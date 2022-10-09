@@ -2498,154 +2498,18 @@ export class GLShader {
 }
 /**
  * @classdesc
- * GUI Object<br>
- * A very basic object to manage GUI elements <br>
- * The object simply register on the "pointerdown" <br>
- * or "touchstart" event and call the onClick function"
+ * A very basic object to manage GUI elements
  * @augments Sprite
+ * @deprecated since 14.0.0
+ * @see UISpriteElement
  */
 export class GUI_Object extends Sprite {
     /**
      * @param {number} x the x coordinate of the GUI Object
      * @param {number} y the y coordinate of the GUI Object
      * @param {object} settings See {@link Sprite}
-     * @example
-     * // create a basic GUI Object
-     * class myButton extends GUI_Object {
-     *    constructor(x, y) {
-     *       var settings = {}
-     *       settings.image = "button";
-     *       settings.framewidth = 100;
-     *       settings.frameheight = 50;
-     *       // super constructor
-     *       super(x, y, settings);
-     *       // define the object z order
-     *       this.pos.z = 4;
-     *    }
-     *
-     *    // output something in the console
-     *    // when the object is clicked
-     *    onClick:function (event) {
-     *       console.log("clicked!");
-     *       // don't propagate the event
-     *       return false;
-     *    }
-     * });
-     *
-     * // add the object at pos (10,10)
-     * me.game.world.addChild(new myButton(10,10));
      */
     constructor(x: number, y: number, settings: object);
-    /**
-     * object can be clicked or not
-     * @public
-     * @type {boolean}
-     * @default true
-     * @name GUI_Object#isClickable
-     */
-    public isClickable: boolean;
-    /**
-     * Tap and hold threshold timeout in ms
-     * @type {number}
-     * @default 250
-     * @name GUI_Object#holdThreshold
-     */
-    holdThreshold: number;
-    /**
-     * object can be tap and hold
-     * @public
-     * @type {boolean}
-     * @default false
-     * @name GUI_Object#isHoldable
-     */
-    public isHoldable: boolean;
-    /**
-     * true if the pointer is over the object
-     * @public
-     * @type {boolean}
-     * @default false
-     * @name GUI_Object#hover
-     */
-    public hover: boolean;
-    holdTimeout: number;
-    released: boolean;
-    /**
-     * function callback for the pointerdown event
-     * @ignore
-     */
-    clicked(event: any): boolean;
-    dirty: boolean;
-    /**
-     * function called when the object is pressed (to be extended)
-     * @name onClick
-     * @memberof GUI_Object
-     * @public
-     * @param {Pointer} event the event object
-     * @returns {boolean} return false if we need to stop propagating the event
-     */
-    public onClick(event: Pointer): boolean;
-    /**
-     * function callback for the pointerEnter event
-     * @ignore
-     */
-    enter(event: any): void;
-    /**
-     * function called when the pointer is over the object
-     * @name onOver
-     * @memberof GUI_Object
-     * @public
-     * @param {Pointer} event the event object
-     */
-    public onOver(event: Pointer): void;
-    /**
-     * function callback for the pointerLeave event
-     * @ignore
-     */
-    leave(event: any): void;
-    /**
-     * function called when the pointer is leaving the object area
-     * @name onOut
-     * @memberof GUI_Object
-     * @public
-     * @param {Pointer} event the event object
-     */
-    public onOut(event: Pointer): void;
-    /**
-     * function callback for the pointerup event
-     * @ignore
-     */
-    release(event: any): boolean;
-    /**
-     * function called when the object is pressed and released (to be extended)
-     * @name onRelease
-     * @memberof GUI_Object
-     * @public
-     * @returns {boolean} return false if we need to stop propagating the event
-     */
-    public onRelease(): boolean;
-    /**
-     * function callback for the tap and hold timer event
-     * @ignore
-     */
-    hold(): void;
-    /**
-     * function called when the object is pressed and held<br>
-     * to be extended <br>
-     * @name onHold
-     * @memberof GUI_Object
-     * @public
-     */
-    public onHold(): void;
-    /**
-     * function called when added to the game world or a container
-     * @ignore
-     */
-    onActivateEvent(): void;
-    /**
-     * function called when removed from the game world or a container
-     * @ignore
-     */
-    onDeactivateEvent(): void;
 }
 /**
  * @classdesc
@@ -8104,6 +7968,277 @@ export class Tween {
     public onComplete(onCompleteCallback: Function): Tween;
     /** @ignore */
     update(dt: any): boolean;
+}
+/**
+ * @classdesc
+ * This is a basic clickable container which you can use in your game UI.
+ * Use this for example if you want to display a button which contains
+ * text and images.
+ * @augments Container
+ */
+export class UIBaseElement extends Container {
+    /**
+     *
+     * @param {number} x The x position of the container
+     * @param {number} y The y position of the container
+     * @param {number} w width of the container (default: viewport width)
+     * @param {number} h height of the container (default: viewport height)
+     */
+    constructor(x: number, y: number, w: number, h: number);
+    /**
+     * object can be clicked or not
+     * @type {boolean}
+     */
+    isClickable: boolean;
+    /**
+     * Tap and hold threshold timeout in ms
+     * @type {number}
+     * @default 250
+     */
+    holdThreshold: number;
+    /**
+     * object can be tap and hold
+     * @type {boolean}
+     * @default false
+     */
+    isHoldable: boolean;
+    /**
+     * true if the pointer is over the object
+     * @type {boolean}
+     * @default false
+     */
+    hover: boolean;
+    holdTimeout: number;
+    released: boolean;
+    /**
+     * function callback for the pointerdown event
+     * @ignore
+     */
+    clicked(event: any): boolean;
+    dirty: boolean;
+    /**
+     * function called when the object is pressed (to be extended)
+     * @param {Pointer} event the event object
+     * @returns {boolean} return false if we need to stop propagating the event
+     */
+    onClick(event: Pointer): boolean;
+    /**
+     * function callback for the pointerEnter event
+     * @ignore
+     */
+    enter(event: any): void;
+    /**
+     * function called when the pointer is over the object
+     * @param {Pointer} event the event object
+     */
+    onOver(event: Pointer): void;
+    /**
+     * function callback for the pointerLeave event
+     * @ignore
+     */
+    leave(event: any): void;
+    /**
+     * function called when the pointer is leaving the object area
+     * @param {Pointer} event the event object
+     */
+    onOut(event: Pointer): void;
+    /**
+     * function callback for the pointerup event
+     * @ignore
+     */
+    release(event: any): boolean;
+    /**
+     * function called when the object is pressed and released (to be extended)
+     * @returns {boolean} return false if we need to stop propagating the event
+     */
+    onRelease(): boolean;
+    /**
+     * function callback for the tap and hold timer event
+     * @ignore
+     */
+    hold(): void;
+    /**
+     * function called when the object is pressed and held<br>
+     * to be extended <br>
+     */
+    onHold(): void;
+}
+/**
+ * @classdesc
+ *  This is a basic sprite based button which you can use in your Game UI.
+ * @augments Sprite
+ */
+export class UISpriteElement extends Sprite {
+    /**
+     * @param {number} x the x coordinate of the GUI Object
+     * @param {number} y the y coordinate of the GUI Object
+     * @param {object} settings See {@link Sprite}
+     * @example
+     * // create a basic GUI Object
+     * class myButton extends UISpriteElement {
+     *    constructor(x, y) {
+     *       var settings = {}
+     *       settings.image = "button";
+     *       settings.framewidth = 100;
+     *       settings.frameheight = 50;
+     *       // super constructor
+     *       super(x, y, settings);
+     *       // define the object z order
+     *       this.pos.z = 4;
+     *    }
+     *
+     *    // output something in the console
+     *    // when the object is clicked
+     *    onClick:function (event) {
+     *       console.log("clicked!");
+     *       // don't propagate the event
+     *       return false;
+     *    }
+     * });
+     *
+     * // add the object at pos (10,10)
+     * me.game.world.addChild(new myButton(10,10));
+     */
+    constructor(x: number, y: number, settings: object);
+    /**
+     * object can be clicked or not
+     * @type {boolean}
+     * @default true
+     */
+    isClickable: boolean;
+    /**
+     * Tap and hold threshold timeout in ms
+     * @type {number}
+     * @default 250
+     */
+    holdThreshold: number;
+    /**
+     * object can be tap and hold
+     * @type {boolean}
+     * @default false
+     */
+    isHoldable: boolean;
+    /**
+     * true if the pointer is over the object
+     * @type {boolean}
+     * @default false
+     */
+    hover: boolean;
+    holdTimeout: number;
+    released: boolean;
+    /**
+     * function callback for the pointerdown event
+     * @ignore
+     */
+    clicked(event: any): boolean;
+    dirty: boolean;
+    /**
+     * function called when the object is pressed (to be extended)
+     * @param {Pointer} event the event object
+     * @returns {boolean} return false if we need to stop propagating the event
+     */
+    onClick(event: Pointer): boolean;
+    /**
+     * function callback for the pointerEnter event
+     * @ignore
+     */
+    enter(event: any): void;
+    /**
+     * function called when the pointer is over the object
+     * @param {Pointer} event the event object
+     */
+    onOver(event: Pointer): void;
+    /**
+     * function callback for the pointerLeave event
+     * @ignore
+     */
+    leave(event: any): void;
+    /**
+     * function called when the pointer is leaving the object area
+     * @param {Pointer} event the event object
+     */
+    onOut(event: Pointer): void;
+    /**
+     * function callback for the pointerup event
+     * @ignore
+     */
+    release(event: any): boolean;
+    /**
+     * function called when the object is pressed and released (to be extended)
+     * @returns {boolean} return false if we need to stop propagating the event
+     */
+    onRelease(): boolean;
+    /**
+     * function callback for the tap and hold timer event
+     * @ignore
+     */
+    hold(): void;
+    /**
+     * function called when the object is pressed and held<br>
+     * to be extended <br>
+     */
+    onHold(): void;
+    /**
+     * function called when added to the game world or a container
+     * @ignore
+     */
+    onActivateEvent(): void;
+    /**
+     * function called when removed from the game world or a container
+     * @ignore
+     */
+    onDeactivateEvent(): void;
+}
+/**
+ * @classdesc
+ * This is a basic base text button which you can use in your Game UI.
+ * @augments UIBaseElement
+ */
+export class UITextButton extends UIBaseElement {
+    /**
+     * A Text Button with an outlined background border, filled with background color.
+     * It uses a RoundRect as background and changes the background color on hovering over.
+     * The background will be drawn with 0.5 opacity, so that the background of the button is
+     * slightly shining through.
+     * @param {number} x x pos of the button
+     * @param {number} y y pos of the button
+     * @param {string} [settings.font] The name of the BitmapText font to use
+     * @param {number} [settings.size] The scale factor of the font (default: 1)
+     * @param {string} [settings.text] The text to display (default: 'click me')
+     * @param {string} [settings.bindKey] The key to bind the action to (default: none)
+     * @param {string} [settings.backgroundColor] The css value of a background color
+     * @param {string} [settings.hoverColor] The css value of a color to be used if the pointer hovers over the button
+     * @param {string} [settings.borderStrokeColor] The css value of a color to be used to draw the border
+     * @param {boolean} [settings.offScreenCanvas] Weather to use an offScreen canvas or not
+     * @param {string} [settings.fillStyle] The css value of a tint color to be used to tint the text
+     * @param {number} [settings.borderWidth] Width of the button
+     * @param {number} [settings.borderHeight] Height of the button
+     * @example
+     * // Create a new Button
+     * class PlayButton extends BaseTextButton {
+     *      constructor(x,y) {
+     *          super(x,y, {
+     *              font: 'my-font',
+     *              text: 'Play',
+     *              // if you omit the next two, size is calculated by the size of the text
+     *              borderWidth: 200,
+     *              borderHeight: 20,
+     *          });
+     *      }
+     *
+     *      onClick(){
+     *          state.change(state.PLAY);
+     *      }
+     * }
+     *
+     * game.world.addChild(new PlayButton(15,200));
+     */
+    constructor(x: number, y: number, settings: any);
+    font: BitmapText;
+    dimensions: TextMetrics;
+    border: RoundRect;
+    settings: any;
+    draw(renderer: any): void;
 }
 /**
  * @classdesc

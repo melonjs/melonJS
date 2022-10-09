@@ -1260,6 +1260,7 @@ if ("now" in globalThis.performance === false) {
 function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
 /**
  * returns true if the given string contains a numeric integer or float value
  * @public
@@ -1274,6 +1275,7 @@ function isNumeric(str) {
     }
     return !isNaN(str) && /[+-]?([0-9]*[.])?[0-9]+/.test(str);
 }
+
 /**
  * returns true if the given string contains a true or false
  * @public
@@ -1286,6 +1288,7 @@ function isBoolean(str) {
     var trimmed = str.trim();
     return (trimmed === "true") || (trimmed === "false");
 }
+
 /**
  * convert a string to the corresponding hexadecimal value
  * @public
@@ -1301,6 +1304,7 @@ function toHex$1(str) {
     }
     return res;
 }
+
 /**
  * returns true if the given string is a data url in the `data:[<mediatype>][;base64],<data>` format.
  * (this will not test the validity of the Data or Base64 encoding)
@@ -1352,12 +1356,13 @@ function prefixed(name, obj) {
     var uc_name = capitalize(name);
 
     var result;
-    vendors$1.some(function (vendor) {
+    vendors$1.some((vendor) => {
         var name = vendor + uc_name;
         return (result = (name in obj) ? obj[name] : undefined);
     });
     return result;
 }
+
 /**
  * Set a vendor-prefixed property
  * @public
@@ -1377,7 +1382,7 @@ function setPrefixed(name, value, obj) {
 
     var uc_name = capitalize(name);
 
-    vendors$1.some(function (vendor) {
+    vendors$1.some((vendor) => {
         var name = vendor + uc_name;
         if (name in obj) {
             obj[name] = value;
@@ -1455,6 +1460,7 @@ const EPSILON = 0.000001;
 function isPowerOfTwo(val) {
     return (val & (val - 1)) === 0;
 }
+
 /**
  * returns the next power of two for the given value
  * @public
@@ -1473,6 +1479,7 @@ function nextPowerOfTwo(val) {
     val ++;
     return val;
 }
+
 /**
  * Converts an angle in degrees to an angle in radians
  * @public
@@ -1487,6 +1494,7 @@ function nextPowerOfTwo(val) {
 function degToRad(angle) {
     return angle * DEG_TO_RAD;
 }
+
 /**
  * Converts an angle in radians to an angle in degrees.
  * @public
@@ -1501,6 +1509,7 @@ function degToRad(angle) {
 function radToDeg(radians) {
     return radians * RAD_TO_DEG;
 }
+
 /**
  * clamp the given value
  * @public
@@ -1514,6 +1523,7 @@ function radToDeg(radians) {
 function clamp(val, low, high) {
     return val < low ? low : val > high ? high : +val;
 }
+
 /**
  * return a random integer between min (included) and max (excluded)
  * @public
@@ -1529,6 +1539,7 @@ function clamp(val, low, high) {
 function random$1(min, max) {
     return (~~(Math.random() * (max - min)) + min);
 }
+
 /**
  * return a random float between min, max (exclusive)
  * @public
@@ -1544,6 +1555,7 @@ function random$1(min, max) {
 function randomFloat(min, max) {
     return (Math.random() * (max - min)) + min;
 }
+
 /**
  * return a weighted random between min, max (exclusive)
  * @public
@@ -1559,6 +1571,7 @@ function randomFloat(min, max) {
 function weightedRandom$1(min, max) {
     return (~~(Math.pow(Math.random(), 2) * (max - min)) + min);
 }
+
 /**
  * round a value to the specified number of digit
  * @public
@@ -1576,6 +1589,7 @@ function round(num, dec = 0) {
     var powres = Math.pow(10, dec);
     return (~~(0.5 + num * powres) / powres);
 }
+
 /**
  * check if the given value is close to the expected one
  * @public
@@ -1638,6 +1652,7 @@ function remove(arr, obj) {
     }
     return arr;
 }
+
 /**
  * return a random array element
  * @public
@@ -1653,6 +1668,7 @@ function remove(arr, obj) {
 function random(arr) {
     return arr[random$1(0, arr.length)];
 }
+
 /**
  * return a weighted random array element, favoring the earlier entries
  * @public
@@ -1693,6 +1709,7 @@ const REMOVE_EXT = /\.[^\.]*$/;
 function getBasename(path) {
     return path.replace(REMOVE_PATH, "").replace(REMOVE_EXT, "");
 }
+
 /**
  * return the extension of the file in the given path
  * @public
@@ -1734,6 +1751,7 @@ var fileUtils = /*#__PURE__*/Object.freeze({
 function defer(func, thisArg, ...args) {
     return setTimeout(func.bind(thisArg), 0.01, ...args);
 }
+
 /**
  * returns a function that, when invoked will only be triggered at most
  * once during a given window of time
@@ -1759,7 +1777,7 @@ function throttle(fn, delay, no_trailing) {
             if (no_trailing === false) {
                 // hold on to it
                 clearTimeout(deferTimer);
-                deferTimer = setTimeout(function () {
+                deferTimer = setTimeout(() => {
                     last = now;
                     return fn.apply(null, args);
                 }, elasped);
@@ -1929,7 +1947,7 @@ class ObjectPool {
      */
     exists(name) {
         return name in this.objectClass;
-    };
+    }
 
     /**
      * Check if an object is poolable
@@ -2481,6 +2499,7 @@ class Vector2d {
 function toHex(component) {
     return "0123456789ABCDEF".charAt((component - (component % 16)) >> 4) + "0123456789ABCDEF".charAt(component % 16);
 }
+
 function hue2rgb(p, q, t) {
     if (t < 0) t += 1;
     if (t > 1) t -= 1;
@@ -2649,7 +2668,7 @@ var cssToRGB = new Map();
     [ "wheat",                  [ 245, 222, 179 ] ],
     [ "whitesmoke",             [ 245, 245, 245 ] ],
     [ "yellowgreen",            [ 154, 205,  50 ] ]
-].forEach(function (value) {
+].forEach((value) => {
     cssToRGB.set(value[0], value[1]);
 });
 
@@ -5063,6 +5082,7 @@ const ONCONTEXT_RESTORED = "renderer.contextrestored";
 function emit(eventName, ...args) {
     return eventEmitter.emit(eventName, ...args);
 }
+
 /**
  * Add a listener for a given event.
  * @function event.on
@@ -5077,6 +5097,7 @@ function emit(eventName, ...args) {
 function on(eventName, listener, context) {
     return eventEmitter.on(eventName, listener, context);
 }
+
 /**
  * Add a one-time listener for a given event.
  * @function event.once
@@ -5091,6 +5112,7 @@ function on(eventName, listener, context) {
 function once(eventName, listener, context) {
     return eventEmitter.once(eventName, listener, context);
 }
+
 /**
  * remove the given listener for a given event.
  * @function event.off
@@ -5209,7 +5231,7 @@ on(BOOT, () => {
 
         if (typeof me_save_content === "string" && me_save_content.length > 0) {
             var keys = JSON.parse(me_save_content) || [];
-            keys.forEach(function (key) {
+            keys.forEach((key) => {
                 data[key] = JSON.parse(globalThis.localStorage.getItem("me.save." + key));
             });
         }
@@ -5232,7 +5254,7 @@ var save = {
     add(props) {
         var obj = save;
 
-        Object.keys(props).forEach(function (key) {
+        Object.keys(props).forEach((key) => {
             if (isReserved(key)) {
                 return;
             }
@@ -5330,6 +5352,7 @@ function _domReady() {
         isDOMReady = true;
     }
 }
+
 // https://developer.mozilla.org/en-US/docs/Web/API/Window/DOMContentLoaded_event
 function DOMContentLoaded(fn) {
     // If the DOM is already ready
@@ -5429,6 +5452,7 @@ function disableSwipeFn(e) {
     }
     return false;
 }
+
 function hasLocalStorage() {
     try {
         return !!globalThis.localStorage;
@@ -5457,6 +5481,7 @@ function onDeviceMotion(e) {
     accelerationY = e.accelerationIncludingGravity.y;
     accelerationZ = e.accelerationIncludingGravity.z;
 }
+
 /**
  * used by [un]watchDeviceOrientation()
  */
@@ -5465,6 +5490,7 @@ function onDeviceRotate(e) {
     beta = e.beta;
     alpha = e.alpha;
 }
+
 /**
  * the device platform type
  * @name platform
@@ -5835,6 +5861,7 @@ let stopOnBlur = false;
 function onReady(fn) {
     DOMContentLoaded(fn);
 }
+
 /**
  * enable/disable swipe on WebView.
  * @function enableSwipe
@@ -5854,6 +5881,7 @@ function enableSwipe(enable) {
         swipeEnabled = false;
     }
 }
+
 /**
  * Returns true if the browser/device is in full screen mode.
  * @function isFullscreen
@@ -5868,6 +5896,7 @@ function isFullscreen() {
         return false;
     }
 }
+
 /**
  * Triggers a fullscreen request. Requires fullscreen support from the browser/device.
  * @function requestFullscreen
@@ -5893,6 +5922,7 @@ function requestFullscreen(element) {
         element.requestFullscreen();
     }
 }
+
 /**
  * Exit fullscreen mode. Requires fullscreen support from the browser/device.
  * @function exitFullscreen
@@ -5904,6 +5934,7 @@ function exitFullscreen() {
         document.exitFullscreen();
     }
 }
+
 /**
  * Return a string representing the orientation of the device screen.
  * It can be "any", "natural", "landscape", "portrait", "portrait-primary", "portrait-secondary", "landscape-primary", "landscape-secondary"
@@ -5939,6 +5970,7 @@ function getScreenOrientation() {
     // fallback to window size check
     return (globalThis.outerWidth > globalThis.outerHeight) ? LANDSCAPE : PORTRAIT;
 }
+
 /**
  * locks the device screen into the specified orientation.<br>
  * This method only works for installed Web apps or for Web pages in full-screen mode.
@@ -5959,6 +5991,7 @@ function lockOrientation(orientation) {
     }
     return false;
 }
+
 /**
  * unlocks the device screen into the specified orientation.<br>
  * This method only works for installed Web apps or for Web pages in full-screen mode.
@@ -5978,6 +6011,7 @@ function unlockOrientation() {
     }
     return false;
 }
+
 /**
  * return true if the device screen orientation is in Portrait mode
  * @function isPortrait
@@ -5988,6 +6022,7 @@ function unlockOrientation() {
 function isPortrait() {
     return getScreenOrientation().includes("portrait");
 }
+
 /**
  * return true if the device screen orientation is in Portrait mode
  * @function isLandscape
@@ -5998,6 +6033,7 @@ function isPortrait() {
 function isLandscape() {
     return getScreenOrientation().includes("landscape");
 }
+
 /**
  * return the device storage
  * @function getStorage
@@ -6016,6 +6052,7 @@ function getStorage(type = "local") {
             throw new Error("storage type " + type + " not supported");
     }
 }
+
 /**
  * return the parent DOM element for the given parent name or HTMLElement object
  * @function getParentElement
@@ -6033,6 +6070,7 @@ function getParentElement(element) {
 
     return target;
 }
+
 /**
  * return the DOM element for the given element name or HTMLElement object
  * @function getElement
@@ -6060,6 +6098,7 @@ function getElement(element) {
 
     return target;
 }
+
 /**
  * returns the size of the given HTMLElement and its position relative to the viewport
  * <br><img src="images/element-box-diagram.png"/>
@@ -6077,7 +6116,9 @@ function getElementBounds(element) {
         domRect.width = domRect.right = globalThis.innerWidth;
         domRect.height = domRect.bottom = globalThis.innerHeight;
         return domRect;
-    }}
+    }
+}
+
 /**
  * returns the size of the given HTMLElement Parent and its position relative to the viewport
  * <br><img src="images/element-box-diagram.png"/>
@@ -6091,6 +6132,7 @@ function getElementBounds(element) {
 function getParentBounds(element) {
     return getElementBounds(getParentElement(element));
 }
+
 /**
  * returns true if the device supports WebGL
  * @function isWebGLSupported
@@ -6115,6 +6157,7 @@ function isWebGLSupported(options) {
 
     return _supported;
 }
+
 /**
  * return the highest precision format supported by this device for GL Shaders
  * @function getMaxShaderPrecision
@@ -6134,6 +6177,7 @@ function getMaxShaderPrecision(gl) {
     }
     return "lowp";
 }
+
 /**
  * Makes a request to bring this device window to the front.
  * @function focus
@@ -6149,6 +6193,7 @@ function focus() {
         globalThis.focus();
     }
 }
+
 /**
  * Enable monitor of the device accelerator to detect the amount of physical force of acceleration the device is receiving.
  * (one some device a first user gesture will be required before calling this function)
@@ -6191,6 +6236,7 @@ function watchAccelerometer() {
     }
     return accelInitialized;
 }
+
 /**
  * unwatch Accelerometor event
  * @function unwatchAccelerometer
@@ -6204,6 +6250,7 @@ function unwatchAccelerometer() {
         accelInitialized = false;
     }
 }
+
 /**
  * Enable monitor of the device orientation to detect the current orientation of the device as compared to the Earth coordinate frame.
  * (one some device a first user gesture will be required before calling this function)
@@ -6242,6 +6289,7 @@ function watchDeviceOrientation() {
     }
     return deviceOrientationInitialized;
 }
+
 /**
  * unwatch Device orientation event
  * @function unwatchDeviceOrientation
@@ -6254,6 +6302,7 @@ function unwatchDeviceOrientation() {
         deviceOrientationInitialized = false;
     }
 }
+
 /**
  * the vibrate method pulses the vibration hardware on the device, <br>
  * If the device doesn't support vibration, this method has no effect. <br>
@@ -6372,14 +6421,14 @@ function extractUniforms(gl, shader) {
         match;
 
     // Detect all uniform names and types
-    [ shader.vertex, shader.fragment ].forEach(function (shader) {
+    [ shader.vertex, shader.fragment ].forEach((shader) => {
         while ((match = uniRx.exec(shader))) {
             uniformsData[match[2]] = match[1];
         }
     });
 
     // Get uniform references
-    Object.keys(uniformsData).forEach(function (name) {
+    Object.keys(uniformsData).forEach((name) => {
         var type = uniformsData[name];
         locations[name] = gl.getUniformLocation(shader.program, name);
 
@@ -6452,6 +6501,7 @@ function compileShader(gl, type, source) {
 
     return shader;
 }
+
 /**
  * Compile GLSL into a shader object
  * @ignore
@@ -8454,7 +8504,7 @@ class Polygon {
      */
     clone() {
         var copy = [];
-        this.points.forEach(function (point) {
+        this.points.forEach((point) => {
             copy.push(point.clone());
         });
         return new Polygon(this.pos.x, this.pos.y, copy);
@@ -9341,7 +9391,7 @@ class Line extends Polygon {
      */
     clone() {
         var copy = [];
-        this.points.forEach(function (point) {
+        this.points.forEach((point) => {
             copy.push(point.clone());
         });
         return new Line(this.pos.x, this.pos.y, copy);
@@ -13886,6 +13936,7 @@ let stopOnAudioError = true;
 
     return !howler.Howler.noAudio;
 }
+
 /**
  * check if the given audio format is supported
  * @function audio.hasFormat
@@ -13895,6 +13946,7 @@ let stopOnAudioError = true;
 function hasFormat(codec) {
     return hasAudio() && howler.Howler.codecs(codec);
 }
+
 /**
  * check if audio (HTML5 or WebAudio) is supported
  * @function audio.hasAudio
@@ -13903,6 +13955,7 @@ function hasFormat(codec) {
 function hasAudio() {
     return !howler.Howler.noAudio;
 }
+
 /**
  * enable audio output <br>
  * only useful if audio supported and previously disabled through
@@ -13912,6 +13965,7 @@ function hasAudio() {
 function enable() {
     unmuteAll();
 }
+
 /**
  * disable audio output
  * @function audio.disable
@@ -13919,6 +13973,7 @@ function enable() {
 function disable() {
     muteAll();
 }
+
 /**
  * Load an audio file.<br>
  * <br>
@@ -13964,6 +14019,7 @@ function load(sound, html5, onload_cb, onerror_cb) {
 
     return 1;
 }
+
 /**
  * play the specified sound
  * @function audio.play
@@ -14004,6 +14060,7 @@ function play(sound_name, loop = false, onend, volume) {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
 }
+
 /**
  * Fade a currently playing sound between two volumee.
  * @function audio.fade
@@ -14021,6 +14078,7 @@ function fade(sound_name, from, to, duration, id) {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
 }
+
 /**
  * get/set the position of playback for a sound.
  * @function audio.seek
@@ -14042,6 +14100,7 @@ function seek(sound_name, ...args) {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
 }
+
 /**
  * get or set the rate of playback for a sound.
  * @function audio.rate
@@ -14063,6 +14122,7 @@ function rate(sound_name, ...args) {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
 }
+
 /**
  * stop the specified sound on all channels
  * @function audio.stop
@@ -14085,6 +14145,7 @@ function stop(sound_name, id) {
         howler.Howler.stop();
     }
 }
+
 /**
  * pause the specified sound on all channels<br>
  * this function does not reset the currentTime property
@@ -14102,6 +14163,7 @@ function pause(sound_name, id) {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
 }
+
 /**
  * resume the specified sound on all channels<br>
  * @function audio.resume
@@ -14125,6 +14187,7 @@ function resume(sound_name, id) {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
 }
+
 /**
  * play the specified audio track<br>
  * this function automatically set the loop property to true<br>
@@ -14145,6 +14208,7 @@ function playTrack(sound_name, volume) {
         volume
     );
 }
+
 /**
  * stop the current audio track
  * @function audio.stopTrack
@@ -14161,6 +14225,7 @@ function stopTrack() {
         current_track_id = null;
     }
 }
+
 /**
  * pause the current audio track
  * @function audio.pauseTrack
@@ -14172,6 +14237,7 @@ function pauseTrack() {
         audioTracks[current_track_id].pause();
     }
 }
+
 /**
  * resume the previously paused audio track
  * @function audio.resumeTrack
@@ -14188,6 +14254,7 @@ function resumeTrack() {
         audioTracks[current_track_id].play();
     }
 }
+
 /**
  * returns the current track Id
  * @function audio.getCurrentTrack
@@ -14196,6 +14263,7 @@ function resumeTrack() {
 function getCurrentTrack() {
     return current_track_id;
 }
+
 /**
  * set the default global volume
  * @function audio.setVolume
@@ -14204,6 +14272,7 @@ function getCurrentTrack() {
 function setVolume(volume) {
     howler.Howler.volume(volume);
 }
+
 /**
  * get the default global volume
  * @function audio.getVolume
@@ -14212,6 +14281,7 @@ function setVolume(volume) {
 function getVolume() {
     return howler.Howler.volume();
 }
+
 /**
  * mute or unmute the specified sound, but does not pause the playback.
  * @function audio.mute
@@ -14232,6 +14302,7 @@ function mute(sound_name, id, mute) {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
 }
+
 /**
  * unmute the specified sound
  * @function audio.unmute
@@ -14241,6 +14312,7 @@ function mute(sound_name, id, mute) {
 function unmute(sound_name, id) {
     mute(sound_name, id, false);
 }
+
 /**
  * mute all audio
  * @function audio.muteAll
@@ -14248,6 +14320,7 @@ function unmute(sound_name, id) {
 function muteAll() {
     howler.Howler.mute(true);
 }
+
 /**
  * unmute all audio
  * @function audio.unmuteAll
@@ -14255,6 +14328,7 @@ function muteAll() {
 function unmuteAll() {
     howler.Howler.mute(false);
 }
+
 /**
  * Returns true if audio is muted globally.
  * @function audio.muted
@@ -14263,6 +14337,7 @@ function unmuteAll() {
 function muted() {
     return howler.Howler._muted;
 }
+
 /**
  * unload specified audio track to free memory
  * @function audio.unload
@@ -14281,6 +14356,7 @@ function unload(sound_name) {
     delete audioTracks[sound_name];
     return true;
 }
+
 /**
  * unload all audio to free memory
  * @function audio.unloadAll
@@ -16210,6 +16286,7 @@ function initKeyboardEvent() {
         }
     }
 }
+
 /**
  * return the key press status of the specified action
  * @name isKeyPressed
@@ -16234,6 +16311,7 @@ function isKeyPressed(action) {
     }
     return false;
 }
+
 /**
  * return the key status of the specified action
  * @name keyStatus
@@ -16245,6 +16323,7 @@ function isKeyPressed(action) {
 function keyStatus(action) {
     return (_keyStatus[action] > 0);
 }
+
 
 /**
  * trigger the specified key (simulated) event <br>
@@ -16266,6 +16345,7 @@ function triggerKeyEvent(keycode, status, mouseButton) {
         keyUpEvent({}, keycode, mouseButton);
     }
 }
+
 
 /**
  * associate a user defined action to a keycode
@@ -16292,6 +16372,7 @@ function bindKey(keycode, action, lock, preventDefault$1 = preventDefault) {
     _keyLocked[action] = false;
     _keyRefs[action] = {};
 }
+
 /**
  * return the action associated with the given keycode
  * @name getBindingKey
@@ -16303,6 +16384,7 @@ function bindKey(keycode, action, lock, preventDefault$1 = preventDefault) {
 function getBindingKey(keycode) {
     return _keyBindings[keycode];
 }
+
 /**
  * unlock a key manually
  * @name unlockKey
@@ -16318,6 +16400,7 @@ function getBindingKey(keycode) {
 function unlockKey(action) {
     _keyLocked[action] = false;
 }
+
 /**
  * unbind the defined keycode
  * @name unbindKey
@@ -16855,7 +16938,7 @@ function enablePointerEvent() {
             focus();
             pointerEventTarget.addEventListener(
                 activeEventList[2], // MOUSE/POINTER DOWN
-                function () {
+                () => {
                     focus();
                 },
                 { passive: (preventDefault === false) }
@@ -17271,6 +17354,7 @@ function globalToLocal(x, y, v) {
     }
     return v.set(x * pixelRatio, y * pixelRatio);
 }
+
 /**
  * enable/disable all gestures on the given element.<br>
  * by default melonJS will disable browser handling of all panning and zooming gestures.
@@ -17284,6 +17368,7 @@ function globalToLocal(x, y, v) {
 function setTouchAction(element, value) {
     element.style["touch-action"] = value || "none";
 }
+
 /**
  * Associate a pointer event to a keycode<br>
  * Left button – 0
@@ -17316,6 +17401,7 @@ function bindPointer() {
     // map the mouse button to the keycode
     pointer.bind[button] = keyCode;
 }
+
 /**
  * unbind the defined keycode
  * @name unbindPointer
@@ -17332,6 +17418,7 @@ function unbindPointer(button) {
         pointer.LEFT : button
     ] = null;
 }
+
 
 /**
  * allows registration of event listeners on the object target. <br>
@@ -17405,6 +17492,7 @@ function registerPointerEvent(eventType, region, callback) {
         }
     }
 }
+
 /**
  * allows the removal of event listeners from the object target.
  * @see {@link http://www.w3.org/TR/pointerevents/#list-of-pointer-events|W3C Pointer Event list}
@@ -17449,6 +17537,7 @@ function releasePointerEvent(eventType, region, callback) {
         }
     }
 }
+
 /**
  * allows the removal of all registered event listeners from the object target.
  * @name releaseAllPointerEvents
@@ -17464,7 +17553,9 @@ function releaseAllPointerEvents(region) {
         for (var i = 0; i < pointerEventList.length; i++) {
             releasePointerEvent(pointerEventList[i], region);
         }
-    }}
+    }
+}
+
 /**
  * request for the pointer to be locked on the parent DOM element.
  * (Must be called in a click event or an event that requires user interaction)
@@ -17557,13 +17648,13 @@ var leadingZeroRE = /^0+/;
  * @ignore
  */
 function addMapping(id, mapping) {
-    var expanded_id = id.replace(vendorProductRE, function (_, a, b) {
+    var expanded_id = id.replace(vendorProductRE, (_, a, b) => {
         return (
             "000".slice(a.length - 1) + a + "-" +
             "000".slice(b.length - 1) + b + "-"
         );
     });
-    var sparse_id = id.replace(vendorProductRE, function (_, a, b) {
+    var sparse_id = id.replace(vendorProductRE, (_, a, b) => {
         return (
             a.replace(leadingZeroRE, "") + "-" +
             b.replace(leadingZeroRE, "") + "-"
@@ -17571,7 +17662,7 @@ function addMapping(id, mapping) {
     });
 
     // Normalize optional parameters
-    mapping.analog = mapping.analog || mapping.buttons.map(function () {
+    mapping.analog = mapping.analog || mapping.buttons.map(() => {
         return -1;
     });
     mapping.normalize_fn = mapping.normalize_fn || function (value) { return value; };
@@ -17634,7 +17725,7 @@ var updateEventHandler;
             "normalize_fn" : ouyaNormalizeFn
         }
     ]
-].forEach(function (value) {
+].forEach((value) => {
     addMapping(value[0], value[1]);
 });
 
@@ -17646,7 +17737,7 @@ var updateGamepads = function () {
     var gamepads = navigator.getGamepads();
 
     // Trigger button bindings
-    Object.keys(bindings).forEach(function (index) {
+    Object.keys(bindings).forEach((index) => {
         var gamepad = gamepads[index];
         if (!gamepad) {
             return;
@@ -17660,7 +17751,7 @@ var updateGamepads = function () {
         var binding = bindings[index];
 
         // Iterate all buttons that have active bindings
-        Object.keys(binding.buttons).forEach(function (button) {
+        Object.keys(binding.buttons).forEach((button) => {
             var last = binding.buttons[button];
             var mapped_button = button;
             var mapped_axis = -1;
@@ -17707,7 +17798,7 @@ var updateGamepads = function () {
         });
 
         // Iterate all axes that have active bindings
-        Object.keys(binding.axes).forEach(function (axis) {
+        Object.keys(binding.axes).forEach((axis) => {
             var last = binding.axes[axis];
             var mapped_axis = axis;
 
@@ -17762,14 +17853,14 @@ var updateGamepads = function () {
 
 // gamepad connected callback
 if (globalThis.navigator && typeof globalThis.navigator.getGamepads === "function") {
-    globalThis.addEventListener("gamepadconnected", function (e) {
+    globalThis.addEventListener("gamepadconnected", (e) => {
         emit(GAMEPAD_CONNECTED, e.gamepad);
     }, false);
 
     /*
      * gamepad disconnected callback
      */
-    globalThis.addEventListener("gamepaddisconnected", function (e) {
+    globalThis.addEventListener("gamepaddisconnected", (e) => {
         emit(GAMEPAD_DISCONNECTED, e.gamepad);
     }, false);
 }
@@ -17925,6 +18016,7 @@ function bindGamepad(index, button, keyCode) {
         }
     }
 }
+
 /**
  * unbind the defined keycode
  * @name unbindGamepad
@@ -17941,6 +18033,7 @@ function unbindGamepad(index, button) {
     }
     bindings[index].buttons[button] = {};
 }
+
 /**
  * Set deadzone for analog gamepad inputs<br>
  * The default deadzone is 0.1 (10%) Analog values less than this will be ignored
@@ -17952,6 +18045,7 @@ function unbindGamepad(index, button) {
 function setGamepadDeadzone(value) {
     deadzone = value;
 }
+
 /**
  * specify a custom mapping for a specific gamepad id<br>
  * see below for the default mapping : <br>
@@ -19366,6 +19460,7 @@ function shouldCollide(a, b) {
 }
 
 
+
 /**
  * find all the collisions for the specified object
  * @name collisionCheck
@@ -19436,6 +19531,7 @@ function collisionCheck(objA, response = globalResponse) {
     // we could return the amount of objects we collided with ?
     return collisionCounter > 0;
 }
+
 /**
  * Checks for object colliding with the given line
  * @name rayCast
@@ -20166,7 +20262,8 @@ class Body {
                 if (shape.contains(_x, _y)) {
                     return true;
                 }
-            }        }
+            }
+        }
         return false;
     }
 
@@ -20334,13 +20431,13 @@ class Container extends Renderable {
      * @param {number} [width=game.viewport.width] width of the container
      * @param {number} [height=game.viewport.height] height of the container
      */
-    constructor(x = 0, y = 0, width = Infinity, height = Infinity, root = false) {
+    constructor(x = 0, y = 0, width, height, root = false) {
 
         // call the super constructor
         super(
             x, y,
-            typeof game.viewport !== "undefined" ? game.viewport.width : width,
-            typeof game.viewport !== "undefined" ? game.viewport.height : height
+            typeof width === "undefined" ? (typeof game.viewport !== "undefined" ? game.viewport.width : Infinity) : width,
+            typeof height === "undefined" ? (typeof game.viewport !== "undefined" ? game.viewport.height : Infinity) : height
         );
 
         /**
@@ -20482,6 +20579,7 @@ class Container extends Renderable {
                 this.removeChildNow(child);
             }
         }
+
         if (typeof this.currentTransform !== "undefined") {
             // just reset some variables
             this.currentTransform.identity();
@@ -21221,10 +21319,11 @@ class Container extends Renderable {
                 // check if object is in any active cameras
                 obj.inViewport = false;
                 // iterate through all cameras
-                state.current().cameras.forEach(function(camera) {
+                state.current().cameras.forEach((camera) => {
                     if (camera.isVisible(obj, isFloating)) {
                         obj.inViewport = true;
-                    }                });
+                    }
+                });
 
                 // update our object
                 this.isDirty |= ((obj.inViewport || obj.alwaysUpdate) && obj.update(dt));
@@ -21341,6 +21440,7 @@ function QT_ARRAY_POP(world, bounds, max_objects = 4, max_levels = 4, level = 0)
         return new QuadTree(world, bounds, max_objects, max_levels, level);
     }
 }
+
 /**
  * Push back a quadtree back into the array
  * @ignore
@@ -21348,6 +21448,7 @@ function QT_ARRAY_POP(world, bounds, max_objects = 4, max_levels = 4, level = 0)
 function QT_ARRAY_PUSH(qt) {
     QT_ARRAY.push(qt);
 }
+
 /**
  * a temporary vector object to be reused
  * @ignore
@@ -21873,7 +21974,8 @@ class World extends Container {
                     if (body.update(dt) === true) {
                         // mark ancestor as dirty
                         ancestor.isDirty = true;
-                    }                    // handle collisions against other objects
+                    }
+                    // handle collisions against other objects
                     collisionCheck(ancestor);
                     // clear body force
                     body.force.set(0, 0);
@@ -22000,7 +22102,7 @@ class Application {
      * // call myFunction () everytime a level is loaded
      * me.game.onLevelLoaded = this.myFunction.bind(this);
      */
-    onLevelLoaded() {};
+    onLevelLoaded() {}
 
     /**
      * Update the renderer framerate using the system config variables.
@@ -22958,16 +23060,18 @@ class Stage {
 
         // update the camera/viewport
         // iterate through all cameras
-        this.cameras.forEach(function(camera) {
+        this.cameras.forEach((camera) => {
             if (camera.update(dt) === true) {
                 isDirty = true;
-            }        });
+            }
+        });
 
         // update all lights
         this.lights.forEach((light) => {
             if (light.update(dt) === true) {
                 isDirty = true;
-            }        });
+            }
+        });
 
         return isDirty;
     }
@@ -23112,6 +23216,7 @@ class ProgressBar extends Renderable {
     }
 
 }
+
 /**
  * a default loading screen
  * @ignore
@@ -23843,6 +23948,7 @@ function parseAttributes(obj, elt) {
 function decompress() {
     throw new Error("GZIP/ZLIB compressed TMX Tile Map not supported!");
 }
+
 /**
  * Decode a CSV encoded array into a binary array
  * @ignore
@@ -23859,6 +23965,7 @@ function decodeCSV(input) {
     }
     return result;
 }
+
 /**
  * Decode a base64 encoded string into a byte array
  * @ignore
@@ -23882,6 +23989,7 @@ function decodeBase64AsArray(input, bytes) {
     }
     return ar;
 }
+
 /**
  * Decode the given data
  * @ignore
@@ -23912,6 +24020,7 @@ function decode(data, encoding, compression) {
             throw new Error("Unknown layer encoding: " + encoding);
     }
 }
+
 /**
  * Normalize TMX format to Tiled JSON format
  * @ignore
@@ -24019,6 +24128,7 @@ function normalize(obj, item) {
             break;
     }
 }
+
 /**
  * Parse a XML TMX object and returns the corresponding javascript object
  * @ignore
@@ -24057,6 +24167,7 @@ function parse(xml) {
 
     return obj;
 }
+
 /**
  * Apply TMX Properties to the given object
  * @ignore
@@ -24229,7 +24340,7 @@ class Tile extends Bounds {
         if (tileset.animations.has(this.tileId)) {
             var frames = [];
             var frameId = [];
-            (tileset.animations.get(this.tileId).frames).forEach(function (frame) {
+            (tileset.animations.get(this.tileId).frames).forEach((frame) => {
                 frameId.push(frame.tileid);
                 frames.push({
                     name : "" + frame.tileid,
@@ -25597,6 +25708,7 @@ class TMXRenderer {
     }
 
 }
+
 /* eslint-enable no-unused-vars */
 
 /**
@@ -26768,7 +26880,7 @@ class TMXTileset {
         if (this._lastUpdate !== now) {
             this._lastUpdate = now;
 
-            this.animations.forEach(function (anim) {
+            this.animations.forEach((anim) => {
                 anim.dt += dt;
                 duration = anim.cur.duration;
                 while (anim.dt >= duration) {
@@ -27626,7 +27738,8 @@ class TMXTileMap {
     getRenderer() {
         if ((typeof(this.renderer) === "undefined") || (!this.renderer.canRender(this))) {
             this.renderer = getNewDefaultRenderer(this);
-        }        return this.renderer;
+        }
+        return this.renderer;
     }
 
     /**
@@ -27736,12 +27849,12 @@ class TMXTileMap {
         }
 
         // add all layers instances
-        this.getLayers().forEach(function (layer) {
+        this.getLayers().forEach((layer) => {
             container.addChild(layer);
         });
 
         // add all Object instances
-        this.getObjects(flatten).forEach(function (object) {
+        this.getObjects(flatten).forEach((object) => {
             container.addChild(object);
         });
 
@@ -28020,6 +28133,7 @@ function safeLoadLevel(levelId, options, restart) {
         state.restart();
     }
 }
+
 /**
  * Load a TMX level
  * @name loadTMXLevel
@@ -28044,6 +28158,7 @@ function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
     // add all level elements to the target container
     level.addTo(container, flatten, setViewportBounds);
 }
+
 
 /**
  * a level manager. once ressources loaded, the level manager contains all references of defined levels.
@@ -28288,7 +28403,7 @@ function checkLoadStatus(onload) {
             // trigger the onload callback
             // we call either the supplied callback (which takes precedence) or the global one
             var callback = onload || loader.onload;
-            setTimeout(function () {
+            setTimeout(() => {
                 callback();
                 emit(LOADER_COMPLETE);
             }, 300);
@@ -28303,6 +28418,7 @@ function checkLoadStatus(onload) {
         }, 100);
     }
 }
+
 /**
  * load Images
  * @example
@@ -28328,6 +28444,7 @@ function preloadImage(img, onload, onerror) {
     }
     imgList[img.name].src = img.src + loader.nocache;
 }
+
 /**
  * load a font face
  * @example
@@ -28356,13 +28473,14 @@ function preloadFontFace(data, onload, onerror) {
             // onloaded callback
             onload();
         }
-    }, function () {
+    }, () => {
         if (typeof onerror === "function") {
             // rejected
             onerror(data.name);
         }
     });
 }
+
 /**
  * preload TMX files
  * @ignore
@@ -28470,6 +28588,7 @@ function preloadTMX(tmxData, onload, onerror) {
     // send the request
     xmlhttp.send();
 }
+
 /**
  * preload JSON files
  * @ignore
@@ -28506,6 +28625,7 @@ function preloadJSON(data, onload, onerror) {
     // send the request
     xmlhttp.send();
 }
+
 /**
  * preload Binary files
  * @ignore
@@ -28536,6 +28656,7 @@ function preloadBinary(data, onload, onerror) {
     };
     httpReq.send();
 }
+
 /**
  * preload Binary files
  * @ignore
@@ -28566,6 +28687,7 @@ function preloadJavascript(data, onload, onerror) {
 
     document.getElementsByTagName("body")[0].appendChild(script);
 }
+
 /**
  * a small class to manage loading of stuff and manage resources
  * @namespace loader
@@ -29230,6 +29352,7 @@ class Sprite extends Renderable {
         if (typeof settings.z !== "undefined") {
             this.pos.z = settings.z;
         }
+
         // for sprite, addAnimation will return !=0
         if (this.addAnimation("default", null) !== 0) {
             // set as default
@@ -29329,7 +29452,7 @@ class Sprite extends Renderable {
         if (index == null) {
             index = [];
             // create a default animation with all frame
-            Object.keys(this.textureAtlas).forEach(function (v, i) {
+            Object.keys(this.textureAtlas).forEach((v, i) => {
                 index[i] = i;
             });
         }
@@ -30010,7 +30133,7 @@ class TextureAtlas {
             region = this.getAtlas(atlas)[name];
         } else {
             // look for the given region in each existing atlas
-            this.atlases.forEach(function (atlas) {
+            this.atlases.forEach((atlas) => {
                 if (typeof atlas[name] !== "undefined") {
                     // there should be only one
                     region = atlas[name];
@@ -31807,6 +31930,7 @@ function autoDetectRenderer(options) {
     }
     return new CanvasRenderer(options);
 }
+
 /**
  * callback for window resize event
  * @ignore
@@ -31881,6 +32005,7 @@ function onresize() {
         scale(settings.scale, settings.scale);
     }
 }
+
 /**
  * Select the HTML5 Canvas renderer
  * @name CANVAS
@@ -32032,7 +32157,7 @@ function init(width, height, options) {
     globalThis.addEventListener(
         "resize",
         utils.function.throttle(
-            function (e) {
+            (e) => {
                 emit(WINDOW_ONRESIZE, e);
             }, 100
         ), false
@@ -32041,7 +32166,7 @@ function init(width, height, options) {
     // Screen Orientation API
     globalThis.addEventListener(
         "orientationchange",
-        function (e) {
+        (e) => {
             emit(WINDOW_ONORIENTATION_CHANGE, e);
         },
         false
@@ -32049,7 +32174,7 @@ function init(width, height, options) {
     // pre-fixed implementation on mozzila
     globalThis.addEventListener(
         "onmozorientationchange",
-        function (e) {
+        (e) => {
             emit(WINDOW_ONORIENTATION_CHANGE, e);
         },
         false
@@ -32062,11 +32187,9 @@ function init(width, height, options) {
     }
 
     // Automatically update relative canvas position on scroll
-    globalThis.addEventListener("scroll", utils.function.throttle(
-        function (e) {
-            emit(WINDOW_ONSCROLL, e);
-        }, 100
-    ), false);
+    globalThis.addEventListener("scroll", utils.function.throttle((e) => {
+        emit(WINDOW_ONSCROLL, e);
+    }, 100), false);
 
     // register to the channel
     on(WINDOW_ONRESIZE, onresize, this);
@@ -32135,6 +32258,7 @@ function init(width, height, options) {
 
     return true;
 }
+
 /**
  * Create and return a new Canvas element
  * @function video.createCanvas
@@ -32166,6 +32290,7 @@ function createCanvas(width, height, returnOffscreenCanvas = false) {
 
     return _canvas;
 }
+
 /**
  * return a reference to the parent DOM element holding the main canvas
  * @function video.getParent
@@ -32174,6 +32299,7 @@ function createCanvas(width, height, returnOffscreenCanvas = false) {
 function getParent() {
     return parent;
 }
+
 /**
  * scale the "displayed" canvas by the given scalar.
  * this will modify the size of canvas element directly.
@@ -32338,9 +32464,9 @@ var utils = {
         }
 
         // parse the url
-        url.slice(1).split("&").filter(function (value) {
+        url.slice(1).split("&").filter((value) => {
             return (value !== "");
-        }).forEach(function (value) {
+        }).forEach((value) => {
             var kv = value.split("=");
             var k = kv.shift();
             var v = kv.join("=");
@@ -32628,6 +32754,7 @@ class Timer {
         }
     }
 }
+
 const timer = new Timer();
 
 var lastTime = 0;
@@ -32652,7 +32779,7 @@ if (!requestAnimationFrame || !cancelAnimationFrame) {
     requestAnimationFrame = function (callback) {
         var currTime = globalThis.performance.now();
         var timeToCall = Math.max(0, (1000 / timer.maxfps) - (currTime - lastTime));
-        var id = globalThis.setTimeout(function () {
+        var id = globalThis.setTimeout(() => {
             callback(currTime + timeToCall);
         }, timeToCall);
         lastTime = currTime + timeToCall;
@@ -33804,7 +33931,7 @@ class Tween {
     onComplete( onCompleteCallback ) {
         this._onCompleteCallback = onCompleteCallback;
         return this;
-    };
+    }
 
     /** @ignore */
     update( dt ) {
@@ -34468,7 +34595,7 @@ class Text extends Renderable {
      */
     setFont(font, size = 10) {
         // font name and type
-        var font_names = font.split(",").map(function (value) {
+        var font_names = font.split(",").map((value) => {
             value = value.trim();
             return (
                 !/(^".*"$)|(^'.*'$)/.test(value)
@@ -34781,6 +34908,7 @@ class BitmapText extends Renderable {
                 (settings.fontData.includes("info face")) ? settings.fontData : loader.getBinary(settings.fontData)
             );
         }
+
         // if floating was specified through settings
         if (typeof settings.floating !== "undefined") {
             this.floating = !!settings.floating;
@@ -35095,6 +35223,7 @@ function getValueFromPair(string, pattern) {
 
     return value[0].split("=")[1];
 }
+
 /**
  * Gets the first glyph in the map that is not a space character
  * @ignore
@@ -35112,6 +35241,7 @@ function getFirstGlyph(glyphs) {
     }
     return null;
 }
+
 /**
  * Creates a glyph to use for the space character
  * @ignore
@@ -35129,7 +35259,6 @@ function createSpaceGlyph(glyphs) {
         glyphs[spaceCharCode] = glyph;
     }
 }
-
 
 /**
  * Class for storing relevant data from the font file.
@@ -35862,20 +35991,331 @@ class NineSliceSprite extends Sprite {
 
 /**
  * @classdesc
- * GUI Object<br>
- * A very basic object to manage GUI elements <br>
- * The object simply register on the "pointerdown" <br>
- * or "touchstart" event and call the onClick function"
+ * This is a basic clickable container which you can use in your game UI.
+ * Use this for example if you want to display a button which contains
+ * text and images.
+ * @augments Container
+ */
+class UIBaseElement extends Container {
+    /**
+     *
+     * @param {number} x The x position of the container
+     * @param {number} y The y position of the container
+     * @param {number} w width of the container (default: viewport width)
+     * @param {number} h height of the container (default: viewport height)
+     */
+    constructor(x, y, w, h) {
+        super(x, y, w, h);
+        /**
+         * object can be clicked or not
+         * @type {boolean}
+         */
+        this.isClickable = true;
+
+        /**
+         * Tap and hold threshold timeout in ms
+         * @type {number}
+         * @default 250
+         */
+        this.holdThreshold = 250;
+
+        /**
+         * object can be tap and hold
+         * @type {boolean}
+         * @default false
+         */
+        this.isHoldable = false;
+
+        /**
+         * true if the pointer is over the object
+         * @type {boolean}
+         * @default false
+         */
+        this.hover = false;
+
+        // object has been updated (clicked,etc..)
+        this.holdTimeout = null;
+        this.released = true;
+
+        // GUI items use screen coordinates
+        this.floating = true;
+
+        // enable event detection
+        this.isKinematic = false;
+    }
+
+    /**
+     * function callback for the pointerdown event
+     * @ignore
+     */
+    clicked(event) {
+        // Check if left mouse button is pressed
+        if (event.button === 0 && this.isClickable) {
+            this.dirty = true;
+            this.released = false;
+            if (this.isHoldable) {
+                if (this.holdTimeout !== null) {
+                    timer.clearTimeout(this.holdTimeout);
+                }
+                this.holdTimeout = timer.setTimeout(
+                    this.hold.bind(this),
+                    this.holdThreshold,
+                    false
+                );
+                this.released = false;
+            }
+            return this.onClick(event);
+        }
+    }
+
+    /**
+     * function called when the object is pressed (to be extended)
+     * @param {Pointer} event the event object
+     * @returns {boolean} return false if we need to stop propagating the event
+     */
+    onClick(event) { // eslint-disable-line no-unused-vars
+        return false;
+    }
+
+    /**
+     * function callback for the pointerEnter event
+     * @ignore
+     */
+    enter(event) {
+        this.hover = true;
+        this.dirty = true;
+        return this.onOver(event);
+    }
+
+    /**
+     * function called when the pointer is over the object
+     * @param {Pointer} event the event object
+     */
+    onOver(event) { // eslint-disable-line no-unused-vars
+        // to be extended
+    }
+
+    /**
+     * function callback for the pointerLeave event
+     * @ignore
+     */
+    leave(event) {
+        this.hover = false;
+        this.dirty = true;
+        this.release(event);
+        return this.onOut(event);
+    }
+
+    /**
+     * function called when the pointer is leaving the object area
+     * @param {Pointer} event the event object
+     */
+    onOut(event) { // eslint-disable-line no-unused-vars
+        // to be extended
+    }
+
+    /**
+     * function callback for the pointerup event
+     * @ignore
+     */
+    release(event) {
+        if (this.released === false) {
+            this.released = true;
+            this.dirty = true;
+            timer.clearTimeout(this.holdTimeout);
+            return this.onRelease(event);
+        }
+    }
+
+    /**
+     * function called when the object is pressed and released (to be extended)
+     * @returns {boolean} return false if we need to stop propagating the event
+     */
+    onRelease() {
+        return false;
+    }
+
+    /**
+     * function callback for the tap and hold timer event
+     * @ignore
+     */
+    hold() {
+        timer.clearTimeout(this.holdTimeout);
+        this.dirty = true;
+        if (!this.released) {
+            this.onHold();
+        }
+    }
+
+    /**
+     * function called when the object is pressed and held<br>
+     * to be extended <br>
+     */
+    onHold() {}
+
+    /**
+     * function called when added to the game world or a container
+     * @ignore
+     */
+    onActivateEvent() {
+        // register pointer events
+        registerPointerEvent(
+            "pointerdown",
+            this,
+            this.clicked.bind(this)
+        );
+        registerPointerEvent("pointerup", this, this.release.bind(this));
+        registerPointerEvent(
+            "pointercancel",
+            this,
+            this.release.bind(this)
+        );
+        registerPointerEvent("pointerenter", this, this.enter.bind(this));
+        registerPointerEvent("pointerleave", this, this.leave.bind(this));
+    }
+
+    /**
+     * function called when removed from the game world or a container
+     * @ignore
+     */
+    onDeactivateEvent() {
+        // release pointer events
+        releasePointerEvent("pointerdown", this.hitbox);
+        releasePointerEvent("pointerup", this);
+        releasePointerEvent("pointercancel", this);
+        releasePointerEvent("pointerenter", this);
+        releasePointerEvent("pointerleave", this);
+        timer.clearTimeout(this.holdTimeout);
+    }
+}
+
+/**
+ * @classdesc
+ * This is a basic base text button which you can use in your Game UI.
+ * @augments UIBaseElement
+ */
+class UITextButton extends UIBaseElement {
+    /**
+     * A Text Button with an outlined background border, filled with background color.
+     * It uses a RoundRect as background and changes the background color on hovering over.
+     * The background will be drawn with 0.5 opacity, so that the background of the button is
+     * slightly shining through.
+     * @param {number} x x pos of the button
+     * @param {number} y y pos of the button
+     * @param {string} [settings.font] The name of the BitmapText font to use
+     * @param {number} [settings.size] The scale factor of the font (default: 1)
+     * @param {string} [settings.text] The text to display (default: 'click me')
+     * @param {string} [settings.bindKey] The key to bind the action to (default: none)
+     * @param {string} [settings.backgroundColor] The css value of a background color
+     * @param {string} [settings.hoverColor] The css value of a color to be used if the pointer hovers over the button
+     * @param {string} [settings.borderStrokeColor] The css value of a color to be used to draw the border
+     * @param {boolean} [settings.offScreenCanvas] Weather to use an offScreen canvas or not
+     * @param {string} [settings.fillStyle] The css value of a tint color to be used to tint the text
+     * @param {number} [settings.borderWidth] Width of the button
+     * @param {number} [settings.borderHeight] Height of the button
+     * @example
+     * // Create a new Button
+     * class PlayButton extends BaseTextButton {
+     *      constructor(x,y) {
+     *          super(x,y, {
+     *              font: 'my-font',
+     *              text: 'Play',
+     *              // if you omit the next two, size is calculated by the size of the text
+     *              borderWidth: 200,
+     *              borderHeight: 20,
+     *          });
+     *      }
+     *
+     *      onClick(){
+     *          state.change(state.PLAY);
+     *      }
+     * }
+     *
+     * game.world.addChild(new PlayButton(15,200));
+     */
+    constructor(x, y, settings) {
+        super(x, y);
+        settings.font = settings.font || "24Outline";
+        settings.size = settings.size || 1;
+        settings.text = settings.text || "<Click Me>";
+        settings.bindKey = settings.bindKey || -1;
+        settings.backgroundColor = settings.backgroundColor || "#00aa00";
+        settings.hoverColor = settings.hoverColor || "#00ff00";
+        settings.borderStrokeColor = settings.borderStrokeColor || "#000000";
+        settings.offScreenCanvas = settings.offScreenCanvas || false;
+        settings.fillStyle = settings.fillStyle || "#ffffff";
+        settings.lineWidth = settings.lineWidth || 1;
+        settings.anchorPoint = settings.anchorPoint || new Vector2d(0, 0);
+
+        let font = new BitmapText(x, y, settings);
+        let dimensions = font.measureText();
+        settings.borderWidth = settings.borderWidth || dimensions.width + 16;
+        settings.borderHeight = settings.borderHeight || dimensions.height + 16;
+
+        let border = new RoundRect(
+            x,
+            y,
+            settings.borderWidth,
+            settings.borderHeight
+        );
+        super.setShape(
+            x,
+            y,
+            border.getBounds().width,
+            border.getBounds().height
+        );
+
+        // build up
+        this.font = font;
+        this.dimensions = dimensions;
+        this.border = border;
+        this.settings = settings;
+
+        // adjust text position
+        this.font.pos.set(
+            Math.round((border.width - dimensions.width) / 2) + this.font.pos.x,
+            Math.round((border.height - dimensions.height) / 2) +
+                this.font.pos.y
+        );
+    }
+
+    draw(renderer) {
+        renderer.setGlobalAlpha(0.5);
+        if (!this.hover) {
+            renderer.setColor(this.settings.backgroundColor);
+        } else {
+            renderer.setColor(this.settings.hoverColor);
+        }
+
+        renderer.fill(this.border);
+        renderer.setGlobalAlpha(1);
+        renderer.setColor(this.settings.borderStrokeColor);
+        renderer.stroke(this.border);
+
+        // fix: supporting tint
+        renderer.setTint(this.font.tint, this.font.getOpacity());
+        this.font.draw(
+            renderer,
+            this.settings.text,
+            this.font.pos.x,
+            this.font.pos.y
+        );
+    }
+}
+
+/**
+ * @classdesc
+ *  This is a basic sprite based button which you can use in your Game UI.
  * @augments Sprite
  */
-class GUI_Object extends Sprite {
+class UISpriteElement extends Sprite {
     /**
      * @param {number} x the x coordinate of the GUI Object
      * @param {number} y the y coordinate of the GUI Object
      * @param {object} settings See {@link Sprite}
      * @example
      * // create a basic GUI Object
-     * class myButton extends GUI_Object {
+     * class myButton extends UISpriteElement {
      *    constructor(x, y) {
      *       var settings = {}
      *       settings.image = "button";
@@ -35906,10 +36346,8 @@ class GUI_Object extends Sprite {
 
         /**
          * object can be clicked or not
-         * @public
          * @type {boolean}
          * @default true
-         * @name GUI_Object#isClickable
          */
         this.isClickable = true;
 
@@ -35917,25 +36355,20 @@ class GUI_Object extends Sprite {
          * Tap and hold threshold timeout in ms
          * @type {number}
          * @default 250
-         * @name GUI_Object#holdThreshold
          */
         this.holdThreshold = 250;
 
         /**
          * object can be tap and hold
-         * @public
          * @type {boolean}
          * @default false
-         * @name GUI_Object#isHoldable
          */
         this.isHoldable = false;
 
         /**
          * true if the pointer is over the object
-         * @public
          * @type {boolean}
          * @default false
-         * @name GUI_Object#hover
          */
         this.hover = false;
 
@@ -35972,9 +36405,6 @@ class GUI_Object extends Sprite {
 
     /**
      * function called when the object is pressed (to be extended)
-     * @name onClick
-     * @memberof GUI_Object
-     * @public
      * @param {Pointer} event the event object
      * @returns {boolean} return false if we need to stop propagating the event
      */
@@ -35994,9 +36424,6 @@ class GUI_Object extends Sprite {
 
     /**
      * function called when the pointer is over the object
-     * @name onOver
-     * @memberof GUI_Object
-     * @public
      * @param {Pointer} event the event object
      */
     onOver(event) { // eslint-disable-line no-unused-vars
@@ -36016,9 +36443,6 @@ class GUI_Object extends Sprite {
 
     /**
      * function called when the pointer is leaving the object area
-     * @name onOut
-     * @memberof GUI_Object
-     * @public
      * @param {Pointer} event the event object
      */
     onOut(event) { // eslint-disable-line no-unused-vars
@@ -36040,9 +36464,6 @@ class GUI_Object extends Sprite {
 
     /**
      * function called when the object is pressed and released (to be extended)
-     * @name onRelease
-     * @memberof GUI_Object
-     * @public
      * @returns {boolean} return false if we need to stop propagating the event
      */
     onRelease() {
@@ -36064,9 +36485,6 @@ class GUI_Object extends Sprite {
     /**
      * function called when the object is pressed and held<br>
      * to be extended <br>
-     * @name onHold
-     * @memberof GUI_Object
-     * @public
      */
     onHold() {}
 
@@ -36200,11 +36618,11 @@ class Trigger extends Renderable {
             event: "level"
         };
 
-        [ "type", "container", "onLoaded", "flatten", "setViewportBounds", "to" ].forEach(function(property) {
+        [ "type", "container", "onLoaded", "flatten", "setViewportBounds", "to" ].forEach((property) => {
             if (typeof settings[property] !== "undefined") {
                 this.triggerSettings[property] = settings[property];
             }
-        }.bind(this));
+        });
 
         // add and configure the physic body
         var shape = settings.shapes;
@@ -36537,6 +36955,7 @@ class Draggable extends Renderable {
         super.destroy();
     }
 }
+
 /**
  * @classdesc
  * a base drop target object
@@ -36960,6 +37379,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
 
     return defaultParticleTexture;
 }
+
 /**
  * @classdesc
  * Particle Emitter Object.
@@ -37647,6 +38067,7 @@ function warning(deprecated, replacement, version) {
         console.groupEnd();
     }
 }
+
 /**
  * Alias of {@link TextureAtlas}
  * @public
@@ -37730,6 +38151,25 @@ Renderer.prototype.getScreenContext = function()  {
     warning("getScreenContext", "getContext", "13.1.0");
     return this.getContext();
 };
+
+/**
+ * @classdesc
+ * A very basic object to manage GUI elements
+ * @augments Sprite
+ * @deprecated since 14.0.0
+ * @see UISpriteElement
+ */
+ class GUI_Object extends UISpriteElement {
+    /**
+     * @param {number} x the x coordinate of the GUI Object
+     * @param {number} y the y coordinate of the GUI Object
+     * @param {object} settings See {@link Sprite}
+     */
+    constructor(x, y, settings) {
+        warning("GUI_Object", "UISpriteElement", "14.0.0");
+        super(x, y, settings);
+    }
+}
 
 // ES5/ES6 polyfills
 
@@ -37847,11 +38287,12 @@ function boot() {
     // mark melonJS as initialized
     initialized = true;
 }
+
 // call the library init function when ready
-onReady(function () {
+onReady(() => {
     {
        boot();
     }
 });
 
-export { BitmapText, BitmapTextData, Body, Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Point, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state, timer, utils, version, video, warning };
+export { BitmapText, BitmapTextData, Body, Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Point, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, UIBaseElement, UISpriteElement, UITextButton, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state, timer, utils, version, video, warning };
