@@ -94,6 +94,6 @@
     "serve": "python3 -m http.server",
     "prepublishOnly": "npm run dist && npm run test",
     "clean": "del-cli --force build/*.js dist/*.js dist/*.d.ts docs src/**/*.d.ts",
-    "types": "tsc dist/melonjs.module.js --declaration --allowJs --emitDeclarationOnly"
+    "types": "tsc src/index.js --declaration --allowJs --emitDeclarationOnly --outfile dist/melonjs.module.d.ts"
   }
 }
