@@ -1,22 +1,20 @@
-import Vector2d from "../math/vector2";
-import BitmapText from "../text/bitmaptext";
-import RoundRect from "../geometries/roundrect";
-import UIBaseElement from "./uibaseelement";
+import Vector2d from "../../math/vector2.js";
+import BitmapText from "../../text/bitmaptext.js";
+import RoundRect from "../../geometries/roundrect.js";
+import UIBaseElement from "./uibaseelement.js";
 
 
 /**
  * @classdesc
  * This is a basic base text button which you can use in your Game UI.
- *
- * @augments BaseClickableContainer
+ * @augments UIBaseElement
  */
-export default class UITextButton extends UIBaseElement {
+class UITextButton extends UIBaseElement {
     /**
      * A Text Button with an outlined background border, filled with background color.
      * It uses a RoundRect as background and changes the background color on hovering over.
      * The background will be drawn with 0.5 opacity, so that the background of the button is
      * slightly shining through.
-     *
      * @param {number} x x pos of the button
      * @param {number} y y pos of the button
      * @param {string} [settings.font] The name of the BitmapText font to use
@@ -30,6 +28,7 @@ export default class UITextButton extends UIBaseElement {
      * @param {string} [settings.fillStyle] The css value of a tint color to be used to tint the text
      * @param {number} [settings.borderWidth] Width of the button
      * @param {number} [settings.borderHeight] Height of the button
+     * @example
      * // Create a new Button
      * class PlayButton extends BaseTextButton {
      *      constructor(x,y) {
@@ -93,10 +92,6 @@ export default class UITextButton extends UIBaseElement {
             Math.round((border.height - dimensions.height) / 2) +
                 this.font.pos.y
         );
-
-        //console.log("Font:   " + this.font.pos.x + "/" + this.font.pos.y);
-        //console.log("Border: " + JSON.stringify(this.border.getBounds()));
-        //console.log("Renderable: " + this.pos.x + " / " + this.pos.y);
     }
 
     draw(renderer) {
@@ -122,3 +117,5 @@ export default class UITextButton extends UIBaseElement {
         );
     }
 }
+export default UITextButton;
+

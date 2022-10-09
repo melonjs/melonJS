@@ -1,18 +1,15 @@
-import game from "../game";
-import Container from "./container";
-import timer  from "../system/timer";
-import input  from "../input/input";
+import Container from "./../container.js";
+import timer from "../../system/timer.js";
+import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js";
 
 /**
  * @classdesc
  * This is a basic clickable container which you can use in your game UI.
  * Use this for example if you want to display a button which contains
  * text and images.
- *
  * @augments Container
-
  */
-export default class UIBaseElement extends Container {
+class UIBaseElement extends Container {
     /**
      *
      * @param {number} x The x position of the container
@@ -20,14 +17,11 @@ export default class UIBaseElement extends Container {
      * @param {number} w width of the container (default: viewport width)
      * @param {number} h height of the container (default: viewport height)
      */
-    constructor(x, y, w = game.viewport.width, h = game.viewport.height) {
+    constructor(x, y, w, h) {
         super(x, y, w, h);
         /**
          * object can be clicked or not
-         * @public
          * @type {boolean}
-         * @default true
-         * @name BaseClickableContainer#isClickable
          */
         this.isClickable = true;
 
@@ -35,25 +29,20 @@ export default class UIBaseElement extends Container {
          * Tap and hold threshold timeout in ms
          * @type {number}
          * @default 250
-         * @name BaseClickableContainer#holdThreshold
          */
         this.holdThreshold = 250;
 
         /**
          * object can be tap and hold
-         * @public
          * @type {boolean}
          * @default false
-         * @name BaseClickableContainer#isHoldable
          */
         this.isHoldable = false;
 
         /**
          * true if the pointer is over the object
-         * @public
          * @type {boolean}
          * @default false
-         * @name BaseClickableContainer#hover
          */
         this.hover = false;
 
@@ -94,9 +83,6 @@ export default class UIBaseElement extends Container {
 
     /**
      * function called when the object is pressed (to be extended)
-     * @name onClick
-     * @memberof BaseClickableContainer
-     * @public
      * @param {Pointer} event the event object
      * @returns {boolean} return false if we need to stop propagating the event
      */
@@ -116,9 +102,6 @@ export default class UIBaseElement extends Container {
 
     /**
      * function called when the pointer is over the object
-     * @name onOver
-     * @memberof BaseClickableContainer
-     * @public
      * @param {Pointer} event the event object
      */
     onOver(event) { // eslint-disable-line no-unused-vars
@@ -138,9 +121,6 @@ export default class UIBaseElement extends Container {
 
     /**
      * function called when the pointer is leaving the object area
-     * @name onOut
-     * @memberof BaseClickableContainer
-     * @public
      * @param {Pointer} event the event object
      */
     onOut(event) { // eslint-disable-line no-unused-vars
@@ -162,9 +142,6 @@ export default class UIBaseElement extends Container {
 
     /**
      * function called when the object is pressed and released (to be extended)
-     * @name onRelease
-     * @memberof BaseClickableContainer
-     * @public
      * @returns {boolean} return false if we need to stop propagating the event
      */
     onRelease() {
@@ -186,9 +163,6 @@ export default class UIBaseElement extends Container {
     /**
      * function called when the object is pressed and held<br>
      * to be extended <br>
-     * @name onHold
-     * @memberof BaseClickableContainer
-     * @public
      */
     onHold() {}
 
@@ -198,19 +172,19 @@ export default class UIBaseElement extends Container {
      */
     onActivateEvent() {
         // register pointer events
-        input.registerPointerEvent(
+        registerPointerEvent(
             "pointerdown",
             this,
             this.clicked.bind(this)
         );
-        input.registerPointerEvent("pointerup", this, this.release.bind(this));
-        input.registerPointerEvent(
+        registerPointerEvent("pointerup", this, this.release.bind(this));
+        registerPointerEvent(
             "pointercancel",
             this,
             this.release.bind(this)
         );
-        input.registerPointerEvent("pointerenter", this, this.enter.bind(this));
-        input.registerPointerEvent("pointerleave", this, this.leave.bind(this));
+        registerPointerEvent("pointerenter", this, this.enter.bind(this));
+        registerPointerEvent("pointerleave", this, this.leave.bind(this));
     }
 
     /**
@@ -219,11 +193,12 @@ export default class UIBaseElement extends Container {
      */
     onDeactivateEvent() {
         // release pointer events
-        input.releasePointerEvent("pointerdown", this.hitbox);
-        input.releasePointerEvent("pointerup", this);
-        input.releasePointerEvent("pointercancel", this);
-        input.releasePointerEvent("pointerenter", this);
-        input.releasePointerEvent("pointerleave", this);
+        releasePointerEvent("pointerdown", this.hitbox);
+        releasePointerEvent("pointerup", this);
+        releasePointerEvent("pointercancel", this);
+        releasePointerEvent("pointerenter", this);
+        releasePointerEvent("pointerleave", this);
         timer.clearTimeout(this.holdTimeout);
     }
 }
+export default UIBaseElement;

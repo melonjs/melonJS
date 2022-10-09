@@ -1,7 +1,7 @@
 import { TextureAtlas } from "./../video/texture/atlas.js";
 import Renderer from "./../video/renderer.js";
 import { Draggable, DropTarget } from "./../renderable/dragndrop.js";
-
+import UISpriteElement from "./../renderable/ui/uispriteelement.js";
 /*
  * placeholder for all deprecated classes and corresponding alias for backward compatibility
  */
@@ -126,3 +126,22 @@ Renderer.prototype.getScreenContext = function()  {
     warning("getScreenContext", "getContext", "13.1.0");
     return this.getContext();
 };
+
+/**
+ * @classdesc
+ * A very basic object to manage GUI elements
+ * @augments Sprite
+ * @deprecated since 14.0.0
+ * @see UISpriteElement
+ */
+ export class GUI_Object extends UISpriteElement {
+    /**
+     * @param {number} x the x coordinate of the GUI Object
+     * @param {number} y the y coordinate of the GUI Object
+     * @param {object} settings See {@link Sprite}
+     */
+    constructor(x, y, settings) {
+        warning("GUI_Object", "UISpriteElement", "14.0.0");
+        super(x, y, settings);
+    }
+}

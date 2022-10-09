@@ -52,7 +52,9 @@ import ColorLayer from "./renderable/colorlayer.js";
 import ImageLayer from "./renderable/imagelayer.js";
 import Sprite from "./renderable/sprite.js";
 import NineSliceSprite from "./renderable/nineslicesprite.js";
-import GUI_Object from "./renderable/GUI.js";
+import UIBaseElement from "./renderable/ui/uibaseelement.js";
+import UITextButton from "./renderable/ui/uitextbutton.js";
+import UISpriteElement from "./renderable/ui/uispriteelement.js";
 import Collectable from "./renderable/collectable.js";
 import Trigger from "./renderable/trigger.js";
 import Light2d from "./renderable/light2d.js";
@@ -141,7 +143,9 @@ export {
     ImageLayer,
     Sprite,
     NineSliceSprite,
-    GUI_Object,
+    UIBaseElement,
+    UITextButton,
+    UISpriteElement,
     Collectable,
     Trigger,
     Light2d,

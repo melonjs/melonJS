@@ -1,24 +1,20 @@
-import timer from "./../system/timer.js";
-import Sprite from "./sprite.js";
-import { registerPointerEvent, releasePointerEvent} from "./../input/input.js";
-
+import timer from "./../../system/timer.js";
+import Sprite from "./../sprite.js";
+import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js";
 
 /**
  * @classdesc
- * GUI Object<br>
- * A very basic object to manage GUI elements <br>
- * The object simply register on the "pointerdown" <br>
- * or "touchstart" event and call the onClick function"
+ *  This is a basic sprite based button which you can use in your Game UI.
  * @augments Sprite
  */
-class GUI_Object extends Sprite {
+class UISpriteElement extends Sprite {
     /**
      * @param {number} x the x coordinate of the GUI Object
      * @param {number} y the y coordinate of the GUI Object
      * @param {object} settings See {@link Sprite}
      * @example
      * // create a basic GUI Object
-     * class myButton extends GUI_Object {
+     * class myButton extends UISpriteElement {
      *    constructor(x, y) {
      *       var settings = {}
      *       settings.image = "button";
@@ -49,10 +45,8 @@ class GUI_Object extends Sprite {
 
         /**
          * object can be clicked or not
-         * @public
          * @type {boolean}
          * @default true
-         * @name GUI_Object#isClickable
          */
         this.isClickable = true;
 
@@ -60,25 +54,20 @@ class GUI_Object extends Sprite {
          * Tap and hold threshold timeout in ms
          * @type {number}
          * @default 250
-         * @name GUI_Object#holdThreshold
          */
         this.holdThreshold = 250;
 
         /**
          * object can be tap and hold
-         * @public
          * @type {boolean}
          * @default false
-         * @name GUI_Object#isHoldable
          */
         this.isHoldable = false;
 
         /**
          * true if the pointer is over the object
-         * @public
          * @type {boolean}
          * @default false
-         * @name GUI_Object#hover
          */
         this.hover = false;
 
@@ -115,9 +104,6 @@ class GUI_Object extends Sprite {
 
     /**
      * function called when the object is pressed (to be extended)
-     * @name onClick
-     * @memberof GUI_Object
-     * @public
      * @param {Pointer} event the event object
      * @returns {boolean} return false if we need to stop propagating the event
      */
@@ -137,9 +123,6 @@ class GUI_Object extends Sprite {
 
     /**
      * function called when the pointer is over the object
-     * @name onOver
-     * @memberof GUI_Object
-     * @public
      * @param {Pointer} event the event object
      */
     onOver(event) { // eslint-disable-line no-unused-vars
@@ -159,9 +142,6 @@ class GUI_Object extends Sprite {
 
     /**
      * function called when the pointer is leaving the object area
-     * @name onOut
-     * @memberof GUI_Object
-     * @public
      * @param {Pointer} event the event object
      */
     onOut(event) { // eslint-disable-line no-unused-vars
@@ -183,9 +163,6 @@ class GUI_Object extends Sprite {
 
     /**
      * function called when the object is pressed and released (to be extended)
-     * @name onRelease
-     * @memberof GUI_Object
-     * @public
      * @returns {boolean} return false if we need to stop propagating the event
      */
     onRelease() {
@@ -207,9 +184,6 @@ class GUI_Object extends Sprite {
     /**
      * function called when the object is pressed and held<br>
      * to be extended <br>
-     * @name onHold
-     * @memberof GUI_Object
-     * @public
      */
     onHold() {}
 
@@ -240,5 +214,4 @@ class GUI_Object extends Sprite {
         timer.clearTimeout(this.holdTimeout);
     }
 }
-
-export default GUI_Object;
+export default UISpriteElement;
