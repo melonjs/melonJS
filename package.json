@@ -39,6 +39,7 @@
   },
   "main": "dist/melonjs.module.js",
   "module": "dist/melonjs.module.js",
+  "types": "dist/melonjs.module.d.ts",
   "files": [
     "dist/melonjs.module.js",
     "dist/melonjs.module.d.ts",
