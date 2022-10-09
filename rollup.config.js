@@ -24,15 +24,15 @@ export default [
         input: "src/**/*.js",
         plugins: [
             multiInput(),
-            // resolve({
-            //     mainFields: ["module"],
-            //     browser: true,
-            //     preferBuiltins: false,
-            // }),
-            // commonjs({
-            //     include: "node_modules/**",
-            //     sourceMap: false,
-            // }),
+            resolve({
+                mainFields: ["module"],
+                browser: true,
+                preferBuiltins: false,
+            }),
+            commonjs({
+                include: "node_modules/**",
+                sourceMap: false,
+            }),
             replace({
                 values: {
                     __VERSION__: pkg.version,
@@ -47,6 +47,7 @@ export default [
         ],
         output: {
             dir: "build/",
+            preserveModules: true,
             banner: license,
             format: "esm",
         },
