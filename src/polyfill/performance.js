@@ -8,7 +8,7 @@ Date.now = (Date.now || function () {  // thanks IE8
 
 if ("now" in globalThis.performance === false) {
 
-    var nowOffset = Date.now();
+    let nowOffset = Date.now();
 
     if (performance.timing && performance.timing.navigationStart) {
       nowOffset = performance.timing.navigationStart;
