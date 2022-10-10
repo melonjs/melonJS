@@ -14,6 +14,7 @@
 ### Fixed
 - Build: fix typescript generation (d.ts), no more missing API or modules
 - Container: fix Container class initialization when no default viewport have been created
+- Core: fix a regression with Ejecta platform detection (following ES6 refactoring)
 
 ## [13.4.0] (melonJS 2) - _2022-09-27_
 

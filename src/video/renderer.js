@@ -70,7 +70,7 @@ class Renderer {
         this.currentBlendMode = "none";
 
         // create the main screen canvas
-        if (device.ejecta === true) {
+        if (device.platform.ejecta === true) {
             // a main canvas is already automatically created by Ejecta
             this.canvas = document.getElementById("canvas");
         } else if (typeof globalThis.canvas !== "undefined") {
