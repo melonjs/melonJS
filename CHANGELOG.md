@@ -3,18 +3,17 @@
 ## [14.0.0] (melonJS 2) - _2022-xx-xx_
 
 ### Added
-- UI: New `UIBaseElement` base object, a clickable container base UI element (thanks @wpernath)
-- UI: New `UITextButton` base object, a clickable roundRect & Text base button (thanks @wpernath)
+- UI: New `UIBaseElement` class, a clickable container base UI element (thanks @wpernath)
+- UI: New `UITextButton` class, a clickable roundRect & Text base button (thanks @wpernath)
 
 ### Changed
-- UI: the base `GUI_Object` object is now deprecated and replaced by `UISpriteElement`, a Sprite based clickable element
+- UI: the base `GUI_Object` class is now deprecated and replaced by `UISpriteElement`, a Sprite based clickable element
 - Distribution: Build process will now only output a ES6 Bundle and the TS Declaration, ES5 is now fully deprecated
 - Test Units: replaced the "old" ES5 based Jasmine+Karma framework by a modern ES6 based Mocha+Puppeteer one (thanks @L1lith)
 
 ### Fixed
 - Build: fix typescript generation (d.ts), no more missing API or modules
 - Container: fix Container class initialization when no default viewport have been created
-
 
 ## [13.4.0] (melonJS 2) - _2022-09-27_
 
