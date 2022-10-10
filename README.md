@@ -156,14 +156,14 @@ Download melonJS
 
 The latest builds with corresponding release note are available for direct download [here](https://github.com/melonjs/melonJS/releases).
 
-Since version 10.0.0 melonJS provides different build options :
+melonJS 2 now only provides an ES6 Bundle :
 
 | build               | description |
 | ------------------- | ----------- |
 | `melonjs.module.js` | the ES6 Module (ESM) Bundle |
 | `melonjs.module.d.ts` | typescript declaration file for the ES6 Module (ESM) Bundle |
-| `melonjs.js`        | a ES5 UMD Bundle (directly transpiled from the ES6 version) |
-| `melonjs.min.js`    | a minified version of the ES5 UMD bundle |
+
+>Note: if you need your application to be compatible with ES5, refer to our [boilerplate](https://github.com/melonjs/es6-boilerplate) that provides automatic transpiling to ES5.
 
 Alternatively, the latest version of melonJS can be installed through [NPM](https://www.npmjs.com/package/melonjs) :
 
@@ -201,9 +201,7 @@ Then build the melonJS source by running:
 
     $ npm run build
 
-The generated library will be available under the `build` directory :
-- `melonjs.js` : plain ES5 UMD bundle
-- `melonjs.min.js` : minified ES5 UMD bundle
+The generated files will be available under the `build` directory :
 - `melonjs.module.js` : plain ES6 module
 - `melonjs.module.d.ts` : typescript declaration for the ES6 Module
 
