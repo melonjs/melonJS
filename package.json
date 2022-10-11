@@ -37,7 +37,7 @@
   "engines": {
     "node": ">= 16"
   },
-  "main": "dist/melonjs.mjs/index.js",
+  "main": "dist/melonjs.module.js",
   "module": "dist/melonjs.module.js",
   "types": "dist/melonjs.module.d.ts",
   "files": [
@@ -54,8 +54,7 @@
     "core-js": "^3.25.5",
     "earcut": "2.2.4",
     "eventemitter3": "^4.0.7",
-    "howler": "2.2.3",
-    "rollup-plugin-rename": "^1.0.1"
+    "howler": "2.2.3"
   },
   "devDependencies": {
     "@fastify/static": "^6.5.0",
@@ -84,7 +83,7 @@
   },
   "scripts": {
     "build": "npm run lint && rollup -c --silent",
-    "dist": " npm run build && mkdirp dist && cp -fR build/*.* dist/ && npm run types",
+    "dist": " npm run build && mkdirp dist && cp -f build/*.js dist/ && npm run types",
     "lint": "eslint src rollup.config.js",
     "pretest": "cp -f ./build/melonjs.module.js ./tests/browser/public/lib",
     "test": "npm run test-node && mocha ./tests/browser/spec/*.js --reporter spec --bail --timeout 10000",
@@ -94,7 +93,7 @@
     "doc": "npm run doc-prod",
     "serve": "python3 -m http.server",
     "prepublishOnly": "npm run dist && npm run test",
-    "clean": "del-cli --force build/*.* dist/*.* docs",
+    "clean": "del-cli --force build/*.js dist/*.js dist/*.d.ts docs src/**/*.d.ts",
     "types": "tsc src/index.js --declaration --allowJs --emitDeclarationOnly --outfile dist/melonjs.module.d.ts"
   }
 }
