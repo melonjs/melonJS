@@ -1233,7 +1233,7 @@ Date.now = (Date.now || function () {  // thanks IE8
 
 if ("now" in globalThis.performance === false) {
 
-    var nowOffset = Date.now();
+    let nowOffset = Date.now();
 
     if (performance.timing && performance.timing.navigationStart) {
       nowOffset = performance.timing.navigationStart;
@@ -10286,7 +10286,7 @@ class Renderer {
         this.currentBlendMode = "none";
 
         // create the main screen canvas
-        if (undefined === true) {
+        if (platform.ejecta === true) {
             // a main canvas is already automatically created by Ejecta
             this.canvas = document.getElementById("canvas");
         } else if (typeof globalThis.canvas !== "undefined") {
