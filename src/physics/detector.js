@@ -2,6 +2,8 @@ import * as SAT from "./sat.js";
 import ResponseObject from "./response.js";
 import Vector2d from "./../math/vector2.js";
 import game from "./../game.js";
+import Bounds from "./bounds.js";
+
 
 // a dummy object when using Line for raycasting
 let dummyObj = {
@@ -13,6 +15,9 @@ let dummyObj = {
         }
     }
 };
+
+let boundsA = new Bounds();
+let boundsB = new Bounds();
 
 // the global response object used for collisions
 let globalResponse = new ResponseObject();
@@ -28,12 +33,16 @@ let globalResponse = new ResponseObject();
  * @returns {boolean} true if they should collide, false otherwise
  */
 function shouldCollide(a, b) {
+    var bodyA = a.body,
+        bodyB = b.body;
     return (
+        a !== b &&
         a.isKinematic !== true && b.isKinematic !== true &&
-        typeof a.body === "object" && typeof b.body === "object" &&
-        !(a.body.isStatic === true && b.body.isStatic === true) &&
-        (a.body.collisionMask & b.body.collisionType) !== 0 &&
-        (a.body.collisionType & b.body.collisionMask) !== 0
+        typeof bodyA === "object" && typeof bodyB === "object" &&
+        bodyA.shapes.length > 0 && bodyB.shapes.length > 0 &&
+        !(bodyA.isStatic === true && bodyB.isStatic === true) &&
+        (bodyA.collisionMask & bodyB.collisionType) !== 0 &&
+        (bodyA.collisionType & bodyB.collisionMask) !== 0
     );
 }
 
@@ -52,60 +61,52 @@ export function collisionCheck(objA, response = globalResponse) {
     // retreive a list of potential colliding objects from the game world
     var candidates = game.world.broadphase.retrieve(objA);
 
-    for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
+    boundsA.addBounds(objA.getBounds(), true);
+    boundsA.addBounds(objA.body.getBounds());
 
+    candidates.forEach((objB) => {
         // check if both objects "should" collide
-        if ((objB !== objA) && shouldCollide(objA, objB) &&
+        if (shouldCollide(objA, objB)) {
+
+            boundsB.addBounds(objB.getBounds(), true);
+            boundsB.addBounds(objB.body.getBounds());
+
             // fast AABB check if both bounding boxes are overlaping
-            objA.body.getBounds().overlaps(objB.body.getBounds())) {
+            if (boundsA.overlaps(boundsB)) {
+                // for each shape in body A
+                objA.body.shapes.forEach((shapeA, indexA) => {
+                    // for each shape in body B
+                    objB.body.shapes.forEach((shapeB, indexB) => {
+                        // full SAT collision check
+                        if (SAT["test" + shapeA.shapeType + shapeB.shapeType].call(
+                                this,
+                                objA, // a reference to the object A
+                                shapeA,
+                                objB,  // a reference to the object B
+                                shapeB,
+                                // clear response object before reusing
+                                response.clear()) === true
+                        ) {
+                            // we touched something !
+                            collisionCounter++;
 
-            // go trough all defined shapes in A
-            var aLen = objA.body.shapes.length;
-            var bLen = objB.body.shapes.length;
-            if (aLen === 0 || bLen === 0) {
-                continue;
+                            // set the shape index
+                            response.indexShapeA = indexA;
+                            response.indexShapeB = indexB;
+
+                            // execute the onCollision callback
+                            if (objA.onCollision && objA.onCollision(response, objB) !== false && objA.body.isStatic === false) {
+                                objA.body.respondToCollision.call(objA.body, response);
+                            }
+                            if (objB.onCollision && objB.onCollision(response, objA) !== false && objB.body.isStatic === false) {
+                                objB.body.respondToCollision.call(objB.body, response);
+                            }
+                        }
+                    });
+                });
             }
-
-            var indexA = 0;
-            do {
-                var shapeA = objA.body.getShape(indexA);
-                // go through all defined shapes in B
-                var indexB = 0;
-                do {
-                    var shapeB = objB.body.getShape(indexB);
-
-                    // full SAT collision check
-                    if (SAT["test" + shapeA.shapeType + shapeB.shapeType]
-                        .call(
-                            this,
-                            objA, // a reference to the object A
-                            shapeA,
-                            objB,  // a reference to the object B
-                            shapeB,
-                             // clear response object before reusing
-                            response.clear()) === true
-                    ) {
-                        // we touched something !
-                        collisionCounter++;
-
-                        // set the shape index
-                        response.indexShapeA = indexA;
-                        response.indexShapeB = indexB;
-
-                        // execute the onCollision callback
-                        if (objA.onCollision && objA.onCollision(response, objB) !== false && objA.body.isStatic === false) {
-                            objA.body.respondToCollision.call(objA.body, response);
-                        }
-                        if (objB.onCollision && objB.onCollision(response, objA) !== false && objB.body.isStatic === false) {
-                            objB.body.respondToCollision.call(objB.body, response);
-                        }
-                    }
-                    indexB++;
-                } while (indexB < bLen);
-                indexA++;
-            } while (indexA < aLen);
         }
-    }
+    });
     // we could return the amount of objects we collided with ?
     return collisionCounter > 0;
 }
