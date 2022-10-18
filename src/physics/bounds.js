@@ -238,13 +238,16 @@ class Bounds {
      */
     addBounds(bounds, clear = false) {
         if (clear === true) {
-            this.clear();
+            this.max.x = bounds.max.x;
+            this.min.x = bounds.min.x;
+            this.max.y = bounds.max.y;
+            this.min.y = bounds.min.y;
+        } else {
+            if (bounds.max.x > this.max.x) this.max.x = bounds.max.x;
+            if (bounds.min.x < this.min.x) this.min.x = bounds.min.x;
+            if (bounds.max.y > this.max.y) this.max.y = bounds.max.y;
+            if (bounds.min.y < this.min.y) this.min.y = bounds.min.y;
         }
-
-        if (bounds.max.x > this.max.x) this.max.x = bounds.max.x;
-        if (bounds.min.x < this.min.x) this.min.x = bounds.min.x;
-        if (bounds.max.y > this.max.y) this.max.y = bounds.max.y;
-        if (bounds.min.y < this.min.y) this.min.y = bounds.min.y;
     }
 
     /**
