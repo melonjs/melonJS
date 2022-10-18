@@ -1,5 +1,10 @@
 # Changelog
 
+## [14.0.2] (melonJS 2) - _2022-10-18_
+
+### Fixed
+- Build: fix wrong distribution files being published on NPM
+
 ## [14.0.1] (melonJS 2) - _2022-10-18_
 
 ### Fixed
