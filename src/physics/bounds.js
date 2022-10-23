@@ -7,7 +7,7 @@ import Vector2d from "./../math/vector2.js";
  */
 class Bounds {
     /**
-     * @param {Vector2d[]} [vertices] an array of me.Vector2d points
+     * @param {Vector2d[]} [vertices] - an array of me.Vector2d points
      */
     constructor(vertices) {
         // @ignore
@@ -203,7 +203,7 @@ class Bounds {
      * Updates bounds using the given vertices
      * @name update
      * @memberof Bounds
-     * @param {Vector2d[]} vertices an array of me.Vector2d points
+     * @param {Vector2d[]} vertices - an array of me.Vector2d points
      */
     update(vertices) {
         this.add(vertices, true);
@@ -213,8 +213,8 @@ class Bounds {
      * add the given vertices to the bounds definition.
      * @name add
      * @memberof Bounds
-     * @param {Vector2d[]} vertices an array of me.Vector2d points
-     * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
+     * @param {Vector2d[]} vertices - an array of me.Vector2d points
+     * @param {boolean} [clear=false] - either to reset the bounds before adding the new vertices
      */
     add(vertices, clear = false) {
         if (clear === true) {
@@ -234,7 +234,7 @@ class Bounds {
      * @name addBounds
      * @memberof Bounds
      * @param {Bounds} bounds
-     * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
+     * @param {boolean} [clear=false] - either to reset the bounds before adding the new vertices
      */
     addBounds(bounds, clear = false) {
         if (clear === true) {
@@ -254,8 +254,8 @@ class Bounds {
      * add the given point to the bounds definition.
      * @name addPoint
      * @memberof Bounds
-     * @param {Vector2d|Point} point the point to be added to the bounds
-     * @param {Matrix2d} [m] an optional transform to apply to the given point (only if the given point is a vector)
+     * @param {Vector2d|Point} point - the point to be added to the bounds
+     * @param {Matrix2d} [m] - an optional transform to apply to the given point (only if the given point is a vector)
      */
     addPoint(point, m) {
         if ((typeof m !== "undefined") && (typeof point.rotate === "function")) {
@@ -276,7 +276,7 @@ class Bounds {
      * @param {number} y0 - top Y coordinates of the quad
      * @param {number} x1 - right X coordinates of the quad
      * @param {number} y1 - bottom y coordinates of the quad
-     * @param {Matrix2d} [m] an optional transform to apply to the given frame coordinates
+     * @param {Matrix2d} [m] - an optional transform to apply to the given frame coordinates
      */
     addFrame(x0, y0, x1, y1, m) {
         var v = pool.pull("Vector2d");

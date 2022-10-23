@@ -21,7 +21,7 @@ function getValueFromPair(string, pattern) {
  * @ignore
  * @name _getFirstGlyph
  * @memberof BitmapTextData
- * @param {object} glyphs the map of glyphs, each key is a char code
+ * @param {object} glyphs - the map of glyphs, each key is a char code
  * @returns {Glyph}
  */
 function getFirstGlyph(glyphs) {
@@ -39,7 +39,7 @@ function getFirstGlyph(glyphs) {
  * @ignore
  * @name createSpaceGlyph
  * @memberof BitmapTextData
- * @param {object} glyphs the map of glyphs, each key is a char code
+ * @param {object} glyphs - the map of glyphs, each key is a char code
  */
 function createSpaceGlyph(glyphs) {
     var spaceCharCode = " ".charCodeAt(0);

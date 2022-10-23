@@ -14,7 +14,7 @@ const REMOVE_EXT = /\.[^\.]*$/;
  * @public
  * @memberof utils.file
  * @name getBasename
- * @param  {string} path path containing the filename
+ * @param  {string} path- -  path containing the filename
  * @returns {string} the base name without path information.
  */
 export function getBasename(path) {
@@ -26,7 +26,7 @@ export function getBasename(path) {
  * @public
  * @memberof utils.file
  * @name getExtension
- * @param  {string} path path containing the filename
+ * @param  {string} path- -  path containing the filename
  * @returns {string} filename extension.
  */
 export function getExtension(path) {

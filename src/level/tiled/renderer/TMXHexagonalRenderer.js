@@ -26,7 +26,7 @@ const offsetsStaggerY = [
  */
 class TMXHexagonalRenderer extends TMXRenderer {
     /**
-     * @param {TMXTileMap} map the TMX map
+     * @param {TMXTileMap} map - the TMX map
      */
     constructor(map) {
         super(
@@ -81,7 +81,7 @@ class TMXHexagonalRenderer extends TMXRenderer {
      * return the bounding rect for this map renderer
      * @name TMXHexagonalRenderer#getBounds
      * @public
-     * @param {TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
+     * @param {TMXLayer} [layer] - calculate the bounding rect for a specific layer (will return a new bounds object)
      * @returns {Bounds}
      */
     getBounds(layer) {

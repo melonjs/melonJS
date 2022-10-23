@@ -184,10 +184,10 @@ var cssToRGB = new Map();
  */
 class Color {
     /**
-     * @param {number} [r=0] red component or array of color components
-     * @param {number} [g=0] green component
-     * @param {number} [b=0] blue component
-     * @param {number} [alpha=1.0] alpha value
+     * @param {number} [r=0] - red component or array of color components
+     * @param {number} [g=0] - green component
+     * @param {number} [b=0] - blue component
+     * @param {number} [alpha=1.0] - alpha value
      */
     constructor(r = 0, g = 0, b = 0, alpha = 1.0) {
         this.onResetEvent(r, g, b, alpha);
@@ -257,10 +257,10 @@ class Color {
 
     /**
      * Set this color to the specified value.
-     * @param {number} r red component [0 .. 255]
-     * @param {number} g green component [0 .. 255]
-     * @param {number} b blue component [0 .. 255]
-     * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
+     * @param {number} r - red component [0 .. 255]
+     * @param {number} g - green component [0 .. 255]
+     * @param {number} b - blue component [0 .. 255]
+     * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
      * @returns {Color} Reference to this object for method chaining
      */
     setColor(r, g, b, alpha = 1.0) {
@@ -273,9 +273,9 @@ class Color {
 
     /**
      * set this color to the specified HSV value
-     * @param {number} h hue (a value from 0 to 1)
-     * @param {number} s saturation (a value from 0 to 1)
-     * @param {number} v value (a value from 0 to 1)
+     * @param {number} h - hue (a value from 0 to 1)
+     * @param {number} s - saturation (a value from 0 to 1)
+     * @param {number} v - value (a value from 0 to 1)
      * @returns {Color} Reference to this object for method chaining
      */
     setHSV(h, s, v) {
@@ -300,9 +300,9 @@ class Color {
 
     /**
      * set this color to the specified HSL value
-     * @param {number} h hue (a value from 0 to 1)
-     * @param {number} s saturation (a value from 0 to 1)
-     * @param {number} l lightness (a value from 0 to 1)
+     * @param {number} h - hue (a value from 0 to 1)
+     * @param {number} s - saturation (a value from 0 to 1)
+     * @param {number} l - lightness (a value from 0 to 1)
      * @returns {Color} Reference to this object for method chaining
      */
     setHSL(h, s, l) {
@@ -375,7 +375,7 @@ class Color {
     /**
      * Linearly interpolate between this color and the given one.
      * @param {Color} color
-     * @param {number} alpha with alpha = 0 being this color, and alpha = 1 being the given one.
+     * @param {number} alpha - with alpha = 0 being this color, and alpha = 1 being the given one.
      * @returns {Color} Reference to this object for method chaining
      */
     lerp(color, alpha) {
@@ -403,8 +403,8 @@ class Color {
 
     /**
      * Generate random r,g,b values for this color object
-     * @param {number} [min=0] minimum value for the random range
-     * @param {number} [max=255] maxmium value for the random range
+     * @param {number} [min=0] - minimum value for the random range
+     * @param {number} [max=255] - maxmium value for the random range
      * @returns {Color} Reference to this object for method chaining
      */
     random(min = 0, max = 255) {
@@ -474,7 +474,7 @@ class Color {
      * Parse a Hex color ("#RGB", "#RGBA" or "#RRGGBB", "#RRGGBBAA" format) and set this color to
      * the corresponding r,g,b,a values
      * @param {string} hexColor
-     * @param {boolean} [argb = false] true if format is #ARGB, or #AARRGGBB (as opposed to #RGBA or #RGGBBAA)
+     * @param {boolean} [argb = false] - true if format is #ARGB, or #AARRGGBB (as opposed to #RGBA or #RGGBBAA)
      * @returns {Color} Reference to this object for method chaining
      */
     parseHex(hexColor, argb = false) {
@@ -530,7 +530,7 @@ class Color {
 
     /**
      * Pack this color into a Uint32 ARGB representation
-     * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
+     * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
      * @returns {number}
      */
     toUint32(alpha = 1.0) {
@@ -590,7 +590,7 @@ class Color {
 
     /**
      * Get the color in "rgba(R,G,B,A)" format
-     * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
+     * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
      * @returns {string}
      */
     toRGBA(alpha = this.alpha) {

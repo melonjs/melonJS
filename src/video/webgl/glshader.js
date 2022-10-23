@@ -12,10 +12,10 @@ import { minify } from "./utils/string.js";
  */
 class GLShader {
     /**
-     * @param {WebGLRenderingContext} gl the current WebGL rendering context
-     * @param {string} vertex a string containing the GLSL source code to set
-     * @param {string} fragment a string containing the GLSL source code to set
-     * @param {string} [precision=auto detected] float precision ('lowp', 'mediump' or 'highp').
+     * @param {WebGLRenderingContext} gl - the current WebGL rendering context
+     * @param {string} vertex - a string containing the GLSL source code to set
+     * @param {string} fragment - a string containing the GLSL source code to set
+     * @param {string} [precision=auto detected] - float precision ('lowp', 'mediump' or 'highp').
      * @see https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_on_the_web/GLSL_Shaders
      * @example
      * // create a basic shader
@@ -90,7 +90,7 @@ class GLShader {
 
     /**
      * returns the location of an attribute variable in this shader program
-     * @param {string} name the name of the attribute variable whose location to get.
+     * @param {string} name - the name of the attribute variable whose location to get.
      * @returns {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
      */
     getAttribLocation(name) {
@@ -104,8 +104,8 @@ class GLShader {
 
     /**
      * Set the uniform to the given value
-     * @param {string} name the uniform name
-     * @param {object|Float32Array} value the value to assign to that uniform
+     * @param {string} name - the uniform name
+     * @param {object|Float32Array} value - the value to assign to that uniform
      * @example
      * myShader.setUniform("uProjectionMatrix", this.projectionMatrix);
      */
@@ -124,9 +124,9 @@ class GLShader {
 
     /**
      * activate the given vertex attribute for this shader
-     * @param {WebGLRenderingContext} gl the current WebGL rendering context
-     * @param {object[]} attributes an array of vertex attributes
-     * @param {number} vertexByteSize the size of a single vertex in bytes
+     * @param {WebGLRenderingContext} gl - the current WebGL rendering context
+     * @param {object[]} attributes - an array of vertex attributes
+     * @param {number} vertexByteSize - the size of a single vertex in bytes
      */
     setVertexAttributes(gl, attributes, vertexByteSize) {
         // set the vertex attributes

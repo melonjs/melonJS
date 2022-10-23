@@ -96,8 +96,8 @@ var collision = {
      * @name rayCast
      * @memberof collision
      * @public
-     * @param {Line} line line to be tested for collision
-     * @param {Array.<Renderable>} [result] a user defined array that will be populated with intersecting physic objects.
+     * @param {Line} line - line to be tested for collision
+     * @param {Array.<Renderable>} [result] - a user defined array that will be populated with intersecting physic objects.
      * @returns {Array.<Renderable>} an array of intersecting physic objects
      * @example
      *    // define a line accross the viewport

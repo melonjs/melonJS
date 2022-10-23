@@ -11,20 +11,20 @@ import TextMetrics from "./textmetrics.js";
  */
 class BitmapText extends Renderable {
     /**
-     * @param {number} x position of the text object
-     * @param {number} y position of the text object
-     * @param {object} settings the text configuration
-     * @param {string|Image} settings.font a font name to identify the corresponing source image
-     * @param {string} [settings.fontData=settings.font] the bitmap font data corresponding name, or the bitmap font data itself
-     * @param {number} [settings.size] size a scaling ratio
-     * @param {Color|string} [settings.fillStyle] a CSS color value used to tint the bitmapText (@see BitmapText.tint)
-     * @param {number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
-     * @param {string} [settings.textAlign="left"] horizontal text alignment
-     * @param {string} [settings.textBaseline="top"] the text baseline
-     * @param {number} [settings.lineHeight=1.0] line spacing height
-     * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
-     * @param {number} [settings.wordWrapWidth] the maximum length in CSS pixel for a single segment of text
-     * @param {(string|string[])} [settings.text] a string, or an array of strings
+     * @param {number} x - position of the text object
+     * @param {number} y - position of the text object
+     * @param {object} settings - the text configuration
+     * @param {string|Image} settings.font - a font name to identify the corresponing source image
+     * @param {string} [settings.fontData=settings.font] - the bitmap font data corresponding name, or the bitmap font data itself
+     * @param {number} [settings.size] - size a scaling ratio
+     * @param {Color|string} [settings.fillStyle] - a CSS color value used to tint the bitmapText (@see BitmapText.tint)
+     * @param {number} [settings.lineWidth=1] - line width, in pixels, when drawing stroke
+     * @param {string} [settings.textAlign="left"] - horizontal text alignment
+     * @param {string} [settings.textBaseline="top"] - the text baseline
+     * @param {number} [settings.lineHeight=1.0] - line spacing height
+     * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] - anchor point to draw the text at
+     * @param {number} [settings.wordWrapWidth] - the maximum length in CSS pixel for a single segment of text
+     * @param {(string|string[])} [settings.text] - a string, or an array of strings
      * @example
      * // Use me.loader.preload or me.loader.load to load assets
      * me.loader.preload([
@@ -142,7 +142,7 @@ class BitmapText extends Renderable {
 
     /**
      * change the font settings
-     * @param {string} textAlign ("left", "center", "right")
+     * @param {string} textAlign - ("left", "center", "right")
      * @param {number} [scale]
      * @returns {BitmapText} this object for chaining
      */
@@ -159,7 +159,7 @@ class BitmapText extends Renderable {
 
     /**
      * change the text to be displayed
-     * @param {number|string|string[]} value a string, or an array of strings
+     * @param {number|string|string[]} value - a string, or an array of strings
      * @returns {BitmapText} this object for chaining
      */
     setText(value = "") {
@@ -201,7 +201,7 @@ class BitmapText extends Renderable {
 
     /**
      * change the font display size
-     * @param {number} scale ratio
+     * @param {number} scale - ratio
      * @returns {BitmapText} this object for chaining
      */
     resize(scale) {
@@ -226,7 +226,7 @@ class BitmapText extends Renderable {
 
     /**
      * draw the bitmap font
-     * @param {CanvasRenderer|WebGLRenderer} renderer Reference to the destination renderer instance
+     * @param {CanvasRenderer|WebGLRenderer} renderer - Reference to the destination renderer instance
      * @param {string} [text]
      * @param {number} [x]
      * @param {number} [y]

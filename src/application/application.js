@@ -157,8 +157,8 @@ class Application {
 
     /**
      * update all objects related to this game active scene/stage
-     * @param {number} time current timestamp as provided by the RAF callback
-     * @param {Stage} stage the current stage
+     * @param {number} time - current timestamp as provided by the RAF callback
+     * @param {Stage} stage - the current stage
      */
     update(time, stage) {
         // handle frame skipping if required
@@ -203,7 +203,7 @@ class Application {
 
     /**
      * draw the active scene/stage associated to this game
-     * @param {Stage} stage the current stage
+     * @param {Stage} stage - the current stage
      */
     draw(stage) {
         if (renderer.isContextValid === true && (this.isDirty || this.isAlwaysDirty)) {

@@ -355,12 +355,12 @@ export var GAMEPAD = {
  * @name bindGamepad
  * @memberof input
  * @public
- * @param {number} index Gamepad index
- * @param {object} button Button/Axis definition
- * @param {string} button.type "buttons" or "axes"
- * @param {number} button.code button or axis code id (See {@link input.GAMEPAD.BUTTONS}, {@link input.GAMEPAD.AXES})
- * @param {number} [button.threshold=1] value indicating when the axis should trigger the keycode (e.g. -0.5 or 0.5)
- * @param {number} keyCode (See {@link input.KEY})
+ * @param {number} index - Gamepad index
+ * @param {object} button - Button/Axis definition
+ * @param {string} button.type - "buttons" or "axes"
+ * @param {number} button.code - button or axis code id (See {@link input.GAMEPAD.BUTTONS}, {@link input.GAMEPAD.AXES})
+ * @param {number} [button.threshold=1] - value indicating when the axis should trigger the keycode (e.g. -0.5 or 0.5)
+ * @param {number} keyCode - (See {@link input.KEY})
  * @example
  * // enable the keyboard
  * me.input.bindKey(me.input.KEY.X, "shoot");
@@ -429,8 +429,8 @@ export function bindGamepad(index, button, keyCode) {
  * @name unbindGamepad
  * @memberof input
  * @public
- * @param {number} index Gamepad index
- * @param {number} button (See {@link input.GAMEPAD.BUTTONS})
+ * @param {number} index - Gamepad index
+ * @param {number} button - (See {@link input.GAMEPAD.BUTTONS})
  * @example
  * me.input.unbindGamepad(0, me.input.GAMEPAD.BUTTONS.FACE_1);
  */
@@ -447,7 +447,7 @@ export function unbindGamepad(index, button) {
  * @name setGamepadDeadzone
  * @memberof input
  * @public
- * @param {number} value Deadzone value
+ * @param {number} value - Deadzone value
  */
 export function setGamepadDeadzone(value) {
     deadzone = value;
@@ -460,12 +460,12 @@ export function setGamepadDeadzone(value) {
  * @name setGamepadMapping
  * @memberof input
  * @public
- * @param {string} id Gamepad id string
- * @param {object} mapping A hash table
- * @param {number[]} mapping.axes Standard analog control stick axis locations
- * @param {number[]} mapping.buttons Standard digital button locations
- * @param {number[]} [mapping.analog] Analog axis locations for buttons
- * @param {Function} [mapping.normalize_fn] a function that returns a normalized value in range [-1.0..1.0] for the given value, axis and button
+ * @param {string} id - Gamepad id string
+ * @param {object} mapping - A hash table
+ * @param {number[]} mapping.axes - Standard analog control stick axis locations
+ * @param {number[]} mapping.buttons - Standard digital button locations
+ * @param {number[]} [mapping.analog] - Analog axis locations for buttons
+ * @param {Function} [mapping.normalize_fn] - a function that returns a normalized value in range [-1.0..1.0] for the given value, axis and button
  * @example
  * // A weird controller that has its axis mappings reversed
  * me.input.setGamepadMapping("Generic USB Controller", {

@@ -9,12 +9,12 @@ import pool from "./../system/pooling.js";
  */
 class ObservableVector3d extends Vector3d {
     /**
-     * @param {number} x x value of the vector
-     * @param {number} y y value of the vector
-     * @param {number} z z value of the vector
-     * @param {object} settings additional required parameters
-     * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
-     * @param {object} [settings.scope] the value to use as this when calling onUpdate
+     * @param {number} x - x value of the vector
+     * @param {number} y - y value of the vector
+     * @param {number} z - z value of the vector
+     * @param {object} settings - additional required parameters
+     * @param {Function} settings.onUpdate - the callback to be executed when the vector is changed
+     * @param {object} [settings.scope] - the value to use as this when calling onUpdate
      */
     constructor(x = 0, y = 0, z = 0, settings) {
         super(x, y, z);
@@ -124,9 +124,9 @@ class ObservableVector3d extends Vector3d {
      * set the vector value without triggering the callback
      * @name setMuted
      * @memberof ObservableVector3d
-     * @param {number} x x value of the vector
-     * @param {number} y y value of the vector
-     * @param {number} [z=0] z value of the vector
+     * @param {number} x - x value of the vector
+     * @param {number} y - y value of the vector
+     * @param {number} [z=0] - z value of the vector
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     setMuted(x, y, z) {
@@ -140,8 +140,8 @@ class ObservableVector3d extends Vector3d {
      * set the callback to be executed when the vector is changed
      * @name setCallback
      * @memberof ObservableVector3d
-     * @param {Function} fn callback
-     * @param {Function} [scope=null] scope
+     * @param {Function} fn - callback
+     * @param {Function} [scope=null] - scope
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     setCallback(fn, scope = null) {
@@ -206,7 +206,7 @@ class ObservableVector3d extends Vector3d {
      * Divide this vector values by the passed value
      * @name div
      * @memberof ObservableVector3d
-     * @param {number} n the value to divide the vector by
+     * @param {number} n - the value to divide the vector by
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     div(n) {
@@ -404,8 +404,8 @@ class ObservableVector3d extends Vector3d {
      * Rotate this vector (counter-clockwise) by the specified angle (in radians).
      * @name rotate
      * @memberof ObservableVector3d
-     * @param {number} angle The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around (on the same z axis)
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around (on the same z axis)
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     rotate(angle, v) {
@@ -461,7 +461,7 @@ class ObservableVector3d extends Vector3d {
      * @name lerp
      * @memberof ObservableVector3d
      * @param {Vector3d|ObservableVector3d} v
-     * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+     * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     lerp(v, alpha) {
@@ -477,7 +477,7 @@ class ObservableVector3d extends Vector3d {
      * @name moveTowards
      * @memberof ObservableVector3d
      * @param {Vector2d|ObservableVector2d|Vector3d|ObservableVector3d} target
-     * @param {number} step the maximum step per iteration (Negative values will push the vector away from the target)
+     * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     moveTowards(target, step) {

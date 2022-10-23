@@ -12,10 +12,10 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
 class UIBaseElement extends Container {
     /**
      *
-     * @param {number} x The x position of the container
-     * @param {number} y The y position of the container
-     * @param {number} w width of the container (default: viewport width)
-     * @param {number} h height of the container (default: viewport height)
+     * @param {number} x - The x position of the container
+     * @param {number} y - The y position of the container
+     * @param {number} w - width of the container (default: viewport width)
+     * @param {number} h - height of the container (default: viewport height)
      */
     constructor(x, y, w, h) {
         super(x, y, w, h);
@@ -83,7 +83,7 @@ class UIBaseElement extends Container {
 
     /**
      * function called when the object is pressed (to be extended)
-     * @param {Pointer} event the event object
+     * @param {Pointer} event - the event object
      * @returns {boolean} return false if we need to stop propagating the event
      */
     onClick(event) { // eslint-disable-line no-unused-vars
@@ -102,7 +102,7 @@ class UIBaseElement extends Container {
 
     /**
      * function called when the pointer is over the object
-     * @param {Pointer} event the event object
+     * @param {Pointer} event - the event object
      */
     onOver(event) { // eslint-disable-line no-unused-vars
         // to be extended
@@ -121,7 +121,7 @@ class UIBaseElement extends Container {
 
     /**
      * function called when the pointer is leaving the object area
-     * @param {Pointer} event the event object
+     * @param {Pointer} event - the event object
      */
     onOut(event) { // eslint-disable-line no-unused-vars
         // to be extended

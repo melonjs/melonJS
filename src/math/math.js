@@ -84,7 +84,7 @@ export function nextPowerOfTwo(val) {
  * @public
  * @memberof Math
  * @name degToRad
- * @param {number} angle angle in degrees
+ * @param {number} angle - angle in degrees
  * @returns {number} corresponding angle in radians
  * @example
  * // convert a specific angle
@@ -99,7 +99,7 @@ export function degToRad(angle) {
  * @public
  * @memberof Math
  * @name radToDeg
- * @param {number} radians angle in radians
+ * @param {number} radians - angle in radians
  * @returns {number} corresponding angle in degrees
  * @example
  * // convert a specific angle
@@ -114,9 +114,9 @@ export function radToDeg(radians) {
  * @public
  * @memberof Math
  * @name clamp
- * @param {number} val the value to clamp
- * @param {number} low lower limit
- * @param {number} high higher limit
+ * @param {number} val - the value to clamp
+ * @param {number} low - lower limit
+ * @param {number} high - higher limit
  * @returns {number} clamped value
  */
 export function clamp(val, low, high) {
@@ -128,8 +128,8 @@ export function clamp(val, low, high) {
  * @public
  * @memberof Math
  * @name random
- * @param {number} min minimum value.
- * @param {number} max maximum value.
+ * @param {number} min - minimum value.
+ * @param {number} max - maximum value.
  * @returns {number} random value
  * @example
  * // Print a random number; one of 5, 6, 7, 8, 9
@@ -144,8 +144,8 @@ export function random(min, max) {
  * @public
  * @memberof Math
  * @name randomFloat
- * @param {number} min minimum value.
- * @param {number} max maximum value.
+ * @param {number} min - minimum value.
+ * @param {number} max - maximum value.
  * @returns {number} random value
  * @example
  * // Print a random number; one of 5, 6, 7, 8, 9
@@ -160,8 +160,8 @@ export function randomFloat(min, max) {
  * @public
  * @memberof Math
  * @name weightedRandom
- * @param {number} min minimum value.
- * @param {number} max maximum value.
+ * @param {number} min - minimum value.
+ * @param {number} max - maximum value.
  * @returns {number} random value
  * @example
  * // Print a random number; one of 5, 6, 7, 8, 9
@@ -176,8 +176,8 @@ export function weightedRandom(min, max) {
  * @public
  * @memberof Math
  * @name round
- * @param {number} num value to be rounded.
- * @param {number} [dec=0] number of decimal digit to be rounded to.
+ * @param {number} num - value to be rounded.
+ * @param {number} [dec=0] - number of decimal digit to be rounded to.
  * @returns {number} rounded value
  * @example
  * // round a specific value to 2 digits
@@ -194,9 +194,9 @@ export function round(num, dec = 0) {
  * @public
  * @memberof Math
  * @name toBeCloseTo
- * @param {number} expected value to be compared with.
- * @param {number} actual actual value to compare
- * @param {number} [precision=2] float precision for the comparison
+ * @param {number} expected - value to be compared with.
+ * @param {number} actual - actual value to compare
+ * @param {number} [precision=2] - float precision for the comparison
  * @returns {boolean} if close to
  * @example
  * // test if the given value is close to 10

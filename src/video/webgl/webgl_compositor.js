@@ -24,7 +24,7 @@ var V_ARRAY = [
  */
 class WebGLCompositor {
     /**
-     * @param {WebGLRenderer} renderer the current WebGL renderer session
+     * @param {WebGLRenderer} renderer - the current WebGL renderer session
      */
     constructor (renderer) {
         this.init(renderer);
@@ -147,11 +147,11 @@ class WebGLCompositor {
 
     /**
      * add vertex attribute property definition to the compositor
-     * @param {string} name name of the attribute in the vertex shader
-     * @param {number} size number of components per vertex attribute. Must be 1, 2, 3, or 4.
-     * @param {GLenum} type data type of each component in the array
-     * @param {boolean} normalized whether integer data values should be normalized into a certain range when being cast to a float
-     * @param {number} offset offset in bytes of the first component in the vertex attribute array
+     * @param {string} name - name of the attribute in the vertex shader
+     * @param {number} size - number of components per vertex attribute. Must be 1, 2, 3, or 4.
+     * @param {GLenum} type - data type of each component in the array
+     * @param {boolean} normalized - whether integer data values should be normalized into a certain range when being cast to a float
+     * @param {number} offset - offset in bytes of the first component in the vertex attribute array
      */
     addAttribute(name, size, type, normalized, offset) {
         this.attributes.push({
@@ -192,10 +192,10 @@ class WebGLCompositor {
 
     /**
      * Sets the viewport
-     * @param {number} x x position of viewport
-     * @param {number} y y position of viewport
-     * @param {number} w width of viewport
-     * @param {number} h height of viewport
+     * @param {number} x - x position of viewport
+     * @param {number} y - y position of viewport
+     * @param {number} w - width of viewport
+     * @param {number} h - height of viewport
      */
     setViewport(x, y, w, h) {
         this.gl.viewport(x, y, w, h);
@@ -203,15 +203,15 @@ class WebGLCompositor {
 
     /**
      * Create a WebGL texture from an image
-     * @param {number} unit Destination texture unit
-     * @param {Image|HTMLCanvasElement|ImageData|Uint8Array[]|Float32Array[]} image Source image
-     * @param {number} filter gl.LINEAR or gl.NEAREST
-     * @param {string} [repeat="no-repeat"] Image repeat behavior (see {@link ImageLayer#repeat})
-     * @param {number} [w] Source image width (Only use with UInt8Array[] or Float32Array[] source image)
-     * @param {number} [h] Source image height (Only use with UInt8Array[] or Float32Array[] source image)
-     * @param {number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
-     * @param {boolean} [premultipliedAlpha=true] Multiplies the alpha channel into the other color channels
-     * @param {boolean} [mipmap=true] Whether mipmap levels should be generated for this texture
+     * @param {number} unit - Destination texture unit
+     * @param {Image|HTMLCanvasElement|ImageData|Uint8Array[]|Float32Array[]} image - Source image
+     * @param {number} filter - gl.LINEAR or gl.NEAREST
+     * @param {string} [repeat="no-repeat"] - Image repeat behavior (see {@link ImageLayer#repeat})
+     * @param {number} [w] - Source image width (Only use with UInt8Array[] or Float32Array[] source image)
+     * @param {number} [h] - Source image height (Only use with UInt8Array[] or Float32Array[] source image)
+     * @param {number} [b] - Source image border (Only use with UInt8Array[] or Float32Array[] source image)
+     * @param {boolean} [premultipliedAlpha=true] - Multiplies the alpha channel into the other color channels
+     * @param {boolean} [mipmap=true] - Whether mipmap levels should be generated for this texture
      * @returns {WebGLTexture} a WebGL texture
      */
     createTexture2D(unit, image, filter, repeat = "no-repeat", w, h, b, premultipliedAlpha = true, mipmap = true) {
@@ -245,8 +245,8 @@ class WebGLCompositor {
 
     /**
      * delete the given WebGL texture
-     * @param {WebGLTexture} [texture] a WebGL texture to delete
-     * @param {number} [unit] Texture unit to delete
+     * @param {WebGLTexture} [texture] - a WebGL texture to delete
+     * @param {number} [unit] - Texture unit to delete
      */
     deleteTexture2D(texture) {
         this.gl.deleteTexture(texture);
@@ -255,7 +255,7 @@ class WebGLCompositor {
 
     /**
      * returns the WebGL texture associated to the given texture unit
-     * @param {number} unit Texture unit to which a texture is bound
+     * @param {number} unit - Texture unit to which a texture is bound
      * @returns {WebGLTexture} texture a WebGL texture
      */
     getTexture2D(unit) {
@@ -264,8 +264,8 @@ class WebGLCompositor {
 
     /**
      * assign the given WebGL texture to the current batch
-     * @param {WebGLTexture} texture a WebGL texture
-     * @param {number} unit Texture unit to which the given texture is bound
+     * @param {WebGLTexture} texture - a WebGL texture
+     * @param {number} unit - Texture unit to which the given texture is bound
      */
     bindTexture2D(texture, unit) {
         var gl = this.gl;
@@ -289,8 +289,8 @@ class WebGLCompositor {
 
     /**
      * unbind the given WebGL texture, forcing it to be reuploaded
-     * @param {WebGLTexture} [texture] a WebGL texture
-     * @param {number} [unit] a WebGL texture
+     * @param {WebGLTexture} [texture] - a WebGL texture
+     * @param {number} [unit] - a WebGL texture
      * @returns {number} unit the unit number that was associated with the given texture
      */
     unbindTexture2D(texture, unit) {
@@ -342,7 +342,7 @@ class WebGLCompositor {
     /**
      * Select the shader to use for compositing
      * @see GLShader
-     * @param {GLShader} shader a reference to a GLShader instance
+     * @param {GLShader} shader - a reference to a GLShader instance
      */
     useShader(shader) {
         if (this.activeShader !== shader) {
@@ -356,16 +356,16 @@ class WebGLCompositor {
 
     /**
      * Add a textured quad
-     * @param {TextureAtlas} texture Source texture atlas
-     * @param {number} x Destination x-coordinate
-     * @param {number} y Destination y-coordinate
-     * @param {number} w Destination width
-     * @param {number} h Destination height
-     * @param {number} u0 Texture UV (u0) value.
-     * @param {number} v0 Texture UV (v0) value.
-     * @param {number} u1 Texture UV (u1) value.
-     * @param {number} v1 Texture UV (v1) value.
-     * @param {number} tint tint color to be applied to the texture in UINT32 (argb) format
+     * @param {TextureAtlas} texture - Source texture atlas
+     * @param {number} x - Destination x-coordinate
+     * @param {number} y - Destination y-coordinate
+     * @param {number} w - Destination width
+     * @param {number} h - Destination height
+     * @param {number} u0 - Texture UV (u0) value.
+     * @param {number} v0 - Texture UV (v0) value.
+     * @param {number} u1 - Texture UV (u1) value.
+     * @param {number} v1 - Texture UV (v1) value.
+     * @param {number} tint - tint color to be applied to the texture in UINT32 (argb) format
      */
     addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint) {
 
@@ -410,7 +410,7 @@ class WebGLCompositor {
 
     /**
      * Flush batched texture operations to the GPU
-     * @param {number} [mode=gl.TRIANGLES] the GL drawing mode
+     * @param {number} [mode=gl.TRIANGLES] - the GL drawing mode
      */
     flush(mode = this.mode) {
         var vertex = this.vertexBuffer;
@@ -436,9 +436,9 @@ class WebGLCompositor {
 
     /**
      * Draw an array of vertices
-     * @param {GLenum} mode primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
-     * @param {Vector2d[]} verts vertices
-     * @param {number} [vertexCount=verts.length] amount of points defined in the points array
+     * @param {GLenum} mode - primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
+     * @param {Vector2d[]} verts - vertices
+     * @param {number} [vertexCount=verts.length] - amount of points defined in the points array
      */
     drawVertices(mode, verts, vertexCount = verts.length) {
         // use the primitive shader

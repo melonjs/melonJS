@@ -9,11 +9,11 @@ import Rect from "./rectangle.js";
  */
 class RoundRect extends Rect {
     /**
-     * @param {number} x position of the rounded rectangle
-     * @param {number} y position of the rounded rectangle
-     * @param {number} width the rectangle width
-     * @param {number} height the rectangle height
-     * @param {number} [radius=20] the radius of the rounded corner
+     * @param {number} x - position of the rounded rectangle
+     * @param {number} y - position of the rounded rectangle
+     * @param {number} width - the rectangle width
+     * @param {number} height - the rectangle height
+     * @param {number} [radius=20] - the radius of the rounded corner
      */
     constructor(x, y, width, height, radius = 20) {
         // parent constructor
@@ -56,7 +56,7 @@ class RoundRect extends Rect {
      * copy the position, size and radius of the given rounded rectangle into this one
      * @name copy
      * @memberof RoundRect
-     * @param {RoundRect} rrect source rounded rectangle
+     * @param {RoundRect} rrect - source rounded rectangle
      * @returns {RoundRect} new rectangle
      */
     copy(rrect) {
@@ -70,8 +70,8 @@ class RoundRect extends Rect {
      * @name contains
      * @memberof RoundRect
      * @method
-     * @param  {number} x x coordinate
-     * @param  {number} y y coordinate
+     * @param  {number} x -  x coordinate
+     * @param  {number} y -  y coordinate
      * @returns {boolean} true if contains
      */
 

@@ -7,9 +7,9 @@ import pool from "./../system/pooling.js";
  */
 class Vector3d {
     /**
-     * @param {number} [x=0] x value of the vector
-     * @param {number} [y=0] y value of the vector
-     * @param {number} [z=0] z value of the vector
+     * @param {number} [x=0] - x value of the vector
+     * @param {number} [y=0] - y value of the vector
+     * @param {number} [z=0] - z value of the vector
      */
     constructor(x = 0, y = 0, z = 0) {
         this.onResetEvent(x, y, z);
@@ -174,7 +174,7 @@ class Vector3d {
      * Divide this vector values by the passed value
      * @name div
      * @memberof Vector3d
-     * @param {number} n the value to divide the vector by
+     * @param {number} n - the value to divide the vector by
      * @returns {Vector3d} Reference to this object for method chaining
      */
     div(n) {
@@ -373,8 +373,8 @@ class Vector3d {
      * Rotate this vector (counter-clockwise) by the specified angle (in radians) around the z axis
      * @name rotate
      * @memberof Vector3d
-     * @param {number} angle The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around (on the same z axis)
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around (on the same z axis)
      * @returns {Vector3d} Reference to this object for method chaining
      */
     rotate(angle, v) {
@@ -450,7 +450,7 @@ class Vector3d {
      * @name lerp
      * @memberof Vector3d
      * @param {Vector3d} v
-     * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+     * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
      * @returns {Vector3d} Reference to this object for method chaining
      */
     lerp(v, alpha) {
@@ -465,7 +465,7 @@ class Vector3d {
      * @name moveTowards
      * @memberof Vector3d
      * @param {Vector2d|Vector3d} target
-     * @param {number} step the maximum step per iteration (Negative values will push the vector away from the target)
+     * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
      * @returns {Vector3d} Reference to this object for method chaining
      */
     moveTowards(target, step) {
@@ -515,7 +515,7 @@ class Vector3d {
      * project this vector on to another vector.
      * @name project
      * @memberof Vector3d
-     * @param {Vector2d|Vector3d} v The vector to project onto.
+     * @param {Vector2d|Vector3d} v - The vector to project onto.
      * @returns {Vector3d} Reference to this object for method chaining
      */
     project(v) {
@@ -528,7 +528,7 @@ class Vector3d {
      * This is slightly more efficient than `project` when dealing with unit vectors.
      * @name projectN
      * @memberof Vector3d
-     * @param {Vector2d|Vector3d} v The unit vector to project onto.
+     * @param {Vector2d|Vector3d} v - The unit vector to project onto.
      * @returns {Vector3d} Reference to this object for method chaining
      */
     projectN(v) {

@@ -7,7 +7,7 @@ import { EPSILON } from "./math.js";
  */
 class Matrix3d {
     /**
-     * @param {(Matrix3d|...number)} args An instance of me.Matrix3d to copy from, or individual Matrix components (See {@link Matrix3d.setTransform}). If not arguments are given, the matrix will be set to Identity.
+     * @param {(Matrix3d|...number)} args - An instance of me.Matrix3d to copy from, or individual Matrix components (See {@link Matrix3d.setTransform}). If not arguments are given, the matrix will be set to Identity.
      */
     constructor(...args) {
         this.onResetEvent(...args);
@@ -131,7 +131,7 @@ class Matrix3d {
      * Copies over the values from another me.Matrix3d.
      * @name copy
      * @memberof Matrix3d
-     * @param {Matrix3d} m the matrix object to copy from
+     * @param {Matrix3d} m - the matrix object to copy from
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     copy(m) {
@@ -143,7 +143,7 @@ class Matrix3d {
      * Copies over the upper-left 2x2 values from the given me.Matrix2d
      * @name fromMat2d
      * @memberof Matrix3d
-     * @param {Matrix2d} m the matrix object to copy from
+     * @param {Matrix2d} m - the matrix object to copy from
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     fromMat2d(m) {
@@ -161,7 +161,7 @@ class Matrix3d {
      * multiply both matrix
      * @name multiply
      * @memberof Matrix3d
-     * @param {Matrix3d} m Other matrix
+     * @param {Matrix3d} m - Other matrix
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     multiply(m) {
@@ -306,7 +306,7 @@ class Matrix3d {
      * apply the current transform to the given 2d or 3d vector
      * @name apply
      * @memberof Matrix3d
-     * @param {Vector2d|Vector3d} v the vector object to be transformed
+     * @param {Vector2d|Vector3d} v - the vector object to be transformed
      * @returns {Vector2d|Vector3d} result vector object.
      */
      apply(v) {
@@ -331,7 +331,7 @@ class Matrix3d {
       * apply the inverted current transform to the given 2d or 3d vector
       * @name applyInverse
       * @memberof Matrix3d
-      * @param {Vector2d|Vector3d} v the vector object to be transformed
+      * @param {Vector2d|Vector3d} v - the vector object to be transformed
       * @returns {Vector2d|Vector3d} result vector object.
       */
      applyInverse(v) {
@@ -351,12 +351,12 @@ class Matrix3d {
      * <img src="images/glOrtho.gif"/><br>
      * @name ortho
      * @memberof Matrix3d
-     * @param {number} left farthest left on the x-axis
-     * @param {number} right farthest right on the x-axis
-     * @param {number} bottom farthest down on the y-axis
-     * @param {number} top farthest up on the y-axis
-     * @param {number} near distance to the near clipping plane along the -Z axis
-     * @param {number} far distance to the far clipping plane along the -Z axis
+     * @param {number} left - farthest left on the x-axis
+     * @param {number} right - farthest right on the x-axis
+     * @param {number} bottom - farthest down on the y-axis
+     * @param {number} top - farthest up on the y-axis
+     * @param {number} near - distance to the near clipping plane along the -Z axis
+     * @param {number} far - distance to the far clipping plane along the -Z axis
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     ortho(left, right, bottom, top, near, far) {
@@ -389,9 +389,9 @@ class Matrix3d {
      * scale the matrix
      * @name scale
      * @memberof Matrix3d
-     * @param {number} x a number representing the abscissa of the scaling vector.
-     * @param {number} [y=x] a number representing the ordinate of the scaling vector.
-     * @param {number} [z=0] a number representing the depth vector
+     * @param {number} x - a number representing the abscissa of the scaling vector.
+     * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
+     * @param {number} [z=0] - a number representing the depth vector
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     scale(x, y, z) {
@@ -422,7 +422,7 @@ class Matrix3d {
      * adds a 2D scaling transformation.
      * @name scaleV
      * @memberof Matrix3d
-     * @param {Vector2d|Vector3d} v scaling vector
+     * @param {Vector2d|Vector3d} v - scaling vector
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     scaleV(v) {
@@ -433,7 +433,7 @@ class Matrix3d {
      * specifies a 2D scale operation using the [sx, 1] scaling vector
      * @name scaleX
      * @memberof Matrix3d
-     * @param {number} x x scaling vector
+     * @param {number} x - x scaling vector
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     scaleX(x) {
@@ -444,7 +444,7 @@ class Matrix3d {
      * specifies a 2D scale operation using the [1,sy] scaling vector
      * @name scaleY
      * @memberof Matrix3d
-     * @param {number} y y scaling vector
+     * @param {number} y - y scaling vector
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     scaleY(y) {
@@ -455,8 +455,8 @@ class Matrix3d {
      * rotate this matrix (counter-clockwise) by the specified angle (in radians).
      * @name rotate
      * @memberof Matrix3d
-     * @param {number} angle Rotation angle in radians.
-     * @param {Vector3d} v the axis to rotate around
+     * @param {number} angle - Rotation angle in radians.
+     * @param {Vector3d} v - the axis to rotate around
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     rotate(angle, v) {
@@ -535,16 +535,16 @@ class Matrix3d {
      * @name translate
      * @memberof Matrix3d
      * @method
-     * @param {number} x a number representing the abscissa of the vector.
-     * @param {number} [y=x] a number representing the ordinate of the vector.
-     * @param {number} [z=0] a number representing the depth of the vector
+     * @param {number} x - a number representing the abscissa of the vector.
+     * @param {number} [y=x] - a number representing the ordinate of the vector.
+     * @param {number} [z=0] - a number representing the depth of the vector
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     /**
      * translate the matrix by a vector on the horizontal and vertical axis
      * @name translateV
      * @memberof Matrix3d
-     * @param {Vector2d|Vector3d} v the vector to translate the matrix by
+     * @param {Vector2d|Vector3d} v - the vector to translate the matrix by
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     translate() {
@@ -604,7 +604,7 @@ class Matrix3d {
      * return true if the two matrices are identical
      * @name equals
      * @memberof Matrix3d
-     * @param {Matrix3d} m the other matrix
+     * @param {Matrix3d} m - the other matrix
      * @returns {boolean} true if both are equals
      */
     equals(m) {

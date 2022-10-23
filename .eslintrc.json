@@ -11,6 +11,7 @@
     "ecmaVersion": 6,
     "sourceType": "module"
   },
+  "plugins": ["eslint-plugin-jsdoc"],
   "extends": "eslint:recommended",
   "rules": {
     // http://eslint.org/docs/rules/
@@ -109,6 +110,7 @@
     "unicode-bom": ["error", "never"],
     "valid-typeof": ["error", { "requireStringLiterals": true }],
     "yield-star-spacing": ["error", "both"],
-    "yoda": ["error", "never"]
+    "yoda": ["error", "never"],
+    "jsdoc/require-hyphen-before-param-description": 1
   }
 }

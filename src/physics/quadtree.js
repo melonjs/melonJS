@@ -55,11 +55,11 @@ var QT_VECTOR = new Vector2d();
  */
 class QuadTree {
     /**
-     * @param {World} world the physic world this QuadTree belongs to
-     * @param {Bounds} bounds bounds of the node
-     * @param {number} [max_objects=4] max objects a node can hold before splitting into 4 subnodes
-     * @param {number} [max_levels=4] total max levels inside root Quadtree
-     * @param {number} [level] deepth level, required for subnodes
+     * @param {World} world - the physic world this QuadTree belongs to
+     * @param {Bounds} bounds - bounds of the node
+     * @param {number} [max_objects=4] - max objects a node can hold before splitting into 4 subnodes
+     * @param {number} [max_levels=4] - total max levels inside root Quadtree
+     * @param {number} [level] - deepth level, required for subnodes
      */
     constructor(world, bounds, max_objects = 4, max_levels = 4, level = 0) {
 
@@ -194,7 +194,7 @@ class QuadTree {
      * Insert the given object container into the node.
      * @name insertContainer
      * @memberof QuadTree
-     * @param {Container} container group of objects to be added
+     * @param {Container} container - group of objects to be added
      */
     insertContainer(container) {
         for (var i = container.children.length, child; i--, (child = container.children[i]);) {
@@ -222,7 +222,7 @@ class QuadTree {
      * objects to their corresponding subnodes.
      * @name insert
      * @memberof QuadTree
-     * @param {object} item object to be added
+     * @param {object} item - object to be added
      */
     insert(item) {
         var index = -1;
@@ -266,8 +266,8 @@ class QuadTree {
      * Return all objects that could collide with the given object
      * @name retrieve
      * @memberof QuadTree
-     * @param {object} item object to be checked against
-     * @param {object} [fn] a sorting function for the returned array
+     * @param {object} item - object to be checked against
+     * @param {object} [fn] - a sorting function for the returned array
      * @returns {object[]} array with all detected objects
      */
     retrieve(item, fn) {
@@ -301,7 +301,7 @@ class QuadTree {
      * (this function won't recalculate the impacted node)
      * @name remove
      * @memberof QuadTree
-     * @param {object} item object to be removed
+     * @param {object} item - object to be removed
      * @returns {boolean} true if the item was found and removed.
      */
      remove(item) {
@@ -367,7 +367,7 @@ class QuadTree {
      * clear the quadtree
      * @name clear
      * @memberof QuadTree
-     * @param {Bounds} [bounds=this.bounds] the bounds to be cleared
+     * @param {Bounds} [bounds=this.bounds] - the bounds to be cleared
      */
     clear(bounds) {
         this.objects.length = 0;

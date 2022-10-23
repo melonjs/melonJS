@@ -8,7 +8,7 @@
  * @public
  * @memberof utils.string
  * @name capitalize
- * @param {string} str the string to be capitalized
+ * @param {string} str - the string to be capitalized
  * @returns {string} the capitalized string
  */
 export function capitalize(str) {
@@ -20,7 +20,7 @@ export function capitalize(str) {
  * @public
  * @memberof utils.string
  * @name isNumeric
- * @param {string} str the string to be tested
+ * @param {string} str - the string to be tested
  * @returns {boolean} true if string contains only digits
  */
 export function isNumeric(str) {
@@ -35,7 +35,7 @@ export function isNumeric(str) {
  * @public
  * @memberof utils.string
  * @name isBoolean
- * @param {string} str the string to be tested
+ * @param {string} str - the string to be tested
  * @returns {boolean} true if the string is either true or false
  */
 export function isBoolean(str) {
@@ -48,7 +48,7 @@ export function isBoolean(str) {
  * @public
  * @memberof utils.string
  * @name toHex
- * @param {string} str the string to be converted
+ * @param {string} str - the string to be converted
  * @returns {string} the converted hexadecimal value
  */
 export function toHex(str) {
@@ -65,7 +65,7 @@ export function toHex(str) {
  * @public
  * @memberof utils.string
  * @name isDataUrl
- * @param {string} str the string (url) to be tested
+ * @param {string} str - the string (url) to be tested
  * @returns {boolean} true if the string is a data url
  */
 export function isDataUrl(str) {

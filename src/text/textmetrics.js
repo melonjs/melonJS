@@ -10,7 +10,7 @@ import setContextStyle from "./textstyle.js";
 class TextMetrics extends Bounds {
 
     /**
-     * @param {Text|BitmapText} ancestor the parent object that contains this TextMetrics object
+     * @param {Text|BitmapText} ancestor - the parent object that contains this TextMetrics object
      */
     constructor(ancestor) {
 
@@ -42,8 +42,8 @@ class TextMetrics extends Bounds {
 
     /**
      * Returns the width of the given segment of inline text in CSS pixels.
-     * @param {string} text the text to be measured
-     * @param {CanvasRenderingContext2D} [context] reference to an active 2d context for canvas rendering
+     * @param {string} text - the text to be measured
+     * @param {CanvasRenderingContext2D} [context] - reference to an active 2d context for canvas rendering
      * @returns {number} the width of the given segment of inline text in CSS pixels.
      */
     lineWidth(text, context) {
@@ -68,8 +68,8 @@ class TextMetrics extends Bounds {
 
     /**
      * measure the given text size in CSS pixels
-     * @param {string} text the text to be measured
-     * @param {CanvasRenderingContext2D} [context] reference to an active 2d context for canvas rendering
+     * @param {string} text - the text to be measured
+     * @param {CanvasRenderingContext2D} [context] - reference to an active 2d context for canvas rendering
      * @returns {TextMetrics} this
      */
     measureText(text, context) {
@@ -117,9 +117,9 @@ class TextMetrics extends Bounds {
 
     /**
      * wrap the given text based on the given width
-     * @param {string|string[]} text the text to be wrapped
-     * @param {number} width maximum width of one segment of text in css pixel
-     * @param {CanvasRenderingContext2D} [context] reference to an active 2d context for canvas rendering
+     * @param {string|string[]} text - the text to be wrapped
+     * @param {number} width - maximum width of one segment of text in css pixel
+     * @param {CanvasRenderingContext2D} [context] - reference to an active 2d context for canvas rendering
      * @returns {string[]} an array of string representing wrapped text
      */
     wordWrap(text, width, context) {

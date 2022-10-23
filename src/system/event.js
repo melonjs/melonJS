@@ -473,8 +473,8 @@ export const ONCONTEXT_RESTORED = "renderer.contextrestored";
 /**
  * calls each of the listeners registered for a given event.
  * @function event.emit
- * @param {string|symbol} eventName The event name.
- * @param {object} [...arguments] arguments to be passed to all listeners
+ * @param {string|symbol} eventName - The event name.
+ * @param {object} [...arguments] - arguments to be passed to all listeners
  * @returns {boolean} true if the event had listeners, false otherwise.
  * @example
  * me.event.emit("event-name", a, b, c);
@@ -486,9 +486,9 @@ export function emit(eventName, ...args) {
 /**
  * Add a listener for a given event.
  * @function event.on
- * @param {string|symbol} eventName The event name.
- * @param {Function} listener The listener function.
- * @param {*} [context=this] The context to invoke the listener with.
+ * @param {string|symbol} eventName - The event name.
+ * @param {Function} listener - The listener function.
+ * @param {*} [context=this] - The context to invoke the listener with.
  * @returns {EventEmitter} `this`.
  * @public
  * @example
@@ -501,9 +501,9 @@ export function on(eventName, listener, context) {
 /**
  * Add a one-time listener for a given event.
  * @function event.once
- * @param {string|symbol} eventName The event name.
- * @param {Function} listener The listener function.
- * @param {*} [context=this] The context to invoke the listener with.
+ * @param {string|symbol} eventName - The event name.
+ * @param {Function} listener - The listener function.
+ * @param {*} [context=this] - The context to invoke the listener with.
  * @returns {EventEmitter} `this`.
  * @public
  * @example
@@ -516,8 +516,8 @@ export function once(eventName, listener, context) {
 /**
  * remove the given listener for a given event.
  * @function event.off
- * @param {string|symbol} eventName The event name.
- * @param {Function} listener The listener function.
+ * @param {string|symbol} eventName - The event name.
+ * @param {Function} listener - The listener function.
  * @returns {EventEmitter} `this`.
  * @public
  * @example

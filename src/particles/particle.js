@@ -10,7 +10,7 @@ import Renderable from "./../renderable/renderable.js";
  */
 class Particle extends Renderable {
     /**
-     * @param {ParticleEmitter} emitter the particle emitter
+     * @param {ParticleEmitter} emitter - the particle emitter
      */
     constructor(emitter) {
         // Call the super constructor
@@ -107,7 +107,7 @@ class Particle extends Renderable {
      * Update the Particle <br>
      * This is automatically called by the game manager {@link game}
      * @ignore
-     * @param {number} dt time since the last update in milliseconds
+     * @param {number} dt - time since the last update in milliseconds
      */
     update(dt) {
         // move things forward independent of the current frame rate

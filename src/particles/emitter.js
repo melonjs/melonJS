@@ -23,9 +23,9 @@ function createDefaultParticleTexture(w = 8, h = 8) {
  */
 class ParticleEmitter extends Container {
     /**
-     * @param {number} x x position of the particle emitter
-     * @param {number} y y position of the particle emitter
-     * @param {ParticleEmitterSettings} [settings=ParticleEmitterSettings] the settings for the particle emitter.
+     * @param {number} x - x position of the particle emitter
+     * @param {number} y - y position of the particle emitter
+     * @param {ParticleEmitterSettings} [settings=ParticleEmitterSettings] - the settings for the particle emitter.
      * @example
      * // Create a particle emitter at position 100, 100
      * var emitter = new ParticleEmitter(100, 100, {
@@ -110,7 +110,7 @@ class ParticleEmitter extends Container {
 
     /**
      * Reset the emitter with particle emitter settings.
-     * @param {ParticleEmitterSettings} settings [optional] object with emitter settings. See {@link ParticleEmitterSettings}
+     * @param {ParticleEmitterSettings} settings - [optional] object with emitter settings. See {@link ParticleEmitterSettings}
      */
     reset(settings = {}) {
         Object.assign(this.settings, ParticleEmitterSettings, settings);
@@ -161,7 +161,7 @@ class ParticleEmitter extends Container {
 
     /**
      * Launch particles from emitter constantly (e.g. for stream)
-     * @param {number} duration [optional] time that the emitter releases particles in ms
+     * @param {number} duration - [optional] time that the emitter releases particles in ms
      */
     streamParticles(duration) {
         this._enabled = true;
@@ -179,7 +179,7 @@ class ParticleEmitter extends Container {
 
     /**
      * Launch all particles from emitter and stop (e.g. for explosion)
-     * @param {number} total [optional] number of particles to launch
+     * @param {number} total - [optional] number of particles to launch
      */
     burstParticles(total) {
         this._enabled = true;

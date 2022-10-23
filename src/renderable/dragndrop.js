@@ -11,10 +11,10 @@ import Renderable from "./../renderable/renderable.js";
  */
 export class Draggable extends Renderable {
     /**
-     * @param {number} x the x coordinates of the draggable object
-     * @param {number} y the y coordinates of the draggable object
-     * @param {number} width draggable object width
-     * @param {number} height draggable object height
+     * @param {number} x - the x coordinates of the draggable object
+     * @param {number} y - the y coordinates of the draggable object
+     * @param {number} width - draggable object width
+     * @param {number} height - draggable object height
      */
     constructor(x, y, width, height) {
         super(x, y, width, height);
@@ -56,7 +56,7 @@ export class Draggable extends Renderable {
      * Gets called when the user starts dragging the entity
      * @name dragStart
      * @memberof Draggable
-     * @param {object} e the pointer event
+     * @param {object} e - the pointer event
      * @returns {boolean} false if the object is being dragged
      */
     dragStart(e) {
@@ -72,7 +72,7 @@ export class Draggable extends Renderable {
      * Gets called when the user drags this entity around
      * @name dragMove
      * @memberof Draggable
-     * @param {object} e the pointer event
+     * @param {object} e - the pointer event
      */
     dragMove(e) {
         if (this.dragging === true) {
@@ -119,10 +119,10 @@ export class Draggable extends Renderable {
  */
 export class DropTarget extends Renderable {
     /**
-     * @param {number} x the x coordinates of the drop target
-     * @param {number} y the y coordinates of the drop target
-     * @param {number} width drop target width
-     * @param {number} height drop target height
+     * @param {number} x - the x coordinates of the drop target
+     * @param {number} y - the y coordinates of the drop target
+     * @param {number} width - drop target width
+     * @param {number} height - drop target height
      */
     constructor(x, y, width, height) {
         super(x, y, width, height);
@@ -168,7 +168,7 @@ export class DropTarget extends Renderable {
      * Sets the collision method which is going to be used to check a valid drop
      * @name setCheckMethod
      * @memberof DropTarget
-     * @param {string} checkMethod the checkmethod (defaults to CHECKMETHOD_OVERLAP)
+     * @param {string} checkMethod - the checkmethod (defaults to CHECKMETHOD_OVERLAP)
      */
     setCheckMethod(checkMethod) {
         //  We can improve this check,
@@ -182,8 +182,8 @@ export class DropTarget extends Renderable {
      * Checks if a dropped entity is dropped on the current entity
      * @name checkOnMe
      * @memberof DropTarget
-     * @param {object} e the triggering event
-     * @param {Draggable} draggable the draggable object that is dropped
+     * @param {object} e - the triggering event
+     * @param {Draggable} draggable - the draggable object that is dropped
      */
     checkOnMe(e, draggable) {
         if (draggable && this.getBounds()[this.checkMethod](draggable.getBounds())) {
@@ -196,7 +196,7 @@ export class DropTarget extends Renderable {
      * Gets called when a draggable entity is dropped on the current entity
      * @name drop
      * @memberof DropTarget
-     * @param {Draggable} draggable the draggable object that is dropped
+     * @param {Draggable} draggable - the draggable object that is dropped
      */
     drop(draggable) {  // eslint-disable-line no-unused-vars
 

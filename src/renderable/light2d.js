@@ -55,7 +55,7 @@ class Light2d extends Renderable {
     * @param {number} y - The vertical position of the light.
     * @param {number} radiusX - The horizontal radius of the light.
     * @param {number} [radiusY=radiusX] - The vertical radius of the light.
-    * @param {Color|string} [color="#FFF"] the color of the light
+    * @param {Color|string} [color="#FFF"] - the color of the light
     * @param {number} [intensity=0.7] - The intensity of the light.
     */
     constructor(x, y, radiusX, radiusY = radiusX, color = "#FFF", intensity = 0.7) {
@@ -123,8 +123,8 @@ class Light2d extends Renderable {
      * @name draw
      * @memberof Light2d
      * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
-     * @param {Camera2d} [viewport] the viewport to (re)draw
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+     * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
     draw(renderer, viewport) {   // eslint-disable-line no-unused-vars
         renderer.drawImage(this.texture.canvas, this.getBounds().x, this.getBounds().y);

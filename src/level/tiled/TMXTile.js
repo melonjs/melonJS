@@ -15,10 +15,10 @@ const TMX_FLIP_H          = 0x80000000,
  */
 class Tile extends Bounds {
     /**
-     * @param {number} x x index of the Tile in the map
-     * @param {number} y y index of the Tile in the map
-     * @param {number} gid tile gid
-     * @param {TMXTileset} tileset the corresponding tileset object
+     * @param {number} x - x index of the Tile in the map
+     * @param {number} y - y index of the Tile in the map
+     * @param {number} gid - tile gid
+     * @param {TMXTileset} tileset - the corresponding tileset object
      */
     constructor(x, y, gid, tileset) {
         var width, height;
@@ -132,7 +132,7 @@ class Tile extends Bounds {
      * return a renderable object for this Tile object
      * @name Tile#getRenderable
      * @public
-     * @param {object} [settings] see {@link Sprite}
+     * @param {object} [settings] - see {@link Sprite}
      * @returns {Renderable} a me.Sprite object
      */
     getRenderable(settings) {

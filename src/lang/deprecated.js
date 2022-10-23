@@ -9,9 +9,9 @@ import UISpriteElement from "./../renderable/ui/uispriteelement.js";
 /**
  * display a deprecation warning in the console
  * @ignore
- * @param {string} deprecated deprecated class,function or property name
- * @param {string} replacement the replacement class, function, or property name
- * @param {string} version the version since when the lass,function or property is deprecated
+ * @param {string} deprecated - deprecated class,function or property name
+ * @param {string} replacement - the replacement class, function, or property name
+ * @param {string} version - the version since when the lass,function or property is deprecated
  */
 export function warning(deprecated, replacement, version) {
     var msg = "melonJS: %s is deprecated since version %s, please use %s";
@@ -71,9 +71,9 @@ Object.defineProperty(Renderer.prototype, "Texture", {
  */
 export class DraggableEntity extends Draggable {
     /**
-     * @param {number} x the x coordinates of the draggable object
-     * @param {number} y the y coordinates of the draggable object
-     * @param {object} settings Entity properties (see {@link Entity})
+     * @param {number} x - the x coordinates of the draggable object
+     * @param {number} y - the y coordinates of the draggable object
+     * @param {object} settings - Entity properties (see {@link Entity})
      */
     constructor(x, y, settings) {
         warning("DraggableEntity", "Draggable", "10.5.0");
@@ -90,9 +90,9 @@ export class DraggableEntity extends Draggable {
  */
 export class DroptargetEntity extends DropTarget {
     /**
-     * @param {number} x the x coordinates of the draggable object
-     * @param {number} y the y coordinates of the draggable object
-     * @param {object} settings Entity properties (see {@link Entity})
+     * @param {number} x - the x coordinates of the draggable object
+     * @param {number} y - the y coordinates of the draggable object
+     * @param {object} settings - Entity properties (see {@link Entity})
      */
     constructor(x, y, settings) {
         warning("DroptargetEntity", "DropTarget", "10.5.0");
@@ -136,9 +136,9 @@ Renderer.prototype.getScreenContext = function()  {
  */
  export class GUI_Object extends UISpriteElement {
     /**
-     * @param {number} x the x coordinate of the GUI Object
-     * @param {number} y the y coordinate of the GUI Object
-     * @param {object} settings See {@link Sprite}
+     * @param {number} x - the x coordinate of the GUI Object
+     * @param {number} y - the y coordinate of the GUI Object
+     * @param {object} settings - See {@link Sprite}
      */
     constructor(x, y, settings) {
         warning("GUI_Object", "UISpriteElement", "14.0.0");

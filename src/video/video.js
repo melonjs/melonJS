@@ -194,18 +194,18 @@ export let renderer = null;
  *  - <i><b>`stretch`</b></i> : Canvas is resized to fit; content is scaled to screen aspect ratio
  * <center><img src="images/scale-stretch.png"/></center><br>
  * @function video.init
- * @param {number} width The width of the canvas viewport
- * @param {number} height The height of the canvas viewport
- * @param {object} [options] The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
- * @param {string|HTMLElement} [options.parent=document.body] the DOM parent element to hold the canvas in the HTML file
- * @param {number} [options.renderer=video.AUTO] renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
- * @param {number|string} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
- * @param {string} [options.scaleMethod="fit"] screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
- * @param {boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
- * @param {string} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
- * @param {boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen).
- * @param {boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
- * @param {boolean} [options.consoleHeader=true] whether to display melonJS version and basic device information in the console
+ * @param {number} width - The width of the canvas viewport
+ * @param {number} height - The height of the canvas viewport
+ * @param {object} [options] - The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
+ * @param {string|HTMLElement} [options.parent=document.body] - the DOM parent element to hold the canvas in the HTML file
+ * @param {number} [options.renderer=video.AUTO] - renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
+ * @param {number|string} [options.scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)
+ * @param {string} [options.scaleMethod="fit"] - screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
+ * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
+ * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
+ * @param {boolean} [options.transparent=false] - whether to allow transparent pixels in the front buffer (screen).
+ * @param {boolean} [options.antiAlias=false] - whether to enable or not video scaling interpolation
+ * @param {boolean} [options.consoleHeader=true] - whether to display melonJS version and basic device information in the console
  * @returns {boolean} false if initialization failed (canvas not supported)
  * @example
  * // init the video with a 640x480 canvas
@@ -381,9 +381,9 @@ export function init(width, height, options) {
 /**
  * Create and return a new Canvas element
  * @function video.createCanvas
- * @param {number} width width
- * @param {number} height height
- * @param {boolean} [returnOffscreenCanvas=false] will return an OffscreenCanvas if supported
+ * @param {number} width - width
+ * @param {number} height - height
+ * @param {boolean} [returnOffscreenCanvas=false] - will return an OffscreenCanvas if supported
  * @returns {HTMLCanvasElement|OffscreenCanvas}
  */
 export function createCanvas(width, height, returnOffscreenCanvas = false) {
@@ -425,8 +425,8 @@ export function getParent() {
  * Only use this if you are not using the automatic scaling feature.
  * @function video.scale
  * @see video.init
- * @param {number} x x scaling multiplier
- * @param {number} y y scaling multiplier
+ * @param {number} x - x scaling multiplier
+ * @param {number} y - y scaling multiplier
  */
 export function scale(x, y) {
     var canvas = renderer.getCanvas();

@@ -389,7 +389,7 @@ export let stopOnBlur = false;
 * @function onReady
 * @memberof device
 * @public
-* @param {Function} fn the function to be executed
+* @param {Function} fn - the function to be executed
 * @example
 * // small game skeleton
 * var game = {
@@ -438,7 +438,7 @@ export function onReady(fn) {
  * @function enableSwipe
  * @memberof device
  * @public
- * @param {boolean} [enable=true] enable or disable swipe.
+ * @param {boolean} [enable=true] - enable or disable swipe.
  */
 export function enableSwipe(enable) {
     let moveEvent = pointerEvent ? "pointermove" : (touchEvent ? "touchmove" : "mousemove");
@@ -473,7 +473,7 @@ export function isFullscreen() {
  * @function requestFullscreen
  * @memberof device
  * @public
- * @param {object} [element=default canvas object] the element to be set in full-screen mode.
+ * @param {object} [element=default canvas object] - the element to be set in full-screen mode.
  * @example
  * // add a keyboard shortcut to toggle Fullscreen mode on/off
  * me.input.bindKey(me.input.KEY.F, "toggleFullscreen");
@@ -549,7 +549,7 @@ export function getScreenOrientation() {
  * @memberof device
  * @public
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
- * @param {string|string[]} orientation The orientation into which to lock the screen.
+ * @param {string|string[]} orientation - The orientation into which to lock the screen.
  * @returns {boolean} true if the orientation was unsuccessfully locked
  */
 export function lockOrientation(orientation) {
@@ -629,7 +629,7 @@ export function getStorage(type = "local") {
  * @function getParentElement
  * @memberof device
  * @public
- * @param {string|HTMLElement} element the parent element name or a HTMLElement object
+ * @param {string|HTMLElement} element - the parent element name or a HTMLElement object
  * @returns {HTMLElement} the parent Element
  */
 export function getParentElement(element) {
@@ -647,7 +647,7 @@ export function getParentElement(element) {
  * @function getElement
  * @memberof device
  * @public
- * @param {string|HTMLElement} element the parent element name or a HTMLElement object
+ * @param {string|HTMLElement} element - the parent element name or a HTMLElement object
  * @returns {HTMLElement} the corresponding DOM Element or null if not existing
  */
 export function getElement(element) {
@@ -677,7 +677,7 @@ export function getElement(element) {
  * @memberof device
  * @public
  * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
- * @param {string|HTMLElement} element an HTMLElement object
+ * @param {string|HTMLElement} element - an HTMLElement object
  * @returns {DOMRect} the size and position of the element relatively to the viewport
  */
 export function getElementBounds(element) {
@@ -697,7 +697,7 @@ export function getElementBounds(element) {
  * @memberof device
  * @public
  * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
- * @param {string|HTMLElement} element an HTMLElement object
+ * @param {string|HTMLElement} element - an HTMLElement object
  * @returns {DOMRect} the size and position of the given element parent relative to the viewport
  */
 export function getParentBounds(element) {
@@ -709,8 +709,8 @@ export function getParentBounds(element) {
  * @function isWebGLSupported
  * @memberof device
  * @public
- * @param {object} [options] context creation options
- * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
+ * @param {object} [options] - context creation options
+ * @param {boolean} [options.failIfMajorPerformanceCaveat=true] - If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
  * @returns {boolean} true if WebGL is supported
  */
 export function isWebGLSupported(options) {
@@ -882,7 +882,7 @@ export function unwatchDeviceOrientation() {
  * @function vibrate
  * @memberof device
  * @public
- * @param {number|number[]} pattern pattern of vibration and pause intervals
+ * @param {number|number[]} pattern - pattern of vibration and pause intervals
  * @example
  * // vibrate for 1000 ms
  * me.device.vibrate(1000);

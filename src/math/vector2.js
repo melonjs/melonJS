@@ -7,8 +7,8 @@ import pool from "./../system/pooling.js";
  */
 class Vector2d {
     /**
-     * @param {number} [x=0] x value of the vector
-     * @param {number} [y=0] y value of the vector
+     * @param {number} [x=0] - x value of the vector
+     * @param {number} [y=0] - y value of the vector
      */
     constructor(x = 0, y = 0) {
         this.onResetEvent(x, y);
@@ -159,7 +159,7 @@ class Vector2d {
      * Divide this vector values by the passed value
      * @name div
      * @memberof Vector2d
-     * @param {number} n the value to divide the vector by
+     * @param {number} n - the value to divide the vector by
      * @returns {Vector2d} Reference to this object for method chaining
      */
     div(n) {
@@ -348,8 +348,8 @@ class Vector2d {
      * Rotate this vector (counter-clockwise) by the specified angle (in radians).
      * @name rotate
      * @memberof Vector2d
-     * @param {number} angle The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
      * @returns {Vector2d} Reference to this object for method chaining
      */
     rotate(angle, v) {
@@ -417,7 +417,7 @@ class Vector2d {
      * @name lerp
      * @memberof Vector2d
      * @param {Vector2d} v
-     * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+     * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
      * @returns {Vector2d} Reference to this object for method chaining
      */
     lerp(v, alpha) {
@@ -431,7 +431,7 @@ class Vector2d {
      * @name moveTowards
      * @memberof Vector2d
      * @param {Vector2d} target
-     * @param {number} step the maximum step per iteration (Negative values will push the vector away from the target)
+     * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
      * @returns {Vector2d} Reference to this object for method chaining
      */
      moveTowards(target, step) {
@@ -476,7 +476,7 @@ class Vector2d {
      * project this vector on to another vector.
      * @name project
      * @memberof Vector2d
-     * @param {Vector2d} v The vector to project onto.
+     * @param {Vector2d} v - The vector to project onto.
      * @returns {Vector2d} Reference to this object for method chaining
      */
     project(v) {
@@ -488,7 +488,7 @@ class Vector2d {
      * This is slightly more efficient than `project` when dealing with unit vectors.
      * @name projectN
      * @memberof Vector2d
-     * @param {Vector2d} v The unit vector to project onto.
+     * @param {Vector2d} v - The unit vector to project onto.
      * @returns {Vector2d} Reference to this object for method chaining
      */
     projectN(v) {

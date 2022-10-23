@@ -74,7 +74,7 @@ var save = {
      * Add new keys to localStorage and set them to the given default values if they do not exist
      * @name add
      * @memberof save
-     * @param {object} props key and corresponding values
+     * @param {object} props - key and corresponding values
      * @example
      * // Initialize "score" and "lives" with default values
      * me.save.add({ score : 0, lives : 3 });
@@ -127,7 +127,7 @@ var save = {
      * Remove a key from localStorage
      * @name remove
      * @memberof save
-     * @param {string} key key to be removed
+     * @param {string} key - key to be removed
      * @example
      * // Remove the "score" key from localStorage
      * me.save.remove("score");

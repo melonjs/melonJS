@@ -9,9 +9,9 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
  */
 class UISpriteElement extends Sprite {
     /**
-     * @param {number} x the x coordinate of the GUI Object
-     * @param {number} y the y coordinate of the GUI Object
-     * @param {object} settings See {@link Sprite}
+     * @param {number} x - the x coordinate of the GUI Object
+     * @param {number} y - the y coordinate of the GUI Object
+     * @param {object} settings - See {@link Sprite}
      * @example
      * // create a basic GUI Object
      * class myButton extends UISpriteElement {
@@ -104,7 +104,7 @@ class UISpriteElement extends Sprite {
 
     /**
      * function called when the object is pressed (to be extended)
-     * @param {Pointer} event the event object
+     * @param {Pointer} event - the event object
      * @returns {boolean} return false if we need to stop propagating the event
      */
     onClick(event) { // eslint-disable-line no-unused-vars
@@ -123,7 +123,7 @@ class UISpriteElement extends Sprite {
 
     /**
      * function called when the pointer is over the object
-     * @param {Pointer} event the event object
+     * @param {Pointer} event - the event object
      */
     onOver(event) { // eslint-disable-line no-unused-vars
         // to be extended
@@ -142,7 +142,7 @@ class UISpriteElement extends Sprite {
 
     /**
      * function called when the pointer is leaving the object area
-     * @param {Pointer} event the event object
+     * @param {Pointer} event - the event object
      */
     onOut(event) { // eslint-disable-line no-unused-vars
         // to be extended

@@ -14,9 +14,9 @@ import pool from "./../system/pooling.js";
  */
 class Polygon {
     /**
-     * @param {number} x origin point of the Polygon
-     * @param {number} y origin point of the Polygon
-     * @param {Vector2d[]} points array of vector defining the Polygon
+     * @param {number} x - origin point of the Polygon
+     * @param {number} y - origin point of the Polygon
+     * @param {Vector2d[]} points - array of vector defining the Polygon
      */
     constructor(x, y, points) {
         /**
@@ -83,9 +83,9 @@ class Polygon {
      * set new value to the Polygon
      * @name setShape
      * @memberof Polygon
-     * @param {number} x position of the Polygon
-     * @param {number} y position of the Polygon
-     * @param {Vector2d[]|number[]} points array of vector or vertice defining the Polygon
+     * @param {number} x - position of the Polygon
+     * @param {number} y - position of the Polygon
+     * @param {Vector2d[]|number[]} points - array of vector or vertice defining the Polygon
      * @returns {Polygon} this instance for objecf chaining
      */
     setShape(x, y, points) {
@@ -98,7 +98,7 @@ class Polygon {
      * set the vertices defining this Polygon
      * @name setVertices
      * @memberof Polygon
-     * @param {Vector2d[]} vertices array of vector or vertice defining the Polygon
+     * @param {Vector2d[]} vertices - array of vector or vertice defining the Polygon
      * @returns {Polygon} this instance for objecf chaining
      */
     setVertices(vertices) {
@@ -137,7 +137,7 @@ class Polygon {
      * apply the given transformation matrix to this Polygon
      * @name transform
      * @memberof Polygon
-     * @param {Matrix2d} m the transformation matrix
+     * @param {Matrix2d} m - the transformation matrix
      * @returns {Polygon} Reference to this object for method chaining
      */
     transform(m) {
@@ -175,8 +175,8 @@ class Polygon {
      * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
      * @name rotate
      * @memberof Polygon
-     * @param {number} angle The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
      * @returns {Polygon} Reference to this object for method chaining
      */
     rotate(angle, v) {
@@ -332,15 +332,15 @@ class Polygon {
      * @name translate
      * @memberof Polygon
      * @method
-     * @param {number} x x offset
-     * @param {number} y y offset
+     * @param {number} x - x offset
+     * @param {number} y - y offset
      * @returns {Polygon} this Polygon
      */
     /**
      * translate the Polygon by the specified vector
      * @name translate
      * @memberof Polygon
-     * @param {Vector2d} v vector offset
+     * @param {Vector2d} v - vector offset
      * @returns {Polygon} Reference to this object for method chaining
      */
     translate() {
@@ -410,8 +410,8 @@ class Polygon {
      *  bounding rect, as the function can be highly consuming with complex shapes)
      * @name contains
      * @memberof Polygon
-     * @param  {number} x x coordinate
-     * @param  {number} y y coordinate
+     * @param  {number} x -  x coordinate
+     * @param  {number} y -  y coordinate
      * @returns {boolean} true if contains
      */
     contains() {

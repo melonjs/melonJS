@@ -441,8 +441,8 @@ var loader = {
      * @name setBaseURL
      * @memberof loader
      * @public
-     * @param {string} type  "*", "audio", binary", "image", "json", "js", "tmx", "tsx"
-     * @param {string} [url="./"] default base URL
+     * @param {string} type  - "*", "audio", binary", "image", "json", "js", "tmx", "tsx"
+     * @param {string} [url="./"] - default base URL
      * @example
      * // change the base URL relative address for audio assets
      * me.loader.setBaseURL("audio", "data/audio/");
@@ -472,12 +472,12 @@ var loader = {
      * @memberof loader
      * @public
      * @param {object[]} res
-     * @param {string} res.name internal name of the resource
-     * @param {string} res.type  "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
-     * @param {string} res.src  path and/or file name of the resource (for audio assets only the path is required)
-     * @param {boolean} [res.stream] Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
-     * @param {Function} [onload=loader.onload] function to be called when all resources are loaded
-     * @param {boolean} [switchToLoadState=true] automatically switch to the loading screen
+     * @param {string} res.name - internal name of the resource
+     * @param {string} res.type  - "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
+     * @param {string} res.src  - path and/or file name of the resource (for audio assets only the path is required)
+     * @param {boolean} [res.stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
+     * @param {Function} [onload=loader.onload] - function to be called when all resources are loaded
+     * @param {boolean} [switchToLoadState=true] - automatically switch to the loading screen
      * @example
      * game_resources = [
      *   // PNG tileset
@@ -540,12 +540,12 @@ var loader = {
      * @memberof loader
      * @public
      * @param {object} res
-     * @param {string} res.name internal name of the resource
-     * @param {string} res.type  "audio", binary", "image", "json", "tmx", "tsx"
-     * @param {string} res.src  path and/or file name of the resource (for audio assets only the path is required)
-     * @param {boolean} [res.stream] Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
-     * @param {Function} [onload] function to be called when the resource is loaded
-     * @param {Function} [onerror] function to be called in case of error
+     * @param {string} res.name - internal name of the resource
+     * @param {string} res.type  - "audio", binary", "image", "json", "tmx", "tsx"
+     * @param {string} res.src  - path and/or file name of the resource (for audio assets only the path is required)
+     * @param {boolean} [res.stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
+     * @param {Function} [onload] - function to be called when the resource is loaded
+     * @param {Function} [onerror] - function to be called in case of error
      * @returns {number} the amount of corresponding resource to be preloaded
      * @example
      * // load an image asset
@@ -610,8 +610,8 @@ var loader = {
      * @memberof loader
      * @public
      * @param {object} res
-     * @param {string} res.name internal name of the resource
-     * @param {string} res.type  "audio", binary", "image", "json", "tmx", "tsx"
+     * @param {string} res.name - internal name of the resource
+     * @param {string} res.type  - "audio", binary", "image", "json", "tmx", "tsx"
      * @returns {boolean} true if unloaded
      * @example me.loader.unload({name: "avatar",  type:"image"});
      */
@@ -724,7 +724,7 @@ var loader = {
      * @name getTMX
      * @memberof loader
      * @public
-     * @param {string} elt name of the tmx/tsx element ("map1");
+     * @param {string} elt - name of the tmx/tsx element ("map1");
      * @returns {object} requested element or null if not found
      */
     getTMX(elt) {
@@ -741,7 +741,7 @@ var loader = {
      * @name getBinary
      * @memberof loader
      * @public
-     * @param {string} elt name of the binary object ("ymTrack");
+     * @param {string} elt - name of the binary object ("ymTrack");
      * @returns {object} requested element or null if not found
      */
     getBinary(elt) {
@@ -758,7 +758,7 @@ var loader = {
      * @name getImage
      * @memberof loader
      * @public
-     * @param {string} image name of the Image element ("tileset-platformer");
+     * @param {string} image - name of the Image element ("tileset-platformer");
      * @returns {HTMLImageElement} requested element or null if not found
      */
     getImage(image) {
@@ -776,7 +776,7 @@ var loader = {
      * @name getJSON
      * @memberof loader
      * @public
-     * @param {string} elt name of the json file to load
+     * @param {string} elt - name of the json file to load
      * @returns {object}
      */
     getJSON(elt) {

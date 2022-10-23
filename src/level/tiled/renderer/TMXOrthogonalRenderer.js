@@ -9,7 +9,7 @@ import TMXRenderer from "./TMXRenderer.js";
  */
 class TMXOrthogonalRenderer extends TMXRenderer {
     /**
-     * @param {TMXTileMap} map the TMX map
+     * @param {TMXTileMap} map - the TMX map
      */
     constructor(map) {
         super(

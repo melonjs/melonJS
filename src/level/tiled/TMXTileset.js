@@ -10,7 +10,7 @@ import loader from "./../../loader/loader.js";
  */
 class TMXTileset {
     /**
-     *  @param {object} tileset tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
+     *  @param {object} tileset - tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
      */
     constructor(tileset) {
         var i = 0;
@@ -206,7 +206,7 @@ class TMXTileset {
      * Get the view (local) tile ID from a GID, with animations applied
      * @name TMXTileset#getViewTileId
      * @public
-     * @param {number} gid Global tile ID
+     * @param {number} gid - Global tile ID
      * @returns {number} View tile ID
      */
     getViewTileId(gid) {

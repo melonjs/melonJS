@@ -29,7 +29,7 @@ var utils = {
      * @public
      * @memberof utils
      * @name getPixels
-     * @param {HTMLImageElement|HTMLCanvasElement} image Image to read
+     * @param {HTMLImageElement|HTMLCanvasElement} image - Image to read
      * @returns {ImageData} ImageData object
      */
     getPixels : function (image) {
@@ -51,8 +51,8 @@ var utils = {
      * @public
      * @memberof utils
      * @name checkVersion
-     * @param {string} first First version string to compare
-     * @param {string} [second=version] Second version string to compare
+     * @param {string} first - First version string to compare
+     * @param {string} [second=version] - Second version string to compare
      * @returns {number} comparison result <br>&lt; 0 : first &lt; second<br>
      * 0 : first == second<br>
      * &gt; 0 : first &gt; second
@@ -83,7 +83,7 @@ var utils = {
      * @public
      * @memberof utils
      * @name getUriFragment
-     * @param {string} [url=document.location] an optional params string or URL containing fragment (hash) params to be parsed
+     * @param {string} [url=document.location] - an optional params string or URL containing fragment (hash) params to be parsed
      * @returns {object} an object representing the deserialized params string.
      * @property {boolean} [hitbox=false] draw the hitbox in the debug panel (if enabled)
      * @property {boolean} [velocity=false] draw the entities velocity in the debug panel (if enabled)
