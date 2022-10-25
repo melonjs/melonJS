@@ -7,9 +7,16 @@
   "globals": {
     "globalThis": false
   },
+  "parser": "@babel/eslint-parser",
   "parserOptions": {
     "ecmaVersion": 6,
-    "sourceType": "module"
+    "sourceType": "module",
+    "requireConfigFile": false,
+    "babelOptions": {
+      "plugins": [
+        "@babel/plugin-syntax-import-assertions"
+      ]
+    }
   },
   "plugins": ["eslint-plugin-jsdoc"],
   "extends": "eslint:recommended",

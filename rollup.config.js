@@ -4,9 +4,7 @@ import image from "@rollup/plugin-image";
 import bundleSize from "rollup-plugin-bundle-size";
 import commonjs from "@rollup/plugin-commonjs";
 import resolve from "@rollup/plugin-node-resolve";
-
-const pkg = require("./package.json");
-
+import pkg from "./package.json" assert { type: "json" };
 
 // credit/license information
 const license = [
