@@ -64,7 +64,7 @@
     "@rollup/plugin-node-resolve": "^14.1.0",
     "@rollup/plugin-replace": "^4.0.0",
     "@types/offscreencanvas": "^2019.7.0",
-    "@webdoc/cli": "^2.1.2",
+    "@webdoc/cli": "^2.2.0",
     "chromedriver": "^106.0.1",
     "cross-env": "^7.0.3",
     "del-cli": "^5.0.0",
