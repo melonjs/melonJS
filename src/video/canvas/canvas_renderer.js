@@ -14,16 +14,16 @@ import * as event from "./../../system/event.js";
  */
 class CanvasRenderer extends Renderer {
     /**
-     * @param {object} options The renderer parameters
-     * @param {number} options.width The width of the canvas without scaling
-     * @param {number} options.height The height of the canvas without scaling
-     * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
-     * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing
-     * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
-     * @param {boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
-     * @param {boolean} [options.textureSeamFix=true] enable the texture seam fix when rendering Tile when antiAlias is off for the canvasRenderer
-     * @param {number} [options.zoomX=width] The actual width of the canvas with scaling applied
-     * @param {number} [options.zoomY=height] The actual height of the canvas with scaling applied
+     * @param {object} options - The renderer parameters
+     * @param {number} options.width - The width of the canvas without scaling
+     * @param {number} options.height - The height of the canvas without scaling
+     * @param {HTMLCanvasElement} [options.canvas] - The html canvas to draw to on screen
+     * @param {boolean} [options.antiAlias=false] - Whether to enable anti-aliasing
+     * @param {boolean} [options.transparent=false] - Whether to enable transparency on the canvas (performance hit when enabled)
+     * @param {boolean} [options.subPixel=false] - Whether to enable subpixel renderering (performance hit when enabled)
+     * @param {boolean} [options.textureSeamFix=true] - enable the texture seam fix when rendering Tile when antiAlias is off for the canvasRenderer
+     * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
+     * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
      */
     constructor(options) {
         // parent constructor
@@ -91,7 +91,7 @@ class CanvasRenderer extends Renderer {
      * @name setBlendMode
      * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
      * @memberof CanvasRenderer
-     * @param {string} [mode="normal"] blend mode : "normal", "multiply", "lighter, "additive", "screen"
+     * @param {string} [mode="normal"] - blend mode : "normal", "multiply", "lighter, "additive", "screen"
      * @param {CanvasRenderingContext2D} [context]
      */
     setBlendMode(mode = "normal", context) {
@@ -135,8 +135,8 @@ class CanvasRenderer extends Renderer {
      * Clears the main framebuffer with the given color
      * @name clearColor
      * @memberof CanvasRenderer
-     * @param {Color|string} [color="#000000"] CSS color.
-     * @param {boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
+     * @param {Color|string} [color="#000000"] - CSS color.
+     * @param {boolean} [opaque=false] - Allow transparency [default] or clear the surface completely [true]
      */
     clearColor(color = "#000000", opaque = false) {
         var canvas = this.getCanvas();
@@ -155,10 +155,10 @@ class CanvasRenderer extends Renderer {
      * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
      * @name clearRect
      * @memberof CanvasRenderer
-     * @param {number} x x axis of the coordinate for the rectangle starting point.
-     * @param {number} y y axis of the coordinate for the rectangle starting point.
-     * @param {number} width The rectangle's width.
-     * @param {number} height The rectangle's height.
+     * @param {number} x - x axis of the coordinate for the rectangle starting point.
+     * @param {number} y - y axis of the coordinate for the rectangle starting point.
+     * @param {number} width - The rectangle's width.
+     * @param {number} height - The rectangle's height.
      */
     clearRect(x, y, width, height) {
         this.getContext().clearRect(x, y, width, height);
@@ -168,8 +168,8 @@ class CanvasRenderer extends Renderer {
      * Create a pattern with the specified repetition
      * @name createPattern
      * @memberof CanvasRenderer
-     * @param {Image} image Source image
-     * @param {string} repeat Define how the pattern should be repeated
+     * @param {Image} image - Source image
+     * @param {string} repeat - Define how the pattern should be repeated
      * @returns {CanvasPattern}
      * @see ImageLayer#repeat
      * @example
@@ -186,15 +186,15 @@ class CanvasRenderer extends Renderer {
      * Draw an image onto the main using the canvas api
      * @name drawImage
      * @memberof CanvasRenderer
-     * @param {Image} image An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
-     * @param {number} sx The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
-     * @param {number} sy The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
-     * @param {number} sw The width of the sub-rectangle of the source image to draw into the destination context. If not specified, the entire rectangle from the coordinates specified by sx and sy to the bottom-right corner of the image is used.
-     * @param {number} sh The height of the sub-rectangle of the source image to draw into the destination context.
-     * @param {number} dx The X coordinate in the destination canvas at which to place the top-left corner of the source image.
-     * @param {number} dy The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
-     * @param {number} dw The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
-     * @param {number} dh The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
+     * @param {Image} image - An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
+     * @param {number} sx - The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
+     * @param {number} sy - The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
+     * @param {number} sw - The width of the sub-rectangle of the source image to draw into the destination context. If not specified, the entire rectangle from the coordinates specified by sx and sy to the bottom-right corner of the image is used.
+     * @param {number} sh - The height of the sub-rectangle of the source image to draw into the destination context.
+     * @param {number} dx - The X coordinate in the destination canvas at which to place the top-left corner of the source image.
+     * @param {number} dy - The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
+     * @param {number} dw - The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
+     * @param {number} dh - The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
      * @example
      * // Position the image on the canvas:
      * renderer.drawImage(image, dx, dy);
@@ -249,7 +249,7 @@ class CanvasRenderer extends Renderer {
      * Draw a pattern within the given rectangle.
      * @name drawPattern
      * @memberof CanvasRenderer
-     * @param {CanvasPattern} pattern Pattern object
+     * @param {CanvasPattern} pattern - Pattern object
      * @param {number} x
      * @param {number} y
      * @param {number} width
@@ -272,13 +272,13 @@ class CanvasRenderer extends Renderer {
      * Stroke an arc at the specified coordinates with given radius, start and end points
      * @name strokeArc
      * @memberof CanvasRenderer
-     * @param {number} x arc center point x-axis
-     * @param {number} y arc center point y-axis
+     * @param {number} x - arc center point x-axis
+     * @param {number} y - arc center point y-axis
      * @param {number} radius
-     * @param {number} start start angle in radians
-     * @param {number} end end angle in radians
-     * @param {boolean} [antiClockwise=false] draw arc anti-clockwise
-     * @param {boolean} [fill=false] also fill the shape with the current color if true
+     * @param {number} start - start angle in radians
+     * @param {number} end - end angle in radians
+     * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeArc(x, y, radius, start, end, antiClockwise, fill = false) {
         if (this.getGlobalAlpha() < 1 / 255) {
@@ -298,12 +298,12 @@ class CanvasRenderer extends Renderer {
      * Fill an arc at the specified coordinates with given radius, start and end points
      * @name fillArc
      * @memberof CanvasRenderer
-     * @param {number} x arc center point x-axis
-     * @param {number} y arc center point y-axis
+     * @param {number} x - arc center point x-axis
+     * @param {number} y - arc center point y-axis
      * @param {number} radius
-     * @param {number} start start angle in radians
-     * @param {number} end end angle in radians
-     * @param {boolean} [antiClockwise=false] draw arc anti-clockwise
+     * @param {number} start - start angle in radians
+     * @param {number} end - end angle in radians
+     * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
      */
     fillArc(x, y, radius, start, end, antiClockwise) {
         this.strokeArc(x, y, radius, start, end, antiClockwise || false, true);
@@ -313,11 +313,11 @@ class CanvasRenderer extends Renderer {
      * Stroke an ellipse at the specified coordinates with given radius
      * @name strokeEllipse
      * @memberof CanvasRenderer
-     * @param {number} x ellipse center point x-axis
-     * @param {number} y ellipse center point y-axis
-     * @param {number} w horizontal radius of the ellipse
-     * @param {number} h vertical radius of the ellipse
-     * @param {boolean} [fill=false] also fill the shape with the current color if true
+     * @param {number} x - ellipse center point x-axis
+     * @param {number} y - ellipse center point y-axis
+     * @param {number} w - horizontal radius of the ellipse
+     * @param {number} h - vertical radius of the ellipse
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeEllipse(x, y, w, h, fill = false) {
         if (this.getGlobalAlpha() < 1 / 255) {
@@ -354,10 +354,10 @@ class CanvasRenderer extends Renderer {
      * Fill an ellipse at the specified coordinates with given radius
      * @name fillEllipse
      * @memberof CanvasRenderer
-     * @param {number} x ellipse center point x-axis
-     * @param {number} y ellipse center point y-axis
-     * @param {number} w horizontal radius of the ellipse
-     * @param {number} h vertical radius of the ellipse
+     * @param {number} x - ellipse center point x-axis
+     * @param {number} y - ellipse center point y-axis
+     * @param {number} w - horizontal radius of the ellipse
+     * @param {number} h - vertical radius of the ellipse
      */
     fillEllipse(x, y, w, h) {
         this.strokeEllipse(x, y, w, h, true);
@@ -367,10 +367,10 @@ class CanvasRenderer extends Renderer {
      * Stroke a line of the given two points
      * @name strokeLine
      * @memberof CanvasRenderer
-     * @param {number} startX the start x coordinate
-     * @param {number} startY the start y coordinate
-     * @param {number} endX the end x coordinate
-     * @param {number} endY the end y coordinate
+     * @param {number} startX - the start x coordinate
+     * @param {number} startY - the start y coordinate
+     * @param {number} endX - the end x coordinate
+     * @param {number} endY - the end y coordinate
      */
     strokeLine(startX, startY, endX, endY) {
         if (this.getGlobalAlpha() < 1 / 255) {
@@ -390,10 +390,10 @@ class CanvasRenderer extends Renderer {
      * Fill a line of the given two points
      * @name fillLine
      * @memberof CanvasRenderer
-     * @param {number} startX the start x coordinate
-     * @param {number} startY the start y coordinate
-     * @param {number} endX the end x coordinate
-     * @param {number} endY the end y coordinate
+     * @param {number} startX - the start x coordinate
+     * @param {number} startY - the start y coordinate
+     * @param {number} endX - the end x coordinate
+     * @param {number} endY - the end y coordinate
      */
     fillLine(startX, startY, endX, endY) {
         this.strokeLine(startX, startY, endX, endY);
@@ -403,8 +403,8 @@ class CanvasRenderer extends Renderer {
      * Stroke the given me.Polygon on the screen
      * @name strokePolygon
      * @memberof CanvasRenderer
-     * @param {Polygon} poly the shape to draw
-     * @param {boolean} [fill=false] also fill the shape with the current color if true
+     * @param {Polygon} poly - the shape to draw
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokePolygon(poly, fill = false) {
         if (this.getGlobalAlpha() < 1 / 255) {
@@ -431,7 +431,7 @@ class CanvasRenderer extends Renderer {
      * Fill the given me.Polygon on the screen
      * @name fillPolygon
      * @memberof CanvasRenderer
-     * @param {Polygon} poly the shape to draw
+     * @param {Polygon} poly - the shape to draw
      */
     fillPolygon(poly) {
         this.strokePolygon(poly, true);
@@ -445,7 +445,7 @@ class CanvasRenderer extends Renderer {
      * @param {number} y
      * @param {number} width
      * @param {number} height
-     * @param {boolean} [fill=false] also fill the shape with the current color if true
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeRect(x, y, width, height, fill = false) {
         if (this.getGlobalAlpha() < 1 / 255) {
@@ -479,7 +479,7 @@ class CanvasRenderer extends Renderer {
      * @param {number} width
      * @param {number} height
      * @param {number} radius
-     * @param {boolean} [fill=false] also fill the shape with the current color if true
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeRoundRect(x, y, width, height, radius, fill = false) {
         if (this.getGlobalAlpha() < 1 / 255) {
@@ -567,7 +567,7 @@ class CanvasRenderer extends Renderer {
      * rotates the canvas context
      * @name rotate
      * @memberof CanvasRenderer
-     * @param {number} angle in radians
+     * @param {number} angle - in radians
      */
     rotate(angle) {
         this.getContext().rotate(angle);
@@ -589,7 +589,7 @@ class CanvasRenderer extends Renderer {
      * By default, or upon reset, the value is set to #000000.
      * @name setColor
      * @memberof CanvasRenderer
-     * @param {Color|string} color css color value
+     * @param {Color|string} color - css color value
      */
     setColor(color) {
         var context = this.getContext();
@@ -605,7 +605,7 @@ class CanvasRenderer extends Renderer {
      * Set the global alpha
      * @name setGlobalAlpha
      * @memberof CanvasRenderer
-     * @param {number} alpha 0.0 to 1.0 values accepted.
+     * @param {number} alpha - 0.0 to 1.0 values accepted.
      */
     setGlobalAlpha(alpha) {
         this.getContext().globalAlpha = this.currentColor.glArray[3] = alpha;
@@ -625,7 +625,7 @@ class CanvasRenderer extends Renderer {
      * Set the line width on the context
      * @name setLineWidth
      * @memberof CanvasRenderer
-     * @param {number} width Line width
+     * @param {number} width - Line width
      */
     setLineWidth(width) {
         this.getContext().lineWidth = width;
@@ -636,7 +636,7 @@ class CanvasRenderer extends Renderer {
      * identity one, and then apply the given transformation matrix.
      * @name setTransform
      * @memberof CanvasRenderer
-     * @param {Matrix2d} mat2d Matrix to transform by
+     * @param {Matrix2d} mat2d - Matrix to transform by
      */
     setTransform(mat2d) {
         this.resetTransform();
@@ -647,7 +647,7 @@ class CanvasRenderer extends Renderer {
      * Multiply given matrix into the renderer tranformation matrix
      * @name transform
      * @memberof CanvasRenderer
-     * @param {Matrix2d} mat2d Matrix to transform by
+     * @param {Matrix2d} mat2d - Matrix to transform by
      */
     transform(mat2d) {
         var m = mat2d.toArray(),
@@ -721,8 +721,8 @@ class CanvasRenderer extends Renderer {
      * Mask are not preserved through renderer context save and restore.
      * @name setMask
      * @memberof CanvasRenderer
-     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
-     * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - the shape defining the mask to be applied
+     * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
      */
     setMask(mask, invert = false) {
         var context = this.getContext();

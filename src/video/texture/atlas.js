@@ -38,9 +38,9 @@ export function createAtlas(width, height, name = "default", repeat = "no-repeat
  */
 export class TextureAtlas {
     /**
-     * @param {object|object[]} atlases atlas information. See {@link loader.getJSON}
-     * @param {HTMLImageElement|HTMLCanvasElement|string|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] Image source
-     * @param {boolean} [cache=false] Use true to skip caching this Texture
+     * @param {object|object[]} atlases - atlas information. See {@link loader.getJSON}
+     * @param {HTMLImageElement|HTMLCanvasElement|string|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] - Image source
+     * @param {boolean} [cache=false] - Use true to skip caching this Texture
      * @example
      * // create a texture atlas from a JSON Object
      * game.texture = new me.TextureAtlas(
@@ -269,7 +269,7 @@ export class TextureAtlas {
 
     /**
      * return the default or specified atlas dictionnary
-     * @param {string} [name] atlas name in case of multipack textures
+     * @param {string} [name] - atlas name in case of multipack textures
      * @returns {object}
      */
     getAtlas(name) {
@@ -290,7 +290,7 @@ export class TextureAtlas {
 
     /**
      * return the source texture for the given region (or default one if none specified)
-     * @param {object} [region] region name in case of multipack textures
+     * @param {object} [region] - region name in case of multipack textures
      * @returns {HTMLImageElement|HTMLCanvasElement}
      */
     getTexture(region) {
@@ -303,11 +303,11 @@ export class TextureAtlas {
 
     /**
      * add a region to the atlas
-     * @param {string} name region mame
-     * @param {number} x x origin of the region
-     * @param {number} y y origin of the region
-     * @param {number} w width of the region
-     * @param {number} h height of the region
+     * @param {string} name - region mame
+     * @param {number} x - x origin of the region
+     * @param {number} y - y origin of the region
+     * @param {number} w - width of the region
+     * @param {number} h - height of the region
      * @returns {object} the created region
      */
     addRegion(name, x, y, w, h) {
@@ -336,8 +336,8 @@ export class TextureAtlas {
 
     /**
      * return a normalized region (or frame) information for the specified sprite name
-     * @param {string} name name of the sprite
-     * @param {string} [atlas] name of a specific atlas where to search for the region
+     * @param {string} name - name of the sprite
+     * @param {string} [atlas] - name of a specific atlas where to search for the region
      * @returns {object}
      */
     getRegion(name, atlas) {
@@ -358,7 +358,7 @@ export class TextureAtlas {
 
     /**
      * return the uvs mapping for the given region
-     * @param {object} name region (or frame) name
+     * @param {object} name - region (or frame) name
      * @returns {Float32Array} region Uvs
      */
     getUVs(name) {
@@ -379,10 +379,10 @@ export class TextureAtlas {
 
     /**
      * add uvs mapping for the given region
-     * @param {object} atlas the atlas dictionnary where the region is define
-     * @param {object} name region (or frame) name
-     * @param {number} w the width of the region
-     * @param {number} h the height of the region
+     * @param {object} atlas - the atlas dictionnary where the region is define
+     * @param {object} name - region (or frame) name
+     * @param {number} w - the width of the region
+     * @param {number} h - the height of the region
      * @returns {Float32Array} the created region UVs
      */
     addUVs(atlas, name, w, h) {
@@ -409,9 +409,9 @@ export class TextureAtlas {
 
     /**
      * Create a sprite object using the first region found using the specified name
-     * @param {string} name name of the sprite
-     * @param {object} [settings] Additional settings passed to the {@link Sprite} contructor
-     * @param {boolean} [nineSlice=false] if true returns a 9-slice sprite
+     * @param {string} name - name of the sprite
+     * @param {object} [settings] - Additional settings passed to the {@link Sprite} contructor
+     * @param {boolean} [nineSlice=false] - if true returns a 9-slice sprite
      * @returns {Sprite|NineSliceSprite}
      * @example
      * // create a new texture object under the `game` namespace
@@ -449,9 +449,9 @@ export class TextureAtlas {
 
     /**
      * Create an animation object using the first region found using all specified names
-     * @param {string[]|number[]} names list of names for each sprite
+     * @param {string[]|number[]} names - list of names for each sprite
      * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)
-     * @param {object} [settings] Additional settings passed to the {@link Sprite} contructor
+     * @param {object} [settings] - Additional settings passed to the {@link Sprite} contructor
      * @returns {Sprite}
      * @example
      * // create a new texture object under the `game` namespace

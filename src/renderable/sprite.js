@@ -12,18 +12,18 @@ import Color from "../math/color.js";
  */
 class Sprite extends Renderable {
     /**
-     * @param {number} x the x coordinates of the sprite object
-     * @param {number} y the y coordinates of the sprite object
-     * @param {object} settings Configuration parameters for the Sprite object
-     * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image reference to spritesheet image, a texture atlas or to a texture atlas
-     * @param {string} [settings.name=""] name of this object
-     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
-     * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
-     * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
-     * @param {string|Color} [settings.tint] a tint to be applied to this sprite
-     * @param {number} [settings.flipX] flip the sprite on the horizontal axis
-     * @param {number} [settings.flipY] flip the sprite on the vertical axis
-     * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
+     * @param {number} x - the x coordinates of the sprite object
+     * @param {number} y - the y coordinates of the sprite object
+     * @param {object} settings - Configuration parameters for the Sprite object
+     * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image - reference to spritesheet image, a texture atlas or to a texture atlas
+     * @param {string} [settings.name=""] - name of this object
+     * @param {string} [settings.region] - region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
+     * @param {number} [settings.framewidth] - Width of a single frame within the spritesheet
+     * @param {number} [settings.frameheight] - Height of a single frame within the spritesheet
+     * @param {string|Color} [settings.tint] - a tint to be applied to this sprite
+     * @param {number} [settings.flipX] - flip the sprite on the horizontal axis
+     * @param {number} [settings.flipY] - flip the sprite on the vertical axis
+     * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] - Anchor point to draw the frame at (defaults to the center of the frame).
      * @example
      * // create a single sprite from a standalone image, with anchor in the center
      * var sprite = new me.Sprite(0, 0, {
@@ -226,8 +226,8 @@ class Sprite extends Renderable {
      * make the object flicker
      * @name flicker
      * @memberof Sprite
-     * @param {number} duration expressed in milliseconds
-     * @param {Function} callback Function to call when flickering ends
+     * @param {number} duration - expressed in milliseconds
+     * @param {Function} callback - Function to call when flickering ends
      * @returns {Sprite} Reference to this object for method chaining
      * @example
      * // make the object flicker for 1 second
@@ -256,10 +256,10 @@ class Sprite extends Renderable {
      * <img src="images/spritesheet_grid.png"/>
      * @name addAnimation
      * @memberof Sprite
-     * @param {string} name animation id
-     * @param {number[]|string[]|object[]} index list of sprite index or name
+     * @param {string} name - animation id
+     * @param {number[]|string[]|object[]} index - list of sprite index or name
      * defining the animation. Can also use objects to specify delay for each frame, see below
-     * @param {number} [animationspeed] cycling speed for animation in ms
+     * @param {number} [animationspeed] - cycling speed for animation in ms
      * @returns {number} frame amount of frame added to the animation (delay between each frame).
      * @see Sprite#animationspeed
      * @example
@@ -355,9 +355,9 @@ class Sprite extends Renderable {
      * this will always change the animation & set the frame to zero
      * @name setCurrentAnimation
      * @memberof Sprite
-     * @param {string} name animation id
-     * @param {string|Function} [resetAnim] animation id to switch to when complete, or callback
-     * @param {boolean} [preserve_dt=false] if false will reset the elapsed time counter since last frame
+     * @param {string} name - animation id
+     * @param {string|Function} [resetAnim] - animation id to switch to when complete, or callback
+     * @param {boolean} [preserve_dt=false] - if false will reset the elapsed time counter since last frame
      * @returns {Sprite} Reference to this object for method chaining
      * @example
      * // set "walk" animation
@@ -415,7 +415,7 @@ class Sprite extends Renderable {
      * reverse the given or current animation if none is specified
      * @name reverseAnimation
      * @memberof Sprite
-     * @param {string} [name] animation id
+     * @param {string} [name] - animation id
      * @returns {Sprite} Reference to this object for method chaining
      * @see Sprite#animationspeed
      */
@@ -433,7 +433,7 @@ class Sprite extends Renderable {
      * return true if the specified animation is the current one.
      * @name isCurrentAnimation
      * @memberof Sprite
-     * @param {string} name animation id
+     * @param {string} name - animation id
      * @returns {boolean}
      * @example
      * if (!this.isCurrentAnimation("walk")) {
@@ -449,7 +449,7 @@ class Sprite extends Renderable {
      * @see Texture.getRegion
      * @name setRegion
      * @memberof Sprite
-     * @param {object} region typically returned through me.Texture.getRegion()
+     * @param {object} region - typically returned through me.Texture.getRegion()
      * @returns {Sprite} Reference to this object for method chaining
      * @example
      * // change the sprite to "shadedDark13.png";
@@ -480,7 +480,7 @@ class Sprite extends Renderable {
      * force the current animation frame index.
      * @name setAnimationFrame
      * @memberof Sprite
-     * @param {number} [idx=0] animation frame index
+     * @param {number} [idx=0] - animation frame index
      * @returns {Sprite} Reference to this object for method chaining
      * @example
      * // reset the current animation to the first frame
@@ -506,7 +506,7 @@ class Sprite extends Renderable {
      * @name getAnimationFrameObjectByIndex
      * @memberof Sprite
      * @ignore
-     * @param {number} id the frame id
+     * @param {number} id - the frame id
      * @returns {number} if using number indices. Returns {object} containing frame data if using texture atlas
      */
     getAnimationFrameObjectByIndex(id) {
@@ -519,7 +519,7 @@ class Sprite extends Renderable {
      * @name update
      * @memberof Sprite
      * @protected
-     * @param {number} dt time since the last update in milliseconds.
+     * @param {number} dt - time since the last update in milliseconds.
      * @returns {boolean} true if the Sprite is dirty
      */
     update(dt) {
@@ -596,8 +596,8 @@ class Sprite extends Renderable {
      * @name draw
      * @memberof Sprite
      * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
-     * @param {Camera2d} [viewport] the viewport to (re)draw
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+     * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
     draw(renderer, viewport) {   // eslint-disable-line no-unused-vars
         // do nothing if we are flickering

@@ -543,9 +543,9 @@ export var throttlingInterval;
  * @name globalToLocal
  * @memberof input
  * @public
- * @param {number} x the global x coordinate to be translated.
- * @param {number} y the global y coordinate to be translated.
- * @param {Vector2d} [v] an optional vector object where to set the translated coordinates
+ * @param {number} x - the global x coordinate to be translated.
+ * @param {number} y - the global y coordinate to be translated.
+ * @param {Vector2d} [v] - an optional vector object where to set the translated coordinates
  * @returns {Vector2d} A vector object with the corresponding translated coordinates
  * @example
  * onMouseEvent : function (pointer) {
@@ -590,7 +590,7 @@ export function setTouchAction(element, value) {
  * @name bindPointer
  * @memberof input
  * @public
- * @param {number} [button=input.pointer.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
+ * @param {number} [button=input.pointer.LEFT] - (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
  * @param {input.KEY} keyCode
  * @example
  * // enable the keyboard
@@ -620,7 +620,7 @@ export function bindPointer() {
  * @name unbindPointer
  * @memberof input
  * @public
- * @param {number} [button=input.pointer.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
+ * @param {number} [button=input.pointer.LEFT] - (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
  * @example
  * me.input.unbindPointer(me.input.pointer.LEFT);
  */
@@ -641,7 +641,7 @@ export function unbindPointer(button) {
  * @name registerPointerEvent
  * @memberof input
  * @public
- * @param {string} eventType The event type for which the object is registering <br>
+ * @param {string} eventType - The event type for which the object is registering <br>
  * melonJS currently supports: <br>
  * <ul>
  *   <li><code>"pointermove"</code></li>
@@ -653,8 +653,8 @@ export function unbindPointer(button) {
  *   <li><code>"pointercancel"</code></li>
  *   <li><code>"wheel"</code></li>
  * </ul>
- * @param {Rect|Polygon|Line|Ellipse} region a shape representing the region to register on
- * @param {Function} callback methods to be called when the event occurs.
+ * @param {Rect|Polygon|Line|Ellipse} region - a shape representing the region to register on
+ * @param {Function} callback - methods to be called when the event occurs.
  * Returning `false` from the defined callback will prevent the event to be propagated to other objects
  * @example
  *  // onActivate function
@@ -712,9 +712,9 @@ export function registerPointerEvent(eventType, region, callback) {
  * @name releasePointerEvent
  * @memberof input
  * @public
- * @param {string} eventType The event type for which the object was registered. See {@link input.registerPointerEvent}
- * @param {Rect|Polygon|Line|Ellipse} region the registered region to release for this event
- * @param {Function} [callback="all"] if specified unregister the event only for the specific callback
+ * @param {string} eventType - The event type for which the object was registered. See {@link input.registerPointerEvent}
+ * @param {Rect|Polygon|Line|Ellipse} region - the registered region to release for this event
+ * @param {Function} [callback="all"] - if specified unregister the event only for the specific callback
  * @example
  * // release the registered region on the 'pointerdown' event
  * me.input.releasePointerEvent('pointerdown', this);
@@ -756,7 +756,7 @@ export function releasePointerEvent(eventType, region, callback) {
  * @name releaseAllPointerEvents
  * @memberof input
  * @public
- * @param {Rect|Polygon|Line|Ellipse} region the registered region to release event from
+ * @param {Rect|Polygon|Line|Ellipse} region - the registered region to release event from
  * @example
  * // release all registered event on the
  * me.input.releaseAllPointerEvents(this);

@@ -9,11 +9,11 @@ import {clamp} from "./math.js";
  */
 class ObservableVector2d extends Vector2d {
     /**
-     * @param {number} x x value of the vector
-     * @param {number} y y value of the vector
-     * @param {object} settings additional required parameters
-     * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
-     * @param {Function} [settings.scope] the value to use as this when calling onUpdate
+     * @param {number} x - x value of the vector
+     * @param {number} y - y value of the vector
+     * @param {object} settings - additional required parameters
+     * @param {Function} settings.onUpdate - the callback to be executed when the vector is changed
+     * @param {Function} [settings.scope] - the value to use as this when calling onUpdate
      */
     constructor(x = 0, y = 0, settings) {
         super(x, y);
@@ -97,8 +97,8 @@ class ObservableVector2d extends Vector2d {
      * set the vector value without triggering the callback
      * @name setMuted
      * @memberof ObservableVector2d
-     * @param {number} x x value of the vector
-     * @param {number} y y value of the vector
+     * @param {number} x - x value of the vector
+     * @param {number} y - y value of the vector
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
     setMuted(x, y) {
@@ -111,8 +111,8 @@ class ObservableVector2d extends Vector2d {
      * set the callback to be executed when the vector is changed
      * @name setCallback
      * @memberof ObservableVector2d
-     * @param {Function} fn callback
-     * @param {Function} [scope=null] scope
+     * @param {Function} fn - callback
+     * @param {Function} [scope=null] - scope
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
     setCallback(fn, scope = null) {
@@ -175,7 +175,7 @@ class ObservableVector2d extends Vector2d {
      * Divide this vector values by the passed value
      * @name div
      * @memberof ObservableVector2d
-     * @param {number} n the value to divide the vector by
+     * @param {number} n - the value to divide the vector by
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
     div(n) {
@@ -335,8 +335,8 @@ class ObservableVector2d extends Vector2d {
      * Rotate this vector (counter-clockwise) by the specified angle (in radians).
      * @name rotate
      * @memberof ObservableVector2d
-     * @param {number} angle The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
     rotate(angle, v) {
@@ -384,7 +384,7 @@ class ObservableVector2d extends Vector2d {
      * @name lerp
      * @memberof ObservableVector2d
      * @param {Vector2d|ObservableVector2d} v
-     * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+     * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
     lerp(v, alpha) {
@@ -399,7 +399,7 @@ class ObservableVector2d extends Vector2d {
      * @name moveTowards
      * @memberof ObservableVector2d
      * @param {Vector2d|ObservableVector2d} target
-     * @param {number} step the maximum step per iteration (Negative values will push the vector away from the target)
+     * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
      moveTowards(target, step) {

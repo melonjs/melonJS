@@ -16,20 +16,20 @@ import { isPowerOfTwo, nextPowerOfTwo } from "./../../math/math.js";
  */
 class WebGLRenderer extends Renderer {
     /**
-     * @param {object} options The renderer parameters
-     * @param {number} options.width The width of the canvas without scaling
-     * @param {number} options.height The height of the canvas without scaling
-     * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
-     * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing
-     * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
-     * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas
-     * @param {boolean} [options.premultipliedAlpha=true] in WebGL, whether the renderer will assume that colors have premultiplied alpha when canvas transparency is enabled
-     * @param {boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
-     * @param {boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
-     * @param {string} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
-     * @param {number} [options.zoomX=width] The actual width of the canvas with scaling applied
-     * @param {number} [options.zoomY=height] The actual height of the canvas with scaling applied
-     * @param {WebGLCompositor} [options.compositor] A class that implements the compositor API
+     * @param {object} options - The renderer parameters
+     * @param {number} options.width - The width of the canvas without scaling
+     * @param {number} options.height - The height of the canvas without scaling
+     * @param {HTMLCanvasElement} [options.canvas] - The html canvas to draw to on screen
+     * @param {boolean} [options.antiAlias=false] - Whether to enable anti-aliasing
+     * @param {boolean} [options.failIfMajorPerformanceCaveat=true] - If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
+     * @param {boolean} [options.transparent=false] - Whether to enable transparency on the canvas
+     * @param {boolean} [options.premultipliedAlpha=true] - in WebGL, whether the renderer will assume that colors have premultiplied alpha when canvas transparency is enabled
+     * @param {boolean} [options.subPixel=false] - Whether to enable subpixel renderering (performance hit when enabled)
+     * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
+     * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
+     * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
+     * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
+     * @param {WebGLCompositor} [options.compositor] - A class that implements the compositor API
      */
     constructor(options) {
 
@@ -176,7 +176,7 @@ class WebGLRenderer extends Renderer {
 
     /**
      * set the active compositor for this renderer
-     * @param {WebGLCompositor|string} compositor a compositor name or instance
+     * @param {WebGLCompositor|string} compositor - a compositor name or instance
      */
     setCompositor(compositor = "default") {
 
@@ -244,8 +244,8 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Create a pattern with the specified repetition
-     * @param {Image} image Source image
-     * @param {string} repeat Define how the pattern should be repeated
+     * @param {Image} image - Source image
+     * @param {string} repeat - Define how the pattern should be repeated
      * @returns {TextureAtlas}
      * @see ImageLayer#repeat
      * @example
@@ -297,8 +297,8 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Clears the gl context with the given color.
-     * @param {Color|string} [color="#000000"] CSS color.
-     * @param {boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
+     * @param {Color|string} [color="#000000"] - CSS color.
+     * @param {boolean} [opaque=false] - Allow transparency [default] or clear the surface completely [true]
      */
     clearColor(color = "#000000", opaque = false) {
         var glArray;
@@ -317,10 +317,10 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
-     * @param {number} x x axis of the coordinate for the rectangle starting point.
-     * @param {number} y y axis of the coordinate for the rectangle starting point.
-     * @param {number} width The rectangle's width.
-     * @param {number} height The rectangle's height.
+     * @param {number} x - x axis of the coordinate for the rectangle starting point.
+     * @param {number} y - y axis of the coordinate for the rectangle starting point.
+     * @param {number} width - The rectangle's width.
+     * @param {number} height - The rectangle's height.
      */
     clearRect(x, y, width, height) {
         this.save();
@@ -364,15 +364,15 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Draw an image to the gl context
-     * @param {Image} image An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
-     * @param {number} sx The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
-     * @param {number} sy The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
-     * @param {number} sw The width of the sub-rectangle of the source image to draw into the destination context. If not specified, the entire rectangle from the coordinates specified by sx and sy to the bottom-right corner of the image is used.
-     * @param {number} sh The height of the sub-rectangle of the source image to draw into the destination context.
-     * @param {number} dx The X coordinate in the destination canvas at which to place the top-left corner of the source image.
-     * @param {number} dy The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
-     * @param {number} dw The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
-     * @param {number} dh The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
+     * @param {Image} image - An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
+     * @param {number} sx - The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
+     * @param {number} sy - The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
+     * @param {number} sw - The width of the sub-rectangle of the source image to draw into the destination context. If not specified, the entire rectangle from the coordinates specified by sx and sy to the bottom-right corner of the image is used.
+     * @param {number} sh - The height of the sub-rectangle of the source image to draw into the destination context.
+     * @param {number} dx - The X coordinate in the destination canvas at which to place the top-left corner of the source image.
+     * @param {number} dy - The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
+     * @param {number} dw - The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
+     * @param {number} dh - The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
      * @example
      * // Position the image on the canvas:
      * renderer.drawImage(image, dx, dy);
@@ -414,7 +414,7 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Draw a pattern within the given rectangle.
-     * @param {TextureAtlas} pattern Pattern object
+     * @param {TextureAtlas} pattern - Pattern object
      * @param {number} x
      * @param {number} y
      * @param {number} width
@@ -429,7 +429,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Returns the WebGL Context object of the given canvas element
      * @param {HTMLCanvasElement} canvas
-     * @param {boolean} [transparent=false] use true to enable transparency
+     * @param {boolean} [transparent=false] - use true to enable transparency
      * @returns {WebGLRenderingContext}
      */
     getContextGL(canvas, transparent = false) {
@@ -497,7 +497,7 @@ class WebGLRenderer extends Renderer {
      * - "screen" : The pixels are inverted, multiplied, and inverted again. A lighter picture is the result (opposite of multiply) <br>
      * <img src="images/screen-blendmode.png" width="510"/> <br>
      * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
-     * @param {string} [mode="normal"] blend mode : "normal", "multiply", "lighter", "additive", "screen"
+     * @param {string} [mode="normal"] - blend mode : "normal", "multiply", "lighter", "additive", "screen"
      * @param {WebGLRenderingContext} [gl]
      */
     setBlendMode(mode = "normal", gl = this.gl) {
@@ -593,7 +593,7 @@ class WebGLRenderer extends Renderer {
 
     /**
      * rotates the uniform matrix
-     * @param {number} angle in radians
+     * @param {number} angle - in radians
      */
     rotate(angle) {
         this.currentTransform.rotate(angle);
@@ -619,7 +619,7 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Set the global alpha
-     * @param {number} alpha 0.0 to 1.0 values accepted.
+     * @param {number} alpha - 0.0 to 1.0 values accepted.
      */
     setGlobalAlpha(alpha) {
         this.currentColor.alpha = alpha;
@@ -636,7 +636,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Set the current fill & stroke style color.
      * By default, or upon reset, the value is set to #000000.
-     * @param {Color|string} color css color string.
+     * @param {Color|string} color - css color string.
      */
     setColor(color) {
         var alpha = this.currentColor.alpha;
@@ -646,7 +646,7 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Set the line width
-     * @param {number} width Line width
+     * @param {number} width - Line width
      */
     setLineWidth(width) {
         this.getContext().lineWidth(width);
@@ -654,12 +654,12 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Stroke an arc at the specified coordinates with given radius, start and end points
-     * @param {number} x arc center point x-axis
-     * @param {number} y arc center point y-axis
+     * @param {number} x - arc center point x-axis
+     * @param {number} y - arc center point y-axis
      * @param {number} radius
-     * @param {number} start start angle in radians
-     * @param {number} end end angle in radians
-     * @param {boolean} [antiClockwise=false] draw arc anti-clockwise
+     * @param {number} start - start angle in radians
+     * @param {number} end - end angle in radians
+     * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
      * @param {boolean} [fill=false]
      */
     strokeArc(x, y, radius, start, end, antiClockwise = false, fill = false) {
@@ -679,12 +679,12 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Fill an arc at the specified coordinates with given radius, start and end points
-     * @param {number} x arc center point x-axis
-     * @param {number} y arc center point y-axis
+     * @param {number} x - arc center point x-axis
+     * @param {number} y - arc center point y-axis
      * @param {number} radius
-     * @param {number} start start angle in radians
-     * @param {number} end end angle in radians
-     * @param {boolean} [antiClockwise=false] draw arc anti-clockwise
+     * @param {number} start - start angle in radians
+     * @param {number} end - end angle in radians
+     * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
      */
     fillArc(x, y, radius, start, end, antiClockwise = false) {
         this.strokeArc(x, y, radius, start, end, antiClockwise, true);
@@ -692,11 +692,11 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Stroke an ellipse at the specified coordinates with given radius
-     * @param {number} x ellipse center point x-axis
-     * @param {number} y ellipse center point y-axis
-     * @param {number} w horizontal radius of the ellipse
-     * @param {number} h vertical radius of the ellipse
-     * @param {boolean} [fill=false] also fill the shape with the current color if true
+     * @param {number} x - ellipse center point x-axis
+     * @param {number} y - ellipse center point y-axis
+     * @param {number} w - horizontal radius of the ellipse
+     * @param {number} h - vertical radius of the ellipse
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeEllipse(x, y, w, h, fill = false) {
         if (this.getGlobalAlpha() < 1 / 255) {
@@ -715,10 +715,10 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Fill an ellipse at the specified coordinates with given radius
-     * @param {number} x ellipse center point x-axis
-     * @param {number} y ellipse center point y-axis
-     * @param {number} w horizontal radius of the ellipse
-     * @param {number} h vertical radius of the ellipse
+     * @param {number} x - ellipse center point x-axis
+     * @param {number} y - ellipse center point y-axis
+     * @param {number} w - horizontal radius of the ellipse
+     * @param {number} h - vertical radius of the ellipse
      */
     fillEllipse(x, y, w, h) {
         this.strokeEllipse(x, y, w, h, false);
@@ -726,10 +726,10 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Stroke a line of the given two points
-     * @param {number} startX the start x coordinate
-     * @param {number} startY the start y coordinate
-     * @param {number} endX the end x coordinate
-     * @param {number} endY the end y coordinate
+     * @param {number} startX - the start x coordinate
+     * @param {number} startY - the start y coordinate
+     * @param {number} endX - the end x coordinate
+     * @param {number} endY - the end y coordinate
      */
     strokeLine(startX, startY, endX, endY) {
         if (this.getGlobalAlpha() < 1 / 255) {
@@ -745,10 +745,10 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Fill a line of the given two points
-     * @param {number} startX the start x coordinate
-     * @param {number} startY the start y coordinate
-     * @param {number} endX the end x coordinate
-     * @param {number} endY the end y coordinate
+     * @param {number} startX - the start x coordinate
+     * @param {number} startY - the start y coordinate
+     * @param {number} endX - the end x coordinate
+     * @param {number} endY - the end y coordinate
      */
     fillLine(startX, startY, endX, endY) {
         this.strokeLine(startX, startY, endX, endY);
@@ -756,8 +756,8 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Stroke a me.Polygon on the screen with a specified color
-     * @param {Polygon} poly the shape to draw
-     * @param {boolean} [fill=false] also fill the shape with the current color if true
+     * @param {Polygon} poly - the shape to draw
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokePolygon(poly, fill = false) {
         if (this.getGlobalAlpha() < 1 / 255) {
@@ -785,7 +785,7 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Fill a me.Polygon on the screen
-     * @param {Polygon} poly the shape to draw
+     * @param {Polygon} poly - the shape to draw
      */
     fillPolygon(poly) {
         this.strokePolygon(poly, true);
@@ -797,7 +797,7 @@ class WebGLRenderer extends Renderer {
      * @param {number} y
      * @param {number} width
      * @param {number} height
-     * @param {boolean} [fill=false] also fill the shape with the current color if true
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeRect(x, y, width, height, fill = false) {
         if (this.getGlobalAlpha() < 1 / 255) {
@@ -831,7 +831,7 @@ class WebGLRenderer extends Renderer {
      * @param {number} width
      * @param {number} height
      * @param {number} radius
-     * @param {boolean} [fill=false] also fill the shape with the current color if true
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeRoundRect(x, y, width, height, radius, fill = false) {
         if (this.getGlobalAlpha() < 1 / 255) {
@@ -883,7 +883,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.
-     * @param {Matrix2d} mat2d Matrix to transform by
+     * @param {Matrix2d} mat2d - Matrix to transform by
      */
     setTransform(mat2d) {
         this.resetTransform();
@@ -892,7 +892,7 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Multiply given matrix into the renderer tranformation matrix
-     * @param {Matrix2d} mat2d Matrix to transform by
+     * @param {Matrix2d} mat2d - Matrix to transform by
      */
     transform(mat2d) {
         var currentTransform = this.currentTransform;
@@ -972,8 +972,8 @@ class WebGLRenderer extends Renderer {
      * A mask limits rendering elements to the shape and position of the given mask object.
      * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
      * Mask are not preserved through renderer context save and restore.
-     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] a shape defining the mask to be applied
-     * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - a shape defining the mask to be applied
+     * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
      */
     setMask(mask, invert = false) {
         var gl = this.gl;

@@ -14,10 +14,10 @@ import Color from "./../math/color.js";
  */
 class Renderable extends Rect {
     /**
-     * @param {number} x position of the renderable object (accessible through inherited pos.x property)
-     * @param {number} y position of the renderable object (accessible through inherited pos.y property)
-     * @param {number} width object width
-     * @param {number} height object height
+     * @param {number} x - position of the renderable object (accessible through inherited pos.x property)
+     * @param {number} y - position of the renderable object (accessible through inherited pos.y property)
+     * @param {number} width - object width
+     * @param {number} height - object height
      */
     constructor(x, y, width, height) {
 
@@ -358,7 +358,7 @@ class Renderable extends Rect {
 
     /**
      * set the renderable alpha channel value<br>
-     * @param {number} alpha opacity value between 0.0 and 1.0
+     * @param {number} alpha - opacity value between 0.0 and 1.0
      */
     setOpacity(alpha) {
         if (typeof (alpha) === "number") {
@@ -374,7 +374,7 @@ class Renderable extends Rect {
     /**
      * flip the renderable on the horizontal axis (around the center of the renderable)
      * @see Matrix2d#scaleX
-     * @param {boolean} [flip=true] `true` to flip this renderable.
+     * @param {boolean} [flip=true] - `true` to flip this renderable.
      * @returns {Renderable} Reference to this object for method chaining
      */
     flipX(flip = true) {
@@ -386,7 +386,7 @@ class Renderable extends Rect {
     /**
      * flip the renderable on the vertical axis (around the center of the renderable)
      * @see Matrix2d#scaleY
-     * @param {boolean} [flip=true] `true` to flip this renderable.
+     * @param {boolean} [flip=true] - `true` to flip this renderable.
      * @returns {Renderable} Reference to this object for method chaining
      */
     flipY(flip = true) {
@@ -398,7 +398,7 @@ class Renderable extends Rect {
     /**
      * multiply the renderable currentTransform with the given matrix
      * @see Renderable#currentTransform
-     * @param {Matrix2d} m the transformation matrix
+     * @param {Matrix2d} m - the transformation matrix
      * @returns {Renderable} Reference to this object for method chaining
      */
     transform(m) {
@@ -453,7 +453,7 @@ class Renderable extends Rect {
 
     /**
      * Rotate this renderable towards the given target.
-     * @param {Renderable|Vector2d|Vector3d} target the renderable or position to look at
+     * @param {Renderable|Vector2d|Vector3d} target - the renderable or position to look at
      * @returns {Renderable} Reference to this object for method chaining
      */
     lookAt(target) {
@@ -474,8 +474,8 @@ class Renderable extends Rect {
 
     /**
      * Rotate this renderable by the specified angle (in radians).
-     * @param {number} angle The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
      * @returns {Renderable} Reference to this object for method chaining
      */
     rotate(angle, v) {
@@ -493,8 +493,8 @@ class Renderable extends Rect {
      * when rendering.  It does not scale the object itself.  For example if the renderable
      * is an image, the image.width and image.height properties are unaltered but the currentTransform
      * member will be changed.
-     * @param {number} x a number representing the abscissa of the scaling vector.
-     * @param {number} [y=x] a number representing the ordinate of the scaling vector.
+     * @param {number} x - a number representing the abscissa of the scaling vector.
+     * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
      * @returns {Renderable} Reference to this object for method chaining
      */
     scale(x, y) {
@@ -506,7 +506,7 @@ class Renderable extends Rect {
 
     /**
      * scale the renderable around his anchor point
-     * @param {Vector2d} v scaling vector
+     * @param {Vector2d} v - scaling vector
      * @returns {Renderable} Reference to this object for method chaining
      */
     scaleV(v) {
@@ -516,7 +516,7 @@ class Renderable extends Rect {
 
     /**
      * update function (automatically called by melonJS).
-     * @param {number} dt time since the last update in milliseconds.
+     * @param {number} dt - time since the last update in milliseconds.
      * @returns {boolean} true if the renderable is dirty
      */
     update(dt) { // eslint-disable-line no-unused-vars
@@ -584,8 +584,8 @@ class Renderable extends Rect {
     /**
      * called when the anchor point value is changed
      * @private
-     * @param {number} x the new X value to be set for the anchor
-     * @param {number} y the new Y value to be set for the anchor
+     * @param {number} x - the new X value to be set for the anchor
+     * @param {number} y - the new Y value to be set for the anchor
      */
      onAnchorUpdate(x, y) {
          // since the callback is called before setting the new value
@@ -600,7 +600,7 @@ class Renderable extends Rect {
      * This will apply any defined transforms, anchor point, tint or blend mode and translate the context accordingly to this renderable position.
      * @see Renderable#draw
      * @see Renderable#postDraw
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
      */
     preDraw(renderer) {
         var bounds = this.getBounds();
@@ -659,8 +659,8 @@ class Renderable extends Rect {
      * from the draw method, you should make sure that your draw it at the 0, 0 coordinates.
      * @see Renderable#preDraw
      * @see Renderable#postDraw
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
-     * @param {Camera2d} [viewport] the viewport to (re)draw
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+     * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
     draw(renderer, viewport) {  // eslint-disable-line no-unused-vars
         // empty one !
@@ -670,7 +670,7 @@ class Renderable extends Rect {
      * restore the rendering context after drawing (automatically called by melonJS).
      * @see Renderable#preDraw
      * @see Renderable#draw
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
      */
     postDraw(renderer) {
         // remove the previously applied tint
@@ -691,8 +691,8 @@ class Renderable extends Rect {
     /**
      * onCollision callback, triggered in case of collision,
      * when this renderable body is colliding with another one
-     * @param {ResponseObject} response the collision response object
-     * @param {Renderable} other the other renderable touching this one (a reference to response.a or response.b)
+     * @param {ResponseObject} response - the collision response object
+     * @param {Renderable} other - the other renderable touching this one (a reference to response.a or response.b)
      * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
      * @example
      * // colision handler

@@ -15,19 +15,19 @@ class UITextButton extends UIBaseElement {
      * It uses a RoundRect as background and changes the background color on hovering over.
      * The background will be drawn with 0.5 opacity, so that the background of the button is
      * slightly shining through.
-     * @param {number} x x pos of the button
-     * @param {number} y y pos of the button
-     * @param {string} [settings.font] The name of the BitmapText font to use
-     * @param {number} [settings.size] The scale factor of the font (default: 1)
-     * @param {string} [settings.text] The text to display (default: 'click me')
-     * @param {string} [settings.bindKey] The key to bind the action to (default: none)
-     * @param {string} [settings.backgroundColor] The css value of a background color
-     * @param {string} [settings.hoverColor] The css value of a color to be used if the pointer hovers over the button
-     * @param {string} [settings.borderStrokeColor] The css value of a color to be used to draw the border
-     * @param {boolean} [settings.offScreenCanvas] Weather to use an offScreen canvas or not
-     * @param {string} [settings.fillStyle] The css value of a tint color to be used to tint the text
-     * @param {number} [settings.borderWidth] Width of the button
-     * @param {number} [settings.borderHeight] Height of the button
+     * @param {number} x - x pos of the button
+     * @param {number} y - y pos of the button
+     * @param {string} [settings.font] - The name of the BitmapText font to use
+     * @param {number} [settings.size] - The scale factor of the font (default: 1)
+     * @param {string} [settings.text] - The text to display (default: 'click me')
+     * @param {string} [settings.bindKey] - The key to bind the action to (default: none)
+     * @param {string} [settings.backgroundColor] - The css value of a background color
+     * @param {string} [settings.hoverColor] - The css value of a color to be used if the pointer hovers over the button
+     * @param {string} [settings.borderStrokeColor] - The css value of a color to be used to draw the border
+     * @param {boolean} [settings.offScreenCanvas] - Weather to use an offScreen canvas or not
+     * @param {string} [settings.fillStyle] - The css value of a tint color to be used to tint the text
+     * @param {number} [settings.borderWidth] - Width of the button
+     * @param {number} [settings.borderHeight] - Height of the button
      * @example
      * // Create a new Button
      * class PlayButton extends BaseTextButton {

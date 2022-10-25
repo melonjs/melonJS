@@ -8,10 +8,10 @@ import Polygon from "./poly.js";
  */
 class Rect extends Polygon {
     /**
-     * @param {number} x position of the Rectangle
-     * @param {number} y position of the Rectangle
-     * @param {number} w width of the rectangle
-     * @param {number} h height of the rectangle
+     * @param {number} x - position of the Rectangle
+     * @param {number} y - position of the Rectangle
+     * @param {number} w - width of the rectangle
+     * @param {number} h - height of the rectangle
      */
     constructor(x, y, w, h) {
         // parent constructor
@@ -33,10 +33,10 @@ class Rect extends Polygon {
      * set new value to the rectangle shape
      * @name setShape
      * @memberof Rect
-     * @param {number} x position of the Rectangle
-     * @param {number} y position of the Rectangle
-     * @param {number|Vector2d[]} w width of the rectangle, or an array of vector defining the rectangle
-     * @param {number} [h] height of the rectangle, if a numeral width parameter is specified
+     * @param {number} x - position of the Rectangle
+     * @param {number} y - position of the Rectangle
+     * @param {number|Vector2d[]} w - width of the rectangle, or an array of vector defining the rectangle
+     * @param {number} [h] - height of the rectangle, if a numeral width parameter is specified
      * @returns {Rect} this rectangle
      */
     setShape(x, y, w, h) {
@@ -175,8 +175,8 @@ class Rect extends Polygon {
      * center the rectangle position around the given coordinates
      * @name centerOn
      * @memberof Rect
-     * @param {number} x the x coordinate around which to center this rectangle
-     * @param {number} y the y coordinate around which to center this rectangle
+     * @param {number} x - the x coordinate around which to center this rectangle
+     * @param {number} y - the y coordinate around which to center this rectangle
      * @returns {Rect} this rectangle
      */
     centerOn(x, y) {
@@ -189,8 +189,8 @@ class Rect extends Polygon {
      * resize the rectangle
      * @name resize
      * @memberof Rect
-     * @param {number} w new width of the rectangle
-     * @param {number} h new height of the rectangle
+     * @param {number} w - new width of the rectangle
+     * @param {number} h - new height of the rectangle
      * @returns {Rect} this rectangle
      */
     resize(w, h) {
@@ -203,8 +203,8 @@ class Rect extends Polygon {
      * scale the rectangle
      * @name scale
      * @memberof Rect
-     * @param {number} x a number representing the abscissa of the scaling vector.
-     * @param {number} [y=x] a number representing the ordinate of the scaling vector.
+     * @param {number} x - a number representing the abscissa of the scaling vector.
+     * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
      * @returns {Rect} this rectangle
      */
     scale(x, y = x) {
@@ -227,7 +227,7 @@ class Rect extends Polygon {
      * copy the position and size of the given rectangle into this one
      * @name copy
      * @memberof Rect
-     * @param {Rect} rect Source rectangle
+     * @param {Rect} rect - Source rectangle
      * @returns {Rect} new rectangle
      */
     copy(rect) {
@@ -238,7 +238,7 @@ class Rect extends Polygon {
      * merge this rectangle with another one
      * @name union
      * @memberof Rect
-     * @param {Rect} rect other rectangle to union with
+     * @param {Rect} rect - other rectangle to union with
      * @returns {Rect} the union(ed) rectangle
      */
     union(rect) {
@@ -285,8 +285,8 @@ class Rect extends Polygon {
      * @name contains
      * @memberof Rect
      * @method
-     * @param  {number} x x coordinate
-     * @param  {number} y y coordinate
+     * @param  {number} x -  x coordinate
+     * @param  {number} y -  y coordinate
      * @returns {boolean} true if contains
      */
 

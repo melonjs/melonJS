@@ -44,9 +44,9 @@ export var plugin = {
      * @name patch
      * @memberof plugin
      * @public
-     * @param {object} proto target object
-     * @param {string} name target function
-     * @param {Function} fn replacement function
+     * @param {object} proto - target object
+     * @param {string} name - target function
+     * @param {Function} fn - replacement function
      * @example
      * // redefine the me.game.update function with a new one
      * me.plugin.patch(me.game, "update", function () {
@@ -89,9 +89,9 @@ export var plugin = {
      * @memberof plugin
      * @see Base
      * @public
-     * @param {plugin.Base} pluginObj Plugin object to instantiate and register
+     * @param {plugin.Base} pluginObj - Plugin object to instantiate and register
      * @param {string} name
-     * @param {object} [...arguments] all extra parameters will be passed to the plugin constructor
+     * @param {object} [...arguments] - all extra parameters will be passed to the plugin constructor
      * @example
      * // register a new plugin
      * me.plugin.register(TestPlugin, "testPlugin");

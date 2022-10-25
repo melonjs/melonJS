@@ -84,7 +84,7 @@ export let stopOnAudioError = true;
  * It is important to remember that melonJS selects the first compatible sound based on the list of extensions and given order passed here.
  * So if you want webm to be used before mp3, you need to put the audio format in that order.
  * @function audio.init
- * @param {string} [format="mp3"] audio format to prioritize
+ * @param {string} [format="mp3"] - audio format to prioritize
  * @returns {boolean} Indicates whether audio initialization was successful
  * @example
  * // initialize the "sound engine", giving "webm" as default desired audio format, and "mp3" as a fallback
@@ -103,7 +103,7 @@ export let stopOnAudioError = true;
 /**
  * check if the given audio format is supported
  * @function audio.hasFormat
- * @param {string} codec audio format : "mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac"
+ * @param {string} codec - audio format : "mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac"
  * @returns {boolean} return true if the given audio format is supported
  */
 export function hasFormat(codec) {
@@ -186,10 +186,10 @@ export function load(sound, html5, onload_cb, onerror_cb) {
 /**
  * play the specified sound
  * @function audio.play
- * @param {string} sound_name audio clip name - case sensitive
- * @param {boolean} [loop=false] loop audio
- * @param {Function} [onend] Function to call when sound instance ends playing.
- * @param {number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
+ * @param {string} sound_name - audio clip name - case sensitive
+ * @param {boolean} [loop=false] - loop audio
+ * @param {Function} [onend] - Function to call when sound instance ends playing.
+ * @param {number} [volume=default] - Float specifying volume (0.0 - 1.0 values accepted).
  * @returns {number} the sound instance ID.
  * @example
  * // play the "cling" audio clip
@@ -227,11 +227,11 @@ export function play(sound_name, loop = false, onend, volume) {
 /**
  * Fade a currently playing sound between two volumee.
  * @function audio.fade
- * @param {string} sound_name audio clip name - case sensitive
- * @param {number} from Volume to fade from (0.0 to 1.0).
- * @param {number} to Volume to fade to (0.0 to 1.0).
- * @param {number} duration Time in milliseconds to fade.
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will fade.
+ * @param {string} sound_name - audio clip name - case sensitive
+ * @param {number} from - Volume to fade from (0.0 to 1.0).
+ * @param {number} to - Volume to fade to (0.0 to 1.0).
+ * @param {number} duration - Time in milliseconds to fade.
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will fade.
  */
 export function fade(sound_name, from, to, duration, id) {
     var sound = audioTracks[sound_name];
@@ -245,9 +245,9 @@ export function fade(sound_name, from, to, duration, id) {
 /**
  * get/set the position of playback for a sound.
  * @function audio.seek
- * @param {string} sound_name audio clip name - case sensitive
- * @param {number} [seek] the position to move current playback to (in seconds).
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will changed.
+ * @param {string} sound_name - audio clip name - case sensitive
+ * @param {number} [seek] - the position to move current playback to (in seconds).
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will changed.
  * @returns {number} return the current seek position (if no extra parameters were given)
  * @example
  * // return the current position of the background music
@@ -267,9 +267,9 @@ export function seek(sound_name, ...args) {
 /**
  * get or set the rate of playback for a sound.
  * @function audio.rate
- * @param {string} sound_name audio clip name - case sensitive
- * @param {number} [rate] playback rate : 0.5 to 4.0, with 1.0 being normal speed.
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will be changed.
+ * @param {string} sound_name - audio clip name - case sensitive
+ * @param {number} [rate] - playback rate : 0.5 to 4.0, with 1.0 being normal speed.
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will be changed.
  * @returns {number} return the current playback rate (if no extra parameters were given)
  * @example
  * // get the playback rate of the background music
@@ -289,8 +289,8 @@ export function rate(sound_name, ...args) {
 /**
  * stop the specified sound on all channels
  * @function audio.stop
- * @param {string} [sound_name] audio clip name (case sensitive). If none is passed, all sounds are stopped.
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will stop.
+ * @param {string} [sound_name] - audio clip name (case sensitive). If none is passed, all sounds are stopped.
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will stop.
  * @example
  * me.audio.stop("cling");
  */
@@ -313,8 +313,8 @@ export function stop(sound_name, id) {
  * pause the specified sound on all channels<br>
  * this function does not reset the currentTime property
  * @function audio.pause
- * @param {string} sound_name audio clip name - case sensitive
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will pause.
+ * @param {string} sound_name - audio clip name - case sensitive
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will pause.
  * @example
  * me.audio.pause("cling");
  */
@@ -330,8 +330,8 @@ export function pause(sound_name, id) {
 /**
  * resume the specified sound on all channels<br>
  * @function audio.resume
- * @param {string} sound_name audio clip name - case sensitive
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will resume.
+ * @param {string} sound_name - audio clip name - case sensitive
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will resume.
  * @example
  * // play a audio clip
  * var id = me.audio.play("myClip");
@@ -356,8 +356,8 @@ export function resume(sound_name, id) {
  * this function automatically set the loop property to true<br>
  * and keep track of the current sound being played.
  * @function audio.playTrack
- * @param {string} sound_name audio track name - case sensitive
- * @param {number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
+ * @param {string} sound_name - audio track name - case sensitive
+ * @param {number} [volume=default] - Float specifying volume (0.0 - 1.0 values accepted).
  * @returns {number} the sound instance ID.
  * @example
  * me.audio.playTrack("awesome_music");
@@ -430,7 +430,7 @@ export function getCurrentTrack() {
 /**
  * set the default global volume
  * @function audio.setVolume
- * @param {number} volume Float specifying volume (0.0 - 1.0 values accepted).
+ * @param {number} volume - Float specifying volume (0.0 - 1.0 values accepted).
  */
 export function setVolume(volume) {
     Howler.volume(volume);
@@ -448,9 +448,9 @@ export function getVolume() {
 /**
  * mute or unmute the specified sound, but does not pause the playback.
  * @function audio.mute
- * @param {string} sound_name audio clip name - case sensitive
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will mute.
- * @param {boolean} [mute=true] True to mute and false to unmute
+ * @param {string} sound_name - audio clip name - case sensitive
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will mute.
+ * @param {boolean} [mute=true] - True to mute and false to unmute
  * @example
  * // mute the background music
  * me.audio.mute("awesome_music");
@@ -469,8 +469,8 @@ export function mute(sound_name, id, mute) {
 /**
  * unmute the specified sound
  * @function audio.unmute
- * @param {string} sound_name audio clip name
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will unmute.
+ * @param {string} sound_name - audio clip name
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will unmute.
  */
 export function unmute(sound_name, id) {
     mute(sound_name, id, false);
@@ -504,7 +504,7 @@ export function muted() {
 /**
  * unload specified audio track to free memory
  * @function audio.unload
- * @param {string} sound_name audio track name - case sensitive
+ * @param {string} sound_name - audio track name - case sensitive
  * @returns {boolean} true if unloaded
  * @example
  * me.audio.unload("awesome_music");

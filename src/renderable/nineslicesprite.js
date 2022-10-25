@@ -10,22 +10,22 @@ import Sprite from "./sprite.js";
  */
 class NineSliceSprite extends Sprite {
     /**
-     * @param {number} x the x coordinates of the sprite object
-     * @param {number} y the y coordinates of the sprite object
-     * @param {object} settings Configuration parameters for the Sprite object
-     * @param {number} settings.width the width of the Renderable over which the sprite needs to be stretched
-     * @param {number} settings.height the height of the Renderable over which the sprite needs to be stretched
-     * @param {number} [settings.insetx] the width of a corner over which the sprite is unscaled (default is a quarter of the sprite width)
-     * @param {number} [settings.insety] the height of a corner over which the sprite is unscaled (default is a quarter of the sprite height)
-     * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image reference to spritesheet image, a texture atlas or to a texture atlas
-     * @param {string} [settings.name=""] name of this object
-     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
-     * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
-     * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
-     * @param {string|Color} [settings.tint] a tint to be applied to this sprite
-     * @param {number} [settings.flipX] flip the sprite on the horizontal axis
-     * @param {number} [settings.flipY] flip the sprite on the vertical axis
-     * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
+     * @param {number} x - the x coordinates of the sprite object
+     * @param {number} y - the y coordinates of the sprite object
+     * @param {object} settings - Configuration parameters for the Sprite object
+     * @param {number} settings.width - the width of the Renderable over which the sprite needs to be stretched
+     * @param {number} settings.height - the height of the Renderable over which the sprite needs to be stretched
+     * @param {number} [settings.insetx] - the width of a corner over which the sprite is unscaled (default is a quarter of the sprite width)
+     * @param {number} [settings.insety] - the height of a corner over which the sprite is unscaled (default is a quarter of the sprite height)
+     * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image - reference to spritesheet image, a texture atlas or to a texture atlas
+     * @param {string} [settings.name=""] - name of this object
+     * @param {string} [settings.region] - region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
+     * @param {number} [settings.framewidth] - Width of a single frame within the spritesheet
+     * @param {number} [settings.frameheight] - Height of a single frame within the spritesheet
+     * @param {string|Color} [settings.tint] - a tint to be applied to this sprite
+     * @param {number} [settings.flipX] - flip the sprite on the horizontal axis
+     * @param {number} [settings.flipY] - flip the sprite on the vertical axis
+     * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] - Anchor point to draw the frame at (defaults to the center of the frame).
      * @example
      * this.panelSprite = new me.NineSliceSprite(0, 0, {
      *     image : game.texture,

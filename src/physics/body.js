@@ -16,9 +16,9 @@ import Point from "../geometries/point.js";
  */
 class Body {
     /**
-     * @param {Renderable} ancestor the parent object this body is attached to
-     * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] a initial shape, list of shapes, or JSON object defining the body
-     * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
+     * @param {Renderable} ancestor - the parent object this body is attached to
+     * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] - a initial shape, list of shapes, or JSON object defining the body
+     * @param {Function} [onBodyUpdate] - callback for when the body is updated (e.g. add/remove shapes)
      */
     constructor(ancestor, shapes, onBodyUpdate) {
 
@@ -236,7 +236,7 @@ class Body {
     /**
      * add a collision shape to this body <br>
      * (note: me.Rect objects will be converted to me.Polygon before being added)
-     * @param {Rect|Polygon|Line|Ellipse|Point|Point[]|Bounds|object} shape a shape or JSON object
+     * @param {Rect|Polygon|Line|Ellipse|Point|Point[]|Bounds|object} shape - a shape or JSON object
      * @returns {number} the shape array length
      * @example
      * // add a rectangle shape
@@ -292,9 +292,9 @@ class Body {
 
     /**
      * set the body vertices to the given one
-     * @param {Vector2d[]} vertices an array of me.Vector2d points defining a convex hull
-     * @param {number} [index=0] the shape object for which to set the vertices
-     * @param {boolean} [clear=true] either to reset the body definition before adding the new vertices
+     * @param {Vector2d[]} vertices - an array of me.Vector2d points defining a convex hull
+     * @param {number} [index=0] - the shape object for which to set the vertices
+     * @param {boolean} [clear=true] - either to reset the body definition before adding the new vertices
      */
     setVertices(vertices, index = 0, clear = true) {
         var polygon = this.getShape(index);
@@ -315,8 +315,8 @@ class Body {
 
     /**
      * add the given vertices to the body shape
-     * @param {Vector2d[]} vertices an array of me.Vector2d points defining a convex hull
-     * @param {number} [index=0] the shape object for which to set the vertices
+     * @param {Vector2d[]} vertices - an array of me.Vector2d points defining a convex hull
+     * @param {number} [index=0] - the shape object for which to set the vertices
      */
     addVertices(vertices, index = 0) {
         this.setVertices(vertices, index, false);
@@ -325,8 +325,8 @@ class Body {
     /**
      * add collision mesh based on a JSON object
      * (this will also apply any physic properties defined in the given JSON file)
-     * @param {object} json a JSON object as exported from a Physics Editor tool
-     * @param {string} [id] an optional shape identifier within the given the json object
+     * @param {object} json - a JSON object as exported from a Physics Editor tool
+     * @param {string} [id] - an optional shape identifier within the given the json object
      * @see https://www.codeandweb.com/physicseditor
      * @returns {number} how many shapes were added to the body
      * @example
@@ -365,7 +365,7 @@ class Body {
 
     /**
      * return the collision shape at the given index
-     * @param {number} [index=0] the shape object at the specified index
+     * @param {number} [index=0] - the shape object at the specified index
      * @returns {Polygon|Line|Ellipse} shape a shape object if defined
      */
     getShape(index) {
@@ -382,7 +382,7 @@ class Body {
 
     /**
      * remove the specified shape from the body shape list
-     * @param {Polygon|Line|Ellipse} shape a shape object
+     * @param {Polygon|Line|Ellipse} shape - a shape object
      * @returns {number} the shape array length
      */
     removeShape(shape) {
@@ -400,7 +400,7 @@ class Body {
 
     /**
      * remove the shape at the given index from the body shape list
-     * @param {number} index the shape object at the specified index
+     * @param {number} index - the shape object at the specified index
      * @returns {number} the shape array length
      */
     removeShapeAt(index) {
@@ -412,7 +412,7 @@ class Body {
      * but it's also possible to specify 'collision filters' to provide a finer <br>
      * control over which body can collide with each other.
      * @see collision.types
-     * @param {number} [bitmask = collision.types.ALL_OBJECT] the collision mask
+     * @param {number} [bitmask = collision.types.ALL_OBJECT] - the collision mask
      * @example
      * // filter collision detection with collision shapes, enemies and collectables
      * body.setCollisionMask(me.collision.types.WORLD_SHAPE | me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
@@ -427,7 +427,7 @@ class Body {
     /**
      * define the collision type of the body for collision filtering
      * @see collision.types
-     * @param {number} type the collision type
+     * @param {number} type - the collision type
      * @example
      * // set the body collision type
      * body.collisionType = me.collision.types.PLAYER_OBJECT;
@@ -444,7 +444,7 @@ class Body {
 
     /**
      * the built-in function to solve the collision response
-     * @param {object} response the collision response object (see {@link ResponseObject})
+     * @param {object} response - the collision response object (see {@link ResponseObject})
      */
     respondToCollision(response) {
         // the overlap vector
@@ -483,8 +483,8 @@ class Body {
      *    - The current element being processed in the array <br>
      *    - The index of element in the array. <br>
      *    - The array forEach() was called upon. <br>
-     * @param {Function} callback fnction to execute on each element
-     * @param {object} [thisArg] value to use as this(i.e reference Object) when executing callback.
+     * @param {Function} callback - fnction to execute on each element
+     * @param {object} [thisArg] - value to use as this(i.e reference Object) when executing callback.
      * @example
      * // iterate through all shapes of the physic body
      * mySprite.body.forEach((shape) => {
@@ -522,8 +522,8 @@ class Body {
      */
     /**
      * Returns true if the any of the shape composing the body contains the given point.
-     * @param  {number} x x coordinate
-     * @param  {number} y y coordinate
+     * @param  {number} x -  x coordinate
+     * @param  {number} y -  y coordinate
      * @returns {boolean} true if contains
      */
     contains() {
@@ -553,8 +553,8 @@ class Body {
     /**
      * Rotate this body (counter-clockwise) by the specified angle (in radians).
      * Unless specified the body will be rotated around its center point
-     * @param {number} angle The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v=Body.getBounds().center] an optional point to rotate around
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v=Body.getBounds().center] - an optional point to rotate around
      * @returns {Body} Reference to this object for method chaining
      */
     rotate(angle, v = this.getBounds().center) {
@@ -577,8 +577,8 @@ class Body {
 
     /**
      * cap the body velocity (body.maxVel property) to the specified value<br>
-     * @param {number} x max velocity on x axis
-     * @param {number} y max velocity on y axis
+     * @param {number} x - max velocity on x axis
+     * @param {number} y - max velocity on y axis
      */
     setMaxVelocity(x, y) {
         this.maxVel.x = x;
@@ -587,8 +587,8 @@ class Body {
 
     /**
      * set the body default friction
-     * @param {number} x horizontal friction
-     * @param {number} y vertical friction
+     * @param {number} x - horizontal friction
+     * @param {number} y - vertical friction
      */
     setFriction(x = 0, y = 0) {
         this.friction.x = x;
@@ -605,7 +605,7 @@ class Body {
      * Updates to Body.vel are bounded by maxVel (which defaults to viewport size if not set) <br>
      * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the constructor arguments.
      * @protected
-     * @param {number} dt time since the last update in milliseconds.
+     * @param {number} dt - time since the last update in milliseconds.
      * @returns {boolean} true if resulting velocity is different than 0
      */
     update(dt) { // eslint-disable-line no-unused-vars

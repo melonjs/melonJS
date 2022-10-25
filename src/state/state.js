@@ -68,7 +68,7 @@ function _pauseRunLoop() {
 
 /**
  * this is only called when using requestAnimFrame stuff
- * @param {number} time current timestamp in milliseconds
+ * @param {number} time - current timestamp in milliseconds
  * @ignore
  */
 function _renderFrame(time) {
@@ -296,7 +296,7 @@ var state = {
      * @name stop
      * @memberof state
      * @public
-     * @param {boolean} [pauseTrack=false] pause current track on screen stop.
+     * @param {boolean} [pauseTrack=false] - pause current track on screen stop.
      */
     stop(pauseTrack=false) {
         // only stop when we are not loading stuff
@@ -322,7 +322,7 @@ var state = {
      * @name pause
      * @memberof state
      * @public
-     * @param {boolean} [music=false] pause current music track on screen pause
+     * @param {boolean} [music=false] - pause current music track on screen pause
      */
     pause(music=false) {
         // only pause when we are not loading stuff
@@ -347,7 +347,7 @@ var state = {
      * @name restart
      * @memberof state
      * @public
-     * @param {boolean} [music=false] resume current music track on screen resume
+     * @param {boolean} [music=false] - resume current music track on screen resume
      */
     restart(music=false) {
         if (!this.isRunning()) {
@@ -374,7 +374,7 @@ var state = {
      * @name resume
      * @memberof state
      * @public
-     * @param {boolean} [music=false] resume current music track on screen resume
+     * @param {boolean} [music=false] - resume current music track on screen resume
      */
     resume(music=false) {
         if (this.isPaused()) {
@@ -420,9 +420,9 @@ var state = {
      * @name set
      * @memberof state
      * @public
-     * @param {number} state State ID (see constants)
-     * @param {Stage} stage Instantiated Stage to associate with state ID
-     * @param {boolean} [start = false] if true the state will be changed immediately after adding it.
+     * @param {number} state - State ID (see constants)
+     * @param {Stage} stage - Instantiated Stage to associate with state ID
+     * @param {boolean} [start = false] - if true the state will be changed immediately after adding it.
      * @example
      * class MenuButton extends me.GUI_Object {
      *     onClick() {
@@ -479,7 +479,7 @@ var state = {
      * @name set
      * @memberof state
      * @public
-     * @param {number} [state] State ID (see constants)
+     * @param {number} [state] - State ID (see constants)
      * @returns {Stage}
      */
     get(state = _state) {
@@ -508,9 +508,9 @@ var state = {
      * @name transition
      * @memberof state
      * @public
-     * @param {string} effect (only "fade" is supported for now)
-     * @param {Color|string} color a CSS color value
-     * @param {number} [duration=1000] expressed in milliseconds
+     * @param {string} effect - (only "fade" is supported for now)
+     * @param {Color|string} color - a CSS color value
+     * @param {number} [duration=1000] - expressed in milliseconds
      */
     transition(effect, color, duration) {
         if (effect === "fade") {
@@ -524,7 +524,7 @@ var state = {
      * @name setTransition
      * @memberof state
      * @public
-     * @param {number} state State ID (see constants)
+     * @param {number} state - State ID (see constants)
      * @param {boolean} enable
      */
     setTransition(state, enable) {
@@ -536,9 +536,9 @@ var state = {
      * @name change
      * @memberof state
      * @public
-     * @param {number} state State ID (see constants)
-     * @param {boolean} forceChange if true the state will be changed immediately
-     * @param {object} [...arguments] extra arguments to be passed to the reset functions
+     * @param {number} state - State ID (see constants)
+     * @param {boolean} forceChange - if true the state will be changed immediately
+     * @param {object} [...arguments] - extra arguments to be passed to the reset functions
      * @example
      * // The onResetEvent method on the play screen will receive two args:
      * // "level_1" and the number 3
@@ -589,7 +589,7 @@ var state = {
      * @name isCurrent
      * @memberof state
      * @public
-     * @param {number} state State ID (see constants)
+     * @param {number} state - State ID (see constants)
      * @returns {boolean} true if the specified state is the current one
      */
     isCurrent(state) {

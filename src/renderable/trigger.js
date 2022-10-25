@@ -12,19 +12,19 @@ import pool from "./../system/pooling.js";
  */
 class Trigger extends Renderable {
     /**
-     * @param {number} x the x coordinates of the trigger area
-     * @param {number} y the y coordinates of the trigger area
-     * @param {number} [settings.width] width of the trigger area
-     * @param {number} [settings.height] height of the trigger area
-     * @param {Rect[]|Polygon[]|Line[]|Ellipse[]} [settings.shapes] collision shape(s) that will trigger the event
-     * @param {string} [settings.duration] Fade duration (in ms)
-     * @param {string|Color} [settings.color] Fade color
-     * @param {string} [settings.event="level"] the type of event to trigger (only "level" supported for now)
-     * @param {string} [settings.to] level to load if level trigger
-     * @param {string|Container} [settings.container] Target container. See {@link level.load}
-     * @param {Function} [settings.onLoaded] Level loaded callback. See {@link level.load}
-     * @param {boolean} [settings.flatten] Flatten all objects into the target container. See {@link level.load}
-     * @param {boolean} [settings.setViewportBounds] Resize the viewport to match the level. See {@link level.load}
+     * @param {number} x - the x coordinates of the trigger area
+     * @param {number} y - the y coordinates of the trigger area
+     * @param {number} [settings.width] - width of the trigger area
+     * @param {number} [settings.height] - height of the trigger area
+     * @param {Rect[]|Polygon[]|Line[]|Ellipse[]} [settings.shapes] - collision shape(s) that will trigger the event
+     * @param {string} [settings.duration] - Fade duration (in ms)
+     * @param {string|Color} [settings.color] - Fade color
+     * @param {string} [settings.event="level"] - the type of event to trigger (only "level" supported for now)
+     * @param {string} [settings.to] - level to load if level trigger
+     * @param {string|Container} [settings.container] - Target container. See {@link level.load}
+     * @param {Function} [settings.onLoaded] - Level loaded callback. See {@link level.load}
+     * @param {boolean} [settings.flatten] - Flatten all objects into the target container. See {@link level.load}
+     * @param {boolean} [settings.setViewportBounds] - Resize the viewport to match the level. See {@link level.load}
      * @example
      * me.game.world.addChild(new me.Trigger(
      *     x, y, {
@@ -133,8 +133,8 @@ class Trigger extends Renderable {
      * onCollision callback, triggered in case of collision with this trigger
      * @name onCollision
      * @memberof Trigger
-     * @param {ResponseObject} response the collision response object
-     * @param {Renderable} other the other renderable touching this one (a reference to response.a or response.b)
+     * @param {ResponseObject} response - the collision response object
+     * @param {Renderable} other - the other renderable touching this one (a reference to response.a or response.b)
      * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
      */
     onCollision(response, other) { // eslint-disable-line no-unused-vars

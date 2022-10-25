@@ -13,10 +13,10 @@ import state from "./../state/state.js";
  */
 class World extends Container {
     /**
-     * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
-     * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
-     * @param {number} [width=game.viewport.width] width of the container
-     * @param {number} [height=game.viewport.height] height of the container
+     * @param {number} [x=0] - position of the container (accessible via the inherited pos.x property)
+     * @param {number} [y=0] - position of the container (accessible via the inherited pos.y property)
+     * @param {number} [width=game.viewport.width] - width of the container
+     * @param {number} [height=game.viewport.height] - height of the container
      */
     constructor(x = 0, y = 0, width = Infinity, height = Infinity) {
         // call the super constructor
@@ -169,7 +169,7 @@ class World extends Container {
      * update the game world
      * @name reset
      * @memberof World
-     * @param {number} dt the time passed since the last frame update
+     * @param {number} dt - the time passed since the last frame update
      * @returns {boolean} true if the word is dirty
      */
     update(dt) {

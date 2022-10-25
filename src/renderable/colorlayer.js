@@ -9,9 +9,9 @@ import Renderable from "./renderable.js";
  */
 class ColorLayer extends Renderable {
     /**
-     * @param {string} name Layer name
-     * @param {Color|string} color CSS color
-     * @param {number} [z = 0] z-index position
+     * @param {string} name - Layer name
+     * @param {Color|string} color - CSS color
+     * @param {number} [z = 0] - z-index position
      */
     constructor(name, color, z) {
         // parent constructor
@@ -44,8 +44,8 @@ class ColorLayer extends Renderable {
      * @name draw
      * @memberof ColorLayer
      * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
-     * @param {Camera2d} [viewport] the viewport to (re)draw
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+     * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
     draw(renderer, viewport) {
         renderer.save();

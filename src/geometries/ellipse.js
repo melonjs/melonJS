@@ -6,10 +6,10 @@ import pool from "./../system/pooling.js";
  */
 class Ellipse {
     /**
-     * @param {number} x the center x coordinate of the ellipse
-     * @param {number} y the center y coordinate of the ellipse
-     * @param {number} w width (diameter) of the ellipse
-     * @param {number} h height (diameter) of the ellipse
+     * @param {number} x - the center x coordinate of the ellipse
+     * @param {number} y - the center y coordinate of the ellipse
+     * @param {number} w - width (diameter) of the ellipse
+     * @param {number} h - height (diameter) of the ellipse
      */
     constructor(x, y, w, h) {
         /**
@@ -77,10 +77,10 @@ class Ellipse {
      * set new value to the Ellipse shape
      * @name setShape
      * @memberof Ellipse
-     * @param {number} x the center x coordinate of the ellipse
-     * @param {number} y the center y coordinate of the ellipse
-     * @param {number} w width (diameter) of the ellipse
-     * @param {number} h height (diameter) of the ellipse
+     * @param {number} x - the center x coordinate of the ellipse
+     * @param {number} y - the center y coordinate of the ellipse
+     * @param {number} w - width (diameter) of the ellipse
+     * @param {number} h - height (diameter) of the ellipse
      * @returns {Ellipse} this instance for objecf chaining
      */
     setShape(x, y, w, h) {
@@ -106,8 +106,8 @@ class Ellipse {
      * Rotate this Ellipse (counter-clockwise) by the specified angle (in radians).
      * @name rotate
      * @memberof Ellipse
-     * @param {number} angle The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
      * @returns {Ellipse} Reference to this object for method chaining
      */
     rotate(angle, v) {
@@ -151,7 +151,7 @@ class Ellipse {
      * apply the given transformation matrix to this ellipse
      * @name transform
      * @memberof Ellipse
-     * @param {Matrix2d} matrix the transformation matrix
+     * @param {Matrix2d} matrix - the transformation matrix
      * @returns {Polygon} Reference to this object for method chaining
      */
     transform(matrix) { // eslint-disable-line no-unused-vars
@@ -164,15 +164,15 @@ class Ellipse {
      * @name translate
      * @memberof Ellipse
      * @method
-     * @param {number} x x offset
-     * @param {number} y y offset
+     * @param {number} x - x offset
+     * @param {number} y - y offset
      * @returns {Ellipse} this ellipse
      */
     /**
      * translate the circle/ellipse by the specified vector
      * @name translate
      * @memberof Ellipse
-     * @param {Vector2d} v vector offset
+     * @param {Vector2d} v - vector offset
      * @returns {Ellipse} this ellipse
      */
     translate() {
@@ -208,8 +208,8 @@ class Ellipse {
      * check if this circle/ellipse contains the specified point
      * @name contains
      * @memberof Ellipse
-     * @param  {number} x x coordinate
-     * @param  {number} y y coordinate
+     * @param  {number} x -  x coordinate
+     * @param  {number} y -  y coordinate
      * @returns {boolean} true if contains
      */
     contains() {

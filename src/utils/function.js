@@ -8,9 +8,9 @@
  * @public
  * @memberof utils.function
  * @name defer
- * @param {Function} func The function to be deferred.
- * @param {object} thisArg The value to be passed as the this parameter to the target function when the deferred function is called
- * @param {...*} args Optional additional arguments to carry for the function.
+ * @param {Function} func - The function to be deferred.
+ * @param {object} thisArg - The value to be passed as the this parameter to the target function when the deferred function is called
+ * @param {...*} args - Optional additional arguments to carry for the function.
  * @returns {number} id that can be used to clear the deferred function using
  * clearTimeout
  * @example
@@ -28,9 +28,9 @@ export function defer(func, thisArg, ...args) {
  * @public
  * @memberof utils.function
  * @name throttle
- * @param {Function} fn the function to be throttled.
- * @param {number} delay The delay in ms
- * @param {no_trailing} no_trailing disable the execution on the trailing edge
+ * @param {Function} fn - the function to be throttled.
+ * @param {number} delay - The delay in ms
+ * @param {no_trailing} no_trailing - disable the execution on the trailing edge
  * @returns {Function} the function that will be throttled
  */
 export function throttle(fn, delay, no_trailing) {

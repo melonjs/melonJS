@@ -38,21 +38,21 @@ var getContext2d = function (renderer, text) {
  */
 class Text extends Renderable {
     /**
-     * @param {number} x position of the text object
-     * @param {number} y position of the text object
-     * @param {object} settings the text configuration
-     * @param {string} settings.font a CSS family font name
-     * @param {number|string} settings.size size, or size + suffix (px, em, pt)
-     * @param {Color|string} [settings.fillStyle="#000000"] a CSS color value
-     * @param {Color|string} [settings.strokeStyle="#000000"] a CSS color value
-     * @param {number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
-     * @param {string} [settings.textAlign="left"] horizontal text alignment
-     * @param {string} [settings.textBaseline="top"] the text baseline
-     * @param {number} [settings.lineHeight=1.0] line spacing height
-     * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
-     * @param {boolean} [settings.offScreenCanvas=false] whether to draw the font to an individual "cache" texture first
-     * @param {number} [settings.wordWrapWidth] the maximum length in CSS pixel for a single segment of text
-     * @param {(string|string[])} [settings.text=""] a string, or an array of strings
+     * @param {number} x - position of the text object
+     * @param {number} y - position of the text object
+     * @param {object} settings - the text configuration
+     * @param {string} settings.font - a CSS family font name
+     * @param {number|string} settings.size - size, or size + suffix (px, em, pt)
+     * @param {Color|string} [settings.fillStyle="#000000"] - a CSS color value
+     * @param {Color|string} [settings.strokeStyle="#000000"] - a CSS color value
+     * @param {number} [settings.lineWidth=1] - line width, in pixels, when drawing stroke
+     * @param {string} [settings.textAlign="left"] - horizontal text alignment
+     * @param {string} [settings.textBaseline="top"] - the text baseline
+     * @param {number} [settings.lineHeight=1.0] - line spacing height
+     * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] - anchor point to draw the text at
+     * @param {boolean} [settings.offScreenCanvas=false] - whether to draw the font to an individual "cache" texture first
+     * @param {number} [settings.wordWrapWidth] - the maximum length in CSS pixel for a single segment of text
+     * @param {(string|string[])} [settings.text=""] - a string, or an array of strings
      * @example
      * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
      */
@@ -226,8 +226,8 @@ class Text extends Renderable {
 
     /**
      * set the font family and size
-     * @param {string} font a CSS font name
-     * @param {number|string} [size=10] size in px, or size + suffix (px, em, pt)
+     * @param {string} font - a CSS font name
+     * @param {number|string} [size=10] - size in px, or size + suffix (px, em, pt)
      * @returns {Text} this object for chaining
      * @example
      * font.setFont("Arial", 20);
@@ -267,7 +267,7 @@ class Text extends Renderable {
 
     /**
      * change the text to be displayed
-     * @param {number|string|string[]} value a string, or an array of strings
+     * @param {number|string|string[]} value - a string, or an array of strings
      * @returns {Text} this object for chaining
      */
     setText(value = "") {
@@ -323,8 +323,8 @@ class Text extends Renderable {
 
     /**
      * measure the given text size in pixels
-     * @param {CanvasRenderer|WebGLRenderer} renderer reference to the active renderer
-     * @param {string} [text] the text to be measured
+     * @param {CanvasRenderer|WebGLRenderer} renderer - reference to the active renderer
+     * @param {string} [text] - the text to be measured
      * @returns {TextMetrics} a TextMetrics object defining the dimensions of the given piece of text
      */
     measureText(renderer, text = this._text) {
@@ -334,11 +334,11 @@ class Text extends Renderable {
 
     /**
      * draw a text at the specified coord
-     * @param {CanvasRenderer|WebGLRenderer} renderer Reference to the destination renderer instance
+     * @param {CanvasRenderer|WebGLRenderer} renderer - Reference to the destination renderer instance
      * @param {string} [text]
      * @param {number} [x]
      * @param {number} [y]
-     * @param {boolean} [stroke=false] draw stroke the the text if true
+     * @param {boolean} [stroke=false] - draw stroke the the text if true
      */
     draw(renderer, text, x = this.pos.x, y = this.pos.y, stroke = false) {
         // "hacky patch" for backward compatibilty
@@ -394,7 +394,7 @@ class Text extends Renderable {
      * draw a stroke text at the specified coord, as defined <br>
      * by the `lineWidth` and `fillStroke` properties. <br>
      * Note : using drawStroke is not recommended for performance reasons
-     * @param {CanvasRenderer|WebGLRenderer} renderer Reference to the destination renderer instance
+     * @param {CanvasRenderer|WebGLRenderer} renderer - Reference to the destination renderer instance
      * @param {string} text
      * @param {number} x
      * @param {number} y

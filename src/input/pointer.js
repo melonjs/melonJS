@@ -310,12 +310,12 @@ class Pointer extends Bounds {
      * initialize the Pointer object using the given Event Object
      * @name Pointer#set
      * @private
-     * @param {Event} event the original Event object
-     * @param {number} [pageX=0] the horizontal coordinate at which the event occurred, relative to the left edge of the entire document
-     * @param {number} [pageY=0] the vertical coordinate at which the event occurred, relative to the left edge of the entire document
-     * @param {number} [clientX=0] the horizontal coordinate within the application's client area at which the event occurred
-     * @param {number} [clientY=0] the vertical coordinate within the application's client area at which the event occurred
-     * @param {number} [pointerId=1] the Pointer, Touch or Mouse event Id (1)
+     * @param {Event} event - the original Event object
+     * @param {number} [pageX=0] - the horizontal coordinate at which the event occurred, relative to the left edge of the entire document
+     * @param {number} [pageY=0] - the vertical coordinate at which the event occurred, relative to the left edge of the entire document
+     * @param {number} [clientX=0] - the horizontal coordinate within the application's client area at which the event occurred
+     * @param {number} [clientY=0] - the vertical coordinate within the application's client area at which the event occurred
+     * @param {number} [pointerId=1] - the Pointer, Touch or Mouse event Id (1)
      */
     setEvent(event, pageX = 0, pageY = 0, clientX = 0, clientY = 0, pointerId = 1) {
         // the original event object

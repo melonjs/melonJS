@@ -21,10 +21,10 @@ var default_settings = {
 class Stage {
 
     /**
-     * @param {object} [settings] The stage` parameters
-     * @param {Camera2d[]} [settings.cameras=[new me.Camera2d()]] a list of cameras (experimental)
-     * @param {Function} [settings.onResetEvent] called by the state manager when reseting the object
-     * @param {Function} [settings.onDestroyEvent] called by the state manager before switching to another state
+     * @param {object} [settings] - The stage` parameters
+     * @param {Camera2d[]} [settings.cameras=[new me.Camera2d()]] - a list of cameras (experimental)
+     * @param {Function} [settings.onResetEvent] - called by the state manager when reseting the object
+     * @param {Function} [settings.onDestroyEvent] - called by the state manager before switching to another state
      */
     constructor(settings) {
         /**
@@ -116,7 +116,7 @@ class Stage {
      * @name update
      * @memberof Stage
      * @ignore
-     * @param {number} dt time since the last update in milliseconds.
+     * @param {number} dt - time since the last update in milliseconds.
      * @returns {boolean}
      */
     update(dt) {
@@ -146,7 +146,7 @@ class Stage {
      * @name draw
      * @memberof Stage
      * @ignore
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
      */
     draw(renderer) {
         // iterate through all cameras
@@ -201,7 +201,7 @@ class Stage {
      * this is typically where you will load a level, add renderables, etc...
      * @name onResetEvent
      * @memberof Stage
-     * @param {object} [...arguments] optional arguments passed when switching state
+     * @param {object} [...arguments] - optional arguments passed when switching state
      * @see state#change
      */
     onResetEvent() {

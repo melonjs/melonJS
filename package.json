@@ -69,6 +69,7 @@
     "cross-env": "^7.0.3",
     "del-cli": "^5.0.0",
     "eslint": "^8.26.0",
+    "eslint-plugin-jsdoc": "^39.3.20",
     "expect": "^29.2.2",
     "expect-mocha-image-snapshot": "^2.0.14",
     "fastify": "^4.9.1",
@@ -84,7 +85,7 @@
   "scripts": {
     "build": "npm run lint && rollup -c --silent",
     "dist": " npm run build && mkdirp dist && cp -f build/*.js dist/ && npm run types",
-    "lint": "eslint src rollup.config.js",
+    "lint": "eslint src/** rollup.config.js",
     "pretest": "cp -f ./build/melonjs.module.js ./tests/browser/public/lib",
     "test": "npm run test-node && mocha ./tests/browser/spec/*.js --reporter spec --bail --timeout 10000",
     "test-node": "node build/melonjs.module.js",

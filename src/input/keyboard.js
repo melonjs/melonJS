@@ -331,7 +331,7 @@ export function initKeyboardEvent() {
  * @name isKeyPressed
  * @memberof input
  * @public
- * @param {string} action user defined corresponding action
+ * @param {string} action - user defined corresponding action
  * @returns {boolean} true if pressed
  * @example
  * if (me.input.isKeyPressed('left')) {
@@ -356,7 +356,7 @@ export function isKeyPressed(action) {
  * @name keyStatus
  * @memberof input
  * @public
- * @param {string} action user defined corresponding action
+ * @param {string} action - user defined corresponding action
  * @returns {boolean} down (true) or up(false)
  */
 export function keyStatus(action) {
@@ -369,9 +369,9 @@ export function keyStatus(action) {
  * @name triggerKeyEvent
  * @memberof input
  * @public
- * @param {number} keycode (See {@link input.KEY})
- * @param {boolean} [status=false] true to trigger a key down event, or false for key up event
- * @param {number} [mouseButton] the mouse button to trigger
+ * @param {number} keycode - (See {@link input.KEY})
+ * @param {boolean} [status=false] - true to trigger a key down event, or false for key up event
+ * @param {number} [mouseButton] - the mouse button to trigger
  * @example
  * // trigger a key press
  * me.input.triggerKeyEvent(me.input.KEY.LEFT, true);
@@ -391,10 +391,10 @@ export function triggerKeyEvent(keycode, status, mouseButton) {
  * @name bindKey
  * @memberof input
  * @public
- * @param {number} keycode (See {@link input.KEY})
- * @param {string} action user defined corresponding action
- * @param {boolean} [lock=false] cancel the keypress event once read
- * @param {boolean} [preventDefault=input.preventDefault] prevent default browser action
+ * @param {number} keycode - (See {@link input.KEY})
+ * @param {string} action - user defined corresponding action
+ * @param {boolean} [lock=false] - cancel the keypress event once read
+ * @param {boolean} [preventDefault=input.preventDefault] - prevent default browser action
  * @example
  * // enable the keyboard
  * me.input.bindKey(me.input.KEY.LEFT,  "left");
@@ -417,7 +417,7 @@ export function bindKey(keycode, action, lock, preventDefault = preventDefaultAc
  * @name getBindingKey
  * @memberof input
  * @public
- * @param {number} keycode (See {@link input.KEY})
+ * @param {number} keycode - (See {@link input.KEY})
  * @returns {string} user defined associated action
  */
 export function getBindingKey(keycode) {
@@ -429,7 +429,7 @@ export function getBindingKey(keycode) {
  * @name unlockKey
  * @memberof input
  * @public
- * @param {string} action user defined corresponding action
+ * @param {string} action - user defined corresponding action
  * @example
  * // Unlock jump when touching the ground
  * if (!this.falling && !this.jumping) {
@@ -445,7 +445,7 @@ export function unlockKey(action) {
  * @name unbindKey
  * @memberof input
  * @public
- * @param {number} keycode (See {@link input.KEY})
+ * @param {number} keycode - (See {@link input.KEY})
  * @example
  * me.input.unbindKey(me.input.KEY.LEFT);
  */

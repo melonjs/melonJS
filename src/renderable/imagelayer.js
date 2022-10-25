@@ -13,15 +13,15 @@ import * as stringUtil from "./../utils/string.js";
  */
 class ImageLayer extends Sprite {
     /**
-     * @param {number} x x coordinate
-     * @param {number} y y coordinate
-     * @param {object} settings ImageLayer properties
-     * @param {HTMLImageElement|HTMLCanvasElement|string} settings.image Image reference. See {@link loader.getImage}
-     * @param {string} [settings.name="me.ImageLayer"] layer name
-     * @param {number} [settings.z=0] z-index position
-     * @param {number|Vector2d} [settings.ratio=1.0] Scrolling ratio to be applied. See {@link ImageLayer#ratio}
-     * @param {string} [settings.repeat='repeat'] define if and how an Image Layer should be repeated (accepted values are 'repeat', 'repeat-x', 'repeat-y', 'no-repeat'). See {@link ImageLayer#repeat}
-     * @param {number|Vector2d} [settings.anchorPoint=0.0] Image origin. See {@link ImageLayer#anchorPoint}
+     * @param {number} x - x coordinate
+     * @param {number} y - y coordinate
+     * @param {object} settings - ImageLayer properties
+     * @param {HTMLImageElement|HTMLCanvasElement|string} settings.image - Image reference. See {@link loader.getImage}
+     * @param {string} [settings.name="me.ImageLayer"] - layer name
+     * @param {number} [settings.z=0] - z-index position
+     * @param {number|Vector2d} [settings.ratio=1.0] - Scrolling ratio to be applied. See {@link ImageLayer#ratio}
+     * @param {string} [settings.repeat='repeat'] - define if and how an Image Layer should be repeated (accepted values are 'repeat', 'repeat-x', 'repeat-y', 'no-repeat'). See {@link ImageLayer#repeat}
+     * @param {number|Vector2d} [settings.anchorPoint=0.0] - Image origin. See {@link ImageLayer#anchorPoint}
      * @example
      * // create a repetitive background pattern on the X axis using the citycloud image asset
      * me.game.world.addChild(new me.ImageLayer(0, 0, {
@@ -160,8 +160,8 @@ class ImageLayer extends Sprite {
      * resize the Image Layer to match the given size
      * @name resize
      * @memberof ImageLayer
-     * @param {number} w new width
-     * @param {number} h new height
+     * @param {number} w - new width
+     * @param {number} h - new height
      */
     resize(w, h) {
         return super.resize(
@@ -247,8 +247,8 @@ class ImageLayer extends Sprite {
      * @name draw
      * @memberof ImageLayer
      * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
-     * @param {Camera2d} [viewport] the viewport to (re)draw
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+     * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
     draw(renderer, viewport) {
         var width = this.width,

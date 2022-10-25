@@ -23,10 +23,10 @@ var globalFloatingCounter = 0;
  */
 class Container extends Renderable {
     /**
-     * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
-     * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
-     * @param {number} [width=game.viewport.width] width of the container
-     * @param {number} [height=game.viewport.height] height of the container
+     * @param {number} [x=0] - position of the container (accessible via the inherited pos.x property)
+     * @param {number} [y=0] - position of the container (accessible via the inherited pos.y property)
+     * @param {number} [width=game.viewport.width] - width of the container
+     * @param {number} [height=game.viewport.height] - height of the container
      */
     constructor(x = 0, y = 0, width, height, root = false) {
 
@@ -104,7 +104,7 @@ class Container extends Renderable {
          * a callback to be extended, triggered after a child has been added or removed
          * @name onChildChange
          * @memberof Container#
-         * @param {number} index added or removed child index
+         * @param {number} index - added or removed child index
          */
         this.onChildChange = function (index) {   // eslint-disable-line no-unused-vars
             // to be extended
@@ -198,7 +198,7 @@ class Container extends Renderable {
      * @name addChild
      * @memberof Container
      * @param {Renderable} child
-     * @param {number} [z] forces the z index of the child to the specified value
+     * @param {number} [z] - forces the z index of the child to the specified value
      * @returns {Renderable} the added child
      */
     addChild(child, z) {
@@ -318,8 +318,8 @@ class Container extends Renderable {
      *    - The array forEach() was called upon. <br>
      * @name forEach
      * @memberof Container
-     * @param {Function} callback fnction to execute on each element
-     * @param {object} [thisArg] value to use as this(i.e reference Object) when executing callback.
+     * @param {Function} callback - fnction to execute on each element
+     * @param {object} [thisArg] - value to use as this(i.e reference Object) when executing callback.
      * @example
      * // iterate through all children of the root container
      * me.game.world.forEach((child) => {
@@ -437,8 +437,8 @@ class Container extends Renderable {
      * @name getChildByProp
      * @memberof Container
      * @public
-     * @param {string} prop Property name
-     * @param {string|RegExp|number|boolean} value Value of the property
+     * @param {string} prop - Property name
+     * @param {string|RegExp|number|boolean} value - Value of the property
      * @returns {Renderable[]} Array of childs
      * @example
      * // get the first child object called "mainPlayer" in a specific container :
@@ -514,7 +514,7 @@ class Container extends Renderable {
      * @name getChildByName
      * @memberof Container
      * @public
-     * @param {string|RegExp|number|boolean} name child name
+     * @param {string|RegExp|number|boolean} name - child name
      * @returns {Renderable[]} Array of children
      */
     getChildByName(name) {
@@ -528,7 +528,7 @@ class Container extends Renderable {
      * @name getChildByGUID
      * @memberof Container
      * @public
-     * @param {string|RegExp|number|boolean} guid child GUID
+     * @param {string|RegExp|number|boolean} guid - child GUID
      * @returns {Renderable} corresponding child or null
      */
     getChildByGUID(guid) {
@@ -642,7 +642,7 @@ class Container extends Renderable {
      * @memberof Container
      * @public
      * @param {Renderable} child
-     * @param {boolean} [keepalive=false] true to prevent calling child.destroy()
+     * @param {boolean} [keepalive=false] - true to prevent calling child.destroy()
      */
     removeChild(child, keepalive) {
         if (this.hasChild(child)) {
@@ -660,7 +660,7 @@ class Container extends Renderable {
      * @name removeChildNow
      * @memberof Container
      * @param {Renderable} child
-     * @param {boolean} [keepalive=False] True to prevent calling child.destroy()
+     * @param {boolean} [keepalive=False] - True to prevent calling child.destroy()
      */
     removeChildNow(child, keepalive) {
         if (this.hasChild(child) && (this.getChildIndex(child) >= 0)) {
@@ -711,9 +711,9 @@ class Container extends Renderable {
      * Automatically set the specified property of all childs to the given value
      * @name setChildsProperty
      * @memberof Container
-     * @param {string} prop property name
-     * @param {object} value property value
-     * @param {boolean} [recursive=false] recursively apply the value to child containers if true
+     * @param {string} prop - property name
+     * @param {object} value - property value
+     * @param {boolean} [recursive=false] - recursively apply the value to child containers if true
      */
     setChildsProperty(prop, value, recursive) {
         this.forEach((child) => {
@@ -799,7 +799,7 @@ class Container extends Renderable {
      * @name sort
      * @memberof Container
      * @public
-     * @param {boolean} [recursive=false] recursively sort all containers if true
+     * @param {boolean} [recursive=false] - recursively sort all containers if true
      */
     sort(recursive) {
         // do nothing if there is already a pending sort
@@ -893,7 +893,7 @@ class Container extends Renderable {
      * @name update
      * @memberof Container
      * @protected
-     * @param {number} dt time since the last update in milliseconds.
+     * @param {number} dt - time since the last update in milliseconds.
      * @returns {boolean} true if the Container is dirty
      */
     update(dt) {
@@ -944,8 +944,8 @@ class Container extends Renderable {
      * @name draw
      * @memberof Container
      * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
-     * @param {Camera2d} [viewport] the viewport to (re)draw
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+     * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
     draw(renderer, viewport) {
         var isFloating = false;

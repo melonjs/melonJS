@@ -10,9 +10,9 @@ import pool from "./../system/pooling.js";
  */
 class Collectable extends Sprite {
     /**
-     * @param {number} x the x coordinates of the collectable
-     * @param {number} y the y coordinates of the collectable
-     * @param {object} settings See {@link Sprite}
+     * @param {number} x - the x coordinates of the collectable
+     * @param {number} y - the y coordinates of the collectable
+     * @param {object} settings - See {@link Sprite}
      */
     constructor(x, y, settings) {
 
