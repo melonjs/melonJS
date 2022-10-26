@@ -161,6 +161,7 @@ melonJS 2 now only provides an ES6 Bundle :
 | build               | description |
 | ------------------- | ----------- |
 | `melonjs.module.js` | the ES6 Module (ESM) Bundle |
+| `melonjs.mjs` | a tree-shakeable ES6 Module Directory |
 | `melonjs.module.d.ts` | typescript declaration file for the ES6 Module (ESM) Bundle |
 
 >Note: if you need your application to be compatible with ES5, refer to our [boilerplate](https://github.com/melonjs/es6-boilerplate) that provides automatic transpiling to ES5.
