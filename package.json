@@ -38,9 +38,11 @@
     "node": ">= 19"
   },
   "main": "dist/melonjs.module.js",
-  "module": "dist/melonjs.module.js",
+  "module": "dist/melonjs.mjs/index.js",
   "types": "dist/melonjs.module.d.ts",
+  "sideEffects": false,
   "files": [
+    "dist/melonjs.mjs",
     "dist/melonjs.module.js",
     "dist/melonjs.module.d.ts",
     "src/",
@@ -86,7 +88,7 @@
   },
   "scripts": {
     "build": "npm run lint && rollup -c --silent",
-    "dist": " npm run build && mkdirp dist && cp -f build/*.js dist/ && npm run types",
+    "dist": " npm run build && mkdirp dist && cp -fR build/*.js dist/ && npm run types",
     "lint": "eslint src/** rollup.config.js",
     "pretest": "cp -f ./build/melonjs.module.js ./tests/browser/public/lib",
     "test": "npm run test-node && mocha ./tests/browser/spec/*.js --reporter spec --bail --timeout 10000",
@@ -96,7 +98,7 @@
     "doc": "npm run doc-prod",
     "serve": "python3 -m http.server",
     "prepublishOnly": "npm run dist && npm run test",
-    "clean": "del-cli --force build/*.js dist/*.js dist/*.d.ts docs src/**/*.d.ts",
+    "clean": "del-cli --force build/*.* dist/*.* docs",
     "types": "tsc src/index.js --declaration --allowJs --emitDeclarationOnly --outfile dist/melonjs.module.d.ts"
   }
 }

@@ -50,5 +50,40 @@ export default [
           banner: license,
           format: "esm"
         }
+    },
+    // ES6 "melonjs.mjs/" chunk
+    {
+        input: "src/index.js",
+        plugins: [
+            resolve({
+                mainFields: ["module"],
+                browser: true,
+                preferBuiltins: false
+            }),
+            commonjs({
+                include: "node_modules/**",
+                sourceMap: false
+            }),
+            replace({
+                values: {
+                    __VERSION__: pkg.version
+                },
+                preventAssignment: true
+            }),
+            string({
+                include: [
+                    "**/*.frag",
+                    "**/*.vert"
+                ]
+            }),
+            image()
+        ],
+        output: {
+          dir: "build/melonjs.mjs",
+          banner: license,
+          format: "es",
+          preserveModules: true,
+          preserveModulesRoot: "src"
+        }
     }
 ];

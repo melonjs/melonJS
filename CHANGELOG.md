@@ -2,6 +2,10 @@
 
 ## [14.1.0] (melonJS 2) - _2022-xx-xx_
 
+### Added
+- Core: the build process has been upgraded to rollup 3 and Node 19
+- Core: the build process will now only output a tree-shakeable ES Module directory `melonjs.mjs`
+
 ## [14.0.2] (melonJS 2) - _2022-10-18_
 
 ### Fixed
