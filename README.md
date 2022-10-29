@@ -204,6 +204,7 @@ Then build the melonJS source by running:
 
 The generated files will be available under the `build` directory :
 - `melonjs.module.js` : plain ES6 module
+- `melonjs.module.js` : a ES6 chunk directory used for tree-shaking
 - `melonjs.module.d.ts` : typescript declaration for the ES6 Module
 
 To run the melonJS test suite simply use the following:
