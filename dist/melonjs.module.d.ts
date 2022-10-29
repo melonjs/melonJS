@@ -8,7 +8,7 @@ declare module "utils/string" {
      * @public
      * @memberof utils.string
      * @name capitalize
-     * @param {string} str the string to be capitalized
+     * @param {string} str - the string to be capitalized
      * @returns {string} the capitalized string
      */
     export function capitalize(str: string): string;
@@ -17,7 +17,7 @@ declare module "utils/string" {
      * @public
      * @memberof utils.string
      * @name isNumeric
-     * @param {string} str the string to be tested
+     * @param {string} str - the string to be tested
      * @returns {boolean} true if string contains only digits
      */
     export function isNumeric(str: string): boolean;
@@ -26,7 +26,7 @@ declare module "utils/string" {
      * @public
      * @memberof utils.string
      * @name isBoolean
-     * @param {string} str the string to be tested
+     * @param {string} str - the string to be tested
      * @returns {boolean} true if the string is either true or false
      */
     export function isBoolean(str: string): boolean;
@@ -35,7 +35,7 @@ declare module "utils/string" {
      * @public
      * @memberof utils.string
      * @name toHex
-     * @param {string} str the string to be converted
+     * @param {string} str - the string to be converted
      * @returns {string} the converted hexadecimal value
      */
     export function toHex(str: string): string;
@@ -45,7 +45,7 @@ declare module "utils/string" {
      * @public
      * @memberof utils.string
      * @name isDataUrl
-     * @param {string} str the string (url) to be tested
+     * @param {string} str - the string (url) to be tested
      * @returns {boolean} true if the string is a data url
      */
     export function isDataUrl(str: string): boolean;
@@ -55,8 +55,8 @@ declare module "utils/agent" {
      * Get a vendor-prefixed property
      * @public
      * @name prefixed
-     * @param {string} name Property name
-     * @param {object} [obj=globalThis] Object or element reference to access
+     * @param {string} name - Property name
+     * @param {object} [obj=globalThis] - Object or element reference to access
      * @returns {string} Value of property
      * @memberof utils.agent
      */
@@ -65,9 +65,9 @@ declare module "utils/agent" {
      * Set a vendor-prefixed property
      * @public
      * @name setPrefixed
-     * @param {string} name Property name
-     * @param {string} value Property value
-     * @param {object} [obj=globalThis] Object or element reference to access
+     * @param {string} name - Property name
+     * @param {string} value - Property value
+     * @param {object} [obj=globalThis] - Object or element reference to access
      * @returns {boolean} true if one of the vendor-prefixed property was found
      * @memberof utils.agent
      */
@@ -97,7 +97,7 @@ declare module "math/math" {
      * @public
      * @memberof Math
      * @name degToRad
-     * @param {number} angle angle in degrees
+     * @param {number} angle - angle in degrees
      * @returns {number} corresponding angle in radians
      * @example
      * // convert a specific angle
@@ -109,7 +109,7 @@ declare module "math/math" {
      * @public
      * @memberof Math
      * @name radToDeg
-     * @param {number} radians angle in radians
+     * @param {number} radians - angle in radians
      * @returns {number} corresponding angle in degrees
      * @example
      * // convert a specific angle
@@ -121,9 +121,9 @@ declare module "math/math" {
      * @public
      * @memberof Math
      * @name clamp
-     * @param {number} val the value to clamp
-     * @param {number} low lower limit
-     * @param {number} high higher limit
+     * @param {number} val - the value to clamp
+     * @param {number} low - lower limit
+     * @param {number} high - higher limit
      * @returns {number} clamped value
      */
     export function clamp(val: number, low: number, high: number): number;
@@ -132,8 +132,8 @@ declare module "math/math" {
      * @public
      * @memberof Math
      * @name random
-     * @param {number} min minimum value.
-     * @param {number} max maximum value.
+     * @param {number} min - minimum value.
+     * @param {number} max - maximum value.
      * @returns {number} random value
      * @example
      * // Print a random number; one of 5, 6, 7, 8, 9
@@ -145,8 +145,8 @@ declare module "math/math" {
      * @public
      * @memberof Math
      * @name randomFloat
-     * @param {number} min minimum value.
-     * @param {number} max maximum value.
+     * @param {number} min - minimum value.
+     * @param {number} max - maximum value.
      * @returns {number} random value
      * @example
      * // Print a random number; one of 5, 6, 7, 8, 9
@@ -158,8 +158,8 @@ declare module "math/math" {
      * @public
      * @memberof Math
      * @name weightedRandom
-     * @param {number} min minimum value.
-     * @param {number} max maximum value.
+     * @param {number} min - minimum value.
+     * @param {number} max - maximum value.
      * @returns {number} random value
      * @example
      * // Print a random number; one of 5, 6, 7, 8, 9
@@ -171,8 +171,8 @@ declare module "math/math" {
      * @public
      * @memberof Math
      * @name round
-     * @param {number} num value to be rounded.
-     * @param {number} [dec=0] number of decimal digit to be rounded to.
+     * @param {number} num - value to be rounded.
+     * @param {number} [dec=0] - number of decimal digit to be rounded to.
      * @returns {number} rounded value
      * @example
      * // round a specific value to 2 digits
@@ -184,9 +184,9 @@ declare module "math/math" {
      * @public
      * @memberof Math
      * @name toBeCloseTo
-     * @param {number} expected value to be compared with.
-     * @param {number} actual actual value to compare
-     * @param {number} [precision=2] float precision for the comparison
+     * @param {number} expected - value to be compared with.
+     * @param {number} actual - actual value to compare
+     * @param {number} [precision=2] - float precision for the comparison
      * @returns {boolean} if close to
      * @example
      * // test if the given value is close to 10
@@ -250,8 +250,8 @@ declare module "utils/array" {
      * @public
      * @memberof utils.array
      * @name remove
-     * @param {Array} arr array from which to remove an object
-     * @param {object} obj to be removed
+     * @param {Array} arr - array from which to remove an object
+     * @param {object} obj - to be removed
      * @returns {Array} the modified Array
      * var arr = [ "foo", "bar", "baz" ];
      * // remove "foo" from the array
@@ -263,7 +263,7 @@ declare module "utils/array" {
      * @public
      * @memberof utils.array
      * @name random
-     * @param {Array} arr array to pick a element
+     * @param {Array} arr - array to pick a element
      * @returns {any} random member of array
      * @example
      * // Select a random array element
@@ -276,7 +276,7 @@ declare module "utils/array" {
      * @public
      * @memberof utils.array
      * @name weightedRandom
-     * @param {Array} arr array to pick a element
+     * @param {Array} arr - array to pick a element
      * @returns {any} random member of array
      */
     export function weightedRandom(arr: any[]): any;
@@ -287,19 +287,19 @@ declare module "utils/file" {
      * @public
      * @memberof utils.file
      * @name getBasename
-     * @param  {string} path path containing the filename
+     * @param  {string} path- -  path containing the filename
      * @returns {string} the base name without path information.
      */
-    export function getBasename(path: string): string;
+    export function getBasename(path: any): string;
     /**
      * return the extension of the file in the given path
      * @public
      * @memberof utils.file
      * @name getExtension
-     * @param  {string} path path containing the filename
+     * @param  {string} path- -  path containing the filename
      * @returns {string} filename extension.
      */
-    export function getExtension(path: string): string;
+    export function getExtension(path: any): string;
 }
 declare module "utils/function" {
     /**
@@ -311,9 +311,9 @@ declare module "utils/function" {
      * @public
      * @memberof utils.function
      * @name defer
-     * @param {Function} func The function to be deferred.
-     * @param {object} thisArg The value to be passed as the this parameter to the target function when the deferred function is called
-     * @param {...*} args Optional additional arguments to carry for the function.
+     * @param {Function} func - The function to be deferred.
+     * @param {object} thisArg - The value to be passed as the this parameter to the target function when the deferred function is called
+     * @param {...*} args - Optional additional arguments to carry for the function.
      * @returns {number} id that can be used to clear the deferred function using
      * clearTimeout
      * @example
@@ -328,9 +328,9 @@ declare module "utils/function" {
      * @public
      * @memberof utils.function
      * @name throttle
-     * @param {Function} fn the function to be throttled.
-     * @param {number} delay The delay in ms
-     * @param {no_trailing} no_trailing disable the execution on the trailing edge
+     * @param {Function} fn - the function to be throttled.
+     * @param {number} delay - The delay in ms
+     * @param {no_trailing} no_trailing - disable the execution on the trailing edge
      * @returns {Function} the function that will be throttled
      */
     export function throttle(fn: Function, delay: number, no_trailing: any): Function;
@@ -359,9 +359,9 @@ declare module "system/pooling" {
          * register an object to the pool. <br>
          * Pooling must be set to true if more than one such objects will be created. <br>
          * (Note: for an object to be poolable, it must implements a `onResetEvent` method)
-         * @param {string} className as defined in the Name field of the Object Properties (in Tiled)
-         * @param {object} classObj corresponding Class to be instantiated
-         * @param {boolean} [recycling=false] enables object recycling for the specified class
+         * @param {string} className - as defined in the Name field of the Object Properties (in Tiled)
+         * @param {object} classObj - corresponding Class to be instantiated
+         * @param {boolean} [recycling=false] - enables object recycling for the specified class
          * @example
          * // implement CherryEntity
          * class CherryEntity extends Spritesheet {
@@ -376,8 +376,8 @@ declare module "system/pooling" {
         register(className: string, classObj: object, recycling?: boolean): void;
         /**
          * Pull a new instance of the requested object (if added into the object pool)
-         * @param {string} name as used in {@link pool.register}
-         * @param {object} [...arguments] arguments to be passed when instantiating/reinitializing the object
+         * @param {string} name - as used in {@link pool.register}
+         * @param {object} [...arguments] - arguments to be passed when instantiating/reinitializing the object
          * @returns {object} the instance of the requested object
          * @example
          * me.pool.register("bullet", BulletEntity, true);
@@ -408,14 +408,14 @@ declare module "system/pooling" {
          * and object must have been instantiated using {@link pool#pull},
          * otherwise this function won't work
          * @throws will throw an error if the object cannot be recycled
-         * @param {object} obj instance to be recycled
-         * @param {boolean} [throwOnError=true] throw an exception if the object cannot be recycled
+         * @param {object} obj - instance to be recycled
+         * @param {boolean} [throwOnError=true] - throw an exception if the object cannot be recycled
          * @returns {boolean} true if the object was successfully recycled in the object pool
          */
         push(obj: object, throwOnError?: boolean): boolean;
         /**
          * Check if an object with the provided name is registered
-         * @param {string} name of the registered object class
+         * @param {string} name - of the registered object class
          * @returns {boolean} true if the classname is registered
          */
         exists(name: string): boolean;
@@ -423,7 +423,7 @@ declare module "system/pooling" {
          * Check if an object is poolable
          * (was properly registered with the recycling feature enable)
          * @see register
-         * @param {object} obj object to be checked
+         * @param {object} obj - object to be checked
          * @returns {boolean} true if the object is poolable
          * @example
          * if (!me.pool.poolable(myCherryEntity)) {
@@ -446,8 +446,8 @@ declare module "math/vector2" {
      */
     class Vector2d {
         /**
-         * @param {number} [x=0] x value of the vector
-         * @param {number} [y=0] y value of the vector
+         * @param {number} [x=0] - x value of the vector
+         * @param {number} [y=0] - y value of the vector
          */
         constructor(x?: number, y?: number);
         /**
@@ -535,7 +535,7 @@ declare module "math/vector2" {
          * Divide this vector values by the passed value
          * @name div
          * @memberof Vector2d
-         * @param {number} n the value to divide the vector by
+         * @param {number} n - the value to divide the vector by
          * @returns {Vector2d} Reference to this object for method chaining
          */
         div(n: number): Vector2d;
@@ -666,8 +666,8 @@ declare module "math/vector2" {
          * Rotate this vector (counter-clockwise) by the specified angle (in radians).
          * @name rotate
          * @memberof Vector2d
-         * @param {number} angle The angle to rotate (in radians)
-         * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
+         * @param {number} angle - The angle to rotate (in radians)
+         * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
          * @returns {Vector2d} Reference to this object for method chaining
          */
         rotate(angle: number, v?: Vector2d | ObservableVector2d): Vector2d;
@@ -706,7 +706,7 @@ declare module "math/vector2" {
          * @name lerp
          * @memberof Vector2d
          * @param {Vector2d} v
-         * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+         * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
          * @returns {Vector2d} Reference to this object for method chaining
          */
         lerp(v: Vector2d, alpha: number): Vector2d;
@@ -715,7 +715,7 @@ declare module "math/vector2" {
          * @name moveTowards
          * @memberof Vector2d
          * @param {Vector2d} target
-         * @param {number} step the maximum step per iteration (Negative values will push the vector away from the target)
+         * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
          * @returns {Vector2d} Reference to this object for method chaining
          */
         moveTowards(target: Vector2d, step: number): Vector2d;
@@ -739,7 +739,7 @@ declare module "math/vector2" {
          * project this vector on to another vector.
          * @name project
          * @memberof Vector2d
-         * @param {Vector2d} v The vector to project onto.
+         * @param {Vector2d} v - The vector to project onto.
          * @returns {Vector2d} Reference to this object for method chaining
          */
         project(v: Vector2d): Vector2d;
@@ -748,7 +748,7 @@ declare module "math/vector2" {
          * This is slightly more efficient than `project` when dealing with unit vectors.
          * @name projectN
          * @memberof Vector2d
-         * @param {Vector2d} v The unit vector to project onto.
+         * @param {Vector2d} v - The unit vector to project onto.
          * @returns {Vector2d} Reference to this object for method chaining
          */
         projectN(v: Vector2d): Vector2d;
@@ -776,10 +776,10 @@ declare module "math/color" {
      */
     class Color {
         /**
-         * @param {number} [r=0] red component or array of color components
-         * @param {number} [g=0] green component
-         * @param {number} [b=0] blue component
-         * @param {number} [alpha=1.0] alpha value
+         * @param {number} [r=0] - red component or array of color components
+         * @param {number} [g=0] - green component
+         * @param {number} [b=0] - blue component
+         * @param {number} [alpha=1.0] - alpha value
          */
         constructor(r?: number, g?: number, b?: number, alpha?: number);
         /**
@@ -813,26 +813,26 @@ declare module "math/color" {
         get alpha(): number;
         /**
          * Set this color to the specified value.
-         * @param {number} r red component [0 .. 255]
-         * @param {number} g green component [0 .. 255]
-         * @param {number} b blue component [0 .. 255]
-         * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
+         * @param {number} r - red component [0 .. 255]
+         * @param {number} g - green component [0 .. 255]
+         * @param {number} b - blue component [0 .. 255]
+         * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
          * @returns {Color} Reference to this object for method chaining
          */
         setColor(r: number, g: number, b: number, alpha?: number): Color;
         /**
          * set this color to the specified HSV value
-         * @param {number} h hue (a value from 0 to 1)
-         * @param {number} s saturation (a value from 0 to 1)
-         * @param {number} v value (a value from 0 to 1)
+         * @param {number} h - hue (a value from 0 to 1)
+         * @param {number} s - saturation (a value from 0 to 1)
+         * @param {number} v - value (a value from 0 to 1)
          * @returns {Color} Reference to this object for method chaining
          */
         setHSV(h: number, s: number, v: number): Color;
         /**
          * set this color to the specified HSL value
-         * @param {number} h hue (a value from 0 to 1)
-         * @param {number} s saturation (a value from 0 to 1)
-         * @param {number} l lightness (a value from 0 to 1)
+         * @param {number} h - hue (a value from 0 to 1)
+         * @param {number} s - saturation (a value from 0 to 1)
+         * @param {number} l - lightness (a value from 0 to 1)
          * @returns {Color} Reference to this object for method chaining
          */
         setHSL(h: number, s: number, l: number): Color;
@@ -862,7 +862,7 @@ declare module "math/color" {
         /**
          * Linearly interpolate between this color and the given one.
          * @param {Color} color
-         * @param {number} alpha with alpha = 0 being this color, and alpha = 1 being the given one.
+         * @param {number} alpha - with alpha = 0 being this color, and alpha = 1 being the given one.
          * @returns {Color} Reference to this object for method chaining
          */
         lerp(color: Color, alpha: number): Color;
@@ -874,8 +874,8 @@ declare module "math/color" {
         lighten(scale: number): Color;
         /**
          * Generate random r,g,b values for this color object
-         * @param {number} [min=0] minimum value for the random range
-         * @param {number} [max=255] maxmium value for the random range
+         * @param {number} [min=0] - minimum value for the random range
+         * @param {number} [max=255] - maxmium value for the random range
          * @returns {Color} Reference to this object for method chaining
          */
         random(min?: number, max?: number): Color;
@@ -903,13 +903,13 @@ declare module "math/color" {
          * Parse a Hex color ("#RGB", "#RGBA" or "#RRGGBB", "#RRGGBBAA" format) and set this color to
          * the corresponding r,g,b,a values
          * @param {string} hexColor
-         * @param {boolean} [argb = false] true if format is #ARGB, or #AARRGGBB (as opposed to #RGBA or #RGGBBAA)
+         * @param {boolean} [argb = false] - true if format is #ARGB, or #AARRGGBB (as opposed to #RGBA or #RGGBBAA)
          * @returns {Color} Reference to this object for method chaining
          */
         parseHex(hexColor: string, argb?: boolean): Color;
         /**
          * Pack this color into a Uint32 ARGB representation
-         * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
+         * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
          * @returns {number}
          */
         toUint32(alpha?: number): number;
@@ -935,7 +935,7 @@ declare module "math/color" {
         toRGB(): string;
         /**
          * Get the color in "rgba(R,G,B,A)" format
-         * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
+         * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
          * @returns {string}
          */
         toRGBA(alpha?: number): string;
@@ -949,7 +949,7 @@ declare module "math/matrix3" {
      */
     class Matrix3d {
         /**
-         * @param {(Matrix3d|...number)} args An instance of me.Matrix3d to copy from, or individual Matrix components (See {@link Matrix3d.setTransform}). If not arguments are given, the matrix will be set to Identity.
+         * @param {(Matrix3d|...number)} args - An instance of me.Matrix3d to copy from, or individual Matrix components (See {@link Matrix3d.setTransform}). If not arguments are given, the matrix will be set to Identity.
          */
         constructor(...args: any[]);
         /**
@@ -1017,7 +1017,7 @@ declare module "math/matrix3" {
          * Copies over the values from another me.Matrix3d.
          * @name copy
          * @memberof Matrix3d
-         * @param {Matrix3d} m the matrix object to copy from
+         * @param {Matrix3d} m - the matrix object to copy from
          * @returns {Matrix3d} Reference to this object for method chaining
          */
         copy(m: Matrix3d): Matrix3d;
@@ -1025,7 +1025,7 @@ declare module "math/matrix3" {
          * Copies over the upper-left 2x2 values from the given me.Matrix2d
          * @name fromMat2d
          * @memberof Matrix3d
-         * @param {Matrix2d} m the matrix object to copy from
+         * @param {Matrix2d} m - the matrix object to copy from
          * @returns {Matrix2d} Reference to this object for method chaining
          */
         fromMat2d(m: Matrix2d): Matrix2d;
@@ -1033,7 +1033,7 @@ declare module "math/matrix3" {
          * multiply both matrix
          * @name multiply
          * @memberof Matrix3d
-         * @param {Matrix3d} m Other matrix
+         * @param {Matrix3d} m - Other matrix
          * @returns {Matrix3d} Reference to this object for method chaining
          */
         multiply(m: Matrix3d): Matrix3d;
@@ -1055,7 +1055,7 @@ declare module "math/matrix3" {
          * apply the current transform to the given 2d or 3d vector
          * @name apply
          * @memberof Matrix3d
-         * @param {Vector2d|Vector3d} v the vector object to be transformed
+         * @param {Vector2d|Vector3d} v - the vector object to be transformed
          * @returns {Vector2d|Vector3d} result vector object.
          */
         apply(v: Vector2d | Vector3d): Vector2d | Vector3d;
@@ -1063,7 +1063,7 @@ declare module "math/matrix3" {
          * apply the inverted current transform to the given 2d or 3d vector
          * @name applyInverse
          * @memberof Matrix3d
-         * @param {Vector2d|Vector3d} v the vector object to be transformed
+         * @param {Vector2d|Vector3d} v - the vector object to be transformed
          * @returns {Vector2d|Vector3d} result vector object.
          */
         applyInverse(v: Vector2d | Vector3d): Vector2d | Vector3d;
@@ -1072,12 +1072,12 @@ declare module "math/matrix3" {
          * <img src="images/glOrtho.gif"/><br>
          * @name ortho
          * @memberof Matrix3d
-         * @param {number} left farthest left on the x-axis
-         * @param {number} right farthest right on the x-axis
-         * @param {number} bottom farthest down on the y-axis
-         * @param {number} top farthest up on the y-axis
-         * @param {number} near distance to the near clipping plane along the -Z axis
-         * @param {number} far distance to the far clipping plane along the -Z axis
+         * @param {number} left - farthest left on the x-axis
+         * @param {number} right - farthest right on the x-axis
+         * @param {number} bottom - farthest down on the y-axis
+         * @param {number} top - farthest up on the y-axis
+         * @param {number} near - distance to the near clipping plane along the -Z axis
+         * @param {number} far - distance to the far clipping plane along the -Z axis
          * @returns {Matrix3d} Reference to this object for method chaining
          */
         ortho(left: number, right: number, bottom: number, top: number, near: number, far: number): Matrix3d;
@@ -1085,9 +1085,9 @@ declare module "math/matrix3" {
          * scale the matrix
          * @name scale
          * @memberof Matrix3d
-         * @param {number} x a number representing the abscissa of the scaling vector.
-         * @param {number} [y=x] a number representing the ordinate of the scaling vector.
-         * @param {number} [z=0] a number representing the depth vector
+         * @param {number} x - a number representing the abscissa of the scaling vector.
+         * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
+         * @param {number} [z=0] - a number representing the depth vector
          * @returns {Matrix3d} Reference to this object for method chaining
          */
         scale(x: number, y?: number, z?: number): Matrix3d;
@@ -1095,7 +1095,7 @@ declare module "math/matrix3" {
          * adds a 2D scaling transformation.
          * @name scaleV
          * @memberof Matrix3d
-         * @param {Vector2d|Vector3d} v scaling vector
+         * @param {Vector2d|Vector3d} v - scaling vector
          * @returns {Matrix3d} Reference to this object for method chaining
          */
         scaleV(v: Vector2d | Vector3d): Matrix3d;
@@ -1103,7 +1103,7 @@ declare module "math/matrix3" {
          * specifies a 2D scale operation using the [sx, 1] scaling vector
          * @name scaleX
          * @memberof Matrix3d
-         * @param {number} x x scaling vector
+         * @param {number} x - x scaling vector
          * @returns {Matrix3d} Reference to this object for method chaining
          */
         scaleX(x: number): Matrix3d;
@@ -1111,7 +1111,7 @@ declare module "math/matrix3" {
          * specifies a 2D scale operation using the [1,sy] scaling vector
          * @name scaleY
          * @memberof Matrix3d
-         * @param {number} y y scaling vector
+         * @param {number} y - y scaling vector
          * @returns {Matrix3d} Reference to this object for method chaining
          */
         scaleY(y: number): Matrix3d;
@@ -1119,8 +1119,8 @@ declare module "math/matrix3" {
          * rotate this matrix (counter-clockwise) by the specified angle (in radians).
          * @name rotate
          * @memberof Matrix3d
-         * @param {number} angle Rotation angle in radians.
-         * @param {Vector3d} v the axis to rotate around
+         * @param {number} angle - Rotation angle in radians.
+         * @param {Vector3d} v - the axis to rotate around
          * @returns {Matrix3d} Reference to this object for method chaining
          */
         rotate(angle: number, v: Vector3d): Matrix3d;
@@ -1129,16 +1129,16 @@ declare module "math/matrix3" {
          * @name translate
          * @memberof Matrix3d
          * @method
-         * @param {number} x a number representing the abscissa of the vector.
-         * @param {number} [y=x] a number representing the ordinate of the vector.
-         * @param {number} [z=0] a number representing the depth of the vector
+         * @param {number} x - a number representing the abscissa of the vector.
+         * @param {number} [y=x] - a number representing the ordinate of the vector.
+         * @param {number} [z=0] - a number representing the depth of the vector
          * @returns {Matrix3d} Reference to this object for method chaining
          */
         /**
          * translate the matrix by a vector on the horizontal and vertical axis
          * @name translateV
          * @memberof Matrix3d
-         * @param {Vector2d|Vector3d} v the vector to translate the matrix by
+         * @param {Vector2d|Vector3d} v - the vector to translate the matrix by
          * @returns {Matrix3d} Reference to this object for method chaining
          */
         translate(...args: any[]): Matrix3d;
@@ -1153,7 +1153,7 @@ declare module "math/matrix3" {
          * return true if the two matrices are identical
          * @name equals
          * @memberof Matrix3d
-         * @param {Matrix3d} m the other matrix
+         * @param {Matrix3d} m - the other matrix
          * @returns {boolean} true if both are equals
          */
         equals(m: Matrix3d): boolean;
@@ -1190,7 +1190,7 @@ declare module "math/matrix2" {
      */
     class Matrix2d {
         /**
-         * @param {(Matrix2d|Matrix3d|...number)} args an instance of me.Matrix2d or me.Matrix3d to copy from, or individual matrix components (See {@link Matrix2d.setTransform}). If not arguments are given, the matrix will be set to Identity.
+         * @param {(Matrix2d|Matrix3d|...number)} args - an instance of me.Matrix2d or me.Matrix3d to copy from, or individual matrix components (See {@link Matrix2d.setTransform}). If not arguments are given, the matrix will be set to Identity.
          */
         constructor(...args: any[]);
         /**
@@ -1245,7 +1245,7 @@ declare module "math/matrix2" {
          * Copies over the values from another me.Matrix2d.
          * @name copy
          * @memberof Matrix2d
-         * @param {Matrix2d} m the matrix object to copy from
+         * @param {Matrix2d} m - the matrix object to copy from
          * @returns {Matrix2d} Reference to this object for method chaining
          */
         copy(m: Matrix2d): Matrix2d;
@@ -1253,7 +1253,7 @@ declare module "math/matrix2" {
          * Copies over the upper-left 3x3 values from the given me.Matrix3d
          * @name fromMat3d
          * @memberof Matrix2d
-         * @param {Matrix3d} m the matrix object to copy from
+         * @param {Matrix3d} m - the matrix object to copy from
          * @returns {Matrix2d} Reference to this object for method chaining
          */
         fromMat3d(m: Matrix3d): Matrix2d;
@@ -1261,7 +1261,7 @@ declare module "math/matrix2" {
          * multiply both matrix
          * @name multiply
          * @memberof Matrix2d
-         * @param {Matrix2d} m the other matrix
+         * @param {Matrix2d} m - the other matrix
          * @returns {Matrix2d} Reference to this object for method chaining
          */
         multiply(m: Matrix2d): Matrix2d;
@@ -1283,7 +1283,7 @@ declare module "math/matrix2" {
          * apply the current transform to the given 2d or 3d vector
          * @name apply
          * @memberof Matrix2d
-         * @param {Vector2d|Vector3d} v the vector object to be transformed
+         * @param {Vector2d|Vector3d} v - the vector object to be transformed
          * @returns {Vector2d|Vector3d} result vector object.
          */
         apply(v: Vector2d | Vector3d): Vector2d | Vector3d;
@@ -1291,7 +1291,7 @@ declare module "math/matrix2" {
          * apply the inverted current transform to the given 2d vector
          * @name applyInverse
          * @memberof Matrix2d
-         * @param {Vector2d} v the vector object to be transformed
+         * @param {Vector2d} v - the vector object to be transformed
          * @returns {Vector2d} result vector object.
          */
         applyInverse(v: Vector2d): Vector2d;
@@ -1299,8 +1299,8 @@ declare module "math/matrix2" {
          * scale the matrix
          * @name scale
          * @memberof Matrix2d
-         * @param {number} x a number representing the abscissa of the scaling vector.
-         * @param {number} [y=x] a number representing the ordinate of the scaling vector.
+         * @param {number} x - a number representing the abscissa of the scaling vector.
+         * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
          * @returns {Matrix2d} Reference to this object for method chaining
          */
         scale(x: number, y?: number): Matrix2d;
@@ -1308,7 +1308,7 @@ declare module "math/matrix2" {
          * adds a 2D scaling transformation.
          * @name scaleV
          * @memberof Matrix2d
-         * @param {Vector2d} v scaling vector
+         * @param {Vector2d} v - scaling vector
          * @returns {Matrix2d} Reference to this object for method chaining
          */
         scaleV(v: Vector2d): Matrix2d;
@@ -1316,7 +1316,7 @@ declare module "math/matrix2" {
          * specifies a 2D scale operation using the [sx, 1] scaling vector
          * @name scaleX
          * @memberof Matrix2d
-         * @param {number} x x scaling vector
+         * @param {number} x - x scaling vector
          * @returns {Matrix2d} Reference to this object for method chaining
          */
         scaleX(x: number): Matrix2d;
@@ -1324,7 +1324,7 @@ declare module "math/matrix2" {
          * specifies a 2D scale operation using the [1,sy] scaling vector
          * @name scaleY
          * @memberof Matrix2d
-         * @param {number} y y scaling vector
+         * @param {number} y - y scaling vector
          * @returns {Matrix2d} Reference to this object for method chaining
          */
         scaleY(y: number): Matrix2d;
@@ -1332,7 +1332,7 @@ declare module "math/matrix2" {
          * rotate the matrix (counter-clockwise) by the specified angle (in radians).
          * @name rotate
          * @memberof Matrix2d
-         * @param {number} angle Rotation angle in radians.
+         * @param {number} angle - Rotation angle in radians.
          * @returns {Matrix2d} Reference to this object for method chaining
          */
         rotate(angle: number): Matrix2d;
@@ -1341,15 +1341,15 @@ declare module "math/matrix2" {
          * @name translate
          * @memberof Matrix2d
          * @method
-         * @param {number} x the x coordindates to translate the matrix by
-         * @param {number} y the y coordindates to translate the matrix by
+         * @param {number} x - the x coordindates to translate the matrix by
+         * @param {number} y - the y coordindates to translate the matrix by
          * @returns {Matrix2d} Reference to this object for method chaining
          */
         /**
          * translate the matrix by a vector on the horizontal and vertical axis
          * @name translateV
          * @memberof Matrix2d
-         * @param {Vector2d} v the vector to translate the matrix by
+         * @param {Vector2d} v - the vector to translate the matrix by
          * @returns {Matrix2d} Reference to this object for method chaining
          */
         translate(...args: any[]): Matrix2d;
@@ -1364,7 +1364,7 @@ declare module "math/matrix2" {
          * return true if the two matrices are identical
          * @name equals
          * @memberof Matrix2d
-         * @param {Matrix2d} m the other matrix
+         * @param {Matrix2d} m - the other matrix
          * @returns {boolean} true if both are equals
          */
         equals(m: Matrix2d): boolean;
@@ -1396,8 +1396,8 @@ declare module "system/event" {
     /**
      * calls each of the listeners registered for a given event.
      * @function event.emit
-     * @param {string|symbol} eventName The event name.
-     * @param {object} [...arguments] arguments to be passed to all listeners
+     * @param {string|symbol} eventName - The event name.
+     * @param {object} [...arguments] - arguments to be passed to all listeners
      * @returns {boolean} true if the event had listeners, false otherwise.
      * @example
      * me.event.emit("event-name", a, b, c);
@@ -1406,9 +1406,9 @@ declare module "system/event" {
     /**
      * Add a listener for a given event.
      * @function event.on
-     * @param {string|symbol} eventName The event name.
-     * @param {Function} listener The listener function.
-     * @param {*} [context=this] The context to invoke the listener with.
+     * @param {string|symbol} eventName - The event name.
+     * @param {Function} listener - The listener function.
+     * @param {*} [context=this] - The context to invoke the listener with.
      * @returns {EventEmitter} `this`.
      * @public
      * @example
@@ -1418,9 +1418,9 @@ declare module "system/event" {
     /**
      * Add a one-time listener for a given event.
      * @function event.once
-     * @param {string|symbol} eventName The event name.
-     * @param {Function} listener The listener function.
-     * @param {*} [context=this] The context to invoke the listener with.
+     * @param {string|symbol} eventName - The event name.
+     * @param {Function} listener - The listener function.
+     * @param {*} [context=this] - The context to invoke the listener with.
      * @returns {EventEmitter} `this`.
      * @public
      * @example
@@ -1430,8 +1430,8 @@ declare module "system/event" {
     /**
      * remove the given listener for a given event.
      * @function event.off
-     * @param {string|symbol} eventName The event name.
-     * @param {Function} listener The listener function.
+     * @param {string|symbol} eventName - The event name.
+     * @param {Function} listener - The listener function.
      * @returns {EventEmitter} `this`.
      * @public
      * @example
@@ -1873,7 +1873,7 @@ declare module "system/save" {
          * Add new keys to localStorage and set them to the given default values if they do not exist
          * @name add
          * @memberof save
-         * @param {object} props key and corresponding values
+         * @param {object} props - key and corresponding values
          * @example
          * // Initialize "score" and "lives" with default values
          * me.save.add({ score : 0, lives : 3 });
@@ -1885,7 +1885,7 @@ declare module "system/save" {
          * Add new keys to localStorage and set them to the given default values if they do not exist
          * @name add
          * @memberof save
-         * @param {object} props key and corresponding values
+         * @param {object} props - key and corresponding values
          * @example
          * // Initialize "score" and "lives" with default values
          * me.save.add({ score : 0, lives : 3 });
@@ -1897,7 +1897,7 @@ declare module "system/save" {
          * Remove a key from localStorage
          * @name remove
          * @memberof save
-         * @param {string} key key to be removed
+         * @param {string} key - key to be removed
          * @example
          * // Remove the "score" key from localStorage
          * me.save.remove("score");
@@ -1907,7 +1907,7 @@ declare module "system/save" {
          * Remove a key from localStorage
          * @name remove
          * @memberof save
-         * @param {string} key key to be removed
+         * @param {string} key - key to be removed
          * @example
          * // Remove the "score" key from localStorage
          * me.save.remove("score");
@@ -1961,7 +1961,7 @@ declare module "system/device" {
     * @function onReady
     * @memberof device
     * @public
-    * @param {Function} fn the function to be executed
+    * @param {Function} fn - the function to be executed
     * @example
     * // small game skeleton
     * var game = {
@@ -2007,7 +2007,7 @@ declare module "system/device" {
      * @function enableSwipe
      * @memberof device
      * @public
-     * @param {boolean} [enable=true] enable or disable swipe.
+     * @param {boolean} [enable=true] - enable or disable swipe.
      */
     export function enableSwipe(enable?: boolean): void;
     /**
@@ -2023,7 +2023,7 @@ declare module "system/device" {
      * @function requestFullscreen
      * @memberof device
      * @public
-     * @param {object} [element=default canvas object] the element to be set in full-screen mode.
+     * @param {object} [element=default canvas object] - the element to be set in full-screen mode.
      * @example
      * // add a keyboard shortcut to toggle Fullscreen mode on/off
      * me.input.bindKey(me.input.KEY.F, "toggleFullscreen");
@@ -2061,7 +2061,7 @@ declare module "system/device" {
      * @memberof device
      * @public
      * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
-     * @param {string|string[]} orientation The orientation into which to lock the screen.
+     * @param {string|string[]} orientation - The orientation into which to lock the screen.
      * @returns {boolean} true if the orientation was unsuccessfully locked
      */
     export function lockOrientation(orientation: string | string[]): boolean;
@@ -2106,7 +2106,7 @@ declare module "system/device" {
      * @function getParentElement
      * @memberof device
      * @public
-     * @param {string|HTMLElement} element the parent element name or a HTMLElement object
+     * @param {string|HTMLElement} element - the parent element name or a HTMLElement object
      * @returns {HTMLElement} the parent Element
      */
     export function getParentElement(element: string | HTMLElement): HTMLElement;
@@ -2115,7 +2115,7 @@ declare module "system/device" {
      * @function getElement
      * @memberof device
      * @public
-     * @param {string|HTMLElement} element the parent element name or a HTMLElement object
+     * @param {string|HTMLElement} element - the parent element name or a HTMLElement object
      * @returns {HTMLElement} the corresponding DOM Element or null if not existing
      */
     export function getElement(element: string | HTMLElement): HTMLElement;
@@ -2126,7 +2126,7 @@ declare module "system/device" {
      * @memberof device
      * @public
      * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
-     * @param {string|HTMLElement} element an HTMLElement object
+     * @param {string|HTMLElement} element - an HTMLElement object
      * @returns {DOMRect} the size and position of the element relatively to the viewport
      */
     export function getElementBounds(element: string | HTMLElement): DOMRect;
@@ -2137,7 +2137,7 @@ declare module "system/device" {
      * @memberof device
      * @public
      * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
-     * @param {string|HTMLElement} element an HTMLElement object
+     * @param {string|HTMLElement} element - an HTMLElement object
      * @returns {DOMRect} the size and position of the given element parent relative to the viewport
      */
     export function getParentBounds(element: string | HTMLElement): DOMRect;
@@ -2146,8 +2146,8 @@ declare module "system/device" {
      * @function isWebGLSupported
      * @memberof device
      * @public
-     * @param {object} [options] context creation options
-     * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
+     * @param {object} [options] - context creation options
+     * @param {boolean} [options.failIfMajorPerformanceCaveat=true] - If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
      * @returns {boolean} true if WebGL is supported
      */
     export function isWebGLSupported(options?: {
@@ -2241,7 +2241,7 @@ declare module "system/device" {
      * @function vibrate
      * @memberof device
      * @public
-     * @param {number|number[]} pattern pattern of vibration and pause intervals
+     * @param {number|number[]} pattern - pattern of vibration and pause intervals
      * @example
      * // vibrate for 1000 ms
      * me.device.vibrate(1000);
@@ -2583,10 +2583,10 @@ declare module "video/webgl/glshader" {
      */
     class GLShader {
         /**
-         * @param {WebGLRenderingContext} gl the current WebGL rendering context
-         * @param {string} vertex a string containing the GLSL source code to set
-         * @param {string} fragment a string containing the GLSL source code to set
-         * @param {string} [precision=auto detected] float precision ('lowp', 'mediump' or 'highp').
+         * @param {WebGLRenderingContext} gl - the current WebGL rendering context
+         * @param {string} vertex - a string containing the GLSL source code to set
+         * @param {string} fragment - a string containing the GLSL source code to set
+         * @param {string} [precision=auto detected] - float precision ('lowp', 'mediump' or 'highp').
          * @see https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_on_the_web/GLSL_Shaders
          * @example
          * // create a basic shader
@@ -2646,23 +2646,23 @@ declare module "video/webgl/glshader" {
         bind(): void;
         /**
          * returns the location of an attribute variable in this shader program
-         * @param {string} name the name of the attribute variable whose location to get.
+         * @param {string} name - the name of the attribute variable whose location to get.
          * @returns {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
          */
         getAttribLocation(name: string): GLint;
         /**
          * Set the uniform to the given value
-         * @param {string} name the uniform name
-         * @param {object|Float32Array} value the value to assign to that uniform
+         * @param {string} name - the uniform name
+         * @param {object|Float32Array} value - the value to assign to that uniform
          * @example
          * myShader.setUniform("uProjectionMatrix", this.projectionMatrix);
          */
         setUniform(name: string, value: object | Float32Array): void;
         /**
          * activate the given vertex attribute for this shader
-         * @param {WebGLRenderingContext} gl the current WebGL rendering context
-         * @param {object[]} attributes an array of vertex attributes
-         * @param {number} vertexByteSize the size of a single vertex in bytes
+         * @param {WebGLRenderingContext} gl - the current WebGL rendering context
+         * @param {object[]} attributes - an array of vertex attributes
+         * @param {number} vertexByteSize - the size of a single vertex in bytes
          */
         setVertexAttributes(gl: WebGLRenderingContext, attributes: object[], vertexByteSize: number): void;
         /**
@@ -2739,7 +2739,7 @@ declare module "video/webgl/webgl_compositor" {
      */
     class WebGLCompositor {
         /**
-         * @param {WebGLRenderer} renderer the current WebGL renderer session
+         * @param {WebGLRenderer} renderer - the current WebGL renderer session
          */
         constructor(renderer: WebGLRenderer);
         /**
@@ -2794,57 +2794,57 @@ declare module "video/webgl/webgl_compositor" {
         reset(): void;
         /**
          * add vertex attribute property definition to the compositor
-         * @param {string} name name of the attribute in the vertex shader
-         * @param {number} size number of components per vertex attribute. Must be 1, 2, 3, or 4.
-         * @param {GLenum} type data type of each component in the array
-         * @param {boolean} normalized whether integer data values should be normalized into a certain range when being cast to a float
-         * @param {number} offset offset in bytes of the first component in the vertex attribute array
+         * @param {string} name - name of the attribute in the vertex shader
+         * @param {number} size - number of components per vertex attribute. Must be 1, 2, 3, or 4.
+         * @param {GLenum} type - data type of each component in the array
+         * @param {boolean} normalized - whether integer data values should be normalized into a certain range when being cast to a float
+         * @param {number} offset - offset in bytes of the first component in the vertex attribute array
          */
         addAttribute(name: string, size: number, type: GLenum, normalized: boolean, offset: number): void;
         /**
          * Sets the viewport
-         * @param {number} x x position of viewport
-         * @param {number} y y position of viewport
-         * @param {number} w width of viewport
-         * @param {number} h height of viewport
+         * @param {number} x - x position of viewport
+         * @param {number} y - y position of viewport
+         * @param {number} w - width of viewport
+         * @param {number} h - height of viewport
          */
         setViewport(x: number, y: number, w: number, h: number): void;
         /**
          * Create a WebGL texture from an image
-         * @param {number} unit Destination texture unit
-         * @param {Image|HTMLCanvasElement|ImageData|Uint8Array[]|Float32Array[]} image Source image
-         * @param {number} filter gl.LINEAR or gl.NEAREST
-         * @param {string} [repeat="no-repeat"] Image repeat behavior (see {@link ImageLayer#repeat})
-         * @param {number} [w] Source image width (Only use with UInt8Array[] or Float32Array[] source image)
-         * @param {number} [h] Source image height (Only use with UInt8Array[] or Float32Array[] source image)
-         * @param {number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
-         * @param {boolean} [premultipliedAlpha=true] Multiplies the alpha channel into the other color channels
-         * @param {boolean} [mipmap=true] Whether mipmap levels should be generated for this texture
+         * @param {number} unit - Destination texture unit
+         * @param {Image|HTMLCanvasElement|ImageData|Uint8Array[]|Float32Array[]} image - Source image
+         * @param {number} filter - gl.LINEAR or gl.NEAREST
+         * @param {string} [repeat="no-repeat"] - Image repeat behavior (see {@link ImageLayer#repeat})
+         * @param {number} [w] - Source image width (Only use with UInt8Array[] or Float32Array[] source image)
+         * @param {number} [h] - Source image height (Only use with UInt8Array[] or Float32Array[] source image)
+         * @param {number} [b] - Source image border (Only use with UInt8Array[] or Float32Array[] source image)
+         * @param {boolean} [premultipliedAlpha=true] - Multiplies the alpha channel into the other color channels
+         * @param {boolean} [mipmap=true] - Whether mipmap levels should be generated for this texture
          * @returns {WebGLTexture} a WebGL texture
          */
         createTexture2D(unit: number, image: (new (width?: number, height?: number) => HTMLImageElement) | HTMLCanvasElement | ImageData | Uint8Array[] | Float32Array[], filter: number, repeat?: string, w?: number, h?: number, b?: number, premultipliedAlpha?: boolean, mipmap?: boolean): WebGLTexture;
         /**
          * delete the given WebGL texture
-         * @param {WebGLTexture} [texture] a WebGL texture to delete
-         * @param {number} [unit] Texture unit to delete
+         * @param {WebGLTexture} [texture] - a WebGL texture to delete
+         * @param {number} [unit] - Texture unit to delete
          */
         deleteTexture2D(texture?: WebGLTexture): void;
         /**
          * returns the WebGL texture associated to the given texture unit
-         * @param {number} unit Texture unit to which a texture is bound
+         * @param {number} unit - Texture unit to which a texture is bound
          * @returns {WebGLTexture} texture a WebGL texture
          */
         getTexture2D(unit: number): WebGLTexture;
         /**
          * assign the given WebGL texture to the current batch
-         * @param {WebGLTexture} texture a WebGL texture
-         * @param {number} unit Texture unit to which the given texture is bound
+         * @param {WebGLTexture} texture - a WebGL texture
+         * @param {number} unit - Texture unit to which the given texture is bound
          */
         bindTexture2D(texture: WebGLTexture, unit: number): void;
         /**
          * unbind the given WebGL texture, forcing it to be reuploaded
-         * @param {WebGLTexture} [texture] a WebGL texture
-         * @param {number} [unit] a WebGL texture
+         * @param {WebGLTexture} [texture] - a WebGL texture
+         * @param {number} [unit] - a WebGL texture
          * @returns {number} unit the unit number that was associated with the given texture
          */
         unbindTexture2D(texture?: WebGLTexture, unit?: number): number;
@@ -2860,33 +2860,33 @@ declare module "video/webgl/webgl_compositor" {
         /**
          * Select the shader to use for compositing
          * @see GLShader
-         * @param {GLShader} shader a reference to a GLShader instance
+         * @param {GLShader} shader - a reference to a GLShader instance
          */
         useShader(shader: GLShader): void;
         /**
          * Add a textured quad
-         * @param {TextureAtlas} texture Source texture atlas
-         * @param {number} x Destination x-coordinate
-         * @param {number} y Destination y-coordinate
-         * @param {number} w Destination width
-         * @param {number} h Destination height
-         * @param {number} u0 Texture UV (u0) value.
-         * @param {number} v0 Texture UV (v0) value.
-         * @param {number} u1 Texture UV (u1) value.
-         * @param {number} v1 Texture UV (v1) value.
-         * @param {number} tint tint color to be applied to the texture in UINT32 (argb) format
+         * @param {TextureAtlas} texture - Source texture atlas
+         * @param {number} x - Destination x-coordinate
+         * @param {number} y - Destination y-coordinate
+         * @param {number} w - Destination width
+         * @param {number} h - Destination height
+         * @param {number} u0 - Texture UV (u0) value.
+         * @param {number} v0 - Texture UV (v0) value.
+         * @param {number} u1 - Texture UV (u1) value.
+         * @param {number} v1 - Texture UV (v1) value.
+         * @param {number} tint - tint color to be applied to the texture in UINT32 (argb) format
          */
         addQuad(texture: TextureAtlas, x: number, y: number, w: number, h: number, u0: number, v0: number, u1: number, v1: number, tint: number): void;
         /**
          * Flush batched texture operations to the GPU
-         * @param {number} [mode=gl.TRIANGLES] the GL drawing mode
+         * @param {number} [mode=gl.TRIANGLES] - the GL drawing mode
          */
         flush(mode?: number): void;
         /**
          * Draw an array of vertices
-         * @param {GLenum} mode primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
-         * @param {Vector2d[]} verts vertices
-         * @param {number} [vertexCount=verts.length] amount of points defined in the points array
+         * @param {GLenum} mode - primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
+         * @param {Vector2d[]} verts - vertices
+         * @param {number} [vertexCount=verts.length] - amount of points defined in the points array
          */
         drawVertices(mode: GLenum, verts: Vector2d[], vertexCount?: number): void;
         /**
@@ -2921,9 +2921,9 @@ declare module "geometries/poly" {
      */
     class Polygon {
         /**
-         * @param {number} x origin point of the Polygon
-         * @param {number} y origin point of the Polygon
-         * @param {Vector2d[]} points array of vector defining the Polygon
+         * @param {number} x - origin point of the Polygon
+         * @param {number} y - origin point of the Polygon
+         * @param {Vector2d[]} points - array of vector defining the Polygon
          */
         constructor(x: number, y: number, points: Vector2d[]);
         /**
@@ -2969,9 +2969,9 @@ declare module "geometries/poly" {
          * set new value to the Polygon
          * @name setShape
          * @memberof Polygon
-         * @param {number} x position of the Polygon
-         * @param {number} y position of the Polygon
-         * @param {Vector2d[]|number[]} points array of vector or vertice defining the Polygon
+         * @param {number} x - position of the Polygon
+         * @param {number} y - position of the Polygon
+         * @param {Vector2d[]|number[]} points - array of vector or vertice defining the Polygon
          * @returns {Polygon} this instance for objecf chaining
          */
         setShape(x: number, y: number, points: Vector2d[] | number[]): Polygon;
@@ -2979,7 +2979,7 @@ declare module "geometries/poly" {
          * set the vertices defining this Polygon
          * @name setVertices
          * @memberof Polygon
-         * @param {Vector2d[]} vertices array of vector or vertice defining the Polygon
+         * @param {Vector2d[]} vertices - array of vector or vertice defining the Polygon
          * @returns {Polygon} this instance for objecf chaining
          */
         setVertices(vertices: Vector2d[]): Polygon;
@@ -2987,7 +2987,7 @@ declare module "geometries/poly" {
          * apply the given transformation matrix to this Polygon
          * @name transform
          * @memberof Polygon
-         * @param {Matrix2d} m the transformation matrix
+         * @param {Matrix2d} m - the transformation matrix
          * @returns {Polygon} Reference to this object for method chaining
          */
         transform(m: Matrix2d): Polygon;
@@ -3009,8 +3009,8 @@ declare module "geometries/poly" {
          * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
          * @name rotate
          * @memberof Polygon
-         * @param {number} angle The angle to rotate (in radians)
-         * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
+         * @param {number} angle - The angle to rotate (in radians)
+         * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
          * @returns {Polygon} Reference to this object for method chaining
          */
         rotate(angle: number, v?: Vector2d | ObservableVector2d): Polygon;
@@ -3058,15 +3058,15 @@ declare module "geometries/poly" {
          * @name translate
          * @memberof Polygon
          * @method
-         * @param {number} x x offset
-         * @param {number} y y offset
+         * @param {number} x - x offset
+         * @param {number} y - y offset
          * @returns {Polygon} this Polygon
          */
         /**
          * translate the Polygon by the specified vector
          * @name translate
          * @memberof Polygon
-         * @param {Vector2d} v vector offset
+         * @param {Vector2d} v - vector offset
          * @returns {Polygon} Reference to this object for method chaining
          */
         translate(...args: any[]): Polygon;
@@ -3101,8 +3101,8 @@ declare module "geometries/poly" {
          *  bounding rect, as the function can be highly consuming with complex shapes)
          * @name contains
          * @memberof Polygon
-         * @param  {number} x x coordinate
-         * @param  {number} y y coordinate
+         * @param  {number} x -  x coordinate
+         * @param  {number} y -  y coordinate
          * @returns {boolean} true if contains
          */
         contains(...args: any[]): boolean;
@@ -3141,10 +3141,10 @@ declare module "geometries/rectangle" {
      */
     class Rect extends Polygon {
         /**
-         * @param {number} x position of the Rectangle
-         * @param {number} y position of the Rectangle
-         * @param {number} w width of the rectangle
-         * @param {number} h height of the rectangle
+         * @param {number} x - position of the Rectangle
+         * @param {number} y - position of the Rectangle
+         * @param {number} w - width of the rectangle
+         * @param {number} h - height of the rectangle
          */
         constructor(x: number, y: number, w: number, h: number);
         /** @ignore */
@@ -3153,10 +3153,10 @@ declare module "geometries/rectangle" {
          * set new value to the rectangle shape
          * @name setShape
          * @memberof Rect
-         * @param {number} x position of the Rectangle
-         * @param {number} y position of the Rectangle
-         * @param {number|Vector2d[]} w width of the rectangle, or an array of vector defining the rectangle
-         * @param {number} [h] height of the rectangle, if a numeral width parameter is specified
+         * @param {number} x - position of the Rectangle
+         * @param {number} y - position of the Rectangle
+         * @param {number|Vector2d[]} w - width of the rectangle, or an array of vector defining the rectangle
+         * @param {number} [h] - height of the rectangle, if a numeral width parameter is specified
          * @returns {Rect} this rectangle
          */
         setShape(x: number, y: number, w: number | Vector2d[], h?: number, ...args: any[]): Rect;
@@ -3232,8 +3232,8 @@ declare module "geometries/rectangle" {
          * center the rectangle position around the given coordinates
          * @name centerOn
          * @memberof Rect
-         * @param {number} x the x coordinate around which to center this rectangle
-         * @param {number} y the y coordinate around which to center this rectangle
+         * @param {number} x - the x coordinate around which to center this rectangle
+         * @param {number} y - the y coordinate around which to center this rectangle
          * @returns {Rect} this rectangle
          */
         centerOn(x: number, y: number): Rect;
@@ -3241,8 +3241,8 @@ declare module "geometries/rectangle" {
          * resize the rectangle
          * @name resize
          * @memberof Rect
-         * @param {number} w new width of the rectangle
-         * @param {number} h new height of the rectangle
+         * @param {number} w - new width of the rectangle
+         * @param {number} h - new height of the rectangle
          * @returns {Rect} this rectangle
          */
         resize(w: number, h: number): Rect;
@@ -3250,8 +3250,8 @@ declare module "geometries/rectangle" {
          * scale the rectangle
          * @name scale
          * @memberof Rect
-         * @param {number} x a number representing the abscissa of the scaling vector.
-         * @param {number} [y=x] a number representing the ordinate of the scaling vector.
+         * @param {number} x - a number representing the abscissa of the scaling vector.
+         * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
          * @returns {Rect} this rectangle
          */
         scale(x: number, y?: number): Rect;
@@ -3266,7 +3266,7 @@ declare module "geometries/rectangle" {
          * copy the position and size of the given rectangle into this one
          * @name copy
          * @memberof Rect
-         * @param {Rect} rect Source rectangle
+         * @param {Rect} rect - Source rectangle
          * @returns {Rect} new rectangle
          */
         copy(rect: Rect): Rect;
@@ -3274,7 +3274,7 @@ declare module "geometries/rectangle" {
          * merge this rectangle with another one
          * @name union
          * @memberof Rect
-         * @param {Rect} rect other rectangle to union with
+         * @param {Rect} rect - other rectangle to union with
          * @returns {Rect} the union(ed) rectangle
          */
         union(rect: Rect): Rect;
@@ -3320,11 +3320,11 @@ declare module "geometries/roundrect" {
      */
     class RoundRect extends Rect {
         /**
-         * @param {number} x position of the rounded rectangle
-         * @param {number} y position of the rounded rectangle
-         * @param {number} width the rectangle width
-         * @param {number} height the rectangle height
-         * @param {number} [radius=20] the radius of the rounded corner
+         * @param {number} x - position of the rounded rectangle
+         * @param {number} y - position of the rounded rectangle
+         * @param {number} width - the rectangle width
+         * @param {number} height - the rectangle height
+         * @param {number} [radius=20] - the radius of the rounded corner
          */
         constructor(x: number, y: number, width: number, height: number, radius?: number);
         public set radius(arg: number);
@@ -3344,7 +3344,7 @@ declare module "geometries/roundrect" {
          * copy the position, size and radius of the given rounded rectangle into this one
          * @name copy
          * @memberof RoundRect
-         * @param {RoundRect} rrect source rounded rectangle
+         * @param {RoundRect} rrect - source rounded rectangle
          * @returns {RoundRect} new rectangle
          */
         copy(rrect: RoundRect): RoundRect;
@@ -3374,10 +3374,10 @@ declare module "geometries/ellipse" {
      */
     class Ellipse {
         /**
-         * @param {number} x the center x coordinate of the ellipse
-         * @param {number} y the center y coordinate of the ellipse
-         * @param {number} w width (diameter) of the ellipse
-         * @param {number} h height (diameter) of the ellipse
+         * @param {number} x - the center x coordinate of the ellipse
+         * @param {number} y - the center y coordinate of the ellipse
+         * @param {number} w - width (diameter) of the ellipse
+         * @param {number} h - height (diameter) of the ellipse
          */
         constructor(x: number, y: number, w: number, h: number);
         /**
@@ -3432,10 +3432,10 @@ declare module "geometries/ellipse" {
          * set new value to the Ellipse shape
          * @name setShape
          * @memberof Ellipse
-         * @param {number} x the center x coordinate of the ellipse
-         * @param {number} y the center y coordinate of the ellipse
-         * @param {number} w width (diameter) of the ellipse
-         * @param {number} h height (diameter) of the ellipse
+         * @param {number} x - the center x coordinate of the ellipse
+         * @param {number} y - the center y coordinate of the ellipse
+         * @param {number} w - width (diameter) of the ellipse
+         * @param {number} h - height (diameter) of the ellipse
          * @returns {Ellipse} this instance for objecf chaining
          */
         setShape(x: number, y: number, w: number, h: number): Ellipse;
@@ -3443,8 +3443,8 @@ declare module "geometries/ellipse" {
          * Rotate this Ellipse (counter-clockwise) by the specified angle (in radians).
          * @name rotate
          * @memberof Ellipse
-         * @param {number} angle The angle to rotate (in radians)
-         * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
+         * @param {number} angle - The angle to rotate (in radians)
+         * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
          * @returns {Ellipse} Reference to this object for method chaining
          */
         rotate(angle: number, v?: Vector2d | ObservableVector2d): Ellipse;
@@ -3469,7 +3469,7 @@ declare module "geometries/ellipse" {
          * apply the given transformation matrix to this ellipse
          * @name transform
          * @memberof Ellipse
-         * @param {Matrix2d} matrix the transformation matrix
+         * @param {Matrix2d} matrix - the transformation matrix
          * @returns {Polygon} Reference to this object for method chaining
          */
         transform(matrix: Matrix2d): Polygon;
@@ -3478,15 +3478,15 @@ declare module "geometries/ellipse" {
          * @name translate
          * @memberof Ellipse
          * @method
-         * @param {number} x x offset
-         * @param {number} y y offset
+         * @param {number} x - x offset
+         * @param {number} y - y offset
          * @returns {Ellipse} this ellipse
          */
         /**
          * translate the circle/ellipse by the specified vector
          * @name translate
          * @memberof Ellipse
-         * @param {Vector2d} v vector offset
+         * @param {Vector2d} v - vector offset
          * @returns {Ellipse} this ellipse
          */
         translate(...args: any[]): Ellipse;
@@ -3502,8 +3502,8 @@ declare module "geometries/ellipse" {
          * check if this circle/ellipse contains the specified point
          * @name contains
          * @memberof Ellipse
-         * @param  {number} x x coordinate
-         * @param  {number} y y coordinate
+         * @param  {number} x -  x coordinate
+         * @param  {number} y -  y coordinate
          * @returns {boolean} true if contains
          */
         contains(...args: any[]): boolean;
@@ -3529,9 +3529,9 @@ declare module "geometries/line" {
      * @classdesc
      * a line segment Object
      * @augments Polygon
-     * @param {number} x origin point of the Line
-     * @param {number} y origin point of the Line
-     * @param {Vector2d[]} points array of vectors defining the Line
+     * @param {number} x - origin point of the Line
+     * @param {number} y - origin point of the Line
+     * @param {Vector2d[]} points - array of vectors defining the Line
      */
     class Line extends Polygon {
     }
@@ -3545,7 +3545,7 @@ declare module "physics/bounds" {
      */
     class Bounds {
         /**
-         * @param {Vector2d[]} [vertices] an array of me.Vector2d points
+         * @param {Vector2d[]} [vertices] - an array of me.Vector2d points
          */
         constructor(vertices?: Vector2d[]);
         _center: Vector2d;
@@ -3673,15 +3673,15 @@ declare module "physics/bounds" {
          * Updates bounds using the given vertices
          * @name update
          * @memberof Bounds
-         * @param {Vector2d[]} vertices an array of me.Vector2d points
+         * @param {Vector2d[]} vertices - an array of me.Vector2d points
          */
         update(vertices: Vector2d[]): void;
         /**
          * add the given vertices to the bounds definition.
          * @name add
          * @memberof Bounds
-         * @param {Vector2d[]} vertices an array of me.Vector2d points
-         * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
+         * @param {Vector2d[]} vertices - an array of me.Vector2d points
+         * @param {boolean} [clear=false] - either to reset the bounds before adding the new vertices
          */
         add(vertices: Vector2d[], clear?: boolean): void;
         /**
@@ -3689,15 +3689,15 @@ declare module "physics/bounds" {
          * @name addBounds
          * @memberof Bounds
          * @param {Bounds} bounds
-         * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
+         * @param {boolean} [clear=false] - either to reset the bounds before adding the new vertices
          */
         addBounds(bounds: Bounds, clear?: boolean): void;
         /**
          * add the given point to the bounds definition.
          * @name addPoint
          * @memberof Bounds
-         * @param {Vector2d|Point} point the point to be added to the bounds
-         * @param {Matrix2d} [m] an optional transform to apply to the given point (only if the given point is a vector)
+         * @param {Vector2d|Point} point - the point to be added to the bounds
+         * @param {Matrix2d} [m] - an optional transform to apply to the given point (only if the given point is a vector)
          */
         addPoint(point: Vector2d | Point, m?: Matrix2d): void;
         /**
@@ -3708,7 +3708,7 @@ declare module "physics/bounds" {
          * @param {number} y0 - top Y coordinates of the quad
          * @param {number} x1 - right X coordinates of the quad
          * @param {number} y1 - bottom y coordinates of the quad
-         * @param {Matrix2d} [m] an optional transform to apply to the given frame coordinates
+         * @param {Matrix2d} [m] - an optional transform to apply to the given frame coordinates
          */
         addFrame(x0: number, y0: number, x1: number, y1: number, m?: Matrix2d): void;
         /**
@@ -3840,16 +3840,16 @@ declare module "geometries/path2d" {
          * moves the starting point of the current path to the (x, y) coordinates.
          * @name moveTo
          * @memberof Path2D
-         * @param {number} x the x-axis (horizontal) coordinate of the point.
-         * @param {number} y the y-axis (vertical) coordinate of the point.
+         * @param {number} x - the x-axis (horizontal) coordinate of the point.
+         * @param {number} y - the y-axis (vertical) coordinate of the point.
          */
         moveTo(x: number, y: number): void;
         /**
          * connects the last point in the current patch to the (x, y) coordinates with a straight line.
          * @name lineTo
          * @memberof Path2D
-         * @param {number} x the x-axis coordinate of the line's end point.
-         * @param {number} y the y-axis coordinate of the line's end point.
+         * @param {number} x - the x-axis coordinate of the line's end point.
+         * @param {number} y - the y-axis coordinate of the line's end point.
          */
         lineTo(x: number, y: number): void;
         /**
@@ -3857,23 +3857,23 @@ declare module "geometries/path2d" {
          * starting at startAngle and ending at endAngle going in the given direction by counterclockwise (defaulting to clockwise).
          * @name arc
          * @memberof Path2D
-         * @param {number} x the horizontal coordinate of the arc's center.
-         * @param {number} y the vertical coordinate of the arc's center.
-         * @param {number} radius the arc's radius. Must be positive.
-         * @param {number} startAngle the angle at which the arc starts in radians, measured from the positive x-axis.
-         * @param {number} endAngle the angle at which the arc ends in radians, measured from the positive x-axis.
-         * @param {boolean} [anticlockwise=false] an optional boolean value. If true, draws the arc counter-clockwise between the start and end angles.
+         * @param {number} x - the horizontal coordinate of the arc's center.
+         * @param {number} y - the vertical coordinate of the arc's center.
+         * @param {number} radius - the arc's radius. Must be positive.
+         * @param {number} startAngle - the angle at which the arc starts in radians, measured from the positive x-axis.
+         * @param {number} endAngle - the angle at which the arc ends in radians, measured from the positive x-axis.
+         * @param {boolean} [anticlockwise=false] - an optional boolean value. If true, draws the arc counter-clockwise between the start and end angles.
          */
         arc(x: number, y: number, radius: number, startAngle: number, endAngle: number, anticlockwise?: boolean): void;
         /**
          * adds a circular arc to the path with the given control points and radius, connected to the previous point by a straight line.
          * @name arcTo
          * @memberof Path2D
-         * @param {number} x1 the x-axis coordinate of the first control point.
-         * @param {number} y1 the y-axis coordinate of the first control point.
-         * @param {number} x2 the x-axis coordinate of the second control point.
-         * @param {number} y2 the y-axis coordinate of the second control point.
-         * @param {number} radius the arc's radius. Must be positive.
+         * @param {number} x1 - the x-axis coordinate of the first control point.
+         * @param {number} y1 - the y-axis coordinate of the first control point.
+         * @param {number} x2 - the x-axis coordinate of the second control point.
+         * @param {number} y2 - the y-axis coordinate of the second control point.
+         * @param {number} radius - the arc's radius. Must be positive.
          */
         arcTo(x1: number, y1: number, x2: number, y2: number, radius: number): void;
         /**
@@ -3881,35 +3881,35 @@ declare module "geometries/path2d" {
          * starting at startAngle and ending at endAngle going in the given direction by counterclockwise.
          * @name ellipse
          * @memberof Path2D
-         * @param {number} x the x-axis (horizontal) coordinate of the ellipse's center.
-         * @param {number} y the  y-axis (vertical) coordinate of the ellipse's center.
-         * @param {number} radiusX the ellipse's major-axis radius. Must be non-negative.
-         * @param {number} radiusY the ellipse's minor-axis radius. Must be non-negative.
-         * @param {number} rotation the rotation of the ellipse, expressed in radians.
-         * @param {number} startAngle the angle at which the ellipse starts, measured clockwise from the positive x-axis and expressed in radians.
-         * @param {number} endAngle the angle at which the ellipse ends, measured clockwise from the positive x-axis and expressed in radians.
-         * @param {boolean} [anticlockwise=false] an optional boolean value which, if true, draws the ellipse counterclockwise (anticlockwise).
+         * @param {number} x - the x-axis (horizontal) coordinate of the ellipse's center.
+         * @param {number} y - the  y-axis (vertical) coordinate of the ellipse's center.
+         * @param {number} radiusX - the ellipse's major-axis radius. Must be non-negative.
+         * @param {number} radiusY - the ellipse's minor-axis radius. Must be non-negative.
+         * @param {number} rotation - the rotation of the ellipse, expressed in radians.
+         * @param {number} startAngle - the angle at which the ellipse starts, measured clockwise from the positive x-axis and expressed in radians.
+         * @param {number} endAngle - the angle at which the ellipse ends, measured clockwise from the positive x-axis and expressed in radians.
+         * @param {boolean} [anticlockwise=false] - an optional boolean value which, if true, draws the ellipse counterclockwise (anticlockwise).
          */
         ellipse(x: number, y: number, radiusX: number, radiusY: number, rotation: number, startAngle: number, endAngle: number, anticlockwise?: boolean): void;
         /**
          * creates a path for a rectangle at position (x, y) with a size that is determined by width and height.
          * @name rect
          * @memberof Path2D
-         * @param {number} x the x-axis coordinate of the rectangle's starting point.
-         * @param {number} y the y-axis coordinate of the rectangle's starting point.
-         * @param {number} width the rectangle's width. Positive values are to the right, and negative to the left.
-         * @param {number} height the rectangle's height. Positive values are down, and negative are up.
+         * @param {number} x - the x-axis coordinate of the rectangle's starting point.
+         * @param {number} y - the y-axis coordinate of the rectangle's starting point.
+         * @param {number} width - the rectangle's width. Positive values are to the right, and negative to the left.
+         * @param {number} height - the rectangle's height. Positive values are down, and negative are up.
          */
         rect(x: number, y: number, width: number, height: number): void;
         /**
          * adds an rounded rectangle to the current path.
          * @name roundRect
          * @memberof Path2D
-         * @param {number} x the x-axis coordinate of the rectangle's starting point.
-         * @param {number} y the y-axis coordinate of the rectangle's starting point.
-         * @param {number} width the rectangle's width. Positive values are to the right, and negative to the left.
-         * @param {number} height the rectangle's height. Positive values are down, and negative are up.
-         * @param {number} radius the arc's radius to draw the borders. Must be positive.
+         * @param {number} x - the x-axis coordinate of the rectangle's starting point.
+         * @param {number} y - the y-axis coordinate of the rectangle's starting point.
+         * @param {number} width - the rectangle's width. Positive values are to the right, and negative to the left.
+         * @param {number} height - the rectangle's height. Positive values are down, and negative are up.
+         * @param {number} radius - the arc's radius to draw the borders. Must be positive.
          */
         roundRect(x: number, y: number, width: number, height: number, radius: number): void;
     }
@@ -3978,19 +3978,19 @@ declare module "video/renderer" {
      */
     class Renderer {
         /**
-         * @param {object} options The renderer parameters
-         * @param {number} options.width The width of the canvas without scaling
-         * @param {number} options.height The height of the canvas without scaling
-         * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
-         * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
-         * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
-         * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas
-         * @param {boolean} [options.premultipliedAlpha=true] in WebGL, whether the renderer will assume that colors have premultiplied alpha when canvas transparency is enabled
-         * @param {boolean} [options.blendMode="normal"] the default blend mode to use ("normal", "multiply")
-         * @param {boolean} [options.subPixel=false] Whether to enable subpixel rendering (performance hit when enabled)
-         * @param {boolean} [options.verbose=false] Enable the verbose mode that provides additional details as to what the renderer is doing
-         * @param {number} [options.zoomX=width] The actual width of the canvas with scaling applied
-         * @param {number} [options.zoomY=height] The actual height of the canvas with scaling applied
+         * @param {object} options - The renderer parameters
+         * @param {number} options.width - The width of the canvas without scaling
+         * @param {number} options.height - The height of the canvas without scaling
+         * @param {HTMLCanvasElement} [options.canvas] - The html canvas to draw to on screen
+         * @param {boolean} [options.antiAlias=false] - Whether to enable anti-aliasing, use false (default) for a pixelated effect.
+         * @param {boolean} [options.failIfMajorPerformanceCaveat=true] - If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
+         * @param {boolean} [options.transparent=false] - Whether to enable transparency on the canvas
+         * @param {boolean} [options.premultipliedAlpha=true] - in WebGL, whether the renderer will assume that colors have premultiplied alpha when canvas transparency is enabled
+         * @param {boolean} [options.blendMode="normal"] - the default blend mode to use ("normal", "multiply")
+         * @param {boolean} [options.subPixel=false] - Whether to enable subpixel rendering (performance hit when enabled)
+         * @param {boolean} [options.verbose=false] - Enable the verbose mode that provides additional details as to what the renderer is doing
+         * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
+         * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
          */
         constructor(options: {
             width: number;
@@ -4071,7 +4071,7 @@ declare module "video/renderer" {
          * Returns the 2D Context object of the given Canvas<br>
          * Also configures anti-aliasing and blend modes based on constructor options.
          * @param {HTMLCanvasElement} canvas
-         * @param {boolean} [transparent=true] use false to disable transparency
+         * @param {boolean} [transparent=true] - use false to disable transparency
          * @returns {CanvasRenderingContext2D}
          */
         getContext2d(canvas: HTMLCanvasElement, transparent?: boolean): CanvasRenderingContext2D;
@@ -4103,8 +4103,8 @@ declare module "video/renderer" {
         overlaps(bounds: Rect | Bounds): boolean;
         /**
          * resizes the system canvas
-         * @param {number} width new width of the canvas
-         * @param {number} height new height of the canvas
+         * @param {number} width - new width of the canvas
+         * @param {number} height - new height of the canvas
          */
         resize(width: number, height: number): void;
         /**
@@ -4120,22 +4120,22 @@ declare module "video/renderer" {
         setProjection(matrix: Matrix3d): void;
         /**
          * stroke the given shape
-         * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape a shape object to stroke
-         * @param {boolean} [fill=false] fill the shape with the current color if true
+         * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape - a shape object to stroke
+         * @param {boolean} [fill=false] - fill the shape with the current color if true
          */
         stroke(shape: Rect | RoundRect | Polygon | Line | Ellipse, fill?: boolean): void;
         /**
          * fill the given shape
          * @name fill
          * @memberof Renderer
-         * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape a shape object to fill
+         * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape - a shape object to fill
          */
         fill(shape: Rect | RoundRect | Polygon | Line | Ellipse): void;
         /**
          * tint the given image or canvas using the given color
-         * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} src the source image to be tinted
-         * @param {Color|string} color the color that will be used to tint the image
-         * @param {string} [mode="multiply"] the composition mode used to tint the image
+         * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} src - the source image to be tinted
+         * @param {Color|string} color - the color that will be used to tint the image
+         * @param {string} [mode="multiply"] - the composition mode used to tint the image
          * @returns {HTMLCanvasElement|OffscreenCanvas} a new canvas element representing the tinted image
          */
         tint(src: HTMLImageElement | HTMLCanvasElement | OffscreenCanvas, color: Color | string, mode?: string): HTMLCanvasElement | OffscreenCanvas;
@@ -4143,8 +4143,8 @@ declare module "video/renderer" {
          * A mask limits rendering elements to the shape and position of the given mask object.
          * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
          * Mask are not preserved through renderer context save and restore.
-         * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
-         * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
+         * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - the shape defining the mask to be applied
+         * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
          */
         setMask(mask?: Rect | RoundRect | Polygon | Line | Ellipse): void;
         /**
@@ -4154,8 +4154,8 @@ declare module "video/renderer" {
         clearMask(): void;
         /**
          * set a coloring tint for sprite based renderables
-         * @param {Color} tint the tint color
-         * @param {number} [alpha] an alpha value to be applied to the tint
+         * @param {Color} tint - the tint color
+         * @param {number} [alpha] - an alpha value to be applied to the tint
          */
         setTint(tint: Color, alpha?: number): void;
         /**
@@ -4189,7 +4189,7 @@ declare module "audio/audio" {
      * It is important to remember that melonJS selects the first compatible sound based on the list of extensions and given order passed here.
      * So if you want webm to be used before mp3, you need to put the audio format in that order.
      * @function audio.init
-     * @param {string} [format="mp3"] audio format to prioritize
+     * @param {string} [format="mp3"] - audio format to prioritize
      * @returns {boolean} Indicates whether audio initialization was successful
      * @example
      * // initialize the "sound engine", giving "webm" as default desired audio format, and "mp3" as a fallback
@@ -4202,7 +4202,7 @@ declare module "audio/audio" {
     /**
      * check if the given audio format is supported
      * @function audio.hasFormat
-     * @param {string} codec audio format : "mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac"
+     * @param {string} codec - audio format : "mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac"
      * @returns {boolean} return true if the given audio format is supported
      */
     export function hasFormat(codec: string): boolean;
@@ -4236,10 +4236,10 @@ declare module "audio/audio" {
     /**
      * play the specified sound
      * @function audio.play
-     * @param {string} sound_name audio clip name - case sensitive
-     * @param {boolean} [loop=false] loop audio
-     * @param {Function} [onend] Function to call when sound instance ends playing.
-     * @param {number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
+     * @param {string} sound_name - audio clip name - case sensitive
+     * @param {boolean} [loop=false] - loop audio
+     * @param {Function} [onend] - Function to call when sound instance ends playing.
+     * @param {number} [volume=default] - Float specifying volume (0.0 - 1.0 values accepted).
      * @returns {number} the sound instance ID.
      * @example
      * // play the "cling" audio clip
@@ -4255,19 +4255,19 @@ declare module "audio/audio" {
     /**
      * Fade a currently playing sound between two volumee.
      * @function audio.fade
-     * @param {string} sound_name audio clip name - case sensitive
-     * @param {number} from Volume to fade from (0.0 to 1.0).
-     * @param {number} to Volume to fade to (0.0 to 1.0).
-     * @param {number} duration Time in milliseconds to fade.
-     * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will fade.
+     * @param {string} sound_name - audio clip name - case sensitive
+     * @param {number} from - Volume to fade from (0.0 to 1.0).
+     * @param {number} to - Volume to fade to (0.0 to 1.0).
+     * @param {number} duration - Time in milliseconds to fade.
+     * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will fade.
      */
     export function fade(sound_name: string, from: number, to: number, duration: number, id?: number): void;
     /**
      * get/set the position of playback for a sound.
      * @function audio.seek
-     * @param {string} sound_name audio clip name - case sensitive
-     * @param {number} [seek] the position to move current playback to (in seconds).
-     * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will changed.
+     * @param {string} sound_name - audio clip name - case sensitive
+     * @param {number} [seek] - the position to move current playback to (in seconds).
+     * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will changed.
      * @returns {number} return the current seek position (if no extra parameters were given)
      * @example
      * // return the current position of the background music
@@ -4279,9 +4279,9 @@ declare module "audio/audio" {
     /**
      * get or set the rate of playback for a sound.
      * @function audio.rate
-     * @param {string} sound_name audio clip name - case sensitive
-     * @param {number} [rate] playback rate : 0.5 to 4.0, with 1.0 being normal speed.
-     * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will be changed.
+     * @param {string} sound_name - audio clip name - case sensitive
+     * @param {number} [rate] - playback rate : 0.5 to 4.0, with 1.0 being normal speed.
+     * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will be changed.
      * @returns {number} return the current playback rate (if no extra parameters were given)
      * @example
      * // get the playback rate of the background music
@@ -4293,8 +4293,8 @@ declare module "audio/audio" {
     /**
      * stop the specified sound on all channels
      * @function audio.stop
-     * @param {string} [sound_name] audio clip name (case sensitive). If none is passed, all sounds are stopped.
-     * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will stop.
+     * @param {string} [sound_name] - audio clip name (case sensitive). If none is passed, all sounds are stopped.
+     * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will stop.
      * @example
      * me.audio.stop("cling");
      */
@@ -4303,8 +4303,8 @@ declare module "audio/audio" {
      * pause the specified sound on all channels<br>
      * this function does not reset the currentTime property
      * @function audio.pause
-     * @param {string} sound_name audio clip name - case sensitive
-     * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will pause.
+     * @param {string} sound_name - audio clip name - case sensitive
+     * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will pause.
      * @example
      * me.audio.pause("cling");
      */
@@ -4312,8 +4312,8 @@ declare module "audio/audio" {
     /**
      * resume the specified sound on all channels<br>
      * @function audio.resume
-     * @param {string} sound_name audio clip name - case sensitive
-     * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will resume.
+     * @param {string} sound_name - audio clip name - case sensitive
+     * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will resume.
      * @example
      * // play a audio clip
      * var id = me.audio.play("myClip");
@@ -4330,8 +4330,8 @@ declare module "audio/audio" {
      * this function automatically set the loop property to true<br>
      * and keep track of the current sound being played.
      * @function audio.playTrack
-     * @param {string} sound_name audio track name - case sensitive
-     * @param {number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
+     * @param {string} sound_name - audio track name - case sensitive
+     * @param {number} [volume=default] - Float specifying volume (0.0 - 1.0 values accepted).
      * @returns {number} the sound instance ID.
      * @example
      * me.audio.playTrack("awesome_music");
@@ -4376,7 +4376,7 @@ declare module "audio/audio" {
     /**
      * set the default global volume
      * @function audio.setVolume
-     * @param {number} volume Float specifying volume (0.0 - 1.0 values accepted).
+     * @param {number} volume - Float specifying volume (0.0 - 1.0 values accepted).
      */
     export function setVolume(volume: number): void;
     /**
@@ -4388,9 +4388,9 @@ declare module "audio/audio" {
     /**
      * mute or unmute the specified sound, but does not pause the playback.
      * @function audio.mute
-     * @param {string} sound_name audio clip name - case sensitive
-     * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will mute.
-     * @param {boolean} [mute=true] True to mute and false to unmute
+     * @param {string} sound_name - audio clip name - case sensitive
+     * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will mute.
+     * @param {boolean} [mute=true] - True to mute and false to unmute
      * @example
      * // mute the background music
      * me.audio.mute("awesome_music");
@@ -4399,8 +4399,8 @@ declare module "audio/audio" {
     /**
      * unmute the specified sound
      * @function audio.unmute
-     * @param {string} sound_name audio clip name
-     * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will unmute.
+     * @param {string} sound_name - audio clip name
+     * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will unmute.
      */
     export function unmute(sound_name: string, id?: number): void;
     /**
@@ -4422,7 +4422,7 @@ declare module "audio/audio" {
     /**
      * unload specified audio track to free memory
      * @function audio.unload
-     * @param {string} sound_name audio track name - case sensitive
+     * @param {string} sound_name - audio track name - case sensitive
      * @returns {boolean} true if unloaded
      * @example
      * me.audio.unload("awesome_music");
@@ -4456,11 +4456,11 @@ declare module "math/observable_vector2" {
      */
     class ObservableVector2d extends Vector2d {
         /**
-         * @param {number} x x value of the vector
-         * @param {number} y y value of the vector
-         * @param {object} settings additional required parameters
-         * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
-         * @param {Function} [settings.scope] the value to use as this when calling onUpdate
+         * @param {number} x - x value of the vector
+         * @param {number} y - y value of the vector
+         * @param {object} settings - additional required parameters
+         * @param {Function} settings.onUpdate - the callback to be executed when the vector is changed
+         * @param {Function} [settings.scope] - the value to use as this when calling onUpdate
          */
         constructor(x: number, y: number, settings: {
             onUpdate: Function;
@@ -4496,8 +4496,8 @@ declare module "math/observable_vector2" {
          * set the vector value without triggering the callback
          * @name setMuted
          * @memberof ObservableVector2d
-         * @param {number} x x value of the vector
-         * @param {number} y y value of the vector
+         * @param {number} x - x value of the vector
+         * @param {number} y - y value of the vector
          * @returns {ObservableVector2d} Reference to this object for method chaining
          */
         setMuted(x: number, y: number): ObservableVector2d;
@@ -4505,8 +4505,8 @@ declare module "math/observable_vector2" {
          * set the callback to be executed when the vector is changed
          * @name setCallback
          * @memberof ObservableVector2d
-         * @param {Function} fn callback
-         * @param {Function} [scope=null] scope
+         * @param {Function} fn - callback
+         * @param {Function} [scope=null] - scope
          * @returns {ObservableVector2d} Reference to this object for method chaining
          */
         setCallback(fn: Function, scope?: Function): ObservableVector2d;
@@ -4549,7 +4549,7 @@ declare module "math/observable_vector2" {
          * Divide this vector values by the passed value
          * @name div
          * @memberof ObservableVector2d
-         * @param {number} n the value to divide the vector by
+         * @param {number} n - the value to divide the vector by
          * @returns {ObservableVector2d} Reference to this object for method chaining
          */
         div(n: number): ObservableVector2d;
@@ -4664,8 +4664,8 @@ declare module "math/observable_vector2" {
          * Rotate this vector (counter-clockwise) by the specified angle (in radians).
          * @name rotate
          * @memberof ObservableVector2d
-         * @param {number} angle The angle to rotate (in radians)
-         * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
+         * @param {number} angle - The angle to rotate (in radians)
+         * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
          * @returns {ObservableVector2d} Reference to this object for method chaining
          */
         rotate(angle: number, v?: Vector2d | ObservableVector2d): ObservableVector2d;
@@ -4690,7 +4690,7 @@ declare module "math/observable_vector2" {
          * @name lerp
          * @memberof ObservableVector2d
          * @param {Vector2d|ObservableVector2d} v
-         * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+         * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
          * @returns {ObservableVector2d} Reference to this object for method chaining
          */
         lerp(v: Vector2d | ObservableVector2d, alpha: number): ObservableVector2d;
@@ -4699,7 +4699,7 @@ declare module "math/observable_vector2" {
          * @name moveTowards
          * @memberof ObservableVector2d
          * @param {Vector2d|ObservableVector2d} target
-         * @param {number} step the maximum step per iteration (Negative values will push the vector away from the target)
+         * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
          * @returns {ObservableVector2d} Reference to this object for method chaining
          */
         moveTowards(target: Vector2d | ObservableVector2d, step: number): ObservableVector2d;
@@ -4736,9 +4736,9 @@ declare module "math/vector3" {
      */
     class Vector3d {
         /**
-         * @param {number} [x=0] x value of the vector
-         * @param {number} [y=0] y value of the vector
-         * @param {number} [z=0] z value of the vector
+         * @param {number} [x=0] - x value of the vector
+         * @param {number} [y=0] - y value of the vector
+         * @param {number} [z=0] - z value of the vector
          */
         constructor(x?: number, y?: number, z?: number);
         /**
@@ -4829,7 +4829,7 @@ declare module "math/vector3" {
          * Divide this vector values by the passed value
          * @name div
          * @memberof Vector3d
-         * @param {number} n the value to divide the vector by
+         * @param {number} n - the value to divide the vector by
          * @returns {Vector3d} Reference to this object for method chaining
          */
         div(n: number): Vector3d;
@@ -4961,8 +4961,8 @@ declare module "math/vector3" {
          * Rotate this vector (counter-clockwise) by the specified angle (in radians) around the z axis
          * @name rotate
          * @memberof Vector3d
-         * @param {number} angle The angle to rotate (in radians)
-         * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around (on the same z axis)
+         * @param {number} angle - The angle to rotate (in radians)
+         * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around (on the same z axis)
          * @returns {Vector3d} Reference to this object for method chaining
          */
         rotate(angle: number, v?: Vector2d | ObservableVector2d): Vector3d;
@@ -5001,7 +5001,7 @@ declare module "math/vector3" {
          * @name lerp
          * @memberof Vector3d
          * @param {Vector3d} v
-         * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+         * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
          * @returns {Vector3d} Reference to this object for method chaining
          */
         lerp(v: Vector3d, alpha: number): Vector3d;
@@ -5010,7 +5010,7 @@ declare module "math/vector3" {
          * @name moveTowards
          * @memberof Vector3d
          * @param {Vector2d|Vector3d} target
-         * @param {number} step the maximum step per iteration (Negative values will push the vector away from the target)
+         * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
          * @returns {Vector3d} Reference to this object for method chaining
          */
         moveTowards(target: Vector2d | Vector3d, step: number): Vector3d;
@@ -5034,7 +5034,7 @@ declare module "math/vector3" {
          * project this vector on to another vector.
          * @name project
          * @memberof Vector3d
-         * @param {Vector2d|Vector3d} v The vector to project onto.
+         * @param {Vector2d|Vector3d} v - The vector to project onto.
          * @returns {Vector3d} Reference to this object for method chaining
          */
         project(v: Vector2d | Vector3d): Vector3d;
@@ -5043,7 +5043,7 @@ declare module "math/vector3" {
          * This is slightly more efficient than `project` when dealing with unit vectors.
          * @name projectN
          * @memberof Vector3d
-         * @param {Vector2d|Vector3d} v The unit vector to project onto.
+         * @param {Vector2d|Vector3d} v - The unit vector to project onto.
          * @returns {Vector3d} Reference to this object for method chaining
          */
         projectN(v: Vector2d | Vector3d): Vector3d;
@@ -5072,12 +5072,12 @@ declare module "math/observable_vector3" {
      */
     class ObservableVector3d extends Vector3d {
         /**
-         * @param {number} x x value of the vector
-         * @param {number} y y value of the vector
-         * @param {number} z z value of the vector
-         * @param {object} settings additional required parameters
-         * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
-         * @param {object} [settings.scope] the value to use as this when calling onUpdate
+         * @param {number} x - x value of the vector
+         * @param {number} y - y value of the vector
+         * @param {number} z - z value of the vector
+         * @param {object} settings - additional required parameters
+         * @param {Function} settings.onUpdate - the callback to be executed when the vector is changed
+         * @param {object} [settings.scope] - the value to use as this when calling onUpdate
          */
         constructor(x: number, y: number, z: number, settings: {
             onUpdate: Function;
@@ -5125,9 +5125,9 @@ declare module "math/observable_vector3" {
          * set the vector value without triggering the callback
          * @name setMuted
          * @memberof ObservableVector3d
-         * @param {number} x x value of the vector
-         * @param {number} y y value of the vector
-         * @param {number} [z=0] z value of the vector
+         * @param {number} x - x value of the vector
+         * @param {number} y - y value of the vector
+         * @param {number} [z=0] - z value of the vector
          * @returns {ObservableVector3d} Reference to this object for method chaining
          */
         setMuted(x: number, y: number, z?: number): ObservableVector3d;
@@ -5135,8 +5135,8 @@ declare module "math/observable_vector3" {
          * set the callback to be executed when the vector is changed
          * @name setCallback
          * @memberof ObservableVector3d
-         * @param {Function} fn callback
-         * @param {Function} [scope=null] scope
+         * @param {Function} fn - callback
+         * @param {Function} [scope=null] - scope
          * @returns {ObservableVector3d} Reference to this object for method chaining
          */
         setCallback(fn: Function, scope?: Function): ObservableVector3d;
@@ -5180,7 +5180,7 @@ declare module "math/observable_vector3" {
          * Divide this vector values by the passed value
          * @name div
          * @memberof ObservableVector3d
-         * @param {number} n the value to divide the vector by
+         * @param {number} n - the value to divide the vector by
          * @returns {ObservableVector3d} Reference to this object for method chaining
          */
         div(n: number): ObservableVector3d;
@@ -5295,8 +5295,8 @@ declare module "math/observable_vector3" {
          * Rotate this vector (counter-clockwise) by the specified angle (in radians).
          * @name rotate
          * @memberof ObservableVector3d
-         * @param {number} angle The angle to rotate (in radians)
-         * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around (on the same z axis)
+         * @param {number} angle - The angle to rotate (in radians)
+         * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around (on the same z axis)
          * @returns {ObservableVector3d} Reference to this object for method chaining
          */
         rotate(angle: number, v?: Vector2d | ObservableVector2d): ObservableVector3d;
@@ -5313,7 +5313,7 @@ declare module "math/observable_vector3" {
          * @name lerp
          * @memberof ObservableVector3d
          * @param {Vector3d|ObservableVector3d} v
-         * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+         * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
          * @returns {ObservableVector3d} Reference to this object for method chaining
          */
         lerp(v: Vector3d | ObservableVector3d, alpha: number): ObservableVector3d;
@@ -5322,7 +5322,7 @@ declare module "math/observable_vector3" {
          * @name moveTowards
          * @memberof ObservableVector3d
          * @param {Vector2d|ObservableVector2d|Vector3d|ObservableVector3d} target
-         * @param {number} step the maximum step per iteration (Negative values will push the vector away from the target)
+         * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
          * @returns {ObservableVector3d} Reference to this object for method chaining
          */
         moveTowards(target: Vector2d | ObservableVector2d | Vector3d | ObservableVector3d, step: number): ObservableVector3d;
@@ -5354,7 +5354,7 @@ declare module "input/keyboard" {
      * @name isKeyPressed
      * @memberof input
      * @public
-     * @param {string} action user defined corresponding action
+     * @param {string} action - user defined corresponding action
      * @returns {boolean} true if pressed
      * @example
      * if (me.input.isKeyPressed('left')) {
@@ -5370,7 +5370,7 @@ declare module "input/keyboard" {
      * @name keyStatus
      * @memberof input
      * @public
-     * @param {string} action user defined corresponding action
+     * @param {string} action - user defined corresponding action
      * @returns {boolean} down (true) or up(false)
      */
     export function keyStatus(action: string): boolean;
@@ -5379,9 +5379,9 @@ declare module "input/keyboard" {
      * @name triggerKeyEvent
      * @memberof input
      * @public
-     * @param {number} keycode (See {@link input.KEY})
-     * @param {boolean} [status=false] true to trigger a key down event, or false for key up event
-     * @param {number} [mouseButton] the mouse button to trigger
+     * @param {number} keycode - (See {@link input.KEY})
+     * @param {boolean} [status=false] - true to trigger a key down event, or false for key up event
+     * @param {number} [mouseButton] - the mouse button to trigger
      * @example
      * // trigger a key press
      * me.input.triggerKeyEvent(me.input.KEY.LEFT, true);
@@ -5392,10 +5392,10 @@ declare module "input/keyboard" {
      * @name bindKey
      * @memberof input
      * @public
-     * @param {number} keycode (See {@link input.KEY})
-     * @param {string} action user defined corresponding action
-     * @param {boolean} [lock=false] cancel the keypress event once read
-     * @param {boolean} [preventDefault=input.preventDefault] prevent default browser action
+     * @param {number} keycode - (See {@link input.KEY})
+     * @param {string} action - user defined corresponding action
+     * @param {boolean} [lock=false] - cancel the keypress event once read
+     * @param {boolean} [preventDefault=input.preventDefault] - prevent default browser action
      * @example
      * // enable the keyboard
      * me.input.bindKey(me.input.KEY.LEFT,  "left");
@@ -5409,7 +5409,7 @@ declare module "input/keyboard" {
      * @name getBindingKey
      * @memberof input
      * @public
-     * @param {number} keycode (See {@link input.KEY})
+     * @param {number} keycode - (See {@link input.KEY})
      * @returns {string} user defined associated action
      */
     export function getBindingKey(keycode: number): string;
@@ -5418,7 +5418,7 @@ declare module "input/keyboard" {
      * @name unlockKey
      * @memberof input
      * @public
-     * @param {string} action user defined corresponding action
+     * @param {string} action - user defined corresponding action
      * @example
      * // Unlock jump when touching the ground
      * if (!this.falling && !this.jumping) {
@@ -5431,7 +5431,7 @@ declare module "input/keyboard" {
      * @name unbindKey
      * @memberof input
      * @public
-     * @param {number} keycode (See {@link input.KEY})
+     * @param {number} keycode - (See {@link input.KEY})
      * @example
      * me.input.unbindKey(me.input.KEY.LEFT);
      */
@@ -5811,12 +5811,12 @@ declare module "input/pointer" {
          * initialize the Pointer object using the given Event Object
          * @name Pointer#set
          * @private
-         * @param {Event} event the original Event object
-         * @param {number} [pageX=0] the horizontal coordinate at which the event occurred, relative to the left edge of the entire document
-         * @param {number} [pageY=0] the vertical coordinate at which the event occurred, relative to the left edge of the entire document
-         * @param {number} [clientX=0] the horizontal coordinate within the application's client area at which the event occurred
-         * @param {number} [clientY=0] the vertical coordinate within the application's client area at which the event occurred
-         * @param {number} [pointerId=1] the Pointer, Touch or Mouse event Id (1)
+         * @param {Event} event - the original Event object
+         * @param {number} [pageX=0] - the horizontal coordinate at which the event occurred, relative to the left edge of the entire document
+         * @param {number} [pageY=0] - the vertical coordinate at which the event occurred, relative to the left edge of the entire document
+         * @param {number} [clientX=0] - the horizontal coordinate within the application's client area at which the event occurred
+         * @param {number} [clientY=0] - the vertical coordinate within the application's client area at which the event occurred
+         * @param {number} [pointerId=1] - the Pointer, Touch or Mouse event Id (1)
          */
         private setEvent;
     }
@@ -5829,9 +5829,9 @@ declare module "input/pointerevent" {
      * @name globalToLocal
      * @memberof input
      * @public
-     * @param {number} x the global x coordinate to be translated.
-     * @param {number} y the global y coordinate to be translated.
-     * @param {Vector2d} [v] an optional vector object where to set the translated coordinates
+     * @param {number} x - the global x coordinate to be translated.
+     * @param {number} y - the global y coordinate to be translated.
+     * @param {Vector2d} [v] - an optional vector object where to set the translated coordinates
      * @returns {Vector2d} A vector object with the corresponding translated coordinates
      * @example
      * onMouseEvent : function (pointer) {
@@ -5860,7 +5860,7 @@ declare module "input/pointerevent" {
      * @name bindPointer
      * @memberof input
      * @public
-     * @param {number} [button=input.pointer.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
+     * @param {number} [button=input.pointer.LEFT] - (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
      * @param {input.KEY} keyCode
      * @example
      * // enable the keyboard
@@ -5876,7 +5876,7 @@ declare module "input/pointerevent" {
      * @name unbindPointer
      * @memberof input
      * @public
-     * @param {number} [button=input.pointer.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
+     * @param {number} [button=input.pointer.LEFT] - (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
      * @example
      * me.input.unbindPointer(me.input.pointer.LEFT);
      */
@@ -5889,7 +5889,7 @@ declare module "input/pointerevent" {
      * @name registerPointerEvent
      * @memberof input
      * @public
-     * @param {string} eventType The event type for which the object is registering <br>
+     * @param {string} eventType - The event type for which the object is registering <br>
      * melonJS currently supports: <br>
      * <ul>
      *   <li><code>"pointermove"</code></li>
@@ -5901,8 +5901,8 @@ declare module "input/pointerevent" {
      *   <li><code>"pointercancel"</code></li>
      *   <li><code>"wheel"</code></li>
      * </ul>
-     * @param {Rect|Polygon|Line|Ellipse} region a shape representing the region to register on
-     * @param {Function} callback methods to be called when the event occurs.
+     * @param {Rect|Polygon|Line|Ellipse} region - a shape representing the region to register on
+     * @param {Function} callback - methods to be called when the event occurs.
      * Returning `false` from the defined callback will prevent the event to be propagated to other objects
      * @example
      *  // onActivate function
@@ -5926,9 +5926,9 @@ declare module "input/pointerevent" {
      * @name releasePointerEvent
      * @memberof input
      * @public
-     * @param {string} eventType The event type for which the object was registered. See {@link input.registerPointerEvent}
-     * @param {Rect|Polygon|Line|Ellipse} region the registered region to release for this event
-     * @param {Function} [callback="all"] if specified unregister the event only for the specific callback
+     * @param {string} eventType - The event type for which the object was registered. See {@link input.registerPointerEvent}
+     * @param {Rect|Polygon|Line|Ellipse} region - the registered region to release for this event
+     * @param {Function} [callback="all"] - if specified unregister the event only for the specific callback
      * @example
      * // release the registered region on the 'pointerdown' event
      * me.input.releasePointerEvent('pointerdown', this);
@@ -5939,7 +5939,7 @@ declare module "input/pointerevent" {
      * @name releaseAllPointerEvents
      * @memberof input
      * @public
-     * @param {Rect|Polygon|Line|Ellipse} region the registered region to release event from
+     * @param {Rect|Polygon|Line|Ellipse} region - the registered region to release event from
      * @example
      * // release all registered event on the
      * me.input.releaseAllPointerEvents(this);
@@ -6011,12 +6011,12 @@ declare module "input/gamepad" {
      * @name bindGamepad
      * @memberof input
      * @public
-     * @param {number} index Gamepad index
-     * @param {object} button Button/Axis definition
-     * @param {string} button.type "buttons" or "axes"
-     * @param {number} button.code button or axis code id (See {@link input.GAMEPAD.BUTTONS}, {@link input.GAMEPAD.AXES})
-     * @param {number} [button.threshold=1] value indicating when the axis should trigger the keycode (e.g. -0.5 or 0.5)
-     * @param {number} keyCode (See {@link input.KEY})
+     * @param {number} index - Gamepad index
+     * @param {object} button - Button/Axis definition
+     * @param {string} button.type - "buttons" or "axes"
+     * @param {number} button.code - button or axis code id (See {@link input.GAMEPAD.BUTTONS}, {@link input.GAMEPAD.AXES})
+     * @param {number} [button.threshold=1] - value indicating when the axis should trigger the keycode (e.g. -0.5 or 0.5)
+     * @param {number} keyCode - (See {@link input.KEY})
      * @example
      * // enable the keyboard
      * me.input.bindKey(me.input.KEY.X, "shoot");
@@ -6036,8 +6036,8 @@ declare module "input/gamepad" {
      * @name unbindGamepad
      * @memberof input
      * @public
-     * @param {number} index Gamepad index
-     * @param {number} button (See {@link input.GAMEPAD.BUTTONS})
+     * @param {number} index - Gamepad index
+     * @param {number} button - (See {@link input.GAMEPAD.BUTTONS})
      * @example
      * me.input.unbindGamepad(0, me.input.GAMEPAD.BUTTONS.FACE_1);
      */
@@ -6048,7 +6048,7 @@ declare module "input/gamepad" {
      * @name setGamepadDeadzone
      * @memberof input
      * @public
-     * @param {number} value Deadzone value
+     * @param {number} value - Deadzone value
      */
     export function setGamepadDeadzone(value: number): void;
     export namespace GAMEPAD {
@@ -6368,27 +6368,27 @@ declare module "renderable/renderable" {
         getOpacity(): number;
         /**
          * set the renderable alpha channel value<br>
-         * @param {number} alpha opacity value between 0.0 and 1.0
+         * @param {number} alpha - opacity value between 0.0 and 1.0
          */
         setOpacity(alpha: number): void;
         /**
          * flip the renderable on the horizontal axis (around the center of the renderable)
          * @see Matrix2d#scaleX
-         * @param {boolean} [flip=true] `true` to flip this renderable.
+         * @param {boolean} [flip=true] - `true` to flip this renderable.
          * @returns {Renderable} Reference to this object for method chaining
          */
         flipX(flip?: boolean): Renderable;
         /**
          * flip the renderable on the vertical axis (around the center of the renderable)
          * @see Matrix2d#scaleY
-         * @param {boolean} [flip=true] `true` to flip this renderable.
+         * @param {boolean} [flip=true] - `true` to flip this renderable.
          * @returns {Renderable} Reference to this object for method chaining
          */
         flipY(flip?: boolean): Renderable;
         /**
          * multiply the renderable currentTransform with the given matrix
          * @see Renderable#currentTransform
-         * @param {Matrix2d} m the transformation matrix
+         * @param {Matrix2d} m - the transformation matrix
          * @returns {Renderable} Reference to this object for method chaining
          */
         transform(m: Matrix2d): Renderable;
@@ -6406,14 +6406,14 @@ declare module "renderable/renderable" {
         distanceTo(target: Renderable | Vector2d | Vector3d): number;
         /**
          * Rotate this renderable towards the given target.
-         * @param {Renderable|Vector2d|Vector3d} target the renderable or position to look at
+         * @param {Renderable|Vector2d|Vector3d} target - the renderable or position to look at
          * @returns {Renderable} Reference to this object for method chaining
          */
         lookAt(target: Renderable | Vector2d | Vector3d): Renderable;
         /**
          * Rotate this renderable by the specified angle (in radians).
-         * @param {number} angle The angle to rotate (in radians)
-         * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
+         * @param {number} angle - The angle to rotate (in radians)
+         * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
          * @returns {Renderable} Reference to this object for method chaining
          */
         rotate(angle: number, v?: Vector2d | ObservableVector2d): Renderable;
@@ -6423,20 +6423,20 @@ declare module "renderable/renderable" {
          * when rendering.  It does not scale the object itself.  For example if the renderable
          * is an image, the image.width and image.height properties are unaltered but the currentTransform
          * member will be changed.
-         * @param {number} x a number representing the abscissa of the scaling vector.
-         * @param {number} [y=x] a number representing the ordinate of the scaling vector.
+         * @param {number} x - a number representing the abscissa of the scaling vector.
+         * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
          * @returns {Renderable} Reference to this object for method chaining
          */
         scale(x: number, y?: number): Renderable;
         /**
          * scale the renderable around his anchor point
-         * @param {Vector2d} v scaling vector
+         * @param {Vector2d} v - scaling vector
          * @returns {Renderable} Reference to this object for method chaining
          */
         scaleV(v: Vector2d): Renderable;
         /**
          * update function (automatically called by melonJS).
-         * @param {number} dt time since the last update in milliseconds.
+         * @param {number} dt - time since the last update in milliseconds.
          * @returns {boolean} true if the renderable is dirty
          */
         update(dt: number): boolean;
@@ -6454,8 +6454,8 @@ declare module "renderable/renderable" {
         /**
          * called when the anchor point value is changed
          * @private
-         * @param {number} x the new X value to be set for the anchor
-         * @param {number} y the new Y value to be set for the anchor
+         * @param {number} x - the new X value to be set for the anchor
+         * @param {number} y - the new Y value to be set for the anchor
          */
         private onAnchorUpdate;
         /**
@@ -6463,7 +6463,7 @@ declare module "renderable/renderable" {
          * This will apply any defined transforms, anchor point, tint or blend mode and translate the context accordingly to this renderable position.
          * @see Renderable#draw
          * @see Renderable#postDraw
-         * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
+         * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
          */
         preDraw(renderer: CanvasRenderer | WebGLRenderer): void;
         /**
@@ -6476,22 +6476,22 @@ declare module "renderable/renderable" {
          * from the draw method, you should make sure that your draw it at the 0, 0 coordinates.
          * @see Renderable#preDraw
          * @see Renderable#postDraw
-         * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
-         * @param {Camera2d} [viewport] the viewport to (re)draw
+         * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+         * @param {Camera2d} [viewport] - the viewport to (re)draw
          */
         draw(renderer: CanvasRenderer | WebGLRenderer, viewport?: Camera2d): void;
         /**
          * restore the rendering context after drawing (automatically called by melonJS).
          * @see Renderable#preDraw
          * @see Renderable#draw
-         * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
+         * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
          */
         postDraw(renderer: CanvasRenderer | WebGLRenderer): void;
         /**
          * onCollision callback, triggered in case of collision,
          * when this renderable body is colliding with another one
-         * @param {ResponseObject} response the collision response object
-         * @param {Renderable} other the other renderable touching this one (a reference to response.a or response.b)
+         * @param {ResponseObject} response - the collision response object
+         * @param {Renderable} other - the other renderable touching this one (a reference to response.a or response.b)
          * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
          * @example
          * // colision handler
@@ -6529,22 +6529,22 @@ declare module "physics/sat" {
     /**
      * Checks whether polygons collide.
      * @ignore
-     * @param {Renderable} a a reference to the object A.
-     * @param {Polygon} polyA a reference to the object A Polygon to be tested
-     * @param {Renderable} b a reference to the object B.
-     * @param {Polygon} polyB a reference to the object B Polygon to be tested
-     * @param {Response=} response Response object (optional) that will be populated if they intersect.
+     * @param {Renderable} a - a reference to the object A.
+     * @param {Polygon} polyA - a reference to the object A Polygon to be tested
+     * @param {Renderable} b - a reference to the object B.
+     * @param {Polygon} polyB - a reference to the object B Polygon to be tested
+     * @param {Response=} response - Response object (optional) that will be populated if they intersect.
      * @returns {boolean} true if they intersect, false if they don't.
      */
     export function testPolygonPolygon(a: Renderable, polyA: Polygon, b: Renderable, polyB: Polygon, response?: Response | undefined): boolean;
     /**
      * Check if two Ellipse collide.
      * @ignore
-     * @param {Renderable} a a reference to the object A.
-     * @param {Ellipse} ellipseA a reference to the object A Ellipse to be tested
-     * @param {Renderable} b a reference to the object B.
-     * @param {Ellipse} ellipseB a reference to the object B Ellipse to be tested
-     * @param {Response=} response Response object (optional) that will be populated if
+     * @param {Renderable} a - a reference to the object A.
+     * @param {Ellipse} ellipseA - a reference to the object A Ellipse to be tested
+     * @param {Renderable} b - a reference to the object B.
+     * @param {Ellipse} ellipseB - a reference to the object B Ellipse to be tested
+     * @param {Response=} response - Response object (optional) that will be populated if
      *   the circles intersect.
      * @returns {boolean} true if the circles intersect, false if they don't.
      */
@@ -6552,11 +6552,11 @@ declare module "physics/sat" {
     /**
      * Check if a polygon and an ellipse collide.
      * @ignore
-     * @param {Renderable} a a reference to the object A.
-     * @param {Polygon} polyA a reference to the object A Polygon to be tested
-     * @param {Renderable} b a reference to the object B.
-     * @param {Ellipse} ellipseB a reference to the object B Ellipse to be tested
-     * @param {Response=} response Response object (optional) that will be populated if they intersect.
+     * @param {Renderable} a - a reference to the object A.
+     * @param {Polygon} polyA - a reference to the object A Polygon to be tested
+     * @param {Renderable} b - a reference to the object B.
+     * @param {Ellipse} ellipseB - a reference to the object B Ellipse to be tested
+     * @param {Response=} response - Response object (optional) that will be populated if they intersect.
      * @returns {boolean} true if they intersect, false if they don't.
      */
     export function testPolygonEllipse(a: Renderable, polyA: Polygon, b: Renderable, ellipseB: Ellipse, response?: Response | undefined): boolean;
@@ -6565,11 +6565,11 @@ declare module "physics/sat" {
      * **NOTE:** This is slightly less efficient than testPolygonEllipse as it just
      * runs testPolygonEllipse and reverses the response at the end.
      * @ignore
-     * @param {Renderable} a a reference to the object A.
-     * @param {Ellipse} ellipseA a reference to the object A Ellipse to be tested
-     * @param {Renderable} b a reference to the object B.
-     * @param {Polygon} polyB a reference to the object B Polygon to be tested
-     * @param {Response=} response Response object (optional) that will be populated if
+     * @param {Renderable} a - a reference to the object A.
+     * @param {Ellipse} ellipseA - a reference to the object A Ellipse to be tested
+     * @param {Renderable} b - a reference to the object B.
+     * @param {Polygon} polyB - a reference to the object B Polygon to be tested
+     * @param {Response=} response - Response object (optional) that will be populated if
      *   they intersect.
      * @returns {boolean} true if they intersect, false if they don't.
      */
@@ -6619,8 +6619,8 @@ declare module "physics/detector" {
      * find all the collisions for the specified object
      * @name collisionCheck
      * @ignore
-     * @param {Renderable} objA object to be tested for collision
-     * @param {ResponseObject} [response] a user defined response object that will be populated if they intersect.
+     * @param {Renderable} objA - object to be tested for collision
+     * @param {ResponseObject} [response] - a user defined response object that will be populated if they intersect.
      * @returns {boolean} in case of collision, false otherwise
      */
     export function collisionCheck(objA: Renderable, response?: ResponseObject): boolean;
@@ -6628,8 +6628,8 @@ declare module "physics/detector" {
      * Checks for object colliding with the given line
      * @name rayCast
      * @ignore
-     * @param {Line} line line to be tested for collision
-     * @param {Array.<Renderable>} [result] a user defined array that will be populated with intersecting physic objects.
+     * @param {Line} line - line to be tested for collision
+     * @param {Array.<Renderable>} [result] - a user defined array that will be populated with intersecting physic objects.
      * @returns {Array.<Renderable>} an array of intersecting physic objects
      * @example
      *    // define a line accross the viewport
@@ -6674,8 +6674,8 @@ declare module "physics/collision" {
          * @name rayCast
          * @memberof collision
          * @public
-         * @param {Line} line line to be tested for collision
-         * @param {Array.<Renderable>} [result] a user defined array that will be populated with intersecting physic objects.
+         * @param {Line} line - line to be tested for collision
+         * @param {Array.<Renderable>} [result] - a user defined array that will be populated with intersecting physic objects.
          * @returns {Array.<Renderable>} an array of intersecting physic objects
          * @example
          *    // define a line accross the viewport
@@ -6701,8 +6701,8 @@ declare module "physics/collision" {
          * @name rayCast
          * @memberof collision
          * @public
-         * @param {Line} line line to be tested for collision
-         * @param {Array.<Renderable>} [result] a user defined array that will be populated with intersecting physic objects.
+         * @param {Line} line - line to be tested for collision
+         * @param {Array.<Renderable>} [result] - a user defined array that will be populated with intersecting physic objects.
          * @returns {Array.<Renderable>} an array of intersecting physic objects
          * @example
          *    // define a line accross the viewport
@@ -6734,9 +6734,9 @@ declare module "physics/body" {
      */
     class Body {
         /**
-         * @param {Renderable} ancestor the parent object this body is attached to
-         * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] a initial shape, list of shapes, or JSON object defining the body
-         * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
+         * @param {Renderable} ancestor - the parent object this body is attached to
+         * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] - a initial shape, list of shapes, or JSON object defining the body
+         * @param {Function} [onBodyUpdate] - callback for when the body is updated (e.g. add/remove shapes)
          */
         constructor(ancestor: Renderable, shapes?: Rect | Rect[] | Polygon | Polygon[] | Line | Line[] | Ellipse | Ellipse[] | Point | Point[] | Bounds | Bounds[] | object, onBodyUpdate?: Function);
         /**
@@ -6894,7 +6894,7 @@ declare module "physics/body" {
         /**
          * add a collision shape to this body <br>
          * (note: me.Rect objects will be converted to me.Polygon before being added)
-         * @param {Rect|Polygon|Line|Ellipse|Point|Point[]|Bounds|object} shape a shape or JSON object
+         * @param {Rect|Polygon|Line|Ellipse|Point|Point[]|Bounds|object} shape - a shape or JSON object
          * @returns {number} the shape array length
          * @example
          * // add a rectangle shape
@@ -6905,22 +6905,22 @@ declare module "physics/body" {
         addShape(shape: Rect | Polygon | Line | Ellipse | Point | Point[] | Bounds | object): number;
         /**
          * set the body vertices to the given one
-         * @param {Vector2d[]} vertices an array of me.Vector2d points defining a convex hull
-         * @param {number} [index=0] the shape object for which to set the vertices
-         * @param {boolean} [clear=true] either to reset the body definition before adding the new vertices
+         * @param {Vector2d[]} vertices - an array of me.Vector2d points defining a convex hull
+         * @param {number} [index=0] - the shape object for which to set the vertices
+         * @param {boolean} [clear=true] - either to reset the body definition before adding the new vertices
          */
         setVertices(vertices: Vector2d[], index?: number, clear?: boolean): void;
         /**
          * add the given vertices to the body shape
-         * @param {Vector2d[]} vertices an array of me.Vector2d points defining a convex hull
-         * @param {number} [index=0] the shape object for which to set the vertices
+         * @param {Vector2d[]} vertices - an array of me.Vector2d points defining a convex hull
+         * @param {number} [index=0] - the shape object for which to set the vertices
          */
         addVertices(vertices: Vector2d[], index?: number): void;
         /**
          * add collision mesh based on a JSON object
          * (this will also apply any physic properties defined in the given JSON file)
-         * @param {object} json a JSON object as exported from a Physics Editor tool
-         * @param {string} [id] an optional shape identifier within the given the json object
+         * @param {object} json - a JSON object as exported from a Physics Editor tool
+         * @param {string} [id] - an optional shape identifier within the given the json object
          * @see https://www.codeandweb.com/physicseditor
          * @returns {number} how many shapes were added to the body
          * @example
@@ -6932,7 +6932,7 @@ declare module "physics/body" {
         fromJSON(json: object, id?: string): number;
         /**
          * return the collision shape at the given index
-         * @param {number} [index=0] the shape object at the specified index
+         * @param {number} [index=0] - the shape object at the specified index
          * @returns {Polygon|Line|Ellipse} shape a shape object if defined
          */
         getShape(index?: number): Polygon | Line | Ellipse;
@@ -6943,13 +6943,13 @@ declare module "physics/body" {
         getBounds(): Bounds;
         /**
          * remove the specified shape from the body shape list
-         * @param {Polygon|Line|Ellipse} shape a shape object
+         * @param {Polygon|Line|Ellipse} shape - a shape object
          * @returns {number} the shape array length
          */
         removeShape(shape: Polygon | Line | Ellipse): number;
         /**
          * remove the shape at the given index from the body shape list
-         * @param {number} index the shape object at the specified index
+         * @param {number} index - the shape object at the specified index
          * @returns {number} the shape array length
          */
         removeShapeAt(index: number): number;
@@ -6958,7 +6958,7 @@ declare module "physics/body" {
          * but it's also possible to specify 'collision filters' to provide a finer <br>
          * control over which body can collide with each other.
          * @see collision.types
-         * @param {number} [bitmask = collision.types.ALL_OBJECT] the collision mask
+         * @param {number} [bitmask = collision.types.ALL_OBJECT] - the collision mask
          * @example
          * // filter collision detection with collision shapes, enemies and collectables
          * body.setCollisionMask(me.collision.types.WORLD_SHAPE | me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
@@ -6970,7 +6970,7 @@ declare module "physics/body" {
         /**
          * define the collision type of the body for collision filtering
          * @see collision.types
-         * @param {number} type the collision type
+         * @param {number} type - the collision type
          * @example
          * // set the body collision type
          * body.collisionType = me.collision.types.PLAYER_OBJECT;
@@ -6978,7 +6978,7 @@ declare module "physics/body" {
         setCollisionType(type: number): void;
         /**
          * the built-in function to solve the collision response
-         * @param {object} response the collision response object (see {@link ResponseObject})
+         * @param {object} response - the collision response object (see {@link ResponseObject})
          */
         respondToCollision(response: object): void;
         /**
@@ -6987,8 +6987,8 @@ declare module "physics/body" {
          *    - The current element being processed in the array <br>
          *    - The index of element in the array. <br>
          *    - The array forEach() was called upon. <br>
-         * @param {Function} callback fnction to execute on each element
-         * @param {object} [thisArg] value to use as this(i.e reference Object) when executing callback.
+         * @param {Function} callback - fnction to execute on each element
+         * @param {object} [thisArg] - value to use as this(i.e reference Object) when executing callback.
          * @example
          * // iterate through all shapes of the physic body
          * mySprite.body.forEach((shape) => {
@@ -7007,29 +7007,29 @@ declare module "physics/body" {
          */
         /**
          * Returns true if the any of the shape composing the body contains the given point.
-         * @param  {number} x x coordinate
-         * @param  {number} y y coordinate
+         * @param  {number} x -  x coordinate
+         * @param  {number} y -  y coordinate
          * @returns {boolean} true if contains
          */
         contains(...args: any[]): boolean;
         /**
          * Rotate this body (counter-clockwise) by the specified angle (in radians).
          * Unless specified the body will be rotated around its center point
-         * @param {number} angle The angle to rotate (in radians)
-         * @param {Vector2d|ObservableVector2d} [v=Body.getBounds().center] an optional point to rotate around
+         * @param {number} angle - The angle to rotate (in radians)
+         * @param {Vector2d|ObservableVector2d} [v=Body.getBounds().center] - an optional point to rotate around
          * @returns {Body} Reference to this object for method chaining
          */
         rotate(angle: number, v?: Vector2d | ObservableVector2d): Body;
         /**
          * cap the body velocity (body.maxVel property) to the specified value<br>
-         * @param {number} x max velocity on x axis
-         * @param {number} y max velocity on y axis
+         * @param {number} x - max velocity on x axis
+         * @param {number} y - max velocity on y axis
          */
         setMaxVelocity(x: number, y: number): void;
         /**
          * set the body default friction
-         * @param {number} x horizontal friction
-         * @param {number} y vertical friction
+         * @param {number} x - horizontal friction
+         * @param {number} y - vertical friction
          */
         setFriction(x?: number, y?: number): void;
         /**
@@ -7042,7 +7042,7 @@ declare module "physics/body" {
          * Updates to Body.vel are bounded by maxVel (which defaults to viewport size if not set) <br>
          * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the constructor arguments.
          * @protected
-         * @param {number} dt time since the last update in milliseconds.
+         * @param {number} dt - time since the last update in milliseconds.
          * @returns {boolean} true if resulting velocity is different than 0
          */
         protected update(dt: number): boolean;
@@ -7067,10 +7067,10 @@ declare module "renderable/container" {
      */
     class Container extends Renderable {
         /**
-         * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
-         * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
-         * @param {number} [width=game.viewport.width] width of the container
-         * @param {number} [height=game.viewport.height] height of the container
+         * @param {number} [x=0] - position of the container (accessible via the inherited pos.x property)
+         * @param {number} [y=0] - position of the container (accessible via the inherited pos.y property)
+         * @param {number} [width=game.viewport.width] - width of the container
+         * @param {number} [height=game.viewport.height] - height of the container
          */
         constructor(x?: number, y?: number, width?: number, height?: number, root?: boolean);
         /**
@@ -7133,7 +7133,7 @@ declare module "renderable/container" {
          * a callback to be extended, triggered after a child has been added or removed
          * @name onChildChange
          * @memberof Container#
-         * @param {number} index added or removed child index
+         * @param {number} index - added or removed child index
          */
         onChildChange: (index: number) => void;
         /**
@@ -7183,7 +7183,7 @@ declare module "renderable/container" {
          * @name addChild
          * @memberof Container
          * @param {Renderable} child
-         * @param {number} [z] forces the z index of the child to the specified value
+         * @param {number} [z] - forces the z index of the child to the specified value
          * @returns {Renderable} the added child
          */
         addChild(child: Renderable, z?: number): Renderable;
@@ -7205,8 +7205,8 @@ declare module "renderable/container" {
          *    - The array forEach() was called upon. <br>
          * @name forEach
          * @memberof Container
-         * @param {Function} callback fnction to execute on each element
-         * @param {object} [thisArg] value to use as this(i.e reference Object) when executing callback.
+         * @param {Function} callback - fnction to execute on each element
+         * @param {object} [thisArg] - value to use as this(i.e reference Object) when executing callback.
          * @example
          * // iterate through all children of the root container
          * me.game.world.forEach((child) => {
@@ -7265,8 +7265,8 @@ declare module "renderable/container" {
          * @name getChildByProp
          * @memberof Container
          * @public
-         * @param {string} prop Property name
-         * @param {string|RegExp|number|boolean} value Value of the property
+         * @param {string} prop - Property name
+         * @param {string|RegExp|number|boolean} value - Value of the property
          * @returns {Renderable[]} Array of childs
          * @example
          * // get the first child object called "mainPlayer" in a specific container :
@@ -7301,7 +7301,7 @@ declare module "renderable/container" {
          * @name getChildByName
          * @memberof Container
          * @public
-         * @param {string|RegExp|number|boolean} name child name
+         * @param {string|RegExp|number|boolean} name - child name
          * @returns {Renderable[]} Array of children
          */
         public getChildByName(name: string | RegExp | number | boolean): Renderable[];
@@ -7312,7 +7312,7 @@ declare module "renderable/container" {
          * @name getChildByGUID
          * @memberof Container
          * @public
-         * @param {string|RegExp|number|boolean} guid child GUID
+         * @param {string|RegExp|number|boolean} guid - child GUID
          * @returns {Renderable} corresponding child or null
          */
         public getChildByGUID(guid: string | RegExp | number | boolean): Renderable;
@@ -7358,7 +7358,7 @@ declare module "renderable/container" {
          * @memberof Container
          * @public
          * @param {Renderable} child
-         * @param {boolean} [keepalive=false] true to prevent calling child.destroy()
+         * @param {boolean} [keepalive=false] - true to prevent calling child.destroy()
          */
         public removeChild(child: Renderable, keepalive?: boolean): void;
         /**
@@ -7368,16 +7368,16 @@ declare module "renderable/container" {
          * @name removeChildNow
          * @memberof Container
          * @param {Renderable} child
-         * @param {boolean} [keepalive=False] True to prevent calling child.destroy()
+         * @param {boolean} [keepalive=False] - True to prevent calling child.destroy()
          */
         removeChildNow(child: Renderable, keepalive?: boolean): void;
         /**
          * Automatically set the specified property of all childs to the given value
          * @name setChildsProperty
          * @memberof Container
-         * @param {string} prop property name
-         * @param {object} value property value
-         * @param {boolean} [recursive=false] recursively apply the value to child containers if true
+         * @param {string} prop - property name
+         * @param {object} value - property value
+         * @param {boolean} [recursive=false] - recursively apply the value to child containers if true
          */
         setChildsProperty(prop: string, value: object, recursive?: boolean): void;
         /**
@@ -7413,7 +7413,7 @@ declare module "renderable/container" {
          * @name sort
          * @memberof Container
          * @public
-         * @param {boolean} [recursive=false] recursively sort all containers if true
+         * @param {boolean} [recursive=false] - recursively sort all containers if true
          */
         public sort(recursive?: boolean): void;
         /**
@@ -7452,11 +7452,11 @@ declare module "physics/quadtree" {
      */
     class QuadTree {
         /**
-         * @param {World} world the physic world this QuadTree belongs to
-         * @param {Bounds} bounds bounds of the node
-         * @param {number} [max_objects=4] max objects a node can hold before splitting into 4 subnodes
-         * @param {number} [max_levels=4] total max levels inside root Quadtree
-         * @param {number} [level] deepth level, required for subnodes
+         * @param {World} world - the physic world this QuadTree belongs to
+         * @param {Bounds} bounds - bounds of the node
+         * @param {number} [max_objects=4] - max objects a node can hold before splitting into 4 subnodes
+         * @param {number} [max_levels=4] - total max levels inside root Quadtree
+         * @param {number} [level] - deepth level, required for subnodes
          */
         constructor(world: World, bounds: Bounds, max_objects?: number, max_levels?: number, level?: number);
         world: World;
@@ -7472,7 +7472,7 @@ declare module "physics/quadtree" {
          * Insert the given object container into the node.
          * @name insertContainer
          * @memberof QuadTree
-         * @param {Container} container group of objects to be added
+         * @param {Container} container - group of objects to be added
          */
         insertContainer(container: Container): void;
         /**
@@ -7481,15 +7481,15 @@ declare module "physics/quadtree" {
          * objects to their corresponding subnodes.
          * @name insert
          * @memberof QuadTree
-         * @param {object} item object to be added
+         * @param {object} item - object to be added
          */
         insert(item: object): void;
         /**
          * Return all objects that could collide with the given object
          * @name retrieve
          * @memberof QuadTree
-         * @param {object} item object to be checked against
-         * @param {object} [fn] a sorting function for the returned array
+         * @param {object} item - object to be checked against
+         * @param {object} [fn] - a sorting function for the returned array
          * @returns {object[]} array with all detected objects
          */
         retrieve(item: object, fn?: object): object[];
@@ -7498,7 +7498,7 @@ declare module "physics/quadtree" {
          * (this function won't recalculate the impacted node)
          * @name remove
          * @memberof QuadTree
-         * @param {object} item object to be removed
+         * @param {object} item - object to be removed
          * @returns {boolean} true if the item was found and removed.
          */
         remove(item: object): boolean;
@@ -7520,7 +7520,7 @@ declare module "physics/quadtree" {
          * clear the quadtree
          * @name clear
          * @memberof QuadTree
-         * @param {Bounds} [bounds=this.bounds] the bounds to be cleared
+         * @param {Bounds} [bounds=this.bounds] - the bounds to be cleared
          */
         clear(bounds?: Bounds): void;
     }
@@ -7535,10 +7535,10 @@ declare module "physics/world" {
      */
     class World extends Container {
         /**
-         * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
-         * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
-         * @param {number} [width=game.viewport.width] width of the container
-         * @param {number} [height=game.viewport.height] height of the container
+         * @param {number} [x=0] - position of the container (accessible via the inherited pos.x property)
+         * @param {number} [y=0] - position of the container (accessible via the inherited pos.y property)
+         * @param {number} [width=game.viewport.width] - width of the container
+         * @param {number} [height=game.viewport.height] - height of the container
          */
         constructor(x?: number, y?: number, width?: number, height?: number);
         /**
@@ -7722,13 +7722,13 @@ declare module "application/application" {
         repaint(): void;
         /**
          * update all objects related to this game active scene/stage
-         * @param {number} time current timestamp as provided by the RAF callback
-         * @param {Stage} stage the current stage
+         * @param {number} time - current timestamp as provided by the RAF callback
+         * @param {Stage} stage - the current stage
          */
         update(time: number, stage: Stage): void;
         /**
          * draw the active scene/stage associated to this game
-         * @param {Stage} stage the current stage
+         * @param {Stage} stage - the current stage
          */
         draw(stage: Stage): void;
     }
@@ -7867,8 +7867,8 @@ declare module "camera/camera2d" {
          * @name setDeadzone
          * @see Camera2d.follow
          * @memberof Camera2d
-         * @param {number} w deadzone width
-         * @param {number} h deadzone height
+         * @param {number} w - deadzone width
+         * @param {number} h - deadzone height
          */
         setDeadzone(w: number, h: number): void;
         deadzone: Rect;
@@ -7876,8 +7876,8 @@ declare module "camera/camera2d" {
          * resize the camera
          * @name resize
          * @memberof Camera2d
-         * @param {number} w new width of the camera
-         * @param {number} h new height of the camera
+         * @param {number} w - new width of the camera
+         * @param {number} h - new height of the camera
          * @returns {Camera2d} this camera
          */
         resize(w: number, h: number): Camera2d;
@@ -7886,10 +7886,10 @@ declare module "camera/camera2d" {
          * the camera is bound to the given coordinates and cannot move/be scrolled outside of it.
          * @name setBounds
          * @memberof Camera2d
-         * @param {number} x world left limit
-         * @param {number} y world top limit
-         * @param {number} w world width limit
-         * @param {number} h world height limit
+         * @param {number} x - world left limit
+         * @param {number} y - world top limit
+         * @param {number} w - world width limit
+         * @param {number} h - world height limit
          */
         setBounds(x: number, y: number, w: number, h: number): void;
         /**
@@ -7897,9 +7897,9 @@ declare module "camera/camera2d" {
          * (this will put the camera center around the given target)
          * @name follow
          * @memberof Camera2d
-         * @param {Renderable|Vector2d} target renderable or position vector to follow
-         * @param {number} [axis=me.game.viewport.AXIS.BOTH] Which axis to follow (see {@link Camera2d.AXIS})
-         * @param {number} [damping=1] default damping value
+         * @param {Renderable|Vector2d} target - renderable or position vector to follow
+         * @param {number} [axis=me.game.viewport.AXIS.BOTH] - Which axis to follow (see {@link Camera2d.AXIS})
+         * @param {number} [damping=1] - default damping value
          * @example
          * // set the camera to follow this renderable on both axis, and enable damping
          * me.game.viewport.follow(this, me.game.viewport.AXIS.BOTH, 0.1);
@@ -7940,12 +7940,12 @@ declare module "camera/camera2d" {
          * shake the camera
          * @name shake
          * @memberof Camera2d
-         * @param {number} intensity maximum offset that the screen can be moved
+         * @param {number} intensity - maximum offset that the screen can be moved
          * while shaking
-         * @param {number} duration expressed in milliseconds
-         * @param {number} [axis=me.game.viewport.AXIS.BOTH] specify on which axis to apply the shake effect (see {@link Camera2d.AXIS})
-         * @param {Function} [onComplete] callback once shaking effect is over
-         * @param {boolean} [force] if true this will override the current effect
+         * @param {number} duration - expressed in milliseconds
+         * @param {number} [axis=me.game.viewport.AXIS.BOTH] - specify on which axis to apply the shake effect (see {@link Camera2d.AXIS})
+         * @param {Function} [onComplete] - callback once shaking effect is over
+         * @param {boolean} [force] - if true this will override the current effect
          * @example
          * // shake it baby !
          * me.game.viewport.shake(10, 500, me.game.viewport.AXIS.BOTH);
@@ -7956,9 +7956,9 @@ declare module "camera/camera2d" {
          * screen is filled with the specified color and slowly goes back to normal
          * @name fadeOut
          * @memberof Camera2d
-         * @param {Color|string} color a CSS color value
-         * @param {number} [duration=1000] expressed in milliseconds
-         * @param {Function} [onComplete] callback once effect is over
+         * @param {Color|string} color - a CSS color value
+         * @param {number} [duration=1000] - expressed in milliseconds
+         * @param {Function} [onComplete] - callback once effect is over
          * @example
          * // fade the camera to white upon dying, reload the level, and then fade out back
          * me.game.viewport.fadeIn("#fff", 150, function() {
@@ -7973,9 +7973,9 @@ declare module "camera/camera2d" {
          * fade to the specified color
          * @name fadeIn
          * @memberof Camera2d
-         * @param {Color|string} color a CSS color value
-         * @param {number} [duration=1000] expressed in milliseconds
-         * @param {Function} [onComplete] callback once effect is over
+         * @param {Color|string} color - a CSS color value
+         * @param {number} [duration=1000] - expressed in milliseconds
+         * @param {Function} [onComplete] - callback once effect is over
          * @example
          * // flash the camera to white for 75ms
          * me.game.viewport.fadeIn("#FFFFFF", 75);
@@ -7985,15 +7985,15 @@ declare module "camera/camera2d" {
          * set the camera position around the specified object
          * @name focusOn
          * @memberof Camera2d
-         * @param {Renderable} target the renderable to focus the camera on
+         * @param {Renderable} target - the renderable to focus the camera on
          */
         focusOn(target: Renderable): void;
         /**
          * check if the specified renderable is in the camera
          * @name isVisible
          * @memberof Camera2d
-         * @param {Renderable} obj to be checked against
-         * @param {boolean} [floating = obj.floating] if visibility check should be done against screen coordinates
+         * @param {Renderable} obj - to be checked against
+         * @param {boolean} [floating = obj.floating] - if visibility check should be done against screen coordinates
          * @returns {boolean}
          */
         isVisible(obj: Renderable, floating?: boolean): boolean;
@@ -8003,7 +8003,7 @@ declare module "camera/camera2d" {
          * @memberof Camera2d
          * @param {number} x
          * @param {number} y
-         * @param {number} [v] an optional vector object where to set the
+         * @param {number} [v] - an optional vector object where to set the
          * converted value
          * @returns {Vector2d}
          */
@@ -8014,7 +8014,7 @@ declare module "camera/camera2d" {
          * @memberof Camera2d
          * @param {number} x
          * @param {number} y
-         * @param {number} [v] an optional vector object where to set the
+         * @param {number} [v] - an optional vector object where to set the
          * converted value
          * @returns {Vector2d}
          */
@@ -8048,10 +8048,10 @@ declare module "state/stage" {
      */
     class Stage {
         /**
-         * @param {object} [settings] The stage` parameters
-         * @param {Camera2d[]} [settings.cameras=[new me.Camera2d()]] a list of cameras (experimental)
-         * @param {Function} [settings.onResetEvent] called by the state manager when reseting the object
-         * @param {Function} [settings.onDestroyEvent] called by the state manager before switching to another state
+         * @param {object} [settings] - The stage` parameters
+         * @param {Camera2d[]} [settings.cameras=[new me.Camera2d()]] - a list of cameras (experimental)
+         * @param {Function} [settings.onResetEvent] - called by the state manager when reseting the object
+         * @param {Function} [settings.onDestroyEvent] - called by the state manager before switching to another state
          */
         constructor(settings?: {
             cameras?: Camera2d[];
@@ -8118,7 +8118,7 @@ declare module "state/stage" {
          * @name update
          * @memberof Stage
          * @ignore
-         * @param {number} dt time since the last update in milliseconds.
+         * @param {number} dt - time since the last update in milliseconds.
          * @returns {boolean}
          */
         update(dt: number): boolean;
@@ -8127,7 +8127,7 @@ declare module "state/stage" {
          * @name draw
          * @memberof Stage
          * @ignore
-         * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
+         * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
          */
         draw(renderer: CanvasRenderer | WebGLRenderer): void;
         /**
@@ -8141,7 +8141,7 @@ declare module "state/stage" {
          * this is typically where you will load a level, add renderables, etc...
          * @name onResetEvent
          * @memberof Stage
-         * @param {object} [...arguments] optional arguments passed when switching state
+         * @param {object} [...arguments] - optional arguments passed when switching state
          * @see state#change
          */
         onResetEvent(...args: any[]): void;
@@ -8195,7 +8195,7 @@ declare module "state/state" {
          * @name stop
          * @memberof state
          * @public
-         * @param {boolean} [pauseTrack=false] pause current track on screen stop.
+         * @param {boolean} [pauseTrack=false] - pause current track on screen stop.
          */
         function stop(pauseTrack?: boolean): void;
         /**
@@ -8203,7 +8203,7 @@ declare module "state/state" {
          * @name stop
          * @memberof state
          * @public
-         * @param {boolean} [pauseTrack=false] pause current track on screen stop.
+         * @param {boolean} [pauseTrack=false] - pause current track on screen stop.
          */
         function stop(pauseTrack?: boolean): void;
         /**
@@ -8211,7 +8211,7 @@ declare module "state/state" {
          * @name pause
          * @memberof state
          * @public
-         * @param {boolean} [music=false] pause current music track on screen pause
+         * @param {boolean} [music=false] - pause current music track on screen pause
          */
         function pause(music?: boolean): void;
         /**
@@ -8219,7 +8219,7 @@ declare module "state/state" {
          * @name pause
          * @memberof state
          * @public
-         * @param {boolean} [music=false] pause current music track on screen pause
+         * @param {boolean} [music=false] - pause current music track on screen pause
          */
         function pause(music?: boolean): void;
         /**
@@ -8227,7 +8227,7 @@ declare module "state/state" {
          * @name restart
          * @memberof state
          * @public
-         * @param {boolean} [music=false] resume current music track on screen resume
+         * @param {boolean} [music=false] - resume current music track on screen resume
          */
         function restart(music?: boolean): void;
         /**
@@ -8235,7 +8235,7 @@ declare module "state/state" {
          * @name restart
          * @memberof state
          * @public
-         * @param {boolean} [music=false] resume current music track on screen resume
+         * @param {boolean} [music=false] - resume current music track on screen resume
          */
         function restart(music?: boolean): void;
         /**
@@ -8243,7 +8243,7 @@ declare module "state/state" {
          * @name resume
          * @memberof state
          * @public
-         * @param {boolean} [music=false] resume current music track on screen resume
+         * @param {boolean} [music=false] - resume current music track on screen resume
          */
         function resume(music?: boolean): void;
         /**
@@ -8251,7 +8251,7 @@ declare module "state/state" {
          * @name resume
          * @memberof state
          * @public
-         * @param {boolean} [music=false] resume current music track on screen resume
+         * @param {boolean} [music=false] - resume current music track on screen resume
          */
         function resume(music?: boolean): void;
         /**
@@ -8291,9 +8291,9 @@ declare module "state/state" {
          * @name set
          * @memberof state
          * @public
-         * @param {number} state State ID (see constants)
-         * @param {Stage} stage Instantiated Stage to associate with state ID
-         * @param {boolean} [start = false] if true the state will be changed immediately after adding it.
+         * @param {number} state - State ID (see constants)
+         * @param {Stage} stage - Instantiated Stage to associate with state ID
+         * @param {boolean} [start = false] - if true the state will be changed immediately after adding it.
          * @example
          * class MenuButton extends me.GUI_Object {
          *     onClick() {
@@ -8337,9 +8337,9 @@ declare module "state/state" {
          * @name set
          * @memberof state
          * @public
-         * @param {number} state State ID (see constants)
-         * @param {Stage} stage Instantiated Stage to associate with state ID
-         * @param {boolean} [start = false] if true the state will be changed immediately after adding it.
+         * @param {number} state - State ID (see constants)
+         * @param {Stage} stage - Instantiated Stage to associate with state ID
+         * @param {boolean} [start = false] - if true the state will be changed immediately after adding it.
          * @example
          * class MenuButton extends me.GUI_Object {
          *     onClick() {
@@ -8384,7 +8384,7 @@ declare module "state/state" {
          * @name set
          * @memberof state
          * @public
-         * @param {number} [state] State ID (see constants)
+         * @param {number} [state] - State ID (see constants)
          * @returns {Stage}
          */
         function get(state?: number): Stage;
@@ -8394,7 +8394,7 @@ declare module "state/state" {
          * @name set
          * @memberof state
          * @public
-         * @param {number} [state] State ID (see constants)
+         * @param {number} [state] - State ID (see constants)
          * @returns {Stage}
          */
         function get(state?: number): Stage;
@@ -8421,9 +8421,9 @@ declare module "state/state" {
          * @name transition
          * @memberof state
          * @public
-         * @param {string} effect (only "fade" is supported for now)
-         * @param {Color|string} color a CSS color value
-         * @param {number} [duration=1000] expressed in milliseconds
+         * @param {string} effect - (only "fade" is supported for now)
+         * @param {Color|string} color - a CSS color value
+         * @param {number} [duration=1000] - expressed in milliseconds
          */
         function transition(effect: string, color: any, duration?: number): void;
         /**
@@ -8431,9 +8431,9 @@ declare module "state/state" {
          * @name transition
          * @memberof state
          * @public
-         * @param {string} effect (only "fade" is supported for now)
-         * @param {Color|string} color a CSS color value
-         * @param {number} [duration=1000] expressed in milliseconds
+         * @param {string} effect - (only "fade" is supported for now)
+         * @param {Color|string} color - a CSS color value
+         * @param {number} [duration=1000] - expressed in milliseconds
          */
         function transition(effect: string, color: any, duration?: number): void;
         /**
@@ -8441,7 +8441,7 @@ declare module "state/state" {
          * @name setTransition
          * @memberof state
          * @public
-         * @param {number} state State ID (see constants)
+         * @param {number} state - State ID (see constants)
          * @param {boolean} enable
          */
         function setTransition(state: number, enable: boolean): void;
@@ -8450,7 +8450,7 @@ declare module "state/state" {
          * @name setTransition
          * @memberof state
          * @public
-         * @param {number} state State ID (see constants)
+         * @param {number} state - State ID (see constants)
          * @param {boolean} enable
          */
         function setTransition(state: number, enable: boolean): void;
@@ -8459,9 +8459,9 @@ declare module "state/state" {
          * @name change
          * @memberof state
          * @public
-         * @param {number} state State ID (see constants)
-         * @param {boolean} forceChange if true the state will be changed immediately
-         * @param {object} [...arguments] extra arguments to be passed to the reset functions
+         * @param {number} state - State ID (see constants)
+         * @param {boolean} forceChange - if true the state will be changed immediately
+         * @param {object} [...arguments] - extra arguments to be passed to the reset functions
          * @example
          * // The onResetEvent method on the play screen will receive two args:
          * // "level_1" and the number 3
@@ -8473,9 +8473,9 @@ declare module "state/state" {
          * @name change
          * @memberof state
          * @public
-         * @param {number} state State ID (see constants)
-         * @param {boolean} forceChange if true the state will be changed immediately
-         * @param {object} [...arguments] extra arguments to be passed to the reset functions
+         * @param {number} state - State ID (see constants)
+         * @param {boolean} forceChange - if true the state will be changed immediately
+         * @param {object} [...arguments] - extra arguments to be passed to the reset functions
          * @example
          * // The onResetEvent method on the play screen will receive two args:
          * // "level_1" and the number 3
@@ -8487,7 +8487,7 @@ declare module "state/state" {
          * @name isCurrent
          * @memberof state
          * @public
-         * @param {number} state State ID (see constants)
+         * @param {number} state - State ID (see constants)
          * @returns {boolean} true if the specified state is the current one
          */
         function isCurrent(state: number): boolean;
@@ -8496,7 +8496,7 @@ declare module "state/state" {
          * @name isCurrent
          * @memberof state
          * @public
-         * @param {number} state State ID (see constants)
+         * @param {number} state - State ID (see constants)
          * @returns {boolean} true if the specified state is the current one
          */
         function isCurrent(state: number): boolean;
@@ -8508,24 +8508,24 @@ declare module "level/tiled/TMXUtils" {
      * decompress zlib/gzip data (NOT IMPLEMENTED)
      * @ignore
      * @name decompress
-     * @param  {number[]} data Array of bytes
-     * @param  {string} format compressed data format ("gzip","zlib")
+     * @param  {number[]} data- -  Array of bytes
+     * @param  {string} format- -  compressed data format ("gzip","zlib")
      */
     export function decompress(): void;
     /**
      * Decode a CSV encoded array into a binary array
      * @ignore
      * @name decodeCSV
-     * @param  {string} input CSV formatted data (only numbers, everything else will be converted to NaN)
+     * @param  {string} input- -  CSV formatted data (only numbers, everything else will be converted to NaN)
      * @returns {number[]} Decoded data
      */
-    export function decodeCSV(input: string): number[];
+    export function decodeCSV(input: any): number[];
     /**
      * Decode a base64 encoded string into a byte array
      * @ignore
      * @name decodeBase64AsArray
-     * @param {string} input Base64 encoded data
-     * @param {number} [bytes] number of bytes per array entry
+     * @param {string} input - Base64 encoded data
+     * @param {number} [bytes] - number of bytes per array entry
      * @returns {Uint32Array} Decoded data
      */
     export function decodeBase64AsArray(input: string, bytes?: number): Uint32Array;
@@ -8561,10 +8561,10 @@ declare module "level/tiled/TMXTile" {
      */
     class Tile extends Bounds {
         /**
-         * @param {number} x x index of the Tile in the map
-         * @param {number} y y index of the Tile in the map
-         * @param {number} gid tile gid
-         * @param {TMXTileset} tileset the corresponding tileset object
+         * @param {number} x - x index of the Tile in the map
+         * @param {number} y - y index of the Tile in the map
+         * @param {number} gid - tile gid
+         * @param {TMXTileset} tileset - the corresponding tileset object
          */
         constructor(x: number, y: number, gid: number, tileset: TMXTileset);
         /**
@@ -8625,7 +8625,7 @@ declare module "level/tiled/TMXTile" {
          * return a renderable object for this Tile object
          * @name Tile#getRenderable
          * @public
-         * @param {object} [settings] see {@link Sprite}
+         * @param {object} [settings] - see {@link Sprite}
          * @returns {Renderable} a me.Sprite object
          */
         public getRenderable(settings?: object): Renderable;
@@ -8642,16 +8642,16 @@ declare module "video/canvas/canvas_renderer" {
      */
     class CanvasRenderer extends Renderer {
         /**
-         * @param {object} options The renderer parameters
-         * @param {number} options.width The width of the canvas without scaling
-         * @param {number} options.height The height of the canvas without scaling
-         * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
-         * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing
-         * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
-         * @param {boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
-         * @param {boolean} [options.textureSeamFix=true] enable the texture seam fix when rendering Tile when antiAlias is off for the canvasRenderer
-         * @param {number} [options.zoomX=width] The actual width of the canvas with scaling applied
-         * @param {number} [options.zoomY=height] The actual height of the canvas with scaling applied
+         * @param {object} options - The renderer parameters
+         * @param {number} options.width - The width of the canvas without scaling
+         * @param {number} options.height - The height of the canvas without scaling
+         * @param {HTMLCanvasElement} [options.canvas] - The html canvas to draw to on screen
+         * @param {boolean} [options.antiAlias=false] - Whether to enable anti-aliasing
+         * @param {boolean} [options.transparent=false] - Whether to enable transparency on the canvas (performance hit when enabled)
+         * @param {boolean} [options.subPixel=false] - Whether to enable subpixel renderering (performance hit when enabled)
+         * @param {boolean} [options.textureSeamFix=true] - enable the texture seam fix when rendering Tile when antiAlias is off for the canvasRenderer
+         * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
+         * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
          */
         constructor(options: {
             width: number;
@@ -8686,7 +8686,7 @@ declare module "video/canvas/canvas_renderer" {
          * @name setBlendMode
          * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
          * @memberof CanvasRenderer
-         * @param {string} [mode="normal"] blend mode : "normal", "multiply", "lighter, "additive", "screen"
+         * @param {string} [mode="normal"] - blend mode : "normal", "multiply", "lighter, "additive", "screen"
          * @param {CanvasRenderingContext2D} [context]
          */
         setBlendMode(mode?: string, context?: CanvasRenderingContext2D): void;
@@ -8694,26 +8694,26 @@ declare module "video/canvas/canvas_renderer" {
          * Clears the main framebuffer with the given color
          * @name clearColor
          * @memberof CanvasRenderer
-         * @param {Color|string} [color="#000000"] CSS color.
-         * @param {boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
+         * @param {Color|string} [color="#000000"] - CSS color.
+         * @param {boolean} [opaque=false] - Allow transparency [default] or clear the surface completely [true]
          */
         clearColor(color?: Color | string, opaque?: boolean): void;
         /**
          * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
          * @name clearRect
          * @memberof CanvasRenderer
-         * @param {number} x x axis of the coordinate for the rectangle starting point.
-         * @param {number} y y axis of the coordinate for the rectangle starting point.
-         * @param {number} width The rectangle's width.
-         * @param {number} height The rectangle's height.
+         * @param {number} x - x axis of the coordinate for the rectangle starting point.
+         * @param {number} y - y axis of the coordinate for the rectangle starting point.
+         * @param {number} width - The rectangle's width.
+         * @param {number} height - The rectangle's height.
          */
         clearRect(x: number, y: number, width: number, height: number): void;
         /**
          * Create a pattern with the specified repetition
          * @name createPattern
          * @memberof CanvasRenderer
-         * @param {Image} image Source image
-         * @param {string} repeat Define how the pattern should be repeated
+         * @param {Image} image - Source image
+         * @param {string} repeat - Define how the pattern should be repeated
          * @returns {CanvasPattern}
          * @see ImageLayer#repeat
          * @example
@@ -8727,15 +8727,15 @@ declare module "video/canvas/canvas_renderer" {
          * Draw an image onto the main using the canvas api
          * @name drawImage
          * @memberof CanvasRenderer
-         * @param {Image} image An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
-         * @param {number} sx The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
-         * @param {number} sy The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
-         * @param {number} sw The width of the sub-rectangle of the source image to draw into the destination context. If not specified, the entire rectangle from the coordinates specified by sx and sy to the bottom-right corner of the image is used.
-         * @param {number} sh The height of the sub-rectangle of the source image to draw into the destination context.
-         * @param {number} dx The X coordinate in the destination canvas at which to place the top-left corner of the source image.
-         * @param {number} dy The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
-         * @param {number} dw The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
-         * @param {number} dh The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
+         * @param {Image} image - An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
+         * @param {number} sx - The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
+         * @param {number} sy - The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
+         * @param {number} sw - The width of the sub-rectangle of the source image to draw into the destination context. If not specified, the entire rectangle from the coordinates specified by sx and sy to the bottom-right corner of the image is used.
+         * @param {number} sh - The height of the sub-rectangle of the source image to draw into the destination context.
+         * @param {number} dx - The X coordinate in the destination canvas at which to place the top-left corner of the source image.
+         * @param {number} dy - The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
+         * @param {number} dw - The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
+         * @param {number} dh - The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
          * @example
          * // Position the image on the canvas:
          * renderer.drawImage(image, dx, dy);
@@ -8749,7 +8749,7 @@ declare module "video/canvas/canvas_renderer" {
          * Draw a pattern within the given rectangle.
          * @name drawPattern
          * @memberof CanvasRenderer
-         * @param {CanvasPattern} pattern Pattern object
+         * @param {CanvasPattern} pattern - Pattern object
          * @param {number} x
          * @param {number} y
          * @param {number} width
@@ -8761,81 +8761,81 @@ declare module "video/canvas/canvas_renderer" {
          * Stroke an arc at the specified coordinates with given radius, start and end points
          * @name strokeArc
          * @memberof CanvasRenderer
-         * @param {number} x arc center point x-axis
-         * @param {number} y arc center point y-axis
+         * @param {number} x - arc center point x-axis
+         * @param {number} y - arc center point y-axis
          * @param {number} radius
-         * @param {number} start start angle in radians
-         * @param {number} end end angle in radians
-         * @param {boolean} [antiClockwise=false] draw arc anti-clockwise
-         * @param {boolean} [fill=false] also fill the shape with the current color if true
+         * @param {number} start - start angle in radians
+         * @param {number} end - end angle in radians
+         * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
+         * @param {boolean} [fill=false] - also fill the shape with the current color if true
          */
         strokeArc(x: number, y: number, radius: number, start: number, end: number, antiClockwise?: boolean, fill?: boolean): void;
         /**
          * Fill an arc at the specified coordinates with given radius, start and end points
          * @name fillArc
          * @memberof CanvasRenderer
-         * @param {number} x arc center point x-axis
-         * @param {number} y arc center point y-axis
+         * @param {number} x - arc center point x-axis
+         * @param {number} y - arc center point y-axis
          * @param {number} radius
-         * @param {number} start start angle in radians
-         * @param {number} end end angle in radians
-         * @param {boolean} [antiClockwise=false] draw arc anti-clockwise
+         * @param {number} start - start angle in radians
+         * @param {number} end - end angle in radians
+         * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
          */
         fillArc(x: number, y: number, radius: number, start: number, end: number, antiClockwise?: boolean): void;
         /**
          * Stroke an ellipse at the specified coordinates with given radius
          * @name strokeEllipse
          * @memberof CanvasRenderer
-         * @param {number} x ellipse center point x-axis
-         * @param {number} y ellipse center point y-axis
-         * @param {number} w horizontal radius of the ellipse
-         * @param {number} h vertical radius of the ellipse
-         * @param {boolean} [fill=false] also fill the shape with the current color if true
+         * @param {number} x - ellipse center point x-axis
+         * @param {number} y - ellipse center point y-axis
+         * @param {number} w - horizontal radius of the ellipse
+         * @param {number} h - vertical radius of the ellipse
+         * @param {boolean} [fill=false] - also fill the shape with the current color if true
          */
         strokeEllipse(x: number, y: number, w: number, h: number, fill?: boolean): void;
         /**
          * Fill an ellipse at the specified coordinates with given radius
          * @name fillEllipse
          * @memberof CanvasRenderer
-         * @param {number} x ellipse center point x-axis
-         * @param {number} y ellipse center point y-axis
-         * @param {number} w horizontal radius of the ellipse
-         * @param {number} h vertical radius of the ellipse
+         * @param {number} x - ellipse center point x-axis
+         * @param {number} y - ellipse center point y-axis
+         * @param {number} w - horizontal radius of the ellipse
+         * @param {number} h - vertical radius of the ellipse
          */
         fillEllipse(x: number, y: number, w: number, h: number): void;
         /**
          * Stroke a line of the given two points
          * @name strokeLine
          * @memberof CanvasRenderer
-         * @param {number} startX the start x coordinate
-         * @param {number} startY the start y coordinate
-         * @param {number} endX the end x coordinate
-         * @param {number} endY the end y coordinate
+         * @param {number} startX - the start x coordinate
+         * @param {number} startY - the start y coordinate
+         * @param {number} endX - the end x coordinate
+         * @param {number} endY - the end y coordinate
          */
         strokeLine(startX: number, startY: number, endX: number, endY: number): void;
         /**
          * Fill a line of the given two points
          * @name fillLine
          * @memberof CanvasRenderer
-         * @param {number} startX the start x coordinate
-         * @param {number} startY the start y coordinate
-         * @param {number} endX the end x coordinate
-         * @param {number} endY the end y coordinate
+         * @param {number} startX - the start x coordinate
+         * @param {number} startY - the start y coordinate
+         * @param {number} endX - the end x coordinate
+         * @param {number} endY - the end y coordinate
          */
         fillLine(startX: number, startY: number, endX: number, endY: number): void;
         /**
          * Stroke the given me.Polygon on the screen
          * @name strokePolygon
          * @memberof CanvasRenderer
-         * @param {Polygon} poly the shape to draw
-         * @param {boolean} [fill=false] also fill the shape with the current color if true
+         * @param {Polygon} poly - the shape to draw
+         * @param {boolean} [fill=false] - also fill the shape with the current color if true
          */
         strokePolygon(poly: Polygon, fill?: boolean): void;
         /**
          * Fill the given me.Polygon on the screen
          * @name fillPolygon
          * @memberof CanvasRenderer
-         * @param {Polygon} poly the shape to draw
+         * @param {Polygon} poly - the shape to draw
          */
         fillPolygon(poly: Polygon): void;
         /**
@@ -8846,7 +8846,7 @@ declare module "video/canvas/canvas_renderer" {
          * @param {number} y
          * @param {number} width
          * @param {number} height
-         * @param {boolean} [fill=false] also fill the shape with the current color if true
+         * @param {boolean} [fill=false] - also fill the shape with the current color if true
          */
         strokeRect(x: number, y: number, width: number, height: number, fill?: boolean): void;
         /**
@@ -8868,7 +8868,7 @@ declare module "video/canvas/canvas_renderer" {
          * @param {number} width
          * @param {number} height
          * @param {number} radius
-         * @param {boolean} [fill=false] also fill the shape with the current color if true
+         * @param {boolean} [fill=false] - also fill the shape with the current color if true
          */
         strokeRoundRect(x: number, y: number, width: number, height: number, radius: number, fill?: boolean): void;
         /**
@@ -8921,7 +8921,7 @@ declare module "video/canvas/canvas_renderer" {
          * rotates the canvas context
          * @name rotate
          * @memberof CanvasRenderer
-         * @param {number} angle in radians
+         * @param {number} angle - in radians
          */
         rotate(angle: number): void;
         /**
@@ -8937,14 +8937,14 @@ declare module "video/canvas/canvas_renderer" {
          * By default, or upon reset, the value is set to #000000.
          * @name setColor
          * @memberof CanvasRenderer
-         * @param {Color|string} color css color value
+         * @param {Color|string} color - css color value
          */
         setColor(color: Color | string): void;
         /**
          * Set the global alpha
          * @name setGlobalAlpha
          * @memberof CanvasRenderer
-         * @param {number} alpha 0.0 to 1.0 values accepted.
+         * @param {number} alpha - 0.0 to 1.0 values accepted.
          */
         setGlobalAlpha(alpha: number): void;
         /**
@@ -8958,7 +8958,7 @@ declare module "video/canvas/canvas_renderer" {
          * Set the line width on the context
          * @name setLineWidth
          * @memberof CanvasRenderer
-         * @param {number} width Line width
+         * @param {number} width - Line width
          */
         setLineWidth(width: number): void;
         /**
@@ -8966,14 +8966,14 @@ declare module "video/canvas/canvas_renderer" {
          * identity one, and then apply the given transformation matrix.
          * @name setTransform
          * @memberof CanvasRenderer
-         * @param {Matrix2d} mat2d Matrix to transform by
+         * @param {Matrix2d} mat2d - Matrix to transform by
          */
         setTransform(mat2d: Matrix2d): void;
         /**
          * Multiply given matrix into the renderer tranformation matrix
          * @name transform
          * @memberof CanvasRenderer
-         * @param {Matrix2d} mat2d Matrix to transform by
+         * @param {Matrix2d} mat2d - Matrix to transform by
          */
         transform(mat2d: Matrix2d): void;
         /**
@@ -9004,8 +9004,8 @@ declare module "video/canvas/canvas_renderer" {
          * Mask are not preserved through renderer context save and restore.
          * @name setMask
          * @memberof CanvasRenderer
-         * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
-         * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
+         * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - the shape defining the mask to be applied
+         * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
          */
         setMask(mask?: Rect | RoundRect | Polygon | Line | Ellipse, invert?: boolean): void;
     }
@@ -9026,13 +9026,13 @@ declare module "level/tiled/TMXLayer" {
      */
     class TMXLayer extends Renderable {
         /**
-         * @param {object} map layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
-         * @param {object} data layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
-         * @param {number} tilewidth width of each tile in pixels
-         * @param {number} tileheight height of each tile in pixels
-         * @param {string} orientation "isometric" or "orthogonal"
-         * @param {TMXTilesetGroup} tilesets tileset as defined in Tiled
-         * @param {number} z z-index position
+         * @param {object} map - layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
+         * @param {object} data - layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
+         * @param {number} tilewidth - width of each tile in pixels
+         * @param {number} tileheight - height of each tile in pixels
+         * @param {string} orientation - "isometric" or "orthogonal"
+         * @param {TMXTilesetGroup} tilesets - tileset as defined in Tiled
+         * @param {number} z - z-index position
          */
         constructor(map: object, data: object, tilewidth: number, tileheight: number, orientation: string, tilesets: TMXTilesetGroup, z: number);
         tilewidth: any;
@@ -9114,8 +9114,8 @@ declare module "level/tiled/TMXLayer" {
          * @name getTileId
          * @memberof TMXLayer
          * @public
-         * @param {number} x X coordinate (in world/pixels coordinates)
-         * @param {number} y Y coordinate (in world/pixels coordinates)
+         * @param {number} x - X coordinate (in world/pixels coordinates)
+         * @param {number} y - Y coordinate (in world/pixels coordinates)
          * @returns {number} TileId or null if there is no Tile at the given position
          */
         public getTileId(x: number, y: number): number;
@@ -9124,8 +9124,8 @@ declare module "level/tiled/TMXLayer" {
          * @name getTile
          * @memberof TMXLayer
          * @public
-         * @param {number} x X coordinate (in world/pixels coordinates)
-         * @param {number} y Y coordinate (in world/pixels coordinates)
+         * @param {number} x - X coordinate (in world/pixels coordinates)
+         * @param {number} y - Y coordinate (in world/pixels coordinates)
          * @returns {Tile} corresponding tile or null if there is no defined tile at the coordinate or if outside of the layer bounds
          * @example
          * // get the TMX Map Layer called "Front layer"
@@ -9139,9 +9139,9 @@ declare module "level/tiled/TMXLayer" {
          * @name getTile
          * @memberof TMXLayer
          * @public
-         * @param {Tile} tile the tile object to be assigned
-         * @param {number} x x coordinate (in world/pixels coordinates)
-         * @param {number} y y coordinate (in world/pixels coordinates)
+         * @param {Tile} tile - the tile object to be assigned
+         * @param {number} x - x coordinate (in world/pixels coordinates)
+         * @param {number} y - y coordinate (in world/pixels coordinates)
          * @returns {Tile} the tile object
          */
         public setTile(tile: Tile, x: number, y: number): Tile;
@@ -9150,9 +9150,9 @@ declare module "level/tiled/TMXLayer" {
          * @name setTile
          * @memberof TMXLayer
          * @public
-         * @param {number} tileId tileId
-         * @param {number} x X coordinate (in world/pixels coordinates)
-         * @param {number} y Y coordinate (in world/pixels coordinates)
+         * @param {number} tileId - tileId
+         * @param {number} x - X coordinate (in world/pixels coordinates)
+         * @param {number} y - Y coordinate (in world/pixels coordinates)
          * @returns {Tile} the tile object
          */
         public getTileById(tileId: number, x: number, y: number): Tile;
@@ -9161,9 +9161,9 @@ declare module "level/tiled/TMXLayer" {
          * @name cellAt
          * @memberof TMXLayer
          * @public
-         * @param {number} x x position of the tile (in Tile unit)
-         * @param {number} y x position of the tile (in Tile unit)
-         * @param {number} [boundsCheck=true] check first if within the layer bounds
+         * @param {number} x - x position of the tile (in Tile unit)
+         * @param {number} y - x position of the tile (in Tile unit)
+         * @param {number} [boundsCheck=true] - check first if within the layer bounds
          * @returns {Tile} corresponding tile or null if there is no defined tile at the position or if outside of the layer bounds
          * @example
          * // return the first tile at offset 0, 0
@@ -9175,8 +9175,8 @@ declare module "level/tiled/TMXLayer" {
          * @name clearTile
          * @memberof TMXLayer
          * @public
-         * @param {number} x X coordinate (in map coordinates: row/column)
-         * @param {number} y Y coordinate (in map coordinates: row/column)
+         * @param {number} x - X coordinate (in map coordinates: row/column)
+         * @param {number} y - Y coordinate (in map coordinates: row/column)
          * @example
          * me.game.world.getChildByType(me.TMXLayer).forEach(function(layer) {
          *     // clear all tiles at the given x,y coordinates
@@ -9207,10 +9207,10 @@ declare module "level/tiled/renderer/TMXRenderer" {
      */
     class TMXRenderer {
         /**
-         * @param {number} cols width of the tilemap in tiles
-         * @param {number} rows height of the tilemap in tiles
-         * @param {number} tilewidth width of each tile in pixels
-         * @param {number} tileheight height of each tile in pixels
+         * @param {number} cols - width of the tilemap in tiles
+         * @param {number} rows - height of the tilemap in tiles
+         * @param {number} tilewidth - width of each tile in pixels
+         * @param {number} tileheight - height of each tile in pixels
          */
         constructor(cols: number, rows: number, tilewidth: number, tileheight: number);
         cols: number;
@@ -9222,7 +9222,7 @@ declare module "level/tiled/renderer/TMXRenderer" {
          * return true if the renderer can render the specified map or layer
          * @name TMXRenderer#canRender
          * @public
-         * @param {TMXTileMap|TMXLayer} component TMX Map or Layer
+         * @param {TMXTileMap|TMXLayer} component - TMX Map or Layer
          * @returns {boolean}
          */
         public canRender(component: TMXTileMap | TMXLayer): boolean;
@@ -9230,7 +9230,7 @@ declare module "level/tiled/renderer/TMXRenderer" {
          * return the bounding rect for this map renderer
          * @name TMXRenderer#getBounds
          * @public
-         * @param {TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
+         * @param {TMXLayer} [layer] - calculate the bounding rect for a specific layer (will return a new bounds object)
          * @returns {Bounds}
          */
         public getBounds(layer?: TMXLayer): Bounds;
@@ -9238,9 +9238,9 @@ declare module "level/tiled/renderer/TMXRenderer" {
          * return the tile position corresponding to the specified pixel
          * @name TMXRenderer#pixelToTileCoords
          * @public
-         * @param {number} x X coordinate
-         * @param {number} y Y coordinate
-         * @param {Vector2d} [v] an optional vector object where to put the return values
+         * @param {number} x - X coordinate
+         * @param {number} y - Y coordinate
+         * @param {Vector2d} [v] - an optional vector object where to put the return values
          * @returns {Vector2d}
          */
         public pixelToTileCoords(x: number, y: number, v?: Vector2d): Vector2d;
@@ -9248,9 +9248,9 @@ declare module "level/tiled/renderer/TMXRenderer" {
          * return the pixel position corresponding of the specified tile
          * @name TMXRenderer#tileToPixelCoords
          * @public
-         * @param {number} col tile horizontal position
-         * @param {number} row tile vertical position
-         * @param {Vector2d} [v] an optional vector object where to put the return values
+         * @param {number} col - tile horizontal position
+         * @param {number} row - tile vertical position
+         * @param {Vector2d} [v] - an optional vector object where to put the return values
          * @returns {Vector2d}
          */
         public tileToPixelCoords(col: number, row: number, v?: Vector2d): Vector2d;
@@ -9258,19 +9258,19 @@ declare module "level/tiled/renderer/TMXRenderer" {
          * draw the given tile at the specified layer
          * @name TMXRenderer#drawTile
          * @public
-         * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
-         * @param {number} x X coordinate where to draw the tile
-         * @param {number} y Y coordinate where to draw the tile
-         * @param {Tile} tile the tile object to draw
+         * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
+         * @param {number} x - X coordinate where to draw the tile
+         * @param {number} y - Y coordinate where to draw the tile
+         * @param {Tile} tile - the tile object to draw
          */
         public drawTile(renderer: CanvasRenderer | WebGLRenderer, x: number, y: number, tile: Tile): void;
         /**
          * draw the given TMX Layer for the given area
          * @name TMXRenderer#drawTileLayer
          * @public
-         * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
-         * @param {TMXLayer} layer a TMX Layer object
-         * @param {Rect} rect the area of the layer to draw
+         * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
+         * @param {TMXLayer} layer - a TMX Layer object
+         * @param {Rect} rect - the area of the layer to draw
          */
         public drawTileLayer(renderer: CanvasRenderer | WebGLRenderer, layer: TMXLayer, rect: Rect): void;
     }
@@ -9286,7 +9286,7 @@ declare module "level/tiled/renderer/TMXOrthogonalRenderer" {
      */
     class TMXOrthogonalRenderer extends TMXRenderer {
         /**
-         * @param {TMXTileMap} map the TMX map
+         * @param {TMXTileMap} map - the TMX map
          */
         constructor(map: TMXTileMap);
         /**
@@ -9332,7 +9332,7 @@ declare module "level/tiled/renderer/TMXIsometricRenderer" {
      */
     class TMXIsometricRenderer extends TMXRenderer {
         /**
-         * @param {TMXTileMap} map the TMX map
+         * @param {TMXTileMap} map - the TMX map
          */
         constructor(map: TMXTileMap);
         hTilewidth: number;
@@ -9347,7 +9347,7 @@ declare module "level/tiled/renderer/TMXIsometricRenderer" {
          * return the bounding rect for this map renderer
          * @name TMXIsometricRenderer#getBounds
          * @public
-         * @param {TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
+         * @param {TMXLayer} [layer] - calculate the bounding rect for a specific layer (will return a new bounds object)
          * @returns {Bounds}
          */
         public getBounds(layer?: TMXLayer): Bounds;
@@ -9390,7 +9390,7 @@ declare module "level/tiled/renderer/TMXHexagonalRenderer" {
      */
     class TMXHexagonalRenderer extends TMXRenderer {
         /**
-         * @param {TMXTileMap} map the TMX map
+         * @param {TMXTileMap} map - the TMX map
          */
         constructor(map: TMXTileMap);
         hexsidelength: any;
@@ -9412,7 +9412,7 @@ declare module "level/tiled/renderer/TMXHexagonalRenderer" {
          * return the bounding rect for this map renderer
          * @name TMXHexagonalRenderer#getBounds
          * @public
-         * @param {TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
+         * @param {TMXLayer} [layer] - calculate the bounding rect for a specific layer (will return a new bounds object)
          * @returns {Bounds}
          */
         public getBounds(layer?: TMXLayer): Bounds;
@@ -9490,7 +9490,7 @@ declare module "level/tiled/TMXTileset" {
      */
     class TMXTileset {
         /**
-         *  @param {object} tileset tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
+         *  @param {object} tileset - tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
          */
         constructor(tileset: object);
         TileProperties: any[];
@@ -9562,7 +9562,7 @@ declare module "level/tiled/TMXTileset" {
          * Get the view (local) tile ID from a GID, with animations applied
          * @name TMXTileset#getViewTileId
          * @public
-         * @param {number} gid Global tile ID
+         * @param {number} gid - Global tile ID
          * @returns {number} View tile ID
          */
         public getViewTileId(gid: number): number;
@@ -9904,8 +9904,8 @@ declare module "level/tiled/TMXTileMap" {
      */
     class TMXTileMap {
         /**
-         * @param {string} levelId name of TMX map
-         * @param {object} data TMX map in JSON format
+         * @param {string} levelId - name of TMX map
+         * @param {object} data - TMX map in JSON format
          * @example
          * // create a new level object based on the TMX JSON object
          * var level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
@@ -10038,9 +10038,9 @@ declare module "level/tiled/TMXTileMap" {
          * note : this will not automatically update the camera viewport
          * @name TMXTileMap#addTo
          * @public
-         * @param {Container} container target container
-         * @param {boolean} [flatten=true] if true, flatten all objects into the given container, else a `me.Container` object will be created for each corresponding groups
-         * @param {boolean} [setViewportBounds=false] if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
+         * @param {Container} container - target container
+         * @param {boolean} [flatten=true] - if true, flatten all objects into the given container, else a `me.Container` object will be created for each corresponding groups
+         * @param {boolean} [setViewportBounds=false] - if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
          * @example
          * // create a new level object based on the TMX JSON object
          * var level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
@@ -10052,7 +10052,7 @@ declare module "level/tiled/TMXTileMap" {
          * return an Array of instantiated objects, based on the map object definition
          * @name TMXTileMap#getObjects
          * @public
-         * @param {boolean} [flatten=true] if true, flatten all objects into the returned array.
+         * @param {boolean} [flatten=true] - if true, flatten all objects into the returned array.
          * when false, a `me.Container` object will be created for each corresponding groups
          * @returns {Renderable[]} Array of Objects
          */
@@ -10087,9 +10087,9 @@ declare module "level/level" {
          * @name add
          * @memberof level
          * @public
-         * @param {string} format level format (only "tmx" supported)
-         * @param {string} levelId the level id (or name)
-         * @param {Function} [callback] a function to be called once the level is loaded
+         * @param {string} format - level format (only "tmx" supported)
+         * @param {string} levelId - the level id (or name)
+         * @param {Function} [callback] - a function to be called once the level is loaded
          * @returns {boolean} true if the level was loaded
          */
         function add(format: string, levelId: string, callback?: Function): boolean;
@@ -10098,9 +10098,9 @@ declare module "level/level" {
          * @name add
          * @memberof level
          * @public
-         * @param {string} format level format (only "tmx" supported)
-         * @param {string} levelId the level id (or name)
-         * @param {Function} [callback] a function to be called once the level is loaded
+         * @param {string} format - level format (only "tmx" supported)
+         * @param {string} levelId - the level id (or name)
+         * @param {Function} [callback] - a function to be called once the level is loaded
          * @returns {boolean} true if the level was loaded
          */
         function add(format: string, levelId: string, callback?: Function): boolean;
@@ -10110,12 +10110,12 @@ declare module "level/level" {
          * @name load
          * @memberof level
          * @public
-         * @param {string} levelId level id
-         * @param {object} [options] additional optional parameters
-         * @param {Container} [options.container=game.world] container in which to load the specified level
-         * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
-         * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
-         * @param {boolean} [options.setViewportBounds=true] if true, set the viewport bounds to the map size
+         * @param {string} levelId - level id
+         * @param {object} [options] - additional optional parameters
+         * @param {Container} [options.container=game.world] - container in which to load the specified level
+         * @param {Function} [options.onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded
+         * @param {boolean} [options.flatten=game.mergeGroup] - if true, flatten all objects into the given container
+         * @param {boolean} [options.setViewportBounds=true] - if true, set the viewport bounds to the map size
          * @returns {boolean} true if the level was successfully loaded
          * @example
          * // the game assets to be be preloaded
@@ -10155,12 +10155,12 @@ declare module "level/level" {
          * @name load
          * @memberof level
          * @public
-         * @param {string} levelId level id
-         * @param {object} [options] additional optional parameters
-         * @param {Container} [options.container=game.world] container in which to load the specified level
-         * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
-         * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
-         * @param {boolean} [options.setViewportBounds=true] if true, set the viewport bounds to the map size
+         * @param {string} levelId - level id
+         * @param {object} [options] - additional optional parameters
+         * @param {Container} [options.container=game.world] - container in which to load the specified level
+         * @param {Function} [options.onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded
+         * @param {boolean} [options.flatten=game.mergeGroup] - if true, flatten all objects into the given container
+         * @param {boolean} [options.setViewportBounds=true] - if true, set the viewport bounds to the map size
          * @returns {boolean} true if the level was successfully loaded
          * @example
          * // the game assets to be be preloaded
@@ -10235,10 +10235,10 @@ declare module "level/level" {
          * @name reload
          * @memberof level
          * @public
-         * @param {object} [options] additional optional parameters
-         * @param {Container} [options.container=game.world] container in which to load the specified level
-         * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
-         * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
+         * @param {object} [options] - additional optional parameters
+         * @param {Container} [options.container=game.world] - container in which to load the specified level
+         * @param {Function} [options.onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded
+         * @param {boolean} [options.flatten=game.mergeGroup] - if true, flatten all objects into the given container
          * @returns {object} the current level
          */
         function reload(options?: {
@@ -10251,10 +10251,10 @@ declare module "level/level" {
          * @name reload
          * @memberof level
          * @public
-         * @param {object} [options] additional optional parameters
-         * @param {Container} [options.container=game.world] container in which to load the specified level
-         * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
-         * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
+         * @param {object} [options] - additional optional parameters
+         * @param {Container} [options.container=game.world] - container in which to load the specified level
+         * @param {Function} [options.onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded
+         * @param {boolean} [options.flatten=game.mergeGroup] - if true, flatten all objects into the given container
          * @returns {object} the current level
          */
         function reload(options?: {
@@ -10267,10 +10267,10 @@ declare module "level/level" {
          * @name next
          * @memberof level
          * @public
-         * @param {object} [options] additional optional parameters
-         * @param {Container} [options.container=game.world] container in which to load the specified level
-         * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
-         * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
+         * @param {object} [options] - additional optional parameters
+         * @param {Container} [options.container=game.world] - container in which to load the specified level
+         * @param {Function} [options.onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded
+         * @param {boolean} [options.flatten=game.mergeGroup] - if true, flatten all objects into the given container
          * @returns {boolean} true if the next level was successfully loaded
          */
         function next(options?: {
@@ -10283,10 +10283,10 @@ declare module "level/level" {
          * @name next
          * @memberof level
          * @public
-         * @param {object} [options] additional optional parameters
-         * @param {Container} [options.container=game.world] container in which to load the specified level
-         * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
-         * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
+         * @param {object} [options] - additional optional parameters
+         * @param {Container} [options.container=game.world] - container in which to load the specified level
+         * @param {Function} [options.onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded
+         * @param {boolean} [options.flatten=game.mergeGroup] - if true, flatten all objects into the given container
          * @returns {boolean} true if the next level was successfully loaded
          */
         function next(options?: {
@@ -10299,10 +10299,10 @@ declare module "level/level" {
          * @name previous
          * @memberof level
          * @public
-         * @param {object} [options] additional optional parameters
-         * @param {Container} [options.container=game.world] container in which to load the specified level
-         * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
-         * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
+         * @param {object} [options] - additional optional parameters
+         * @param {Container} [options.container=game.world] - container in which to load the specified level
+         * @param {Function} [options.onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded
+         * @param {boolean} [options.flatten=game.mergeGroup] - if true, flatten all objects into the given container
          * @returns {boolean} true if the previous level was successfully loaded
          */
         function previous(options?: {
@@ -10315,10 +10315,10 @@ declare module "level/level" {
          * @name previous
          * @memberof level
          * @public
-         * @param {object} [options] additional optional parameters
-         * @param {Container} [options.container=game.world] container in which to load the specified level
-         * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
-         * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
+         * @param {object} [options] - additional optional parameters
+         * @param {Container} [options.container=game.world] - container in which to load the specified level
+         * @param {Function} [options.onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded
+         * @param {boolean} [options.flatten=game.mergeGroup] - if true, flatten all objects into the given container
          * @returns {boolean} true if the previous level was successfully loaded
          */
         function previous(options?: {
@@ -10389,8 +10389,8 @@ declare module "loader/loader" {
          * @name setBaseURL
          * @memberof loader
          * @public
-         * @param {string} type  "*", "audio", binary", "image", "json", "js", "tmx", "tsx"
-         * @param {string} [url="./"] default base URL
+         * @param {string} type  - "*", "audio", binary", "image", "json", "js", "tmx", "tsx"
+         * @param {string} [url="./"] - default base URL
          * @example
          * // change the base URL relative address for audio assets
          * me.loader.setBaseURL("audio", "data/audio/");
@@ -10404,8 +10404,8 @@ declare module "loader/loader" {
          * @name setBaseURL
          * @memberof loader
          * @public
-         * @param {string} type  "*", "audio", binary", "image", "json", "js", "tmx", "tsx"
-         * @param {string} [url="./"] default base URL
+         * @param {string} type  - "*", "audio", binary", "image", "json", "js", "tmx", "tsx"
+         * @param {string} [url="./"] - default base URL
          * @example
          * // change the base URL relative address for audio assets
          * me.loader.setBaseURL("audio", "data/audio/");
@@ -10419,12 +10419,12 @@ declare module "loader/loader" {
          * @memberof loader
          * @public
          * @param {object[]} res
-         * @param {string} res.name internal name of the resource
-         * @param {string} res.type  "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
-         * @param {string} res.src  path and/or file name of the resource (for audio assets only the path is required)
-         * @param {boolean} [res.stream] Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
-         * @param {Function} [onload=loader.onload] function to be called when all resources are loaded
-         * @param {boolean} [switchToLoadState=true] automatically switch to the loading screen
+         * @param {string} res.name - internal name of the resource
+         * @param {string} res.type  - "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
+         * @param {string} res.src  - path and/or file name of the resource (for audio assets only the path is required)
+         * @param {boolean} [res.stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
+         * @param {Function} [onload=loader.onload] - function to be called when all resources are loaded
+         * @param {boolean} [switchToLoadState=true] - automatically switch to the loading screen
          * @example
          * game_resources = [
          *   // PNG tileset
@@ -10470,12 +10470,12 @@ declare module "loader/loader" {
          * @memberof loader
          * @public
          * @param {object[]} res
-         * @param {string} res.name internal name of the resource
-         * @param {string} res.type  "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
-         * @param {string} res.src  path and/or file name of the resource (for audio assets only the path is required)
-         * @param {boolean} [res.stream] Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
-         * @param {Function} [onload=loader.onload] function to be called when all resources are loaded
-         * @param {boolean} [switchToLoadState=true] automatically switch to the loading screen
+         * @param {string} res.name - internal name of the resource
+         * @param {string} res.type  - "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
+         * @param {string} res.src  - path and/or file name of the resource (for audio assets only the path is required)
+         * @param {boolean} [res.stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
+         * @param {Function} [onload=loader.onload] - function to be called when all resources are loaded
+         * @param {boolean} [switchToLoadState=true] - automatically switch to the loading screen
          * @example
          * game_resources = [
          *   // PNG tileset
@@ -10521,12 +10521,12 @@ declare module "loader/loader" {
          * @memberof loader
          * @public
          * @param {object} res
-         * @param {string} res.name internal name of the resource
-         * @param {string} res.type  "audio", binary", "image", "json", "tmx", "tsx"
-         * @param {string} res.src  path and/or file name of the resource (for audio assets only the path is required)
-         * @param {boolean} [res.stream] Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
-         * @param {Function} [onload] function to be called when the resource is loaded
-         * @param {Function} [onerror] function to be called in case of error
+         * @param {string} res.name - internal name of the resource
+         * @param {string} res.type  - "audio", binary", "image", "json", "tmx", "tsx"
+         * @param {string} res.src  - path and/or file name of the resource (for audio assets only the path is required)
+         * @param {boolean} [res.stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
+         * @param {Function} [onload] - function to be called when the resource is loaded
+         * @param {Function} [onerror] - function to be called in case of error
          * @returns {number} the amount of corresponding resource to be preloaded
          * @example
          * // load an image asset
@@ -10554,12 +10554,12 @@ declare module "loader/loader" {
          * @memberof loader
          * @public
          * @param {object} res
-         * @param {string} res.name internal name of the resource
-         * @param {string} res.type  "audio", binary", "image", "json", "tmx", "tsx"
-         * @param {string} res.src  path and/or file name of the resource (for audio assets only the path is required)
-         * @param {boolean} [res.stream] Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
-         * @param {Function} [onload] function to be called when the resource is loaded
-         * @param {Function} [onerror] function to be called in case of error
+         * @param {string} res.name - internal name of the resource
+         * @param {string} res.type  - "audio", binary", "image", "json", "tmx", "tsx"
+         * @param {string} res.src  - path and/or file name of the resource (for audio assets only the path is required)
+         * @param {boolean} [res.stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
+         * @param {Function} [onload] - function to be called when the resource is loaded
+         * @param {Function} [onerror] - function to be called in case of error
          * @returns {number} the amount of corresponding resource to be preloaded
          * @example
          * // load an image asset
@@ -10587,8 +10587,8 @@ declare module "loader/loader" {
          * @memberof loader
          * @public
          * @param {object} res
-         * @param {string} res.name internal name of the resource
-         * @param {string} res.type  "audio", binary", "image", "json", "tmx", "tsx"
+         * @param {string} res.name - internal name of the resource
+         * @param {string} res.type  - "audio", binary", "image", "json", "tmx", "tsx"
          * @returns {boolean} true if unloaded
          * @example me.loader.unload({name: "avatar",  type:"image"});
          */
@@ -10602,8 +10602,8 @@ declare module "loader/loader" {
          * @memberof loader
          * @public
          * @param {object} res
-         * @param {string} res.name internal name of the resource
-         * @param {string} res.type  "audio", binary", "image", "json", "tmx", "tsx"
+         * @param {string} res.name - internal name of the resource
+         * @param {string} res.type  - "audio", binary", "image", "json", "tmx", "tsx"
          * @returns {boolean} true if unloaded
          * @example me.loader.unload({name: "avatar",  type:"image"});
          */
@@ -10632,7 +10632,7 @@ declare module "loader/loader" {
          * @name getTMX
          * @memberof loader
          * @public
-         * @param {string} elt name of the tmx/tsx element ("map1");
+         * @param {string} elt - name of the tmx/tsx element ("map1");
          * @returns {object} requested element or null if not found
          */
         function getTMX(elt: string): any;
@@ -10641,7 +10641,7 @@ declare module "loader/loader" {
          * @name getTMX
          * @memberof loader
          * @public
-         * @param {string} elt name of the tmx/tsx element ("map1");
+         * @param {string} elt - name of the tmx/tsx element ("map1");
          * @returns {object} requested element or null if not found
          */
         function getTMX(elt: string): any;
@@ -10650,7 +10650,7 @@ declare module "loader/loader" {
          * @name getBinary
          * @memberof loader
          * @public
-         * @param {string} elt name of the binary object ("ymTrack");
+         * @param {string} elt - name of the binary object ("ymTrack");
          * @returns {object} requested element or null if not found
          */
         function getBinary(elt: string): any;
@@ -10659,7 +10659,7 @@ declare module "loader/loader" {
          * @name getBinary
          * @memberof loader
          * @public
-         * @param {string} elt name of the binary object ("ymTrack");
+         * @param {string} elt - name of the binary object ("ymTrack");
          * @returns {object} requested element or null if not found
          */
         function getBinary(elt: string): any;
@@ -10668,7 +10668,7 @@ declare module "loader/loader" {
          * @name getImage
          * @memberof loader
          * @public
-         * @param {string} image name of the Image element ("tileset-platformer");
+         * @param {string} image - name of the Image element ("tileset-platformer");
          * @returns {HTMLImageElement} requested element or null if not found
          */
         function getImage(image: string): HTMLImageElement;
@@ -10677,7 +10677,7 @@ declare module "loader/loader" {
          * @name getImage
          * @memberof loader
          * @public
-         * @param {string} image name of the Image element ("tileset-platformer");
+         * @param {string} image - name of the Image element ("tileset-platformer");
          * @returns {HTMLImageElement} requested element or null if not found
          */
         function getImage(image: string): HTMLImageElement;
@@ -10686,7 +10686,7 @@ declare module "loader/loader" {
          * @name getJSON
          * @memberof loader
          * @public
-         * @param {string} elt name of the json file to load
+         * @param {string} elt - name of the json file to load
          * @returns {object}
          */
         function getJSON(elt: string): any;
@@ -10695,7 +10695,7 @@ declare module "loader/loader" {
          * @name getJSON
          * @memberof loader
          * @public
-         * @param {string} elt name of the json file to load
+         * @param {string} elt - name of the json file to load
          * @returns {object}
          */
         function getJSON(elt: string): any;
@@ -10710,18 +10710,18 @@ declare module "renderable/sprite" {
      */
     class Sprite extends Renderable {
         /**
-         * @param {number} x the x coordinates of the sprite object
-         * @param {number} y the y coordinates of the sprite object
-         * @param {object} settings Configuration parameters for the Sprite object
-         * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image reference to spritesheet image, a texture atlas or to a texture atlas
-         * @param {string} [settings.name=""] name of this object
-         * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
-         * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
-         * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
-         * @param {string|Color} [settings.tint] a tint to be applied to this sprite
-         * @param {number} [settings.flipX] flip the sprite on the horizontal axis
-         * @param {number} [settings.flipY] flip the sprite on the vertical axis
-         * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
+         * @param {number} x - the x coordinates of the sprite object
+         * @param {number} y - the y coordinates of the sprite object
+         * @param {object} settings - Configuration parameters for the Sprite object
+         * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image - reference to spritesheet image, a texture atlas or to a texture atlas
+         * @param {string} [settings.name=""] - name of this object
+         * @param {string} [settings.region] - region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
+         * @param {number} [settings.framewidth] - Width of a single frame within the spritesheet
+         * @param {number} [settings.frameheight] - Height of a single frame within the spritesheet
+         * @param {string|Color} [settings.tint] - a tint to be applied to this sprite
+         * @param {number} [settings.flipX] - flip the sprite on the horizontal axis
+         * @param {number} [settings.flipY] - flip the sprite on the vertical axis
+         * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] - Anchor point to draw the frame at (defaults to the center of the frame).
          * @example
          * // create a single sprite from a standalone image, with anchor in the center
          * var sprite = new me.Sprite(0, 0, {
@@ -10817,8 +10817,8 @@ declare module "renderable/sprite" {
          * make the object flicker
          * @name flicker
          * @memberof Sprite
-         * @param {number} duration expressed in milliseconds
-         * @param {Function} callback Function to call when flickering ends
+         * @param {number} duration - expressed in milliseconds
+         * @param {Function} callback - Function to call when flickering ends
          * @returns {Sprite} Reference to this object for method chaining
          * @example
          * // make the object flicker for 1 second
@@ -10835,10 +10835,10 @@ declare module "renderable/sprite" {
          * <img src="images/spritesheet_grid.png"/>
          * @name addAnimation
          * @memberof Sprite
-         * @param {string} name animation id
-         * @param {number[]|string[]|object[]} index list of sprite index or name
+         * @param {string} name - animation id
+         * @param {number[]|string[]|object[]} index - list of sprite index or name
          * defining the animation. Can also use objects to specify delay for each frame, see below
-         * @param {number} [animationspeed] cycling speed for animation in ms
+         * @param {number} [animationspeed] - cycling speed for animation in ms
          * @returns {number} frame amount of frame added to the animation (delay between each frame).
          * @see Sprite#animationspeed
          * @example
@@ -10867,9 +10867,9 @@ declare module "renderable/sprite" {
          * this will always change the animation & set the frame to zero
          * @name setCurrentAnimation
          * @memberof Sprite
-         * @param {string} name animation id
-         * @param {string|Function} [resetAnim] animation id to switch to when complete, or callback
-         * @param {boolean} [preserve_dt=false] if false will reset the elapsed time counter since last frame
+         * @param {string} name - animation id
+         * @param {string|Function} [resetAnim] - animation id to switch to when complete, or callback
+         * @param {boolean} [preserve_dt=false] - if false will reset the elapsed time counter since last frame
          * @returns {Sprite} Reference to this object for method chaining
          * @example
          * // set "walk" animation
@@ -10906,7 +10906,7 @@ declare module "renderable/sprite" {
          * reverse the given or current animation if none is specified
          * @name reverseAnimation
          * @memberof Sprite
-         * @param {string} [name] animation id
+         * @param {string} [name] - animation id
          * @returns {Sprite} Reference to this object for method chaining
          * @see Sprite#animationspeed
          */
@@ -10915,7 +10915,7 @@ declare module "renderable/sprite" {
          * return true if the specified animation is the current one.
          * @name isCurrentAnimation
          * @memberof Sprite
-         * @param {string} name animation id
+         * @param {string} name - animation id
          * @returns {boolean}
          * @example
          * if (!this.isCurrentAnimation("walk")) {
@@ -10928,7 +10928,7 @@ declare module "renderable/sprite" {
          * @see Texture.getRegion
          * @name setRegion
          * @memberof Sprite
-         * @param {object} region typically returned through me.Texture.getRegion()
+         * @param {object} region - typically returned through me.Texture.getRegion()
          * @returns {Sprite} Reference to this object for method chaining
          * @example
          * // change the sprite to "shadedDark13.png";
@@ -10939,7 +10939,7 @@ declare module "renderable/sprite" {
          * force the current animation frame index.
          * @name setAnimationFrame
          * @memberof Sprite
-         * @param {number} [idx=0] animation frame index
+         * @param {number} [idx=0] - animation frame index
          * @returns {Sprite} Reference to this object for method chaining
          * @example
          * // reset the current animation to the first frame
@@ -10958,7 +10958,7 @@ declare module "renderable/sprite" {
          * @name getAnimationFrameObjectByIndex
          * @memberof Sprite
          * @ignore
-         * @param {number} id the frame id
+         * @param {number} id - the frame id
          * @returns {number} if using number indices. Returns {object} containing frame data if using texture atlas
          */
         getAnimationFrameObjectByIndex(id: number): number;
@@ -11009,9 +11009,9 @@ declare module "video/texture/atlas" {
      */
     export class TextureAtlas {
         /**
-         * @param {object|object[]} atlases atlas information. See {@link loader.getJSON}
-         * @param {HTMLImageElement|HTMLCanvasElement|string|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] Image source
-         * @param {boolean} [cache=false] Use true to skip caching this Texture
+         * @param {object|object[]} atlases - atlas information. See {@link loader.getJSON}
+         * @param {HTMLImageElement|HTMLCanvasElement|string|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] - Image source
+         * @param {boolean} [cache=false] - Use true to skip caching this Texture
          * @example
          * // create a texture atlas from a JSON Object
          * game.texture = new me.TextureAtlas(
@@ -11065,7 +11065,7 @@ declare module "video/texture/atlas" {
         parseFromSpriteSheet(data: any): {};
         /**
          * return the default or specified atlas dictionnary
-         * @param {string} [name] atlas name in case of multipack textures
+         * @param {string} [name] - atlas name in case of multipack textures
          * @returns {object}
          */
         getAtlas(name?: string): object;
@@ -11076,47 +11076,47 @@ declare module "video/texture/atlas" {
         getFormat(): string;
         /**
          * return the source texture for the given region (or default one if none specified)
-         * @param {object} [region] region name in case of multipack textures
+         * @param {object} [region] - region name in case of multipack textures
          * @returns {HTMLImageElement|HTMLCanvasElement}
          */
         getTexture(region?: object): HTMLImageElement | HTMLCanvasElement;
         /**
          * add a region to the atlas
-         * @param {string} name region mame
-         * @param {number} x x origin of the region
-         * @param {number} y y origin of the region
-         * @param {number} w width of the region
-         * @param {number} h height of the region
+         * @param {string} name - region mame
+         * @param {number} x - x origin of the region
+         * @param {number} y - y origin of the region
+         * @param {number} w - width of the region
+         * @param {number} h - height of the region
          * @returns {object} the created region
          */
         addRegion(name: string, x: number, y: number, w: number, h: number): object;
         /**
          * return a normalized region (or frame) information for the specified sprite name
-         * @param {string} name name of the sprite
-         * @param {string} [atlas] name of a specific atlas where to search for the region
+         * @param {string} name - name of the sprite
+         * @param {string} [atlas] - name of a specific atlas where to search for the region
          * @returns {object}
          */
         getRegion(name: string, atlas?: string): object;
         /**
          * return the uvs mapping for the given region
-         * @param {object} name region (or frame) name
+         * @param {object} name - region (or frame) name
          * @returns {Float32Array} region Uvs
          */
         getUVs(name: object): Float32Array;
         /**
          * add uvs mapping for the given region
-         * @param {object} atlas the atlas dictionnary where the region is define
-         * @param {object} name region (or frame) name
-         * @param {number} w the width of the region
-         * @param {number} h the height of the region
+         * @param {object} atlas - the atlas dictionnary where the region is define
+         * @param {object} name - region (or frame) name
+         * @param {number} w - the width of the region
+         * @param {number} h - the height of the region
          * @returns {Float32Array} the created region UVs
          */
         addUVs(atlas: object, name: object, w: number, h: number): Float32Array;
         /**
          * Create a sprite object using the first region found using the specified name
-         * @param {string} name name of the sprite
-         * @param {object} [settings] Additional settings passed to the {@link Sprite} contructor
-         * @param {boolean} [nineSlice=false] if true returns a 9-slice sprite
+         * @param {string} name - name of the sprite
+         * @param {object} [settings] - Additional settings passed to the {@link Sprite} contructor
+         * @param {boolean} [nineSlice=false] - if true returns a 9-slice sprite
          * @returns {Sprite|NineSliceSprite}
          * @example
          * // create a new texture object under the `game` namespace
@@ -11143,9 +11143,9 @@ declare module "video/texture/atlas" {
         createSpriteFromName(name: string, settings?: object, nineSlice?: boolean): Sprite | NineSliceSprite;
         /**
          * Create an animation object using the first region found using all specified names
-         * @param {string[]|number[]} names list of names for each sprite
+         * @param {string[]|number[]} names - list of names for each sprite
          * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)
-         * @param {object} [settings] Additional settings passed to the {@link Sprite} contructor
+         * @param {object} [settings] - Additional settings passed to the {@link Sprite} contructor
          * @returns {Sprite}
          * @example
          * // create a new texture object under the `game` namespace
@@ -11231,20 +11231,20 @@ declare module "video/webgl/webgl_renderer" {
      */
     class WebGLRenderer extends Renderer {
         /**
-         * @param {object} options The renderer parameters
-         * @param {number} options.width The width of the canvas without scaling
-         * @param {number} options.height The height of the canvas without scaling
-         * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
-         * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing
-         * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
-         * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas
-         * @param {boolean} [options.premultipliedAlpha=true] in WebGL, whether the renderer will assume that colors have premultiplied alpha when canvas transparency is enabled
-         * @param {boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
-         * @param {boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
-         * @param {string} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
-         * @param {number} [options.zoomX=width] The actual width of the canvas with scaling applied
-         * @param {number} [options.zoomY=height] The actual height of the canvas with scaling applied
-         * @param {WebGLCompositor} [options.compositor] A class that implements the compositor API
+         * @param {object} options - The renderer parameters
+         * @param {number} options.width - The width of the canvas without scaling
+         * @param {number} options.height - The height of the canvas without scaling
+         * @param {HTMLCanvasElement} [options.canvas] - The html canvas to draw to on screen
+         * @param {boolean} [options.antiAlias=false] - Whether to enable anti-aliasing
+         * @param {boolean} [options.failIfMajorPerformanceCaveat=true] - If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
+         * @param {boolean} [options.transparent=false] - Whether to enable transparency on the canvas
+         * @param {boolean} [options.premultipliedAlpha=true] - in WebGL, whether the renderer will assume that colors have premultiplied alpha when canvas transparency is enabled
+         * @param {boolean} [options.subPixel=false] - Whether to enable subpixel renderering (performance hit when enabled)
+         * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
+         * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
+         * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
+         * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
+         * @param {WebGLCompositor} [options.compositor] - A class that implements the compositor API
          */
         constructor(options: {
             width: number;
@@ -11329,7 +11329,7 @@ declare module "video/webgl/webgl_renderer" {
         cache: TextureCache;
         /**
          * set the active compositor for this renderer
-         * @param {WebGLCompositor|string} compositor a compositor name or instance
+         * @param {WebGLCompositor|string} compositor - a compositor name or instance
          */
         setCompositor(compositor?: WebGLCompositor | string): void;
         /**
@@ -11350,8 +11350,8 @@ declare module "video/webgl/webgl_renderer" {
         fontTexture: TextureAtlas;
         /**
          * Create a pattern with the specified repetition
-         * @param {Image} image Source image
-         * @param {string} repeat Define how the pattern should be repeated
+         * @param {Image} image - Source image
+         * @param {string} repeat - Define how the pattern should be repeated
          * @returns {TextureAtlas}
          * @see ImageLayer#repeat
          * @example
@@ -11368,16 +11368,16 @@ declare module "video/webgl/webgl_renderer" {
         setProjection(matrix: Matrix3d): void;
         /**
          * Clears the gl context with the given color.
-         * @param {Color|string} [color="#000000"] CSS color.
-         * @param {boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
+         * @param {Color|string} [color="#000000"] - CSS color.
+         * @param {boolean} [opaque=false] - Allow transparency [default] or clear the surface completely [true]
          */
         clearColor(color?: Color | string, opaque?: boolean): void;
         /**
          * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
-         * @param {number} x x axis of the coordinate for the rectangle starting point.
-         * @param {number} y y axis of the coordinate for the rectangle starting point.
-         * @param {number} width The rectangle's width.
-         * @param {number} height The rectangle's height.
+         * @param {number} x - x axis of the coordinate for the rectangle starting point.
+         * @param {number} y - y axis of the coordinate for the rectangle starting point.
+         * @param {number} width - The rectangle's width.
+         * @param {number} height - The rectangle's height.
          */
         clearRect(x: number, y: number, width: number, height: number): void;
         /**
@@ -11386,15 +11386,15 @@ declare module "video/webgl/webgl_renderer" {
         drawFont(bounds: any): void;
         /**
          * Draw an image to the gl context
-         * @param {Image} image An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
-         * @param {number} sx The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
-         * @param {number} sy The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
-         * @param {number} sw The width of the sub-rectangle of the source image to draw into the destination context. If not specified, the entire rectangle from the coordinates specified by sx and sy to the bottom-right corner of the image is used.
-         * @param {number} sh The height of the sub-rectangle of the source image to draw into the destination context.
-         * @param {number} dx The X coordinate in the destination canvas at which to place the top-left corner of the source image.
-         * @param {number} dy The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
-         * @param {number} dw The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
-         * @param {number} dh The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
+         * @param {Image} image - An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
+         * @param {number} sx - The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
+         * @param {number} sy - The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
+         * @param {number} sw - The width of the sub-rectangle of the source image to draw into the destination context. If not specified, the entire rectangle from the coordinates specified by sx and sy to the bottom-right corner of the image is used.
+         * @param {number} sh - The height of the sub-rectangle of the source image to draw into the destination context.
+         * @param {number} dx - The X coordinate in the destination canvas at which to place the top-left corner of the source image.
+         * @param {number} dy - The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
+         * @param {number} dw - The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
+         * @param {number} dh - The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
          * @example
          * // Position the image on the canvas:
          * renderer.drawImage(image, dx, dy);
@@ -11406,7 +11406,7 @@ declare module "video/webgl/webgl_renderer" {
         drawImage(image: new (width?: number, height?: number) => HTMLImageElement, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: number, dh: number): void;
         /**
          * Draw a pattern within the given rectangle.
-         * @param {TextureAtlas} pattern Pattern object
+         * @param {TextureAtlas} pattern - Pattern object
          * @param {number} x
          * @param {number} y
          * @param {number} width
@@ -11417,7 +11417,7 @@ declare module "video/webgl/webgl_renderer" {
         /**
          * Returns the WebGL Context object of the given canvas element
          * @param {HTMLCanvasElement} canvas
-         * @param {boolean} [transparent=false] use true to enable transparency
+         * @param {boolean} [transparent=false] - use true to enable transparency
          * @returns {WebGLRenderingContext}
          */
         getContextGL(canvas: HTMLCanvasElement, transparent?: boolean): WebGLRenderingContext;
@@ -11439,7 +11439,7 @@ declare module "video/webgl/webgl_renderer" {
          * - "screen" : The pixels are inverted, multiplied, and inverted again. A lighter picture is the result (opposite of multiply) <br>
          * <img src="images/screen-blendmode.png" width="510"/> <br>
          * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
-         * @param {string} [mode="normal"] blend mode : "normal", "multiply", "lighter", "additive", "screen"
+         * @param {string} [mode="normal"] - blend mode : "normal", "multiply", "lighter", "additive", "screen"
          * @param {WebGLRenderingContext} [gl]
          */
         setBlendMode(mode?: string, gl?: WebGLRenderingContext): void;
@@ -11459,7 +11459,7 @@ declare module "video/webgl/webgl_renderer" {
         save(): void;
         /**
          * rotates the uniform matrix
-         * @param {number} angle in radians
+         * @param {number} angle - in radians
          */
         rotate(angle: number): void;
         /**
@@ -11475,7 +11475,7 @@ declare module "video/webgl/webgl_renderer" {
         setAntiAlias(context: any, enable: any): void;
         /**
          * Set the global alpha
-         * @param {number} alpha 0.0 to 1.0 values accepted.
+         * @param {number} alpha - 0.0 to 1.0 values accepted.
          */
         setGlobalAlpha(alpha: number): void;
         /**
@@ -11486,77 +11486,77 @@ declare module "video/webgl/webgl_renderer" {
         /**
          * Set the current fill & stroke style color.
          * By default, or upon reset, the value is set to #000000.
-         * @param {Color|string} color css color string.
+         * @param {Color|string} color - css color string.
          */
         setColor(color: Color | string): void;
         /**
          * Set the line width
-         * @param {number} width Line width
+         * @param {number} width - Line width
          */
         setLineWidth(width: number): void;
         /**
          * Stroke an arc at the specified coordinates with given radius, start and end points
-         * @param {number} x arc center point x-axis
-         * @param {number} y arc center point y-axis
+         * @param {number} x - arc center point x-axis
+         * @param {number} y - arc center point y-axis
          * @param {number} radius
-         * @param {number} start start angle in radians
-         * @param {number} end end angle in radians
-         * @param {boolean} [antiClockwise=false] draw arc anti-clockwise
+         * @param {number} start - start angle in radians
+         * @param {number} end - end angle in radians
+         * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
          * @param {boolean} [fill=false]
          */
         strokeArc(x: number, y: number, radius: number, start: number, end: number, antiClockwise?: boolean, fill?: boolean): void;
         /**
          * Fill an arc at the specified coordinates with given radius, start and end points
-         * @param {number} x arc center point x-axis
-         * @param {number} y arc center point y-axis
+         * @param {number} x - arc center point x-axis
+         * @param {number} y - arc center point y-axis
          * @param {number} radius
-         * @param {number} start start angle in radians
-         * @param {number} end end angle in radians
-         * @param {boolean} [antiClockwise=false] draw arc anti-clockwise
+         * @param {number} start - start angle in radians
+         * @param {number} end - end angle in radians
+         * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
          */
         fillArc(x: number, y: number, radius: number, start: number, end: number, antiClockwise?: boolean): void;
         /**
          * Stroke an ellipse at the specified coordinates with given radius
-         * @param {number} x ellipse center point x-axis
-         * @param {number} y ellipse center point y-axis
-         * @param {number} w horizontal radius of the ellipse
-         * @param {number} h vertical radius of the ellipse
-         * @param {boolean} [fill=false] also fill the shape with the current color if true
+         * @param {number} x - ellipse center point x-axis
+         * @param {number} y - ellipse center point y-axis
+         * @param {number} w - horizontal radius of the ellipse
+         * @param {number} h - vertical radius of the ellipse
+         * @param {boolean} [fill=false] - also fill the shape with the current color if true
          */
         strokeEllipse(x: number, y: number, w: number, h: number, fill?: boolean): void;
         /**
          * Fill an ellipse at the specified coordinates with given radius
-         * @param {number} x ellipse center point x-axis
-         * @param {number} y ellipse center point y-axis
-         * @param {number} w horizontal radius of the ellipse
-         * @param {number} h vertical radius of the ellipse
+         * @param {number} x - ellipse center point x-axis
+         * @param {number} y - ellipse center point y-axis
+         * @param {number} w - horizontal radius of the ellipse
+         * @param {number} h - vertical radius of the ellipse
          */
         fillEllipse(x: number, y: number, w: number, h: number): void;
         /**
          * Stroke a line of the given two points
-         * @param {number} startX the start x coordinate
-         * @param {number} startY the start y coordinate
-         * @param {number} endX the end x coordinate
-         * @param {number} endY the end y coordinate
+         * @param {number} startX - the start x coordinate
+         * @param {number} startY - the start y coordinate
+         * @param {number} endX - the end x coordinate
+         * @param {number} endY - the end y coordinate
          */
         strokeLine(startX: number, startY: number, endX: number, endY: number): void;
         /**
          * Fill a line of the given two points
-         * @param {number} startX the start x coordinate
-         * @param {number} startY the start y coordinate
-         * @param {number} endX the end x coordinate
-         * @param {number} endY the end y coordinate
+         * @param {number} startX - the start x coordinate
+         * @param {number} startY - the start y coordinate
+         * @param {number} endX - the end x coordinate
+         * @param {number} endY - the end y coordinate
          */
         fillLine(startX: number, startY: number, endX: number, endY: number): void;
         /**
          * Stroke a me.Polygon on the screen with a specified color
-         * @param {Polygon} poly the shape to draw
-         * @param {boolean} [fill=false] also fill the shape with the current color if true
+         * @param {Polygon} poly - the shape to draw
+         * @param {boolean} [fill=false] - also fill the shape with the current color if true
          */
         strokePolygon(poly: Polygon, fill?: boolean): void;
         /**
          * Fill a me.Polygon on the screen
-         * @param {Polygon} poly the shape to draw
+         * @param {Polygon} poly - the shape to draw
          */
         fillPolygon(poly: Polygon): void;
         /**
@@ -11565,7 +11565,7 @@ declare module "video/webgl/webgl_renderer" {
          * @param {number} y
          * @param {number} width
          * @param {number} height
-         * @param {boolean} [fill=false] also fill the shape with the current color if true
+         * @param {boolean} [fill=false] - also fill the shape with the current color if true
          */
         strokeRect(x: number, y: number, width: number, height: number, fill?: boolean): void;
         /**
@@ -11583,7 +11583,7 @@ declare module "video/webgl/webgl_renderer" {
          * @param {number} width
          * @param {number} height
          * @param {number} radius
-         * @param {boolean} [fill=false] also fill the shape with the current color if true
+         * @param {boolean} [fill=false] - also fill the shape with the current color if true
          */
         strokeRoundRect(x: number, y: number, width: number, height: number, radius: number, fill?: boolean): void;
         /**
@@ -11612,12 +11612,12 @@ declare module "video/webgl/webgl_renderer" {
         /**
          * Reset (overrides) the renderer transformation matrix to the
          * identity one, and then apply the given transformation matrix.
-         * @param {Matrix2d} mat2d Matrix to transform by
+         * @param {Matrix2d} mat2d - Matrix to transform by
          */
         setTransform(mat2d: Matrix2d): void;
         /**
          * Multiply given matrix into the renderer tranformation matrix
-         * @param {Matrix2d} mat2d Matrix to transform by
+         * @param {Matrix2d} mat2d - Matrix to transform by
          */
         transform(mat2d: Matrix2d): void;
         /**
@@ -11642,8 +11642,8 @@ declare module "video/webgl/webgl_renderer" {
          * A mask limits rendering elements to the shape and position of the given mask object.
          * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
          * Mask are not preserved through renderer context save and restore.
-         * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] a shape defining the mask to be applied
-         * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
+         * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - a shape defining the mask to be applied
+         * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
          */
         setMask(mask?: Rect | RoundRect | Polygon | Line | Ellipse, invert?: boolean): void;
     }
@@ -11673,18 +11673,18 @@ declare module "video/video" {
      *  - <i><b>`stretch`</b></i> : Canvas is resized to fit; content is scaled to screen aspect ratio
      * <center><img src="images/scale-stretch.png"/></center><br>
      * @function video.init
-     * @param {number} width The width of the canvas viewport
-     * @param {number} height The height of the canvas viewport
-     * @param {object} [options] The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
-     * @param {string|HTMLElement} [options.parent=document.body] the DOM parent element to hold the canvas in the HTML file
-     * @param {number} [options.renderer=video.AUTO] renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
-     * @param {number|string} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
-     * @param {string} [options.scaleMethod="fit"] screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
-     * @param {boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
-     * @param {string} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
-     * @param {boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen).
-     * @param {boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
-     * @param {boolean} [options.consoleHeader=true] whether to display melonJS version and basic device information in the console
+     * @param {number} width - The width of the canvas viewport
+     * @param {number} height - The height of the canvas viewport
+     * @param {object} [options] - The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
+     * @param {string|HTMLElement} [options.parent=document.body] - the DOM parent element to hold the canvas in the HTML file
+     * @param {number} [options.renderer=video.AUTO] - renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
+     * @param {number|string} [options.scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)
+     * @param {string} [options.scaleMethod="fit"] - screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
+     * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
+     * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
+     * @param {boolean} [options.transparent=false] - whether to allow transparent pixels in the front buffer (screen).
+     * @param {boolean} [options.antiAlias=false] - whether to enable or not video scaling interpolation
+     * @param {boolean} [options.consoleHeader=true] - whether to display melonJS version and basic device information in the console
      * @returns {boolean} false if initialization failed (canvas not supported)
      * @example
      * // init the video with a 640x480 canvas
@@ -11709,9 +11709,9 @@ declare module "video/video" {
     /**
      * Create and return a new Canvas element
      * @function video.createCanvas
-     * @param {number} width width
-     * @param {number} height height
-     * @param {boolean} [returnOffscreenCanvas=false] will return an OffscreenCanvas if supported
+     * @param {number} width - width
+     * @param {number} height - height
+     * @param {boolean} [returnOffscreenCanvas=false] - will return an OffscreenCanvas if supported
      * @returns {HTMLCanvasElement|OffscreenCanvas}
      */
     export function createCanvas(width: number, height: number, returnOffscreenCanvas?: boolean): HTMLCanvasElement | OffscreenCanvas;
@@ -11727,8 +11727,8 @@ declare module "video/video" {
      * Only use this if you are not using the automatic scaling feature.
      * @function video.scale
      * @see video.init
-     * @param {number} x x scaling multiplier
-     * @param {number} y y scaling multiplier
+     * @param {number} x - x scaling multiplier
+     * @param {number} y - y scaling multiplier
      */
     export function scale(x: number, y: number): void;
     /**
@@ -11859,10 +11859,10 @@ declare module "system/timer" {
         reset(): void;
         /**
          * Calls a function once after a specified delay. See me.timer.setInterval to repeativly call a function.
-         * @param {Function} fn the function you want to execute after delay milliseconds.
-         * @param {number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
-         * @param {boolean} [pauseable=true] respects the pause state of the engine.
-         * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
+         * @param {Function} fn - the function you want to execute after delay milliseconds.
+         * @param {number} delay - the number of milliseconds (thousandths of a second) that the function call should be delayed by.
+         * @param {boolean} [pauseable=true] - respects the pause state of the engine.
+         * @param {...*} args - optional parameters which are passed through to the function specified by fn once the timer expires.
          * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
          * @example
          * // set a timer to call "myFunction" after 1000ms
@@ -11873,10 +11873,10 @@ declare module "system/timer" {
         setTimeout(fn: Function, delay: number, pauseable?: boolean, ...args: any[]): number;
         /**
          * Calls a function continously at the specified interval.  See setTimeout to call function a single time.
-         * @param {Function} fn the function to execute
-         * @param {number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
-         * @param {boolean} [pauseable=true] respects the pause state of the engine.
-         * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
+         * @param {Function} fn - the function to execute
+         * @param {number} delay - the number of milliseconds (thousandths of a second) on how often to execute the function
+         * @param {boolean} [pauseable=true] - respects the pause state of the engine.
+         * @param {...*} args - optional parameters which are passed through to the function specified by fn once the timer expires.
          * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
          * @example
          * // set a timer to call "myFunction" every 1000ms
@@ -11887,12 +11887,12 @@ declare module "system/timer" {
         setInterval(fn: Function, delay: number, pauseable?: boolean, ...args: any[]): number;
         /**
          * Clears the delay set by me.timer.setTimeout().
-         * @param {number} timeoutID ID of the timeout to be cleared
+         * @param {number} timeoutID - ID of the timeout to be cleared
          */
         clearTimeout(timeoutID: number): void;
         /**
          * Clears the Interval set by me.timer.setInterval().
-         * @param {number} intervalID ID of the interval to be cleared
+         * @param {number} intervalID - ID of the interval to be cleared
          */
         clearInterval(intervalID: number): void;
         /**
@@ -12034,7 +12034,7 @@ declare module "tweens/tween" {
         static get Easing(): any;
         static get Interpolation(): any;
         /**
-         * @param {object} object object on which to apply the tween
+         * @param {object} object - object on which to apply the tween
          * @example
          * // add a tween to change the object pos.x and pos.y variable to 200 in 3 seconds
          * tween = new me.Tween(myObject.pos).to({
@@ -12096,15 +12096,15 @@ declare module "tweens/tween" {
          * @name to
          * @memberof Tween
          * @public
-         * @param {object} properties hash of properties
-         * @param {object|number} [options] object of tween properties, or a duration if a numeric value is passed
-         * @param {number} [options.duration] tween duration
-         * @param {Tween.Easing} [options.easing] easing function
-         * @param {number} [options.delay] delay amount expressed in milliseconds
-         * @param {boolean} [options.yoyo] allows the tween to bounce back to their original value when finished. To be used together with repeat to create endless loops.
-         * @param {number} [options.repeat] amount of times the tween should be repeated
-         * @param {Tween.Interpolation} [options.interpolation] interpolation function
-         * @param {boolean} [options.autoStart] allow this tween to start automatically. Otherwise call me.Tween.start().
+         * @param {object} properties - hash of properties
+         * @param {object|number} [options] - object of tween properties, or a duration if a numeric value is passed
+         * @param {number} [options.duration] - tween duration
+         * @param {Tween.Easing} [options.easing] - easing function
+         * @param {number} [options.delay] - delay amount expressed in milliseconds
+         * @param {boolean} [options.yoyo] - allows the tween to bounce back to their original value when finished. To be used together with repeat to create endless loops.
+         * @param {number} [options.repeat] - amount of times the tween should be repeated
+         * @param {Tween.Interpolation} [options.interpolation] - interpolation function
+         * @param {boolean} [options.autoStart] - allow this tween to start automatically. Otherwise call me.Tween.start().
          * @returns {Tween} this instance for object chaining
          */
         public to(properties: object, options?: object | number): Tween;
@@ -12113,7 +12113,7 @@ declare module "tweens/tween" {
          * @name start
          * @memberof Tween
          * @public
-         * @param {number} [time] the current time when the tween was started
+         * @param {number} [time] - the current time when the tween was started
          * @returns {Tween} this instance for object chaining
          */
         public start(time?: number): Tween;
@@ -12130,7 +12130,7 @@ declare module "tweens/tween" {
          * @name delay
          * @memberof Tween
          * @public
-         * @param {number} amount delay amount expressed in milliseconds
+         * @param {number} amount - delay amount expressed in milliseconds
          * @returns {Tween} this instance for object chaining
          */
         public delay(amount: number): Tween;
@@ -12139,7 +12139,7 @@ declare module "tweens/tween" {
          * @name repeat
          * @memberof Tween
          * @public
-         * @param {number} times amount of times the tween should be repeated
+         * @param {number} times - amount of times the tween should be repeated
          * @returns {Tween} this instance for object chaining
          */
         public repeat(times: number): Tween;
@@ -12159,7 +12159,7 @@ declare module "tweens/tween" {
          * @name easing
          * @memberof Tween
          * @public
-         * @param {Tween.Easing} easing easing function
+         * @param {Tween.Easing} easing - easing function
          * @returns {Tween} this instance for object chaining
          */
         public easing(easing: any): Tween;
@@ -12168,7 +12168,7 @@ declare module "tweens/tween" {
          * @name interpolation
          * @memberof Tween
          * @public
-         * @param {Tween.Interpolation} interpolation interpolation function
+         * @param {Tween.Interpolation} interpolation - interpolation function
          * @returns {Tween} this instance for object chaining
          */
         public interpolation(interpolation: any): Tween;
@@ -12177,7 +12177,7 @@ declare module "tweens/tween" {
          * @name chain
          * @memberof Tween
          * @public
-         * @param {...Tween} chainedTween Tween(s) to be chained
+         * @param {...Tween} chainedTween - Tween(s) to be chained
          * @returns {Tween} this instance for object chaining
          */
         public chain(...args: Tween[]): Tween;
@@ -12186,7 +12186,7 @@ declare module "tweens/tween" {
          * @name onStart
          * @memberof Tween
          * @public
-         * @param {Function} onStartCallback callback
+         * @param {Function} onStartCallback - callback
          * @returns {Tween} this instance for object chaining
          */
         public onStart(onStartCallback: Function): Tween;
@@ -12195,7 +12195,7 @@ declare module "tweens/tween" {
          * @name onUpdate
          * @memberof Tween
          * @public
-         * @param {Function} onUpdateCallback callback
+         * @param {Function} onUpdateCallback - callback
          * @returns {Tween} this instance for object chaining
          */
         public onUpdate(onUpdateCallback: Function): Tween;
@@ -12204,7 +12204,7 @@ declare module "tweens/tween" {
          * @name onComplete
          * @memberof Tween
          * @public
-         * @param {Function} onCompleteCallback callback
+         * @param {Function} onCompleteCallback - callback
          * @returns {Tween} this instance for object chaining
          */
         public onComplete(onCompleteCallback: Function): Tween;
@@ -12219,13 +12219,13 @@ declare module "video/texture/canvas_texture" {
      */
     class CanvasTexture {
         /**
-         * @param {number} width the desired width of the canvas
-         * @param {number} height the desired height of the canvas
-         * @param {object} attributes The attributes to create both the canvas and context
-         * @param {boolean} [attributes.context="2d"] the context type to be created ("2d", "webgl", "webgl2")
-         * @param {boolean} [attributes.offscreenCanvas=false] will create an offscreenCanvas if true instead of a standard canvas
-         * @param {boolean} [attributes.willReadFrequently=false] Indicates whether or not a lot of read-back operations are planned
-         * @param {boolean} [attributes.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
+         * @param {number} width - the desired width of the canvas
+         * @param {number} height - the desired height of the canvas
+         * @param {object} attributes - The attributes to create both the canvas and context
+         * @param {boolean} [attributes.context="2d"] - the context type to be created ("2d", "webgl", "webgl2")
+         * @param {boolean} [attributes.offscreenCanvas=false] - will create an offscreenCanvas if true instead of a standard canvas
+         * @param {boolean} [attributes.willReadFrequently=false] - Indicates whether or not a lot of read-back operations are planned
+         * @param {boolean} [attributes.antiAlias=false] - Whether to enable anti-aliasing, use false (default) for a pixelated effect.
          */
         constructor(width: number, height: number, attributes?: {
             context?: boolean;
@@ -12258,8 +12258,8 @@ declare module "video/texture/canvas_texture" {
         setAntiAlias(enable?: boolean): void;
         /**
          * Resizes the canvas texture to the given width and height.
-         * @param {number} width the desired width
-         * @param {number} height the desired height
+         * @param {number} width - the desired width
+         * @param {number} height - the desired height
          */
         resize(width: number, height: number): void;
         /**
@@ -12298,7 +12298,7 @@ declare module "text/textmetrics" {
      */
     class TextMetrics extends Bounds {
         /**
-         * @param {Text|BitmapText} ancestor the parent object that contains this TextMetrics object
+         * @param {Text|BitmapText} ancestor - the parent object that contains this TextMetrics object
          */
         constructor(ancestor: Text | BitmapText);
         /**
@@ -12315,23 +12315,23 @@ declare module "text/textmetrics" {
         lineHeight(): number;
         /**
          * Returns the width of the given segment of inline text in CSS pixels.
-         * @param {string} text the text to be measured
-         * @param {CanvasRenderingContext2D} [context] reference to an active 2d context for canvas rendering
+         * @param {string} text - the text to be measured
+         * @param {CanvasRenderingContext2D} [context] - reference to an active 2d context for canvas rendering
          * @returns {number} the width of the given segment of inline text in CSS pixels.
          */
         lineWidth(text: string, context?: CanvasRenderingContext2D): number;
         /**
          * measure the given text size in CSS pixels
-         * @param {string} text the text to be measured
-         * @param {CanvasRenderingContext2D} [context] reference to an active 2d context for canvas rendering
+         * @param {string} text - the text to be measured
+         * @param {CanvasRenderingContext2D} [context] - reference to an active 2d context for canvas rendering
          * @returns {TextMetrics} this
          */
         measureText(text: string, context?: CanvasRenderingContext2D): TextMetrics;
         /**
          * wrap the given text based on the given width
-         * @param {string|string[]} text the text to be wrapped
-         * @param {number} width maximum width of one segment of text in css pixel
-         * @param {CanvasRenderingContext2D} [context] reference to an active 2d context for canvas rendering
+         * @param {string|string[]} text - the text to be wrapped
+         * @param {number} width - maximum width of one segment of text in css pixel
+         * @param {CanvasRenderingContext2D} [context] - reference to an active 2d context for canvas rendering
          * @returns {string[]} an array of string representing wrapped text
          */
         wordWrap(text: string | string[], width: number, context?: CanvasRenderingContext2D): string[];
@@ -12348,21 +12348,21 @@ declare module "text/text" {
      */
     class Text extends Renderable {
         /**
-         * @param {number} x position of the text object
-         * @param {number} y position of the text object
-         * @param {object} settings the text configuration
-         * @param {string} settings.font a CSS family font name
-         * @param {number|string} settings.size size, or size + suffix (px, em, pt)
-         * @param {Color|string} [settings.fillStyle="#000000"] a CSS color value
-         * @param {Color|string} [settings.strokeStyle="#000000"] a CSS color value
-         * @param {number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
-         * @param {string} [settings.textAlign="left"] horizontal text alignment
-         * @param {string} [settings.textBaseline="top"] the text baseline
-         * @param {number} [settings.lineHeight=1.0] line spacing height
-         * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
-         * @param {boolean} [settings.offScreenCanvas=false] whether to draw the font to an individual "cache" texture first
-         * @param {number} [settings.wordWrapWidth] the maximum length in CSS pixel for a single segment of text
-         * @param {(string|string[])} [settings.text=""] a string, or an array of strings
+         * @param {number} x - position of the text object
+         * @param {number} y - position of the text object
+         * @param {object} settings - the text configuration
+         * @param {string} settings.font - a CSS family font name
+         * @param {number|string} settings.size - size, or size + suffix (px, em, pt)
+         * @param {Color|string} [settings.fillStyle="#000000"] - a CSS color value
+         * @param {Color|string} [settings.strokeStyle="#000000"] - a CSS color value
+         * @param {number} [settings.lineWidth=1] - line width, in pixels, when drawing stroke
+         * @param {string} [settings.textAlign="left"] - horizontal text alignment
+         * @param {string} [settings.textBaseline="top"] - the text baseline
+         * @param {number} [settings.lineHeight=1.0] - line spacing height
+         * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] - anchor point to draw the text at
+         * @param {boolean} [settings.offScreenCanvas=false] - whether to draw the font to an individual "cache" texture first
+         * @param {number} [settings.wordWrapWidth] - the maximum length in CSS pixel for a single segment of text
+         * @param {(string|string[])} [settings.text=""] - a string, or an array of strings
          * @example
          * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
          */
@@ -12459,8 +12459,8 @@ declare module "text/text" {
         italic(): Text;
         /**
          * set the font family and size
-         * @param {string} font a CSS font name
-         * @param {number|string} [size=10] size in px, or size + suffix (px, em, pt)
+         * @param {string} font - a CSS font name
+         * @param {number|string} [size=10] - size in px, or size + suffix (px, em, pt)
          * @returns {Text} this object for chaining
          * @example
          * font.setFont("Arial", 20);
@@ -12469,32 +12469,32 @@ declare module "text/text" {
         setFont(font: string, size?: number | string): Text;
         /**
          * change the text to be displayed
-         * @param {number|string|string[]} value a string, or an array of strings
+         * @param {number|string|string[]} value - a string, or an array of strings
          * @returns {Text} this object for chaining
          */
         setText(value?: number | string | string[]): Text;
         glTextureUnit: any;
         /**
          * measure the given text size in pixels
-         * @param {CanvasRenderer|WebGLRenderer} renderer reference to the active renderer
-         * @param {string} [text] the text to be measured
+         * @param {CanvasRenderer|WebGLRenderer} renderer - reference to the active renderer
+         * @param {string} [text] - the text to be measured
          * @returns {TextMetrics} a TextMetrics object defining the dimensions of the given piece of text
          */
         measureText(renderer: CanvasRenderer | WebGLRenderer, text?: string): TextMetrics;
         /**
          * draw a text at the specified coord
-         * @param {CanvasRenderer|WebGLRenderer} renderer Reference to the destination renderer instance
+         * @param {CanvasRenderer|WebGLRenderer} renderer - Reference to the destination renderer instance
          * @param {string} [text]
          * @param {number} [x]
          * @param {number} [y]
-         * @param {boolean} [stroke=false] draw stroke the the text if true
+         * @param {boolean} [stroke=false] - draw stroke the the text if true
          */
         draw(renderer: CanvasRenderer | WebGLRenderer, text?: string, x?: number, y?: number, stroke?: boolean): void;
         /**
          * draw a stroke text at the specified coord, as defined <br>
          * by the `lineWidth` and `fillStroke` properties. <br>
          * Note : using drawStroke is not recommended for performance reasons
-         * @param {CanvasRenderer|WebGLRenderer} renderer Reference to the destination renderer instance
+         * @param {CanvasRenderer|WebGLRenderer} renderer - Reference to the destination renderer instance
          * @param {string} text
          * @param {number} x
          * @param {number} y
@@ -12524,20 +12524,20 @@ declare module "text/bitmaptext" {
      */
     class BitmapText extends Renderable {
         /**
-         * @param {number} x position of the text object
-         * @param {number} y position of the text object
-         * @param {object} settings the text configuration
-         * @param {string|Image} settings.font a font name to identify the corresponing source image
-         * @param {string} [settings.fontData=settings.font] the bitmap font data corresponding name, or the bitmap font data itself
-         * @param {number} [settings.size] size a scaling ratio
-         * @param {Color|string} [settings.fillStyle] a CSS color value used to tint the bitmapText (@see BitmapText.tint)
-         * @param {number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
-         * @param {string} [settings.textAlign="left"] horizontal text alignment
-         * @param {string} [settings.textBaseline="top"] the text baseline
-         * @param {number} [settings.lineHeight=1.0] line spacing height
-         * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
-         * @param {number} [settings.wordWrapWidth] the maximum length in CSS pixel for a single segment of text
-         * @param {(string|string[])} [settings.text] a string, or an array of strings
+         * @param {number} x - position of the text object
+         * @param {number} y - position of the text object
+         * @param {object} settings - the text configuration
+         * @param {string|Image} settings.font - a font name to identify the corresponing source image
+         * @param {string} [settings.fontData=settings.font] - the bitmap font data corresponding name, or the bitmap font data itself
+         * @param {number} [settings.size] - size a scaling ratio
+         * @param {Color|string} [settings.fillStyle] - a CSS color value used to tint the bitmapText (@see BitmapText.tint)
+         * @param {number} [settings.lineWidth=1] - line width, in pixels, when drawing stroke
+         * @param {string} [settings.textAlign="left"] - horizontal text alignment
+         * @param {string} [settings.textBaseline="top"] - the text baseline
+         * @param {number} [settings.lineHeight=1.0] - line spacing height
+         * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] - anchor point to draw the text at
+         * @param {number} [settings.wordWrapWidth] - the maximum length in CSS pixel for a single segment of text
+         * @param {(string|string[])} [settings.text] - a string, or an array of strings
          * @example
          * // Use me.loader.preload or me.loader.load to load assets
          * me.loader.preload([
@@ -12628,20 +12628,20 @@ declare module "text/bitmaptext" {
         metrics: TextMetrics;
         /**
          * change the font settings
-         * @param {string} textAlign ("left", "center", "right")
+         * @param {string} textAlign - ("left", "center", "right")
          * @param {number} [scale]
          * @returns {BitmapText} this object for chaining
          */
         set(textAlign: string, scale?: number): BitmapText;
         /**
          * change the text to be displayed
-         * @param {number|string|string[]} value a string, or an array of strings
+         * @param {number|string|string[]} value - a string, or an array of strings
          * @returns {BitmapText} this object for chaining
          */
         setText(value?: number | string | string[]): BitmapText;
         /**
          * change the font display size
-         * @param {number} scale ratio
+         * @param {number} scale - ratio
          * @returns {BitmapText} this object for chaining
          */
         resize(scale: number): BitmapText;
@@ -12653,7 +12653,7 @@ declare module "text/bitmaptext" {
         measureText(text?: string): TextMetrics;
         /**
          * draw the bitmap font
-         * @param {CanvasRenderer|WebGLRenderer} renderer Reference to the destination renderer instance
+         * @param {CanvasRenderer|WebGLRenderer} renderer - Reference to the destination renderer instance
          * @param {string} [text]
          * @param {number} [x]
          * @param {number} [y]
@@ -12747,9 +12747,9 @@ declare module "renderable/colorlayer" {
      */
     class ColorLayer extends Renderable {
         /**
-         * @param {string} name Layer name
-         * @param {Color|string} color CSS color
-         * @param {number} [z = 0] z-index position
+         * @param {string} name - Layer name
+         * @param {Color|string} color - CSS color
+         * @param {number} [z = 0] - z-index position
          */
         constructor(name: string, color: Color | string, z?: number);
         /**
@@ -12778,15 +12778,15 @@ declare module "renderable/imagelayer" {
      */
     class ImageLayer {
         /**
-         * @param {number} x x coordinate
-         * @param {number} y y coordinate
-         * @param {object} settings ImageLayer properties
-         * @param {HTMLImageElement|HTMLCanvasElement|string} settings.image Image reference. See {@link loader.getImage}
-         * @param {string} [settings.name="me.ImageLayer"] layer name
-         * @param {number} [settings.z=0] z-index position
-         * @param {number|Vector2d} [settings.ratio=1.0] Scrolling ratio to be applied. See {@link ImageLayer#ratio}
-         * @param {string} [settings.repeat='repeat'] define if and how an Image Layer should be repeated (accepted values are 'repeat', 'repeat-x', 'repeat-y', 'no-repeat'). See {@link ImageLayer#repeat}
-         * @param {number|Vector2d} [settings.anchorPoint=0.0] Image origin. See {@link ImageLayer#anchorPoint}
+         * @param {number} x - x coordinate
+         * @param {number} y - y coordinate
+         * @param {object} settings - ImageLayer properties
+         * @param {HTMLImageElement|HTMLCanvasElement|string} settings.image - Image reference. See {@link loader.getImage}
+         * @param {string} [settings.name="me.ImageLayer"] - layer name
+         * @param {number} [settings.z=0] - z-index position
+         * @param {number|Vector2d} [settings.ratio=1.0] - Scrolling ratio to be applied. See {@link ImageLayer#ratio}
+         * @param {string} [settings.repeat='repeat'] - define if and how an Image Layer should be repeated (accepted values are 'repeat', 'repeat-x', 'repeat-y', 'no-repeat'). See {@link ImageLayer#repeat}
+         * @param {number|Vector2d} [settings.anchorPoint=0.0] - Image origin. See {@link ImageLayer#anchorPoint}
          * @example
          * // create a repetitive background pattern on the X axis using the citycloud image asset
          * me.game.world.addChild(new me.ImageLayer(0, 0, {
@@ -12839,8 +12839,8 @@ declare module "renderable/imagelayer" {
          * resize the Image Layer to match the given size
          * @name resize
          * @memberof ImageLayer
-         * @param {number} w new width
-         * @param {number} h new height
+         * @param {number} w - new width
+         * @param {number} h - new height
          */
         resize(w: number, h: number): any;
         /**
@@ -12866,8 +12866,8 @@ declare module "renderable/imagelayer" {
          * @name draw
          * @memberof ImageLayer
          * @protected
-         * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
-         * @param {Camera2d} [viewport] the viewport to (re)draw
+         * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+         * @param {Camera2d} [viewport] - the viewport to (re)draw
          */
         protected draw(renderer: CanvasRenderer | WebGLRenderer, viewport?: Camera2d): void;
         onDeactivateEvent(): void;
@@ -12890,22 +12890,22 @@ declare module "renderable/nineslicesprite" {
      */
     class NineSliceSprite extends Sprite {
         /**
-         * @param {number} x the x coordinates of the sprite object
-         * @param {number} y the y coordinates of the sprite object
-         * @param {object} settings Configuration parameters for the Sprite object
-         * @param {number} settings.width the width of the Renderable over which the sprite needs to be stretched
-         * @param {number} settings.height the height of the Renderable over which the sprite needs to be stretched
-         * @param {number} [settings.insetx] the width of a corner over which the sprite is unscaled (default is a quarter of the sprite width)
-         * @param {number} [settings.insety] the height of a corner over which the sprite is unscaled (default is a quarter of the sprite height)
-         * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image reference to spritesheet image, a texture atlas or to a texture atlas
-         * @param {string} [settings.name=""] name of this object
-         * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
-         * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
-         * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
-         * @param {string|Color} [settings.tint] a tint to be applied to this sprite
-         * @param {number} [settings.flipX] flip the sprite on the horizontal axis
-         * @param {number} [settings.flipY] flip the sprite on the vertical axis
-         * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
+         * @param {number} x - the x coordinates of the sprite object
+         * @param {number} y - the y coordinates of the sprite object
+         * @param {object} settings - Configuration parameters for the Sprite object
+         * @param {number} settings.width - the width of the Renderable over which the sprite needs to be stretched
+         * @param {number} settings.height - the height of the Renderable over which the sprite needs to be stretched
+         * @param {number} [settings.insetx] - the width of a corner over which the sprite is unscaled (default is a quarter of the sprite width)
+         * @param {number} [settings.insety] - the height of a corner over which the sprite is unscaled (default is a quarter of the sprite height)
+         * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image - reference to spritesheet image, a texture atlas or to a texture atlas
+         * @param {string} [settings.name=""] - name of this object
+         * @param {string} [settings.region] - region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
+         * @param {number} [settings.framewidth] - Width of a single frame within the spritesheet
+         * @param {number} [settings.frameheight] - Height of a single frame within the spritesheet
+         * @param {string|Color} [settings.tint] - a tint to be applied to this sprite
+         * @param {number} [settings.flipX] - flip the sprite on the horizontal axis
+         * @param {number} [settings.flipY] - flip the sprite on the vertical axis
+         * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] - Anchor point to draw the frame at (defaults to the center of the frame).
          * @example
          * this.panelSprite = new me.NineSliceSprite(0, 0, {
          *     image : game.texture,
@@ -12952,10 +12952,10 @@ declare module "renderable/ui/uibaseelement" {
     class UIBaseElement extends Container {
         /**
          *
-         * @param {number} x The x position of the container
-         * @param {number} y The y position of the container
-         * @param {number} w width of the container (default: viewport width)
-         * @param {number} h height of the container (default: viewport height)
+         * @param {number} x - The x position of the container
+         * @param {number} y - The y position of the container
+         * @param {number} w - width of the container (default: viewport width)
+         * @param {number} h - height of the container (default: viewport height)
          */
         constructor(x: number, y: number, w: number, h: number);
         /**
@@ -12991,7 +12991,7 @@ declare module "renderable/ui/uibaseelement" {
         dirty: boolean;
         /**
          * function called when the object is pressed (to be extended)
-         * @param {Pointer} event the event object
+         * @param {Pointer} event - the event object
          * @returns {boolean} return false if we need to stop propagating the event
          */
         onClick(event: Pointer): boolean;
@@ -13002,7 +13002,7 @@ declare module "renderable/ui/uibaseelement" {
         enter(event: any): void;
         /**
          * function called when the pointer is over the object
-         * @param {Pointer} event the event object
+         * @param {Pointer} event - the event object
          */
         onOver(event: Pointer): void;
         /**
@@ -13012,7 +13012,7 @@ declare module "renderable/ui/uibaseelement" {
         leave(event: any): void;
         /**
          * function called when the pointer is leaving the object area
-         * @param {Pointer} event the event object
+         * @param {Pointer} event - the event object
          */
         onOut(event: Pointer): void;
         /**
@@ -13051,19 +13051,19 @@ declare module "renderable/ui/uitextbutton" {
          * It uses a RoundRect as background and changes the background color on hovering over.
          * The background will be drawn with 0.5 opacity, so that the background of the button is
          * slightly shining through.
-         * @param {number} x x pos of the button
-         * @param {number} y y pos of the button
-         * @param {string} [settings.font] The name of the BitmapText font to use
-         * @param {number} [settings.size] The scale factor of the font (default: 1)
-         * @param {string} [settings.text] The text to display (default: 'click me')
-         * @param {string} [settings.bindKey] The key to bind the action to (default: none)
-         * @param {string} [settings.backgroundColor] The css value of a background color
-         * @param {string} [settings.hoverColor] The css value of a color to be used if the pointer hovers over the button
-         * @param {string} [settings.borderStrokeColor] The css value of a color to be used to draw the border
-         * @param {boolean} [settings.offScreenCanvas] Weather to use an offScreen canvas or not
-         * @param {string} [settings.fillStyle] The css value of a tint color to be used to tint the text
-         * @param {number} [settings.borderWidth] Width of the button
-         * @param {number} [settings.borderHeight] Height of the button
+         * @param {number} x - x pos of the button
+         * @param {number} y - y pos of the button
+         * @param {string} [settings.font] - The name of the BitmapText font to use
+         * @param {number} [settings.size] - The scale factor of the font (default: 1)
+         * @param {string} [settings.text] - The text to display (default: 'click me')
+         * @param {string} [settings.bindKey] - The key to bind the action to (default: none)
+         * @param {string} [settings.backgroundColor] - The css value of a background color
+         * @param {string} [settings.hoverColor] - The css value of a color to be used if the pointer hovers over the button
+         * @param {string} [settings.borderStrokeColor] - The css value of a color to be used to draw the border
+         * @param {boolean} [settings.offScreenCanvas] - Weather to use an offScreen canvas or not
+         * @param {string} [settings.fillStyle] - The css value of a tint color to be used to tint the text
+         * @param {number} [settings.borderWidth] - Width of the button
+         * @param {number} [settings.borderHeight] - Height of the button
          * @example
          * // Create a new Button
          * class PlayButton extends BaseTextButton {
@@ -13104,9 +13104,9 @@ declare module "renderable/ui/uispriteelement" {
      */
     class UISpriteElement extends Sprite {
         /**
-         * @param {number} x the x coordinate of the GUI Object
-         * @param {number} y the y coordinate of the GUI Object
-         * @param {object} settings See {@link Sprite}
+         * @param {number} x - the x coordinate of the GUI Object
+         * @param {number} y - the y coordinate of the GUI Object
+         * @param {object} settings - See {@link Sprite}
          * @example
          * // create a basic GUI Object
          * class myButton extends UISpriteElement {
@@ -13168,7 +13168,7 @@ declare module "renderable/ui/uispriteelement" {
         dirty: boolean;
         /**
          * function called when the object is pressed (to be extended)
-         * @param {Pointer} event the event object
+         * @param {Pointer} event - the event object
          * @returns {boolean} return false if we need to stop propagating the event
          */
         onClick(event: Pointer): boolean;
@@ -13179,7 +13179,7 @@ declare module "renderable/ui/uispriteelement" {
         enter(event: any): void;
         /**
          * function called when the pointer is over the object
-         * @param {Pointer} event the event object
+         * @param {Pointer} event - the event object
          */
         onOver(event: Pointer): void;
         /**
@@ -13189,7 +13189,7 @@ declare module "renderable/ui/uispriteelement" {
         leave(event: any): void;
         /**
          * function called when the pointer is leaving the object area
-         * @param {Pointer} event the event object
+         * @param {Pointer} event - the event object
          */
         onOut(event: Pointer): void;
         /**
@@ -13234,9 +13234,9 @@ declare module "renderable/collectable" {
      */
     class Collectable extends Sprite {
         /**
-         * @param {number} x the x coordinates of the collectable
-         * @param {number} y the y coordinates of the collectable
-         * @param {object} settings See {@link Sprite}
+         * @param {number} x - the x coordinates of the collectable
+         * @param {number} y - the y coordinates of the collectable
+         * @param {object} settings - See {@link Sprite}
          */
         constructor(x: number, y: number, settings: object);
         name: any;
@@ -13256,19 +13256,19 @@ declare module "renderable/trigger" {
      */
     class Trigger extends Renderable {
         /**
-         * @param {number} x the x coordinates of the trigger area
-         * @param {number} y the y coordinates of the trigger area
-         * @param {number} [settings.width] width of the trigger area
-         * @param {number} [settings.height] height of the trigger area
-         * @param {Rect[]|Polygon[]|Line[]|Ellipse[]} [settings.shapes] collision shape(s) that will trigger the event
-         * @param {string} [settings.duration] Fade duration (in ms)
-         * @param {string|Color} [settings.color] Fade color
-         * @param {string} [settings.event="level"] the type of event to trigger (only "level" supported for now)
-         * @param {string} [settings.to] level to load if level trigger
-         * @param {string|Container} [settings.container] Target container. See {@link level.load}
-         * @param {Function} [settings.onLoaded] Level loaded callback. See {@link level.load}
-         * @param {boolean} [settings.flatten] Flatten all objects into the target container. See {@link level.load}
-         * @param {boolean} [settings.setViewportBounds] Resize the viewport to match the level. See {@link level.load}
+         * @param {number} x - the x coordinates of the trigger area
+         * @param {number} y - the y coordinates of the trigger area
+         * @param {number} [settings.width] - width of the trigger area
+         * @param {number} [settings.height] - height of the trigger area
+         * @param {Rect[]|Polygon[]|Line[]|Ellipse[]} [settings.shapes] - collision shape(s) that will trigger the event
+         * @param {string} [settings.duration] - Fade duration (in ms)
+         * @param {string|Color} [settings.color] - Fade color
+         * @param {string} [settings.event="level"] - the type of event to trigger (only "level" supported for now)
+         * @param {string} [settings.to] - level to load if level trigger
+         * @param {string|Container} [settings.container] - Target container. See {@link level.load}
+         * @param {Function} [settings.onLoaded] - Level loaded callback. See {@link level.load}
+         * @param {boolean} [settings.flatten] - Flatten all objects into the target container. See {@link level.load}
+         * @param {boolean} [settings.setViewportBounds] - Resize the viewport to match the level. See {@link level.load}
          * @example
          * me.game.world.addChild(new me.Trigger(
          *     x, y, {
@@ -13327,7 +13327,7 @@ declare module "renderable/light2d" {
          * @param {number} y - The vertical position of the light.
          * @param {number} radiusX - The horizontal radius of the light.
          * @param {number} [radiusY=radiusX] - The vertical radius of the light.
-         * @param {Color|string} [color="#FFF"] the color of the light
+         * @param {Color|string} [color="#FFF"] - the color of the light
          * @param {number} [intensity=0.7] - The intensity of the light.
          */
         constructor(x: number, y: number, radiusX: number, radiusY?: number, color?: Color | string, intensity?: number);
@@ -13398,7 +13398,7 @@ declare module "renderable/dragndrop" {
          * Gets called when the user starts dragging the entity
          * @name dragStart
          * @memberof Draggable
-         * @param {object} e the pointer event
+         * @param {object} e - the pointer event
          * @returns {boolean} false if the object is being dragged
          */
         dragStart(e: object): boolean;
@@ -13406,7 +13406,7 @@ declare module "renderable/dragndrop" {
          * Gets called when the user drags this entity around
          * @name dragMove
          * @memberof Draggable
-         * @param {object} e the pointer event
+         * @param {object} e - the pointer event
          */
         dragMove(e: object): void;
         /**
@@ -13463,22 +13463,22 @@ declare module "renderable/dragndrop" {
          * Sets the collision method which is going to be used to check a valid drop
          * @name setCheckMethod
          * @memberof DropTarget
-         * @param {string} checkMethod the checkmethod (defaults to CHECKMETHOD_OVERLAP)
+         * @param {string} checkMethod - the checkmethod (defaults to CHECKMETHOD_OVERLAP)
          */
         setCheckMethod(checkMethod: string): void;
         /**
          * Checks if a dropped entity is dropped on the current entity
          * @name checkOnMe
          * @memberof DropTarget
-         * @param {object} e the triggering event
-         * @param {Draggable} draggable the draggable object that is dropped
+         * @param {object} e - the triggering event
+         * @param {Draggable} draggable - the draggable object that is dropped
          */
         checkOnMe(e: object, draggable: Draggable): void;
         /**
          * Gets called when a draggable entity is dropped on the current entity
          * @name drop
          * @memberof DropTarget
-         * @param {Draggable} draggable the draggable object that is dropped
+         * @param {Draggable} draggable - the draggable object that is dropped
          */
         drop(draggable: Draggable): void;
         /**
@@ -13535,9 +13535,9 @@ declare module "particles/emitter" {
      */
     class ParticleEmitter extends Container {
         /**
-         * @param {number} x x position of the particle emitter
-         * @param {number} y y position of the particle emitter
-         * @param {ParticleEmitterSettings} [settings=ParticleEmitterSettings] the settings for the particle emitter.
+         * @param {number} x - x position of the particle emitter
+         * @param {number} y - y position of the particle emitter
+         * @param {ParticleEmitterSettings} [settings=ParticleEmitterSettings] - the settings for the particle emitter.
          * @example
          * // Create a particle emitter at position 100, 100
          * var emitter = new ParticleEmitter(100, 100, {
@@ -13645,7 +13645,7 @@ declare module "particles/emitter" {
         _dt: number;
         /**
          * Reset the emitter with particle emitter settings.
-         * @param {ParticleEmitterSettings} settings [optional] object with emitter settings. See {@link ParticleEmitterSettings}
+         * @param {ParticleEmitterSettings} settings - [optional] object with emitter settings. See {@link ParticleEmitterSettings}
          */
         reset(settings?: {
             width: number;
@@ -13698,7 +13698,7 @@ declare module "particles/emitter" {
         isRunning(): boolean;
         /**
          * Launch particles from emitter constantly (e.g. for stream)
-         * @param {number} duration [optional] time that the emitter releases particles in ms
+         * @param {number} duration - [optional] time that the emitter releases particles in ms
          */
         streamParticles(duration: number): void;
         /**
@@ -13707,7 +13707,7 @@ declare module "particles/emitter" {
         stopStream(): void;
         /**
          * Launch all particles from emitter and stop (e.g. for explosion)
-         * @param {number} total [optional] number of particles to launch
+         * @param {number} total - [optional] number of particles to launch
          */
         burstParticles(total: number): void;
         /**
@@ -13726,7 +13726,7 @@ declare module "particles/particle" {
      */
     class Particle extends Renderable {
         /**
-         * @param {ParticleEmitter} emitter the particle emitter
+         * @param {ParticleEmitter} emitter - the particle emitter
          */
         constructor(emitter: ParticleEmitter);
         /**
@@ -13762,21 +13762,21 @@ declare module "entity/entity" {
      */
     class Entity extends Renderable {
         /**
-         * @param {number} x the x coordinates of the entity object
-         * @param {number} y the y coordinates of the entity object
-         * @param {object} settings Entity properties, to be defined through Tiled or when calling the entity constructor
+         * @param {number} x - the x coordinates of the entity object
+         * @param {number} y - the y coordinates of the entity object
+         * @param {object} settings - Entity properties, to be defined through Tiled or when calling the entity constructor
          * <img src="images/object_properties.png"/>
-         * @param {number} settings.width the physical width the entity takes up in game
-         * @param {number} settings.height the physical height the entity takes up in game
-         * @param {string} [settings.name] object entity name
-         * @param {string} [settings.id] object unique IDs
-         * @param {Image|string} [settings.image] resource name of a spritesheet to use for the entity renderable component
-         * @param {Vector2d} [settings.anchorPoint=0.0] Entity anchor point
-         * @param {number} [settings.framewidth=settings.width] width of a single frame in the given spritesheet
-         * @param {number} [settings.frameheight=settings.width] height of a single frame in the given spritesheet
-         * @param {string} [settings.type] object type
-         * @param {number} [settings.collisionMask] Mask collision detection for this object
-         * @param {Rect[]|Polygon[]|Line[]|Ellipse[]} [settings.shapes] the initial list of collision shapes (usually populated through Tiled)
+         * @param {number} settings.width - the physical width the entity takes up in game
+         * @param {number} settings.height - the physical height the entity takes up in game
+         * @param {string} [settings.name] - object entity name
+         * @param {string} [settings.id] - object unique IDs
+         * @param {Image|string} [settings.image] - resource name of a spritesheet to use for the entity renderable component
+         * @param {Vector2d} [settings.anchorPoint=0.0] - Entity anchor point
+         * @param {number} [settings.framewidth=settings.width] - width of a single frame in the given spritesheet
+         * @param {number} [settings.frameheight=settings.width] - height of a single frame in the given spritesheet
+         * @param {string} [settings.type] - object type
+         * @param {number} [settings.collisionMask] - Mask collision detection for this object
+         * @param {Rect[]|Polygon[]|Line[]|Ellipse[]} [settings.shapes] - the initial list of collision shapes (usually populated through Tiled)
          */
         constructor(x: number, y: number, settings: {
             width: number;
@@ -13838,7 +13838,7 @@ declare module "entity/entity" {
          * @ignore
          * @name onBodyUpdate
          * @memberof Entity
-         * @param {Body} body the body whose bounds to update
+         * @param {Body} body - the body whose bounds to update
          */
         onBodyUpdate(body: Body): void;
         preDraw(renderer: any): void;
@@ -13857,9 +13857,9 @@ declare module "lang/deprecated" {
     /**
      * display a deprecation warning in the console
      * @ignore
-     * @param {string} deprecated deprecated class,function or property name
-     * @param {string} replacement the replacement class, function, or property name
-     * @param {string} version the version since when the lass,function or property is deprecated
+     * @param {string} deprecated - deprecated class,function or property name
+     * @param {string} replacement - the replacement class, function, or property name
+     * @param {string} version - the version since when the lass,function or property is deprecated
      */
     export function warning(deprecated: string, replacement: string, version: string): void;
     /**
@@ -13871,9 +13871,9 @@ declare module "lang/deprecated" {
      */
     export class DraggableEntity {
         /**
-         * @param {number} x the x coordinates of the draggable object
-         * @param {number} y the y coordinates of the draggable object
-         * @param {object} settings Entity properties (see {@link Entity})
+         * @param {number} x - the x coordinates of the draggable object
+         * @param {number} y - the y coordinates of the draggable object
+         * @param {object} settings - Entity properties (see {@link Entity})
          */
         constructor(x: number, y: number, settings: object);
     }
@@ -13886,9 +13886,9 @@ declare module "lang/deprecated" {
      */
     export class DroptargetEntity {
         /**
-         * @param {number} x the x coordinates of the draggable object
-         * @param {number} y the y coordinates of the draggable object
-         * @param {object} settings Entity properties (see {@link Entity})
+         * @param {number} x - the x coordinates of the draggable object
+         * @param {number} y - the y coordinates of the draggable object
+         * @param {object} settings - Entity properties (see {@link Entity})
          */
         constructor(x: number, y: number, settings: object);
     }
@@ -13901,9 +13901,9 @@ declare module "lang/deprecated" {
      */
     export class GUI_Object {
         /**
-         * @param {number} x the x coordinate of the GUI Object
-         * @param {number} y the y coordinate of the GUI Object
-         * @param {object} settings See {@link Sprite}
+         * @param {number} x - the x coordinate of the GUI Object
+         * @param {number} y - the y coordinate of the GUI Object
+         * @param {object} settings - See {@link Sprite}
          */
         constructor(x: number, y: number, settings: object);
     }

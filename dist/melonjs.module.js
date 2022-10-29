@@ -1,1248 +1,11 @@
 /*!
- * melonJS Game Engine - v14.0.2
+ * melonJS Game Engine - v14.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
  */
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
-
-var check = function (it) {
-  return it && it.Math == Math && it;
-};
-
-// https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
-var global$c =
-  // eslint-disable-next-line es/no-global-this -- safe
-  check(typeof globalThis == 'object' && globalThis) ||
-  check(typeof window == 'object' && window) ||
-  // eslint-disable-next-line no-restricted-globals -- safe
-  check(typeof self == 'object' && self) ||
-  check(typeof commonjsGlobal == 'object' && commonjsGlobal) ||
-  // eslint-disable-next-line no-new-func -- fallback
-  (function () { return this; })() || Function('return this')();
-
-var objectGetOwnPropertyDescriptor = {};
-
-var fails$9 = function (exec) {
-  try {
-    return !!exec();
-  } catch (error) {
-    return true;
-  }
-};
-
-var fails$8 = fails$9;
-
-// Detect IE8's incomplete defineProperty implementation
-var descriptors = !fails$8(function () {
-  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
-  return Object.defineProperty({}, 1, { get: function () { return 7; } })[1] != 7;
-});
-
-var fails$7 = fails$9;
-
-var functionBindNative = !fails$7(function () {
-  // eslint-disable-next-line es/no-function-prototype-bind -- safe
-  var test = (function () { /* empty */ }).bind();
-  // eslint-disable-next-line no-prototype-builtins -- safe
-  return typeof test != 'function' || test.hasOwnProperty('prototype');
-});
-
-var NATIVE_BIND$1 = functionBindNative;
-
-var call$4 = Function.prototype.call;
-
-var functionCall = NATIVE_BIND$1 ? call$4.bind(call$4) : function () {
-  return call$4.apply(call$4, arguments);
-};
-
-var objectPropertyIsEnumerable = {};
-
-var $propertyIsEnumerable = {}.propertyIsEnumerable;
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var getOwnPropertyDescriptor$1 = Object.getOwnPropertyDescriptor;
-
-// Nashorn ~ JDK8 bug
-var NASHORN_BUG = getOwnPropertyDescriptor$1 && !$propertyIsEnumerable.call({ 1: 2 }, 1);
-
-// `Object.prototype.propertyIsEnumerable` method implementation
-// https://tc39.es/ecma262/#sec-object.prototype.propertyisenumerable
-objectPropertyIsEnumerable.f = NASHORN_BUG ? function propertyIsEnumerable(V) {
-  var descriptor = getOwnPropertyDescriptor$1(this, V);
-  return !!descriptor && descriptor.enumerable;
-} : $propertyIsEnumerable;
-
-var createPropertyDescriptor$2 = function (bitmap, value) {
-  return {
-    enumerable: !(bitmap & 1),
-    configurable: !(bitmap & 2),
-    writable: !(bitmap & 4),
-    value: value
-  };
-};
-
-var NATIVE_BIND = functionBindNative;
-
-var FunctionPrototype$1 = Function.prototype;
-var call$3 = FunctionPrototype$1.call;
-var uncurryThisWithBind = NATIVE_BIND && FunctionPrototype$1.bind.bind(call$3, call$3);
-
-var functionUncurryThisRaw = function (fn) {
-  return NATIVE_BIND ? uncurryThisWithBind(fn) : function () {
-    return call$3.apply(fn, arguments);
-  };
-};
-
-var uncurryThisRaw$1 = functionUncurryThisRaw;
-
-var toString$4 = uncurryThisRaw$1({}.toString);
-var stringSlice = uncurryThisRaw$1(''.slice);
-
-var classofRaw$2 = function (it) {
-  return stringSlice(toString$4(it), 8, -1);
-};
-
-var classofRaw$1 = classofRaw$2;
-var uncurryThisRaw = functionUncurryThisRaw;
-
-var functionUncurryThis = function (fn) {
-  // Nashorn bug:
-  //   https://github.com/zloirock/core-js/issues/1128
-  //   https://github.com/zloirock/core-js/issues/1130
-  if (classofRaw$1(fn) === 'Function') return uncurryThisRaw(fn);
-};
-
-var uncurryThis$8 = functionUncurryThis;
-var fails$6 = fails$9;
-var classof$2 = classofRaw$2;
-
-var $Object$3 = Object;
-var split = uncurryThis$8(''.split);
-
-// fallback for non-array-like ES3 and non-enumerable old V8 strings
-var indexedObject = fails$6(function () {
-  // throws an error in rhino, see https://github.com/mozilla/rhino/issues/346
-  // eslint-disable-next-line no-prototype-builtins -- safe
-  return !$Object$3('z').propertyIsEnumerable(0);
-}) ? function (it) {
-  return classof$2(it) == 'String' ? split(it, '') : $Object$3(it);
-} : $Object$3;
-
-// we can't use just `it == null` since of `document.all` special case
-// https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot-aec
-var isNullOrUndefined$2 = function (it) {
-  return it === null || it === undefined;
-};
-
-var isNullOrUndefined$1 = isNullOrUndefined$2;
-
-var $TypeError$5 = TypeError;
-
-// `RequireObjectCoercible` abstract operation
-// https://tc39.es/ecma262/#sec-requireobjectcoercible
-var requireObjectCoercible$3 = function (it) {
-  if (isNullOrUndefined$1(it)) throw $TypeError$5("Can't call method on " + it);
-  return it;
-};
-
-// toObject with fallback for non-array-like ES3 strings
-var IndexedObject = indexedObject;
-var requireObjectCoercible$2 = requireObjectCoercible$3;
-
-var toIndexedObject$3 = function (it) {
-  return IndexedObject(requireObjectCoercible$2(it));
-};
-
-var documentAll$2 = typeof document == 'object' && document.all;
-
-// https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot
-var IS_HTMLDDA = typeof documentAll$2 == 'undefined' && documentAll$2 !== undefined;
-
-var documentAll_1 = {
-  all: documentAll$2,
-  IS_HTMLDDA: IS_HTMLDDA
-};
-
-var $documentAll$1 = documentAll_1;
-
-var documentAll$1 = $documentAll$1.all;
-
-// `IsCallable` abstract operation
-// https://tc39.es/ecma262/#sec-iscallable
-var isCallable$b = $documentAll$1.IS_HTMLDDA ? function (argument) {
-  return typeof argument == 'function' || argument === documentAll$1;
-} : function (argument) {
-  return typeof argument == 'function';
-};
-
-var isCallable$a = isCallable$b;
-var $documentAll = documentAll_1;
-
-var documentAll = $documentAll.all;
-
-var isObject$5 = $documentAll.IS_HTMLDDA ? function (it) {
-  return typeof it == 'object' ? it !== null : isCallable$a(it) || it === documentAll;
-} : function (it) {
-  return typeof it == 'object' ? it !== null : isCallable$a(it);
-};
-
-var global$b = global$c;
-var isCallable$9 = isCallable$b;
-
-var aFunction = function (argument) {
-  return isCallable$9(argument) ? argument : undefined;
-};
-
-var getBuiltIn$3 = function (namespace, method) {
-  return arguments.length < 2 ? aFunction(global$b[namespace]) : global$b[namespace] && global$b[namespace][method];
-};
-
-var uncurryThis$7 = functionUncurryThis;
-
-var objectIsPrototypeOf = uncurryThis$7({}.isPrototypeOf);
-
-var getBuiltIn$2 = getBuiltIn$3;
-
-var engineUserAgent = getBuiltIn$2('navigator', 'userAgent') || '';
-
-var global$a = global$c;
-var userAgent = engineUserAgent;
-
-var process$1 = global$a.process;
-var Deno = global$a.Deno;
-var versions = process$1 && process$1.versions || Deno && Deno.version;
-var v8 = versions && versions.v8;
-var match, version$1;
-
-if (v8) {
-  match = v8.split('.');
-  // in old Chrome, versions of V8 isn't V8 = Chrome / 10
-  // but their correct versions are not interesting for us
-  version$1 = match[0] > 0 && match[0] < 4 ? 1 : +(match[0] + match[1]);
-}
-
-// BrowserFS NodeJS `process` polyfill incorrectly set `.v8` to `0.0`
-// so check `userAgent` even if `.v8` exists, but 0
-if (!version$1 && userAgent) {
-  match = userAgent.match(/Edge\/(\d+)/);
-  if (!match || match[1] >= 74) {
-    match = userAgent.match(/Chrome\/(\d+)/);
-    if (match) version$1 = +match[1];
-  }
-}
-
-var engineV8Version = version$1;
-
-/* eslint-disable es/no-symbol -- required for testing */
-
-var V8_VERSION = engineV8Version;
-var fails$5 = fails$9;
-
-// eslint-disable-next-line es/no-object-getownpropertysymbols -- required for testing
-var symbolConstructorDetection = !!Object.getOwnPropertySymbols && !fails$5(function () {
-  var symbol = Symbol();
-  // Chrome 38 Symbol has incorrect toString conversion
-  // `get-own-property-symbols` polyfill symbols converted to object are not Symbol instances
-  return !String(symbol) || !(Object(symbol) instanceof Symbol) ||
-    // Chrome 38-40 symbols are not inherited from DOM collections prototypes to instances
-    !Symbol.sham && V8_VERSION && V8_VERSION < 41;
-});
-
-/* eslint-disable es/no-symbol -- required for testing */
-
-var NATIVE_SYMBOL$1 = symbolConstructorDetection;
-
-var useSymbolAsUid = NATIVE_SYMBOL$1
-  && !Symbol.sham
-  && typeof Symbol.iterator == 'symbol';
-
-var getBuiltIn$1 = getBuiltIn$3;
-var isCallable$8 = isCallable$b;
-var isPrototypeOf = objectIsPrototypeOf;
-var USE_SYMBOL_AS_UID$1 = useSymbolAsUid;
-
-var $Object$2 = Object;
-
-var isSymbol$2 = USE_SYMBOL_AS_UID$1 ? function (it) {
-  return typeof it == 'symbol';
-} : function (it) {
-  var $Symbol = getBuiltIn$1('Symbol');
-  return isCallable$8($Symbol) && isPrototypeOf($Symbol.prototype, $Object$2(it));
-};
-
-var $String$2 = String;
-
-var tryToString$1 = function (argument) {
-  try {
-    return $String$2(argument);
-  } catch (error) {
-    return 'Object';
-  }
-};
-
-var isCallable$7 = isCallable$b;
-var tryToString = tryToString$1;
-
-var $TypeError$4 = TypeError;
-
-// `Assert: IsCallable(argument) is true`
-var aCallable$1 = function (argument) {
-  if (isCallable$7(argument)) return argument;
-  throw $TypeError$4(tryToString(argument) + ' is not a function');
-};
-
-var aCallable = aCallable$1;
-var isNullOrUndefined = isNullOrUndefined$2;
-
-// `GetMethod` abstract operation
-// https://tc39.es/ecma262/#sec-getmethod
-var getMethod$1 = function (V, P) {
-  var func = V[P];
-  return isNullOrUndefined(func) ? undefined : aCallable(func);
-};
-
-var call$2 = functionCall;
-var isCallable$6 = isCallable$b;
-var isObject$4 = isObject$5;
-
-var $TypeError$3 = TypeError;
-
-// `OrdinaryToPrimitive` abstract operation
-// https://tc39.es/ecma262/#sec-ordinarytoprimitive
-var ordinaryToPrimitive$1 = function (input, pref) {
-  var fn, val;
-  if (pref === 'string' && isCallable$6(fn = input.toString) && !isObject$4(val = call$2(fn, input))) return val;
-  if (isCallable$6(fn = input.valueOf) && !isObject$4(val = call$2(fn, input))) return val;
-  if (pref !== 'string' && isCallable$6(fn = input.toString) && !isObject$4(val = call$2(fn, input))) return val;
-  throw $TypeError$3("Can't convert object to primitive value");
-};
-
-var shared$3 = {exports: {}};
-
-var global$9 = global$c;
-
-// eslint-disable-next-line es/no-object-defineproperty -- safe
-var defineProperty$1 = Object.defineProperty;
-
-var defineGlobalProperty$3 = function (key, value) {
-  try {
-    defineProperty$1(global$9, key, { value: value, configurable: true, writable: true });
-  } catch (error) {
-    global$9[key] = value;
-  } return value;
-};
-
-var global$8 = global$c;
-var defineGlobalProperty$2 = defineGlobalProperty$3;
-
-var SHARED = '__core-js_shared__';
-var store$3 = global$8[SHARED] || defineGlobalProperty$2(SHARED, {});
-
-var sharedStore = store$3;
-
-var store$2 = sharedStore;
-
-(shared$3.exports = function (key, value) {
-  return store$2[key] || (store$2[key] = value !== undefined ? value : {});
-})('versions', []).push({
-  version: '3.25.5',
-  mode: 'global',
-  copyright: '© 2014-2022 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.25.5/LICENSE',
-  source: 'https://github.com/zloirock/core-js'
-});
-
-var requireObjectCoercible$1 = requireObjectCoercible$3;
-
-var $Object$1 = Object;
-
-// `ToObject` abstract operation
-// https://tc39.es/ecma262/#sec-toobject
-var toObject$1 = function (argument) {
-  return $Object$1(requireObjectCoercible$1(argument));
-};
-
-var uncurryThis$6 = functionUncurryThis;
-var toObject = toObject$1;
-
-var hasOwnProperty = uncurryThis$6({}.hasOwnProperty);
-
-// `HasOwnProperty` abstract operation
-// https://tc39.es/ecma262/#sec-hasownproperty
-// eslint-disable-next-line es/no-object-hasown -- safe
-var hasOwnProperty_1 = Object.hasOwn || function hasOwn(it, key) {
-  return hasOwnProperty(toObject(it), key);
-};
-
-var uncurryThis$5 = functionUncurryThis;
-
-var id = 0;
-var postfix = Math.random();
-var toString$3 = uncurryThis$5(1.0.toString);
-
-var uid$2 = function (key) {
-  return 'Symbol(' + (key === undefined ? '' : key) + ')_' + toString$3(++id + postfix, 36);
-};
-
-var global$7 = global$c;
-var shared$2 = shared$3.exports;
-var hasOwn$6 = hasOwnProperty_1;
-var uid$1 = uid$2;
-var NATIVE_SYMBOL = symbolConstructorDetection;
-var USE_SYMBOL_AS_UID = useSymbolAsUid;
-
-var WellKnownSymbolsStore = shared$2('wks');
-var Symbol$1 = global$7.Symbol;
-var symbolFor = Symbol$1 && Symbol$1['for'];
-var createWellKnownSymbol = USE_SYMBOL_AS_UID ? Symbol$1 : Symbol$1 && Symbol$1.withoutSetter || uid$1;
-
-var wellKnownSymbol$3 = function (name) {
-  if (!hasOwn$6(WellKnownSymbolsStore, name) || !(NATIVE_SYMBOL || typeof WellKnownSymbolsStore[name] == 'string')) {
-    var description = 'Symbol.' + name;
-    if (NATIVE_SYMBOL && hasOwn$6(Symbol$1, name)) {
-      WellKnownSymbolsStore[name] = Symbol$1[name];
-    } else if (USE_SYMBOL_AS_UID && symbolFor) {
-      WellKnownSymbolsStore[name] = symbolFor(description);
-    } else {
-      WellKnownSymbolsStore[name] = createWellKnownSymbol(description);
-    }
-  } return WellKnownSymbolsStore[name];
-};
-
-var call$1 = functionCall;
-var isObject$3 = isObject$5;
-var isSymbol$1 = isSymbol$2;
-var getMethod = getMethod$1;
-var ordinaryToPrimitive = ordinaryToPrimitive$1;
-var wellKnownSymbol$2 = wellKnownSymbol$3;
-
-var $TypeError$2 = TypeError;
-var TO_PRIMITIVE = wellKnownSymbol$2('toPrimitive');
-
-// `ToPrimitive` abstract operation
-// https://tc39.es/ecma262/#sec-toprimitive
-var toPrimitive$1 = function (input, pref) {
-  if (!isObject$3(input) || isSymbol$1(input)) return input;
-  var exoticToPrim = getMethod(input, TO_PRIMITIVE);
-  var result;
-  if (exoticToPrim) {
-    if (pref === undefined) pref = 'default';
-    result = call$1(exoticToPrim, input, pref);
-    if (!isObject$3(result) || isSymbol$1(result)) return result;
-    throw $TypeError$2("Can't convert object to primitive value");
-  }
-  if (pref === undefined) pref = 'number';
-  return ordinaryToPrimitive(input, pref);
-};
-
-var toPrimitive = toPrimitive$1;
-var isSymbol = isSymbol$2;
-
-// `ToPropertyKey` abstract operation
-// https://tc39.es/ecma262/#sec-topropertykey
-var toPropertyKey$2 = function (argument) {
-  var key = toPrimitive(argument, 'string');
-  return isSymbol(key) ? key : key + '';
-};
-
-var global$6 = global$c;
-var isObject$2 = isObject$5;
-
-var document$1 = global$6.document;
-// typeof document.createElement is 'object' in old IE
-var EXISTS$1 = isObject$2(document$1) && isObject$2(document$1.createElement);
-
-var documentCreateElement = function (it) {
-  return EXISTS$1 ? document$1.createElement(it) : {};
-};
-
-var DESCRIPTORS$6 = descriptors;
-var fails$4 = fails$9;
-var createElement = documentCreateElement;
-
-// Thanks to IE8 for its funny defineProperty
-var ie8DomDefine = !DESCRIPTORS$6 && !fails$4(function () {
-  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
-  return Object.defineProperty(createElement('div'), 'a', {
-    get: function () { return 7; }
-  }).a != 7;
-});
-
-var DESCRIPTORS$5 = descriptors;
-var call = functionCall;
-var propertyIsEnumerableModule = objectPropertyIsEnumerable;
-var createPropertyDescriptor$1 = createPropertyDescriptor$2;
-var toIndexedObject$2 = toIndexedObject$3;
-var toPropertyKey$1 = toPropertyKey$2;
-var hasOwn$5 = hasOwnProperty_1;
-var IE8_DOM_DEFINE$1 = ie8DomDefine;
-
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var $getOwnPropertyDescriptor$1 = Object.getOwnPropertyDescriptor;
-
-// `Object.getOwnPropertyDescriptor` method
-// https://tc39.es/ecma262/#sec-object.getownpropertydescriptor
-objectGetOwnPropertyDescriptor.f = DESCRIPTORS$5 ? $getOwnPropertyDescriptor$1 : function getOwnPropertyDescriptor(O, P) {
-  O = toIndexedObject$2(O);
-  P = toPropertyKey$1(P);
-  if (IE8_DOM_DEFINE$1) try {
-    return $getOwnPropertyDescriptor$1(O, P);
-  } catch (error) { /* empty */ }
-  if (hasOwn$5(O, P)) return createPropertyDescriptor$1(!call(propertyIsEnumerableModule.f, O, P), O[P]);
-};
-
-var objectDefineProperty = {};
-
-var DESCRIPTORS$4 = descriptors;
-var fails$3 = fails$9;
-
-// V8 ~ Chrome 36-
-// https://bugs.chromium.org/p/v8/issues/detail?id=3334
-var v8PrototypeDefineBug = DESCRIPTORS$4 && fails$3(function () {
-  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
-  return Object.defineProperty(function () { /* empty */ }, 'prototype', {
-    value: 42,
-    writable: false
-  }).prototype != 42;
-});
-
-var isObject$1 = isObject$5;
-
-var $String$1 = String;
-var $TypeError$1 = TypeError;
-
-// `Assert: Type(argument) is Object`
-var anObject$2 = function (argument) {
-  if (isObject$1(argument)) return argument;
-  throw $TypeError$1($String$1(argument) + ' is not an object');
-};
-
-var DESCRIPTORS$3 = descriptors;
-var IE8_DOM_DEFINE = ie8DomDefine;
-var V8_PROTOTYPE_DEFINE_BUG = v8PrototypeDefineBug;
-var anObject$1 = anObject$2;
-var toPropertyKey = toPropertyKey$2;
-
-var $TypeError = TypeError;
-// eslint-disable-next-line es/no-object-defineproperty -- safe
-var $defineProperty = Object.defineProperty;
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var $getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-var ENUMERABLE = 'enumerable';
-var CONFIGURABLE$1 = 'configurable';
-var WRITABLE = 'writable';
-
-// `Object.defineProperty` method
-// https://tc39.es/ecma262/#sec-object.defineproperty
-objectDefineProperty.f = DESCRIPTORS$3 ? V8_PROTOTYPE_DEFINE_BUG ? function defineProperty(O, P, Attributes) {
-  anObject$1(O);
-  P = toPropertyKey(P);
-  anObject$1(Attributes);
-  if (typeof O === 'function' && P === 'prototype' && 'value' in Attributes && WRITABLE in Attributes && !Attributes[WRITABLE]) {
-    var current = $getOwnPropertyDescriptor(O, P);
-    if (current && current[WRITABLE]) {
-      O[P] = Attributes.value;
-      Attributes = {
-        configurable: CONFIGURABLE$1 in Attributes ? Attributes[CONFIGURABLE$1] : current[CONFIGURABLE$1],
-        enumerable: ENUMERABLE in Attributes ? Attributes[ENUMERABLE] : current[ENUMERABLE],
-        writable: false
-      };
-    }
-  } return $defineProperty(O, P, Attributes);
-} : $defineProperty : function defineProperty(O, P, Attributes) {
-  anObject$1(O);
-  P = toPropertyKey(P);
-  anObject$1(Attributes);
-  if (IE8_DOM_DEFINE) try {
-    return $defineProperty(O, P, Attributes);
-  } catch (error) { /* empty */ }
-  if ('get' in Attributes || 'set' in Attributes) throw $TypeError('Accessors not supported');
-  if ('value' in Attributes) O[P] = Attributes.value;
-  return O;
-};
-
-var DESCRIPTORS$2 = descriptors;
-var definePropertyModule$2 = objectDefineProperty;
-var createPropertyDescriptor = createPropertyDescriptor$2;
-
-var createNonEnumerableProperty$2 = DESCRIPTORS$2 ? function (object, key, value) {
-  return definePropertyModule$2.f(object, key, createPropertyDescriptor(1, value));
-} : function (object, key, value) {
-  object[key] = value;
-  return object;
-};
-
-var makeBuiltIn$2 = {exports: {}};
-
-var DESCRIPTORS$1 = descriptors;
-var hasOwn$4 = hasOwnProperty_1;
-
-var FunctionPrototype = Function.prototype;
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var getDescriptor = DESCRIPTORS$1 && Object.getOwnPropertyDescriptor;
-
-var EXISTS = hasOwn$4(FunctionPrototype, 'name');
-// additional protection from minified / mangled / dropped function names
-var PROPER = EXISTS && (function something() { /* empty */ }).name === 'something';
-var CONFIGURABLE = EXISTS && (!DESCRIPTORS$1 || (DESCRIPTORS$1 && getDescriptor(FunctionPrototype, 'name').configurable));
-
-var functionName = {
-  EXISTS: EXISTS,
-  PROPER: PROPER,
-  CONFIGURABLE: CONFIGURABLE
-};
-
-var uncurryThis$4 = functionUncurryThis;
-var isCallable$5 = isCallable$b;
-var store$1 = sharedStore;
-
-var functionToString = uncurryThis$4(Function.toString);
-
-// this helper broken in `core-js@3.4.1-3.4.4`, so we can't use `shared` helper
-if (!isCallable$5(store$1.inspectSource)) {
-  store$1.inspectSource = function (it) {
-    return functionToString(it);
-  };
-}
-
-var inspectSource$1 = store$1.inspectSource;
-
-var global$5 = global$c;
-var isCallable$4 = isCallable$b;
-
-var WeakMap$1 = global$5.WeakMap;
-
-var weakMapBasicDetection = isCallable$4(WeakMap$1) && /native code/.test(String(WeakMap$1));
-
-var shared$1 = shared$3.exports;
-var uid = uid$2;
-
-var keys = shared$1('keys');
-
-var sharedKey$1 = function (key) {
-  return keys[key] || (keys[key] = uid(key));
-};
-
-var hiddenKeys$3 = {};
-
-var NATIVE_WEAK_MAP = weakMapBasicDetection;
-var global$4 = global$c;
-var isObject = isObject$5;
-var createNonEnumerableProperty$1 = createNonEnumerableProperty$2;
-var hasOwn$3 = hasOwnProperty_1;
-var shared = sharedStore;
-var sharedKey = sharedKey$1;
-var hiddenKeys$2 = hiddenKeys$3;
-
-var OBJECT_ALREADY_INITIALIZED = 'Object already initialized';
-var TypeError$1 = global$4.TypeError;
-var WeakMap = global$4.WeakMap;
-var set, get, has;
-
-var enforce = function (it) {
-  return has(it) ? get(it) : set(it, {});
-};
-
-var getterFor = function (TYPE) {
-  return function (it) {
-    var state;
-    if (!isObject(it) || (state = get(it)).type !== TYPE) {
-      throw TypeError$1('Incompatible receiver, ' + TYPE + ' required');
-    } return state;
-  };
-};
-
-if (NATIVE_WEAK_MAP || shared.state) {
-  var store = shared.state || (shared.state = new WeakMap());
-  /* eslint-disable no-self-assign -- prototype methods protection */
-  store.get = store.get;
-  store.has = store.has;
-  store.set = store.set;
-  /* eslint-enable no-self-assign -- prototype methods protection */
-  set = function (it, metadata) {
-    if (store.has(it)) throw TypeError$1(OBJECT_ALREADY_INITIALIZED);
-    metadata.facade = it;
-    store.set(it, metadata);
-    return metadata;
-  };
-  get = function (it) {
-    return store.get(it) || {};
-  };
-  has = function (it) {
-    return store.has(it);
-  };
-} else {
-  var STATE = sharedKey('state');
-  hiddenKeys$2[STATE] = true;
-  set = function (it, metadata) {
-    if (hasOwn$3(it, STATE)) throw TypeError$1(OBJECT_ALREADY_INITIALIZED);
-    metadata.facade = it;
-    createNonEnumerableProperty$1(it, STATE, metadata);
-    return metadata;
-  };
-  get = function (it) {
-    return hasOwn$3(it, STATE) ? it[STATE] : {};
-  };
-  has = function (it) {
-    return hasOwn$3(it, STATE);
-  };
-}
-
-var internalState = {
-  set: set,
-  get: get,
-  has: has,
-  enforce: enforce,
-  getterFor: getterFor
-};
-
-var fails$2 = fails$9;
-var isCallable$3 = isCallable$b;
-var hasOwn$2 = hasOwnProperty_1;
-var DESCRIPTORS = descriptors;
-var CONFIGURABLE_FUNCTION_NAME = functionName.CONFIGURABLE;
-var inspectSource = inspectSource$1;
-var InternalStateModule = internalState;
-
-var enforceInternalState = InternalStateModule.enforce;
-var getInternalState = InternalStateModule.get;
-// eslint-disable-next-line es/no-object-defineproperty -- safe
-var defineProperty = Object.defineProperty;
-
-var CONFIGURABLE_LENGTH = DESCRIPTORS && !fails$2(function () {
-  return defineProperty(function () { /* empty */ }, 'length', { value: 8 }).length !== 8;
-});
-
-var TEMPLATE = String(String).split('String');
-
-var makeBuiltIn$1 = makeBuiltIn$2.exports = function (value, name, options) {
-  if (String(name).slice(0, 7) === 'Symbol(') {
-    name = '[' + String(name).replace(/^Symbol\(([^)]*)\)/, '$1') + ']';
-  }
-  if (options && options.getter) name = 'get ' + name;
-  if (options && options.setter) name = 'set ' + name;
-  if (!hasOwn$2(value, 'name') || (CONFIGURABLE_FUNCTION_NAME && value.name !== name)) {
-    if (DESCRIPTORS) defineProperty(value, 'name', { value: name, configurable: true });
-    else value.name = name;
-  }
-  if (CONFIGURABLE_LENGTH && options && hasOwn$2(options, 'arity') && value.length !== options.arity) {
-    defineProperty(value, 'length', { value: options.arity });
-  }
-  try {
-    if (options && hasOwn$2(options, 'constructor') && options.constructor) {
-      if (DESCRIPTORS) defineProperty(value, 'prototype', { writable: false });
-    // in V8 ~ Chrome 53, prototypes of some methods, like `Array.prototype.values`, are non-writable
-    } else if (value.prototype) value.prototype = undefined;
-  } catch (error) { /* empty */ }
-  var state = enforceInternalState(value);
-  if (!hasOwn$2(state, 'source')) {
-    state.source = TEMPLATE.join(typeof name == 'string' ? name : '');
-  } return value;
-};
-
-// add fake Function#toString for correct work wrapped methods / constructors with methods like LoDash isNative
-// eslint-disable-next-line no-extend-native -- required
-Function.prototype.toString = makeBuiltIn$1(function toString() {
-  return isCallable$3(this) && getInternalState(this).source || inspectSource(this);
-}, 'toString');
-
-var isCallable$2 = isCallable$b;
-var definePropertyModule$1 = objectDefineProperty;
-var makeBuiltIn = makeBuiltIn$2.exports;
-var defineGlobalProperty$1 = defineGlobalProperty$3;
-
-var defineBuiltIn$1 = function (O, key, value, options) {
-  if (!options) options = {};
-  var simple = options.enumerable;
-  var name = options.name !== undefined ? options.name : key;
-  if (isCallable$2(value)) makeBuiltIn(value, name, options);
-  if (options.global) {
-    if (simple) O[key] = value;
-    else defineGlobalProperty$1(key, value);
-  } else {
-    try {
-      if (!options.unsafe) delete O[key];
-      else if (O[key]) simple = true;
-    } catch (error) { /* empty */ }
-    if (simple) O[key] = value;
-    else definePropertyModule$1.f(O, key, {
-      value: value,
-      enumerable: false,
-      configurable: !options.nonConfigurable,
-      writable: !options.nonWritable
-    });
-  } return O;
-};
-
-var objectGetOwnPropertyNames = {};
-
-var ceil = Math.ceil;
-var floor = Math.floor;
-
-// `Math.trunc` method
-// https://tc39.es/ecma262/#sec-math.trunc
-// eslint-disable-next-line es/no-math-trunc -- safe
-var mathTrunc = Math.trunc || function trunc(x) {
-  var n = +x;
-  return (n > 0 ? floor : ceil)(n);
-};
-
-var trunc = mathTrunc;
-
-// `ToIntegerOrInfinity` abstract operation
-// https://tc39.es/ecma262/#sec-tointegerorinfinity
-var toIntegerOrInfinity$2 = function (argument) {
-  var number = +argument;
-  // eslint-disable-next-line no-self-compare -- NaN check
-  return number !== number || number === 0 ? 0 : trunc(number);
-};
-
-var toIntegerOrInfinity$1 = toIntegerOrInfinity$2;
-
-var max = Math.max;
-var min$1 = Math.min;
-
-// Helper for a popular repeating case of the spec:
-// Let integer be ? ToInteger(index).
-// If integer < 0, let result be max((length + integer), 0); else let result be min(integer, length).
-var toAbsoluteIndex$1 = function (index, length) {
-  var integer = toIntegerOrInfinity$1(index);
-  return integer < 0 ? max(integer + length, 0) : min$1(integer, length);
-};
-
-var toIntegerOrInfinity = toIntegerOrInfinity$2;
-
-var min = Math.min;
-
-// `ToLength` abstract operation
-// https://tc39.es/ecma262/#sec-tolength
-var toLength$1 = function (argument) {
-  return argument > 0 ? min(toIntegerOrInfinity(argument), 0x1FFFFFFFFFFFFF) : 0; // 2 ** 53 - 1 == 9007199254740991
-};
-
-var toLength = toLength$1;
-
-// `LengthOfArrayLike` abstract operation
-// https://tc39.es/ecma262/#sec-lengthofarraylike
-var lengthOfArrayLike$1 = function (obj) {
-  return toLength(obj.length);
-};
-
-var toIndexedObject$1 = toIndexedObject$3;
-var toAbsoluteIndex = toAbsoluteIndex$1;
-var lengthOfArrayLike = lengthOfArrayLike$1;
-
-// `Array.prototype.{ indexOf, includes }` methods implementation
-var createMethod$1 = function (IS_INCLUDES) {
-  return function ($this, el, fromIndex) {
-    var O = toIndexedObject$1($this);
-    var length = lengthOfArrayLike(O);
-    var index = toAbsoluteIndex(fromIndex, length);
-    var value;
-    // Array#includes uses SameValueZero equality algorithm
-    // eslint-disable-next-line no-self-compare -- NaN check
-    if (IS_INCLUDES && el != el) while (length > index) {
-      value = O[index++];
-      // eslint-disable-next-line no-self-compare -- NaN check
-      if (value != value) return true;
-    // Array#indexOf ignores holes, Array#includes - not
-    } else for (;length > index; index++) {
-      if ((IS_INCLUDES || index in O) && O[index] === el) return IS_INCLUDES || index || 0;
-    } return !IS_INCLUDES && -1;
-  };
-};
-
-var arrayIncludes = {
-  // `Array.prototype.includes` method
-  // https://tc39.es/ecma262/#sec-array.prototype.includes
-  includes: createMethod$1(true),
-  // `Array.prototype.indexOf` method
-  // https://tc39.es/ecma262/#sec-array.prototype.indexof
-  indexOf: createMethod$1(false)
-};
-
-var uncurryThis$3 = functionUncurryThis;
-var hasOwn$1 = hasOwnProperty_1;
-var toIndexedObject = toIndexedObject$3;
-var indexOf = arrayIncludes.indexOf;
-var hiddenKeys$1 = hiddenKeys$3;
-
-var push = uncurryThis$3([].push);
-
-var objectKeysInternal = function (object, names) {
-  var O = toIndexedObject(object);
-  var i = 0;
-  var result = [];
-  var key;
-  for (key in O) !hasOwn$1(hiddenKeys$1, key) && hasOwn$1(O, key) && push(result, key);
-  // Don't enum bug & hidden keys
-  while (names.length > i) if (hasOwn$1(O, key = names[i++])) {
-    ~indexOf(result, key) || push(result, key);
-  }
-  return result;
-};
-
-// IE8- don't enum bug keys
-var enumBugKeys$1 = [
-  'constructor',
-  'hasOwnProperty',
-  'isPrototypeOf',
-  'propertyIsEnumerable',
-  'toLocaleString',
-  'toString',
-  'valueOf'
-];
-
-var internalObjectKeys = objectKeysInternal;
-var enumBugKeys = enumBugKeys$1;
-
-var hiddenKeys = enumBugKeys.concat('length', 'prototype');
-
-// `Object.getOwnPropertyNames` method
-// https://tc39.es/ecma262/#sec-object.getownpropertynames
-// eslint-disable-next-line es/no-object-getownpropertynames -- safe
-objectGetOwnPropertyNames.f = Object.getOwnPropertyNames || function getOwnPropertyNames(O) {
-  return internalObjectKeys(O, hiddenKeys);
-};
-
-var objectGetOwnPropertySymbols = {};
-
-// eslint-disable-next-line es/no-object-getownpropertysymbols -- safe
-objectGetOwnPropertySymbols.f = Object.getOwnPropertySymbols;
-
-var getBuiltIn = getBuiltIn$3;
-var uncurryThis$2 = functionUncurryThis;
-var getOwnPropertyNamesModule = objectGetOwnPropertyNames;
-var getOwnPropertySymbolsModule = objectGetOwnPropertySymbols;
-var anObject = anObject$2;
-
-var concat = uncurryThis$2([].concat);
-
-// all object keys, includes non-enumerable and symbols
-var ownKeys$1 = getBuiltIn('Reflect', 'ownKeys') || function ownKeys(it) {
-  var keys = getOwnPropertyNamesModule.f(anObject(it));
-  var getOwnPropertySymbols = getOwnPropertySymbolsModule.f;
-  return getOwnPropertySymbols ? concat(keys, getOwnPropertySymbols(it)) : keys;
-};
-
-var hasOwn = hasOwnProperty_1;
-var ownKeys = ownKeys$1;
-var getOwnPropertyDescriptorModule = objectGetOwnPropertyDescriptor;
-var definePropertyModule = objectDefineProperty;
-
-var copyConstructorProperties$1 = function (target, source, exceptions) {
-  var keys = ownKeys(source);
-  var defineProperty = definePropertyModule.f;
-  var getOwnPropertyDescriptor = getOwnPropertyDescriptorModule.f;
-  for (var i = 0; i < keys.length; i++) {
-    var key = keys[i];
-    if (!hasOwn(target, key) && !(exceptions && hasOwn(exceptions, key))) {
-      defineProperty(target, key, getOwnPropertyDescriptor(source, key));
-    }
-  }
-};
-
-var fails$1 = fails$9;
-var isCallable$1 = isCallable$b;
-
-var replacement = /#|\.prototype\./;
-
-var isForced$1 = function (feature, detection) {
-  var value = data$1[normalize$1(feature)];
-  return value == POLYFILL ? true
-    : value == NATIVE ? false
-    : isCallable$1(detection) ? fails$1(detection)
-    : !!detection;
-};
-
-var normalize$1 = isForced$1.normalize = function (string) {
-  return String(string).replace(replacement, '.').toLowerCase();
-};
-
-var data$1 = isForced$1.data = {};
-var NATIVE = isForced$1.NATIVE = 'N';
-var POLYFILL = isForced$1.POLYFILL = 'P';
-
-var isForced_1 = isForced$1;
-
-var global$3 = global$c;
-var getOwnPropertyDescriptor = objectGetOwnPropertyDescriptor.f;
-var createNonEnumerableProperty = createNonEnumerableProperty$2;
-var defineBuiltIn = defineBuiltIn$1;
-var defineGlobalProperty = defineGlobalProperty$3;
-var copyConstructorProperties = copyConstructorProperties$1;
-var isForced = isForced_1;
-
-/*
-  options.target         - name of the target object
-  options.global         - target is the global object
-  options.stat           - export as static methods of target
-  options.proto          - export as prototype methods of target
-  options.real           - real prototype method for the `pure` version
-  options.forced         - export even if the native feature is available
-  options.bind           - bind methods to the target, required for the `pure` version
-  options.wrap           - wrap constructors to preventing global pollution, required for the `pure` version
-  options.unsafe         - use the simple assignment of property instead of delete + defineProperty
-  options.sham           - add a flag to not completely full polyfills
-  options.enumerable     - export as enumerable property
-  options.dontCallGetSet - prevent calling a getter on target
-  options.name           - the .name of the function if it does not match the key
-*/
-var _export = function (options, source) {
-  var TARGET = options.target;
-  var GLOBAL = options.global;
-  var STATIC = options.stat;
-  var FORCED, target, key, targetProperty, sourceProperty, descriptor;
-  if (GLOBAL) {
-    target = global$3;
-  } else if (STATIC) {
-    target = global$3[TARGET] || defineGlobalProperty(TARGET, {});
-  } else {
-    target = (global$3[TARGET] || {}).prototype;
-  }
-  if (target) for (key in source) {
-    sourceProperty = source[key];
-    if (options.dontCallGetSet) {
-      descriptor = getOwnPropertyDescriptor(target, key);
-      targetProperty = descriptor && descriptor.value;
-    } else targetProperty = target[key];
-    FORCED = isForced(GLOBAL ? key : TARGET + (STATIC ? '.' : '#') + key, options.forced);
-    // contained in target
-    if (!FORCED && targetProperty !== undefined) {
-      if (typeof sourceProperty == typeof targetProperty) continue;
-      copyConstructorProperties(sourceProperty, targetProperty);
-    }
-    // add a flag to not completely full polyfills
-    if (options.sham || (targetProperty && targetProperty.sham)) {
-      createNonEnumerableProperty(sourceProperty, 'sham', true);
-    }
-    defineBuiltIn(target, key, sourceProperty, options);
-  }
-};
-
-var $$4 = _export;
-var global$2 = global$c;
-
-// `globalThis` object
-// https://tc39.es/ecma262/#sec-globalthis
-$$4({ global: true, forced: global$2.globalThis !== global$2 }, {
-  globalThis: global$2
-});
-
-var wellKnownSymbol$1 = wellKnownSymbol$3;
-
-var TO_STRING_TAG$1 = wellKnownSymbol$1('toStringTag');
-var test = {};
-
-test[TO_STRING_TAG$1] = 'z';
-
-var toStringTagSupport = String(test) === '[object z]';
-
-var TO_STRING_TAG_SUPPORT = toStringTagSupport;
-var isCallable = isCallable$b;
-var classofRaw = classofRaw$2;
-var wellKnownSymbol = wellKnownSymbol$3;
-
-var TO_STRING_TAG = wellKnownSymbol('toStringTag');
-var $Object = Object;
-
-// ES3 wrong here
-var CORRECT_ARGUMENTS = classofRaw(function () { return arguments; }()) == 'Arguments';
-
-// fallback for IE11 Script Access Denied error
-var tryGet = function (it, key) {
-  try {
-    return it[key];
-  } catch (error) { /* empty */ }
-};
-
-// getting tag from ES6+ `Object.prototype.toString`
-var classof$1 = TO_STRING_TAG_SUPPORT ? classofRaw : function (it) {
-  var O, tag, result;
-  return it === undefined ? 'Undefined' : it === null ? 'Null'
-    // @@toStringTag case
-    : typeof (tag = tryGet(O = $Object(it), TO_STRING_TAG)) == 'string' ? tag
-    // builtinTag case
-    : CORRECT_ARGUMENTS ? classofRaw(O)
-    // ES3 arguments fallback
-    : (result = classofRaw(O)) == 'Object' && isCallable(O.callee) ? 'Arguments' : result;
-};
-
-var classof = classof$1;
-
-var $String = String;
-
-var toString$2 = function (argument) {
-  if (classof(argument) === 'Symbol') throw TypeError('Cannot convert a Symbol value to a string');
-  return $String(argument);
-};
-
-// a string of all valid unicode whitespaces
-var whitespaces$2 = '\u0009\u000A\u000B\u000C\u000D\u0020\u00A0\u1680\u2000\u2001\u2002' +
-  '\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF';
-
-var uncurryThis$1 = functionUncurryThis;
-var requireObjectCoercible = requireObjectCoercible$3;
-var toString$1 = toString$2;
-var whitespaces$1 = whitespaces$2;
-
-var replace = uncurryThis$1(''.replace);
-var whitespace = '[' + whitespaces$1 + ']';
-var ltrim = RegExp('^' + whitespace + whitespace + '*');
-var rtrim = RegExp(whitespace + whitespace + '*$');
-
-// `String.prototype.{ trim, trimStart, trimEnd, trimLeft, trimRight }` methods implementation
-var createMethod = function (TYPE) {
-  return function ($this) {
-    var string = toString$1(requireObjectCoercible($this));
-    if (TYPE & 1) string = replace(string, ltrim, '');
-    if (TYPE & 2) string = replace(string, rtrim, '');
-    return string;
-  };
-};
-
-var stringTrim = {
-  // `String.prototype.{ trimLeft, trimStart }` methods
-  // https://tc39.es/ecma262/#sec-string.prototype.trimstart
-  start: createMethod(1),
-  // `String.prototype.{ trimRight, trimEnd }` methods
-  // https://tc39.es/ecma262/#sec-string.prototype.trimend
-  end: createMethod(2),
-  // `String.prototype.trim` method
-  // https://tc39.es/ecma262/#sec-string.prototype.trim
-  trim: createMethod(3)
-};
-
-var PROPER_FUNCTION_NAME = functionName.PROPER;
-var fails = fails$9;
-var whitespaces = whitespaces$2;
-
-var non = '\u200B\u0085\u180E';
-
-// check that a method works with the correct list
-// of whitespaces and has a correct name
-var stringTrimForced = function (METHOD_NAME) {
-  return fails(function () {
-    return !!whitespaces[METHOD_NAME]()
-      || non[METHOD_NAME]() !== non
-      || (PROPER_FUNCTION_NAME && whitespaces[METHOD_NAME].name !== METHOD_NAME);
-  });
-};
-
-var $trimStart = stringTrim.start;
-var forcedStringTrimMethod$1 = stringTrimForced;
-
-// `String.prototype.{ trimStart, trimLeft }` method
-// https://tc39.es/ecma262/#sec-string.prototype.trimstart
-// https://tc39.es/ecma262/#String.prototype.trimleft
-var stringTrimStart = forcedStringTrimMethod$1('trimStart') ? function trimStart() {
-  return $trimStart(this);
-// eslint-disable-next-line es/no-string-prototype-trimstart-trimend -- safe
-} : ''.trimStart;
-
-var $$3 = _export;
-var trimStart$1 = stringTrimStart;
-
-// `String.prototype.trimLeft` method
-// https://tc39.es/ecma262/#sec-string.prototype.trimleft
-// eslint-disable-next-line es/no-string-prototype-trimleft-trimright -- safe
-$$3({ target: 'String', proto: true, name: 'trimStart', forced: ''.trimLeft !== trimStart$1 }, {
-  trimLeft: trimStart$1
-});
-
-// TODO: Remove this line from `core-js@4`
-
-var $$2 = _export;
-var trimStart = stringTrimStart;
-
-// `String.prototype.trimStart` method
-// https://tc39.es/ecma262/#sec-string.prototype.trimstart
-// eslint-disable-next-line es/no-string-prototype-trimstart-trimend -- safe
-$$2({ target: 'String', proto: true, name: 'trimStart', forced: ''.trimStart !== trimStart }, {
-  trimStart: trimStart
-});
-
-var global$1 = global$c;
-var uncurryThis = functionUncurryThis;
-
-var entryUnbind$2 = function (CONSTRUCTOR, METHOD) {
-  return uncurryThis(global$1[CONSTRUCTOR].prototype[METHOD]);
-};
-
-var entryUnbind$1 = entryUnbind$2;
-
-entryUnbind$1('String', 'trimLeft');
-
-var $trimEnd = stringTrim.end;
-var forcedStringTrimMethod = stringTrimForced;
-
-// `String.prototype.{ trimEnd, trimRight }` method
-// https://tc39.es/ecma262/#sec-string.prototype.trimend
-// https://tc39.es/ecma262/#String.prototype.trimright
-var stringTrimEnd = forcedStringTrimMethod('trimEnd') ? function trimEnd() {
-  return $trimEnd(this);
-// eslint-disable-next-line es/no-string-prototype-trimstart-trimend -- safe
-} : ''.trimEnd;
-
-var $$1 = _export;
-var trimEnd$1 = stringTrimEnd;
-
-// `String.prototype.trimRight` method
-// https://tc39.es/ecma262/#sec-string.prototype.trimend
-// eslint-disable-next-line es/no-string-prototype-trimleft-trimright -- safe
-$$1({ target: 'String', proto: true, name: 'trimEnd', forced: ''.trimRight !== trimEnd$1 }, {
-  trimRight: trimEnd$1
-});
-
-// TODO: Remove this line from `core-js@4`
-
-var $ = _export;
-var trimEnd = stringTrimEnd;
-
-// `String.prototype.trimEnd` method
-// https://tc39.es/ecma262/#sec-string.prototype.trimend
-// eslint-disable-next-line es/no-string-prototype-trimstart-trimend -- safe
-$({ target: 'String', proto: true, name: 'trimEnd', forced: ''.trimEnd !== trimEnd }, {
-  trimEnd: trimEnd
-});
-
-var entryUnbind = entryUnbind$2;
-
-entryUnbind('String', 'trimRight');
-
-if (typeof globalThis !== "undefined") {
-    if (typeof globalThis.console === "undefined") {
-        globalThis.console = {};
-        globalThis.console.log = function() {};
-        globalThis.console.assert = function() {};
-        globalThis.console.warn = function() {};
-        globalThis.console.error = function() {
-            alert(Array.prototype.slice.call(arguments).join(", "));
-        };
-    }
-}
-
-if ("performance" in globalThis === false) {
-    globalThis.performance = {};
-}
-
-Date.now = (Date.now || function () {  // thanks IE8
-    return new Date().getTime();
-});
-
-if ("now" in globalThis.performance === false) {
-
-    let nowOffset = Date.now();
-
-    if (performance.timing && performance.timing.navigationStart) {
-      nowOffset = performance.timing.navigationStart;
-    }
-
-    globalThis.performance.now = function now() {
-      return Date.now() - nowOffset;
-  };
-}
 
 /**
  * a collection of string utility functions
@@ -1254,7 +17,7 @@ if ("now" in globalThis.performance === false) {
  * @public
  * @memberof utils.string
  * @name capitalize
- * @param {string} str the string to be capitalized
+ * @param {string} str - the string to be capitalized
  * @returns {string} the capitalized string
  */
 function capitalize(str) {
@@ -1266,7 +29,7 @@ function capitalize(str) {
  * @public
  * @memberof utils.string
  * @name isNumeric
- * @param {string} str the string to be tested
+ * @param {string} str - the string to be tested
  * @returns {boolean} true if string contains only digits
  */
 function isNumeric(str) {
@@ -1281,7 +44,7 @@ function isNumeric(str) {
  * @public
  * @memberof utils.string
  * @name isBoolean
- * @param {string} str the string to be tested
+ * @param {string} str - the string to be tested
  * @returns {boolean} true if the string is either true or false
  */
 function isBoolean(str) {
@@ -1294,7 +57,7 @@ function isBoolean(str) {
  * @public
  * @memberof utils.string
  * @name toHex
- * @param {string} str the string to be converted
+ * @param {string} str - the string to be converted
  * @returns {string} the converted hexadecimal value
  */
 function toHex$1(str) {
@@ -1311,7 +74,7 @@ function toHex$1(str) {
  * @public
  * @memberof utils.string
  * @name isDataUrl
- * @param {string} str the string (url) to be tested
+ * @param {string} str - the string (url) to be tested
  * @returns {boolean} true if the string is a data url
  */
 function isDataUrl(str) {
@@ -1336,14 +99,14 @@ var stringUtils = /*#__PURE__*/Object.freeze({
  * Known agent vendors
  * @ignore
  */
-const vendors$1 = [ "ms", "MS", "moz", "webkit", "o" ];
+const vendors = [ "ms", "MS", "moz", "webkit", "o" ];
 
 /**
  * Get a vendor-prefixed property
  * @public
  * @name prefixed
- * @param {string} name Property name
- * @param {object} [obj=globalThis] Object or element reference to access
+ * @param {string} name - Property name
+ * @param {object} [obj=globalThis] - Object or element reference to access
  * @returns {string} Value of property
  * @memberof utils.agent
  */
@@ -1356,7 +119,7 @@ function prefixed(name, obj) {
     var uc_name = capitalize(name);
 
     var result;
-    vendors$1.some((vendor) => {
+    vendors.some((vendor) => {
         var name = vendor + uc_name;
         return (result = (name in obj) ? obj[name] : undefined);
     });
@@ -1367,9 +130,9 @@ function prefixed(name, obj) {
  * Set a vendor-prefixed property
  * @public
  * @name setPrefixed
- * @param {string} name Property name
- * @param {string} value Property value
- * @param {object} [obj=globalThis] Object or element reference to access
+ * @param {string} name - Property name
+ * @param {string} value - Property value
+ * @param {object} [obj=globalThis] - Object or element reference to access
  * @returns {boolean} true if one of the vendor-prefixed property was found
  * @memberof utils.agent
  */
@@ -1382,7 +145,7 @@ function setPrefixed(name, value, obj) {
 
     var uc_name = capitalize(name);
 
-    vendors$1.some((vendor) => {
+    vendors.some((vendor) => {
         var name = vendor + uc_name;
         if (name in obj) {
             obj[name] = value;
@@ -1485,7 +248,7 @@ function nextPowerOfTwo(val) {
  * @public
  * @memberof Math
  * @name degToRad
- * @param {number} angle angle in degrees
+ * @param {number} angle - angle in degrees
  * @returns {number} corresponding angle in radians
  * @example
  * // convert a specific angle
@@ -1500,7 +263,7 @@ function degToRad(angle) {
  * @public
  * @memberof Math
  * @name radToDeg
- * @param {number} radians angle in radians
+ * @param {number} radians - angle in radians
  * @returns {number} corresponding angle in degrees
  * @example
  * // convert a specific angle
@@ -1515,9 +278,9 @@ function radToDeg(radians) {
  * @public
  * @memberof Math
  * @name clamp
- * @param {number} val the value to clamp
- * @param {number} low lower limit
- * @param {number} high higher limit
+ * @param {number} val - the value to clamp
+ * @param {number} low - lower limit
+ * @param {number} high - higher limit
  * @returns {number} clamped value
  */
 function clamp(val, low, high) {
@@ -1529,8 +292,8 @@ function clamp(val, low, high) {
  * @public
  * @memberof Math
  * @name random
- * @param {number} min minimum value.
- * @param {number} max maximum value.
+ * @param {number} min - minimum value.
+ * @param {number} max - maximum value.
  * @returns {number} random value
  * @example
  * // Print a random number; one of 5, 6, 7, 8, 9
@@ -1545,8 +308,8 @@ function random$1(min, max) {
  * @public
  * @memberof Math
  * @name randomFloat
- * @param {number} min minimum value.
- * @param {number} max maximum value.
+ * @param {number} min - minimum value.
+ * @param {number} max - maximum value.
  * @returns {number} random value
  * @example
  * // Print a random number; one of 5, 6, 7, 8, 9
@@ -1561,8 +324,8 @@ function randomFloat(min, max) {
  * @public
  * @memberof Math
  * @name weightedRandom
- * @param {number} min minimum value.
- * @param {number} max maximum value.
+ * @param {number} min - minimum value.
+ * @param {number} max - maximum value.
  * @returns {number} random value
  * @example
  * // Print a random number; one of 5, 6, 7, 8, 9
@@ -1577,8 +340,8 @@ function weightedRandom$1(min, max) {
  * @public
  * @memberof Math
  * @name round
- * @param {number} num value to be rounded.
- * @param {number} [dec=0] number of decimal digit to be rounded to.
+ * @param {number} num - value to be rounded.
+ * @param {number} [dec=0] - number of decimal digit to be rounded to.
  * @returns {number} rounded value
  * @example
  * // round a specific value to 2 digits
@@ -1595,9 +358,9 @@ function round(num, dec = 0) {
  * @public
  * @memberof Math
  * @name toBeCloseTo
- * @param {number} expected value to be compared with.
- * @param {number} actual actual value to compare
- * @param {number} [precision=2] float precision for the comparison
+ * @param {number} expected - value to be compared with.
+ * @param {number} actual - actual value to compare
+ * @param {number} [precision=2] - float precision for the comparison
  * @returns {boolean} if close to
  * @example
  * // test if the given value is close to 10
@@ -1638,8 +401,8 @@ var math = /*#__PURE__*/Object.freeze({
  * @public
  * @memberof utils.array
  * @name remove
- * @param {Array} arr array from which to remove an object
- * @param {object} obj to be removed
+ * @param {Array} arr - array from which to remove an object
+ * @param {object} obj - to be removed
  * @returns {Array} the modified Array
  * var arr = [ "foo", "bar", "baz" ];
  * // remove "foo" from the array
@@ -1658,7 +421,7 @@ function remove(arr, obj) {
  * @public
  * @memberof utils.array
  * @name random
- * @param {Array} arr array to pick a element
+ * @param {Array} arr - array to pick a element
  * @returns {any} random member of array
  * @example
  * // Select a random array element
@@ -1674,7 +437,7 @@ function random(arr) {
  * @public
  * @memberof utils.array
  * @name weightedRandom
- * @param {Array} arr array to pick a element
+ * @param {Array} arr - array to pick a element
  * @returns {any} random member of array
  */
 function weightedRandom(arr) {
@@ -1703,7 +466,7 @@ const REMOVE_EXT = /\.[^\.]*$/;
  * @public
  * @memberof utils.file
  * @name getBasename
- * @param  {string} path path containing the filename
+ * @param  {string} path- -  path containing the filename
  * @returns {string} the base name without path information.
  */
 function getBasename(path) {
@@ -1715,7 +478,7 @@ function getBasename(path) {
  * @public
  * @memberof utils.file
  * @name getExtension
- * @param  {string} path path containing the filename
+ * @param  {string} path- -  path containing the filename
  * @returns {string} filename extension.
  */
 function getExtension(path) {
@@ -1738,9 +501,9 @@ var fileUtils = /*#__PURE__*/Object.freeze({
  * @public
  * @memberof utils.function
  * @name defer
- * @param {Function} func The function to be deferred.
- * @param {object} thisArg The value to be passed as the this parameter to the target function when the deferred function is called
- * @param {...*} args Optional additional arguments to carry for the function.
+ * @param {Function} func - The function to be deferred.
+ * @param {object} thisArg - The value to be passed as the this parameter to the target function when the deferred function is called
+ * @param {...*} args - Optional additional arguments to carry for the function.
  * @returns {number} id that can be used to clear the deferred function using
  * clearTimeout
  * @example
@@ -1758,9 +521,9 @@ function defer(func, thisArg, ...args) {
  * @public
  * @memberof utils.function
  * @name throttle
- * @param {Function} fn the function to be throttled.
- * @param {number} delay The delay in ms
- * @param {no_trailing} no_trailing disable the execution on the trailing edge
+ * @param {Function} fn - the function to be throttled.
+ * @param {number} delay - The delay in ms
+ * @param {no_trailing} no_trailing - disable the execution on the trailing edge
  * @returns {Function} the function that will be throttled
  */
 function throttle(fn, delay, no_trailing) {
@@ -1821,9 +584,9 @@ class ObjectPool {
      * register an object to the pool. <br>
      * Pooling must be set to true if more than one such objects will be created. <br>
      * (Note: for an object to be poolable, it must implements a `onResetEvent` method)
-     * @param {string} className as defined in the Name field of the Object Properties (in Tiled)
-     * @param {object} classObj corresponding Class to be instantiated
-     * @param {boolean} [recycling=false] enables object recycling for the specified class
+     * @param {string} className - as defined in the Name field of the Object Properties (in Tiled)
+     * @param {object} classObj - corresponding Class to be instantiated
+     * @param {boolean} [recycling=false] - enables object recycling for the specified class
      * @example
      * // implement CherryEntity
      * class CherryEntity extends Spritesheet {
@@ -1848,8 +611,8 @@ class ObjectPool {
 
     /**
      * Pull a new instance of the requested object (if added into the object pool)
-     * @param {string} name as used in {@link pool.register}
-     * @param {object} [...arguments] arguments to be passed when instantiating/reinitializing the object
+     * @param {string} name - as used in {@link pool.register}
+     * @param {object} [...arguments] - arguments to be passed when instantiating/reinitializing the object
      * @returns {object} the instance of the requested object
      * @example
      * me.pool.register("bullet", BulletEntity, true);
@@ -1920,8 +683,8 @@ class ObjectPool {
      * and object must have been instantiated using {@link pool#pull},
      * otherwise this function won't work
      * @throws will throw an error if the object cannot be recycled
-     * @param {object} obj instance to be recycled
-     * @param {boolean} [throwOnError=true] throw an exception if the object cannot be recycled
+     * @param {object} obj - instance to be recycled
+     * @param {boolean} [throwOnError=true] - throw an exception if the object cannot be recycled
      * @returns {boolean} true if the object was successfully recycled in the object pool
      */
     push(obj, throwOnError = true) {
@@ -1942,7 +705,7 @@ class ObjectPool {
 
     /**
      * Check if an object with the provided name is registered
-     * @param {string} name of the registered object class
+     * @param {string} name - of the registered object class
      * @returns {boolean} true if the classname is registered
      */
     exists(name) {
@@ -1953,7 +716,7 @@ class ObjectPool {
      * Check if an object is poolable
      * (was properly registered with the recycling feature enable)
      * @see register
-     * @param {object} obj object to be checked
+     * @param {object} obj - object to be checked
      * @returns {boolean} true if the object is poolable
      * @example
      * if (!me.pool.poolable(myCherryEntity)) {
@@ -1981,13 +744,30 @@ class ObjectPool {
 var pool = new ObjectPool();
 
 /**
+ * a default global ObjectPool instance
+ * @namespace pool
+ * @see ObjectPool
+ * @example
+ * // register our bullet object into the object pool
+ * pool.register("bullet", BulletEntity, true);
+ * // ...
+ * // when we need to manually create a new bullet:
+ * var bullet = pool.pull("bullet", x, y, direction, velocity);
+ * // ...
+ * // when we want to destroy existing object, the remove
+ * // function will ensure the object can then be reallocated later
+ * game.world.removeChild(bullet);
+ */
+var pool$1 = pool;
+
+/**
  * @classdesc
  * a generic 2D Vector Object
  */
 class Vector2d {
     /**
-     * @param {number} [x=0] x value of the vector
-     * @param {number} [y=0] y value of the vector
+     * @param {number} [x=0] - x value of the vector
+     * @param {number} [y=0] - y value of the vector
      */
     constructor(x = 0, y = 0) {
         this.onResetEvent(x, y);
@@ -2138,7 +918,7 @@ class Vector2d {
      * Divide this vector values by the passed value
      * @name div
      * @memberof Vector2d
-     * @param {number} n the value to divide the vector by
+     * @param {number} n - the value to divide the vector by
      * @returns {Vector2d} Reference to this object for method chaining
      */
     div(n) {
@@ -2327,8 +1107,8 @@ class Vector2d {
      * Rotate this vector (counter-clockwise) by the specified angle (in radians).
      * @name rotate
      * @memberof Vector2d
-     * @param {number} angle The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
      * @returns {Vector2d} Reference to this object for method chaining
      */
     rotate(angle, v) {
@@ -2396,7 +1176,7 @@ class Vector2d {
      * @name lerp
      * @memberof Vector2d
      * @param {Vector2d} v
-     * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+     * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
      * @returns {Vector2d} Reference to this object for method chaining
      */
     lerp(v, alpha) {
@@ -2410,7 +1190,7 @@ class Vector2d {
      * @name moveTowards
      * @memberof Vector2d
      * @param {Vector2d} target
-     * @param {number} step the maximum step per iteration (Negative values will push the vector away from the target)
+     * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
      * @returns {Vector2d} Reference to this object for method chaining
      */
      moveTowards(target, step) {
@@ -2455,7 +1235,7 @@ class Vector2d {
      * project this vector on to another vector.
      * @name project
      * @memberof Vector2d
-     * @param {Vector2d} v The vector to project onto.
+     * @param {Vector2d} v - The vector to project onto.
      * @returns {Vector2d} Reference to this object for method chaining
      */
     project(v) {
@@ -2467,7 +1247,7 @@ class Vector2d {
      * This is slightly more efficient than `project` when dealing with unit vectors.
      * @name projectN
      * @memberof Vector2d
-     * @param {Vector2d} v The unit vector to project onto.
+     * @param {Vector2d} v - The unit vector to project onto.
      * @returns {Vector2d} Reference to this object for method chaining
      */
     projectN(v) {
@@ -2481,7 +1261,7 @@ class Vector2d {
      * @returns {Vector2d} new me.Vector2d
      */
     clone() {
-        return pool.pull("Vector2d", this.x, this.y);
+        return pool$1.pull("Vector2d", this.x, this.y);
     }
 
     /**
@@ -2494,6 +1274,8 @@ class Vector2d {
         return "x:" + this.x + ",y:" + this.y;
     }
 }
+
+var Vector2d$1 = Vector2d;
 
 // convert a give color component to it hexadecimal value
 function toHex(component) {
@@ -2678,10 +1460,10 @@ var cssToRGB = new Map();
  */
 class Color {
     /**
-     * @param {number} [r=0] red component or array of color components
-     * @param {number} [g=0] green component
-     * @param {number} [b=0] blue component
-     * @param {number} [alpha=1.0] alpha value
+     * @param {number} [r=0] - red component or array of color components
+     * @param {number} [g=0] - green component
+     * @param {number} [b=0] - blue component
+     * @param {number} [alpha=1.0] - alpha value
      */
     constructor(r = 0, g = 0, b = 0, alpha = 1.0) {
         this.onResetEvent(r, g, b, alpha);
@@ -2751,10 +1533,10 @@ class Color {
 
     /**
      * Set this color to the specified value.
-     * @param {number} r red component [0 .. 255]
-     * @param {number} g green component [0 .. 255]
-     * @param {number} b blue component [0 .. 255]
-     * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
+     * @param {number} r - red component [0 .. 255]
+     * @param {number} g - green component [0 .. 255]
+     * @param {number} b - blue component [0 .. 255]
+     * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
      * @returns {Color} Reference to this object for method chaining
      */
     setColor(r, g, b, alpha = 1.0) {
@@ -2767,9 +1549,9 @@ class Color {
 
     /**
      * set this color to the specified HSV value
-     * @param {number} h hue (a value from 0 to 1)
-     * @param {number} s saturation (a value from 0 to 1)
-     * @param {number} v value (a value from 0 to 1)
+     * @param {number} h - hue (a value from 0 to 1)
+     * @param {number} s - saturation (a value from 0 to 1)
+     * @param {number} v - value (a value from 0 to 1)
      * @returns {Color} Reference to this object for method chaining
      */
     setHSV(h, s, v) {
@@ -2794,9 +1576,9 @@ class Color {
 
     /**
      * set this color to the specified HSL value
-     * @param {number} h hue (a value from 0 to 1)
-     * @param {number} s saturation (a value from 0 to 1)
-     * @param {number} l lightness (a value from 0 to 1)
+     * @param {number} h - hue (a value from 0 to 1)
+     * @param {number} s - saturation (a value from 0 to 1)
+     * @param {number} l - lightness (a value from 0 to 1)
      * @returns {Color} Reference to this object for method chaining
      */
     setHSL(h, s, l) {
@@ -2821,7 +1603,7 @@ class Color {
      * @returns {Color} Reference to the newly cloned object
      */
     clone() {
-        return pool.pull("Color").copy(this);
+        return pool$1.pull("Color").copy(this);
     }
 
     /**
@@ -2869,7 +1651,7 @@ class Color {
     /**
      * Linearly interpolate between this color and the given one.
      * @param {Color} color
-     * @param {number} alpha with alpha = 0 being this color, and alpha = 1 being the given one.
+     * @param {number} alpha - with alpha = 0 being this color, and alpha = 1 being the given one.
      * @returns {Color} Reference to this object for method chaining
      */
     lerp(color, alpha) {
@@ -2897,8 +1679,8 @@ class Color {
 
     /**
      * Generate random r,g,b values for this color object
-     * @param {number} [min=0] minimum value for the random range
-     * @param {number} [max=255] maxmium value for the random range
+     * @param {number} [min=0] - minimum value for the random range
+     * @param {number} [max=255] - maxmium value for the random range
      * @returns {Color} Reference to this object for method chaining
      */
     random(min = 0, max = 255) {
@@ -2968,7 +1750,7 @@ class Color {
      * Parse a Hex color ("#RGB", "#RGBA" or "#RRGGBB", "#RRGGBBAA" format) and set this color to
      * the corresponding r,g,b,a values
      * @param {string} hexColor
-     * @param {boolean} [argb = false] true if format is #ARGB, or #AARRGGBB (as opposed to #RGBA or #RGGBBAA)
+     * @param {boolean} [argb = false] - true if format is #ARGB, or #AARRGGBB (as opposed to #RGBA or #RGGBBAA)
      * @returns {Color} Reference to this object for method chaining
      */
     parseHex(hexColor, argb = false) {
@@ -3024,7 +1806,7 @@ class Color {
 
     /**
      * Pack this color into a Uint32 ARGB representation
-     * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
+     * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
      * @returns {number}
      */
     toUint32(alpha = 1.0) {
@@ -3084,7 +1866,7 @@ class Color {
 
     /**
      * Get the color in "rgba(R,G,B,A)" format
-     * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
+     * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
      * @returns {string}
      */
     toRGBA(alpha = this.alpha) {
@@ -3100,13 +1882,15 @@ class Color {
     }
 }
 
+var Color$1 = Color;
+
 /**
  * @classdesc
  * a 4x4 Matrix3d Object
  */
 class Matrix3d {
     /**
-     * @param {(Matrix3d|...number)} args An instance of me.Matrix3d to copy from, or individual Matrix components (See {@link Matrix3d.setTransform}). If not arguments are given, the matrix will be set to Identity.
+     * @param {(Matrix3d|...number)} args - An instance of me.Matrix3d to copy from, or individual Matrix components (See {@link Matrix3d.setTransform}). If not arguments are given, the matrix will be set to Identity.
      */
     constructor(...args) {
         this.onResetEvent(...args);
@@ -3230,7 +2014,7 @@ class Matrix3d {
      * Copies over the values from another me.Matrix3d.
      * @name copy
      * @memberof Matrix3d
-     * @param {Matrix3d} m the matrix object to copy from
+     * @param {Matrix3d} m - the matrix object to copy from
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     copy(m) {
@@ -3242,7 +2026,7 @@ class Matrix3d {
      * Copies over the upper-left 2x2 values from the given me.Matrix2d
      * @name fromMat2d
      * @memberof Matrix3d
-     * @param {Matrix2d} m the matrix object to copy from
+     * @param {Matrix2d} m - the matrix object to copy from
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     fromMat2d(m) {
@@ -3260,7 +2044,7 @@ class Matrix3d {
      * multiply both matrix
      * @name multiply
      * @memberof Matrix3d
-     * @param {Matrix3d} m Other matrix
+     * @param {Matrix3d} m - Other matrix
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     multiply(m) {
@@ -3405,7 +2189,7 @@ class Matrix3d {
      * apply the current transform to the given 2d or 3d vector
      * @name apply
      * @memberof Matrix3d
-     * @param {Vector2d|Vector3d} v the vector object to be transformed
+     * @param {Vector2d|Vector3d} v - the vector object to be transformed
      * @returns {Vector2d|Vector3d} result vector object.
      */
      apply(v) {
@@ -3430,17 +2214,17 @@ class Matrix3d {
       * apply the inverted current transform to the given 2d or 3d vector
       * @name applyInverse
       * @memberof Matrix3d
-      * @param {Vector2d|Vector3d} v the vector object to be transformed
+      * @param {Vector2d|Vector3d} v - the vector object to be transformed
       * @returns {Vector2d|Vector3d} result vector object.
       */
      applyInverse(v) {
          // invert the current matrix
-         var im = pool.pull("Matrix3d", this).invert();
+         var im = pool$1.pull("Matrix3d", this).invert();
 
          // apply the inverted matrix
          im.apply(v);
 
-         pool.push(im);
+         pool$1.push(im);
 
          return v;
      }
@@ -3450,12 +2234,12 @@ class Matrix3d {
      * <img src="images/glOrtho.gif"/><br>
      * @name ortho
      * @memberof Matrix3d
-     * @param {number} left farthest left on the x-axis
-     * @param {number} right farthest right on the x-axis
-     * @param {number} bottom farthest down on the y-axis
-     * @param {number} top farthest up on the y-axis
-     * @param {number} near distance to the near clipping plane along the -Z axis
-     * @param {number} far distance to the far clipping plane along the -Z axis
+     * @param {number} left - farthest left on the x-axis
+     * @param {number} right - farthest right on the x-axis
+     * @param {number} bottom - farthest down on the y-axis
+     * @param {number} top - farthest up on the y-axis
+     * @param {number} near - distance to the near clipping plane along the -Z axis
+     * @param {number} far - distance to the far clipping plane along the -Z axis
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     ortho(left, right, bottom, top, near, far) {
@@ -3488,9 +2272,9 @@ class Matrix3d {
      * scale the matrix
      * @name scale
      * @memberof Matrix3d
-     * @param {number} x a number representing the abscissa of the scaling vector.
-     * @param {number} [y=x] a number representing the ordinate of the scaling vector.
-     * @param {number} [z=0] a number representing the depth vector
+     * @param {number} x - a number representing the abscissa of the scaling vector.
+     * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
+     * @param {number} [z=0] - a number representing the depth vector
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     scale(x, y, z) {
@@ -3521,7 +2305,7 @@ class Matrix3d {
      * adds a 2D scaling transformation.
      * @name scaleV
      * @memberof Matrix3d
-     * @param {Vector2d|Vector3d} v scaling vector
+     * @param {Vector2d|Vector3d} v - scaling vector
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     scaleV(v) {
@@ -3532,7 +2316,7 @@ class Matrix3d {
      * specifies a 2D scale operation using the [sx, 1] scaling vector
      * @name scaleX
      * @memberof Matrix3d
-     * @param {number} x x scaling vector
+     * @param {number} x - x scaling vector
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     scaleX(x) {
@@ -3543,7 +2327,7 @@ class Matrix3d {
      * specifies a 2D scale operation using the [1,sy] scaling vector
      * @name scaleY
      * @memberof Matrix3d
-     * @param {number} y y scaling vector
+     * @param {number} y - y scaling vector
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     scaleY(y) {
@@ -3554,8 +2338,8 @@ class Matrix3d {
      * rotate this matrix (counter-clockwise) by the specified angle (in radians).
      * @name rotate
      * @memberof Matrix3d
-     * @param {number} angle Rotation angle in radians.
-     * @param {Vector3d} v the axis to rotate around
+     * @param {number} angle - Rotation angle in radians.
+     * @param {Vector3d} v - the axis to rotate around
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     rotate(angle, v) {
@@ -3634,16 +2418,16 @@ class Matrix3d {
      * @name translate
      * @memberof Matrix3d
      * @method
-     * @param {number} x a number representing the abscissa of the vector.
-     * @param {number} [y=x] a number representing the ordinate of the vector.
-     * @param {number} [z=0] a number representing the depth of the vector
+     * @param {number} x - a number representing the abscissa of the vector.
+     * @param {number} [y=x] - a number representing the ordinate of the vector.
+     * @param {number} [z=0] - a number representing the depth of the vector
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     /**
      * translate the matrix by a vector on the horizontal and vertical axis
      * @name translateV
      * @memberof Matrix3d
-     * @param {Vector2d|Vector3d} v the vector to translate the matrix by
+     * @param {Vector2d|Vector3d} v - the vector to translate the matrix by
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     translate() {
@@ -3703,7 +2487,7 @@ class Matrix3d {
      * return true if the two matrices are identical
      * @name equals
      * @memberof Matrix3d
-     * @param {Matrix3d} m the other matrix
+     * @param {Matrix3d} m - the other matrix
      * @returns {boolean} true if both are equals
      */
     equals(m) {
@@ -3737,7 +2521,7 @@ class Matrix3d {
      * @returns {Matrix3d}
      */
     clone() {
-        return pool.pull("Matrix3d", this);
+        return pool$1.pull("Matrix3d", this);
     }
 
     /**
@@ -3768,6 +2552,8 @@ class Matrix3d {
     }
 }
 
+var Matrix3d$1 = Matrix3d;
+
 /**
  * @classdesc
  * a Matrix2d Object.<br>
@@ -3776,7 +2562,7 @@ class Matrix3d {
  */
 class Matrix2d {
     /**
-     * @param {(Matrix2d|Matrix3d|...number)} args an instance of me.Matrix2d or me.Matrix3d to copy from, or individual matrix components (See {@link Matrix2d.setTransform}). If not arguments are given, the matrix will be set to Identity.
+     * @param {(Matrix2d|Matrix3d|...number)} args - an instance of me.Matrix2d or me.Matrix3d to copy from, or individual matrix components (See {@link Matrix2d.setTransform}). If not arguments are given, the matrix will be set to Identity.
      */
     constructor(...args) {
         this.onResetEvent(...args);
@@ -3793,7 +2579,7 @@ class Matrix2d {
         if (arguments.length && arguments[0] instanceof Matrix2d) {
             this.copy(arguments[0]);
         }
-        else if (arguments.length && arguments[0] instanceof Matrix3d) {
+        else if (arguments.length && arguments[0] instanceof Matrix3d$1) {
             this.fromMat3d(arguments[0]);
         }
         else if (arguments.length >= 6) {
@@ -3893,7 +2679,7 @@ class Matrix2d {
      * Copies over the values from another me.Matrix2d.
      * @name copy
      * @memberof Matrix2d
-     * @param {Matrix2d} m the matrix object to copy from
+     * @param {Matrix2d} m - the matrix object to copy from
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     copy(m) {
@@ -3905,7 +2691,7 @@ class Matrix2d {
      * Copies over the upper-left 3x3 values from the given me.Matrix3d
      * @name fromMat3d
      * @memberof Matrix2d
-     * @param {Matrix3d} m the matrix object to copy from
+     * @param {Matrix3d} m - the matrix object to copy from
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     fromMat3d(m) {
@@ -3929,7 +2715,7 @@ class Matrix2d {
      * multiply both matrix
      * @name multiply
      * @memberof Matrix2d
-     * @param {Matrix2d} m the other matrix
+     * @param {Matrix2d} m - the other matrix
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     multiply(m) {
@@ -4016,7 +2802,7 @@ class Matrix2d {
     * apply the current transform to the given 2d or 3d vector
     * @name apply
     * @memberof Matrix2d
-    * @param {Vector2d|Vector3d} v the vector object to be transformed
+    * @param {Vector2d|Vector3d} v - the vector object to be transformed
     * @returns {Vector2d|Vector3d} result vector object.
     */
     apply(v) {
@@ -4039,7 +2825,7 @@ class Matrix2d {
      * apply the inverted current transform to the given 2d vector
      * @name applyInverse
      * @memberof Matrix2d
-     * @param {Vector2d} v the vector object to be transformed
+     * @param {Vector2d} v - the vector object to be transformed
      * @returns {Vector2d} result vector object.
      */
     applyInverse(v) {
@@ -4059,8 +2845,8 @@ class Matrix2d {
      * scale the matrix
      * @name scale
      * @memberof Matrix2d
-     * @param {number} x a number representing the abscissa of the scaling vector.
-     * @param {number} [y=x] a number representing the ordinate of the scaling vector.
+     * @param {number} x - a number representing the abscissa of the scaling vector.
+     * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     scale(x, y) {
@@ -4080,7 +2866,7 @@ class Matrix2d {
      * adds a 2D scaling transformation.
      * @name scaleV
      * @memberof Matrix2d
-     * @param {Vector2d} v scaling vector
+     * @param {Vector2d} v - scaling vector
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     scaleV(v) {
@@ -4091,7 +2877,7 @@ class Matrix2d {
      * specifies a 2D scale operation using the [sx, 1] scaling vector
      * @name scaleX
      * @memberof Matrix2d
-     * @param {number} x x scaling vector
+     * @param {number} x - x scaling vector
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     scaleX(x) {
@@ -4102,7 +2888,7 @@ class Matrix2d {
      * specifies a 2D scale operation using the [1,sy] scaling vector
      * @name scaleY
      * @memberof Matrix2d
-     * @param {number} y y scaling vector
+     * @param {number} y - y scaling vector
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     scaleY(y) {
@@ -4113,7 +2899,7 @@ class Matrix2d {
      * rotate the matrix (counter-clockwise) by the specified angle (in radians).
      * @name rotate
      * @memberof Matrix2d
-     * @param {number} angle Rotation angle in radians.
+     * @param {number} angle - Rotation angle in radians.
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     rotate(angle) {
@@ -4144,15 +2930,15 @@ class Matrix2d {
      * @name translate
      * @memberof Matrix2d
      * @method
-     * @param {number} x the x coordindates to translate the matrix by
-     * @param {number} y the y coordindates to translate the matrix by
+     * @param {number} x - the x coordindates to translate the matrix by
+     * @param {number} y - the y coordindates to translate the matrix by
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     /**
      * translate the matrix by a vector on the horizontal and vertical axis
      * @name translateV
      * @memberof Matrix2d
-     * @param {Vector2d} v the vector to translate the matrix by
+     * @param {Vector2d} v - the vector to translate the matrix by
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     translate() {
@@ -4201,7 +2987,7 @@ class Matrix2d {
      * return true if the two matrices are identical
      * @name equals
      * @memberof Matrix2d
-     * @param {Matrix2d} m the other matrix
+     * @param {Matrix2d} m - the other matrix
      * @returns {boolean} true if both are equals
      */
     equals(m) {
@@ -4228,7 +3014,7 @@ class Matrix2d {
      * @returns {Matrix2d}
      */
     clone() {
-        return pool.pull("Matrix2d", this);
+        return pool$1.pull("Matrix2d", this);
     }
 
     /**
@@ -4257,6 +3043,8 @@ class Matrix2d {
         ")";
     }
 }
+
+var Matrix2d$1 = Matrix2d;
 
 var eventemitter3 = {exports: {}};
 
@@ -5073,8 +3861,8 @@ const ONCONTEXT_RESTORED = "renderer.contextrestored";
 /**
  * calls each of the listeners registered for a given event.
  * @function event.emit
- * @param {string|symbol} eventName The event name.
- * @param {object} [...arguments] arguments to be passed to all listeners
+ * @param {string|symbol} eventName - The event name.
+ * @param {object} [...arguments] - arguments to be passed to all listeners
  * @returns {boolean} true if the event had listeners, false otherwise.
  * @example
  * me.event.emit("event-name", a, b, c);
@@ -5086,9 +3874,9 @@ function emit(eventName, ...args) {
 /**
  * Add a listener for a given event.
  * @function event.on
- * @param {string|symbol} eventName The event name.
- * @param {Function} listener The listener function.
- * @param {*} [context=this] The context to invoke the listener with.
+ * @param {string|symbol} eventName - The event name.
+ * @param {Function} listener - The listener function.
+ * @param {*} [context=this] - The context to invoke the listener with.
  * @returns {EventEmitter} `this`.
  * @public
  * @example
@@ -5101,9 +3889,9 @@ function on(eventName, listener, context) {
 /**
  * Add a one-time listener for a given event.
  * @function event.once
- * @param {string|symbol} eventName The event name.
- * @param {Function} listener The listener function.
- * @param {*} [context=this] The context to invoke the listener with.
+ * @param {string|symbol} eventName - The event name.
+ * @param {Function} listener - The listener function.
+ * @param {*} [context=this] - The context to invoke the listener with.
  * @returns {EventEmitter} `this`.
  * @public
  * @example
@@ -5116,8 +3904,8 @@ function once(eventName, listener, context) {
 /**
  * remove the given listener for a given event.
  * @function event.off
- * @param {string|symbol} eventName The event name.
- * @param {Function} listener The listener function.
+ * @param {string|symbol} eventName - The event name.
+ * @param {Function} listener - The listener function.
  * @returns {EventEmitter} `this`.
  * @public
  * @example
@@ -5244,7 +4032,7 @@ var save = {
      * Add new keys to localStorage and set them to the given default values if they do not exist
      * @name add
      * @memberof save
-     * @param {object} props key and corresponding values
+     * @param {object} props - key and corresponding values
      * @example
      * // Initialize "score" and "lives" with default values
      * me.save.add({ score : 0, lives : 3 });
@@ -5297,7 +4085,7 @@ var save = {
      * Remove a key from localStorage
      * @name remove
      * @memberof save
-     * @param {string} key key to be removed
+     * @param {string} key - key to be removed
      * @example
      * // Remove the "score" key from localStorage
      * me.save.remove("score");
@@ -5314,6 +4102,8 @@ var save = {
         }
     }
 };
+
+var save$1 = save;
 
 // track if DOMContentLoaded was called already
 let readyBound = false;
@@ -5818,7 +4608,7 @@ let stopOnBlur = false;
 * @function onReady
 * @memberof device
 * @public
-* @param {Function} fn the function to be executed
+* @param {Function} fn - the function to be executed
 * @example
 * // small game skeleton
 * var game = {
@@ -5867,7 +4657,7 @@ function onReady(fn) {
  * @function enableSwipe
  * @memberof device
  * @public
- * @param {boolean} [enable=true] enable or disable swipe.
+ * @param {boolean} [enable=true] - enable or disable swipe.
  */
 function enableSwipe(enable) {
     let moveEvent = pointerEvent ? "pointermove" : (touchEvent ? "touchmove" : "mousemove");
@@ -5902,7 +4692,7 @@ function isFullscreen() {
  * @function requestFullscreen
  * @memberof device
  * @public
- * @param {object} [element=default canvas object] the element to be set in full-screen mode.
+ * @param {object} [element=default canvas object] - the element to be set in full-screen mode.
  * @example
  * // add a keyboard shortcut to toggle Fullscreen mode on/off
  * me.input.bindKey(me.input.KEY.F, "toggleFullscreen");
@@ -5978,7 +4768,7 @@ function getScreenOrientation() {
  * @memberof device
  * @public
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
- * @param {string|string[]} orientation The orientation into which to lock the screen.
+ * @param {string|string[]} orientation - The orientation into which to lock the screen.
  * @returns {boolean} true if the orientation was unsuccessfully locked
  */
 function lockOrientation(orientation) {
@@ -6046,7 +4836,7 @@ function isLandscape() {
 function getStorage(type = "local") {
     switch (type) {
         case "local" :
-            return save;
+            return save$1;
 
         default :
             throw new Error("storage type " + type + " not supported");
@@ -6058,7 +4848,7 @@ function getStorage(type = "local") {
  * @function getParentElement
  * @memberof device
  * @public
- * @param {string|HTMLElement} element the parent element name or a HTMLElement object
+ * @param {string|HTMLElement} element - the parent element name or a HTMLElement object
  * @returns {HTMLElement} the parent Element
  */
 function getParentElement(element) {
@@ -6076,7 +4866,7 @@ function getParentElement(element) {
  * @function getElement
  * @memberof device
  * @public
- * @param {string|HTMLElement} element the parent element name or a HTMLElement object
+ * @param {string|HTMLElement} element - the parent element name or a HTMLElement object
  * @returns {HTMLElement} the corresponding DOM Element or null if not existing
  */
 function getElement(element) {
@@ -6106,7 +4896,7 @@ function getElement(element) {
  * @memberof device
  * @public
  * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
- * @param {string|HTMLElement} element an HTMLElement object
+ * @param {string|HTMLElement} element - an HTMLElement object
  * @returns {DOMRect} the size and position of the element relatively to the viewport
  */
 function getElementBounds(element) {
@@ -6126,7 +4916,7 @@ function getElementBounds(element) {
  * @memberof device
  * @public
  * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
- * @param {string|HTMLElement} element an HTMLElement object
+ * @param {string|HTMLElement} element - an HTMLElement object
  * @returns {DOMRect} the size and position of the given element parent relative to the viewport
  */
 function getParentBounds(element) {
@@ -6138,8 +4928,8 @@ function getParentBounds(element) {
  * @function isWebGLSupported
  * @memberof device
  * @public
- * @param {object} [options] context creation options
- * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
+ * @param {object} [options] - context creation options
+ * @param {boolean} [options.failIfMajorPerformanceCaveat=true] - If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
  * @returns {boolean} true if WebGL is supported
  */
 function isWebGLSupported(options) {
@@ -6311,7 +5101,7 @@ function unwatchDeviceOrientation() {
  * @function vibrate
  * @memberof device
  * @public
- * @param {number|number[]} pattern pattern of vibration and pause intervals
+ * @param {number|number[]} pattern - pattern of vibration and pause intervals
  * @example
  * // vibrate for 1000 ms
  * me.device.vibrate(1000);
@@ -6581,10 +5371,10 @@ function minify(src) {
  */
 class GLShader {
     /**
-     * @param {WebGLRenderingContext} gl the current WebGL rendering context
-     * @param {string} vertex a string containing the GLSL source code to set
-     * @param {string} fragment a string containing the GLSL source code to set
-     * @param {string} [precision=auto detected] float precision ('lowp', 'mediump' or 'highp').
+     * @param {WebGLRenderingContext} gl - the current WebGL rendering context
+     * @param {string} vertex - a string containing the GLSL source code to set
+     * @param {string} fragment - a string containing the GLSL source code to set
+     * @param {string} [precision=auto detected] - float precision ('lowp', 'mediump' or 'highp').
      * @see https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_on_the_web/GLSL_Shaders
      * @example
      * // create a basic shader
@@ -6659,7 +5449,7 @@ class GLShader {
 
     /**
      * returns the location of an attribute variable in this shader program
-     * @param {string} name the name of the attribute variable whose location to get.
+     * @param {string} name - the name of the attribute variable whose location to get.
      * @returns {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
      */
     getAttribLocation(name) {
@@ -6673,8 +5463,8 @@ class GLShader {
 
     /**
      * Set the uniform to the given value
-     * @param {string} name the uniform name
-     * @param {object|Float32Array} value the value to assign to that uniform
+     * @param {string} name - the uniform name
+     * @param {object|Float32Array} value - the value to assign to that uniform
      * @example
      * myShader.setUniform("uProjectionMatrix", this.projectionMatrix);
      */
@@ -6693,9 +5483,9 @@ class GLShader {
 
     /**
      * activate the given vertex attribute for this shader
-     * @param {WebGLRenderingContext} gl the current WebGL rendering context
-     * @param {object[]} attributes an array of vertex attributes
-     * @param {number} vertexByteSize the size of a single vertex in bytes
+     * @param {WebGLRenderingContext} gl - the current WebGL rendering context
+     * @param {object[]} attributes - an array of vertex attributes
+     * @param {number} vertexByteSize - the size of a single vertex in bytes
      */
     setVertexAttributes(gl, attributes, vertexByteSize) {
         // set the vertex attributes
@@ -6725,6 +5515,7 @@ class GLShader {
         this.fragment = null;
     }
 }
+var GLShader$1 = GLShader;
 
 /**
  * @classdesc
@@ -6859,6 +5650,7 @@ class VertexArrayBuffer {
     }
 
 }
+var VertexArrayBuffer$1 = VertexArrayBuffer;
 
 var primitiveVertex = "// Current vertex point\nattribute vec2 aVertex;\n\n// Projection matrix\nuniform mat4 uProjectionMatrix;\n\n// Vertex color\nuniform vec4 uColor;\n\n// Fragment color\nvarying vec4 vColor;\n\nvoid main(void) {\n    // Transform the vertex position by the projection matrix\n    gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);\n    // Pass the remaining attributes to the fragment shader\n    vColor = vec4(uColor.rgb * uColor.a, uColor.a);\n}\n";
 
@@ -6870,10 +5662,10 @@ var quadFragment = "uniform sampler2D uSampler;\nvarying vec4 vColor;\nvarying v
 
 // a pool of resuable vectors
 var V_ARRAY = [
-    new Vector2d(),
-    new Vector2d(),
-    new Vector2d(),
-    new Vector2d()
+    new Vector2d$1(),
+    new Vector2d$1(),
+    new Vector2d$1(),
+    new Vector2d$1()
 ];
 
 /**
@@ -6883,7 +5675,7 @@ var V_ARRAY = [
  */
 class WebGLCompositor {
     /**
-     * @param {WebGLRenderer} renderer the current WebGL renderer session
+     * @param {WebGLRenderer} renderer - the current WebGL renderer session
      */
     constructor (renderer) {
         this.init(renderer);
@@ -6950,15 +5742,15 @@ class WebGLCompositor {
         this.vertexSize = 0;
 
         // Load and create shader programs
-        this.primitiveShader = new GLShader(this.gl, primitiveVertex, primitiveFragment);
-        this.quadShader = new GLShader(this.gl, quadVertex, quadFragment);
+        this.primitiveShader = new GLShader$1(this.gl, primitiveVertex, primitiveFragment);
+        this.quadShader = new GLShader$1(this.gl, quadVertex, quadFragment);
 
         /// define all vertex attributes
         this.addAttribute("aVertex", 2, gl.FLOAT, false, 0 * Float32Array.BYTES_PER_ELEMENT); // 0
         this.addAttribute("aRegion", 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT); // 1
         this.addAttribute("aColor",  4, gl.UNSIGNED_BYTE, true, 4 * Float32Array.BYTES_PER_ELEMENT); // 2
 
-        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, 6); // 6 vertices per quad
+        this.vertexBuffer = new VertexArrayBuffer$1(this.vertexSize, 6); // 6 vertices per quad
 
         // vertex buffer
         gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
@@ -7006,11 +5798,11 @@ class WebGLCompositor {
 
     /**
      * add vertex attribute property definition to the compositor
-     * @param {string} name name of the attribute in the vertex shader
-     * @param {number} size number of components per vertex attribute. Must be 1, 2, 3, or 4.
-     * @param {GLenum} type data type of each component in the array
-     * @param {boolean} normalized whether integer data values should be normalized into a certain range when being cast to a float
-     * @param {number} offset offset in bytes of the first component in the vertex attribute array
+     * @param {string} name - name of the attribute in the vertex shader
+     * @param {number} size - number of components per vertex attribute. Must be 1, 2, 3, or 4.
+     * @param {GLenum} type - data type of each component in the array
+     * @param {boolean} normalized - whether integer data values should be normalized into a certain range when being cast to a float
+     * @param {number} offset - offset in bytes of the first component in the vertex attribute array
      */
     addAttribute(name, size, type, normalized, offset) {
         this.attributes.push({
@@ -7051,10 +5843,10 @@ class WebGLCompositor {
 
     /**
      * Sets the viewport
-     * @param {number} x x position of viewport
-     * @param {number} y y position of viewport
-     * @param {number} w width of viewport
-     * @param {number} h height of viewport
+     * @param {number} x - x position of viewport
+     * @param {number} y - y position of viewport
+     * @param {number} w - width of viewport
+     * @param {number} h - height of viewport
      */
     setViewport(x, y, w, h) {
         this.gl.viewport(x, y, w, h);
@@ -7062,15 +5854,15 @@ class WebGLCompositor {
 
     /**
      * Create a WebGL texture from an image
-     * @param {number} unit Destination texture unit
-     * @param {Image|HTMLCanvasElement|ImageData|Uint8Array[]|Float32Array[]} image Source image
-     * @param {number} filter gl.LINEAR or gl.NEAREST
-     * @param {string} [repeat="no-repeat"] Image repeat behavior (see {@link ImageLayer#repeat})
-     * @param {number} [w] Source image width (Only use with UInt8Array[] or Float32Array[] source image)
-     * @param {number} [h] Source image height (Only use with UInt8Array[] or Float32Array[] source image)
-     * @param {number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
-     * @param {boolean} [premultipliedAlpha=true] Multiplies the alpha channel into the other color channels
-     * @param {boolean} [mipmap=true] Whether mipmap levels should be generated for this texture
+     * @param {number} unit - Destination texture unit
+     * @param {Image|HTMLCanvasElement|ImageData|Uint8Array[]|Float32Array[]} image - Source image
+     * @param {number} filter - gl.LINEAR or gl.NEAREST
+     * @param {string} [repeat="no-repeat"] - Image repeat behavior (see {@link ImageLayer#repeat})
+     * @param {number} [w] - Source image width (Only use with UInt8Array[] or Float32Array[] source image)
+     * @param {number} [h] - Source image height (Only use with UInt8Array[] or Float32Array[] source image)
+     * @param {number} [b] - Source image border (Only use with UInt8Array[] or Float32Array[] source image)
+     * @param {boolean} [premultipliedAlpha=true] - Multiplies the alpha channel into the other color channels
+     * @param {boolean} [mipmap=true] - Whether mipmap levels should be generated for this texture
      * @returns {WebGLTexture} a WebGL texture
      */
     createTexture2D(unit, image, filter, repeat = "no-repeat", w, h, b, premultipliedAlpha = true, mipmap = true) {
@@ -7104,8 +5896,8 @@ class WebGLCompositor {
 
     /**
      * delete the given WebGL texture
-     * @param {WebGLTexture} [texture] a WebGL texture to delete
-     * @param {number} [unit] Texture unit to delete
+     * @param {WebGLTexture} [texture] - a WebGL texture to delete
+     * @param {number} [unit] - Texture unit to delete
      */
     deleteTexture2D(texture) {
         this.gl.deleteTexture(texture);
@@ -7114,7 +5906,7 @@ class WebGLCompositor {
 
     /**
      * returns the WebGL texture associated to the given texture unit
-     * @param {number} unit Texture unit to which a texture is bound
+     * @param {number} unit - Texture unit to which a texture is bound
      * @returns {WebGLTexture} texture a WebGL texture
      */
     getTexture2D(unit) {
@@ -7123,8 +5915,8 @@ class WebGLCompositor {
 
     /**
      * assign the given WebGL texture to the current batch
-     * @param {WebGLTexture} texture a WebGL texture
-     * @param {number} unit Texture unit to which the given texture is bound
+     * @param {WebGLTexture} texture - a WebGL texture
+     * @param {number} unit - Texture unit to which the given texture is bound
      */
     bindTexture2D(texture, unit) {
         var gl = this.gl;
@@ -7148,8 +5940,8 @@ class WebGLCompositor {
 
     /**
      * unbind the given WebGL texture, forcing it to be reuploaded
-     * @param {WebGLTexture} [texture] a WebGL texture
-     * @param {number} [unit] a WebGL texture
+     * @param {WebGLTexture} [texture] - a WebGL texture
+     * @param {number} [unit] - a WebGL texture
      * @returns {number} unit the unit number that was associated with the given texture
      */
     unbindTexture2D(texture, unit) {
@@ -7201,7 +5993,7 @@ class WebGLCompositor {
     /**
      * Select the shader to use for compositing
      * @see GLShader
-     * @param {GLShader} shader a reference to a GLShader instance
+     * @param {GLShader} shader - a reference to a GLShader instance
      */
     useShader(shader) {
         if (this.activeShader !== shader) {
@@ -7215,16 +6007,16 @@ class WebGLCompositor {
 
     /**
      * Add a textured quad
-     * @param {TextureAtlas} texture Source texture atlas
-     * @param {number} x Destination x-coordinate
-     * @param {number} y Destination y-coordinate
-     * @param {number} w Destination width
-     * @param {number} h Destination height
-     * @param {number} u0 Texture UV (u0) value.
-     * @param {number} v0 Texture UV (v0) value.
-     * @param {number} u1 Texture UV (u1) value.
-     * @param {number} v1 Texture UV (v1) value.
-     * @param {number} tint tint color to be applied to the texture in UINT32 (argb) format
+     * @param {TextureAtlas} texture - Source texture atlas
+     * @param {number} x - Destination x-coordinate
+     * @param {number} y - Destination y-coordinate
+     * @param {number} w - Destination width
+     * @param {number} h - Destination height
+     * @param {number} u0 - Texture UV (u0) value.
+     * @param {number} v0 - Texture UV (v0) value.
+     * @param {number} u1 - Texture UV (u1) value.
+     * @param {number} v1 - Texture UV (v1) value.
+     * @param {number} tint - tint color to be applied to the texture in UINT32 (argb) format
      */
     addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint) {
 
@@ -7269,7 +6061,7 @@ class WebGLCompositor {
 
     /**
      * Flush batched texture operations to the GPU
-     * @param {number} [mode=gl.TRIANGLES] the GL drawing mode
+     * @param {number} [mode=gl.TRIANGLES] - the GL drawing mode
      */
     flush(mode = this.mode) {
         var vertex = this.vertexBuffer;
@@ -7295,9 +6087,9 @@ class WebGLCompositor {
 
     /**
      * Draw an array of vertices
-     * @param {GLenum} mode primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
-     * @param {Vector2d[]} verts vertices
-     * @param {number} [vertexCount=verts.length] amount of points defined in the points array
+     * @param {GLenum} mode - primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
+     * @param {Vector2d[]} verts - vertices
+     * @param {number} [vertexCount=verts.length] - amount of points defined in the points array
      */
     drawVertices(mode, verts, vertexCount = verts.length) {
         // use the primitive shader
@@ -7343,6 +6135,7 @@ class WebGLCompositor {
         gl.clear(gl.COLOR_BUFFER_BIT);
     }
 }
+var WebGLCompositor$1 = WebGLCompositor;
 
 var earcut$1 = {exports: {}};
 
@@ -8038,9 +6831,9 @@ earcut.flatten = function (data) {
  */
 class Polygon {
     /**
-     * @param {number} x origin point of the Polygon
-     * @param {number} y origin point of the Polygon
-     * @param {Vector2d[]} points array of vector defining the Polygon
+     * @param {number} x - origin point of the Polygon
+     * @param {number} y - origin point of the Polygon
+     * @param {Vector2d[]} points - array of vector defining the Polygon
      */
     constructor(x, y, points) {
         /**
@@ -8050,7 +6843,7 @@ class Polygon {
          * @name pos
          * @memberof Polygon
          */
-        this.pos = pool.pull("Vector2d");
+        this.pos = pool$1.pull("Vector2d");
 
         /**
          * The bounding rectangle for this shape
@@ -8107,9 +6900,9 @@ class Polygon {
      * set new value to the Polygon
      * @name setShape
      * @memberof Polygon
-     * @param {number} x position of the Polygon
-     * @param {number} y position of the Polygon
-     * @param {Vector2d[]|number[]} points array of vector or vertice defining the Polygon
+     * @param {number} x - position of the Polygon
+     * @param {number} y - position of the Polygon
+     * @param {Vector2d[]|number[]} points - array of vector or vertice defining the Polygon
      * @returns {Polygon} this instance for objecf chaining
      */
     setShape(x, y, points) {
@@ -8122,7 +6915,7 @@ class Polygon {
      * set the vertices defining this Polygon
      * @name setVertices
      * @memberof Polygon
-     * @param {Vector2d[]} vertices array of vector or vertice defining the Polygon
+     * @param {Vector2d[]} vertices - array of vector or vertice defining the Polygon
      * @returns {Polygon} this instance for objecf chaining
      */
     setVertices(vertices) {
@@ -8132,19 +6925,19 @@ class Polygon {
         }
 
         // convert given points to me.Vector2d if required
-        if (!(vertices[0] instanceof Vector2d)) {
+        if (!(vertices[0] instanceof Vector2d$1)) {
             this.points.length = 0;
 
             if (typeof vertices[0] === "object") {
                 // array of {x,y} object
                 vertices.forEach((vertice) => {
-                   this.points.push(pool.pull("Vector2d", vertice.x, vertice.y));
+                   this.points.push(pool$1.pull("Vector2d", vertice.x, vertice.y));
                 });
 
             } else {
                 // it's a flat array
                 for (var p = 0; p < vertices.length; p += 2) {
-                    this.points.push(pool.pull("Vector2d", vertices[p], vertices[p + 1]));
+                    this.points.push(pool$1.pull("Vector2d", vertices[p], vertices[p + 1]));
                 }
             }
         } else {
@@ -8161,7 +6954,7 @@ class Polygon {
      * apply the given transformation matrix to this Polygon
      * @name transform
      * @memberof Polygon
-     * @param {Matrix2d} m the transformation matrix
+     * @param {Matrix2d} m - the transformation matrix
      * @returns {Polygon} Reference to this object for method chaining
      */
     transform(m) {
@@ -8199,8 +6992,8 @@ class Polygon {
      * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
      * @name rotate
      * @memberof Polygon
-     * @param {number} angle The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
      * @returns {Polygon} Reference to this object for method chaining
      */
     rotate(angle, v) {
@@ -8272,12 +7065,12 @@ class Polygon {
         // Calculate the edges/normals
         for (i = 0; i < len; i++) {
             if (edges[i] === undefined) {
-                edges[i] = pool.pull("Vector2d");
+                edges[i] = pool$1.pull("Vector2d");
             }
             edges[i].copy(points[(i + 1) % len]).sub(points[i]);
 
             if (normals[i] === undefined) {
-                normals[i] = pool.pull("Vector2d");
+                normals[i] = pool$1.pull("Vector2d");
             }
             normals[i].copy(edges[i]).perp().normalize();
         }
@@ -8356,15 +7149,15 @@ class Polygon {
      * @name translate
      * @memberof Polygon
      * @method
-     * @param {number} x x offset
-     * @param {number} y y offset
+     * @param {number} x - x offset
+     * @param {number} y - y offset
      * @returns {Polygon} this Polygon
      */
     /**
      * translate the Polygon by the specified vector
      * @name translate
      * @memberof Polygon
-     * @param {Vector2d} v vector offset
+     * @param {Vector2d} v - vector offset
      * @returns {Polygon} Reference to this object for method chaining
      */
     translate() {
@@ -8434,8 +7227,8 @@ class Polygon {
      *  bounding rect, as the function can be highly consuming with complex shapes)
      * @name contains
      * @memberof Polygon
-     * @param  {number} x x coordinate
-     * @param  {number} y y coordinate
+     * @param  {number} x -  x coordinate
+     * @param  {number} y -  y coordinate
      * @returns {boolean} true if contains
      */
     contains() {
@@ -8475,7 +7268,7 @@ class Polygon {
      */
     getBounds() {
         if (typeof this._bounds === "undefined") {
-            this._bounds = pool.pull("Bounds");
+            this._bounds = pool$1.pull("Bounds");
         }
         return this._bounds;
     }
@@ -8511,25 +7304,27 @@ class Polygon {
     }
 }
 
+var Polygon$1 = Polygon;
+
 /**
  * @classdesc
  * a rectangle Object
  * @augments Polygon
  */
-class Rect extends Polygon {
+class Rect extends Polygon$1 {
     /**
-     * @param {number} x position of the Rectangle
-     * @param {number} y position of the Rectangle
-     * @param {number} w width of the rectangle
-     * @param {number} h height of the rectangle
+     * @param {number} x - position of the Rectangle
+     * @param {number} y - position of the Rectangle
+     * @param {number} w - width of the rectangle
+     * @param {number} h - height of the rectangle
      */
     constructor(x, y, w, h) {
         // parent constructor
         super(x, y, [
-            pool.pull("Vector2d", 0, 0), // 0, 0
-            pool.pull("Vector2d", w, 0), // 1, 0
-            pool.pull("Vector2d", w, h), // 1, 1
-            pool.pull("Vector2d", 0, h)  // 0, 1
+            pool$1.pull("Vector2d", 0, 0), // 0, 0
+            pool$1.pull("Vector2d", w, 0), // 1, 0
+            pool$1.pull("Vector2d", w, h), // 1, 1
+            pool$1.pull("Vector2d", 0, h)  // 0, 1
         ]);
         this.shapeType = "Rectangle";
     }
@@ -8543,10 +7338,10 @@ class Rect extends Polygon {
      * set new value to the rectangle shape
      * @name setShape
      * @memberof Rect
-     * @param {number} x position of the Rectangle
-     * @param {number} y position of the Rectangle
-     * @param {number|Vector2d[]} w width of the rectangle, or an array of vector defining the rectangle
-     * @param {number} [h] height of the rectangle, if a numeral width parameter is specified
+     * @param {number} x - position of the Rectangle
+     * @param {number} y - position of the Rectangle
+     * @param {number|Vector2d[]} w - width of the rectangle, or an array of vector defining the rectangle
+     * @param {number} [h] - height of the rectangle, if a numeral width parameter is specified
      * @returns {Rect} this rectangle
      */
     setShape(x, y, w, h) {
@@ -8685,8 +7480,8 @@ class Rect extends Polygon {
      * center the rectangle position around the given coordinates
      * @name centerOn
      * @memberof Rect
-     * @param {number} x the x coordinate around which to center this rectangle
-     * @param {number} y the y coordinate around which to center this rectangle
+     * @param {number} x - the x coordinate around which to center this rectangle
+     * @param {number} y - the y coordinate around which to center this rectangle
      * @returns {Rect} this rectangle
      */
     centerOn(x, y) {
@@ -8699,8 +7494,8 @@ class Rect extends Polygon {
      * resize the rectangle
      * @name resize
      * @memberof Rect
-     * @param {number} w new width of the rectangle
-     * @param {number} h new height of the rectangle
+     * @param {number} w - new width of the rectangle
+     * @param {number} h - new height of the rectangle
      * @returns {Rect} this rectangle
      */
     resize(w, h) {
@@ -8713,8 +7508,8 @@ class Rect extends Polygon {
      * scale the rectangle
      * @name scale
      * @memberof Rect
-     * @param {number} x a number representing the abscissa of the scaling vector.
-     * @param {number} [y=x] a number representing the ordinate of the scaling vector.
+     * @param {number} x - a number representing the abscissa of the scaling vector.
+     * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
      * @returns {Rect} this rectangle
      */
     scale(x, y = x) {
@@ -8737,7 +7532,7 @@ class Rect extends Polygon {
      * copy the position and size of the given rectangle into this one
      * @name copy
      * @memberof Rect
-     * @param {Rect} rect Source rectangle
+     * @param {Rect} rect - Source rectangle
      * @returns {Rect} new rectangle
      */
     copy(rect) {
@@ -8748,7 +7543,7 @@ class Rect extends Polygon {
      * merge this rectangle with another one
      * @name union
      * @memberof Rect
-     * @param {Rect} rect other rectangle to union with
+     * @param {Rect} rect - other rectangle to union with
      * @returns {Rect} the union(ed) rectangle
      */
     union(rect) {
@@ -8795,8 +7590,8 @@ class Rect extends Polygon {
      * @name contains
      * @memberof Rect
      * @method
-     * @param  {number} x x coordinate
-     * @param  {number} y y coordinate
+     * @param  {number} x -  x coordinate
+     * @param  {number} y -  y coordinate
      * @returns {boolean} true if contains
      */
 
@@ -8868,11 +7663,12 @@ class Rect extends Polygon {
      * @returns {Polygon} a new Polygon that represents this rectangle.
      */
     toPolygon() {
-        return pool.pull("Polygon",
+        return pool$1.pull("Polygon",
             this.pos.x, this.pos.y, this.points
         );
     }
 }
+var Rect$1 = Rect;
 
 // https://developer.chrome.com/blog/canvas2d/#round-rect
 
@@ -8881,13 +7677,13 @@ class Rect extends Polygon {
  * a rectangle object with rounded corners
  * @augments Rect
  */
-class RoundRect extends Rect {
+class RoundRect extends Rect$1 {
     /**
-     * @param {number} x position of the rounded rectangle
-     * @param {number} y position of the rounded rectangle
-     * @param {number} width the rectangle width
-     * @param {number} height the rectangle height
-     * @param {number} [radius=20] the radius of the rounded corner
+     * @param {number} x - position of the rounded rectangle
+     * @param {number} y - position of the rounded rectangle
+     * @param {number} width - the rectangle width
+     * @param {number} height - the rectangle height
+     * @param {number} [radius=20] - the radius of the rounded corner
      */
     constructor(x, y, width, height, radius = 20) {
         // parent constructor
@@ -8930,7 +7726,7 @@ class RoundRect extends Rect {
      * copy the position, size and radius of the given rounded rectangle into this one
      * @name copy
      * @memberof RoundRect
-     * @param {RoundRect} rrect source rounded rectangle
+     * @param {RoundRect} rrect - source rounded rectangle
      * @returns {RoundRect} new rectangle
      */
     copy(rrect) {
@@ -8944,8 +7740,8 @@ class RoundRect extends Rect {
      * @name contains
      * @memberof RoundRect
      * @method
-     * @param  {number} x x coordinate
-     * @param  {number} y y coordinate
+     * @param  {number} x -  x coordinate
+     * @param  {number} y -  y coordinate
      * @returns {boolean} true if contains
      */
 
@@ -8964,7 +7760,7 @@ class RoundRect extends Rect {
              _x = arg0;
              _y = arguments[1];
          } else {
-             if (arg0 instanceof Rect) {
+             if (arg0 instanceof Rect$1) {
                  // good enough
                  return super.contains(arg0);
              } else {
@@ -9030,6 +7826,7 @@ class RoundRect extends Rect {
         return new RoundRect(this.pos.x, this.pos.y, this.width, this.height, this.radius);
     }
 }
+var RoundRect$1 = RoundRect;
 
 /**
  * @classdesc
@@ -9037,10 +7834,10 @@ class RoundRect extends Rect {
  */
 class Ellipse {
     /**
-     * @param {number} x the center x coordinate of the ellipse
-     * @param {number} y the center y coordinate of the ellipse
-     * @param {number} w width (diameter) of the ellipse
-     * @param {number} h height (diameter) of the ellipse
+     * @param {number} x - the center x coordinate of the ellipse
+     * @param {number} y - the center y coordinate of the ellipse
+     * @param {number} w - width (diameter) of the ellipse
+     * @param {number} h - height (diameter) of the ellipse
      */
     constructor(x, y, w, h) {
         /**
@@ -9050,7 +7847,7 @@ class Ellipse {
          * @name pos
          * @memberof Ellipse
          */
-        this.pos = pool.pull("Vector2d");
+        this.pos = pool$1.pull("Vector2d");
 
         /**
          * The bounding rectangle for this shape
@@ -9074,7 +7871,7 @@ class Ellipse {
          * @name radiusV
          * @memberof Ellipse
          */
-        this.radiusV = pool.pull("Vector2d");
+        this.radiusV = pool$1.pull("Vector2d");
 
         /**
          * Radius squared, for pythagorean theorom
@@ -9083,7 +7880,7 @@ class Ellipse {
          * @name radiusSq
          * @memberof Ellipse
          */
-        this.radiusSq = pool.pull("Vector2d");
+        this.radiusSq = pool$1.pull("Vector2d");
 
         /**
          * x/y scaling ratio for ellipse
@@ -9092,7 +7889,7 @@ class Ellipse {
          * @name ratio
          * @memberof Ellipse
          */
-        this.ratio = pool.pull("Vector2d");
+        this.ratio = pool$1.pull("Vector2d");
 
         // the shape type
         this.shapeType = "Ellipse";
@@ -9108,10 +7905,10 @@ class Ellipse {
      * set new value to the Ellipse shape
      * @name setShape
      * @memberof Ellipse
-     * @param {number} x the center x coordinate of the ellipse
-     * @param {number} y the center y coordinate of the ellipse
-     * @param {number} w width (diameter) of the ellipse
-     * @param {number} h height (diameter) of the ellipse
+     * @param {number} x - the center x coordinate of the ellipse
+     * @param {number} y - the center y coordinate of the ellipse
+     * @param {number} w - width (diameter) of the ellipse
+     * @param {number} h - height (diameter) of the ellipse
      * @returns {Ellipse} this instance for objecf chaining
      */
     setShape(x, y, w, h) {
@@ -9137,8 +7934,8 @@ class Ellipse {
      * Rotate this Ellipse (counter-clockwise) by the specified angle (in radians).
      * @name rotate
      * @memberof Ellipse
-     * @param {number} angle The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
      * @returns {Ellipse} Reference to this object for method chaining
      */
     rotate(angle, v) {
@@ -9182,7 +7979,7 @@ class Ellipse {
      * apply the given transformation matrix to this ellipse
      * @name transform
      * @memberof Ellipse
-     * @param {Matrix2d} matrix the transformation matrix
+     * @param {Matrix2d} matrix - the transformation matrix
      * @returns {Polygon} Reference to this object for method chaining
      */
     transform(matrix) { // eslint-disable-line no-unused-vars
@@ -9195,15 +7992,15 @@ class Ellipse {
      * @name translate
      * @memberof Ellipse
      * @method
-     * @param {number} x x offset
-     * @param {number} y y offset
+     * @param {number} x - x offset
+     * @param {number} y - y offset
      * @returns {Ellipse} this ellipse
      */
     /**
      * translate the circle/ellipse by the specified vector
      * @name translate
      * @memberof Ellipse
-     * @param {Vector2d} v vector offset
+     * @param {Vector2d} v - vector offset
      * @returns {Ellipse} this ellipse
      */
     translate() {
@@ -9239,8 +8036,8 @@ class Ellipse {
      * check if this circle/ellipse contains the specified point
      * @name contains
      * @memberof Ellipse
-     * @param  {number} x x coordinate
-     * @param  {number} y y coordinate
+     * @param  {number} x -  x coordinate
+     * @param  {number} y -  y coordinate
      * @returns {boolean} true if contains
      */
     contains() {
@@ -9274,7 +8071,7 @@ class Ellipse {
      */
     getBounds() {
         if (typeof this._bounds === "undefined") {
-            this._bounds = pool.pull("Bounds");
+            this._bounds = pool$1.pull("Bounds");
         }
         return this._bounds;
     }
@@ -9294,17 +8091,18 @@ class Ellipse {
         );
     }
 }
+var Ellipse$1 = Ellipse;
 
 /**
  * @classdesc
  * a line segment Object
  * @augments Polygon
- * @param {number} x origin point of the Line
- * @param {number} y origin point of the Line
- * @param {Vector2d[]} points array of vectors defining the Line
+ * @param {number} x - origin point of the Line
+ * @param {number} y - origin point of the Line
+ * @param {Vector2d[]} points - array of vectors defining the Line
  */
 
-class Line extends Polygon {
+class Line extends Polygon$1 {
 
     /**
      * Returns true if the Line contains the given point
@@ -9319,8 +8117,8 @@ class Line extends Polygon {
      * Returns true if the Line contains the given point
      * @name contains
      * @memberof Line
-     * @param  {number} x x coordinate
-     * @param  {number} y y coordinate
+     * @param  {number} x -  x coordinate
+     * @param  {number} y -  y coordinate
      * @returns {boolean} true if contains
      */
     contains() {
@@ -9368,11 +8166,11 @@ class Line extends Polygon {
 
         // Calculate the edges/normals
         if (edges[0] === undefined) {
-            edges[0] = pool.pull("Vector2d");
+            edges[0] = pool$1.pull("Vector2d");
         }
         edges[0].copy(points[1]).sub(points[0]);
         if (normals[0] === undefined) {
-            normals[0] = pool.pull("Vector2d");
+            normals[0] = pool$1.pull("Vector2d");
         }
         normals[0].copy(edges[0]).perp().normalize();
 
@@ -9398,6 +8196,7 @@ class Line extends Polygon {
     }
 
 }
+var Line$1 = Line;
 
 /**
  * @classdesc
@@ -9405,11 +8204,11 @@ class Line extends Polygon {
  */
 class Bounds {
     /**
-     * @param {Vector2d[]} [vertices] an array of me.Vector2d points
+     * @param {Vector2d[]} [vertices] - an array of me.Vector2d points
      */
     constructor(vertices) {
         // @ignore
-        this._center = new Vector2d();
+        this._center = new Vector2d$1();
         this.onResetEvent(vertices);
     }
 
@@ -9601,7 +8400,7 @@ class Bounds {
      * Updates bounds using the given vertices
      * @name update
      * @memberof Bounds
-     * @param {Vector2d[]} vertices an array of me.Vector2d points
+     * @param {Vector2d[]} vertices - an array of me.Vector2d points
      */
     update(vertices) {
         this.add(vertices, true);
@@ -9611,8 +8410,8 @@ class Bounds {
      * add the given vertices to the bounds definition.
      * @name add
      * @memberof Bounds
-     * @param {Vector2d[]} vertices an array of me.Vector2d points
-     * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
+     * @param {Vector2d[]} vertices - an array of me.Vector2d points
+     * @param {boolean} [clear=false] - either to reset the bounds before adding the new vertices
      */
     add(vertices, clear = false) {
         if (clear === true) {
@@ -9632,7 +8431,7 @@ class Bounds {
      * @name addBounds
      * @memberof Bounds
      * @param {Bounds} bounds
-     * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
+     * @param {boolean} [clear=false] - either to reset the bounds before adding the new vertices
      */
     addBounds(bounds, clear = false) {
         if (clear === true) {
@@ -9652,8 +8451,8 @@ class Bounds {
      * add the given point to the bounds definition.
      * @name addPoint
      * @memberof Bounds
-     * @param {Vector2d|Point} point the point to be added to the bounds
-     * @param {Matrix2d} [m] an optional transform to apply to the given point (only if the given point is a vector)
+     * @param {Vector2d|Point} point - the point to be added to the bounds
+     * @param {Matrix2d} [m] - an optional transform to apply to the given point (only if the given point is a vector)
      */
     addPoint(point, m) {
         if ((typeof m !== "undefined") && (typeof point.rotate === "function")) {
@@ -9674,10 +8473,10 @@ class Bounds {
      * @param {number} y0 - top Y coordinates of the quad
      * @param {number} x1 - right X coordinates of the quad
      * @param {number} y1 - bottom y coordinates of the quad
-     * @param {Matrix2d} [m] an optional transform to apply to the given frame coordinates
+     * @param {Matrix2d} [m] - an optional transform to apply to the given frame coordinates
      */
     addFrame(x0, y0, x1, y1, m) {
-        var v = pool.pull("Vector2d");
+        var v = pool$1.pull("Vector2d");
 
         // transform all points and add to the bound definition
         this.addPoint(v.set(x0, y0), m);
@@ -9685,7 +8484,7 @@ class Bounds {
         this.addPoint(v.set(x0, y1), m);
         this.addPoint(v.set(x1, y1), m);
 
-        pool.push(v);
+        pool$1.push(v);
     }
 
     /**
@@ -9837,15 +8636,16 @@ class Bounds {
      * @returns {Polygon} a new Polygon that represents this bounds.
      */
     toPolygon () {
-        return pool.pull("Polygon", this.x, this.y, [
-            pool.pull("Vector2d", 0,          0),
-            pool.pull("Vector2d", this.width, 0),
-            pool.pull("Vector2d", this.width, this.height),
-            pool.pull("Vector2d", 0,          this.height)
+        return pool$1.pull("Polygon", this.x, this.y, [
+            pool$1.pull("Vector2d", 0,          0),
+            pool$1.pull("Vector2d", this.width, 0),
+            pool$1.pull("Vector2d", this.width, this.height),
+            pool$1.pull("Vector2d", 0,          this.height)
         ]);
     }
 
 }
+var Bounds$1 = Bounds;
 
 /**
  * @classdesc
@@ -9884,7 +8684,7 @@ class Path2D {
     beginPath() {
         // empty the cache and recycle all vectors
         this.points.forEach((point) => {
-            pool.push(point);
+            pool$1.push(point);
         });
         this.points.length = 0;
     }
@@ -9899,7 +8699,7 @@ class Path2D {
     closePath() {
         var points = this.points;
         if (points.length > 1 && !points[points.length-1].equals(points[0])) {
-            points.push(pool.pull("Vector2d", points[0].x, points[0].y));
+            points.push(pool$1.pull("Vector2d", points[0].x, points[0].y));
         }
     }
 
@@ -9919,14 +8719,14 @@ class Path2D {
         for (i = 0; i < indices.length; i++ ) {
             if (typeof vertices[i] === "undefined") {
                 // increase cache buffer if necessary
-                vertices[i] = pool.pull("Vector2d");
+                vertices[i] = pool$1.pull("Vector2d");
             }
             vertices[i].set(points[indices[i]].x, points[indices[i]].y);
         }
 
         // recycle overhead from a previous triangulation
         while (vertices.length > indices.length) {
-            pool.push(vertices[vertices.length-1]);
+            pool$1.push(vertices[vertices.length-1]);
             vertices.length -= 1;
         }
 
@@ -9937,22 +8737,22 @@ class Path2D {
      * moves the starting point of the current path to the (x, y) coordinates.
      * @name moveTo
      * @memberof Path2D
-     * @param {number} x the x-axis (horizontal) coordinate of the point.
-     * @param {number} y the y-axis (vertical) coordinate of the point.
+     * @param {number} x - the x-axis (horizontal) coordinate of the point.
+     * @param {number} y - the y-axis (vertical) coordinate of the point.
      */
     moveTo(x, y) {
-      this.points.push(pool.pull("Vector2d", x, y));
+      this.points.push(pool$1.pull("Vector2d", x, y));
     }
 
     /**
      * connects the last point in the current patch to the (x, y) coordinates with a straight line.
      * @name lineTo
      * @memberof Path2D
-     * @param {number} x the x-axis coordinate of the line's end point.
-     * @param {number} y the y-axis coordinate of the line's end point.
+     * @param {number} x - the x-axis coordinate of the line's end point.
+     * @param {number} y - the y-axis coordinate of the line's end point.
      */
     lineTo(x, y) {
-        this.points.push(pool.pull("Vector2d", x, y));
+        this.points.push(pool$1.pull("Vector2d", x, y));
     }
 
     /**
@@ -9960,12 +8760,12 @@ class Path2D {
      * starting at startAngle and ending at endAngle going in the given direction by counterclockwise (defaulting to clockwise).
      * @name arc
      * @memberof Path2D
-     * @param {number} x the horizontal coordinate of the arc's center.
-     * @param {number} y the vertical coordinate of the arc's center.
-     * @param {number} radius the arc's radius. Must be positive.
-     * @param {number} startAngle the angle at which the arc starts in radians, measured from the positive x-axis.
-     * @param {number} endAngle the angle at which the arc ends in radians, measured from the positive x-axis.
-     * @param {boolean} [anticlockwise=false] an optional boolean value. If true, draws the arc counter-clockwise between the start and end angles.
+     * @param {number} x - the horizontal coordinate of the arc's center.
+     * @param {number} y - the vertical coordinate of the arc's center.
+     * @param {number} radius - the arc's radius. Must be positive.
+     * @param {number} startAngle - the angle at which the arc starts in radians, measured from the positive x-axis.
+     * @param {number} endAngle - the angle at which the arc ends in radians, measured from the positive x-axis.
+     * @param {boolean} [anticlockwise=false] - an optional boolean value. If true, draws the arc counter-clockwise between the start and end angles.
      */
     arc(x, y, radius, startAngle, endAngle, anticlockwise = false) {
         var points = this.points;
@@ -9999,21 +8799,21 @@ class Path2D {
 
         var angle = startAngle;
         for (var j = 0; j < nr_of_interpolation_points; j++) {
-            points.push(pool.pull("Vector2d", x + radius * Math.cos(angle), y + radius * Math.sin(angle)));
+            points.push(pool$1.pull("Vector2d", x + radius * Math.cos(angle), y + radius * Math.sin(angle)));
             angle += direction * dangle;
         }
-        points.push(pool.pull("Vector2d", x + radius * Math.cos(endAngle), y + radius * Math.sin(endAngle)));
+        points.push(pool$1.pull("Vector2d", x + radius * Math.cos(endAngle), y + radius * Math.sin(endAngle)));
     }
 
     /**
      * adds a circular arc to the path with the given control points and radius, connected to the previous point by a straight line.
      * @name arcTo
      * @memberof Path2D
-     * @param {number} x1 the x-axis coordinate of the first control point.
-     * @param {number} y1 the y-axis coordinate of the first control point.
-     * @param {number} x2 the x-axis coordinate of the second control point.
-     * @param {number} y2 the y-axis coordinate of the second control point.
-     * @param {number} radius the arc's radius. Must be positive.
+     * @param {number} x1 - the x-axis coordinate of the first control point.
+     * @param {number} y1 - the y-axis coordinate of the first control point.
+     * @param {number} x2 - the x-axis coordinate of the second control point.
+     * @param {number} y2 - the y-axis coordinate of the second control point.
+     * @param {number} radius - the arc's radius. Must be positive.
      */
     arcTo(x1, y1, x2, y2, radius) {
         var points = this.points;
@@ -10037,7 +8837,7 @@ class Path2D {
         var tangent_point1 =  [x1 + a[0] * adj_l, y1 + a[1] * adj_l];
         var tangent_point2 =  [x1 + b[0] * adj_l, y1 + b[1] * adj_l];
 
-        points.push(pool.pull("Vector2d", tangent_point1[0], tangent_point1[1]));
+        points.push(pool$1.pull("Vector2d", tangent_point1[0], tangent_point1[1]));
 
         var bisec = [(a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0];
         var bisec_l = Math.sqrt(Math.pow(bisec[0], 2) + Math.pow(bisec[1], 2));
@@ -10057,14 +8857,14 @@ class Path2D {
      * starting at startAngle and ending at endAngle going in the given direction by counterclockwise.
      * @name ellipse
      * @memberof Path2D
-     * @param {number} x the x-axis (horizontal) coordinate of the ellipse's center.
-     * @param {number} y the  y-axis (vertical) coordinate of the ellipse's center.
-     * @param {number} radiusX the ellipse's major-axis radius. Must be non-negative.
-     * @param {number} radiusY the ellipse's minor-axis radius. Must be non-negative.
-     * @param {number} rotation the rotation of the ellipse, expressed in radians.
-     * @param {number} startAngle the angle at which the ellipse starts, measured clockwise from the positive x-axis and expressed in radians.
-     * @param {number} endAngle the angle at which the ellipse ends, measured clockwise from the positive x-axis and expressed in radians.
-     * @param {boolean} [anticlockwise=false] an optional boolean value which, if true, draws the ellipse counterclockwise (anticlockwise).
+     * @param {number} x - the x-axis (horizontal) coordinate of the ellipse's center.
+     * @param {number} y - the  y-axis (vertical) coordinate of the ellipse's center.
+     * @param {number} radiusX - the ellipse's major-axis radius. Must be non-negative.
+     * @param {number} radiusY - the ellipse's minor-axis radius. Must be non-negative.
+     * @param {number} rotation - the rotation of the ellipse, expressed in radians.
+     * @param {number} startAngle - the angle at which the ellipse starts, measured clockwise from the positive x-axis and expressed in radians.
+     * @param {number} endAngle - the angle at which the ellipse ends, measured clockwise from the positive x-axis and expressed in radians.
+     * @param {boolean} [anticlockwise=false] - an optional boolean value which, if true, draws the ellipse counterclockwise (anticlockwise).
      */
     ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle, anticlockwise = false) {
         var points = this.points;
@@ -10104,7 +8904,7 @@ class Path2D {
             var _y1 = radiusY * Math.sin(angle);
             var _x2 = x + _x1 * cos_rotation - _y1 * sin_rotation;
             var _y2 = y + _x1 * sin_rotation + _y1 * cos_rotation;
-            points.push(pool.pull("Vector2d", _x2, _y2));
+            points.push(pool$1.pull("Vector2d", _x2, _y2));
             angle += direction * dangle;
         }
         //var x1 = radiusX * Math.cos(endAngle);
@@ -10116,10 +8916,10 @@ class Path2D {
      * creates a path for a rectangle at position (x, y) with a size that is determined by width and height.
      * @name rect
      * @memberof Path2D
-     * @param {number} x the x-axis coordinate of the rectangle's starting point.
-     * @param {number} y the y-axis coordinate of the rectangle's starting point.
-     * @param {number} width the rectangle's width. Positive values are to the right, and negative to the left.
-     * @param {number} height the rectangle's height. Positive values are down, and negative are up.
+     * @param {number} x - the x-axis coordinate of the rectangle's starting point.
+     * @param {number} y - the y-axis coordinate of the rectangle's starting point.
+     * @param {number} width - the rectangle's width. Positive values are to the right, and negative to the left.
+     * @param {number} height - the rectangle's height. Positive values are down, and negative are up.
      */
     rect(x, y, width, height) {
         this.moveTo(x, y);
@@ -10133,11 +8933,11 @@ class Path2D {
      * adds an rounded rectangle to the current path.
      * @name roundRect
      * @memberof Path2D
-     * @param {number} x the x-axis coordinate of the rectangle's starting point.
-     * @param {number} y the y-axis coordinate of the rectangle's starting point.
-     * @param {number} width the rectangle's width. Positive values are to the right, and negative to the left.
-     * @param {number} height the rectangle's height. Positive values are down, and negative are up.
-     * @param {number} radius the arc's radius to draw the borders. Must be positive.
+     * @param {number} x - the x-axis coordinate of the rectangle's starting point.
+     * @param {number} y - the y-axis coordinate of the rectangle's starting point.
+     * @param {number} width - the rectangle's width. Positive values are to the right, and negative to the left.
+     * @param {number} height - the rectangle's height. Positive values are down, and negative are up.
+     * @param {number} radius - the arc's radius to draw the borders. Must be positive.
      */
      roundRect(x, y, width, height, radius) {
         this.moveTo(x + radius, y);
@@ -10151,6 +8951,7 @@ class Path2D {
         this.arcTo(x, y, x + radius, y, radius);
     }
 }
+var Path2D$1 = Path2D;
 
 /**
  * @classdesc
@@ -10231,6 +9032,7 @@ class Point {
         return new Point(this.x, this.y);
     }
 }
+var Point$1 = Point;
 
 /**
  * @classdesc
@@ -10238,19 +9040,19 @@ class Point {
  */
 class Renderer {
     /**
-     * @param {object} options The renderer parameters
-     * @param {number} options.width The width of the canvas without scaling
-     * @param {number} options.height The height of the canvas without scaling
-     * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
-     * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
-     * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
-     * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas
-     * @param {boolean} [options.premultipliedAlpha=true] in WebGL, whether the renderer will assume that colors have premultiplied alpha when canvas transparency is enabled
-     * @param {boolean} [options.blendMode="normal"] the default blend mode to use ("normal", "multiply")
-     * @param {boolean} [options.subPixel=false] Whether to enable subpixel rendering (performance hit when enabled)
-     * @param {boolean} [options.verbose=false] Enable the verbose mode that provides additional details as to what the renderer is doing
-     * @param {number} [options.zoomX=width] The actual width of the canvas with scaling applied
-     * @param {number} [options.zoomY=height] The actual height of the canvas with scaling applied
+     * @param {object} options - The renderer parameters
+     * @param {number} options.width - The width of the canvas without scaling
+     * @param {number} options.height - The height of the canvas without scaling
+     * @param {HTMLCanvasElement} [options.canvas] - The html canvas to draw to on screen
+     * @param {boolean} [options.antiAlias=false] - Whether to enable anti-aliasing, use false (default) for a pixelated effect.
+     * @param {boolean} [options.failIfMajorPerformanceCaveat=true] - If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
+     * @param {boolean} [options.transparent=false] - Whether to enable transparency on the canvas
+     * @param {boolean} [options.premultipliedAlpha=true] - in WebGL, whether the renderer will assume that colors have premultiplied alpha when canvas transparency is enabled
+     * @param {boolean} [options.blendMode="normal"] - the default blend mode to use ("normal", "multiply")
+     * @param {boolean} [options.subPixel=false] - Whether to enable subpixel rendering (performance hit when enabled)
+     * @param {boolean} [options.verbose=false] - Enable the verbose mode that provides additional details as to what the renderer is doing
+     * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
+     * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
      */
     constructor(options) {
         /**
@@ -10271,7 +9073,7 @@ class Renderer {
          * The Path2D instance used by the renderer to draw primitives
          * @type {Path2D}
          */
-        this.path2D = new Path2D();
+        this.path2D = new Path2D$1();
 
         /**
          * @ignore
@@ -10302,13 +9104,13 @@ class Renderer {
         }
 
         // global color
-        this.currentColor = new Color(0, 0, 0, 1.0);
+        this.currentColor = new Color$1(0, 0, 0, 1.0);
 
         // global tint color
-        this.currentTint = new Color(255, 255, 255, 1.0);
+        this.currentTint = new Color$1(255, 255, 255, 1.0);
 
         // the projectionMatrix (set through setProjection)
-        this.projectionMatrix = new Matrix3d();
+        this.projectionMatrix = new Matrix3d$1();
 
         // default uvOffset
         this.uvOffset = 0;
@@ -10374,7 +9176,7 @@ class Renderer {
      * Returns the 2D Context object of the given Canvas<br>
      * Also configures anti-aliasing and blend modes based on constructor options.
      * @param {HTMLCanvasElement} canvas
-     * @param {boolean} [transparent=true] use false to disable transparency
+     * @param {boolean} [transparent=true] - use false to disable transparency
      * @returns {CanvasRenderingContext2D}
      */
     getContext2d(canvas, transparent) {
@@ -10453,8 +9255,8 @@ class Renderer {
 
     /**
      * resizes the system canvas
-     * @param {number} width new width of the canvas
-     * @param {number} height new height of the canvas
+     * @param {number} width - new width of the canvas
+     * @param {number} height - new height of the canvas
      */
     resize(width, height) {
         var canvas = this.getCanvas();
@@ -10507,23 +9309,23 @@ class Renderer {
 
     /**
      * stroke the given shape
-     * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape a shape object to stroke
-     * @param {boolean} [fill=false] fill the shape with the current color if true
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape - a shape object to stroke
+     * @param {boolean} [fill=false] - fill the shape with the current color if true
      */
     stroke(shape, fill) {
-        if (shape instanceof RoundRect) {
+        if (shape instanceof RoundRect$1) {
             this.strokeRoundRect(shape.left, shape.top, shape.width, shape.height, shape.radius, fill);
             return;
         }
-        if (shape instanceof Rect || shape instanceof Bounds) {
+        if (shape instanceof Rect$1 || shape instanceof Bounds$1) {
             this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
             return;
         }
-        if (shape instanceof Line || shape instanceof Polygon) {
+        if (shape instanceof Line$1 || shape instanceof Polygon$1) {
             this.strokePolygon(shape, fill);
             return;
         }
-        if (shape instanceof Ellipse) {
+        if (shape instanceof Ellipse$1) {
             this.strokeEllipse(
                 shape.pos.x,
                 shape.pos.y,
@@ -10533,7 +9335,7 @@ class Renderer {
             );
             return;
         }
-        if (shape instanceof Point) {
+        if (shape instanceof Point$1) {
             this.strokePoint(shape.x, shape.y);
             return;
         }
@@ -10544,7 +9346,7 @@ class Renderer {
      * fill the given shape
      * @name fill
      * @memberof Renderer
-     * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape a shape object to fill
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape - a shape object to fill
      */
     fill(shape) {
         this.stroke(shape, true);
@@ -10552,9 +9354,9 @@ class Renderer {
 
     /**
      * tint the given image or canvas using the given color
-     * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} src the source image to be tinted
-     * @param {Color|string} color the color that will be used to tint the image
-     * @param {string} [mode="multiply"] the composition mode used to tint the image
+     * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} src - the source image to be tinted
+     * @param {Color|string} color - the color that will be used to tint the image
+     * @param {string} [mode="multiply"] - the composition mode used to tint the image
      * @returns {HTMLCanvasElement|OffscreenCanvas} a new canvas element representing the tinted image
      */
     tint(src, color, mode) {
@@ -10563,7 +9365,7 @@ class Renderer {
 
         context.save();
 
-        context.fillStyle = color instanceof Color ? color.toRGB() : color;
+        context.fillStyle = color instanceof Color$1 ? color.toRGB() : color;
         context.fillRect(0, 0, src.width, src.height);
 
         context.globalCompositeOperation = mode || "multiply";
@@ -10580,8 +9382,8 @@ class Renderer {
      * A mask limits rendering elements to the shape and position of the given mask object.
      * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
      * Mask are not preserved through renderer context save and restore.
-     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
-     * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - the shape defining the mask to be applied
+     * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
      */
     // eslint-disable-next-line no-unused-vars
     setMask(mask) {}
@@ -10594,8 +9396,8 @@ class Renderer {
 
     /**
      * set a coloring tint for sprite based renderables
-     * @param {Color} tint the tint color
-     * @param {number} [alpha] an alpha value to be applied to the tint
+     * @param {Color} tint - the tint color
+     * @param {number} [alpha] - an alpha value to be applied to the tint
      */
     setTint(tint, alpha = tint.alpha) {
         // global tint color
@@ -10618,6 +9420,7 @@ class Renderer {
     drawFont(/*bounds*/) {}
 
 }
+var Renderer$1 = Renderer;
 
 var howler = {};
 
@@ -13924,7 +12727,7 @@ let stopOnAudioError = true;
  * It is important to remember that melonJS selects the first compatible sound based on the list of extensions and given order passed here.
  * So if you want webm to be used before mp3, you need to put the audio format in that order.
  * @function audio.init
- * @param {string} [format="mp3"] audio format to prioritize
+ * @param {string} [format="mp3"] - audio format to prioritize
  * @returns {boolean} Indicates whether audio initialization was successful
  * @example
  * // initialize the "sound engine", giving "webm" as default desired audio format, and "mp3" as a fallback
@@ -13943,7 +12746,7 @@ let stopOnAudioError = true;
 /**
  * check if the given audio format is supported
  * @function audio.hasFormat
- * @param {string} codec audio format : "mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac"
+ * @param {string} codec - audio format : "mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac"
  * @returns {boolean} return true if the given audio format is supported
  */
 function hasFormat(codec) {
@@ -13994,7 +12797,7 @@ function load(sound, html5, onload_cb, onerror_cb) {
         urls.push(sound.src);
     } else {
         for (var i = 0; i < audioExts.length; i++) {
-            urls.push(sound.src + sound.name + "." + audioExts[i] + loader.nocache);
+            urls.push(sound.src + sound.name + "." + audioExts[i] + loader$1.nocache);
         }
     }
 
@@ -14002,7 +12805,7 @@ function load(sound, html5, onload_cb, onerror_cb) {
         src : urls,
         volume : howler.Howler.volume(),
         html5 : html5 === true,
-        xhrWithCredentials : loader.withCredentials,
+        xhrWithCredentials : loader$1.withCredentials,
         /**
          * @ignore
          */
@@ -14026,10 +12829,10 @@ function load(sound, html5, onload_cb, onerror_cb) {
 /**
  * play the specified sound
  * @function audio.play
- * @param {string} sound_name audio clip name - case sensitive
- * @param {boolean} [loop=false] loop audio
- * @param {Function} [onend] Function to call when sound instance ends playing.
- * @param {number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
+ * @param {string} sound_name - audio clip name - case sensitive
+ * @param {boolean} [loop=false] - loop audio
+ * @param {Function} [onend] - Function to call when sound instance ends playing.
+ * @param {number} [volume=default] - Float specifying volume (0.0 - 1.0 values accepted).
  * @returns {number} the sound instance ID.
  * @example
  * // play the "cling" audio clip
@@ -14067,11 +12870,11 @@ function play(sound_name, loop = false, onend, volume) {
 /**
  * Fade a currently playing sound between two volumee.
  * @function audio.fade
- * @param {string} sound_name audio clip name - case sensitive
- * @param {number} from Volume to fade from (0.0 to 1.0).
- * @param {number} to Volume to fade to (0.0 to 1.0).
- * @param {number} duration Time in milliseconds to fade.
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will fade.
+ * @param {string} sound_name - audio clip name - case sensitive
+ * @param {number} from - Volume to fade from (0.0 to 1.0).
+ * @param {number} to - Volume to fade to (0.0 to 1.0).
+ * @param {number} duration - Time in milliseconds to fade.
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will fade.
  */
 function fade(sound_name, from, to, duration, id) {
     var sound = audioTracks[sound_name];
@@ -14085,9 +12888,9 @@ function fade(sound_name, from, to, duration, id) {
 /**
  * get/set the position of playback for a sound.
  * @function audio.seek
- * @param {string} sound_name audio clip name - case sensitive
- * @param {number} [seek] the position to move current playback to (in seconds).
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will changed.
+ * @param {string} sound_name - audio clip name - case sensitive
+ * @param {number} [seek] - the position to move current playback to (in seconds).
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will changed.
  * @returns {number} return the current seek position (if no extra parameters were given)
  * @example
  * // return the current position of the background music
@@ -14107,9 +12910,9 @@ function seek(sound_name, ...args) {
 /**
  * get or set the rate of playback for a sound.
  * @function audio.rate
- * @param {string} sound_name audio clip name - case sensitive
- * @param {number} [rate] playback rate : 0.5 to 4.0, with 1.0 being normal speed.
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will be changed.
+ * @param {string} sound_name - audio clip name - case sensitive
+ * @param {number} [rate] - playback rate : 0.5 to 4.0, with 1.0 being normal speed.
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will be changed.
  * @returns {number} return the current playback rate (if no extra parameters were given)
  * @example
  * // get the playback rate of the background music
@@ -14129,8 +12932,8 @@ function rate(sound_name, ...args) {
 /**
  * stop the specified sound on all channels
  * @function audio.stop
- * @param {string} [sound_name] audio clip name (case sensitive). If none is passed, all sounds are stopped.
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will stop.
+ * @param {string} [sound_name] - audio clip name (case sensitive). If none is passed, all sounds are stopped.
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will stop.
  * @example
  * me.audio.stop("cling");
  */
@@ -14153,8 +12956,8 @@ function stop(sound_name, id) {
  * pause the specified sound on all channels<br>
  * this function does not reset the currentTime property
  * @function audio.pause
- * @param {string} sound_name audio clip name - case sensitive
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will pause.
+ * @param {string} sound_name - audio clip name - case sensitive
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will pause.
  * @example
  * me.audio.pause("cling");
  */
@@ -14170,8 +12973,8 @@ function pause(sound_name, id) {
 /**
  * resume the specified sound on all channels<br>
  * @function audio.resume
- * @param {string} sound_name audio clip name - case sensitive
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will resume.
+ * @param {string} sound_name - audio clip name - case sensitive
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will resume.
  * @example
  * // play a audio clip
  * var id = me.audio.play("myClip");
@@ -14196,8 +12999,8 @@ function resume(sound_name, id) {
  * this function automatically set the loop property to true<br>
  * and keep track of the current sound being played.
  * @function audio.playTrack
- * @param {string} sound_name audio track name - case sensitive
- * @param {number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
+ * @param {string} sound_name - audio track name - case sensitive
+ * @param {number} [volume=default] - Float specifying volume (0.0 - 1.0 values accepted).
  * @returns {number} the sound instance ID.
  * @example
  * me.audio.playTrack("awesome_music");
@@ -14270,7 +13073,7 @@ function getCurrentTrack() {
 /**
  * set the default global volume
  * @function audio.setVolume
- * @param {number} volume Float specifying volume (0.0 - 1.0 values accepted).
+ * @param {number} volume - Float specifying volume (0.0 - 1.0 values accepted).
  */
 function setVolume(volume) {
     howler.Howler.volume(volume);
@@ -14288,9 +13091,9 @@ function getVolume() {
 /**
  * mute or unmute the specified sound, but does not pause the playback.
  * @function audio.mute
- * @param {string} sound_name audio clip name - case sensitive
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will mute.
- * @param {boolean} [mute=true] True to mute and false to unmute
+ * @param {string} sound_name - audio clip name - case sensitive
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will mute.
+ * @param {boolean} [mute=true] - True to mute and false to unmute
  * @example
  * // mute the background music
  * me.audio.mute("awesome_music");
@@ -14309,8 +13112,8 @@ function mute(sound_name, id, mute) {
 /**
  * unmute the specified sound
  * @function audio.unmute
- * @param {string} sound_name audio clip name
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will unmute.
+ * @param {string} sound_name - audio clip name
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will unmute.
  */
 function unmute(sound_name, id) {
     mute(sound_name, id, false);
@@ -14344,7 +13147,7 @@ function muted() {
 /**
  * unload specified audio track to free memory
  * @function audio.unload
- * @param {string} sound_name audio track name - case sensitive
+ * @param {string} sound_name - audio track name - case sensitive
  * @returns {boolean} true if unloaded
  * @example
  * me.audio.unload("awesome_music");
@@ -14411,13 +13214,13 @@ var audio = /*#__PURE__*/Object.freeze({
  * A Vector2d object that provide notification by executing the given callback when the vector is changed.
  * @augments Vector2d
  */
-class ObservableVector2d extends Vector2d {
+class ObservableVector2d extends Vector2d$1 {
     /**
-     * @param {number} x x value of the vector
-     * @param {number} y y value of the vector
-     * @param {object} settings additional required parameters
-     * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
-     * @param {Function} [settings.scope] the value to use as this when calling onUpdate
+     * @param {number} x - x value of the vector
+     * @param {number} y - y value of the vector
+     * @param {object} settings - additional required parameters
+     * @param {Function} settings.onUpdate - the callback to be executed when the vector is changed
+     * @param {Function} [settings.scope] - the value to use as this when calling onUpdate
      */
     constructor(x = 0, y = 0, settings) {
         super(x, y);
@@ -14501,8 +13304,8 @@ class ObservableVector2d extends Vector2d {
      * set the vector value without triggering the callback
      * @name setMuted
      * @memberof ObservableVector2d
-     * @param {number} x x value of the vector
-     * @param {number} y y value of the vector
+     * @param {number} x - x value of the vector
+     * @param {number} y - y value of the vector
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
     setMuted(x, y) {
@@ -14515,8 +13318,8 @@ class ObservableVector2d extends Vector2d {
      * set the callback to be executed when the vector is changed
      * @name setCallback
      * @memberof ObservableVector2d
-     * @param {Function} fn callback
-     * @param {Function} [scope=null] scope
+     * @param {Function} fn - callback
+     * @param {Function} [scope=null] - scope
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
     setCallback(fn, scope = null) {
@@ -14579,7 +13382,7 @@ class ObservableVector2d extends Vector2d {
      * Divide this vector values by the passed value
      * @name div
      * @memberof ObservableVector2d
-     * @param {number} n the value to divide the vector by
+     * @param {number} n - the value to divide the vector by
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
     div(n) {
@@ -14739,8 +13542,8 @@ class ObservableVector2d extends Vector2d {
      * Rotate this vector (counter-clockwise) by the specified angle (in radians).
      * @name rotate
      * @memberof ObservableVector2d
-     * @param {number} angle The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
     rotate(angle, v) {
@@ -14788,7 +13591,7 @@ class ObservableVector2d extends Vector2d {
      * @name lerp
      * @memberof ObservableVector2d
      * @param {Vector2d|ObservableVector2d} v
-     * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+     * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
     lerp(v, alpha) {
@@ -14803,7 +13606,7 @@ class ObservableVector2d extends Vector2d {
      * @name moveTowards
      * @memberof ObservableVector2d
      * @param {Vector2d|ObservableVector2d} target
-     * @param {number} step the maximum step per iteration (Negative values will push the vector away from the target)
+     * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
      moveTowards(target, step) {
@@ -14839,7 +13642,7 @@ class ObservableVector2d extends Vector2d {
      * @returns {ObservableVector2d} new me.ObservableVector2d
      */
     clone() {
-        return pool.pull("ObservableVector2d", this._x, this._y, {onUpdate: this.onUpdate, scope: this.scope});
+        return pool$1.pull("ObservableVector2d", this._x, this._y, {onUpdate: this.onUpdate, scope: this.scope});
     }
 
     /**
@@ -14849,7 +13652,7 @@ class ObservableVector2d extends Vector2d {
      * @returns {Vector2d} new me.Vector2d
      */
     toVector2d() {
-        return pool.pull("Vector2d", this._x, this._y);
+        return pool$1.pull("Vector2d", this._x, this._y);
     }
 
     /**
@@ -14863,15 +13666,17 @@ class ObservableVector2d extends Vector2d {
     }
 }
 
+var ObservableVector2d$1 = ObservableVector2d;
+
 /**
  * @classdesc
  * a generic 3D Vector Object
  */
 class Vector3d {
     /**
-     * @param {number} [x=0] x value of the vector
-     * @param {number} [y=0] y value of the vector
-     * @param {number} [z=0] z value of the vector
+     * @param {number} [x=0] - x value of the vector
+     * @param {number} [y=0] - y value of the vector
+     * @param {number} [z=0] - z value of the vector
      */
     constructor(x = 0, y = 0, z = 0) {
         this.onResetEvent(x, y, z);
@@ -15036,7 +13841,7 @@ class Vector3d {
      * Divide this vector values by the passed value
      * @name div
      * @memberof Vector3d
-     * @param {number} n the value to divide the vector by
+     * @param {number} n - the value to divide the vector by
      * @returns {Vector3d} Reference to this object for method chaining
      */
     div(n) {
@@ -15235,8 +14040,8 @@ class Vector3d {
      * Rotate this vector (counter-clockwise) by the specified angle (in radians) around the z axis
      * @name rotate
      * @memberof Vector3d
-     * @param {number} angle The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around (on the same z axis)
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around (on the same z axis)
      * @returns {Vector3d} Reference to this object for method chaining
      */
     rotate(angle, v) {
@@ -15312,7 +14117,7 @@ class Vector3d {
      * @name lerp
      * @memberof Vector3d
      * @param {Vector3d} v
-     * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+     * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
      * @returns {Vector3d} Reference to this object for method chaining
      */
     lerp(v, alpha) {
@@ -15327,7 +14132,7 @@ class Vector3d {
      * @name moveTowards
      * @memberof Vector3d
      * @param {Vector2d|Vector3d} target
-     * @param {number} step the maximum step per iteration (Negative values will push the vector away from the target)
+     * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
      * @returns {Vector3d} Reference to this object for method chaining
      */
     moveTowards(target, step) {
@@ -15377,7 +14182,7 @@ class Vector3d {
      * project this vector on to another vector.
      * @name project
      * @memberof Vector3d
-     * @param {Vector2d|Vector3d} v The vector to project onto.
+     * @param {Vector2d|Vector3d} v - The vector to project onto.
      * @returns {Vector3d} Reference to this object for method chaining
      */
     project(v) {
@@ -15390,7 +14195,7 @@ class Vector3d {
      * This is slightly more efficient than `project` when dealing with unit vectors.
      * @name projectN
      * @memberof Vector3d
-     * @param {Vector2d|Vector3d} v The unit vector to project onto.
+     * @param {Vector2d|Vector3d} v - The unit vector to project onto.
      * @returns {Vector3d} Reference to this object for method chaining
      */
     projectN(v) {
@@ -15405,7 +14210,7 @@ class Vector3d {
      * @returns {Vector3d} new me.Vector3d
      */
     clone() {
-        return pool.pull("Vector3d", this.x, this.y, this.z);
+        return pool$1.pull("Vector3d", this.x, this.y, this.z);
     }
 
     /**
@@ -15419,19 +14224,21 @@ class Vector3d {
     }
 }
 
+var Vector3d$1 = Vector3d;
+
 /**
  * @classdesc
  * A Vector3d object that provide notification by executing the given callback when the vector is changed.
  * @augments Vector3d
  */
-class ObservableVector3d extends Vector3d {
+class ObservableVector3d extends Vector3d$1 {
     /**
-     * @param {number} x x value of the vector
-     * @param {number} y y value of the vector
-     * @param {number} z z value of the vector
-     * @param {object} settings additional required parameters
-     * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
-     * @param {object} [settings.scope] the value to use as this when calling onUpdate
+     * @param {number} x - x value of the vector
+     * @param {number} y - y value of the vector
+     * @param {number} z - z value of the vector
+     * @param {object} settings - additional required parameters
+     * @param {Function} settings.onUpdate - the callback to be executed when the vector is changed
+     * @param {object} [settings.scope] - the value to use as this when calling onUpdate
      */
     constructor(x = 0, y = 0, z = 0, settings) {
         super(x, y, z);
@@ -15541,9 +14348,9 @@ class ObservableVector3d extends Vector3d {
      * set the vector value without triggering the callback
      * @name setMuted
      * @memberof ObservableVector3d
-     * @param {number} x x value of the vector
-     * @param {number} y y value of the vector
-     * @param {number} [z=0] z value of the vector
+     * @param {number} x - x value of the vector
+     * @param {number} y - y value of the vector
+     * @param {number} [z=0] - z value of the vector
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     setMuted(x, y, z) {
@@ -15557,8 +14364,8 @@ class ObservableVector3d extends Vector3d {
      * set the callback to be executed when the vector is changed
      * @name setCallback
      * @memberof ObservableVector3d
-     * @param {Function} fn callback
-     * @param {Function} [scope=null] scope
+     * @param {Function} fn - callback
+     * @param {Function} [scope=null] - scope
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     setCallback(fn, scope = null) {
@@ -15623,7 +14430,7 @@ class ObservableVector3d extends Vector3d {
      * Divide this vector values by the passed value
      * @name div
      * @memberof ObservableVector3d
-     * @param {number} n the value to divide the vector by
+     * @param {number} n - the value to divide the vector by
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     div(n) {
@@ -15821,8 +14628,8 @@ class ObservableVector3d extends Vector3d {
      * Rotate this vector (counter-clockwise) by the specified angle (in radians).
      * @name rotate
      * @memberof ObservableVector3d
-     * @param {number} angle The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around (on the same z axis)
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around (on the same z axis)
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     rotate(angle, v) {
@@ -15878,7 +14685,7 @@ class ObservableVector3d extends Vector3d {
      * @name lerp
      * @memberof ObservableVector3d
      * @param {Vector3d|ObservableVector3d} v
-     * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+     * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     lerp(v, alpha) {
@@ -15894,7 +14701,7 @@ class ObservableVector3d extends Vector3d {
      * @name moveTowards
      * @memberof ObservableVector3d
      * @param {Vector2d|ObservableVector2d|Vector3d|ObservableVector3d} target
-     * @param {number} step the maximum step per iteration (Negative values will push the vector away from the target)
+     * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     moveTowards(target, step) {
@@ -15937,7 +14744,7 @@ class ObservableVector3d extends Vector3d {
      * @returns {ObservableVector3d} new me.ObservableVector3d
      */
     clone() {
-        return pool.pull("ObservableVector3d",
+        return pool$1.pull("ObservableVector3d",
             this._x,
             this._y,
             this._z,
@@ -15952,7 +14759,7 @@ class ObservableVector3d extends Vector3d {
      * @returns {Vector3d} new me.Vector3d
      */
     toVector3d() {
-        return pool.pull("Vector3d", this._x, this._y, this._z);
+        return pool$1.pull("Vector3d", this._x, this._y, this._z);
     }
 
     /**
@@ -15965,6 +14772,8 @@ class ObservableVector3d extends Vector3d {
         return "x:" + this._x + ",y:" + this._y + ",z:" + this._z;
     }
 }
+
+var ObservableVector3d$1 = ObservableVector3d;
 
 // corresponding actions
 var _keyStatus = {};
@@ -16295,7 +15104,7 @@ function initKeyboardEvent() {
  * @name isKeyPressed
  * @memberof input
  * @public
- * @param {string} action user defined corresponding action
+ * @param {string} action - user defined corresponding action
  * @returns {boolean} true if pressed
  * @example
  * if (me.input.isKeyPressed('left')) {
@@ -16320,7 +15129,7 @@ function isKeyPressed(action) {
  * @name keyStatus
  * @memberof input
  * @public
- * @param {string} action user defined corresponding action
+ * @param {string} action - user defined corresponding action
  * @returns {boolean} down (true) or up(false)
  */
 function keyStatus(action) {
@@ -16333,9 +15142,9 @@ function keyStatus(action) {
  * @name triggerKeyEvent
  * @memberof input
  * @public
- * @param {number} keycode (See {@link input.KEY})
- * @param {boolean} [status=false] true to trigger a key down event, or false for key up event
- * @param {number} [mouseButton] the mouse button to trigger
+ * @param {number} keycode - (See {@link input.KEY})
+ * @param {boolean} [status=false] - true to trigger a key down event, or false for key up event
+ * @param {number} [mouseButton] - the mouse button to trigger
  * @example
  * // trigger a key press
  * me.input.triggerKeyEvent(me.input.KEY.LEFT, true);
@@ -16355,10 +15164,10 @@ function triggerKeyEvent(keycode, status, mouseButton) {
  * @name bindKey
  * @memberof input
  * @public
- * @param {number} keycode (See {@link input.KEY})
- * @param {string} action user defined corresponding action
- * @param {boolean} [lock=false] cancel the keypress event once read
- * @param {boolean} [preventDefault=input.preventDefault] prevent default browser action
+ * @param {number} keycode - (See {@link input.KEY})
+ * @param {string} action - user defined corresponding action
+ * @param {boolean} [lock=false] - cancel the keypress event once read
+ * @param {boolean} [preventDefault=input.preventDefault] - prevent default browser action
  * @example
  * // enable the keyboard
  * me.input.bindKey(me.input.KEY.LEFT,  "left");
@@ -16381,7 +15190,7 @@ function bindKey(keycode, action, lock, preventDefault$1 = preventDefault) {
  * @name getBindingKey
  * @memberof input
  * @public
- * @param {number} keycode (See {@link input.KEY})
+ * @param {number} keycode - (See {@link input.KEY})
  * @returns {string} user defined associated action
  */
 function getBindingKey(keycode) {
@@ -16393,7 +15202,7 @@ function getBindingKey(keycode) {
  * @name unlockKey
  * @memberof input
  * @public
- * @param {string} action user defined corresponding action
+ * @param {string} action - user defined corresponding action
  * @example
  * // Unlock jump when touching the ground
  * if (!this.falling && !this.jumping) {
@@ -16409,7 +15218,7 @@ function unlockKey(action) {
  * @name unbindKey
  * @memberof input
  * @public
- * @param {number} keycode (See {@link input.KEY})
+ * @param {number} keycode - (See {@link input.KEY})
  * @example
  * me.input.unbindKey(me.input.KEY.LEFT);
  */
@@ -16428,7 +15237,7 @@ function unbindKey(keycode) {
  * a temporary vector object
  * @ignore
  */
-var tmpVec = new Vector2d();
+var tmpVec = new Vector2d$1();
 
 /**
  * @classdesc
@@ -16436,7 +15245,7 @@ var tmpVec = new Vector2d();
  * @class Pointer
  * @augments Bounds
  */
-class Pointer extends Bounds {
+class Pointer extends Bounds$1 {
 
     /**
      * @ignore
@@ -16729,12 +15538,12 @@ class Pointer extends Bounds {
      * initialize the Pointer object using the given Event Object
      * @name Pointer#set
      * @private
-     * @param {Event} event the original Event object
-     * @param {number} [pageX=0] the horizontal coordinate at which the event occurred, relative to the left edge of the entire document
-     * @param {number} [pageY=0] the vertical coordinate at which the event occurred, relative to the left edge of the entire document
-     * @param {number} [clientX=0] the horizontal coordinate within the application's client area at which the event occurred
-     * @param {number} [clientY=0] the vertical coordinate within the application's client area at which the event occurred
-     * @param {number} [pointerId=1] the Pointer, Touch or Mouse event Id (1)
+     * @param {Event} event - the original Event object
+     * @param {number} [pageX=0] - the horizontal coordinate at which the event occurred, relative to the left edge of the entire document
+     * @param {number} [pageY=0] - the vertical coordinate at which the event occurred, relative to the left edge of the entire document
+     * @param {number} [clientX=0] - the horizontal coordinate within the application's client area at which the event occurred
+     * @param {number} [clientY=0] - the vertical coordinate within the application's client area at which the event occurred
+     * @param {number} [pointerId=1] - the Pointer, Touch or Mouse event Id (1)
      */
     setEvent(event, pageX = 0, pageY = 0, clientX = 0, clientY = 0, pointerId = 1) {
         // the original event object
@@ -16779,8 +15588,8 @@ class Pointer extends Bounds {
         this.type = event.type;
 
         // get the current screen to game world offset
-        if (typeof game.viewport !== "undefined") {
-            game.viewport.localToWorld(this.gameScreenX, this.gameScreenY, tmpVec);
+        if (typeof game$1.viewport !== "undefined") {
+            game$1.viewport.localToWorld(this.gameScreenX, this.gameScreenY, tmpVec);
         }
 
         /* Initialize the two coordinate space properties. */
@@ -16801,6 +15610,8 @@ class Pointer extends Bounds {
         }
     }
 }
+
+var Pointer$1 = Pointer;
 
 /**
  * A pool of `Pointer` objects to cache pointer/touch event coordinates.
@@ -16906,11 +15717,11 @@ function enablePointerEvent() {
     if (!pointerInitialized) {
 
         // the current pointer area
-        currentPointer = new Rect(0, 0, 1, 1);
+        currentPointer = new Rect$1(0, 0, 1, 1);
 
         // instantiate a pool of pointer catched
         for (var v = 0; v < maxTouchPoints; v++) {
-            T_POINTERS.push(new Pointer());
+            T_POINTERS.push(new Pointer$1());
         }
 
         if (pointerEventTarget === null) {
@@ -16934,7 +15745,7 @@ function enablePointerEvent() {
         // set the PointerMove/touchMove/MouseMove event
         if (typeof(throttlingInterval) === "undefined") {
             // set the default value
-            throttlingInterval = ~~(1000 / timer.maxfps);
+            throttlingInterval = ~~(1000 / timer$1.maxfps);
         }
 
         {
@@ -17077,10 +15888,10 @@ function dispatchEvent(normalizedEvents) {
         }
 
         // fetch valid candiates from the game world container
-        var candidates = game.world.broadphase.retrieve(currentPointer, Container.prototype._sortReverseZ);
+        var candidates = game$1.world.broadphase.retrieve(currentPointer, Container$1.prototype._sortReverseZ);
 
         // add the main game viewport to the list of candidates
-        candidates = candidates.concat([ game.viewport ]);
+        candidates = candidates.concat([ game$1.viewport ]);
 
         for (var c = candidates.length, candidate; c--, (candidate = candidates[c]);) {
             if (eventHandlers.has(candidate) && (candidate.isKinematic !== true)) {
@@ -17113,11 +15924,11 @@ function dispatchEvent(normalizedEvents) {
                 if (typeof region.currentTransform !== "undefined") {
                     if (!region.currentTransform.isIdentity()) {
                         var invV = region.currentTransform.applyInverse(
-                            pool.pull("Vector2d", gameX, gameY)
+                            pool$1.pull("Vector2d", gameX, gameY)
                         );
                         gameX = invV.x;
                         gameY = invV.y;
-                        pool.push(invV);
+                        pool$1.push(invV);
                     }
                 }
                 eventInBounds = bounds.contains(gameX, gameY);
@@ -17304,7 +16115,7 @@ function onPointerEvent(e) {
  * @name pointer
  * @memberof input
  */
-var pointer = new Pointer(0, 0, 1, 1);
+var pointer = new Pointer$1(0, 0, 1, 1);
 
 
 /**
@@ -17333,9 +16144,9 @@ var throttlingInterval;
  * @name globalToLocal
  * @memberof input
  * @public
- * @param {number} x the global x coordinate to be translated.
- * @param {number} y the global y coordinate to be translated.
- * @param {Vector2d} [v] an optional vector object where to set the translated coordinates
+ * @param {number} x - the global x coordinate to be translated.
+ * @param {number} y - the global y coordinate to be translated.
+ * @param {Vector2d} [v] - an optional vector object where to set the translated coordinates
  * @returns {Vector2d} A vector object with the corresponding translated coordinates
  * @example
  * onMouseEvent : function (pointer) {
@@ -17345,7 +16156,7 @@ var throttlingInterval;
  * };
  */
 function globalToLocal(x, y, v) {
-    v = v || pool.pull("Vector2d");
+    v = v || pool$1.pull("Vector2d");
     var rect = getElementBounds(renderer.getCanvas());
     var pixelRatio = globalThis.devicePixelRatio || 1;
     x -= rect.left + (globalThis.pageXOffset || 0);
@@ -17380,7 +16191,7 @@ function setTouchAction(element, value) {
  * @name bindPointer
  * @memberof input
  * @public
- * @param {number} [button=input.pointer.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
+ * @param {number} [button=input.pointer.LEFT] - (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
  * @param {input.KEY} keyCode
  * @example
  * // enable the keyboard
@@ -17410,7 +16221,7 @@ function bindPointer() {
  * @name unbindPointer
  * @memberof input
  * @public
- * @param {number} [button=input.pointer.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
+ * @param {number} [button=input.pointer.LEFT] - (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
  * @example
  * me.input.unbindPointer(me.input.pointer.LEFT);
  */
@@ -17431,7 +16242,7 @@ function unbindPointer(button) {
  * @name registerPointerEvent
  * @memberof input
  * @public
- * @param {string} eventType The event type for which the object is registering <br>
+ * @param {string} eventType - The event type for which the object is registering <br>
  * melonJS currently supports: <br>
  * <ul>
  *   <li><code>"pointermove"</code></li>
@@ -17443,8 +16254,8 @@ function unbindPointer(button) {
  *   <li><code>"pointercancel"</code></li>
  *   <li><code>"wheel"</code></li>
  * </ul>
- * @param {Rect|Polygon|Line|Ellipse} region a shape representing the region to register on
- * @param {Function} callback methods to be called when the event occurs.
+ * @param {Rect|Polygon|Line|Ellipse} region - a shape representing the region to register on
+ * @param {Function} callback - methods to be called when the event occurs.
  * Returning `false` from the defined callback will prevent the event to be propagated to other objects
  * @example
  *  // onActivate function
@@ -17502,9 +16313,9 @@ function registerPointerEvent(eventType, region, callback) {
  * @name releasePointerEvent
  * @memberof input
  * @public
- * @param {string} eventType The event type for which the object was registered. See {@link input.registerPointerEvent}
- * @param {Rect|Polygon|Line|Ellipse} region the registered region to release for this event
- * @param {Function} [callback="all"] if specified unregister the event only for the specific callback
+ * @param {string} eventType - The event type for which the object was registered. See {@link input.registerPointerEvent}
+ * @param {Rect|Polygon|Line|Ellipse} region - the registered region to release for this event
+ * @param {Function} [callback="all"] - if specified unregister the event only for the specific callback
  * @example
  * // release the registered region on the 'pointerdown' event
  * me.input.releasePointerEvent('pointerdown', this);
@@ -17546,7 +16357,7 @@ function releasePointerEvent(eventType, region, callback) {
  * @name releaseAllPointerEvents
  * @memberof input
  * @public
- * @param {Rect|Polygon|Line|Ellipse} region the registered region to release event from
+ * @param {Rect|Polygon|Line|Ellipse} region - the registered region to release event from
  * @example
  * // release all registered event on the
  * me.input.releaseAllPointerEvents(this);
@@ -17951,12 +16762,12 @@ var GAMEPAD = {
  * @name bindGamepad
  * @memberof input
  * @public
- * @param {number} index Gamepad index
- * @param {object} button Button/Axis definition
- * @param {string} button.type "buttons" or "axes"
- * @param {number} button.code button or axis code id (See {@link input.GAMEPAD.BUTTONS}, {@link input.GAMEPAD.AXES})
- * @param {number} [button.threshold=1] value indicating when the axis should trigger the keycode (e.g. -0.5 or 0.5)
- * @param {number} keyCode (See {@link input.KEY})
+ * @param {number} index - Gamepad index
+ * @param {object} button - Button/Axis definition
+ * @param {string} button.type - "buttons" or "axes"
+ * @param {number} button.code - button or axis code id (See {@link input.GAMEPAD.BUTTONS}, {@link input.GAMEPAD.AXES})
+ * @param {number} [button.threshold=1] - value indicating when the axis should trigger the keycode (e.g. -0.5 or 0.5)
+ * @param {number} keyCode - (See {@link input.KEY})
  * @example
  * // enable the keyboard
  * me.input.bindKey(me.input.KEY.X, "shoot");
@@ -18025,8 +16836,8 @@ function bindGamepad(index, button, keyCode) {
  * @name unbindGamepad
  * @memberof input
  * @public
- * @param {number} index Gamepad index
- * @param {number} button (See {@link input.GAMEPAD.BUTTONS})
+ * @param {number} index - Gamepad index
+ * @param {number} button - (See {@link input.GAMEPAD.BUTTONS})
  * @example
  * me.input.unbindGamepad(0, me.input.GAMEPAD.BUTTONS.FACE_1);
  */
@@ -18043,7 +16854,7 @@ function unbindGamepad(index, button) {
  * @name setGamepadDeadzone
  * @memberof input
  * @public
- * @param {number} value Deadzone value
+ * @param {number} value - Deadzone value
  */
 function setGamepadDeadzone(value) {
     deadzone = value;
@@ -18056,12 +16867,12 @@ function setGamepadDeadzone(value) {
  * @name setGamepadMapping
  * @memberof input
  * @public
- * @param {string} id Gamepad id string
- * @param {object} mapping A hash table
- * @param {number[]} mapping.axes Standard analog control stick axis locations
- * @param {number[]} mapping.buttons Standard digital button locations
- * @param {number[]} [mapping.analog] Analog axis locations for buttons
- * @param {Function} [mapping.normalize_fn] a function that returns a normalized value in range [-1.0..1.0] for the given value, axis and button
+ * @param {string} id - Gamepad id string
+ * @param {object} mapping - A hash table
+ * @param {number[]} mapping.axes - Standard analog control stick axis locations
+ * @param {number[]} mapping.buttons - Standard digital button locations
+ * @param {number[]} [mapping.analog] - Analog axis locations for buttons
+ * @param {Function} [mapping.normalize_fn] - a function that returns a normalized value in range [-1.0..1.0] for the given value, axis and button
  * @example
  * // A weird controller that has its axis mappings reversed
  * me.input.setGamepadMapping("Generic USB Controller", {
@@ -18140,12 +16951,12 @@ var input = /*#__PURE__*/Object.freeze({
  * A base class for renderable objects.
  * @augments Rect
  */
-class Renderable extends Rect {
+class Renderable extends Rect$1 {
     /**
-     * @param {number} x position of the renderable object (accessible through inherited pos.x property)
-     * @param {number} y position of the renderable object (accessible through inherited pos.y property)
-     * @param {number} width object width
-     * @param {number} height object height
+     * @param {number} x - position of the renderable object (accessible through inherited pos.x property)
+     * @param {number} y - position of the renderable object (accessible through inherited pos.y property)
+     * @param {number} width - object width
+     * @param {number} height - object height
      */
     constructor(x, y, width, height) {
 
@@ -18207,7 +17018,7 @@ class Renderable extends Rect {
              * the renderable default transformation matrix
              * @type {Matrix2d}
              */
-            this.currentTransform = pool.pull("Matrix2d");
+            this.currentTransform = pool$1.pull("Matrix2d");
         }
         this.currentTransform.identity();
 
@@ -18261,7 +17072,7 @@ class Renderable extends Rect {
          */
         this.floating = false;
 
-        if (this.anchorPoint instanceof ObservableVector2d) {
+        if (this.anchorPoint instanceof ObservableVector2d$1) {
             this.anchorPoint.setMuted(0.5, 0.5).setCallback(this.onAnchorUpdate, this);
         } else {
             /**
@@ -18275,7 +17086,7 @@ class Renderable extends Rect {
              * @type {ObservableVector2d}
              * @default <0.5,0.5>
              */
-            this.anchorPoint = pool.pull("ObservableVector2d", 0.5, 0.5, { onUpdate: this.onAnchorUpdate, scope: this });
+            this.anchorPoint = pool$1.pull("ObservableVector2d", 0.5, 0.5, { onUpdate: this.onAnchorUpdate, scope: this });
         }
 
         /**
@@ -18353,7 +17164,7 @@ class Renderable extends Rect {
          */
         this.name = "";
 
-        if (this.pos instanceof ObservableVector3d) {
+        if (this.pos instanceof ObservableVector3d$1) {
             this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos, this);
         } else {
             /**
@@ -18361,7 +17172,7 @@ class Renderable extends Rect {
              * @public
              * @type {ObservableVector3d}
              */
-            this.pos = pool.pull("ObservableVector3d", x, y, 0, { onUpdate: this.updateBoundsPos, scope: this});
+            this.pos = pool$1.pull("ObservableVector3d", x, y, 0, { onUpdate: this.updateBoundsPos, scope: this});
         }
 
         /**
@@ -18405,15 +17216,15 @@ class Renderable extends Rect {
      */
     get tint() {
         if (typeof this._tint === "undefined") {
-            this._tint = pool.pull("Color", 255, 255, 255, 1.0);
+            this._tint = pool$1.pull("Color", 255, 255, 255, 1.0);
         }
         return this._tint;
     }
     set tint(value) {
         if (typeof this._tint === "undefined") {
-            this._tint = pool.pull("Color", 255, 255, 255, 1.0);
+            this._tint = pool$1.pull("Color", 255, 255, 255, 1.0);
         }
-        if (value instanceof Color) {
+        if (value instanceof Color$1) {
             this._tint.copy(value);
         } else {
             // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
@@ -18486,7 +17297,7 @@ class Renderable extends Rect {
 
     /**
      * set the renderable alpha channel value<br>
-     * @param {number} alpha opacity value between 0.0 and 1.0
+     * @param {number} alpha - opacity value between 0.0 and 1.0
      */
     setOpacity(alpha) {
         if (typeof (alpha) === "number") {
@@ -18502,7 +17313,7 @@ class Renderable extends Rect {
     /**
      * flip the renderable on the horizontal axis (around the center of the renderable)
      * @see Matrix2d#scaleX
-     * @param {boolean} [flip=true] `true` to flip this renderable.
+     * @param {boolean} [flip=true] - `true` to flip this renderable.
      * @returns {Renderable} Reference to this object for method chaining
      */
     flipX(flip = true) {
@@ -18514,7 +17325,7 @@ class Renderable extends Rect {
     /**
      * flip the renderable on the vertical axis (around the center of the renderable)
      * @see Matrix2d#scaleY
-     * @param {boolean} [flip=true] `true` to flip this renderable.
+     * @param {boolean} [flip=true] - `true` to flip this renderable.
      * @returns {Renderable} Reference to this object for method chaining
      */
     flipY(flip = true) {
@@ -18526,7 +17337,7 @@ class Renderable extends Rect {
     /**
      * multiply the renderable currentTransform with the given matrix
      * @see Renderable#currentTransform
-     * @param {Matrix2d} m the transformation matrix
+     * @param {Matrix2d} m - the transformation matrix
      * @returns {Renderable} Reference to this object for method chaining
      */
     transform(m) {
@@ -18581,7 +17392,7 @@ class Renderable extends Rect {
 
     /**
      * Rotate this renderable towards the given target.
-     * @param {Renderable|Vector2d|Vector3d} target the renderable or position to look at
+     * @param {Renderable|Vector2d|Vector3d} target - the renderable or position to look at
      * @returns {Renderable} Reference to this object for method chaining
      */
     lookAt(target) {
@@ -18602,8 +17413,8 @@ class Renderable extends Rect {
 
     /**
      * Rotate this renderable by the specified angle (in radians).
-     * @param {number} angle The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
      * @returns {Renderable} Reference to this object for method chaining
      */
     rotate(angle, v) {
@@ -18621,8 +17432,8 @@ class Renderable extends Rect {
      * when rendering.  It does not scale the object itself.  For example if the renderable
      * is an image, the image.width and image.height properties are unaltered but the currentTransform
      * member will be changed.
-     * @param {number} x a number representing the abscissa of the scaling vector.
-     * @param {number} [y=x] a number representing the ordinate of the scaling vector.
+     * @param {number} x - a number representing the abscissa of the scaling vector.
+     * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
      * @returns {Renderable} Reference to this object for method chaining
      */
     scale(x, y) {
@@ -18634,7 +17445,7 @@ class Renderable extends Rect {
 
     /**
      * scale the renderable around his anchor point
-     * @param {Vector2d} v scaling vector
+     * @param {Vector2d} v - scaling vector
      * @returns {Renderable} Reference to this object for method chaining
      */
     scaleV(v) {
@@ -18644,7 +17455,7 @@ class Renderable extends Rect {
 
     /**
      * update function (automatically called by melonJS).
-     * @param {number} dt time since the last update in milliseconds.
+     * @param {number} dt - time since the last update in milliseconds.
      * @returns {boolean} true if the renderable is dirty
      */
     update(dt) { // eslint-disable-line no-unused-vars
@@ -18686,7 +17497,7 @@ class Renderable extends Rect {
          */
 
          // XXX: This is called from the constructor, before it gets an ancestor
-         if (this.ancestor instanceof Container && this.floating !== true) {
+         if (this.ancestor instanceof Container$1 && this.floating !== true) {
              bounds.translate(this.ancestor.getAbsolutePosition());
          }
 
@@ -18699,11 +17510,11 @@ class Renderable extends Rect {
       */
       getAbsolutePosition() {
           if (typeof this._absPos === "undefined") {
-              this._absPos = pool.pull("Vector2d");
+              this._absPos = pool$1.pull("Vector2d");
           }
           // XXX Cache me or something
           this._absPos.set(this.pos.x, this.pos.y);
-          if (this.ancestor instanceof Container && this.floating !== true) {
+          if (this.ancestor instanceof Container$1 && this.floating !== true) {
               this._absPos.add(this.ancestor.getAbsolutePosition());
           }
           return this._absPos;
@@ -18712,8 +17523,8 @@ class Renderable extends Rect {
     /**
      * called when the anchor point value is changed
      * @private
-     * @param {number} x the new X value to be set for the anchor
-     * @param {number} y the new Y value to be set for the anchor
+     * @param {number} x - the new X value to be set for the anchor
+     * @param {number} y - the new Y value to be set for the anchor
      */
      onAnchorUpdate(x, y) {
          // since the callback is called before setting the new value
@@ -18728,7 +17539,7 @@ class Renderable extends Rect {
      * This will apply any defined transforms, anchor point, tint or blend mode and translate the context accordingly to this renderable position.
      * @see Renderable#draw
      * @see Renderable#postDraw
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
      */
     preDraw(renderer) {
         var bounds = this.getBounds();
@@ -18787,8 +17598,8 @@ class Renderable extends Rect {
      * from the draw method, you should make sure that your draw it at the 0, 0 coordinates.
      * @see Renderable#preDraw
      * @see Renderable#postDraw
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
-     * @param {Camera2d} [viewport] the viewport to (re)draw
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+     * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
     draw(renderer, viewport) {  // eslint-disable-line no-unused-vars
         // empty one !
@@ -18798,7 +17609,7 @@ class Renderable extends Rect {
      * restore the rendering context after drawing (automatically called by melonJS).
      * @see Renderable#preDraw
      * @see Renderable#draw
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
      */
     postDraw(renderer) {
         // remove the previously applied tint
@@ -18819,8 +17630,8 @@ class Renderable extends Rect {
     /**
      * onCollision callback, triggered in case of collision,
      * when this renderable body is colliding with another one
-     * @param {ResponseObject} response the collision response object
-     * @param {Renderable} other the other renderable touching this one (a reference to response.a or response.b)
+     * @param {ResponseObject} response - the collision response object
+     * @param {Renderable} other - the other renderable touching this one (a reference to response.a or response.b)
      * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
      * @example
      * // colision handler
@@ -18846,32 +17657,32 @@ class Renderable extends Rect {
      */
     destroy() {
         // allow recycling object properties
-        pool.push(this.currentTransform);
+        pool$1.push(this.currentTransform);
         this.currentTransform = undefined;
 
-        pool.push(this.anchorPoint);
+        pool$1.push(this.anchorPoint);
         this.anchorPoint = undefined;
 
-        pool.push(this.pos);
+        pool$1.push(this.pos);
         this.pos = undefined;
 
         if (typeof this._absPos !== "undefined") {
-            pool.push(this._absPos);
+            pool$1.push(this._absPos);
             this._absPos = undefined;
         }
 
-        pool.push(this._bounds);
+        pool$1.push(this._bounds);
         this._bounds = undefined;
 
         this.onVisibilityChange = undefined;
 
         if (typeof this.mask !== "undefined") {
-            pool.push(this.mask);
+            pool$1.push(this.mask);
             this.mask = undefined;
         }
 
         if (typeof this._tint !== "undefined") {
-            pool.push(this._tint);
+            pool$1.push(this._tint);
             this._tint = undefined;
         }
 
@@ -18899,6 +17710,7 @@ class Renderable extends Rect {
     }
 
 }
+var Renderable$1 = Renderable;
 
 /*
 * Separating Axis Theorem implementation, based on the SAT.js library by Jim Riecken <jimr@jimr.ca>
@@ -18930,7 +17742,7 @@ const RIGHT_VORNOI_REGION = 1;
  * @ignore
  */
 var T_VECTORS = [];
-for (var v = 0; v < 10; v++) { T_VECTORS.push(new Vector2d()); }
+for (var v = 0; v < 10; v++) { T_VECTORS.push(new Vector2d$1()); }
 
 /**
  * A pool of arrays of numbers used in calculations to avoid allocating memory.
@@ -18946,9 +17758,9 @@ for (var a = 0; a < 5; a++) { T_ARRAYS.push([]); }
  * resulting in a one dimensional range of the minimum and
  * maximum value on that axis.
  * @ignore
- * @param {Array.<Vector2d>} points The points to flatten.
- * @param {Vector2d} normal The unit vector axis to flatten on.
- * @param {Array.<number>} result An array.  After calling this function,
+ * @param {Array.<Vector2d>} points - The points to flatten.
+ * @param {Vector2d} normal - The unit vector axis to flatten on.
+ * @param {Array.<number>} result - An array.  After calling this function,
  *   result[0] will be the minimum value,
  *   result[1] will be the maximum value.
  */
@@ -18970,13 +17782,13 @@ function flattenPointsOn(points, normal, result) {
  * Check whether two convex polygons are separated by the specified
  * axis (must be a unit vector).
  * @ignore
- * @param {Vector2d} aPos The position of the first polygon.
- * @param {Vector2d} bPos The position of the second polygon.
- * @param {Array.<Vector2d>} aPoints The points in the first polygon.
- * @param {Array.<Vector2d>} bPoints The points in the second polygon.
- * @param {Vector2d} axis The axis (unit sized) to test against.  The points of both polygons
+ * @param {Vector2d} aPos - The position of the first polygon.
+ * @param {Vector2d} bPos - The position of the second polygon.
+ * @param {Array.<Vector2d>} aPoints - The points in the first polygon.
+ * @param {Array.<Vector2d>} bPoints - The points in the second polygon.
+ * @param {Vector2d} axis - The axis (unit sized) to test against.  The points of both polygons
  *   will be projected onto this axis.
- * @param {Response=} response A Response object (optional) which will be populated
+ * @param {Response=} response - A Response object (optional) which will be populated
  *   if the axis is not a separating axis.
  * @returns {boolean} true if it is a separating axis, false otherwise.  If false,
  *   and a response is passed in, information about how much overlap and
@@ -19061,8 +17873,8 @@ function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
  * </pre>
  *
  * @ignore
- * @param {Vector2d} line The line segment.
- * @param {Vector2d} point The point.
+ * @param {Vector2d} line - The line segment.
+ * @param {Vector2d} point - The point.
  * @returns  {number} LEFT_VORNOI_REGION (-1) if it is the left region,
  *          MIDDLE_VORNOI_REGION (0) if it is the middle region,
  *          RIGHT_VORNOI_REGION (1) if it is the right region.
@@ -19087,11 +17899,11 @@ function vornoiRegion(line, point) {
 /**
  * Checks whether polygons collide.
  * @ignore
- * @param {Renderable} a a reference to the object A.
- * @param {Polygon} polyA a reference to the object A Polygon to be tested
- * @param {Renderable} b a reference to the object B.
- * @param {Polygon} polyB a reference to the object B Polygon to be tested
- * @param {Response=} response Response object (optional) that will be populated if they intersect.
+ * @param {Renderable} a - a reference to the object A.
+ * @param {Polygon} polyA - a reference to the object A Polygon to be tested
+ * @param {Renderable} b - a reference to the object B.
+ * @param {Polygon} polyB - a reference to the object B Polygon to be tested
+ * @param {Response=} response - Response object (optional) that will be populated if they intersect.
  * @returns {boolean} true if they intersect, false if they don't.
  */
 function testPolygonPolygon(a, polyA, b, polyB, response) {
@@ -19141,11 +17953,11 @@ function testPolygonPolygon(a, polyA, b, polyB, response) {
 /**
  * Check if two Ellipse collide.
  * @ignore
- * @param {Renderable} a a reference to the object A.
- * @param {Ellipse} ellipseA a reference to the object A Ellipse to be tested
- * @param {Renderable} b a reference to the object B.
- * @param {Ellipse} ellipseB a reference to the object B Ellipse to be tested
- * @param {Response=} response Response object (optional) that will be populated if
+ * @param {Renderable} a - a reference to the object A.
+ * @param {Ellipse} ellipseA - a reference to the object A Ellipse to be tested
+ * @param {Renderable} b - a reference to the object B.
+ * @param {Ellipse} ellipseB - a reference to the object B Ellipse to be tested
+ * @param {Response=} response - Response object (optional) that will be populated if
  *   the circles intersect.
  * @returns {boolean} true if the circles intersect, false if they don't.
  */
@@ -19182,11 +17994,11 @@ function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
 /**
  * Check if a polygon and an ellipse collide.
  * @ignore
- * @param {Renderable} a a reference to the object A.
- * @param {Polygon} polyA a reference to the object A Polygon to be tested
- * @param {Renderable} b a reference to the object B.
- * @param {Ellipse} ellipseB a reference to the object B Ellipse to be tested
- * @param {Response=} response Response object (optional) that will be populated if they intersect.
+ * @param {Renderable} a - a reference to the object A.
+ * @param {Polygon} polyA - a reference to the object A Polygon to be tested
+ * @param {Renderable} b - a reference to the object B.
+ * @param {Ellipse} ellipseB - a reference to the object B Ellipse to be tested
+ * @param {Response=} response - Response object (optional) that will be populated if they intersect.
  * @returns {boolean} true if they intersect, false if they don't.
  */
 function testPolygonEllipse(a, polyA, b, ellipseB, response) {
@@ -19348,11 +18160,11 @@ function testPolygonEllipse(a, polyA, b, ellipseB, response) {
  * **NOTE:** This is slightly less efficient than testPolygonEllipse as it just
  * runs testPolygonEllipse and reverses the response at the end.
  * @ignore
- * @param {Renderable} a a reference to the object A.
- * @param {Ellipse} ellipseA a reference to the object A Ellipse to be tested
- * @param {Renderable} b a reference to the object B.
- * @param {Polygon} polyB a reference to the object B Polygon to be tested
- * @param {Response=} response Response object (optional) that will be populated if
+ * @param {Renderable} a - a reference to the object A.
+ * @param {Ellipse} ellipseA - a reference to the object A Ellipse to be tested
+ * @param {Renderable} b - a reference to the object B.
+ * @param {Polygon} polyB - a reference to the object B Polygon to be tested
+ * @param {Response=} response - Response object (optional) that will be populated if
  *   they intersect.
  * @returns {boolean} true if they intersect, false if they don't.
  */
@@ -19400,8 +18212,8 @@ class ResponseObject {
     constructor() {
         this.a = null;
         this.b = null;
-        this.overlapN = new Vector2d();
-        this.overlapV = new Vector2d();
+        this.overlapN = new Vector2d$1();
+        this.overlapV = new Vector2d$1();
         this.aInB = true;
         this.bInA = true;
         this.indexShapeA = -1;
@@ -19430,17 +18242,17 @@ class ResponseObject {
 
 // a dummy object when using Line for raycasting
 let dummyObj = {
-    pos : new Vector2d(0, 0),
+    pos : new Vector2d$1(0, 0),
     ancestor : {
-        _absPos : new Vector2d(0, 0),
+        _absPos : new Vector2d$1(0, 0),
         getAbsolutePosition : function () {
             return this._absPos;
         }
     }
 };
 
-let boundsA = new Bounds();
-let boundsB = new Bounds();
+let boundsA = new Bounds$1();
+let boundsB = new Bounds$1();
 
 // the global response object used for collisions
 let globalResponse = new ResponseObject();
@@ -19451,8 +18263,8 @@ let globalResponse = new ResponseObject();
  * @name shouldCollide
  * @memberof collision
  * @ignore
- * @param {Renderable} a a reference to the object A.
- * @param {Renderable} b a reference to the object B.
+ * @param {Renderable} a - a reference to the object A.
+ * @param {Renderable} b - a reference to the object B.
  * @returns {boolean} true if they should collide, false otherwise
  */
 function shouldCollide(a, b) {
@@ -19475,14 +18287,14 @@ function shouldCollide(a, b) {
  * find all the collisions for the specified object
  * @name collisionCheck
  * @ignore
- * @param {Renderable} objA object to be tested for collision
- * @param {ResponseObject} [response] a user defined response object that will be populated if they intersect.
+ * @param {Renderable} objA - object to be tested for collision
+ * @param {ResponseObject} [response] - a user defined response object that will be populated if they intersect.
  * @returns {boolean} in case of collision, false otherwise
  */
 function collisionCheck(objA, response = globalResponse) {
     var collisionCounter = 0;
     // retreive a list of potential colliding objects from the game world
-    var candidates = game.world.broadphase.retrieve(objA);
+    var candidates = game$1.world.broadphase.retrieve(objA);
 
     boundsA.addBounds(objA.getBounds(), true);
     boundsA.addBounds(objA.body.getBounds());
@@ -19538,8 +18350,8 @@ function collisionCheck(objA, response = globalResponse) {
  * Checks for object colliding with the given line
  * @name rayCast
  * @ignore
- * @param {Line} line line to be tested for collision
- * @param {Array.<Renderable>} [result] a user defined array that will be populated with intersecting physic objects.
+ * @param {Line} line - line to be tested for collision
+ * @param {Array.<Renderable>} [result] - a user defined array that will be populated with intersecting physic objects.
  * @returns {Array.<Renderable>} an array of intersecting physic objects
  * @example
  *    // define a line accross the viewport
@@ -19563,7 +18375,7 @@ function rayCast(line, result = []) {
     var collisionCounter = 0;
 
     // retrieve a list of potential colliding objects from the game world
-    var candidates = game.world.broadphase.retrieve(line);
+    var candidates = game$1.world.broadphase.retrieve(line);
 
     for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
 
@@ -19704,8 +18516,8 @@ var collision = {
      * @name rayCast
      * @memberof collision
      * @public
-     * @param {Line} line line to be tested for collision
-     * @param {Array.<Renderable>} [result] a user defined array that will be populated with intersecting physic objects.
+     * @param {Line} line - line to be tested for collision
+     * @param {Array.<Renderable>} [result] - a user defined array that will be populated with intersecting physic objects.
      * @returns {Array.<Renderable>} an array of intersecting physic objects
      * @example
      *    // define a line accross the viewport
@@ -19728,6 +18540,8 @@ var collision = {
     rayCast(line, result) { return rayCast(line, result); }
 };
 
+var collision$1 = collision;
+
 /**
  * @classdesc
  * a Generic Physic Body Object with some physic properties and behavior functionality, to as a member of a Renderable.
@@ -19735,9 +18549,9 @@ var collision = {
  */
 class Body {
     /**
-     * @param {Renderable} ancestor the parent object this body is attached to
-     * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] a initial shape, list of shapes, or JSON object defining the body
-     * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
+     * @param {Renderable} ancestor - the parent object this body is attached to
+     * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] - a initial shape, list of shapes, or JSON object defining the body
+     * @param {Function} [onBodyUpdate] - callback for when the body is updated (e.g. add/remove shapes)
      */
     constructor(ancestor, shapes, onBodyUpdate) {
 
@@ -19756,7 +18570,7 @@ class Body {
              * @public
              * @type {Bounds}
              */
-            this.bounds = pool.pull("Bounds");
+            this.bounds = pool$1.pull("Bounds");
         }
 
         if (typeof this.shapes === "undefined") {
@@ -19776,7 +18590,7 @@ class Body {
          * @default collision.types.ALL_OBJECT
          * @see collision.types
          */
-        this.collisionMask = collision.types.ALL_OBJECT;
+        this.collisionMask = collision$1.types.ALL_OBJECT;
 
         /**
          * define the collision type of the body for collision filtering
@@ -19788,7 +18602,7 @@ class Body {
          * // set the body collision type
          * body.collisionType = me.collision.types.PLAYER_OBJECT;
          */
-        this.collisionType = collision.types.ENEMY_OBJECT;
+        this.collisionType = collision$1.types.ENEMY_OBJECT;
 
         if (typeof this.vel === "undefined") {
             /**
@@ -19799,7 +18613,7 @@ class Body {
              * @type {Vector2d}
              * @default <0,0>
              */
-            this.vel = pool.pull("Vector2d");
+            this.vel = pool$1.pull("Vector2d");
         }
         this.vel.set(0, 0);
 
@@ -19826,7 +18640,7 @@ class Body {
              *     }
              * }
              */
-            this.force = pool.pull("Vector2d");
+            this.force = pool$1.pull("Vector2d");
         }
         this.force.set(0, 0);
 
@@ -19837,7 +18651,7 @@ class Body {
              * @type {Vector2d}
              * @default <0,0>
              */
-            this.friction = pool.pull("Vector2d");
+            this.friction = pool$1.pull("Vector2d");
         }
         this.friction.set(0, 0);
 
@@ -19865,7 +18679,7 @@ class Body {
              * @type {Vector2d}
              * @default <490,490>
              */
-            this.maxVel = pool.pull("Vector2d");
+            this.maxVel = pool$1.pull("Vector2d");
         }
         // cap by default to half the default gravity force
         this.maxVel.set(490, 490);
@@ -19955,7 +18769,7 @@ class Body {
     /**
      * add a collision shape to this body <br>
      * (note: me.Rect objects will be converted to me.Polygon before being added)
-     * @param {Rect|Polygon|Line|Ellipse|Point|Point[]|Bounds|object} shape a shape or JSON object
+     * @param {Rect|Polygon|Line|Ellipse|Point|Point[]|Bounds|object} shape - a shape or JSON object
      * @returns {number} the shape array length
      * @example
      * // add a rectangle shape
@@ -19964,13 +18778,13 @@ class Body {
      * this.body.addShape(me.loader.getJSON("shapesdef").banana);
      */
     addShape(shape) {
-        if (shape instanceof Rect || shape instanceof Bounds) {
+        if (shape instanceof Rect$1 || shape instanceof Bounds$1) {
             var poly = shape.toPolygon();
             this.shapes.push(poly);
             // update the body bounds
             this.bounds.add(poly.points);
             this.bounds.translate(poly.pos);
-        } else if (shape instanceof Ellipse) {
+        } else if (shape instanceof Ellipse$1) {
             if (!this.shapes.includes(shape)) {
                 // see removeShape
                 this.shapes.push(shape);
@@ -19982,7 +18796,7 @@ class Body {
                 shape.getBounds().x,
                 shape.getBounds().y
             );
-        } else if (shape instanceof Polygon) {
+        } else if (shape instanceof Polygon$1) {
             if (!this.shapes.includes(shape)) {
                 // see removeShape
                 this.shapes.push(shape);
@@ -19990,7 +18804,7 @@ class Body {
             // update the body bounds
             this.bounds.add(shape.points);
             this.bounds.translate(shape.pos);
-        } else if (shape instanceof Point) {
+        } else if (shape instanceof Point$1) {
             if (!this.shapes.includes(shape)) {
                 // see removeShape
                 this.shapes.push(shape);
@@ -20011,17 +18825,17 @@ class Body {
 
     /**
      * set the body vertices to the given one
-     * @param {Vector2d[]} vertices an array of me.Vector2d points defining a convex hull
-     * @param {number} [index=0] the shape object for which to set the vertices
-     * @param {boolean} [clear=true] either to reset the body definition before adding the new vertices
+     * @param {Vector2d[]} vertices - an array of me.Vector2d points defining a convex hull
+     * @param {number} [index=0] - the shape object for which to set the vertices
+     * @param {boolean} [clear=true] - either to reset the body definition before adding the new vertices
      */
     setVertices(vertices, index = 0, clear = true) {
         var polygon = this.getShape(index);
-        if (polygon instanceof Polygon) {
+        if (polygon instanceof Polygon$1) {
             polygon.setShape(0, 0, vertices);
         } else {
             // this will replace any other non polygon shape type if defined
-            this.shapes[index] = pool.pull("Polygon", 0, 0, vertices);
+            this.shapes[index] = pool$1.pull("Polygon", 0, 0, vertices);
         }
 
         // update the body bounds to take in account the new vertices
@@ -20034,8 +18848,8 @@ class Body {
 
     /**
      * add the given vertices to the body shape
-     * @param {Vector2d[]} vertices an array of me.Vector2d points defining a convex hull
-     * @param {number} [index=0] the shape object for which to set the vertices
+     * @param {Vector2d[]} vertices - an array of me.Vector2d points defining a convex hull
+     * @param {number} [index=0] - the shape object for which to set the vertices
      */
     addVertices(vertices, index = 0) {
         this.setVertices(vertices, index, false);
@@ -20044,8 +18858,8 @@ class Body {
     /**
      * add collision mesh based on a JSON object
      * (this will also apply any physic properties defined in the given JSON file)
-     * @param {object} json a JSON object as exported from a Physics Editor tool
-     * @param {string} [id] an optional shape identifier within the given the json object
+     * @param {object} json - a JSON object as exported from a Physics Editor tool
+     * @param {string} [id] - an optional shape identifier within the given the json object
      * @see https://www.codeandweb.com/physicseditor
      * @returns {number} how many shapes were added to the body
      * @example
@@ -20084,7 +18898,7 @@ class Body {
 
     /**
      * return the collision shape at the given index
-     * @param {number} [index=0] the shape object at the specified index
+     * @param {number} [index=0] - the shape object at the specified index
      * @returns {Polygon|Line|Ellipse} shape a shape object if defined
      */
     getShape(index) {
@@ -20101,7 +18915,7 @@ class Body {
 
     /**
      * remove the specified shape from the body shape list
-     * @param {Polygon|Line|Ellipse} shape a shape object
+     * @param {Polygon|Line|Ellipse} shape - a shape object
      * @returns {number} the shape array length
      */
     removeShape(shape) {
@@ -20119,7 +18933,7 @@ class Body {
 
     /**
      * remove the shape at the given index from the body shape list
-     * @param {number} index the shape object at the specified index
+     * @param {number} index - the shape object at the specified index
      * @returns {number} the shape array length
      */
     removeShapeAt(index) {
@@ -20131,7 +18945,7 @@ class Body {
      * but it's also possible to specify 'collision filters' to provide a finer <br>
      * control over which body can collide with each other.
      * @see collision.types
-     * @param {number} [bitmask = collision.types.ALL_OBJECT] the collision mask
+     * @param {number} [bitmask = collision.types.ALL_OBJECT] - the collision mask
      * @example
      * // filter collision detection with collision shapes, enemies and collectables
      * body.setCollisionMask(me.collision.types.WORLD_SHAPE | me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
@@ -20139,22 +18953,22 @@ class Body {
      * // disable collision detection with all other objects
      * body.setCollisionMask(me.collision.types.NO_OBJECT);
      */
-    setCollisionMask(bitmask = collision.types.ALL_OBJECT) {
+    setCollisionMask(bitmask = collision$1.types.ALL_OBJECT) {
         this.collisionMask = bitmask;
     }
 
     /**
      * define the collision type of the body for collision filtering
      * @see collision.types
-     * @param {number} type the collision type
+     * @param {number} type - the collision type
      * @example
      * // set the body collision type
      * body.collisionType = me.collision.types.PLAYER_OBJECT;
      */
     setCollisionType(type) {
         if (typeof type !== "undefined") {
-            if (typeof collision.types[type] !== "undefined") {
-                this.collisionType = collision.types[type];
+            if (typeof collision$1.types[type] !== "undefined") {
+                this.collisionType = collision$1.types[type];
             } else {
                 throw new Error("Invalid value for the collisionType property");
             }
@@ -20163,7 +18977,7 @@ class Body {
 
     /**
      * the built-in function to solve the collision response
-     * @param {object} response the collision response object (see {@link ResponseObject})
+     * @param {object} response - the collision response object (see {@link ResponseObject})
      */
     respondToCollision(response) {
         // the overlap vector
@@ -20202,8 +19016,8 @@ class Body {
      *    - The current element being processed in the array <br>
      *    - The index of element in the array. <br>
      *    - The array forEach() was called upon. <br>
-     * @param {Function} callback fnction to execute on each element
-     * @param {object} [thisArg] value to use as this(i.e reference Object) when executing callback.
+     * @param {Function} callback - fnction to execute on each element
+     * @param {object} [thisArg] - value to use as this(i.e reference Object) when executing callback.
      * @example
      * // iterate through all shapes of the physic body
      * mySprite.body.forEach((shape) => {
@@ -20241,8 +19055,8 @@ class Body {
      */
     /**
      * Returns true if the any of the shape composing the body contains the given point.
-     * @param  {number} x x coordinate
-     * @param  {number} y y coordinate
+     * @param  {number} x -  x coordinate
+     * @param  {number} y -  y coordinate
      * @returns {boolean} true if contains
      */
     contains() {
@@ -20272,8 +19086,8 @@ class Body {
     /**
      * Rotate this body (counter-clockwise) by the specified angle (in radians).
      * Unless specified the body will be rotated around its center point
-     * @param {number} angle The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v=Body.getBounds().center] an optional point to rotate around
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v=Body.getBounds().center] - an optional point to rotate around
      * @returns {Body} Reference to this object for method chaining
      */
     rotate(angle, v = this.getBounds().center) {
@@ -20281,7 +19095,7 @@ class Body {
         this.forEach((shape) => {
             shape.rotate(angle, v);
             this.bounds.addBounds(shape.getBounds());
-            if (shape instanceof Ellipse) {
+            if (shape instanceof Ellipse$1) {
                 // use bounds position as ellipse position is center
                 this.bounds.translate(
                     shape.getBounds().x,
@@ -20296,8 +19110,8 @@ class Body {
 
     /**
      * cap the body velocity (body.maxVel property) to the specified value<br>
-     * @param {number} x max velocity on x axis
-     * @param {number} y max velocity on y axis
+     * @param {number} x - max velocity on x axis
+     * @param {number} y - max velocity on y axis
      */
     setMaxVelocity(x, y) {
         this.maxVel.x = x;
@@ -20306,8 +19120,8 @@ class Body {
 
     /**
      * set the body default friction
-     * @param {number} x horizontal friction
-     * @param {number} y vertical friction
+     * @param {number} x - horizontal friction
+     * @param {number} y - vertical friction
      */
     setFriction(x = 0, y = 0) {
         this.friction.x = x;
@@ -20324,13 +19138,13 @@ class Body {
      * Updates to Body.vel are bounded by maxVel (which defaults to viewport size if not set) <br>
      * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the constructor arguments.
      * @protected
-     * @param {number} dt time since the last update in milliseconds.
+     * @param {number} dt - time since the last update in milliseconds.
      * @returns {boolean} true if resulting velocity is different than 0
      */
     update(dt) { // eslint-disable-line no-unused-vars
         // apply timer.tick to delta time for linear interpolation (when enabled)
         // #761 add delta time in body update
-        var deltaTime = /* dt * */ timer.tick;
+        var deltaTime = /* dt * */ timer$1.tick;
 
         // apply force if defined
         if (this.force.x !== 0) {
@@ -20387,13 +19201,13 @@ class Body {
      */
     destroy() {
         // push back instance into object pool
-        pool.push(this.bounds);
-        pool.push(this.vel);
-        pool.push(this.force);
-        pool.push(this.friction);
-        pool.push(this.maxVel);
+        pool$1.push(this.bounds);
+        pool$1.push(this.vel);
+        pool$1.push(this.force);
+        pool$1.push(this.friction);
+        pool$1.push(this.maxVel);
         this.shapes.forEach((shape) => {
-            pool.push(shape, false);
+            pool$1.push(shape, false);
         });
 
         // set to undefined
@@ -20411,6 +19225,8 @@ class Body {
     }
 }
 
+var Body$1 = Body;
+
 /**
  * Private function to re-use for object removal in a defer
  * @ignore
@@ -20426,20 +19242,20 @@ var globalFloatingCounter = 0;
  * Container represents a collection of child objects
  * @augments Renderable
  */
-class Container extends Renderable {
+class Container extends Renderable$1 {
     /**
-     * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
-     * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
-     * @param {number} [width=game.viewport.width] width of the container
-     * @param {number} [height=game.viewport.height] height of the container
+     * @param {number} [x=0] - position of the container (accessible via the inherited pos.x property)
+     * @param {number} [y=0] - position of the container (accessible via the inherited pos.y property)
+     * @param {number} [width=game.viewport.width] - width of the container
+     * @param {number} [height=game.viewport.height] - height of the container
      */
     constructor(x = 0, y = 0, width, height, root = false) {
 
         // call the super constructor
         super(
             x, y,
-            typeof width === "undefined" ? (typeof game.viewport !== "undefined" ? game.viewport.width : Infinity) : width,
-            typeof height === "undefined" ? (typeof game.viewport !== "undefined" ? game.viewport.height : Infinity) : height
+            typeof width === "undefined" ? (typeof game$1.viewport !== "undefined" ? game$1.viewport.width : Infinity) : width,
+            typeof height === "undefined" ? (typeof game$1.viewport !== "undefined" ? game$1.viewport.height : Infinity) : height
         );
 
         /**
@@ -20473,7 +19289,7 @@ class Container extends Renderable {
          * @name sortOn
          * @memberof Container
          */
-        this.sortOn = game.sortOn;
+        this.sortOn = game$1.sortOn;
 
         /**
          * Specify if the children list should be automatically sorted when adding a new child
@@ -20509,7 +19325,7 @@ class Container extends Renderable {
          * a callback to be extended, triggered after a child has been added or removed
          * @name onChildChange
          * @memberof Container#
-         * @param {number} index added or removed child index
+         * @param {number} index - added or removed child index
          */
         this.onChildChange = function (index) {   // eslint-disable-line no-unused-vars
             // to be extended
@@ -20538,7 +19354,7 @@ class Container extends Renderable {
          * // add a red background color to this container
          * this.backgroundColor.setColor(255, 0, 0);
          */
-        this.backgroundColor = pool.pull("Color", 0, 0, 0, 0.0);
+        this.backgroundColor = pool$1.pull("Color", 0, 0, 0, 0.0);
 
         /**
          * Used by the debug panel plugin
@@ -20603,7 +19419,7 @@ class Container extends Renderable {
      * @name addChild
      * @memberof Container
      * @param {Renderable} child
-     * @param {number} [z] forces the z index of the child to the specified value
+     * @param {number} [z] - forces the z index of the child to the specified value
      * @returns {Renderable} the added child
      */
     addChild(child, z) {
@@ -20615,7 +19431,7 @@ class Container extends Renderable {
             // (e.g. move one child from one container to another)
             if (child.isRenderable) {
                 // allocated a GUID value (use child.id as based index if defined)
-                child.GUID = utils.createGUID(child.id);
+                child.GUID = utils$1.createGUID(child.id);
             }
         }
 
@@ -20641,7 +19457,7 @@ class Container extends Renderable {
 
         // force repaint in case this is a static non-animated object
         if (this.isAttachedToRoot() === true) {
-            game.repaint();
+            game$1.repaint();
         }
 
         // force bounds update if required
@@ -20650,8 +19466,8 @@ class Container extends Renderable {
         }
 
         // if a physic body is defined, add it to the game world
-        if (child.body instanceof Body) {
-            game.world.addBody(child.body);
+        if (child.body instanceof Body$1) {
+            game$1.world.addBody(child.body);
         }
 
         // triggered callback if defined
@@ -20679,7 +19495,7 @@ class Container extends Renderable {
                 // (e.g. move one child from one container to another)
                 if (child.isRenderable) {
                     // allocated a GUID value
-                    child.GUID = utils.createGUID();
+                    child.GUID = utils$1.createGUID();
                 }
             }
             child.ancestor = this;
@@ -20692,7 +19508,7 @@ class Container extends Renderable {
 
             // force repaint in case this is a static non-animated object
             if (this.isAttachedToRoot() === true) {
-                game.repaint();
+                game$1.repaint();
             }
 
             // force bounds update if required
@@ -20701,8 +19517,8 @@ class Container extends Renderable {
             }
 
             // if a physic body is defined, add it to the game world
-            if (child.body instanceof Body) {
-                game.world.addBody(child.body);
+            if (child.body instanceof Body$1) {
+                game$1.world.addBody(child.body);
             }
 
             // triggered callback if defined
@@ -20723,8 +19539,8 @@ class Container extends Renderable {
      *    - The array forEach() was called upon. <br>
      * @name forEach
      * @memberof Container
-     * @param {Function} callback fnction to execute on each element
-     * @param {object} [thisArg] value to use as this(i.e reference Object) when executing callback.
+     * @param {Function} callback - fnction to execute on each element
+     * @param {object} [thisArg] - value to use as this(i.e reference Object) when executing callback.
      * @example
      * // iterate through all children of the root container
      * me.game.world.forEach((child) => {
@@ -20842,8 +19658,8 @@ class Container extends Renderable {
      * @name getChildByProp
      * @memberof Container
      * @public
-     * @param {string} prop Property name
-     * @param {string|RegExp|number|boolean} value Value of the property
+     * @param {string} prop - Property name
+     * @param {string|RegExp|number|boolean} value - Value of the property
      * @returns {Renderable[]} Array of childs
      * @example
      * // get the first child object called "mainPlayer" in a specific container :
@@ -20919,7 +19735,7 @@ class Container extends Renderable {
      * @name getChildByName
      * @memberof Container
      * @public
-     * @param {string|RegExp|number|boolean} name child name
+     * @param {string|RegExp|number|boolean} name - child name
      * @returns {Renderable[]} Array of children
      */
     getChildByName(name) {
@@ -20933,7 +19749,7 @@ class Container extends Renderable {
      * @name getChildByGUID
      * @memberof Container
      * @public
-     * @param {string|RegExp|number|boolean} guid child GUID
+     * @param {string|RegExp|number|boolean} guid - child GUID
      * @returns {Renderable} corresponding child or null
      */
     getChildByGUID(guid) {
@@ -21047,11 +19863,11 @@ class Container extends Renderable {
      * @memberof Container
      * @public
      * @param {Renderable} child
-     * @param {boolean} [keepalive=false] true to prevent calling child.destroy()
+     * @param {boolean} [keepalive=false] - true to prevent calling child.destroy()
      */
     removeChild(child, keepalive) {
         if (this.hasChild(child)) {
-            utils.function.defer(deferredRemove, this, child, keepalive);
+            utils$1.function.defer(deferredRemove, this, child, keepalive);
         }
         else {
             throw new Error("Child is not mine.");
@@ -21065,7 +19881,7 @@ class Container extends Renderable {
      * @name removeChildNow
      * @memberof Container
      * @param {Renderable} child
-     * @param {boolean} [keepalive=False] True to prevent calling child.destroy()
+     * @param {boolean} [keepalive=False] - True to prevent calling child.destroy()
      */
     removeChildNow(child, keepalive) {
         if (this.hasChild(child) && (this.getChildIndex(child) >= 0)) {
@@ -21075,13 +19891,13 @@ class Container extends Renderable {
 
             // remove the body first to avoid a condition where a body can be detached
             // from its parent, before the body is removed from the game world
-            if (child.body instanceof Body) {
-                game.world.removeBody(child.body);
+            if (child.body instanceof Body$1) {
+                game$1.world.removeBody(child.body);
             }
 
             if (!keepalive) {
                 // attempt at recycling the object
-                if (pool.push(child, false) === false ) {
+                if (pool$1.push(child, false) === false ) {
                     //  else just destroy it
                     if (typeof child.destroy === "function") {
                         child.destroy();
@@ -21099,7 +19915,7 @@ class Container extends Renderable {
 
             // force repaint in case this is a static non-animated object
             if (this.isAttachedToRoot() === true) {
-                game.repaint();
+                game$1.repaint();
             }
 
             // force bounds update if required
@@ -21116,9 +19932,9 @@ class Container extends Renderable {
      * Automatically set the specified property of all childs to the given value
      * @name setChildsProperty
      * @memberof Container
-     * @param {string} prop property name
-     * @param {object} value property value
-     * @param {boolean} [recursive=false] recursively apply the value to child containers if true
+     * @param {string} prop - property name
+     * @param {object} value - property value
+     * @param {boolean} [recursive=false] - recursively apply the value to child containers if true
      */
     setChildsProperty(prop, value, recursive) {
         this.forEach((child) => {
@@ -21204,7 +20020,7 @@ class Container extends Renderable {
      * @name sort
      * @memberof Container
      * @public
-     * @param {boolean} [recursive=false] recursively sort all containers if true
+     * @param {boolean} [recursive=false] - recursively sort all containers if true
      */
     sort(recursive) {
         // do nothing if there is already a pending sort
@@ -21219,13 +20035,13 @@ class Container extends Renderable {
                 });
             }
             /** @ignore */
-            this.pendingSort = utils.function.defer(function () {
+            this.pendingSort = utils$1.function.defer(function () {
                 // sort everything in this container
                 this.getChildren().sort(this["_sort" + this.sortOn.toUpperCase()]);
                 // clear the defer id
                 this.pendingSort = null;
                 // make sure we redraw everything
-                game.repaint();
+                game$1.repaint();
             }, this);
         }
     }
@@ -21298,12 +20114,12 @@ class Container extends Renderable {
      * @name update
      * @memberof Container
      * @protected
-     * @param {number} dt time since the last update in milliseconds.
+     * @param {number} dt - time since the last update in milliseconds.
      * @returns {boolean} true if the Container is dirty
      */
     update(dt) {
         var isFloating = false;
-        var isPaused = state.isPaused();
+        var isPaused = state$1.isPaused();
         var children = this.getChildren();
 
         for (var i = children.length, obj; i--, (obj = children[i]);) {
@@ -21321,7 +20137,7 @@ class Container extends Renderable {
                 // check if object is in any active cameras
                 obj.inViewport = false;
                 // iterate through all cameras
-                state.current().cameras.forEach((camera) => {
+                state$1.current().cameras.forEach((camera) => {
                     if (camera.isVisible(obj, isFloating)) {
                         obj.inViewport = true;
                     }
@@ -21349,8 +20165,8 @@ class Container extends Renderable {
      * @name draw
      * @memberof Container
      * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
-     * @param {Camera2d} [viewport] the viewport to (re)draw
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+     * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
     draw(renderer, viewport) {
         var isFloating = false;
@@ -21411,6 +20227,8 @@ class Container extends Renderable {
     }
 }
 
+var Container$1 = Container;
+
 /*
  * A QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
  * Based on the QuadTree Library by Timo Hausmann and released under the MIT license
@@ -21455,7 +20273,7 @@ function QT_ARRAY_PUSH(qt) {
  * a temporary vector object to be reused
  * @ignore
  */
-var QT_VECTOR = new Vector2d();
+var QT_VECTOR = new Vector2d$1();
 
 /**
  * @classdesc
@@ -21464,11 +20282,11 @@ var QT_VECTOR = new Vector2d();
  */
 class QuadTree {
     /**
-     * @param {World} world the physic world this QuadTree belongs to
-     * @param {Bounds} bounds bounds of the node
-     * @param {number} [max_objects=4] max objects a node can hold before splitting into 4 subnodes
-     * @param {number} [max_levels=4] total max levels inside root Quadtree
-     * @param {number} [level] deepth level, required for subnodes
+     * @param {World} world - the physic world this QuadTree belongs to
+     * @param {Bounds} bounds - bounds of the node
+     * @param {number} [max_objects=4] - max objects a node can hold before splitting into 4 subnodes
+     * @param {number} [max_levels=4] - total max levels inside root Quadtree
+     * @param {number} [level] - deepth level, required for subnodes
      */
     constructor(world, bounds, max_objects = 4, max_levels = 4, level = 0) {
 
@@ -21595,12 +20413,12 @@ class QuadTree {
      * Insert the given object container into the node.
      * @name insertContainer
      * @memberof QuadTree
-     * @param {Container} container group of objects to be added
+     * @param {Container} container - group of objects to be added
      */
     insertContainer(container) {
         for (var i = container.children.length, child; i--, (child = container.children[i]);) {
             if (child.isKinematic !== true) {
-                if (child instanceof Container) {
+                if (child instanceof Container$1) {
                     if (child.name !== "rootContainer") {
                         this.insert(child);
                     }
@@ -21623,7 +20441,7 @@ class QuadTree {
      * objects to their corresponding subnodes.
      * @name insert
      * @memberof QuadTree
-     * @param {object} item object to be added
+     * @param {object} item - object to be added
      */
     insert(item) {
         var index = -1;
@@ -21667,8 +20485,8 @@ class QuadTree {
      * Return all objects that could collide with the given object
      * @name retrieve
      * @memberof QuadTree
-     * @param {object} item object to be checked against
-     * @param {object} [fn] a sorting function for the returned array
+     * @param {object} item - object to be checked against
+     * @param {object} [fn] - a sorting function for the returned array
      * @returns {object[]} array with all detected objects
      */
     retrieve(item, fn) {
@@ -21702,7 +20520,7 @@ class QuadTree {
      * (this function won't recalculate the impacted node)
      * @name remove
      * @memberof QuadTree
-     * @param {object} item object to be removed
+     * @param {object} item - object to be removed
      * @returns {boolean} true if the item was found and removed.
      */
      remove(item) {
@@ -21768,7 +20586,7 @@ class QuadTree {
      * clear the quadtree
      * @name clear
      * @memberof QuadTree
-     * @param {Bounds} [bounds=this.bounds] the bounds to be cleared
+     * @param {Bounds} [bounds=this.bounds] - the bounds to be cleared
      */
     clear(bounds) {
         this.objects.length = 0;
@@ -21788,17 +20606,19 @@ class QuadTree {
     }
 }
 
+var QuadTree$1 = QuadTree;
+
 /**
  * @classdesc
  * an object representing the physic world, and responsible for managing and updating all childs and physics
  * @augments Container
  */
-class World extends Container {
+class World extends Container$1 {
     /**
-     * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
-     * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
-     * @param {number} [width=game.viewport.width] width of the container
-     * @param {number} [height=game.viewport.height] height of the container
+     * @param {number} [x=0] - position of the container (accessible via the inherited pos.x property)
+     * @param {number} [y=0] - position of the container (accessible via the inherited pos.y property)
+     * @param {number} [width=game.viewport.width] - width of the container
+     * @param {number} [height=game.viewport.height] - height of the container
      */
     constructor(x = 0, y = 0, width = Infinity, height = Infinity) {
         // call the super constructor
@@ -21837,7 +20657,7 @@ class World extends Container {
          * @name gravity
          * @memberof World
          */
-        this.gravity = new Vector2d(0, 0.98);
+        this.gravity = new Vector2d$1(0, 0.98);
 
         /**
          * Specify the rendering method for tile layers. <br>
@@ -21869,7 +20689,7 @@ class World extends Container {
          * @public
          * @type {QuadTree}
          */
-        this.broadphase = new QuadTree(this, this.getBounds().clone(), collision.maxChildren, collision.maxDepth);
+        this.broadphase = new QuadTree$1(this, this.getBounds().clone(), collision$1.maxChildren, collision$1.maxDepth);
 
         // reset the world container on the game reset signal
         on(GAME_RESET, this.reset, this);
@@ -21951,11 +20771,11 @@ class World extends Container {
      * update the game world
      * @name reset
      * @memberof World
-     * @param {number} dt the time passed since the last frame update
+     * @param {number} dt - the time passed since the last frame update
      * @returns {boolean} true if the word is dirty
      */
     update(dt) {
-        var isPaused = state.isPaused();
+        var isPaused = state$1.isPaused();
 
         // clear the quadtree
         this.broadphase.clear();
@@ -21990,6 +20810,8 @@ class World extends Container {
     }
 
 }
+
+var World$1 = World;
 
 /**
  * @classdesc
@@ -22072,7 +20894,7 @@ class Application {
      */
     init() {
         // create a new physic world
-        this.world = new World();
+        this.world = new World$1();
         // set the reference to this application instance
         this.world.app = this;
         this.lastUpdate = globalThis.performance.now();
@@ -22085,7 +20907,7 @@ class Application {
      */
     reset() {
         // point to the current active stage "default" camera
-        var current = state.get();
+        var current = state$1.get();
         if (typeof current !== "undefined") {
             this.viewport = current.cameras.get("default");
         }
@@ -22114,7 +20936,7 @@ class Application {
     updateFrameRate() {
         // reset the frame counter
         this.frameCounter = 0;
-        this.frameRate = ~~(0.5 + 60 / timer.maxfps);
+        this.frameRate = ~~(0.5 + 60 / timer$1.maxfps);
 
         // set step size based on the updatesPerSecond
         this.stepSize = (1000 / this.world.fps);
@@ -22123,7 +20945,7 @@ class Application {
 
         // display should always re-draw when update speed doesn't match fps
         // this means the user intends to write position prediction drawing logic
-        this.isAlwaysDirty = (timer.maxfps > this.world.fps);
+        this.isAlwaysDirty = (timer$1.maxfps > this.world.fps);
     }
 
     /**
@@ -22144,8 +20966,8 @@ class Application {
 
     /**
      * update all objects related to this game active scene/stage
-     * @param {number} time current timestamp as provided by the RAF callback
-     * @param {Stage} stage the current stage
+     * @param {number} time - current timestamp as provided by the RAF callback
+     * @param {Stage} stage - the current stage
      */
     update(time, stage) {
         // handle frame skipping if required
@@ -22156,17 +20978,17 @@ class Application {
             // publish notification
             emit(GAME_BEFORE_UPDATE, time);
 
-            this.accumulator += timer.getDelta();
+            this.accumulator += timer$1.getDelta();
             this.accumulator = Math.min(this.accumulator, this.accumulatorMax);
 
-            this.updateDelta = (timer.interpolation) ? timer.getDelta() : this.stepSize;
-            this.accumulatorUpdateDelta = (timer.interpolation) ? this.updateDelta : Math.max(this.updateDelta, this.updateAverageDelta);
+            this.updateDelta = (timer$1.interpolation) ? timer$1.getDelta() : this.stepSize;
+            this.accumulatorUpdateDelta = (timer$1.interpolation) ? this.updateDelta : Math.max(this.updateDelta, this.updateAverageDelta);
 
-            while (this.accumulator >= this.accumulatorUpdateDelta || timer.interpolation) {
+            while (this.accumulator >= this.accumulatorUpdateDelta || timer$1.interpolation) {
                 this.lastUpdateStart = globalThis.performance.now();
 
                 // game update event
-                if (state.isPaused() !== true) {
+                if (state$1.isPaused() !== true) {
                     emit(GAME_UPDATE, time);
                 }
 
@@ -22177,7 +20999,7 @@ class Application {
                 this.updateAverageDelta = this.lastUpdate - this.lastUpdateStart;
 
                 this.accumulator -= this.accumulatorUpdateDelta;
-                if (timer.interpolation) {
+                if (timer$1.interpolation) {
                     this.accumulator = 0;
                     break;
                 }
@@ -22190,7 +21012,7 @@ class Application {
 
     /**
      * draw the active scene/stage associated to this game
-     * @param {Stage} stage the current stage
+     * @param {Stage} stage - the current stage
      */
     draw(stage) {
         if (renderer.isContextValid === true && (this.isDirty || this.isAlwaysDirty)) {
@@ -22215,6 +21037,8 @@ class Application {
     }
 }
 
+var Application$1 = Application;
+
 /**
  * game is a default instance of a melonJS Application and represents your current game,
  * it contains all the objects, tilemap layers, current viewport, collision map, etc...<br>
@@ -22223,7 +21047,7 @@ class Application {
  */
 
 // create a default melonJS application instance
-let game = new Application();
+let game = new Application$1();
 
  // initialize the game manager on system boot
 on(BOOT, () => {
@@ -22231,22 +21055,24 @@ on(BOOT, () => {
     game.init();
 });
 
+var game$1 = game;
+
 // some ref shortcut
 const MIN = Math.min, MAX = Math.max;
 
-var targetV = new Vector2d();
+var targetV = new Vector2d$1();
 
 /**
  * @classdesc
  * a 2D orthographic camera
  * @augments Renderable
  */
-class Camera2d extends Renderable {
+class Camera2d extends Renderable$1 {
     /**
-     * @param {number} minX start x offset
-     * @param {number} minY start y offset
-     * @param {number} maxX end x offset
-     * @param {number} maxY end y offset
+     * @param {number} minX - start x offset
+     * @param {number} minY - start y offset
+     * @param {number} maxX - end x offset
+     * @param {number} maxY - end y offset
      */
     constructor(minX, minY, maxX, maxY) {
         super(minX, minY, maxX - minX, maxY - minY);
@@ -22276,7 +21102,7 @@ class Camera2d extends Renderable {
          * @name bounds
          * @memberof Camera2d
          */
-        this.bounds = pool.pull("Bounds");
+        this.bounds = pool$1.pull("Bounds");
 
         /**
          * enable or disable damping
@@ -22324,7 +21150,7 @@ class Camera2d extends Renderable {
          * @name projectionMatrix
          * @memberof Camera2d
          */
-        this.projectionMatrix = new Matrix3d();
+        this.projectionMatrix = new Matrix3d$1();
 
         /**
          * the invert camera transform used to unproject points
@@ -22333,10 +21159,10 @@ class Camera2d extends Renderable {
          * @name invCurrentTransform
          * @memberof Camera2d
          */
-        this.invCurrentTransform = new Matrix2d();
+        this.invCurrentTransform = new Matrix2d$1();
 
         // offset for shake effect
-        this.offset = new Vector2d();
+        this.offset = new Vector2d$1();
 
         // target to follow
         this.target = null;
@@ -22455,12 +21281,12 @@ class Camera2d extends Renderable {
      * @name setDeadzone
      * @see Camera2d.follow
      * @memberof Camera2d
-     * @param {number} w deadzone width
-     * @param {number} h deadzone height
+     * @param {number} w - deadzone width
+     * @param {number} h - deadzone height
      */
     setDeadzone(w, h) {
         if (typeof(this.deadzone) === "undefined") {
-            this.deadzone = new Rect(0, 0, 0, 0);
+            this.deadzone = new Rect$1(0, 0, 0, 0);
         }
 
         // reusing the old code for now...
@@ -22482,8 +21308,8 @@ class Camera2d extends Renderable {
      * resize the camera
      * @name resize
      * @memberof Camera2d
-     * @param {number} w new width of the camera
-     * @param {number} h new height of the camera
+     * @param {number} w - new width of the camera
+     * @param {number} h - new height of the camera
      * @returns {Camera2d} this camera
      */
     resize(w, h) {
@@ -22513,10 +21339,10 @@ class Camera2d extends Renderable {
      * the camera is bound to the given coordinates and cannot move/be scrolled outside of it.
      * @name setBounds
      * @memberof Camera2d
-     * @param {number} x world left limit
-     * @param {number} y world top limit
-     * @param {number} w world width limit
-     * @param {number} h world height limit
+     * @param {number} x - world left limit
+     * @param {number} y - world top limit
+     * @param {number} w - world width limit
+     * @param {number} h - world height limit
      */
     setBounds(x, y, w, h) {
         this.smoothFollow = false;
@@ -22531,19 +21357,19 @@ class Camera2d extends Renderable {
      * (this will put the camera center around the given target)
      * @name follow
      * @memberof Camera2d
-     * @param {Renderable|Vector2d} target renderable or position vector to follow
-     * @param {number} [axis=me.game.viewport.AXIS.BOTH] Which axis to follow (see {@link Camera2d.AXIS})
-     * @param {number} [damping=1] default damping value
+     * @param {Renderable|Vector2d} target - renderable or position vector to follow
+     * @param {number} [axis=me.game.viewport.AXIS.BOTH] - Which axis to follow (see {@link Camera2d.AXIS})
+     * @param {number} [damping=1] - default damping value
      * @example
      * // set the camera to follow this renderable on both axis, and enable damping
      * me.game.viewport.follow(this, me.game.viewport.AXIS.BOTH, 0.1);
      */
     follow(target, axis, damping) {
-        if (target instanceof Renderable) {
+        if (target instanceof Renderable$1) {
             this.target = target.pos;
         }
-        else if ((target instanceof Vector2d) || (target instanceof Vector3d) ||
-                 (target instanceof ObservableVector2d) || (target instanceof ObservableVector3d)) {
+        else if ((target instanceof Vector2d$1) || (target instanceof Vector3d$1) ||
+                 (target instanceof ObservableVector2d$1) || (target instanceof ObservableVector3d$1)) {
             this.target = target;
         }
         else {
@@ -22718,12 +21544,12 @@ class Camera2d extends Renderable {
      * shake the camera
      * @name shake
      * @memberof Camera2d
-     * @param {number} intensity maximum offset that the screen can be moved
+     * @param {number} intensity - maximum offset that the screen can be moved
      * while shaking
-     * @param {number} duration expressed in milliseconds
-     * @param {number} [axis=me.game.viewport.AXIS.BOTH] specify on which axis to apply the shake effect (see {@link Camera2d.AXIS})
-     * @param {Function} [onComplete] callback once shaking effect is over
-     * @param {boolean} [force] if true this will override the current effect
+     * @param {number} duration - expressed in milliseconds
+     * @param {number} [axis=me.game.viewport.AXIS.BOTH] - specify on which axis to apply the shake effect (see {@link Camera2d.AXIS})
+     * @param {Function} [onComplete] - callback once shaking effect is over
+     * @param {boolean} [force] - if true this will override the current effect
      * @example
      * // shake it baby !
      * me.game.viewport.shake(10, 500, me.game.viewport.AXIS.BOTH);
@@ -22742,9 +21568,9 @@ class Camera2d extends Renderable {
      * screen is filled with the specified color and slowly goes back to normal
      * @name fadeOut
      * @memberof Camera2d
-     * @param {Color|string} color a CSS color value
-     * @param {number} [duration=1000] expressed in milliseconds
-     * @param {Function} [onComplete] callback once effect is over
+     * @param {Color|string} color - a CSS color value
+     * @param {number} [duration=1000] - expressed in milliseconds
+     * @param {Function} [onComplete] - callback once effect is over
      * @example
      * // fade the camera to white upon dying, reload the level, and then fade out back
      * me.game.viewport.fadeIn("#fff", 150, function() {
@@ -22754,8 +21580,8 @@ class Camera2d extends Renderable {
      * });
      */
     fadeOut(color, duration = 1000, onComplete) {
-        this._fadeOut.color = pool.pull("Color").copy(color);
-        this._fadeOut.tween = pool.pull("Tween", this._fadeOut.color)
+        this._fadeOut.color = pool$1.pull("Color").copy(color);
+        this._fadeOut.tween = pool$1.pull("Tween", this._fadeOut.color)
             .to({ alpha: 0.0 }, duration)
             .onComplete(onComplete || null);
         this._fadeOut.tween.isPersistent = true;
@@ -22767,18 +21593,18 @@ class Camera2d extends Renderable {
      * fade to the specified color
      * @name fadeIn
      * @memberof Camera2d
-     * @param {Color|string} color a CSS color value
-     * @param {number} [duration=1000] expressed in milliseconds
-     * @param {Function} [onComplete] callback once effect is over
+     * @param {Color|string} color - a CSS color value
+     * @param {number} [duration=1000] - expressed in milliseconds
+     * @param {Function} [onComplete] - callback once effect is over
      * @example
      * // flash the camera to white for 75ms
      * me.game.viewport.fadeIn("#FFFFFF", 75);
      */
     fadeIn(color, duration = 1000, onComplete) {
-        this._fadeIn.color = pool.pull("Color").copy(color);
+        this._fadeIn.color = pool$1.pull("Color").copy(color);
         var _alpha = this._fadeIn.color.alpha;
         this._fadeIn.color.alpha = 0.0;
-        this._fadeIn.tween = pool.pull("Tween", this._fadeIn.color)
+        this._fadeIn.tween = pool$1.pull("Tween", this._fadeIn.color)
             .to({ alpha: _alpha }, duration)
             .onComplete(onComplete || null);
         this._fadeIn.tween.isPersistent = true;
@@ -22789,7 +21615,7 @@ class Camera2d extends Renderable {
      * set the camera position around the specified object
      * @name focusOn
      * @memberof Camera2d
-     * @param {Renderable} target the renderable to focus the camera on
+     * @param {Renderable} target - the renderable to focus the camera on
      */
     focusOn(target) {
         var bounds = target.getBounds();
@@ -22803,8 +21629,8 @@ class Camera2d extends Renderable {
      * check if the specified renderable is in the camera
      * @name isVisible
      * @memberof Camera2d
-     * @param {Renderable} obj to be checked against
-     * @param {boolean} [floating = obj.floating] if visibility check should be done against screen coordinates
+     * @param {Renderable} obj - to be checked against
+     * @param {boolean} [floating = obj.floating] - if visibility check should be done against screen coordinates
      * @returns {boolean}
      */
     isVisible(obj, floating = obj.floating) {
@@ -22823,14 +21649,14 @@ class Camera2d extends Renderable {
      * @memberof Camera2d
      * @param {number} x
      * @param {number} y
-     * @param {number} [v] an optional vector object where to set the
+     * @param {number} [v] - an optional vector object where to set the
      * converted value
      * @returns {Vector2d}
      */
     localToWorld(x, y, v) {
         // TODO memoization for one set of coords (multitouch)
-        v = v || pool.pull("Vector2d");
-        v.set(x, y).add(this.pos).sub(game.world.pos);
+        v = v || pool$1.pull("Vector2d");
+        v.set(x, y).add(this.pos).sub(game$1.world.pos);
         if (!this.currentTransform.isIdentity()) {
             this.invCurrentTransform.apply(v);
         }
@@ -22843,18 +21669,18 @@ class Camera2d extends Renderable {
      * @memberof Camera2d
      * @param {number} x
      * @param {number} y
-     * @param {number} [v] an optional vector object where to set the
+     * @param {number} [v] - an optional vector object where to set the
      * converted value
      * @returns {Vector2d}
      */
     worldToLocal(x, y, v) {
         // TODO memoization for one set of coords (multitouch)
-        v = v || pool.pull("Vector2d");
+        v = v || pool$1.pull("Vector2d");
         v.set(x, y);
         if (!this.currentTransform.isIdentity()) {
             this.currentTransform.apply(v);
         }
-        return v.sub(this.pos).add(game.world.pos);
+        return v.sub(this.pos).add(game$1.world.pos);
     }
 
     /**
@@ -22874,7 +21700,7 @@ class Camera2d extends Renderable {
             // remove the tween if over
             if (this._fadeIn.color.alpha === 1.0) {
                 this._fadeIn.tween = null;
-                pool.push(this._fadeIn.color);
+                pool$1.push(this._fadeIn.color);
                 this._fadeIn.color = null;
             }
         }
@@ -22891,7 +21717,7 @@ class Camera2d extends Renderable {
             // remove the tween if over
             if (this._fadeOut.color.alpha === 0.0) {
                 this._fadeOut.tween = null;
-                pool.push(this._fadeOut.color);
+                pool$1.push(this._fadeOut.color);
                 this._fadeOut.color = null;
             }
         }
@@ -22939,6 +21765,7 @@ class Camera2d extends Renderable {
     }
 
 }
+var Camera2d$1 = Camera2d;
 
 // a default camera instance to use across all stages
 var default_camera;
@@ -22958,10 +21785,10 @@ var default_settings = {
 class Stage {
 
     /**
-     * @param {object} [settings] The stage` parameters
-     * @param {Camera2d[]} [settings.cameras=[new me.Camera2d()]] a list of cameras (experimental)
-     * @param {Function} [settings.onResetEvent] called by the state manager when reseting the object
-     * @param {Function} [settings.onDestroyEvent] called by the state manager before switching to another state
+     * @param {object} [settings] - The stage` parameters
+     * @param {Camera2d[]} [settings.cameras=[new me.Camera2d()]] - a list of cameras (experimental)
+     * @param {Function} [settings.onResetEvent] - called by the state manager when reseting the object
+     * @param {Function} [settings.onDestroyEvent] - called by the state manager before switching to another state
      */
     constructor(settings) {
         /**
@@ -23007,7 +21834,7 @@ class Stage {
          * @default "#000000"
          * @see Light2d
          */
-        this.ambientLight = new Color(0, 0, 0, 0);
+        this.ambientLight = new Color$1(0, 0, 0, 0);
 
         /**
          * The given constructor options
@@ -23036,13 +21863,13 @@ class Stage {
                 var width = renderer.getWidth();
                 var height = renderer.getHeight();
                 // new default camera instance
-                default_camera = new Camera2d(0, 0, width, height);
+                default_camera = new Camera2d$1(0, 0, width, height);
             }
             this.cameras.set("default", default_camera);
         }
 
         // reset the game
-        game.reset();
+        game$1.reset();
 
         // call the onReset Function
         this.onResetEvent.apply(this, arguments);
@@ -23053,12 +21880,12 @@ class Stage {
      * @name update
      * @memberof Stage
      * @ignore
-     * @param {number} dt time since the last update in milliseconds.
+     * @param {number} dt - time since the last update in milliseconds.
      * @returns {boolean}
      */
     update(dt) {
         // update all objects (and pass the elapsed time since last frame)
-        var isDirty = game.world.update(dt);
+        var isDirty = game$1.world.update(dt);
 
         // update the camera/viewport
         // iterate through all cameras
@@ -23083,13 +21910,13 @@ class Stage {
      * @name draw
      * @memberof Stage
      * @ignore
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
      */
     draw(renderer) {
         // iterate through all cameras
         this.cameras.forEach((camera) => {
             // render the root container
-            camera.draw(renderer, game.world);
+            camera.draw(renderer, game$1.world);
 
             // render the ambient light
             if (this.ambientLight.alpha !== 0) {
@@ -23109,9 +21936,9 @@ class Stage {
 
             // render all lights
             this.lights.forEach((light) => {
-                light.preDraw(renderer, game.world);
-                light.draw(renderer, game.world);
-                light.postDraw(renderer, game.world);
+                light.preDraw(renderer, game$1.world);
+                light.draw(renderer, game$1.world);
+                light.postDraw(renderer, game$1.world);
             });
         });
     }
@@ -23138,7 +21965,7 @@ class Stage {
      * this is typically where you will load a level, add renderables, etc...
      * @name onResetEvent
      * @memberof Stage
-     * @param {object} [...arguments] optional arguments passed when switching state
+     * @param {object} [...arguments] - optional arguments passed when switching state
      * @see state#change
      */
     onResetEvent() {
@@ -23162,11 +21989,13 @@ class Stage {
         }
     }
 }
+var Stage$1 = Stage;
 
 var img = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAA8FBMVEUgICBrqDHRZVtqpzEhJCAjKCBurTIfHyDQZFptrDEWAB8OAB7VZ1wtIiIAEhYlISDYaF4SAB4pIiEAFhkcFh8eGyBopDAMAB5noS8kKyAAGhtjmy4bEB9lni8ZBR/HYFdPeim/XFQ9XCUaCh9flS1VhCtSfyorOSEVHh4HHB1EZyatVExhmC5ajCxHbSc0SyMuQCInMiFKcSgxRSI6VSRBYiWdTUZdki09JyZ8PzpYiSs3UCRlNjK1WE9ckC1MdShbjywyJCONRkDKYliUSUNeMzBDKShXMC2kUEl1PDeEQj1OLStnNjNxOjZsODQAAAcMh1CFAAAU4UlEQVR42uyaa3fSMBjHk5EQkgClkBZKoXblNhlswIooc2N6pp7jUb//x/FpRbnt4JWwzv7eraQvfs/zby7tUEpKSkpKSkpKSkpKSkpKSkqKTsg30P8E+FIArJllqQaglMXQt6tPuhogGSlaLWFKKU2hEB33eqPRqDemRAlhRhdbVjwIBj8xogajhpBSkNH1dOJ37mYDt1mr2UCt1mwOZned7qQfjhxPVs0WovTpRIFFNkpIU42CSWfm2phnIzjHP+DLS9hutjuL4IqZUigC9yU/CWDBhBROOJkPbBxL4swKjDf/jEvBbXe4CMeiKixKEx0EAq03JbqeDJs4Ul9a7mE5AqqAazM/pJCb5JaAUmWa42nHBflYDf8y8WC4qznv9yRKZAUIRUKO+/Maz/J1+d8ugu0rK3kVoNSTVhDZr8v/WRGyQw8lC0KJMK989+/sVzXILiRNzmrACGXSC4Z2lsf2f08GN2lyHgJCLUn6bRw1/2dim+A9hIKiJMAQ6NOJu7f5a7r8B+u/7N7BAzMZBaBIkkkz0t83sfMsgDHsgN1BOybaFNvww2qblMgEUGKqi2aU/X3u2HZnHf8iuL4aO0S1PKDVQM54dBn0F50718bfq5CwOYBQIaaDVfd37MG91u5MwhER8WHQU8qC2wCEmFJefEYUrBdedGe15b4xQasAtaqXt/wh/W87W1679YNeCxQbjNCItTchBFheRErAmHEYb575ch/Qeuz9ByXpdHH2QX2wx4NuMBbSbJCfn3IJWZ4dndBvZ6Bytt949A8AbZjT6OHftQeDTHtx2VgebhFj6KfAmGisJaS46k+mj/4sELW/N+QP6UOIXf/Sqwq0p/F7okA8KU312BcAqmTf3k1/1Hx7HlgyskfsL96h7b3XMNCRcYQzz+KH9N3FSC57fxiYUTDOWLmAjgcjpBo2d9oPKxdv95Fs0UPGl5XPinWDVYqGwdBxYFQJH/Mdfc5nQUuyw77KYYXKm/ub09PzV/Xn5SNVAOJ/B/Hf0W8HwiQUHRTwf/2slM/nS6WbN/XjZIDK6534w8zv9r1In6GDUq6/y+VzMaVTdGYg7cDj38/wHX17YknQPzSGUb8p5U5icqX7ovaZkBFk+nw7/hx3epIdvPtAufIpf7Ikl39W0B0BRpToQPy32j8IZUPPW+xC8S0E4Afv6noLwGgL3WZ32u8roetbTqF4v1aA/JdKGWmEUc8ZgP/m0j+4riKKNFEoflwrQO6D1gQwKnrulj/mXUto048XgZV+/vQMaYQ5otfc8s/Wpprav5oFz5cRgHXwo85VgFHw55nN+Ld7UvMnPOP5y2elXMRJ6VzDA7DPH2e7XstBemHl+vubfAk4efGc6SsAo9542x9fVJH+D/lQgfrnF+fn9++KWv0bdHP+z3A7rFKC9MMMo1KsVIr1ssYHgFiqvemfdUemg45EuVAuFMpIH4SI4ZZ/2xEOQ8eCAUgjVHa3/G+txuN/Z/+vYE51suU/9NT/5G8GIL3uPxfsCfwf11fyrW1FgRiGTkna0vZpYHQUXRHdVZBhvCMorP7/V+3oyprgPiy2Dxk2HzA06TknpyHz19CjVfcpf9kj+6SBtqgcMPz/q/vPdPgwLP/DsCM1f2vTf7Ifap5/hYXQ/FGnX7S16LdABADc23oqVP91kYfgrU5b1GxKHSCo7tILzR/z9eJ8nliv0zqAMZ8ATEJfaP6+7jlj3CDlXpHVfsfnH+eyn4kMzMdGQRNO7fNkGEXbGTigBkDq1lZzU07BnaXzIab6LCMAuEEmdWcD8+ax9uNTckxFqyWxwKBgKXZrzerHtAbcPhFQ0R8oAExdChXADIt1Tz0KkGi9TjML1CBLqgA0YZGIFZhZqVNUtf9GCdBbF0IF4Be/vvQYz6pyxhRwH+QC4CpXoAgELvE6iKMtfwJLzv+5YU2iDasOR0MJMBdMgFsMK6ICrppGY+rELGAdhFpAYoXYgRdBRzsLUtB3L/z+7zpITFvHYhQAdorGyQudAdCuNe8qoJjVNgYAF0M+9iFbAe9tK2w4BKIIdVJ0CLASv7jeBFo7cBwCrxcgP1IAjEv5ALipwII1gmGGMR4A2uEB+blJK4x4E1kdZhQA5xYowPe58z3lwKfH199WbQRAc/LpuwPWu17k0qaFCnANAgHSvKJcZdMCxJtgOsQuKsexG2uCwMxa8O8aUa/axHZCe/OUZA42ag0Avqi5ll2nYSAaRQEbZI+NrbKwEFFYJURCiEcpqEE0aZOmBfH/f4PLQ+OEttwxLKg3jq5Or3TG9jyOJ/FjgSIGZvBRLhB1oFvi7/3X5CIDhZHodOLtfyyEXUlh0IGzyDoQM+rbGljFRNaE2ZOXj0MT3pALxGQo8v1z1ILRBb6+hTJoZgLvBoMYRjZAeALuv/v/hZCzeTxWRIu/iwEvbqQMmKcxUekwHqF/KQSo74OCVX8rCyQoC9C/QYBZENZTcYMlRkqjWFlVZfn9OWGXwcoDVFKewD+fo33v9AwQD3HGFqH5XsXHACWVA7BObfp+YyoL4BKpLvb+MuvBlVn1q03iwIONVNFy1jPUBvGyPOaGJT4GGOPAHd9v66bIuy7Pi3p5GKoTrYSdeRXaQrk7LD02P2Gbejv2FqrYdugFxgHM5ChBEFNpIn/czxaObdMJrcXP4Z94sdxZUGZmAZmA+7ws0im4a9oenFQsKg58uE8NhBgE43+LlBysa65FmvJweIppMzobsmJKWve+EFrMsUJ3+wEqGaUKPA9XkSYNhj0xUd8xYkbBsU516lnMhv+LFs1nKCX7BZYVjIUQZ8FC830PRjG6LnSqBzCSPcloP0U9IaLZhknntlynSGhOS+yV/bWuEla1EPwSONXdAc0VKYv4ZcyoWQBGEDp/2zdI/zyrYgfyR6CAL7nm18BC18pJFnlLhuUMsScgvs9CwjrXyOgCq/Q9yIQpBa0Q/DqW6+JoJSNX9AGNT4S2uezhx8B9kBvu2AZGjpQubwLRglHKLnX6Z7DodmgBQjDHkji7O3+MoFFZgITx+pLiMdiChL1G7DUL8DWQLBDPw3dGh5Yjn38YT+TuMrhuvy71HbGiGyzRAg8DVYQQzO49evYg7ArLiP7v82/7n3OcZ8u6F36+IzjfVCqivwkTetqNCHpP2nvdfS74PJTr7zH+NM9pTflPwTMbcN1YkgEwFcL7EXIddf85LQ1SrtZ8FsO6uh13w7Abt02nZ7tjbiuR1+2Xn2COYPxaCCM3+KCqQz86fnpDSgOkPQg+i/dtb8E6P/zUt8Vln+/pF4fVD7D103Gbz8B8cIbULeJlHXqLM2ZQZDHEuGMnpsF+m0Alpfk+pKmAtZdCJNf5wUGJYAervRB8eggotSH2SlAy2myBchi14VbCxKlzka+BScWCqofBUASYCbsVKAQzD65g7CbmEl9OCTQtocEm74ysiPsq6imhilLVxANyUfR2o9i0SN7YstH8DP+9db+DYcD/iFsgqnXWd02SXAc9CrLpx124yFd2w35HlQ4tEPCHxPwO9haY7oG1NbQbMnLPYPbw2YNIMYAlxeTIDlP+WP0axAUhTrGzefUXEeK+kXetvU3DUDQtqdxKSQwJG1romIbQSLWhfuChFRioG92rsP//c3AiwbErxfKxBMoFf/am5cyPc+899/hDkTOJHZ4IKMQQrC6irDZTh+YVa9VHlsbuyK6uEe7tINCdK9hVutGkUgL/S0pox5cEchPX2X9qrXVfuIQIoAcsDN2sj+yb5XuVU8JZlgkpZ+PMzMbhvG0AwKqfteh6O3VZbqL8J4tNhggAluxxBgaNEIK7A/BNWvkWC7DCV/X+3qsMU0+LkqiS75NyMUhD+LqqrjdT51TPlQeAVTZ11nXpW1nm1sDOWhA1blBBcGEincwV1crqwV7Vq6r0U8ZxiCEevONwtzaaKnGS6X3lCGRHSwaAuyzU4Uyr5tjaLv4wL6+cm3BbxwFw9pSujJsfowBY2UfAutHeyRftZGwXb4RxY2+XDQHAgQGAlblMHI382xeRABwnSicBpyDYjS/HADYILhiYFAMA6k8DUDgANCQAfue0bPy3AeC3QD48AGK2gHLOgJFwAKhDENfgvwkArkGGCH0SDcAuEeKp8MhQYcEAtFT4EU2Fn9nB0HvJAExQHEMwRIfDogFgw2GI7eGXIhkANyESlxITvQLc/2UwAO+cLILgW4BMikIg46TF01QwAGxaHOwBuoI9uQBwhRGMPbs09nouFwCo3fAlLG6GCooFAMVRrGVaXTUz5XGxAHjK44xAQioArUBiZgskYiUyUrcAKhygdDEiqT2xPACZDS6qSe2+y04hIROAFM5aSO6F2qe5pmxDAMBJivJCydFhqsiOK9SHhQLQNb/ahTHFycsglh7EFogB4IQUSyORsqT841Aay8aBxR7VqYlQHPfK33SysAUVwY/qzF/ZO5kRfKLljAkidJMfZaEPgJXVD+ubNnUZqL0yS0upwKAOWidW7ZY++UhSIRQxp79KmAvth8sIha5Q8VZJ0B6YdquFaZlBTjyl7UMQEQcXyG8fZ93TN+MHCJv75l4bzWQ3+RhlRI8A2UzGozpEdpvjgSDRYALh7TY6qS+PWpHvBcT9nmdizk+nmQHsNq+xAHoRuLkYt21k32qlQ/01D0es0gVUCIcAZUimdbG+u7z/XOP7PQgsiu395WpbNKUKaEKqNmbyeZFoNiEKOscrDHkf1bxpmz91GdZY2HWHhjWHlt3kRc6bS/I2IoijIkyadZ7nJTNZU5PpByHAAmhXvkgfGqXUACY77fOc5h2SeXRciTNQ2Gkef56oOAsNtF1KQwCRIN/9CxqFZII8E5WXFpdFiZeW2oNHyRrIhSAfGrMHUCUfrKN8yAI+oYyUkFK2HaVFW2khtR/rPzDal+UkZGjwzOMAwRSJkReScwyi5QGdEvxI2wqZSEdNeGryRNYl018dT9X/zlIzndt0eHR4MNSnVXyPgoAGR3tKYidJ8dOa4PRCTTD2eRl7CUyEmAqirIHqbuxveuOcAjIuApwAHjNFKqmC5lsZIdH8zGuuzp8mYJQCTgGo/FARix7KMSQzYzn8vAAU8gFGcPQS+DJ8AH4rndH8PqQ3S35yd2U7isNAMFHasWw/WcopQhRBIBICQsggJCIx/P9XrTMcDWbZY5YQs36Yh4EZXNXl7vJB3Hkjd7fCkCfc3/ZGbgh4zp5xwYbuBdBWGr00pF2OrT0E6p/sIH6V1uRHTANeDv1NE/j4rB1mFYMHgTYJsJtnrGORL1W9w107NA4/u+gqjL+cFXprU2+cbSvA828GxFKImwRmLpDiji6WwCdvsuDjOU1MA7iI+WzXBj4MmfFpQKuAeC7wOdss6n8afe8qjaUaqNdRWoeEPt1g4wPGpFkMUJKuIruDAaA/ahsToVmXr4NnYanq4GI4eq4waLKJZxADYF12MvFIEO3EZKPLTMxxhADo1ztK0zgtxIND3JhieKnTeKEEhacT4F9OHOB+qRkMXHZwcCOzgwxFv76IfKszMxgg4bqNDDa26cSs01hsmKMtDlj9X8La4sfAdHkvHn6vHhngtGcGAJT+EX+3RxnwDDV+GPf7rIYUQGQa/tyj3RFA063GwN4f98cAJT6f3HaIDaukO1FS8GCuMTCveGz10yhJvIWGP+rWolKSFkMtEw7LvuaGMa/yW/y208iO8GMxXEXslnRnE8LrUyEFIpqhht8edb5aRWNeawzYLJMvnxhQsMKZw16KHw2RzoC7iF+dCOJ0PGX2a/Hj0sNFA5gIPl4zDFD+KzX8dfzhoyh0zwCzP/nrREA8MQu0HtjOSHTeAcwDxcDVPt/d1iGQVygQiKx2rq1FIPh4BX7MA/G5AOEwCNZKBN3PjuJEbCLX0cZgVL90kY6SxFcW5E4EZegTq9N+ECssdszWyZ8X/DX4UYc+n+oydFx7SgR0Z4sogEzWgc684x6s9PV1GMS6DbsmguGMc9IRBUC4HM3d+w+d9jIlAxKOIi0R2A5z85HkHWRDCiQV5YIxR8PP7KWAfiblsSxyV++P6tDhQz5dBS38emLfhV9ZkKa/Q8xknKAdu04Fiw/OLfKssFCLAJf1xEH4PZpQ3ZBvMCdddcvejxLhE3hO8KnkzQ7hX8t/LfvdnwAiiz327IoCli9jwUFxQP8l9kBgLKzNvhX/Pc/zpo+JqD4M+NpBEVzlAjeaNqkYA4Hv00s8wetswJDj6/BPfQNOKlCAsN7+rIPtSMjXKy4SIH8rBGoBEPCkqGYHx8XMfx3+wUdombE9RzhfBg8ocIPDUnHAfULgr0JP1R8Vs13kovZvEq2TqfCbsC1xMkXFzsY46RxsPxuQioRWCQC/RA5AFPhUCL9cL6JW+j+Dz1rXTfuXPzaSiNEcY3XHgT3YLRvCheSeBQR5oKpdIQfLS6WQUM4mA8e9Qa/7TWPCf/FpfLwcIgU6B0zBGe6zWVklMlQ8jD2/BX0mg3pjLkUo07jcZIsWPEP0OvwgA9l78r9vBAT5jB5QcESjYDlRvpsuN01dES/lnEupfqQeVKtmtMx2+dBhJ/APmHSdaWGW+rERPyymAVKgtRMq5rYIg2g4z/P9YbFY7PN8PoyC4wuI/QH8yUokxDIu/Ofk7YVFFmllSyfhjJCxFvIXaqa99Ah+MKnF2KzBf0dBElbrAdNk8IAKbL9/txJIlK1EajT8Yzb0hTXb2pjC/7k5X55qvqzCxHT458mL4M10iDL4bsMSEuxGifDeAv5RBcBFPDsEWMq/H3vmOttlIbhFzKt8v5SBL/hquW85QBL+Xvmuk3+W/H2CfyuDccvBIrKxsP859jb0LNqvy1RweK/gYwMCiZDVKMsDdlLCr2m4vEWBD+bTTcFFCu8XfI0Dr53XjbL9yeRh/dNgo0+yo+10s1LcJW+O/ryo05IQ8ricZYt5pGg4Wr6bxo6/taP5YTprKh624AmYavn+urVgfC6F9KpSef7JYTtQ7jcInLYFyhcP8sMkW27KwudCcA/I+4f+Tgnn+a5CKCT3SVWs6ros63q1qgg9/do7vY3+L6H/0a4dqgAAg1AULYPBsjax+P//uA3TwuJAxj3RJiYf7xJ5rBVVLNzHcA8T7fkZl6iePpchSDvs8b9XBwAAAAAAqGQCc31B4/xqSwwAAAAASUVORK5CYII=";
+  var logo_url = img;
 
 // a basic progress bar object
-class ProgressBar extends Renderable {
+class ProgressBar extends Renderable$1 {
     /**
      * @ignore
      */
@@ -23223,7 +22052,7 @@ class ProgressBar extends Renderable {
  * a default loading screen
  * @ignore
  */
-class DefaultLoadingScreen extends Stage {
+class DefaultLoadingScreen extends Stage$1 {
     /**
      * call when the loader is resetted
      * @ignore
@@ -23232,10 +22061,10 @@ class DefaultLoadingScreen extends Stage {
         var barHeight = 8;
 
         // set a background color
-        game.world.backgroundColor.parseCSS("#202020");
+        game$1.world.backgroundColor.parseCSS("#202020");
 
         // progress bar
-        game.world.addChild(new ProgressBar(
+        game$1.world.addChild(new ProgressBar(
             0,
             renderer.getHeight() / 2,
             renderer.getWidth(),
@@ -23243,9 +22072,9 @@ class DefaultLoadingScreen extends Stage {
         ), 1);
 
         // load the melonJS logo
-        loader.load({name: "melonjs_logo", type: "image", src: img}, () => {
+        loader$1.load({name: "melonjs_logo", type: "image", src: logo_url}, () => {
             // melonJS logo
-            game.world.addChild(new Sprite(
+            game$1.world.addChild(new Sprite$1(
                 renderer.getWidth() / 2,
                 renderer.getHeight() / 2, {
                     image : "melonjs_logo",
@@ -23262,9 +22091,11 @@ class DefaultLoadingScreen extends Stage {
      */
     onDestroyEvent() {
         // cancel the callback
-        loader.unload({name: "melonjs_logo", type:"image"});
+        loader$1.unload({name: "melonjs_logo", type:"image"});
     }
 }
+
+var DefaultLoadingScreen$1 = DefaultLoadingScreen;
 
 // current state
 var _state = -1;
@@ -23327,15 +22158,15 @@ function _pauseRunLoop() {
 
 /**
  * this is only called when using requestAnimFrame stuff
- * @param {number} time current timestamp in milliseconds
+ * @param {number} time - current timestamp in milliseconds
  * @ignore
  */
 function _renderFrame(time) {
     var stage = _stages[_state].stage;
     // update all game objects
-    game.update(time, stage);
+    game$1.update(time, stage);
     // render all game objects
-    game.draw(stage);
+    game$1.draw(stage);
     // schedule the next frame update
     if (_animFrameId !== -1) {
         _animFrameId = globalThis.requestAnimationFrame(_renderFrame);
@@ -23386,16 +22217,16 @@ function _switchState(state) {
         }
 
         // force repaint
-        game.repaint();
+        game$1.repaint();
     }
 }
 
 // initialize me.state on system boot
 on(BOOT, () => {
     // set the built-in loading stage
-    state.set(state.LOADING, new DefaultLoadingScreen());
+    state.set(state.LOADING, new DefaultLoadingScreen$1());
     // set and enable the default stage
-    state.set(state.DEFAULT, new Stage());
+    state.set(state.DEFAULT, new Stage$1());
     // enable by default as soon as the display is initialized
     on(VIDEO_INIT, () => {
         state.change(state.DEFAULT, true);
@@ -23543,7 +22374,7 @@ var state = {
      * @name stop
      * @memberof state
      * @public
-     * @param {boolean} [pauseTrack=false] pause current track on screen stop.
+     * @param {boolean} [pauseTrack=false] - pause current track on screen stop.
      */
     stop(pauseTrack=false) {
         // only stop when we are not loading stuff
@@ -23569,7 +22400,7 @@ var state = {
      * @name pause
      * @memberof state
      * @public
-     * @param {boolean} [music=false] pause current music track on screen pause
+     * @param {boolean} [music=false] - pause current music track on screen pause
      */
     pause(music=false) {
         // only pause when we are not loading stuff
@@ -23594,7 +22425,7 @@ var state = {
      * @name restart
      * @memberof state
      * @public
-     * @param {boolean} [music=false] resume current music track on screen resume
+     * @param {boolean} [music=false] - resume current music track on screen resume
      */
     restart(music=false) {
         if (!this.isRunning()) {
@@ -23609,7 +22440,7 @@ var state = {
             _pauseTime = globalThis.performance.now() - _pauseTime;
 
             // force repaint
-            game.repaint();
+            game$1.repaint();
 
             // publish the restart notification
             emit(STATE_RESTART, _pauseTime);
@@ -23621,7 +22452,7 @@ var state = {
      * @name resume
      * @memberof state
      * @public
-     * @param {boolean} [music=false] resume current music track on screen resume
+     * @param {boolean} [music=false] - resume current music track on screen resume
      */
     resume(music=false) {
         if (this.isPaused()) {
@@ -23667,9 +22498,9 @@ var state = {
      * @name set
      * @memberof state
      * @public
-     * @param {number} state State ID (see constants)
-     * @param {Stage} stage Instantiated Stage to associate with state ID
-     * @param {boolean} [start = false] if true the state will be changed immediately after adding it.
+     * @param {number} state - State ID (see constants)
+     * @param {Stage} stage - Instantiated Stage to associate with state ID
+     * @param {boolean} [start = false] - if true the state will be changed immediately after adding it.
      * @example
      * class MenuButton extends me.GUI_Object {
      *     onClick() {
@@ -23708,7 +22539,7 @@ var state = {
      * me.state.set(me.state.MENU, new MenuScreen());
      */
     set(state, stage, start = false) {
-        if (!(stage instanceof Stage)) {
+        if (!(stage instanceof Stage$1)) {
             throw new Error(stage + " is not an instance of me.Stage");
         }
         _stages[state] = {};
@@ -23726,7 +22557,7 @@ var state = {
      * @name set
      * @memberof state
      * @public
-     * @param {number} [state] State ID (see constants)
+     * @param {number} [state] - State ID (see constants)
      * @returns {Stage}
      */
     get(state = _state) {
@@ -23755,9 +22586,9 @@ var state = {
      * @name transition
      * @memberof state
      * @public
-     * @param {string} effect (only "fade" is supported for now)
-     * @param {Color|string} color a CSS color value
-     * @param {number} [duration=1000] expressed in milliseconds
+     * @param {string} effect - (only "fade" is supported for now)
+     * @param {Color|string} color - a CSS color value
+     * @param {number} [duration=1000] - expressed in milliseconds
      */
     transition(effect, color, duration) {
         if (effect === "fade") {
@@ -23771,7 +22602,7 @@ var state = {
      * @name setTransition
      * @memberof state
      * @public
-     * @param {number} state State ID (see constants)
+     * @param {number} state - State ID (see constants)
      * @param {boolean} enable
      */
     setTransition(state, enable) {
@@ -23783,9 +22614,9 @@ var state = {
      * @name change
      * @memberof state
      * @public
-     * @param {number} state State ID (see constants)
-     * @param {boolean} forceChange if true the state will be changed immediately
-     * @param {object} [...arguments] extra arguments to be passed to the reset functions
+     * @param {number} state - State ID (see constants)
+     * @param {boolean} forceChange - if true the state will be changed immediately
+     * @param {object} [...arguments] - extra arguments to be passed to the reset functions
      * @example
      * // The onResetEvent method on the play screen will receive two args:
      * // "level_1" and the number 3
@@ -23807,9 +22638,9 @@ var state = {
             // if fading effect
             if (_fade.duration && _stages[state].transition) {
                 _onSwitchComplete = () => {
-                    game.viewport.fadeOut(_fade.color, _fade.duration);
+                    game$1.viewport.fadeOut(_fade.color, _fade.duration);
                 };
-                game.viewport.fadeIn(
+                game$1.viewport.fadeIn(
                     _fade.color,
                     _fade.duration,
                     function () {
@@ -23836,7 +22667,7 @@ var state = {
      * @name isCurrent
      * @memberof state
      * @public
-     * @param {number} state State ID (see constants)
+     * @param {number} state - State ID (see constants)
      * @returns {boolean} true if the specified state is the current one
      */
     isCurrent(state) {
@@ -23844,6 +22675,7 @@ var state = {
     }
 
 };
+var state$1 = state;
 
 /**
  * set and interpret a TMX property value
@@ -23944,8 +22776,8 @@ function parseAttributes(obj, elt) {
  * decompress zlib/gzip data (NOT IMPLEMENTED)
  * @ignore
  * @name decompress
- * @param  {number[]} data Array of bytes
- * @param  {string} format compressed data format ("gzip","zlib")
+ * @param  {number[]} data- -  Array of bytes
+ * @param  {string} format- -  compressed data format ("gzip","zlib")
  */
 function decompress() {
     throw new Error("GZIP/ZLIB compressed TMX Tile Map not supported!");
@@ -23955,7 +22787,7 @@ function decompress() {
  * Decode a CSV encoded array into a binary array
  * @ignore
  * @name decodeCSV
- * @param  {string} input CSV formatted data (only numbers, everything else will be converted to NaN)
+ * @param  {string} input- -  CSV formatted data (only numbers, everything else will be converted to NaN)
  * @returns {number[]} Decoded data
  */
 function decodeCSV(input) {
@@ -23972,8 +22804,8 @@ function decodeCSV(input) {
  * Decode a base64 encoded string into a byte array
  * @ignore
  * @name decodeBase64AsArray
- * @param {string} input Base64 encoded data
- * @param {number} [bytes] number of bytes per array entry
+ * @param {string} input - Base64 encoded data
+ * @param {number} [bytes] - number of bytes per array entry
  * @returns {Uint32Array} Decoded data
  */
 function decodeBase64AsArray(input, bytes) {
@@ -24213,12 +23045,12 @@ const TMX_FLIP_H          = 0x80000000,
  * a basic tile object
  * @augments Bounds
  */
-class Tile extends Bounds {
+class Tile extends Bounds$1 {
     /**
-     * @param {number} x x index of the Tile in the map
-     * @param {number} y y index of the Tile in the map
-     * @param {number} gid tile gid
-     * @param {TMXTileset} tileset the corresponding tileset object
+     * @param {number} x - x index of the Tile in the map
+     * @param {number} y - y index of the Tile in the map
+     * @param {number} gid - tile gid
+     * @param {TMXTileset} tileset - the corresponding tileset object
      */
     constructor(x, y, gid, tileset) {
         var width, height;
@@ -24296,7 +23128,7 @@ class Tile extends Bounds {
         // create and apply transformation matrix if required
         if (this.flipped === true) {
             if (this.currentTransform === null) {
-                this.currentTransform = new Matrix2d();
+                this.currentTransform = new Matrix2d$1();
             }
             this.setTileTransform(this.currentTransform.identity());
         }
@@ -24332,7 +23164,7 @@ class Tile extends Bounds {
      * return a renderable object for this Tile object
      * @name Tile#getRenderable
      * @public
-     * @param {object} [settings] see {@link Sprite}
+     * @param {object} [settings] - see {@link Sprite}
      * @returns {Renderable} a me.Sprite object
      */
     getRenderable(settings) {
@@ -24356,7 +23188,7 @@ class Tile extends Bounds {
         } else {
             if (tileset.isCollection === true) {
                 var image = tileset.getTileImage(this.tileId);
-                renderable = new Sprite(0, 0,
+                renderable = new Sprite$1(0, 0,
                     Object.assign({
                         image: image
                     })//, settings)
@@ -24382,24 +23214,25 @@ class Tile extends Bounds {
         return renderable;
     }
 }
+var Tile$1 = Tile;
 
 /**
  * @classdesc
  * a canvas renderer object
  * @augments Renderer
  */
-class CanvasRenderer extends Renderer {
+class CanvasRenderer extends Renderer$1 {
     /**
-     * @param {object} options The renderer parameters
-     * @param {number} options.width The width of the canvas without scaling
-     * @param {number} options.height The height of the canvas without scaling
-     * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
-     * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing
-     * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
-     * @param {boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
-     * @param {boolean} [options.textureSeamFix=true] enable the texture seam fix when rendering Tile when antiAlias is off for the canvasRenderer
-     * @param {number} [options.zoomX=width] The actual width of the canvas with scaling applied
-     * @param {number} [options.zoomY=height] The actual height of the canvas with scaling applied
+     * @param {object} options - The renderer parameters
+     * @param {number} options.width - The width of the canvas without scaling
+     * @param {number} options.height - The height of the canvas without scaling
+     * @param {HTMLCanvasElement} [options.canvas] - The html canvas to draw to on screen
+     * @param {boolean} [options.antiAlias=false] - Whether to enable anti-aliasing
+     * @param {boolean} [options.transparent=false] - Whether to enable transparency on the canvas (performance hit when enabled)
+     * @param {boolean} [options.subPixel=false] - Whether to enable subpixel renderering (performance hit when enabled)
+     * @param {boolean} [options.textureSeamFix=true] - enable the texture seam fix when rendering Tile when antiAlias is off for the canvasRenderer
+     * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
+     * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
      */
     constructor(options) {
         // parent constructor
@@ -24414,7 +23247,7 @@ class CanvasRenderer extends Renderer {
         this.setColor(this.currentColor);
 
         // create a texture cache
-        this.cache = new TextureCache();
+        this.cache = new TextureCache$1();
 
         if (this.settings.textureSeamFix !== false && !this.settings.antiAlias) {
             // enable the tile texture seam fix with the canvas renderer
@@ -24467,7 +23300,7 @@ class CanvasRenderer extends Renderer {
      * @name setBlendMode
      * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
      * @memberof CanvasRenderer
-     * @param {string} [mode="normal"] blend mode : "normal", "multiply", "lighter, "additive", "screen"
+     * @param {string} [mode="normal"] - blend mode : "normal", "multiply", "lighter, "additive", "screen"
      * @param {CanvasRenderingContext2D} [context]
      */
     setBlendMode(mode = "normal", context) {
@@ -24511,8 +23344,8 @@ class CanvasRenderer extends Renderer {
      * Clears the main framebuffer with the given color
      * @name clearColor
      * @memberof CanvasRenderer
-     * @param {Color|string} [color="#000000"] CSS color.
-     * @param {boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
+     * @param {Color|string} [color="#000000"] - CSS color.
+     * @param {boolean} [opaque=false] - Allow transparency [default] or clear the surface completely [true]
      */
     clearColor(color = "#000000", opaque = false) {
         var canvas = this.getCanvas();
@@ -24522,7 +23355,7 @@ class CanvasRenderer extends Renderer {
         this.resetTransform();
         context.globalAlpha = 1;
         context.globalCompositeOperation = opaque === true ? "copy" : "source-over";
-        context.fillStyle = (color instanceof Color) ? color.toRGBA() : color;
+        context.fillStyle = (color instanceof Color$1) ? color.toRGBA() : color;
         this.fillRect(0, 0, canvas.width, canvas.height);
         this.restore();
     }
@@ -24531,10 +23364,10 @@ class CanvasRenderer extends Renderer {
      * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
      * @name clearRect
      * @memberof CanvasRenderer
-     * @param {number} x x axis of the coordinate for the rectangle starting point.
-     * @param {number} y y axis of the coordinate for the rectangle starting point.
-     * @param {number} width The rectangle's width.
-     * @param {number} height The rectangle's height.
+     * @param {number} x - x axis of the coordinate for the rectangle starting point.
+     * @param {number} y - y axis of the coordinate for the rectangle starting point.
+     * @param {number} width - The rectangle's width.
+     * @param {number} height - The rectangle's height.
      */
     clearRect(x, y, width, height) {
         this.getContext().clearRect(x, y, width, height);
@@ -24544,8 +23377,8 @@ class CanvasRenderer extends Renderer {
      * Create a pattern with the specified repetition
      * @name createPattern
      * @memberof CanvasRenderer
-     * @param {Image} image Source image
-     * @param {string} repeat Define how the pattern should be repeated
+     * @param {Image} image - Source image
+     * @param {string} repeat - Define how the pattern should be repeated
      * @returns {CanvasPattern}
      * @see ImageLayer#repeat
      * @example
@@ -24562,15 +23395,15 @@ class CanvasRenderer extends Renderer {
      * Draw an image onto the main using the canvas api
      * @name drawImage
      * @memberof CanvasRenderer
-     * @param {Image} image An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
-     * @param {number} sx The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
-     * @param {number} sy The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
-     * @param {number} sw The width of the sub-rectangle of the source image to draw into the destination context. If not specified, the entire rectangle from the coordinates specified by sx and sy to the bottom-right corner of the image is used.
-     * @param {number} sh The height of the sub-rectangle of the source image to draw into the destination context.
-     * @param {number} dx The X coordinate in the destination canvas at which to place the top-left corner of the source image.
-     * @param {number} dy The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
-     * @param {number} dw The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
-     * @param {number} dh The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
+     * @param {Image} image - An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
+     * @param {number} sx - The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
+     * @param {number} sy - The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
+     * @param {number} sw - The width of the sub-rectangle of the source image to draw into the destination context. If not specified, the entire rectangle from the coordinates specified by sx and sy to the bottom-right corner of the image is used.
+     * @param {number} sh - The height of the sub-rectangle of the source image to draw into the destination context.
+     * @param {number} dx - The X coordinate in the destination canvas at which to place the top-left corner of the source image.
+     * @param {number} dy - The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
+     * @param {number} dw - The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
+     * @param {number} dh - The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
      * @example
      * // Position the image on the canvas:
      * renderer.drawImage(image, dx, dy);
@@ -24625,7 +23458,7 @@ class CanvasRenderer extends Renderer {
      * Draw a pattern within the given rectangle.
      * @name drawPattern
      * @memberof CanvasRenderer
-     * @param {CanvasPattern} pattern Pattern object
+     * @param {CanvasPattern} pattern - Pattern object
      * @param {number} x
      * @param {number} y
      * @param {number} width
@@ -24648,13 +23481,13 @@ class CanvasRenderer extends Renderer {
      * Stroke an arc at the specified coordinates with given radius, start and end points
      * @name strokeArc
      * @memberof CanvasRenderer
-     * @param {number} x arc center point x-axis
-     * @param {number} y arc center point y-axis
+     * @param {number} x - arc center point x-axis
+     * @param {number} y - arc center point y-axis
      * @param {number} radius
-     * @param {number} start start angle in radians
-     * @param {number} end end angle in radians
-     * @param {boolean} [antiClockwise=false] draw arc anti-clockwise
-     * @param {boolean} [fill=false] also fill the shape with the current color if true
+     * @param {number} start - start angle in radians
+     * @param {number} end - end angle in radians
+     * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeArc(x, y, radius, start, end, antiClockwise, fill = false) {
         if (this.getGlobalAlpha() < 1 / 255) {
@@ -24674,12 +23507,12 @@ class CanvasRenderer extends Renderer {
      * Fill an arc at the specified coordinates with given radius, start and end points
      * @name fillArc
      * @memberof CanvasRenderer
-     * @param {number} x arc center point x-axis
-     * @param {number} y arc center point y-axis
+     * @param {number} x - arc center point x-axis
+     * @param {number} y - arc center point y-axis
      * @param {number} radius
-     * @param {number} start start angle in radians
-     * @param {number} end end angle in radians
-     * @param {boolean} [antiClockwise=false] draw arc anti-clockwise
+     * @param {number} start - start angle in radians
+     * @param {number} end - end angle in radians
+     * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
      */
     fillArc(x, y, radius, start, end, antiClockwise) {
         this.strokeArc(x, y, radius, start, end, antiClockwise || false, true);
@@ -24689,11 +23522,11 @@ class CanvasRenderer extends Renderer {
      * Stroke an ellipse at the specified coordinates with given radius
      * @name strokeEllipse
      * @memberof CanvasRenderer
-     * @param {number} x ellipse center point x-axis
-     * @param {number} y ellipse center point y-axis
-     * @param {number} w horizontal radius of the ellipse
-     * @param {number} h vertical radius of the ellipse
-     * @param {boolean} [fill=false] also fill the shape with the current color if true
+     * @param {number} x - ellipse center point x-axis
+     * @param {number} y - ellipse center point y-axis
+     * @param {number} w - horizontal radius of the ellipse
+     * @param {number} h - vertical radius of the ellipse
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeEllipse(x, y, w, h, fill = false) {
         if (this.getGlobalAlpha() < 1 / 255) {
@@ -24730,10 +23563,10 @@ class CanvasRenderer extends Renderer {
      * Fill an ellipse at the specified coordinates with given radius
      * @name fillEllipse
      * @memberof CanvasRenderer
-     * @param {number} x ellipse center point x-axis
-     * @param {number} y ellipse center point y-axis
-     * @param {number} w horizontal radius of the ellipse
-     * @param {number} h vertical radius of the ellipse
+     * @param {number} x - ellipse center point x-axis
+     * @param {number} y - ellipse center point y-axis
+     * @param {number} w - horizontal radius of the ellipse
+     * @param {number} h - vertical radius of the ellipse
      */
     fillEllipse(x, y, w, h) {
         this.strokeEllipse(x, y, w, h, true);
@@ -24743,10 +23576,10 @@ class CanvasRenderer extends Renderer {
      * Stroke a line of the given two points
      * @name strokeLine
      * @memberof CanvasRenderer
-     * @param {number} startX the start x coordinate
-     * @param {number} startY the start y coordinate
-     * @param {number} endX the end x coordinate
-     * @param {number} endY the end y coordinate
+     * @param {number} startX - the start x coordinate
+     * @param {number} startY - the start y coordinate
+     * @param {number} endX - the end x coordinate
+     * @param {number} endY - the end y coordinate
      */
     strokeLine(startX, startY, endX, endY) {
         if (this.getGlobalAlpha() < 1 / 255) {
@@ -24766,10 +23599,10 @@ class CanvasRenderer extends Renderer {
      * Fill a line of the given two points
      * @name fillLine
      * @memberof CanvasRenderer
-     * @param {number} startX the start x coordinate
-     * @param {number} startY the start y coordinate
-     * @param {number} endX the end x coordinate
-     * @param {number} endY the end y coordinate
+     * @param {number} startX - the start x coordinate
+     * @param {number} startY - the start y coordinate
+     * @param {number} endX - the end x coordinate
+     * @param {number} endY - the end y coordinate
      */
     fillLine(startX, startY, endX, endY) {
         this.strokeLine(startX, startY, endX, endY);
@@ -24779,8 +23612,8 @@ class CanvasRenderer extends Renderer {
      * Stroke the given me.Polygon on the screen
      * @name strokePolygon
      * @memberof CanvasRenderer
-     * @param {Polygon} poly the shape to draw
-     * @param {boolean} [fill=false] also fill the shape with the current color if true
+     * @param {Polygon} poly - the shape to draw
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokePolygon(poly, fill = false) {
         if (this.getGlobalAlpha() < 1 / 255) {
@@ -24807,7 +23640,7 @@ class CanvasRenderer extends Renderer {
      * Fill the given me.Polygon on the screen
      * @name fillPolygon
      * @memberof CanvasRenderer
-     * @param {Polygon} poly the shape to draw
+     * @param {Polygon} poly - the shape to draw
      */
     fillPolygon(poly) {
         this.strokePolygon(poly, true);
@@ -24821,7 +23654,7 @@ class CanvasRenderer extends Renderer {
      * @param {number} y
      * @param {number} width
      * @param {number} height
-     * @param {boolean} [fill=false] also fill the shape with the current color if true
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeRect(x, y, width, height, fill = false) {
         if (this.getGlobalAlpha() < 1 / 255) {
@@ -24855,7 +23688,7 @@ class CanvasRenderer extends Renderer {
      * @param {number} width
      * @param {number} height
      * @param {number} radius
-     * @param {boolean} [fill=false] also fill the shape with the current color if true
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeRoundRect(x, y, width, height, radius, fill = false) {
         if (this.getGlobalAlpha() < 1 / 255) {
@@ -24943,7 +23776,7 @@ class CanvasRenderer extends Renderer {
      * rotates the canvas context
      * @name rotate
      * @memberof CanvasRenderer
-     * @param {number} angle in radians
+     * @param {number} angle - in radians
      */
     rotate(angle) {
         this.getContext().rotate(angle);
@@ -24965,13 +23798,13 @@ class CanvasRenderer extends Renderer {
      * By default, or upon reset, the value is set to #000000.
      * @name setColor
      * @memberof CanvasRenderer
-     * @param {Color|string} color css color value
+     * @param {Color|string} color - css color value
      */
     setColor(color) {
         var context = this.getContext();
         context.strokeStyle =
         context.fillStyle = (
-            color instanceof Color ?
+            color instanceof Color$1 ?
             color.toRGBA() :
             color
         );
@@ -24981,7 +23814,7 @@ class CanvasRenderer extends Renderer {
      * Set the global alpha
      * @name setGlobalAlpha
      * @memberof CanvasRenderer
-     * @param {number} alpha 0.0 to 1.0 values accepted.
+     * @param {number} alpha - 0.0 to 1.0 values accepted.
      */
     setGlobalAlpha(alpha) {
         this.getContext().globalAlpha = this.currentColor.glArray[3] = alpha;
@@ -25001,7 +23834,7 @@ class CanvasRenderer extends Renderer {
      * Set the line width on the context
      * @name setLineWidth
      * @memberof CanvasRenderer
-     * @param {number} width Line width
+     * @param {number} width - Line width
      */
     setLineWidth(width) {
         this.getContext().lineWidth = width;
@@ -25012,7 +23845,7 @@ class CanvasRenderer extends Renderer {
      * identity one, and then apply the given transformation matrix.
      * @name setTransform
      * @memberof CanvasRenderer
-     * @param {Matrix2d} mat2d Matrix to transform by
+     * @param {Matrix2d} mat2d - Matrix to transform by
      */
     setTransform(mat2d) {
         this.resetTransform();
@@ -25023,7 +23856,7 @@ class CanvasRenderer extends Renderer {
      * Multiply given matrix into the renderer tranformation matrix
      * @name transform
      * @memberof CanvasRenderer
-     * @param {Matrix2d} mat2d Matrix to transform by
+     * @param {Matrix2d} mat2d - Matrix to transform by
      */
     transform(mat2d) {
         var m = mat2d.toArray(),
@@ -25097,8 +23930,8 @@ class CanvasRenderer extends Renderer {
      * Mask are not preserved through renderer context save and restore.
      * @name setMask
      * @memberof CanvasRenderer
-     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
-     * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - the shape defining the mask to be applied
+     * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
      */
     setMask(mask, invert = false) {
         var context = this.getContext();
@@ -25110,11 +23943,11 @@ class CanvasRenderer extends Renderer {
         }
 
         // https://github.com/melonjs/melonJS/issues/648
-        if (mask instanceof RoundRect) {
+        if (mask instanceof RoundRect$1) {
             context.roundRect(mask.top, mask.left, mask.width, mask.height, mask.radius);
-        } else if (mask instanceof Rect || mask instanceof Bounds) {
+        } else if (mask instanceof Rect$1 || mask instanceof Bounds$1) {
             context.rect(mask.top, mask.left, mask.width, mask.height);
-        } else if (mask instanceof Ellipse) {
+        } else if (mask instanceof Ellipse$1) {
             const _x = mask.pos.x, _y = mask.pos.y,
                 hw = mask.radiusV.x,
                 hh = mask.radiusV.y,
@@ -25171,6 +24004,7 @@ class CanvasRenderer extends Renderer {
         }
     }
 }
+var CanvasRenderer$1 = CanvasRenderer;
 
 /**
  * Create required arrays for the given layer object
@@ -25220,7 +24054,7 @@ function preRenderLayer(layer, renderer) {
             // get the value of the gid
             var tile = layer.layerData[x][y];
             // draw the tile if defined
-            if (tile instanceof Tile) {
+            if (tile instanceof Tile$1) {
                 // add a new tile to the layer
                 layer.getRenderer().drawTile(renderer, x, y, tile);
             }
@@ -25234,15 +24068,15 @@ function preRenderLayer(layer, renderer) {
  * Tiled QT 0.7.x format
  * @augments Renderable
  */
-class TMXLayer extends Renderable {
+class TMXLayer extends Renderable$1 {
     /**
-     * @param {object} map layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
-     * @param {object} data layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
-     * @param {number} tilewidth width of each tile in pixels
-     * @param {number} tileheight height of each tile in pixels
-     * @param {string} orientation "isometric" or "orthogonal"
-     * @param {TMXTilesetGroup} tilesets tileset as defined in Tiled
-     * @param {number} z z-index position
+     * @param {object} map - layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
+     * @param {object} data - layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
+     * @param {number} tilewidth - width of each tile in pixels
+     * @param {number} tileheight - height of each tile in pixels
+     * @param {string} orientation - "isometric" or "orthogonal"
+     * @param {TMXTilesetGroup} tilesets - tileset as defined in Tiled
+     * @param {number} z - z-index position
      */
     constructor(map, data, tilewidth, tileheight, orientation, tilesets, z) {
         // super constructor
@@ -25348,7 +24182,7 @@ class TMXLayer extends Renderable {
 
         // check for the correct rendering method
         if (typeof (this.preRender) === "undefined") {
-            this.preRender = game.world.preRender;
+            this.preRender = game$1.world.preRender;
         }
 
         // set a renderer
@@ -25395,7 +24229,7 @@ class TMXLayer extends Renderable {
 
         // if pre-rendering method is use, create an offline canvas/renderer
         if ((this.preRender === true) && (!this.canvasRenderer)) {
-            this.canvasRenderer = new CanvasRenderer({
+            this.canvasRenderer = new CanvasRenderer$1({
                 canvas : createCanvas(this.width, this.height),
                 widht : this.width,
                 heigth : this.height,
@@ -25444,8 +24278,8 @@ class TMXLayer extends Renderable {
      * @name getTileId
      * @memberof TMXLayer
      * @public
-     * @param {number} x X coordinate (in world/pixels coordinates)
-     * @param {number} y Y coordinate (in world/pixels coordinates)
+     * @param {number} x - X coordinate (in world/pixels coordinates)
+     * @param {number} y - Y coordinate (in world/pixels coordinates)
      * @returns {number} TileId or null if there is no Tile at the given position
      */
     getTileId(x, y) {
@@ -25458,8 +24292,8 @@ class TMXLayer extends Renderable {
      * @name getTile
      * @memberof TMXLayer
      * @public
-     * @param {number} x X coordinate (in world/pixels coordinates)
-     * @param {number} y Y coordinate (in world/pixels coordinates)
+     * @param {number} x - X coordinate (in world/pixels coordinates)
+     * @param {number} y - Y coordinate (in world/pixels coordinates)
      * @returns {Tile} corresponding tile or null if there is no defined tile at the coordinate or if outside of the layer bounds
      * @example
      * // get the TMX Map Layer called "Front layer"
@@ -25471,9 +24305,9 @@ class TMXLayer extends Renderable {
         var tile = null;
 
         if (this.contains(x, y)) {
-            var coord = this.getRenderer().pixelToTileCoords(x, y, pool.pull("Vector2d"));
+            var coord = this.getRenderer().pixelToTileCoords(x, y, pool$1.pull("Vector2d"));
             tile = this.cellAt(coord.x, coord.y);
-            pool.push(coord);
+            pool$1.push(coord);
         }
         return tile;
     }
@@ -25483,9 +24317,9 @@ class TMXLayer extends Renderable {
      * @name getTile
      * @memberof TMXLayer
      * @public
-     * @param {Tile} tile the tile object to be assigned
-     * @param {number} x x coordinate (in world/pixels coordinates)
-     * @param {number} y y coordinate (in world/pixels coordinates)
+     * @param {Tile} tile - the tile object to be assigned
+     * @param {number} x - x coordinate (in world/pixels coordinates)
+     * @param {number} y - y coordinate (in world/pixels coordinates)
      * @returns {Tile} the tile object
      */
     setTile(tile, x, y) {
@@ -25498,9 +24332,9 @@ class TMXLayer extends Renderable {
      * @name setTile
      * @memberof TMXLayer
      * @public
-     * @param {number} tileId tileId
-     * @param {number} x X coordinate (in world/pixels coordinates)
-     * @param {number} y Y coordinate (in world/pixels coordinates)
+     * @param {number} tileId - tileId
+     * @param {number} x - X coordinate (in world/pixels coordinates)
+     * @param {number} y - Y coordinate (in world/pixels coordinates)
      * @returns {Tile} the tile object
      */
     getTileById(tileId, x, y) {
@@ -25508,7 +24342,7 @@ class TMXLayer extends Renderable {
             // look for the corresponding tileset
             this.tileset = this.tilesets.getTilesetByGid(tileId);
         }
-        return new Tile(x, y, tileId, this.tileset);
+        return new Tile$1(x, y, tileId, this.tileset);
     }
 
     /**
@@ -25516,9 +24350,9 @@ class TMXLayer extends Renderable {
      * @name cellAt
      * @memberof TMXLayer
      * @public
-     * @param {number} x x position of the tile (in Tile unit)
-     * @param {number} y x position of the tile (in Tile unit)
-     * @param {number} [boundsCheck=true] check first if within the layer bounds
+     * @param {number} x - x position of the tile (in Tile unit)
+     * @param {number} y - x position of the tile (in Tile unit)
+     * @param {number} [boundsCheck=true] - check first if within the layer bounds
      * @returns {Tile} corresponding tile or null if there is no defined tile at the position or if outside of the layer bounds
      * @example
      * // return the first tile at offset 0, 0
@@ -25542,8 +24376,8 @@ class TMXLayer extends Renderable {
      * @name clearTile
      * @memberof TMXLayer
      * @public
-     * @param {number} x X coordinate (in map coordinates: row/column)
-     * @param {number} y Y coordinate (in map coordinates: row/column)
+     * @param {number} x - X coordinate (in map coordinates: row/column)
+     * @param {number} y - Y coordinate (in map coordinates: row/column)
      * @example
      * me.game.world.getChildByType(me.TMXLayer).forEach(function(layer) {
      *     // clear all tiles at the given x,y coordinates
@@ -25602,6 +24436,8 @@ class TMXLayer extends Renderable {
     }
 }
 
+var TMXLayer$1 = TMXLayer;
+
 /* eslint-disable no-unused-vars */
 
 /**
@@ -25610,24 +24446,24 @@ class TMXLayer extends Renderable {
  */
 class TMXRenderer {
     /**
-     * @param {number} cols width of the tilemap in tiles
-     * @param {number} rows height of the tilemap in tiles
-     * @param {number} tilewidth width of each tile in pixels
-     * @param {number} tileheight height of each tile in pixels
+     * @param {number} cols - width of the tilemap in tiles
+     * @param {number} rows - height of the tilemap in tiles
+     * @param {number} tilewidth - width of each tile in pixels
+     * @param {number} tileheight - height of each tile in pixels
      */
     constructor(cols, rows, tilewidth, tileheight) {
         this.cols = cols;
         this.rows = rows;
         this.tilewidth = tilewidth;
         this.tileheight = tileheight;
-        this.bounds = new Bounds();
+        this.bounds = new Bounds$1();
     }
 
     /**
      * return true if the renderer can render the specified map or layer
      * @name TMXRenderer#canRender
      * @public
-     * @param {TMXTileMap|TMXLayer} component TMX Map or Layer
+     * @param {TMXTileMap|TMXLayer} component - TMX Map or Layer
      * @returns {boolean}
      */
     canRender(component) {
@@ -25647,11 +24483,11 @@ class TMXRenderer {
      * return the bounding rect for this map renderer
      * @name TMXRenderer#getBounds
      * @public
-     * @param {TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
+     * @param {TMXLayer} [layer] - calculate the bounding rect for a specific layer (will return a new bounds object)
      * @returns {Bounds}
      */
     getBounds(layer) {
-        var bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
+        var bounds = layer instanceof TMXLayer$1 ? pool$1.pull("Bounds") : this.bounds;
         bounds.setMinMax(
             0, 0,
             this.cols * this.tilewidth,
@@ -25664,9 +24500,9 @@ class TMXRenderer {
      * return the tile position corresponding to the specified pixel
      * @name TMXRenderer#pixelToTileCoords
      * @public
-     * @param {number} x X coordinate
-     * @param {number} y Y coordinate
-     * @param {Vector2d} [v] an optional vector object where to put the return values
+     * @param {number} x - X coordinate
+     * @param {number} y - Y coordinate
+     * @param {Vector2d} [v] - an optional vector object where to put the return values
      * @returns {Vector2d}
      */
     pixelToTileCoords(x, y, v) {
@@ -25677,9 +24513,9 @@ class TMXRenderer {
      * return the pixel position corresponding of the specified tile
      * @name TMXRenderer#tileToPixelCoords
      * @public
-     * @param {number} col tile horizontal position
-     * @param {number} row tile vertical position
-     * @param {Vector2d} [v] an optional vector object where to put the return values
+     * @param {number} col - tile horizontal position
+     * @param {number} row - tile vertical position
+     * @param {Vector2d} [v] - an optional vector object where to put the return values
      * @returns {Vector2d}
      */
     tileToPixelCoords(col, row, v) {
@@ -25690,10 +24526,10 @@ class TMXRenderer {
      * draw the given tile at the specified layer
      * @name TMXRenderer#drawTile
      * @public
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
-     * @param {number} x X coordinate where to draw the tile
-     * @param {number} y Y coordinate where to draw the tile
-     * @param {Tile} tile the tile object to draw
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
+     * @param {number} x - X coordinate where to draw the tile
+     * @param {number} y - Y coordinate where to draw the tile
+     * @param {Tile} tile - the tile object to draw
      */
     drawTile(renderer, x, y, tile) {
     }
@@ -25702,14 +24538,16 @@ class TMXRenderer {
      * draw the given TMX Layer for the given area
      * @name TMXRenderer#drawTileLayer
      * @public
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
-     * @param {TMXLayer} layer a TMX Layer object
-     * @param {Rect} rect the area of the layer to draw
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
+     * @param {TMXLayer} layer - a TMX Layer object
+     * @param {Rect} rect - the area of the layer to draw
      */
     drawTileLayer(renderer, layer, rect) {
     }
 
 }
+
+var TMXRenderer$1 = TMXRenderer;
 
 /* eslint-enable no-unused-vars */
 
@@ -25718,9 +24556,9 @@ class TMXRenderer {
  * an Orthogonal Map Renderder
  * @augments TMXRenderer
  */
-class TMXOrthogonalRenderer extends TMXRenderer {
+class TMXOrthogonalRenderer extends TMXRenderer$1 {
     /**
-     * @param {TMXTileMap} map the TMX map
+     * @param {TMXTileMap} map - the TMX map
      */
     constructor(map) {
         super(
@@ -25747,7 +24585,7 @@ class TMXOrthogonalRenderer extends TMXRenderer {
      * @ignore
      */
     pixelToTileCoords(x, y, v) {
-        var ret = v || new Vector2d();
+        var ret = v || new Vector2d$1();
         return ret.set(
             x / this.tilewidth,
             y / this.tileheight
@@ -25760,7 +24598,7 @@ class TMXOrthogonalRenderer extends TMXRenderer {
      * @ignore
      */
     tileToPixelCoords(x, y, v) {
-        var ret = v || new Vector2d();
+        var ret = v || new Vector2d$1();
         return ret.set(
             x * this.tilewidth,
             y * this.tileheight
@@ -25807,13 +24645,13 @@ class TMXOrthogonalRenderer extends TMXRenderer {
         var start = this.pixelToTileCoords(
             Math.max(rect.pos.x - (layer.maxTileSize.width - layer.tilewidth), 0),
             Math.max(rect.pos.y - (layer.maxTileSize.height - layer.tileheight), 0),
-            pool.pull("Vector2d")
+            pool$1.pull("Vector2d")
         ).floorSelf();
 
         var end = this.pixelToTileCoords(
             rect.pos.x + rect.width + this.tilewidth,
             rect.pos.y + rect.height + this.tileheight,
-            pool.pull("Vector2d")
+            pool$1.pull("Vector2d")
         ).ceilSelf();
 
         //ensure we are in the valid tile range
@@ -25851,19 +24689,21 @@ class TMXOrthogonalRenderer extends TMXRenderer {
             }
         }
 
-        pool.push(start);
-        pool.push(end);
+        pool$1.push(start);
+        pool$1.push(end);
     }
 }
+
+var TMXOrthogonalRenderer$1 = TMXOrthogonalRenderer;
 
 /**
  * @classdesc
  * an Isometric Map Renderder
  * @augments TMXRenderer
  */
-class TMXIsometricRenderer extends TMXRenderer {
+class TMXIsometricRenderer extends TMXRenderer$1 {
     /**
-     * @param {TMXTileMap} map the TMX map
+     * @param {TMXTileMap} map - the TMX map
      */
     constructor(map) {
         super(
@@ -25893,11 +24733,11 @@ class TMXIsometricRenderer extends TMXRenderer {
      * return the bounding rect for this map renderer
      * @name TMXIsometricRenderer#getBounds
      * @public
-     * @param {TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
+     * @param {TMXLayer} [layer] - calculate the bounding rect for a specific layer (will return a new bounds object)
      * @returns {Bounds}
      */
     getBounds(layer) {
-        var bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
+        var bounds = layer instanceof TMXLayer$1 ? pool$1.pull("Bounds") : this.bounds;
         bounds.setMinMax(
             0, 0,
             (this.cols + this.rows) * (this.tilewidth / 2),
@@ -25911,7 +24751,7 @@ class TMXIsometricRenderer extends TMXRenderer {
      * @ignore
      */
     pixelToTileCoords(x, y, v) {
-        var ret = v || new Vector2d();
+        var ret = v || new Vector2d$1();
         return ret.set(
             (y / this.tileheight) + ((x - this.originX) / this.tilewidth),
             (y / this.tileheight) - ((x - this.originX) / this.tilewidth)
@@ -25923,7 +24763,7 @@ class TMXIsometricRenderer extends TMXRenderer {
      * @ignore
      */
     tileToPixelCoords(x, y, v) {
-        var ret = v || new Vector2d();
+        var ret = v || new Vector2d$1();
         return ret.set(
             (x - y) * this.hTilewidth + this.originX,
             (x + y) * this.hTileheight
@@ -25938,14 +24778,14 @@ class TMXIsometricRenderer extends TMXRenderer {
     adjustPosition(obj) {
         var tileX = obj.x / this.hTilewidth;
         var tileY = obj.y / this.tileheight;
-        var isoPos = pool.pull("Vector2d");
+        var isoPos = pool$1.pull("Vector2d");
 
         this.tileToPixelCoords(tileX, tileY, isoPos);
 
         obj.x = isoPos.x;
         obj.y = isoPos.y;
 
-        pool.push(isoPos);
+        pool$1.push(isoPos);
     }
 
     /**
@@ -25975,18 +24815,18 @@ class TMXIsometricRenderer extends TMXRenderer {
         var rowItr = this.pixelToTileCoords(
             rect.pos.x - tileset.tilewidth,
             rect.pos.y - tileset.tileheight,
-            pool.pull("Vector2d")
+            pool$1.pull("Vector2d")
         ).floorSelf();
         var tileEnd = this.pixelToTileCoords(
             rect.pos.x + rect.width + tileset.tilewidth,
             rect.pos.y + rect.height + tileset.tileheight,
-            pool.pull("Vector2d")
+            pool$1.pull("Vector2d")
         ).ceilSelf();
 
-        var rectEnd = this.tileToPixelCoords(tileEnd.x, tileEnd.y, pool.pull("Vector2d"));
+        var rectEnd = this.tileToPixelCoords(tileEnd.x, tileEnd.y, pool$1.pull("Vector2d"));
 
         // Determine the tile and pixel coordinates to start at
-        var startPos = this.tileToPixelCoords(rowItr.x, rowItr.y, pool.pull("Vector2d"));
+        var startPos = this.tileToPixelCoords(rowItr.x, rowItr.y, pool$1.pull("Vector2d"));
         startPos.x -= this.hTilewidth;
         startPos.y += this.tileheight;
 
@@ -26053,13 +24893,15 @@ class TMXIsometricRenderer extends TMXRenderer {
             }
         }
 
-        pool.push(columnItr);
-        pool.push(rowItr);
-        pool.push(tileEnd);
-        pool.push(rectEnd);
-        pool.push(startPos);
+        pool$1.push(columnItr);
+        pool$1.push(rowItr);
+        pool$1.push(tileEnd);
+        pool$1.push(rectEnd);
+        pool$1.push(startPos);
     }
 }
+
+var TMXIsometricRenderer$1 = TMXIsometricRenderer;
 
 // scope global var & constants
 const offsetsStaggerX = [
@@ -26080,9 +24922,9 @@ const offsetsStaggerY = [
  * an Hexagonal Map Renderder
  * @augments TMXRenderer
  */
-class TMXHexagonalRenderer extends TMXRenderer {
+class TMXHexagonalRenderer extends TMXRenderer$1 {
     /**
-     * @param {TMXTileMap} map the TMX map
+     * @param {TMXTileMap} map - the TMX map
      */
     constructor(map) {
         super(
@@ -26115,10 +24957,10 @@ class TMXHexagonalRenderer extends TMXRenderer {
         this.rowheight = this.sideoffsety + this.sidelengthy;
 
         this.centers = [
-            new Vector2d(),
-            new Vector2d(),
-            new Vector2d(),
-            new Vector2d()
+            new Vector2d$1(),
+            new Vector2d$1(),
+            new Vector2d$1(),
+            new Vector2d$1()
         ];
     }
 
@@ -26137,11 +24979,11 @@ class TMXHexagonalRenderer extends TMXRenderer {
      * return the bounding rect for this map renderer
      * @name TMXHexagonalRenderer#getBounds
      * @public
-     * @param {TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
+     * @param {TMXLayer} [layer] - calculate the bounding rect for a specific layer (will return a new bounds object)
      * @returns {Bounds}
      */
     getBounds(layer) {
-        var bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
+        var bounds = layer instanceof TMXLayer$1 ? pool$1.pull("Bounds") : this.bounds;
 
         // The map size is the same regardless of which indexes are shifted.
         if (this.staggerX) {
@@ -26184,7 +25026,7 @@ class TMXHexagonalRenderer extends TMXRenderer {
      * @ignore
      */
     topLeft(x, y, v) {
-        var ret = v || new Vector2d();
+        var ret = v || new Vector2d$1();
 
         if (!this.staggerX) {
             if ((y & 1) ^ this.staggerEven) {
@@ -26208,7 +25050,7 @@ class TMXHexagonalRenderer extends TMXRenderer {
      * @ignore
      */
     topRight(x, y, v) {
-        var ret = v || new Vector2d();
+        var ret = v || new Vector2d$1();
 
         if (!this.staggerX) {
             if ((y & 1) ^ this.staggerEven) {
@@ -26233,7 +25075,7 @@ class TMXHexagonalRenderer extends TMXRenderer {
      * @ignore
      */
     bottomLeft(x, y, v) {
-        var ret = v || new Vector2d();
+        var ret = v || new Vector2d$1();
 
         if (!this.staggerX) {
             if ((y & 1) ^ this.staggerEven) {
@@ -26257,7 +25099,7 @@ class TMXHexagonalRenderer extends TMXRenderer {
      * @ignore
      */
     bottomRight(x, y, v) {
-        var ret = v || new Vector2d();
+        var ret = v || new Vector2d$1();
 
         if (!this.staggerX) {
             if ((y & 1) ^ this.staggerEven) {
@@ -26282,7 +25124,7 @@ class TMXHexagonalRenderer extends TMXRenderer {
      * @ignore
      */
     pixelToTileCoords(x, y, v) {
-        var ret = v || new Vector2d();
+        var ret = v || new Vector2d$1();
 
         if (this.staggerX) { //flat top
             x -= this.staggerEven ? this.tilewidth : this.sideoffsetx;
@@ -26292,13 +25134,13 @@ class TMXHexagonalRenderer extends TMXRenderer {
         }
 
         // Start with the coordinates of a grid-aligned tile
-        var referencePoint = pool.pull("Vector2d",
+        var referencePoint = pool$1.pull("Vector2d",
             Math.floor(x / (this.columnwidth * 2)),
             Math.floor((y / (this.rowheight * 2)))
         );
 
         // Relative x and y position on the base square of the grid-aligned tile
-        var rel = pool.pull("Vector2d",
+        var rel = pool$1.pull("Vector2d",
             x - referencePoint.x * (this.columnwidth * 2),
             y - referencePoint.y * (this.rowheight * 2)
         );
@@ -26357,8 +25199,8 @@ class TMXHexagonalRenderer extends TMXRenderer {
             referencePoint.y + offsets[nearest].y
         );
 
-        pool.push(referencePoint);
-        pool.push(rel);
+        pool$1.push(referencePoint);
+        pool$1.push(rel);
 
         return ret;
     }
@@ -26370,7 +25212,7 @@ class TMXHexagonalRenderer extends TMXRenderer {
     tileToPixelCoords(x, y, v) {
         var tileX = Math.floor(x),
             tileY = Math.floor(y);
-        var ret = v || new Vector2d();
+        var ret = v || new Vector2d$1();
 
         if (this.staggerX) {
             ret.y = tileY * (this.tileheight + this.sidelengthy);
@@ -26409,7 +25251,7 @@ class TMXHexagonalRenderer extends TMXRenderer {
      */
     drawTile(renderer, x, y, tmxTile) {
         var tileset = tmxTile.tileset;
-        var point = this.tileToPixelCoords(x, y, pool.pull("Vector2d"));
+        var point = this.tileToPixelCoords(x, y, pool$1.pull("Vector2d"));
 
         // draw the tile
         tileset.drawTile(
@@ -26419,7 +25261,7 @@ class TMXHexagonalRenderer extends TMXRenderer {
             tmxTile
         );
 
-        pool.push(point);
+        pool$1.push(point);
     }
 
     /**
@@ -26433,7 +25275,7 @@ class TMXHexagonalRenderer extends TMXRenderer {
         var startTile = this.pixelToTileCoords(
             rect.pos.x,
             rect.pos.y,
-            pool.pull("Vector2d")
+            pool$1.pull("Vector2d")
         );
 
         // Compensate for the layer position
@@ -26443,7 +25285,7 @@ class TMXHexagonalRenderer extends TMXRenderer {
         var startPos = this.tileToPixelCoords(
             startTile.x + layer.pos.x,
             startTile.y + layer.pos.y,
-            pool.pull("Vector2d")
+            pool$1.pull("Vector2d")
         );
 
         var rowTile = startTile.clone();
@@ -26506,8 +25348,8 @@ class TMXHexagonalRenderer extends TMXRenderer {
 
                 startPos.y += this.rowheight;
             }
-            pool.push(rowTile);
-            pool.push(rowPos);
+            pool$1.push(rowTile);
+            pool$1.push(rowPos);
 
         } else {
             //ensure we are in the valid tile range
@@ -26543,21 +25385,23 @@ class TMXHexagonalRenderer extends TMXRenderer {
                 }
                 startPos.y += this.rowheight;
             }
-            pool.push(rowTile);
-            pool.push(rowPos);
+            pool$1.push(rowTile);
+            pool$1.push(rowPos);
         }
 
-        pool.push(startTile);
-        pool.push(startPos);
+        pool$1.push(startTile);
+        pool$1.push(startPos);
     }
 }
+
+var TMXHexagonalRenderer$1 = TMXHexagonalRenderer;
 
 /**
  * @classdesc
  * a Staggered Map Renderder
  * @augments TMXHexagonalRenderer
  */
-class TMXStaggeredRenderer extends TMXHexagonalRenderer {
+class TMXStaggeredRenderer extends TMXHexagonalRenderer$1 {
 
     /**
      * return true if the renderer can render the specified layer
@@ -26575,7 +25419,7 @@ class TMXStaggeredRenderer extends TMXHexagonalRenderer {
      * @ignore
      */
     pixelToTileCoords(x, y, v) {
-        var ret = v || new Vector2d();
+        var ret = v || new Vector2d$1();
 
         var alignedX = x,
             alignedY = y;
@@ -26587,7 +25431,7 @@ class TMXStaggeredRenderer extends TMXHexagonalRenderer {
         }
 
         // Start with the coordinates of a grid-aligned tile
-        var referencePoint = pool.pull("Vector2d",
+        var referencePoint = pool$1.pull("Vector2d",
             Math.floor(alignedX / this.tilewidth),
             Math.floor(alignedY / this.tileheight)
         );
@@ -26606,7 +25450,7 @@ class TMXStaggeredRenderer extends TMXHexagonalRenderer {
         }
 
         // Relative x and y position on the base square of the grid-aligned tile
-        var rel = pool.pull("Vector2d",
+        var rel = pool$1.pull("Vector2d",
             alignedX - referencePoint.x * this.tilewidth,
             alignedY - referencePoint.y * this.tileheight
         );
@@ -26639,12 +25483,14 @@ class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 
         ret.div(this.tilewidth / Math.sqrt(2)).rotate(degToRad(-45)).add(referencePoint);
 
-        pool.push(referencePoint);
-        pool.push(rel);
+        pool$1.push(referencePoint);
+        pool$1.push(rel);
 
         return ret;
     }
 }
+
+var TMXStaggeredRenderer$1 = TMXStaggeredRenderer;
 
 /**
  * @classdesc
@@ -26652,7 +25498,7 @@ class TMXStaggeredRenderer extends TMXHexagonalRenderer {
  */
 class TMXTileset {
     /**
-     *  @param {object} tileset tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
+     *  @param {object} tileset - tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
      */
     constructor(tileset) {
         var i = 0;
@@ -26672,7 +25518,7 @@ class TMXTileset {
             var ext = getExtension(src);
             if (ext === "tsx" || ext === "json") {
                 // load the external tileset (TSX/JSON)
-                tileset = loader.getTMX(getBasename(src));
+                tileset = loader$1.getTMX(getBasename(src));
                 if (!tileset) {
                     throw new Error(src + " external TSX/JSON tileset not found");
                 }
@@ -26686,7 +25532,7 @@ class TMXTileset {
         this.margin = +tileset.margin || 0;
 
         // set tile offset properties (if any)
-        this.tileoffset = new Vector2d();
+        this.tileoffset = new Vector2d$1();
 
         /**
          * Tileset contains animated tiles
@@ -26749,7 +25595,7 @@ class TMXTileset {
                     }
                 }
                 if ("image" in tiles[i]) {
-                    var image = loader.getImage(tiles[i].image);
+                    var image = loader$1.getImage(tiles[i].image);
                     if (!image) {
                         throw new Error("melonJS: '" + tiles[i].image + "' file for tile '" + (+i + this.firstgid) + "' not found!");
                     }
@@ -26780,7 +25626,7 @@ class TMXTileset {
         if (this.isCollection === false) {
 
             // get the global tileset texture
-            this.image = loader.getImage(tileset.image);
+            this.image = loader$1.getImage(tileset.image);
 
             if (!this.image) {
                 throw new Error("melonJS: '" + tileset.image + "' file for tileset '" + this.name + "' not found!");
@@ -26848,7 +25694,7 @@ class TMXTileset {
      * Get the view (local) tile ID from a GID, with animations applied
      * @name TMXTileset#getViewTileId
      * @public
-     * @param {number} gid Global tile ID
+     * @param {number} gid - Global tile ID
      * @returns {number} View tile ID
      */
     getViewTileId(gid) {
@@ -26876,7 +25722,7 @@ class TMXTileset {
     // update tile animations
     update(dt) {
         var duration = 0,
-            now = timer.getTime(),
+            now = timer$1.getTime(),
             result = false;
 
         if (this._lastUpdate !== now) {
@@ -26940,6 +25786,8 @@ class TMXTileset {
         }
     }
 }
+
+var TMXTileset$1 = TMXTileset;
 
 // bitmask constants to check for flipped & rotated tiles
 const TMX_CLEAR_BIT_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
@@ -27013,6 +25861,8 @@ class TMXTilesetGroup {
         }
     }
 }
+
+var TMXTilesetGroup$1 = TMXTilesetGroup;
 
 /**
  * @classdesc
@@ -27271,7 +26121,7 @@ class TMXObject {
         }
 
         // the object corresponding tile object
-        this.tile = new Tile(this.x, this.y, this.gid, tileset);
+        this.tile = new Tile$1(this.x, this.y, this.gid, tileset);
     }
 
     /**
@@ -27288,18 +26138,18 @@ class TMXObject {
         // add an ellipse shape
         if (this.isEllipse === true) {
             // ellipse coordinates are the center position, so set default to the corresonding radius
-            shapes.push((pool.pull("Ellipse",
+            shapes.push((pool$1.pull("Ellipse",
                 this.width / 2,
                 this.height / 2,
                 this.width,
                 this.height
             )).rotate(this.rotation));
         } else if (this.isPoint === true) {
-            shapes.push(pool.pull("Point", this.x, this.y));
+            shapes.push(pool$1.pull("Point", this.x, this.y));
         } else {
             // add a polygon
             if (this.isPolygon === true) {
-                var _polygon = pool.pull("Polygon", 0, 0, this.points);
+                var _polygon = pool$1.pull("Polygon", 0, 0, this.points);
                 // make sure it's a convex polygon
                 if (_polygon.isConvex() === false ) {
                     throw new Error("collision polygones in Tiled should be defined as Convex");
@@ -27313,22 +26163,22 @@ class TMXObject {
                 for (i = 0; i < segments; i++) {
                     // clone the value before, as [i + 1]
                     // is reused later by the next segment
-                    p1 = pool.pull("Vector2d", p[i].x, p[i].y);
-                    p2 = pool.pull("Vector2d", p[i + 1].x, p[i + 1].y);
+                    p1 = pool$1.pull("Vector2d", p[i].x, p[i].y);
+                    p2 = pool$1.pull("Vector2d", p[i + 1].x, p[i + 1].y);
                     if (this.rotation !== 0) {
                         p1 = p1.rotate(this.rotation);
                         p2 = p2.rotate(this.rotation);
                     }
-                    shapes.push(pool.pull("Line", 0, 0, [ p1, p2 ]));
+                    shapes.push(pool$1.pull("Line", 0, 0, [ p1, p2 ]));
                 }
             }
 
             // it's a rectangle, returns a polygon object anyway
             else {
-                shapes.push((pool.pull("Polygon",
+                shapes.push((pool$1.pull("Polygon",
                     0, 0, [
-                        pool.pull("Vector2d"),  pool.pull("Vector2d", this.width, 0),
-                        pool.pull("Vector2d", this.width, this.height), pool.pull("Vector2d", 0, this.height)
+                        pool$1.pull("Vector2d"),  pool$1.pull("Vector2d", this.width, 0),
+                        pool$1.pull("Vector2d", this.width, this.height), pool$1.pull("Vector2d", 0, this.height)
                     ]
                 )).rotate(this.rotation));
             }
@@ -27447,7 +26297,7 @@ class TMXGroup {
 
         if (data.layers) {
             data.layers.forEach((data) => {
-                var layer = new TMXLayer(map, data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z++);
+                var layer = new TMXLayer$1(map, data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z++);
                 // set a renderer
                 layer.setRenderer(map.getRenderer());
                 // resize container accordingly
@@ -27495,16 +26345,16 @@ const COLLISION_GROUP = "collision";
 function getNewDefaultRenderer(map) {
     switch (map.orientation) {
         case "orthogonal":
-            return new TMXOrthogonalRenderer(map);
+            return new TMXOrthogonalRenderer$1(map);
 
         case "isometric":
-            return new TMXIsometricRenderer(map);
+            return new TMXIsometricRenderer$1(map);
 
         case "hexagonal":
-            return new TMXHexagonalRenderer(map);
+            return new TMXHexagonalRenderer$1(map);
 
         case "staggered":
-            return new TMXStaggeredRenderer(map);
+            return new TMXStaggeredRenderer$1(map);
 
         // if none found, throw an exception
         default:
@@ -27517,7 +26367,7 @@ function getNewDefaultRenderer(map) {
  * @ignore
  */
 function readLayer(map, data, z) {
-    return new TMXLayer(map, data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
+    return new TMXLayer$1(map, data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
 }
 
 /**
@@ -27529,16 +26379,16 @@ function readImageLayer(map, data, z) {
     applyTMXProperties(data.properties, data);
 
     // create the layer
-    var imageLayer = pool.pull("ImageLayer",
+    var imageLayer = pool$1.pull("ImageLayer",
         // x/y is deprecated since 0.15 and replace by offsetx/y
         +data.offsetx || +data.x || 0,
         +data.offsety || +data.y || 0,
         Object.assign({
             name: data.name,
             image: data.image,
-            ratio : pool.pull("Vector2d", +data.parallaxx || 1.0, +data.parallaxy || 1.0),
+            ratio : pool$1.pull("Vector2d", +data.parallaxx || 1.0, +data.parallaxy || 1.0),
             // convert to melonJS color format (note: this should be done earlier when parsing data)
-            tint : typeof (data.tintcolor) !== "undefined" ? (pool.pull("Color")).parseHex(data.tintcolor, true) : undefined,
+            tint : typeof (data.tintcolor) !== "undefined" ? (pool$1.pull("Color")).parseHex(data.tintcolor, true) : undefined,
             z: z
         }, data.properties)
     );
@@ -27556,7 +26406,7 @@ function readImageLayer(map, data, z) {
  * @ignore
  */
 function readTileset(data) {
-    return (new TMXTileset(data));
+    return (new TMXTileset$1(data));
 }
 
 /**
@@ -27574,8 +26424,8 @@ function readObjectGroup(map, data, z) {
  */
 class TMXTileMap {
     /**
-     * @param {string} levelId name of TMX map
-     * @param {object} data TMX map in JSON format
+     * @param {string} levelId - name of TMX map
+     * @param {object} data - TMX map in JSON format
      * @example
      * // create a new level object based on the TMX JSON object
      * var level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
@@ -27771,7 +26621,7 @@ class TMXTileMap {
         // Tileset information
         if (!this.tilesets) {
             // make sure we have a TilesetGroup Object
-            this.tilesets = new TMXTilesetGroup();
+            this.tilesets = new TMXTilesetGroup$1();
         }
 
         // parse all tileset objects
@@ -27787,7 +26637,7 @@ class TMXTileMap {
         if (this.background_image) {
             // add a new image layer
             this.layers.push(
-                pool.pull("ImageLayer",
+                pool$1.pull("ImageLayer",
                     0, 0, {
                         name : "background_image",
                         image : this.background_image,
@@ -27827,9 +26677,9 @@ class TMXTileMap {
      * note : this will not automatically update the camera viewport
      * @name TMXTileMap#addTo
      * @public
-     * @param {Container} container target container
-     * @param {boolean} [flatten=true] if true, flatten all objects into the given container, else a `me.Container` object will be created for each corresponding groups
-     * @param {boolean} [setViewportBounds=false] if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
+     * @param {Container} container - target container
+     * @param {boolean} [flatten=true] - if true, flatten all objects into the given container, else a `me.Container` object will be created for each corresponding groups
+     * @param {boolean} [setViewportBounds=false] - if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
      * @example
      * // create a new level object based on the TMX JSON object
      * var level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
@@ -27872,7 +26722,7 @@ class TMXTileMap {
          */
         function _setBounds(width, height) {
             // adjust the viewport bounds if level is smaller
-            game.viewport.setBounds(
+            game$1.viewport.setBounds(
                 0, 0,
                 Math.max(levelBounds.width, width),
                 Math.max(levelBounds.height, height)
@@ -27889,7 +26739,7 @@ class TMXTileMap {
         if (setViewportBounds === true) {
             off(VIEWPORT_ONRESIZE, _setBounds);
             // force viewport bounds update
-            _setBounds(game.viewport.width, game.viewport.height);
+            _setBounds(game$1.viewport.width, game$1.viewport.height);
             // Replace the resize handler
             on(VIEWPORT_ONRESIZE, _setBounds, this);
         }
@@ -27903,7 +26753,7 @@ class TMXTileMap {
      * return an Array of instantiated objects, based on the map object definition
      * @name TMXTileMap#getObjects
      * @public
-     * @param {boolean} [flatten=true] if true, flatten all objects into the returned array.
+     * @param {boolean} [flatten=true] - if true, flatten all objects into the returned array.
      * when false, a `me.Container` object will be created for each corresponding groups
      * @returns {Renderable[]} Array of Objects
      */
@@ -27923,7 +26773,7 @@ class TMXTileMap {
 
             if (flatten === false) {
                 // create a new container
-                targetContainer = new Container(0, 0, this.width, this.height);
+                targetContainer = new Container$1(0, 0, this.width, this.height);
 
                 // tiled uses 0,0 by default
                 targetContainer.anchorPoint.set(0, 0);
@@ -27954,7 +26804,7 @@ class TMXTileMap {
                 }
                 // convert to melonJS renderable argument name
                 if (typeof (settings.tintcolor) !== "undefined") {
-                    settings.tint = pool.pull("Color");
+                    settings.tint = pool$1.pull("Color");
                     settings.tint.parseHex(settings.tintcolor, true);
                 }
 
@@ -27962,7 +26812,7 @@ class TMXTileMap {
                 /// specific instantiation logic/details from here
 
                 // groups can contains either text, objects or layers
-                if (settings instanceof TMXLayer) {
+                if (settings instanceof TMXLayer$1) {
                     // layers are already instantiated & initialized
                     obj = settings;
                     // z value set already
@@ -27972,9 +26822,9 @@ class TMXTileMap {
                         settings.text.anchorPoint = settings.anchorPoint;
                     }
                     if (settings.text.bitmap === true) {
-                        obj = pool.pull("BitmapText", settings.x, settings.y, settings.text);
+                        obj = pool$1.pull("BitmapText", settings.x, settings.y, settings.text);
                     } else {
-                        obj = pool.pull("Text", settings.x, settings.y, settings.text);
+                        obj = pool$1.pull("Text", settings.x, settings.y, settings.text);
                     }
                     // set the obj z order
                     obj.pos.z = settings.z;
@@ -27982,29 +26832,29 @@ class TMXTileMap {
                     // create a default shape if none is specified
                     shape = settings.shapes;
                     if (typeof shape === "undefined") {
-                        shape = pool.pull("Polygon", 0, 0, [
-                            pool.pull("Vector2d", 0,          0),
-                            pool.pull("Vector2d", this.width, 0),
-                            pool.pull("Vector2d", this.width, this.height)
+                        shape = pool$1.pull("Polygon", 0, 0, [
+                            pool$1.pull("Vector2d", 0,          0),
+                            pool$1.pull("Vector2d", this.width, 0),
+                            pool$1.pull("Vector2d", this.width, this.height)
                         ]);
                     }
                     // check if a me.Tile object is embedded
                     obj = settings.tile.getRenderable(settings);
-                    obj.body = new Body(obj, shape);
+                    obj.body = new Body$1(obj, shape);
                     obj.body.setStatic(true);
                     // set the obj z order
                     obj.pos.setMuted(settings.x, settings.y, settings.z);
                 } else {
                     // pull the corresponding object from the object pool
                     if (typeof settings.name !== "undefined" && settings.name !== "") {
-                        obj = pool.pull(
+                        obj = pool$1.pull(
                             settings.name,
                             settings.x, settings.y,
                             settings
                         );
                     } else {
                         // unnamed shape object
-                        obj = pool.pull(
+                        obj = pool$1.pull(
                             "Renderable",
                             settings.x, settings.y,
                             settings.width, settings.height
@@ -28012,10 +26862,10 @@ class TMXTileMap {
                         // create a default shape if none is specified
                         shape = settings.shapes;
                         if (typeof shape === "undefined") {
-                            shape = pool.pull("Polygon", 0, 0, [
-                                pool.pull("Vector2d", 0,          0),
-                                pool.pull("Vector2d", this.width, 0),
-                                pool.pull("Vector2d", this.width, this.height)
+                            shape = pool$1.pull("Polygon", 0, 0, [
+                                pool$1.pull("Vector2d", 0,          0),
+                                pool$1.pull("Vector2d", this.width, 0),
+                                pool$1.pull("Vector2d", this.width, this.height)
                             ]);
                         }
                         obj.anchorPoint.set(0, 0);
@@ -28024,7 +26874,7 @@ class TMXTileMap {
                         // for backward compatibility
                         obj.class = settings.class || settings.type;
                         obj.id = settings.id;
-                        obj.body = new Body(obj, shape);
+                        obj.body = new Body$1(obj, shape);
                         obj.body.setStatic(true);
                         obj.resize(obj.body.getBounds().width, obj.body.getBounds().height);
                     }
@@ -28034,7 +26884,7 @@ class TMXTileMap {
 
                 if (isCollisionGroup && !settings.name && obj.body) {
                     // configure the body accordingly
-                    obj.body.collisionType = collision.types.WORLD_SHAPE;
+                    obj.body.collisionType = collision$1.types.WORLD_SHAPE;
                     // mark collision shapes as static
                     obj.body.isStatic = true;
                 }
@@ -28044,7 +26894,7 @@ class TMXTileMap {
                     if (obj.isRenderable === true) {
                         obj.setOpacity(obj.getOpacity() * group.opacity);
                         // and to child renderables if any
-                        if (obj.renderable instanceof Renderable) {
+                        if (obj.renderable instanceof Renderable$1) {
                             obj.renderable.setOpacity(obj.renderable.getOpacity() * group.opacity);
                         }
                     }
@@ -28096,6 +26946,8 @@ class TMXTileMap {
     }
 }
 
+var TMXTileMap$1 = TMXTileMap;
+
 // our levels
 var levels = {};
 // level index table
@@ -28111,7 +26963,7 @@ function safeLoadLevel(levelId, options, restart) {
     options.container.reset();
 
     // reset the renderer
-    game.reset();
+    game$1.reset();
 
     // clean the current (previous) level
     if (levels[level.getCurrentLevelId()]) {
@@ -28132,7 +26984,7 @@ function safeLoadLevel(levelId, options, restart) {
 
     if (restart) {
         // resume the game loop if it was previously running
-        state.restart();
+        state$1.restart();
     }
 }
 
@@ -28141,10 +26993,10 @@ function safeLoadLevel(levelId, options, restart) {
  * @name loadTMXLevel
  * @memberof level
  * @private
- * @param {string} levelId level id
- * @param {Container} container target container
- * @param {boolean} [flatten=true] if true, flatten all objects into the given container
- * @param {boolean} [setViewportBounds=false] if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
+ * @param {string} levelId - level id
+ * @param {Container} container - target container
+ * @param {boolean} [flatten=true] - if true, flatten all objects into the given container
+ * @param {boolean} [setViewportBounds=false] - if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
  * @ignore
  */
 function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
@@ -28152,7 +27004,7 @@ function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
 
     // reset the GUID generator
     // and pass the level id as parameter
-    utils.resetGUID(levelId, level.nextobjectid);
+    utils$1.resetGUID(levelId, level.nextobjectid);
 
     // Tiled use 0,0 anchor coordinates
     container.anchorPoint.set(0, 0);
@@ -28174,9 +27026,9 @@ var level = {
      * @name add
      * @memberof level
      * @public
-     * @param {string} format level format (only "tmx" supported)
-     * @param {string} levelId the level id (or name)
-     * @param {Function} [callback] a function to be called once the level is loaded
+     * @param {string} format - level format (only "tmx" supported)
+     * @param {string} levelId - the level id (or name)
+     * @param {Function} [callback] - a function to be called once the level is loaded
      * @returns {boolean} true if the level was loaded
      */
     add(format, levelId, callback) {
@@ -28185,7 +27037,7 @@ var level = {
                 // just load the level with the XML stuff
                 if (levels[levelId] == null) {
                     //console.log("loading "+ levelId);
-                    levels[levelId] = new TMXTileMap(levelId, loader.getTMX(levelId));
+                    levels[levelId] = new TMXTileMap$1(levelId, loader$1.getTMX(levelId));
                     // level index
                     levelIdx.push(levelId);
                 }
@@ -28212,12 +27064,12 @@ var level = {
      * @name load
      * @memberof level
      * @public
-     * @param {string} levelId level id
-     * @param {object} [options] additional optional parameters
-     * @param {Container} [options.container=game.world] container in which to load the specified level
-     * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
-     * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
-     * @param {boolean} [options.setViewportBounds=true] if true, set the viewport bounds to the map size
+     * @param {string} levelId - level id
+     * @param {object} [options] - additional optional parameters
+     * @param {Container} [options.container=game.world] - container in which to load the specified level
+     * @param {Function} [options.onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded
+     * @param {boolean} [options.flatten=game.mergeGroup] - if true, flatten all objects into the given container
+     * @param {boolean} [options.setViewportBounds=true] - if true, set the viewport bounds to the map size
      * @returns {boolean} true if the level was successfully loaded
      * @example
      * // the game assets to be be preloaded
@@ -28247,9 +27099,9 @@ var level = {
      */
     load(levelId, options) {
         options = Object.assign({
-            "container"         : game.world,
-            "onLoaded"          : game.onLevelLoaded,
-            "flatten"           : game.mergeGroup,
+            "container"         : game$1.world,
+            "onLoaded"          : game$1.onLevelLoaded,
+            "flatten"           : game$1.mergeGroup,
             "setViewportBounds" : true
         }, options || {});
 
@@ -28258,17 +27110,17 @@ var level = {
             throw new Error("level " + levelId + " not found");
         }
 
-        if (levels[levelId] instanceof TMXTileMap) {
+        if (levels[levelId] instanceof TMXTileMap$1) {
 
             // check the status of the state mngr
-            var wasRunning = state.isRunning();
+            var wasRunning = state$1.isRunning();
 
             if (wasRunning) {
                 // stop the game loop to avoid
                 // some silly side effects
-                state.stop();
+                state$1.stop();
 
-                utils.function.defer(safeLoadLevel, this, levelId, options, true);
+                utils$1.function.defer(safeLoadLevel, this, levelId, options, true);
             }
             else {
                 safeLoadLevel(levelId, options);
@@ -28309,10 +27161,10 @@ var level = {
      * @name reload
      * @memberof level
      * @public
-     * @param {object} [options] additional optional parameters
-     * @param {Container} [options.container=game.world] container in which to load the specified level
-     * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
-     * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
+     * @param {object} [options] - additional optional parameters
+     * @param {Container} [options.container=game.world] - container in which to load the specified level
+     * @param {Function} [options.onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded
+     * @param {boolean} [options.flatten=game.mergeGroup] - if true, flatten all objects into the given container
      * @returns {object} the current level
      */
     reload(options) {
@@ -28326,10 +27178,10 @@ var level = {
      * @name next
      * @memberof level
      * @public
-     * @param {object} [options] additional optional parameters
-     * @param {Container} [options.container=game.world] container in which to load the specified level
-     * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
-     * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
+     * @param {object} [options] - additional optional parameters
+     * @param {Container} [options.container=game.world] - container in which to load the specified level
+     * @param {Function} [options.onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded
+     * @param {boolean} [options.flatten=game.mergeGroup] - if true, flatten all objects into the given container
      * @returns {boolean} true if the next level was successfully loaded
      */
     next(options) {
@@ -28347,10 +27199,10 @@ var level = {
      * @name previous
      * @memberof level
      * @public
-     * @param {object} [options] additional optional parameters
-     * @param {Container} [options.container=game.world] container in which to load the specified level
-     * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
-     * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
+     * @param {object} [options] - additional optional parameters
+     * @param {Container} [options.container=game.world] - container in which to load the specified level
+     * @param {Function} [options.onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded
+     * @param {boolean} [options.flatten=game.mergeGroup] - if true, flatten all objects into the given container
      * @returns {boolean} true if the previous level was successfully loaded
      */
     previous(options) {
@@ -28375,6 +27227,8 @@ var level = {
     }
 
 };
+
+var level$1 = level;
 
 // contains all the images loaded
 var imgList = {};
@@ -28497,7 +27351,7 @@ function preloadTMX(tmxData, onload, onerror) {
 
         // add the tmx to the level manager
         if (tmxData.type === "tmx") {
-            level.add(tmxData.type, tmxData.name);
+            level$1.add(tmxData.type, tmxData.name);
         }
     }
 
@@ -28809,8 +27663,8 @@ var loader = {
      * @name setBaseURL
      * @memberof loader
      * @public
-     * @param {string} type  "*", "audio", binary", "image", "json", "js", "tmx", "tsx"
-     * @param {string} [url="./"] default base URL
+     * @param {string} type  - "*", "audio", binary", "image", "json", "js", "tmx", "tsx"
+     * @param {string} [url="./"] - default base URL
      * @example
      * // change the base URL relative address for audio assets
      * me.loader.setBaseURL("audio", "data/audio/");
@@ -28840,12 +27694,12 @@ var loader = {
      * @memberof loader
      * @public
      * @param {object[]} res
-     * @param {string} res.name internal name of the resource
-     * @param {string} res.type  "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
-     * @param {string} res.src  path and/or file name of the resource (for audio assets only the path is required)
-     * @param {boolean} [res.stream] Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
-     * @param {Function} [onload=loader.onload] function to be called when all resources are loaded
-     * @param {boolean} [switchToLoadState=true] automatically switch to the loading screen
+     * @param {string} res.name - internal name of the resource
+     * @param {string} res.type  - "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
+     * @param {string} res.src  - path and/or file name of the resource (for audio assets only the path is required)
+     * @param {boolean} [res.stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
+     * @param {Function} [onload=loader.onload] - function to be called when all resources are loaded
+     * @param {boolean} [switchToLoadState=true] - automatically switch to the loading screen
      * @example
      * game_resources = [
      *   // PNG tileset
@@ -28895,7 +27749,7 @@ var loader = {
 
         if (switchToLoadState === true) {
             // swith to the loading screen
-            state.change(state.LOADING);
+            state$1.change(state$1.LOADING);
         }
 
         // check load status
@@ -28908,12 +27762,12 @@ var loader = {
      * @memberof loader
      * @public
      * @param {object} res
-     * @param {string} res.name internal name of the resource
-     * @param {string} res.type  "audio", binary", "image", "json", "tmx", "tsx"
-     * @param {string} res.src  path and/or file name of the resource (for audio assets only the path is required)
-     * @param {boolean} [res.stream] Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
-     * @param {Function} [onload] function to be called when the resource is loaded
-     * @param {Function} [onerror] function to be called in case of error
+     * @param {string} res.name - internal name of the resource
+     * @param {string} res.type  - "audio", binary", "image", "json", "tmx", "tsx"
+     * @param {string} res.src  - path and/or file name of the resource (for audio assets only the path is required)
+     * @param {boolean} [res.stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
+     * @param {Function} [onload] - function to be called when the resource is loaded
+     * @param {Function} [onerror] - function to be called in case of error
      * @returns {number} the amount of corresponding resource to be preloaded
      * @example
      * // load an image asset
@@ -28978,8 +27832,8 @@ var loader = {
      * @memberof loader
      * @public
      * @param {object} res
-     * @param {string} res.name internal name of the resource
-     * @param {string} res.type  "audio", binary", "image", "json", "tmx", "tsx"
+     * @param {string} res.name - internal name of the resource
+     * @param {string} res.type  - "audio", binary", "image", "json", "tmx", "tsx"
      * @returns {boolean} true if unloaded
      * @example me.loader.unload({name: "avatar",  type:"image"});
      */
@@ -29092,7 +27946,7 @@ var loader = {
      * @name getTMX
      * @memberof loader
      * @public
-     * @param {string} elt name of the tmx/tsx element ("map1");
+     * @param {string} elt - name of the tmx/tsx element ("map1");
      * @returns {object} requested element or null if not found
      */
     getTMX(elt) {
@@ -29109,7 +27963,7 @@ var loader = {
      * @name getBinary
      * @memberof loader
      * @public
-     * @param {string} elt name of the binary object ("ymTrack");
+     * @param {string} elt - name of the binary object ("ymTrack");
      * @returns {object} requested element or null if not found
      */
     getBinary(elt) {
@@ -29126,7 +27980,7 @@ var loader = {
      * @name getImage
      * @memberof loader
      * @public
-     * @param {string} image name of the Image element ("tileset-platformer");
+     * @param {string} image - name of the Image element ("tileset-platformer");
      * @returns {HTMLImageElement} requested element or null if not found
      */
     getImage(image) {
@@ -29144,7 +27998,7 @@ var loader = {
      * @name getJSON
      * @memberof loader
      * @public
-     * @param {string} elt name of the json file to load
+     * @param {string} elt - name of the json file to load
      * @returns {object}
      */
     getJSON(elt) {
@@ -29158,25 +28012,27 @@ var loader = {
 
 };
 
+var loader$1 = loader;
+
 /**
  * @classdesc
  * An object to display a fixed or animated sprite on screen.
  * @augments Renderable
  */
-class Sprite extends Renderable {
+class Sprite extends Renderable$1 {
     /**
-     * @param {number} x the x coordinates of the sprite object
-     * @param {number} y the y coordinates of the sprite object
-     * @param {object} settings Configuration parameters for the Sprite object
-     * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image reference to spritesheet image, a texture atlas or to a texture atlas
-     * @param {string} [settings.name=""] name of this object
-     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
-     * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
-     * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
-     * @param {string|Color} [settings.tint] a tint to be applied to this sprite
-     * @param {number} [settings.flipX] flip the sprite on the horizontal axis
-     * @param {number} [settings.flipY] flip the sprite on the vertical axis
-     * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
+     * @param {number} x - the x coordinates of the sprite object
+     * @param {number} y - the y coordinates of the sprite object
+     * @param {object} settings - Configuration parameters for the Sprite object
+     * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image - reference to spritesheet image, a texture atlas or to a texture atlas
+     * @param {string} [settings.name=""] - name of this object
+     * @param {string} [settings.region] - region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
+     * @param {number} [settings.framewidth] - Width of a single frame within the spritesheet
+     * @param {number} [settings.frameheight] - Height of a single frame within the spritesheet
+     * @param {string|Color} [settings.tint] - a tint to be applied to this sprite
+     * @param {number} [settings.flipX] - flip the sprite on the horizontal axis
+     * @param {number} [settings.flipY] - flip the sprite on the vertical axis
+     * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] - Anchor point to draw the frame at (defaults to the center of the frame).
      * @example
      * // create a single sprite from a standalone image, with anchor in the center
      * var sprite = new me.Sprite(0, 0, {
@@ -29227,7 +28083,7 @@ class Sprite extends Renderable {
          * @name offset
          * @memberof Sprite#
          */
-        this.offset = pool.pull("Vector2d", 0, 0);
+        this.offset = pool$1.pull("Vector2d", 0, 0);
 
         /**
          * The source texture object this sprite object is using
@@ -29252,7 +28108,7 @@ class Sprite extends Renderable {
             // length of the current animation name
             length : 0,
             //current frame texture offset
-            offset : pool.pull("Vector2d"),
+            offset : pool$1.pull("Vector2d"),
             // current frame size
             width : 0,
             height : 0,
@@ -29295,7 +28151,7 @@ class Sprite extends Renderable {
             }
         } else {
             // HTMLImageElement/Canvas or {string}
-            this.image = (typeof settings.image === "object") ? settings.image : loader.getImage(settings.image);
+            this.image = (typeof settings.image === "object") ? settings.image : loader$1.getImage(settings.image);
             // throw an error if image ends up being null/undefined
             if (!this.image) {
                 throw new Error("me.Sprite: '" + settings.image + "' image/texture not found!");
@@ -29337,7 +28193,7 @@ class Sprite extends Renderable {
         }
 
         if (typeof (settings.tint) !== "undefined") {
-            if (settings.tint instanceof Color) {
+            if (settings.tint instanceof Color$1) {
                 this.tint.copy(settings.tint);
             } else {
                 // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
@@ -29379,8 +28235,8 @@ class Sprite extends Renderable {
      * make the object flicker
      * @name flicker
      * @memberof Sprite
-     * @param {number} duration expressed in milliseconds
-     * @param {Function} callback Function to call when flickering ends
+     * @param {number} duration - expressed in milliseconds
+     * @param {Function} callback - Function to call when flickering ends
      * @returns {Sprite} Reference to this object for method chaining
      * @example
      * // make the object flicker for 1 second
@@ -29409,10 +28265,10 @@ class Sprite extends Renderable {
      * <img src="images/spritesheet_grid.png"/>
      * @name addAnimation
      * @memberof Sprite
-     * @param {string} name animation id
-     * @param {number[]|string[]|object[]} index list of sprite index or name
+     * @param {string} name - animation id
+     * @param {number[]|string[]|object[]} index - list of sprite index or name
      * defining the animation. Can also use objects to specify delay for each frame, see below
-     * @param {number} [animationspeed] cycling speed for animation in ms
+     * @param {number} [animationspeed] - cycling speed for animation in ms
      * @returns {number} frame amount of frame added to the animation (delay between each frame).
      * @see Sprite#animationspeed
      * @example
@@ -29508,9 +28364,9 @@ class Sprite extends Renderable {
      * this will always change the animation & set the frame to zero
      * @name setCurrentAnimation
      * @memberof Sprite
-     * @param {string} name animation id
-     * @param {string|Function} [resetAnim] animation id to switch to when complete, or callback
-     * @param {boolean} [preserve_dt=false] if false will reset the elapsed time counter since last frame
+     * @param {string} name - animation id
+     * @param {string|Function} [resetAnim] - animation id to switch to when complete, or callback
+     * @param {boolean} [preserve_dt=false] - if false will reset the elapsed time counter since last frame
      * @returns {Sprite} Reference to this object for method chaining
      * @example
      * // set "walk" animation
@@ -29568,7 +28424,7 @@ class Sprite extends Renderable {
      * reverse the given or current animation if none is specified
      * @name reverseAnimation
      * @memberof Sprite
-     * @param {string} [name] animation id
+     * @param {string} [name] - animation id
      * @returns {Sprite} Reference to this object for method chaining
      * @see Sprite#animationspeed
      */
@@ -29586,7 +28442,7 @@ class Sprite extends Renderable {
      * return true if the specified animation is the current one.
      * @name isCurrentAnimation
      * @memberof Sprite
-     * @param {string} name animation id
+     * @param {string} name - animation id
      * @returns {boolean}
      * @example
      * if (!this.isCurrentAnimation("walk")) {
@@ -29602,7 +28458,7 @@ class Sprite extends Renderable {
      * @see Texture.getRegion
      * @name setRegion
      * @memberof Sprite
-     * @param {object} region typically returned through me.Texture.getRegion()
+     * @param {object} region - typically returned through me.Texture.getRegion()
      * @returns {Sprite} Reference to this object for method chaining
      * @example
      * // change the sprite to "shadedDark13.png";
@@ -29633,7 +28489,7 @@ class Sprite extends Renderable {
      * force the current animation frame index.
      * @name setAnimationFrame
      * @memberof Sprite
-     * @param {number} [idx=0] animation frame index
+     * @param {number} [idx=0] - animation frame index
      * @returns {Sprite} Reference to this object for method chaining
      * @example
      * // reset the current animation to the first frame
@@ -29659,7 +28515,7 @@ class Sprite extends Renderable {
      * @name getAnimationFrameObjectByIndex
      * @memberof Sprite
      * @ignore
-     * @param {number} id the frame id
+     * @param {number} id - the frame id
      * @returns {number} if using number indices. Returns {object} containing frame data if using texture atlas
      */
     getAnimationFrameObjectByIndex(id) {
@@ -29672,7 +28528,7 @@ class Sprite extends Renderable {
      * @name update
      * @memberof Sprite
      * @protected
-     * @param {number} dt time since the last update in milliseconds.
+     * @param {number} dt - time since the last update in milliseconds.
      * @returns {boolean} true if the Sprite is dirty
      */
     update(dt) {
@@ -29739,7 +28595,7 @@ class Sprite extends Renderable {
      * @ignore
      */
     destroy() {
-        pool.push(this.offset);
+        pool$1.push(this.offset);
         this.offset = undefined;
         super.destroy();
     }
@@ -29749,8 +28605,8 @@ class Sprite extends Renderable {
      * @name draw
      * @memberof Sprite
      * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
-     * @param {Camera2d} [viewport] the viewport to (re)draw
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+     * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
     draw(renderer, viewport) {   // eslint-disable-line no-unused-vars
         // do nothing if we are flickering
@@ -29795,6 +28651,7 @@ class Sprite extends Renderable {
         );
     }
 }
+var Sprite$1 = Sprite;
 
 /**
  * create a simple 1 frame texture atlas based on the given parameters
@@ -29827,9 +28684,9 @@ function createAtlas(width, height, name = "default", repeat = "no-repeat") {
  */
 class TextureAtlas {
     /**
-     * @param {object|object[]} atlases atlas information. See {@link loader.getJSON}
-     * @param {HTMLImageElement|HTMLCanvasElement|string|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] Image source
-     * @param {boolean} [cache=false] Use true to skip caching this Texture
+     * @param {object|object[]} atlases - atlas information. See {@link loader.getJSON}
+     * @param {HTMLImageElement|HTMLCanvasElement|string|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] - Image source
+     * @param {boolean} [cache=false] - Use true to skip caching this Texture
      * @example
      * // create a texture atlas from a JSON Object
      * game.texture = new me.TextureAtlas(
@@ -29887,7 +28744,7 @@ class TextureAtlas {
                         // set the texture
                         if (typeof(src) === "undefined") {
                             // get the texture name from the atlas meta data
-                            var image = loader.getImage(atlas.meta.image);
+                            var image = loader$1.getImage(atlas.meta.image);
                             if (!image) {
                                 throw new Error(
                                     "Atlas texture '" + image + "' not found"
@@ -29895,7 +28752,7 @@ class TextureAtlas {
                             }
                             this.sources.set(atlas.meta.image, image);
                         } else {
-                            this.sources.set(atlas.meta.image || "default", typeof src === "string" ? loader.getImage(src) : src);
+                            this.sources.set(atlas.meta.image || "default", typeof src === "string" ? loader$1.getImage(src) : src);
                         }
                         this.repeat = "no-repeat";
                     }
@@ -29909,13 +28766,13 @@ class TextureAtlas {
                         }
                         this.format = "ShoeBox";
                         this.repeat = "no-repeat";
-                        this.sources.set("default", typeof src === "string" ? loader.getImage(src) : src);
+                        this.sources.set("default", typeof src === "string" ? loader$1.getImage(src) : src);
                     }
                     // Internal texture atlas
                     else if (atlas.meta.app.includes("melonJS")) {
                         this.format = "melonJS";
                         this.repeat = atlas.meta.repeat || "no-repeat";
-                        this.sources.set("default", typeof src === "string" ? loader.getImage(src) : src);
+                        this.sources.set("default", typeof src === "string" ? loader$1.getImage(src) : src);
                     }
                     // initialize the atlas
                     this.atlases.set(atlas.meta.image || "default", this.parse(atlas));
@@ -29929,7 +28786,7 @@ class TextureAtlas {
 
                         if (typeof(src) !== "undefined") {
                             // overwrite if specified
-                            atlas.image = typeof src === "string" ? loader.getImage(src) : src;
+                            atlas.image = typeof src === "string" ? loader$1.getImage(src) : src;
                         }
                         // initialize the atlas
                         this.atlases.set("default", this.parseFromSpriteSheet(atlas));
@@ -29948,7 +28805,7 @@ class TextureAtlas {
         // Add self to TextureCache if cache !== false
         if (cache !== false) {
             this.sources.forEach((source) => {
-                if (cache instanceof TextureCache) {
+                if (cache instanceof TextureCache$1) {
                     cache.set(source, this);
                 } else {
                     renderer.cache.set(source, this);
@@ -29981,8 +28838,8 @@ class TextureAtlas {
                 atlas[frame.filename] = {
                     name         : frame.filename, // frame name
                     texture      : data.meta.image || "default", // the source texture
-                    offset       : new Vector2d(s.x, s.y),
-                    anchorPoint  : (hasTextureAnchorPoint) ? new Vector2d(originX / s.w, originY / s.h) : null,
+                    offset       : new Vector2d$1(s.x, s.y),
+                    anchorPoint  : (hasTextureAnchorPoint) ? new Vector2d$1(originX / s.w, originY / s.h) : null,
                     trimmed      : !!frame.trimmed,
                     width        : s.w,
                     height       : s.h,
@@ -30008,7 +28865,7 @@ class TextureAtlas {
         var height = image.height;
 
         // calculate the sprite count (line, col)
-        var spritecount = pool.pull("Vector2d",
+        var spritecount = pool$1.pull("Vector2d",
             ~~((width - margin + spacing) / (data.framewidth + spacing)),
             ~~((height - margin + spacing) / (data.frameheight + spacing))
         );
@@ -30038,7 +28895,7 @@ class TextureAtlas {
             atlas[name] = {
                 name        : name,
                 texture     : "default", // the source texture
-                offset      : new Vector2d(
+                offset      : new Vector2d$1(
                     margin + (spacing + data.framewidth) * (frame % spritecount.x),
                     margin + (spacing + data.frameheight) * ~~(frame / spritecount.x)
                 ),
@@ -30051,14 +28908,14 @@ class TextureAtlas {
             this.addUVs(atlas, name, width, height);
         }
 
-        pool.push(spritecount);
+        pool$1.push(spritecount);
 
         return atlas;
     }
 
     /**
      * return the default or specified atlas dictionnary
-     * @param {string} [name] atlas name in case of multipack textures
+     * @param {string} [name] - atlas name in case of multipack textures
      * @returns {object}
      */
     getAtlas(name) {
@@ -30079,7 +28936,7 @@ class TextureAtlas {
 
     /**
      * return the source texture for the given region (or default one if none specified)
-     * @param {object} [region] region name in case of multipack textures
+     * @param {object} [region] - region name in case of multipack textures
      * @returns {HTMLImageElement|HTMLCanvasElement}
      */
     getTexture(region) {
@@ -30092,11 +28949,11 @@ class TextureAtlas {
 
     /**
      * add a region to the atlas
-     * @param {string} name region mame
-     * @param {number} x x origin of the region
-     * @param {number} y y origin of the region
-     * @param {number} w width of the region
-     * @param {number} h height of the region
+     * @param {string} name - region mame
+     * @param {number} x - x origin of the region
+     * @param {number} y - y origin of the region
+     * @param {number} w - width of the region
+     * @param {number} h - height of the region
      * @returns {object} the created region
      */
     addRegion(name, x, y, w, h) {
@@ -30112,7 +28969,7 @@ class TextureAtlas {
 
         atlas[name] = {
             name    : name,
-            offset  : new Vector2d(x, y),
+            offset  : new Vector2d$1(x, y),
             width   : w,
             height  : h,
             angle   : 0
@@ -30125,8 +28982,8 @@ class TextureAtlas {
 
     /**
      * return a normalized region (or frame) information for the specified sprite name
-     * @param {string} name name of the sprite
-     * @param {string} [atlas] name of a specific atlas where to search for the region
+     * @param {string} name - name of the sprite
+     * @param {string} [atlas] - name of a specific atlas where to search for the region
      * @returns {object}
      */
     getRegion(name, atlas) {
@@ -30147,7 +29004,7 @@ class TextureAtlas {
 
     /**
      * return the uvs mapping for the given region
-     * @param {object} name region (or frame) name
+     * @param {object} name - region (or frame) name
      * @returns {Float32Array} region Uvs
      */
     getUVs(name) {
@@ -30168,15 +29025,15 @@ class TextureAtlas {
 
     /**
      * add uvs mapping for the given region
-     * @param {object} atlas the atlas dictionnary where the region is define
-     * @param {object} name region (or frame) name
-     * @param {number} w the width of the region
-     * @param {number} h the height of the region
+     * @param {object} atlas - the atlas dictionnary where the region is define
+     * @param {object} name - region (or frame) name
+     * @param {number} w - the width of the region
+     * @param {number} h - the height of the region
      * @returns {Float32Array} the created region UVs
      */
     addUVs(atlas, name, w, h) {
         // ignore if using the Canvas Renderer
-        if (renderer instanceof WebGLRenderer) {
+        if (renderer instanceof WebGLRenderer$1) {
             // Source coordinates
             var s = atlas[name].offset;
             var sw = atlas[name].width;
@@ -30198,9 +29055,9 @@ class TextureAtlas {
 
     /**
      * Create a sprite object using the first region found using the specified name
-     * @param {string} name name of the sprite
-     * @param {object} [settings] Additional settings passed to the {@link Sprite} contructor
-     * @param {boolean} [nineSlice=false] if true returns a 9-slice sprite
+     * @param {string} name - name of the sprite
+     * @param {object} [settings] - Additional settings passed to the {@link Sprite} contructor
+     * @param {boolean} [nineSlice=false] - if true returns a 9-slice sprite
      * @returns {Sprite|NineSliceSprite}
      * @example
      * // create a new texture object under the `game` namespace
@@ -30226,7 +29083,7 @@ class TextureAtlas {
      */
     createSpriteFromName(name, settings, nineSlice = false) {
         // instantiate a new sprite object
-        return pool.pull(
+        return pool$1.pull(
             nineSlice === true ? "me.NineSliceSprite" : "me.Sprite",
             0, 0,
             Object.assign({
@@ -30238,9 +29095,9 @@ class TextureAtlas {
 
     /**
      * Create an animation object using the first region found using all specified names
-     * @param {string[]|number[]} names list of names for each sprite
+     * @param {string[]|number[]} names - list of names for each sprite
      * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)
-     * @param {object} [settings] Additional settings passed to the {@link Sprite} contructor
+     * @param {object} [settings] - Additional settings passed to the {@link Sprite} contructor
      * @returns {Sprite}
      * @example
      * // create a new texture object under the `game` namespace
@@ -30286,7 +29143,7 @@ class TextureAtlas {
             height = Math.max(region.height, height);
         }
         // instantiate a new animation sheet object
-        return new Sprite(0, 0, Object.assign({
+        return new Sprite$1(0, 0, Object.assign({
             image: this,
             framewidth: width,
             frameheight: height,
@@ -30873,28 +29730,29 @@ class TextureCache {
         return this.units.get(texture);
     }
 }
+var TextureCache$1 = TextureCache;
 
 /**
  * @classdesc
  * a WebGL renderer object
  * @augments Renderer
  */
-class WebGLRenderer extends Renderer {
+class WebGLRenderer extends Renderer$1 {
     /**
-     * @param {object} options The renderer parameters
-     * @param {number} options.width The width of the canvas without scaling
-     * @param {number} options.height The height of the canvas without scaling
-     * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
-     * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing
-     * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
-     * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas
-     * @param {boolean} [options.premultipliedAlpha=true] in WebGL, whether the renderer will assume that colors have premultiplied alpha when canvas transparency is enabled
-     * @param {boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
-     * @param {boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
-     * @param {string} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
-     * @param {number} [options.zoomX=width] The actual width of the canvas with scaling applied
-     * @param {number} [options.zoomY=height] The actual height of the canvas with scaling applied
-     * @param {WebGLCompositor} [options.compositor] A class that implements the compositor API
+     * @param {object} options - The renderer parameters
+     * @param {number} options.width - The width of the canvas without scaling
+     * @param {number} options.height - The height of the canvas without scaling
+     * @param {HTMLCanvasElement} [options.canvas] - The html canvas to draw to on screen
+     * @param {boolean} [options.antiAlias=false] - Whether to enable anti-aliasing
+     * @param {boolean} [options.failIfMajorPerformanceCaveat=true] - If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
+     * @param {boolean} [options.transparent=false] - Whether to enable transparency on the canvas
+     * @param {boolean} [options.premultipliedAlpha=true] - in WebGL, whether the renderer will assume that colors have premultiplied alpha when canvas transparency is enabled
+     * @param {boolean} [options.subPixel=false] - Whether to enable subpixel renderering (performance hit when enabled)
+     * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
+     * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
+     * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
+     * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
+     * @param {WebGLCompositor} [options.compositor] - A class that implements the compositor API
      */
     constructor(options) {
 
@@ -30963,7 +29821,7 @@ class WebGLRenderer extends Renderer {
          * The current transformation matrix used for transformations on the overall scene
          * @type {Matrix2d}
          */
-        this.currentTransform = new Matrix2d();
+        this.currentTransform = new Matrix2d$1();
 
         /**
          * The current compositor used by the renderer
@@ -30978,7 +29836,7 @@ class WebGLRenderer extends Renderer {
         this.compositors = new Map();
 
         // Create a default compositor
-        var compositor = new (this.settings.compositor || WebGLCompositor)(this);
+        var compositor = new (this.settings.compositor || WebGLCompositor$1)(this);
         this.compositors.set("default", compositor);
         this.setCompositor(compositor);
 
@@ -30999,7 +29857,7 @@ class WebGLRenderer extends Renderer {
         }
 
         // Create a texture cache
-        this.cache = new TextureCache(this.maxTextures);
+        this.cache = new TextureCache$1(this.maxTextures);
 
         // to simulate context lost and restore in WebGL:
         // var ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');
@@ -31041,7 +29899,7 @@ class WebGLRenderer extends Renderer {
 
     /**
      * set the active compositor for this renderer
-     * @param {WebGLCompositor|string} compositor a compositor name or instance
+     * @param {WebGLCompositor|string} compositor - a compositor name or instance
      */
     setCompositor(compositor = "default") {
 
@@ -31109,8 +29967,8 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Create a pattern with the specified repetition
-     * @param {Image} image Source image
-     * @param {string} repeat Define how the pattern should be repeated
+     * @param {Image} image - Source image
+     * @param {string} repeat - Define how the pattern should be repeated
      * @returns {TextureAtlas}
      * @see ImageLayer#repeat
      * @example
@@ -31162,19 +30020,19 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Clears the gl context with the given color.
-     * @param {Color|string} [color="#000000"] CSS color.
-     * @param {boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
+     * @param {Color|string} [color="#000000"] - CSS color.
+     * @param {boolean} [opaque=false] - Allow transparency [default] or clear the surface completely [true]
      */
     clearColor(color = "#000000", opaque = false) {
         var glArray;
 
-        if (color instanceof Color) {
+        if (color instanceof Color$1) {
             glArray = color.toArray();
         } else {
-            var _color = pool.pull("me.Color");
+            var _color = pool$1.pull("me.Color");
             // reuse temporary the renderer default color object
             glArray = _color.parseCSS(color).toArray();
-            pool.push(_color);
+            pool$1.push(_color);
         }
         // clear gl context with the specified color
         this.currentCompositor.clearColor(glArray[0], glArray[1], glArray[2], (opaque === true) ? 1.0 : glArray[3]);
@@ -31182,10 +30040,10 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
-     * @param {number} x x axis of the coordinate for the rectangle starting point.
-     * @param {number} y y axis of the coordinate for the rectangle starting point.
-     * @param {number} width The rectangle's width.
-     * @param {number} height The rectangle's height.
+     * @param {number} x - x axis of the coordinate for the rectangle starting point.
+     * @param {number} y - y axis of the coordinate for the rectangle starting point.
+     * @param {number} width - The rectangle's width.
+     * @param {number} height - The rectangle's height.
      */
     clearRect(x, y, width, height) {
         this.save();
@@ -31229,15 +30087,15 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Draw an image to the gl context
-     * @param {Image} image An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
-     * @param {number} sx The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
-     * @param {number} sy The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
-     * @param {number} sw The width of the sub-rectangle of the source image to draw into the destination context. If not specified, the entire rectangle from the coordinates specified by sx and sy to the bottom-right corner of the image is used.
-     * @param {number} sh The height of the sub-rectangle of the source image to draw into the destination context.
-     * @param {number} dx The X coordinate in the destination canvas at which to place the top-left corner of the source image.
-     * @param {number} dy The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
-     * @param {number} dw The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
-     * @param {number} dh The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
+     * @param {Image} image - An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
+     * @param {number} sx - The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
+     * @param {number} sy - The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
+     * @param {number} sw - The width of the sub-rectangle of the source image to draw into the destination context. If not specified, the entire rectangle from the coordinates specified by sx and sy to the bottom-right corner of the image is used.
+     * @param {number} sh - The height of the sub-rectangle of the source image to draw into the destination context.
+     * @param {number} dx - The X coordinate in the destination canvas at which to place the top-left corner of the source image.
+     * @param {number} dy - The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
+     * @param {number} dw - The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
+     * @param {number} dh - The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
      * @example
      * // Position the image on the canvas:
      * renderer.drawImage(image, dx, dy);
@@ -31279,7 +30137,7 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Draw a pattern within the given rectangle.
-     * @param {TextureAtlas} pattern Pattern object
+     * @param {TextureAtlas} pattern - Pattern object
      * @param {number} x
      * @param {number} y
      * @param {number} width
@@ -31294,7 +30152,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Returns the WebGL Context object of the given canvas element
      * @param {HTMLCanvasElement} canvas
-     * @param {boolean} [transparent=false] use true to enable transparency
+     * @param {boolean} [transparent=false] - use true to enable transparency
      * @returns {WebGLRenderingContext}
      */
     getContextGL(canvas, transparent = false) {
@@ -31362,7 +30220,7 @@ class WebGLRenderer extends Renderer {
      * - "screen" : The pixels are inverted, multiplied, and inverted again. A lighter picture is the result (opposite of multiply) <br>
      * <img src="images/screen-blendmode.png" width="510"/> <br>
      * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
-     * @param {string} [mode="normal"] blend mode : "normal", "multiply", "lighter", "additive", "screen"
+     * @param {string} [mode="normal"] - blend mode : "normal", "multiply", "lighter", "additive", "screen"
      * @param {WebGLRenderingContext} [gl]
      */
     setBlendMode(mode = "normal", gl = this.gl) {
@@ -31424,8 +30282,8 @@ class WebGLRenderer extends Renderer {
             this.setBlendMode(this._blendStack.pop());
 
             // recycle objects
-            pool.push(color);
-            pool.push(matrix);
+            pool$1.push(color);
+            pool$1.push(matrix);
         }
 
         if (this._scissorStack.length !== 0) {
@@ -31458,7 +30316,7 @@ class WebGLRenderer extends Renderer {
 
     /**
      * rotates the uniform matrix
-     * @param {number} angle in radians
+     * @param {number} angle - in radians
      */
     rotate(angle) {
         this.currentTransform.rotate(angle);
@@ -31484,7 +30342,7 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Set the global alpha
-     * @param {number} alpha 0.0 to 1.0 values accepted.
+     * @param {number} alpha - 0.0 to 1.0 values accepted.
      */
     setGlobalAlpha(alpha) {
         this.currentColor.alpha = alpha;
@@ -31501,7 +30359,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Set the current fill & stroke style color.
      * By default, or upon reset, the value is set to #000000.
-     * @param {Color|string} color css color string.
+     * @param {Color|string} color - css color string.
      */
     setColor(color) {
         var alpha = this.currentColor.alpha;
@@ -31511,7 +30369,7 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Set the line width
-     * @param {number} width Line width
+     * @param {number} width - Line width
      */
     setLineWidth(width) {
         this.getContext().lineWidth(width);
@@ -31519,12 +30377,12 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Stroke an arc at the specified coordinates with given radius, start and end points
-     * @param {number} x arc center point x-axis
-     * @param {number} y arc center point y-axis
+     * @param {number} x - arc center point x-axis
+     * @param {number} y - arc center point y-axis
      * @param {number} radius
-     * @param {number} start start angle in radians
-     * @param {number} end end angle in radians
-     * @param {boolean} [antiClockwise=false] draw arc anti-clockwise
+     * @param {number} start - start angle in radians
+     * @param {number} end - end angle in radians
+     * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
      * @param {boolean} [fill=false]
      */
     strokeArc(x, y, radius, start, end, antiClockwise = false, fill = false) {
@@ -31544,12 +30402,12 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Fill an arc at the specified coordinates with given radius, start and end points
-     * @param {number} x arc center point x-axis
-     * @param {number} y arc center point y-axis
+     * @param {number} x - arc center point x-axis
+     * @param {number} y - arc center point y-axis
      * @param {number} radius
-     * @param {number} start start angle in radians
-     * @param {number} end end angle in radians
-     * @param {boolean} [antiClockwise=false] draw arc anti-clockwise
+     * @param {number} start - start angle in radians
+     * @param {number} end - end angle in radians
+     * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
      */
     fillArc(x, y, radius, start, end, antiClockwise = false) {
         this.strokeArc(x, y, radius, start, end, antiClockwise, true);
@@ -31557,11 +30415,11 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Stroke an ellipse at the specified coordinates with given radius
-     * @param {number} x ellipse center point x-axis
-     * @param {number} y ellipse center point y-axis
-     * @param {number} w horizontal radius of the ellipse
-     * @param {number} h vertical radius of the ellipse
-     * @param {boolean} [fill=false] also fill the shape with the current color if true
+     * @param {number} x - ellipse center point x-axis
+     * @param {number} y - ellipse center point y-axis
+     * @param {number} w - horizontal radius of the ellipse
+     * @param {number} h - vertical radius of the ellipse
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeEllipse(x, y, w, h, fill = false) {
         if (this.getGlobalAlpha() < 1 / 255) {
@@ -31580,10 +30438,10 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Fill an ellipse at the specified coordinates with given radius
-     * @param {number} x ellipse center point x-axis
-     * @param {number} y ellipse center point y-axis
-     * @param {number} w horizontal radius of the ellipse
-     * @param {number} h vertical radius of the ellipse
+     * @param {number} x - ellipse center point x-axis
+     * @param {number} y - ellipse center point y-axis
+     * @param {number} w - horizontal radius of the ellipse
+     * @param {number} h - vertical radius of the ellipse
      */
     fillEllipse(x, y, w, h) {
         this.strokeEllipse(x, y, w, h, false);
@@ -31591,10 +30449,10 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Stroke a line of the given two points
-     * @param {number} startX the start x coordinate
-     * @param {number} startY the start y coordinate
-     * @param {number} endX the end x coordinate
-     * @param {number} endY the end y coordinate
+     * @param {number} startX - the start x coordinate
+     * @param {number} startY - the start y coordinate
+     * @param {number} endX - the end x coordinate
+     * @param {number} endY - the end y coordinate
      */
     strokeLine(startX, startY, endX, endY) {
         if (this.getGlobalAlpha() < 1 / 255) {
@@ -31610,10 +30468,10 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Fill a line of the given two points
-     * @param {number} startX the start x coordinate
-     * @param {number} startY the start y coordinate
-     * @param {number} endX the end x coordinate
-     * @param {number} endY the end y coordinate
+     * @param {number} startX - the start x coordinate
+     * @param {number} startY - the start y coordinate
+     * @param {number} endX - the end x coordinate
+     * @param {number} endY - the end y coordinate
      */
     fillLine(startX, startY, endX, endY) {
         this.strokeLine(startX, startY, endX, endY);
@@ -31621,8 +30479,8 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Stroke a me.Polygon on the screen with a specified color
-     * @param {Polygon} poly the shape to draw
-     * @param {boolean} [fill=false] also fill the shape with the current color if true
+     * @param {Polygon} poly - the shape to draw
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokePolygon(poly, fill = false) {
         if (this.getGlobalAlpha() < 1 / 255) {
@@ -31650,7 +30508,7 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Fill a me.Polygon on the screen
-     * @param {Polygon} poly the shape to draw
+     * @param {Polygon} poly - the shape to draw
      */
     fillPolygon(poly) {
         this.strokePolygon(poly, true);
@@ -31662,7 +30520,7 @@ class WebGLRenderer extends Renderer {
      * @param {number} y
      * @param {number} width
      * @param {number} height
-     * @param {boolean} [fill=false] also fill the shape with the current color if true
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeRect(x, y, width, height, fill = false) {
         if (this.getGlobalAlpha() < 1 / 255) {
@@ -31696,7 +30554,7 @@ class WebGLRenderer extends Renderer {
      * @param {number} width
      * @param {number} height
      * @param {number} radius
-     * @param {boolean} [fill=false] also fill the shape with the current color if true
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeRoundRect(x, y, width, height, radius, fill = false) {
         if (this.getGlobalAlpha() < 1 / 255) {
@@ -31748,7 +30606,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.
-     * @param {Matrix2d} mat2d Matrix to transform by
+     * @param {Matrix2d} mat2d - Matrix to transform by
      */
     setTransform(mat2d) {
         this.resetTransform();
@@ -31757,7 +30615,7 @@ class WebGLRenderer extends Renderer {
 
     /**
      * Multiply given matrix into the renderer tranformation matrix
-     * @param {Matrix2d} mat2d Matrix to transform by
+     * @param {Matrix2d} mat2d - Matrix to transform by
      */
     transform(mat2d) {
         var currentTransform = this.currentTransform;
@@ -31837,8 +30695,8 @@ class WebGLRenderer extends Renderer {
      * A mask limits rendering elements to the shape and position of the given mask object.
      * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
      * Mask are not preserved through renderer context save and restore.
-     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] a shape defining the mask to be applied
-     * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - a shape defining the mask to be applied
+     * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
      */
     setMask(mask, invert = false) {
         var gl = this.gl;
@@ -31889,6 +30747,7 @@ class WebGLRenderer extends Renderer {
         }
     }
 }
+var WebGLRenderer$1 = WebGLRenderer;
 
 /**
  * video functions
@@ -31925,12 +30784,12 @@ var settings = {
 function autoDetectRenderer(options) {
     try {
         if (isWebGLSupported(options)) {
-            return new WebGLRenderer(options);
+            return new WebGLRenderer$1(options);
         }
     } catch (e) {
         console.log("Error creating WebGL renderer :" + e.message);
     }
-    return new CanvasRenderer(options);
+    return new CanvasRenderer$1(options);
 }
 
 /**
@@ -32049,7 +30908,7 @@ let parent = null;
  * @default <1,1>
  * @memberof video
  */
-let scaleRatio = new Vector2d(1, 1);
+let scaleRatio = new Vector2d$1(1, 1);
 
  /**
   * A reference to the active Canvas or WebGL active renderer renderer
@@ -32077,18 +30936,18 @@ let renderer = null;
  *  - <i><b>`stretch`</b></i> : Canvas is resized to fit; content is scaled to screen aspect ratio
  * <center><img src="images/scale-stretch.png"/></center><br>
  * @function video.init
- * @param {number} width The width of the canvas viewport
- * @param {number} height The height of the canvas viewport
- * @param {object} [options] The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
- * @param {string|HTMLElement} [options.parent=document.body] the DOM parent element to hold the canvas in the HTML file
- * @param {number} [options.renderer=video.AUTO] renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
- * @param {number|string} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
- * @param {string} [options.scaleMethod="fit"] screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
- * @param {boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
- * @param {string} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
- * @param {boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen).
- * @param {boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
- * @param {boolean} [options.consoleHeader=true] whether to display melonJS version and basic device information in the console
+ * @param {number} width - The width of the canvas viewport
+ * @param {number} height - The height of the canvas viewport
+ * @param {object} [options] - The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
+ * @param {string|HTMLElement} [options.parent=document.body] - the DOM parent element to hold the canvas in the HTML file
+ * @param {number} [options.renderer=video.AUTO] - renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
+ * @param {number|string} [options.scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)
+ * @param {string} [options.scaleMethod="fit"] - screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
+ * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
+ * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
+ * @param {boolean} [options.transparent=false] - whether to allow transparent pixels in the front buffer (screen).
+ * @param {boolean} [options.antiAlias=false] - whether to enable or not video scaling interpolation
+ * @param {boolean} [options.consoleHeader=true] - whether to display melonJS version and basic device information in the console
  * @returns {boolean} false if initialization failed (canvas not supported)
  * @example
  * // init the video with a 640x480 canvas
@@ -32132,7 +30991,7 @@ function init(width, height, options) {
     }
 
     // override renderer settings if &webgl or &canvas is defined in the URL
-    var uriFragment = utils.getUriFragment();
+    var uriFragment = utils$1.getUriFragment();
     if (uriFragment.webgl === true || uriFragment.webgl1 === true || uriFragment.webgl2 === true) {
         settings.renderer = WEBGL;
         if (uriFragment.webgl1 === true) {
@@ -32158,7 +31017,7 @@ function init(width, height, options) {
     //add a channel for the onresize/onorientationchange event
     globalThis.addEventListener(
         "resize",
-        utils.function.throttle(
+        utils$1.function.throttle(
             (e) => {
                 emit(WINDOW_ONRESIZE, e);
             }, 100
@@ -32189,7 +31048,7 @@ function init(width, height, options) {
     }
 
     // Automatically update relative canvas position on scroll
-    globalThis.addEventListener("scroll", utils.function.throttle((e) => {
+    globalThis.addEventListener("scroll", utils$1.function.throttle((e) => {
         emit(WINDOW_ONSCROLL, e);
     }, 100), false);
 
@@ -32204,7 +31063,7 @@ function init(width, height, options) {
                 renderer = autoDetectRenderer(settings);
                 break;
             default:
-                renderer = new CanvasRenderer(settings);
+                renderer = new CanvasRenderer$1(settings);
                 break;
         }
     } catch (e) {
@@ -32238,7 +31097,7 @@ function init(width, height, options) {
     }
 
     if (settings.consoleHeader !== false) {
-        var renderType = (renderer instanceof CanvasRenderer) ? "CANVAS" : "WebGL" + renderer.WebGLVersion;
+        var renderType = (renderer instanceof CanvasRenderer$1) ? "CANVAS" : "WebGL" + renderer.WebGLVersion;
         var audioType = hasWebAudio ? "Web Audio" : "HTML5 Audio";
         var gpu_renderer = (typeof renderer.GPURenderer === "string") ? " (" + renderer.GPURenderer + ")" : "";
         // output video information in the console
@@ -32264,9 +31123,9 @@ function init(width, height, options) {
 /**
  * Create and return a new Canvas element
  * @function video.createCanvas
- * @param {number} width width
- * @param {number} height height
- * @param {boolean} [returnOffscreenCanvas=false] will return an OffscreenCanvas if supported
+ * @param {number} width - width
+ * @param {number} height - height
+ * @param {boolean} [returnOffscreenCanvas=false] - will return an OffscreenCanvas if supported
  * @returns {HTMLCanvasElement|OffscreenCanvas}
  */
 function createCanvas(width, height, returnOffscreenCanvas = false) {
@@ -32308,8 +31167,8 @@ function getParent() {
  * Only use this if you are not using the automatic scaling feature.
  * @function video.scale
  * @see video.init
- * @param {number} x x scaling multiplier
- * @param {number} y y scaling multiplier
+ * @param {number} x - x scaling multiplier
+ * @param {number} y - y scaling multiplier
  */
 function scale(x, y) {
     var canvas = renderer.getCanvas();
@@ -32332,7 +31191,7 @@ function scale(x, y) {
     renderer.setBlendMode(settings.blendMode, context);
 
     // force repaint
-    game.repaint();
+    game$1.repaint();
 }
 
 var video = /*#__PURE__*/Object.freeze({
@@ -32371,12 +31230,12 @@ var utils = {
      * @public
      * @memberof utils
      * @name getPixels
-     * @param {HTMLImageElement|HTMLCanvasElement} image Image to read
+     * @param {HTMLImageElement|HTMLCanvasElement} image - Image to read
      * @returns {ImageData} ImageData object
      */
     getPixels : function (image) {
         if (image instanceof HTMLImageElement) {
-            var _context = CanvasRenderer.getContext2d(
+            var _context = CanvasRenderer$1.getContext2d(
                 createCanvas(image.width, image.height)
             );
             _context.drawImage(image, 0, 0);
@@ -32393,8 +31252,8 @@ var utils = {
      * @public
      * @memberof utils
      * @name checkVersion
-     * @param {string} first First version string to compare
-     * @param {string} [second=version] Second version string to compare
+     * @param {string} first - First version string to compare
+     * @param {string} [second=version] - Second version string to compare
      * @returns {number} comparison result <br>&lt; 0 : first &lt; second<br>
      * 0 : first == second<br>
      * &gt; 0 : first &gt; second
@@ -32425,7 +31284,7 @@ var utils = {
      * @public
      * @memberof utils
      * @name getUriFragment
-     * @param {string} [url=document.location] an optional params string or URL containing fragment (hash) params to be parsed
+     * @param {string} [url=document.location] - an optional params string or URL containing fragment (hash) params to be parsed
      * @returns {object} an object representing the deserialized params string.
      * @property {boolean} [hitbox=false] draw the hitbox in the debug panel (if enabled)
      * @property {boolean} [velocity=false] draw the entities velocity in the debug panel (if enabled)
@@ -32501,6 +31360,8 @@ var utils = {
         return GUID_base + "-" + (index || GUID_index);
     }
 };
+
+var utils$1 = utils;
 
 /**
  * @classdesc
@@ -32604,10 +31465,10 @@ class Timer {
 
     /**
      * Calls a function once after a specified delay. See me.timer.setInterval to repeativly call a function.
-     * @param {Function} fn the function you want to execute after delay milliseconds.
-     * @param {number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
-     * @param {boolean} [pauseable=true] respects the pause state of the engine.
-     * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
+     * @param {Function} fn - the function you want to execute after delay milliseconds.
+     * @param {number} delay - the number of milliseconds (thousandths of a second) that the function call should be delayed by.
+     * @param {boolean} [pauseable=true] - respects the pause state of the engine.
+     * @param {...*} args - optional parameters which are passed through to the function specified by fn once the timer expires.
      * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
      * @example
      * // set a timer to call "myFunction" after 1000ms
@@ -32630,10 +31491,10 @@ class Timer {
 
     /**
      * Calls a function continously at the specified interval.  See setTimeout to call function a single time.
-     * @param {Function} fn the function to execute
-     * @param {number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
-     * @param {boolean} [pauseable=true] respects the pause state of the engine.
-     * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
+     * @param {Function} fn - the function to execute
+     * @param {number} delay - the number of milliseconds (thousandths of a second) on how often to execute the function
+     * @param {boolean} [pauseable=true] - respects the pause state of the engine.
+     * @param {...*} args - optional parameters which are passed through to the function specified by fn once the timer expires.
      * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
      * @example
      * // set a timer to call "myFunction" every 1000ms
@@ -32656,18 +31517,18 @@ class Timer {
 
     /**
      * Clears the delay set by me.timer.setTimeout().
-     * @param {number} timeoutID ID of the timeout to be cleared
+     * @param {number} timeoutID - ID of the timeout to be cleared
      */
     clearTimeout(timeoutID) {
-        utils.function.defer(this.clearTimer.bind(this), this, timeoutID);
+        utils$1.function.defer(this.clearTimer.bind(this), this, timeoutID);
     }
 
     /**
      * Clears the Interval set by me.timer.setInterval().
-     * @param {number} intervalID ID of the interval to be cleared
+     * @param {number} intervalID - ID of the interval to be cleared
      */
     clearInterval(intervalID) {
-        utils.function.defer(this.clearTimer.bind(this), this, intervalID);
+        utils$1.function.defer(this.clearTimer.bind(this), this, intervalID);
     }
 
     /**
@@ -32742,7 +31603,7 @@ class Timer {
     updateTimers() {
         for (var i = 0, len = this.timers.length; i < len; i++) {
             var _timer = this.timers[i];
-            if (!(_timer.pauseable && state.isPaused())) {
+            if (!(_timer.pauseable && state$1.isPaused())) {
                 _timer.elapsed += this.delta;
             }
             if (_timer.elapsed >= _timer.delay) {
@@ -32759,279 +31620,21 @@ class Timer {
 
 const timer = new Timer();
 
-var lastTime = 0;
-var vendors = ["ms", "moz", "webkit", "o"];
-var x;
-
-// standardized functions
-// https://developer.mozilla.org/fr/docs/Web/API/Window/requestAnimationFrame
-var requestAnimationFrame = globalThis.requestAnimationFrame;
-var cancelAnimationFrame = globalThis.cancelAnimationFrame;
-
-// get prefixed rAF and cAF is standard one not supported
-for (x = 0; x < vendors.length && !requestAnimationFrame; ++x) {
-    requestAnimationFrame = globalThis[vendors[x] + "RequestAnimationFrame"];
-}
-for (x = 0; x < vendors.length && !cancelAnimationFrame; ++x) {
-    cancelAnimationFrame = globalThis[vendors[x] + "CancelAnimationFrame"] ||
-                           globalThis[vendors[x] + "CancelRequestAnimationFrame"];
-}
-
-if (!requestAnimationFrame || !cancelAnimationFrame) {
-    requestAnimationFrame = function (callback) {
-        var currTime = globalThis.performance.now();
-        var timeToCall = Math.max(0, (1000 / timer.maxfps) - (currTime - lastTime));
-        var id = globalThis.setTimeout(() => {
-            callback(currTime + timeToCall);
-        }, timeToCall);
-        lastTime = currTime + timeToCall;
-        return id;
-    };
-
-    cancelAnimationFrame = function (id) {
-        globalThis.clearTimeout(id);
-    };
-
-    // put back in global namespace
-    globalThis.requestAnimationFrame = requestAnimationFrame;
-    globalThis.cancelAnimationFrame = cancelAnimationFrame;
-}
-
-/*
- * based on https://www.npmjs.com/package/canvas-roundrect-polyfill
- * @version 0.0.1
+/**
+ * the default global Timer instance
+ * @namespace timer
+ * @see Timer
+ * @example
+ * // set a timer to call "myFunction" after 1000ms
+ * timer.setTimeout(myFunction, 1000);
+ * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
+ * timer.setTimeout(myFunction, 1000, true, param1, param2);
+ * // set a timer to call "myFunction" every 1000ms
+ * timer.setInterval(myFunction, 1000);
+ * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
+ * timer.setInterval(myFunction, 1000, true, param1, param2);
  */
-(() => {
-
-  /** @ignore */
-  function roundRect(x, y, w, h, radii) {
-
-    if (!([x, y, w, h].every((input) => Number.isFinite(input)))) {
-
-      return;
-
-    }
-
-    radii = parseRadiiArgument(radii);
-
-    let upperLeft, upperRight, lowerRight, lowerLeft;
-
-    if (radii.length === 4) {
-
-      upperLeft = toCornerPoint(radii[0]);
-      upperRight = toCornerPoint(radii[1]);
-      lowerRight = toCornerPoint(radii[2]);
-      lowerLeft = toCornerPoint(radii[3]);
-
-    } else if (radii.length === 3) {
-
-      upperLeft = toCornerPoint(radii[0]);
-      upperRight = toCornerPoint(radii[1]);
-      lowerLeft = toCornerPoint(radii[1]);
-      lowerRight = toCornerPoint(radii[2]);
-
-    } else if (radii.length === 2) {
-
-      upperLeft = toCornerPoint(radii[0]);
-      lowerRight = toCornerPoint(radii[0]);
-      upperRight = toCornerPoint(radii[1]);
-      lowerLeft = toCornerPoint(radii[1]);
-
-    } else if (radii.length === 1) {
-
-      upperLeft = toCornerPoint(radii[0]);
-      upperRight = toCornerPoint(radii[0]);
-      lowerRight = toCornerPoint(radii[0]);
-      lowerLeft = toCornerPoint(radii[0]);
-
-    } else {
-
-      throw new Error(radii.length + " is not a valid size for radii sequence.");
-
-    }
-
-    const corners = [upperLeft, upperRight, lowerRight, lowerLeft];
-    const negativeCorner = corners.find(({x, y}) => x < 0 || y < 0);
-    //const negativeValue = negativeCorner?.x < 0 ? negativeCorner.x : negativeCorner?.y
-
-    if (corners.some(({x, y}) => !Number.isFinite(x) || !Number.isFinite(y))) {
-
-      return;
-
-    }
-
-    if (negativeCorner) {
-
-      throw new Error("Radius value " + negativeCorner + " is negative.");
-
-    }
-
-    fixOverlappingCorners(corners);
-
-    if (w < 0 && h < 0) {
-
-      this.moveTo(x - upperLeft.x, y);
-      this.ellipse(x + w + upperRight.x, y - upperRight.y, upperRight.x, upperRight.y, 0, -Math.PI * 1.5, -Math.PI);
-      this.ellipse(x + w + lowerRight.x, y + h + lowerRight.y, lowerRight.x, lowerRight.y, 0, -Math.PI, -Math.PI / 2);
-      this.ellipse(x - lowerLeft.x, y + h + lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, -Math.PI / 2, 0);
-      this.ellipse(x - upperLeft.x, y - upperLeft.y, upperLeft.x, upperLeft.y, 0, 0, -Math.PI / 2);
-
-    } else if (w < 0) {
-
-      this.moveTo(x - upperLeft.x, y);
-      this.ellipse(x + w + upperRight.x, y + upperRight.y, upperRight.x, upperRight.y, 0, -Math.PI / 2, -Math.PI, 1);
-      this.ellipse(x + w + lowerRight.x, y + h - lowerRight.y, lowerRight.x, lowerRight.y, 0, -Math.PI, -Math.PI * 1.5, 1);
-      this.ellipse(x - lowerLeft.x, y + h - lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, Math.PI / 2, 0, 1);
-      this.ellipse(x - upperLeft.x, y + upperLeft.y, upperLeft.x, upperLeft.y, 0, 0, -Math.PI / 2, 1);
-
-    } else if (h < 0) {
-
-      this.moveTo(x + upperLeft.x, y);
-      this.ellipse(x + w - upperRight.x, y - upperRight.y, upperRight.x, upperRight.y, 0, Math.PI / 2, 0, 1);
-      this.ellipse(x + w - lowerRight.x, y + h + lowerRight.y, lowerRight.x, lowerRight.y, 0, 0, -Math.PI / 2, 1);
-      this.ellipse(x + lowerLeft.x, y + h + lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, -Math.PI / 2, -Math.PI, 1);
-      this.ellipse(x + upperLeft.x, y - upperLeft.y, upperLeft.x, upperLeft.y, 0, -Math.PI, -Math.PI * 1.5, 1);
-
-    } else {
-
-      this.moveTo(x + upperLeft.x, y);
-      this.ellipse(x + w - upperRight.x, y + upperRight.y, upperRight.x, upperRight.y, 0, -Math.PI / 2, 0);
-      this.ellipse(x + w - lowerRight.x, y + h - lowerRight.y, lowerRight.x, lowerRight.y, 0, 0, Math.PI / 2);
-      this.ellipse(x + lowerLeft.x, y + h - lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, Math.PI / 2, Math.PI);
-      this.ellipse(x + upperLeft.x, y + upperLeft.y, upperLeft.x, upperLeft.y, 0, Math.PI, Math.PI * 1.5);
-
-    }
-
-    this.closePath();
-    this.moveTo(x, y);
-
-    /** @ignore */
-    function toDOMPointInit(value) {
-
-      const {x, y, z, w} = value;
-      return {x, y, z, w};
-
-    }
-
-    /** @ignore */
-    function parseRadiiArgument(value) {
-
-      // https://webidl.spec.whatwg.org/#es-union
-      // with 'optional (unrestricted double or DOMPointInit
-      //   or sequence<(unrestricted double or DOMPointInit)>) radii = 0'
-      const type = typeof value;
-
-      if (type === "undefined" || value === null) {
-
-        return [0];
-
-      }
-      if (type === "function") {
-
-        return [NaN];
-
-      }
-      if (type === "object") {
-
-        if (typeof value[Symbol.iterator] === "function") {
-
-          return [...value].map((elem) => {
-            // https://webidl.spec.whatwg.org/#es-union
-            // with '(unrestricted double or DOMPointInit)'
-            const elemType = typeof elem;
-            if (elemType === "undefined" || elem === null) {
-              return 0;
-            }
-            if (elemType === "function") {
-              return NaN;
-            }
-            if (elemType === "object") {
-              return toDOMPointInit(elem);
-            }
-            return toUnrestrictedNumber(elem);
-          });
-
-        }
-
-        return [toDOMPointInit(value)];
-
-      }
-
-      return [toUnrestrictedNumber(value)];
-
-    }
-
-    /** @ignore */
-    function toUnrestrictedNumber(value) {
-
-      return +value;
-
-    }
-
-    /** @ignore */
-    function toCornerPoint(value) {
-
-      const asNumber = toUnrestrictedNumber(value);
-      if (Number.isFinite(asNumber)) {
-
-        return {
-          x: asNumber,
-          y: asNumber
-        };
-
-      }
-      if (Object(value) === value) {
-
-        return {
-          x: toUnrestrictedNumber(value.x || 0),
-          y: toUnrestrictedNumber(value.y || 0)
-        };
-
-      }
-
-      return {
-        x: NaN,
-        y: NaN
-      };
-
-    }
-
-    /** @ignore */
-    function fixOverlappingCorners(corners) {
-      const [upperLeft, upperRight, lowerRight, lowerLeft] = corners;
-      const factors = [
-        Math.abs(w) / (upperLeft.x + upperRight.x),
-        Math.abs(h) / (upperRight.y + lowerRight.y),
-        Math.abs(w) / (lowerRight.x + lowerLeft.x),
-        Math.abs(h) / (upperLeft.y + lowerLeft.y)
-      ];
-      const minFactor = Math.min(...factors);
-      if (minFactor <= 1) {
-        corners.forEach((radii) => {
-            radii.x *= minFactor;
-            radii.y *= minFactor;
-        });
-      }
-    }
-  }
-
-  if (globalThis.CanvasRenderingContext2D) {
-    if (typeof globalThis.Path2D.prototype.roundRect === "undefined") {
-        globalThis.Path2D.prototype.roundRect = roundRect;
-    }
-  }
-  if (globalThis.CanvasRenderingContext2D) {
-    if (typeof globalThis.CanvasRenderingContext2D.prototype.roundRect === "undefined") {
-        globalThis.CanvasRenderingContext2D.prototype.roundRect = roundRect;
-    }
-  }
-  if (globalThis.OffscreenCanvasRenderingContext2D) {
-    if (typeof globalThis.OffscreenCanvasRenderingContext2D.prototype.roundRect === "undefined") {
-        globalThis.OffscreenCanvasRenderingContext2D.prototype.roundRect = roundRect;
-    }
-  }
-
-})();
+var timer$1 = timer;
 
 /**
  * This namespace is a container for all registered plugins.
@@ -33049,10 +31652,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "14.0.2"
+         * @default "14.1.0"
          * @name plugin.Base#version
          */
-        this.version = "14.0.2";
+        this.version = "14.1.0";
     }
 }
 
@@ -33076,9 +31679,9 @@ var plugin = {
      * @name patch
      * @memberof plugin
      * @public
-     * @param {object} proto target object
-     * @param {string} name target function
-     * @param {Function} fn replacement function
+     * @param {object} proto - target object
+     * @param {string} name - target function
+     * @param {Function} fn - replacement function
      * @example
      * // redefine the me.game.update function with a new one
      * me.plugin.patch(me.game, "update", function () {
@@ -33121,9 +31724,9 @@ var plugin = {
      * @memberof plugin
      * @see Base
      * @public
-     * @param {plugin.Base} pluginObj Plugin object to instantiate and register
+     * @param {plugin.Base} pluginObj - Plugin object to instantiate and register
      * @param {string} name
-     * @param {object} [...arguments] all extra parameters will be passed to the plugin constructor
+     * @param {object} [...arguments] - all extra parameters will be passed to the plugin constructor
      * @example
      * // register a new plugin
      * me.plugin.register(TestPlugin, "testPlugin");
@@ -33154,7 +31757,7 @@ var plugin = {
         }
 
         // compatibility testing
-        if (utils.checkVersion(instance.version) > 0) {
+        if (utils$1.checkVersion(instance.version) > 0) {
             throw new Error("Plugin version mismatch, expected: " + instance.version + ", got: " + version);
         }
 
@@ -33617,7 +32220,7 @@ let Interpolation = {
 class Tween {
 
     /**
-     * @param {object} object object on which to apply the tween
+     * @param {object} object - object on which to apply the tween
      * @example
      * // add a tween to change the object pos.x and pos.y variable to 200 in 3 seconds
      * tween = new me.Tween(myObject.pos).to({
@@ -33663,7 +32266,7 @@ class Tween {
         this._onUpdateCallback = null;
         this._onCompleteCallback = null;
         // tweens are synchronized with the game update loop
-        this._tweenTimeTracker = game.lastUpdate;
+        this._tweenTimeTracker = game$1.lastUpdate;
 
         // reset flags to default value
         this.isPersistent = false;
@@ -33712,15 +32315,15 @@ class Tween {
      * @name to
      * @memberof Tween
      * @public
-     * @param {object} properties hash of properties
-     * @param {object|number} [options] object of tween properties, or a duration if a numeric value is passed
-     * @param {number} [options.duration] tween duration
-     * @param {Tween.Easing} [options.easing] easing function
-     * @param {number} [options.delay] delay amount expressed in milliseconds
-     * @param {boolean} [options.yoyo] allows the tween to bounce back to their original value when finished. To be used together with repeat to create endless loops.
-     * @param {number} [options.repeat] amount of times the tween should be repeated
-     * @param {Tween.Interpolation} [options.interpolation] interpolation function
-     * @param {boolean} [options.autoStart] allow this tween to start automatically. Otherwise call me.Tween.start().
+     * @param {object} properties - hash of properties
+     * @param {object|number} [options] - object of tween properties, or a duration if a numeric value is passed
+     * @param {number} [options.duration] - tween duration
+     * @param {Tween.Easing} [options.easing] - easing function
+     * @param {number} [options.delay] - delay amount expressed in milliseconds
+     * @param {boolean} [options.yoyo] - allows the tween to bounce back to their original value when finished. To be used together with repeat to create endless loops.
+     * @param {number} [options.repeat] - amount of times the tween should be repeated
+     * @param {Tween.Interpolation} [options.interpolation] - interpolation function
+     * @param {boolean} [options.autoStart] - allow this tween to start automatically. Otherwise call me.Tween.start().
      * @returns {Tween} this instance for object chaining
      */
     to( properties, options ) {
@@ -33753,15 +32356,15 @@ class Tween {
      * @name start
      * @memberof Tween
      * @public
-     * @param {number} [time] the current time when the tween was started
+     * @param {number} [time] - the current time when the tween was started
      * @returns {Tween} this instance for object chaining
      */
-    start( time = timer.getTime() ) {
+    start( time = timer$1.getTime() ) {
 
         this._onStartCallbackFired = false;
 
         // add the tween to the object pool on start
-        game.world.addChild(this);
+        game$1.world.addChild(this);
 
         this._startTime =  time + this._delayTime;
 
@@ -33803,7 +32406,7 @@ class Tween {
      */
     stop() {
         // remove the tween from the world container
-        game.world.removeChildNow(this);
+        game$1.world.removeChildNow(this);
         return this;
     }
 
@@ -33812,7 +32415,7 @@ class Tween {
      * @name delay
      * @memberof Tween
      * @public
-     * @param {number} amount delay amount expressed in milliseconds
+     * @param {number} amount - delay amount expressed in milliseconds
      * @returns {Tween} this instance for object chaining
      */
     delay( amount ) {
@@ -33827,7 +32430,7 @@ class Tween {
      * @name repeat
      * @memberof Tween
      * @public
-     * @param {number} times amount of times the tween should be repeated
+     * @param {number} times - amount of times the tween should be repeated
      * @returns {Tween} this instance for object chaining
      */
     repeat( times ) {
@@ -33859,7 +32462,7 @@ class Tween {
      * @name easing
      * @memberof Tween
      * @public
-     * @param {Tween.Easing} easing easing function
+     * @param {Tween.Easing} easing - easing function
      * @returns {Tween} this instance for object chaining
      */
     easing( easing ) {
@@ -33875,7 +32478,7 @@ class Tween {
      * @name interpolation
      * @memberof Tween
      * @public
-     * @param {Tween.Interpolation} interpolation interpolation function
+     * @param {Tween.Interpolation} interpolation - interpolation function
      * @returns {Tween} this instance for object chaining
      */
     interpolation( interpolation ) {
@@ -33888,7 +32491,7 @@ class Tween {
      * @name chain
      * @memberof Tween
      * @public
-     * @param {...Tween} chainedTween Tween(s) to be chained
+     * @param {...Tween} chainedTween - Tween(s) to be chained
      * @returns {Tween} this instance for object chaining
      */
     chain() {
@@ -33901,7 +32504,7 @@ class Tween {
      * @name onStart
      * @memberof Tween
      * @public
-     * @param {Function} onStartCallback callback
+     * @param {Function} onStartCallback - callback
      * @returns {Tween} this instance for object chaining
      */
     onStart( onStartCallback ) {
@@ -33914,7 +32517,7 @@ class Tween {
      * @name onUpdate
      * @memberof Tween
      * @public
-     * @param {Function} onUpdateCallback callback
+     * @param {Function} onUpdateCallback - callback
      * @returns {Tween} this instance for object chaining
      */
     onUpdate( onUpdateCallback ) {
@@ -33927,7 +32530,7 @@ class Tween {
      * @name onComplete
      * @memberof Tween
      * @public
-     * @param {Function} onCompleteCallback callback
+     * @param {Function} onCompleteCallback - callback
      * @returns {Tween} this instance for object chaining
      */
     onComplete( onCompleteCallback ) {
@@ -33940,7 +32543,7 @@ class Tween {
 
         // the original Tween implementation expect
         // a timestamp and not a time delta
-        this._tweenTimeTracker = (game.lastUpdate > this._tweenTimeTracker) ? game.lastUpdate : this._tweenTimeTracker + dt;
+        this._tweenTimeTracker = (game$1.lastUpdate > this._tweenTimeTracker) ? game$1.lastUpdate : this._tweenTimeTracker + dt;
         var time = this._tweenTimeTracker;
 
         var property;
@@ -34033,7 +32636,7 @@ class Tween {
 
             } else {
                 // remove the tween from the world container
-                game.world.removeChildNow(this);
+                game$1.world.removeChildNow(this);
 
                 if ( this._onCompleteCallback !== null ) {
 
@@ -34059,6 +32662,7 @@ class Tween {
     static get Easing() { return Easing; }
     static get Interpolation() { return Interpolation; }
 }
+var Tween$1 = Tween;
 
 // default canvas settings
 var defaultAttributes = {
@@ -34073,13 +32677,13 @@ var defaultAttributes = {
  */
 class CanvasTexture {
     /**
-     * @param {number} width the desired width of the canvas
-     * @param {number} height the desired height of the canvas
-     * @param {object} attributes The attributes to create both the canvas and context
-     * @param {boolean} [attributes.context="2d"] the context type to be created ("2d", "webgl", "webgl2")
-     * @param {boolean} [attributes.offscreenCanvas=false] will create an offscreenCanvas if true instead of a standard canvas
-     * @param {boolean} [attributes.willReadFrequently=false] Indicates whether or not a lot of read-back operations are planned
-     * @param {boolean} [attributes.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
+     * @param {number} width - the desired width of the canvas
+     * @param {number} height - the desired height of the canvas
+     * @param {object} attributes - The attributes to create both the canvas and context
+     * @param {boolean} [attributes.context="2d"] - the context type to be created ("2d", "webgl", "webgl2")
+     * @param {boolean} [attributes.offscreenCanvas=false] - will create an offscreenCanvas if true instead of a standard canvas
+     * @param {boolean} [attributes.willReadFrequently=false] - Indicates whether or not a lot of read-back operations are planned
+     * @param {boolean} [attributes.antiAlias=false] - Whether to enable anti-aliasing, use false (default) for a pixelated effect.
      */
     constructor(width, height, attributes = defaultAttributes) {
 
@@ -34148,8 +32752,8 @@ class CanvasTexture {
 
     /**
      * Resizes the canvas texture to the given width and height.
-     * @param {number} width the desired width
-     * @param {number} height the desired height
+     * @param {number} width - the desired width
+     * @param {number} height - the desired height
      */
     resize(width, height) {
         this.canvas.width = Math.round(width);
@@ -34191,6 +32795,8 @@ class CanvasTexture {
     }
 }
 
+var CanvasTexture$1 = CanvasTexture;
+
 /**
  * apply the current text style to the given context
  * @ignore
@@ -34211,10 +32817,10 @@ function setContextStyle(context, style, stroke = false) {
  * a Text Metrics object that contains helper for text manipulation
  * @augments Bounds
  */
-class TextMetrics extends Bounds {
+class TextMetrics extends Bounds$1 {
 
     /**
-     * @param {Text|BitmapText} ancestor the parent object that contains this TextMetrics object
+     * @param {Text|BitmapText} ancestor - the parent object that contains this TextMetrics object
      */
     constructor(ancestor) {
 
@@ -34237,7 +32843,7 @@ class TextMetrics extends Bounds {
      * @returns {number} the height of a segment of inline text in CSS pixels.
      */
     lineHeight() {
-        if (this.ancestor instanceof Text) {
+        if (this.ancestor instanceof Text$1) {
             return this.ancestor.fontSize * this.ancestor.lineHeight;
         } else { // it's a BitmapText
             return this.ancestor.fontData.capHeight * this.ancestor.lineHeight * this.ancestor.fontScale.y;
@@ -34246,12 +32852,12 @@ class TextMetrics extends Bounds {
 
     /**
      * Returns the width of the given segment of inline text in CSS pixels.
-     * @param {string} text the text to be measured
-     * @param {CanvasRenderingContext2D} [context] reference to an active 2d context for canvas rendering
+     * @param {string} text - the text to be measured
+     * @param {CanvasRenderingContext2D} [context] - reference to an active 2d context for canvas rendering
      * @returns {number} the width of the given segment of inline text in CSS pixels.
      */
     lineWidth(text, context) {
-        if (this.ancestor instanceof Text) {
+        if (this.ancestor instanceof Text$1) {
             return context.measureText(text).width;
         } else { // it's a BitmapText
             var characters = text.split("");
@@ -34272,8 +32878,8 @@ class TextMetrics extends Bounds {
 
     /**
      * measure the given text size in CSS pixels
-     * @param {string} text the text to be measured
-     * @param {CanvasRenderingContext2D} [context] reference to an active 2d context for canvas rendering
+     * @param {string} text - the text to be measured
+     * @param {CanvasRenderingContext2D} [context] - reference to an active 2d context for canvas rendering
      * @returns {TextMetrics} this
      */
     measureText(text, context) {
@@ -34321,9 +32927,9 @@ class TextMetrics extends Bounds {
 
     /**
      * wrap the given text based on the given width
-     * @param {string|string[]} text the text to be wrapped
-     * @param {number} width maximum width of one segment of text in css pixel
-     * @param {CanvasRenderingContext2D} [context] reference to an active 2d context for canvas rendering
+     * @param {string|string[]} text - the text to be wrapped
+     * @param {number} width - maximum width of one segment of text in css pixel
+     * @param {CanvasRenderingContext2D} [context] - reference to an active 2d context for canvas rendering
      * @returns {string[]} an array of string representing wrapped text
      */
     wordWrap(text, width, context) {
@@ -34368,6 +32974,7 @@ class TextMetrics extends Bounds {
         return output;
     }
 }
+var TextMetrics$1 = TextMetrics;
 
 /*
 * ASCII Table
@@ -34398,23 +33005,23 @@ var getContext2d = function (renderer$1, text) {
  * a generic system font object.
  * @augments Renderable
  */
-class Text extends Renderable {
+class Text extends Renderable$1 {
     /**
-     * @param {number} x position of the text object
-     * @param {number} y position of the text object
-     * @param {object} settings the text configuration
-     * @param {string} settings.font a CSS family font name
-     * @param {number|string} settings.size size, or size + suffix (px, em, pt)
-     * @param {Color|string} [settings.fillStyle="#000000"] a CSS color value
-     * @param {Color|string} [settings.strokeStyle="#000000"] a CSS color value
-     * @param {number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
-     * @param {string} [settings.textAlign="left"] horizontal text alignment
-     * @param {string} [settings.textBaseline="top"] the text baseline
-     * @param {number} [settings.lineHeight=1.0] line spacing height
-     * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
-     * @param {boolean} [settings.offScreenCanvas=false] whether to draw the font to an individual "cache" texture first
-     * @param {number} [settings.wordWrapWidth] the maximum length in CSS pixel for a single segment of text
-     * @param {(string|string[])} [settings.text=""] a string, or an array of strings
+     * @param {number} x - position of the text object
+     * @param {number} y - position of the text object
+     * @param {object} settings - the text configuration
+     * @param {string} settings.font - a CSS family font name
+     * @param {number|string} settings.size - size, or size + suffix (px, em, pt)
+     * @param {Color|string} [settings.fillStyle="#000000"] - a CSS color value
+     * @param {Color|string} [settings.strokeStyle="#000000"] - a CSS color value
+     * @param {number} [settings.lineWidth=1] - line width, in pixels, when drawing stroke
+     * @param {string} [settings.textAlign="left"] - horizontal text alignment
+     * @param {string} [settings.textBaseline="top"] - the text baseline
+     * @param {number} [settings.lineHeight=1.0] - line spacing height
+     * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] - anchor point to draw the text at
+     * @param {boolean} [settings.offScreenCanvas=false] - whether to draw the font to an individual "cache" texture first
+     * @param {number} [settings.wordWrapWidth] - the maximum length in CSS pixel for a single segment of text
+     * @param {(string|string[])} [settings.text=""] - a string, or an array of strings
      * @example
      * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
      */
@@ -34435,14 +33042,14 @@ class Text extends Renderable {
          * @default black
          */
         if (typeof settings.fillStyle !== "undefined") {
-            if (settings.fillStyle instanceof Color) {
+            if (settings.fillStyle instanceof Color$1) {
                 this.fillStyle = settings.fillStyle;
             } else {
                 // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-                this.fillStyle = pool.pull("Color").parseCSS(settings.fillStyle);
+                this.fillStyle = pool$1.pull("Color").parseCSS(settings.fillStyle);
             }
         } else {
-            this.fillStyle = pool.pull("Color", 0, 0, 0);
+            this.fillStyle = pool$1.pull("Color", 0, 0, 0);
         }
 
         /**
@@ -34453,14 +33060,14 @@ class Text extends Renderable {
          * @default black
          */
          if (typeof settings.strokeStyle !== "undefined") {
-             if (settings.strokeStyle instanceof Color) {
+             if (settings.strokeStyle instanceof Color$1) {
                  this.strokeStyle = settings.strokeStyle;
              } else {
                  // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-                 this.strokeStyle = pool.pull("Color").parseCSS(settings.strokeStyle);
+                 this.strokeStyle = pool$1.pull("Color").parseCSS(settings.strokeStyle);
              }
          } else {
-             this.strokeStyle = pool.pull("Color", 0, 0, 0);
+             this.strokeStyle = pool$1.pull("Color", 0, 0, 0);
          }
 
         /**
@@ -34556,11 +33163,11 @@ class Text extends Renderable {
 
         if (settings.offScreenCanvas === true) {
             this.offScreenCanvas = true;
-            this.canvasTexture = pool.pull("CanvasTexture", 2, 2, { offscreenCanvas: true });
+            this.canvasTexture = pool$1.pull("CanvasTexture", 2, 2, { offscreenCanvas: true });
         }
 
         // instance to text metrics functions
-        this.metrics = new TextMetrics(this);
+        this.metrics = new TextMetrics$1(this);
 
         // set the text
         this.setText(settings.text);
@@ -34588,8 +33195,8 @@ class Text extends Renderable {
 
     /**
      * set the font family and size
-     * @param {string} font a CSS font name
-     * @param {number|string} [size=10] size in px, or size + suffix (px, em, pt)
+     * @param {string} font - a CSS font name
+     * @param {number|string} [size=10] - size in px, or size + suffix (px, em, pt)
      * @returns {Text} this object for chaining
      * @example
      * font.setFont("Arial", 20);
@@ -34629,7 +33236,7 @@ class Text extends Renderable {
 
     /**
      * change the text to be displayed
-     * @param {number|string|string[]} value a string, or an array of strings
+     * @param {number|string|string[]} value - a string, or an array of strings
      * @returns {Text} this object for chaining
      */
     setText(value = "") {
@@ -34657,7 +33264,7 @@ class Text extends Renderable {
             var width = Math.ceil(this.metrics.width),
                 height = Math.ceil(this.metrics.height);
 
-            if (renderer instanceof WebGLRenderer) {
+            if (renderer instanceof WebGLRenderer$1) {
                 // invalidate the previous corresponding texture so that it can reuploaded once changed
                 this.glTextureUnit = renderer.cache.getUnit(renderer.cache.get(this.canvasTexture.canvas));
                 renderer.currentCompositor.unbindTexture2D(null, this.glTextureUnit);
@@ -34685,8 +33292,8 @@ class Text extends Renderable {
 
     /**
      * measure the given text size in pixels
-     * @param {CanvasRenderer|WebGLRenderer} renderer reference to the active renderer
-     * @param {string} [text] the text to be measured
+     * @param {CanvasRenderer|WebGLRenderer} renderer - reference to the active renderer
+     * @param {string} [text] - the text to be measured
      * @returns {TextMetrics} a TextMetrics object defining the dimensions of the given piece of text
      */
     measureText(renderer, text = this._text) {
@@ -34696,11 +33303,11 @@ class Text extends Renderable {
 
     /**
      * draw a text at the specified coord
-     * @param {CanvasRenderer|WebGLRenderer} renderer Reference to the destination renderer instance
+     * @param {CanvasRenderer|WebGLRenderer} renderer - Reference to the destination renderer instance
      * @param {string} [text]
      * @param {number} [x]
      * @param {number} [y]
-     * @param {boolean} [stroke=false] draw stroke the the text if true
+     * @param {boolean} [stroke=false] - draw stroke the the text if true
      */
     draw(renderer, text, x = this.pos.x, y = this.pos.y, stroke = false) {
         // "hacky patch" for backward compatibilty
@@ -34756,7 +33363,7 @@ class Text extends Renderable {
      * draw a stroke text at the specified coord, as defined <br>
      * by the `lineWidth` and `fillStroke` properties. <br>
      * Note : using drawStroke is not recommended for performance reasons
-     * @param {CanvasRenderer|WebGLRenderer} renderer Reference to the destination renderer instance
+     * @param {CanvasRenderer|WebGLRenderer} renderer - Reference to the destination renderer instance
      * @param {string} text
      * @param {number} x
      * @param {number} y
@@ -34787,44 +33394,45 @@ class Text extends Renderable {
      */
     destroy() {
         if (this.offScreenCanvas === true) {
-            if (renderer instanceof WebGLRenderer) {
+            if (renderer instanceof WebGLRenderer$1) {
                 renderer.currentCompositor.deleteTexture2D(renderer.currentCompositor.getTexture2D(this.glTextureUnit));
                 this.glTextureUnit = undefined;
             }
             renderer.cache.delete(this.canvasTexture.canvas);
-            pool.push(this.canvasTexture);
+            pool$1.push(this.canvasTexture);
             this.canvasTexture = undefined;
         }
-        pool.push(this.fillStyle);
-        pool.push(this.strokeStyle);
+        pool$1.push(this.fillStyle);
+        pool$1.push(this.strokeStyle);
         this.fillStyle = this.strokeStyle = undefined;
         this.metrics = undefined;
         this._text.length = 0;
         super.destroy();
     }
 }
+var Text$1 = Text;
 
 /**
  * @classdesc
  * a bitmap font object
  * @augments Renderable
  */
-class BitmapText extends Renderable {
+class BitmapText extends Renderable$1 {
     /**
-     * @param {number} x position of the text object
-     * @param {number} y position of the text object
-     * @param {object} settings the text configuration
-     * @param {string|Image} settings.font a font name to identify the corresponing source image
-     * @param {string} [settings.fontData=settings.font] the bitmap font data corresponding name, or the bitmap font data itself
-     * @param {number} [settings.size] size a scaling ratio
-     * @param {Color|string} [settings.fillStyle] a CSS color value used to tint the bitmapText (@see BitmapText.tint)
-     * @param {number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
-     * @param {string} [settings.textAlign="left"] horizontal text alignment
-     * @param {string} [settings.textBaseline="top"] the text baseline
-     * @param {number} [settings.lineHeight=1.0] line spacing height
-     * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
-     * @param {number} [settings.wordWrapWidth] the maximum length in CSS pixel for a single segment of text
-     * @param {(string|string[])} [settings.text] a string, or an array of strings
+     * @param {number} x - position of the text object
+     * @param {number} y - position of the text object
+     * @param {object} settings - the text configuration
+     * @param {string|Image} settings.font - a font name to identify the corresponing source image
+     * @param {string} [settings.fontData=settings.font] - the bitmap font data corresponding name, or the bitmap font data itself
+     * @param {number} [settings.size] - size a scaling ratio
+     * @param {Color|string} [settings.fillStyle] - a CSS color value used to tint the bitmapText (@see BitmapText.tint)
+     * @param {number} [settings.lineWidth=1] - line width, in pixels, when drawing stroke
+     * @param {string} [settings.textAlign="left"] - horizontal text alignment
+     * @param {string} [settings.textBaseline="top"] - the text baseline
+     * @param {number} [settings.lineHeight=1.0] - line spacing height
+     * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] - anchor point to draw the text at
+     * @param {number} [settings.wordWrapWidth] - the maximum length in CSS pixel for a single segment of text
+     * @param {(string|string[])} [settings.text] - a string, or an array of strings
      * @example
      * // Use me.loader.preload or me.loader.load to load assets
      * me.loader.preload([
@@ -34889,13 +33497,13 @@ class BitmapText extends Renderable {
          * scaled font size
          * @private
          */
-        this.fontScale = pool.pull("Vector2d", 1.0, 1.0);
+        this.fontScale = pool$1.pull("Vector2d", 1.0, 1.0);
 
         /**
          * font image
          * @private
          */
-        this.fontImage = (typeof settings.font === "object") ? settings.font : loader.getImage(settings.font);
+        this.fontImage = (typeof settings.font === "object") ? settings.font : loader$1.getImage(settings.font);
 
         if (typeof settings.fontData !== "string") {
             /**
@@ -34903,11 +33511,11 @@ class BitmapText extends Renderable {
              * @private
              */
             // use settings.font to retreive the data from the loader
-            this.fontData = pool.pull("BitmapTextData", loader.getBinary(settings.font));
+            this.fontData = pool$1.pull("BitmapTextData", loader$1.getBinary(settings.font));
         } else {
-            this.fontData = pool.pull("BitmapTextData",
+            this.fontData = pool$1.pull("BitmapTextData",
                 // if starting/includes "info face" the whole data string was passed as parameter
-                (settings.fontData.includes("info face")) ? settings.fontData : loader.getBinary(settings.fontData)
+                (settings.fontData.includes("info face")) ? settings.fontData : loader$1.getBinary(settings.fontData)
             );
         }
 
@@ -34929,7 +33537,7 @@ class BitmapText extends Renderable {
         }
 
         // instance to text metrics functions
-        this.metrics = new TextMetrics(this);
+        this.metrics = new TextMetrics$1(this);
 
         // resize if necessary
         if (typeof settings.size === "number" && settings.size !== 1.0) {
@@ -34942,7 +33550,7 @@ class BitmapText extends Renderable {
 
     /**
      * change the font settings
-     * @param {string} textAlign ("left", "center", "right")
+     * @param {string} textAlign - ("left", "center", "right")
      * @param {number} [scale]
      * @returns {BitmapText} this object for chaining
      */
@@ -34959,7 +33567,7 @@ class BitmapText extends Renderable {
 
     /**
      * change the text to be displayed
-     * @param {number|string|string[]} value a string, or an array of strings
+     * @param {number|string|string[]} value - a string, or an array of strings
      * @returns {BitmapText} this object for chaining
      */
     setText(value = "") {
@@ -34991,7 +33599,7 @@ class BitmapText extends Renderable {
         return this.tint;
     }
     set fillStyle(value) {
-        if (value instanceof Color) {
+        if (value instanceof Color$1) {
             this.tint.copy(value);
         } else {
             // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
@@ -35001,7 +33609,7 @@ class BitmapText extends Renderable {
 
     /**
      * change the font display size
-     * @param {number} scale ratio
+     * @param {number} scale - ratio
      * @returns {BitmapText} this object for chaining
      */
     resize(scale) {
@@ -35026,7 +33634,7 @@ class BitmapText extends Renderable {
 
     /**
      * draw the bitmap font
-     * @param {CanvasRenderer|WebGLRenderer} renderer Reference to the destination renderer instance
+     * @param {CanvasRenderer|WebGLRenderer} renderer - Reference to the destination renderer instance
      * @param {string} [text]
      * @param {number} [x]
      * @param {number} [y]
@@ -35142,9 +33750,9 @@ class BitmapText extends Renderable {
      * @ignore
      */
     destroy() {
-        pool.push(this.fontScale);
+        pool$1.push(this.fontScale);
         this.fontScale = undefined;
-        pool.push(this.fontData);
+        pool$1.push(this.fontData);
         this.fontData = undefined;
         this._text.length = 0;
         this.metrics = undefined;
@@ -35152,6 +33760,7 @@ class BitmapText extends Renderable {
     }
 
 }
+var BitmapText$1 = BitmapText;
 
 // bitmap constants
 const LOG2_PAGE_SIZE = 9;
@@ -35209,6 +33818,7 @@ class Glyph {
         page[ch & PAGE_SIZE - 1] = value;
     }
 }
+var Glyph$1 = Glyph;
 
 // bitmap constants
 const capChars = ["M", "N", "B", "D", "C", "E", "F", "K", "A", "G", "H", "I", "J", "L", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
@@ -35231,7 +33841,7 @@ function getValueFromPair(string, pattern) {
  * @ignore
  * @name _getFirstGlyph
  * @memberof BitmapTextData
- * @param {object} glyphs the map of glyphs, each key is a char code
+ * @param {object} glyphs - the map of glyphs, each key is a char code
  * @returns {Glyph}
  */
 function getFirstGlyph(glyphs) {
@@ -35249,13 +33859,13 @@ function getFirstGlyph(glyphs) {
  * @ignore
  * @name createSpaceGlyph
  * @memberof BitmapTextData
- * @param {object} glyphs the map of glyphs, each key is a char code
+ * @param {object} glyphs - the map of glyphs, each key is a char code
  */
 function createSpaceGlyph(glyphs) {
     var spaceCharCode = " ".charCodeAt(0);
     var glyph = glyphs[spaceCharCode];
     if (!glyph) {
-        glyph = new Glyph();
+        glyph = new Glyph$1();
         glyph.id = spaceCharCode;
         glyph.xadvance = getFirstGlyph(glyphs).xadvance;
         glyphs[spaceCharCode] = glyph;
@@ -35349,7 +33959,7 @@ class BitmapTextData {
                     glyph.setKerning(second, amount);
                 }
             } else {
-                glyph = new Glyph();
+                glyph = new Glyph$1();
 
                 var ch = parseFloat(characterValues[2]);
                 glyph.id = ch;
@@ -35397,17 +34007,18 @@ class BitmapTextData {
         this.capHeight -= padY;
     }
 }
+var BitmapTextData$1 = BitmapTextData;
 
 /**
  * @classdesc
  * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
  * @augments Renderable
  */
-class ColorLayer extends Renderable {
+class ColorLayer extends Renderable$1 {
     /**
-     * @param {string} name Layer name
-     * @param {Color|string} color CSS color
-     * @param {number} [z = 0] z-index position
+     * @param {string} name - Layer name
+     * @param {Color|string} color - CSS color
+     * @param {number} [z = 0] - z-index position
      */
     constructor(name, color, z) {
         // parent constructor
@@ -35420,7 +34031,7 @@ class ColorLayer extends Renderable {
          * @name color
          * @memberof ColorLayer#
          */
-         this.color = pool.pull("Color").parseCSS(color);
+         this.color = pool$1.pull("Color").parseCSS(color);
 
          this.onResetEvent(name, color, z);
 
@@ -35440,8 +34051,8 @@ class ColorLayer extends Renderable {
      * @name draw
      * @memberof ColorLayer
      * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
-     * @param {Camera2d} [viewport] the viewport to (re)draw
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+     * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
     draw(renderer, viewport) {
         renderer.save();
@@ -35458,29 +34069,31 @@ class ColorLayer extends Renderable {
      * @ignore
      */
     destroy() {
-        pool.push(this.color);
+        pool$1.push(this.color);
         this.color = undefined;
         super.destroy();
     }
 
 }
 
+var ColorLayer$1 = ColorLayer;
+
 /**
  * @classdesc
  * a generic Image Layer Object
  * @augments Renderable
  */
-class ImageLayer extends Sprite {
+class ImageLayer extends Sprite$1 {
     /**
-     * @param {number} x x coordinate
-     * @param {number} y y coordinate
-     * @param {object} settings ImageLayer properties
-     * @param {HTMLImageElement|HTMLCanvasElement|string} settings.image Image reference. See {@link loader.getImage}
-     * @param {string} [settings.name="me.ImageLayer"] layer name
-     * @param {number} [settings.z=0] z-index position
-     * @param {number|Vector2d} [settings.ratio=1.0] Scrolling ratio to be applied. See {@link ImageLayer#ratio}
-     * @param {string} [settings.repeat='repeat'] define if and how an Image Layer should be repeated (accepted values are 'repeat', 'repeat-x', 'repeat-y', 'no-repeat'). See {@link ImageLayer#repeat}
-     * @param {number|Vector2d} [settings.anchorPoint=0.0] Image origin. See {@link ImageLayer#anchorPoint}
+     * @param {number} x - x coordinate
+     * @param {number} y - y coordinate
+     * @param {object} settings - ImageLayer properties
+     * @param {HTMLImageElement|HTMLCanvasElement|string} settings.image - Image reference. See {@link loader.getImage}
+     * @param {string} [settings.name="me.ImageLayer"] - layer name
+     * @param {number} [settings.z=0] - z-index position
+     * @param {number|Vector2d} [settings.ratio=1.0] - Scrolling ratio to be applied. See {@link ImageLayer#ratio}
+     * @param {string} [settings.repeat='repeat'] - define if and how an Image Layer should be repeated (accepted values are 'repeat', 'repeat-x', 'repeat-y', 'no-repeat'). See {@link ImageLayer#repeat}
+     * @param {number|Vector2d} [settings.anchorPoint=0.0] - Image origin. See {@link ImageLayer#anchorPoint}
      * @example
      * // create a repetitive background pattern on the X axis using the citycloud image asset
      * me.game.world.addChild(new me.ImageLayer(0, 0, {
@@ -35510,7 +34123,7 @@ class ImageLayer extends Sprite {
          * @default <1.0,1.0>
          * @name ImageLayer#ratio
          */
-        this.ratio = pool.pull("Vector2d", 1.0, 1.0);
+        this.ratio = pool$1.pull("Vector2d", 1.0, 1.0);
 
         if (typeof(settings.ratio) !== "undefined") {
             // little hack for backward compatiblity
@@ -35593,7 +34206,7 @@ class ImageLayer extends Sprite {
                 this.repeatY = true;
                 break;
         }
-        this.resize(game.viewport.width, game.viewport.height);
+        this.resize(game$1.viewport.width, game$1.viewport.height);
         this.createPattern();
     }
 
@@ -35605,13 +34218,13 @@ class ImageLayer extends Sprite {
         on(VIEWPORT_ONRESIZE, this.resize, this);
         // force a first refresh when the level is loaded
         once(LEVEL_LOADED, () => {
-            this.updateLayer(game.viewport.pos);
+            this.updateLayer(game$1.viewport.pos);
         });
         // in case the level is not added to the root container,
         // the onActivateEvent call happens after the LEVEL_LOADED event
         // so we need to force a first update
         if (this.ancestor.root !== true) {
-            this.updateLayer(game.viewport.pos);
+            this.updateLayer(game$1.viewport.pos);
         }
     }
 
@@ -35619,8 +34232,8 @@ class ImageLayer extends Sprite {
      * resize the Image Layer to match the given size
      * @name resize
      * @memberof ImageLayer
-     * @param {number} w new width
-     * @param {number} h new height
+     * @param {number} w - new width
+     * @param {number} h - new height
      */
     resize(w, h) {
         return super.resize(
@@ -35652,8 +34265,8 @@ class ImageLayer extends Sprite {
 
         var width = this.width,
             height = this.height,
-            bw = game.viewport.bounds.width,
-            bh = game.viewport.bounds.height,
+            bw = game$1.viewport.bounds.width,
+            bh = game$1.viewport.bounds.height,
             ax = this.anchorPoint.x,
             ay = this.anchorPoint.y,
 
@@ -35663,8 +34276,8 @@ class ImageLayer extends Sprite {
              * See https://github.com/melonjs/melonJS/issues/741#issuecomment-138431532
              * for a thorough description of how this works.
              */
-            x = ax * (rx - 1) * (bw - game.viewport.width) + this.offset.x - rx * vpos.x,
-            y = ay * (ry - 1) * (bh - game.viewport.height) + this.offset.y - ry * vpos.y;
+            x = ax * (rx - 1) * (bw - game$1.viewport.width) + this.offset.x - rx * vpos.x,
+            y = ay * (ry - 1) * (bh - game$1.viewport.height) + this.offset.y - ry * vpos.y;
 
 
         // Repeat horizontally; start drawing from left boundary
@@ -35706,8 +34319,8 @@ class ImageLayer extends Sprite {
      * @name draw
      * @memberof ImageLayer
      * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
-     * @param {Camera2d} [viewport] the viewport to (re)draw
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+     * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
     draw(renderer, viewport) {
         var width = this.width,
@@ -35747,13 +34360,14 @@ class ImageLayer extends Sprite {
      * @ignore
      */
     destroy() {
-        pool.push(this.ratio);
+        pool$1.push(this.ratio);
         this.ratio = undefined;
         off(ONCONTEXT_RESTORED, this.createPattern);
         super.destroy();
     }
 
 }
+var ImageLayer$1 = ImageLayer;
 
 /**
  * @classdesc
@@ -35763,24 +34377,24 @@ class ImageLayer extends Sprite {
  * @see https://en.wikipedia.org/wiki/9-slice_scaling
  * @augments Sprite
  */
-class NineSliceSprite extends Sprite {
+class NineSliceSprite extends Sprite$1 {
     /**
-     * @param {number} x the x coordinates of the sprite object
-     * @param {number} y the y coordinates of the sprite object
-     * @param {object} settings Configuration parameters for the Sprite object
-     * @param {number} settings.width the width of the Renderable over which the sprite needs to be stretched
-     * @param {number} settings.height the height of the Renderable over which the sprite needs to be stretched
-     * @param {number} [settings.insetx] the width of a corner over which the sprite is unscaled (default is a quarter of the sprite width)
-     * @param {number} [settings.insety] the height of a corner over which the sprite is unscaled (default is a quarter of the sprite height)
-     * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image reference to spritesheet image, a texture atlas or to a texture atlas
-     * @param {string} [settings.name=""] name of this object
-     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
-     * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
-     * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
-     * @param {string|Color} [settings.tint] a tint to be applied to this sprite
-     * @param {number} [settings.flipX] flip the sprite on the horizontal axis
-     * @param {number} [settings.flipY] flip the sprite on the vertical axis
-     * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
+     * @param {number} x - the x coordinates of the sprite object
+     * @param {number} y - the y coordinates of the sprite object
+     * @param {object} settings - Configuration parameters for the Sprite object
+     * @param {number} settings.width - the width of the Renderable over which the sprite needs to be stretched
+     * @param {number} settings.height - the height of the Renderable over which the sprite needs to be stretched
+     * @param {number} [settings.insetx] - the width of a corner over which the sprite is unscaled (default is a quarter of the sprite width)
+     * @param {number} [settings.insety] - the height of a corner over which the sprite is unscaled (default is a quarter of the sprite height)
+     * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image - reference to spritesheet image, a texture atlas or to a texture atlas
+     * @param {string} [settings.name=""] - name of this object
+     * @param {string} [settings.region] - region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
+     * @param {number} [settings.framewidth] - Width of a single frame within the spritesheet
+     * @param {number} [settings.frameheight] - Height of a single frame within the spritesheet
+     * @param {string|Color} [settings.tint] - a tint to be applied to this sprite
+     * @param {number} [settings.flipX] - flip the sprite on the horizontal axis
+     * @param {number} [settings.flipY] - flip the sprite on the vertical axis
+     * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] - Anchor point to draw the frame at (defaults to the center of the frame).
      * @example
      * this.panelSprite = new me.NineSliceSprite(0, 0, {
      *     image : game.texture,
@@ -35990,6 +34604,7 @@ class NineSliceSprite extends Sprite {
         );
     }
 }
+var NineSliceSprite$1 = NineSliceSprite;
 
 /**
  * @classdesc
@@ -35998,13 +34613,13 @@ class NineSliceSprite extends Sprite {
  * text and images.
  * @augments Container
  */
-class UIBaseElement extends Container {
+class UIBaseElement extends Container$1 {
     /**
      *
-     * @param {number} x The x position of the container
-     * @param {number} y The y position of the container
-     * @param {number} w width of the container (default: viewport width)
-     * @param {number} h height of the container (default: viewport height)
+     * @param {number} x - The x position of the container
+     * @param {number} y - The y position of the container
+     * @param {number} w - width of the container (default: viewport width)
+     * @param {number} h - height of the container (default: viewport height)
      */
     constructor(x, y, w, h) {
         super(x, y, w, h);
@@ -36057,9 +34672,9 @@ class UIBaseElement extends Container {
             this.released = false;
             if (this.isHoldable) {
                 if (this.holdTimeout !== null) {
-                    timer.clearTimeout(this.holdTimeout);
+                    timer$1.clearTimeout(this.holdTimeout);
                 }
-                this.holdTimeout = timer.setTimeout(
+                this.holdTimeout = timer$1.setTimeout(
                     this.hold.bind(this),
                     this.holdThreshold,
                     false
@@ -36072,7 +34687,7 @@ class UIBaseElement extends Container {
 
     /**
      * function called when the object is pressed (to be extended)
-     * @param {Pointer} event the event object
+     * @param {Pointer} event - the event object
      * @returns {boolean} return false if we need to stop propagating the event
      */
     onClick(event) { // eslint-disable-line no-unused-vars
@@ -36091,7 +34706,7 @@ class UIBaseElement extends Container {
 
     /**
      * function called when the pointer is over the object
-     * @param {Pointer} event the event object
+     * @param {Pointer} event - the event object
      */
     onOver(event) { // eslint-disable-line no-unused-vars
         // to be extended
@@ -36110,7 +34725,7 @@ class UIBaseElement extends Container {
 
     /**
      * function called when the pointer is leaving the object area
-     * @param {Pointer} event the event object
+     * @param {Pointer} event - the event object
      */
     onOut(event) { // eslint-disable-line no-unused-vars
         // to be extended
@@ -36124,7 +34739,7 @@ class UIBaseElement extends Container {
         if (this.released === false) {
             this.released = true;
             this.dirty = true;
-            timer.clearTimeout(this.holdTimeout);
+            timer$1.clearTimeout(this.holdTimeout);
             return this.onRelease(event);
         }
     }
@@ -36142,7 +34757,7 @@ class UIBaseElement extends Container {
      * @ignore
      */
     hold() {
-        timer.clearTimeout(this.holdTimeout);
+        timer$1.clearTimeout(this.holdTimeout);
         this.dirty = true;
         if (!this.released) {
             this.onHold();
@@ -36187,34 +34802,35 @@ class UIBaseElement extends Container {
         releasePointerEvent("pointercancel", this);
         releasePointerEvent("pointerenter", this);
         releasePointerEvent("pointerleave", this);
-        timer.clearTimeout(this.holdTimeout);
+        timer$1.clearTimeout(this.holdTimeout);
     }
 }
+var UIBaseElement$1 = UIBaseElement;
 
 /**
  * @classdesc
  * This is a basic base text button which you can use in your Game UI.
  * @augments UIBaseElement
  */
-class UITextButton extends UIBaseElement {
+class UITextButton extends UIBaseElement$1 {
     /**
      * A Text Button with an outlined background border, filled with background color.
      * It uses a RoundRect as background and changes the background color on hovering over.
      * The background will be drawn with 0.5 opacity, so that the background of the button is
      * slightly shining through.
-     * @param {number} x x pos of the button
-     * @param {number} y y pos of the button
-     * @param {string} [settings.font] The name of the BitmapText font to use
-     * @param {number} [settings.size] The scale factor of the font (default: 1)
-     * @param {string} [settings.text] The text to display (default: 'click me')
-     * @param {string} [settings.bindKey] The key to bind the action to (default: none)
-     * @param {string} [settings.backgroundColor] The css value of a background color
-     * @param {string} [settings.hoverColor] The css value of a color to be used if the pointer hovers over the button
-     * @param {string} [settings.borderStrokeColor] The css value of a color to be used to draw the border
-     * @param {boolean} [settings.offScreenCanvas] Weather to use an offScreen canvas or not
-     * @param {string} [settings.fillStyle] The css value of a tint color to be used to tint the text
-     * @param {number} [settings.borderWidth] Width of the button
-     * @param {number} [settings.borderHeight] Height of the button
+     * @param {number} x - x pos of the button
+     * @param {number} y - y pos of the button
+     * @param {string} [settings.font] - The name of the BitmapText font to use
+     * @param {number} [settings.size] - The scale factor of the font (default: 1)
+     * @param {string} [settings.text] - The text to display (default: 'click me')
+     * @param {string} [settings.bindKey] - The key to bind the action to (default: none)
+     * @param {string} [settings.backgroundColor] - The css value of a background color
+     * @param {string} [settings.hoverColor] - The css value of a color to be used if the pointer hovers over the button
+     * @param {string} [settings.borderStrokeColor] - The css value of a color to be used to draw the border
+     * @param {boolean} [settings.offScreenCanvas] - Weather to use an offScreen canvas or not
+     * @param {string} [settings.fillStyle] - The css value of a tint color to be used to tint the text
+     * @param {number} [settings.borderWidth] - Width of the button
+     * @param {number} [settings.borderHeight] - Height of the button
      * @example
      * // Create a new Button
      * class PlayButton extends BaseTextButton {
@@ -36247,14 +34863,14 @@ class UITextButton extends UIBaseElement {
         settings.offScreenCanvas = settings.offScreenCanvas || false;
         settings.fillStyle = settings.fillStyle || "#ffffff";
         settings.lineWidth = settings.lineWidth || 1;
-        settings.anchorPoint = settings.anchorPoint || new Vector2d(0, 0);
+        settings.anchorPoint = settings.anchorPoint || new Vector2d$1(0, 0);
 
-        let font = new BitmapText(x, y, settings);
+        let font = new BitmapText$1(x, y, settings);
         let dimensions = font.measureText();
         settings.borderWidth = settings.borderWidth || dimensions.width + 16;
         settings.borderHeight = settings.borderHeight || dimensions.height + 16;
 
-        let border = new RoundRect(
+        let border = new RoundRect$1(
             x,
             y,
             settings.borderWidth,
@@ -36304,17 +34920,18 @@ class UITextButton extends UIBaseElement {
         );
     }
 }
+var UITextButton$1 = UITextButton;
 
 /**
  * @classdesc
  *  This is a basic sprite based button which you can use in your Game UI.
  * @augments Sprite
  */
-class UISpriteElement extends Sprite {
+class UISpriteElement extends Sprite$1 {
     /**
-     * @param {number} x the x coordinate of the GUI Object
-     * @param {number} y the y coordinate of the GUI Object
-     * @param {object} settings See {@link Sprite}
+     * @param {number} x - the x coordinate of the GUI Object
+     * @param {number} y - the y coordinate of the GUI Object
+     * @param {object} settings - See {@link Sprite}
      * @example
      * // create a basic GUI Object
      * class myButton extends UISpriteElement {
@@ -36396,9 +35013,9 @@ class UISpriteElement extends Sprite {
             this.released = false;
             if (this.isHoldable) {
                 if (this.holdTimeout !== null) {
-                    timer.clearTimeout(this.holdTimeout);
+                    timer$1.clearTimeout(this.holdTimeout);
                 }
-                this.holdTimeout = timer.setTimeout(this.hold.bind(this), this.holdThreshold, false);
+                this.holdTimeout = timer$1.setTimeout(this.hold.bind(this), this.holdThreshold, false);
                 this.released = false;
             }
             return this.onClick(event);
@@ -36407,7 +35024,7 @@ class UISpriteElement extends Sprite {
 
     /**
      * function called when the object is pressed (to be extended)
-     * @param {Pointer} event the event object
+     * @param {Pointer} event - the event object
      * @returns {boolean} return false if we need to stop propagating the event
      */
     onClick(event) { // eslint-disable-line no-unused-vars
@@ -36426,7 +35043,7 @@ class UISpriteElement extends Sprite {
 
     /**
      * function called when the pointer is over the object
-     * @param {Pointer} event the event object
+     * @param {Pointer} event - the event object
      */
     onOver(event) { // eslint-disable-line no-unused-vars
         // to be extended
@@ -36445,7 +35062,7 @@ class UISpriteElement extends Sprite {
 
     /**
      * function called when the pointer is leaving the object area
-     * @param {Pointer} event the event object
+     * @param {Pointer} event - the event object
      */
     onOut(event) { // eslint-disable-line no-unused-vars
         // to be extended
@@ -36459,7 +35076,7 @@ class UISpriteElement extends Sprite {
         if (this.released === false) {
             this.released = true;
             this.dirty = true;
-            timer.clearTimeout(this.holdTimeout);
+            timer$1.clearTimeout(this.holdTimeout);
             return this.onRelease(event);
         }
     }
@@ -36477,7 +35094,7 @@ class UISpriteElement extends Sprite {
      * @ignore
      */
     hold() {
-        timer.clearTimeout(this.holdTimeout);
+        timer$1.clearTimeout(this.holdTimeout);
         this.dirty = true;
         if (!this.released) {
             this.onHold();
@@ -36514,20 +35131,21 @@ class UISpriteElement extends Sprite {
         releasePointerEvent("pointercancel", this);
         releasePointerEvent("pointerenter", this);
         releasePointerEvent("pointerleave", this);
-        timer.clearTimeout(this.holdTimeout);
+        timer$1.clearTimeout(this.holdTimeout);
     }
 }
+var UISpriteElement$1 = UISpriteElement;
 
 /**
  * @classdesc
  * a basic collectable helper class for immovable object (e.g. a coin)
  * @augments Sprite
  */
-class Collectable extends Sprite {
+class Collectable extends Sprite$1 {
     /**
-     * @param {number} x the x coordinates of the collectable
-     * @param {number} y the y coordinates of the collectable
-     * @param {object} settings See {@link Sprite}
+     * @param {number} x - the x coordinates of the collectable
+     * @param {number} y - the y coordinates of the collectable
+     * @param {object} settings - See {@link Sprite}
      */
     constructor(x, y, settings) {
 
@@ -36541,16 +35159,16 @@ class Collectable extends Sprite {
         // add and configure the physic body
         var shape = settings.shapes;
         if (typeof shape === "undefined") {
-            shape = pool.pull("Polygon", 0, 0, [
-                pool.pull("Vector2d", 0,          0),
-                pool.pull("Vector2d", this.width, 0),
-                pool.pull("Vector2d", this.width, this.height)
+            shape = pool$1.pull("Polygon", 0, 0, [
+                pool$1.pull("Vector2d", 0,          0),
+                pool$1.pull("Vector2d", this.width, 0),
+                pool$1.pull("Vector2d", this.width, this.height)
             ]);
         }
-        this.body = new Body(this, shape);
-        this.body.collisionType = collision.types.COLLECTABLE_OBJECT;
+        this.body = new Body$1(this, shape);
+        this.body.collisionType = collision$1.types.COLLECTABLE_OBJECT;
         // by default only collides with PLAYER_OBJECT
-        this.body.setCollisionMask(collision.types.PLAYER_OBJECT);
+        this.body.setCollisionMask(collision$1.types.PLAYER_OBJECT);
         this.body.setStatic(true);
 
         // Update anchorPoint
@@ -36565,26 +35183,28 @@ class Collectable extends Sprite {
 
 }
 
+var Collectable$1 = Collectable;
+
 /**
  * @classdesc
  * trigger an event when colliding with another object
  * @augments Renderable
  */
-class Trigger extends Renderable {
+class Trigger extends Renderable$1 {
     /**
-     * @param {number} x the x coordinates of the trigger area
-     * @param {number} y the y coordinates of the trigger area
-     * @param {number} [settings.width] width of the trigger area
-     * @param {number} [settings.height] height of the trigger area
-     * @param {Rect[]|Polygon[]|Line[]|Ellipse[]} [settings.shapes] collision shape(s) that will trigger the event
-     * @param {string} [settings.duration] Fade duration (in ms)
-     * @param {string|Color} [settings.color] Fade color
-     * @param {string} [settings.event="level"] the type of event to trigger (only "level" supported for now)
-     * @param {string} [settings.to] level to load if level trigger
-     * @param {string|Container} [settings.container] Target container. See {@link level.load}
-     * @param {Function} [settings.onLoaded] Level loaded callback. See {@link level.load}
-     * @param {boolean} [settings.flatten] Flatten all objects into the target container. See {@link level.load}
-     * @param {boolean} [settings.setViewportBounds] Resize the viewport to match the level. See {@link level.load}
+     * @param {number} x - the x coordinates of the trigger area
+     * @param {number} y - the y coordinates of the trigger area
+     * @param {number} [settings.width] - width of the trigger area
+     * @param {number} [settings.height] - height of the trigger area
+     * @param {Rect[]|Polygon[]|Line[]|Ellipse[]} [settings.shapes] - collision shape(s) that will trigger the event
+     * @param {string} [settings.duration] - Fade duration (in ms)
+     * @param {string|Color} [settings.color] - Fade color
+     * @param {string} [settings.event="level"] - the type of event to trigger (only "level" supported for now)
+     * @param {string} [settings.to] - level to load if level trigger
+     * @param {string|Container} [settings.container] - Target container. See {@link level.load}
+     * @param {Function} [settings.onLoaded] - Level loaded callback. See {@link level.load}
+     * @param {boolean} [settings.flatten] - Flatten all objects into the target container. See {@link level.load}
+     * @param {boolean} [settings.setViewportBounds] - Resize the viewport to match the level. See {@link level.load}
      * @example
      * me.game.world.addChild(new me.Trigger(
      *     x, y, {
@@ -36629,16 +35249,16 @@ class Trigger extends Renderable {
         // add and configure the physic body
         var shape = settings.shapes;
         if (typeof shape === "undefined") {
-            shape = pool.pull("Polygon", 0, 0, [
-                pool.pull("Vector2d", 0,          0),
-                pool.pull("Vector2d", this.width, 0),
-                pool.pull("Vector2d", this.width, this.height)
+            shape = pool$1.pull("Polygon", 0, 0, [
+                pool$1.pull("Vector2d", 0,          0),
+                pool$1.pull("Vector2d", this.width, 0),
+                pool$1.pull("Vector2d", this.width, this.height)
             ]);
         }
-        this.body = new Body(this, shape);
-        this.body.collisionType = collision.types.ACTION_OBJECT;
+        this.body = new Body$1(this, shape);
+        this.body.collisionType = collision$1.types.ACTION_OBJECT;
         // by default only collides with PLAYER_OBJECT
-        this.body.setCollisionMask(collision.types.PLAYER_OBJECT);
+        this.body.setCollisionMask(collision$1.types.PLAYER_OBJECT);
         this.body.setStatic(true);
         this.resize(this.body.getBounds().width, this.body.getBounds().height);
     }
@@ -36649,7 +35269,7 @@ class Trigger extends Renderable {
      getTriggerSettings() {
          // Lookup for the container instance
          if (typeof(this.triggerSettings.container) === "string") {
-             this.triggerSettings.container = game.world.getChildByName(this.triggerSettings.container)[0];
+             this.triggerSettings.container = game$1.world.getChildByName(this.triggerSettings.container)[0];
          }
          return this.triggerSettings;
      }
@@ -36658,8 +35278,8 @@ class Trigger extends Renderable {
      * @ignore
      */
     onFadeComplete() {
-        level.load(this.gotolevel, this.getTriggerSettings());
-        game.viewport.fadeOut(this.fade, this.duration);
+        level$1.load(this.gotolevel, this.getTriggerSettings());
+        game$1.viewport.fadeOut(this.fade, this.duration);
     }
 
     /**
@@ -36678,11 +35298,11 @@ class Trigger extends Renderable {
             if (this.fade && this.duration) {
                 if (!this.fading) {
                     this.fading = true;
-                    game.viewport.fadeIn(this.fade, this.duration,
+                    game$1.viewport.fadeIn(this.fade, this.duration,
                             this.onFadeComplete.bind(this));
                 }
             } else {
-                level.load(this.gotolevel, triggerSettings);
+                level$1.load(this.gotolevel, triggerSettings);
             }
         } else {
             throw new Error("Trigger invalid type");
@@ -36693,8 +35313,8 @@ class Trigger extends Renderable {
      * onCollision callback, triggered in case of collision with this trigger
      * @name onCollision
      * @memberof Trigger
-     * @param {ResponseObject} response the collision response object
-     * @param {Renderable} other the other renderable touching this one (a reference to response.a or response.b)
+     * @param {ResponseObject} response - the collision response object
+     * @param {Renderable} other - the other renderable touching this one (a reference to response.a or response.b)
      * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
      */
     onCollision(response, other) { // eslint-disable-line no-unused-vars
@@ -36705,6 +35325,7 @@ class Trigger extends Renderable {
     }
 
 }
+var Trigger$1 = Trigger;
 
 /** @ignore */
 function createGradient(light) {
@@ -36754,13 +35375,13 @@ function createGradient(light) {
  * (multiple lights are not supported, alpha component of the ambient light is ignored)
  * @see stage.lights
  */
-class Light2d extends Renderable {
+class Light2d extends Renderable$1 {
    /**
     * @param {number} x - The horizontal position of the light.
     * @param {number} y - The vertical position of the light.
     * @param {number} radiusX - The horizontal radius of the light.
     * @param {number} [radiusY=radiusX] - The vertical radius of the light.
-    * @param {Color|string} [color="#FFF"] the color of the light
+    * @param {Color|string} [color="#FFF"] - the color of the light
     * @param {number} [intensity=0.7] - The intensity of the light.
     */
     constructor(x, y, radiusX, radiusY = radiusX, color = "#FFF", intensity = 0.7) {
@@ -36772,7 +35393,7 @@ class Light2d extends Renderable {
          * @type {Color}
          * @default "#FFF"
          */
-        this.color = pool.pull("Color").parseCSS(color);
+        this.color = pool$1.pull("Color").parseCSS(color);
 
         /**
          * The horizontal radius of the light
@@ -36803,10 +35424,10 @@ class Light2d extends Renderable {
         this.blendMode = "lighter";
 
         /** @ignore */
-        this.visibleArea = pool.pull("Ellipse", this.centerX, this.centerY, this.width, this.height);
+        this.visibleArea = pool$1.pull("Ellipse", this.centerX, this.centerY, this.width, this.height);
 
         /** @ignore */
-        this.texture = pool.pull("CanvasTexture", this.width, this.height, { offscreenCanvas: false });
+        this.texture = pool$1.pull("CanvasTexture", this.width, this.height, { offscreenCanvas: false });
 
         this.anchorPoint.set(0, 0);
 
@@ -36828,8 +35449,8 @@ class Light2d extends Renderable {
      * @name draw
      * @memberof Light2d
      * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
-     * @param {Camera2d} [viewport] the viewport to (re)draw
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+     * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
     draw(renderer, viewport) {   // eslint-disable-line no-unused-vars
         renderer.drawImage(this.texture.canvas, this.getBounds().x, this.getBounds().y);
@@ -36840,15 +35461,16 @@ class Light2d extends Renderable {
      * @ignore
      */
     destroy() {
-        pool.push(this.color);
+        pool$1.push(this.color);
         this.color = undefined;
-        pool.push(this.texture);
+        pool$1.push(this.texture);
         this.texture = undefined;
-        pool.push(this.visibleArea);
+        pool$1.push(this.visibleArea);
         this.visibleArea = undefined;
         super.destroy();
     }
 }
+var Light2d$1 = Light2d;
 
 /**
  * @classdesc
@@ -36856,19 +35478,19 @@ class Light2d extends Renderable {
  * @see DropTarget
  * @augments Renderable
  */
-class Draggable extends Renderable {
+class Draggable extends Renderable$1 {
     /**
-     * @param {number} x the x coordinates of the draggable object
-     * @param {number} y the y coordinates of the draggable object
-     * @param {number} width draggable object width
-     * @param {number} height draggable object height
+     * @param {number} x - the x coordinates of the draggable object
+     * @param {number} y - the y coordinates of the draggable object
+     * @param {number} width - draggable object width
+     * @param {number} height - draggable object height
      */
     constructor(x, y, width, height) {
         super(x, y, width, height);
         this.isKinematic = false;
         this.dragging = false;
         this.dragId = null;
-        this.grabOffset = new Vector2d(0, 0);
+        this.grabOffset = new Vector2d$1(0, 0);
         this.initEvents();
     }
 
@@ -36903,7 +35525,7 @@ class Draggable extends Renderable {
      * Gets called when the user starts dragging the entity
      * @name dragStart
      * @memberof Draggable
-     * @param {object} e the pointer event
+     * @param {object} e - the pointer event
      * @returns {boolean} false if the object is being dragged
      */
     dragStart(e) {
@@ -36919,7 +35541,7 @@ class Draggable extends Renderable {
      * Gets called when the user drags this entity around
      * @name dragMove
      * @memberof Draggable
-     * @param {object} e the pointer event
+     * @param {object} e - the pointer event
      */
     dragMove(e) {
         if (this.dragging === true) {
@@ -36964,12 +35586,12 @@ class Draggable extends Renderable {
  * @see Draggable
  * @augments Renderable
  */
-class DropTarget extends Renderable {
+class DropTarget extends Renderable$1 {
     /**
-     * @param {number} x the x coordinates of the drop target
-     * @param {number} y the y coordinates of the drop target
-     * @param {number} width drop target width
-     * @param {number} height drop target height
+     * @param {number} x - the x coordinates of the drop target
+     * @param {number} y - the y coordinates of the drop target
+     * @param {number} width - drop target width
+     * @param {number} height - drop target height
      */
     constructor(x, y, width, height) {
         super(x, y, width, height);
@@ -37015,7 +35637,7 @@ class DropTarget extends Renderable {
      * Sets the collision method which is going to be used to check a valid drop
      * @name setCheckMethod
      * @memberof DropTarget
-     * @param {string} checkMethod the checkmethod (defaults to CHECKMETHOD_OVERLAP)
+     * @param {string} checkMethod - the checkmethod (defaults to CHECKMETHOD_OVERLAP)
      */
     setCheckMethod(checkMethod) {
         //  We can improve this check,
@@ -37029,8 +35651,8 @@ class DropTarget extends Renderable {
      * Checks if a dropped entity is dropped on the current entity
      * @name checkOnMe
      * @memberof DropTarget
-     * @param {object} e the triggering event
-     * @param {Draggable} draggable the draggable object that is dropped
+     * @param {object} e - the triggering event
+     * @param {Draggable} draggable - the draggable object that is dropped
      */
     checkOnMe(e, draggable) {
         if (draggable && this.getBounds()[this.checkMethod](draggable.getBounds())) {
@@ -37043,7 +35665,7 @@ class DropTarget extends Renderable {
      * Gets called when a draggable entity is dropped on the current entity
      * @name drop
      * @memberof DropTarget
-     * @param {Draggable} draggable the draggable object that is dropped
+     * @param {Draggable} draggable - the draggable object that is dropped
      */
     drop(draggable) {  // eslint-disable-line no-unused-vars
 
@@ -37370,11 +35992,13 @@ const ParticleEmitterSettings = {
     framesToSkip : 0
 };
 
+var ParticleEmitterSettings$1 = ParticleEmitterSettings;
+
 /**
  * @ignore
  */
 function createDefaultParticleTexture(w = 8, h = 8) {
-    var defaultParticleTexture = pool.pull("CanvasTexture", w, h, { offscreenCanvas: true });
+    var defaultParticleTexture = pool$1.pull("CanvasTexture", w, h, { offscreenCanvas: true });
 
     defaultParticleTexture.context.fillStyle = "#fff";
     defaultParticleTexture.context.fillRect(0, 0, w, h);
@@ -37387,11 +36011,11 @@ function createDefaultParticleTexture(w = 8, h = 8) {
  * Particle Emitter Object.
  * @augments Container
  */
-class ParticleEmitter extends Container {
+class ParticleEmitter extends Container$1 {
     /**
-     * @param {number} x x position of the particle emitter
-     * @param {number} y y position of the particle emitter
-     * @param {ParticleEmitterSettings} [settings=ParticleEmitterSettings] the settings for the particle emitter.
+     * @param {number} x - x position of the particle emitter
+     * @param {number} y - y position of the particle emitter
+     * @param {ParticleEmitterSettings} [settings=ParticleEmitterSettings] - the settings for the particle emitter.
      * @example
      * // Create a particle emitter at position 100, 100
      * var emitter = new ParticleEmitter(100, 100, {
@@ -37476,10 +36100,10 @@ class ParticleEmitter extends Container {
 
     /**
      * Reset the emitter with particle emitter settings.
-     * @param {ParticleEmitterSettings} settings [optional] object with emitter settings. See {@link ParticleEmitterSettings}
+     * @param {ParticleEmitterSettings} settings - [optional] object with emitter settings. See {@link ParticleEmitterSettings}
      */
     reset(settings = {}) {
-        Object.assign(this.settings, ParticleEmitterSettings, settings);
+        Object.assign(this.settings, ParticleEmitterSettings$1, settings);
 
         if (typeof this.settings.image === "undefined") {
             this._defaultParticle = createDefaultParticleTexture(settings.textureSize, settings.textureSize);
@@ -37512,7 +36136,7 @@ class ParticleEmitter extends Container {
     addParticles(count) {
         for (var i = 0; i < count; i++) {
             // Add particle to the container
-            this.addChild(pool.pull("Particle", this), this.pos.z);
+            this.addChild(pool$1.pull("Particle", this), this.pos.z);
         }
         this.isDirty = true;
     }
@@ -37527,7 +36151,7 @@ class ParticleEmitter extends Container {
 
     /**
      * Launch particles from emitter constantly (e.g. for stream)
-     * @param {number} duration [optional] time that the emitter releases particles in ms
+     * @param {number} duration - [optional] time that the emitter releases particles in ms
      */
     streamParticles(duration) {
         this._enabled = true;
@@ -37545,7 +36169,7 @@ class ParticleEmitter extends Container {
 
     /**
      * Launch all particles from emitter and stop (e.g. for explosion)
-     * @param {number} total [optional] number of particles to launch
+     * @param {number} total - [optional] number of particles to launch
      */
     burstParticles(total) {
         this._enabled = true;
@@ -37614,7 +36238,7 @@ class ParticleEmitter extends Container {
         super.destroy(arguments);
         // clean emitter specific Properties
         if (typeof this._defaultParticle !== "undefined") {
-            pool.push(this._defaultParticle);
+            pool$1.push(this._defaultParticle);
             this._defaultParticle = undefined;
         }
         this.settings.image = undefined;
@@ -37622,14 +36246,16 @@ class ParticleEmitter extends Container {
     }
 }
 
+var ParticleEmitter$1 = ParticleEmitter;
+
 /**
  * @classdesc
  * Single Particle Object.
  * @augments Renderable
  */
-class Particle extends Renderable {
+class Particle extends Renderable$1 {
     /**
-     * @param {ParticleEmitter} emitter the particle emitter
+     * @param {ParticleEmitter} emitter - the particle emitter
      */
     constructor(emitter) {
         // Call the super constructor
@@ -37658,7 +36284,7 @@ class Particle extends Renderable {
             this.currentTransform.identity();
         } else {
             // particle velocity
-            this.vel = pool.pull("Vector2d");
+            this.vel = pool$1.pull("Vector2d");
         }
 
         this.image = emitter.settings.image;
@@ -37713,7 +36339,7 @@ class Particle extends Renderable {
         this.onlyInViewport = emitter.settings.onlyInViewport;
 
         // cache inverse of the expected delta time
-        this._deltaInv = timer.maxfps / 1000;
+        this._deltaInv = timer$1.maxfps / 1000;
 
         // Set the start particle rotation as defined in emitter
         // if the particle not follow trajectory
@@ -37726,7 +36352,7 @@ class Particle extends Renderable {
      * Update the Particle <br>
      * This is automatically called by the game manager {@link game}
      * @ignore
-     * @param {number} dt time since the last update in milliseconds
+     * @param {number} dt - time since the last update in milliseconds
      */
     update(dt) {
         // move things forward independent of the current frame rate
@@ -37795,29 +36421,31 @@ class Particle extends Renderable {
     }
 }
 
+var Particle$1 = Particle;
+
 /**
  * @classdesc
  * a Generic Object Entity
  * @augments Renderable
  * @see Renderable
  */
-class Entity extends Renderable {
+class Entity extends Renderable$1 {
     /**
-     * @param {number} x the x coordinates of the entity object
-     * @param {number} y the y coordinates of the entity object
-     * @param {object} settings Entity properties, to be defined through Tiled or when calling the entity constructor
+     * @param {number} x - the x coordinates of the entity object
+     * @param {number} y - the y coordinates of the entity object
+     * @param {object} settings - Entity properties, to be defined through Tiled or when calling the entity constructor
      * <img src="images/object_properties.png"/>
-     * @param {number} settings.width the physical width the entity takes up in game
-     * @param {number} settings.height the physical height the entity takes up in game
-     * @param {string} [settings.name] object entity name
-     * @param {string} [settings.id] object unique IDs
-     * @param {Image|string} [settings.image] resource name of a spritesheet to use for the entity renderable component
-     * @param {Vector2d} [settings.anchorPoint=0.0] Entity anchor point
-     * @param {number} [settings.framewidth=settings.width] width of a single frame in the given spritesheet
-     * @param {number} [settings.frameheight=settings.width] height of a single frame in the given spritesheet
-     * @param {string} [settings.type] object type
-     * @param {number} [settings.collisionMask] Mask collision detection for this object
-     * @param {Rect[]|Polygon[]|Line[]|Ellipse[]} [settings.shapes] the initial list of collision shapes (usually populated through Tiled)
+     * @param {number} settings.width - the physical width the entity takes up in game
+     * @param {number} settings.height - the physical height the entity takes up in game
+     * @param {string} [settings.name] - object entity name
+     * @param {string} [settings.id] - object unique IDs
+     * @param {Image|string} [settings.image] - resource name of a spritesheet to use for the entity renderable component
+     * @param {Vector2d} [settings.anchorPoint=0.0] - Entity anchor point
+     * @param {number} [settings.framewidth=settings.width] - width of a single frame in the given spritesheet
+     * @param {number} [settings.frameheight=settings.width] - height of a single frame in the given spritesheet
+     * @param {string} [settings.type] - object type
+     * @param {number} [settings.collisionMask] - Mask collision detection for this object
+     * @param {Rect[]|Polygon[]|Line[]|Ellipse[]} [settings.shapes] - the initial list of collision shapes (usually populated through Tiled)
      */
     constructor(x, y, settings) {
 
@@ -37839,7 +36467,7 @@ class Entity extends Renderable {
             // set the frame size to the given entity size, if not defined in settings
             settings.framewidth = settings.framewidth || settings.width;
             settings.frameheight = settings.frameheight || settings.height;
-            this.renderable = new Sprite(0, 0, settings);
+            this.renderable = new Sprite$1(0, 0, settings);
         }
 
         // Update anchorPoint
@@ -37892,14 +36520,14 @@ class Entity extends Renderable {
          */
         // initialize the default body
         if (typeof settings.shapes === "undefined") {
-            settings.shapes = pool.pull("Polygon", 0, 0, [
-                pool.pull("Vector2d", 0,          0),
-                pool.pull("Vector2d", this.width, 0),
-                pool.pull("Vector2d", this.width, this.height),
-                pool.pull("Vector2d", 0,          this.height)
+            settings.shapes = pool$1.pull("Polygon", 0, 0, [
+                pool$1.pull("Vector2d", 0,          0),
+                pool$1.pull("Vector2d", this.width, 0),
+                pool$1.pull("Vector2d", this.width, this.height),
+                pool$1.pull("Vector2d", 0,          this.height)
             ]);
         }
-        this.body = new Body(this, settings.shapes, this.onBodyUpdate.bind(this));
+        this.body = new Body$1(this, settings.shapes, this.onBodyUpdate.bind(this));
 
         // resize the entity if required
         if (this.width === 0 && this.height === 0) {
@@ -37928,7 +36556,7 @@ class Entity extends Renderable {
     }
 
     set renderable(value) {
-        if (value instanceof Renderable) {
+        if (value instanceof Renderable$1) {
             this.children[0] = value;
             this.children[0].ancestor = this;
         } else {
@@ -37949,7 +36577,7 @@ class Entity extends Renderable {
      * @ignore
      * @name onBodyUpdate
      * @memberof Entity
-     * @param {Body} body the body whose bounds to update
+     * @param {Body} body - the body whose bounds to update
      */
     onBodyUpdate(body) {
         // update the entity bounds to include the body bounds
@@ -37967,7 +36595,7 @@ class Entity extends Renderable {
             this.pos.y + this.body.getBounds().y
         );
 
-        if (this.renderable instanceof Renderable) {
+        if (this.renderable instanceof Renderable$1) {
             // draw the child renderable's anchorPoint at the entity's
             // anchor point.  the entity's anchor point is a scale from
             // body position to body width/height
@@ -37983,12 +36611,12 @@ class Entity extends Renderable {
      * @name draw
      * @memberof Entity
      * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
-     * @param {Camera2d} [viewport] the viewport to (re)draw
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+     * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
     draw(renderer, viewport) {
         var renderable = this.renderable;
-        if (renderable instanceof Renderable) {
+        if (renderable instanceof Renderable$1) {
             // predraw (apply transforms)
             renderable.preDraw(renderer);
 
@@ -38028,6 +36656,7 @@ class Entity extends Renderable {
     }
 
 }
+var Entity$1 = Entity;
 
 /*
  * placeholder for all deprecated classes and corresponding alias for backward compatibility
@@ -38036,9 +36665,9 @@ class Entity extends Renderable {
 /**
  * display a deprecation warning in the console
  * @ignore
- * @param {string} deprecated deprecated class,function or property name
- * @param {string} replacement the replacement class, function, or property name
- * @param {string} version the version since when the lass,function or property is deprecated
+ * @param {string} deprecated - deprecated class,function or property name
+ * @param {string} replacement - the replacement class, function, or property name
+ * @param {string} version - the version since when the lass,function or property is deprecated
  */
 function warning(deprecated, replacement, version) {
     var msg = "melonJS: %s is deprecated since version %s, please use %s";
@@ -38079,7 +36708,7 @@ function warning(deprecated, replacement, version) {
  * @deprecated since 10.4.0
  * @see TextureAtlas
  */
-Object.defineProperty(Renderer.prototype, "Texture", {
+Object.defineProperty(Renderer$1.prototype, "Texture", {
     /**
      * @ignore
      */
@@ -38098,9 +36727,9 @@ Object.defineProperty(Renderer.prototype, "Texture", {
  */
 class DraggableEntity extends Draggable {
     /**
-     * @param {number} x the x coordinates of the draggable object
-     * @param {number} y the y coordinates of the draggable object
-     * @param {object} settings Entity properties (see {@link Entity})
+     * @param {number} x - the x coordinates of the draggable object
+     * @param {number} y - the y coordinates of the draggable object
+     * @param {object} settings - Entity properties (see {@link Entity})
      */
     constructor(x, y, settings) {
         warning("DraggableEntity", "Draggable", "10.5.0");
@@ -38117,9 +36746,9 @@ class DraggableEntity extends Draggable {
  */
 class DroptargetEntity extends DropTarget {
     /**
-     * @param {number} x the x coordinates of the draggable object
-     * @param {number} y the y coordinates of the draggable object
-     * @param {object} settings Entity properties (see {@link Entity})
+     * @param {number} x - the x coordinates of the draggable object
+     * @param {number} y - the y coordinates of the draggable object
+     * @param {object} settings - Entity properties (see {@link Entity})
      */
     constructor(x, y, settings) {
         warning("DroptargetEntity", "DropTarget", "10.5.0");
@@ -38135,7 +36764,7 @@ class DroptargetEntity extends DropTarget {
  * @deprecated since 13.1.0
  * @see getCanvas();
  */
-Renderer.prototype.getScreenCanvas = function() {
+Renderer$1.prototype.getScreenCanvas = function() {
     warning("getScreenCanvas", "getCanvas", "13.1.0");
     return this.getCanvas();
 };
@@ -38149,7 +36778,7 @@ Renderer.prototype.getScreenCanvas = function() {
  * @deprecated since 13.1.0
  * @see getContext();
  */
-Renderer.prototype.getScreenContext = function()  {
+Renderer$1.prototype.getScreenContext = function()  {
     warning("getScreenContext", "getContext", "13.1.0");
     return this.getContext();
 };
@@ -38161,11 +36790,11 @@ Renderer.prototype.getScreenContext = function()  {
  * @deprecated since 14.0.0
  * @see UISpriteElement
  */
- class GUI_Object extends UISpriteElement {
+ class GUI_Object extends UISpriteElement$1 {
     /**
-     * @param {number} x the x coordinate of the GUI Object
-     * @param {number} y the y coordinate of the GUI Object
-     * @param {object} settings See {@link Sprite}
+     * @param {number} x - the x coordinate of the GUI Object
+     * @param {number} y - the y coordinate of the GUI Object
+     * @param {object} settings - See {@link Sprite}
      */
     constructor(x, y, settings) {
         warning("GUI_Object", "UISpriteElement", "14.0.0");
@@ -38183,7 +36812,7 @@ Renderer.prototype.getScreenContext = function()  {
  * @name version
  * @type {string}
  */
-const version = "14.0.2";
+const version = "14.1.0";
 
 
 /**
@@ -38217,71 +36846,71 @@ function boot() {
     }
 
     // register all built-ins objects into the object pool
-    pool.register("me.Entity", Entity);
-    pool.register("me.Collectable", Collectable);
-    pool.register("me.Trigger", Trigger);
-    pool.register("me.Light2d", Light2d);
-    pool.register("me.Tween", Tween, true);
-    pool.register("me.Color", Color, true);
-    pool.register("me.Particle", Particle, true);
-    pool.register("me.Sprite", Sprite);
-    pool.register("me.NineSliceSprite", NineSliceSprite);
-    pool.register("me.Renderable", Renderable);
-    pool.register("me.Text", Text, true);
-    pool.register("me.BitmapText", BitmapText);
-    pool.register("me.BitmapTextData", BitmapTextData, true);
-    pool.register("me.ImageLayer", ImageLayer);
-    pool.register("me.ColorLayer", ColorLayer, true);
-    pool.register("me.Vector2d", Vector2d, true);
-    pool.register("me.Vector3d", Vector3d, true);
-    pool.register("me.ObservableVector2d", ObservableVector2d, true);
-    pool.register("me.ObservableVector3d", ObservableVector3d, true);
-    pool.register("me.Matrix2d", Matrix2d, true);
-    pool.register("me.Matrix3d", Matrix3d, true);
-    pool.register("me.Rect", Rect, true);
-    pool.register("me.RoundRect", RoundRect, true);
-    pool.register("me.Polygon", Polygon, true);
-    pool.register("me.Line", Line, true);
-    pool.register("me.Point", Point, true);
-    pool.register("me.Ellipse", Ellipse, true);
-    pool.register("me.Bounds", Bounds, true);
+    pool$1.register("me.Entity", Entity$1);
+    pool$1.register("me.Collectable", Collectable$1);
+    pool$1.register("me.Trigger", Trigger$1);
+    pool$1.register("me.Light2d", Light2d$1);
+    pool$1.register("me.Tween", Tween$1, true);
+    pool$1.register("me.Color", Color$1, true);
+    pool$1.register("me.Particle", Particle$1, true);
+    pool$1.register("me.Sprite", Sprite$1);
+    pool$1.register("me.NineSliceSprite", NineSliceSprite$1);
+    pool$1.register("me.Renderable", Renderable$1);
+    pool$1.register("me.Text", Text$1, true);
+    pool$1.register("me.BitmapText", BitmapText$1);
+    pool$1.register("me.BitmapTextData", BitmapTextData$1, true);
+    pool$1.register("me.ImageLayer", ImageLayer$1);
+    pool$1.register("me.ColorLayer", ColorLayer$1, true);
+    pool$1.register("me.Vector2d", Vector2d$1, true);
+    pool$1.register("me.Vector3d", Vector3d$1, true);
+    pool$1.register("me.ObservableVector2d", ObservableVector2d$1, true);
+    pool$1.register("me.ObservableVector3d", ObservableVector3d$1, true);
+    pool$1.register("me.Matrix2d", Matrix2d$1, true);
+    pool$1.register("me.Matrix3d", Matrix3d$1, true);
+    pool$1.register("me.Rect", Rect$1, true);
+    pool$1.register("me.RoundRect", RoundRect$1, true);
+    pool$1.register("me.Polygon", Polygon$1, true);
+    pool$1.register("me.Line", Line$1, true);
+    pool$1.register("me.Point", Point$1, true);
+    pool$1.register("me.Ellipse", Ellipse$1, true);
+    pool$1.register("me.Bounds", Bounds$1, true);
 
     // duplicate all entries if use with no namespace (e.g. es6)
-    pool.register("Entity", Entity);
-    pool.register("Collectable", Collectable);
-    pool.register("Trigger", Trigger);
-    pool.register("Light2d", Light2d);
-    pool.register("Tween", Tween, true);
-    pool.register("Color", Color, true);
-    pool.register("Particle", Particle, true);
-    pool.register("Sprite", Sprite);
-    pool.register("NineSliceSprite", NineSliceSprite);
-    pool.register("Renderable", Renderable);
-    pool.register("Text", Text, true);
-    pool.register("BitmapText", BitmapText);
-    pool.register("BitmapTextData", BitmapTextData, true);
-    pool.register("ImageLayer", ImageLayer);
-    pool.register("ColorLayer", ColorLayer, true);
-    pool.register("Vector2d", Vector2d, true);
-    pool.register("Vector3d", Vector3d, true);
-    pool.register("ObservableVector2d", ObservableVector2d, true);
-    pool.register("ObservableVector3d", ObservableVector3d, true);
-    pool.register("Matrix2d", Matrix2d, true);
-    pool.register("Matrix3d", Matrix3d, true);
-    pool.register("Rect", Rect, true);
-    pool.register("RoundRect", RoundRect, true);
-    pool.register("Polygon", Polygon, true);
-    pool.register("Line", Line, true);
-    pool.register("Point", Point, true);
-    pool.register("Ellipse", Ellipse, true);
-    pool.register("Bounds", Bounds, true);
-    pool.register("CanvasTexture", CanvasTexture, true);
+    pool$1.register("Entity", Entity$1);
+    pool$1.register("Collectable", Collectable$1);
+    pool$1.register("Trigger", Trigger$1);
+    pool$1.register("Light2d", Light2d$1);
+    pool$1.register("Tween", Tween$1, true);
+    pool$1.register("Color", Color$1, true);
+    pool$1.register("Particle", Particle$1, true);
+    pool$1.register("Sprite", Sprite$1);
+    pool$1.register("NineSliceSprite", NineSliceSprite$1);
+    pool$1.register("Renderable", Renderable$1);
+    pool$1.register("Text", Text$1, true);
+    pool$1.register("BitmapText", BitmapText$1);
+    pool$1.register("BitmapTextData", BitmapTextData$1, true);
+    pool$1.register("ImageLayer", ImageLayer$1);
+    pool$1.register("ColorLayer", ColorLayer$1, true);
+    pool$1.register("Vector2d", Vector2d$1, true);
+    pool$1.register("Vector3d", Vector3d$1, true);
+    pool$1.register("ObservableVector2d", ObservableVector2d$1, true);
+    pool$1.register("ObservableVector3d", ObservableVector3d$1, true);
+    pool$1.register("Matrix2d", Matrix2d$1, true);
+    pool$1.register("Matrix3d", Matrix3d$1, true);
+    pool$1.register("Rect", Rect$1, true);
+    pool$1.register("RoundRect", RoundRect$1, true);
+    pool$1.register("Polygon", Polygon$1, true);
+    pool$1.register("Line", Line$1, true);
+    pool$1.register("Point", Point$1, true);
+    pool$1.register("Ellipse", Ellipse$1, true);
+    pool$1.register("Bounds", Bounds$1, true);
+    pool$1.register("CanvasTexture", CanvasTexture$1, true);
 
     // publish Boot notification
     emit(BOOT);
 
     // enable/disable the cache
-    loader.setNocache( utils.getUriFragment().nocache || false );
+    loader$1.setNocache( utils$1.getUriFragment().nocache || false );
 
     // automatically enable keyboard events
     initKeyboardEvent();
@@ -38297,4 +36926,4 @@ onReady(() => {
     }
 });
 
-export { BitmapText, BitmapTextData, Body, Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Point, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, UIBaseElement, UISpriteElement, UITextButton, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state, timer, utils, version, video, warning };
+export { BitmapText$1 as BitmapText, BitmapTextData$1 as BitmapTextData, Body$1 as Body, Bounds$1 as Bounds, Camera2d$1 as Camera2d, CanvasRenderer$1 as CanvasRenderer, Collectable$1 as Collectable, Color$1 as Color, ColorLayer$1 as ColorLayer, Container$1 as Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse$1 as Ellipse, Entity$1 as Entity, GLShader$1 as GLShader, GUI_Object, ImageLayer$1 as ImageLayer, Light2d$1 as Light2d, Line$1 as Line, math as Math, Matrix2d$1 as Matrix2d, Matrix3d$1 as Matrix3d, NineSliceSprite$1 as NineSliceSprite, ObservableVector2d$1 as ObservableVector2d, ObservableVector3d$1 as ObservableVector3d, Particle$1 as Particle, ParticleEmitter$1 as ParticleEmitter, ParticleEmitterSettings$1 as ParticleEmitterSettings, Point$1 as Point, Pointer$1 as Pointer, Polygon$1 as Polygon, QuadTree$1 as QuadTree, Rect$1 as Rect, Renderable$1 as Renderable, Renderer$1 as Renderer, RoundRect$1 as RoundRect, Sprite$1 as Sprite, Stage$1 as Stage, TMXHexagonalRenderer$1 as TMXHexagonalRenderer, TMXIsometricRenderer$1 as TMXIsometricRenderer, TMXLayer$1 as TMXLayer, TMXOrthogonalRenderer$1 as TMXOrthogonalRenderer, TMXRenderer$1 as TMXRenderer, TMXStaggeredRenderer$1 as TMXStaggeredRenderer, TMXTileMap$1 as TMXTileMap, TMXTileset$1 as TMXTileset, TMXTilesetGroup$1 as TMXTilesetGroup, Text$1 as Text, TextureAtlas, Tile$1 as Tile, Trigger$1 as Trigger, Tween$1 as Tween, UIBaseElement$1 as UIBaseElement, UISpriteElement$1 as UISpriteElement, UITextButton$1 as UITextButton, Vector2d$1 as Vector2d, Vector3d$1 as Vector3d, WebGLCompositor$1 as WebGLCompositor, WebGLRenderer$1 as WebGLRenderer, World$1 as World, audio, boot, collision$1 as collision, device, event, game$1 as game, initialized, input, level$1 as level, loader$1 as loader, plugin, plugins, pool$1 as pool, save$1 as save, skipAutoInit, state$1 as state, timer$1 as timer, utils$1 as utils, version, video, warning };
