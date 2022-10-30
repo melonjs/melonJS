@@ -1,6 +1,6 @@
 # Changelog
 
-## [14.1.0] (melonJS 2) - _2022-10-29_
+## [14.1.0] (melonJS 2) - _2022-10-30_
 
 ### Added
 - Core: the build process has been upgraded to rollup 3 and Node 19
