@@ -48,7 +48,7 @@ export default [
         output: {
           file: "build/melonjs.module.js",
           banner: license,
-          format: "esm"
+          format: "es"
         }
     },
     // ES6 "melonjs.mjs/" chunk
