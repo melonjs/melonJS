@@ -1,5 +1,4 @@
 import Vector2d from "./../math/vector2.js";
-import Container from "./../renderable/container.js";
 import * as arrayUtil from "./../utils/array.js";
 
 /*
@@ -7,7 +6,6 @@ import * as arrayUtil from "./../utils/array.js";
  * Based on the QuadTree Library by Timo Hausmann and released under the MIT license
  * https://github.com/timohausmann/quadtree-js/
 **/
-
 
 /**
  * a pool of `QuadTree` objects
@@ -199,7 +197,7 @@ var QT_VECTOR = new Vector2d();
     insertContainer(container) {
         for (var i = container.children.length, child; i--, (child = container.children[i]);) {
             if (child.isKinematic !== true) {
-                if (child instanceof Container) {
+                if (typeof child.addChild === "function") {
                     if (child.name !== "rootContainer") {
                         this.insert(child);
                     }
