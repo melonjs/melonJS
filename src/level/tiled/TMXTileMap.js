@@ -12,7 +12,6 @@ import TMXTilesetGroup from "./TMXTilesetGroup.js";
 import TMXGroup from "./TMXGroup.js";
 import TMXLayer from "./TMXLayer.js";
 import { applyTMXProperties } from "./TMXUtils.js";
-import Renderable from "./../../renderable/renderable.js";
 import Container from "./../../renderable/container.js";
 
 // constant to identify the collision object layer
@@ -578,7 +577,7 @@ function readObjectGroup(map, data, z) {
                     if (obj.isRenderable === true) {
                         obj.setOpacity(obj.getOpacity() * group.opacity);
                         // and to child renderables if any
-                        if (obj.renderable instanceof Renderable) {
+                        if (typeof obj.renderable !== "undefined" && obj.renderable.isRenderable === true) {
                             obj.renderable.setOpacity(obj.renderable.getOpacity() * group.opacity);
                         }
                     }
