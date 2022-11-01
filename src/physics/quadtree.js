@@ -53,7 +53,7 @@ var QT_VECTOR = new Vector2d();
  * a QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
  * @see game.world.broadphase
  */
-class QuadTree {
+ export default class QuadTree {
     /**
      * @param {World} world - the physic world this QuadTree belongs to
      * @param {Bounds} bounds - bounds of the node
@@ -386,5 +386,3 @@ class QuadTree {
         }
     }
 }
-
-export default QuadTree;

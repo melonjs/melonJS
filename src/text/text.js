@@ -36,7 +36,7 @@ var getContext2d = function (renderer, text) {
  * a generic system font object.
  * @augments Renderable
  */
-class Text extends Renderable {
+ export default class Text extends Renderable {
     /**
      * @param {number} x - position of the text object
      * @param {number} y - position of the text object
@@ -441,4 +441,3 @@ class Text extends Renderable {
         super.destroy();
     }
 }
-export default Text;

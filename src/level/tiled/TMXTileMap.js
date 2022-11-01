@@ -103,7 +103,7 @@ function readObjectGroup(map, data, z) {
  * a TMX Tile Map Object
  * Tiled QT +0.7.x format
  */
-class TMXTileMap {
+ export default class TMXTileMap {
     /**
      * @param {string} levelId - name of TMX map
      * @param {object} data - TMX map in JSON format
@@ -630,4 +630,3 @@ class TMXTileMap {
     }
 }
 
-export default TMXTileMap;

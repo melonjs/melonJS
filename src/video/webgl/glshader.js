@@ -10,7 +10,7 @@ import { minify } from "./utils/string.js";
  * @classdesc
  * a base GL Shader object
  */
-class GLShader {
+ export default class GLShader {
     /**
      * @param {WebGLRenderingContext} gl - the current WebGL rendering context
      * @param {string} vertex - a string containing the GLSL source code to set
@@ -156,4 +156,4 @@ class GLShader {
         this.fragment = null;
     }
 }
-export default GLShader;
+

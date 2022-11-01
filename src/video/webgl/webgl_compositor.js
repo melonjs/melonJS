@@ -22,7 +22,7 @@ var V_ARRAY = [
  * A WebGL Compositor object. This class handles all of the WebGL state<br>
  * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
  */
-class WebGLCompositor {
+ export default class WebGLCompositor {
     /**
      * @param {WebGLRenderer} renderer - the current WebGL renderer session
      */
@@ -484,4 +484,3 @@ class WebGLCompositor {
         gl.clear(gl.COLOR_BUFFER_BIT);
     }
 }
-export default WebGLCompositor;

@@ -9,7 +9,7 @@ import TextMetrics from "./textmetrics.js";
  * a bitmap font object
  * @augments Renderable
  */
-class BitmapText extends Renderable {
+ export default class BitmapText extends Renderable {
     /**
      * @param {number} x - position of the text object
      * @param {number} y - position of the text object
@@ -358,4 +358,3 @@ class BitmapText extends Renderable {
     }
 
 }
-export default BitmapText;

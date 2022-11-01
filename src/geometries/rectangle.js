@@ -6,7 +6,7 @@ import Polygon from "./poly.js";
  * a rectangle Object
  * @augments Polygon
  */
-class Rect extends Polygon {
+ export default class Rect extends Polygon {
     /**
      * @param {number} x - position of the Rectangle
      * @param {number} y - position of the Rectangle
@@ -363,4 +363,3 @@ class Rect extends Polygon {
         );
     }
 }
-export default Rect;

@@ -10,18 +10,18 @@ import Body from "./../physics/body.js";
  * Private function to re-use for object removal in a defer
  * @ignore
  */
-var deferredRemove = function (child, keepalive) {
+function deferredRemove(child, keepalive) {
     this.removeChildNow(child, keepalive);
-};
+}
 
-var globalFloatingCounter = 0;
+let globalFloatingCounter = 0;
 
 /**
  * @classdesc
  * Container represents a collection of child objects
  * @augments Renderable
  */
-class Container extends Renderable {
+ export default class Container extends Renderable {
     /**
      * @param {number} [x=0] - position of the container (accessible via the inherited pos.x property)
      * @param {number} [y=0] - position of the container (accessible via the inherited pos.y property)
@@ -1005,5 +1005,3 @@ class Container extends Renderable {
         }
     }
 }
-
-export default Container;

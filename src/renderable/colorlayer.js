@@ -7,7 +7,7 @@ import Renderable from "./renderable.js";
  * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
  * @augments Renderable
  */
-class ColorLayer extends Renderable {
+ export default class ColorLayer extends Renderable {
     /**
      * @param {string} name - Layer name
      * @param {Color|string} color - CSS color
@@ -68,5 +68,3 @@ class ColorLayer extends Renderable {
     }
 
 }
-
-export default ColorLayer;

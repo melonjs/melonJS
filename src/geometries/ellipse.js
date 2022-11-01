@@ -4,7 +4,7 @@ import pool from "./../system/pooling.js";
  * @classdesc
  * an ellipse Object
  */
-class Ellipse {
+ export default class Ellipse {
     /**
      * @param {number} x - the center x coordinate of the ellipse
      * @param {number} y - the center y coordinate of the ellipse
@@ -263,4 +263,3 @@ class Ellipse {
         );
     }
 }
-export default Ellipse;

@@ -5,7 +5,7 @@
  * @ignore
  */
 
-class VertexArrayBuffer {
+ export default class VertexArrayBuffer {
 
     constructor(vertex_size, vertex_per_quad) {
         // the size of one vertex in float
@@ -131,4 +131,3 @@ class VertexArrayBuffer {
     }
 
 }
-export default VertexArrayBuffer;

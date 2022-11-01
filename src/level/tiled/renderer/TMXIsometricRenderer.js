@@ -9,7 +9,7 @@ import TMXLayer from "./../TMXLayer.js";
  * an Isometric Map Renderder
  * @augments TMXRenderer
  */
-class TMXIsometricRenderer extends TMXRenderer {
+ export default class TMXIsometricRenderer extends TMXRenderer {
     /**
      * @param {TMXTileMap} map - the TMX map
      */
@@ -209,4 +209,3 @@ class TMXIsometricRenderer extends TMXRenderer {
     }
 }
 
-export default TMXIsometricRenderer;

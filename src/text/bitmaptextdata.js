@@ -56,7 +56,7 @@ function createSpaceGlyph(glyphs) {
  * Class for storing relevant data from the font file.
  * @ignore
  */
-class BitmapTextData {
+ export default class BitmapTextData {
 
    /**
     * @param {string} data - The bitmap font data pulled from the resource loader using me.loader.getBinary()
@@ -187,4 +187,3 @@ class BitmapTextData {
         this.capHeight -= padY;
     }
 }
-export default BitmapTextData;

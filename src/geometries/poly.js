@@ -12,7 +12,7 @@ import pool from "./../system/pooling.js";
  *
  * A polygon's `winding` is clockwise if its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
  */
-class Polygon {
+ export default class Polygon {
     /**
      * @param {number} x - origin point of the Polygon
      * @param {number} y - origin point of the Polygon
@@ -486,5 +486,3 @@ class Polygon {
         return new Polygon(this.pos.x, this.pos.y, copy);
     }
 }
-
-export default Polygon;

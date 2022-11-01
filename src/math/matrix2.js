@@ -7,7 +7,7 @@ import Matrix3d from "./matrix3.js";
  * the identity matrix and parameters position : <br>
  * <img src="images/identity-matrix_2x.png"/>
  */
-class Matrix2d {
+ export default class Matrix2d {
     /**
      * @param {(Matrix2d|Matrix3d|...number)} args - an instance of me.Matrix2d or me.Matrix3d to copy from, or individual matrix components (See {@link Matrix2d.setTransform}). If not arguments are given, the matrix will be set to Identity.
      */
@@ -491,4 +491,3 @@ class Matrix2d {
     }
 }
 
-export default Matrix2d;

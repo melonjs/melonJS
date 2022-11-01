@@ -12,7 +12,7 @@ import * as event from "./../../system/event.js";
  * a canvas renderer object
  * @augments Renderer
  */
-class CanvasRenderer extends Renderer {
+ export default class CanvasRenderer extends Renderer {
     /**
      * @param {object} options - The renderer parameters
      * @param {number} options.width - The width of the canvas without scaling
@@ -795,4 +795,3 @@ class CanvasRenderer extends Renderer {
         }
     }
 }
-export default CanvasRenderer;

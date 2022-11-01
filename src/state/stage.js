@@ -18,7 +18,7 @@ var default_settings = {
  * through the state manager must inherit from this base class.
  * @see state
  */
-class Stage {
+ export default class Stage {
 
     /**
      * @param {object} [settings] - The stage` parameters
@@ -225,4 +225,3 @@ class Stage {
         }
     }
 }
-export default Stage;

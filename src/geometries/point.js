@@ -2,7 +2,7 @@
  * @classdesc
  * represents a point in a 2d space
  */
-class Point {
+ export default class Point {
     constructor(x = 0, y = 0) {
         /**
          * the position of the point on the horizontal axis
@@ -77,4 +77,3 @@ class Point {
         return new Point(this.x, this.y);
     }
 }
-export default Point;

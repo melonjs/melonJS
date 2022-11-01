@@ -7,7 +7,7 @@ import TMXRenderer from "./TMXRenderer.js";
  * an Orthogonal Map Renderder
  * @augments TMXRenderer
  */
-class TMXOrthogonalRenderer extends TMXRenderer {
+ export default class TMXOrthogonalRenderer extends TMXRenderer {
     /**
      * @param {TMXTileMap} map - the TMX map
      */
@@ -147,4 +147,3 @@ class TMXOrthogonalRenderer extends TMXRenderer {
     }
 }
 
-export default TMXOrthogonalRenderer;

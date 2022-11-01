@@ -68,7 +68,7 @@ function preRenderLayer(layer, renderer) {
  * Tiled QT 0.7.x format
  * @augments Renderable
  */
-class TMXLayer extends Renderable {
+ export default class TMXLayer extends Renderable {
     /**
      * @param {object} map - layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
      * @param {object} data - layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
@@ -436,4 +436,3 @@ class TMXLayer extends Renderable {
     }
 }
 
-export default TMXLayer;

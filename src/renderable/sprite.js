@@ -10,7 +10,7 @@ import Color from "../math/color.js";
  * An object to display a fixed or animated sprite on screen.
  * @augments Renderable
  */
-class Sprite extends Renderable {
+ export default class Sprite extends Renderable {
     /**
      * @param {number} x - the x coordinates of the sprite object
      * @param {number} y - the y coordinates of the sprite object
@@ -642,4 +642,3 @@ class Sprite extends Renderable {
         );
     }
 }
-export default Sprite;

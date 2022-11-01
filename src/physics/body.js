@@ -14,7 +14,7 @@ import Point from "../geometries/point.js";
  * a Generic Physic Body Object with some physic properties and behavior functionality, to as a member of a Renderable.
  * @see Renderable.body
  */
-class Body {
+ export default class Body {
     /**
      * @param {Renderable} ancestor - the parent object this body is attached to
      * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] - a initial shape, list of shapes, or JSON object defining the body
@@ -692,4 +692,3 @@ class Body {
     }
 }
 
-export default Body;

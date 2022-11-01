@@ -7,7 +7,7 @@ const PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
  * a glyph representing a single character in a font
  * @ignore
  */
-class Glyph {
+ export default class Glyph {
     /**
      * @ignore
      */
@@ -55,4 +55,3 @@ class Glyph {
         page[ch & PAGE_SIZE - 1] = value;
     }
 }
-export default Glyph;

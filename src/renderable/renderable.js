@@ -12,7 +12,7 @@ import Color from "./../math/color.js";
  * A base class for renderable objects.
  * @augments Rect
  */
-class Renderable extends Rect {
+ export default class Renderable extends Rect {
     /**
      * @param {number} x - position of the renderable object (accessible through inherited pos.x property)
      * @param {number} y - position of the renderable object (accessible through inherited pos.y property)
@@ -771,4 +771,3 @@ class Renderable extends Rect {
     }
 
 }
-export default Renderable;

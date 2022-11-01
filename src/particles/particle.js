@@ -8,7 +8,7 @@ import Renderable from "./../renderable/renderable.js";
  * Single Particle Object.
  * @augments Renderable
  */
-class Particle extends Renderable {
+ export default class Particle extends Renderable {
     /**
      * @param {ParticleEmitter} emitter - the particle emitter
      */
@@ -176,4 +176,3 @@ class Particle extends Renderable {
     }
 }
 
-export default Particle;

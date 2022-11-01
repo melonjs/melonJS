@@ -5,7 +5,7 @@ import Vector2d from "./../math/vector2.js";
  * @classdesc
  * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
  */
-class Bounds {
+ export default class Bounds {
     /**
      * @param {Vector2d[]} [vertices] - an array of me.Vector2d points
      */
@@ -448,4 +448,4 @@ class Bounds {
     }
 
 }
-export default Bounds;
+

@@ -14,7 +14,7 @@ import { isPowerOfTwo, nextPowerOfTwo } from "./../../math/math.js";
  * a WebGL renderer object
  * @augments Renderer
  */
-class WebGLRenderer extends Renderer {
+ export default class WebGLRenderer extends Renderer {
     /**
      * @param {object} options - The renderer parameters
      * @param {number} options.width - The width of the canvas without scaling
@@ -1024,4 +1024,3 @@ class WebGLRenderer extends Renderer {
         }
     }
 }
-export default WebGLRenderer;

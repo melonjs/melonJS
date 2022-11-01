@@ -23,7 +23,7 @@ import { Interpolation } from "./interpolation.js";
  * author lechecacharro<br>
  * author Josh Faul / http://jocafa.com/
  */
-class Tween {
+ export default class Tween {
 
     /**
      * @param {object} object - object on which to apply the tween
@@ -468,4 +468,3 @@ class Tween {
     static get Easing() { return Easing; }
     static get Interpolation() { return Interpolation; }
 }
-export default Tween;

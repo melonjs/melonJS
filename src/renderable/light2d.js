@@ -49,7 +49,7 @@ function createGradient(light) {
  * (multiple lights are not supported, alpha component of the ambient light is ignored)
  * @see stage.lights
  */
-class Light2d extends Renderable {
+ export default class Light2d extends Renderable {
    /**
     * @param {number} x - The horizontal position of the light.
     * @param {number} y - The vertical position of the light.
@@ -144,4 +144,3 @@ class Light2d extends Renderable {
         super.destroy();
     }
 }
-export default Light2d;

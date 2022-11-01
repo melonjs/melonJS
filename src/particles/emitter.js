@@ -21,7 +21,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
  * Particle Emitter Object.
  * @augments Container
  */
-class ParticleEmitter extends Container {
+ export default class ParticleEmitter extends Container {
     /**
      * @param {number} x - x position of the particle emitter
      * @param {number} y - y position of the particle emitter
@@ -256,4 +256,3 @@ class ParticleEmitter extends Container {
     }
 }
 
-export default ParticleEmitter;

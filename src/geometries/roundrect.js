@@ -7,7 +7,7 @@ import Rect from "./rectangle.js";
  * a rectangle object with rounded corners
  * @augments Rect
  */
-class RoundRect extends Rect {
+export default class RoundRect extends Rect {
     /**
      * @param {number} x - position of the rounded rectangle
      * @param {number} y - position of the rounded rectangle
@@ -156,4 +156,3 @@ class RoundRect extends Rect {
         return new RoundRect(this.pos.x, this.pos.y, this.width, this.height, this.radius);
     }
 }
-export default RoundRect;

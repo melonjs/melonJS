@@ -5,7 +5,7 @@ import pool from "./../system/pooling.js";
  * @classdesc
  * a generic 2D Vector Object
  */
-class Vector2d {
+ export default class Vector2d {
     /**
      * @param {number} [x=0] - x value of the vector
      * @param {number} [y=0] - y value of the vector
@@ -516,4 +516,3 @@ class Vector2d {
     }
 }
 
-export default Vector2d;

@@ -10,7 +10,7 @@ import World from "./../physics/world.js";
  * An Application is responsible for updating (each frame) all the related object status and draw them.
  * @see game
  */
-class Application {
+ export default class Application {
     constructor() {
         /**
          * a reference to the current active stage "default" camera
@@ -228,4 +228,3 @@ class Application {
     }
 }
 
-export default Application;

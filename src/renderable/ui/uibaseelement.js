@@ -9,7 +9,7 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
  * text and images.
  * @augments Container
  */
-class UIBaseElement extends Container {
+ export default class UIBaseElement extends Container {
     /**
      *
      * @param {number} x - The x position of the container
@@ -201,4 +201,3 @@ class UIBaseElement extends Container {
         timer.clearTimeout(this.holdTimeout);
     }
 }
-export default UIBaseElement;

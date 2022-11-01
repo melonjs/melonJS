@@ -6,7 +6,7 @@ import earcut from "earcut";
  * @classdesc
  * a simplified path2d implementation, supporting only one path
  */
-class Path2D {
+ export default class Path2D {
     constructor() {
         /**
          * the points defining the current path
@@ -306,4 +306,3 @@ class Path2D {
         this.arcTo(x, y, x + radius, y, radius);
     }
 }
-export default Path2D;

@@ -7,7 +7,7 @@ import {clamp} from "./math.js";
  * A Vector2d object that provide notification by executing the given callback when the vector is changed.
  * @augments Vector2d
  */
-class ObservableVector2d extends Vector2d {
+ export default class ObservableVector2d extends Vector2d {
     /**
      * @param {number} x - x value of the vector
      * @param {number} y - y value of the vector
@@ -459,4 +459,3 @@ class ObservableVector2d extends Vector2d {
     }
 }
 
-export default ObservableVector2d;

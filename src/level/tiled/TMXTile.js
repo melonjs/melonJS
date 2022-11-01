@@ -13,7 +13,7 @@ const TMX_FLIP_H          = 0x80000000,
  * a basic tile object
  * @augments Bounds
  */
-class Tile extends Bounds {
+ export default class Tile extends Bounds {
     /**
      * @param {number} x - x index of the Tile in the map
      * @param {number} y - y index of the Tile in the map
@@ -182,4 +182,3 @@ class Tile extends Bounds {
         return renderable;
     }
 }
-export default Tile;

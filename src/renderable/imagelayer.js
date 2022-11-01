@@ -11,7 +11,7 @@ import * as stringUtil from "./../utils/string.js";
  * a generic Image Layer Object
  * @augments Renderable
  */
-class ImageLayer extends Sprite {
+ export default class ImageLayer extends Sprite {
     /**
      * @param {number} x - x coordinate
      * @param {number} y - y coordinate
@@ -295,4 +295,3 @@ class ImageLayer extends Sprite {
     }
 
 }
-export default ImageLayer;

@@ -10,7 +10,7 @@ import pool from "./../system/pooling.js";
  * trigger an event when colliding with another object
  * @augments Renderable
  */
-class Trigger extends Renderable {
+ export default class Trigger extends Renderable {
     /**
      * @param {number} x - the x coordinates of the trigger area
      * @param {number} y - the y coordinates of the trigger area
@@ -145,4 +145,3 @@ class Trigger extends Renderable {
     }
 
 }
-export default Trigger;

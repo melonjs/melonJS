@@ -17,7 +17,7 @@ import Point from "../geometries/point.js";
  * @classdesc
  * a base renderer object
  */
-class Renderer {
+ export default class Renderer {
     /**
      * @param {object} options - The renderer parameters
      * @param {number} options.width - The width of the canvas without scaling
@@ -399,4 +399,3 @@ class Renderer {
     drawFont(/*bounds*/) {}
 
 }
-export default Renderer;

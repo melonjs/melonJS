@@ -8,7 +8,7 @@ import Sprite from "./sprite.js";
  * @see https://en.wikipedia.org/wiki/9-slice_scaling
  * @augments Sprite
  */
-class NineSliceSprite extends Sprite {
+ export default class NineSliceSprite extends Sprite {
     /**
      * @param {number} x - the x coordinates of the sprite object
      * @param {number} y - the y coordinates of the sprite object
@@ -235,4 +235,3 @@ class NineSliceSprite extends Sprite {
         );
     }
 }
-export default NineSliceSprite;

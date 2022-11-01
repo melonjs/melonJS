@@ -182,7 +182,7 @@ var cssToRGB = new Map();
  * @classdesc
  * A color manipulation object.
  */
-class Color {
+ export default class Color {
     /**
      * @param {number} [r=0] - red component or array of color components
      * @param {number} [g=0] - green component
@@ -606,4 +606,3 @@ class Color {
     }
 }
 
-export default Color;
