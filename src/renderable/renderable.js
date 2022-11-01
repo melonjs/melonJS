@@ -1,7 +1,6 @@
 import ObservableVector2d from "./../math/observable_vector2.js";
 import ObservableVector3d from "./../math/observable_vector3.js";
 import Rect from "./../geometries/rectangle.js";
-import Container from "./container.js";
 import pool from "./../system/pooling.js";
 import { releaseAllPointerEvents } from "./../input/input.js";
 import { clamp } from "./../math/math.js";
@@ -558,7 +557,7 @@ import Color from "./../math/color.js";
          */
 
          // XXX: This is called from the constructor, before it gets an ancestor
-         if (this.ancestor instanceof Container && this.floating !== true) {
+         if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
              bounds.translate(this.ancestor.getAbsolutePosition());
          }
 
@@ -575,7 +574,7 @@ import Color from "./../math/color.js";
           }
           // XXX Cache me or something
           this._absPos.set(this.pos.x, this.pos.y);
-          if (this.ancestor instanceof Container && this.floating !== true) {
+          if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
               this._absPos.add(this.ancestor.getAbsolutePosition());
           }
           return this._absPos;
