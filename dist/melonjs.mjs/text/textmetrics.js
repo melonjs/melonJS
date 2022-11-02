@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -14,7 +14,7 @@ import setContextStyle from './textstyle.js';
  * a Text Metrics object that contains helper for text manipulation
  * @augments Bounds
  */
-class TextMetrics extends Bounds {
+ class TextMetrics extends Bounds {
 
     /**
      * @param {Text|BitmapText} ancestor - the parent object that contains this TextMetrics object
@@ -171,6 +171,5 @@ class TextMetrics extends Bounds {
         return output;
     }
 }
-var TextMetrics$1 = TextMetrics;
 
-export { TextMetrics$1 as default };
+export { TextMetrics as default };

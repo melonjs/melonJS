@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -14,7 +14,7 @@ import { e as earcut } from '../_virtual/earcut.js';
  * @classdesc
  * a simplified path2d implementation, supporting only one path
  */
-class Path2D {
+ class Path2D {
     constructor() {
         /**
          * the points defining the current path
@@ -314,6 +314,5 @@ class Path2D {
         this.arcTo(x, y, x + radius, y, radius);
     }
 }
-var Path2D$1 = Path2D;
 
-export { Path2D$1 as default };
+export { Path2D as default };

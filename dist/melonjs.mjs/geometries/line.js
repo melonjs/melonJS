@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -17,7 +17,7 @@ import Polygon from './poly.js';
  * @param {Vector2d[]} points - array of vectors defining the Line
  */
 
-class Line extends Polygon {
+ class Line extends Polygon {
 
     /**
      * Returns true if the Line contains the given point
@@ -111,6 +111,5 @@ class Line extends Polygon {
     }
 
 }
-var Line$1 = Line;
 
-export { Line$1 as default };
+export { Line as default };

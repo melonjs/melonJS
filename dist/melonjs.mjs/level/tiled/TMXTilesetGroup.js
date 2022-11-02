@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -12,7 +12,7 @@ const TMX_CLEAR_BIT_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
  * @classdesc
  * an object containing all tileset
  */
-class TMXTilesetGroup {
+ class TMXTilesetGroup {
 
     constructor() {
         this.tilesets = [];
@@ -78,6 +78,4 @@ class TMXTilesetGroup {
     }
 }
 
-var TMXTilesetGroup$1 = TMXTilesetGroup;
-
-export { TMXTilesetGroup$1 as default };
+export { TMXTilesetGroup as default };

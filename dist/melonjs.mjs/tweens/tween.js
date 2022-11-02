@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -30,7 +30,7 @@ import { Interpolation } from './interpolation.js';
  * author lechecacharro<br>
  * author Josh Faul / http://jocafa.com/
  */
-class Tween {
+ class Tween {
 
     /**
      * @param {object} object - object on which to apply the tween
@@ -475,6 +475,5 @@ class Tween {
     static get Easing() { return Easing; }
     static get Interpolation() { return Interpolation; }
 }
-var Tween$1 = Tween;
 
-export { Tween$1 as default };
+export { Tween as default };

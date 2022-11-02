@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -14,7 +14,7 @@ import Matrix3d from './matrix3.js';
  * the identity matrix and parameters position : <br>
  * <img src="images/identity-matrix_2x.png"/>
  */
-class Matrix2d {
+ class Matrix2d {
     /**
      * @param {(Matrix2d|Matrix3d|...number)} args - an instance of me.Matrix2d or me.Matrix3d to copy from, or individual matrix components (See {@link Matrix2d.setTransform}). If not arguments are given, the matrix will be set to Identity.
      */
@@ -498,6 +498,4 @@ class Matrix2d {
     }
 }
 
-var Matrix2d$1 = Matrix2d;
-
-export { Matrix2d$1 as default };
+export { Matrix2d as default };

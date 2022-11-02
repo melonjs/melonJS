@@ -1,12 +1,12 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
  */
 import pool from '../../system/pooling.js';
-import { off, VIEWPORT_ONRESIZE, on } from '../../system/event.js';
+import { off, on, VIEWPORT_ONRESIZE } from '../../system/event.js';
 import game from '../../game.js';
 import collision from '../../physics/collision.js';
 import Body from '../../physics/body.js';
@@ -19,7 +19,6 @@ import TMXTilesetGroup from './TMXTilesetGroup.js';
 import TMXGroup from './TMXGroup.js';
 import TMXLayer from './TMXLayer.js';
 import { applyTMXProperties } from './TMXUtils.js';
-import Renderable from '../../renderable/renderable.js';
 import Container from '../../renderable/container.js';
 
 // constant to identify the collision object layer
@@ -110,7 +109,7 @@ function readObjectGroup(map, data, z) {
  * a TMX Tile Map Object
  * Tiled QT +0.7.x format
  */
-class TMXTileMap {
+ class TMXTileMap {
     /**
      * @param {string} levelId - name of TMX map
      * @param {object} data - TMX map in JSON format
@@ -582,7 +581,7 @@ class TMXTileMap {
                     if (obj.isRenderable === true) {
                         obj.setOpacity(obj.getOpacity() * group.opacity);
                         // and to child renderables if any
-                        if (obj.renderable instanceof Renderable) {
+                        if (typeof obj.renderable !== "undefined" && obj.renderable.isRenderable === true) {
                             obj.renderable.setOpacity(obj.renderable.getOpacity() * group.opacity);
                         }
                     }
@@ -634,6 +633,4 @@ class TMXTileMap {
     }
 }
 
-var TMXTileMap$1 = TMXTileMap;
-
-export { TMXTileMap$1 as default };
+export { TMXTileMap as default };

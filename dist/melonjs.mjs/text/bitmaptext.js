@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -16,7 +16,7 @@ import TextMetrics from './textmetrics.js';
  * a bitmap font object
  * @augments Renderable
  */
-class BitmapText extends Renderable {
+ class BitmapText extends Renderable {
     /**
      * @param {number} x - position of the text object
      * @param {number} y - position of the text object
@@ -359,6 +359,5 @@ class BitmapText extends Renderable {
     }
 
 }
-var BitmapText$1 = BitmapText;
 
-export { BitmapText$1 as default };
+export { BitmapText as default };

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -56,7 +56,7 @@ function createGradient(light) {
  * (multiple lights are not supported, alpha component of the ambient light is ignored)
  * @see stage.lights
  */
-class Light2d extends Renderable {
+ class Light2d extends Renderable {
    /**
     * @param {number} x - The horizontal position of the light.
     * @param {number} y - The vertical position of the light.
@@ -151,6 +151,5 @@ class Light2d extends Renderable {
         super.destroy();
     }
 }
-var Light2d$1 = Light2d;
 
-export { Light2d$1 as default };
+export { Light2d as default };

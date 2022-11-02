@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -15,7 +15,7 @@ import Renderable from '../renderable/renderable.js';
  * Single Particle Object.
  * @augments Renderable
  */
-class Particle extends Renderable {
+ class Particle extends Renderable {
     /**
      * @param {ParticleEmitter} emitter - the particle emitter
      */
@@ -183,6 +183,4 @@ class Particle extends Renderable {
     }
 }
 
-var Particle$1 = Particle;
-
-export { Particle$1 as default };
+export { Particle as default };

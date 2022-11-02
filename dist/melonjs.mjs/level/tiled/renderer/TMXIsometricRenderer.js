@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -15,7 +15,7 @@ import TMXLayer from '../TMXLayer.js';
  * an Isometric Map Renderder
  * @augments TMXRenderer
  */
-class TMXIsometricRenderer extends TMXRenderer {
+ class TMXIsometricRenderer extends TMXRenderer {
     /**
      * @param {TMXTileMap} map - the TMX map
      */
@@ -215,6 +215,4 @@ class TMXIsometricRenderer extends TMXRenderer {
     }
 }
 
-var TMXIsometricRenderer$1 = TMXIsometricRenderer;
-
-export { TMXIsometricRenderer$1 as default };
+export { TMXIsometricRenderer as default };

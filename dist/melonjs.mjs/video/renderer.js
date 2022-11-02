@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -8,7 +8,7 @@
 import Color from '../math/color.js';
 import Matrix3d from '../math/matrix3.js';
 import { createCanvas, renderer } from './video.js';
-import { on, GAME_RESET, emit, CANVAS_ONRESIZE } from '../system/event.js';
+import { on, emit, GAME_RESET, CANVAS_ONRESIZE } from '../system/event.js';
 import { platform } from '../system/device.js';
 import { setPrefixed } from '../utils/agent.js';
 import Rect from '../geometries/rectangle.js';
@@ -24,7 +24,7 @@ import Point from '../geometries/point.js';
  * @classdesc
  * a base renderer object
  */
-class Renderer {
+ class Renderer {
     /**
      * @param {object} options - The renderer parameters
      * @param {number} options.width - The width of the canvas without scaling
@@ -406,6 +406,5 @@ class Renderer {
     drawFont(/*bounds*/) {}
 
 }
-var Renderer$1 = Renderer;
 
-export { Renderer$1 as default };
+export { Renderer as default };

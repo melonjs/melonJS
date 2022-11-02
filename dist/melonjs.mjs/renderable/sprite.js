@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -17,7 +17,7 @@ import Color from '../math/color.js';
  * An object to display a fixed or animated sprite on screen.
  * @augments Renderable
  */
-class Sprite extends Renderable {
+ class Sprite extends Renderable {
     /**
      * @param {number} x - the x coordinates of the sprite object
      * @param {number} y - the y coordinates of the sprite object
@@ -649,6 +649,5 @@ class Sprite extends Renderable {
         );
     }
 }
-var Sprite$1 = Sprite;
 
-export { Sprite$1 as default };
+export { Sprite as default };

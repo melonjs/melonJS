@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -21,7 +21,7 @@ import Point from '../geometries/point.js';
  * a Generic Physic Body Object with some physic properties and behavior functionality, to as a member of a Renderable.
  * @see Renderable.body
  */
-class Body {
+ class Body {
     /**
      * @param {Renderable} ancestor - the parent object this body is attached to
      * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] - a initial shape, list of shapes, or JSON object defining the body
@@ -699,6 +699,4 @@ class Body {
     }
 }
 
-var Body$1 = Body;
-
-export { Body$1 as default };
+export { Body as default };

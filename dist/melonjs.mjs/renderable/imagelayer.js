@@ -1,12 +1,12 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
  */
 import { renderer } from '../video/video.js';
-import { on, ONCONTEXT_RESTORED, VIEWPORT_ONCHANGE, VIEWPORT_ONRESIZE, once, LEVEL_LOADED, off } from '../system/event.js';
+import { on, ONCONTEXT_RESTORED, VIEWPORT_ONCHANGE, VIEWPORT_ONRESIZE, once, off, LEVEL_LOADED } from '../system/event.js';
 import pool from '../system/pooling.js';
 import game from '../game.js';
 import Sprite from './sprite.js';
@@ -17,7 +17,7 @@ import { isNumeric } from '../utils/string.js';
  * a generic Image Layer Object
  * @augments Renderable
  */
-class ImageLayer extends Sprite {
+ class ImageLayer extends Sprite {
     /**
      * @param {number} x - x coordinate
      * @param {number} y - y coordinate
@@ -301,6 +301,5 @@ class ImageLayer extends Sprite {
     }
 
 }
-var ImageLayer$1 = ImageLayer;
 
-export { ImageLayer$1 as default };
+export { ImageLayer as default };

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -14,7 +14,7 @@ import { clamp } from './math.js';
  * A Vector2d object that provide notification by executing the given callback when the vector is changed.
  * @augments Vector2d
  */
-class ObservableVector2d extends Vector2d {
+ class ObservableVector2d extends Vector2d {
     /**
      * @param {number} x - x value of the vector
      * @param {number} y - y value of the vector
@@ -466,6 +466,4 @@ class ObservableVector2d extends Vector2d {
     }
 }
 
-var ObservableVector2d$1 = ObservableVector2d;
-
-export { ObservableVector2d$1 as default };
+export { ObservableVector2d as default };

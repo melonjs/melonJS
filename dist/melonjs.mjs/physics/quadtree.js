@@ -1,12 +1,11 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
  */
 import Vector2d from '../math/vector2.js';
-import Container from '../renderable/container.js';
 import { remove } from '../utils/array.js';
 
 /*
@@ -14,7 +13,6 @@ import { remove } from '../utils/array.js';
  * Based on the QuadTree Library by Timo Hausmann and released under the MIT license
  * https://github.com/timohausmann/quadtree-js/
 **/
-
 
 /**
  * a pool of `QuadTree` objects
@@ -60,7 +58,7 @@ var QT_VECTOR = new Vector2d();
  * a QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
  * @see game.world.broadphase
  */
-class QuadTree {
+ class QuadTree {
     /**
      * @param {World} world - the physic world this QuadTree belongs to
      * @param {Bounds} bounds - bounds of the node
@@ -77,7 +75,6 @@ class QuadTree {
         this.max_levels  = max_levels;
 
         this.level = level;
-        this.bounds = bounds;
 
         this.objects = [];
         this.nodes = [];
@@ -87,8 +84,8 @@ class QuadTree {
      * Split the node into 4 subnodes
      */
     split() {
-        this.level + 1;
-            var subWidth  = this.bounds.width / 2,
+        var nextLevel = this.level + 1,
+            subWidth  = this.bounds.width / 2,
             subHeight = this.bounds.height / 2,
             left = this.bounds.left,
             top = this.bounds.top;
@@ -96,50 +93,58 @@ class QuadTree {
          //top right node
         this.nodes[0] = QT_ARRAY_POP(
             this.world,
-            this.bounds, {
+            {
                 left : left + subWidth,
                 top : top,
                 width : subWidth,
                 height : subHeight
             },
             this.max_objects,
-            this.max_levels);
+            this.max_levels,
+            nextLevel
+        );
 
         //top left node
         this.nodes[1] = QT_ARRAY_POP(
             this.world,
-            this.bounds, {
+            {
                 left : left,
                 top: top,
                 width : subWidth,
                 height : subHeight
             },
             this.max_objects,
-            this.max_levels);
+            this.max_levels,
+            nextLevel
+        );
 
         //bottom left node
         this.nodes[2] = QT_ARRAY_POP(
             this.world,
-            this.bounds, {
+            {
                 left : left,
                 top : top + subHeight,
                 width : subWidth,
                 height : subHeight
             },
             this.max_objects,
-            this.max_levels);
+            this.max_levels,
+            nextLevel
+        );
 
         //bottom right node
         this.nodes[3] = QT_ARRAY_POP(
             this.world,
-            this.bounds, {
+            {
                 left : left + subWidth,
                 top : top + subHeight,
                 width : subWidth,
                 height : subHeight
             },
             this.max_objects,
-            this.max_levels);
+            this.max_levels,
+            nextLevel
+        );
     }
 
     /*
@@ -155,7 +160,7 @@ class QuadTree {
         if (item.isFloating === true) {
             pos = this.world.app.viewport.localToWorld(bounds.left, bounds.top, QT_VECTOR);
         } else {
-            pos = QT_VECTOR.set(bounds.left, bounds.top);
+            pos = QT_VECTOR.set(item.left, item.top);
         }
 
         var index = -1,
@@ -198,7 +203,7 @@ class QuadTree {
     insertContainer(container) {
         for (var i = container.children.length, child; i--, (child = container.children[i]);) {
             if (child.isKinematic !== true) {
-                if (child instanceof Container) {
+                if (typeof child.addChild === "function") {
                     if (child.name !== "rootContainer") {
                         this.insert(child);
                     }
@@ -386,6 +391,4 @@ class QuadTree {
     }
 }
 
-var QuadTree$1 = QuadTree;
-
-export { QuadTree$1 as default };
+export { QuadTree as default };

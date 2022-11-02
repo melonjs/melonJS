@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -11,7 +11,7 @@ import pool from '../system/pooling.js';
  * @classdesc
  * an ellipse Object
  */
-class Ellipse {
+ class Ellipse {
     /**
      * @param {number} x - the center x coordinate of the ellipse
      * @param {number} y - the center y coordinate of the ellipse
@@ -270,6 +270,5 @@ class Ellipse {
         );
     }
 }
-var Ellipse$1 = Ellipse;
 
-export { Ellipse$1 as default };
+export { Ellipse as default };

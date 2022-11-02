@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -17,7 +17,7 @@ import World from '../physics/world.js';
  * An Application is responsible for updating (each frame) all the related object status and draw them.
  * @see game
  */
-class Application {
+ class Application {
     constructor() {
         /**
          * a reference to the current active stage "default" camera
@@ -235,6 +235,4 @@ class Application {
     }
 }
 
-var Application$1 = Application;
-
-export { Application$1 as default };
+export { Application as default };

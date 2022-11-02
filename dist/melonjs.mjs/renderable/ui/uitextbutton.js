@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -15,7 +15,7 @@ import UIBaseElement from './uibaseelement.js';
  * This is a basic base text button which you can use in your Game UI.
  * @augments UIBaseElement
  */
-class UITextButton extends UIBaseElement {
+ class UITextButton extends UIBaseElement {
     /**
      * A Text Button with an outlined background border, filled with background color.
      * It uses a RoundRect as background and changes the background color on hovering over.
@@ -123,6 +123,5 @@ class UITextButton extends UIBaseElement {
         );
     }
 }
-var UITextButton$1 = UITextButton;
 
-export { UITextButton$1 as default };
+export { UITextButton as default };

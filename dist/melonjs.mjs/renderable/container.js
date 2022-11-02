@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -17,18 +17,18 @@ import Body from '../physics/body.js';
  * Private function to re-use for object removal in a defer
  * @ignore
  */
-var deferredRemove = function (child, keepalive) {
+function deferredRemove(child, keepalive) {
     this.removeChildNow(child, keepalive);
-};
+}
 
-var globalFloatingCounter = 0;
+let globalFloatingCounter = 0;
 
 /**
  * @classdesc
  * Container represents a collection of child objects
  * @augments Renderable
  */
-class Container extends Renderable {
+ class Container extends Renderable {
     /**
      * @param {number} [x=0] - position of the container (accessible via the inherited pos.x property)
      * @param {number} [y=0] - position of the container (accessible via the inherited pos.y property)
@@ -1013,6 +1013,4 @@ class Container extends Renderable {
     }
 }
 
-var Container$1 = Container;
-
-export { Container$1 as default };
+export { Container as default };

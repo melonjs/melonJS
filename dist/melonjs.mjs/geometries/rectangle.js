@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -13,7 +13,7 @@ import Polygon from './poly.js';
  * a rectangle Object
  * @augments Polygon
  */
-class Rect extends Polygon {
+ class Rect extends Polygon {
     /**
      * @param {number} x - position of the Rectangle
      * @param {number} y - position of the Rectangle
@@ -370,6 +370,5 @@ class Rect extends Polygon {
         );
     }
 }
-var Rect$1 = Rect;
 
-export { Rect$1 as default };
+export { Rect as default };

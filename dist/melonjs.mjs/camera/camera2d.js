@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -29,7 +29,7 @@ var targetV = new Vector2d();
  * a 2D orthographic camera
  * @augments Renderable
  */
-class Camera2d extends Renderable {
+ class Camera2d extends Renderable {
     /**
      * @param {number} minX - start x offset
      * @param {number} minY - start y offset
@@ -727,6 +727,5 @@ class Camera2d extends Renderable {
     }
 
 }
-var Camera2d$1 = Camera2d;
 
-export { Camera2d$1 as default };
+export { Camera2d as default };

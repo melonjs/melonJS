@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -15,7 +15,7 @@ import Sprite from './sprite.js';
  * @see https://en.wikipedia.org/wiki/9-slice_scaling
  * @augments Sprite
  */
-class NineSliceSprite extends Sprite {
+ class NineSliceSprite extends Sprite {
     /**
      * @param {number} x - the x coordinates of the sprite object
      * @param {number} y - the y coordinates of the sprite object
@@ -242,6 +242,5 @@ class NineSliceSprite extends Sprite {
         );
     }
 }
-var NineSliceSprite$1 = NineSliceSprite;
 
-export { NineSliceSprite$1 as default };
+export { NineSliceSprite as default };

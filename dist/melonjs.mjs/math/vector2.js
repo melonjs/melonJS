@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -12,7 +12,7 @@ import pool from '../system/pooling.js';
  * @classdesc
  * a generic 2D Vector Object
  */
-class Vector2d {
+ class Vector2d {
     /**
      * @param {number} [x=0] - x value of the vector
      * @param {number} [y=0] - y value of the vector
@@ -523,6 +523,4 @@ class Vector2d {
     }
 }
 
-var Vector2d$1 = Vector2d;
-
-export { Vector2d$1 as default };
+export { Vector2d as default };

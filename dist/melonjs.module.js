@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -764,7 +764,7 @@ var pool$1 = pool;
  * @classdesc
  * a generic 2D Vector Object
  */
-class Vector2d {
+ class Vector2d {
     /**
      * @param {number} [x=0] - x value of the vector
      * @param {number} [y=0] - y value of the vector
@@ -1275,8 +1275,6 @@ class Vector2d {
     }
 }
 
-var Vector2d$1 = Vector2d;
-
 // convert a give color component to it hexadecimal value
 function toHex(component) {
     return "0123456789ABCDEF".charAt((component - (component % 16)) >> 4) + "0123456789ABCDEF".charAt(component % 16);
@@ -1458,7 +1456,7 @@ var cssToRGB = new Map();
  * @classdesc
  * A color manipulation object.
  */
-class Color {
+ class Color {
     /**
      * @param {number} [r=0] - red component or array of color components
      * @param {number} [g=0] - green component
@@ -1882,13 +1880,11 @@ class Color {
     }
 }
 
-var Color$1 = Color;
-
 /**
  * @classdesc
  * a 4x4 Matrix3d Object
  */
-class Matrix3d {
+ class Matrix3d {
     /**
      * @param {(Matrix3d|...number)} args - An instance of me.Matrix3d to copy from, or individual Matrix components (See {@link Matrix3d.setTransform}). If not arguments are given, the matrix will be set to Identity.
      */
@@ -2552,15 +2548,13 @@ class Matrix3d {
     }
 }
 
-var Matrix3d$1 = Matrix3d;
-
 /**
  * @classdesc
  * a Matrix2d Object.<br>
  * the identity matrix and parameters position : <br>
  * <img src="images/identity-matrix_2x.png"/>
  */
-class Matrix2d {
+ class Matrix2d {
     /**
      * @param {(Matrix2d|Matrix3d|...number)} args - an instance of me.Matrix2d or me.Matrix3d to copy from, or individual matrix components (See {@link Matrix2d.setTransform}). If not arguments are given, the matrix will be set to Identity.
      */
@@ -2579,7 +2573,7 @@ class Matrix2d {
         if (arguments.length && arguments[0] instanceof Matrix2d) {
             this.copy(arguments[0]);
         }
-        else if (arguments.length && arguments[0] instanceof Matrix3d$1) {
+        else if (arguments.length && arguments[0] instanceof Matrix3d) {
             this.fromMat3d(arguments[0]);
         }
         else if (arguments.length >= 6) {
@@ -3043,8 +3037,6 @@ class Matrix2d {
         ")";
     }
 }
-
-var Matrix2d$1 = Matrix2d;
 
 var eventemitter3 = {exports: {}};
 
@@ -5369,7 +5361,7 @@ function minify(src) {
  * @classdesc
  * a base GL Shader object
  */
-class GLShader {
+ class GLShader {
     /**
      * @param {WebGLRenderingContext} gl - the current WebGL rendering context
      * @param {string} vertex - a string containing the GLSL source code to set
@@ -5515,7 +5507,6 @@ class GLShader {
         this.fragment = null;
     }
 }
-var GLShader$1 = GLShader;
 
 /**
  * @classdesc
@@ -5524,7 +5515,7 @@ var GLShader$1 = GLShader;
  * @ignore
  */
 
-class VertexArrayBuffer {
+ class VertexArrayBuffer {
 
     constructor(vertex_size, vertex_per_quad) {
         // the size of one vertex in float
@@ -5650,7 +5641,6 @@ class VertexArrayBuffer {
     }
 
 }
-var VertexArrayBuffer$1 = VertexArrayBuffer;
 
 var primitiveVertex = "// Current vertex point\nattribute vec2 aVertex;\n\n// Projection matrix\nuniform mat4 uProjectionMatrix;\n\n// Vertex color\nuniform vec4 uColor;\n\n// Fragment color\nvarying vec4 vColor;\n\nvoid main(void) {\n    // Transform the vertex position by the projection matrix\n    gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);\n    // Pass the remaining attributes to the fragment shader\n    vColor = vec4(uColor.rgb * uColor.a, uColor.a);\n}\n";
 
@@ -5662,10 +5652,10 @@ var quadFragment = "uniform sampler2D uSampler;\nvarying vec4 vColor;\nvarying v
 
 // a pool of resuable vectors
 var V_ARRAY = [
-    new Vector2d$1(),
-    new Vector2d$1(),
-    new Vector2d$1(),
-    new Vector2d$1()
+    new Vector2d(),
+    new Vector2d(),
+    new Vector2d(),
+    new Vector2d()
 ];
 
 /**
@@ -5673,7 +5663,7 @@ var V_ARRAY = [
  * A WebGL Compositor object. This class handles all of the WebGL state<br>
  * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
  */
-class WebGLCompositor {
+ class WebGLCompositor {
     /**
      * @param {WebGLRenderer} renderer - the current WebGL renderer session
      */
@@ -5742,15 +5732,15 @@ class WebGLCompositor {
         this.vertexSize = 0;
 
         // Load and create shader programs
-        this.primitiveShader = new GLShader$1(this.gl, primitiveVertex, primitiveFragment);
-        this.quadShader = new GLShader$1(this.gl, quadVertex, quadFragment);
+        this.primitiveShader = new GLShader(this.gl, primitiveVertex, primitiveFragment);
+        this.quadShader = new GLShader(this.gl, quadVertex, quadFragment);
 
         /// define all vertex attributes
         this.addAttribute("aVertex", 2, gl.FLOAT, false, 0 * Float32Array.BYTES_PER_ELEMENT); // 0
         this.addAttribute("aRegion", 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT); // 1
         this.addAttribute("aColor",  4, gl.UNSIGNED_BYTE, true, 4 * Float32Array.BYTES_PER_ELEMENT); // 2
 
-        this.vertexBuffer = new VertexArrayBuffer$1(this.vertexSize, 6); // 6 vertices per quad
+        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, 6); // 6 vertices per quad
 
         // vertex buffer
         gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
@@ -6135,7 +6125,6 @@ class WebGLCompositor {
         gl.clear(gl.COLOR_BUFFER_BIT);
     }
 }
-var WebGLCompositor$1 = WebGLCompositor;
 
 var earcut$1 = {exports: {}};
 
@@ -6829,7 +6818,7 @@ earcut.flatten = function (data) {
  *
  * A polygon's `winding` is clockwise if its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
  */
-class Polygon {
+ class Polygon {
     /**
      * @param {number} x - origin point of the Polygon
      * @param {number} y - origin point of the Polygon
@@ -6925,7 +6914,7 @@ class Polygon {
         }
 
         // convert given points to me.Vector2d if required
-        if (!(vertices[0] instanceof Vector2d$1)) {
+        if (!(vertices[0] instanceof Vector2d)) {
             this.points.length = 0;
 
             if (typeof vertices[0] === "object") {
@@ -7304,14 +7293,12 @@ class Polygon {
     }
 }
 
-var Polygon$1 = Polygon;
-
 /**
  * @classdesc
  * a rectangle Object
  * @augments Polygon
  */
-class Rect extends Polygon$1 {
+ class Rect extends Polygon {
     /**
      * @param {number} x - position of the Rectangle
      * @param {number} y - position of the Rectangle
@@ -7668,7 +7655,6 @@ class Rect extends Polygon$1 {
         );
     }
 }
-var Rect$1 = Rect;
 
 // https://developer.chrome.com/blog/canvas2d/#round-rect
 
@@ -7677,7 +7663,7 @@ var Rect$1 = Rect;
  * a rectangle object with rounded corners
  * @augments Rect
  */
-class RoundRect extends Rect$1 {
+class RoundRect extends Rect {
     /**
      * @param {number} x - position of the rounded rectangle
      * @param {number} y - position of the rounded rectangle
@@ -7760,7 +7746,7 @@ class RoundRect extends Rect$1 {
              _x = arg0;
              _y = arguments[1];
          } else {
-             if (arg0 instanceof Rect$1) {
+             if (arg0 instanceof Rect) {
                  // good enough
                  return super.contains(arg0);
              } else {
@@ -7826,13 +7812,12 @@ class RoundRect extends Rect$1 {
         return new RoundRect(this.pos.x, this.pos.y, this.width, this.height, this.radius);
     }
 }
-var RoundRect$1 = RoundRect;
 
 /**
  * @classdesc
  * an ellipse Object
  */
-class Ellipse {
+ class Ellipse {
     /**
      * @param {number} x - the center x coordinate of the ellipse
      * @param {number} y - the center y coordinate of the ellipse
@@ -8091,7 +8076,6 @@ class Ellipse {
         );
     }
 }
-var Ellipse$1 = Ellipse;
 
 /**
  * @classdesc
@@ -8102,7 +8086,7 @@ var Ellipse$1 = Ellipse;
  * @param {Vector2d[]} points - array of vectors defining the Line
  */
 
-class Line extends Polygon$1 {
+ class Line extends Polygon {
 
     /**
      * Returns true if the Line contains the given point
@@ -8196,19 +8180,18 @@ class Line extends Polygon$1 {
     }
 
 }
-var Line$1 = Line;
 
 /**
  * @classdesc
  * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
  */
-class Bounds {
+ class Bounds {
     /**
      * @param {Vector2d[]} [vertices] - an array of me.Vector2d points
      */
     constructor(vertices) {
         // @ignore
-        this._center = new Vector2d$1();
+        this._center = new Vector2d();
         this.onResetEvent(vertices);
     }
 
@@ -8645,13 +8628,12 @@ class Bounds {
     }
 
 }
-var Bounds$1 = Bounds;
 
 /**
  * @classdesc
  * a simplified path2d implementation, supporting only one path
  */
-class Path2D {
+ class Path2D {
     constructor() {
         /**
          * the points defining the current path
@@ -8951,13 +8933,12 @@ class Path2D {
         this.arcTo(x, y, x + radius, y, radius);
     }
 }
-var Path2D$1 = Path2D;
 
 /**
  * @classdesc
  * represents a point in a 2d space
  */
-class Point {
+ class Point {
     constructor(x = 0, y = 0) {
         /**
          * the position of the point on the horizontal axis
@@ -9032,13 +9013,12 @@ class Point {
         return new Point(this.x, this.y);
     }
 }
-var Point$1 = Point;
 
 /**
  * @classdesc
  * a base renderer object
  */
-class Renderer {
+ class Renderer {
     /**
      * @param {object} options - The renderer parameters
      * @param {number} options.width - The width of the canvas without scaling
@@ -9073,7 +9053,7 @@ class Renderer {
          * The Path2D instance used by the renderer to draw primitives
          * @type {Path2D}
          */
-        this.path2D = new Path2D$1();
+        this.path2D = new Path2D();
 
         /**
          * @ignore
@@ -9104,13 +9084,13 @@ class Renderer {
         }
 
         // global color
-        this.currentColor = new Color$1(0, 0, 0, 1.0);
+        this.currentColor = new Color(0, 0, 0, 1.0);
 
         // global tint color
-        this.currentTint = new Color$1(255, 255, 255, 1.0);
+        this.currentTint = new Color(255, 255, 255, 1.0);
 
         // the projectionMatrix (set through setProjection)
-        this.projectionMatrix = new Matrix3d$1();
+        this.projectionMatrix = new Matrix3d();
 
         // default uvOffset
         this.uvOffset = 0;
@@ -9313,19 +9293,19 @@ class Renderer {
      * @param {boolean} [fill=false] - fill the shape with the current color if true
      */
     stroke(shape, fill) {
-        if (shape instanceof RoundRect$1) {
+        if (shape instanceof RoundRect) {
             this.strokeRoundRect(shape.left, shape.top, shape.width, shape.height, shape.radius, fill);
             return;
         }
-        if (shape instanceof Rect$1 || shape instanceof Bounds$1) {
+        if (shape instanceof Rect || shape instanceof Bounds) {
             this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
             return;
         }
-        if (shape instanceof Line$1 || shape instanceof Polygon$1) {
+        if (shape instanceof Line || shape instanceof Polygon) {
             this.strokePolygon(shape, fill);
             return;
         }
-        if (shape instanceof Ellipse$1) {
+        if (shape instanceof Ellipse) {
             this.strokeEllipse(
                 shape.pos.x,
                 shape.pos.y,
@@ -9335,7 +9315,7 @@ class Renderer {
             );
             return;
         }
-        if (shape instanceof Point$1) {
+        if (shape instanceof Point) {
             this.strokePoint(shape.x, shape.y);
             return;
         }
@@ -9365,7 +9345,7 @@ class Renderer {
 
         context.save();
 
-        context.fillStyle = color instanceof Color$1 ? color.toRGB() : color;
+        context.fillStyle = color instanceof Color ? color.toRGB() : color;
         context.fillRect(0, 0, src.width, src.height);
 
         context.globalCompositeOperation = mode || "multiply";
@@ -9420,7 +9400,6 @@ class Renderer {
     drawFont(/*bounds*/) {}
 
 }
-var Renderer$1 = Renderer;
 
 var howler = {};
 
@@ -13209,12 +13188,395 @@ var audio = /*#__PURE__*/Object.freeze({
 	unloadAll: unloadAll
 });
 
+/*
+ * A QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
+ * Based on the QuadTree Library by Timo Hausmann and released under the MIT license
+ * https://github.com/timohausmann/quadtree-js/
+**/
+
+/**
+ * a pool of `QuadTree` objects
+ * @ignore
+ */
+var QT_ARRAY = [];
+
+/**
+ * will pop a quadtree object from the array
+ * or create a new one if the array is empty
+ * @ignore
+ */
+function QT_ARRAY_POP(world, bounds, max_objects = 4, max_levels = 4, level = 0) {
+    if (QT_ARRAY.length > 0) {
+        var _qt =  QT_ARRAY.pop();
+        _qt.world = world;
+        _qt.bounds = bounds;
+        _qt.max_objects = max_objects;
+        _qt.max_levels  = max_levels;
+        _qt.level = level;
+        return _qt;
+    } else {
+        return new QuadTree(world, bounds, max_objects, max_levels, level);
+    }
+}
+
+/**
+ * Push back a quadtree back into the array
+ * @ignore
+ */
+function QT_ARRAY_PUSH(qt) {
+    QT_ARRAY.push(qt);
+}
+
+/**
+ * a temporary vector object to be reused
+ * @ignore
+ */
+var QT_VECTOR = new Vector2d();
+
+/**
+ * @classdesc
+ * a QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
+ * @see game.world.broadphase
+ */
+ class QuadTree {
+    /**
+     * @param {World} world - the physic world this QuadTree belongs to
+     * @param {Bounds} bounds - bounds of the node
+     * @param {number} [max_objects=4] - max objects a node can hold before splitting into 4 subnodes
+     * @param {number} [max_levels=4] - total max levels inside root Quadtree
+     * @param {number} [level] - deepth level, required for subnodes
+     */
+    constructor(world, bounds, max_objects = 4, max_levels = 4, level = 0) {
+
+        this.world = world;
+        this.bounds = bounds;
+
+        this.max_objects = max_objects;
+        this.max_levels  = max_levels;
+
+        this.level = level;
+
+        this.objects = [];
+        this.nodes = [];
+    }
+
+    /*
+     * Split the node into 4 subnodes
+     */
+    split() {
+        var nextLevel = this.level + 1,
+            subWidth  = this.bounds.width / 2,
+            subHeight = this.bounds.height / 2,
+            left = this.bounds.left,
+            top = this.bounds.top;
+
+         //top right node
+        this.nodes[0] = QT_ARRAY_POP(
+            this.world,
+            {
+                left : left + subWidth,
+                top : top,
+                width : subWidth,
+                height : subHeight
+            },
+            this.max_objects,
+            this.max_levels,
+            nextLevel
+        );
+
+        //top left node
+        this.nodes[1] = QT_ARRAY_POP(
+            this.world,
+            {
+                left : left,
+                top: top,
+                width : subWidth,
+                height : subHeight
+            },
+            this.max_objects,
+            this.max_levels,
+            nextLevel
+        );
+
+        //bottom left node
+        this.nodes[2] = QT_ARRAY_POP(
+            this.world,
+            {
+                left : left,
+                top : top + subHeight,
+                width : subWidth,
+                height : subHeight
+            },
+            this.max_objects,
+            this.max_levels,
+            nextLevel
+        );
+
+        //bottom right node
+        this.nodes[3] = QT_ARRAY_POP(
+            this.world,
+            {
+                left : left + subWidth,
+                top : top + subHeight,
+                width : subWidth,
+                height : subHeight
+            },
+            this.max_objects,
+            this.max_levels,
+            nextLevel
+        );
+    }
+
+    /*
+     * Determine which node the object belongs to
+     * @param {Rect} rect bounds of the area to be checked
+     * @returns Integer index of the subnode (0-3), or -1 if rect cannot completely fit within a subnode and is part of the parent node
+     */
+    getIndex(item) {
+        var pos;
+        var bounds = item.getBounds();
+
+        // use game world coordinates for floating items
+        if (item.isFloating === true) {
+            pos = this.world.app.viewport.localToWorld(bounds.left, bounds.top, QT_VECTOR);
+        } else {
+            pos = QT_VECTOR.set(item.left, item.top);
+        }
+
+        var index = -1,
+            rx = pos.x,
+            ry = pos.y,
+            rw = bounds.width,
+            rh = bounds.height,
+            verticalMidpoint = this.bounds.left + (this.bounds.width / 2),
+            horizontalMidpoint = this.bounds.top + (this.bounds.height / 2),
+            //rect can completely fit within the top quadrants
+            topQuadrant = (ry < horizontalMidpoint && ry + rh < horizontalMidpoint),
+            //rect can completely fit within the bottom quadrants
+            bottomQuadrant = (ry > horizontalMidpoint);
+
+        //rect can completely fit within the left quadrants
+        if (rx < verticalMidpoint && rx + rw < verticalMidpoint) {
+            if (topQuadrant) {
+                index = 1;
+            } else if (bottomQuadrant) {
+                index = 2;
+            }
+        } else if (rx > verticalMidpoint) {
+            //rect can completely fit within the right quadrants
+            if (topQuadrant) {
+                index = 0;
+            } else if (bottomQuadrant) {
+                index = 3;
+            }
+        }
+
+        return index;
+    }
+
+    /**
+     * Insert the given object container into the node.
+     * @name insertContainer
+     * @memberof QuadTree
+     * @param {Container} container - group of objects to be added
+     */
+    insertContainer(container) {
+        for (var i = container.children.length, child; i--, (child = container.children[i]);) {
+            if (child.isKinematic !== true) {
+                if (typeof child.addChild === "function") {
+                    if (child.name !== "rootContainer") {
+                        this.insert(child);
+                    }
+                    // recursivly insert all childs
+                    this.insertContainer(child);
+                } else {
+                    // only insert object with a bounding box
+                    // Probably redundant with `isKinematic`
+                    if (typeof (child.getBounds) === "function") {
+                        this.insert(child);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Insert the given object into the node. If the node
+     * exceeds the capacity, it will split and add all
+     * objects to their corresponding subnodes.
+     * @name insert
+     * @memberof QuadTree
+     * @param {object} item - object to be added
+     */
+    insert(item) {
+        var index = -1;
+
+        //if we have subnodes ...
+        if (this.nodes.length > 0) {
+            index = this.getIndex(item);
+
+            if (index !== -1) {
+                this.nodes[index].insert(item);
+                return;
+            }
+        }
+
+        this.objects.push(item);
+
+        if (this.objects.length > this.max_objects && this.level < this.max_levels) {
+
+            //split if we don't already have subnodes
+            if (this.nodes.length === 0) {
+                this.split();
+            }
+
+            var i = 0;
+
+            //add all objects to there corresponding subnodes
+            while (i < this.objects.length) {
+
+                index = this.getIndex(this.objects[i]);
+
+                if (index !== -1) {
+                    this.nodes[index].insert(this.objects.splice(i, 1)[0]);
+                } else {
+                    i = i + 1;
+                }
+            }
+        }
+    }
+
+    /**
+     * Return all objects that could collide with the given object
+     * @name retrieve
+     * @memberof QuadTree
+     * @param {object} item - object to be checked against
+     * @param {object} [fn] - a sorting function for the returned array
+     * @returns {object[]} array with all detected objects
+     */
+    retrieve(item, fn) {
+        var returnObjects = this.objects;
+
+        //if we have subnodes ...
+        if (this.nodes.length > 0) {
+
+            var index = this.getIndex(item);
+
+            //if rect fits into a subnode ..
+            if (index !== -1) {
+                returnObjects = returnObjects.concat(this.nodes[index].retrieve(item));
+            } else {
+                 //if rect does not fit into a subnode, check it against all subnodes
+                for (var i = 0; i < this.nodes.length; i = i + 1) {
+                    returnObjects = returnObjects.concat(this.nodes[i].retrieve(item));
+                }
+            }
+        }
+
+        if (typeof(fn) === "function") {
+            returnObjects.sort(fn);
+        }
+
+        return returnObjects;
+    }
+
+    /**
+     * Remove the given item from the quadtree.
+     * (this function won't recalculate the impacted node)
+     * @name remove
+     * @memberof QuadTree
+     * @param {object} item - object to be removed
+     * @returns {boolean} true if the item was found and removed.
+     */
+     remove(item) {
+        var found = false;
+
+        if (typeof (item.getBounds) === "undefined") {
+            // ignore object that cannot be added in the first place
+            return false;
+        }
+
+        //if we have subnodes ...
+        if (this.nodes.length > 0) {
+            // determine to which node the item belongs to
+            var index = this.getIndex(item);
+
+            if (index !== -1) {
+                found = remove(this.nodes[index], item);
+                // trim node if empty
+                if (found && this.nodes[index].isPrunable()) {
+                    this.nodes.splice(index, 1);
+                }
+            }
+        }
+
+        if (found === false) {
+            // try and remove the item from the list of items in this node
+            if (this.objects.indexOf(item) !== -1) {
+                remove(this.objects, item);
+                found = true;
+            }
+        }
+
+        return found;
+    }
+
+    /**
+     * return true if the node is prunable
+     * @name isPrunable
+     * @memberof QuadTree
+     * @returns {boolean} true if the node is prunable
+     */
+    isPrunable() {
+        return !(this.hasChildren() || (this.objects.length > 0));
+    }
+
+    /**
+     * return true if the node has any children
+     * @name hasChildren
+     * @memberof QuadTree
+     * @returns {boolean} true if the node has any children
+     */
+    hasChildren() {
+        for (var i = 0; i < this.nodes.length; i = i + 1) {
+            var subnode = this.nodes[i];
+            if (subnode.length > 0 || subnode.objects.length > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * clear the quadtree
+     * @name clear
+     * @memberof QuadTree
+     * @param {Bounds} [bounds=this.bounds] - the bounds to be cleared
+     */
+    clear(bounds) {
+        this.objects.length = 0;
+
+        for (var i = 0; i < this.nodes.length; i++) {
+            this.nodes[i].clear();
+            // recycle the quadTree object
+            QT_ARRAY_PUSH(this.nodes[i]);
+        }
+        // empty the array
+        this.nodes.length = 0;
+
+        // resize the root bounds if required
+        if (typeof bounds !== "undefined") {
+            this.bounds.setMinMax(bounds.min.x, bounds.min.y, bounds.max.x, bounds.max.y);
+        }
+    }
+}
+
 /**
  * @classdesc
  * A Vector2d object that provide notification by executing the given callback when the vector is changed.
  * @augments Vector2d
  */
-class ObservableVector2d extends Vector2d$1 {
+ class ObservableVector2d extends Vector2d {
     /**
      * @param {number} x - x value of the vector
      * @param {number} y - y value of the vector
@@ -13666,13 +14028,11 @@ class ObservableVector2d extends Vector2d$1 {
     }
 }
 
-var ObservableVector2d$1 = ObservableVector2d;
-
 /**
  * @classdesc
  * a generic 3D Vector Object
  */
-class Vector3d {
+ class Vector3d {
     /**
      * @param {number} [x=0] - x value of the vector
      * @param {number} [y=0] - y value of the vector
@@ -14224,14 +14584,12 @@ class Vector3d {
     }
 }
 
-var Vector3d$1 = Vector3d;
-
 /**
  * @classdesc
  * A Vector3d object that provide notification by executing the given callback when the vector is changed.
  * @augments Vector3d
  */
-class ObservableVector3d extends Vector3d$1 {
+ class ObservableVector3d extends Vector3d {
     /**
      * @param {number} x - x value of the vector
      * @param {number} y - y value of the vector
@@ -14773,8 +15131,6 @@ class ObservableVector3d extends Vector3d$1 {
     }
 }
 
-var ObservableVector3d$1 = ObservableVector3d;
-
 // corresponding actions
 var _keyStatus = {};
 
@@ -15237,7 +15593,7 @@ function unbindKey(keycode) {
  * a temporary vector object
  * @ignore
  */
-var tmpVec = new Vector2d$1();
+var tmpVec = new Vector2d();
 
 /**
  * @classdesc
@@ -15245,7 +15601,7 @@ var tmpVec = new Vector2d$1();
  * @class Pointer
  * @augments Bounds
  */
-class Pointer extends Bounds$1 {
+class Pointer extends Bounds {
 
     /**
      * @ignore
@@ -15717,7 +16073,7 @@ function enablePointerEvent() {
     if (!pointerInitialized) {
 
         // the current pointer area
-        currentPointer = new Rect$1(0, 0, 1, 1);
+        currentPointer = new Rect(0, 0, 1, 1);
 
         // instantiate a pool of pointer catched
         for (var v = 0; v < maxTouchPoints; v++) {
@@ -15888,7 +16244,7 @@ function dispatchEvent(normalizedEvents) {
         }
 
         // fetch valid candiates from the game world container
-        var candidates = game$1.world.broadphase.retrieve(currentPointer, Container$1.prototype._sortReverseZ);
+        var candidates = game$1.world.broadphase.retrieve(currentPointer, Container.prototype._sortReverseZ);
 
         // add the main game viewport to the list of candidates
         candidates = candidates.concat([ game$1.viewport ]);
@@ -16951,7 +17307,7 @@ var input = /*#__PURE__*/Object.freeze({
  * A base class for renderable objects.
  * @augments Rect
  */
-class Renderable extends Rect$1 {
+ class Renderable extends Rect {
     /**
      * @param {number} x - position of the renderable object (accessible through inherited pos.x property)
      * @param {number} y - position of the renderable object (accessible through inherited pos.y property)
@@ -17072,7 +17428,7 @@ class Renderable extends Rect$1 {
          */
         this.floating = false;
 
-        if (this.anchorPoint instanceof ObservableVector2d$1) {
+        if (this.anchorPoint instanceof ObservableVector2d) {
             this.anchorPoint.setMuted(0.5, 0.5).setCallback(this.onAnchorUpdate, this);
         } else {
             /**
@@ -17164,7 +17520,7 @@ class Renderable extends Rect$1 {
          */
         this.name = "";
 
-        if (this.pos instanceof ObservableVector3d$1) {
+        if (this.pos instanceof ObservableVector3d) {
             this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos, this);
         } else {
             /**
@@ -17224,7 +17580,7 @@ class Renderable extends Rect$1 {
         if (typeof this._tint === "undefined") {
             this._tint = pool$1.pull("Color", 255, 255, 255, 1.0);
         }
-        if (value instanceof Color$1) {
+        if (value instanceof Color) {
             this._tint.copy(value);
         } else {
             // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
@@ -17497,7 +17853,7 @@ class Renderable extends Rect$1 {
          */
 
          // XXX: This is called from the constructor, before it gets an ancestor
-         if (this.ancestor instanceof Container$1 && this.floating !== true) {
+         if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
              bounds.translate(this.ancestor.getAbsolutePosition());
          }
 
@@ -17514,7 +17870,7 @@ class Renderable extends Rect$1 {
           }
           // XXX Cache me or something
           this._absPos.set(this.pos.x, this.pos.y);
-          if (this.ancestor instanceof Container$1 && this.floating !== true) {
+          if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
               this._absPos.add(this.ancestor.getAbsolutePosition());
           }
           return this._absPos;
@@ -17710,7 +18066,6 @@ class Renderable extends Rect$1 {
     }
 
 }
-var Renderable$1 = Renderable;
 
 /*
 * Separating Axis Theorem implementation, based on the SAT.js library by Jim Riecken <jimr@jimr.ca>
@@ -17742,7 +18097,7 @@ const RIGHT_VORNOI_REGION = 1;
  * @ignore
  */
 var T_VECTORS = [];
-for (var v = 0; v < 10; v++) { T_VECTORS.push(new Vector2d$1()); }
+for (var v = 0; v < 10; v++) { T_VECTORS.push(new Vector2d()); }
 
 /**
  * A pool of arrays of numbers used in calculations to avoid allocating memory.
@@ -18212,8 +18567,8 @@ class ResponseObject {
     constructor() {
         this.a = null;
         this.b = null;
-        this.overlapN = new Vector2d$1();
-        this.overlapV = new Vector2d$1();
+        this.overlapN = new Vector2d();
+        this.overlapV = new Vector2d();
         this.aInB = true;
         this.bInA = true;
         this.indexShapeA = -1;
@@ -18242,17 +18597,17 @@ class ResponseObject {
 
 // a dummy object when using Line for raycasting
 let dummyObj = {
-    pos : new Vector2d$1(0, 0),
+    pos : new Vector2d(0, 0),
     ancestor : {
-        _absPos : new Vector2d$1(0, 0),
+        _absPos : new Vector2d(0, 0),
         getAbsolutePosition : function () {
             return this._absPos;
         }
     }
 };
 
-let boundsA = new Bounds$1();
-let boundsB = new Bounds$1();
+let boundsA = new Bounds();
+let boundsB = new Bounds();
 
 // the global response object used for collisions
 let globalResponse = new ResponseObject();
@@ -18547,7 +18902,7 @@ var collision$1 = collision;
  * a Generic Physic Body Object with some physic properties and behavior functionality, to as a member of a Renderable.
  * @see Renderable.body
  */
-class Body {
+ class Body {
     /**
      * @param {Renderable} ancestor - the parent object this body is attached to
      * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] - a initial shape, list of shapes, or JSON object defining the body
@@ -18778,13 +19133,13 @@ class Body {
      * this.body.addShape(me.loader.getJSON("shapesdef").banana);
      */
     addShape(shape) {
-        if (shape instanceof Rect$1 || shape instanceof Bounds$1) {
+        if (shape instanceof Rect || shape instanceof Bounds) {
             var poly = shape.toPolygon();
             this.shapes.push(poly);
             // update the body bounds
             this.bounds.add(poly.points);
             this.bounds.translate(poly.pos);
-        } else if (shape instanceof Ellipse$1) {
+        } else if (shape instanceof Ellipse) {
             if (!this.shapes.includes(shape)) {
                 // see removeShape
                 this.shapes.push(shape);
@@ -18796,7 +19151,7 @@ class Body {
                 shape.getBounds().x,
                 shape.getBounds().y
             );
-        } else if (shape instanceof Polygon$1) {
+        } else if (shape instanceof Polygon) {
             if (!this.shapes.includes(shape)) {
                 // see removeShape
                 this.shapes.push(shape);
@@ -18804,7 +19159,7 @@ class Body {
             // update the body bounds
             this.bounds.add(shape.points);
             this.bounds.translate(shape.pos);
-        } else if (shape instanceof Point$1) {
+        } else if (shape instanceof Point) {
             if (!this.shapes.includes(shape)) {
                 // see removeShape
                 this.shapes.push(shape);
@@ -18831,7 +19186,7 @@ class Body {
      */
     setVertices(vertices, index = 0, clear = true) {
         var polygon = this.getShape(index);
-        if (polygon instanceof Polygon$1) {
+        if (polygon instanceof Polygon) {
             polygon.setShape(0, 0, vertices);
         } else {
             // this will replace any other non polygon shape type if defined
@@ -19095,7 +19450,7 @@ class Body {
         this.forEach((shape) => {
             shape.rotate(angle, v);
             this.bounds.addBounds(shape.getBounds());
-            if (shape instanceof Ellipse$1) {
+            if (shape instanceof Ellipse) {
                 // use bounds position as ellipse position is center
                 this.bounds.translate(
                     shape.getBounds().x,
@@ -19225,24 +19580,22 @@ class Body {
     }
 }
 
-var Body$1 = Body;
-
 /**
  * Private function to re-use for object removal in a defer
  * @ignore
  */
-var deferredRemove = function (child, keepalive) {
+function deferredRemove(child, keepalive) {
     this.removeChildNow(child, keepalive);
-};
+}
 
-var globalFloatingCounter = 0;
+let globalFloatingCounter = 0;
 
 /**
  * @classdesc
  * Container represents a collection of child objects
  * @augments Renderable
  */
-class Container extends Renderable$1 {
+ class Container extends Renderable {
     /**
      * @param {number} [x=0] - position of the container (accessible via the inherited pos.x property)
      * @param {number} [y=0] - position of the container (accessible via the inherited pos.y property)
@@ -19466,7 +19819,7 @@ class Container extends Renderable$1 {
         }
 
         // if a physic body is defined, add it to the game world
-        if (child.body instanceof Body$1) {
+        if (child.body instanceof Body) {
             game$1.world.addBody(child.body);
         }
 
@@ -19517,7 +19870,7 @@ class Container extends Renderable$1 {
             }
 
             // if a physic body is defined, add it to the game world
-            if (child.body instanceof Body$1) {
+            if (child.body instanceof Body) {
                 game$1.world.addBody(child.body);
             }
 
@@ -19891,7 +20244,7 @@ class Container extends Renderable$1 {
 
             // remove the body first to avoid a condition where a body can be detached
             // from its parent, before the body is removed from the game world
-            if (child.body instanceof Body$1) {
+            if (child.body instanceof Body) {
                 game$1.world.removeBody(child.body);
             }
 
@@ -20227,393 +20580,12 @@ class Container extends Renderable$1 {
     }
 }
 
-var Container$1 = Container;
-
-/*
- * A QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
- * Based on the QuadTree Library by Timo Hausmann and released under the MIT license
- * https://github.com/timohausmann/quadtree-js/
-**/
-
-
-/**
- * a pool of `QuadTree` objects
- * @ignore
- */
-var QT_ARRAY = [];
-
-/**
- * will pop a quadtree object from the array
- * or create a new one if the array is empty
- * @ignore
- */
-function QT_ARRAY_POP(world, bounds, max_objects = 4, max_levels = 4, level = 0) {
-    if (QT_ARRAY.length > 0) {
-        var _qt =  QT_ARRAY.pop();
-        _qt.world = world;
-        _qt.bounds = bounds;
-        _qt.max_objects = max_objects;
-        _qt.max_levels  = max_levels;
-        _qt.level = level;
-        return _qt;
-    } else {
-        return new QuadTree(world, bounds, max_objects, max_levels, level);
-    }
-}
-
-/**
- * Push back a quadtree back into the array
- * @ignore
- */
-function QT_ARRAY_PUSH(qt) {
-    QT_ARRAY.push(qt);
-}
-
-/**
- * a temporary vector object to be reused
- * @ignore
- */
-var QT_VECTOR = new Vector2d$1();
-
-/**
- * @classdesc
- * a QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
- * @see game.world.broadphase
- */
-class QuadTree {
-    /**
-     * @param {World} world - the physic world this QuadTree belongs to
-     * @param {Bounds} bounds - bounds of the node
-     * @param {number} [max_objects=4] - max objects a node can hold before splitting into 4 subnodes
-     * @param {number} [max_levels=4] - total max levels inside root Quadtree
-     * @param {number} [level] - deepth level, required for subnodes
-     */
-    constructor(world, bounds, max_objects = 4, max_levels = 4, level = 0) {
-
-        this.world = world;
-        this.bounds = bounds;
-
-        this.max_objects = max_objects;
-        this.max_levels  = max_levels;
-
-        this.level = level;
-        this.bounds = bounds;
-
-        this.objects = [];
-        this.nodes = [];
-    }
-
-    /*
-     * Split the node into 4 subnodes
-     */
-    split() {
-        this.level + 1;
-            var subWidth  = this.bounds.width / 2,
-            subHeight = this.bounds.height / 2,
-            left = this.bounds.left,
-            top = this.bounds.top;
-
-         //top right node
-        this.nodes[0] = QT_ARRAY_POP(
-            this.world,
-            this.bounds, {
-                left : left + subWidth,
-                top : top,
-                width : subWidth,
-                height : subHeight
-            },
-            this.max_objects,
-            this.max_levels);
-
-        //top left node
-        this.nodes[1] = QT_ARRAY_POP(
-            this.world,
-            this.bounds, {
-                left : left,
-                top: top,
-                width : subWidth,
-                height : subHeight
-            },
-            this.max_objects,
-            this.max_levels);
-
-        //bottom left node
-        this.nodes[2] = QT_ARRAY_POP(
-            this.world,
-            this.bounds, {
-                left : left,
-                top : top + subHeight,
-                width : subWidth,
-                height : subHeight
-            },
-            this.max_objects,
-            this.max_levels);
-
-        //bottom right node
-        this.nodes[3] = QT_ARRAY_POP(
-            this.world,
-            this.bounds, {
-                left : left + subWidth,
-                top : top + subHeight,
-                width : subWidth,
-                height : subHeight
-            },
-            this.max_objects,
-            this.max_levels);
-    }
-
-    /*
-     * Determine which node the object belongs to
-     * @param {Rect} rect bounds of the area to be checked
-     * @returns Integer index of the subnode (0-3), or -1 if rect cannot completely fit within a subnode and is part of the parent node
-     */
-    getIndex(item) {
-        var pos;
-        var bounds = item.getBounds();
-
-        // use game world coordinates for floating items
-        if (item.isFloating === true) {
-            pos = this.world.app.viewport.localToWorld(bounds.left, bounds.top, QT_VECTOR);
-        } else {
-            pos = QT_VECTOR.set(bounds.left, bounds.top);
-        }
-
-        var index = -1,
-            rx = pos.x,
-            ry = pos.y,
-            rw = bounds.width,
-            rh = bounds.height,
-            verticalMidpoint = this.bounds.left + (this.bounds.width / 2),
-            horizontalMidpoint = this.bounds.top + (this.bounds.height / 2),
-            //rect can completely fit within the top quadrants
-            topQuadrant = (ry < horizontalMidpoint && ry + rh < horizontalMidpoint),
-            //rect can completely fit within the bottom quadrants
-            bottomQuadrant = (ry > horizontalMidpoint);
-
-        //rect can completely fit within the left quadrants
-        if (rx < verticalMidpoint && rx + rw < verticalMidpoint) {
-            if (topQuadrant) {
-                index = 1;
-            } else if (bottomQuadrant) {
-                index = 2;
-            }
-        } else if (rx > verticalMidpoint) {
-            //rect can completely fit within the right quadrants
-            if (topQuadrant) {
-                index = 0;
-            } else if (bottomQuadrant) {
-                index = 3;
-            }
-        }
-
-        return index;
-    }
-
-    /**
-     * Insert the given object container into the node.
-     * @name insertContainer
-     * @memberof QuadTree
-     * @param {Container} container - group of objects to be added
-     */
-    insertContainer(container) {
-        for (var i = container.children.length, child; i--, (child = container.children[i]);) {
-            if (child.isKinematic !== true) {
-                if (child instanceof Container$1) {
-                    if (child.name !== "rootContainer") {
-                        this.insert(child);
-                    }
-                    // recursivly insert all childs
-                    this.insertContainer(child);
-                } else {
-                    // only insert object with a bounding box
-                    // Probably redundant with `isKinematic`
-                    if (typeof (child.getBounds) === "function") {
-                        this.insert(child);
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Insert the given object into the node. If the node
-     * exceeds the capacity, it will split and add all
-     * objects to their corresponding subnodes.
-     * @name insert
-     * @memberof QuadTree
-     * @param {object} item - object to be added
-     */
-    insert(item) {
-        var index = -1;
-
-        //if we have subnodes ...
-        if (this.nodes.length > 0) {
-            index = this.getIndex(item);
-
-            if (index !== -1) {
-                this.nodes[index].insert(item);
-                return;
-            }
-        }
-
-        this.objects.push(item);
-
-        if (this.objects.length > this.max_objects && this.level < this.max_levels) {
-
-            //split if we don't already have subnodes
-            if (this.nodes.length === 0) {
-                this.split();
-            }
-
-            var i = 0;
-
-            //add all objects to there corresponding subnodes
-            while (i < this.objects.length) {
-
-                index = this.getIndex(this.objects[i]);
-
-                if (index !== -1) {
-                    this.nodes[index].insert(this.objects.splice(i, 1)[0]);
-                } else {
-                    i = i + 1;
-                }
-            }
-        }
-    }
-
-    /**
-     * Return all objects that could collide with the given object
-     * @name retrieve
-     * @memberof QuadTree
-     * @param {object} item - object to be checked against
-     * @param {object} [fn] - a sorting function for the returned array
-     * @returns {object[]} array with all detected objects
-     */
-    retrieve(item, fn) {
-        var returnObjects = this.objects;
-
-        //if we have subnodes ...
-        if (this.nodes.length > 0) {
-
-            var index = this.getIndex(item);
-
-            //if rect fits into a subnode ..
-            if (index !== -1) {
-                returnObjects = returnObjects.concat(this.nodes[index].retrieve(item));
-            } else {
-                 //if rect does not fit into a subnode, check it against all subnodes
-                for (var i = 0; i < this.nodes.length; i = i + 1) {
-                    returnObjects = returnObjects.concat(this.nodes[i].retrieve(item));
-                }
-            }
-        }
-
-        if (typeof(fn) === "function") {
-            returnObjects.sort(fn);
-        }
-
-        return returnObjects;
-    }
-
-    /**
-     * Remove the given item from the quadtree.
-     * (this function won't recalculate the impacted node)
-     * @name remove
-     * @memberof QuadTree
-     * @param {object} item - object to be removed
-     * @returns {boolean} true if the item was found and removed.
-     */
-     remove(item) {
-        var found = false;
-
-        if (typeof (item.getBounds) === "undefined") {
-            // ignore object that cannot be added in the first place
-            return false;
-        }
-
-        //if we have subnodes ...
-        if (this.nodes.length > 0) {
-            // determine to which node the item belongs to
-            var index = this.getIndex(item);
-
-            if (index !== -1) {
-                found = remove(this.nodes[index], item);
-                // trim node if empty
-                if (found && this.nodes[index].isPrunable()) {
-                    this.nodes.splice(index, 1);
-                }
-            }
-        }
-
-        if (found === false) {
-            // try and remove the item from the list of items in this node
-            if (this.objects.indexOf(item) !== -1) {
-                remove(this.objects, item);
-                found = true;
-            }
-        }
-
-        return found;
-    }
-
-    /**
-     * return true if the node is prunable
-     * @name isPrunable
-     * @memberof QuadTree
-     * @returns {boolean} true if the node is prunable
-     */
-    isPrunable() {
-        return !(this.hasChildren() || (this.objects.length > 0));
-    }
-
-    /**
-     * return true if the node has any children
-     * @name hasChildren
-     * @memberof QuadTree
-     * @returns {boolean} true if the node has any children
-     */
-    hasChildren() {
-        for (var i = 0; i < this.nodes.length; i = i + 1) {
-            var subnode = this.nodes[i];
-            if (subnode.length > 0 || subnode.objects.length > 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * clear the quadtree
-     * @name clear
-     * @memberof QuadTree
-     * @param {Bounds} [bounds=this.bounds] - the bounds to be cleared
-     */
-    clear(bounds) {
-        this.objects.length = 0;
-
-        for (var i = 0; i < this.nodes.length; i++) {
-            this.nodes[i].clear();
-            // recycle the quadTree object
-            QT_ARRAY_PUSH(this.nodes[i]);
-        }
-        // empty the array
-        this.nodes.length = 0;
-
-        // resize the root bounds if required
-        if (typeof bounds !== "undefined") {
-            this.bounds.setMinMax(bounds.min.x, bounds.min.y, bounds.max.x, bounds.max.y);
-        }
-    }
-}
-
-var QuadTree$1 = QuadTree;
-
 /**
  * @classdesc
  * an object representing the physic world, and responsible for managing and updating all childs and physics
  * @augments Container
  */
-class World extends Container$1 {
+ class World extends Container {
     /**
      * @param {number} [x=0] - position of the container (accessible via the inherited pos.x property)
      * @param {number} [y=0] - position of the container (accessible via the inherited pos.y property)
@@ -20657,7 +20629,7 @@ class World extends Container$1 {
          * @name gravity
          * @memberof World
          */
-        this.gravity = new Vector2d$1(0, 0.98);
+        this.gravity = new Vector2d(0, 0.98);
 
         /**
          * Specify the rendering method for tile layers. <br>
@@ -20689,7 +20661,7 @@ class World extends Container$1 {
          * @public
          * @type {QuadTree}
          */
-        this.broadphase = new QuadTree$1(this, this.getBounds().clone(), collision$1.maxChildren, collision$1.maxDepth);
+        this.broadphase = new QuadTree(this, this.getBounds().clone(), collision$1.maxChildren, collision$1.maxDepth);
 
         // reset the world container on the game reset signal
         on(GAME_RESET, this.reset, this);
@@ -20811,15 +20783,13 @@ class World extends Container$1 {
 
 }
 
-var World$1 = World;
-
 /**
  * @classdesc
  * An Application represents a single melonJS game.
  * An Application is responsible for updating (each frame) all the related object status and draw them.
  * @see game
  */
-class Application {
+ class Application {
     constructor() {
         /**
          * a reference to the current active stage "default" camera
@@ -20894,7 +20864,7 @@ class Application {
      */
     init() {
         // create a new physic world
-        this.world = new World$1();
+        this.world = new World();
         // set the reference to this application instance
         this.world.app = this;
         this.lastUpdate = globalThis.performance.now();
@@ -21037,8 +21007,6 @@ class Application {
     }
 }
 
-var Application$1 = Application;
-
 /**
  * game is a default instance of a melonJS Application and represents your current game,
  * it contains all the objects, tilemap layers, current viewport, collision map, etc...<br>
@@ -21047,7 +21015,7 @@ var Application$1 = Application;
  */
 
 // create a default melonJS application instance
-let game = new Application$1();
+let game = new Application();
 
  // initialize the game manager on system boot
 on(BOOT, () => {
@@ -21060,14 +21028,14 @@ var game$1 = game;
 // some ref shortcut
 const MIN = Math.min, MAX = Math.max;
 
-var targetV = new Vector2d$1();
+var targetV = new Vector2d();
 
 /**
  * @classdesc
  * a 2D orthographic camera
  * @augments Renderable
  */
-class Camera2d extends Renderable$1 {
+ class Camera2d extends Renderable {
     /**
      * @param {number} minX - start x offset
      * @param {number} minY - start y offset
@@ -21150,7 +21118,7 @@ class Camera2d extends Renderable$1 {
          * @name projectionMatrix
          * @memberof Camera2d
          */
-        this.projectionMatrix = new Matrix3d$1();
+        this.projectionMatrix = new Matrix3d();
 
         /**
          * the invert camera transform used to unproject points
@@ -21159,10 +21127,10 @@ class Camera2d extends Renderable$1 {
          * @name invCurrentTransform
          * @memberof Camera2d
          */
-        this.invCurrentTransform = new Matrix2d$1();
+        this.invCurrentTransform = new Matrix2d();
 
         // offset for shake effect
-        this.offset = new Vector2d$1();
+        this.offset = new Vector2d();
 
         // target to follow
         this.target = null;
@@ -21286,7 +21254,7 @@ class Camera2d extends Renderable$1 {
      */
     setDeadzone(w, h) {
         if (typeof(this.deadzone) === "undefined") {
-            this.deadzone = new Rect$1(0, 0, 0, 0);
+            this.deadzone = new Rect(0, 0, 0, 0);
         }
 
         // reusing the old code for now...
@@ -21365,11 +21333,11 @@ class Camera2d extends Renderable$1 {
      * me.game.viewport.follow(this, me.game.viewport.AXIS.BOTH, 0.1);
      */
     follow(target, axis, damping) {
-        if (target instanceof Renderable$1) {
+        if (target instanceof Renderable) {
             this.target = target.pos;
         }
-        else if ((target instanceof Vector2d$1) || (target instanceof Vector3d$1) ||
-                 (target instanceof ObservableVector2d$1) || (target instanceof ObservableVector3d$1)) {
+        else if ((target instanceof Vector2d) || (target instanceof Vector3d) ||
+                 (target instanceof ObservableVector2d) || (target instanceof ObservableVector3d)) {
             this.target = target;
         }
         else {
@@ -21765,7 +21733,6 @@ class Camera2d extends Renderable$1 {
     }
 
 }
-var Camera2d$1 = Camera2d;
 
 // a default camera instance to use across all stages
 var default_camera;
@@ -21782,7 +21749,7 @@ var default_settings = {
  * through the state manager must inherit from this base class.
  * @see state
  */
-class Stage {
+ class Stage {
 
     /**
      * @param {object} [settings] - The stage` parameters
@@ -21834,7 +21801,7 @@ class Stage {
          * @default "#000000"
          * @see Light2d
          */
-        this.ambientLight = new Color$1(0, 0, 0, 0);
+        this.ambientLight = new Color(0, 0, 0, 0);
 
         /**
          * The given constructor options
@@ -21863,7 +21830,7 @@ class Stage {
                 var width = renderer.getWidth();
                 var height = renderer.getHeight();
                 // new default camera instance
-                default_camera = new Camera2d$1(0, 0, width, height);
+                default_camera = new Camera2d(0, 0, width, height);
             }
             this.cameras.set("default", default_camera);
         }
@@ -21989,13 +21956,12 @@ class Stage {
         }
     }
 }
-var Stage$1 = Stage;
 
 var img = "data:image/png;base64,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";
   var logo_url = img;
 
 // a basic progress bar object
-class ProgressBar extends Renderable$1 {
+class ProgressBar extends Renderable {
     /**
      * @ignore
      */
@@ -22052,7 +22018,7 @@ class ProgressBar extends Renderable$1 {
  * a default loading screen
  * @ignore
  */
-class DefaultLoadingScreen extends Stage$1 {
+class DefaultLoadingScreen extends Stage {
     /**
      * call when the loader is resetted
      * @ignore
@@ -22074,7 +22040,7 @@ class DefaultLoadingScreen extends Stage$1 {
         // load the melonJS logo
         loader$1.load({name: "melonjs_logo", type: "image", src: logo_url}, () => {
             // melonJS logo
-            game$1.world.addChild(new Sprite$1(
+            game$1.world.addChild(new Sprite(
                 renderer.getWidth() / 2,
                 renderer.getHeight() / 2, {
                     image : "melonjs_logo",
@@ -22226,7 +22192,7 @@ on(BOOT, () => {
     // set the built-in loading stage
     state.set(state.LOADING, new DefaultLoadingScreen$1());
     // set and enable the default stage
-    state.set(state.DEFAULT, new Stage$1());
+    state.set(state.DEFAULT, new Stage());
     // enable by default as soon as the display is initialized
     on(VIDEO_INIT, () => {
         state.change(state.DEFAULT, true);
@@ -22539,7 +22505,7 @@ var state = {
      * me.state.set(me.state.MENU, new MenuScreen());
      */
     set(state, stage, start = false) {
-        if (!(stage instanceof Stage$1)) {
+        if (!(stage instanceof Stage)) {
             throw new Error(stage + " is not an instance of me.Stage");
         }
         _stages[state] = {};
@@ -23045,7 +23011,7 @@ const TMX_FLIP_H          = 0x80000000,
  * a basic tile object
  * @augments Bounds
  */
-class Tile extends Bounds$1 {
+ class Tile extends Bounds {
     /**
      * @param {number} x - x index of the Tile in the map
      * @param {number} y - y index of the Tile in the map
@@ -23128,7 +23094,7 @@ class Tile extends Bounds$1 {
         // create and apply transformation matrix if required
         if (this.flipped === true) {
             if (this.currentTransform === null) {
-                this.currentTransform = new Matrix2d$1();
+                this.currentTransform = new Matrix2d();
             }
             this.setTileTransform(this.currentTransform.identity());
         }
@@ -23188,7 +23154,7 @@ class Tile extends Bounds$1 {
         } else {
             if (tileset.isCollection === true) {
                 var image = tileset.getTileImage(this.tileId);
-                renderable = new Sprite$1(0, 0,
+                renderable = new Sprite(0, 0,
                     Object.assign({
                         image: image
                     })//, settings)
@@ -23214,14 +23180,13 @@ class Tile extends Bounds$1 {
         return renderable;
     }
 }
-var Tile$1 = Tile;
 
 /**
  * @classdesc
  * a canvas renderer object
  * @augments Renderer
  */
-class CanvasRenderer extends Renderer$1 {
+ class CanvasRenderer extends Renderer {
     /**
      * @param {object} options - The renderer parameters
      * @param {number} options.width - The width of the canvas without scaling
@@ -23355,7 +23320,7 @@ class CanvasRenderer extends Renderer$1 {
         this.resetTransform();
         context.globalAlpha = 1;
         context.globalCompositeOperation = opaque === true ? "copy" : "source-over";
-        context.fillStyle = (color instanceof Color$1) ? color.toRGBA() : color;
+        context.fillStyle = (color instanceof Color) ? color.toRGBA() : color;
         this.fillRect(0, 0, canvas.width, canvas.height);
         this.restore();
     }
@@ -23804,7 +23769,7 @@ class CanvasRenderer extends Renderer$1 {
         var context = this.getContext();
         context.strokeStyle =
         context.fillStyle = (
-            color instanceof Color$1 ?
+            color instanceof Color ?
             color.toRGBA() :
             color
         );
@@ -23943,11 +23908,11 @@ class CanvasRenderer extends Renderer$1 {
         }
 
         // https://github.com/melonjs/melonJS/issues/648
-        if (mask instanceof RoundRect$1) {
+        if (mask instanceof RoundRect) {
             context.roundRect(mask.top, mask.left, mask.width, mask.height, mask.radius);
-        } else if (mask instanceof Rect$1 || mask instanceof Bounds$1) {
+        } else if (mask instanceof Rect || mask instanceof Bounds) {
             context.rect(mask.top, mask.left, mask.width, mask.height);
-        } else if (mask instanceof Ellipse$1) {
+        } else if (mask instanceof Ellipse) {
             const _x = mask.pos.x, _y = mask.pos.y,
                 hw = mask.radiusV.x,
                 hh = mask.radiusV.y,
@@ -24004,7 +23969,6 @@ class CanvasRenderer extends Renderer$1 {
         }
     }
 }
-var CanvasRenderer$1 = CanvasRenderer;
 
 /**
  * Create required arrays for the given layer object
@@ -24054,7 +24018,7 @@ function preRenderLayer(layer, renderer) {
             // get the value of the gid
             var tile = layer.layerData[x][y];
             // draw the tile if defined
-            if (tile instanceof Tile$1) {
+            if (tile instanceof Tile) {
                 // add a new tile to the layer
                 layer.getRenderer().drawTile(renderer, x, y, tile);
             }
@@ -24068,7 +24032,7 @@ function preRenderLayer(layer, renderer) {
  * Tiled QT 0.7.x format
  * @augments Renderable
  */
-class TMXLayer extends Renderable$1 {
+ class TMXLayer extends Renderable {
     /**
      * @param {object} map - layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
      * @param {object} data - layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
@@ -24229,7 +24193,7 @@ class TMXLayer extends Renderable$1 {
 
         // if pre-rendering method is use, create an offline canvas/renderer
         if ((this.preRender === true) && (!this.canvasRenderer)) {
-            this.canvasRenderer = new CanvasRenderer$1({
+            this.canvasRenderer = new CanvasRenderer({
                 canvas : createCanvas(this.width, this.height),
                 widht : this.width,
                 heigth : this.height,
@@ -24342,7 +24306,7 @@ class TMXLayer extends Renderable$1 {
             // look for the corresponding tileset
             this.tileset = this.tilesets.getTilesetByGid(tileId);
         }
-        return new Tile$1(x, y, tileId, this.tileset);
+        return new Tile(x, y, tileId, this.tileset);
     }
 
     /**
@@ -24436,15 +24400,13 @@ class TMXLayer extends Renderable$1 {
     }
 }
 
-var TMXLayer$1 = TMXLayer;
-
 /* eslint-disable no-unused-vars */
 
 /**
  * @classdesc
  * The map renderer base class
  */
-class TMXRenderer {
+ class TMXRenderer {
     /**
      * @param {number} cols - width of the tilemap in tiles
      * @param {number} rows - height of the tilemap in tiles
@@ -24456,7 +24418,7 @@ class TMXRenderer {
         this.rows = rows;
         this.tilewidth = tilewidth;
         this.tileheight = tileheight;
-        this.bounds = new Bounds$1();
+        this.bounds = new Bounds();
     }
 
     /**
@@ -24487,7 +24449,7 @@ class TMXRenderer {
      * @returns {Bounds}
      */
     getBounds(layer) {
-        var bounds = layer instanceof TMXLayer$1 ? pool$1.pull("Bounds") : this.bounds;
+        var bounds = layer instanceof TMXLayer ? pool$1.pull("Bounds") : this.bounds;
         bounds.setMinMax(
             0, 0,
             this.cols * this.tilewidth,
@@ -24547,7 +24509,6 @@ class TMXRenderer {
 
 }
 
-var TMXRenderer$1 = TMXRenderer;
 
 /* eslint-enable no-unused-vars */
 
@@ -24556,7 +24517,7 @@ var TMXRenderer$1 = TMXRenderer;
  * an Orthogonal Map Renderder
  * @augments TMXRenderer
  */
-class TMXOrthogonalRenderer extends TMXRenderer$1 {
+ class TMXOrthogonalRenderer extends TMXRenderer {
     /**
      * @param {TMXTileMap} map - the TMX map
      */
@@ -24585,7 +24546,7 @@ class TMXOrthogonalRenderer extends TMXRenderer$1 {
      * @ignore
      */
     pixelToTileCoords(x, y, v) {
-        var ret = v || new Vector2d$1();
+        var ret = v || new Vector2d();
         return ret.set(
             x / this.tilewidth,
             y / this.tileheight
@@ -24598,7 +24559,7 @@ class TMXOrthogonalRenderer extends TMXRenderer$1 {
      * @ignore
      */
     tileToPixelCoords(x, y, v) {
-        var ret = v || new Vector2d$1();
+        var ret = v || new Vector2d();
         return ret.set(
             x * this.tilewidth,
             y * this.tileheight
@@ -24694,14 +24655,12 @@ class TMXOrthogonalRenderer extends TMXRenderer$1 {
     }
 }
 
-var TMXOrthogonalRenderer$1 = TMXOrthogonalRenderer;
-
 /**
  * @classdesc
  * an Isometric Map Renderder
  * @augments TMXRenderer
  */
-class TMXIsometricRenderer extends TMXRenderer$1 {
+ class TMXIsometricRenderer extends TMXRenderer {
     /**
      * @param {TMXTileMap} map - the TMX map
      */
@@ -24737,7 +24696,7 @@ class TMXIsometricRenderer extends TMXRenderer$1 {
      * @returns {Bounds}
      */
     getBounds(layer) {
-        var bounds = layer instanceof TMXLayer$1 ? pool$1.pull("Bounds") : this.bounds;
+        var bounds = layer instanceof TMXLayer ? pool$1.pull("Bounds") : this.bounds;
         bounds.setMinMax(
             0, 0,
             (this.cols + this.rows) * (this.tilewidth / 2),
@@ -24751,7 +24710,7 @@ class TMXIsometricRenderer extends TMXRenderer$1 {
      * @ignore
      */
     pixelToTileCoords(x, y, v) {
-        var ret = v || new Vector2d$1();
+        var ret = v || new Vector2d();
         return ret.set(
             (y / this.tileheight) + ((x - this.originX) / this.tilewidth),
             (y / this.tileheight) - ((x - this.originX) / this.tilewidth)
@@ -24763,7 +24722,7 @@ class TMXIsometricRenderer extends TMXRenderer$1 {
      * @ignore
      */
     tileToPixelCoords(x, y, v) {
-        var ret = v || new Vector2d$1();
+        var ret = v || new Vector2d();
         return ret.set(
             (x - y) * this.hTilewidth + this.originX,
             (x + y) * this.hTileheight
@@ -24901,8 +24860,6 @@ class TMXIsometricRenderer extends TMXRenderer$1 {
     }
 }
 
-var TMXIsometricRenderer$1 = TMXIsometricRenderer;
-
 // scope global var & constants
 const offsetsStaggerX = [
     {x:   0, y:   0},
@@ -24922,7 +24879,7 @@ const offsetsStaggerY = [
  * an Hexagonal Map Renderder
  * @augments TMXRenderer
  */
-class TMXHexagonalRenderer extends TMXRenderer$1 {
+ class TMXHexagonalRenderer extends TMXRenderer {
     /**
      * @param {TMXTileMap} map - the TMX map
      */
@@ -24957,10 +24914,10 @@ class TMXHexagonalRenderer extends TMXRenderer$1 {
         this.rowheight = this.sideoffsety + this.sidelengthy;
 
         this.centers = [
-            new Vector2d$1(),
-            new Vector2d$1(),
-            new Vector2d$1(),
-            new Vector2d$1()
+            new Vector2d(),
+            new Vector2d(),
+            new Vector2d(),
+            new Vector2d()
         ];
     }
 
@@ -24983,7 +24940,7 @@ class TMXHexagonalRenderer extends TMXRenderer$1 {
      * @returns {Bounds}
      */
     getBounds(layer) {
-        var bounds = layer instanceof TMXLayer$1 ? pool$1.pull("Bounds") : this.bounds;
+        var bounds = layer instanceof TMXLayer ? pool$1.pull("Bounds") : this.bounds;
 
         // The map size is the same regardless of which indexes are shifted.
         if (this.staggerX) {
@@ -25026,7 +24983,7 @@ class TMXHexagonalRenderer extends TMXRenderer$1 {
      * @ignore
      */
     topLeft(x, y, v) {
-        var ret = v || new Vector2d$1();
+        var ret = v || new Vector2d();
 
         if (!this.staggerX) {
             if ((y & 1) ^ this.staggerEven) {
@@ -25050,7 +25007,7 @@ class TMXHexagonalRenderer extends TMXRenderer$1 {
      * @ignore
      */
     topRight(x, y, v) {
-        var ret = v || new Vector2d$1();
+        var ret = v || new Vector2d();
 
         if (!this.staggerX) {
             if ((y & 1) ^ this.staggerEven) {
@@ -25075,7 +25032,7 @@ class TMXHexagonalRenderer extends TMXRenderer$1 {
      * @ignore
      */
     bottomLeft(x, y, v) {
-        var ret = v || new Vector2d$1();
+        var ret = v || new Vector2d();
 
         if (!this.staggerX) {
             if ((y & 1) ^ this.staggerEven) {
@@ -25099,7 +25056,7 @@ class TMXHexagonalRenderer extends TMXRenderer$1 {
      * @ignore
      */
     bottomRight(x, y, v) {
-        var ret = v || new Vector2d$1();
+        var ret = v || new Vector2d();
 
         if (!this.staggerX) {
             if ((y & 1) ^ this.staggerEven) {
@@ -25124,7 +25081,7 @@ class TMXHexagonalRenderer extends TMXRenderer$1 {
      * @ignore
      */
     pixelToTileCoords(x, y, v) {
-        var ret = v || new Vector2d$1();
+        var ret = v || new Vector2d();
 
         if (this.staggerX) { //flat top
             x -= this.staggerEven ? this.tilewidth : this.sideoffsetx;
@@ -25212,7 +25169,7 @@ class TMXHexagonalRenderer extends TMXRenderer$1 {
     tileToPixelCoords(x, y, v) {
         var tileX = Math.floor(x),
             tileY = Math.floor(y);
-        var ret = v || new Vector2d$1();
+        var ret = v || new Vector2d();
 
         if (this.staggerX) {
             ret.y = tileY * (this.tileheight + this.sidelengthy);
@@ -25394,14 +25351,12 @@ class TMXHexagonalRenderer extends TMXRenderer$1 {
     }
 }
 
-var TMXHexagonalRenderer$1 = TMXHexagonalRenderer;
-
 /**
  * @classdesc
  * a Staggered Map Renderder
  * @augments TMXHexagonalRenderer
  */
-class TMXStaggeredRenderer extends TMXHexagonalRenderer$1 {
+ class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 
     /**
      * return true if the renderer can render the specified layer
@@ -25419,7 +25374,7 @@ class TMXStaggeredRenderer extends TMXHexagonalRenderer$1 {
      * @ignore
      */
     pixelToTileCoords(x, y, v) {
-        var ret = v || new Vector2d$1();
+        var ret = v || new Vector2d();
 
         var alignedX = x,
             alignedY = y;
@@ -25490,13 +25445,11 @@ class TMXStaggeredRenderer extends TMXHexagonalRenderer$1 {
     }
 }
 
-var TMXStaggeredRenderer$1 = TMXStaggeredRenderer;
-
 /**
  * @classdesc
  * a TMX Tile Set Object
  */
-class TMXTileset {
+ class TMXTileset {
     /**
      *  @param {object} tileset - tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
      */
@@ -25532,7 +25485,7 @@ class TMXTileset {
         this.margin = +tileset.margin || 0;
 
         // set tile offset properties (if any)
-        this.tileoffset = new Vector2d$1();
+        this.tileoffset = new Vector2d();
 
         /**
          * Tileset contains animated tiles
@@ -25787,8 +25740,6 @@ class TMXTileset {
     }
 }
 
-var TMXTileset$1 = TMXTileset;
-
 // bitmask constants to check for flipped & rotated tiles
 const TMX_CLEAR_BIT_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
 
@@ -25796,7 +25747,7 @@ const TMX_CLEAR_BIT_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
  * @classdesc
  * an object containing all tileset
  */
-class TMXTilesetGroup {
+ class TMXTilesetGroup {
 
     constructor() {
         this.tilesets = [];
@@ -25861,8 +25812,6 @@ class TMXTilesetGroup {
         }
     }
 }
-
-var TMXTilesetGroup$1 = TMXTilesetGroup;
 
 /**
  * @classdesc
@@ -26121,7 +26070,7 @@ class TMXObject {
         }
 
         // the object corresponding tile object
-        this.tile = new Tile$1(this.x, this.y, this.gid, tileset);
+        this.tile = new Tile(this.x, this.y, this.gid, tileset);
     }
 
     /**
@@ -26297,7 +26246,7 @@ class TMXGroup {
 
         if (data.layers) {
             data.layers.forEach((data) => {
-                var layer = new TMXLayer$1(map, data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z++);
+                var layer = new TMXLayer(map, data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z++);
                 // set a renderer
                 layer.setRenderer(map.getRenderer());
                 // resize container accordingly
@@ -26345,16 +26294,16 @@ const COLLISION_GROUP = "collision";
 function getNewDefaultRenderer(map) {
     switch (map.orientation) {
         case "orthogonal":
-            return new TMXOrthogonalRenderer$1(map);
+            return new TMXOrthogonalRenderer(map);
 
         case "isometric":
-            return new TMXIsometricRenderer$1(map);
+            return new TMXIsometricRenderer(map);
 
         case "hexagonal":
-            return new TMXHexagonalRenderer$1(map);
+            return new TMXHexagonalRenderer(map);
 
         case "staggered":
-            return new TMXStaggeredRenderer$1(map);
+            return new TMXStaggeredRenderer(map);
 
         // if none found, throw an exception
         default:
@@ -26367,7 +26316,7 @@ function getNewDefaultRenderer(map) {
  * @ignore
  */
 function readLayer(map, data, z) {
-    return new TMXLayer$1(map, data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
+    return new TMXLayer(map, data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
 }
 
 /**
@@ -26406,7 +26355,7 @@ function readImageLayer(map, data, z) {
  * @ignore
  */
 function readTileset(data) {
-    return (new TMXTileset$1(data));
+    return (new TMXTileset(data));
 }
 
 /**
@@ -26422,7 +26371,7 @@ function readObjectGroup(map, data, z) {
  * a TMX Tile Map Object
  * Tiled QT +0.7.x format
  */
-class TMXTileMap {
+ class TMXTileMap {
     /**
      * @param {string} levelId - name of TMX map
      * @param {object} data - TMX map in JSON format
@@ -26621,7 +26570,7 @@ class TMXTileMap {
         // Tileset information
         if (!this.tilesets) {
             // make sure we have a TilesetGroup Object
-            this.tilesets = new TMXTilesetGroup$1();
+            this.tilesets = new TMXTilesetGroup();
         }
 
         // parse all tileset objects
@@ -26773,7 +26722,7 @@ class TMXTileMap {
 
             if (flatten === false) {
                 // create a new container
-                targetContainer = new Container$1(0, 0, this.width, this.height);
+                targetContainer = new Container(0, 0, this.width, this.height);
 
                 // tiled uses 0,0 by default
                 targetContainer.anchorPoint.set(0, 0);
@@ -26812,7 +26761,7 @@ class TMXTileMap {
                 /// specific instantiation logic/details from here
 
                 // groups can contains either text, objects or layers
-                if (settings instanceof TMXLayer$1) {
+                if (settings instanceof TMXLayer) {
                     // layers are already instantiated & initialized
                     obj = settings;
                     // z value set already
@@ -26840,7 +26789,7 @@ class TMXTileMap {
                     }
                     // check if a me.Tile object is embedded
                     obj = settings.tile.getRenderable(settings);
-                    obj.body = new Body$1(obj, shape);
+                    obj.body = new Body(obj, shape);
                     obj.body.setStatic(true);
                     // set the obj z order
                     obj.pos.setMuted(settings.x, settings.y, settings.z);
@@ -26874,7 +26823,7 @@ class TMXTileMap {
                         // for backward compatibility
                         obj.class = settings.class || settings.type;
                         obj.id = settings.id;
-                        obj.body = new Body$1(obj, shape);
+                        obj.body = new Body(obj, shape);
                         obj.body.setStatic(true);
                         obj.resize(obj.body.getBounds().width, obj.body.getBounds().height);
                     }
@@ -26894,7 +26843,7 @@ class TMXTileMap {
                     if (obj.isRenderable === true) {
                         obj.setOpacity(obj.getOpacity() * group.opacity);
                         // and to child renderables if any
-                        if (obj.renderable instanceof Renderable$1) {
+                        if (typeof obj.renderable !== "undefined" && obj.renderable.isRenderable === true) {
                             obj.renderable.setOpacity(obj.renderable.getOpacity() * group.opacity);
                         }
                     }
@@ -26945,8 +26894,6 @@ class TMXTileMap {
         this.initialized = false;
     }
 }
-
-var TMXTileMap$1 = TMXTileMap;
 
 // our levels
 var levels = {};
@@ -27037,7 +26984,7 @@ var level = {
                 // just load the level with the XML stuff
                 if (levels[levelId] == null) {
                     //console.log("loading "+ levelId);
-                    levels[levelId] = new TMXTileMap$1(levelId, loader$1.getTMX(levelId));
+                    levels[levelId] = new TMXTileMap(levelId, loader$1.getTMX(levelId));
                     // level index
                     levelIdx.push(levelId);
                 }
@@ -27110,7 +27057,7 @@ var level = {
             throw new Error("level " + levelId + " not found");
         }
 
-        if (levels[levelId] instanceof TMXTileMap$1) {
+        if (levels[levelId] instanceof TMXTileMap) {
 
             // check the status of the state mngr
             var wasRunning = state$1.isRunning();
@@ -28019,7 +27966,7 @@ var loader$1 = loader;
  * An object to display a fixed or animated sprite on screen.
  * @augments Renderable
  */
-class Sprite extends Renderable$1 {
+ class Sprite extends Renderable {
     /**
      * @param {number} x - the x coordinates of the sprite object
      * @param {number} y - the y coordinates of the sprite object
@@ -28193,7 +28140,7 @@ class Sprite extends Renderable$1 {
         }
 
         if (typeof (settings.tint) !== "undefined") {
-            if (settings.tint instanceof Color$1) {
+            if (settings.tint instanceof Color) {
                 this.tint.copy(settings.tint);
             } else {
                 // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
@@ -28651,7 +28598,6 @@ class Sprite extends Renderable$1 {
         );
     }
 }
-var Sprite$1 = Sprite;
 
 /**
  * create a simple 1 frame texture atlas based on the given parameters
@@ -28838,8 +28784,8 @@ class TextureAtlas {
                 atlas[frame.filename] = {
                     name         : frame.filename, // frame name
                     texture      : data.meta.image || "default", // the source texture
-                    offset       : new Vector2d$1(s.x, s.y),
-                    anchorPoint  : (hasTextureAnchorPoint) ? new Vector2d$1(originX / s.w, originY / s.h) : null,
+                    offset       : new Vector2d(s.x, s.y),
+                    anchorPoint  : (hasTextureAnchorPoint) ? new Vector2d(originX / s.w, originY / s.h) : null,
                     trimmed      : !!frame.trimmed,
                     width        : s.w,
                     height       : s.h,
@@ -28895,7 +28841,7 @@ class TextureAtlas {
             atlas[name] = {
                 name        : name,
                 texture     : "default", // the source texture
-                offset      : new Vector2d$1(
+                offset      : new Vector2d(
                     margin + (spacing + data.framewidth) * (frame % spritecount.x),
                     margin + (spacing + data.frameheight) * ~~(frame / spritecount.x)
                 ),
@@ -28969,7 +28915,7 @@ class TextureAtlas {
 
         atlas[name] = {
             name    : name,
-            offset  : new Vector2d$1(x, y),
+            offset  : new Vector2d(x, y),
             width   : w,
             height  : h,
             angle   : 0
@@ -29033,7 +28979,7 @@ class TextureAtlas {
      */
     addUVs(atlas, name, w, h) {
         // ignore if using the Canvas Renderer
-        if (renderer instanceof WebGLRenderer$1) {
+        if (renderer instanceof WebGLRenderer) {
             // Source coordinates
             var s = atlas[name].offset;
             var sw = atlas[name].width;
@@ -29143,7 +29089,7 @@ class TextureAtlas {
             height = Math.max(region.height, height);
         }
         // instantiate a new animation sheet object
-        return new Sprite$1(0, 0, Object.assign({
+        return new Sprite(0, 0, Object.assign({
             image: this,
             framewidth: width,
             frameheight: height,
@@ -29737,7 +29683,7 @@ var TextureCache$1 = TextureCache;
  * a WebGL renderer object
  * @augments Renderer
  */
-class WebGLRenderer extends Renderer$1 {
+ class WebGLRenderer extends Renderer {
     /**
      * @param {object} options - The renderer parameters
      * @param {number} options.width - The width of the canvas without scaling
@@ -29821,7 +29767,7 @@ class WebGLRenderer extends Renderer$1 {
          * The current transformation matrix used for transformations on the overall scene
          * @type {Matrix2d}
          */
-        this.currentTransform = new Matrix2d$1();
+        this.currentTransform = new Matrix2d();
 
         /**
          * The current compositor used by the renderer
@@ -29836,7 +29782,7 @@ class WebGLRenderer extends Renderer$1 {
         this.compositors = new Map();
 
         // Create a default compositor
-        var compositor = new (this.settings.compositor || WebGLCompositor$1)(this);
+        var compositor = new (this.settings.compositor || WebGLCompositor)(this);
         this.compositors.set("default", compositor);
         this.setCompositor(compositor);
 
@@ -30026,7 +29972,7 @@ class WebGLRenderer extends Renderer$1 {
     clearColor(color = "#000000", opaque = false) {
         var glArray;
 
-        if (color instanceof Color$1) {
+        if (color instanceof Color) {
             glArray = color.toArray();
         } else {
             var _color = pool$1.pull("me.Color");
@@ -30747,7 +30693,6 @@ class WebGLRenderer extends Renderer$1 {
         }
     }
 }
-var WebGLRenderer$1 = WebGLRenderer;
 
 /**
  * video functions
@@ -30784,12 +30729,12 @@ var settings = {
 function autoDetectRenderer(options) {
     try {
         if (isWebGLSupported(options)) {
-            return new WebGLRenderer$1(options);
+            return new WebGLRenderer(options);
         }
     } catch (e) {
         console.log("Error creating WebGL renderer :" + e.message);
     }
-    return new CanvasRenderer$1(options);
+    return new CanvasRenderer(options);
 }
 
 /**
@@ -30908,7 +30853,7 @@ let parent = null;
  * @default <1,1>
  * @memberof video
  */
-let scaleRatio = new Vector2d$1(1, 1);
+let scaleRatio = new Vector2d(1, 1);
 
  /**
   * A reference to the active Canvas or WebGL active renderer renderer
@@ -31063,7 +31008,7 @@ function init(width, height, options) {
                 renderer = autoDetectRenderer(settings);
                 break;
             default:
-                renderer = new CanvasRenderer$1(settings);
+                renderer = new CanvasRenderer(settings);
                 break;
         }
     } catch (e) {
@@ -31097,7 +31042,7 @@ function init(width, height, options) {
     }
 
     if (settings.consoleHeader !== false) {
-        var renderType = (renderer instanceof CanvasRenderer$1) ? "CANVAS" : "WebGL" + renderer.WebGLVersion;
+        var renderType = (renderer instanceof CanvasRenderer) ? "CANVAS" : "WebGL" + renderer.WebGLVersion;
         var audioType = hasWebAudio ? "Web Audio" : "HTML5 Audio";
         var gpu_renderer = (typeof renderer.GPURenderer === "string") ? " (" + renderer.GPURenderer + ")" : "";
         // output video information in the console
@@ -31235,7 +31180,7 @@ var utils = {
      */
     getPixels : function (image) {
         if (image instanceof HTMLImageElement) {
-            var _context = CanvasRenderer$1.getContext2d(
+            var _context = CanvasRenderer.getContext2d(
                 createCanvas(image.width, image.height)
             );
             _context.drawImage(image, 0, 0);
@@ -31652,10 +31597,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "14.1.0"
+         * @default "14.1.1"
          * @name plugin.Base#version
          */
-        this.version = "14.1.0";
+        this.version = "14.1.1";
     }
 }
 
@@ -32217,7 +32162,7 @@ let Interpolation = {
  * author lechecacharro<br>
  * author Josh Faul / http://jocafa.com/
  */
-class Tween {
+ class Tween {
 
     /**
      * @param {object} object - object on which to apply the tween
@@ -32662,7 +32607,6 @@ class Tween {
     static get Easing() { return Easing; }
     static get Interpolation() { return Interpolation; }
 }
-var Tween$1 = Tween;
 
 // default canvas settings
 var defaultAttributes = {
@@ -32817,7 +32761,7 @@ function setContextStyle(context, style, stroke = false) {
  * a Text Metrics object that contains helper for text manipulation
  * @augments Bounds
  */
-class TextMetrics extends Bounds$1 {
+ class TextMetrics extends Bounds {
 
     /**
      * @param {Text|BitmapText} ancestor - the parent object that contains this TextMetrics object
@@ -32843,7 +32787,7 @@ class TextMetrics extends Bounds$1 {
      * @returns {number} the height of a segment of inline text in CSS pixels.
      */
     lineHeight() {
-        if (this.ancestor instanceof Text$1) {
+        if (this.ancestor instanceof Text) {
             return this.ancestor.fontSize * this.ancestor.lineHeight;
         } else { // it's a BitmapText
             return this.ancestor.fontData.capHeight * this.ancestor.lineHeight * this.ancestor.fontScale.y;
@@ -32857,7 +32801,7 @@ class TextMetrics extends Bounds$1 {
      * @returns {number} the width of the given segment of inline text in CSS pixels.
      */
     lineWidth(text, context) {
-        if (this.ancestor instanceof Text$1) {
+        if (this.ancestor instanceof Text) {
             return context.measureText(text).width;
         } else { // it's a BitmapText
             var characters = text.split("");
@@ -32974,7 +32918,6 @@ class TextMetrics extends Bounds$1 {
         return output;
     }
 }
-var TextMetrics$1 = TextMetrics;
 
 /*
 * ASCII Table
@@ -33005,7 +32948,7 @@ var getContext2d = function (renderer$1, text) {
  * a generic system font object.
  * @augments Renderable
  */
-class Text extends Renderable$1 {
+ class Text extends Renderable {
     /**
      * @param {number} x - position of the text object
      * @param {number} y - position of the text object
@@ -33042,7 +32985,7 @@ class Text extends Renderable$1 {
          * @default black
          */
         if (typeof settings.fillStyle !== "undefined") {
-            if (settings.fillStyle instanceof Color$1) {
+            if (settings.fillStyle instanceof Color) {
                 this.fillStyle = settings.fillStyle;
             } else {
                 // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
@@ -33060,7 +33003,7 @@ class Text extends Renderable$1 {
          * @default black
          */
          if (typeof settings.strokeStyle !== "undefined") {
-             if (settings.strokeStyle instanceof Color$1) {
+             if (settings.strokeStyle instanceof Color) {
                  this.strokeStyle = settings.strokeStyle;
              } else {
                  // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
@@ -33167,7 +33110,7 @@ class Text extends Renderable$1 {
         }
 
         // instance to text metrics functions
-        this.metrics = new TextMetrics$1(this);
+        this.metrics = new TextMetrics(this);
 
         // set the text
         this.setText(settings.text);
@@ -33264,7 +33207,7 @@ class Text extends Renderable$1 {
             var width = Math.ceil(this.metrics.width),
                 height = Math.ceil(this.metrics.height);
 
-            if (renderer instanceof WebGLRenderer$1) {
+            if (renderer instanceof WebGLRenderer) {
                 // invalidate the previous corresponding texture so that it can reuploaded once changed
                 this.glTextureUnit = renderer.cache.getUnit(renderer.cache.get(this.canvasTexture.canvas));
                 renderer.currentCompositor.unbindTexture2D(null, this.glTextureUnit);
@@ -33394,7 +33337,7 @@ class Text extends Renderable$1 {
      */
     destroy() {
         if (this.offScreenCanvas === true) {
-            if (renderer instanceof WebGLRenderer$1) {
+            if (renderer instanceof WebGLRenderer) {
                 renderer.currentCompositor.deleteTexture2D(renderer.currentCompositor.getTexture2D(this.glTextureUnit));
                 this.glTextureUnit = undefined;
             }
@@ -33410,14 +33353,13 @@ class Text extends Renderable$1 {
         super.destroy();
     }
 }
-var Text$1 = Text;
 
 /**
  * @classdesc
  * a bitmap font object
  * @augments Renderable
  */
-class BitmapText extends Renderable$1 {
+ class BitmapText extends Renderable {
     /**
      * @param {number} x - position of the text object
      * @param {number} y - position of the text object
@@ -33537,7 +33479,7 @@ class BitmapText extends Renderable$1 {
         }
 
         // instance to text metrics functions
-        this.metrics = new TextMetrics$1(this);
+        this.metrics = new TextMetrics(this);
 
         // resize if necessary
         if (typeof settings.size === "number" && settings.size !== 1.0) {
@@ -33599,7 +33541,7 @@ class BitmapText extends Renderable$1 {
         return this.tint;
     }
     set fillStyle(value) {
-        if (value instanceof Color$1) {
+        if (value instanceof Color) {
             this.tint.copy(value);
         } else {
             // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
@@ -33760,7 +33702,6 @@ class BitmapText extends Renderable$1 {
     }
 
 }
-var BitmapText$1 = BitmapText;
 
 // bitmap constants
 const LOG2_PAGE_SIZE = 9;
@@ -33770,7 +33711,7 @@ const PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
  * a glyph representing a single character in a font
  * @ignore
  */
-class Glyph {
+ class Glyph {
     /**
      * @ignore
      */
@@ -33818,7 +33759,6 @@ class Glyph {
         page[ch & PAGE_SIZE - 1] = value;
     }
 }
-var Glyph$1 = Glyph;
 
 // bitmap constants
 const capChars = ["M", "N", "B", "D", "C", "E", "F", "K", "A", "G", "H", "I", "J", "L", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
@@ -33865,7 +33805,7 @@ function createSpaceGlyph(glyphs) {
     var spaceCharCode = " ".charCodeAt(0);
     var glyph = glyphs[spaceCharCode];
     if (!glyph) {
-        glyph = new Glyph$1();
+        glyph = new Glyph();
         glyph.id = spaceCharCode;
         glyph.xadvance = getFirstGlyph(glyphs).xadvance;
         glyphs[spaceCharCode] = glyph;
@@ -33876,7 +33816,7 @@ function createSpaceGlyph(glyphs) {
  * Class for storing relevant data from the font file.
  * @ignore
  */
-class BitmapTextData {
+ class BitmapTextData {
 
    /**
     * @param {string} data - The bitmap font data pulled from the resource loader using me.loader.getBinary()
@@ -33959,7 +33899,7 @@ class BitmapTextData {
                     glyph.setKerning(second, amount);
                 }
             } else {
-                glyph = new Glyph$1();
+                glyph = new Glyph();
 
                 var ch = parseFloat(characterValues[2]);
                 glyph.id = ch;
@@ -34007,14 +33947,13 @@ class BitmapTextData {
         this.capHeight -= padY;
     }
 }
-var BitmapTextData$1 = BitmapTextData;
 
 /**
  * @classdesc
  * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
  * @augments Renderable
  */
-class ColorLayer extends Renderable$1 {
+ class ColorLayer extends Renderable {
     /**
      * @param {string} name - Layer name
      * @param {Color|string} color - CSS color
@@ -34076,14 +34015,12 @@ class ColorLayer extends Renderable$1 {
 
 }
 
-var ColorLayer$1 = ColorLayer;
-
 /**
  * @classdesc
  * a generic Image Layer Object
  * @augments Renderable
  */
-class ImageLayer extends Sprite$1 {
+ class ImageLayer extends Sprite {
     /**
      * @param {number} x - x coordinate
      * @param {number} y - y coordinate
@@ -34367,7 +34304,6 @@ class ImageLayer extends Sprite$1 {
     }
 
 }
-var ImageLayer$1 = ImageLayer;
 
 /**
  * @classdesc
@@ -34377,7 +34313,7 @@ var ImageLayer$1 = ImageLayer;
  * @see https://en.wikipedia.org/wiki/9-slice_scaling
  * @augments Sprite
  */
-class NineSliceSprite extends Sprite$1 {
+ class NineSliceSprite extends Sprite {
     /**
      * @param {number} x - the x coordinates of the sprite object
      * @param {number} y - the y coordinates of the sprite object
@@ -34604,7 +34540,6 @@ class NineSliceSprite extends Sprite$1 {
         );
     }
 }
-var NineSliceSprite$1 = NineSliceSprite;
 
 /**
  * @classdesc
@@ -34613,7 +34548,7 @@ var NineSliceSprite$1 = NineSliceSprite;
  * text and images.
  * @augments Container
  */
-class UIBaseElement extends Container$1 {
+ class UIBaseElement extends Container {
     /**
      *
      * @param {number} x - The x position of the container
@@ -34805,14 +34740,13 @@ class UIBaseElement extends Container$1 {
         timer$1.clearTimeout(this.holdTimeout);
     }
 }
-var UIBaseElement$1 = UIBaseElement;
 
 /**
  * @classdesc
  * This is a basic base text button which you can use in your Game UI.
  * @augments UIBaseElement
  */
-class UITextButton extends UIBaseElement$1 {
+ class UITextButton extends UIBaseElement {
     /**
      * A Text Button with an outlined background border, filled with background color.
      * It uses a RoundRect as background and changes the background color on hovering over.
@@ -34863,14 +34797,14 @@ class UITextButton extends UIBaseElement$1 {
         settings.offScreenCanvas = settings.offScreenCanvas || false;
         settings.fillStyle = settings.fillStyle || "#ffffff";
         settings.lineWidth = settings.lineWidth || 1;
-        settings.anchorPoint = settings.anchorPoint || new Vector2d$1(0, 0);
+        settings.anchorPoint = settings.anchorPoint || new Vector2d(0, 0);
 
-        let font = new BitmapText$1(x, y, settings);
+        let font = new BitmapText(x, y, settings);
         let dimensions = font.measureText();
         settings.borderWidth = settings.borderWidth || dimensions.width + 16;
         settings.borderHeight = settings.borderHeight || dimensions.height + 16;
 
-        let border = new RoundRect$1(
+        let border = new RoundRect(
             x,
             y,
             settings.borderWidth,
@@ -34920,14 +34854,13 @@ class UITextButton extends UIBaseElement$1 {
         );
     }
 }
-var UITextButton$1 = UITextButton;
 
 /**
  * @classdesc
  *  This is a basic sprite based button which you can use in your Game UI.
  * @augments Sprite
  */
-class UISpriteElement extends Sprite$1 {
+ class UISpriteElement extends Sprite {
     /**
      * @param {number} x - the x coordinate of the GUI Object
      * @param {number} y - the y coordinate of the GUI Object
@@ -35134,14 +35067,13 @@ class UISpriteElement extends Sprite$1 {
         timer$1.clearTimeout(this.holdTimeout);
     }
 }
-var UISpriteElement$1 = UISpriteElement;
 
 /**
  * @classdesc
  * a basic collectable helper class for immovable object (e.g. a coin)
  * @augments Sprite
  */
-class Collectable extends Sprite$1 {
+ class Collectable extends Sprite {
     /**
      * @param {number} x - the x coordinates of the collectable
      * @param {number} y - the y coordinates of the collectable
@@ -35165,7 +35097,7 @@ class Collectable extends Sprite$1 {
                 pool$1.pull("Vector2d", this.width, this.height)
             ]);
         }
-        this.body = new Body$1(this, shape);
+        this.body = new Body(this, shape);
         this.body.collisionType = collision$1.types.COLLECTABLE_OBJECT;
         // by default only collides with PLAYER_OBJECT
         this.body.setCollisionMask(collision$1.types.PLAYER_OBJECT);
@@ -35183,14 +35115,12 @@ class Collectable extends Sprite$1 {
 
 }
 
-var Collectable$1 = Collectable;
-
 /**
  * @classdesc
  * trigger an event when colliding with another object
  * @augments Renderable
  */
-class Trigger extends Renderable$1 {
+ class Trigger extends Renderable {
     /**
      * @param {number} x - the x coordinates of the trigger area
      * @param {number} y - the y coordinates of the trigger area
@@ -35255,7 +35185,7 @@ class Trigger extends Renderable$1 {
                 pool$1.pull("Vector2d", this.width, this.height)
             ]);
         }
-        this.body = new Body$1(this, shape);
+        this.body = new Body(this, shape);
         this.body.collisionType = collision$1.types.ACTION_OBJECT;
         // by default only collides with PLAYER_OBJECT
         this.body.setCollisionMask(collision$1.types.PLAYER_OBJECT);
@@ -35325,7 +35255,6 @@ class Trigger extends Renderable$1 {
     }
 
 }
-var Trigger$1 = Trigger;
 
 /** @ignore */
 function createGradient(light) {
@@ -35375,7 +35304,7 @@ function createGradient(light) {
  * (multiple lights are not supported, alpha component of the ambient light is ignored)
  * @see stage.lights
  */
-class Light2d extends Renderable$1 {
+ class Light2d extends Renderable {
    /**
     * @param {number} x - The horizontal position of the light.
     * @param {number} y - The vertical position of the light.
@@ -35470,7 +35399,6 @@ class Light2d extends Renderable$1 {
         super.destroy();
     }
 }
-var Light2d$1 = Light2d;
 
 /**
  * @classdesc
@@ -35478,7 +35406,7 @@ var Light2d$1 = Light2d;
  * @see DropTarget
  * @augments Renderable
  */
-class Draggable extends Renderable$1 {
+class Draggable extends Renderable {
     /**
      * @param {number} x - the x coordinates of the draggable object
      * @param {number} y - the y coordinates of the draggable object
@@ -35490,7 +35418,7 @@ class Draggable extends Renderable$1 {
         this.isKinematic = false;
         this.dragging = false;
         this.dragId = null;
-        this.grabOffset = new Vector2d$1(0, 0);
+        this.grabOffset = new Vector2d(0, 0);
         this.initEvents();
     }
 
@@ -35586,7 +35514,7 @@ class Draggable extends Renderable$1 {
  * @see Draggable
  * @augments Renderable
  */
-class DropTarget extends Renderable$1 {
+class DropTarget extends Renderable {
     /**
      * @param {number} x - the x coordinates of the drop target
      * @param {number} y - the y coordinates of the drop target
@@ -36011,7 +35939,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
  * Particle Emitter Object.
  * @augments Container
  */
-class ParticleEmitter extends Container$1 {
+ class ParticleEmitter extends Container {
     /**
      * @param {number} x - x position of the particle emitter
      * @param {number} y - y position of the particle emitter
@@ -36246,14 +36174,12 @@ class ParticleEmitter extends Container$1 {
     }
 }
 
-var ParticleEmitter$1 = ParticleEmitter;
-
 /**
  * @classdesc
  * Single Particle Object.
  * @augments Renderable
  */
-class Particle extends Renderable$1 {
+ class Particle extends Renderable {
     /**
      * @param {ParticleEmitter} emitter - the particle emitter
      */
@@ -36421,15 +36347,13 @@ class Particle extends Renderable$1 {
     }
 }
 
-var Particle$1 = Particle;
-
 /**
  * @classdesc
  * a Generic Object Entity
  * @augments Renderable
  * @see Renderable
  */
-class Entity extends Renderable$1 {
+ class Entity extends Renderable {
     /**
      * @param {number} x - the x coordinates of the entity object
      * @param {number} y - the y coordinates of the entity object
@@ -36467,7 +36391,7 @@ class Entity extends Renderable$1 {
             // set the frame size to the given entity size, if not defined in settings
             settings.framewidth = settings.framewidth || settings.width;
             settings.frameheight = settings.frameheight || settings.height;
-            this.renderable = new Sprite$1(0, 0, settings);
+            this.renderable = new Sprite(0, 0, settings);
         }
 
         // Update anchorPoint
@@ -36527,7 +36451,7 @@ class Entity extends Renderable$1 {
                 pool$1.pull("Vector2d", 0,          this.height)
             ]);
         }
-        this.body = new Body$1(this, settings.shapes, this.onBodyUpdate.bind(this));
+        this.body = new Body(this, settings.shapes, this.onBodyUpdate.bind(this));
 
         // resize the entity if required
         if (this.width === 0 && this.height === 0) {
@@ -36556,7 +36480,7 @@ class Entity extends Renderable$1 {
     }
 
     set renderable(value) {
-        if (value instanceof Renderable$1) {
+        if (value instanceof Renderable) {
             this.children[0] = value;
             this.children[0].ancestor = this;
         } else {
@@ -36595,7 +36519,7 @@ class Entity extends Renderable$1 {
             this.pos.y + this.body.getBounds().y
         );
 
-        if (this.renderable instanceof Renderable$1) {
+        if (this.renderable instanceof Renderable) {
             // draw the child renderable's anchorPoint at the entity's
             // anchor point.  the entity's anchor point is a scale from
             // body position to body width/height
@@ -36616,7 +36540,7 @@ class Entity extends Renderable$1 {
      */
     draw(renderer, viewport) {
         var renderable = this.renderable;
-        if (renderable instanceof Renderable$1) {
+        if (renderable instanceof Renderable) {
             // predraw (apply transforms)
             renderable.preDraw(renderer);
 
@@ -36656,7 +36580,6 @@ class Entity extends Renderable$1 {
     }
 
 }
-var Entity$1 = Entity;
 
 /*
  * placeholder for all deprecated classes and corresponding alias for backward compatibility
@@ -36708,7 +36631,7 @@ function warning(deprecated, replacement, version) {
  * @deprecated since 10.4.0
  * @see TextureAtlas
  */
-Object.defineProperty(Renderer$1.prototype, "Texture", {
+Object.defineProperty(Renderer.prototype, "Texture", {
     /**
      * @ignore
      */
@@ -36764,7 +36687,7 @@ class DroptargetEntity extends DropTarget {
  * @deprecated since 13.1.0
  * @see getCanvas();
  */
-Renderer$1.prototype.getScreenCanvas = function() {
+Renderer.prototype.getScreenCanvas = function() {
     warning("getScreenCanvas", "getCanvas", "13.1.0");
     return this.getCanvas();
 };
@@ -36778,7 +36701,7 @@ Renderer$1.prototype.getScreenCanvas = function() {
  * @deprecated since 13.1.0
  * @see getContext();
  */
-Renderer$1.prototype.getScreenContext = function()  {
+Renderer.prototype.getScreenContext = function()  {
     warning("getScreenContext", "getContext", "13.1.0");
     return this.getContext();
 };
@@ -36790,7 +36713,7 @@ Renderer$1.prototype.getScreenContext = function()  {
  * @deprecated since 14.0.0
  * @see UISpriteElement
  */
- class GUI_Object extends UISpriteElement$1 {
+ class GUI_Object extends UISpriteElement {
     /**
      * @param {number} x - the x coordinate of the GUI Object
      * @param {number} y - the y coordinate of the GUI Object
@@ -36812,7 +36735,7 @@ Renderer$1.prototype.getScreenContext = function()  {
  * @name version
  * @type {string}
  */
-const version = "14.1.0";
+const version = "14.1.1";
 
 
 /**
@@ -36846,64 +36769,64 @@ function boot() {
     }
 
     // register all built-ins objects into the object pool
-    pool$1.register("me.Entity", Entity$1);
-    pool$1.register("me.Collectable", Collectable$1);
-    pool$1.register("me.Trigger", Trigger$1);
-    pool$1.register("me.Light2d", Light2d$1);
-    pool$1.register("me.Tween", Tween$1, true);
-    pool$1.register("me.Color", Color$1, true);
-    pool$1.register("me.Particle", Particle$1, true);
-    pool$1.register("me.Sprite", Sprite$1);
-    pool$1.register("me.NineSliceSprite", NineSliceSprite$1);
-    pool$1.register("me.Renderable", Renderable$1);
-    pool$1.register("me.Text", Text$1, true);
-    pool$1.register("me.BitmapText", BitmapText$1);
-    pool$1.register("me.BitmapTextData", BitmapTextData$1, true);
-    pool$1.register("me.ImageLayer", ImageLayer$1);
-    pool$1.register("me.ColorLayer", ColorLayer$1, true);
-    pool$1.register("me.Vector2d", Vector2d$1, true);
-    pool$1.register("me.Vector3d", Vector3d$1, true);
-    pool$1.register("me.ObservableVector2d", ObservableVector2d$1, true);
-    pool$1.register("me.ObservableVector3d", ObservableVector3d$1, true);
-    pool$1.register("me.Matrix2d", Matrix2d$1, true);
-    pool$1.register("me.Matrix3d", Matrix3d$1, true);
-    pool$1.register("me.Rect", Rect$1, true);
-    pool$1.register("me.RoundRect", RoundRect$1, true);
-    pool$1.register("me.Polygon", Polygon$1, true);
-    pool$1.register("me.Line", Line$1, true);
-    pool$1.register("me.Point", Point$1, true);
-    pool$1.register("me.Ellipse", Ellipse$1, true);
-    pool$1.register("me.Bounds", Bounds$1, true);
+    pool$1.register("me.Entity", Entity);
+    pool$1.register("me.Collectable", Collectable);
+    pool$1.register("me.Trigger", Trigger);
+    pool$1.register("me.Light2d", Light2d);
+    pool$1.register("me.Tween", Tween, true);
+    pool$1.register("me.Color", Color, true);
+    pool$1.register("me.Particle", Particle, true);
+    pool$1.register("me.Sprite", Sprite);
+    pool$1.register("me.NineSliceSprite", NineSliceSprite);
+    pool$1.register("me.Renderable", Renderable);
+    pool$1.register("me.Text", Text, true);
+    pool$1.register("me.BitmapText", BitmapText);
+    pool$1.register("me.BitmapTextData", BitmapTextData, true);
+    pool$1.register("me.ImageLayer", ImageLayer);
+    pool$1.register("me.ColorLayer", ColorLayer, true);
+    pool$1.register("me.Vector2d", Vector2d, true);
+    pool$1.register("me.Vector3d", Vector3d, true);
+    pool$1.register("me.ObservableVector2d", ObservableVector2d, true);
+    pool$1.register("me.ObservableVector3d", ObservableVector3d, true);
+    pool$1.register("me.Matrix2d", Matrix2d, true);
+    pool$1.register("me.Matrix3d", Matrix3d, true);
+    pool$1.register("me.Rect", Rect, true);
+    pool$1.register("me.RoundRect", RoundRect, true);
+    pool$1.register("me.Polygon", Polygon, true);
+    pool$1.register("me.Line", Line, true);
+    pool$1.register("me.Point", Point, true);
+    pool$1.register("me.Ellipse", Ellipse, true);
+    pool$1.register("me.Bounds", Bounds, true);
 
     // duplicate all entries if use with no namespace (e.g. es6)
-    pool$1.register("Entity", Entity$1);
-    pool$1.register("Collectable", Collectable$1);
-    pool$1.register("Trigger", Trigger$1);
-    pool$1.register("Light2d", Light2d$1);
-    pool$1.register("Tween", Tween$1, true);
-    pool$1.register("Color", Color$1, true);
-    pool$1.register("Particle", Particle$1, true);
-    pool$1.register("Sprite", Sprite$1);
-    pool$1.register("NineSliceSprite", NineSliceSprite$1);
-    pool$1.register("Renderable", Renderable$1);
-    pool$1.register("Text", Text$1, true);
-    pool$1.register("BitmapText", BitmapText$1);
-    pool$1.register("BitmapTextData", BitmapTextData$1, true);
-    pool$1.register("ImageLayer", ImageLayer$1);
-    pool$1.register("ColorLayer", ColorLayer$1, true);
-    pool$1.register("Vector2d", Vector2d$1, true);
-    pool$1.register("Vector3d", Vector3d$1, true);
-    pool$1.register("ObservableVector2d", ObservableVector2d$1, true);
-    pool$1.register("ObservableVector3d", ObservableVector3d$1, true);
-    pool$1.register("Matrix2d", Matrix2d$1, true);
-    pool$1.register("Matrix3d", Matrix3d$1, true);
-    pool$1.register("Rect", Rect$1, true);
-    pool$1.register("RoundRect", RoundRect$1, true);
-    pool$1.register("Polygon", Polygon$1, true);
-    pool$1.register("Line", Line$1, true);
-    pool$1.register("Point", Point$1, true);
-    pool$1.register("Ellipse", Ellipse$1, true);
-    pool$1.register("Bounds", Bounds$1, true);
+    pool$1.register("Entity", Entity);
+    pool$1.register("Collectable", Collectable);
+    pool$1.register("Trigger", Trigger);
+    pool$1.register("Light2d", Light2d);
+    pool$1.register("Tween", Tween, true);
+    pool$1.register("Color", Color, true);
+    pool$1.register("Particle", Particle, true);
+    pool$1.register("Sprite", Sprite);
+    pool$1.register("NineSliceSprite", NineSliceSprite);
+    pool$1.register("Renderable", Renderable);
+    pool$1.register("Text", Text, true);
+    pool$1.register("BitmapText", BitmapText);
+    pool$1.register("BitmapTextData", BitmapTextData, true);
+    pool$1.register("ImageLayer", ImageLayer);
+    pool$1.register("ColorLayer", ColorLayer, true);
+    pool$1.register("Vector2d", Vector2d, true);
+    pool$1.register("Vector3d", Vector3d, true);
+    pool$1.register("ObservableVector2d", ObservableVector2d, true);
+    pool$1.register("ObservableVector3d", ObservableVector3d, true);
+    pool$1.register("Matrix2d", Matrix2d, true);
+    pool$1.register("Matrix3d", Matrix3d, true);
+    pool$1.register("Rect", Rect, true);
+    pool$1.register("RoundRect", RoundRect, true);
+    pool$1.register("Polygon", Polygon, true);
+    pool$1.register("Line", Line, true);
+    pool$1.register("Point", Point, true);
+    pool$1.register("Ellipse", Ellipse, true);
+    pool$1.register("Bounds", Bounds, true);
     pool$1.register("CanvasTexture", CanvasTexture$1, true);
 
     // publish Boot notification
@@ -36926,4 +36849,4 @@ onReady(() => {
     }
 });
 
-export { BitmapText$1 as BitmapText, BitmapTextData$1 as BitmapTextData, Body$1 as Body, Bounds$1 as Bounds, Camera2d$1 as Camera2d, CanvasRenderer$1 as CanvasRenderer, Collectable$1 as Collectable, Color$1 as Color, ColorLayer$1 as ColorLayer, Container$1 as Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse$1 as Ellipse, Entity$1 as Entity, GLShader$1 as GLShader, GUI_Object, ImageLayer$1 as ImageLayer, Light2d$1 as Light2d, Line$1 as Line, math as Math, Matrix2d$1 as Matrix2d, Matrix3d$1 as Matrix3d, NineSliceSprite$1 as NineSliceSprite, ObservableVector2d$1 as ObservableVector2d, ObservableVector3d$1 as ObservableVector3d, Particle$1 as Particle, ParticleEmitter$1 as ParticleEmitter, ParticleEmitterSettings$1 as ParticleEmitterSettings, Point$1 as Point, Pointer$1 as Pointer, Polygon$1 as Polygon, QuadTree$1 as QuadTree, Rect$1 as Rect, Renderable$1 as Renderable, Renderer$1 as Renderer, RoundRect$1 as RoundRect, Sprite$1 as Sprite, Stage$1 as Stage, TMXHexagonalRenderer$1 as TMXHexagonalRenderer, TMXIsometricRenderer$1 as TMXIsometricRenderer, TMXLayer$1 as TMXLayer, TMXOrthogonalRenderer$1 as TMXOrthogonalRenderer, TMXRenderer$1 as TMXRenderer, TMXStaggeredRenderer$1 as TMXStaggeredRenderer, TMXTileMap$1 as TMXTileMap, TMXTileset$1 as TMXTileset, TMXTilesetGroup$1 as TMXTilesetGroup, Text$1 as Text, TextureAtlas, Tile$1 as Tile, Trigger$1 as Trigger, Tween$1 as Tween, UIBaseElement$1 as UIBaseElement, UISpriteElement$1 as UISpriteElement, UITextButton$1 as UITextButton, Vector2d$1 as Vector2d, Vector3d$1 as Vector3d, WebGLCompositor$1 as WebGLCompositor, WebGLRenderer$1 as WebGLRenderer, World$1 as World, audio, boot, collision$1 as collision, device, event, game$1 as game, initialized, input, level$1 as level, loader$1 as loader, plugin, plugins, pool$1 as pool, save$1 as save, skipAutoInit, state$1 as state, timer$1 as timer, utils$1 as utils, version, video, warning };
+export { BitmapText, BitmapTextData, Body, Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings$1 as ParticleEmitterSettings, Point, Pointer$1 as Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, UIBaseElement, UISpriteElement, UITextButton, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio, boot, collision$1 as collision, device, event, game$1 as game, initialized, input, level$1 as level, loader$1 as loader, plugin, plugins, pool$1 as pool, save$1 as save, skipAutoInit, state$1 as state, timer$1 as timer, utils$1 as utils, version, video, warning };

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -14,7 +14,7 @@ import { registerPointerEvent, releasePointerEvent } from '../../input/pointerev
  *  This is a basic sprite based button which you can use in your Game UI.
  * @augments Sprite
  */
-class UISpriteElement extends Sprite {
+ class UISpriteElement extends Sprite {
     /**
      * @param {number} x - the x coordinate of the GUI Object
      * @param {number} y - the y coordinate of the GUI Object
@@ -221,6 +221,5 @@ class UISpriteElement extends Sprite {
         timer.clearTimeout(this.holdTimeout);
     }
 }
-var UISpriteElement$1 = UISpriteElement;
 
-export { UISpriteElement$1 as default };
+export { UISpriteElement as default };

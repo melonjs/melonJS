@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -12,7 +12,7 @@ import { EPSILON } from './math.js';
  * @classdesc
  * a 4x4 Matrix3d Object
  */
-class Matrix3d {
+ class Matrix3d {
     /**
      * @param {(Matrix3d|...number)} args - An instance of me.Matrix3d to copy from, or individual Matrix components (See {@link Matrix3d.setTransform}). If not arguments are given, the matrix will be set to Identity.
      */
@@ -676,6 +676,4 @@ class Matrix3d {
     }
 }
 
-var Matrix3d$1 = Matrix3d;
-
-export { Matrix3d$1 as default };
+export { Matrix3d as default };

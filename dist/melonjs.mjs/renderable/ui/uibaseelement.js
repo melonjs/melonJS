@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -16,7 +16,7 @@ import { registerPointerEvent, releasePointerEvent } from '../../input/pointerev
  * text and images.
  * @augments Container
  */
-class UIBaseElement extends Container {
+ class UIBaseElement extends Container {
     /**
      *
      * @param {number} x - The x position of the container
@@ -208,6 +208,5 @@ class UIBaseElement extends Container {
         timer.clearTimeout(this.holdTimeout);
     }
 }
-var UIBaseElement$1 = UIBaseElement;
 
-export { UIBaseElement$1 as default };
+export { UIBaseElement as default };

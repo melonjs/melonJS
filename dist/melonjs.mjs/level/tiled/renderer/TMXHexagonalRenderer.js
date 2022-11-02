@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -29,7 +29,7 @@ const offsetsStaggerY = [
  * an Hexagonal Map Renderder
  * @augments TMXRenderer
  */
-class TMXHexagonalRenderer extends TMXRenderer {
+ class TMXHexagonalRenderer extends TMXRenderer {
     /**
      * @param {TMXTileMap} map - the TMX map
      */
@@ -501,6 +501,4 @@ class TMXHexagonalRenderer extends TMXRenderer {
     }
 }
 
-var TMXHexagonalRenderer$1 = TMXHexagonalRenderer;
-
-export { TMXHexagonalRenderer$1 as default };
+export { TMXHexagonalRenderer as default };

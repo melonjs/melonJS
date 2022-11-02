@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -19,7 +19,7 @@ import { emit, ONCONTEXT_LOST, ONCONTEXT_RESTORED } from '../../system/event.js'
  * a canvas renderer object
  * @augments Renderer
  */
-class CanvasRenderer extends Renderer {
+ class CanvasRenderer extends Renderer {
     /**
      * @param {object} options - The renderer parameters
      * @param {number} options.width - The width of the canvas without scaling
@@ -802,6 +802,5 @@ class CanvasRenderer extends Renderer {
         }
     }
 }
-var CanvasRenderer$1 = CanvasRenderer;
 
-export { CanvasRenderer$1 as default };
+export { CanvasRenderer as default };

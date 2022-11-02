@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -14,7 +14,7 @@ import pool from '../system/pooling.js';
  * A Vector3d object that provide notification by executing the given callback when the vector is changed.
  * @augments Vector3d
  */
-class ObservableVector3d extends Vector3d {
+ class ObservableVector3d extends Vector3d {
     /**
      * @param {number} x - x value of the vector
      * @param {number} y - y value of the vector
@@ -556,6 +556,4 @@ class ObservableVector3d extends Vector3d {
     }
 }
 
-var ObservableVector3d$1 = ObservableVector3d;
-
-export { ObservableVector3d$1 as default };
+export { ObservableVector3d as default };

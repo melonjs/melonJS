@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -27,7 +27,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
  * Particle Emitter Object.
  * @augments Container
  */
-class ParticleEmitter extends Container {
+ class ParticleEmitter extends Container {
     /**
      * @param {number} x - x position of the particle emitter
      * @param {number} y - y position of the particle emitter
@@ -262,6 +262,4 @@ class ParticleEmitter extends Container {
     }
 }
 
-var ParticleEmitter$1 = ParticleEmitter;
-
-export { ParticleEmitter$1 as default };
+export { ParticleEmitter as default };

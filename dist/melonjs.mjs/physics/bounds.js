@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -12,7 +12,7 @@ import Vector2d from '../math/vector2.js';
  * @classdesc
  * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
  */
-class Bounds {
+ class Bounds {
     /**
      * @param {Vector2d[]} [vertices] - an array of me.Vector2d points
      */
@@ -455,6 +455,5 @@ class Bounds {
     }
 
 }
-var Bounds$1 = Bounds;
 
-export { Bounds$1 as default };
+export { Bounds as default };

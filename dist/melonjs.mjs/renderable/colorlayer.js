@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -13,7 +13,7 @@ import Renderable from './renderable.js';
  * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
  * @augments Renderable
  */
-class ColorLayer extends Renderable {
+ class ColorLayer extends Renderable {
     /**
      * @param {string} name - Layer name
      * @param {Color|string} color - CSS color
@@ -75,6 +75,4 @@ class ColorLayer extends Renderable {
 
 }
 
-var ColorLayer$1 = ColorLayer;
-
-export { ColorLayer$1 as default };
+export { ColorLayer as default };

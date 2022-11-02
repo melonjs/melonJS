@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -16,7 +16,7 @@ import Body from '../physics/body.js';
  * @augments Renderable
  * @see Renderable
  */
-class Entity extends Renderable {
+ class Entity extends Renderable {
     /**
      * @param {number} x - the x coordinates of the entity object
      * @param {number} y - the y coordinates of the entity object
@@ -243,6 +243,5 @@ class Entity extends Renderable {
     }
 
 }
-var Entity$1 = Entity;
 
-export { Entity$1 as default };
+export { Entity as default };

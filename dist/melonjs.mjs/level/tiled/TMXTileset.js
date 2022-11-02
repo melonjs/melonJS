@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -15,7 +15,7 @@ import loader from '../../loader/loader.js';
  * @classdesc
  * a TMX Tile Set Object
  */
-class TMXTileset {
+ class TMXTileset {
     /**
      *  @param {object} tileset - tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
      */
@@ -306,6 +306,4 @@ class TMXTileset {
     }
 }
 
-var TMXTileset$1 = TMXTileset;
-
-export { TMXTileset$1 as default };
+export { TMXTileset as default };

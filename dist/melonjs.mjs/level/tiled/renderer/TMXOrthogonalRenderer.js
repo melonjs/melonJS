@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -14,7 +14,7 @@ import TMXRenderer from './TMXRenderer.js';
  * an Orthogonal Map Renderder
  * @augments TMXRenderer
  */
-class TMXOrthogonalRenderer extends TMXRenderer {
+ class TMXOrthogonalRenderer extends TMXRenderer {
     /**
      * @param {TMXTileMap} map - the TMX map
      */
@@ -152,6 +152,4 @@ class TMXOrthogonalRenderer extends TMXRenderer {
     }
 }
 
-var TMXOrthogonalRenderer$1 = TMXOrthogonalRenderer;
-
-export { TMXOrthogonalRenderer$1 as default };
+export { TMXOrthogonalRenderer as default };

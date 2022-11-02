@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -75,7 +75,7 @@ function preRenderLayer(layer, renderer) {
  * Tiled QT 0.7.x format
  * @augments Renderable
  */
-class TMXLayer extends Renderable {
+ class TMXLayer extends Renderable {
     /**
      * @param {object} map - layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
      * @param {object} data - layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
@@ -443,6 +443,4 @@ class TMXLayer extends Renderable {
     }
 }
 
-var TMXLayer$1 = TMXLayer;
-
-export { TMXLayer$1 as default };
+export { TMXLayer as default };

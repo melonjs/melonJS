@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -15,7 +15,7 @@ import Bounds from '../../../physics/bounds.js';
  * @classdesc
  * The map renderer base class
  */
-class TMXRenderer {
+ class TMXRenderer {
     /**
      * @param {number} cols - width of the tilemap in tiles
      * @param {number} rows - height of the tilemap in tiles
@@ -118,8 +118,7 @@ class TMXRenderer {
 
 }
 
-var TMXRenderer$1 = TMXRenderer;
 
 /* eslint-enable no-unused-vars */
 
-export { TMXRenderer$1 as default };
+export { TMXRenderer as default };

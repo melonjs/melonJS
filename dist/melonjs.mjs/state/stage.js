@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -25,7 +25,7 @@ var default_settings = {
  * through the state manager must inherit from this base class.
  * @see state
  */
-class Stage {
+ class Stage {
 
     /**
      * @param {object} [settings] - The stage` parameters
@@ -232,6 +232,5 @@ class Stage {
         }
     }
 }
-var Stage$1 = Stage;
 
-export { Stage$1 as default };
+export { Stage as default };

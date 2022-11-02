@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -20,7 +20,7 @@ import { e as earcut } from '../_virtual/earcut.js';
  *
  * A polygon's `winding` is clockwise if its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
  */
-class Polygon {
+ class Polygon {
     /**
      * @param {number} x - origin point of the Polygon
      * @param {number} y - origin point of the Polygon
@@ -495,6 +495,4 @@ class Polygon {
     }
 }
 
-var Polygon$1 = Polygon;
-
-export { Polygon$1 as default };
+export { Polygon as default };

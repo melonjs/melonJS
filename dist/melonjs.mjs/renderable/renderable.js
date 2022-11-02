@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -8,7 +8,6 @@
 import ObservableVector2d from '../math/observable_vector2.js';
 import ObservableVector3d from '../math/observable_vector3.js';
 import Rect from '../geometries/rectangle.js';
-import Container from './container.js';
 import pool from '../system/pooling.js';
 import { clamp } from '../math/math.js';
 import Color from '../math/color.js';
@@ -19,7 +18,7 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
  * A base class for renderable objects.
  * @augments Rect
  */
-class Renderable extends Rect {
+ class Renderable extends Rect {
     /**
      * @param {number} x - position of the renderable object (accessible through inherited pos.x property)
      * @param {number} y - position of the renderable object (accessible through inherited pos.y property)
@@ -565,7 +564,7 @@ class Renderable extends Rect {
          */
 
          // XXX: This is called from the constructor, before it gets an ancestor
-         if (this.ancestor instanceof Container && this.floating !== true) {
+         if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
              bounds.translate(this.ancestor.getAbsolutePosition());
          }
 
@@ -582,7 +581,7 @@ class Renderable extends Rect {
           }
           // XXX Cache me or something
           this._absPos.set(this.pos.x, this.pos.y);
-          if (this.ancestor instanceof Container && this.floating !== true) {
+          if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
               this._absPos.add(this.ancestor.getAbsolutePosition());
           }
           return this._absPos;
@@ -778,6 +777,5 @@ class Renderable extends Rect {
     }
 
 }
-var Renderable$1 = Renderable;
 
-export { Renderable$1 as default };
+export { Renderable as default };

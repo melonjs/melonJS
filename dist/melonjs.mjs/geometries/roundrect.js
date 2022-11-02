@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -163,6 +163,5 @@ class RoundRect extends Rect {
         return new RoundRect(this.pos.x, this.pos.y, this.width, this.height, this.radius);
     }
 }
-var RoundRect$1 = RoundRect;
 
-export { RoundRect$1 as default };
+export { RoundRect as default };

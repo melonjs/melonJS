@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -17,7 +17,7 @@ import pool from '../system/pooling.js';
  * trigger an event when colliding with another object
  * @augments Renderable
  */
-class Trigger extends Renderable {
+ class Trigger extends Renderable {
     /**
      * @param {number} x - the x coordinates of the trigger area
      * @param {number} y - the y coordinates of the trigger area
@@ -152,6 +152,5 @@ class Trigger extends Renderable {
     }
 
 }
-var Trigger$1 = Trigger;
 
-export { Trigger$1 as default };
+export { Trigger as default };

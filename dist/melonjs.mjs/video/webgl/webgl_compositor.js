@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -28,7 +28,7 @@ var V_ARRAY = [
  * A WebGL Compositor object. This class handles all of the WebGL state<br>
  * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
  */
-class WebGLCompositor {
+ class WebGLCompositor {
     /**
      * @param {WebGLRenderer} renderer - the current WebGL renderer session
      */
@@ -490,6 +490,5 @@ class WebGLCompositor {
         gl.clear(gl.COLOR_BUFFER_BIT);
     }
 }
-var WebGLCompositor$1 = WebGLCompositor;
 
-export { WebGLCompositor$1 as default };
+export { WebGLCompositor as default };

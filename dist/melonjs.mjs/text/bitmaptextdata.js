@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -63,7 +63,7 @@ function createSpaceGlyph(glyphs) {
  * Class for storing relevant data from the font file.
  * @ignore
  */
-class BitmapTextData {
+ class BitmapTextData {
 
    /**
     * @param {string} data - The bitmap font data pulled from the resource loader using me.loader.getBinary()
@@ -194,6 +194,5 @@ class BitmapTextData {
         this.capHeight -= padY;
     }
 }
-var BitmapTextData$1 = BitmapTextData;
 
-export { BitmapTextData$1 as default };
+export { BitmapTextData as default };

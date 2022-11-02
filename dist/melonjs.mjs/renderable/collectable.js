@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -15,7 +15,7 @@ import pool from '../system/pooling.js';
  * a basic collectable helper class for immovable object (e.g. a coin)
  * @augments Sprite
  */
-class Collectable extends Sprite {
+ class Collectable extends Sprite {
     /**
      * @param {number} x - the x coordinates of the collectable
      * @param {number} y - the y coordinates of the collectable
@@ -57,6 +57,4 @@ class Collectable extends Sprite {
 
 }
 
-var Collectable$1 = Collectable;
-
-export { Collectable$1 as default };
+export { Collectable as default };

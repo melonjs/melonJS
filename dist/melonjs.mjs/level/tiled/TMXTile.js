@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -20,7 +20,7 @@ const TMX_FLIP_H          = 0x80000000,
  * a basic tile object
  * @augments Bounds
  */
-class Tile extends Bounds {
+ class Tile extends Bounds {
     /**
      * @param {number} x - x index of the Tile in the map
      * @param {number} y - y index of the Tile in the map
@@ -189,6 +189,5 @@ class Tile extends Bounds {
         return renderable;
     }
 }
-var Tile$1 = Tile;
 
-export { Tile$1 as default };
+export { Tile as default };

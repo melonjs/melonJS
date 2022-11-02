@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -21,7 +21,7 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
  * a WebGL renderer object
  * @augments Renderer
  */
-class WebGLRenderer extends Renderer {
+ class WebGLRenderer extends Renderer {
     /**
      * @param {object} options - The renderer parameters
      * @param {number} options.width - The width of the canvas without scaling
@@ -1031,6 +1031,5 @@ class WebGLRenderer extends Renderer {
         }
     }
 }
-var WebGLRenderer$1 = WebGLRenderer;
 
-export { WebGLRenderer$1 as default };
+export { WebGLRenderer as default };

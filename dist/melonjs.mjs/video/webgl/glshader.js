@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -17,7 +17,7 @@ import { minify } from './utils/string.js';
  * @classdesc
  * a base GL Shader object
  */
-class GLShader {
+ class GLShader {
     /**
      * @param {WebGLRenderingContext} gl - the current WebGL rendering context
      * @param {string} vertex - a string containing the GLSL source code to set
@@ -163,6 +163,5 @@ class GLShader {
         this.fragment = null;
     }
 }
-var GLShader$1 = GLShader;
 
-export { GLShader$1 as default };
+export { GLShader as default };

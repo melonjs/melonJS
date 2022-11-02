@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -13,7 +13,7 @@ const PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
  * a glyph representing a single character in a font
  * @ignore
  */
-class Glyph {
+ class Glyph {
     /**
      * @ignore
      */
@@ -61,6 +61,5 @@ class Glyph {
         page[ch & PAGE_SIZE - 1] = value;
     }
 }
-var Glyph$1 = Glyph;
 
-export { Glyph$1 as default };
+export { Glyph as default };

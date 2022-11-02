@@ -439,12 +439,11 @@ declare module "system/pooling" {
     }
 }
 declare module "math/vector2" {
-    export default Vector2d;
     /**
      * @classdesc
      * a generic 2D Vector Object
      */
-    class Vector2d {
+    export default class Vector2d {
         /**
          * @param {number} [x=0] - x value of the vector
          * @param {number} [y=0] - y value of the vector
@@ -769,12 +768,11 @@ declare module "math/vector2" {
     }
 }
 declare module "math/color" {
-    export default Color;
     /**
      * @classdesc
      * A color manipulation object.
      */
-    class Color {
+    export default class Color {
         /**
          * @param {number} [r=0] - red component or array of color components
          * @param {number} [g=0] - green component
@@ -942,12 +940,11 @@ declare module "math/color" {
     }
 }
 declare module "math/matrix3" {
-    export default Matrix3d;
     /**
      * @classdesc
      * a 4x4 Matrix3d Object
      */
-    class Matrix3d {
+    export default class Matrix3d {
         /**
          * @param {(Matrix3d|...number)} args - An instance of me.Matrix3d to copy from, or individual Matrix components (See {@link Matrix3d.setTransform}). If not arguments are given, the matrix will be set to Identity.
          */
@@ -1181,14 +1178,13 @@ declare module "math/matrix3" {
     }
 }
 declare module "math/matrix2" {
-    export default Matrix2d;
     /**
      * @classdesc
      * a Matrix2d Object.<br>
      * the identity matrix and parameters position : <br>
      * <img src="images/identity-matrix_2x.png"/>
      */
-    class Matrix2d {
+    export default class Matrix2d {
         /**
          * @param {(Matrix2d|Matrix3d|...number)} args - an instance of me.Matrix2d or me.Matrix3d to copy from, or individual matrix components (See {@link Matrix2d.setTransform}). If not arguments are given, the matrix will be set to Identity.
          */
@@ -2576,12 +2572,11 @@ declare module "video/webgl/utils/string" {
     export function minify(src: any): any;
 }
 declare module "video/webgl/glshader" {
-    export default GLShader;
     /**
      * @classdesc
      * a base GL Shader object
      */
-    class GLShader {
+    export default class GLShader {
         /**
          * @param {WebGLRenderingContext} gl - the current WebGL rendering context
          * @param {string} vertex - a string containing the GLSL source code to set
@@ -2672,14 +2667,13 @@ declare module "video/webgl/glshader" {
     }
 }
 declare module "video/webgl/buffer/vertex" {
-    export default VertexArrayBuffer;
     /**
      * @classdesc
      * a Vertex Buffer object
      * @class VertexArrayBuffer
      * @ignore
      */
-    class VertexArrayBuffer {
+    export default class VertexArrayBuffer {
         constructor(vertex_size: any, vertex_per_quad: any);
         vertexSize: any;
         quadSize: any;
@@ -2731,13 +2725,12 @@ declare module "video/webgl/buffer/vertex" {
     }
 }
 declare module "video/webgl/webgl_compositor" {
-    export default WebGLCompositor;
     /**
      * @classdesc
      * A WebGL Compositor object. This class handles all of the WebGL state<br>
      * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
      */
-    class WebGLCompositor {
+    export default class WebGLCompositor {
         /**
          * @param {WebGLRenderer} renderer - the current WebGL renderer session
          */
@@ -2908,7 +2901,6 @@ declare module "video/webgl/webgl_compositor" {
     import Vector2d from "math/vector2";
 }
 declare module "geometries/poly" {
-    export default Polygon;
     /**
      * @classdesc
      * a polygon Object.<br>
@@ -2919,7 +2911,7 @@ declare module "geometries/poly" {
      *
      * A polygon's `winding` is clockwise if its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
      */
-    class Polygon {
+    export default class Polygon {
         /**
          * @param {number} x - origin point of the Polygon
          * @param {number} y - origin point of the Polygon
@@ -3133,13 +3125,12 @@ declare module "geometries/poly" {
     import Vector2d from "math/vector2";
 }
 declare module "geometries/rectangle" {
-    export default Rect;
     /**
      * @classdesc
      * a rectangle Object
      * @augments Polygon
      */
-    class Rect extends Polygon {
+    export default class Rect extends Polygon {
         /**
          * @param {number} x - position of the Rectangle
          * @param {number} y - position of the Rectangle
@@ -3312,13 +3303,12 @@ declare module "geometries/rectangle" {
     import Polygon from "geometries/poly";
 }
 declare module "geometries/roundrect" {
-    export default RoundRect;
     /**
      * @classdesc
      * a rectangle object with rounded corners
      * @augments Rect
      */
-    class RoundRect extends Rect {
+    export default class RoundRect extends Rect {
         /**
          * @param {number} x - position of the rounded rectangle
          * @param {number} y - position of the rounded rectangle
@@ -3367,12 +3357,11 @@ declare module "geometries/roundrect" {
     import Rect from "geometries/rectangle";
 }
 declare module "geometries/ellipse" {
-    export default Ellipse;
     /**
      * @classdesc
      * an ellipse Object
      */
-    class Ellipse {
+    export default class Ellipse {
         /**
          * @param {number} x - the center x coordinate of the ellipse
          * @param {number} y - the center y coordinate of the ellipse
@@ -3524,7 +3513,6 @@ declare module "geometries/ellipse" {
     }
 }
 declare module "geometries/line" {
-    export default Line;
     /**
      * @classdesc
      * a line segment Object
@@ -3533,17 +3521,16 @@ declare module "geometries/line" {
      * @param {number} y - origin point of the Line
      * @param {Vector2d[]} points - array of vectors defining the Line
      */
-    class Line extends Polygon {
+    export default class Line extends Polygon {
     }
     import Polygon from "geometries/poly";
 }
 declare module "physics/bounds" {
-    export default Bounds;
     /**
      * @classdesc
      * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
      */
-    class Bounds {
+    export default class Bounds {
         /**
          * @param {Vector2d[]} [vertices] - an array of me.Vector2d points
          */
@@ -3791,12 +3778,11 @@ declare module "physics/bounds" {
     import Vector2d from "math/vector2";
 }
 declare module "geometries/path2d" {
-    export default Path2D;
     /**
      * @classdesc
      * a simplified path2d implementation, supporting only one path
      */
-    class Path2D {
+    export default class Path2D {
         /**
          * the points defining the current path
          * @public
@@ -3915,12 +3901,11 @@ declare module "geometries/path2d" {
     }
 }
 declare module "geometries/point" {
-    export default Point;
     /**
      * @classdesc
      * represents a point in a 2d space
      */
-    class Point {
+    export default class Point {
         constructor(x?: number, y?: number);
         /**
          * the position of the point on the horizontal axis
@@ -3971,12 +3956,11 @@ declare module "geometries/point" {
     }
 }
 declare module "video/renderer" {
-    export default Renderer;
     /**
      * @classdesc
      * a base renderer object
      */
-    class Renderer {
+    export default class Renderer {
         /**
          * @param {object} options - The renderer parameters
          * @param {number} options.width - The width of the canvas without scaling
@@ -4447,14 +4431,94 @@ declare module "audio/audio" {
      */
     export let stopOnAudioError: boolean;
 }
+declare module "physics/quadtree" {
+    /**
+     * @classdesc
+     * a QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
+     * @see game.world.broadphase
+     */
+    export default class QuadTree {
+        /**
+         * @param {World} world - the physic world this QuadTree belongs to
+         * @param {Bounds} bounds - bounds of the node
+         * @param {number} [max_objects=4] - max objects a node can hold before splitting into 4 subnodes
+         * @param {number} [max_levels=4] - total max levels inside root Quadtree
+         * @param {number} [level] - deepth level, required for subnodes
+         */
+        constructor(world: World, bounds: Bounds, max_objects?: number, max_levels?: number, level?: number);
+        world: World;
+        bounds: Bounds;
+        max_objects: number;
+        max_levels: number;
+        level: number;
+        objects: any[];
+        nodes: any[];
+        split(): void;
+        getIndex(item: any): number;
+        /**
+         * Insert the given object container into the node.
+         * @name insertContainer
+         * @memberof QuadTree
+         * @param {Container} container - group of objects to be added
+         */
+        insertContainer(container: Container): void;
+        /**
+         * Insert the given object into the node. If the node
+         * exceeds the capacity, it will split and add all
+         * objects to their corresponding subnodes.
+         * @name insert
+         * @memberof QuadTree
+         * @param {object} item - object to be added
+         */
+        insert(item: object): void;
+        /**
+         * Return all objects that could collide with the given object
+         * @name retrieve
+         * @memberof QuadTree
+         * @param {object} item - object to be checked against
+         * @param {object} [fn] - a sorting function for the returned array
+         * @returns {object[]} array with all detected objects
+         */
+        retrieve(item: object, fn?: object): object[];
+        /**
+         * Remove the given item from the quadtree.
+         * (this function won't recalculate the impacted node)
+         * @name remove
+         * @memberof QuadTree
+         * @param {object} item - object to be removed
+         * @returns {boolean} true if the item was found and removed.
+         */
+        remove(item: object): boolean;
+        /**
+         * return true if the node is prunable
+         * @name isPrunable
+         * @memberof QuadTree
+         * @returns {boolean} true if the node is prunable
+         */
+        isPrunable(): boolean;
+        /**
+         * return true if the node has any children
+         * @name hasChildren
+         * @memberof QuadTree
+         * @returns {boolean} true if the node has any children
+         */
+        hasChildren(): boolean;
+        /**
+         * clear the quadtree
+         * @name clear
+         * @memberof QuadTree
+         * @param {Bounds} [bounds=this.bounds] - the bounds to be cleared
+         */
+        clear(bounds?: Bounds): void;
+    }
+}
 declare module "math/observable_vector2" {
-    export default ObservableVector2d;
     /**
      * @classdesc
      * A Vector2d object that provide notification by executing the given callback when the vector is changed.
      * @augments Vector2d
      */
-    class ObservableVector2d extends Vector2d {
+    export default class ObservableVector2d extends Vector2d {
         /**
          * @param {number} x - x value of the vector
          * @param {number} y - y value of the vector
@@ -4729,12 +4793,11 @@ declare module "math/observable_vector2" {
     import Vector2d from "math/vector2";
 }
 declare module "math/vector3" {
-    export default Vector3d;
     /**
      * @classdesc
      * a generic 3D Vector Object
      */
-    class Vector3d {
+    export default class Vector3d {
         /**
          * @param {number} [x=0] - x value of the vector
          * @param {number} [y=0] - y value of the vector
@@ -5064,13 +5127,12 @@ declare module "math/vector3" {
     }
 }
 declare module "math/observable_vector3" {
-    export default ObservableVector3d;
     /**
      * @classdesc
      * A Vector3d object that provide notification by executing the given callback when the vector is changed.
      * @augments Vector3d
      */
-    class ObservableVector3d extends Vector3d {
+    export default class ObservableVector3d extends Vector3d {
         /**
          * @param {number} x - x value of the vector
          * @param {number} y - y value of the vector
@@ -6120,13 +6182,12 @@ declare module "input/input" {
     export * from "input/gamepad";
 }
 declare module "renderable/renderable" {
-    export default Renderable;
     /**
      * @classdesc
      * A base class for renderable objects.
      * @augments Rect
      */
-    class Renderable extends Rect {
+    export default class Renderable extends Rect {
         /**
          * to identify the object as a renderable object
          * @ignore
@@ -6521,7 +6582,6 @@ declare module "renderable/renderable" {
     }
     import Rect from "geometries/rectangle";
     import ObservableVector2d from "math/observable_vector2";
-    import Container from "renderable/container";
     import ObservableVector3d from "math/observable_vector3";
     import Color from "math/color";
 }
@@ -6726,13 +6786,12 @@ declare module "physics/collision" {
     }
 }
 declare module "physics/body" {
-    export default Body;
     /**
      * @classdesc
      * a Generic Physic Body Object with some physic properties and behavior functionality, to as a member of a Renderable.
      * @see Renderable.body
      */
-    class Body {
+    export default class Body {
         /**
          * @param {Renderable} ancestor - the parent object this body is attached to
          * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] - a initial shape, list of shapes, or JSON object defining the body
@@ -7059,13 +7118,12 @@ declare module "physics/body" {
     import Rect from "geometries/rectangle";
 }
 declare module "renderable/container" {
-    export default Container;
     /**
      * @classdesc
      * Container represents a collection of child objects
      * @augments Renderable
      */
-    class Container extends Renderable {
+    export default class Container extends Renderable {
         /**
          * @param {number} [x=0] - position of the container (accessible via the inherited pos.x property)
          * @param {number} [y=0] - position of the container (accessible via the inherited pos.y property)
@@ -7443,97 +7501,13 @@ declare module "renderable/container" {
     }
     import Renderable from "renderable/renderable";
 }
-declare module "physics/quadtree" {
-    export default QuadTree;
-    /**
-     * @classdesc
-     * a QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
-     * @see game.world.broadphase
-     */
-    class QuadTree {
-        /**
-         * @param {World} world - the physic world this QuadTree belongs to
-         * @param {Bounds} bounds - bounds of the node
-         * @param {number} [max_objects=4] - max objects a node can hold before splitting into 4 subnodes
-         * @param {number} [max_levels=4] - total max levels inside root Quadtree
-         * @param {number} [level] - deepth level, required for subnodes
-         */
-        constructor(world: World, bounds: Bounds, max_objects?: number, max_levels?: number, level?: number);
-        world: World;
-        bounds: Bounds;
-        max_objects: number;
-        max_levels: number;
-        level: number;
-        objects: any[];
-        nodes: any[];
-        split(): void;
-        getIndex(item: any): number;
-        /**
-         * Insert the given object container into the node.
-         * @name insertContainer
-         * @memberof QuadTree
-         * @param {Container} container - group of objects to be added
-         */
-        insertContainer(container: Container): void;
-        /**
-         * Insert the given object into the node. If the node
-         * exceeds the capacity, it will split and add all
-         * objects to their corresponding subnodes.
-         * @name insert
-         * @memberof QuadTree
-         * @param {object} item - object to be added
-         */
-        insert(item: object): void;
-        /**
-         * Return all objects that could collide with the given object
-         * @name retrieve
-         * @memberof QuadTree
-         * @param {object} item - object to be checked against
-         * @param {object} [fn] - a sorting function for the returned array
-         * @returns {object[]} array with all detected objects
-         */
-        retrieve(item: object, fn?: object): object[];
-        /**
-         * Remove the given item from the quadtree.
-         * (this function won't recalculate the impacted node)
-         * @name remove
-         * @memberof QuadTree
-         * @param {object} item - object to be removed
-         * @returns {boolean} true if the item was found and removed.
-         */
-        remove(item: object): boolean;
-        /**
-         * return true if the node is prunable
-         * @name isPrunable
-         * @memberof QuadTree
-         * @returns {boolean} true if the node is prunable
-         */
-        isPrunable(): boolean;
-        /**
-         * return true if the node has any children
-         * @name hasChildren
-         * @memberof QuadTree
-         * @returns {boolean} true if the node has any children
-         */
-        hasChildren(): boolean;
-        /**
-         * clear the quadtree
-         * @name clear
-         * @memberof QuadTree
-         * @param {Bounds} [bounds=this.bounds] - the bounds to be cleared
-         */
-        clear(bounds?: Bounds): void;
-    }
-    import Container from "renderable/container";
-}
 declare module "physics/world" {
-    export default World;
     /**
      * @classdesc
      * an object representing the physic world, and responsible for managing and updating all childs and physics
      * @augments Container
      */
-    class World extends Container {
+    export default class World extends Container {
         /**
          * @param {number} [x=0] - position of the container (accessible via the inherited pos.x property)
          * @param {number} [y=0] - position of the container (accessible via the inherited pos.y property)
@@ -7628,14 +7602,13 @@ declare module "physics/world" {
     import QuadTree from "physics/quadtree";
 }
 declare module "application/application" {
-    export default Application;
     /**
      * @classdesc
      * An Application represents a single melonJS game.
      * An Application is responsible for updating (each frame) all the related object status and draw them.
      * @see game
      */
-    class Application {
+    export default class Application {
         /**
          * a reference to the current active stage "default" camera
          * @public
@@ -7746,13 +7719,12 @@ declare module "game" {
     import Application from "application/application";
 }
 declare module "camera/camera2d" {
-    export default Camera2d;
     /**
      * @classdesc
      * a 2D orthographic camera
      * @augments Renderable
      */
-    class Camera2d extends Renderable {
+    export default class Camera2d extends Renderable {
         /**
          * Axis definition
          * @enum {number}
@@ -8038,7 +8010,6 @@ declare module "camera/camera2d" {
     import Rect from "geometries/rectangle";
 }
 declare module "state/stage" {
-    export default Stage;
     /**
      * @classdesc
      * a default "Stage" object.
@@ -8046,7 +8017,7 @@ declare module "state/stage" {
      * through the state manager must inherit from this base class.
      * @see state
      */
-    class Stage {
+    export default class Stage {
         /**
          * @param {object} [settings] - The stage` parameters
          * @param {Camera2d[]} [settings.cameras=[new me.Camera2d()]] - a list of cameras (experimental)
@@ -8553,13 +8524,12 @@ declare module "level/tiled/TMXUtils" {
     export function applyTMXProperties(obj: any, data: any): void;
 }
 declare module "level/tiled/TMXTile" {
-    export default Tile;
     /**
      * @classdesc
      * a basic tile object
      * @augments Bounds
      */
-    class Tile extends Bounds {
+    export default class Tile extends Bounds {
         /**
          * @param {number} x - x index of the Tile in the map
          * @param {number} y - y index of the Tile in the map
@@ -8634,13 +8604,12 @@ declare module "level/tiled/TMXTile" {
     import Matrix2d from "math/matrix2";
 }
 declare module "video/canvas/canvas_renderer" {
-    export default CanvasRenderer;
     /**
      * @classdesc
      * a canvas renderer object
      * @augments Renderer
      */
-    class CanvasRenderer extends Renderer {
+    export default class CanvasRenderer extends Renderer {
         /**
          * @param {object} options - The renderer parameters
          * @param {number} options.width - The width of the canvas without scaling
@@ -9017,14 +8986,13 @@ declare module "video/canvas/canvas_renderer" {
     import Ellipse from "geometries/ellipse";
 }
 declare module "level/tiled/TMXLayer" {
-    export default TMXLayer;
     /**
      * @classdesc
      * a TMX Tile Layer Object
      * Tiled QT 0.7.x format
      * @augments Renderable
      */
-    class TMXLayer extends Renderable {
+    export default class TMXLayer extends Renderable {
         /**
          * @param {object} map - layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
          * @param {object} data - layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
@@ -9200,12 +9168,11 @@ declare module "level/tiled/TMXLayer" {
     import Tile from "level/tiled/TMXTile";
 }
 declare module "level/tiled/renderer/TMXRenderer" {
-    export default TMXRenderer;
     /**
      * @classdesc
      * The map renderer base class
      */
-    class TMXRenderer {
+    export default class TMXRenderer {
         /**
          * @param {number} cols - width of the tilemap in tiles
          * @param {number} rows - height of the tilemap in tiles
@@ -9278,13 +9245,12 @@ declare module "level/tiled/renderer/TMXRenderer" {
     import TMXLayer from "level/tiled/TMXLayer";
 }
 declare module "level/tiled/renderer/TMXOrthogonalRenderer" {
-    export default TMXOrthogonalRenderer;
     /**
      * @classdesc
      * an Orthogonal Map Renderder
      * @augments TMXRenderer
      */
-    class TMXOrthogonalRenderer extends TMXRenderer {
+    export default class TMXOrthogonalRenderer extends TMXRenderer {
         /**
          * @param {TMXTileMap} map - the TMX map
          */
@@ -9324,13 +9290,12 @@ declare module "level/tiled/renderer/TMXOrthogonalRenderer" {
     import TMXRenderer from "level/tiled/renderer/TMXRenderer";
 }
 declare module "level/tiled/renderer/TMXIsometricRenderer" {
-    export default TMXIsometricRenderer;
     /**
      * @classdesc
      * an Isometric Map Renderder
      * @augments TMXRenderer
      */
-    class TMXIsometricRenderer extends TMXRenderer {
+    export default class TMXIsometricRenderer extends TMXRenderer {
         /**
          * @param {TMXTileMap} map - the TMX map
          */
@@ -9382,13 +9347,12 @@ declare module "level/tiled/renderer/TMXIsometricRenderer" {
     import TMXLayer from "level/tiled/TMXLayer";
 }
 declare module "level/tiled/renderer/TMXHexagonalRenderer" {
-    export default TMXHexagonalRenderer;
     /**
      * @classdesc
      * an Hexagonal Map Renderder
      * @augments TMXRenderer
      */
-    class TMXHexagonalRenderer extends TMXRenderer {
+    export default class TMXHexagonalRenderer extends TMXRenderer {
         /**
          * @param {TMXTileMap} map - the TMX map
          */
@@ -9472,23 +9436,21 @@ declare module "level/tiled/renderer/TMXHexagonalRenderer" {
     import TMXLayer from "level/tiled/TMXLayer";
 }
 declare module "level/tiled/renderer/TMXStaggeredRenderer" {
-    export default TMXStaggeredRenderer;
     /**
      * @classdesc
      * a Staggered Map Renderder
      * @augments TMXHexagonalRenderer
      */
-    class TMXStaggeredRenderer extends TMXHexagonalRenderer {
+    export default class TMXStaggeredRenderer extends TMXHexagonalRenderer {
     }
     import TMXHexagonalRenderer from "level/tiled/renderer/TMXHexagonalRenderer";
 }
 declare module "level/tiled/TMXTileset" {
-    export default TMXTileset;
     /**
      * @classdesc
      * a TMX Tile Set Object
      */
-    class TMXTileset {
+    export default class TMXTileset {
         /**
          *  @param {object} tileset - tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
          */
@@ -9580,12 +9542,11 @@ declare module "level/tiled/TMXTileset" {
     import Vector2d from "math/vector2";
 }
 declare module "level/tiled/TMXTilesetGroup" {
-    export default TMXTilesetGroup;
     /**
      * @classdesc
      * an object containing all tileset
      */
-    class TMXTilesetGroup {
+    export default class TMXTilesetGroup {
         tilesets: any[];
         length: number;
         /**
@@ -9896,13 +9857,12 @@ declare module "level/tiled/TMXGroup" {
     }
 }
 declare module "level/tiled/TMXTileMap" {
-    export default TMXTileMap;
     /**
      * @classdesc
      * a TMX Tile Map Object
      * Tiled QT +0.7.x format
      */
-    class TMXTileMap {
+    export default class TMXTileMap {
         /**
          * @param {string} levelId - name of TMX map
          * @param {object} data - TMX map in JSON format
@@ -10076,7 +10036,6 @@ declare module "level/tiled/TMXTileMap" {
     import TMXIsometricRenderer from "level/tiled/renderer/TMXIsometricRenderer";
     import TMXHexagonalRenderer from "level/tiled/renderer/TMXHexagonalRenderer";
     import Container from "renderable/container";
-    import Renderable from "renderable/renderable";
     import TMXLayer from "level/tiled/TMXLayer";
 }
 declare module "level/level" {
@@ -10702,13 +10661,12 @@ declare module "loader/loader" {
     }
 }
 declare module "renderable/sprite" {
-    export default Sprite;
     /**
      * @classdesc
      * An object to display a fixed or animated sprite on screen.
      * @augments Renderable
      */
-    class Sprite extends Renderable {
+    export default class Sprite extends Renderable {
         /**
          * @param {number} x - the x coordinates of the sprite object
          * @param {number} y - the y coordinates of the sprite object
@@ -11223,13 +11181,12 @@ declare module "video/texture/cache" {
     import { ArrayMultimap } from "@teppeis/multimaps";
 }
 declare module "video/webgl/webgl_renderer" {
-    export default WebGLRenderer;
     /**
      * @classdesc
      * a WebGL renderer object
      * @augments Renderer
      */
-    class WebGLRenderer extends Renderer {
+    export default class WebGLRenderer extends Renderer {
         /**
          * @param {object} options - The renderer parameters
          * @param {number} options.width - The width of the canvas without scaling
@@ -12015,7 +11972,6 @@ declare module "tweens/interpolation" {
     export let Interpolation: any;
 }
 declare module "tweens/tween" {
-    export default Tween;
     /**
      * @classdesc
      * Javascript Tweening Engine<p>
@@ -12030,7 +11986,7 @@ declare module "tweens/tween" {
      * author lechecacharro<br>
      * author Josh Faul / http://jocafa.com/
      */
-    class Tween {
+    export default class Tween {
         static get Easing(): any;
         static get Interpolation(): any;
         /**
@@ -12290,13 +12246,12 @@ declare module "text/textstyle" {
     export default function setContextStyle(context: any, style: any, stroke?: boolean): void;
 }
 declare module "text/textmetrics" {
-    export default TextMetrics;
     /**
      * @classdesc
      * a Text Metrics object that contains helper for text manipulation
      * @augments Bounds
      */
-    class TextMetrics extends Bounds {
+    export default class TextMetrics extends Bounds {
         /**
          * @param {Text|BitmapText} ancestor - the parent object that contains this TextMetrics object
          */
@@ -12340,13 +12295,12 @@ declare module "text/textmetrics" {
     import Text from "text/text";
 }
 declare module "text/text" {
-    export default Text;
     /**
      * @classdesc
      * a generic system font object.
      * @augments Renderable
      */
-    class Text extends Renderable {
+    export default class Text extends Renderable {
         /**
          * @param {number} x - position of the text object
          * @param {number} y - position of the text object
@@ -12516,13 +12470,12 @@ declare module "text/text" {
     import Color from "math/color";
 }
 declare module "text/bitmaptext" {
-    export default BitmapText;
     /**
      * @classdesc
      * a bitmap font object
      * @augments Renderable
      */
-    class BitmapText extends Renderable {
+    export default class BitmapText extends Renderable {
         /**
          * @param {number} x - position of the text object
          * @param {number} y - position of the text object
@@ -12670,12 +12623,11 @@ declare module "text/bitmaptext" {
     import TextMetrics from "text/textmetrics";
 }
 declare module "text/glyph" {
-    export default Glyph;
     /**
      * a glyph representing a single character in a font
      * @ignore
      */
-    class Glyph {
+    export default class Glyph {
         id: number;
         x: number;
         y: number;
@@ -12701,12 +12653,11 @@ declare module "text/glyph" {
     }
 }
 declare module "text/bitmaptextdata" {
-    export default BitmapTextData;
     /**
      * Class for storing relevant data from the font file.
      * @ignore
      */
-    class BitmapTextData {
+    export default class BitmapTextData {
         /**
          * @param {string} data - The bitmap font data pulled from the resource loader using me.loader.getBinary()
          */
@@ -12739,13 +12690,12 @@ declare module "text/bitmaptextdata" {
     }
 }
 declare module "renderable/colorlayer" {
-    export default ColorLayer;
     /**
      * @classdesc
      * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
      * @augments Renderable
      */
-    class ColorLayer extends Renderable {
+    export default class ColorLayer extends Renderable {
         /**
          * @param {string} name - Layer name
          * @param {Color|string} color - CSS color
@@ -12770,13 +12720,12 @@ declare module "renderable/colorlayer" {
     import Renderable from "renderable/renderable";
 }
 declare module "renderable/imagelayer" {
-    export default ImageLayer;
     /**
      * @classdesc
      * a generic Image Layer Object
      * @augments Renderable
      */
-    class ImageLayer {
+    export default class ImageLayer {
         /**
          * @param {number} x - x coordinate
          * @param {number} y - y coordinate
@@ -12879,7 +12828,6 @@ declare module "renderable/imagelayer" {
     }
 }
 declare module "renderable/nineslicesprite" {
-    export default NineSliceSprite;
     /**
      * @classdesc
      * A NineSliceSprite is similar to a Sprite, but it uses 9-slice scaling to strech its inner area to fit the size of the Renderable,
@@ -12888,7 +12836,7 @@ declare module "renderable/nineslicesprite" {
      * @see https://en.wikipedia.org/wiki/9-slice_scaling
      * @augments Sprite
      */
-    class NineSliceSprite extends Sprite {
+    export default class NineSliceSprite extends Sprite {
         /**
          * @param {number} x - the x coordinates of the sprite object
          * @param {number} y - the y coordinates of the sprite object
@@ -12941,7 +12889,6 @@ declare module "renderable/nineslicesprite" {
     import Sprite from "renderable/sprite";
 }
 declare module "renderable/ui/uibaseelement" {
-    export default UIBaseElement;
     /**
      * @classdesc
      * This is a basic clickable container which you can use in your game UI.
@@ -12949,7 +12896,7 @@ declare module "renderable/ui/uibaseelement" {
      * text and images.
      * @augments Container
      */
-    class UIBaseElement extends Container {
+    export default class UIBaseElement extends Container {
         /**
          *
          * @param {number} x - The x position of the container
@@ -13039,13 +12986,12 @@ declare module "renderable/ui/uibaseelement" {
     import Container from "renderable/container";
 }
 declare module "renderable/ui/uitextbutton" {
-    export default UITextButton;
     /**
      * @classdesc
      * This is a basic base text button which you can use in your Game UI.
      * @augments UIBaseElement
      */
-    class UITextButton extends UIBaseElement {
+    export default class UITextButton extends UIBaseElement {
         /**
          * A Text Button with an outlined background border, filled with background color.
          * It uses a RoundRect as background and changes the background color on hovering over.
@@ -13096,13 +13042,12 @@ declare module "renderable/ui/uitextbutton" {
     import RoundRect from "geometries/roundrect";
 }
 declare module "renderable/ui/uispriteelement" {
-    export default UISpriteElement;
     /**
      * @classdesc
      *  This is a basic sprite based button which you can use in your Game UI.
      * @augments Sprite
      */
-    class UISpriteElement extends Sprite {
+    export default class UISpriteElement extends Sprite {
         /**
          * @param {number} x - the x coordinate of the GUI Object
          * @param {number} y - the y coordinate of the GUI Object
@@ -13226,13 +13171,12 @@ declare module "renderable/ui/uispriteelement" {
     import Sprite from "renderable/sprite";
 }
 declare module "renderable/collectable" {
-    export default Collectable;
     /**
      * @classdesc
      * a basic collectable helper class for immovable object (e.g. a coin)
      * @augments Sprite
      */
-    class Collectable extends Sprite {
+    export default class Collectable extends Sprite {
         /**
          * @param {number} x - the x coordinates of the collectable
          * @param {number} y - the y coordinates of the collectable
@@ -13248,13 +13192,12 @@ declare module "renderable/collectable" {
     import Body from "physics/body";
 }
 declare module "renderable/trigger" {
-    export default Trigger;
     /**
      * @classdesc
      * trigger an event when colliding with another object
      * @augments Renderable
      */
-    class Trigger extends Renderable {
+    export default class Trigger extends Renderable {
         /**
          * @param {number} x - the x coordinates of the trigger area
          * @param {number} y - the y coordinates of the trigger area
@@ -13312,7 +13255,6 @@ declare module "renderable/trigger" {
     import Body from "physics/body";
 }
 declare module "renderable/light2d" {
-    export default Light2d;
     /**
      * @classdesc
      * A 2D point light.
@@ -13321,7 +13263,7 @@ declare module "renderable/light2d" {
      * (multiple lights are not supported, alpha component of the ambient light is ignored)
      * @see stage.lights
      */
-    class Light2d extends Renderable {
+    export default class Light2d extends Renderable {
         /**
          * @param {number} x - The horizontal position of the light.
          * @param {number} y - The vertical position of the light.
@@ -13527,13 +13469,12 @@ declare module "particles/settings" {
     }
 }
 declare module "particles/emitter" {
-    export default ParticleEmitter;
     /**
      * @classdesc
      * Particle Emitter Object.
      * @augments Container
      */
-    class ParticleEmitter extends Container {
+    export default class ParticleEmitter extends Container {
         /**
          * @param {number} x - x position of the particle emitter
          * @param {number} y - y position of the particle emitter
@@ -13718,13 +13659,12 @@ declare module "particles/emitter" {
     import Container from "renderable/container";
 }
 declare module "particles/particle" {
-    export default Particle;
     /**
      * @classdesc
      * Single Particle Object.
      * @augments Renderable
      */
-    class Particle extends Renderable {
+    export default class Particle extends Renderable {
         /**
          * @param {ParticleEmitter} emitter - the particle emitter
          */
@@ -13753,14 +13693,13 @@ declare module "particles/particle" {
     import Renderable from "renderable/renderable";
 }
 declare module "entity/entity" {
-    export default Entity;
     /**
      * @classdesc
      * a Generic Object Entity
      * @augments Renderable
      * @see Renderable
      */
-    class Entity extends Renderable {
+    export default class Entity extends Renderable {
         /**
          * @param {number} x - the x coordinates of the entity object
          * @param {number} y - the y coordinates of the entity object

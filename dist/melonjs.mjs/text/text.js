@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -43,7 +43,7 @@ var getContext2d = function (renderer$1, text) {
  * a generic system font object.
  * @augments Renderable
  */
-class Text extends Renderable {
+ class Text extends Renderable {
     /**
      * @param {number} x - position of the text object
      * @param {number} y - position of the text object
@@ -448,6 +448,5 @@ class Text extends Renderable {
         super.destroy();
     }
 }
-var Text$1 = Text;
 
-export { Text$1 as default };
+export { Text as default };

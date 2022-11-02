@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -12,7 +12,7 @@
  * @ignore
  */
 
-class VertexArrayBuffer {
+ class VertexArrayBuffer {
 
     constructor(vertex_size, vertex_per_quad) {
         // the size of one vertex in float
@@ -138,6 +138,5 @@ class VertexArrayBuffer {
     }
 
 }
-var VertexArrayBuffer$1 = VertexArrayBuffer;
 
-export { VertexArrayBuffer$1 as default };
+export { VertexArrayBuffer as default };

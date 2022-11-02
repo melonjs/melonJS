@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.0
+ * melonJS Game Engine - v14.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -9,7 +9,7 @@
  * @classdesc
  * represents a point in a 2d space
  */
-class Point {
+ class Point {
     constructor(x = 0, y = 0) {
         /**
          * the position of the point on the horizontal axis
@@ -84,6 +84,5 @@ class Point {
         return new Point(this.x, this.y);
     }
 }
-var Point$1 = Point;
 
-export { Point$1 as default };
+export { Point as default };
