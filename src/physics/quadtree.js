@@ -68,7 +68,6 @@ var QT_VECTOR = new Vector2d();
         this.max_levels  = max_levels;
 
         this.level = level;
-        this.bounds = bounds;
 
         this.objects = [];
         this.nodes = [];
@@ -87,7 +86,7 @@ var QT_VECTOR = new Vector2d();
          //top right node
         this.nodes[0] = QT_ARRAY_POP(
             this.world,
-            this.bounds, {
+            {
                 left : left + subWidth,
                 top : top,
                 width : subWidth,
@@ -101,7 +100,7 @@ var QT_VECTOR = new Vector2d();
         //top left node
         this.nodes[1] = QT_ARRAY_POP(
             this.world,
-            this.bounds, {
+            {
                 left : left,
                 top: top,
                 width : subWidth,
@@ -115,7 +114,7 @@ var QT_VECTOR = new Vector2d();
         //bottom left node
         this.nodes[2] = QT_ARRAY_POP(
             this.world,
-            this.bounds, {
+            {
                 left : left,
                 top : top + subHeight,
                 width : subWidth,
@@ -129,7 +128,7 @@ var QT_VECTOR = new Vector2d();
         //bottom right node
         this.nodes[3] = QT_ARRAY_POP(
             this.world,
-            this.bounds, {
+            {
                 left : left + subWidth,
                 top : top + subHeight,
                 width : subWidth,
@@ -154,7 +153,7 @@ var QT_VECTOR = new Vector2d();
         if (item.isFloating === true) {
             pos = this.world.app.viewport.localToWorld(bounds.left, bounds.top, QT_VECTOR);
         } else {
-            pos = QT_VECTOR.set(bounds.left, bounds.top);
+            pos = QT_VECTOR.set(item.left, item.top);
         }
 
         var index = -1,
