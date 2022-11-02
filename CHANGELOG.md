@@ -3,6 +3,7 @@
 ## [14.1.1] (melonJS 2) - _2022-11-xx_
 
 ### Fixed
+- ES6: use proper semantic when exporting default classes
 - Physic: fix a regression in the quadtree implementation that was causing issues with some collision detection edge case
 
 ## [14.1.0] (melonJS 2) - _2022-10-30_
