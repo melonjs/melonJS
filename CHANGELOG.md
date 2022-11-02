@@ -1,5 +1,10 @@
 # Changelog
 
+## [14.1.1] (melonJS 2) - _2022-11-xx_
+
+### Fixed
+- Physic: fix a regression in the quadtree implementation that was causing issues with some collision detection edge case
+
 ## [14.1.0] (melonJS 2) - _2022-10-30_
 
 ### Added
