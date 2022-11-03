@@ -1,6 +1,6 @@
 # Changelog
 
-## [14.1.1] (melonJS 2) - _2022-11-xx_
+## [14.1.1] (melonJS 2) - _2022-11-03_
 
 ### Fixed
 - Core: disable tree-shaking for now, as it is causing exception with the boilerplate
