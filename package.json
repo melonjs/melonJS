@@ -38,7 +38,7 @@
     "node": ">= 19"
   },
   "main": "dist/melonjs.module.js",
-  "module": "dist/melonjs.mjs/index.js",
+  "module": "dist/melonjs.module.js",
   "types": "dist/melonjs.module.d.ts",
   "sideEffects": false,
   "files": [

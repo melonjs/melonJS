@@ -3,6 +3,7 @@
 ## [14.1.1] (melonJS 2) - _2022-11-xx_
 
 ### Fixed
+- Core: disable tree-shaking for now, as it is causing exception with the boilerplate
 - ES6: use proper semantic when exporting default classes
 - Physic: fix a regression in the quadtree implementation that was causing issues with some collision detection edge case
 
