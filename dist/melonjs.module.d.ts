@@ -1867,20 +1867,6 @@ declare module "system/save" {
     namespace save {
         /**
          * Add new keys to localStorage and set them to the given default values if they do not exist
-         * @name add
-         * @memberof save
-         * @param {object} props - key and corresponding values
-         * @example
-         * // Initialize "score" and "lives" with default values
-         * me.save.add({ score : 0, lives : 3 });
-         * // get or set the value through me.save
-         * me.save.score = 1000;
-         */
-        function add(props: any): void;
-        /**
-         * Add new keys to localStorage and set them to the given default values if they do not exist
-         * @name add
-         * @memberof save
          * @param {object} props - key and corresponding values
          * @example
          * // Initialize "score" and "lives" with default values
@@ -1891,18 +1877,6 @@ declare module "system/save" {
         function add(props: any): void;
         /**
          * Remove a key from localStorage
-         * @name remove
-         * @memberof save
-         * @param {string} key - key to be removed
-         * @example
-         * // Remove the "score" key from localStorage
-         * me.save.remove("score");
-         */
-        function remove(key: string): void;
-        /**
-         * Remove a key from localStorage
-         * @name remove
-         * @memberof save
          * @param {string} key - key to be removed
          * @example
          * // Remove the "score" key from localStorage
@@ -6756,33 +6730,6 @@ declare module "physics/collision" {
          *    }
          */
         function rayCast(line: Line, result?: Renderable[]): Renderable[];
-        /**
-         * Checks for object colliding with the given line
-         * @name rayCast
-         * @memberof collision
-         * @public
-         * @param {Line} line - line to be tested for collision
-         * @param {Array.<Renderable>} [result] - a user defined array that will be populated with intersecting physic objects.
-         * @returns {Array.<Renderable>} an array of intersecting physic objects
-         * @example
-         *    // define a line accross the viewport
-         *    var ray = new me.Line(
-         *        // absolute position of the line
-         *        0, 0, [
-         *        // starting point relative to the initial position
-         *        new me.Vector2d(0, 0),
-         *        // ending point
-         *        new me.Vector2d(me.game.viewport.width, me.game.viewport.height)
-         *    ]);
-         *
-         *    // check for collition
-         *    result = me.collision.rayCast(ray);
-         *
-         *    if (result.length > 0) {
-         *        // ...
-         *    }
-         */
-        function rayCast(line: Line, result?: Renderable[]): Renderable[];
     }
 }
 declare module "physics/body" {
@@ -8170,14 +8117,6 @@ declare module "state/state" {
          */
         function stop(pauseTrack?: boolean): void;
         /**
-         * Stop the current stage.
-         * @name stop
-         * @memberof state
-         * @public
-         * @param {boolean} [pauseTrack=false] - pause current track on screen stop.
-         */
-        function stop(pauseTrack?: boolean): void;
-        /**
          * pause the current stage
          * @name pause
          * @memberof state
@@ -8185,22 +8124,6 @@ declare module "state/state" {
          * @param {boolean} [music=false] - pause current music track on screen pause
          */
         function pause(music?: boolean): void;
-        /**
-         * pause the current stage
-         * @name pause
-         * @memberof state
-         * @public
-         * @param {boolean} [music=false] - pause current music track on screen pause
-         */
-        function pause(music?: boolean): void;
-        /**
-         * Restart the current stage from a full stop.
-         * @name restart
-         * @memberof state
-         * @public
-         * @param {boolean} [music=false] - resume current music track on screen resume
-         */
-        function restart(music?: boolean): void;
         /**
          * Restart the current stage from a full stop.
          * @name restart
@@ -8218,22 +8141,6 @@ declare module "state/state" {
          */
         function resume(music?: boolean): void;
         /**
-         * resume the current stage
-         * @name resume
-         * @memberof state
-         * @public
-         * @param {boolean} [music=false] - resume current music track on screen resume
-         */
-        function resume(music?: boolean): void;
-        /**
-         * return the running state of the state manager
-         * @name isRunning
-         * @memberof state
-         * @public
-         * @returns {boolean} true if a "process is running"
-         */
-        function isRunning(): boolean;
-        /**
          * return the running state of the state manager
          * @name isRunning
          * @memberof state
@@ -8249,60 +8156,6 @@ declare module "state/state" {
          * @returns {boolean} true if the game is paused
          */
         function isPaused(): boolean;
-        /**
-         * Return the pause state of the state manager
-         * @name isPaused
-         * @memberof state
-         * @public
-         * @returns {boolean} true if the game is paused
-         */
-        function isPaused(): boolean;
-        /**
-         * associate the specified state with a Stage
-         * @name set
-         * @memberof state
-         * @public
-         * @param {number} state - State ID (see constants)
-         * @param {Stage} stage - Instantiated Stage to associate with state ID
-         * @param {boolean} [start = false] - if true the state will be changed immediately after adding it.
-         * @example
-         * class MenuButton extends me.GUI_Object {
-         *     onClick() {
-         *         // Change to the PLAY state when the button is clicked
-         *         me.state.change(me.state.PLAY);
-         *         return true;
-         *     }
-         * };
-         *
-         * class MenuScreen extends me.Stage {
-         *     onResetEvent() {
-         *         // Load background image
-         *         me.game.world.addChild(
-         *             new me.ImageLayer(0, 0, {
-         *                 image : "bg",
-         *                 z: 0 // z-index
-         *             }
-         *         );
-         *
-         *         // Add a button
-         *         me.game.world.addChild(
-         *             new MenuButton(350, 200, { "image" : "start" }),
-         *             1 // z-index
-         *         );
-         *
-         *         // Play music
-         *         me.audio.playTrack("menu");
-         *     }
-         *
-         *     onDestroyEvent() {
-         *         // Stop music
-         *         me.audio.stopTrack();
-         *     }
-         * };
-         *
-         * me.state.set(me.state.MENU, new MenuScreen());
-         */
-        function set(state: number, stage: Stage, start?: boolean): void;
         /**
          * associate the specified state with a Stage
          * @name set
@@ -8360,25 +8213,6 @@ declare module "state/state" {
          */
         function get(state?: number): Stage;
         /**
-         * returns the stage associated with the specified state
-         * (or the current one if none is specified)
-         * @name set
-         * @memberof state
-         * @public
-         * @param {number} [state] - State ID (see constants)
-         * @returns {Stage}
-         */
-        function get(state?: number): Stage;
-        /**
-         * return a reference to the current stage<br>
-         * useful to call a object specific method
-         * @name current
-         * @memberof state
-         * @public
-         * @returns {Stage}
-         */
-        function current(): Stage;
-        /**
          * return a reference to the current stage<br>
          * useful to call a object specific method
          * @name current
@@ -8397,25 +8231,6 @@ declare module "state/state" {
          * @param {number} [duration=1000] - expressed in milliseconds
          */
         function transition(effect: string, color: any, duration?: number): void;
-        /**
-         * specify a global transition effect
-         * @name transition
-         * @memberof state
-         * @public
-         * @param {string} effect - (only "fade" is supported for now)
-         * @param {Color|string} color - a CSS color value
-         * @param {number} [duration=1000] - expressed in milliseconds
-         */
-        function transition(effect: string, color: any, duration?: number): void;
-        /**
-         * enable/disable transition for a specific state (by default enabled for all)
-         * @name setTransition
-         * @memberof state
-         * @public
-         * @param {number} state - State ID (see constants)
-         * @param {boolean} enable
-         */
-        function setTransition(state: number, enable: boolean): void;
         /**
          * enable/disable transition for a specific state (by default enabled for all)
          * @name setTransition
@@ -8439,29 +8254,6 @@ declare module "state/state" {
          * me.state.change(me.state.PLAY, "level_1", 3);
          */
         function change(state: number, forceChange: boolean, ...args: any[]): void;
-        /**
-         * change the game/app state
-         * @name change
-         * @memberof state
-         * @public
-         * @param {number} state - State ID (see constants)
-         * @param {boolean} forceChange - if true the state will be changed immediately
-         * @param {object} [...arguments] - extra arguments to be passed to the reset functions
-         * @example
-         * // The onResetEvent method on the play screen will receive two args:
-         * // "level_1" and the number 3
-         * me.state.change(me.state.PLAY, "level_1", 3);
-         */
-        function change(state: number, forceChange: boolean, ...args: any[]): void;
-        /**
-         * return true if the specified state is the current one
-         * @name isCurrent
-         * @memberof state
-         * @public
-         * @param {number} state - State ID (see constants)
-         * @returns {boolean} true if the specified state is the current one
-         */
-        function isCurrent(state: number): boolean;
         /**
          * return true if the specified state is the current one
          * @name isCurrent
@@ -10053,62 +9845,6 @@ declare module "level/level" {
          */
         function add(format: string, levelId: string, callback?: Function): boolean;
         /**
-         * add a level into the game manager (usually called by the preloader)
-         * @name add
-         * @memberof level
-         * @public
-         * @param {string} format - level format (only "tmx" supported)
-         * @param {string} levelId - the level id (or name)
-         * @param {Function} [callback] - a function to be called once the level is loaded
-         * @returns {boolean} true if the level was loaded
-         */
-        function add(format: string, levelId: string, callback?: Function): boolean;
-        /**
-         * load a level into the game manager<br>
-         * (will also create all level defined entities, etc..)
-         * @name load
-         * @memberof level
-         * @public
-         * @param {string} levelId - level id
-         * @param {object} [options] - additional optional parameters
-         * @param {Container} [options.container=game.world] - container in which to load the specified level
-         * @param {Function} [options.onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded
-         * @param {boolean} [options.flatten=game.mergeGroup] - if true, flatten all objects into the given container
-         * @param {boolean} [options.setViewportBounds=true] - if true, set the viewport bounds to the map size
-         * @returns {boolean} true if the level was successfully loaded
-         * @example
-         * // the game assets to be be preloaded
-         * // TMX maps
-         * var resources = [
-         *     {name: "a4_level1",   type: "tmx",   src: "data/level/a4_level1.tmx"},
-         *     {name: "a4_level2",   type: "tmx",   src: "data/level/a4_level2.tmx"},
-         *     {name: "a4_level3",   type: "tmx",   src: "data/level/a4_level3.tmx"},
-         *     // ...
-         * ];
-         *
-         * // ...
-         *
-         * // load a level into the game world
-         * me.level.load("a4_level1");
-         * ...
-         * ...
-         * // load a level into a specific container
-         * var levelContainer = new me.Container();
-         * me.level.load("a4_level2", {container:levelContainer});
-         * // add a simple transformation
-         * levelContainer.currentTransform.translate(levelContainer.width / 2, levelContainer.height / 2 );
-         * levelContainer.currentTransform.rotate(0.05);
-         * levelContainer.currentTransform.translate(-levelContainer.width / 2, -levelContainer.height / 2 );
-         * // add it to the game world
-         * me.game.world.addChild(levelContainer);
-         */
-        function load(levelId: string, options?: {
-            container?: Container;
-            onLoaded?: Function;
-            flatten?: boolean;
-            setViewportBounds?: boolean;
-        }): boolean;
-        /**
          * load a level into the game manager<br>
          * (will also create all level defined entities, etc..)
          * @name load
@@ -10162,14 +9898,6 @@ declare module "level/level" {
          */
         function getCurrentLevelId(): string;
         /**
-         * return the current level id<br>
-         * @name getCurrentLevelId
-         * @memberof level
-         * @public
-         * @returns {string}
-         */
-        function getCurrentLevelId(): string;
-        /**
          * return the current level definition.
          * for a reference to the live instantiated level,
          * rather use the container in which it was loaded (e.g. me.game.world)
@@ -10179,32 +9907,6 @@ declare module "level/level" {
          * @returns {TMXTileMap}
          */
         function getCurrentLevel(): TMXTileMap;
-        /**
-         * return the current level definition.
-         * for a reference to the live instantiated level,
-         * rather use the container in which it was loaded (e.g. me.game.world)
-         * @name getCurrentLevel
-         * @memberof level
-         * @public
-         * @returns {TMXTileMap}
-         */
-        function getCurrentLevel(): TMXTileMap;
-        /**
-         * reload the current level
-         * @name reload
-         * @memberof level
-         * @public
-         * @param {object} [options] - additional optional parameters
-         * @param {Container} [options.container=game.world] - container in which to load the specified level
-         * @param {Function} [options.onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded
-         * @param {boolean} [options.flatten=game.mergeGroup] - if true, flatten all objects into the given container
-         * @returns {object} the current level
-         */
-        function reload(options?: {
-            container?: Container;
-            onLoaded?: Function;
-            flatten?: boolean;
-        }): any;
         /**
          * reload the current level
          * @name reload
@@ -10238,22 +9940,6 @@ declare module "level/level" {
             flatten?: boolean;
         }): boolean;
         /**
-         * load the next level
-         * @name next
-         * @memberof level
-         * @public
-         * @param {object} [options] - additional optional parameters
-         * @param {Container} [options.container=game.world] - container in which to load the specified level
-         * @param {Function} [options.onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded
-         * @param {boolean} [options.flatten=game.mergeGroup] - if true, flatten all objects into the given container
-         * @returns {boolean} true if the next level was successfully loaded
-         */
-        function next(options?: {
-            container?: Container;
-            onLoaded?: Function;
-            flatten?: boolean;
-        }): boolean;
-        /**
          * load the previous level<br>
          * @name previous
          * @memberof level
@@ -10269,30 +9955,6 @@ declare module "level/level" {
             onLoaded?: Function;
             flatten?: boolean;
         }): boolean;
-        /**
-         * load the previous level<br>
-         * @name previous
-         * @memberof level
-         * @public
-         * @param {object} [options] - additional optional parameters
-         * @param {Container} [options.container=game.world] - container in which to load the specified level
-         * @param {Function} [options.onLoaded=game.onLevelLoaded] - callback for when the level is fully loaded
-         * @param {boolean} [options.flatten=game.mergeGroup] - if true, flatten all objects into the given container
-         * @returns {boolean} true if the previous level was successfully loaded
-         */
-        function previous(options?: {
-            container?: Container;
-            onLoaded?: Function;
-            flatten?: boolean;
-        }): boolean;
-        /**
-         * return the amount of level preloaded
-         * @name levelCount
-         * @memberof level
-         * @public
-         * @returns {number} the amount of level preloaded
-         */
-        function levelCount(): number;
         /**
          * return the amount of level preloaded
          * @name levelCount
@@ -10318,25 +9980,10 @@ declare module "loader/loader" {
          */
         function onResourceLoaded(res: any): void;
         /**
-         * just increment the number of already loaded resources
-         * @ignore
-         */
-        function onResourceLoaded(res: any): void;
-        /**
          * on error callback for image loading
          * @ignore
          */
         function onLoadingError(res: any): never;
-        /**
-         * on error callback for image loading
-         * @ignore
-         */
-        function onLoadingError(res: any): never;
-        /**
-         * enable the nocache mechanism
-         * @ignore
-         */
-        function setNocache(enable: any): void;
         /**
          * enable the nocache mechanism
          * @ignore
@@ -10357,72 +10004,6 @@ declare module "loader/loader" {
          * me.loader.setBaseURL("*", "http://myurl.com/")
          */
         function setBaseURL(type: string, url?: string): void;
-        /**
-         * change the default baseURL for the given asset type.<br>
-         * (this will prepend the asset URL and must finish with a '/')
-         * @name setBaseURL
-         * @memberof loader
-         * @public
-         * @param {string} type  - "*", "audio", binary", "image", "json", "js", "tmx", "tsx"
-         * @param {string} [url="./"] - default base URL
-         * @example
-         * // change the base URL relative address for audio assets
-         * me.loader.setBaseURL("audio", "data/audio/");
-         * // change the base URL absolute address for all object types
-         * me.loader.setBaseURL("*", "http://myurl.com/")
-         */
-        function setBaseURL(type: string, url?: string): void;
-        /**
-         * set all the specified game resources to be preloaded.
-         * @name preload
-         * @memberof loader
-         * @public
-         * @param {object[]} res
-         * @param {string} res.name - internal name of the resource
-         * @param {string} res.type  - "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
-         * @param {string} res.src  - path and/or file name of the resource (for audio assets only the path is required)
-         * @param {boolean} [res.stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
-         * @param {Function} [onload=loader.onload] - function to be called when all resources are loaded
-         * @param {boolean} [switchToLoadState=true] - automatically switch to the loading screen
-         * @example
-         * game_resources = [
-         *   // PNG tileset
-         *   {name: "tileset-platformer", type: "image",  src: "data/map/tileset.png"},
-         *   // PNG packed texture
-         *   {name: "texture", type:"image", src: "data/gfx/texture.png"}
-         *   // PNG base64 encoded image
-         *   {name: "texture", type:"image", src: "data:image/png;base64,iVBORw0KAAAQAAAAEACA..."}
-         *   // TSX file
-         *   {name: "meta_tiles", type: "tsx", src: "data/map/meta_tiles.tsx"},
-         *   // TMX level (XML & JSON)
-         *   {name: "map1", type: "tmx", src: "data/map/map1.json"},
-         *   {name: "map2", type: "tmx", src: "data/map/map2.tmx"},
-         *   {name: "map3", type: "tmx", format: "json", data: {"height":15,"layers":[...],"tilewidth":32,"version":1,"width":20}},
-         *   {name: "map4", type: "tmx", format: "xml", data: {xml representation of tmx}},
-         *   // audio resources
-         *   {name: "bgmusic", type: "audio",  src: "data/audio/"},
-         *   {name: "cling",   type: "audio",  src: "data/audio/"},
-         *   // base64 encoded audio resources
-         *   {name: "band",   type: "audio",  src: "data:audio/wav;base64,..."},
-         *   // binary file
-         *   {name: "ymTrack", type: "binary", src: "data/audio/main.ym"},
-         *   // JSON file (used for texturePacker)
-         *   {name: "texture", type: "json", src: "data/gfx/texture.json"},
-         *   // JavaScript file
-         *   {name: "plugin", type: "js", src: "data/js/plugin.js"},
-         *   // Font Face
-         *   { name: "'kenpixel'", type: "fontface",  src: "url('data/font/kenvector_future.woff2')" }
-         * ];
-         * ...
-         * // set all resources to be loaded
-         * me.loader.preload(game.resources, this.loaded.bind(this));
-         */
-        function preload(res: {
-            name: string;
-            type: string;
-            src: string;
-            stream?: boolean;
-        }[], onload?: Function, switchToLoadState?: boolean): void;
         /**
          * set all the specified game resources to be preloaded.
          * @name preload
@@ -10508,54 +10089,6 @@ declare module "loader/loader" {
             stream?: boolean;
         }, onload?: Function, onerror?: Function): number;
         /**
-         * Load a single resource (to be used if you need to load additional resource during the game)
-         * @name load
-         * @memberof loader
-         * @public
-         * @param {object} res
-         * @param {string} res.name - internal name of the resource
-         * @param {string} res.type  - "audio", binary", "image", "json", "tmx", "tsx"
-         * @param {string} res.src  - path and/or file name of the resource (for audio assets only the path is required)
-         * @param {boolean} [res.stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
-         * @param {Function} [onload] - function to be called when the resource is loaded
-         * @param {Function} [onerror] - function to be called in case of error
-         * @returns {number} the amount of corresponding resource to be preloaded
-         * @example
-         * // load an image asset
-         * me.loader.load({name: "avatar",  type:"image",  src: "data/avatar.png"}, this.onload.bind(this), this.onerror.bind(this));
-         * // load a base64 image asset
-         *  me.loader.load({name: "avatar", type:"image", src: "data:image/png;base64,iVBORw0KAAAQAAAAEACA..."};
-         * // start loading music
-         * me.loader.load({
-         *     name   : "bgmusic",
-         *     type   : "audio",
-         *     src    : "data/audio/"
-         * }, function () {
-         *     me.audio.play("bgmusic");
-         * });
-         */
-        function load(res: {
-            name: string;
-            type: string;
-            src: string;
-            stream?: boolean;
-        }, onload?: Function, onerror?: Function): number;
-        /**
-         * unload specified resource to free memory
-         * @name unload
-         * @memberof loader
-         * @public
-         * @param {object} res
-         * @param {string} res.name - internal name of the resource
-         * @param {string} res.type  - "audio", binary", "image", "json", "tmx", "tsx"
-         * @returns {boolean} true if unloaded
-         * @example me.loader.unload({name: "avatar",  type:"image"});
-         */
-        function unload(res: {
-            name: string;
-            type: string;
-        }): boolean;
-        /**
          * unload specified resource to free memory
          * @name unload
          * @memberof loader
@@ -10579,23 +10112,6 @@ declare module "loader/loader" {
          */
         function unloadAll(): void;
         /**
-         * unload all resources to free memory
-         * @name unloadAll
-         * @memberof loader
-         * @public
-         * @example me.loader.unloadAll();
-         */
-        function unloadAll(): void;
-        /**
-         * return the specified TMX/TSX object
-         * @name getTMX
-         * @memberof loader
-         * @public
-         * @param {string} elt - name of the tmx/tsx element ("map1");
-         * @returns {object} requested element or null if not found
-         */
-        function getTMX(elt: string): any;
-        /**
          * return the specified TMX/TSX object
          * @name getTMX
          * @memberof loader
@@ -10614,15 +10130,6 @@ declare module "loader/loader" {
          */
         function getBinary(elt: string): any;
         /**
-         * return the specified Binary object
-         * @name getBinary
-         * @memberof loader
-         * @public
-         * @param {string} elt - name of the binary object ("ymTrack");
-         * @returns {object} requested element or null if not found
-         */
-        function getBinary(elt: string): any;
-        /**
          * return the specified Image Object
          * @name getImage
          * @memberof loader
@@ -10631,24 +10138,6 @@ declare module "loader/loader" {
          * @returns {HTMLImageElement} requested element or null if not found
          */
         function getImage(image: string): HTMLImageElement;
-        /**
-         * return the specified Image Object
-         * @name getImage
-         * @memberof loader
-         * @public
-         * @param {string} image - name of the Image element ("tileset-platformer");
-         * @returns {HTMLImageElement} requested element or null if not found
-         */
-        function getImage(image: string): HTMLImageElement;
-        /**
-         * return the specified JSON Object
-         * @name getJSON
-         * @memberof loader
-         * @public
-         * @param {string} elt - name of the json file to load
-         * @returns {object}
-         */
-        function getJSON(elt: string): any;
         /**
          * return the specified JSON Object
          * @name getJSON
