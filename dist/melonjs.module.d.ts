@@ -1867,6 +1867,8 @@ declare module "system/save" {
     namespace save {
         /**
          * Add new keys to localStorage and set them to the given default values if they do not exist
+         * @name add
+         * @memberof save
          * @param {object} props - key and corresponding values
          * @example
          * // Initialize "score" and "lives" with default values
@@ -1877,6 +1879,8 @@ declare module "system/save" {
         function add(props: any): void;
         /**
          * Remove a key from localStorage
+         * @name remove
+         * @memberof save
          * @param {string} key - key to be removed
          * @example
          * // Remove the "score" key from localStorage
@@ -6651,7 +6655,6 @@ declare module "physics/response" {
 declare module "physics/detector" {
     /**
      * find all the collisions for the specified object
-     * @name collisionCheck
      * @ignore
      * @param {Renderable} objA - object to be tested for collision
      * @param {ResponseObject} [response] - a user defined response object that will be populated if they intersect.
@@ -6660,7 +6663,6 @@ declare module "physics/detector" {
     export function collisionCheck(objA: Renderable, response?: ResponseObject): boolean;
     /**
      * Checks for object colliding with the given line
-     * @name rayCast
      * @ignore
      * @param {Line} line - line to be tested for collision
      * @param {Array.<Renderable>} [result] - a user defined array that will be populated with intersecting physic objects.
