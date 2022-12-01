@@ -39,12 +39,12 @@
   },
   "main": "dist/melonjs.module.js",
   "module": "dist/melonjs.module.js",
-  "types": "dist/melonjs.module.d.ts",
+  "types": "dist/types/index.d.ts",
   "sideEffects": false,
   "files": [
     "dist/melonjs.mjs",
     "dist/melonjs.module.js",
-    "dist/melonjs.module.d.ts",
+    "dist/types/index.d.ts",
     "src/",
     "package.json",
     "README.md",
@@ -99,6 +99,6 @@
     "serve": "python3 -m http.server",
     "prepublishOnly": "npm run dist && npm run test",
     "clean": "del-cli --force build/*.* dist/*.* docs",
-    "types": "tsc src/index.js --declaration --allowJs --emitDeclarationOnly --outfile dist/melonjs.module.d.ts"
+    "types": "tsc src/index.js --declaration --allowJs --emitDeclarationOnly --outdir dist/types"
   }
 }

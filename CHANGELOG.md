@@ -1,6 +1,9 @@
 # Changelog
 
-## [14.1.2] (melonJS 2) - _2022-11-xx
+## [14.1.2] (melonJS 2) - _2022-12-01_
+
+### Fixed
+- Build: fix TypeScript `.d.ts` file generation & definition (thanks @lartkma)
 
 ## [14.1.1] (melonJS 2) - _2022-11-03_
 
