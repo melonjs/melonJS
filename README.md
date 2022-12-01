@@ -208,7 +208,7 @@ The generated files will be available under the `build` directory :
 
 If you need to create the corresponding typing you can use the follwing :
 
-    $ npm run build
+    $ npm run types
 
 This will generate all the `.d.ts` file under the `dist/types` directory.
 
