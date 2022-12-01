@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.1
+ * melonJS Game Engine - v14.1.2
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -18615,8 +18615,6 @@ let globalResponse = new ResponseObject();
 /**
  * a function used to determine if two objects should collide (based on both respective objects collision mask and type).<br>
  * you can redefine this function if you need any specific rules over what should collide with what.
- * @name shouldCollide
- * @memberof collision
  * @ignore
  * @param {Renderable} a - a reference to the object A.
  * @param {Renderable} b - a reference to the object B.
@@ -18640,7 +18638,6 @@ function shouldCollide(a, b) {
 
 /**
  * find all the collisions for the specified object
- * @name collisionCheck
  * @ignore
  * @param {Renderable} objA - object to be tested for collision
  * @param {ResponseObject} [response] - a user defined response object that will be populated if they intersect.
@@ -18703,7 +18700,6 @@ function collisionCheck(objA, response = globalResponse) {
 
 /**
  * Checks for object colliding with the given line
- * @name rayCast
  * @ignore
  * @param {Line} line - line to be tested for collision
  * @param {Array.<Renderable>} [result] - a user defined array that will be populated with intersecting physic objects.
@@ -31597,10 +31593,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "14.1.1"
+         * @default "14.1.2"
          * @name plugin.Base#version
          */
-        this.version = "14.1.1";
+        this.version = "14.1.2";
     }
 }
 
@@ -36735,7 +36731,7 @@ Renderer.prototype.getScreenContext = function()  {
  * @name version
  * @type {string}
  */
-const version = "14.1.1";
+const version = "14.1.2";
 
 
 /**
