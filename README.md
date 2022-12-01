@@ -162,7 +162,7 @@ melonJS 2 now only provides an ES6 Bundle :
 | ------------------- | ----------- |
 | `melonjs.module.js` | the ES6 Module (ESM) Bundle |
 | `melonjs.mjs` | a tree-shakeable ES6 Module Directory |
-| `melonjs.module.d.ts` | typescript declaration file for the ES6 Module (ESM) Bundle |
+| `types/index.d.ts` | typescript declaration files for the ES6 Module (ESM) Bundle |
 
 >Note: if you need your application to be compatible with ES5, refer to our [boilerplate](https://github.com/melonjs/es6-boilerplate) that provides automatic transpiling to ES5.
 
@@ -204,8 +204,13 @@ Then build the melonJS source by running:
 
 The generated files will be available under the `build` directory :
 - `melonjs.module.js` : plain ES6 module
-- `melonjs.module.js` : a ES6 chunk directory used for tree-shaking
-- `melonjs.module.d.ts` : typescript declaration for the ES6 Module
+- `melonjs.mjs` : a ES6 chunk directory used for tree-shaking
+
+If you need to create the corresponding typing you can use the follwing :
+
+    $ npm run build
+
+This will generate all the `.d.ts` file under the `dist/types` directory.
 
 To run the melonJS test suite simply use the following:
 
