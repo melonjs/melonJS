@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+      "target": "es2020",
+      "allowJs": true,
+      "emitDeclarationOnly": true,
+      "declaration": true,
+      "declarationDir": "dist/types",
+      "removeComments": false,
+      "strict": true,
+      "noImplicitAny": true,
+      "moduleResolution": "node",
+      "resolveJsonModule": true,
+  },
+  "include": ["src/**/*.js"],
+  "exclude": ["node_modules", "test/*.*"]
+}

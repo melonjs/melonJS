@@ -99,6 +99,6 @@
     "serve": "python3 -m http.server",
     "prepublishOnly": "npm run dist && npm run test",
     "clean": "del-cli --force build/*.* dist/*.* docs",
-    "types": "tsc src/index.js --declaration --allowJs --emitDeclarationOnly --outdir dist/types"
+    "types": "tsc"
   }
 }
