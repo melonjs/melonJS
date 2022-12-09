@@ -22,7 +22,7 @@ export function decodeCSV(input: any): number[];
  * @param {number} [bytes] - number of bytes per array entry
  * @returns {Uint32Array} Decoded data
  */
-export function decodeBase64AsArray(input: string, bytes?: number): Uint32Array;
+export function decodeBase64AsArray(input: string, bytes?: number | undefined): Uint32Array;
 /**
  * Decode the given data
  * @ignore

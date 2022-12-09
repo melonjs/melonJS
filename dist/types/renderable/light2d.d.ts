@@ -15,7 +15,7 @@ export default class Light2d extends Renderable {
      * @param {Color|string} [color="#FFF"] - the color of the light
      * @param {number} [intensity=0.7] - The intensity of the light.
      */
-    constructor(x: number, y: number, radiusX: number, radiusY?: number, color?: Color | string, intensity?: number);
+    constructor(x: number, y: number, radiusX: number, radiusY?: number | undefined, color?: Color | string, intensity?: number | undefined);
     /**
      * the color of the light
      * @type {Color}
@@ -39,9 +39,9 @@ export default class Light2d extends Renderable {
      */
     intensity: number;
     /** @ignore */
-    visibleArea: any;
+    visibleArea: object;
     /** @ignore */
-    texture: any;
+    texture: object;
     /**
      * returns a geometry representing the visible area of this light
      * @name getVisibleArea

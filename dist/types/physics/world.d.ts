@@ -10,7 +10,7 @@ export default class World extends Container {
      * @param {number} [width=game.viewport.width] - width of the container
      * @param {number} [height=game.viewport.height] - height of the container
      */
-    constructor(x?: number, y?: number, width?: number, height?: number);
+    constructor(x?: number | undefined, y?: number | undefined, width?: number | undefined, height?: number | undefined);
     /**
      * the application (game) this physic world belong to
      * @public

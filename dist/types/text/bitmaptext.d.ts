@@ -34,17 +34,17 @@ export default class BitmapText extends Renderable {
      * me.game.world.addChild(myFont);
      */
     constructor(x: number, y: number, settings: {
-        font: string | (new (width?: number, height?: number) => HTMLImageElement);
-        fontData?: string;
-        size?: number;
-        fillStyle?: Color | string;
-        lineWidth?: number;
-        textAlign?: string;
-        textBaseline?: string;
-        lineHeight?: number;
-        anchorPoint?: Vector2d;
-        wordWrapWidth?: number;
-        text?: (string | string[]);
+        font: string | (new (width?: number | undefined, height?: number | undefined) => HTMLImageElement);
+        fontData?: string | undefined;
+        size?: number | undefined;
+        fillStyle?: string | Color | undefined;
+        lineWidth?: number | undefined;
+        textAlign?: string | undefined;
+        textBaseline?: string | undefined;
+        lineHeight?: number | undefined;
+        anchorPoint?: any;
+        wordWrapWidth?: number | undefined;
+        text?: string | string[] | undefined;
     });
     /**
      * Set the default text alignment (or justification),<br>
@@ -113,7 +113,7 @@ export default class BitmapText extends Renderable {
      * @param {number} [scale]
      * @returns {BitmapText} this object for chaining
      */
-    set(textAlign: string, scale?: number): BitmapText;
+    set(textAlign: string, scale?: number | undefined): BitmapText;
     /**
      * change the text to be displayed
      * @param {number|string|string[]} value - a string, or an array of strings
@@ -131,7 +131,7 @@ export default class BitmapText extends Renderable {
      * @param {string} [text]
      * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
      */
-    measureText(text?: string): TextMetrics;
+    measureText(text?: string | undefined): TextMetrics;
     /**
      * draw the bitmap font
      * @param {CanvasRenderer|WebGLRenderer} renderer - Reference to the destination renderer instance
@@ -139,7 +139,7 @@ export default class BitmapText extends Renderable {
      * @param {number} [x]
      * @param {number} [y]
      */
-    draw(renderer: CanvasRenderer | WebGLRenderer, text?: string, x?: number, y?: number): void;
+    draw(renderer: CanvasRenderer | WebGLRenderer, text?: string | undefined, x?: number | undefined, y?: number | undefined): void;
     /**
      * Destroy function
      * @ignore

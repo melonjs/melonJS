@@ -7,7 +7,7 @@
  * @returns {string} Value of property
  * @memberof utils.agent
  */
-export function prefixed(name: string, obj?: object): string;
+export function prefixed(name: string, obj?: object | undefined): string;
 /**
  * Set a vendor-prefixed property
  * @public
@@ -18,4 +18,4 @@ export function prefixed(name: string, obj?: object): string;
  * @returns {boolean} true if one of the vendor-prefixed property was found
  * @memberof utils.agent
  */
-export function setPrefixed(name: string, value: string, obj?: object): boolean;
+export function setPrefixed(name: string, value: string, obj?: object | undefined): boolean;

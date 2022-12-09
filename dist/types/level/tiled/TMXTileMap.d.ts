@@ -18,7 +18,7 @@ export default class TMXTileMap {
      * the level data (JSON)
      * @ignore
      */
-    data: any;
+    data: object;
     /**
      * name of the tilemap
      * @public
@@ -100,11 +100,11 @@ export default class TMXTileMap {
      * @name TMXTileMap#class
      */
     public class: string;
-    tilesets: TMXTilesetGroup;
+    tilesets: TMXTilesetGroup | null | undefined;
     layers: any[];
     objectGroups: any[];
     isEditor: boolean;
-    nextobjectid: number;
+    nextobjectid: number | undefined;
     hexsidelength: number;
     staggeraxis: any;
     staggerindex: any;
@@ -121,7 +121,7 @@ export default class TMXTileMap {
      * @returns {TMXRenderer} a TMX renderer
      */
     public getRenderer(): TMXRenderer;
-    renderer: TMXOrthogonalRenderer | TMXIsometricRenderer | TMXHexagonalRenderer;
+    renderer: TMXOrthogonalRenderer | TMXIsometricRenderer | TMXHexagonalRenderer | undefined;
     /**
      * return the map bounding rect
      * @name TMXRenderer#getBounds
@@ -148,7 +148,7 @@ export default class TMXTileMap {
      * // add the level to the game world container
      * level.addTo(me.game.world, true, true);
      */
-    public addTo(container: Container, flatten?: boolean, setViewportBounds?: boolean): void;
+    public addTo(container: Container, flatten?: boolean | undefined, setViewportBounds?: boolean | undefined): void;
     /**
      * return an Array of instantiated objects, based on the map object definition
      * @name TMXTileMap#getObjects
@@ -157,7 +157,7 @@ export default class TMXTileMap {
      * when false, a `me.Container` object will be created for each corresponding groups
      * @returns {Renderable[]} Array of Objects
      */
-    public getObjects(flatten?: boolean): Renderable[];
+    public getObjects(flatten?: boolean | undefined): Renderable[];
     /**
      * return all the existing layers
      * @name TMXTileMap#getLayers

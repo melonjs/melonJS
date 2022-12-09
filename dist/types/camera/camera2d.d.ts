@@ -81,21 +81,21 @@ export default class Camera2d extends Renderable {
      */
     invCurrentTransform: Matrix2d;
     offset: Vector2d;
-    target: Vector2d | ObservableVector3d;
+    target: Vector2d | ObservableVector3d | null;
     follow_axis: number;
     _shake: {
         intensity: number;
         duration: number;
         axis: number;
-        onComplete: any;
+        onComplete: null;
     };
     _fadeOut: {
-        color: any;
-        tween: any;
+        color: null;
+        tween: null;
     };
     _fadeIn: {
-        color: any;
-        tween: any;
+        color: null;
+        tween: null;
     };
     /** @ignore */
     _updateProjectionMatrix(): void;
@@ -110,7 +110,7 @@ export default class Camera2d extends Renderable {
      * @param {number} [x=0]
      * @param {number} [y=0]
      */
-    reset(x?: number, y?: number): void;
+    reset(x?: number | undefined, y?: number | undefined): void;
     /**
      * change the deadzone settings.
      * the "deadzone" defines an area within the current camera in which
@@ -122,7 +122,7 @@ export default class Camera2d extends Renderable {
      * @param {number} h - deadzone height
      */
     setDeadzone(w: number, h: number): void;
-    deadzone: Rect;
+    deadzone: Rect | undefined;
     /**
      * resize the camera
      * @name resize
@@ -155,7 +155,7 @@ export default class Camera2d extends Renderable {
      * // set the camera to follow this renderable on both axis, and enable damping
      * me.game.viewport.follow(this, me.game.viewport.AXIS.BOTH, 0.1);
      */
-    follow(target: Renderable | Vector2d, axis?: number, damping?: number): void;
+    follow(target: Renderable | Vector2d, axis?: number | undefined, damping?: number | undefined): void;
     /**
      * unfollow the current target
      * @name unfollow
@@ -201,7 +201,7 @@ export default class Camera2d extends Renderable {
      * // shake it baby !
      * me.game.viewport.shake(10, 500, me.game.viewport.AXIS.BOTH);
      */
-    shake(intensity: number, duration: number, axis?: number, onComplete?: Function, force?: boolean): void;
+    shake(intensity: number, duration: number, axis?: number | undefined, onComplete?: Function | undefined, force?: boolean | undefined): void;
     /**
      * fadeOut(flash) effect<p>
      * screen is filled with the specified color and slowly goes back to normal
@@ -218,7 +218,7 @@ export default class Camera2d extends Renderable {
      *     me.game.viewport.fadeOut("#fff", 150);
      * });
      */
-    fadeOut(color: Color | string, duration?: number, onComplete?: Function): void;
+    fadeOut(color: Color | string, duration?: number | undefined, onComplete?: Function | undefined): void;
     /**
      * fadeIn effect <p>
      * fade to the specified color
@@ -231,7 +231,7 @@ export default class Camera2d extends Renderable {
      * // flash the camera to white for 75ms
      * me.game.viewport.fadeIn("#FFFFFF", 75);
      */
-    fadeIn(color: Color | string, duration?: number, onComplete?: Function): void;
+    fadeIn(color: Color | string, duration?: number | undefined, onComplete?: Function | undefined): void;
     /**
      * set the camera position around the specified object
      * @name focusOn
@@ -247,7 +247,7 @@ export default class Camera2d extends Renderable {
      * @param {boolean} [floating = obj.floating] - if visibility check should be done against screen coordinates
      * @returns {boolean}
      */
-    isVisible(obj: Renderable, floating?: boolean): boolean;
+    isVisible(obj: Renderable, floating?: boolean | undefined): boolean;
     /**
      * convert the given "local" (screen) coordinates into world coordinates
      * @name localToWorld
@@ -258,7 +258,7 @@ export default class Camera2d extends Renderable {
      * converted value
      * @returns {Vector2d}
      */
-    localToWorld(x: number, y: number, v?: number): Vector2d;
+    localToWorld(x: number, y: number, v?: number | undefined): Vector2d;
     /**
      * convert the given world coordinates into "local" (screen) coordinates
      * @name worldToLocal
@@ -269,7 +269,7 @@ export default class Camera2d extends Renderable {
      * converted value
      * @returns {Vector2d}
      */
-    worldToLocal(x: number, y: number, v?: number): Vector2d;
+    worldToLocal(x: number, y: number, v?: number | undefined): Vector2d;
     /**
      * render the camera effects
      * @ignore

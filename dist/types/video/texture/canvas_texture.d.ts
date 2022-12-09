@@ -13,10 +13,10 @@ declare class CanvasTexture {
      * @param {boolean} [attributes.antiAlias=false] - Whether to enable anti-aliasing, use false (default) for a pixelated effect.
      */
     constructor(width: number, height: number, attributes?: {
-        context?: boolean;
-        offscreenCanvas?: boolean;
-        willReadFrequently?: boolean;
-        antiAlias?: boolean;
+        context?: boolean | undefined;
+        offscreenCanvas?: boolean | undefined;
+        willReadFrequently?: boolean | undefined;
+        antiAlias?: boolean | undefined;
     });
     /**
      * the canvas created for this CanvasTexture
@@ -40,7 +40,7 @@ declare class CanvasTexture {
      * enable/disable image smoothing (scaling interpolation)
      * @param {boolean} [enable=false]
      */
-    setAntiAlias(enable?: boolean): void;
+    setAntiAlias(enable?: boolean | undefined): void;
     /**
      * Resizes the canvas texture to the given width and height.
      * @param {number} width - the desired width

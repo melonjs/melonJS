@@ -23,7 +23,7 @@ export default class Rect extends Polygon {
      * @param {number} [h] - height of the rectangle, if a numeral width parameter is specified
      * @returns {Rect} this rectangle
      */
-    setShape(x: number, y: number, w: number | Vector2d[], h?: number, ...args: any[]): Rect;
+    setShape(x: number, y: number, w: number | Vector2d[], h?: number | undefined, ...args: any[]): Rect;
     /**
      * left coordinate of the Rectangle
      * @public
@@ -118,7 +118,7 @@ export default class Rect extends Polygon {
      * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
      * @returns {Rect} this rectangle
      */
-    scale(x: number, y?: number): Rect;
+    scale(x: number, y?: number | undefined): Rect;
     /**
      * clone this rectangle
      * @name clone

@@ -38,14 +38,14 @@ export default class Sprite extends Renderable {
      */
     constructor(x: number, y: number, settings: {
         image: HTMLImageElement | HTMLCanvasElement | TextureAtlas | string;
-        name?: string;
-        region?: string;
-        framewidth?: number;
-        frameheight?: number;
-        tint?: string | Color;
-        flipX?: number;
-        flipY?: number;
-        anchorPoint?: Vector2d;
+        name?: string | undefined;
+        region?: string | undefined;
+        framewidth?: number | undefined;
+        frameheight?: number | undefined;
+        tint?: string | Color | undefined;
+        flipX?: number | undefined;
+        flipY?: number | undefined;
+        anchorPoint?: any;
     });
     /**
      * pause and resume animation
@@ -81,11 +81,11 @@ export default class Sprite extends Renderable {
      */
     public source: TextureAtlas;
     anim: {};
-    resetAnim: any;
+    resetAnim: Function | (() => Sprite) | undefined;
     current: {
         name: string;
         length: number;
-        offset: any;
+        offset: object;
         width: number;
         height: number;
         angle: number;
@@ -95,7 +95,7 @@ export default class Sprite extends Renderable {
     _flicker: {
         isFlickering: boolean;
         duration: number;
-        callback: any;
+        callback: null;
         state: boolean;
     };
     image: HTMLCanvasElement | HTMLImageElement;
@@ -156,7 +156,7 @@ export default class Sprite extends Renderable {
      * // set the standing animation as default
      * this.setCurrentAnimation("stand");
      */
-    addAnimation(name: string, index: number[] | string[] | object[], animationspeed?: number): number;
+    addAnimation(name: string, index: number[] | string[] | object[], animationspeed?: number | undefined): number;
     /**
      * set the current animation
      * this will always change the animation & set the frame to zero
@@ -196,7 +196,7 @@ export default class Sprite extends Renderable {
      *    return false; // do not reset to first frame
      * }).bind(this));
      */
-    setCurrentAnimation(name: string, resetAnim?: string | Function, preserve_dt?: boolean): Sprite;
+    setCurrentAnimation(name: string, resetAnim?: string | Function | undefined, preserve_dt?: boolean | undefined): Sprite;
     /**
      * reverse the given or current animation if none is specified
      * @name reverseAnimation
@@ -205,7 +205,7 @@ export default class Sprite extends Renderable {
      * @returns {Sprite} Reference to this object for method chaining
      * @see Sprite#animationspeed
      */
-    reverseAnimation(name?: string): Sprite;
+    reverseAnimation(name?: string | undefined): Sprite;
     /**
      * return true if the specified animation is the current one.
      * @name isCurrentAnimation
@@ -240,7 +240,7 @@ export default class Sprite extends Renderable {
      * // reset the current animation to the first frame
      * this.setAnimationFrame();
      */
-    setAnimationFrame(idx?: number): Sprite;
+    setAnimationFrame(idx?: number | undefined): Sprite;
     /**
      * return the current animation frame index.
      * @name getCurrentAnimationFrame

@@ -40,5 +40,5 @@ declare namespace collision {
      *        // ...
      *    }
      */
-    function rayCast(line: Line, result?: Renderable[]): Renderable[];
+    function rayCast(line: Line, result?: Renderable[] | undefined): Renderable[];
 }

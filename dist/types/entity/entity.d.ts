@@ -25,15 +25,15 @@ export default class Entity extends Renderable {
     constructor(x: number, y: number, settings: {
         width: number;
         height: number;
-        name?: string;
-        id?: string;
-        image?: (new (width?: number, height?: number) => HTMLImageElement) | string;
-        anchorPoint?: Vector2d;
-        framewidth?: number;
-        frameheight?: number;
-        type?: string;
-        collisionMask?: number;
-        shapes?: Rect[] | Polygon[] | Line[] | Ellipse[];
+        name?: string | undefined;
+        id?: string | undefined;
+        image?: string | (new (width?: number | undefined, height?: number | undefined) => HTMLImageElement) | undefined;
+        anchorPoint?: any;
+        framewidth?: number | undefined;
+        frameheight?: number | undefined;
+        type?: string | undefined;
+        collisionMask?: number | undefined;
+        shapes?: Line[] | Polygon[] | Ellipse[] | Rect[] | undefined;
     });
     /**
      * The array of renderable children of this entity.

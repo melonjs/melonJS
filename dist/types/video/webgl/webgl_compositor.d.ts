@@ -14,7 +14,7 @@ export default class WebGLCompositor {
      */
     init(renderer: any): void;
     currentTextureUnit: any;
-    boundTextures: any[];
+    boundTextures: any[] | undefined;
     renderer: any;
     gl: any;
     color: any;
@@ -23,36 +23,36 @@ export default class WebGLCompositor {
      * a reference to the active WebGL shader
      * @type {GLShader}
      */
-    activeShader: GLShader;
+    activeShader: GLShader | undefined;
     /**
      * primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
      * @type {number}
      * @default gl.TRIANGLES
      */
-    mode: number;
+    mode: number | undefined;
     /**
      * an array of vertex attribute properties
      * @see WebGLCompositor.addAttribute
      * @type {Array}
      */
-    attributes: any[];
+    attributes: any[] | undefined;
     /**
      * the size of a single vertex in bytes
      * (will automatically be calculated as attributes definitions are added)
      * @see WebGLCompositor.addAttribute
      * @type {number}
      */
-    vertexByteSize: number;
+    vertexByteSize: number | undefined;
     /**
      * the size of a single vertex in floats
      * (will automatically be calculated as attributes definitions are added)
      * @see WebGLCompositor.addAttribute
      * @type {number}
      */
-    vertexSize: number;
-    primitiveShader: GLShader;
-    quadShader: GLShader;
-    vertexBuffer: VertexArrayBuffer;
+    vertexSize: number | undefined;
+    primitiveShader: GLShader | undefined;
+    quadShader: GLShader | undefined;
+    vertexBuffer: VertexArrayBuffer | undefined;
     /**
      * Reset compositor internal state
      * @ignore
@@ -88,13 +88,13 @@ export default class WebGLCompositor {
      * @param {boolean} [mipmap=true] - Whether mipmap levels should be generated for this texture
      * @returns {WebGLTexture} a WebGL texture
      */
-    createTexture2D(unit: number, image: (new (width?: number, height?: number) => HTMLImageElement) | HTMLCanvasElement | ImageData | Uint8Array[] | Float32Array[], filter: number, repeat?: string, w?: number, h?: number, b?: number, premultipliedAlpha?: boolean, mipmap?: boolean): WebGLTexture;
+    createTexture2D(unit: number, image: (new (width?: number | undefined, height?: number | undefined) => HTMLImageElement) | HTMLCanvasElement | ImageData | Uint8Array[] | Float32Array[], filter: number, repeat?: string | undefined, w?: number | undefined, h?: number | undefined, b?: number | undefined, premultipliedAlpha?: boolean | undefined, mipmap?: boolean | undefined): WebGLTexture;
     /**
      * delete the given WebGL texture
      * @param {WebGLTexture} [texture] - a WebGL texture to delete
      * @param {number} [unit] - Texture unit to delete
      */
-    deleteTexture2D(texture?: WebGLTexture): void;
+    deleteTexture2D(texture?: WebGLTexture | undefined): void;
     /**
      * returns the WebGL texture associated to the given texture unit
      * @param {number} unit - Texture unit to which a texture is bound
@@ -113,7 +113,7 @@ export default class WebGLCompositor {
      * @param {number} [unit] - a WebGL texture
      * @returns {number} unit the unit number that was associated with the given texture
      */
-    unbindTexture2D(texture?: WebGLTexture, unit?: number): number;
+    unbindTexture2D(texture?: WebGLTexture | undefined, unit?: number | undefined): number;
     /**
      * @ignore
      */
@@ -147,19 +147,19 @@ export default class WebGLCompositor {
      * Flush batched texture operations to the GPU
      * @param {number} [mode=gl.TRIANGLES] - the GL drawing mode
      */
-    flush(mode?: number): void;
+    flush(mode?: number | undefined): void;
     /**
      * Draw an array of vertices
      * @param {GLenum} mode - primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
      * @param {Vector2d[]} verts - vertices
      * @param {number} [vertexCount=verts.length] - amount of points defined in the points array
      */
-    drawVertices(mode: GLenum, verts: Vector2d[], vertexCount?: number): void;
+    drawVertices(mode: GLenum, verts: Vector2d[], vertexCount?: number | undefined): void;
     /**
      * Clear the frame buffer
      * @param {number} [alpha = 0.0] - the alpha value used when clearing the framebuffer
      */
-    clear(alpha?: number): void;
+    clear(alpha?: number | undefined): void;
     /**
      * Specify the color values used when clearing color buffers. The values are clamped between 0 and 1.
      * @param {number} [r = 0] - the red color value used when the color buffers are cleared
@@ -167,7 +167,7 @@ export default class WebGLCompositor {
      * @param {number} [b = 0] - the blue color value used when the color buffers are cleared
      * @param {number} [a = 0] - the alpha color value used when the color buffers are cleared
      */
-    clearColor(r?: number, g?: number, b?: number, a?: number): void;
+    clearColor(r?: number | undefined, g?: number | undefined, b?: number | undefined, a?: number | undefined): void;
 }
 import GLShader from "./glshader.js";
 import VertexArrayBuffer from "./buffer/vertex.js";

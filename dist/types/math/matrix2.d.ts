@@ -13,7 +13,7 @@ export default class Matrix2d {
      * @ignore
      */
     onResetEvent(...args: any[]): Matrix2d;
-    val: Float32Array;
+    val: Float32Array | undefined;
     /**
      * tx component of the matrix
      * @public
@@ -119,7 +119,7 @@ export default class Matrix2d {
      * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
      * @returns {Matrix2d} Reference to this object for method chaining
      */
-    scale(x: number, y?: number): Matrix2d;
+    scale(x: number, y?: number | undefined): Matrix2d;
     /**
      * adds a 2D scaling transformation.
      * @name scaleV

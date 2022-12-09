@@ -12,14 +12,14 @@ export default class ObservableVector3d extends Vector3d {
      * @param {Function} settings.onUpdate - the callback to be executed when the vector is changed
      * @param {object} [settings.scope] - the value to use as this when calling onUpdate
      */
-    constructor(x: number, y: number, z: number, settings: {
+    constructor(x: number | undefined, y: number | undefined, z: number | undefined, settings: {
         onUpdate: Function;
-        scope?: object;
+        scope?: object | undefined;
     });
     /**
      * @ignore
      */
-    onResetEvent(x: number, y: number, z: number, settings: any): ObservableVector3d;
+    onResetEvent(x: number | undefined, y: number | undefined, z: number | undefined, settings: any): ObservableVector3d;
     public set x(arg: number);
     /**
      * x value of the vector
@@ -63,7 +63,7 @@ export default class ObservableVector3d extends Vector3d {
      * @param {number} [z=0] - z value of the vector
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
-    setMuted(x: number, y: number, z?: number): ObservableVector3d;
+    setMuted(x: number, y: number, z?: number | undefined): ObservableVector3d;
     /**
      * set the callback to be executed when the vector is changed
      * @name setCallback
@@ -72,9 +72,9 @@ export default class ObservableVector3d extends Vector3d {
      * @param {Function} [scope=null] - scope
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
-    setCallback(fn: Function, scope?: Function): ObservableVector3d;
-    onUpdate: Function;
-    scope: Function;
+    setCallback(fn: Function, scope?: Function | undefined): ObservableVector3d;
+    onUpdate: Function | undefined;
+    scope: Function | undefined;
     /**
      * Add the passed vector to this vector
      * @name add
@@ -100,7 +100,7 @@ export default class ObservableVector3d extends Vector3d {
      * @param {number} [z=1]
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
-    scale(x: number, y?: number, z?: number): ObservableVector3d;
+    scale(x: number, y?: number | undefined, z?: number | undefined): ObservableVector3d;
     /**
      * Multiply this vector values by the passed vector
      * @name scaleV

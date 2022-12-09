@@ -55,7 +55,7 @@ export function onReady(fn: Function): void;
  * @public
  * @param {boolean} [enable=true] - enable or disable swipe.
  */
-export function enableSwipe(enable?: boolean): void;
+export function enableSwipe(enable?: boolean | undefined): void;
 /**
  * Returns true if the browser/device is in full screen mode.
  * @function isFullscreen
@@ -82,7 +82,7 @@ export function isFullscreen(): boolean;
  *    }
  * });
  */
-export function requestFullscreen(element?: object): void;
+export function requestFullscreen(element?: object | undefined): void;
 /**
  * Exit fullscreen mode. Requires fullscreen support from the browser/device.
  * @function exitFullscreen
@@ -146,7 +146,7 @@ export function isLandscape(): boolean;
  * @param {string} [type="local"]
  * @returns {object} a reference to the device storage
  */
-export function getStorage(type?: string): object;
+export function getStorage(type?: string | undefined): object;
 /**
  * return the parent DOM element for the given parent name or HTMLElement object
  * @function getParentElement
@@ -197,8 +197,8 @@ export function getParentBounds(element: string | HTMLElement): DOMRect;
  * @returns {boolean} true if WebGL is supported
  */
 export function isWebGLSupported(options?: {
-    failIfMajorPerformanceCaveat?: boolean;
-}): boolean;
+    failIfMajorPerformanceCaveat?: boolean | undefined;
+} | undefined): boolean;
 /**
  * return the highest precision format supported by this device for GL Shaders
  * @function getMaxShaderPrecision

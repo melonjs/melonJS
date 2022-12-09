@@ -21,16 +21,16 @@ export default class Renderer {
     constructor(options: {
         width: number;
         height: number;
-        canvas?: HTMLCanvasElement;
-        antiAlias?: boolean;
-        failIfMajorPerformanceCaveat?: boolean;
-        transparent?: boolean;
-        premultipliedAlpha?: boolean;
-        blendMode?: boolean;
-        subPixel?: boolean;
-        verbose?: boolean;
-        zoomX?: number;
-        zoomY?: number;
+        canvas?: HTMLCanvasElement | undefined;
+        antiAlias?: boolean | undefined;
+        failIfMajorPerformanceCaveat?: boolean | undefined;
+        transparent?: boolean | undefined;
+        premultipliedAlpha?: boolean | undefined;
+        blendMode?: boolean | undefined;
+        subPixel?: boolean | undefined;
+        verbose?: boolean | undefined;
+        zoomX?: number | undefined;
+        zoomY?: number | undefined;
     });
     /**
      * The given constructor options
@@ -100,7 +100,7 @@ export default class Renderer {
      * @param {boolean} [transparent=true] - use false to disable transparency
      * @returns {CanvasRenderingContext2D}
      */
-    getContext2d(canvas: HTMLCanvasElement, transparent?: boolean): CanvasRenderingContext2D;
+    getContext2d(canvas: HTMLCanvasElement, transparent?: boolean | undefined): CanvasRenderingContext2D;
     /**
      * return the width of the system Canvas
      * @returns {number}
@@ -138,7 +138,7 @@ export default class Renderer {
      * @param {CanvasRenderingContext2D} context
      * @param {boolean} [enable=false]
      */
-    setAntiAlias(context: CanvasRenderingContext2D, enable?: boolean): void;
+    setAntiAlias(context: CanvasRenderingContext2D, enable?: boolean | undefined): void;
     /**
      * set/change the current projection matrix (WebGL only)
      * @param {Matrix3d} matrix
@@ -149,7 +149,7 @@ export default class Renderer {
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape - a shape object to stroke
      * @param {boolean} [fill=false] - fill the shape with the current color if true
      */
-    stroke(shape: Rect | RoundRect | Polygon | Line | Ellipse, fill?: boolean): void;
+    stroke(shape: Rect | RoundRect | Polygon | Line | Ellipse, fill?: boolean | undefined): void;
     /**
      * fill the given shape
      * @name fill
@@ -164,7 +164,7 @@ export default class Renderer {
      * @param {string} [mode="multiply"] - the composition mode used to tint the image
      * @returns {HTMLCanvasElement|OffscreenCanvas} a new canvas element representing the tinted image
      */
-    tint(src: HTMLImageElement | HTMLCanvasElement | OffscreenCanvas, color: Color | string, mode?: string): HTMLCanvasElement | OffscreenCanvas;
+    tint(src: HTMLImageElement | HTMLCanvasElement | OffscreenCanvas, color: Color | string, mode?: string | undefined): HTMLCanvasElement | OffscreenCanvas;
     /**
      * A mask limits rendering elements to the shape and position of the given mask object.
      * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
@@ -172,7 +172,7 @@ export default class Renderer {
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - the shape defining the mask to be applied
      * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
      */
-    setMask(mask?: Rect | RoundRect | Polygon | Line | Ellipse): void;
+    setMask(mask?: Polygon | Rect | RoundRect | Ellipse | Line | undefined): void;
     /**
      * disable (remove) the rendering mask set through setMask.
      * @see Renderer#setMask
@@ -183,7 +183,7 @@ export default class Renderer {
      * @param {Color} tint - the tint color
      * @param {number} [alpha] - an alpha value to be applied to the tint
      */
-    setTint(tint: Color, alpha?: number): void;
+    setTint(tint: Color, alpha?: number | undefined): void;
     /**
      * clear the rendering tint set through setTint.
      * @see Renderer#setTint

@@ -10,7 +10,7 @@ export default class Container extends Renderable {
      * @param {number} [width=game.viewport.width] - width of the container
      * @param {number} [height=game.viewport.height] - height of the container
      */
-    constructor(x?: number, y?: number, width?: number, height?: number, root?: boolean);
+    constructor(x?: number | undefined, y?: number | undefined, width?: number | undefined, height?: number | undefined, root?: boolean);
     /**
      * keep track of pending sort
      * @ignore
@@ -29,7 +29,7 @@ export default class Container extends Renderable {
      * The array of children of this container.
      * @ignore
      */
-    children: any[];
+    children: any[] | undefined;
     /**
      * The property of the child object that should be used to sort on <br>
      * value : "x", "y", "z"
@@ -124,7 +124,7 @@ export default class Container extends Renderable {
      * @param {number} [z] - forces the z index of the child to the specified value
      * @returns {Renderable} the added child
      */
-    addChild(child: Renderable, z?: number): Renderable;
+    addChild(child: Renderable, z?: number | undefined): Renderable;
     /**
      * Add a child to the container at the specified index<br>
      * (the list won't be sorted after insertion)
@@ -155,7 +155,7 @@ export default class Container extends Renderable {
      * me.game.world.forEach((child, index, array) => { ... });
      * me.game.world.forEach((child, index, array) => { ... }, thisArg);
      */
-    forEach(callback: Function, thisArg?: object, ...args: any[]): void;
+    forEach(callback: Function, thisArg?: object | undefined, ...args: any[]): void;
     /**
      * Swaps the position (z-index) of 2 children
      * @name swapChildren
@@ -298,7 +298,7 @@ export default class Container extends Renderable {
      * @param {Renderable} child
      * @param {boolean} [keepalive=false] - true to prevent calling child.destroy()
      */
-    public removeChild(child: Renderable, keepalive?: boolean): void;
+    public removeChild(child: Renderable, keepalive?: boolean | undefined): void;
     /**
      * Removes (and optionally destroys) a child from the container.<br>
      * (removal is immediate and unconditional)<br>
@@ -308,7 +308,7 @@ export default class Container extends Renderable {
      * @param {Renderable} child
      * @param {boolean} [keepalive=False] - True to prevent calling child.destroy()
      */
-    removeChildNow(child: Renderable, keepalive?: boolean): void;
+    removeChildNow(child: Renderable, keepalive?: boolean | undefined): void;
     /**
      * Automatically set the specified property of all childs to the given value
      * @name setChildsProperty
@@ -317,7 +317,7 @@ export default class Container extends Renderable {
      * @param {object} value - property value
      * @param {boolean} [recursive=false] - recursively apply the value to child containers if true
      */
-    setChildsProperty(prop: string, value: object, recursive?: boolean): void;
+    setChildsProperty(prop: string, value: object, recursive?: boolean | undefined): void;
     /**
      * Move the child in the group one step forward (z depth).
      * @name moveUp
@@ -353,7 +353,7 @@ export default class Container extends Renderable {
      * @public
      * @param {boolean} [recursive=false] - recursively sort all containers if true
      */
-    public sort(recursive?: boolean): void;
+    public sort(recursive?: boolean | undefined): void;
     /**
      * @ignore
      */

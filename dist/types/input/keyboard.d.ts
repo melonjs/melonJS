@@ -40,7 +40,7 @@ export function keyStatus(action: string): boolean;
  * // trigger a key press
  * me.input.triggerKeyEvent(me.input.KEY.LEFT, true);
  */
-export function triggerKeyEvent(keycode: number, status?: boolean, mouseButton?: number): void;
+export function triggerKeyEvent(keycode: number, status?: boolean | undefined, mouseButton?: number | undefined): void;
 /**
  * associate a user defined action to a keycode
  * @name bindKey
@@ -57,7 +57,7 @@ export function triggerKeyEvent(keycode: number, status?: boolean, mouseButton?:
  * me.input.bindKey(me.input.KEY.X,     "jump", true);
  * me.input.bindKey(me.input.KEY.F1,    "options", true, true);
  */
-export function bindKey(keycode: number, action: string, lock?: boolean, preventDefault?: boolean): void;
+export function bindKey(keycode: number, action: string, lock?: boolean | undefined, preventDefault?: boolean | undefined): void;
 /**
  * return the action associated with the given keycode
  * @name getBindingKey

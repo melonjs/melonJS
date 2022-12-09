@@ -64,7 +64,7 @@ export default class ParticleEmitter extends Container {
         frequency: number;
         duration: number;
         framesToSkip: number;
-    });
+    } | undefined);
     /**
      * the current (active) emitter settings
      * @public
@@ -148,7 +148,7 @@ export default class ParticleEmitter extends Container {
         duration: number;
         framesToSkip: number;
     }): void;
-    _defaultParticle: any;
+    _defaultParticle: object | undefined;
     /**
      * returns a random point on the x axis within the bounds of this emitter
      * @returns {number}

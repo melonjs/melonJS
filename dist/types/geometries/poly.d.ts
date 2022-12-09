@@ -111,7 +111,7 @@ export default class Polygon {
      * @param {number} [y=x]
      * @returns {Polygon} Reference to this object for method chaining
      */
-    scale(x: number, y?: number): Polygon;
+    scale(x: number, y?: number | undefined): Polygon;
     /**
      * Scale this Polygon by the given vector
      * @name scaleV
@@ -202,7 +202,7 @@ export default class Polygon {
      * @returns {Bounds} this shape bounding box Rectangle object
      */
     getBounds(): Bounds;
-    _bounds: any;
+    _bounds: object | undefined;
     /**
      * update the bounding box for this shape.
      * @ignore

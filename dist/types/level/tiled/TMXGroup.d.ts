@@ -78,5 +78,5 @@ export default class TMXGroup {
      * returns the object at the specified index
      * @ignore
      */
-    getObjectByIndex(idx: any): any;
+    getObjectByIndex(idx: any): object;
 }

@@ -35,7 +35,7 @@ declare class ObjectPool {
      * // add our users defined entities in the object pool and enable object recycling
      * me.pool.register("cherryentity", CherryEntity, true);
      */
-    register(className: string, classObj: object, recycling?: boolean): void;
+    register(className: string, classObj: object, recycling?: boolean | undefined): void;
     /**
      * Pull a new instance of the requested object (if added into the object pool)
      * @param {string} name - as used in {@link pool.register}
@@ -74,7 +74,7 @@ declare class ObjectPool {
      * @param {boolean} [throwOnError=true] - throw an exception if the object cannot be recycled
      * @returns {boolean} true if the object was successfully recycled in the object pool
      */
-    push(obj: object, throwOnError?: boolean): boolean;
+    push(obj: object, throwOnError?: boolean | undefined): boolean;
     /**
      * Check if an object with the provided name is registered
      * @param {string} name - of the registered object class

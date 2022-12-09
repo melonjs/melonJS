@@ -5,7 +5,7 @@
  * @param {ResponseObject} [response] - a user defined response object that will be populated if they intersect.
  * @returns {boolean} in case of collision, false otherwise
  */
-export function collisionCheck(objA: Renderable, response?: ResponseObject): boolean;
+export function collisionCheck(objA: Renderable, response?: ResponseObject | undefined): boolean;
 /**
  * Checks for object colliding with the given line
  * @ignore
@@ -30,5 +30,5 @@ export function collisionCheck(objA: Renderable, response?: ResponseObject): boo
  *        // ...
  *    }
  */
-export function rayCast(line: Line, result?: Array<Renderable>): Array<Renderable>;
+export function rayCast(line: Line, result?: Renderable[] | undefined): Array<Renderable>;
 import ResponseObject from "./response.js";

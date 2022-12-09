@@ -86,7 +86,7 @@ export default class Ellipse {
      * @param {number} [y=x]
      * @returns {Ellipse} Reference to this object for method chaining
      */
-    scale(x: number, y?: number): Ellipse;
+    scale(x: number, y?: number | undefined): Ellipse;
     /**
      * Scale this Ellipse by the specified vector.
      * @name scale

@@ -9,7 +9,7 @@ export default class Body {
      * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] - a initial shape, list of shapes, or JSON object defining the body
      * @param {Function} [onBodyUpdate] - callback for when the body is updated (e.g. add/remove shapes)
      */
-    constructor(ancestor: Renderable, shapes?: Rect | Rect[] | Polygon | Polygon[] | Line | Line[] | Ellipse | Ellipse[] | Point | Point[] | Bounds | Bounds[] | object, onBodyUpdate?: Function);
+    constructor(ancestor: Renderable, shapes?: Rect | Rect[] | Polygon | Polygon[] | Line | Line[] | Ellipse | Ellipse[] | Point | Point[] | Bounds | Bounds[] | object, onBodyUpdate?: Function | undefined);
     /**
      * a reference to the parent object that contains this body,
      * or undefined if it has not been added to one.
@@ -155,13 +155,13 @@ export default class Body {
      * @default false
      */
     public readonly jumping: boolean;
-    onBodyUpdate: Function;
+    onBodyUpdate: Function | undefined;
     /**
      * set the body as a static body
      * static body do not move automatically and do not check againt collision with others
      * @param {boolean} [isStatic=true]
      */
-    setStatic(isStatic?: boolean): void;
+    setStatic(isStatic?: boolean | undefined): void;
     /**
      * add a collision shape to this body <br>
      * (note: me.Rect objects will be converted to me.Polygon before being added)
@@ -180,13 +180,13 @@ export default class Body {
      * @param {number} [index=0] - the shape object for which to set the vertices
      * @param {boolean} [clear=true] - either to reset the body definition before adding the new vertices
      */
-    setVertices(vertices: Vector2d[], index?: number, clear?: boolean): void;
+    setVertices(vertices: Vector2d[], index?: number | undefined, clear?: boolean | undefined): void;
     /**
      * add the given vertices to the body shape
      * @param {Vector2d[]} vertices - an array of me.Vector2d points defining a convex hull
      * @param {number} [index=0] - the shape object for which to set the vertices
      */
-    addVertices(vertices: Vector2d[], index?: number): void;
+    addVertices(vertices: Vector2d[], index?: number | undefined): void;
     /**
      * add collision mesh based on a JSON object
      * (this will also apply any physic properties defined in the given JSON file)
@@ -200,13 +200,13 @@ export default class Body {
      * // or ...
      * this.body.fromJSON(me.loader.getJSON("shapesdef"), "banana");
      */
-    fromJSON(json: object, id?: string): number;
+    fromJSON(json: object, id?: string | undefined): number;
     /**
      * return the collision shape at the given index
      * @param {number} [index=0] - the shape object at the specified index
      * @returns {Polygon|Line|Ellipse} shape a shape object if defined
      */
-    getShape(index?: number): Polygon | Line | Ellipse;
+    getShape(index?: number | undefined): Polygon | Line | Ellipse;
     /**
      * returns the AABB bounding box for this body
      * @returns {Bounds} bounding box Rectangle object
@@ -237,7 +237,7 @@ export default class Body {
      * // disable collision detection with all other objects
      * body.setCollisionMask(me.collision.types.NO_OBJECT);
      */
-    setCollisionMask(bitmask?: number): void;
+    setCollisionMask(bitmask?: number | undefined): void;
     /**
      * define the collision type of the body for collision filtering
      * @see collision.types
@@ -269,7 +269,7 @@ export default class Body {
      * mySprite.body.forEach((shape, index, array) => { ... });
      * mySprite.body.forEach((shape, index, array) => { ... }, thisArg);
      */
-    forEach(callback: Function, thisArg?: object, ...args: any[]): void;
+    forEach(callback: Function, thisArg?: object | undefined, ...args: any[]): void;
     /**
      * Returns true if the any of the shape composing the body contains the given point.
      * @method Body#contains

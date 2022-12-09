@@ -18,7 +18,7 @@ declare namespace state {
      * @public
      * @param {boolean} [pauseTrack=false] - pause current track on screen stop.
      */
-    function stop(pauseTrack?: boolean): void;
+    function stop(pauseTrack?: boolean | undefined): void;
     /**
      * pause the current stage
      * @name pause
@@ -26,7 +26,7 @@ declare namespace state {
      * @public
      * @param {boolean} [music=false] - pause current music track on screen pause
      */
-    function pause(music?: boolean): void;
+    function pause(music?: boolean | undefined): void;
     /**
      * Restart the current stage from a full stop.
      * @name restart
@@ -34,7 +34,7 @@ declare namespace state {
      * @public
      * @param {boolean} [music=false] - resume current music track on screen resume
      */
-    function restart(music?: boolean): void;
+    function restart(music?: boolean | undefined): void;
     /**
      * resume the current stage
      * @name resume
@@ -42,7 +42,7 @@ declare namespace state {
      * @public
      * @param {boolean} [music=false] - resume current music track on screen resume
      */
-    function resume(music?: boolean): void;
+    function resume(music?: boolean | undefined): void;
     /**
      * return the running state of the state manager
      * @name isRunning
@@ -104,7 +104,7 @@ declare namespace state {
      *
      * me.state.set(me.state.MENU, new MenuScreen());
      */
-    function set(state: number, stage: Stage, start?: boolean): void;
+    function set(state: number, stage: Stage, start?: boolean | undefined): void;
     /**
      * returns the stage associated with the specified state
      * (or the current one if none is specified)
@@ -114,7 +114,7 @@ declare namespace state {
      * @param {number} [state] - State ID (see constants)
      * @returns {Stage}
      */
-    function get(state?: number): Stage;
+    function get(state?: number | undefined): Stage;
     /**
      * return a reference to the current stage<br>
      * useful to call a object specific method
@@ -133,7 +133,7 @@ declare namespace state {
      * @param {Color|string} color - a CSS color value
      * @param {number} [duration=1000] - expressed in milliseconds
      */
-    function transition(effect: string, color: any, duration?: number): void;
+    function transition(effect: string, color: any, duration?: number | undefined): void;
     /**
      * enable/disable transition for a specific state (by default enabled for all)
      * @name setTransition

@@ -7,7 +7,7 @@ export default class Vector2d {
      * @param {number} [x=0] - x value of the vector
      * @param {number} [y=0] - y value of the vector
      */
-    constructor(x?: number, y?: number);
+    constructor(x?: number | undefined, y?: number | undefined);
     /**
      * @ignore
      */
@@ -66,7 +66,7 @@ export default class Vector2d {
      * @param {number} [y=x]
      * @returns {Vector2d} Reference to this object for method chaining
      */
-    scale(x: number, y?: number): Vector2d;
+    scale(x: number, y?: number | undefined): Vector2d;
     /**
      * Convert this vector into isometric coordinate space
      * @name toIso

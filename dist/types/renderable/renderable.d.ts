@@ -216,7 +216,7 @@ export default class Renderable extends Rect {
      * this.tint.setColor(255, 255, 255);
      */
     get tint(): Color;
-    _tint: any;
+    _tint: object | undefined;
     set inViewport(arg: boolean);
     /**
      * Whether the renderable object is visible and within the viewport
@@ -254,14 +254,14 @@ export default class Renderable extends Rect {
      * @param {boolean} [flip=true] - `true` to flip this renderable.
      * @returns {Renderable} Reference to this object for method chaining
      */
-    flipX(flip?: boolean): Renderable;
+    flipX(flip?: boolean | undefined): Renderable;
     /**
      * flip the renderable on the vertical axis (around the center of the renderable)
      * @see Matrix2d#scaleY
      * @param {boolean} [flip=true] - `true` to flip this renderable.
      * @returns {Renderable} Reference to this object for method chaining
      */
-    flipY(flip?: boolean): Renderable;
+    flipY(flip?: boolean | undefined): Renderable;
     /**
      * multiply the renderable currentTransform with the given matrix
      * @see Renderable#currentTransform
@@ -304,7 +304,7 @@ export default class Renderable extends Rect {
      * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
      * @returns {Renderable} Reference to this object for method chaining
      */
-    scale(x: number, y?: number): Renderable;
+    scale(x: number, y?: number | undefined): Renderable;
     /**
      * scale the renderable around his anchor point
      * @param {Vector2d} v - scaling vector
@@ -327,7 +327,7 @@ export default class Renderable extends Rect {
      * @returns {Vector2d}
      */
     getAbsolutePosition(): Vector2d;
-    _absPos: any;
+    _absPos: object | undefined;
     /**
      * called when the anchor point value is changed
      * @private
@@ -356,7 +356,7 @@ export default class Renderable extends Rect {
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
      * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
-    draw(renderer: CanvasRenderer | WebGLRenderer, viewport?: Camera2d): void;
+    draw(renderer: CanvasRenderer | WebGLRenderer, viewport?: any): void;
     /**
      * restore the rendering context after drawing (automatically called by melonJS).
      * @see Renderable#preDraw

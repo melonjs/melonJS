@@ -11,14 +11,14 @@ export default class ObservableVector2d extends Vector2d {
      * @param {Function} settings.onUpdate - the callback to be executed when the vector is changed
      * @param {Function} [settings.scope] - the value to use as this when calling onUpdate
      */
-    constructor(x: number, y: number, settings: {
+    constructor(x: number | undefined, y: number | undefined, settings: {
         onUpdate: Function;
-        scope?: Function;
+        scope?: Function | undefined;
     });
     /**
      * @ignore
      */
-    onResetEvent(x: number, y: number, settings: any): ObservableVector2d;
+    onResetEvent(x: number | undefined, y: number | undefined, settings: any): ObservableVector2d;
     public set x(arg: number);
     /**
      * x value of the vector
@@ -58,9 +58,9 @@ export default class ObservableVector2d extends Vector2d {
      * @param {Function} [scope=null] - scope
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
-    setCallback(fn: Function, scope?: Function): ObservableVector2d;
-    onUpdate: Function;
-    scope: Function;
+    setCallback(fn: Function, scope?: Function | undefined): ObservableVector2d;
+    onUpdate: Function | undefined;
+    scope: Function | undefined;
     /**
      * Add the passed vector to this vector
      * @name add
@@ -85,7 +85,7 @@ export default class ObservableVector2d extends Vector2d {
      * @param {number} [y=x]
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
-    scale(x: number, y?: number): ObservableVector2d;
+    scale(x: number, y?: number | undefined): ObservableVector2d;
     /**
      * Multiply this vector values by the passed vector
      * @name scaleV
@@ -217,7 +217,7 @@ export default class ObservableVector2d extends Vector2d {
      * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
-    rotate(angle: number, v?: Vector2d | ObservableVector2d): ObservableVector2d;
+    rotate(angle: number, v?: Vector2d | ObservableVector2d | undefined): ObservableVector2d;
     /**
      * return the dot product of this vector and the passed one
      * @name dot

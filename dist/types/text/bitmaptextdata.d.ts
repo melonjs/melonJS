@@ -11,11 +11,11 @@ export default class BitmapTextData {
      * @ignore
      */
     onResetEvent(data: any): void;
-    padTop: number;
-    padRight: number;
-    padBottom: number;
-    padLeft: number;
-    lineHeight: number;
+    padTop: number | undefined;
+    padRight: number | undefined;
+    padBottom: number | undefined;
+    padLeft: number | undefined;
+    lineHeight: number | undefined;
     capHeight: any;
     descent: any;
     /**
@@ -24,7 +24,7 @@ export default class BitmapTextData {
      * @type {object}
      * @memberof BitmapTextData
      */
-    glyphs: object;
+    glyphs: object | undefined;
     /**
      * This parses the font data text and builds a map of glyphs containing the data for each character
      * @name parse

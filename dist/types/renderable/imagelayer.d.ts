@@ -23,10 +23,10 @@ export default class ImageLayer {
      */
     constructor(x: number, y: number, settings: {
         image: HTMLImageElement | HTMLCanvasElement | string;
-        name?: string;
-        z?: number;
+        name?: string | undefined;
+        z?: number | undefined;
         ratio?: number | Vector2d;
-        repeat?: string;
+        repeat?: string | undefined;
         anchorPoint?: number | Vector2d;
     });
     floating: boolean;
@@ -58,9 +58,9 @@ export default class ImageLayer {
      * @name ImageLayer#repeat
      */
     public get repeat(): string;
-    _repeat: string;
-    repeatX: boolean;
-    repeatY: boolean;
+    _repeat: string | undefined;
+    repeatX: boolean | undefined;
+    repeatY: boolean | undefined;
     onActivateEvent(): void;
     /**
      * resize the Image Layer to match the given size
@@ -75,13 +75,13 @@ export default class ImageLayer {
      * @ignore
      */
     createPattern(): void;
-    _pattern: CanvasPattern | import("../index.js").TextureAtlas;
+    _pattern: CanvasPattern | import("../index.js").TextureAtlas | undefined;
     /**
      * updateLayer function
      * @ignore
      */
     updateLayer(vpos: any): void;
-    isDirty: boolean;
+    isDirty: boolean | undefined;
     /**
      * override the default predraw function
      * as repeat and anchor are managed directly in the draw method
@@ -96,7 +96,7 @@ export default class ImageLayer {
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
      * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
-    protected draw(renderer: CanvasRenderer | WebGLRenderer, viewport?: Camera2d): void;
+    protected draw(renderer: CanvasRenderer | WebGLRenderer, viewport?: any): void;
     onDeactivateEvent(): void;
     /**
      * Destroy function<br>

@@ -24,5 +24,5 @@ export default class Glyph {
      * @ignore
      */
     setKerning(ch: any, value: any): void;
-    kerning: {};
+    kerning: {} | undefined;
 }

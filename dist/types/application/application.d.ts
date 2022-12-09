@@ -54,7 +54,7 @@ export default class Application {
     accumulatorUpdateDelta: number;
     stepSize: number;
     updateDelta: number;
-    lastUpdateStart: number;
+    lastUpdateStart: number | null;
     updateAverageDelta: number;
     /**
      * init the game instance (create a physic world, update starting time, etc..)

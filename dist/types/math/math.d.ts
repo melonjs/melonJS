@@ -102,7 +102,7 @@ export function weightedRandom(min: number, max: number): number;
  * // round a specific value to 2 digits
  * me.Math.round(10.33333, 2); // return 10.33
  */
-export function round(num: number, dec?: number): number;
+export function round(num: number, dec?: number | undefined): number;
 /**
  * check if the given value is close to the expected one
  * @public
@@ -118,7 +118,7 @@ export function round(num: number, dec?: number): number;
  *     // do something
  * }
  */
-export function toBeCloseTo(expected: number, actual: number, precision?: number): boolean;
+export function toBeCloseTo(expected: number, actual: number, precision?: number | undefined): boolean;
 /**
  * a collection of math utility functions
  * @namespace Math

@@ -48,7 +48,7 @@ export default class TMXTileset {
      * @private
      */
     private _lastUpdate;
-    image: HTMLImageElement;
+    image: HTMLImageElement | undefined;
     texture: any;
     atlas: any;
     /**
@@ -58,7 +58,7 @@ export default class TMXTileset {
      * @param {number} gid
      * @returns {Image} corresponding image or undefined
      */
-    public getTileImage(gid: number): new (width?: number, height?: number) => HTMLImageElement;
+    public getTileImage(gid: number): new (width?: number | undefined, height?: number | undefined) => HTMLImageElement;
     /**
      * set the tile properties
      * @ignore

@@ -19,13 +19,13 @@ export default class CanvasRenderer extends Renderer {
     constructor(options: {
         width: number;
         height: number;
-        canvas?: HTMLCanvasElement;
-        antiAlias?: boolean;
-        transparent?: boolean;
-        subPixel?: boolean;
-        textureSeamFix?: boolean;
-        zoomX?: number;
-        zoomY?: number;
+        canvas?: HTMLCanvasElement | undefined;
+        antiAlias?: boolean | undefined;
+        transparent?: boolean | undefined;
+        subPixel?: boolean | undefined;
+        textureSeamFix?: boolean | undefined;
+        zoomX?: number | undefined;
+        zoomY?: number | undefined;
     });
     context: CanvasRenderingContext2D;
     cache: TextureCache;
@@ -52,7 +52,7 @@ export default class CanvasRenderer extends Renderer {
      * @param {string} [mode="normal"] - blend mode : "normal", "multiply", "lighter, "additive", "screen"
      * @param {CanvasRenderingContext2D} [context]
      */
-    setBlendMode(mode?: string, context?: CanvasRenderingContext2D): void;
+    setBlendMode(mode?: string | undefined, context?: CanvasRenderingContext2D | undefined): void;
     /**
      * Clears the main framebuffer with the given color
      * @name clearColor
@@ -60,7 +60,7 @@ export default class CanvasRenderer extends Renderer {
      * @param {Color|string} [color="#000000"] - CSS color.
      * @param {boolean} [opaque=false] - Allow transparency [default] or clear the surface completely [true]
      */
-    clearColor(color?: Color | string, opaque?: boolean): void;
+    clearColor(color?: string | Color | undefined, opaque?: boolean | undefined): void;
     /**
      * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
      * @name clearRect
@@ -85,7 +85,7 @@ export default class CanvasRenderer extends Renderer {
      * var vertical   = renderer.createPattern(image, "repeat-y");
      * var basic      = renderer.createPattern(image, "no-repeat");
      */
-    createPattern(image: new (width?: number, height?: number) => HTMLImageElement, repeat: string): CanvasPattern;
+    createPattern(image: new (width?: number | undefined, height?: number | undefined) => HTMLImageElement, repeat: string): CanvasPattern;
     /**
      * Draw an image onto the main using the canvas api
      * @name drawImage
@@ -107,7 +107,7 @@ export default class CanvasRenderer extends Renderer {
      * // Clip the image and position the clipped part on the canvas:
      * renderer.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
      */
-    drawImage(image: new (width?: number, height?: number) => HTMLImageElement, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: number, dh: number): void;
+    drawImage(image: new (width?: number | undefined, height?: number | undefined) => HTMLImageElement, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: number, dh: number): void;
     /**
      * Draw a pattern within the given rectangle.
      * @name drawPattern
@@ -132,7 +132,7 @@ export default class CanvasRenderer extends Renderer {
      * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
-    strokeArc(x: number, y: number, radius: number, start: number, end: number, antiClockwise?: boolean, fill?: boolean): void;
+    strokeArc(x: number, y: number, radius: number, start: number, end: number, antiClockwise?: boolean | undefined, fill?: boolean | undefined): void;
     /**
      * Fill an arc at the specified coordinates with given radius, start and end points
      * @name fillArc
@@ -144,7 +144,7 @@ export default class CanvasRenderer extends Renderer {
      * @param {number} end - end angle in radians
      * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
      */
-    fillArc(x: number, y: number, radius: number, start: number, end: number, antiClockwise?: boolean): void;
+    fillArc(x: number, y: number, radius: number, start: number, end: number, antiClockwise?: boolean | undefined): void;
     /**
      * Stroke an ellipse at the specified coordinates with given radius
      * @name strokeEllipse
@@ -155,7 +155,7 @@ export default class CanvasRenderer extends Renderer {
      * @param {number} h - vertical radius of the ellipse
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
-    strokeEllipse(x: number, y: number, w: number, h: number, fill?: boolean): void;
+    strokeEllipse(x: number, y: number, w: number, h: number, fill?: boolean | undefined): void;
     /**
      * Fill an ellipse at the specified coordinates with given radius
      * @name fillEllipse
@@ -193,7 +193,7 @@ export default class CanvasRenderer extends Renderer {
      * @param {Polygon} poly - the shape to draw
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
-    strokePolygon(poly: Polygon, fill?: boolean): void;
+    strokePolygon(poly: Polygon, fill?: boolean | undefined): void;
     /**
      * Fill the given me.Polygon on the screen
      * @name fillPolygon
@@ -211,7 +211,7 @@ export default class CanvasRenderer extends Renderer {
      * @param {number} height
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
-    strokeRect(x: number, y: number, width: number, height: number, fill?: boolean): void;
+    strokeRect(x: number, y: number, width: number, height: number, fill?: boolean | undefined): void;
     /**
      * Draw a filled rectangle at the specified coordinates
      * @name fillRect
@@ -233,7 +233,7 @@ export default class CanvasRenderer extends Renderer {
      * @param {number} radius
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
-    strokeRoundRect(x: number, y: number, width: number, height: number, radius: number, fill?: boolean): void;
+    strokeRoundRect(x: number, y: number, width: number, height: number, radius: number, fill?: boolean | undefined): void;
     /**
      * Draw a rounded filled rectangle at the specified coordinates
      * @name fillRoundRect
@@ -370,7 +370,7 @@ export default class CanvasRenderer extends Renderer {
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - the shape defining the mask to be applied
      * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
      */
-    setMask(mask?: Rect | RoundRect | Polygon | Line | Ellipse, invert?: boolean): void;
+    setMask(mask?: Rect | RoundRect | Polygon | Line | Ellipse, invert?: boolean | undefined): void;
 }
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture/cache.js";

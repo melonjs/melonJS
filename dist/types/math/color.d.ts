@@ -9,12 +9,12 @@ export default class Color {
      * @param {number} [b=0] - blue component
      * @param {number} [alpha=1.0] - alpha value
      */
-    constructor(r?: number, g?: number, b?: number, alpha?: number);
+    constructor(r?: number | undefined, g?: number | undefined, b?: number | undefined, alpha?: number | undefined);
     /**
      * @ignore
      */
     onResetEvent(r?: number, g?: number, b?: number, alpha?: number): Color;
-    glArray: Float32Array;
+    glArray: Float32Array | undefined;
     set r(arg: number);
     /**
      * Color Red Component [0 .. 255]
@@ -47,7 +47,7 @@ export default class Color {
      * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
      * @returns {Color} Reference to this object for method chaining
      */
-    setColor(r: number, g: number, b: number, alpha?: number): Color;
+    setColor(r: number, g: number, b: number, alpha?: number | undefined): Color;
     /**
      * set this color to the specified HSV value
      * @param {number} h - hue (a value from 0 to 1)
@@ -106,7 +106,7 @@ export default class Color {
      * @param {number} [max=255] - maxmium value for the random range
      * @returns {Color} Reference to this object for method chaining
      */
-    random(min?: number, max?: number): Color;
+    random(min?: number | undefined, max?: number | undefined): Color;
     /**
      * Return true if the r,g,b,a values of this color are equal with the
      * given one.
@@ -134,13 +134,13 @@ export default class Color {
      * @param {boolean} [argb = false] - true if format is #ARGB, or #AARRGGBB (as opposed to #RGBA or #RGGBBAA)
      * @returns {Color} Reference to this object for method chaining
      */
-    parseHex(hexColor: string, argb?: boolean): Color;
+    parseHex(hexColor: string, argb?: boolean | undefined): Color;
     /**
      * Pack this color into a Uint32 ARGB representation
      * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
      * @returns {number}
      */
-    toUint32(alpha?: number): number;
+    toUint32(alpha?: number | undefined): number;
     /**
      * return an array representation of this object
      * @returns {Float32Array}
@@ -166,5 +166,5 @@ export default class Color {
      * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
      * @returns {string}
      */
-    toRGBA(alpha?: number): string;
+    toRGBA(alpha?: number | undefined): string;
 }

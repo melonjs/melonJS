@@ -8,7 +8,7 @@ export default class Vector3d {
      * @param {number} [y=0] - y value of the vector
      * @param {number} [z=0] - z value of the vector
      */
-    constructor(x?: number, y?: number, z?: number);
+    constructor(x?: number | undefined, y?: number | undefined, z?: number | undefined);
     /**
      * @ignore
      */
@@ -29,7 +29,7 @@ export default class Vector3d {
      * @param {number} [z=0]
      * @returns {Vector3d} Reference to this object for method chaining
      */
-    set(x: number, y: number, z?: number): Vector3d;
+    set(x: number, y: number, z?: number | undefined): Vector3d;
     /**
      * set the Vector x and y properties to 0
      * @name setZero
@@ -70,7 +70,7 @@ export default class Vector3d {
      * @param {number} [z=1]
      * @returns {Vector3d} Reference to this object for method chaining
      */
-    scale(x: number, y?: number, z?: number): Vector3d;
+    scale(x: number, y?: number | undefined, z?: number | undefined): Vector3d;
     /**
      * Multiply this vector values by the passed vector
      * @name scaleV

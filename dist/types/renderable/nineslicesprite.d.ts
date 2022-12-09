@@ -35,22 +35,22 @@ export default class NineSliceSprite extends Sprite {
     constructor(x: number, y: number, settings: {
         width: number;
         height: number;
-        insetx?: number;
-        insety?: number;
+        insetx?: number | undefined;
+        insety?: number | undefined;
         image: HTMLImageElement | HTMLCanvasElement | TextureAtlas | string;
-        name?: string;
-        region?: string;
-        framewidth?: number;
-        frameheight?: number;
+        name?: string | undefined;
+        region?: string | undefined;
+        framewidth?: number | undefined;
+        frameheight?: number | undefined;
         tint?: string | Color;
-        flipX?: number;
-        flipY?: number;
-        anchorPoint?: Vector2d;
+        flipX?: number | undefined;
+        flipY?: number | undefined;
+        anchorPoint?: any;
     });
     nss_width: number;
     nss_height: number;
-    insetx: number;
-    insety: number;
+    insetx: number | undefined;
+    insety: number | undefined;
     /**
      * @ignore
      */

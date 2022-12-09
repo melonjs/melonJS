@@ -177,7 +177,7 @@ export default class TMXObject {
     setTile(tilesets: any): void;
     framewidth: any;
     frameheight: any;
-    tile: Tile;
+    tile: Tile | undefined;
     /**
      * parses the TMX shape definition and returns a corresponding array of me.Shape object
      * @name parseTMXShapes

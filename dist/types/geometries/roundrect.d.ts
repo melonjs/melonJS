@@ -11,7 +11,7 @@ export default class RoundRect extends Rect {
      * @param {number} height - the rectangle height
      * @param {number} [radius=20] - the radius of the rounded corner
      */
-    constructor(x: number, y: number, width: number, height: number, radius?: number);
+    constructor(x: number, y: number, width: number, height: number, radius?: number | undefined);
     public set radius(arg: number);
     /**
      * the radius of the rounded corner
@@ -24,7 +24,7 @@ export default class RoundRect extends Rect {
     public get radius(): number;
     /** @ignore */
     onResetEvent(x: any, y: any, w: any, h: any, radius: any): void;
-    _radius: number;
+    _radius: number | undefined;
     /**
      * copy the position, size and radius of the given rounded rectangle into this one
      * @name copy

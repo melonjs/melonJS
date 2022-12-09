@@ -39,26 +39,26 @@ export default class Tween {
      */
     setProperties(object: any): void;
     _object: any;
-    _valuesStart: {};
-    _valuesEnd: any;
-    _valuesStartRepeat: {};
+    _valuesStart: {} | undefined;
+    _valuesEnd: {} | undefined;
+    _valuesStartRepeat: {} | undefined;
     _duration: any;
-    _repeat: number;
-    _yoyo: boolean;
+    _repeat: number | undefined;
+    _yoyo: boolean | undefined;
     _reversed: any;
-    _delayTime: number;
+    _delayTime: number | undefined;
     _startTime: any;
     _easingFunction: any;
     _interpolationFunction: any;
-    _chainedTweens: IArguments | any[];
-    _onStartCallback: Function;
-    _onStartCallbackFired: boolean;
-    _onUpdateCallback: Function;
-    _onCompleteCallback: Function;
+    _chainedTweens: IArguments | any[] | undefined;
+    _onStartCallback: Function | null | undefined;
+    _onStartCallbackFired: boolean | undefined;
+    _onUpdateCallback: Function | null | undefined;
+    _onCompleteCallback: Function | null | undefined;
     _tweenTimeTracker: any;
-    isPersistent: boolean;
-    updateWhenPaused: boolean;
-    isRenderable: boolean;
+    isPersistent: boolean | undefined;
+    updateWhenPaused: boolean | undefined;
+    isRenderable: boolean | undefined;
     /**
      * @ignore
      */
@@ -89,7 +89,7 @@ export default class Tween {
      * @param {boolean} [options.autoStart] - allow this tween to start automatically. Otherwise call me.Tween.start().
      * @returns {Tween} this instance for object chaining
      */
-    public to(properties: object, options?: object | number): Tween;
+    public to(properties: object, options?: number | object | undefined): Tween;
     /**
      * start the tween
      * @name start
@@ -98,7 +98,7 @@ export default class Tween {
      * @param {number} [time] - the current time when the tween was started
      * @returns {Tween} this instance for object chaining
      */
-    public start(time?: number): Tween;
+    public start(time?: number | undefined): Tween;
     /**
      * stop the tween
      * @name stop

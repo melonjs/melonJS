@@ -11,7 +11,7 @@ export default class QuadTree {
      * @param {number} [max_levels=4] - total max levels inside root Quadtree
      * @param {number} [level] - deepth level, required for subnodes
      */
-    constructor(world: World, bounds: Bounds, max_objects?: number, max_levels?: number, level?: number);
+    constructor(world: World, bounds: Bounds, max_objects?: number | undefined, max_levels?: number | undefined, level?: number | undefined);
     world: World;
     bounds: Bounds;
     max_objects: number;
@@ -45,7 +45,7 @@ export default class QuadTree {
      * @param {object} [fn] - a sorting function for the returned array
      * @returns {object[]} array with all detected objects
      */
-    retrieve(item: object, fn?: object): object[];
+    retrieve(item: object, fn?: object | undefined): object[];
     /**
      * Remove the given item from the quadtree.
      * (this function won't recalculate the impacted node)
@@ -75,5 +75,5 @@ export default class QuadTree {
      * @memberof QuadTree
      * @param {Bounds} [bounds=this.bounds] - the bounds to be cleared
      */
-    clear(bounds?: Bounds): void;
+    clear(bounds?: any): void;
 }

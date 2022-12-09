@@ -6,7 +6,7 @@ export default class Bounds {
     /**
      * @param {Vector2d[]} [vertices] - an array of me.Vector2d points
      */
-    constructor(vertices?: Vector2d[]);
+    constructor(vertices?: Vector2d[] | undefined);
     _center: Vector2d;
     /**
      * @ignore
@@ -15,11 +15,11 @@ export default class Bounds {
     min: {
         x: number;
         y: number;
-    };
+    } | undefined;
     max: {
         x: number;
         y: number;
-    };
+    } | undefined;
     /**
      * reset the bound
      * @name clear
@@ -142,7 +142,7 @@ export default class Bounds {
      * @param {Vector2d[]} vertices - an array of me.Vector2d points
      * @param {boolean} [clear=false] - either to reset the bounds before adding the new vertices
      */
-    add(vertices: Vector2d[], clear?: boolean): void;
+    add(vertices: Vector2d[], clear?: boolean | undefined): void;
     /**
      * add the given bounds to the bounds definition.
      * @name addBounds
@@ -150,7 +150,7 @@ export default class Bounds {
      * @param {Bounds} bounds
      * @param {boolean} [clear=false] - either to reset the bounds before adding the new vertices
      */
-    addBounds(bounds: Bounds, clear?: boolean): void;
+    addBounds(bounds: Bounds, clear?: boolean | undefined): void;
     /**
      * add the given point to the bounds definition.
      * @name addPoint
@@ -158,7 +158,7 @@ export default class Bounds {
      * @param {Vector2d|Point} point - the point to be added to the bounds
      * @param {Matrix2d} [m] - an optional transform to apply to the given point (only if the given point is a vector)
      */
-    addPoint(point: Vector2d | Point, m?: Matrix2d): void;
+    addPoint(point: Vector2d | Point, m?: any): void;
     /**
      * add the given quad coordinates to this bound definition, multiplied by the given matrix
      * @name addFrame
@@ -169,7 +169,7 @@ export default class Bounds {
      * @param {number} y1 - bottom y coordinates of the quad
      * @param {Matrix2d} [m] - an optional transform to apply to the given frame coordinates
      */
-    addFrame(x0: number, y0: number, x1: number, y1: number, m?: Matrix2d): void;
+    addFrame(x0: number, y0: number, x1: number, y1: number, m?: any): void;
     /**
      * Returns true if the bounds contains the given point.
      * @name contains

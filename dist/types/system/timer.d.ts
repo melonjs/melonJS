@@ -67,7 +67,7 @@ declare class Timer {
      * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
      * me.timer.setTimeout(myFunction, 1000, true, param1, param2);
      */
-    setTimeout(fn: Function, delay: number, pauseable?: boolean, ...args: any[]): number;
+    setTimeout(fn: Function, delay: number, pauseable?: boolean | undefined, ...args: any[]): number;
     /**
      * Calls a function continously at the specified interval.  See setTimeout to call function a single time.
      * @param {Function} fn - the function to execute
@@ -81,7 +81,7 @@ declare class Timer {
      * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
      * me.timer.setInterval(myFunction, 1000, true, param1, param2);
      */
-    setInterval(fn: Function, delay: number, pauseable?: boolean, ...args: any[]): number;
+    setInterval(fn: Function, delay: number, pauseable?: boolean | undefined, ...args: any[]): number;
     /**
      * Clears the delay set by me.timer.setTimeout().
      * @param {number} timeoutID - ID of the timeout to be cleared

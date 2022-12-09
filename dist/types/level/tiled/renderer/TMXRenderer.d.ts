@@ -30,7 +30,7 @@ export default class TMXRenderer {
      * @param {TMXLayer} [layer] - calculate the bounding rect for a specific layer (will return a new bounds object)
      * @returns {Bounds}
      */
-    public getBounds(layer?: TMXLayer): Bounds;
+    public getBounds(layer?: TMXLayer | undefined): Bounds;
     /**
      * return the tile position corresponding to the specified pixel
      * @name TMXRenderer#pixelToTileCoords
@@ -40,7 +40,7 @@ export default class TMXRenderer {
      * @param {Vector2d} [v] - an optional vector object where to put the return values
      * @returns {Vector2d}
      */
-    public pixelToTileCoords(x: number, y: number, v?: Vector2d): Vector2d;
+    public pixelToTileCoords(x: number, y: number, v?: any): Vector2d;
     /**
      * return the pixel position corresponding of the specified tile
      * @name TMXRenderer#tileToPixelCoords
@@ -50,7 +50,7 @@ export default class TMXRenderer {
      * @param {Vector2d} [v] - an optional vector object where to put the return values
      * @returns {Vector2d}
      */
-    public tileToPixelCoords(col: number, row: number, v?: Vector2d): Vector2d;
+    public tileToPixelCoords(col: number, row: number, v?: any): Vector2d;
     /**
      * draw the given tile at the specified layer
      * @name TMXRenderer#drawTile

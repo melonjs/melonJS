@@ -37,14 +37,14 @@ export default class UIBaseElement extends Container {
      * @default false
      */
     hover: boolean;
-    holdTimeout: number;
+    holdTimeout: number | null;
     released: boolean;
     /**
      * function callback for the pointerdown event
      * @ignore
      */
-    clicked(event: any): boolean;
-    dirty: boolean;
+    clicked(event: any): boolean | undefined;
+    dirty: boolean | undefined;
     /**
      * function called when the object is pressed (to be extended)
      * @param {Pointer} event - the event object
@@ -75,7 +75,7 @@ export default class UIBaseElement extends Container {
      * function callback for the pointerup event
      * @ignore
      */
-    release(event: any): boolean;
+    release(event: any): boolean | undefined;
     /**
      * function called when the object is pressed and released (to be extended)
      * @returns {boolean} return false if we need to stop propagating the event

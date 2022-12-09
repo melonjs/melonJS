@@ -11,7 +11,7 @@ declare namespace save {
      * // get or set the value through me.save
      * me.save.score = 1000;
      */
-    function add(props: any): void;
+    function add(props: object): void;
     /**
      * Remove a key from localStorage
      * @name remove

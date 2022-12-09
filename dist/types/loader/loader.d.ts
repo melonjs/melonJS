@@ -1,8 +1,8 @@
 export default loader;
 declare namespace loader {
     const nocache: string;
-    const onload: any;
-    const onProgress: any;
+    const onload: undefined;
+    const onProgress: undefined;
     const crossOrigin: string;
     const withCredentials: boolean;
     /**
@@ -34,7 +34,7 @@ declare namespace loader {
      * // change the base URL absolute address for all object types
      * me.loader.setBaseURL("*", "http://myurl.com/")
      */
-    function setBaseURL(type: string, url?: string): void;
+    function setBaseURL(type: string, url?: string | undefined): void;
     /**
      * set all the specified game resources to be preloaded.
      * @name preload
@@ -84,8 +84,8 @@ declare namespace loader {
         name: string;
         type: string;
         src: string;
-        stream?: boolean;
-    }[], onload?: Function, switchToLoadState?: boolean): void;
+        stream?: boolean | undefined;
+    }[], onload?: Function | undefined, switchToLoadState?: boolean | undefined): void;
     /**
      * Load a single resource (to be used if you need to load additional resource during the game)
      * @name load
@@ -117,8 +117,8 @@ declare namespace loader {
         name: string;
         type: string;
         src: string;
-        stream?: boolean;
-    }, onload?: Function, onerror?: Function): number;
+        stream?: boolean | undefined;
+    }, onload?: Function | undefined, onerror?: Function | undefined): number;
     /**
      * unload specified resource to free memory
      * @name unload
@@ -150,7 +150,7 @@ declare namespace loader {
      * @param {string} elt - name of the tmx/tsx element ("map1");
      * @returns {object} requested element or null if not found
      */
-    function getTMX(elt: string): any;
+    function getTMX(elt: string): object;
     /**
      * return the specified Binary object
      * @name getBinary
@@ -159,7 +159,7 @@ declare namespace loader {
      * @param {string} elt - name of the binary object ("ymTrack");
      * @returns {object} requested element or null if not found
      */
-    function getBinary(elt: string): any;
+    function getBinary(elt: string): object;
     /**
      * return the specified Image Object
      * @name getImage
@@ -177,5 +177,5 @@ declare namespace loader {
      * @param {string} elt - name of the json file to load
      * @returns {object}
      */
-    function getJSON(elt: string): any;
+    function getJSON(elt: string): object;
 }

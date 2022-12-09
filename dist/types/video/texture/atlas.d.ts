@@ -59,12 +59,12 @@ export class TextureAtlas {
      *     },
      *     me.loader.getImage("spritesheet")
      */
-    constructor(atlases: object | object[], src?: HTMLImageElement | HTMLCanvasElement | string | HTMLImageElement[] | HTMLCanvasElement[] | string[], cache?: boolean);
+    constructor(atlases: object | object[], src?: string | string[] | HTMLCanvasElement | HTMLImageElement | HTMLImageElement[] | HTMLCanvasElement[] | undefined, cache?: boolean | undefined);
     /**
      * to identify the atlas format (e.g. texture packer)
      * @ignore
      */
-    format: string;
+    format: string | null;
     /**
      * the texture source(s) itself
      * @type {Map}
@@ -93,7 +93,7 @@ export class TextureAtlas {
      * @param {string} [name] - atlas name in case of multipack textures
      * @returns {object}
      */
-    getAtlas(name?: string): object;
+    getAtlas(name?: string | undefined): object;
     /**
      * return the format of the atlas dictionnary
      * @returns {string} will return "texturepacker", or "ShoeBox", or "melonJS", or "Spritesheet (fixed cell size)"
@@ -104,7 +104,7 @@ export class TextureAtlas {
      * @param {object} [region] - region name in case of multipack textures
      * @returns {HTMLImageElement|HTMLCanvasElement}
      */
-    getTexture(region?: object): HTMLImageElement | HTMLCanvasElement;
+    getTexture(region?: object | undefined): HTMLImageElement | HTMLCanvasElement;
     /**
      * add a region to the atlas
      * @param {string} name - region mame
@@ -121,7 +121,7 @@ export class TextureAtlas {
      * @param {string} [atlas] - name of a specific atlas where to search for the region
      * @returns {object}
      */
-    getRegion(name: string, atlas?: string): object;
+    getRegion(name: string, atlas?: string | undefined): object;
     /**
      * return the uvs mapping for the given region
      * @param {object} name - region (or frame) name
@@ -165,7 +165,7 @@ export class TextureAtlas {
      *    true
      * );
      */
-    createSpriteFromName(name: string, settings?: object, nineSlice?: boolean): Sprite | NineSliceSprite;
+    createSpriteFromName(name: string, settings?: object | undefined, nineSlice?: boolean | undefined): Sprite | NineSliceSprite;
     /**
      * Create an animation object using the first region found using all specified names
      * @param {string[]|number[]} names - list of names for each sprite
@@ -196,6 +196,6 @@ export class TextureAtlas {
      * // set the renderable position to bottom center
      * sprite.anchorPoint.set(0.5, 1.0);
      */
-    createAnimationFromName(names: string[] | number[], settings?: object): Sprite;
+    createAnimationFromName(names: string[] | number[], settings?: object | undefined): Sprite;
 }
 import Sprite from "./../../renderable/sprite.js";

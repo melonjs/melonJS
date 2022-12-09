@@ -70,7 +70,7 @@ export default class Path2D {
      * @param {number} endAngle - the angle at which the arc ends in radians, measured from the positive x-axis.
      * @param {boolean} [anticlockwise=false] - an optional boolean value. If true, draws the arc counter-clockwise between the start and end angles.
      */
-    arc(x: number, y: number, radius: number, startAngle: number, endAngle: number, anticlockwise?: boolean): void;
+    arc(x: number, y: number, radius: number, startAngle: number, endAngle: number, anticlockwise?: boolean | undefined): void;
     /**
      * adds a circular arc to the path with the given control points and radius, connected to the previous point by a straight line.
      * @name arcTo
@@ -96,7 +96,7 @@ export default class Path2D {
      * @param {number} endAngle - the angle at which the ellipse ends, measured clockwise from the positive x-axis and expressed in radians.
      * @param {boolean} [anticlockwise=false] - an optional boolean value which, if true, draws the ellipse counterclockwise (anticlockwise).
      */
-    ellipse(x: number, y: number, radiusX: number, radiusY: number, rotation: number, startAngle: number, endAngle: number, anticlockwise?: boolean): void;
+    ellipse(x: number, y: number, radiusX: number, radiusY: number, rotation: number, startAngle: number, endAngle: number, anticlockwise?: boolean | undefined): void;
     /**
      * creates a path for a rectangle at position (x, y) with a size that is determined by width and height.
      * @name rect

@@ -22,7 +22,7 @@ export default class Tile extends Bounds {
      * the tile transformation matrix (if defined)
      * @ignore
      */
-    currentTransform: Matrix2d;
+    currentTransform: Matrix2d | null;
     col: number;
     row: number;
     /**
@@ -72,7 +72,7 @@ export default class Tile extends Bounds {
      * @param {object} [settings] - see {@link Sprite}
      * @returns {Renderable} a me.Sprite object
      */
-    public getRenderable(settings?: object): Renderable;
+    public getRenderable(settings?: object | undefined): Renderable;
 }
 import Bounds from "./../../physics/bounds.js";
 import Matrix2d from "./../../math/matrix2.js";

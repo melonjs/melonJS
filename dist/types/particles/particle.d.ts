@@ -12,18 +12,18 @@ export default class Particle extends Renderable {
      * @ignore
      */
     onResetEvent(emitter: any, newInstance?: boolean): void;
-    vel: any;
+    vel: object | undefined;
     image: any;
     life: any;
     startLife: any;
-    startScale: number;
-    endScale: number;
+    startScale: number | undefined;
+    endScale: number | undefined;
     gravity: any;
     wind: any;
     followTrajectory: any;
     onlyInViewport: any;
-    _deltaInv: number;
-    angle: number;
+    _deltaInv: number | undefined;
+    angle: number | undefined;
     /**
      * @ignore
      */

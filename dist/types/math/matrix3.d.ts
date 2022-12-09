@@ -11,7 +11,7 @@ export default class Matrix3d {
      * @ignore
      */
     onResetEvent(...args: any[]): void;
-    val: Float32Array;
+    val: Float32Array | undefined;
     /**
      * tx component of the matrix
      * @public
@@ -145,7 +145,7 @@ export default class Matrix3d {
      * @param {number} [z=0] - a number representing the depth vector
      * @returns {Matrix3d} Reference to this object for method chaining
      */
-    scale(x: number, y?: number, z?: number): Matrix3d;
+    scale(x: number, y?: number | undefined, z?: number | undefined): Matrix3d;
     /**
      * adds a 2D scaling transformation.
      * @name scaleV

@@ -26,16 +26,16 @@ export default class Text extends Renderable {
     constructor(x: number, y: number, settings: {
         font: string;
         size: number | string;
-        fillStyle?: Color | string;
-        strokeStyle?: Color | string;
-        lineWidth?: number;
-        textAlign?: string;
-        textBaseline?: string;
-        lineHeight?: number;
-        anchorPoint?: Vector2d;
-        offScreenCanvas?: boolean;
-        wordWrapWidth?: number;
-        text?: (string | string[]);
+        fillStyle?: string | Color | undefined;
+        strokeStyle?: string | Color | undefined;
+        lineWidth?: number | undefined;
+        textAlign?: string | undefined;
+        textBaseline?: string | undefined;
+        lineHeight?: number | undefined;
+        anchorPoint?: any;
+        offScreenCanvas?: boolean | undefined;
+        wordWrapWidth?: number | undefined;
+        text?: string | string[] | undefined;
     });
     /** @ignore */
     onResetEvent(x: any, y: any, settings: any): void;
@@ -47,7 +47,7 @@ export default class Text extends Renderable {
      * @type {number}
      * @default 1
      */
-    public lineWidth: number;
+    public lineWidth: number | undefined;
     /**
      * Set the default text alignment (or justification),<br>
      * possible values are "left", "right", and "center".<br>
@@ -55,7 +55,7 @@ export default class Text extends Renderable {
      * @type {string}
      * @default "left"
      */
-    public textAlign: string;
+    public textAlign: string | undefined;
     /**
      * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
      * possible values are "top", "hanging, "middle, "alphabetic, "ideographic, "bottom"<br>
@@ -63,7 +63,7 @@ export default class Text extends Renderable {
      * @type {string}
      * @default "top"
      */
-    public textBaseline: string;
+    public textBaseline: string | undefined;
     /**
      * Set the line spacing height (when displaying multi-line strings). <br>
      * Current font height will be multiplied with this value to set the line height.
@@ -71,7 +71,7 @@ export default class Text extends Renderable {
      * @type {number}
      * @default 1.0
      */
-    public lineHeight: number;
+    public lineHeight: number | undefined;
     /**
      * whether to draw the font to a indidividual offscreen canvas texture first <br>
      * Note: this will improve performances when using WebGL, but will impact
@@ -80,7 +80,7 @@ export default class Text extends Renderable {
      * @type {boolean}
      * @default false
      */
-    public offScreenCanvas: boolean;
+    public offScreenCanvas: boolean | undefined;
     /**
      * the maximum length in CSS pixel for a single segment of text.
      * (use -1 to disable word wrapping)
@@ -88,7 +88,7 @@ export default class Text extends Renderable {
      * @type {number}
      * @default -1
      */
-    public wordWrapWidth: number;
+    public wordWrapWidth: number | undefined;
     /**
      * the text to be displayed
      * @private
@@ -100,9 +100,9 @@ export default class Text extends Renderable {
      * @type {number}
      * @default 10
      */
-    public fontSize: number;
-    canvasTexture: any;
-    metrics: TextMetrics;
+    public fontSize: number | undefined;
+    canvasTexture: object | undefined;
+    metrics: TextMetrics | undefined;
     /**
      * make the font bold
      * @returns {Text} this object for chaining
@@ -123,7 +123,7 @@ export default class Text extends Renderable {
      * font.setFont("Arial", 20);
      * font.setFont("Arial", "1.5em");
      */
-    setFont(font: string, size?: number | string): Text;
+    setFont(font: string, size?: string | number | undefined): Text;
     /**
      * change the text to be displayed
      * @param {number|string|string[]} value - a string, or an array of strings
@@ -137,7 +137,7 @@ export default class Text extends Renderable {
      * @param {string} [text] - the text to be measured
      * @returns {TextMetrics} a TextMetrics object defining the dimensions of the given piece of text
      */
-    measureText(renderer: CanvasRenderer | WebGLRenderer, text?: string): TextMetrics;
+    measureText(renderer: CanvasRenderer | WebGLRenderer, text?: string | undefined): TextMetrics;
     /**
      * draw a text at the specified coord
      * @param {CanvasRenderer|WebGLRenderer} renderer - Reference to the destination renderer instance
@@ -146,7 +146,7 @@ export default class Text extends Renderable {
      * @param {number} [y]
      * @param {boolean} [stroke=false] - draw stroke the the text if true
      */
-    draw(renderer: CanvasRenderer | WebGLRenderer, text?: string, x?: number, y?: number, stroke?: boolean): void;
+    draw(renderer: CanvasRenderer | WebGLRenderer, text?: string | undefined, x?: number | undefined, y?: number | undefined, stroke?: boolean | undefined): void;
     /**
      * draw a stroke text at the specified coord, as defined <br>
      * by the `lineWidth` and `fillStroke` properties. <br>
@@ -160,7 +160,7 @@ export default class Text extends Renderable {
     /**
      * @ignore
      */
-    _drawFont(context: any, text: any, x: any, y: any, stroke?: boolean): TextMetrics;
+    _drawFont(context: any, text: any, x: any, y: any, stroke?: boolean): TextMetrics | undefined;
     /**
      * Destroy function
      * @ignore

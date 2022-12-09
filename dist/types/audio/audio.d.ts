@@ -17,7 +17,7 @@
  *     return;
  * }
  */
-export function init(format?: string): boolean;
+export function init(format?: string | undefined): boolean;
 /**
  * check if the given audio format is supported
  * @function audio.hasFormat
@@ -70,7 +70,7 @@ export function load(sound: any, html5: any, onload_cb: any, onerror_cb: any): n
  * // play the "gameover_sfx" audio clip with a lower volume level
  * me.audio.play("gameover_sfx", false, null, 0.5);
  */
-export function play(sound_name: string, loop?: boolean, onend?: Function, volume?: number): number;
+export function play(sound_name: string, loop?: boolean | undefined, onend?: Function | undefined, volume?: number | undefined): number;
 /**
  * Fade a currently playing sound between two volumee.
  * @function audio.fade
@@ -80,7 +80,7 @@ export function play(sound_name: string, loop?: boolean, onend?: Function, volum
  * @param {number} duration - Time in milliseconds to fade.
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will fade.
  */
-export function fade(sound_name: string, from: number, to: number, duration: number, id?: number): void;
+export function fade(sound_name: string, from: number, to: number, duration: number, id?: number | undefined): void;
 /**
  * get/set the position of playback for a sound.
  * @function audio.seek
@@ -117,7 +117,7 @@ export function rate(sound_name: string, ...args: any[]): number;
  * @example
  * me.audio.stop("cling");
  */
-export function stop(sound_name?: string, id?: number): void;
+export function stop(sound_name?: string | undefined, id?: number | undefined): void;
 /**
  * pause the specified sound on all channels<br>
  * this function does not reset the currentTime property
@@ -127,7 +127,7 @@ export function stop(sound_name?: string, id?: number): void;
  * @example
  * me.audio.pause("cling");
  */
-export function pause(sound_name: string, id?: number): void;
+export function pause(sound_name: string, id?: number | undefined): void;
 /**
  * resume the specified sound on all channels<br>
  * @function audio.resume
@@ -143,7 +143,7 @@ export function pause(sound_name: string, id?: number): void;
  * // resume
  * me.audio.resume("myClip", id);
  */
-export function resume(sound_name: string, id?: number): void;
+export function resume(sound_name: string, id?: number | undefined): void;
 /**
  * play the specified audio track<br>
  * this function automatically set the loop property to true<br>
@@ -155,7 +155,7 @@ export function resume(sound_name: string, id?: number): void;
  * @example
  * me.audio.playTrack("awesome_music");
  */
-export function playTrack(sound_name: string, volume?: number): number;
+export function playTrack(sound_name: string, volume?: number | undefined): number;
 /**
  * stop the current audio track
  * @function audio.stopTrack
@@ -214,14 +214,14 @@ export function getVolume(): number;
  * // mute the background music
  * me.audio.mute("awesome_music");
  */
-export function mute(sound_name: string, id?: number, mute?: boolean): void;
+export function mute(sound_name: string, id?: number | undefined, mute?: boolean | undefined): void;
 /**
  * unmute the specified sound
  * @function audio.unmute
  * @param {string} sound_name - audio clip name
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will unmute.
  */
-export function unmute(sound_name: string, id?: number): void;
+export function unmute(sound_name: string, id?: number | undefined): void;
 /**
  * mute all audio
  * @function audio.muteAll

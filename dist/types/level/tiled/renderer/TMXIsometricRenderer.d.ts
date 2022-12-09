@@ -23,7 +23,7 @@ export default class TMXIsometricRenderer extends TMXRenderer {
      * @param {TMXLayer} [layer] - calculate the bounding rect for a specific layer (will return a new bounds object)
      * @returns {Bounds}
      */
-    public getBounds(layer?: TMXLayer): Bounds;
+    public getBounds(layer?: TMXLayer | undefined): Bounds;
     /**
      * return the tile position corresponding to the specified pixel
      * @ignore

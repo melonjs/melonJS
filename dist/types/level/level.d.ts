@@ -10,7 +10,7 @@ declare namespace level {
      * @param {Function} [callback] - a function to be called once the level is loaded
      * @returns {boolean} true if the level was loaded
      */
-    function add(format: string, levelId: string, callback?: Function): boolean;
+    function add(format: string, levelId: string, callback?: Function | undefined): boolean;
     /**
      * load a level into the game manager<br>
      * (will also create all level defined entities, etc..)
@@ -51,11 +51,11 @@ declare namespace level {
      * me.game.world.addChild(levelContainer);
      */
     function load(levelId: string, options?: {
-        container?: Container;
-        onLoaded?: Function;
-        flatten?: boolean;
-        setViewportBounds?: boolean;
-    }): boolean;
+        container?: any;
+        onLoaded?: Function | undefined;
+        flatten?: boolean | undefined;
+        setViewportBounds?: boolean | undefined;
+    } | undefined): boolean;
     /**
      * return the current level id<br>
      * @name getCurrentLevelId
@@ -86,10 +86,10 @@ declare namespace level {
      * @returns {object} the current level
      */
     function reload(options?: {
-        container?: Container;
-        onLoaded?: Function;
-        flatten?: boolean;
-    }): any;
+        container?: any;
+        onLoaded?: Function | undefined;
+        flatten?: boolean | undefined;
+    } | undefined): object;
     /**
      * load the next level
      * @name next
@@ -102,10 +102,10 @@ declare namespace level {
      * @returns {boolean} true if the next level was successfully loaded
      */
     function next(options?: {
-        container?: Container;
-        onLoaded?: Function;
-        flatten?: boolean;
-    }): boolean;
+        container?: any;
+        onLoaded?: Function | undefined;
+        flatten?: boolean | undefined;
+    } | undefined): boolean;
     /**
      * load the previous level<br>
      * @name previous
@@ -118,10 +118,10 @@ declare namespace level {
      * @returns {boolean} true if the previous level was successfully loaded
      */
     function previous(options?: {
-        container?: Container;
-        onLoaded?: Function;
-        flatten?: boolean;
-    }): boolean;
+        container?: any;
+        onLoaded?: Function | undefined;
+        flatten?: boolean | undefined;
+    } | undefined): boolean;
     /**
      * return the amount of level preloaded
      * @name levelCount

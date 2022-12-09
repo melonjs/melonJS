@@ -39,16 +39,16 @@
  * });
  */
 export function init(width: number, height: number, options?: {
-    parent?: string | HTMLElement;
-    renderer?: number;
-    scale?: number | string;
-    scaleMethod?: string;
-    preferWebGL1?: boolean;
-    powerPreference?: string;
-    transparent?: boolean;
-    antiAlias?: boolean;
-    consoleHeader?: boolean;
-}): boolean;
+    parent?: string | HTMLElement | undefined;
+    renderer?: number | undefined;
+    scale?: string | number | undefined;
+    scaleMethod?: string | undefined;
+    preferWebGL1?: boolean | undefined;
+    powerPreference?: string | undefined;
+    transparent?: boolean | undefined;
+    antiAlias?: boolean | undefined;
+    consoleHeader?: boolean | undefined;
+} | undefined): boolean;
 /**
  * Create and return a new Canvas element
  * @function video.createCanvas
@@ -57,7 +57,7 @@ export function init(width: number, height: number, options?: {
  * @param {boolean} [returnOffscreenCanvas=false] - will return an OffscreenCanvas if supported
  * @returns {HTMLCanvasElement|OffscreenCanvas}
  */
-export function createCanvas(width: number, height: number, returnOffscreenCanvas?: boolean): HTMLCanvasElement | OffscreenCanvas;
+export function createCanvas(width: number, height: number, returnOffscreenCanvas?: boolean | undefined): HTMLCanvasElement | OffscreenCanvas;
 /**
  * return a reference to the parent DOM element holding the main canvas
  * @function video.getParent

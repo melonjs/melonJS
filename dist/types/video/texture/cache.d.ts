@@ -16,7 +16,7 @@ declare class TextureCache {
      * @ignore
      */
     clear(): void;
-    length: number;
+    length: number | undefined;
     /**
      * @ignore
      */

@@ -66,7 +66,7 @@ export default class TMXLayer extends Renderable {
     rows: number;
     preRender: boolean;
     onActivateEvent(): void;
-    canvasRenderer: CanvasRenderer;
+    canvasRenderer: CanvasRenderer | undefined;
     onDeactivateEvent(): void;
     /**
      * Set the TMX renderer for this layer object
@@ -80,7 +80,7 @@ export default class TMXLayer extends Renderable {
      * layer.setRenderer(map.getRenderer());
      */
     public setRenderer(renderer: TMXRenderer): void;
-    renderer: TMXRenderer;
+    renderer: any;
     /**
      * Return the layer current renderer object
      * @name getRenderer
@@ -149,7 +149,7 @@ export default class TMXLayer extends Renderable {
      * // return the first tile at offset 0, 0
      * var tile = layer.cellAt(0, 0);
      */
-    public cellAt(x: number, y: number, boundsCheck?: number): Tile;
+    public cellAt(x: number, y: number, boundsCheck?: number | undefined): Tile;
     /**
      * clear the tile at the specified position
      * @name clearTile

@@ -30,15 +30,15 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
      * @param {TMXLayer} [layer] - calculate the bounding rect for a specific layer (will return a new bounds object)
      * @returns {Bounds}
      */
-    public getBounds(layer?: TMXLayer): Bounds;
+    public getBounds(layer?: TMXLayer | undefined): Bounds;
     /**
      * @ignore
      */
-    doStaggerX(x: any): number;
+    doStaggerX(x: any): number | false;
     /**
      * @ignore
      */
-    doStaggerY(y: any): number;
+    doStaggerY(y: any): number | false;
     /**
      * @ignore
      */

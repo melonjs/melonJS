@@ -13,10 +13,10 @@ export default class Stage {
      * @param {Function} [settings.onDestroyEvent] - called by the state manager before switching to another state
      */
     constructor(settings?: {
-        cameras?: Camera2d[];
-        onResetEvent?: Function;
-        onDestroyEvent?: Function;
-    });
+        cameras?: Camera2d[] | undefined;
+        onResetEvent?: Function | undefined;
+        onDestroyEvent?: Function | undefined;
+    } | undefined);
     /**
      * The list of active cameras in this stage.
      * Cameras will be renderered based on this order defined in this list.

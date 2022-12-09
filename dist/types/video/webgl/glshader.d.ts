@@ -30,7 +30,7 @@ export default class GLShader {
      * // use the shader
      * myShader.bind();
      */
-    constructor(gl: WebGLRenderingContext, vertex: string, fragment: string, precision?: string);
+    constructor(gl: WebGLRenderingContext, vertex: string, fragment: string, precision?: string | undefined);
     /**
      * the active gl rendering context
      * @type {WebGLRenderingContext}

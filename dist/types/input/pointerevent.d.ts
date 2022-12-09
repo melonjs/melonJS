@@ -15,7 +15,7 @@
  *    // do something with pos !
  * };
  */
-export function globalToLocal(x: number, y: number, v?: Vector2d): Vector2d;
+export function globalToLocal(x: number, y: number, v?: any): Vector2d;
 /**
  * enable/disable all gestures on the given element.<br>
  * by default melonJS will disable browser handling of all panning and zooming gestures.
@@ -26,7 +26,7 @@ export function globalToLocal(x: number, y: number, v?: Vector2d): Vector2d;
  * @param {HTMLCanvasElement} element
  * @param {string} [value="none"]
  */
-export function setTouchAction(element: HTMLCanvasElement, value?: string): void;
+export function setTouchAction(element: HTMLCanvasElement, value?: string | undefined): void;
 /**
  * Associate a pointer event to a keycode<br>
  * Left button – 0
@@ -55,7 +55,7 @@ export function bindPointer(...args: any[]): void;
  * @example
  * me.input.unbindPointer(me.input.pointer.LEFT);
  */
-export function unbindPointer(button?: number): void;
+export function unbindPointer(button?: number | undefined): void;
 /**
  * allows registration of event listeners on the object target. <br>
  * melonJS will pass a me.Pointer object to the defined callback.
@@ -108,7 +108,7 @@ export function registerPointerEvent(eventType: string, region: Rect | Polygon |
  * // release the registered region on the 'pointerdown' event
  * me.input.releasePointerEvent('pointerdown', this);
  */
-export function releasePointerEvent(eventType: string, region: Rect | Polygon | Line | Ellipse, callback?: Function): void;
+export function releasePointerEvent(eventType: string, region: Rect | Polygon | Line | Ellipse, callback?: Function | undefined): void;
 /**
  * allows the removal of all registered event listeners from the object target.
  * @name releaseAllPointerEvents

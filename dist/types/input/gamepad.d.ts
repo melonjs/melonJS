@@ -21,7 +21,7 @@
 export function bindGamepad(index: number, button: {
     type: string;
     code: number;
-    threshold?: number;
+    threshold?: number | undefined;
 }, keyCode: number): void;
 /**
  * unbind the defined keycode
