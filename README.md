@@ -178,10 +178,10 @@ Or can simply be added to your html, using [jsDeliver](https://www.jsdelivr.com/
 
 ```html
 <!-- load the ES6 module bundle of melonJS v10.0 -->
-<script src="https://esm.run/melonjs@10.0"></script>
+<script type="module" src="https://esm.run/melonjs@10.0"></script>
 <!-- omit the version completely to get the latest one -->
 <!-- you should NOT use this in production -->
-<script src="https://esm.run/melonjs"></script>
+<script type="module" src="https://esm.run/melonjs"></script>
 ```
 > Note: starting from the 10.0.0 version, the debug plugin is no longer provided as part of the melonJS library release, and has been moved to the official [boilerplate](https://github.com/melonjs/es6-boilerplate)
 
