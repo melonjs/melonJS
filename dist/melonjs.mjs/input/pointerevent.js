@@ -7,7 +7,7 @@
  */
 import { preventDefault } from './input.js';
 import { getBindingKey, triggerKeyEvent } from './keyboard.js';
-import { renderer, scaleRatio, getParent } from '../video/video.js';
+import { renderer } from '../video/video.js';
 import { throttle } from '../utils/function.js';
 import { remove } from '../utils/array.js';
 import { emit, POINTERLOCKCHANGE, POINTERMOVE } from '../system/event.js';
@@ -202,7 +202,7 @@ function enablePointerEvent() {
         if (hasPointerLockSupport) {
             document.addEventListener("pointerlockchange", () => {
                 // change the locked status accordingly
-                locked = document.pointerLockElement === getParent();
+                locked = document.pointerLockElement === game.getParentElement();
                 // emit the corresponding internal event
                 emit(POINTERLOCKCHANGE, locked);
             }, true);
@@ -567,7 +567,7 @@ function globalToLocal(x, y, v) {
     var pixelRatio = globalThis.devicePixelRatio || 1;
     x -= rect.left + (globalThis.pageXOffset || 0);
     y -= rect.top + (globalThis.pageYOffset || 0);
-    var scale = scaleRatio;
+    var scale = renderer.scaleRatio;
     if (scale.x !== 1.0 || scale.y !== 1.0) {
         x /= scale.x;
         y /= scale.y;
@@ -793,7 +793,7 @@ function releaseAllPointerEvents(region) {
  */
 function requestPointerLock() {
     if (hasPointerLockSupport) {
-        var element = getParent();
+        var element = game.getParentElement();
         element.requestPointerLock();
         return true;
     }

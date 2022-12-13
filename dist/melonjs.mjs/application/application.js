@@ -19,9 +19,15 @@ import World from '../physics/world.js';
  */
  class Application {
     constructor() {
+
         /**
-         * a reference to the current active stage "default" camera
-         * @public
+         * the parent HTML element holding the main canvas of this application
+         * @type {HTMLElement}
+         */
+        this.parentElement = undefined;
+
+        /**
+         * the active stage "default" camera
          * @type {Camera2d}
          */
         this.viewport = undefined;
@@ -29,7 +35,6 @@ import World from '../physics/world.js';
         /**
          * a reference to the game world, <br>
          * a world is a virtual environment containing all the game objects
-         * @public
          * @type {World}
          */
         this.world = undefined;
@@ -37,7 +42,6 @@ import World from '../physics/world.js';
         /**
          * when true, all objects will be added under the root world container.<br>
          * When false, a `me.Container` object will be created for each corresponding groups
-         * @public
          * @type {boolean}
          * @default true
          */
@@ -46,7 +50,6 @@ import World from '../physics/world.js';
         /**
          * Specify the property to be used when sorting renderables.
          * Accepted values : "x", "y", "z"
-         * @public
          * @type {string}
          * @default "z"
          */
@@ -57,12 +60,16 @@ import World from '../physics/world.js';
          * Use this value to implement frame prediction in drawing events,
          * for creating smooth motion while running game update logic at
          * a lower fps.
-         * @public
          * @type {DOMHighResTimeStamp}
-         * @name lastUpdate
-         * @memberof Application
          */
         this.lastUpdate = 0;
+
+        /**
+         * true when this app instance has been initialized
+         * @type {boolean}
+         * @default false
+         */
+        this.isInitialized = false;
 
         // to know when we have to refresh the display
         this.isDirty = true;
@@ -96,6 +103,7 @@ import World from '../physics/world.js';
         // set the reference to this application instance
         this.world.app = this;
         this.lastUpdate = globalThis.performance.now();
+        this.isInitialized = true;
         emit(GAME_INIT, this);
     }
 
@@ -147,12 +155,11 @@ import World from '../physics/world.js';
     }
 
     /**
-     * Returns the parent container of the specified Child in the game world
-     * @param {Renderable} child
-     * @returns {Container}
+     * Returns the parent HTML Element holding the main canvas of this application
+     * @returns {HTMLElement}
      */
-    getParentContainer(child) {
-        return child.ancestor;
+    getParentElement() {
+        return this.parentElement;
     }
 
     /**

@@ -5,23 +5,18 @@
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
  */
-import Vector2d from '../math/vector2.js';
 import WebGLRenderer from './webgl/webgl_renderer.js';
 import CanvasRenderer from './canvas/canvas_renderer.js';
 import utils from '../utils/utils.js';
 import { emit, WINDOW_ONRESIZE, WINDOW_ONORIENTATION_CHANGE, WINDOW_ONSCROLL, on, VIDEO_INIT } from '../system/event.js';
-import game from '../game.js';
-import { offscreenCanvas, screenOrientation, getElement, platform, enableSwipe, devicePixelRatio, getScreenOrientation, language, isWebGLSupported, getParentBounds, hasWebAudio } from '../system/device.js';
+import { offscreenCanvas, screenOrientation, getElement, platform, enableSwipe, devicePixelRatio, getScreenOrientation, language, isWebGLSupported, hasWebAudio } from '../system/device.js';
 import { initialized, version } from '../index.js';
+import game from '../game.js';
+import { onresize } from './utils/resize.js';
 
 /**
- * video functions
  * @namespace video
  */
-
-var designRatio = 1;
-var designWidth = 0;
-var designHeight = 0;
 
 // default video settings
 var settings = {
@@ -57,84 +52,9 @@ function autoDetectRenderer(options) {
     return new CanvasRenderer(options);
 }
 
-/**
- * callback for window resize event
- * @ignore
- */
-function onresize() {
-    var settings = renderer.settings;
-    var scaleX = 1, scaleY = 1;
-
-    if (settings.autoScale) {
-
-        // set max the canvas max size if CSS values are defined
-        var canvasMaxWidth = Infinity;
-        var canvasMaxHeight = Infinity;
-
-        if (globalThis.getComputedStyle) {
-            var style = globalThis.getComputedStyle(renderer.getCanvas(), null);
-            canvasMaxWidth = parseInt(style.maxWidth, 10) || Infinity;
-            canvasMaxHeight = parseInt(style.maxHeight, 10) || Infinity;
-        }
-
-        // get the maximum canvas size within the parent div containing the canvas container
-        var nodeBounds = getParentBounds(getParent());
-
-        var _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
-        var _max_height = Math.min(canvasMaxHeight, nodeBounds.height);
-
-        // calculate final canvas width & height
-        var screenRatio = _max_width / _max_height;
-
-        if ((settings.scaleMethod === "fill-min" && screenRatio > designRatio) ||
-            (settings.scaleMethod === "fill-max" && screenRatio < designRatio) ||
-            (settings.scaleMethod === "flex-width")
-        ) {
-            // resize the display canvas to fill the parent container
-            var sWidth = Math.min(canvasMaxWidth, designHeight * screenRatio);
-            scaleX = scaleY = _max_width / sWidth;
-            renderer.resize(Math.floor(sWidth), designHeight);
-        }
-        else if ((settings.scaleMethod === "fill-min" && screenRatio < designRatio) ||
-                 (settings.scaleMethod === "fill-max" && screenRatio > designRatio) ||
-                 (settings.scaleMethod === "flex-height")
-        ) {
-            // resize the display canvas to fill the parent container
-            var sHeight = Math.min(canvasMaxHeight, designWidth * (_max_height / _max_width));
-            scaleX = scaleY = _max_height / sHeight;
-            renderer.resize(designWidth, Math.floor(sHeight));
-        }
-        else if (settings.scaleMethod === "flex") {
-            // resize the display canvas to fill the parent container
-            renderer.resize(Math.floor(_max_width), Math.floor(_max_height));
-        }
-        else if (settings.scaleMethod === "stretch") {
-            // scale the display canvas to fit with the parent container
-            scaleX = _max_width / designWidth;
-            scaleY = _max_height / designHeight;
-        }
-        else {
-            // scale the display canvas to fit the parent container
-            // make sure we maintain the original aspect ratio
-            if (screenRatio < designRatio) {
-                scaleX = scaleY = _max_width / designWidth;
-            }
-            else {
-                scaleX = scaleY = _max_height / designHeight;
-            }
-        }
-
-        // adjust scaling ratio based on the new scaling ratio
-        scale(scaleX, scaleY);
-    } else {
-        // adjust scaling ratio based on the given settings
-        scale(settings.scale, settings.scale);
-    }
-}
 
 /**
  * Select the HTML5 Canvas renderer
- * @name CANVAS
  * @memberof video
  * @constant
  */
@@ -142,7 +62,6 @@ const CANVAS = 0;
 
 /**
  * Select the WebGL renderer
- * @name WEBGL
  * @memberof video
  * @constant
  */
@@ -150,36 +69,15 @@ const WEBGL = 1;
 
 /**
  * Auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
- * @name AUTO
  * @memberof video
  * @constant
  */
 const AUTO = 2;
 
-/**
- * the parent container of the main canvas element
- * @ignore
- * @type {HTMLElement}
- * @readonly
- * @name parent
- * @memberof video
- */
-let parent = null;
-
-/**
- * the scaling ratio to be applied to the display canvas
- * @name scaleRatio
- * @type {Vector2d}
- * @default <1,1>
- * @memberof video
- */
-let scaleRatio = new Vector2d(1, 1);
-
  /**
   * A reference to the active Canvas or WebGL active renderer renderer
-  * @name renderer
-  * @type {CanvasRenderer|WebGLRenderer}
   * @memberof video
+  * @type {CanvasRenderer|WebGLRenderer}
   */
 let renderer = null;
 
@@ -200,7 +98,7 @@ let renderer = null;
  * <center><img src="images/scale-flex-height.png"/></center><br>
  *  - <i><b>`stretch`</b></i> : Canvas is resized to fit; content is scaled to screen aspect ratio
  * <center><img src="images/scale-stretch.png"/></center><br>
- * @function video.init
+ * @memberof video
  * @param {number} width - The width of the canvas viewport
  * @param {number} height - The height of the canvas viewport
  * @param {object} [options] - The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
@@ -268,16 +166,10 @@ function init(width, height, options) {
 
     // normalize scale
     settings.scale = (settings.autoScale) ? 1.0 : (+settings.scale || 1.0);
-    scaleRatio.set(settings.scale, settings.scale);
-
-    // hold the requested video size ratio
-    designRatio = width / height;
-    designWidth = width;
-    designHeight = height;
 
     // default scaled size value
-    settings.zoomX = width * scaleRatio.x;
-    settings.zoomY = height * scaleRatio.y;
+    settings.zoomX = width * settings.scale;
+    settings.zoomY = height * settings.scale;
 
     //add a channel for the onresize/onorientationchange event
     globalThis.addEventListener(
@@ -317,10 +209,6 @@ function init(width, height, options) {
         emit(WINDOW_ONSCROLL, e);
     }, 100), false);
 
-    // register to the channel
-    on(WINDOW_ONRESIZE, onresize, this);
-    on(WINDOW_ONORIENTATION_CHANGE, onresize, this);
-
     try {
         switch (settings.renderer) {
             case AUTO:
@@ -337,9 +225,13 @@ function init(width, height, options) {
         return false;
     }
 
+    // register to the channel
+    on(WINDOW_ONRESIZE, () => { onresize(renderer); }, this);
+    on(WINDOW_ONORIENTATION_CHANGE, () => { onresize(renderer); }, this);
+
     // add our canvas (default to document.body if settings.parent is undefined)
-    parent = getElement(typeof settings.parent !== "undefined" ? settings.parent : document.body);
-    parent.appendChild(renderer.getCanvas());
+    game.parentElement = getElement(typeof settings.parent !== "undefined" ? settings.parent : document.body);
+    game.parentElement.appendChild(renderer.getCanvas());
 
     // Mobile browser hacks
     if (platform.isMobile) {
@@ -348,15 +240,15 @@ function init(width, height, options) {
     }
 
     // trigger an initial resize();
-    onresize();
+    onresize(renderer);
 
     // add an observer to detect when the dom tree is modified
     if ("MutationObserver" in globalThis) {
         // Create an observer instance linked to the callback function
-        var observer = new MutationObserver(onresize.bind(this));
+        var observer = new MutationObserver(onresize.bind(this, renderer));
 
         // Start observing the target node for configured mutations
-        observer.observe(parent, {
+        observer.observe(game.parentElement, {
             attributes: false, childList: true, subtree: true
         });
     }
@@ -387,7 +279,7 @@ function init(width, height, options) {
 
 /**
  * Create and return a new Canvas element
- * @function video.createCanvas
+ * @memberof video
  * @param {number} width - width
  * @param {number} height - height
  * @param {boolean} [returnOffscreenCanvas=false] - will return an OffscreenCanvas if supported
@@ -419,44 +311,10 @@ function createCanvas(width, height, returnOffscreenCanvas = false) {
 
 /**
  * return a reference to the parent DOM element holding the main canvas
- * @function video.getParent
  * @returns {HTMLElement}
  */
 function getParent() {
-    return parent;
+    return game.getParentElement();
 }
 
-/**
- * scale the "displayed" canvas by the given scalar.
- * this will modify the size of canvas element directly.
- * Only use this if you are not using the automatic scaling feature.
- * @function video.scale
- * @see video.init
- * @param {number} x - x scaling multiplier
- * @param {number} y - y scaling multiplier
- */
-function scale(x, y) {
-    var canvas = renderer.getCanvas();
-    var context = renderer.getContext();
-    var settings = renderer.settings;
-    var pixelRatio = devicePixelRatio;
-
-    var w = settings.zoomX = canvas.width * x * pixelRatio;
-    var h = settings.zoomY = canvas.height * y * pixelRatio;
-
-    // update the global scale variable
-    scaleRatio.set(x * pixelRatio, y * pixelRatio);
-
-    // adjust CSS style based on device pixel ratio
-    canvas.style.width = (w / pixelRatio) + "px";
-    canvas.style.height = (h / pixelRatio) + "px";
-
-    // if anti-alias and blend mode were resetted (e.g. Canvas mode)
-    renderer.setAntiAlias(context, settings.antiAlias);
-    renderer.setBlendMode(settings.blendMode, context);
-
-    // force repaint
-    game.repaint();
-}
-
-export { AUTO, CANVAS, WEBGL, createCanvas, getParent, init, parent, renderer, scale, scaleRatio };
+export { AUTO, CANVAS, WEBGL, createCanvas, getParent, init, renderer };

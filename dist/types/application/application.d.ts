@@ -6,45 +6,49 @@
  */
 export default class Application {
     /**
-     * a reference to the current active stage "default" camera
-     * @public
+     * the parent HTML element holding the main canvas of this application
+     * @type {HTMLElement}
+     */
+    parentElement: HTMLElement;
+    /**
+     * the active stage "default" camera
      * @type {Camera2d}
      */
-    public viewport: Camera2d;
+    viewport: Camera2d;
     /**
      * a reference to the game world, <br>
      * a world is a virtual environment containing all the game objects
-     * @public
      * @type {World}
      */
-    public world: World;
+    world: World;
     /**
      * when true, all objects will be added under the root world container.<br>
      * When false, a `me.Container` object will be created for each corresponding groups
-     * @public
      * @type {boolean}
      * @default true
      */
-    public mergeGroup: boolean;
+    mergeGroup: boolean;
     /**
      * Specify the property to be used when sorting renderables.
      * Accepted values : "x", "y", "z"
-     * @public
      * @type {string}
      * @default "z"
      */
-    public sortOn: string;
+    sortOn: string;
     /**
      * Last time the game update loop was executed. <br>
      * Use this value to implement frame prediction in drawing events,
      * for creating smooth motion while running game update logic at
      * a lower fps.
-     * @public
      * @type {DOMHighResTimeStamp}
-     * @name lastUpdate
-     * @memberof Application
      */
-    public lastUpdate: DOMHighResTimeStamp;
+    lastUpdate: DOMHighResTimeStamp;
+    /**
+     * true when this app instance has been initialized
+     * @type {boolean}
+     * @default false
+     */
+    isInitialized: boolean;
     isDirty: boolean;
     isAlwaysDirty: boolean;
     frameCounter: number;
@@ -80,11 +84,10 @@ export default class Application {
      */
     updateFrameRate(): void;
     /**
-     * Returns the parent container of the specified Child in the game world
-     * @param {Renderable} child
-     * @returns {Container}
+     * Returns the parent HTML Element holding the main canvas of this application
+     * @returns {HTMLElement}
      */
-    getParentContainer(child: Renderable): Container;
+    getParentElement(): HTMLElement;
     /**
      * force the redraw (not update) of all objects
      */

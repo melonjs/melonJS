@@ -760,521 +760,6 @@ var pool = new ObjectPool();
  */
 var pool$1 = pool;
 
-/**
- * @classdesc
- * a generic 2D Vector Object
- */
- class Vector2d {
-    /**
-     * @param {number} [x=0] - x value of the vector
-     * @param {number} [y=0] - y value of the vector
-     */
-    constructor(x = 0, y = 0) {
-        this.onResetEvent(x, y);
-    }
-
-    /**
-     * @ignore
-     */
-    onResetEvent(x = 0, y = 0) {
-        // this is to enable proper object pooling
-        this.x = x;
-        this.y = y;
-        return this;
-    }
-
-    /**
-     * @ignore
-     */
-    _set(x, y) {
-        this.x = x;
-        this.y = y;
-        return this;
-    }
-
-    /**
-     * set the Vector x and y properties to the given values<br>
-     * @name set
-     * @memberof Vector2d
-     * @param {number} x
-     * @param {number} y
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    set(x, y) {
-        if (x !== +x || y !== +y) {
-            throw new Error(
-                "invalid x,y parameters (not a number)"
-            );
-        }
-
-        /**
-         * x value of the vector
-         * @public
-         * @member {number}
-         * @name x
-         * @memberof Vector2d
-         */
-        //this.x = x;
-
-        /**
-         * y value of the vector
-         * @public
-         * @member {number}
-         * @name y
-         * @memberof Vector2d
-         */
-        //this.y = y;
-
-        return this._set(x, y);
-    }
-
-    /**
-     * set the Vector x and y properties to 0
-     * @name setZero
-     * @memberof Vector2d
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    setZero() {
-        return this.set(0, 0);
-    }
-
-    /**
-     * set the Vector x and y properties using the passed vector
-     * @name setV
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    setV(v) {
-        return this._set(v.x, v.y);
-    }
-
-    /**
-     * Add the passed vector to this vector
-     * @name add
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    add(v) {
-        return this._set(this.x + v.x, this.y + v.y);
-    }
-
-    /**
-     * Substract the passed vector to this vector
-     * @name sub
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    sub(v) {
-        return this._set(this.x - v.x, this.y - v.y);
-    }
-
-    /**
-     * Multiply this vector values by the given scalar
-     * @name scale
-     * @memberof Vector2d
-     * @param {number} x
-     * @param {number} [y=x]
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    scale(x, y) {
-        return this._set(this.x * x, this.y * (typeof (y) !== "undefined" ? y : x));
-    }
-
-    /**
-     * Convert this vector into isometric coordinate space
-     * @name toIso
-     * @memberof Vector2d
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    toIso() {
-        return this._set(this.x - this.y, (this.x + this.y) * 0.5);
-    }
-
-    /**
-     * Convert this vector into 2d coordinate space
-     * @name to2d
-     * @memberof Vector2d
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    to2d() {
-        return this._set(this.y + this.x / 2, this.y - this.x / 2);
-    }
-
-    /**
-     * Multiply this vector values by the passed vector
-     * @name scaleV
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    scaleV(v) {
-        return this._set(this.x * v.x, this.y * v.y);
-    }
-
-    /**
-     * Divide this vector values by the passed value
-     * @name div
-     * @memberof Vector2d
-     * @param {number} n - the value to divide the vector by
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    div(n) {
-        return this._set(this.x / n, this.y / n);
-    }
-
-    /**
-     * Update this vector values to absolute values
-     * @name abs
-     * @memberof Vector2d
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    abs() {
-        return this._set((this.x < 0) ? -this.x : this.x, (this.y < 0) ? -this.y : this.y);
-    }
-
-    /**
-     * Clamp the vector value within the specified value range
-     * @name clamp
-     * @memberof Vector2d
-     * @param {number} low
-     * @param {number} high
-     * @returns {Vector2d} new me.Vector2d
-     */
-    clamp(low, high) {
-        return new Vector2d(clamp(this.x, low, high), clamp(this.y, low, high));
-    }
-
-    /**
-     * Clamp this vector value within the specified value range
-     * @name clampSelf
-     * @memberof Vector2d
-     * @param {number} low
-     * @param {number} high
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    clampSelf(low, high) {
-        return this._set(clamp(this.x, low, high), clamp(this.y, low, high));
-    }
-
-    /**
-     * Update this vector with the minimum value between this and the passed vector
-     * @name minV
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    minV(v) {
-        return this._set((this.x < v.x) ? this.x : v.x, (this.y < v.y) ? this.y : v.y);
-    }
-
-    /**
-     * Update this vector with the maximum value between this and the passed vector
-     * @name maxV
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    maxV(v) {
-        return this._set((this.x > v.x) ? this.x : v.x, (this.y > v.y) ? this.y : v.y);
-    }
-
-    /**
-     * Floor the vector values
-     * @name floor
-     * @memberof Vector2d
-     * @returns {Vector2d} new me.Vector2d
-     */
-    floor() {
-        return new Vector2d(Math.floor(this.x), Math.floor(this.y));
-    }
-
-    /**
-     * Floor this vector values
-     * @name floorSelf
-     * @memberof Vector2d
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    floorSelf() {
-        return this._set(Math.floor(this.x), Math.floor(this.y));
-    }
-
-    /**
-     * Ceil the vector values
-     * @name ceil
-     * @memberof Vector2d
-     * @returns {Vector2d} new me.Vector2d
-     */
-    ceil() {
-        return new Vector2d(Math.ceil(this.x), Math.ceil(this.y));
-    }
-
-    /**
-     * Ceil this vector values
-     * @name ceilSelf
-     * @memberof Vector2d
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    ceilSelf() {
-        return this._set(Math.ceil(this.x), Math.ceil(this.y));
-    }
-
-    /**
-     * Negate the vector values
-     * @name negate
-     * @memberof Vector2d
-     * @returns {Vector2d} new me.Vector2d
-     */
-    negate() {
-        return new Vector2d(-this.x, -this.y);
-    }
-
-    /**
-     * Negate this vector values
-     * @name negateSelf
-     * @memberof Vector2d
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    negateSelf() {
-        return this._set(-this.x, -this.y);
-    }
-
-    /**
-     * Copy the x,y values of the passed vector to this one
-     * @name copy
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    copy(v) {
-        return this._set(v.x, v.y);
-    }
-
-    /**
-     * return true if the two vectors are the same
-     * @name equals
-     * @memberof Vector2d
-     * @method
-     * @param {Vector2d} v
-     * @returns {boolean}
-     */
-    /**
-     * return true if this vector is equal to the given values
-     * @name equals
-     * @memberof Vector2d
-     * @param {number} x
-     * @param {number} y
-     * @returns {boolean}
-     */
-    equals() {
-        var _x, _y;
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-        return ((this.x === _x) && (this.y === _y));
-    }
-
-    /**
-     * normalize this vector (scale the vector so that its magnitude is 1)
-     * @name normalize
-     * @memberof Vector2d
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    normalize() {
-        return this.div(this.length() || 1);
-    }
-
-    /**
-     * change this vector to be perpendicular to what it was before.<br>
-     * (Effectively rotates it 90 degrees in a clockwise direction)
-     * @name perp
-     * @memberof Vector2d
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    perp() {
-        return this._set(this.y, -this.x);
-    }
-
-    /**
-     * Rotate this vector (counter-clockwise) by the specified angle (in radians).
-     * @name rotate
-     * @memberof Vector2d
-     * @param {number} angle - The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    rotate(angle, v) {
-        var cx = 0;
-        var cy = 0;
-
-        if (typeof v === "object") {
-            cx = v.x;
-            cy = v.y;
-        }
-
-        var x = this.x - cx;
-        var y = this.y - cy;
-
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
-
-        return this._set(x * c - y * s + cx, x * s + y * c + cy);
-    }
-
-    /**
-     * return the dot product of this vector and the passed one
-     * @name dot
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @returns {number} The dot product.
-     */
-    dot(v) {
-        return this.x * v.x + this.y * v.y;
-    }
-
-    /**
-     * return the cross product of this vector and the passed one
-     * @name cross
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @returns {number} The cross product.
-     */
-    cross(v) {
-        return this.x * v.y - this.y * v.x;
-    }
-
-   /**
-    * return the square length of this vector
-    * @name length2
-    * @memberof Vector2d
-    * @returns {number} The length^2 of this vector.
-    */
-    length2() {
-        return this.dot(this);
-    }
-
-    /**
-     * return the length (magnitude) of this vector
-     * @name length
-     * @memberof Vector2d
-     * @returns {number} the length of this vector
-     */
-    length() {
-        return Math.sqrt(this.length2());
-    }
-
-    /**
-     * Linearly interpolate between this vector and the given one.
-     * @name lerp
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    lerp(v, alpha) {
-        this.x += ( v.x - this.x ) * alpha;
-        this.y += ( v.y - this.y ) * alpha;
-        return this;
-    }
-
-    /**
-     * interpolate the position of this vector towards the given one by the given maximum step.
-     * @name moveTowards
-     * @memberof Vector2d
-     * @param {Vector2d} target
-     * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-     moveTowards(target, step) {
-        var angle = Math.atan2(target.y - this.y, target.x - this.x);
-
-        var distance = this.distance(target);
-
-        if (distance === 0 || (step >= 0 && distance <= step * step)) {
-            return target;
-        }
-
-        this.x += Math.cos(angle) * step;
-        this.y += Math.sin(angle) * step;
-
-        return this;
-    }
-
-    /**
-     * return the distance between this vector and the passed one
-     * @name distance
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @returns {number}
-     */
-    distance(v) {
-        var dx = this.x - v.x, dy = this.y - v.y;
-        return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    /**
-     * return the angle between this vector and the passed one
-     * @name angle
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @returns {number} angle in radians
-     */
-    angle(v) {
-        return Math.acos(clamp(this.dot(v) / (this.length() * v.length()), -1, 1));
-    }
-
-    /**
-     * project this vector on to another vector.
-     * @name project
-     * @memberof Vector2d
-     * @param {Vector2d} v - The vector to project onto.
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    project(v) {
-        return this.scale(this.dot(v) / v.length2());
-    }
-
-    /**
-     * Project this vector onto a vector of unit length.<br>
-     * This is slightly more efficient than `project` when dealing with unit vectors.
-     * @name projectN
-     * @memberof Vector2d
-     * @param {Vector2d} v - The unit vector to project onto.
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    projectN(v) {
-        return this.scale(this.dot(v));
-    }
-
-    /**
-     * return a clone copy of this vector
-     * @name clone
-     * @memberof Vector2d
-     * @returns {Vector2d} new me.Vector2d
-     */
-    clone() {
-        return pool$1.pull("Vector2d", this.x, this.y);
-    }
-
-    /**
-     * convert the object to a string representation
-     * @name toString
-     * @memberof Vector2d
-     * @returns {string}
-     */
-    toString() {
-        return "x:" + this.x + ",y:" + this.y;
-    }
-}
-
 // convert a give color component to it hexadecimal value
 function toHex(component) {
     return "0123456789ABCDEF".charAt((component - (component % 16)) >> 4) + "0123456789ABCDEF".charAt(component % 16);
@@ -3038,6 +2523,521 @@ var cssToRGB = new Map();
     }
 }
 
+/**
+ * @classdesc
+ * a generic 2D Vector Object
+ */
+ class Vector2d {
+    /**
+     * @param {number} [x=0] - x value of the vector
+     * @param {number} [y=0] - y value of the vector
+     */
+    constructor(x = 0, y = 0) {
+        this.onResetEvent(x, y);
+    }
+
+    /**
+     * @ignore
+     */
+    onResetEvent(x = 0, y = 0) {
+        // this is to enable proper object pooling
+        this.x = x;
+        this.y = y;
+        return this;
+    }
+
+    /**
+     * @ignore
+     */
+    _set(x, y) {
+        this.x = x;
+        this.y = y;
+        return this;
+    }
+
+    /**
+     * set the Vector x and y properties to the given values<br>
+     * @name set
+     * @memberof Vector2d
+     * @param {number} x
+     * @param {number} y
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    set(x, y) {
+        if (x !== +x || y !== +y) {
+            throw new Error(
+                "invalid x,y parameters (not a number)"
+            );
+        }
+
+        /**
+         * x value of the vector
+         * @public
+         * @member {number}
+         * @name x
+         * @memberof Vector2d
+         */
+        //this.x = x;
+
+        /**
+         * y value of the vector
+         * @public
+         * @member {number}
+         * @name y
+         * @memberof Vector2d
+         */
+        //this.y = y;
+
+        return this._set(x, y);
+    }
+
+    /**
+     * set the Vector x and y properties to 0
+     * @name setZero
+     * @memberof Vector2d
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    setZero() {
+        return this.set(0, 0);
+    }
+
+    /**
+     * set the Vector x and y properties using the passed vector
+     * @name setV
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    setV(v) {
+        return this._set(v.x, v.y);
+    }
+
+    /**
+     * Add the passed vector to this vector
+     * @name add
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    add(v) {
+        return this._set(this.x + v.x, this.y + v.y);
+    }
+
+    /**
+     * Substract the passed vector to this vector
+     * @name sub
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    sub(v) {
+        return this._set(this.x - v.x, this.y - v.y);
+    }
+
+    /**
+     * Multiply this vector values by the given scalar
+     * @name scale
+     * @memberof Vector2d
+     * @param {number} x
+     * @param {number} [y=x]
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    scale(x, y) {
+        return this._set(this.x * x, this.y * (typeof (y) !== "undefined" ? y : x));
+    }
+
+    /**
+     * Convert this vector into isometric coordinate space
+     * @name toIso
+     * @memberof Vector2d
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    toIso() {
+        return this._set(this.x - this.y, (this.x + this.y) * 0.5);
+    }
+
+    /**
+     * Convert this vector into 2d coordinate space
+     * @name to2d
+     * @memberof Vector2d
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    to2d() {
+        return this._set(this.y + this.x / 2, this.y - this.x / 2);
+    }
+
+    /**
+     * Multiply this vector values by the passed vector
+     * @name scaleV
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    scaleV(v) {
+        return this._set(this.x * v.x, this.y * v.y);
+    }
+
+    /**
+     * Divide this vector values by the passed value
+     * @name div
+     * @memberof Vector2d
+     * @param {number} n - the value to divide the vector by
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    div(n) {
+        return this._set(this.x / n, this.y / n);
+    }
+
+    /**
+     * Update this vector values to absolute values
+     * @name abs
+     * @memberof Vector2d
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    abs() {
+        return this._set((this.x < 0) ? -this.x : this.x, (this.y < 0) ? -this.y : this.y);
+    }
+
+    /**
+     * Clamp the vector value within the specified value range
+     * @name clamp
+     * @memberof Vector2d
+     * @param {number} low
+     * @param {number} high
+     * @returns {Vector2d} new me.Vector2d
+     */
+    clamp(low, high) {
+        return new Vector2d(clamp(this.x, low, high), clamp(this.y, low, high));
+    }
+
+    /**
+     * Clamp this vector value within the specified value range
+     * @name clampSelf
+     * @memberof Vector2d
+     * @param {number} low
+     * @param {number} high
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    clampSelf(low, high) {
+        return this._set(clamp(this.x, low, high), clamp(this.y, low, high));
+    }
+
+    /**
+     * Update this vector with the minimum value between this and the passed vector
+     * @name minV
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    minV(v) {
+        return this._set((this.x < v.x) ? this.x : v.x, (this.y < v.y) ? this.y : v.y);
+    }
+
+    /**
+     * Update this vector with the maximum value between this and the passed vector
+     * @name maxV
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    maxV(v) {
+        return this._set((this.x > v.x) ? this.x : v.x, (this.y > v.y) ? this.y : v.y);
+    }
+
+    /**
+     * Floor the vector values
+     * @name floor
+     * @memberof Vector2d
+     * @returns {Vector2d} new me.Vector2d
+     */
+    floor() {
+        return new Vector2d(Math.floor(this.x), Math.floor(this.y));
+    }
+
+    /**
+     * Floor this vector values
+     * @name floorSelf
+     * @memberof Vector2d
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    floorSelf() {
+        return this._set(Math.floor(this.x), Math.floor(this.y));
+    }
+
+    /**
+     * Ceil the vector values
+     * @name ceil
+     * @memberof Vector2d
+     * @returns {Vector2d} new me.Vector2d
+     */
+    ceil() {
+        return new Vector2d(Math.ceil(this.x), Math.ceil(this.y));
+    }
+
+    /**
+     * Ceil this vector values
+     * @name ceilSelf
+     * @memberof Vector2d
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    ceilSelf() {
+        return this._set(Math.ceil(this.x), Math.ceil(this.y));
+    }
+
+    /**
+     * Negate the vector values
+     * @name negate
+     * @memberof Vector2d
+     * @returns {Vector2d} new me.Vector2d
+     */
+    negate() {
+        return new Vector2d(-this.x, -this.y);
+    }
+
+    /**
+     * Negate this vector values
+     * @name negateSelf
+     * @memberof Vector2d
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    negateSelf() {
+        return this._set(-this.x, -this.y);
+    }
+
+    /**
+     * Copy the x,y values of the passed vector to this one
+     * @name copy
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    copy(v) {
+        return this._set(v.x, v.y);
+    }
+
+    /**
+     * return true if the two vectors are the same
+     * @name equals
+     * @memberof Vector2d
+     * @method
+     * @param {Vector2d} v
+     * @returns {boolean}
+     */
+    /**
+     * return true if this vector is equal to the given values
+     * @name equals
+     * @memberof Vector2d
+     * @param {number} x
+     * @param {number} y
+     * @returns {boolean}
+     */
+    equals() {
+        var _x, _y;
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+        return ((this.x === _x) && (this.y === _y));
+    }
+
+    /**
+     * normalize this vector (scale the vector so that its magnitude is 1)
+     * @name normalize
+     * @memberof Vector2d
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    normalize() {
+        return this.div(this.length() || 1);
+    }
+
+    /**
+     * change this vector to be perpendicular to what it was before.<br>
+     * (Effectively rotates it 90 degrees in a clockwise direction)
+     * @name perp
+     * @memberof Vector2d
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    perp() {
+        return this._set(this.y, -this.x);
+    }
+
+    /**
+     * Rotate this vector (counter-clockwise) by the specified angle (in radians).
+     * @name rotate
+     * @memberof Vector2d
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    rotate(angle, v) {
+        var cx = 0;
+        var cy = 0;
+
+        if (typeof v === "object") {
+            cx = v.x;
+            cy = v.y;
+        }
+
+        var x = this.x - cx;
+        var y = this.y - cy;
+
+        var c = Math.cos(angle);
+        var s = Math.sin(angle);
+
+        return this._set(x * c - y * s + cx, x * s + y * c + cy);
+    }
+
+    /**
+     * return the dot product of this vector and the passed one
+     * @name dot
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @returns {number} The dot product.
+     */
+    dot(v) {
+        return this.x * v.x + this.y * v.y;
+    }
+
+    /**
+     * return the cross product of this vector and the passed one
+     * @name cross
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @returns {number} The cross product.
+     */
+    cross(v) {
+        return this.x * v.y - this.y * v.x;
+    }
+
+   /**
+    * return the square length of this vector
+    * @name length2
+    * @memberof Vector2d
+    * @returns {number} The length^2 of this vector.
+    */
+    length2() {
+        return this.dot(this);
+    }
+
+    /**
+     * return the length (magnitude) of this vector
+     * @name length
+     * @memberof Vector2d
+     * @returns {number} the length of this vector
+     */
+    length() {
+        return Math.sqrt(this.length2());
+    }
+
+    /**
+     * Linearly interpolate between this vector and the given one.
+     * @name lerp
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    lerp(v, alpha) {
+        this.x += ( v.x - this.x ) * alpha;
+        this.y += ( v.y - this.y ) * alpha;
+        return this;
+    }
+
+    /**
+     * interpolate the position of this vector towards the given one by the given maximum step.
+     * @name moveTowards
+     * @memberof Vector2d
+     * @param {Vector2d} target
+     * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+     moveTowards(target, step) {
+        var angle = Math.atan2(target.y - this.y, target.x - this.x);
+
+        var distance = this.distance(target);
+
+        if (distance === 0 || (step >= 0 && distance <= step * step)) {
+            return target;
+        }
+
+        this.x += Math.cos(angle) * step;
+        this.y += Math.sin(angle) * step;
+
+        return this;
+    }
+
+    /**
+     * return the distance between this vector and the passed one
+     * @name distance
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @returns {number}
+     */
+    distance(v) {
+        var dx = this.x - v.x, dy = this.y - v.y;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    /**
+     * return the angle between this vector and the passed one
+     * @name angle
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @returns {number} angle in radians
+     */
+    angle(v) {
+        return Math.acos(clamp(this.dot(v) / (this.length() * v.length()), -1, 1));
+    }
+
+    /**
+     * project this vector on to another vector.
+     * @name project
+     * @memberof Vector2d
+     * @param {Vector2d} v - The vector to project onto.
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    project(v) {
+        return this.scale(this.dot(v) / v.length2());
+    }
+
+    /**
+     * Project this vector onto a vector of unit length.<br>
+     * This is slightly more efficient than `project` when dealing with unit vectors.
+     * @name projectN
+     * @memberof Vector2d
+     * @param {Vector2d} v - The unit vector to project onto.
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    projectN(v) {
+        return this.scale(this.dot(v));
+    }
+
+    /**
+     * return a clone copy of this vector
+     * @name clone
+     * @memberof Vector2d
+     * @returns {Vector2d} new me.Vector2d
+     */
+    clone() {
+        return pool$1.pull("Vector2d", this.x, this.y);
+    }
+
+    /**
+     * convert the object to a string representation
+     * @name toString
+     * @memberof Vector2d
+     * @returns {string}
+     */
+    toString() {
+        return "x:" + this.x + ",y:" + this.y;
+    }
+}
+
 var eventemitter3 = {exports: {}};
 
 (function (module) {
@@ -4684,7 +4684,7 @@ function isFullscreen() {
  * @function requestFullscreen
  * @memberof device
  * @public
- * @param {object} [element=default canvas object] - the element to be set in full-screen mode.
+ * @param {Element} [element] - the element to be set in full-screen mode.
  * @example
  * // add a keyboard shortcut to toggle Fullscreen mode on/off
  * me.input.bindKey(me.input.KEY.F, "toggleFullscreen");
@@ -9043,6 +9043,20 @@ class RoundRect extends Rect {
         this.settings = options;
 
         /**
+         * the requested video size ratio
+         * @public
+         * @type {Number}
+         */
+        this.designRatio = this.settings.width / this.settings.height;
+
+        /**
+         * the scaling ratio to be applied to the main canvas
+         * @type {Vector2d}
+         * @default <1,1>
+         */
+        this.scaleRatio = new Vector2d(this.settings.scale, this.settings.scale);
+
+        /**
          * true if the current rendering context is valid
          * @default true
          * @type {boolean}
@@ -9095,9 +9109,9 @@ class RoundRect extends Rect {
         // default uvOffset
         this.uvOffset = 0;
 
-        // reset the instantiated renderer on game reset
+        // reset the renderer on game reset
         on(GAME_RESET, () => {
-            renderer.reset();
+            this.reset();
         });
     }
 
@@ -9324,8 +9338,6 @@ class RoundRect extends Rect {
 
     /**
      * fill the given shape
-     * @name fill
-     * @memberof Renderer
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape - a shape object to fill
      */
     fill(shape) {
@@ -16152,7 +16164,7 @@ function enablePointerEvent() {
         if (hasPointerLockSupport) {
             document.addEventListener("pointerlockchange", () => {
                 // change the locked status accordingly
-                locked = document.pointerLockElement === getParent();
+                locked = document.pointerLockElement === game$1.getParentElement();
                 // emit the corresponding internal event
                 emit(POINTERLOCKCHANGE, locked);
             }, true);
@@ -16517,7 +16529,7 @@ function globalToLocal(x, y, v) {
     var pixelRatio = globalThis.devicePixelRatio || 1;
     x -= rect.left + (globalThis.pageXOffset || 0);
     y -= rect.top + (globalThis.pageYOffset || 0);
-    var scale = scaleRatio;
+    var scale = renderer.scaleRatio;
     if (scale.x !== 1.0 || scale.y !== 1.0) {
         x /= scale.x;
         y /= scale.y;
@@ -16743,7 +16755,7 @@ function releaseAllPointerEvents(region) {
  */
 function requestPointerLock() {
     if (hasPointerLockSupport) {
-        var element = getParent();
+        var element = game$1.getParentElement();
         element.requestPointerLock();
         return true;
     }
@@ -20787,9 +20799,15 @@ let globalFloatingCounter = 0;
  */
  class Application {
     constructor() {
+
         /**
-         * a reference to the current active stage "default" camera
-         * @public
+         * the parent HTML element holding the main canvas of this application
+         * @type {HTMLElement}
+         */
+        this.parentElement = undefined;
+
+        /**
+         * the active stage "default" camera
          * @type {Camera2d}
          */
         this.viewport = undefined;
@@ -20797,7 +20815,6 @@ let globalFloatingCounter = 0;
         /**
          * a reference to the game world, <br>
          * a world is a virtual environment containing all the game objects
-         * @public
          * @type {World}
          */
         this.world = undefined;
@@ -20805,7 +20822,6 @@ let globalFloatingCounter = 0;
         /**
          * when true, all objects will be added under the root world container.<br>
          * When false, a `me.Container` object will be created for each corresponding groups
-         * @public
          * @type {boolean}
          * @default true
          */
@@ -20814,7 +20830,6 @@ let globalFloatingCounter = 0;
         /**
          * Specify the property to be used when sorting renderables.
          * Accepted values : "x", "y", "z"
-         * @public
          * @type {string}
          * @default "z"
          */
@@ -20825,12 +20840,16 @@ let globalFloatingCounter = 0;
          * Use this value to implement frame prediction in drawing events,
          * for creating smooth motion while running game update logic at
          * a lower fps.
-         * @public
          * @type {DOMHighResTimeStamp}
-         * @name lastUpdate
-         * @memberof Application
          */
         this.lastUpdate = 0;
+
+        /**
+         * true when this app instance has been initialized
+         * @type {boolean}
+         * @default false
+         */
+        this.isInitialized = false;
 
         // to know when we have to refresh the display
         this.isDirty = true;
@@ -20864,6 +20883,7 @@ let globalFloatingCounter = 0;
         // set the reference to this application instance
         this.world.app = this;
         this.lastUpdate = globalThis.performance.now();
+        this.isInitialized = true;
         emit(GAME_INIT, this);
     }
 
@@ -20915,12 +20935,11 @@ let globalFloatingCounter = 0;
     }
 
     /**
-     * Returns the parent container of the specified Child in the game world
-     * @param {Renderable} child
-     * @returns {Container}
+     * Returns the parent HTML Element holding the main canvas of this application
+     * @returns {HTMLElement}
      */
-    getParentContainer(child) {
-        return child.ancestor;
+    getParentElement() {
+        return this.parentElement;
     }
 
     /**
@@ -30691,13 +30710,113 @@ var TextureCache$1 = TextureCache;
 }
 
 /**
- * video functions
+ * scale the "displayed" canvas by the given scalar.
+ * this will modify the size of canvas element directly.
+ * Only use this if you are not using the automatic scaling feature.
+ * @param {number} x - x scaling multiplier
+ * @param {number} y - y scaling multiplier
+ */
+function scale(renderer, x, y) {
+    var canvas = renderer.getCanvas();
+    var context = renderer.getContext();
+    var settings = renderer.settings;
+    var pixelRatio = devicePixelRatio;
+
+    var w = settings.zoomX = canvas.width * x * pixelRatio;
+    var h = settings.zoomY = canvas.height * y * pixelRatio;
+
+    // update the global scale variable
+    renderer.scaleRatio.set(x * pixelRatio, y * pixelRatio);
+
+    // adjust CSS style based on device pixel ratio
+    canvas.style.width = (w / pixelRatio) + "px";
+    canvas.style.height = (h / pixelRatio) + "px";
+
+    // if anti-alias and blend mode were resetted (e.g. Canvas mode)
+    renderer.setAntiAlias(context, settings.antiAlias);
+    renderer.setBlendMode(settings.blendMode, context);
+
+    // force repaint
+    game$1.repaint();
+}
+
+/**
+ * callback for window resize event
+ */
+function onresize(renderer) {
+    var settings = renderer.settings;
+    var scaleX = 1, scaleY = 1;
+
+    if (settings.autoScale) {
+
+        // set max the canvas max size if CSS values are defined
+        var canvasMaxWidth = Infinity;
+        var canvasMaxHeight = Infinity;
+
+        if (globalThis.getComputedStyle) {
+            var style = globalThis.getComputedStyle(renderer.getCanvas(), null);
+            canvasMaxWidth = parseInt(style.maxWidth, 10) || Infinity;
+            canvasMaxHeight = parseInt(style.maxHeight, 10) || Infinity;
+        }
+
+        // get the maximum canvas size within the parent div containing the canvas container
+        var nodeBounds = getParentBounds(game$1.getParentElement());
+
+        var _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
+        var _max_height = Math.min(canvasMaxHeight, nodeBounds.height);
+
+        // calculate final canvas width & height
+        var screenRatio = _max_width / _max_height;
+
+        if ((settings.scaleMethod === "fill-min" && screenRatio > renderer.designRatio) ||
+            (settings.scaleMethod === "fill-max" && screenRatio < renderer.designRatio) ||
+            (settings.scaleMethod === "flex-width")
+        ) {
+            // resize the display canvas to fill the parent container
+            var sWidth = Math.min(canvasMaxWidth, settings.height * screenRatio);
+            scaleX = scaleY = _max_width / sWidth;
+            renderer.resize(Math.floor(sWidth), settings.height);
+        }
+        else if ((settings.scaleMethod === "fill-min" && screenRatio < renderer.designRatio) ||
+                 (settings.scaleMethod === "fill-max" && screenRatio > renderer.designRatio) ||
+                 (settings.scaleMethod === "flex-height")
+        ) {
+            // resize the display canvas to fill the parent container
+            var sHeight = Math.min(canvasMaxHeight, settings.width * (_max_height / _max_width));
+            scaleX = scaleY = _max_height / sHeight;
+            renderer.resize(settings.width, Math.floor(sHeight));
+        }
+        else if (settings.scaleMethod === "flex") {
+            // resize the display canvas to fill the parent container
+            renderer.resize(Math.floor(_max_width), Math.floor(_max_height));
+        }
+        else if (settings.scaleMethod === "stretch") {
+            // scale the display canvas to fit with the parent container
+            scaleX = _max_width / settings.width;
+            scaleY = _max_height / settings.height;
+        }
+        else {
+            // scale the display canvas to fit the parent container
+            // make sure we maintain the original aspect ratio
+            if (screenRatio < renderer.designRatio) {
+                scaleX = scaleY = _max_width / settings.width;
+            }
+            else {
+                scaleX = scaleY = _max_height / settings.height;
+            }
+        }
+
+        // adjust scaling ratio based on the new scaling ratio
+        scale(renderer, scaleX, scaleY);
+    } else {
+        // adjust scaling ratio based on the given settings
+        scale(renderer, settings.scale, settings.scale);
+    }
+}
+
+/**
  * @namespace video
  */
-
-var designRatio = 1;
-var designWidth = 0;
-var designHeight = 0;
 
 // default video settings
 var settings = {
@@ -30733,84 +30852,9 @@ function autoDetectRenderer(options) {
     return new CanvasRenderer(options);
 }
 
-/**
- * callback for window resize event
- * @ignore
- */
-function onresize() {
-    var settings = renderer.settings;
-    var scaleX = 1, scaleY = 1;
-
-    if (settings.autoScale) {
-
-        // set max the canvas max size if CSS values are defined
-        var canvasMaxWidth = Infinity;
-        var canvasMaxHeight = Infinity;
-
-        if (globalThis.getComputedStyle) {
-            var style = globalThis.getComputedStyle(renderer.getCanvas(), null);
-            canvasMaxWidth = parseInt(style.maxWidth, 10) || Infinity;
-            canvasMaxHeight = parseInt(style.maxHeight, 10) || Infinity;
-        }
-
-        // get the maximum canvas size within the parent div containing the canvas container
-        var nodeBounds = getParentBounds(getParent());
-
-        var _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
-        var _max_height = Math.min(canvasMaxHeight, nodeBounds.height);
-
-        // calculate final canvas width & height
-        var screenRatio = _max_width / _max_height;
-
-        if ((settings.scaleMethod === "fill-min" && screenRatio > designRatio) ||
-            (settings.scaleMethod === "fill-max" && screenRatio < designRatio) ||
-            (settings.scaleMethod === "flex-width")
-        ) {
-            // resize the display canvas to fill the parent container
-            var sWidth = Math.min(canvasMaxWidth, designHeight * screenRatio);
-            scaleX = scaleY = _max_width / sWidth;
-            renderer.resize(Math.floor(sWidth), designHeight);
-        }
-        else if ((settings.scaleMethod === "fill-min" && screenRatio < designRatio) ||
-                 (settings.scaleMethod === "fill-max" && screenRatio > designRatio) ||
-                 (settings.scaleMethod === "flex-height")
-        ) {
-            // resize the display canvas to fill the parent container
-            var sHeight = Math.min(canvasMaxHeight, designWidth * (_max_height / _max_width));
-            scaleX = scaleY = _max_height / sHeight;
-            renderer.resize(designWidth, Math.floor(sHeight));
-        }
-        else if (settings.scaleMethod === "flex") {
-            // resize the display canvas to fill the parent container
-            renderer.resize(Math.floor(_max_width), Math.floor(_max_height));
-        }
-        else if (settings.scaleMethod === "stretch") {
-            // scale the display canvas to fit with the parent container
-            scaleX = _max_width / designWidth;
-            scaleY = _max_height / designHeight;
-        }
-        else {
-            // scale the display canvas to fit the parent container
-            // make sure we maintain the original aspect ratio
-            if (screenRatio < designRatio) {
-                scaleX = scaleY = _max_width / designWidth;
-            }
-            else {
-                scaleX = scaleY = _max_height / designHeight;
-            }
-        }
-
-        // adjust scaling ratio based on the new scaling ratio
-        scale(scaleX, scaleY);
-    } else {
-        // adjust scaling ratio based on the given settings
-        scale(settings.scale, settings.scale);
-    }
-}
 
 /**
  * Select the HTML5 Canvas renderer
- * @name CANVAS
  * @memberof video
  * @constant
  */
@@ -30818,7 +30862,6 @@ const CANVAS = 0;
 
 /**
  * Select the WebGL renderer
- * @name WEBGL
  * @memberof video
  * @constant
  */
@@ -30826,36 +30869,15 @@ const WEBGL = 1;
 
 /**
  * Auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
- * @name AUTO
  * @memberof video
  * @constant
  */
 const AUTO = 2;
 
-/**
- * the parent container of the main canvas element
- * @ignore
- * @type {HTMLElement}
- * @readonly
- * @name parent
- * @memberof video
- */
-let parent = null;
-
-/**
- * the scaling ratio to be applied to the display canvas
- * @name scaleRatio
- * @type {Vector2d}
- * @default <1,1>
- * @memberof video
- */
-let scaleRatio = new Vector2d(1, 1);
-
  /**
   * A reference to the active Canvas or WebGL active renderer renderer
-  * @name renderer
-  * @type {CanvasRenderer|WebGLRenderer}
   * @memberof video
+  * @type {CanvasRenderer|WebGLRenderer}
   */
 let renderer = null;
 
@@ -30876,7 +30898,7 @@ let renderer = null;
  * <center><img src="images/scale-flex-height.png"/></center><br>
  *  - <i><b>`stretch`</b></i> : Canvas is resized to fit; content is scaled to screen aspect ratio
  * <center><img src="images/scale-stretch.png"/></center><br>
- * @function video.init
+ * @memberof video
  * @param {number} width - The width of the canvas viewport
  * @param {number} height - The height of the canvas viewport
  * @param {object} [options] - The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
@@ -30944,16 +30966,10 @@ function init(width, height, options) {
 
     // normalize scale
     settings.scale = (settings.autoScale) ? 1.0 : (+settings.scale || 1.0);
-    scaleRatio.set(settings.scale, settings.scale);
-
-    // hold the requested video size ratio
-    designRatio = width / height;
-    designWidth = width;
-    designHeight = height;
 
     // default scaled size value
-    settings.zoomX = width * scaleRatio.x;
-    settings.zoomY = height * scaleRatio.y;
+    settings.zoomX = width * settings.scale;
+    settings.zoomY = height * settings.scale;
 
     //add a channel for the onresize/onorientationchange event
     globalThis.addEventListener(
@@ -30993,10 +31009,6 @@ function init(width, height, options) {
         emit(WINDOW_ONSCROLL, e);
     }, 100), false);
 
-    // register to the channel
-    on(WINDOW_ONRESIZE, onresize, this);
-    on(WINDOW_ONORIENTATION_CHANGE, onresize, this);
-
     try {
         switch (settings.renderer) {
             case AUTO:
@@ -31013,9 +31025,13 @@ function init(width, height, options) {
         return false;
     }
 
+    // register to the channel
+    on(WINDOW_ONRESIZE, () => { onresize(renderer); }, this);
+    on(WINDOW_ONORIENTATION_CHANGE, () => { onresize(renderer); }, this);
+
     // add our canvas (default to document.body if settings.parent is undefined)
-    parent = getElement(typeof settings.parent !== "undefined" ? settings.parent : document.body);
-    parent.appendChild(renderer.getCanvas());
+    game$1.parentElement = getElement(typeof settings.parent !== "undefined" ? settings.parent : document.body);
+    game$1.parentElement.appendChild(renderer.getCanvas());
 
     // Mobile browser hacks
     if (platform.isMobile) {
@@ -31024,15 +31040,15 @@ function init(width, height, options) {
     }
 
     // trigger an initial resize();
-    onresize();
+    onresize(renderer);
 
     // add an observer to detect when the dom tree is modified
     if ("MutationObserver" in globalThis) {
         // Create an observer instance linked to the callback function
-        var observer = new MutationObserver(onresize.bind(this));
+        var observer = new MutationObserver(onresize.bind(this, renderer));
 
         // Start observing the target node for configured mutations
-        observer.observe(parent, {
+        observer.observe(game$1.parentElement, {
             attributes: false, childList: true, subtree: true
         });
     }
@@ -31063,7 +31079,7 @@ function init(width, height, options) {
 
 /**
  * Create and return a new Canvas element
- * @function video.createCanvas
+ * @memberof video
  * @param {number} width - width
  * @param {number} height - height
  * @param {boolean} [returnOffscreenCanvas=false] - will return an OffscreenCanvas if supported
@@ -31095,44 +31111,10 @@ function createCanvas(width, height, returnOffscreenCanvas = false) {
 
 /**
  * return a reference to the parent DOM element holding the main canvas
- * @function video.getParent
  * @returns {HTMLElement}
  */
 function getParent() {
-    return parent;
-}
-
-/**
- * scale the "displayed" canvas by the given scalar.
- * this will modify the size of canvas element directly.
- * Only use this if you are not using the automatic scaling feature.
- * @function video.scale
- * @see video.init
- * @param {number} x - x scaling multiplier
- * @param {number} y - y scaling multiplier
- */
-function scale(x, y) {
-    var canvas = renderer.getCanvas();
-    var context = renderer.getContext();
-    var settings = renderer.settings;
-    var pixelRatio = devicePixelRatio;
-
-    var w = settings.zoomX = canvas.width * x * pixelRatio;
-    var h = settings.zoomY = canvas.height * y * pixelRatio;
-
-    // update the global scale variable
-    scaleRatio.set(x * pixelRatio, y * pixelRatio);
-
-    // adjust CSS style based on device pixel ratio
-    canvas.style.width = (w / pixelRatio) + "px";
-    canvas.style.height = (h / pixelRatio) + "px";
-
-    // if anti-alias and blend mode were resetted (e.g. Canvas mode)
-    renderer.setAntiAlias(context, settings.antiAlias);
-    renderer.setBlendMode(settings.blendMode, context);
-
-    // force repaint
-    game$1.repaint();
+    return game$1.getParentElement();
 }
 
 var video = /*#__PURE__*/Object.freeze({
@@ -31140,13 +31122,10 @@ var video = /*#__PURE__*/Object.freeze({
 	CANVAS: CANVAS,
 	WEBGL: WEBGL,
 	AUTO: AUTO,
-	get parent () { return parent; },
-	scaleRatio: scaleRatio,
 	get renderer () { return renderer; },
 	init: init,
 	createCanvas: createCanvas,
-	getParent: getParent,
-	scale: scale
+	getParent: getParent
 });
 
 /**

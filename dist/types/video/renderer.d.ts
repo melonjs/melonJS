@@ -39,6 +39,18 @@ export default class Renderer {
      */
     public settings: object;
     /**
+     * the requested video size ratio
+     * @public
+     * @type {Number}
+     */
+    public designRatio: number;
+    /**
+     * the scaling ratio to be applied to the main canvas
+     * @type {Vector2d}
+     * @default <1,1>
+     */
+    scaleRatio: Vector2d;
+    /**
      * true if the current rendering context is valid
      * @default true
      * @type {boolean}
@@ -152,8 +164,6 @@ export default class Renderer {
     stroke(shape: Rect | RoundRect | Polygon | Line | Ellipse, fill?: boolean | undefined): void;
     /**
      * fill the given shape
-     * @name fill
-     * @memberof Renderer
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape - a shape object to fill
      */
     fill(shape: Rect | RoundRect | Polygon | Line | Ellipse): void;
@@ -194,6 +204,7 @@ export default class Renderer {
      */
     drawFont(): void;
 }
+import Vector2d from "../math/vector2.js";
 import Path2D from "./../geometries/path2d.js";
 import Color from "./../math/color.js";
 import Matrix3d from "./../math/matrix3.js";

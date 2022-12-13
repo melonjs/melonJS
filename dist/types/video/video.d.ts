@@ -15,7 +15,7 @@
  * <center><img src="images/scale-flex-height.png"/></center><br>
  *  - <i><b>`stretch`</b></i> : Canvas is resized to fit; content is scaled to screen aspect ratio
  * <center><img src="images/scale-stretch.png"/></center><br>
- * @function video.init
+ * @memberof video
  * @param {number} width - The width of the canvas viewport
  * @param {number} height - The height of the canvas viewport
  * @param {object} [options] - The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
@@ -51,7 +51,7 @@ export function init(width: number, height: number, options?: {
 } | undefined): boolean;
 /**
  * Create and return a new Canvas element
- * @function video.createCanvas
+ * @memberof video
  * @param {number} width - width
  * @param {number} height - height
  * @param {boolean} [returnOffscreenCanvas=false] - will return an OffscreenCanvas if supported
@@ -60,65 +60,32 @@ export function init(width: number, height: number, options?: {
 export function createCanvas(width: number, height: number, returnOffscreenCanvas?: boolean | undefined): HTMLCanvasElement | OffscreenCanvas;
 /**
  * return a reference to the parent DOM element holding the main canvas
- * @function video.getParent
  * @returns {HTMLElement}
  */
 export function getParent(): HTMLElement;
 /**
- * scale the "displayed" canvas by the given scalar.
- * this will modify the size of canvas element directly.
- * Only use this if you are not using the automatic scaling feature.
- * @function video.scale
- * @see video.init
- * @param {number} x - x scaling multiplier
- * @param {number} y - y scaling multiplier
- */
-export function scale(x: number, y: number): void;
-/**
  * Select the HTML5 Canvas renderer
- * @name CANVAS
  * @memberof video
  * @constant
  */
 export const CANVAS: 0;
 /**
  * Select the WebGL renderer
- * @name WEBGL
  * @memberof video
  * @constant
  */
 export const WEBGL: 1;
 /**
  * Auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
- * @name AUTO
  * @memberof video
  * @constant
  */
 export const AUTO: 2;
 /**
- * the parent container of the main canvas element
- * @ignore
- * @type {HTMLElement}
- * @readonly
- * @name parent
- * @memberof video
- */
-export let parent: HTMLElement;
-/**
- * the scaling ratio to be applied to the display canvas
- * @name scaleRatio
- * @type {Vector2d}
- * @default <1,1>
- * @memberof video
- */
-export let scaleRatio: Vector2d;
-/**
  * A reference to the active Canvas or WebGL active renderer renderer
- * @name renderer
- * @type {CanvasRenderer|WebGLRenderer}
  * @memberof video
+ * @type {CanvasRenderer|WebGLRenderer}
  */
 export let renderer: CanvasRenderer | WebGLRenderer;
-import Vector2d from "./../math/vector2.js";
 import CanvasRenderer from "./canvas/canvas_renderer.js";
 import WebGLRenderer from "./webgl/webgl_renderer.js";
