@@ -1,8 +1,8 @@
 import Color from "./../math/color.js";
 import Matrix3d from "./../math/matrix3.js";
-import { createCanvas, renderer } from "./video.js";
+import { createCanvas } from "./video.js";
 import * as event from "./../system/event.js";
-import * as device from "./../system/device.js";
+import { platform } from "../system/device.js";
 import { setPrefixed } from "./../utils/agent.js";
 import Rect from "./../geometries/rectangle.js";
 import RoundRect from "./../geometries/roundrect.js";
@@ -11,6 +11,7 @@ import Polygon from "./../geometries/poly.js";
 import Line from "./../geometries/line.js";
 import Bounds from "./../physics/bounds.js";
 import Path2D from "./../geometries/path2d.js";
+import Vector2d from "../math/vector2.js";
 import Point from "../geometries/point.js";
 
 /**
@@ -42,6 +43,20 @@ import Point from "../geometries/point.js";
         this.settings = options;
 
         /**
+         * the requested video size ratio
+         * @public
+         * @type {Number}
+         */
+        this.designRatio = this.settings.width / this.settings.height;
+
+        /**
+         * the scaling ratio to be applied to the main canvas
+         * @type {Vector2d}
+         * @default <1,1>
+         */
+        this.scaleRatio = new Vector2d(this.settings.scale, this.settings.scale);
+
+        /**
          * true if the current rendering context is valid
          * @default true
          * @type {boolean}
@@ -70,7 +85,7 @@ import Point from "../geometries/point.js";
         this.currentBlendMode = "none";
 
         // create the main screen canvas
-        if (device.platform.ejecta === true) {
+        if (platform.ejecta === true) {
             // a main canvas is already automatically created by Ejecta
             this.canvas = document.getElementById("canvas");
         } else if (typeof globalThis.canvas !== "undefined") {
@@ -94,9 +109,9 @@ import Point from "../geometries/point.js";
         // default uvOffset
         this.uvOffset = 0;
 
-        // reset the instantiated renderer on game reset
+        // reset the renderer on game reset
         event.on(event.GAME_RESET, () => {
-            renderer.reset();
+            this.reset();
         });
     }
 
@@ -323,8 +338,6 @@ import Point from "../geometries/point.js";
 
     /**
      * fill the given shape
-     * @name fill
-     * @memberof Renderer
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape - a shape object to fill
      */
     fill(shape) {

@@ -473,7 +473,7 @@ export function isFullscreen() {
  * @function requestFullscreen
  * @memberof device
  * @public
- * @param {object} [element=default canvas object] - the element to be set in full-screen mode.
+ * @param {Element} [element] - the element to be set in full-screen mode.
  * @example
  * // add a keyboard shortcut to toggle Fullscreen mode on/off
  * me.input.bindKey(me.input.KEY.F, "toggleFullscreen");
