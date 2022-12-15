@@ -462,7 +462,7 @@ export function enableSwipe(enable) {
  */
 export function isFullscreen() {
     if (hasFullscreenSupport) {
-        return !!(prefixed("fullscreenElement", document) || document.mozFullScreenElement);
+        return !!(prefixed("fullscreenElement", globalThis.document) || globalThis.document.mozFullScreenElement);
     } else {
         return false;
     }
@@ -502,7 +502,7 @@ export function requestFullscreen(element) {
  */
 export function exitFullscreen() {
     if (hasFullscreenSupport && isFullscreen()) {
-        document.exitFullscreen();
+        globalThis.document.exitFullscreen();
     }
 }
 
@@ -655,7 +655,7 @@ export function getElement(element) {
 
     if (element !== "undefined") {
         if (typeof element === "string") {
-            target = document.getElementById(element);
+            target = globalThis.document.getElementById(element);
         } else if (typeof element === "object" && element.nodeType === Node.ELEMENT_NODE) {
             target = element;
         }
@@ -664,7 +664,7 @@ export function getElement(element) {
     // fallback, if invalid target or non HTMLElement object
     if (!target)  {
         //default to document.body
-        target = document.body;
+        target = globalThis.document.body;
     }
 
     return target;
@@ -681,7 +681,7 @@ export function getElement(element) {
  * @returns {DOMRect} the size and position of the element relatively to the viewport
  */
 export function getElementBounds(element) {
-    if (typeof element === "object" && element !== document.body && typeof element.getBoundingClientRect !== "undefined") {
+    if (typeof element === "object" && element !== globalThis.document.body && typeof element.getBoundingClientRect !== "undefined") {
         return element.getBoundingClientRect();
     } else {
         domRect.width = domRect.right = globalThis.innerWidth;
@@ -716,7 +716,7 @@ export function getParentBounds(element) {
 export function isWebGLSupported(options) {
     let _supported = false;
     try {
-        let canvas = document.createElement("canvas");
+        let canvas = globalThis.document.createElement("canvas");
         let ctxOptions = {
             stencil: true,
             failIfMajorPerformanceCaveat: options.failIfMajorPerformanceCaveat
