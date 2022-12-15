@@ -5,7 +5,6 @@ import * as stringUtils from "./string.js";
 import * as fnUtils from "./function.js";
 import { createCanvas } from "./../video/video.js";
 import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
-import { version } from "./../index.js";
 
 /**
  * a collection of utility functions
@@ -51,8 +50,8 @@ var utils = {
      * @public
      * @memberof utils
      * @name checkVersion
-     * @param {string} first - First version string to compare
-     * @param {string} [second=version] - Second version string to compare
+     * @param {string} first - Ffrst version string to compare
+     * @param {string} second - second version string to compare
      * @returns {number} comparison result <br>&lt; 0 : first &lt; second<br>
      * 0 : first == second<br>
      * &gt; 0 : first &gt; second
@@ -63,7 +62,7 @@ var utils = {
      *     );
      * }
      */
-    checkVersion : function (first, second = version) {
+    checkVersion : function (first, second) {
         var a = first.split(".");
         var b = second.split(".");
         var len = Math.min(a.length, b.length);

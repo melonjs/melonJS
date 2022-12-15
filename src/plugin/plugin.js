@@ -122,7 +122,7 @@ export var plugin = {
         }
 
         // compatibility testing
-        if (utils.checkVersion(instance.version) > 0) {
+        if (utils.checkVersion(instance.version, version) > 0) {
             throw new Error("Plugin version mismatch, expected: " + instance.version + ", got: " + version);
         }
 
