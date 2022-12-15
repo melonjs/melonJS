@@ -3,8 +3,6 @@ import * as arrayUtils from "./array.js";
 import * as fileUtils from "./file.js";
 import * as stringUtils from "./string.js";
 import * as fnUtils from "./function.js";
-import { createCanvas } from "./../video/video.js";
-import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
 
 /**
  * a collection of utility functions
@@ -22,28 +20,6 @@ var utils = {
     file : fileUtils,
     string : stringUtils,
     function : fnUtils,
-
-    /**
-     * Get image pixels
-     * @public
-     * @memberof utils
-     * @name getPixels
-     * @param {HTMLImageElement|HTMLCanvasElement} image - Image to read
-     * @returns {ImageData} ImageData object
-     */
-    getPixels : function (image) {
-        if (image instanceof HTMLImageElement) {
-            var _context = CanvasRenderer.getContext2d(
-                createCanvas(image.width, image.height)
-            );
-            _context.drawImage(image, 0, 0);
-            return _context.getImageData(0, 0, image.width, image.height);
-        }
-        else {
-            // canvas !
-            return image.getContext("2d").getImageData(0, 0, image.width, image.height);
-        }
-    },
 
     /**
      * Compare two version strings
