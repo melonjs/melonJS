@@ -1,6 +1,6 @@
 import Vector2d from "./../math/vector2.js";
 import Bounds from "./../physics/bounds.js";
-import game from "./../game.js";
+import { game } from "../index.js";
 import { globalToLocal } from "./input.js";
 import { locked } from "./pointerevent.js";
 

@@ -1,5 +1,5 @@
 import { renderer } from "./../video/video.js";
-import game from "./../game.js";
+import { game } from "../index.js";
 import Camera2d from "./../camera/camera2d.js";
 import Color from "./../math/color.js";
 

@@ -1,7 +1,7 @@
 import * as SAT from "./sat.js";
 import ResponseObject from "./response.js";
 import Vector2d from "./../math/vector2.js";
-import game from "./../game.js";
+import { game } from "../index.js";
 import Bounds from "./bounds.js";
 
 

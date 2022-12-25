@@ -1,4 +1,4 @@
-import game from "./../game.js";
+import { game } from "../index.js";
 import { renderer } from "./../video/video.js";
 import * as event from "./../system/event.js";
 import Sprite from "./../renderable/sprite.js";

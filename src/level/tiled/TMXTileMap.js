@@ -1,6 +1,6 @@
 import pool from "./../../system/pooling.js";
 import * as event from "./../../system/event.js";
-import game from "./../../game.js";
+import { game } from "../../index.js";
 import collision from "./../../physics/collision.js";
 import Body from "./../../physics/body.js";
 import TMXOrthogonalRenderer from "./renderer/TMXOrthogonalRenderer.js";
@@ -12,7 +12,7 @@ import TMXTilesetGroup from "./TMXTilesetGroup.js";
 import TMXGroup from "./TMXGroup.js";
 import TMXLayer from "./TMXLayer.js";
 import { applyTMXProperties } from "./TMXUtils.js";
-import Container from "./../../renderable/container.js";
+import Container from "../../renderable/container.js";
 
 // constant to identify the collision object layer
 const COLLISION_GROUP = "collision";

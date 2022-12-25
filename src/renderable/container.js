@@ -1,10 +1,10 @@
-import utils from "./../utils/utils.js";
-import game from "./../game.js";
-import * as event from "./../system/event.js";
-import pool from "./../system/pooling.js";
-import state from "./../state/state.js";
-import Renderable from "./renderable.js";
-import Body from "./../physics/body.js";
+import Renderable from "./renderable";
+import utils from "../utils/utils.js";
+import { game } from "../index.js";
+import * as event from "../system/event.js";
+import pool from "../system/pooling.js";
+import state from "../state/state.js";
+import Body from "../physics/body.js";
 
 /**
  * Private function to re-use for object removal in a defer

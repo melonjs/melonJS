@@ -10,7 +10,7 @@ import * as event from "./../system/event.js";
 import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
 import {clamp, toBeCloseTo} from "./../math/math.js";
-import game from "./../game.js";
+import { game } from "../index.js";
 
 
 // some ref shortcut

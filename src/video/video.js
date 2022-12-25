@@ -1,50 +1,11 @@
-import WebGLRenderer from "./webgl/webgl_renderer.js";
-import CanvasRenderer from "./canvas/canvas_renderer.js";
-import utils from "./../utils/utils.js";
 import * as event from "./../system/event.js";
+import { initialized, game } from "./../index.js";
 import * as device from "./../system/device.js";
-import { initialized, version } from "./../index.js";
-import game from "./../game.js";
-import { onresize } from "./utils/resize.js";
+import utils from "./../utils/utils.js";
 
 /**
  * @namespace video
  */
-
-// default video settings
-var settings = {
-    parent : undefined,
-    renderer : 2, // AUTO
-    autoScale : false,
-    scale : 1.0,
-    scaleMethod : "manual",
-    transparent : false,
-    premultipliedAlpha: true,
-    blendMode : "normal",
-    antiAlias : false,
-    failIfMajorPerformanceCaveat : true,
-    subPixel : false,
-    preferWebGL1 : false,
-    powerPreference : "default",
-    verbose : false,
-    consoleHeader : true
-};
-
-/**
- * Auto-detect the best renderer to use
- * @ignore
- */
-function autoDetectRenderer(options) {
-    try {
-        if (device.isWebGLSupported(options)) {
-            return new WebGLRenderer(options);
-        }
-    } catch (e) {
-        console.log("Error creating WebGL renderer :" + e.message);
-    }
-    return new CanvasRenderer(options);
-}
-
 
 /**
  * Select the HTML5 Canvas renderer
@@ -115,54 +76,16 @@ export let renderer = null;
  * });
  */
 export function init(width, height, options) {
-
     // ensure melonjs has been properly initialized
     if (!initialized) {
         throw new Error("me.video.init() called before engine initialization.");
     }
 
-    // revert to default options if not defined
-    settings = Object.assign(settings, options || {});
+    // initialize the default game Application with the given options
+    game.init(width, height, options);
 
-    // sanitize potential given parameters
-    settings.width = width;
-    settings.height = height;
-    settings.transparent = !!(settings.transparent);
-    settings.antiAlias = !!(settings.antiAlias);
-    settings.failIfMajorPerformanceCaveat = !!(settings.failIfMajorPerformanceCaveat);
-    settings.subPixel = !!(settings.subPixel);
-    settings.verbose = !!(settings.verbose);
-    if (settings.scaleMethod.search(/^(fill-(min|max)|fit|flex(-(width|height))?|stretch)$/) !== -1) {
-        settings.autoScale = (settings.scale === "auto") || true;
-    } else {
-        // default scaling method
-        settings.scaleMethod = "fit";
-        settings.autoScale = (settings.scale === "auto") || false;
-    }
-
-    // display melonJS version
-    if (settings.consoleHeader !== false) {
-        // output video information in the console
-        console.log("melonJS 2 (v" + version + ") | http://melonjs.org" );
-    }
-
-    // override renderer settings if &webgl or &canvas is defined in the URL
-    var uriFragment = utils.getUriFragment();
-    if (uriFragment.webgl === true || uriFragment.webgl1 === true || uriFragment.webgl2 === true) {
-        settings.renderer = WEBGL;
-        if (uriFragment.webgl1 === true) {
-            settings.preferWebGL1 = true;
-        }
-    } else if (uriFragment.canvas === true) {
-        settings.renderer = CANVAS;
-    }
-
-    // normalize scale
-    settings.scale = (settings.autoScale) ? 1.0 : (+settings.scale || 1.0);
-
-    // default scaled size value
-    settings.zoomX = width * settings.scale;
-    settings.zoomY = height * settings.scale;
+    // assign the default renderer
+    renderer = game.renderer;
 
     //add a channel for the onresize/onorientationchange event
     globalThis.addEventListener(
@@ -182,6 +105,7 @@ export function init(width, height, options) {
         },
         false
     );
+
     // pre-fixed implementation on mozzila
     globalThis.addEventListener(
         "onmozorientationchange",
@@ -201,68 +125,6 @@ export function init(width, height, options) {
     globalThis.addEventListener("scroll", utils.function.throttle((e) => {
         event.emit(event.WINDOW_ONSCROLL, e);
     }, 100), false);
-
-    try {
-        switch (settings.renderer) {
-            case AUTO:
-            case WEBGL:
-                renderer = autoDetectRenderer(settings);
-                break;
-            default:
-                renderer = new CanvasRenderer(settings);
-                break;
-        }
-    } catch (e) {
-        console(e.message);
-        // me.video.init() returns false if failing at creating/using a HTML5 canvas
-        return false;
-    }
-
-    // register to the channel
-    event.on(event.WINDOW_ONRESIZE, () => { onresize(renderer); }, this);
-    event.on(event.WINDOW_ONORIENTATION_CHANGE, () => { onresize(renderer); }, this);
-
-    // add our canvas (default to document.body if settings.parent is undefined)
-    game.parentElement = device.getElement(typeof settings.parent !== "undefined" ? settings.parent : document.body);
-    game.parentElement.appendChild(renderer.getCanvas());
-
-    // Mobile browser hacks
-    if (device.platform.isMobile) {
-        // Prevent the webview from moving on a swipe
-        device.enableSwipe(false);
-    }
-
-    // trigger an initial resize();
-    onresize(renderer);
-
-    // add an observer to detect when the dom tree is modified
-    if ("MutationObserver" in globalThis) {
-        // Create an observer instance linked to the callback function
-        var observer = new MutationObserver(onresize.bind(this, renderer));
-
-        // Start observing the target node for configured mutations
-        observer.observe(game.parentElement, {
-            attributes: false, childList: true, subtree: true
-        });
-    }
-
-    if (settings.consoleHeader !== false) {
-        var renderType = (renderer instanceof CanvasRenderer) ? "CANVAS" : "WebGL" + renderer.WebGLVersion;
-        var audioType = device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
-        var gpu_renderer = (typeof renderer.GPURenderer === "string") ? " (" + renderer.GPURenderer + ")" : "";
-        // output video information in the console
-        console.log(
-            renderType + " renderer" + gpu_renderer + " | " +
-            audioType + " | " +
-            "pixel ratio " + device.devicePixelRatio + " | " +
-            (device.platform.nodeJS ? "node.js" : device.platform.isMobile ? "mobile" : "desktop") + " | " +
-            device.getScreenOrientation() + " | " +
-            device.language
-        );
-        console.log( "resolution: " + "requested " + width + "x" + height +
-            ", got " + renderer.getWidth() + "x" + renderer.getHeight()
-        );
-    }
 
     // notify the video has been initialized
     event.emit(event.VIDEO_INIT);

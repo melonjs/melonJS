@@ -2,7 +2,7 @@ import Renderable from "./renderable.js";
 import collision from "./../physics/collision.js";
 import Body from "./../physics/body.js";
 import level from "./../level/level.js";
-import game from "./../game.js";
+import { game } from "../index.js";
 import pool from "./../system/pooling.js";
 
 /**

@@ -9,8 +9,7 @@ import pool from "./../system/pooling.js";
 import * as device from "./../system/device.js";
 import Pointer from "./pointer.js";
 import Rect from "./../geometries/rectangle.js";
-import Container from "./../renderable/container.js";
-import game from "./../game.js";
+import { game } from "../index.js";
 
 /**
  * A pool of `Pointer` objects to cache pointer/touch event coordinates.
@@ -287,7 +286,7 @@ function dispatchEvent(normalizedEvents) {
         }
 
         // fetch valid candiates from the game world container
-        var candidates = game.world.broadphase.retrieve(currentPointer, Container.prototype._sortReverseZ);
+        var candidates = game.world.broadphase.retrieve(currentPointer, game.world._sortReverseZ);
 
         // add the main game viewport to the list of candidates
         candidates = candidates.concat([ game.viewport ]);
