@@ -1,6 +1,17 @@
 # Changelog
 
-## [14.1.3] (melonJS 2) - _2022-12-xx_
+## [14.2.0] (melonJS 2) - _2022-12-25_
+
+### Added
+- Core: add a tsconfig file for types generation and properly enable type suggestions (@thanks lartkma)
+
+### Changed
+- Utils: move `getPixels()` as `getImageData()` under the CanvasTexture object
+
+### Fixed
+- Core: fix an uncaught exception (again) when using melonJS with parcel (thanks @infamoustrey)
+- Core: fix further global reference to document (use globalThis instead that window)
+- Core: fix few circular dependencies for better/clearer code
 
 ## [14.1.2] (melonJS 2) - _2022-12-01_
 
@@ -1365,6 +1376,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[14.2.0]: https://github.com/melonjs/melonJS/compare/14.2.0...14.1.2
 [14.1.2]: https://github.com/melonjs/melonJS/compare/14.1.2...14.1.1
 [14.1.1]: https://github.com/melonjs/melonJS/compare/14.1.1...14.1.0
 [14.1.0]: https://github.com/melonjs/melonJS/compare/14.1.0...14.0.2
