@@ -1,4 +1,5 @@
 import * as event from "./event.js";
+import { nodeJS } from "./platform.js";
 
 // track if DOMContentLoaded was called already
 let readyBound = false;
@@ -51,7 +52,7 @@ export function DOMContentLoaded(fn) {
         // bind dom load event if not done yet
         if (!readyBound) {
             // directly call domReady if document is already "ready"
-            if (((typeof process !== "undefined") && (process.release.name === "node")) || (typeof globalThis.document !== "undefined" && globalThis.document.readyState === "complete")) {
+            if (nodeJS === true || typeof globalThis.document !== "undefined" && globalThis.document.readyState === "complete") {
                 // defer the fn call to ensure our script is fully loaded
                 globalThis.setTimeout(_domReady, 0);
             }
