@@ -10,8 +10,8 @@
 
 ### Fixed
 - Core: fix an uncaught exception (again) when using melonJS with parcel (thanks @infamoustrey)
-- Core: fix further global reference to document (use globalThis instead that window)
-- Core: fix few circular dependencies for better/clearer code
+- Core: fix further global reference to document (i.e. refer to globalThis instead of implicitely using window)
+- Core: fix more circular dependencies for better/clearer code
 
 ## [14.1.2] (melonJS 2) - _2022-12-01_
 
