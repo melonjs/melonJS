@@ -49,7 +49,8 @@ export default [
           file: "build/melonjs.module.js",
           banner: license,
           format: "es"
-        }
+        },
+        treeshake: false
     },
     // ES6 "melonjs.mjs/" chunk
     {
