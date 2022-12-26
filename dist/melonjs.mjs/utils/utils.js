@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.3
+ * melonJS Game Engine - v14.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -11,9 +11,6 @@ import * as file from './file.js';
 import * as string from './string.js';
 import { toHex } from './string.js';
 import * as _function from './function.js';
-import { createCanvas } from '../video/video.js';
-import CanvasRenderer from '../video/canvas/canvas_renderer.js';
-import { version } from '../index.js';
 
 /**
  * a collection of utility functions
@@ -33,34 +30,12 @@ var utils = {
     function : _function,
 
     /**
-     * Get image pixels
-     * @public
-     * @memberof utils
-     * @name getPixels
-     * @param {HTMLImageElement|HTMLCanvasElement} image - Image to read
-     * @returns {ImageData} ImageData object
-     */
-    getPixels : function (image) {
-        if (image instanceof HTMLImageElement) {
-            var _context = CanvasRenderer.getContext2d(
-                createCanvas(image.width, image.height)
-            );
-            _context.drawImage(image, 0, 0);
-            return _context.getImageData(0, 0, image.width, image.height);
-        }
-        else {
-            // canvas !
-            return image.getContext("2d").getImageData(0, 0, image.width, image.height);
-        }
-    },
-
-    /**
      * Compare two version strings
      * @public
      * @memberof utils
      * @name checkVersion
-     * @param {string} first - First version string to compare
-     * @param {string} [second=version] - Second version string to compare
+     * @param {string} first - Ffrst version string to compare
+     * @param {string} second - second version string to compare
      * @returns {number} comparison result <br>&lt; 0 : first &lt; second<br>
      * 0 : first == second<br>
      * &gt; 0 : first &gt; second
@@ -71,7 +46,7 @@ var utils = {
      *     );
      * }
      */
-    checkVersion : function (first, second = version) {
+    checkVersion : function (first, second) {
         var a = first.split(".");
         var b = second.split(".");
         var len = Math.min(a.length, b.length);

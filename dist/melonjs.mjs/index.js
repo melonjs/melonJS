@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.3
+ * melonJS Game Engine - v14.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -16,11 +16,9 @@ import * as device from './system/device.js';
 export { device };
 export { default as game } from './game.js';
 import loader from './loader/loader.js';
-export { default as loader } from './loader/loader.js';
 import * as math from './math/math.js';
 export { math as Math };
 import utils from './utils/utils.js';
-export { default as utils } from './utils/utils.js';
 import * as input from './input/input.js';
 export { input };
 export { plugin, plugins } from './plugin/plugin.js';
@@ -29,41 +27,25 @@ export { video };
 export { default as save } from './system/save.js';
 export { default as timer } from './system/timer.js';
 import pool from './system/pooling.js';
-export { default as pool } from './system/pooling.js';
 export { default as state } from './state/state.js';
 export { default as level } from './level/level.js';
 import Color from './math/color.js';
-export { default as Color } from './math/color.js';
 import Vector2d from './math/vector2.js';
-export { default as Vector2d } from './math/vector2.js';
 import Vector3d from './math/vector3.js';
-export { default as Vector3d } from './math/vector3.js';
 import ObservableVector2d from './math/observable_vector2.js';
-export { default as ObservableVector2d } from './math/observable_vector2.js';
 import ObservableVector3d from './math/observable_vector3.js';
-export { default as ObservableVector3d } from './math/observable_vector3.js';
 import Matrix2d from './math/matrix2.js';
-export { default as Matrix2d } from './math/matrix2.js';
 import Matrix3d from './math/matrix3.js';
-export { default as Matrix3d } from './math/matrix3.js';
 import Polygon from './geometries/poly.js';
-export { default as Polygon } from './geometries/poly.js';
 import Line from './geometries/line.js';
-export { default as Line } from './geometries/line.js';
 import Ellipse from './geometries/ellipse.js';
-export { default as Ellipse } from './geometries/ellipse.js';
 import Point from './geometries/point.js';
-export { default as Point } from './geometries/point.js';
 import Rect from './geometries/rectangle.js';
-export { default as Rect } from './geometries/rectangle.js';
 import RoundRect from './geometries/roundrect.js';
-export { default as RoundRect } from './geometries/roundrect.js';
 export { default as QuadTree } from './physics/quadtree.js';
 export { default as Body } from './physics/body.js';
 import Bounds from './physics/bounds.js';
-export { default as Bounds } from './physics/bounds.js';
 import Tween from './tweens/tween.js';
-export { default as Tween } from './tweens/tween.js';
 export { default as GLShader } from './video/webgl/glshader.js';
 export { default as WebGLCompositor } from './video/webgl/webgl_compositor.js';
 export { default as Renderer } from './video/renderer.js';
@@ -72,30 +54,19 @@ export { default as CanvasRenderer } from './video/canvas/canvas_renderer.js';
 import CanvasTexture from './video/texture/canvas_texture.js';
 export { TextureAtlas } from './video/texture/atlas.js';
 import Renderable from './renderable/renderable.js';
-export { default as Renderable } from './renderable/renderable.js';
 import Text from './text/text.js';
-export { default as Text } from './text/text.js';
 import BitmapText from './text/bitmaptext.js';
-export { default as BitmapText } from './text/bitmaptext.js';
 import BitmapTextData from './text/bitmaptextdata.js';
-export { default as BitmapTextData } from './text/bitmaptextdata.js';
 import ColorLayer from './renderable/colorlayer.js';
-export { default as ColorLayer } from './renderable/colorlayer.js';
 import ImageLayer from './renderable/imagelayer.js';
-export { default as ImageLayer } from './renderable/imagelayer.js';
 import Sprite from './renderable/sprite.js';
-export { default as Sprite } from './renderable/sprite.js';
 import NineSliceSprite from './renderable/nineslicesprite.js';
-export { default as NineSliceSprite } from './renderable/nineslicesprite.js';
 export { default as UIBaseElement } from './renderable/ui/uibaseelement.js';
 export { default as UITextButton } from './renderable/ui/uitextbutton.js';
 export { default as UISpriteElement } from './renderable/ui/uispriteelement.js';
 import Collectable from './renderable/collectable.js';
-export { default as Collectable } from './renderable/collectable.js';
 import Trigger from './renderable/trigger.js';
-export { default as Trigger } from './renderable/trigger.js';
 import Light2d from './renderable/light2d.js';
-export { default as Light2d } from './renderable/light2d.js';
 export { Draggable, DropTarget } from './renderable/dragndrop.js';
 export { default as TMXRenderer } from './level/tiled/renderer/TMXRenderer.js';
 export { default as TMXOrthogonalRenderer } from './level/tiled/renderer/TMXOrthogonalRenderer.js';
@@ -115,9 +86,7 @@ export { default as World } from './physics/world.js';
 export { default as ParticleEmitterSettings } from './particles/settings.js';
 export { default as ParticleEmitter } from './particles/emitter.js';
 import Particle from './particles/particle.js';
-export { default as Particle } from './particles/particle.js';
 import Entity from './entity/entity.js';
-export { default as Entity } from './entity/entity.js';
 export { DraggableEntity, DroptargetEntity, GUI_Object, warning } from './lang/deprecated.js';
 import { initKeyboardEvent } from './input/keyboard.js';
 
@@ -131,7 +100,7 @@ import { initKeyboardEvent } from './input/keyboard.js';
  * @name version
  * @type {string}
  */
-const version = "14.1.3";
+const version = "14.2.0";
 
 
 /**
@@ -245,4 +214,4 @@ onReady(() => {
     }
 });
 
-export { boot, initialized, skipAutoInit, version };
+export { BitmapText, BitmapTextData, Bounds, Collectable, Color, ColorLayer, Ellipse, Entity, ImageLayer, Light2d, Line, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, Point, Polygon, Rect, Renderable, RoundRect, Sprite, Text, Trigger, Tween, Vector2d, Vector3d, boot, initialized, loader, pool, skipAutoInit, utils, version };

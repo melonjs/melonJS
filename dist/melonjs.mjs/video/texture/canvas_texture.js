@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.3
+ * melonJS Game Engine - v14.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -7,6 +7,7 @@
  */
 import { createCanvas } from '../video.js';
 import { setPrefixed } from '../../utils/agent.js';
+import { clamp } from '../../math/math.js';
 
 // default canvas settings
 var defaultAttributes = {
@@ -102,6 +103,24 @@ class CanvasTexture {
     resize(width, height) {
         this.canvas.width = Math.round(width);
         this.canvas.height = Math.round(height);
+    }
+
+    /**
+     * Returns an ImageData object representing the underlying pixel data for a specified portion of this canvas texture
+     * @param {number} x - The x-axis coordinate of the top-left corner of the rectangle from which the ImageData will be extracted
+     * @param {number} y - The y-axis coordinate of the top-left corner of the rectangle from which the ImageData will be extracted
+     * @param {number} width - The width of the rectangle from which the ImageData will be extracted. Positive values are to the right, and negative to the left
+     * @param {number} height - The height of the rectangle from which the ImageData will be extracted. Positive values are down, and negative are up
+     * @return {ImageData} The ImageData extracted from this CanvasTexture.
+     */
+    getImageData(x, y, width, height) {
+        // clamp values
+        x = clamp(Math.floor(x), 0, this.canvas.width - 1);
+        y = clamp(Math.floor(y), 0, this.canvas.height - 1);
+        width = clamp(width, 1, this.canvas.width - x);
+        height = clamp(height, 1, this.canvas.height - y);
+        // return imageData
+        return this.context.getImageData(x, y, width, height);
     }
 
     /**

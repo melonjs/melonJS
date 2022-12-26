@@ -48,6 +48,15 @@ declare class CanvasTexture {
      */
     resize(width: number, height: number): void;
     /**
+     * Returns an ImageData object representing the underlying pixel data for a specified portion of this canvas texture
+     * @param {number} x - The x-axis coordinate of the top-left corner of the rectangle from which the ImageData will be extracted
+     * @param {number} y - The y-axis coordinate of the top-left corner of the rectangle from which the ImageData will be extracted
+     * @param {number} width - The width of the rectangle from which the ImageData will be extracted. Positive values are to the right, and negative to the left
+     * @param {number} height - The height of the rectangle from which the ImageData will be extracted. Positive values are down, and negative are up
+     * @return {ImageData} The ImageData extracted from this CanvasTexture.
+     */
+    getImageData(x: number, y: number, width: number, height: number): ImageData;
+    /**
      * @ignore
      */
     destroy(): void;

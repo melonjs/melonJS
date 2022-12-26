@@ -5,8 +5,7 @@ declare namespace utils {
     export { fileUtils as file };
     export { stringUtils as string };
     export { fnUtils as function };
-    export function getPixels(image: HTMLCanvasElement | HTMLImageElement): ImageData;
-    export function checkVersion(first: string, second?: string | undefined): number;
+    export function checkVersion(first: string, second: string): number;
     export function getUriFragment(url?: string | undefined): object;
     export function resetGUID(base: any, index?: number): void;
     export function createGUID(index?: number): string;

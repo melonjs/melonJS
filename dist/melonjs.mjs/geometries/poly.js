@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.3
+ * melonJS Game Engine - v14.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -8,7 +8,7 @@
 import '../node_modules/earcut/src/earcut.js';
 import Vector2d from '../math/vector2.js';
 import pool from '../system/pooling.js';
-import { e as earcut } from '../_virtual/earcut.js';
+import { exports as earcutExports } from '../_virtual/earcut.js';
 
 /**
  * @classdesc
@@ -284,7 +284,7 @@ import { e as earcut } from '../_virtual/earcut.js';
      */
     getIndices() {
         if (this.indices.length === 0) {
-            this.indices = earcut.exports(this.points.flatMap(p => [p.x, p.y]));
+            this.indices = earcutExports(this.points.flatMap(p => [p.x, p.y]));
         }
         return this.indices;
     }

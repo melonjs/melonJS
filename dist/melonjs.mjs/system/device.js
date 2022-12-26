@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.1.3
+ * melonJS Game Engine - v14.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -469,7 +469,7 @@ function enableSwipe(enable) {
  */
 function isFullscreen() {
     if (hasFullscreenSupport) {
-        return !!(prefixed("fullscreenElement", document) || document.mozFullScreenElement);
+        return !!(prefixed("fullscreenElement", globalThis.document) || globalThis.document.mozFullScreenElement);
     } else {
         return false;
     }
@@ -509,7 +509,7 @@ function requestFullscreen(element) {
  */
 function exitFullscreen() {
     if (hasFullscreenSupport && isFullscreen()) {
-        document.exitFullscreen();
+        globalThis.document.exitFullscreen();
     }
 }
 
@@ -662,7 +662,7 @@ function getElement(element) {
 
     if (element !== "undefined") {
         if (typeof element === "string") {
-            target = document.getElementById(element);
+            target = globalThis.document.getElementById(element);
         } else if (typeof element === "object" && element.nodeType === Node.ELEMENT_NODE) {
             target = element;
         }
@@ -671,7 +671,7 @@ function getElement(element) {
     // fallback, if invalid target or non HTMLElement object
     if (!target)  {
         //default to document.body
-        target = document.body;
+        target = globalThis.document.body;
     }
 
     return target;
@@ -688,7 +688,7 @@ function getElement(element) {
  * @returns {DOMRect} the size and position of the element relatively to the viewport
  */
 function getElementBounds(element) {
-    if (typeof element === "object" && element !== document.body && typeof element.getBoundingClientRect !== "undefined") {
+    if (typeof element === "object" && element !== globalThis.document.body && typeof element.getBoundingClientRect !== "undefined") {
         return element.getBoundingClientRect();
     } else {
         domRect.width = domRect.right = globalThis.innerWidth;
@@ -723,7 +723,7 @@ function getParentBounds(element) {
 function isWebGLSupported(options) {
     let _supported = false;
     try {
-        let canvas = document.createElement("canvas");
+        let canvas = globalThis.document.createElement("canvas");
         let ctxOptions = {
             stencil: true,
             failIfMajorPerformanceCaveat: options.failIfMajorPerformanceCaveat
