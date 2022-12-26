@@ -1,6 +1,6 @@
 # Changelog
 
-## [14.2.0] (melonJS 2) - _2022-12-25_
+## [14.2.0] (melonJS 2) - _2022-12-26_
 
 ### Added
 - Core: add a tsconfig file for types generation and properly enable type suggestions (@thanks lartkma)
