@@ -52,7 +52,7 @@ export function DOMContentLoaded(fn) {
         // bind dom load event if not done yet
         if (!readyBound) {
             // directly call domReady if document is already "ready"
-            if (nodeJS === true || typeof globalThis.document !== "undefined" && globalThis.document.readyState === "complete") {
+            if (nodeJS === true || (typeof globalThis.document !== "undefined" && globalThis.document.readyState === "complete")) {
                 // defer the fn call to ensure our script is fully loaded
                 globalThis.setTimeout(_domReady, 0);
             }
