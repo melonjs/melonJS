@@ -1,7 +1,7 @@
 import Vector2d from "./../math/vector2.js";
 import * as event from "./../system/event.js";
 import QuadTree from "./quadtree.js";
-import Container from "./../renderable/container.js";
+import Container from "../renderable/container.js";
 import collision from "./collision.js";
 import { collisionCheck } from "./detector.js";
 import state from "./../state/state.js";
@@ -33,7 +33,7 @@ import state from "./../state/state.js";
          * @public
          * @type {Application}
          */
-        this.app = null;
+        this.app = undefined;
 
         /**
          * the rate at which the game world is updated,

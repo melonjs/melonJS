@@ -1,6 +1,6 @@
 import timer from "./../system/timer.js";
 import * as event from "./../system/event.js";
-import game from "./../game.js";
+import { game } from "../index.js";
 import { Easing } from "./easing.js";
 import { Interpolation } from "./interpolation.js";
 

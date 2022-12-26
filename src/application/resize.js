@@ -1,14 +1,15 @@
-import * as device from "./../../system/device.js";
-import game from "./../../game.js";
+import * as device from "./../system/device";
 
 /**
  * scale the "displayed" canvas by the given scalar.
  * this will modify the size of canvas element directly.
  * Only use this if you are not using the automatic scaling feature.
+ * @param {Application} game - the game application instance triggering the resize
  * @param {number} x - x scaling multiplier
  * @param {number} y - y scaling multiplier
  */
-function scale(renderer, x, y) {
+function scale(game, x, y) {
+    var renderer = game.renderer;
     var canvas = renderer.getCanvas();
     var context = renderer.getContext();
     var settings = renderer.settings;
@@ -34,8 +35,10 @@ function scale(renderer, x, y) {
 
 /**
  * callback for window resize event
+ * @param {Application} game - the game application instance triggering the resize
  */
-export function onresize(renderer) {
+export function onresize(game) {
+    var renderer = game.renderer;
     var settings = renderer.settings;
     var scaleX = 1, scaleY = 1;
 
@@ -99,9 +102,9 @@ export function onresize(renderer) {
         }
 
         // adjust scaling ratio based on the new scaling ratio
-        scale(renderer, scaleX, scaleY);
+        scale(game, scaleX, scaleY);
     } else {
         // adjust scaling ratio based on the given settings
-        scale(renderer, settings.scale, settings.scale);
+        scale(game, settings.scale, settings.scale);
     }
 }

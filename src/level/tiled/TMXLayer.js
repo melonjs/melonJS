@@ -4,7 +4,7 @@ import * as TMXUtils from "./TMXUtils.js";
 import Tile from "./TMXTile.js";
 import Renderable from "./../../renderable/renderable.js";
 import CanvasRenderer from "./../../video/canvas/canvas_renderer";
-import game from "./../../game.js";
+import { game } from "../../index.js";
 
 /**
  * Create required arrays for the given layer object

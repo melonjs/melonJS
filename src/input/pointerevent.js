@@ -9,7 +9,7 @@ import pool from "./../system/pooling.js";
 import * as device from "./../system/device.js";
 import Pointer from "./pointer.js";
 import Rect from "./../geometries/rectangle.js";
-import game from "./../game.js";
+import { game } from "../index.js";
 
 /**
  * A pool of `Pointer` objects to cache pointer/touch event coordinates.

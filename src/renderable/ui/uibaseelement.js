@@ -1,4 +1,4 @@
-import Container from "./../container.js";
+import Container from "../container.js";
 import timer from "../../system/timer.js";
 import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js";
 

@@ -1,24 +1,6 @@
 // ES5/ES6 polyfills
 import "./polyfill/index.js";
 
-// utility classes
-import * as audio from "./audio/audio.js";
-import collision from "./physics/collision.js";
-import * as event from "./system/event.js";
-import * as device from "./system/device.js";
-import game from "./game.js";
-import loader from "./loader/loader.js";
-import * as Math from "./math/math.js";
-import utils from "./utils/utils.js";
-import * as input from "./input/input.js";
-import { plugin, plugins } from "./plugin/plugin.js";
-import * as video from "./video/video.js";
-import save from "./system/save.js";
-import timer from "./system/timer.js";
-import pool from "./system/pooling.js";
-import state from "./state/state.js";
-import level from "./level/level.js";
-
 // class definition
 import Color from "./math/color.js";
 import Vector2d from "./math/vector2.js";
@@ -45,9 +27,6 @@ import CanvasRenderer from "./video/canvas/canvas_renderer.js";
 import CanvasTexture from "./video/texture/canvas_texture.js";
 import { TextureAtlas } from "./video/texture/atlas.js";
 import Renderable from "./renderable/renderable.js";
-import Text from "./text/text.js";
-import BitmapText from "./text/bitmaptext.js";
-import BitmapTextData from "./text/bitmaptextdata.js";
 import ColorLayer from "./renderable/colorlayer.js";
 import ImageLayer from "./renderable/imagelayer.js";
 import Sprite from "./renderable/sprite.js";
@@ -58,6 +37,9 @@ import UISpriteElement from "./renderable/ui/uispriteelement.js";
 import Collectable from "./renderable/collectable.js";
 import Trigger from "./renderable/trigger.js";
 import Light2d from "./renderable/light2d.js";
+import Text from "./text/text.js";
+import BitmapText from "./text/bitmaptext.js";
+import BitmapTextData from "./text/bitmaptextdata.js";
 import { Draggable, DropTarget } from "./renderable/dragndrop.js";
 import TMXRenderer from "./level/tiled/renderer/TMXRenderer.js";
 import TMXOrthogonalRenderer from "./level/tiled/renderer/TMXOrthogonalRenderer.js";
@@ -78,6 +60,24 @@ import ParticleEmitterSettings from "./particles/settings.js";
 import ParticleEmitter from "./particles/emitter.js";
 import Particle from "./particles/particle.js";
 import Entity from "./entity/entity.js";
+import Application from "./application/application.js";
+
+// utility classes
+import * as audio from "./audio/audio.js";
+import collision from "./physics/collision.js";
+import * as event from "./system/event.js";
+import * as device from "./system/device.js";
+import loader from "./loader/loader.js";
+import * as Math from "./math/math.js";
+import utils from "./utils/utils.js";
+import * as input from "./input/input.js";
+import { plugin, plugins } from "./plugin/plugin.js";
+import * as video from "./video/video.js";
+import save from "./system/save.js";
+import timer from "./system/timer.js";
+import pool from "./system/pooling.js";
+import state from "./state/state.js";
+import level from "./level/level.js";
 
 
 /**
@@ -95,7 +95,6 @@ export {
     collision,
     device,
     event,
-    game,
     loader,
     level,
     input,
@@ -169,7 +168,8 @@ export {
     ParticleEmitter,
     ParticleEmitterSettings,
     Particle,
-    Entity
+    Entity,
+    Application
 };
 
 // Backward compatibility for deprecated method or properties
@@ -192,6 +192,14 @@ export var initialized = false;
  */
 export var skipAutoInit = false;
 
+/*
+ * game is a default instance of a melonJS Application and represents your current game,
+ * it contains all the objects, tilemap layers, current viewport, collision map, etc...<br>
+ * @namespace game
+ * @see Application
+ */
+export const game = new Application(0, 0, {legacy:true});
+
 /**
  * initialize the melonJS library.
  * this is automatically called unless me.skipAutoInit is set to true,
@@ -205,6 +213,9 @@ export function boot() {
     if (initialized === true) {
         return;
     }
+
+    // output melonJS version in the console
+    console.log("melonJS 2 (v" + version + ") | http://melonjs.org" );
 
     // register all built-ins objects into the object pool
     pool.register("me.Entity", Entity);
