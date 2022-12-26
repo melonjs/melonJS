@@ -2,6 +2,9 @@
 
 ## [14.3.0] (melonJS 2) - _2022-12-XX_
 
+### Changed
+- General: further code revamping to make melonJS more modular and allow instantiation of different app/games
+
 ## [14.2.0] (melonJS 2) - _2022-12-26_
 
 ### Added
