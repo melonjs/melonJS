@@ -1,9 +1,11 @@
 # Changelog
 
+## [14.3.0] (melonJS 2) - _2022-12-XX_
+
 ## [14.2.0] (melonJS 2) - _2022-12-26_
 
 ### Added
-- Core: add a tsconfig file for types generation and properly enable type suggestions (@thanks lartkma)
+- Core: add a tsconfig file for types generation and properly enable type suggestions (thanks @lartkma)
 
 ### Changed
 - Utils: move `getPixels()` as `getImageData()` under the CanvasTexture object
@@ -1376,6 +1378,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[14.3.0]: https://github.com/melonjs/melonJS/compare/14.3.0...14.2.0
 [14.2.0]: https://github.com/melonjs/melonJS/compare/14.2.0...14.1.2
 [14.1.2]: https://github.com/melonjs/melonJS/compare/14.1.2...14.1.1
 [14.1.1]: https://github.com/melonjs/melonJS/compare/14.1.1...14.1.0
