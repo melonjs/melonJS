@@ -1,4 +1,4 @@
-import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
+import { autoDetectRenderer } from "../video/utils/autodetect.js";
 import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
 import * as device from "./../system/device.js";
 import * as event from "./../system/event.js";
@@ -7,41 +7,7 @@ import timer from "./../system/timer.js";
 import state from "./../state/state.js";
 import World from "./../physics/world.js";
 import { onresize } from "./resize.js";
-
-/**
- * Auto-detect the best renderer to use
- * @ignore
- */
-function autoDetectRenderer(options) {
-    try {
-        if (device.isWebGLSupported(options)) {
-            return new WebGLRenderer(options);
-        }
-    } catch (e) {
-        console.log("Error creating WebGL renderer :" + e.message);
-    }
-    return new CanvasRenderer(options);
-}
-
-// default settings
-const defaultSettings = {
-    parent : undefined,
-    renderer : 2, // AUTO
-    autoScale : false,
-    scale : 1.0,
-    scaleMethod : "manual",
-    transparent : false,
-    premultipliedAlpha: true,
-    blendMode : "normal",
-    antiAlias : false,
-    failIfMajorPerformanceCaveat : true,
-    subPixel : false,
-    preferWebGL1 : false,
-    powerPreference : "default",
-    verbose : false,
-    consoleHeader : true,
-    legacy : false
-};
+import { defaultSettings } from "./settings.js";
 
 /**
  * Select the HTML5 Canvas renderer
