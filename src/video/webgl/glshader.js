@@ -1,9 +1,8 @@
 import * as event from "./../../system/event.js";
-import * as device from "./../../system/device.js";
 import { extractUniforms } from "./utils/uniforms.js";
 import { extractAttributes } from "./utils/attributes.js";
 import { compileProgram } from "./utils/program.js";
-import { setPrecision } from "./utils/precision.js";
+import { setPrecision, getMaxShaderPrecision } from "./utils/precision.js";
 import { minify } from "./utils/string.js";
 
 /**
@@ -50,13 +49,13 @@ import { minify } from "./utils/string.js";
          * the vertex shader source code
          * @type {string}
          */
-        this.vertex = setPrecision(minify(vertex), precision || device.getMaxShaderPrecision(this.gl));
+        this.vertex = setPrecision(minify(vertex), precision || getMaxShaderPrecision(this.gl));
 
         /**
          * the fragment shader source code
          * @type {string}
          */
-        this.fragment = setPrecision(minify(fragment), precision || device.getMaxShaderPrecision(this.gl));
+        this.fragment = setPrecision(minify(fragment), precision || getMaxShaderPrecision(this.gl));
 
         /**
          * the location attributes of the shader
