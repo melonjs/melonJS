@@ -57,7 +57,7 @@ export let renderer = null;
  * @param {number} height - The height of the canvas viewport
  * @param {object} [options] - The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
  * @param {string|HTMLElement} [options.parent=document.body] - the DOM parent element to hold the canvas in the HTML file
- * @param {number} [options.renderer=video.AUTO] - renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
+ * @param {number|Renderer} [options.renderer=video.AUTO] - renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO), or a custom renderer class
  * @param {number|string} [options.scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)
  * @param {string} [options.scaleMethod="fit"] - screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
  * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
@@ -81,8 +81,14 @@ export function init(width, height, options) {
         throw new Error("me.video.init() called before engine initialization.");
     }
 
-    // initialize the default game Application with the given options
-    game.init(width, height, options);
+    try {
+         // initialize the default game Application with the given options
+        game.init(width, height, options);
+    } catch (e) {
+        console(e.message);
+        // me.video.init() historically returns false if failing at creating/using a HTML5 canvas
+        return false;
+    }
 
     // assign the default renderer
     renderer = game.renderer;

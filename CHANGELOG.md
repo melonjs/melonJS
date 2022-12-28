@@ -2,6 +2,9 @@
 
 ## [14.3.0] (melonJS 2) - _2022-12-XX_
 
+### Added
+- Core: its now possible to specify a custom renderer (that extends the default Renderer class)
+
 ### Changed
 - General: further code revamping to make melonJS more modular and allow instantiation of different app/games
 - Physic: new `Detector` class instantiated by each physic world instance to detect and solve collisions

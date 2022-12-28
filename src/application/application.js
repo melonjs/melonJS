@@ -39,7 +39,7 @@ const AUTO = 2;
      * @param {number} height - The height of the canvas viewport
      * @param {object} [options] - The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
      * @param {string|HTMLElement} [options.parent=document.body] - the DOM parent element to hold the canvas in the HTML file
-     * @param {number} [options.renderer=video.AUTO] - renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
+     * @param {number|Renderer} [options.renderer=video.AUTO] - renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO), or a custom renderer class
      * @param {number|string} [options.scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)
      * @param {string} [options.scaleMethod="fit"] - screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
      * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
@@ -47,6 +47,7 @@ const AUTO = 2;
      * @param {boolean} [options.transparent=false] - whether to allow transparent pixels in the front buffer (screen).
      * @param {boolean} [options.antiAlias=false] - whether to enable or not video scaling interpolation
      * @param {boolean} [options.consoleHeader=true] - whether to display melonJS version and basic device information in the console
+     * @throws Will throw an exception if it fails to instantiate a renderer
      */
     constructor(width, height, options) {
 
@@ -183,7 +184,7 @@ const AUTO = 2;
         this.settings.zoomX = width * this.settings.scale;
         this.settings.zoomY = height * this.settings.scale;
 
-        try {
+        if (typeof this.settings.renderer === "number") {
             switch (this.settings.renderer) {
                 case AUTO:
                 case WEBGL:
@@ -193,10 +194,10 @@ const AUTO = 2;
                     this.renderer = new CanvasRenderer(this.settings);
                     break;
             }
-        } catch (e) {
-            console(e.message);
-            // me.video.init() returns false if failing at creating/using a HTML5 canvas
-            return false;
+        } else {
+            var CustomRenderer = this.settings.renderer;
+            // a renderer class
+            this.renderer = new CustomRenderer(this.settings);
         }
 
         // register to the channel
@@ -228,7 +229,7 @@ const AUTO = 2;
         }
 
         if (this.settings.consoleHeader !== false) {
-            var renderType = (this.renderer instanceof CanvasRenderer) ? "CANVAS" : "WebGL" + this.renderer.WebGLVersion;
+            var renderType = typeof this.settings.renderer === "number" ? (this.renderer instanceof CanvasRenderer ? "CANVAS" : "WebGL" + this.renderer.WebGLVersion) : "Custom";
             var audioType = device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
             var gpu_renderer = (typeof this.renderer.GPURenderer === "string") ? " (" + this.renderer.GPURenderer + ")" : "";
             // output video information in the console
