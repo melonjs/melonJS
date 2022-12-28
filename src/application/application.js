@@ -8,6 +8,7 @@ import state from "./../state/state.js";
 import World from "./../physics/world.js";
 import { onresize } from "./resize.js";
 import { defaultSettings } from "./settings.js";
+import { consoleHeader } from "./header.js";
 
 /**
  * Select the HTML5 Canvas renderer
@@ -229,21 +230,7 @@ const AUTO = 2;
         }
 
         if (this.settings.consoleHeader !== false) {
-            var renderType = typeof this.settings.renderer === "number" ? (this.renderer instanceof CanvasRenderer ? "CANVAS" : "WebGL" + this.renderer.WebGLVersion) : "Custom";
-            var audioType = device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
-            var gpu_renderer = (typeof this.renderer.GPURenderer === "string") ? " (" + this.renderer.GPURenderer + ")" : "";
-            // output video information in the console
-            console.log(
-                renderType + " renderer" + gpu_renderer + " | " +
-                audioType + " | " +
-                "pixel ratio " + device.devicePixelRatio + " | " +
-                (device.platform.nodeJS ? "node.js" : device.platform.isMobile ? "mobile" : "desktop") + " | " +
-                device.getScreenOrientation() + " | " +
-                device.language
-            );
-            console.log( "resolution: " + "requested " + this.settings.width + "x" + this.settings.height +
-                ", got " + this.renderer.getWidth() + "x" + this.renderer.getHeight()
-            );
+            consoleHeader(this);
         }
 
         // create a new physic world
