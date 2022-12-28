@@ -1,4 +1,4 @@
-import { rayCast } from "./detector.js";
+import { game } from "../index.js";
 
 /**
  * Collision detection (and projection-based collision response) of 2D shapes.<br>
@@ -117,7 +117,7 @@ var collision = {
      *        // ...
      *    }
      */
-    rayCast(line, result) { return rayCast(line, result); }
+    rayCast(line, result) { return game.world.rayCast(line, result); }
 };
 
 export default collision;
