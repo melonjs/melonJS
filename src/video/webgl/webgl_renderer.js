@@ -136,6 +136,9 @@ import { isPowerOfTwo, nextPowerOfTwo } from "./../../math/math.js";
         // Create a texture cache
         this.cache = new TextureCache(this.maxTextures);
 
+        // set the renderer type
+        this.type =  "WebGL" + this.WebGLVersion;
+
         // to simulate context lost and restore in WebGL:
         // var ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');
         // ctx.loseContext()

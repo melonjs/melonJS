@@ -70,6 +70,13 @@ import Point from "../geometries/point.js";
         this.path2D = new Path2D();
 
         /**
+         * The renderer type : Canvas, WebGL, etc...
+         * (override this property with a specific value when implementing a custom renderer)
+         * @type {string}
+         */
+        this.type = "Generic";
+
+        /**
          * @ignore
          */
         this.currentScissor = new Int32Array([ 0, 0, this.settings.width, this.settings.height ]);

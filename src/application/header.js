@@ -1,14 +1,13 @@
 import * as device from "../system/device";
-import CanvasRenderer from "../video/canvas/canvas_renderer";
 
 /**
  * display information
  * @param {Application} game - the game application instance calling this function
  */
 export function consoleHeader(app) {
-    var renderType = typeof app.settings.renderer === "number" ? (app.renderer instanceof CanvasRenderer ? "CANVAS" : "WebGL" + app.renderer.WebGLVersion) : "Custom";
-    var audioType = device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
+    var renderType = app.renderer.type;
     var gpu_renderer = (typeof app.renderer.GPURenderer === "string") ? " (" + app.renderer.GPURenderer + ")" : "";
+    var audioType = device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
 
     // output video information in the console
     console.log(

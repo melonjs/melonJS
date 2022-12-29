@@ -45,6 +45,9 @@ import * as event from "./../../system/event.js";
             this.uvOffset = 1;
         }
 
+        // set the renderer type
+        this.type = "CANVAS";
+
         // context lost & restore event for canvas
         this.getCanvas().addEventListener("contextlost", (e) => {
             e.preventDefault();
