@@ -30,7 +30,6 @@ import state from "./../state/state.js";
 
         /**
          * the application (game) this physic world belong to
-         * @public
          * @type {Application}
          */
         this.app = undefined;
@@ -188,6 +187,5 @@ import state from "./../state/state.js";
         // call the super constructor
         return super.update(dt);
     }
-
 }
 
