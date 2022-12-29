@@ -1,16 +1,16 @@
 /*!
- * melonJS Game Engine - v14.2.0
+ * melonJS Game Engine - v14.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
  */
+import Renderable from './renderable.js';
 import utils from '../utils/utils.js';
-import game from '../game.js';
+import { game } from '../index.js';
 import { on, CANVAS_ONRESIZE } from '../system/event.js';
 import pool from '../system/pooling.js';
 import state from '../state/state.js';
-import Renderable from './renderable.js';
 import Body from '../physics/body.js';
 
 /**
@@ -52,11 +52,8 @@ let globalFloatingCounter = 0;
 
         /**
          * whether the container is the root of the scene
-         * @public
          * @type {boolean}
          * @default false
-         * @name root
-         * @memberof Container
          */
         this.root = root;
 
@@ -69,48 +66,34 @@ let globalFloatingCounter = 0;
         /**
          * The property of the child object that should be used to sort on <br>
          * value : "x", "y", "z"
-         * @public
          * @type {string}
          * @default me.game.sortOn
-         * @name sortOn
-         * @memberof Container
          */
         this.sortOn = game.sortOn;
 
         /**
          * Specify if the children list should be automatically sorted when adding a new child
-         * @public
          * @type {boolean}
          * @default true
-         * @name autoSort
-         * @memberof Container
          */
         this.autoSort = true;
 
         /**
          * Specify if the children z index should automatically be managed by the parent container
-         * @public
          * @type {boolean}
          * @default true
-         * @name autoDepth
-         * @memberof Container
          */
         this.autoDepth = true;
 
         /**
          * Specify if the container draw operation should clip his children to its own bounds
-         * @public
          * @type {boolean}
          * @default false
-         * @name clipping
-         * @memberof Container
          */
         this.clipping = false;
 
         /**
          * a callback to be extended, triggered after a child has been added or removed
-         * @name onChildChange
-         * @memberof Container#
          * @param {number} index - added or removed child index
          */
         this.onChildChange = function (index) {   // eslint-disable-line no-unused-vars
@@ -121,21 +104,15 @@ let globalFloatingCounter = 0;
          * Specify if the container bounds should automatically take in account
          * all child bounds when updated (this is expensive and disabled by default,
          * only enable if necessary)
-         * @public
          * @type {boolean}
          * @default false
-         * @name enableChildBoundsUpdate
-         * @memberof Container
          */
         this.enableChildBoundsUpdate = false;
 
         /**
          * define a background color for this container
-         * @public
          * @type {Color}
-         * @name backgroundColor
          * @default (0, 0, 0, 0.0)
-         * @memberof Container
          * @example
          * // add a red background color to this container
          * this.backgroundColor.setColor(255, 0, 0);
@@ -165,8 +142,6 @@ let globalFloatingCounter = 0;
 
     /**
      * reset the container, removing all childrens, and reseting transforms.
-     * @name reset
-     * @memberof Container
      */
     reset() {
         // cancel any sort operation
@@ -202,8 +177,6 @@ let globalFloatingCounter = 0;
      * will not be in any container. <br>
      * if the given child implements a onActivateEvent method, that method will be called
      * once the child is added to this container.
-     * @name addChild
-     * @memberof Container
      * @param {Renderable} child
      * @param {number} [z] - forces the z index of the child to the specified value
      * @returns {Renderable} the added child
@@ -265,8 +238,6 @@ let globalFloatingCounter = 0;
     /**
      * Add a child to the container at the specified index<br>
      * (the list won't be sorted after insertion)
-     * @name addChildAt
-     * @memberof Container
      * @param {Renderable} child
      * @param {number} index
      * @returns {Renderable} the added child
@@ -323,8 +294,6 @@ let globalFloatingCounter = 0;
      *    - The current element being processed in the array <br>
      *    - The index of element in the array. <br>
      *    - The array forEach() was called upon. <br>
-     * @name forEach
-     * @memberof Container
      * @param {Function} callback - fnction to execute on each element
      * @param {object} [thisArg] - value to use as this(i.e reference Object) when executing callback.
      * @example
@@ -359,8 +328,6 @@ let globalFloatingCounter = 0;
 
     /**
      * Swaps the position (z-index) of 2 children
-     * @name swapChildren
-     * @memberof Container
      * @param {Renderable} child
      * @param {Renderable} child2
      */
@@ -386,8 +353,6 @@ let globalFloatingCounter = 0;
 
     /**
      * Returns the Child at the specified index
-     * @name getChildAt
-     * @memberof Container
      * @param {number} index
      * @returns {Renderable} the child at the specified index
      */
@@ -402,8 +367,6 @@ let globalFloatingCounter = 0;
 
     /**
      * Returns the index of the given Child
-     * @name getChildIndex
-     * @memberof Container
      * @param {Renderable} child
      * @returns {number} index
      */
@@ -413,8 +376,6 @@ let globalFloatingCounter = 0;
 
     /**
      * Returns the next child within the container or undefined if none
-     * @name getNextChild
-     * @memberof Container
      * @param {Renderable} child
      * @returns {Renderable} child
      */
@@ -428,8 +389,6 @@ let globalFloatingCounter = 0;
 
     /**
      * Returns true if contains the specified Child
-     * @name hasChild
-     * @memberof Container
      * @param {Renderable} child
      * @returns {boolean}
      */
@@ -441,9 +400,6 @@ let globalFloatingCounter = 0;
      * return the child corresponding to the given property and value.<br>
      * note : avoid calling this function every frame since
      * it parses the whole object tree each time
-     * @name getChildByProp
-     * @memberof Container
-     * @public
      * @param {string} prop - Property name
      * @param {string|RegExp|number|boolean} value - Value of the property
      * @returns {Renderable[]} Array of childs
@@ -492,9 +448,6 @@ let globalFloatingCounter = 0;
 
     /**
      * returns the list of childs with the specified class type
-     * @name getChildByType
-     * @memberof Container
-     * @public
      * @param {object} classType
      * @returns {Renderable[]} Array of children
      */
@@ -518,9 +471,6 @@ let globalFloatingCounter = 0;
      * as defined in Tiled (Name field of the Object Properties)<br>
      * note : avoid calling this function every frame since
      * it parses the whole object list each time
-     * @name getChildByName
-     * @memberof Container
-     * @public
      * @param {string|RegExp|number|boolean} name - child name
      * @returns {Renderable[]} Array of children
      */
@@ -532,9 +482,6 @@ let globalFloatingCounter = 0;
      * return the child corresponding to the specified GUID<br>
      * note : avoid calling this function every frame since
      * it parses the whole object list each time
-     * @name getChildByGUID
-     * @memberof Container
-     * @public
      * @param {string|RegExp|number|boolean} guid - child GUID
      * @returns {Renderable} corresponding child or null
      */
@@ -545,9 +492,6 @@ let globalFloatingCounter = 0;
 
     /**
      * return all child in this container
-     * @name getChildren
-     * @memberof Container
-     * @public
      * @returns {Renderable[]} an array of renderable object
      */
     getChildren() {
@@ -560,8 +504,6 @@ let globalFloatingCounter = 0;
     /**
      * update the bounding box for this shape.
      * @ignore
-     * @name updateBounds
-     * @memberof Renderable
      * @returns {Bounds} this shape bounding box Rectangle object
      */
     updateBounds(forceUpdateChildBounds = false) {
@@ -588,8 +530,6 @@ let globalFloatingCounter = 0;
     /**
      * Checks if this container is root or if it's attached to the root container.
      * @private
-     * @name isAttachedToRoot
-     * @memberof Container
      * @returns {boolean}
      */
     isAttachedToRoot() {
@@ -610,8 +550,6 @@ let globalFloatingCounter = 0;
     /**
      * update the cointainer's bounding rect (private)
      * @ignore
-     * @name updateBoundsPos
-     * @memberof Container
      */
     updateBoundsPos(newX, newY) {
         // call the parent method
@@ -645,9 +583,6 @@ let globalFloatingCounter = 0;
     /**
      * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed. <br>
      * if the given child implements a onDeactivateEvent() method, that method will be called once the child is removed from this container.
-     * @name removeChild
-     * @memberof Container
-     * @public
      * @param {Renderable} child
      * @param {boolean} [keepalive=false] - true to prevent calling child.destroy()
      */
@@ -664,8 +599,6 @@ let globalFloatingCounter = 0;
      * Removes (and optionally destroys) a child from the container.<br>
      * (removal is immediate and unconditional)<br>
      * Never use keepalive=true with objects from {@link pool}. Doing so will create a memory leak.
-     * @name removeChildNow
-     * @memberof Container
      * @param {Renderable} child
      * @param {boolean} [keepalive=False] - True to prevent calling child.destroy()
      */
@@ -716,8 +649,6 @@ let globalFloatingCounter = 0;
 
     /**
      * Automatically set the specified property of all childs to the given value
-     * @name setChildsProperty
-     * @memberof Container
      * @param {string} prop - property name
      * @param {object} value - property value
      * @param {boolean} [recursive=false] - recursively apply the value to child containers if true
@@ -733,8 +664,6 @@ let globalFloatingCounter = 0;
 
     /**
      * Move the child in the group one step forward (z depth).
-     * @name moveUp
-     * @memberof Container
      * @param {Renderable} child
      */
     moveUp(child) {
@@ -749,8 +678,6 @@ let globalFloatingCounter = 0;
 
     /**
      * Move the child in the group one step backward (z depth).
-     * @name moveDown
-     * @memberof Container
      * @param {Renderable} child
      */
     moveDown(child) {
@@ -765,8 +692,6 @@ let globalFloatingCounter = 0;
 
     /**
      * Move the specified child to the top(z depth).
-     * @name moveToTop
-     * @memberof Container
      * @param {Renderable} child
      */
     moveToTop(child) {
@@ -784,8 +709,6 @@ let globalFloatingCounter = 0;
 
     /**
      * Move the specified child the bottom (z depth).
-     * @name moveToBottom
-     * @memberof Container
      * @param {Renderable} child
      */
     moveToBottom(child) {
@@ -803,9 +726,6 @@ let globalFloatingCounter = 0;
 
     /**
      * Manually trigger the sort of all the childs in the container</p>
-     * @name sort
-     * @memberof Container
-     * @public
      * @param {boolean} [recursive=false] - recursively sort all containers if true
      */
     sort(recursive) {
@@ -897,8 +817,6 @@ let globalFloatingCounter = 0;
     /**
      * container update function. <br>
      * automatically called by the game manager {@link game}
-     * @name update
-     * @memberof Container
      * @protected
      * @param {number} dt - time since the last update in milliseconds.
      * @returns {boolean} true if the Container is dirty
@@ -948,8 +866,6 @@ let globalFloatingCounter = 0;
 
     /**
       * draw this renderable (automatically called by melonJS)
-     * @name draw
-     * @memberof Container
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
      * @param {Camera2d} [viewport] - the viewport to (re)draw

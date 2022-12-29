@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.2.0
+ * melonJS Game Engine - v14.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -8,7 +8,7 @@
 import { renderer } from '../video/video.js';
 import { on, ONCONTEXT_RESTORED, VIEWPORT_ONCHANGE, VIEWPORT_ONRESIZE, once, off, LEVEL_LOADED } from '../system/event.js';
 import pool from '../system/pooling.js';
-import game from '../game.js';
+import { game } from '../index.js';
 import Sprite from './sprite.js';
 import { isNumeric } from '../utils/string.js';
 

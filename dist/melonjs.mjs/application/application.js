@@ -1,15 +1,39 @@
 /*!
- * melonJS Game Engine - v14.2.0
+ * melonJS Game Engine - v14.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
  */
-import { renderer } from '../video/video.js';
-import { emit, GAME_INIT, GAME_RESET, GAME_BEFORE_UPDATE, GAME_UPDATE, GAME_AFTER_UPDATE, GAME_BEFORE_DRAW, GAME_AFTER_DRAW } from '../system/event.js';
+import { autoDetectRenderer } from '../video/utils/autodetect.js';
+import CanvasRenderer from '../video/canvas/canvas_renderer.js';
+import { getElement, platform, enableSwipe } from '../system/device.js';
+import { on, emit, GAME_AFTER_UPDATE, GAME_BEFORE_DRAW, GAME_AFTER_DRAW, WINDOW_ONRESIZE, WINDOW_ONORIENTATION_CHANGE, GAME_INIT, GAME_RESET, GAME_BEFORE_UPDATE, GAME_UPDATE } from '../system/event.js';
+import utils from '../utils/utils.js';
 import timer from '../system/timer.js';
 import state from '../state/state.js';
 import World from '../physics/world.js';
+import { onresize } from './resize.js';
+import { defaultSettings } from './settings.js';
+import { consoleHeader } from './header.js';
+
+/**
+ * Select the HTML5 Canvas renderer
+ * @constant
+ */
+const CANVAS = 0;
+
+/**
+ * Select the WebGL renderer
+ * @constant
+ */
+const WEBGL = 1;
+
+/**
+ * Auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
+ * @constant
+ */
+const AUTO = 2;
 
 /**
  * @classdesc
@@ -18,13 +42,34 @@ import World from '../physics/world.js';
  * @see game
  */
  class Application {
-    constructor() {
+    /**
+     * @param {number} width - The width of the canvas viewport
+     * @param {number} height - The height of the canvas viewport
+     * @param {object} [options] - The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
+     * @param {string|HTMLElement} [options.parent=document.body] - the DOM parent element to hold the canvas in the HTML file
+     * @param {number|Renderer} [options.renderer=video.AUTO] - renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO), or a custom renderer class
+     * @param {number|string} [options.scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)
+     * @param {string} [options.scaleMethod="fit"] - screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
+     * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
+     * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
+     * @param {boolean} [options.transparent=false] - whether to allow transparent pixels in the front buffer (screen).
+     * @param {boolean} [options.antiAlias=false] - whether to enable or not video scaling interpolation
+     * @param {boolean} [options.consoleHeader=true] - whether to display melonJS version and basic device information in the console
+     * @throws Will throw an exception if it fails to instantiate a renderer
+     */
+    constructor(width, height, options) {
 
         /**
          * the parent HTML element holding the main canvas of this application
          * @type {HTMLElement}
          */
         this.parentElement = undefined;
+
+        /**
+         * a reference to the active Canvas or WebGL active renderer renderer
+         * @type {CanvasRenderer|WebGLRenderer}
+         */
+        this.renderer = undefined;
 
         /**
          * the active stage "default" camera
@@ -71,6 +116,12 @@ import World from '../physics/world.js';
          */
         this.isInitialized = false;
 
+        /**
+         * the given settings used when creating this application
+         * @type {Object}
+         */
+        this.settings = undefined;
+
         // to know when we have to refresh the display
         this.isDirty = true;
 
@@ -92,18 +143,111 @@ import World from '../physics/world.js';
         this.updateDelta = 0;
         this.lastUpdateStart = null;
         this.updateAverageDelta = 0;
+
+        // when using the default game application, legacy is set to true
+        // and init is called through the legacy video.init() call
+        if (options.legacy !== true) {
+            this.init(width, height, options);
+        }
     }
 
     /**
      * init the game instance (create a physic world, update starting time, etc..)
      */
-    init() {
+    init(width, height, options) {
+
+        this.settings = Object.assign(defaultSettings, options || {});
+
+        // sanitize potential given parameters
+        this.settings.width = width;
+        this.settings.height = height;
+        this.settings.transparent = !!(this.settings.transparent);
+        this.settings.antiAlias = !!(this.settings.antiAlias);
+        this.settings.failIfMajorPerformanceCaveat = !!(this.settings.failIfMajorPerformanceCaveat);
+        this.settings.subPixel = !!(this.settings.subPixel);
+        this.settings.verbose = !!(this.settings.verbose);
+        if (this.settings.scaleMethod.search(/^(fill-(min|max)|fit|flex(-(width|height))?|stretch)$/) !== -1) {
+            this.settings.autoScale = (this.settings.scale === "auto") || true;
+        } else {
+            // default scaling method
+            this.settings.scaleMethod = "fit";
+            this.settings.autoScale = (this.settings.scale === "auto") || false;
+        }
+
+        // override renderer settings if &webgl or &canvas is defined in the URL
+        var uriFragment = utils.getUriFragment();
+        if (uriFragment.webgl === true || uriFragment.webgl1 === true || uriFragment.webgl2 === true) {
+            this.settings.renderer = WEBGL;
+            if (uriFragment.webgl1 === true) {
+                this.settings.preferWebGL1 = true;
+            }
+        } else if (uriFragment.canvas === true) {
+            this.settings.renderer = CANVAS;
+        }
+
+        // normalize scale
+        this.settings.scale = (this.settings.autoScale) ? 1.0 : (+this.settings.scale || 1.0);
+
+        // default scaled size value
+        this.settings.zoomX = width * this.settings.scale;
+        this.settings.zoomY = height * this.settings.scale;
+
+        if (typeof this.settings.renderer === "number") {
+            switch (this.settings.renderer) {
+                case AUTO:
+                case WEBGL:
+                    this.renderer = autoDetectRenderer(this.settings);
+                    break;
+                default:
+                    this.renderer = new CanvasRenderer(this.settings);
+                    break;
+            }
+        } else {
+            var CustomRenderer = this.settings.renderer;
+            // a renderer class
+            this.renderer = new CustomRenderer(this.settings);
+        }
+
+        // register to the channel
+        on(WINDOW_ONRESIZE, () => { onresize(this); }, this);
+        on(WINDOW_ONORIENTATION_CHANGE, () => { onresize(this); }, this);
+
+        // add our canvas (default to document.body if settings.parent is undefined)
+        this.parentElement = getElement(this.settings.parent);
+        this.parentElement.appendChild(this.renderer.getCanvas());
+
+        // Mobile browser hacks
+        if (platform.isMobile) {
+            // Prevent the webview from moving on a swipe
+            enableSwipe(false);
+        }
+
+        // trigger an initial resize();
+        onresize(this);
+
+        // add an observer to detect when the dom tree is modified
+        if ("MutationObserver" in globalThis) {
+            // Create an observer instance linked to the callback function
+            var observer = new MutationObserver(onresize.bind(this, this));
+
+            // Start observing the target node for configured mutations
+            observer.observe(this.parentElement, {
+                attributes: false, childList: true, subtree: true
+            });
+        }
+
+        if (this.settings.consoleHeader !== false) {
+            consoleHeader(this);
+        }
+
         // create a new physic world
         this.world = new World();
         // set the reference to this application instance
         this.world.app = this;
         this.lastUpdate = globalThis.performance.now();
+
         this.isInitialized = true;
+
         emit(GAME_INIT, this);
     }
 
@@ -220,21 +364,21 @@ import World from '../physics/world.js';
      * @param {Stage} stage - the current stage
      */
     draw(stage) {
-        if (renderer.isContextValid === true && (this.isDirty || this.isAlwaysDirty)) {
+        if (this.renderer.isContextValid === true && (this.isDirty || this.isAlwaysDirty)) {
             // publish notification
             emit(GAME_BEFORE_DRAW, globalThis.performance.now());
 
             // prepare renderer to draw a new frame
-            renderer.clear();
+            this.renderer.clear();
 
             // render the stage
-            stage.draw(renderer);
+            stage.draw(this.renderer);
 
             // set back to flag
             this.isDirty = false;
 
             // flush/render our frame
-            renderer.flush();
+            this.renderer.flush();
 
             // publish notification
             emit(GAME_AFTER_DRAW, globalThis.performance.now());

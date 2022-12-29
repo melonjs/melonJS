@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.2.0
+ * melonJS Game Engine - v14.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -17,7 +17,7 @@ import { on, GAME_RESET, CANVAS_ONRESIZE, emit, VIEWPORT_ONRESIZE, VIEWPORT_ONCH
 import pool from '../system/pooling.js';
 import Renderable from '../renderable/renderable.js';
 import { clamp, toBeCloseTo } from '../math/math.js';
-import game from '../game.js';
+import { game } from '../index.js';
 
 // some ref shortcut
 const MIN = Math.min, MAX = Math.max;

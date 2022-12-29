@@ -75,7 +75,7 @@ export default class ImageLayer {
      * @ignore
      */
     createPattern(): void;
-    _pattern: CanvasPattern | import("../index.js").TextureAtlas | undefined;
+    _pattern: any;
     /**
      * updateLayer function
      * @ignore

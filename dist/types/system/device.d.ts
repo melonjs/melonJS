@@ -200,15 +200,6 @@ export function isWebGLSupported(options?: {
     failIfMajorPerformanceCaveat?: boolean | undefined;
 } | undefined): boolean;
 /**
- * return the highest precision format supported by this device for GL Shaders
- * @function getMaxShaderPrecision
- * @memberof device
- * @public
- * @param {WebGLRenderingContext} gl
- * @returns {boolean} "lowp", "mediump", or "highp"
- */
-export function getMaxShaderPrecision(gl: WebGLRenderingContext): boolean;
-/**
  * Makes a request to bring this device window to the front.
  * @function focus
  * @memberof device

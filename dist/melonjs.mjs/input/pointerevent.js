@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.2.0
+ * melonJS Game Engine - v14.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -16,7 +16,7 @@ import pool from '../system/pooling.js';
 import { getElementBounds, hasPointerLockSupport, maxTouchPoints, pointerEvent, touch, focus, touchEvent } from '../system/device.js';
 import Pointer from './pointer.js';
 import Rect from '../geometries/rectangle.js';
-import game from '../game.js';
+import { game } from '../index.js';
 
 /**
  * A pool of `Pointer` objects to cache pointer/touch event coordinates.

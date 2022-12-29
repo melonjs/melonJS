@@ -13,30 +13,22 @@ export default class World extends Container {
     constructor(x?: number | undefined, y?: number | undefined, width?: number | undefined, height?: number | undefined);
     /**
      * the application (game) this physic world belong to
-     * @public
      * @type {Application}
      */
-    public app: Application;
+    app: Application;
     /**
      * the rate at which the game world is updated,
      * may be greater than or lower than the display fps
-     * @public
-     * @type {Vector2d}
      * @default 60
-     * @name fps
-     * @memberof World
      * @see timer.maxfps
      */
-    public fps: Vector2d;
+    fps: number;
     /**
      * world gravity
-     * @public
      * @type {Vector2d}
      * @default <0,0.98>
-     * @name gravity
-     * @memberof World
      */
-    public gravity: Vector2d;
+    gravity: Vector2d;
     /**
      * Specify the rendering method for tile layers. <br>
      * if false visible part of the layers are rendered dynamically,<br>
@@ -47,29 +39,25 @@ export default class World extends Container {
      * property to your layer (in Tiled).
      * @type {boolean}
      * @default false
-     * @memberof World
      */
     preRender: boolean;
     /**
      * the active physic bodies in this simulation
-     * @name bodies
-     * @memberof World
-     * @public
      * @type {Set<Body>}
      */
-    public bodies: Set<Body>;
+    bodies: Set<Body>;
     /**
      * the instance of the game world quadtree used for broadphase
-     * @name broadphase
-     * @memberof World
-     * @public
      * @type {QuadTree}
      */
-    public broadphase: QuadTree;
+    broadphase: QuadTree;
+    /**
+     * the collision detector instance used by this world instance
+     * @type {Detector}
+     */
+    detector: Detector;
     /**
      * Add a physic body to the game world
-     * @name addBody
-     * @memberof World
      * @see Container.addChild
      * @param {Body} body
      * @returns {World} this game world
@@ -77,8 +65,6 @@ export default class World extends Container {
     addBody(body: Body): World;
     /**
      * Remove a physic body from the game world
-     * @name removeBody
-     * @memberof World
      * @see Container.removeChild
      * @param {Body} body
      * @returns {World} this game world
@@ -86,13 +72,12 @@ export default class World extends Container {
     removeBody(body: Body): World;
     /**
      * Apply gravity to the given body
-     * @name bodyApplyVelocity
-     * @memberof World
      * @private
      * @param {Body} body
      */
     private bodyApplyGravity;
 }
-import Container from "./../renderable/container.js";
+import Container from "../renderable/container.js";
 import Vector2d from "./../math/vector2.js";
 import QuadTree from "./quadtree.js";
+import Detector from "./detector.js";

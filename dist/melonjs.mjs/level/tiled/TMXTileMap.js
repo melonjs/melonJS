@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.2.0
+ * melonJS Game Engine - v14.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -7,7 +7,7 @@
  */
 import pool from '../../system/pooling.js';
 import { off, on, VIEWPORT_ONRESIZE } from '../../system/event.js';
-import game from '../../game.js';
+import { game } from '../../index.js';
 import collision from '../../physics/collision.js';
 import Body from '../../physics/body.js';
 import TMXOrthogonalRenderer from './renderer/TMXOrthogonalRenderer.js';

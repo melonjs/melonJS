@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.2.0
+ * melonJS Game Engine - v14.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -17,4 +17,22 @@ function setPrecision(src, precision) {
     return src;
 }
 
-export { setPrecision };
+/**
+ * return the highest precision format supported by this device for GL Shaders
+ * @ignore
+ * @param {WebGLRenderingContext} gl
+ * @returns {boolean} "lowp", "mediump", or "highp"
+ */
+function getMaxShaderPrecision(gl) {
+    if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT ).precision > 0 &&
+        gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT ).precision > 0) {
+            return "highp";
+    }
+    if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT ).precision > 0 &&
+        gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT ).precision > 0) {
+            return "mediump";
+    }
+    return "lowp";
+}
+
+export { getMaxShaderPrecision, setPrecision };

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.2.0
+ * melonJS Game Engine - v14.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -7,7 +7,7 @@
  */
 import Vector2d from '../math/vector2.js';
 import Bounds from '../physics/bounds.js';
-import game from '../game.js';
+import { game } from '../index.js';
 import { globalToLocal, locked } from './pointerevent.js';
 
 /**

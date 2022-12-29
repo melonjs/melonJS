@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.2.0
+ * melonJS Game Engine - v14.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -737,26 +737,6 @@ function isWebGLSupported(options) {
 }
 
 /**
- * return the highest precision format supported by this device for GL Shaders
- * @function getMaxShaderPrecision
- * @memberof device
- * @public
- * @param {WebGLRenderingContext} gl
- * @returns {boolean} "lowp", "mediump", or "highp"
- */
-function getMaxShaderPrecision(gl) {
-    if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT ).precision > 0 &&
-        gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT ).precision > 0) {
-            return "highp";
-    }
-    if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT ).precision > 0 &&
-        gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT ).precision > 0) {
-            return "mediump";
-    }
-    return "lowp";
-}
-
-/**
  * Makes a request to bring this device window to the front.
  * @function focus
  * @memberof device
@@ -906,4 +886,4 @@ function vibrate(pattern) {
     }
 }
 
-export { accelerationX, accelerationY, accelerationZ, alpha, autoFocus, beta, devicePixelRatio, enableSwipe, exitFullscreen, focus, gamma, getElement, getElementBounds, getMaxShaderPrecision, getParentBounds, getParentElement, getScreenOrientation, getStorage, hasAccelerometer, hasDeviceOrientation, hasFullscreenSupport, hasHTML5Audio, hasPointerLockSupport, hasWebAudio, isFullscreen, isLandscape, isMobile, isPortrait, isWebGLSupported, language, localStorage, lockOrientation, maxTouchPoints, nativeBase64, offscreenCanvas, onDeviceRotate, onReady, pauseOnBlur, platform, pointerEvent, requestFullscreen, resumeOnFocus, screenOrientation, sound, stopOnBlur, touch, touchEvent, unlockOrientation, unwatchAccelerometer, unwatchDeviceOrientation, vibrate, watchAccelerometer, watchDeviceOrientation, wheel };
+export { accelerationX, accelerationY, accelerationZ, alpha, autoFocus, beta, devicePixelRatio, enableSwipe, exitFullscreen, focus, gamma, getElement, getElementBounds, getParentBounds, getParentElement, getScreenOrientation, getStorage, hasAccelerometer, hasDeviceOrientation, hasFullscreenSupport, hasHTML5Audio, hasPointerLockSupport, hasWebAudio, isFullscreen, isLandscape, isMobile, isPortrait, isWebGLSupported, language, localStorage, lockOrientation, maxTouchPoints, nativeBase64, offscreenCanvas, onDeviceRotate, onReady, pauseOnBlur, platform, pointerEvent, requestFullscreen, resumeOnFocus, screenOrientation, sound, stopOnBlur, touch, touchEvent, unlockOrientation, unwatchAccelerometer, unwatchDeviceOrientation, vibrate, watchAccelerometer, watchDeviceOrientation, wheel };

@@ -92,4 +92,4 @@ export default class UIBaseElement extends Container {
      */
     onHold(): void;
 }
-import Container from "./../container.js";
+import Container from "../container.js";

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.2.0
+ * melonJS Game Engine - v14.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -51,6 +51,9 @@ import { emit, ONCONTEXT_LOST, ONCONTEXT_RESTORED } from '../../system/event.js'
             // enable the tile texture seam fix with the canvas renderer
             this.uvOffset = 1;
         }
+
+        // set the renderer type
+        this.type = "CANVAS";
 
         // context lost & restore event for canvas
         this.getCanvas().addEventListener("contextlost", (e) => {

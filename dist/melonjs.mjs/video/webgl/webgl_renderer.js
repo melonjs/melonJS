@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.2.0
+ * melonJS Game Engine - v14.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -142,6 +142,9 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
 
         // Create a texture cache
         this.cache = new TextureCache(this.maxTextures);
+
+        // set the renderer type
+        this.type =  "WebGL" + this.WebGLVersion;
 
         // to simulate context lost and restore in WebGL:
         // var ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');

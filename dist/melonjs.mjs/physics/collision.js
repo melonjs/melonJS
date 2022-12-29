@@ -1,11 +1,11 @@
 /*!
- * melonJS Game Engine - v14.2.0
+ * melonJS Game Engine - v14.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
  */
-import { rayCast } from './detector.js';
+import { game } from '../index.js';
 
 /**
  * Collision detection (and projection-based collision response) of 2D shapes.<br>
@@ -124,7 +124,7 @@ var collision = {
      *        // ...
      *    }
      */
-    rayCast(line, result) { return rayCast(line, result); }
+    rayCast(line, result) { return game.world.rayCast(line, result); }
 };
 
 var collision$1 = collision;

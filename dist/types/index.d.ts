@@ -30,11 +30,11 @@ export const initialized: boolean;
  * @see boot
  */
 export const skipAutoInit: boolean;
+export const game: Application;
 import * as audio from "./audio/audio.js";
 import collision from "./physics/collision.js";
 import * as device from "./system/device.js";
 import * as event from "./system/event.js";
-import game from "./game.js";
 import loader from "./loader/loader.js";
 import level from "./level/level.js";
 import * as input from "./input/input.js";
@@ -105,4 +105,5 @@ import ParticleEmitter from "./particles/emitter.js";
 import ParticleEmitterSettings from "./particles/settings.js";
 import Particle from "./particles/particle.js";
 import Entity from "./entity/entity.js";
-export { audio, collision, device, event, game, loader, level, input, Math, plugin, plugins, utils, save, timer, pool, state, video, Color, Vector2d, Vector3d, ObservableVector2d, ObservableVector3d, Matrix2d, Matrix3d, Polygon, Line, Ellipse, Point, Rect, RoundRect, Tween, QuadTree, GLShader, WebGLCompositor, Renderer, WebGLRenderer, CanvasRenderer, TextureAtlas, Renderable, Body, Bounds, Text, BitmapText, BitmapTextData, ColorLayer, ImageLayer, Sprite, NineSliceSprite, UIBaseElement, UITextButton, UISpriteElement, Collectable, Trigger, Light2d, Draggable, DropTarget, TMXRenderer, TMXOrthogonalRenderer, TMXIsometricRenderer, TMXHexagonalRenderer, TMXStaggeredRenderer, Tile, TMXTileset, TMXTilesetGroup, TMXTileMap, TMXLayer, Pointer, Stage, Camera2d, Container, World, ParticleEmitter, ParticleEmitterSettings, Particle, Entity };
+import Application from "./application/application.js";
+export { audio, collision, device, event, loader, level, input, Math, plugin, plugins, utils, save, timer, pool, state, video, Color, Vector2d, Vector3d, ObservableVector2d, ObservableVector3d, Matrix2d, Matrix3d, Polygon, Line, Ellipse, Point, Rect, RoundRect, Tween, QuadTree, GLShader, WebGLCompositor, Renderer, WebGLRenderer, CanvasRenderer, TextureAtlas, Renderable, Body, Bounds, Text, BitmapText, BitmapTextData, ColorLayer, ImageLayer, Sprite, NineSliceSprite, UIBaseElement, UITextButton, UISpriteElement, Collectable, Trigger, Light2d, Draggable, DropTarget, TMXRenderer, TMXOrthogonalRenderer, TMXIsometricRenderer, TMXHexagonalRenderer, TMXStaggeredRenderer, Tile, TMXTileset, TMXTilesetGroup, TMXTileMap, TMXLayer, Pointer, Stage, Camera2d, Container, World, ParticleEmitter, ParticleEmitterSettings, Particle, Entity, Application };

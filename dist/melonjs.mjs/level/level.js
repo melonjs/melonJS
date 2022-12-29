@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.2.0
+ * melonJS Game Engine - v14.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -9,7 +9,7 @@ import utils from '../utils/utils.js';
 import { emit, LEVEL_LOADED } from '../system/event.js';
 import state from '../state/state.js';
 import loader from '../loader/loader.js';
-import game from '../game.js';
+import { game } from '../index.js';
 import TMXTileMap from './tiled/TMXTileMap.js';
 
 // our levels

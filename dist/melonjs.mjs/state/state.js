@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.2.0
+ * melonJS Game Engine - v14.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -8,7 +8,7 @@
 import { pauseTrack, resumeTrack } from '../audio/audio.js';
 import { defer } from '../utils/function.js';
 import { on, VIDEO_INIT, BOOT, emit, STATE_STOP, STATE_PAUSE, STATE_RESTART, STATE_RESUME, STATE_CHANGE } from '../system/event.js';
-import game from '../game.js';
+import { game } from '../index.js';
 import { focus } from '../system/device.js';
 import Stage from './stage.js';
 import DefaultLoadingScreen from '../loader/loadingscreen.js';

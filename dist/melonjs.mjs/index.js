@@ -1,34 +1,10 @@
 /*!
- * melonJS Game Engine - v14.2.0
+ * melonJS Game Engine - v14.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
  */
-import * as audio from './audio/audio.js';
-export { audio };
-export { default as collision } from './physics/collision.js';
-import { emit, BOOT } from './system/event.js';
-import * as event from './system/event.js';
-export { event };
-import { onReady } from './system/device.js';
-import * as device from './system/device.js';
-export { device };
-export { default as game } from './game.js';
-import loader from './loader/loader.js';
-import * as math from './math/math.js';
-export { math as Math };
-import utils from './utils/utils.js';
-import * as input from './input/input.js';
-export { input };
-export { plugin, plugins } from './plugin/plugin.js';
-import * as video from './video/video.js';
-export { video };
-export { default as save } from './system/save.js';
-export { default as timer } from './system/timer.js';
-import pool from './system/pooling.js';
-export { default as state } from './state/state.js';
-export { default as level } from './level/level.js';
 import Color from './math/color.js';
 import Vector2d from './math/vector2.js';
 import Vector3d from './math/vector3.js';
@@ -54,9 +30,6 @@ export { default as CanvasRenderer } from './video/canvas/canvas_renderer.js';
 import CanvasTexture from './video/texture/canvas_texture.js';
 export { TextureAtlas } from './video/texture/atlas.js';
 import Renderable from './renderable/renderable.js';
-import Text from './text/text.js';
-import BitmapText from './text/bitmaptext.js';
-import BitmapTextData from './text/bitmaptextdata.js';
 import ColorLayer from './renderable/colorlayer.js';
 import ImageLayer from './renderable/imagelayer.js';
 import Sprite from './renderable/sprite.js';
@@ -67,6 +40,9 @@ export { default as UISpriteElement } from './renderable/ui/uispriteelement.js';
 import Collectable from './renderable/collectable.js';
 import Trigger from './renderable/trigger.js';
 import Light2d from './renderable/light2d.js';
+import Text from './text/text.js';
+import BitmapText from './text/bitmaptext.js';
+import BitmapTextData from './text/bitmaptextdata.js';
 export { Draggable, DropTarget } from './renderable/dragndrop.js';
 export { default as TMXRenderer } from './level/tiled/renderer/TMXRenderer.js';
 export { default as TMXOrthogonalRenderer } from './level/tiled/renderer/TMXOrthogonalRenderer.js';
@@ -87,6 +63,30 @@ export { default as ParticleEmitterSettings } from './particles/settings.js';
 export { default as ParticleEmitter } from './particles/emitter.js';
 import Particle from './particles/particle.js';
 import Entity from './entity/entity.js';
+import Application from './application/application.js';
+import * as audio from './audio/audio.js';
+export { audio };
+export { default as collision } from './physics/collision.js';
+import { emit, BOOT } from './system/event.js';
+import * as event from './system/event.js';
+export { event };
+import { onReady } from './system/device.js';
+import * as device from './system/device.js';
+export { device };
+import loader from './loader/loader.js';
+import * as math from './math/math.js';
+export { math as Math };
+import utils from './utils/utils.js';
+import * as input from './input/input.js';
+export { input };
+export { plugin, plugins } from './plugin/plugin.js';
+import * as video from './video/video.js';
+export { video };
+export { default as save } from './system/save.js';
+export { default as timer } from './system/timer.js';
+import pool from './system/pooling.js';
+export { default as state } from './state/state.js';
+export { default as level } from './level/level.js';
 export { DraggableEntity, DroptargetEntity, GUI_Object, warning } from './lang/deprecated.js';
 import { initKeyboardEvent } from './input/keyboard.js';
 
@@ -100,7 +100,7 @@ import { initKeyboardEvent } from './input/keyboard.js';
  * @name version
  * @type {string}
  */
-const version = "14.2.0";
+const version = "14.3.0";
 
 
 /**
@@ -119,6 +119,14 @@ var initialized = false;
  */
 var skipAutoInit = false;
 
+/*
+ * game is a default instance of a melonJS Application and represents your current game,
+ * it contains all the objects, tilemap layers, current viewport, collision map, etc...<br>
+ * @namespace game
+ * @see Application
+ */
+const game = new Application(0, 0, {legacy:true});
+
 /**
  * initialize the melonJS library.
  * this is automatically called unless me.skipAutoInit is set to true,
@@ -132,6 +140,9 @@ function boot() {
     if (initialized === true) {
         return;
     }
+
+    // output melonJS version in the console
+    console.log("melonJS 2 (v" + version + ") | http://melonjs.org" );
 
     // register all built-ins objects into the object pool
     pool.register("me.Entity", Entity);
@@ -214,4 +225,4 @@ onReady(() => {
     }
 });
 
-export { BitmapText, BitmapTextData, Bounds, Collectable, Color, ColorLayer, Ellipse, Entity, ImageLayer, Light2d, Line, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, Point, Polygon, Rect, Renderable, RoundRect, Sprite, Text, Trigger, Tween, Vector2d, Vector3d, boot, initialized, loader, pool, skipAutoInit, utils, version };
+export { Application, BitmapText, BitmapTextData, Bounds, Collectable, Color, ColorLayer, Ellipse, Entity, ImageLayer, Light2d, Line, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, Point, Polygon, Rect, Renderable, RoundRect, Sprite, Text, Trigger, Tween, Vector2d, Vector3d, boot, game, initialized, loader, pool, skipAutoInit, utils, version };

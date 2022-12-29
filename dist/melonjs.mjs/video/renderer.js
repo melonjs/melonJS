@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.2.0
+ * melonJS Game Engine - v14.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -75,6 +75,13 @@ import Point from '../geometries/point.js';
          * @type {Path2D}
          */
         this.path2D = new Path2D();
+
+        /**
+         * The renderer type : Canvas, WebGL, etc...
+         * (override this property with a specific value when implementing a custom renderer)
+         * @type {string}
+         */
+        this.type = "Generic";
 
         /**
          * @ignore

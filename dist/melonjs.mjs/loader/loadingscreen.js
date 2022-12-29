@@ -1,11 +1,11 @@
 /*!
- * melonJS Game Engine - v14.2.0
+ * melonJS Game Engine - v14.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
  */
-import game from '../game.js';
+import { game } from '../index.js';
 import { renderer } from '../video/video.js';
 import { on, LOADER_PROGRESS, VIEWPORT_ONRESIZE, off } from '../system/event.js';
 import Sprite from '../renderable/sprite.js';

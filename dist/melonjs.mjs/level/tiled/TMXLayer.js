@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.2.0
+ * melonJS Game Engine - v14.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -11,7 +11,7 @@ import { applyTMXProperties, decode } from './TMXUtils.js';
 import Tile from './TMXTile.js';
 import Renderable from '../../renderable/renderable.js';
 import CanvasRenderer from '../../video/canvas/canvas_renderer.js';
-import game from '../../game.js';
+import { game } from '../../index.js';
 
 /**
  * Create required arrays for the given layer object

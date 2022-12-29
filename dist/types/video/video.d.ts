@@ -20,7 +20,7 @@
  * @param {number} height - The height of the canvas viewport
  * @param {object} [options] - The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
  * @param {string|HTMLElement} [options.parent=document.body] - the DOM parent element to hold the canvas in the HTML file
- * @param {number} [options.renderer=video.AUTO] - renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
+ * @param {number|Renderer} [options.renderer=video.AUTO] - renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO), or a custom renderer class
  * @param {number|string} [options.scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)
  * @param {string} [options.scaleMethod="fit"] - screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
  * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
@@ -40,7 +40,7 @@
  */
 export function init(width: number, height: number, options?: {
     parent?: string | HTMLElement | undefined;
-    renderer?: number | undefined;
+    renderer?: number | Renderer;
     scale?: string | number | undefined;
     scaleMethod?: string | undefined;
     preferWebGL1?: boolean | undefined;
@@ -63,6 +63,9 @@ export function createCanvas(width: number, height: number, returnOffscreenCanva
  * @returns {HTMLElement}
  */
 export function getParent(): HTMLElement;
+/**
+ * @namespace video
+ */
 /**
  * Select the HTML5 Canvas renderer
  * @memberof video
@@ -87,5 +90,3 @@ export const AUTO: 2;
  * @type {CanvasRenderer|WebGLRenderer}
  */
 export let renderer: CanvasRenderer | WebGLRenderer;
-import CanvasRenderer from "./canvas/canvas_renderer.js";
-import WebGLRenderer from "./webgl/webgl_renderer.js";

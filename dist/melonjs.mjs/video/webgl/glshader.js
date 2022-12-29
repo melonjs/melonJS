@@ -1,16 +1,15 @@
 /*!
- * melonJS Game Engine - v14.2.0
+ * melonJS Game Engine - v14.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
  */
 import { on, ONCONTEXT_LOST } from '../../system/event.js';
-import { getMaxShaderPrecision } from '../../system/device.js';
 import { extractUniforms } from './utils/uniforms.js';
 import { extractAttributes } from './utils/attributes.js';
 import { compileProgram } from './utils/program.js';
-import { setPrecision } from './utils/precision.js';
+import { setPrecision, getMaxShaderPrecision } from './utils/precision.js';
 import { minify } from './utils/string.js';
 
 /**
