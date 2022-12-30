@@ -44,7 +44,7 @@
   "files": [
     "dist/melonjs.mjs",
     "dist/melonjs.module.js",
-    "dist/types/index.d.ts",
+    "dist/types",
     "src/",
     "package.json",
     "README.md",

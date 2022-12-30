@@ -4,6 +4,7 @@
 
 ### Added
 - Core: its now possible to specify a custom renderer (that extends the default Renderer class)
+- Core: fix missing TS definitions when publishing on NPM (following changes in #1162)
 
 ### Changed
 - General: further code revamping to make melonJS more modular and allow instantiation of different app/games
