@@ -418,7 +418,8 @@ const offsetsStaggerY = [
 
             startPos = this.tileToPixelCoords(
                 startTile.x + layer.pos.x,
-                startTile.y + layer.pos.y
+                startTile.y + layer.pos.y,
+                startPos
             );
 
             var staggeredRow = this.doStaggerX(startTile.x + layer.pos.x);
@@ -460,7 +461,8 @@ const offsetsStaggerY = [
 
             startPos = this.tileToPixelCoords(
                 startTile.x + layer.pos.x,
-                startTile.y + layer.pos.y
+                startTile.y + layer.pos.y,
+                startPos
             );
 
             // Odd row shifting is applied in the rendering loop, so un-apply it here
