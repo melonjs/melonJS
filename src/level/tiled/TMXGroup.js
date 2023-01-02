@@ -15,66 +15,45 @@ export default class TMXGroup {
 
         /**
          * group name
-         * @public
          * @type {string}
-         * @name name
-         * @memberof TMXGroup
          */
         this.name = data.name;
 
         /**
          * group width
-         * @public
          * @type {number}
-         * @name width
-         * @memberof TMXGroup
          */
         this.width = data.width || 0;
 
         /**
          * group height
-         * @public
          * @type {number}
-         * @name height
-         * @memberof TMXGroup
          */
         this.height = data.height || 0;
 
         /**
          * tint color
-         * @public
          * @type {string}
-         * @name tintcolor
-         * @memberof TMXGroup
          */
         this.tintcolor = data.tintcolor;
 
 
         /**
          * the group class
-         * @public
          * @type {string}
-         * @name class
-         * @memberof TMXGroup
          */
         this.class = data.class;
 
         /**
          * group z order
-         * @public
          * @type {number}
-         * @name z
-         * @memberof TMXGroup
          */
         this.z = z;
 
         /**
          * group objects list definition
          * @see TMXObject
-         * @public
          * @type {object[]}
-         * @name name
-         * @memberof TMXGroup
          */
         this.objects = [];
 

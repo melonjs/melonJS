@@ -79,10 +79,7 @@ const offsetsStaggerY = [
 
     /**
      * return the bounding rect for this map renderer
-     * @name TMXHexagonalRenderer#getBounds
-     * @public
-     * @param {TMXLayer} [layer] - calculate the bounding rect for a specific layer (will return a new bounds object)
-     * @returns {Bounds}
+     * @ignore
      */
     getBounds(layer) {
         var bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;

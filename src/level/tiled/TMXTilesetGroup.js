@@ -13,8 +13,6 @@ import { TMX_CLEAR_BIT_MASK } from "./contants";
 
     /**
      * add a tileset to the tileset group
-     * @name TMXTilesetGroup#add
-     * @public
      * @param {TMXTileset} tileset
      */
     add(tileset) {
@@ -24,8 +22,6 @@ import { TMX_CLEAR_BIT_MASK } from "./contants";
 
     /**
      * return the tileset at the specified index
-     * @name TMXTilesetGroup#getTilesetByIndex
-     * @public
      * @param {number} i
      * @returns {TMXTileset} corresponding tileset
      */
@@ -36,8 +32,6 @@ import { TMX_CLEAR_BIT_MASK } from "./contants";
     /**
      * return the tileset corresponding to the specified id <br>
      * will throw an exception if no matching tileset is found
-     * @name TMXTilesetGroup#getTilesetByGid
-     * @public
      * @param {number} gid
      * @returns {TMXTileset} corresponding tileset
      */

@@ -121,92 +121,71 @@ function readObjectGroup(map, data, z) {
 
         /**
          * name of the tilemap
-         * @public
          * @type {string}
-         * @name TMXTileMap#name
          */
         this.name = levelId;
 
         /**
          * width of the tilemap in tiles
-         * @public
          * @type {number}
-         * @name TMXTileMap#cols
          */
         this.cols = +data.width;
+
         /**
          * height of the tilemap in tiles
-         * @public
          * @type {number}
-         * @name TMXTileMap#rows
          */
         this.rows = +data.height;
 
         /**
          * Tile width
-         * @public
          * @type {number}
-         * @name TMXTileMap#tilewidth
          */
         this.tilewidth = +data.tilewidth;
 
         /**
          * Tile height
-         * @public
          * @type {number}
-         * @name TMXTileMap#tileheight
          */
         this.tileheight = +data.tileheight;
 
         /**
          * is the map an infinite map
-         * @public
          * @type {number}
          * @default 0
-         * @name TMXTileMap#infinite
          */
         this.infinite = +data.infinite;
 
         /**
          * the map orientation type. melonJS supports “orthogonal”, “isometric”, “staggered” and “hexagonal”.
-         * @public
          * @type {string}
          * @default "orthogonal"
-         * @name TMXTileMap#orientation
          */
         this.orientation = data.orientation;
 
         /**
          * the order in which tiles on orthogonal tile layers are rendered.
          * (valid values are "left-down", "left-up", "right-down", "right-up")
-         * @public
          * @type {string}
          * @default "right-down"
-         * @name TMXTileMap#renderorder
          */
         this.renderorder = data.renderorder || "right-down";
 
         /**
          * the TMX format version
-         * @public
          * @type {string}
-         * @name TMXTileMap#version
          */
         this.version = data.version;
 
         /**
          * The Tiled version used to save the file (since Tiled 1.0.1).
-         * @public
          * @type {string}
-         * @name TMXTileMap#tiledversion
          */
         this.tiledversion = data.tiledversion;
 
         /**
          * The map class.
-         * @public
          * @type {string}
-         * @name TMXTileMap#class
          */
         this.class = data.class;
 
@@ -258,9 +237,6 @@ function readObjectGroup(map, data, z) {
 
     /**
      * Return the map default renderer
-     * @name getRenderer
-     * @memberof TMXTileMap
-     * @public
      * @returns {TMXRenderer} a TMX renderer
      */
     getRenderer() {
@@ -272,8 +248,6 @@ function readObjectGroup(map, data, z) {
 
     /**
      * return the map bounding rect
-     * @name TMXRenderer#getBounds
-     * @public
      * @returns {Bounds}
      */
     getBounds() {
@@ -354,8 +328,6 @@ function readObjectGroup(map, data, z) {
     /**
      * add all the map layers and objects to the given container.
      * note : this will not automatically update the camera viewport
-     * @name TMXTileMap#addTo
-     * @public
      * @param {Container} container - target container
      * @param {boolean} [flatten=true] - if true, flatten all objects into the given container, else a `me.Container` object will be created for each corresponding groups
      * @param {boolean} [setViewportBounds=false] - if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
@@ -430,8 +402,6 @@ function readObjectGroup(map, data, z) {
 
     /**
      * return an Array of instantiated objects, based on the map object definition
-     * @name TMXTileMap#getObjects
-     * @public
      * @param {boolean} [flatten=true] - if true, flatten all objects into the returned array.
      * when false, a `me.Container` object will be created for each corresponding groups
      * @returns {Renderable[]} Array of Objects
@@ -602,8 +572,6 @@ function readObjectGroup(map, data, z) {
 
     /**
      * return all the existing layers
-     * @name TMXTileMap#getLayers
-     * @public
      * @returns {TMXLayer[]} Array of Layers
      */
     getLayers() {
@@ -614,8 +582,6 @@ function readObjectGroup(map, data, z) {
 
     /**
      * destroy function, clean all allocated objects
-     * @name TMXTileMap#destroy
-     * @public
      */
     destroy() {
         this.tilesets = undefined;

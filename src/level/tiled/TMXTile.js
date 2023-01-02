@@ -35,9 +35,7 @@ import { TMX_FLIP_V, TMX_FLIP_H, TMX_FLIP_AD, TMX_CLEAR_BIT_MASK } from "./conta
 
         /**
          * tileset
-         * @public
          * @type {TMXTileset}
-         * @name Tile#tileset
          */
         this.tileset = tileset;
 
@@ -53,38 +51,31 @@ import { TMX_FLIP_V, TMX_FLIP_H, TMX_FLIP_AD, TMX_CLEAR_BIT_MASK } from "./conta
 
         /**
          * tileId
-         * @public
          * @type {number}
-         * @name Tile#tileId
          */
         this.tileId = gid;
+
         /**
-         * True if the tile is flipped horizontally<br>
-         * @public
+         * True if the tile is flipped horizontally
          * @type {boolean}
-         * @name Tile#flipX
          */
         this.flippedX  = (this.tileId & TMX_FLIP_H) !== 0;
+
         /**
-         * True if the tile is flipped vertically<br>
-         * @public
+         * True if the tile is flipped vertically
          * @type {boolean}
-         * @name Tile#flippedY
          */
         this.flippedY  = (this.tileId & TMX_FLIP_V) !== 0;
+
         /**
-         * True if the tile is flipped anti-diagonally<br>
-         * @public
+         * True if the tile is flipped anti-diagonally
          * @type {boolean}
-         * @name Tile#flippedAD
          */
         this.flippedAD = (this.tileId & TMX_FLIP_AD) !== 0;
 
         /**
-         * Global flag that indicates if the tile is flipped<br>
-         * @public
+         * Global flag that indicates if the tile is flipped
          * @type {boolean}
-         * @name Tile#flipped
          */
         this.flipped = this.flippedX || this.flippedY || this.flippedAD;
 
@@ -125,8 +116,6 @@ import { TMX_FLIP_V, TMX_FLIP_H, TMX_FLIP_AD, TMX_CLEAR_BIT_MASK } from "./conta
 
     /**
      * return a renderable object for this Tile object
-     * @name Tile#getRenderable
-     * @public
      * @param {object} [settings] - see {@link Sprite}
      * @returns {Renderable} a me.Sprite object
      */
