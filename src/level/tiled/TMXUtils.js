@@ -1,4 +1,4 @@
-import * as stringUtil from "./../../utils/string.js";
+import { isBoolean, isNumeric } from "../../utils/string";
 
 /**
  * set and interpret a TMX property value
@@ -25,11 +25,11 @@ function setTMXValue(name, type, value) {
 
         default :
             // try to parse it anyway
-            if (!value || stringUtil.isBoolean(value)) {
+            if (!value || isBoolean(value)) {
                 // if value not defined or boolean
                 value = value ? (value === "true") : true;
             }
-            else if (stringUtil.isNumeric(value)) {
+            else if (isNumeric(value)) {
                 // check if numeric
                 value = Number(value);
             }
