@@ -1,6 +1,4 @@
-
-// bitmask constants to check for flipped & rotated tiles
-const TMX_CLEAR_BIT_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
+import { TMX_CLEAR_BIT_MASK } from "./contants";
 
 /**
  * @classdesc

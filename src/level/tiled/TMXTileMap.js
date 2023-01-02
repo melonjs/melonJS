@@ -13,9 +13,8 @@ import TMXGroup from "./TMXGroup.js";
 import TMXLayer from "./TMXLayer.js";
 import { applyTMXProperties } from "./TMXUtils.js";
 import Container from "../../renderable/container.js";
+import { COLLISION_GROUP } from "./contants.js";
 
-// constant to identify the collision object layer
-const COLLISION_GROUP = "collision";
 
 /**
  * set a compatible renderer object
@@ -203,15 +202,13 @@ function readObjectGroup(map, data, z) {
          */
         this.tiledversion = data.tiledversion;
 
-
         /**
          * The map class.
          * @public
          * @type {string}
          * @name TMXTileMap#class
          */
-         this.class = data.class;
-
+        this.class = data.class;
 
         // tilesets for this map
         this.tilesets = null;
@@ -227,7 +224,6 @@ function readObjectGroup(map, data, z) {
 
         // Check if map is from melon editor
         this.isEditor = data.editor === "melon-editor";
-
 
         // object id
         this.nextobjectid = +data.nextobjectid || undefined;

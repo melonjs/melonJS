@@ -1,12 +1,7 @@
 import Matrix2d from "./../../math/matrix2.js";
 import Sprite from "./../../renderable/sprite.js";
 import Bounds from "./../../physics/bounds.js";
-
-// bitmask constants to check for flipped & rotated tiles
-const TMX_FLIP_H          = 0x80000000,
-      TMX_FLIP_V          = 0x40000000,
-      TMX_FLIP_AD         = 0x20000000,
-      TMX_CLEAR_BIT_MASK  = ~(0x80000000 | 0x40000000 | 0x20000000);
+import { TMX_FLIP_V, TMX_FLIP_H, TMX_FLIP_AD, TMX_CLEAR_BIT_MASK } from "./contants.js";
 
 /**
  * @classdesc
