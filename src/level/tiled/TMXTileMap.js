@@ -13,7 +13,7 @@ import TMXGroup from "./TMXGroup.js";
 import TMXLayer from "./TMXLayer.js";
 import { applyTMXProperties } from "./TMXUtils.js";
 import Container from "../../renderable/container.js";
-import { COLLISION_GROUP } from "./contants.js";
+import { COLLISION_GROUP } from "./constants.js";
 
 
 /**

@@ -1,7 +1,7 @@
 import Matrix2d from "./../../math/matrix2.js";
 import Sprite from "./../../renderable/sprite.js";
 import Bounds from "./../../physics/bounds.js";
-import { TMX_FLIP_V, TMX_FLIP_H, TMX_FLIP_AD, TMX_CLEAR_BIT_MASK } from "./contants.js";
+import { TMX_FLIP_V, TMX_FLIP_H, TMX_FLIP_AD, TMX_CLEAR_BIT_MASK } from "./constants.js";
 
 /**
  * @classdesc

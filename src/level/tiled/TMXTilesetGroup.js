@@ -1,4 +1,4 @@
-import { TMX_CLEAR_BIT_MASK } from "./contants";
+import { TMX_CLEAR_BIT_MASK } from "./constants";
 
 /**
  * @classdesc
