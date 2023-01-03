@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v14.3.0
+ * melonJS Game Engine - v14.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 import pool from '../../system/pooling.js';
 import { applyTMXProperties } from './TMXUtils.js';
@@ -22,185 +22,125 @@ class TMXObject {
 
         /**
          * point list in JSON format
-         * @public
          * @type {object[]}
-         * @name points
-         * @memberof TMXObject
          */
         this.points = undefined;
 
         /**
          * object name
-         * @public
          * @type {string}
-         * @name name
-         * @memberof TMXObject
          */
         this.name = settings.name;
 
         /**
          * object x position
-         * @public
          * @type {number}
-         * @name x
-         * @memberof TMXObject
          */
         this.x = +settings.x;
 
         /**
          * object y position
-         * @public
          * @type {number}
-         * @name y
-         * @memberof TMXObject
          */
         this.y = +settings.y;
 
         /**
          * object z order
-         * @public
          * @type {number}
-         * @name z
-         * @memberof TMXObject
          */
         this.z = +z;
 
         /**
          * object width
-         * @public
          * @type {number}
-         * @name width
-         * @memberof TMXObject
          */
         this.width = +settings.width || 0;
 
         /**
          * object height
-         * @public
          * @type {number}
-         * @name height
-         * @memberof TMXObject
          */
         this.height = +settings.height || 0;
 
         /**
          * object gid value
          * when defined the object is a tiled object
-         * @public
          * @type {number}
-         * @name gid
-         * @memberof TMXObject
          */
         this.gid = +settings.gid || null;
 
         /**
          * tint color
-         * @public
          * @type {string}
-         * @name tintcolor
-         * @memberof TMXObject
          */
         this.tintcolor = settings.tintcolor;
 
         /**
          * object type
-         * @public
          * @type {string}
          * @deprecated since Tiled 1.9
          * @see https://docs.mapeditor.org/en/stable/reference/tmx-changelog/#tiled-1-9
-         * @name type
-         * @memberof TMXObject
          */
         this.type = settings.type;
 
         /**
          * the object class
-         * @public
          * @type {string}
-         * @name class
-         * @memberof TMXObject
          */
         this.class = typeof settings.class !== "undefined" ? settings.class : settings.type;
 
         /**
          * object text
-         * @public
          * @type {object}
          * @see http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#text
-         * @name text
-         * @memberof TMXObject
          */
         this.text = undefined;
 
         /**
          * The rotation of the object in radians clockwise (defaults to 0)
-         * @public
          * @type {number}
-         * @name rotation
-         * @memberof TMXObject
          */
         this.rotation = degToRad(+settings.rotation || 0);
 
         /**
          * object unique identifier per level (Tiled 0.11.x+)
-         * @public
          * @type {number}
-         * @name id
-         * @memberof TMXObject
          */
         this.id = +settings.id || undefined;
 
         /**
          * object orientation (orthogonal or isometric)
-         * @public
          * @type {string}
-         * @name orientation
-         * @memberof TMXObject
          */
         this.orientation = map.orientation;
 
         /**
          * the collision shapes defined for this object
-         * @public
          * @type {object[]}
-         * @name shapes
-         * @memberof TMXObject
          */
         this.shapes = undefined;
 
         /**
          * if true, the object is an Ellipse
-         * @public
          * @type {boolean}
-         * @name isEllipse
-         * @memberof TMXObject
          */
         this.isEllipse = false;
 
         /**
          * if true, the object is a Point
-         * @public
          * @type {boolean}
-         * @name isPoint
-         * @memberof TMXObject
          */
         this.isPoint = false;
 
         /**
          * if true, the object is a Polygon
-         * @public
          * @type {boolean}
-         * @name isPolygon
-         * @memberof TMXObject
          */
         this.isPolygon = false;
 
         /**
          * if true, the object is a PolyLine
-         * @public
          * @type {boolean}
-         * @name isPolyLine
-         * @memberof TMXObject
          */
         this.isPolyLine = false;
 
@@ -272,8 +212,6 @@ class TMXObject {
 
     /**
      * parses the TMX shape definition and returns a corresponding array of me.Shape object
-     * @name parseTMXShapes
-     * @memberof TMXObject
      * @private
      * @returns {Polygon[]|Line[]|Ellipse[]} an array of shape objects
      */

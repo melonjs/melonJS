@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v14.3.0
+ * melonJS Game Engine - v14.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 import { TextureAtlas } from '../video/texture/atlas.js';
 import Renderer from '../video/renderer.js';

@@ -25,12 +25,9 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
     canRender(layer: any): boolean;
     /**
      * return the bounding rect for this map renderer
-     * @name TMXHexagonalRenderer#getBounds
-     * @public
-     * @param {TMXLayer} [layer] - calculate the bounding rect for a specific layer (will return a new bounds object)
-     * @returns {Bounds}
+     * @ignore
      */
-    public getBounds(layer?: TMXLayer | undefined): Bounds;
+    getBounds(layer: any): object;
     /**
      * @ignore
      */
@@ -84,4 +81,3 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 }
 import TMXRenderer from "./TMXRenderer.js";
 import Vector2d from "./../../../math/vector2.js";
-import TMXLayer from "./../TMXLayer.js";

@@ -13,11 +13,9 @@ export default class Tile extends Bounds {
     constructor(x: number, y: number, gid: number, tileset: TMXTileset);
     /**
      * tileset
-     * @public
      * @type {TMXTileset}
-     * @name Tile#tileset
      */
-    public tileset: TMXTileset;
+    tileset: TMXTileset;
     /**
      * the tile transformation matrix (if defined)
      * @ignore
@@ -27,39 +25,29 @@ export default class Tile extends Bounds {
     row: number;
     /**
      * tileId
-     * @public
      * @type {number}
-     * @name Tile#tileId
      */
-    public tileId: number;
+    tileId: number;
     /**
-     * True if the tile is flipped horizontally<br>
-     * @public
+     * True if the tile is flipped horizontally
      * @type {boolean}
-     * @name Tile#flipX
      */
-    public flippedX: boolean;
+    flippedX: boolean;
     /**
-     * True if the tile is flipped vertically<br>
-     * @public
+     * True if the tile is flipped vertically
      * @type {boolean}
-     * @name Tile#flippedY
      */
-    public flippedY: boolean;
+    flippedY: boolean;
     /**
-     * True if the tile is flipped anti-diagonally<br>
-     * @public
+     * True if the tile is flipped anti-diagonally
      * @type {boolean}
-     * @name Tile#flippedAD
      */
-    public flippedAD: boolean;
+    flippedAD: boolean;
     /**
-     * Global flag that indicates if the tile is flipped<br>
-     * @public
+     * Global flag that indicates if the tile is flipped
      * @type {boolean}
-     * @name Tile#flipped
      */
-    public flipped: boolean;
+    flipped: boolean;
     /**
      * set the transformation matrix for this tile
      * @ignore
@@ -67,12 +55,10 @@ export default class Tile extends Bounds {
     setTileTransform(transform: any): void;
     /**
      * return a renderable object for this Tile object
-     * @name Tile#getRenderable
-     * @public
      * @param {object} [settings] - see {@link Sprite}
      * @returns {Renderable} a me.Sprite object
      */
-    public getRenderable(settings?: object | undefined): Renderable;
+    getRenderable(settings?: object | undefined): Renderable;
 }
 import Bounds from "./../../physics/bounds.js";
 import Matrix2d from "./../../math/matrix2.js";

@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v14.3.0
+ * melonJS Game Engine - v14.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 export { bindPointer, exitPointerLock, globalToLocal, locked, pointer, pointerEventTarget, registerPointerEvent, releaseAllPointerEvents, releasePointerEvent, requestPointerLock, setTouchAction, throttlingInterval, unbindPointer } from './pointerevent.js';
 export { KEY, bindKey, getBindingKey, initKeyboardEvent, isKeyPressed, keyBoardEventTarget, keyStatus, triggerKeyEvent, unbindKey, unlockKey } from './keyboard.js';

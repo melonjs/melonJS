@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v14.3.0
+ * melonJS Game Engine - v14.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -1384,10 +1384,10 @@ function isDataUrl(str) {
 var stringUtils = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	capitalize: capitalize,
-	isNumeric: isNumeric,
 	isBoolean: isBoolean,
-	toHex: toHex$1,
-	isDataUrl: isDataUrl
+	isDataUrl: isDataUrl,
+	isNumeric: isNumeric,
+	toHex: toHex$1
 });
 
 /**
@@ -1675,20 +1675,20 @@ function toBeCloseTo(expected, actual, precision = 2) {
 var math = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	DEG_TO_RAD: DEG_TO_RAD,
+	EPSILON: EPSILON,
+	ETA: ETA,
 	RAD_TO_DEG: RAD_TO_DEG,
 	TAU: TAU,
-	ETA: ETA,
-	EPSILON: EPSILON,
+	clamp: clamp,
+	degToRad: degToRad,
 	isPowerOfTwo: isPowerOfTwo,
 	nextPowerOfTwo: nextPowerOfTwo,
-	degToRad: degToRad,
 	radToDeg: radToDeg,
-	clamp: clamp,
 	random: random$1,
 	randomFloat: randomFloat,
-	weightedRandom: weightedRandom$1,
 	round: round,
-	toBeCloseTo: toBeCloseTo
+	toBeCloseTo: toBeCloseTo,
+	weightedRandom: weightedRandom$1
 });
 
 /**
@@ -1746,8 +1746,8 @@ function weightedRandom(arr) {
 
 var arrayUtils = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	remove: remove,
 	random: random,
+	remove: remove,
 	weightedRandom: weightedRandom
 });
 
@@ -2866,45 +2866,45 @@ function off(eventName, listener) {
 
 var event = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	DOM_READY: DOM_READY,
 	BOOT: BOOT,
-	STATE_PAUSE: STATE_PAUSE,
-	STATE_RESUME: STATE_RESUME,
-	STATE_STOP: STATE_STOP,
-	STATE_RESTART: STATE_RESTART,
-	STATE_CHANGE: STATE_CHANGE,
-	VIDEO_INIT: VIDEO_INIT,
-	GAME_INIT: GAME_INIT,
-	GAME_RESET: GAME_RESET,
-	GAME_BEFORE_UPDATE: GAME_BEFORE_UPDATE,
-	GAME_AFTER_UPDATE: GAME_AFTER_UPDATE,
-	GAME_UPDATE: GAME_UPDATE,
-	GAME_BEFORE_DRAW: GAME_BEFORE_DRAW,
-	GAME_AFTER_DRAW: GAME_AFTER_DRAW,
-	LEVEL_LOADED: LEVEL_LOADED,
-	LOADER_COMPLETE: LOADER_COMPLETE,
-	LOADER_PROGRESS: LOADER_PROGRESS,
-	KEYDOWN: KEYDOWN,
-	KEYUP: KEYUP,
+	CANVAS_ONRESIZE: CANVAS_ONRESIZE,
+	DOM_READY: DOM_READY,
+	DRAGEND: DRAGEND,
+	DRAGSTART: DRAGSTART,
 	GAMEPAD_CONNECTED: GAMEPAD_CONNECTED,
 	GAMEPAD_DISCONNECTED: GAMEPAD_DISCONNECTED,
 	GAMEPAD_UPDATE: GAMEPAD_UPDATE,
-	POINTERMOVE: POINTERMOVE,
-	POINTERLOCKCHANGE: POINTERLOCKCHANGE,
-	DRAGSTART: DRAGSTART,
-	DRAGEND: DRAGEND,
-	WINDOW_ONRESIZE: WINDOW_ONRESIZE,
-	CANVAS_ONRESIZE: CANVAS_ONRESIZE,
-	VIEWPORT_ONRESIZE: VIEWPORT_ONRESIZE,
-	WINDOW_ONORIENTATION_CHANGE: WINDOW_ONORIENTATION_CHANGE,
-	WINDOW_ONSCROLL: WINDOW_ONSCROLL,
-	VIEWPORT_ONCHANGE: VIEWPORT_ONCHANGE,
+	GAME_AFTER_DRAW: GAME_AFTER_DRAW,
+	GAME_AFTER_UPDATE: GAME_AFTER_UPDATE,
+	GAME_BEFORE_DRAW: GAME_BEFORE_DRAW,
+	GAME_BEFORE_UPDATE: GAME_BEFORE_UPDATE,
+	GAME_INIT: GAME_INIT,
+	GAME_RESET: GAME_RESET,
+	GAME_UPDATE: GAME_UPDATE,
+	KEYDOWN: KEYDOWN,
+	KEYUP: KEYUP,
+	LEVEL_LOADED: LEVEL_LOADED,
+	LOADER_COMPLETE: LOADER_COMPLETE,
+	LOADER_PROGRESS: LOADER_PROGRESS,
 	ONCONTEXT_LOST: ONCONTEXT_LOST,
 	ONCONTEXT_RESTORED: ONCONTEXT_RESTORED,
+	POINTERLOCKCHANGE: POINTERLOCKCHANGE,
+	POINTERMOVE: POINTERMOVE,
+	STATE_CHANGE: STATE_CHANGE,
+	STATE_PAUSE: STATE_PAUSE,
+	STATE_RESTART: STATE_RESTART,
+	STATE_RESUME: STATE_RESUME,
+	STATE_STOP: STATE_STOP,
+	VIDEO_INIT: VIDEO_INIT,
+	VIEWPORT_ONCHANGE: VIEWPORT_ONCHANGE,
+	VIEWPORT_ONRESIZE: VIEWPORT_ONRESIZE,
+	WINDOW_ONORIENTATION_CHANGE: WINDOW_ONORIENTATION_CHANGE,
+	WINDOW_ONRESIZE: WINDOW_ONRESIZE,
+	WINDOW_ONSCROLL: WINDOW_ONSCROLL,
 	emit: emit,
+	off: off,
 	on: on,
-	once: once,
-	off: off
+	once: once
 });
 
 var howler = {};
@@ -6189,19 +6189,19 @@ const isMobile$1 = /Mobi/i.test(ua) || iOS || android || wp || BlackBerry || Kin
 
 var device_platform = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	ua: ua,
-	iOS: iOS,
-	android: android,
-	android2: android2,
-	linux: linux,
-	chromeOS: chromeOS,
-	wp: wp,
 	BlackBerry: BlackBerry,
 	Kindle: Kindle,
+	android: android,
+	android2: android2,
+	chromeOS: chromeOS,
 	ejecta: ejecta,
+	iOS: iOS,
+	isMobile: isMobile$1,
 	isWeixin: isWeixin,
+	linux: linux,
 	nodeJS: nodeJS,
-	isMobile: isMobile$1
+	ua: ua,
+	wp: wp
 });
 
 /**
@@ -11124,91 +11124,116 @@ function vibrate(pattern) {
 
 var device = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	onDeviceRotate: onDeviceRotate,
-	platform: platform,
-	touchEvent: touchEvent,
-	pointerEvent: pointerEvent,
-	touch: touch,
-	maxTouchPoints: maxTouchPoints,
-	wheel: wheel,
-	hasPointerLockSupport: hasPointerLockSupport,
-	hasDeviceOrientation: hasDeviceOrientation,
-	screenOrientation: screenOrientation,
-	hasAccelerometer: hasAccelerometer,
-	hasFullscreenSupport: hasFullscreenSupport,
-	hasWebAudio: hasWebAudio,
-	hasHTML5Audio: hasHTML5Audio,
-	sound: sound,
-	localStorage: localStorage,
-	offscreenCanvas: offscreenCanvas,
-	nativeBase64: nativeBase64,
-	language: language,
-	devicePixelRatio: devicePixelRatio,
-	isMobile: isMobile,
 	get accelerationX () { return accelerationX; },
 	get accelerationY () { return accelerationY; },
 	get accelerationZ () { return accelerationZ; },
-	get gamma () { return gamma; },
-	get beta () { return beta; },
 	get alpha () { return alpha; },
-	pauseOnBlur: pauseOnBlur,
-	resumeOnFocus: resumeOnFocus,
 	autoFocus: autoFocus,
-	stopOnBlur: stopOnBlur,
-	onReady: onReady,
+	get beta () { return beta; },
+	devicePixelRatio: devicePixelRatio,
 	enableSwipe: enableSwipe,
-	isFullscreen: isFullscreen,
-	requestFullscreen: requestFullscreen,
 	exitFullscreen: exitFullscreen,
-	getScreenOrientation: getScreenOrientation,
-	lockOrientation: lockOrientation,
-	unlockOrientation: unlockOrientation,
-	isPortrait: isPortrait,
-	isLandscape: isLandscape,
-	getStorage: getStorage,
-	getParentElement: getParentElement,
+	focus: focus,
+	get gamma () { return gamma; },
 	getElement: getElement,
 	getElementBounds: getElementBounds,
 	getParentBounds: getParentBounds,
+	getParentElement: getParentElement,
+	getScreenOrientation: getScreenOrientation,
+	getStorage: getStorage,
+	hasAccelerometer: hasAccelerometer,
+	hasDeviceOrientation: hasDeviceOrientation,
+	hasFullscreenSupport: hasFullscreenSupport,
+	hasHTML5Audio: hasHTML5Audio,
+	hasPointerLockSupport: hasPointerLockSupport,
+	hasWebAudio: hasWebAudio,
+	isFullscreen: isFullscreen,
+	isLandscape: isLandscape,
+	isMobile: isMobile,
+	isPortrait: isPortrait,
 	isWebGLSupported: isWebGLSupported,
-	focus: focus,
-	watchAccelerometer: watchAccelerometer,
+	language: language,
+	localStorage: localStorage,
+	lockOrientation: lockOrientation,
+	maxTouchPoints: maxTouchPoints,
+	nativeBase64: nativeBase64,
+	offscreenCanvas: offscreenCanvas,
+	onDeviceRotate: onDeviceRotate,
+	onReady: onReady,
+	pauseOnBlur: pauseOnBlur,
+	platform: platform,
+	pointerEvent: pointerEvent,
+	requestFullscreen: requestFullscreen,
+	resumeOnFocus: resumeOnFocus,
+	screenOrientation: screenOrientation,
+	sound: sound,
+	stopOnBlur: stopOnBlur,
+	touch: touch,
+	touchEvent: touchEvent,
+	unlockOrientation: unlockOrientation,
 	unwatchAccelerometer: unwatchAccelerometer,
-	watchDeviceOrientation: watchDeviceOrientation,
 	unwatchDeviceOrientation: unwatchDeviceOrientation,
-	vibrate: vibrate
+	vibrate: vibrate,
+	watchAccelerometer: watchAccelerometer,
+	watchDeviceOrientation: watchDeviceOrientation,
+	wheel: wheel
 });
+
+/**
+ * constant to select the HTML5 Canvas renderer
+ * @type {number}
+ * @static
+ * @see Application
+ */
+const CANVAS$1 = 0;
+
+/**
+ * constant to select select the WebGL renderer
+ * @type {number}
+ * @static
+ * @see Application
+ */
+const WEBGL$1 = 1;
+
+/**
+ * constant to auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
+ * @static
+ * @type (number)
+ * @see Application
+ */
+const AUTO$1 = 2;
 
 /**
  * @namespace video
  */
 
+
 /**
  * Select the HTML5 Canvas renderer
  * @memberof video
- * @constant
+ * @static
  */
-const CANVAS$1 = 0;
+const CANVAS = CANVAS$1;
 
 /**
  * Select the WebGL renderer
  * @memberof video
- * @constant
+ * @static
  */
-const WEBGL$1 = 1;
+const WEBGL = WEBGL$1;
 
 /**
  * Auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
  * @memberof video
- * @constant
+ * @static
  */
-const AUTO$1 = 2;
+const AUTO = AUTO$1;
 
- /**
-  * A reference to the active Canvas or WebGL active renderer renderer
-  * @memberof video
-  * @type {CanvasRenderer|WebGLRenderer}
-  */
+/**
+ * A reference to the active Canvas or WebGL active renderer renderer
+ * @memberof video
+ * @type {CanvasRenderer|WebGLRenderer}
+ */
 let renderer = null;
 
 /**
@@ -11348,6 +11373,7 @@ function createCanvas(width, height, returnOffscreenCanvas = false) {
 
 /**
  * return a reference to the parent DOM element holding the main canvas
+ * @memberof video
  * @returns {HTMLElement}
  */
 function getParent() {
@@ -11356,13 +11382,13 @@ function getParent() {
 
 var video = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	CANVAS: CANVAS$1,
-	WEBGL: WEBGL$1,
-	AUTO: AUTO$1,
-	get renderer () { return renderer; },
-	init: init$1,
+	AUTO: AUTO,
+	CANVAS: CANVAS,
+	WEBGL: WEBGL,
 	createCanvas: createCanvas,
-	getParent: getParent
+	getParent: getParent,
+	init: init$1,
+	get renderer () { return renderer; }
 });
 
 /**
@@ -21234,35 +21260,35 @@ var preventDefault = true;
 
 var input = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	preventDefault: preventDefault,
-	get pointerEventTarget () { return pointerEventTarget; },
-	pointer: pointer,
-	get locked () { return locked; },
-	get throttlingInterval () { return throttlingInterval; },
-	globalToLocal: globalToLocal,
-	setTouchAction: setTouchAction,
-	bindPointer: bindPointer,
-	unbindPointer: unbindPointer,
-	registerPointerEvent: registerPointerEvent,
-	releasePointerEvent: releasePointerEvent,
-	releaseAllPointerEvents: releaseAllPointerEvents,
-	requestPointerLock: requestPointerLock,
-	exitPointerLock: exitPointerLock,
-	get keyBoardEventTarget () { return keyBoardEventTarget; },
+	GAMEPAD: GAMEPAD,
 	KEY: KEY,
+	bindGamepad: bindGamepad,
+	bindKey: bindKey,
+	bindPointer: bindPointer,
+	exitPointerLock: exitPointerLock,
+	getBindingKey: getBindingKey,
+	globalToLocal: globalToLocal,
 	initKeyboardEvent: initKeyboardEvent,
 	isKeyPressed: isKeyPressed,
+	get keyBoardEventTarget () { return keyBoardEventTarget; },
 	keyStatus: keyStatus,
-	triggerKeyEvent: triggerKeyEvent,
-	bindKey: bindKey,
-	getBindingKey: getBindingKey,
-	unlockKey: unlockKey,
-	unbindKey: unbindKey,
-	GAMEPAD: GAMEPAD,
-	bindGamepad: bindGamepad,
-	unbindGamepad: unbindGamepad,
+	get locked () { return locked; },
+	pointer: pointer,
+	get pointerEventTarget () { return pointerEventTarget; },
+	preventDefault: preventDefault,
+	registerPointerEvent: registerPointerEvent,
+	releaseAllPointerEvents: releaseAllPointerEvents,
+	releasePointerEvent: releasePointerEvent,
+	requestPointerLock: requestPointerLock,
 	setGamepadDeadzone: setGamepadDeadzone,
-	setGamepadMapping: setGamepadMapping
+	setGamepadMapping: setGamepadMapping,
+	setTouchAction: setTouchAction,
+	get throttlingInterval () { return throttlingInterval; },
+	triggerKeyEvent: triggerKeyEvent,
+	unbindGamepad: unbindGamepad,
+	unbindKey: unbindKey,
+	unbindPointer: unbindPointer,
+	unlockKey: unlockKey
 });
 
 /**
@@ -22669,10 +22695,13 @@ var input = /*#__PURE__*/Object.freeze({
 }
 
 // bitmask constants to check for flipped & rotated tiles
-const TMX_FLIP_H          = 0x80000000,
-      TMX_FLIP_V          = 0x40000000,
-      TMX_FLIP_AD         = 0x20000000,
-      TMX_CLEAR_BIT_MASK$1  = ~(0x80000000 | 0x40000000 | 0x20000000);
+const TMX_FLIP_H          = 0x80000000;
+const TMX_FLIP_V          = 0x40000000;
+const TMX_FLIP_AD         = 0x20000000;
+const TMX_CLEAR_BIT_MASK  = ~(TMX_FLIP_H | TMX_FLIP_V  | TMX_FLIP_AD);
+
+// constant to identify the collision object layer
+const COLLISION_GROUP     = "collision";
 
 /**
  * @classdesc
@@ -22694,7 +22723,7 @@ const TMX_FLIP_H          = 0x80000000,
 
         // determine the tile size
         if (tileset.isCollection) {
-            var image = tileset.getTileImage(gid & TMX_CLEAR_BIT_MASK$1);
+            var image = tileset.getTileImage(gid & TMX_CLEAR_BIT_MASK);
             width = image.width;
             height = image.height;
         } else {
@@ -22706,9 +22735,7 @@ const TMX_FLIP_H          = 0x80000000,
 
         /**
          * tileset
-         * @public
          * @type {TMXTileset}
-         * @name Tile#tileset
          */
         this.tileset = tileset;
 
@@ -22724,38 +22751,31 @@ const TMX_FLIP_H          = 0x80000000,
 
         /**
          * tileId
-         * @public
          * @type {number}
-         * @name Tile#tileId
          */
         this.tileId = gid;
+
         /**
-         * True if the tile is flipped horizontally<br>
-         * @public
+         * True if the tile is flipped horizontally
          * @type {boolean}
-         * @name Tile#flipX
          */
         this.flippedX  = (this.tileId & TMX_FLIP_H) !== 0;
+
         /**
-         * True if the tile is flipped vertically<br>
-         * @public
+         * True if the tile is flipped vertically
          * @type {boolean}
-         * @name Tile#flippedY
          */
         this.flippedY  = (this.tileId & TMX_FLIP_V) !== 0;
+
         /**
-         * True if the tile is flipped anti-diagonally<br>
-         * @public
+         * True if the tile is flipped anti-diagonally
          * @type {boolean}
-         * @name Tile#flippedAD
          */
         this.flippedAD = (this.tileId & TMX_FLIP_AD) !== 0;
 
         /**
-         * Global flag that indicates if the tile is flipped<br>
-         * @public
+         * Global flag that indicates if the tile is flipped
          * @type {boolean}
-         * @name Tile#flipped
          */
         this.flipped = this.flippedX || this.flippedY || this.flippedAD;
 
@@ -22768,7 +22788,7 @@ const TMX_FLIP_H          = 0x80000000,
         }
 
         // clear out the flags and set the tileId
-        this.tileId &= TMX_CLEAR_BIT_MASK$1;
+        this.tileId &= TMX_CLEAR_BIT_MASK;
     }
 
     /**
@@ -22796,8 +22816,6 @@ const TMX_FLIP_H          = 0x80000000,
 
     /**
      * return a renderable object for this Tile object
-     * @name Tile#getRenderable
-     * @public
      * @param {object} [settings] - see {@link Sprite}
      * @returns {Renderable} a me.Sprite object
      */
@@ -23726,9 +23744,7 @@ function preRenderLayer(layer, renderer) {
 
         /**
          * The Layer corresponding Tilesets
-         * @public
          * @type {TMXTilesetGroup}
-         * @name TMXLayer#tilesets
          */
         this.tilesets = tilesets;
 
@@ -23749,36 +23765,27 @@ function preRenderLayer(layer, renderer) {
 
         /**
          * All animated tilesets in this layer
-         * @ignore
          * @type {TMXTileset[]}
-         * @name TMXLayer#animatedTilesets
          */
         this.animatedTilesets = [];
 
         /**
          * Layer contains tileset animations
-         * @public
          * @type {boolean}
-         * @name TMXLayer#isAnimated
          */
         this.isAnimated = false;
 
         /**
          * the order in which tiles on orthogonal tile layers are rendered.
          * (valid values are "left-down", "left-up", "right-down", "right-up")
-         * @public
          * @type {string}
          * @default "right-down"
-         * @name TMXLayer#renderorder
          */
         this.renderorder = data.renderorder || "right-down";
 
         /**
          * the layer class
-         * @public
          * @type {string}
-         * @name class
-         * @name TMXLayer#class
          */
         this.class = data.class;
 
@@ -23883,9 +23890,6 @@ function preRenderLayer(layer, renderer) {
 
     /**
      * Set the TMX renderer for this layer object
-     * @name setRenderer
-     * @memberof TMXLayer
-     * @public
      * @param {TMXRenderer} renderer
      * @example
      * // use the parent map default renderer
@@ -23898,9 +23902,6 @@ function preRenderLayer(layer, renderer) {
 
     /**
      * Return the layer current renderer object
-     * @name getRenderer
-     * @memberof TMXLayer
-     * @public
      * @returns {TMXRenderer} renderer
      */
     getRenderer() {
@@ -23910,9 +23911,6 @@ function preRenderLayer(layer, renderer) {
 
     /**
      * Return the TileId of the Tile at the specified position
-     * @name getTileId
-     * @memberof TMXLayer
-     * @public
      * @param {number} x - X coordinate (in world/pixels coordinates)
      * @param {number} y - Y coordinate (in world/pixels coordinates)
      * @returns {number} TileId or null if there is no Tile at the given position
@@ -23924,9 +23922,6 @@ function preRenderLayer(layer, renderer) {
 
     /**
      * Return the Tile object at the specified position
-     * @name getTile
-     * @memberof TMXLayer
-     * @public
      * @param {number} x - X coordinate (in world/pixels coordinates)
      * @param {number} y - Y coordinate (in world/pixels coordinates)
      * @returns {Tile} corresponding tile or null if there is no defined tile at the coordinate or if outside of the layer bounds
@@ -23949,9 +23944,6 @@ function preRenderLayer(layer, renderer) {
 
     /**
      * assign the given Tile object to the specified position
-     * @name getTile
-     * @memberof TMXLayer
-     * @public
      * @param {Tile} tile - the tile object to be assigned
      * @param {number} x - x coordinate (in world/pixels coordinates)
      * @param {number} y - y coordinate (in world/pixels coordinates)
@@ -23964,9 +23956,6 @@ function preRenderLayer(layer, renderer) {
 
     /**
      * return a new the Tile object corresponding to the given tile id
-     * @name setTile
-     * @memberof TMXLayer
-     * @public
      * @param {number} tileId - tileId
      * @param {number} x - X coordinate (in world/pixels coordinates)
      * @param {number} y - Y coordinate (in world/pixels coordinates)
@@ -23982,9 +23971,6 @@ function preRenderLayer(layer, renderer) {
 
     /**
      * Return the Tile object at the specified tile coordinates
-     * @name cellAt
-     * @memberof TMXLayer
-     * @public
      * @param {number} x - x position of the tile (in Tile unit)
      * @param {number} y - x position of the tile (in Tile unit)
      * @param {number} [boundsCheck=true] - check first if within the layer bounds
@@ -24008,9 +23994,6 @@ function preRenderLayer(layer, renderer) {
 
     /**
      * clear the tile at the specified position
-     * @name clearTile
-     * @memberof TMXLayer
-     * @public
      * @param {number} x - X coordinate (in map coordinates: row/column)
      * @param {number} y - Y coordinate (in map coordinates: row/column)
      * @example
@@ -24094,8 +24077,6 @@ function preRenderLayer(layer, renderer) {
 
     /**
      * return true if the renderer can render the specified map or layer
-     * @name TMXRenderer#canRender
-     * @public
      * @param {TMXTileMap|TMXLayer} component - TMX Map or Layer
      * @returns {boolean}
      */
@@ -24114,8 +24095,6 @@ function preRenderLayer(layer, renderer) {
 
     /**
      * return the bounding rect for this map renderer
-     * @name TMXRenderer#getBounds
-     * @public
      * @param {TMXLayer} [layer] - calculate the bounding rect for a specific layer (will return a new bounds object)
      * @returns {Bounds}
      */
@@ -24131,8 +24110,6 @@ function preRenderLayer(layer, renderer) {
 
     /**
      * return the tile position corresponding to the specified pixel
-     * @name TMXRenderer#pixelToTileCoords
-     * @public
      * @param {number} x - X coordinate
      * @param {number} y - Y coordinate
      * @param {Vector2d} [v] - an optional vector object where to put the return values
@@ -24144,8 +24121,6 @@ function preRenderLayer(layer, renderer) {
 
     /**
      * return the pixel position corresponding of the specified tile
-     * @name TMXRenderer#tileToPixelCoords
-     * @public
      * @param {number} col - tile horizontal position
      * @param {number} row - tile vertical position
      * @param {Vector2d} [v] - an optional vector object where to put the return values
@@ -24157,8 +24132,6 @@ function preRenderLayer(layer, renderer) {
 
     /**
      * draw the given tile at the specified layer
-     * @name TMXRenderer#drawTile
-     * @public
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
      * @param {number} x - X coordinate where to draw the tile
      * @param {number} y - Y coordinate where to draw the tile
@@ -24169,8 +24142,6 @@ function preRenderLayer(layer, renderer) {
 
     /**
      * draw the given TMX Layer for the given area
-     * @name TMXRenderer#drawTileLayer
-     * @public
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
      * @param {TMXLayer} layer - a TMX Layer object
      * @param {Rect} rect - the area of the layer to draw
@@ -24363,10 +24334,7 @@ function preRenderLayer(layer, renderer) {
 
     /**
      * return the bounding rect for this map renderer
-     * @name TMXIsometricRenderer#getBounds
-     * @public
-     * @param {TMXLayer} [layer] - calculate the bounding rect for a specific layer (will return a new bounds object)
-     * @returns {Bounds}
+     * @ignore
      */
     getBounds(layer) {
         var bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
@@ -24607,10 +24575,7 @@ const offsetsStaggerY = [
 
     /**
      * return the bounding rect for this map renderer
-     * @name TMXHexagonalRenderer#getBounds
-     * @public
-     * @param {TMXLayer} [layer] - calculate the bounding rect for a specific layer (will return a new bounds object)
-     * @returns {Bounds}
+     * @ignore
      */
     getBounds(layer) {
         var bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
@@ -24946,7 +24911,8 @@ const offsetsStaggerY = [
 
             startPos = this.tileToPixelCoords(
                 startTile.x + layer.pos.x,
-                startTile.y + layer.pos.y
+                startTile.y + layer.pos.y,
+                startPos
             );
 
             var staggeredRow = this.doStaggerX(startTile.x + layer.pos.x);
@@ -24988,7 +24954,8 @@ const offsetsStaggerY = [
 
             startPos = this.tileToPixelCoords(
                 startTile.x + layer.pos.x,
-                startTile.y + layer.pos.y
+                startTile.y + layer.pos.y,
+                startPos
             );
 
             // Odd row shifting is applied in the rendering loop, so un-apply it here
@@ -25162,25 +25129,19 @@ const offsetsStaggerY = [
 
         /**
          * Tileset contains animated tiles
-         * @public
          * @type {boolean}
-         * @name TMXTileset#isAnimated
          */
         this.isAnimated = false;
 
         /**
          * true if the tileset is a "Collection of Image" Tileset
-         * @public
          * @type {boolean}
-         * @name TMXTileset#isCollection
          */
         this.isCollection = false;
 
         /**
          * the tileset class
-         * @public
          * @type {boolean}
-         * @name TMXTileset#class
          */
         this.class = tileset.class;
 
@@ -25286,8 +25247,6 @@ const offsetsStaggerY = [
 
     /**
      * return the tile image from a "Collection of Image" tileset
-     * @name TMXTileset#getTileImage
-     * @public
      * @param {number} gid
      * @returns {Image} corresponding image or undefined
      */
@@ -25307,8 +25266,6 @@ const offsetsStaggerY = [
 
     /**
      * return true if the gid belongs to the tileset
-     * @name TMXTileset#contains
-     * @public
      * @param {number} gid
      * @returns {boolean}
      */
@@ -25318,8 +25275,6 @@ const offsetsStaggerY = [
 
     /**
      * Get the view (local) tile ID from a GID, with animations applied
-     * @name TMXTileset#getViewTileId
-     * @public
      * @param {number} gid - Global tile ID
      * @returns {number} View tile ID
      */
@@ -25336,8 +25291,6 @@ const offsetsStaggerY = [
 
     /**
      * return the properties of the specified tile
-     * @name TMXTileset#getTileProperties
-     * @public
      * @param {number} tileId
      * @returns {object}
      */
@@ -25413,9 +25366,6 @@ const offsetsStaggerY = [
     }
 }
 
-// bitmask constants to check for flipped & rotated tiles
-const TMX_CLEAR_BIT_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
-
 /**
  * @classdesc
  * an object containing all tileset
@@ -25429,8 +25379,6 @@ const TMX_CLEAR_BIT_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
 
     /**
      * add a tileset to the tileset group
-     * @name TMXTilesetGroup#add
-     * @public
      * @param {TMXTileset} tileset
      */
     add(tileset) {
@@ -25440,8 +25388,6 @@ const TMX_CLEAR_BIT_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
 
     /**
      * return the tileset at the specified index
-     * @name TMXTilesetGroup#getTilesetByIndex
-     * @public
      * @param {number} i
      * @returns {TMXTileset} corresponding tileset
      */
@@ -25452,8 +25398,6 @@ const TMX_CLEAR_BIT_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
     /**
      * return the tileset corresponding to the specified id <br>
      * will throw an exception if no matching tileset is found
-     * @name TMXTilesetGroup#getTilesetByGid
-     * @public
      * @param {number} gid
      * @returns {TMXTileset} corresponding tileset
      */
@@ -25498,185 +25442,125 @@ class TMXObject {
 
         /**
          * point list in JSON format
-         * @public
          * @type {object[]}
-         * @name points
-         * @memberof TMXObject
          */
         this.points = undefined;
 
         /**
          * object name
-         * @public
          * @type {string}
-         * @name name
-         * @memberof TMXObject
          */
         this.name = settings.name;
 
         /**
          * object x position
-         * @public
          * @type {number}
-         * @name x
-         * @memberof TMXObject
          */
         this.x = +settings.x;
 
         /**
          * object y position
-         * @public
          * @type {number}
-         * @name y
-         * @memberof TMXObject
          */
         this.y = +settings.y;
 
         /**
          * object z order
-         * @public
          * @type {number}
-         * @name z
-         * @memberof TMXObject
          */
         this.z = +z;
 
         /**
          * object width
-         * @public
          * @type {number}
-         * @name width
-         * @memberof TMXObject
          */
         this.width = +settings.width || 0;
 
         /**
          * object height
-         * @public
          * @type {number}
-         * @name height
-         * @memberof TMXObject
          */
         this.height = +settings.height || 0;
 
         /**
          * object gid value
          * when defined the object is a tiled object
-         * @public
          * @type {number}
-         * @name gid
-         * @memberof TMXObject
          */
         this.gid = +settings.gid || null;
 
         /**
          * tint color
-         * @public
          * @type {string}
-         * @name tintcolor
-         * @memberof TMXObject
          */
         this.tintcolor = settings.tintcolor;
 
         /**
          * object type
-         * @public
          * @type {string}
          * @deprecated since Tiled 1.9
          * @see https://docs.mapeditor.org/en/stable/reference/tmx-changelog/#tiled-1-9
-         * @name type
-         * @memberof TMXObject
          */
         this.type = settings.type;
 
         /**
          * the object class
-         * @public
          * @type {string}
-         * @name class
-         * @memberof TMXObject
          */
         this.class = typeof settings.class !== "undefined" ? settings.class : settings.type;
 
         /**
          * object text
-         * @public
          * @type {object}
          * @see http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#text
-         * @name text
-         * @memberof TMXObject
          */
         this.text = undefined;
 
         /**
          * The rotation of the object in radians clockwise (defaults to 0)
-         * @public
          * @type {number}
-         * @name rotation
-         * @memberof TMXObject
          */
         this.rotation = degToRad(+settings.rotation || 0);
 
         /**
          * object unique identifier per level (Tiled 0.11.x+)
-         * @public
          * @type {number}
-         * @name id
-         * @memberof TMXObject
          */
         this.id = +settings.id || undefined;
 
         /**
          * object orientation (orthogonal or isometric)
-         * @public
          * @type {string}
-         * @name orientation
-         * @memberof TMXObject
          */
         this.orientation = map.orientation;
 
         /**
          * the collision shapes defined for this object
-         * @public
          * @type {object[]}
-         * @name shapes
-         * @memberof TMXObject
          */
         this.shapes = undefined;
 
         /**
          * if true, the object is an Ellipse
-         * @public
          * @type {boolean}
-         * @name isEllipse
-         * @memberof TMXObject
          */
         this.isEllipse = false;
 
         /**
          * if true, the object is a Point
-         * @public
          * @type {boolean}
-         * @name isPoint
-         * @memberof TMXObject
          */
         this.isPoint = false;
 
         /**
          * if true, the object is a Polygon
-         * @public
          * @type {boolean}
-         * @name isPolygon
-         * @memberof TMXObject
          */
         this.isPolygon = false;
 
         /**
          * if true, the object is a PolyLine
-         * @public
          * @type {boolean}
-         * @name isPolyLine
-         * @memberof TMXObject
          */
         this.isPolyLine = false;
 
@@ -25748,8 +25632,6 @@ class TMXObject {
 
     /**
      * parses the TMX shape definition and returns a corresponding array of me.Shape object
-     * @name parseTMXShapes
-     * @memberof TMXObject
      * @private
      * @returns {Polygon[]|Line[]|Ellipse[]} an array of shape objects
      */
@@ -25840,66 +25722,45 @@ class TMXGroup {
 
         /**
          * group name
-         * @public
          * @type {string}
-         * @name name
-         * @memberof TMXGroup
          */
         this.name = data.name;
 
         /**
          * group width
-         * @public
          * @type {number}
-         * @name width
-         * @memberof TMXGroup
          */
         this.width = data.width || 0;
 
         /**
          * group height
-         * @public
          * @type {number}
-         * @name height
-         * @memberof TMXGroup
          */
         this.height = data.height || 0;
 
         /**
          * tint color
-         * @public
          * @type {string}
-         * @name tintcolor
-         * @memberof TMXGroup
          */
         this.tintcolor = data.tintcolor;
 
 
         /**
          * the group class
-         * @public
          * @type {string}
-         * @name class
-         * @memberof TMXGroup
          */
         this.class = data.class;
 
         /**
          * group z order
-         * @public
          * @type {number}
-         * @name z
-         * @memberof TMXGroup
          */
         this.z = z;
 
         /**
          * group objects list definition
          * @see TMXObject
-         * @public
          * @type {object[]}
-         * @name name
-         * @memberof TMXGroup
          */
         this.objects = [];
 
@@ -26872,9 +26733,6 @@ let globalFloatingCounter = 0;
     }
 }
 
-// constant to identify the collision object layer
-const COLLISION_GROUP = "collision";
-
 /**
  * set a compatible renderer object
  * for the specified map
@@ -26980,96 +26838,73 @@ function readObjectGroup(map, data, z) {
 
         /**
          * name of the tilemap
-         * @public
          * @type {string}
-         * @name TMXTileMap#name
          */
         this.name = levelId;
 
         /**
          * width of the tilemap in tiles
-         * @public
          * @type {number}
-         * @name TMXTileMap#cols
          */
         this.cols = +data.width;
+
         /**
          * height of the tilemap in tiles
-         * @public
          * @type {number}
-         * @name TMXTileMap#rows
          */
         this.rows = +data.height;
 
         /**
          * Tile width
-         * @public
          * @type {number}
-         * @name TMXTileMap#tilewidth
          */
         this.tilewidth = +data.tilewidth;
 
         /**
          * Tile height
-         * @public
          * @type {number}
-         * @name TMXTileMap#tileheight
          */
         this.tileheight = +data.tileheight;
 
         /**
          * is the map an infinite map
-         * @public
          * @type {number}
          * @default 0
-         * @name TMXTileMap#infinite
          */
         this.infinite = +data.infinite;
 
         /**
          * the map orientation type. melonJS supports “orthogonal”, “isometric”, “staggered” and “hexagonal”.
-         * @public
          * @type {string}
          * @default "orthogonal"
-         * @name TMXTileMap#orientation
          */
         this.orientation = data.orientation;
 
         /**
          * the order in which tiles on orthogonal tile layers are rendered.
          * (valid values are "left-down", "left-up", "right-down", "right-up")
-         * @public
          * @type {string}
          * @default "right-down"
-         * @name TMXTileMap#renderorder
          */
         this.renderorder = data.renderorder || "right-down";
 
         /**
          * the TMX format version
-         * @public
          * @type {string}
-         * @name TMXTileMap#version
          */
         this.version = data.version;
 
         /**
          * The Tiled version used to save the file (since Tiled 1.0.1).
-         * @public
          * @type {string}
-         * @name TMXTileMap#tiledversion
          */
         this.tiledversion = data.tiledversion;
 
-
         /**
          * The map class.
-         * @public
          * @type {string}
-         * @name TMXTileMap#class
          */
-         this.class = data.class;
-
+        this.class = data.class;
 
         // tilesets for this map
         this.tilesets = null;
@@ -27085,7 +26920,6 @@ function readObjectGroup(map, data, z) {
 
         // Check if map is from melon editor
         this.isEditor = data.editor === "melon-editor";
-
 
         // object id
         this.nextobjectid = +data.nextobjectid || undefined;
@@ -27120,9 +26954,6 @@ function readObjectGroup(map, data, z) {
 
     /**
      * Return the map default renderer
-     * @name getRenderer
-     * @memberof TMXTileMap
-     * @public
      * @returns {TMXRenderer} a TMX renderer
      */
     getRenderer() {
@@ -27134,8 +26965,6 @@ function readObjectGroup(map, data, z) {
 
     /**
      * return the map bounding rect
-     * @name TMXRenderer#getBounds
-     * @public
      * @returns {Bounds}
      */
     getBounds() {
@@ -27216,8 +27045,6 @@ function readObjectGroup(map, data, z) {
     /**
      * add all the map layers and objects to the given container.
      * note : this will not automatically update the camera viewport
-     * @name TMXTileMap#addTo
-     * @public
      * @param {Container} container - target container
      * @param {boolean} [flatten=true] - if true, flatten all objects into the given container, else a `me.Container` object will be created for each corresponding groups
      * @param {boolean} [setViewportBounds=false] - if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
@@ -27292,8 +27119,6 @@ function readObjectGroup(map, data, z) {
 
     /**
      * return an Array of instantiated objects, based on the map object definition
-     * @name TMXTileMap#getObjects
-     * @public
      * @param {boolean} [flatten=true] - if true, flatten all objects into the returned array.
      * when false, a `me.Container` object will be created for each corresponding groups
      * @returns {Renderable[]} Array of Objects
@@ -27464,8 +27289,6 @@ function readObjectGroup(map, data, z) {
 
     /**
      * return all the existing layers
-     * @name TMXTileMap#getLayers
-     * @public
      * @returns {TMXLayer[]} Array of Layers
      */
     getLayers() {
@@ -27476,8 +27299,6 @@ function readObjectGroup(map, data, z) {
 
     /**
      * destroy function, clean all allocated objects
-     * @name TMXTileMap#destroy
-     * @public
      */
     destroy() {
         this.tilesets = undefined;
@@ -29085,34 +28906,34 @@ function unloadAll() {
 
 var audio = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	stopOnAudioError: stopOnAudioError,
-	init: init,
-	hasFormat: hasFormat,
-	hasAudio: hasAudio,
-	enable: enable,
 	disable: disable,
-	load: load,
-	play: play,
+	enable: enable,
 	fade: fade,
-	seek: seek,
-	rate: rate,
-	stop: stop,
-	pause: pause,
-	resume: resume,
-	playTrack: playTrack,
-	stopTrack: stopTrack,
-	pauseTrack: pauseTrack,
-	resumeTrack: resumeTrack,
 	getCurrentTrack: getCurrentTrack,
-	setVolume: setVolume,
 	getVolume: getVolume,
+	hasAudio: hasAudio,
+	hasFormat: hasFormat,
+	init: init,
+	load: load,
 	mute: mute,
-	unmute: unmute,
 	muteAll: muteAll,
-	unmuteAll: unmuteAll,
 	muted: muted,
+	pause: pause,
+	pauseTrack: pauseTrack,
+	play: play,
+	playTrack: playTrack,
+	rate: rate,
+	resume: resume,
+	resumeTrack: resumeTrack,
+	seek: seek,
+	setVolume: setVolume,
+	stop: stop,
+	stopOnAudioError: stopOnAudioError,
+	stopTrack: stopTrack,
 	unload: unload,
-	unloadAll: unloadAll
+	unloadAll: unloadAll,
+	unmute: unmute,
+	unmuteAll: unmuteAll
 });
 
 // some ref shortcut
@@ -36077,10 +35898,10 @@ function testEllipsePolygon(a, ellipseA, b, polyB, response) {
 
 var SAT = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	testPolygonPolygon: testPolygonPolygon,
 	testEllipseEllipse: testEllipseEllipse,
+	testEllipsePolygon: testEllipsePolygon,
 	testPolygonEllipse: testPolygonEllipse,
-	testEllipsePolygon: testEllipsePolygon
+	testPolygonPolygon: testPolygonPolygon
 });
 
 /**
@@ -37505,6 +37326,7 @@ function autoDetectRenderer(options) {
  * scale the "displayed" canvas by the given scalar.
  * this will modify the size of canvas element directly.
  * Only use this if you are not using the automatic scaling feature.
+ * @private
  * @param {Application} game - the game application instance triggering the resize
  * @param {number} x - x scaling multiplier
  * @param {number} y - y scaling multiplier
@@ -37536,6 +37358,7 @@ function scale(game, x, y) {
 
 /**
  * callback for window resize event
+ * @private
  * @param {Application} game - the game application instance triggering the resize
  */
 function onresize(game) {
@@ -37655,24 +37478,6 @@ function consoleHeader(app) {
 }
 
 /**
- * Select the HTML5 Canvas renderer
- * @constant
- */
-const CANVAS = 0;
-
-/**
- * Select the WebGL renderer
- * @constant
- */
-const WEBGL = 1;
-
-/**
- * Auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
- * @constant
- */
-const AUTO = 2;
-
-/**
  * @classdesc
  * An Application represents a single melonJS game.
  * An Application is responsible for updating (each frame) all the related object status and draw them.
@@ -37684,7 +37489,7 @@ const AUTO = 2;
      * @param {number} height - The height of the canvas viewport
      * @param {object} [options] - The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
      * @param {string|HTMLElement} [options.parent=document.body] - the DOM parent element to hold the canvas in the HTML file
-     * @param {number|Renderer} [options.renderer=video.AUTO] - renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO), or a custom renderer class
+     * @param {number|Renderer} [options.renderer=AUTO] - renderer to use (CANVAS, WEBGL, AUTO), or a custom renderer class
      * @param {number|string} [options.scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)
      * @param {string} [options.scaleMethod="fit"] - screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
      * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
@@ -37693,6 +37498,10 @@ const AUTO = 2;
      * @param {boolean} [options.antiAlias=false] - whether to enable or not video scaling interpolation
      * @param {boolean} [options.consoleHeader=true] - whether to display melonJS version and basic device information in the console
      * @throws Will throw an exception if it fails to instantiate a renderer
+     * @example
+     * var my game = new Application(640, 480, {renderer: me.video.AUTO}) {
+     *     ....
+     * }
      */
     constructor(width, height, options) {
 
@@ -37814,12 +37623,12 @@ const AUTO = 2;
         // override renderer settings if &webgl or &canvas is defined in the URL
         var uriFragment = utils.getUriFragment();
         if (uriFragment.webgl === true || uriFragment.webgl1 === true || uriFragment.webgl2 === true) {
-            this.settings.renderer = WEBGL;
+            this.settings.renderer = WEBGL$1;
             if (uriFragment.webgl1 === true) {
                 this.settings.preferWebGL1 = true;
             }
         } else if (uriFragment.canvas === true) {
-            this.settings.renderer = CANVAS;
+            this.settings.renderer = CANVAS$1;
         }
 
         // normalize scale
@@ -37831,8 +37640,8 @@ const AUTO = 2;
 
         if (typeof this.settings.renderer === "number") {
             switch (this.settings.renderer) {
-                case AUTO:
-                case WEBGL:
+                case AUTO$1:
+                case WEBGL$1:
                     this.renderer = autoDetectRenderer(this.settings);
                     break;
                 default:
@@ -38039,10 +37848,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "14.3.0"
+         * @default "14.4.0"
          * @name plugin.Base#version
          */
-        this.version = "14.3.0";
+        this.version = "14.4.0";
     }
 }
 
@@ -38307,8 +38116,7 @@ Renderer.prototype.getScreenContext = function()  {
  * @name version
  * @type {string}
  */
-const version = "14.3.0";
-
+const version = "14.4.0";
 
 /**
  * a flag indicating that melonJS is fully initialized
@@ -38437,4 +38245,4 @@ onReady(() => {
     }
 });
 
-export { Application, BitmapText, BitmapTextData, Body, Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Point, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, UIBaseElement, UISpriteElement, UITextButton, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader$1 as loader, plugin, plugins, pool, save, skipAutoInit, state$1 as state, timer$1 as timer, utils, version, video, warning };
+export { AUTO$1 as AUTO, Application, BitmapText, BitmapTextData, Body, Bounds, CANVAS$1 as CANVAS, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Point, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, UIBaseElement, UISpriteElement, UITextButton, Vector2d, Vector3d, WEBGL$1 as WEBGL, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader$1 as loader, plugin, plugins, pool, save, skipAutoInit, state$1 as state, timer$1 as timer, utils, version, video, warning };

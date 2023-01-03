@@ -20,11 +20,9 @@ export default class TMXLayer extends Renderable {
     orientation: string;
     /**
      * The Layer corresponding Tilesets
-     * @public
      * @type {TMXTilesetGroup}
-     * @name TMXLayer#tilesets
      */
-    public tilesets: TMXTilesetGroup;
+    tilesets: TMXTilesetGroup;
     tileset: any;
     maxTileSize: {
         width: number;
@@ -32,35 +30,26 @@ export default class TMXLayer extends Renderable {
     };
     /**
      * All animated tilesets in this layer
-     * @ignore
      * @type {TMXTileset[]}
-     * @name TMXLayer#animatedTilesets
      */
     animatedTilesets: TMXTileset[];
     /**
      * Layer contains tileset animations
-     * @public
      * @type {boolean}
-     * @name TMXLayer#isAnimated
      */
-    public isAnimated: boolean;
+    isAnimated: boolean;
     /**
      * the order in which tiles on orthogonal tile layers are rendered.
      * (valid values are "left-down", "left-up", "right-down", "right-up")
-     * @public
      * @type {string}
      * @default "right-down"
-     * @name TMXLayer#renderorder
      */
-    public renderorder: string;
+    renderorder: string;
     /**
      * the layer class
-     * @public
      * @type {string}
-     * @name class
-     * @name TMXLayer#class
      */
-    public class: string;
+    class: string;
     name: any;
     cols: number;
     rows: number;
@@ -70,40 +59,28 @@ export default class TMXLayer extends Renderable {
     onDeactivateEvent(): void;
     /**
      * Set the TMX renderer for this layer object
-     * @name setRenderer
-     * @memberof TMXLayer
-     * @public
      * @param {TMXRenderer} renderer
      * @example
      * // use the parent map default renderer
      * var layer = new me.TMXLayer(...);
      * layer.setRenderer(map.getRenderer());
      */
-    public setRenderer(renderer: TMXRenderer): void;
+    setRenderer(renderer: TMXRenderer): void;
     renderer: any;
     /**
      * Return the layer current renderer object
-     * @name getRenderer
-     * @memberof TMXLayer
-     * @public
      * @returns {TMXRenderer} renderer
      */
-    public getRenderer(): TMXRenderer;
+    getRenderer(): TMXRenderer;
     /**
      * Return the TileId of the Tile at the specified position
-     * @name getTileId
-     * @memberof TMXLayer
-     * @public
      * @param {number} x - X coordinate (in world/pixels coordinates)
      * @param {number} y - Y coordinate (in world/pixels coordinates)
      * @returns {number} TileId or null if there is no Tile at the given position
      */
-    public getTileId(x: number, y: number): number;
+    getTileId(x: number, y: number): number;
     /**
      * Return the Tile object at the specified position
-     * @name getTile
-     * @memberof TMXLayer
-     * @public
      * @param {number} x - X coordinate (in world/pixels coordinates)
      * @param {number} y - Y coordinate (in world/pixels coordinates)
      * @returns {Tile} corresponding tile or null if there is no defined tile at the coordinate or if outside of the layer bounds
@@ -113,34 +90,25 @@ export default class TMXLayer extends Renderable {
      * // get the tile object corresponding to the latest pointer position
      * var tile = layer.getTile(me.input.pointer.x, me.input.pointer.y);
      */
-    public getTile(x: number, y: number): Tile;
+    getTile(x: number, y: number): Tile;
     /**
      * assign the given Tile object to the specified position
-     * @name getTile
-     * @memberof TMXLayer
-     * @public
      * @param {Tile} tile - the tile object to be assigned
      * @param {number} x - x coordinate (in world/pixels coordinates)
      * @param {number} y - y coordinate (in world/pixels coordinates)
      * @returns {Tile} the tile object
      */
-    public setTile(tile: Tile, x: number, y: number): Tile;
+    setTile(tile: Tile, x: number, y: number): Tile;
     /**
      * return a new the Tile object corresponding to the given tile id
-     * @name setTile
-     * @memberof TMXLayer
-     * @public
      * @param {number} tileId - tileId
      * @param {number} x - X coordinate (in world/pixels coordinates)
      * @param {number} y - Y coordinate (in world/pixels coordinates)
      * @returns {Tile} the tile object
      */
-    public getTileById(tileId: number, x: number, y: number): Tile;
+    getTileById(tileId: number, x: number, y: number): Tile;
     /**
      * Return the Tile object at the specified tile coordinates
-     * @name cellAt
-     * @memberof TMXLayer
-     * @public
      * @param {number} x - x position of the tile (in Tile unit)
      * @param {number} y - x position of the tile (in Tile unit)
      * @param {number} [boundsCheck=true] - check first if within the layer bounds
@@ -149,12 +117,9 @@ export default class TMXLayer extends Renderable {
      * // return the first tile at offset 0, 0
      * var tile = layer.cellAt(0, 0);
      */
-    public cellAt(x: number, y: number, boundsCheck?: number | undefined): Tile;
+    cellAt(x: number, y: number, boundsCheck?: number | undefined): Tile;
     /**
      * clear the tile at the specified position
-     * @name clearTile
-     * @memberof TMXLayer
-     * @public
      * @param {number} x - X coordinate (in map coordinates: row/column)
      * @param {number} y - Y coordinate (in map coordinates: row/column)
      * @example
@@ -163,7 +128,7 @@ export default class TMXLayer extends Renderable {
      *     layer.clearTile(x, y);
      * });
      */
-    public clearTile(x: number, y: number): void;
+    clearTile(x: number, y: number): void;
     /**
      * update animations in a tileset layer
      * @ignore

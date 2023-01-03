@@ -1,12 +1,11 @@
 /*!
- * melonJS Game Engine - v14.3.0
+ * melonJS Game Engine - v14.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
-// bitmask constants to check for flipped & rotated tiles
-const TMX_CLEAR_BIT_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
+import { TMX_CLEAR_BIT_MASK } from './constants.js';
 
 /**
  * @classdesc
@@ -21,8 +20,6 @@ const TMX_CLEAR_BIT_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
 
     /**
      * add a tileset to the tileset group
-     * @name TMXTilesetGroup#add
-     * @public
      * @param {TMXTileset} tileset
      */
     add(tileset) {
@@ -32,8 +29,6 @@ const TMX_CLEAR_BIT_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
 
     /**
      * return the tileset at the specified index
-     * @name TMXTilesetGroup#getTilesetByIndex
-     * @public
      * @param {number} i
      * @returns {TMXTileset} corresponding tileset
      */
@@ -44,8 +39,6 @@ const TMX_CLEAR_BIT_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
     /**
      * return the tileset corresponding to the specified id <br>
      * will throw an exception if no matching tileset is found
-     * @name TMXTilesetGroup#getTilesetByGid
-     * @public
      * @param {number} gid
      * @returns {TMXTileset} corresponding tileset
      */

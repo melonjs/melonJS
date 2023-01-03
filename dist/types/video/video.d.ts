@@ -60,6 +60,7 @@ export function init(width: number, height: number, options?: {
 export function createCanvas(width: number, height: number, returnOffscreenCanvas?: boolean | undefined): HTMLCanvasElement | OffscreenCanvas;
 /**
  * return a reference to the parent DOM element holding the main canvas
+ * @memberof video
  * @returns {HTMLElement}
  */
 export function getParent(): HTMLElement;
@@ -69,21 +70,21 @@ export function getParent(): HTMLElement;
 /**
  * Select the HTML5 Canvas renderer
  * @memberof video
- * @constant
+ * @static
  */
-export const CANVAS: 0;
+export const CANVAS: number;
 /**
  * Select the WebGL renderer
  * @memberof video
- * @constant
+ * @static
  */
-export const WEBGL: 1;
+export const WEBGL: number;
 /**
  * Auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
  * @memberof video
- * @constant
+ * @static
  */
-export const AUTO: 2;
+export const AUTO: any;
 /**
  * A reference to the active Canvas or WebGL active renderer renderer
  * @memberof video

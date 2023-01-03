@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v14.3.0
+ * melonJS Game Engine - v14.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 import pool from '../../../system/pooling.js';
 import TMXLayer from '../TMXLayer.js';
@@ -32,8 +32,6 @@ import Bounds from '../../../physics/bounds.js';
 
     /**
      * return true if the renderer can render the specified map or layer
-     * @name TMXRenderer#canRender
-     * @public
      * @param {TMXTileMap|TMXLayer} component - TMX Map or Layer
      * @returns {boolean}
      */
@@ -52,8 +50,6 @@ import Bounds from '../../../physics/bounds.js';
 
     /**
      * return the bounding rect for this map renderer
-     * @name TMXRenderer#getBounds
-     * @public
      * @param {TMXLayer} [layer] - calculate the bounding rect for a specific layer (will return a new bounds object)
      * @returns {Bounds}
      */
@@ -69,8 +65,6 @@ import Bounds from '../../../physics/bounds.js';
 
     /**
      * return the tile position corresponding to the specified pixel
-     * @name TMXRenderer#pixelToTileCoords
-     * @public
      * @param {number} x - X coordinate
      * @param {number} y - Y coordinate
      * @param {Vector2d} [v] - an optional vector object where to put the return values
@@ -82,8 +76,6 @@ import Bounds from '../../../physics/bounds.js';
 
     /**
      * return the pixel position corresponding of the specified tile
-     * @name TMXRenderer#tileToPixelCoords
-     * @public
      * @param {number} col - tile horizontal position
      * @param {number} row - tile vertical position
      * @param {Vector2d} [v] - an optional vector object where to put the return values
@@ -95,8 +87,6 @@ import Bounds from '../../../physics/bounds.js';
 
     /**
      * draw the given tile at the specified layer
-     * @name TMXRenderer#drawTile
-     * @public
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
      * @param {number} x - X coordinate where to draw the tile
      * @param {number} y - Y coordinate where to draw the tile
@@ -107,8 +97,6 @@ import Bounds from '../../../physics/bounds.js';
 
     /**
      * draw the given TMX Layer for the given area
-     * @name TMXRenderer#drawTileLayer
-     * @public
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
      * @param {TMXLayer} layer - a TMX Layer object
      * @param {Rect} rect - the area of the layer to draw

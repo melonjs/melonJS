@@ -18,12 +18,9 @@ export default class TMXIsometricRenderer extends TMXRenderer {
     canRender(layer: any): boolean;
     /**
      * return the bounding rect for this map renderer
-     * @name TMXIsometricRenderer#getBounds
-     * @public
-     * @param {TMXLayer} [layer] - calculate the bounding rect for a specific layer (will return a new bounds object)
-     * @returns {Bounds}
+     * @ignore
      */
-    public getBounds(layer?: TMXLayer | undefined): Bounds;
+    getBounds(layer: any): object;
     /**
      * return the tile position corresponding to the specified pixel
      * @ignore
@@ -52,4 +49,3 @@ export default class TMXIsometricRenderer extends TMXRenderer {
     drawTileLayer(renderer: any, layer: any, rect: any): void;
 }
 import TMXRenderer from "./TMXRenderer.js";
-import TMXLayer from "./../TMXLayer.js";

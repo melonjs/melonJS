@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v14.3.0
+ * melonJS Game Engine - v14.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 import utils from '../utils/utils.js';
 import { version } from '../index.js';
@@ -24,10 +24,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "14.3.0"
+         * @default "14.4.0"
          * @name plugin.Base#version
          */
-        this.version = "14.3.0";
+        this.version = "14.4.0";
     }
 }
 

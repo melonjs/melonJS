@@ -1,19 +1,14 @@
 /*!
- * melonJS Game Engine - v14.3.0
+ * melonJS Game Engine - v14.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 import Matrix2d from '../../math/matrix2.js';
 import Sprite from '../../renderable/sprite.js';
 import Bounds from '../../physics/bounds.js';
-
-// bitmask constants to check for flipped & rotated tiles
-const TMX_FLIP_H          = 0x80000000,
-      TMX_FLIP_V          = 0x40000000,
-      TMX_FLIP_AD         = 0x20000000,
-      TMX_CLEAR_BIT_MASK  = ~(0x80000000 | 0x40000000 | 0x20000000);
+import { TMX_CLEAR_BIT_MASK, TMX_FLIP_H, TMX_FLIP_V, TMX_FLIP_AD } from './constants.js';
 
 /**
  * @classdesc
@@ -47,9 +42,7 @@ const TMX_FLIP_H          = 0x80000000,
 
         /**
          * tileset
-         * @public
          * @type {TMXTileset}
-         * @name Tile#tileset
          */
         this.tileset = tileset;
 
@@ -65,38 +58,31 @@ const TMX_FLIP_H          = 0x80000000,
 
         /**
          * tileId
-         * @public
          * @type {number}
-         * @name Tile#tileId
          */
         this.tileId = gid;
+
         /**
-         * True if the tile is flipped horizontally<br>
-         * @public
+         * True if the tile is flipped horizontally
          * @type {boolean}
-         * @name Tile#flipX
          */
         this.flippedX  = (this.tileId & TMX_FLIP_H) !== 0;
+
         /**
-         * True if the tile is flipped vertically<br>
-         * @public
+         * True if the tile is flipped vertically
          * @type {boolean}
-         * @name Tile#flippedY
          */
         this.flippedY  = (this.tileId & TMX_FLIP_V) !== 0;
+
         /**
-         * True if the tile is flipped anti-diagonally<br>
-         * @public
+         * True if the tile is flipped anti-diagonally
          * @type {boolean}
-         * @name Tile#flippedAD
          */
         this.flippedAD = (this.tileId & TMX_FLIP_AD) !== 0;
 
         /**
-         * Global flag that indicates if the tile is flipped<br>
-         * @public
+         * Global flag that indicates if the tile is flipped
          * @type {boolean}
-         * @name Tile#flipped
          */
         this.flipped = this.flippedX || this.flippedY || this.flippedAD;
 
@@ -137,8 +123,6 @@ const TMX_FLIP_H          = 0x80000000,
 
     /**
      * return a renderable object for this Tile object
-     * @name Tile#getRenderable
-     * @public
      * @param {object} [settings] - see {@link Sprite}
      * @returns {Renderable} a me.Sprite object
      */

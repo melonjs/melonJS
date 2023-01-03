@@ -10,7 +10,7 @@ export default class Application {
      * @param {number} height - The height of the canvas viewport
      * @param {object} [options] - The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
      * @param {string|HTMLElement} [options.parent=document.body] - the DOM parent element to hold the canvas in the HTML file
-     * @param {number|Renderer} [options.renderer=video.AUTO] - renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO), or a custom renderer class
+     * @param {number|Renderer} [options.renderer=AUTO] - renderer to use (CANVAS, WEBGL, AUTO), or a custom renderer class
      * @param {number|string} [options.scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)
      * @param {string} [options.scaleMethod="fit"] - screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
      * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
@@ -19,6 +19,10 @@ export default class Application {
      * @param {boolean} [options.antiAlias=false] - whether to enable or not video scaling interpolation
      * @param {boolean} [options.consoleHeader=true] - whether to display melonJS version and basic device information in the console
      * @throws Will throw an exception if it fails to instantiate a renderer
+     * @example
+     * var my game = new Application(640, 480, {renderer: me.video.AUTO}) {
+     *     ....
+     * }
      */
     constructor(width: number, height: number, options?: {
         parent?: string | HTMLElement | undefined;

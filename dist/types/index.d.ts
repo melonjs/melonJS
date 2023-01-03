@@ -16,6 +16,7 @@ export function boot(): void;
  */
 export const version: string;
 export * from "./lang/deprecated.js";
+export * from "./const.js";
 /**
  * a flag indicating that melonJS is fully initialized
  * @type {boolean}

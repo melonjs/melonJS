@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v14.3.0
+ * melonJS Game Engine - v14.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 import Vector2d from '../../../math/vector2.js';
 import pool from '../../../system/pooling.js';
@@ -84,10 +84,7 @@ const offsetsStaggerY = [
 
     /**
      * return the bounding rect for this map renderer
-     * @name TMXHexagonalRenderer#getBounds
-     * @public
-     * @param {TMXLayer} [layer] - calculate the bounding rect for a specific layer (will return a new bounds object)
-     * @returns {Bounds}
+     * @ignore
      */
     getBounds(layer) {
         var bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
@@ -423,7 +420,8 @@ const offsetsStaggerY = [
 
             startPos = this.tileToPixelCoords(
                 startTile.x + layer.pos.x,
-                startTile.y + layer.pos.y
+                startTile.y + layer.pos.y,
+                startPos
             );
 
             var staggeredRow = this.doStaggerX(startTile.x + layer.pos.x);
@@ -465,7 +463,8 @@ const offsetsStaggerY = [
 
             startPos = this.tileToPixelCoords(
                 startTile.x + layer.pos.x,
-                startTile.y + layer.pos.y
+                startTile.y + layer.pos.y,
+                startPos
             );
 
             // Odd row shifting is applied in the rendering loop, so un-apply it here

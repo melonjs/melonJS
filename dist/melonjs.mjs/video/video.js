@@ -1,45 +1,47 @@
 /*!
- * melonJS Game Engine - v14.3.0
+ * melonJS Game Engine - v14.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 import { emit, WINDOW_ONRESIZE, WINDOW_ONORIENTATION_CHANGE, WINDOW_ONSCROLL, VIDEO_INIT } from '../system/event.js';
 import { game, initialized } from '../index.js';
 import { offscreenCanvas, screenOrientation } from '../system/device.js';
 import utils from '../utils/utils.js';
+import { CANVAS as CANVAS$1, WEBGL as WEBGL$1, AUTO as AUTO$1 } from '../const.js';
 
 /**
  * @namespace video
  */
 
+
 /**
  * Select the HTML5 Canvas renderer
  * @memberof video
- * @constant
+ * @static
  */
-const CANVAS = 0;
+const CANVAS = CANVAS$1;
 
 /**
  * Select the WebGL renderer
  * @memberof video
- * @constant
+ * @static
  */
-const WEBGL = 1;
+const WEBGL = WEBGL$1;
 
 /**
  * Auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
  * @memberof video
- * @constant
+ * @static
  */
-const AUTO = 2;
+const AUTO = AUTO$1;
 
- /**
-  * A reference to the active Canvas or WebGL active renderer renderer
-  * @memberof video
-  * @type {CanvasRenderer|WebGLRenderer}
-  */
+/**
+ * A reference to the active Canvas or WebGL active renderer renderer
+ * @memberof video
+ * @type {CanvasRenderer|WebGLRenderer}
+ */
 let renderer = null;
 
 /**
@@ -179,6 +181,7 @@ function createCanvas(width, height, returnOffscreenCanvas = false) {
 
 /**
  * return a reference to the parent DOM element holding the main canvas
+ * @memberof video
  * @returns {HTMLElement}
  */
 function getParent() {

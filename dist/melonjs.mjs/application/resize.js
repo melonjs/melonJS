@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v14.3.0
+ * melonJS Game Engine - v14.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 import { getParentBounds, devicePixelRatio } from '../system/device.js';
 
@@ -11,6 +11,7 @@ import { getParentBounds, devicePixelRatio } from '../system/device.js';
  * scale the "displayed" canvas by the given scalar.
  * this will modify the size of canvas element directly.
  * Only use this if you are not using the automatic scaling feature.
+ * @private
  * @param {Application} game - the game application instance triggering the resize
  * @param {number} x - x scaling multiplier
  * @param {number} y - y scaling multiplier
@@ -42,6 +43,7 @@ function scale(game, x, y) {
 
 /**
  * callback for window resize event
+ * @private
  * @param {Application} game - the game application instance triggering the resize
  */
 function onresize(game) {

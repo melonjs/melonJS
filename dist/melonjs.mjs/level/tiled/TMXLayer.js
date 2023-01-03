@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v14.3.0
+ * melonJS Game Engine - v14.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 import { createCanvas } from '../../video/video.js';
 import pool from '../../system/pooling.js';
@@ -98,9 +98,7 @@ function preRenderLayer(layer, renderer) {
 
         /**
          * The Layer corresponding Tilesets
-         * @public
          * @type {TMXTilesetGroup}
-         * @name TMXLayer#tilesets
          */
         this.tilesets = tilesets;
 
@@ -121,36 +119,27 @@ function preRenderLayer(layer, renderer) {
 
         /**
          * All animated tilesets in this layer
-         * @ignore
          * @type {TMXTileset[]}
-         * @name TMXLayer#animatedTilesets
          */
         this.animatedTilesets = [];
 
         /**
          * Layer contains tileset animations
-         * @public
          * @type {boolean}
-         * @name TMXLayer#isAnimated
          */
         this.isAnimated = false;
 
         /**
          * the order in which tiles on orthogonal tile layers are rendered.
          * (valid values are "left-down", "left-up", "right-down", "right-up")
-         * @public
          * @type {string}
          * @default "right-down"
-         * @name TMXLayer#renderorder
          */
         this.renderorder = data.renderorder || "right-down";
 
         /**
          * the layer class
-         * @public
          * @type {string}
-         * @name class
-         * @name TMXLayer#class
          */
         this.class = data.class;
 
@@ -255,9 +244,6 @@ function preRenderLayer(layer, renderer) {
 
     /**
      * Set the TMX renderer for this layer object
-     * @name setRenderer
-     * @memberof TMXLayer
-     * @public
      * @param {TMXRenderer} renderer
      * @example
      * // use the parent map default renderer
@@ -270,9 +256,6 @@ function preRenderLayer(layer, renderer) {
 
     /**
      * Return the layer current renderer object
-     * @name getRenderer
-     * @memberof TMXLayer
-     * @public
      * @returns {TMXRenderer} renderer
      */
     getRenderer() {
@@ -282,9 +265,6 @@ function preRenderLayer(layer, renderer) {
 
     /**
      * Return the TileId of the Tile at the specified position
-     * @name getTileId
-     * @memberof TMXLayer
-     * @public
      * @param {number} x - X coordinate (in world/pixels coordinates)
      * @param {number} y - Y coordinate (in world/pixels coordinates)
      * @returns {number} TileId or null if there is no Tile at the given position
@@ -296,9 +276,6 @@ function preRenderLayer(layer, renderer) {
 
     /**
      * Return the Tile object at the specified position
-     * @name getTile
-     * @memberof TMXLayer
-     * @public
      * @param {number} x - X coordinate (in world/pixels coordinates)
      * @param {number} y - Y coordinate (in world/pixels coordinates)
      * @returns {Tile} corresponding tile or null if there is no defined tile at the coordinate or if outside of the layer bounds
@@ -321,9 +298,6 @@ function preRenderLayer(layer, renderer) {
 
     /**
      * assign the given Tile object to the specified position
-     * @name getTile
-     * @memberof TMXLayer
-     * @public
      * @param {Tile} tile - the tile object to be assigned
      * @param {number} x - x coordinate (in world/pixels coordinates)
      * @param {number} y - y coordinate (in world/pixels coordinates)
@@ -336,9 +310,6 @@ function preRenderLayer(layer, renderer) {
 
     /**
      * return a new the Tile object corresponding to the given tile id
-     * @name setTile
-     * @memberof TMXLayer
-     * @public
      * @param {number} tileId - tileId
      * @param {number} x - X coordinate (in world/pixels coordinates)
      * @param {number} y - Y coordinate (in world/pixels coordinates)
@@ -354,9 +325,6 @@ function preRenderLayer(layer, renderer) {
 
     /**
      * Return the Tile object at the specified tile coordinates
-     * @name cellAt
-     * @memberof TMXLayer
-     * @public
      * @param {number} x - x position of the tile (in Tile unit)
      * @param {number} y - x position of the tile (in Tile unit)
      * @param {number} [boundsCheck=true] - check first if within the layer bounds
@@ -380,9 +348,6 @@ function preRenderLayer(layer, renderer) {
 
     /**
      * clear the tile at the specified position
-     * @name clearTile
-     * @memberof TMXLayer
-     * @public
      * @param {number} x - X coordinate (in map coordinates: row/column)
      * @param {number} y - Y coordinate (in map coordinates: row/column)
      * @example

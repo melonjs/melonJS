@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v14.3.0
+ * melonJS Game Engine - v14.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 import Vector2d from '../../math/vector2.js';
 import { renderer } from '../../video/video.js';
@@ -55,25 +55,19 @@ import loader from '../../loader/loader.js';
 
         /**
          * Tileset contains animated tiles
-         * @public
          * @type {boolean}
-         * @name TMXTileset#isAnimated
          */
         this.isAnimated = false;
 
         /**
          * true if the tileset is a "Collection of Image" Tileset
-         * @public
          * @type {boolean}
-         * @name TMXTileset#isCollection
          */
         this.isCollection = false;
 
         /**
          * the tileset class
-         * @public
          * @type {boolean}
-         * @name TMXTileset#class
          */
         this.class = tileset.class;
 
@@ -179,8 +173,6 @@ import loader from '../../loader/loader.js';
 
     /**
      * return the tile image from a "Collection of Image" tileset
-     * @name TMXTileset#getTileImage
-     * @public
      * @param {number} gid
      * @returns {Image} corresponding image or undefined
      */
@@ -200,8 +192,6 @@ import loader from '../../loader/loader.js';
 
     /**
      * return true if the gid belongs to the tileset
-     * @name TMXTileset#contains
-     * @public
      * @param {number} gid
      * @returns {boolean}
      */
@@ -211,8 +201,6 @@ import loader from '../../loader/loader.js';
 
     /**
      * Get the view (local) tile ID from a GID, with animations applied
-     * @name TMXTileset#getViewTileId
-     * @public
      * @param {number} gid - Global tile ID
      * @returns {number} View tile ID
      */
@@ -229,8 +217,6 @@ import loader from '../../loader/loader.js';
 
     /**
      * return the properties of the specified tile
-     * @name TMXTileset#getTileProperties
-     * @public
      * @param {number} tileId
      * @returns {object}
      */
