@@ -175,6 +175,8 @@ export {
 // Backward compatibility for deprecated method or properties
 export * from "./lang/deprecated.js";
 
+// export all public constants
+export * from "./const.js";
 
 /**
  * a flag indicating that melonJS is fully initialized

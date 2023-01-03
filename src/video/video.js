@@ -2,37 +2,39 @@ import * as event from "./../system/event.js";
 import { initialized, game } from "./../index.js";
 import * as device from "./../system/device.js";
 import utils from "./../utils/utils.js";
+import * as vc from "../const";
 
 /**
  * @namespace video
  */
 
+
 /**
  * Select the HTML5 Canvas renderer
  * @memberof video
- * @constant
+ * @static
  */
-export const CANVAS = 0;
+export const CANVAS = vc.CANVAS;
 
 /**
  * Select the WebGL renderer
  * @memberof video
- * @constant
+ * @static
  */
-export const WEBGL = 1;
+export const WEBGL = vc.WEBGL;
 
 /**
  * Auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
  * @memberof video
- * @constant
+ * @static
  */
-export const AUTO = 2;
+export const AUTO = vc.AUTO;
 
- /**
-  * A reference to the active Canvas or WebGL active renderer renderer
-  * @memberof video
-  * @type {CanvasRenderer|WebGLRenderer}
-  */
+/**
+ * A reference to the active Canvas or WebGL active renderer renderer
+ * @memberof video
+ * @type {CanvasRenderer|WebGLRenderer}
+ */
 export let renderer = null;
 
 /**
@@ -172,6 +174,7 @@ export function createCanvas(width, height, returnOffscreenCanvas = false) {
 
 /**
  * return a reference to the parent DOM element holding the main canvas
+ * @memberof video
  * @returns {HTMLElement}
  */
 export function getParent() {
