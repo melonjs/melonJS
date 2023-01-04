@@ -5,9 +5,6 @@
 ### Fixed
 - Tiled: fix a `cannot recycle` exception when rendering hexagonal maps
 
-### Added
-- Core: its now possible to specify a custom renderer (that extends the default Renderer c
-
 ## [14.3.0] (melonJS 2) - _2022-12-30_
 
 ### Added
