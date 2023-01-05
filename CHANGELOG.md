@@ -2,6 +2,9 @@
 
 ## [14.4.0] (melonJS 2) - _2023-01-XX_
 
+### Added
+- Tiled: add support for the .tmj extension (JSON)
+
 ### Fixed
 - Tiled: fix a `cannot recycle` exception when rendering hexagonal maps
 
