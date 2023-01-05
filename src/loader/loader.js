@@ -199,6 +199,7 @@ function preloadTMX(tmxData, onload, onerror) {
                         break;
 
                     case "json":
+                    case "tmj":
                         result = JSON.parse(xmlhttp.responseText);
                         break;
 
