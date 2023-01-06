@@ -19,6 +19,18 @@ export default class TMXLayer extends Renderable {
     tileheight: any;
     orientation: string;
     /**
+     * Horizontal layer offset in tiles
+     * @default 0
+     * @type {number}
+     */
+    x: number;
+    /**
+     * Vertical layer offset in tiles
+     * @default 0
+     * @type {number}
+     */
+    y: number;
+    /**
      * The Layer corresponding Tilesets
      * @type {TMXTilesetGroup}
      */
@@ -54,6 +66,7 @@ export default class TMXLayer extends Renderable {
     cols: number;
     rows: number;
     preRender: boolean;
+    layerData: any[];
     onActivateEvent(): void;
     canvasRenderer: CanvasRenderer | undefined;
     onDeactivateEvent(): void;

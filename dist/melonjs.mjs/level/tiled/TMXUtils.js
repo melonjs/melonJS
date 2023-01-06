@@ -195,13 +195,37 @@ function normalize(obj, item) {
     switch (nodeName) {
         case "data":
             var data = parse(item);
-            // #956 Support for Infinite map
-            // workaround to prevent the parsing code from crashing
-            data.text = data.text || data.chunk.text;
-            // When no encoding is given, the tiles are stored as individual XML tile elements.
+
             data.encoding = data.encoding || "xml";
-            obj.data = decode(data.text, data.encoding, data.compression);
-            obj.encoding = "none";
+
+            // decode chunks for infinite maps
+            if (typeof data.chunks !== "undefined") {
+                obj.chunks = obj.chunks || [];
+                // infinite maps containing chunk data
+                data.chunks.forEach((chunk) => {
+                    obj.chunks.push({
+                        x: +chunk.x,
+                        y: +chunk.y,
+                        // chunk width is in tiles
+                        width: +chunk.width,
+                        // chunk height is in tiles
+                        height: +chunk.height,
+                        data: decode(chunk.text, data.encoding, data.compression)
+                    });
+                });
+                obj.encoding = "none";
+            }
+            // Bug on if condition: when parsing data, data.text is sometimes defined when chunks are present
+            if (typeof data.text !== "undefined" && typeof obj.chunks === "undefined") {
+                // Finite maps
+                obj.data = decode(data.text, data.encoding, data.compression);
+                obj.encoding = "none";
+            }
+            break;
+
+        case "chunk":
+            obj.chunks = obj.chunks || [];
+            obj.chunks.push(parse(item));
             break;
 
         case "imagelayer":
@@ -310,16 +334,15 @@ function parse(xml) {
 
     // do children
     if (xml.hasChildNodes()) {
-        for (var i = 0; i < xml.childNodes.length; i++) {
-            var item = xml.childNodes.item(i);
-
-            switch (item.nodeType) {
+        let children = xml.childNodes;
+        for (const node of children) {
+            switch (node.nodeType) {
                 case 1:
-                    normalize(obj, item);
+                    normalize(obj, node);
                     break;
 
                 case 3:
-                    text += item.nodeValue.trim();
+                    text += node.nodeValue.trim();
                     break;
             }
         }

@@ -17,34 +17,43 @@ import { game } from '../../index.js';
  * Create required arrays for the given layer object
  * @ignore
  */
-function initArray(layer) {
+function initArray(rows, cols) {
     // initialize the array
-    layer.layerData = new Array(layer.cols);
-    for (var x = 0; x < layer.cols; x++) {
-        layer.layerData[x] = new Array(layer.rows);
-        for (var y = 0; y < layer.rows; y++) {
-            layer.layerData[x][y] = null;
+    var array = new Array(cols);
+    for (var col = 0; col < cols; col++) {
+        array[col] = new Array(rows);
+        for (var row = 0; row < rows; row++) {
+            array[col][row] = null;
         }
     }
+    return array;
 }
 
 /**
  * Set a tiled layer Data
  * @ignore
  */
-function setLayerData(layer, data) {
+function setLayerData(layer, bounds, data) {
     var idx = 0;
-    // initialize the data array
-    initArray(layer);
+    var width, height;
+
+    // layer provide rows and cols, chunk width and height
+    if (typeof bounds.rows === "undefined") {
+        width = bounds.width;
+        height = bounds.height;
+    } else {
+        width = bounds.cols;
+        height = bounds.rows;
+    }
     // set everything
-    for (var y = 0; y < layer.rows; y++) {
-        for (var x = 0; x < layer.cols; x++) {
+    for (var y = 0; y < height; y++) {
+        for (var x = 0; x < width; x++) {
             // get the value of the gid
             var gid = data[idx++];
             // fill the array
             if (gid !== 0) {
                 // add a new tile to the layer
-                layer.layerData[x][y] = layer.getTileById(gid, x, y);
+                layer.layerData[x + bounds.x][y + bounds.y] = layer.getTileById(gid, x + bounds.x, y + bounds.y);
             }
         }
     }
@@ -95,6 +104,20 @@ function preRenderLayer(layer, renderer) {
 
         // layer orientation
         this.orientation = orientation;
+
+        /**
+         * Horizontal layer offset in tiles
+         * @default 0
+         * @type {number}
+         */
+        this.x = 0;
+
+        /**
+         * Vertical layer offset in tiles
+         * @default 0
+         * @type {number}
+         */
+        this.y = 0;
 
         /**
          * The Layer corresponding Tilesets
@@ -185,14 +208,36 @@ function preRenderLayer(layer, renderer) {
         this.setRenderer(map.getRenderer());
 
 
-        // initialize and set the layer data
-        setLayerData(this,
-            decode(
-                data.data,
-                data.encoding,
-                data.compression
-            )
-        );
+        // initialize the data array
+        this.layerData = initArray(this.rows, this.cols);
+
+        if (map.infinite === 0) {
+            // initialize and set the layer data
+            setLayerData(
+                this,
+                this,
+                decode(
+                    data.data,
+                    data.encoding,
+                    data.compression
+                )
+            );
+        } else if (map.infinite === 1) {
+            // infinite map, initialize per chunk
+            data.chunks.forEach((chunk) => {
+                // initialize and set the layer data
+                setLayerData(
+                    this,
+                    chunk,
+                    decode(
+                        chunk.data,
+                        data.encoding,
+                        data.compression
+                    )
+                );
+            });
+        }
+
     }
 
 

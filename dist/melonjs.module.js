@@ -11579,13 +11579,37 @@ function normalize(obj, item) {
     switch (nodeName) {
         case "data":
             var data = parse(item);
-            // #956 Support for Infinite map
-            // workaround to prevent the parsing code from crashing
-            data.text = data.text || data.chunk.text;
-            // When no encoding is given, the tiles are stored as individual XML tile elements.
+
             data.encoding = data.encoding || "xml";
-            obj.data = decode(data.text, data.encoding, data.compression);
-            obj.encoding = "none";
+
+            // decode chunks for infinite maps
+            if (typeof data.chunks !== "undefined") {
+                obj.chunks = obj.chunks || [];
+                // infinite maps containing chunk data
+                data.chunks.forEach((chunk) => {
+                    obj.chunks.push({
+                        x: +chunk.x,
+                        y: +chunk.y,
+                        // chunk width is in tiles
+                        width: +chunk.width,
+                        // chunk height is in tiles
+                        height: +chunk.height,
+                        data: decode(chunk.text, data.encoding, data.compression)
+                    });
+                });
+                obj.encoding = "none";
+            }
+            // Bug on if condition: when parsing data, data.text is sometimes defined when chunks are present
+            if (typeof data.text !== "undefined" && typeof obj.chunks === "undefined") {
+                // Finite maps
+                obj.data = decode(data.text, data.encoding, data.compression);
+                obj.encoding = "none";
+            }
+            break;
+
+        case "chunk":
+            obj.chunks = obj.chunks || [];
+            obj.chunks.push(parse(item));
             break;
 
         case "imagelayer":
@@ -11694,16 +11718,15 @@ function parse(xml) {
 
     // do children
     if (xml.hasChildNodes()) {
-        for (var i = 0; i < xml.childNodes.length; i++) {
-            var item = xml.childNodes.item(i);
-
-            switch (item.nodeType) {
+        let children = xml.childNodes;
+        for (const node of children) {
+            switch (node.nodeType) {
                 case 1:
-                    normalize(obj, item);
+                    normalize(obj, node);
                     break;
 
                 case 3:
-                    text += item.nodeValue.trim();
+                    text += node.nodeValue.trim();
                     break;
             }
         }
@@ -23663,34 +23686,43 @@ const COLLISION_GROUP     = "collision";
  * Create required arrays for the given layer object
  * @ignore
  */
-function initArray(layer) {
+function initArray(rows, cols) {
     // initialize the array
-    layer.layerData = new Array(layer.cols);
-    for (var x = 0; x < layer.cols; x++) {
-        layer.layerData[x] = new Array(layer.rows);
-        for (var y = 0; y < layer.rows; y++) {
-            layer.layerData[x][y] = null;
+    var array = new Array(cols);
+    for (var col = 0; col < cols; col++) {
+        array[col] = new Array(rows);
+        for (var row = 0; row < rows; row++) {
+            array[col][row] = null;
         }
     }
+    return array;
 }
 
 /**
  * Set a tiled layer Data
  * @ignore
  */
-function setLayerData(layer, data) {
+function setLayerData(layer, bounds, data) {
     var idx = 0;
-    // initialize the data array
-    initArray(layer);
+    var width, height;
+
+    // layer provide rows and cols, chunk width and height
+    if (typeof bounds.rows === "undefined") {
+        width = bounds.width;
+        height = bounds.height;
+    } else {
+        width = bounds.cols;
+        height = bounds.rows;
+    }
     // set everything
-    for (var y = 0; y < layer.rows; y++) {
-        for (var x = 0; x < layer.cols; x++) {
+    for (var y = 0; y < height; y++) {
+        for (var x = 0; x < width; x++) {
             // get the value of the gid
             var gid = data[idx++];
             // fill the array
             if (gid !== 0) {
                 // add a new tile to the layer
-                layer.layerData[x][y] = layer.getTileById(gid, x, y);
+                layer.layerData[x + bounds.x][y + bounds.y] = layer.getTileById(gid, x + bounds.x, y + bounds.y);
             }
         }
     }
@@ -23741,6 +23773,20 @@ function preRenderLayer(layer, renderer) {
 
         // layer orientation
         this.orientation = orientation;
+
+        /**
+         * Horizontal layer offset in tiles
+         * @default 0
+         * @type {number}
+         */
+        this.x = 0;
+
+        /**
+         * Vertical layer offset in tiles
+         * @default 0
+         * @type {number}
+         */
+        this.y = 0;
 
         /**
          * The Layer corresponding Tilesets
@@ -23831,14 +23877,36 @@ function preRenderLayer(layer, renderer) {
         this.setRenderer(map.getRenderer());
 
 
-        // initialize and set the layer data
-        setLayerData(this,
-            decode(
-                data.data,
-                data.encoding,
-                data.compression
-            )
-        );
+        // initialize the data array
+        this.layerData = initArray(this.rows, this.cols);
+
+        if (map.infinite === 0) {
+            // initialize and set the layer data
+            setLayerData(
+                this,
+                this,
+                decode(
+                    data.data,
+                    data.encoding,
+                    data.compression
+                )
+            );
+        } else if (map.infinite === 1) {
+            // infinite map, initialize per chunk
+            data.chunks.forEach((chunk) => {
+                // initialize and set the layer data
+                setLayerData(
+                    this,
+                    chunk,
+                    decode(
+                        chunk.data,
+                        data.encoding,
+                        data.compression
+                    )
+                );
+            });
+        }
+
     }
 
 
@@ -26871,7 +26939,7 @@ function readObjectGroup(map, data, z) {
          * @type {number}
          * @default 0
          */
-        this.infinite = +data.infinite;
+        this.infinite = +data.infinite || 0;
 
         /**
          * the map orientation type. melonJS supports “orthogonal”, “isometric”, “staggered” and “hexagonal”.
@@ -26944,12 +27012,6 @@ function readObjectGroup(map, data, z) {
 
         // internal flag
         this.initialized = false;
-
-        if (this.infinite === 1) {
-            // #956 Support for Infinite map
-            // see as well in me.TMXUtils
-            throw new Error("Tiled Infinite Map not supported!");
-        }
     }
 
     /**
@@ -27779,6 +27841,7 @@ function preloadTMX(tmxData, onload, onerror) {
                         break;
 
                     case "json":
+                    case "tmj":
                         result = JSON.parse(xmlhttp.responseText);
                         break;
 

@@ -160,7 +160,7 @@ function readObjectGroup(map, data, z) {
          * @type {number}
          * @default 0
          */
-        this.infinite = +data.infinite;
+        this.infinite = +data.infinite || 0;
 
         /**
          * the map orientation type. melonJS supports “orthogonal”, “isometric”, “staggered” and “hexagonal”.
@@ -233,12 +233,6 @@ function readObjectGroup(map, data, z) {
 
         // internal flag
         this.initialized = false;
-
-        if (this.infinite === 1) {
-            // #956 Support for Infinite map
-            // see as well in me.TMXUtils
-            throw new Error("Tiled Infinite Map not supported!");
-        }
     }
 
     /**
