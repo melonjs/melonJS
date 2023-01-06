@@ -4,6 +4,7 @@
 
 ### Added
 - Tiled: add support for the .tmj extension (JSON)
+- Tiled: add support for Infinite map (Tiled chunks based map format)
 
 ### Fixed
 - Tiled: fix a `cannot recycle` exception when rendering hexagonal maps
