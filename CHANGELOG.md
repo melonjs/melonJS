@@ -10,6 +10,7 @@
 - Tiled: warn about map version 1.4 and below being deprecated (terrain was replaced by wangset tiles since version 1.5)
 
 ### Fixed
+- Physic: fix a regression with the `collision.rayCast()` function (thanks @cpravetz)
 - Tiled: fix a `cannot recycle` exception when rendering hexagonal maps
 
 ## [14.3.0] (melonJS 2) - _2022-12-30_
