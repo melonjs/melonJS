@@ -3,7 +3,7 @@
 ## [14.4.0] (melonJS 2) - _2023-01-XX_
 
 ### Added
-- Tiled: add support for the .tmj extension (JSON)
+- Tiled: add support for the .tmj and .tsj extension (JSON)
 - Tiled: add support for Infinite map (Tiled chunks based map format)
 
 ### Changed

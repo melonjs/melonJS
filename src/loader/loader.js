@@ -200,11 +200,12 @@ function preloadTMX(tmxData, onload, onerror) {
 
                     case "json":
                     case "tmj":
+                    case "tsj":
                         result = JSON.parse(xmlhttp.responseText);
                         break;
 
                     default:
-                        throw new Error("TMX file format " + format + "not supported !");
+                        throw new Error("TMX file format " + format + " not supported !");
                 }
 
                 //set the TMX content
