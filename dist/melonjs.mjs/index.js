@@ -87,7 +87,7 @@ export { default as timer } from './system/timer.js';
 import pool from './system/pooling.js';
 export { default as state } from './state/state.js';
 export { default as level } from './level/level.js';
-export { DraggableEntity, DroptargetEntity, GUI_Object, warning } from './lang/deprecated.js';
+export { DraggableEntity, DroptargetEntity, GUI_Object } from './lang/deprecated.js';
 export { AUTO, CANVAS, WEBGL } from './const.js';
 import { initKeyboardEvent } from './input/keyboard.js';
 

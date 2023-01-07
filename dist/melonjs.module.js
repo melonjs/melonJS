@@ -11392,6 +11392,360 @@ var video = /*#__PURE__*/Object.freeze({
 });
 
 /**
+ * @classdesc
+ * a TMX Tile Set Object
+ */
+ class TMXTileset {
+    /**
+     *  @param {object} tileset - tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
+     */
+    constructor(tileset) {
+        var i = 0;
+        // first gid
+
+        // tile properties (collidable, etc..)
+        this.TileProperties = [];
+
+        // hold reference to each tile image
+        this.imageCollection = [];
+
+        this.firstgid = this.lastgid = +tileset.firstgid;
+
+        // check if an external tileset is defined
+        if (typeof(tileset.source) !== "undefined") {
+            var src = tileset.source;
+            var ext = getExtension(src);
+            if (ext === "tsx" || ext === "json") {
+                // load the external tileset (TSX/JSON)
+                tileset = loader$1.getTMX(getBasename(src));
+                if (!tileset) {
+                    throw new Error(src + " external TSX/JSON tileset not found");
+                }
+            }
+        }
+
+        this.name = tileset.name;
+        this.tilewidth = +tileset.tilewidth;
+        this.tileheight = +tileset.tileheight;
+        this.spacing = +tileset.spacing || 0;
+        this.margin = +tileset.margin || 0;
+
+        // set tile offset properties (if any)
+        this.tileoffset = new Vector2d();
+
+        /**
+         * Tileset contains animated tiles
+         * @type {boolean}
+         */
+        this.isAnimated = false;
+
+        /**
+         * true if the tileset is a "Collection of Image" Tileset
+         * @type {boolean}
+         */
+        this.isCollection = false;
+
+        /**
+         * the tileset class
+         * @type {boolean}
+         */
+        this.class = tileset.class;
+
+        /**
+         * Tileset animations
+         * @private
+         */
+        this.animations = new Map();
+
+        /**
+         * Remember the last update timestamp to prevent too many animation updates
+         * @private
+         */
+        this._lastUpdate = 0;
+
+        var tiles = tileset.tiles;
+        for (i in tiles) {
+            if (tiles.hasOwnProperty(i)) {
+                if ("animation" in tiles[i]) {
+                    this.isAnimated = true;
+                    this.animations.set(tiles[+i].animation[0].tileid, {
+                        dt      : 0,
+                        idx     : 0,
+                        frames  : tiles[+i].animation,
+                        cur     : tiles[+i].animation[0]
+                    });
+                }
+                // set tile properties, if any
+                if ("properties" in tiles[i]) {
+                    if (Array.isArray(tiles[i].properties)) { // JSON (new format)
+                        var tileProperty = {};
+                        for (var j in tiles[i].properties) {
+                            tileProperty[tiles[i].properties[j].name] = tiles[i].properties[j].value;
+                        }
+                        this.setTileProperty(+tiles[i].id + this.firstgid, tileProperty);
+                    } else { // XML format
+                        this.setTileProperty(+i + this.firstgid, tiles[i].properties);
+                    }
+                }
+                if ("image" in tiles[i]) {
+                    var image = loader$1.getImage(tiles[i].image);
+                    if (!image) {
+                        throw new Error("melonJS: '" + tiles[i].image + "' file for tile '" + (+i + this.firstgid) + "' not found!");
+                    }
+                    this.imageCollection[+i + this.firstgid] = image;
+                }
+            }
+        }
+
+        this.isCollection = this.imageCollection.length > 0;
+
+        var offset = tileset.tileoffset;
+        if (offset) {
+            this.tileoffset.x = +offset.x;
+            this.tileoffset.y = +offset.y;
+        }
+
+        // set tile properties, if any (JSON old format)
+        var tileInfo = tileset.tileproperties;
+        if (tileInfo) {
+            for (i in tileInfo) {
+                if (tileInfo.hasOwnProperty(i)) {
+                    this.setTileProperty(+i + this.firstgid, tileInfo[i]);
+                }
+            }
+        }
+
+        // if not a tile image collection
+        if (this.isCollection === false) {
+
+            // get the global tileset texture
+            this.image = loader$1.getImage(tileset.image);
+
+            if (!this.image) {
+                throw new Error("melonJS: '" + tileset.image + "' file for tileset '" + this.name + "' not found!");
+            }
+
+            // create a texture atlas for the given tileset
+            this.texture = renderer.cache.get(this.image, {
+                framewidth : this.tilewidth,
+                frameheight : this.tileheight,
+                margin : this.margin,
+                spacing : this.spacing
+            });
+            this.atlas = this.texture.getAtlas();
+
+            // calculate the number of tiles per horizontal line
+            var hTileCount = +tileset.columns || Math.round(this.image.width / (this.tilewidth + this.spacing));
+            var vTileCount = Math.round(this.image.height / (this.tileheight + this.spacing));
+            if (tileset.tilecount % hTileCount > 0) {
+                ++vTileCount;
+            }
+            // compute the last gid value in the tileset
+            this.lastgid = this.firstgid + (((hTileCount * vTileCount) - 1) || 0);
+            if (tileset.tilecount && this.lastgid - this.firstgid + 1 !== +tileset.tilecount) {
+                console.warn(
+                    "Computed tilecount (" + (this.lastgid - this.firstgid + 1) +
+                    ") does not match expected tilecount (" + tileset.tilecount + ")"
+                );
+            }
+        }
+    }
+
+    /**
+     * return the tile image from a "Collection of Image" tileset
+     * @param {number} gid
+     * @returns {Image} corresponding image or undefined
+     */
+    getTileImage(gid) {
+        return this.imageCollection[gid];
+    }
+
+
+    /**
+     * set the tile properties
+     * @ignore
+     */
+    setTileProperty(gid, prop) {
+        // set the given tile id
+        this.TileProperties[gid] = prop;
+    }
+
+    /**
+     * return true if the gid belongs to the tileset
+     * @param {number} gid
+     * @returns {boolean}
+     */
+    contains(gid) {
+        return gid >= this.firstgid && gid <= this.lastgid;
+    }
+
+    /**
+     * Get the view (local) tile ID from a GID, with animations applied
+     * @param {number} gid - Global tile ID
+     * @returns {number} View tile ID
+     */
+    getViewTileId(gid) {
+        var localId = gid - this.firstgid;
+
+        if (this.animations.has(localId)) {
+            // return the current corresponding tile id if animated
+            return this.animations.get(localId).cur.tileid;
+        }
+
+        return localId;
+    }
+
+    /**
+     * return the properties of the specified tile
+     * @param {number} tileId
+     * @returns {object}
+     */
+    getTileProperties(tileId) {
+        return this.TileProperties[tileId];
+    }
+
+    // update tile animations
+    update(dt) {
+        var duration = 0,
+            now = timer$1.getTime(),
+            result = false;
+
+        if (this._lastUpdate !== now) {
+            this._lastUpdate = now;
+
+            this.animations.forEach((anim) => {
+                anim.dt += dt;
+                duration = anim.cur.duration;
+                while (anim.dt >= duration) {
+                    anim.dt -= duration;
+                    anim.idx = (anim.idx + 1) % anim.frames.length;
+                    anim.cur = anim.frames[anim.idx];
+                    duration = anim.cur.duration;
+                    result = true;
+                }
+            });
+        }
+
+        return result;
+    }
+
+    // draw the x,y tile
+    drawTile(renderer, dx, dy, tmxTile) {
+
+        // check if any transformation is required
+        if (tmxTile.flipped) {
+            renderer.save();
+            // apply the tile current transform
+            renderer.translate(dx, dy);
+            renderer.transform(tmxTile.currentTransform);
+            // reset both values as managed through transform();
+            dx = dy = 0;
+        }
+
+        // check if the tile has an associated image
+        if (this.isCollection === true) {
+            // draw the tile
+            renderer.drawImage(
+                this.imageCollection[tmxTile.tileId],
+                0, 0,
+                tmxTile.width, tmxTile.height,
+                dx, dy,
+                tmxTile.width, tmxTile.height
+            );
+        } else {
+            // use the tileset texture
+            var offset = this.atlas[this.getViewTileId(tmxTile.tileId)].offset;
+            // draw the tile
+            renderer.drawImage(
+                this.image,
+                offset.x, offset.y,
+                this.tilewidth, this.tileheight,
+                dx, dy,
+                this.tilewidth + renderer.uvOffset, this.tileheight + renderer.uvOffset
+            );
+        }
+
+        if (tmxTile.flipped) {
+            // restore the context to the previous state
+            renderer.restore();
+        }
+    }
+}
+
+// bitmask constants to check for flipped & rotated tiles
+const TMX_FLIP_H          = 0x80000000;
+const TMX_FLIP_V          = 0x40000000;
+const TMX_FLIP_AD         = 0x20000000;
+const TMX_CLEAR_BIT_MASK  = ~(TMX_FLIP_H | TMX_FLIP_V  | TMX_FLIP_AD);
+
+// constant to identify the collision object layer
+const COLLISION_GROUP     = "collision";
+
+/**
+ * @classdesc
+ * an object containing all tileset
+ */
+ class TMXTilesetGroup {
+
+    constructor() {
+        this.tilesets = [];
+        this.length = 0;
+    }
+
+    /**
+     * add a tileset to the tileset group
+     * @param {TMXTileset} tileset
+     */
+    add(tileset) {
+        this.tilesets.push(tileset);
+        this.length++;
+    }
+
+    /**
+     * return the tileset at the specified index
+     * @param {number} i
+     * @returns {TMXTileset} corresponding tileset
+     */
+    getTilesetByIndex(i) {
+        return this.tilesets[i];
+    }
+
+    /**
+     * return the tileset corresponding to the specified id <br>
+     * will throw an exception if no matching tileset is found
+     * @param {number} gid
+     * @returns {TMXTileset} corresponding tileset
+     */
+    getTilesetByGid(gid) {
+        var invalidRange = -1;
+
+        // clear the gid of all flip/rotation flags
+        gid &= TMX_CLEAR_BIT_MASK;
+
+        // cycle through all tilesets
+        for (var i = 0, len = this.tilesets.length; i < len; i++) {
+            // return the corresponding tileset if matching
+            if (this.tilesets[i].contains(gid)) {
+                return this.tilesets[i];
+            }
+            // typically indicates a layer with no asset loaded (collision?)
+            if (this.tilesets[i].firstgid === this.tilesets[i].lastgid &&
+                gid >= this.tilesets[i].firstgid) {
+                // store the id if the [firstgid .. lastgid] is invalid
+                invalidRange = i;
+            }
+        }
+        // return the tileset with the invalid range
+        if (invalidRange !== -1) {
+            return this.tilesets[invalidRange];
+        }
+        else {
+            throw new Error("no matching tileset found for gid " + gid);
+        }
+    }
+}
+
+/**
  * set and interpret a TMX property value
  * @ignore
  */
@@ -22717,15 +23071,6 @@ var input = /*#__PURE__*/Object.freeze({
     }
 }
 
-// bitmask constants to check for flipped & rotated tiles
-const TMX_FLIP_H          = 0x80000000;
-const TMX_FLIP_V          = 0x40000000;
-const TMX_FLIP_AD         = 0x20000000;
-const TMX_CLEAR_BIT_MASK  = ~(TMX_FLIP_H | TMX_FLIP_V  | TMX_FLIP_AD);
-
-// constant to identify the collision object layer
-const COLLISION_GROUP     = "collision";
-
 /**
  * @classdesc
  * a basic tile object
@@ -22887,6 +23232,286 @@ const COLLISION_GROUP     = "collision";
         this.setTileTransform(renderable.currentTransform);
 
         return renderable;
+    }
+}
+
+/**
+ * @classdesc
+ * a TMX Object defintion, as defined in Tiled
+ * (Object definition is translated into the virtual `me.game.world` using `me.Renderable`)
+ * @ignore
+ */
+class TMXObject {
+
+    constructor(map, settings, z) {
+
+        /**
+         * point list in JSON format
+         * @type {object[]}
+         */
+        this.points = undefined;
+
+        /**
+         * object name
+         * @type {string}
+         */
+        this.name = settings.name;
+
+        /**
+         * object x position
+         * @type {number}
+         */
+        this.x = +settings.x;
+
+        /**
+         * object y position
+         * @type {number}
+         */
+        this.y = +settings.y;
+
+        /**
+         * object z order
+         * @type {number}
+         */
+        this.z = +z;
+
+        /**
+         * object width
+         * @type {number}
+         */
+        this.width = +settings.width || 0;
+
+        /**
+         * object height
+         * @type {number}
+         */
+        this.height = +settings.height || 0;
+
+        /**
+         * object gid value
+         * when defined the object is a tiled object
+         * @type {number}
+         */
+        this.gid = +settings.gid || null;
+
+        /**
+         * tint color
+         * @type {string}
+         */
+        this.tintcolor = settings.tintcolor;
+
+        /**
+         * object type
+         * @type {string}
+         * @deprecated since Tiled 1.9
+         * @see https://docs.mapeditor.org/en/stable/reference/tmx-changelog/#tiled-1-9
+         */
+        this.type = settings.type;
+
+        /**
+         * the object class
+         * @type {string}
+         */
+        this.class = typeof settings.class !== "undefined" ? settings.class : settings.type;
+
+        /**
+         * object text
+         * @type {object}
+         * @see http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#text
+         */
+        this.text = undefined;
+
+        /**
+         * The rotation of the object in radians clockwise (defaults to 0)
+         * @type {number}
+         */
+        this.rotation = degToRad(+settings.rotation || 0);
+
+        /**
+         * object unique identifier per level (Tiled 0.11.x+)
+         * @type {number}
+         */
+        this.id = +settings.id || undefined;
+
+        /**
+         * object orientation (orthogonal or isometric)
+         * @type {string}
+         */
+        this.orientation = map.orientation;
+
+        /**
+         * the collision shapes defined for this object
+         * @type {object[]}
+         */
+        this.shapes = undefined;
+
+        /**
+         * if true, the object is an Ellipse
+         * @type {boolean}
+         */
+        this.isEllipse = false;
+
+        /**
+         * if true, the object is a Point
+         * @type {boolean}
+         */
+        this.isPoint = false;
+
+        /**
+         * if true, the object is a Polygon
+         * @type {boolean}
+         */
+        this.isPolygon = false;
+
+        /**
+         * if true, the object is a PolyLine
+         * @type {boolean}
+         */
+        this.isPolyLine = false;
+
+        // check if the object has an associated gid
+        if (typeof this.gid === "number") {
+            this.setTile(map.tilesets);
+        }
+        else {
+            if (typeof settings.ellipse !== "undefined") {
+                this.isEllipse = true;
+            } else if (typeof settings.point !== "undefined") {
+                this.isPoint = true;
+            } else if (typeof settings.polygon !== "undefined") {
+                this.points = settings.polygon;
+                this.isPolygon = true;
+            } else if (typeof settings.polyline !== "undefined") {
+                this.points = settings.polyline;
+                this.isPolyLine = true;
+            }
+        }
+
+        // check for text information
+        if (typeof settings.text !== "undefined") {
+            // a text object
+            this.text = settings.text;
+            // normalize field name and default value the melonjs way
+            this.text.font = settings.text.fontfamily || "sans-serif";
+            this.text.size = settings.text.pixelsize || 16;
+            this.text.fillStyle = settings.text.color || "#000000";
+            this.text.textAlign = settings.text.halign || "left";
+            this.text.textBaseline = settings.text.valign || "top";
+            this.text.width = this.width;
+            this.text.height = this.height;
+            // set the object properties
+            applyTMXProperties(this.text, settings);
+        } else {
+            // set the object properties
+            applyTMXProperties(this, settings);
+            // a standard object
+            if (!this.shapes) {
+                // else define the object shapes if required
+                this.shapes = this.parseTMXShapes();
+            }
+        }
+
+        // Adjust the Position to match Tiled
+        if (!map.isEditor) {
+            map.getRenderer().adjustPosition(this);
+        }
+    }
+
+    /**
+     * set the object image (for Tiled Object)
+     * @ignore
+     */
+    setTile(tilesets) {
+        // get the corresponding tileset
+        var tileset = tilesets.getTilesetByGid(this.gid);
+
+        if (tileset.isCollection === false) {
+            // set width and height equal to tile size
+            this.width = this.framewidth = tileset.tilewidth;
+            this.height = this.frameheight = tileset.tileheight;
+        }
+
+        // the object corresponding tile object
+        this.tile = new Tile(this.x, this.y, this.gid, tileset);
+    }
+
+    /**
+     * parses the TMX shape definition and returns a corresponding array of me.Shape object
+     * @private
+     * @returns {Polygon[]|Line[]|Ellipse[]} an array of shape objects
+     */
+    parseTMXShapes() {
+        var i = 0;
+        var shapes = [];
+
+        // add an ellipse shape
+        if (this.isEllipse === true) {
+            // ellipse coordinates are the center position, so set default to the corresonding radius
+            shapes.push((pool.pull("Ellipse",
+                this.width / 2,
+                this.height / 2,
+                this.width,
+                this.height
+            )).rotate(this.rotation));
+        } else if (this.isPoint === true) {
+            shapes.push(pool.pull("Point", this.x, this.y));
+        } else {
+            // add a polygon
+            if (this.isPolygon === true) {
+                var _polygon = pool.pull("Polygon", 0, 0, this.points);
+                // make sure it's a convex polygon
+                if (_polygon.isConvex() === false ) {
+                    throw new Error("collision polygones in Tiled should be defined as Convex");
+                }
+                shapes.push(_polygon.rotate(this.rotation));
+
+            } else if (this.isPolyLine === true) {
+                var p = this.points;
+                var p1, p2;
+                var segments = p.length - 1;
+                for (i = 0; i < segments; i++) {
+                    // clone the value before, as [i + 1]
+                    // is reused later by the next segment
+                    p1 = pool.pull("Vector2d", p[i].x, p[i].y);
+                    p2 = pool.pull("Vector2d", p[i + 1].x, p[i + 1].y);
+                    if (this.rotation !== 0) {
+                        p1 = p1.rotate(this.rotation);
+                        p2 = p2.rotate(this.rotation);
+                    }
+                    shapes.push(pool.pull("Line", 0, 0, [ p1, p2 ]));
+                }
+            }
+
+            // it's a rectangle, returns a polygon object anyway
+            else {
+                shapes.push((pool.pull("Polygon",
+                    0, 0, [
+                        pool.pull("Vector2d"),  pool.pull("Vector2d", this.width, 0),
+                        pool.pull("Vector2d", this.width, this.height), pool.pull("Vector2d", 0, this.height)
+                    ]
+                )).rotate(this.rotation));
+            }
+
+        }
+
+        // Apply isometric projection
+        if (this.orientation === "isometric") {
+            for (i = 0; i < shapes.length; i++) {
+                if (typeof shapes[i].toIso === "function") {
+                    shapes[i].toIso();
+                }
+            }
+        }
+
+        return shapes;
+    }
+
+    /**
+     * getObjectPropertyByName
+     * @ignore
+     */
+    getObjectPropertyByName(name) {
+        return this[name];
     }
 }
 
@@ -24122,6 +24747,1029 @@ function preRenderLayer(layer, renderer) {
     }
 }
 
+/**
+ * @classdesc
+ * object group definition as defined in Tiled.
+ * (group definition is translated into the virtual `me.game.world` using `me.Container`)
+ * @ignore
+ */
+class TMXGroup {
+
+    constructor(map, data, z) {
+
+        /**
+         * group name
+         * @type {string}
+         */
+        this.name = data.name;
+
+        /**
+         * group width
+         * @type {number}
+         */
+        this.width = data.width || 0;
+
+        /**
+         * group height
+         * @type {number}
+         */
+        this.height = data.height || 0;
+
+        /**
+         * tint color
+         * @type {string}
+         */
+        this.tintcolor = data.tintcolor;
+
+
+        /**
+         * the group class
+         * @type {string}
+         */
+        this.class = data.class;
+
+        /**
+         * group z order
+         * @type {number}
+         */
+        this.z = z;
+
+        /**
+         * group objects list definition
+         * @see TMXObject
+         * @type {object[]}
+         */
+        this.objects = [];
+
+        var visible = typeof(data.visible) !== "undefined" ? data.visible : true;
+        this.opacity = (visible === true) ? clamp(+data.opacity || 1.0, 0.0, 1.0) : 0;
+
+        // check if we have any user-defined properties
+        applyTMXProperties(this, data);
+
+        // parse all child objects/layers
+        if (data.objects) {
+            data.objects.forEach((object) => {
+                object.tintcolor = this.tintcolor;
+                this.objects.push(new TMXObject(map, object, z));
+            });
+        }
+
+        if (data.layers) {
+            data.layers.forEach((data) => {
+                var layer = new TMXLayer(map, data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z++);
+                // set a renderer
+                layer.setRenderer(map.getRenderer());
+                // resize container accordingly
+                this.width = Math.max(this.width, layer.width);
+                this.height = Math.max(this.height, layer.height);
+                this.objects.push(layer);
+            });
+        }
+    }
+
+    /**
+     * reset function
+     * @ignore
+     */
+    destroy() {
+        // clear all allocated objects
+        this.objects = null;
+    }
+
+    /**
+     * return the object count
+     * @ignore
+     */
+    getObjectCount() {
+        return this.objects.length;
+    }
+
+    /**
+     * returns the object at the specified index
+     * @ignore
+     */
+    getObjectByIndex(idx) {
+        return this.objects[idx];
+    }
+}
+
+/**
+ * Private function to re-use for object removal in a defer
+ * @ignore
+ */
+function deferredRemove(child, keepalive) {
+    this.removeChildNow(child, keepalive);
+}
+
+let globalFloatingCounter = 0;
+
+/**
+ * @classdesc
+ * Container represents a collection of child objects
+ * @augments Renderable
+ */
+ class Container extends Renderable {
+    /**
+     * @param {number} [x=0] - position of the container (accessible via the inherited pos.x property)
+     * @param {number} [y=0] - position of the container (accessible via the inherited pos.y property)
+     * @param {number} [width=game.viewport.width] - width of the container
+     * @param {number} [height=game.viewport.height] - height of the container
+     */
+    constructor(x = 0, y = 0, width, height, root = false) {
+
+        // call the super constructor
+        super(
+            x, y,
+            typeof width === "undefined" ? (typeof game.viewport !== "undefined" ? game.viewport.width : Infinity) : width,
+            typeof height === "undefined" ? (typeof game.viewport !== "undefined" ? game.viewport.height : Infinity) : height
+        );
+
+        /**
+         * keep track of pending sort
+         * @ignore
+         */
+        this.pendingSort = null;
+
+        /**
+         * whether the container is the root of the scene
+         * @type {boolean}
+         * @default false
+         */
+        this.root = root;
+
+        /**
+         * The array of children of this container.
+         * @ignore
+         */
+        this.children = undefined;
+
+        /**
+         * The property of the child object that should be used to sort on <br>
+         * value : "x", "y", "z"
+         * @type {string}
+         * @default me.game.sortOn
+         */
+        this.sortOn = game.sortOn;
+
+        /**
+         * Specify if the children list should be automatically sorted when adding a new child
+         * @type {boolean}
+         * @default true
+         */
+        this.autoSort = true;
+
+        /**
+         * Specify if the children z index should automatically be managed by the parent container
+         * @type {boolean}
+         * @default true
+         */
+        this.autoDepth = true;
+
+        /**
+         * Specify if the container draw operation should clip his children to its own bounds
+         * @type {boolean}
+         * @default false
+         */
+        this.clipping = false;
+
+        /**
+         * a callback to be extended, triggered after a child has been added or removed
+         * @param {number} index - added or removed child index
+         */
+        this.onChildChange = function (index) {   // eslint-disable-line no-unused-vars
+            // to be extended
+        };
+
+        /**
+         * Specify if the container bounds should automatically take in account
+         * all child bounds when updated (this is expensive and disabled by default,
+         * only enable if necessary)
+         * @type {boolean}
+         * @default false
+         */
+        this.enableChildBoundsUpdate = false;
+
+        /**
+         * define a background color for this container
+         * @type {Color}
+         * @default (0, 0, 0, 0.0)
+         * @example
+         * // add a red background color to this container
+         * this.backgroundColor.setColor(255, 0, 0);
+         */
+        this.backgroundColor = pool.pull("Color", 0, 0, 0, 0.0);
+
+        /**
+         * Used by the debug panel plugin
+         * @ignore
+         */
+        this.drawCount = 0;
+
+        // container self apply any defined transformation
+        this.autoTransform = true;
+
+        // enable collision and event detection
+        this.isKinematic = false;
+
+        this.anchorPoint.set(0, 0);
+
+        // subscribe on the canvas resize event
+        if (this.root === true) {
+            // Workaround for not updating container child-bounds automatically (it's expensive!)
+            on(CANVAS_ONRESIZE, this.updateBounds.bind(this, true));
+        }
+    }
+
+    /**
+     * reset the container, removing all childrens, and reseting transforms.
+     */
+    reset() {
+        // cancel any sort operation
+        if (this.pendingSort) {
+            clearTimeout(this.pendingSort);
+            this.pendingSort = null;
+        }
+
+        // delete all children
+        var children = this.getChildren();
+        for (var i = children.length, child; i >= 0; (child = children[--i])) {
+            // don't remove it if a persistent object
+            if (child && child.isPersistent !== true) {
+                this.removeChildNow(child);
+            }
+        }
+
+        if (typeof this.currentTransform !== "undefined") {
+            // just reset some variables
+            this.currentTransform.identity();
+        }
+
+        this.backgroundColor.setColor(0, 0, 0, 0.0);
+    }
+
+    /**
+     * Add a child to the container <br>
+     * if auto-sort is disable, the object will be appended at the bottom of the list.
+     * Adding a child to the container will automatically remove it from its other container.
+     * Meaning a child can only have one parent.  This is important if you add a renderable
+     * to a container then add it to the me.game.world container it will move it out of the
+     * orginal container. Then when the me.game.world.reset() is called the renderable
+     * will not be in any container. <br>
+     * if the given child implements a onActivateEvent method, that method will be called
+     * once the child is added to this container.
+     * @param {Renderable} child
+     * @param {number} [z] - forces the z index of the child to the specified value
+     * @returns {Renderable} the added child
+     */
+    addChild(child, z) {
+        if (child.ancestor instanceof Container) {
+            child.ancestor.removeChildNow(child);
+        }
+        else {
+            // only allocate a GUID if the object has no previous ancestor
+            // (e.g. move one child from one container to another)
+            if (child.isRenderable) {
+                // allocated a GUID value (use child.id as based index if defined)
+                child.GUID = utils.createGUID(child.id);
+            }
+        }
+
+        child.ancestor = this;
+        this.getChildren().push(child);
+
+        // set the child z value if required
+        if (typeof(child.pos) !== "undefined") {
+            if (typeof(z) === "number") {
+                    child.pos.z = z;
+            } else if (this.autoDepth === true) {
+                child.pos.z = this.getChildren().length;
+            }
+        }
+
+        if (this.autoSort === true) {
+            this.sort();
+        }
+
+        if (typeof child.onActivateEvent === "function" && this.isAttachedToRoot()) {
+            child.onActivateEvent();
+        }
+
+        // force repaint in case this is a static non-animated object
+        if (this.isAttachedToRoot() === true) {
+            game.repaint();
+        }
+
+        // force bounds update if required
+        if (this.enableChildBoundsUpdate) {
+            this.updateBounds(true);
+        }
+
+        // if a physic body is defined, add it to the game world
+        if (child.body instanceof Body) {
+            game.world.addBody(child.body);
+        }
+
+        // triggered callback if defined
+        this.onChildChange.call(this, this.getChildren().length - 1);
+
+        return child;
+    }
+
+    /**
+     * Add a child to the container at the specified index<br>
+     * (the list won't be sorted after insertion)
+     * @param {Renderable} child
+     * @param {number} index
+     * @returns {Renderable} the added child
+     */
+    addChildAt(child, index) {
+        if (index >= 0 && index < this.getChildren().length) {
+            if (child.ancestor instanceof Container) {
+                child.ancestor.removeChildNow(child);
+            }
+            else {
+                // only allocate a GUID if the object has no previous ancestor
+                // (e.g. move one child from one container to another)
+                if (child.isRenderable) {
+                    // allocated a GUID value
+                    child.GUID = utils.createGUID();
+                }
+            }
+            child.ancestor = this;
+
+            this.getChildren().splice(index, 0, child);
+
+            if (typeof child.onActivateEvent === "function" && this.isAttachedToRoot()) {
+                child.onActivateEvent();
+            }
+
+            // force repaint in case this is a static non-animated object
+            if (this.isAttachedToRoot() === true) {
+                game.repaint();
+            }
+
+            // force bounds update if required
+            if (this.enableChildBoundsUpdate) {
+                this.updateBounds(true);
+            }
+
+            // if a physic body is defined, add it to the game world
+            if (child.body instanceof Body) {
+                game.world.addBody(child.body);
+            }
+
+            // triggered callback if defined
+            this.onChildChange.call(this, index);
+
+            return child;
+        }
+        else {
+            throw new Error("Index (" + index + ") Out Of Bounds for addChildAt()");
+        }
+    }
+
+    /**
+     * The forEach() method executes a provided function once per child element. <br>
+     * the callback function is invoked with three arguments: <br>
+     *    - The current element being processed in the array <br>
+     *    - The index of element in the array. <br>
+     *    - The array forEach() was called upon. <br>
+     * @param {Function} callback - fnction to execute on each element
+     * @param {object} [thisArg] - value to use as this(i.e reference Object) when executing callback.
+     * @example
+     * // iterate through all children of the root container
+     * me.game.world.forEach((child) => {
+     *    // do something with the child
+     *    child.doSomething();
+     * });
+     * me.game.world.forEach((child, index) => { ... });
+     * me.game.world.forEach((child, index, array) => { ... });
+     * me.game.world.forEach((child, index, array) => { ... }, thisArg);
+     */
+    forEach(callback, thisArg) {
+        var context = this, i = 0;
+        var children = this.getChildren();
+
+        var len = children.length;
+
+        if (typeof callback !== "function") {
+            throw new Error(callback + " is not a function");
+        }
+
+        if (arguments.length > 1) {
+            context = thisArg;
+        }
+
+        while (i < len) {
+            callback.call(context, children[i], i, children);
+            i++;
+        }
+    }
+
+    /**
+     * Swaps the position (z-index) of 2 children
+     * @param {Renderable} child
+     * @param {Renderable} child2
+     */
+    swapChildren(child, child2) {
+        var index = this.getChildIndex(child);
+        var index2 = this.getChildIndex(child2);
+
+        if ((index !== -1) && (index2 !== -1)) {
+            // swap z index
+            var _z = child.pos.z;
+            child.pos.z = child2.pos.z;
+            child2.pos.z = _z;
+            // swap the positions..
+            this.getChildren()[index] = child2;
+            this.getChildren()[index2] = child;
+            // mark the container as dirty
+            this.isDirty = true;
+        }
+        else {
+            throw new Error(child + " Both the supplied childs must be a child of the caller " + this);
+        }
+    }
+
+    /**
+     * Returns the Child at the specified index
+     * @param {number} index
+     * @returns {Renderable} the child at the specified index
+     */
+    getChildAt(index) {
+        if (index >= 0 && index < this.getChildren().length) {
+            return this.getChildren()[index];
+        }
+        else {
+            throw new Error("Index (" + index + ") Out Of Bounds for getChildAt()");
+        }
+    }
+
+    /**
+     * Returns the index of the given Child
+     * @param {Renderable} child
+     * @returns {number} index
+     */
+    getChildIndex(child) {
+        return this.getChildren().indexOf(child);
+    }
+
+    /**
+     * Returns the next child within the container or undefined if none
+     * @param {Renderable} child
+     * @returns {Renderable} child
+     */
+    getNextChild(child) {
+        var index = this.getChildren().indexOf(child) - 1;
+        if (index >= 0 && index < this.getChildren().length) {
+            return this.getChildAt(index);
+        }
+        return undefined;
+    }
+
+    /**
+     * Returns true if contains the specified Child
+     * @param {Renderable} child
+     * @returns {boolean}
+     */
+    hasChild(child) {
+        return this === child.ancestor;
+    }
+
+    /**
+     * return the child corresponding to the given property and value.<br>
+     * note : avoid calling this function every frame since
+     * it parses the whole object tree each time
+     * @param {string} prop - Property name
+     * @param {string|RegExp|number|boolean} value - Value of the property
+     * @returns {Renderable[]} Array of childs
+     * @example
+     * // get the first child object called "mainPlayer" in a specific container :
+     * var ent = myContainer.getChildByProp("name", "mainPlayer");
+     *
+     * // or query the whole world :
+     * var ent = me.game.world.getChildByProp("name", "mainPlayer");
+     *
+     * // partial property matches are also allowed by using a RegExp.
+     * // the following matches "redCOIN", "bluecoin", "bagOfCoins", etc :
+     * var allCoins = me.game.world.getChildByProp("name", /coin/i);
+     *
+     * // searching for numbers or other data types :
+     * var zIndex10 = me.game.world.getChildByProp("z", 10);
+     * var inViewport = me.game.world.getChildByProp("inViewport", true);
+     */
+    getChildByProp(prop, value)    {
+        var objList = [];
+
+        /**
+         * @ignore
+         */
+        function compare(obj, prop) {
+            var v = obj[prop];
+            if (value instanceof RegExp && typeof(v) === "string") {
+                if (value.test(v)) {
+                    objList.push(obj);
+                }
+            }
+            else if (v === value) {
+                objList.push(obj);
+            }
+        }
+
+        this.forEach((child) => {
+            compare(child, prop);
+            if (child instanceof Container) {
+                objList = objList.concat(child.getChildByProp(prop, value));
+            }
+        });
+
+        return objList;
+    }
+
+    /**
+     * returns the list of childs with the specified class type
+     * @param {object} classType
+     * @returns {Renderable[]} Array of children
+     */
+    getChildByType(classType) {
+        var objList = [];
+
+        this.forEach((child) => {
+            if (child instanceof classType) {
+                objList.push(child);
+            }
+            if (child instanceof Container) {
+                objList = objList.concat(child.getChildByType(classType));
+            }
+        });
+
+        return objList;
+    }
+
+    /**
+     * returns the list of childs with the specified name<br>
+     * as defined in Tiled (Name field of the Object Properties)<br>
+     * note : avoid calling this function every frame since
+     * it parses the whole object list each time
+     * @param {string|RegExp|number|boolean} name - child name
+     * @returns {Renderable[]} Array of children
+     */
+    getChildByName(name) {
+        return this.getChildByProp("name", name);
+    }
+
+    /**
+     * return the child corresponding to the specified GUID<br>
+     * note : avoid calling this function every frame since
+     * it parses the whole object list each time
+     * @param {string|RegExp|number|boolean} guid - child GUID
+     * @returns {Renderable} corresponding child or null
+     */
+    getChildByGUID(guid) {
+        var obj = this.getChildByProp("GUID", guid);
+        return (obj.length > 0) ? obj[0] : null;
+    }
+
+    /**
+     * return all child in this container
+     * @returns {Renderable[]} an array of renderable object
+     */
+    getChildren() {
+        if (typeof this.children === "undefined") {
+            this.children = [];
+        }
+        return this.children;
+    }
+
+    /**
+     * update the bounding box for this shape.
+     * @ignore
+     * @returns {Bounds} this shape bounding box Rectangle object
+     */
+    updateBounds(forceUpdateChildBounds = false) {
+
+        // call parent method
+        super.updateBounds();
+
+        var bounds = this.getBounds();
+
+        if (forceUpdateChildBounds === true || this.enableChildBoundsUpdate === true) {
+            this.forEach((child) => {
+                if (child.isRenderable) {
+                    var childBounds = child.getBounds();
+                    if (childBounds.isFinite()) {
+                        bounds.addBounds(child.getBounds());
+                    }
+                }
+            });
+        }
+
+        return bounds;
+    }
+
+    /**
+     * Checks if this container is root or if it's attached to the root container.
+     * @private
+     * @returns {boolean}
+     */
+    isAttachedToRoot() {
+        if (this.root === true) {
+            return true;
+        } else {
+            var ancestor = this.ancestor;
+            while (ancestor) {
+                if (ancestor.root === true) {
+                    return true;
+                }
+                ancestor = ancestor.ancestor;
+            }
+            return false;
+        }
+    }
+
+    /**
+     * update the cointainer's bounding rect (private)
+     * @ignore
+     */
+    updateBoundsPos(newX, newY) {
+        // call the parent method
+        super.updateBoundsPos(newX, newY);
+
+        // Notify children that the parent's position has changed
+        this.forEach((child) => {
+            if (child.isRenderable) {
+                child.updateBoundsPos(
+                    // workaround on this.pos being updated after
+                    // the callback being triggered
+                    child.pos.x + newX - this.pos.x,
+                    child.pos.y + newY - this.pos.y
+                );
+            }
+        });
+        return this.getBounds();
+    }
+
+    /**
+     * @ignore
+     */
+    onActivateEvent() {
+        this.forEach((child) => {
+            if (typeof child.onActivateEvent === "function") {
+                child.onActivateEvent();
+            }
+        });
+    }
+
+    /**
+     * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed. <br>
+     * if the given child implements a onDeactivateEvent() method, that method will be called once the child is removed from this container.
+     * @param {Renderable} child
+     * @param {boolean} [keepalive=false] - true to prevent calling child.destroy()
+     */
+    removeChild(child, keepalive) {
+        if (this.hasChild(child)) {
+            utils.function.defer(deferredRemove, this, child, keepalive);
+        }
+        else {
+            throw new Error("Child is not mine.");
+        }
+    }
+
+    /**
+     * Removes (and optionally destroys) a child from the container.<br>
+     * (removal is immediate and unconditional)<br>
+     * Never use keepalive=true with objects from {@link pool}. Doing so will create a memory leak.
+     * @param {Renderable} child
+     * @param {boolean} [keepalive=False] - True to prevent calling child.destroy()
+     */
+    removeChildNow(child, keepalive) {
+        if (this.hasChild(child) && (this.getChildIndex(child) >= 0)) {
+            if (typeof child.onDeactivateEvent === "function") {
+                child.onDeactivateEvent();
+            }
+
+            // remove the body first to avoid a condition where a body can be detached
+            // from its parent, before the body is removed from the game world
+            if (child.body instanceof Body) {
+                game.world.removeBody(child.body);
+            }
+
+            if (!keepalive) {
+                // attempt at recycling the object
+                if (pool.push(child, false) === false ) {
+                    //  else just destroy it
+                    if (typeof child.destroy === "function") {
+                        child.destroy();
+                    }
+                }
+            }
+
+            // Don't cache the child index; another element might have been removed
+            // by the child's `onDeactivateEvent` or `destroy` methods
+            var childIndex = this.getChildIndex(child);
+            if (childIndex >= 0) {
+                this.getChildren().splice(childIndex, 1);
+                child.ancestor = undefined;
+            }
+
+            // force repaint in case this is a static non-animated object
+            if (this.isAttachedToRoot() === true) {
+                game.repaint();
+            }
+
+            // force bounds update if required
+            if (this.enableChildBoundsUpdate) {
+                this.updateBounds(true);
+            }
+
+            // triggered callback if defined
+            this.onChildChange.call(this, childIndex);
+        }
+    }
+
+    /**
+     * Automatically set the specified property of all childs to the given value
+     * @param {string} prop - property name
+     * @param {object} value - property value
+     * @param {boolean} [recursive=false] - recursively apply the value to child containers if true
+     */
+    setChildsProperty(prop, value, recursive) {
+        this.forEach((child) => {
+            if ((recursive === true) && (child instanceof Container)) {
+                child.setChildsProperty(prop, value, recursive);
+            }
+            child[prop] = value;
+        });
+    }
+
+    /**
+     * Move the child in the group one step forward (z depth).
+     * @param {Renderable} child
+     */
+    moveUp(child) {
+        var childIndex = this.getChildIndex(child);
+        if (childIndex - 1 >= 0) {
+            // note : we use an inverted loop
+            this.swapChildren(child, this.getChildAt(childIndex - 1));
+            // mark the container as dirty
+            this.isDirty = true;
+        }
+    }
+
+    /**
+     * Move the child in the group one step backward (z depth).
+     * @param {Renderable} child
+     */
+    moveDown(child) {
+        var childIndex = this.getChildIndex(child);
+        if (childIndex >= 0 && (childIndex + 1) < this.getChildren().length) {
+            // note : we use an inverted loop
+            this.swapChildren(child, this.getChildAt(childIndex + 1));
+            // mark the container as dirty
+            this.isDirty = true;
+        }
+    }
+
+    /**
+     * Move the specified child to the top(z depth).
+     * @param {Renderable} child
+     */
+    moveToTop(child) {
+        var childIndex = this.getChildIndex(child);
+        if (childIndex > 0) {
+            var children = this.getChildren();
+            // note : we use an inverted loop
+            children.splice(0, 0, children.splice(childIndex, 1)[0]);
+            // increment our child z value based on the previous child depth
+            child.pos.z = children[1].pos.z + 1;
+            // mark the container as dirty
+            this.isDirty = true;
+        }
+    }
+
+    /**
+     * Move the specified child the bottom (z depth).
+     * @param {Renderable} child
+     */
+    moveToBottom(child) {
+        var childIndex = this.getChildIndex(child);
+        var children = this.getChildren();
+        if (childIndex >= 0 && childIndex < (children.length - 1)) {
+            // note : we use an inverted loop
+            children.splice((children.length - 1), 0, children.splice(childIndex, 1)[0]);
+            // increment our child z value based on the next child depth
+            child.pos.z = children[(children.length - 2)].pos.z - 1;
+            // mark the container as dirty
+            this.isDirty = true;
+        }
+    }
+
+    /**
+     * Manually trigger the sort of all the childs in the container</p>
+     * @param {boolean} [recursive=false] - recursively sort all containers if true
+     */
+    sort(recursive) {
+        // do nothing if there is already a pending sort
+        if (!this.pendingSort) {
+            if (recursive === true) {
+                this.forEach((child) => {
+                    if (child instanceof Container) {
+                        // note : this will generate one defered sorting function
+                        // for each existing containe
+                        child.sort(recursive);
+                    }
+                });
+            }
+            /** @ignore */
+            this.pendingSort = utils.function.defer(function () {
+                // sort everything in this container
+                this.getChildren().sort(this["_sort" + this.sortOn.toUpperCase()]);
+                // clear the defer id
+                this.pendingSort = null;
+                // make sure we redraw everything
+                game.repaint();
+            }, this);
+        }
+    }
+
+    /**
+     * @ignore
+     */
+    onDeactivateEvent() {
+        this.forEach((child) => {
+            if (typeof child.onDeactivateEvent === "function") {
+                child.onDeactivateEvent();
+            }
+        });
+    }
+
+    /**
+     * Z Sorting function
+     * @ignore
+     */
+    _sortZ(a, b) {
+        return (b.pos && a.pos) ? (b.pos.z - a.pos.z) : (a.pos ? -Infinity : Infinity);
+    }
+
+    /**
+     * Reverse Z Sorting function
+     * @ignore
+     */
+    _sortReverseZ(a, b) {
+        return (a.pos && b.pos) ? (a.pos.z - b.pos.z) : (a.pos ? Infinity : -Infinity);
+    }
+
+    /**
+     * X Sorting function
+     * @ignore
+     */
+    _sortX(a, b) {
+        if (!b.pos || !a.pos) {
+            return (a.pos ? -Infinity : Infinity);
+        }
+        var result = b.pos.z - a.pos.z;
+        return (result ? result : (b.pos.x - a.pos.x));
+    }
+
+    /**
+     * Y Sorting function
+     * @ignore
+     */
+    _sortY(a, b) {
+        if (!b.pos || !a.pos) {
+            return (a.pos ? -Infinity : Infinity);
+        }
+        var result = b.pos.z - a.pos.z;
+        return (result ? result : (b.pos.y - a.pos.y));
+    }
+
+    /**
+     * Destroy function<br>
+     * @ignore
+     */
+    destroy() {
+        // empty the container
+        this.reset();
+        // call the parent destroy method
+        super.destroy(arguments);
+    }
+
+    /**
+     * container update function. <br>
+     * automatically called by the game manager {@link game}
+     * @protected
+     * @param {number} dt - time since the last update in milliseconds.
+     * @returns {boolean} true if the Container is dirty
+     */
+    update(dt) {
+        var isFloating = false;
+        var isPaused = state$1.isPaused();
+        var children = this.getChildren();
+
+        for (var i = children.length, obj; i--, (obj = children[i]);) {
+            if (isPaused && (!obj.updateWhenPaused)) {
+                // skip this object
+                continue;
+            }
+
+            if (obj.isRenderable) {
+                isFloating = (globalFloatingCounter > 0 || obj.floating);
+                if (isFloating) {
+                    globalFloatingCounter++;
+                }
+
+                // check if object is in any active cameras
+                obj.inViewport = false;
+                // iterate through all cameras
+                state$1.current().cameras.forEach((camera) => {
+                    if (camera.isVisible(obj, isFloating)) {
+                        obj.inViewport = true;
+                    }
+                });
+
+                // update our object
+                this.isDirty |= ((obj.inViewport || obj.alwaysUpdate) && obj.update(dt));
+
+                if (globalFloatingCounter > 0) {
+                    globalFloatingCounter--;
+                }
+            }
+            else {
+                // just directly call update() for non renderable object
+                this.isDirty |= obj.update(dt);
+            }
+        }
+
+        // call the parent method
+        return super.update(dt);
+    }
+
+    /**
+      * draw this renderable (automatically called by melonJS)
+     * @protected
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+     * @param {Camera2d} [viewport] - the viewport to (re)draw
+     */
+    draw(renderer, viewport) {
+        var isFloating = false;
+        var bounds = this.getBounds();
+
+        this.drawCount = 0;
+
+        // clip the containter children to the container bounds
+        if (this.root === false && this.clipping === true && bounds.isFinite() === true) {
+            renderer.clipRect(
+                bounds.left,
+                bounds.top,
+                bounds.width,
+                bounds.height
+            );
+        }
+
+        // adjust position if required (e.g. canvas/window centering)
+        renderer.translate(this.pos.x, this.pos.y);
+
+        // color background if defined
+        if (this.backgroundColor.alpha > 1 / 255) {
+            renderer.clearColor(this.backgroundColor);
+        }
+
+        var children = this.getChildren();
+        for (var i = children.length, obj; i--, (obj = children[i]);) {
+            if (obj.isRenderable) {
+
+                isFloating = obj.floating === true;
+
+                if ((obj.inViewport || isFloating)) {
+
+                    if (isFloating) {
+                        // translate to screen coordinates
+                        renderer.save();
+                        renderer.resetTransform();
+                    }
+
+                    // predraw (apply transforms)
+                    obj.preDraw(renderer);
+
+                    // draw the object
+                    obj.draw(renderer, viewport);
+
+                    // postdraw (clean-up);
+                    obj.postDraw(renderer);
+
+                    // restore the previous "state"
+                    if (isFloating) {
+                        renderer.restore();
+                    }
+
+                    this.drawCount++;
+                }
+            }
+        }
+    }
+}
+
 /* eslint-disable no-unused-vars */
 
 /**
@@ -25154,1659 +26802,11 @@ const offsetsStaggerY = [
 }
 
 /**
- * @classdesc
- * a TMX Tile Set Object
- */
- class TMXTileset {
-    /**
-     *  @param {object} tileset - tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
-     */
-    constructor(tileset) {
-        var i = 0;
-        // first gid
-
-        // tile properties (collidable, etc..)
-        this.TileProperties = [];
-
-        // hold reference to each tile image
-        this.imageCollection = [];
-
-        this.firstgid = this.lastgid = +tileset.firstgid;
-
-        // check if an external tileset is defined
-        if (typeof(tileset.source) !== "undefined") {
-            var src = tileset.source;
-            var ext = getExtension(src);
-            if (ext === "tsx" || ext === "json") {
-                // load the external tileset (TSX/JSON)
-                tileset = loader$1.getTMX(getBasename(src));
-                if (!tileset) {
-                    throw new Error(src + " external TSX/JSON tileset not found");
-                }
-            }
-        }
-
-        this.name = tileset.name;
-        this.tilewidth = +tileset.tilewidth;
-        this.tileheight = +tileset.tileheight;
-        this.spacing = +tileset.spacing || 0;
-        this.margin = +tileset.margin || 0;
-
-        // set tile offset properties (if any)
-        this.tileoffset = new Vector2d();
-
-        /**
-         * Tileset contains animated tiles
-         * @type {boolean}
-         */
-        this.isAnimated = false;
-
-        /**
-         * true if the tileset is a "Collection of Image" Tileset
-         * @type {boolean}
-         */
-        this.isCollection = false;
-
-        /**
-         * the tileset class
-         * @type {boolean}
-         */
-        this.class = tileset.class;
-
-        /**
-         * Tileset animations
-         * @private
-         */
-        this.animations = new Map();
-
-        /**
-         * Remember the last update timestamp to prevent too many animation updates
-         * @private
-         */
-        this._lastUpdate = 0;
-
-        var tiles = tileset.tiles;
-        for (i in tiles) {
-            if (tiles.hasOwnProperty(i)) {
-                if ("animation" in tiles[i]) {
-                    this.isAnimated = true;
-                    this.animations.set(tiles[+i].animation[0].tileid, {
-                        dt      : 0,
-                        idx     : 0,
-                        frames  : tiles[+i].animation,
-                        cur     : tiles[+i].animation[0]
-                    });
-                }
-                // set tile properties, if any
-                if ("properties" in tiles[i]) {
-                    if (Array.isArray(tiles[i].properties)) { // JSON (new format)
-                        var tileProperty = {};
-                        for (var j in tiles[i].properties) {
-                            tileProperty[tiles[i].properties[j].name] = tiles[i].properties[j].value;
-                        }
-                        this.setTileProperty(+tiles[i].id + this.firstgid, tileProperty);
-                    } else { // XML format
-                        this.setTileProperty(+i + this.firstgid, tiles[i].properties);
-                    }
-                }
-                if ("image" in tiles[i]) {
-                    var image = loader$1.getImage(tiles[i].image);
-                    if (!image) {
-                        throw new Error("melonJS: '" + tiles[i].image + "' file for tile '" + (+i + this.firstgid) + "' not found!");
-                    }
-                    this.imageCollection[+i + this.firstgid] = image;
-                }
-            }
-        }
-
-        this.isCollection = this.imageCollection.length > 0;
-
-        var offset = tileset.tileoffset;
-        if (offset) {
-            this.tileoffset.x = +offset.x;
-            this.tileoffset.y = +offset.y;
-        }
-
-        // set tile properties, if any (JSON old format)
-        var tileInfo = tileset.tileproperties;
-        if (tileInfo) {
-            for (i in tileInfo) {
-                if (tileInfo.hasOwnProperty(i)) {
-                    this.setTileProperty(+i + this.firstgid, tileInfo[i]);
-                }
-            }
-        }
-
-        // if not a tile image collection
-        if (this.isCollection === false) {
-
-            // get the global tileset texture
-            this.image = loader$1.getImage(tileset.image);
-
-            if (!this.image) {
-                throw new Error("melonJS: '" + tileset.image + "' file for tileset '" + this.name + "' not found!");
-            }
-
-            // create a texture atlas for the given tileset
-            this.texture = renderer.cache.get(this.image, {
-                framewidth : this.tilewidth,
-                frameheight : this.tileheight,
-                margin : this.margin,
-                spacing : this.spacing
-            });
-            this.atlas = this.texture.getAtlas();
-
-            // calculate the number of tiles per horizontal line
-            var hTileCount = +tileset.columns || Math.round(this.image.width / (this.tilewidth + this.spacing));
-            var vTileCount = Math.round(this.image.height / (this.tileheight + this.spacing));
-            if (tileset.tilecount % hTileCount > 0) {
-                ++vTileCount;
-            }
-            // compute the last gid value in the tileset
-            this.lastgid = this.firstgid + (((hTileCount * vTileCount) - 1) || 0);
-            if (tileset.tilecount && this.lastgid - this.firstgid + 1 !== +tileset.tilecount) {
-                console.warn(
-                    "Computed tilecount (" + (this.lastgid - this.firstgid + 1) +
-                    ") does not match expected tilecount (" + tileset.tilecount + ")"
-                );
-            }
-        }
-    }
-
-    /**
-     * return the tile image from a "Collection of Image" tileset
-     * @param {number} gid
-     * @returns {Image} corresponding image or undefined
-     */
-    getTileImage(gid) {
-        return this.imageCollection[gid];
-    }
-
-
-    /**
-     * set the tile properties
-     * @ignore
-     */
-    setTileProperty(gid, prop) {
-        // set the given tile id
-        this.TileProperties[gid] = prop;
-    }
-
-    /**
-     * return true if the gid belongs to the tileset
-     * @param {number} gid
-     * @returns {boolean}
-     */
-    contains(gid) {
-        return gid >= this.firstgid && gid <= this.lastgid;
-    }
-
-    /**
-     * Get the view (local) tile ID from a GID, with animations applied
-     * @param {number} gid - Global tile ID
-     * @returns {number} View tile ID
-     */
-    getViewTileId(gid) {
-        var localId = gid - this.firstgid;
-
-        if (this.animations.has(localId)) {
-            // return the current corresponding tile id if animated
-            return this.animations.get(localId).cur.tileid;
-        }
-
-        return localId;
-    }
-
-    /**
-     * return the properties of the specified tile
-     * @param {number} tileId
-     * @returns {object}
-     */
-    getTileProperties(tileId) {
-        return this.TileProperties[tileId];
-    }
-
-    // update tile animations
-    update(dt) {
-        var duration = 0,
-            now = timer$1.getTime(),
-            result = false;
-
-        if (this._lastUpdate !== now) {
-            this._lastUpdate = now;
-
-            this.animations.forEach((anim) => {
-                anim.dt += dt;
-                duration = anim.cur.duration;
-                while (anim.dt >= duration) {
-                    anim.dt -= duration;
-                    anim.idx = (anim.idx + 1) % anim.frames.length;
-                    anim.cur = anim.frames[anim.idx];
-                    duration = anim.cur.duration;
-                    result = true;
-                }
-            });
-        }
-
-        return result;
-    }
-
-    // draw the x,y tile
-    drawTile(renderer, dx, dy, tmxTile) {
-
-        // check if any transformation is required
-        if (tmxTile.flipped) {
-            renderer.save();
-            // apply the tile current transform
-            renderer.translate(dx, dy);
-            renderer.transform(tmxTile.currentTransform);
-            // reset both values as managed through transform();
-            dx = dy = 0;
-        }
-
-        // check if the tile has an associated image
-        if (this.isCollection === true) {
-            // draw the tile
-            renderer.drawImage(
-                this.imageCollection[tmxTile.tileId],
-                0, 0,
-                tmxTile.width, tmxTile.height,
-                dx, dy,
-                tmxTile.width, tmxTile.height
-            );
-        } else {
-            // use the tileset texture
-            var offset = this.atlas[this.getViewTileId(tmxTile.tileId)].offset;
-            // draw the tile
-            renderer.drawImage(
-                this.image,
-                offset.x, offset.y,
-                this.tilewidth, this.tileheight,
-                dx, dy,
-                this.tilewidth + renderer.uvOffset, this.tileheight + renderer.uvOffset
-            );
-        }
-
-        if (tmxTile.flipped) {
-            // restore the context to the previous state
-            renderer.restore();
-        }
-    }
-}
-
-/**
- * @classdesc
- * an object containing all tileset
- */
- class TMXTilesetGroup {
-
-    constructor() {
-        this.tilesets = [];
-        this.length = 0;
-    }
-
-    /**
-     * add a tileset to the tileset group
-     * @param {TMXTileset} tileset
-     */
-    add(tileset) {
-        this.tilesets.push(tileset);
-        this.length++;
-    }
-
-    /**
-     * return the tileset at the specified index
-     * @param {number} i
-     * @returns {TMXTileset} corresponding tileset
-     */
-    getTilesetByIndex(i) {
-        return this.tilesets[i];
-    }
-
-    /**
-     * return the tileset corresponding to the specified id <br>
-     * will throw an exception if no matching tileset is found
-     * @param {number} gid
-     * @returns {TMXTileset} corresponding tileset
-     */
-    getTilesetByGid(gid) {
-        var invalidRange = -1;
-
-        // clear the gid of all flip/rotation flags
-        gid &= TMX_CLEAR_BIT_MASK;
-
-        // cycle through all tilesets
-        for (var i = 0, len = this.tilesets.length; i < len; i++) {
-            // return the corresponding tileset if matching
-            if (this.tilesets[i].contains(gid)) {
-                return this.tilesets[i];
-            }
-            // typically indicates a layer with no asset loaded (collision?)
-            if (this.tilesets[i].firstgid === this.tilesets[i].lastgid &&
-                gid >= this.tilesets[i].firstgid) {
-                // store the id if the [firstgid .. lastgid] is invalid
-                invalidRange = i;
-            }
-        }
-        // return the tileset with the invalid range
-        if (invalidRange !== -1) {
-            return this.tilesets[invalidRange];
-        }
-        else {
-            throw new Error("no matching tileset found for gid " + gid);
-        }
-    }
-}
-
-/**
- * @classdesc
- * a TMX Object defintion, as defined in Tiled
- * (Object definition is translated into the virtual `me.game.world` using `me.Renderable`)
+ * return a compatible renderer object for the given map
+ * @param {TMXTileMap} map
  * @ignore
  */
-class TMXObject {
-
-    constructor(map, settings, z) {
-
-        /**
-         * point list in JSON format
-         * @type {object[]}
-         */
-        this.points = undefined;
-
-        /**
-         * object name
-         * @type {string}
-         */
-        this.name = settings.name;
-
-        /**
-         * object x position
-         * @type {number}
-         */
-        this.x = +settings.x;
-
-        /**
-         * object y position
-         * @type {number}
-         */
-        this.y = +settings.y;
-
-        /**
-         * object z order
-         * @type {number}
-         */
-        this.z = +z;
-
-        /**
-         * object width
-         * @type {number}
-         */
-        this.width = +settings.width || 0;
-
-        /**
-         * object height
-         * @type {number}
-         */
-        this.height = +settings.height || 0;
-
-        /**
-         * object gid value
-         * when defined the object is a tiled object
-         * @type {number}
-         */
-        this.gid = +settings.gid || null;
-
-        /**
-         * tint color
-         * @type {string}
-         */
-        this.tintcolor = settings.tintcolor;
-
-        /**
-         * object type
-         * @type {string}
-         * @deprecated since Tiled 1.9
-         * @see https://docs.mapeditor.org/en/stable/reference/tmx-changelog/#tiled-1-9
-         */
-        this.type = settings.type;
-
-        /**
-         * the object class
-         * @type {string}
-         */
-        this.class = typeof settings.class !== "undefined" ? settings.class : settings.type;
-
-        /**
-         * object text
-         * @type {object}
-         * @see http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#text
-         */
-        this.text = undefined;
-
-        /**
-         * The rotation of the object in radians clockwise (defaults to 0)
-         * @type {number}
-         */
-        this.rotation = degToRad(+settings.rotation || 0);
-
-        /**
-         * object unique identifier per level (Tiled 0.11.x+)
-         * @type {number}
-         */
-        this.id = +settings.id || undefined;
-
-        /**
-         * object orientation (orthogonal or isometric)
-         * @type {string}
-         */
-        this.orientation = map.orientation;
-
-        /**
-         * the collision shapes defined for this object
-         * @type {object[]}
-         */
-        this.shapes = undefined;
-
-        /**
-         * if true, the object is an Ellipse
-         * @type {boolean}
-         */
-        this.isEllipse = false;
-
-        /**
-         * if true, the object is a Point
-         * @type {boolean}
-         */
-        this.isPoint = false;
-
-        /**
-         * if true, the object is a Polygon
-         * @type {boolean}
-         */
-        this.isPolygon = false;
-
-        /**
-         * if true, the object is a PolyLine
-         * @type {boolean}
-         */
-        this.isPolyLine = false;
-
-        // check if the object has an associated gid
-        if (typeof this.gid === "number") {
-            this.setTile(map.tilesets);
-        }
-        else {
-            if (typeof settings.ellipse !== "undefined") {
-                this.isEllipse = true;
-            } else if (typeof settings.point !== "undefined") {
-                this.isPoint = true;
-            } else if (typeof settings.polygon !== "undefined") {
-                this.points = settings.polygon;
-                this.isPolygon = true;
-            } else if (typeof settings.polyline !== "undefined") {
-                this.points = settings.polyline;
-                this.isPolyLine = true;
-            }
-        }
-
-        // check for text information
-        if (typeof settings.text !== "undefined") {
-            // a text object
-            this.text = settings.text;
-            // normalize field name and default value the melonjs way
-            this.text.font = settings.text.fontfamily || "sans-serif";
-            this.text.size = settings.text.pixelsize || 16;
-            this.text.fillStyle = settings.text.color || "#000000";
-            this.text.textAlign = settings.text.halign || "left";
-            this.text.textBaseline = settings.text.valign || "top";
-            this.text.width = this.width;
-            this.text.height = this.height;
-            // set the object properties
-            applyTMXProperties(this.text, settings);
-        } else {
-            // set the object properties
-            applyTMXProperties(this, settings);
-            // a standard object
-            if (!this.shapes) {
-                // else define the object shapes if required
-                this.shapes = this.parseTMXShapes();
-            }
-        }
-
-        // Adjust the Position to match Tiled
-        if (!map.isEditor) {
-            map.getRenderer().adjustPosition(this);
-        }
-    }
-
-    /**
-     * set the object image (for Tiled Object)
-     * @ignore
-     */
-    setTile(tilesets) {
-        // get the corresponding tileset
-        var tileset = tilesets.getTilesetByGid(this.gid);
-
-        if (tileset.isCollection === false) {
-            // set width and height equal to tile size
-            this.width = this.framewidth = tileset.tilewidth;
-            this.height = this.frameheight = tileset.tileheight;
-        }
-
-        // the object corresponding tile object
-        this.tile = new Tile(this.x, this.y, this.gid, tileset);
-    }
-
-    /**
-     * parses the TMX shape definition and returns a corresponding array of me.Shape object
-     * @private
-     * @returns {Polygon[]|Line[]|Ellipse[]} an array of shape objects
-     */
-    parseTMXShapes() {
-        var i = 0;
-        var shapes = [];
-
-        // add an ellipse shape
-        if (this.isEllipse === true) {
-            // ellipse coordinates are the center position, so set default to the corresonding radius
-            shapes.push((pool.pull("Ellipse",
-                this.width / 2,
-                this.height / 2,
-                this.width,
-                this.height
-            )).rotate(this.rotation));
-        } else if (this.isPoint === true) {
-            shapes.push(pool.pull("Point", this.x, this.y));
-        } else {
-            // add a polygon
-            if (this.isPolygon === true) {
-                var _polygon = pool.pull("Polygon", 0, 0, this.points);
-                // make sure it's a convex polygon
-                if (_polygon.isConvex() === false ) {
-                    throw new Error("collision polygones in Tiled should be defined as Convex");
-                }
-                shapes.push(_polygon.rotate(this.rotation));
-
-            } else if (this.isPolyLine === true) {
-                var p = this.points;
-                var p1, p2;
-                var segments = p.length - 1;
-                for (i = 0; i < segments; i++) {
-                    // clone the value before, as [i + 1]
-                    // is reused later by the next segment
-                    p1 = pool.pull("Vector2d", p[i].x, p[i].y);
-                    p2 = pool.pull("Vector2d", p[i + 1].x, p[i + 1].y);
-                    if (this.rotation !== 0) {
-                        p1 = p1.rotate(this.rotation);
-                        p2 = p2.rotate(this.rotation);
-                    }
-                    shapes.push(pool.pull("Line", 0, 0, [ p1, p2 ]));
-                }
-            }
-
-            // it's a rectangle, returns a polygon object anyway
-            else {
-                shapes.push((pool.pull("Polygon",
-                    0, 0, [
-                        pool.pull("Vector2d"),  pool.pull("Vector2d", this.width, 0),
-                        pool.pull("Vector2d", this.width, this.height), pool.pull("Vector2d", 0, this.height)
-                    ]
-                )).rotate(this.rotation));
-            }
-
-        }
-
-        // Apply isometric projection
-        if (this.orientation === "isometric") {
-            for (i = 0; i < shapes.length; i++) {
-                if (typeof shapes[i].toIso === "function") {
-                    shapes[i].toIso();
-                }
-            }
-        }
-
-        return shapes;
-    }
-
-    /**
-     * getObjectPropertyByName
-     * @ignore
-     */
-    getObjectPropertyByName(name) {
-        return this[name];
-    }
-}
-
-/**
- * @classdesc
- * object group definition as defined in Tiled.
- * (group definition is translated into the virtual `me.game.world` using `me.Container`)
- * @ignore
- */
-class TMXGroup {
-
-    constructor(map, data, z) {
-
-        /**
-         * group name
-         * @type {string}
-         */
-        this.name = data.name;
-
-        /**
-         * group width
-         * @type {number}
-         */
-        this.width = data.width || 0;
-
-        /**
-         * group height
-         * @type {number}
-         */
-        this.height = data.height || 0;
-
-        /**
-         * tint color
-         * @type {string}
-         */
-        this.tintcolor = data.tintcolor;
-
-
-        /**
-         * the group class
-         * @type {string}
-         */
-        this.class = data.class;
-
-        /**
-         * group z order
-         * @type {number}
-         */
-        this.z = z;
-
-        /**
-         * group objects list definition
-         * @see TMXObject
-         * @type {object[]}
-         */
-        this.objects = [];
-
-        var visible = typeof(data.visible) !== "undefined" ? data.visible : true;
-        this.opacity = (visible === true) ? clamp(+data.opacity || 1.0, 0.0, 1.0) : 0;
-
-        // check if we have any user-defined properties
-        applyTMXProperties(this, data);
-
-        // parse all child objects/layers
-        if (data.objects) {
-            data.objects.forEach((object) => {
-                object.tintcolor = this.tintcolor;
-                this.objects.push(new TMXObject(map, object, z));
-            });
-        }
-
-        if (data.layers) {
-            data.layers.forEach((data) => {
-                var layer = new TMXLayer(map, data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z++);
-                // set a renderer
-                layer.setRenderer(map.getRenderer());
-                // resize container accordingly
-                this.width = Math.max(this.width, layer.width);
-                this.height = Math.max(this.height, layer.height);
-                this.objects.push(layer);
-            });
-        }
-    }
-
-    /**
-     * reset function
-     * @ignore
-     */
-    destroy() {
-        // clear all allocated objects
-        this.objects = null;
-    }
-
-    /**
-     * return the object count
-     * @ignore
-     */
-    getObjectCount() {
-        return this.objects.length;
-    }
-
-    /**
-     * returns the object at the specified index
-     * @ignore
-     */
-    getObjectByIndex(idx) {
-        return this.objects[idx];
-    }
-}
-
-/**
- * Private function to re-use for object removal in a defer
- * @ignore
- */
-function deferredRemove(child, keepalive) {
-    this.removeChildNow(child, keepalive);
-}
-
-let globalFloatingCounter = 0;
-
-/**
- * @classdesc
- * Container represents a collection of child objects
- * @augments Renderable
- */
- class Container extends Renderable {
-    /**
-     * @param {number} [x=0] - position of the container (accessible via the inherited pos.x property)
-     * @param {number} [y=0] - position of the container (accessible via the inherited pos.y property)
-     * @param {number} [width=game.viewport.width] - width of the container
-     * @param {number} [height=game.viewport.height] - height of the container
-     */
-    constructor(x = 0, y = 0, width, height, root = false) {
-
-        // call the super constructor
-        super(
-            x, y,
-            typeof width === "undefined" ? (typeof game.viewport !== "undefined" ? game.viewport.width : Infinity) : width,
-            typeof height === "undefined" ? (typeof game.viewport !== "undefined" ? game.viewport.height : Infinity) : height
-        );
-
-        /**
-         * keep track of pending sort
-         * @ignore
-         */
-        this.pendingSort = null;
-
-        /**
-         * whether the container is the root of the scene
-         * @type {boolean}
-         * @default false
-         */
-        this.root = root;
-
-        /**
-         * The array of children of this container.
-         * @ignore
-         */
-        this.children = undefined;
-
-        /**
-         * The property of the child object that should be used to sort on <br>
-         * value : "x", "y", "z"
-         * @type {string}
-         * @default me.game.sortOn
-         */
-        this.sortOn = game.sortOn;
-
-        /**
-         * Specify if the children list should be automatically sorted when adding a new child
-         * @type {boolean}
-         * @default true
-         */
-        this.autoSort = true;
-
-        /**
-         * Specify if the children z index should automatically be managed by the parent container
-         * @type {boolean}
-         * @default true
-         */
-        this.autoDepth = true;
-
-        /**
-         * Specify if the container draw operation should clip his children to its own bounds
-         * @type {boolean}
-         * @default false
-         */
-        this.clipping = false;
-
-        /**
-         * a callback to be extended, triggered after a child has been added or removed
-         * @param {number} index - added or removed child index
-         */
-        this.onChildChange = function (index) {   // eslint-disable-line no-unused-vars
-            // to be extended
-        };
-
-        /**
-         * Specify if the container bounds should automatically take in account
-         * all child bounds when updated (this is expensive and disabled by default,
-         * only enable if necessary)
-         * @type {boolean}
-         * @default false
-         */
-        this.enableChildBoundsUpdate = false;
-
-        /**
-         * define a background color for this container
-         * @type {Color}
-         * @default (0, 0, 0, 0.0)
-         * @example
-         * // add a red background color to this container
-         * this.backgroundColor.setColor(255, 0, 0);
-         */
-        this.backgroundColor = pool.pull("Color", 0, 0, 0, 0.0);
-
-        /**
-         * Used by the debug panel plugin
-         * @ignore
-         */
-        this.drawCount = 0;
-
-        // container self apply any defined transformation
-        this.autoTransform = true;
-
-        // enable collision and event detection
-        this.isKinematic = false;
-
-        this.anchorPoint.set(0, 0);
-
-        // subscribe on the canvas resize event
-        if (this.root === true) {
-            // Workaround for not updating container child-bounds automatically (it's expensive!)
-            on(CANVAS_ONRESIZE, this.updateBounds.bind(this, true));
-        }
-    }
-
-    /**
-     * reset the container, removing all childrens, and reseting transforms.
-     */
-    reset() {
-        // cancel any sort operation
-        if (this.pendingSort) {
-            clearTimeout(this.pendingSort);
-            this.pendingSort = null;
-        }
-
-        // delete all children
-        var children = this.getChildren();
-        for (var i = children.length, child; i >= 0; (child = children[--i])) {
-            // don't remove it if a persistent object
-            if (child && child.isPersistent !== true) {
-                this.removeChildNow(child);
-            }
-        }
-
-        if (typeof this.currentTransform !== "undefined") {
-            // just reset some variables
-            this.currentTransform.identity();
-        }
-
-        this.backgroundColor.setColor(0, 0, 0, 0.0);
-    }
-
-    /**
-     * Add a child to the container <br>
-     * if auto-sort is disable, the object will be appended at the bottom of the list.
-     * Adding a child to the container will automatically remove it from its other container.
-     * Meaning a child can only have one parent.  This is important if you add a renderable
-     * to a container then add it to the me.game.world container it will move it out of the
-     * orginal container. Then when the me.game.world.reset() is called the renderable
-     * will not be in any container. <br>
-     * if the given child implements a onActivateEvent method, that method will be called
-     * once the child is added to this container.
-     * @param {Renderable} child
-     * @param {number} [z] - forces the z index of the child to the specified value
-     * @returns {Renderable} the added child
-     */
-    addChild(child, z) {
-        if (child.ancestor instanceof Container) {
-            child.ancestor.removeChildNow(child);
-        }
-        else {
-            // only allocate a GUID if the object has no previous ancestor
-            // (e.g. move one child from one container to another)
-            if (child.isRenderable) {
-                // allocated a GUID value (use child.id as based index if defined)
-                child.GUID = utils.createGUID(child.id);
-            }
-        }
-
-        child.ancestor = this;
-        this.getChildren().push(child);
-
-        // set the child z value if required
-        if (typeof(child.pos) !== "undefined") {
-            if (typeof(z) === "number") {
-                    child.pos.z = z;
-            } else if (this.autoDepth === true) {
-                child.pos.z = this.getChildren().length;
-            }
-        }
-
-        if (this.autoSort === true) {
-            this.sort();
-        }
-
-        if (typeof child.onActivateEvent === "function" && this.isAttachedToRoot()) {
-            child.onActivateEvent();
-        }
-
-        // force repaint in case this is a static non-animated object
-        if (this.isAttachedToRoot() === true) {
-            game.repaint();
-        }
-
-        // force bounds update if required
-        if (this.enableChildBoundsUpdate) {
-            this.updateBounds(true);
-        }
-
-        // if a physic body is defined, add it to the game world
-        if (child.body instanceof Body) {
-            game.world.addBody(child.body);
-        }
-
-        // triggered callback if defined
-        this.onChildChange.call(this, this.getChildren().length - 1);
-
-        return child;
-    }
-
-    /**
-     * Add a child to the container at the specified index<br>
-     * (the list won't be sorted after insertion)
-     * @param {Renderable} child
-     * @param {number} index
-     * @returns {Renderable} the added child
-     */
-    addChildAt(child, index) {
-        if (index >= 0 && index < this.getChildren().length) {
-            if (child.ancestor instanceof Container) {
-                child.ancestor.removeChildNow(child);
-            }
-            else {
-                // only allocate a GUID if the object has no previous ancestor
-                // (e.g. move one child from one container to another)
-                if (child.isRenderable) {
-                    // allocated a GUID value
-                    child.GUID = utils.createGUID();
-                }
-            }
-            child.ancestor = this;
-
-            this.getChildren().splice(index, 0, child);
-
-            if (typeof child.onActivateEvent === "function" && this.isAttachedToRoot()) {
-                child.onActivateEvent();
-            }
-
-            // force repaint in case this is a static non-animated object
-            if (this.isAttachedToRoot() === true) {
-                game.repaint();
-            }
-
-            // force bounds update if required
-            if (this.enableChildBoundsUpdate) {
-                this.updateBounds(true);
-            }
-
-            // if a physic body is defined, add it to the game world
-            if (child.body instanceof Body) {
-                game.world.addBody(child.body);
-            }
-
-            // triggered callback if defined
-            this.onChildChange.call(this, index);
-
-            return child;
-        }
-        else {
-            throw new Error("Index (" + index + ") Out Of Bounds for addChildAt()");
-        }
-    }
-
-    /**
-     * The forEach() method executes a provided function once per child element. <br>
-     * the callback function is invoked with three arguments: <br>
-     *    - The current element being processed in the array <br>
-     *    - The index of element in the array. <br>
-     *    - The array forEach() was called upon. <br>
-     * @param {Function} callback - fnction to execute on each element
-     * @param {object} [thisArg] - value to use as this(i.e reference Object) when executing callback.
-     * @example
-     * // iterate through all children of the root container
-     * me.game.world.forEach((child) => {
-     *    // do something with the child
-     *    child.doSomething();
-     * });
-     * me.game.world.forEach((child, index) => { ... });
-     * me.game.world.forEach((child, index, array) => { ... });
-     * me.game.world.forEach((child, index, array) => { ... }, thisArg);
-     */
-    forEach(callback, thisArg) {
-        var context = this, i = 0;
-        var children = this.getChildren();
-
-        var len = children.length;
-
-        if (typeof callback !== "function") {
-            throw new Error(callback + " is not a function");
-        }
-
-        if (arguments.length > 1) {
-            context = thisArg;
-        }
-
-        while (i < len) {
-            callback.call(context, children[i], i, children);
-            i++;
-        }
-    }
-
-    /**
-     * Swaps the position (z-index) of 2 children
-     * @param {Renderable} child
-     * @param {Renderable} child2
-     */
-    swapChildren(child, child2) {
-        var index = this.getChildIndex(child);
-        var index2 = this.getChildIndex(child2);
-
-        if ((index !== -1) && (index2 !== -1)) {
-            // swap z index
-            var _z = child.pos.z;
-            child.pos.z = child2.pos.z;
-            child2.pos.z = _z;
-            // swap the positions..
-            this.getChildren()[index] = child2;
-            this.getChildren()[index2] = child;
-            // mark the container as dirty
-            this.isDirty = true;
-        }
-        else {
-            throw new Error(child + " Both the supplied childs must be a child of the caller " + this);
-        }
-    }
-
-    /**
-     * Returns the Child at the specified index
-     * @param {number} index
-     * @returns {Renderable} the child at the specified index
-     */
-    getChildAt(index) {
-        if (index >= 0 && index < this.getChildren().length) {
-            return this.getChildren()[index];
-        }
-        else {
-            throw new Error("Index (" + index + ") Out Of Bounds for getChildAt()");
-        }
-    }
-
-    /**
-     * Returns the index of the given Child
-     * @param {Renderable} child
-     * @returns {number} index
-     */
-    getChildIndex(child) {
-        return this.getChildren().indexOf(child);
-    }
-
-    /**
-     * Returns the next child within the container or undefined if none
-     * @param {Renderable} child
-     * @returns {Renderable} child
-     */
-    getNextChild(child) {
-        var index = this.getChildren().indexOf(child) - 1;
-        if (index >= 0 && index < this.getChildren().length) {
-            return this.getChildAt(index);
-        }
-        return undefined;
-    }
-
-    /**
-     * Returns true if contains the specified Child
-     * @param {Renderable} child
-     * @returns {boolean}
-     */
-    hasChild(child) {
-        return this === child.ancestor;
-    }
-
-    /**
-     * return the child corresponding to the given property and value.<br>
-     * note : avoid calling this function every frame since
-     * it parses the whole object tree each time
-     * @param {string} prop - Property name
-     * @param {string|RegExp|number|boolean} value - Value of the property
-     * @returns {Renderable[]} Array of childs
-     * @example
-     * // get the first child object called "mainPlayer" in a specific container :
-     * var ent = myContainer.getChildByProp("name", "mainPlayer");
-     *
-     * // or query the whole world :
-     * var ent = me.game.world.getChildByProp("name", "mainPlayer");
-     *
-     * // partial property matches are also allowed by using a RegExp.
-     * // the following matches "redCOIN", "bluecoin", "bagOfCoins", etc :
-     * var allCoins = me.game.world.getChildByProp("name", /coin/i);
-     *
-     * // searching for numbers or other data types :
-     * var zIndex10 = me.game.world.getChildByProp("z", 10);
-     * var inViewport = me.game.world.getChildByProp("inViewport", true);
-     */
-    getChildByProp(prop, value)    {
-        var objList = [];
-
-        /**
-         * @ignore
-         */
-        function compare(obj, prop) {
-            var v = obj[prop];
-            if (value instanceof RegExp && typeof(v) === "string") {
-                if (value.test(v)) {
-                    objList.push(obj);
-                }
-            }
-            else if (v === value) {
-                objList.push(obj);
-            }
-        }
-
-        this.forEach((child) => {
-            compare(child, prop);
-            if (child instanceof Container) {
-                objList = objList.concat(child.getChildByProp(prop, value));
-            }
-        });
-
-        return objList;
-    }
-
-    /**
-     * returns the list of childs with the specified class type
-     * @param {object} classType
-     * @returns {Renderable[]} Array of children
-     */
-    getChildByType(classType) {
-        var objList = [];
-
-        this.forEach((child) => {
-            if (child instanceof classType) {
-                objList.push(child);
-            }
-            if (child instanceof Container) {
-                objList = objList.concat(child.getChildByType(classType));
-            }
-        });
-
-        return objList;
-    }
-
-    /**
-     * returns the list of childs with the specified name<br>
-     * as defined in Tiled (Name field of the Object Properties)<br>
-     * note : avoid calling this function every frame since
-     * it parses the whole object list each time
-     * @param {string|RegExp|number|boolean} name - child name
-     * @returns {Renderable[]} Array of children
-     */
-    getChildByName(name) {
-        return this.getChildByProp("name", name);
-    }
-
-    /**
-     * return the child corresponding to the specified GUID<br>
-     * note : avoid calling this function every frame since
-     * it parses the whole object list each time
-     * @param {string|RegExp|number|boolean} guid - child GUID
-     * @returns {Renderable} corresponding child or null
-     */
-    getChildByGUID(guid) {
-        var obj = this.getChildByProp("GUID", guid);
-        return (obj.length > 0) ? obj[0] : null;
-    }
-
-    /**
-     * return all child in this container
-     * @returns {Renderable[]} an array of renderable object
-     */
-    getChildren() {
-        if (typeof this.children === "undefined") {
-            this.children = [];
-        }
-        return this.children;
-    }
-
-    /**
-     * update the bounding box for this shape.
-     * @ignore
-     * @returns {Bounds} this shape bounding box Rectangle object
-     */
-    updateBounds(forceUpdateChildBounds = false) {
-
-        // call parent method
-        super.updateBounds();
-
-        var bounds = this.getBounds();
-
-        if (forceUpdateChildBounds === true || this.enableChildBoundsUpdate === true) {
-            this.forEach((child) => {
-                if (child.isRenderable) {
-                    var childBounds = child.getBounds();
-                    if (childBounds.isFinite()) {
-                        bounds.addBounds(child.getBounds());
-                    }
-                }
-            });
-        }
-
-        return bounds;
-    }
-
-    /**
-     * Checks if this container is root or if it's attached to the root container.
-     * @private
-     * @returns {boolean}
-     */
-    isAttachedToRoot() {
-        if (this.root === true) {
-            return true;
-        } else {
-            var ancestor = this.ancestor;
-            while (ancestor) {
-                if (ancestor.root === true) {
-                    return true;
-                }
-                ancestor = ancestor.ancestor;
-            }
-            return false;
-        }
-    }
-
-    /**
-     * update the cointainer's bounding rect (private)
-     * @ignore
-     */
-    updateBoundsPos(newX, newY) {
-        // call the parent method
-        super.updateBoundsPos(newX, newY);
-
-        // Notify children that the parent's position has changed
-        this.forEach((child) => {
-            if (child.isRenderable) {
-                child.updateBoundsPos(
-                    // workaround on this.pos being updated after
-                    // the callback being triggered
-                    child.pos.x + newX - this.pos.x,
-                    child.pos.y + newY - this.pos.y
-                );
-            }
-        });
-        return this.getBounds();
-    }
-
-    /**
-     * @ignore
-     */
-    onActivateEvent() {
-        this.forEach((child) => {
-            if (typeof child.onActivateEvent === "function") {
-                child.onActivateEvent();
-            }
-        });
-    }
-
-    /**
-     * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed. <br>
-     * if the given child implements a onDeactivateEvent() method, that method will be called once the child is removed from this container.
-     * @param {Renderable} child
-     * @param {boolean} [keepalive=false] - true to prevent calling child.destroy()
-     */
-    removeChild(child, keepalive) {
-        if (this.hasChild(child)) {
-            utils.function.defer(deferredRemove, this, child, keepalive);
-        }
-        else {
-            throw new Error("Child is not mine.");
-        }
-    }
-
-    /**
-     * Removes (and optionally destroys) a child from the container.<br>
-     * (removal is immediate and unconditional)<br>
-     * Never use keepalive=true with objects from {@link pool}. Doing so will create a memory leak.
-     * @param {Renderable} child
-     * @param {boolean} [keepalive=False] - True to prevent calling child.destroy()
-     */
-    removeChildNow(child, keepalive) {
-        if (this.hasChild(child) && (this.getChildIndex(child) >= 0)) {
-            if (typeof child.onDeactivateEvent === "function") {
-                child.onDeactivateEvent();
-            }
-
-            // remove the body first to avoid a condition where a body can be detached
-            // from its parent, before the body is removed from the game world
-            if (child.body instanceof Body) {
-                game.world.removeBody(child.body);
-            }
-
-            if (!keepalive) {
-                // attempt at recycling the object
-                if (pool.push(child, false) === false ) {
-                    //  else just destroy it
-                    if (typeof child.destroy === "function") {
-                        child.destroy();
-                    }
-                }
-            }
-
-            // Don't cache the child index; another element might have been removed
-            // by the child's `onDeactivateEvent` or `destroy` methods
-            var childIndex = this.getChildIndex(child);
-            if (childIndex >= 0) {
-                this.getChildren().splice(childIndex, 1);
-                child.ancestor = undefined;
-            }
-
-            // force repaint in case this is a static non-animated object
-            if (this.isAttachedToRoot() === true) {
-                game.repaint();
-            }
-
-            // force bounds update if required
-            if (this.enableChildBoundsUpdate) {
-                this.updateBounds(true);
-            }
-
-            // triggered callback if defined
-            this.onChildChange.call(this, childIndex);
-        }
-    }
-
-    /**
-     * Automatically set the specified property of all childs to the given value
-     * @param {string} prop - property name
-     * @param {object} value - property value
-     * @param {boolean} [recursive=false] - recursively apply the value to child containers if true
-     */
-    setChildsProperty(prop, value, recursive) {
-        this.forEach((child) => {
-            if ((recursive === true) && (child instanceof Container)) {
-                child.setChildsProperty(prop, value, recursive);
-            }
-            child[prop] = value;
-        });
-    }
-
-    /**
-     * Move the child in the group one step forward (z depth).
-     * @param {Renderable} child
-     */
-    moveUp(child) {
-        var childIndex = this.getChildIndex(child);
-        if (childIndex - 1 >= 0) {
-            // note : we use an inverted loop
-            this.swapChildren(child, this.getChildAt(childIndex - 1));
-            // mark the container as dirty
-            this.isDirty = true;
-        }
-    }
-
-    /**
-     * Move the child in the group one step backward (z depth).
-     * @param {Renderable} child
-     */
-    moveDown(child) {
-        var childIndex = this.getChildIndex(child);
-        if (childIndex >= 0 && (childIndex + 1) < this.getChildren().length) {
-            // note : we use an inverted loop
-            this.swapChildren(child, this.getChildAt(childIndex + 1));
-            // mark the container as dirty
-            this.isDirty = true;
-        }
-    }
-
-    /**
-     * Move the specified child to the top(z depth).
-     * @param {Renderable} child
-     */
-    moveToTop(child) {
-        var childIndex = this.getChildIndex(child);
-        if (childIndex > 0) {
-            var children = this.getChildren();
-            // note : we use an inverted loop
-            children.splice(0, 0, children.splice(childIndex, 1)[0]);
-            // increment our child z value based on the previous child depth
-            child.pos.z = children[1].pos.z + 1;
-            // mark the container as dirty
-            this.isDirty = true;
-        }
-    }
-
-    /**
-     * Move the specified child the bottom (z depth).
-     * @param {Renderable} child
-     */
-    moveToBottom(child) {
-        var childIndex = this.getChildIndex(child);
-        var children = this.getChildren();
-        if (childIndex >= 0 && childIndex < (children.length - 1)) {
-            // note : we use an inverted loop
-            children.splice((children.length - 1), 0, children.splice(childIndex, 1)[0]);
-            // increment our child z value based on the next child depth
-            child.pos.z = children[(children.length - 2)].pos.z - 1;
-            // mark the container as dirty
-            this.isDirty = true;
-        }
-    }
-
-    /**
-     * Manually trigger the sort of all the childs in the container</p>
-     * @param {boolean} [recursive=false] - recursively sort all containers if true
-     */
-    sort(recursive) {
-        // do nothing if there is already a pending sort
-        if (!this.pendingSort) {
-            if (recursive === true) {
-                this.forEach((child) => {
-                    if (child instanceof Container) {
-                        // note : this will generate one defered sorting function
-                        // for each existing containe
-                        child.sort(recursive);
-                    }
-                });
-            }
-            /** @ignore */
-            this.pendingSort = utils.function.defer(function () {
-                // sort everything in this container
-                this.getChildren().sort(this["_sort" + this.sortOn.toUpperCase()]);
-                // clear the defer id
-                this.pendingSort = null;
-                // make sure we redraw everything
-                game.repaint();
-            }, this);
-        }
-    }
-
-    /**
-     * @ignore
-     */
-    onDeactivateEvent() {
-        this.forEach((child) => {
-            if (typeof child.onDeactivateEvent === "function") {
-                child.onDeactivateEvent();
-            }
-        });
-    }
-
-    /**
-     * Z Sorting function
-     * @ignore
-     */
-    _sortZ(a, b) {
-        return (b.pos && a.pos) ? (b.pos.z - a.pos.z) : (a.pos ? -Infinity : Infinity);
-    }
-
-    /**
-     * Reverse Z Sorting function
-     * @ignore
-     */
-    _sortReverseZ(a, b) {
-        return (a.pos && b.pos) ? (a.pos.z - b.pos.z) : (a.pos ? Infinity : -Infinity);
-    }
-
-    /**
-     * X Sorting function
-     * @ignore
-     */
-    _sortX(a, b) {
-        if (!b.pos || !a.pos) {
-            return (a.pos ? -Infinity : Infinity);
-        }
-        var result = b.pos.z - a.pos.z;
-        return (result ? result : (b.pos.x - a.pos.x));
-    }
-
-    /**
-     * Y Sorting function
-     * @ignore
-     */
-    _sortY(a, b) {
-        if (!b.pos || !a.pos) {
-            return (a.pos ? -Infinity : Infinity);
-        }
-        var result = b.pos.z - a.pos.z;
-        return (result ? result : (b.pos.y - a.pos.y));
-    }
-
-    /**
-     * Destroy function<br>
-     * @ignore
-     */
-    destroy() {
-        // empty the container
-        this.reset();
-        // call the parent destroy method
-        super.destroy(arguments);
-    }
-
-    /**
-     * container update function. <br>
-     * automatically called by the game manager {@link game}
-     * @protected
-     * @param {number} dt - time since the last update in milliseconds.
-     * @returns {boolean} true if the Container is dirty
-     */
-    update(dt) {
-        var isFloating = false;
-        var isPaused = state$1.isPaused();
-        var children = this.getChildren();
-
-        for (var i = children.length, obj; i--, (obj = children[i]);) {
-            if (isPaused && (!obj.updateWhenPaused)) {
-                // skip this object
-                continue;
-            }
-
-            if (obj.isRenderable) {
-                isFloating = (globalFloatingCounter > 0 || obj.floating);
-                if (isFloating) {
-                    globalFloatingCounter++;
-                }
-
-                // check if object is in any active cameras
-                obj.inViewport = false;
-                // iterate through all cameras
-                state$1.current().cameras.forEach((camera) => {
-                    if (camera.isVisible(obj, isFloating)) {
-                        obj.inViewport = true;
-                    }
-                });
-
-                // update our object
-                this.isDirty |= ((obj.inViewport || obj.alwaysUpdate) && obj.update(dt));
-
-                if (globalFloatingCounter > 0) {
-                    globalFloatingCounter--;
-                }
-            }
-            else {
-                // just directly call update() for non renderable object
-                this.isDirty |= obj.update(dt);
-            }
-        }
-
-        // call the parent method
-        return super.update(dt);
-    }
-
-    /**
-      * draw this renderable (automatically called by melonJS)
-     * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
-     * @param {Camera2d} [viewport] - the viewport to (re)draw
-     */
-    draw(renderer, viewport) {
-        var isFloating = false;
-        var bounds = this.getBounds();
-
-        this.drawCount = 0;
-
-        // clip the containter children to the container bounds
-        if (this.root === false && this.clipping === true && bounds.isFinite() === true) {
-            renderer.clipRect(
-                bounds.left,
-                bounds.top,
-                bounds.width,
-                bounds.height
-            );
-        }
-
-        // adjust position if required (e.g. canvas/window centering)
-        renderer.translate(this.pos.x, this.pos.y);
-
-        // color background if defined
-        if (this.backgroundColor.alpha > 1 / 255) {
-            renderer.clearColor(this.backgroundColor);
-        }
-
-        var children = this.getChildren();
-        for (var i = children.length, obj; i--, (obj = children[i]);) {
-            if (obj.isRenderable) {
-
-                isFloating = obj.floating === true;
-
-                if ((obj.inViewport || isFloating)) {
-
-                    if (isFloating) {
-                        // translate to screen coordinates
-                        renderer.save();
-                        renderer.resetTransform();
-                    }
-
-                    // predraw (apply transforms)
-                    obj.preDraw(renderer);
-
-                    // draw the object
-                    obj.draw(renderer, viewport);
-
-                    // postdraw (clean-up);
-                    obj.postDraw(renderer);
-
-                    // restore the previous "state"
-                    if (isFloating) {
-                        renderer.restore();
-                    }
-
-                    this.drawCount++;
-                }
-            }
-        }
-    }
-}
-
-/**
- * set a compatible renderer object
- * for the specified map
- * @ignore
- */
-function getNewDefaultRenderer(map) {
+function getNewTMXRenderer(map) {
     switch (map.orientation) {
         case "orthogonal":
             return new TMXOrthogonalRenderer(map);
@@ -26823,6 +26823,42 @@ function getNewDefaultRenderer(map) {
         // if none found, throw an exception
         default:
             throw new Error(map.orientation + " type TMX Tile Map not supported!");
+    }
+}
+
+/**
+ * display a deprecation warning in the console
+ * @param {string} deprecated - deprecated class,function or property name
+ * @param {string} replacement - the replacement class, function, or property name
+ * @param {string} version - the version since when the lass,function or property is deprecated
+ */
+function warning(deprecated, replacement, version) {
+    var msg = "melonJS: %s is deprecated since version %s, please use %s";
+    var stack = new Error().stack;
+
+    if (console.groupCollapsed) {
+        console.groupCollapsed(
+            "%c" + msg,
+            "font-weight:normal;color:yellow;",
+            deprecated,
+            version,
+            replacement
+        );
+    } else {
+        console.warn(
+            msg,
+            deprecated,
+            version,
+            replacement
+        );
+    }
+
+    if (typeof stack !== "undefined") {
+        console.warn(stack);
+    }
+
+    if (console.groupCollapsed) {
+        console.groupEnd();
     }
 }
 
@@ -26960,13 +26996,13 @@ function readObjectGroup(map, data, z) {
          * the TMX format version
          * @type {string}
          */
-        this.version = data.version;
+        this.version = "" + data.version;
 
         /**
          * The Tiled version used to save the file (since Tiled 1.0.1).
          * @type {string}
          */
-        this.tiledversion = data.tiledversion;
+        this.tiledversion = "" + data.tiledversion;
 
         /**
          * The map class.
@@ -27007,6 +27043,11 @@ function readObjectGroup(map, data, z) {
         // background color
         this.backgroundcolor = data.backgroundcolor;
 
+        // deprecation warning if map tiled version is older than 1.5
+        if (utils.checkVersion(this.version, "1.5") < 0) {
+            warning("("+this.name+") Tiled Map format version 1.4 and below", "Tiled 1.5 or higher", "10.4.4");
+        }
+
         // set additional map properties (if any)
         applyTMXProperties(this, data);
 
@@ -27020,7 +27061,7 @@ function readObjectGroup(map, data, z) {
      */
     getRenderer() {
         if ((typeof(this.renderer) === "undefined") || (!this.renderer.canRender(this))) {
-            this.renderer = getNewDefaultRenderer(this);
+            this.renderer = getNewTMXRenderer(this);
         }
         return this.renderer;
     }
@@ -27842,11 +27883,12 @@ function preloadTMX(tmxData, onload, onerror) {
 
                     case "json":
                     case "tmj":
+                    case "tsj":
                         result = JSON.parse(xmlhttp.responseText);
                         break;
 
                     default:
-                        throw new Error("TMX file format " + format + "not supported !");
+                        throw new Error("TMX file format " + format + " not supported !");
                 }
 
                 //set the TMX content
@@ -38030,43 +38072,6 @@ var plugin = {
  */
 
 /**
- * display a deprecation warning in the console
- * @ignore
- * @param {string} deprecated - deprecated class,function or property name
- * @param {string} replacement - the replacement class, function, or property name
- * @param {string} version - the version since when the lass,function or property is deprecated
- */
-function warning(deprecated, replacement, version) {
-    var msg = "melonJS: %s is deprecated since version %s, please use %s";
-    var stack = new Error().stack;
-
-    if (console.groupCollapsed) {
-        console.groupCollapsed(
-            "%c" + msg,
-            "font-weight:normal;color:yellow;",
-            deprecated,
-            version,
-            replacement
-        );
-    } else {
-        console.warn(
-            msg,
-            deprecated,
-            version,
-            replacement
-        );
-    }
-
-    if (typeof stack !== "undefined") {
-        console.warn(stack);
-    }
-
-    if (console.groupCollapsed) {
-        console.groupEnd();
-    }
-}
-
-/**
  * Alias of {@link TextureAtlas}
  * @public
  * @name Texture
@@ -38308,4 +38313,4 @@ onReady(() => {
     }
 });
 
-export { AUTO$1 as AUTO, Application, BitmapText, BitmapTextData, Body, Bounds, CANVAS$1 as CANVAS, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Point, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, UIBaseElement, UISpriteElement, UITextButton, Vector2d, Vector3d, WEBGL$1 as WEBGL, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader$1 as loader, plugin, plugins, pool, save, skipAutoInit, state$1 as state, timer$1 as timer, utils, version, video, warning };
+export { AUTO$1 as AUTO, Application, BitmapText, BitmapTextData, Body, Bounds, CANVAS$1 as CANVAS, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Point, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, UIBaseElement, UISpriteElement, UITextButton, Vector2d, Vector3d, WEBGL$1 as WEBGL, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader$1 as loader, plugin, plugins, pool, save, skipAutoInit, state$1 as state, timer$1 as timer, utils, version, video };

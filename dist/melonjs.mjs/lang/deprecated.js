@@ -9,47 +9,11 @@ import { TextureAtlas } from '../video/texture/atlas.js';
 import Renderer from '../video/renderer.js';
 import { Draggable, DropTarget } from '../renderable/dragndrop.js';
 import UISpriteElement from '../renderable/ui/uispriteelement.js';
+import { warning } from './console.js';
 
 /*
  * placeholder for all deprecated classes and corresponding alias for backward compatibility
  */
-
-/**
- * display a deprecation warning in the console
- * @ignore
- * @param {string} deprecated - deprecated class,function or property name
- * @param {string} replacement - the replacement class, function, or property name
- * @param {string} version - the version since when the lass,function or property is deprecated
- */
-function warning(deprecated, replacement, version) {
-    var msg = "melonJS: %s is deprecated since version %s, please use %s";
-    var stack = new Error().stack;
-
-    if (console.groupCollapsed) {
-        console.groupCollapsed(
-            "%c" + msg,
-            "font-weight:normal;color:yellow;",
-            deprecated,
-            version,
-            replacement
-        );
-    } else {
-        console.warn(
-            msg,
-            deprecated,
-            version,
-            replacement
-        );
-    }
-
-    if (typeof stack !== "undefined") {
-        console.warn(stack);
-    }
-
-    if (console.groupCollapsed) {
-        console.groupEnd();
-    }
-}
 
 /**
  * Alias of {@link TextureAtlas}
@@ -154,4 +118,4 @@ Renderer.prototype.getScreenContext = function()  {
     }
 }
 
-export { DraggableEntity, DroptargetEntity, GUI_Object, warning };
+export { DraggableEntity, DroptargetEntity, GUI_Object };

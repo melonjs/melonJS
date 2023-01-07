@@ -96,7 +96,7 @@ export default class TMXTileMap {
      * @returns {TMXRenderer} a TMX renderer
      */
     getRenderer(): TMXRenderer;
-    renderer: TMXOrthogonalRenderer | TMXIsometricRenderer | TMXHexagonalRenderer | undefined;
+    renderer: import("./renderer/TMXOrthogonalRenderer.js").default | import("./renderer/TMXIsometricRenderer.js").default | import("./renderer/TMXHexagonalRenderer.js").default | undefined;
     /**
      * return the map bounding rect
      * @returns {Bounds}
@@ -138,8 +138,5 @@ export default class TMXTileMap {
     destroy(): void;
 }
 import TMXTilesetGroup from "./TMXTilesetGroup.js";
-import TMXOrthogonalRenderer from "./renderer/TMXOrthogonalRenderer.js";
-import TMXIsometricRenderer from "./renderer/TMXIsometricRenderer.js";
-import TMXHexagonalRenderer from "./renderer/TMXHexagonalRenderer.js";
 import Container from "../../renderable/container.js";
 import TMXLayer from "./TMXLayer.js";
