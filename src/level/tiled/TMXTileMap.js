@@ -12,6 +12,7 @@ import { applyTMXProperties } from "./TMXUtils.js";
 import Container from "../../renderable/container.js";
 import { COLLISION_GROUP } from "./constants.js";
 import { getNewTMXRenderer } from "./renderer/autodetect.js";
+import { warning } from "../../lang/console.js";
 
 /**
  * read the layer Data
@@ -195,8 +196,8 @@ function readObjectGroup(map, data, z) {
         this.backgroundcolor = data.backgroundcolor;
 
         // deprecation warning if map tiled version is older than 1.5
-        if (utils.checkVersion(this.version, "1.5") > 0) {
-            console.warn("Tiled Map format version 1.4 and below are deprecated");
+        if (utils.checkVersion(this.version, "1.5") < 0) {
+            warning("("+this.name+") Tiled Map format version 1.4 and below", "Tiled 1.5 or higher", "10.4.4");
         }
 
         // set additional map properties (if any)
