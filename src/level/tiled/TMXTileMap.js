@@ -1,6 +1,7 @@
 import pool from "./../../system/pooling.js";
 import * as event from "./../../system/event.js";
 import { game } from "../../index.js";
+import utils from "./../../utils/utils.js";
 import collision from "./../../physics/collision.js";
 import Body from "./../../physics/body.js";
 import TMXOrthogonalRenderer from "./renderer/TMXOrthogonalRenderer.js";
@@ -14,7 +15,6 @@ import TMXLayer from "./TMXLayer.js";
 import { applyTMXProperties } from "./TMXUtils.js";
 import Container from "../../renderable/container.js";
 import { COLLISION_GROUP } from "./constants.js";
-
 
 /**
  * set a compatible renderer object
@@ -175,13 +175,13 @@ function readObjectGroup(map, data, z) {
          * the TMX format version
          * @type {string}
          */
-        this.version = data.version;
+        this.version = "" + data.version;
 
         /**
          * The Tiled version used to save the file (since Tiled 1.0.1).
          * @type {string}
          */
-        this.tiledversion = data.tiledversion;
+        this.tiledversion = "" + data.tiledversion;
 
         /**
          * The map class.
@@ -221,6 +221,11 @@ function readObjectGroup(map, data, z) {
 
         // background color
         this.backgroundcolor = data.backgroundcolor;
+
+        // deprecation warning if map tiled version is older than 1.5
+        if (utils.checkVersion(this.version, "1.5") > 0) {
+            console.warn("Tiled Map format version 1.4 and below are deprecated");
+        }
 
         // set additional map properties (if any)
         applyTMXProperties(this, data);
