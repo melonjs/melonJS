@@ -117,7 +117,7 @@ var collision = {
      *        // ...
      *    }
      */
-    rayCast(line, result) { return game.world.rayCast(line, result); }
+    rayCast(line, result) { return game.world.detector.rayCast(line, result); }
 };
 
 export default collision;
