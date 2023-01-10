@@ -1402,6 +1402,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[14.4.0]: https://github.com/melonjs/melonJS/compare/14.4.0...14.3.0
 [14.3.0]: https://github.com/melonjs/melonJS/compare/14.3.0...14.2.0
 [14.2.0]: https://github.com/melonjs/melonJS/compare/14.2.0...14.1.2
 [14.1.2]: https://github.com/melonjs/melonJS/compare/14.1.2...14.1.1
