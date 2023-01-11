@@ -192,6 +192,24 @@ describe("me.Vector2d", function () {
         expect(a.angle(b)).toEqual(Math.PI / 2);
     });
 
+    it("rotate around its origin point", function () {
+        a.set(1, 0);
+        // rotate the vector by 90 degree clockwise
+        a.rotate(Math.PI / 2);
+
+        expect(a.x).toBeCloseTo(0, 5);
+        expect(a.y).toBeCloseTo(1, 5);
+    });
+
+    it("rotate around a given point", function () {
+        a.set(1, 0);
+        // rotate the vector by 90 degree clockwise on the z axis
+        a.rotate(Math.PI / 2, { x: 1, y: 1 });
+
+        expect(a.x).toBeCloseTo(2, 5);
+        expect(a.y).toBeCloseTo(1, 5);
+    });
+
     it("perp and rotate function", function () {
         a.set(x, y);
         b.copy(a).perp();
