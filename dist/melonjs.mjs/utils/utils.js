@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.4.0
+ * melonJS Game Engine - v14.4.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -107,9 +107,7 @@ var utils = {
         }
 
         // parse the url
-        url.slice(1).split("&").filter((value) => {
-            return (value !== "");
-        }).forEach((value) => {
+        url.slice(1).split("&").filter((value) => value !== "").forEach((value) => {
             var kv = value.split("=");
             var k = kv.shift();
             var v = kv.join("=");

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.4.0
+ * melonJS Game Engine - v14.4.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -1954,9 +1954,7 @@ var utils = {
         }
 
         // parse the url
-        url.slice(1).split("&").filter((value) => {
-            return (value !== "");
-        }).forEach((value) => {
+        url.slice(1).split("&").filter((value) => value !== "").forEach((value) => {
             var kv = value.split("=");
             var k = kv.shift();
             var v = kv.join("=");
@@ -8272,7 +8270,7 @@ earcut.flatten = function (data) {
      */
     get right() {
         var w = this.width;
-        return (this.pos.x + w) || w;
+        return (this.left + w) || w;
     }
 
     /**
@@ -8295,7 +8293,7 @@ earcut.flatten = function (data) {
      */
     get bottom() {
         var h = this.height;
-        return (this.pos.y + h) || h;
+        return (this.top + h) || h;
     }
 
     /**
@@ -8339,7 +8337,7 @@ earcut.flatten = function (data) {
      */
     get centerX() {
         if (isFinite(this.width)) {
-            return this.pos.x + (this.width / 2);
+            return this.left + (this.width / 2);
         } else {
             return this.width;
         }
@@ -8357,7 +8355,7 @@ earcut.flatten = function (data) {
      */
     get centerY() {
         if (isFinite(this.height)) {
-            return this.pos.y + (this.height / 2);
+            return this.top + (this.height / 2);
         } else {
             return this.height;
         }
@@ -8415,7 +8413,7 @@ earcut.flatten = function (data) {
      * @returns {Rect} new rectangle
      */
     clone() {
-        return new Rect(this.pos.x, this.pos.y, this.width, this.height);
+        return new Rect(this.left, this.top, this.width, this.height);
     }
 
     /**
@@ -8426,7 +8424,7 @@ earcut.flatten = function (data) {
      * @returns {Rect} new rectangle
      */
     copy(rect) {
-        return this.setShape(rect.pos.x, rect.pos.y, rect.width, rect.height);
+        return this.setShape(rect.left, rect.top, rect.width, rect.height);
     }
 
     /**
@@ -8543,7 +8541,7 @@ earcut.flatten = function (data) {
      * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
      */
     isFinite() {
-        return (isFinite(this.pos.x) && isFinite(this.pos.y) && isFinite(this.width) && isFinite(this.height));
+        return (isFinite(this.left) && isFinite(this.top) && isFinite(this.width) && isFinite(this.height));
     }
 
     /**
@@ -8554,7 +8552,7 @@ earcut.flatten = function (data) {
      */
     toPolygon() {
         return pool.pull("Polygon",
-            this.pos.x, this.pos.y, this.points
+            this.left, this.top, this.points
         );
     }
 }
@@ -21184,23 +21182,17 @@ var leadingZeroRE = /^0+/;
  * @ignore
  */
 function addMapping(id, mapping) {
-    var expanded_id = id.replace(vendorProductRE, (_, a, b) => {
-        return (
-            "000".slice(a.length - 1) + a + "-" +
-            "000".slice(b.length - 1) + b + "-"
-        );
-    });
-    var sparse_id = id.replace(vendorProductRE, (_, a, b) => {
-        return (
-            a.replace(leadingZeroRE, "") + "-" +
-            b.replace(leadingZeroRE, "") + "-"
-        );
-    });
+    var expanded_id = id.replace(vendorProductRE, (_, a, b) =>
+        "000".slice(a.length - 1) + a + "-" +
+        "000".slice(b.length - 1) + b + "-"
+    );
+    var sparse_id = id.replace(vendorProductRE, (_, a, b) =>
+        a.replace(leadingZeroRE, "") + "-" +
+        b.replace(leadingZeroRE, "") + "-"
+    );
 
     // Normalize optional parameters
-    mapping.analog = mapping.analog || mapping.buttons.map(() => {
-        return -1;
-    });
+    mapping.analog = mapping.analog || mapping.buttons.map(() => -1);
     mapping.normalize_fn = mapping.normalize_fn || function (value) { return value; };
 
     remap.set(expanded_id, mapping);
@@ -37953,10 +37945,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "14.4.0"
+         * @default "14.4.1"
          * @name plugin.Base#version
          */
-        this.version = "14.4.0";
+        this.version = "14.4.1";
     }
 }
 
@@ -38184,7 +38176,7 @@ Renderer.prototype.getScreenContext = function()  {
  * @name version
  * @type {string}
  */
-const version = "14.4.0";
+const version = "14.4.1";
 
 /**
  * a flag indicating that melonJS is fully initialized

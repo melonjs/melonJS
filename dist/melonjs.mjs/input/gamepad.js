@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.4.0
+ * melonJS Game Engine - v14.4.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -61,23 +61,17 @@ var leadingZeroRE = /^0+/;
  * @ignore
  */
 function addMapping(id, mapping) {
-    var expanded_id = id.replace(vendorProductRE, (_, a, b) => {
-        return (
-            "000".slice(a.length - 1) + a + "-" +
-            "000".slice(b.length - 1) + b + "-"
-        );
-    });
-    var sparse_id = id.replace(vendorProductRE, (_, a, b) => {
-        return (
-            a.replace(leadingZeroRE, "") + "-" +
-            b.replace(leadingZeroRE, "") + "-"
-        );
-    });
+    var expanded_id = id.replace(vendorProductRE, (_, a, b) =>
+        "000".slice(a.length - 1) + a + "-" +
+        "000".slice(b.length - 1) + b + "-"
+    );
+    var sparse_id = id.replace(vendorProductRE, (_, a, b) =>
+        a.replace(leadingZeroRE, "") + "-" +
+        b.replace(leadingZeroRE, "") + "-"
+    );
 
     // Normalize optional parameters
-    mapping.analog = mapping.analog || mapping.buttons.map(() => {
-        return -1;
-    });
+    mapping.analog = mapping.analog || mapping.buttons.map(() => -1);
     mapping.normalize_fn = mapping.normalize_fn || function (value) { return value; };
 
     remap.set(expanded_id, mapping);

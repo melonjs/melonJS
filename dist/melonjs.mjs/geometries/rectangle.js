@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.4.0
+ * melonJS Game Engine - v14.4.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -84,7 +84,7 @@ import Polygon from './poly.js';
      */
     get right() {
         var w = this.width;
-        return (this.pos.x + w) || w;
+        return (this.left + w) || w;
     }
 
     /**
@@ -107,7 +107,7 @@ import Polygon from './poly.js';
      */
     get bottom() {
         var h = this.height;
-        return (this.pos.y + h) || h;
+        return (this.top + h) || h;
     }
 
     /**
@@ -151,7 +151,7 @@ import Polygon from './poly.js';
      */
     get centerX() {
         if (isFinite(this.width)) {
-            return this.pos.x + (this.width / 2);
+            return this.left + (this.width / 2);
         } else {
             return this.width;
         }
@@ -169,7 +169,7 @@ import Polygon from './poly.js';
      */
     get centerY() {
         if (isFinite(this.height)) {
-            return this.pos.y + (this.height / 2);
+            return this.top + (this.height / 2);
         } else {
             return this.height;
         }
@@ -227,7 +227,7 @@ import Polygon from './poly.js';
      * @returns {Rect} new rectangle
      */
     clone() {
-        return new Rect(this.pos.x, this.pos.y, this.width, this.height);
+        return new Rect(this.left, this.top, this.width, this.height);
     }
 
     /**
@@ -238,7 +238,7 @@ import Polygon from './poly.js';
      * @returns {Rect} new rectangle
      */
     copy(rect) {
-        return this.setShape(rect.pos.x, rect.pos.y, rect.width, rect.height);
+        return this.setShape(rect.left, rect.top, rect.width, rect.height);
     }
 
     /**
@@ -355,7 +355,7 @@ import Polygon from './poly.js';
      * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
      */
     isFinite() {
-        return (isFinite(this.pos.x) && isFinite(this.pos.y) && isFinite(this.width) && isFinite(this.height));
+        return (isFinite(this.left) && isFinite(this.top) && isFinite(this.width) && isFinite(this.height));
     }
 
     /**
@@ -366,7 +366,7 @@ import Polygon from './poly.js';
      */
     toPolygon() {
         return pool.pull("Polygon",
-            this.pos.x, this.pos.y, this.points
+            this.left, this.top, this.points
         );
     }
 }
