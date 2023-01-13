@@ -97,29 +97,47 @@ describe("Shape : me.Rect", function () {
 
         it("rect 1 can be rotated around its origin point", function () {
             rect1.resize(200, 500);
+
+            expect(rect1.pos.x).toEqual(0);
+            expect(rect1.pos.y).toEqual(0);
+            expect(rect1.width).toBeCloseTo(200);
+            expect(rect1.height).toBeCloseTo(500);
+
             rect1.rotate(-me.Math.degToRad(90));
 
+            expect(rect1.pos.x).toEqual(0);
+            expect(rect1.pos.y).toEqual(0);
             expect(rect1.width).toBeCloseTo(500);
             expect(rect1.height).toBeCloseTo(-200);
 
             // rotate back for following tests
             rect1.rotate(me.Math.degToRad(90));
+            expect(rect1.pos.x).toEqual(0);
+            expect(rect1.pos.y).toEqual(0);
+            expect(rect1.width).toBeCloseTo(200);
+            expect(rect1.height).toBeCloseTo(500);
         });
 
         it("rect 1 can be rotated arount its center", function () {
             rect1.resize(200, 500);
+            expect(rect1.getBounds().x).toEqual(0);
+            expect(rect1.getBounds().y).toEqual(0);
             expect(rect1.getBounds().width).toEqual(200);
             expect(rect1.getBounds().height).toEqual(500);
 
             // rotate by 90 degrees
-            rect1.rotate(-me.Math.degToRad(90), {x:rect1.centerX, y:rect1.centerY});
+            rect1.rotate(-me.Math.degToRad(90), {x:rect1.getBounds().centerX, y:rect1.getBounds().centerY});
+            expect(rect1.getBounds().x).toEqual(-150);
+            expect(rect1.getBounds().y).toEqual(150);
             expect(rect1.getBounds().width).toBeCloseTo(500);
             expect(rect1.getBounds().height).toBeCloseTo(200);
             
             // rotate back
-            rect1.rotate(me.Math.degToRad(90), {x:rect1.centerX, y:rect1.centerY});
-            expect(rect1.getBounds().width).toEqual(200);
-            expect(rect1.getBounds().height).toEqual(500);
+            rect1.rotate(me.Math.degToRad(90), {x:rect1.getBounds().centerX, y:rect1.getBounds().centerY});
+            expect(rect1.getBounds().x).toBeCloseTo(0, 5);
+            expect(rect1.getBounds().y).toBeCloseTo(0, 5);
+            expect(rect1.getBounds().width).toBeCloseTo(200, 5);
+            expect(rect1.getBounds().height).toBeCloseTo(500, 5);
         });
 
     });
