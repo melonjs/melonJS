@@ -27,9 +27,9 @@ describe("Physics : me.Bounds", function () {
             bound1.shift(10, 20);
             expect(bound1.left).toEqual(10);
             expect(bound1.top).toEqual(20);
-            bound1.translate(10, 10);
+            bound1.translate(10, -10);
             expect(bound1.left).toEqual(20);
-            expect(bound1.top).toEqual(30);
+            expect(bound1.top).toEqual(10);
             bound1.shift(100, 100);
             expect(bound1.left).toEqual(100);
             expect(bound1.top).toEqual(100);
@@ -113,6 +113,30 @@ describe("Physics : me.Bounds", function () {
             expect(bound1.contains(bound2)).toEqual(true);
             expect(bound2.overlaps(bound1)).toEqual(true);
             expect(bound2.contains(bound1)).toEqual(false);
+        });
+
+        it("bound2 is defined using addFrame", function () {
+            bound2.clear();
+            // addFrame expect the left, top, right and bottom coordinates
+            bound2.addFrame(10, 50, 110, 250);
+            expect(bound2.x).toEqual(10);
+            expect(bound2.y).toEqual(50);
+            expect(bound2.width).toEqual(100);
+            expect(bound2.height).toEqual(200);
+        });
+
+        it("bound2 is defined using addFrame with transformation", function () {
+            var m = new me.Matrix2d();
+
+            // rotate 90 degrees clockwise
+            m.rotate(me.Math.degToRad(90));
+            bound2.clear();
+            // addFrame expect the left, top, right and bottom coordinates
+            bound2.addFrame(10, 50, 110, 250, m);
+            expect(bound2.x).toBeCloseTo(-250, 5);
+            expect(bound2.y).toBeCloseTo(10, 5);  
+            expect(bound2.width).toBeCloseTo(200, 5);
+            expect(bound2.height).toBeCloseTo(100, 5);
         });
     });
 
