@@ -2,6 +2,9 @@
 
 ## [14.4.1] (melonJS 2) - _2023-01-xx_
 
+### Fixed
+- Tiled: fix format deprecation warning if map was not created with Tiled and format version is not available
+
 ## [14.4.0] (melonJS 2) - _2023-01-10_
 
 ### Added
