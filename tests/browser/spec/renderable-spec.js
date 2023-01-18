@@ -9,7 +9,25 @@ describe("me.Renderable", function () {
             renderable.anchorPoint.set(0, 0);
         });
 
+        it("renderable has correct bounds", function () {
+            var bounds = renderable.getBounds();
+            expect(bounds.x).toEqual(50);
+            expect(bounds.y).toEqual(50);
+            expect(bounds.width).toEqual(100);
+            expect(bounds.height).toEqual(100);
+        });
+
+        it("renderable has correct bounds when chaning anchor point", function () {
+            renderable.anchorPoint.set(0.5, 0.5);
+            var bounds = renderable.getBounds();
+            expect(bounds.x).toEqual(0);
+            expect(bounds.y).toEqual(0);
+            expect(bounds.width).toEqual(100);
+            expect(bounds.height).toEqual(100);
+        });
+
         it("setting x, y position changes bounds pos", function () {
+            renderable.anchorPoint.set(0, 0);
             renderable.pos.x = 10;
             expect(renderable.getBounds().x).toEqual(10);
             renderable.pos.y = 120;
