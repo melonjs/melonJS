@@ -25,12 +25,15 @@
       });
 
       // a test entity object
-      globalThis.entity = new me.Entity(100, 100, {
+      globalThis.entity = new me.Entity(0, 0, {
           width: 32,
           height: 64,
           image: "rect",
           shapes: [],
       });
+
+      // all current test are based on anchorpoint being 0, 0
+      globalThis.entity.renderable.anchorPoint.set(0, 0);
 
       // a default rect shape
       globalThis.defaultRectShape = new me.Rect(10, 10, 32, 64);

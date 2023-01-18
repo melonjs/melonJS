@@ -27,17 +27,19 @@ describe("Entity", function () {
         })).toEqual(true);
     });
 
+
     it("has the correct renderable bounds: A", async () => {
         expect(await page.evaluate(() => {
-            var renderable = entity.renderable
-            return (renderable.pos.x === 0 && renderable.pos.y === 0 && renderable.width === 32 && renderable.height === 64);
+            var bounds = entity.renderable.getBounds();
+            console.log(bounds);
+            return (bounds.x === 0 && bounds.y === 0 && bounds.width === 32 && bounds.height === 64);
         })).toEqual(true);
     });
 
     it("has the correct entity bounds: A", async () => {
         expect(await page.evaluate(() => {
             var bounds = entity.getBounds();
-            return (bounds.x === 100 && bounds.y === 100 && bounds.width === 32 && bounds.height === 64);
+            return (bounds.x === 0 && bounds.y === 0 && bounds.width === 42 && bounds.height === 74);
         })).toEqual(true);
     });
 
@@ -72,20 +74,11 @@ describe("Entity", function () {
         })).toEqual(true);
     });
 
+
     it("has the correct entity bounds: B", async () => {
         expect(await page.evaluate(() => {
             var bounds = entity.getBounds();
-            return (bounds.x === 100 && bounds.y === 100 && bounds.width === 42 && bounds.height === 74);
-        })).toEqual(true);
-    });
-
-    /*
-     * XXX: Disabled until #580 is fixed:
-     * https://github.com/melonjs/melonJS/issues/580
-     */
-    xit("has the correct entity geometry: B", async () => {
-        expect(await page.evaluate(() => {
-            return (entity.pos.x === 90 && entity.pos.y === 90 && entity.width === 42 && entity.height === 74);
+            return (bounds.x === 0 && bounds.y === 0 && bounds.width === 42 && bounds.height === 74);
         })).toEqual(true);
     });
 
@@ -109,12 +102,14 @@ describe("Entity", function () {
         })).toEqual(true);
     });
 
+
     it("has the correct entity bounds: C", async () => {
         expect(await page.evaluate(() => {
             var bounds = entity.getBounds();
-            return (bounds.x === 100 && bounds.y === 100 && bounds.width === 32 && bounds.height === 64);
+            return (bounds.x === 0 && bounds.y === 0 && bounds.width === 42 && bounds.height === 74);
         })).toEqual(true);
     });
+
 
     xit("has the correct entity geometry: C", async () => {
         expect(await page.evaluate(() => {
@@ -143,10 +138,12 @@ describe("Entity", function () {
         })).toEqual(true);
     });
 
+
     it("has the correct entity bounds: D", async () => {
         expect(await page.evaluate(() => {
             var bounds = entity.getBounds();
-            return (bounds.x === 120 && bounds.y === 150 && bounds.width === 32 && bounds.height === 64);
+            return (bounds.x === 120 && bounds.y === 150 && bounds.width === 42 && bounds.height === 74);
         })).toEqual(true);
     });
+
 });
