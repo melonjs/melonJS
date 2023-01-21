@@ -346,12 +346,13 @@ export class TextureAtlas {
             region = this.getAtlas(atlas)[name];
         } else {
             // look for the given region in each existing atlas
-            this.atlases.forEach((atlas) => {
+            for (let atlas of this.atlases.values()) {
                 if (typeof atlas[name] !== "undefined") {
                     // there should be only one
                     region = atlas[name];
+                    break;
                 }
-            });
+            }
         }
         return region;
     }

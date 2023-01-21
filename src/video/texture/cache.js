@@ -56,8 +56,8 @@ class TextureCache {
         } else {
             // manage cases where a specific atlas is specified
             this.cache.forEach((value, key) => {
-                var _atlas = value.getAtlas();
-                if (key === image && _atlas[0].width === atlas.framewidth && _atlas[0].height === atlas.frameheight) {
+                var _atlas = value.getAtlas()[0];
+                if (key === image && _atlas.width === atlas.framewidth && _atlas.height === atlas.frameheight) {
                     entry = value;
                 }
             });
