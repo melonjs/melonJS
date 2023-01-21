@@ -5,7 +5,8 @@
 ### Changed
 - Pool: simplified and optimized the pool `pull` method
 - Renderer: optimized access to cached textures, especially when using multiple atlases
-- Renderer: optimize Path2d triangulation
+- Renderer: Path2D now uses `Point` internally (instead of `Vector2d`) which is a much more simple object 
+- Renderer: optimize Path2D triangulation
 
 ### Fixed
 - Tiled: fix format deprecation warning if map was not created with Tiled and format version is not available

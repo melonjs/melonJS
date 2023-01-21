@@ -11,7 +11,7 @@ import earcut from "earcut";
         /**
          * the points defining the current path
          * @public
-         * @type {Vector2d[]}
+         * @type {Point[]}
          * @name points
          * @memberof Path2D#
          */
@@ -54,7 +54,7 @@ import earcut from "earcut";
     closePath() {
         var points = this.points;
         if (points.length > 1 && !points[points.length-1].equals(points[0])) {
-            points.push(pool.pull("Vector2d", points[0].x, points[0].y));
+            points.push(pool.pull("Point", points[0].x, points[0].y));
         }
     }
 
@@ -62,7 +62,7 @@ import earcut from "earcut";
      * triangulate the shape defined by this path into an array of triangles
      * @name triangulatePath
      * @memberof Path2D
-     * @returns {Vector2d[]}
+     * @returns {Point[]}
      */
     triangulatePath() {
         var i = 0;
@@ -72,7 +72,7 @@ import earcut from "earcut";
 
         // pre-allocate vertices if necessary
         while (vertices.length < indices.length) {
-            vertices.push(pool.pull("Vector2d"));
+            vertices.push(pool.pull("Point"));
         }
 
         // calculate all vertices
@@ -98,7 +98,7 @@ import earcut from "earcut";
      * @param {number} y - the y-axis (vertical) coordinate of the point.
      */
     moveTo(x, y) {
-      this.points.push(pool.pull("Vector2d", x, y));
+      this.points.push(pool.pull("Point", x, y));
     }
 
     /**
@@ -109,7 +109,7 @@ import earcut from "earcut";
      * @param {number} y - the y-axis coordinate of the line's end point.
      */
     lineTo(x, y) {
-        this.points.push(pool.pull("Vector2d", x, y));
+        this.points.push(pool.pull("Point", x, y));
     }
 
     /**
@@ -156,10 +156,10 @@ import earcut from "earcut";
 
         var angle = startAngle;
         for (var j = 0; j < nr_of_interpolation_points; j++) {
-            points.push(pool.pull("Vector2d", x + radius * Math.cos(angle), y + radius * Math.sin(angle)));
+            points.push(pool.pull("Point", x + radius * Math.cos(angle), y + radius * Math.sin(angle)));
             angle += direction * dangle;
         }
-        points.push(pool.pull("Vector2d", x + radius * Math.cos(endAngle), y + radius * Math.sin(endAngle)));
+        points.push(pool.pull("Point", x + radius * Math.cos(endAngle), y + radius * Math.sin(endAngle)));
     }
 
     /**
@@ -194,7 +194,7 @@ import earcut from "earcut";
         var tangent_point1 =  [x1 + a[0] * adj_l, y1 + a[1] * adj_l];
         var tangent_point2 =  [x1 + b[0] * adj_l, y1 + b[1] * adj_l];
 
-        points.push(pool.pull("Vector2d", tangent_point1[0], tangent_point1[1]));
+        points.push(pool.pull("Point", tangent_point1[0], tangent_point1[1]));
 
         var bisec = [(a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0];
         var bisec_l = Math.sqrt(Math.pow(bisec[0], 2) + Math.pow(bisec[1], 2));
@@ -261,12 +261,12 @@ import earcut from "earcut";
             var _y1 = radiusY * Math.sin(angle);
             var _x2 = x + _x1 * cos_rotation - _y1 * sin_rotation;
             var _y2 = y + _x1 * sin_rotation + _y1 * cos_rotation;
-            points.push(pool.pull("Vector2d", _x2, _y2));
+            points.push(pool.pull("Point", _x2, _y2));
             angle += direction * dangle;
         }
         //var x1 = radiusX * Math.cos(endAngle);
         //var y1 = radiusY * Math.sin(endAngle);
-        //points.push(pool.pull("Vector2d", x + x1 * cos_rotation - y1 * sin_rotation, y + x1 * sin_rotation + y1 * cos_rotation));
+        //points.push(pool.pull("Point", x + x1 * cos_rotation - y1 * sin_rotation, y + x1 * sin_rotation + y1 * cos_rotation));
     }
 
     /**
