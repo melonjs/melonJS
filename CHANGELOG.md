@@ -4,7 +4,7 @@
 
 ### Changed
 - Pool: simplified and optimized the pool `pull` method
-- Renderer: optimized acccess to cache textured, especially when using multiple atlases
+- Renderer: optimized access to cached textures, especially when using multiple atlases
 
 ### Fixed
 - Tiled: fix format deprecation warning if map was not created with Tiled and format version is not available
