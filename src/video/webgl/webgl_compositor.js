@@ -3,7 +3,6 @@ import GLShader from "./glshader.js";
 import VertexArrayBuffer from "./buffer/vertex.js";
 import * as event from "./../../system/event.js";
 import { isPowerOfTwo } from "./../../math/math.js";
-
 import primitiveVertex from "./shaders/primitive.vert";
 import primitiveFragment from "./shaders/primitive.frag";
 import quadVertex from "./shaders/quad.vert";
@@ -437,7 +436,7 @@ var V_ARRAY = [
     /**
      * Draw an array of vertices
      * @param {GLenum} mode - primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
-     * @param {Vector2d[]} verts - vertices
+     * @param {Point[]} verts - an array of vertices
      * @param {number} [vertexCount=verts.length] - amount of points defined in the points array
      */
     drawVertices(mode, verts, vertexCount = verts.length) {
