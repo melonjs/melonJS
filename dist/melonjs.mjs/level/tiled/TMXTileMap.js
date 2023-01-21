@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.4.1
+ * melonJS Game Engine - v14.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -202,10 +202,14 @@ function readObjectGroup(map, data, z) {
         // background color
         this.backgroundcolor = data.backgroundcolor;
 
-        // deprecation warning if map tiled version is older than 1.5
-        if (utils.checkVersion(this.version, "1.5") < 0) {
-            warning("("+this.name+") Tiled Map format version 1.4 and below", "Tiled 1.5 or higher", "10.4.4");
+        // if version is undefined or empty it usually means the map was not created with Tiled
+        if (this.version !== "undefined" && this.version !== "") {
+            // deprecation warning if map tiled version is older than 1.5
+            if (utils.checkVersion(this.version, "1.5") < 0) {
+                warning("("+this.name+") Tiled Map format version 1.4 and below", "format 1.5 or higher", "10.4.4");
+            }
         }
+
 
         // set additional map properties (if any)
         applyTMXProperties(this, data);

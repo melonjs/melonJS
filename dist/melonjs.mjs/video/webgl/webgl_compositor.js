@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.4.1
+ * melonJS Game Engine - v14.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -443,7 +443,7 @@ var V_ARRAY = [
     /**
      * Draw an array of vertices
      * @param {GLenum} mode - primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
-     * @param {Vector2d[]} verts - vertices
+     * @param {Point[]} verts - an array of vertices
      * @param {number} [vertexCount=verts.length] - amount of points defined in the points array
      */
     drawVertices(mode, verts, vertexCount = verts.length) {

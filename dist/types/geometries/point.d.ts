@@ -6,18 +6,16 @@ export default class Point {
     constructor(x?: number, y?: number);
     /**
      * the position of the point on the horizontal axis
-     * @public
      * @type {Number}
      * @default 0
      */
-    public x: number;
+    x: number;
     /**
      * the position of the point on the vertical axis
-     * @public
      * @type {Number}
      * @default 0
      */
-    public y: number;
+    y: number;
     /** @ignore */
     onResetEvent(x?: number, y?: number): void;
     /**
@@ -37,8 +35,6 @@ export default class Point {
      */
     /**
      * return true if this point is equal to the given values
-     * @name equals
-     * @memberof Point
      * @param {number} x
      * @param {number} y
      * @returns {boolean}
@@ -46,7 +42,6 @@ export default class Point {
     equals(...args: any[]): boolean;
     /**
      * clone this Point
-     * @name clone
      * @returns {Point} new Point
      */
     clone(): Point;

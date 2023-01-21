@@ -78,13 +78,13 @@ export default class Entity extends Renderable {
     /** @ignore */
     update(dt: any): boolean;
     /**
-     * update the bounds position when the body is modified
+     * update the bounds when the body is modified
      * @ignore
      * @name onBodyUpdate
      * @memberof Entity
      * @param {Body} body - the body whose bounds to update
      */
-    onBodyUpdate(body: Body): void;
+    onBodyUpdate(): void;
     preDraw(renderer: any): void;
     /**
      * onDeactivateEvent Notification function<br>

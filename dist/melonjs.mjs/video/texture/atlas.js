@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.4.1
+ * melonJS Game Engine - v14.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -353,12 +353,13 @@ class TextureAtlas {
             region = this.getAtlas(atlas)[name];
         } else {
             // look for the given region in each existing atlas
-            this.atlases.forEach((atlas) => {
+            for (let atlas of this.atlases.values()) {
                 if (typeof atlas[name] !== "undefined") {
                     // there should be only one
                     region = atlas[name];
+                    break;
                 }
-            });
+            }
         }
         return region;
     }

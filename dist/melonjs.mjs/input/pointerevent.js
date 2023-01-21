@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.4.1
+ * melonJS Game Engine - v14.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -322,21 +322,7 @@ function dispatchEvent(normalizedEvents) {
                     pointer.gameLocalY = pointer.gameY - parentBounds.y;
                 }
 
-                var gameX = pointer.gameX;
-                var gameY = pointer.gameY;
-
-                // apply inverse transformation for renderable
-                if (typeof region.currentTransform !== "undefined") {
-                    if (!region.currentTransform.isIdentity()) {
-                        var invV = region.currentTransform.applyInverse(
-                            pool.pull("Vector2d", gameX, gameY)
-                        );
-                        gameX = invV.x;
-                        gameY = invV.y;
-                        pool.push(invV);
-                    }
-                }
-                eventInBounds = bounds.contains(gameX, gameY);
+                eventInBounds = bounds.contains(pointer.gameX, pointer.gameY);
 
                 switch (pointer.type) {
                     case POINTER_MOVE[0]:

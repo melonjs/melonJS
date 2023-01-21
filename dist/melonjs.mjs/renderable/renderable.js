@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.4.1
+ * melonJS Game Engine - v14.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -485,9 +485,9 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
      * @returns {Renderable} Reference to this object for method chaining
      */
     rotate(angle, v) {
-        if (!isNaN(angle)) {
+        if (angle !== 0) {
             this.currentTransform.rotate(angle, v);
-            //this.updateBoundsPos(this.pos.x, this.pos.y);
+            this.updateBounds();
             this.isDirty = true;
         }
         return this;
@@ -535,9 +535,18 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
      * @returns {Bounds} this shape bounding box Rectangle object
      */
     updateBounds() {
-        super.updateBounds();
-        this.updateBoundsPos(this.pos.x, this.pos.y);
-        return this.getBounds();
+        var bounds = this.getBounds();
+
+        bounds.clear();
+        bounds.addFrame(
+            0,
+            0,
+            this.width,
+            this.height,
+            this.currentTransform
+        );
+        this.updateBoundsPos(this.pos.x + bounds.x, this.pos.y + bounds.y);
+        return bounds;
     }
 
     /**
@@ -550,10 +559,9 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
          bounds.shift(newX, newY);
 
          if (typeof this.anchorPoint !== "undefined" && bounds.isFinite()) {
-             bounds.translate(
-                 -(this.anchorPoint.x * bounds.width),
-                 -(this.anchorPoint.y * bounds.height)
-             );
+            var ax = bounds.width * this.anchorPoint.x,
+                ay = bounds.height * this.anchorPoint.y;
+            bounds.translate(-ax, -ay);
          }
 
          /*

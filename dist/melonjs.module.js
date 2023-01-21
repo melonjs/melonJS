@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.4.1
+ * melonJS Game Engine - v14.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -6232,14 +6232,14 @@ class ObjectPool {
      * @param {boolean} [recycling=false] - enables object recycling for the specified class
      * @example
      * // implement CherryEntity
-     * class CherryEntity extends Spritesheet {
+     * class Cherry extends Sprite {
      *    onResetEvent() {
      *        // reset object mutable properties
      *        this.lifeBar = 100;
      *    }
      * };
      * // add our users defined entities in the object pool and enable object recycling
-     * me.pool.register("cherryentity", CherryEntity, true);
+     * me.pool.register("cherrysprite", Cherry, true);
      */
     register(className, classObj, recycling = false) {
          if (typeof (classObj) !== "undefined") {
@@ -6273,11 +6273,7 @@ class ObjectPool {
      * me.game.world.removeChild(enemy);
      * me.game.world.removeChild(bullet);
      */
-    pull(name) {
-        var args = new Array(arguments.length);
-        for (var i = 0; i < arguments.length; i++) {
-            args[i] = arguments[i];
-        }
+    pull(name, ...args) {
         var className = this.objectClass[name];
         if (className) {
             var proto = className["class"],
@@ -6285,18 +6281,12 @@ class ObjectPool {
                 obj;
 
             if (poolArray && ((obj = poolArray.pop()))) {
-                // pull an existing instance from the pool
-                args.shift();
-                // call the object onResetEvent function if defined
-                if (typeof(obj.onResetEvent) === "function") {
-                    obj.onResetEvent.apply(obj, args);
-                }
+                // poolable object must implement a `onResetEvent` method
+                obj.onResetEvent.apply(obj, args);
                 this.instance_counter--;
-            }
-            else {
+            } else {
                 // create a new instance
-                args[0] = proto;
-                obj = new (proto.bind.apply(proto, args))();
+                obj = new (proto.bind.apply(proto, [ proto, ...args ]))();
                 if (poolArray) {
                     obj.className = name;
                 }
@@ -8827,7 +8817,7 @@ earcut.flatten = function (data) {
  */
  class Bounds {
     /**
-     * @param {Vector2d[]} [vertices] - an array of me.Vector2d points
+     * @param {Vector2d[]|Point[]} [vertices] - an array of me.Vector2d points
      */
     constructor(vertices) {
         // @ignore
@@ -8852,8 +8842,6 @@ earcut.flatten = function (data) {
 
     /**
      * reset the bound
-     * @name clear
-     * @memberof Bounds
      */
     clear() {
         this.setMinMax(Infinity, Infinity, -Infinity, -Infinity);
@@ -8862,8 +8850,6 @@ earcut.flatten = function (data) {
 
     /**
      * sets the bounds to the given min and max value
-     * @name setMinMax
-     * @memberof Bounds
      * @param {number} minX
      * @param {number} minY
      * @param {number} maxX
@@ -8879,10 +8865,7 @@ earcut.flatten = function (data) {
 
     /**
      * x position of the bound
-     * @public
      * @type {number}
-     * @name x
-     * @memberof Bounds
      */
     get x() {
         return this.min.x;
@@ -8896,10 +8879,7 @@ earcut.flatten = function (data) {
 
     /**
      * y position of the bounds
-     * @public
      * @type {number}
-     * @name y
-     * @memberof Bounds
      */
     get y() {
         return this.min.y;
@@ -8914,10 +8894,7 @@ earcut.flatten = function (data) {
 
     /**
      * width of the bounds
-     * @public
      * @type {number}
-     * @name width
-     * @memberof Bounds
      */
     get width() {
         return this.max.x - this.min.x;
@@ -8929,10 +8906,7 @@ earcut.flatten = function (data) {
 
     /**
      * width of the bounds
-     * @public
      * @type {number}
-     * @name width
-     * @memberof Bounds
      */
     get height() {
         return this.max.y - this.min.y;
@@ -8944,10 +8918,7 @@ earcut.flatten = function (data) {
 
     /**
      * left coordinate of the bound
-     * @public
      * @type {number}
-     * @name left
-     * @memberof Bounds
      */
     get left() {
         return this.min.x;
@@ -8955,10 +8926,7 @@ earcut.flatten = function (data) {
 
     /**
      * right coordinate of the bound
-     * @public
      * @type {number}
-     * @name right
-     * @memberof Bounds
      */
     get right() {
         return this.max.x;
@@ -8966,10 +8934,7 @@ earcut.flatten = function (data) {
 
     /**
      * top coordinate of the bound
-     * @public
      * @type {number}
-     * @name top
-     * @memberof Bounds
      */
     get top() {
         return this.min.y;
@@ -8977,10 +8942,7 @@ earcut.flatten = function (data) {
 
     /**
      * bottom coordinate of the bound
-     * @public
      * @type {number}
-     * @name bottom
-     * @memberof Bounds
      */
     get bottom() {
         return this.max.y;
@@ -8988,10 +8950,7 @@ earcut.flatten = function (data) {
 
     /**
      * center position of the bound on the x axis
-     * @public
      * @type {number}
-     * @name centerX
-     * @memberof Bounds
      */
     get centerX() {
         return this.min.x + (this.width / 2);
@@ -8999,10 +8958,7 @@ earcut.flatten = function (data) {
 
     /**
      * center position of the bound on the y axis
-     * @public
      * @type {number}
-     * @name centerY
-     * @memberof Bounds
      */
     get centerY() {
         return this.min.y + (this.height / 2);
@@ -9010,10 +8966,7 @@ earcut.flatten = function (data) {
 
     /**
      * return the center position of the bound
-     * @public
      * @type {Vector2d}
-     * @name center
-     * @memberof Bounds
      */
     get center() {
         return this._center.set(this.centerX, this.centerY);
@@ -9021,9 +8974,7 @@ earcut.flatten = function (data) {
 
     /**
      * Updates bounds using the given vertices
-     * @name update
-     * @memberof Bounds
-     * @param {Vector2d[]} vertices - an array of me.Vector2d points
+     * @param {Vector2d[]|Point[]} vertices - an array of me.Vector2d points
      */
     update(vertices) {
         this.add(vertices, true);
@@ -9031,9 +8982,7 @@ earcut.flatten = function (data) {
 
     /**
      * add the given vertices to the bounds definition.
-     * @name add
-     * @memberof Bounds
-     * @param {Vector2d[]} vertices - an array of me.Vector2d points
+     * @param {Vector2d[]|Point[]} vertices - an array of me.Vector2d points
      * @param {boolean} [clear=false] - either to reset the bounds before adding the new vertices
      */
     add(vertices, clear = false) {
@@ -9051,8 +9000,6 @@ earcut.flatten = function (data) {
 
     /**
      * add the given bounds to the bounds definition.
-     * @name addBounds
-     * @memberof Bounds
      * @param {Bounds} bounds
      * @param {boolean} [clear=false] - either to reset the bounds before adding the new vertices
      */
@@ -9072,13 +9019,11 @@ earcut.flatten = function (data) {
 
     /**
      * add the given point to the bounds definition.
-     * @name addPoint
-     * @memberof Bounds
      * @param {Vector2d|Point} point - the point to be added to the bounds
      * @param {Matrix2d} [m] - an optional transform to apply to the given point (only if the given point is a vector)
      */
     addPoint(point, m) {
-        if ((typeof m !== "undefined") && (typeof point.rotate === "function")) {
+        if ((typeof m !== "undefined")) {
             // only Vectors object have a rotate function
             point = m.apply(point);
         }
@@ -9090,8 +9035,6 @@ earcut.flatten = function (data) {
 
     /**
      * add the given quad coordinates to this bound definition, multiplied by the given matrix
-     * @name addFrame
-     * @memberof Bounds
      * @param {number} x0 - left X coordinates of the quad
      * @param {number} y0 - top Y coordinates of the quad
      * @param {number} x1 - right X coordinates of the quad
@@ -9099,13 +9042,20 @@ earcut.flatten = function (data) {
      * @param {Matrix2d} [m] - an optional transform to apply to the given frame coordinates
      */
     addFrame(x0, y0, x1, y1, m) {
-        var v = pool.pull("Vector2d");
+        var v = pool.pull("Point");
 
         // transform all points and add to the bound definition
-        this.addPoint(v.set(x0, y0), m);
-        this.addPoint(v.set(x1, y0), m);
-        this.addPoint(v.set(x0, y1), m);
-        this.addPoint(v.set(x1, y1), m);
+        if (typeof m !== "undefined" && !m.isIdentity()) {
+            this.addPoint(v.set(x0, y0), m);
+            this.addPoint(v.set(x1, y0), m);
+            this.addPoint(v.set(x0, y1), m);
+            this.addPoint(v.set(x1, y1), m);
+        } else {
+            this.addPoint(v.set(x0, y0));
+            this.addPoint(v.set(x1, y0));
+            this.addPoint(v.set(x0, y1));
+            this.addPoint(v.set(x1, y1));
+        }
 
         pool.push(v);
     }
@@ -9120,8 +9070,6 @@ earcut.flatten = function (data) {
      */
     /**
      * Returns true if the bounds contains the given point.
-     * @name contains
-     * @memberof Bounds
      * @param {number} x
      * @param {number} y
      * @returns {boolean} True if the bounds contain the point, otherwise false
@@ -9153,8 +9101,6 @@ earcut.flatten = function (data) {
 
     /**
      * Returns true if the two bounds intersect.
-     * @name overlaps
-     * @memberof Bounds
      * @param {Bounds|Rect} bounds
      * @returns {boolean} True if the bounds overlap, otherwise false
      */
@@ -9165,8 +9111,6 @@ earcut.flatten = function (data) {
 
     /**
      * determines whether all coordinates of this bounds are finite numbers.
-     * @name isFinite
-     * @memberof Bounds
      * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
      */
     isFinite() {
@@ -9182,8 +9126,6 @@ earcut.flatten = function (data) {
      */
     /**
      * Translates the bounds by x on the x axis, and y on the y axis
-     * @name translate
-     * @memberof Bounds
      * @param {number} x
      * @param {number} y
      */
@@ -9213,8 +9155,6 @@ earcut.flatten = function (data) {
      */
     /**
      * Shifts the bounds to the given x, y position.
-     * @name shift
-     * @memberof Bounds
      * @param {number} x
      * @param {number} y
      */
@@ -9242,8 +9182,6 @@ earcut.flatten = function (data) {
 
     /**
      * clone this bounds
-     * @name clone
-     * @memberof Bounds
      * @returns {Bounds}
      */
     clone() {
@@ -9254,8 +9192,6 @@ earcut.flatten = function (data) {
 
     /**
      * Returns a polygon whose edges are the same as this bounds.
-     * @name toPolygon
-     * @memberof Bounds
      * @returns {Polygon} a new Polygon that represents this bounds.
      */
     toPolygon () {
@@ -9277,7 +9213,6 @@ earcut.flatten = function (data) {
     constructor(x = 0, y = 0) {
         /**
          * the position of the point on the horizontal axis
-         * @public
          * @type {Number}
          * @default 0
          */
@@ -9285,7 +9220,6 @@ earcut.flatten = function (data) {
 
         /**
          * the position of the point on the vertical axis
-         * @public
          * @type {Number}
          * @default 0
          */
@@ -9319,8 +9253,6 @@ earcut.flatten = function (data) {
      */
     /**
      * return true if this point is equal to the given values
-     * @name equals
-     * @memberof Point
      * @param {number} x
      * @param {number} y
      * @returns {boolean}
@@ -9341,7 +9273,6 @@ earcut.flatten = function (data) {
 
     /**
      * clone this Point
-     * @name clone
      * @returns {Point} new Point
      */
     clone() {
@@ -9898,20 +9829,24 @@ earcut.flatten = function (data) {
      * @returns {Body} Reference to this object for method chaining
      */
     rotate(angle, v = this.getBounds().center) {
-        this.bounds.clear();
-        this.forEach((shape) => {
-            shape.rotate(angle, v);
-            this.bounds.addBounds(shape.getBounds());
-            if (shape instanceof Ellipse) {
-                // use bounds position as ellipse position is center
-                this.bounds.translate(
-                    shape.getBounds().x,
-                    shape.getBounds().y
-                );
-            } else {
-                this.bounds.translate(shape.pos);
+        if (angle !== 0) {
+            this.bounds.clear();
+            this.forEach((shape) => {
+                shape.rotate(angle, v);
+                this.bounds.addBounds(shape.getBounds());
+                /*
+                if (!(shape instanceof Ellipse)) {
+                    // ellipse position is center
+                    this.bounds.translate(shape.pos);
+                }
+                */
+            });
+            /*
+            if (typeof this.onBodyUpdate === "function") {
+                this.onBodyUpdate(this);
             }
-        });
+            */
+        }
         return this;
     }
 
@@ -11284,7 +11219,7 @@ function init$1(width, height, options) {
          // initialize the default game Application with the given options
         game.init(width, height, options);
     } catch (e) {
-        console(e.message);
+        console.log(e.message);
         // me.video.init() historically returns false if failing at creating/using a HTML5 canvas
         return false;
     }
@@ -14814,7 +14749,7 @@ var V_ARRAY = [
     /**
      * Draw an array of vertices
      * @param {GLenum} mode - primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
-     * @param {Vector2d[]} verts - vertices
+     * @param {Point[]} verts - an array of vertices
      * @param {number} [vertexCount=verts.length] - amount of points defined in the points array
      */
     drawVertices(mode, verts, vertexCount = verts.length) {
@@ -15131,20 +15066,14 @@ class RoundRect extends Rect {
     constructor() {
         /**
          * the points defining the current path
-         * @public
-         * @type {Vector2d[]}
-         * @name points
-         * @memberof Path2D#
+         * @type {Point[]}
          */
         this.points = [];
 
         /**
          * space between interpolated points for quadratic and bezier curve approx. in pixels.
-         * @public
          * @type {number}
-         * @name arcResolution
          * @default 5
-         * @memberof Path2D#
          */
         this.arcResolution = 5;
 
@@ -15154,8 +15083,6 @@ class RoundRect extends Rect {
 
     /**
      * begin a new path
-     * @name beginPath
-     * @memberof Path2D
      */
     beginPath() {
         // empty the cache and recycle all vectors
@@ -15169,21 +15096,17 @@ class RoundRect extends Rect {
      * causes the point of the pen to move back to the start of the current path.
      * It tries to draw a straight line from the current point to the start.
      * If the shape has already been closed or has only one point, this function does nothing.
-     * @name closePath
-     * @memberof Path2D
      */
     closePath() {
         var points = this.points;
         if (points.length > 1 && !points[points.length-1].equals(points[0])) {
-            points.push(pool.pull("Vector2d", points[0].x, points[0].y));
+            points.push(pool.pull("Point", points[0].x, points[0].y));
         }
     }
 
     /**
      * triangulate the shape defined by this path into an array of triangles
-     * @name triangulatePath
-     * @memberof Path2D
-     * @returns {Vector2d[]}
+     * @returns {Point[]}
      */
     triangulatePath() {
         var i = 0;
@@ -15191,13 +15114,15 @@ class RoundRect extends Rect {
         var vertices = this.vertices;
         var indices = earcutExports(points.flatMap(p => [p.x, p.y]));
 
+        // pre-allocate vertices if necessary
+        while (vertices.length < indices.length) {
+            vertices.push(pool.pull("Point"));
+        }
+
         // calculate all vertices
         for (i = 0; i < indices.length; i++ ) {
-            if (typeof vertices[i] === "undefined") {
-                // increase cache buffer if necessary
-                vertices[i] = pool.pull("Vector2d");
-            }
-            vertices[i].set(points[indices[i]].x, points[indices[i]].y);
+            var point = points[indices[i]];
+            vertices[i].set(point.x, point.y);
         }
 
         // recycle overhead from a previous triangulation
@@ -15211,31 +15136,25 @@ class RoundRect extends Rect {
 
     /**
      * moves the starting point of the current path to the (x, y) coordinates.
-     * @name moveTo
-     * @memberof Path2D
      * @param {number} x - the x-axis (horizontal) coordinate of the point.
      * @param {number} y - the y-axis (vertical) coordinate of the point.
      */
     moveTo(x, y) {
-      this.points.push(pool.pull("Vector2d", x, y));
+      this.points.push(pool.pull("Point", x, y));
     }
 
     /**
      * connects the last point in the current patch to the (x, y) coordinates with a straight line.
-     * @name lineTo
-     * @memberof Path2D
      * @param {number} x - the x-axis coordinate of the line's end point.
      * @param {number} y - the y-axis coordinate of the line's end point.
      */
     lineTo(x, y) {
-        this.points.push(pool.pull("Vector2d", x, y));
+        this.points.push(pool.pull("Point", x, y));
     }
 
     /**
      * adds an arc to the current path which is centered at (x, y) position with the given radius,
      * starting at startAngle and ending at endAngle going in the given direction by counterclockwise (defaulting to clockwise).
-     * @name arc
-     * @memberof Path2D
      * @param {number} x - the horizontal coordinate of the arc's center.
      * @param {number} y - the vertical coordinate of the arc's center.
      * @param {number} radius - the arc's radius. Must be positive.
@@ -15275,16 +15194,14 @@ class RoundRect extends Rect {
 
         var angle = startAngle;
         for (var j = 0; j < nr_of_interpolation_points; j++) {
-            points.push(pool.pull("Vector2d", x + radius * Math.cos(angle), y + radius * Math.sin(angle)));
+            points.push(pool.pull("Point", x + radius * Math.cos(angle), y + radius * Math.sin(angle)));
             angle += direction * dangle;
         }
-        points.push(pool.pull("Vector2d", x + radius * Math.cos(endAngle), y + radius * Math.sin(endAngle)));
+        points.push(pool.pull("Point", x + radius * Math.cos(endAngle), y + radius * Math.sin(endAngle)));
     }
 
     /**
      * adds a circular arc to the path with the given control points and radius, connected to the previous point by a straight line.
-     * @name arcTo
-     * @memberof Path2D
      * @param {number} x1 - the x-axis coordinate of the first control point.
      * @param {number} y1 - the y-axis coordinate of the first control point.
      * @param {number} x2 - the x-axis coordinate of the second control point.
@@ -15313,7 +15230,7 @@ class RoundRect extends Rect {
         var tangent_point1 =  [x1 + a[0] * adj_l, y1 + a[1] * adj_l];
         var tangent_point2 =  [x1 + b[0] * adj_l, y1 + b[1] * adj_l];
 
-        points.push(pool.pull("Vector2d", tangent_point1[0], tangent_point1[1]));
+        points.push(pool.pull("Point", tangent_point1[0], tangent_point1[1]));
 
         var bisec = [(a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0];
         var bisec_l = Math.sqrt(Math.pow(bisec[0], 2) + Math.pow(bisec[1], 2));
@@ -15331,8 +15248,6 @@ class RoundRect extends Rect {
     /**
      * adds an elliptical arc to the path which is centered at (x, y) position with the radii radiusX and radiusY
      * starting at startAngle and ending at endAngle going in the given direction by counterclockwise.
-     * @name ellipse
-     * @memberof Path2D
      * @param {number} x - the x-axis (horizontal) coordinate of the ellipse's center.
      * @param {number} y - the  y-axis (vertical) coordinate of the ellipse's center.
      * @param {number} radiusX - the ellipse's major-axis radius. Must be non-negative.
@@ -15380,18 +15295,16 @@ class RoundRect extends Rect {
             var _y1 = radiusY * Math.sin(angle);
             var _x2 = x + _x1 * cos_rotation - _y1 * sin_rotation;
             var _y2 = y + _x1 * sin_rotation + _y1 * cos_rotation;
-            points.push(pool.pull("Vector2d", _x2, _y2));
+            points.push(pool.pull("Point", _x2, _y2));
             angle += direction * dangle;
         }
         //var x1 = radiusX * Math.cos(endAngle);
         //var y1 = radiusY * Math.sin(endAngle);
-        //points.push(pool.pull("Vector2d", x + x1 * cos_rotation - y1 * sin_rotation, y + x1 * sin_rotation + y1 * cos_rotation));
+        //points.push(pool.pull("Point", x + x1 * cos_rotation - y1 * sin_rotation, y + x1 * sin_rotation + y1 * cos_rotation));
     }
 
     /**
      * creates a path for a rectangle at position (x, y) with a size that is determined by width and height.
-     * @name rect
-     * @memberof Path2D
      * @param {number} x - the x-axis coordinate of the rectangle's starting point.
      * @param {number} y - the y-axis coordinate of the rectangle's starting point.
      * @param {number} width - the rectangle's width. Positive values are to the right, and negative to the left.
@@ -15407,8 +15320,6 @@ class RoundRect extends Rect {
 
     /**
      * adds an rounded rectangle to the current path.
-     * @name roundRect
-     * @memberof Path2D
      * @param {number} x - the x-axis coordinate of the rectangle's starting point.
      * @param {number} y - the y-axis coordinate of the rectangle's starting point.
      * @param {number} width - the rectangle's width. Positive values are to the right, and negative to the left.
@@ -16341,8 +16252,8 @@ class TextureCache {
         } else {
             // manage cases where a specific atlas is specified
             this.cache.forEach((value, key) => {
-                var _atlas = value.getAtlas();
-                if (key === image && _atlas[0].width === atlas.framewidth && _atlas[0].height === atlas.frameheight) {
+                var _atlas = value.getAtlas()[0];
+                if (key === image && _atlas.width === atlas.framewidth && _atlas.height === atlas.frameheight) {
                     entry = value;
                 }
             });
@@ -17774,12 +17685,13 @@ class TextureAtlas {
             region = this.getAtlas(atlas)[name];
         } else {
             // look for the given region in each existing atlas
-            this.atlases.forEach((atlas) => {
+            for (let atlas of this.atlases.values()) {
                 if (typeof atlas[name] !== "undefined") {
                     // there should be only one
                     region = atlas[name];
+                    break;
                 }
-            });
+            }
         }
         return region;
     }
@@ -20637,21 +20549,7 @@ function dispatchEvent(normalizedEvents) {
                     pointer.gameLocalY = pointer.gameY - parentBounds.y;
                 }
 
-                var gameX = pointer.gameX;
-                var gameY = pointer.gameY;
-
-                // apply inverse transformation for renderable
-                if (typeof region.currentTransform !== "undefined") {
-                    if (!region.currentTransform.isIdentity()) {
-                        var invV = region.currentTransform.applyInverse(
-                            pool.pull("Vector2d", gameX, gameY)
-                        );
-                        gameX = invV.x;
-                        gameY = invV.y;
-                        pool.push(invV);
-                    }
-                }
-                eventInBounds = bounds.contains(gameX, gameY);
+                eventInBounds = bounds.contains(pointer.gameX, pointer.gameY);
 
                 switch (pointer.type) {
                     case POINTER_MOVE[0]:
@@ -22132,9 +22030,9 @@ var input = /*#__PURE__*/Object.freeze({
      * @returns {Renderable} Reference to this object for method chaining
      */
     rotate(angle, v) {
-        if (!isNaN(angle)) {
+        if (angle !== 0) {
             this.currentTransform.rotate(angle, v);
-            //this.updateBoundsPos(this.pos.x, this.pos.y);
+            this.updateBounds();
             this.isDirty = true;
         }
         return this;
@@ -22182,9 +22080,18 @@ var input = /*#__PURE__*/Object.freeze({
      * @returns {Bounds} this shape bounding box Rectangle object
      */
     updateBounds() {
-        super.updateBounds();
-        this.updateBoundsPos(this.pos.x, this.pos.y);
-        return this.getBounds();
+        var bounds = this.getBounds();
+
+        bounds.clear();
+        bounds.addFrame(
+            0,
+            0,
+            this.width,
+            this.height,
+            this.currentTransform
+        );
+        this.updateBoundsPos(this.pos.x + bounds.x, this.pos.y + bounds.y);
+        return bounds;
     }
 
     /**
@@ -22197,10 +22104,9 @@ var input = /*#__PURE__*/Object.freeze({
          bounds.shift(newX, newY);
 
          if (typeof this.anchorPoint !== "undefined" && bounds.isFinite()) {
-             bounds.translate(
-                 -(this.anchorPoint.x * bounds.width),
-                 -(this.anchorPoint.y * bounds.height)
-             );
+            var ax = bounds.width * this.anchorPoint.x,
+                ay = bounds.height * this.anchorPoint.y;
+            bounds.translate(-ax, -ay);
          }
 
          /*
@@ -22972,19 +22878,9 @@ var input = /*#__PURE__*/Object.freeze({
         }
 
         // update the sprite bounding box
-        /*
-        if (this.isDirty === true && !this.currentTransform.isIdentity()) {
-            this.getBounds().clear();
-            this.getBounds().addFrame(
-                0,
-                0,
-                this.current.width,
-                this.current.height,
-                this.currentTransform
-            );
-            this.updateBoundsPos(this.pos.x, this.pos.y);
+        if (this.isDirty === true) {
+            this.updateBounds();
         }
-        */
 
         //update the "flickering" state if necessary
         if (this._flicker.isFlickering) {
@@ -22999,6 +22895,32 @@ var input = /*#__PURE__*/Object.freeze({
         }
 
         return super.update(dt);
+    }
+
+    /**
+     * update the bounding box for this sprite.
+     * @ignore
+     * @returns {Bounds} this shape bounding box Rectangle object
+     */
+    updateBounds() {
+        var bounds = this.getBounds();
+
+        if (typeof this.current !== "undefined") {
+            bounds.clear();
+            bounds.addFrame(
+                0,
+                0,
+                this.current.width,
+                this.current.height,
+                this.currentTransform
+            );
+            this.updateBoundsPos(this.pos.x + bounds.x, this.pos.y + bounds.y);
+        } else {
+            // cover the case where updateBounds is called by the
+            // parent constructor before `current` was declared
+            super.updateBounds();
+        }
+        return bounds;
     }
 
     /**
@@ -27035,10 +26957,14 @@ function readObjectGroup(map, data, z) {
         // background color
         this.backgroundcolor = data.backgroundcolor;
 
-        // deprecation warning if map tiled version is older than 1.5
-        if (utils.checkVersion(this.version, "1.5") < 0) {
-            warning("("+this.name+") Tiled Map format version 1.4 and below", "Tiled 1.5 or higher", "10.4.4");
+        // if version is undefined or empty it usually means the map was not created with Tiled
+        if (this.version !== "undefined" && this.version !== "") {
+            // deprecation warning if map tiled version is older than 1.5
+            if (utils.checkVersion(this.version, "1.5") < 0) {
+                warning("("+this.name+") Tiled Map format version 1.4 and below", "format 1.5 or higher", "10.4.4");
+            }
         }
+
 
         // set additional map properties (if any)
         applyTMXProperties(this, data);
@@ -37306,6 +37232,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
         if (value instanceof Renderable) {
             this.children[0] = value;
             this.children[0].ancestor = this;
+            this.updateBounds();
         } else {
             throw new Error(value + "should extend me.Renderable");
         }
@@ -37320,17 +37247,44 @@ function createDefaultParticleTexture(w = 8, h = 8) {
     }
 
     /**
-     * update the bounds position when the body is modified
+     * update the bounding box for this entity.
+     * @ignore
+     * @returns {Bounds} this shape bounding box Rectangle object
+     */
+    updateBounds() {
+        var bounds = this.getBounds();
+
+        bounds.clear();
+        bounds.addFrame(
+            0,
+            0,
+            this.width,
+            this.height
+        );
+
+        // add each renderable bounds
+        if (this.children && this.children.length > 0) {
+            bounds.addBounds(this.children[0].getBounds());
+        }
+
+        if (this.body) {
+            bounds.addBounds(this.body.getBounds());
+        }
+
+        this.updateBoundsPos(this.pos.x + bounds.x, this.pos.y + bounds.y);
+
+        return bounds;
+    }
+
+    /**
+     * update the bounds when the body is modified
      * @ignore
      * @name onBodyUpdate
      * @memberof Entity
      * @param {Body} body - the body whose bounds to update
      */
-    onBodyUpdate(body) {
-        // update the entity bounds to include the body bounds
-        this.getBounds().addBounds(body.getBounds(), true);
-        // update the bounds pos
-        this.updateBoundsPos(this.pos.x, this.pos.y);
+    onBodyUpdate() {
+        this.updateBounds();
     }
 
     preDraw(renderer) {
@@ -37945,10 +37899,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "14.4.1"
+         * @default "14.5.0"
          * @name plugin.Base#version
          */
-        this.version = "14.4.1";
+        this.version = "14.5.0";
     }
 }
 
@@ -38176,7 +38130,7 @@ Renderer.prototype.getScreenContext = function()  {
  * @name version
  * @type {string}
  */
-const version = "14.4.1";
+const version = "14.5.0";
 
 /**
  * a flag indicating that melonJS is fully initialized

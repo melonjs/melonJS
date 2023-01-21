@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.4.1
+ * melonJS Game Engine - v14.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -14,7 +14,7 @@ import Vector2d from '../math/vector2.js';
  */
  class Bounds {
     /**
-     * @param {Vector2d[]} [vertices] - an array of me.Vector2d points
+     * @param {Vector2d[]|Point[]} [vertices] - an array of me.Vector2d points
      */
     constructor(vertices) {
         // @ignore
@@ -39,8 +39,6 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * reset the bound
-     * @name clear
-     * @memberof Bounds
      */
     clear() {
         this.setMinMax(Infinity, Infinity, -Infinity, -Infinity);
@@ -49,8 +47,6 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * sets the bounds to the given min and max value
-     * @name setMinMax
-     * @memberof Bounds
      * @param {number} minX
      * @param {number} minY
      * @param {number} maxX
@@ -66,10 +62,7 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * x position of the bound
-     * @public
      * @type {number}
-     * @name x
-     * @memberof Bounds
      */
     get x() {
         return this.min.x;
@@ -83,10 +76,7 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * y position of the bounds
-     * @public
      * @type {number}
-     * @name y
-     * @memberof Bounds
      */
     get y() {
         return this.min.y;
@@ -101,10 +91,7 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * width of the bounds
-     * @public
      * @type {number}
-     * @name width
-     * @memberof Bounds
      */
     get width() {
         return this.max.x - this.min.x;
@@ -116,10 +103,7 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * width of the bounds
-     * @public
      * @type {number}
-     * @name width
-     * @memberof Bounds
      */
     get height() {
         return this.max.y - this.min.y;
@@ -131,10 +115,7 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * left coordinate of the bound
-     * @public
      * @type {number}
-     * @name left
-     * @memberof Bounds
      */
     get left() {
         return this.min.x;
@@ -142,10 +123,7 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * right coordinate of the bound
-     * @public
      * @type {number}
-     * @name right
-     * @memberof Bounds
      */
     get right() {
         return this.max.x;
@@ -153,10 +131,7 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * top coordinate of the bound
-     * @public
      * @type {number}
-     * @name top
-     * @memberof Bounds
      */
     get top() {
         return this.min.y;
@@ -164,10 +139,7 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * bottom coordinate of the bound
-     * @public
      * @type {number}
-     * @name bottom
-     * @memberof Bounds
      */
     get bottom() {
         return this.max.y;
@@ -175,10 +147,7 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * center position of the bound on the x axis
-     * @public
      * @type {number}
-     * @name centerX
-     * @memberof Bounds
      */
     get centerX() {
         return this.min.x + (this.width / 2);
@@ -186,10 +155,7 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * center position of the bound on the y axis
-     * @public
      * @type {number}
-     * @name centerY
-     * @memberof Bounds
      */
     get centerY() {
         return this.min.y + (this.height / 2);
@@ -197,10 +163,7 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * return the center position of the bound
-     * @public
      * @type {Vector2d}
-     * @name center
-     * @memberof Bounds
      */
     get center() {
         return this._center.set(this.centerX, this.centerY);
@@ -208,9 +171,7 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * Updates bounds using the given vertices
-     * @name update
-     * @memberof Bounds
-     * @param {Vector2d[]} vertices - an array of me.Vector2d points
+     * @param {Vector2d[]|Point[]} vertices - an array of me.Vector2d points
      */
     update(vertices) {
         this.add(vertices, true);
@@ -218,9 +179,7 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * add the given vertices to the bounds definition.
-     * @name add
-     * @memberof Bounds
-     * @param {Vector2d[]} vertices - an array of me.Vector2d points
+     * @param {Vector2d[]|Point[]} vertices - an array of me.Vector2d points
      * @param {boolean} [clear=false] - either to reset the bounds before adding the new vertices
      */
     add(vertices, clear = false) {
@@ -238,8 +197,6 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * add the given bounds to the bounds definition.
-     * @name addBounds
-     * @memberof Bounds
      * @param {Bounds} bounds
      * @param {boolean} [clear=false] - either to reset the bounds before adding the new vertices
      */
@@ -259,13 +216,11 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * add the given point to the bounds definition.
-     * @name addPoint
-     * @memberof Bounds
      * @param {Vector2d|Point} point - the point to be added to the bounds
      * @param {Matrix2d} [m] - an optional transform to apply to the given point (only if the given point is a vector)
      */
     addPoint(point, m) {
-        if ((typeof m !== "undefined") && (typeof point.rotate === "function")) {
+        if ((typeof m !== "undefined")) {
             // only Vectors object have a rotate function
             point = m.apply(point);
         }
@@ -277,8 +232,6 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * add the given quad coordinates to this bound definition, multiplied by the given matrix
-     * @name addFrame
-     * @memberof Bounds
      * @param {number} x0 - left X coordinates of the quad
      * @param {number} y0 - top Y coordinates of the quad
      * @param {number} x1 - right X coordinates of the quad
@@ -286,13 +239,20 @@ import Vector2d from '../math/vector2.js';
      * @param {Matrix2d} [m] - an optional transform to apply to the given frame coordinates
      */
     addFrame(x0, y0, x1, y1, m) {
-        var v = pool.pull("Vector2d");
+        var v = pool.pull("Point");
 
         // transform all points and add to the bound definition
-        this.addPoint(v.set(x0, y0), m);
-        this.addPoint(v.set(x1, y0), m);
-        this.addPoint(v.set(x0, y1), m);
-        this.addPoint(v.set(x1, y1), m);
+        if (typeof m !== "undefined" && !m.isIdentity()) {
+            this.addPoint(v.set(x0, y0), m);
+            this.addPoint(v.set(x1, y0), m);
+            this.addPoint(v.set(x0, y1), m);
+            this.addPoint(v.set(x1, y1), m);
+        } else {
+            this.addPoint(v.set(x0, y0));
+            this.addPoint(v.set(x1, y0));
+            this.addPoint(v.set(x0, y1));
+            this.addPoint(v.set(x1, y1));
+        }
 
         pool.push(v);
     }
@@ -307,8 +267,6 @@ import Vector2d from '../math/vector2.js';
      */
     /**
      * Returns true if the bounds contains the given point.
-     * @name contains
-     * @memberof Bounds
      * @param {number} x
      * @param {number} y
      * @returns {boolean} True if the bounds contain the point, otherwise false
@@ -340,8 +298,6 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * Returns true if the two bounds intersect.
-     * @name overlaps
-     * @memberof Bounds
      * @param {Bounds|Rect} bounds
      * @returns {boolean} True if the bounds overlap, otherwise false
      */
@@ -352,8 +308,6 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * determines whether all coordinates of this bounds are finite numbers.
-     * @name isFinite
-     * @memberof Bounds
      * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
      */
     isFinite() {
@@ -369,8 +323,6 @@ import Vector2d from '../math/vector2.js';
      */
     /**
      * Translates the bounds by x on the x axis, and y on the y axis
-     * @name translate
-     * @memberof Bounds
      * @param {number} x
      * @param {number} y
      */
@@ -400,8 +352,6 @@ import Vector2d from '../math/vector2.js';
      */
     /**
      * Shifts the bounds to the given x, y position.
-     * @name shift
-     * @memberof Bounds
      * @param {number} x
      * @param {number} y
      */
@@ -429,8 +379,6 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * clone this bounds
-     * @name clone
-     * @memberof Bounds
      * @returns {Bounds}
      */
     clone() {
@@ -441,8 +389,6 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * Returns a polygon whose edges are the same as this bounds.
-     * @name toPolygon
-     * @memberof Bounds
      * @returns {Polygon} a new Polygon that represents this bounds.
      */
     toPolygon () {

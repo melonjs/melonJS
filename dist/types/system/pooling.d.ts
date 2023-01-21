@@ -26,14 +26,14 @@ declare class ObjectPool {
      * @param {boolean} [recycling=false] - enables object recycling for the specified class
      * @example
      * // implement CherryEntity
-     * class CherryEntity extends Spritesheet {
+     * class Cherry extends Sprite {
      *    onResetEvent() {
      *        // reset object mutable properties
      *        this.lifeBar = 100;
      *    }
      * };
      * // add our users defined entities in the object pool and enable object recycling
-     * me.pool.register("cherryentity", CherryEntity, true);
+     * me.pool.register("cherrysprite", Cherry, true);
      */
     register(className: string, classObj: object, recycling?: boolean | undefined): void;
     /**

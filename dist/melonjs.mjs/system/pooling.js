@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.4.1
+ * melonJS Game Engine - v14.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -35,14 +35,14 @@ class ObjectPool {
      * @param {boolean} [recycling=false] - enables object recycling for the specified class
      * @example
      * // implement CherryEntity
-     * class CherryEntity extends Spritesheet {
+     * class Cherry extends Sprite {
      *    onResetEvent() {
      *        // reset object mutable properties
      *        this.lifeBar = 100;
      *    }
      * };
      * // add our users defined entities in the object pool and enable object recycling
-     * me.pool.register("cherryentity", CherryEntity, true);
+     * me.pool.register("cherrysprite", Cherry, true);
      */
     register(className, classObj, recycling = false) {
          if (typeof (classObj) !== "undefined") {
@@ -76,11 +76,7 @@ class ObjectPool {
      * me.game.world.removeChild(enemy);
      * me.game.world.removeChild(bullet);
      */
-    pull(name) {
-        var args = new Array(arguments.length);
-        for (var i = 0; i < arguments.length; i++) {
-            args[i] = arguments[i];
-        }
+    pull(name, ...args) {
         var className = this.objectClass[name];
         if (className) {
             var proto = className["class"],
@@ -88,18 +84,12 @@ class ObjectPool {
                 obj;
 
             if (poolArray && ((obj = poolArray.pop()))) {
-                // pull an existing instance from the pool
-                args.shift();
-                // call the object onResetEvent function if defined
-                if (typeof(obj.onResetEvent) === "function") {
-                    obj.onResetEvent.apply(obj, args);
-                }
+                // poolable object must implement a `onResetEvent` method
+                obj.onResetEvent.apply(obj, args);
                 this.instance_counter--;
-            }
-            else {
+            } else {
                 // create a new instance
-                args[0] = proto;
-                obj = new (proto.bind.apply(proto, args))();
+                obj = new (proto.bind.apply(proto, [ proto, ...args ]))();
                 if (poolArray) {
                     obj.className = name;
                 }

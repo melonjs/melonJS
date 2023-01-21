@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.4.1
+ * melonJS Game Engine - v14.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -18,20 +18,14 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
     constructor() {
         /**
          * the points defining the current path
-         * @public
-         * @type {Vector2d[]}
-         * @name points
-         * @memberof Path2D#
+         * @type {Point[]}
          */
         this.points = [];
 
         /**
          * space between interpolated points for quadratic and bezier curve approx. in pixels.
-         * @public
          * @type {number}
-         * @name arcResolution
          * @default 5
-         * @memberof Path2D#
          */
         this.arcResolution = 5;
 
@@ -41,8 +35,6 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
 
     /**
      * begin a new path
-     * @name beginPath
-     * @memberof Path2D
      */
     beginPath() {
         // empty the cache and recycle all vectors
@@ -56,21 +48,17 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
      * causes the point of the pen to move back to the start of the current path.
      * It tries to draw a straight line from the current point to the start.
      * If the shape has already been closed or has only one point, this function does nothing.
-     * @name closePath
-     * @memberof Path2D
      */
     closePath() {
         var points = this.points;
         if (points.length > 1 && !points[points.length-1].equals(points[0])) {
-            points.push(pool.pull("Vector2d", points[0].x, points[0].y));
+            points.push(pool.pull("Point", points[0].x, points[0].y));
         }
     }
 
     /**
      * triangulate the shape defined by this path into an array of triangles
-     * @name triangulatePath
-     * @memberof Path2D
-     * @returns {Vector2d[]}
+     * @returns {Point[]}
      */
     triangulatePath() {
         var i = 0;
@@ -78,13 +66,15 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
         var vertices = this.vertices;
         var indices = earcutExports(points.flatMap(p => [p.x, p.y]));
 
+        // pre-allocate vertices if necessary
+        while (vertices.length < indices.length) {
+            vertices.push(pool.pull("Point"));
+        }
+
         // calculate all vertices
         for (i = 0; i < indices.length; i++ ) {
-            if (typeof vertices[i] === "undefined") {
-                // increase cache buffer if necessary
-                vertices[i] = pool.pull("Vector2d");
-            }
-            vertices[i].set(points[indices[i]].x, points[indices[i]].y);
+            var point = points[indices[i]];
+            vertices[i].set(point.x, point.y);
         }
 
         // recycle overhead from a previous triangulation
@@ -98,31 +88,25 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
 
     /**
      * moves the starting point of the current path to the (x, y) coordinates.
-     * @name moveTo
-     * @memberof Path2D
      * @param {number} x - the x-axis (horizontal) coordinate of the point.
      * @param {number} y - the y-axis (vertical) coordinate of the point.
      */
     moveTo(x, y) {
-      this.points.push(pool.pull("Vector2d", x, y));
+      this.points.push(pool.pull("Point", x, y));
     }
 
     /**
      * connects the last point in the current patch to the (x, y) coordinates with a straight line.
-     * @name lineTo
-     * @memberof Path2D
      * @param {number} x - the x-axis coordinate of the line's end point.
      * @param {number} y - the y-axis coordinate of the line's end point.
      */
     lineTo(x, y) {
-        this.points.push(pool.pull("Vector2d", x, y));
+        this.points.push(pool.pull("Point", x, y));
     }
 
     /**
      * adds an arc to the current path which is centered at (x, y) position with the given radius,
      * starting at startAngle and ending at endAngle going in the given direction by counterclockwise (defaulting to clockwise).
-     * @name arc
-     * @memberof Path2D
      * @param {number} x - the horizontal coordinate of the arc's center.
      * @param {number} y - the vertical coordinate of the arc's center.
      * @param {number} radius - the arc's radius. Must be positive.
@@ -162,16 +146,14 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
 
         var angle = startAngle;
         for (var j = 0; j < nr_of_interpolation_points; j++) {
-            points.push(pool.pull("Vector2d", x + radius * Math.cos(angle), y + radius * Math.sin(angle)));
+            points.push(pool.pull("Point", x + radius * Math.cos(angle), y + radius * Math.sin(angle)));
             angle += direction * dangle;
         }
-        points.push(pool.pull("Vector2d", x + radius * Math.cos(endAngle), y + radius * Math.sin(endAngle)));
+        points.push(pool.pull("Point", x + radius * Math.cos(endAngle), y + radius * Math.sin(endAngle)));
     }
 
     /**
      * adds a circular arc to the path with the given control points and radius, connected to the previous point by a straight line.
-     * @name arcTo
-     * @memberof Path2D
      * @param {number} x1 - the x-axis coordinate of the first control point.
      * @param {number} y1 - the y-axis coordinate of the first control point.
      * @param {number} x2 - the x-axis coordinate of the second control point.
@@ -200,7 +182,7 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
         var tangent_point1 =  [x1 + a[0] * adj_l, y1 + a[1] * adj_l];
         var tangent_point2 =  [x1 + b[0] * adj_l, y1 + b[1] * adj_l];
 
-        points.push(pool.pull("Vector2d", tangent_point1[0], tangent_point1[1]));
+        points.push(pool.pull("Point", tangent_point1[0], tangent_point1[1]));
 
         var bisec = [(a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0];
         var bisec_l = Math.sqrt(Math.pow(bisec[0], 2) + Math.pow(bisec[1], 2));
@@ -218,8 +200,6 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
     /**
      * adds an elliptical arc to the path which is centered at (x, y) position with the radii radiusX and radiusY
      * starting at startAngle and ending at endAngle going in the given direction by counterclockwise.
-     * @name ellipse
-     * @memberof Path2D
      * @param {number} x - the x-axis (horizontal) coordinate of the ellipse's center.
      * @param {number} y - the  y-axis (vertical) coordinate of the ellipse's center.
      * @param {number} radiusX - the ellipse's major-axis radius. Must be non-negative.
@@ -267,18 +247,16 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
             var _y1 = radiusY * Math.sin(angle);
             var _x2 = x + _x1 * cos_rotation - _y1 * sin_rotation;
             var _y2 = y + _x1 * sin_rotation + _y1 * cos_rotation;
-            points.push(pool.pull("Vector2d", _x2, _y2));
+            points.push(pool.pull("Point", _x2, _y2));
             angle += direction * dangle;
         }
         //var x1 = radiusX * Math.cos(endAngle);
         //var y1 = radiusY * Math.sin(endAngle);
-        //points.push(pool.pull("Vector2d", x + x1 * cos_rotation - y1 * sin_rotation, y + x1 * sin_rotation + y1 * cos_rotation));
+        //points.push(pool.pull("Point", x + x1 * cos_rotation - y1 * sin_rotation, y + x1 * sin_rotation + y1 * cos_rotation));
     }
 
     /**
      * creates a path for a rectangle at position (x, y) with a size that is determined by width and height.
-     * @name rect
-     * @memberof Path2D
      * @param {number} x - the x-axis coordinate of the rectangle's starting point.
      * @param {number} y - the y-axis coordinate of the rectangle's starting point.
      * @param {number} width - the rectangle's width. Positive values are to the right, and negative to the left.
@@ -294,8 +272,6 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
 
     /**
      * adds an rounded rectangle to the current path.
-     * @name roundRect
-     * @memberof Path2D
      * @param {number} x - the x-axis coordinate of the rectangle's starting point.
      * @param {number} y - the y-axis coordinate of the rectangle's starting point.
      * @param {number} width - the rectangle's width. Positive values are to the right, and negative to the left.

@@ -151,10 +151,10 @@ export default class WebGLCompositor {
     /**
      * Draw an array of vertices
      * @param {GLenum} mode - primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
-     * @param {Vector2d[]} verts - vertices
+     * @param {Point[]} verts - an array of vertices
      * @param {number} [vertexCount=verts.length] - amount of points defined in the points array
      */
-    drawVertices(mode: GLenum, verts: Vector2d[], vertexCount?: number | undefined): void;
+    drawVertices(mode: GLenum, verts: Point[], vertexCount?: number | undefined): void;
     /**
      * Clear the frame buffer
      * @param {number} [alpha = 0.0] - the alpha value used when clearing the framebuffer
@@ -171,4 +171,3 @@ export default class WebGLCompositor {
 }
 import GLShader from "./glshader.js";
 import VertexArrayBuffer from "./buffer/vertex.js";
-import Vector2d from "./../../math/vector2.js";

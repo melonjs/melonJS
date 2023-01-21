@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.4.1
+ * melonJS Game Engine - v14.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -94,7 +94,7 @@ function init(width, height, options) {
          // initialize the default game Application with the given options
         game.init(width, height, options);
     } catch (e) {
-        console(e.message);
+        console.log(e.message);
         // me.video.init() historically returns false if failing at creating/using a HTML5 canvas
         return false;
     }
