@@ -87,7 +87,7 @@ export function init(width, height, options) {
          // initialize the default game Application with the given options
         game.init(width, height, options);
     } catch (e) {
-        console(e.message);
+        console.log(e.message);
         // me.video.init() historically returns false if failing at creating/using a HTML5 canvas
         return false;
     }
