@@ -139,21 +139,21 @@ var functionUncurryThis = NATIVE_BIND ? uncurryThisWithBind : function (fn) {
   };
 };
 
-var uncurryThis$9 = functionUncurryThis;
+var uncurryThis$a = functionUncurryThis;
 
-var toString$4 = uncurryThis$9({}.toString);
-var stringSlice = uncurryThis$9(''.slice);
+var toString$4 = uncurryThis$a({}.toString);
+var stringSlice$1 = uncurryThis$a(''.slice);
 
 var classofRaw$1 = function (it) {
-  return stringSlice(toString$4(it), 8, -1);
+  return stringSlice$1(toString$4(it), 8, -1);
 };
 
-var uncurryThis$8 = functionUncurryThis;
+var uncurryThis$9 = functionUncurryThis;
 var fails$6 = fails$9;
 var classof$2 = classofRaw$1;
 
 var $Object$3 = Object;
-var split = uncurryThis$8(''.split);
+var split = uncurryThis$9(''.split);
 
 // fallback for non-array-like ES3 and non-enumerable old V8 strings
 var indexedObject = fails$6(function () {
@@ -230,17 +230,15 @@ var aFunction = function (argument) {
   return isCallable$9(argument) ? argument : undefined;
 };
 
-var getBuiltIn$3 = function (namespace, method) {
+var getBuiltIn$2 = function (namespace, method) {
   return arguments.length < 2 ? aFunction(global$c[namespace]) : global$c[namespace] && global$c[namespace][method];
 };
 
-var uncurryThis$7 = functionUncurryThis;
+var uncurryThis$8 = functionUncurryThis;
 
-var objectIsPrototypeOf = uncurryThis$7({}.isPrototypeOf);
+var objectIsPrototypeOf = uncurryThis$8({}.isPrototypeOf);
 
-var getBuiltIn$2 = getBuiltIn$3;
-
-var engineUserAgent = getBuiltIn$2('navigator', 'userAgent') || '';
+var engineUserAgent = typeof navigator != 'undefined' && String(navigator.userAgent) || '';
 
 var global$b = global$d;
 var userAgent = engineUserAgent;
@@ -293,7 +291,7 @@ var useSymbolAsUid = NATIVE_SYMBOL$1
   && !Symbol.sham
   && typeof Symbol.iterator == 'symbol';
 
-var getBuiltIn$1 = getBuiltIn$3;
+var getBuiltIn$1 = getBuiltIn$2;
 var isCallable$8 = isCallable$b;
 var isPrototypeOf = objectIsPrototypeOf;
 var USE_SYMBOL_AS_UID$1 = useSymbolAsUid;
@@ -307,11 +305,11 @@ var isSymbol$2 = USE_SYMBOL_AS_UID$1 ? function (it) {
   return isCallable$8($Symbol) && isPrototypeOf($Symbol.prototype, $Object$2(it));
 };
 
-var $String$2 = String;
+var $String$3 = String;
 
 var tryToString$1 = function (argument) {
   try {
-    return $String$2(argument);
+    return $String$3(argument);
   } catch (error) {
     return 'Object';
   }
@@ -389,10 +387,10 @@ var store$2 = sharedStore;
 (shared$3.exports = function (key, value) {
   return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 })('versions', []).push({
-  version: '3.27.1',
+  version: '3.27.2',
   mode: IS_PURE ? 'pure' : 'global',
-  copyright: '© 2014-2022 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.27.1/LICENSE',
+  copyright: '© 2014-2023 Denis Pushkarev (zloirock.ru)',
+  license: 'https://github.com/zloirock/core-js/blob/v3.27.2/LICENSE',
   source: 'https://github.com/zloirock/core-js'
 });
 
@@ -406,10 +404,10 @@ var toObject$1 = function (argument) {
   return $Object$1(requireObjectCoercible$1(argument));
 };
 
-var uncurryThis$6 = functionUncurryThis;
+var uncurryThis$7 = functionUncurryThis;
 var toObject = toObject$1;
 
-var hasOwnProperty = uncurryThis$6({}.hasOwnProperty);
+var hasOwnProperty = uncurryThis$7({}.hasOwnProperty);
 
 // `HasOwnProperty` abstract operation
 // https://tc39.es/ecma262/#sec-hasownproperty
@@ -418,11 +416,11 @@ var hasOwnProperty_1 = Object.hasOwn || function hasOwn(it, key) {
   return hasOwnProperty(toObject(it), key);
 };
 
-var uncurryThis$5 = functionUncurryThis;
+var uncurryThis$6 = functionUncurryThis;
 
 var id = 0;
 var postfix = Math.random();
-var toString$3 = uncurryThis$5(1.0.toString);
+var toString$3 = uncurryThis$6(1.0.toString);
 
 var uid$2 = function (key) {
   return 'Symbol(' + (key === undefined ? '' : key) + ')_' + toString$3(++id + postfix, 36);
@@ -435,21 +433,15 @@ var uid$1 = uid$2;
 var NATIVE_SYMBOL = symbolConstructorDetection;
 var USE_SYMBOL_AS_UID = useSymbolAsUid;
 
-var WellKnownSymbolsStore = shared$2('wks');
 var Symbol$1 = global$8.Symbol;
-var symbolFor = Symbol$1 && Symbol$1['for'];
-var createWellKnownSymbol = USE_SYMBOL_AS_UID ? Symbol$1 : Symbol$1 && Symbol$1.withoutSetter || uid$1;
+var WellKnownSymbolsStore = shared$2('wks');
+var createWellKnownSymbol = USE_SYMBOL_AS_UID ? Symbol$1['for'] || Symbol$1 : Symbol$1 && Symbol$1.withoutSetter || uid$1;
 
 var wellKnownSymbol$3 = function (name) {
-  if (!hasOwn$6(WellKnownSymbolsStore, name) || !(NATIVE_SYMBOL || typeof WellKnownSymbolsStore[name] == 'string')) {
-    var description = 'Symbol.' + name;
-    if (NATIVE_SYMBOL && hasOwn$6(Symbol$1, name)) {
-      WellKnownSymbolsStore[name] = Symbol$1[name];
-    } else if (USE_SYMBOL_AS_UID && symbolFor) {
-      WellKnownSymbolsStore[name] = symbolFor(description);
-    } else {
-      WellKnownSymbolsStore[name] = createWellKnownSymbol(description);
-    }
+  if (!hasOwn$6(WellKnownSymbolsStore, name)) {
+    WellKnownSymbolsStore[name] = NATIVE_SYMBOL && hasOwn$6(Symbol$1, name)
+      ? Symbol$1[name]
+      : createWellKnownSymbol('Symbol.' + name);
   } return WellKnownSymbolsStore[name];
 };
 
@@ -552,13 +544,13 @@ var v8PrototypeDefineBug = DESCRIPTORS$4 && fails$3(function () {
 
 var isObject$1 = isObject$5;
 
-var $String$1 = String;
+var $String$2 = String;
 var $TypeError$1 = TypeError;
 
 // `Assert: Type(argument) is Object`
 var anObject$2 = function (argument) {
   if (isObject$1(argument)) return argument;
-  throw $TypeError$1($String$1(argument) + ' is not an object');
+  throw $TypeError$1($String$2(argument) + ' is not an object');
 };
 
 var DESCRIPTORS$3 = descriptors;
@@ -640,11 +632,11 @@ var functionName = {
   CONFIGURABLE: CONFIGURABLE
 };
 
-var uncurryThis$4 = functionUncurryThis;
+var uncurryThis$5 = functionUncurryThis;
 var isCallable$5 = isCallable$b;
 var store$1 = sharedStore;
 
-var functionToString = uncurryThis$4(Function.toString);
+var functionToString = uncurryThis$5(Function.toString);
 
 // this helper broken in `core-js@3.4.1-3.4.4`, so we can't use `shared` helper
 if (!isCallable$5(store$1.inspectSource)) {
@@ -744,6 +736,7 @@ var internalState = {
   getterFor: getterFor
 };
 
+var uncurryThis$4 = functionUncurryThis;
 var fails$2 = fails$9;
 var isCallable$3 = isCallable$b;
 var hasOwn$2 = hasOwnProperty_1;
@@ -754,8 +747,12 @@ var InternalStateModule = internalState;
 
 var enforceInternalState = InternalStateModule.enforce;
 var getInternalState = InternalStateModule.get;
+var $String$1 = String;
 // eslint-disable-next-line es/no-object-defineproperty -- safe
 var defineProperty = Object.defineProperty;
+var stringSlice = uncurryThis$4(''.slice);
+var replace$1 = uncurryThis$4(''.replace);
+var join = uncurryThis$4([].join);
 
 var CONFIGURABLE_LENGTH = DESCRIPTORS && !fails$2(function () {
   return defineProperty(function () { /* empty */ }, 'length', { value: 8 }).length !== 8;
@@ -764,8 +761,8 @@ var CONFIGURABLE_LENGTH = DESCRIPTORS && !fails$2(function () {
 var TEMPLATE = String(String).split('String');
 
 var makeBuiltIn$1 = makeBuiltIn$2.exports = function (value, name, options) {
-  if (String(name).slice(0, 7) === 'Symbol(') {
-    name = '[' + String(name).replace(/^Symbol\(([^)]*)\)/, '$1') + ']';
+  if (stringSlice($String$1(name), 0, 7) === 'Symbol(') {
+    name = '[' + replace$1($String$1(name), /^Symbol\(([^)]*)\)/, '$1') + ']';
   }
   if (options && options.getter) name = 'get ' + name;
   if (options && options.setter) name = 'set ' + name;
@@ -784,7 +781,7 @@ var makeBuiltIn$1 = makeBuiltIn$2.exports = function (value, name, options) {
   } catch (error) { /* empty */ }
   var state = enforceInternalState(value);
   if (!hasOwn$2(state, 'source')) {
-    state.source = TEMPLATE.join(typeof name == 'string' ? name : '');
+    state.source = join(TEMPLATE, typeof name == 'string' ? name : '');
   } return value;
 };
 
@@ -958,7 +955,7 @@ var objectGetOwnPropertySymbols = {};
 // eslint-disable-next-line es/no-object-getownpropertysymbols -- safe
 var f = objectGetOwnPropertySymbols.f = Object.getOwnPropertySymbols;
 
-var getBuiltIn = getBuiltIn$3;
+var getBuiltIn = getBuiltIn$2;
 var uncurryThis$2 = functionUncurryThis;
 var getOwnPropertyNamesModule = objectGetOwnPropertyNames;
 var getOwnPropertySymbolsModule = objectGetOwnPropertySymbols;
