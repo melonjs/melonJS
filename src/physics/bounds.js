@@ -213,7 +213,7 @@ import Vector2d from "./../math/vector2.js";
      * add the given vertices to the bounds definition.
      * @name add
      * @memberof Bounds
-     * @param {Vector2d[]} vertices - an array of me.Vector2d points
+     * @param {Vector2d[]|Point[]} vertices - an array of me.Vector2d points
      * @param {boolean} [clear=false] - either to reset the bounds before adding the new vertices
      */
     add(vertices, clear = false) {
@@ -258,7 +258,7 @@ import Vector2d from "./../math/vector2.js";
      * @param {Matrix2d} [m] - an optional transform to apply to the given point (only if the given point is a vector)
      */
     addPoint(point, m) {
-        if ((typeof m !== "undefined") && (typeof point.rotate === "function")) {
+        if ((typeof m !== "undefined")) {
             // only Vectors object have a rotate function
             point = m.apply(point);
         }
@@ -279,7 +279,7 @@ import Vector2d from "./../math/vector2.js";
      * @param {Matrix2d} [m] - an optional transform to apply to the given frame coordinates
      */
     addFrame(x0, y0, x1, y1, m) {
-        var v = pool.pull("Vector2d");
+        var v = pool.pull("Point");
 
         // transform all points and add to the bound definition
         if (typeof m !== "undefined" && !m.isIdentity()) {
