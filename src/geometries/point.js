@@ -6,7 +6,6 @@
     constructor(x = 0, y = 0) {
         /**
          * the position of the point on the horizontal axis
-         * @public
          * @type {Number}
          * @default 0
          */
@@ -14,7 +13,6 @@
 
         /**
          * the position of the point on the vertical axis
-         * @public
          * @type {Number}
          * @default 0
          */
@@ -48,8 +46,6 @@
      */
     /**
      * return true if this point is equal to the given values
-     * @name equals
-     * @memberof Point
      * @param {number} x
      * @param {number} y
      * @returns {boolean}
@@ -70,7 +66,6 @@
 
     /**
      * clone this Point
-     * @name clone
      * @returns {Point} new Point
      */
     clone() {
