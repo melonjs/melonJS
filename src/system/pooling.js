@@ -69,11 +69,7 @@ class ObjectPool {
      * me.game.world.removeChild(enemy);
      * me.game.world.removeChild(bullet);
      */
-    pull(name) {
-        var args = new Array(arguments.length);
-        for (var i = 0; i < arguments.length; i++) {
-            args[i] = arguments[i];
-        }
+    pull(name, ...args) {
         var className = this.objectClass[name];
         if (className) {
             var proto = className["class"],
@@ -81,18 +77,12 @@ class ObjectPool {
                 obj;
 
             if (poolArray && ((obj = poolArray.pop()))) {
-                // pull an existing instance from the pool
-                args.shift();
-                // call the object onResetEvent function if defined
-                if (typeof(obj.onResetEvent) === "function") {
-                    obj.onResetEvent.apply(obj, args);
-                }
+                // poolable object must implement a `onResetEvent` method
+                obj.onResetEvent.apply(obj, args);
                 this.instance_counter--;
-            }
-            else {
+            } else {
                 // create a new instance
-                args[0] = proto;
-                obj = new (proto.bind.apply(proto, args))();
+                obj = new (proto.bind.apply(proto, [ proto, ...args ]))();
                 if (poolArray) {
                     obj.className = name;
                 }
