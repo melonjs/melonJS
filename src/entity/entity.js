@@ -140,6 +140,7 @@ import Body from "./../physics/body.js";
         if (value instanceof Renderable) {
             this.children[0] = value;
             this.children[0].ancestor = this;
+            this.updateBounds();
         } else {
             throw new Error(value + "should extend me.Renderable");
         }
@@ -154,17 +155,44 @@ import Body from "./../physics/body.js";
     }
 
     /**
-     * update the bounds position when the body is modified
+     * update the bounding box for this entity.
+     * @ignore
+     * @returns {Bounds} this shape bounding box Rectangle object
+     */
+    updateBounds() {
+        var bounds = this.getBounds();
+
+        bounds.clear();
+        bounds.addFrame(
+            0,
+            0,
+            this.width,
+            this.height
+        );
+
+        // add each renderable bounds
+        if (this.children && this.children.length > 0) {
+            bounds.addBounds(this.children[0].getBounds());
+        }
+
+        if (this.body) {
+            bounds.addBounds(this.body.getBounds());
+        }
+
+        this.updateBoundsPos(this.pos.x + bounds.x, this.pos.y + bounds.y);
+
+        return bounds;
+    }
+
+    /**
+     * update the bounds when the body is modified
      * @ignore
      * @name onBodyUpdate
      * @memberof Entity
      * @param {Body} body - the body whose bounds to update
      */
-    onBodyUpdate(body) {
-        // update the entity bounds to include the body bounds
-        this.getBounds().addBounds(body.getBounds(), true);
-        // update the bounds pos
-        this.updateBoundsPos(this.pos.x, this.pos.y);
+    onBodyUpdate() {
+        this.updateBounds();
     }
 
     preDraw(renderer) {

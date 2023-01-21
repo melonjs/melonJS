@@ -558,20 +558,24 @@ import Point from "../geometries/point.js";
      * @returns {Body} Reference to this object for method chaining
      */
     rotate(angle, v = this.getBounds().center) {
-        this.bounds.clear();
-        this.forEach((shape) => {
-            shape.rotate(angle, v);
-            this.bounds.addBounds(shape.getBounds());
-            if (shape instanceof Ellipse) {
-                // use bounds position as ellipse position is center
-                this.bounds.translate(
-                    shape.getBounds().x,
-                    shape.getBounds().y
-                );
-            } else {
-                this.bounds.translate(shape.pos);
+        if (angle !== 0) {
+            this.bounds.clear();
+            this.forEach((shape) => {
+                shape.rotate(angle, v);
+                this.bounds.addBounds(shape.getBounds());
+                /*
+                if (!(shape instanceof Ellipse)) {
+                    // ellipse position is center
+                    this.bounds.translate(shape.pos);
+                }
+                */
+            });
+            /*
+            if (typeof this.onBodyUpdate === "function") {
+                this.onBodyUpdate(this);
             }
-        });
+            */
+        }
         return this;
     }
 

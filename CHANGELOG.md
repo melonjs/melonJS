@@ -9,6 +9,7 @@
 - Renderer: optimize Path2D triangulation
 
 ### Fixed
+- Core: fix a regression with Bounds position being off after applying a transformation to a Renderable
 - Tiled: fix format deprecation warning if map was not created with Tiled and format version is not available
 
 ## [14.4.0] (melonJS 2) - _2023-01-10_

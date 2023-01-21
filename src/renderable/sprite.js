@@ -552,19 +552,9 @@ import Color from "../math/color.js";
         }
 
         // update the sprite bounding box
-        /*
-        if (this.isDirty === true && !this.currentTransform.isIdentity()) {
-            this.getBounds().clear();
-            this.getBounds().addFrame(
-                0,
-                0,
-                this.current.width,
-                this.current.height,
-                this.currentTransform
-            );
-            this.updateBoundsPos(this.pos.x, this.pos.y);
+        if (this.isDirty === true) {
+            this.updateBounds();
         }
-        */
 
         //update the "flickering" state if necessary
         if (this._flicker.isFlickering) {
@@ -579,6 +569,32 @@ import Color from "../math/color.js";
         }
 
         return super.update(dt);
+    }
+
+    /**
+     * update the bounding box for this sprite.
+     * @ignore
+     * @returns {Bounds} this shape bounding box Rectangle object
+     */
+    updateBounds() {
+        var bounds = this.getBounds();
+
+        if (typeof this.current !== "undefined") {
+            bounds.clear();
+            bounds.addFrame(
+                0,
+                0,
+                this.current.width,
+                this.current.height,
+                this.currentTransform
+            );
+            this.updateBoundsPos(this.pos.x + bounds.x, this.pos.y + bounds.y);
+        } else {
+            // cover the case where updateBounds is called by the
+            // parent constructor before `current` was declared
+            super.updateBounds();
+        }
+        return bounds;
     }
 
     /**
