@@ -70,13 +70,15 @@ import earcut from "earcut";
         var vertices = this.vertices;
         var indices = earcut(points.flatMap(p => [p.x, p.y]));
 
+        // pre-allocate vertices if necessary
+        while (vertices.length < indices.length) {
+            vertices.push(pool.pull("Vector2d"));
+        }
+
         // calculate all vertices
         for (i = 0; i < indices.length; i++ ) {
-            if (typeof vertices[i] === "undefined") {
-                // increase cache buffer if necessary
-                vertices[i] = pool.pull("Vector2d");
-            }
-            vertices[i].set(points[indices[i]].x, points[indices[i]].y);
+            var point = points[indices[i]];
+            vertices[i].set(point.x, point.y);
         }
 
         // recycle overhead from a previous triangulation

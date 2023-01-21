@@ -5,6 +5,7 @@
 ### Changed
 - Pool: simplified and optimized the pool `pull` method
 - Renderer: optimized access to cached textures, especially when using multiple atlases
+- Renderer: optimize Path2d triangulation
 
 ### Fixed
 - Tiled: fix format deprecation warning if map was not created with Tiled and format version is not available
