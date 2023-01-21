@@ -10,6 +10,7 @@
 
 ### Fixed
 - Core: fix a regression with Bounds position being off after applying a transformation to a Renderable
+- Input: fix a regression with pointer detection on transformed Sprite object
 - Tiled: fix format deprecation warning if map was not created with Tiled and format version is not available
 
 ## [14.4.0] (melonJS 2) - _2023-01-10_
