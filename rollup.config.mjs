@@ -48,6 +48,7 @@ export default [
         output: {
           file: "build/melonjs.module.js",
           banner: license,
+          freeze: false,
           format: "es"
         },
         treeshake: false
@@ -83,6 +84,7 @@ export default [
           dir: "build/melonjs.mjs",
           banner: license,
           format: "es",
+          freeze: false,
           preserveModules: true,
           preserveModulesRoot: "src"
         }
