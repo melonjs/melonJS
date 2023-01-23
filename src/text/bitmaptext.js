@@ -1,6 +1,6 @@
 import Color from "./../math/color.js";
 import pool from "./../system/pooling.js";
-import loader from "./../loader/loader.js";
+import { getImage, getBinary } from "./../loader/loader.js";
 import Renderable from "./../renderable/renderable.js";
 import TextMetrics from "./textmetrics.js";
 
@@ -95,7 +95,7 @@ import TextMetrics from "./textmetrics.js";
          * font image
          * @private
          */
-        this.fontImage = (typeof settings.font === "object") ? settings.font : loader.getImage(settings.font);
+        this.fontImage = (typeof settings.font === "object") ? settings.font : getImage(settings.font);
 
         if (typeof settings.fontData !== "string") {
             /**
@@ -103,11 +103,11 @@ import TextMetrics from "./textmetrics.js";
              * @private
              */
             // use settings.font to retreive the data from the loader
-            this.fontData = pool.pull("BitmapTextData", loader.getBinary(settings.font));
+            this.fontData = pool.pull("BitmapTextData", getBinary(settings.font));
         } else {
             this.fontData = pool.pull("BitmapTextData",
                 // if starting/includes "info face" the whole data string was passed as parameter
-                (settings.fontData.includes("info face")) ? settings.fontData : loader.getBinary(settings.fontData)
+                (settings.fontData.includes("info face")) ? settings.fontData : getBinary(settings.fontData)
             );
         }
 

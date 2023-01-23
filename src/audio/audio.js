@@ -1,7 +1,7 @@
 // external import
 import {Howl, Howler} from "howler";
 import {clamp} from "./../math/math.js";
-import loader from "./../loader/loader.js";
+import { nocache, withCredentials} from "./../loader/settings.js";
 import { isDataUrl } from "./../utils/string.js";
 
 /**
@@ -154,7 +154,7 @@ export function load(sound, html5, onload_cb, onerror_cb) {
         urls.push(sound.src);
     } else {
         for (var i = 0; i < audioExts.length; i++) {
-            urls.push(sound.src + sound.name + "." + audioExts[i] + loader.nocache);
+            urls.push(sound.src + sound.name + "." + audioExts[i] + nocache);
         }
     }
 
@@ -162,7 +162,7 @@ export function load(sound, html5, onload_cb, onerror_cb) {
         src : urls,
         volume : Howler.volume(),
         html5 : html5 === true,
-        xhrWithCredentials : loader.withCredentials,
+        xhrWithCredentials : withCredentials,
         /**
          * @ignore
          */

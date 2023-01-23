@@ -1,6 +1,6 @@
 import { renderer } from "./../video/video.js";
 import pool from "./../system/pooling.js";
-import loader from "./../loader/loader.js";
+import { getImage } from "./../loader/loader.js";
 import { TextureAtlas } from "./../video/texture/atlas.js";
 import Renderable from "./renderable.js";
 import Color from "../math/color.js";
@@ -142,7 +142,7 @@ import Color from "../math/color.js";
             }
         } else {
             // HTMLImageElement/Canvas or {string}
-            this.image = (typeof settings.image === "object") ? settings.image : loader.getImage(settings.image);
+            this.image = (typeof settings.image === "object") ? settings.image : getImage(settings.image);
             // throw an error if image ends up being null/undefined
             if (!this.image) {
                 throw new Error("me.Sprite: '" + settings.image + "' image/texture not found!");

@@ -4,7 +4,7 @@ import * as event from "./../system/event.js";
 import Sprite from "./../renderable/sprite.js";
 import Renderable from "./../renderable/renderable.js";
 import Stage from "./../state/stage.js";
-import loader from "./loader.js";
+import { load, unload } from "./loader.js";
 import logo_url from "./melonjs_logo.png";
 
 
@@ -86,7 +86,7 @@ class DefaultLoadingScreen extends Stage {
         ), 1);
 
         // load the melonJS logo
-        loader.load({name: "melonjs_logo", type: "image", src: logo_url}, () => {
+        load({name: "melonjs_logo", type: "image", src: logo_url}, () => {
             // melonJS logo
             game.world.addChild(new Sprite(
                 renderer.getWidth() / 2,
@@ -105,7 +105,7 @@ class DefaultLoadingScreen extends Stage {
      */
     onDestroyEvent() {
         // cancel the callback
-        loader.unload({name: "melonjs_logo", type:"image"});
+        unload({name: "melonjs_logo", type:"image"});
     }
 }
 

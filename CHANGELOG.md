@@ -11,6 +11,7 @@
 ### Fixed
 - Core: fix a regression with Bounds position being off after applying a transformation to a Renderable
 - Input: fix a regression with pointer detection on transformed Sprite object
+- Loader: partial refactoring of the preloader to be more es6 compliant and fix circular dependencies with other modules/classes
 - Tiled: fix format deprecation warning if map was not created with Tiled and format version is not available
 
 ## [14.4.0] (melonJS 2) - _2023-01-10_

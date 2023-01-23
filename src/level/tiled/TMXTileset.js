@@ -2,7 +2,7 @@ import Vector2d from "./../../math/vector2.js";
 import { renderer } from "./../../video/video.js";
 import * as fileUtil from "./../../utils/file.js";
 import timer from "./../../system/timer.js";
-import loader from "./../../loader/loader.js";
+import { getTMX, getImage } from "./../../loader/loader.js";
 
 /**
  * @classdesc
@@ -30,7 +30,7 @@ import loader from "./../../loader/loader.js";
             var ext = fileUtil.getExtension(src);
             if (ext === "tsx" || ext === "json") {
                 // load the external tileset (TSX/JSON)
-                tileset = loader.getTMX(fileUtil.getBasename(src));
+                tileset = getTMX(fileUtil.getBasename(src));
                 if (!tileset) {
                     throw new Error(src + " external TSX/JSON tileset not found");
                 }
@@ -101,7 +101,7 @@ import loader from "./../../loader/loader.js";
                     }
                 }
                 if ("image" in tiles[i]) {
-                    var image = loader.getImage(tiles[i].image);
+                    var image = getImage(tiles[i].image);
                     if (!image) {
                         throw new Error("melonJS: '" + tiles[i].image + "' file for tile '" + (+i + this.firstgid) + "' not found!");
                     }
@@ -132,7 +132,7 @@ import loader from "./../../loader/loader.js";
         if (this.isCollection === false) {
 
             // get the global tileset texture
-            this.image = loader.getImage(tileset.image);
+            this.image = getImage(tileset.image);
 
             if (!this.image) {
                 throw new Error("melonJS: '" + tileset.image + "' file for tileset '" + this.name + "' not found!");

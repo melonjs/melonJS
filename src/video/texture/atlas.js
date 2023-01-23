@@ -4,7 +4,7 @@ import TextureCache from "./../texture/cache.js";
 import Sprite from "./../../renderable/sprite.js";
 import { renderer } from "./../video.js";
 import pool from "./../../system/pooling.js";
-import loader from "./../../loader/loader.js";
+import { getImage } from "./../../loader/loader.js";
 import { ETA } from "./../../math/math.js";
 
 /**
@@ -98,7 +98,7 @@ export class TextureAtlas {
                         // set the texture
                         if (typeof(src) === "undefined") {
                             // get the texture name from the atlas meta data
-                            var image = loader.getImage(atlas.meta.image);
+                            var image = getImage(atlas.meta.image);
                             if (!image) {
                                 throw new Error(
                                     "Atlas texture '" + image + "' not found"
@@ -106,7 +106,7 @@ export class TextureAtlas {
                             }
                             this.sources.set(atlas.meta.image, image);
                         } else {
-                            this.sources.set(atlas.meta.image || "default", typeof src === "string" ? loader.getImage(src) : src);
+                            this.sources.set(atlas.meta.image || "default", typeof src === "string" ? getImage(src) : src);
                         }
                         this.repeat = "no-repeat";
                     }
@@ -120,13 +120,13 @@ export class TextureAtlas {
                         }
                         this.format = "ShoeBox";
                         this.repeat = "no-repeat";
-                        this.sources.set("default", typeof src === "string" ? loader.getImage(src) : src);
+                        this.sources.set("default", typeof src === "string" ? getImage(src) : src);
                     }
                     // Internal texture atlas
                     else if (atlas.meta.app.includes("melonJS")) {
                         this.format = "melonJS";
                         this.repeat = atlas.meta.repeat || "no-repeat";
-                        this.sources.set("default", typeof src === "string" ? loader.getImage(src) : src);
+                        this.sources.set("default", typeof src === "string" ? getImage(src) : src);
                     }
                     // initialize the atlas
                     this.atlases.set(atlas.meta.image || "default", this.parse(atlas));
@@ -140,7 +140,7 @@ export class TextureAtlas {
 
                         if (typeof(src) !== "undefined") {
                             // overwrite if specified
-                            atlas.image = typeof src === "string" ? loader.getImage(src) : src;
+                            atlas.image = typeof src === "string" ? getImage(src) : src;
                         }
                         // initialize the atlas
                         this.atlases.set("default", this.parseFromSpriteSheet(atlas));
