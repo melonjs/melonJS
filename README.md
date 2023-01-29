@@ -3,7 +3,8 @@ melonJS 2
 ![melonJS Logo](https://github.com/melonjs/melonJS/raw/master/media/Banner/Banner%20-%20Billboard%20-%20Original%20Logo%20-%20horizontal.png)
 
 [![Build Status](https://travis-ci.org/melonjs/melonJS.svg)](https://travis-ci.org/melonjs/melonJS)
-[![Build Size](https://badgen.net/bundlephobia/min/melonjs)](https://bundlephobia.com/result?p=melonjs)
+[![Build Size](https://badgen.net/bundlephobia/minzip/melonjs)](https://bundlephobia.com/result?p=melonjs)
+[![Tree-shaking](https://badgen.net/bundlephobia/tree-shaking/react-colorful)](https://bundlephobia.com/result?p=melonjs)
 [![NPM Package](https://img.shields.io/npm/v/melonjs)](https://www.npmjs.com/package/melonjs)
 [![jsDeliver](https://data.jsdelivr.com/v1/package/npm/melonjs/badge?style=rounded)](https://www.jsdelivr.com/package/npm/melonjs)
 [![Boss Bounty Badge](https://img.shields.io/endpoint.svg?url=https://api.boss.dev/badge/enabled/melonjs/melonJS)](https://www.boss.dev/issues/repo/melonjs/melonJS)
