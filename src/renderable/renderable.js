@@ -402,8 +402,7 @@ import Color from "./../math/color.js";
      */
     transform(m) {
         this.currentTransform.multiply(m);
-        //super.transform(m);
-        this.updateBoundsPos(this.pos.x, this.pos.y);
+        this.updateBounds();
         this.isDirty = true;
         return this;
     }
@@ -499,6 +498,7 @@ import Color from "./../math/color.js";
     scale(x, y) {
         this.currentTransform.scale(x, y);
         super.scale(x, y);
+        this.updateBounds();
         this.isDirty = true;
         return this;
     }
