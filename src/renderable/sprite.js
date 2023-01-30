@@ -472,6 +472,8 @@ import Color from "../math/color.js";
                 this._flip.y && region.trimmed === true ? 1 - region.anchorPoint.y : region.anchorPoint.y
             );
         }
+        // update the sprite bounding box
+        this.updateBounds();
         this.isDirty = true;
         return this;
     }
@@ -549,11 +551,6 @@ import Color from "../math/color.js";
                 // Get next frame duration
                 duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
             }
-        }
-
-        // update the sprite bounding box
-        if (this.isDirty === true) {
-            this.updateBounds();
         }
 
         //update the "flickering" state if necessary
