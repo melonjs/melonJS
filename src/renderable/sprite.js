@@ -132,9 +132,6 @@ import Color from "../math/color.js";
                 if (region) {
                     // set the sprite region within the texture
                     this.setRegion(region);
-                    // update the default "current" frame size
-                    this.current.width = settings.framewidth || region.width;
-                    this.current.height = settings.frameheight || region.height;
                 } else {
                     // throw an error
                     throw new Error("Texture - region for " + settings.region + " not found");
