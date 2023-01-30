@@ -455,7 +455,7 @@ import Color from "../math/color.js";
         // set the sprite offset within the texture
         this.current.offset.setV(region.offset);
         // set angle if defined
-        this.current.angle = region.angle;
+        this.current.angle = typeof region.angle === "number" ? region.angle : 0;
         // update the default "current" size
         this.width = this.current.width = region.width;
         this.height = this.current.height = region.height;
