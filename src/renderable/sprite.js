@@ -207,9 +207,6 @@ import Color from "../math/color.js";
             // set as default
             this.setCurrentAnimation("default");
         }
-
-        // enable currentTransform for me.Sprite based objects
-        this.autoTransform = true;
     }
 
     /**
