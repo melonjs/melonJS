@@ -202,7 +202,7 @@ import Color from "../math/color.js";
             this.pos.z = settings.z;
         }
 
-        // for sprite, addAnimation will return !=0
+        // addAnimation will return 0 if no texture atlas is defined
         if (this.addAnimation("default", null) !== 0) {
             // set as default
             this.setCurrentAnimation("default");
