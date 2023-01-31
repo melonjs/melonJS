@@ -192,6 +192,12 @@ For most users, all you probably want is to use melonJS, and all you need then i
 
 If you want to start to be part and contribute to the project, make sure to read our [Contributing Guide](CONTRIBUTING.md) before starting submitting changes or new features.
 
+Contributors
+-------------------------------------------------------------------------------
+<a href = "https://github.com/melonjs/melonJS/graphs/contributors">
+  <img src = "https://contrib.rocks/image?repo = melonjs/melonJS"/>
+</a>
+
 Sponsors
 -------------------------------------------------------------------------------
 Support the development of melonJS by [becoming a sponsor](https://github.com/sponsors/melonjs). Get your logo in our README with a link to your site or become a backer and get your name in the [BACKERS](BACKERS.md) list. Any level of support is really appreciated and goes a long way !

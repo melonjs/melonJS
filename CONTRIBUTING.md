@@ -64,6 +64,12 @@ If you need technical support, you can contact us through the following channels
 * Chat: come and chat with us on [discord](https://discord.gg/aur7JMk), or [gitter](https://gitter.im/melonjs/public)
 * we tried to keep our [wikipage](https://github.com/melonjs/melonJS/wiki) up-to-date with useful links, tutorials, and anything related melonJS.
 
+## Contributors
+
+<a href = "https://github.com/melonjs/melonJS/graphs/contributors">
+  <img src = "https://contrib.rocks/image?repo = melonjs/melonJS"/>
+</a>
+
 ## Sponsors
 
 Support the development of melonJS by [becoming a sponsor](https://github.com/sponsors/melonjs). Get your logo in our README with a link to your site or become a backer and get your name in the [BACKERS](BACKERS.md) list. Any level of support is really appreciated and goes a long way !
