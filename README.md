@@ -186,63 +186,11 @@ Or can simply be added to your html, using [jsDeliver](https://www.jsdelivr.com/
 ```
 > Note: starting from the 10.0.0 version, the debug plugin is no longer provided as part of the melonJS library release, and has been moved to the official [boilerplate](https://github.com/melonjs/es6-boilerplate)
 
-Building melonJS
+Contributing
 -------------------------------------------------------------------------------
-For most users, all you probably want is to use melonJS, and all you need then is just to download the latest built [release](https://github.com/melonjs/melonJS#download-melonjs) to get started. The only time you should need to build melonJS is if you want to contribute to the project and start developing on it.
+For most users, all you probably want is to use melonJS, and all you need then is just to download the latest built [release](https://github.com/melonjs/melonJS#download-melonjs) to get started.
 
-To build your own version of melonJS you will need to install :
-
-- The [Node.js](http://nodejs.org/) JavaScript runtime and the [NPM](https://npmjs.org/) package manager
-
-Once Node.js and NPM have been installed, you need to install build dependencies,
-by executing the following in the folder where you cloned the repository :
-
-    $ [sudo] npm install
-
-Then build the melonJS source by running:
-
-    $ npm run build
-
-The generated files will be available under the `build` directory :
-- `melonjs.module.js` : plain ES6 module
-- `melonjs.mjs` : a ES6 chunk directory used for tree-shaking
-
-If you need to create the corresponding typing you can use the follwing :
-
-    $ npm run types
-
-This will generate all the `.d.ts` file under the `dist/types` directory.
-
-To run the melonJS test suite simply use the following:
-
-    $ npm run test
-
-This will run the jasmine spec tests with the output displayed on the shell. Do
-note that the latest Chrome version is required, as the test unit will run the
-Browser in a headless mode (in case of failed tests, upgrade your browser).
-
-Last but not least, if you really want to contribute, but not sure how, you can
-always check our [discussions](https://github.com/melonjs/melonJS/discussions/categories/ideas) list to get some idea on where to start.
-
-Building the documentation
--------------------------------------------------------------------------------
-Similarly, you can build your own copy of the docs locally by running :
-
-    $ npm run doc
-
-The generated documentation will be available in the `docs` directory
-
-WIP Builds
--------------------------------------------------------------------------------
-latest WIP builds are available under [`dist`](dist/) in the [master](https://github.com/melonjs/melonJS/tree/master) branch.
-
-Questions, need help ?
--------------------------------------------------------------------------------
-If you need technical support, you can contact us through the following channels :
-* Forums: with melonJS 2 we moved to a new discourse [forum](https://melonjs.discourse.group), but we can still also find the previous one [here](http://www.html5gamedevs.com/forum/32-melonjs/)
-* Chat: come and chat with us on [discord](https://discord.gg/aur7JMk), or [gitter](https://gitter.im/melonjs/public)
-* we tried to keep our [wikipage](https://github.com/melonjs/melonJS/wiki) up-to-date with useful links, tutorials, and anything related melonJS.
-
+If you want to start to be part and contribute to the project, make sure to read our [Contributing Guide](.github/CONTRIBUTING.md) before starting submitting changes or new features.
 
 Sponsors
 -------------------------------------------------------------------------------
