@@ -190,7 +190,7 @@ Contributing
 -------------------------------------------------------------------------------
 For most users, all you probably want is to use melonJS, and all you need then is just to download the latest built [release](https://github.com/melonjs/melonJS#download-melonjs) to get started.
 
-If you want to start to be part and contribute to the project, make sure to read our [Contributing Guide](.github/CONTRIBUTING.md) before starting submitting changes or new features.
+If you want to start to be part and contribute to the project, make sure to read our [Contributing Guide](CONTRIBUTING.md) before starting submitting changes or new features.
 
 Sponsors
 -------------------------------------------------------------------------------
