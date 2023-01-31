@@ -67,7 +67,7 @@ If you need technical support, you can contact us through the following channels
 ## Contributors
 
 <a href = "https://github.com/melonjs/melonJS/graphs/contributors">
-  <img src = "https://contrib.rocks/image?repo = melonjs/melonJS"/>
+  <img src = "https://contrib.rocks/image?repo=melonJS/melonjs"/>
 </a>
 
 ## Sponsors
