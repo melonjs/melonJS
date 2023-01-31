@@ -188,7 +188,7 @@ export default class Renderer {
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - the shape defining the mask to be applied
      * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
      */
-    setMask(mask?: Rect | Polygon | Ellipse | RoundRect | Line | undefined): void;
+    setMask(mask?: Polygon | Rect | Ellipse | RoundRect | Line | undefined): void;
     /**
      * disable (remove) the rendering mask set through setMask.
      * @see Renderer#setMask

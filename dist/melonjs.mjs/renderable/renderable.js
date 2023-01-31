@@ -409,8 +409,7 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
      */
     transform(m) {
         this.currentTransform.multiply(m);
-        //super.transform(m);
-        this.updateBoundsPos(this.pos.x, this.pos.y);
+        this.updateBounds();
         this.isDirty = true;
         return this;
     }
@@ -506,6 +505,7 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
     scale(x, y) {
         this.currentTransform.scale(x, y);
         super.scale(x, y);
+        this.updateBounds();
         this.isDirty = true;
         return this;
     }

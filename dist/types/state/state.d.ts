@@ -135,7 +135,7 @@ declare namespace state {
      */
     function transition(effect: string, color: any, duration?: number | undefined): void;
     /**
-     * enable/disable transition for a specific state (by default enabled for all)
+     * enable/disable the transition to a particular state (by default enabled for all)
      * @name setTransition
      * @memberof state
      * @public

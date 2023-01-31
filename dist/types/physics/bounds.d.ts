@@ -4,7 +4,7 @@
  */
 export default class Bounds {
     /**
-     * @param {Vector2d[]|Point[]} [vertices] - an array of me.Vector2d points
+     * @param {Vector2d[]|Point[]} [vertices] - an array of Vector2d or Point
      */
     constructor(vertices?: Vector2d[] | Point[] | undefined);
     _center: Vector2d;
@@ -93,12 +93,12 @@ export default class Bounds {
     get center(): Vector2d;
     /**
      * Updates bounds using the given vertices
-     * @param {Vector2d[]|Point[]} vertices - an array of me.Vector2d points
+     * @param {Vector2d[]|Point[]} vertices - an array of Vector2d or Point
      */
     update(vertices: Vector2d[] | Point[]): void;
     /**
      * add the given vertices to the bounds definition.
-     * @param {Vector2d[]|Point[]} vertices - an array of me.Vector2d points
+     * @param {Vector2d[]|Point[]} vertices - an array of Vector2d or Point
      * @param {boolean} [clear=false] - either to reset the bounds before adding the new vertices
      */
     add(vertices: Vector2d[] | Point[], clear?: boolean | undefined): void;
@@ -110,8 +110,8 @@ export default class Bounds {
     addBounds(bounds: Bounds, clear?: boolean | undefined): void;
     /**
      * add the given point to the bounds definition.
-     * @param {Vector2d|Point} point - the point to be added to the bounds
-     * @param {Matrix2d} [m] - an optional transform to apply to the given point (only if the given point is a vector)
+     * @param {Vector2d|Point} point - the vector or point to be added to the bounds
+     * @param {Matrix2d} [m] - an optional transform to apply to the given point (if the given point is a Vector2d)
      */
     addPoint(point: Vector2d | Point, m?: any): void;
     /**

@@ -514,7 +514,7 @@ var state = {
     },
 
     /**
-     * enable/disable transition for a specific state (by default enabled for all)
+     * enable/disable the transition to a particular state (by default enabled for all)
      * @name setTransition
      * @memberof state
      * @public

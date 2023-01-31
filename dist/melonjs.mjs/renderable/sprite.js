@@ -7,7 +7,7 @@
  */
 import { renderer } from '../video/video.js';
 import pool from '../system/pooling.js';
-import loader from '../loader/loader.js';
+import { getImage } from '../loader/loader.js';
 import { TextureAtlas } from '../video/texture/atlas.js';
 import Renderable from './renderable.js';
 import Color from '../math/color.js';
@@ -139,9 +139,6 @@ import Color from '../math/color.js';
                 if (region) {
                     // set the sprite region within the texture
                     this.setRegion(region);
-                    // update the default "current" frame size
-                    this.current.width = settings.framewidth || region.width;
-                    this.current.height = settings.frameheight || region.height;
                 } else {
                     // throw an error
                     throw new Error("Texture - region for " + settings.region + " not found");
@@ -149,7 +146,7 @@ import Color from '../math/color.js';
             }
         } else {
             // HTMLImageElement/Canvas or {string}
-            this.image = (typeof settings.image === "object") ? settings.image : loader.getImage(settings.image);
+            this.image = (typeof settings.image === "object") ? settings.image : getImage(settings.image);
             // throw an error if image ends up being null/undefined
             if (!this.image) {
                 throw new Error("me.Sprite: '" + settings.image + "' image/texture not found!");
@@ -209,14 +206,11 @@ import Color from '../math/color.js';
             this.pos.z = settings.z;
         }
 
-        // for sprite, addAnimation will return !=0
+        // addAnimation will return 0 if no texture atlas is defined
         if (this.addAnimation("default", null) !== 0) {
             // set as default
             this.setCurrentAnimation("default");
         }
-
-        // enable currentTransform for me.Sprite based objects
-        this.autoTransform = true;
     }
 
     /**
@@ -468,7 +462,7 @@ import Color from '../math/color.js';
         // set the sprite offset within the texture
         this.current.offset.setV(region.offset);
         // set angle if defined
-        this.current.angle = region.angle;
+        this.current.angle = typeof region.angle === "number" ? region.angle : 0;
         // update the default "current" size
         this.width = this.current.width = region.width;
         this.height = this.current.height = region.height;
@@ -479,6 +473,8 @@ import Color from '../math/color.js';
                 this._flip.y && region.trimmed === true ? 1 - region.anchorPoint.y : region.anchorPoint.y
             );
         }
+        // update the sprite bounding box
+        this.updateBounds();
         this.isDirty = true;
         return this;
     }
@@ -556,11 +552,6 @@ import Color from '../math/color.js';
                 // Get next frame duration
                 duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
             }
-        }
-
-        // update the sprite bounding box
-        if (this.isDirty === true) {
-            this.updateBounds();
         }
 
         //update the "flickering" state if necessary

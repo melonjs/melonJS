@@ -14,7 +14,7 @@ import Vector2d from '../math/vector2.js';
  */
  class Bounds {
     /**
-     * @param {Vector2d[]|Point[]} [vertices] - an array of me.Vector2d points
+     * @param {Vector2d[]|Point[]} [vertices] - an array of Vector2d or Point
      */
     constructor(vertices) {
         // @ignore
@@ -171,7 +171,7 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * Updates bounds using the given vertices
-     * @param {Vector2d[]|Point[]} vertices - an array of me.Vector2d points
+     * @param {Vector2d[]|Point[]} vertices - an array of Vector2d or Point
      */
     update(vertices) {
         this.add(vertices, true);
@@ -179,7 +179,7 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * add the given vertices to the bounds definition.
-     * @param {Vector2d[]|Point[]} vertices - an array of me.Vector2d points
+     * @param {Vector2d[]|Point[]} vertices - an array of Vector2d or Point
      * @param {boolean} [clear=false] - either to reset the bounds before adding the new vertices
      */
     add(vertices, clear = false) {
@@ -216,8 +216,8 @@ import Vector2d from '../math/vector2.js';
 
     /**
      * add the given point to the bounds definition.
-     * @param {Vector2d|Point} point - the point to be added to the bounds
-     * @param {Matrix2d} [m] - an optional transform to apply to the given point (only if the given point is a vector)
+     * @param {Vector2d|Point} point - the vector or point to be added to the bounds
+     * @param {Matrix2d} [m] - an optional transform to apply to the given point (if the given point is a Vector2d)
      */
     addPoint(point, m) {
         if ((typeof m !== "undefined")) {

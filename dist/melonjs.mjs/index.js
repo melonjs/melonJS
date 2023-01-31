@@ -73,7 +73,8 @@ export { event };
 import { onReady } from './system/device.js';
 import * as device from './system/device.js';
 export { device };
-import loader from './loader/loader.js';
+import * as loader from './loader/loader.js';
+export { loader };
 import * as math from './math/math.js';
 export { math as Math };
 import utils from './utils/utils.js';
@@ -89,6 +90,7 @@ export { default as state } from './state/state.js';
 export { default as level } from './level/level.js';
 export { DraggableEntity, DroptargetEntity, GUI_Object } from './lang/deprecated.js';
 export { AUTO, CANVAS, WEBGL } from './const.js';
+import { setNocache } from './loader/settings.js';
 import { initKeyboardEvent } from './input/keyboard.js';
 
 // ES5/ES6 polyfills
@@ -209,7 +211,7 @@ function boot() {
     emit(BOOT);
 
     // enable/disable the cache
-    loader.setNocache( utils.getUriFragment().nocache || false );
+    setNocache( utils.getUriFragment().nocache || false );
 
     // automatically enable keyboard events
     initKeyboardEvent();
@@ -225,4 +227,4 @@ onReady(() => {
     }
 });
 
-export { Application, BitmapText, BitmapTextData, Bounds, Collectable, Color, ColorLayer, Ellipse, Entity, ImageLayer, Light2d, Line, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, Point, Polygon, Rect, Renderable, RoundRect, Sprite, Text, Trigger, Tween, Vector2d, Vector3d, boot, game, initialized, loader, pool, skipAutoInit, utils, version };
+export { Application, BitmapText, BitmapTextData, Bounds, Collectable, Color, ColorLayer, Ellipse, Entity, ImageLayer, Light2d, Line, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, Point, Polygon, Rect, Renderable, RoundRect, Sprite, Text, Trigger, Tween, Vector2d, Vector3d, boot, game, initialized, pool, skipAutoInit, utils, version };
