@@ -95,7 +95,7 @@ import Color from "../math/color.js";
         // (reusing current, any better/cleaner place?)
         this.current = {
             // the current animation name
-            name : "default",
+            name : undefined,
             // length of the current animation name
             length : 0,
             //current frame texture offset
@@ -383,22 +383,24 @@ import Color from "../math/color.js";
      *    return false; // do not reset to first frame
      * }).bind(this));
      */
-    setCurrentAnimation(name, resetAnim, preserve_dt) {
-        if (this.anim[name]) {
-            this.current.name = name;
-            this.current.length = this.anim[this.current.name].length;
-            if (typeof resetAnim === "string") {
-                this.resetAnim = this.setCurrentAnimation.bind(this, resetAnim, null, true);
-            } else if (typeof resetAnim === "function") {
-                this.resetAnim = resetAnim;
-            } else {
-                this.resetAnim = undefined;
+    setCurrentAnimation(name, resetAnim, preserve_dt = false) {
+        if (typeof this.anim[name] !== "undefined") {
+            if (!this.isCurrentAnimation(name)) {
+                this.current.name = name;
+                this.current.length = this.anim[this.current.name].length;
+                if (typeof resetAnim === "string") {
+                    this.resetAnim = this.setCurrentAnimation.bind(this, resetAnim, null, true);
+                } else if (typeof resetAnim === "function") {
+                    this.resetAnim = resetAnim;
+                } else {
+                    this.resetAnim = undefined;
+                }
+                this.setAnimationFrame(0);
+                if (!preserve_dt) {
+                    this.dt = 0;
+                }
+                this.isDirty = true;
             }
-            this.setAnimationFrame(this.current.idx);
-            if (!preserve_dt) {
-                this.dt = 0;
-            }
-            this.isDirty = true;
         } else {
             throw new Error("animation id '" + name + "' not defined");
         }
@@ -476,14 +478,14 @@ import Color from "../math/color.js";
      * force the current animation frame index.
      * @name setAnimationFrame
      * @memberof Sprite
-     * @param {number} [idx=0] - animation frame index
+     * @param {number} [index=0] - animation frame index
      * @returns {Sprite} Reference to this object for method chaining
      * @example
      * // reset the current animation to the first frame
      * this.setAnimationFrame();
      */
-    setAnimationFrame(idx) {
-        this.current.idx = (idx || 0) % this.current.length;
+    setAnimationFrame(index = 0) {
+        this.current.idx = index % this.current.length;
         return this.setRegion(this.getAnimationFrameObjectByIndex(this.current.idx));
     }
 
@@ -520,14 +522,14 @@ import Color from "../math/color.js";
      */
     update(dt) {
         // Update animation if necessary
-        if (!this.animationpause && this.current && this.current.length > 0) {
+        if (!this.animationpause && this.current.length > 1) {
             var duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
             this.dt += dt;
             while (this.dt >= duration) {
                 this.isDirty = true;
                 this.dt -= duration;
 
-                var nextFrame = (this.current.length > 1? this.current.idx+1: this.current.idx);
+                var nextFrame = (this.current.length > 1 ? this.current.idx + 1 : this.current.idx);
                 this.setAnimationFrame(nextFrame);
 
                 // Switch animation if we reach the end of the strip and a callback is defined
