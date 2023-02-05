@@ -2,6 +2,9 @@
 
 ## [14.5.0] (melonJS 2) - _2023-01-xx_
 
+### Added
+- Bounds: add a `centerOn` method similarly to other base geometry objects.
+
 ### Changed
 - Loader: partial refactoring of the preloader to be more es6 compliant and fix circular dependencies with other modules/classes
 - Pool: simplified and optimized the pool `pull` method
