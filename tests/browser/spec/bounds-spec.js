@@ -14,6 +14,8 @@ describe("Physics : me.Bounds", function () {
     describe("bound coordinates", function () {
         it("bound1 has finite coordinates", function () {
             expect(bound1.isFinite()).toEqual(true);
+            expect(bound1.width).toEqual(50);
+            expect(bound1.height).toEqual(100);
         });
 
         it("bound1 position", function () {
@@ -39,6 +41,16 @@ describe("Physics : me.Bounds", function () {
             bound1.shift(0, 0);
             expect(bound1.left).toEqual(0);
             expect(bound1.top).toEqual(0);
+        });
+
+        it("centerOn bound1", function () {
+            bound1.centerOn(100, 100);
+            expect(bound1.left).toEqual(100 - 50 / 2);
+            expect(bound1.top).toEqual(100 - 100 / 2);
+            expect(bound1.width).toEqual(50);
+            expect(bound1.height).toEqual(100);
+            // restore previous position for next test
+            bound1.centerOn(25, 50);
         });
 
         it("translate bound1", function () {
