@@ -4,6 +4,7 @@
 
 ### Added
 - Bounds: add a `centerOn` method similarly to other base geometry objects
+- ImageLayer: enable blend mode for `ImageLayer` renderable objects
 - Sprite: sprites now "flip" (see flip[X/Y] methods) properly around their default anchor point
 
 ### Changed
