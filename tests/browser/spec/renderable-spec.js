@@ -17,7 +17,7 @@ describe("me.Renderable", function () {
             expect(bounds.height).toEqual(100);
         });
 
-        it("renderable has correct bounds when chaning anchor point", function () {
+        it("renderable has correct bounds when changing anchor point", function () {
             renderable.anchorPoint.set(0.5, 0.5);
             var bounds = renderable.getBounds();
             expect(bounds.x).toEqual(0);
