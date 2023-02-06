@@ -136,7 +136,13 @@ let globalFloatingCounter = 0;
         // subscribe on the canvas resize event
         if (this.root === true) {
             // Workaround for not updating container child-bounds automatically (it's expensive!)
-            on(CANVAS_ONRESIZE, this.updateBounds.bind(this, true));
+            on(CANVAS_ONRESIZE, () => {
+                // temporarly enable the enableChildBoundsUpdate flag
+                this.enableChildBoundsUpdate === true;
+                // update bounds
+                this.updateBounds();
+                this.enableChildBoundsUpdate === false;
+            });
         }
     }
 
@@ -220,8 +226,8 @@ let globalFloatingCounter = 0;
         }
 
         // force bounds update if required
-        if (this.enableChildBoundsUpdate) {
-            this.updateBounds(true);
+        if (this.enableChildBoundsUpdate === true) {
+            this.updateBounds();
         }
 
         // if a physic body is defined, add it to the game world
@@ -269,8 +275,8 @@ let globalFloatingCounter = 0;
             }
 
             // force bounds update if required
-            if (this.enableChildBoundsUpdate) {
-                this.updateBounds(true);
+            if (this.enableChildBoundsUpdate === true) {
+                this.updateBounds();
             }
 
             // if a physic body is defined, add it to the game world
@@ -504,26 +510,25 @@ let globalFloatingCounter = 0;
     /**
      * update the bounding box for this shape.
      * @ignore
+     * @param {boolean} absolute - update the bounds size and position in (world) absolute coordinates
      * @returns {Bounds} this shape bounding box Rectangle object
      */
-    updateBounds(forceUpdateChildBounds = false) {
-
+    updateBounds(absolute = true) {  // eslint-disable-line no-unused-vars
         // call parent method
-        super.updateBounds();
+        super.updateBounds(false);
 
         var bounds = this.getBounds();
 
-        if (forceUpdateChildBounds === true || this.enableChildBoundsUpdate === true) {
+        if (this.enableChildBoundsUpdate === true) {
             this.forEach((child) => {
                 if (child.isRenderable) {
                     var childBounds = child.getBounds();
                     if (childBounds.isFinite()) {
-                        bounds.addBounds(child.getBounds());
+                        bounds.addBounds(childBounds);
                     }
                 }
             });
         }
-
         return bounds;
     }
 
@@ -638,8 +643,8 @@ let globalFloatingCounter = 0;
             }
 
             // force bounds update if required
-            if (this.enableChildBoundsUpdate) {
-                this.updateBounds(true);
+            if (this.enableChildBoundsUpdate === true) {
+                this.updateBounds();
             }
 
             // triggered callback if defined

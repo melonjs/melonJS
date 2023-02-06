@@ -92,6 +92,12 @@ export default class Bounds {
      */
     get center(): Vector2d;
     /**
+     * center the bounds position around the given coordinates
+     * @param {number} x - the x coordinate around which to center this bounds
+     * @param {number} y - the y coordinate around which to center this bounds
+     */
+    centerOn(x: number, y: number): Bounds;
+    /**
      * Updates bounds using the given vertices
      * @param {Vector2d[]|Point[]} vertices - an array of Vector2d or Point
      */

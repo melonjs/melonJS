@@ -83,7 +83,7 @@ export default class Sprite extends Renderable {
     anim: {};
     resetAnim: Function | (() => Sprite) | undefined;
     current: {
-        name: string;
+        name: undefined;
         length: number;
         offset: object;
         width: number;
@@ -234,13 +234,13 @@ export default class Sprite extends Renderable {
      * force the current animation frame index.
      * @name setAnimationFrame
      * @memberof Sprite
-     * @param {number} [idx=0] - animation frame index
+     * @param {number} [index=0] - animation frame index
      * @returns {Sprite} Reference to this object for method chaining
      * @example
      * // reset the current animation to the first frame
      * this.setAnimationFrame();
      */
-    setAnimationFrame(idx?: number | undefined): Sprite;
+    setAnimationFrame(index?: number | undefined): Sprite;
     /**
      * return the current animation frame index.
      * @name getCurrentAnimationFrame

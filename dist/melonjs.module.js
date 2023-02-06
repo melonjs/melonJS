@@ -13766,6 +13766,16 @@ function unbindKey(keycode) {
     }
 
     /**
+     * center the bounds position around the given coordinates
+     * @param {number} x - the x coordinate around which to center this bounds
+     * @param {number} y - the y coordinate around which to center this bounds
+     */
+    centerOn(x, y) {
+        this.shift(x - this.width / 2, y - this.height / 2);
+        return this;
+    }
+
+    /**
      * Updates bounds using the given vertices
      * @param {Vector2d[]|Point[]} vertices - an array of Vector2d or Point
      */
@@ -16526,9 +16536,9 @@ var cssToRGB = new Map();
         /**
          * when true the renderable will be redrawn during the next update cycle
          * @type {boolean}
-         * @default false
+         * @default true
          */
-        this.isDirty = false;
+        this.isDirty = true;
 
         // keep track of when we flip
         this._flip = {
@@ -16625,7 +16635,7 @@ var cssToRGB = new Map();
         if (typeof this._bounds === "undefined") {
             super.getBounds();
             if (this.isFinite()) {
-                this._bounds.setMinMax(this.pos.x, this.pos.y, this.pos.x + this.width, this.pos.y + this.height);
+                this.updateBounds();
             } else {
                 // e.g. containers or game world can have infinite size
                 this._bounds.setMinMax(this.pos.x, this.pos.y, this.width, this.height);
@@ -16783,9 +16793,8 @@ var cssToRGB = new Map();
      * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
      * @returns {Renderable} Reference to this object for method chaining
      */
-    scale(x, y) {
+    scale(x, y = x) {
         this.currentTransform.scale(x, y);
-        super.scale(x, y);
         this.updateBounds();
         this.isDirty = true;
         return this;
@@ -16813,20 +16822,44 @@ var cssToRGB = new Map();
     /**
      * update the bounding box for this shape.
      * @ignore
+     * @param {boolean} absolute - update the bounds size and position in (world) absolute coordinates
      * @returns {Bounds} this shape bounding box Rectangle object
      */
-    updateBounds() {
+    updateBounds(absolute = true) {
         var bounds = this.getBounds();
+        var hasTransform = typeof this.currentTransform !== "undefined" && !this.currentTransform.isIdentity();
 
         bounds.clear();
+
+        // temporarly translate the matrix
+        if (hasTransform) {
+            this.currentTransform.translate(
+                -this.width * this.anchorPoint.x,
+                -this.height * this.anchorPoint.y
+            );
+        }
+
         bounds.addFrame(
             0,
             0,
             this.width,
             this.height,
-            this.currentTransform
+            hasTransform ? this.currentTransform : undefined
         );
-        this.updateBoundsPos(this.pos.x + bounds.x, this.pos.y + bounds.y);
+
+        if (hasTransform) {
+            this.currentTransform.translate(
+                this.width * this.anchorPoint.x,
+                this.height * this.anchorPoint.y
+            );
+        }
+
+        if (absolute === true) {
+            this.updateBoundsPos();//this.pos.x + bounds.x, this.pos.y + bounds.y);
+        }
+
+        this.isDirty = true;
+
         return bounds;
     }
 
@@ -16834,23 +16867,17 @@ var cssToRGB = new Map();
      * update the renderable's bounding rect (private)
      * @ignore
      */
-     updateBoundsPos(newX, newY) {
-         var bounds = this.getBounds();
+     updateBoundsPos(newX = this.pos.x, newY = this.pos.y) {
+        var bounds = this.getBounds();
 
-         bounds.shift(newX, newY);
+        bounds.centerOn(newX + this.width / 2, newY + this.height / 2);
 
-         if (typeof this.anchorPoint !== "undefined" && bounds.isFinite()) {
-            var ax = bounds.width * this.anchorPoint.x,
-                ay = bounds.height * this.anchorPoint.y;
-            bounds.translate(-ax, -ay);
-         }
-
-         /*
-         if (typeof this.body !== "undefined") {
-              var bodyBounds = this.body.getBounds();
-              bounds.translate(bodyBounds.x, bodyBounds.y);
-         }
-         */
+        if (typeof this.anchorPoint !== "undefined" && bounds.isFinite()) {
+            bounds.translate(
+                -bounds.width * this.anchorPoint.x,
+                -bounds.height * this.anchorPoint.y
+            );
+        }
 
          // XXX: This is called from the constructor, before it gets an ancestor
          if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
@@ -16887,7 +16914,10 @@ var cssToRGB = new Map();
          // manually update the anchor point (required for updateBoundsPos)
          this.anchorPoint.setMuted(x, y);
          // then call updateBounds
-         this.updateBoundsPos(this.pos.x, this.pos.y);
+         //this.updateBoundsPos(this.pos.x, this.pos.y);
+         this.updateBounds();
+         //console.log("hello");
+         this.isDirty = true;
      }
 
     /**
@@ -16898,9 +16928,8 @@ var cssToRGB = new Map();
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
      */
     preDraw(renderer) {
-        var bounds = this.getBounds();
-        var ax = bounds.width * this.anchorPoint.x,
-            ay = bounds.height * this.anchorPoint.y;
+        var ax = this.width * this.anchorPoint.x,
+            ay = this.height * this.anchorPoint.y;
 
         // save renderer context
         renderer.save();
@@ -25833,7 +25862,13 @@ let globalFloatingCounter = 0;
         // subscribe on the canvas resize event
         if (this.root === true) {
             // Workaround for not updating container child-bounds automatically (it's expensive!)
-            on(CANVAS_ONRESIZE, this.updateBounds.bind(this, true));
+            on(CANVAS_ONRESIZE, () => {
+                // temporarly enable the enableChildBoundsUpdate flag
+                this.enableChildBoundsUpdate === true;
+                // update bounds
+                this.updateBounds();
+                this.enableChildBoundsUpdate === false;
+            });
         }
     }
 
@@ -25917,8 +25952,8 @@ let globalFloatingCounter = 0;
         }
 
         // force bounds update if required
-        if (this.enableChildBoundsUpdate) {
-            this.updateBounds(true);
+        if (this.enableChildBoundsUpdate === true) {
+            this.updateBounds();
         }
 
         // if a physic body is defined, add it to the game world
@@ -25966,8 +26001,8 @@ let globalFloatingCounter = 0;
             }
 
             // force bounds update if required
-            if (this.enableChildBoundsUpdate) {
-                this.updateBounds(true);
+            if (this.enableChildBoundsUpdate === true) {
+                this.updateBounds();
             }
 
             // if a physic body is defined, add it to the game world
@@ -26201,26 +26236,25 @@ let globalFloatingCounter = 0;
     /**
      * update the bounding box for this shape.
      * @ignore
+     * @param {boolean} absolute - update the bounds size and position in (world) absolute coordinates
      * @returns {Bounds} this shape bounding box Rectangle object
      */
-    updateBounds(forceUpdateChildBounds = false) {
-
+    updateBounds(absolute = true) {  // eslint-disable-line no-unused-vars
         // call parent method
-        super.updateBounds();
+        super.updateBounds(false);
 
         var bounds = this.getBounds();
 
-        if (forceUpdateChildBounds === true || this.enableChildBoundsUpdate === true) {
+        if (this.enableChildBoundsUpdate === true) {
             this.forEach((child) => {
                 if (child.isRenderable) {
                     var childBounds = child.getBounds();
                     if (childBounds.isFinite()) {
-                        bounds.addBounds(child.getBounds());
+                        bounds.addBounds(childBounds);
                     }
                 }
             });
         }
-
         return bounds;
     }
 
@@ -26335,8 +26369,8 @@ let globalFloatingCounter = 0;
             }
 
             // force bounds update if required
-            if (this.enableChildBoundsUpdate) {
-                this.updateBounds(true);
+            if (this.enableChildBoundsUpdate === true) {
+                this.updateBounds();
             }
 
             // triggered callback if defined
@@ -29339,7 +29373,7 @@ var loader = {
         // (reusing current, any better/cleaner place?)
         this.current = {
             // the current animation name
-            name : "default",
+            name : undefined,
             // length of the current animation name
             length : 0,
             //current frame texture offset
@@ -29627,22 +29661,24 @@ var loader = {
      *    return false; // do not reset to first frame
      * }).bind(this));
      */
-    setCurrentAnimation(name, resetAnim, preserve_dt) {
-        if (this.anim[name]) {
-            this.current.name = name;
-            this.current.length = this.anim[this.current.name].length;
-            if (typeof resetAnim === "string") {
-                this.resetAnim = this.setCurrentAnimation.bind(this, resetAnim, null, true);
-            } else if (typeof resetAnim === "function") {
-                this.resetAnim = resetAnim;
-            } else {
-                this.resetAnim = undefined;
+    setCurrentAnimation(name, resetAnim, preserve_dt = false) {
+        if (typeof this.anim[name] !== "undefined") {
+            if (!this.isCurrentAnimation(name)) {
+                this.current.name = name;
+                this.current.length = this.anim[this.current.name].length;
+                if (typeof resetAnim === "string") {
+                    this.resetAnim = this.setCurrentAnimation.bind(this, resetAnim, null, true);
+                } else if (typeof resetAnim === "function") {
+                    this.resetAnim = resetAnim;
+                } else {
+                    this.resetAnim = undefined;
+                }
+                this.setAnimationFrame(0);
+                if (!preserve_dt) {
+                    this.dt = 0;
+                }
+                this.isDirty = true;
             }
-            this.setAnimationFrame(this.current.idx);
-            if (!preserve_dt) {
-                this.dt = 0;
-            }
-            this.isDirty = true;
         } else {
             throw new Error("animation id '" + name + "' not defined");
         }
@@ -29705,7 +29741,7 @@ var loader = {
         this.height = this.current.height = region.height;
         // set global anchortPoint if defined
         if (region.anchorPoint) {
-            this.anchorPoint.set(
+            this.anchorPoint.setMuted(
                 this._flip.x && region.trimmed === true ? 1 - region.anchorPoint.x : region.anchorPoint.x,
                 this._flip.y && region.trimmed === true ? 1 - region.anchorPoint.y : region.anchorPoint.y
             );
@@ -29720,14 +29756,14 @@ var loader = {
      * force the current animation frame index.
      * @name setAnimationFrame
      * @memberof Sprite
-     * @param {number} [idx=0] - animation frame index
+     * @param {number} [index=0] - animation frame index
      * @returns {Sprite} Reference to this object for method chaining
      * @example
      * // reset the current animation to the first frame
      * this.setAnimationFrame();
      */
-    setAnimationFrame(idx) {
-        this.current.idx = (idx || 0) % this.current.length;
+    setAnimationFrame(index = 0) {
+        this.current.idx = index % this.current.length;
         return this.setRegion(this.getAnimationFrameObjectByIndex(this.current.idx));
     }
 
@@ -29764,14 +29800,14 @@ var loader = {
      */
     update(dt) {
         // Update animation if necessary
-        if (!this.animationpause && this.current && this.current.length > 0) {
+        if (!this.animationpause && this.current.length > 1) {
             var duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
             this.dt += dt;
             while (this.dt >= duration) {
                 this.isDirty = true;
                 this.dt -= duration;
 
-                var nextFrame = (this.current.length > 1? this.current.idx+1: this.current.idx);
+                var nextFrame = (this.current.length > 1 ? this.current.idx + 1 : this.current.idx);
                 this.setAnimationFrame(nextFrame);
 
                 // Switch animation if we reach the end of the strip and a callback is defined
@@ -29804,32 +29840,6 @@ var loader = {
         }
 
         return super.update(dt);
-    }
-
-    /**
-     * update the bounding box for this sprite.
-     * @ignore
-     * @returns {Bounds} this shape bounding box Rectangle object
-     */
-    updateBounds() {
-        var bounds = this.getBounds();
-
-        if (typeof this.current !== "undefined") {
-            bounds.clear();
-            bounds.addFrame(
-                0,
-                0,
-                this.current.width,
-                this.current.height,
-                this.currentTransform
-            );
-            this.updateBoundsPos(this.pos.x + bounds.x, this.pos.y + bounds.y);
-        } else {
-            // cover the case where updateBounds is called by the
-            // parent constructor before `current` was declared
-            super.updateBounds();
-        }
-        return bounds;
     }
 
     /**
@@ -37145,10 +37155,10 @@ function createDefaultParticleTexture(w = 8, h = 8) {
 
         // Update anchorPoint
         if (settings.anchorPoint) {
-            this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
+            this.anchorPoint.setMuted(settings.anchorPoint.x, settings.anchorPoint.y);
         } else {
             // for backward compatibility
-            this.anchorPoint.set(0, 0);
+            this.anchorPoint.setMuted(0, 0);
         }
 
         // set the sprite name if specified

@@ -190,7 +190,7 @@ export default class Renderable extends Rect {
     /**
      * when true the renderable will be redrawn during the next update cycle
      * @type {boolean}
-     * @default false
+     * @default true
      */
     isDirty: boolean;
     _flip: {
@@ -318,10 +318,17 @@ export default class Renderable extends Rect {
      */
     update(dt: number): boolean;
     /**
+     * update the bounding box for this shape.
+     * @ignore
+     * @param {boolean} absolute - update the bounds size and position in (world) absolute coordinates
+     * @returns {Bounds} this shape bounding box Rectangle object
+     */
+    updateBounds(absolute?: boolean): Bounds;
+    /**
      * update the renderable's bounding rect (private)
      * @ignore
      */
-    updateBoundsPos(newX: any, newY: any): void;
+    updateBoundsPos(newX?: number, newY?: number): void;
     /**
      * return the renderable absolute position in the game world
      * @returns {Vector2d}

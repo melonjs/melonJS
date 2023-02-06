@@ -207,12 +207,6 @@ export default class Container extends Renderable {
      */
     getChildren(): Renderable[];
     /**
-     * update the bounding box for this shape.
-     * @ignore
-     * @returns {Bounds} this shape bounding box Rectangle object
-     */
-    updateBounds(forceUpdateChildBounds?: boolean): Bounds;
-    /**
      * Checks if this container is root or if it's attached to the root container.
      * @private
      * @returns {boolean}
