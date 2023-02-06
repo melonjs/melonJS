@@ -53,10 +53,10 @@ import Body from "./../physics/body.js";
 
         // Update anchorPoint
         if (settings.anchorPoint) {
-            this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
+            this.anchorPoint.setMuted(settings.anchorPoint.x, settings.anchorPoint.y);
         } else {
             // for backward compatibility
-            this.anchorPoint.set(0, 0);
+            this.anchorPoint.setMuted(0, 0);
         }
 
         // set the sprite name if specified

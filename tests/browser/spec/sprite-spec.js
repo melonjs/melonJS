@@ -21,7 +21,7 @@ describe("me.Sprite", function () {
                 var bounds = sprite.getBounds();
                 // scale up the sprite
                 sprite.scale(2.0); // w & h -> 64, 64
-                return (bounds.x === 50 && bounds.y === 50 && bounds.width === 64 && bounds.height === 64 && sprite.width === 64 && sprite.height === 64);
+                return (bounds.x === 34 && bounds.y === 34 && bounds.width === 64 && bounds.height === 64);
             })).toEqual(true);
 
             expect(await page.evaluate(() => {

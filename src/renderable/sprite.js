@@ -463,7 +463,7 @@ import Color from "../math/color.js";
         this.height = this.current.height = region.height;
         // set global anchortPoint if defined
         if (region.anchorPoint) {
-            this.anchorPoint.set(
+            this.anchorPoint.setMuted(
                 this._flip.x && region.trimmed === true ? 1 - region.anchorPoint.x : region.anchorPoint.x,
                 this._flip.y && region.trimmed === true ? 1 - region.anchorPoint.y : region.anchorPoint.y
             );
@@ -562,32 +562,6 @@ import Color from "../math/color.js";
         }
 
         return super.update(dt);
-    }
-
-    /**
-     * update the bounding box for this sprite.
-     * @ignore
-     * @returns {Bounds} this shape bounding box Rectangle object
-     */
-    updateBounds() {
-        var bounds = this.getBounds();
-
-        if (typeof this.current !== "undefined") {
-            bounds.clear();
-            bounds.addFrame(
-                0,
-                0,
-                this.current.width,
-                this.current.height,
-                this.currentTransform
-            );
-            this.updateBoundsPos(this.pos.x + bounds.x, this.pos.y + bounds.y);
-        } else {
-            // cover the case where updateBounds is called by the
-            // parent constructor before `current` was declared
-            super.updateBounds();
-        }
-        return bounds;
     }
 
     /**

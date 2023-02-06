@@ -238,9 +238,9 @@ import Color from "./../math/color.js";
         /**
          * when true the renderable will be redrawn during the next update cycle
          * @type {boolean}
-         * @default false
+         * @default true
          */
-        this.isDirty = false;
+        this.isDirty = true;
 
         // keep track of when we flip
         this._flip = {
@@ -337,7 +337,7 @@ import Color from "./../math/color.js";
         if (typeof this._bounds === "undefined") {
             super.getBounds();
             if (this.isFinite()) {
-                this._bounds.setMinMax(this.pos.x, this.pos.y, this.pos.x + this.width, this.pos.y + this.height);
+                this.updateBounds();
             } else {
                 // e.g. containers or game world can have infinite size
                 this._bounds.setMinMax(this.pos.x, this.pos.y, this.width, this.height);
@@ -495,9 +495,8 @@ import Color from "./../math/color.js";
      * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
      * @returns {Renderable} Reference to this object for method chaining
      */
-    scale(x, y) {
+    scale(x, y = x) {
         this.currentTransform.scale(x, y);
-        super.scale(x, y);
         this.updateBounds();
         this.isDirty = true;
         return this;
@@ -525,20 +524,44 @@ import Color from "./../math/color.js";
     /**
      * update the bounding box for this shape.
      * @ignore
+     * @param {boolean} absolute - update the bounds size and position in (world) absolute coordinates
      * @returns {Bounds} this shape bounding box Rectangle object
      */
-    updateBounds() {
+    updateBounds(absolute = true) {
         var bounds = this.getBounds();
+        var hasTransform = typeof this.currentTransform !== "undefined" && !this.currentTransform.isIdentity();
 
         bounds.clear();
+
+        // temporarly translate the matrix
+        if (hasTransform) {
+            this.currentTransform.translate(
+                -this.width * this.anchorPoint.x,
+                -this.height * this.anchorPoint.y
+            );
+        }
+
         bounds.addFrame(
             0,
             0,
             this.width,
             this.height,
-            this.currentTransform
+            hasTransform ? this.currentTransform : undefined
         );
-        this.updateBoundsPos(this.pos.x + bounds.x, this.pos.y + bounds.y);
+
+        if (hasTransform) {
+            this.currentTransform.translate(
+                this.width * this.anchorPoint.x,
+                this.height * this.anchorPoint.y
+            );
+        }
+
+        if (absolute === true) {
+            this.updateBoundsPos();//this.pos.x + bounds.x, this.pos.y + bounds.y);
+        }
+
+        this.isDirty = true;
+
         return bounds;
     }
 
@@ -546,23 +569,17 @@ import Color from "./../math/color.js";
      * update the renderable's bounding rect (private)
      * @ignore
      */
-     updateBoundsPos(newX, newY) {
-         var bounds = this.getBounds();
+     updateBoundsPos(newX = this.pos.x, newY = this.pos.y) {
+        var bounds = this.getBounds();
 
-         bounds.shift(newX, newY);
+        bounds.centerOn(newX + this.width / 2, newY + this.height / 2);
 
-         if (typeof this.anchorPoint !== "undefined" && bounds.isFinite()) {
-            var ax = bounds.width * this.anchorPoint.x,
-                ay = bounds.height * this.anchorPoint.y;
-            bounds.translate(-ax, -ay);
-         }
-
-         /*
-         if (typeof this.body !== "undefined") {
-              var bodyBounds = this.body.getBounds();
-              bounds.translate(bodyBounds.x, bodyBounds.y);
-         }
-         */
+        if (typeof this.anchorPoint !== "undefined" && bounds.isFinite()) {
+            bounds.translate(
+                -bounds.width * this.anchorPoint.x,
+                -bounds.height * this.anchorPoint.y
+            );
+        }
 
          // XXX: This is called from the constructor, before it gets an ancestor
          if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
@@ -599,7 +616,10 @@ import Color from "./../math/color.js";
          // manually update the anchor point (required for updateBoundsPos)
          this.anchorPoint.setMuted(x, y);
          // then call updateBounds
-         this.updateBoundsPos(this.pos.x, this.pos.y);
+         //this.updateBoundsPos(this.pos.x, this.pos.y);
+         this.updateBounds();
+         //console.log("hello");
+         this.isDirty = true;
      }
 
     /**
@@ -610,9 +630,8 @@ import Color from "./../math/color.js";
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
      */
     preDraw(renderer) {
-        var bounds = this.getBounds();
-        var ax = bounds.width * this.anchorPoint.x,
-            ay = bounds.height * this.anchorPoint.y;
+        var ax = this.width * this.anchorPoint.x,
+            ay = this.height * this.anchorPoint.y;
 
         // save renderer context
         renderer.save();

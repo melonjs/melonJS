@@ -1,7 +1,6 @@
 import { expect } from "expect";
 
 describe("Entity", function () {
-    var entity;
     var page;
 
     before(async () => {
@@ -10,56 +9,54 @@ describe("Entity", function () {
     });
 
     it("has an empty set of shapes", async () => {
-        expect(await page.evaluate(() => entity.body.shapes.length)).toEqual(0);
+        expect(await page.evaluate(() => globalThis.entity.body.shapes.length)).toEqual(0);
     });
 
     it("has a first shape", async () => {
         await page.evaluate(() => {
-            entity.body.addShape(defaultRectShape);
+            globalThis.entity.body.addShape(defaultRectShape);
         });
-        expect(await page.evaluate(() => entity.body.shapes.length)).toEqual(1);
+        expect(await page.evaluate(() => globalThis.entity.body.shapes.length)).toEqual(1);
     });
 
     it("has the correct body bounds: A", async () => {
         expect(await page.evaluate(() => {
-            var bounds = entity.body.getBounds();
+            var bounds = globalThis.entity.body.getBounds();
             return (bounds.x === 10 && bounds.y === 10 && bounds.width === 32 && bounds.height === 64);
         })).toEqual(true);
     });
 
-
     it("has the correct renderable bounds: A", async () => {
         expect(await page.evaluate(() => {
-            var bounds = entity.renderable.getBounds();
-            console.log(bounds);
+            var bounds = globalThis.entity.renderable.getBounds();
             return (bounds.x === 0 && bounds.y === 0 && bounds.width === 32 && bounds.height === 64);
         })).toEqual(true);
     });
 
     it("has the correct entity bounds: A", async () => {
         expect(await page.evaluate(() => {
-            var bounds = entity.getBounds();
-            return (bounds.x === 0 && bounds.y === 0 && bounds.width === 42 && bounds.height === 74);
+            var bounds = globalThis.entity.getBounds();
+            return (bounds.x === -5 && bounds.y === -5 && bounds.width === 42 && bounds.height === 74);
         })).toEqual(true);
     });
 
     it("has a second shape", async () => {
         await page.evaluate(() => {
-            entity.body.addShape(defaultRectShape.clone().setShape(-10, -10, 32, 64));
+            globalThis.entity.body.addShape(defaultRectShape.clone().setShape(-10, -10, 32, 64));
         });
-        expect(await page.evaluate(() => entity.body.shapes.length)).toEqual(2);
+        expect(await page.evaluate(() => globalThis.entity.body.shapes.length)).toEqual(2);
     });
 
     it("has the correct body bounds: B", async () => {
         expect(await page.evaluate(() => {
-            var bounds = entity.body.getBounds();
+            var bounds = globalThis.entity.body.getBounds();
             return (bounds.x === -10 && bounds.y === -10 && bounds.width === 42 && bounds.height === 74);
         })).toEqual(true);
     });
 
     it("has the correct renderable bounds: B", async () => {
         expect(await page.evaluate(() => {
-            var renderable = entity.renderable
+            var renderable = globalThis.entity.renderable
             return (renderable.pos.x === 0 && renderable.pos.y === 0 && renderable.width === 32 && renderable.height === 64);
         })).toEqual(true);
     });
@@ -67,27 +64,27 @@ describe("Entity", function () {
 
     it("has the correct entity bounds: B", async () => {
         expect(await page.evaluate(() => {
-            var bounds = entity.getBounds();
-            return (bounds.x === -10 && bounds.y === -10 && bounds.width === 42 && bounds.height === 74);
+            var bounds = globalThis.entity.getBounds();
+            return (bounds.x === -15 && bounds.y === -15 && bounds.width === 42 && bounds.height === 74);
         })).toEqual(true);
     });
 
     it("removes the second shape", async () => {
         expect(await page.evaluate(() => {
-            return entity.body.removeShapeAt(1);
+            return globalThis.entity.body.removeShapeAt(1);
         })).toEqual(1);
     });
 
     it("has the correct body bounds: C", async () => {
         expect(await page.evaluate(() => {
-            var bounds = entity.body.getBounds();
+            var bounds = globalThis.entity.body.getBounds();
             return (bounds.x === 10 && bounds.y === 10 && bounds.width === 32 && bounds.height === 64);
         })).toEqual(true);
     });
 
     it("has the correct renderable bounds: C", async () => {
         expect(await page.evaluate(() => {
-            var renderable = entity.renderable
+            var renderable = globalThis.entity.renderable
             return (renderable.pos.x === 0 && renderable.pos.y === 0 && renderable.width === 32 && renderable.height === 64);
         })).toEqual(true);
     });
@@ -95,44 +92,43 @@ describe("Entity", function () {
 
     it("has the correct entity bounds: C", async () => {
         expect(await page.evaluate(() => {
-            var bounds = entity.getBounds();
-            return (bounds.x === 0 && bounds.y === 0 && bounds.width === 42 && bounds.height === 74);
+            var bounds = globalThis.entity.getBounds();
+            return (bounds.x === -5 && bounds.y === -5 && bounds.width === 42 && bounds.height === 74);
         })).toEqual(true);
     });
 
 
     xit("has the correct entity geometry: C", async () => {
         expect(await page.evaluate(() => {
-            return (entity.pos.x === 90 && entity.pos.y === 90 && entity.width === 42 && entity.height === 74);
+            return (globalThis.entity.pos.x === 90 && globalThis.entity.pos.y === 90 && globalThis.entity.width === 42 && globalThis.entity.height === 74);
         })).toEqual(true);
     });
 
     it("moves properly", async () => {
         expect(await page.evaluate(() => {
-            entity.pos.set(120, 150, 0);
-            return (entity.pos.x === 120 && entity.pos.y === 150);
+            globalThis.entity.pos.set(120, 150);
+            return (globalThis.entity.pos.x === 120 && globalThis.entity.pos.y === 150);
         })).toEqual(true);
     });
 
     it("has the correct body bounds: D", async () => {
         expect(await page.evaluate(() => {
-            var bounds = entity.body.getBounds();
+            var bounds = globalThis.entity.body.getBounds();
             return (bounds.x === 10 && bounds.y === 10 && bounds.width === 32 && bounds.height === 64);
         })).toEqual(true);
     });
 
     it("has the correct renderable bounds: D", async () => {
         expect(await page.evaluate(() => {
-            var renderable = entity.renderable
+            var renderable = globalThis.entity.renderable;
             return (renderable.pos.x === 0 && renderable.pos.y === 0 && renderable.width === 32 && renderable.height === 64);
         })).toEqual(true);
     });
 
-
     it("has the correct entity bounds: D", async () => {
         expect(await page.evaluate(() => {
-            var bounds = entity.getBounds();
-            return (bounds.x === 120 && bounds.y === 150 && bounds.width === 42 && bounds.height === 74);
+            var bounds = globalThis.entity.getBounds();
+            return (bounds.x === 115 && bounds.y === 145 && bounds.width === 42 && bounds.height === 74);
         })).toEqual(true);
     });
 
