@@ -3,11 +3,13 @@
 ## [14.5.0] (melonJS 2) - _2023-01-xx_
 
 ### Added
-- Bounds: add a `centerOn` method similarly to other base geometry objects.
+- Bounds: add a `centerOn` method similarly to other base geometry objects
+- Sprite: sprites now "flip" (see flip[X/Y] methods) properly around their default anchor point
 
 ### Changed
 - Loader: partial refactoring of the preloader to be more es6 compliant and fix circular dependencies with other modules/classes
 - Pool: simplified and optimized the pool `pull` method
+- Sprite: optimized flip[X/Y] operations by using the sprite own transform matrix instead of manipulating the renderer at draw time
 - Renderer: optimized access to cached textures, especially when using multiple atlases
 - Renderer: Path2D now uses `Point` internally (instead of `Vector2d`) which is a much more simple object 
 - Renderer: optimize Path2D triangulation
