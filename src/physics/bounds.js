@@ -244,18 +244,10 @@ import Vector2d from "./../math/vector2.js";
     addFrame(x0, y0, x1, y1, m) {
         var v = pool.pull("Point");
 
-        // transform all points and add to the bound definition
-        if (typeof m !== "undefined" && !m.isIdentity()) {
-            this.addPoint(v.set(x0, y0), m);
-            this.addPoint(v.set(x1, y0), m);
-            this.addPoint(v.set(x0, y1), m);
-            this.addPoint(v.set(x1, y1), m);
-        } else {
-            this.addPoint(v.set(x0, y0));
-            this.addPoint(v.set(x1, y0));
-            this.addPoint(v.set(x0, y1));
-            this.addPoint(v.set(x1, y1));
-        }
+        this.addPoint(v.set(x0, y0), m);
+        this.addPoint(v.set(x1, y0), m);
+        this.addPoint(v.set(x0, y1), m);
+        this.addPoint(v.set(x1, y1), m);
 
         pool.push(v);
     }
