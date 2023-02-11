@@ -151,6 +151,8 @@ import Polygon from "./poly.js";
     }
     set centerX (value) {
         this.pos.x = value - (this.width / 2);
+        this.recalc();
+        this.updateBounds();
     }
 
     /**
@@ -169,6 +171,8 @@ import Polygon from "./poly.js";
     }
     set centerY(value) {
         this.pos.y = value - (this.height / 2);
+        this.recalc();
+        this.updateBounds();
     }
 
     /**

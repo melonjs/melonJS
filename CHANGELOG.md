@@ -17,6 +17,7 @@
 
 ### Fixed
 - Core: fix "global" exposed properties being read-only after refactoring to ES6
+- Geometry: fix corresponing bounds not being properly updated when setting `center[X/Y]` or calling `centerOn()`.
 - Input: fix a regression with pointer detection on transformed Sprite object
 - Renderable: fix a regression with Bounds position being off after applying a transformation
 - Sprite: fix `setRegion()` being called at every update for non-animated sprites 

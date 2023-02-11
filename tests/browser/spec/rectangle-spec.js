@@ -70,11 +70,20 @@ describe("Shape : me.Rect", function () {
             expect(rect1.pos.y).toEqual(350);
             expect(rect1.centerX).toEqual(200);
             expect(rect1.centerY).toEqual(400);
+            expect(rect1.getBounds().x).toEqual(150);
+            expect(rect1.getBounds().y).toEqual(350);
+            expect(rect1.getBounds().width).toEqual(100);
+            expect(rect1.getBounds().height).toEqual(100);
             // move it back
-            rect1.centerX = 50;
-            rect1.centerY = 50;
+            rect1.centerOn(50, 50);
             expect(rect1.pos.x).toEqual(0);
             expect(rect1.pos.y).toEqual(0);
+            expect(rect1.centerX).toEqual(50);
+            expect(rect1.centerY).toEqual(50);
+            expect(rect1.getBounds().x).toEqual(0);
+            expect(rect1.getBounds().y).toEqual(0);
+            expect(rect1.getBounds().width).toEqual(100);
+            expect(rect1.getBounds().height).toEqual(100);
         });
 
         it("rect 1 overlaps rect2", function () {
