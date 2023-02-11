@@ -36,7 +36,7 @@ describe("Entity", function () {
     it("has the correct entity bounds: A", async () => {
         expect(await page.evaluate(() => {
             var bounds = globalThis.entity.getBounds();
-            return (bounds.x === -5 && bounds.y === -5 && bounds.width === 42 && bounds.height === 74);
+            return (bounds.x === 0 && bounds.y === 0 && bounds.width === 42 && bounds.height === 74);
         })).toEqual(true);
     });
 
@@ -65,7 +65,7 @@ describe("Entity", function () {
     it("has the correct entity bounds: B", async () => {
         expect(await page.evaluate(() => {
             var bounds = globalThis.entity.getBounds();
-            return (bounds.x === -15 && bounds.y === -15 && bounds.width === 42 && bounds.height === 74);
+            return (bounds.x === -10 && bounds.y === -10 && bounds.width === 42 && bounds.height === 74);
         })).toEqual(true);
     });
 
@@ -93,14 +93,14 @@ describe("Entity", function () {
     it("has the correct entity bounds: C", async () => {
         expect(await page.evaluate(() => {
             var bounds = globalThis.entity.getBounds();
-            return (bounds.x === -5 && bounds.y === -5 && bounds.width === 42 && bounds.height === 74);
+            return (bounds.x === 0 && bounds.y === 0 && bounds.width === 42 && bounds.height === 74);
         })).toEqual(true);
     });
 
 
-    xit("has the correct entity geometry: C", async () => {
+    it("has the correct entity geometry: C", async () => {
         expect(await page.evaluate(() => {
-            return (globalThis.entity.pos.x === 90 && globalThis.entity.pos.y === 90 && globalThis.entity.width === 42 && globalThis.entity.height === 74);
+            return (globalThis.entity.pos.x === 0 && globalThis.entity.pos.y === 0 && globalThis.entity.width === 32 && globalThis.entity.height === 64);
         })).toEqual(true);
     });
 
@@ -128,7 +128,7 @@ describe("Entity", function () {
     it("has the correct entity bounds: D", async () => {
         expect(await page.evaluate(() => {
             var bounds = globalThis.entity.getBounds();
-            return (bounds.x === 115 && bounds.y === 145 && bounds.width === 42 && bounds.height === 74);
+            return (bounds.x === 120 && bounds.y === 150 && bounds.width === 42 && bounds.height === 74);
         })).toEqual(true);
     });
 

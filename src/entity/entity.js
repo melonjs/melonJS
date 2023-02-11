@@ -156,10 +156,10 @@ import Body from "./../physics/body.js";
 
     /**
      * update the bounding box for this entity.
-     * @ignore
-     * @returns {Bounds} this shape bounding box Rectangle object
+     * @param {boolean} [absolute=true] - update the bounds size and position in (world) absolute coordinates
+     * @returns {Bounds} this entity bounding box Rectangle object
      */
-    updateBounds() {
+    updateBounds(absolute = true) {
         var bounds = this.getBounds();
 
         bounds.clear();
@@ -179,7 +179,13 @@ import Body from "./../physics/body.js";
             bounds.addBounds(this.body.getBounds());
         }
 
-        this.updateBoundsPos(this.pos.x + bounds.x, this.pos.y + bounds.y);
+        if (absolute === true) {
+            bounds.centerOn(this.pos.x + bounds.x + bounds.width / 2,  this.pos.y + bounds.y + bounds.height / 2);
+             if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
+                 bounds.translate(this.ancestor.getAbsolutePosition());
+             }
+
+        }
 
         return bounds;
     }

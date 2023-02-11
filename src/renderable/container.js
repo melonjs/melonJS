@@ -195,6 +195,10 @@ let globalFloatingCounter = 0;
 
         child.ancestor = this;
         this.getChildren().push(child);
+        if (typeof child.updateBounds === "function") {
+            // update child bounds to reflect the new ancestor
+            child.updateBounds();
+        }
 
         // set the child z value if required
         if (typeof(child.pos) !== "undefined") {
@@ -506,11 +510,11 @@ let globalFloatingCounter = 0;
      * @param {boolean} absolute - update the bounds size and position in (world) absolute coordinates
      * @returns {Bounds} this shape bounding box Rectangle object
      */
-    updateBounds(absolute = true) {  // eslint-disable-line no-unused-vars
-        // call parent method
-        super.updateBounds(false);
-
+    updateBounds(absolute = true) {
         var bounds = this.getBounds();
+
+        // call parent method
+        super.updateBounds(absolute);
 
         if (this.enableChildBoundsUpdate === true) {
             this.forEach((child) => {
@@ -549,7 +553,7 @@ let globalFloatingCounter = 0;
      * update the cointainer's bounding rect (private)
      * @ignore
      */
-    updateBoundsPos(newX, newY) {
+    updateBoundsPos(newX = this.pos.x, newY = this.pos.y) {
         // call the parent method
         super.updateBoundsPos(newX, newY);
 
@@ -557,14 +561,11 @@ let globalFloatingCounter = 0;
         this.forEach((child) => {
             if (child.isRenderable) {
                 child.updateBoundsPos(
-                    // workaround on this.pos being updated after
-                    // the callback being triggered
                     child.pos.x + newX - this.pos.x,
                     child.pos.y + newY - this.pos.y
                 );
             }
         });
-        return this.getBounds();
     }
 
     /**
