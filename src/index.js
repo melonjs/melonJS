@@ -20,7 +20,7 @@ import Body from "./physics/body.js";
 import Bounds from "./physics/bounds.js";
 import Tween from "./tweens/tween.js";
 import GLShader from "./video/webgl/glshader.js";
-import WebGLCompositor from "./video/webgl/webgl_compositor.js";
+import WebGLCompositor from "./video/webgl/compositors/webgl_compositor.js";
 import Renderer from "./video/renderer.js";
 import WebGLRenderer from "./video/webgl/webgl_renderer.js";
 import CanvasRenderer from "./video/canvas/canvas_renderer.js";

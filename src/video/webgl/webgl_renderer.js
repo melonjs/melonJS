@@ -1,6 +1,6 @@
 import Color from "./../../math/color.js";
 import Matrix2d from "./../../math/matrix2.js";
-import WebGLCompositor from "./webgl_compositor.js";
+import WebGLCompositor from "./compositors/webgl_compositor.js";
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture/cache.js";
 import { TextureAtlas, createAtlas } from "./../texture/atlas.js";
