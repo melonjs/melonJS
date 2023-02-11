@@ -205,7 +205,6 @@ export default class Polygon {
     _bounds: object | undefined;
     /**
      * update the bounding box for this shape.
-     * @ignore
      * @name updateBounds
      * @memberof Polygon
      * @returns {Bounds} this shape bounding box Rectangle object

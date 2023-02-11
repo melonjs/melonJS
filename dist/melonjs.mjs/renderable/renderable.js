@@ -30,18 +30,42 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
         // parent constructor
         super(x, y, width, height);
 
-        /**
-         * to identify the object as a renderable object
-         * @ignore
-         */
-        this.isRenderable = true;
+        if (this.pos instanceof ObservableVector3d) {
+            this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos, this);
+        } else {
+            /**
+             * Position of the Renderable relative to its parent container
+             * @public
+             * @type {ObservableVector3d}
+             */
+            this.pos = pool.pull("ObservableVector3d", x, y, 0, { onUpdate: this.updateBoundsPos, scope: this});
+        }
 
-        /**
-         * If true then physic collision and input events will not impact this renderable
-         * @type {boolean}
-         * @default true
-         */
-        this.isKinematic = true;
+        if (this.anchorPoint instanceof ObservableVector2d) {
+            this.anchorPoint.setMuted(0.5, 0.5).setCallback(this.onAnchorUpdate, this);
+        } else {
+            /**
+             * The anchor point is used for attachment behavior, and/or when applying transformations.<br>
+             * The coordinate system places the origin at the top left corner of the frame (0, 0) and (1, 1) means the bottom-right corner<br>
+             * <img src="images/anchor_point.png"/><br>
+             * a Renderable's anchor point defaults to (0.5,0.5), which corresponds to the center position.<br>
+             * <br>
+             * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation.
+             * To specify a value through Tiled, use a json expression like `json:{"x":0.5,"y":0.5}`. </i>
+             * @type {ObservableVector2d}
+             * @default <0.5,0.5>
+             */
+            this.anchorPoint = pool.pull("ObservableVector2d", 0.5, 0.5, { onUpdate: this.onAnchorUpdate, scope: this });
+        }
+
+        if (typeof this.currentTransform === "undefined") {
+            /**
+             * the renderable default transformation matrix
+             * @type {Matrix2d}
+             */
+            this.currentTransform = pool.pull("Matrix2d");
+        }
+        this.currentTransform.identity();
 
         /**
          * the renderable physic body
@@ -79,15 +103,6 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
          * }
          */
         this.body = undefined;
-
-        if (typeof this.currentTransform === "undefined") {
-            /**
-             * the renderable default transformation matrix
-             * @type {Matrix2d}
-             */
-            this.currentTransform = pool.pull("Matrix2d");
-        }
-        this.currentTransform.identity();
 
        /**
         * (G)ame (U)nique (Id)entifier" <br>
@@ -138,23 +153,6 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
          * @default false
          */
         this.floating = false;
-
-        if (this.anchorPoint instanceof ObservableVector2d) {
-            this.anchorPoint.setMuted(0.5, 0.5).setCallback(this.onAnchorUpdate, this);
-        } else {
-            /**
-             * The anchor point is used for attachment behavior, and/or when applying transformations.<br>
-             * The coordinate system places the origin at the top left corner of the frame (0, 0) and (1, 1) means the bottom-right corner<br>
-             * <img src="images/anchor_point.png"/><br>
-             * a Renderable's anchor point defaults to (0.5,0.5), which corresponds to the center position.<br>
-             * <br>
-             * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation.
-             * To specify a value through Tiled, use a json expression like `json:{"x":0.5,"y":0.5}`. </i>
-             * @type {ObservableVector2d}
-             * @default <0.5,0.5>
-             */
-            this.anchorPoint = pool.pull("ObservableVector2d", 0.5, 0.5, { onUpdate: this.onAnchorUpdate, scope: this });
-        }
 
         /**
          * When enabled, an object container will automatically apply
@@ -231,16 +229,18 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
          */
         this.name = "";
 
-        if (this.pos instanceof ObservableVector3d) {
-            this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos, this);
-        } else {
-            /**
-             * Position of the Renderable relative to its parent container
-             * @public
-             * @type {ObservableVector3d}
-             */
-            this.pos = pool.pull("ObservableVector3d", x, y, 0, { onUpdate: this.updateBoundsPos, scope: this});
-        }
+        /**
+         * to identify the object as a renderable object
+         * @ignore
+         */
+        this.isRenderable = true;
+
+        /**
+         * If true then physic collision and input events will not impact this renderable
+         * @type {boolean}
+         * @default true
+         */
+        this.isKinematic = true;
 
         /**
          * when true the renderable will be redrawn during the next update cycle
@@ -384,8 +384,11 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
      * @returns {Renderable} Reference to this object for method chaining
      */
     flipX(flip = true) {
-        this._flip.x = !!flip;
-        this.isDirty = true;
+        if (this.isFlippedX !== flip) {
+            this._flip.x = !!flip;
+            this.scale(-1, 1);
+            this.isDirty = true;
+        }
         return this;
     }
 
@@ -396,8 +399,11 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
      * @returns {Renderable} Reference to this object for method chaining
      */
     flipY(flip = true) {
-        this._flip.y = !!flip;
-        this.isDirty = true;
+        if (this.isFlippedY !== flip) {
+            this._flip.y = !!flip;
+            this.scale(1, -1);
+            this.isDirty = true;
+        }
         return this;
     }
 
@@ -530,46 +536,60 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
 
     /**
      * update the bounding box for this shape.
-     * @ignore
-     * @param {boolean} absolute - update the bounds size and position in (world) absolute coordinates
+     * @param {boolean} [absolute=true] - update the bounds size and position in (world) absolute coordinates
      * @returns {Bounds} this shape bounding box Rectangle object
      */
     updateBounds(absolute = true) {
-        var bounds = this.getBounds();
-        var hasTransform = typeof this.currentTransform !== "undefined" && !this.currentTransform.isIdentity();
+        if (this.isRenderable) {
+            var bounds = this.getBounds();
 
-        bounds.clear();
+            bounds.clear();
 
-        // temporarly translate the matrix
-        if (hasTransform) {
-            this.currentTransform.translate(
-                -this.width * this.anchorPoint.x,
-                -this.height * this.anchorPoint.y
-            );
+            if ((this.autoTransform === true) && (!this.currentTransform.isIdentity())) {
+                // temporarly translate the matrix based on the anchor point
+                this.currentTransform.translate(
+                    -this.width * this.anchorPoint.x,
+                    -this.height * this.anchorPoint.y
+                );
+                bounds.addFrame(
+                    0,
+                    0,
+                    this.width,
+                    this.height,
+                    this.currentTransform
+                );
+                this.currentTransform.translate(
+                    this.width * this.anchorPoint.x,
+                    this.height * this.anchorPoint.y
+                );
+            } else {
+                bounds.addFrame(
+                    0,
+                    0,
+                    this.width,
+                    this.height
+                );
+                // translate the bounds based on the anchor point
+                bounds.translate(
+                    -this.width * this.anchorPoint.x,
+                    -this.height * this.anchorPoint.y
+                );
+            }
+
+            if (absolute === true) {
+                bounds.centerOn(this.pos.x + bounds.x + bounds.width / 2,  this.pos.y + bounds.y + bounds.height / 2);
+                if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
+                     bounds.translate(this.ancestor.getAbsolutePosition());
+                }
+
+            }
+            return bounds;
+
+        } else {
+            // manage the case where updateBounds is called
+            // before the object being yet properly initialized
+            return super.updateBounds(absolute);
         }
-
-        bounds.addFrame(
-            0,
-            0,
-            this.width,
-            this.height,
-            hasTransform ? this.currentTransform : undefined
-        );
-
-        if (hasTransform) {
-            this.currentTransform.translate(
-                this.width * this.anchorPoint.x,
-                this.height * this.anchorPoint.y
-            );
-        }
-
-        if (absolute === true) {
-            this.updateBoundsPos();//this.pos.x + bounds.x, this.pos.y + bounds.y);
-        }
-
-        this.isDirty = true;
-
-        return bounds;
     }
 
     /**
@@ -577,23 +597,7 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
      * @ignore
      */
      updateBoundsPos(newX = this.pos.x, newY = this.pos.y) {
-        var bounds = this.getBounds();
-
-        bounds.centerOn(newX + this.width / 2, newY + this.height / 2);
-
-        if (typeof this.anchorPoint !== "undefined" && bounds.isFinite()) {
-            bounds.translate(
-                -bounds.width * this.anchorPoint.x,
-                -bounds.height * this.anchorPoint.y
-            );
-        }
-
-         // XXX: This is called from the constructor, before it gets an ancestor
-         if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
-             bounds.translate(this.ancestor.getAbsolutePosition());
-         }
-
-         this.isDirty = true;
+        this.getBounds().translate(newX - this.pos.x, newY - this.pos.y);
      }
 
      /**
@@ -645,16 +649,6 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
 
         // apply the defined alpha value
         renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
-
-        // apply flip
-        if (this._flip.x || this._flip.y) {
-            var dx = this._flip.x ? this.centerX - ax : 0,
-                dy = this._flip.y ? this.centerY - ay : 0;
-
-            renderer.translate(dx, dy);
-            renderer.scale(this._flip.x  ? -1 : 1, this._flip.y  ? -1 : 1);
-            renderer.translate(-dx, -dy);
-        }
 
         // apply stencil mask if defined
         if (typeof this.mask !== "undefined") {

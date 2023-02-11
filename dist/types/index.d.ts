@@ -64,7 +64,7 @@ import RoundRect from "./geometries/roundrect.js";
 import Tween from "./tweens/tween.js";
 import QuadTree from "./physics/quadtree.js";
 import GLShader from "./video/webgl/glshader.js";
-import WebGLCompositor from "./video/webgl/webgl_compositor.js";
+import WebGLCompositor from "./video/webgl/compositors/webgl_compositor.js";
 import Renderer from "./video/renderer.js";
 import WebGLRenderer from "./video/webgl/webgl_renderer.js";
 import CanvasRenderer from "./video/canvas/canvas_renderer.js";

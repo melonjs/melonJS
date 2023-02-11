@@ -5,16 +5,28 @@
  */
 export default class Renderable extends Rect {
     /**
-     * to identify the object as a renderable object
-     * @ignore
+     * Position of the Renderable relative to its parent container
+     * @public
+     * @type {ObservableVector3d}
      */
-    isRenderable: boolean;
+    public pos: ObservableVector3d;
     /**
-     * If true then physic collision and input events will not impact this renderable
-     * @type {boolean}
-     * @default true
+     * The anchor point is used for attachment behavior, and/or when applying transformations.<br>
+     * The coordinate system places the origin at the top left corner of the frame (0, 0) and (1, 1) means the bottom-right corner<br>
+     * <img src="images/anchor_point.png"/><br>
+     * a Renderable's anchor point defaults to (0.5,0.5), which corresponds to the center position.<br>
+     * <br>
+     * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation.
+     * To specify a value through Tiled, use a json expression like `json:{"x":0.5,"y":0.5}`. </i>
+     * @type {ObservableVector2d}
+     * @default <0.5,0.5>
      */
-    isKinematic: boolean;
+    anchorPoint: ObservableVector2d;
+    /**
+     * the renderable default transformation matrix
+     * @type {Matrix2d}
+     */
+    currentTransform: Matrix2d;
     /**
      * the renderable physic body
      * @type {Body}
@@ -51,11 +63,6 @@ export default class Renderable extends Rect {
      * }
      */
     body: Body;
-    /**
-     * the renderable default transformation matrix
-     * @type {Matrix2d}
-     */
-    currentTransform: Matrix2d;
     /**
      * (G)ame (U)nique (Id)entifier" <br>
      * a GUID will be allocated for any renderable object added <br>
@@ -100,18 +107,6 @@ export default class Renderable extends Rect {
      * @default false
      */
     floating: boolean;
-    /**
-     * The anchor point is used for attachment behavior, and/or when applying transformations.<br>
-     * The coordinate system places the origin at the top left corner of the frame (0, 0) and (1, 1) means the bottom-right corner<br>
-     * <img src="images/anchor_point.png"/><br>
-     * a Renderable's anchor point defaults to (0.5,0.5), which corresponds to the center position.<br>
-     * <br>
-     * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation.
-     * To specify a value through Tiled, use a json expression like `json:{"x":0.5,"y":0.5}`. </i>
-     * @type {ObservableVector2d}
-     * @default <0.5,0.5>
-     */
-    anchorPoint: ObservableVector2d;
     /**
      * When enabled, an object container will automatically apply
      * any defined transformation before calling the child draw method.
@@ -182,11 +177,16 @@ export default class Renderable extends Rect {
      */
     name: string;
     /**
-     * Position of the Renderable relative to its parent container
-     * @public
-     * @type {ObservableVector3d}
+     * to identify the object as a renderable object
+     * @ignore
      */
-    public pos: ObservableVector3d;
+    isRenderable: boolean;
+    /**
+     * If true then physic collision and input events will not impact this renderable
+     * @type {boolean}
+     * @default true
+     */
+    isKinematic: boolean;
     /**
      * when true the renderable will be redrawn during the next update cycle
      * @type {boolean}
@@ -319,11 +319,10 @@ export default class Renderable extends Rect {
     update(dt: number): boolean;
     /**
      * update the bounding box for this shape.
-     * @ignore
-     * @param {boolean} absolute - update the bounds size and position in (world) absolute coordinates
+     * @param {boolean} [absolute=true] - update the bounds size and position in (world) absolute coordinates
      * @returns {Bounds} this shape bounding box Rectangle object
      */
-    updateBounds(absolute?: boolean): Bounds;
+    updateBounds(absolute?: boolean | undefined): Bounds;
     /**
      * update the renderable's bounding rect (private)
      * @ignore
@@ -404,6 +403,6 @@ export default class Renderable extends Rect {
     onDestroyEvent(): void;
 }
 import Rect from "./../geometries/rectangle.js";
-import ObservableVector2d from "./../math/observable_vector2.js";
 import ObservableVector3d from "./../math/observable_vector3.js";
+import ObservableVector2d from "./../math/observable_vector2.js";
 import Color from "./../math/color.js";

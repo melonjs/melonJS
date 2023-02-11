@@ -23,7 +23,7 @@ export { default as Body } from './physics/body.js';
 import Bounds from './physics/bounds.js';
 import Tween from './tweens/tween.js';
 export { default as GLShader } from './video/webgl/glshader.js';
-export { default as WebGLCompositor } from './video/webgl/webgl_compositor.js';
+export { default as WebGLCompositor } from './video/webgl/compositors/webgl_compositor.js';
 export { default as Renderer } from './video/renderer.js';
 export { default as WebGLRenderer } from './video/webgl/webgl_renderer.js';
 export { default as CanvasRenderer } from './video/canvas/canvas_renderer.js';

@@ -423,7 +423,7 @@ export default class WebGLRenderer extends Renderer {
 }
 import Renderer from "./../renderer.js";
 import Matrix2d from "./../../math/matrix2.js";
-import WebGLCompositor from "./webgl_compositor.js";
+import WebGLCompositor from "./compositors/webgl_compositor.js";
 import TextureCache from "./../texture/cache.js";
 import { TextureAtlas } from "./../texture/atlas.js";
 import Color from "./../../math/color.js";

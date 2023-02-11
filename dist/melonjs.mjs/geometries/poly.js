@@ -466,7 +466,6 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
 
     /**
      * update the bounding box for this shape.
-     * @ignore
      * @name updateBounds
      * @memberof Polygon
      * @returns {Bounds} this shape bounding box Rectangle object

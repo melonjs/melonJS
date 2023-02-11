@@ -241,11 +241,17 @@ import { isNumeric } from '../utils/string.js';
     preDraw(renderer) {
         // save the context
         renderer.save();
+
         // apply the defined alpha value
         renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
         // apply the defined tint, if any
         renderer.setTint(this.tint);
+
+        // apply blending if different from "normal"
+        if (this.blendMode !== renderer.getBlendMode()) {
+            renderer.setBlendMode(this.blendMode);
+        }
     }
 
     /**

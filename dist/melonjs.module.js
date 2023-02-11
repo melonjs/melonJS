@@ -12754,7 +12754,6 @@ earcut.flatten = function (data) {
 
     /**
      * update the bounding box for this shape.
-     * @ignore
      * @name updateBounds
      * @memberof Polygon
      * @returns {Bounds} this shape bounding box Rectangle object
@@ -12933,6 +12932,8 @@ earcut.flatten = function (data) {
     }
     set centerX (value) {
         this.pos.x = value - (this.width / 2);
+        this.recalc();
+        this.updateBounds();
     }
 
     /**
@@ -12951,6 +12952,8 @@ earcut.flatten = function (data) {
     }
     set centerY(value) {
         this.pos.y = value - (this.height / 2);
+        this.recalc();
+        this.updateBounds();
     }
 
     /**
@@ -16321,18 +16324,42 @@ var cssToRGB = new Map();
         // parent constructor
         super(x, y, width, height);
 
-        /**
-         * to identify the object as a renderable object
-         * @ignore
-         */
-        this.isRenderable = true;
+        if (this.pos instanceof ObservableVector3d) {
+            this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos, this);
+        } else {
+            /**
+             * Position of the Renderable relative to its parent container
+             * @public
+             * @type {ObservableVector3d}
+             */
+            this.pos = pool.pull("ObservableVector3d", x, y, 0, { onUpdate: this.updateBoundsPos, scope: this});
+        }
 
-        /**
-         * If true then physic collision and input events will not impact this renderable
-         * @type {boolean}
-         * @default true
-         */
-        this.isKinematic = true;
+        if (this.anchorPoint instanceof ObservableVector2d) {
+            this.anchorPoint.setMuted(0.5, 0.5).setCallback(this.onAnchorUpdate, this);
+        } else {
+            /**
+             * The anchor point is used for attachment behavior, and/or when applying transformations.<br>
+             * The coordinate system places the origin at the top left corner of the frame (0, 0) and (1, 1) means the bottom-right corner<br>
+             * <img src="images/anchor_point.png"/><br>
+             * a Renderable's anchor point defaults to (0.5,0.5), which corresponds to the center position.<br>
+             * <br>
+             * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation.
+             * To specify a value through Tiled, use a json expression like `json:{"x":0.5,"y":0.5}`. </i>
+             * @type {ObservableVector2d}
+             * @default <0.5,0.5>
+             */
+            this.anchorPoint = pool.pull("ObservableVector2d", 0.5, 0.5, { onUpdate: this.onAnchorUpdate, scope: this });
+        }
+
+        if (typeof this.currentTransform === "undefined") {
+            /**
+             * the renderable default transformation matrix
+             * @type {Matrix2d}
+             */
+            this.currentTransform = pool.pull("Matrix2d");
+        }
+        this.currentTransform.identity();
 
         /**
          * the renderable physic body
@@ -16370,15 +16397,6 @@ var cssToRGB = new Map();
          * }
          */
         this.body = undefined;
-
-        if (typeof this.currentTransform === "undefined") {
-            /**
-             * the renderable default transformation matrix
-             * @type {Matrix2d}
-             */
-            this.currentTransform = pool.pull("Matrix2d");
-        }
-        this.currentTransform.identity();
 
        /**
         * (G)ame (U)nique (Id)entifier" <br>
@@ -16429,23 +16447,6 @@ var cssToRGB = new Map();
          * @default false
          */
         this.floating = false;
-
-        if (this.anchorPoint instanceof ObservableVector2d) {
-            this.anchorPoint.setMuted(0.5, 0.5).setCallback(this.onAnchorUpdate, this);
-        } else {
-            /**
-             * The anchor point is used for attachment behavior, and/or when applying transformations.<br>
-             * The coordinate system places the origin at the top left corner of the frame (0, 0) and (1, 1) means the bottom-right corner<br>
-             * <img src="images/anchor_point.png"/><br>
-             * a Renderable's anchor point defaults to (0.5,0.5), which corresponds to the center position.<br>
-             * <br>
-             * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation.
-             * To specify a value through Tiled, use a json expression like `json:{"x":0.5,"y":0.5}`. </i>
-             * @type {ObservableVector2d}
-             * @default <0.5,0.5>
-             */
-            this.anchorPoint = pool.pull("ObservableVector2d", 0.5, 0.5, { onUpdate: this.onAnchorUpdate, scope: this });
-        }
 
         /**
          * When enabled, an object container will automatically apply
@@ -16522,16 +16523,18 @@ var cssToRGB = new Map();
          */
         this.name = "";
 
-        if (this.pos instanceof ObservableVector3d) {
-            this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos, this);
-        } else {
-            /**
-             * Position of the Renderable relative to its parent container
-             * @public
-             * @type {ObservableVector3d}
-             */
-            this.pos = pool.pull("ObservableVector3d", x, y, 0, { onUpdate: this.updateBoundsPos, scope: this});
-        }
+        /**
+         * to identify the object as a renderable object
+         * @ignore
+         */
+        this.isRenderable = true;
+
+        /**
+         * If true then physic collision and input events will not impact this renderable
+         * @type {boolean}
+         * @default true
+         */
+        this.isKinematic = true;
 
         /**
          * when true the renderable will be redrawn during the next update cycle
@@ -16675,8 +16678,11 @@ var cssToRGB = new Map();
      * @returns {Renderable} Reference to this object for method chaining
      */
     flipX(flip = true) {
-        this._flip.x = !!flip;
-        this.isDirty = true;
+        if (this.isFlippedX !== flip) {
+            this._flip.x = !!flip;
+            this.scale(-1, 1);
+            this.isDirty = true;
+        }
         return this;
     }
 
@@ -16687,8 +16693,11 @@ var cssToRGB = new Map();
      * @returns {Renderable} Reference to this object for method chaining
      */
     flipY(flip = true) {
-        this._flip.y = !!flip;
-        this.isDirty = true;
+        if (this.isFlippedY !== flip) {
+            this._flip.y = !!flip;
+            this.scale(1, -1);
+            this.isDirty = true;
+        }
         return this;
     }
 
@@ -16821,46 +16830,60 @@ var cssToRGB = new Map();
 
     /**
      * update the bounding box for this shape.
-     * @ignore
-     * @param {boolean} absolute - update the bounds size and position in (world) absolute coordinates
+     * @param {boolean} [absolute=true] - update the bounds size and position in (world) absolute coordinates
      * @returns {Bounds} this shape bounding box Rectangle object
      */
     updateBounds(absolute = true) {
-        var bounds = this.getBounds();
-        var hasTransform = typeof this.currentTransform !== "undefined" && !this.currentTransform.isIdentity();
+        if (this.isRenderable) {
+            var bounds = this.getBounds();
 
-        bounds.clear();
+            bounds.clear();
 
-        // temporarly translate the matrix
-        if (hasTransform) {
-            this.currentTransform.translate(
-                -this.width * this.anchorPoint.x,
-                -this.height * this.anchorPoint.y
-            );
+            if ((this.autoTransform === true) && (!this.currentTransform.isIdentity())) {
+                // temporarly translate the matrix based on the anchor point
+                this.currentTransform.translate(
+                    -this.width * this.anchorPoint.x,
+                    -this.height * this.anchorPoint.y
+                );
+                bounds.addFrame(
+                    0,
+                    0,
+                    this.width,
+                    this.height,
+                    this.currentTransform
+                );
+                this.currentTransform.translate(
+                    this.width * this.anchorPoint.x,
+                    this.height * this.anchorPoint.y
+                );
+            } else {
+                bounds.addFrame(
+                    0,
+                    0,
+                    this.width,
+                    this.height
+                );
+                // translate the bounds based on the anchor point
+                bounds.translate(
+                    -this.width * this.anchorPoint.x,
+                    -this.height * this.anchorPoint.y
+                );
+            }
+
+            if (absolute === true) {
+                bounds.centerOn(this.pos.x + bounds.x + bounds.width / 2,  this.pos.y + bounds.y + bounds.height / 2);
+                if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
+                     bounds.translate(this.ancestor.getAbsolutePosition());
+                }
+
+            }
+            return bounds;
+
+        } else {
+            // manage the case where updateBounds is called
+            // before the object being yet properly initialized
+            return super.updateBounds(absolute);
         }
-
-        bounds.addFrame(
-            0,
-            0,
-            this.width,
-            this.height,
-            hasTransform ? this.currentTransform : undefined
-        );
-
-        if (hasTransform) {
-            this.currentTransform.translate(
-                this.width * this.anchorPoint.x,
-                this.height * this.anchorPoint.y
-            );
-        }
-
-        if (absolute === true) {
-            this.updateBoundsPos();//this.pos.x + bounds.x, this.pos.y + bounds.y);
-        }
-
-        this.isDirty = true;
-
-        return bounds;
     }
 
     /**
@@ -16868,23 +16891,7 @@ var cssToRGB = new Map();
      * @ignore
      */
      updateBoundsPos(newX = this.pos.x, newY = this.pos.y) {
-        var bounds = this.getBounds();
-
-        bounds.centerOn(newX + this.width / 2, newY + this.height / 2);
-
-        if (typeof this.anchorPoint !== "undefined" && bounds.isFinite()) {
-            bounds.translate(
-                -bounds.width * this.anchorPoint.x,
-                -bounds.height * this.anchorPoint.y
-            );
-        }
-
-         // XXX: This is called from the constructor, before it gets an ancestor
-         if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
-             bounds.translate(this.ancestor.getAbsolutePosition());
-         }
-
-         this.isDirty = true;
+        this.getBounds().translate(newX - this.pos.x, newY - this.pos.y);
      }
 
      /**
@@ -16936,16 +16943,6 @@ var cssToRGB = new Map();
 
         // apply the defined alpha value
         renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
-
-        // apply flip
-        if (this._flip.x || this._flip.y) {
-            var dx = this._flip.x ? this.centerX - ax : 0,
-                dy = this._flip.y ? this.centerY - ay : 0;
-
-            renderer.translate(dx, dy);
-            renderer.scale(this._flip.x  ? -1 : 1, this._flip.y  ? -1 : 1);
-            renderer.translate(-dx, -dy);
-        }
 
         // apply stencil mask if defined
         if (typeof this.mask !== "undefined") {
@@ -21819,20 +21816,11 @@ var quadVertex = "attribute vec2 aVertex;\nattribute vec2 aRegion;\nattribute ve
 
 var quadFragment = "uniform sampler2D uSampler;\nvarying vec4 vColor;\nvarying vec2 vRegion;\n\nvoid main(void) {\n    gl_FragColor = texture2D(uSampler, vRegion) * vColor;\n}\n";
 
-// a pool of resuable vectors
-var V_ARRAY = [
-    new Vector2d(),
-    new Vector2d(),
-    new Vector2d(),
-    new Vector2d()
-];
-
 /**
  * @classdesc
- * A WebGL Compositor object. This class handles all of the WebGL state<br>
- * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
+ * A base Compositor object.
  */
- class WebGLCompositor {
+ class Compositor {
     /**
      * @param {WebGLRenderer} renderer - the current WebGL renderer session
      */
@@ -21847,10 +21835,6 @@ var V_ARRAY = [
     init (renderer) {
         // local reference
         var gl = renderer.gl;
-
-        // list of active texture units
-        this.currentTextureUnit = -1;
-        this.boundTextures = [];
 
         // the associated renderer
         this.renderer = renderer;
@@ -21900,21 +21884,6 @@ var V_ARRAY = [
          */
         this.vertexSize = 0;
 
-        // Load and create shader programs
-        this.primitiveShader = new GLShader(this.gl, primitiveVertex, primitiveFragment);
-        this.quadShader = new GLShader(this.gl, quadVertex, quadFragment);
-
-        /// define all vertex attributes
-        this.addAttribute("aVertex", 2, gl.FLOAT, false, 0 * Float32Array.BYTES_PER_ELEMENT); // 0
-        this.addAttribute("aRegion", 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT); // 1
-        this.addAttribute("aColor",  4, gl.UNSIGNED_BYTE, true, 4 * Float32Array.BYTES_PER_ELEMENT); // 2
-
-        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, 6); // 6 vertices per quad
-
-        // vertex buffer
-        gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-        gl.bufferData(gl.ARRAY_BUFFER, this.vertexBuffer.buffer, gl.STREAM_DRAW);
-
         // register to the CANVAS resize channel
         on(CANVAS_ONRESIZE, (width, height) => {
             this.flush();
@@ -21941,18 +21910,6 @@ var V_ARRAY = [
 
         // Initialize clear color
         this.clearColor(0.0, 0.0, 0.0, 0.0);
-
-        // delete all related bound texture
-        for (var i = 0; i < this.renderer.maxTextures; i++) {
-            var texture2D = this.getTexture2D(i);
-            if (typeof texture2D !== "undefined") {
-                this.deleteTexture2D(texture2D);
-            }
-        }
-        this.currentTextureUnit = -1;
-
-        // set the quad shader as the default program
-        this.useShader(this.quadShader);
     }
 
     /**
@@ -22009,6 +21966,142 @@ var V_ARRAY = [
      */
     setViewport(x, y, w, h) {
         this.gl.viewport(x, y, w, h);
+    }
+
+    /**
+     * set/change the current projection matrix
+     * @param {Matrix3d} matrix
+     */
+    setProjection(matrix) {
+        this.activeShader.setUniform("uProjectionMatrix", matrix);
+    }
+
+    /**
+     * Select the shader to use for compositing
+     * @see GLShader
+     * @param {GLShader} shader - a reference to a GLShader instance
+     */
+    useShader(shader) {
+        if (this.activeShader !== shader) {
+            this.flush();
+            this.activeShader = shader;
+            this.activeShader.bind();
+            this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
+            this.activeShader.setVertexAttributes(this.gl, this.attributes, this.vertexByteSize);
+        }
+    }
+
+    /**
+     * Flush batched texture operations to the GPU
+     * @param {number} [mode=gl.TRIANGLES] - the GL drawing mode
+     */
+    flush(mode = this.mode) {
+        var vertex = this.vertexBuffer;
+        var vertexCount = vertex.vertexCount;
+
+        if (vertexCount > 0) {
+            var gl = this.gl;
+            var vertexSize = vertex.vertexSize;
+
+            // Copy data into stream buffer
+            if (this.renderer.WebGLVersion > 1) {
+                gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(), gl.STREAM_DRAW, 0, vertexCount * vertexSize);
+            } else {
+                gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(0, vertexCount * vertexSize), gl.STREAM_DRAW);
+            }
+
+            gl.drawArrays(mode, 0, vertexCount);
+
+            // clear the vertex buffer
+            vertex.clear();
+        }
+    }
+
+    /**
+     * Clear the frame buffer
+     * @param {number} [alpha = 0.0] - the alpha value used when clearing the framebuffer
+     */
+    clear(alpha = 0) {
+        var gl = this.gl;
+        gl.clearColor(0, 0, 0, alpha);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+    }
+
+    /**
+     * Specify the color values used when clearing color buffers. The values are clamped between 0 and 1.
+     * @param {number} [r = 0] - the red color value used when the color buffers are cleared
+     * @param {number} [g = 0] - the green color value used when the color buffers are cleared
+     * @param {number} [b = 0] - the blue color value used when the color buffers are cleared
+     * @param {number} [a = 0] - the alpha color value used when the color buffers are cleared
+     */
+    clearColor(r = 0, g = 0, b = 0, a = 0) {
+        var gl = this.gl;
+        gl.clearColor(r, g, b, a);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+    }
+}
+
+// a pool of resuable vectors
+var V_ARRAY = [
+    new Vector2d(),
+    new Vector2d(),
+    new Vector2d(),
+    new Vector2d()
+];
+
+/**
+ * @classdesc
+ * A WebGL Compositor object. This class handles all of the WebGL state<br>
+ * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
+ * @augments Compositor
+ */
+ class WebGLCompositor extends Compositor {
+
+    /**
+     * Initialize the compositor
+     * @ignore
+     */
+    init (renderer) {
+        super.init(renderer);
+
+        // list of active texture units
+        this.currentTextureUnit = -1;
+        this.boundTextures = [];
+
+        // Load and create shader programs
+        this.primitiveShader = new GLShader(this.gl, primitiveVertex, primitiveFragment);
+        this.quadShader = new GLShader(this.gl, quadVertex, quadFragment);
+
+        /// define all vertex attributes
+        this.addAttribute("aVertex", 2, this.gl.FLOAT, false, 0 * Float32Array.BYTES_PER_ELEMENT); // 0
+        this.addAttribute("aRegion", 2, this.gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT); // 1
+        this.addAttribute("aColor",  4, this.gl.UNSIGNED_BYTE, true, 4 * Float32Array.BYTES_PER_ELEMENT); // 2
+
+        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, 6); // 6 vertices per quad
+
+        // vertex buffer
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gl.createBuffer());
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.vertexBuffer.buffer, this.gl.STREAM_DRAW);
+    }
+
+    /**
+     * Reset compositor internal state
+     * @ignore
+     */
+    reset() {
+        super.reset();
+
+        // delete all related bound texture
+        for (var i = 0; i < this.renderer.maxTextures; i++) {
+            var texture2D = this.getTexture2D(i);
+            if (typeof texture2D !== "undefined") {
+                this.deleteTexture2D(texture2D);
+            }
+        }
+        this.currentTextureUnit = -1;
+
+        // set the quad shader as the default program
+        this.useShader(this.quadShader);
     }
 
     /**
@@ -22141,13 +22234,6 @@ var V_ARRAY = [
         return this.currentTextureUnit;
     }
 
-    /**
-     * set/change the current projection matrix
-     * @param {Matrix3d} matrix
-     */
-    setProjection(matrix) {
-        this.activeShader.setUniform("uProjectionMatrix", matrix);
-    }
 
     /**
      * Select the shader to use for compositing
@@ -22219,32 +22305,6 @@ var V_ARRAY = [
     }
 
     /**
-     * Flush batched texture operations to the GPU
-     * @param {number} [mode=gl.TRIANGLES] - the GL drawing mode
-     */
-    flush(mode = this.mode) {
-        var vertex = this.vertexBuffer;
-        var vertexCount = vertex.vertexCount;
-
-        if (vertexCount > 0) {
-            var gl = this.gl;
-            var vertexSize = vertex.vertexSize;
-
-            // Copy data into stream buffer
-            if (this.renderer.WebGLVersion > 1) {
-                gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(), gl.STREAM_DRAW, 0, vertexCount * vertexSize);
-            } else {
-                gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(0, vertexCount * vertexSize), gl.STREAM_DRAW);
-            }
-
-            gl.drawArrays(mode, 0, vertexCount);
-
-            // clear the vertex buffer
-            vertex.clear();
-        }
-    }
-
-    /**
      * Draw an array of vertices
      * @param {GLenum} mode - primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
      * @param {Point[]} verts - an array of vertices
@@ -22269,29 +22329,6 @@ var V_ARRAY = [
 
         // flush
         this.flush(mode);
-    }
-
-    /**
-     * Clear the frame buffer
-     * @param {number} [alpha = 0.0] - the alpha value used when clearing the framebuffer
-     */
-    clear(alpha = 0) {
-        var gl = this.gl;
-        gl.clearColor(0, 0, 0, alpha);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
-    }
-
-    /**
-     * Specify the color values used when clearing color buffers. The values are clamped between 0 and 1.
-     * @param {number} [r = 0] - the red color value used when the color buffers are cleared
-     * @param {number} [g = 0] - the green color value used when the color buffers are cleared
-     * @param {number} [b = 0] - the blue color value used when the color buffers are cleared
-     * @param {number} [a = 0] - the alpha color value used when the color buffers are cleared
-     */
-    clearColor(r = 0, g = 0, b = 0, a = 0) {
-        var gl = this.gl;
-        gl.clearColor(r, g, b, a);
-        gl.clear(gl.COLOR_BUFFER_BIT);
     }
 }
 
@@ -25419,7 +25456,6 @@ function preRenderLayer(layer, renderer) {
 
     }
 
-
     // called when the layer is added to the game world or a container
     onActivateEvent() {
 
@@ -25442,10 +25478,6 @@ function preRenderLayer(layer, renderer) {
         if (this.isAnimated) {
             this.preRender = false;
         }
-
-        // Resize the bounding rect
-        this.getBounds().addBounds(this.getRenderer().getBounds(), true);
-        this.getBounds().shift(this.pos);
 
         // if pre-rendering method is use, create an offline canvas/renderer
         if ((this.preRender === true) && (!this.canvasRenderer)) {
@@ -25485,7 +25517,6 @@ function preRenderLayer(layer, renderer) {
     getRenderer() {
         return this.renderer;
     }
-
 
     /**
      * Return the TileId of the Tile at the specified position
@@ -25601,7 +25632,6 @@ function preRenderLayer(layer, renderer) {
             }
             return result;
         }
-
         return false;
     }
 
@@ -25928,6 +25958,10 @@ let globalFloatingCounter = 0;
 
         child.ancestor = this;
         this.getChildren().push(child);
+        if (typeof child.updateBounds === "function") {
+            // update child bounds to reflect the new ancestor
+            child.updateBounds();
+        }
 
         // set the child z value if required
         if (typeof(child.pos) !== "undefined") {
@@ -26239,11 +26273,11 @@ let globalFloatingCounter = 0;
      * @param {boolean} absolute - update the bounds size and position in (world) absolute coordinates
      * @returns {Bounds} this shape bounding box Rectangle object
      */
-    updateBounds(absolute = true) {  // eslint-disable-line no-unused-vars
-        // call parent method
-        super.updateBounds(false);
-
+    updateBounds(absolute = true) {
         var bounds = this.getBounds();
+
+        // call parent method
+        super.updateBounds(absolute);
 
         if (this.enableChildBoundsUpdate === true) {
             this.forEach((child) => {
@@ -26282,7 +26316,7 @@ let globalFloatingCounter = 0;
      * update the cointainer's bounding rect (private)
      * @ignore
      */
-    updateBoundsPos(newX, newY) {
+    updateBoundsPos(newX = this.pos.x, newY = this.pos.y) {
         // call the parent method
         super.updateBoundsPos(newX, newY);
 
@@ -26290,14 +26324,11 @@ let globalFloatingCounter = 0;
         this.forEach((child) => {
             if (child.isRenderable) {
                 child.updateBoundsPos(
-                    // workaround on this.pos being updated after
-                    // the callback being triggered
                     child.pos.x + newX - this.pos.x,
                     child.pos.y + newY - this.pos.y
                 );
             }
         });
-        return this.getBounds();
     }
 
     /**
@@ -29423,8 +29454,8 @@ var loader = {
                 throw new Error("me.Sprite: '" + settings.image + "' image/texture not found!");
             }
             // update the default "current" frame size
-            this.current.width = settings.framewidth = settings.framewidth || this.image.width;
-            this.current.height = settings.frameheight = settings.frameheight || this.image.height;
+            this.width = this.current.width = settings.framewidth = settings.framewidth || this.image.width;
+            this.height = this.current.height = settings.frameheight = settings.frameheight || this.image.height;
             this.source = renderer.cache.get(this.image, settings);
             this.textureAtlas = this.source.getAtlas();
         }
@@ -29434,10 +29465,6 @@ var loader = {
             this.textureAtlas = settings.atlas;
             this.atlasIndices = settings.atlasIndices;
         }
-
-        // resize based on the active frame
-        this.width = this.current.width;
-        this.height = this.current.height;
 
         // apply flip flags if specified
         if (typeof (settings.flipX) !== "undefined") {
@@ -32876,11 +32903,17 @@ class CanvasTexture {
     preDraw(renderer) {
         // save the context
         renderer.save();
+
         // apply the defined alpha value
         renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
         // apply the defined tint, if any
         renderer.setTint(this.tint);
+
+        // apply blending if different from "normal"
+        if (this.blendMode !== renderer.getBlendMode()) {
+            renderer.setBlendMode(this.blendMode);
+        }
     }
 
     /**
@@ -37258,10 +37291,10 @@ function createDefaultParticleTexture(w = 8, h = 8) {
 
     /**
      * update the bounding box for this entity.
-     * @ignore
-     * @returns {Bounds} this shape bounding box Rectangle object
+     * @param {boolean} [absolute=true] - update the bounds size and position in (world) absolute coordinates
+     * @returns {Bounds} this entity bounding box Rectangle object
      */
-    updateBounds() {
+    updateBounds(absolute = true) {
         var bounds = this.getBounds();
 
         bounds.clear();
@@ -37281,7 +37314,13 @@ function createDefaultParticleTexture(w = 8, h = 8) {
             bounds.addBounds(this.body.getBounds());
         }
 
-        this.updateBoundsPos(this.pos.x + bounds.x, this.pos.y + bounds.y);
+        if (absolute === true) {
+            bounds.centerOn(this.pos.x + bounds.x + bounds.width / 2,  this.pos.y + bounds.y + bounds.height / 2);
+             if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
+                 bounds.translate(this.ancestor.getAbsolutePosition());
+             }
+
+        }
 
         return bounds;
     }

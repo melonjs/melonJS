@@ -213,11 +213,6 @@ export default class Container extends Renderable {
      */
     private isAttachedToRoot;
     /**
-     * update the cointainer's bounding rect (private)
-     * @ignore
-     */
-    updateBoundsPos(newX: any, newY: any): Bounds;
-    /**
      * @ignore
      */
     onActivateEvent(): void;

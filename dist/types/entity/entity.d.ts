@@ -78,12 +78,6 @@ export default class Entity extends Renderable {
     /** @ignore */
     update(dt: any): boolean;
     /**
-     * update the bounding box for this entity.
-     * @ignore
-     * @returns {Bounds} this shape bounding box Rectangle object
-     */
-    updateBounds(): Bounds;
-    /**
      * update the bounds when the body is modified
      * @ignore
      * @name onBodyUpdate

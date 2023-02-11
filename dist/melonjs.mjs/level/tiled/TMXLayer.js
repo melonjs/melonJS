@@ -240,7 +240,6 @@ function preRenderLayer(layer, renderer) {
 
     }
 
-
     // called when the layer is added to the game world or a container
     onActivateEvent() {
 
@@ -263,10 +262,6 @@ function preRenderLayer(layer, renderer) {
         if (this.isAnimated) {
             this.preRender = false;
         }
-
-        // Resize the bounding rect
-        this.getBounds().addBounds(this.getRenderer().getBounds(), true);
-        this.getBounds().shift(this.pos);
 
         // if pre-rendering method is use, create an offline canvas/renderer
         if ((this.preRender === true) && (!this.canvasRenderer)) {
@@ -306,7 +301,6 @@ function preRenderLayer(layer, renderer) {
     getRenderer() {
         return this.renderer;
     }
-
 
     /**
      * Return the TileId of the Tile at the specified position
@@ -422,7 +416,6 @@ function preRenderLayer(layer, renderer) {
             }
             return result;
         }
-
         return false;
     }
 

@@ -152,8 +152,8 @@ import Color from '../math/color.js';
                 throw new Error("me.Sprite: '" + settings.image + "' image/texture not found!");
             }
             // update the default "current" frame size
-            this.current.width = settings.framewidth = settings.framewidth || this.image.width;
-            this.current.height = settings.frameheight = settings.frameheight || this.image.height;
+            this.width = this.current.width = settings.framewidth = settings.framewidth || this.image.width;
+            this.height = this.current.height = settings.frameheight = settings.frameheight || this.image.height;
             this.source = renderer.cache.get(this.image, settings);
             this.textureAtlas = this.source.getAtlas();
         }
@@ -163,10 +163,6 @@ import Color from '../math/color.js';
             this.textureAtlas = settings.atlas;
             this.atlasIndices = settings.atlasIndices;
         }
-
-        // resize based on the active frame
-        this.width = this.current.width;
-        this.height = this.current.height;
 
         // apply flip flags if specified
         if (typeof (settings.flipX) !== "undefined") {
