@@ -186,9 +186,8 @@ import pool from "./../system/pooling.js";
      * @param {number} [z=1]
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
-    scale(x, y, z) {
-        y = (typeof (y) !== "undefined" ? y : x);
-        return this._set(this._x * x, this._y * y, this._z * (z || 1));
+    scale(x, y = x, z = 1) {
+        return this._set(this._x * x, this._y * y, this._z * z);
     }
 
     /**
