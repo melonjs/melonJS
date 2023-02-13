@@ -1,5 +1,7 @@
 # Changelog
 
+## [15.0.0] (melonJS 2) - _2023-02-xx_
+
 ## [14.5.0] (melonJS 2) - _2023-02-13_
 
 ### Added
@@ -1425,6 +1427,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[15.0.0]: https://github.com/melonjs/melonJS/compare/15.0.0...14.5.0
 [14.5.0]: https://github.com/melonjs/melonJS/compare/14.5.0...14.4.0
 [14.4.0]: https://github.com/melonjs/melonJS/compare/14.4.0...14.3.0
 [14.3.0]: https://github.com/melonjs/melonJS/compare/14.3.0...14.2.0

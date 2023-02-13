@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v14.5.0
+ * melonJS Game Engine - v15.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -103,7 +103,7 @@ import { initKeyboardEvent } from './input/keyboard.js';
  * @name version
  * @type {string}
  */
-const version = "14.5.0";
+const version = "15.0.0";
 
 /**
  * a flag indicating that melonJS is fully initialized
