@@ -133,8 +133,7 @@ import pool from '../system/pooling.js';
      * @param {number} [y=x]
      * @returns {Ellipse} Reference to this object for method chaining
      */
-    scale(x, y) {
-        y = typeof (y) !== "undefined" ? y : x;
+    scale(x, y = x) {
         return this.setShape(
             this.pos.x,
             this.pos.y,

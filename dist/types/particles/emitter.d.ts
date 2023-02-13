@@ -168,18 +168,18 @@ export default class ParticleEmitter extends Container {
     isRunning(): boolean;
     /**
      * Launch particles from emitter constantly (e.g. for stream)
-     * @param {number} duration - [optional] time that the emitter releases particles in ms
+     * @param {number} [duration] - time that the emitter releases particles in ms
      */
-    streamParticles(duration: number): void;
+    streamParticles(duration?: number | undefined): void;
     /**
      * Stop the emitter from generating new particles (used only if emitter is Stream)
      */
     stopStream(): void;
     /**
      * Launch all particles from emitter and stop (e.g. for explosion)
-     * @param {number} total - [optional] number of particles to launch
+     * @param {number} [total] - number of particles to launch
      */
-    burstParticles(total: number): void;
+    burstParticles(total?: number | undefined): void;
     /**
      * @ignore
      */

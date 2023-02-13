@@ -163,8 +163,8 @@ import { clamp } from './math.js';
      * @param {number} [y=x]
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
-    scale(x, y) {
-        return this._set(this._x * x, this._y * (typeof (y) !== "undefined" ? y : x));
+    scale(x, y = x) {
+        return this._set(this._x * x, this._y * y);
     }
 
     /**

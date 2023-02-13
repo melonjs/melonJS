@@ -127,8 +127,8 @@ import pool from '../system/pooling.js';
      * @param {number} [y=x]
      * @returns {Vector2d} Reference to this object for method chaining
      */
-    scale(x, y) {
-        return this._set(this.x * x, this.y * (typeof (y) !== "undefined" ? y : x));
+    scale(x, y = x) {
+        return this._set(this.x * x, this.y * y);
     }
 
     /**

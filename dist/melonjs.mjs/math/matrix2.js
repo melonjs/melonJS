@@ -303,15 +303,13 @@ import Matrix3d from './matrix3.js';
      * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
      * @returns {Matrix2d} Reference to this object for method chaining
      */
-    scale(x, y) {
-        var a = this.val,
-           _x = x,
-           _y = typeof(y) === "undefined" ? _x : y;
+    scale(x, y = x) {
+        var a = this.val;
 
-        a[0] *= _x;
-        a[1] *= _x;
-        a[3] *= _y;
-        a[4] *= _y;
+        a[0] *= x;
+        a[1] *= x;
+        a[3] *= y;
+        a[4] *= y;
 
         return this;
     }

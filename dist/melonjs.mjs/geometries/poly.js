@@ -208,9 +208,7 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
      * @param {number} [y=x]
      * @returns {Polygon} Reference to this object for method chaining
      */
-    scale(x, y) {
-        y = typeof (y) !== "undefined" ? y : x;
-
+    scale(x, y = x) {
         var points = this.points;
         var len = points.length;
         for (var i = 0; i < len; i++) {

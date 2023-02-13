@@ -183,9 +183,68 @@ import TextMetrics from './textmetrics.js';
             this._text = this.metrics.wordWrap(this._text, this.wordWrapWidth);
         }
 
-        this.getBounds().addBounds(this.metrics.measureText(this._text), true);
+        this.updateBounds();
 
         return this;
+    }
+
+    /**
+     * update the bounding box for this Bitmap Text.
+     * @param {boolean} [absolute=true] - update the bounds size and position in (world) absolute coordinates
+     * @returns {Bounds} this Bitmap Text bounding box Rectangle object
+     */
+    updateBounds(absolute = true) {
+        var bounds = this.getBounds();
+
+        bounds.clear();
+
+        if (typeof this.metrics !== "undefined") {
+            var ax, ay;
+
+            bounds.addBounds(this.metrics.measureText(this._text));
+
+            switch (this.textAlign) {
+                case "right":
+                    ax = this.metrics.width * 1.0;
+                    break;
+
+                case "center":
+                    ax = this.metrics.width * 0.5;
+                    break;
+
+                default :
+                    ax = this.metrics.width * 0.0;
+                    break;
+            }
+
+             // adjust y pos based on alignment value
+             switch (this.textBaseline) {
+                case "middle":
+                    ay = this.metrics.height * 0.5;
+                    break;
+
+                case "ideographic":
+                case "alphabetic":
+                case "bottom":
+                    ay = this.metrics.height * 1.0;
+                    break;
+
+                default :
+                    ay = this.metrics.height * 0.0;
+                    break;
+            }
+
+            // translate the bounds accordingly
+            bounds.translate(ax, ay);
+        }
+
+        if (absolute === true) {
+            if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
+                 bounds.translate(this.ancestor.getAbsolutePosition());
+            }
+        }
+
+        return bounds;
     }
 
     /**
@@ -214,9 +273,8 @@ import TextMetrics from './textmetrics.js';
     resize(scale) {
         this.fontScale.set(scale, scale);
 
-        this.getBounds().addBounds(this.metrics.measureText(this._text), true);
+        this.updateBounds();
 
-        // clear the cache text to recalculate bounds
         this.isDirty = true;
 
         return this;

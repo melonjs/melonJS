@@ -34,7 +34,7 @@ function isNumeric(str) {
     if (typeof str === "string") {
         str = str.trim();
     }
-    return !isNaN(str) && /[+-]?([0-9]*[.])?[0-9]+/.test(str);
+    return !isNaN(str) && /^[+-]?(\d+(\.\d+)?|\.\d+)$/.test(str);
 }
 
 /**

@@ -1333,7 +1333,7 @@ function isNumeric(str) {
     if (typeof str === "string") {
         str = str.trim();
     }
-    return !isNaN(str) && /[+-]?([0-9]*[.])?[0-9]+/.test(str);
+    return !isNaN(str) && /^[+-]?(\d+(\.\d+)?|\.\d+)$/.test(str);
 }
 
 /**
@@ -8496,8 +8496,8 @@ var pool = new ObjectPool();
      * @param {number} [y=x]
      * @returns {Vector2d} Reference to this object for method chaining
      */
-    scale(x, y) {
-        return this._set(this.x * x, this.y * (typeof (y) !== "undefined" ? y : x));
+    scale(x, y = x) {
+        return this._set(this.x * x, this.y * y);
     }
 
     /**
@@ -9025,9 +9025,8 @@ var pool = new ObjectPool();
      * @param {number} [z=1]
      * @returns {Vector3d} Reference to this object for method chaining
      */
-    scale(x, y, z) {
-        y = (typeof (y) !== "undefined" ? y : x);
-        return this._set(this.x * x, this.y * y, this.z * (z || 1));
+    scale(x, y = x, z = 1) {
+        return this._set(this.x * x, this.y * y, this.z * z);
     }
 
     /**
@@ -9602,8 +9601,8 @@ var pool = new ObjectPool();
      * @param {number} [y=x]
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
-    scale(x, y) {
-        return this._set(this._x * x, this._y * (typeof (y) !== "undefined" ? y : x));
+    scale(x, y = x) {
+        return this._set(this._x * x, this._y * y);
     }
 
     /**
@@ -10089,9 +10088,8 @@ var pool = new ObjectPool();
      * @param {number} [z=1]
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
-    scale(x, y, z) {
-        y = (typeof (y) !== "undefined" ? y : x);
-        return this._set(this._x * x, this._y * y, this._z * (z || 1));
+    scale(x, y = x, z = 1) {
+        return this._set(this._x * x, this._y * y, this._z * z);
     }
 
     /**
@@ -10845,26 +10843,23 @@ var pool = new ObjectPool();
      * @param {number} [z=0] - a number representing the depth vector
      * @returns {Matrix3d} Reference to this object for method chaining
      */
-    scale(x, y, z) {
-        var a = this.val,
-           _x = x,
-           _y = typeof(y) === "undefined" ? _x : y,
-           _z = typeof(z) === "undefined" ?  0 : z;
+    scale(x, y = x, z = 0) {
+        var a = this.val;
 
-        a[0] = a[0] * _x;
-        a[1] = a[1] * _x;
-        a[2] = a[2] * _x;
-        a[3] = a[3] * _x;
+        a[0] = a[0] * x;
+        a[1] = a[1] * x;
+        a[2] = a[2] * x;
+        a[3] = a[3] * x;
 
-        a[4] = a[4] * _y;
-        a[5] = a[5] * _y;
-        a[6] = a[6] * _y;
-        a[7] = a[7] * _y;
+        a[4] = a[4] * y;
+        a[5] = a[5] * y;
+        a[6] = a[6] * y;
+        a[7] = a[7] * y;
 
-        a[8] = a[8] * _z;
-        a[9] = a[9] * _z;
-        a[10] = a[10] * _z;
-        a[11] = a[11] * _z;
+        a[8] = a[8] * z;
+        a[9] = a[9] * z;
+        a[10] = a[10] * z;
+        a[11] = a[11] * z;
 
         return this;
     }
@@ -11415,15 +11410,13 @@ var pool = new ObjectPool();
      * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
      * @returns {Matrix2d} Reference to this object for method chaining
      */
-    scale(x, y) {
-        var a = this.val,
-           _x = x,
-           _y = typeof(y) === "undefined" ? _x : y;
+    scale(x, y = x) {
+        var a = this.val;
 
-        a[0] *= _x;
-        a[1] *= _x;
-        a[3] *= _y;
-        a[4] *= _y;
+        a[0] *= x;
+        a[1] *= x;
+        a[3] *= y;
+        a[4] *= y;
 
         return this;
     }
@@ -12496,9 +12489,7 @@ earcut.flatten = function (data) {
      * @param {number} [y=x]
      * @returns {Polygon} Reference to this object for method chaining
      */
-    scale(x, y) {
-        y = typeof (y) !== "undefined" ? y : x;
-
+    scale(x, y = x) {
         var points = this.points;
         var len = points.length;
         for (var i = 0; i < len; i++) {
@@ -13850,18 +13841,10 @@ function unbindKey(keycode) {
     addFrame(x0, y0, x1, y1, m) {
         var v = pool.pull("Point");
 
-        // transform all points and add to the bound definition
-        if (typeof m !== "undefined" && !m.isIdentity()) {
-            this.addPoint(v.set(x0, y0), m);
-            this.addPoint(v.set(x1, y0), m);
-            this.addPoint(v.set(x0, y1), m);
-            this.addPoint(v.set(x1, y1), m);
-        } else {
-            this.addPoint(v.set(x0, y0));
-            this.addPoint(v.set(x1, y0));
-            this.addPoint(v.set(x0, y1));
-            this.addPoint(v.set(x1, y1));
-        }
+        this.addPoint(v.set(x0, y0), m);
+        this.addPoint(v.set(x1, y0), m);
+        this.addPoint(v.set(x0, y1), m);
+        this.addPoint(v.set(x1, y1), m);
 
         pool.push(v);
     }
@@ -18290,8 +18273,7 @@ var collision = {
      * @param {number} [y=x]
      * @returns {Ellipse} Reference to this object for method chaining
      */
-    scale(x, y) {
-        y = typeof (y) !== "undefined" ? y : x;
+    scale(x, y = x) {
         return this.setShape(
             this.pos.x,
             this.pos.y,
@@ -34191,9 +34173,68 @@ var getContext2d = function (renderer$1, text) {
             this._text = this.metrics.wordWrap(this._text, this.wordWrapWidth);
         }
 
-        this.getBounds().addBounds(this.metrics.measureText(this._text), true);
+        this.updateBounds();
 
         return this;
+    }
+
+    /**
+     * update the bounding box for this Bitmap Text.
+     * @param {boolean} [absolute=true] - update the bounds size and position in (world) absolute coordinates
+     * @returns {Bounds} this Bitmap Text bounding box Rectangle object
+     */
+    updateBounds(absolute = true) {
+        var bounds = this.getBounds();
+
+        bounds.clear();
+
+        if (typeof this.metrics !== "undefined") {
+            var ax, ay;
+
+            bounds.addBounds(this.metrics.measureText(this._text));
+
+            switch (this.textAlign) {
+                case "right":
+                    ax = this.metrics.width * 1.0;
+                    break;
+
+                case "center":
+                    ax = this.metrics.width * 0.5;
+                    break;
+
+                default :
+                    ax = this.metrics.width * 0.0;
+                    break;
+            }
+
+             // adjust y pos based on alignment value
+             switch (this.textBaseline) {
+                case "middle":
+                    ay = this.metrics.height * 0.5;
+                    break;
+
+                case "ideographic":
+                case "alphabetic":
+                case "bottom":
+                    ay = this.metrics.height * 1.0;
+                    break;
+
+                default :
+                    ay = this.metrics.height * 0.0;
+                    break;
+            }
+
+            // translate the bounds accordingly
+            bounds.translate(ax, ay);
+        }
+
+        if (absolute === true) {
+            if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
+                 bounds.translate(this.ancestor.getAbsolutePosition());
+            }
+        }
+
+        return bounds;
     }
 
     /**
@@ -34222,9 +34263,8 @@ var getContext2d = function (renderer$1, text) {
     resize(scale) {
         this.fontScale.set(scale, scale);
 
-        this.getBounds().addBounds(this.metrics.measureText(this._text), true);
+        this.updateBounds();
 
-        // clear the cache text to recalculate bounds
         this.isDirty = true;
 
         return this;
@@ -36871,7 +36911,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
 
     /**
      * Launch particles from emitter constantly (e.g. for stream)
-     * @param {number} duration - [optional] time that the emitter releases particles in ms
+     * @param {number} [duration] - time that the emitter releases particles in ms
      */
     streamParticles(duration) {
         this._enabled = true;
@@ -36889,7 +36929,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
 
     /**
      * Launch all particles from emitter and stop (e.g. for explosion)
-     * @param {number} total - [optional] number of particles to launch
+     * @param {number} [total] - number of particles to launch
      */
     burstParticles(total) {
         this._enabled = true;

@@ -141,9 +141,8 @@ import pool from '../system/pooling.js';
      * @param {number} [z=1]
      * @returns {Vector3d} Reference to this object for method chaining
      */
-    scale(x, y, z) {
-        y = (typeof (y) !== "undefined" ? y : x);
-        return this._set(this.x * x, this.y * y, this.z * (z || 1));
+    scale(x, y = x, z = 1) {
+        return this._set(this.x * x, this.y * y, this.z * z);
     }
 
     /**

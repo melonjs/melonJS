@@ -401,26 +401,23 @@ import { EPSILON } from './math.js';
      * @param {number} [z=0] - a number representing the depth vector
      * @returns {Matrix3d} Reference to this object for method chaining
      */
-    scale(x, y, z) {
-        var a = this.val,
-           _x = x,
-           _y = typeof(y) === "undefined" ? _x : y,
-           _z = typeof(z) === "undefined" ?  0 : z;
+    scale(x, y = x, z = 0) {
+        var a = this.val;
 
-        a[0] = a[0] * _x;
-        a[1] = a[1] * _x;
-        a[2] = a[2] * _x;
-        a[3] = a[3] * _x;
+        a[0] = a[0] * x;
+        a[1] = a[1] * x;
+        a[2] = a[2] * x;
+        a[3] = a[3] * x;
 
-        a[4] = a[4] * _y;
-        a[5] = a[5] * _y;
-        a[6] = a[6] * _y;
-        a[7] = a[7] * _y;
+        a[4] = a[4] * y;
+        a[5] = a[5] * y;
+        a[6] = a[6] * y;
+        a[7] = a[7] * y;
 
-        a[8] = a[8] * _z;
-        a[9] = a[9] * _z;
-        a[10] = a[10] * _z;
-        a[11] = a[11] * _z;
+        a[8] = a[8] * z;
+        a[9] = a[9] * z;
+        a[10] = a[10] * z;
+        a[11] = a[11] * z;
 
         return this;
     }
