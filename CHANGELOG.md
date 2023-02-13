@@ -1,6 +1,6 @@
 # Changelog
 
-## [14.5.0] (melonJS 2) - _2023-01-xx_
+## [14.5.0] (melonJS 2) - _2023-02-13_
 
 ### Added
 - Bounds: add a `centerOn` method similarly to other base geometry objects
