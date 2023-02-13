@@ -2,6 +2,9 @@
 
 ## [15.0.0] (melonJS 2) - _2023-02-xx_
 
+### Changed
+- Core: remove remaining polyfills related to pre-ECMAScript 2015 features (as melonJS 2 implementation base is now 100% ES6)
+
 ## [14.5.0] (melonJS 2) - _2023-02-13_
 
 ### Added

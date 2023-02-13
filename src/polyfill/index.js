@@ -7,6 +7,4 @@ import "core-js/es/string/trim-end";
 
 // "built-in" polyfills
 import "./console.js";
-import "./performance.js";
-import "./requestAnimationFrame.js";
 import "./roundrect.js";
