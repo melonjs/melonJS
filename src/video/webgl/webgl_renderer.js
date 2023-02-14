@@ -29,7 +29,7 @@ import { isPowerOfTwo, nextPowerOfTwo } from "./../../math/math.js";
      * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
      * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
      * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
-     * @param {WebGLCompositor} [options.compositor] - A class that implements the compositor API
+     * @param {Compositor} [options.compositor] - A class that implements the compositor API for sprite rendering
      */
     constructor(options) {
 
@@ -113,9 +113,7 @@ import { isPowerOfTwo, nextPowerOfTwo } from "./../../math/math.js";
         this.compositors = new Map();
 
         // Create a default compositor
-        var compositor = new (this.settings.compositor || WebGLCompositor)(this);
-        this.compositors.set("default", compositor);
-        this.setCompositor(compositor);
+        this.addCompositor(new (this.settings.compositor || WebGLCompositor)(this), "default", true);
 
 
         // default WebGL state(s)
@@ -178,17 +176,36 @@ import { isPowerOfTwo, nextPowerOfTwo } from "./../../math/math.js";
     }
 
     /**
-     * set the active compositor for this renderer
-     * @param {WebGLCompositor|string} compositor - a compositor name or instance
+     * add a new compositor to this renderer
+     * @param {Compositor} compositor - a compositor instance
+     * @param {String} name - a name uniquely identifying this compositor
+     * @param {Boolean} [activate=false] - true if the given compositor should be set as the active one
      */
-    setCompositor(compositor = "default") {
-
-        if (typeof compositor === "string") {
-            compositor = this.compositors.get(compositor);
+    addCompositor(compositor, name = "default", activate = false) {
+        // make sure there is no existing compositor with the same name
+        if (typeof this.compositors.get(name) !== "undefined") {
+            throw new Error("Invalid Compositor name");
         }
 
+        // add the new compositor
+        this.compositors.set(name, compositor);
+
+        if (activate === true) {
+            // set as active one
+            this.setCompositor(name);
+        }
+    }
+
+    /**
+     * set the active compositor for this renderer
+     * @param {String} name - a compositor name
+     * @return {Compositor} an instance to the current active compositor
+     */
+    setCompositor(name = "default") {
+        let compositor = this.compositors.get(name);
+
         if (typeof compositor === "undefined") {
-            throw new Error("Invalid WebGL Compositor");
+            throw new Error("Invalid Compositor");
         }
 
         if (this.currentCompositor !== compositor) {
@@ -199,6 +216,8 @@ import { isPowerOfTwo, nextPowerOfTwo } from "./../../math/math.js";
             // set given one as current
             this.currentCompositor = compositor;
         }
+
+        return this.currentCompositor;
     }
 
     /**
@@ -288,7 +307,9 @@ import { isPowerOfTwo, nextPowerOfTwo } from "./../../math/math.js";
      */
     setProjection(matrix) {
         super.setProjection(matrix);
-        this.currentCompositor.setProjection(matrix);
+        this.compositors.forEach((compositor) => {
+            compositor.setProjection(matrix);
+        });
     }
 
     /**
