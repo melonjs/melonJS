@@ -7,18 +7,18 @@
 
  export default class VertexArrayBuffer {
 
-    constructor(vertex_size, vertex_per_quad) {
+    constructor(vertex_size, vertex_per_obj) {
         // the size of one vertex in float
         this.vertexSize = vertex_size;
-        // size of a quad in vertex
-        this.quadSize = vertex_per_quad;
+        // size of an object in vertex
+        this.objSize = vertex_per_obj;
         // the maximum number of vertices the vertex array buffer can hold
-        this.maxVertex = 256;
+        this.maxVertex = 256; // (note: this seems to be the sweet spot performance-wise when using batching)
         // the current number of vertices added to the vertex array buffer
         this.vertexCount = 0;
 
         // the actual vertex data buffer
-        this.buffer = new ArrayBuffer(this.maxVertex * this.vertexSize * this.quadSize);
+        this.buffer = new ArrayBuffer(this.maxVertex * this.vertexSize * this.objSize);
         // Float32 and Uint32 view of the vertex data array buffer
         this.bufferF32 = new Float32Array(this.buffer);
         this.bufferU32 = new Uint32Array(this.buffer);
@@ -37,7 +37,7 @@
      * return true if full
      * @ignore
      */
-    isFull(vertex = this.quadSize) {
+    isFull(vertex = this.objSize) {
          return (this.vertexCount + vertex >= this.maxVertex);
     }
 
@@ -45,14 +45,18 @@
      * resize the vertex buffer, retaining its original contents
      * @ignore
      */
-    resize() {
-        // double the vertex size
-        this.maxVertex <<= 1;
+    resize(vertexCount) {
+
+        while (vertexCount > this.maxVertex) {
+            // double the vertex size
+            this.maxVertex <<= 1;
+        }
+
         // save a reference to the previous data
         var data = this.bufferF32;
 
         // recreate ArrayBuffer and views
-        this.buffer = new ArrayBuffer(this.maxVertex * this.vertexSize * this.quadSize);
+        this.buffer = new ArrayBuffer(this.maxVertex * this.vertexSize * this.objSize);
         this.bufferF32 = new Float32Array(this.buffer);
         this.bufferU32 = new Uint32Array(this.buffer);
 
@@ -70,19 +74,19 @@
         var offset = this.vertexCount * this.vertexSize;
 
         if (this.vertexCount >= this.maxVertex) {
-            this.resize();
+            this.resize(this.vertexCount);
         }
 
-        this.bufferF32[offset + 0] = x;
-        this.bufferF32[offset + 1] = y;
+        this.bufferF32[offset] = x;
+        this.bufferF32[++offset] = y;
 
         if (typeof u !== "undefined") {
-            this.bufferF32[offset + 2] = u;
-            this.bufferF32[offset + 3] = v;
+            this.bufferF32[++offset] = u;
+            this.bufferF32[++offset] = v;
         }
 
         if (typeof tint !== "undefined") {
-            this.bufferU32[offset + 4] = tint;
+            this.bufferU32[++offset] = tint;
         }
 
         this.vertexCount++;
