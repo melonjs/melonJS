@@ -33,7 +33,7 @@ export default class Entity extends Renderable {
         frameheight?: number | undefined;
         type?: string | undefined;
         collisionMask?: number | undefined;
-        shapes?: Line[] | Polygon[] | Ellipse[] | Rect[] | undefined;
+        shapes?: Polygon[] | Line[] | Ellipse[] | Rect[] | undefined;
     });
     /**
      * The array of renderable children of this entity.

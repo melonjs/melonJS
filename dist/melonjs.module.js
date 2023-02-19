@@ -387,10 +387,10 @@ var store$2 = sharedStore;
 (shared$3.exports = function (key, value) {
   return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 })('versions', []).push({
-  version: '3.27.2',
+  version: '3.28.0',
   mode: IS_PURE ? 'pure' : 'global',
   copyright: '© 2014-2023 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.27.2/LICENSE',
+  license: 'https://github.com/zloirock/core-js/blob/v3.28.0/LICENSE',
   source: 'https://github.com/zloirock/core-js'
 });
 
@@ -1142,16 +1142,15 @@ var toString$1 = toString$2;
 var whitespaces$1 = whitespaces$2;
 
 var replace = uncurryThis$1(''.replace);
-var whitespace = '[' + whitespaces$1 + ']';
-var ltrim = RegExp('^' + whitespace + whitespace + '*');
-var rtrim = RegExp(whitespace + whitespace + '*$');
+var ltrim = RegExp('^[' + whitespaces$1 + ']+');
+var rtrim = RegExp('(^|[^' + whitespaces$1 + '])[' + whitespaces$1 + ']+$');
 
 // `String.prototype.{ trim, trimStart, trimEnd, trimLeft, trimRight }` methods implementation
 var createMethod = function (TYPE) {
   return function ($this) {
     var string = toString$1(requireObjectCoercible($this));
     if (TYPE & 1) string = replace(string, ltrim, '');
-    if (TYPE & 2) string = replace(string, rtrim, '');
+    if (TYPE & 2) string = replace(string, rtrim, '$1');
     return string;
   };
 };
@@ -1283,181 +1282,245 @@ if (typeof globalThis !== "undefined") {
     }
 }
 
-if ("performance" in globalThis === false) {
-    globalThis.performance = {};
-}
+/*
+ * based on https://www.npmjs.com/package/canvas-roundrect-polyfill
+ * @version 0.0.1
+ */
+(() => {
 
-Date.now = (Date.now || function () {  // thanks IE8
-    return new Date().getTime();
-});
+  "use strict";
 
-if ("now" in globalThis.performance === false) {
+  /** @ignore */
+  function roundRect(x, y, w, h, radii) {
 
-    let nowOffset = Date.now();
+    if (!([x, y, w, h].every((input) => Number.isFinite(input)))) {
 
-    if (performance.timing && performance.timing.navigationStart) {
-      nowOffset = performance.timing.navigationStart;
+      return;
+
     }
 
-    globalThis.performance.now = function now() {
-      return Date.now() - nowOffset;
-  };
-}
+    radii = parseRadiiArgument(radii);
 
-/**
- * a collection of string utility functions
- * @namespace utils.string
- */
+    let upperLeft, upperRight, lowerRight, lowerLeft;
 
-/**
- * converts the first character of the given string to uppercase
- * @public
- * @memberof utils.string
- * @name capitalize
- * @param {string} str - the string to be capitalized
- * @returns {string} the capitalized string
- */
-function capitalize(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-}
+    if (radii.length === 4) {
 
-/**
- * returns true if the given string contains a numeric integer or float value
- * @public
- * @memberof utils.string
- * @name isNumeric
- * @param {string} str - the string to be tested
- * @returns {boolean} true if string contains only digits
- */
-function isNumeric(str) {
-    if (typeof str === "string") {
-        str = str.trim();
-    }
-    return !isNaN(str) && /^[+-]?(\d+(\.\d+)?|\.\d+)$/.test(str);
-}
+      upperLeft = toCornerPoint(radii[0]);
+      upperRight = toCornerPoint(radii[1]);
+      lowerRight = toCornerPoint(radii[2]);
+      lowerLeft = toCornerPoint(radii[3]);
 
-/**
- * returns true if the given string contains a true or false
- * @public
- * @memberof utils.string
- * @name isBoolean
- * @param {string} str - the string to be tested
- * @returns {boolean} true if the string is either true or false
- */
-function isBoolean(str) {
-    var trimmed = str.trim();
-    return (trimmed === "true") || (trimmed === "false");
-}
+    } else if (radii.length === 3) {
 
-/**
- * convert a string to the corresponding hexadecimal value
- * @public
- * @memberof utils.string
- * @name toHex
- * @param {string} str - the string to be converted
- * @returns {string} the converted hexadecimal value
- */
-function toHex$1(str) {
-    var res = "", c = 0;
-    while (c < str.length) {
-        res += str.charCodeAt(c++).toString(16);
-    }
-    return res;
-}
+      upperLeft = toCornerPoint(radii[0]);
+      upperRight = toCornerPoint(radii[1]);
+      lowerLeft = toCornerPoint(radii[1]);
+      lowerRight = toCornerPoint(radii[2]);
 
-/**
- * returns true if the given string is a data url in the `data:[<mediatype>][;base64],<data>` format.
- * (this will not test the validity of the Data or Base64 encoding)
- * @public
- * @memberof utils.string
- * @name isDataUrl
- * @param {string} str - the string (url) to be tested
- * @returns {boolean} true if the string is a data url
- */
-function isDataUrl(str) {
-    return /^data:(.+);base64,(.+)$/.test(str);
-}
+    } else if (radii.length === 2) {
 
-var stringUtils = {
-	__proto__: null,
-	capitalize: capitalize,
-	isBoolean: isBoolean,
-	isDataUrl: isDataUrl,
-	isNumeric: isNumeric,
-	toHex: toHex$1
-};
+      upperLeft = toCornerPoint(radii[0]);
+      lowerRight = toCornerPoint(radii[0]);
+      upperRight = toCornerPoint(radii[1]);
+      lowerLeft = toCornerPoint(radii[1]);
 
-/**
- * a collection of utility functons to ease porting between different user agents.
- * @namespace utils.agent
- */
+    } else if (radii.length === 1) {
 
-/**
- * Known agent vendors
- * @ignore
- */
-const vendors$1 = [ "ms", "MS", "moz", "webkit", "o" ];
+      upperLeft = toCornerPoint(radii[0]);
+      upperRight = toCornerPoint(radii[0]);
+      lowerRight = toCornerPoint(radii[0]);
+      lowerLeft = toCornerPoint(radii[0]);
 
-/**
- * Get a vendor-prefixed property
- * @public
- * @name prefixed
- * @param {string} name - Property name
- * @param {object} [obj=globalThis] - Object or element reference to access
- * @returns {string} Value of property
- * @memberof utils.agent
- */
-function prefixed(name, obj) {
-    obj = obj || globalThis;
-    if (name in obj) {
-        return obj[name];
+    } else {
+
+      throw new Error(radii.length + " is not a valid size for radii sequence.");
+
     }
 
-    var uc_name = capitalize(name);
+    const corners = [upperLeft, upperRight, lowerRight, lowerLeft];
+    const negativeCorner = corners.find(({x, y}) => x < 0 || y < 0);
+    //const negativeValue = negativeCorner?.x < 0 ? negativeCorner.x : negativeCorner?.y
 
-    var result;
-    vendors$1.some((vendor) => {
-        var name = vendor + uc_name;
-        return (result = (name in obj) ? obj[name] : undefined);
-    });
-    return result;
-}
+    if (corners.some(({x, y}) => !Number.isFinite(x) || !Number.isFinite(y))) {
 
-/**
- * Set a vendor-prefixed property
- * @public
- * @name setPrefixed
- * @param {string} name - Property name
- * @param {string} value - Property value
- * @param {object} [obj=globalThis] - Object or element reference to access
- * @returns {boolean} true if one of the vendor-prefixed property was found
- * @memberof utils.agent
- */
-function setPrefixed(name, value, obj) {
-    obj = obj || globalThis;
-    if (name in obj) {
-        obj[name] = value;
-        return;
+      return;
+
     }
 
-    var uc_name = capitalize(name);
+    if (negativeCorner) {
 
-    vendors$1.some((vendor) => {
-        var name = vendor + uc_name;
-        if (name in obj) {
-            obj[name] = value;
-            return true;
+      throw new Error("Radius value " + negativeCorner + " is negative.");
+
+    }
+
+    fixOverlappingCorners(corners);
+
+    if (w < 0 && h < 0) {
+
+      this.moveTo(x - upperLeft.x, y);
+      this.ellipse(x + w + upperRight.x, y - upperRight.y, upperRight.x, upperRight.y, 0, -Math.PI * 1.5, -Math.PI);
+      this.ellipse(x + w + lowerRight.x, y + h + lowerRight.y, lowerRight.x, lowerRight.y, 0, -Math.PI, -Math.PI / 2);
+      this.ellipse(x - lowerLeft.x, y + h + lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, -Math.PI / 2, 0);
+      this.ellipse(x - upperLeft.x, y - upperLeft.y, upperLeft.x, upperLeft.y, 0, 0, -Math.PI / 2);
+
+    } else if (w < 0) {
+
+      this.moveTo(x - upperLeft.x, y);
+      this.ellipse(x + w + upperRight.x, y + upperRight.y, upperRight.x, upperRight.y, 0, -Math.PI / 2, -Math.PI, 1);
+      this.ellipse(x + w + lowerRight.x, y + h - lowerRight.y, lowerRight.x, lowerRight.y, 0, -Math.PI, -Math.PI * 1.5, 1);
+      this.ellipse(x - lowerLeft.x, y + h - lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, Math.PI / 2, 0, 1);
+      this.ellipse(x - upperLeft.x, y + upperLeft.y, upperLeft.x, upperLeft.y, 0, 0, -Math.PI / 2, 1);
+
+    } else if (h < 0) {
+
+      this.moveTo(x + upperLeft.x, y);
+      this.ellipse(x + w - upperRight.x, y - upperRight.y, upperRight.x, upperRight.y, 0, Math.PI / 2, 0, 1);
+      this.ellipse(x + w - lowerRight.x, y + h + lowerRight.y, lowerRight.x, lowerRight.y, 0, 0, -Math.PI / 2, 1);
+      this.ellipse(x + lowerLeft.x, y + h + lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, -Math.PI / 2, -Math.PI, 1);
+      this.ellipse(x + upperLeft.x, y - upperLeft.y, upperLeft.x, upperLeft.y, 0, -Math.PI, -Math.PI * 1.5, 1);
+
+    } else {
+
+      this.moveTo(x + upperLeft.x, y);
+      this.ellipse(x + w - upperRight.x, y + upperRight.y, upperRight.x, upperRight.y, 0, -Math.PI / 2, 0);
+      this.ellipse(x + w - lowerRight.x, y + h - lowerRight.y, lowerRight.x, lowerRight.y, 0, 0, Math.PI / 2);
+      this.ellipse(x + lowerLeft.x, y + h - lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, Math.PI / 2, Math.PI);
+      this.ellipse(x + upperLeft.x, y + upperLeft.y, upperLeft.x, upperLeft.y, 0, Math.PI, Math.PI * 1.5);
+
+    }
+
+    this.closePath();
+    this.moveTo(x, y);
+
+    /** @ignore */
+    function toDOMPointInit(value) {
+
+      const {x, y, z, w} = value;
+      return {x, y, z, w};
+
+    }
+
+    /** @ignore */
+    function parseRadiiArgument(value) {
+
+      // https://webidl.spec.whatwg.org/#es-union
+      // with 'optional (unrestricted double or DOMPointInit
+      //   or sequence<(unrestricted double or DOMPointInit)>) radii = 0'
+      const type = typeof value;
+
+      if (type === "undefined" || value === null) {
+
+        return [0];
+
+      }
+      if (type === "function") {
+
+        return [NaN];
+
+      }
+      if (type === "object") {
+
+        if (typeof value[Symbol.iterator] === "function") {
+
+          return [...value].map((elem) => {
+            // https://webidl.spec.whatwg.org/#es-union
+            // with '(unrestricted double or DOMPointInit)'
+            const elemType = typeof elem;
+            if (elemType === "undefined" || elem === null) {
+              return 0;
+            }
+            if (elemType === "function") {
+              return NaN;
+            }
+            if (elemType === "object") {
+              return toDOMPointInit(elem);
+            }
+            return toUnrestrictedNumber(elem);
+          });
+
         }
-    });
 
-    return false;
-}
+        return [toDOMPointInit(value)];
 
-var agentUtils = {
-	__proto__: null,
-	prefixed: prefixed,
-	setPrefixed: setPrefixed
-};
+      }
+
+      return [toUnrestrictedNumber(value)];
+
+    }
+
+    /** @ignore */
+    function toUnrestrictedNumber(value) {
+
+      return +value;
+
+    }
+
+    /** @ignore */
+    function toCornerPoint(value) {
+
+      const asNumber = toUnrestrictedNumber(value);
+      if (Number.isFinite(asNumber)) {
+
+        return {
+          x: asNumber,
+          y: asNumber
+        };
+
+      }
+      if (Object(value) === value) {
+
+        return {
+          x: toUnrestrictedNumber(value.x || 0),
+          y: toUnrestrictedNumber(value.y || 0)
+        };
+
+      }
+
+      return {
+        x: NaN,
+        y: NaN
+      };
+
+    }
+
+    /** @ignore */
+    function fixOverlappingCorners(corners) {
+      const [upperLeft, upperRight, lowerRight, lowerLeft] = corners;
+      const factors = [
+        Math.abs(w) / (upperLeft.x + upperRight.x),
+        Math.abs(h) / (upperRight.y + lowerRight.y),
+        Math.abs(w) / (lowerRight.x + lowerLeft.x),
+        Math.abs(h) / (upperLeft.y + lowerLeft.y)
+      ];
+      const minFactor = Math.min(...factors);
+      if (minFactor <= 1) {
+        corners.forEach((radii) => {
+            radii.x *= minFactor;
+            radii.y *= minFactor;
+        });
+      }
+    }
+  }
+
+  if (globalThis.CanvasRenderingContext2D) {
+    if (typeof globalThis.Path2D.prototype.roundRect === "undefined") {
+        globalThis.Path2D.prototype.roundRect = roundRect;
+    }
+  }
+  if (globalThis.CanvasRenderingContext2D) {
+    if (typeof globalThis.CanvasRenderingContext2D.prototype.roundRect === "undefined") {
+        globalThis.CanvasRenderingContext2D.prototype.roundRect = roundRect;
+    }
+  }
+  if (globalThis.OffscreenCanvasRenderingContext2D) {
+    if (typeof globalThis.OffscreenCanvasRenderingContext2D.prototype.roundRect === "undefined") {
+        globalThis.OffscreenCanvasRenderingContext2D.prototype.roundRect = roundRect;
+    }
+  }
+
+})();
+
+// https://github.com/melonjs/melonJS/issues/1092
 
 /**
  * a collection of math utility functions
@@ -1689,6 +1752,6148 @@ var math = {
 };
 
 /**
+ * @classdesc
+ * Object pooling - a technique that might speed up your game if used properly.<br>
+ * If some of your classes will be instantiated and removed a lot at a time, it is a
+ * good idea to add the class to this object pool. A separate pool for that class
+ * will be created, which will reuse objects of the class. That way they won't be instantiated
+ * each time you need a new one (slowing your game), but stored into that pool and taking one
+ * already instantiated when you need it.<br><br>
+ * This technique is also used by the engine to instantiate objects defined in the map,
+ * which means, that on level loading the engine will try to instantiate every object
+ * found in the map, based on the user defined name in each Object Properties<br>
+ * <img src="images/object_properties.png"/><br>
+ * @see {@link pool} the default global instance of ObjectPool
+ */
+class ObjectPool {
+
+    constructor() {
+        this.objectClass = {};
+        this.instance_counter = 0;
+    }
+
+    /**
+     * register an object to the pool. <br>
+     * Pooling must be set to true if more than one such objects will be created. <br>
+     * (Note: for an object to be poolable, it must implements a `onResetEvent` method)
+     * @param {string} className - as defined in the Name field of the Object Properties (in Tiled)
+     * @param {object} classObj - corresponding Class to be instantiated
+     * @param {boolean} [recycling=false] - enables object recycling for the specified class
+     * @example
+     * // implement CherryEntity
+     * class Cherry extends Sprite {
+     *    onResetEvent() {
+     *        // reset object mutable properties
+     *        this.lifeBar = 100;
+     *    }
+     * };
+     * // add our users defined entities in the object pool and enable object recycling
+     * me.pool.register("cherrysprite", Cherry, true);
+     */
+    register(className, classObj, recycling = false) {
+         if (typeof (classObj) !== "undefined") {
+             this.objectClass[className] = {
+                 "class" : classObj,
+                 "pool" : (recycling ? [] : undefined)
+             };
+         } else {
+             throw new Error("Cannot register object '" + className + "', invalid class");
+         }
+     }
+
+    /**
+     * Pull a new instance of the requested object (if added into the object pool)
+     * @param {string} name - as used in {@link pool.register}
+     * @param {object} [...arguments] - arguments to be passed when instantiating/reinitializing the object
+     * @returns {object} the instance of the requested object
+     * @example
+     * me.pool.register("bullet", BulletEntity, true);
+     * me.pool.register("enemy", EnemyEntity, true);
+     * // ...
+     * // when we need to manually create a new bullet:
+     * var bullet = me.pool.pull("bullet", x, y, direction);
+     * // ...
+     * // params aren't a fixed number
+     * // when we need new enemy we can add more params, that the object construct requires:
+     * var enemy = me.pool.pull("enemy", x, y, direction, speed, power, life);
+     * // ...
+     * // when we want to destroy existing object, the remove
+     * // function will ensure the object can then be reallocated later
+     * me.game.world.removeChild(enemy);
+     * me.game.world.removeChild(bullet);
+     */
+    pull(name, ...args) {
+        var className = this.objectClass[name];
+        if (className) {
+            var proto = className["class"],
+                poolArray = className.pool,
+                obj;
+
+            if (poolArray && ((obj = poolArray.pop()))) {
+                // poolable object must implement a `onResetEvent` method
+                obj.onResetEvent.apply(obj, args);
+                this.instance_counter--;
+            } else {
+                // create a new instance
+                obj = new (proto.bind.apply(proto, [ proto, ...args ]))();
+                if (poolArray) {
+                    obj.className = name;
+                }
+            }
+            return obj;
+        }
+        throw new Error("Cannot instantiate object of type '" + name + "'");
+    }
+
+    /**
+     * purge the object pool from any inactive object <br>
+     * Object pooling must be enabled for this function to work<br>
+     * note: this will trigger the garbage collector
+     */
+    purge() {
+        for (var className in this.objectClass) {
+            if (this.objectClass[className]) {
+                this.objectClass[className].pool = [];
+            }
+        }
+        this.instance_counter = 0;
+    }
+
+    /**
+     * Push back an object instance into the object pool <br>
+     * Object pooling for the object class must be enabled,
+     * and object must have been instantiated using {@link pool#pull},
+     * otherwise this function won't work
+     * @throws will throw an error if the object cannot be recycled
+     * @param {object} obj - instance to be recycled
+     * @param {boolean} [throwOnError=true] - throw an exception if the object cannot be recycled
+     * @returns {boolean} true if the object was successfully recycled in the object pool
+     */
+    push(obj, throwOnError = true) {
+        if (!this.poolable(obj)) {
+            if (throwOnError === true ) {
+                throw new Error("me.pool: object " + obj + " cannot be recycled");
+            } else {
+                return false;
+            }
+        }
+
+        // store back the object instance for later recycling
+        this.objectClass[obj.className].pool.push(obj);
+        this.instance_counter++;
+
+        return true;
+    }
+
+    /**
+     * Check if an object with the provided name is registered
+     * @param {string} name - of the registered object class
+     * @returns {boolean} true if the classname is registered
+     */
+    exists(name) {
+        return name in this.objectClass;
+    }
+
+    /**
+     * Check if an object is poolable
+     * (was properly registered with the recycling feature enable)
+     * @see register
+     * @param {object} obj - object to be checked
+     * @returns {boolean} true if the object is poolable
+     * @example
+     * if (!me.pool.poolable(myCherryEntity)) {
+     *     // object was not properly registered
+     * }
+     */
+    poolable(obj) {
+        var className = obj.className;
+        return (typeof className !== "undefined") &&
+                (typeof obj.onResetEvent === "function") &&
+                (className in this.objectClass) &&
+                (typeof this.objectClass[className].pool !== "undefined");
+
+    }
+
+    /**
+     * returns the amount of object instance currently in the pool
+     * @returns {number} amount of object instance
+     */
+    getInstanceCount() {
+        return this.instance_counter;
+    }
+}
+
+var pool = new ObjectPool();
+
+// convert a give color component to it hexadecimal value
+function toHex$1(component) {
+    return "0123456789ABCDEF".charAt((component - (component % 16)) >> 4) + "0123456789ABCDEF".charAt(component % 16);
+}
+
+function hue2rgb(p, q, t) {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1/6) return p + (q - p) * 6 * t;
+    if (t < 1/2) return q;
+    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+    return p;
+}
+
+const rgbaRx = /^rgba?\((\d+), ?(\d+), ?(\d+)(, ?([\d\.]+))?\)$/;
+const hex3Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
+const hex4Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
+const hex6Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
+const hex8Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
+
+var cssToRGB = new Map();
+
+[
+    // CSS1
+    [ "black",                  [   0,   0,   0 ] ],
+    [ "silver",                 [ 192, 192, 129 ] ],
+    [ "gray",                   [ 128, 128, 128 ] ],
+    [ "white",                  [ 255, 255, 255 ] ],
+    [ "maroon",                 [ 128,   0,   0 ] ],
+    [ "red",                    [ 255,   0,   0 ] ],
+    [ "purple",                 [ 128,   0, 128 ] ],
+    [ "fuchsia",                [ 255,   0, 255 ] ],
+    [ "green",                  [   0, 128,   0 ] ],
+    [ "lime",                   [   0, 255,   0 ] ],
+    [ "olive",                  [ 128, 128,   0 ] ],
+    [ "yellow",                 [ 255, 255,   0 ] ],
+    [ "navy",                   [   0,   0, 128 ] ],
+    [ "blue",                   [   0,   0, 255 ] ],
+    [ "teal",                   [   0, 128, 128 ] ],
+    [ "aqua",                   [   0, 255, 255 ] ],
+
+    // CSS2
+    [ "orange",                 [ 255, 165,   0 ] ],
+
+    // CSS3
+    [ "aliceblue",              [ 240, 248, 245 ] ],
+    [ "antiquewhite",           [ 250, 235, 215 ] ],
+    [ "aquamarine",             [ 127, 255, 212 ] ],
+    [ "azure",                  [ 240, 255, 255 ] ],
+    [ "beige",                  [ 245, 245, 220 ] ],
+    [ "bisque",                 [ 255, 228, 196 ] ],
+    [ "blanchedalmond",         [ 255, 235, 205 ] ],
+    [ "blueviolet",             [ 138,  43, 226 ] ],
+    [ "brown",                  [ 165,  42,  42 ] ],
+    [ "burlywood",              [ 222, 184,  35 ] ],
+    [ "cadetblue",              [  95, 158, 160 ] ],
+    [ "chartreuse",             [ 127, 255,   0 ] ],
+    [ "chocolate",              [ 210, 105,  30 ] ],
+    [ "coral",                  [ 255, 127,  80 ] ],
+    [ "cornflowerblue",         [ 100, 149, 237 ] ],
+    [ "cornsilk",               [ 255, 248, 220 ] ],
+    [ "crimson",                [ 220,  20,  60 ] ],
+    [ "darkblue",               [   0,   0, 139 ] ],
+    [ "darkcyan",               [   0, 139, 139 ] ],
+    [ "darkgoldenrod",          [ 184, 134,  11 ] ],
+    [ "darkgray[*]",            [ 169, 169, 169 ] ],
+    [ "darkgreen",              [   0, 100,   0 ] ],
+    [ "darkgrey[*]",            [ 169, 169, 169 ] ],
+    [ "darkkhaki",              [ 189, 183, 107 ] ],
+    [ "darkmagenta",            [ 139,   0, 139 ] ],
+    [ "darkolivegreen",         [  85, 107,  47 ] ],
+    [ "darkorange",             [ 255, 140,   0 ] ],
+    [ "darkorchid",             [ 153,  50, 204 ] ],
+    [ "darkred",                [ 139,   0,   0 ] ],
+    [ "darksalmon",             [ 233, 150, 122 ] ],
+    [ "darkseagreen",           [ 143, 188, 143 ] ],
+    [ "darkslateblue",          [  72,  61, 139 ] ],
+    [ "darkslategray",          [  47,  79,  79 ] ],
+    [ "darkslategrey",          [  47,  79,  79 ] ],
+    [ "darkturquoise",          [   0, 206, 209 ] ],
+    [ "darkviolet",             [ 148,   0, 211 ] ],
+    [ "deeppink",               [ 255,  20, 147 ] ],
+    [ "deepskyblue",            [   0, 191, 255 ] ],
+    [ "dimgray",                [ 105, 105, 105 ] ],
+    [ "dimgrey",                [ 105, 105, 105 ] ],
+    [ "dodgerblue",             [  30, 144, 255 ] ],
+    [ "firebrick",              [ 178,  34,  34 ] ],
+    [ "floralwhite",            [ 255, 250, 240 ] ],
+    [ "forestgreen",            [  34, 139,  34 ] ],
+    [ "gainsboro",              [ 220, 220, 220 ] ],
+    [ "ghostwhite",             [ 248, 248, 255 ] ],
+    [ "gold",                   [ 255, 215,   0 ] ],
+    [ "goldenrod",              [ 218, 165,  32 ] ],
+    [ "greenyellow",            [ 173, 255,  47 ] ],
+    [ "grey",                   [ 128, 128, 128 ] ],
+    [ "honeydew",               [ 240, 255, 240 ] ],
+    [ "hotpink",                [ 255, 105, 180 ] ],
+    [ "indianred",              [ 205,  92,  92 ] ],
+    [ "indigo",                 [  75,   0, 130 ] ],
+    [ "ivory",                  [ 255, 255, 240 ] ],
+    [ "khaki",                  [ 240, 230, 140 ] ],
+    [ "lavender",               [ 230, 230, 250 ] ],
+    [ "lavenderblush",          [ 255, 240, 245 ] ],
+    [ "lawngreen",              [ 124, 252,   0 ] ],
+    [ "lemonchiffon",           [ 255, 250, 205 ] ],
+    [ "lightblue",              [ 173, 216, 230 ] ],
+    [ "lightcoral",             [ 240, 128, 128 ] ],
+    [ "lightcyan",              [ 224, 255, 255 ] ],
+    [ "lightgoldenrodyellow",   [ 250, 250, 210 ] ],
+    [ "lightgray",              [ 211, 211, 211 ] ],
+    [ "lightgreen",             [ 144, 238, 144 ] ],
+    [ "lightgrey",              [ 211, 211, 211 ] ],
+    [ "lightpink",              [ 255, 182, 193 ] ],
+    [ "lightsalmon",            [ 255, 160, 122 ] ],
+    [ "lightseagreen",          [  32, 178, 170 ] ],
+    [ "lightskyblue",           [ 135, 206, 250 ] ],
+    [ "lightslategray",         [ 119, 136, 153 ] ],
+    [ "lightslategrey",         [ 119, 136, 153 ] ],
+    [ "lightsteelblue",         [ 176, 196, 222 ] ],
+    [ "lightyellow",            [ 255, 255, 224 ] ],
+    [ "limegreen",              [  50, 205,  50 ] ],
+    [ "linen",                  [ 250, 240, 230 ] ],
+    [ "mediumaquamarine",       [ 102, 205, 170 ] ],
+    [ "mediumblue",             [   0,   0, 205 ] ],
+    [ "mediumorchid",           [ 186,  85, 211 ] ],
+    [ "mediumpurple",           [ 147, 112, 219 ] ],
+    [ "mediumseagreen",         [  60, 179, 113 ] ],
+    [ "mediumslateblue",        [ 123, 104, 238 ] ],
+    [ "mediumspringgreen",      [   0, 250, 154 ] ],
+    [ "mediumturquoise",        [  72, 209, 204 ] ],
+    [ "mediumvioletred",        [ 199,  21, 133 ] ],
+    [ "midnightblue",           [  25,  25, 112 ] ],
+    [ "mintcream",              [ 245, 255, 250 ] ],
+    [ "mistyrose",              [ 255, 228, 225 ] ],
+    [ "moccasin",               [ 255, 228, 181 ] ],
+    [ "navajowhite",            [ 255, 222, 173 ] ],
+    [ "oldlace",                [ 253, 245, 230 ] ],
+    [ "olivedrab",              [ 107, 142,  35 ] ],
+    [ "orangered",              [ 255,  69,   0 ] ],
+    [ "orchid",                 [ 218, 112, 214 ] ],
+    [ "palegoldenrod",          [ 238, 232, 170 ] ],
+    [ "palegreen",              [ 152, 251, 152 ] ],
+    [ "paleturquoise",          [ 175, 238, 238 ] ],
+    [ "palevioletred",          [ 219, 112, 147 ] ],
+    [ "papayawhip",             [ 255, 239, 213 ] ],
+    [ "peachpuff",              [ 255, 218, 185 ] ],
+    [ "peru",                   [ 205, 133,  63 ] ],
+    [ "pink",                   [ 255, 192, 203 ] ],
+    [ "plum",                   [ 221, 160, 221 ] ],
+    [ "powderblue",             [ 176, 224, 230 ] ],
+    [ "rosybrown",              [ 188, 143, 143 ] ],
+    [ "royalblue",              [  65, 105, 225 ] ],
+    [ "saddlebrown",            [ 139,  69,  19 ] ],
+    [ "salmon",                 [ 250, 128, 114 ] ],
+    [ "sandybrown",             [ 244, 164,  96 ] ],
+    [ "seagreen",               [  46, 139,  87 ] ],
+    [ "seashell",               [ 255, 245, 238 ] ],
+    [ "sienna",                 [ 160,  82,  45 ] ],
+    [ "skyblue",                [ 135, 206, 235 ] ],
+    [ "slateblue",              [ 106,  90, 205 ] ],
+    [ "slategray",              [ 112, 128, 144 ] ],
+    [ "slategrey",              [ 112, 128, 144 ] ],
+    [ "snow",                   [ 255, 250, 250 ] ],
+    [ "springgreen",            [   0, 255, 127 ] ],
+    [ "steelblue",              [  70, 130, 180 ] ],
+    [ "tan",                    [ 210, 180, 140 ] ],
+    [ "thistle",                [ 216, 191, 216 ] ],
+    [ "tomato",                 [ 255,  99,  71 ] ],
+    [ "turquoise",              [  64, 224, 208 ] ],
+    [ "violet",                 [ 238, 130, 238 ] ],
+    [ "wheat",                  [ 245, 222, 179 ] ],
+    [ "whitesmoke",             [ 245, 245, 245 ] ],
+    [ "yellowgreen",            [ 154, 205,  50 ] ]
+].forEach((value) => {
+    cssToRGB.set(value[0], value[1]);
+});
+
+/**
+ * @classdesc
+ * A color manipulation object.
+ */
+ class Color {
+    /**
+     * @param {number} [r=0] - red component or array of color components
+     * @param {number} [g=0] - green component
+     * @param {number} [b=0] - blue component
+     * @param {number} [alpha=1.0] - alpha value
+     */
+    constructor(r = 0, g = 0, b = 0, alpha = 1.0) {
+        this.onResetEvent(r, g, b, alpha);
+    }
+
+    /**
+     * @ignore
+     */
+    onResetEvent(r = 0, g = 0, b = 0, alpha = 1.0) {
+        if (typeof (this.glArray) === "undefined") {
+            // Color components in a Float32Array suitable for WebGL
+            this.glArray = new Float32Array([ 0.0, 0.0, 0.0, 1.0 ]);
+        }
+
+        return this.setColor(r, g, b, alpha);
+    }
+
+    /**
+     * Color Red Component [0 .. 255]
+     * @type {number}
+     */
+    get r() {
+        return ~~(this.glArray[0] * 255);
+    }
+
+    set r(value) {
+        this.glArray[0] = clamp(~~value || 0, 0, 255) / 255.0;
+    }
+
+
+    /**
+     * Color Green Component [0 .. 255]
+     * @type {number}
+     */
+    get g() {
+        return ~~(this.glArray[1] * 255);
+    }
+
+    set g(value) {
+        this.glArray[1] = clamp(~~value || 0, 0, 255) / 255.0;
+    }
+
+
+    /**
+     * Color Blue Component [0 .. 255]
+     * @type {number}
+     */
+    get b() {
+        return ~~(this.glArray[2] * 255);
+    }
+    set b(value) {
+        this.glArray[2] = clamp(~~value || 0, 0, 255) / 255.0;
+    }
+
+    /**
+     * Color Alpha Component [0.0 .. 1.0]
+     * @type {number}
+     */
+    get alpha() {
+        return this.glArray[3];
+    }
+
+    set alpha(value) {
+        this.glArray[3] = typeof(value) === "undefined" ? 1.0 : clamp(+value, 0, 1.0);
+    }
+
+
+    /**
+     * Set this color to the specified value.
+     * @param {number} r - red component [0 .. 255]
+     * @param {number} g - green component [0 .. 255]
+     * @param {number} b - blue component [0 .. 255]
+     * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
+     * @returns {Color} Reference to this object for method chaining
+     */
+    setColor(r, g, b, alpha = 1.0) {
+        this.r = r;
+        this.g = g;
+        this.b = b;
+        this.alpha = alpha;
+        return this;
+    }
+
+    /**
+     * set this color to the specified HSV value
+     * @param {number} h - hue (a value from 0 to 1)
+     * @param {number} s - saturation (a value from 0 to 1)
+     * @param {number} v - value (a value from 0 to 1)
+     * @returns {Color} Reference to this object for method chaining
+     */
+    setHSV(h, s, v) {
+        var r, g, b;
+
+        var i = Math.floor(h * 6);
+        var f = h * 6 - i;
+        var p = v * (1 - s);
+        var q = v * (1 - f * s);
+        var t = v * (1 - (1 - f) * s);
+
+        switch (i % 6) {
+            case 0: r = v, g = t, b = p; break;
+            case 1: r = q, g = v, b = p; break;
+            case 2: r = p, g = v, b = t; break;
+            case 3: r = p, g = q, b = v; break;
+            case 4: r = t, g = p, b = v; break;
+            case 5: r = v, g = p, b = q; break;
+        }
+        return this.setColor(r * 255, g * 255, b * 255);
+    }
+
+    /**
+     * set this color to the specified HSL value
+     * @param {number} h - hue (a value from 0 to 1)
+     * @param {number} s - saturation (a value from 0 to 1)
+     * @param {number} l - lightness (a value from 0 to 1)
+     * @returns {Color} Reference to this object for method chaining
+     */
+    setHSL(h, s, l) {
+        var r, g, b;
+
+        if (s === 0) {
+            r = g = b = l; // achromatic
+        } else {
+            var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            var p = 2 * l - q;
+
+            r = hue2rgb(p, q, h + 1/3);
+            g = hue2rgb(p, q, h);
+            b = hue2rgb(p, q, h - 1/3);
+        }
+
+        return this.setColor(r * 255, g * 255, b * 255);
+    }
+
+    /**
+     * Create a new copy of this color object.
+     * @returns {Color} Reference to the newly cloned object
+     */
+    clone() {
+        return pool.pull("Color").copy(this);
+    }
+
+    /**
+     * Copy a color object or CSS color into this one.
+     * @param {Color|string} color
+     * @returns {Color} Reference to this object for method chaining
+     */
+    copy(color) {
+        if (color instanceof Color) {
+            this.glArray.set(color.glArray);
+            return this;
+        }
+
+        return this.parseCSS(color);
+    }
+
+    /**
+     * Blend this color with the given one using addition.
+     * @param {Color} color
+     * @returns {Color} Reference to this object for method chaining
+     */
+    add(color) {
+        this.glArray[0] = clamp(this.glArray[0] + color.glArray[0], 0, 1);
+        this.glArray[1] = clamp(this.glArray[1] + color.glArray[1], 0, 1);
+        this.glArray[2] = clamp(this.glArray[2] + color.glArray[2], 0, 1);
+        this.glArray[3] = (this.glArray[3] + color.glArray[3]) / 2;
+
+        return this;
+    }
+
+    /**
+     * Darken this color value by 0..1
+     * @param {number} scale
+     * @returns {Color} Reference to this object for method chaining
+     */
+    darken(scale) {
+        scale = clamp(scale, 0, 1);
+        this.glArray[0] *= scale;
+        this.glArray[1] *= scale;
+        this.glArray[2] *= scale;
+
+        return this;
+    }
+
+    /**
+     * Linearly interpolate between this color and the given one.
+     * @param {Color} color
+     * @param {number} alpha - with alpha = 0 being this color, and alpha = 1 being the given one.
+     * @returns {Color} Reference to this object for method chaining
+     */
+    lerp(color, alpha) {
+        alpha = clamp(alpha, 0, 1);
+        this.glArray[0] += (color.glArray[0] - this.glArray[0]) * alpha;
+        this.glArray[1] += (color.glArray[1] - this.glArray[1]) * alpha;
+        this.glArray[2] += (color.glArray[2] - this.glArray[2]) * alpha;
+
+        return this;
+    }
+
+    /**
+     * Lighten this color value by 0..1
+     * @param {number} scale
+     * @returns {Color} Reference to this object for method chaining
+     */
+    lighten(scale) {
+        scale = clamp(scale, 0, 1);
+        this.glArray[0] = clamp(this.glArray[0] + (1 - this.glArray[0]) * scale, 0, 1);
+        this.glArray[1] = clamp(this.glArray[1] + (1 - this.glArray[1]) * scale, 0, 1);
+        this.glArray[2] = clamp(this.glArray[2] + (1 - this.glArray[2]) * scale, 0, 1);
+
+        return this;
+    }
+
+    /**
+     * Generate random r,g,b values for this color object
+     * @param {number} [min=0] - minimum value for the random range
+     * @param {number} [max=255] - maxmium value for the random range
+     * @returns {Color} Reference to this object for method chaining
+     */
+    random(min = 0, max = 255) {
+        if (min < 0) {
+            min = 0;
+        }
+        if (max > 255) {
+            max = 255;
+        }
+
+        return this.setColor(
+            random$1(min, max),
+            random$1(min, max),
+            random$1(min, max),
+            this.alpha
+        );
+    }
+
+    /**
+     * Return true if the r,g,b,a values of this color are equal with the
+     * given one.
+     * @param {Color} color
+     * @returns {boolean}
+     */
+    equals(color) {
+        return (
+            (this.glArray[0] === color.glArray[0]) &&
+            (this.glArray[1] === color.glArray[1]) &&
+            (this.glArray[2] === color.glArray[2]) &&
+            (this.glArray[3] === color.glArray[3])
+        );
+    }
+
+    /**
+     * Parse a CSS color string and set this color to the corresponding
+     * r,g,b values
+     * @param {string} cssColor
+     * @returns {Color} Reference to this object for method chaining
+     */
+    parseCSS(cssColor) {
+        // TODO : Memoize this function by caching its input
+
+        if (cssToRGB.has(cssColor)) {
+            return this.setColor.apply(this, cssToRGB.get(cssColor));
+        }
+
+        return this.parseRGB(cssColor);
+    }
+
+    /**
+     * Parse an RGB or RGBA CSS color string
+     * @param {string} rgbColor
+     * @returns {Color} Reference to this object for method chaining
+     */
+    parseRGB(rgbColor) {
+        // TODO : Memoize this function by caching its input
+
+        var match = rgbaRx.exec(rgbColor);
+        if (match) {
+            return this.setColor(+match[1], +match[2], +match[3], +match[5]);
+        }
+
+        return this.parseHex(rgbColor);
+    }
+
+    /**
+     * Parse a Hex color ("#RGB", "#RGBA" or "#RRGGBB", "#RRGGBBAA" format) and set this color to
+     * the corresponding r,g,b,a values
+     * @param {string} hexColor
+     * @param {boolean} [argb = false] - true if format is #ARGB, or #AARRGGBB (as opposed to #RGBA or #RGGBBAA)
+     * @returns {Color} Reference to this object for method chaining
+     */
+    parseHex(hexColor, argb = false) {
+        // TODO : Memoize this function by caching its input
+
+        var match;
+        if ((match = hex8Rx.exec(hexColor))) {
+            // #AARRGGBB or #RRGGBBAA
+            return this.setColor(
+                parseInt(match[argb === false ? 1 : 2], 16), // r
+                parseInt(match[argb === false ? 2 : 3], 16), // g
+                parseInt(match[argb === false ? 3 : 4], 16), // b
+                (clamp(parseInt(match[argb === false ? 4 : 1], 16), 0, 255) / 255.0).toFixed(1) // a
+            );
+        }
+
+        if ((match = hex6Rx.exec(hexColor))) {
+            // #RRGGBB
+            return this.setColor(
+                parseInt(match[1], 16),
+                parseInt(match[2], 16),
+                parseInt(match[3], 16)
+            );
+        }
+
+        if ((match = hex4Rx.exec(hexColor))) {
+            // #ARGB or #RGBA
+            var r = match[argb === false ? 1 : 2];
+            var g = match[argb === false ? 2 : 3];
+            var b = match[argb === false ? 3 : 4];
+            var a = match[argb === false ? 4 : 1];
+            return this.setColor(
+                parseInt(r + r, 16), // r
+                parseInt(g + g, 16), // g
+                parseInt(b + b, 16), // b
+                (clamp(parseInt(a + a, 16), 0, 255) / 255.0).toFixed(1) // a
+            );
+        }
+
+        if ((match = hex3Rx.exec(hexColor))) {
+            // #RGB
+            return this.setColor(
+                parseInt(match[1] + match[1], 16),
+                parseInt(match[2] + match[2], 16),
+                parseInt(match[3] + match[3], 16)
+            );
+        }
+
+        throw new Error(
+            "invalid parameter: " + hexColor
+        );
+    }
+
+    /**
+     * Pack this color into a Uint32 ARGB representation
+     * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
+     * @returns {number}
+     */
+    toUint32(alpha = 1.0) {
+        var a = this.glArray;
+
+        var ur = (a[0] * 255) & 0xff;
+        var ug = (a[1] * 255) & 0xff;
+        var ub = (a[2] * 255) & 0xff;
+
+        return (((alpha * 255) & 0xff) << 24) + (ur << 16) + (ug << 8) + ub;
+    }
+
+    /**
+     * return an array representation of this object
+     * @returns {Float32Array}
+     */
+    toArray() {
+        return this.glArray;
+    }
+
+
+    /**
+     * return the color in "#RRGGBB" format
+     * @returns {string}
+     */
+    toHex() {
+        // TODO : Memoize this function by caching its result until any of
+        // the r,g,b,a values are changed
+
+        return "#" + toHex$1(this.r) + toHex$1(this.g) + toHex$1(this.b);
+    }
+
+    /**
+     * Get the color in "#RRGGBBAA" format
+     * @returns {string}
+     */
+    toHex8(alpha = this.alpha) {
+        // TODO : Memoize this function by caching its result until any of
+        // the r,g,b,a values are changed
+
+        return "#" + toHex$1(this.r) + toHex$1(this.g) + toHex$1(this.b) + toHex$1(alpha * 255);
+    }
+
+    /**
+     * Get the color in "rgb(R,G,B)" format
+     * @returns {string}
+     */
+    toRGB() {
+        // TODO : Memoize this function by caching its result until any of
+        // the r,g,b,a values are changed
+
+        return "rgb(" +
+            this.r + "," +
+            this.g + "," +
+            this.b +
+        ")";
+    }
+
+    /**
+     * Get the color in "rgba(R,G,B,A)" format
+     * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
+     * @returns {string}
+     */
+    toRGBA(alpha = this.alpha) {
+        // TODO : Memoize this function by caching its result until any of
+        // the r,g,b,a values are changed
+
+        return "rgba(" +
+            this.r + "," +
+            this.g + "," +
+            this.b + "," +
+            alpha +
+        ")";
+    }
+}
+
+/**
+ * @classdesc
+ * a generic 2D Vector Object
+ */
+ class Vector2d {
+    /**
+     * @param {number} [x=0] - x value of the vector
+     * @param {number} [y=0] - y value of the vector
+     */
+    constructor(x = 0, y = 0) {
+        this.onResetEvent(x, y);
+    }
+
+    /**
+     * @ignore
+     */
+    onResetEvent(x = 0, y = 0) {
+        // this is to enable proper object pooling
+        this.x = x;
+        this.y = y;
+        return this;
+    }
+
+    /**
+     * @ignore
+     */
+    _set(x, y) {
+        this.x = x;
+        this.y = y;
+        return this;
+    }
+
+    /**
+     * set the Vector x and y properties to the given values<br>
+     * @name set
+     * @memberof Vector2d
+     * @param {number} x
+     * @param {number} y
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    set(x, y) {
+        if (x !== +x || y !== +y) {
+            throw new Error(
+                "invalid x,y parameters (not a number)"
+            );
+        }
+
+        /**
+         * x value of the vector
+         * @public
+         * @member {number}
+         * @name x
+         * @memberof Vector2d
+         */
+        //this.x = x;
+
+        /**
+         * y value of the vector
+         * @public
+         * @member {number}
+         * @name y
+         * @memberof Vector2d
+         */
+        //this.y = y;
+
+        return this._set(x, y);
+    }
+
+    /**
+     * set the Vector x and y properties to 0
+     * @name setZero
+     * @memberof Vector2d
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    setZero() {
+        return this.set(0, 0);
+    }
+
+    /**
+     * set the Vector x and y properties using the passed vector
+     * @name setV
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    setV(v) {
+        return this._set(v.x, v.y);
+    }
+
+    /**
+     * Add the passed vector to this vector
+     * @name add
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    add(v) {
+        return this._set(this.x + v.x, this.y + v.y);
+    }
+
+    /**
+     * Substract the passed vector to this vector
+     * @name sub
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    sub(v) {
+        return this._set(this.x - v.x, this.y - v.y);
+    }
+
+    /**
+     * Multiply this vector values by the given scalar
+     * @name scale
+     * @memberof Vector2d
+     * @param {number} x
+     * @param {number} [y=x]
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    scale(x, y = x) {
+        return this._set(this.x * x, this.y * y);
+    }
+
+    /**
+     * Convert this vector into isometric coordinate space
+     * @name toIso
+     * @memberof Vector2d
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    toIso() {
+        return this._set(this.x - this.y, (this.x + this.y) * 0.5);
+    }
+
+    /**
+     * Convert this vector into 2d coordinate space
+     * @name to2d
+     * @memberof Vector2d
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    to2d() {
+        return this._set(this.y + this.x / 2, this.y - this.x / 2);
+    }
+
+    /**
+     * Multiply this vector values by the passed vector
+     * @name scaleV
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    scaleV(v) {
+        return this._set(this.x * v.x, this.y * v.y);
+    }
+
+    /**
+     * Divide this vector values by the passed value
+     * @name div
+     * @memberof Vector2d
+     * @param {number} n - the value to divide the vector by
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    div(n) {
+        return this._set(this.x / n, this.y / n);
+    }
+
+    /**
+     * Update this vector values to absolute values
+     * @name abs
+     * @memberof Vector2d
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    abs() {
+        return this._set((this.x < 0) ? -this.x : this.x, (this.y < 0) ? -this.y : this.y);
+    }
+
+    /**
+     * Clamp the vector value within the specified value range
+     * @name clamp
+     * @memberof Vector2d
+     * @param {number} low
+     * @param {number} high
+     * @returns {Vector2d} new me.Vector2d
+     */
+    clamp(low, high) {
+        return new Vector2d(clamp(this.x, low, high), clamp(this.y, low, high));
+    }
+
+    /**
+     * Clamp this vector value within the specified value range
+     * @name clampSelf
+     * @memberof Vector2d
+     * @param {number} low
+     * @param {number} high
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    clampSelf(low, high) {
+        return this._set(clamp(this.x, low, high), clamp(this.y, low, high));
+    }
+
+    /**
+     * Update this vector with the minimum value between this and the passed vector
+     * @name minV
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    minV(v) {
+        return this._set((this.x < v.x) ? this.x : v.x, (this.y < v.y) ? this.y : v.y);
+    }
+
+    /**
+     * Update this vector with the maximum value between this and the passed vector
+     * @name maxV
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    maxV(v) {
+        return this._set((this.x > v.x) ? this.x : v.x, (this.y > v.y) ? this.y : v.y);
+    }
+
+    /**
+     * Floor the vector values
+     * @name floor
+     * @memberof Vector2d
+     * @returns {Vector2d} new me.Vector2d
+     */
+    floor() {
+        return new Vector2d(Math.floor(this.x), Math.floor(this.y));
+    }
+
+    /**
+     * Floor this vector values
+     * @name floorSelf
+     * @memberof Vector2d
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    floorSelf() {
+        return this._set(Math.floor(this.x), Math.floor(this.y));
+    }
+
+    /**
+     * Ceil the vector values
+     * @name ceil
+     * @memberof Vector2d
+     * @returns {Vector2d} new me.Vector2d
+     */
+    ceil() {
+        return new Vector2d(Math.ceil(this.x), Math.ceil(this.y));
+    }
+
+    /**
+     * Ceil this vector values
+     * @name ceilSelf
+     * @memberof Vector2d
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    ceilSelf() {
+        return this._set(Math.ceil(this.x), Math.ceil(this.y));
+    }
+
+    /**
+     * Negate the vector values
+     * @name negate
+     * @memberof Vector2d
+     * @returns {Vector2d} new me.Vector2d
+     */
+    negate() {
+        return new Vector2d(-this.x, -this.y);
+    }
+
+    /**
+     * Negate this vector values
+     * @name negateSelf
+     * @memberof Vector2d
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    negateSelf() {
+        return this._set(-this.x, -this.y);
+    }
+
+    /**
+     * Copy the x,y values of the passed vector to this one
+     * @name copy
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    copy(v) {
+        return this._set(v.x, v.y);
+    }
+
+    /**
+     * return true if the two vectors are the same
+     * @name equals
+     * @memberof Vector2d
+     * @method
+     * @param {Vector2d} v
+     * @returns {boolean}
+     */
+    /**
+     * return true if this vector is equal to the given values
+     * @name equals
+     * @memberof Vector2d
+     * @param {number} x
+     * @param {number} y
+     * @returns {boolean}
+     */
+    equals() {
+        var _x, _y;
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+        return ((this.x === _x) && (this.y === _y));
+    }
+
+    /**
+     * normalize this vector (scale the vector so that its magnitude is 1)
+     * @name normalize
+     * @memberof Vector2d
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    normalize() {
+        return this.div(this.length() || 1);
+    }
+
+    /**
+     * change this vector to be perpendicular to what it was before.<br>
+     * (Effectively rotates it 90 degrees in a clockwise direction)
+     * @name perp
+     * @memberof Vector2d
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    perp() {
+        return this._set(this.y, -this.x);
+    }
+
+    /**
+     * Rotate this vector (counter-clockwise) by the specified angle (in radians).
+     * @name rotate
+     * @memberof Vector2d
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    rotate(angle, v) {
+        var cx = 0;
+        var cy = 0;
+
+        if (typeof v === "object") {
+            cx = v.x;
+            cy = v.y;
+        }
+
+        var x = this.x - cx;
+        var y = this.y - cy;
+
+        var c = Math.cos(angle);
+        var s = Math.sin(angle);
+
+        return this._set(x * c - y * s + cx, x * s + y * c + cy);
+    }
+
+    /**
+     * return the dot product of this vector and the passed one
+     * @name dot
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @returns {number} The dot product.
+     */
+    dot(v) {
+        return this.x * v.x + this.y * v.y;
+    }
+
+    /**
+     * return the cross product of this vector and the passed one
+     * @name cross
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @returns {number} The cross product.
+     */
+    cross(v) {
+        return this.x * v.y - this.y * v.x;
+    }
+
+   /**
+    * return the square length of this vector
+    * @name length2
+    * @memberof Vector2d
+    * @returns {number} The length^2 of this vector.
+    */
+    length2() {
+        return this.dot(this);
+    }
+
+    /**
+     * return the length (magnitude) of this vector
+     * @name length
+     * @memberof Vector2d
+     * @returns {number} the length of this vector
+     */
+    length() {
+        return Math.sqrt(this.length2());
+    }
+
+    /**
+     * Linearly interpolate between this vector and the given one.
+     * @name lerp
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    lerp(v, alpha) {
+        this.x += ( v.x - this.x ) * alpha;
+        this.y += ( v.y - this.y ) * alpha;
+        return this;
+    }
+
+    /**
+     * interpolate the position of this vector towards the given one by the given maximum step.
+     * @name moveTowards
+     * @memberof Vector2d
+     * @param {Vector2d} target
+     * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+     moveTowards(target, step) {
+        var angle = Math.atan2(target.y - this.y, target.x - this.x);
+
+        var distance = this.distance(target);
+
+        if (distance === 0 || (step >= 0 && distance <= step * step)) {
+            return target;
+        }
+
+        this.x += Math.cos(angle) * step;
+        this.y += Math.sin(angle) * step;
+
+        return this;
+    }
+
+    /**
+     * return the distance between this vector and the passed one
+     * @name distance
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @returns {number}
+     */
+    distance(v) {
+        var dx = this.x - v.x, dy = this.y - v.y;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    /**
+     * return the angle between this vector and the passed one
+     * @name angle
+     * @memberof Vector2d
+     * @param {Vector2d} v
+     * @returns {number} angle in radians
+     */
+    angle(v) {
+        return Math.acos(clamp(this.dot(v) / (this.length() * v.length()), -1, 1));
+    }
+
+    /**
+     * project this vector on to another vector.
+     * @name project
+     * @memberof Vector2d
+     * @param {Vector2d} v - The vector to project onto.
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    project(v) {
+        return this.scale(this.dot(v) / v.length2());
+    }
+
+    /**
+     * Project this vector onto a vector of unit length.<br>
+     * This is slightly more efficient than `project` when dealing with unit vectors.
+     * @name projectN
+     * @memberof Vector2d
+     * @param {Vector2d} v - The unit vector to project onto.
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    projectN(v) {
+        return this.scale(this.dot(v));
+    }
+
+    /**
+     * return a clone copy of this vector
+     * @name clone
+     * @memberof Vector2d
+     * @returns {Vector2d} new me.Vector2d
+     */
+    clone() {
+        return pool.pull("Vector2d", this.x, this.y);
+    }
+
+    /**
+     * convert the object to a string representation
+     * @name toString
+     * @memberof Vector2d
+     * @returns {string}
+     */
+    toString() {
+        return "x:" + this.x + ",y:" + this.y;
+    }
+}
+
+/**
+ * @classdesc
+ * a generic 3D Vector Object
+ */
+ class Vector3d {
+    /**
+     * @param {number} [x=0] - x value of the vector
+     * @param {number} [y=0] - y value of the vector
+     * @param {number} [z=0] - z value of the vector
+     */
+    constructor(x = 0, y = 0, z = 0) {
+        this.onResetEvent(x, y, z);
+    }
+
+    /**
+     * @ignore
+     */
+    onResetEvent(x = 0, y = 0, z = 0) {
+        // this is to enable proper object pooling
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        return this;
+    }
+
+    /**
+     * @ignore
+     */
+    _set(x, y, z = 0) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        return this;
+    }
+
+    /**
+     * set the Vector x and y properties to the given values<br>
+     * @name set
+     * @memberof Vector3d
+     * @param {number} x
+     * @param {number} y
+     * @param {number} [z=0]
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    set(x, y, z) {
+        if (x !== +x || y !== +y || (typeof z !== "undefined" && z !== +z)) {
+            throw new Error(
+                "invalid x, y, z parameters (not a number)"
+            );
+        }
+
+        /**
+         * x value of the vector
+         * @public
+         * @member {number}
+         * @name x
+         * @memberof Vector3d
+         */
+        //this.x = x;
+
+        /**
+         * y value of the vector
+         * @public
+         * @member {number}
+         * @name y
+         * @memberof Vector3d
+         */
+        //this.y = y;
+
+        /**
+         * z value of the vector
+         * @public
+         * @member {number}
+         * @name z
+         * @memberof Vector3d
+         */
+        //this.z = z;
+
+        return this._set(x, y, z);
+    }
+
+    /**
+     * set the Vector x and y properties to 0
+     * @name setZero
+     * @memberof Vector3d
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    setZero() {
+        return this.set(0, 0, 0);
+    }
+
+    /**
+     * set the Vector x and y properties using the passed vector
+     * @name setV
+     * @memberof Vector3d
+     * @param {Vector2d|Vector3d} v
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    setV(v) {
+        return this._set(v.x, v.y, v.z);
+    }
+
+    /**
+     * Add the passed vector to this vector
+     * @name add
+     * @memberof Vector3d
+     * @param {Vector2d|Vector3d} v
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    add(v) {
+        return this._set(this.x + v.x, this.y + v.y, this.z + (v.z || 0));
+    }
+
+    /**
+     * Substract the passed vector to this vector
+     * @name sub
+     * @memberof Vector3d
+     * @param {Vector2d|Vector3d} v
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    sub(v) {
+        return this._set(this.x - v.x, this.y - v.y, this.z - (v.z || 0));
+    }
+
+    /**
+     * Multiply this vector values by the given scalar
+     * @name scale
+     * @memberof Vector3d
+     * @param {number} x
+     * @param {number} [y=x]
+     * @param {number} [z=1]
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    scale(x, y = x, z = 1) {
+        return this._set(this.x * x, this.y * y, this.z * z);
+    }
+
+    /**
+     * Multiply this vector values by the passed vector
+     * @name scaleV
+     * @memberof Vector3d
+     * @param {Vector2d|Vector3d} v
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    scaleV(v) {
+        return this.scale(v.x, v.y, v.z);
+    }
+
+    /**
+     * Convert this vector into isometric coordinate space
+     * @name toIso
+     * @memberof Vector3d
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    toIso() {
+        return this._set(this.x - this.y, (this.x + this.y) * 0.5, this.z);
+    }
+
+    /**
+     * Convert this vector into 2d coordinate space
+     * @name to2d
+     * @memberof Vector3d
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    to2d() {
+        return this._set(this.y + this.x / 2, this.y - this.x / 2, this.z);
+    }
+
+    /**
+     * Divide this vector values by the passed value
+     * @name div
+     * @memberof Vector3d
+     * @param {number} n - the value to divide the vector by
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    div(n) {
+        return this._set(this.x / n, this.y / n, this.z / n);
+    }
+
+    /**
+     * Update this vector values to absolute values
+     * @name abs
+     * @memberof Vector3d
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    abs() {
+        return this._set((this.x < 0) ? -this.x : this.x, (this.y < 0) ? -this.y : this.y, (this.z < 0) ? -this.z : this.z);
+    }
+
+    /**
+     * Clamp the vector value within the specified value range
+     * @name clamp
+     * @memberof Vector3d
+     * @param {number} low
+     * @param {number} high
+     * @returns {Vector3d} new me.Vector3d
+     */
+    clamp(low, high) {
+        return new Vector3d(clamp(this.x, low, high), clamp(this.y, low, high), clamp(this.z, low, high));
+    }
+
+    /**
+     * Clamp this vector value within the specified value range
+     * @name clampSelf
+     * @memberof Vector3d
+     * @param {number} low
+     * @param {number} high
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    clampSelf(low, high) {
+        return this._set(clamp(this.x, low, high), clamp(this.y, low, high), clamp(this.z, low, high));
+    }
+
+    /**
+     * Update this vector with the minimum value between this and the passed vector
+     * @name minV
+     * @memberof Vector3d
+     * @param {Vector2d|Vector3d} v
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    minV(v) {
+        var _vz = v.z || 0;
+        return this._set((this.x < v.x) ? this.x : v.x, (this.y < v.y) ? this.y : v.y, (this.z < _vz) ? this.z : _vz);
+    }
+
+    /**
+     * Update this vector with the maximum value between this and the passed vector
+     * @name maxV
+     * @memberof Vector3d
+     * @param {Vector2d|Vector3d} v
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    maxV(v) {
+        var _vz = v.z || 0;
+        return this._set((this.x > v.x) ? this.x : v.x, (this.y > v.y) ? this.y : v.y, (this.z > _vz) ? this.z : _vz);
+    }
+
+    /**
+     * Floor the vector values
+     * @name floor
+     * @memberof Vector3d
+     * @returns {Vector3d} new me.Vector3d
+     */
+    floor() {
+        return new Vector3d(Math.floor(this.x), Math.floor(this.y), Math.floor(this.z));
+    }
+
+    /**
+     * Floor this vector values
+     * @name floorSelf
+     * @memberof Vector3d
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    floorSelf() {
+        return this._set(Math.floor(this.x), Math.floor(this.y), Math.floor(this.z));
+    }
+
+    /**
+     * Ceil the vector values
+     * @name ceil
+     * @memberof Vector3d
+     * @returns {Vector3d} new me.Vector3d
+     */
+    ceil() {
+        return new Vector3d(Math.ceil(this.x), Math.ceil(this.y), Math.ceil(this.z));
+    }
+
+    /**
+     * Ceil this vector values
+     * @name ceilSelf
+     * @memberof Vector3d
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    ceilSelf() {
+        return this._set(Math.ceil(this.x), Math.ceil(this.y), Math.ceil(this.z));
+    }
+
+    /**
+     * Negate the vector values
+     * @name negate
+     * @memberof Vector3d
+     * @returns {Vector3d} new me.Vector3d
+     */
+    negate() {
+        return new Vector3d(-this.x, -this.y, -this.z);
+    }
+
+    /**
+     * Negate this vector values
+     * @name negateSelf
+     * @memberof Vector3d
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    negateSelf() {
+        return this._set(-this.x, -this.y, -this.z);
+    }
+
+    /**
+     * Copy the components of the given vector into this one
+     * @name copy
+     * @memberof Vector3d
+     * @param {Vector2d|Vector3d} v
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    copy(v) {
+        return this._set(v.x, v.y, v.z || 0);
+    }
+
+    /**
+     * return true if the two vectors are the same
+     * @name equals
+     * @memberof Vector3d
+     * @method
+     * @param {Vector2d|Vector3d} v
+     * @returns {boolean}
+     */
+    /**
+     * return true if this vector is equal to the given values
+     * @name equals
+     * @memberof Vector3d
+     * @param {number} x
+     * @param {number} y
+     * @param {number} [z]
+     * @returns {boolean}
+     */
+    equals() {
+        var _x, _y, _z;
+        if (arguments.length >= 2) {
+            // x, y, z
+            _x = arguments[0];
+            _y = arguments[1];
+            _z = arguments[2];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+            _z = arguments[0].z;
+        }
+
+        if (typeof _z === "undefined") {
+            _z = this.z;
+        }
+
+        return ((this.x === _x) && (this.y === _y) && (this.z === _z));
+    }
+
+    /**
+     * normalize this vector (scale the vector so that its magnitude is 1)
+     * @name normalize
+     * @memberof Vector3d
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    normalize() {
+        return this.div(this.length() || 1);
+    }
+
+    /**
+     * change this vector to be perpendicular to what it was before.<br>
+     * (Effectively rotates it 90 degrees in a clockwise direction around the z axis)
+     * @name perp
+     * @memberof Vector3d
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    perp() {
+        return this._set(this.y, -this.x, this.z);
+    }
+
+    /**
+     * Rotate this vector (counter-clockwise) by the specified angle (in radians) around the z axis
+     * @name rotate
+     * @memberof Vector3d
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around (on the same z axis)
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    rotate(angle, v) {
+        var cx = 0;
+        var cy = 0;
+
+        if (typeof v === "object") {
+            cx = v.x;
+            cy = v.y;
+        }
+
+        // TODO also rotate on the z axis if the given vector is a 3d one
+        var x = this.x - cx;
+        var y = this.y - cy;
+
+        var c = Math.cos(angle);
+        var s = Math.sin(angle);
+
+        return this._set(x * c - y * s + cx, x * s + y * c + cy, this.z);
+    }
+
+    /**
+     * return the dot product of this vector and the passed one
+     * @name dot
+     * @memberof Vector3d
+     * @param {Vector2d|Vector3d} v
+     * @returns {number} The dot product.
+     */
+    dot(v) {
+        return this.x * v.x + this.y * v.y + this.z * (typeof(v.z) !== "undefined" ? v.z : this.z);
+    }
+
+    /**
+     * calculate the cross product of this vector and the passed one
+     * @name cross
+     * @memberof Vector3d
+     * @param {Vector3d} v
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    cross(v) {
+        var ax = this.x, ay = this.y, az = this.z;
+        var bx = v.x, by = v.y, bz = v.z;
+
+        this.x = ay * bz - az * by;
+        this.y = az * bx - ax * bz;
+        this.z = ax * by - ay * bx;
+
+        return this;
+    }
+
+   /**
+    * return the square length of this vector
+    * @name length2
+    * @memberof Vector3d
+    * @returns {number} The length^2 of this vector.
+    */
+    length2() {
+        return this.dot(this);
+    }
+
+    /**
+     * return the length (magnitude) of this vector
+     * @name length
+     * @memberof Vector3d
+     * @returns {number} the length of this vector
+     */
+    length() {
+        return Math.sqrt(this.length2());
+    }
+
+    /**
+     * Linearly interpolate between this vector and the given one.
+     * @name lerp
+     * @memberof Vector3d
+     * @param {Vector3d} v
+     * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    lerp(v, alpha) {
+        this.x += ( v.x - this.x ) * alpha;
+        this.y += ( v.y - this.y ) * alpha;
+        this.z += ( v.z - this.z ) * alpha;
+        return this;
+    }
+
+    /**
+     * interpolate the position of this vector on the x and y axis towards the given one by the given maximum step.
+     * @name moveTowards
+     * @memberof Vector3d
+     * @param {Vector2d|Vector3d} target
+     * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    moveTowards(target, step) {
+        var angle = Math.atan2(target.y - this.y, target.x - this.x);
+
+        var dx = this.x - target.x;
+        var dy = this.y - target.y;
+
+        var distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance === 0 || (step >= 0 && distance <= step * step)) {
+            return target;
+        }
+
+        this.x += Math.cos(angle) * step;
+        this.y += Math.sin(angle) * step;
+
+        return this;
+    }
+
+    /**
+     * return the distance between this vector and the passed one
+     * @name distance
+     * @memberof Vector3d
+     * @param {Vector2d|Vector3d} v
+     * @returns {number}
+     */
+    distance(v) {
+        var dx = this.x - v.x;
+        var dy = this.y - v.y;
+        var dz = this.z - (v.z || 0);
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    /**
+     * return the angle between this vector and the passed one
+     * @name angle
+     * @memberof Vector3d
+     * @param {Vector2d|Vector3d} v
+     * @returns {number} angle in radians
+     */
+    angle(v) {
+        return Math.acos(clamp(this.dot(v) / (this.length() * v.length()), -1, 1));
+    }
+
+    /**
+     * project this vector on to another vector.
+     * @name project
+     * @memberof Vector3d
+     * @param {Vector2d|Vector3d} v - The vector to project onto.
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    project(v) {
+        var ratio = this.dot(v) / v.length2();
+        return this.scale(ratio, ratio, ratio);
+    }
+
+    /**
+     * Project this vector onto a vector of unit length.<br>
+     * This is slightly more efficient than `project` when dealing with unit vectors.
+     * @name projectN
+     * @memberof Vector3d
+     * @param {Vector2d|Vector3d} v - The unit vector to project onto.
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    projectN(v) {
+        var ratio = this.dot(v) / v.length2();
+        return this.scale(ratio, ratio, ratio);
+    }
+
+    /**
+     * return a clone copy of this vector
+     * @name clone
+     * @memberof Vector3d
+     * @returns {Vector3d} new me.Vector3d
+     */
+    clone() {
+        return pool.pull("Vector3d", this.x, this.y, this.z);
+    }
+
+    /**
+     * convert the object to a string representation
+     * @name toString
+     * @memberof Vector3d
+     * @returns {string}
+     */
+    toString() {
+        return "x:" + this.x + ",y:" + this.y + ",z:" + this.z;
+    }
+}
+
+/**
+ * @classdesc
+ * A Vector2d object that provide notification by executing the given callback when the vector is changed.
+ * @augments Vector2d
+ */
+ class ObservableVector2d extends Vector2d {
+    /**
+     * @param {number} x - x value of the vector
+     * @param {number} y - y value of the vector
+     * @param {object} settings - additional required parameters
+     * @param {Function} settings.onUpdate - the callback to be executed when the vector is changed
+     * @param {Function} [settings.scope] - the value to use as this when calling onUpdate
+     */
+    constructor(x = 0, y = 0, settings) {
+        super(x, y);
+        if (typeof(settings) === "undefined") {
+            throw new Error(
+                "undefined `onUpdate` callback"
+            );
+        }
+        this.setCallback(settings.onUpdate, settings.scope);
+    }
+
+    /**
+     * @ignore
+     */
+    onResetEvent(x = 0, y = 0, settings) {
+        // init is call by the constructor and does not trigger the cb
+        this.setMuted(x, y);
+        if (typeof settings !== "undefined") {
+            this.setCallback(settings.onUpdate, settings.scope);
+        }
+        return this;
+    }
+
+    /**
+     * x value of the vector
+     * @public
+     * @type {number}
+     * @name x
+     * @memberof ObservableVector2d
+     */
+
+    get x() {
+        return this._x;
+    }
+
+    set x(value) {
+        var ret = this.onUpdate.call(this.scope, value, this._y, this._x, this._y);
+        if (ret && "x" in ret) {
+            this._x = ret.x;
+        } else {
+            this._x = value;
+        }
+    }
+
+
+    /**
+     * y value of the vector
+     * @public
+     * @type {number}
+     * @name y
+     * @memberof ObservableVector2d
+     */
+
+    get y() {
+        return this._y;
+    }
+
+    set y(value) {
+        var ret = this.onUpdate.call(this.scope, this._x, value, this._x, this._y);
+        if (ret && "y" in ret) {
+            this._y = ret.y;
+        } else {
+            this._y = value;
+        }
+    }
+
+    /** @ignore */
+    _set(x, y) {
+        var ret = this.onUpdate.call(this.scope, x, y, this._x, this._y);
+        if (ret && "x" in ret && "y" in ret) {
+            this._x = ret.x;
+            this._y = ret.y;
+        } else {
+          this._x = x;
+          this._y = y;
+       }
+       return this;
+    }
+
+    /**
+     * set the vector value without triggering the callback
+     * @name setMuted
+     * @memberof ObservableVector2d
+     * @param {number} x - x value of the vector
+     * @param {number} y - y value of the vector
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    setMuted(x, y) {
+        this._x = x;
+        this._y = y;
+        return this;
+    }
+
+    /**
+     * set the callback to be executed when the vector is changed
+     * @name setCallback
+     * @memberof ObservableVector2d
+     * @param {Function} fn - callback
+     * @param {Function} [scope=null] - scope
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    setCallback(fn, scope = null) {
+        if (typeof(fn) !== "function") {
+            throw new Error(
+                "invalid `onUpdate` callback"
+            );
+        }
+        this.onUpdate = fn;
+        this.scope = scope;
+        return this;
+    }
+
+    /**
+     * Add the passed vector to this vector
+     * @name add
+     * @memberof ObservableVector2d
+     * @param {ObservableVector2d} v
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    add(v) {
+        return this._set(this._x + v.x, this._y + v.y);
+    }
+
+    /**
+     * Substract the passed vector to this vector
+     * @name sub
+     * @memberof ObservableVector2d
+     * @param {ObservableVector2d} v
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    sub(v) {
+        return this._set(this._x - v.x, this._y - v.y);
+    }
+
+    /**
+     * Multiply this vector values by the given scalar
+     * @name scale
+     * @memberof ObservableVector2d
+     * @param {number} x
+     * @param {number} [y=x]
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    scale(x, y = x) {
+        return this._set(this._x * x, this._y * y);
+    }
+
+    /**
+     * Multiply this vector values by the passed vector
+     * @name scaleV
+     * @memberof ObservableVector2d
+     * @param {ObservableVector2d} v
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    scaleV(v) {
+        return this._set(this._x * v.x, this._y * v.y);
+    }
+
+    /**
+     * Divide this vector values by the passed value
+     * @name div
+     * @memberof ObservableVector2d
+     * @param {number} n - the value to divide the vector by
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    div(n) {
+        return this._set(this._x / n, this._y / n);
+    }
+
+    /**
+     * Update this vector values to absolute values
+     * @name abs
+     * @memberof ObservableVector2d
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    abs() {
+        return this._set((this._x < 0) ? -this._x : this._x, (this._y < 0) ? -this._y : this._y);
+    }
+
+    /**
+     * Clamp the vector value within the specified value range
+     * @name clamp
+     * @memberof ObservableVector2d
+     * @param {number} low
+     * @param {number} high
+     * @returns {ObservableVector2d} new me.ObservableVector2d
+     */
+    clamp(low, high) {
+        return new ObservableVector2d(clamp(this.x, low, high), clamp(this.y, low, high), {onUpdate: this.onUpdate, scope: this.scope});
+    }
+
+    /**
+     * Clamp this vector value within the specified value range
+     * @name clampSelf
+     * @memberof ObservableVector2d
+     * @param {number} low
+     * @param {number} high
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    clampSelf(low, high) {
+        return this._set(clamp(this._x, low, high), clamp(this._y, low, high));
+    }
+
+    /**
+     * Update this vector with the minimum value between this and the passed vector
+     * @name minV
+     * @memberof ObservableVector2d
+     * @param {ObservableVector2d} v
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    minV(v) {
+        return this._set((this._x < v.x) ? this._x : v.x, (this._y < v.y) ? this._y : v.y);
+    }
+
+    /**
+     * Update this vector with the maximum value between this and the passed vector
+     * @name maxV
+     * @memberof ObservableVector2d
+     * @param {ObservableVector2d} v
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    maxV(v) {
+        return this._set((this._x > v.x) ? this._x : v.x, (this._y > v.y) ? this._y : v.y);
+    }
+
+    /**
+     * Floor the vector values
+     * @name floor
+     * @memberof ObservableVector2d
+     * @returns {ObservableVector2d} new me.ObservableVector2d
+     */
+    floor() {
+        return new ObservableVector2d(Math.floor(this._x), Math.floor(this._y), {onUpdate: this.onUpdate, scope: this.scope});
+    }
+
+    /**
+     * Floor this vector values
+     * @name floorSelf
+     * @memberof ObservableVector2d
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    floorSelf() {
+        return this._set(Math.floor(this._x), Math.floor(this._y));
+    }
+
+    /**
+     * Ceil the vector values
+     * @name ceil
+     * @memberof ObservableVector2d
+     * @returns {ObservableVector2d} new me.ObservableVector2d
+     */
+    ceil() {
+        return new ObservableVector2d(Math.ceil(this._x), Math.ceil(this._y), {onUpdate: this.onUpdate, scope: this.scope});
+    }
+
+    /**
+     * Ceil this vector values
+     * @name ceilSelf
+     * @memberof ObservableVector2d
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    ceilSelf() {
+        return this._set(Math.ceil(this._x), Math.ceil(this._y));
+    }
+
+    /**
+     * Negate the vector values
+     * @name negate
+     * @memberof ObservableVector2d
+     * @returns {ObservableVector2d} new me.ObservableVector2d
+     */
+    negate() {
+        return new ObservableVector2d(-this._x, -this._y, {onUpdate: this.onUpdate, scope: this.scope});
+    }
+
+    /**
+     * Negate this vector values
+     * @name negateSelf
+     * @memberof ObservableVector2d
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    negateSelf() {
+        return this._set(-this._x, -this._y);
+    }
+
+    /**
+     * Copy the x,y values of the passed vector to this one
+     * @name copy
+     * @memberof ObservableVector2d
+     * @param {ObservableVector2d} v
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    copy(v) {
+        return this._set(v.x, v.y);
+    }
+
+    /**
+     * return true if the two vectors are the same
+     * @name equals
+     * @memberof ObservableVector2d
+     * @param {ObservableVector2d} v
+     * @returns {boolean}
+     */
+    equals(v) {
+        return ((this._x === v.x) && (this._y === v.y));
+    }
+
+    /**
+     * change this vector to be perpendicular to what it was before.<br>
+     * (Effectively rotates it 90 degrees in a clockwise direction)
+     * @name perp
+     * @memberof ObservableVector2d
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    perp() {
+        return this._set(this._y, -this._x);
+    }
+
+    /**
+     * Rotate this vector (counter-clockwise) by the specified angle (in radians).
+     * @name rotate
+     * @memberof ObservableVector2d
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    rotate(angle, v) {
+        var cx = 0;
+        var cy = 0;
+
+        if (typeof v === "object") {
+            cx = v.x;
+            cy = v.y;
+        }
+
+        var x = this._x - cx;
+        var y = this._y - cy;
+
+        var c = Math.cos(angle);
+        var s = Math.sin(angle);
+
+        return this._set(x * c - y * s + cx, x * s + y * c + cy);
+    }
+
+    /**
+     * return the dot product of this vector and the passed one
+     * @name dot
+     * @memberof ObservableVector2d
+     * @param {Vector2d|ObservableVector2d} v
+     * @returns {number} The dot product.
+     */
+    dot(v) {
+        return this._x * v.x + this._y * v.y;
+    }
+
+    /**
+     * return the cross product of this vector and the passed one
+     * @name cross
+     * @memberof ObservableVector2d
+     * @param {Vector2d|ObservableVector2d} v
+     * @returns {number} The cross product.
+     */
+    cross(v) {
+        return this._x * v.y - this._y * v.x;
+    }
+
+    /**
+     * Linearly interpolate between this vector and the given one.
+     * @name lerp
+     * @memberof ObservableVector2d
+     * @param {Vector2d|ObservableVector2d} v
+     * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    lerp(v, alpha) {
+        return this._set(
+            this._x + ( v.x - this._x ) * alpha,
+            this._y + ( v.y - this._y ) * alpha
+        );
+    }
+
+    /**
+     * interpolate the position of this vector towards the given one while nsure that the distance never exceeds the given step.
+     * @name moveTowards
+     * @memberof ObservableVector2d
+     * @param {Vector2d|ObservableVector2d} target
+     * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+     moveTowards(target, step) {
+        var angle = Math.atan2(target.y - this._y, target.x - this._x);
+
+        var distance = this.distance(target);
+
+        if (distance === 0 || (step >= 0 && distance <= step * step)) {
+            return target;
+        }
+
+        this._x += Math.cos(angle) * step;
+        this._y += Math.sin(angle) * step;
+
+        return this;
+    }
+
+    /**
+     * return the distance between this vector and the passed one
+     * @name distance
+     * @memberof ObservableVector2d
+     * @param {ObservableVector2d} v
+     * @returns {number}
+     */
+    distance(v) {
+        return Math.sqrt((this._x - v.x) * (this._x - v.x) + (this._y - v.y) * (this._y - v.y));
+    }
+
+    /**
+     * return a clone copy of this vector
+     * @name clone
+     * @memberof ObservableVector2d
+     * @returns {ObservableVector2d} new me.ObservableVector2d
+     */
+    clone() {
+        return pool.pull("ObservableVector2d", this._x, this._y, {onUpdate: this.onUpdate, scope: this.scope});
+    }
+
+    /**
+     * return a `me.Vector2d` copy of this `me.ObservableVector2d` object
+     * @name toVector2d
+     * @memberof ObservableVector2d
+     * @returns {Vector2d} new me.Vector2d
+     */
+    toVector2d() {
+        return pool.pull("Vector2d", this._x, this._y);
+    }
+
+    /**
+     * convert the object to a string representation
+     * @name toString
+     * @memberof ObservableVector2d
+     * @returns {string}
+     */
+    toString() {
+        return "x:" + this._x + ",y:" + this._y;
+    }
+}
+
+/**
+ * @classdesc
+ * A Vector3d object that provide notification by executing the given callback when the vector is changed.
+ * @augments Vector3d
+ */
+ class ObservableVector3d extends Vector3d {
+    /**
+     * @param {number} x - x value of the vector
+     * @param {number} y - y value of the vector
+     * @param {number} z - z value of the vector
+     * @param {object} settings - additional required parameters
+     * @param {Function} settings.onUpdate - the callback to be executed when the vector is changed
+     * @param {object} [settings.scope] - the value to use as this when calling onUpdate
+     */
+    constructor(x = 0, y = 0, z = 0, settings) {
+        super(x, y, z);
+        if (typeof(settings) === "undefined") {
+            throw new Error(
+                "undefined `onUpdate` callback"
+            );
+        }
+        this.setCallback(settings.onUpdate, settings.scope);
+    }
+
+    /**
+     * @ignore
+     */
+    onResetEvent(x = 0, y = 0, z = 0, settings) {
+        // init is call by the constructor and does not trigger the cb
+        this.setMuted(x, y, z);
+        if (typeof settings !== "undefined") {
+            this.setCallback(settings.onUpdate, settings.scope);
+        }
+        return this;
+    }
+
+    /**
+     * x value of the vector
+     * @public
+     * @type {number}
+     * @name x
+     * @memberof ObservableVector3d
+     */
+
+    get x() {
+        return this._x;
+    }
+
+    set x(value) {
+        var ret = this.onUpdate.call(this.scope, value, this._y, this._z, this._x, this._y, this._z);
+        if (ret && "x" in ret) {
+            this._x = ret.x;
+        } else {
+            this._x = value;
+        }
+    }
+
+    /**
+     * y value of the vector
+     * @public
+     * @type {number}
+     * @name y
+     * @memberof ObservableVector3d
+     */
+
+    get y() {
+        return this._y;
+    }
+
+    set y(value) {
+        var ret = this.onUpdate.call(this.scope, this._x, value, this._z, this._x, this._y, this._z);
+        if (ret && "y" in ret) {
+            this._y = ret.y;
+        } else {
+            this._y = value;
+        }
+    }
+
+
+    /**
+     * z value of the vector
+     * @public
+     * @type {number}
+     * @name z
+     * @memberof ObservableVector3d
+     */
+
+
+    get z() {
+        return this._z;
+    }
+
+    set z(value) {
+        var ret = this.onUpdate.call(this.scope, this._x, this._y, value, this._x, this._y, this._z);
+        if (ret && "z" in ret) {
+            this._z = ret.z;
+        } else {
+            this._z = value;
+        }
+    }
+
+    /**
+     * @ignore
+     */
+    _set(x, y, z) {
+        var ret = this.onUpdate.call(this.scope, x, y, z, this._x, this._y, this._z);
+        if (ret && "x" in ret && "y" in ret && "z" in ret) {
+            this._x = ret.x;
+            this._y = ret.y;
+            this._z = ret.z;
+        } else {
+          this._x = x;
+          this._y = y;
+          this._z = z || 0;
+        }
+        return this;
+    }
+
+    /**
+     * set the vector value without triggering the callback
+     * @name setMuted
+     * @memberof ObservableVector3d
+     * @param {number} x - x value of the vector
+     * @param {number} y - y value of the vector
+     * @param {number} [z=0] - z value of the vector
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    setMuted(x, y, z) {
+        this._x = x;
+        this._y = y;
+        this._z = z || 0;
+        return this;
+    }
+
+    /**
+     * set the callback to be executed when the vector is changed
+     * @name setCallback
+     * @memberof ObservableVector3d
+     * @param {Function} fn - callback
+     * @param {Function} [scope=null] - scope
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    setCallback(fn, scope = null) {
+        if (typeof(fn) !== "function") {
+            throw new Error(
+                "invalid `onUpdate` callback"
+            );
+        }
+        this.onUpdate = fn;
+        this.scope = scope;
+        return this;
+    }
+
+    /**
+     * Add the passed vector to this vector
+     * @name add
+     * @memberof ObservableVector3d
+     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    add(v) {
+        return this._set(this._x + v.x, this._y + v.y, this._z + (v.z || 0));
+    }
+
+    /**
+     * Substract the passed vector to this vector
+     * @name sub
+     * @memberof ObservableVector3d
+     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    sub(v) {
+        return this._set(this._x - v.x, this._y - v.y, this._z - (v.z || 0));
+    }
+
+    /**
+     * Multiply this vector values by the given scalar
+     * @name scale
+     * @memberof ObservableVector3d
+     * @param {number} x
+     * @param {number} [y=x]
+     * @param {number} [z=1]
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    scale(x, y = x, z = 1) {
+        return this._set(this._x * x, this._y * y, this._z * z);
+    }
+
+    /**
+     * Multiply this vector values by the passed vector
+     * @name scaleV
+     * @memberof ObservableVector3d
+     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    scaleV(v) {
+        return this._set(this._x * v.x, this._y * v.y, this._z * (v.z || 1));
+    }
+
+    /**
+     * Divide this vector values by the passed value
+     * @name div
+     * @memberof ObservableVector3d
+     * @param {number} n - the value to divide the vector by
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    div(n) {
+        return this._set(this._x / n, this._y / n, this._z / n);
+    }
+
+    /**
+     * Update this vector values to absolute values
+     * @name abs
+     * @memberof ObservableVector3d
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    abs() {
+        return this._set(
+            (this._x < 0) ? -this._x : this._x,
+            (this._y < 0) ? -this._y : this._y,
+            (this._Z < 0) ? -this._z : this._z
+        );
+    }
+
+    /**
+     * Clamp the vector value within the specified value range
+     * @name clamp
+     * @memberof ObservableVector3d
+     * @param {number} low
+     * @param {number} high
+     * @returns {ObservableVector3d} new me.ObservableVector3d
+     */
+    clamp(low, high) {
+        return new ObservableVector3d(
+            clamp(this._x, low, high),
+            clamp(this._y, low, high),
+            clamp(this._z, low, high),
+            {onUpdate: this.onUpdate, scope: this.scope}
+        );
+    }
+
+    /**
+     * Clamp this vector value within the specified value range
+     * @name clampSelf
+     * @memberof ObservableVector3d
+     * @param {number} low
+     * @param {number} high
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    clampSelf(low, high) {
+        return this._set(
+            clamp(this._x, low, high),
+            clamp(this._y, low, high),
+            clamp(this._z, low, high)
+        );
+    }
+
+    /**
+     * Update this vector with the minimum value between this and the passed vector
+     * @name minV
+     * @memberof ObservableVector3d
+     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    minV(v) {
+        var _vz = v.z || 0;
+        return this._set(
+            (this._x < v.x) ? this._x : v.x,
+            (this._y < v.y) ? this._y : v.y,
+            (this._z < _vz) ? this._z : _vz
+        );
+    }
+
+    /**
+     * Update this vector with the maximum value between this and the passed vector
+     * @name maxV
+     * @memberof ObservableVector3d
+     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    maxV(v) {
+        var _vz = v.z || 0;
+        return this._set(
+            (this._x > v.x) ? this._x : v.x,
+            (this._y > v.y) ? this._y : v.y,
+            (this._z > _vz) ? this._z : _vz
+        );
+    }
+
+    /**
+     * Floor the vector values
+     * @name floor
+     * @memberof ObservableVector3d
+     * @returns {ObservableVector3d} new me.ObservableVector3d
+     */
+    floor() {
+        return new ObservableVector3d(
+            Math.floor(this._x),
+            Math.floor(this._y),
+            Math.floor(this._z),
+            {onUpdate: this.onUpdate, scope: this.scope}
+        );
+    }
+
+    /**
+     * Floor this vector values
+     * @name floorSelf
+     * @memberof ObservableVector3d
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    floorSelf() {
+        return this._set(Math.floor(this._x), Math.floor(this._y), Math.floor(this._z));
+    }
+
+    /**
+     * Ceil the vector values
+     * @name ceil
+     * @memberof ObservableVector3d
+     * @returns {ObservableVector3d} new me.ObservableVector3d
+     */
+    ceil() {
+        return new ObservableVector3d(
+            Math.ceil(this._x),
+            Math.ceil(this._y),
+            Math.ceil(this._z),
+            {onUpdate: this.onUpdate, scope: this.scope}
+        );
+    }
+
+    /**
+     * Ceil this vector values
+     * @name ceilSelf
+     * @memberof ObservableVector3d
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    ceilSelf() {
+        return this._set(Math.ceil(this._x), Math.ceil(this._y), Math.ceil(this._z));
+    }
+
+    /**
+     * Negate the vector values
+     * @name negate
+     * @memberof ObservableVector3d
+     * @returns {ObservableVector3d} new me.ObservableVector3d
+     */
+    negate() {
+        return new ObservableVector3d(
+            -this._x,
+            -this._y,
+            -this._z,
+            {onUpdate: this.onUpdate, scope: this.scope}
+        );
+    }
+
+    /**
+     * Negate this vector values
+     * @name negateSelf
+     * @memberof ObservableVector3d
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    negateSelf() {
+        return this._set(-this._x, -this._y, -this._z);
+    }
+
+    /**
+     * Copy the components of the given vector into this one
+     * @name copy
+     * @memberof ObservableVector3d
+     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    copy(v) {
+        return this._set(v.x, v.y, v.z || 0);
+    }
+
+    /**
+     * return true if the two vectors are the same
+     * @name equals
+     * @memberof ObservableVector3d
+     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
+     * @returns {boolean}
+     */
+    equals(v) {
+        return ((this._x === v.x) && (this._y === v.y) && (this._z === (v.z || this._z)));
+    }
+
+    /**
+     * change this vector to be perpendicular to what it was before.<br>
+     * (Effectively rotates it 90 degrees in a clockwise direction)
+     * @name perp
+     * @memberof ObservableVector3d
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    perp() {
+        return this._set(this._y, -this._x, this._z);
+    }
+
+    /**
+     * Rotate this vector (counter-clockwise) by the specified angle (in radians).
+     * @name rotate
+     * @memberof ObservableVector3d
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around (on the same z axis)
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    rotate(angle, v) {
+        var cx = 0;
+        var cy = 0;
+
+        if (typeof v === "object") {
+            cx = v.x;
+            cy = v.y;
+        }
+
+        // TODO also rotate on the z axis if the given vector is a 3d one
+        var x = this.x - cx;
+        var y = this.y - cy;
+
+        var c = Math.cos(angle);
+        var s = Math.sin(angle);
+
+        return this._set(x * c - y * s + cx, x * s + y * c + cy, this.z);
+    }
+
+    /**
+     * return the dot product of this vector and the passed one
+     * @name dot
+     * @memberof ObservableVector3d
+     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
+     * @returns {number} The dot product.
+     */
+    dot(v) {
+        return this._x * v.x + this._y * v.y + this._z * (v.z || 1);
+    }
+
+    /**
+     * calculate the cross product of this vector and the passed one
+     * @name cross
+     * @memberof ObservableVector3d
+     * @param {Vector3d|ObservableVector3d} v
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    cross(v) {
+        var ax = this._x, ay = this._y, az = this._z;
+        var bx = v.x, by = v.y, bz = v.z;
+
+        return this._set(
+            ay * bz - az * by,
+            az * bx - ax * bz,
+            ax * by - ay * bx
+        );
+    }
+
+    /**
+     * Linearly interpolate between this vector and the given one.
+     * @name lerp
+     * @memberof ObservableVector3d
+     * @param {Vector3d|ObservableVector3d} v
+     * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    lerp(v, alpha) {
+        return this._set(
+            this._x + ( v.x - this._x ) * alpha,
+            this._y + ( v.y - this._y ) * alpha,
+            this._z + ( v.z - this._z ) * alpha
+        );
+    }
+
+    /**
+     * interpolate the position of this vector on the x and y axis towards the given one while ensure that the distance never exceeds the given step.
+     * @name moveTowards
+     * @memberof ObservableVector3d
+     * @param {Vector2d|ObservableVector2d|Vector3d|ObservableVector3d} target
+     * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    moveTowards(target, step) {
+        var angle = Math.atan2(target.y - this._y, target.x - this._x);
+
+        var dx = this._x - target.x;
+        var dy = this._y - target.y;
+
+        var distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance === 0 || (step >= 0 && distance <= step * step)) {
+            return target;
+        }
+
+        return this._set(
+            this._x + Math.cos(angle) * step,
+            this._y + Math.sin(angle) * step,
+            this._z
+        );
+    }
+
+    /**
+     * return the distance between this vector and the passed one
+     * @name distance
+     * @memberof ObservableVector3d
+     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
+     * @returns {number}
+     */
+    distance(v) {
+        var dx = this._x - v.x;
+        var dy = this._y - v.y;
+        var dz = this._z - (v.z || 0);
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    /**
+     * return a clone copy of this vector
+     * @name clone
+     * @memberof ObservableVector3d
+     * @returns {ObservableVector3d} new me.ObservableVector3d
+     */
+    clone() {
+        return pool.pull("ObservableVector3d",
+            this._x,
+            this._y,
+            this._z,
+            {onUpdate: this.onUpdate}
+        );
+    }
+
+    /**
+     * return a `me.Vector3d` copy of this `me.ObservableVector3d` object
+     * @name toVector3d
+     * @memberof ObservableVector3d
+     * @returns {Vector3d} new me.Vector3d
+     */
+    toVector3d() {
+        return pool.pull("Vector3d", this._x, this._y, this._z);
+    }
+
+    /**
+     * convert the object to a string representation
+     * @name toString
+     * @memberof ObservableVector3d
+     * @returns {string}
+     */
+    toString() {
+        return "x:" + this._x + ",y:" + this._y + ",z:" + this._z;
+    }
+}
+
+/**
+ * @classdesc
+ * a 4x4 Matrix3d Object
+ */
+ class Matrix3d {
+    /**
+     * @param {(Matrix3d|...number)} args - An instance of me.Matrix3d to copy from, or individual Matrix components (See {@link Matrix3d.setTransform}). If not arguments are given, the matrix will be set to Identity.
+     */
+    constructor(...args) {
+        this.onResetEvent(...args);
+    }
+
+    /**
+     * @ignore
+     */
+    onResetEvent() {
+        if (typeof this.val === "undefined") {
+            this.val = new Float32Array(16);
+        }
+
+        if (arguments.length && arguments[0] instanceof Matrix3d) {
+            this.copy(arguments[0]);
+        }
+        else if (arguments.length === 16) {
+            this.setTransform.apply(this, arguments);
+        }
+        else {
+            this.identity();
+        }
+    }
+
+    /**
+     * tx component of the matrix
+     * @public
+     * @type {number}
+     * @name tx
+     * @memberof Matrix3d
+     */
+    get tx() {
+        return this.val[12];
+    }
+
+    /**
+     * ty component of the matrix
+     * @public
+     * @type {number}
+     * @name ty
+     * @memberof Matrix3d
+     */
+    get ty() {
+        return this.val[13];
+    }
+
+    /**
+     * ty component of the matrix
+     * @public
+     * @type {number}
+     * @name tz
+     * @memberof Matrix3d
+     */
+    get tz() {
+        return this.val[14];
+    }
+
+    /**
+     * reset the transformation matrix to the identity matrix (no transformation).<br>
+     * the identity matrix and parameters position : <br>
+     * <img src="images/identity-matrix_2x.png"/>
+     * @name identity
+     * @memberof Matrix3d
+     * @returns {Matrix3d} Reference to this object for method chaining
+     */
+    identity() {
+        return this.setTransform(
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+        );
+    }
+
+    /**
+     * set the matrix to the specified value
+     * @name setTransform
+     * @memberof Matrix3d
+     * @param {number} m00
+     * @param {number} m01
+     * @param {number} m02
+     * @param {number} m03
+     * @param {number} m10
+     * @param {number} m11
+     * @param {number} m12
+     * @param {number} m13
+     * @param {number} m20
+     * @param {number} m21
+     * @param {number} m22
+     * @param {number} m23
+     * @param {number} m30
+     * @param {number} m31
+     * @param {number} m32
+     * @param {number} m33
+     * @returns {Matrix3d} Reference to this object for method chaining
+     */
+    setTransform(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33) {
+        var a = this.val;
+
+        a[0] = m00;
+        a[1] = m01;
+        a[2] = m02;
+        a[3] = m03;
+        a[4] = m10;
+        a[5] = m11;
+        a[6] = m12;
+        a[7] = m13;
+        a[8] = m20;
+        a[9] = m21;
+        a[10] = m22;
+        a[11] = m23;
+        a[12] = m30;
+        a[13] = m31;
+        a[14] = m32;
+        a[15] = m33;
+
+        return this;
+    }
+
+    /**
+     * Copies over the values from another me.Matrix3d.
+     * @name copy
+     * @memberof Matrix3d
+     * @param {Matrix3d} m - the matrix object to copy from
+     * @returns {Matrix3d} Reference to this object for method chaining
+     */
+    copy(m) {
+        this.val.set(m.val);
+        return this;
+    }
+
+    /**
+     * Copies over the upper-left 2x2 values from the given me.Matrix2d
+     * @name fromMat2d
+     * @memberof Matrix3d
+     * @param {Matrix2d} m - the matrix object to copy from
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    fromMat2d(m) {
+        var b = m.val;
+        return this.setTransform(
+            b[0], b[3], b[6], 0,
+            b[1], b[4], b[7], 0,
+            b[2], b[5], b[8], 0,
+            0,    0,    0,    1
+
+        );
+    }
+
+    /**
+     * multiply both matrix
+     * @name multiply
+     * @memberof Matrix3d
+     * @param {Matrix3d} m - Other matrix
+     * @returns {Matrix3d} Reference to this object for method chaining
+     */
+    multiply(m) {
+        var a = this.val;
+        var b = m.val;
+
+        var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+        var a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+        var a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+        var a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+        var b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
+
+        a[0] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
+        a[1] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
+        a[2] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
+        a[3] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
+
+        b0 = b[4];
+        b1 = b[5];
+        b2 = b[6];
+        b3 = b[7];
+
+        a[4] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
+        a[5] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
+        a[6] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
+        a[7] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
+
+        b0 = b[8];
+        b1 = b[9];
+        b2 = b[10];
+        b3 = b[11];
+
+        a[8] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
+        a[9] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
+        a[10] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
+        a[11] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
+
+        b0 = b[12];
+        b1 = b[13];
+        b2 = b[14];
+        b3 = b[15];
+
+        a[12] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
+        a[13] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
+        a[14] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
+        a[15] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
+
+        return this;
+    }
+
+    /**
+     * Transpose the value of this matrix.
+     * @name transpose
+     * @memberof Matrix3d
+     * @returns {Matrix3d} Reference to this object for method chaining
+     */
+    transpose() {
+        var a = this.val,
+            a01 = a[1],
+            a02 = a[2],
+            a03 = a[3],
+            a12 = a[6],
+            a13 = a[7],
+            a23 = a[11];
+
+         a[1] = a[4];
+         a[2] = a[8];
+         a[3] = a[12];
+         a[4] = a01;
+         a[6] = a[9];
+         a[7] = a[13];
+         a[8] = a02;
+         a[9] = a12;
+         a[11] = a[14];
+         a[12] = a03;
+         a[13] = a13;
+         a[14] = a23;
+
+         return this;
+    }
+
+    /**
+     * invert this matrix, causing it to apply the opposite transformation.
+     * @name invert
+     * @memberof Matrix3d
+     * @returns {Matrix3d} Reference to this object for method chaining
+     */
+    invert() {
+         var a = this.val;
+
+         var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+         var a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+         var a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+         var a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+
+         var b00 = a00 * a11 - a01 * a10;
+         var b01 = a00 * a12 - a02 * a10;
+         var b02 = a00 * a13 - a03 * a10;
+         var b03 = a01 * a12 - a02 * a11;
+
+         var b04 = a01 * a13 - a03 * a11;
+         var b05 = a02 * a13 - a03 * a12;
+         var b06 = a20 * a31 - a21 * a30;
+         var b07 = a20 * a32 - a22 * a30;
+
+         var b08 = a20 * a33 - a23 * a30;
+         var b09 = a21 * a32 - a22 * a31;
+         var b10 = a21 * a33 - a23 * a31;
+         var b11 = a22 * a33 - a23 * a32;
+
+         // Calculate the determinant
+         var det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+
+         if (!det)
+         {
+             return null;
+         }
+
+         det = 1 / det;
+
+         a[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
+         a[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
+         a[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
+         a[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
+         a[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
+         a[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
+         a[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
+         a[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
+         a[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
+         a[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
+         a[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
+         a[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
+         a[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
+         a[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
+         a[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
+         a[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+
+         return this;
+    }
+
+    /**
+     * apply the current transform to the given 2d or 3d vector
+     * @name apply
+     * @memberof Matrix3d
+     * @param {Vector2d|Vector3d} v - the vector object to be transformed
+     * @returns {Vector2d|Vector3d} result vector object.
+     */
+     apply(v) {
+        var a = this.val,
+        x = v.x,
+        y = v.y,
+        z = (typeof v.z !== "undefined") ? v.z : 1;
+
+        var w = (a[3] * x + a[7] * y + a[11] * z + a[15]) || 1.0;
+
+        v.x = (a[0] * x + a[4] * y + a[8] * z + a[12]) / w;
+        v.y = (a[1] * x + a[5] * y + a[9] * z + a[13]) / w;
+
+        if (typeof v.z !== "undefined") {
+            v.z = (a[2] * x + a[6] * y + a[10] * z + a[14]) / w;
+        }
+
+        return v;
+     }
+
+     /**
+      * apply the inverted current transform to the given 2d or 3d vector
+      * @name applyInverse
+      * @memberof Matrix3d
+      * @param {Vector2d|Vector3d} v - the vector object to be transformed
+      * @returns {Vector2d|Vector3d} result vector object.
+      */
+     applyInverse(v) {
+         // invert the current matrix
+         var im = pool.pull("Matrix3d", this).invert();
+
+         // apply the inverted matrix
+         im.apply(v);
+
+         pool.push(im);
+
+         return v;
+     }
+
+    /**
+     * generate an orthogonal projection matrix, with the result replacing the current matrix
+     * <img src="images/glOrtho.gif"/><br>
+     * @name ortho
+     * @memberof Matrix3d
+     * @param {number} left - farthest left on the x-axis
+     * @param {number} right - farthest right on the x-axis
+     * @param {number} bottom - farthest down on the y-axis
+     * @param {number} top - farthest up on the y-axis
+     * @param {number} near - distance to the near clipping plane along the -Z axis
+     * @param {number} far - distance to the far clipping plane along the -Z axis
+     * @returns {Matrix3d} Reference to this object for method chaining
+     */
+    ortho(left, right, bottom, top, near, far) {
+        var a = this.val;
+        var leftRight = 1.0 / (left - right);
+        var bottomTop = 1.0 / (bottom - top);
+        var nearFar = 1.0 / (near - far);
+
+        a[0] = -2.0 * leftRight;
+        a[1] = 0.0;
+        a[2] = 0.0;
+        a[3] = 0.0;
+        a[4] = 0.0;
+        a[5] = -2.0 * bottomTop;
+        a[6] = 0.0;
+        a[7] = 0.0;
+        a[8] = 0.0;
+        a[9] = 0.0;
+        a[10] = 2.0 * nearFar;
+        a[11] = 0.0;
+        a[12] = (left + right) * leftRight;
+        a[13] = (top + bottom) * bottomTop;
+        a[14] = (far + near) * nearFar;
+        a[15] = 1.0;
+
+        return this;
+    }
+
+    /**
+     * scale the matrix
+     * @name scale
+     * @memberof Matrix3d
+     * @param {number} x - a number representing the abscissa of the scaling vector.
+     * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
+     * @param {number} [z=0] - a number representing the depth vector
+     * @returns {Matrix3d} Reference to this object for method chaining
+     */
+    scale(x, y = x, z = 0) {
+        var a = this.val;
+
+        a[0] = a[0] * x;
+        a[1] = a[1] * x;
+        a[2] = a[2] * x;
+        a[3] = a[3] * x;
+
+        a[4] = a[4] * y;
+        a[5] = a[5] * y;
+        a[6] = a[6] * y;
+        a[7] = a[7] * y;
+
+        a[8] = a[8] * z;
+        a[9] = a[9] * z;
+        a[10] = a[10] * z;
+        a[11] = a[11] * z;
+
+        return this;
+    }
+
+    /**
+     * adds a 2D scaling transformation.
+     * @name scaleV
+     * @memberof Matrix3d
+     * @param {Vector2d|Vector3d} v - scaling vector
+     * @returns {Matrix3d} Reference to this object for method chaining
+     */
+    scaleV(v) {
+        return this.scale(v.x, v.y, v.z);
+    }
+
+    /**
+     * specifies a 2D scale operation using the [sx, 1] scaling vector
+     * @name scaleX
+     * @memberof Matrix3d
+     * @param {number} x - x scaling vector
+     * @returns {Matrix3d} Reference to this object for method chaining
+     */
+    scaleX(x) {
+        return this.scale(x, 1);
+    }
+
+    /**
+     * specifies a 2D scale operation using the [1,sy] scaling vector
+     * @name scaleY
+     * @memberof Matrix3d
+     * @param {number} y - y scaling vector
+     * @returns {Matrix3d} Reference to this object for method chaining
+     */
+    scaleY(y) {
+        return this.scale(1, y);
+    }
+
+    /**
+     * rotate this matrix (counter-clockwise) by the specified angle (in radians).
+     * @name rotate
+     * @memberof Matrix3d
+     * @param {number} angle - Rotation angle in radians.
+     * @param {Vector3d} v - the axis to rotate around
+     * @returns {Matrix3d} Reference to this object for method chaining
+     */
+    rotate(angle, v) {
+        if (angle !== 0) {
+            var a = this.val,
+                x = v.x,
+                y = v.y,
+                z = v.z;
+
+            var len = Math.sqrt(x * x + y * y + z * z);
+
+            var s, c, t;
+            var a00, a01, a02, a03;
+            var a10, a11, a12, a13;
+            var a20, a21, a22, a23;
+            var b00, b01, b02;
+            var b10, b11, b12;
+            var b20, b21, b22;
+
+            if (len < EPSILON) {
+                return null;
+            }
+
+            len = 1 / len;
+            x *= len;
+            y *= len;
+            z *= len;
+
+            s = Math.sin(angle);
+            c = Math.cos(angle);
+            t = 1 - c;
+
+            a00 = a[0];
+            a01 = a[1];
+            a02 = a[2];
+            a03 = a[3];
+            a10 = a[4];
+            a11 = a[5];
+            a12 = a[6];
+            a13 = a[7];
+            a20 = a[8];
+            a21 = a[9];
+            a22 = a[10];
+            a23 = a[11];
+
+            // Construct the elements of the rotation matrix
+            b00 = x * x * t + c;
+            b01 = y * x * t + z * s;
+            b02 = z * x * t - y * s;
+            b10 = x * y * t - z * s;
+            b11 = y * y * t + c;
+            b12 = z * y * t + x * s;
+            b20 = x * z * t + y * s;
+            b21 = y * z * t - x * s;
+            b22 = z * z * t + c;
+
+            // Perform rotation-specific matrix multiplication
+            a[0] = a00 * b00 + a10 * b01 + a20 * b02;
+            a[1] = a01 * b00 + a11 * b01 + a21 * b02;
+            a[2] = a02 * b00 + a12 * b01 + a22 * b02;
+            a[3] = a03 * b00 + a13 * b01 + a23 * b02;
+            a[4] = a00 * b10 + a10 * b11 + a20 * b12;
+            a[5] = a01 * b10 + a11 * b11 + a21 * b12;
+            a[6] = a02 * b10 + a12 * b11 + a22 * b12;
+            a[7] = a03 * b10 + a13 * b11 + a23 * b12;
+            a[8] = a00 * b20 + a10 * b21 + a20 * b22;
+            a[9] = a01 * b20 + a11 * b21 + a21 * b22;
+            a[10] = a02 * b20 + a12 * b21 + a22 * b22;
+            a[11] = a03 * b20 + a13 * b21 + a23 * b22;
+        }
+        return this;
+    }
+
+    /**
+     * translate the matrix position using the given vector
+     * @name translate
+     * @memberof Matrix3d
+     * @method
+     * @param {number} x - a number representing the abscissa of the vector.
+     * @param {number} [y=x] - a number representing the ordinate of the vector.
+     * @param {number} [z=0] - a number representing the depth of the vector
+     * @returns {Matrix3d} Reference to this object for method chaining
+     */
+    /**
+     * translate the matrix by a vector on the horizontal and vertical axis
+     * @name translateV
+     * @memberof Matrix3d
+     * @param {Vector2d|Vector3d} v - the vector to translate the matrix by
+     * @returns {Matrix3d} Reference to this object for method chaining
+     */
+    translate() {
+        var a = this.val;
+        var _x, _y, _z;
+
+        if (arguments.length > 1 ) {
+            // x, y (, z)
+            _x = arguments[0];
+            _y = arguments[1];
+            _z = typeof(arguments[2]) === "undefined" ?  0 : arguments[2];
+        } else {
+            // 2d/3d vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+            _z = typeof(arguments[0].z) === "undefined" ? 0 : arguments[0].z;
+        }
+
+        a[12] = a[0] * _x + a[4] * _y + a[8] * _z + a[12];
+        a[13] = a[1] * _x + a[5] * _y + a[9] * _z + a[13];
+        a[14] = a[2] * _x + a[6] * _y + a[10] * _z + a[14];
+        a[15] = a[3] * _x + a[7] * _y + a[11] * _z + a[15];
+
+        return this;
+    }
+
+    /**
+     * returns true if the matrix is an identity matrix.
+     * @name isIdentity
+     * @memberof Matrix3d
+     * @returns {boolean}
+     */
+    isIdentity() {
+        var a = this.val;
+
+        return (
+            (a[0] === 1) &&
+            (a[1] === 0) &&
+            (a[2] === 0) &&
+            (a[3] === 0) &&
+            (a[4] === 0) &&
+            (a[5] === 1) &&
+            (a[6] === 0) &&
+            (a[7] === 0) &&
+            (a[8] === 0) &&
+            (a[9] === 0) &&
+            (a[10] === 1) &&
+            (a[11] === 0) &&
+            (a[12] === 0) &&
+            (a[13] === 0) &&
+            (a[14] === 0) &&
+            (a[15] === 1)
+        );
+    }
+
+    /**
+     * return true if the two matrices are identical
+     * @name equals
+     * @memberof Matrix3d
+     * @param {Matrix3d} m - the other matrix
+     * @returns {boolean} true if both are equals
+     */
+    equals(m) {
+        var b = m.val;
+        var a = this.val;
+
+        return (
+            (a[0] === b[0]) &&
+            (a[1] === b[1]) &&
+            (a[2] === b[2]) &&
+            (a[3] === b[3]) &&
+            (a[4] === b[4]) &&
+            (a[5] === b[5]) &&
+            (a[6] === b[6]) &&
+            (a[7] === b[7]) &&
+            (a[8] === b[8]) &&
+            (a[9] === b[9]) &&
+            (a[10] === b[10]) &&
+            (a[11] === b[11]) &&
+            (a[12] === b[12]) &&
+            (a[13] === b[13]) &&
+            (a[14] === b[14]) &&
+            (a[15] === b[15])
+        );
+    }
+
+    /**
+     * Clone the Matrix
+     * @name clone
+     * @memberof Matrix3d
+     * @returns {Matrix3d}
+     */
+    clone() {
+        return pool.pull("Matrix3d", this);
+    }
+
+    /**
+     * return an array representation of this Matrix
+     * @name toArray
+     * @memberof Matrix3d
+     * @returns {Float32Array}
+     */
+    toArray() {
+        return this.val;
+    }
+
+    /**
+     * convert the object to a string representation
+     * @name toString
+     * @memberof Matrix3d
+     * @returns {string}
+     */
+    toString() {
+        var a = this.val;
+
+        return "me.Matrix3d(" +
+            a[0] + ", " + a[1] + ", " + a[2] + ", " + a[3] + ", " +
+            a[4] + ", " + a[5] + ", " + a[6] + ", " + a[7] + ", " +
+            a[8] + ", " + a[9] + ", " + a[10] + ", " + a[11] + ", " +
+            a[12] + ", " + a[13] + ", " + a[14] + ", " + a[15] +
+        ")";
+    }
+}
+
+/**
+ * @classdesc
+ * a Matrix2d Object.<br>
+ * the identity matrix and parameters position : <br>
+ * <img src="images/identity-matrix_2x.png"/>
+ */
+ class Matrix2d {
+    /**
+     * @param {(Matrix2d|Matrix3d|...number)} args - an instance of me.Matrix2d or me.Matrix3d to copy from, or individual matrix components (See {@link Matrix2d.setTransform}). If not arguments are given, the matrix will be set to Identity.
+     */
+    constructor(...args) {
+        this.onResetEvent(...args);
+    }
+
+    /**
+     * @ignore
+     */
+    onResetEvent() {
+        if (typeof(this.val) === "undefined") {
+            this.val = new Float32Array(9);
+        }
+
+        if (arguments.length && arguments[0] instanceof Matrix2d) {
+            this.copy(arguments[0]);
+        }
+        else if (arguments.length && arguments[0] instanceof Matrix3d) {
+            this.fromMat3d(arguments[0]);
+        }
+        else if (arguments.length >= 6) {
+            this.setTransform.apply(this, arguments);
+        }
+        else {
+            this.identity();
+        }
+        return this;
+    }
+
+    /**
+     * tx component of the matrix
+     * @public
+     * @type {number}
+     * @see Matrix2d.translate
+     * @name tx
+     * @memberof Matrix2d
+     */
+    get tx() {
+        return this.val[6];
+    }
+
+    /**
+     * ty component of the matrix
+     * @public
+     * @type {number}
+     * @see Matrix2d.translate
+     * @name ty
+     * @memberof Matrix2d
+     */
+    get ty() {
+        return this.val[7];
+    }
+
+    /**
+     * reset the transformation matrix to the identity matrix (no transformation).<br>
+     * the identity matrix and parameters position : <br>
+     * <img src="images/identity-matrix_2x.png"/>
+     * @name identity
+     * @memberof Matrix2d
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    identity() {
+        this.setTransform(
+            1, 0, 0,
+            0, 1, 0,
+            0, 0, 1
+        );
+        return this;
+    }
+
+    /**
+     * set the matrix to the specified value
+     * @name setTransform
+     * @memberof Matrix2d
+     * @param {number} a
+     * @param {number} b
+     * @param {number} c
+     * @param {number} d
+     * @param {number} e
+     * @param {number} f
+     * @param {number} [g=0]
+     * @param {number} [h=0]
+     * @param {number} [i=1]
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    setTransform() {
+        var a = this.val;
+
+        if (arguments.length === 9) {
+            a[0] = arguments[0]; // a - m00
+            a[1] = arguments[1]; // b - m10
+            a[2] = arguments[2]; // c - m20
+            a[3] = arguments[3]; // d - m01
+            a[4] = arguments[4]; // e - m11
+            a[5] = arguments[5]; // f - m21
+            a[6] = arguments[6]; // g - m02
+            a[7] = arguments[7]; // h - m12
+            a[8] = arguments[8]; // i - m22
+        } else if (arguments.length === 6) {
+            a[0] = arguments[0]; // a
+            a[1] = arguments[2]; // c
+            a[2] = arguments[4]; // e
+            a[3] = arguments[1]; // b
+            a[4] = arguments[3]; // d
+            a[5] = arguments[5]; // f
+            a[6] = 0; // g
+            a[7] = 0; // h
+            a[8] = 1; // i
+        }
+
+        return this;
+    }
+
+    /**
+     * Copies over the values from another me.Matrix2d.
+     * @name copy
+     * @memberof Matrix2d
+     * @param {Matrix2d} m - the matrix object to copy from
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    copy(m) {
+        this.val.set(m.val);
+        return this;
+    }
+
+    /**
+     * Copies over the upper-left 3x3 values from the given me.Matrix3d
+     * @name fromMat3d
+     * @memberof Matrix2d
+     * @param {Matrix3d} m - the matrix object to copy from
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    fromMat3d(m) {
+        var b = m.val;
+        var a = this.val;
+
+        a[0] = b[0];
+        a[1] = b[1];
+        a[2] = b[2];
+        a[3] = b[4];
+        a[4] = b[5];
+        a[5] = b[6];
+        a[6] = b[8];
+        a[7] = b[9];
+        a[8] = b[10];
+
+        return this;
+    }
+
+    /**
+     * multiply both matrix
+     * @name multiply
+     * @memberof Matrix2d
+     * @param {Matrix2d} m - the other matrix
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    multiply(m) {
+        var b = m.val;
+        var a = this.val,
+            a0 = a[0],
+            a1 = a[1],
+            a3 = a[3],
+            a4 = a[4],
+            b0 = b[0],
+            b1 = b[1],
+            b3 = b[3],
+            b4 = b[4],
+            b6 = b[6],
+            b7 = b[7];
+
+        a[0] = a0 * b0 + a3 * b1;
+        a[1] = a1 * b0 + a4 * b1;
+        a[3] = a0 * b3 + a3 * b4;
+        a[4] = a1 * b3 + a4 * b4;
+        a[6] += a0 * b6 + a3 * b7;
+        a[7] += a1 * b6 + a4 * b7;
+
+        return this;
+    }
+
+    /**
+     * Transpose the value of this matrix.
+     * @name transpose
+     * @memberof Matrix2d
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    transpose() {
+        var a = this.val,
+            a1 = a[1],
+            a2 = a[2],
+            a5 = a[5];
+
+        a[1] = a[3];
+        a[2] = a[6];
+        a[3] = a1;
+        a[5] = a[7];
+        a[6] = a2;
+        a[7] = a5;
+
+        return this;
+    }
+
+    /**
+     * invert this matrix, causing it to apply the opposite transformation.
+     * @name invert
+     * @memberof Matrix2d
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    invert() {
+        var val = this.val;
+
+        var a = val[ 0 ], b = val[ 1 ], c = val[ 2 ],
+            d = val[ 3 ], e = val[ 4 ], f = val[ 5 ],
+            g = val[ 6 ], h = val[ 7 ], i = val[ 8 ];
+
+        var ta = i * e - f * h,
+            td = f * g - i * d,
+            tg = h * d - e * g;
+
+        var n = a * ta + b * td + c * tg;
+
+        val[ 0 ] = ta / n;
+        val[ 1 ] = ( c * h - i * b ) / n;
+        val[ 2 ] = ( f * b - c * e ) / n;
+
+        val[ 3 ] = td / n;
+        val[ 4 ] = ( i * a - c * g ) / n;
+        val[ 5 ] = ( c * d - f * a ) / n;
+
+        val[ 6 ] = tg / n;
+        val[ 7 ] = ( b * g - h * a ) / n;
+        val[ 8 ] = ( e * a - b * d ) / n;
+
+        return this;
+    }
+
+   /**
+    * apply the current transform to the given 2d or 3d vector
+    * @name apply
+    * @memberof Matrix2d
+    * @param {Vector2d|Vector3d} v - the vector object to be transformed
+    * @returns {Vector2d|Vector3d} result vector object.
+    */
+    apply(v) {
+        var a = this.val,
+            x = v.x,
+            y = v.y,
+            z = (typeof v.z !== "undefined") ? v.z : 1;
+
+        v.x = x * a[0] + y * a[3] + z * a[6];
+        v.y = x * a[1] + y * a[4] + z * a[7];
+
+        if (typeof v.z !== "undefined") {
+            v.z = x * a[2] + y * a[5] + z * a[8];
+        }
+
+        return v;
+    }
+
+    /**
+     * apply the inverted current transform to the given 2d vector
+     * @name applyInverse
+     * @memberof Matrix2d
+     * @param {Vector2d} v - the vector object to be transformed
+     * @returns {Vector2d} result vector object.
+     */
+    applyInverse(v) {
+        var a = this.val,
+            x = v.x,
+            y = v.y;
+
+        var invD = 1 / ((a[0] * a[4]) + (a[3] * -a[1]));
+
+        v.x = (a[4] * invD * x) + (-a[3] * invD * y) + (((a[7] * a[3]) - (a[6] * a[4])) * invD);
+        v.y = (a[0] * invD * y) + (-a[1] * invD * x) + (((-a[7] * a[0]) + (a[6] * a[1])) * invD);
+
+        return v;
+    }
+
+    /**
+     * scale the matrix
+     * @name scale
+     * @memberof Matrix2d
+     * @param {number} x - a number representing the abscissa of the scaling vector.
+     * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    scale(x, y = x) {
+        var a = this.val;
+
+        a[0] *= x;
+        a[1] *= x;
+        a[3] *= y;
+        a[4] *= y;
+
+        return this;
+    }
+
+    /**
+     * adds a 2D scaling transformation.
+     * @name scaleV
+     * @memberof Matrix2d
+     * @param {Vector2d} v - scaling vector
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    scaleV(v) {
+        return this.scale(v.x, v.y);
+    }
+
+    /**
+     * specifies a 2D scale operation using the [sx, 1] scaling vector
+     * @name scaleX
+     * @memberof Matrix2d
+     * @param {number} x - x scaling vector
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    scaleX(x) {
+        return this.scale(x, 1);
+    }
+
+    /**
+     * specifies a 2D scale operation using the [1,sy] scaling vector
+     * @name scaleY
+     * @memberof Matrix2d
+     * @param {number} y - y scaling vector
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    scaleY(y) {
+        return this.scale(1, y);
+    }
+
+    /**
+     * rotate the matrix (counter-clockwise) by the specified angle (in radians).
+     * @name rotate
+     * @memberof Matrix2d
+     * @param {number} angle - Rotation angle in radians.
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    rotate(angle) {
+        if (angle !== 0) {
+            var a = this.val,
+                a00 = a[0],
+                a01 = a[1],
+                a02 = a[2],
+                a10 = a[3],
+                a11 = a[4],
+                a12 = a[5],
+                s = Math.sin(angle),
+                c = Math.cos(angle);
+
+            a[0] = c * a00 + s * a10;
+            a[1] = c * a01 + s * a11;
+            a[2] = c * a02 + s * a12;
+
+            a[3] = c * a10 - s * a00;
+            a[4] = c * a11 - s * a01;
+            a[5] = c * a12 - s * a02;
+        }
+        return this;
+    }
+
+    /**
+     * translate the matrix position on the horizontal and vertical axis
+     * @name translate
+     * @memberof Matrix2d
+     * @method
+     * @param {number} x - the x coordindates to translate the matrix by
+     * @param {number} y - the y coordindates to translate the matrix by
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    /**
+     * translate the matrix by a vector on the horizontal and vertical axis
+     * @name translateV
+     * @memberof Matrix2d
+     * @param {Vector2d} v - the vector to translate the matrix by
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    translate() {
+        var a = this.val;
+        var _x, _y;
+
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+
+        a[6] += a[0] * _x + a[3] * _y;
+        a[7] += a[1] * _x + a[4] * _y;
+
+        return this;
+    }
+
+    /**
+     * returns true if the matrix is an identity matrix.
+     * @name isIdentity
+     * @memberof Matrix2d
+     * @returns {boolean}
+     */
+    isIdentity() {
+        var a = this.val;
+
+        return (
+            a[0] === 1 &&
+            a[1] === 0 &&
+            a[2] === 0 &&
+            a[3] === 0 &&
+            a[4] === 1 &&
+            a[5] === 0 &&
+            a[6] === 0 &&
+            a[7] === 0 &&
+            a[8] === 1
+        );
+    }
+
+    /**
+     * return true if the two matrices are identical
+     * @name equals
+     * @memberof Matrix2d
+     * @param {Matrix2d} m - the other matrix
+     * @returns {boolean} true if both are equals
+     */
+    equals(m) {
+        var b = m.val;
+        var a = this.val;
+
+        return (
+            (a[0] === b[0]) &&
+            (a[1] === b[1]) &&
+            (a[2] === b[2]) &&
+            (a[3] === b[3]) &&
+            (a[4] === b[4]) &&
+            (a[5] === b[5]) &&
+            (a[6] === b[6]) &&
+            (a[7] === b[7]) &&
+            (a[8] === b[8])
+        );
+    }
+
+    /**
+     * Clone the Matrix
+     * @name clone
+     * @memberof Matrix2d
+     * @returns {Matrix2d}
+     */
+    clone() {
+        return pool.pull("Matrix2d", this);
+    }
+
+    /**
+     * return an array representation of this Matrix
+     * @name toArray
+     * @memberof Matrix2d
+     * @returns {Float32Array}
+     */
+    toArray() {
+        return this.val;
+    }
+
+    /**
+     * convert the object to a string representation
+     * @name toString
+     * @memberof Matrix2d
+     * @returns {string}
+     */
+    toString() {
+        var a = this.val;
+
+        return "me.Matrix2d(" +
+            a[0] + ", " + a[1] + ", " + a[2] + ", " +
+            a[3] + ", " + a[4] + ", " + a[5] + ", " +
+            a[6] + ", " + a[7] + ", " + a[8] +
+        ")";
+    }
+}
+
+var earcutExports = {};
+var earcut$1 = {
+  get exports(){ return earcutExports; },
+  set exports(v){ earcutExports = v; },
+};
+
+'use strict';
+
+earcut$1.exports = earcut;
+var _default = earcutExports.default = earcut;
+
+function earcut(data, holeIndices, dim) {
+
+    dim = dim || 2;
+
+    var hasHoles = holeIndices && holeIndices.length,
+        outerLen = hasHoles ? holeIndices[0] * dim : data.length,
+        outerNode = linkedList(data, 0, outerLen, dim, true),
+        triangles = [];
+
+    if (!outerNode || outerNode.next === outerNode.prev) return triangles;
+
+    var minX, minY, maxX, maxY, x, y, invSize;
+
+    if (hasHoles) outerNode = eliminateHoles(data, holeIndices, outerNode, dim);
+
+    // if the shape is not too simple, we'll use z-order curve hash later; calculate polygon bbox
+    if (data.length > 80 * dim) {
+        minX = maxX = data[0];
+        minY = maxY = data[1];
+
+        for (var i = dim; i < outerLen; i += dim) {
+            x = data[i];
+            y = data[i + 1];
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+        }
+
+        // minX, minY and invSize are later used to transform coords into integers for z-order calculation
+        invSize = Math.max(maxX - minX, maxY - minY);
+        invSize = invSize !== 0 ? 32767 / invSize : 0;
+    }
+
+    earcutLinked(outerNode, triangles, dim, minX, minY, invSize, 0);
+
+    return triangles;
+}
+
+// create a circular doubly linked list from polygon points in the specified winding order
+function linkedList(data, start, end, dim, clockwise) {
+    var i, last;
+
+    if (clockwise === (signedArea(data, start, end, dim) > 0)) {
+        for (i = start; i < end; i += dim) last = insertNode(i, data[i], data[i + 1], last);
+    } else {
+        for (i = end - dim; i >= start; i -= dim) last = insertNode(i, data[i], data[i + 1], last);
+    }
+
+    if (last && equals(last, last.next)) {
+        removeNode(last);
+        last = last.next;
+    }
+
+    return last;
+}
+
+// eliminate colinear or duplicate points
+function filterPoints(start, end) {
+    if (!start) return start;
+    if (!end) end = start;
+
+    var p = start,
+        again;
+    do {
+        again = false;
+
+        if (!p.steiner && (equals(p, p.next) || area(p.prev, p, p.next) === 0)) {
+            removeNode(p);
+            p = end = p.prev;
+            if (p === p.next) break;
+            again = true;
+
+        } else {
+            p = p.next;
+        }
+    } while (again || p !== end);
+
+    return end;
+}
+
+// main ear slicing loop which triangulates a polygon (given as a linked list)
+function earcutLinked(ear, triangles, dim, minX, minY, invSize, pass) {
+    if (!ear) return;
+
+    // interlink polygon nodes in z-order
+    if (!pass && invSize) indexCurve(ear, minX, minY, invSize);
+
+    var stop = ear,
+        prev, next;
+
+    // iterate through ears, slicing them one by one
+    while (ear.prev !== ear.next) {
+        prev = ear.prev;
+        next = ear.next;
+
+        if (invSize ? isEarHashed(ear, minX, minY, invSize) : isEar(ear)) {
+            // cut off the triangle
+            triangles.push(prev.i / dim | 0);
+            triangles.push(ear.i / dim | 0);
+            triangles.push(next.i / dim | 0);
+
+            removeNode(ear);
+
+            // skipping the next vertex leads to less sliver triangles
+            ear = next.next;
+            stop = next.next;
+
+            continue;
+        }
+
+        ear = next;
+
+        // if we looped through the whole remaining polygon and can't find any more ears
+        if (ear === stop) {
+            // try filtering points and slicing again
+            if (!pass) {
+                earcutLinked(filterPoints(ear), triangles, dim, minX, minY, invSize, 1);
+
+            // if this didn't work, try curing all small self-intersections locally
+            } else if (pass === 1) {
+                ear = cureLocalIntersections(filterPoints(ear), triangles, dim);
+                earcutLinked(ear, triangles, dim, minX, minY, invSize, 2);
+
+            // as a last resort, try splitting the remaining polygon into two
+            } else if (pass === 2) {
+                splitEarcut(ear, triangles, dim, minX, minY, invSize);
+            }
+
+            break;
+        }
+    }
+}
+
+// check whether a polygon node forms a valid ear with adjacent nodes
+function isEar(ear) {
+    var a = ear.prev,
+        b = ear,
+        c = ear.next;
+
+    if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
+
+    // now make sure we don't have other points inside the potential ear
+    var ax = a.x, bx = b.x, cx = c.x, ay = a.y, by = b.y, cy = c.y;
+
+    // triangle bbox; min & max are calculated like this for speed
+    var x0 = ax < bx ? (ax < cx ? ax : cx) : (bx < cx ? bx : cx),
+        y0 = ay < by ? (ay < cy ? ay : cy) : (by < cy ? by : cy),
+        x1 = ax > bx ? (ax > cx ? ax : cx) : (bx > cx ? bx : cx),
+        y1 = ay > by ? (ay > cy ? ay : cy) : (by > cy ? by : cy);
+
+    var p = c.next;
+    while (p !== a) {
+        if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 &&
+            pointInTriangle(ax, ay, bx, by, cx, cy, p.x, p.y) &&
+            area(p.prev, p, p.next) >= 0) return false;
+        p = p.next;
+    }
+
+    return true;
+}
+
+function isEarHashed(ear, minX, minY, invSize) {
+    var a = ear.prev,
+        b = ear,
+        c = ear.next;
+
+    if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
+
+    var ax = a.x, bx = b.x, cx = c.x, ay = a.y, by = b.y, cy = c.y;
+
+    // triangle bbox; min & max are calculated like this for speed
+    var x0 = ax < bx ? (ax < cx ? ax : cx) : (bx < cx ? bx : cx),
+        y0 = ay < by ? (ay < cy ? ay : cy) : (by < cy ? by : cy),
+        x1 = ax > bx ? (ax > cx ? ax : cx) : (bx > cx ? bx : cx),
+        y1 = ay > by ? (ay > cy ? ay : cy) : (by > cy ? by : cy);
+
+    // z-order range for the current triangle bbox;
+    var minZ = zOrder(x0, y0, minX, minY, invSize),
+        maxZ = zOrder(x1, y1, minX, minY, invSize);
+
+    var p = ear.prevZ,
+        n = ear.nextZ;
+
+    // look for points inside the triangle in both directions
+    while (p && p.z >= minZ && n && n.z <= maxZ) {
+        if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && p !== a && p !== c &&
+            pointInTriangle(ax, ay, bx, by, cx, cy, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
+        p = p.prevZ;
+
+        if (n.x >= x0 && n.x <= x1 && n.y >= y0 && n.y <= y1 && n !== a && n !== c &&
+            pointInTriangle(ax, ay, bx, by, cx, cy, n.x, n.y) && area(n.prev, n, n.next) >= 0) return false;
+        n = n.nextZ;
+    }
+
+    // look for remaining points in decreasing z-order
+    while (p && p.z >= minZ) {
+        if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && p !== a && p !== c &&
+            pointInTriangle(ax, ay, bx, by, cx, cy, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
+        p = p.prevZ;
+    }
+
+    // look for remaining points in increasing z-order
+    while (n && n.z <= maxZ) {
+        if (n.x >= x0 && n.x <= x1 && n.y >= y0 && n.y <= y1 && n !== a && n !== c &&
+            pointInTriangle(ax, ay, bx, by, cx, cy, n.x, n.y) && area(n.prev, n, n.next) >= 0) return false;
+        n = n.nextZ;
+    }
+
+    return true;
+}
+
+// go through all polygon nodes and cure small local self-intersections
+function cureLocalIntersections(start, triangles, dim) {
+    var p = start;
+    do {
+        var a = p.prev,
+            b = p.next.next;
+
+        if (!equals(a, b) && intersects(a, p, p.next, b) && locallyInside(a, b) && locallyInside(b, a)) {
+
+            triangles.push(a.i / dim | 0);
+            triangles.push(p.i / dim | 0);
+            triangles.push(b.i / dim | 0);
+
+            // remove two nodes involved
+            removeNode(p);
+            removeNode(p.next);
+
+            p = start = b;
+        }
+        p = p.next;
+    } while (p !== start);
+
+    return filterPoints(p);
+}
+
+// try splitting polygon into two and triangulate them independently
+function splitEarcut(start, triangles, dim, minX, minY, invSize) {
+    // look for a valid diagonal that divides the polygon into two
+    var a = start;
+    do {
+        var b = a.next.next;
+        while (b !== a.prev) {
+            if (a.i !== b.i && isValidDiagonal(a, b)) {
+                // split the polygon in two by the diagonal
+                var c = splitPolygon(a, b);
+
+                // filter colinear points around the cuts
+                a = filterPoints(a, a.next);
+                c = filterPoints(c, c.next);
+
+                // run earcut on each half
+                earcutLinked(a, triangles, dim, minX, minY, invSize, 0);
+                earcutLinked(c, triangles, dim, minX, minY, invSize, 0);
+                return;
+            }
+            b = b.next;
+        }
+        a = a.next;
+    } while (a !== start);
+}
+
+// link every hole into the outer loop, producing a single-ring polygon without holes
+function eliminateHoles(data, holeIndices, outerNode, dim) {
+    var queue = [],
+        i, len, start, end, list;
+
+    for (i = 0, len = holeIndices.length; i < len; i++) {
+        start = holeIndices[i] * dim;
+        end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
+        list = linkedList(data, start, end, dim, false);
+        if (list === list.next) list.steiner = true;
+        queue.push(getLeftmost(list));
+    }
+
+    queue.sort(compareX);
+
+    // process holes from left to right
+    for (i = 0; i < queue.length; i++) {
+        outerNode = eliminateHole(queue[i], outerNode);
+    }
+
+    return outerNode;
+}
+
+function compareX(a, b) {
+    return a.x - b.x;
+}
+
+// find a bridge between vertices that connects hole with an outer ring and and link it
+function eliminateHole(hole, outerNode) {
+    var bridge = findHoleBridge(hole, outerNode);
+    if (!bridge) {
+        return outerNode;
+    }
+
+    var bridgeReverse = splitPolygon(bridge, hole);
+
+    // filter collinear points around the cuts
+    filterPoints(bridgeReverse, bridgeReverse.next);
+    return filterPoints(bridge, bridge.next);
+}
+
+// David Eberly's algorithm for finding a bridge between hole and outer polygon
+function findHoleBridge(hole, outerNode) {
+    var p = outerNode,
+        hx = hole.x,
+        hy = hole.y,
+        qx = -Infinity,
+        m;
+
+    // find a segment intersected by a ray from the hole's leftmost point to the left;
+    // segment's endpoint with lesser x will be potential connection point
+    do {
+        if (hy <= p.y && hy >= p.next.y && p.next.y !== p.y) {
+            var x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
+            if (x <= hx && x > qx) {
+                qx = x;
+                m = p.x < p.next.x ? p : p.next;
+                if (x === hx) return m; // hole touches outer segment; pick leftmost endpoint
+            }
+        }
+        p = p.next;
+    } while (p !== outerNode);
+
+    if (!m) return null;
+
+    // look for points inside the triangle of hole point, segment intersection and endpoint;
+    // if there are no points found, we have a valid connection;
+    // otherwise choose the point of the minimum angle with the ray as connection point
+
+    var stop = m,
+        mx = m.x,
+        my = m.y,
+        tanMin = Infinity,
+        tan;
+
+    p = m;
+
+    do {
+        if (hx >= p.x && p.x >= mx && hx !== p.x &&
+                pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
+
+            tan = Math.abs(hy - p.y) / (hx - p.x); // tangential
+
+            if (locallyInside(p, hole) &&
+                (tan < tanMin || (tan === tanMin && (p.x > m.x || (p.x === m.x && sectorContainsSector(m, p)))))) {
+                m = p;
+                tanMin = tan;
+            }
+        }
+
+        p = p.next;
+    } while (p !== stop);
+
+    return m;
+}
+
+// whether sector in vertex m contains sector in vertex p in the same coordinates
+function sectorContainsSector(m, p) {
+    return area(m.prev, m, p.prev) < 0 && area(p.next, m, m.next) < 0;
+}
+
+// interlink polygon nodes in z-order
+function indexCurve(start, minX, minY, invSize) {
+    var p = start;
+    do {
+        if (p.z === 0) p.z = zOrder(p.x, p.y, minX, minY, invSize);
+        p.prevZ = p.prev;
+        p.nextZ = p.next;
+        p = p.next;
+    } while (p !== start);
+
+    p.prevZ.nextZ = null;
+    p.prevZ = null;
+
+    sortLinked(p);
+}
+
+// Simon Tatham's linked list merge sort algorithm
+// http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
+function sortLinked(list) {
+    var i, p, q, e, tail, numMerges, pSize, qSize,
+        inSize = 1;
+
+    do {
+        p = list;
+        list = null;
+        tail = null;
+        numMerges = 0;
+
+        while (p) {
+            numMerges++;
+            q = p;
+            pSize = 0;
+            for (i = 0; i < inSize; i++) {
+                pSize++;
+                q = q.nextZ;
+                if (!q) break;
+            }
+            qSize = inSize;
+
+            while (pSize > 0 || (qSize > 0 && q)) {
+
+                if (pSize !== 0 && (qSize === 0 || !q || p.z <= q.z)) {
+                    e = p;
+                    p = p.nextZ;
+                    pSize--;
+                } else {
+                    e = q;
+                    q = q.nextZ;
+                    qSize--;
+                }
+
+                if (tail) tail.nextZ = e;
+                else list = e;
+
+                e.prevZ = tail;
+                tail = e;
+            }
+
+            p = q;
+        }
+
+        tail.nextZ = null;
+        inSize *= 2;
+
+    } while (numMerges > 1);
+
+    return list;
+}
+
+// z-order of a point given coords and inverse of the longer side of data bbox
+function zOrder(x, y, minX, minY, invSize) {
+    // coords are transformed into non-negative 15-bit integer range
+    x = (x - minX) * invSize | 0;
+    y = (y - minY) * invSize | 0;
+
+    x = (x | (x << 8)) & 0x00FF00FF;
+    x = (x | (x << 4)) & 0x0F0F0F0F;
+    x = (x | (x << 2)) & 0x33333333;
+    x = (x | (x << 1)) & 0x55555555;
+
+    y = (y | (y << 8)) & 0x00FF00FF;
+    y = (y | (y << 4)) & 0x0F0F0F0F;
+    y = (y | (y << 2)) & 0x33333333;
+    y = (y | (y << 1)) & 0x55555555;
+
+    return x | (y << 1);
+}
+
+// find the leftmost node of a polygon ring
+function getLeftmost(start) {
+    var p = start,
+        leftmost = start;
+    do {
+        if (p.x < leftmost.x || (p.x === leftmost.x && p.y < leftmost.y)) leftmost = p;
+        p = p.next;
+    } while (p !== start);
+
+    return leftmost;
+}
+
+// check if a point lies within a convex triangle
+function pointInTriangle(ax, ay, bx, by, cx, cy, px, py) {
+    return (cx - px) * (ay - py) >= (ax - px) * (cy - py) &&
+           (ax - px) * (by - py) >= (bx - px) * (ay - py) &&
+           (bx - px) * (cy - py) >= (cx - px) * (by - py);
+}
+
+// check if a diagonal between two polygon nodes is valid (lies in polygon interior)
+function isValidDiagonal(a, b) {
+    return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) && // dones't intersect other edges
+           (locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b) && // locally visible
+            (area(a.prev, a, b.prev) || area(a, b.prev, b)) || // does not create opposite-facing sectors
+            equals(a, b) && area(a.prev, a, a.next) > 0 && area(b.prev, b, b.next) > 0); // special zero-length case
+}
+
+// signed area of a triangle
+function area(p, q, r) {
+    return (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+}
+
+// check if two points are equal
+function equals(p1, p2) {
+    return p1.x === p2.x && p1.y === p2.y;
+}
+
+// check if two segments intersect
+function intersects(p1, q1, p2, q2) {
+    var o1 = sign(area(p1, q1, p2));
+    var o2 = sign(area(p1, q1, q2));
+    var o3 = sign(area(p2, q2, p1));
+    var o4 = sign(area(p2, q2, q1));
+
+    if (o1 !== o2 && o3 !== o4) return true; // general case
+
+    if (o1 === 0 && onSegment(p1, p2, q1)) return true; // p1, q1 and p2 are collinear and p2 lies on p1q1
+    if (o2 === 0 && onSegment(p1, q2, q1)) return true; // p1, q1 and q2 are collinear and q2 lies on p1q1
+    if (o3 === 0 && onSegment(p2, p1, q2)) return true; // p2, q2 and p1 are collinear and p1 lies on p2q2
+    if (o4 === 0 && onSegment(p2, q1, q2)) return true; // p2, q2 and q1 are collinear and q1 lies on p2q2
+
+    return false;
+}
+
+// for collinear points p, q, r, check if point q lies on segment pr
+function onSegment(p, q, r) {
+    return q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) && q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y);
+}
+
+function sign(num) {
+    return num > 0 ? 1 : num < 0 ? -1 : 0;
+}
+
+// check if a polygon diagonal intersects any polygon segments
+function intersectsPolygon(a, b) {
+    var p = a;
+    do {
+        if (p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i &&
+                intersects(p, p.next, a, b)) return true;
+        p = p.next;
+    } while (p !== a);
+
+    return false;
+}
+
+// check if a polygon diagonal is locally inside the polygon
+function locallyInside(a, b) {
+    return area(a.prev, a, a.next) < 0 ?
+        area(a, b, a.next) >= 0 && area(a, a.prev, b) >= 0 :
+        area(a, b, a.prev) < 0 || area(a, a.next, b) < 0;
+}
+
+// check if the middle point of a polygon diagonal is inside the polygon
+function middleInside(a, b) {
+    var p = a,
+        inside = false,
+        px = (a.x + b.x) / 2,
+        py = (a.y + b.y) / 2;
+    do {
+        if (((p.y > py) !== (p.next.y > py)) && p.next.y !== p.y &&
+                (px < (p.next.x - p.x) * (py - p.y) / (p.next.y - p.y) + p.x))
+            inside = !inside;
+        p = p.next;
+    } while (p !== a);
+
+    return inside;
+}
+
+// link two polygon vertices with a bridge; if the vertices belong to the same ring, it splits polygon into two;
+// if one belongs to the outer ring and another to a hole, it merges it into a single ring
+function splitPolygon(a, b) {
+    var a2 = new Node$1(a.i, a.x, a.y),
+        b2 = new Node$1(b.i, b.x, b.y),
+        an = a.next,
+        bp = b.prev;
+
+    a.next = b;
+    b.prev = a;
+
+    a2.next = an;
+    an.prev = a2;
+
+    b2.next = a2;
+    a2.prev = b2;
+
+    bp.next = b2;
+    b2.prev = bp;
+
+    return b2;
+}
+
+// create a node and optionally link it with previous one (in a circular doubly linked list)
+function insertNode(i, x, y, last) {
+    var p = new Node$1(i, x, y);
+
+    if (!last) {
+        p.prev = p;
+        p.next = p;
+
+    } else {
+        p.next = last.next;
+        p.prev = last;
+        last.next.prev = p;
+        last.next = p;
+    }
+    return p;
+}
+
+function removeNode(p) {
+    p.next.prev = p.prev;
+    p.prev.next = p.next;
+
+    if (p.prevZ) p.prevZ.nextZ = p.nextZ;
+    if (p.nextZ) p.nextZ.prevZ = p.prevZ;
+}
+
+function Node$1(i, x, y) {
+    // vertex index in coordinates array
+    this.i = i;
+
+    // vertex coordinates
+    this.x = x;
+    this.y = y;
+
+    // previous and next vertex nodes in a polygon ring
+    this.prev = null;
+    this.next = null;
+
+    // z-order curve value
+    this.z = 0;
+
+    // previous and next nodes in z-order
+    this.prevZ = null;
+    this.nextZ = null;
+
+    // indicates whether this is a steiner point
+    this.steiner = false;
+}
+
+// return a percentage difference between the polygon area and its triangulation area;
+// used to verify correctness of triangulation
+earcut.deviation = function (data, holeIndices, dim, triangles) {
+    var hasHoles = holeIndices && holeIndices.length;
+    var outerLen = hasHoles ? holeIndices[0] * dim : data.length;
+
+    var polygonArea = Math.abs(signedArea(data, 0, outerLen, dim));
+    if (hasHoles) {
+        for (var i = 0, len = holeIndices.length; i < len; i++) {
+            var start = holeIndices[i] * dim;
+            var end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
+            polygonArea -= Math.abs(signedArea(data, start, end, dim));
+        }
+    }
+
+    var trianglesArea = 0;
+    for (i = 0; i < triangles.length; i += 3) {
+        var a = triangles[i] * dim;
+        var b = triangles[i + 1] * dim;
+        var c = triangles[i + 2] * dim;
+        trianglesArea += Math.abs(
+            (data[a] - data[c]) * (data[b + 1] - data[a + 1]) -
+            (data[a] - data[b]) * (data[c + 1] - data[a + 1]));
+    }
+
+    return polygonArea === 0 && trianglesArea === 0 ? 0 :
+        Math.abs((trianglesArea - polygonArea) / polygonArea);
+};
+
+function signedArea(data, start, end, dim) {
+    var sum = 0;
+    for (var i = start, j = end - dim; i < end; i += dim) {
+        sum += (data[j] - data[i]) * (data[i + 1] + data[j + 1]);
+        j = i;
+    }
+    return sum;
+}
+
+// turn a polygon in a multi-dimensional array form (e.g. as in GeoJSON) into a form Earcut accepts
+earcut.flatten = function (data) {
+    var dim = data[0][0].length,
+        result = {vertices: [], holes: [], dimensions: dim},
+        holeIndex = 0;
+
+    for (var i = 0; i < data.length; i++) {
+        for (var j = 0; j < data[i].length; j++) {
+            for (var d = 0; d < dim; d++) result.vertices.push(data[i][j][d]);
+        }
+        if (i > 0) {
+            holeIndex += data[i - 1].length;
+            result.holes.push(holeIndex);
+        }
+    }
+    return result;
+};
+
+/**
+ * @classdesc
+ * a polygon Object.<br>
+ * Please do note that melonJS implements a simple Axis-Aligned Boxes collision algorithm, which requires all polygons used for collision to be convex with all vertices defined with clockwise winding.
+ * A polygon is convex when all line segments connecting two points in the interior do not cross any edge of the polygon
+ * (which means that all angles are less than 180 degrees), as described here below : <br>
+ * <center><img src="images/convex_polygon.png"/></center><br>
+ *
+ * A polygon's `winding` is clockwise if its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
+ */
+ class Polygon {
+    /**
+     * @param {number} x - origin point of the Polygon
+     * @param {number} y - origin point of the Polygon
+     * @param {Vector2d[]} points - array of vector defining the Polygon
+     */
+    constructor(x, y, points) {
+        /**
+         * origin point of the Polygon
+         * @public
+         * @type {Vector2d}
+         * @name pos
+         * @memberof Polygon
+         */
+        this.pos = pool.pull("Vector2d");
+
+        /**
+         * The bounding rectangle for this shape
+         * @ignore
+         * @member {Bounds}
+         * @name _bounds
+         * @memberof Polygon
+         */
+        this._bounds;
+
+        /**
+         * Array of points defining the Polygon <br>
+         * Note: If you manually change `points`, you **must** call `recalc`afterwards so that the changes get applied correctly.
+         * @public
+         * @type {Vector2d[]}
+         * @name points
+         * @memberof Polygon
+         */
+        this.points = [];
+
+        /**
+         * The edges here are the direction of the `n`th edge of the polygon, relative to
+         * the `n`th point. If you want to draw a given edge from the edge value, you must
+         * first translate to the position of the starting point.
+         * @ignore
+         */
+        this.edges = [];
+
+        /**
+         * a list of indices for all vertices composing this polygon (@see earcut)
+         * @ignore
+         */
+        this.indices = [];
+
+        /**
+         * The normals here are the direction of the normal for the `n`th edge of the polygon, relative
+         * to the position of the `n`th point. If you want to draw an edge normal, you must first
+         * translate to the position of the starting point.
+         * @ignore
+         */
+        this.normals = [];
+
+        // the shape type
+        this.shapeType = "Polygon";
+        this.setShape(x, y, points);
+    }
+
+    /** @ignore */
+    onResetEvent(x, y, points) {
+        this.setShape(x, y, points);
+    }
+
+    /**
+     * set new value to the Polygon
+     * @name setShape
+     * @memberof Polygon
+     * @param {number} x - position of the Polygon
+     * @param {number} y - position of the Polygon
+     * @param {Vector2d[]|number[]} points - array of vector or vertice defining the Polygon
+     * @returns {Polygon} this instance for objecf chaining
+     */
+    setShape(x, y, points) {
+        this.pos.set(x, y);
+        this.setVertices(points);
+        return this;
+    }
+
+    /**
+     * set the vertices defining this Polygon
+     * @name setVertices
+     * @memberof Polygon
+     * @param {Vector2d[]} vertices - array of vector or vertice defining the Polygon
+     * @returns {Polygon} this instance for objecf chaining
+     */
+    setVertices(vertices) {
+
+        if (!Array.isArray(vertices)) {
+            return this;
+        }
+
+        // convert given points to me.Vector2d if required
+        if (!(vertices[0] instanceof Vector2d)) {
+            this.points.length = 0;
+
+            if (typeof vertices[0] === "object") {
+                // array of {x,y} object
+                vertices.forEach((vertice) => {
+                   this.points.push(pool.pull("Vector2d", vertice.x, vertice.y));
+                });
+
+            } else {
+                // it's a flat array
+                for (var p = 0; p < vertices.length; p += 2) {
+                    this.points.push(pool.pull("Vector2d", vertices[p], vertices[p + 1]));
+                }
+            }
+        } else {
+            // array of me.Vector2d
+            this.points = vertices;
+        }
+
+        this.recalc();
+        this.updateBounds();
+        return this;
+    }
+
+    /**
+     * apply the given transformation matrix to this Polygon
+     * @name transform
+     * @memberof Polygon
+     * @param {Matrix2d} m - the transformation matrix
+     * @returns {Polygon} Reference to this object for method chaining
+     */
+    transform(m) {
+        var points = this.points;
+        var len = points.length;
+        for (var i = 0; i < len; i++) {
+            m.apply(points[i]);
+        }
+        this.recalc();
+        this.updateBounds();
+        return this;
+    }
+
+    /**
+     * apply an isometric projection to this shape
+     * @name toIso
+     * @memberof Polygon
+     * @returns {Polygon} Reference to this object for method chaining
+     */
+    toIso() {
+        return this.rotate(Math.PI / 4).scale(Math.SQRT2, Math.SQRT1_2);
+    }
+
+    /**
+     * apply a 2d projection to this shape
+     * @name to2d
+     * @memberof Polygon
+     * @returns {Polygon} Reference to this object for method chaining
+     */
+    to2d() {
+        return this.scale(Math.SQRT1_2, Math.SQRT2).rotate(-Math.PI / 4);
+    }
+
+    /**
+     * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
+     * @name rotate
+     * @memberof Polygon
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
+     * @returns {Polygon} Reference to this object for method chaining
+     */
+    rotate(angle, v) {
+        if (angle !== 0) {
+            var points = this.points;
+            var len = points.length;
+            for (var i = 0; i < len; i++) {
+                points[i].rotate(angle, v);
+            }
+            this.recalc();
+            this.updateBounds();
+        }
+        return this;
+    }
+
+    /**
+     * Scale this Polygon by the given scalar.
+     * @name scale
+     * @memberof Polygon
+     * @param {number} x
+     * @param {number} [y=x]
+     * @returns {Polygon} Reference to this object for method chaining
+     */
+    scale(x, y = x) {
+        var points = this.points;
+        var len = points.length;
+        for (var i = 0; i < len; i++) {
+            points[i].scale(x, y);
+        }
+        this.recalc();
+        this.updateBounds();
+        return this;
+    }
+
+    /**
+     * Scale this Polygon by the given vector
+     * @name scaleV
+     * @memberof Polygon
+     * @param {Vector2d} v
+     * @returns {Polygon} Reference to this object for method chaining
+     */
+    scaleV(v) {
+        return this.scale(v.x, v.y);
+    }
+
+    /**
+     * Computes the calculated collision polygon.
+     * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
+     * @name recalc
+     * @memberof Polygon
+     * @returns {Polygon} Reference to this object for method chaining
+     */
+    recalc() {
+        var i;
+        var edges = this.edges;
+        var normals = this.normals;
+        var indices = this.indices;
+
+        // Copy the original points array and apply the offset/angle
+        var points = this.points;
+        var len = points.length;
+
+        if (len < 3) {
+            throw new Error("Requires at least 3 points");
+        }
+
+        // Calculate the edges/normals
+        for (i = 0; i < len; i++) {
+            if (edges[i] === undefined) {
+                edges[i] = pool.pull("Vector2d");
+            }
+            edges[i].copy(points[(i + 1) % len]).sub(points[i]);
+
+            if (normals[i] === undefined) {
+                normals[i] = pool.pull("Vector2d");
+            }
+            normals[i].copy(edges[i]).perp().normalize();
+        }
+        // trunc array
+        edges.length = len;
+        normals.length = len;
+        // do not do anything here, indices will be computed by
+        // getIndices if array is empty upon function call
+        indices.length = 0;
+
+        return this;
+    }
+
+
+    /**
+     * returns a list of indices for all triangles defined in this polygon
+     * @name getIndices
+     * @memberof Polygon
+     * @returns {Array} an array of vertex indices for all triangles forming this polygon.
+     */
+    getIndices() {
+        if (this.indices.length === 0) {
+            this.indices = earcutExports(this.points.flatMap(p => [p.x, p.y]));
+        }
+        return this.indices;
+    }
+
+    /**
+     * Returns true if the vertices composing this polygon form a convex shape (vertices must be in clockwise order).
+     * @name isConvex
+     * @memberof Polygon
+     * @returns {boolean} true if the vertices are convex, false if not, null if not computable
+     */
+    isConvex() {
+        // http://paulbourke.net/geometry/polygonmesh/
+        // Copyright (c) Paul Bourke (use permitted)
+
+        var flag = 0,
+            vertices = this.points,
+            n = vertices.length,
+            i,
+            j,
+            k,
+            z;
+
+        if (n < 3) {
+            return null;
+        }
+
+        for (i = 0; i < n; i++) {
+            j = (i + 1) % n;
+            k = (i + 2) % n;
+            z = (vertices[j].x - vertices[i].x) * (vertices[k].y - vertices[j].y);
+            z -= (vertices[j].y - vertices[i].y) * (vertices[k].x - vertices[j].x);
+
+            if (z < 0) {
+                flag |= 1;
+            } else if (z > 0) {
+                flag |= 2;
+            }
+
+            if (flag === 3) {
+                return false;
+            }
+        }
+
+        if (flag !== 0) {
+            return true;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * translate the Polygon by the specified offset
+     * @name translate
+     * @memberof Polygon
+     * @method
+     * @param {number} x - x offset
+     * @param {number} y - y offset
+     * @returns {Polygon} this Polygon
+     */
+    /**
+     * translate the Polygon by the specified vector
+     * @name translate
+     * @memberof Polygon
+     * @param {Vector2d} v - vector offset
+     * @returns {Polygon} Reference to this object for method chaining
+     */
+    translate() {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+
+        this.pos.x += _x;
+        this.pos.y += _y;
+        this.getBounds().translate(_x, _y);
+
+        return this;
+    }
+
+    /**
+     * Shifts the Polygon to the given position vector.
+     * @name shift
+     * @memberof Polygon
+     * @method
+     * @param {Vector2d} position
+     */
+    /**
+     * Shifts the Polygon to the given x, y position.
+     * @name shift
+     * @memberof Polygon
+     * @param {number} x
+     * @param {number} y
+     */
+    shift() {
+        var _x, _y;
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+        this.pos.x = _x;
+        this.pos.y = _y;
+        this.updateBounds();
+    }
+
+    /**
+     * Returns true if the polygon contains the given point.
+     * (Note: it is highly recommended to first do a hit test on the corresponding <br>
+     *  bounding rect, as the function can be highly consuming with complex shapes)
+     * @name contains
+     * @memberof Polygon
+     * @method
+     * @param {Vector2d} point
+     * @returns {boolean} true if contains
+     */
+
+    /**
+     * Returns true if the polygon contains the given point. <br>
+     * (Note: it is highly recommended to first do a hit test on the corresponding <br>
+     *  bounding rect, as the function can be highly consuming with complex shapes)
+     * @name contains
+     * @memberof Polygon
+     * @param  {number} x -  x coordinate
+     * @param  {number} y -  y coordinate
+     * @returns {boolean} true if contains
+     */
+    contains() {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+          // x, y
+          _x = arguments[0];
+          _y = arguments[1];
+        } else {
+          // vector
+          _x = arguments[0].x;
+          _y = arguments[0].y;
+        }
+
+        var intersects = false;
+        var posx = this.pos.x, posy = this.pos.y;
+        var points = this.points;
+        var len = points.length;
+
+        //http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+        for (var i = 0, j = len - 1; i < len; j = i++) {
+            var iy = points[i].y + posy, ix = points[i].x + posx,
+                jy = points[j].y + posy, jx = points[j].x + posx;
+            if (((iy > _y) !== (jy > _y)) && (_x < (jx - ix) * (_y - iy) / (jy - iy) + ix)) {
+                intersects = !intersects;
+            }
+        }
+        return intersects;
+    }
+
+    /**
+     * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
+     * @name getBounds
+     * @memberof Polygon
+     * @returns {Bounds} this shape bounding box Rectangle object
+     */
+    getBounds() {
+        if (typeof this._bounds === "undefined") {
+            this._bounds = pool.pull("Bounds");
+        }
+        return this._bounds;
+    }
+
+    /**
+     * update the bounding box for this shape.
+     * @name updateBounds
+     * @memberof Polygon
+     * @returns {Bounds} this shape bounding box Rectangle object
+     */
+    updateBounds() {
+        var bounds = this.getBounds();
+
+        bounds.update(this.points);
+        bounds.translate(this.pos);
+
+        return bounds;
+    }
+
+    /**
+     * clone this Polygon
+     * @name clone
+     * @memberof Polygon
+     * @returns {Polygon} new Polygon
+     */
+    clone() {
+        var copy = [];
+        this.points.forEach((point) => {
+            copy.push(point.clone());
+        });
+        return new Polygon(this.pos.x, this.pos.y, copy);
+    }
+}
+
+/**
+ * @classdesc
+ * a line segment Object
+ * @augments Polygon
+ * @param {number} x - origin point of the Line
+ * @param {number} y - origin point of the Line
+ * @param {Vector2d[]} points - array of vectors defining the Line
+ */
+
+ class Line extends Polygon {
+
+    /**
+     * Returns true if the Line contains the given point
+     * @name contains
+     * @memberof Line
+     * @method
+     * @param {Vector2d} point
+     * @returns {boolean} true if contains
+     */
+
+    /**
+     * Returns true if the Line contains the given point
+     * @name contains
+     * @memberof Line
+     * @param  {number} x -  x coordinate
+     * @param  {number} y -  y coordinate
+     * @returns {boolean} true if contains
+     */
+    contains() {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+          // x, y
+          _x = arguments[0];
+          _y = arguments[1];
+        } else {
+          // vector
+          _x = arguments[0].x;
+          _y = arguments[0].y;
+        }
+
+        // translate the given coordinates,
+        // rather than creating temp translated vectors
+        _x -= this.pos.x; // Cx
+        _y -= this.pos.y; // Cy
+        var start = this.points[0]; // Ax/Ay
+        var end = this.points[1]; // Bx/By
+
+        //(Cy - Ay) * (Bx - Ax) = (By - Ay) * (Cx - Ax)
+        return (_y - start.y) * (end.x - start.x) === (end.y - start.y) * (_x - start.x);
+    }
+
+    /**
+     * Computes the calculated collision edges and normals.
+     * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
+     * @name recalc
+     * @memberof Line
+     * @returns {Line} this instance for objecf chaining
+     */
+    recalc() {
+        var edges = this.edges;
+        var normals = this.normals;
+        var indices = this.indices;
+
+        // Copy the original points array and apply the offset/angle
+        var points = this.points;
+
+        if (points.length !== 2) {
+            throw new Error("Requires exactly 2 points");
+        }
+
+        // Calculate the edges/normals
+        if (edges[0] === undefined) {
+            edges[0] = pool.pull("Vector2d");
+        }
+        edges[0].copy(points[1]).sub(points[0]);
+        if (normals[0] === undefined) {
+            normals[0] = pool.pull("Vector2d");
+        }
+        normals[0].copy(edges[0]).perp().normalize();
+
+        // do not do anything here, indices will be computed by
+        // toIndices if array is empty upon function call
+        indices.length = 0;
+
+        return this;
+    }
+
+    /**
+     * clone this line segment
+     * @name clone
+     * @memberof Line
+     * @returns {Line} new Line
+     */
+    clone() {
+        var copy = [];
+        this.points.forEach((point) => {
+            copy.push(point.clone());
+        });
+        return new Line(this.pos.x, this.pos.y, copy);
+    }
+
+}
+
+/**
+ * @classdesc
+ * an ellipse Object
+ */
+ class Ellipse {
+    /**
+     * @param {number} x - the center x coordinate of the ellipse
+     * @param {number} y - the center y coordinate of the ellipse
+     * @param {number} w - width (diameter) of the ellipse
+     * @param {number} h - height (diameter) of the ellipse
+     */
+    constructor(x, y, w, h) {
+        /**
+         * the center coordinates of the ellipse
+         * @public
+         * @type {Vector2d}
+         * @name pos
+         * @memberof Ellipse
+         */
+        this.pos = pool.pull("Vector2d");
+
+        /**
+         * The bounding rectangle for this shape
+         * @private
+         */
+        this._bounds = undefined;
+
+        /**
+         * Maximum radius of the ellipse
+         * @public
+         * @type {number}
+         * @name radius
+         * @memberof Ellipse
+         */
+        this.radius = NaN;
+
+        /**
+         * Pre-scaled radius vector for ellipse
+         * @public
+         * @type {Vector2d}
+         * @name radiusV
+         * @memberof Ellipse
+         */
+        this.radiusV = pool.pull("Vector2d");
+
+        /**
+         * Radius squared, for pythagorean theorom
+         * @public
+         * @type {Vector2d}
+         * @name radiusSq
+         * @memberof Ellipse
+         */
+        this.radiusSq = pool.pull("Vector2d");
+
+        /**
+         * x/y scaling ratio for ellipse
+         * @public
+         * @type {Vector2d}
+         * @name ratio
+         * @memberof Ellipse
+         */
+        this.ratio = pool.pull("Vector2d");
+
+        // the shape type
+        this.shapeType = "Ellipse";
+        this.setShape(x, y, w, h);
+    }
+
+    /** @ignore */
+    onResetEvent(x, y, w, h) {
+        this.setShape(x, y, w, h);
+    }
+
+    /**
+     * set new value to the Ellipse shape
+     * @name setShape
+     * @memberof Ellipse
+     * @param {number} x - the center x coordinate of the ellipse
+     * @param {number} y - the center y coordinate of the ellipse
+     * @param {number} w - width (diameter) of the ellipse
+     * @param {number} h - height (diameter) of the ellipse
+     * @returns {Ellipse} this instance for objecf chaining
+     */
+    setShape(x, y, w, h) {
+        var hW = w / 2;
+        var hH = h / 2;
+
+        this.pos.set(x, y);
+        this.radius = Math.max(hW, hH);
+        this.ratio.set(hW / this.radius, hH / this.radius);
+        this.radiusV.set(this.radius, this.radius).scaleV(this.ratio);
+        var r = this.radius * this.radius;
+        this.radiusSq.set(r, r).scaleV(this.ratio);
+
+        // update the corresponding bounds
+        this.getBounds().setMinMax(x, y, x + w, x + h);
+        // elipse position is the center of the cirble, bounds position are top left
+        this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
+
+        return this;
+    }
+
+    /**
+     * Rotate this Ellipse (counter-clockwise) by the specified angle (in radians).
+     * @name rotate
+     * @memberof Ellipse
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
+     * @returns {Ellipse} Reference to this object for method chaining
+     */
+    rotate(angle, v) {
+        // TODO : only works for circle
+        this.pos.rotate(angle, v);
+        this.getBounds().shift(this.pos);
+        this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
+        return this;
+    }
+
+    /**
+     * Scale this Ellipse by the specified scalar.
+     * @name scale
+     * @memberof Ellipse
+     * @param {number} x
+     * @param {number} [y=x]
+     * @returns {Ellipse} Reference to this object for method chaining
+     */
+    scale(x, y = x) {
+        return this.setShape(
+            this.pos.x,
+            this.pos.y,
+            this.radiusV.x * 2 * x,
+            this.radiusV.y * 2 * y
+        );
+    }
+
+    /**
+     * Scale this Ellipse by the specified vector.
+     * @name scale
+     * @memberof Ellipse
+     * @param {Vector2d} v
+     * @returns {Ellipse} Reference to this object for method chaining
+     */
+    scaleV(v) {
+        return this.scale(v.x, v.y);
+    }
+
+    /**
+     * apply the given transformation matrix to this ellipse
+     * @name transform
+     * @memberof Ellipse
+     * @param {Matrix2d} matrix - the transformation matrix
+     * @returns {Polygon} Reference to this object for method chaining
+     */
+    transform(matrix) { // eslint-disable-line no-unused-vars
+        // TODO
+        return this;
+    }
+
+    /**
+     * translate the circle/ellipse by the specified offset
+     * @name translate
+     * @memberof Ellipse
+     * @method
+     * @param {number} x - x offset
+     * @param {number} y - y offset
+     * @returns {Ellipse} this ellipse
+     */
+    /**
+     * translate the circle/ellipse by the specified vector
+     * @name translate
+     * @memberof Ellipse
+     * @param {Vector2d} v - vector offset
+     * @returns {Ellipse} this ellipse
+     */
+    translate() {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+
+        this.pos.x += _x;
+        this.pos.y += _y;
+        this.getBounds().translate(_x, _y);
+
+        return this;
+    }
+
+    /**
+     * check if this circle/ellipse contains the specified point
+     * @name contains
+     * @method
+     * @memberof Ellipse
+     * @param {Vector2d} point
+     * @returns {boolean} true if contains
+     */
+
+    /**
+     * check if this circle/ellipse contains the specified point
+     * @name contains
+     * @memberof Ellipse
+     * @param  {number} x -  x coordinate
+     * @param  {number} y -  y coordinate
+     * @returns {boolean} true if contains
+     */
+    contains() {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+          // x, y
+          _x = arguments[0];
+          _y = arguments[1];
+        } else {
+          // vector
+          _x = arguments[0].x;
+          _y = arguments[0].y;
+        }
+
+        // Make position relative to object center point.
+        _x -= this.pos.x;
+        _y -= this.pos.y;
+        // Pythagorean theorem.
+        return (
+            ((_x * _x) / this.radiusSq.x) +
+            ((_y * _y) / this.radiusSq.y)
+        ) <= 1.0;
+    }
+
+    /**
+     * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
+     * @name getBounds
+     * @memberof Ellipse
+     * @returns {Bounds} this shape bounding box Rectangle object
+     */
+    getBounds() {
+        if (typeof this._bounds === "undefined") {
+            this._bounds = pool.pull("Bounds");
+        }
+        return this._bounds;
+    }
+
+    /**
+     * clone this Ellipse
+     * @name clone
+     * @memberof Ellipse
+     * @returns {Ellipse} new Ellipse
+     */
+    clone() {
+        return new Ellipse(
+            this.pos.x,
+            this.pos.y,
+            this.radiusV.x * 2,
+            this.radiusV.y * 2
+        );
+    }
+}
+
+/**
+ * @classdesc
+ * represents a point in a 2d space
+ */
+ class Point {
+    constructor(x = 0, y = 0) {
+        /**
+         * the position of the point on the horizontal axis
+         * @type {Number}
+         * @default 0
+         */
+        this.x = x;
+
+        /**
+         * the position of the point on the vertical axis
+         * @type {Number}
+         * @default 0
+         */
+        this.y = y;
+    }
+
+    /** @ignore */
+    onResetEvent(x = 0, y = 0) {
+        this.set(x, y);
+    }
+
+    /**
+     * set the Point x and y properties to the given values
+     * @param {number} x
+     * @param {number} y
+     * @returns {Point} Reference to this object for method chaining
+     */
+    set(x = 0, y = 0) {
+        this.x = x;
+        this.y = y;
+        return this;
+    }
+
+    /**
+     * return true if the two points are the same
+     * @name equals
+     * @memberof Point
+     * @method
+     * @param {Point} point
+     * @returns {boolean}
+     */
+    /**
+     * return true if this point is equal to the given values
+     * @param {number} x
+     * @param {number} y
+     * @returns {boolean}
+     */
+     equals() {
+        var _x, _y;
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // point
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+        return ((this.x === _x) && (this.y === _y));
+    }
+
+    /**
+     * clone this Point
+     * @returns {Point} new Point
+     */
+    clone() {
+        return new Point(this.x, this.y);
+    }
+}
+
+/**
+ * @classdesc
+ * a rectangle Object
+ * @augments Polygon
+ */
+ class Rect extends Polygon {
+    /**
+     * @param {number} x - position of the Rectangle
+     * @param {number} y - position of the Rectangle
+     * @param {number} w - width of the rectangle
+     * @param {number} h - height of the rectangle
+     */
+    constructor(x, y, w, h) {
+        // parent constructor
+        super(x, y, [
+            pool.pull("Vector2d", 0, 0), // 0, 0
+            pool.pull("Vector2d", w, 0), // 1, 0
+            pool.pull("Vector2d", w, h), // 1, 1
+            pool.pull("Vector2d", 0, h)  // 0, 1
+        ]);
+        this.shapeType = "Rectangle";
+    }
+
+    /** @ignore */
+    onResetEvent(x, y, w, h) {
+        this.setShape(x, y, w, h);
+    }
+
+    /**
+     * set new value to the rectangle shape
+     * @name setShape
+     * @memberof Rect
+     * @param {number} x - position of the Rectangle
+     * @param {number} y - position of the Rectangle
+     * @param {number|Vector2d[]} w - width of the rectangle, or an array of vector defining the rectangle
+     * @param {number} [h] - height of the rectangle, if a numeral width parameter is specified
+     * @returns {Rect} this rectangle
+     */
+    setShape(x, y, w, h) {
+        var points = w; // assume w is an array by default
+
+        this.pos.set(x, y);
+
+        if (arguments.length === 4) {
+            points = this.points;
+            points[0].set(0, 0); // 0, 0
+            points[1].set(w, 0); // 1, 0
+            points[2].set(w, h); // 1, 1
+            points[3].set(0, h); // 0, 1
+        }
+
+        this.setVertices(points);
+        return this;
+    }
+
+
+    /**
+     * left coordinate of the Rectangle
+     * @public
+     * @type {number}
+     * @name left
+     * @memberof Rect
+     */
+    get left() {
+        return this.pos.x;
+    }
+
+    /**
+     * right coordinate of the Rectangle
+     * @public
+     * @type {number}
+     * @name right
+     * @memberof Rect
+     */
+    get right() {
+        var w = this.width;
+        return (this.left + w) || w;
+    }
+
+    /**
+     * top coordinate of the Rectangle
+     * @public
+     * @type {number}
+     * @name top
+     * @memberof Rect
+     */
+    get top() {
+        return this.pos.y;
+    }
+
+    /**
+     * bottom coordinate of the Rectangle
+     * @public
+     * @type {number}
+     * @name bottom
+     * @memberof Rect
+     */
+    get bottom() {
+        var h = this.height;
+        return (this.top + h) || h;
+    }
+
+    /**
+     * width of the Rectangle
+     * @public
+     * @type {number}
+     * @name width
+     * @memberof Rect
+     */
+    get width() {
+        return this.points[2].x;
+    }
+    set width(value) {
+        this.points[1].x = this.points[2].x = value;
+        this.recalc();
+        this.updateBounds();
+    }
+
+    /**
+     * height of the Rectangle
+     * @public
+     * @type {number}
+     * @name height
+     * @memberof Rect
+     */
+    get height() {
+        return this.points[2].y;
+    }
+    set height(value) {
+        this.points[2].y = this.points[3].y = value;
+        this.recalc();
+        this.updateBounds();
+    }
+
+    /**
+     * absolute center of this rectangle on the horizontal axis
+     * @public
+     * @type {number}
+     * @name centerX
+     * @memberof Rect
+     */
+    get centerX() {
+        if (isFinite(this.width)) {
+            return this.left + (this.width / 2);
+        } else {
+            return this.width;
+        }
+    }
+    set centerX (value) {
+        this.pos.x = value - (this.width / 2);
+        this.recalc();
+        this.updateBounds();
+    }
+
+    /**
+     * absolute center of this rectangle on the vertical axis
+     * @public
+     * @type {number}
+     * @name centerY
+     * @memberof Rect
+     */
+    get centerY() {
+        if (isFinite(this.height)) {
+            return this.top + (this.height / 2);
+        } else {
+            return this.height;
+        }
+    }
+    set centerY(value) {
+        this.pos.y = value - (this.height / 2);
+        this.recalc();
+        this.updateBounds();
+    }
+
+    /**
+     * center the rectangle position around the given coordinates
+     * @name centerOn
+     * @memberof Rect
+     * @param {number} x - the x coordinate around which to center this rectangle
+     * @param {number} y - the y coordinate around which to center this rectangle
+     * @returns {Rect} this rectangle
+     */
+    centerOn(x, y) {
+        this.centerX = x;
+        this.centerY = y;
+        return this;
+    }
+
+    /**
+     * resize the rectangle
+     * @name resize
+     * @memberof Rect
+     * @param {number} w - new width of the rectangle
+     * @param {number} h - new height of the rectangle
+     * @returns {Rect} this rectangle
+     */
+    resize(w, h) {
+        this.width = w;
+        this.height = h;
+        return this;
+    }
+
+    /**
+     * scale the rectangle
+     * @name scale
+     * @memberof Rect
+     * @param {number} x - a number representing the abscissa of the scaling vector.
+     * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
+     * @returns {Rect} this rectangle
+     */
+    scale(x, y = x) {
+        this.width *= x;
+        this.height *= y;
+        return this;
+    }
+
+    /**
+     * clone this rectangle
+     * @name clone
+     * @memberof Rect
+     * @returns {Rect} new rectangle
+     */
+    clone() {
+        return new Rect(this.left, this.top, this.width, this.height);
+    }
+
+    /**
+     * copy the position and size of the given rectangle into this one
+     * @name copy
+     * @memberof Rect
+     * @param {Rect} rect - Source rectangle
+     * @returns {Rect} new rectangle
+     */
+    copy(rect) {
+        return this.setShape(rect.left, rect.top, rect.width, rect.height);
+    }
+
+    /**
+     * merge this rectangle with another one
+     * @name union
+     * @memberof Rect
+     * @param {Rect} rect - other rectangle to union with
+     * @returns {Rect} the union(ed) rectangle
+     */
+    union(rect) {
+        var x1 = Math.min(this.left, rect.left);
+        var y1 = Math.min(this.top, rect.top);
+
+        this.resize(
+            Math.max(this.right, rect.right) - x1,
+            Math.max(this.bottom, rect.bottom) - y1
+        );
+
+        this.pos.set(x1, y1);
+
+        return this;
+    }
+
+    /**
+     * check if this rectangle is intersecting with the specified one
+     * @name overlaps
+     * @memberof Rect
+     * @param {Rect} rect
+     * @returns {boolean} true if overlaps
+     */
+    overlaps(rect) {
+        return (
+            this.left < rect.right &&
+            rect.left < this.right &&
+            this.top < rect.bottom &&
+            rect.top < this.bottom
+        );
+    }
+
+    /**
+     * Returns true if the rectangle contains the given rectangle
+     * @name contains
+     * @memberof Rect
+     * @method
+     * @param {Rect} rect
+     * @returns {boolean} true if contains
+     */
+
+    /**
+     * Returns true if the rectangle contains the given point
+     * @name contains
+     * @memberof Rect
+     * @method
+     * @param  {number} x -  x coordinate
+     * @param  {number} y -  y coordinate
+     * @returns {boolean} true if contains
+     */
+
+    /**
+     * Returns true if the rectangle contains the given point
+     * @name contains
+     * @memberof Rect
+     * @param {Vector2d} point
+     * @returns {boolean} true if contains
+     */
+    contains() {
+        var arg0 = arguments[0];
+        var _x1, _x2, _y1, _y2;
+        if (arguments.length === 2) {
+             // x, y
+             _x1 = _x2 = arg0;
+             _y1 = _y2 = arguments[1];
+         } else {
+             if (arg0 instanceof Rect) {
+                 // me.Rect
+                 _x1 = arg0.left;
+                 _x2 = arg0.right;
+                 _y1 = arg0.top;
+                 _y2 = arg0.bottom;
+             } else {
+                 // vector
+                 _x1 = _x2 = arg0.x;
+                 _y1 = _y2 = arg0.y;
+             }
+         }
+         return (
+             _x1 >= this.left &&
+             _x2 <= this.right &&
+             _y1 >= this.top &&
+             _y2 <= this.bottom
+         );
+    }
+
+    /**
+     * check if this rectangle is identical to the specified one
+     * @name equals
+     * @memberof Rect
+     * @param {Rect} rect
+     * @returns {boolean} true if equals
+     */
+    equals(rect) {
+        return (
+            rect.left === this.left &&
+            rect.right === this.right &&
+            rect.top === this.top &&
+            rect.bottom === this.bottom
+        );
+    }
+
+    /**
+     * determines whether all coordinates of this rectangle are finite numbers.
+     * @name isFinite
+     * @memberof Rect
+     * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
+     */
+    isFinite() {
+        return (isFinite(this.left) && isFinite(this.top) && isFinite(this.width) && isFinite(this.height));
+    }
+
+    /**
+     * Returns a polygon whose edges are the same as this box.
+     * @name toPolygon
+     * @memberof Rect
+     * @returns {Polygon} a new Polygon that represents this rectangle.
+     */
+    toPolygon() {
+        return pool.pull("Polygon",
+            this.left, this.top, this.points
+        );
+    }
+}
+
+// https://developer.chrome.com/blog/canvas2d/#round-rect
+
+/**
+ * @classdesc
+ * a rectangle object with rounded corners
+ * @augments Rect
+ */
+class RoundRect extends Rect {
+    /**
+     * @param {number} x - position of the rounded rectangle
+     * @param {number} y - position of the rounded rectangle
+     * @param {number} width - the rectangle width
+     * @param {number} height - the rectangle height
+     * @param {number} [radius=20] - the radius of the rounded corner
+     */
+    constructor(x, y, width, height, radius = 20) {
+        // parent constructor
+        super(x, y, width, height);
+
+        // set the corner radius
+        this.radius = radius;
+    }
+
+    /** @ignore */
+    onResetEvent(x, y, w, h, radius) {
+        super.setShape(x, y, w, h);
+        this.radius = radius;
+    }
+
+
+    /**
+     * the radius of the rounded corner
+     * @public
+     * @type {number}
+     * @default 20
+     * @name radius
+     * @memberof RoundRect
+     */
+    get radius() {
+        return this._radius;
+    }
+    set radius(value) {
+        // verify the rectangle is at least as wide and tall as the rounded corners.
+        if (this.width < 2 * value) {
+            value = this.width / 2;
+        }
+        if (this.height < 2 * value) {
+            value = this.height / 2;
+        }
+        this._radius = value;
+    }
+
+    /**
+     * copy the position, size and radius of the given rounded rectangle into this one
+     * @name copy
+     * @memberof RoundRect
+     * @param {RoundRect} rrect - source rounded rectangle
+     * @returns {RoundRect} new rectangle
+     */
+    copy(rrect) {
+        super.setShape(rrect.pos.x, rrect.pos.y, rrect.width, rrect.height);
+        this.radius = rrect.radius;
+        return this;
+    }
+
+    /**
+     * Returns true if the rounded rectangle contains the given point
+     * @name contains
+     * @memberof RoundRect
+     * @method
+     * @param  {number} x -  x coordinate
+     * @param  {number} y -  y coordinate
+     * @returns {boolean} true if contains
+     */
+
+    /**
+     * Returns true if the rounded rectangle contains the given point
+     * @name contains
+     * @memberof RoundRect
+     * @param {Vector2d} point
+     * @returns {boolean} true if contains
+     */
+    contains() {
+        var arg0 = arguments[0];
+        var _x, _y;
+        if (arguments.length === 2) {
+             // x, y
+             _x = arg0;
+             _y = arguments[1];
+         } else {
+             if (arg0 instanceof Rect) {
+                 // good enough
+                 return super.contains(arg0);
+             } else {
+                 // vector
+                _x = arg0.x;
+                _y = arg0.y;
+             }
+        }
+
+        // check whether point is outside the bounding box
+        if (_x < this.left || _x >= this.right || _y < this.top || _y >= this.bottom) {
+            return false; // outside bounding box
+        }
+
+        // check whether point is within the bounding box minus radius
+        if ((_x >= this.left + this.radius && _x <= this.right - this.radius) || (_y >= this.top + this.radius && _y <= this.bottom - this.radius)) {
+            return true;
+        }
+
+        // check whether point is in one of the rounded corner areas
+        var tx, ty;
+        var radiusX =  Math.max(0, Math.min(this.radius, this.width / 2));
+        var radiusY =  Math.max(0, Math.min(this.radius, this.height / 2));
+
+        if (_x < this.left + radiusX && _y < this.top + radiusY) {
+            tx = _x - this.left - radiusX;
+            ty = _y - this.top - radiusY;
+        } else if (_x > this.right - radiusX && _y < this.top + radiusY) {
+            tx = _x - this.right + radiusX;
+            ty = _y - this.top - radiusY;
+        } else if (_x > this.right - radiusX && _y > this.bottom - radiusY) {
+            tx = _x - this.right + radiusX;
+            ty = _y - this.bottom + radiusY;
+        } else if (_x < this.left + radiusX && _y > this.bottom - radiusY) {
+            tx = _x - this.left - radiusX;
+            ty = _y - this.bottom + radiusY;
+        } else {
+            return false; // inside and not within the rounded corner area
+        }
+
+        // Pythagorean theorem.
+        return ((tx * tx) + (ty * ty) <= (radiusX * radiusY));
+    }
+
+    /**
+     * check if this RoundRect is identical to the specified one
+     * @name equals
+     * @memberof RoundRect
+     * @param {RoundRect} rrect
+     * @returns {boolean} true if equals
+     */
+    equals(rrect) {
+        return super.equals(rrect) && this.radius === rrect.radius;
+    }
+
+    /**
+     * clone this RoundRect
+     * @name clone
+     * @memberof RoundRect
+     * @returns {RoundRect} new RoundRect
+     */
+    clone() {
+        return new RoundRect(this.pos.x, this.pos.y, this.width, this.height, this.radius);
+    }
+}
+
+/**
  * a collection of array utility functions
  * @namespace utils.array
  */
@@ -1746,6 +7951,1060 @@ var arrayUtils = {
 	random: random,
 	remove: remove,
 	weightedRandom: weightedRandom
+};
+
+/*
+ * A QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
+ * Based on the QuadTree Library by Timo Hausmann and released under the MIT license
+ * https://github.com/timohausmann/quadtree-js/
+**/
+
+/**
+ * a pool of `QuadTree` objects
+ * @ignore
+ */
+var QT_ARRAY = [];
+
+/**
+ * will pop a quadtree object from the array
+ * or create a new one if the array is empty
+ * @ignore
+ */
+function QT_ARRAY_POP(world, bounds, max_objects = 4, max_levels = 4, level = 0) {
+    if (QT_ARRAY.length > 0) {
+        var _qt =  QT_ARRAY.pop();
+        _qt.world = world;
+        _qt.bounds = bounds;
+        _qt.max_objects = max_objects;
+        _qt.max_levels  = max_levels;
+        _qt.level = level;
+        return _qt;
+    } else {
+        return new QuadTree(world, bounds, max_objects, max_levels, level);
+    }
+}
+
+/**
+ * Push back a quadtree back into the array
+ * @ignore
+ */
+function QT_ARRAY_PUSH(qt) {
+    QT_ARRAY.push(qt);
+}
+
+/**
+ * a temporary vector object to be reused
+ * @ignore
+ */
+var QT_VECTOR = new Vector2d();
+
+/**
+ * @classdesc
+ * a QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
+ * @see game.world.broadphase
+ */
+ class QuadTree {
+    /**
+     * @param {World} world - the physic world this QuadTree belongs to
+     * @param {Bounds} bounds - bounds of the node
+     * @param {number} [max_objects=4] - max objects a node can hold before splitting into 4 subnodes
+     * @param {number} [max_levels=4] - total max levels inside root Quadtree
+     * @param {number} [level] - deepth level, required for subnodes
+     */
+    constructor(world, bounds, max_objects = 4, max_levels = 4, level = 0) {
+
+        this.world = world;
+        this.bounds = bounds;
+
+        this.max_objects = max_objects;
+        this.max_levels  = max_levels;
+
+        this.level = level;
+
+        this.objects = [];
+        this.nodes = [];
+    }
+
+    /*
+     * Split the node into 4 subnodes
+     */
+    split() {
+        var nextLevel = this.level + 1,
+            subWidth  = this.bounds.width / 2,
+            subHeight = this.bounds.height / 2,
+            left = this.bounds.left,
+            top = this.bounds.top;
+
+         //top right node
+        this.nodes[0] = QT_ARRAY_POP(
+            this.world,
+            {
+                left : left + subWidth,
+                top : top,
+                width : subWidth,
+                height : subHeight
+            },
+            this.max_objects,
+            this.max_levels,
+            nextLevel
+        );
+
+        //top left node
+        this.nodes[1] = QT_ARRAY_POP(
+            this.world,
+            {
+                left : left,
+                top: top,
+                width : subWidth,
+                height : subHeight
+            },
+            this.max_objects,
+            this.max_levels,
+            nextLevel
+        );
+
+        //bottom left node
+        this.nodes[2] = QT_ARRAY_POP(
+            this.world,
+            {
+                left : left,
+                top : top + subHeight,
+                width : subWidth,
+                height : subHeight
+            },
+            this.max_objects,
+            this.max_levels,
+            nextLevel
+        );
+
+        //bottom right node
+        this.nodes[3] = QT_ARRAY_POP(
+            this.world,
+            {
+                left : left + subWidth,
+                top : top + subHeight,
+                width : subWidth,
+                height : subHeight
+            },
+            this.max_objects,
+            this.max_levels,
+            nextLevel
+        );
+    }
+
+    /*
+     * Determine which node the object belongs to
+     * @param {Rect} rect bounds of the area to be checked
+     * @returns Integer index of the subnode (0-3), or -1 if rect cannot completely fit within a subnode and is part of the parent node
+     */
+    getIndex(item) {
+        var pos;
+        var bounds = item.getBounds();
+
+        // use game world coordinates for floating items
+        if (item.isFloating === true) {
+            pos = this.world.app.viewport.localToWorld(bounds.left, bounds.top, QT_VECTOR);
+        } else {
+            pos = QT_VECTOR.set(item.left, item.top);
+        }
+
+        var index = -1,
+            rx = pos.x,
+            ry = pos.y,
+            rw = bounds.width,
+            rh = bounds.height,
+            verticalMidpoint = this.bounds.left + (this.bounds.width / 2),
+            horizontalMidpoint = this.bounds.top + (this.bounds.height / 2),
+            //rect can completely fit within the top quadrants
+            topQuadrant = (ry < horizontalMidpoint && ry + rh < horizontalMidpoint),
+            //rect can completely fit within the bottom quadrants
+            bottomQuadrant = (ry > horizontalMidpoint);
+
+        //rect can completely fit within the left quadrants
+        if (rx < verticalMidpoint && rx + rw < verticalMidpoint) {
+            if (topQuadrant) {
+                index = 1;
+            } else if (bottomQuadrant) {
+                index = 2;
+            }
+        } else if (rx > verticalMidpoint) {
+            //rect can completely fit within the right quadrants
+            if (topQuadrant) {
+                index = 0;
+            } else if (bottomQuadrant) {
+                index = 3;
+            }
+        }
+
+        return index;
+    }
+
+    /**
+     * Insert the given object container into the node.
+     * @name insertContainer
+     * @memberof QuadTree
+     * @param {Container} container - group of objects to be added
+     */
+    insertContainer(container) {
+        for (var i = container.children.length, child; i--, (child = container.children[i]);) {
+            if (child.isKinematic !== true) {
+                if (typeof child.addChild === "function") {
+                    if (child.name !== "rootContainer") {
+                        this.insert(child);
+                    }
+                    // recursivly insert all childs
+                    this.insertContainer(child);
+                } else {
+                    // only insert object with a bounding box
+                    // Probably redundant with `isKinematic`
+                    if (typeof (child.getBounds) === "function") {
+                        this.insert(child);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Insert the given object into the node. If the node
+     * exceeds the capacity, it will split and add all
+     * objects to their corresponding subnodes.
+     * @name insert
+     * @memberof QuadTree
+     * @param {object} item - object to be added
+     */
+    insert(item) {
+        var index = -1;
+
+        //if we have subnodes ...
+        if (this.nodes.length > 0) {
+            index = this.getIndex(item);
+
+            if (index !== -1) {
+                this.nodes[index].insert(item);
+                return;
+            }
+        }
+
+        this.objects.push(item);
+
+        if (this.objects.length > this.max_objects && this.level < this.max_levels) {
+
+            //split if we don't already have subnodes
+            if (this.nodes.length === 0) {
+                this.split();
+            }
+
+            var i = 0;
+
+            //add all objects to there corresponding subnodes
+            while (i < this.objects.length) {
+
+                index = this.getIndex(this.objects[i]);
+
+                if (index !== -1) {
+                    this.nodes[index].insert(this.objects.splice(i, 1)[0]);
+                } else {
+                    i = i + 1;
+                }
+            }
+        }
+    }
+
+    /**
+     * Return all objects that could collide with the given object
+     * @name retrieve
+     * @memberof QuadTree
+     * @param {object} item - object to be checked against
+     * @param {object} [fn] - a sorting function for the returned array
+     * @returns {object[]} array with all detected objects
+     */
+    retrieve(item, fn) {
+        var returnObjects = this.objects;
+
+        //if we have subnodes ...
+        if (this.nodes.length > 0) {
+
+            var index = this.getIndex(item);
+
+            //if rect fits into a subnode ..
+            if (index !== -1) {
+                returnObjects = returnObjects.concat(this.nodes[index].retrieve(item));
+            } else {
+                 //if rect does not fit into a subnode, check it against all subnodes
+                for (var i = 0; i < this.nodes.length; i = i + 1) {
+                    returnObjects = returnObjects.concat(this.nodes[i].retrieve(item));
+                }
+            }
+        }
+
+        if (typeof(fn) === "function") {
+            returnObjects.sort(fn);
+        }
+
+        return returnObjects;
+    }
+
+    /**
+     * Remove the given item from the quadtree.
+     * (this function won't recalculate the impacted node)
+     * @name remove
+     * @memberof QuadTree
+     * @param {object} item - object to be removed
+     * @returns {boolean} true if the item was found and removed.
+     */
+     remove(item) {
+        var found = false;
+
+        if (typeof (item.getBounds) === "undefined") {
+            // ignore object that cannot be added in the first place
+            return false;
+        }
+
+        //if we have subnodes ...
+        if (this.nodes.length > 0) {
+            // determine to which node the item belongs to
+            var index = this.getIndex(item);
+
+            if (index !== -1) {
+                found = remove(this.nodes[index], item);
+                // trim node if empty
+                if (found && this.nodes[index].isPrunable()) {
+                    this.nodes.splice(index, 1);
+                }
+            }
+        }
+
+        if (found === false) {
+            // try and remove the item from the list of items in this node
+            if (this.objects.indexOf(item) !== -1) {
+                remove(this.objects, item);
+                found = true;
+            }
+        }
+
+        return found;
+    }
+
+    /**
+     * return true if the node is prunable
+     * @name isPrunable
+     * @memberof QuadTree
+     * @returns {boolean} true if the node is prunable
+     */
+    isPrunable() {
+        return !(this.hasChildren() || (this.objects.length > 0));
+    }
+
+    /**
+     * return true if the node has any children
+     * @name hasChildren
+     * @memberof QuadTree
+     * @returns {boolean} true if the node has any children
+     */
+    hasChildren() {
+        for (var i = 0; i < this.nodes.length; i = i + 1) {
+            var subnode = this.nodes[i];
+            if (subnode.length > 0 || subnode.objects.length > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * clear the quadtree
+     * @name clear
+     * @memberof QuadTree
+     * @param {Bounds} [bounds=this.bounds] - the bounds to be cleared
+     */
+    clear(bounds) {
+        this.objects.length = 0;
+
+        for (var i = 0; i < this.nodes.length; i++) {
+            this.nodes[i].clear();
+            // recycle the quadTree object
+            QT_ARRAY_PUSH(this.nodes[i]);
+        }
+        // empty the array
+        this.nodes.length = 0;
+
+        // resize the root bounds if required
+        if (typeof bounds !== "undefined") {
+            this.bounds.setMinMax(bounds.min.x, bounds.min.y, bounds.max.x, bounds.max.y);
+        }
+    }
+}
+
+/**
+ * @classdesc
+ * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
+ */
+ class Bounds {
+    /**
+     * @param {Vector2d[]|Point[]} [vertices] - an array of Vector2d or Point
+     */
+    constructor(vertices) {
+        // @ignore
+        this._center = new Vector2d();
+        this.onResetEvent(vertices);
+    }
+
+    /**
+     * @ignore
+     */
+    onResetEvent(vertices) {
+        if (typeof this.min === "undefined") {
+            this.min = { x: Infinity,  y: Infinity };
+            this.max = { x: -Infinity, y: -Infinity };
+        } else {
+            this.clear();
+        }
+        if (typeof vertices !== "undefined") {
+            this.update(vertices);
+        }
+    }
+
+    /**
+     * reset the bound
+     */
+    clear() {
+        this.setMinMax(Infinity, Infinity, -Infinity, -Infinity);
+
+    }
+
+    /**
+     * sets the bounds to the given min and max value
+     * @param {number} minX
+     * @param {number} minY
+     * @param {number} maxX
+     * @param {number} maxY
+     */
+    setMinMax(minX, minY, maxX, maxY) {
+        this.min.x = minX;
+        this.min.y = minY;
+
+        this.max.x = maxX;
+        this.max.y = maxY;
+    }
+
+    /**
+     * x position of the bound
+     * @type {number}
+     */
+    get x() {
+        return this.min.x;
+    }
+
+    set x(value) {
+        var deltaX = this.max.x - this.min.x;
+        this.min.x = value;
+        this.max.x = value + deltaX;
+    }
+
+    /**
+     * y position of the bounds
+     * @type {number}
+     */
+    get y() {
+        return this.min.y;
+    }
+
+    set y(value) {
+        var deltaY = this.max.y - this.min.y;
+
+        this.min.y = value;
+        this.max.y = value + deltaY;
+    }
+
+    /**
+     * width of the bounds
+     * @type {number}
+     */
+    get width() {
+        return this.max.x - this.min.x;
+    }
+
+    set width(value) {
+        this.max.x = this.min.x + value;
+    }
+
+    /**
+     * width of the bounds
+     * @type {number}
+     */
+    get height() {
+        return this.max.y - this.min.y;
+    }
+
+    set height(value) {
+        this.max.y = this.min.y + value;
+    }
+
+    /**
+     * left coordinate of the bound
+     * @type {number}
+     */
+    get left() {
+        return this.min.x;
+    }
+
+    /**
+     * right coordinate of the bound
+     * @type {number}
+     */
+    get right() {
+        return this.max.x;
+    }
+
+    /**
+     * top coordinate of the bound
+     * @type {number}
+     */
+    get top() {
+        return this.min.y;
+    }
+
+    /**
+     * bottom coordinate of the bound
+     * @type {number}
+     */
+    get bottom() {
+        return this.max.y;
+    }
+
+    /**
+     * center position of the bound on the x axis
+     * @type {number}
+     */
+    get centerX() {
+        return this.min.x + (this.width / 2);
+    }
+
+    /**
+     * center position of the bound on the y axis
+     * @type {number}
+     */
+    get centerY() {
+        return this.min.y + (this.height / 2);
+    }
+
+    /**
+     * return the center position of the bound
+     * @type {Vector2d}
+     */
+    get center() {
+        return this._center.set(this.centerX, this.centerY);
+    }
+
+    /**
+     * center the bounds position around the given coordinates
+     * @param {number} x - the x coordinate around which to center this bounds
+     * @param {number} y - the y coordinate around which to center this bounds
+     */
+    centerOn(x, y) {
+        this.shift(x - this.width / 2, y - this.height / 2);
+        return this;
+    }
+
+    /**
+     * Updates bounds using the given vertices
+     * @param {Vector2d[]|Point[]} vertices - an array of Vector2d or Point
+     */
+    update(vertices) {
+        this.add(vertices, true);
+    }
+
+    /**
+     * add the given vertices to the bounds definition.
+     * @param {Vector2d[]|Point[]} vertices - an array of Vector2d or Point
+     * @param {boolean} [clear=false] - either to reset the bounds before adding the new vertices
+     */
+    add(vertices, clear = false) {
+        if (clear === true) {
+            this.clear();
+        }
+        for (var i = 0; i < vertices.length; i++) {
+            var vertex = vertices[i];
+            if (vertex.x > this.max.x) this.max.x = vertex.x;
+            if (vertex.x < this.min.x) this.min.x = vertex.x;
+            if (vertex.y > this.max.y) this.max.y = vertex.y;
+            if (vertex.y < this.min.y) this.min.y = vertex.y;
+        }
+    }
+
+    /**
+     * add the given bounds to the bounds definition.
+     * @param {Bounds} bounds
+     * @param {boolean} [clear=false] - either to reset the bounds before adding the new vertices
+     */
+    addBounds(bounds, clear = false) {
+        if (clear === true) {
+            this.max.x = bounds.max.x;
+            this.min.x = bounds.min.x;
+            this.max.y = bounds.max.y;
+            this.min.y = bounds.min.y;
+        } else {
+            if (bounds.max.x > this.max.x) this.max.x = bounds.max.x;
+            if (bounds.min.x < this.min.x) this.min.x = bounds.min.x;
+            if (bounds.max.y > this.max.y) this.max.y = bounds.max.y;
+            if (bounds.min.y < this.min.y) this.min.y = bounds.min.y;
+        }
+    }
+
+    /**
+     * add the given point to the bounds definition.
+     * @param {Vector2d|Point} point - the vector or point to be added to the bounds
+     * @param {Matrix2d} [m] - an optional transform to apply to the given point (if the given point is a Vector2d)
+     */
+    addPoint(point, m) {
+        if ((typeof m !== "undefined")) {
+            // only Vectors object have a rotate function
+            point = m.apply(point);
+        }
+        this.min.x = Math.min(this.min.x, point.x);
+        this.max.x = Math.max(this.max.x, point.x);
+        this.min.y = Math.min(this.min.y, point.y);
+        this.max.y = Math.max(this.max.y, point.y);
+    }
+
+    /**
+     * add the given quad coordinates to this bound definition, multiplied by the given matrix
+     * @param {number} x0 - left X coordinates of the quad
+     * @param {number} y0 - top Y coordinates of the quad
+     * @param {number} x1 - right X coordinates of the quad
+     * @param {number} y1 - bottom y coordinates of the quad
+     * @param {Matrix2d} [m] - an optional transform to apply to the given frame coordinates
+     */
+    addFrame(x0, y0, x1, y1, m) {
+        var v = pool.pull("Point");
+
+        this.addPoint(v.set(x0, y0), m);
+        this.addPoint(v.set(x1, y0), m);
+        this.addPoint(v.set(x0, y1), m);
+        this.addPoint(v.set(x1, y1), m);
+
+        pool.push(v);
+    }
+
+    /**
+     * Returns true if the bounds contains the given point.
+     * @name contains
+     * @memberof Bounds
+     * @method
+     * @param {Vector2d} point
+     * @returns {boolean} True if the bounds contain the point, otherwise false
+     */
+    /**
+     * Returns true if the bounds contains the given point.
+     * @param {number} x
+     * @param {number} y
+     * @returns {boolean} True if the bounds contain the point, otherwise false
+     */
+    contains() {
+        var arg0 = arguments[0];
+        var _x1, _x2, _y1, _y2;
+        if (arguments.length === 2) {
+            // x, y
+            _x1 = _x2 = arg0;
+            _y1 = _y2 = arguments[1];
+        } else {
+            if (arg0 instanceof Bounds) {
+                // bounds
+                _x1 = arg0.min.x;
+                _x2 = arg0.max.x;
+                _y1 = arg0.min.y;
+                _y2 = arg0.max.y;
+            } else {
+                // vector
+                _x1 = _x2 = arg0.x;
+                _y1 = _y2 = arg0.y;
+            }
+        }
+
+        return _x1 >= this.min.x && _x2 <= this.max.x
+            && _y1 >= this.min.y && _y2 <= this.max.y;
+    }
+
+    /**
+     * Returns true if the two bounds intersect.
+     * @param {Bounds|Rect} bounds
+     * @returns {boolean} True if the bounds overlap, otherwise false
+     */
+    overlaps(bounds) {
+        return !(this.right < bounds.left || this.left > bounds.right ||
+                 this.bottom < bounds.top || this.top > bounds.bottom);
+    }
+
+    /**
+     * determines whether all coordinates of this bounds are finite numbers.
+     * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
+     */
+    isFinite() {
+        return (isFinite(this.min.x) && isFinite(this.max.x) && isFinite(this.min.y) && isFinite(this.max.y));
+    }
+
+    /**
+     * Translates the bounds by the given vector.
+     * @name translate
+     * @memberof Bounds
+     * @method
+     * @param {Vector2d} vector
+     */
+    /**
+     * Translates the bounds by x on the x axis, and y on the y axis
+     * @param {number} x
+     * @param {number} y
+     */
+    translate() {
+        var _x, _y;
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+        this.min.x += _x;
+        this.max.x += _x;
+        this.min.y += _y;
+        this.max.y += _y;
+    }
+
+    /**
+     * Shifts the bounds to the given position vector.
+     * @name shift
+     * @memberof Bounds
+     * @method
+     * @param {Vector2d} position
+     */
+    /**
+     * Shifts the bounds to the given x, y position.
+     * @param {number} x
+     * @param {number} y
+     */
+    shift() {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+
+        var deltaX = this.max.x - this.min.x,
+            deltaY = this.max.y - this.min.y;
+
+        this.min.x = _x;
+        this.max.x = _x + deltaX;
+        this.min.y = _y;
+        this.max.y = _y + deltaY;
+    }
+
+    /**
+     * clone this bounds
+     * @returns {Bounds}
+     */
+    clone() {
+        var bounds = new Bounds();
+        bounds.addBounds(this);
+        return bounds;
+    }
+
+    /**
+     * Returns a polygon whose edges are the same as this bounds.
+     * @returns {Polygon} a new Polygon that represents this bounds.
+     */
+    toPolygon () {
+        return pool.pull("Polygon", this.x, this.y, [
+            pool.pull("Vector2d", 0,          0),
+            pool.pull("Vector2d", this.width, 0),
+            pool.pull("Vector2d", this.width, this.height),
+            pool.pull("Vector2d", 0,          this.height)
+        ]);
+    }
+
+}
+
+/**
+ * Collision detection (and projection-based collision response) of 2D shapes.<br>
+ * Based on the Separating Axis Theorem and supports detecting collisions between simple Axis-Aligned Boxes, convex polygons and circles based shapes.
+ * @namespace collision
+ */
+
+var collision = {
+
+     /**
+      * The maximum number of children that a quadtree node can contain before it is split into sub-nodes.
+      * @name maxChildren
+      * @memberof collision
+      * @public
+      * @type {number}
+      * @default 8
+      * @see game.world.broadphase
+      */
+     maxChildren : 8,
+
+     /**
+      * The maximum number of levels that the quadtree will create.
+      * @name maxDepth
+      * @memberof collision
+      * @public
+      * @type {number}
+      * @default 4
+      * @see game.world.broadphase
+      */
+     maxDepth : 4,
+
+    /**
+     * Enum for collision type values.
+     * @property {number} NO_OBJECT to disable collision check
+     * @property {number} PLAYER_OBJECT playbable characters
+     * @property {number} NPC_OBJECT non playable characters
+     * @property {number} ENEMY_OBJECT enemies objects
+     * @property {number} COLLECTABLE_OBJECT collectable objects
+     * @property {number} ACTION_OBJECT e.g. doors
+     * @property {number} PROJECTILE_OBJECT e.g. missiles
+     * @property {number} WORLD_SHAPE e.g. walls; for map collision shapes
+     * @property {number} USER user-defined collision types (see example)
+     * @property {number} ALL_OBJECT all of the above (including user-defined types)
+     * @readonly
+     * @enum {number}
+     * @name types
+     * @memberof collision
+     * @see Body.setCollisionMask
+     * @see Body.collisionType
+     * @example
+     * // set the body collision type
+     * myEntity.body.collisionType = me.collision.types.PLAYER_OBJECT;
+     *
+     * // filter collision detection with collision shapes, enemies and collectables
+     * myEntity.body.setCollisionMask(
+     *     me.collision.types.WORLD_SHAPE |
+     *     me.collision.types.ENEMY_OBJECT |
+     *     me.collision.types.COLLECTABLE_OBJECT
+     * );
+     *
+     * // User-defined collision types are defined using BITWISE LEFT-SHIFT:
+     * game.collisionTypes = {
+     *     LOCKED_DOOR : me.collision.types.USER << 0,
+     *     OPEN_DOOR   : me.collision.types.USER << 1,
+     *     LOOT        : me.collision.types.USER << 2,
+     * };
+     *
+     * // Set collision type for a door entity
+     * myDoorEntity.body.collisionType = game.collisionTypes.LOCKED_DOOR;
+     *
+     * // Set collision mask for the player entity, so it collides with locked doors and loot
+     * myPlayerEntity.body.setCollisionMask(
+     *     me.collision.types.ENEMY_OBJECT |
+     *     me.collision.types.WORLD_SHAPE |
+     *     game.collisionTypes.LOCKED_DOOR |
+     *     game.collisionTypes.LOOT
+     * );
+     */
+    types : {
+        /** to disable collision check */
+        NO_OBJECT           : 0,
+        PLAYER_OBJECT       : 1 << 0,
+        NPC_OBJECT          : 1 << 1,
+        ENEMY_OBJECT        : 1 << 2,
+        COLLECTABLE_OBJECT  : 1 << 3,
+        ACTION_OBJECT       : 1 << 4, // door, etc...
+        PROJECTILE_OBJECT   : 1 << 5, // missiles, etc...
+        WORLD_SHAPE         : 1 << 6, // walls, etc...
+        USER                : 1 << 7, // user-defined types start here...
+        ALL_OBJECT          : 0xFFFFFFFF // all objects
+    },
+
+    /**
+     * Checks for object colliding with the given line
+     * @name rayCast
+     * @memberof collision
+     * @public
+     * @param {Line} line - line to be tested for collision
+     * @param {Array.<Renderable>} [result] - a user defined array that will be populated with intersecting physic objects.
+     * @returns {Array.<Renderable>} an array of intersecting physic objects
+     * @example
+     *    // define a line accross the viewport
+     *    var ray = new me.Line(
+     *        // absolute position of the line
+     *        0, 0, [
+     *        // starting point relative to the initial position
+     *        new me.Vector2d(0, 0),
+     *        // ending point
+     *        new me.Vector2d(me.game.viewport.width, me.game.viewport.height)
+     *    ]);
+     *
+     *    // check for collition
+     *    result = me.collision.rayCast(ray);
+     *
+     *    if (result.length > 0) {
+     *        // ...
+     *    }
+     */
+    rayCast(line, result) { return game.world.detector.rayCast(line, result); }
+};
+
+/**
+ * a collection of string utility functions
+ * @namespace utils.string
+ */
+
+/**
+ * converts the first character of the given string to uppercase
+ * @public
+ * @memberof utils.string
+ * @name capitalize
+ * @param {string} str - the string to be capitalized
+ * @returns {string} the capitalized string
+ */
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+/**
+ * returns true if the given string contains a numeric integer or float value
+ * @public
+ * @memberof utils.string
+ * @name isNumeric
+ * @param {string} str - the string to be tested
+ * @returns {boolean} true if string contains only digits
+ */
+function isNumeric(str) {
+    if (typeof str === "string") {
+        str = str.trim();
+    }
+    return !isNaN(str) && /^[+-]?(\d+(\.\d+)?|\.\d+)$/.test(str);
+}
+
+/**
+ * returns true if the given string contains a true or false
+ * @public
+ * @memberof utils.string
+ * @name isBoolean
+ * @param {string} str - the string to be tested
+ * @returns {boolean} true if the string is either true or false
+ */
+function isBoolean(str) {
+    var trimmed = str.trim();
+    return (trimmed === "true") || (trimmed === "false");
+}
+
+/**
+ * convert a string to the corresponding hexadecimal value
+ * @public
+ * @memberof utils.string
+ * @name toHex
+ * @param {string} str - the string to be converted
+ * @returns {string} the converted hexadecimal value
+ */
+function toHex(str) {
+    var res = "", c = 0;
+    while (c < str.length) {
+        res += str.charCodeAt(c++).toString(16);
+    }
+    return res;
+}
+
+/**
+ * returns true if the given string is a data url in the `data:[<mediatype>][;base64],<data>` format.
+ * (this will not test the validity of the Data or Base64 encoding)
+ * @public
+ * @memberof utils.string
+ * @name isDataUrl
+ * @param {string} str - the string (url) to be tested
+ * @returns {boolean} true if the string is a data url
+ */
+function isDataUrl(str) {
+    return /^data:(.+);base64,(.+)$/.test(str);
+}
+
+var stringUtils = {
+	__proto__: null,
+	capitalize: capitalize,
+	isBoolean: isBoolean,
+	isDataUrl: isDataUrl,
+	isNumeric: isNumeric,
+	toHex: toHex
+};
+
+/**
+ * a collection of utility functons to ease porting between different user agents.
+ * @namespace utils.agent
+ */
+
+/**
+ * Known agent vendors
+ * @ignore
+ */
+const vendors = [ "ms", "MS", "moz", "webkit", "o" ];
+
+/**
+ * Get a vendor-prefixed property
+ * @public
+ * @name prefixed
+ * @param {string} name - Property name
+ * @param {object} [obj=globalThis] - Object or element reference to access
+ * @returns {string} Value of property
+ * @memberof utils.agent
+ */
+function prefixed(name, obj) {
+    obj = obj || globalThis;
+    if (name in obj) {
+        return obj[name];
+    }
+
+    var uc_name = capitalize(name);
+
+    var result;
+    vendors.some((vendor) => {
+        var name = vendor + uc_name;
+        return (result = (name in obj) ? obj[name] : undefined);
+    });
+    return result;
+}
+
+/**
+ * Set a vendor-prefixed property
+ * @public
+ * @name setPrefixed
+ * @param {string} name - Property name
+ * @param {string} value - Property value
+ * @param {object} [obj=globalThis] - Object or element reference to access
+ * @returns {boolean} true if one of the vendor-prefixed property was found
+ * @memberof utils.agent
+ */
+function setPrefixed(name, value, obj) {
+    obj = obj || globalThis;
+    if (name in obj) {
+        obj[name] = value;
+        return;
+    }
+
+    var uc_name = capitalize(name);
+
+    vendors.some((vendor) => {
+        var name = vendor + uc_name;
+        if (name in obj) {
+            obj[name] = value;
+            return true;
+        }
+    });
+
+    return false;
+}
+
+var agentUtils = {
+	__proto__: null,
+	prefixed: prefixed,
+	setPrefixed: setPrefixed
 };
 
 /**
@@ -1969,7 +9228,7 @@ var utils = {
      */
     resetGUID : function (base, index = 0) {
         // also ensure it's only 8bit ASCII characters
-        GUID_base  = toHex$1(base.toString().toUpperCase());
+        GUID_base  = toHex(base.toString().toUpperCase());
         GUID_index = index;
     },
 
@@ -8203,4943 +15462,6 @@ var device = {
 	wheel: wheel
 };
 
-/**
- * @classdesc
- * Object pooling - a technique that might speed up your game if used properly.<br>
- * If some of your classes will be instantiated and removed a lot at a time, it is a
- * good idea to add the class to this object pool. A separate pool for that class
- * will be created, which will reuse objects of the class. That way they won't be instantiated
- * each time you need a new one (slowing your game), but stored into that pool and taking one
- * already instantiated when you need it.<br><br>
- * This technique is also used by the engine to instantiate objects defined in the map,
- * which means, that on level loading the engine will try to instantiate every object
- * found in the map, based on the user defined name in each Object Properties<br>
- * <img src="images/object_properties.png"/><br>
- * @see {@link pool} the default global instance of ObjectPool
- */
-class ObjectPool {
-
-    constructor() {
-        this.objectClass = {};
-        this.instance_counter = 0;
-    }
-
-    /**
-     * register an object to the pool. <br>
-     * Pooling must be set to true if more than one such objects will be created. <br>
-     * (Note: for an object to be poolable, it must implements a `onResetEvent` method)
-     * @param {string} className - as defined in the Name field of the Object Properties (in Tiled)
-     * @param {object} classObj - corresponding Class to be instantiated
-     * @param {boolean} [recycling=false] - enables object recycling for the specified class
-     * @example
-     * // implement CherryEntity
-     * class Cherry extends Sprite {
-     *    onResetEvent() {
-     *        // reset object mutable properties
-     *        this.lifeBar = 100;
-     *    }
-     * };
-     * // add our users defined entities in the object pool and enable object recycling
-     * me.pool.register("cherrysprite", Cherry, true);
-     */
-    register(className, classObj, recycling = false) {
-         if (typeof (classObj) !== "undefined") {
-             this.objectClass[className] = {
-                 "class" : classObj,
-                 "pool" : (recycling ? [] : undefined)
-             };
-         } else {
-             throw new Error("Cannot register object '" + className + "', invalid class");
-         }
-     }
-
-    /**
-     * Pull a new instance of the requested object (if added into the object pool)
-     * @param {string} name - as used in {@link pool.register}
-     * @param {object} [...arguments] - arguments to be passed when instantiating/reinitializing the object
-     * @returns {object} the instance of the requested object
-     * @example
-     * me.pool.register("bullet", BulletEntity, true);
-     * me.pool.register("enemy", EnemyEntity, true);
-     * // ...
-     * // when we need to manually create a new bullet:
-     * var bullet = me.pool.pull("bullet", x, y, direction);
-     * // ...
-     * // params aren't a fixed number
-     * // when we need new enemy we can add more params, that the object construct requires:
-     * var enemy = me.pool.pull("enemy", x, y, direction, speed, power, life);
-     * // ...
-     * // when we want to destroy existing object, the remove
-     * // function will ensure the object can then be reallocated later
-     * me.game.world.removeChild(enemy);
-     * me.game.world.removeChild(bullet);
-     */
-    pull(name, ...args) {
-        var className = this.objectClass[name];
-        if (className) {
-            var proto = className["class"],
-                poolArray = className.pool,
-                obj;
-
-            if (poolArray && ((obj = poolArray.pop()))) {
-                // poolable object must implement a `onResetEvent` method
-                obj.onResetEvent.apply(obj, args);
-                this.instance_counter--;
-            } else {
-                // create a new instance
-                obj = new (proto.bind.apply(proto, [ proto, ...args ]))();
-                if (poolArray) {
-                    obj.className = name;
-                }
-            }
-            return obj;
-        }
-        throw new Error("Cannot instantiate object of type '" + name + "'");
-    }
-
-    /**
-     * purge the object pool from any inactive object <br>
-     * Object pooling must be enabled for this function to work<br>
-     * note: this will trigger the garbage collector
-     */
-    purge() {
-        for (var className in this.objectClass) {
-            if (this.objectClass[className]) {
-                this.objectClass[className].pool = [];
-            }
-        }
-        this.instance_counter = 0;
-    }
-
-    /**
-     * Push back an object instance into the object pool <br>
-     * Object pooling for the object class must be enabled,
-     * and object must have been instantiated using {@link pool#pull},
-     * otherwise this function won't work
-     * @throws will throw an error if the object cannot be recycled
-     * @param {object} obj - instance to be recycled
-     * @param {boolean} [throwOnError=true] - throw an exception if the object cannot be recycled
-     * @returns {boolean} true if the object was successfully recycled in the object pool
-     */
-    push(obj, throwOnError = true) {
-        if (!this.poolable(obj)) {
-            if (throwOnError === true ) {
-                throw new Error("me.pool: object " + obj + " cannot be recycled");
-            } else {
-                return false;
-            }
-        }
-
-        // store back the object instance for later recycling
-        this.objectClass[obj.className].pool.push(obj);
-        this.instance_counter++;
-
-        return true;
-    }
-
-    /**
-     * Check if an object with the provided name is registered
-     * @param {string} name - of the registered object class
-     * @returns {boolean} true if the classname is registered
-     */
-    exists(name) {
-        return name in this.objectClass;
-    }
-
-    /**
-     * Check if an object is poolable
-     * (was properly registered with the recycling feature enable)
-     * @see register
-     * @param {object} obj - object to be checked
-     * @returns {boolean} true if the object is poolable
-     * @example
-     * if (!me.pool.poolable(myCherryEntity)) {
-     *     // object was not properly registered
-     * }
-     */
-    poolable(obj) {
-        var className = obj.className;
-        return (typeof className !== "undefined") &&
-                (typeof obj.onResetEvent === "function") &&
-                (className in this.objectClass) &&
-                (typeof this.objectClass[className].pool !== "undefined");
-
-    }
-
-    /**
-     * returns the amount of object instance currently in the pool
-     * @returns {number} amount of object instance
-     */
-    getInstanceCount() {
-        return this.instance_counter;
-    }
-}
-
-var pool = new ObjectPool();
-
-/**
- * @classdesc
- * a generic 2D Vector Object
- */
- class Vector2d {
-    /**
-     * @param {number} [x=0] - x value of the vector
-     * @param {number} [y=0] - y value of the vector
-     */
-    constructor(x = 0, y = 0) {
-        this.onResetEvent(x, y);
-    }
-
-    /**
-     * @ignore
-     */
-    onResetEvent(x = 0, y = 0) {
-        // this is to enable proper object pooling
-        this.x = x;
-        this.y = y;
-        return this;
-    }
-
-    /**
-     * @ignore
-     */
-    _set(x, y) {
-        this.x = x;
-        this.y = y;
-        return this;
-    }
-
-    /**
-     * set the Vector x and y properties to the given values<br>
-     * @name set
-     * @memberof Vector2d
-     * @param {number} x
-     * @param {number} y
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    set(x, y) {
-        if (x !== +x || y !== +y) {
-            throw new Error(
-                "invalid x,y parameters (not a number)"
-            );
-        }
-
-        /**
-         * x value of the vector
-         * @public
-         * @member {number}
-         * @name x
-         * @memberof Vector2d
-         */
-        //this.x = x;
-
-        /**
-         * y value of the vector
-         * @public
-         * @member {number}
-         * @name y
-         * @memberof Vector2d
-         */
-        //this.y = y;
-
-        return this._set(x, y);
-    }
-
-    /**
-     * set the Vector x and y properties to 0
-     * @name setZero
-     * @memberof Vector2d
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    setZero() {
-        return this.set(0, 0);
-    }
-
-    /**
-     * set the Vector x and y properties using the passed vector
-     * @name setV
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    setV(v) {
-        return this._set(v.x, v.y);
-    }
-
-    /**
-     * Add the passed vector to this vector
-     * @name add
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    add(v) {
-        return this._set(this.x + v.x, this.y + v.y);
-    }
-
-    /**
-     * Substract the passed vector to this vector
-     * @name sub
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    sub(v) {
-        return this._set(this.x - v.x, this.y - v.y);
-    }
-
-    /**
-     * Multiply this vector values by the given scalar
-     * @name scale
-     * @memberof Vector2d
-     * @param {number} x
-     * @param {number} [y=x]
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    scale(x, y = x) {
-        return this._set(this.x * x, this.y * y);
-    }
-
-    /**
-     * Convert this vector into isometric coordinate space
-     * @name toIso
-     * @memberof Vector2d
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    toIso() {
-        return this._set(this.x - this.y, (this.x + this.y) * 0.5);
-    }
-
-    /**
-     * Convert this vector into 2d coordinate space
-     * @name to2d
-     * @memberof Vector2d
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    to2d() {
-        return this._set(this.y + this.x / 2, this.y - this.x / 2);
-    }
-
-    /**
-     * Multiply this vector values by the passed vector
-     * @name scaleV
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    scaleV(v) {
-        return this._set(this.x * v.x, this.y * v.y);
-    }
-
-    /**
-     * Divide this vector values by the passed value
-     * @name div
-     * @memberof Vector2d
-     * @param {number} n - the value to divide the vector by
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    div(n) {
-        return this._set(this.x / n, this.y / n);
-    }
-
-    /**
-     * Update this vector values to absolute values
-     * @name abs
-     * @memberof Vector2d
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    abs() {
-        return this._set((this.x < 0) ? -this.x : this.x, (this.y < 0) ? -this.y : this.y);
-    }
-
-    /**
-     * Clamp the vector value within the specified value range
-     * @name clamp
-     * @memberof Vector2d
-     * @param {number} low
-     * @param {number} high
-     * @returns {Vector2d} new me.Vector2d
-     */
-    clamp(low, high) {
-        return new Vector2d(clamp(this.x, low, high), clamp(this.y, low, high));
-    }
-
-    /**
-     * Clamp this vector value within the specified value range
-     * @name clampSelf
-     * @memberof Vector2d
-     * @param {number} low
-     * @param {number} high
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    clampSelf(low, high) {
-        return this._set(clamp(this.x, low, high), clamp(this.y, low, high));
-    }
-
-    /**
-     * Update this vector with the minimum value between this and the passed vector
-     * @name minV
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    minV(v) {
-        return this._set((this.x < v.x) ? this.x : v.x, (this.y < v.y) ? this.y : v.y);
-    }
-
-    /**
-     * Update this vector with the maximum value between this and the passed vector
-     * @name maxV
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    maxV(v) {
-        return this._set((this.x > v.x) ? this.x : v.x, (this.y > v.y) ? this.y : v.y);
-    }
-
-    /**
-     * Floor the vector values
-     * @name floor
-     * @memberof Vector2d
-     * @returns {Vector2d} new me.Vector2d
-     */
-    floor() {
-        return new Vector2d(Math.floor(this.x), Math.floor(this.y));
-    }
-
-    /**
-     * Floor this vector values
-     * @name floorSelf
-     * @memberof Vector2d
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    floorSelf() {
-        return this._set(Math.floor(this.x), Math.floor(this.y));
-    }
-
-    /**
-     * Ceil the vector values
-     * @name ceil
-     * @memberof Vector2d
-     * @returns {Vector2d} new me.Vector2d
-     */
-    ceil() {
-        return new Vector2d(Math.ceil(this.x), Math.ceil(this.y));
-    }
-
-    /**
-     * Ceil this vector values
-     * @name ceilSelf
-     * @memberof Vector2d
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    ceilSelf() {
-        return this._set(Math.ceil(this.x), Math.ceil(this.y));
-    }
-
-    /**
-     * Negate the vector values
-     * @name negate
-     * @memberof Vector2d
-     * @returns {Vector2d} new me.Vector2d
-     */
-    negate() {
-        return new Vector2d(-this.x, -this.y);
-    }
-
-    /**
-     * Negate this vector values
-     * @name negateSelf
-     * @memberof Vector2d
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    negateSelf() {
-        return this._set(-this.x, -this.y);
-    }
-
-    /**
-     * Copy the x,y values of the passed vector to this one
-     * @name copy
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    copy(v) {
-        return this._set(v.x, v.y);
-    }
-
-    /**
-     * return true if the two vectors are the same
-     * @name equals
-     * @memberof Vector2d
-     * @method
-     * @param {Vector2d} v
-     * @returns {boolean}
-     */
-    /**
-     * return true if this vector is equal to the given values
-     * @name equals
-     * @memberof Vector2d
-     * @param {number} x
-     * @param {number} y
-     * @returns {boolean}
-     */
-    equals() {
-        var _x, _y;
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-        return ((this.x === _x) && (this.y === _y));
-    }
-
-    /**
-     * normalize this vector (scale the vector so that its magnitude is 1)
-     * @name normalize
-     * @memberof Vector2d
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    normalize() {
-        return this.div(this.length() || 1);
-    }
-
-    /**
-     * change this vector to be perpendicular to what it was before.<br>
-     * (Effectively rotates it 90 degrees in a clockwise direction)
-     * @name perp
-     * @memberof Vector2d
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    perp() {
-        return this._set(this.y, -this.x);
-    }
-
-    /**
-     * Rotate this vector (counter-clockwise) by the specified angle (in radians).
-     * @name rotate
-     * @memberof Vector2d
-     * @param {number} angle - The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    rotate(angle, v) {
-        var cx = 0;
-        var cy = 0;
-
-        if (typeof v === "object") {
-            cx = v.x;
-            cy = v.y;
-        }
-
-        var x = this.x - cx;
-        var y = this.y - cy;
-
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
-
-        return this._set(x * c - y * s + cx, x * s + y * c + cy);
-    }
-
-    /**
-     * return the dot product of this vector and the passed one
-     * @name dot
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @returns {number} The dot product.
-     */
-    dot(v) {
-        return this.x * v.x + this.y * v.y;
-    }
-
-    /**
-     * return the cross product of this vector and the passed one
-     * @name cross
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @returns {number} The cross product.
-     */
-    cross(v) {
-        return this.x * v.y - this.y * v.x;
-    }
-
-   /**
-    * return the square length of this vector
-    * @name length2
-    * @memberof Vector2d
-    * @returns {number} The length^2 of this vector.
-    */
-    length2() {
-        return this.dot(this);
-    }
-
-    /**
-     * return the length (magnitude) of this vector
-     * @name length
-     * @memberof Vector2d
-     * @returns {number} the length of this vector
-     */
-    length() {
-        return Math.sqrt(this.length2());
-    }
-
-    /**
-     * Linearly interpolate between this vector and the given one.
-     * @name lerp
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    lerp(v, alpha) {
-        this.x += ( v.x - this.x ) * alpha;
-        this.y += ( v.y - this.y ) * alpha;
-        return this;
-    }
-
-    /**
-     * interpolate the position of this vector towards the given one by the given maximum step.
-     * @name moveTowards
-     * @memberof Vector2d
-     * @param {Vector2d} target
-     * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-     moveTowards(target, step) {
-        var angle = Math.atan2(target.y - this.y, target.x - this.x);
-
-        var distance = this.distance(target);
-
-        if (distance === 0 || (step >= 0 && distance <= step * step)) {
-            return target;
-        }
-
-        this.x += Math.cos(angle) * step;
-        this.y += Math.sin(angle) * step;
-
-        return this;
-    }
-
-    /**
-     * return the distance between this vector and the passed one
-     * @name distance
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @returns {number}
-     */
-    distance(v) {
-        var dx = this.x - v.x, dy = this.y - v.y;
-        return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    /**
-     * return the angle between this vector and the passed one
-     * @name angle
-     * @memberof Vector2d
-     * @param {Vector2d} v
-     * @returns {number} angle in radians
-     */
-    angle(v) {
-        return Math.acos(clamp(this.dot(v) / (this.length() * v.length()), -1, 1));
-    }
-
-    /**
-     * project this vector on to another vector.
-     * @name project
-     * @memberof Vector2d
-     * @param {Vector2d} v - The vector to project onto.
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    project(v) {
-        return this.scale(this.dot(v) / v.length2());
-    }
-
-    /**
-     * Project this vector onto a vector of unit length.<br>
-     * This is slightly more efficient than `project` when dealing with unit vectors.
-     * @name projectN
-     * @memberof Vector2d
-     * @param {Vector2d} v - The unit vector to project onto.
-     * @returns {Vector2d} Reference to this object for method chaining
-     */
-    projectN(v) {
-        return this.scale(this.dot(v));
-    }
-
-    /**
-     * return a clone copy of this vector
-     * @name clone
-     * @memberof Vector2d
-     * @returns {Vector2d} new me.Vector2d
-     */
-    clone() {
-        return pool.pull("Vector2d", this.x, this.y);
-    }
-
-    /**
-     * convert the object to a string representation
-     * @name toString
-     * @memberof Vector2d
-     * @returns {string}
-     */
-    toString() {
-        return "x:" + this.x + ",y:" + this.y;
-    }
-}
-
-/**
- * @classdesc
- * a generic 3D Vector Object
- */
- class Vector3d {
-    /**
-     * @param {number} [x=0] - x value of the vector
-     * @param {number} [y=0] - y value of the vector
-     * @param {number} [z=0] - z value of the vector
-     */
-    constructor(x = 0, y = 0, z = 0) {
-        this.onResetEvent(x, y, z);
-    }
-
-    /**
-     * @ignore
-     */
-    onResetEvent(x = 0, y = 0, z = 0) {
-        // this is to enable proper object pooling
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        return this;
-    }
-
-    /**
-     * @ignore
-     */
-    _set(x, y, z = 0) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        return this;
-    }
-
-    /**
-     * set the Vector x and y properties to the given values<br>
-     * @name set
-     * @memberof Vector3d
-     * @param {number} x
-     * @param {number} y
-     * @param {number} [z=0]
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    set(x, y, z) {
-        if (x !== +x || y !== +y || (typeof z !== "undefined" && z !== +z)) {
-            throw new Error(
-                "invalid x, y, z parameters (not a number)"
-            );
-        }
-
-        /**
-         * x value of the vector
-         * @public
-         * @member {number}
-         * @name x
-         * @memberof Vector3d
-         */
-        //this.x = x;
-
-        /**
-         * y value of the vector
-         * @public
-         * @member {number}
-         * @name y
-         * @memberof Vector3d
-         */
-        //this.y = y;
-
-        /**
-         * z value of the vector
-         * @public
-         * @member {number}
-         * @name z
-         * @memberof Vector3d
-         */
-        //this.z = z;
-
-        return this._set(x, y, z);
-    }
-
-    /**
-     * set the Vector x and y properties to 0
-     * @name setZero
-     * @memberof Vector3d
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    setZero() {
-        return this.set(0, 0, 0);
-    }
-
-    /**
-     * set the Vector x and y properties using the passed vector
-     * @name setV
-     * @memberof Vector3d
-     * @param {Vector2d|Vector3d} v
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    setV(v) {
-        return this._set(v.x, v.y, v.z);
-    }
-
-    /**
-     * Add the passed vector to this vector
-     * @name add
-     * @memberof Vector3d
-     * @param {Vector2d|Vector3d} v
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    add(v) {
-        return this._set(this.x + v.x, this.y + v.y, this.z + (v.z || 0));
-    }
-
-    /**
-     * Substract the passed vector to this vector
-     * @name sub
-     * @memberof Vector3d
-     * @param {Vector2d|Vector3d} v
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    sub(v) {
-        return this._set(this.x - v.x, this.y - v.y, this.z - (v.z || 0));
-    }
-
-    /**
-     * Multiply this vector values by the given scalar
-     * @name scale
-     * @memberof Vector3d
-     * @param {number} x
-     * @param {number} [y=x]
-     * @param {number} [z=1]
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    scale(x, y = x, z = 1) {
-        return this._set(this.x * x, this.y * y, this.z * z);
-    }
-
-    /**
-     * Multiply this vector values by the passed vector
-     * @name scaleV
-     * @memberof Vector3d
-     * @param {Vector2d|Vector3d} v
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    scaleV(v) {
-        return this.scale(v.x, v.y, v.z);
-    }
-
-    /**
-     * Convert this vector into isometric coordinate space
-     * @name toIso
-     * @memberof Vector3d
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    toIso() {
-        return this._set(this.x - this.y, (this.x + this.y) * 0.5, this.z);
-    }
-
-    /**
-     * Convert this vector into 2d coordinate space
-     * @name to2d
-     * @memberof Vector3d
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    to2d() {
-        return this._set(this.y + this.x / 2, this.y - this.x / 2, this.z);
-    }
-
-    /**
-     * Divide this vector values by the passed value
-     * @name div
-     * @memberof Vector3d
-     * @param {number} n - the value to divide the vector by
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    div(n) {
-        return this._set(this.x / n, this.y / n, this.z / n);
-    }
-
-    /**
-     * Update this vector values to absolute values
-     * @name abs
-     * @memberof Vector3d
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    abs() {
-        return this._set((this.x < 0) ? -this.x : this.x, (this.y < 0) ? -this.y : this.y, (this.z < 0) ? -this.z : this.z);
-    }
-
-    /**
-     * Clamp the vector value within the specified value range
-     * @name clamp
-     * @memberof Vector3d
-     * @param {number} low
-     * @param {number} high
-     * @returns {Vector3d} new me.Vector3d
-     */
-    clamp(low, high) {
-        return new Vector3d(clamp(this.x, low, high), clamp(this.y, low, high), clamp(this.z, low, high));
-    }
-
-    /**
-     * Clamp this vector value within the specified value range
-     * @name clampSelf
-     * @memberof Vector3d
-     * @param {number} low
-     * @param {number} high
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    clampSelf(low, high) {
-        return this._set(clamp(this.x, low, high), clamp(this.y, low, high), clamp(this.z, low, high));
-    }
-
-    /**
-     * Update this vector with the minimum value between this and the passed vector
-     * @name minV
-     * @memberof Vector3d
-     * @param {Vector2d|Vector3d} v
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    minV(v) {
-        var _vz = v.z || 0;
-        return this._set((this.x < v.x) ? this.x : v.x, (this.y < v.y) ? this.y : v.y, (this.z < _vz) ? this.z : _vz);
-    }
-
-    /**
-     * Update this vector with the maximum value between this and the passed vector
-     * @name maxV
-     * @memberof Vector3d
-     * @param {Vector2d|Vector3d} v
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    maxV(v) {
-        var _vz = v.z || 0;
-        return this._set((this.x > v.x) ? this.x : v.x, (this.y > v.y) ? this.y : v.y, (this.z > _vz) ? this.z : _vz);
-    }
-
-    /**
-     * Floor the vector values
-     * @name floor
-     * @memberof Vector3d
-     * @returns {Vector3d} new me.Vector3d
-     */
-    floor() {
-        return new Vector3d(Math.floor(this.x), Math.floor(this.y), Math.floor(this.z));
-    }
-
-    /**
-     * Floor this vector values
-     * @name floorSelf
-     * @memberof Vector3d
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    floorSelf() {
-        return this._set(Math.floor(this.x), Math.floor(this.y), Math.floor(this.z));
-    }
-
-    /**
-     * Ceil the vector values
-     * @name ceil
-     * @memberof Vector3d
-     * @returns {Vector3d} new me.Vector3d
-     */
-    ceil() {
-        return new Vector3d(Math.ceil(this.x), Math.ceil(this.y), Math.ceil(this.z));
-    }
-
-    /**
-     * Ceil this vector values
-     * @name ceilSelf
-     * @memberof Vector3d
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    ceilSelf() {
-        return this._set(Math.ceil(this.x), Math.ceil(this.y), Math.ceil(this.z));
-    }
-
-    /**
-     * Negate the vector values
-     * @name negate
-     * @memberof Vector3d
-     * @returns {Vector3d} new me.Vector3d
-     */
-    negate() {
-        return new Vector3d(-this.x, -this.y, -this.z);
-    }
-
-    /**
-     * Negate this vector values
-     * @name negateSelf
-     * @memberof Vector3d
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    negateSelf() {
-        return this._set(-this.x, -this.y, -this.z);
-    }
-
-    /**
-     * Copy the components of the given vector into this one
-     * @name copy
-     * @memberof Vector3d
-     * @param {Vector2d|Vector3d} v
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    copy(v) {
-        return this._set(v.x, v.y, v.z || 0);
-    }
-
-    /**
-     * return true if the two vectors are the same
-     * @name equals
-     * @memberof Vector3d
-     * @method
-     * @param {Vector2d|Vector3d} v
-     * @returns {boolean}
-     */
-    /**
-     * return true if this vector is equal to the given values
-     * @name equals
-     * @memberof Vector3d
-     * @param {number} x
-     * @param {number} y
-     * @param {number} [z]
-     * @returns {boolean}
-     */
-    equals() {
-        var _x, _y, _z;
-        if (arguments.length >= 2) {
-            // x, y, z
-            _x = arguments[0];
-            _y = arguments[1];
-            _z = arguments[2];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-            _z = arguments[0].z;
-        }
-
-        if (typeof _z === "undefined") {
-            _z = this.z;
-        }
-
-        return ((this.x === _x) && (this.y === _y) && (this.z === _z));
-    }
-
-    /**
-     * normalize this vector (scale the vector so that its magnitude is 1)
-     * @name normalize
-     * @memberof Vector3d
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    normalize() {
-        return this.div(this.length() || 1);
-    }
-
-    /**
-     * change this vector to be perpendicular to what it was before.<br>
-     * (Effectively rotates it 90 degrees in a clockwise direction around the z axis)
-     * @name perp
-     * @memberof Vector3d
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    perp() {
-        return this._set(this.y, -this.x, this.z);
-    }
-
-    /**
-     * Rotate this vector (counter-clockwise) by the specified angle (in radians) around the z axis
-     * @name rotate
-     * @memberof Vector3d
-     * @param {number} angle - The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around (on the same z axis)
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    rotate(angle, v) {
-        var cx = 0;
-        var cy = 0;
-
-        if (typeof v === "object") {
-            cx = v.x;
-            cy = v.y;
-        }
-
-        // TODO also rotate on the z axis if the given vector is a 3d one
-        var x = this.x - cx;
-        var y = this.y - cy;
-
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
-
-        return this._set(x * c - y * s + cx, x * s + y * c + cy, this.z);
-    }
-
-    /**
-     * return the dot product of this vector and the passed one
-     * @name dot
-     * @memberof Vector3d
-     * @param {Vector2d|Vector3d} v
-     * @returns {number} The dot product.
-     */
-    dot(v) {
-        return this.x * v.x + this.y * v.y + this.z * (typeof(v.z) !== "undefined" ? v.z : this.z);
-    }
-
-    /**
-     * calculate the cross product of this vector and the passed one
-     * @name cross
-     * @memberof Vector3d
-     * @param {Vector3d} v
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    cross(v) {
-        var ax = this.x, ay = this.y, az = this.z;
-        var bx = v.x, by = v.y, bz = v.z;
-
-        this.x = ay * bz - az * by;
-        this.y = az * bx - ax * bz;
-        this.z = ax * by - ay * bx;
-
-        return this;
-    }
-
-   /**
-    * return the square length of this vector
-    * @name length2
-    * @memberof Vector3d
-    * @returns {number} The length^2 of this vector.
-    */
-    length2() {
-        return this.dot(this);
-    }
-
-    /**
-     * return the length (magnitude) of this vector
-     * @name length
-     * @memberof Vector3d
-     * @returns {number} the length of this vector
-     */
-    length() {
-        return Math.sqrt(this.length2());
-    }
-
-    /**
-     * Linearly interpolate between this vector and the given one.
-     * @name lerp
-     * @memberof Vector3d
-     * @param {Vector3d} v
-     * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    lerp(v, alpha) {
-        this.x += ( v.x - this.x ) * alpha;
-        this.y += ( v.y - this.y ) * alpha;
-        this.z += ( v.z - this.z ) * alpha;
-        return this;
-    }
-
-    /**
-     * interpolate the position of this vector on the x and y axis towards the given one by the given maximum step.
-     * @name moveTowards
-     * @memberof Vector3d
-     * @param {Vector2d|Vector3d} target
-     * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    moveTowards(target, step) {
-        var angle = Math.atan2(target.y - this.y, target.x - this.x);
-
-        var dx = this.x - target.x;
-        var dy = this.y - target.y;
-
-        var distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance === 0 || (step >= 0 && distance <= step * step)) {
-            return target;
-        }
-
-        this.x += Math.cos(angle) * step;
-        this.y += Math.sin(angle) * step;
-
-        return this;
-    }
-
-    /**
-     * return the distance between this vector and the passed one
-     * @name distance
-     * @memberof Vector3d
-     * @param {Vector2d|Vector3d} v
-     * @returns {number}
-     */
-    distance(v) {
-        var dx = this.x - v.x;
-        var dy = this.y - v.y;
-        var dz = this.z - (v.z || 0);
-        return Math.sqrt(dx * dx + dy * dy + dz * dz);
-    }
-
-    /**
-     * return the angle between this vector and the passed one
-     * @name angle
-     * @memberof Vector3d
-     * @param {Vector2d|Vector3d} v
-     * @returns {number} angle in radians
-     */
-    angle(v) {
-        return Math.acos(clamp(this.dot(v) / (this.length() * v.length()), -1, 1));
-    }
-
-    /**
-     * project this vector on to another vector.
-     * @name project
-     * @memberof Vector3d
-     * @param {Vector2d|Vector3d} v - The vector to project onto.
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    project(v) {
-        var ratio = this.dot(v) / v.length2();
-        return this.scale(ratio, ratio, ratio);
-    }
-
-    /**
-     * Project this vector onto a vector of unit length.<br>
-     * This is slightly more efficient than `project` when dealing with unit vectors.
-     * @name projectN
-     * @memberof Vector3d
-     * @param {Vector2d|Vector3d} v - The unit vector to project onto.
-     * @returns {Vector3d} Reference to this object for method chaining
-     */
-    projectN(v) {
-        var ratio = this.dot(v) / v.length2();
-        return this.scale(ratio, ratio, ratio);
-    }
-
-    /**
-     * return a clone copy of this vector
-     * @name clone
-     * @memberof Vector3d
-     * @returns {Vector3d} new me.Vector3d
-     */
-    clone() {
-        return pool.pull("Vector3d", this.x, this.y, this.z);
-    }
-
-    /**
-     * convert the object to a string representation
-     * @name toString
-     * @memberof Vector3d
-     * @returns {string}
-     */
-    toString() {
-        return "x:" + this.x + ",y:" + this.y + ",z:" + this.z;
-    }
-}
-
-/**
- * @classdesc
- * A Vector2d object that provide notification by executing the given callback when the vector is changed.
- * @augments Vector2d
- */
- class ObservableVector2d extends Vector2d {
-    /**
-     * @param {number} x - x value of the vector
-     * @param {number} y - y value of the vector
-     * @param {object} settings - additional required parameters
-     * @param {Function} settings.onUpdate - the callback to be executed when the vector is changed
-     * @param {Function} [settings.scope] - the value to use as this when calling onUpdate
-     */
-    constructor(x = 0, y = 0, settings) {
-        super(x, y);
-        if (typeof(settings) === "undefined") {
-            throw new Error(
-                "undefined `onUpdate` callback"
-            );
-        }
-        this.setCallback(settings.onUpdate, settings.scope);
-    }
-
-    /**
-     * @ignore
-     */
-    onResetEvent(x = 0, y = 0, settings) {
-        // init is call by the constructor and does not trigger the cb
-        this.setMuted(x, y);
-        if (typeof settings !== "undefined") {
-            this.setCallback(settings.onUpdate, settings.scope);
-        }
-        return this;
-    }
-
-    /**
-     * x value of the vector
-     * @public
-     * @type {number}
-     * @name x
-     * @memberof ObservableVector2d
-     */
-
-    get x() {
-        return this._x;
-    }
-
-    set x(value) {
-        var ret = this.onUpdate.call(this.scope, value, this._y, this._x, this._y);
-        if (ret && "x" in ret) {
-            this._x = ret.x;
-        } else {
-            this._x = value;
-        }
-    }
-
-
-    /**
-     * y value of the vector
-     * @public
-     * @type {number}
-     * @name y
-     * @memberof ObservableVector2d
-     */
-
-    get y() {
-        return this._y;
-    }
-
-    set y(value) {
-        var ret = this.onUpdate.call(this.scope, this._x, value, this._x, this._y);
-        if (ret && "y" in ret) {
-            this._y = ret.y;
-        } else {
-            this._y = value;
-        }
-    }
-
-    /** @ignore */
-    _set(x, y) {
-        var ret = this.onUpdate.call(this.scope, x, y, this._x, this._y);
-        if (ret && "x" in ret && "y" in ret) {
-            this._x = ret.x;
-            this._y = ret.y;
-        } else {
-          this._x = x;
-          this._y = y;
-       }
-       return this;
-    }
-
-    /**
-     * set the vector value without triggering the callback
-     * @name setMuted
-     * @memberof ObservableVector2d
-     * @param {number} x - x value of the vector
-     * @param {number} y - y value of the vector
-     * @returns {ObservableVector2d} Reference to this object for method chaining
-     */
-    setMuted(x, y) {
-        this._x = x;
-        this._y = y;
-        return this;
-    }
-
-    /**
-     * set the callback to be executed when the vector is changed
-     * @name setCallback
-     * @memberof ObservableVector2d
-     * @param {Function} fn - callback
-     * @param {Function} [scope=null] - scope
-     * @returns {ObservableVector2d} Reference to this object for method chaining
-     */
-    setCallback(fn, scope = null) {
-        if (typeof(fn) !== "function") {
-            throw new Error(
-                "invalid `onUpdate` callback"
-            );
-        }
-        this.onUpdate = fn;
-        this.scope = scope;
-        return this;
-    }
-
-    /**
-     * Add the passed vector to this vector
-     * @name add
-     * @memberof ObservableVector2d
-     * @param {ObservableVector2d} v
-     * @returns {ObservableVector2d} Reference to this object for method chaining
-     */
-    add(v) {
-        return this._set(this._x + v.x, this._y + v.y);
-    }
-
-    /**
-     * Substract the passed vector to this vector
-     * @name sub
-     * @memberof ObservableVector2d
-     * @param {ObservableVector2d} v
-     * @returns {ObservableVector2d} Reference to this object for method chaining
-     */
-    sub(v) {
-        return this._set(this._x - v.x, this._y - v.y);
-    }
-
-    /**
-     * Multiply this vector values by the given scalar
-     * @name scale
-     * @memberof ObservableVector2d
-     * @param {number} x
-     * @param {number} [y=x]
-     * @returns {ObservableVector2d} Reference to this object for method chaining
-     */
-    scale(x, y = x) {
-        return this._set(this._x * x, this._y * y);
-    }
-
-    /**
-     * Multiply this vector values by the passed vector
-     * @name scaleV
-     * @memberof ObservableVector2d
-     * @param {ObservableVector2d} v
-     * @returns {ObservableVector2d} Reference to this object for method chaining
-     */
-    scaleV(v) {
-        return this._set(this._x * v.x, this._y * v.y);
-    }
-
-    /**
-     * Divide this vector values by the passed value
-     * @name div
-     * @memberof ObservableVector2d
-     * @param {number} n - the value to divide the vector by
-     * @returns {ObservableVector2d} Reference to this object for method chaining
-     */
-    div(n) {
-        return this._set(this._x / n, this._y / n);
-    }
-
-    /**
-     * Update this vector values to absolute values
-     * @name abs
-     * @memberof ObservableVector2d
-     * @returns {ObservableVector2d} Reference to this object for method chaining
-     */
-    abs() {
-        return this._set((this._x < 0) ? -this._x : this._x, (this._y < 0) ? -this._y : this._y);
-    }
-
-    /**
-     * Clamp the vector value within the specified value range
-     * @name clamp
-     * @memberof ObservableVector2d
-     * @param {number} low
-     * @param {number} high
-     * @returns {ObservableVector2d} new me.ObservableVector2d
-     */
-    clamp(low, high) {
-        return new ObservableVector2d(clamp(this.x, low, high), clamp(this.y, low, high), {onUpdate: this.onUpdate, scope: this.scope});
-    }
-
-    /**
-     * Clamp this vector value within the specified value range
-     * @name clampSelf
-     * @memberof ObservableVector2d
-     * @param {number} low
-     * @param {number} high
-     * @returns {ObservableVector2d} Reference to this object for method chaining
-     */
-    clampSelf(low, high) {
-        return this._set(clamp(this._x, low, high), clamp(this._y, low, high));
-    }
-
-    /**
-     * Update this vector with the minimum value between this and the passed vector
-     * @name minV
-     * @memberof ObservableVector2d
-     * @param {ObservableVector2d} v
-     * @returns {ObservableVector2d} Reference to this object for method chaining
-     */
-    minV(v) {
-        return this._set((this._x < v.x) ? this._x : v.x, (this._y < v.y) ? this._y : v.y);
-    }
-
-    /**
-     * Update this vector with the maximum value between this and the passed vector
-     * @name maxV
-     * @memberof ObservableVector2d
-     * @param {ObservableVector2d} v
-     * @returns {ObservableVector2d} Reference to this object for method chaining
-     */
-    maxV(v) {
-        return this._set((this._x > v.x) ? this._x : v.x, (this._y > v.y) ? this._y : v.y);
-    }
-
-    /**
-     * Floor the vector values
-     * @name floor
-     * @memberof ObservableVector2d
-     * @returns {ObservableVector2d} new me.ObservableVector2d
-     */
-    floor() {
-        return new ObservableVector2d(Math.floor(this._x), Math.floor(this._y), {onUpdate: this.onUpdate, scope: this.scope});
-    }
-
-    /**
-     * Floor this vector values
-     * @name floorSelf
-     * @memberof ObservableVector2d
-     * @returns {ObservableVector2d} Reference to this object for method chaining
-     */
-    floorSelf() {
-        return this._set(Math.floor(this._x), Math.floor(this._y));
-    }
-
-    /**
-     * Ceil the vector values
-     * @name ceil
-     * @memberof ObservableVector2d
-     * @returns {ObservableVector2d} new me.ObservableVector2d
-     */
-    ceil() {
-        return new ObservableVector2d(Math.ceil(this._x), Math.ceil(this._y), {onUpdate: this.onUpdate, scope: this.scope});
-    }
-
-    /**
-     * Ceil this vector values
-     * @name ceilSelf
-     * @memberof ObservableVector2d
-     * @returns {ObservableVector2d} Reference to this object for method chaining
-     */
-    ceilSelf() {
-        return this._set(Math.ceil(this._x), Math.ceil(this._y));
-    }
-
-    /**
-     * Negate the vector values
-     * @name negate
-     * @memberof ObservableVector2d
-     * @returns {ObservableVector2d} new me.ObservableVector2d
-     */
-    negate() {
-        return new ObservableVector2d(-this._x, -this._y, {onUpdate: this.onUpdate, scope: this.scope});
-    }
-
-    /**
-     * Negate this vector values
-     * @name negateSelf
-     * @memberof ObservableVector2d
-     * @returns {ObservableVector2d} Reference to this object for method chaining
-     */
-    negateSelf() {
-        return this._set(-this._x, -this._y);
-    }
-
-    /**
-     * Copy the x,y values of the passed vector to this one
-     * @name copy
-     * @memberof ObservableVector2d
-     * @param {ObservableVector2d} v
-     * @returns {ObservableVector2d} Reference to this object for method chaining
-     */
-    copy(v) {
-        return this._set(v.x, v.y);
-    }
-
-    /**
-     * return true if the two vectors are the same
-     * @name equals
-     * @memberof ObservableVector2d
-     * @param {ObservableVector2d} v
-     * @returns {boolean}
-     */
-    equals(v) {
-        return ((this._x === v.x) && (this._y === v.y));
-    }
-
-    /**
-     * change this vector to be perpendicular to what it was before.<br>
-     * (Effectively rotates it 90 degrees in a clockwise direction)
-     * @name perp
-     * @memberof ObservableVector2d
-     * @returns {ObservableVector2d} Reference to this object for method chaining
-     */
-    perp() {
-        return this._set(this._y, -this._x);
-    }
-
-    /**
-     * Rotate this vector (counter-clockwise) by the specified angle (in radians).
-     * @name rotate
-     * @memberof ObservableVector2d
-     * @param {number} angle - The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
-     * @returns {ObservableVector2d} Reference to this object for method chaining
-     */
-    rotate(angle, v) {
-        var cx = 0;
-        var cy = 0;
-
-        if (typeof v === "object") {
-            cx = v.x;
-            cy = v.y;
-        }
-
-        var x = this._x - cx;
-        var y = this._y - cy;
-
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
-
-        return this._set(x * c - y * s + cx, x * s + y * c + cy);
-    }
-
-    /**
-     * return the dot product of this vector and the passed one
-     * @name dot
-     * @memberof ObservableVector2d
-     * @param {Vector2d|ObservableVector2d} v
-     * @returns {number} The dot product.
-     */
-    dot(v) {
-        return this._x * v.x + this._y * v.y;
-    }
-
-    /**
-     * return the cross product of this vector and the passed one
-     * @name cross
-     * @memberof ObservableVector2d
-     * @param {Vector2d|ObservableVector2d} v
-     * @returns {number} The cross product.
-     */
-    cross(v) {
-        return this._x * v.y - this._y * v.x;
-    }
-
-    /**
-     * Linearly interpolate between this vector and the given one.
-     * @name lerp
-     * @memberof ObservableVector2d
-     * @param {Vector2d|ObservableVector2d} v
-     * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
-     * @returns {ObservableVector2d} Reference to this object for method chaining
-     */
-    lerp(v, alpha) {
-        return this._set(
-            this._x + ( v.x - this._x ) * alpha,
-            this._y + ( v.y - this._y ) * alpha
-        );
-    }
-
-    /**
-     * interpolate the position of this vector towards the given one while nsure that the distance never exceeds the given step.
-     * @name moveTowards
-     * @memberof ObservableVector2d
-     * @param {Vector2d|ObservableVector2d} target
-     * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
-     * @returns {ObservableVector2d} Reference to this object for method chaining
-     */
-     moveTowards(target, step) {
-        var angle = Math.atan2(target.y - this._y, target.x - this._x);
-
-        var distance = this.distance(target);
-
-        if (distance === 0 || (step >= 0 && distance <= step * step)) {
-            return target;
-        }
-
-        this._x += Math.cos(angle) * step;
-        this._y += Math.sin(angle) * step;
-
-        return this;
-    }
-
-    /**
-     * return the distance between this vector and the passed one
-     * @name distance
-     * @memberof ObservableVector2d
-     * @param {ObservableVector2d} v
-     * @returns {number}
-     */
-    distance(v) {
-        return Math.sqrt((this._x - v.x) * (this._x - v.x) + (this._y - v.y) * (this._y - v.y));
-    }
-
-    /**
-     * return a clone copy of this vector
-     * @name clone
-     * @memberof ObservableVector2d
-     * @returns {ObservableVector2d} new me.ObservableVector2d
-     */
-    clone() {
-        return pool.pull("ObservableVector2d", this._x, this._y, {onUpdate: this.onUpdate, scope: this.scope});
-    }
-
-    /**
-     * return a `me.Vector2d` copy of this `me.ObservableVector2d` object
-     * @name toVector2d
-     * @memberof ObservableVector2d
-     * @returns {Vector2d} new me.Vector2d
-     */
-    toVector2d() {
-        return pool.pull("Vector2d", this._x, this._y);
-    }
-
-    /**
-     * convert the object to a string representation
-     * @name toString
-     * @memberof ObservableVector2d
-     * @returns {string}
-     */
-    toString() {
-        return "x:" + this._x + ",y:" + this._y;
-    }
-}
-
-/**
- * @classdesc
- * A Vector3d object that provide notification by executing the given callback when the vector is changed.
- * @augments Vector3d
- */
- class ObservableVector3d extends Vector3d {
-    /**
-     * @param {number} x - x value of the vector
-     * @param {number} y - y value of the vector
-     * @param {number} z - z value of the vector
-     * @param {object} settings - additional required parameters
-     * @param {Function} settings.onUpdate - the callback to be executed when the vector is changed
-     * @param {object} [settings.scope] - the value to use as this when calling onUpdate
-     */
-    constructor(x = 0, y = 0, z = 0, settings) {
-        super(x, y, z);
-        if (typeof(settings) === "undefined") {
-            throw new Error(
-                "undefined `onUpdate` callback"
-            );
-        }
-        this.setCallback(settings.onUpdate, settings.scope);
-    }
-
-    /**
-     * @ignore
-     */
-    onResetEvent(x = 0, y = 0, z = 0, settings) {
-        // init is call by the constructor and does not trigger the cb
-        this.setMuted(x, y, z);
-        if (typeof settings !== "undefined") {
-            this.setCallback(settings.onUpdate, settings.scope);
-        }
-        return this;
-    }
-
-    /**
-     * x value of the vector
-     * @public
-     * @type {number}
-     * @name x
-     * @memberof ObservableVector3d
-     */
-
-    get x() {
-        return this._x;
-    }
-
-    set x(value) {
-        var ret = this.onUpdate.call(this.scope, value, this._y, this._z, this._x, this._y, this._z);
-        if (ret && "x" in ret) {
-            this._x = ret.x;
-        } else {
-            this._x = value;
-        }
-    }
-
-    /**
-     * y value of the vector
-     * @public
-     * @type {number}
-     * @name y
-     * @memberof ObservableVector3d
-     */
-
-    get y() {
-        return this._y;
-    }
-
-    set y(value) {
-        var ret = this.onUpdate.call(this.scope, this._x, value, this._z, this._x, this._y, this._z);
-        if (ret && "y" in ret) {
-            this._y = ret.y;
-        } else {
-            this._y = value;
-        }
-    }
-
-
-    /**
-     * z value of the vector
-     * @public
-     * @type {number}
-     * @name z
-     * @memberof ObservableVector3d
-     */
-
-
-    get z() {
-        return this._z;
-    }
-
-    set z(value) {
-        var ret = this.onUpdate.call(this.scope, this._x, this._y, value, this._x, this._y, this._z);
-        if (ret && "z" in ret) {
-            this._z = ret.z;
-        } else {
-            this._z = value;
-        }
-    }
-
-    /**
-     * @ignore
-     */
-    _set(x, y, z) {
-        var ret = this.onUpdate.call(this.scope, x, y, z, this._x, this._y, this._z);
-        if (ret && "x" in ret && "y" in ret && "z" in ret) {
-            this._x = ret.x;
-            this._y = ret.y;
-            this._z = ret.z;
-        } else {
-          this._x = x;
-          this._y = y;
-          this._z = z || 0;
-        }
-        return this;
-    }
-
-    /**
-     * set the vector value without triggering the callback
-     * @name setMuted
-     * @memberof ObservableVector3d
-     * @param {number} x - x value of the vector
-     * @param {number} y - y value of the vector
-     * @param {number} [z=0] - z value of the vector
-     * @returns {ObservableVector3d} Reference to this object for method chaining
-     */
-    setMuted(x, y, z) {
-        this._x = x;
-        this._y = y;
-        this._z = z || 0;
-        return this;
-    }
-
-    /**
-     * set the callback to be executed when the vector is changed
-     * @name setCallback
-     * @memberof ObservableVector3d
-     * @param {Function} fn - callback
-     * @param {Function} [scope=null] - scope
-     * @returns {ObservableVector3d} Reference to this object for method chaining
-     */
-    setCallback(fn, scope = null) {
-        if (typeof(fn) !== "function") {
-            throw new Error(
-                "invalid `onUpdate` callback"
-            );
-        }
-        this.onUpdate = fn;
-        this.scope = scope;
-        return this;
-    }
-
-    /**
-     * Add the passed vector to this vector
-     * @name add
-     * @memberof ObservableVector3d
-     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
-     * @returns {ObservableVector3d} Reference to this object for method chaining
-     */
-    add(v) {
-        return this._set(this._x + v.x, this._y + v.y, this._z + (v.z || 0));
-    }
-
-    /**
-     * Substract the passed vector to this vector
-     * @name sub
-     * @memberof ObservableVector3d
-     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
-     * @returns {ObservableVector3d} Reference to this object for method chaining
-     */
-    sub(v) {
-        return this._set(this._x - v.x, this._y - v.y, this._z - (v.z || 0));
-    }
-
-    /**
-     * Multiply this vector values by the given scalar
-     * @name scale
-     * @memberof ObservableVector3d
-     * @param {number} x
-     * @param {number} [y=x]
-     * @param {number} [z=1]
-     * @returns {ObservableVector3d} Reference to this object for method chaining
-     */
-    scale(x, y = x, z = 1) {
-        return this._set(this._x * x, this._y * y, this._z * z);
-    }
-
-    /**
-     * Multiply this vector values by the passed vector
-     * @name scaleV
-     * @memberof ObservableVector3d
-     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
-     * @returns {ObservableVector3d} Reference to this object for method chaining
-     */
-    scaleV(v) {
-        return this._set(this._x * v.x, this._y * v.y, this._z * (v.z || 1));
-    }
-
-    /**
-     * Divide this vector values by the passed value
-     * @name div
-     * @memberof ObservableVector3d
-     * @param {number} n - the value to divide the vector by
-     * @returns {ObservableVector3d} Reference to this object for method chaining
-     */
-    div(n) {
-        return this._set(this._x / n, this._y / n, this._z / n);
-    }
-
-    /**
-     * Update this vector values to absolute values
-     * @name abs
-     * @memberof ObservableVector3d
-     * @returns {ObservableVector3d} Reference to this object for method chaining
-     */
-    abs() {
-        return this._set(
-            (this._x < 0) ? -this._x : this._x,
-            (this._y < 0) ? -this._y : this._y,
-            (this._Z < 0) ? -this._z : this._z
-        );
-    }
-
-    /**
-     * Clamp the vector value within the specified value range
-     * @name clamp
-     * @memberof ObservableVector3d
-     * @param {number} low
-     * @param {number} high
-     * @returns {ObservableVector3d} new me.ObservableVector3d
-     */
-    clamp(low, high) {
-        return new ObservableVector3d(
-            clamp(this._x, low, high),
-            clamp(this._y, low, high),
-            clamp(this._z, low, high),
-            {onUpdate: this.onUpdate, scope: this.scope}
-        );
-    }
-
-    /**
-     * Clamp this vector value within the specified value range
-     * @name clampSelf
-     * @memberof ObservableVector3d
-     * @param {number} low
-     * @param {number} high
-     * @returns {ObservableVector3d} Reference to this object for method chaining
-     */
-    clampSelf(low, high) {
-        return this._set(
-            clamp(this._x, low, high),
-            clamp(this._y, low, high),
-            clamp(this._z, low, high)
-        );
-    }
-
-    /**
-     * Update this vector with the minimum value between this and the passed vector
-     * @name minV
-     * @memberof ObservableVector3d
-     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
-     * @returns {ObservableVector3d} Reference to this object for method chaining
-     */
-    minV(v) {
-        var _vz = v.z || 0;
-        return this._set(
-            (this._x < v.x) ? this._x : v.x,
-            (this._y < v.y) ? this._y : v.y,
-            (this._z < _vz) ? this._z : _vz
-        );
-    }
-
-    /**
-     * Update this vector with the maximum value between this and the passed vector
-     * @name maxV
-     * @memberof ObservableVector3d
-     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
-     * @returns {ObservableVector3d} Reference to this object for method chaining
-     */
-    maxV(v) {
-        var _vz = v.z || 0;
-        return this._set(
-            (this._x > v.x) ? this._x : v.x,
-            (this._y > v.y) ? this._y : v.y,
-            (this._z > _vz) ? this._z : _vz
-        );
-    }
-
-    /**
-     * Floor the vector values
-     * @name floor
-     * @memberof ObservableVector3d
-     * @returns {ObservableVector3d} new me.ObservableVector3d
-     */
-    floor() {
-        return new ObservableVector3d(
-            Math.floor(this._x),
-            Math.floor(this._y),
-            Math.floor(this._z),
-            {onUpdate: this.onUpdate, scope: this.scope}
-        );
-    }
-
-    /**
-     * Floor this vector values
-     * @name floorSelf
-     * @memberof ObservableVector3d
-     * @returns {ObservableVector3d} Reference to this object for method chaining
-     */
-    floorSelf() {
-        return this._set(Math.floor(this._x), Math.floor(this._y), Math.floor(this._z));
-    }
-
-    /**
-     * Ceil the vector values
-     * @name ceil
-     * @memberof ObservableVector3d
-     * @returns {ObservableVector3d} new me.ObservableVector3d
-     */
-    ceil() {
-        return new ObservableVector3d(
-            Math.ceil(this._x),
-            Math.ceil(this._y),
-            Math.ceil(this._z),
-            {onUpdate: this.onUpdate, scope: this.scope}
-        );
-    }
-
-    /**
-     * Ceil this vector values
-     * @name ceilSelf
-     * @memberof ObservableVector3d
-     * @returns {ObservableVector3d} Reference to this object for method chaining
-     */
-    ceilSelf() {
-        return this._set(Math.ceil(this._x), Math.ceil(this._y), Math.ceil(this._z));
-    }
-
-    /**
-     * Negate the vector values
-     * @name negate
-     * @memberof ObservableVector3d
-     * @returns {ObservableVector3d} new me.ObservableVector3d
-     */
-    negate() {
-        return new ObservableVector3d(
-            -this._x,
-            -this._y,
-            -this._z,
-            {onUpdate: this.onUpdate, scope: this.scope}
-        );
-    }
-
-    /**
-     * Negate this vector values
-     * @name negateSelf
-     * @memberof ObservableVector3d
-     * @returns {ObservableVector3d} Reference to this object for method chaining
-     */
-    negateSelf() {
-        return this._set(-this._x, -this._y, -this._z);
-    }
-
-    /**
-     * Copy the components of the given vector into this one
-     * @name copy
-     * @memberof ObservableVector3d
-     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
-     * @returns {ObservableVector3d} Reference to this object for method chaining
-     */
-    copy(v) {
-        return this._set(v.x, v.y, v.z || 0);
-    }
-
-    /**
-     * return true if the two vectors are the same
-     * @name equals
-     * @memberof ObservableVector3d
-     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
-     * @returns {boolean}
-     */
-    equals(v) {
-        return ((this._x === v.x) && (this._y === v.y) && (this._z === (v.z || this._z)));
-    }
-
-    /**
-     * change this vector to be perpendicular to what it was before.<br>
-     * (Effectively rotates it 90 degrees in a clockwise direction)
-     * @name perp
-     * @memberof ObservableVector3d
-     * @returns {ObservableVector3d} Reference to this object for method chaining
-     */
-    perp() {
-        return this._set(this._y, -this._x, this._z);
-    }
-
-    /**
-     * Rotate this vector (counter-clockwise) by the specified angle (in radians).
-     * @name rotate
-     * @memberof ObservableVector3d
-     * @param {number} angle - The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around (on the same z axis)
-     * @returns {ObservableVector3d} Reference to this object for method chaining
-     */
-    rotate(angle, v) {
-        var cx = 0;
-        var cy = 0;
-
-        if (typeof v === "object") {
-            cx = v.x;
-            cy = v.y;
-        }
-
-        // TODO also rotate on the z axis if the given vector is a 3d one
-        var x = this.x - cx;
-        var y = this.y - cy;
-
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
-
-        return this._set(x * c - y * s + cx, x * s + y * c + cy, this.z);
-    }
-
-    /**
-     * return the dot product of this vector and the passed one
-     * @name dot
-     * @memberof ObservableVector3d
-     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
-     * @returns {number} The dot product.
-     */
-    dot(v) {
-        return this._x * v.x + this._y * v.y + this._z * (v.z || 1);
-    }
-
-    /**
-     * calculate the cross product of this vector and the passed one
-     * @name cross
-     * @memberof ObservableVector3d
-     * @param {Vector3d|ObservableVector3d} v
-     * @returns {ObservableVector3d} Reference to this object for method chaining
-     */
-    cross(v) {
-        var ax = this._x, ay = this._y, az = this._z;
-        var bx = v.x, by = v.y, bz = v.z;
-
-        return this._set(
-            ay * bz - az * by,
-            az * bx - ax * bz,
-            ax * by - ay * bx
-        );
-    }
-
-    /**
-     * Linearly interpolate between this vector and the given one.
-     * @name lerp
-     * @memberof ObservableVector3d
-     * @param {Vector3d|ObservableVector3d} v
-     * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
-     * @returns {ObservableVector3d} Reference to this object for method chaining
-     */
-    lerp(v, alpha) {
-        return this._set(
-            this._x + ( v.x - this._x ) * alpha,
-            this._y + ( v.y - this._y ) * alpha,
-            this._z + ( v.z - this._z ) * alpha
-        );
-    }
-
-    /**
-     * interpolate the position of this vector on the x and y axis towards the given one while ensure that the distance never exceeds the given step.
-     * @name moveTowards
-     * @memberof ObservableVector3d
-     * @param {Vector2d|ObservableVector2d|Vector3d|ObservableVector3d} target
-     * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
-     * @returns {ObservableVector3d} Reference to this object for method chaining
-     */
-    moveTowards(target, step) {
-        var angle = Math.atan2(target.y - this._y, target.x - this._x);
-
-        var dx = this._x - target.x;
-        var dy = this._y - target.y;
-
-        var distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance === 0 || (step >= 0 && distance <= step * step)) {
-            return target;
-        }
-
-        return this._set(
-            this._x + Math.cos(angle) * step,
-            this._y + Math.sin(angle) * step,
-            this._z
-        );
-    }
-
-    /**
-     * return the distance between this vector and the passed one
-     * @name distance
-     * @memberof ObservableVector3d
-     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
-     * @returns {number}
-     */
-    distance(v) {
-        var dx = this._x - v.x;
-        var dy = this._y - v.y;
-        var dz = this._z - (v.z || 0);
-        return Math.sqrt(dx * dx + dy * dy + dz * dz);
-    }
-
-    /**
-     * return a clone copy of this vector
-     * @name clone
-     * @memberof ObservableVector3d
-     * @returns {ObservableVector3d} new me.ObservableVector3d
-     */
-    clone() {
-        return pool.pull("ObservableVector3d",
-            this._x,
-            this._y,
-            this._z,
-            {onUpdate: this.onUpdate}
-        );
-    }
-
-    /**
-     * return a `me.Vector3d` copy of this `me.ObservableVector3d` object
-     * @name toVector3d
-     * @memberof ObservableVector3d
-     * @returns {Vector3d} new me.Vector3d
-     */
-    toVector3d() {
-        return pool.pull("Vector3d", this._x, this._y, this._z);
-    }
-
-    /**
-     * convert the object to a string representation
-     * @name toString
-     * @memberof ObservableVector3d
-     * @returns {string}
-     */
-    toString() {
-        return "x:" + this._x + ",y:" + this._y + ",z:" + this._z;
-    }
-}
-
-/**
- * @classdesc
- * a 4x4 Matrix3d Object
- */
- class Matrix3d {
-    /**
-     * @param {(Matrix3d|...number)} args - An instance of me.Matrix3d to copy from, or individual Matrix components (See {@link Matrix3d.setTransform}). If not arguments are given, the matrix will be set to Identity.
-     */
-    constructor(...args) {
-        this.onResetEvent(...args);
-    }
-
-    /**
-     * @ignore
-     */
-    onResetEvent() {
-        if (typeof this.val === "undefined") {
-            this.val = new Float32Array(16);
-        }
-
-        if (arguments.length && arguments[0] instanceof Matrix3d) {
-            this.copy(arguments[0]);
-        }
-        else if (arguments.length === 16) {
-            this.setTransform.apply(this, arguments);
-        }
-        else {
-            this.identity();
-        }
-    }
-
-    /**
-     * tx component of the matrix
-     * @public
-     * @type {number}
-     * @name tx
-     * @memberof Matrix3d
-     */
-    get tx() {
-        return this.val[12];
-    }
-
-    /**
-     * ty component of the matrix
-     * @public
-     * @type {number}
-     * @name ty
-     * @memberof Matrix3d
-     */
-    get ty() {
-        return this.val[13];
-    }
-
-    /**
-     * ty component of the matrix
-     * @public
-     * @type {number}
-     * @name tz
-     * @memberof Matrix3d
-     */
-    get tz() {
-        return this.val[14];
-    }
-
-    /**
-     * reset the transformation matrix to the identity matrix (no transformation).<br>
-     * the identity matrix and parameters position : <br>
-     * <img src="images/identity-matrix_2x.png"/>
-     * @name identity
-     * @memberof Matrix3d
-     * @returns {Matrix3d} Reference to this object for method chaining
-     */
-    identity() {
-        return this.setTransform(
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1
-        );
-    }
-
-    /**
-     * set the matrix to the specified value
-     * @name setTransform
-     * @memberof Matrix3d
-     * @param {number} m00
-     * @param {number} m01
-     * @param {number} m02
-     * @param {number} m03
-     * @param {number} m10
-     * @param {number} m11
-     * @param {number} m12
-     * @param {number} m13
-     * @param {number} m20
-     * @param {number} m21
-     * @param {number} m22
-     * @param {number} m23
-     * @param {number} m30
-     * @param {number} m31
-     * @param {number} m32
-     * @param {number} m33
-     * @returns {Matrix3d} Reference to this object for method chaining
-     */
-    setTransform(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33) {
-        var a = this.val;
-
-        a[0] = m00;
-        a[1] = m01;
-        a[2] = m02;
-        a[3] = m03;
-        a[4] = m10;
-        a[5] = m11;
-        a[6] = m12;
-        a[7] = m13;
-        a[8] = m20;
-        a[9] = m21;
-        a[10] = m22;
-        a[11] = m23;
-        a[12] = m30;
-        a[13] = m31;
-        a[14] = m32;
-        a[15] = m33;
-
-        return this;
-    }
-
-    /**
-     * Copies over the values from another me.Matrix3d.
-     * @name copy
-     * @memberof Matrix3d
-     * @param {Matrix3d} m - the matrix object to copy from
-     * @returns {Matrix3d} Reference to this object for method chaining
-     */
-    copy(m) {
-        this.val.set(m.val);
-        return this;
-    }
-
-    /**
-     * Copies over the upper-left 2x2 values from the given me.Matrix2d
-     * @name fromMat2d
-     * @memberof Matrix3d
-     * @param {Matrix2d} m - the matrix object to copy from
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    fromMat2d(m) {
-        var b = m.val;
-        return this.setTransform(
-            b[0], b[3], b[6], 0,
-            b[1], b[4], b[7], 0,
-            b[2], b[5], b[8], 0,
-            0,    0,    0,    1
-
-        );
-    }
-
-    /**
-     * multiply both matrix
-     * @name multiply
-     * @memberof Matrix3d
-     * @param {Matrix3d} m - Other matrix
-     * @returns {Matrix3d} Reference to this object for method chaining
-     */
-    multiply(m) {
-        var a = this.val;
-        var b = m.val;
-
-        var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
-        var a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
-        var a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
-        var a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
-        var b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
-
-        a[0] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
-        a[1] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
-        a[2] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
-        a[3] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
-
-        b0 = b[4];
-        b1 = b[5];
-        b2 = b[6];
-        b3 = b[7];
-
-        a[4] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
-        a[5] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
-        a[6] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
-        a[7] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
-
-        b0 = b[8];
-        b1 = b[9];
-        b2 = b[10];
-        b3 = b[11];
-
-        a[8] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
-        a[9] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
-        a[10] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
-        a[11] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
-
-        b0 = b[12];
-        b1 = b[13];
-        b2 = b[14];
-        b3 = b[15];
-
-        a[12] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
-        a[13] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
-        a[14] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
-        a[15] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
-
-        return this;
-    }
-
-    /**
-     * Transpose the value of this matrix.
-     * @name transpose
-     * @memberof Matrix3d
-     * @returns {Matrix3d} Reference to this object for method chaining
-     */
-    transpose() {
-        var a = this.val,
-            a01 = a[1],
-            a02 = a[2],
-            a03 = a[3],
-            a12 = a[6],
-            a13 = a[7],
-            a23 = a[11];
-
-         a[1] = a[4];
-         a[2] = a[8];
-         a[3] = a[12];
-         a[4] = a01;
-         a[6] = a[9];
-         a[7] = a[13];
-         a[8] = a02;
-         a[9] = a12;
-         a[11] = a[14];
-         a[12] = a03;
-         a[13] = a13;
-         a[14] = a23;
-
-         return this;
-    }
-
-    /**
-     * invert this matrix, causing it to apply the opposite transformation.
-     * @name invert
-     * @memberof Matrix3d
-     * @returns {Matrix3d} Reference to this object for method chaining
-     */
-    invert() {
-         var a = this.val;
-
-         var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
-         var a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
-         var a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
-         var a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
-
-         var b00 = a00 * a11 - a01 * a10;
-         var b01 = a00 * a12 - a02 * a10;
-         var b02 = a00 * a13 - a03 * a10;
-         var b03 = a01 * a12 - a02 * a11;
-
-         var b04 = a01 * a13 - a03 * a11;
-         var b05 = a02 * a13 - a03 * a12;
-         var b06 = a20 * a31 - a21 * a30;
-         var b07 = a20 * a32 - a22 * a30;
-
-         var b08 = a20 * a33 - a23 * a30;
-         var b09 = a21 * a32 - a22 * a31;
-         var b10 = a21 * a33 - a23 * a31;
-         var b11 = a22 * a33 - a23 * a32;
-
-         // Calculate the determinant
-         var det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
-
-         if (!det)
-         {
-             return null;
-         }
-
-         det = 1 / det;
-
-         a[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
-         a[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
-         a[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
-         a[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
-         a[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
-         a[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
-         a[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
-         a[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
-         a[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
-         a[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
-         a[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
-         a[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
-         a[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
-         a[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
-         a[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
-         a[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
-
-         return this;
-    }
-
-    /**
-     * apply the current transform to the given 2d or 3d vector
-     * @name apply
-     * @memberof Matrix3d
-     * @param {Vector2d|Vector3d} v - the vector object to be transformed
-     * @returns {Vector2d|Vector3d} result vector object.
-     */
-     apply(v) {
-        var a = this.val,
-        x = v.x,
-        y = v.y,
-        z = (typeof v.z !== "undefined") ? v.z : 1;
-
-        var w = (a[3] * x + a[7] * y + a[11] * z + a[15]) || 1.0;
-
-        v.x = (a[0] * x + a[4] * y + a[8] * z + a[12]) / w;
-        v.y = (a[1] * x + a[5] * y + a[9] * z + a[13]) / w;
-
-        if (typeof v.z !== "undefined") {
-            v.z = (a[2] * x + a[6] * y + a[10] * z + a[14]) / w;
-        }
-
-        return v;
-     }
-
-     /**
-      * apply the inverted current transform to the given 2d or 3d vector
-      * @name applyInverse
-      * @memberof Matrix3d
-      * @param {Vector2d|Vector3d} v - the vector object to be transformed
-      * @returns {Vector2d|Vector3d} result vector object.
-      */
-     applyInverse(v) {
-         // invert the current matrix
-         var im = pool.pull("Matrix3d", this).invert();
-
-         // apply the inverted matrix
-         im.apply(v);
-
-         pool.push(im);
-
-         return v;
-     }
-
-    /**
-     * generate an orthogonal projection matrix, with the result replacing the current matrix
-     * <img src="images/glOrtho.gif"/><br>
-     * @name ortho
-     * @memberof Matrix3d
-     * @param {number} left - farthest left on the x-axis
-     * @param {number} right - farthest right on the x-axis
-     * @param {number} bottom - farthest down on the y-axis
-     * @param {number} top - farthest up on the y-axis
-     * @param {number} near - distance to the near clipping plane along the -Z axis
-     * @param {number} far - distance to the far clipping plane along the -Z axis
-     * @returns {Matrix3d} Reference to this object for method chaining
-     */
-    ortho(left, right, bottom, top, near, far) {
-        var a = this.val;
-        var leftRight = 1.0 / (left - right);
-        var bottomTop = 1.0 / (bottom - top);
-        var nearFar = 1.0 / (near - far);
-
-        a[0] = -2.0 * leftRight;
-        a[1] = 0.0;
-        a[2] = 0.0;
-        a[3] = 0.0;
-        a[4] = 0.0;
-        a[5] = -2.0 * bottomTop;
-        a[6] = 0.0;
-        a[7] = 0.0;
-        a[8] = 0.0;
-        a[9] = 0.0;
-        a[10] = 2.0 * nearFar;
-        a[11] = 0.0;
-        a[12] = (left + right) * leftRight;
-        a[13] = (top + bottom) * bottomTop;
-        a[14] = (far + near) * nearFar;
-        a[15] = 1.0;
-
-        return this;
-    }
-
-    /**
-     * scale the matrix
-     * @name scale
-     * @memberof Matrix3d
-     * @param {number} x - a number representing the abscissa of the scaling vector.
-     * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
-     * @param {number} [z=0] - a number representing the depth vector
-     * @returns {Matrix3d} Reference to this object for method chaining
-     */
-    scale(x, y = x, z = 0) {
-        var a = this.val;
-
-        a[0] = a[0] * x;
-        a[1] = a[1] * x;
-        a[2] = a[2] * x;
-        a[3] = a[3] * x;
-
-        a[4] = a[4] * y;
-        a[5] = a[5] * y;
-        a[6] = a[6] * y;
-        a[7] = a[7] * y;
-
-        a[8] = a[8] * z;
-        a[9] = a[9] * z;
-        a[10] = a[10] * z;
-        a[11] = a[11] * z;
-
-        return this;
-    }
-
-    /**
-     * adds a 2D scaling transformation.
-     * @name scaleV
-     * @memberof Matrix3d
-     * @param {Vector2d|Vector3d} v - scaling vector
-     * @returns {Matrix3d} Reference to this object for method chaining
-     */
-    scaleV(v) {
-        return this.scale(v.x, v.y, v.z);
-    }
-
-    /**
-     * specifies a 2D scale operation using the [sx, 1] scaling vector
-     * @name scaleX
-     * @memberof Matrix3d
-     * @param {number} x - x scaling vector
-     * @returns {Matrix3d} Reference to this object for method chaining
-     */
-    scaleX(x) {
-        return this.scale(x, 1);
-    }
-
-    /**
-     * specifies a 2D scale operation using the [1,sy] scaling vector
-     * @name scaleY
-     * @memberof Matrix3d
-     * @param {number} y - y scaling vector
-     * @returns {Matrix3d} Reference to this object for method chaining
-     */
-    scaleY(y) {
-        return this.scale(1, y);
-    }
-
-    /**
-     * rotate this matrix (counter-clockwise) by the specified angle (in radians).
-     * @name rotate
-     * @memberof Matrix3d
-     * @param {number} angle - Rotation angle in radians.
-     * @param {Vector3d} v - the axis to rotate around
-     * @returns {Matrix3d} Reference to this object for method chaining
-     */
-    rotate(angle, v) {
-        if (angle !== 0) {
-            var a = this.val,
-                x = v.x,
-                y = v.y,
-                z = v.z;
-
-            var len = Math.sqrt(x * x + y * y + z * z);
-
-            var s, c, t;
-            var a00, a01, a02, a03;
-            var a10, a11, a12, a13;
-            var a20, a21, a22, a23;
-            var b00, b01, b02;
-            var b10, b11, b12;
-            var b20, b21, b22;
-
-            if (len < EPSILON) {
-                return null;
-            }
-
-            len = 1 / len;
-            x *= len;
-            y *= len;
-            z *= len;
-
-            s = Math.sin(angle);
-            c = Math.cos(angle);
-            t = 1 - c;
-
-            a00 = a[0];
-            a01 = a[1];
-            a02 = a[2];
-            a03 = a[3];
-            a10 = a[4];
-            a11 = a[5];
-            a12 = a[6];
-            a13 = a[7];
-            a20 = a[8];
-            a21 = a[9];
-            a22 = a[10];
-            a23 = a[11];
-
-            // Construct the elements of the rotation matrix
-            b00 = x * x * t + c;
-            b01 = y * x * t + z * s;
-            b02 = z * x * t - y * s;
-            b10 = x * y * t - z * s;
-            b11 = y * y * t + c;
-            b12 = z * y * t + x * s;
-            b20 = x * z * t + y * s;
-            b21 = y * z * t - x * s;
-            b22 = z * z * t + c;
-
-            // Perform rotation-specific matrix multiplication
-            a[0] = a00 * b00 + a10 * b01 + a20 * b02;
-            a[1] = a01 * b00 + a11 * b01 + a21 * b02;
-            a[2] = a02 * b00 + a12 * b01 + a22 * b02;
-            a[3] = a03 * b00 + a13 * b01 + a23 * b02;
-            a[4] = a00 * b10 + a10 * b11 + a20 * b12;
-            a[5] = a01 * b10 + a11 * b11 + a21 * b12;
-            a[6] = a02 * b10 + a12 * b11 + a22 * b12;
-            a[7] = a03 * b10 + a13 * b11 + a23 * b12;
-            a[8] = a00 * b20 + a10 * b21 + a20 * b22;
-            a[9] = a01 * b20 + a11 * b21 + a21 * b22;
-            a[10] = a02 * b20 + a12 * b21 + a22 * b22;
-            a[11] = a03 * b20 + a13 * b21 + a23 * b22;
-        }
-        return this;
-    }
-
-    /**
-     * translate the matrix position using the given vector
-     * @name translate
-     * @memberof Matrix3d
-     * @method
-     * @param {number} x - a number representing the abscissa of the vector.
-     * @param {number} [y=x] - a number representing the ordinate of the vector.
-     * @param {number} [z=0] - a number representing the depth of the vector
-     * @returns {Matrix3d} Reference to this object for method chaining
-     */
-    /**
-     * translate the matrix by a vector on the horizontal and vertical axis
-     * @name translateV
-     * @memberof Matrix3d
-     * @param {Vector2d|Vector3d} v - the vector to translate the matrix by
-     * @returns {Matrix3d} Reference to this object for method chaining
-     */
-    translate() {
-        var a = this.val;
-        var _x, _y, _z;
-
-        if (arguments.length > 1 ) {
-            // x, y (, z)
-            _x = arguments[0];
-            _y = arguments[1];
-            _z = typeof(arguments[2]) === "undefined" ?  0 : arguments[2];
-        } else {
-            // 2d/3d vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-            _z = typeof(arguments[0].z) === "undefined" ? 0 : arguments[0].z;
-        }
-
-        a[12] = a[0] * _x + a[4] * _y + a[8] * _z + a[12];
-        a[13] = a[1] * _x + a[5] * _y + a[9] * _z + a[13];
-        a[14] = a[2] * _x + a[6] * _y + a[10] * _z + a[14];
-        a[15] = a[3] * _x + a[7] * _y + a[11] * _z + a[15];
-
-        return this;
-    }
-
-    /**
-     * returns true if the matrix is an identity matrix.
-     * @name isIdentity
-     * @memberof Matrix3d
-     * @returns {boolean}
-     */
-    isIdentity() {
-        var a = this.val;
-
-        return (
-            (a[0] === 1) &&
-            (a[1] === 0) &&
-            (a[2] === 0) &&
-            (a[3] === 0) &&
-            (a[4] === 0) &&
-            (a[5] === 1) &&
-            (a[6] === 0) &&
-            (a[7] === 0) &&
-            (a[8] === 0) &&
-            (a[9] === 0) &&
-            (a[10] === 1) &&
-            (a[11] === 0) &&
-            (a[12] === 0) &&
-            (a[13] === 0) &&
-            (a[14] === 0) &&
-            (a[15] === 1)
-        );
-    }
-
-    /**
-     * return true if the two matrices are identical
-     * @name equals
-     * @memberof Matrix3d
-     * @param {Matrix3d} m - the other matrix
-     * @returns {boolean} true if both are equals
-     */
-    equals(m) {
-        var b = m.val;
-        var a = this.val;
-
-        return (
-            (a[0] === b[0]) &&
-            (a[1] === b[1]) &&
-            (a[2] === b[2]) &&
-            (a[3] === b[3]) &&
-            (a[4] === b[4]) &&
-            (a[5] === b[5]) &&
-            (a[6] === b[6]) &&
-            (a[7] === b[7]) &&
-            (a[8] === b[8]) &&
-            (a[9] === b[9]) &&
-            (a[10] === b[10]) &&
-            (a[11] === b[11]) &&
-            (a[12] === b[12]) &&
-            (a[13] === b[13]) &&
-            (a[14] === b[14]) &&
-            (a[15] === b[15])
-        );
-    }
-
-    /**
-     * Clone the Matrix
-     * @name clone
-     * @memberof Matrix3d
-     * @returns {Matrix3d}
-     */
-    clone() {
-        return pool.pull("Matrix3d", this);
-    }
-
-    /**
-     * return an array representation of this Matrix
-     * @name toArray
-     * @memberof Matrix3d
-     * @returns {Float32Array}
-     */
-    toArray() {
-        return this.val;
-    }
-
-    /**
-     * convert the object to a string representation
-     * @name toString
-     * @memberof Matrix3d
-     * @returns {string}
-     */
-    toString() {
-        var a = this.val;
-
-        return "me.Matrix3d(" +
-            a[0] + ", " + a[1] + ", " + a[2] + ", " + a[3] + ", " +
-            a[4] + ", " + a[5] + ", " + a[6] + ", " + a[7] + ", " +
-            a[8] + ", " + a[9] + ", " + a[10] + ", " + a[11] + ", " +
-            a[12] + ", " + a[13] + ", " + a[14] + ", " + a[15] +
-        ")";
-    }
-}
-
-/**
- * @classdesc
- * a Matrix2d Object.<br>
- * the identity matrix and parameters position : <br>
- * <img src="images/identity-matrix_2x.png"/>
- */
- class Matrix2d {
-    /**
-     * @param {(Matrix2d|Matrix3d|...number)} args - an instance of me.Matrix2d or me.Matrix3d to copy from, or individual matrix components (See {@link Matrix2d.setTransform}). If not arguments are given, the matrix will be set to Identity.
-     */
-    constructor(...args) {
-        this.onResetEvent(...args);
-    }
-
-    /**
-     * @ignore
-     */
-    onResetEvent() {
-        if (typeof(this.val) === "undefined") {
-            this.val = new Float32Array(9);
-        }
-
-        if (arguments.length && arguments[0] instanceof Matrix2d) {
-            this.copy(arguments[0]);
-        }
-        else if (arguments.length && arguments[0] instanceof Matrix3d) {
-            this.fromMat3d(arguments[0]);
-        }
-        else if (arguments.length >= 6) {
-            this.setTransform.apply(this, arguments);
-        }
-        else {
-            this.identity();
-        }
-        return this;
-    }
-
-    /**
-     * tx component of the matrix
-     * @public
-     * @type {number}
-     * @see Matrix2d.translate
-     * @name tx
-     * @memberof Matrix2d
-     */
-    get tx() {
-        return this.val[6];
-    }
-
-    /**
-     * ty component of the matrix
-     * @public
-     * @type {number}
-     * @see Matrix2d.translate
-     * @name ty
-     * @memberof Matrix2d
-     */
-    get ty() {
-        return this.val[7];
-    }
-
-    /**
-     * reset the transformation matrix to the identity matrix (no transformation).<br>
-     * the identity matrix and parameters position : <br>
-     * <img src="images/identity-matrix_2x.png"/>
-     * @name identity
-     * @memberof Matrix2d
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    identity() {
-        this.setTransform(
-            1, 0, 0,
-            0, 1, 0,
-            0, 0, 1
-        );
-        return this;
-    }
-
-    /**
-     * set the matrix to the specified value
-     * @name setTransform
-     * @memberof Matrix2d
-     * @param {number} a
-     * @param {number} b
-     * @param {number} c
-     * @param {number} d
-     * @param {number} e
-     * @param {number} f
-     * @param {number} [g=0]
-     * @param {number} [h=0]
-     * @param {number} [i=1]
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    setTransform() {
-        var a = this.val;
-
-        if (arguments.length === 9) {
-            a[0] = arguments[0]; // a - m00
-            a[1] = arguments[1]; // b - m10
-            a[2] = arguments[2]; // c - m20
-            a[3] = arguments[3]; // d - m01
-            a[4] = arguments[4]; // e - m11
-            a[5] = arguments[5]; // f - m21
-            a[6] = arguments[6]; // g - m02
-            a[7] = arguments[7]; // h - m12
-            a[8] = arguments[8]; // i - m22
-        } else if (arguments.length === 6) {
-            a[0] = arguments[0]; // a
-            a[1] = arguments[2]; // c
-            a[2] = arguments[4]; // e
-            a[3] = arguments[1]; // b
-            a[4] = arguments[3]; // d
-            a[5] = arguments[5]; // f
-            a[6] = 0; // g
-            a[7] = 0; // h
-            a[8] = 1; // i
-        }
-
-        return this;
-    }
-
-    /**
-     * Copies over the values from another me.Matrix2d.
-     * @name copy
-     * @memberof Matrix2d
-     * @param {Matrix2d} m - the matrix object to copy from
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    copy(m) {
-        this.val.set(m.val);
-        return this;
-    }
-
-    /**
-     * Copies over the upper-left 3x3 values from the given me.Matrix3d
-     * @name fromMat3d
-     * @memberof Matrix2d
-     * @param {Matrix3d} m - the matrix object to copy from
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    fromMat3d(m) {
-        var b = m.val;
-        var a = this.val;
-
-        a[0] = b[0];
-        a[1] = b[1];
-        a[2] = b[2];
-        a[3] = b[4];
-        a[4] = b[5];
-        a[5] = b[6];
-        a[6] = b[8];
-        a[7] = b[9];
-        a[8] = b[10];
-
-        return this;
-    }
-
-    /**
-     * multiply both matrix
-     * @name multiply
-     * @memberof Matrix2d
-     * @param {Matrix2d} m - the other matrix
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    multiply(m) {
-        var b = m.val;
-        var a = this.val,
-            a0 = a[0],
-            a1 = a[1],
-            a3 = a[3],
-            a4 = a[4],
-            b0 = b[0],
-            b1 = b[1],
-            b3 = b[3],
-            b4 = b[4],
-            b6 = b[6],
-            b7 = b[7];
-
-        a[0] = a0 * b0 + a3 * b1;
-        a[1] = a1 * b0 + a4 * b1;
-        a[3] = a0 * b3 + a3 * b4;
-        a[4] = a1 * b3 + a4 * b4;
-        a[6] += a0 * b6 + a3 * b7;
-        a[7] += a1 * b6 + a4 * b7;
-
-        return this;
-    }
-
-    /**
-     * Transpose the value of this matrix.
-     * @name transpose
-     * @memberof Matrix2d
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    transpose() {
-        var a = this.val,
-            a1 = a[1],
-            a2 = a[2],
-            a5 = a[5];
-
-        a[1] = a[3];
-        a[2] = a[6];
-        a[3] = a1;
-        a[5] = a[7];
-        a[6] = a2;
-        a[7] = a5;
-
-        return this;
-    }
-
-    /**
-     * invert this matrix, causing it to apply the opposite transformation.
-     * @name invert
-     * @memberof Matrix2d
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    invert() {
-        var val = this.val;
-
-        var a = val[ 0 ], b = val[ 1 ], c = val[ 2 ],
-            d = val[ 3 ], e = val[ 4 ], f = val[ 5 ],
-            g = val[ 6 ], h = val[ 7 ], i = val[ 8 ];
-
-        var ta = i * e - f * h,
-            td = f * g - i * d,
-            tg = h * d - e * g;
-
-        var n = a * ta + b * td + c * tg;
-
-        val[ 0 ] = ta / n;
-        val[ 1 ] = ( c * h - i * b ) / n;
-        val[ 2 ] = ( f * b - c * e ) / n;
-
-        val[ 3 ] = td / n;
-        val[ 4 ] = ( i * a - c * g ) / n;
-        val[ 5 ] = ( c * d - f * a ) / n;
-
-        val[ 6 ] = tg / n;
-        val[ 7 ] = ( b * g - h * a ) / n;
-        val[ 8 ] = ( e * a - b * d ) / n;
-
-        return this;
-    }
-
-   /**
-    * apply the current transform to the given 2d or 3d vector
-    * @name apply
-    * @memberof Matrix2d
-    * @param {Vector2d|Vector3d} v - the vector object to be transformed
-    * @returns {Vector2d|Vector3d} result vector object.
-    */
-    apply(v) {
-        var a = this.val,
-            x = v.x,
-            y = v.y,
-            z = (typeof v.z !== "undefined") ? v.z : 1;
-
-        v.x = x * a[0] + y * a[3] + z * a[6];
-        v.y = x * a[1] + y * a[4] + z * a[7];
-
-        if (typeof v.z !== "undefined") {
-            v.z = x * a[2] + y * a[5] + z * a[8];
-        }
-
-        return v;
-    }
-
-    /**
-     * apply the inverted current transform to the given 2d vector
-     * @name applyInverse
-     * @memberof Matrix2d
-     * @param {Vector2d} v - the vector object to be transformed
-     * @returns {Vector2d} result vector object.
-     */
-    applyInverse(v) {
-        var a = this.val,
-            x = v.x,
-            y = v.y;
-
-        var invD = 1 / ((a[0] * a[4]) + (a[3] * -a[1]));
-
-        v.x = (a[4] * invD * x) + (-a[3] * invD * y) + (((a[7] * a[3]) - (a[6] * a[4])) * invD);
-        v.y = (a[0] * invD * y) + (-a[1] * invD * x) + (((-a[7] * a[0]) + (a[6] * a[1])) * invD);
-
-        return v;
-    }
-
-    /**
-     * scale the matrix
-     * @name scale
-     * @memberof Matrix2d
-     * @param {number} x - a number representing the abscissa of the scaling vector.
-     * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    scale(x, y = x) {
-        var a = this.val;
-
-        a[0] *= x;
-        a[1] *= x;
-        a[3] *= y;
-        a[4] *= y;
-
-        return this;
-    }
-
-    /**
-     * adds a 2D scaling transformation.
-     * @name scaleV
-     * @memberof Matrix2d
-     * @param {Vector2d} v - scaling vector
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    scaleV(v) {
-        return this.scale(v.x, v.y);
-    }
-
-    /**
-     * specifies a 2D scale operation using the [sx, 1] scaling vector
-     * @name scaleX
-     * @memberof Matrix2d
-     * @param {number} x - x scaling vector
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    scaleX(x) {
-        return this.scale(x, 1);
-    }
-
-    /**
-     * specifies a 2D scale operation using the [1,sy] scaling vector
-     * @name scaleY
-     * @memberof Matrix2d
-     * @param {number} y - y scaling vector
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    scaleY(y) {
-        return this.scale(1, y);
-    }
-
-    /**
-     * rotate the matrix (counter-clockwise) by the specified angle (in radians).
-     * @name rotate
-     * @memberof Matrix2d
-     * @param {number} angle - Rotation angle in radians.
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    rotate(angle) {
-        if (angle !== 0) {
-            var a = this.val,
-                a00 = a[0],
-                a01 = a[1],
-                a02 = a[2],
-                a10 = a[3],
-                a11 = a[4],
-                a12 = a[5],
-                s = Math.sin(angle),
-                c = Math.cos(angle);
-
-            a[0] = c * a00 + s * a10;
-            a[1] = c * a01 + s * a11;
-            a[2] = c * a02 + s * a12;
-
-            a[3] = c * a10 - s * a00;
-            a[4] = c * a11 - s * a01;
-            a[5] = c * a12 - s * a02;
-        }
-        return this;
-    }
-
-    /**
-     * translate the matrix position on the horizontal and vertical axis
-     * @name translate
-     * @memberof Matrix2d
-     * @method
-     * @param {number} x - the x coordindates to translate the matrix by
-     * @param {number} y - the y coordindates to translate the matrix by
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    /**
-     * translate the matrix by a vector on the horizontal and vertical axis
-     * @name translateV
-     * @memberof Matrix2d
-     * @param {Vector2d} v - the vector to translate the matrix by
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    translate() {
-        var a = this.val;
-        var _x, _y;
-
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-
-        a[6] += a[0] * _x + a[3] * _y;
-        a[7] += a[1] * _x + a[4] * _y;
-
-        return this;
-    }
-
-    /**
-     * returns true if the matrix is an identity matrix.
-     * @name isIdentity
-     * @memberof Matrix2d
-     * @returns {boolean}
-     */
-    isIdentity() {
-        var a = this.val;
-
-        return (
-            a[0] === 1 &&
-            a[1] === 0 &&
-            a[2] === 0 &&
-            a[3] === 0 &&
-            a[4] === 1 &&
-            a[5] === 0 &&
-            a[6] === 0 &&
-            a[7] === 0 &&
-            a[8] === 1
-        );
-    }
-
-    /**
-     * return true if the two matrices are identical
-     * @name equals
-     * @memberof Matrix2d
-     * @param {Matrix2d} m - the other matrix
-     * @returns {boolean} true if both are equals
-     */
-    equals(m) {
-        var b = m.val;
-        var a = this.val;
-
-        return (
-            (a[0] === b[0]) &&
-            (a[1] === b[1]) &&
-            (a[2] === b[2]) &&
-            (a[3] === b[3]) &&
-            (a[4] === b[4]) &&
-            (a[5] === b[5]) &&
-            (a[6] === b[6]) &&
-            (a[7] === b[7]) &&
-            (a[8] === b[8])
-        );
-    }
-
-    /**
-     * Clone the Matrix
-     * @name clone
-     * @memberof Matrix2d
-     * @returns {Matrix2d}
-     */
-    clone() {
-        return pool.pull("Matrix2d", this);
-    }
-
-    /**
-     * return an array representation of this Matrix
-     * @name toArray
-     * @memberof Matrix2d
-     * @returns {Float32Array}
-     */
-    toArray() {
-        return this.val;
-    }
-
-    /**
-     * convert the object to a string representation
-     * @name toString
-     * @memberof Matrix2d
-     * @returns {string}
-     */
-    toString() {
-        var a = this.val;
-
-        return "me.Matrix2d(" +
-            a[0] + ", " + a[1] + ", " + a[2] + ", " +
-            a[3] + ", " + a[4] + ", " + a[5] + ", " +
-            a[6] + ", " + a[7] + ", " + a[8] +
-        ")";
-    }
-}
-
-var earcutExports = {};
-var earcut$1 = {
-  get exports(){ return earcutExports; },
-  set exports(v){ earcutExports = v; },
-};
-
-'use strict';
-
-earcut$1.exports = earcut;
-var _default = earcutExports.default = earcut;
-
-function earcut(data, holeIndices, dim) {
-
-    dim = dim || 2;
-
-    var hasHoles = holeIndices && holeIndices.length,
-        outerLen = hasHoles ? holeIndices[0] * dim : data.length,
-        outerNode = linkedList(data, 0, outerLen, dim, true),
-        triangles = [];
-
-    if (!outerNode || outerNode.next === outerNode.prev) return triangles;
-
-    var minX, minY, maxX, maxY, x, y, invSize;
-
-    if (hasHoles) outerNode = eliminateHoles(data, holeIndices, outerNode, dim);
-
-    // if the shape is not too simple, we'll use z-order curve hash later; calculate polygon bbox
-    if (data.length > 80 * dim) {
-        minX = maxX = data[0];
-        minY = maxY = data[1];
-
-        for (var i = dim; i < outerLen; i += dim) {
-            x = data[i];
-            y = data[i + 1];
-            if (x < minX) minX = x;
-            if (y < minY) minY = y;
-            if (x > maxX) maxX = x;
-            if (y > maxY) maxY = y;
-        }
-
-        // minX, minY and invSize are later used to transform coords into integers for z-order calculation
-        invSize = Math.max(maxX - minX, maxY - minY);
-        invSize = invSize !== 0 ? 32767 / invSize : 0;
-    }
-
-    earcutLinked(outerNode, triangles, dim, minX, minY, invSize, 0);
-
-    return triangles;
-}
-
-// create a circular doubly linked list from polygon points in the specified winding order
-function linkedList(data, start, end, dim, clockwise) {
-    var i, last;
-
-    if (clockwise === (signedArea(data, start, end, dim) > 0)) {
-        for (i = start; i < end; i += dim) last = insertNode(i, data[i], data[i + 1], last);
-    } else {
-        for (i = end - dim; i >= start; i -= dim) last = insertNode(i, data[i], data[i + 1], last);
-    }
-
-    if (last && equals(last, last.next)) {
-        removeNode(last);
-        last = last.next;
-    }
-
-    return last;
-}
-
-// eliminate colinear or duplicate points
-function filterPoints(start, end) {
-    if (!start) return start;
-    if (!end) end = start;
-
-    var p = start,
-        again;
-    do {
-        again = false;
-
-        if (!p.steiner && (equals(p, p.next) || area(p.prev, p, p.next) === 0)) {
-            removeNode(p);
-            p = end = p.prev;
-            if (p === p.next) break;
-            again = true;
-
-        } else {
-            p = p.next;
-        }
-    } while (again || p !== end);
-
-    return end;
-}
-
-// main ear slicing loop which triangulates a polygon (given as a linked list)
-function earcutLinked(ear, triangles, dim, minX, minY, invSize, pass) {
-    if (!ear) return;
-
-    // interlink polygon nodes in z-order
-    if (!pass && invSize) indexCurve(ear, minX, minY, invSize);
-
-    var stop = ear,
-        prev, next;
-
-    // iterate through ears, slicing them one by one
-    while (ear.prev !== ear.next) {
-        prev = ear.prev;
-        next = ear.next;
-
-        if (invSize ? isEarHashed(ear, minX, minY, invSize) : isEar(ear)) {
-            // cut off the triangle
-            triangles.push(prev.i / dim | 0);
-            triangles.push(ear.i / dim | 0);
-            triangles.push(next.i / dim | 0);
-
-            removeNode(ear);
-
-            // skipping the next vertex leads to less sliver triangles
-            ear = next.next;
-            stop = next.next;
-
-            continue;
-        }
-
-        ear = next;
-
-        // if we looped through the whole remaining polygon and can't find any more ears
-        if (ear === stop) {
-            // try filtering points and slicing again
-            if (!pass) {
-                earcutLinked(filterPoints(ear), triangles, dim, minX, minY, invSize, 1);
-
-            // if this didn't work, try curing all small self-intersections locally
-            } else if (pass === 1) {
-                ear = cureLocalIntersections(filterPoints(ear), triangles, dim);
-                earcutLinked(ear, triangles, dim, minX, minY, invSize, 2);
-
-            // as a last resort, try splitting the remaining polygon into two
-            } else if (pass === 2) {
-                splitEarcut(ear, triangles, dim, minX, minY, invSize);
-            }
-
-            break;
-        }
-    }
-}
-
-// check whether a polygon node forms a valid ear with adjacent nodes
-function isEar(ear) {
-    var a = ear.prev,
-        b = ear,
-        c = ear.next;
-
-    if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
-
-    // now make sure we don't have other points inside the potential ear
-    var ax = a.x, bx = b.x, cx = c.x, ay = a.y, by = b.y, cy = c.y;
-
-    // triangle bbox; min & max are calculated like this for speed
-    var x0 = ax < bx ? (ax < cx ? ax : cx) : (bx < cx ? bx : cx),
-        y0 = ay < by ? (ay < cy ? ay : cy) : (by < cy ? by : cy),
-        x1 = ax > bx ? (ax > cx ? ax : cx) : (bx > cx ? bx : cx),
-        y1 = ay > by ? (ay > cy ? ay : cy) : (by > cy ? by : cy);
-
-    var p = c.next;
-    while (p !== a) {
-        if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 &&
-            pointInTriangle(ax, ay, bx, by, cx, cy, p.x, p.y) &&
-            area(p.prev, p, p.next) >= 0) return false;
-        p = p.next;
-    }
-
-    return true;
-}
-
-function isEarHashed(ear, minX, minY, invSize) {
-    var a = ear.prev,
-        b = ear,
-        c = ear.next;
-
-    if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
-
-    var ax = a.x, bx = b.x, cx = c.x, ay = a.y, by = b.y, cy = c.y;
-
-    // triangle bbox; min & max are calculated like this for speed
-    var x0 = ax < bx ? (ax < cx ? ax : cx) : (bx < cx ? bx : cx),
-        y0 = ay < by ? (ay < cy ? ay : cy) : (by < cy ? by : cy),
-        x1 = ax > bx ? (ax > cx ? ax : cx) : (bx > cx ? bx : cx),
-        y1 = ay > by ? (ay > cy ? ay : cy) : (by > cy ? by : cy);
-
-    // z-order range for the current triangle bbox;
-    var minZ = zOrder(x0, y0, minX, minY, invSize),
-        maxZ = zOrder(x1, y1, minX, minY, invSize);
-
-    var p = ear.prevZ,
-        n = ear.nextZ;
-
-    // look for points inside the triangle in both directions
-    while (p && p.z >= minZ && n && n.z <= maxZ) {
-        if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && p !== a && p !== c &&
-            pointInTriangle(ax, ay, bx, by, cx, cy, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
-        p = p.prevZ;
-
-        if (n.x >= x0 && n.x <= x1 && n.y >= y0 && n.y <= y1 && n !== a && n !== c &&
-            pointInTriangle(ax, ay, bx, by, cx, cy, n.x, n.y) && area(n.prev, n, n.next) >= 0) return false;
-        n = n.nextZ;
-    }
-
-    // look for remaining points in decreasing z-order
-    while (p && p.z >= minZ) {
-        if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && p !== a && p !== c &&
-            pointInTriangle(ax, ay, bx, by, cx, cy, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
-        p = p.prevZ;
-    }
-
-    // look for remaining points in increasing z-order
-    while (n && n.z <= maxZ) {
-        if (n.x >= x0 && n.x <= x1 && n.y >= y0 && n.y <= y1 && n !== a && n !== c &&
-            pointInTriangle(ax, ay, bx, by, cx, cy, n.x, n.y) && area(n.prev, n, n.next) >= 0) return false;
-        n = n.nextZ;
-    }
-
-    return true;
-}
-
-// go through all polygon nodes and cure small local self-intersections
-function cureLocalIntersections(start, triangles, dim) {
-    var p = start;
-    do {
-        var a = p.prev,
-            b = p.next.next;
-
-        if (!equals(a, b) && intersects(a, p, p.next, b) && locallyInside(a, b) && locallyInside(b, a)) {
-
-            triangles.push(a.i / dim | 0);
-            triangles.push(p.i / dim | 0);
-            triangles.push(b.i / dim | 0);
-
-            // remove two nodes involved
-            removeNode(p);
-            removeNode(p.next);
-
-            p = start = b;
-        }
-        p = p.next;
-    } while (p !== start);
-
-    return filterPoints(p);
-}
-
-// try splitting polygon into two and triangulate them independently
-function splitEarcut(start, triangles, dim, minX, minY, invSize) {
-    // look for a valid diagonal that divides the polygon into two
-    var a = start;
-    do {
-        var b = a.next.next;
-        while (b !== a.prev) {
-            if (a.i !== b.i && isValidDiagonal(a, b)) {
-                // split the polygon in two by the diagonal
-                var c = splitPolygon(a, b);
-
-                // filter colinear points around the cuts
-                a = filterPoints(a, a.next);
-                c = filterPoints(c, c.next);
-
-                // run earcut on each half
-                earcutLinked(a, triangles, dim, minX, minY, invSize, 0);
-                earcutLinked(c, triangles, dim, minX, minY, invSize, 0);
-                return;
-            }
-            b = b.next;
-        }
-        a = a.next;
-    } while (a !== start);
-}
-
-// link every hole into the outer loop, producing a single-ring polygon without holes
-function eliminateHoles(data, holeIndices, outerNode, dim) {
-    var queue = [],
-        i, len, start, end, list;
-
-    for (i = 0, len = holeIndices.length; i < len; i++) {
-        start = holeIndices[i] * dim;
-        end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
-        list = linkedList(data, start, end, dim, false);
-        if (list === list.next) list.steiner = true;
-        queue.push(getLeftmost(list));
-    }
-
-    queue.sort(compareX);
-
-    // process holes from left to right
-    for (i = 0; i < queue.length; i++) {
-        outerNode = eliminateHole(queue[i], outerNode);
-    }
-
-    return outerNode;
-}
-
-function compareX(a, b) {
-    return a.x - b.x;
-}
-
-// find a bridge between vertices that connects hole with an outer ring and and link it
-function eliminateHole(hole, outerNode) {
-    var bridge = findHoleBridge(hole, outerNode);
-    if (!bridge) {
-        return outerNode;
-    }
-
-    var bridgeReverse = splitPolygon(bridge, hole);
-
-    // filter collinear points around the cuts
-    filterPoints(bridgeReverse, bridgeReverse.next);
-    return filterPoints(bridge, bridge.next);
-}
-
-// David Eberly's algorithm for finding a bridge between hole and outer polygon
-function findHoleBridge(hole, outerNode) {
-    var p = outerNode,
-        hx = hole.x,
-        hy = hole.y,
-        qx = -Infinity,
-        m;
-
-    // find a segment intersected by a ray from the hole's leftmost point to the left;
-    // segment's endpoint with lesser x will be potential connection point
-    do {
-        if (hy <= p.y && hy >= p.next.y && p.next.y !== p.y) {
-            var x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
-            if (x <= hx && x > qx) {
-                qx = x;
-                m = p.x < p.next.x ? p : p.next;
-                if (x === hx) return m; // hole touches outer segment; pick leftmost endpoint
-            }
-        }
-        p = p.next;
-    } while (p !== outerNode);
-
-    if (!m) return null;
-
-    // look for points inside the triangle of hole point, segment intersection and endpoint;
-    // if there are no points found, we have a valid connection;
-    // otherwise choose the point of the minimum angle with the ray as connection point
-
-    var stop = m,
-        mx = m.x,
-        my = m.y,
-        tanMin = Infinity,
-        tan;
-
-    p = m;
-
-    do {
-        if (hx >= p.x && p.x >= mx && hx !== p.x &&
-                pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
-
-            tan = Math.abs(hy - p.y) / (hx - p.x); // tangential
-
-            if (locallyInside(p, hole) &&
-                (tan < tanMin || (tan === tanMin && (p.x > m.x || (p.x === m.x && sectorContainsSector(m, p)))))) {
-                m = p;
-                tanMin = tan;
-            }
-        }
-
-        p = p.next;
-    } while (p !== stop);
-
-    return m;
-}
-
-// whether sector in vertex m contains sector in vertex p in the same coordinates
-function sectorContainsSector(m, p) {
-    return area(m.prev, m, p.prev) < 0 && area(p.next, m, m.next) < 0;
-}
-
-// interlink polygon nodes in z-order
-function indexCurve(start, minX, minY, invSize) {
-    var p = start;
-    do {
-        if (p.z === 0) p.z = zOrder(p.x, p.y, minX, minY, invSize);
-        p.prevZ = p.prev;
-        p.nextZ = p.next;
-        p = p.next;
-    } while (p !== start);
-
-    p.prevZ.nextZ = null;
-    p.prevZ = null;
-
-    sortLinked(p);
-}
-
-// Simon Tatham's linked list merge sort algorithm
-// http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
-function sortLinked(list) {
-    var i, p, q, e, tail, numMerges, pSize, qSize,
-        inSize = 1;
-
-    do {
-        p = list;
-        list = null;
-        tail = null;
-        numMerges = 0;
-
-        while (p) {
-            numMerges++;
-            q = p;
-            pSize = 0;
-            for (i = 0; i < inSize; i++) {
-                pSize++;
-                q = q.nextZ;
-                if (!q) break;
-            }
-            qSize = inSize;
-
-            while (pSize > 0 || (qSize > 0 && q)) {
-
-                if (pSize !== 0 && (qSize === 0 || !q || p.z <= q.z)) {
-                    e = p;
-                    p = p.nextZ;
-                    pSize--;
-                } else {
-                    e = q;
-                    q = q.nextZ;
-                    qSize--;
-                }
-
-                if (tail) tail.nextZ = e;
-                else list = e;
-
-                e.prevZ = tail;
-                tail = e;
-            }
-
-            p = q;
-        }
-
-        tail.nextZ = null;
-        inSize *= 2;
-
-    } while (numMerges > 1);
-
-    return list;
-}
-
-// z-order of a point given coords and inverse of the longer side of data bbox
-function zOrder(x, y, minX, minY, invSize) {
-    // coords are transformed into non-negative 15-bit integer range
-    x = (x - minX) * invSize | 0;
-    y = (y - minY) * invSize | 0;
-
-    x = (x | (x << 8)) & 0x00FF00FF;
-    x = (x | (x << 4)) & 0x0F0F0F0F;
-    x = (x | (x << 2)) & 0x33333333;
-    x = (x | (x << 1)) & 0x55555555;
-
-    y = (y | (y << 8)) & 0x00FF00FF;
-    y = (y | (y << 4)) & 0x0F0F0F0F;
-    y = (y | (y << 2)) & 0x33333333;
-    y = (y | (y << 1)) & 0x55555555;
-
-    return x | (y << 1);
-}
-
-// find the leftmost node of a polygon ring
-function getLeftmost(start) {
-    var p = start,
-        leftmost = start;
-    do {
-        if (p.x < leftmost.x || (p.x === leftmost.x && p.y < leftmost.y)) leftmost = p;
-        p = p.next;
-    } while (p !== start);
-
-    return leftmost;
-}
-
-// check if a point lies within a convex triangle
-function pointInTriangle(ax, ay, bx, by, cx, cy, px, py) {
-    return (cx - px) * (ay - py) >= (ax - px) * (cy - py) &&
-           (ax - px) * (by - py) >= (bx - px) * (ay - py) &&
-           (bx - px) * (cy - py) >= (cx - px) * (by - py);
-}
-
-// check if a diagonal between two polygon nodes is valid (lies in polygon interior)
-function isValidDiagonal(a, b) {
-    return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) && // dones't intersect other edges
-           (locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b) && // locally visible
-            (area(a.prev, a, b.prev) || area(a, b.prev, b)) || // does not create opposite-facing sectors
-            equals(a, b) && area(a.prev, a, a.next) > 0 && area(b.prev, b, b.next) > 0); // special zero-length case
-}
-
-// signed area of a triangle
-function area(p, q, r) {
-    return (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
-}
-
-// check if two points are equal
-function equals(p1, p2) {
-    return p1.x === p2.x && p1.y === p2.y;
-}
-
-// check if two segments intersect
-function intersects(p1, q1, p2, q2) {
-    var o1 = sign(area(p1, q1, p2));
-    var o2 = sign(area(p1, q1, q2));
-    var o3 = sign(area(p2, q2, p1));
-    var o4 = sign(area(p2, q2, q1));
-
-    if (o1 !== o2 && o3 !== o4) return true; // general case
-
-    if (o1 === 0 && onSegment(p1, p2, q1)) return true; // p1, q1 and p2 are collinear and p2 lies on p1q1
-    if (o2 === 0 && onSegment(p1, q2, q1)) return true; // p1, q1 and q2 are collinear and q2 lies on p1q1
-    if (o3 === 0 && onSegment(p2, p1, q2)) return true; // p2, q2 and p1 are collinear and p1 lies on p2q2
-    if (o4 === 0 && onSegment(p2, q1, q2)) return true; // p2, q2 and q1 are collinear and q1 lies on p2q2
-
-    return false;
-}
-
-// for collinear points p, q, r, check if point q lies on segment pr
-function onSegment(p, q, r) {
-    return q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) && q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y);
-}
-
-function sign(num) {
-    return num > 0 ? 1 : num < 0 ? -1 : 0;
-}
-
-// check if a polygon diagonal intersects any polygon segments
-function intersectsPolygon(a, b) {
-    var p = a;
-    do {
-        if (p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i &&
-                intersects(p, p.next, a, b)) return true;
-        p = p.next;
-    } while (p !== a);
-
-    return false;
-}
-
-// check if a polygon diagonal is locally inside the polygon
-function locallyInside(a, b) {
-    return area(a.prev, a, a.next) < 0 ?
-        area(a, b, a.next) >= 0 && area(a, a.prev, b) >= 0 :
-        area(a, b, a.prev) < 0 || area(a, a.next, b) < 0;
-}
-
-// check if the middle point of a polygon diagonal is inside the polygon
-function middleInside(a, b) {
-    var p = a,
-        inside = false,
-        px = (a.x + b.x) / 2,
-        py = (a.y + b.y) / 2;
-    do {
-        if (((p.y > py) !== (p.next.y > py)) && p.next.y !== p.y &&
-                (px < (p.next.x - p.x) * (py - p.y) / (p.next.y - p.y) + p.x))
-            inside = !inside;
-        p = p.next;
-    } while (p !== a);
-
-    return inside;
-}
-
-// link two polygon vertices with a bridge; if the vertices belong to the same ring, it splits polygon into two;
-// if one belongs to the outer ring and another to a hole, it merges it into a single ring
-function splitPolygon(a, b) {
-    var a2 = new Node$1(a.i, a.x, a.y),
-        b2 = new Node$1(b.i, b.x, b.y),
-        an = a.next,
-        bp = b.prev;
-
-    a.next = b;
-    b.prev = a;
-
-    a2.next = an;
-    an.prev = a2;
-
-    b2.next = a2;
-    a2.prev = b2;
-
-    bp.next = b2;
-    b2.prev = bp;
-
-    return b2;
-}
-
-// create a node and optionally link it with previous one (in a circular doubly linked list)
-function insertNode(i, x, y, last) {
-    var p = new Node$1(i, x, y);
-
-    if (!last) {
-        p.prev = p;
-        p.next = p;
-
-    } else {
-        p.next = last.next;
-        p.prev = last;
-        last.next.prev = p;
-        last.next = p;
-    }
-    return p;
-}
-
-function removeNode(p) {
-    p.next.prev = p.prev;
-    p.prev.next = p.next;
-
-    if (p.prevZ) p.prevZ.nextZ = p.nextZ;
-    if (p.nextZ) p.nextZ.prevZ = p.prevZ;
-}
-
-function Node$1(i, x, y) {
-    // vertex index in coordinates array
-    this.i = i;
-
-    // vertex coordinates
-    this.x = x;
-    this.y = y;
-
-    // previous and next vertex nodes in a polygon ring
-    this.prev = null;
-    this.next = null;
-
-    // z-order curve value
-    this.z = 0;
-
-    // previous and next nodes in z-order
-    this.prevZ = null;
-    this.nextZ = null;
-
-    // indicates whether this is a steiner point
-    this.steiner = false;
-}
-
-// return a percentage difference between the polygon area and its triangulation area;
-// used to verify correctness of triangulation
-earcut.deviation = function (data, holeIndices, dim, triangles) {
-    var hasHoles = holeIndices && holeIndices.length;
-    var outerLen = hasHoles ? holeIndices[0] * dim : data.length;
-
-    var polygonArea = Math.abs(signedArea(data, 0, outerLen, dim));
-    if (hasHoles) {
-        for (var i = 0, len = holeIndices.length; i < len; i++) {
-            var start = holeIndices[i] * dim;
-            var end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
-            polygonArea -= Math.abs(signedArea(data, start, end, dim));
-        }
-    }
-
-    var trianglesArea = 0;
-    for (i = 0; i < triangles.length; i += 3) {
-        var a = triangles[i] * dim;
-        var b = triangles[i + 1] * dim;
-        var c = triangles[i + 2] * dim;
-        trianglesArea += Math.abs(
-            (data[a] - data[c]) * (data[b + 1] - data[a + 1]) -
-            (data[a] - data[b]) * (data[c + 1] - data[a + 1]));
-    }
-
-    return polygonArea === 0 && trianglesArea === 0 ? 0 :
-        Math.abs((trianglesArea - polygonArea) / polygonArea);
-};
-
-function signedArea(data, start, end, dim) {
-    var sum = 0;
-    for (var i = start, j = end - dim; i < end; i += dim) {
-        sum += (data[j] - data[i]) * (data[i + 1] + data[j + 1]);
-        j = i;
-    }
-    return sum;
-}
-
-// turn a polygon in a multi-dimensional array form (e.g. as in GeoJSON) into a form Earcut accepts
-earcut.flatten = function (data) {
-    var dim = data[0][0].length,
-        result = {vertices: [], holes: [], dimensions: dim},
-        holeIndex = 0;
-
-    for (var i = 0; i < data.length; i++) {
-        for (var j = 0; j < data[i].length; j++) {
-            for (var d = 0; d < dim; d++) result.vertices.push(data[i][j][d]);
-        }
-        if (i > 0) {
-            holeIndex += data[i - 1].length;
-            result.holes.push(holeIndex);
-        }
-    }
-    return result;
-};
-
-/**
- * @classdesc
- * a polygon Object.<br>
- * Please do note that melonJS implements a simple Axis-Aligned Boxes collision algorithm, which requires all polygons used for collision to be convex with all vertices defined with clockwise winding.
- * A polygon is convex when all line segments connecting two points in the interior do not cross any edge of the polygon
- * (which means that all angles are less than 180 degrees), as described here below : <br>
- * <center><img src="images/convex_polygon.png"/></center><br>
- *
- * A polygon's `winding` is clockwise if its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
- */
- class Polygon {
-    /**
-     * @param {number} x - origin point of the Polygon
-     * @param {number} y - origin point of the Polygon
-     * @param {Vector2d[]} points - array of vector defining the Polygon
-     */
-    constructor(x, y, points) {
-        /**
-         * origin point of the Polygon
-         * @public
-         * @type {Vector2d}
-         * @name pos
-         * @memberof Polygon
-         */
-        this.pos = pool.pull("Vector2d");
-
-        /**
-         * The bounding rectangle for this shape
-         * @ignore
-         * @member {Bounds}
-         * @name _bounds
-         * @memberof Polygon
-         */
-        this._bounds;
-
-        /**
-         * Array of points defining the Polygon <br>
-         * Note: If you manually change `points`, you **must** call `recalc`afterwards so that the changes get applied correctly.
-         * @public
-         * @type {Vector2d[]}
-         * @name points
-         * @memberof Polygon
-         */
-        this.points = [];
-
-        /**
-         * The edges here are the direction of the `n`th edge of the polygon, relative to
-         * the `n`th point. If you want to draw a given edge from the edge value, you must
-         * first translate to the position of the starting point.
-         * @ignore
-         */
-        this.edges = [];
-
-        /**
-         * a list of indices for all vertices composing this polygon (@see earcut)
-         * @ignore
-         */
-        this.indices = [];
-
-        /**
-         * The normals here are the direction of the normal for the `n`th edge of the polygon, relative
-         * to the position of the `n`th point. If you want to draw an edge normal, you must first
-         * translate to the position of the starting point.
-         * @ignore
-         */
-        this.normals = [];
-
-        // the shape type
-        this.shapeType = "Polygon";
-        this.setShape(x, y, points);
-    }
-
-    /** @ignore */
-    onResetEvent(x, y, points) {
-        this.setShape(x, y, points);
-    }
-
-    /**
-     * set new value to the Polygon
-     * @name setShape
-     * @memberof Polygon
-     * @param {number} x - position of the Polygon
-     * @param {number} y - position of the Polygon
-     * @param {Vector2d[]|number[]} points - array of vector or vertice defining the Polygon
-     * @returns {Polygon} this instance for objecf chaining
-     */
-    setShape(x, y, points) {
-        this.pos.set(x, y);
-        this.setVertices(points);
-        return this;
-    }
-
-    /**
-     * set the vertices defining this Polygon
-     * @name setVertices
-     * @memberof Polygon
-     * @param {Vector2d[]} vertices - array of vector or vertice defining the Polygon
-     * @returns {Polygon} this instance for objecf chaining
-     */
-    setVertices(vertices) {
-
-        if (!Array.isArray(vertices)) {
-            return this;
-        }
-
-        // convert given points to me.Vector2d if required
-        if (!(vertices[0] instanceof Vector2d)) {
-            this.points.length = 0;
-
-            if (typeof vertices[0] === "object") {
-                // array of {x,y} object
-                vertices.forEach((vertice) => {
-                   this.points.push(pool.pull("Vector2d", vertice.x, vertice.y));
-                });
-
-            } else {
-                // it's a flat array
-                for (var p = 0; p < vertices.length; p += 2) {
-                    this.points.push(pool.pull("Vector2d", vertices[p], vertices[p + 1]));
-                }
-            }
-        } else {
-            // array of me.Vector2d
-            this.points = vertices;
-        }
-
-        this.recalc();
-        this.updateBounds();
-        return this;
-    }
-
-    /**
-     * apply the given transformation matrix to this Polygon
-     * @name transform
-     * @memberof Polygon
-     * @param {Matrix2d} m - the transformation matrix
-     * @returns {Polygon} Reference to this object for method chaining
-     */
-    transform(m) {
-        var points = this.points;
-        var len = points.length;
-        for (var i = 0; i < len; i++) {
-            m.apply(points[i]);
-        }
-        this.recalc();
-        this.updateBounds();
-        return this;
-    }
-
-    /**
-     * apply an isometric projection to this shape
-     * @name toIso
-     * @memberof Polygon
-     * @returns {Polygon} Reference to this object for method chaining
-     */
-    toIso() {
-        return this.rotate(Math.PI / 4).scale(Math.SQRT2, Math.SQRT1_2);
-    }
-
-    /**
-     * apply a 2d projection to this shape
-     * @name to2d
-     * @memberof Polygon
-     * @returns {Polygon} Reference to this object for method chaining
-     */
-    to2d() {
-        return this.scale(Math.SQRT1_2, Math.SQRT2).rotate(-Math.PI / 4);
-    }
-
-    /**
-     * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
-     * @name rotate
-     * @memberof Polygon
-     * @param {number} angle - The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
-     * @returns {Polygon} Reference to this object for method chaining
-     */
-    rotate(angle, v) {
-        if (angle !== 0) {
-            var points = this.points;
-            var len = points.length;
-            for (var i = 0; i < len; i++) {
-                points[i].rotate(angle, v);
-            }
-            this.recalc();
-            this.updateBounds();
-        }
-        return this;
-    }
-
-    /**
-     * Scale this Polygon by the given scalar.
-     * @name scale
-     * @memberof Polygon
-     * @param {number} x
-     * @param {number} [y=x]
-     * @returns {Polygon} Reference to this object for method chaining
-     */
-    scale(x, y = x) {
-        var points = this.points;
-        var len = points.length;
-        for (var i = 0; i < len; i++) {
-            points[i].scale(x, y);
-        }
-        this.recalc();
-        this.updateBounds();
-        return this;
-    }
-
-    /**
-     * Scale this Polygon by the given vector
-     * @name scaleV
-     * @memberof Polygon
-     * @param {Vector2d} v
-     * @returns {Polygon} Reference to this object for method chaining
-     */
-    scaleV(v) {
-        return this.scale(v.x, v.y);
-    }
-
-    /**
-     * Computes the calculated collision polygon.
-     * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
-     * @name recalc
-     * @memberof Polygon
-     * @returns {Polygon} Reference to this object for method chaining
-     */
-    recalc() {
-        var i;
-        var edges = this.edges;
-        var normals = this.normals;
-        var indices = this.indices;
-
-        // Copy the original points array and apply the offset/angle
-        var points = this.points;
-        var len = points.length;
-
-        if (len < 3) {
-            throw new Error("Requires at least 3 points");
-        }
-
-        // Calculate the edges/normals
-        for (i = 0; i < len; i++) {
-            if (edges[i] === undefined) {
-                edges[i] = pool.pull("Vector2d");
-            }
-            edges[i].copy(points[(i + 1) % len]).sub(points[i]);
-
-            if (normals[i] === undefined) {
-                normals[i] = pool.pull("Vector2d");
-            }
-            normals[i].copy(edges[i]).perp().normalize();
-        }
-        // trunc array
-        edges.length = len;
-        normals.length = len;
-        // do not do anything here, indices will be computed by
-        // getIndices if array is empty upon function call
-        indices.length = 0;
-
-        return this;
-    }
-
-
-    /**
-     * returns a list of indices for all triangles defined in this polygon
-     * @name getIndices
-     * @memberof Polygon
-     * @returns {Array} an array of vertex indices for all triangles forming this polygon.
-     */
-    getIndices() {
-        if (this.indices.length === 0) {
-            this.indices = earcutExports(this.points.flatMap(p => [p.x, p.y]));
-        }
-        return this.indices;
-    }
-
-    /**
-     * Returns true if the vertices composing this polygon form a convex shape (vertices must be in clockwise order).
-     * @name isConvex
-     * @memberof Polygon
-     * @returns {boolean} true if the vertices are convex, false if not, null if not computable
-     */
-    isConvex() {
-        // http://paulbourke.net/geometry/polygonmesh/
-        // Copyright (c) Paul Bourke (use permitted)
-
-        var flag = 0,
-            vertices = this.points,
-            n = vertices.length,
-            i,
-            j,
-            k,
-            z;
-
-        if (n < 3) {
-            return null;
-        }
-
-        for (i = 0; i < n; i++) {
-            j = (i + 1) % n;
-            k = (i + 2) % n;
-            z = (vertices[j].x - vertices[i].x) * (vertices[k].y - vertices[j].y);
-            z -= (vertices[j].y - vertices[i].y) * (vertices[k].x - vertices[j].x);
-
-            if (z < 0) {
-                flag |= 1;
-            } else if (z > 0) {
-                flag |= 2;
-            }
-
-            if (flag === 3) {
-                return false;
-            }
-        }
-
-        if (flag !== 0) {
-            return true;
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * translate the Polygon by the specified offset
-     * @name translate
-     * @memberof Polygon
-     * @method
-     * @param {number} x - x offset
-     * @param {number} y - y offset
-     * @returns {Polygon} this Polygon
-     */
-    /**
-     * translate the Polygon by the specified vector
-     * @name translate
-     * @memberof Polygon
-     * @param {Vector2d} v - vector offset
-     * @returns {Polygon} Reference to this object for method chaining
-     */
-    translate() {
-        var _x, _y;
-
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-
-        this.pos.x += _x;
-        this.pos.y += _y;
-        this.getBounds().translate(_x, _y);
-
-        return this;
-    }
-
-    /**
-     * Shifts the Polygon to the given position vector.
-     * @name shift
-     * @memberof Polygon
-     * @method
-     * @param {Vector2d} position
-     */
-    /**
-     * Shifts the Polygon to the given x, y position.
-     * @name shift
-     * @memberof Polygon
-     * @param {number} x
-     * @param {number} y
-     */
-    shift() {
-        var _x, _y;
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-        this.pos.x = _x;
-        this.pos.y = _y;
-        this.updateBounds();
-    }
-
-    /**
-     * Returns true if the polygon contains the given point.
-     * (Note: it is highly recommended to first do a hit test on the corresponding <br>
-     *  bounding rect, as the function can be highly consuming with complex shapes)
-     * @name contains
-     * @memberof Polygon
-     * @method
-     * @param {Vector2d} point
-     * @returns {boolean} true if contains
-     */
-
-    /**
-     * Returns true if the polygon contains the given point. <br>
-     * (Note: it is highly recommended to first do a hit test on the corresponding <br>
-     *  bounding rect, as the function can be highly consuming with complex shapes)
-     * @name contains
-     * @memberof Polygon
-     * @param  {number} x -  x coordinate
-     * @param  {number} y -  y coordinate
-     * @returns {boolean} true if contains
-     */
-    contains() {
-        var _x, _y;
-
-        if (arguments.length === 2) {
-          // x, y
-          _x = arguments[0];
-          _y = arguments[1];
-        } else {
-          // vector
-          _x = arguments[0].x;
-          _y = arguments[0].y;
-        }
-
-        var intersects = false;
-        var posx = this.pos.x, posy = this.pos.y;
-        var points = this.points;
-        var len = points.length;
-
-        //http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-        for (var i = 0, j = len - 1; i < len; j = i++) {
-            var iy = points[i].y + posy, ix = points[i].x + posx,
-                jy = points[j].y + posy, jx = points[j].x + posx;
-            if (((iy > _y) !== (jy > _y)) && (_x < (jx - ix) * (_y - iy) / (jy - iy) + ix)) {
-                intersects = !intersects;
-            }
-        }
-        return intersects;
-    }
-
-    /**
-     * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
-     * @name getBounds
-     * @memberof Polygon
-     * @returns {Bounds} this shape bounding box Rectangle object
-     */
-    getBounds() {
-        if (typeof this._bounds === "undefined") {
-            this._bounds = pool.pull("Bounds");
-        }
-        return this._bounds;
-    }
-
-    /**
-     * update the bounding box for this shape.
-     * @name updateBounds
-     * @memberof Polygon
-     * @returns {Bounds} this shape bounding box Rectangle object
-     */
-    updateBounds() {
-        var bounds = this.getBounds();
-
-        bounds.update(this.points);
-        bounds.translate(this.pos);
-
-        return bounds;
-    }
-
-    /**
-     * clone this Polygon
-     * @name clone
-     * @memberof Polygon
-     * @returns {Polygon} new Polygon
-     */
-    clone() {
-        var copy = [];
-        this.points.forEach((point) => {
-            copy.push(point.clone());
-        });
-        return new Polygon(this.pos.x, this.pos.y, copy);
-    }
-}
-
-/**
- * @classdesc
- * a rectangle Object
- * @augments Polygon
- */
- class Rect extends Polygon {
-    /**
-     * @param {number} x - position of the Rectangle
-     * @param {number} y - position of the Rectangle
-     * @param {number} w - width of the rectangle
-     * @param {number} h - height of the rectangle
-     */
-    constructor(x, y, w, h) {
-        // parent constructor
-        super(x, y, [
-            pool.pull("Vector2d", 0, 0), // 0, 0
-            pool.pull("Vector2d", w, 0), // 1, 0
-            pool.pull("Vector2d", w, h), // 1, 1
-            pool.pull("Vector2d", 0, h)  // 0, 1
-        ]);
-        this.shapeType = "Rectangle";
-    }
-
-    /** @ignore */
-    onResetEvent(x, y, w, h) {
-        this.setShape(x, y, w, h);
-    }
-
-    /**
-     * set new value to the rectangle shape
-     * @name setShape
-     * @memberof Rect
-     * @param {number} x - position of the Rectangle
-     * @param {number} y - position of the Rectangle
-     * @param {number|Vector2d[]} w - width of the rectangle, or an array of vector defining the rectangle
-     * @param {number} [h] - height of the rectangle, if a numeral width parameter is specified
-     * @returns {Rect} this rectangle
-     */
-    setShape(x, y, w, h) {
-        var points = w; // assume w is an array by default
-
-        this.pos.set(x, y);
-
-        if (arguments.length === 4) {
-            points = this.points;
-            points[0].set(0, 0); // 0, 0
-            points[1].set(w, 0); // 1, 0
-            points[2].set(w, h); // 1, 1
-            points[3].set(0, h); // 0, 1
-        }
-
-        this.setVertices(points);
-        return this;
-    }
-
-
-    /**
-     * left coordinate of the Rectangle
-     * @public
-     * @type {number}
-     * @name left
-     * @memberof Rect
-     */
-    get left() {
-        return this.pos.x;
-    }
-
-    /**
-     * right coordinate of the Rectangle
-     * @public
-     * @type {number}
-     * @name right
-     * @memberof Rect
-     */
-    get right() {
-        var w = this.width;
-        return (this.left + w) || w;
-    }
-
-    /**
-     * top coordinate of the Rectangle
-     * @public
-     * @type {number}
-     * @name top
-     * @memberof Rect
-     */
-    get top() {
-        return this.pos.y;
-    }
-
-    /**
-     * bottom coordinate of the Rectangle
-     * @public
-     * @type {number}
-     * @name bottom
-     * @memberof Rect
-     */
-    get bottom() {
-        var h = this.height;
-        return (this.top + h) || h;
-    }
-
-    /**
-     * width of the Rectangle
-     * @public
-     * @type {number}
-     * @name width
-     * @memberof Rect
-     */
-    get width() {
-        return this.points[2].x;
-    }
-    set width(value) {
-        this.points[1].x = this.points[2].x = value;
-        this.recalc();
-        this.updateBounds();
-    }
-
-    /**
-     * height of the Rectangle
-     * @public
-     * @type {number}
-     * @name height
-     * @memberof Rect
-     */
-    get height() {
-        return this.points[2].y;
-    }
-    set height(value) {
-        this.points[2].y = this.points[3].y = value;
-        this.recalc();
-        this.updateBounds();
-    }
-
-    /**
-     * absolute center of this rectangle on the horizontal axis
-     * @public
-     * @type {number}
-     * @name centerX
-     * @memberof Rect
-     */
-    get centerX() {
-        if (isFinite(this.width)) {
-            return this.left + (this.width / 2);
-        } else {
-            return this.width;
-        }
-    }
-    set centerX (value) {
-        this.pos.x = value - (this.width / 2);
-        this.recalc();
-        this.updateBounds();
-    }
-
-    /**
-     * absolute center of this rectangle on the vertical axis
-     * @public
-     * @type {number}
-     * @name centerY
-     * @memberof Rect
-     */
-    get centerY() {
-        if (isFinite(this.height)) {
-            return this.top + (this.height / 2);
-        } else {
-            return this.height;
-        }
-    }
-    set centerY(value) {
-        this.pos.y = value - (this.height / 2);
-        this.recalc();
-        this.updateBounds();
-    }
-
-    /**
-     * center the rectangle position around the given coordinates
-     * @name centerOn
-     * @memberof Rect
-     * @param {number} x - the x coordinate around which to center this rectangle
-     * @param {number} y - the y coordinate around which to center this rectangle
-     * @returns {Rect} this rectangle
-     */
-    centerOn(x, y) {
-        this.centerX = x;
-        this.centerY = y;
-        return this;
-    }
-
-    /**
-     * resize the rectangle
-     * @name resize
-     * @memberof Rect
-     * @param {number} w - new width of the rectangle
-     * @param {number} h - new height of the rectangle
-     * @returns {Rect} this rectangle
-     */
-    resize(w, h) {
-        this.width = w;
-        this.height = h;
-        return this;
-    }
-
-    /**
-     * scale the rectangle
-     * @name scale
-     * @memberof Rect
-     * @param {number} x - a number representing the abscissa of the scaling vector.
-     * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
-     * @returns {Rect} this rectangle
-     */
-    scale(x, y = x) {
-        this.width *= x;
-        this.height *= y;
-        return this;
-    }
-
-    /**
-     * clone this rectangle
-     * @name clone
-     * @memberof Rect
-     * @returns {Rect} new rectangle
-     */
-    clone() {
-        return new Rect(this.left, this.top, this.width, this.height);
-    }
-
-    /**
-     * copy the position and size of the given rectangle into this one
-     * @name copy
-     * @memberof Rect
-     * @param {Rect} rect - Source rectangle
-     * @returns {Rect} new rectangle
-     */
-    copy(rect) {
-        return this.setShape(rect.left, rect.top, rect.width, rect.height);
-    }
-
-    /**
-     * merge this rectangle with another one
-     * @name union
-     * @memberof Rect
-     * @param {Rect} rect - other rectangle to union with
-     * @returns {Rect} the union(ed) rectangle
-     */
-    union(rect) {
-        var x1 = Math.min(this.left, rect.left);
-        var y1 = Math.min(this.top, rect.top);
-
-        this.resize(
-            Math.max(this.right, rect.right) - x1,
-            Math.max(this.bottom, rect.bottom) - y1
-        );
-
-        this.pos.set(x1, y1);
-
-        return this;
-    }
-
-    /**
-     * check if this rectangle is intersecting with the specified one
-     * @name overlaps
-     * @memberof Rect
-     * @param {Rect} rect
-     * @returns {boolean} true if overlaps
-     */
-    overlaps(rect) {
-        return (
-            this.left < rect.right &&
-            rect.left < this.right &&
-            this.top < rect.bottom &&
-            rect.top < this.bottom
-        );
-    }
-
-    /**
-     * Returns true if the rectangle contains the given rectangle
-     * @name contains
-     * @memberof Rect
-     * @method
-     * @param {Rect} rect
-     * @returns {boolean} true if contains
-     */
-
-    /**
-     * Returns true if the rectangle contains the given point
-     * @name contains
-     * @memberof Rect
-     * @method
-     * @param  {number} x -  x coordinate
-     * @param  {number} y -  y coordinate
-     * @returns {boolean} true if contains
-     */
-
-    /**
-     * Returns true if the rectangle contains the given point
-     * @name contains
-     * @memberof Rect
-     * @param {Vector2d} point
-     * @returns {boolean} true if contains
-     */
-    contains() {
-        var arg0 = arguments[0];
-        var _x1, _x2, _y1, _y2;
-        if (arguments.length === 2) {
-             // x, y
-             _x1 = _x2 = arg0;
-             _y1 = _y2 = arguments[1];
-         } else {
-             if (arg0 instanceof Rect) {
-                 // me.Rect
-                 _x1 = arg0.left;
-                 _x2 = arg0.right;
-                 _y1 = arg0.top;
-                 _y2 = arg0.bottom;
-             } else {
-                 // vector
-                 _x1 = _x2 = arg0.x;
-                 _y1 = _y2 = arg0.y;
-             }
-         }
-         return (
-             _x1 >= this.left &&
-             _x2 <= this.right &&
-             _y1 >= this.top &&
-             _y2 <= this.bottom
-         );
-    }
-
-    /**
-     * check if this rectangle is identical to the specified one
-     * @name equals
-     * @memberof Rect
-     * @param {Rect} rect
-     * @returns {boolean} true if equals
-     */
-    equals(rect) {
-        return (
-            rect.left === this.left &&
-            rect.right === this.right &&
-            rect.top === this.top &&
-            rect.bottom === this.bottom
-        );
-    }
-
-    /**
-     * determines whether all coordinates of this rectangle are finite numbers.
-     * @name isFinite
-     * @memberof Rect
-     * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
-     */
-    isFinite() {
-        return (isFinite(this.left) && isFinite(this.top) && isFinite(this.width) && isFinite(this.height));
-    }
-
-    /**
-     * Returns a polygon whose edges are the same as this box.
-     * @name toPolygon
-     * @memberof Rect
-     * @returns {Polygon} a new Polygon that represents this rectangle.
-     */
-    toPolygon() {
-        return pool.pull("Polygon",
-            this.left, this.top, this.points
-        );
-    }
-}
-
 // corresponding actions
 var _keyStatus = {};
 
@@ -13596,402 +15918,6 @@ function unbindKey(keycode) {
     // remove the key binding
     _keyBindings[keycode] = null;
     _preventDefaultForKeys[keycode] = null;
-}
-
-/**
- * @classdesc
- * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
- */
- class Bounds {
-    /**
-     * @param {Vector2d[]|Point[]} [vertices] - an array of Vector2d or Point
-     */
-    constructor(vertices) {
-        // @ignore
-        this._center = new Vector2d();
-        this.onResetEvent(vertices);
-    }
-
-    /**
-     * @ignore
-     */
-    onResetEvent(vertices) {
-        if (typeof this.min === "undefined") {
-            this.min = { x: Infinity,  y: Infinity };
-            this.max = { x: -Infinity, y: -Infinity };
-        } else {
-            this.clear();
-        }
-        if (typeof vertices !== "undefined") {
-            this.update(vertices);
-        }
-    }
-
-    /**
-     * reset the bound
-     */
-    clear() {
-        this.setMinMax(Infinity, Infinity, -Infinity, -Infinity);
-
-    }
-
-    /**
-     * sets the bounds to the given min and max value
-     * @param {number} minX
-     * @param {number} minY
-     * @param {number} maxX
-     * @param {number} maxY
-     */
-    setMinMax(minX, minY, maxX, maxY) {
-        this.min.x = minX;
-        this.min.y = minY;
-
-        this.max.x = maxX;
-        this.max.y = maxY;
-    }
-
-    /**
-     * x position of the bound
-     * @type {number}
-     */
-    get x() {
-        return this.min.x;
-    }
-
-    set x(value) {
-        var deltaX = this.max.x - this.min.x;
-        this.min.x = value;
-        this.max.x = value + deltaX;
-    }
-
-    /**
-     * y position of the bounds
-     * @type {number}
-     */
-    get y() {
-        return this.min.y;
-    }
-
-    set y(value) {
-        var deltaY = this.max.y - this.min.y;
-
-        this.min.y = value;
-        this.max.y = value + deltaY;
-    }
-
-    /**
-     * width of the bounds
-     * @type {number}
-     */
-    get width() {
-        return this.max.x - this.min.x;
-    }
-
-    set width(value) {
-        this.max.x = this.min.x + value;
-    }
-
-    /**
-     * width of the bounds
-     * @type {number}
-     */
-    get height() {
-        return this.max.y - this.min.y;
-    }
-
-    set height(value) {
-        this.max.y = this.min.y + value;
-    }
-
-    /**
-     * left coordinate of the bound
-     * @type {number}
-     */
-    get left() {
-        return this.min.x;
-    }
-
-    /**
-     * right coordinate of the bound
-     * @type {number}
-     */
-    get right() {
-        return this.max.x;
-    }
-
-    /**
-     * top coordinate of the bound
-     * @type {number}
-     */
-    get top() {
-        return this.min.y;
-    }
-
-    /**
-     * bottom coordinate of the bound
-     * @type {number}
-     */
-    get bottom() {
-        return this.max.y;
-    }
-
-    /**
-     * center position of the bound on the x axis
-     * @type {number}
-     */
-    get centerX() {
-        return this.min.x + (this.width / 2);
-    }
-
-    /**
-     * center position of the bound on the y axis
-     * @type {number}
-     */
-    get centerY() {
-        return this.min.y + (this.height / 2);
-    }
-
-    /**
-     * return the center position of the bound
-     * @type {Vector2d}
-     */
-    get center() {
-        return this._center.set(this.centerX, this.centerY);
-    }
-
-    /**
-     * center the bounds position around the given coordinates
-     * @param {number} x - the x coordinate around which to center this bounds
-     * @param {number} y - the y coordinate around which to center this bounds
-     */
-    centerOn(x, y) {
-        this.shift(x - this.width / 2, y - this.height / 2);
-        return this;
-    }
-
-    /**
-     * Updates bounds using the given vertices
-     * @param {Vector2d[]|Point[]} vertices - an array of Vector2d or Point
-     */
-    update(vertices) {
-        this.add(vertices, true);
-    }
-
-    /**
-     * add the given vertices to the bounds definition.
-     * @param {Vector2d[]|Point[]} vertices - an array of Vector2d or Point
-     * @param {boolean} [clear=false] - either to reset the bounds before adding the new vertices
-     */
-    add(vertices, clear = false) {
-        if (clear === true) {
-            this.clear();
-        }
-        for (var i = 0; i < vertices.length; i++) {
-            var vertex = vertices[i];
-            if (vertex.x > this.max.x) this.max.x = vertex.x;
-            if (vertex.x < this.min.x) this.min.x = vertex.x;
-            if (vertex.y > this.max.y) this.max.y = vertex.y;
-            if (vertex.y < this.min.y) this.min.y = vertex.y;
-        }
-    }
-
-    /**
-     * add the given bounds to the bounds definition.
-     * @param {Bounds} bounds
-     * @param {boolean} [clear=false] - either to reset the bounds before adding the new vertices
-     */
-    addBounds(bounds, clear = false) {
-        if (clear === true) {
-            this.max.x = bounds.max.x;
-            this.min.x = bounds.min.x;
-            this.max.y = bounds.max.y;
-            this.min.y = bounds.min.y;
-        } else {
-            if (bounds.max.x > this.max.x) this.max.x = bounds.max.x;
-            if (bounds.min.x < this.min.x) this.min.x = bounds.min.x;
-            if (bounds.max.y > this.max.y) this.max.y = bounds.max.y;
-            if (bounds.min.y < this.min.y) this.min.y = bounds.min.y;
-        }
-    }
-
-    /**
-     * add the given point to the bounds definition.
-     * @param {Vector2d|Point} point - the vector or point to be added to the bounds
-     * @param {Matrix2d} [m] - an optional transform to apply to the given point (if the given point is a Vector2d)
-     */
-    addPoint(point, m) {
-        if ((typeof m !== "undefined")) {
-            // only Vectors object have a rotate function
-            point = m.apply(point);
-        }
-        this.min.x = Math.min(this.min.x, point.x);
-        this.max.x = Math.max(this.max.x, point.x);
-        this.min.y = Math.min(this.min.y, point.y);
-        this.max.y = Math.max(this.max.y, point.y);
-    }
-
-    /**
-     * add the given quad coordinates to this bound definition, multiplied by the given matrix
-     * @param {number} x0 - left X coordinates of the quad
-     * @param {number} y0 - top Y coordinates of the quad
-     * @param {number} x1 - right X coordinates of the quad
-     * @param {number} y1 - bottom y coordinates of the quad
-     * @param {Matrix2d} [m] - an optional transform to apply to the given frame coordinates
-     */
-    addFrame(x0, y0, x1, y1, m) {
-        var v = pool.pull("Point");
-
-        this.addPoint(v.set(x0, y0), m);
-        this.addPoint(v.set(x1, y0), m);
-        this.addPoint(v.set(x0, y1), m);
-        this.addPoint(v.set(x1, y1), m);
-
-        pool.push(v);
-    }
-
-    /**
-     * Returns true if the bounds contains the given point.
-     * @name contains
-     * @memberof Bounds
-     * @method
-     * @param {Vector2d} point
-     * @returns {boolean} True if the bounds contain the point, otherwise false
-     */
-    /**
-     * Returns true if the bounds contains the given point.
-     * @param {number} x
-     * @param {number} y
-     * @returns {boolean} True if the bounds contain the point, otherwise false
-     */
-    contains() {
-        var arg0 = arguments[0];
-        var _x1, _x2, _y1, _y2;
-        if (arguments.length === 2) {
-            // x, y
-            _x1 = _x2 = arg0;
-            _y1 = _y2 = arguments[1];
-        } else {
-            if (arg0 instanceof Bounds) {
-                // bounds
-                _x1 = arg0.min.x;
-                _x2 = arg0.max.x;
-                _y1 = arg0.min.y;
-                _y2 = arg0.max.y;
-            } else {
-                // vector
-                _x1 = _x2 = arg0.x;
-                _y1 = _y2 = arg0.y;
-            }
-        }
-
-        return _x1 >= this.min.x && _x2 <= this.max.x
-            && _y1 >= this.min.y && _y2 <= this.max.y;
-    }
-
-    /**
-     * Returns true if the two bounds intersect.
-     * @param {Bounds|Rect} bounds
-     * @returns {boolean} True if the bounds overlap, otherwise false
-     */
-    overlaps(bounds) {
-        return !(this.right < bounds.left || this.left > bounds.right ||
-                 this.bottom < bounds.top || this.top > bounds.bottom);
-    }
-
-    /**
-     * determines whether all coordinates of this bounds are finite numbers.
-     * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
-     */
-    isFinite() {
-        return (isFinite(this.min.x) && isFinite(this.max.x) && isFinite(this.min.y) && isFinite(this.max.y));
-    }
-
-    /**
-     * Translates the bounds by the given vector.
-     * @name translate
-     * @memberof Bounds
-     * @method
-     * @param {Vector2d} vector
-     */
-    /**
-     * Translates the bounds by x on the x axis, and y on the y axis
-     * @param {number} x
-     * @param {number} y
-     */
-    translate() {
-        var _x, _y;
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-        this.min.x += _x;
-        this.max.x += _x;
-        this.min.y += _y;
-        this.max.y += _y;
-    }
-
-    /**
-     * Shifts the bounds to the given position vector.
-     * @name shift
-     * @memberof Bounds
-     * @method
-     * @param {Vector2d} position
-     */
-    /**
-     * Shifts the bounds to the given x, y position.
-     * @param {number} x
-     * @param {number} y
-     */
-    shift() {
-        var _x, _y;
-
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-
-        var deltaX = this.max.x - this.min.x,
-            deltaY = this.max.y - this.min.y;
-
-        this.min.x = _x;
-        this.max.x = _x + deltaX;
-        this.min.y = _y;
-        this.max.y = _y + deltaY;
-    }
-
-    /**
-     * clone this bounds
-     * @returns {Bounds}
-     */
-    clone() {
-        var bounds = new Bounds();
-        bounds.addBounds(this);
-        return bounds;
-    }
-
-    /**
-     * Returns a polygon whose edges are the same as this bounds.
-     * @returns {Polygon} a new Polygon that represents this bounds.
-     */
-    toPolygon () {
-        return pool.pull("Polygon", this.x, this.y, [
-            pool.pull("Vector2d", 0,          0),
-            pool.pull("Vector2d", this.width, 0),
-            pool.pull("Vector2d", this.width, this.height),
-            pool.pull("Vector2d", 0,          this.height)
-        ]);
-    }
-
 }
 
 /**
@@ -15684,611 +17610,6 @@ var input = {
 	unbindPointer: unbindPointer,
 	unlockKey: unlockKey
 };
-
-// convert a give color component to it hexadecimal value
-function toHex(component) {
-    return "0123456789ABCDEF".charAt((component - (component % 16)) >> 4) + "0123456789ABCDEF".charAt(component % 16);
-}
-
-function hue2rgb(p, q, t) {
-    if (t < 0) t += 1;
-    if (t > 1) t -= 1;
-    if (t < 1/6) return p + (q - p) * 6 * t;
-    if (t < 1/2) return q;
-    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-    return p;
-}
-
-const rgbaRx = /^rgba?\((\d+), ?(\d+), ?(\d+)(, ?([\d\.]+))?\)$/;
-const hex3Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
-const hex4Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
-const hex6Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
-const hex8Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
-
-var cssToRGB = new Map();
-
-[
-    // CSS1
-    [ "black",                  [   0,   0,   0 ] ],
-    [ "silver",                 [ 192, 192, 129 ] ],
-    [ "gray",                   [ 128, 128, 128 ] ],
-    [ "white",                  [ 255, 255, 255 ] ],
-    [ "maroon",                 [ 128,   0,   0 ] ],
-    [ "red",                    [ 255,   0,   0 ] ],
-    [ "purple",                 [ 128,   0, 128 ] ],
-    [ "fuchsia",                [ 255,   0, 255 ] ],
-    [ "green",                  [   0, 128,   0 ] ],
-    [ "lime",                   [   0, 255,   0 ] ],
-    [ "olive",                  [ 128, 128,   0 ] ],
-    [ "yellow",                 [ 255, 255,   0 ] ],
-    [ "navy",                   [   0,   0, 128 ] ],
-    [ "blue",                   [   0,   0, 255 ] ],
-    [ "teal",                   [   0, 128, 128 ] ],
-    [ "aqua",                   [   0, 255, 255 ] ],
-
-    // CSS2
-    [ "orange",                 [ 255, 165,   0 ] ],
-
-    // CSS3
-    [ "aliceblue",              [ 240, 248, 245 ] ],
-    [ "antiquewhite",           [ 250, 235, 215 ] ],
-    [ "aquamarine",             [ 127, 255, 212 ] ],
-    [ "azure",                  [ 240, 255, 255 ] ],
-    [ "beige",                  [ 245, 245, 220 ] ],
-    [ "bisque",                 [ 255, 228, 196 ] ],
-    [ "blanchedalmond",         [ 255, 235, 205 ] ],
-    [ "blueviolet",             [ 138,  43, 226 ] ],
-    [ "brown",                  [ 165,  42,  42 ] ],
-    [ "burlywood",              [ 222, 184,  35 ] ],
-    [ "cadetblue",              [  95, 158, 160 ] ],
-    [ "chartreuse",             [ 127, 255,   0 ] ],
-    [ "chocolate",              [ 210, 105,  30 ] ],
-    [ "coral",                  [ 255, 127,  80 ] ],
-    [ "cornflowerblue",         [ 100, 149, 237 ] ],
-    [ "cornsilk",               [ 255, 248, 220 ] ],
-    [ "crimson",                [ 220,  20,  60 ] ],
-    [ "darkblue",               [   0,   0, 139 ] ],
-    [ "darkcyan",               [   0, 139, 139 ] ],
-    [ "darkgoldenrod",          [ 184, 134,  11 ] ],
-    [ "darkgray[*]",            [ 169, 169, 169 ] ],
-    [ "darkgreen",              [   0, 100,   0 ] ],
-    [ "darkgrey[*]",            [ 169, 169, 169 ] ],
-    [ "darkkhaki",              [ 189, 183, 107 ] ],
-    [ "darkmagenta",            [ 139,   0, 139 ] ],
-    [ "darkolivegreen",         [  85, 107,  47 ] ],
-    [ "darkorange",             [ 255, 140,   0 ] ],
-    [ "darkorchid",             [ 153,  50, 204 ] ],
-    [ "darkred",                [ 139,   0,   0 ] ],
-    [ "darksalmon",             [ 233, 150, 122 ] ],
-    [ "darkseagreen",           [ 143, 188, 143 ] ],
-    [ "darkslateblue",          [  72,  61, 139 ] ],
-    [ "darkslategray",          [  47,  79,  79 ] ],
-    [ "darkslategrey",          [  47,  79,  79 ] ],
-    [ "darkturquoise",          [   0, 206, 209 ] ],
-    [ "darkviolet",             [ 148,   0, 211 ] ],
-    [ "deeppink",               [ 255,  20, 147 ] ],
-    [ "deepskyblue",            [   0, 191, 255 ] ],
-    [ "dimgray",                [ 105, 105, 105 ] ],
-    [ "dimgrey",                [ 105, 105, 105 ] ],
-    [ "dodgerblue",             [  30, 144, 255 ] ],
-    [ "firebrick",              [ 178,  34,  34 ] ],
-    [ "floralwhite",            [ 255, 250, 240 ] ],
-    [ "forestgreen",            [  34, 139,  34 ] ],
-    [ "gainsboro",              [ 220, 220, 220 ] ],
-    [ "ghostwhite",             [ 248, 248, 255 ] ],
-    [ "gold",                   [ 255, 215,   0 ] ],
-    [ "goldenrod",              [ 218, 165,  32 ] ],
-    [ "greenyellow",            [ 173, 255,  47 ] ],
-    [ "grey",                   [ 128, 128, 128 ] ],
-    [ "honeydew",               [ 240, 255, 240 ] ],
-    [ "hotpink",                [ 255, 105, 180 ] ],
-    [ "indianred",              [ 205,  92,  92 ] ],
-    [ "indigo",                 [  75,   0, 130 ] ],
-    [ "ivory",                  [ 255, 255, 240 ] ],
-    [ "khaki",                  [ 240, 230, 140 ] ],
-    [ "lavender",               [ 230, 230, 250 ] ],
-    [ "lavenderblush",          [ 255, 240, 245 ] ],
-    [ "lawngreen",              [ 124, 252,   0 ] ],
-    [ "lemonchiffon",           [ 255, 250, 205 ] ],
-    [ "lightblue",              [ 173, 216, 230 ] ],
-    [ "lightcoral",             [ 240, 128, 128 ] ],
-    [ "lightcyan",              [ 224, 255, 255 ] ],
-    [ "lightgoldenrodyellow",   [ 250, 250, 210 ] ],
-    [ "lightgray",              [ 211, 211, 211 ] ],
-    [ "lightgreen",             [ 144, 238, 144 ] ],
-    [ "lightgrey",              [ 211, 211, 211 ] ],
-    [ "lightpink",              [ 255, 182, 193 ] ],
-    [ "lightsalmon",            [ 255, 160, 122 ] ],
-    [ "lightseagreen",          [  32, 178, 170 ] ],
-    [ "lightskyblue",           [ 135, 206, 250 ] ],
-    [ "lightslategray",         [ 119, 136, 153 ] ],
-    [ "lightslategrey",         [ 119, 136, 153 ] ],
-    [ "lightsteelblue",         [ 176, 196, 222 ] ],
-    [ "lightyellow",            [ 255, 255, 224 ] ],
-    [ "limegreen",              [  50, 205,  50 ] ],
-    [ "linen",                  [ 250, 240, 230 ] ],
-    [ "mediumaquamarine",       [ 102, 205, 170 ] ],
-    [ "mediumblue",             [   0,   0, 205 ] ],
-    [ "mediumorchid",           [ 186,  85, 211 ] ],
-    [ "mediumpurple",           [ 147, 112, 219 ] ],
-    [ "mediumseagreen",         [  60, 179, 113 ] ],
-    [ "mediumslateblue",        [ 123, 104, 238 ] ],
-    [ "mediumspringgreen",      [   0, 250, 154 ] ],
-    [ "mediumturquoise",        [  72, 209, 204 ] ],
-    [ "mediumvioletred",        [ 199,  21, 133 ] ],
-    [ "midnightblue",           [  25,  25, 112 ] ],
-    [ "mintcream",              [ 245, 255, 250 ] ],
-    [ "mistyrose",              [ 255, 228, 225 ] ],
-    [ "moccasin",               [ 255, 228, 181 ] ],
-    [ "navajowhite",            [ 255, 222, 173 ] ],
-    [ "oldlace",                [ 253, 245, 230 ] ],
-    [ "olivedrab",              [ 107, 142,  35 ] ],
-    [ "orangered",              [ 255,  69,   0 ] ],
-    [ "orchid",                 [ 218, 112, 214 ] ],
-    [ "palegoldenrod",          [ 238, 232, 170 ] ],
-    [ "palegreen",              [ 152, 251, 152 ] ],
-    [ "paleturquoise",          [ 175, 238, 238 ] ],
-    [ "palevioletred",          [ 219, 112, 147 ] ],
-    [ "papayawhip",             [ 255, 239, 213 ] ],
-    [ "peachpuff",              [ 255, 218, 185 ] ],
-    [ "peru",                   [ 205, 133,  63 ] ],
-    [ "pink",                   [ 255, 192, 203 ] ],
-    [ "plum",                   [ 221, 160, 221 ] ],
-    [ "powderblue",             [ 176, 224, 230 ] ],
-    [ "rosybrown",              [ 188, 143, 143 ] ],
-    [ "royalblue",              [  65, 105, 225 ] ],
-    [ "saddlebrown",            [ 139,  69,  19 ] ],
-    [ "salmon",                 [ 250, 128, 114 ] ],
-    [ "sandybrown",             [ 244, 164,  96 ] ],
-    [ "seagreen",               [  46, 139,  87 ] ],
-    [ "seashell",               [ 255, 245, 238 ] ],
-    [ "sienna",                 [ 160,  82,  45 ] ],
-    [ "skyblue",                [ 135, 206, 235 ] ],
-    [ "slateblue",              [ 106,  90, 205 ] ],
-    [ "slategray",              [ 112, 128, 144 ] ],
-    [ "slategrey",              [ 112, 128, 144 ] ],
-    [ "snow",                   [ 255, 250, 250 ] ],
-    [ "springgreen",            [   0, 255, 127 ] ],
-    [ "steelblue",              [  70, 130, 180 ] ],
-    [ "tan",                    [ 210, 180, 140 ] ],
-    [ "thistle",                [ 216, 191, 216 ] ],
-    [ "tomato",                 [ 255,  99,  71 ] ],
-    [ "turquoise",              [  64, 224, 208 ] ],
-    [ "violet",                 [ 238, 130, 238 ] ],
-    [ "wheat",                  [ 245, 222, 179 ] ],
-    [ "whitesmoke",             [ 245, 245, 245 ] ],
-    [ "yellowgreen",            [ 154, 205,  50 ] ]
-].forEach((value) => {
-    cssToRGB.set(value[0], value[1]);
-});
-
-/**
- * @classdesc
- * A color manipulation object.
- */
- class Color {
-    /**
-     * @param {number} [r=0] - red component or array of color components
-     * @param {number} [g=0] - green component
-     * @param {number} [b=0] - blue component
-     * @param {number} [alpha=1.0] - alpha value
-     */
-    constructor(r = 0, g = 0, b = 0, alpha = 1.0) {
-        this.onResetEvent(r, g, b, alpha);
-    }
-
-    /**
-     * @ignore
-     */
-    onResetEvent(r = 0, g = 0, b = 0, alpha = 1.0) {
-        if (typeof (this.glArray) === "undefined") {
-            // Color components in a Float32Array suitable for WebGL
-            this.glArray = new Float32Array([ 0.0, 0.0, 0.0, 1.0 ]);
-        }
-
-        return this.setColor(r, g, b, alpha);
-    }
-
-    /**
-     * Color Red Component [0 .. 255]
-     * @type {number}
-     */
-    get r() {
-        return ~~(this.glArray[0] * 255);
-    }
-
-    set r(value) {
-        this.glArray[0] = clamp(~~value || 0, 0, 255) / 255.0;
-    }
-
-
-    /**
-     * Color Green Component [0 .. 255]
-     * @type {number}
-     */
-    get g() {
-        return ~~(this.glArray[1] * 255);
-    }
-
-    set g(value) {
-        this.glArray[1] = clamp(~~value || 0, 0, 255) / 255.0;
-    }
-
-
-    /**
-     * Color Blue Component [0 .. 255]
-     * @type {number}
-     */
-    get b() {
-        return ~~(this.glArray[2] * 255);
-    }
-    set b(value) {
-        this.glArray[2] = clamp(~~value || 0, 0, 255) / 255.0;
-    }
-
-    /**
-     * Color Alpha Component [0.0 .. 1.0]
-     * @type {number}
-     */
-    get alpha() {
-        return this.glArray[3];
-    }
-
-    set alpha(value) {
-        this.glArray[3] = typeof(value) === "undefined" ? 1.0 : clamp(+value, 0, 1.0);
-    }
-
-
-    /**
-     * Set this color to the specified value.
-     * @param {number} r - red component [0 .. 255]
-     * @param {number} g - green component [0 .. 255]
-     * @param {number} b - blue component [0 .. 255]
-     * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
-     * @returns {Color} Reference to this object for method chaining
-     */
-    setColor(r, g, b, alpha = 1.0) {
-        this.r = r;
-        this.g = g;
-        this.b = b;
-        this.alpha = alpha;
-        return this;
-    }
-
-    /**
-     * set this color to the specified HSV value
-     * @param {number} h - hue (a value from 0 to 1)
-     * @param {number} s - saturation (a value from 0 to 1)
-     * @param {number} v - value (a value from 0 to 1)
-     * @returns {Color} Reference to this object for method chaining
-     */
-    setHSV(h, s, v) {
-        var r, g, b;
-
-        var i = Math.floor(h * 6);
-        var f = h * 6 - i;
-        var p = v * (1 - s);
-        var q = v * (1 - f * s);
-        var t = v * (1 - (1 - f) * s);
-
-        switch (i % 6) {
-            case 0: r = v, g = t, b = p; break;
-            case 1: r = q, g = v, b = p; break;
-            case 2: r = p, g = v, b = t; break;
-            case 3: r = p, g = q, b = v; break;
-            case 4: r = t, g = p, b = v; break;
-            case 5: r = v, g = p, b = q; break;
-        }
-        return this.setColor(r * 255, g * 255, b * 255);
-    }
-
-    /**
-     * set this color to the specified HSL value
-     * @param {number} h - hue (a value from 0 to 1)
-     * @param {number} s - saturation (a value from 0 to 1)
-     * @param {number} l - lightness (a value from 0 to 1)
-     * @returns {Color} Reference to this object for method chaining
-     */
-    setHSL(h, s, l) {
-        var r, g, b;
-
-        if (s === 0) {
-            r = g = b = l; // achromatic
-        } else {
-            var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-            var p = 2 * l - q;
-
-            r = hue2rgb(p, q, h + 1/3);
-            g = hue2rgb(p, q, h);
-            b = hue2rgb(p, q, h - 1/3);
-        }
-
-        return this.setColor(r * 255, g * 255, b * 255);
-    }
-
-    /**
-     * Create a new copy of this color object.
-     * @returns {Color} Reference to the newly cloned object
-     */
-    clone() {
-        return pool.pull("Color").copy(this);
-    }
-
-    /**
-     * Copy a color object or CSS color into this one.
-     * @param {Color|string} color
-     * @returns {Color} Reference to this object for method chaining
-     */
-    copy(color) {
-        if (color instanceof Color) {
-            this.glArray.set(color.glArray);
-            return this;
-        }
-
-        return this.parseCSS(color);
-    }
-
-    /**
-     * Blend this color with the given one using addition.
-     * @param {Color} color
-     * @returns {Color} Reference to this object for method chaining
-     */
-    add(color) {
-        this.glArray[0] = clamp(this.glArray[0] + color.glArray[0], 0, 1);
-        this.glArray[1] = clamp(this.glArray[1] + color.glArray[1], 0, 1);
-        this.glArray[2] = clamp(this.glArray[2] + color.glArray[2], 0, 1);
-        this.glArray[3] = (this.glArray[3] + color.glArray[3]) / 2;
-
-        return this;
-    }
-
-    /**
-     * Darken this color value by 0..1
-     * @param {number} scale
-     * @returns {Color} Reference to this object for method chaining
-     */
-    darken(scale) {
-        scale = clamp(scale, 0, 1);
-        this.glArray[0] *= scale;
-        this.glArray[1] *= scale;
-        this.glArray[2] *= scale;
-
-        return this;
-    }
-
-    /**
-     * Linearly interpolate between this color and the given one.
-     * @param {Color} color
-     * @param {number} alpha - with alpha = 0 being this color, and alpha = 1 being the given one.
-     * @returns {Color} Reference to this object for method chaining
-     */
-    lerp(color, alpha) {
-        alpha = clamp(alpha, 0, 1);
-        this.glArray[0] += (color.glArray[0] - this.glArray[0]) * alpha;
-        this.glArray[1] += (color.glArray[1] - this.glArray[1]) * alpha;
-        this.glArray[2] += (color.glArray[2] - this.glArray[2]) * alpha;
-
-        return this;
-    }
-
-    /**
-     * Lighten this color value by 0..1
-     * @param {number} scale
-     * @returns {Color} Reference to this object for method chaining
-     */
-    lighten(scale) {
-        scale = clamp(scale, 0, 1);
-        this.glArray[0] = clamp(this.glArray[0] + (1 - this.glArray[0]) * scale, 0, 1);
-        this.glArray[1] = clamp(this.glArray[1] + (1 - this.glArray[1]) * scale, 0, 1);
-        this.glArray[2] = clamp(this.glArray[2] + (1 - this.glArray[2]) * scale, 0, 1);
-
-        return this;
-    }
-
-    /**
-     * Generate random r,g,b values for this color object
-     * @param {number} [min=0] - minimum value for the random range
-     * @param {number} [max=255] - maxmium value for the random range
-     * @returns {Color} Reference to this object for method chaining
-     */
-    random(min = 0, max = 255) {
-        if (min < 0) {
-            min = 0;
-        }
-        if (max > 255) {
-            max = 255;
-        }
-
-        return this.setColor(
-            random$1(min, max),
-            random$1(min, max),
-            random$1(min, max),
-            this.alpha
-        );
-    }
-
-    /**
-     * Return true if the r,g,b,a values of this color are equal with the
-     * given one.
-     * @param {Color} color
-     * @returns {boolean}
-     */
-    equals(color) {
-        return (
-            (this.glArray[0] === color.glArray[0]) &&
-            (this.glArray[1] === color.glArray[1]) &&
-            (this.glArray[2] === color.glArray[2]) &&
-            (this.glArray[3] === color.glArray[3])
-        );
-    }
-
-    /**
-     * Parse a CSS color string and set this color to the corresponding
-     * r,g,b values
-     * @param {string} cssColor
-     * @returns {Color} Reference to this object for method chaining
-     */
-    parseCSS(cssColor) {
-        // TODO : Memoize this function by caching its input
-
-        if (cssToRGB.has(cssColor)) {
-            return this.setColor.apply(this, cssToRGB.get(cssColor));
-        }
-
-        return this.parseRGB(cssColor);
-    }
-
-    /**
-     * Parse an RGB or RGBA CSS color string
-     * @param {string} rgbColor
-     * @returns {Color} Reference to this object for method chaining
-     */
-    parseRGB(rgbColor) {
-        // TODO : Memoize this function by caching its input
-
-        var match = rgbaRx.exec(rgbColor);
-        if (match) {
-            return this.setColor(+match[1], +match[2], +match[3], +match[5]);
-        }
-
-        return this.parseHex(rgbColor);
-    }
-
-    /**
-     * Parse a Hex color ("#RGB", "#RGBA" or "#RRGGBB", "#RRGGBBAA" format) and set this color to
-     * the corresponding r,g,b,a values
-     * @param {string} hexColor
-     * @param {boolean} [argb = false] - true if format is #ARGB, or #AARRGGBB (as opposed to #RGBA or #RGGBBAA)
-     * @returns {Color} Reference to this object for method chaining
-     */
-    parseHex(hexColor, argb = false) {
-        // TODO : Memoize this function by caching its input
-
-        var match;
-        if ((match = hex8Rx.exec(hexColor))) {
-            // #AARRGGBB or #RRGGBBAA
-            return this.setColor(
-                parseInt(match[argb === false ? 1 : 2], 16), // r
-                parseInt(match[argb === false ? 2 : 3], 16), // g
-                parseInt(match[argb === false ? 3 : 4], 16), // b
-                (clamp(parseInt(match[argb === false ? 4 : 1], 16), 0, 255) / 255.0).toFixed(1) // a
-            );
-        }
-
-        if ((match = hex6Rx.exec(hexColor))) {
-            // #RRGGBB
-            return this.setColor(
-                parseInt(match[1], 16),
-                parseInt(match[2], 16),
-                parseInt(match[3], 16)
-            );
-        }
-
-        if ((match = hex4Rx.exec(hexColor))) {
-            // #ARGB or #RGBA
-            var r = match[argb === false ? 1 : 2];
-            var g = match[argb === false ? 2 : 3];
-            var b = match[argb === false ? 3 : 4];
-            var a = match[argb === false ? 4 : 1];
-            return this.setColor(
-                parseInt(r + r, 16), // r
-                parseInt(g + g, 16), // g
-                parseInt(b + b, 16), // b
-                (clamp(parseInt(a + a, 16), 0, 255) / 255.0).toFixed(1) // a
-            );
-        }
-
-        if ((match = hex3Rx.exec(hexColor))) {
-            // #RGB
-            return this.setColor(
-                parseInt(match[1] + match[1], 16),
-                parseInt(match[2] + match[2], 16),
-                parseInt(match[3] + match[3], 16)
-            );
-        }
-
-        throw new Error(
-            "invalid parameter: " + hexColor
-        );
-    }
-
-    /**
-     * Pack this color into a Uint32 ARGB representation
-     * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
-     * @returns {number}
-     */
-    toUint32(alpha = 1.0) {
-        var ur = this.r & 0xff;
-        var ug = this.g & 0xff;
-        var ub = this.b & 0xff;
-        var ua = (alpha * 255) & 0xff;
-
-        return (ua << 24) + (ur << 16) + (ug << 8) + ub;
-    }
-
-    /**
-     * return an array representation of this object
-     * @returns {Float32Array}
-     */
-    toArray() {
-        return this.glArray;
-    }
-
-
-    /**
-     * return the color in "#RRGGBB" format
-     * @returns {string}
-     */
-    toHex() {
-        // TODO : Memoize this function by caching its result until any of
-        // the r,g,b,a values are changed
-
-        return "#" + toHex(this.r) + toHex(this.g) + toHex(this.b);
-    }
-
-    /**
-     * Get the color in "#RRGGBBAA" format
-     * @returns {string}
-     */
-    toHex8(alpha = this.alpha) {
-        // TODO : Memoize this function by caching its result until any of
-        // the r,g,b,a values are changed
-
-        return "#" + toHex(this.r) + toHex(this.g) + toHex(this.b) + toHex(alpha * 255);
-    }
-
-    /**
-     * Get the color in "rgb(R,G,B)" format
-     * @returns {string}
-     */
-    toRGB() {
-        // TODO : Memoize this function by caching its result until any of
-        // the r,g,b,a values are changed
-
-        return "rgb(" +
-            this.r + "," +
-            this.g + "," +
-            this.b +
-        ")";
-    }
-
-    /**
-     * Get the color in "rgba(R,G,B,A)" format
-     * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
-     * @returns {string}
-     */
-    toRGBA(alpha = this.alpha) {
-        // TODO : Memoize this function by caching its result until any of
-        // the r,g,b,a values are changed
-
-        return "rgba(" +
-            this.r + "," +
-            this.g + "," +
-            this.b + "," +
-            alpha +
-        ")";
-    }
-}
 
 /**
  * @classdesc
@@ -18028,1151 +19349,6 @@ let binList = {};
 let jsonList = {};
 
 /**
- * Collision detection (and projection-based collision response) of 2D shapes.<br>
- * Based on the Separating Axis Theorem and supports detecting collisions between simple Axis-Aligned Boxes, convex polygons and circles based shapes.
- * @namespace collision
- */
-
-var collision = {
-
-     /**
-      * The maximum number of children that a quadtree node can contain before it is split into sub-nodes.
-      * @name maxChildren
-      * @memberof collision
-      * @public
-      * @type {number}
-      * @default 8
-      * @see game.world.broadphase
-      */
-     maxChildren : 8,
-
-     /**
-      * The maximum number of levels that the quadtree will create.
-      * @name maxDepth
-      * @memberof collision
-      * @public
-      * @type {number}
-      * @default 4
-      * @see game.world.broadphase
-      */
-     maxDepth : 4,
-
-    /**
-     * Enum for collision type values.
-     * @property {number} NO_OBJECT to disable collision check
-     * @property {number} PLAYER_OBJECT playbable characters
-     * @property {number} NPC_OBJECT non playable characters
-     * @property {number} ENEMY_OBJECT enemies objects
-     * @property {number} COLLECTABLE_OBJECT collectable objects
-     * @property {number} ACTION_OBJECT e.g. doors
-     * @property {number} PROJECTILE_OBJECT e.g. missiles
-     * @property {number} WORLD_SHAPE e.g. walls; for map collision shapes
-     * @property {number} USER user-defined collision types (see example)
-     * @property {number} ALL_OBJECT all of the above (including user-defined types)
-     * @readonly
-     * @enum {number}
-     * @name types
-     * @memberof collision
-     * @see Body.setCollisionMask
-     * @see Body.collisionType
-     * @example
-     * // set the body collision type
-     * myEntity.body.collisionType = me.collision.types.PLAYER_OBJECT;
-     *
-     * // filter collision detection with collision shapes, enemies and collectables
-     * myEntity.body.setCollisionMask(
-     *     me.collision.types.WORLD_SHAPE |
-     *     me.collision.types.ENEMY_OBJECT |
-     *     me.collision.types.COLLECTABLE_OBJECT
-     * );
-     *
-     * // User-defined collision types are defined using BITWISE LEFT-SHIFT:
-     * game.collisionTypes = {
-     *     LOCKED_DOOR : me.collision.types.USER << 0,
-     *     OPEN_DOOR   : me.collision.types.USER << 1,
-     *     LOOT        : me.collision.types.USER << 2,
-     * };
-     *
-     * // Set collision type for a door entity
-     * myDoorEntity.body.collisionType = game.collisionTypes.LOCKED_DOOR;
-     *
-     * // Set collision mask for the player entity, so it collides with locked doors and loot
-     * myPlayerEntity.body.setCollisionMask(
-     *     me.collision.types.ENEMY_OBJECT |
-     *     me.collision.types.WORLD_SHAPE |
-     *     game.collisionTypes.LOCKED_DOOR |
-     *     game.collisionTypes.LOOT
-     * );
-     */
-    types : {
-        /** to disable collision check */
-        NO_OBJECT           : 0,
-        PLAYER_OBJECT       : 1 << 0,
-        NPC_OBJECT          : 1 << 1,
-        ENEMY_OBJECT        : 1 << 2,
-        COLLECTABLE_OBJECT  : 1 << 3,
-        ACTION_OBJECT       : 1 << 4, // door, etc...
-        PROJECTILE_OBJECT   : 1 << 5, // missiles, etc...
-        WORLD_SHAPE         : 1 << 6, // walls, etc...
-        USER                : 1 << 7, // user-defined types start here...
-        ALL_OBJECT          : 0xFFFFFFFF // all objects
-    },
-
-    /**
-     * Checks for object colliding with the given line
-     * @name rayCast
-     * @memberof collision
-     * @public
-     * @param {Line} line - line to be tested for collision
-     * @param {Array.<Renderable>} [result] - a user defined array that will be populated with intersecting physic objects.
-     * @returns {Array.<Renderable>} an array of intersecting physic objects
-     * @example
-     *    // define a line accross the viewport
-     *    var ray = new me.Line(
-     *        // absolute position of the line
-     *        0, 0, [
-     *        // starting point relative to the initial position
-     *        new me.Vector2d(0, 0),
-     *        // ending point
-     *        new me.Vector2d(me.game.viewport.width, me.game.viewport.height)
-     *    ]);
-     *
-     *    // check for collition
-     *    result = me.collision.rayCast(ray);
-     *
-     *    if (result.length > 0) {
-     *        // ...
-     *    }
-     */
-    rayCast(line, result) { return game.world.detector.rayCast(line, result); }
-};
-
-/**
- * @classdesc
- * an ellipse Object
- */
- class Ellipse {
-    /**
-     * @param {number} x - the center x coordinate of the ellipse
-     * @param {number} y - the center y coordinate of the ellipse
-     * @param {number} w - width (diameter) of the ellipse
-     * @param {number} h - height (diameter) of the ellipse
-     */
-    constructor(x, y, w, h) {
-        /**
-         * the center coordinates of the ellipse
-         * @public
-         * @type {Vector2d}
-         * @name pos
-         * @memberof Ellipse
-         */
-        this.pos = pool.pull("Vector2d");
-
-        /**
-         * The bounding rectangle for this shape
-         * @private
-         */
-        this._bounds = undefined;
-
-        /**
-         * Maximum radius of the ellipse
-         * @public
-         * @type {number}
-         * @name radius
-         * @memberof Ellipse
-         */
-        this.radius = NaN;
-
-        /**
-         * Pre-scaled radius vector for ellipse
-         * @public
-         * @type {Vector2d}
-         * @name radiusV
-         * @memberof Ellipse
-         */
-        this.radiusV = pool.pull("Vector2d");
-
-        /**
-         * Radius squared, for pythagorean theorom
-         * @public
-         * @type {Vector2d}
-         * @name radiusSq
-         * @memberof Ellipse
-         */
-        this.radiusSq = pool.pull("Vector2d");
-
-        /**
-         * x/y scaling ratio for ellipse
-         * @public
-         * @type {Vector2d}
-         * @name ratio
-         * @memberof Ellipse
-         */
-        this.ratio = pool.pull("Vector2d");
-
-        // the shape type
-        this.shapeType = "Ellipse";
-        this.setShape(x, y, w, h);
-    }
-
-    /** @ignore */
-    onResetEvent(x, y, w, h) {
-        this.setShape(x, y, w, h);
-    }
-
-    /**
-     * set new value to the Ellipse shape
-     * @name setShape
-     * @memberof Ellipse
-     * @param {number} x - the center x coordinate of the ellipse
-     * @param {number} y - the center y coordinate of the ellipse
-     * @param {number} w - width (diameter) of the ellipse
-     * @param {number} h - height (diameter) of the ellipse
-     * @returns {Ellipse} this instance for objecf chaining
-     */
-    setShape(x, y, w, h) {
-        var hW = w / 2;
-        var hH = h / 2;
-
-        this.pos.set(x, y);
-        this.radius = Math.max(hW, hH);
-        this.ratio.set(hW / this.radius, hH / this.radius);
-        this.radiusV.set(this.radius, this.radius).scaleV(this.ratio);
-        var r = this.radius * this.radius;
-        this.radiusSq.set(r, r).scaleV(this.ratio);
-
-        // update the corresponding bounds
-        this.getBounds().setMinMax(x, y, x + w, x + h);
-        // elipse position is the center of the cirble, bounds position are top left
-        this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
-
-        return this;
-    }
-
-    /**
-     * Rotate this Ellipse (counter-clockwise) by the specified angle (in radians).
-     * @name rotate
-     * @memberof Ellipse
-     * @param {number} angle - The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
-     * @returns {Ellipse} Reference to this object for method chaining
-     */
-    rotate(angle, v) {
-        // TODO : only works for circle
-        this.pos.rotate(angle, v);
-        this.getBounds().shift(this.pos);
-        this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
-        return this;
-    }
-
-    /**
-     * Scale this Ellipse by the specified scalar.
-     * @name scale
-     * @memberof Ellipse
-     * @param {number} x
-     * @param {number} [y=x]
-     * @returns {Ellipse} Reference to this object for method chaining
-     */
-    scale(x, y = x) {
-        return this.setShape(
-            this.pos.x,
-            this.pos.y,
-            this.radiusV.x * 2 * x,
-            this.radiusV.y * 2 * y
-        );
-    }
-
-    /**
-     * Scale this Ellipse by the specified vector.
-     * @name scale
-     * @memberof Ellipse
-     * @param {Vector2d} v
-     * @returns {Ellipse} Reference to this object for method chaining
-     */
-    scaleV(v) {
-        return this.scale(v.x, v.y);
-    }
-
-    /**
-     * apply the given transformation matrix to this ellipse
-     * @name transform
-     * @memberof Ellipse
-     * @param {Matrix2d} matrix - the transformation matrix
-     * @returns {Polygon} Reference to this object for method chaining
-     */
-    transform(matrix) { // eslint-disable-line no-unused-vars
-        // TODO
-        return this;
-    }
-
-    /**
-     * translate the circle/ellipse by the specified offset
-     * @name translate
-     * @memberof Ellipse
-     * @method
-     * @param {number} x - x offset
-     * @param {number} y - y offset
-     * @returns {Ellipse} this ellipse
-     */
-    /**
-     * translate the circle/ellipse by the specified vector
-     * @name translate
-     * @memberof Ellipse
-     * @param {Vector2d} v - vector offset
-     * @returns {Ellipse} this ellipse
-     */
-    translate() {
-        var _x, _y;
-
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-
-        this.pos.x += _x;
-        this.pos.y += _y;
-        this.getBounds().translate(_x, _y);
-
-        return this;
-    }
-
-    /**
-     * check if this circle/ellipse contains the specified point
-     * @name contains
-     * @method
-     * @memberof Ellipse
-     * @param {Vector2d} point
-     * @returns {boolean} true if contains
-     */
-
-    /**
-     * check if this circle/ellipse contains the specified point
-     * @name contains
-     * @memberof Ellipse
-     * @param  {number} x -  x coordinate
-     * @param  {number} y -  y coordinate
-     * @returns {boolean} true if contains
-     */
-    contains() {
-        var _x, _y;
-
-        if (arguments.length === 2) {
-          // x, y
-          _x = arguments[0];
-          _y = arguments[1];
-        } else {
-          // vector
-          _x = arguments[0].x;
-          _y = arguments[0].y;
-        }
-
-        // Make position relative to object center point.
-        _x -= this.pos.x;
-        _y -= this.pos.y;
-        // Pythagorean theorem.
-        return (
-            ((_x * _x) / this.radiusSq.x) +
-            ((_y * _y) / this.radiusSq.y)
-        ) <= 1.0;
-    }
-
-    /**
-     * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
-     * @name getBounds
-     * @memberof Ellipse
-     * @returns {Bounds} this shape bounding box Rectangle object
-     */
-    getBounds() {
-        if (typeof this._bounds === "undefined") {
-            this._bounds = pool.pull("Bounds");
-        }
-        return this._bounds;
-    }
-
-    /**
-     * clone this Ellipse
-     * @name clone
-     * @memberof Ellipse
-     * @returns {Ellipse} new Ellipse
-     */
-    clone() {
-        return new Ellipse(
-            this.pos.x,
-            this.pos.y,
-            this.radiusV.x * 2,
-            this.radiusV.y * 2
-        );
-    }
-}
-
-/**
- * @classdesc
- * represents a point in a 2d space
- */
- class Point {
-    constructor(x = 0, y = 0) {
-        /**
-         * the position of the point on the horizontal axis
-         * @type {Number}
-         * @default 0
-         */
-        this.x = x;
-
-        /**
-         * the position of the point on the vertical axis
-         * @type {Number}
-         * @default 0
-         */
-        this.y = y;
-    }
-
-    /** @ignore */
-    onResetEvent(x = 0, y = 0) {
-        this.set(x, y);
-    }
-
-    /**
-     * set the Point x and y properties to the given values
-     * @param {number} x
-     * @param {number} y
-     * @returns {Point} Reference to this object for method chaining
-     */
-    set(x = 0, y = 0) {
-        this.x = x;
-        this.y = y;
-        return this;
-    }
-
-    /**
-     * return true if the two points are the same
-     * @name equals
-     * @memberof Point
-     * @method
-     * @param {Point} point
-     * @returns {boolean}
-     */
-    /**
-     * return true if this point is equal to the given values
-     * @param {number} x
-     * @param {number} y
-     * @returns {boolean}
-     */
-     equals() {
-        var _x, _y;
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // point
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-        return ((this.x === _x) && (this.y === _y));
-    }
-
-    /**
-     * clone this Point
-     * @returns {Point} new Point
-     */
-    clone() {
-        return new Point(this.x, this.y);
-    }
-}
-
-/**
- * @classdesc
- * a Generic Physic Body Object with some physic properties and behavior functionality, to as a member of a Renderable.
- * @see Renderable.body
- */
- class Body {
-    /**
-     * @param {Renderable} ancestor - the parent object this body is attached to
-     * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] - a initial shape, list of shapes, or JSON object defining the body
-     * @param {Function} [onBodyUpdate] - callback for when the body is updated (e.g. add/remove shapes)
-     */
-    constructor(ancestor, shapes, onBodyUpdate) {
-
-        /**
-         * a reference to the parent object that contains this body,
-         * or undefined if it has not been added to one.
-         * @public
-         * @type {Renderable}
-         * @default undefined
-         */
-        this.ancestor = ancestor;
-
-        if (typeof this.bounds === "undefined") {
-            /**
-             * The AABB bounds box reprensenting this body
-             * @public
-             * @type {Bounds}
-             */
-            this.bounds = pool.pull("Bounds");
-        }
-
-        if (typeof this.shapes === "undefined") {
-            /**
-             * The collision shapes of the body
-             * @ignore
-             * @type {Polygon[]|Line[]|Ellipse[]|Point|Point[]}
-             */
-            this.shapes = [];
-        }
-
-        /**
-         * The body collision mask, that defines what should collide with what.<br>
-         * (by default will collide with all entities)
-         * @ignore
-         * @type {number}
-         * @default collision.types.ALL_OBJECT
-         * @see collision.types
-         */
-        this.collisionMask = collision.types.ALL_OBJECT;
-
-        /**
-         * define the collision type of the body for collision filtering
-         * @public
-         * @type {number}
-         * @default collision.types.ENEMY_OBJECT
-         * @see collision.types
-         * @example
-         * // set the body collision type
-         * body.collisionType = me.collision.types.PLAYER_OBJECT;
-         */
-        this.collisionType = collision.types.ENEMY_OBJECT;
-
-        if (typeof this.vel === "undefined") {
-            /**
-             * The current velocity of the body.
-             * See to apply a force if you need to modify a body velocity
-             * @see Body.force
-             * @public
-             * @type {Vector2d}
-             * @default <0,0>
-             */
-            this.vel = pool.pull("Vector2d");
-        }
-        this.vel.set(0, 0);
-
-        if (typeof this.force === "undefined") {
-            /**
-             * body force to apply to this the body in the current step.
-             * (any positive or negative force will be cancelled after every world/body update cycle)
-             * @public
-             * @type {Vector2d}
-             * @default <0,0>
-             * @see Body.setMaxVelocity
-             * @example
-             * // define a default maximum acceleration, initial force and friction
-             * this.body.force.set(1, 0);
-             * this.body.friction.set(0.4, 0);
-             * this.body.setMaxVelocity(3, 15);
-             *
-             * // apply a postive or negative force when pressing left of right key
-             * update(dt) {
-             *     if (me.input.isKeyPressed("left"))    {
-             *          this.body.force.x = -this.body.maxVel.x;
-             *      } else if (me.input.isKeyPressed("right")) {
-             *         this.body.force.x = this.body.maxVel.x;
-             *     }
-             * }
-             */
-            this.force = pool.pull("Vector2d");
-        }
-        this.force.set(0, 0);
-
-        if (typeof this.friction === "undefined") {
-            /**
-             * body friction
-             * @public
-             * @type {Vector2d}
-             * @default <0,0>
-             */
-            this.friction = pool.pull("Vector2d");
-        }
-        this.friction.set(0, 0);
-
-        /**
-         * the body bouciness level when colliding with other solid bodies :
-         * a value of 0 will not bounce, a value of 1 will fully rebound.
-         * @public
-         * @type {number}
-         * @default 0
-         */
-        this.bounce = 0;
-
-        /**
-         * the body mass
-         * @public
-         * @type {number}
-         * @default 1
-         */
-        this.mass = 1;
-
-        if (typeof this.maxVel === "undefined") {
-            /**
-             * max velocity (to limit body velocity)
-             * @public
-             * @type {Vector2d}
-             * @default <490,490>
-             */
-            this.maxVel = pool.pull("Vector2d");
-        }
-        // cap by default to half the default gravity force
-        this.maxVel.set(490, 490);
-
-
-        /**
-         * Either this body is a static body or not.
-         * A static body is completely fixed and can never change position or angle.
-         * @readonly
-         * @public
-         * @type {boolean}
-         * @default false
-         */
-        this.isStatic = false;
-
-
-        /**
-         * The degree to which this body is affected by the world gravity
-         * @public
-         * @see World.gravity
-         * @type {number}
-         * @default 1.0
-         */
-        this.gravityScale = 1.0;
-
-        /**
-         * If true this body won't be affected by the world gravity
-         * @public
-         * @see World.gravity
-         * @type {boolean}
-         * @default false
-         */
-        this.ignoreGravity = false;
-
-        /**
-         * falling state of the body<br>
-         * true if the object is falling<br>
-         * false if the object is standing on something<br>
-         * @readonly
-         * @public
-         * @type {boolean}
-         * @default false
-         */
-        this.falling = false;
-
-        /**
-         * jumping state of the body<br>
-         * equal true if the body is jumping<br>
-         * @readonly
-         * @public
-         * @type {boolean}
-         * @default false
-         */
-        this.jumping = false;
-
-
-        if (typeof onBodyUpdate === "function") {
-            this.onBodyUpdate = onBodyUpdate;
-        }
-
-        this.bounds.clear();
-
-        // parses the given shapes array and add them
-        if (typeof shapes !== "undefined") {
-            if (Array.isArray(shapes)) {
-                for (var s = 0; s < shapes.length; s++) {
-                    this.addShape(shapes[s]);
-                }
-            } else {
-                this.addShape(shapes);
-            }
-        }
-
-        // automatically enable physic when a body is added to a renderable
-        this.ancestor.isKinematic = false;
-    }
-
-    /**
-     * set the body as a static body
-     * static body do not move automatically and do not check againt collision with others
-     * @param {boolean} [isStatic=true]
-     */
-    setStatic(isStatic = true) {
-        this.isStatic = isStatic === true;
-    }
-
-    /**
-     * add a collision shape to this body <br>
-     * (note: me.Rect objects will be converted to me.Polygon before being added)
-     * @param {Rect|Polygon|Line|Ellipse|Point|Point[]|Bounds|object} shape - a shape or JSON object
-     * @returns {number} the shape array length
-     * @example
-     * // add a rectangle shape
-     * this.body.addShape(new me.Rect(0, 0, image.width, image.height));
-     * // add a shape from a JSON object
-     * this.body.addShape(me.loader.getJSON("shapesdef").banana);
-     */
-    addShape(shape) {
-        if (shape instanceof Rect || shape instanceof Bounds) {
-            var poly = shape.toPolygon();
-            this.shapes.push(poly);
-            // update the body bounds
-            this.bounds.add(poly.points);
-            this.bounds.translate(poly.pos);
-        } else if (shape instanceof Ellipse) {
-            if (!this.shapes.includes(shape)) {
-                // see removeShape
-                this.shapes.push(shape);
-            }
-            // update the body bounds
-            this.bounds.addBounds(shape.getBounds());
-            // use bounds position as ellipse position is center
-            this.bounds.translate(
-                shape.getBounds().x,
-                shape.getBounds().y
-            );
-        } else if (shape instanceof Polygon) {
-            if (!this.shapes.includes(shape)) {
-                // see removeShape
-                this.shapes.push(shape);
-            }
-            // update the body bounds
-            this.bounds.add(shape.points);
-            this.bounds.translate(shape.pos);
-        } else if (shape instanceof Point) {
-            if (!this.shapes.includes(shape)) {
-                // see removeShape
-                this.shapes.push(shape);
-            }
-            this.bounds.addPoint(shape);
-        } else {
-            // JSON object
-            this.fromJSON(shape);
-        }
-
-        if (typeof this.onBodyUpdate === "function") {
-            this.onBodyUpdate(this);
-        }
-
-        // return the length of the shape list
-        return this.shapes.length;
-    }
-
-    /**
-     * set the body vertices to the given one
-     * @param {Vector2d[]} vertices - an array of me.Vector2d points defining a convex hull
-     * @param {number} [index=0] - the shape object for which to set the vertices
-     * @param {boolean} [clear=true] - either to reset the body definition before adding the new vertices
-     */
-    setVertices(vertices, index = 0, clear = true) {
-        var polygon = this.getShape(index);
-        if (polygon instanceof Polygon) {
-            polygon.setShape(0, 0, vertices);
-        } else {
-            // this will replace any other non polygon shape type if defined
-            this.shapes[index] = pool.pull("Polygon", 0, 0, vertices);
-        }
-
-        // update the body bounds to take in account the new vertices
-        this.bounds.add(this.shapes[index].points, clear);
-
-        if (typeof this.onBodyUpdate === "function") {
-            this.onBodyUpdate(this);
-        }
-    }
-
-    /**
-     * add the given vertices to the body shape
-     * @param {Vector2d[]} vertices - an array of me.Vector2d points defining a convex hull
-     * @param {number} [index=0] - the shape object for which to set the vertices
-     */
-    addVertices(vertices, index = 0) {
-        this.setVertices(vertices, index, false);
-    }
-
-    /**
-     * add collision mesh based on a JSON object
-     * (this will also apply any physic properties defined in the given JSON file)
-     * @param {object} json - a JSON object as exported from a Physics Editor tool
-     * @param {string} [id] - an optional shape identifier within the given the json object
-     * @see https://www.codeandweb.com/physicseditor
-     * @returns {number} how many shapes were added to the body
-     * @example
-     * // define the body based on the banana shape
-     * this.body.fromJSON(me.loader.getJSON("shapesdef").banana);
-     * // or ...
-     * this.body.fromJSON(me.loader.getJSON("shapesdef"), "banana");
-     */
-    fromJSON(json, id) {
-        var data = json;
-
-        if (typeof id !== "undefined" ) {
-            data = json[id];
-        }
-
-        // Physic Editor Format (https://www.codeandweb.com/physicseditor)
-        if (typeof data === "undefined") {
-            throw new Error("Identifier (" + id + ") undefined for the given JSON object)");
-        }
-
-        if (data.length) {
-            // go through all shapes and add them to the body
-            for (var i = 0; i < data.length; i++) {
-                this.addVertices(data[i].shape, i);
-            }
-            // apply density, friction and bounce properties from the first shape
-            // Note : how to manage different mass or friction for all different shapes?
-            this.mass = data[0].density || 0;
-            this.friction.set(data[0].friction || 0, data[0].friction || 0);
-            this.bounce = data[0].bounce || 0;
-        }
-
-        // return the amount of shapes added to the body
-        return data.length;
-    }
-
-    /**
-     * return the collision shape at the given index
-     * @param {number} [index=0] - the shape object at the specified index
-     * @returns {Polygon|Line|Ellipse} shape a shape object if defined
-     */
-    getShape(index) {
-        return this.shapes[index || 0];
-    }
-
-    /**
-     * returns the AABB bounding box for this body
-     * @returns {Bounds} bounding box Rectangle object
-     */
-    getBounds() {
-        return this.bounds;
-    }
-
-    /**
-     * remove the specified shape from the body shape list
-     * @param {Polygon|Line|Ellipse} shape - a shape object
-     * @returns {number} the shape array length
-     */
-    removeShape(shape) {
-        // clear the current bounds
-        this.bounds.clear();
-        // remove the shape from shape list
-        remove(this.shapes, shape);
-        // add everything left back
-        for (var s = 0; s < this.shapes.length; s++) {
-            this.addShape(this.shapes[s]);
-        }
-        // return the length of the shape list
-        return this.shapes.length;
-    }
-
-    /**
-     * remove the shape at the given index from the body shape list
-     * @param {number} index - the shape object at the specified index
-     * @returns {number} the shape array length
-     */
-    removeShapeAt(index) {
-        return this.removeShape(this.getShape(index));
-    }
-
-    /**
-     * By default all physic bodies are able to collide with all other bodies, <br>
-     * but it's also possible to specify 'collision filters' to provide a finer <br>
-     * control over which body can collide with each other.
-     * @see collision.types
-     * @param {number} [bitmask = collision.types.ALL_OBJECT] - the collision mask
-     * @example
-     * // filter collision detection with collision shapes, enemies and collectables
-     * body.setCollisionMask(me.collision.types.WORLD_SHAPE | me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
-     * ...
-     * // disable collision detection with all other objects
-     * body.setCollisionMask(me.collision.types.NO_OBJECT);
-     */
-    setCollisionMask(bitmask = collision.types.ALL_OBJECT) {
-        this.collisionMask = bitmask;
-    }
-
-    /**
-     * define the collision type of the body for collision filtering
-     * @see collision.types
-     * @param {number} type - the collision type
-     * @example
-     * // set the body collision type
-     * body.collisionType = me.collision.types.PLAYER_OBJECT;
-     */
-    setCollisionType(type) {
-        if (typeof type !== "undefined") {
-            if (typeof collision.types[type] !== "undefined") {
-                this.collisionType = collision.types[type];
-            } else {
-                throw new Error("Invalid value for the collisionType property");
-            }
-        }
-    }
-
-    /**
-     * the built-in function to solve the collision response
-     * @param {object} response - the collision response object (see {@link ResponseObject})
-     */
-    respondToCollision(response) {
-        // the overlap vector
-        var overlap = response.overlapV;
-
-        // FIXME: Respond proportionally to object mass
-
-        // Move out of the other object shape
-        this.ancestor.pos.sub(overlap);
-
-        // adjust velocity
-        if (overlap.x !== 0) {
-            this.vel.x = ~~(0.5 + this.vel.x - overlap.x) || 0;
-            if (this.bounce > 0) {
-                this.vel.x *= -this.bounce;
-            }
-        }
-        if (overlap.y !== 0) {
-            this.vel.y = ~~(0.5 + this.vel.y - overlap.y) || 0;
-            if (this.bounce > 0) {
-                this.vel.y *= -this.bounce;
-            }
-
-            if (!this.ignoreGravity) {
-                // cancel the falling an jumping flags if necessary
-                var dir = this.falling === true ? 1 : this.jumping === true ? -1 : 0;
-                this.falling = overlap.y >= dir;
-                this.jumping = overlap.y <= -dir;
-            }
-        }
-    }
-
-    /**
-     * The forEach() method executes a provided function once per body shape element. <br>
-     * the callback function is invoked with three arguments: <br>
-     *    - The current element being processed in the array <br>
-     *    - The index of element in the array. <br>
-     *    - The array forEach() was called upon. <br>
-     * @param {Function} callback - fnction to execute on each element
-     * @param {object} [thisArg] - value to use as this(i.e reference Object) when executing callback.
-     * @example
-     * // iterate through all shapes of the physic body
-     * mySprite.body.forEach((shape) => {
-     *    shape.doSomething();
-     * });
-     * mySprite.body.forEach((shape, index) => { ... });
-     * mySprite.body.forEach((shape, index, array) => { ... });
-     * mySprite.body.forEach((shape, index, array) => { ... }, thisArg);
-     */
-    forEach(callback, thisArg) {
-        var context = this, i = 0;
-        var shapes = this.shapes;
-
-        var len = shapes.length;
-
-        if (typeof callback !== "function") {
-            throw new Error(callback + " is not a function");
-        }
-
-        if (arguments.length > 1) {
-            context = thisArg;
-        }
-
-        while (i < len) {
-            callback.call(context, shapes[i], i, shapes);
-            i++;
-        }
-    }
-
-    /**
-     * Returns true if the any of the shape composing the body contains the given point.
-     * @method Body#contains
-     * @param {Vector2d} point
-     * @returns {boolean} true if contains
-     */
-    /**
-     * Returns true if the any of the shape composing the body contains the given point.
-     * @param  {number} x -  x coordinate
-     * @param  {number} y -  y coordinate
-     * @returns {boolean} true if contains
-     */
-    contains() {
-        var _x, _y;
-
-        if (arguments.length === 2) {
-          // x, y
-          _x = arguments[0];
-          _y = arguments[1];
-        } else {
-          // vector
-          _x = arguments[0].x;
-          _y = arguments[0].y;
-        }
-
-        if (this.getBounds().contains(_x, _y)) {
-             // cannot use forEach here as cannot break out with a return
-             for (var i = this.shapes.length, shape; i--, (shape = this.shapes[i]);) {
-                if (shape.contains(_x, _y)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Rotate this body (counter-clockwise) by the specified angle (in radians).
-     * Unless specified the body will be rotated around its center point
-     * @param {number} angle - The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v=Body.getBounds().center] - an optional point to rotate around
-     * @returns {Body} Reference to this object for method chaining
-     */
-    rotate(angle, v = this.getBounds().center) {
-        if (angle !== 0) {
-            this.bounds.clear();
-            this.forEach((shape) => {
-                shape.rotate(angle, v);
-                this.bounds.addBounds(shape.getBounds());
-                /*
-                if (!(shape instanceof Ellipse)) {
-                    // ellipse position is center
-                    this.bounds.translate(shape.pos);
-                }
-                */
-            });
-            /*
-            if (typeof this.onBodyUpdate === "function") {
-                this.onBodyUpdate(this);
-            }
-            */
-        }
-        return this;
-    }
-
-    /**
-     * cap the body velocity (body.maxVel property) to the specified value<br>
-     * @param {number} x - max velocity on x axis
-     * @param {number} y - max velocity on y axis
-     */
-    setMaxVelocity(x, y) {
-        this.maxVel.x = x;
-        this.maxVel.y = y;
-    }
-
-    /**
-     * set the body default friction
-     * @param {number} x - horizontal friction
-     * @param {number} y - vertical friction
-     */
-    setFriction(x = 0, y = 0) {
-        this.friction.x = x;
-        this.friction.y = y;
-    }
-
-    /**
-     * Updates the parent's position as well as computes the new body's velocity based
-     * on the values of force/friction.  Velocity chages are proportional to the
-     * me.timer.tick value (which can be used to scale velocities).  The approach to moving the
-     * parent renderable is to compute new values of the Body.vel property then add them to
-     * the parent.pos value thus changing the postion the amount of Body.vel each time the
-     * update call is made. <br>
-     * Updates to Body.vel are bounded by maxVel (which defaults to viewport size if not set) <br>
-     * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the constructor arguments.
-     * @protected
-     * @param {number} dt - time since the last update in milliseconds.
-     * @returns {boolean} true if resulting velocity is different than 0
-     */
-    update(dt) { // eslint-disable-line no-unused-vars
-        // apply timer.tick to delta time for linear interpolation (when enabled)
-        // #761 add delta time in body update
-        var deltaTime = /* dt * */ timer$1.tick;
-
-        // apply force if defined
-        if (this.force.x !== 0) {
-            this.vel.x += this.force.x * deltaTime;
-        }
-        if (this.force.y !== 0) {
-            this.vel.y += this.force.y * deltaTime;
-        }
-
-        // apply friction if defined
-        if (this.friction.x > 0) {
-            var fx = this.friction.x * deltaTime,
-                nx = this.vel.x + fx,
-                x = this.vel.x - fx;
-
-            this.vel.x = (
-                (nx < 0) ? nx :
-                ( x > 0) ? x  : 0
-            );
-        }
-        if (this.friction.y > 0) {
-            var fy = this.friction.y * deltaTime,
-                ny = this.vel.y + fy,
-                y = this.vel.y - fy;
-
-            this.vel.y = (
-                (ny < 0) ? ny :
-                ( y > 0) ? y  : 0
-            );
-        }
-
-        // cap velocity
-        if (this.vel.y !== 0) {
-            this.vel.y = clamp(this.vel.y, -this.maxVel.y, this.maxVel.y);
-        }
-        if (this.vel.x !== 0) {
-            this.vel.x = clamp(this.vel.x, -this.maxVel.x, this.maxVel.x);
-        }
-
-        // check if falling / jumping
-        this.falling = (this.vel.y * Math.sign(this.force.y)) > 0;
-        this.jumping = (this.falling ? false : this.jumping);
-
-        // update the body ancestor position
-        this.ancestor.pos.add(this.vel);
-
-        // returns true if vel is different from 0
-        return (this.vel.x !== 0 || this.vel.y !== 0);
-    }
-
-    /**
-     * Destroy function<br>
-     * @ignore
-     */
-    destroy() {
-        // push back instance into object pool
-        pool.push(this.bounds);
-        pool.push(this.vel);
-        pool.push(this.force);
-        pool.push(this.friction);
-        pool.push(this.maxVel);
-        this.shapes.forEach((shape) => {
-            pool.push(shape, false);
-        });
-
-        // set to undefined
-        this.onBodyUpdate = undefined;
-        this.ancestor = undefined;
-        this.bounds = undefined;
-        this.vel = undefined;
-        this.force = undefined;
-        this.friction = undefined;
-        this.maxVel = undefined;
-        this.shapes.length = 0;
-
-        // reset some variable to default
-        this.setStatic(false);
-    }
-}
-
-/**
  * @classdesc
  * a TMX Tile Set Object
  */
@@ -20350,267 +20526,6 @@ class TMXObject {
     }
 }
 
-// https://developer.chrome.com/blog/canvas2d/#round-rect
-
-/**
- * @classdesc
- * a rectangle object with rounded corners
- * @augments Rect
- */
-class RoundRect extends Rect {
-    /**
-     * @param {number} x - position of the rounded rectangle
-     * @param {number} y - position of the rounded rectangle
-     * @param {number} width - the rectangle width
-     * @param {number} height - the rectangle height
-     * @param {number} [radius=20] - the radius of the rounded corner
-     */
-    constructor(x, y, width, height, radius = 20) {
-        // parent constructor
-        super(x, y, width, height);
-
-        // set the corner radius
-        this.radius = radius;
-    }
-
-    /** @ignore */
-    onResetEvent(x, y, w, h, radius) {
-        super.setShape(x, y, w, h);
-        this.radius = radius;
-    }
-
-
-    /**
-     * the radius of the rounded corner
-     * @public
-     * @type {number}
-     * @default 20
-     * @name radius
-     * @memberof RoundRect
-     */
-    get radius() {
-        return this._radius;
-    }
-    set radius(value) {
-        // verify the rectangle is at least as wide and tall as the rounded corners.
-        if (this.width < 2 * value) {
-            value = this.width / 2;
-        }
-        if (this.height < 2 * value) {
-            value = this.height / 2;
-        }
-        this._radius = value;
-    }
-
-    /**
-     * copy the position, size and radius of the given rounded rectangle into this one
-     * @name copy
-     * @memberof RoundRect
-     * @param {RoundRect} rrect - source rounded rectangle
-     * @returns {RoundRect} new rectangle
-     */
-    copy(rrect) {
-        super.setShape(rrect.pos.x, rrect.pos.y, rrect.width, rrect.height);
-        this.radius = rrect.radius;
-        return this;
-    }
-
-    /**
-     * Returns true if the rounded rectangle contains the given point
-     * @name contains
-     * @memberof RoundRect
-     * @method
-     * @param  {number} x -  x coordinate
-     * @param  {number} y -  y coordinate
-     * @returns {boolean} true if contains
-     */
-
-    /**
-     * Returns true if the rounded rectangle contains the given point
-     * @name contains
-     * @memberof RoundRect
-     * @param {Vector2d} point
-     * @returns {boolean} true if contains
-     */
-    contains() {
-        var arg0 = arguments[0];
-        var _x, _y;
-        if (arguments.length === 2) {
-             // x, y
-             _x = arg0;
-             _y = arguments[1];
-         } else {
-             if (arg0 instanceof Rect) {
-                 // good enough
-                 return super.contains(arg0);
-             } else {
-                 // vector
-                _x = arg0.x;
-                _y = arg0.y;
-             }
-        }
-
-        // check whether point is outside the bounding box
-        if (_x < this.left || _x >= this.right || _y < this.top || _y >= this.bottom) {
-            return false; // outside bounding box
-        }
-
-        // check whether point is within the bounding box minus radius
-        if ((_x >= this.left + this.radius && _x <= this.right - this.radius) || (_y >= this.top + this.radius && _y <= this.bottom - this.radius)) {
-            return true;
-        }
-
-        // check whether point is in one of the rounded corner areas
-        var tx, ty;
-        var radiusX =  Math.max(0, Math.min(this.radius, this.width / 2));
-        var radiusY =  Math.max(0, Math.min(this.radius, this.height / 2));
-
-        if (_x < this.left + radiusX && _y < this.top + radiusY) {
-            tx = _x - this.left - radiusX;
-            ty = _y - this.top - radiusY;
-        } else if (_x > this.right - radiusX && _y < this.top + radiusY) {
-            tx = _x - this.right + radiusX;
-            ty = _y - this.top - radiusY;
-        } else if (_x > this.right - radiusX && _y > this.bottom - radiusY) {
-            tx = _x - this.right + radiusX;
-            ty = _y - this.bottom + radiusY;
-        } else if (_x < this.left + radiusX && _y > this.bottom - radiusY) {
-            tx = _x - this.left - radiusX;
-            ty = _y - this.bottom + radiusY;
-        } else {
-            return false; // inside and not within the rounded corner area
-        }
-
-        // Pythagorean theorem.
-        return ((tx * tx) + (ty * ty) <= (radiusX * radiusY));
-    }
-
-    /**
-     * check if this RoundRect is identical to the specified one
-     * @name equals
-     * @memberof RoundRect
-     * @param {RoundRect} rrect
-     * @returns {boolean} true if equals
-     */
-    equals(rrect) {
-        return super.equals(rrect) && this.radius === rrect.radius;
-    }
-
-    /**
-     * clone this RoundRect
-     * @name clone
-     * @memberof RoundRect
-     * @returns {RoundRect} new RoundRect
-     */
-    clone() {
-        return new RoundRect(this.pos.x, this.pos.y, this.width, this.height, this.radius);
-    }
-}
-
-/**
- * @classdesc
- * a line segment Object
- * @augments Polygon
- * @param {number} x - origin point of the Line
- * @param {number} y - origin point of the Line
- * @param {Vector2d[]} points - array of vectors defining the Line
- */
-
- class Line extends Polygon {
-
-    /**
-     * Returns true if the Line contains the given point
-     * @name contains
-     * @memberof Line
-     * @method
-     * @param {Vector2d} point
-     * @returns {boolean} true if contains
-     */
-
-    /**
-     * Returns true if the Line contains the given point
-     * @name contains
-     * @memberof Line
-     * @param  {number} x -  x coordinate
-     * @param  {number} y -  y coordinate
-     * @returns {boolean} true if contains
-     */
-    contains() {
-        var _x, _y;
-
-        if (arguments.length === 2) {
-          // x, y
-          _x = arguments[0];
-          _y = arguments[1];
-        } else {
-          // vector
-          _x = arguments[0].x;
-          _y = arguments[0].y;
-        }
-
-        // translate the given coordinates,
-        // rather than creating temp translated vectors
-        _x -= this.pos.x; // Cx
-        _y -= this.pos.y; // Cy
-        var start = this.points[0]; // Ax/Ay
-        var end = this.points[1]; // Bx/By
-
-        //(Cy - Ay) * (Bx - Ax) = (By - Ay) * (Cx - Ax)
-        return (_y - start.y) * (end.x - start.x) === (end.y - start.y) * (_x - start.x);
-    }
-
-    /**
-     * Computes the calculated collision edges and normals.
-     * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
-     * @name recalc
-     * @memberof Line
-     * @returns {Line} this instance for objecf chaining
-     */
-    recalc() {
-        var edges = this.edges;
-        var normals = this.normals;
-        var indices = this.indices;
-
-        // Copy the original points array and apply the offset/angle
-        var points = this.points;
-
-        if (points.length !== 2) {
-            throw new Error("Requires exactly 2 points");
-        }
-
-        // Calculate the edges/normals
-        if (edges[0] === undefined) {
-            edges[0] = pool.pull("Vector2d");
-        }
-        edges[0].copy(points[1]).sub(points[0]);
-        if (normals[0] === undefined) {
-            normals[0] = pool.pull("Vector2d");
-        }
-        normals[0].copy(edges[0]).perp().normalize();
-
-        // do not do anything here, indices will be computed by
-        // toIndices if array is empty upon function call
-        indices.length = 0;
-
-        return this;
-    }
-
-    /**
-     * clone this line segment
-     * @name clone
-     * @memberof Line
-     * @returns {Line} new Line
-     */
-    clone() {
-        var copy = [];
-        this.points.forEach((point) => {
-            copy.push(point.clone());
-        });
-        return new Line(this.pos.x, this.pos.y, copy);
-    }
-
-}
-
 /**
  * @classdesc
  * a simplified path2d implementation, supporting only one path
@@ -20851,9 +20766,6 @@ class RoundRect extends Rect {
             points.push(pool.pull("Point", _x2, _y2));
             angle += direction * dangle;
         }
-        //var x1 = radiusX * Math.cos(endAngle);
-        //var y1 = radiusY * Math.sin(endAngle);
-        //points.push(pool.pull("Point", x + x1 * cos_rotation - y1 * sin_rotation, y + x1 * sin_rotation + y1 * cos_rotation));
     }
 
     /**
@@ -20866,8 +20778,11 @@ class RoundRect extends Rect {
     rect(x, y, width, height) {
         this.moveTo(x, y);
         this.lineTo(x + width, y);
+        this.moveTo(x + width, y);
         this.lineTo(x + width, y + height);
+        this.moveTo(x + width, y + height);
         this.lineTo(x, y + height);
+        this.moveTo(x, y + height);
         this.lineTo(x, y);
     }
 
@@ -21665,18 +21580,18 @@ function minify(src) {
 
  class VertexArrayBuffer {
 
-    constructor(vertex_size, vertex_per_quad) {
+    constructor(vertex_size, vertex_per_obj) {
         // the size of one vertex in float
         this.vertexSize = vertex_size;
-        // size of a quad in vertex
-        this.quadSize = vertex_per_quad;
+        // size of an object in vertex
+        this.objSize = vertex_per_obj;
         // the maximum number of vertices the vertex array buffer can hold
-        this.maxVertex = 256;
+        this.maxVertex = 256; // (note: this seems to be the sweet spot performance-wise when using batching)
         // the current number of vertices added to the vertex array buffer
         this.vertexCount = 0;
 
         // the actual vertex data buffer
-        this.buffer = new ArrayBuffer(this.maxVertex * this.vertexSize * this.quadSize);
+        this.buffer = new ArrayBuffer(this.maxVertex * this.vertexSize * this.objSize);
         // Float32 and Uint32 view of the vertex data array buffer
         this.bufferF32 = new Float32Array(this.buffer);
         this.bufferU32 = new Uint32Array(this.buffer);
@@ -21695,7 +21610,7 @@ function minify(src) {
      * return true if full
      * @ignore
      */
-    isFull(vertex = this.quadSize) {
+    isFull(vertex = this.objSize) {
          return (this.vertexCount + vertex >= this.maxVertex);
     }
 
@@ -21703,14 +21618,18 @@ function minify(src) {
      * resize the vertex buffer, retaining its original contents
      * @ignore
      */
-    resize() {
-        // double the vertex size
-        this.maxVertex <<= 1;
+    resize(vertexCount) {
+
+        while (vertexCount > this.maxVertex) {
+            // double the vertex size
+            this.maxVertex <<= 1;
+        }
+
         // save a reference to the previous data
         var data = this.bufferF32;
 
         // recreate ArrayBuffer and views
-        this.buffer = new ArrayBuffer(this.maxVertex * this.vertexSize * this.quadSize);
+        this.buffer = new ArrayBuffer(this.maxVertex * this.vertexSize * this.objSize);
         this.bufferF32 = new Float32Array(this.buffer);
         this.bufferU32 = new Uint32Array(this.buffer);
 
@@ -21728,19 +21647,19 @@ function minify(src) {
         var offset = this.vertexCount * this.vertexSize;
 
         if (this.vertexCount >= this.maxVertex) {
-            this.resize();
+            this.resize(this.vertexCount);
         }
 
-        this.bufferF32[offset + 0] = x;
-        this.bufferF32[offset + 1] = y;
+        this.bufferF32[offset] = x;
+        this.bufferF32[++offset] = y;
 
         if (typeof u !== "undefined") {
-            this.bufferF32[offset + 2] = u;
-            this.bufferF32[offset + 3] = v;
+            this.bufferF32[++offset] = u;
+            this.bufferF32[++offset] = v;
         }
 
         if (typeof tint !== "undefined") {
-            this.bufferU32[offset + 4] = tint;
+            this.bufferU32[++offset] = tint;
         }
 
         this.vertexCount++;
@@ -21790,11 +21709,7 @@ function minify(src) {
 
 }
 
-var primitiveVertex = "// Current vertex point\nattribute vec2 aVertex;\n\n// Projection matrix\nuniform mat4 uProjectionMatrix;\n\n// Vertex color\nuniform vec4 uColor;\n\n// Fragment color\nvarying vec4 vColor;\n\nvoid main(void) {\n    // Transform the vertex position by the projection matrix\n    gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);\n    // Pass the remaining attributes to the fragment shader\n    vColor = vec4(uColor.rgb * uColor.a, uColor.a);\n}\n";
-
-var primitiveFragment = "varying vec4 vColor;\n\nvoid main(void) {\n    gl_FragColor = vColor;\n}\n";
-
-var quadVertex = "attribute vec2 aVertex;\nattribute vec2 aRegion;\nattribute vec4 aColor;\n\nuniform mat4 uProjectionMatrix;\n\nvarying vec2 vRegion;\nvarying vec4 vColor;\n\nvoid main(void) {\n    // Transform the vertex position by the projection matrix\n     gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);\n    // Pass the remaining attributes to the fragment shader\n    vColor = vec4(aColor.bgr * aColor.a, aColor.a);\n    vRegion = aRegion;\n}\n";
+var quadVertex = "// Current vertex point\nattribute vec2 aVertex;\nattribute vec2 aRegion;\nattribute vec4 aColor;\n\n// Projection matrix\nuniform mat4 uProjectionMatrix;\n\nvarying vec2 vRegion;\nvarying vec4 vColor;\n\nvoid main(void) {\n    // Transform the vertex position by the projection matrix\n    gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);\n    // Pass the remaining attributes to the fragment shader\n    vColor = vec4(aColor.bgr * aColor.a, aColor.a);\n    vRegion = aRegion;\n}\n";
 
 var quadFragment = "uniform sampler2D uSampler;\nvarying vec4 vColor;\nvarying vec2 vRegion;\n\nvoid main(void) {\n    gl_FragColor = texture2D(uSampler, vRegion) * vColor;\n}\n";
 
@@ -21892,6 +21807,19 @@ var quadFragment = "uniform sampler2D uSampler;\nvarying vec4 vColor;\nvarying v
 
         // Initialize clear color
         this.clearColor(0.0, 0.0, 0.0, 0.0);
+    }
+
+    /**
+     * @ignore
+     * called by the WebGL renderer when a compositor become the current one
+     */
+    bind() {
+        if (this.activeShader !== null) {
+            this.activeShader.bind();
+            this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
+            this.activeShader.setVertexAttributes(this.gl, this.attributes, this.vertexByteSize);
+        }
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.vertexBuffer.buffer, this.gl.STREAM_DRAW);
     }
 
     /**
@@ -22037,7 +21965,7 @@ var V_ARRAY = [
  * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
  * @augments Compositor
  */
- class WebGLCompositor extends Compositor {
+ class QuadCompositor extends Compositor {
 
     /**
      * Initialize the compositor
@@ -22051,7 +21979,6 @@ var V_ARRAY = [
         this.boundTextures = [];
 
         // Load and create shader programs
-        this.primitiveShader = new GLShader(this.gl, primitiveVertex, primitiveFragment);
         this.quadShader = new GLShader(this.gl, quadVertex, quadFragment);
 
         /// define all vertex attributes
@@ -22059,7 +21986,7 @@ var V_ARRAY = [
         this.addAttribute("aRegion", 2, this.gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT); // 1
         this.addAttribute("aColor",  4, this.gl.UNSIGNED_BYTE, true, 4 * Float32Array.BYTES_PER_ELEMENT); // 2
 
-        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, 6); // 6 vertices per quad
+        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, 6);
 
         // vertex buffer
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gl.createBuffer());
@@ -22216,22 +22143,6 @@ var V_ARRAY = [
         return this.currentTextureUnit;
     }
 
-
-    /**
-     * Select the shader to use for compositing
-     * @see GLShader
-     * @param {GLShader} shader - a reference to a GLShader instance
-     */
-    useShader(shader) {
-        if (this.activeShader !== shader) {
-            this.flush();
-            this.activeShader = shader;
-            this.activeShader.bind();
-            this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
-            this.activeShader.setVertexAttributes(this.gl, this.attributes, this.vertexByteSize);
-        }
-    }
-
     /**
      * Add a textured quad
      * @param {TextureAtlas} texture - Source texture atlas
@@ -22246,15 +22157,9 @@ var V_ARRAY = [
      * @param {number} tint - tint color to be applied to the texture in UINT32 (argb) format
      */
     addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint) {
+        var vertexBuffer = this.vertexBuffer;
 
-        if (this.color.alpha < 1 / 255) {
-            // Fast path: don't send fully transparent quads
-            return;
-        }
-
-        this.useShader(this.quadShader);
-
-        if (this.vertexBuffer.isFull(6)) {
+        if (vertexBuffer.isFull(6)) {
             // is the vertex buffer full if we add 6 more vertices
             this.flush();
         }
@@ -22278,12 +22183,57 @@ var V_ARRAY = [
             m.apply(vec3);
         }
 
-        this.vertexBuffer.push(vec0.x, vec0.y, u0, v0, tint);
-        this.vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
-        this.vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
-        this.vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
-        this.vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
-        this.vertexBuffer.push(vec3.x, vec3.y, u1, v1, tint);
+        vertexBuffer.push(vec0.x, vec0.y, u0, v0, tint);
+        vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
+        vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
+        vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
+        vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
+        vertexBuffer.push(vec3.x, vec3.y, u1, v1, tint);
+    }
+}
+
+var primitiveVertex = "// Current vertex point\nattribute vec2 aVertex;\nattribute vec4 aColor;\n\n// Projection matrix\nuniform mat4 uProjectionMatrix;\n\nvarying vec4 vColor;\n\nvoid main(void) {\n    // Transform the vertex position by the projection matrix\n    gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);\n    // Pass the remaining attributes to the fragment shader\n    vColor = vec4(aColor.bgr * aColor.a, aColor.a);\n}\n";
+
+var primitiveFragment = "varying vec4 vColor;\n\nvoid main(void) {\n    gl_FragColor = vColor;\n}\n";
+
+/**
+ * @classdesc
+ * A WebGL Compositor object. This class handles all of the WebGL state<br>
+ * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
+ * @augments Compositor
+ */
+ class PrimitiveCompositor extends Compositor {
+
+    /**
+     * Initialize the compositor
+     * @ignore
+     */
+    init (renderer) {
+        super.init(renderer);
+
+        // Load and create shader programs
+        this.primitiveShader = new GLShader(this.gl, primitiveVertex, primitiveFragment);
+
+        /// define all vertex attributes
+        this.addAttribute("aVertex", 2, this.gl.FLOAT, false, 0 * Float32Array.BYTES_PER_ELEMENT); // 0
+        this.addAttribute("aColor",  4, this.gl.UNSIGNED_BYTE, true, 2 * Float32Array.BYTES_PER_ELEMENT); // 1
+
+        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, 6);
+
+        // vertex buffer
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gl.createBuffer());
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.vertexBuffer.buffer, this.gl.STREAM_DRAW);
+    }
+
+    /**
+     * Reset compositor internal state
+     * @ignore
+     */
+    reset() {
+        super.reset();
+
+        // set the quad shader as the default program
+        this.useShader(this.primitiveShader);
     }
 
     /**
@@ -22293,24 +22243,37 @@ var V_ARRAY = [
      * @param {number} [vertexCount=verts.length] - amount of points defined in the points array
      */
     drawVertices(mode, verts, vertexCount = verts.length) {
-        // use the primitive shader
-        this.useShader(this.primitiveShader);
-        // Set the line color
-        this.primitiveShader.setUniform("uColor", this.color);
+        var viewMatrix = this.viewMatrix;
+        var vertexBuffer = this.vertexBuffer;
+        var color = this.renderer.currentColor;
+        var alpha = this.renderer.getGlobalAlpha();
 
-        var m = this.viewMatrix;
-        var vertex = this.vertexBuffer;
-        var m_isIdentity = m.isIdentity();
-
-        for (var i = 0; i < vertexCount; i++) {
-            if (!m_isIdentity) {
-                m.apply(verts[i]);
-            }
-            vertex.push(verts[i].x, verts[i].y);
+        if (vertexBuffer.isFull(vertexCount)) {
+            // is the vertex buffer full if we add more vertices
+            this.flush();
         }
 
-        // flush
-        this.flush(mode);
+        // flush if drawing vertices with a different drawing mode
+        if (mode !== this.mode) {
+            this.flush(this.mode);
+            this.mode = mode;
+        }
+
+        if (!viewMatrix.isIdentity()) {
+            verts.forEach((vert) => {
+                viewMatrix.apply(vert);
+                vertexBuffer.push(vert.x, vert.y, undefined, undefined, color.toUint32(alpha));
+            });
+        } else {
+            verts.forEach((vert) => {
+                vertexBuffer.push(vert.x, vert.y, undefined, undefined, color.toUint32(alpha));
+            });
+        }
+
+        // disable batching for primitive using LINE_STRIP or LINE_LOOP
+        if (this.mode === this.gl.LINE_STRIP || this.mode === this.gl.LINE_LOOP) {
+            this.flush(this.mode);
+        }
     }
 }
 
@@ -22334,7 +22297,7 @@ var V_ARRAY = [
      * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
      * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
      * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
-     * @param {WebGLCompositor} [options.compositor] - A class that implements the compositor API
+     * @param {Compositor} [options.compositor] - A class that implements the compositor API for sprite rendering
      */
     constructor(options) {
 
@@ -22417,10 +22380,9 @@ var V_ARRAY = [
          */
         this.compositors = new Map();
 
-        // Create a default compositor
-        var compositor = new (this.settings.compositor || WebGLCompositor)(this);
-        this.compositors.set("default", compositor);
-        this.setCompositor(compositor);
+        // Create both quad and primitive compositor
+        this.addCompositor(new (this.settings.compositor || QuadCompositor)(this), "quad", true);
+        this.addCompositor(new (this.settings.compositor || PrimitiveCompositor)(this), "primitive");
 
 
         // default WebGL state(s)
@@ -22483,17 +22445,36 @@ var V_ARRAY = [
     }
 
     /**
-     * set the active compositor for this renderer
-     * @param {WebGLCompositor|string} compositor - a compositor name or instance
+     * add a new compositor to this renderer
+     * @param {Compositor} compositor - a compositor instance
+     * @param {String} name - a name uniquely identifying this compositor
+     * @param {Boolean} [activate=false] - true if the given compositor should be set as the active one
      */
-    setCompositor(compositor = "default") {
-
-        if (typeof compositor === "string") {
-            compositor = this.compositors.get(compositor);
+    addCompositor(compositor, name = "default", activate = false) {
+        // make sure there is no existing compositor with the same name
+        if (typeof this.compositors.get(name) !== "undefined") {
+            throw new Error("Invalid Compositor name");
         }
 
+        // add the new compositor
+        this.compositors.set(name, compositor);
+
+        if (activate === true) {
+            // set as active one
+            this.setCompositor(name);
+        }
+    }
+
+    /**
+     * set the active compositor for this renderer
+     * @param {String} name - a compositor name
+     * @return {Compositor} an instance to the current active compositor
+     */
+    setCompositor(name = "default") {
+        let compositor = this.compositors.get(name);
+
         if (typeof compositor === "undefined") {
-            throw new Error("Invalid WebGL Compositor");
+            throw new Error("Invalid Compositor");
         }
 
         if (this.currentCompositor !== compositor) {
@@ -22503,7 +22484,10 @@ var V_ARRAY = [
             }
             // set given one as current
             this.currentCompositor = compositor;
+            this.currentCompositor.bind();
         }
+
+        return this.currentCompositor;
     }
 
     /**
@@ -22517,6 +22501,7 @@ var V_ARRAY = [
      * @ignore
      */
     createFontTexture(cache) {
+        this.setCompositor("quad");
         if (typeof this.fontTexture === "undefined") {
             var canvas = this.getCanvas();
             var width = canvas.width;
@@ -22564,6 +22549,8 @@ var V_ARRAY = [
      */
     createPattern(image, repeat) {
 
+        this.setCompositor("quad");
+
         if (renderer.WebGLVersion === 1 && (!isPowerOfTwo(image.width) || !isPowerOfTwo(image.height))) {
             var src = typeof image.src !== "undefined" ? image.src : image;
             throw new Error(
@@ -22593,14 +22580,15 @@ var V_ARRAY = [
      */
     setProjection(matrix) {
         super.setProjection(matrix);
-        this.currentCompositor.setProjection(matrix);
     }
 
     /**
      * prepare the framebuffer for drawing a new frame
      */
     clear() {
-        this.currentCompositor.clear(this.settings.transparent ? 0.0 : 1.0);
+        this.compositors.forEach((compositor) => {
+            compositor.clear(this.settings.transparent ? 0.0 : 1.0);
+        });
     }
 
     /**
@@ -22642,6 +22630,8 @@ var V_ARRAY = [
      */
     drawFont(bounds) {
         var fontContext = this.getFontContext();
+
+        this.setCompositor("quad");
 
         // Force-upload the new texture
         this.currentCompositor.uploadTexture(this.fontTexture, 0, 0, 0, true);
@@ -22715,6 +22705,8 @@ var V_ARRAY = [
             dy |= 0;
         }
 
+        this.setCompositor("quad");
+
         var texture = this.cache.get(image);
         var uvs = texture.getUVs(sx + "," + sy + "," + sw + "," + sh);
         this.currentCompositor.addQuad(texture, dx, dy, dw, dh, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()));
@@ -22731,6 +22723,7 @@ var V_ARRAY = [
      */
     drawPattern(pattern, x, y, width, height) {
         var uvs = pattern.getUVs("0,0," + width + "," + height);
+        this.setCompositor("quad");
         this.currentCompositor.addQuad(pattern, x, y, width, height, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()));
     }
 
@@ -22971,10 +22964,7 @@ var V_ARRAY = [
      * @param {boolean} [fill=false]
      */
     strokeArc(x, y, radius, start, end, antiClockwise = false, fill = false) {
-        if (this.getGlobalAlpha() < 1 / 255) {
-            // Fast path: don't draw fully transparent
-            return;
-        }
+        this.setCompositor("primitive");
         this.path2D.beginPath();
         this.path2D.arc(x, y, radius, start, end, antiClockwise);
         if (fill === false) {
@@ -23007,15 +22997,12 @@ var V_ARRAY = [
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeEllipse(x, y, w, h, fill = false) {
-        if (this.getGlobalAlpha() < 1 / 255) {
-            // Fast path: don't draw fully transparent
-            return;
-        }
+        this.setCompositor("primitive");
         this.path2D.beginPath();
         this.path2D.ellipse(x, y, w, h, 0, 0, 360);
         this.path2D.closePath();
         if (fill === false) {
-            this.currentCompositor.drawVertices(this.gl.LINE_LOOP, this.path2D.points);
+            this.currentCompositor.drawVertices(this.gl.LINE_STRIP, this.path2D.points);
         } else {
             this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
         }
@@ -23040,14 +23027,11 @@ var V_ARRAY = [
      * @param {number} endY - the end y coordinate
      */
     strokeLine(startX, startY, endX, endY) {
-        if (this.getGlobalAlpha() < 1 / 255) {
-            // Fast path: don't draw fully transparent
-            return;
-        }
+        this.setCompositor("primitive");
         this.path2D.beginPath();
         this.path2D.moveTo(startX, startY);
         this.path2D.lineTo(endX, endY);
-        this.currentCompositor.drawVertices(this.gl.LINE_STRIP, this.path2D.points);
+        this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
     }
 
 
@@ -23068,22 +23052,19 @@ var V_ARRAY = [
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokePolygon(poly, fill = false) {
-        if (this.getGlobalAlpha() < 1 / 255) {
-            // Fast path: don't draw fully transparent
-            return;
-        }
+        this.setCompositor("primitive");
         this.translate(poly.pos.x, poly.pos.y);
         this.path2D.beginPath();
-        this.path2D.moveTo(poly.points[0].x, poly.points[0].y);
-        var point;
-        for (var i = 1; i < poly.points.length; i++) {
-            point = poly.points[i];
-            this.path2D.lineTo(point.x, point.y);
+
+        var points = poly.points;
+        for (var i = 1; i < points.length; i++) {
+            this.path2D.moveTo(points[i-1].x, points[i-1].y);
+            this.path2D.lineTo(points[i].x, points[i].y);
         }
-        this.path2D.lineTo(poly.points[0].x, poly.points[0].y);
+        this.path2D.lineTo(points[points.length - 1].x, points[points.length - 1].y);
         this.path2D.closePath();
         if (fill === false) {
-            this.currentCompositor.drawVertices(this.gl.LINE_LOOP, this.path2D.points);
+            this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
         } else {
             // draw all triangles
             this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
@@ -23108,14 +23089,11 @@ var V_ARRAY = [
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeRect(x, y, width, height, fill = false) {
-        if (this.getGlobalAlpha() < 1 / 255) {
-            // Fast path: don't draw fully transparent
-            return;
-        }
+        this.setCompositor("primitive");
         this.path2D.beginPath();
         this.path2D.rect(x, y, width, height);
         if (fill === false) {
-            this.currentCompositor.drawVertices(this.gl.LINE_LOOP, this.path2D.points);
+            this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
         } else {
             this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
         }
@@ -23142,14 +23120,11 @@ var V_ARRAY = [
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeRoundRect(x, y, width, height, radius, fill = false) {
-        if (this.getGlobalAlpha() < 1 / 255) {
-            // Fast path: don't draw fully transparent
-            return;
-        }
+        this.setCompositor("primitive");
         this.path2D.beginPath();
         this.path2D.roundRect(x, y, width, height, radius);
         if (fill === false) {
-            this.currentCompositor.drawVertices(this.gl.LINE_LOOP, this.path2D.points);
+            this.currentCompositor.drawVertices(this.gl.LINE_STRIP, this.path2D.points);
         } else {
             this.path2D.closePath();
             this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
@@ -30881,664 +30856,690 @@ const timer = new Timer();
  */
 var timer$1 = timer;
 
-var lastTime = 0;
-var vendors = ["ms", "moz", "webkit", "o"];
-var x;
-
-// standardized functions
-// https://developer.mozilla.org/fr/docs/Web/API/Window/requestAnimationFrame
-var requestAnimationFrame = globalThis.requestAnimationFrame;
-var cancelAnimationFrame = globalThis.cancelAnimationFrame;
-
-// get prefixed rAF and cAF is standard one not supported
-for (x = 0; x < vendors.length && !requestAnimationFrame; ++x) {
-    requestAnimationFrame = globalThis[vendors[x] + "RequestAnimationFrame"];
-}
-for (x = 0; x < vendors.length && !cancelAnimationFrame; ++x) {
-    cancelAnimationFrame = globalThis[vendors[x] + "CancelAnimationFrame"] ||
-                           globalThis[vendors[x] + "CancelRequestAnimationFrame"];
-}
-
-if (!requestAnimationFrame || !cancelAnimationFrame) {
-    requestAnimationFrame = function (callback) {
-        var currTime = globalThis.performance.now();
-        var timeToCall = Math.max(0, (1000 / timer$1.maxfps) - (currTime - lastTime));
-        var id = globalThis.setTimeout(() => {
-            callback(currTime + timeToCall);
-        }, timeToCall);
-        lastTime = currTime + timeToCall;
-        return id;
-    };
-
-    cancelAnimationFrame = function (id) {
-        globalThis.clearTimeout(id);
-    };
-
-    // put back in global namespace
-    globalThis.requestAnimationFrame = requestAnimationFrame;
-    globalThis.cancelAnimationFrame = cancelAnimationFrame;
-}
-
-/*
- * based on https://www.npmjs.com/package/canvas-roundrect-polyfill
- * @version 0.0.1
- */
-(() => {
-
-  "use strict";
-
-  /** @ignore */
-  function roundRect(x, y, w, h, radii) {
-
-    if (!([x, y, w, h].every((input) => Number.isFinite(input)))) {
-
-      return;
-
-    }
-
-    radii = parseRadiiArgument(radii);
-
-    let upperLeft, upperRight, lowerRight, lowerLeft;
-
-    if (radii.length === 4) {
-
-      upperLeft = toCornerPoint(radii[0]);
-      upperRight = toCornerPoint(radii[1]);
-      lowerRight = toCornerPoint(radii[2]);
-      lowerLeft = toCornerPoint(radii[3]);
-
-    } else if (radii.length === 3) {
-
-      upperLeft = toCornerPoint(radii[0]);
-      upperRight = toCornerPoint(radii[1]);
-      lowerLeft = toCornerPoint(radii[1]);
-      lowerRight = toCornerPoint(radii[2]);
-
-    } else if (radii.length === 2) {
-
-      upperLeft = toCornerPoint(radii[0]);
-      lowerRight = toCornerPoint(radii[0]);
-      upperRight = toCornerPoint(radii[1]);
-      lowerLeft = toCornerPoint(radii[1]);
-
-    } else if (radii.length === 1) {
-
-      upperLeft = toCornerPoint(radii[0]);
-      upperRight = toCornerPoint(radii[0]);
-      lowerRight = toCornerPoint(radii[0]);
-      lowerLeft = toCornerPoint(radii[0]);
-
-    } else {
-
-      throw new Error(radii.length + " is not a valid size for radii sequence.");
-
-    }
-
-    const corners = [upperLeft, upperRight, lowerRight, lowerLeft];
-    const negativeCorner = corners.find(({x, y}) => x < 0 || y < 0);
-    //const negativeValue = negativeCorner?.x < 0 ? negativeCorner.x : negativeCorner?.y
-
-    if (corners.some(({x, y}) => !Number.isFinite(x) || !Number.isFinite(y))) {
-
-      return;
-
-    }
-
-    if (negativeCorner) {
-
-      throw new Error("Radius value " + negativeCorner + " is negative.");
-
-    }
-
-    fixOverlappingCorners(corners);
-
-    if (w < 0 && h < 0) {
-
-      this.moveTo(x - upperLeft.x, y);
-      this.ellipse(x + w + upperRight.x, y - upperRight.y, upperRight.x, upperRight.y, 0, -Math.PI * 1.5, -Math.PI);
-      this.ellipse(x + w + lowerRight.x, y + h + lowerRight.y, lowerRight.x, lowerRight.y, 0, -Math.PI, -Math.PI / 2);
-      this.ellipse(x - lowerLeft.x, y + h + lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, -Math.PI / 2, 0);
-      this.ellipse(x - upperLeft.x, y - upperLeft.y, upperLeft.x, upperLeft.y, 0, 0, -Math.PI / 2);
-
-    } else if (w < 0) {
-
-      this.moveTo(x - upperLeft.x, y);
-      this.ellipse(x + w + upperRight.x, y + upperRight.y, upperRight.x, upperRight.y, 0, -Math.PI / 2, -Math.PI, 1);
-      this.ellipse(x + w + lowerRight.x, y + h - lowerRight.y, lowerRight.x, lowerRight.y, 0, -Math.PI, -Math.PI * 1.5, 1);
-      this.ellipse(x - lowerLeft.x, y + h - lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, Math.PI / 2, 0, 1);
-      this.ellipse(x - upperLeft.x, y + upperLeft.y, upperLeft.x, upperLeft.y, 0, 0, -Math.PI / 2, 1);
-
-    } else if (h < 0) {
-
-      this.moveTo(x + upperLeft.x, y);
-      this.ellipse(x + w - upperRight.x, y - upperRight.y, upperRight.x, upperRight.y, 0, Math.PI / 2, 0, 1);
-      this.ellipse(x + w - lowerRight.x, y + h + lowerRight.y, lowerRight.x, lowerRight.y, 0, 0, -Math.PI / 2, 1);
-      this.ellipse(x + lowerLeft.x, y + h + lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, -Math.PI / 2, -Math.PI, 1);
-      this.ellipse(x + upperLeft.x, y - upperLeft.y, upperLeft.x, upperLeft.y, 0, -Math.PI, -Math.PI * 1.5, 1);
-
-    } else {
-
-      this.moveTo(x + upperLeft.x, y);
-      this.ellipse(x + w - upperRight.x, y + upperRight.y, upperRight.x, upperRight.y, 0, -Math.PI / 2, 0);
-      this.ellipse(x + w - lowerRight.x, y + h - lowerRight.y, lowerRight.x, lowerRight.y, 0, 0, Math.PI / 2);
-      this.ellipse(x + lowerLeft.x, y + h - lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, Math.PI / 2, Math.PI);
-      this.ellipse(x + upperLeft.x, y + upperLeft.y, upperLeft.x, upperLeft.y, 0, Math.PI, Math.PI * 1.5);
-
-    }
-
-    this.closePath();
-    this.moveTo(x, y);
-
-    /** @ignore */
-    function toDOMPointInit(value) {
-
-      const {x, y, z, w} = value;
-      return {x, y, z, w};
-
-    }
-
-    /** @ignore */
-    function parseRadiiArgument(value) {
-
-      // https://webidl.spec.whatwg.org/#es-union
-      // with 'optional (unrestricted double or DOMPointInit
-      //   or sequence<(unrestricted double or DOMPointInit)>) radii = 0'
-      const type = typeof value;
-
-      if (type === "undefined" || value === null) {
-
-        return [0];
-
-      }
-      if (type === "function") {
-
-        return [NaN];
-
-      }
-      if (type === "object") {
-
-        if (typeof value[Symbol.iterator] === "function") {
-
-          return [...value].map((elem) => {
-            // https://webidl.spec.whatwg.org/#es-union
-            // with '(unrestricted double or DOMPointInit)'
-            const elemType = typeof elem;
-            if (elemType === "undefined" || elem === null) {
-              return 0;
-            }
-            if (elemType === "function") {
-              return NaN;
-            }
-            if (elemType === "object") {
-              return toDOMPointInit(elem);
-            }
-            return toUnrestrictedNumber(elem);
-          });
-
-        }
-
-        return [toDOMPointInit(value)];
-
-      }
-
-      return [toUnrestrictedNumber(value)];
-
-    }
-
-    /** @ignore */
-    function toUnrestrictedNumber(value) {
-
-      return +value;
-
-    }
-
-    /** @ignore */
-    function toCornerPoint(value) {
-
-      const asNumber = toUnrestrictedNumber(value);
-      if (Number.isFinite(asNumber)) {
-
-        return {
-          x: asNumber,
-          y: asNumber
-        };
-
-      }
-      if (Object(value) === value) {
-
-        return {
-          x: toUnrestrictedNumber(value.x || 0),
-          y: toUnrestrictedNumber(value.y || 0)
-        };
-
-      }
-
-      return {
-        x: NaN,
-        y: NaN
-      };
-
-    }
-
-    /** @ignore */
-    function fixOverlappingCorners(corners) {
-      const [upperLeft, upperRight, lowerRight, lowerLeft] = corners;
-      const factors = [
-        Math.abs(w) / (upperLeft.x + upperRight.x),
-        Math.abs(h) / (upperRight.y + lowerRight.y),
-        Math.abs(w) / (lowerRight.x + lowerLeft.x),
-        Math.abs(h) / (upperLeft.y + lowerLeft.y)
-      ];
-      const minFactor = Math.min(...factors);
-      if (minFactor <= 1) {
-        corners.forEach((radii) => {
-            radii.x *= minFactor;
-            radii.y *= minFactor;
-        });
-      }
-    }
-  }
-
-  if (globalThis.CanvasRenderingContext2D) {
-    if (typeof globalThis.Path2D.prototype.roundRect === "undefined") {
-        globalThis.Path2D.prototype.roundRect = roundRect;
-    }
-  }
-  if (globalThis.CanvasRenderingContext2D) {
-    if (typeof globalThis.CanvasRenderingContext2D.prototype.roundRect === "undefined") {
-        globalThis.CanvasRenderingContext2D.prototype.roundRect = roundRect;
-    }
-  }
-  if (globalThis.OffscreenCanvasRenderingContext2D) {
-    if (typeof globalThis.OffscreenCanvasRenderingContext2D.prototype.roundRect === "undefined") {
-        globalThis.OffscreenCanvasRenderingContext2D.prototype.roundRect = roundRect;
-    }
-  }
-
-})();
-
-// https://github.com/melonjs/melonJS/issues/1092
-
-/*
- * A QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
- * Based on the QuadTree Library by Timo Hausmann and released under the MIT license
- * https://github.com/timohausmann/quadtree-js/
-**/
-
-/**
- * a pool of `QuadTree` objects
- * @ignore
- */
-var QT_ARRAY = [];
-
-/**
- * will pop a quadtree object from the array
- * or create a new one if the array is empty
- * @ignore
- */
-function QT_ARRAY_POP(world, bounds, max_objects = 4, max_levels = 4, level = 0) {
-    if (QT_ARRAY.length > 0) {
-        var _qt =  QT_ARRAY.pop();
-        _qt.world = world;
-        _qt.bounds = bounds;
-        _qt.max_objects = max_objects;
-        _qt.max_levels  = max_levels;
-        _qt.level = level;
-        return _qt;
-    } else {
-        return new QuadTree(world, bounds, max_objects, max_levels, level);
-    }
-}
-
-/**
- * Push back a quadtree back into the array
- * @ignore
- */
-function QT_ARRAY_PUSH(qt) {
-    QT_ARRAY.push(qt);
-}
-
-/**
- * a temporary vector object to be reused
- * @ignore
- */
-var QT_VECTOR = new Vector2d();
-
 /**
  * @classdesc
- * a QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
- * @see game.world.broadphase
+ * a Generic Physic Body Object with some physic properties and behavior functionality, to as a member of a Renderable.
+ * @see Renderable.body
  */
- class QuadTree {
+ class Body {
     /**
-     * @param {World} world - the physic world this QuadTree belongs to
-     * @param {Bounds} bounds - bounds of the node
-     * @param {number} [max_objects=4] - max objects a node can hold before splitting into 4 subnodes
-     * @param {number} [max_levels=4] - total max levels inside root Quadtree
-     * @param {number} [level] - deepth level, required for subnodes
+     * @param {Renderable} ancestor - the parent object this body is attached to
+     * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] - a initial shape, list of shapes, or JSON object defining the body
+     * @param {Function} [onBodyUpdate] - callback for when the body is updated (e.g. add/remove shapes)
      */
-    constructor(world, bounds, max_objects = 4, max_levels = 4, level = 0) {
+    constructor(ancestor, shapes, onBodyUpdate) {
 
-        this.world = world;
-        this.bounds = bounds;
+        /**
+         * a reference to the parent object that contains this body,
+         * or undefined if it has not been added to one.
+         * @public
+         * @type {Renderable}
+         * @default undefined
+         */
+        this.ancestor = ancestor;
 
-        this.max_objects = max_objects;
-        this.max_levels  = max_levels;
-
-        this.level = level;
-
-        this.objects = [];
-        this.nodes = [];
-    }
-
-    /*
-     * Split the node into 4 subnodes
-     */
-    split() {
-        var nextLevel = this.level + 1,
-            subWidth  = this.bounds.width / 2,
-            subHeight = this.bounds.height / 2,
-            left = this.bounds.left,
-            top = this.bounds.top;
-
-         //top right node
-        this.nodes[0] = QT_ARRAY_POP(
-            this.world,
-            {
-                left : left + subWidth,
-                top : top,
-                width : subWidth,
-                height : subHeight
-            },
-            this.max_objects,
-            this.max_levels,
-            nextLevel
-        );
-
-        //top left node
-        this.nodes[1] = QT_ARRAY_POP(
-            this.world,
-            {
-                left : left,
-                top: top,
-                width : subWidth,
-                height : subHeight
-            },
-            this.max_objects,
-            this.max_levels,
-            nextLevel
-        );
-
-        //bottom left node
-        this.nodes[2] = QT_ARRAY_POP(
-            this.world,
-            {
-                left : left,
-                top : top + subHeight,
-                width : subWidth,
-                height : subHeight
-            },
-            this.max_objects,
-            this.max_levels,
-            nextLevel
-        );
-
-        //bottom right node
-        this.nodes[3] = QT_ARRAY_POP(
-            this.world,
-            {
-                left : left + subWidth,
-                top : top + subHeight,
-                width : subWidth,
-                height : subHeight
-            },
-            this.max_objects,
-            this.max_levels,
-            nextLevel
-        );
-    }
-
-    /*
-     * Determine which node the object belongs to
-     * @param {Rect} rect bounds of the area to be checked
-     * @returns Integer index of the subnode (0-3), or -1 if rect cannot completely fit within a subnode and is part of the parent node
-     */
-    getIndex(item) {
-        var pos;
-        var bounds = item.getBounds();
-
-        // use game world coordinates for floating items
-        if (item.isFloating === true) {
-            pos = this.world.app.viewport.localToWorld(bounds.left, bounds.top, QT_VECTOR);
-        } else {
-            pos = QT_VECTOR.set(item.left, item.top);
+        if (typeof this.bounds === "undefined") {
+            /**
+             * The AABB bounds box reprensenting this body
+             * @public
+             * @type {Bounds}
+             */
+            this.bounds = pool.pull("Bounds");
         }
 
-        var index = -1,
-            rx = pos.x,
-            ry = pos.y,
-            rw = bounds.width,
-            rh = bounds.height,
-            verticalMidpoint = this.bounds.left + (this.bounds.width / 2),
-            horizontalMidpoint = this.bounds.top + (this.bounds.height / 2),
-            //rect can completely fit within the top quadrants
-            topQuadrant = (ry < horizontalMidpoint && ry + rh < horizontalMidpoint),
-            //rect can completely fit within the bottom quadrants
-            bottomQuadrant = (ry > horizontalMidpoint);
-
-        //rect can completely fit within the left quadrants
-        if (rx < verticalMidpoint && rx + rw < verticalMidpoint) {
-            if (topQuadrant) {
-                index = 1;
-            } else if (bottomQuadrant) {
-                index = 2;
-            }
-        } else if (rx > verticalMidpoint) {
-            //rect can completely fit within the right quadrants
-            if (topQuadrant) {
-                index = 0;
-            } else if (bottomQuadrant) {
-                index = 3;
-            }
+        if (typeof this.shapes === "undefined") {
+            /**
+             * The collision shapes of the body
+             * @ignore
+             * @type {Polygon[]|Line[]|Ellipse[]|Point|Point[]}
+             */
+            this.shapes = [];
         }
 
-        return index;
-    }
+        /**
+         * The body collision mask, that defines what should collide with what.<br>
+         * (by default will collide with all entities)
+         * @ignore
+         * @type {number}
+         * @default collision.types.ALL_OBJECT
+         * @see collision.types
+         */
+        this.collisionMask = collision.types.ALL_OBJECT;
 
-    /**
-     * Insert the given object container into the node.
-     * @name insertContainer
-     * @memberof QuadTree
-     * @param {Container} container - group of objects to be added
-     */
-    insertContainer(container) {
-        for (var i = container.children.length, child; i--, (child = container.children[i]);) {
-            if (child.isKinematic !== true) {
-                if (typeof child.addChild === "function") {
-                    if (child.name !== "rootContainer") {
-                        this.insert(child);
-                    }
-                    // recursivly insert all childs
-                    this.insertContainer(child);
-                } else {
-                    // only insert object with a bounding box
-                    // Probably redundant with `isKinematic`
-                    if (typeof (child.getBounds) === "function") {
-                        this.insert(child);
-                    }
+        /**
+         * define the collision type of the body for collision filtering
+         * @public
+         * @type {number}
+         * @default collision.types.ENEMY_OBJECT
+         * @see collision.types
+         * @example
+         * // set the body collision type
+         * body.collisionType = me.collision.types.PLAYER_OBJECT;
+         */
+        this.collisionType = collision.types.ENEMY_OBJECT;
+
+        if (typeof this.vel === "undefined") {
+            /**
+             * The current velocity of the body.
+             * See to apply a force if you need to modify a body velocity
+             * @see Body.force
+             * @public
+             * @type {Vector2d}
+             * @default <0,0>
+             */
+            this.vel = pool.pull("Vector2d");
+        }
+        this.vel.set(0, 0);
+
+        if (typeof this.force === "undefined") {
+            /**
+             * body force to apply to this the body in the current step.
+             * (any positive or negative force will be cancelled after every world/body update cycle)
+             * @public
+             * @type {Vector2d}
+             * @default <0,0>
+             * @see Body.setMaxVelocity
+             * @example
+             * // define a default maximum acceleration, initial force and friction
+             * this.body.force.set(1, 0);
+             * this.body.friction.set(0.4, 0);
+             * this.body.setMaxVelocity(3, 15);
+             *
+             * // apply a postive or negative force when pressing left of right key
+             * update(dt) {
+             *     if (me.input.isKeyPressed("left"))    {
+             *          this.body.force.x = -this.body.maxVel.x;
+             *      } else if (me.input.isKeyPressed("right")) {
+             *         this.body.force.x = this.body.maxVel.x;
+             *     }
+             * }
+             */
+            this.force = pool.pull("Vector2d");
+        }
+        this.force.set(0, 0);
+
+        if (typeof this.friction === "undefined") {
+            /**
+             * body friction
+             * @public
+             * @type {Vector2d}
+             * @default <0,0>
+             */
+            this.friction = pool.pull("Vector2d");
+        }
+        this.friction.set(0, 0);
+
+        /**
+         * the body bouciness level when colliding with other solid bodies :
+         * a value of 0 will not bounce, a value of 1 will fully rebound.
+         * @public
+         * @type {number}
+         * @default 0
+         */
+        this.bounce = 0;
+
+        /**
+         * the body mass
+         * @public
+         * @type {number}
+         * @default 1
+         */
+        this.mass = 1;
+
+        if (typeof this.maxVel === "undefined") {
+            /**
+             * max velocity (to limit body velocity)
+             * @public
+             * @type {Vector2d}
+             * @default <490,490>
+             */
+            this.maxVel = pool.pull("Vector2d");
+        }
+        // cap by default to half the default gravity force
+        this.maxVel.set(490, 490);
+
+
+        /**
+         * Either this body is a static body or not.
+         * A static body is completely fixed and can never change position or angle.
+         * @readonly
+         * @public
+         * @type {boolean}
+         * @default false
+         */
+        this.isStatic = false;
+
+
+        /**
+         * The degree to which this body is affected by the world gravity
+         * @public
+         * @see World.gravity
+         * @type {number}
+         * @default 1.0
+         */
+        this.gravityScale = 1.0;
+
+        /**
+         * If true this body won't be affected by the world gravity
+         * @public
+         * @see World.gravity
+         * @type {boolean}
+         * @default false
+         */
+        this.ignoreGravity = false;
+
+        /**
+         * falling state of the body<br>
+         * true if the object is falling<br>
+         * false if the object is standing on something<br>
+         * @readonly
+         * @public
+         * @type {boolean}
+         * @default false
+         */
+        this.falling = false;
+
+        /**
+         * jumping state of the body<br>
+         * equal true if the body is jumping<br>
+         * @readonly
+         * @public
+         * @type {boolean}
+         * @default false
+         */
+        this.jumping = false;
+
+
+        if (typeof onBodyUpdate === "function") {
+            this.onBodyUpdate = onBodyUpdate;
+        }
+
+        this.bounds.clear();
+
+        // parses the given shapes array and add them
+        if (typeof shapes !== "undefined") {
+            if (Array.isArray(shapes)) {
+                for (var s = 0; s < shapes.length; s++) {
+                    this.addShape(shapes[s]);
                 }
-            }
-        }
-    }
-
-    /**
-     * Insert the given object into the node. If the node
-     * exceeds the capacity, it will split and add all
-     * objects to their corresponding subnodes.
-     * @name insert
-     * @memberof QuadTree
-     * @param {object} item - object to be added
-     */
-    insert(item) {
-        var index = -1;
-
-        //if we have subnodes ...
-        if (this.nodes.length > 0) {
-            index = this.getIndex(item);
-
-            if (index !== -1) {
-                this.nodes[index].insert(item);
-                return;
-            }
-        }
-
-        this.objects.push(item);
-
-        if (this.objects.length > this.max_objects && this.level < this.max_levels) {
-
-            //split if we don't already have subnodes
-            if (this.nodes.length === 0) {
-                this.split();
-            }
-
-            var i = 0;
-
-            //add all objects to there corresponding subnodes
-            while (i < this.objects.length) {
-
-                index = this.getIndex(this.objects[i]);
-
-                if (index !== -1) {
-                    this.nodes[index].insert(this.objects.splice(i, 1)[0]);
-                } else {
-                    i = i + 1;
-                }
-            }
-        }
-    }
-
-    /**
-     * Return all objects that could collide with the given object
-     * @name retrieve
-     * @memberof QuadTree
-     * @param {object} item - object to be checked against
-     * @param {object} [fn] - a sorting function for the returned array
-     * @returns {object[]} array with all detected objects
-     */
-    retrieve(item, fn) {
-        var returnObjects = this.objects;
-
-        //if we have subnodes ...
-        if (this.nodes.length > 0) {
-
-            var index = this.getIndex(item);
-
-            //if rect fits into a subnode ..
-            if (index !== -1) {
-                returnObjects = returnObjects.concat(this.nodes[index].retrieve(item));
             } else {
-                 //if rect does not fit into a subnode, check it against all subnodes
-                for (var i = 0; i < this.nodes.length; i = i + 1) {
-                    returnObjects = returnObjects.concat(this.nodes[i].retrieve(item));
+                this.addShape(shapes);
+            }
+        }
+
+        // automatically enable physic when a body is added to a renderable
+        this.ancestor.isKinematic = false;
+    }
+
+    /**
+     * set the body as a static body
+     * static body do not move automatically and do not check againt collision with others
+     * @param {boolean} [isStatic=true]
+     */
+    setStatic(isStatic = true) {
+        this.isStatic = isStatic === true;
+    }
+
+    /**
+     * add a collision shape to this body <br>
+     * (note: me.Rect objects will be converted to me.Polygon before being added)
+     * @param {Rect|Polygon|Line|Ellipse|Point|Point[]|Bounds|object} shape - a shape or JSON object
+     * @returns {number} the shape array length
+     * @example
+     * // add a rectangle shape
+     * this.body.addShape(new me.Rect(0, 0, image.width, image.height));
+     * // add a shape from a JSON object
+     * this.body.addShape(me.loader.getJSON("shapesdef").banana);
+     */
+    addShape(shape) {
+        if (shape instanceof Rect || shape instanceof Bounds) {
+            var poly = shape.toPolygon();
+            this.shapes.push(poly);
+            // update the body bounds
+            this.bounds.add(poly.points);
+            this.bounds.translate(poly.pos);
+        } else if (shape instanceof Ellipse) {
+            if (!this.shapes.includes(shape)) {
+                // see removeShape
+                this.shapes.push(shape);
+            }
+            // update the body bounds
+            this.bounds.addBounds(shape.getBounds());
+            // use bounds position as ellipse position is center
+            this.bounds.translate(
+                shape.getBounds().x,
+                shape.getBounds().y
+            );
+        } else if (shape instanceof Polygon) {
+            if (!this.shapes.includes(shape)) {
+                // see removeShape
+                this.shapes.push(shape);
+            }
+            // update the body bounds
+            this.bounds.add(shape.points);
+            this.bounds.translate(shape.pos);
+        } else if (shape instanceof Point) {
+            if (!this.shapes.includes(shape)) {
+                // see removeShape
+                this.shapes.push(shape);
+            }
+            this.bounds.addPoint(shape);
+        } else {
+            // JSON object
+            this.fromJSON(shape);
+        }
+
+        if (typeof this.onBodyUpdate === "function") {
+            this.onBodyUpdate(this);
+        }
+
+        // return the length of the shape list
+        return this.shapes.length;
+    }
+
+    /**
+     * set the body vertices to the given one
+     * @param {Vector2d[]} vertices - an array of me.Vector2d points defining a convex hull
+     * @param {number} [index=0] - the shape object for which to set the vertices
+     * @param {boolean} [clear=true] - either to reset the body definition before adding the new vertices
+     */
+    setVertices(vertices, index = 0, clear = true) {
+        var polygon = this.getShape(index);
+        if (polygon instanceof Polygon) {
+            polygon.setShape(0, 0, vertices);
+        } else {
+            // this will replace any other non polygon shape type if defined
+            this.shapes[index] = pool.pull("Polygon", 0, 0, vertices);
+        }
+
+        // update the body bounds to take in account the new vertices
+        this.bounds.add(this.shapes[index].points, clear);
+
+        if (typeof this.onBodyUpdate === "function") {
+            this.onBodyUpdate(this);
+        }
+    }
+
+    /**
+     * add the given vertices to the body shape
+     * @param {Vector2d[]} vertices - an array of me.Vector2d points defining a convex hull
+     * @param {number} [index=0] - the shape object for which to set the vertices
+     */
+    addVertices(vertices, index = 0) {
+        this.setVertices(vertices, index, false);
+    }
+
+    /**
+     * add collision mesh based on a JSON object
+     * (this will also apply any physic properties defined in the given JSON file)
+     * @param {object} json - a JSON object as exported from a Physics Editor tool
+     * @param {string} [id] - an optional shape identifier within the given the json object
+     * @see https://www.codeandweb.com/physicseditor
+     * @returns {number} how many shapes were added to the body
+     * @example
+     * // define the body based on the banana shape
+     * this.body.fromJSON(me.loader.getJSON("shapesdef").banana);
+     * // or ...
+     * this.body.fromJSON(me.loader.getJSON("shapesdef"), "banana");
+     */
+    fromJSON(json, id) {
+        var data = json;
+
+        if (typeof id !== "undefined" ) {
+            data = json[id];
+        }
+
+        // Physic Editor Format (https://www.codeandweb.com/physicseditor)
+        if (typeof data === "undefined") {
+            throw new Error("Identifier (" + id + ") undefined for the given JSON object)");
+        }
+
+        if (data.length) {
+            // go through all shapes and add them to the body
+            for (var i = 0; i < data.length; i++) {
+                this.addVertices(data[i].shape, i);
+            }
+            // apply density, friction and bounce properties from the first shape
+            // Note : how to manage different mass or friction for all different shapes?
+            this.mass = data[0].density || 0;
+            this.friction.set(data[0].friction || 0, data[0].friction || 0);
+            this.bounce = data[0].bounce || 0;
+        }
+
+        // return the amount of shapes added to the body
+        return data.length;
+    }
+
+    /**
+     * return the collision shape at the given index
+     * @param {number} [index=0] - the shape object at the specified index
+     * @returns {Polygon|Line|Ellipse} shape a shape object if defined
+     */
+    getShape(index) {
+        return this.shapes[index || 0];
+    }
+
+    /**
+     * returns the AABB bounding box for this body
+     * @returns {Bounds} bounding box Rectangle object
+     */
+    getBounds() {
+        return this.bounds;
+    }
+
+    /**
+     * remove the specified shape from the body shape list
+     * @param {Polygon|Line|Ellipse} shape - a shape object
+     * @returns {number} the shape array length
+     */
+    removeShape(shape) {
+        // clear the current bounds
+        this.bounds.clear();
+        // remove the shape from shape list
+        remove(this.shapes, shape);
+        // add everything left back
+        for (var s = 0; s < this.shapes.length; s++) {
+            this.addShape(this.shapes[s]);
+        }
+        // return the length of the shape list
+        return this.shapes.length;
+    }
+
+    /**
+     * remove the shape at the given index from the body shape list
+     * @param {number} index - the shape object at the specified index
+     * @returns {number} the shape array length
+     */
+    removeShapeAt(index) {
+        return this.removeShape(this.getShape(index));
+    }
+
+    /**
+     * By default all physic bodies are able to collide with all other bodies, <br>
+     * but it's also possible to specify 'collision filters' to provide a finer <br>
+     * control over which body can collide with each other.
+     * @see collision.types
+     * @param {number} [bitmask = collision.types.ALL_OBJECT] - the collision mask
+     * @example
+     * // filter collision detection with collision shapes, enemies and collectables
+     * body.setCollisionMask(me.collision.types.WORLD_SHAPE | me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
+     * ...
+     * // disable collision detection with all other objects
+     * body.setCollisionMask(me.collision.types.NO_OBJECT);
+     */
+    setCollisionMask(bitmask = collision.types.ALL_OBJECT) {
+        this.collisionMask = bitmask;
+    }
+
+    /**
+     * define the collision type of the body for collision filtering
+     * @see collision.types
+     * @param {number} type - the collision type
+     * @example
+     * // set the body collision type
+     * body.collisionType = me.collision.types.PLAYER_OBJECT;
+     */
+    setCollisionType(type) {
+        if (typeof type !== "undefined") {
+            if (typeof collision.types[type] !== "undefined") {
+                this.collisionType = collision.types[type];
+            } else {
+                throw new Error("Invalid value for the collisionType property");
+            }
+        }
+    }
+
+    /**
+     * the built-in function to solve the collision response
+     * @param {object} response - the collision response object (see {@link ResponseObject})
+     */
+    respondToCollision(response) {
+        // the overlap vector
+        var overlap = response.overlapV;
+
+        // FIXME: Respond proportionally to object mass
+
+        // Move out of the other object shape
+        this.ancestor.pos.sub(overlap);
+
+        // adjust velocity
+        if (overlap.x !== 0) {
+            this.vel.x = ~~(0.5 + this.vel.x - overlap.x) || 0;
+            if (this.bounce > 0) {
+                this.vel.x *= -this.bounce;
+            }
+        }
+        if (overlap.y !== 0) {
+            this.vel.y = ~~(0.5 + this.vel.y - overlap.y) || 0;
+            if (this.bounce > 0) {
+                this.vel.y *= -this.bounce;
+            }
+
+            if (!this.ignoreGravity) {
+                // cancel the falling an jumping flags if necessary
+                var dir = this.falling === true ? 1 : this.jumping === true ? -1 : 0;
+                this.falling = overlap.y >= dir;
+                this.jumping = overlap.y <= -dir;
+            }
+        }
+    }
+
+    /**
+     * The forEach() method executes a provided function once per body shape element. <br>
+     * the callback function is invoked with three arguments: <br>
+     *    - The current element being processed in the array <br>
+     *    - The index of element in the array. <br>
+     *    - The array forEach() was called upon. <br>
+     * @param {Function} callback - fnction to execute on each element
+     * @param {object} [thisArg] - value to use as this(i.e reference Object) when executing callback.
+     * @example
+     * // iterate through all shapes of the physic body
+     * mySprite.body.forEach((shape) => {
+     *    shape.doSomething();
+     * });
+     * mySprite.body.forEach((shape, index) => { ... });
+     * mySprite.body.forEach((shape, index, array) => { ... });
+     * mySprite.body.forEach((shape, index, array) => { ... }, thisArg);
+     */
+    forEach(callback, thisArg) {
+        var context = this, i = 0;
+        var shapes = this.shapes;
+
+        var len = shapes.length;
+
+        if (typeof callback !== "function") {
+            throw new Error(callback + " is not a function");
+        }
+
+        if (arguments.length > 1) {
+            context = thisArg;
+        }
+
+        while (i < len) {
+            callback.call(context, shapes[i], i, shapes);
+            i++;
+        }
+    }
+
+    /**
+     * Returns true if the any of the shape composing the body contains the given point.
+     * @method Body#contains
+     * @param {Vector2d} point
+     * @returns {boolean} true if contains
+     */
+    /**
+     * Returns true if the any of the shape composing the body contains the given point.
+     * @param  {number} x -  x coordinate
+     * @param  {number} y -  y coordinate
+     * @returns {boolean} true if contains
+     */
+    contains() {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+          // x, y
+          _x = arguments[0];
+          _y = arguments[1];
+        } else {
+          // vector
+          _x = arguments[0].x;
+          _y = arguments[0].y;
+        }
+
+        if (this.getBounds().contains(_x, _y)) {
+             // cannot use forEach here as cannot break out with a return
+             for (var i = this.shapes.length, shape; i--, (shape = this.shapes[i]);) {
+                if (shape.contains(_x, _y)) {
+                    return true;
                 }
-            }
-        }
-
-        if (typeof(fn) === "function") {
-            returnObjects.sort(fn);
-        }
-
-        return returnObjects;
-    }
-
-    /**
-     * Remove the given item from the quadtree.
-     * (this function won't recalculate the impacted node)
-     * @name remove
-     * @memberof QuadTree
-     * @param {object} item - object to be removed
-     * @returns {boolean} true if the item was found and removed.
-     */
-     remove(item) {
-        var found = false;
-
-        if (typeof (item.getBounds) === "undefined") {
-            // ignore object that cannot be added in the first place
-            return false;
-        }
-
-        //if we have subnodes ...
-        if (this.nodes.length > 0) {
-            // determine to which node the item belongs to
-            var index = this.getIndex(item);
-
-            if (index !== -1) {
-                found = remove(this.nodes[index], item);
-                // trim node if empty
-                if (found && this.nodes[index].isPrunable()) {
-                    this.nodes.splice(index, 1);
-                }
-            }
-        }
-
-        if (found === false) {
-            // try and remove the item from the list of items in this node
-            if (this.objects.indexOf(item) !== -1) {
-                remove(this.objects, item);
-                found = true;
-            }
-        }
-
-        return found;
-    }
-
-    /**
-     * return true if the node is prunable
-     * @name isPrunable
-     * @memberof QuadTree
-     * @returns {boolean} true if the node is prunable
-     */
-    isPrunable() {
-        return !(this.hasChildren() || (this.objects.length > 0));
-    }
-
-    /**
-     * return true if the node has any children
-     * @name hasChildren
-     * @memberof QuadTree
-     * @returns {boolean} true if the node has any children
-     */
-    hasChildren() {
-        for (var i = 0; i < this.nodes.length; i = i + 1) {
-            var subnode = this.nodes[i];
-            if (subnode.length > 0 || subnode.objects.length > 0) {
-                return true;
             }
         }
         return false;
     }
 
     /**
-     * clear the quadtree
-     * @name clear
-     * @memberof QuadTree
-     * @param {Bounds} [bounds=this.bounds] - the bounds to be cleared
+     * Rotate this body (counter-clockwise) by the specified angle (in radians).
+     * Unless specified the body will be rotated around its center point
+     * @param {number} angle - The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v=Body.getBounds().center] - an optional point to rotate around
+     * @returns {Body} Reference to this object for method chaining
      */
-    clear(bounds) {
-        this.objects.length = 0;
-
-        for (var i = 0; i < this.nodes.length; i++) {
-            this.nodes[i].clear();
-            // recycle the quadTree object
-            QT_ARRAY_PUSH(this.nodes[i]);
+    rotate(angle, v = this.getBounds().center) {
+        if (angle !== 0) {
+            this.bounds.clear();
+            this.forEach((shape) => {
+                shape.rotate(angle, v);
+                this.bounds.addBounds(shape.getBounds());
+                /*
+                if (!(shape instanceof Ellipse)) {
+                    // ellipse position is center
+                    this.bounds.translate(shape.pos);
+                }
+                */
+            });
+            /*
+            if (typeof this.onBodyUpdate === "function") {
+                this.onBodyUpdate(this);
+            }
+            */
         }
-        // empty the array
-        this.nodes.length = 0;
+        return this;
+    }
 
-        // resize the root bounds if required
-        if (typeof bounds !== "undefined") {
-            this.bounds.setMinMax(bounds.min.x, bounds.min.y, bounds.max.x, bounds.max.y);
+    /**
+     * cap the body velocity (body.maxVel property) to the specified value<br>
+     * @param {number} x - max velocity on x axis
+     * @param {number} y - max velocity on y axis
+     */
+    setMaxVelocity(x, y) {
+        this.maxVel.x = x;
+        this.maxVel.y = y;
+    }
+
+    /**
+     * set the body default friction
+     * @param {number} x - horizontal friction
+     * @param {number} y - vertical friction
+     */
+    setFriction(x = 0, y = 0) {
+        this.friction.x = x;
+        this.friction.y = y;
+    }
+
+    /**
+     * Updates the parent's position as well as computes the new body's velocity based
+     * on the values of force/friction.  Velocity chages are proportional to the
+     * me.timer.tick value (which can be used to scale velocities).  The approach to moving the
+     * parent renderable is to compute new values of the Body.vel property then add them to
+     * the parent.pos value thus changing the postion the amount of Body.vel each time the
+     * update call is made. <br>
+     * Updates to Body.vel are bounded by maxVel (which defaults to viewport size if not set) <br>
+     * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the constructor arguments.
+     * @protected
+     * @param {number} dt - time since the last update in milliseconds.
+     * @returns {boolean} true if resulting velocity is different than 0
+     */
+    update(dt) { // eslint-disable-line no-unused-vars
+        // apply timer.tick to delta time for linear interpolation (when enabled)
+        // #761 add delta time in body update
+        var deltaTime = /* dt * */ timer$1.tick;
+
+        // apply force if defined
+        if (this.force.x !== 0) {
+            this.vel.x += this.force.x * deltaTime;
         }
+        if (this.force.y !== 0) {
+            this.vel.y += this.force.y * deltaTime;
+        }
+
+        // apply friction if defined
+        if (this.friction.x > 0) {
+            var fx = this.friction.x * deltaTime,
+                nx = this.vel.x + fx,
+                x = this.vel.x - fx;
+
+            this.vel.x = (
+                (nx < 0) ? nx :
+                ( x > 0) ? x  : 0
+            );
+        }
+        if (this.friction.y > 0) {
+            var fy = this.friction.y * deltaTime,
+                ny = this.vel.y + fy,
+                y = this.vel.y - fy;
+
+            this.vel.y = (
+                (ny < 0) ? ny :
+                ( y > 0) ? y  : 0
+            );
+        }
+
+        // cap velocity
+        if (this.vel.y !== 0) {
+            this.vel.y = clamp(this.vel.y, -this.maxVel.y, this.maxVel.y);
+        }
+        if (this.vel.x !== 0) {
+            this.vel.x = clamp(this.vel.x, -this.maxVel.x, this.maxVel.x);
+        }
+
+        // check if falling / jumping
+        this.falling = (this.vel.y * Math.sign(this.force.y)) > 0;
+        this.jumping = (this.falling ? false : this.jumping);
+
+        // update the body ancestor position
+        this.ancestor.pos.add(this.vel);
+
+        // returns true if vel is different from 0
+        return (this.vel.x !== 0 || this.vel.y !== 0);
+    }
+
+    /**
+     * Destroy function<br>
+     * @ignore
+     */
+    destroy() {
+        // push back instance into object pool
+        pool.push(this.bounds);
+        pool.push(this.vel);
+        pool.push(this.force);
+        pool.push(this.friction);
+        pool.push(this.maxVel);
+        this.shapes.forEach((shape) => {
+            pool.push(shape, false);
+        });
+
+        // set to undefined
+        this.onBodyUpdate = undefined;
+        this.ancestor = undefined;
+        this.bounds = undefined;
+        this.vel = undefined;
+        this.force = undefined;
+        this.friction = undefined;
+        this.maxVel = undefined;
+        this.shapes.length = 0;
+
+        // reset some variable to default
+        this.setStatic(false);
     }
 }
 
@@ -38348,4 +38349,4 @@ onReady(() => {
     }
 });
 
-export { AUTO$1 as AUTO, Application, BitmapText, BitmapTextData, Body, Bounds, CANVAS$1 as CANVAS, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Point, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, UIBaseElement, UISpriteElement, UITextButton, Vector2d, Vector3d, WEBGL$1 as WEBGL, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state$1 as state, timer$1 as timer, utils, version, video };
+export { AUTO$1 as AUTO, Application, BitmapText, BitmapTextData, Body, Bounds, CANVAS$1 as CANVAS, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Compositor, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Point, Pointer, Polygon, PrimitiveCompositor, QuadCompositor, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, UIBaseElement, UISpriteElement, UITextButton, Vector2d, Vector3d, WEBGL$1 as WEBGL, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state$1 as state, timer$1 as timer, utils, version, video };

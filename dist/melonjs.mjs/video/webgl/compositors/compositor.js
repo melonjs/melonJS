@@ -104,6 +104,19 @@ import { on, CANVAS_ONRESIZE } from '../../../system/event.js';
     }
 
     /**
+     * @ignore
+     * called by the WebGL renderer when a compositor become the current one
+     */
+    bind() {
+        if (this.activeShader !== null) {
+            this.activeShader.bind();
+            this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
+            this.activeShader.setVertexAttributes(this.gl, this.attributes, this.vertexByteSize);
+        }
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.vertexBuffer.buffer, this.gl.STREAM_DRAW);
+    }
+
+    /**
      * add vertex attribute property definition to the compositor
      * @param {string} name - name of the attribute in the vertex shader
      * @param {number} size - number of components per vertex attribute. Must be 1, 2, 3, or 4.

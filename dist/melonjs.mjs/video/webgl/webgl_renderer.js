@@ -7,7 +7,8 @@
  */
 import Color from '../../math/color.js';
 import Matrix2d from '../../math/matrix2.js';
-import WebGLCompositor from './compositors/webgl_compositor.js';
+import QuadCompositor from './compositors/quad_compositor.js';
+import PrimitiveCompositor from './compositors/primitive_compositor.js';
 import Renderer from '../renderer.js';
 import TextureCache from '../texture/cache.js';
 import { TextureAtlas, createAtlas } from '../texture/atlas.js';
@@ -36,7 +37,7 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
      * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
      * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
      * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
-     * @param {WebGLCompositor} [options.compositor] - A class that implements the compositor API
+     * @param {Compositor} [options.compositor] - A class that implements the compositor API for sprite rendering
      */
     constructor(options) {
 
@@ -119,10 +120,9 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
          */
         this.compositors = new Map();
 
-        // Create a default compositor
-        var compositor = new (this.settings.compositor || WebGLCompositor)(this);
-        this.compositors.set("default", compositor);
-        this.setCompositor(compositor);
+        // Create both quad and primitive compositor
+        this.addCompositor(new (this.settings.compositor || QuadCompositor)(this), "quad", true);
+        this.addCompositor(new (this.settings.compositor || PrimitiveCompositor)(this), "primitive");
 
 
         // default WebGL state(s)
@@ -185,17 +185,36 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
     }
 
     /**
-     * set the active compositor for this renderer
-     * @param {WebGLCompositor|string} compositor - a compositor name or instance
+     * add a new compositor to this renderer
+     * @param {Compositor} compositor - a compositor instance
+     * @param {String} name - a name uniquely identifying this compositor
+     * @param {Boolean} [activate=false] - true if the given compositor should be set as the active one
      */
-    setCompositor(compositor = "default") {
-
-        if (typeof compositor === "string") {
-            compositor = this.compositors.get(compositor);
+    addCompositor(compositor, name = "default", activate = false) {
+        // make sure there is no existing compositor with the same name
+        if (typeof this.compositors.get(name) !== "undefined") {
+            throw new Error("Invalid Compositor name");
         }
 
+        // add the new compositor
+        this.compositors.set(name, compositor);
+
+        if (activate === true) {
+            // set as active one
+            this.setCompositor(name);
+        }
+    }
+
+    /**
+     * set the active compositor for this renderer
+     * @param {String} name - a compositor name
+     * @return {Compositor} an instance to the current active compositor
+     */
+    setCompositor(name = "default") {
+        let compositor = this.compositors.get(name);
+
         if (typeof compositor === "undefined") {
-            throw new Error("Invalid WebGL Compositor");
+            throw new Error("Invalid Compositor");
         }
 
         if (this.currentCompositor !== compositor) {
@@ -205,7 +224,10 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
             }
             // set given one as current
             this.currentCompositor = compositor;
+            this.currentCompositor.bind();
         }
+
+        return this.currentCompositor;
     }
 
     /**
@@ -219,6 +241,7 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
      * @ignore
      */
     createFontTexture(cache) {
+        this.setCompositor("quad");
         if (typeof this.fontTexture === "undefined") {
             var canvas = this.getCanvas();
             var width = canvas.width;
@@ -266,6 +289,8 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
      */
     createPattern(image, repeat) {
 
+        this.setCompositor("quad");
+
         if (renderer.WebGLVersion === 1 && (!isPowerOfTwo(image.width) || !isPowerOfTwo(image.height))) {
             var src = typeof image.src !== "undefined" ? image.src : image;
             throw new Error(
@@ -295,14 +320,15 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
      */
     setProjection(matrix) {
         super.setProjection(matrix);
-        this.currentCompositor.setProjection(matrix);
     }
 
     /**
      * prepare the framebuffer for drawing a new frame
      */
     clear() {
-        this.currentCompositor.clear(this.settings.transparent ? 0.0 : 1.0);
+        this.compositors.forEach((compositor) => {
+            compositor.clear(this.settings.transparent ? 0.0 : 1.0);
+        });
     }
 
     /**
@@ -344,6 +370,8 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
      */
     drawFont(bounds) {
         var fontContext = this.getFontContext();
+
+        this.setCompositor("quad");
 
         // Force-upload the new texture
         this.currentCompositor.uploadTexture(this.fontTexture, 0, 0, 0, true);
@@ -417,6 +445,8 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
             dy |= 0;
         }
 
+        this.setCompositor("quad");
+
         var texture = this.cache.get(image);
         var uvs = texture.getUVs(sx + "," + sy + "," + sw + "," + sh);
         this.currentCompositor.addQuad(texture, dx, dy, dw, dh, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()));
@@ -433,6 +463,7 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
      */
     drawPattern(pattern, x, y, width, height) {
         var uvs = pattern.getUVs("0,0," + width + "," + height);
+        this.setCompositor("quad");
         this.currentCompositor.addQuad(pattern, x, y, width, height, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()));
     }
 
@@ -673,10 +704,7 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
      * @param {boolean} [fill=false]
      */
     strokeArc(x, y, radius, start, end, antiClockwise = false, fill = false) {
-        if (this.getGlobalAlpha() < 1 / 255) {
-            // Fast path: don't draw fully transparent
-            return;
-        }
+        this.setCompositor("primitive");
         this.path2D.beginPath();
         this.path2D.arc(x, y, radius, start, end, antiClockwise);
         if (fill === false) {
@@ -709,15 +737,12 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeEllipse(x, y, w, h, fill = false) {
-        if (this.getGlobalAlpha() < 1 / 255) {
-            // Fast path: don't draw fully transparent
-            return;
-        }
+        this.setCompositor("primitive");
         this.path2D.beginPath();
         this.path2D.ellipse(x, y, w, h, 0, 0, 360);
         this.path2D.closePath();
         if (fill === false) {
-            this.currentCompositor.drawVertices(this.gl.LINE_LOOP, this.path2D.points);
+            this.currentCompositor.drawVertices(this.gl.LINE_STRIP, this.path2D.points);
         } else {
             this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
         }
@@ -742,14 +767,11 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
      * @param {number} endY - the end y coordinate
      */
     strokeLine(startX, startY, endX, endY) {
-        if (this.getGlobalAlpha() < 1 / 255) {
-            // Fast path: don't draw fully transparent
-            return;
-        }
+        this.setCompositor("primitive");
         this.path2D.beginPath();
         this.path2D.moveTo(startX, startY);
         this.path2D.lineTo(endX, endY);
-        this.currentCompositor.drawVertices(this.gl.LINE_STRIP, this.path2D.points);
+        this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
     }
 
 
@@ -770,22 +792,19 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokePolygon(poly, fill = false) {
-        if (this.getGlobalAlpha() < 1 / 255) {
-            // Fast path: don't draw fully transparent
-            return;
-        }
+        this.setCompositor("primitive");
         this.translate(poly.pos.x, poly.pos.y);
         this.path2D.beginPath();
-        this.path2D.moveTo(poly.points[0].x, poly.points[0].y);
-        var point;
-        for (var i = 1; i < poly.points.length; i++) {
-            point = poly.points[i];
-            this.path2D.lineTo(point.x, point.y);
+
+        var points = poly.points;
+        for (var i = 1; i < points.length; i++) {
+            this.path2D.moveTo(points[i-1].x, points[i-1].y);
+            this.path2D.lineTo(points[i].x, points[i].y);
         }
-        this.path2D.lineTo(poly.points[0].x, poly.points[0].y);
+        this.path2D.lineTo(points[points.length - 1].x, points[points.length - 1].y);
         this.path2D.closePath();
         if (fill === false) {
-            this.currentCompositor.drawVertices(this.gl.LINE_LOOP, this.path2D.points);
+            this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
         } else {
             // draw all triangles
             this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
@@ -810,14 +829,11 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeRect(x, y, width, height, fill = false) {
-        if (this.getGlobalAlpha() < 1 / 255) {
-            // Fast path: don't draw fully transparent
-            return;
-        }
+        this.setCompositor("primitive");
         this.path2D.beginPath();
         this.path2D.rect(x, y, width, height);
         if (fill === false) {
-            this.currentCompositor.drawVertices(this.gl.LINE_LOOP, this.path2D.points);
+            this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
         } else {
             this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
         }
@@ -844,14 +860,11 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeRoundRect(x, y, width, height, radius, fill = false) {
-        if (this.getGlobalAlpha() < 1 / 255) {
-            // Fast path: don't draw fully transparent
-            return;
-        }
+        this.setCompositor("primitive");
         this.path2D.beginPath();
         this.path2D.roundRect(x, y, width, height, radius);
         if (fill === false) {
-            this.currentCompositor.drawVertices(this.gl.LINE_LOOP, this.path2D.points);
+            this.currentCompositor.drawVertices(this.gl.LINE_STRIP, this.path2D.points);
         } else {
             this.path2D.closePath();
             this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());

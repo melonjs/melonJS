@@ -18,7 +18,7 @@ export default class WebGLRenderer extends Renderer {
      * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
      * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
      * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
-     * @param {WebGLCompositor} [options.compositor] - A class that implements the compositor API
+     * @param {Compositor} [options.compositor] - A class that implements the compositor API for sprite rendering
      */
     constructor(options: {
         width: number;
@@ -33,7 +33,7 @@ export default class WebGLRenderer extends Renderer {
         powerPreference?: string | undefined;
         zoomX?: number | undefined;
         zoomY?: number | undefined;
-        compositor?: WebGLCompositor | undefined;
+        compositor?: any;
     });
     /**
      * The WebGL version used by this renderer (1 or 2)
@@ -102,10 +102,18 @@ export default class WebGLRenderer extends Renderer {
     compositors: Map<WebGLCompositor, any>;
     cache: TextureCache;
     /**
-     * set the active compositor for this renderer
-     * @param {WebGLCompositor|string} compositor - a compositor name or instance
+     * add a new compositor to this renderer
+     * @param {Compositor} compositor - a compositor instance
+     * @param {String} name - a name uniquely identifying this compositor
+     * @param {Boolean} [activate=false] - true if the given compositor should be set as the active one
      */
-    setCompositor(compositor?: WebGLCompositor | string): void;
+    addCompositor(compositor: Compositor, name?: string, activate?: boolean | undefined): void;
+    /**
+     * set the active compositor for this renderer
+     * @param {String} name - a compositor name
+     * @return {Compositor} an instance to the current active compositor
+     */
+    setCompositor(name?: string): Compositor;
     /**
      * Reset the gl transform to identity
      */
@@ -423,7 +431,6 @@ export default class WebGLRenderer extends Renderer {
 }
 import Renderer from "./../renderer.js";
 import Matrix2d from "./../../math/matrix2.js";
-import WebGLCompositor from "./compositors/webgl_compositor.js";
 import TextureCache from "./../texture/cache.js";
 import { TextureAtlas } from "./../texture/atlas.js";
 import Color from "./../../math/color.js";

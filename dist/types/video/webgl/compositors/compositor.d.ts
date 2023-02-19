@@ -53,6 +53,11 @@ export default class Compositor {
      */
     reset(): void;
     /**
+     * @ignore
+     * called by the WebGL renderer when a compositor become the current one
+     */
+    bind(): void;
+    /**
      * add vertex attribute property definition to the compositor
      * @param {string} name - name of the attribute in the vertex shader
      * @param {number} size - number of components per vertex attribute. Must be 1, 2, 3, or 4.

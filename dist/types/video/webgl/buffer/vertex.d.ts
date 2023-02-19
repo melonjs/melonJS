@@ -5,9 +5,9 @@
  * @ignore
  */
 export default class VertexArrayBuffer {
-    constructor(vertex_size: any, vertex_per_quad: any);
+    constructor(vertex_size: any, vertex_per_obj: any);
     vertexSize: any;
-    quadSize: any;
+    objSize: any;
     maxVertex: number;
     vertexCount: number;
     buffer: ArrayBuffer;
@@ -27,7 +27,7 @@ export default class VertexArrayBuffer {
      * resize the vertex buffer, retaining its original contents
      * @ignore
      */
-    resize(): VertexArrayBuffer;
+    resize(vertexCount: any): VertexArrayBuffer;
     /**
      * push a new vertex to the buffer
      * @ignore

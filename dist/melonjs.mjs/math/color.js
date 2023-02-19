@@ -541,12 +541,13 @@ var cssToRGB = new Map();
      * @returns {number}
      */
     toUint32(alpha = 1.0) {
-        var ur = this.r & 0xff;
-        var ug = this.g & 0xff;
-        var ub = this.b & 0xff;
-        var ua = (alpha * 255) & 0xff;
+        var a = this.glArray;
 
-        return (ua << 24) + (ur << 16) + (ug << 8) + ub;
+        var ur = (a[0] * 255) & 0xff;
+        var ug = (a[1] * 255) & 0xff;
+        var ub = (a[2] * 255) & 0xff;
+
+        return (((alpha * 255) & 0xff) << 24) + (ur << 16) + (ug << 8) + ub;
     }
 
     /**
