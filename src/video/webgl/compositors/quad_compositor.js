@@ -2,8 +2,6 @@ import Vector2d from "../../../math/vector2.js";
 import GLShader from "../glshader.js";
 import VertexArrayBuffer from "../buffer/vertex.js";
 import { isPowerOfTwo } from "../../../math/math.js";
-import primitiveVertex from "./../shaders/primitive.vert";
-import primitiveFragment from "./../shaders/primitive.frag";
 import quadVertex from "./../shaders/quad.vert";
 import quadFragment from "./../shaders/quad.frag";
 import Compositor from "./compositor.js";
@@ -22,7 +20,7 @@ var V_ARRAY = [
  * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
  * @augments Compositor
  */
- export default class WebGLCompositor extends Compositor {
+ export default class QuadCompositor extends Compositor {
 
     /**
      * Initialize the compositor
@@ -36,7 +34,6 @@ var V_ARRAY = [
         this.boundTextures = [];
 
         // Load and create shader programs
-        this.primitiveShader = new GLShader(this.gl, primitiveVertex, primitiveFragment);
         this.quadShader = new GLShader(this.gl, quadVertex, quadFragment);
 
         /// define all vertex attributes
@@ -44,7 +41,7 @@ var V_ARRAY = [
         this.addAttribute("aRegion", 2, this.gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT); // 1
         this.addAttribute("aColor",  4, this.gl.UNSIGNED_BYTE, true, 4 * Float32Array.BYTES_PER_ELEMENT); // 2
 
-        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, 6); // 6 vertices per quad
+        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, 6);
 
         // vertex buffer
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gl.createBuffer());
@@ -201,22 +198,6 @@ var V_ARRAY = [
         return this.currentTextureUnit;
     }
 
-
-    /**
-     * Select the shader to use for compositing
-     * @see GLShader
-     * @param {GLShader} shader - a reference to a GLShader instance
-     */
-    useShader(shader) {
-        if (this.activeShader !== shader) {
-            this.flush();
-            this.activeShader = shader;
-            this.activeShader.bind();
-            this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
-            this.activeShader.setVertexAttributes(this.gl, this.attributes, this.vertexByteSize);
-        }
-    }
-
     /**
      * Add a textured quad
      * @param {TextureAtlas} texture - Source texture atlas
@@ -231,15 +212,9 @@ var V_ARRAY = [
      * @param {number} tint - tint color to be applied to the texture in UINT32 (argb) format
      */
     addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint) {
+        var vertexBuffer = this.vertexBuffer;
 
-        if (this.color.alpha < 1 / 255) {
-            // Fast path: don't send fully transparent quads
-            return;
-        }
-
-        this.useShader(this.quadShader);
-
-        if (this.vertexBuffer.isFull(6)) {
+        if (vertexBuffer.isFull(6)) {
             // is the vertex buffer full if we add 6 more vertices
             this.flush();
         }
@@ -263,38 +238,11 @@ var V_ARRAY = [
             m.apply(vec3);
         }
 
-        this.vertexBuffer.push(vec0.x, vec0.y, u0, v0, tint);
-        this.vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
-        this.vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
-        this.vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
-        this.vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
-        this.vertexBuffer.push(vec3.x, vec3.y, u1, v1, tint);
-    }
-
-    /**
-     * Draw an array of vertices
-     * @param {GLenum} mode - primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
-     * @param {Point[]} verts - an array of vertices
-     * @param {number} [vertexCount=verts.length] - amount of points defined in the points array
-     */
-    drawVertices(mode, verts, vertexCount = verts.length) {
-        // use the primitive shader
-        this.useShader(this.primitiveShader);
-        // Set the line color
-        this.primitiveShader.setUniform("uColor", this.color);
-
-        var m = this.viewMatrix;
-        var vertex = this.vertexBuffer;
-        var m_isIdentity = m.isIdentity();
-
-        for (var i = 0; i < vertexCount; i++) {
-            if (!m_isIdentity) {
-                m.apply(verts[i]);
-            }
-            vertex.push(verts[i].x, verts[i].y);
-        }
-
-        // flush
-        this.flush(mode);
+        vertexBuffer.push(vec0.x, vec0.y, u0, v0, tint);
+        vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
+        vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
+        vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
+        vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
+        vertexBuffer.push(vec3.x, vec3.y, u1, v1, tint);
     }
 }

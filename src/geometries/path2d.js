@@ -242,9 +242,6 @@ import earcut from "earcut";
             points.push(pool.pull("Point", _x2, _y2));
             angle += direction * dangle;
         }
-        //var x1 = radiusX * Math.cos(endAngle);
-        //var y1 = radiusY * Math.sin(endAngle);
-        //points.push(pool.pull("Point", x + x1 * cos_rotation - y1 * sin_rotation, y + x1 * sin_rotation + y1 * cos_rotation));
     }
 
     /**
@@ -257,8 +254,11 @@ import earcut from "earcut";
     rect(x, y, width, height) {
         this.moveTo(x, y);
         this.lineTo(x + width, y);
+        this.moveTo(x + width, y);
         this.lineTo(x + width, y + height);
+        this.moveTo(x + width, y + height);
         this.lineTo(x, y + height);
+        this.moveTo(x, y + height);
         this.lineTo(x, y);
     }
 

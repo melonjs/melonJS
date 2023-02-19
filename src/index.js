@@ -20,7 +20,9 @@ import Body from "./physics/body.js";
 import Bounds from "./physics/bounds.js";
 import Tween from "./tweens/tween.js";
 import GLShader from "./video/webgl/glshader.js";
-import WebGLCompositor from "./video/webgl/compositors/webgl_compositor.js";
+import Compositor from "./video/webgl/compositors/compositor.js";
+import PrimitiveCompositor from "./video/webgl/compositors/primitive_compositor.js";
+import QuadCompositor from "./video/webgl/compositors/quad_compositor.js";
 import Renderer from "./video/renderer.js";
 import WebGLRenderer from "./video/webgl/webgl_renderer.js";
 import CanvasRenderer from "./video/canvas/canvas_renderer.js";
@@ -127,7 +129,9 @@ export {
     Tween,
     QuadTree,
     GLShader,
-    WebGLCompositor,
+    Compositor,
+    PrimitiveCompositor,
+    QuadCompositor,
     Renderer,
     WebGLRenderer,
     CanvasRenderer,
