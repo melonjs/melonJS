@@ -2,8 +2,17 @@
 
 ## [15.0.0] (melonJS 2) - _2023-02-xx_
 
+### Added
+- Renderer: enable batch drawing for rectangle and polygon based primitive shapes
+- Renderer: new base `Compositor` class that can be extended to create custom WebGL compositors
+
 ### Changed
 - Core: remove remaining polyfills related to pre-ECMAScript 2015 features (as melonJS 2 implementation base is now 100% ES6)
+- Renderer: refactoring of the `WebGLCompositor` into a `QuadCompositor` and `PrimitiveCompitor` for Quad and Primitive composition
+
+### Fixed
+- Geometry: fix `arcTo()` drawing a "looping" line between the start and end angle
+- Renderer: fix binding of active shader when switching compositor
 
 ## [14.5.0] (melonJS 2) - _2023-02-13_
 
