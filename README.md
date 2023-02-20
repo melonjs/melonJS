@@ -128,8 +128,8 @@ me.device.onReady(function () {
         return;
     }
 
-    // add a gray background to the default Stage
-    me.game.world.addChild(new me.ColorLayer("background", "#202020"));
+    // set a gray background color
+    me.game.world.backgroundColor.parseCSS("#202020");
 
     // add a font text display object
     me.game.world.addChild(new me.Text(609, 281, {
