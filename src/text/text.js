@@ -296,6 +296,8 @@ var getContext2d = function (renderer, text) {
                 height = Math.ceil(this.metrics.height);
 
             if (globalRenderer instanceof WebGLRenderer) {
+                // make sure the right compositor is active
+                globalRenderer.setCompositor("quad");
                 // invalidate the previous corresponding texture so that it can reuploaded once changed
                 this.glTextureUnit = globalRenderer.cache.getUnit(globalRenderer.cache.get(this.canvasTexture.canvas));
                 globalRenderer.currentCompositor.unbindTexture2D(null, this.glTextureUnit);
