@@ -428,6 +428,8 @@ var getContext2d = function (renderer, text) {
     destroy() {
         if (this.offScreenCanvas === true) {
             if (globalRenderer instanceof WebGLRenderer) {
+                // make sure the right compositor is active
+                globalRenderer.setCompositor("quad");
                 globalRenderer.currentCompositor.deleteTexture2D(globalRenderer.currentCompositor.getTexture2D(this.glTextureUnit));
                 this.glTextureUnit = undefined;
             }
