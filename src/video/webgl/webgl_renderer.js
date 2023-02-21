@@ -171,10 +171,6 @@ import { isPowerOfTwo, nextPowerOfTwo } from "./../../math/math.js";
         });
 
         this.gl.disable(this.gl.SCISSOR_TEST);
-        if (typeof this.fontContext2D !== "undefined" ) {
-            this.createFontTexture(this.cache);
-        }
-
     }
 
     /**
@@ -215,8 +211,9 @@ import { isPowerOfTwo, nextPowerOfTwo } from "./../../math/math.js";
                 // flush the current compositor
                 this.currentCompositor.flush();
             }
-            // set given one as current
+            // set as the active one
             this.currentCompositor = compositor;
+            // (re)bind the compositor (program & attributes)
             this.currentCompositor.bind();
         }
 
@@ -234,7 +231,6 @@ import { isPowerOfTwo, nextPowerOfTwo } from "./../../math/math.js";
      * @ignore
      */
     createFontTexture(cache) {
-        this.setCompositor("quad");
         if (typeof this.fontTexture === "undefined") {
             var canvas = this.getCanvas();
             var width = canvas.width;
@@ -250,6 +246,8 @@ import { isPowerOfTwo, nextPowerOfTwo } from "./../../math/math.js";
             }
 
             var image = createCanvas(width, height, true);
+
+            this.setCompositor("quad");
 
             /**
              * @ignore
@@ -362,8 +360,6 @@ import { isPowerOfTwo, nextPowerOfTwo } from "./../../math/math.js";
      * @ignore
      */
     drawFont(bounds) {
-        var fontContext = this.getFontContext();
-
         this.setCompositor("quad");
 
         // Force-upload the new texture
@@ -385,7 +381,7 @@ import { isPowerOfTwo, nextPowerOfTwo } from "./../../math/math.js";
         );
 
         // Clear font context2D
-        fontContext.clearRect(
+        this.getFontContext().clearRect(
             bounds.left,
             bounds.top,
             bounds.width,
