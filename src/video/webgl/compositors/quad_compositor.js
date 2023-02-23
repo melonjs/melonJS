@@ -74,14 +74,14 @@ var V_ARRAY = [
      * @param {Image|HTMLCanvasElement|ImageData|Uint8Array[]|Float32Array[]} image - Source image
      * @param {number} filter - gl.LINEAR or gl.NEAREST
      * @param {string} [repeat="no-repeat"] - Image repeat behavior (see {@link ImageLayer#repeat})
-     * @param {number} [w] - Source image width (Only use with UInt8Array[] or Float32Array[] source image)
-     * @param {number} [h] - Source image height (Only use with UInt8Array[] or Float32Array[] source image)
-     * @param {number} [b] - Source image border (Only use with UInt8Array[] or Float32Array[] source image)
+     * @param {number} [w=image.width] - Source image width (Only use with UInt8Array[] or Float32Array[] source image)
+     * @param {number} [h=image.height] - Source image height (Only use with UInt8Array[] or Float32Array[] source image)
+     * @param {number} [b=0] - Source image border (Only use with UInt8Array[] or Float32Array[] source image)
      * @param {boolean} [premultipliedAlpha=true] - Multiplies the alpha channel into the other color channels
      * @param {boolean} [mipmap=true] - Whether mipmap levels should be generated for this texture
      * @returns {WebGLTexture} a WebGL texture
      */
-    createTexture2D(unit, image, filter, repeat = "no-repeat", w, h, b, premultipliedAlpha = true, mipmap = true) {
+    createTexture2D(unit, image, filter, repeat = "no-repeat", w = image.width, h = image.height, b = 0, premultipliedAlpha = true, mipmap = true) {
         var gl = this.gl;
         var isPOT = isPowerOfTwo(w || image.width) && isPowerOfTwo(h || image.height);
         var texture = gl.createTexture();
@@ -95,12 +95,7 @@ var V_ARRAY = [
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultipliedAlpha);
-        if (w || h || b) {
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, b, gl.RGBA, gl.UNSIGNED_BYTE, image);
-        }
-        else {
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-        }
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, b, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
         // generate the sprite mimap (used when scaling) if a PowerOfTwo texture
         if (isPOT && mipmap !== false) {

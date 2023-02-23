@@ -14,6 +14,7 @@
 ### Fixed
 - Geometry: fix `arcTo()` drawing a "looping" line between the start and end angle
 - Renderer: fix binding of active shader when switching compositor
+- Renderer: fix a TypeError exception on Safari Technology Preview
 
 ## [14.5.0] (melonJS 2) - _2023-02-13_
 
