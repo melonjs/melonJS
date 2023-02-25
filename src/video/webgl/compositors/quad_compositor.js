@@ -76,14 +76,14 @@ var V_ARRAY = [
      * @param {string} [repeat="no-repeat"] - Image repeat behavior (see {@link ImageLayer#repeat})
      * @param {number} [w=image.width] - Source image width (Only use with UInt8Array[] or Float32Array[] source image)
      * @param {number} [h=image.height] - Source image height (Only use with UInt8Array[] or Float32Array[] source image)
-     * @param {number} [b=0] - Source image border (Only use with UInt8Array[] or Float32Array[] source image)
+     * @param {number} [b=0] - Source image border width. Must be 0.
      * @param {boolean} [premultipliedAlpha=true] - Multiplies the alpha channel into the other color channels
      * @param {boolean} [mipmap=true] - Whether mipmap levels should be generated for this texture
      * @returns {WebGLTexture} a WebGL texture
      */
     createTexture2D(unit, image, filter, repeat = "no-repeat", w = image.width, h = image.height, b = 0, premultipliedAlpha = true, mipmap = true) {
         var gl = this.gl;
-        var isPOT = isPowerOfTwo(w || image.width) && isPowerOfTwo(h || image.height);
+        var isPOT = isPowerOfTwo(w) && isPowerOfTwo(h);
         var texture = gl.createTexture();
         var rs = (repeat.search(/^repeat(-x)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
         var rt = (repeat.search(/^repeat(-y)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
