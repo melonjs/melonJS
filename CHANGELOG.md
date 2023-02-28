@@ -11,11 +11,14 @@
 - Renderer: refactoring of the `WebGLCompositor` into a `QuadCompositor` and `PrimitiveCompitor` for Quad and Primitive composition
 - Renderer: the vertex shader now takes a color attributes (as opposed to using an uniform in previous version)
 - Text: Text object now use offscreen canvas by default to render text (this has been in beta for almost 2 years)
+- Text: setting `lineWidth` to a value greater than 0 will now automatically stroke the text
+- Text: `drawStroke()` is now deprecated in favour of the `lineWidth` property
 
 ### Fixed
 - Geometry: fix `arcTo()` drawing a "looping" line between the start and end angle
 - Renderer: fix binding of active shader when switching compositor
 - Renderer: fix a TypeError exception on Safari Technology Preview
+- Text: restore the text Stroke feature (was broken since a couple of releases)
 
 ## [14.5.0] (melonJS 2) - _2023-02-13_
 

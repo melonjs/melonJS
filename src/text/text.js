@@ -33,7 +33,7 @@ const toPX = [12, 24, 0.75, 1];
      * @param {number|string} settings.size - size, or size + suffix (px, em, pt)
      * @param {Color|string} [settings.fillStyle="#000000"] - a CSS color value
      * @param {Color|string} [settings.strokeStyle="#000000"] - a CSS color value
-     * @param {number} [settings.lineWidth=1] - line width, in pixels, when drawing stroke
+     * @param {number} [settings.lineWidth=0] - line width, in pixels, when drawing stroke
      * @param {string} [settings.textAlign="left"] - horizontal text alignment
      * @param {string} [settings.textBaseline="top"] - the text baseline
      * @param {number} [settings.lineHeight=1.0] - line spacing height
@@ -92,9 +92,9 @@ const toPX = [12, 24, 0.75, 1];
          * sets the current line width, in pixels, when drawing stroke
          * @public
          * @type {number}
-         * @default 1
+         * @default 0
          */
-        this.lineWidth = settings.lineWidth || 1;
+        this.lineWidth = settings.lineWidth || 0;
 
         /**
          * Set the default text alignment (or justification),<br>
@@ -289,7 +289,7 @@ const toPX = [12, 24, 0.75, 1];
         }
 
         this.canvasTexture.clear();
-        this._drawFont(this.canvasTexture.context, this._text,  this.pos.x - this.metrics.x, this.pos.y - this.metrics.y, false);
+        this._drawFont(this.canvasTexture.context, this._text,  this.pos.x - this.metrics.x, this.pos.y - this.metrics.y);
 
         this.isDirty = true;
 
@@ -313,9 +313,8 @@ const toPX = [12, 24, 0.75, 1];
      * @param {string} [text]
      * @param {number} [x]
      * @param {number} [y]
-     * @param {boolean} [stroke=false] - draw stroke the the text if true
      */
-    draw(renderer, text, x = this.pos.x, y = this.pos.y /*, stroke = false */) {
+    draw(renderer, text, x = this.pos.x, y = this.pos.y) {
         // "hacky patch" for backward compatibilty
         if (typeof this.ancestor === "undefined") {
 
@@ -361,28 +360,33 @@ const toPX = [12, 24, 0.75, 1];
     }
 
     /**
-     * draw a stroke text at the specified coord, as defined <br>
-     * by the `lineWidth` and `fillStroke` properties. <br>
-     * Note : using drawStroke is not recommended for performance reasons
+     * draw a stroke text at the specified coord, as defined by the `lineWidth` and `fillStroke` properties.
+     * @deprecated since 15.0.0
      * @param {CanvasRenderer|WebGLRenderer} renderer - Reference to the destination renderer instance
      * @param {string} text
      * @param {number} x
      * @param {number} y
      */
     drawStroke(renderer, text, x, y) {
-        this.draw(renderer, text, x, y, true);
+        this.draw(renderer, text, x, y);
     }
 
     /**
      * @ignore
      */
-    _drawFont(context, text, x, y, stroke = false) {
-        setContextStyle(context, this, stroke);
+    _drawFont(context, text, x, y) {
+        setContextStyle(context, this);
 
         for (var i = 0; i < text.length; i++) {
             var string = text[i].trimEnd();
             // draw the string
-            context[stroke ? "strokeText" : "fillText"](string, x, y);
+            if (this.fillStyle.alpha > 0) {
+                context.fillText(string, x, y);
+            }
+            // stroke the text
+            if (this.lineWidth > 0 && this.strokeStyle.alpha > 0) {
+                context.strokeText(string, x, y);
+            }
             // add leading space
             y += this.metrics.lineHeight();
         }
