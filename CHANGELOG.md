@@ -10,6 +10,7 @@
 - Core: remove remaining polyfills related to pre-ECMAScript 2015 features (as melonJS 2 implementation base is now 100% ES6)
 - Renderer: refactoring of the `WebGLCompositor` into a `QuadCompositor` and `PrimitiveCompitor` for Quad and Primitive composition
 - Renderer: the vertex shader now takes a color attributes (as opposed to using an uniform in previous version)
+- Text: Text object now use offscreen canvas by default to render text (this has been in beta for almost 2 years)
 
 ### Fixed
 - Geometry: fix `arcTo()` drawing a "looping" line between the start and end angle

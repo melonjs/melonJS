@@ -5,10 +5,10 @@ import PrimitiveCompositor from "./compositors/primitive_compositor";
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture/cache.js";
 import { TextureAtlas, createAtlas } from "./../texture/atlas.js";
-import { createCanvas, renderer } from "./../video.js";
+import { renderer } from "./../video.js";
 import * as event from "./../../system/event.js";
 import pool from "./../../system/pooling.js";
-import { isPowerOfTwo, nextPowerOfTwo } from "./../../math/math.js";
+import { isPowerOfTwo } from "./../../math/math.js";
 
 /**
  * @classdesc
@@ -228,45 +228,6 @@ import { isPowerOfTwo, nextPowerOfTwo } from "./../../math/math.js";
     }
 
     /**
-     * @ignore
-     */
-    createFontTexture(cache) {
-        if (typeof this.fontTexture === "undefined") {
-            var canvas = this.getCanvas();
-            var width = canvas.width;
-            var height = canvas.height;
-
-            if (this.WebGLVersion === 1) {
-                if (!isPowerOfTwo(width)) {
-                    width = nextPowerOfTwo(canvas.width);
-                }
-                if (!isPowerOfTwo(height)) {
-                    height = nextPowerOfTwo(canvas.height);
-                }
-            }
-
-            var image = createCanvas(width, height, true);
-
-            this.setCompositor("quad");
-
-            /**
-             * @ignore
-             */
-            this.fontContext2D = this.getContext2d(image);
-
-            /**
-             * @ignore
-             */
-            this.fontTexture = new TextureAtlas(createAtlas(canvas.width, canvas.height, "fontTexture"), image, cache);
-            this.currentCompositor.uploadTexture(this.fontTexture, 0, 0, 0);
-
-        } else {
-           // fontTexture was already created, just add it back into the cache
-           cache.set(this.fontContext2D.canvas, this.fontTexture);
-       }
-    }
-
-    /**
      * Create a pattern with the specified repetition
      * @param {Image} image - Source image
      * @param {string} repeat - Define how the pattern should be repeated
@@ -354,39 +315,6 @@ import { isPowerOfTwo, nextPowerOfTwo } from "./../../math/math.js";
         this.clipRect(x, y, width, height);
         this.clearColor();
         this.restore();
-    }
-
-    /**
-     * @ignore
-     */
-    drawFont(bounds) {
-        this.setCompositor("quad");
-
-        // Force-upload the new texture
-        this.currentCompositor.uploadTexture(this.fontTexture, 0, 0, 0, true);
-
-        // Add the new quad
-        var uvs = this.fontTexture.getUVs(bounds.left + "," + bounds.top + "," + bounds.width + "," + bounds.height);
-        this.currentCompositor.addQuad(
-            this.fontTexture,
-            bounds.left,
-            bounds.top,
-            bounds.width,
-            bounds.height,
-            uvs[0],
-            uvs[1],
-            uvs[2],
-            uvs[3],
-            this.currentTint.toUint32(this.getGlobalAlpha())
-        );
-
-        // Clear font context2D
-        this.getFontContext().clearRect(
-            bounds.left,
-            bounds.top,
-            bounds.width,
-            bounds.height
-        );
     }
 
     /**
@@ -557,20 +485,6 @@ import { isPowerOfTwo, nextPowerOfTwo } from "./../../math/math.js";
                     break;
             }
         }
-    }
-
-    /**
-     * return a reference to the font 2d Context
-     * @ignore
-     */
-    getFontContext() {
-        if (typeof this.fontContext2D === "undefined" ) {
-            // warn the end user about performance impact
-            console.warn("[WebGL Renderer] WARNING : Using Standard me.Text with WebGL will severly impact performances !");
-            // create the font texture if not done yet
-            this.createFontTexture(this.cache);
-        }
-        return this.fontContext2D;
     }
 
     /**

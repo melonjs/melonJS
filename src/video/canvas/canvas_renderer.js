@@ -535,15 +535,6 @@ import * as event from "./../../system/event.js";
     }
 
     /**
-     * return a reference to the font 2d Context
-     * @ignore
-     */
-    getFontContext() {
-        // in canvas mode we can directly use the 2d context
-        return this.getContext();
-    }
-
-    /**
      * save the canvas context
      * @name save
      * @memberof CanvasRenderer

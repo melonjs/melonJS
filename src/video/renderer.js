@@ -412,10 +412,4 @@ import Point from "../geometries/point.js";
         // reset to default
         this.currentTint.setColor(255, 255, 255, 1.0);
     }
-
-    /**
-     * @ignore
-     */
-    drawFont(/*bounds*/) {}
-
 }

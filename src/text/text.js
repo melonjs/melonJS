@@ -19,18 +19,6 @@ import TextMetrics from "./textmetrics.js";
 const runits = ["ex", "em", "pt", "px"];
 const toPX = [12, 24, 0.75, 1];
 
-// return a valid 2d context for Text rendering/styling
-var getContext2d = function (renderer, text) {
-    if (text.offScreenCanvas === true) {
-        return text.canvasTexture.context;
-    } else {
-        if (typeof renderer === "undefined") {
-            renderer = globalRenderer;
-        }
-        return renderer.getFontContext();
-    }
-};
-
 /**
  * @classdesc
  * a generic system font object.
@@ -50,7 +38,6 @@ var getContext2d = function (renderer, text) {
      * @param {string} [settings.textBaseline="top"] - the text baseline
      * @param {number} [settings.lineHeight=1.0] - line spacing height
      * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] - anchor point to draw the text at
-     * @param {boolean} [settings.offScreenCanvas=false] - whether to draw the font to an individual "cache" texture first
      * @param {number} [settings.wordWrapWidth] - the maximum length in CSS pixel for a single segment of text
      * @param {(string|string[])} [settings.text=""] - a string, or an array of strings
      * @example
@@ -137,16 +124,6 @@ var getContext2d = function (renderer, text) {
         this.lineHeight = settings.lineHeight || 1.0;
 
         /**
-         * whether to draw the font to a indidividual offscreen canvas texture first <br>
-         * Note: this will improve performances when using WebGL, but will impact
-         * memory consumption as every text element will have its own canvas texture
-         * @public
-         * @type {boolean}
-         * @default false
-         */
-        this.offScreenCanvas = false;
-
-        /**
          * the maximum length in CSS pixel for a single segment of text.
          * (use -1 to disable word wrapping)
          * @public
@@ -192,10 +169,8 @@ var getContext2d = function (renderer, text) {
             this.italic();
         }
 
-        if (settings.offScreenCanvas === true) {
-            this.offScreenCanvas = true;
-            this.canvasTexture = pool.pull("CanvasTexture", 2, 2, { offscreenCanvas: true });
-        }
+        // the canvas Texture used to render this text
+        this.canvasTexture = pool.pull("CanvasTexture", 2, 2, { offscreenCanvas: true });
 
         // instance to text metrics functions
         this.metrics = new TextMetrics(this);
@@ -284,39 +259,37 @@ var getContext2d = function (renderer, text) {
 
         // word wrap if necessary
         if (this._text.length > 0 && this.wordWrapWidth > 0) {
-            this._text = this.metrics.wordWrap(this._text, this.wordWrapWidth, getContext2d(globalRenderer, this));
+            this._text = this.metrics.wordWrap(this._text, this.wordWrapWidth, this.canvasTexture.context);
         }
 
         // calculcate the text size and update the bounds accordingly
-        bounds.addBounds(this.metrics.measureText(this._text, getContext2d(globalRenderer, this)), true);
+        bounds.addBounds(this.metrics.measureText(this._text, this.canvasTexture.context), true);
 
         // update the offScreenCanvas texture if required
-        if (this.offScreenCanvas === true) {
-            var width = Math.ceil(this.metrics.width),
-                height = Math.ceil(this.metrics.height);
+        var width = Math.ceil(this.metrics.width),
+            height = Math.ceil(this.metrics.height);
 
-            if (globalRenderer instanceof WebGLRenderer) {
-                // make sure the right compositor is active
-                globalRenderer.setCompositor("quad");
-                // invalidate the previous corresponding texture so that it can reuploaded once changed
-                this.glTextureUnit = globalRenderer.cache.getUnit(globalRenderer.cache.get(this.canvasTexture.canvas));
-                globalRenderer.currentCompositor.unbindTexture2D(null, this.glTextureUnit);
+        if (globalRenderer instanceof WebGLRenderer) {
+            // make sure the right compositor is active
+            globalRenderer.setCompositor("quad");
+            // invalidate the previous corresponding texture so that it can reuploaded once changed
+            this.glTextureUnit = globalRenderer.cache.getUnit(globalRenderer.cache.get(this.canvasTexture.canvas));
+            globalRenderer.currentCompositor.unbindTexture2D(null, this.glTextureUnit);
 
-                if (globalRenderer.WebGLVersion === 1) {
-                    // round size to next Pow2
-                    width = nextPowerOfTwo(this.metrics.width);
-                    height = nextPowerOfTwo(this.metrics.height);
-                }
+            if (globalRenderer.WebGLVersion === 1) {
+                // round size to next Pow2
+                width = nextPowerOfTwo(this.metrics.width);
+                height = nextPowerOfTwo(this.metrics.height);
             }
-
-            // resize the cache canvas if necessary
-            if (this.canvasTexture.width < width || this.canvasTexture.height < height) {
-                this.canvasTexture.resize(width, height);
-            }
-
-            this.canvasTexture.clear();
-            this._drawFont(this.canvasTexture.context, this._text,  this.pos.x - this.metrics.x, this.pos.y - this.metrics.y, false);
         }
+
+        // resize the cache canvas if necessary
+        if (this.canvasTexture.width < width || this.canvasTexture.height < height) {
+            this.canvasTexture.resize(width, height);
+        }
+
+        this.canvasTexture.clear();
+        this._drawFont(this.canvasTexture.context, this._text,  this.pos.x - this.metrics.x, this.pos.y - this.metrics.y, false);
 
         this.isDirty = true;
 
@@ -330,7 +303,7 @@ var getContext2d = function (renderer, text) {
      * @returns {TextMetrics} a TextMetrics object defining the dimensions of the given piece of text
      */
     measureText(renderer, text = this._text) {
-        return this.metrics.measureText(text, getContext2d(renderer, this));
+        return this.metrics.measureText(text, this.canvasTexture.context);
     }
 
 
@@ -342,7 +315,7 @@ var getContext2d = function (renderer, text) {
      * @param {number} [y]
      * @param {boolean} [stroke=false] - draw stroke the the text if true
      */
-    draw(renderer, text, x = this.pos.x, y = this.pos.y, stroke = false) {
+    draw(renderer, text, x = this.pos.x, y = this.pos.y /*, stroke = false */) {
         // "hacky patch" for backward compatibilty
         if (typeof this.ancestor === "undefined") {
 
@@ -378,12 +351,7 @@ var getContext2d = function (renderer, text) {
         }
 
         // draw the text
-        if (this.offScreenCanvas === true) {
-            renderer.drawImage(this.canvasTexture.canvas, x, y);
-        } else {
-            renderer.drawFont(this._drawFont(renderer.getFontContext(), this._text, x, y, stroke));
-        }
-
+        renderer.drawImage(this.canvasTexture.canvas, x, y);
 
         // for backward compatibilty
         if (typeof this.ancestor === "undefined") {
@@ -426,17 +394,15 @@ var getContext2d = function (renderer, text) {
      * @ignore
      */
     destroy() {
-        if (this.offScreenCanvas === true) {
-            if (globalRenderer instanceof WebGLRenderer) {
-                // make sure the right compositor is active
-                globalRenderer.setCompositor("quad");
-                globalRenderer.currentCompositor.deleteTexture2D(globalRenderer.currentCompositor.getTexture2D(this.glTextureUnit));
-                this.glTextureUnit = undefined;
-            }
-            globalRenderer.cache.delete(this.canvasTexture.canvas);
-            pool.push(this.canvasTexture);
-            this.canvasTexture = undefined;
+        if (globalRenderer instanceof WebGLRenderer) {
+            // make sure the right compositor is active
+            globalRenderer.setCompositor("quad");
+            globalRenderer.currentCompositor.deleteTexture2D(globalRenderer.currentCompositor.getTexture2D(this.glTextureUnit));
+            this.glTextureUnit = undefined;
         }
+        globalRenderer.cache.delete(this.canvasTexture.canvas);
+        pool.push(this.canvasTexture);
+        this.canvasTexture = undefined;
         pool.push(this.fillStyle);
         pool.push(this.strokeStyle);
         this.fillStyle = this.strokeStyle = undefined;
