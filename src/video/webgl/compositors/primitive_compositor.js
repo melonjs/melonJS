@@ -1,5 +1,4 @@
 import GLShader from "../glshader.js";
-import VertexArrayBuffer from "../buffer/vertex.js";
 import primitiveVertex from "./../shaders/primitive.vert";
 import primitiveFragment from "./../shaders/primitive.frag";
 import Compositor from "./compositor.js";
@@ -16,21 +15,16 @@ import Compositor from "./compositor.js";
      * Initialize the compositor
      * @ignore
      */
-    init (renderer) {
-        super.init(renderer);
+    init(renderer) {
+        super.init(renderer, {
+            attributes: [
+                {name: "aVertex", size: 2, type: renderer.gl.FLOAT, normalized: false, offset: 0 * Float32Array.BYTES_PER_ELEMENT},
+                {name: "aColor",  size: 4, type: renderer.gl.UNSIGNED_BYTE, normalized: true, offset: 2 * Float32Array.BYTES_PER_ELEMENT}
+            ]
+        });
 
         // Load and create shader programs
         this.primitiveShader = new GLShader(this.gl, primitiveVertex, primitiveFragment);
-
-        /// define all vertex attributes
-        this.addAttribute("aVertex", 2, this.gl.FLOAT, false, 0 * Float32Array.BYTES_PER_ELEMENT); // 0
-        this.addAttribute("aColor",  4, this.gl.UNSIGNED_BYTE, true, 2 * Float32Array.BYTES_PER_ELEMENT); // 1
-
-        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, 6);
-
-        // vertex buffer
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gl.createBuffer());
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.vertexBuffer.buffer, this.gl.STREAM_DRAW);
     }
 
     /**

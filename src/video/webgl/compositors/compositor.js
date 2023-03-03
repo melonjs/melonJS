@@ -1,5 +1,5 @@
 import * as event from "../../../system/event.js";
-
+import VertexArrayBuffer from "../buffer/vertex.js";
 
 /**
  * @classdesc
@@ -8,16 +8,23 @@ import * as event from "../../../system/event.js";
  export default class Compositor {
     /**
      * @param {WebGLRenderer} renderer - the current WebGL renderer session
+     * @param {Object} settings - additional settings to initialize this compositors
+     * @param {object[]} [attribute] - an array of attributes definition
+     * @param {string} [attribute.name] - name of the attribute in the vertex shader
+     * @param {number} [attribute.size] - number of components per vertex attribute. Must be 1, 2, 3, or 4.
+     * @param {GLenum} [attribute.type] - data type of each component in the array
+     * @param {boolean} [attribute.normalized] - whether integer data values should be normalized into a certain range when being cast to a float
+     * @param {number} [attribute.offset] - offset in bytes of the first component in the vertex attribute array
      */
-    constructor (renderer) {
-        this.init(renderer);
+    constructor (renderer, settings) {
+        this.init(renderer, settings);
     }
 
     /**
      * Initialize the compositor
      * @ignore
      */
-    init (renderer) {
+    init (renderer, settings) {
         // local reference
         var gl = renderer.gl;
 
@@ -69,6 +76,28 @@ import * as event from "../../../system/event.js";
          */
         this.vertexSize = 0;
 
+        /**
+         * the vertex buffer used by this compositor
+         * @type {VertexArrayBuffer}
+         */
+        this.vertexBuffer = null;
+
+        // parse given attibrutes
+        if (typeof settings !== "undefined" && Array.isArray(settings.attributes)) {
+            settings.attributes.forEach((attr) => {
+                this.addAttribute(attr.name, attr.size, attr.type, attr.normalized, attr.offset);
+            });
+        } else {
+            throw new Error("attributes definition missing");
+        }
+
+        // instantiate the compositor vertexBuffer
+        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, 6);
+
+        // vertex buffer
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gl.createBuffer());
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.vertexBuffer.buffer, this.gl.STREAM_DRAW);
+
         // register to the CANVAS resize channel
         event.on(event.CANVAS_ONRESIZE, (width, height) => {
             this.flush();
@@ -107,7 +136,6 @@ import * as event from "../../../system/event.js";
             this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
             this.activeShader.setVertexAttributes(this.gl, this.attributes, this.vertexByteSize);
         }
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.vertexBuffer.buffer, this.gl.STREAM_DRAW);
     }
 
     /**

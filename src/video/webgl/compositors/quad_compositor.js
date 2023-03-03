@@ -1,6 +1,5 @@
 import Vector2d from "../../../math/vector2.js";
 import GLShader from "../glshader.js";
-import VertexArrayBuffer from "../buffer/vertex.js";
 import { isPowerOfTwo } from "../../../math/math.js";
 import quadVertex from "./../shaders/quad.vert";
 import quadFragment from "./../shaders/quad.frag";
@@ -27,7 +26,13 @@ var V_ARRAY = [
      * @ignore
      */
     init (renderer) {
-        super.init(renderer);
+        super.init(renderer, {
+            attributes: [
+                {name: "aVertex", size: 2, type: renderer.gl.FLOAT, normalized: false, offset: 0 * Float32Array.BYTES_PER_ELEMENT},
+                {name: "aRegion", size: 2, type: renderer.gl.FLOAT, normalized: false, offset: 2 * Float32Array.BYTES_PER_ELEMENT},
+                {name: "aColor",  size: 4, type: renderer.gl.UNSIGNED_BYTE, normalized: true, offset: 4 * Float32Array.BYTES_PER_ELEMENT}
+            ]
+        });
 
         // list of active texture units
         this.currentTextureUnit = -1;
@@ -35,17 +40,6 @@ var V_ARRAY = [
 
         // Load and create shader programs
         this.quadShader = new GLShader(this.gl, quadVertex, quadFragment);
-
-        /// define all vertex attributes
-        this.addAttribute("aVertex", 2, this.gl.FLOAT, false, 0 * Float32Array.BYTES_PER_ELEMENT); // 0
-        this.addAttribute("aRegion", 2, this.gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT); // 1
-        this.addAttribute("aColor",  4, this.gl.UNSIGNED_BYTE, true, 4 * Float32Array.BYTES_PER_ELEMENT); // 2
-
-        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, 6);
-
-        // vertex buffer
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gl.createBuffer());
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.vertexBuffer.buffer, this.gl.STREAM_DRAW);
     }
 
     /**
