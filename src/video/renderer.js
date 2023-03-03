@@ -115,11 +115,6 @@ import Point from "../geometries/point.js";
 
         // default uvOffset
         this.uvOffset = 0;
-
-        // reset the renderer on game reset
-        event.on(event.GAME_RESET, () => {
-            this.reset();
-        });
     }
 
     /**

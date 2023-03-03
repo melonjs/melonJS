@@ -33,7 +33,6 @@ import { isPowerOfTwo } from "./../../math/math.js";
      * @param {Compositor} [options.compositor] - A class that implements the compositor API for sprite rendering
      */
     constructor(options) {
-
         // parent contructor
         super(options);
 
@@ -153,6 +152,11 @@ import { isPowerOfTwo } from "./../../math/math.js";
             this.isContextValid = true;
             event.emit(event.ONCONTEXT_RESTORED, this);
         }, false );
+
+        // reset the renderer on game reset
+        event.on(event.GAME_RESET, () => {
+            this.reset();
+        });
     }
 
     /**

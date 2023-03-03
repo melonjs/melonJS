@@ -59,6 +59,11 @@ import * as event from "./../../system/event.js";
             this.isContextValid = true;
             event.emit(event.ONCONTEXT_RESTORED, this);
         }, false );
+
+        // reset the renderer on game reset
+        event.on(event.GAME_RESET, () => {
+            this.reset();
+        });
     }
 
     /**
