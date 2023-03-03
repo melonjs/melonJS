@@ -201,9 +201,9 @@ var V_ARRAY = [
      * @param {number} tint - tint color to be applied to the texture in UINT32 (argb) format
      */
     addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint) {
-        var vertexBuffer = this.vertexBuffer;
+        var vertexData = this.vertexData;
 
-        if (vertexBuffer.isFull(6)) {
+        if (vertexData.isFull(6)) {
             // is the vertex buffer full if we add 6 more vertices
             this.flush();
         }
@@ -227,11 +227,11 @@ var V_ARRAY = [
             m.apply(vec3);
         }
 
-        vertexBuffer.push(vec0.x, vec0.y, u0, v0, tint);
-        vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
-        vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
-        vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
-        vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
-        vertexBuffer.push(vec3.x, vec3.y, u1, v1, tint);
+        vertexData.push(vec0.x, vec0.y, u0, v0, tint);
+        vertexData.push(vec1.x, vec1.y, u1, v0, tint);
+        vertexData.push(vec2.x, vec2.y, u0, v1, tint);
+        vertexData.push(vec2.x, vec2.y, u0, v1, tint);
+        vertexData.push(vec1.x, vec1.y, u1, v0, tint);
+        vertexData.push(vec3.x, vec3.y, u1, v1, tint);
     }
 }

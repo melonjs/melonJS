@@ -77,10 +77,10 @@ import VertexArrayBuffer from "../buffer/vertex.js";
         this.vertexSize = 0;
 
         /**
-         * the vertex buffer used by this compositor
+         * the vertex data buffer used by this compositor
          * @type {VertexArrayBuffer}
          */
-        this.vertexBuffer = null;
+        this.vertexData = null;
 
         // parse given attibrutes
         if (typeof settings !== "undefined" && Array.isArray(settings.attributes)) {
@@ -91,12 +91,7 @@ import VertexArrayBuffer from "../buffer/vertex.js";
             throw new Error("attributes definition missing");
         }
 
-        // instantiate the compositor vertexBuffer
-        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, 6);
-
-        // vertex buffer
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gl.createBuffer());
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.vertexBuffer.buffer, this.gl.STREAM_DRAW);
+        this.vertexData = new VertexArrayBuffer(this.vertexSize, 6);
 
         // register to the CANVAS resize channel
         event.on(event.CANVAS_ONRESIZE, (width, height) => {
@@ -113,7 +108,8 @@ import VertexArrayBuffer from "../buffer/vertex.js";
         // WebGL context
         this.gl = this.renderer.gl;
 
-        this.flush();
+        // clear the vertex data buffer
+        this.vertexData.clear();
 
         // initial viewport size
         this.setViewport(
@@ -131,6 +127,7 @@ import VertexArrayBuffer from "../buffer/vertex.js";
      * called by the WebGL renderer when a compositor become the current one
      */
     bind() {
+        // (re)bind the active shader
         if (this.activeShader !== null) {
             this.activeShader.bind();
             this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
@@ -222,7 +219,7 @@ import VertexArrayBuffer from "../buffer/vertex.js";
      * @param {number} [mode=gl.TRIANGLES] - the GL drawing mode
      */
     flush(mode = this.mode) {
-        var vertex = this.vertexBuffer;
+        var vertex = this.vertexData;
         var vertexCount = vertex.vertexCount;
 
         if (vertexCount > 0) {

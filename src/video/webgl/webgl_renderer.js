@@ -68,6 +68,12 @@ import { isPowerOfTwo } from "./../../math/math.js";
         this.context = this.gl = this.getContextGL(this.getCanvas(), options.transparent);
 
         /**
+         * the vertex buffer used by this WebGL Renderer
+         * @type {WebGLBuffer}
+         */
+        this.vertexBuffer = this.gl.createBuffer();
+
+        /**
          * Maximum number of texture unit supported under the current context
          * @type {number}
          * @readonly
@@ -111,6 +117,9 @@ import { isPowerOfTwo } from "./../../math/math.js";
          * @type {Map<WebGLCompositor>}
          */
         this.compositors = new Map();
+
+        // bind the vertex buffer
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
 
         // Create both quad and primitive compositor
         this.addCompositor(new (this.settings.compositor || QuadCompositor)(this), "quad", true);
@@ -219,6 +228,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
                 // flush the current compositor
                 this.currentCompositor.flush();
             }
+            //console.log("set Compositor " + name);
             // set as the active one
             this.currentCompositor = compositor;
             // (re)bind the compositor (program & attributes)

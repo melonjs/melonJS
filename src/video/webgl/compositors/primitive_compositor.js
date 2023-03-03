@@ -46,11 +46,11 @@ import Compositor from "./compositor.js";
      */
     drawVertices(mode, verts, vertexCount = verts.length) {
         var viewMatrix = this.viewMatrix;
-        var vertexBuffer = this.vertexBuffer;
+        var vertexData = this.vertexData;
         var color = this.renderer.currentColor;
         var alpha = this.renderer.getGlobalAlpha();
 
-        if (vertexBuffer.isFull(vertexCount)) {
+        if (vertexData.isFull(vertexCount)) {
             // is the vertex buffer full if we add more vertices
             this.flush();
         }
@@ -64,11 +64,11 @@ import Compositor from "./compositor.js";
         if (!viewMatrix.isIdentity()) {
             verts.forEach((vert) => {
                 viewMatrix.apply(vert);
-                vertexBuffer.push(vert.x, vert.y, undefined, undefined, color.toUint32(alpha));
+                vertexData.push(vert.x, vert.y, undefined, undefined, color.toUint32(alpha));
             });
         } else {
             verts.forEach((vert) => {
-                vertexBuffer.push(vert.x, vert.y, undefined, undefined, color.toUint32(alpha));
+                vertexData.push(vert.x, vert.y, undefined, undefined, color.toUint32(alpha));
             });
         }
 
