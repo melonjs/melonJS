@@ -165,6 +165,8 @@ import { isPowerOfTwo } from "./../../math/math.js";
     reset() {
         super.reset();
 
+        this.currentCompositor = null;
+
         this.compositors.forEach((compositor) => {
             if (this.isContextValid === false) {
                 // on context lost/restore
@@ -173,6 +175,8 @@ import { isPowerOfTwo } from "./../../math/math.js";
                 compositor.reset();
             }
         });
+
+        this.setCompositor("quad");
 
         this.gl.disable(this.gl.SCISSOR_TEST);
     }
