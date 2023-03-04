@@ -1,5 +1,4 @@
 import Vector2d from "./../../math/vector2.js";
-import WebGLRenderer from "./../webgl/webgl_renderer.js";
 import TextureCache from "./../texture/cache.js";
 import Sprite from "./../../renderable/sprite.js";
 import { renderer } from "./../video.js";
@@ -388,7 +387,7 @@ export class TextureAtlas {
      */
     addUVs(atlas, name, w, h) {
         // ignore if using the Canvas Renderer
-        if (renderer instanceof WebGLRenderer) {
+        if (typeof renderer.gl !== "undefined") {
             // Source coordinates
             var s = atlas[name].offset;
             var sw = atlas[name].width;

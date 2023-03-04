@@ -1,5 +1,4 @@
 import Color from "./../math/color.js";
-import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
 import { renderer as globalRenderer } from "./../video/video.js";
 import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
@@ -269,7 +268,7 @@ const toPX = [12, 24, 0.75, 1];
         var width = Math.ceil(this.metrics.width),
             height = Math.ceil(this.metrics.height);
 
-        if (globalRenderer instanceof WebGLRenderer) {
+        if (typeof globalRenderer.gl !== "undefined") {
             // make sure the right compositor is active
             globalRenderer.setCompositor("quad");
             // invalidate the previous corresponding texture so that it can reuploaded once changed
@@ -398,7 +397,7 @@ const toPX = [12, 24, 0.75, 1];
      * @ignore
      */
     destroy() {
-        if (globalRenderer instanceof WebGLRenderer) {
+        if (typeof globalRenderer.gl !== "undefined") {
             // make sure the right compositor is active
             globalRenderer.setCompositor("quad");
             globalRenderer.currentCompositor.deleteTexture2D(globalRenderer.currentCompositor.getTexture2D(this.glTextureUnit));
