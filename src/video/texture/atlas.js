@@ -1,5 +1,4 @@
 import Vector2d from "./../../math/vector2.js";
-import TextureCache from "./../texture/cache.js";
 import Sprite from "./../../renderable/sprite.js";
 import { renderer } from "./../video.js";
 import pool from "./../../system/pooling.js";
@@ -62,7 +61,7 @@ export class TextureAtlas {
      *     },
      *     me.loader.getImage("spritesheet")
      */
-    constructor (atlases, src, cache) {
+    constructor (atlases, src, cache = false) {
         /**
          * to identify the atlas format (e.g. texture packer)
          * @ignore
@@ -158,11 +157,7 @@ export class TextureAtlas {
         // Add self to TextureCache if cache !== false
         if (cache !== false) {
             this.sources.forEach((source) => {
-                if (cache instanceof TextureCache) {
-                    cache.set(source, this);
-                } else {
-                    renderer.cache.set(source, this);
-                }
+                renderer.cache.set(source, this);
             });
         }
     }
