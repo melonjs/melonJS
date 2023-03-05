@@ -25,9 +25,6 @@ import VertexArrayBuffer from "../buffer/vertex.js";
      * @ignore
      */
     init (renderer, settings) {
-        // local reference
-        var gl = renderer.gl;
-
         // the associated renderer
         this.renderer = renderer;
 
@@ -51,7 +48,7 @@ import VertexArrayBuffer from "../buffer/vertex.js";
          * @type {number}
          * @default gl.TRIANGLES
          */
-        this.mode = gl.TRIANGLES;
+        this.mode = this.gl.TRIANGLES;
 
         /**
          * an array of vertex attribute properties
