@@ -455,9 +455,7 @@ export function getVolume() {
  * // mute the background music
  * me.audio.mute("awesome_music");
  */
-export function mute(sound_name, id, mute) {
-    // if not defined : true
-    mute = (typeof(mute) === "undefined" ? true : !!mute);
+export function mute(sound_name, id, mute = true) {
     var sound = audioTracks[sound_name];
     if (sound && typeof(sound) !== "undefined") {
         sound.mute(mute, id);
