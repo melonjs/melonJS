@@ -61,7 +61,7 @@ export class TextureAtlas {
      *     },
      *     me.loader.getImage("spritesheet")
      */
-    constructor (atlases, src, cache = false) {
+    constructor (atlases, src, cache) {
         /**
          * to identify the atlas format (e.g. texture packer)
          * @ignore
