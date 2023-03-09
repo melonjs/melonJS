@@ -10,7 +10,7 @@
 - Core: remove remaining polyfills related to pre-ECMAScript 2015 features (as melonJS 2 implementation base is now 100% ES6)
 - Renderer: refactoring of the `WebGLCompositor` into a `QuadCompositor` and `PrimitiveCompitor` for Quad and Primitive composition
 - Renderer: the vertex shader now takes a color attributes (as opposed to using an uniform in previous version)
-- Renderer: attributes definitions for WebGL Compositor(s) are now directly passed through the constructor
+- Renderer: attributes and default shader "definitions" for WebGL Compositor(s) are now directly passed through the constructor
 - Text: Text object now use offscreen canvas by default to render text (this has been in beta for almost 2 years)
 - Text: setting `lineWidth` to a value greater than 0 will now automatically stroke the text
 - Text: `drawStroke()` is now deprecated in favour of the `lineWidth` property

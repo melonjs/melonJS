@@ -1,5 +1,6 @@
 import * as event from "../../../system/event.js";
 import VertexArrayBuffer from "../buffer/vertex.js";
+import GLShader from "../glshader.js";
 
 /**
  * @classdesc
@@ -9,12 +10,15 @@ import VertexArrayBuffer from "../buffer/vertex.js";
     /**
      * @param {WebGLRenderer} renderer - the current WebGL renderer session
      * @param {Object} settings - additional settings to initialize this compositors
-     * @param {object[]} [attribute] - an array of attributes definition
-     * @param {string} [attribute.name] - name of the attribute in the vertex shader
-     * @param {number} [attribute.size] - number of components per vertex attribute. Must be 1, 2, 3, or 4.
-     * @param {GLenum} [attribute.type] - data type of each component in the array
-     * @param {boolean} [attribute.normalized] - whether integer data values should be normalized into a certain range when being cast to a float
-     * @param {number} [attribute.offset] - offset in bytes of the first component in the vertex attribute array
+     * @param {object[]} attribute - an array of attributes definition
+     * @param {string} attribute.name - name of the attribute in the vertex shader
+     * @param {number} attribute.size - number of components per vertex attribute. Must be 1, 2, 3, or 4.
+     * @param {GLenum} attribute.type - data type of each component in the array
+     * @param {boolean} attribute.normalized - whether integer data values should be normalized into a certain range when being cast to a float
+     * @param {number} attribute.offset - offset in bytes of the first component in the vertex attribute array
+     * @param {object} shader - an array of attributes definition
+     * @param {string} shader.vertex - a string containing the GLSL source code to set
+     * @param {string} shader.fragment - a string containing the GLSL source code to set
      */
     constructor (renderer, settings) {
         this.init(renderer, settings);
@@ -38,10 +42,10 @@ import VertexArrayBuffer from "../buffer/vertex.js";
         this.viewMatrix = renderer.currentTransform;
 
         /**
-         * a reference to the active WebGL shader
+         * the default shader used by this compositor
          * @type {GLShader}
          */
-        this.activeShader = null;
+        this.defaultShader = null;
 
         /**
          * primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
@@ -83,12 +87,18 @@ import VertexArrayBuffer from "../buffer/vertex.js";
         if (typeof settings !== "undefined" && Array.isArray(settings.attributes)) {
             settings.attributes.forEach((attr) => {
                 this.addAttribute(attr.name, attr.size, attr.type, attr.normalized, attr.offset);
+                this.vertexData = new VertexArrayBuffer(this.vertexSize, 6);
             });
         } else {
             throw new Error("attributes definition missing");
         }
 
-        this.vertexData = new VertexArrayBuffer(this.vertexSize, 6);
+        // parse and instantiate the default shader
+        if (typeof settings !== "undefined" && typeof settings.shader !== "undefined") {
+            this.defaultShader = new GLShader(this.gl, settings.shader.vertex, settings.shader.fragment);
+        } else {
+            throw new Error("shader definition missing");
+        }
 
         // register to the CANVAS resize channel
         event.on(event.CANVAS_ONRESIZE, (width, height) => {
@@ -124,11 +134,24 @@ import VertexArrayBuffer from "../buffer/vertex.js";
      * called by the WebGL renderer when a compositor become the current one
      */
     bind() {
-        // (re)bind the active shader
-        if (this.activeShader !== null) {
-            this.activeShader.bind();
-            this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
-            this.activeShader.setVertexAttributes(this.gl, this.attributes, this.vertexByteSize);
+        if (this.renderer.currentProgram !== this.defaultShader.program) {
+            this.useShader(this.defaultShader);
+        }
+    }
+
+    /**
+     * Select the shader to use for compositing
+     * @see GLShader
+     * @param {GLShader} shader - a reference to a GLShader instance
+     */
+    useShader(shader) {
+        if (this.renderer.currentProgram !== shader.program) {
+            this.flush();
+            shader.bind();
+            shader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
+            shader.setVertexAttributes(this.gl, this.attributes, this.vertexByteSize);
+
+            this.renderer.currentProgram = shader.program;
         }
     }
 
@@ -193,22 +216,7 @@ import VertexArrayBuffer from "../buffer/vertex.js";
      * @param {Matrix3d} matrix
      */
     setProjection(matrix) {
-        this.activeShader.setUniform("uProjectionMatrix", matrix);
-    }
-
-    /**
-     * Select the shader to use for compositing
-     * @see GLShader
-     * @param {GLShader} shader - a reference to a GLShader instance
-     */
-    useShader(shader) {
-        if (this.activeShader !== shader) {
-            this.flush();
-            this.activeShader = shader;
-            this.activeShader.bind();
-            this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
-            this.activeShader.setVertexAttributes(this.gl, this.attributes, this.vertexByteSize);
-        }
+        this.defaultShader.setUniform("uProjectionMatrix", matrix);
     }
 
     /**

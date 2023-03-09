@@ -1,4 +1,3 @@
-import GLShader from "../glshader.js";
 import primitiveVertex from "./../shaders/primitive.vert";
 import primitiveFragment from "./../shaders/primitive.frag";
 import Compositor from "./compositor.js";
@@ -20,22 +19,11 @@ import Compositor from "./compositor.js";
             attributes: [
                 {name: "aVertex", size: 2, type: renderer.gl.FLOAT, normalized: false, offset: 0 * Float32Array.BYTES_PER_ELEMENT},
                 {name: "aColor",  size: 4, type: renderer.gl.UNSIGNED_BYTE, normalized: true, offset: 2 * Float32Array.BYTES_PER_ELEMENT}
-            ]
+            ],
+            shader: {
+                vertex: primitiveVertex, fragment: primitiveFragment
+            }
         });
-
-        // Load and create shader programs
-        this.primitiveShader = new GLShader(this.gl, primitiveVertex, primitiveFragment);
-    }
-
-    /**
-     * Reset compositor internal state
-     * @ignore
-     */
-    reset() {
-        super.reset();
-
-        // set the quad shader as the default program
-        this.useShader(this.primitiveShader);
     }
 
     /**

@@ -113,6 +113,12 @@ import { isPowerOfTwo } from "./../../math/math.js";
         this.currentCompositor = null;
 
         /**
+         * a reference to the current shader program used by the renderer
+         * @type {WebGLProgram}
+         */
+        this.currentProgram = null;
+
+        /**
          * The list of active compositors
          * @type {Map<WebGLCompositor>}
          */
@@ -174,7 +180,13 @@ import { isPowerOfTwo } from "./../../math/math.js";
     reset() {
         super.reset();
 
+        // rebind the vertex buffer if required (e.g in case of context loss)
+        if (this.gl.getParameter(this.gl.ARRAY_BUFFER_BINDING) !== this.vertexBuffer) {
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
+        }
+
         this.currentCompositor = null;
+        this.currentProgram = null;
 
         this.compositors.forEach((compositor) => {
             if (this.isContextValid === false) {
@@ -228,7 +240,6 @@ import { isPowerOfTwo } from "./../../math/math.js";
                 // flush the current compositor
                 this.currentCompositor.flush();
             }
-            //console.log("set Compositor " + name);
             // set as the active one
             this.currentCompositor = compositor;
             // (re)bind the compositor (program & attributes)
@@ -290,6 +301,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
      */
     setProjection(matrix) {
         super.setProjection(matrix);
+        this.currentCompositor.setProjection(matrix);
     }
 
     /**
