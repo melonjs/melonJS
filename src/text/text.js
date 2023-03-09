@@ -327,20 +327,17 @@ const toPX = [12, 24, 0.75, 1];
             // update text cache
             this.setText(text);
 
-            x = this.metrics.x;
-            y = this.metrics.y;
-
             // save the previous context
             renderer.save();
 
             // apply the defined alpha value
             renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
-        } else {
-             // added directly to an object container
-            x = this.pos.x;
-            y = this.pos.y;
         }
+
+        // adjust x,y position based on the bounding box
+        x = this.metrics.x;
+        y = this.metrics.y;
 
         // clamp to pixel grid if required
         if (renderer.settings.subPixel === false) {
