@@ -205,10 +205,6 @@ export default class Renderer {
      * @see Renderer#setTint
      */
     clearTint(): void;
-    /**
-     * @ignore
-     */
-    drawFont(): void;
 }
 import Vector2d from "../math/vector2.js";
 import Path2D from "./../geometries/path2d.js";

@@ -64,6 +64,11 @@ export default class WebGLRenderer extends Renderer {
     context: WebGLRenderingContext;
     gl: WebGLRenderingContext;
     /**
+     * the vertex buffer used by this WebGL Renderer
+     * @type {WebGLBuffer}
+     */
+    vertexBuffer: WebGLBuffer;
+    /**
      * Maximum number of texture unit supported under the current context
      * @type {number}
      * @readonly
@@ -96,6 +101,11 @@ export default class WebGLRenderer extends Renderer {
      */
     currentCompositor: WebGLCompositor;
     /**
+     * a reference to the current shader program used by the renderer
+     * @type {WebGLProgram}
+     */
+    currentProgram: WebGLProgram;
+    /**
      * The list of active compositors
      * @type {Map<WebGLCompositor>}
      */
@@ -111,25 +121,14 @@ export default class WebGLRenderer extends Renderer {
     /**
      * set the active compositor for this renderer
      * @param {String} name - a compositor name
+     * @param {GLShader} [shader] - an optional shader program to be used, instead of the default one, when activating the compositor
      * @return {Compositor} an instance to the current active compositor
      */
-    setCompositor(name?: string): Compositor;
+    setCompositor(name?: string, shader?: any): Compositor;
     /**
      * Reset the gl transform to identity
      */
     resetTransform(): void;
-    /**
-     * @ignore
-     */
-    createFontTexture(cache: any): void;
-    /**
-     * @ignore
-     */
-    fontContext2D: CanvasRenderingContext2D | undefined;
-    /**
-     * @ignore
-     */
-    fontTexture: TextureAtlas | undefined;
     /**
      * Create a pattern with the specified repetition
      * @param {Image} image - Source image
@@ -162,10 +161,6 @@ export default class WebGLRenderer extends Renderer {
      * @param {number} height - The rectangle's height.
      */
     clearRect(x: number, y: number, width: number, height: number): void;
-    /**
-     * @ignore
-     */
-    drawFont(bounds: any): void;
     /**
      * Draw an image to the gl context
      * @param {Image} image - An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
@@ -226,11 +221,6 @@ export default class WebGLRenderer extends Renderer {
      */
     setBlendMode(mode?: string | undefined, gl?: WebGLRenderingContext | undefined): void;
     currentBlendMode: any;
-    /**
-     * return a reference to the font 2d Context
-     * @ignore
-     */
-    getFontContext(): CanvasRenderingContext2D | undefined;
     /**
      * restores the canvas context
      */

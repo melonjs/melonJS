@@ -8,7 +8,7 @@
 import Color from '../math/color.js';
 import Matrix3d from '../math/matrix3.js';
 import { createCanvas } from './video.js';
-import { on, emit, GAME_RESET, CANVAS_ONRESIZE } from '../system/event.js';
+import { emit, CANVAS_ONRESIZE } from '../system/event.js';
 import { platform } from '../system/device.js';
 import { setPrefixed } from '../utils/agent.js';
 import Rect from '../geometries/rectangle.js';
@@ -122,11 +122,6 @@ import Point from '../geometries/point.js';
 
         // default uvOffset
         this.uvOffset = 0;
-
-        // reset the renderer on game reset
-        on(GAME_RESET, () => {
-            this.reset();
-        });
     }
 
     /**
@@ -419,12 +414,6 @@ import Point from '../geometries/point.js';
         // reset to default
         this.currentTint.setColor(255, 255, 255, 1.0);
     }
-
-    /**
-     * @ignore
-     */
-    drawFont(/*bounds*/) {}
-
 }
 
 export { Renderer as default };

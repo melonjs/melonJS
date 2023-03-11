@@ -30,7 +30,6 @@ import UIBaseElement from './uibaseelement.js';
      * @param {string} [settings.backgroundColor] - The css value of a background color
      * @param {string} [settings.hoverColor] - The css value of a color to be used if the pointer hovers over the button
      * @param {string} [settings.borderStrokeColor] - The css value of a color to be used to draw the border
-     * @param {boolean} [settings.offScreenCanvas] - Weather to use an offScreen canvas or not
      * @param {string} [settings.fillStyle] - The css value of a tint color to be used to tint the text
      * @param {number} [settings.borderWidth] - Width of the button
      * @param {number} [settings.borderHeight] - Height of the button
@@ -63,7 +62,6 @@ import UIBaseElement from './uibaseelement.js';
         settings.backgroundColor = settings.backgroundColor || "#00aa00";
         settings.hoverColor = settings.hoverColor || "#00ff00";
         settings.borderStrokeColor = settings.borderStrokeColor || "#000000";
-        settings.offScreenCanvas = settings.offScreenCanvas || false;
         settings.fillStyle = settings.fillStyle || "#ffffff";
         settings.lineWidth = settings.lineWidth || 1;
         settings.anchorPoint = settings.anchorPoint || new Vector2d(0, 0);

@@ -387,10 +387,10 @@ var store$2 = sharedStore;
 (shared$3.exports = function (key, value) {
   return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 })('versions', []).push({
-  version: '3.28.0',
+  version: '3.29.0',
   mode: IS_PURE ? 'pure' : 'global',
   copyright: '© 2014-2023 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.28.0/LICENSE',
+  license: 'https://github.com/zloirock/core-js/blob/v3.29.0/LICENSE',
   source: 'https://github.com/zloirock/core-js'
 });
 
@@ -2174,8 +2174,8 @@ var cssToRGB = new Map();
         return this.glArray[3];
     }
 
-    set alpha(value) {
-        this.glArray[3] = typeof(value) === "undefined" ? 1.0 : clamp(+value, 0, 1.0);
+    set alpha(value = 1.0) {
+        this.glArray[3] = clamp(+value, 0, 1.0);
     }
 
 
@@ -13944,9 +13944,7 @@ function getVolume() {
  * // mute the background music
  * me.audio.mute("awesome_music");
  */
-function mute(sound_name, id, mute) {
-    // if not defined : true
-    mute = (typeof(mute) === "undefined" ? true : !!mute);
+function mute(sound_name, id, mute = true) {
     var sound = audioTracks[sound_name];
     if (sound && typeof(sound) !== "undefined") {
         sound.mute(mute, id);
@@ -17812,6 +17810,13 @@ var input = {
         this.mask = undefined;
 
         /**
+          * (Experimental) an optional shader, to be used instead of the default built-in one, when drawing this renderable (WebGL only)
+          * @type {GLShader}
+          * @default undefined
+        */
+        this.shader = undefined;
+
+        /**
          * the blend mode to be applied to this renderable (see renderer setBlendMode for available blend mode)
          * @type {string}
          * @default "normal"
@@ -18255,6 +18260,11 @@ var input = {
             renderer.translate(-this.pos.x, -this.pos.y);
         }
 
+        // use this renderable shader if defined
+        if (typeof this.shader === "object" && typeof renderer.gl !== "undefined") {
+            renderer.setCompositor("quad", this.shader);
+        }
+
         if ((this.autoTransform === true) && (!this.currentTransform.isIdentity())) {
             // apply the renderable transformation matrix
             renderer.translate(this.pos.x, this.pos.y);
@@ -18304,6 +18314,11 @@ var input = {
         // clear the mask if set
         if (typeof this.mask !== "undefined") {
             renderer.clearMask();
+        }
+
+        // revert to the default shader if defined
+        if (typeof this.shader === "object" && typeof renderer.gl !== "undefined") {
+            renderer.setCompositor("quad");
         }
 
         // restore the context
@@ -20908,11 +20923,6 @@ class TMXObject {
 
         // default uvOffset
         this.uvOffset = 0;
-
-        // reset the renderer on game reset
-        on(GAME_RESET, () => {
-            this.reset();
-        });
     }
 
     /**
@@ -21205,2107 +21215,6 @@ class TMXObject {
         // reset to default
         this.currentTint.setColor(255, 255, 255, 1.0);
     }
-
-    /**
-     * @ignore
-     */
-    drawFont(/*bounds*/) {}
-
-}
-
-/**
- * Hash map of GLSL data types to WebGL Uniform methods
- * @ignore
- */
-const fnHash = {
-    "bool"      : "1i",
-    "int"       : "1i",
-    "float"     : "1f",
-    "vec2"      : "2fv",
-    "vec3"      : "3fv",
-    "vec4"      : "4fv",
-    "bvec2"     : "2iv",
-    "bvec3"     : "3iv",
-    "bvec4"     : "4iv",
-    "ivec2"     : "2iv",
-    "ivec3"     : "3iv",
-    "ivec4"     : "4iv",
-    "mat2"      : "Matrix2fv",
-    "mat3"      : "Matrix3fv",
-    "mat4"      : "Matrix4fv",
-    "sampler2D" : "1i"
-};
-
-/**
- * @ignore
- */
-function extractUniforms(gl, shader) {
-    var uniforms = {},
-        uniRx = /uniform\s+(\w+)\s+(\w+)/g,
-        uniformsData = {},
-        descriptor = {},
-        locations = {},
-        match;
-
-    // Detect all uniform names and types
-    [ shader.vertex, shader.fragment ].forEach((shader) => {
-        while ((match = uniRx.exec(shader))) {
-            uniformsData[match[2]] = match[1];
-        }
-    });
-
-    // Get uniform references
-    Object.keys(uniformsData).forEach((name) => {
-        var type = uniformsData[name];
-        locations[name] = gl.getUniformLocation(shader.program, name);
-
-        descriptor[name] = {
-            "get" : (function (name) {
-                /*
-                 * A getter for the uniform location
-                 */
-                return function () {
-                    return locations[name];
-                };
-            })(name),
-            "set" : (function (name, type, fn) {
-                if (type.indexOf("mat") === 0) {
-                    /*
-                     * A generic setter for uniform matrices
-                     */
-                    return function (val) {
-                        gl[fn](locations[name], false, val);
-                    };
-                }
-                else {
-                    /*
-                     * A generic setter for uniform vectors
-                     */
-                    return function (val) {
-                        var fnv = fn;
-                        if (val.length && fn.slice(-1) !== "v") {
-                            fnv += "v";
-                        }
-                        gl[fnv](locations[name], val);
-                    };
-                }
-            })(name, type, "uniform" + fnHash[type])
-        };
-    });
-    Object.defineProperties(uniforms, descriptor);
-
-    return uniforms;
-}
-
-/**
- * @ignore
- */
-function extractAttributes(gl, shader) {
-    var attributes = {},
-        attrRx = /attribute\s+\w+\s+(\w+)/g,
-        match,
-        i = 0;
-
-    // Detect all attribute names
-    while ((match = attrRx.exec(shader.vertex))) {
-        attributes[match[1]] = i++;
-    }
-
-    return attributes;
-}
-
-/**
- * @ignore
- */
-function compileShader(gl, type, source) {
-    var shader = gl.createShader(type);
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        throw new Error(gl.getShaderInfoLog(shader));
-    }
-
-    return shader;
-}
-
-/**
- * Compile GLSL into a shader object
- * @ignore
- */
-function compileProgram(gl, vertex, fragment, attributes) {
-    var vertShader = compileShader(gl, gl.VERTEX_SHADER, vertex);
-    var fragShader = compileShader(gl, gl.FRAGMENT_SHADER, fragment);
-
-    var program = gl.createProgram();
-
-    gl.attachShader(program, vertShader);
-    gl.attachShader(program, fragShader);
-
-
-    // force vertex attributes to use location 0 as starting location to prevent
-    // browser to do complicated emulation when running on desktop OpenGL (e.g. on macOS)
-    for (var location in attributes) {
-        gl.bindAttribLocation(program, attributes[location], location);
-    }
-
-    gl.linkProgram(program);
-
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-        var error_msg =
-            "Error initializing Shader " + this + "\n" +
-            "gl.VALIDATE_STATUS: " + gl.getProgramParameter(program, gl.VALIDATE_STATUS) + "\n" +
-            "gl.getError()" + gl.getError() + "\n" +
-            "gl.getProgramInfoLog()" + gl.getProgramInfoLog(program);
-        // house cleaning
-        gl.deleteProgram(program);
-        program = null;
-        // throw the exception
-        throw new Error(error_msg);
-    }
-
-    gl.useProgram(program);
-
-    // clean-up
-    gl.deleteShader(vertShader);
-    gl.deleteShader(fragShader);
-
-    return program;
-}
-
-/**
- * set precision for the fiven shader source
- * won't do anything if the precision is already specified
- * @ignore
- */
-function setPrecision(src, precision) {
-    if (src.substring(0, 9) !== "precision") {
-        return "precision " + precision + " float;" + src;
-    }
-    return src;
-}
-
-/**
- * return the highest precision format supported by this device for GL Shaders
- * @ignore
- * @param {WebGLRenderingContext} gl
- * @returns {boolean} "lowp", "mediump", or "highp"
- */
-function getMaxShaderPrecision(gl) {
-    if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT ).precision > 0 &&
-        gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT ).precision > 0) {
-            return "highp";
-    }
-    if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT ).precision > 0 &&
-        gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT ).precision > 0) {
-            return "mediump";
-    }
-    return "lowp";
-}
-
-/**
- * clean the given source from space, comments, etc...
- * @ignore
- */
-function minify(src) {
-    // remove comments
-    src = src.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, "$1");
-    // Remove leading and trailing whitespace from lines
-    src = src.replace(/(\\n\s+)|(\s+\\n)/g, "");
-    // Remove line breaks
-    src = src.replace(/(\\r|\\n)+/g, "");
-    // Remove unnecessary whitespace
-    src = src.replace(/\s*([;,[\](){}\\\/\-+*|^&!=<>?~%])\s*/g, "$1");
-
-    return src;
-}
-
-/**
- * @classdesc
- * a base GL Shader object
- */
- class GLShader {
-    /**
-     * @param {WebGLRenderingContext} gl - the current WebGL rendering context
-     * @param {string} vertex - a string containing the GLSL source code to set
-     * @param {string} fragment - a string containing the GLSL source code to set
-     * @param {string} [precision=auto detected] - float precision ('lowp', 'mediump' or 'highp').
-     * @see https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_on_the_web/GLSL_Shaders
-     * @example
-     * // create a basic shader
-     * var myShader = new me.GLShader(
-     *    // WebGL rendering context
-     *    gl,
-     *    // vertex shader
-     *    [
-     *        "void main() {",
-     *        "    gl_Position = doMathToMakeClipspaceCoordinates;",
-     *        "}"
-     *    ].join("\n"),
-     *    // fragment shader
-     *    [
-     *        "void main() {",
-     *        "    gl_FragColor = doMathToMakeAColor;",
-     *        "}"
-     *    ].join("\n")
-     *  )
-     * // use the shader
-     * myShader.bind();
-     */
-    constructor(gl, vertex, fragment, precision) {
-
-        /**
-         * the active gl rendering context
-         * @type {WebGLRenderingContext}
-         */
-        this.gl = gl;
-
-        /**
-         * the vertex shader source code
-         * @type {string}
-         */
-        this.vertex = setPrecision(minify(vertex), precision || getMaxShaderPrecision(this.gl));
-
-        /**
-         * the fragment shader source code
-         * @type {string}
-         */
-        this.fragment = setPrecision(minify(fragment), precision || getMaxShaderPrecision(this.gl));
-
-        /**
-         * the location attributes of the shader
-         * @type {GLint[]}
-         */
-        this.attributes = extractAttributes(this.gl, this);
-
-
-        /**
-         * a reference to the shader program (once compiled)
-         * @type {WebGLProgram}
-         */
-        this.program = compileProgram(this.gl, this.vertex, this.fragment, this.attributes);
-
-        /**
-         * the uniforms of the shader
-         * @type {object}
-         */
-        this.uniforms = extractUniforms(this.gl, this);
-
-        // destroy the shader on context lost (will be recreated on context restore)
-        on(ONCONTEXT_LOST, this.destroy, this);
-    }
-
-    /**
-     * Installs this shader program as part of current rendering state
-     */
-    bind() {
-        this.gl.useProgram(this.program);
-    }
-
-    /**
-     * returns the location of an attribute variable in this shader program
-     * @param {string} name - the name of the attribute variable whose location to get.
-     * @returns {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
-     */
-    getAttribLocation(name) {
-        var attr = this.attributes[name];
-        if (typeof attr !== "undefined") {
-            return attr;
-        } else {
-            return -1;
-        }
-    }
-
-    /**
-     * Set the uniform to the given value
-     * @param {string} name - the uniform name
-     * @param {object|Float32Array} value - the value to assign to that uniform
-     * @example
-     * myShader.setUniform("uProjectionMatrix", this.projectionMatrix);
-     */
-    setUniform(name, value) {
-        var uniforms = this.uniforms;
-        if (typeof uniforms[name] !== "undefined") {
-            if (typeof value === "object" && typeof value.toArray === "function") {
-                uniforms[name] = value.toArray();
-            } else {
-                uniforms[name] = value;
-            }
-        } else {
-            throw new Error("undefined (" + name + ") uniform for shader " + this);
-        }
-    }
-
-    /**
-     * activate the given vertex attribute for this shader
-     * @param {WebGLRenderingContext} gl - the current WebGL rendering context
-     * @param {object[]} attributes - an array of vertex attributes
-     * @param {number} vertexByteSize - the size of a single vertex in bytes
-     */
-    setVertexAttributes(gl, attributes, vertexByteSize) {
-        // set the vertex attributes
-        for (var index = 0; index < attributes.length; ++index) {
-            var element = attributes[index];
-            var location = this.getAttribLocation(element.name);
-
-            if (location !== -1) {
-                gl.enableVertexAttribArray(location);
-                gl.vertexAttribPointer(location, element.size, element.type, element.normalized, vertexByteSize, element.offset);
-            } else {
-                gl.disableVertexAttribArray(index);
-            }
-        }
-    }
-
-    /**
-     * destroy this shader objects resources (program, attributes, uniforms)
-     */
-    destroy() {
-        this.uniforms = null;
-        this.attributes = null;
-
-        this.gl.deleteProgram(this.program);
-
-        this.vertex = null;
-        this.fragment = null;
-    }
-}
-
-/**
- * @classdesc
- * a Vertex Buffer object
- * @class VertexArrayBuffer
- * @ignore
- */
-
- class VertexArrayBuffer {
-
-    constructor(vertex_size, vertex_per_obj) {
-        // the size of one vertex in float
-        this.vertexSize = vertex_size;
-        // size of an object in vertex
-        this.objSize = vertex_per_obj;
-        // the maximum number of vertices the vertex array buffer can hold
-        this.maxVertex = 256; // (note: this seems to be the sweet spot performance-wise when using batching)
-        // the current number of vertices added to the vertex array buffer
-        this.vertexCount = 0;
-
-        // the actual vertex data buffer
-        this.buffer = new ArrayBuffer(this.maxVertex * this.vertexSize * this.objSize);
-        // Float32 and Uint32 view of the vertex data array buffer
-        this.bufferF32 = new Float32Array(this.buffer);
-        this.bufferU32 = new Uint32Array(this.buffer);
-    }
-
-    /**
-     * clear the vertex array buffer
-     * @ignore
-     */
-    clear() {
-        this.vertexCount = 0;
-    }
-
-
-    /**
-     * return true if full
-     * @ignore
-     */
-    isFull(vertex = this.objSize) {
-         return (this.vertexCount + vertex >= this.maxVertex);
-    }
-
-    /**
-     * resize the vertex buffer, retaining its original contents
-     * @ignore
-     */
-    resize(vertexCount) {
-
-        while (vertexCount > this.maxVertex) {
-            // double the vertex size
-            this.maxVertex <<= 1;
-        }
-
-        // save a reference to the previous data
-        var data = this.bufferF32;
-
-        // recreate ArrayBuffer and views
-        this.buffer = new ArrayBuffer(this.maxVertex * this.vertexSize * this.objSize);
-        this.bufferF32 = new Float32Array(this.buffer);
-        this.bufferU32 = new Uint32Array(this.buffer);
-
-        // copy previous data
-        this.bufferF32.set(data);
-
-        return this;
-    }
-
-    /**
-     * push a new vertex to the buffer
-     * @ignore
-     */
-    push(x, y, u, v, tint) {
-        var offset = this.vertexCount * this.vertexSize;
-
-        if (this.vertexCount >= this.maxVertex) {
-            this.resize(this.vertexCount);
-        }
-
-        this.bufferF32[offset] = x;
-        this.bufferF32[++offset] = y;
-
-        if (typeof u !== "undefined") {
-            this.bufferF32[++offset] = u;
-            this.bufferF32[++offset] = v;
-        }
-
-        if (typeof tint !== "undefined") {
-            this.bufferU32[++offset] = tint;
-        }
-
-        this.vertexCount++;
-
-        return this;
-    }
-
-    /**
-     * return a reference to the data in Float32 format
-     * @ignore
-     */
-    toFloat32(begin, end) {
-        if (typeof end !== "undefined") {
-            return this.bufferF32.subarray(begin, end);
-        } else {
-            return this.bufferF32;
-        }
-    }
-
-    /**
-     * return a reference to the data in Uint32 format
-     * @ignore
-     */
-    toUint32(begin, end) {
-        if (typeof end !== "undefined") {
-            return this.bufferU32.subarray(begin, end);
-        } else {
-            return this.bufferU32;
-        }
-    }
-
-    /**
-     * return the size of the vertex in vertex
-     * @ignore
-     */
-    length() {
-        return this.vertexCount;
-    }
-
-    /**
-     * return true if empty
-     * @ignore
-     */
-    isEmpty() {
-        return this.vertexCount === 0;
-    }
-
-}
-
-var quadVertex = "// Current vertex point\nattribute vec2 aVertex;\nattribute vec2 aRegion;\nattribute vec4 aColor;\n\n// Projection matrix\nuniform mat4 uProjectionMatrix;\n\nvarying vec2 vRegion;\nvarying vec4 vColor;\n\nvoid main(void) {\n    // Transform the vertex position by the projection matrix\n    gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);\n    // Pass the remaining attributes to the fragment shader\n    vColor = vec4(aColor.bgr * aColor.a, aColor.a);\n    vRegion = aRegion;\n}\n";
-
-var quadFragment = "uniform sampler2D uSampler;\nvarying vec4 vColor;\nvarying vec2 vRegion;\n\nvoid main(void) {\n    gl_FragColor = texture2D(uSampler, vRegion) * vColor;\n}\n";
-
-/**
- * @classdesc
- * A base Compositor object.
- */
- class Compositor {
-    /**
-     * @param {WebGLRenderer} renderer - the current WebGL renderer session
-     */
-    constructor (renderer) {
-        this.init(renderer);
-    }
-
-    /**
-     * Initialize the compositor
-     * @ignore
-     */
-    init (renderer) {
-        // local reference
-        var gl = renderer.gl;
-
-        // the associated renderer
-        this.renderer = renderer;
-
-        // WebGL context
-        this.gl = renderer.gl;
-
-        // Global fill color
-        this.color = renderer.currentColor;
-
-        // Global transformation matrix
-        this.viewMatrix = renderer.currentTransform;
-
-        /**
-         * a reference to the active WebGL shader
-         * @type {GLShader}
-         */
-        this.activeShader = null;
-
-        /**
-         * primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
-         * @type {number}
-         * @default gl.TRIANGLES
-         */
-        this.mode = gl.TRIANGLES;
-
-        /**
-         * an array of vertex attribute properties
-         * @see WebGLCompositor.addAttribute
-         * @type {Array}
-         */
-        this.attributes = [];
-
-        /**
-         * the size of a single vertex in bytes
-         * (will automatically be calculated as attributes definitions are added)
-         * @see WebGLCompositor.addAttribute
-         * @type {number}
-         */
-        this.vertexByteSize = 0;
-
-        /**
-         * the size of a single vertex in floats
-         * (will automatically be calculated as attributes definitions are added)
-         * @see WebGLCompositor.addAttribute
-         * @type {number}
-         */
-        this.vertexSize = 0;
-
-        // register to the CANVAS resize channel
-        on(CANVAS_ONRESIZE, (width, height) => {
-            this.flush();
-            this.setViewport(0, 0, width, height);
-        });
-    }
-
-    /**
-     * Reset compositor internal state
-     * @ignore
-     */
-    reset() {
-        // WebGL context
-        this.gl = this.renderer.gl;
-
-        this.flush();
-
-        // initial viewport size
-        this.setViewport(
-            0, 0,
-            this.renderer.getCanvas().width,
-            this.renderer.getCanvas().height
-        );
-
-        // Initialize clear color
-        this.clearColor(0.0, 0.0, 0.0, 0.0);
-    }
-
-    /**
-     * @ignore
-     * called by the WebGL renderer when a compositor become the current one
-     */
-    bind() {
-        if (this.activeShader !== null) {
-            this.activeShader.bind();
-            this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
-            this.activeShader.setVertexAttributes(this.gl, this.attributes, this.vertexByteSize);
-        }
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.vertexBuffer.buffer, this.gl.STREAM_DRAW);
-    }
-
-    /**
-     * add vertex attribute property definition to the compositor
-     * @param {string} name - name of the attribute in the vertex shader
-     * @param {number} size - number of components per vertex attribute. Must be 1, 2, 3, or 4.
-     * @param {GLenum} type - data type of each component in the array
-     * @param {boolean} normalized - whether integer data values should be normalized into a certain range when being cast to a float
-     * @param {number} offset - offset in bytes of the first component in the vertex attribute array
-     */
-    addAttribute(name, size, type, normalized, offset) {
-        this.attributes.push({
-            name: name,
-            size: size,
-            type: type,
-            normalized: normalized,
-            offset: offset
-        });
-
-        switch (type) {
-            case this.gl.BYTE:
-                this.vertexByteSize += size * Int8Array.BYTES_PER_ELEMENT;
-                break;
-            case this.gl.UNSIGNED_BYTE:
-                this.vertexByteSize += size * Uint8Array.BYTES_PER_ELEMENT;
-                break;
-            case this.gl.SHORT:
-                this.vertexByteSize += size * Int16Array.BYTES_PER_ELEMENT;
-                break;
-            case this.gl.UNSIGNED_SHORT:
-                this.vertexByteSize += size * Uint16Array.BYTES_PER_ELEMENT;
-                break;
-            case this.gl.INT:
-                this.vertexByteSize += size * Int32Array.BYTES_PER_ELEMENT;
-                break;
-            case this.gl.UNSIGNED_INT:
-                this.vertexByteSize += size * Uint32Array.BYTES_PER_ELEMENT;
-                break;
-            case this.gl.FLOAT:
-                this.vertexByteSize += size * Float32Array.BYTES_PER_ELEMENT;
-                break;
-            default:
-                throw new Error("Invalid GL Attribute type");
-        }
-        this.vertexSize = this.vertexByteSize / Float32Array.BYTES_PER_ELEMENT;
-    }
-
-    /**
-     * Sets the viewport
-     * @param {number} x - x position of viewport
-     * @param {number} y - y position of viewport
-     * @param {number} w - width of viewport
-     * @param {number} h - height of viewport
-     */
-    setViewport(x, y, w, h) {
-        this.gl.viewport(x, y, w, h);
-    }
-
-    /**
-     * set/change the current projection matrix
-     * @param {Matrix3d} matrix
-     */
-    setProjection(matrix) {
-        this.activeShader.setUniform("uProjectionMatrix", matrix);
-    }
-
-    /**
-     * Select the shader to use for compositing
-     * @see GLShader
-     * @param {GLShader} shader - a reference to a GLShader instance
-     */
-    useShader(shader) {
-        if (this.activeShader !== shader) {
-            this.flush();
-            this.activeShader = shader;
-            this.activeShader.bind();
-            this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
-            this.activeShader.setVertexAttributes(this.gl, this.attributes, this.vertexByteSize);
-        }
-    }
-
-    /**
-     * Flush batched texture operations to the GPU
-     * @param {number} [mode=gl.TRIANGLES] - the GL drawing mode
-     */
-    flush(mode = this.mode) {
-        var vertex = this.vertexBuffer;
-        var vertexCount = vertex.vertexCount;
-
-        if (vertexCount > 0) {
-            var gl = this.gl;
-            var vertexSize = vertex.vertexSize;
-
-            // Copy data into stream buffer
-            if (this.renderer.WebGLVersion > 1) {
-                gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(), gl.STREAM_DRAW, 0, vertexCount * vertexSize);
-            } else {
-                gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(0, vertexCount * vertexSize), gl.STREAM_DRAW);
-            }
-
-            gl.drawArrays(mode, 0, vertexCount);
-
-            // clear the vertex buffer
-            vertex.clear();
-        }
-    }
-
-    /**
-     * Clear the frame buffer
-     * @param {number} [alpha = 0.0] - the alpha value used when clearing the framebuffer
-     */
-    clear(alpha = 0) {
-        var gl = this.gl;
-        gl.clearColor(0, 0, 0, alpha);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
-    }
-
-    /**
-     * Specify the color values used when clearing color buffers. The values are clamped between 0 and 1.
-     * @param {number} [r = 0] - the red color value used when the color buffers are cleared
-     * @param {number} [g = 0] - the green color value used when the color buffers are cleared
-     * @param {number} [b = 0] - the blue color value used when the color buffers are cleared
-     * @param {number} [a = 0] - the alpha color value used when the color buffers are cleared
-     */
-    clearColor(r = 0, g = 0, b = 0, a = 0) {
-        var gl = this.gl;
-        gl.clearColor(r, g, b, a);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-    }
-}
-
-// a pool of resuable vectors
-var V_ARRAY = [
-    new Vector2d(),
-    new Vector2d(),
-    new Vector2d(),
-    new Vector2d()
-];
-
-/**
- * @classdesc
- * A WebGL Compositor object. This class handles all of the WebGL state<br>
- * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
- * @augments Compositor
- */
- class QuadCompositor extends Compositor {
-
-    /**
-     * Initialize the compositor
-     * @ignore
-     */
-    init (renderer) {
-        super.init(renderer);
-
-        // list of active texture units
-        this.currentTextureUnit = -1;
-        this.boundTextures = [];
-
-        // Load and create shader programs
-        this.quadShader = new GLShader(this.gl, quadVertex, quadFragment);
-
-        /// define all vertex attributes
-        this.addAttribute("aVertex", 2, this.gl.FLOAT, false, 0 * Float32Array.BYTES_PER_ELEMENT); // 0
-        this.addAttribute("aRegion", 2, this.gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT); // 1
-        this.addAttribute("aColor",  4, this.gl.UNSIGNED_BYTE, true, 4 * Float32Array.BYTES_PER_ELEMENT); // 2
-
-        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, 6);
-
-        // vertex buffer
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gl.createBuffer());
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.vertexBuffer.buffer, this.gl.STREAM_DRAW);
-    }
-
-    /**
-     * Reset compositor internal state
-     * @ignore
-     */
-    reset() {
-        super.reset();
-
-        // delete all related bound texture
-        for (var i = 0; i < this.renderer.maxTextures; i++) {
-            var texture2D = this.getTexture2D(i);
-            if (typeof texture2D !== "undefined") {
-                this.deleteTexture2D(texture2D);
-            }
-        }
-        this.currentTextureUnit = -1;
-
-        // set the quad shader as the default program
-        this.useShader(this.quadShader);
-    }
-
-    /**
-     * Create a WebGL texture from an image
-     * @param {number} unit - Destination texture unit
-     * @param {Image|HTMLCanvasElement|ImageData|Uint8Array[]|Float32Array[]} image - Source image
-     * @param {number} filter - gl.LINEAR or gl.NEAREST
-     * @param {string} [repeat="no-repeat"] - Image repeat behavior (see {@link ImageLayer#repeat})
-     * @param {number} [w] - Source image width (Only use with UInt8Array[] or Float32Array[] source image)
-     * @param {number} [h] - Source image height (Only use with UInt8Array[] or Float32Array[] source image)
-     * @param {number} [b] - Source image border (Only use with UInt8Array[] or Float32Array[] source image)
-     * @param {boolean} [premultipliedAlpha=true] - Multiplies the alpha channel into the other color channels
-     * @param {boolean} [mipmap=true] - Whether mipmap levels should be generated for this texture
-     * @returns {WebGLTexture} a WebGL texture
-     */
-    createTexture2D(unit, image, filter, repeat = "no-repeat", w, h, b, premultipliedAlpha = true, mipmap = true) {
-        var gl = this.gl;
-        var isPOT = isPowerOfTwo(w || image.width) && isPowerOfTwo(h || image.height);
-        var texture = gl.createTexture();
-        var rs = (repeat.search(/^repeat(-x)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
-        var rt = (repeat.search(/^repeat(-y)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
-
-        this.bindTexture2D(texture, unit);
-
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, rs);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, rt);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultipliedAlpha);
-        if (w || h || b) {
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, b, gl.RGBA, gl.UNSIGNED_BYTE, image);
-        }
-        else {
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-        }
-
-        // generate the sprite mimap (used when scaling) if a PowerOfTwo texture
-        if (isPOT && mipmap !== false) {
-            gl.generateMipmap(gl.TEXTURE_2D);
-        }
-
-        return texture;
-    }
-
-    /**
-     * delete the given WebGL texture
-     * @param {WebGLTexture} [texture] - a WebGL texture to delete
-     * @param {number} [unit] - Texture unit to delete
-     */
-    deleteTexture2D(texture) {
-        this.gl.deleteTexture(texture);
-        this.unbindTexture2D(texture);
-    }
-
-    /**
-     * returns the WebGL texture associated to the given texture unit
-     * @param {number} unit - Texture unit to which a texture is bound
-     * @returns {WebGLTexture} texture a WebGL texture
-     */
-    getTexture2D(unit) {
-        return this.boundTextures[unit];
-    }
-
-    /**
-     * assign the given WebGL texture to the current batch
-     * @param {WebGLTexture} texture - a WebGL texture
-     * @param {number} unit - Texture unit to which the given texture is bound
-     */
-    bindTexture2D(texture, unit) {
-        var gl = this.gl;
-
-        if (texture !== this.boundTextures[unit]) {
-            this.flush();
-            if (this.currentTextureUnit !== unit) {
-                this.currentTextureUnit = unit;
-                gl.activeTexture(gl.TEXTURE0 + unit);
-            }
-
-            gl.bindTexture(gl.TEXTURE_2D, texture);
-            this.boundTextures[unit] = texture;
-
-        } else if (this.currentTextureUnit !== unit) {
-            this.flush();
-            this.currentTextureUnit = unit;
-            gl.activeTexture(gl.TEXTURE0 + unit);
-        }
-    }
-
-    /**
-     * unbind the given WebGL texture, forcing it to be reuploaded
-     * @param {WebGLTexture} [texture] - a WebGL texture
-     * @param {number} [unit] - a WebGL texture
-     * @returns {number} unit the unit number that was associated with the given texture
-     */
-    unbindTexture2D(texture, unit) {
-        if (typeof unit === "undefined") {
-            unit = this.boundTextures.indexOf(texture);
-        }
-        if (unit !== -1) {
-            delete this.boundTextures[unit];
-            if (unit === this.currentTextureUnit) {
-                this.currentTextureUnit = -1;
-            }
-        }
-        return unit;
-    }
-
-    /**
-     * @ignore
-     */
-    uploadTexture(texture, w, h, b, force = false) {
-        var unit = this.renderer.cache.getUnit(texture);
-        var texture2D = this.boundTextures[unit];
-
-        if (typeof texture2D === "undefined" || force) {
-            this.createTexture2D(
-                unit,
-                texture.getTexture(),
-                this.renderer.settings.antiAlias ? this.gl.LINEAR : this.gl.NEAREST,
-                texture.repeat,
-                w,
-                h,
-                b,
-                texture.premultipliedAlpha
-            );
-        } else {
-            this.bindTexture2D(texture2D, unit);
-        }
-
-        return this.currentTextureUnit;
-    }
-
-    /**
-     * Add a textured quad
-     * @param {TextureAtlas} texture - Source texture atlas
-     * @param {number} x - Destination x-coordinate
-     * @param {number} y - Destination y-coordinate
-     * @param {number} w - Destination width
-     * @param {number} h - Destination height
-     * @param {number} u0 - Texture UV (u0) value.
-     * @param {number} v0 - Texture UV (v0) value.
-     * @param {number} u1 - Texture UV (u1) value.
-     * @param {number} v1 - Texture UV (v1) value.
-     * @param {number} tint - tint color to be applied to the texture in UINT32 (argb) format
-     */
-    addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint) {
-        var vertexBuffer = this.vertexBuffer;
-
-        if (vertexBuffer.isFull(6)) {
-            // is the vertex buffer full if we add 6 more vertices
-            this.flush();
-        }
-
-        // upload and activate the texture if necessary
-        var unit = this.uploadTexture(texture);
-        // set fragement sampler accordingly
-        this.quadShader.setUniform("uSampler", unit);
-
-        // Transform vertices
-        var m = this.viewMatrix,
-            vec0 = V_ARRAY[0].set(x, y),
-            vec1 = V_ARRAY[1].set(x + w, y),
-            vec2 = V_ARRAY[2].set(x, y + h),
-            vec3 = V_ARRAY[3].set(x + w, y + h);
-
-        if (!m.isIdentity()) {
-            m.apply(vec0);
-            m.apply(vec1);
-            m.apply(vec2);
-            m.apply(vec3);
-        }
-
-        vertexBuffer.push(vec0.x, vec0.y, u0, v0, tint);
-        vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
-        vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
-        vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
-        vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
-        vertexBuffer.push(vec3.x, vec3.y, u1, v1, tint);
-    }
-}
-
-var primitiveVertex = "// Current vertex point\nattribute vec2 aVertex;\nattribute vec4 aColor;\n\n// Projection matrix\nuniform mat4 uProjectionMatrix;\n\nvarying vec4 vColor;\n\nvoid main(void) {\n    // Transform the vertex position by the projection matrix\n    gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);\n    // Pass the remaining attributes to the fragment shader\n    vColor = vec4(aColor.bgr * aColor.a, aColor.a);\n}\n";
-
-var primitiveFragment = "varying vec4 vColor;\n\nvoid main(void) {\n    gl_FragColor = vColor;\n}\n";
-
-/**
- * @classdesc
- * A WebGL Compositor object. This class handles all of the WebGL state<br>
- * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
- * @augments Compositor
- */
- class PrimitiveCompositor extends Compositor {
-
-    /**
-     * Initialize the compositor
-     * @ignore
-     */
-    init (renderer) {
-        super.init(renderer);
-
-        // Load and create shader programs
-        this.primitiveShader = new GLShader(this.gl, primitiveVertex, primitiveFragment);
-
-        /// define all vertex attributes
-        this.addAttribute("aVertex", 2, this.gl.FLOAT, false, 0 * Float32Array.BYTES_PER_ELEMENT); // 0
-        this.addAttribute("aColor",  4, this.gl.UNSIGNED_BYTE, true, 2 * Float32Array.BYTES_PER_ELEMENT); // 1
-
-        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, 6);
-
-        // vertex buffer
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gl.createBuffer());
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.vertexBuffer.buffer, this.gl.STREAM_DRAW);
-    }
-
-    /**
-     * Reset compositor internal state
-     * @ignore
-     */
-    reset() {
-        super.reset();
-
-        // set the quad shader as the default program
-        this.useShader(this.primitiveShader);
-    }
-
-    /**
-     * Draw an array of vertices
-     * @param {GLenum} mode - primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
-     * @param {Point[]} verts - an array of vertices
-     * @param {number} [vertexCount=verts.length] - amount of points defined in the points array
-     */
-    drawVertices(mode, verts, vertexCount = verts.length) {
-        var viewMatrix = this.viewMatrix;
-        var vertexBuffer = this.vertexBuffer;
-        var color = this.renderer.currentColor;
-        var alpha = this.renderer.getGlobalAlpha();
-
-        if (vertexBuffer.isFull(vertexCount)) {
-            // is the vertex buffer full if we add more vertices
-            this.flush();
-        }
-
-        // flush if drawing vertices with a different drawing mode
-        if (mode !== this.mode) {
-            this.flush(this.mode);
-            this.mode = mode;
-        }
-
-        if (!viewMatrix.isIdentity()) {
-            verts.forEach((vert) => {
-                viewMatrix.apply(vert);
-                vertexBuffer.push(vert.x, vert.y, undefined, undefined, color.toUint32(alpha));
-            });
-        } else {
-            verts.forEach((vert) => {
-                vertexBuffer.push(vert.x, vert.y, undefined, undefined, color.toUint32(alpha));
-            });
-        }
-
-        // disable batching for primitive using LINE_STRIP or LINE_LOOP
-        if (this.mode === this.gl.LINE_STRIP || this.mode === this.gl.LINE_LOOP) {
-            this.flush(this.mode);
-        }
-    }
-}
-
-/**
- * @classdesc
- * a WebGL renderer object
- * @augments Renderer
- */
- class WebGLRenderer extends Renderer {
-    /**
-     * @param {object} options - The renderer parameters
-     * @param {number} options.width - The width of the canvas without scaling
-     * @param {number} options.height - The height of the canvas without scaling
-     * @param {HTMLCanvasElement} [options.canvas] - The html canvas to draw to on screen
-     * @param {boolean} [options.antiAlias=false] - Whether to enable anti-aliasing
-     * @param {boolean} [options.failIfMajorPerformanceCaveat=true] - If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
-     * @param {boolean} [options.transparent=false] - Whether to enable transparency on the canvas
-     * @param {boolean} [options.premultipliedAlpha=true] - in WebGL, whether the renderer will assume that colors have premultiplied alpha when canvas transparency is enabled
-     * @param {boolean} [options.subPixel=false] - Whether to enable subpixel renderering (performance hit when enabled)
-     * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
-     * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
-     * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
-     * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
-     * @param {Compositor} [options.compositor] - A class that implements the compositor API for sprite rendering
-     */
-    constructor(options) {
-
-        // parent contructor
-        super(options);
-
-        /**
-         * The WebGL version used by this renderer (1 or 2)
-         * @type {number}
-         * @default 1
-         * @readonly
-         */
-        this.WebGLVersion = 1;
-
-        /**
-         * The vendor string of the underlying graphics driver.
-         * @type {string}
-         * @default null
-         * @readonly
-         */
-        this.GPUVendor = null;
-
-        /**
-         * The renderer string of the underlying graphics driver.
-         * @type {string}
-         * @default null
-         * @readonly
-         */
-        this.GPURenderer = null;
-
-        /**
-         * The WebGL context
-         * @name gl
-         * @type {WebGLRenderingContext}
-         */
-        this.context = this.gl = this.getContextGL(this.getCanvas(), options.transparent);
-
-        /**
-         * Maximum number of texture unit supported under the current context
-         * @type {number}
-         * @readonly
-         */
-        this.maxTextures = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
-
-        /**
-         * @ignore
-         */
-        this._colorStack = [];
-
-        /**
-         * @ignore
-         */
-        this._matrixStack = [];
-
-        /**
-         * @ignore
-         */
-        this._scissorStack = [];
-
-        /**
-         * @ignore
-         */
-        this._blendStack = [];
-
-        /**
-         * The current transformation matrix used for transformations on the overall scene
-         * @type {Matrix2d}
-         */
-        this.currentTransform = new Matrix2d();
-
-        /**
-         * The current compositor used by the renderer
-         * @type {WebGLCompositor}
-         */
-        this.currentCompositor = null;
-
-        /**
-         * The list of active compositors
-         * @type {Map<WebGLCompositor>}
-         */
-        this.compositors = new Map();
-
-        // Create both quad and primitive compositor
-        this.addCompositor(new (this.settings.compositor || QuadCompositor)(this), "quad", true);
-        this.addCompositor(new (this.settings.compositor || PrimitiveCompositor)(this), "primitive");
-
-
-        // default WebGL state(s)
-        this.gl.disable(this.gl.DEPTH_TEST);
-        this.gl.disable(this.gl.SCISSOR_TEST);
-        this.gl.enable(this.gl.BLEND);
-
-        // set default mode
-        this.setBlendMode(this.settings.blendMode);
-
-        // get GPU vendor and renderer
-        var debugInfo = this.gl.getExtension("WEBGL_debug_renderer_info");
-        if (debugInfo !== null) {
-            this.GPUVendor = this.gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
-            this.GPURenderer = this.gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-        }
-
-        // Create a texture cache
-        this.cache = new TextureCache$1(this.maxTextures);
-
-        // set the renderer type
-        this.type =  "WebGL" + this.WebGLVersion;
-
-        // to simulate context lost and restore in WebGL:
-        // var ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');
-        // ctx.loseContext()
-        this.getCanvas().addEventListener("webglcontextlost", (e) => {
-            e.preventDefault();
-            this.isContextValid = false;
-            emit(ONCONTEXT_LOST, this);
-        }, false );
-        // ctx.restoreContext()
-        this.getCanvas().addEventListener("webglcontextrestored", () => {
-            this.reset();
-            this.isContextValid = true;
-            emit(ONCONTEXT_RESTORED, this);
-        }, false );
-    }
-
-    /**
-     * Reset context state
-     */
-    reset() {
-        super.reset();
-
-        this.compositors.forEach((compositor) => {
-            if (this.isContextValid === false) {
-                // on context lost/restore
-                compositor.init(this);
-            } else {
-                compositor.reset();
-            }
-        });
-
-        this.gl.disable(this.gl.SCISSOR_TEST);
-        if (typeof this.fontContext2D !== "undefined" ) {
-            this.createFontTexture(this.cache);
-        }
-
-    }
-
-    /**
-     * add a new compositor to this renderer
-     * @param {Compositor} compositor - a compositor instance
-     * @param {String} name - a name uniquely identifying this compositor
-     * @param {Boolean} [activate=false] - true if the given compositor should be set as the active one
-     */
-    addCompositor(compositor, name = "default", activate = false) {
-        // make sure there is no existing compositor with the same name
-        if (typeof this.compositors.get(name) !== "undefined") {
-            throw new Error("Invalid Compositor name");
-        }
-
-        // add the new compositor
-        this.compositors.set(name, compositor);
-
-        if (activate === true) {
-            // set as active one
-            this.setCompositor(name);
-        }
-    }
-
-    /**
-     * set the active compositor for this renderer
-     * @param {String} name - a compositor name
-     * @return {Compositor} an instance to the current active compositor
-     */
-    setCompositor(name = "default") {
-        let compositor = this.compositors.get(name);
-
-        if (typeof compositor === "undefined") {
-            throw new Error("Invalid Compositor");
-        }
-
-        if (this.currentCompositor !== compositor) {
-            if (this.currentCompositor !== null) {
-                // flush the current compositor
-                this.currentCompositor.flush();
-            }
-            // set given one as current
-            this.currentCompositor = compositor;
-            this.currentCompositor.bind();
-        }
-
-        return this.currentCompositor;
-    }
-
-    /**
-     * Reset the gl transform to identity
-     */
-    resetTransform() {
-        this.currentTransform.identity();
-    }
-
-    /**
-     * @ignore
-     */
-    createFontTexture(cache) {
-        this.setCompositor("quad");
-        if (typeof this.fontTexture === "undefined") {
-            var canvas = this.getCanvas();
-            var width = canvas.width;
-            var height = canvas.height;
-
-            if (this.WebGLVersion === 1) {
-                if (!isPowerOfTwo(width)) {
-                    width = nextPowerOfTwo(canvas.width);
-                }
-                if (!isPowerOfTwo(height)) {
-                    height = nextPowerOfTwo(canvas.height);
-                }
-            }
-
-            var image = createCanvas(width, height, true);
-
-            /**
-             * @ignore
-             */
-            this.fontContext2D = this.getContext2d(image);
-
-            /**
-             * @ignore
-             */
-            this.fontTexture = new TextureAtlas(createAtlas(canvas.width, canvas.height, "fontTexture"), image, cache);
-            this.currentCompositor.uploadTexture(this.fontTexture, 0, 0, 0);
-
-        } else {
-           // fontTexture was already created, just add it back into the cache
-           cache.set(this.fontContext2D.canvas, this.fontTexture);
-       }
-    }
-
-    /**
-     * Create a pattern with the specified repetition
-     * @param {Image} image - Source image
-     * @param {string} repeat - Define how the pattern should be repeated
-     * @returns {TextureAtlas}
-     * @see ImageLayer#repeat
-     * @example
-     * var tileable   = renderer.createPattern(image, "repeat");
-     * var horizontal = renderer.createPattern(image, "repeat-x");
-     * var vertical   = renderer.createPattern(image, "repeat-y");
-     * var basic      = renderer.createPattern(image, "no-repeat");
-     */
-    createPattern(image, repeat) {
-
-        this.setCompositor("quad");
-
-        if (renderer.WebGLVersion === 1 && (!isPowerOfTwo(image.width) || !isPowerOfTwo(image.height))) {
-            var src = typeof image.src !== "undefined" ? image.src : image;
-            throw new Error(
-                "[WebGL Renderer] " + src + " is not a POT texture " +
-                "(" + image.width + "x" + image.height + ")"
-            );
-        }
-
-        var texture = new TextureAtlas(createAtlas(image.width, image.height, "pattern", repeat), image);
-
-        // FIXME: Remove old cache entry and texture when changing the repeat mode
-        this.currentCompositor.uploadTexture(texture);
-
-        return texture;
-    }
-
-    /**
-     * Flush the compositor to the frame buffer
-     */
-    flush() {
-        this.currentCompositor.flush();
-    }
-
-    /**
-     * set/change the current projection matrix (WebGL only)
-     * @param {Matrix3d} matrix
-     */
-    setProjection(matrix) {
-        super.setProjection(matrix);
-    }
-
-    /**
-     * prepare the framebuffer for drawing a new frame
-     */
-    clear() {
-        this.compositors.forEach((compositor) => {
-            compositor.clear(this.settings.transparent ? 0.0 : 1.0);
-        });
-    }
-
-    /**
-     * Clears the gl context with the given color.
-     * @param {Color|string} [color="#000000"] - CSS color.
-     * @param {boolean} [opaque=false] - Allow transparency [default] or clear the surface completely [true]
-     */
-    clearColor(color = "#000000", opaque = false) {
-        var glArray;
-
-        if (color instanceof Color) {
-            glArray = color.toArray();
-        } else {
-            var _color = pool.pull("me.Color");
-            // reuse temporary the renderer default color object
-            glArray = _color.parseCSS(color).toArray();
-            pool.push(_color);
-        }
-        // clear gl context with the specified color
-        this.currentCompositor.clearColor(glArray[0], glArray[1], glArray[2], (opaque === true) ? 1.0 : glArray[3]);
-    }
-
-    /**
-     * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
-     * @param {number} x - x axis of the coordinate for the rectangle starting point.
-     * @param {number} y - y axis of the coordinate for the rectangle starting point.
-     * @param {number} width - The rectangle's width.
-     * @param {number} height - The rectangle's height.
-     */
-    clearRect(x, y, width, height) {
-        this.save();
-        this.clipRect(x, y, width, height);
-        this.clearColor();
-        this.restore();
-    }
-
-    /**
-     * @ignore
-     */
-    drawFont(bounds) {
-        var fontContext = this.getFontContext();
-
-        this.setCompositor("quad");
-
-        // Force-upload the new texture
-        this.currentCompositor.uploadTexture(this.fontTexture, 0, 0, 0, true);
-
-        // Add the new quad
-        var uvs = this.fontTexture.getUVs(bounds.left + "," + bounds.top + "," + bounds.width + "," + bounds.height);
-        this.currentCompositor.addQuad(
-            this.fontTexture,
-            bounds.left,
-            bounds.top,
-            bounds.width,
-            bounds.height,
-            uvs[0],
-            uvs[1],
-            uvs[2],
-            uvs[3],
-            this.currentTint.toUint32(this.getGlobalAlpha())
-        );
-
-        // Clear font context2D
-        fontContext.clearRect(
-            bounds.left,
-            bounds.top,
-            bounds.width,
-            bounds.height
-        );
-    }
-
-    /**
-     * Draw an image to the gl context
-     * @param {Image} image - An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
-     * @param {number} sx - The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
-     * @param {number} sy - The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
-     * @param {number} sw - The width of the sub-rectangle of the source image to draw into the destination context. If not specified, the entire rectangle from the coordinates specified by sx and sy to the bottom-right corner of the image is used.
-     * @param {number} sh - The height of the sub-rectangle of the source image to draw into the destination context.
-     * @param {number} dx - The X coordinate in the destination canvas at which to place the top-left corner of the source image.
-     * @param {number} dy - The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
-     * @param {number} dw - The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
-     * @param {number} dh - The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
-     * @example
-     * // Position the image on the canvas:
-     * renderer.drawImage(image, dx, dy);
-     * // Position the image on the canvas, and specify width and height of the image:
-     * renderer.drawImage(image, dx, dy, dWidth, dHeight);
-     * // Clip the image and position the clipped part on the canvas:
-     * renderer.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
-     */
-    drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh) {
-        if (typeof sw === "undefined") {
-            sw = dw = image.width;
-            sh = dh = image.height;
-            dx = sx;
-            dy = sy;
-            sx = 0;
-            sy = 0;
-        }
-        else if (typeof dx === "undefined") {
-            dx = sx;
-            dy = sy;
-            dw = sw;
-            dh = sh;
-            sw = image.width;
-            sh = image.height;
-            sx = 0;
-            sy = 0;
-        }
-
-        if (this.settings.subPixel === false) {
-            // clamp to pixel grid
-            dx |= 0;
-            dy |= 0;
-        }
-
-        this.setCompositor("quad");
-
-        var texture = this.cache.get(image);
-        var uvs = texture.getUVs(sx + "," + sy + "," + sw + "," + sh);
-        this.currentCompositor.addQuad(texture, dx, dy, dw, dh, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()));
-    }
-
-    /**
-     * Draw a pattern within the given rectangle.
-     * @param {TextureAtlas} pattern - Pattern object
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
-     * @see WebGLRenderer#createPattern
-     */
-    drawPattern(pattern, x, y, width, height) {
-        var uvs = pattern.getUVs("0,0," + width + "," + height);
-        this.setCompositor("quad");
-        this.currentCompositor.addQuad(pattern, x, y, width, height, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()));
-    }
-
-    /**
-     * Returns the WebGL Context object of the given canvas element
-     * @param {HTMLCanvasElement} canvas
-     * @param {boolean} [transparent=false] - use true to enable transparency
-     * @returns {WebGLRenderingContext}
-     */
-    getContextGL(canvas, transparent = false) {
-        if (typeof canvas === "undefined" || canvas === null) {
-            throw new Error(
-                "You must pass a canvas element in order to create " +
-                "a GL context"
-            );
-        }
-
-        var attr = {
-            alpha : transparent,
-            antialias : this.settings.antiAlias,
-            depth : false,
-            stencil: true,
-            preserveDrawingBuffer : false,
-            premultipliedAlpha: transparent ? this.settings.premultipliedAlpha : false,
-            powerPreference: this.settings.powerPreference,
-            failIfMajorPerformanceCaveat : this.settings.failIfMajorPerformanceCaveat
-        };
-
-        var gl;
-
-        // attempt to create a WebGL2 context if requested
-        if (this.settings.preferWebGL1 === false) {
-            gl = canvas.getContext("webgl2", attr);
-            if (gl) {
-                this.WebGLVersion = 2;
-            }
-        }
-
-        // fallback to WebGL1
-        if (!gl) {
-            this.WebGLVersion = 1;
-            gl = canvas.getContext("webgl", attr) || canvas.getContext("experimental-webgl", attr);
-        }
-
-        if (!gl) {
-            throw new Error(
-                "A WebGL context could not be created."
-            );
-        }
-
-        return gl;
-    }
-
-    /**
-     * Returns the WebGLContext instance for the renderer
-     * return a reference to the system 2d Context
-     * @returns {WebGLRenderingContext}
-     */
-    getContext() {
-        return this.gl;
-    }
-
-    /**
-     * set a blend mode for the given context. <br>
-     * Supported blend mode between Canvas and WebGL remderer : <br>
-     * - "normal" : this is the default mode and draws new content on top of the existing content <br>
-     * <img src="images/normal-blendmode.png" width="510"/> <br>
-     * - "multiply" : the pixels of the top layer are multiplied with the corresponding pixel of the bottom layer. A darker picture is the result. <br>
-     * <img src="images/multiply-blendmode.png" width="510"/> <br>
-     * - "additive or lighter" : where both content overlap the color is determined by adding color values. <br>
-     * <img src="images/lighter-blendmode.png" width="510"/> <br>
-     * - "screen" : The pixels are inverted, multiplied, and inverted again. A lighter picture is the result (opposite of multiply) <br>
-     * <img src="images/screen-blendmode.png" width="510"/> <br>
-     * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
-     * @param {string} [mode="normal"] - blend mode : "normal", "multiply", "lighter", "additive", "screen"
-     * @param {WebGLRenderingContext} [gl]
-     */
-    setBlendMode(mode = "normal", gl = this.gl) {
-
-        if (this.currentBlendMode !== mode) {
-            this.flush();
-            gl.enable(gl.BLEND);
-            this.currentBlendMode = mode;
-
-            switch (mode) {
-                case "screen" :
-                    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
-                    break;
-
-                case "lighter" :
-                case "additive" :
-                    gl.blendFunc(gl.ONE, gl.ONE);
-                    break;
-
-                case "multiply" :
-                    gl.blendFunc(gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA);
-                    break;
-
-                default :
-                    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-                    this.currentBlendMode = "normal";
-                    break;
-            }
-        }
-    }
-
-    /**
-     * return a reference to the font 2d Context
-     * @ignore
-     */
-    getFontContext() {
-        if (typeof this.fontContext2D === "undefined" ) {
-            // warn the end user about performance impact
-            console.warn("[WebGL Renderer] WARNING : Using Standard me.Text with WebGL will severly impact performances !");
-            // create the font texture if not done yet
-            this.createFontTexture(this.cache);
-        }
-        return this.fontContext2D;
-    }
-
-    /**
-     * restores the canvas context
-     */
-    restore() {
-        // do nothing if there is no saved states
-        if (this._matrixStack.length !== 0) {
-            var color = this._colorStack.pop();
-            var matrix = this._matrixStack.pop();
-
-            // restore the previous context
-            this.currentColor.copy(color);
-            this.currentTransform.copy(matrix);
-
-            this.setBlendMode(this._blendStack.pop());
-
-            // recycle objects
-            pool.push(color);
-            pool.push(matrix);
-        }
-
-        if (this._scissorStack.length !== 0) {
-            // FIXME : prevent `scissor` object realloc and GC
-            this.currentScissor.set(this._scissorStack.pop());
-        } else {
-            // turn off scissor test
-            this.gl.disable(this.gl.SCISSOR_TEST);
-            this.currentScissor[0] = 0;
-            this.currentScissor[1] = 0;
-            this.currentScissor[2] = this.getCanvas().width;
-            this.currentScissor[3] = this.getCanvas().height;
-        }
-    }
-
-    /**
-     * saves the canvas context
-     */
-    save() {
-        this._colorStack.push(this.currentColor.clone());
-        this._matrixStack.push(this.currentTransform.clone());
-
-        if (this.gl.isEnabled(this.gl.SCISSOR_TEST)) {
-            // FIXME avoid slice and object realloc
-            this._scissorStack.push(this.currentScissor.slice());
-        }
-
-        this._blendStack.push(this.getBlendMode());
-    }
-
-    /**
-     * rotates the uniform matrix
-     * @param {number} angle - in radians
-     */
-    rotate(angle) {
-        this.currentTransform.rotate(angle);
-    }
-
-    /**
-     * scales the uniform matrix
-     * @param {number} x
-     * @param {number} y
-     */
-    scale(x, y) {
-        this.currentTransform.scale(x, y);
-    }
-
-    /**
-     * not used by this renderer?
-     * @ignore
-     */
-    setAntiAlias(context, enable) {
-        super.setAntiAlias(context, enable);
-        // TODO: perhaps handle GLNEAREST or other options with texture binding
-    }
-
-    /**
-     * Set the global alpha
-     * @param {number} alpha - 0.0 to 1.0 values accepted.
-     */
-    setGlobalAlpha(alpha) {
-        this.currentColor.alpha = alpha;
-    }
-
-    /**
-     * Return the global alpha
-     * @returns {number} global alpha value
-     */
-    getGlobalAlpha() {
-        return this.currentColor.alpha;
-    }
-
-    /**
-     * Set the current fill & stroke style color.
-     * By default, or upon reset, the value is set to #000000.
-     * @param {Color|string} color - css color string.
-     */
-    setColor(color) {
-        var alpha = this.currentColor.alpha;
-        this.currentColor.copy(color);
-        this.currentColor.alpha *= alpha;
-    }
-
-    /**
-     * Set the line width
-     * @param {number} width - Line width
-     */
-    setLineWidth(width) {
-        this.getContext().lineWidth(width);
-    }
-
-    /**
-     * Stroke an arc at the specified coordinates with given radius, start and end points
-     * @param {number} x - arc center point x-axis
-     * @param {number} y - arc center point y-axis
-     * @param {number} radius
-     * @param {number} start - start angle in radians
-     * @param {number} end - end angle in radians
-     * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
-     * @param {boolean} [fill=false]
-     */
-    strokeArc(x, y, radius, start, end, antiClockwise = false, fill = false) {
-        this.setCompositor("primitive");
-        this.path2D.beginPath();
-        this.path2D.arc(x, y, radius, start, end, antiClockwise);
-        if (fill === false) {
-            this.currentCompositor.drawVertices(this.gl.LINE_STRIP, this.path2D.points);
-        } else {
-            this.path2D.closePath();
-            this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
-        }
-    }
-
-    /**
-     * Fill an arc at the specified coordinates with given radius, start and end points
-     * @param {number} x - arc center point x-axis
-     * @param {number} y - arc center point y-axis
-     * @param {number} radius
-     * @param {number} start - start angle in radians
-     * @param {number} end - end angle in radians
-     * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
-     */
-    fillArc(x, y, radius, start, end, antiClockwise = false) {
-        this.strokeArc(x, y, radius, start, end, antiClockwise, true);
-    }
-
-    /**
-     * Stroke an ellipse at the specified coordinates with given radius
-     * @param {number} x - ellipse center point x-axis
-     * @param {number} y - ellipse center point y-axis
-     * @param {number} w - horizontal radius of the ellipse
-     * @param {number} h - vertical radius of the ellipse
-     * @param {boolean} [fill=false] - also fill the shape with the current color if true
-     */
-    strokeEllipse(x, y, w, h, fill = false) {
-        this.setCompositor("primitive");
-        this.path2D.beginPath();
-        this.path2D.ellipse(x, y, w, h, 0, 0, 360);
-        this.path2D.closePath();
-        if (fill === false) {
-            this.currentCompositor.drawVertices(this.gl.LINE_STRIP, this.path2D.points);
-        } else {
-            this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
-        }
-    }
-
-    /**
-     * Fill an ellipse at the specified coordinates with given radius
-     * @param {number} x - ellipse center point x-axis
-     * @param {number} y - ellipse center point y-axis
-     * @param {number} w - horizontal radius of the ellipse
-     * @param {number} h - vertical radius of the ellipse
-     */
-    fillEllipse(x, y, w, h) {
-        this.strokeEllipse(x, y, w, h, false);
-    }
-
-    /**
-     * Stroke a line of the given two points
-     * @param {number} startX - the start x coordinate
-     * @param {number} startY - the start y coordinate
-     * @param {number} endX - the end x coordinate
-     * @param {number} endY - the end y coordinate
-     */
-    strokeLine(startX, startY, endX, endY) {
-        this.setCompositor("primitive");
-        this.path2D.beginPath();
-        this.path2D.moveTo(startX, startY);
-        this.path2D.lineTo(endX, endY);
-        this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
-    }
-
-
-    /**
-     * Fill a line of the given two points
-     * @param {number} startX - the start x coordinate
-     * @param {number} startY - the start y coordinate
-     * @param {number} endX - the end x coordinate
-     * @param {number} endY - the end y coordinate
-     */
-    fillLine(startX, startY, endX, endY) {
-        this.strokeLine(startX, startY, endX, endY);
-    }
-
-    /**
-     * Stroke a me.Polygon on the screen with a specified color
-     * @param {Polygon} poly - the shape to draw
-     * @param {boolean} [fill=false] - also fill the shape with the current color if true
-     */
-    strokePolygon(poly, fill = false) {
-        this.setCompositor("primitive");
-        this.translate(poly.pos.x, poly.pos.y);
-        this.path2D.beginPath();
-
-        var points = poly.points;
-        for (var i = 1; i < points.length; i++) {
-            this.path2D.moveTo(points[i-1].x, points[i-1].y);
-            this.path2D.lineTo(points[i].x, points[i].y);
-        }
-        this.path2D.lineTo(points[points.length - 1].x, points[points.length - 1].y);
-        this.path2D.closePath();
-        if (fill === false) {
-            this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
-        } else {
-            // draw all triangles
-            this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
-        }
-        this.translate(-poly.pos.x, -poly.pos.y);
-    }
-
-    /**
-     * Fill a me.Polygon on the screen
-     * @param {Polygon} poly - the shape to draw
-     */
-    fillPolygon(poly) {
-        this.strokePolygon(poly, true);
-    }
-
-    /**
-     * Draw a stroke rectangle at the specified coordinates
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
-     * @param {boolean} [fill=false] - also fill the shape with the current color if true
-     */
-    strokeRect(x, y, width, height, fill = false) {
-        this.setCompositor("primitive");
-        this.path2D.beginPath();
-        this.path2D.rect(x, y, width, height);
-        if (fill === false) {
-            this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
-        } else {
-            this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
-        }
-    }
-
-    /**
-     * Draw a filled rectangle at the specified coordinates
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
-     */
-    fillRect(x, y, width, height) {
-        this.strokeRect(x, y, width, height, true);
-    }
-
-    /**
-     * Stroke a rounded rectangle at the specified coordinates
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
-     * @param {number} radius
-     * @param {boolean} [fill=false] - also fill the shape with the current color if true
-     */
-    strokeRoundRect(x, y, width, height, radius, fill = false) {
-        this.setCompositor("primitive");
-        this.path2D.beginPath();
-        this.path2D.roundRect(x, y, width, height, radius);
-        if (fill === false) {
-            this.currentCompositor.drawVertices(this.gl.LINE_STRIP, this.path2D.points);
-        } else {
-            this.path2D.closePath();
-            this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
-        }
-    }
-
-    /**
-     * Draw a rounded filled rectangle at the specified coordinates
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
-     * @param {number} radius
-     */
-    fillRoundRect(x, y, width, height, radius) {
-        this.strokeRoundRect(x, y, width, height, radius, true);
-    }
-
-    /**
-     * Stroke a Point at the specified coordinates
-     * @param {number} x
-     * @param {number} y
-     */
-    strokePoint(x, y) {
-        this.strokeLine(x, y, x + 1, y + 1);
-    }
-
-    /**
-     * Draw a a point at the specified coordinates
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
-     */
-    fillPoint(x, y) {
-        this.strokePoint(x, y);
-    }
-
-    /**
-     * Reset (overrides) the renderer transformation matrix to the
-     * identity one, and then apply the given transformation matrix.
-     * @param {Matrix2d} mat2d - Matrix to transform by
-     */
-    setTransform(mat2d) {
-        this.resetTransform();
-        this.transform(mat2d);
-    }
-
-    /**
-     * Multiply given matrix into the renderer tranformation matrix
-     * @param {Matrix2d} mat2d - Matrix to transform by
-     */
-    transform(mat2d) {
-        var currentTransform = this.currentTransform;
-        currentTransform.multiply(mat2d);
-        if (this.settings.subPixel === false) {
-            // snap position values to pixel grid
-            var a = currentTransform.toArray();
-            a[6] |= 0;
-            a[7] |= 0;
-        }
-    }
-
-    /**
-     * Translates the uniform matrix by the given coordinates
-     * @param {number} x
-     * @param {number} y
-     */
-    translate(x, y) {
-        var currentTransform = this.currentTransform;
-        currentTransform.translate(x, y);
-        if (this.settings.subPixel === false) {
-            // snap position values to pixel grid
-            var a = currentTransform.toArray();
-            a[6] |= 0;
-            a[7] |= 0;
-        }
-    }
-
-    /**
-     * clip the given region from the original canvas. Once a region is clipped,
-     * all future drawing will be limited to the clipped region.
-     * You can however save the current region using the save(),
-     * and restore it (with the restore() method) any time in the future.
-     * (<u>this is an experimental feature !</u>)
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
-     */
-    clipRect(x, y, width, height) {
-        var canvas = this.getCanvas();
-        var gl = this.gl;
-        // if requested box is different from the current canvas size
-        if (x !== 0 || y !== 0 || width !== canvas.width || height !== canvas.height) {
-            var currentScissor = this.currentScissor;
-            if (gl.isEnabled(gl.SCISSOR_TEST)) {
-                // if same as the current scissor box do nothing
-                if (currentScissor[0] === x && currentScissor[1] === y &&
-                    currentScissor[2] === width && currentScissor[3] === height) {
-                        return;
-                }
-            }
-            // flush the compositor
-            this.flush();
-            // turn on scissor test
-            gl.enable(this.gl.SCISSOR_TEST);
-            // set the scissor rectangle (note : coordinates are left/bottom)
-            gl.scissor(
-                // scissor does not account for currentTransform, so manually adjust
-                x + this.currentTransform.tx,
-                canvas.height -height -y -this.currentTransform.ty,
-                width,
-                height
-            );
-            // save the new currentScissor box
-            currentScissor[0] = x;
-            currentScissor[1] = y;
-            currentScissor[2] = width;
-            currentScissor[3] = height;
-        } else {
-            // turn off scissor test
-            gl.disable(gl.SCISSOR_TEST);
-        }
-    }
-
-    /**
-     * A mask limits rendering elements to the shape and position of the given mask object.
-     * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
-     * Mask are not preserved through renderer context save and restore.
-     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - a shape defining the mask to be applied
-     * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
-     */
-    setMask(mask, invert = false) {
-        var gl = this.gl;
-
-        // flush the compositor
-        this.flush();
-
-        if (this.maskLevel === 0) {
-            // Enable and setup GL state to write to stencil buffer
-            gl.enable(gl.STENCIL_TEST);
-            gl.clear(gl.STENCIL_BUFFER_BIT);
-        }
-
-        this.maskLevel++;
-
-        gl.colorMask(false, false, false, false);
-        gl.stencilFunc(gl.EQUAL, this.maskLevel, 1);
-        gl.stencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE);
-
-
-        // fill the given mask shape
-        this.fill(mask);
-
-        // flush the compositor
-        this.flush();
-
-        gl.colorMask(true, true, true, true);
-
-        // Use stencil buffer to affect next rendering object
-        if (invert === true) {
-            gl.stencilFunc(gl.EQUAL, this.maskLevel + 1, 1);
-        } else {
-            gl.stencilFunc(gl.NOTEQUAL, this.maskLevel + 1, 1);
-        }
-        gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
-    }
-
-    /**
-     * disable (remove) the rendering mask set through setMask.
-     * @see WebGLRenderer#setMask
-     */
-    clearMask() {
-        if (this.maskLevel > 0) {
-            // flush the compositor
-            this.flush();
-            this.maskLevel = 0;
-            this.gl.disable(this.gl.STENCIL_TEST);
-        }
-    }
 }
 
 /**
@@ -23460,11 +21369,7 @@ class TextureAtlas {
         // Add self to TextureCache if cache !== false
         if (cache !== false) {
             this.sources.forEach((source) => {
-                if (cache instanceof TextureCache$1) {
-                    cache.set(source, this);
-                } else {
-                    renderer.cache.set(source, this);
-                }
+                renderer.cache.set(source, this);
             });
         }
     }
@@ -23689,7 +21594,7 @@ class TextureAtlas {
      */
     addUVs(atlas, name, w, h) {
         // ignore if using the Canvas Renderer
-        if (renderer instanceof WebGLRenderer) {
+        if (typeof renderer.gl !== "undefined") {
             // Source coordinates
             var s = atlas[name].offset;
             var sw = atlas[name].width;
@@ -24392,7 +22297,6 @@ class TextureCache {
         return this.units.get(texture);
     }
 }
-var TextureCache$1 = TextureCache;
 
 /**
  * @classdesc
@@ -24425,7 +22329,7 @@ var TextureCache$1 = TextureCache;
         this.setColor(this.currentColor);
 
         // create a texture cache
-        this.cache = new TextureCache$1();
+        this.cache = new TextureCache();
 
         if (this.settings.textureSeamFix !== false && !this.settings.antiAlias) {
             // enable the tile texture seam fix with the canvas renderer
@@ -24446,6 +22350,11 @@ var TextureCache$1 = TextureCache;
             this.isContextValid = true;
             emit(ONCONTEXT_RESTORED, this);
         }, false );
+
+        // reset the renderer on game reset
+        on(GAME_RESET, () => {
+            this.reset();
+        });
     }
 
     /**
@@ -24919,15 +22828,6 @@ var TextureCache$1 = TextureCache;
      */
     fillPoint(x, y) {
         this.strokePoint(x, y);
-    }
-
-    /**
-     * return a reference to the font 2d Context
-     * @ignore
-     */
-    getFontContext() {
-        // in canvas mode we can directly use the 2d context
-        return this.getContext();
     }
 
     /**
@@ -32440,6 +30340,2041 @@ let Interpolation = {
     static get Interpolation() { return Interpolation; }
 }
 
+/**
+ * Hash map of GLSL data types to WebGL Uniform methods
+ * @ignore
+ */
+const fnHash = {
+    "bool"      : "1i",
+    "int"       : "1i",
+    "float"     : "1f",
+    "vec2"      : "2fv",
+    "vec3"      : "3fv",
+    "vec4"      : "4fv",
+    "bvec2"     : "2iv",
+    "bvec3"     : "3iv",
+    "bvec4"     : "4iv",
+    "ivec2"     : "2iv",
+    "ivec3"     : "3iv",
+    "ivec4"     : "4iv",
+    "mat2"      : "Matrix2fv",
+    "mat3"      : "Matrix3fv",
+    "mat4"      : "Matrix4fv",
+    "sampler2D" : "1i"
+};
+
+/**
+ * @ignore
+ */
+function extractUniforms(gl, shader) {
+    var uniforms = {},
+        uniRx = /uniform\s+(\w+)\s+(\w+)/g,
+        uniformsData = {},
+        descriptor = {},
+        locations = {},
+        match;
+
+    // Detect all uniform names and types
+    [ shader.vertex, shader.fragment ].forEach((shader) => {
+        while ((match = uniRx.exec(shader))) {
+            uniformsData[match[2]] = match[1];
+        }
+    });
+
+    // Get uniform references
+    Object.keys(uniformsData).forEach((name) => {
+        var type = uniformsData[name];
+        locations[name] = gl.getUniformLocation(shader.program, name);
+
+        descriptor[name] = {
+            "get" : (function (name) {
+                /*
+                 * A getter for the uniform location
+                 */
+                return function () {
+                    return locations[name];
+                };
+            })(name),
+            "set" : (function (name, type, fn) {
+                if (type.indexOf("mat") === 0) {
+                    /*
+                     * A generic setter for uniform matrices
+                     */
+                    return function (val) {
+                        gl[fn](locations[name], false, val);
+                    };
+                }
+                else {
+                    /*
+                     * A generic setter for uniform vectors
+                     */
+                    return function (val) {
+                        var fnv = fn;
+                        if (val.length && fn.slice(-1) !== "v") {
+                            fnv += "v";
+                        }
+                        gl[fnv](locations[name], val);
+                    };
+                }
+            })(name, type, "uniform" + fnHash[type])
+        };
+    });
+    Object.defineProperties(uniforms, descriptor);
+
+    return uniforms;
+}
+
+/**
+ * @ignore
+ */
+function extractAttributes(gl, shader) {
+    var attributes = {},
+        attrRx = /attribute\s+\w+\s+(\w+)/g,
+        match,
+        i = 0;
+
+    // Detect all attribute names
+    while ((match = attrRx.exec(shader.vertex))) {
+        attributes[match[1]] = i++;
+    }
+
+    return attributes;
+}
+
+/**
+ * @ignore
+ */
+function compileShader(gl, type, source) {
+    var shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        throw new Error(gl.getShaderInfoLog(shader));
+    }
+
+    return shader;
+}
+
+/**
+ * Compile GLSL into a shader object
+ * @ignore
+ */
+function compileProgram(gl, vertex, fragment, attributes) {
+    var vertShader = compileShader(gl, gl.VERTEX_SHADER, vertex);
+    var fragShader = compileShader(gl, gl.FRAGMENT_SHADER, fragment);
+
+    var program = gl.createProgram();
+
+    gl.attachShader(program, vertShader);
+    gl.attachShader(program, fragShader);
+
+
+    // force vertex attributes to use location 0 as starting location to prevent
+    // browser to do complicated emulation when running on desktop OpenGL (e.g. on macOS)
+    for (var location in attributes) {
+        gl.bindAttribLocation(program, attributes[location], location);
+    }
+
+    gl.linkProgram(program);
+
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        var error_msg =
+            "Error initializing Shader " + this + "\n" +
+            "gl.VALIDATE_STATUS: " + gl.getProgramParameter(program, gl.VALIDATE_STATUS) + "\n" +
+            "gl.getError()" + gl.getError() + "\n" +
+            "gl.getProgramInfoLog()" + gl.getProgramInfoLog(program);
+        // house cleaning
+        gl.deleteProgram(program);
+        program = null;
+        // throw the exception
+        throw new Error(error_msg);
+    }
+
+    gl.useProgram(program);
+
+    // clean-up
+    gl.deleteShader(vertShader);
+    gl.deleteShader(fragShader);
+
+    return program;
+}
+
+/**
+ * set precision for the fiven shader source
+ * won't do anything if the precision is already specified
+ * @ignore
+ */
+function setPrecision(src, precision) {
+    if (src.substring(0, 9) !== "precision") {
+        return "precision " + precision + " float;" + src;
+    }
+    return src;
+}
+
+/**
+ * return the highest precision format supported by this device for GL Shaders
+ * @ignore
+ * @param {WebGLRenderingContext} gl
+ * @returns {boolean} "lowp", "mediump", or "highp"
+ */
+function getMaxShaderPrecision(gl) {
+    if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT ).precision > 0 &&
+        gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT ).precision > 0) {
+            return "highp";
+    }
+    if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT ).precision > 0 &&
+        gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT ).precision > 0) {
+            return "mediump";
+    }
+    return "lowp";
+}
+
+/**
+ * clean the given source from space, comments, etc...
+ * @ignore
+ */
+function minify(src) {
+    // remove comments
+    src = src.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, "$1");
+    // Remove leading and trailing whitespace from lines
+    src = src.replace(/(\\n\s+)|(\s+\\n)/g, "");
+    // Remove line breaks
+    src = src.replace(/(\\r|\\n)+/g, "");
+    // Remove unnecessary whitespace
+    src = src.replace(/\s*([;,[\](){}\\\/\-+*|^&!=<>?~%])\s*/g, "$1");
+
+    return src;
+}
+
+/**
+ * @classdesc
+ * a base GL Shader object
+ */
+ class GLShader {
+    /**
+     * @param {WebGLRenderingContext} gl - the current WebGL rendering context
+     * @param {string} vertex - a string containing the GLSL source code to set
+     * @param {string} fragment - a string containing the GLSL source code to set
+     * @param {string} [precision=auto detected] - float precision ('lowp', 'mediump' or 'highp').
+     * @see https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_on_the_web/GLSL_Shaders
+     * @example
+     * // create a basic shader
+     * var myShader = new me.GLShader(
+     *    // WebGL rendering context
+     *    gl,
+     *    // vertex shader
+     *    [
+     *        "void main() {",
+     *        "    gl_Position = doMathToMakeClipspaceCoordinates;",
+     *        "}"
+     *    ].join("\n"),
+     *    // fragment shader
+     *    [
+     *        "void main() {",
+     *        "    gl_FragColor = doMathToMakeAColor;",
+     *        "}"
+     *    ].join("\n")
+     *  )
+     * // use the shader
+     * myShader.bind();
+     */
+    constructor(gl, vertex, fragment, precision) {
+
+        /**
+         * the active gl rendering context
+         * @type {WebGLRenderingContext}
+         */
+        this.gl = gl;
+
+        /**
+         * the vertex shader source code
+         * @type {string}
+         */
+        this.vertex = setPrecision(minify(vertex), precision || getMaxShaderPrecision(this.gl));
+
+        /**
+         * the fragment shader source code
+         * @type {string}
+         */
+        this.fragment = setPrecision(minify(fragment), precision || getMaxShaderPrecision(this.gl));
+
+        /**
+         * the location attributes of the shader
+         * @type {GLint[]}
+         */
+        this.attributes = extractAttributes(this.gl, this);
+
+
+        /**
+         * a reference to the shader program (once compiled)
+         * @type {WebGLProgram}
+         */
+        this.program = compileProgram(this.gl, this.vertex, this.fragment, this.attributes);
+
+        /**
+         * the uniforms of the shader
+         * @type {object}
+         */
+        this.uniforms = extractUniforms(this.gl, this);
+
+        // destroy the shader on context lost (will be recreated on context restore)
+        on(ONCONTEXT_LOST, this.destroy, this);
+    }
+
+    /**
+     * Installs this shader program as part of current rendering state
+     */
+    bind() {
+        this.gl.useProgram(this.program);
+    }
+
+    /**
+     * returns the location of an attribute variable in this shader program
+     * @param {string} name - the name of the attribute variable whose location to get.
+     * @returns {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
+     */
+    getAttribLocation(name) {
+        var attr = this.attributes[name];
+        if (typeof attr !== "undefined") {
+            return attr;
+        } else {
+            return -1;
+        }
+    }
+
+    /**
+     * Set the uniform to the given value
+     * @param {string} name - the uniform name
+     * @param {object|Float32Array} value - the value to assign to that uniform
+     * @example
+     * myShader.setUniform("uProjectionMatrix", this.projectionMatrix);
+     */
+    setUniform(name, value) {
+        var uniforms = this.uniforms;
+        if (typeof uniforms[name] !== "undefined") {
+            if (typeof value === "object" && typeof value.toArray === "function") {
+                uniforms[name] = value.toArray();
+            } else {
+                uniforms[name] = value;
+            }
+        } else {
+            throw new Error("undefined (" + name + ") uniform for shader " + this);
+        }
+    }
+
+    /**
+     * activate the given vertex attribute for this shader
+     * @param {WebGLRenderingContext} gl - the current WebGL rendering context
+     * @param {object[]} attributes - an array of vertex attributes
+     * @param {number} vertexByteSize - the size of a single vertex in bytes
+     */
+    setVertexAttributes(gl, attributes, vertexByteSize) {
+        // set the vertex attributes
+        for (var index = 0; index < attributes.length; ++index) {
+            var element = attributes[index];
+            var location = this.getAttribLocation(element.name);
+
+            if (location !== -1) {
+                gl.enableVertexAttribArray(location);
+                gl.vertexAttribPointer(location, element.size, element.type, element.normalized, vertexByteSize, element.offset);
+            } else {
+                gl.disableVertexAttribArray(index);
+            }
+        }
+    }
+
+    /**
+     * destroy this shader objects resources (program, attributes, uniforms)
+     */
+    destroy() {
+        this.uniforms = null;
+        this.attributes = null;
+
+        this.gl.deleteProgram(this.program);
+
+        this.vertex = null;
+        this.fragment = null;
+    }
+}
+
+/**
+ * @classdesc
+ * a Vertex Buffer object
+ * @class VertexArrayBuffer
+ * @ignore
+ */
+
+ class VertexArrayBuffer {
+
+    constructor(vertex_size, vertex_per_obj) {
+        // the size of one vertex in float
+        this.vertexSize = vertex_size;
+        // size of an object in vertex
+        this.objSize = vertex_per_obj;
+        // the maximum number of vertices the vertex array buffer can hold
+        this.maxVertex = 256; // (note: this seems to be the sweet spot performance-wise when using batching)
+        // the current number of vertices added to the vertex array buffer
+        this.vertexCount = 0;
+
+        // the actual vertex data buffer
+        this.buffer = new ArrayBuffer(this.maxVertex * this.vertexSize * this.objSize);
+        // Float32 and Uint32 view of the vertex data array buffer
+        this.bufferF32 = new Float32Array(this.buffer);
+        this.bufferU32 = new Uint32Array(this.buffer);
+    }
+
+    /**
+     * clear the vertex array buffer
+     * @ignore
+     */
+    clear() {
+        this.vertexCount = 0;
+    }
+
+
+    /**
+     * return true if full
+     * @ignore
+     */
+    isFull(vertex = this.objSize) {
+         return (this.vertexCount + vertex >= this.maxVertex);
+    }
+
+    /**
+     * resize the vertex buffer, retaining its original contents
+     * @ignore
+     */
+    resize(vertexCount) {
+
+        while (vertexCount > this.maxVertex) {
+            // double the vertex size
+            this.maxVertex <<= 1;
+        }
+
+        // save a reference to the previous data
+        var data = this.bufferF32;
+
+        // recreate ArrayBuffer and views
+        this.buffer = new ArrayBuffer(this.maxVertex * this.vertexSize * this.objSize);
+        this.bufferF32 = new Float32Array(this.buffer);
+        this.bufferU32 = new Uint32Array(this.buffer);
+
+        // copy previous data
+        this.bufferF32.set(data);
+
+        return this;
+    }
+
+    /**
+     * push a new vertex to the buffer
+     * @ignore
+     */
+    push(x, y, u, v, tint) {
+        var offset = this.vertexCount * this.vertexSize;
+
+        if (this.vertexCount >= this.maxVertex) {
+            this.resize(this.vertexCount);
+        }
+
+        this.bufferF32[offset] = x;
+        this.bufferF32[++offset] = y;
+
+        if (typeof u !== "undefined") {
+            this.bufferF32[++offset] = u;
+            this.bufferF32[++offset] = v;
+        }
+
+        if (typeof tint !== "undefined") {
+            this.bufferU32[++offset] = tint;
+        }
+
+        this.vertexCount++;
+
+        return this;
+    }
+
+    /**
+     * return a reference to the data in Float32 format
+     * @ignore
+     */
+    toFloat32(begin, end) {
+        if (typeof end !== "undefined") {
+            return this.bufferF32.subarray(begin, end);
+        } else {
+            return this.bufferF32;
+        }
+    }
+
+    /**
+     * return a reference to the data in Uint32 format
+     * @ignore
+     */
+    toUint32(begin, end) {
+        if (typeof end !== "undefined") {
+            return this.bufferU32.subarray(begin, end);
+        } else {
+            return this.bufferU32;
+        }
+    }
+
+    /**
+     * return the size of the vertex in vertex
+     * @ignore
+     */
+    length() {
+        return this.vertexCount;
+    }
+
+    /**
+     * return true if empty
+     * @ignore
+     */
+    isEmpty() {
+        return this.vertexCount === 0;
+    }
+
+}
+
+/**
+ * @classdesc
+ * A base Compositor object.
+ */
+ class Compositor {
+    /**
+     * @param {WebGLRenderer} renderer - the current WebGL renderer session
+     * @param {Object} settings - additional settings to initialize this compositors
+     * @param {object[]} attribute - an array of attributes definition
+     * @param {string} attribute.name - name of the attribute in the vertex shader
+     * @param {number} attribute.size - number of components per vertex attribute. Must be 1, 2, 3, or 4.
+     * @param {GLenum} attribute.type - data type of each component in the array
+     * @param {boolean} attribute.normalized - whether integer data values should be normalized into a certain range when being cast to a float
+     * @param {number} attribute.offset - offset in bytes of the first component in the vertex attribute array
+     * @param {object} shader - an array of attributes definition
+     * @param {string} shader.vertex - a string containing the GLSL source code to set
+     * @param {string} shader.fragment - a string containing the GLSL source code to set
+     */
+    constructor (renderer, settings) {
+        this.init(renderer, settings);
+    }
+
+    /**
+     * Initialize the compositor
+     * @ignore
+     */
+    init (renderer, settings) {
+        // the associated renderer
+        this.renderer = renderer;
+
+        // WebGL context
+        this.gl = renderer.gl;
+
+        // Global fill color
+        this.color = renderer.currentColor;
+
+        // Global transformation matrix
+        this.viewMatrix = renderer.currentTransform;
+
+        /**
+         * the default shader created by this compositor
+         * @type {GLShader}
+         */
+        this.defaultShader = undefined;
+
+        /**
+         * the shader currently used by this compositor
+         * @type {GLShader}
+         */
+        this.currentShader = undefined;
+
+        /**
+         * primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
+         * @type {number}
+         * @default gl.TRIANGLES
+         */
+        this.mode = this.gl.TRIANGLES;
+
+        /**
+         * an array of vertex attribute properties
+         * @see WebGLCompositor.addAttribute
+         * @type {Array}
+         */
+        this.attributes = [];
+
+        /**
+         * the size of a single vertex in bytes
+         * (will automatically be calculated as attributes definitions are added)
+         * @see WebGLCompositor.addAttribute
+         * @type {number}
+         */
+        this.vertexByteSize = 0;
+
+        /**
+         * the size of a single vertex in floats
+         * (will automatically be calculated as attributes definitions are added)
+         * @see WebGLCompositor.addAttribute
+         * @type {number}
+         */
+        this.vertexSize = 0;
+
+        /**
+         * the vertex data buffer used by this compositor
+         * @type {VertexArrayBuffer}
+         */
+        this.vertexData = null;
+
+        // parse given attibrutes
+        if (typeof settings !== "undefined" && Array.isArray(settings.attributes)) {
+            settings.attributes.forEach((attr) => {
+                this.addAttribute(attr.name, attr.size, attr.type, attr.normalized, attr.offset);
+                this.vertexData = new VertexArrayBuffer(this.vertexSize, 6);
+            });
+        } else {
+            throw new Error("attributes definition missing");
+        }
+
+        // parse and instantiate the default shader
+        if (typeof settings !== "undefined" && typeof settings.shader !== "undefined") {
+            this.defaultShader = new GLShader(this.gl, settings.shader.vertex, settings.shader.fragment);
+        } else {
+            throw new Error("shader definition missing");
+        }
+
+        // register to the CANVAS resize channel
+        on(CANVAS_ONRESIZE, (width, height) => {
+            this.flush();
+            this.setViewport(0, 0, width, height);
+        });
+    }
+
+    /**
+     * Reset compositor internal state
+     * @ignore
+     */
+    reset() {
+        // WebGL context
+        this.gl = this.renderer.gl;
+
+        // clear the vertex data buffer
+        this.vertexData.clear();
+
+        // initial viewport size
+        this.setViewport(
+            0, 0,
+            this.renderer.getCanvas().width,
+            this.renderer.getCanvas().height
+        );
+    }
+
+    /**
+     * @ignore
+     * called by the WebGL renderer when a compositor become the current one
+     */
+    bind() {
+        if (this.renderer.currentProgram !== this.defaultShader.program) {
+            this.useShader(this.defaultShader);
+        }
+    }
+
+    /**
+     * Select the shader to use for compositing
+     * @see GLShader
+     * @param {GLShader} shader - a reference to a GLShader instance
+     */
+    useShader(shader) {
+        if (this.renderer.currentProgram !== shader.program) {
+            this.flush();
+            shader.bind();
+            shader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
+            shader.setVertexAttributes(this.gl, this.attributes, this.vertexByteSize);
+
+            this.currentShader = shader;
+            this.renderer.currentProgram = this.currentShader.program;
+        }
+    }
+
+    /**
+     * add vertex attribute property definition to the compositor
+     * @param {string} name - name of the attribute in the vertex shader
+     * @param {number} size - number of components per vertex attribute. Must be 1, 2, 3, or 4.
+     * @param {GLenum} type - data type of each component in the array
+     * @param {boolean} normalized - whether integer data values should be normalized into a certain range when being cast to a float
+     * @param {number} offset - offset in bytes of the first component in the vertex attribute array
+     */
+    addAttribute(name, size, type, normalized, offset) {
+        this.attributes.push({
+            name: name,
+            size: size,
+            type: type,
+            normalized: normalized,
+            offset: offset
+        });
+
+        switch (type) {
+            case this.gl.BYTE:
+                this.vertexByteSize += size * Int8Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.UNSIGNED_BYTE:
+                this.vertexByteSize += size * Uint8Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.SHORT:
+                this.vertexByteSize += size * Int16Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.UNSIGNED_SHORT:
+                this.vertexByteSize += size * Uint16Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.INT:
+                this.vertexByteSize += size * Int32Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.UNSIGNED_INT:
+                this.vertexByteSize += size * Uint32Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.FLOAT:
+                this.vertexByteSize += size * Float32Array.BYTES_PER_ELEMENT;
+                break;
+            default:
+                throw new Error("Invalid GL Attribute type");
+        }
+        this.vertexSize = this.vertexByteSize / Float32Array.BYTES_PER_ELEMENT;
+    }
+
+    /**
+     * Sets the viewport
+     * @param {number} x - x position of viewport
+     * @param {number} y - y position of viewport
+     * @param {number} w - width of viewport
+     * @param {number} h - height of viewport
+     */
+    setViewport(x, y, w, h) {
+        this.gl.viewport(x, y, w, h);
+    }
+
+    /**
+     * set/change the current projection matrix
+     * @param {Matrix3d} matrix
+     */
+    setProjection(matrix) {
+        this.currentShader.setUniform("uProjectionMatrix", matrix);
+    }
+
+    /**
+     * Flush batched vertex data to the GPU
+     * @param {number} [mode=gl.TRIANGLES] - the GL drawing mode
+     */
+    flush(mode = this.mode) {
+        var vertex = this.vertexData;
+        var vertexCount = vertex.vertexCount;
+
+        if (vertexCount > 0) {
+            var gl = this.gl;
+            var vertexSize = vertex.vertexSize;
+
+            // Copy data into stream buffer
+            if (this.renderer.WebGLVersion > 1) {
+                gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(), gl.STREAM_DRAW, 0, vertexCount * vertexSize);
+            } else {
+                gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(0, vertexCount * vertexSize), gl.STREAM_DRAW);
+            }
+
+            gl.drawArrays(mode, 0, vertexCount);
+
+            // clear the vertex buffer
+            vertex.clear();
+        }
+    }
+}
+
+var primitiveVertex = "// Current vertex point\nattribute vec2 aVertex;\nattribute vec4 aColor;\n\n// Projection matrix\nuniform mat4 uProjectionMatrix;\n\nvarying vec4 vColor;\n\nvoid main(void) {\n    // Transform the vertex position by the projection matrix\n    gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);\n    // Pass the remaining attributes to the fragment shader\n    vColor = vec4(aColor.bgr * aColor.a, aColor.a);\n}\n";
+
+var primitiveFragment = "varying vec4 vColor;\n\nvoid main(void) {\n    gl_FragColor = vColor;\n}\n";
+
+/**
+ * @classdesc
+ * A WebGL Compositor object. This class handles all of the WebGL state<br>
+ * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
+ * @augments Compositor
+ */
+ class PrimitiveCompositor extends Compositor {
+
+    /**
+     * Initialize the compositor
+     * @ignore
+     */
+    init(renderer) {
+        super.init(renderer, {
+            attributes: [
+                {name: "aVertex", size: 2, type: renderer.gl.FLOAT, normalized: false, offset: 0 * Float32Array.BYTES_PER_ELEMENT},
+                {name: "aColor",  size: 4, type: renderer.gl.UNSIGNED_BYTE, normalized: true, offset: 2 * Float32Array.BYTES_PER_ELEMENT}
+            ],
+            shader: {
+                vertex: primitiveVertex, fragment: primitiveFragment
+            }
+        });
+    }
+
+    /**
+     * Draw an array of vertices
+     * @param {GLenum} mode - primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
+     * @param {Point[]} verts - an array of vertices
+     * @param {number} [vertexCount=verts.length] - amount of points defined in the points array
+     */
+    drawVertices(mode, verts, vertexCount = verts.length) {
+        var viewMatrix = this.viewMatrix;
+        var vertexData = this.vertexData;
+        var color = this.renderer.currentColor;
+        var alpha = this.renderer.getGlobalAlpha();
+
+        if (vertexData.isFull(vertexCount)) {
+            // is the vertex buffer full if we add more vertices
+            this.flush();
+        }
+
+        // flush if drawing vertices with a different drawing mode
+        if (mode !== this.mode) {
+            this.flush(this.mode);
+            this.mode = mode;
+        }
+
+        if (!viewMatrix.isIdentity()) {
+            verts.forEach((vert) => {
+                viewMatrix.apply(vert);
+                vertexData.push(vert.x, vert.y, undefined, undefined, color.toUint32(alpha));
+            });
+        } else {
+            verts.forEach((vert) => {
+                vertexData.push(vert.x, vert.y, undefined, undefined, color.toUint32(alpha));
+            });
+        }
+
+        // force flush for primitive using LINE_STRIP or LINE_LOOP
+        if (this.mode === this.gl.LINE_STRIP || this.mode === this.gl.LINE_LOOP) {
+            this.flush(this.mode);
+        }
+    }
+}
+
+var quadVertex = "// Current vertex point\nattribute vec2 aVertex;\nattribute vec2 aRegion;\nattribute vec4 aColor;\n\n// Projection matrix\nuniform mat4 uProjectionMatrix;\n\nvarying vec2 vRegion;\nvarying vec4 vColor;\n\nvoid main(void) {\n    // Transform the vertex position by the projection matrix\n    gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);\n    // Pass the remaining attributes to the fragment shader\n    vColor = vec4(aColor.bgr * aColor.a, aColor.a);\n    vRegion = aRegion;\n}\n";
+
+var quadFragment = "uniform sampler2D uSampler;\nvarying vec4 vColor;\nvarying vec2 vRegion;\n\nvoid main(void) {\n    gl_FragColor = texture2D(uSampler, vRegion) * vColor;\n}\n";
+
+// a pool of resuable vectors
+var V_ARRAY = [
+    new Vector2d(),
+    new Vector2d(),
+    new Vector2d(),
+    new Vector2d()
+];
+
+/**
+ * @classdesc
+ * A WebGL Compositor object. This class handles all of the WebGL state<br>
+ * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
+ * @augments Compositor
+ */
+ class QuadCompositor extends Compositor {
+
+    /**
+     * Initialize the compositor
+     * @ignore
+     */
+    init (renderer) {
+        super.init(renderer, {
+            attributes: [
+                {name: "aVertex", size: 2, type: renderer.gl.FLOAT, normalized: false, offset: 0 * Float32Array.BYTES_PER_ELEMENT},
+                {name: "aRegion", size: 2, type: renderer.gl.FLOAT, normalized: false, offset: 2 * Float32Array.BYTES_PER_ELEMENT},
+                {name: "aColor",  size: 4, type: renderer.gl.UNSIGNED_BYTE, normalized: true, offset: 4 * Float32Array.BYTES_PER_ELEMENT}
+            ],
+            shader: {
+                vertex: quadVertex, fragment: quadFragment
+            }
+        });
+
+        // list of active texture units
+        this.currentTextureUnit = -1;
+        this.boundTextures = [];
+    }
+
+    /**
+     * Reset compositor internal state
+     * @ignore
+     */
+    reset() {
+        super.reset();
+
+        // delete all related bound texture
+        for (var i = 0; i < this.renderer.maxTextures; i++) {
+            var texture2D = this.getTexture2D(i);
+            if (typeof texture2D !== "undefined") {
+                this.deleteTexture2D(texture2D);
+            }
+        }
+        this.currentTextureUnit = -1;
+    }
+
+    /**
+     * Create a WebGL texture from an image
+     * @param {number} unit - Destination texture unit
+     * @param {Image|HTMLCanvasElement|ImageData|Uint8Array[]|Float32Array[]} [pixels=null] - Source image
+     * @param {number} filter - gl.LINEAR or gl.NEAREST
+     * @param {string} [repeat="no-repeat"] - Image repeat behavior (see {@link ImageLayer#repeat})
+     * @param {number} [w=pixels.width] - Source image width (Only use with UInt8Array[] or Float32Array[] source image)
+     * @param {number} [h=pixels.height] - Source image height (Only use with UInt8Array[] or Float32Array[] source image)
+     * @param {boolean} [premultipliedAlpha=true] - Multiplies the alpha channel into the other color channels
+     * @param {boolean} [mipmap=true] - Whether mipmap levels should be generated for this texture
+     * @returns {WebGLTexture} a WebGL texture
+     */
+    createTexture2D(unit, pixels = null, filter, repeat = "no-repeat", w = pixels.width, h = pixels.height, premultipliedAlpha = true, mipmap = true) {
+        var gl = this.gl;
+        var isPOT = isPowerOfTwo(w) && isPowerOfTwo(h);
+        var rs = (repeat.search(/^repeat(-x)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+        var rt = (repeat.search(/^repeat(-y)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+
+        var texture = gl.createTexture();
+
+        this.bindTexture2D(texture, unit);
+
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, rs);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, rt);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+
+        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultipliedAlpha);
+
+        if (pixels === null || typeof pixels.byteLength !== "undefined") {
+            // if pixels is undefined, or if it's Uint8Array/Float32Array TypedArray
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels, 0);
+        } else {
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        }
+
+        // generate the sprite mimap (used when scaling) if a PowerOfTwo texture
+        if (isPOT && mipmap === true) {
+            gl.generateMipmap(gl.TEXTURE_2D);
+        }
+
+        return texture;
+    }
+
+    /**
+     * delete the given WebGL texture
+     * @param {WebGLTexture} [texture] - a WebGL texture to delete
+     * @param {number} [unit] - Texture unit to delete
+     */
+    deleteTexture2D(texture) {
+        this.gl.deleteTexture(texture);
+        this.unbindTexture2D(texture);
+    }
+
+    /**
+     * returns the WebGL texture associated to the given texture unit
+     * @param {number} unit - Texture unit to which a texture is bound
+     * @returns {WebGLTexture} texture a WebGL texture
+     */
+    getTexture2D(unit) {
+        return this.boundTextures[unit];
+    }
+
+    /**
+     * assign the given WebGL texture to the current batch
+     * @param {WebGLTexture} texture - a WebGL texture
+     * @param {number} unit - Texture unit to which the given texture is bound
+     */
+    bindTexture2D(texture, unit) {
+        var gl = this.gl;
+
+        if (texture !== this.boundTextures[unit]) {
+            this.flush();
+            if (this.currentTextureUnit !== unit) {
+                this.currentTextureUnit = unit;
+                gl.activeTexture(gl.TEXTURE0 + unit);
+            }
+
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            this.boundTextures[unit] = texture;
+
+        } else if (this.currentTextureUnit !== unit) {
+            this.flush();
+            this.currentTextureUnit = unit;
+            gl.activeTexture(gl.TEXTURE0 + unit);
+        }
+    }
+
+    /**
+     * unbind the given WebGL texture, forcing it to be reuploaded
+     * @param {WebGLTexture} [texture] - a WebGL texture
+     * @param {number} [unit] - a WebGL texture
+     * @returns {number} unit the unit number that was associated with the given texture
+     */
+    unbindTexture2D(texture, unit) {
+        if (typeof unit === "undefined") {
+            unit = this.boundTextures.indexOf(texture);
+        }
+        if (unit !== -1) {
+            delete this.boundTextures[unit];
+            if (unit === this.currentTextureUnit) {
+                this.currentTextureUnit = -1;
+            }
+        }
+        return unit;
+    }
+
+    /**
+     * @ignore
+     */
+    uploadTexture(texture, w, h, force = false) {
+        var unit = this.renderer.cache.getUnit(texture);
+        var texture2D = this.boundTextures[unit];
+
+        if (typeof texture2D === "undefined" || force) {
+            this.createTexture2D(
+                unit,
+                texture.getTexture(),
+                this.renderer.settings.antiAlias ? this.gl.LINEAR : this.gl.NEAREST,
+                texture.repeat,
+                w,
+                h,
+                texture.premultipliedAlpha
+            );
+        } else {
+            this.bindTexture2D(texture2D, unit);
+        }
+
+        return this.currentTextureUnit;
+    }
+
+    /**
+     * Add a textured quad
+     * @param {TextureAtlas} texture - Source texture atlas
+     * @param {number} x - Destination x-coordinate
+     * @param {number} y - Destination y-coordinate
+     * @param {number} w - Destination width
+     * @param {number} h - Destination height
+     * @param {number} u0 - Texture UV (u0) value.
+     * @param {number} v0 - Texture UV (v0) value.
+     * @param {number} u1 - Texture UV (u1) value.
+     * @param {number} v1 - Texture UV (v1) value.
+     * @param {number} tint - tint color to be applied to the texture in UINT32 (argb) format
+     */
+    addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint) {
+        var vertexData = this.vertexData;
+
+        if (vertexData.isFull(6)) {
+            // is the vertex buffer full if we add 6 more vertices
+            this.flush();
+        }
+
+        // upload and activate the texture if necessary
+        var unit = this.uploadTexture(texture);
+
+        // set fragment sampler accordingly
+        this.currentShader.setUniform("uSampler", unit);
+
+        // Transform vertices
+        var m = this.viewMatrix,
+            vec0 = V_ARRAY[0].set(x, y),
+            vec1 = V_ARRAY[1].set(x + w, y),
+            vec2 = V_ARRAY[2].set(x, y + h),
+            vec3 = V_ARRAY[3].set(x + w, y + h);
+
+        if (!m.isIdentity()) {
+            m.apply(vec0);
+            m.apply(vec1);
+            m.apply(vec2);
+            m.apply(vec3);
+        }
+
+        vertexData.push(vec0.x, vec0.y, u0, v0, tint);
+        vertexData.push(vec1.x, vec1.y, u1, v0, tint);
+        vertexData.push(vec2.x, vec2.y, u0, v1, tint);
+        vertexData.push(vec2.x, vec2.y, u0, v1, tint);
+        vertexData.push(vec1.x, vec1.y, u1, v0, tint);
+        vertexData.push(vec3.x, vec3.y, u1, v1, tint);
+    }
+}
+
+/**
+ * @classdesc
+ * a WebGL renderer object
+ * @augments Renderer
+ */
+ class WebGLRenderer extends Renderer {
+    /**
+     * @param {object} options - The renderer parameters
+     * @param {number} options.width - The width of the canvas without scaling
+     * @param {number} options.height - The height of the canvas without scaling
+     * @param {HTMLCanvasElement} [options.canvas] - The html canvas to draw to on screen
+     * @param {boolean} [options.antiAlias=false] - Whether to enable anti-aliasing
+     * @param {boolean} [options.failIfMajorPerformanceCaveat=true] - If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
+     * @param {boolean} [options.transparent=false] - Whether to enable transparency on the canvas
+     * @param {boolean} [options.premultipliedAlpha=true] - in WebGL, whether the renderer will assume that colors have premultiplied alpha when canvas transparency is enabled
+     * @param {boolean} [options.subPixel=false] - Whether to enable subpixel renderering (performance hit when enabled)
+     * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
+     * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
+     * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
+     * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
+     * @param {Compositor} [options.compositor] - A class that implements the compositor API for sprite rendering
+     */
+    constructor(options) {
+        // parent contructor
+        super(options);
+
+        /**
+         * The WebGL version used by this renderer (1 or 2)
+         * @type {number}
+         * @default 1
+         * @readonly
+         */
+        this.WebGLVersion = 1;
+
+        /**
+         * The vendor string of the underlying graphics driver.
+         * @type {string}
+         * @default null
+         * @readonly
+         */
+        this.GPUVendor = null;
+
+        /**
+         * The renderer string of the underlying graphics driver.
+         * @type {string}
+         * @default null
+         * @readonly
+         */
+        this.GPURenderer = null;
+
+        /**
+         * The WebGL context
+         * @name gl
+         * @type {WebGLRenderingContext}
+         */
+        this.context = this.gl = this.getContextGL(this.getCanvas(), options.transparent);
+
+        /**
+         * the vertex buffer used by this WebGL Renderer
+         * @type {WebGLBuffer}
+         */
+        this.vertexBuffer = this.gl.createBuffer();
+
+        /**
+         * Maximum number of texture unit supported under the current context
+         * @type {number}
+         * @readonly
+         */
+        this.maxTextures = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
+
+        /**
+         * @ignore
+         */
+        this._colorStack = [];
+
+        /**
+         * @ignore
+         */
+        this._matrixStack = [];
+
+        /**
+         * @ignore
+         */
+        this._scissorStack = [];
+
+        /**
+         * @ignore
+         */
+        this._blendStack = [];
+
+        /**
+         * The current transformation matrix used for transformations on the overall scene
+         * @type {Matrix2d}
+         */
+        this.currentTransform = new Matrix2d();
+
+        /**
+         * The current compositor used by the renderer
+         * @type {WebGLCompositor}
+         */
+        this.currentCompositor = null;
+
+        /**
+         * a reference to the current shader program used by the renderer
+         * @type {WebGLProgram}
+         */
+        this.currentProgram = null;
+
+        /**
+         * The list of active compositors
+         * @type {Map<WebGLCompositor>}
+         */
+        this.compositors = new Map();
+
+        // bind the vertex buffer
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
+
+        // Create both quad and primitive compositor
+        this.addCompositor(new (this.settings.compositor || QuadCompositor)(this), "quad", true);
+        this.addCompositor(new (this.settings.compositor || PrimitiveCompositor)(this), "primitive");
+
+
+        // default WebGL state(s)
+        this.gl.disable(this.gl.DEPTH_TEST);
+        this.gl.disable(this.gl.SCISSOR_TEST);
+        this.gl.enable(this.gl.BLEND);
+
+        // set default mode
+        this.setBlendMode(this.settings.blendMode);
+
+        // get GPU vendor and renderer
+        var debugInfo = this.gl.getExtension("WEBGL_debug_renderer_info");
+        if (debugInfo !== null) {
+            this.GPUVendor = this.gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+            this.GPURenderer = this.gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+        }
+
+        // Create a texture cache
+        this.cache = new TextureCache(this.maxTextures);
+
+        // set the renderer type
+        this.type =  "WebGL" + this.WebGLVersion;
+
+        // to simulate context lost and restore in WebGL:
+        // var ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');
+        // ctx.loseContext()
+        this.getCanvas().addEventListener("webglcontextlost", (e) => {
+            e.preventDefault();
+            this.isContextValid = false;
+            emit(ONCONTEXT_LOST, this);
+        }, false );
+        // ctx.restoreContext()
+        this.getCanvas().addEventListener("webglcontextrestored", () => {
+            this.reset();
+            this.isContextValid = true;
+            emit(ONCONTEXT_RESTORED, this);
+        }, false );
+
+        // reset the renderer on game reset
+        on(GAME_RESET, () => {
+            this.reset();
+        });
+    }
+
+    /**
+     * Reset context state
+     */
+    reset() {
+        super.reset();
+
+        // clear gl context
+        this.clear();
+
+        // rebind the vertex buffer if required (e.g in case of context loss)
+        if (this.gl.getParameter(this.gl.ARRAY_BUFFER_BINDING) !== this.vertexBuffer) {
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
+        }
+
+        this.currentCompositor = null;
+        this.currentProgram = null;
+
+        this.compositors.forEach((compositor) => {
+            if (this.isContextValid === false) {
+                // on context lost/restore
+                compositor.init(this);
+            } else {
+                compositor.reset();
+            }
+        });
+
+        this.setCompositor("quad");
+
+        this.gl.disable(this.gl.SCISSOR_TEST);
+    }
+
+    /**
+     * add a new compositor to this renderer
+     * @param {Compositor} compositor - a compositor instance
+     * @param {String} name - a name uniquely identifying this compositor
+     * @param {Boolean} [activate=false] - true if the given compositor should be set as the active one
+     */
+    addCompositor(compositor, name = "default", activate = false) {
+        // make sure there is no existing compositor with the same name
+        if (typeof this.compositors.get(name) !== "undefined") {
+            throw new Error("Invalid Compositor name");
+        }
+
+        // add the new compositor
+        this.compositors.set(name, compositor);
+
+        if (activate === true) {
+            // set as active one
+            this.setCompositor(name);
+        }
+    }
+
+    /**
+     * set the active compositor for this renderer
+     * @param {String} name - a compositor name
+     * @param {GLShader} [shader] - an optional shader program to be used, instead of the default one, when activating the compositor
+     * @return {Compositor} an instance to the current active compositor
+     */
+    setCompositor(name = "default", shader) {
+        let compositor = this.compositors.get(name);
+
+        if (typeof compositor === "undefined") {
+            throw new Error("Invalid Compositor");
+        }
+
+        if (this.currentCompositor !== compositor) {
+            if (this.currentCompositor !== null) {
+                // flush the current compositor
+                this.currentCompositor.flush();
+            }
+            // set as the active one
+            this.currentCompositor = compositor;
+        }
+
+        if (typeof shader === "object") {
+            this.currentCompositor.useShader(shader);
+        } else  {
+            // (re)bind the compositor with the default shader (program & attributes)
+            this.currentCompositor.bind();
+        }
+
+        return this.currentCompositor;
+    }
+
+    /**
+     * Reset the gl transform to identity
+     */
+    resetTransform() {
+        this.currentTransform.identity();
+    }
+
+    /**
+     * Create a pattern with the specified repetition
+     * @param {Image} image - Source image
+     * @param {string} repeat - Define how the pattern should be repeated
+     * @returns {TextureAtlas}
+     * @see ImageLayer#repeat
+     * @example
+     * var tileable   = renderer.createPattern(image, "repeat");
+     * var horizontal = renderer.createPattern(image, "repeat-x");
+     * var vertical   = renderer.createPattern(image, "repeat-y");
+     * var basic      = renderer.createPattern(image, "no-repeat");
+     */
+    createPattern(image, repeat) {
+
+        this.setCompositor("quad");
+
+        if (renderer.WebGLVersion === 1 && (!isPowerOfTwo(image.width) || !isPowerOfTwo(image.height))) {
+            var src = typeof image.src !== "undefined" ? image.src : image;
+            throw new Error(
+                "[WebGL Renderer] " + src + " is not a POT texture " +
+                "(" + image.width + "x" + image.height + ")"
+            );
+        }
+
+        var texture = new TextureAtlas(createAtlas(image.width, image.height, "pattern", repeat), image);
+
+        // FIXME: Remove old cache entry and texture when changing the repeat mode
+        this.currentCompositor.uploadTexture(texture);
+
+        return texture;
+    }
+
+    /**
+     * Flush the compositor to the frame buffer
+     */
+    flush() {
+        this.currentCompositor.flush();
+    }
+
+    /**
+     * set/change the current projection matrix (WebGL only)
+     * @param {Matrix3d} matrix
+     */
+    setProjection(matrix) {
+        super.setProjection(matrix);
+        this.currentCompositor.setProjection(matrix);
+    }
+
+    /**
+     * Clear the frame buffer
+     */
+    clear() {
+        var gl = this.gl;
+        gl.clearColor(0, 0, 0, this.settings.transparent ? 0.0 : 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+    }
+
+    /**
+     * Clears the gl context with the given color.
+     * @param {Color|string} [color="#000000"] - CSS color.
+     * @param {boolean} [opaque=false] - Allow transparency [default] or clear the surface completely [true]
+     */
+    clearColor(color = "#000000", opaque = false) {
+        var glArray;
+        var gl = this.gl;
+
+        if (color instanceof Color) {
+            glArray = color.toArray();
+        } else {
+            var _color = pool.pull("me.Color");
+            // reuse temporary the renderer default color object
+            glArray = _color.parseCSS(color).toArray();
+            pool.push(_color);
+        }
+
+        // clear gl context with the specified color
+        gl.clearColor(glArray[0], glArray[1], glArray[2], (opaque === true) ? 1.0 : glArray[3]);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+    }
+
+    /**
+     * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
+     * @param {number} x - x axis of the coordinate for the rectangle starting point.
+     * @param {number} y - y axis of the coordinate for the rectangle starting point.
+     * @param {number} width - The rectangle's width.
+     * @param {number} height - The rectangle's height.
+     */
+    clearRect(x, y, width, height) {
+        this.save();
+        this.clipRect(x, y, width, height);
+        this.clearColor();
+        this.restore();
+    }
+
+    /**
+     * Draw an image to the gl context
+     * @param {Image} image - An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
+     * @param {number} sx - The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
+     * @param {number} sy - The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
+     * @param {number} sw - The width of the sub-rectangle of the source image to draw into the destination context. If not specified, the entire rectangle from the coordinates specified by sx and sy to the bottom-right corner of the image is used.
+     * @param {number} sh - The height of the sub-rectangle of the source image to draw into the destination context.
+     * @param {number} dx - The X coordinate in the destination canvas at which to place the top-left corner of the source image.
+     * @param {number} dy - The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
+     * @param {number} dw - The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
+     * @param {number} dh - The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
+     * @example
+     * // Position the image on the canvas:
+     * renderer.drawImage(image, dx, dy);
+     * // Position the image on the canvas, and specify width and height of the image:
+     * renderer.drawImage(image, dx, dy, dWidth, dHeight);
+     * // Clip the image and position the clipped part on the canvas:
+     * renderer.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+     */
+    drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh) {
+        if (typeof sw === "undefined") {
+            sw = dw = image.width;
+            sh = dh = image.height;
+            dx = sx;
+            dy = sy;
+            sx = 0;
+            sy = 0;
+        }
+        else if (typeof dx === "undefined") {
+            dx = sx;
+            dy = sy;
+            dw = sw;
+            dh = sh;
+            sw = image.width;
+            sh = image.height;
+            sx = 0;
+            sy = 0;
+        }
+
+        if (this.settings.subPixel === false) {
+            // clamp to pixel grid
+            dx |= 0;
+            dy |= 0;
+        }
+
+        this.setCompositor("quad");
+
+        var texture = this.cache.get(image);
+        var uvs = texture.getUVs(sx + "," + sy + "," + sw + "," + sh);
+        this.currentCompositor.addQuad(texture, dx, dy, dw, dh, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()));
+    }
+
+    /**
+     * Draw a pattern within the given rectangle.
+     * @param {TextureAtlas} pattern - Pattern object
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     * @see WebGLRenderer#createPattern
+     */
+    drawPattern(pattern, x, y, width, height) {
+        var uvs = pattern.getUVs("0,0," + width + "," + height);
+        this.setCompositor("quad");
+        this.currentCompositor.addQuad(pattern, x, y, width, height, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()));
+    }
+
+    /**
+     * Returns the WebGL Context object of the given canvas element
+     * @param {HTMLCanvasElement} canvas
+     * @param {boolean} [transparent=false] - use true to enable transparency
+     * @returns {WebGLRenderingContext}
+     */
+    getContextGL(canvas, transparent = false) {
+        if (typeof canvas === "undefined" || canvas === null) {
+            throw new Error(
+                "You must pass a canvas element in order to create " +
+                "a GL context"
+            );
+        }
+
+        var attr = {
+            alpha : transparent,
+            antialias : this.settings.antiAlias,
+            depth : false,
+            stencil: true,
+            preserveDrawingBuffer : false,
+            premultipliedAlpha: transparent ? this.settings.premultipliedAlpha : false,
+            powerPreference: this.settings.powerPreference,
+            failIfMajorPerformanceCaveat : this.settings.failIfMajorPerformanceCaveat
+        };
+
+        var gl;
+
+        // attempt to create a WebGL2 context if requested
+        if (this.settings.preferWebGL1 === false) {
+            gl = canvas.getContext("webgl2", attr);
+            if (gl) {
+                this.WebGLVersion = 2;
+            }
+        }
+
+        // fallback to WebGL1
+        if (!gl) {
+            this.WebGLVersion = 1;
+            gl = canvas.getContext("webgl", attr) || canvas.getContext("experimental-webgl", attr);
+        }
+
+        if (!gl) {
+            throw new Error(
+                "A WebGL context could not be created."
+            );
+        }
+
+        return gl;
+    }
+
+    /**
+     * Returns the WebGLContext instance for the renderer
+     * return a reference to the system 2d Context
+     * @returns {WebGLRenderingContext}
+     */
+    getContext() {
+        return this.gl;
+    }
+
+    /**
+     * set a blend mode for the given context. <br>
+     * Supported blend mode between Canvas and WebGL remderer : <br>
+     * - "normal" : this is the default mode and draws new content on top of the existing content <br>
+     * <img src="images/normal-blendmode.png" width="510"/> <br>
+     * - "multiply" : the pixels of the top layer are multiplied with the corresponding pixel of the bottom layer. A darker picture is the result. <br>
+     * <img src="images/multiply-blendmode.png" width="510"/> <br>
+     * - "additive or lighter" : where both content overlap the color is determined by adding color values. <br>
+     * <img src="images/lighter-blendmode.png" width="510"/> <br>
+     * - "screen" : The pixels are inverted, multiplied, and inverted again. A lighter picture is the result (opposite of multiply) <br>
+     * <img src="images/screen-blendmode.png" width="510"/> <br>
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
+     * @param {string} [mode="normal"] - blend mode : "normal", "multiply", "lighter", "additive", "screen"
+     * @param {WebGLRenderingContext} [gl]
+     */
+    setBlendMode(mode = "normal", gl = this.gl) {
+
+        if (this.currentBlendMode !== mode) {
+            this.flush();
+            gl.enable(gl.BLEND);
+            this.currentBlendMode = mode;
+
+            switch (mode) {
+                case "screen" :
+                    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
+                    break;
+
+                case "lighter" :
+                case "additive" :
+                    gl.blendFunc(gl.ONE, gl.ONE);
+                    break;
+
+                case "multiply" :
+                    gl.blendFunc(gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA);
+                    break;
+
+                default :
+                    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+                    this.currentBlendMode = "normal";
+                    break;
+            }
+        }
+    }
+
+    /**
+     * restores the canvas context
+     */
+    restore() {
+        // do nothing if there is no saved states
+        if (this._matrixStack.length !== 0) {
+            var color = this._colorStack.pop();
+            var matrix = this._matrixStack.pop();
+
+            // restore the previous context
+            this.currentColor.copy(color);
+            this.currentTransform.copy(matrix);
+
+            this.setBlendMode(this._blendStack.pop());
+
+            // recycle objects
+            pool.push(color);
+            pool.push(matrix);
+        }
+
+        if (this._scissorStack.length !== 0) {
+            // FIXME : prevent `scissor` object realloc and GC
+            this.currentScissor.set(this._scissorStack.pop());
+        } else {
+            // turn off scissor test
+            this.gl.disable(this.gl.SCISSOR_TEST);
+            this.currentScissor[0] = 0;
+            this.currentScissor[1] = 0;
+            this.currentScissor[2] = this.getCanvas().width;
+            this.currentScissor[3] = this.getCanvas().height;
+        }
+    }
+
+    /**
+     * saves the canvas context
+     */
+    save() {
+        this._colorStack.push(this.currentColor.clone());
+        this._matrixStack.push(this.currentTransform.clone());
+
+        if (this.gl.isEnabled(this.gl.SCISSOR_TEST)) {
+            // FIXME avoid slice and object realloc
+            this._scissorStack.push(this.currentScissor.slice());
+        }
+
+        this._blendStack.push(this.getBlendMode());
+    }
+
+    /**
+     * rotates the uniform matrix
+     * @param {number} angle - in radians
+     */
+    rotate(angle) {
+        this.currentTransform.rotate(angle);
+    }
+
+    /**
+     * scales the uniform matrix
+     * @param {number} x
+     * @param {number} y
+     */
+    scale(x, y) {
+        this.currentTransform.scale(x, y);
+    }
+
+    /**
+     * not used by this renderer?
+     * @ignore
+     */
+    setAntiAlias(context, enable) {
+        super.setAntiAlias(context, enable);
+        // TODO: perhaps handle GLNEAREST or other options with texture binding
+    }
+
+    /**
+     * Set the global alpha
+     * @param {number} alpha - 0.0 to 1.0 values accepted.
+     */
+    setGlobalAlpha(alpha) {
+        this.currentColor.alpha = alpha;
+    }
+
+    /**
+     * Return the global alpha
+     * @returns {number} global alpha value
+     */
+    getGlobalAlpha() {
+        return this.currentColor.alpha;
+    }
+
+    /**
+     * Set the current fill & stroke style color.
+     * By default, or upon reset, the value is set to #000000.
+     * @param {Color|string} color - css color string.
+     */
+    setColor(color) {
+        var alpha = this.currentColor.alpha;
+        this.currentColor.copy(color);
+        this.currentColor.alpha *= alpha;
+    }
+
+    /**
+     * Set the line width
+     * @param {number} width - Line width
+     */
+    setLineWidth(width) {
+        this.getContext().lineWidth(width);
+    }
+
+    /**
+     * Stroke an arc at the specified coordinates with given radius, start and end points
+     * @param {number} x - arc center point x-axis
+     * @param {number} y - arc center point y-axis
+     * @param {number} radius
+     * @param {number} start - start angle in radians
+     * @param {number} end - end angle in radians
+     * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
+     * @param {boolean} [fill=false]
+     */
+    strokeArc(x, y, radius, start, end, antiClockwise = false, fill = false) {
+        this.setCompositor("primitive");
+        this.path2D.beginPath();
+        this.path2D.arc(x, y, radius, start, end, antiClockwise);
+        if (fill === false) {
+            this.currentCompositor.drawVertices(this.gl.LINE_STRIP, this.path2D.points);
+        } else {
+            this.path2D.closePath();
+            this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
+        }
+    }
+
+    /**
+     * Fill an arc at the specified coordinates with given radius, start and end points
+     * @param {number} x - arc center point x-axis
+     * @param {number} y - arc center point y-axis
+     * @param {number} radius
+     * @param {number} start - start angle in radians
+     * @param {number} end - end angle in radians
+     * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
+     */
+    fillArc(x, y, radius, start, end, antiClockwise = false) {
+        this.strokeArc(x, y, radius, start, end, antiClockwise, true);
+    }
+
+    /**
+     * Stroke an ellipse at the specified coordinates with given radius
+     * @param {number} x - ellipse center point x-axis
+     * @param {number} y - ellipse center point y-axis
+     * @param {number} w - horizontal radius of the ellipse
+     * @param {number} h - vertical radius of the ellipse
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
+     */
+    strokeEllipse(x, y, w, h, fill = false) {
+        this.setCompositor("primitive");
+        this.path2D.beginPath();
+        this.path2D.ellipse(x, y, w, h, 0, 0, 360);
+        this.path2D.closePath();
+        if (fill === false) {
+            this.currentCompositor.drawVertices(this.gl.LINE_STRIP, this.path2D.points);
+        } else {
+            this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
+        }
+    }
+
+    /**
+     * Fill an ellipse at the specified coordinates with given radius
+     * @param {number} x - ellipse center point x-axis
+     * @param {number} y - ellipse center point y-axis
+     * @param {number} w - horizontal radius of the ellipse
+     * @param {number} h - vertical radius of the ellipse
+     */
+    fillEllipse(x, y, w, h) {
+        this.strokeEllipse(x, y, w, h, false);
+    }
+
+    /**
+     * Stroke a line of the given two points
+     * @param {number} startX - the start x coordinate
+     * @param {number} startY - the start y coordinate
+     * @param {number} endX - the end x coordinate
+     * @param {number} endY - the end y coordinate
+     */
+    strokeLine(startX, startY, endX, endY) {
+        this.setCompositor("primitive");
+        this.path2D.beginPath();
+        this.path2D.moveTo(startX, startY);
+        this.path2D.lineTo(endX, endY);
+        this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+    }
+
+
+    /**
+     * Fill a line of the given two points
+     * @param {number} startX - the start x coordinate
+     * @param {number} startY - the start y coordinate
+     * @param {number} endX - the end x coordinate
+     * @param {number} endY - the end y coordinate
+     */
+    fillLine(startX, startY, endX, endY) {
+        this.strokeLine(startX, startY, endX, endY);
+    }
+
+    /**
+     * Stroke a me.Polygon on the screen with a specified color
+     * @param {Polygon} poly - the shape to draw
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
+     */
+    strokePolygon(poly, fill = false) {
+        this.setCompositor("primitive");
+        this.translate(poly.pos.x, poly.pos.y);
+        this.path2D.beginPath();
+
+        var points = poly.points;
+        for (var i = 1; i < points.length; i++) {
+            this.path2D.moveTo(points[i-1].x, points[i-1].y);
+            this.path2D.lineTo(points[i].x, points[i].y);
+        }
+        this.path2D.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+        this.path2D.closePath();
+        if (fill === false) {
+            this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+        } else {
+            // draw all triangles
+            this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
+        }
+        this.translate(-poly.pos.x, -poly.pos.y);
+    }
+
+    /**
+     * Fill a me.Polygon on the screen
+     * @param {Polygon} poly - the shape to draw
+     */
+    fillPolygon(poly) {
+        this.strokePolygon(poly, true);
+    }
+
+    /**
+     * Draw a stroke rectangle at the specified coordinates
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
+     */
+    strokeRect(x, y, width, height, fill = false) {
+        this.setCompositor("primitive");
+        this.path2D.beginPath();
+        this.path2D.rect(x, y, width, height);
+        if (fill === false) {
+            this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+        } else {
+            this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
+        }
+    }
+
+    /**
+     * Draw a filled rectangle at the specified coordinates
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     */
+    fillRect(x, y, width, height) {
+        this.strokeRect(x, y, width, height, true);
+    }
+
+    /**
+     * Stroke a rounded rectangle at the specified coordinates
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     * @param {number} radius
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
+     */
+    strokeRoundRect(x, y, width, height, radius, fill = false) {
+        this.setCompositor("primitive");
+        this.path2D.beginPath();
+        this.path2D.roundRect(x, y, width, height, radius);
+        if (fill === false) {
+            this.currentCompositor.drawVertices(this.gl.LINE_STRIP, this.path2D.points);
+        } else {
+            this.path2D.closePath();
+            this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
+        }
+    }
+
+    /**
+     * Draw a rounded filled rectangle at the specified coordinates
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     * @param {number} radius
+     */
+    fillRoundRect(x, y, width, height, radius) {
+        this.strokeRoundRect(x, y, width, height, radius, true);
+    }
+
+    /**
+     * Stroke a Point at the specified coordinates
+     * @param {number} x
+     * @param {number} y
+     */
+    strokePoint(x, y) {
+        this.strokeLine(x, y, x + 1, y + 1);
+    }
+
+    /**
+     * Draw a a point at the specified coordinates
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     */
+    fillPoint(x, y) {
+        this.strokePoint(x, y);
+    }
+
+    /**
+     * Reset (overrides) the renderer transformation matrix to the
+     * identity one, and then apply the given transformation matrix.
+     * @param {Matrix2d} mat2d - Matrix to transform by
+     */
+    setTransform(mat2d) {
+        this.resetTransform();
+        this.transform(mat2d);
+    }
+
+    /**
+     * Multiply given matrix into the renderer tranformation matrix
+     * @param {Matrix2d} mat2d - Matrix to transform by
+     */
+    transform(mat2d) {
+        var currentTransform = this.currentTransform;
+        currentTransform.multiply(mat2d);
+        if (this.settings.subPixel === false) {
+            // snap position values to pixel grid
+            var a = currentTransform.toArray();
+            a[6] |= 0;
+            a[7] |= 0;
+        }
+    }
+
+    /**
+     * Translates the uniform matrix by the given coordinates
+     * @param {number} x
+     * @param {number} y
+     */
+    translate(x, y) {
+        var currentTransform = this.currentTransform;
+        currentTransform.translate(x, y);
+        if (this.settings.subPixel === false) {
+            // snap position values to pixel grid
+            var a = currentTransform.toArray();
+            a[6] |= 0;
+            a[7] |= 0;
+        }
+    }
+
+    /**
+     * clip the given region from the original canvas. Once a region is clipped,
+     * all future drawing will be limited to the clipped region.
+     * You can however save the current region using the save(),
+     * and restore it (with the restore() method) any time in the future.
+     * (<u>this is an experimental feature !</u>)
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     */
+    clipRect(x, y, width, height) {
+        var canvas = this.getCanvas();
+        var gl = this.gl;
+        // if requested box is different from the current canvas size
+        if (x !== 0 || y !== 0 || width !== canvas.width || height !== canvas.height) {
+            var currentScissor = this.currentScissor;
+            if (gl.isEnabled(gl.SCISSOR_TEST)) {
+                // if same as the current scissor box do nothing
+                if (currentScissor[0] === x && currentScissor[1] === y &&
+                    currentScissor[2] === width && currentScissor[3] === height) {
+                        return;
+                }
+            }
+            // flush the compositor
+            this.flush();
+            // turn on scissor test
+            gl.enable(this.gl.SCISSOR_TEST);
+            // set the scissor rectangle (note : coordinates are left/bottom)
+            gl.scissor(
+                // scissor does not account for currentTransform, so manually adjust
+                x + this.currentTransform.tx,
+                canvas.height -height -y -this.currentTransform.ty,
+                width,
+                height
+            );
+            // save the new currentScissor box
+            currentScissor[0] = x;
+            currentScissor[1] = y;
+            currentScissor[2] = width;
+            currentScissor[3] = height;
+        } else {
+            // turn off scissor test
+            gl.disable(gl.SCISSOR_TEST);
+        }
+    }
+
+    /**
+     * A mask limits rendering elements to the shape and position of the given mask object.
+     * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
+     * Mask are not preserved through renderer context save and restore.
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - a shape defining the mask to be applied
+     * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
+     */
+    setMask(mask, invert = false) {
+        var gl = this.gl;
+
+        // flush the compositor
+        this.flush();
+
+        if (this.maskLevel === 0) {
+            // Enable and setup GL state to write to stencil buffer
+            gl.enable(gl.STENCIL_TEST);
+            gl.clear(gl.STENCIL_BUFFER_BIT);
+        }
+
+        this.maskLevel++;
+
+        gl.colorMask(false, false, false, false);
+        gl.stencilFunc(gl.EQUAL, this.maskLevel, 1);
+        gl.stencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE);
+
+
+        // fill the given mask shape
+        this.fill(mask);
+
+        // flush the compositor
+        this.flush();
+
+        gl.colorMask(true, true, true, true);
+
+        // Use stencil buffer to affect next rendering object
+        if (invert === true) {
+            gl.stencilFunc(gl.EQUAL, this.maskLevel + 1, 1);
+        } else {
+            gl.stencilFunc(gl.NOTEQUAL, this.maskLevel + 1, 1);
+        }
+        gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+    }
+
+    /**
+     * disable (remove) the rendering mask set through setMask.
+     * @see WebGLRenderer#setMask
+     */
+    clearMask() {
+        if (this.maskLevel > 0) {
+            // flush the compositor
+            this.flush();
+            this.maskLevel = 0;
+            this.gl.disable(this.gl.STENCIL_TEST);
+        }
+    }
+}
+
 // default canvas settings
 var defaultAttributes = {
     offscreenCanvas : false,
@@ -33393,13 +33328,11 @@ class CanvasTexture {
  * apply the current text style to the given context
  * @ignore
  */
-function setContextStyle(context, style, stroke = false) {
+function setContextStyle(context, style) {
     context.font = style.font;
     context.fillStyle = style.fillStyle.toRGBA();
-    if (stroke === true) {
-        context.strokeStyle = style.strokeStyle.toRGBA();
-        context.lineWidth = style.lineWidth;
-    }
+    context.strokeStyle = style.strokeStyle.toRGBA();
+    context.lineWidth = style.lineWidth;
     context.textAlign = style.textAlign;
     context.textBaseline = style.textBaseline;
 }
@@ -33416,18 +33349,6 @@ function setContextStyle(context, style, stroke = false) {
 const runits = ["ex", "em", "pt", "px"];
 const toPX = [12, 24, 0.75, 1];
 
-// return a valid 2d context for Text rendering/styling
-var getContext2d = function (renderer$1, text) {
-    if (text.offScreenCanvas === true) {
-        return text.canvasTexture.context;
-    } else {
-        if (typeof renderer$1 === "undefined") {
-            renderer$1 = renderer;
-        }
-        return renderer$1.getFontContext();
-    }
-};
-
 /**
  * @classdesc
  * a generic system font object.
@@ -33442,12 +33363,11 @@ var getContext2d = function (renderer$1, text) {
      * @param {number|string} settings.size - size, or size + suffix (px, em, pt)
      * @param {Color|string} [settings.fillStyle="#000000"] - a CSS color value
      * @param {Color|string} [settings.strokeStyle="#000000"] - a CSS color value
-     * @param {number} [settings.lineWidth=1] - line width, in pixels, when drawing stroke
+     * @param {number} [settings.lineWidth=0] - line width, in pixels, when drawing stroke
      * @param {string} [settings.textAlign="left"] - horizontal text alignment
      * @param {string} [settings.textBaseline="top"] - the text baseline
      * @param {number} [settings.lineHeight=1.0] - line spacing height
      * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] - anchor point to draw the text at
-     * @param {boolean} [settings.offScreenCanvas=false] - whether to draw the font to an individual "cache" texture first
      * @param {number} [settings.wordWrapWidth] - the maximum length in CSS pixel for a single segment of text
      * @param {(string|string[])} [settings.text=""] - a string, or an array of strings
      * @example
@@ -33502,9 +33422,9 @@ var getContext2d = function (renderer$1, text) {
          * sets the current line width, in pixels, when drawing stroke
          * @public
          * @type {number}
-         * @default 1
+         * @default 0
          */
-        this.lineWidth = settings.lineWidth || 1;
+        this.lineWidth = settings.lineWidth || 0;
 
         /**
          * Set the default text alignment (or justification),<br>
@@ -33532,16 +33452,6 @@ var getContext2d = function (renderer$1, text) {
          * @default 1.0
          */
         this.lineHeight = settings.lineHeight || 1.0;
-
-        /**
-         * whether to draw the font to a indidividual offscreen canvas texture first <br>
-         * Note: this will improve performances when using WebGL, but will impact
-         * memory consumption as every text element will have its own canvas texture
-         * @public
-         * @type {boolean}
-         * @default false
-         */
-        this.offScreenCanvas = false;
 
         /**
          * the maximum length in CSS pixel for a single segment of text.
@@ -33589,10 +33499,8 @@ var getContext2d = function (renderer$1, text) {
             this.italic();
         }
 
-        if (settings.offScreenCanvas === true) {
-            this.offScreenCanvas = true;
-            this.canvasTexture = pool.pull("CanvasTexture", 2, 2, { offscreenCanvas: true });
-        }
+        // the canvas Texture used to render this text
+        this.canvasTexture = pool.pull("CanvasTexture", 2, 2, { offscreenCanvas: true });
 
         // instance to text metrics functions
         this.metrics = new TextMetrics(this);
@@ -33681,37 +33589,37 @@ var getContext2d = function (renderer$1, text) {
 
         // word wrap if necessary
         if (this._text.length > 0 && this.wordWrapWidth > 0) {
-            this._text = this.metrics.wordWrap(this._text, this.wordWrapWidth, getContext2d(renderer, this));
+            this._text = this.metrics.wordWrap(this._text, this.wordWrapWidth, this.canvasTexture.context);
         }
 
         // calculcate the text size and update the bounds accordingly
-        bounds.addBounds(this.metrics.measureText(this._text, getContext2d(renderer, this)), true);
+        bounds.addBounds(this.metrics.measureText(this._text, this.canvasTexture.context), true);
 
         // update the offScreenCanvas texture if required
-        if (this.offScreenCanvas === true) {
-            var width = Math.ceil(this.metrics.width),
-                height = Math.ceil(this.metrics.height);
+        var width = Math.ceil(this.metrics.width),
+            height = Math.ceil(this.metrics.height);
 
-            if (renderer instanceof WebGLRenderer) {
-                // invalidate the previous corresponding texture so that it can reuploaded once changed
-                this.glTextureUnit = renderer.cache.getUnit(renderer.cache.get(this.canvasTexture.canvas));
-                renderer.currentCompositor.unbindTexture2D(null, this.glTextureUnit);
+        if (typeof renderer.gl !== "undefined") {
+            // make sure the right compositor is active
+            renderer.setCompositor("quad");
+            // invalidate the previous corresponding texture so that it can reuploaded once changed
+            this.glTextureUnit = renderer.cache.getUnit(renderer.cache.get(this.canvasTexture.canvas));
+            renderer.currentCompositor.unbindTexture2D(null, this.glTextureUnit);
 
-                if (renderer.WebGLVersion === 1) {
-                    // round size to next Pow2
-                    width = nextPowerOfTwo(this.metrics.width);
-                    height = nextPowerOfTwo(this.metrics.height);
-                }
+            if (renderer.WebGLVersion === 1) {
+                // round size to next Pow2
+                width = nextPowerOfTwo(this.metrics.width);
+                height = nextPowerOfTwo(this.metrics.height);
             }
-
-            // resize the cache canvas if necessary
-            if (this.canvasTexture.width < width || this.canvasTexture.height < height) {
-                this.canvasTexture.resize(width, height);
-            }
-
-            this.canvasTexture.clear();
-            this._drawFont(this.canvasTexture.context, this._text,  this.pos.x - this.metrics.x, this.pos.y - this.metrics.y, false);
         }
+
+        // resize the cache canvas if necessary
+        if (this.canvasTexture.width < width || this.canvasTexture.height < height) {
+            this.canvasTexture.resize(width, height);
+        }
+
+        this.canvasTexture.clear();
+        this._drawFont(this.canvasTexture.context, this._text,  this.pos.x - this.metrics.x, this.pos.y - this.metrics.y);
 
         this.isDirty = true;
 
@@ -33725,7 +33633,7 @@ var getContext2d = function (renderer$1, text) {
      * @returns {TextMetrics} a TextMetrics object defining the dimensions of the given piece of text
      */
     measureText(renderer, text = this._text) {
-        return this.metrics.measureText(text, getContext2d(renderer, this));
+        return this.metrics.measureText(text, this.canvasTexture.context);
     }
 
 
@@ -33735,9 +33643,8 @@ var getContext2d = function (renderer$1, text) {
      * @param {string} [text]
      * @param {number} [x]
      * @param {number} [y]
-     * @param {boolean} [stroke=false] - draw stroke the the text if true
      */
-    draw(renderer, text, x = this.pos.x, y = this.pos.y, stroke = false) {
+    draw(renderer, text, x = this.pos.x, y = this.pos.y) {
         // "hacky patch" for backward compatibilty
         if (typeof this.ancestor === "undefined") {
 
@@ -33751,20 +33658,17 @@ var getContext2d = function (renderer$1, text) {
             // update text cache
             this.setText(text);
 
-            x = this.metrics.x;
-            y = this.metrics.y;
-
             // save the previous context
             renderer.save();
 
             // apply the defined alpha value
             renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
-        } else {
-             // added directly to an object container
-            x = this.pos.x;
-            y = this.pos.y;
         }
+
+        // adjust x,y position based on the bounding box
+        x = this.metrics.x;
+        y = this.metrics.y;
 
         // clamp to pixel grid if required
         if (renderer.settings.subPixel === false) {
@@ -33773,12 +33677,7 @@ var getContext2d = function (renderer$1, text) {
         }
 
         // draw the text
-        if (this.offScreenCanvas === true) {
-            renderer.drawImage(this.canvasTexture.canvas, x, y);
-        } else {
-            renderer.drawFont(this._drawFont(renderer.getFontContext(), this._text, x, y, stroke));
-        }
-
+        renderer.drawImage(this.canvasTexture.canvas, x, y);
 
         // for backward compatibilty
         if (typeof this.ancestor === "undefined") {
@@ -33788,28 +33687,33 @@ var getContext2d = function (renderer$1, text) {
     }
 
     /**
-     * draw a stroke text at the specified coord, as defined <br>
-     * by the `lineWidth` and `fillStroke` properties. <br>
-     * Note : using drawStroke is not recommended for performance reasons
+     * draw a stroke text at the specified coord, as defined by the `lineWidth` and `fillStroke` properties.
+     * @deprecated since 15.0.0
      * @param {CanvasRenderer|WebGLRenderer} renderer - Reference to the destination renderer instance
      * @param {string} text
      * @param {number} x
      * @param {number} y
      */
     drawStroke(renderer, text, x, y) {
-        this.draw(renderer, text, x, y, true);
+        this.draw(renderer, text, x, y);
     }
 
     /**
      * @ignore
      */
-    _drawFont(context, text, x, y, stroke = false) {
-        setContextStyle(context, this, stroke);
+    _drawFont(context, text, x, y) {
+        setContextStyle(context, this);
 
         for (var i = 0; i < text.length; i++) {
             var string = text[i].trimEnd();
             // draw the string
-            context[stroke ? "strokeText" : "fillText"](string, x, y);
+            if (this.fillStyle.alpha > 0) {
+                context.fillText(string, x, y);
+            }
+            // stroke the text
+            if (this.lineWidth > 0 && this.strokeStyle.alpha > 0) {
+                context.strokeText(string, x, y);
+            }
             // add leading space
             y += this.metrics.lineHeight();
         }
@@ -33821,15 +33725,15 @@ var getContext2d = function (renderer$1, text) {
      * @ignore
      */
     destroy() {
-        if (this.offScreenCanvas === true) {
-            if (renderer instanceof WebGLRenderer) {
-                renderer.currentCompositor.deleteTexture2D(renderer.currentCompositor.getTexture2D(this.glTextureUnit));
-                this.glTextureUnit = undefined;
-            }
-            renderer.cache.delete(this.canvasTexture.canvas);
-            pool.push(this.canvasTexture);
-            this.canvasTexture = undefined;
+        if (typeof renderer.gl !== "undefined") {
+            // make sure the right compositor is active
+            renderer.setCompositor("quad");
+            renderer.currentCompositor.deleteTexture2D(renderer.currentCompositor.getTexture2D(this.glTextureUnit));
+            this.glTextureUnit = undefined;
         }
+        renderer.cache.delete(this.canvasTexture.canvas);
+        pool.push(this.canvasTexture);
+        this.canvasTexture = undefined;
         pool.push(this.fillStyle);
         pool.push(this.strokeStyle);
         this.fillStyle = this.strokeStyle = undefined;
@@ -34435,7 +34339,6 @@ var getContext2d = function (renderer$1, text) {
      * @param {string} [settings.backgroundColor] - The css value of a background color
      * @param {string} [settings.hoverColor] - The css value of a color to be used if the pointer hovers over the button
      * @param {string} [settings.borderStrokeColor] - The css value of a color to be used to draw the border
-     * @param {boolean} [settings.offScreenCanvas] - Weather to use an offScreen canvas or not
      * @param {string} [settings.fillStyle] - The css value of a tint color to be used to tint the text
      * @param {number} [settings.borderWidth] - Width of the button
      * @param {number} [settings.borderHeight] - Height of the button
@@ -34468,7 +34371,6 @@ var getContext2d = function (renderer$1, text) {
         settings.backgroundColor = settings.backgroundColor || "#00aa00";
         settings.hoverColor = settings.hoverColor || "#00ff00";
         settings.borderStrokeColor = settings.borderStrokeColor || "#000000";
-        settings.offScreenCanvas = settings.offScreenCanvas || false;
         settings.fillStyle = settings.fillStyle || "#ffffff";
         settings.lineWidth = settings.lineWidth || 1;
         settings.anchorPoint = settings.anchorPoint || new Vector2d(0, 0);

@@ -6,8 +6,6 @@
  * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 import Vector2d from '../../math/vector2.js';
-import WebGLRenderer from '../webgl/webgl_renderer.js';
-import TextureCache from './cache.js';
 import Sprite from '../../renderable/sprite.js';
 import { renderer } from '../video.js';
 import pool from '../../system/pooling.js';
@@ -166,11 +164,7 @@ class TextureAtlas {
         // Add self to TextureCache if cache !== false
         if (cache !== false) {
             this.sources.forEach((source) => {
-                if (cache instanceof TextureCache) {
-                    cache.set(source, this);
-                } else {
-                    renderer.cache.set(source, this);
-                }
+                renderer.cache.set(source, this);
             });
         }
     }
@@ -395,7 +389,7 @@ class TextureAtlas {
      */
     addUVs(atlas, name, w, h) {
         // ignore if using the Canvas Renderer
-        if (renderer instanceof WebGLRenderer) {
+        if (typeof renderer.gl !== "undefined") {
             // Source coordinates
             var s = atlas[name].offset;
             var sw = atlas[name].width;

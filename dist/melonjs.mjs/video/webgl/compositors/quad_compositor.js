@@ -6,8 +6,6 @@
  * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 import Vector2d from '../../../math/vector2.js';
-import GLShader from '../glshader.js';
-import VertexArrayBuffer from '../buffer/vertex.js';
 import { isPowerOfTwo } from '../../../math/math.js';
 import quadVertex from '../shaders/quad.vert.js';
 import quadFragment from '../shaders/quad.frag.js';
@@ -34,25 +32,20 @@ var V_ARRAY = [
      * @ignore
      */
     init (renderer) {
-        super.init(renderer);
+        super.init(renderer, {
+            attributes: [
+                {name: "aVertex", size: 2, type: renderer.gl.FLOAT, normalized: false, offset: 0 * Float32Array.BYTES_PER_ELEMENT},
+                {name: "aRegion", size: 2, type: renderer.gl.FLOAT, normalized: false, offset: 2 * Float32Array.BYTES_PER_ELEMENT},
+                {name: "aColor",  size: 4, type: renderer.gl.UNSIGNED_BYTE, normalized: true, offset: 4 * Float32Array.BYTES_PER_ELEMENT}
+            ],
+            shader: {
+                vertex: quadVertex, fragment: quadFragment
+            }
+        });
 
         // list of active texture units
         this.currentTextureUnit = -1;
         this.boundTextures = [];
-
-        // Load and create shader programs
-        this.quadShader = new GLShader(this.gl, quadVertex, quadFragment);
-
-        /// define all vertex attributes
-        this.addAttribute("aVertex", 2, this.gl.FLOAT, false, 0 * Float32Array.BYTES_PER_ELEMENT); // 0
-        this.addAttribute("aRegion", 2, this.gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT); // 1
-        this.addAttribute("aColor",  4, this.gl.UNSIGNED_BYTE, true, 4 * Float32Array.BYTES_PER_ELEMENT); // 2
-
-        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, 6);
-
-        // vertex buffer
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gl.createBuffer());
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.vertexBuffer.buffer, this.gl.STREAM_DRAW);
     }
 
     /**
@@ -70,30 +63,27 @@ var V_ARRAY = [
             }
         }
         this.currentTextureUnit = -1;
-
-        // set the quad shader as the default program
-        this.useShader(this.quadShader);
     }
 
     /**
      * Create a WebGL texture from an image
      * @param {number} unit - Destination texture unit
-     * @param {Image|HTMLCanvasElement|ImageData|Uint8Array[]|Float32Array[]} image - Source image
+     * @param {Image|HTMLCanvasElement|ImageData|Uint8Array[]|Float32Array[]} [pixels=null] - Source image
      * @param {number} filter - gl.LINEAR or gl.NEAREST
      * @param {string} [repeat="no-repeat"] - Image repeat behavior (see {@link ImageLayer#repeat})
-     * @param {number} [w] - Source image width (Only use with UInt8Array[] or Float32Array[] source image)
-     * @param {number} [h] - Source image height (Only use with UInt8Array[] or Float32Array[] source image)
-     * @param {number} [b] - Source image border (Only use with UInt8Array[] or Float32Array[] source image)
+     * @param {number} [w=pixels.width] - Source image width (Only use with UInt8Array[] or Float32Array[] source image)
+     * @param {number} [h=pixels.height] - Source image height (Only use with UInt8Array[] or Float32Array[] source image)
      * @param {boolean} [premultipliedAlpha=true] - Multiplies the alpha channel into the other color channels
      * @param {boolean} [mipmap=true] - Whether mipmap levels should be generated for this texture
      * @returns {WebGLTexture} a WebGL texture
      */
-    createTexture2D(unit, image, filter, repeat = "no-repeat", w, h, b, premultipliedAlpha = true, mipmap = true) {
+    createTexture2D(unit, pixels = null, filter, repeat = "no-repeat", w = pixels.width, h = pixels.height, premultipliedAlpha = true, mipmap = true) {
         var gl = this.gl;
-        var isPOT = isPowerOfTwo(w || image.width) && isPowerOfTwo(h || image.height);
-        var texture = gl.createTexture();
+        var isPOT = isPowerOfTwo(w) && isPowerOfTwo(h);
         var rs = (repeat.search(/^repeat(-x)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
         var rt = (repeat.search(/^repeat(-y)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+
+        var texture = gl.createTexture();
 
         this.bindTexture2D(texture, unit);
 
@@ -101,16 +91,18 @@ var V_ARRAY = [
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, rt);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+
         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultipliedAlpha);
-        if (w || h || b) {
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, b, gl.RGBA, gl.UNSIGNED_BYTE, image);
-        }
-        else {
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+
+        if (pixels === null || typeof pixels.byteLength !== "undefined") {
+            // if pixels is undefined, or if it's Uint8Array/Float32Array TypedArray
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels, 0);
+        } else {
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
         }
 
         // generate the sprite mimap (used when scaling) if a PowerOfTwo texture
-        if (isPOT && mipmap !== false) {
+        if (isPOT && mipmap === true) {
             gl.generateMipmap(gl.TEXTURE_2D);
         }
 
@@ -183,7 +175,7 @@ var V_ARRAY = [
     /**
      * @ignore
      */
-    uploadTexture(texture, w, h, b, force = false) {
+    uploadTexture(texture, w, h, force = false) {
         var unit = this.renderer.cache.getUnit(texture);
         var texture2D = this.boundTextures[unit];
 
@@ -195,7 +187,6 @@ var V_ARRAY = [
                 texture.repeat,
                 w,
                 h,
-                b,
                 texture.premultipliedAlpha
             );
         } else {
@@ -219,17 +210,18 @@ var V_ARRAY = [
      * @param {number} tint - tint color to be applied to the texture in UINT32 (argb) format
      */
     addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint) {
-        var vertexBuffer = this.vertexBuffer;
+        var vertexData = this.vertexData;
 
-        if (vertexBuffer.isFull(6)) {
+        if (vertexData.isFull(6)) {
             // is the vertex buffer full if we add 6 more vertices
             this.flush();
         }
 
         // upload and activate the texture if necessary
         var unit = this.uploadTexture(texture);
-        // set fragement sampler accordingly
-        this.quadShader.setUniform("uSampler", unit);
+
+        // set fragment sampler accordingly
+        this.currentShader.setUniform("uSampler", unit);
 
         // Transform vertices
         var m = this.viewMatrix,
@@ -245,12 +237,12 @@ var V_ARRAY = [
             m.apply(vec3);
         }
 
-        vertexBuffer.push(vec0.x, vec0.y, u0, v0, tint);
-        vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
-        vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
-        vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
-        vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
-        vertexBuffer.push(vec3.x, vec3.y, u1, v1, tint);
+        vertexData.push(vec0.x, vec0.y, u0, v0, tint);
+        vertexData.push(vec1.x, vec1.y, u1, v0, tint);
+        vertexData.push(vec2.x, vec2.y, u0, v1, tint);
+        vertexData.push(vec2.x, vec2.y, u0, v1, tint);
+        vertexData.push(vec1.x, vec1.y, u1, v0, tint);
+        vertexData.push(vec3.x, vec3.y, u1, v1, tint);
     }
 }
 

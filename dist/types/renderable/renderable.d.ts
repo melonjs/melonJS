@@ -163,6 +163,12 @@ export default class Renderable extends Rect {
      */
     mask: Rect | RoundRect | Polygon | Line | Ellipse;
     /**
+      * (Experimental) an optional shader, to be used instead of the default built-in one, when drawing this renderable (WebGL only)
+      * @type {GLShader}
+      * @default undefined
+    */
+    shader: GLShader;
+    /**
      * the blend mode to be applied to this renderable (see renderer setBlendMode for available blend mode)
      * @type {string}
      * @default "normal"

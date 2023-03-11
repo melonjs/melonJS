@@ -13,7 +13,7 @@ import { remove } from '../utils/array.js';
 import { emit, POINTERLOCKCHANGE, POINTERMOVE } from '../system/event.js';
 import timer from '../system/timer.js';
 import pool from '../system/pooling.js';
-import { getElementBounds, hasPointerLockSupport, maxTouchPoints, pointerEvent, touch, focus, touchEvent } from '../system/device.js';
+import { getElementBounds, hasPointerLockSupport, maxTouchPoints, touch, pointerEvent, focus, touchEvent } from '../system/device.js';
 import Pointer from './pointer.js';
 import Rect from '../geometries/rectangle.js';
 import { game } from '../index.js';

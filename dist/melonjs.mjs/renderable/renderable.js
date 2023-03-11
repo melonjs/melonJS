@@ -214,6 +214,13 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
         this.mask = undefined;
 
         /**
+          * (Experimental) an optional shader, to be used instead of the default built-in one, when drawing this renderable (WebGL only)
+          * @type {GLShader}
+          * @default undefined
+        */
+        this.shader = undefined;
+
+        /**
          * the blend mode to be applied to this renderable (see renderer setBlendMode for available blend mode)
          * @type {string}
          * @default "normal"
@@ -657,6 +664,11 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
             renderer.translate(-this.pos.x, -this.pos.y);
         }
 
+        // use this renderable shader if defined
+        if (typeof this.shader === "object" && typeof renderer.gl !== "undefined") {
+            renderer.setCompositor("quad", this.shader);
+        }
+
         if ((this.autoTransform === true) && (!this.currentTransform.isIdentity())) {
             // apply the renderable transformation matrix
             renderer.translate(this.pos.x, this.pos.y);
@@ -706,6 +718,11 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
         // clear the mask if set
         if (typeof this.mask !== "undefined") {
             renderer.clearMask();
+        }
+
+        // revert to the default shader if defined
+        if (typeof this.shader === "object" && typeof renderer.gl !== "undefined") {
+            renderer.setCompositor("quad");
         }
 
         // restore the context

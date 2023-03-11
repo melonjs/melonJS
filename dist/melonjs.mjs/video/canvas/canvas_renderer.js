@@ -12,7 +12,7 @@ import Ellipse from '../../geometries/ellipse.js';
 import RoundRect from '../../geometries/roundrect.js';
 import Rect from '../../geometries/rectangle.js';
 import Bounds from '../../physics/bounds.js';
-import { emit, ONCONTEXT_LOST, ONCONTEXT_RESTORED } from '../../system/event.js';
+import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../system/event.js';
 
 /**
  * @classdesc
@@ -66,6 +66,11 @@ import { emit, ONCONTEXT_LOST, ONCONTEXT_RESTORED } from '../../system/event.js'
             this.isContextValid = true;
             emit(ONCONTEXT_RESTORED, this);
         }, false );
+
+        // reset the renderer on game reset
+        on(GAME_RESET, () => {
+            this.reset();
+        });
     }
 
     /**
@@ -539,15 +544,6 @@ import { emit, ONCONTEXT_LOST, ONCONTEXT_RESTORED } from '../../system/event.js'
      */
     fillPoint(x, y) {
         this.strokePoint(x, y);
-    }
-
-    /**
-     * return a reference to the font 2d Context
-     * @ignore
-     */
-    getFontContext() {
-        // in canvas mode we can directly use the 2d context
-        return this.getContext();
     }
 
     /**

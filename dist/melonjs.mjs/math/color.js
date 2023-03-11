@@ -257,8 +257,8 @@ var cssToRGB = new Map();
         return this.glArray[3];
     }
 
-    set alpha(value) {
-        this.glArray[3] = typeof(value) === "undefined" ? 1.0 : clamp(+value, 0, 1.0);
+    set alpha(value = 1.0) {
+        this.glArray[3] = clamp(+value, 0, 1.0);
     }
 
 

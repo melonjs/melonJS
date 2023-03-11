@@ -5,8 +5,6 @@
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
-import GLShader from '../glshader.js';
-import VertexArrayBuffer from '../buffer/vertex.js';
 import primitiveVertex from '../shaders/primitive.vert.js';
 import primitiveFragment from '../shaders/primitive.frag.js';
 import Compositor from './compositor.js';
@@ -23,32 +21,16 @@ import Compositor from './compositor.js';
      * Initialize the compositor
      * @ignore
      */
-    init (renderer) {
-        super.init(renderer);
-
-        // Load and create shader programs
-        this.primitiveShader = new GLShader(this.gl, primitiveVertex, primitiveFragment);
-
-        /// define all vertex attributes
-        this.addAttribute("aVertex", 2, this.gl.FLOAT, false, 0 * Float32Array.BYTES_PER_ELEMENT); // 0
-        this.addAttribute("aColor",  4, this.gl.UNSIGNED_BYTE, true, 2 * Float32Array.BYTES_PER_ELEMENT); // 1
-
-        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, 6);
-
-        // vertex buffer
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gl.createBuffer());
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.vertexBuffer.buffer, this.gl.STREAM_DRAW);
-    }
-
-    /**
-     * Reset compositor internal state
-     * @ignore
-     */
-    reset() {
-        super.reset();
-
-        // set the quad shader as the default program
-        this.useShader(this.primitiveShader);
+    init(renderer) {
+        super.init(renderer, {
+            attributes: [
+                {name: "aVertex", size: 2, type: renderer.gl.FLOAT, normalized: false, offset: 0 * Float32Array.BYTES_PER_ELEMENT},
+                {name: "aColor",  size: 4, type: renderer.gl.UNSIGNED_BYTE, normalized: true, offset: 2 * Float32Array.BYTES_PER_ELEMENT}
+            ],
+            shader: {
+                vertex: primitiveVertex, fragment: primitiveFragment
+            }
+        });
     }
 
     /**
@@ -59,11 +41,11 @@ import Compositor from './compositor.js';
      */
     drawVertices(mode, verts, vertexCount = verts.length) {
         var viewMatrix = this.viewMatrix;
-        var vertexBuffer = this.vertexBuffer;
+        var vertexData = this.vertexData;
         var color = this.renderer.currentColor;
         var alpha = this.renderer.getGlobalAlpha();
 
-        if (vertexBuffer.isFull(vertexCount)) {
+        if (vertexData.isFull(vertexCount)) {
             // is the vertex buffer full if we add more vertices
             this.flush();
         }
@@ -77,15 +59,15 @@ import Compositor from './compositor.js';
         if (!viewMatrix.isIdentity()) {
             verts.forEach((vert) => {
                 viewMatrix.apply(vert);
-                vertexBuffer.push(vert.x, vert.y, undefined, undefined, color.toUint32(alpha));
+                vertexData.push(vert.x, vert.y, undefined, undefined, color.toUint32(alpha));
             });
         } else {
             verts.forEach((vert) => {
-                vertexBuffer.push(vert.x, vert.y, undefined, undefined, color.toUint32(alpha));
+                vertexData.push(vert.x, vert.y, undefined, undefined, color.toUint32(alpha));
             });
         }
 
-        // disable batching for primitive using LINE_STRIP or LINE_LOOP
+        // force flush for primitive using LINE_STRIP or LINE_LOOP
         if (this.mode === this.gl.LINE_STRIP || this.mode === this.gl.LINE_LOOP) {
             this.flush(this.mode);
         }

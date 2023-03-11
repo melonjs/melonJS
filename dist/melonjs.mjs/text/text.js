@@ -6,7 +6,6 @@
  * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 import Color from '../math/color.js';
-import WebGLRenderer from '../video/webgl/webgl_renderer.js';
 import { renderer } from '../video/video.js';
 import pool from '../system/pooling.js';
 import Renderable from '../renderable/renderable.js';
@@ -26,18 +25,6 @@ import TextMetrics from './textmetrics.js';
 const runits = ["ex", "em", "pt", "px"];
 const toPX = [12, 24, 0.75, 1];
 
-// return a valid 2d context for Text rendering/styling
-var getContext2d = function (renderer$1, text) {
-    if (text.offScreenCanvas === true) {
-        return text.canvasTexture.context;
-    } else {
-        if (typeof renderer$1 === "undefined") {
-            renderer$1 = renderer;
-        }
-        return renderer$1.getFontContext();
-    }
-};
-
 /**
  * @classdesc
  * a generic system font object.
@@ -52,12 +39,11 @@ var getContext2d = function (renderer$1, text) {
      * @param {number|string} settings.size - size, or size + suffix (px, em, pt)
      * @param {Color|string} [settings.fillStyle="#000000"] - a CSS color value
      * @param {Color|string} [settings.strokeStyle="#000000"] - a CSS color value
-     * @param {number} [settings.lineWidth=1] - line width, in pixels, when drawing stroke
+     * @param {number} [settings.lineWidth=0] - line width, in pixels, when drawing stroke
      * @param {string} [settings.textAlign="left"] - horizontal text alignment
      * @param {string} [settings.textBaseline="top"] - the text baseline
      * @param {number} [settings.lineHeight=1.0] - line spacing height
      * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] - anchor point to draw the text at
-     * @param {boolean} [settings.offScreenCanvas=false] - whether to draw the font to an individual "cache" texture first
      * @param {number} [settings.wordWrapWidth] - the maximum length in CSS pixel for a single segment of text
      * @param {(string|string[])} [settings.text=""] - a string, or an array of strings
      * @example
@@ -112,9 +98,9 @@ var getContext2d = function (renderer$1, text) {
          * sets the current line width, in pixels, when drawing stroke
          * @public
          * @type {number}
-         * @default 1
+         * @default 0
          */
-        this.lineWidth = settings.lineWidth || 1;
+        this.lineWidth = settings.lineWidth || 0;
 
         /**
          * Set the default text alignment (or justification),<br>
@@ -142,16 +128,6 @@ var getContext2d = function (renderer$1, text) {
          * @default 1.0
          */
         this.lineHeight = settings.lineHeight || 1.0;
-
-        /**
-         * whether to draw the font to a indidividual offscreen canvas texture first <br>
-         * Note: this will improve performances when using WebGL, but will impact
-         * memory consumption as every text element will have its own canvas texture
-         * @public
-         * @type {boolean}
-         * @default false
-         */
-        this.offScreenCanvas = false;
 
         /**
          * the maximum length in CSS pixel for a single segment of text.
@@ -199,10 +175,8 @@ var getContext2d = function (renderer$1, text) {
             this.italic();
         }
 
-        if (settings.offScreenCanvas === true) {
-            this.offScreenCanvas = true;
-            this.canvasTexture = pool.pull("CanvasTexture", 2, 2, { offscreenCanvas: true });
-        }
+        // the canvas Texture used to render this text
+        this.canvasTexture = pool.pull("CanvasTexture", 2, 2, { offscreenCanvas: true });
 
         // instance to text metrics functions
         this.metrics = new TextMetrics(this);
@@ -291,37 +265,37 @@ var getContext2d = function (renderer$1, text) {
 
         // word wrap if necessary
         if (this._text.length > 0 && this.wordWrapWidth > 0) {
-            this._text = this.metrics.wordWrap(this._text, this.wordWrapWidth, getContext2d(renderer, this));
+            this._text = this.metrics.wordWrap(this._text, this.wordWrapWidth, this.canvasTexture.context);
         }
 
         // calculcate the text size and update the bounds accordingly
-        bounds.addBounds(this.metrics.measureText(this._text, getContext2d(renderer, this)), true);
+        bounds.addBounds(this.metrics.measureText(this._text, this.canvasTexture.context), true);
 
         // update the offScreenCanvas texture if required
-        if (this.offScreenCanvas === true) {
-            var width = Math.ceil(this.metrics.width),
-                height = Math.ceil(this.metrics.height);
+        var width = Math.ceil(this.metrics.width),
+            height = Math.ceil(this.metrics.height);
 
-            if (renderer instanceof WebGLRenderer) {
-                // invalidate the previous corresponding texture so that it can reuploaded once changed
-                this.glTextureUnit = renderer.cache.getUnit(renderer.cache.get(this.canvasTexture.canvas));
-                renderer.currentCompositor.unbindTexture2D(null, this.glTextureUnit);
+        if (typeof renderer.gl !== "undefined") {
+            // make sure the right compositor is active
+            renderer.setCompositor("quad");
+            // invalidate the previous corresponding texture so that it can reuploaded once changed
+            this.glTextureUnit = renderer.cache.getUnit(renderer.cache.get(this.canvasTexture.canvas));
+            renderer.currentCompositor.unbindTexture2D(null, this.glTextureUnit);
 
-                if (renderer.WebGLVersion === 1) {
-                    // round size to next Pow2
-                    width = nextPowerOfTwo(this.metrics.width);
-                    height = nextPowerOfTwo(this.metrics.height);
-                }
+            if (renderer.WebGLVersion === 1) {
+                // round size to next Pow2
+                width = nextPowerOfTwo(this.metrics.width);
+                height = nextPowerOfTwo(this.metrics.height);
             }
-
-            // resize the cache canvas if necessary
-            if (this.canvasTexture.width < width || this.canvasTexture.height < height) {
-                this.canvasTexture.resize(width, height);
-            }
-
-            this.canvasTexture.clear();
-            this._drawFont(this.canvasTexture.context, this._text,  this.pos.x - this.metrics.x, this.pos.y - this.metrics.y, false);
         }
+
+        // resize the cache canvas if necessary
+        if (this.canvasTexture.width < width || this.canvasTexture.height < height) {
+            this.canvasTexture.resize(width, height);
+        }
+
+        this.canvasTexture.clear();
+        this._drawFont(this.canvasTexture.context, this._text,  this.pos.x - this.metrics.x, this.pos.y - this.metrics.y);
 
         this.isDirty = true;
 
@@ -335,7 +309,7 @@ var getContext2d = function (renderer$1, text) {
      * @returns {TextMetrics} a TextMetrics object defining the dimensions of the given piece of text
      */
     measureText(renderer, text = this._text) {
-        return this.metrics.measureText(text, getContext2d(renderer, this));
+        return this.metrics.measureText(text, this.canvasTexture.context);
     }
 
 
@@ -345,9 +319,8 @@ var getContext2d = function (renderer$1, text) {
      * @param {string} [text]
      * @param {number} [x]
      * @param {number} [y]
-     * @param {boolean} [stroke=false] - draw stroke the the text if true
      */
-    draw(renderer, text, x = this.pos.x, y = this.pos.y, stroke = false) {
+    draw(renderer, text, x = this.pos.x, y = this.pos.y) {
         // "hacky patch" for backward compatibilty
         if (typeof this.ancestor === "undefined") {
 
@@ -361,20 +334,17 @@ var getContext2d = function (renderer$1, text) {
             // update text cache
             this.setText(text);
 
-            x = this.metrics.x;
-            y = this.metrics.y;
-
             // save the previous context
             renderer.save();
 
             // apply the defined alpha value
             renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
-        } else {
-             // added directly to an object container
-            x = this.pos.x;
-            y = this.pos.y;
         }
+
+        // adjust x,y position based on the bounding box
+        x = this.metrics.x;
+        y = this.metrics.y;
 
         // clamp to pixel grid if required
         if (renderer.settings.subPixel === false) {
@@ -383,12 +353,7 @@ var getContext2d = function (renderer$1, text) {
         }
 
         // draw the text
-        if (this.offScreenCanvas === true) {
-            renderer.drawImage(this.canvasTexture.canvas, x, y);
-        } else {
-            renderer.drawFont(this._drawFont(renderer.getFontContext(), this._text, x, y, stroke));
-        }
-
+        renderer.drawImage(this.canvasTexture.canvas, x, y);
 
         // for backward compatibilty
         if (typeof this.ancestor === "undefined") {
@@ -398,28 +363,33 @@ var getContext2d = function (renderer$1, text) {
     }
 
     /**
-     * draw a stroke text at the specified coord, as defined <br>
-     * by the `lineWidth` and `fillStroke` properties. <br>
-     * Note : using drawStroke is not recommended for performance reasons
+     * draw a stroke text at the specified coord, as defined by the `lineWidth` and `fillStroke` properties.
+     * @deprecated since 15.0.0
      * @param {CanvasRenderer|WebGLRenderer} renderer - Reference to the destination renderer instance
      * @param {string} text
      * @param {number} x
      * @param {number} y
      */
     drawStroke(renderer, text, x, y) {
-        this.draw(renderer, text, x, y, true);
+        this.draw(renderer, text, x, y);
     }
 
     /**
      * @ignore
      */
-    _drawFont(context, text, x, y, stroke = false) {
-        setContextStyle(context, this, stroke);
+    _drawFont(context, text, x, y) {
+        setContextStyle(context, this);
 
         for (var i = 0; i < text.length; i++) {
             var string = text[i].trimEnd();
             // draw the string
-            context[stroke ? "strokeText" : "fillText"](string, x, y);
+            if (this.fillStyle.alpha > 0) {
+                context.fillText(string, x, y);
+            }
+            // stroke the text
+            if (this.lineWidth > 0 && this.strokeStyle.alpha > 0) {
+                context.strokeText(string, x, y);
+            }
             // add leading space
             y += this.metrics.lineHeight();
         }
@@ -431,15 +401,15 @@ var getContext2d = function (renderer$1, text) {
      * @ignore
      */
     destroy() {
-        if (this.offScreenCanvas === true) {
-            if (renderer instanceof WebGLRenderer) {
-                renderer.currentCompositor.deleteTexture2D(renderer.currentCompositor.getTexture2D(this.glTextureUnit));
-                this.glTextureUnit = undefined;
-            }
-            renderer.cache.delete(this.canvasTexture.canvas);
-            pool.push(this.canvasTexture);
-            this.canvasTexture = undefined;
+        if (typeof renderer.gl !== "undefined") {
+            // make sure the right compositor is active
+            renderer.setCompositor("quad");
+            renderer.currentCompositor.deleteTexture2D(renderer.currentCompositor.getTexture2D(this.glTextureUnit));
+            this.glTextureUnit = undefined;
         }
+        renderer.cache.delete(this.canvasTexture.canvas);
+        pool.push(this.canvasTexture);
+        this.canvasTexture = undefined;
         pool.push(this.fillStyle);
         pool.push(this.strokeStyle);
         this.fillStyle = this.strokeStyle = undefined;

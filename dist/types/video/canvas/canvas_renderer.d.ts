@@ -264,11 +264,6 @@ export default class CanvasRenderer extends Renderer {
      */
     fillPoint(x: number, y: number): void;
     /**
-     * return a reference to the font 2d Context
-     * @ignore
-     */
-    getFontContext(): CanvasRenderingContext2D | WebGLRenderingContext;
-    /**
      * save the canvas context
      * @name save
      * @memberof CanvasRenderer

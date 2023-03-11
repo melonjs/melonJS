@@ -12,12 +12,11 @@ export default class Text extends Renderable {
      * @param {number|string} settings.size - size, or size + suffix (px, em, pt)
      * @param {Color|string} [settings.fillStyle="#000000"] - a CSS color value
      * @param {Color|string} [settings.strokeStyle="#000000"] - a CSS color value
-     * @param {number} [settings.lineWidth=1] - line width, in pixels, when drawing stroke
+     * @param {number} [settings.lineWidth=0] - line width, in pixels, when drawing stroke
      * @param {string} [settings.textAlign="left"] - horizontal text alignment
      * @param {string} [settings.textBaseline="top"] - the text baseline
      * @param {number} [settings.lineHeight=1.0] - line spacing height
      * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] - anchor point to draw the text at
-     * @param {boolean} [settings.offScreenCanvas=false] - whether to draw the font to an individual "cache" texture first
      * @param {number} [settings.wordWrapWidth] - the maximum length in CSS pixel for a single segment of text
      * @param {(string|string[])} [settings.text=""] - a string, or an array of strings
      * @example
@@ -33,7 +32,6 @@ export default class Text extends Renderable {
         textBaseline?: string | undefined;
         lineHeight?: number | undefined;
         anchorPoint?: any;
-        offScreenCanvas?: boolean | undefined;
         wordWrapWidth?: number | undefined;
         text?: string | string[] | undefined;
     });
@@ -45,7 +43,7 @@ export default class Text extends Renderable {
      * sets the current line width, in pixels, when drawing stroke
      * @public
      * @type {number}
-     * @default 1
+     * @default 0
      */
     public lineWidth: number | undefined;
     /**
@@ -72,15 +70,6 @@ export default class Text extends Renderable {
      * @default 1.0
      */
     public lineHeight: number | undefined;
-    /**
-     * whether to draw the font to a indidividual offscreen canvas texture first <br>
-     * Note: this will improve performances when using WebGL, but will impact
-     * memory consumption as every text element will have its own canvas texture
-     * @public
-     * @type {boolean}
-     * @default false
-     */
-    public offScreenCanvas: boolean | undefined;
     /**
      * the maximum length in CSS pixel for a single segment of text.
      * (use -1 to disable word wrapping)
@@ -144,13 +133,11 @@ export default class Text extends Renderable {
      * @param {string} [text]
      * @param {number} [x]
      * @param {number} [y]
-     * @param {boolean} [stroke=false] - draw stroke the the text if true
      */
-    draw(renderer: CanvasRenderer | WebGLRenderer, text?: string | undefined, x?: number | undefined, y?: number | undefined, stroke?: boolean | undefined): void;
+    draw(renderer: CanvasRenderer | WebGLRenderer, text?: string | undefined, x?: number | undefined, y?: number | undefined): void;
     /**
-     * draw a stroke text at the specified coord, as defined <br>
-     * by the `lineWidth` and `fillStroke` properties. <br>
-     * Note : using drawStroke is not recommended for performance reasons
+     * draw a stroke text at the specified coord, as defined by the `lineWidth` and `fillStroke` properties.
+     * @deprecated since 15.0.0
      * @param {CanvasRenderer|WebGLRenderer} renderer - Reference to the destination renderer instance
      * @param {string} text
      * @param {number} x
@@ -160,7 +147,7 @@ export default class Text extends Renderable {
     /**
      * @ignore
      */
-    _drawFont(context: any, text: any, x: any, y: any, stroke?: boolean): TextMetrics | undefined;
+    _drawFont(context: any, text: any, x: any, y: any): TextMetrics | undefined;
     /**
      * Destroy function
      * @ignore
@@ -169,5 +156,4 @@ export default class Text extends Renderable {
 }
 import Renderable from "./../renderable/renderable.js";
 import TextMetrics from "./textmetrics.js";
-import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
 import Color from "./../math/color.js";

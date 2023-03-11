@@ -6,6 +6,8 @@
  * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 import { on, CANVAS_ONRESIZE } from '../../../system/event.js';
+import VertexArrayBuffer from '../buffer/vertex.js';
+import GLShader from '../glshader.js';
 
 /**
  * @classdesc
@@ -14,19 +16,26 @@ import { on, CANVAS_ONRESIZE } from '../../../system/event.js';
  class Compositor {
     /**
      * @param {WebGLRenderer} renderer - the current WebGL renderer session
+     * @param {Object} settings - additional settings to initialize this compositors
+     * @param {object[]} attribute - an array of attributes definition
+     * @param {string} attribute.name - name of the attribute in the vertex shader
+     * @param {number} attribute.size - number of components per vertex attribute. Must be 1, 2, 3, or 4.
+     * @param {GLenum} attribute.type - data type of each component in the array
+     * @param {boolean} attribute.normalized - whether integer data values should be normalized into a certain range when being cast to a float
+     * @param {number} attribute.offset - offset in bytes of the first component in the vertex attribute array
+     * @param {object} shader - an array of attributes definition
+     * @param {string} shader.vertex - a string containing the GLSL source code to set
+     * @param {string} shader.fragment - a string containing the GLSL source code to set
      */
-    constructor (renderer) {
-        this.init(renderer);
+    constructor (renderer, settings) {
+        this.init(renderer, settings);
     }
 
     /**
      * Initialize the compositor
      * @ignore
      */
-    init (renderer) {
-        // local reference
-        var gl = renderer.gl;
-
+    init (renderer, settings) {
         // the associated renderer
         this.renderer = renderer;
 
@@ -40,17 +49,23 @@ import { on, CANVAS_ONRESIZE } from '../../../system/event.js';
         this.viewMatrix = renderer.currentTransform;
 
         /**
-         * a reference to the active WebGL shader
+         * the default shader created by this compositor
          * @type {GLShader}
          */
-        this.activeShader = null;
+        this.defaultShader = undefined;
+
+        /**
+         * the shader currently used by this compositor
+         * @type {GLShader}
+         */
+        this.currentShader = undefined;
 
         /**
          * primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
          * @type {number}
          * @default gl.TRIANGLES
          */
-        this.mode = gl.TRIANGLES;
+        this.mode = this.gl.TRIANGLES;
 
         /**
          * an array of vertex attribute properties
@@ -75,6 +90,29 @@ import { on, CANVAS_ONRESIZE } from '../../../system/event.js';
          */
         this.vertexSize = 0;
 
+        /**
+         * the vertex data buffer used by this compositor
+         * @type {VertexArrayBuffer}
+         */
+        this.vertexData = null;
+
+        // parse given attibrutes
+        if (typeof settings !== "undefined" && Array.isArray(settings.attributes)) {
+            settings.attributes.forEach((attr) => {
+                this.addAttribute(attr.name, attr.size, attr.type, attr.normalized, attr.offset);
+                this.vertexData = new VertexArrayBuffer(this.vertexSize, 6);
+            });
+        } else {
+            throw new Error("attributes definition missing");
+        }
+
+        // parse and instantiate the default shader
+        if (typeof settings !== "undefined" && typeof settings.shader !== "undefined") {
+            this.defaultShader = new GLShader(this.gl, settings.shader.vertex, settings.shader.fragment);
+        } else {
+            throw new Error("shader definition missing");
+        }
+
         // register to the CANVAS resize channel
         on(CANVAS_ONRESIZE, (width, height) => {
             this.flush();
@@ -90,7 +128,8 @@ import { on, CANVAS_ONRESIZE } from '../../../system/event.js';
         // WebGL context
         this.gl = this.renderer.gl;
 
-        this.flush();
+        // clear the vertex data buffer
+        this.vertexData.clear();
 
         // initial viewport size
         this.setViewport(
@@ -98,9 +137,6 @@ import { on, CANVAS_ONRESIZE } from '../../../system/event.js';
             this.renderer.getCanvas().width,
             this.renderer.getCanvas().height
         );
-
-        // Initialize clear color
-        this.clearColor(0.0, 0.0, 0.0, 0.0);
     }
 
     /**
@@ -108,12 +144,26 @@ import { on, CANVAS_ONRESIZE } from '../../../system/event.js';
      * called by the WebGL renderer when a compositor become the current one
      */
     bind() {
-        if (this.activeShader !== null) {
-            this.activeShader.bind();
-            this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
-            this.activeShader.setVertexAttributes(this.gl, this.attributes, this.vertexByteSize);
+        if (this.renderer.currentProgram !== this.defaultShader.program) {
+            this.useShader(this.defaultShader);
         }
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.vertexBuffer.buffer, this.gl.STREAM_DRAW);
+    }
+
+    /**
+     * Select the shader to use for compositing
+     * @see GLShader
+     * @param {GLShader} shader - a reference to a GLShader instance
+     */
+    useShader(shader) {
+        if (this.renderer.currentProgram !== shader.program) {
+            this.flush();
+            shader.bind();
+            shader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
+            shader.setVertexAttributes(this.gl, this.attributes, this.vertexByteSize);
+
+            this.currentShader = shader;
+            this.renderer.currentProgram = this.currentShader.program;
+        }
     }
 
     /**
@@ -177,30 +227,15 @@ import { on, CANVAS_ONRESIZE } from '../../../system/event.js';
      * @param {Matrix3d} matrix
      */
     setProjection(matrix) {
-        this.activeShader.setUniform("uProjectionMatrix", matrix);
+        this.currentShader.setUniform("uProjectionMatrix", matrix);
     }
 
     /**
-     * Select the shader to use for compositing
-     * @see GLShader
-     * @param {GLShader} shader - a reference to a GLShader instance
-     */
-    useShader(shader) {
-        if (this.activeShader !== shader) {
-            this.flush();
-            this.activeShader = shader;
-            this.activeShader.bind();
-            this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
-            this.activeShader.setVertexAttributes(this.gl, this.attributes, this.vertexByteSize);
-        }
-    }
-
-    /**
-     * Flush batched texture operations to the GPU
+     * Flush batched vertex data to the GPU
      * @param {number} [mode=gl.TRIANGLES] - the GL drawing mode
      */
     flush(mode = this.mode) {
-        var vertex = this.vertexBuffer;
+        var vertex = this.vertexData;
         var vertexCount = vertex.vertexCount;
 
         if (vertexCount > 0) {
@@ -219,29 +254,6 @@ import { on, CANVAS_ONRESIZE } from '../../../system/event.js';
             // clear the vertex buffer
             vertex.clear();
         }
-    }
-
-    /**
-     * Clear the frame buffer
-     * @param {number} [alpha = 0.0] - the alpha value used when clearing the framebuffer
-     */
-    clear(alpha = 0) {
-        var gl = this.gl;
-        gl.clearColor(0, 0, 0, alpha);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
-    }
-
-    /**
-     * Specify the color values used when clearing color buffers. The values are clamped between 0 and 1.
-     * @param {number} [r = 0] - the red color value used when the color buffers are cleared
-     * @param {number} [g = 0] - the green color value used when the color buffers are cleared
-     * @param {number} [b = 0] - the blue color value used when the color buffers are cleared
-     * @param {number} [a = 0] - the alpha color value used when the color buffers are cleared
-     */
-    clearColor(r = 0, g = 0, b = 0, a = 0) {
-        var gl = this.gl;
-        gl.clearColor(r, g, b, a);
-        gl.clear(gl.COLOR_BUFFER_BIT);
     }
 }
 

@@ -5,8 +5,11 @@
  * @augments Compositor
  */
 export default class PrimitiveCompositor extends Compositor {
-    primitiveShader: GLShader | undefined;
-    vertexBuffer: VertexArrayBuffer | undefined;
+    /**
+     * Initialize the compositor
+     * @ignore
+     */
+    init(renderer: any): void;
     /**
      * Draw an array of vertices
      * @param {GLenum} mode - primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
@@ -17,5 +20,3 @@ export default class PrimitiveCompositor extends Compositor {
     mode: any;
 }
 import Compositor from "./compositor.js";
-import GLShader from "../glshader.js";
-import VertexArrayBuffer from "../buffer/vertex.js";

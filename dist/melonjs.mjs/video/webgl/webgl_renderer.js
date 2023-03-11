@@ -12,10 +12,10 @@ import PrimitiveCompositor from './compositors/primitive_compositor.js';
 import Renderer from '../renderer.js';
 import TextureCache from '../texture/cache.js';
 import { TextureAtlas, createAtlas } from '../texture/atlas.js';
-import { createCanvas, renderer } from '../video.js';
-import { emit, ONCONTEXT_LOST, ONCONTEXT_RESTORED } from '../../system/event.js';
+import { renderer } from '../video.js';
+import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../system/event.js';
 import pool from '../../system/pooling.js';
-import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
+import { isPowerOfTwo } from '../../math/math.js';
 
 /**
  * @classdesc
@@ -40,7 +40,6 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
      * @param {Compositor} [options.compositor] - A class that implements the compositor API for sprite rendering
      */
     constructor(options) {
-
         // parent contructor
         super(options);
 
@@ -74,6 +73,12 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
          * @type {WebGLRenderingContext}
          */
         this.context = this.gl = this.getContextGL(this.getCanvas(), options.transparent);
+
+        /**
+         * the vertex buffer used by this WebGL Renderer
+         * @type {WebGLBuffer}
+         */
+        this.vertexBuffer = this.gl.createBuffer();
 
         /**
          * Maximum number of texture unit supported under the current context
@@ -115,10 +120,19 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
         this.currentCompositor = null;
 
         /**
+         * a reference to the current shader program used by the renderer
+         * @type {WebGLProgram}
+         */
+        this.currentProgram = null;
+
+        /**
          * The list of active compositors
          * @type {Map<WebGLCompositor>}
          */
         this.compositors = new Map();
+
+        // bind the vertex buffer
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
 
         // Create both quad and primitive compositor
         this.addCompositor(new (this.settings.compositor || QuadCompositor)(this), "quad", true);
@@ -160,6 +174,11 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
             this.isContextValid = true;
             emit(ONCONTEXT_RESTORED, this);
         }, false );
+
+        // reset the renderer on game reset
+        on(GAME_RESET, () => {
+            this.reset();
+        });
     }
 
     /**
@@ -167,6 +186,17 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
      */
     reset() {
         super.reset();
+
+        // clear gl context
+        this.clear();
+
+        // rebind the vertex buffer if required (e.g in case of context loss)
+        if (this.gl.getParameter(this.gl.ARRAY_BUFFER_BINDING) !== this.vertexBuffer) {
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
+        }
+
+        this.currentCompositor = null;
+        this.currentProgram = null;
 
         this.compositors.forEach((compositor) => {
             if (this.isContextValid === false) {
@@ -177,11 +207,9 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
             }
         });
 
-        this.gl.disable(this.gl.SCISSOR_TEST);
-        if (typeof this.fontContext2D !== "undefined" ) {
-            this.createFontTexture(this.cache);
-        }
+        this.setCompositor("quad");
 
+        this.gl.disable(this.gl.SCISSOR_TEST);
     }
 
     /**
@@ -208,9 +236,10 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
     /**
      * set the active compositor for this renderer
      * @param {String} name - a compositor name
+     * @param {GLShader} [shader] - an optional shader program to be used, instead of the default one, when activating the compositor
      * @return {Compositor} an instance to the current active compositor
      */
-    setCompositor(name = "default") {
+    setCompositor(name = "default", shader) {
         let compositor = this.compositors.get(name);
 
         if (typeof compositor === "undefined") {
@@ -222,8 +251,14 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
                 // flush the current compositor
                 this.currentCompositor.flush();
             }
-            // set given one as current
+            // set as the active one
             this.currentCompositor = compositor;
+        }
+
+        if (typeof shader === "object") {
+            this.currentCompositor.useShader(shader);
+        } else  {
+            // (re)bind the compositor with the default shader (program & attributes)
             this.currentCompositor.bind();
         }
 
@@ -235,44 +270,6 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
      */
     resetTransform() {
         this.currentTransform.identity();
-    }
-
-    /**
-     * @ignore
-     */
-    createFontTexture(cache) {
-        this.setCompositor("quad");
-        if (typeof this.fontTexture === "undefined") {
-            var canvas = this.getCanvas();
-            var width = canvas.width;
-            var height = canvas.height;
-
-            if (this.WebGLVersion === 1) {
-                if (!isPowerOfTwo(width)) {
-                    width = nextPowerOfTwo(canvas.width);
-                }
-                if (!isPowerOfTwo(height)) {
-                    height = nextPowerOfTwo(canvas.height);
-                }
-            }
-
-            var image = createCanvas(width, height, true);
-
-            /**
-             * @ignore
-             */
-            this.fontContext2D = this.getContext2d(image);
-
-            /**
-             * @ignore
-             */
-            this.fontTexture = new TextureAtlas(createAtlas(canvas.width, canvas.height, "fontTexture"), image, cache);
-            this.currentCompositor.uploadTexture(this.fontTexture, 0, 0, 0);
-
-        } else {
-           // fontTexture was already created, just add it back into the cache
-           cache.set(this.fontContext2D.canvas, this.fontTexture);
-       }
     }
 
     /**
@@ -320,15 +317,16 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
      */
     setProjection(matrix) {
         super.setProjection(matrix);
+        this.currentCompositor.setProjection(matrix);
     }
 
     /**
-     * prepare the framebuffer for drawing a new frame
+     * Clear the frame buffer
      */
     clear() {
-        this.compositors.forEach((compositor) => {
-            compositor.clear(this.settings.transparent ? 0.0 : 1.0);
-        });
+        var gl = this.gl;
+        gl.clearColor(0, 0, 0, this.settings.transparent ? 0.0 : 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
     }
 
     /**
@@ -338,6 +336,7 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
      */
     clearColor(color = "#000000", opaque = false) {
         var glArray;
+        var gl = this.gl;
 
         if (color instanceof Color) {
             glArray = color.toArray();
@@ -347,8 +346,10 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
             glArray = _color.parseCSS(color).toArray();
             pool.push(_color);
         }
+
         // clear gl context with the specified color
-        this.currentCompositor.clearColor(glArray[0], glArray[1], glArray[2], (opaque === true) ? 1.0 : glArray[3]);
+        gl.clearColor(glArray[0], glArray[1], glArray[2], (opaque === true) ? 1.0 : glArray[3]);
+        gl.clear(gl.COLOR_BUFFER_BIT);
     }
 
     /**
@@ -363,41 +364,6 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
         this.clipRect(x, y, width, height);
         this.clearColor();
         this.restore();
-    }
-
-    /**
-     * @ignore
-     */
-    drawFont(bounds) {
-        var fontContext = this.getFontContext();
-
-        this.setCompositor("quad");
-
-        // Force-upload the new texture
-        this.currentCompositor.uploadTexture(this.fontTexture, 0, 0, 0, true);
-
-        // Add the new quad
-        var uvs = this.fontTexture.getUVs(bounds.left + "," + bounds.top + "," + bounds.width + "," + bounds.height);
-        this.currentCompositor.addQuad(
-            this.fontTexture,
-            bounds.left,
-            bounds.top,
-            bounds.width,
-            bounds.height,
-            uvs[0],
-            uvs[1],
-            uvs[2],
-            uvs[3],
-            this.currentTint.toUint32(this.getGlobalAlpha())
-        );
-
-        // Clear font context2D
-        fontContext.clearRect(
-            bounds.left,
-            bounds.top,
-            bounds.width,
-            bounds.height
-        );
     }
 
     /**
@@ -568,20 +534,6 @@ import { isPowerOfTwo, nextPowerOfTwo } from '../../math/math.js';
                     break;
             }
         }
-    }
-
-    /**
-     * return a reference to the font 2d Context
-     * @ignore
-     */
-    getFontContext() {
-        if (typeof this.fontContext2D === "undefined" ) {
-            // warn the end user about performance impact
-            console.warn("[WebGL Renderer] WARNING : Using Standard me.Text with WebGL will severly impact performances !");
-            // create the font texture if not done yet
-            this.createFontTexture(this.cache);
-        }
-        return this.fontContext2D;
     }
 
     /**
