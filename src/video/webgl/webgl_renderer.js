@@ -226,9 +226,10 @@ import { isPowerOfTwo } from "./../../math/math.js";
     /**
      * set the active compositor for this renderer
      * @param {String} name - a compositor name
+     * @param {GLShader} [shader] - an optional shader program to be used, instead of the default one, when activating the compositor
      * @return {Compositor} an instance to the current active compositor
      */
-    setCompositor(name = "default") {
+    setCompositor(name = "default", shader) {
         let compositor = this.compositors.get(name);
 
         if (typeof compositor === "undefined") {
@@ -242,7 +243,12 @@ import { isPowerOfTwo } from "./../../math/math.js";
             }
             // set as the active one
             this.currentCompositor = compositor;
-            // (re)bind the compositor (program & attributes)
+        }
+
+        if (typeof shader === "object") {
+            this.currentCompositor.useShader(shader);
+        } else  {
+            // (re)bind the compositor with the default shader (program & attributes)
             this.currentCompositor.bind();
         }
 
@@ -329,6 +335,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
             glArray = _color.parseCSS(color).toArray();
             pool.push(_color);
         }
+
         // clear gl context with the specified color
         this.currentCompositor.clearColor(glArray[0], glArray[1], glArray[2], (opaque === true) ? 1.0 : glArray[3]);
     }
