@@ -180,6 +180,9 @@ import { isPowerOfTwo } from "./../../math/math.js";
     reset() {
         super.reset();
 
+        // clear gl context
+        this.clear();
+
         // rebind the vertex buffer if required (e.g in case of context loss)
         if (this.gl.getParameter(this.gl.ARRAY_BUFFER_BINDING) !== this.vertexBuffer) {
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
@@ -311,12 +314,12 @@ import { isPowerOfTwo } from "./../../math/math.js";
     }
 
     /**
-     * prepare the framebuffer for drawing a new frame
+     * Clear the frame buffer
      */
     clear() {
-        this.compositors.forEach((compositor) => {
-            compositor.clear(this.settings.transparent ? 0.0 : 1.0);
-        });
+        var gl = this.gl;
+        gl.clearColor(0, 0, 0, this.settings.transparent ? 0.0 : 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
     }
 
     /**
@@ -326,6 +329,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
      */
     clearColor(color = "#000000", opaque = false) {
         var glArray;
+        var gl = this.gl;
 
         if (color instanceof Color) {
             glArray = color.toArray();
@@ -337,7 +341,8 @@ import { isPowerOfTwo } from "./../../math/math.js";
         }
 
         // clear gl context with the specified color
-        this.currentCompositor.clearColor(glArray[0], glArray[1], glArray[2], (opaque === true) ? 1.0 : glArray[3]);
+        gl.clearColor(glArray[0], glArray[1], glArray[2], (opaque === true) ? 1.0 : glArray[3]);
+        gl.clear(gl.COLOR_BUFFER_BIT);
     }
 
     /**

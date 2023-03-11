@@ -130,9 +130,6 @@ import GLShader from "../glshader.js";
             this.renderer.getCanvas().width,
             this.renderer.getCanvas().height
         );
-
-        // Initialize clear color
-        this.clearColor(0.0, 0.0, 0.0, 0.0);
     }
 
     /**
@@ -250,28 +247,5 @@ import GLShader from "../glshader.js";
             // clear the vertex buffer
             vertex.clear();
         }
-    }
-
-    /**
-     * Clear the frame buffer
-     * @param {number} [alpha = 0.0] - the alpha value used when clearing the framebuffer
-     */
-    clear(alpha = 0) {
-        var gl = this.gl;
-        gl.clearColor(0, 0, 0, alpha);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
-    }
-
-    /**
-     * Specify the color values used when clearing color buffers. The values are clamped between 0 and 1.
-     * @param {number} [r = 0] - the red color value used when the color buffers are cleared
-     * @param {number} [g = 0] - the green color value used when the color buffers are cleared
-     * @param {number} [b = 0] - the blue color value used when the color buffers are cleared
-     * @param {number} [a = 0] - the alpha color value used when the color buffers are cleared
-     */
-    clearColor(r = 0, g = 0, b = 0, a = 0) {
-        var gl = this.gl;
-        gl.clearColor(r, g, b, a);
-        gl.clear(gl.COLOR_BUFFER_BIT);
     }
 }
