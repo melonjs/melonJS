@@ -212,8 +212,9 @@ var V_ARRAY = [
 
         // upload and activate the texture if necessary
         var unit = this.uploadTexture(texture);
-        // set fragement sampler accordingly
-        this.defaultShader.setUniform("uSampler", unit);
+
+        // set fragment sampler accordingly
+        this.currentShader.setUniform("uSampler", unit);
 
         // Transform vertices
         var m = this.viewMatrix,

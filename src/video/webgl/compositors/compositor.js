@@ -42,10 +42,16 @@ import GLShader from "../glshader.js";
         this.viewMatrix = renderer.currentTransform;
 
         /**
-         * the default shader used by this compositor
+         * the default shader created by this compositor
          * @type {GLShader}
          */
-        this.defaultShader = null;
+        this.defaultShader = undefined;
+
+        /**
+         * the shader currently used by this compositor
+         * @type {GLShader}
+         */
+        this.currentShader = undefined;
 
         /**
          * primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
@@ -151,7 +157,8 @@ import GLShader from "../glshader.js";
             shader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
             shader.setVertexAttributes(this.gl, this.attributes, this.vertexByteSize);
 
-            this.renderer.currentProgram = shader.program;
+            this.currentShader = shader;
+            this.renderer.currentProgram = this.currentShader.program;
         }
     }
 
@@ -216,11 +223,11 @@ import GLShader from "../glshader.js";
      * @param {Matrix3d} matrix
      */
     setProjection(matrix) {
-        this.defaultShader.setUniform("uProjectionMatrix", matrix);
+        this.currentShader.setUniform("uProjectionMatrix", matrix);
     }
 
     /**
-     * Flush batched texture operations to the GPU
+     * Flush batched vertex data to the GPU
      * @param {number} [mode=gl.TRIANGLES] - the GL drawing mode
      */
     flush(mode = this.mode) {

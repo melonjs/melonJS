@@ -60,7 +60,7 @@ import Compositor from "./compositor.js";
             });
         }
 
-        // disable batching for primitive using LINE_STRIP or LINE_LOOP
+        // force flush for primitive using LINE_STRIP or LINE_LOOP
         if (this.mode === this.gl.LINE_STRIP || this.mode === this.gl.LINE_LOOP) {
             this.flush(this.mode);
         }
