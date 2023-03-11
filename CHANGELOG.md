@@ -5,7 +5,7 @@
 ### Added
 - Renderer: enable batch drawing for rectangle and polygon based primitive shapes
 - Renderer: new base `Compositor` class that can be extended to create custom WebGL compositors
-- Renderable: custom shader can now be added to a renderable (currently beta and for testing only)
+- Renderable: custom shader can now be added to a renderable (experimental feature, for testing only)
 
 ### Changed
 - Core: remove remaining polyfills related to pre-ECMAScript 2015 features (as melonJS 2 implementation base is now 100% ES6)

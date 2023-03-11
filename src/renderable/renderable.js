@@ -207,7 +207,7 @@ import Color from "./../math/color.js";
         this.mask = undefined;
 
         /**
-          * (Beta) an optional shader program, to be used instead of the default built-in one, when drawing this renderable (WebGL only)
+          * (Experimental) an optional shader, to be used instead of the default built-in one, when drawing this renderable (WebGL only)
           * @type {GLShader}
           * @default undefined
         */
