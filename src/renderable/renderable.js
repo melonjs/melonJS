@@ -777,11 +777,6 @@ import Color from "./../math/color.js";
             this.mask = undefined;
         }
 
-        if (typeof this.shader === "object") {
-            this.shader.destroy();
-            this.shader = undefined;
-        }
-
         if (typeof this._tint !== "undefined") {
             pool.push(this._tint);
             this._tint = undefined;
@@ -800,6 +795,12 @@ import Color from "./../math/color.js";
 
         // call the user defined destroy method
         this.onDestroyEvent.apply(this, arguments);
+
+        // destroy any shader object if not done by the user through onDestroyEvent()
+        if (typeof this.shader === "object") {
+            this.shader.destroy();
+            this.shader = undefined;
+        }
     }
 
     /**
