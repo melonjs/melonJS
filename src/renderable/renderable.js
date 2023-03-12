@@ -627,9 +627,7 @@ import Color from "./../math/color.js";
          // manually update the anchor point (required for updateBoundsPos)
          this.anchorPoint.setMuted(x, y);
          // then call updateBounds
-         //this.updateBoundsPos(this.pos.x, this.pos.y);
          this.updateBounds();
-         //console.log("hello");
          this.isDirty = true;
      }
 
