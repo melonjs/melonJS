@@ -100,7 +100,7 @@ export const pointerEvent = !!globalThis.PointerEvent;
  * @readonly
  * @public
  */
-export const touch = touchEvent || pointerEvent;
+export const touch = touchEvent || (pointerEvent && globalThis.navigator.maxTouchPoints > 0);
 
 /**
  * the maximum number of simultaneous touch contact points are supported by the current device.

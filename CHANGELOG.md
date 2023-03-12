@@ -18,6 +18,7 @@
 
 ### Fixed
 - Geometry: fix `arcTo()` drawing a "looping" line between the start and end angle
+- Input: fix `device.touch` wrongly returning `true` on non-touch devices
 - Renderer: fix binding of active shader when switching compositor
 - Renderer: fix a TypeError exception on Safari Technology Preview
 - Text: restore the text Stroke feature (was broken since a couple of releases)
