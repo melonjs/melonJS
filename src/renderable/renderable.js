@@ -659,7 +659,7 @@ import Color from "./../math/color.js";
 
         // use this renderable shader if defined
         if (typeof this.shader === "object" && typeof renderer.gl !== "undefined") {
-            renderer.setCompositor("quad", this.shader);
+            renderer.customShader = this.shader;
         }
 
         if ((this.autoTransform === true) && (!this.currentTransform.isIdentity())) {
@@ -715,7 +715,7 @@ import Color from "./../math/color.js";
 
         // revert to the default shader if defined
         if (typeof this.shader === "object" && typeof renderer.gl !== "undefined") {
-            renderer.setCompositor("quad");
+            renderer.customShader = undefined;
         }
 
         // restore the context
@@ -777,6 +777,11 @@ import Color from "./../math/color.js";
         if (typeof this.mask !== "undefined") {
             pool.push(this.mask);
             this.mask = undefined;
+        }
+
+        if (typeof this.shader === "object") {
+            this.shader.destroy();
+            this.shader = undefined;
         }
 
         if (typeof this._tint !== "undefined") {

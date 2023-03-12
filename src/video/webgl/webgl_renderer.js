@@ -147,6 +147,10 @@ import { isPowerOfTwo } from "./../../math/math.js";
             this.GPURenderer = this.gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
         }
 
+        // a private property that when set will make `setCompositor`
+        // to use this specific shader instead of the default one
+        this.customShader = undefined;
+
         // Create a texture cache
         this.cache = new TextureCache(this.maxTextures);
 
@@ -232,7 +236,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
      * @param {GLShader} [shader] - an optional shader program to be used, instead of the default one, when activating the compositor
      * @return {Compositor} an instance to the current active compositor
      */
-    setCompositor(name = "default", shader) {
+    setCompositor(name = "default", shader = this.customShader) {
         let compositor = this.compositors.get(name);
 
         if (typeof compositor === "undefined") {
@@ -250,7 +254,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
 
         if (typeof shader === "object") {
             this.currentCompositor.useShader(shader);
-        } else  {
+        } else {
             // (re)bind the compositor with the default shader (program & attributes)
             this.currentCompositor.bind();
         }
