@@ -253,7 +253,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
             this.currentCompositor = compositor;
         }
 
-        if (typeof shader === "object") {
+        if (name === "quad" && typeof shader === "object") {
             this.currentCompositor.useShader(shader);
         } else {
             // (re)bind the compositor with the default shader (program & attributes)
