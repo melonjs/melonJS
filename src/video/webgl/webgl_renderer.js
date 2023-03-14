@@ -176,6 +176,12 @@ import { isPowerOfTwo } from "./../../math/math.js";
         event.on(event.GAME_RESET, () => {
             this.reset();
         });
+
+        // register to the CANVAS resize channel
+        event.on(event.CANVAS_ONRESIZE, (width, height) => {
+            this.flush();
+            this.setViewport(0, 0, width, height);
+        });
     }
 
     /**
@@ -186,6 +192,9 @@ import { isPowerOfTwo } from "./../../math/math.js";
 
         // clear gl context
         this.clear();
+
+        // initial viewport size
+        this.setViewport();
 
         // rebind the vertex buffer if required (e.g in case of context loss)
         if (this.gl.getParameter(this.gl.ARRAY_BUFFER_BINDING) !== this.vertexBuffer) {
@@ -316,6 +325,17 @@ import { isPowerOfTwo } from "./../../math/math.js";
     setProjection(matrix) {
         super.setProjection(matrix);
         this.currentCompositor.setProjection(matrix);
+    }
+
+    /**
+     * Sets the WebGL viewport, which specifies the affine transformation of x and y from normalized device coordinates to window coordinates
+     * @param {number} [x = 0] - x the horizontal coordinate for the lower left corner of the viewport origin
+     * @param {number} [y = 0] - y the vertical coordinate for the lower left corner of the viewport origin
+     * @param {number} [w = width of the canvas] - the width of viewport
+     * @param {number} [h = height of the canvas] - the height of viewport
+     */
+    setViewport(x = 0, y = 0, w = this.getCanvas().width, h = this.getCanvas().height) {
+        this.gl.viewport(x, y, w, h);
     }
 
     /**
