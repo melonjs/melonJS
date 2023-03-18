@@ -5,7 +5,6 @@
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
-import { on, CANVAS_ONRESIZE } from '../../../system/event.js';
 import VertexArrayBuffer from '../buffer/vertex.js';
 import GLShader from '../glshader.js';
 
@@ -112,12 +111,6 @@ import GLShader from '../glshader.js';
         } else {
             throw new Error("shader definition missing");
         }
-
-        // register to the CANVAS resize channel
-        on(CANVAS_ONRESIZE, (width, height) => {
-            this.flush();
-            this.setViewport(0, 0, width, height);
-        });
     }
 
     /**
@@ -130,13 +123,6 @@ import GLShader from '../glshader.js';
 
         // clear the vertex data buffer
         this.vertexData.clear();
-
-        // initial viewport size
-        this.setViewport(
-            0, 0,
-            this.renderer.getCanvas().width,
-            this.renderer.getCanvas().height
-        );
     }
 
     /**
@@ -209,17 +195,6 @@ import GLShader from '../glshader.js';
                 throw new Error("Invalid GL Attribute type");
         }
         this.vertexSize = this.vertexByteSize / Float32Array.BYTES_PER_ELEMENT;
-    }
-
-    /**
-     * Sets the viewport
-     * @param {number} x - x position of viewport
-     * @param {number} y - y position of viewport
-     * @param {number} w - width of viewport
-     * @param {number} h - height of viewport
-     */
-    setViewport(x, y, w, h) {
-        this.gl.viewport(x, y, w, h);
     }
 
     /**

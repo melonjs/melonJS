@@ -13,7 +13,7 @@ import Renderer from '../renderer.js';
 import TextureCache from '../texture/cache.js';
 import { TextureAtlas, createAtlas } from '../texture/atlas.js';
 import { renderer } from '../video.js';
-import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../system/event.js';
+import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET, CANVAS_ONRESIZE } from '../../system/event.js';
 import pool from '../../system/pooling.js';
 import { isPowerOfTwo } from '../../math/math.js';
 
@@ -54,18 +54,18 @@ import { isPowerOfTwo } from '../../math/math.js';
         /**
          * The vendor string of the underlying graphics driver.
          * @type {string}
-         * @default null
+         * @default undefined
          * @readonly
          */
-        this.GPUVendor = null;
+        this.GPUVendor = undefined;
 
         /**
          * The renderer string of the underlying graphics driver.
          * @type {string}
-         * @default null
+         * @default undefined
          * @readonly
          */
-        this.GPURenderer = null;
+        this.GPURenderer = undefined;
 
         /**
          * The WebGL context
@@ -117,13 +117,13 @@ import { isPowerOfTwo } from '../../math/math.js';
          * The current compositor used by the renderer
          * @type {WebGLCompositor}
          */
-        this.currentCompositor = null;
+        this.currentCompositor = undefined;
 
         /**
          * a reference to the current shader program used by the renderer
          * @type {WebGLProgram}
          */
-        this.currentProgram = null;
+        this.currentProgram = undefined;
 
         /**
          * The list of active compositors
@@ -154,6 +154,10 @@ import { isPowerOfTwo } from '../../math/math.js';
             this.GPURenderer = this.gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
         }
 
+        // a private property that when set will make `setCompositor`
+        // to use this specific shader instead of the default one
+        this.customShader = undefined;
+
         // Create a texture cache
         this.cache = new TextureCache(this.maxTextures);
 
@@ -179,6 +183,12 @@ import { isPowerOfTwo } from '../../math/math.js';
         on(GAME_RESET, () => {
             this.reset();
         });
+
+        // register to the CANVAS resize channel
+        on(CANVAS_ONRESIZE, (width, height) => {
+            this.flush();
+            this.setViewport(0, 0, width, height);
+        });
     }
 
     /**
@@ -190,13 +200,17 @@ import { isPowerOfTwo } from '../../math/math.js';
         // clear gl context
         this.clear();
 
+        // initial viewport size
+        this.setViewport();
+
         // rebind the vertex buffer if required (e.g in case of context loss)
         if (this.gl.getParameter(this.gl.ARRAY_BUFFER_BINDING) !== this.vertexBuffer) {
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
         }
 
-        this.currentCompositor = null;
-        this.currentProgram = null;
+        this.currentCompositor = undefined;
+        this.currentProgram = undefined;
+        this.customShader = undefined;
 
         this.compositors.forEach((compositor) => {
             if (this.isContextValid === false) {
@@ -239,7 +253,7 @@ import { isPowerOfTwo } from '../../math/math.js';
      * @param {GLShader} [shader] - an optional shader program to be used, instead of the default one, when activating the compositor
      * @return {Compositor} an instance to the current active compositor
      */
-    setCompositor(name = "default", shader) {
+    setCompositor(name = "default", shader = this.customShader) {
         let compositor = this.compositors.get(name);
 
         if (typeof compositor === "undefined") {
@@ -247,7 +261,7 @@ import { isPowerOfTwo } from '../../math/math.js';
         }
 
         if (this.currentCompositor !== compositor) {
-            if (this.currentCompositor !== null) {
+            if (this.currentCompositor !== undefined) {
                 // flush the current compositor
                 this.currentCompositor.flush();
             }
@@ -255,9 +269,9 @@ import { isPowerOfTwo } from '../../math/math.js';
             this.currentCompositor = compositor;
         }
 
-        if (typeof shader === "object") {
+        if (name === "quad" && typeof shader === "object") {
             this.currentCompositor.useShader(shader);
-        } else  {
+        } else {
             // (re)bind the compositor with the default shader (program & attributes)
             this.currentCompositor.bind();
         }
@@ -318,6 +332,17 @@ import { isPowerOfTwo } from '../../math/math.js';
     setProjection(matrix) {
         super.setProjection(matrix);
         this.currentCompositor.setProjection(matrix);
+    }
+
+    /**
+     * Sets the WebGL viewport, which specifies the affine transformation of x and y from normalized device coordinates to window coordinates
+     * @param {number} [x = 0] - x the horizontal coordinate for the lower left corner of the viewport origin
+     * @param {number} [y = 0] - y the vertical coordinate for the lower left corner of the viewport origin
+     * @param {number} [w = width of the canvas] - the width of viewport
+     * @param {number} [h = height of the canvas] - the height of viewport
+     */
+    setViewport(x = 0, y = 0, w = this.getCanvas().width, h = this.getCanvas().height) {
+        this.gl.viewport(x, y, w, h);
     }
 
     /**

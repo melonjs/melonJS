@@ -387,10 +387,10 @@ var store$2 = sharedStore;
 (shared$3.exports = function (key, value) {
   return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 })('versions', []).push({
-  version: '3.29.0',
+  version: '3.29.1',
   mode: IS_PURE ? 'pure' : 'global',
   copyright: '© 2014-2023 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.29.0/LICENSE',
+  license: 'https://github.com/zloirock/core-js/blob/v3.29.1/LICENSE',
   source: 'https://github.com/zloirock/core-js'
 });
 
@@ -14624,7 +14624,7 @@ const pointerEvent = !!globalThis.PointerEvent;
  * @readonly
  * @public
  */
-const touch = touchEvent || pointerEvent;
+const touch = touchEvent || (pointerEvent && globalThis.navigator.maxTouchPoints > 0);
 
 /**
  * the maximum number of simultaneous touch contact points are supported by the current device.
@@ -18230,9 +18230,7 @@ var input = {
          // manually update the anchor point (required for updateBoundsPos)
          this.anchorPoint.setMuted(x, y);
          // then call updateBounds
-         //this.updateBoundsPos(this.pos.x, this.pos.y);
          this.updateBounds();
-         //console.log("hello");
          this.isDirty = true;
      }
 
@@ -18262,7 +18260,7 @@ var input = {
 
         // use this renderable shader if defined
         if (typeof this.shader === "object" && typeof renderer.gl !== "undefined") {
-            renderer.setCompositor("quad", this.shader);
+            renderer.customShader = this.shader;
         }
 
         if ((this.autoTransform === true) && (!this.currentTransform.isIdentity())) {
@@ -18318,7 +18316,8 @@ var input = {
 
         // revert to the default shader if defined
         if (typeof this.shader === "object" && typeof renderer.gl !== "undefined") {
-            renderer.setCompositor("quad");
+            renderer.customShader = undefined;
+            //renderer.setCompositor("quad");
         }
 
         // restore the context
@@ -18400,6 +18399,12 @@ var input = {
 
         // call the user defined destroy method
         this.onDestroyEvent.apply(this, arguments);
+
+        // destroy any shader object if not done by the user through onDestroyEvent()
+        if (typeof this.shader === "object") {
+            this.shader.destroy();
+            this.shader = undefined;
+        }
     }
 
     /**
@@ -30939,12 +30944,6 @@ function minify(src) {
         } else {
             throw new Error("shader definition missing");
         }
-
-        // register to the CANVAS resize channel
-        on(CANVAS_ONRESIZE, (width, height) => {
-            this.flush();
-            this.setViewport(0, 0, width, height);
-        });
     }
 
     /**
@@ -30957,13 +30956,6 @@ function minify(src) {
 
         // clear the vertex data buffer
         this.vertexData.clear();
-
-        // initial viewport size
-        this.setViewport(
-            0, 0,
-            this.renderer.getCanvas().width,
-            this.renderer.getCanvas().height
-        );
     }
 
     /**
@@ -31036,17 +31028,6 @@ function minify(src) {
                 throw new Error("Invalid GL Attribute type");
         }
         this.vertexSize = this.vertexByteSize / Float32Array.BYTES_PER_ELEMENT;
-    }
-
-    /**
-     * Sets the viewport
-     * @param {number} x - x position of viewport
-     * @param {number} y - y position of viewport
-     * @param {number} w - width of viewport
-     * @param {number} h - height of viewport
-     */
-    setViewport(x, y, w, h) {
-        this.gl.viewport(x, y, w, h);
     }
 
     /**
@@ -31429,18 +31410,18 @@ var V_ARRAY = [
         /**
          * The vendor string of the underlying graphics driver.
          * @type {string}
-         * @default null
+         * @default undefined
          * @readonly
          */
-        this.GPUVendor = null;
+        this.GPUVendor = undefined;
 
         /**
          * The renderer string of the underlying graphics driver.
          * @type {string}
-         * @default null
+         * @default undefined
          * @readonly
          */
-        this.GPURenderer = null;
+        this.GPURenderer = undefined;
 
         /**
          * The WebGL context
@@ -31492,13 +31473,13 @@ var V_ARRAY = [
          * The current compositor used by the renderer
          * @type {WebGLCompositor}
          */
-        this.currentCompositor = null;
+        this.currentCompositor = undefined;
 
         /**
          * a reference to the current shader program used by the renderer
          * @type {WebGLProgram}
          */
-        this.currentProgram = null;
+        this.currentProgram = undefined;
 
         /**
          * The list of active compositors
@@ -31529,6 +31510,10 @@ var V_ARRAY = [
             this.GPURenderer = this.gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
         }
 
+        // a private property that when set will make `setCompositor`
+        // to use this specific shader instead of the default one
+        this.customShader = undefined;
+
         // Create a texture cache
         this.cache = new TextureCache(this.maxTextures);
 
@@ -31554,6 +31539,12 @@ var V_ARRAY = [
         on(GAME_RESET, () => {
             this.reset();
         });
+
+        // register to the CANVAS resize channel
+        on(CANVAS_ONRESIZE, (width, height) => {
+            this.flush();
+            this.setViewport(0, 0, width, height);
+        });
     }
 
     /**
@@ -31565,13 +31556,17 @@ var V_ARRAY = [
         // clear gl context
         this.clear();
 
+        // initial viewport size
+        this.setViewport();
+
         // rebind the vertex buffer if required (e.g in case of context loss)
         if (this.gl.getParameter(this.gl.ARRAY_BUFFER_BINDING) !== this.vertexBuffer) {
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
         }
 
-        this.currentCompositor = null;
-        this.currentProgram = null;
+        this.currentCompositor = undefined;
+        this.currentProgram = undefined;
+        this.customShader = undefined;
 
         this.compositors.forEach((compositor) => {
             if (this.isContextValid === false) {
@@ -31614,7 +31609,7 @@ var V_ARRAY = [
      * @param {GLShader} [shader] - an optional shader program to be used, instead of the default one, when activating the compositor
      * @return {Compositor} an instance to the current active compositor
      */
-    setCompositor(name = "default", shader) {
+    setCompositor(name = "default", shader = this.customShader) {
         let compositor = this.compositors.get(name);
 
         if (typeof compositor === "undefined") {
@@ -31622,7 +31617,7 @@ var V_ARRAY = [
         }
 
         if (this.currentCompositor !== compositor) {
-            if (this.currentCompositor !== null) {
+            if (this.currentCompositor !== undefined) {
                 // flush the current compositor
                 this.currentCompositor.flush();
             }
@@ -31630,9 +31625,9 @@ var V_ARRAY = [
             this.currentCompositor = compositor;
         }
 
-        if (typeof shader === "object") {
+        if (name === "quad" && typeof shader === "object") {
             this.currentCompositor.useShader(shader);
-        } else  {
+        } else {
             // (re)bind the compositor with the default shader (program & attributes)
             this.currentCompositor.bind();
         }
@@ -31693,6 +31688,17 @@ var V_ARRAY = [
     setProjection(matrix) {
         super.setProjection(matrix);
         this.currentCompositor.setProjection(matrix);
+    }
+
+    /**
+     * Sets the WebGL viewport, which specifies the affine transformation of x and y from normalized device coordinates to window coordinates
+     * @param {number} [x = 0] - x the horizontal coordinate for the lower left corner of the viewport origin
+     * @param {number} [y = 0] - y the vertical coordinate for the lower left corner of the viewport origin
+     * @param {number} [w = width of the canvas] - the width of viewport
+     * @param {number} [h = height of the canvas] - the height of viewport
+     */
+    setViewport(x = 0, y = 0, w = this.getCanvas().width, h = this.getCanvas().height) {
+        this.gl.viewport(x, y, w, h);
     }
 
     /**

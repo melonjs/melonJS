@@ -634,9 +634,7 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
          // manually update the anchor point (required for updateBoundsPos)
          this.anchorPoint.setMuted(x, y);
          // then call updateBounds
-         //this.updateBoundsPos(this.pos.x, this.pos.y);
          this.updateBounds();
-         //console.log("hello");
          this.isDirty = true;
      }
 
@@ -666,7 +664,7 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
 
         // use this renderable shader if defined
         if (typeof this.shader === "object" && typeof renderer.gl !== "undefined") {
-            renderer.setCompositor("quad", this.shader);
+            renderer.customShader = this.shader;
         }
 
         if ((this.autoTransform === true) && (!this.currentTransform.isIdentity())) {
@@ -722,7 +720,8 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
 
         // revert to the default shader if defined
         if (typeof this.shader === "object" && typeof renderer.gl !== "undefined") {
-            renderer.setCompositor("quad");
+            renderer.customShader = undefined;
+            //renderer.setCompositor("quad");
         }
 
         // restore the context
@@ -804,6 +803,12 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
 
         // call the user defined destroy method
         this.onDestroyEvent.apply(this, arguments);
+
+        // destroy any shader object if not done by the user through onDestroyEvent()
+        if (typeof this.shader === "object") {
+            this.shader.destroy();
+            this.shader = undefined;
+        }
     }
 
     /**

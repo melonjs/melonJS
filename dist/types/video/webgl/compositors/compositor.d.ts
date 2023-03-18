@@ -93,14 +93,6 @@ export default class Compositor {
      */
     addAttribute(name: string, size: number, type: GLenum, normalized: boolean, offset: number): void;
     /**
-     * Sets the viewport
-     * @param {number} x - x position of viewport
-     * @param {number} y - y position of viewport
-     * @param {number} w - width of viewport
-     * @param {number} h - height of viewport
-     */
-    setViewport(x: number, y: number, w: number, h: number): void;
-    /**
      * set/change the current projection matrix
      * @param {Matrix3d} matrix
      */

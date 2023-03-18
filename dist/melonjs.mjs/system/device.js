@@ -107,7 +107,7 @@ const pointerEvent = !!globalThis.PointerEvent;
  * @readonly
  * @public
  */
-const touch = touchEvent || pointerEvent;
+const touch = touchEvent || (pointerEvent && globalThis.navigator.maxTouchPoints > 0);
 
 /**
  * the maximum number of simultaneous touch contact points are supported by the current device.

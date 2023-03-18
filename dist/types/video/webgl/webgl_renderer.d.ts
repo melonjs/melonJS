@@ -45,14 +45,14 @@ export default class WebGLRenderer extends Renderer {
     /**
      * The vendor string of the underlying graphics driver.
      * @type {string}
-     * @default null
+     * @default undefined
      * @readonly
      */
     readonly GPUVendor: string;
     /**
      * The renderer string of the underlying graphics driver.
      * @type {string}
-     * @default null
+     * @default undefined
      * @readonly
      */
     readonly GPURenderer: string;
@@ -110,6 +110,7 @@ export default class WebGLRenderer extends Renderer {
      * @type {Map<WebGLCompositor>}
      */
     compositors: Map<WebGLCompositor, any>;
+    customShader: any;
     cache: TextureCache;
     /**
      * add a new compositor to this renderer
@@ -147,6 +148,14 @@ export default class WebGLRenderer extends Renderer {
      * @param {Matrix3d} matrix
      */
     setProjection(matrix: Matrix3d): void;
+    /**
+     * Sets the WebGL viewport, which specifies the affine transformation of x and y from normalized device coordinates to window coordinates
+     * @param {number} [x = 0] - x the horizontal coordinate for the lower left corner of the viewport origin
+     * @param {number} [y = 0] - y the vertical coordinate for the lower left corner of the viewport origin
+     * @param {number} [w = width of the canvas] - the width of viewport
+     * @param {number} [h = height of the canvas] - the height of viewport
+     */
+    setViewport(x?: number | undefined, y?: number | undefined, w?: number | undefined, h?: number | undefined): void;
     /**
      * Clears the gl context with the given color.
      * @param {Color|string} [color="#000000"] - CSS color.
