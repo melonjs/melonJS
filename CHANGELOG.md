@@ -1,6 +1,6 @@
 # Changelog
 
-## [15.0.0] (melonJS 2) - _2023-02-xx_
+## [15.0.0] (melonJS 2) - _2023-03-18_
 
 ### Added
 - Renderer: enable batch drawing for rectangle and polygon based primitive shapes
