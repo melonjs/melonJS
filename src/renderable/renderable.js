@@ -714,6 +714,7 @@ import Color from "./../math/color.js";
         // revert to the default shader if defined
         if (typeof this.shader === "object" && typeof renderer.gl !== "undefined") {
             renderer.customShader = undefined;
+            //renderer.setCompositor("quad");
         }
 
         // restore the context
