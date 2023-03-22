@@ -68,8 +68,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Reset context state
-     * @name reset
-     * @memberof CanvasRenderer
      */
     reset() {
         super.reset();
@@ -78,8 +76,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Reset the canvas transform to identity
-     * @name resetTransform
-     * @memberof CanvasRenderer
      */
     resetTransform() {
         this.getContext().setTransform(1, 0, 0, 1, 0, 0);
@@ -96,9 +92,7 @@ import * as event from "./../../system/event.js";
      * <img src="images/lighter-blendmode.png" width="510"/> <br>
      * - "screen" : The pixels are inverted, multiplied, and inverted again. A lighter picture is the result (opposite of multiply) <br>
      * <img src="images/screen-blendmode.png" width="510"/> <br>
-     * @name setBlendMode
      * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
-     * @memberof CanvasRenderer
      * @param {string} [mode="normal"] - blend mode : "normal", "multiply", "lighter, "additive", "screen"
      * @param {CanvasRenderingContext2D} [context]
      */
@@ -128,8 +122,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * prepare the framebuffer for drawing a new frame
-     * @name clear
-     * @memberof CanvasRenderer
      */
     clear() {
         if (this.settings.transparent === false) {
@@ -141,8 +133,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Clears the main framebuffer with the given color
-     * @name clearColor
-     * @memberof CanvasRenderer
      * @param {Color|string} [color="#000000"] - CSS color.
      * @param {boolean} [opaque=false] - Allow transparency [default] or clear the surface completely [true]
      */
@@ -161,8 +151,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
-     * @name clearRect
-     * @memberof CanvasRenderer
      * @param {number} x - x axis of the coordinate for the rectangle starting point.
      * @param {number} y - y axis of the coordinate for the rectangle starting point.
      * @param {number} width - The rectangle's width.
@@ -174,8 +162,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Create a pattern with the specified repetition
-     * @name createPattern
-     * @memberof CanvasRenderer
      * @param {HTMLImageElement|SVGImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap|OffscreenCanvas|VideoFrame} image - Source image to be used as the pattern's image
      * @param {string} repeat - Define how the pattern should be repeated
      * @returns {CanvasPattern}
@@ -192,8 +178,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Draw an image onto the main using the canvas api
-     * @name drawImage
-     * @memberof CanvasRenderer
      * @param {HTMLImageElement|SVGImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap|OffscreenCanvas|VideoFrame} image - An element to draw into the context.
      * @param {number} sx - The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
      * @param {number} sy - The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
@@ -255,8 +239,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Draw a pattern within the given rectangle.
-     * @name drawPattern
-     * @memberof CanvasRenderer
      * @param {CanvasPattern} pattern - Pattern object
      * @param {number} x
      * @param {number} y
@@ -278,8 +260,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Stroke an arc at the specified coordinates with given radius, start and end points
-     * @name strokeArc
-     * @memberof CanvasRenderer
      * @param {number} x - arc center point x-axis
      * @param {number} y - arc center point y-axis
      * @param {number} radius
@@ -304,8 +284,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Fill an arc at the specified coordinates with given radius, start and end points
-     * @name fillArc
-     * @memberof CanvasRenderer
      * @param {number} x - arc center point x-axis
      * @param {number} y - arc center point y-axis
      * @param {number} radius
@@ -319,8 +297,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Stroke an ellipse at the specified coordinates with given radius
-     * @name strokeEllipse
-     * @memberof CanvasRenderer
      * @param {number} x - ellipse center point x-axis
      * @param {number} y - ellipse center point y-axis
      * @param {number} w - horizontal radius of the ellipse
@@ -360,8 +336,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Fill an ellipse at the specified coordinates with given radius
-     * @name fillEllipse
-     * @memberof CanvasRenderer
      * @param {number} x - ellipse center point x-axis
      * @param {number} y - ellipse center point y-axis
      * @param {number} w - horizontal radius of the ellipse
@@ -373,8 +347,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Stroke a line of the given two points
-     * @name strokeLine
-     * @memberof CanvasRenderer
      * @param {number} startX - the start x coordinate
      * @param {number} startY - the start y coordinate
      * @param {number} endX - the end x coordinate
@@ -396,8 +368,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Fill a line of the given two points
-     * @name fillLine
-     * @memberof CanvasRenderer
      * @param {number} startX - the start x coordinate
      * @param {number} startY - the start y coordinate
      * @param {number} endX - the end x coordinate
@@ -409,8 +379,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Stroke the given me.Polygon on the screen
-     * @name strokePolygon
-     * @memberof CanvasRenderer
      * @param {Polygon} poly - the shape to draw
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
@@ -437,8 +405,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Fill the given me.Polygon on the screen
-     * @name fillPolygon
-     * @memberof CanvasRenderer
      * @param {Polygon} poly - the shape to draw
      */
     fillPolygon(poly) {
@@ -447,8 +413,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Stroke a rectangle at the specified coordinates
-     * @name strokeRect
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      * @param {number} width
@@ -467,8 +431,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Draw a filled rectangle at the specified coordinates
-     * @name fillRect
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      * @param {number} width
@@ -480,8 +442,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Stroke a rounded rectangle at the specified coordinates
-     * @name strokeRoundRect
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      * @param {number} width
@@ -503,8 +463,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Draw a rounded filled rectangle at the specified coordinates
-     * @name fillRoundRect
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      * @param {number} width
@@ -517,8 +475,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Stroke a Point at the specified coordinates
-     * @name strokePoint
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      */
@@ -528,8 +484,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Draw a a point at the specified coordinates
-     * @name fillPoint
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      * @param {number} width
@@ -541,8 +495,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * save the canvas context
-     * @name save
-     * @memberof CanvasRenderer
      */
     save() {
         this.getContext().save();
@@ -550,8 +502,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * restores the canvas context
-     * @name restore
-     * @memberof CanvasRenderer
      */
     restore() {
         this.getContext().restore();
@@ -564,8 +514,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * rotates the canvas context
-     * @name rotate
-     * @memberof CanvasRenderer
      * @param {number} angle - in radians
      */
     rotate(angle) {
@@ -574,8 +522,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * scales the canvas context
-     * @name scale
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      */
@@ -586,8 +532,6 @@ import * as event from "./../../system/event.js";
     /**
      * Set the current fill & stroke style color.
      * By default, or upon reset, the value is set to #000000.
-     * @name setColor
-     * @memberof CanvasRenderer
      * @param {Color|string} color - css color value
      */
     setColor(color) {
@@ -602,8 +546,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Set the global alpha
-     * @name setGlobalAlpha
-     * @memberof CanvasRenderer
      * @param {number} alpha - 0.0 to 1.0 values accepted.
      */
     setGlobalAlpha(alpha) {
@@ -612,8 +554,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Return the global alpha
-     * @name getGlobalAlpha
-     * @memberof CanvasRenderer
      * @returns {number} global alpha value
      */
     getGlobalAlpha() {
@@ -622,8 +562,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Set the line width on the context
-     * @name setLineWidth
-     * @memberof CanvasRenderer
      * @param {number} width - Line width
      */
     setLineWidth(width) {
@@ -633,8 +571,6 @@ import * as event from "./../../system/event.js";
     /**
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.
-     * @name setTransform
-     * @memberof CanvasRenderer
      * @param {Matrix2d} mat2d - Matrix to transform by
      */
     setTransform(mat2d) {
@@ -644,8 +580,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Multiply given matrix into the renderer tranformation matrix
-     * @name transform
-     * @memberof CanvasRenderer
      * @param {Matrix2d} mat2d - Matrix to transform by
      */
     transform(mat2d) {
@@ -667,8 +601,6 @@ import * as event from "./../../system/event.js";
 
     /**
      * Translates the context to the given position
-     * @name translate
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      */
@@ -686,8 +618,6 @@ import * as event from "./../../system/event.js";
      * You can however save the current region using the save(),
      * and restore it (with the restore() method) any time in the future.
      * (<u>this is an experimental feature !</u>)
-     * @name clipRect
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      * @param {number} width
@@ -718,8 +648,6 @@ import * as event from "./../../system/event.js";
      * A mask limits rendering elements to the shape and position of the given mask object.
      * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
      * Mask are not preserved through renderer context save and restore.
-     * @name setMask
-     * @memberof CanvasRenderer
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - the shape defining the mask to be applied
      * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
      */
@@ -783,9 +711,7 @@ import * as event from "./../../system/event.js";
 
     /**
      * disable (remove) the rendering mask set through setMask.
-     * @name clearMask
      * @see CanvasRenderer#setMask
-     * @memberof CanvasRenderer
      */
     clearMask() {
         if (this.maskLevel > 0) {
