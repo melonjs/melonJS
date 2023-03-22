@@ -176,7 +176,7 @@ import * as event from "./../../system/event.js";
      * Create a pattern with the specified repetition
      * @name createPattern
      * @memberof CanvasRenderer
-     * @param {Image} image - Source image
+     * @param {HTMLImageElement|SVGImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap|OffscreenCanvas|VideoFrame} image - Source image to be used as the pattern's image
      * @param {string} repeat - Define how the pattern should be repeated
      * @returns {CanvasPattern}
      * @see ImageLayer#repeat
