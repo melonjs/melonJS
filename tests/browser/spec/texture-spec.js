@@ -13,7 +13,7 @@ describe("Texture", function () {
     describe("CanvasTexture", function () {
         it("convertToBlob() should return a Blob when using a regular canvas", async () => {
             expect(await page.evaluate(() => {
-                globalThis.texture_canvas.convertToBlob().then((blob) => { 
+                globalThis.texture_canvas.toBlob().then((blob) => { 
                     expect(blob).toBeInstanceOf(window.Blob);
                 });
             }))
@@ -21,7 +21,7 @@ describe("Texture", function () {
 
         it("convertToBlob() should return a Blob when using a offscreenCanvas", async () => {
             expect(await page.evaluate(() => {
-                globalThis.texture_offscreencanvas.convertToBlob().then((blob) => { 
+                globalThis.texture_offscreencanvas.toBlob().then((blob) => { 
                     expect(blob).toBeInstanceOf(window.Blob);
                 });
             }))

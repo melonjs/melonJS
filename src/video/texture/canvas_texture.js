@@ -126,7 +126,7 @@ class CanvasTexture {
      * @example
      * canvasTexture.convertToBlob().then((blob) => console.log(blob));
      */
-    convertToBlob(options) {
+    toBlob(options) {
         if (typeof this.canvas.convertToBlob === "function") {
             return this.canvas.convertToBlob(options);
         } else {
@@ -140,19 +140,25 @@ class CanvasTexture {
 
     /**
      * creates an ImageBitmap object from the most recently rendered image of this canvas texture
-     * (not supported by standard Canvas)
-     * @return {ImageBitmap} An ImageBitmap.
+     * @param {Object} [options] - An object with the following properties:
+     * @param {String} [options.type="image/png"] - A string indicating the image format
+     * @param {Number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @return {Promise} A Promise returning an ImageBitmap.
      * @example
-     * canvasTexture.transferToImageBitmap();
+     * canvasTexture.transferToImageBitmap().then((bitmap) => console.log(bitmap));
      */
-    transferToImageBitmap() {
-        if (typeof this.canvas.transferToImageBitmap === "function") {
-            return this.canvas.transferToImageBitmap();
-        } else {
-            let imageBitmap = new Image();
-            imageBitmap.src = this.canvas.toDataURL();
-            return imageBitmap;
-        }
+    toImageBitmap(options) {
+        return new Promise((resolve) => {
+            if (typeof this.canvas.transferToImageBitmap === "function") {
+                resolve(this.canvas.transferToImageBitmap());
+            } else {
+                let image = new Image();
+                image.src = this.canvas.toDataURL(options);
+                image.onload = () => {
+                    createImageBitmap(image).then((bitmap) => resolve(bitmap));
+                };
+            }
+        });
     }
 
     /**
@@ -161,12 +167,14 @@ class CanvasTexture {
      * @param {Object} [options] - An object with the following properties:
      * @param {String} [options.type="image/png"] - A string indicating the image format
      * @param {Number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
-     * @return {String} A string containing the requested data URL.
+     * @return {Promise} A Promise returning a string containing the requested data URL.
      * @example
-     * renderer.toDataUrl();
+     * renderer.toDataURL().then((dataURL) => console.log(dataURL));
      */
     toDataURL(options) {
-        return this.canvas.toDataURL(options);
+        return new Promise((resolve) => {
+            resolve(this.canvas.toDataURL(options));
+        });
     }
 
     /**
