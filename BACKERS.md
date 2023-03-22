@@ -9,4 +9,5 @@ Sponsors [[add your logo](https://github.com/sponsors/melonjs)]
 
 Backers [[add your name](https://github.com/sponsors/melonjs)]
 -------------------------------------------------------------------------------
-* Olivier Biot
+* [Oasis Cover Band](https://github.com/oasis-cover-band)
+* [Olivier Biot](https://github.com/obiot)
