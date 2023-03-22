@@ -118,6 +118,25 @@ class CanvasTexture {
     }
 
     /**
+     * creates a Blob object representing the image contained in this canvas texture
+     * @param {Object} [options] - The x-axis coordinate of the top-left corner of the rectangle from which the ImageData will be extracted
+     * @param {String} [options.type="image/png"] - a string indicating the image format
+     * @param {Number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @return {Promise} A Promise returning a Blob object representing the image contained in the canvas.
+     */
+    convertToBlob(options) {
+        if (typeof this.canvas.convertToBlob === "function") {
+            return this.canvas.convertToBlob(options);
+        } else {
+            return new Promise(function(resolve) {
+                this.canvas.toBlob((blob) => {
+                    resolve(blob);
+                }, options.type, options.quality);
+            });
+        }
+    }
+
+    /**
      * @ignore
      */
     destroy() {

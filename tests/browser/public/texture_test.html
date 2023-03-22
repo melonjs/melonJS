@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Puppeteer Mocha</title>
+</head>
+<body>
+    <!-- Canvas placeholder -->
+    <div id="screen"></div>
+    <script type="module">
+      import * as me from './lib/melonjs.module.js';
+
+      me.boot();
+      me.video.init(800, 600, {parent : "screen", scale : "auto", renderer : me.video.AUTO});
+
+      globalThis.texture_canvas = new me.CanvasTexture(100, 100);
+      globalThis.texture_offscreencanvas = new me.CanvasTexture(100, 100, {offscreenCanvas: true});
+
+  </script>
+</body>
+</html>
