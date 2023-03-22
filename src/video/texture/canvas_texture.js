@@ -139,6 +139,20 @@ class CanvasTexture {
     }
 
     /**
+     * creates an ImageBitmap object from the most recently rendered image of this canvas texture
+     * @return {ImageBitmap} An ImageBitmap.
+     * @example
+     * canvasTexture.transferToImageBitmap();
+     */
+    transferToImageBitmap() {
+        if (typeof this.canvas.transferToImageBitmap === "function") {
+            return this.canvas.transferToImageBitmap();
+        } else {
+            return this.canvas.ImageBitmap();
+        }
+    }
+
+    /**
      * @ignore
      */
     destroy() {
