@@ -194,7 +194,7 @@ import * as event from "./../../system/event.js";
      * Draw an image onto the main using the canvas api
      * @name drawImage
      * @memberof CanvasRenderer
-     * @param {Image} image - An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
+     * @param {HTMLImageElement|SVGImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap|OffscreenCanvas|VideoFrame} image - An element to draw into the context.
      * @param {number} sx - The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
      * @param {number} sy - The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
      * @param {number} sw - The width of the sub-rectangle of the source image to draw into the destination context. If not specified, the entire rectangle from the coordinates specified by sx and sy to the bottom-right corner of the image is used.
