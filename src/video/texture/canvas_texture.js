@@ -133,7 +133,7 @@ class CanvasTexture {
             return new Promise(function(resolve) {
                 this.canvas.toBlob((blob) => {
                     resolve(blob);
-                }, options.type, options.quality);
+                }, options ? options.type : undefined, options ? options.quality : undefined);
             });
         }
     }
