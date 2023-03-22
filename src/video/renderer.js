@@ -407,4 +407,62 @@ import Point from "../geometries/point.js";
         // reset to default
         this.currentTint.setColor(255, 255, 255, 1.0);
     }
+
+    /**
+     * creates a Blob object representing the last rendered frame
+     * @param {Object} [options] - An object with the following properties:
+     * @param {String} [options.type="image/png"] - A string indicating the image format
+     * @param {Number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @return {Promise} A Promise returning a Blob object representing the last rendered frame
+     * @example
+     * renderer.convertToBlob().then((blob) => console.log(blob));
+     */
+    toBlob(options) {
+        return new Promise((resolve) => {
+            event.once(event.GAME_AFTER_DRAW, () => {
+                this.canvas.toBlob((blob) => {
+                    resolve(blob);
+                }, options ? options.type : undefined, options ? options.quality : undefined);
+            });
+        });
+    }
+
+    /**
+     * creates an ImageBitmap object of the last frame rendered
+     * (not supported by standard Canvas)
+     * @param {Object} [options] - An object with the following properties:
+     * @param {String} [options.type="image/png"] - A string indicating the image format
+     * @param {Number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @return {Promise} A Promise returning an ImageBitmap.
+     * @example
+     * renderer.transferToImageBitmap().then((image) => console.log(image));
+     */
+    toImageBitmap(options) {
+        return new Promise((resolve) => {
+            event.once(event.GAME_AFTER_DRAW, () => {
+                let image = new Image();
+                image.src = this.canvas.toDataURL(options);
+                image.onload = () => {
+                    createImageBitmap(image).then((bitmap) => resolve(bitmap));
+                };
+            });
+        });
+    }
+
+    /**
+     * returns a data URL containing a representation of the last frame rendered
+     * @param {Object} [options] - An object with the following properties:
+     * @param {String} [options.type="image/png"] - A string indicating the image format
+     * @param {Number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @return {Promise} A Promise returning a string containing the requested data URL.
+     * @example
+     * renderer.toDataURL().then((dataURL) => console.log(dataURL));
+     */
+    toDataURL(options) {
+        return new Promise((resolve) => {
+            event.once(event.GAME_AFTER_DRAW, () => {
+                resolve(this.canvas.toDataURL(options));
+            });
+        });
+    }
 }

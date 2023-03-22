@@ -4,10 +4,10 @@
 
 ### Added
 - Renderer: add new `toBlob()`, `toDataURL()` and `toImageBitmap()` methods to `CanvasTexture`
+- Renderer: add new `toBlob()`, `toDataURL()` and `toImageBitmap()` methods to the all Renderers
 
 ### Fixed
 - Renderer: add missing export for the `CanvasTexture` class
-
 
 ## [15.0.0] (melonJS 2) - _2023-03-18_
 
