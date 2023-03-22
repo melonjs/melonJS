@@ -140,6 +140,7 @@ class CanvasTexture {
 
     /**
      * creates an ImageBitmap object from the most recently rendered image of this canvas texture
+     * (not supported by standard Canvas)
      * @return {ImageBitmap} An ImageBitmap.
      * @example
      * canvasTexture.transferToImageBitmap();
@@ -148,8 +149,24 @@ class CanvasTexture {
         if (typeof this.canvas.transferToImageBitmap === "function") {
             return this.canvas.transferToImageBitmap();
         } else {
-            return this.canvas.ImageBitmap();
+            let imageBitmap = new Image();
+            imageBitmap.src = this.canvas.toDataURL();
+            return imageBitmap;
         }
+    }
+
+    /**
+     * returns a data URL containing a representation of the most recently rendered image of this canvas texture
+     * (not supported by OffscreenCanvas)
+     * @param {Object} [options] - An object with the following properties:
+     * @param {String} [options.type="image/png"] - A string indicating the image format
+     * @param {Number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @return {String} A string containing the requested data URL.
+     * @example
+     * renderer.toDataUrl();
+     */
+    toDataURL(options) {
+        return this.canvas.toDataURL(options);
     }
 
     /**

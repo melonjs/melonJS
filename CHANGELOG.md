@@ -3,7 +3,7 @@
 ## [15.1.0] (melonJS 2) - _2023-xx-xx_
 
 ### Added
-- Renderer: add a new `convertToBlob()` and `transferToImageBitmap()` method to `CanvasTexture`
+- Renderer: add a new `convertToBlob()`, `toDataURL()` and `transferToImageBitmap()` method to `CanvasTexture`
 
 ### Fixed
 - Renderer: add missing export for the `CanvasTexture` class
