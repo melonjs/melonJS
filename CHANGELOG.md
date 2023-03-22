@@ -2,7 +2,8 @@
 
 ## [15.1.0] (melonJS 2) - _2023-xx-xx_
 
-### Added
+### Fixed
+- Renderer: add missing export for the `CanvasTexture` class
 
 
 ## [15.0.0] (melonJS 2) - _2023-03-18_

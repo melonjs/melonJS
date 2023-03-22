@@ -135,6 +135,7 @@ export {
     Renderer,
     WebGLRenderer,
     CanvasRenderer,
+    CanvasTexture,
     TextureAtlas,
     Renderable,
     Body,
