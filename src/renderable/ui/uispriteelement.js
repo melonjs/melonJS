@@ -36,7 +36,7 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
      * });
      *
      * // add the object at pos (10,10)
-     * me.game.world.addChild(new myButton(10,10));
+     * world.addChild(new myButton(10,10));
      */
     constructor(x, y, settings) {
 

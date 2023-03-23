@@ -45,7 +45,7 @@ import UIBaseElement from "./uibaseelement.js";
      *      }
      * }
      *
-     * game.world.addChild(new PlayButton(15,200));
+     * world.addChild(new PlayButton(15,200));
      */
     constructor(x, y, settings) {
         super(x, y);
