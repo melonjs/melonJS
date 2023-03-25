@@ -106,7 +106,7 @@ Renderer.prototype.getScreenContext = function()  {
      * @param {object} settings - See {@link Sprite}
      */
     constructor(x, y, settings) {
-        warning("GUI_Object", "UISpriteElement", "14.0.0");
+        warning("GUI_Object", "UISpriteElement or UITextButton", "14.0.0");
         super(x, y, settings);
     }
 }
