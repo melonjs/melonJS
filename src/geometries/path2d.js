@@ -158,35 +158,35 @@ import earcut from "earcut";
         var x0 = points[points.length-1].x, y0 = points[points.length-1].y;
 
         //a = -incoming vector, b = outgoing vector to x1, y1
-        var a = [x0 - x1, y0 - y1];
-        var b = [x2 - x1, y2 - y1];
+        var a0 = x0 - x1, a1 = y0 - y1;
+        var b0 = x2 - x1, b1 = y2 - y1;
 
         //normalize
-        var l_a = Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2));
-        var l_b = Math.sqrt(Math.pow(b[0], 2) + Math.pow(b[1], 2));
-        a[0] /= l_a; a[1] /= l_a; b[0] /= l_b; b[1] /= l_b;
-        var angle = Math.atan2(a[1], a[0]) - Math.atan2(b[1], b[0]);
+        var l_a = Math.sqrt(Math.pow(a0, 2) + Math.pow(a1, 2));
+        var l_b = Math.sqrt(Math.pow(b0, 2) + Math.pow(b1, 2));
+        a0 /= l_a; a1 /= l_a; b0 /= l_b; b1 /= l_b;
+        var angle = Math.atan2(a1, a0) - Math.atan2(b1, b0);
 
         //work out tangent points using tan(θ) = opposite / adjacent; angle/2 because hypotenuse is the bisection of a,b
         var tan_angle_div2 = Math.tan(angle/2);
         var adj_l = (radius/tan_angle_div2);
 
-        var tangent_point1 =  [x1 + a[0] * adj_l, y1 + a[1] * adj_l];
-        var tangent_point2 =  [x1 + b[0] * adj_l, y1 + b[1] * adj_l];
+        var tangent1_pointx = x1 + a0 * adj_l, tangent1_pointy = y1 + a1 * adj_l;
+        var tangent2_pointx = x1 + b0 * adj_l, tangent2_pointy = y1 + b1 * adj_l;
 
-        points.push(pool.pull("Point", tangent_point1[0], tangent_point1[1]));
+        points.push(pool.pull("Point", tangent1_pointx, tangent1_pointy));
 
-        var bisec = [(a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0];
-        var bisec_l = Math.sqrt(Math.pow(bisec[0], 2) + Math.pow(bisec[1], 2));
-        bisec[0] /= bisec_l; bisec[1] /= bisec_l;
+        var bisec0 = (a0 + b0) / 2.0, bisec1 = (a1 + b1) / 2.0;
+        var bisec_l = Math.sqrt(Math.pow(bisec0, 2) + Math.pow(bisec1, 2));
+        bisec0 /= bisec_l; bisec1 /= bisec_l;
 
         var hyp_l = Math.sqrt(Math.pow(radius, 2) + Math.pow(adj_l, 2));
-        var center = [x1 + hyp_l * bisec[0], y1 + hyp_l * bisec[1]];
+        var centerx = x1 + hyp_l * bisec0, centery = y1 + hyp_l * bisec1;
 
-        var startAngle = Math.atan2(tangent_point1[1] - center[1], tangent_point1[0] - center[0]);
-        var endAngle = Math.atan2(tangent_point2[1] - center[1], tangent_point2[0] - center[0]);
+        var startAngle = Math.atan2(tangent1_pointy - centery, tangent1_pointx - centerx);
+        var endAngle = Math.atan2(tangent2_pointy - centery, tangent2_pointx - centerx);
 
-        this.arc(center[0], center[1], radius, startAngle, endAngle);
+        this.arc(centerx, centery, radius, startAngle, endAngle);
     }
 
     /**
