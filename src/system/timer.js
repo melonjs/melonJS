@@ -109,7 +109,7 @@ class Timer {
      * @param {number} delay - the number of milliseconds (thousandths of a second) that the function call should be delayed by.
      * @param {boolean} [pauseable=true] - respects the pause state of the engine.
      * @param {...*} args - optional parameters which are passed through to the function specified by fn once the timer expires.
-     * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
+     * @returns {number} a positive integer value which identifies the timer created by the call to setTimeout(), which can be used later with me.timer.clearTimeout().
      * @example
      * // set a timer to call "myFunction" after 1000ms
      * me.timer.setTimeout(myFunction, 1000);
@@ -135,7 +135,7 @@ class Timer {
      * @param {number} delay - the number of milliseconds (thousandths of a second) on how often to execute the function
      * @param {boolean} [pauseable=true] - respects the pause state of the engine.
      * @param {...*} args - optional parameters which are passed through to the function specified by fn once the timer expires.
-     * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
+     * @returns {number} a numeric, non-zero value which identifies the timer created by the call to setInterval(), which can be used later with me.timer.clearInterval().
      * @example
      * // set a timer to call "myFunction" every 1000ms
      * me.timer.setInterval(myFunction, 1000);
@@ -156,19 +156,23 @@ class Timer {
     }
 
     /**
-     * Clears the delay set by me.timer.setTimeout().
-     * @param {number} timeoutID - ID of the timeout to be cleared
+     * Cancels a timeout previously established by calling setTimeout().
+     * @param {number} timeoutID - ID of the timeout to be cancelled
      */
     clearTimeout(timeoutID) {
-        utils.function.defer(this.clearTimer.bind(this), this, timeoutID);
+        if (timeoutID > 0) {
+            utils.function.defer(this.clearTimer.bind(this), this, timeoutID);
+        }
     }
 
     /**
-     * Clears the Interval set by me.timer.setInterval().
+     * cancels the timed, repeating action which was previously established by a call to setInterval().
      * @param {number} intervalID - ID of the interval to be cleared
      */
     clearInterval(intervalID) {
-        utils.function.defer(this.clearTimer.bind(this), this, intervalID);
+        if (intervalID > 0) {
+            utils.function.defer(this.clearTimer.bind(this), this, intervalID);
+        }
     }
 
     /**
