@@ -5,6 +5,10 @@
 ### Added
 - Renderer: add new `toBlob()`, `toDataURL()` and `toImageBitmap()` methods to `CanvasTexture`
 - Renderer: add new `toBlob()`, `toDataURL()` and `toImageBitmap()` methods to the all Renderers
+- Container: new `getRootAncestor()` method that returns the root container's parent (aka World Container)
+
+### Changed
+- Application: the `sortOn` property is now a proper getter/setter for the App World instance `sortOn` property
 
 ### Fixed
 - Renderer: add missing export for the `CanvasTexture` class

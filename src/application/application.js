@@ -73,14 +73,6 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
         this.mergeGroup = true;
 
         /**
-         * Specify the property to be used when sorting renderables.
-         * Accepted values : "x", "y", "z"
-         * @type {string}
-         * @default "z"
-         */
-        this.sortOn = "z";
-
-        /**
          * Last time the game update loop was executed. <br>
          * Use this value to implement frame prediction in drawing events,
          * for creating smooth motion while running game update logic at
@@ -221,7 +213,7 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
         }
 
         // create a new physic world
-        this.world = new World();
+        this.world = new World(0, 0, this.settings.width, this.settings.height);
         // set the reference to this application instance
         this.world.app = this;
         this.lastUpdate = globalThis.performance.now();
@@ -247,6 +239,19 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
 
         // Refresh internal variables for framerate  limiting
         this.updateFrameRate();
+    }
+
+    /**
+     * Specify the property to be used when sorting renderables for this application game world.
+     * Accepted values : "x", "y", "z"
+     * @type {string}
+     * @see World.sortOn
+     */
+    get sortOn() {
+        return this.world.sortOn;
+    }
+    set sortOn(value) {
+        this.world.sortOn = value;
     }
 
     /**

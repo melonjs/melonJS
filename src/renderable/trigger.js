@@ -2,7 +2,6 @@ import Renderable from "./renderable.js";
 import collision from "./../physics/collision.js";
 import Body from "./../physics/body.js";
 import level from "./../level/level.js";
-import { game } from "../index.js";
 import pool from "./../system/pooling.js";
 
 /**
@@ -26,7 +25,7 @@ import pool from "./../system/pooling.js";
      * @param {boolean} [settings.flatten] - Flatten all objects into the target container. See {@link level.load}
      * @param {boolean} [settings.setViewportBounds] - Resize the viewport to match the level. See {@link level.load}
      * @example
-     * me.game.world.addChild(new me.Trigger(
+     * world.addChild(new me.Trigger(
      *     x, y, {
      *         shapes: [new me.Rect(0, 0, 100, 100)],
      *         "duration" : 250,
@@ -87,9 +86,10 @@ import pool from "./../system/pooling.js";
      * @ignore
      */
      getTriggerSettings() {
+        var world = this.ancestor.getRootAncestor();
          // Lookup for the container instance
          if (typeof(this.triggerSettings.container) === "string") {
-             this.triggerSettings.container = game.world.getChildByName(this.triggerSettings.container)[0];
+             this.triggerSettings.container = world.getChildByName(this.triggerSettings.container)[0];
          }
          return this.triggerSettings;
      }
@@ -98,8 +98,9 @@ import pool from "./../system/pooling.js";
      * @ignore
      */
     onFadeComplete() {
+        var world = this.ancestor.getRootAncestor();
         level.load(this.gotolevel, this.getTriggerSettings());
-        game.viewport.fadeOut(this.fade, this.duration);
+        world.app.viewport.fadeOut(this.fade, this.duration);
     }
 
     /**
@@ -110,6 +111,7 @@ import pool from "./../system/pooling.js";
      */
     triggerEvent() {
         var triggerSettings = this.getTriggerSettings();
+        var world = this.ancestor.getRootAncestor();
 
         if (triggerSettings.event === "level") {
             this.gotolevel = triggerSettings.to;
@@ -118,7 +120,7 @@ import pool from "./../system/pooling.js";
             if (this.fade && this.duration) {
                 if (!this.fading) {
                     this.fading = true;
-                    game.viewport.fadeIn(this.fade, this.duration,
+                    world.app.viewport.fadeIn(this.fade, this.duration,
                             this.onFadeComplete.bind(this));
                 }
             } else {

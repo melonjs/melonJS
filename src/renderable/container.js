@@ -57,12 +57,12 @@ let globalFloatingCounter = 0;
         this.children = undefined;
 
         /**
-         * The property of the child object that should be used to sort on <br>
+         * The property of the child object that should be used to sort on this container
          * value : "x", "y", "z"
          * @type {string}
-         * @default me.game.sortOn
+         * @default "z"
          */
-        this.sortOn = game.sortOn;
+        this.sortOn = "z";
 
         /**
          * Specify if the children list should be automatically sorted when adding a new child
@@ -170,9 +170,9 @@ let globalFloatingCounter = 0;
      * Add a child to the container <br>
      * if auto-sort is disable, the object will be appended at the bottom of the list.
      * Adding a child to the container will automatically remove it from its other container.
-     * Meaning a child can only have one parent.  This is important if you add a renderable
-     * to a container then add it to the me.game.world container it will move it out of the
-     * orginal container. Then when the me.game.world.reset() is called the renderable
+     * Meaning a child can only have one parent. This is important if you add a renderable
+     * to a container then add it to the World container it will move it out of the
+     * orginal container. Then when the World container reset() method is called the renderable
      * will not be in any container. <br>
      * if the given child implements a onActivateEvent method, that method will be called
      * once the child is added to this container.
@@ -219,7 +219,7 @@ let globalFloatingCounter = 0;
 
         // force repaint in case this is a static non-animated object
         if (this.isAttachedToRoot() === true) {
-            game.repaint();
+            this.isDirty = true;
         }
 
         // force bounds update if required
@@ -229,7 +229,7 @@ let globalFloatingCounter = 0;
 
         // if a physic body is defined, add it to the game world
         if (child.body instanceof Body) {
-            game.world.addBody(child.body);
+            this.getRootAncestor().addBody(child.body);
         }
 
         // triggered callback if defined
@@ -268,7 +268,7 @@ let globalFloatingCounter = 0;
 
             // force repaint in case this is a static non-animated object
             if (this.isAttachedToRoot() === true) {
-                game.repaint();
+                this.isDirty = true;
             }
 
             // force bounds update if required
@@ -278,7 +278,7 @@ let globalFloatingCounter = 0;
 
             // if a physic body is defined, add it to the game world
             if (child.body instanceof Body) {
-                game.world.addBody(child.body);
+                this.getRootAncestor().addBody(child.body);
             }
 
             // triggered callback if defined
@@ -300,14 +300,14 @@ let globalFloatingCounter = 0;
      * @param {Function} callback - fnction to execute on each element
      * @param {object} [thisArg] - value to use as this(i.e reference Object) when executing callback.
      * @example
-     * // iterate through all children of the root container
-     * me.game.world.forEach((child) => {
+     * // iterate through all children of this container
+     * container.forEach((child) => {
      *    // do something with the child
      *    child.doSomething();
      * });
-     * me.game.world.forEach((child, index) => { ... });
-     * me.game.world.forEach((child, index, array) => { ... });
-     * me.game.world.forEach((child, index, array) => { ... }, thisArg);
+     * container.forEach((child, index) => { ... });
+     * container.forEach((child, index, array) => { ... });
+     * container.forEach((child, index, array) => { ... }, thisArg);
      */
     forEach(callback, thisArg) {
         var context = this, i = 0;
@@ -411,15 +411,15 @@ let globalFloatingCounter = 0;
      * var ent = myContainer.getChildByProp("name", "mainPlayer");
      *
      * // or query the whole world :
-     * var ent = me.game.world.getChildByProp("name", "mainPlayer");
+     * var ent = container.getChildByProp("name", "mainPlayer");
      *
      * // partial property matches are also allowed by using a RegExp.
      * // the following matches "redCOIN", "bluecoin", "bagOfCoins", etc :
-     * var allCoins = me.game.world.getChildByProp("name", /coin/i);
+     * var allCoins = container.getChildByProp("name", /coin/i);
      *
      * // searching for numbers or other data types :
-     * var zIndex10 = me.game.world.getChildByProp("z", 10);
-     * var inViewport = me.game.world.getChildByProp("inViewport", true);
+     * var zIndex10 = container.getChildByProp("z", 10);
+     * var inViewport = container.getChildByProp("inViewport", true);
      */
     getChildByProp(prop, value)    {
         var objList = [];
@@ -531,7 +531,6 @@ let globalFloatingCounter = 0;
 
     /**
      * Checks if this container is root or if it's attached to the root container.
-     * @private
      * @returns {boolean}
      */
     isAttachedToRoot() {
@@ -546,6 +545,25 @@ let globalFloatingCounter = 0;
                 ancestor = ancestor.ancestor;
             }
             return false;
+        }
+    }
+
+    /**
+     * Returns the instance of the root container (i.e. the current application World container).
+     * @returns {Container}
+     */
+    getRootAncestor() {
+        if (this.root === true) {
+            return this;
+        } else {
+            var ancestor = this.ancestor;
+            while (ancestor) {
+                if (ancestor.root === true) {
+                    break;
+                }
+                ancestor = ancestor.ancestor;
+            }
+            return ancestor;
         }
     }
 
@@ -610,7 +628,7 @@ let globalFloatingCounter = 0;
             // remove the body first to avoid a condition where a body can be detached
             // from its parent, before the body is removed from the game world
             if (child.body instanceof Body) {
-                game.world.removeBody(child.body);
+               this.getRootAncestor().removeBody(child.body);
             }
 
             if (!keepalive) {
@@ -633,7 +651,7 @@ let globalFloatingCounter = 0;
 
             // force repaint in case this is a static non-animated object
             if (this.isAttachedToRoot() === true) {
-                game.repaint();
+                this.isDirty = true;
             }
 
             // force bounds update if required
@@ -746,7 +764,7 @@ let globalFloatingCounter = 0;
                 // clear the defer id
                 this.pendingSort = null;
                 // make sure we redraw everything
-                game.repaint();
+                this.isDirty = true;
             }, this);
         }
     }
@@ -815,7 +833,7 @@ let globalFloatingCounter = 0;
 
     /**
      * container update function. <br>
-     * automatically called by the game manager {@link game}
+     * automatically called by the application update loop {@link Application}
      * @protected
      * @param {number} dt - time since the last update in milliseconds.
      * @returns {boolean} true if the Container is dirty
