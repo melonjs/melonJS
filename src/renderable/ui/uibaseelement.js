@@ -5,8 +5,7 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
 /**
  * @classdesc
  * This is a basic clickable container which you can use in your game UI.
- * Use this for example if you want to display a button which contains
- * text and images.
+ * Use this for example if you want to display a button which contains text and images.
  * @augments Container
  */
  export default class UIBaseElement extends Container {

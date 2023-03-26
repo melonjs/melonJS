@@ -4,13 +4,13 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
 
 /**
  * @classdesc
- *  This is a basic sprite based button which you can use in your Game UI.
+ * This is a basic sprite based button which you can use in your Game UI.
  * @augments Sprite
  */
  export default class UISpriteElement extends Sprite {
     /**
-     * @param {number} x - the x coordinate of the GUI Object
-     * @param {number} y - the y coordinate of the GUI Object
+     * @param {number} x - the x coordinate of the UISpriteElement Object
+     * @param {number} y - the y coordinate of the UISpriteElement Object
      * @param {object} settings - See {@link Sprite}
      * @example
      * // create a basic GUI Object
@@ -28,7 +28,7 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
      *
      *    // output something in the console
      *    // when the object is clicked
-     *    onClick:function (event) {
+     *    onClick(event) {
      *       console.log("clicked!");
      *       // don't propagate the event
      *       return false;
