@@ -12,6 +12,7 @@
 
 ### Fixed
 - Renderer: add missing export for the `CanvasTexture` class
+- WebGL: fix a Type Error exception with the latest version of Safari when using OffscreenCanvas element as a texture source
 
 ## [15.0.0] (melonJS 2) - _2023-03-18_
 

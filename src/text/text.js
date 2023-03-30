@@ -169,7 +169,8 @@ const toPX = [12, 24, 0.75, 1];
         }
 
         // the canvas Texture used to render this text
-        this.canvasTexture = pool.pull("CanvasTexture", 2, 2, { offscreenCanvas: true });
+        // XXX: offscreenCanvas is currently disabled for text rendering due to issue in WebGL mode
+        this.canvasTexture = pool.pull("CanvasTexture", 2, 2, { offscreenCanvas: false });
 
         // instance to text metrics functions
         this.metrics = new TextMetrics(this);
