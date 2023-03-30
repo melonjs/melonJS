@@ -46,7 +46,7 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
         this.hover = false;
 
         // object has been updated (clicked,etc..)
-        this.holdTimeout = null;
+        this.holdTimeout = -1;
         this.released = true;
 
         // GUI items use screen coordinates
@@ -66,9 +66,7 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
             this.dirty = true;
             this.released = false;
             if (this.isHoldable) {
-                if (this.holdTimeout !== null) {
-                    timer.clearTimeout(this.holdTimeout);
-                }
+                timer.clearTimeout(this.holdTimeout);
                 this.holdTimeout = timer.setTimeout(
                     this.hold.bind(this),
                     this.holdThreshold,
@@ -135,6 +133,7 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
             this.released = true;
             this.dirty = true;
             timer.clearTimeout(this.holdTimeout);
+            this.holdTimeout = -1;
             return this.onRelease(event);
         }
     }
@@ -153,6 +152,7 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
      */
     hold() {
         timer.clearTimeout(this.holdTimeout);
+        this.holdTimeout = -1;
         this.dirty = true;
         if (!this.released) {
             this.onHold();
@@ -198,5 +198,6 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
         releasePointerEvent("pointerenter", this);
         releasePointerEvent("pointerleave", this);
         timer.clearTimeout(this.holdTimeout);
+        this.holdTimeout = -1;
     }
 }

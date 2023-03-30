@@ -16,14 +16,12 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
      * // create a basic GUI Object
      * class myButton extends UISpriteElement {
      *    constructor(x, y) {
-     *       var settings = {}
-     *       settings.image = "button";
-     *       settings.framewidth = 100;
-     *       settings.frameheight = 50;
-     *       // super constructor
-     *       super(x, y, settings);
-     *       // define the object z order
-     *       this.pos.z = 4;
+     *       // call the UISpriteElement parent constructor
+     *       super(x, y, {
+     *          image: "button",
+     *          framewidth: 100,
+     *          frameheight: 50
+     *       });
      *    }
      *
      *    // output something in the console
@@ -72,7 +70,7 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
         this.hover = false;
 
         // object has been updated (clicked,etc..)
-        this.holdTimeout = null;
+        this.holdTimeout = -1;
         this.released = true;
 
         // GUI items use screen coordinates
@@ -92,9 +90,7 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
             this.dirty = true;
             this.released = false;
             if (this.isHoldable) {
-                if (this.holdTimeout !== null) {
-                    timer.clearTimeout(this.holdTimeout);
-                }
+                timer.clearTimeout(this.holdTimeout);
                 this.holdTimeout = timer.setTimeout(this.hold.bind(this), this.holdThreshold, false);
                 this.released = false;
             }
@@ -157,6 +153,7 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
             this.released = true;
             this.dirty = true;
             timer.clearTimeout(this.holdTimeout);
+            this.holdTimeout = -1;
             return this.onRelease(event);
         }
     }
@@ -175,6 +172,7 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
      */
     hold() {
         timer.clearTimeout(this.holdTimeout);
+        this.holdTimeout = -1;
         this.dirty = true;
         if (!this.released) {
             this.onHold();
@@ -212,6 +210,7 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
         releasePointerEvent("pointerenter", this);
         releasePointerEvent("pointerleave", this);
         timer.clearTimeout(this.holdTimeout);
+        this.holdTimeout = -1;
     }
 }
 
