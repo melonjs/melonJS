@@ -13,6 +13,8 @@
 ### Fixed
 - Renderer: add missing export for the `CanvasTexture` class
 - UI: fix internal holdTimeout type to integer and properly reset value to -1 when a timer is cleared
+- UI: UITextButton now properly use the given alpha value of the given background and hover color
+- UI: cleaned-up the UITextButton implementation, and added proper documentation for UITextButton specific properties
 - WebGL: fix a Type Error exception with the latest version of Safari when using OffscreenCanvas element as a texture source
 
 ## [15.0.0] (melonJS 2) - _2023-03-18_

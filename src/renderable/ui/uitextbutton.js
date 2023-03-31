@@ -1,4 +1,3 @@
-import Vector2d from "../../math/vector2.js";
 import BitmapText from "../../text/bitmaptext.js";
 import RoundRect from "../../geometries/roundrect.js";
 import UIBaseElement from "./uibaseelement.js";
@@ -11,25 +10,27 @@ import UIBaseElement from "./uibaseelement.js";
  */
  export default class UITextButton extends UIBaseElement {
     /**
-     * A Text Button with an outlined background border, filled with background color.
+     * A Bitmap Text Button with an outlined background border, filled with background color.
      * It uses a RoundRect as background and changes the background color on hovering over.
      * The background will be drawn with 0.5 opacity, so that the background of the button is
      * slightly shining through.
      * @param {number} x - x pos of the button
      * @param {number} y - y pos of the button
      * @param {string} [settings.font] - The name of the BitmapText font to use
-     * @param {number} [settings.size] - The scale factor of the font (default: 1)
-     * @param {string} [settings.text] - The text to display (default: 'click me')
+     * @param {number} [settings.size=1] - The scale factor of the BitmapText
+     * @param {string} [settings.text] - The text to display
      * @param {string} [settings.bindKey] - The key to bind the action to (default: none)
-     * @param {string} [settings.backgroundColor] - The css value of a background color
-     * @param {string} [settings.hoverColor] - The css value of a color to be used if the pointer hovers over the button
-     * @param {string} [settings.borderStrokeColor] - The css value of a color to be used to draw the border
-     * @param {string} [settings.fillStyle] - The css value of a tint color to be used to tint the text
+     * @param {string} [settings.backgroundColor="#00aa0080"] - The css value of a background color
+     * @param {string} [settings.hoverColor="#00ff00ff"] - The css value of a color to be used if the pointer hovers over the button
+     * @param {string} [settings.borderStrokeColor="#000000"] - The css value of a color to be used to draw the border
+     * @param {string} [settings.fillStyle] - The css value of a tint color to be used to tint the BitmapText
+     * @param {string} [settings.textAlign="center"] - horizontal text alignment
+     * @param {string} [settings.textBaseline="middle"] - the text baseline
      * @param {number} [settings.borderWidth] - Width of the button
      * @param {number} [settings.borderHeight] - Height of the button
      * @example
      * // Create a new Button
-     * class PlayButton extends BaseTextButton {
+     * class PlayButton extends UITextButton {
      *      constructor(x,y) {
      *          super(x,y, {
      *              font: 'my-font',
@@ -49,70 +50,89 @@ import UIBaseElement from "./uibaseelement.js";
      */
     constructor(x, y, settings) {
         super(x, y);
-        settings.font = settings.font || "24Outline";
-        settings.size = settings.size || 1;
-        settings.text = settings.text || "<Click Me>";
-        settings.bindKey = settings.bindKey || -1;
-        settings.backgroundColor = settings.backgroundColor || "#00aa00";
-        settings.hoverColor = settings.hoverColor || "#00ff00";
-        settings.borderStrokeColor = settings.borderStrokeColor || "#000000";
-        settings.fillStyle = settings.fillStyle || "#ffffff";
-        settings.lineWidth = settings.lineWidth || 1;
-        settings.anchorPoint = settings.anchorPoint || new Vector2d(0, 0);
 
-        let font = new BitmapText(x, y, settings);
-        let dimensions = font.measureText();
-        settings.borderWidth = settings.borderWidth || dimensions.width + 16;
-        settings.borderHeight = settings.borderHeight || dimensions.height + 16;
+        /**
+         * The key to bind the action to
+         * @type {string}
+         */
+        this.bindKey = settings.bindKey || -1;
 
-        let border = new RoundRect(
-            x,
-            y,
-            settings.borderWidth,
-            settings.borderHeight
+        /**
+         * The css value of a background color
+         * @type {string}
+         */
+        this.backgroundColor = settings.backgroundColor || "#00aa0080";
+
+        /**
+         * The css value of a color to be used if the pointer hovers over the button
+         * @type {string}
+         */
+        this.hoverColor = settings.hoverColor || "#00ff00ff";
+
+        /**
+         * The css value of a color to be used to draw the border
+         * @type {string}
+         */
+        this.borderStrokeColor = settings.borderStrokeColor || "#000000";
+
+        /**
+         * Set the default text alignment (or justification),<br>
+         * possible values are "left", "right", and "center".
+         * @public
+         * @type {string}
+         * @default "center"
+         */
+        this.textAlign = settings.textAlign = settings.textAlign || "center";
+
+        /**
+         * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
+         * possible values are "top", "hanging, "middle, "alphabetic, "ideographic, "bottom"<br>
+         * @public
+         * @type {string}
+         * @default "middle"
+         */
+        this.textBaseline = settings.textBaseline = settings.textBaseline || "middle";
+
+        /**
+         * the bitmapText used by the UITextButton class
+         * @type {BitmapText}
+         */
+        this.bitmapText = new BitmapText(0, 0, settings);
+
+        // "detect" the button size
+        this.dimensions = this.bitmapText.measureText();
+        settings.borderWidth = settings.borderWidth || this.dimensions.width + 16;
+        settings.borderHeight = settings.borderHeight || this.dimensions.height + 16;
+
+        // create the round rect button
+        this.border = new RoundRect(x, y, settings.borderWidth, settings.borderHeight);
+
+        // resize the container accordingly
+        this.resize(
+            this.border.getBounds().width,
+            this.border.getBounds().height
         );
-        super.setShape(
-            x,
-            y,
-            border.getBounds().width,
-            border.getBounds().height
-        );
 
-        // build up
-        this.font = font;
-        this.dimensions = dimensions;
-        this.border = border;
-        this.settings = settings;
+        // adjust size position
+        this.bitmapText.pos.set(this.width / 2, this.height / 2);
 
-        // adjust text position
-        this.font.pos.set(
-            Math.round((border.width - dimensions.width) / 2) + this.font.pos.x,
-            Math.round((border.height - dimensions.height) / 2) +
-                this.font.pos.y
-        );
+        // add bitmapText to the UI container
+        this.addChild(this.bitmapText);
     }
 
     draw(renderer) {
-        renderer.setGlobalAlpha(0.5);
-        if (!this.hover) {
-            renderer.setColor(this.settings.backgroundColor);
+        if (this.hover === true) {
+            renderer.setColor(this.hoverColor);
         } else {
-            renderer.setColor(this.settings.hoverColor);
+            renderer.setColor(this.backgroundColor);
         }
-
         renderer.fill(this.border);
-        renderer.setGlobalAlpha(1);
-        renderer.setColor(this.settings.borderStrokeColor);
+        renderer.setColor(this.borderStrokeColor);
         renderer.stroke(this.border);
-
-        // fix: supporting tint
-        renderer.setTint(this.font.tint, this.font.getOpacity());
-        this.font.draw(
-            renderer,
-            this.settings.text,
-            this.font.pos.x,
-            this.font.pos.y
-        );
+        this.bitmapText.preDraw(renderer);
+        this.bitmapText.draw(renderer);
+        this.bitmapText.postDraw(renderer);
+        super.draw(renderer);
     }
 }
 
