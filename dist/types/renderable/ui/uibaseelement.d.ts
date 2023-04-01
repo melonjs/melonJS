@@ -1,8 +1,7 @@
 /**
  * @classdesc
  * This is a basic clickable container which you can use in your game UI.
- * Use this for example if you want to display a button which contains
- * text and images.
+ * Use this for example if you want to display a button which contains text and images.
  * @augments Container
  */
 export default class UIBaseElement extends Container {
@@ -37,7 +36,7 @@ export default class UIBaseElement extends Container {
      * @default false
      */
     hover: boolean;
-    holdTimeout: number | null;
+    holdTimeout: number;
     released: boolean;
     /**
      * function callback for the pointerdown event

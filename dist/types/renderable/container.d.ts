@@ -28,10 +28,10 @@ export default class Container extends Renderable {
      */
     children: any[] | undefined;
     /**
-     * The property of the child object that should be used to sort on <br>
+     * The property of the child object that should be used to sort on this container
      * value : "x", "y", "z"
      * @type {string}
-     * @default me.game.sortOn
+     * @default "z"
      */
     sortOn: string;
     /**
@@ -87,9 +87,9 @@ export default class Container extends Renderable {
      * Add a child to the container <br>
      * if auto-sort is disable, the object will be appended at the bottom of the list.
      * Adding a child to the container will automatically remove it from its other container.
-     * Meaning a child can only have one parent.  This is important if you add a renderable
-     * to a container then add it to the me.game.world container it will move it out of the
-     * orginal container. Then when the me.game.world.reset() is called the renderable
+     * Meaning a child can only have one parent. This is important if you add a renderable
+     * to a container then add it to the World container it will move it out of the
+     * orginal container. Then when the World container reset() method is called the renderable
      * will not be in any container. <br>
      * if the given child implements a onActivateEvent method, that method will be called
      * once the child is added to this container.
@@ -115,14 +115,14 @@ export default class Container extends Renderable {
      * @param {Function} callback - fnction to execute on each element
      * @param {object} [thisArg] - value to use as this(i.e reference Object) when executing callback.
      * @example
-     * // iterate through all children of the root container
-     * me.game.world.forEach((child) => {
+     * // iterate through all children of this container
+     * container.forEach((child) => {
      *    // do something with the child
      *    child.doSomething();
      * });
-     * me.game.world.forEach((child, index) => { ... });
-     * me.game.world.forEach((child, index, array) => { ... });
-     * me.game.world.forEach((child, index, array) => { ... }, thisArg);
+     * container.forEach((child, index) => { ... });
+     * container.forEach((child, index, array) => { ... });
+     * container.forEach((child, index, array) => { ... }, thisArg);
      */
     forEach(callback: Function, thisArg?: object | undefined, ...args: any[]): void;
     /**
@@ -167,15 +167,15 @@ export default class Container extends Renderable {
      * var ent = myContainer.getChildByProp("name", "mainPlayer");
      *
      * // or query the whole world :
-     * var ent = me.game.world.getChildByProp("name", "mainPlayer");
+     * var ent = container.getChildByProp("name", "mainPlayer");
      *
      * // partial property matches are also allowed by using a RegExp.
      * // the following matches "redCOIN", "bluecoin", "bagOfCoins", etc :
-     * var allCoins = me.game.world.getChildByProp("name", /coin/i);
+     * var allCoins = container.getChildByProp("name", /coin/i);
      *
      * // searching for numbers or other data types :
-     * var zIndex10 = me.game.world.getChildByProp("z", 10);
-     * var inViewport = me.game.world.getChildByProp("inViewport", true);
+     * var zIndex10 = container.getChildByProp("z", 10);
+     * var inViewport = container.getChildByProp("inViewport", true);
      */
     getChildByProp(prop: string, value: string | RegExp | number | boolean): Renderable[];
     /**
@@ -208,10 +208,14 @@ export default class Container extends Renderable {
     getChildren(): Renderable[];
     /**
      * Checks if this container is root or if it's attached to the root container.
-     * @private
      * @returns {boolean}
      */
-    private isAttachedToRoot;
+    isAttachedToRoot(): boolean;
+    /**
+     * Returns the instance of the root container (i.e. the current application World container).
+     * @returns {Container}
+     */
+    getRootAncestor(): Container;
     /**
      * @ignore
      */

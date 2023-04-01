@@ -19,7 +19,7 @@ export default class Trigger extends Renderable {
      * @param {boolean} [settings.flatten] - Flatten all objects into the target container. See {@link level.load}
      * @param {boolean} [settings.setViewportBounds] - Resize the viewport to match the level. See {@link level.load}
      * @example
-     * me.game.world.addChild(new me.Trigger(
+     * world.addChild(new me.Trigger(
      *     x, y, {
      *         shapes: [new me.Rect(0, 0, 100, 100)],
      *         "duration" : 250,

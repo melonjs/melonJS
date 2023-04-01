@@ -1,30 +1,28 @@
 /**
  * @classdesc
- *  This is a basic sprite based button which you can use in your Game UI.
+ * This is a basic sprite based button which you can use in your Game UI.
  * @augments Sprite
  */
 export default class UISpriteElement extends Sprite {
     /**
-     * @param {number} x - the x coordinate of the GUI Object
-     * @param {number} y - the y coordinate of the GUI Object
+     * @param {number} x - the x coordinate of the UISpriteElement Object
+     * @param {number} y - the y coordinate of the UISpriteElement Object
      * @param {object} settings - See {@link Sprite}
      * @example
      * // create a basic GUI Object
      * class myButton extends UISpriteElement {
      *    constructor(x, y) {
-     *       var settings = {}
-     *       settings.image = "button";
-     *       settings.framewidth = 100;
-     *       settings.frameheight = 50;
-     *       // super constructor
-     *       super(x, y, settings);
-     *       // define the object z order
-     *       this.pos.z = 4;
+     *       // call the UISpriteElement parent constructor
+     *       super(x, y, {
+     *          image: "button",
+     *          framewidth: 100,
+     *          frameheight: 50
+     *       });
      *    }
      *
      *    // output something in the console
      *    // when the object is clicked
-     *    onClick:function (event) {
+     *    onClick(event) {
      *       console.log("clicked!");
      *       // don't propagate the event
      *       return false;
@@ -32,7 +30,7 @@ export default class UISpriteElement extends Sprite {
      * });
      *
      * // add the object at pos (10,10)
-     * me.game.world.addChild(new myButton(10,10));
+     * world.addChild(new myButton(10,10));
      */
     constructor(x: number, y: number, settings: object);
     /**
@@ -59,7 +57,7 @@ export default class UISpriteElement extends Sprite {
      * @default false
      */
     hover: boolean;
-    holdTimeout: number | null;
+    holdTimeout: number;
     released: boolean;
     /**
      * function callback for the pointerdown event

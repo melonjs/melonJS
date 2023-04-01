@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.0.0
+ * melonJS Game Engine - v15.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -9,8 +9,7 @@ import { renderer } from '../video.js';
 import { getBasename } from '../../utils/file.js';
 import { createAtlas, TextureAtlas } from './atlas.js';
 import { isPowerOfTwo } from '../../math/math.js';
-import '../../node_modules/@teppeis/multimaps/dist/src/index.js';
-import { __exports as src } from '../../_virtual/index.js';
+import { ArrayMultimap } from '../../node_modules/@teppeis/multimaps/dist/esm/arraymultimap.js';
 
 /**
  * a basic texture cache object
@@ -23,7 +22,7 @@ class TextureCache {
      */
     constructor(max_size) {
         // cache uses an array to allow for duplicated key
-        this.cache = new src.ArrayMultimap();
+        this.cache = new ArrayMultimap();
         this.tinted = new Map();
         this.units = new Map();
         this.max_size = max_size || Infinity;

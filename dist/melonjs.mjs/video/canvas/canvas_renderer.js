@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.0.0
+ * melonJS Game Engine - v15.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -75,8 +75,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Reset context state
-     * @name reset
-     * @memberof CanvasRenderer
      */
     reset() {
         super.reset();
@@ -85,8 +83,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Reset the canvas transform to identity
-     * @name resetTransform
-     * @memberof CanvasRenderer
      */
     resetTransform() {
         this.getContext().setTransform(1, 0, 0, 1, 0, 0);
@@ -103,9 +99,7 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
      * <img src="images/lighter-blendmode.png" width="510"/> <br>
      * - "screen" : The pixels are inverted, multiplied, and inverted again. A lighter picture is the result (opposite of multiply) <br>
      * <img src="images/screen-blendmode.png" width="510"/> <br>
-     * @name setBlendMode
      * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
-     * @memberof CanvasRenderer
      * @param {string} [mode="normal"] - blend mode : "normal", "multiply", "lighter, "additive", "screen"
      * @param {CanvasRenderingContext2D} [context]
      */
@@ -135,8 +129,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * prepare the framebuffer for drawing a new frame
-     * @name clear
-     * @memberof CanvasRenderer
      */
     clear() {
         if (this.settings.transparent === false) {
@@ -148,8 +140,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Clears the main framebuffer with the given color
-     * @name clearColor
-     * @memberof CanvasRenderer
      * @param {Color|string} [color="#000000"] - CSS color.
      * @param {boolean} [opaque=false] - Allow transparency [default] or clear the surface completely [true]
      */
@@ -168,8 +158,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
-     * @name clearRect
-     * @memberof CanvasRenderer
      * @param {number} x - x axis of the coordinate for the rectangle starting point.
      * @param {number} y - y axis of the coordinate for the rectangle starting point.
      * @param {number} width - The rectangle's width.
@@ -181,9 +169,7 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Create a pattern with the specified repetition
-     * @name createPattern
-     * @memberof CanvasRenderer
-     * @param {Image} image - Source image
+     * @param {HTMLImageElement|SVGImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap|OffscreenCanvas|VideoFrame} image - Source image to be used as the pattern's image
      * @param {string} repeat - Define how the pattern should be repeated
      * @returns {CanvasPattern}
      * @see ImageLayer#repeat
@@ -199,9 +185,7 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Draw an image onto the main using the canvas api
-     * @name drawImage
-     * @memberof CanvasRenderer
-     * @param {Image} image - An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
+     * @param {HTMLImageElement|SVGImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap|OffscreenCanvas|VideoFrame} image - An element to draw into the context.
      * @param {number} sx - The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
      * @param {number} sy - The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
      * @param {number} sw - The width of the sub-rectangle of the source image to draw into the destination context. If not specified, the entire rectangle from the coordinates specified by sx and sy to the bottom-right corner of the image is used.
@@ -262,8 +246,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Draw a pattern within the given rectangle.
-     * @name drawPattern
-     * @memberof CanvasRenderer
      * @param {CanvasPattern} pattern - Pattern object
      * @param {number} x
      * @param {number} y
@@ -285,8 +267,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Stroke an arc at the specified coordinates with given radius, start and end points
-     * @name strokeArc
-     * @memberof CanvasRenderer
      * @param {number} x - arc center point x-axis
      * @param {number} y - arc center point y-axis
      * @param {number} radius
@@ -311,8 +291,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Fill an arc at the specified coordinates with given radius, start and end points
-     * @name fillArc
-     * @memberof CanvasRenderer
      * @param {number} x - arc center point x-axis
      * @param {number} y - arc center point y-axis
      * @param {number} radius
@@ -326,8 +304,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Stroke an ellipse at the specified coordinates with given radius
-     * @name strokeEllipse
-     * @memberof CanvasRenderer
      * @param {number} x - ellipse center point x-axis
      * @param {number} y - ellipse center point y-axis
      * @param {number} w - horizontal radius of the ellipse
@@ -367,8 +343,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Fill an ellipse at the specified coordinates with given radius
-     * @name fillEllipse
-     * @memberof CanvasRenderer
      * @param {number} x - ellipse center point x-axis
      * @param {number} y - ellipse center point y-axis
      * @param {number} w - horizontal radius of the ellipse
@@ -380,8 +354,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Stroke a line of the given two points
-     * @name strokeLine
-     * @memberof CanvasRenderer
      * @param {number} startX - the start x coordinate
      * @param {number} startY - the start y coordinate
      * @param {number} endX - the end x coordinate
@@ -403,8 +375,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Fill a line of the given two points
-     * @name fillLine
-     * @memberof CanvasRenderer
      * @param {number} startX - the start x coordinate
      * @param {number} startY - the start y coordinate
      * @param {number} endX - the end x coordinate
@@ -416,8 +386,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Stroke the given me.Polygon on the screen
-     * @name strokePolygon
-     * @memberof CanvasRenderer
      * @param {Polygon} poly - the shape to draw
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
@@ -444,8 +412,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Fill the given me.Polygon on the screen
-     * @name fillPolygon
-     * @memberof CanvasRenderer
      * @param {Polygon} poly - the shape to draw
      */
     fillPolygon(poly) {
@@ -454,8 +420,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Stroke a rectangle at the specified coordinates
-     * @name strokeRect
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      * @param {number} width
@@ -474,8 +438,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Draw a filled rectangle at the specified coordinates
-     * @name fillRect
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      * @param {number} width
@@ -487,8 +449,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Stroke a rounded rectangle at the specified coordinates
-     * @name strokeRoundRect
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      * @param {number} width
@@ -510,8 +470,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Draw a rounded filled rectangle at the specified coordinates
-     * @name fillRoundRect
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      * @param {number} width
@@ -524,8 +482,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Stroke a Point at the specified coordinates
-     * @name strokePoint
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      */
@@ -535,8 +491,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Draw a a point at the specified coordinates
-     * @name fillPoint
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      * @param {number} width
@@ -548,8 +502,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * save the canvas context
-     * @name save
-     * @memberof CanvasRenderer
      */
     save() {
         this.getContext().save();
@@ -557,8 +509,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * restores the canvas context
-     * @name restore
-     * @memberof CanvasRenderer
      */
     restore() {
         this.getContext().restore();
@@ -571,8 +521,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * rotates the canvas context
-     * @name rotate
-     * @memberof CanvasRenderer
      * @param {number} angle - in radians
      */
     rotate(angle) {
@@ -581,8 +529,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * scales the canvas context
-     * @name scale
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      */
@@ -593,8 +539,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
     /**
      * Set the current fill & stroke style color.
      * By default, or upon reset, the value is set to #000000.
-     * @name setColor
-     * @memberof CanvasRenderer
      * @param {Color|string} color - css color value
      */
     setColor(color) {
@@ -609,8 +553,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Set the global alpha
-     * @name setGlobalAlpha
-     * @memberof CanvasRenderer
      * @param {number} alpha - 0.0 to 1.0 values accepted.
      */
     setGlobalAlpha(alpha) {
@@ -619,8 +561,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Return the global alpha
-     * @name getGlobalAlpha
-     * @memberof CanvasRenderer
      * @returns {number} global alpha value
      */
     getGlobalAlpha() {
@@ -629,8 +569,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Set the line width on the context
-     * @name setLineWidth
-     * @memberof CanvasRenderer
      * @param {number} width - Line width
      */
     setLineWidth(width) {
@@ -640,8 +578,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
     /**
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.
-     * @name setTransform
-     * @memberof CanvasRenderer
      * @param {Matrix2d} mat2d - Matrix to transform by
      */
     setTransform(mat2d) {
@@ -651,8 +587,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Multiply given matrix into the renderer tranformation matrix
-     * @name transform
-     * @memberof CanvasRenderer
      * @param {Matrix2d} mat2d - Matrix to transform by
      */
     transform(mat2d) {
@@ -674,8 +608,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * Translates the context to the given position
-     * @name translate
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      */
@@ -693,8 +625,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
      * You can however save the current region using the save(),
      * and restore it (with the restore() method) any time in the future.
      * (<u>this is an experimental feature !</u>)
-     * @name clipRect
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      * @param {number} width
@@ -725,8 +655,6 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
      * A mask limits rendering elements to the shape and position of the given mask object.
      * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
      * Mask are not preserved through renderer context save and restore.
-     * @name setMask
-     * @memberof CanvasRenderer
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - the shape defining the mask to be applied
      * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
      */
@@ -790,9 +718,7 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
 
     /**
      * disable (remove) the rendering mask set through setMask.
-     * @name clearMask
      * @see CanvasRenderer#setMask
-     * @memberof CanvasRenderer
      */
     clearMask() {
         if (this.maskLevel > 0) {

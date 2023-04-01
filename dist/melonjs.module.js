@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.0.0
+ * melonJS Game Engine - v15.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -20702,35 +20702,35 @@ class TMXObject {
         var x0 = points[points.length-1].x, y0 = points[points.length-1].y;
 
         //a = -incoming vector, b = outgoing vector to x1, y1
-        var a = [x0 - x1, y0 - y1];
-        var b = [x2 - x1, y2 - y1];
+        var a0 = x0 - x1, a1 = y0 - y1;
+        var b0 = x2 - x1, b1 = y2 - y1;
 
         //normalize
-        var l_a = Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2));
-        var l_b = Math.sqrt(Math.pow(b[0], 2) + Math.pow(b[1], 2));
-        a[0] /= l_a; a[1] /= l_a; b[0] /= l_b; b[1] /= l_b;
-        var angle = Math.atan2(a[1], a[0]) - Math.atan2(b[1], b[0]);
+        var l_a = Math.sqrt(Math.pow(a0, 2) + Math.pow(a1, 2));
+        var l_b = Math.sqrt(Math.pow(b0, 2) + Math.pow(b1, 2));
+        a0 /= l_a; a1 /= l_a; b0 /= l_b; b1 /= l_b;
+        var angle = Math.atan2(a1, a0) - Math.atan2(b1, b0);
 
         //work out tangent points using tan(θ) = opposite / adjacent; angle/2 because hypotenuse is the bisection of a,b
         var tan_angle_div2 = Math.tan(angle/2);
         var adj_l = (radius/tan_angle_div2);
 
-        var tangent_point1 =  [x1 + a[0] * adj_l, y1 + a[1] * adj_l];
-        var tangent_point2 =  [x1 + b[0] * adj_l, y1 + b[1] * adj_l];
+        var tangent1_pointx = x1 + a0 * adj_l, tangent1_pointy = y1 + a1 * adj_l;
+        var tangent2_pointx = x1 + b0 * adj_l, tangent2_pointy = y1 + b1 * adj_l;
 
-        points.push(pool.pull("Point", tangent_point1[0], tangent_point1[1]));
+        points.push(pool.pull("Point", tangent1_pointx, tangent1_pointy));
 
-        var bisec = [(a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0];
-        var bisec_l = Math.sqrt(Math.pow(bisec[0], 2) + Math.pow(bisec[1], 2));
-        bisec[0] /= bisec_l; bisec[1] /= bisec_l;
+        var bisec0 = (a0 + b0) / 2.0, bisec1 = (a1 + b1) / 2.0;
+        var bisec_l = Math.sqrt(Math.pow(bisec0, 2) + Math.pow(bisec1, 2));
+        bisec0 /= bisec_l; bisec1 /= bisec_l;
 
         var hyp_l = Math.sqrt(Math.pow(radius, 2) + Math.pow(adj_l, 2));
-        var center = [x1 + hyp_l * bisec[0], y1 + hyp_l * bisec[1]];
+        var centerx = x1 + hyp_l * bisec0, centery = y1 + hyp_l * bisec1;
 
-        var startAngle = Math.atan2(tangent_point1[1] - center[1], tangent_point1[0] - center[0]);
-        var endAngle = Math.atan2(tangent_point2[1] - center[1], tangent_point2[0] - center[0]);
+        var startAngle = Math.atan2(tangent1_pointy - centery, tangent1_pointx - centerx);
+        var endAngle = Math.atan2(tangent2_pointy - centery, tangent2_pointx - centerx);
 
-        this.arc(center[0], center[1], radius, startAngle, endAngle);
+        this.arc(centerx, centery, radius, startAngle, endAngle);
     }
 
     /**
@@ -21219,6 +21219,64 @@ class TMXObject {
     clearTint() {
         // reset to default
         this.currentTint.setColor(255, 255, 255, 1.0);
+    }
+
+    /**
+     * creates a Blob object representing the last rendered frame
+     * @param {Object} [options] - An object with the following properties:
+     * @param {String} [options.type="image/png"] - A string indicating the image format
+     * @param {Number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @return {Promise} A Promise returning a Blob object representing the last rendered frame
+     * @example
+     * renderer.convertToBlob().then((blob) => console.log(blob));
+     */
+    toBlob(options) {
+        return new Promise((resolve) => {
+            once(GAME_AFTER_DRAW, () => {
+                this.canvas.toBlob((blob) => {
+                    resolve(blob);
+                }, options ? options.type : undefined, options ? options.quality : undefined);
+            });
+        });
+    }
+
+    /**
+     * creates an ImageBitmap object of the last frame rendered
+     * (not supported by standard Canvas)
+     * @param {Object} [options] - An object with the following properties:
+     * @param {String} [options.type="image/png"] - A string indicating the image format
+     * @param {Number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @return {Promise} A Promise returning an ImageBitmap.
+     * @example
+     * renderer.transferToImageBitmap().then((image) => console.log(image));
+     */
+    toImageBitmap(options) {
+        return new Promise((resolve) => {
+            once(GAME_AFTER_DRAW, () => {
+                let image = new Image();
+                image.src = this.canvas.toDataURL(options);
+                image.onload = () => {
+                    createImageBitmap(image).then((bitmap) => resolve(bitmap));
+                };
+            });
+        });
+    }
+
+    /**
+     * returns a data URL containing a representation of the last frame rendered
+     * @param {Object} [options] - An object with the following properties:
+     * @param {String} [options.type="image/png"] - A string indicating the image format
+     * @param {Number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @return {Promise} A Promise returning a string containing the requested data URL.
+     * @example
+     * renderer.toDataURL().then((dataURL) => console.log(dataURL));
+     */
+    toDataURL(options) {
+        return new Promise((resolve) => {
+            once(GAME_AFTER_DRAW, () => {
+                resolve(this.canvas.toDataURL(options));
+            });
+        });
     }
 }
 
@@ -21721,110 +21779,32 @@ class TextureAtlas {
     }
 }
 
-var src = {};
-
-var arraymultimap = {};
-
-var multimap = {};
-
-"use strict";
-var __generator = (commonjsGlobal && commonjsGlobal.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-var __values = (commonjsGlobal && commonjsGlobal.__values) || function(o) {
-    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
-    if (m) return m.call(o);
-    if (o && typeof o.length === "number") return {
-        next: function () {
-            if (o && i >= o.length) o = void 0;
-            return { value: o && o[i++], done: !o };
-        }
-    };
-    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
-};
-var __read = (commonjsGlobal && commonjsGlobal.__read) || function (o, n) {
-    var m = typeof Symbol === "function" && o[Symbol.iterator];
-    if (!m) return o;
-    var i = m.call(o), r, ar = [], e;
-    try {
-        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
-    }
-    catch (error) { e = { error: error }; }
-    finally {
-        try {
-            if (r && !r.done && (m = i["return"])) m.call(i);
-        }
-        finally { if (e) throw e.error; }
-    }
-    return ar;
-};
-Object.defineProperty(multimap, "__esModule", { value: true });
-var Multimap_1 = multimap.Multimap = void 0;
-var Multimap = /** @class */ (function () {
-    function Multimap(operator, iterable) {
-        var e_1, _a;
+class Multimap {
+    constructor(operator, iterable) {
         this.size_ = 0;
         this.map = new Map();
         this.operator = operator;
         if (iterable) {
-            try {
-                for (var iterable_1 = __values(iterable), iterable_1_1 = iterable_1.next(); !iterable_1_1.done; iterable_1_1 = iterable_1.next()) {
-                    var _b = __read(iterable_1_1.value, 2), key = _b[0], value = _b[1];
-                    this.put(key, value);
-                }
-            }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
-            finally {
-                try {
-                    if (iterable_1_1 && !iterable_1_1.done && (_a = iterable_1.return)) _a.call(iterable_1);
-                }
-                finally { if (e_1) throw e_1.error; }
+            for (const [key, value] of iterable) {
+                this.put(key, value);
             }
         }
         return this;
     }
-    Object.defineProperty(Multimap.prototype, "size", {
-        get: function () {
-            return this.size_;
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Multimap.prototype.get = function (key) {
-        var values = this.map.get(key);
+    get size() {
+        return this.size_;
+    }
+    get(key) {
+        const values = this.map.get(key);
         if (values) {
             return this.operator.clone(values);
         }
         else {
             return this.operator.create();
         }
-    };
-    Multimap.prototype.put = function (key, value) {
-        var values = this.map.get(key);
+    }
+    put(key, value) {
+        let values = this.map.get(key);
         if (!values) {
             values = this.operator.create();
         }
@@ -21834,347 +21814,158 @@ var Multimap = /** @class */ (function () {
         this.map.set(key, values);
         this.size_++;
         return true;
-    };
-    Multimap.prototype.putAll = function (arg1, arg2) {
-        var e_2, _a, e_3, _b;
-        var pushed = 0;
+    }
+    putAll(arg1, arg2) {
+        let pushed = 0;
         if (arg2) {
-            var key = arg1;
-            var values = arg2;
-            try {
-                for (var values_1 = __values(values), values_1_1 = values_1.next(); !values_1_1.done; values_1_1 = values_1.next()) {
-                    var value = values_1_1.value;
-                    this.put(key, value);
-                    pushed++;
-                }
-            }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
-            finally {
-                try {
-                    if (values_1_1 && !values_1_1.done && (_a = values_1.return)) _a.call(values_1);
-                }
-                finally { if (e_2) throw e_2.error; }
+            const key = arg1;
+            const values = arg2;
+            for (const value of values) {
+                this.put(key, value);
+                pushed++;
             }
         }
         else if (arg1 instanceof Multimap) {
-            try {
-                for (var _c = __values(arg1.entries()), _d = _c.next(); !_d.done; _d = _c.next()) {
-                    var _e = __read(_d.value, 2), key = _e[0], value = _e[1];
-                    this.put(key, value);
-                    pushed++;
-                }
-            }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
-            finally {
-                try {
-                    if (_d && !_d.done && (_b = _c.return)) _b.call(_c);
-                }
-                finally { if (e_3) throw e_3.error; }
+            for (const [key, value] of arg1.entries()) {
+                this.put(key, value);
+                pushed++;
             }
         }
         else {
             throw new TypeError("unexpected arguments");
         }
         return pushed > 0;
-    };
-    Multimap.prototype.has = function (key) {
+    }
+    has(key) {
         return this.map.has(key);
-    };
-    Multimap.prototype.hasEntry = function (key, value) {
+    }
+    hasEntry(key, value) {
         return this.operator.has(value, this.get(key));
-    };
-    Multimap.prototype.delete = function (key) {
+    }
+    delete(key) {
         this.size_ -= this.operator.size(this.get(key));
         return this.map.delete(key);
-    };
-    Multimap.prototype.deleteEntry = function (key, value) {
-        var current = this.get(key);
+    }
+    deleteEntry(key, value) {
+        const current = this.get(key);
         if (!this.operator.delete(value, current)) {
             return false;
         }
         this.map.set(key, current);
         this.size_--;
         return true;
-    };
-    Multimap.prototype.clear = function () {
+    }
+    clear() {
         this.map.clear();
         this.size_ = 0;
-    };
-    Multimap.prototype.keys = function () {
+    }
+    keys() {
         return this.map.keys();
-    };
-    Multimap.prototype.entries = function () {
-        var self = this;
-        function gen() {
-            var _a, _b, _c, key, values, values_2, values_2_1, value, e_4_1, e_5_1;
-            var e_5, _d, e_4, _e;
-            return __generator(this, function (_f) {
-                switch (_f.label) {
-                    case 0:
-                        _f.trys.push([0, 11, 12, 13]);
-                        _a = __values(self.map.entries()), _b = _a.next();
-                        _f.label = 1;
-                    case 1:
-                        if (!!_b.done) return [3 /*break*/, 10];
-                        _c = __read(_b.value, 2), key = _c[0], values = _c[1];
-                        _f.label = 2;
-                    case 2:
-                        _f.trys.push([2, 7, 8, 9]);
-                        values_2 = (e_4 = void 0, __values(values)), values_2_1 = values_2.next();
-                        _f.label = 3;
-                    case 3:
-                        if (!!values_2_1.done) return [3 /*break*/, 6];
-                        value = values_2_1.value;
-                        return [4 /*yield*/, [key, value]];
-                    case 4:
-                        _f.sent();
-                        _f.label = 5;
-                    case 5:
-                        values_2_1 = values_2.next();
-                        return [3 /*break*/, 3];
-                    case 6: return [3 /*break*/, 9];
-                    case 7:
-                        e_4_1 = _f.sent();
-                        e_4 = { error: e_4_1 };
-                        return [3 /*break*/, 9];
-                    case 8:
-                        try {
-                            if (values_2_1 && !values_2_1.done && (_e = values_2.return)) _e.call(values_2);
-                        }
-                        finally { if (e_4) throw e_4.error; }
-                        return [7 /*endfinally*/];
-                    case 9:
-                        _b = _a.next();
-                        return [3 /*break*/, 1];
-                    case 10: return [3 /*break*/, 13];
-                    case 11:
-                        e_5_1 = _f.sent();
-                        e_5 = { error: e_5_1 };
-                        return [3 /*break*/, 13];
-                    case 12:
-                        try {
-                            if (_b && !_b.done && (_d = _a.return)) _d.call(_a);
-                        }
-                        finally { if (e_5) throw e_5.error; }
-                        return [7 /*endfinally*/];
-                    case 13: return [2 /*return*/];
+    }
+    entries() {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const self = this;
+        function* gen() {
+            for (const [key, values] of self.map.entries()) {
+                for (const value of values) {
+                    yield [key, value];
                 }
-            });
-        }
-        return gen();
-    };
-    Multimap.prototype.values = function () {
-        var self = this;
-        function gen() {
-            var _a, _b, _c, value, e_6_1;
-            var e_6, _d;
-            return __generator(this, function (_e) {
-                switch (_e.label) {
-                    case 0:
-                        _e.trys.push([0, 5, 6, 7]);
-                        _a = __values(self.entries()), _b = _a.next();
-                        _e.label = 1;
-                    case 1:
-                        if (!!_b.done) return [3 /*break*/, 4];
-                        _c = __read(_b.value, 2), value = _c[1];
-                        return [4 /*yield*/, value];
-                    case 2:
-                        _e.sent();
-                        _e.label = 3;
-                    case 3:
-                        _b = _a.next();
-                        return [3 /*break*/, 1];
-                    case 4: return [3 /*break*/, 7];
-                    case 5:
-                        e_6_1 = _e.sent();
-                        e_6 = { error: e_6_1 };
-                        return [3 /*break*/, 7];
-                    case 6:
-                        try {
-                            if (_b && !_b.done && (_d = _a.return)) _d.call(_a);
-                        }
-                        finally { if (e_6) throw e_6.error; }
-                        return [7 /*endfinally*/];
-                    case 7: return [2 /*return*/];
-                }
-            });
-        }
-        return gen();
-    };
-    Multimap.prototype.forEach = function (callback, thisArg) {
-        var e_7, _a;
-        try {
-            for (var _b = __values(this.entries()), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var _d = __read(_c.value, 2), key = _d[0], value = _d[1];
-                callback.call(thisArg === undefined ? this : thisArg, value, key, this);
             }
         }
-        catch (e_7_1) { e_7 = { error: e_7_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+        return gen();
+    }
+    values() {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const self = this;
+        function* gen() {
+            for (const [, value] of self.entries()) {
+                yield value;
             }
-            finally { if (e_7) throw e_7.error; }
         }
-    };
-    Multimap.prototype[Symbol.iterator] = function () {
+        return gen();
+    }
+    forEach(callback, thisArg) {
+        for (const [key, value] of this.entries()) {
+            callback.call(thisArg === undefined ? this : thisArg, value, key, this);
+        }
+    }
+    [Symbol.iterator]() {
         return this.entries();
-    };
-    Multimap.prototype.asMap = function () {
-        var e_8, _a;
-        var ret = new Map();
-        try {
-            for (var _b = __values(this.keys()), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var key = _c.value;
-                ret.set(key, this.operator.clone(this.get(key)));
-            }
-        }
-        catch (e_8_1) { e_8 = { error: e_8_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-            }
-            finally { if (e_8) throw e_8.error; }
+    }
+    asMap() {
+        const ret = new Map();
+        for (const key of this.keys()) {
+            ret.set(key, this.operator.clone(this.get(key)));
         }
         return ret;
-    };
-    return Multimap;
-}());
-Multimap_1 = multimap.Multimap = Multimap;
+    }
+}
 
-"use strict";
-var __extends$1 = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(arraymultimap, "__esModule", { value: true });
-var ArrayMultimap_1 = arraymultimap.ArrayMultimap = void 0;
-var multimap_1$1 = multimap;
-var ArrayMultimap = /** @class */ (function (_super) {
-    __extends$1(ArrayMultimap, _super);
-    function ArrayMultimap(iterable) {
-        return _super.call(this, new ArrayOperator(), iterable) || this;
+class ArrayMultimap extends Multimap {
+    constructor(iterable) {
+        super(new ArrayOperator(), iterable);
     }
-    Object.defineProperty(ArrayMultimap.prototype, Symbol.toStringTag, {
-        get: function () {
-            return "ArrayMultimap";
-        },
-        enumerable: false,
-        configurable: true
-    });
-    return ArrayMultimap;
-}(multimap_1$1.Multimap));
-ArrayMultimap_1 = arraymultimap.ArrayMultimap = ArrayMultimap;
-var ArrayOperator = /** @class */ (function () {
-    function ArrayOperator() {
+    get [Symbol.toStringTag]() {
+        return "ArrayMultimap";
     }
-    ArrayOperator.prototype.create = function () {
+}
+class ArrayOperator {
+    create() {
         return [];
-    };
-    ArrayOperator.prototype.clone = function (collection) {
+    }
+    clone(collection) {
         return collection.slice();
-    };
-    ArrayOperator.prototype.add = function (value, collection) {
+    }
+    add(value, collection) {
         collection.push(value);
         return true;
-    };
-    ArrayOperator.prototype.size = function (collection) {
+    }
+    size(collection) {
         return collection.length;
-    };
-    ArrayOperator.prototype.delete = function (value, collection) {
-        var index = collection.indexOf(value);
+    }
+    delete(value, collection) {
+        const index = collection.indexOf(value);
         if (index > -1) {
             collection.splice(index, 1);
             return true;
         }
         return false;
-    };
-    ArrayOperator.prototype.has = function (value, collection) {
+    }
+    has(value, collection) {
         return collection.includes(value);
-    };
-    return ArrayOperator;
-}());
-
-var setmultimap = {};
-
-"use strict";
-var __extends = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(setmultimap, "__esModule", { value: true });
-var SetMultimap_1 = setmultimap.SetMultimap = void 0;
-var multimap_1 = multimap;
-var SetMultimap = /** @class */ (function (_super) {
-    __extends(SetMultimap, _super);
-    function SetMultimap(iterable) {
-        return _super.call(this, new SetOperator(), iterable) || this;
     }
-    Object.defineProperty(SetMultimap.prototype, Symbol.toStringTag, {
-        get: function () {
-            return "SetMultimap";
-        },
-        enumerable: false,
-        configurable: true
-    });
-    return SetMultimap;
-}(multimap_1.Multimap));
-SetMultimap_1 = setmultimap.SetMultimap = SetMultimap;
-var SetOperator = /** @class */ (function () {
-    function SetOperator() {
+}
+
+class SetMultimap extends Multimap {
+    constructor(iterable) {
+        super(new SetOperator(), iterable);
     }
-    SetOperator.prototype.create = function () {
+    get [Symbol.toStringTag]() {
+        return "SetMultimap";
+    }
+}
+class SetOperator {
+    create() {
         return new Set();
-    };
-    SetOperator.prototype.clone = function (collection) {
+    }
+    clone(collection) {
         return new Set(collection);
-    };
-    SetOperator.prototype.add = function (value, collection) {
-        var prev = collection.size;
+    }
+    add(value, collection) {
+        const prev = collection.size;
         collection.add(value);
         return prev !== collection.size;
-    };
-    SetOperator.prototype.size = function (collection) {
+    }
+    size(collection) {
         return collection.size;
-    };
-    SetOperator.prototype.delete = function (value, collection) {
+    }
+    delete(value, collection) {
         return collection.delete(value);
-    };
-    SetOperator.prototype.has = function (value, collection) {
+    }
+    has(value, collection) {
         return collection.has(value);
-    };
-    return SetOperator;
-}());
-
-(function (exports) {
-	"use strict";
-	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.SetMultimap = exports.ArrayMultimap = void 0;
-	var arraymultimap_1 = arraymultimap;
-	Object.defineProperty(exports, "ArrayMultimap", { enumerable: true, get: function () { return arraymultimap_1.ArrayMultimap; } });
-	var setmultimap_1 = setmultimap;
-	Object.defineProperty(exports, "SetMultimap", { enumerable: true, get: function () { return setmultimap_1.SetMultimap; } });
-} (src));
-
-var index = /*@__PURE__*/getDefaultExportFromCjs(src);
+    }
+}
 
 /**
  * a basic texture cache object
@@ -22187,7 +21978,7 @@ class TextureCache {
      */
     constructor(max_size) {
         // cache uses an array to allow for duplicated key
-        this.cache = new src.ArrayMultimap();
+        this.cache = new ArrayMultimap();
         this.tinted = new Map();
         this.units = new Map();
         this.max_size = max_size || Infinity;
@@ -22364,8 +22155,6 @@ class TextureCache {
 
     /**
      * Reset context state
-     * @name reset
-     * @memberof CanvasRenderer
      */
     reset() {
         super.reset();
@@ -22374,8 +22163,6 @@ class TextureCache {
 
     /**
      * Reset the canvas transform to identity
-     * @name resetTransform
-     * @memberof CanvasRenderer
      */
     resetTransform() {
         this.getContext().setTransform(1, 0, 0, 1, 0, 0);
@@ -22392,9 +22179,7 @@ class TextureCache {
      * <img src="images/lighter-blendmode.png" width="510"/> <br>
      * - "screen" : The pixels are inverted, multiplied, and inverted again. A lighter picture is the result (opposite of multiply) <br>
      * <img src="images/screen-blendmode.png" width="510"/> <br>
-     * @name setBlendMode
      * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
-     * @memberof CanvasRenderer
      * @param {string} [mode="normal"] - blend mode : "normal", "multiply", "lighter, "additive", "screen"
      * @param {CanvasRenderingContext2D} [context]
      */
@@ -22424,8 +22209,6 @@ class TextureCache {
 
     /**
      * prepare the framebuffer for drawing a new frame
-     * @name clear
-     * @memberof CanvasRenderer
      */
     clear() {
         if (this.settings.transparent === false) {
@@ -22437,8 +22220,6 @@ class TextureCache {
 
     /**
      * Clears the main framebuffer with the given color
-     * @name clearColor
-     * @memberof CanvasRenderer
      * @param {Color|string} [color="#000000"] - CSS color.
      * @param {boolean} [opaque=false] - Allow transparency [default] or clear the surface completely [true]
      */
@@ -22457,8 +22238,6 @@ class TextureCache {
 
     /**
      * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
-     * @name clearRect
-     * @memberof CanvasRenderer
      * @param {number} x - x axis of the coordinate for the rectangle starting point.
      * @param {number} y - y axis of the coordinate for the rectangle starting point.
      * @param {number} width - The rectangle's width.
@@ -22470,9 +22249,7 @@ class TextureCache {
 
     /**
      * Create a pattern with the specified repetition
-     * @name createPattern
-     * @memberof CanvasRenderer
-     * @param {Image} image - Source image
+     * @param {HTMLImageElement|SVGImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap|OffscreenCanvas|VideoFrame} image - Source image to be used as the pattern's image
      * @param {string} repeat - Define how the pattern should be repeated
      * @returns {CanvasPattern}
      * @see ImageLayer#repeat
@@ -22488,9 +22265,7 @@ class TextureCache {
 
     /**
      * Draw an image onto the main using the canvas api
-     * @name drawImage
-     * @memberof CanvasRenderer
-     * @param {Image} image - An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
+     * @param {HTMLImageElement|SVGImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap|OffscreenCanvas|VideoFrame} image - An element to draw into the context.
      * @param {number} sx - The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
      * @param {number} sy - The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
      * @param {number} sw - The width of the sub-rectangle of the source image to draw into the destination context. If not specified, the entire rectangle from the coordinates specified by sx and sy to the bottom-right corner of the image is used.
@@ -22551,8 +22326,6 @@ class TextureCache {
 
     /**
      * Draw a pattern within the given rectangle.
-     * @name drawPattern
-     * @memberof CanvasRenderer
      * @param {CanvasPattern} pattern - Pattern object
      * @param {number} x
      * @param {number} y
@@ -22574,8 +22347,6 @@ class TextureCache {
 
     /**
      * Stroke an arc at the specified coordinates with given radius, start and end points
-     * @name strokeArc
-     * @memberof CanvasRenderer
      * @param {number} x - arc center point x-axis
      * @param {number} y - arc center point y-axis
      * @param {number} radius
@@ -22600,8 +22371,6 @@ class TextureCache {
 
     /**
      * Fill an arc at the specified coordinates with given radius, start and end points
-     * @name fillArc
-     * @memberof CanvasRenderer
      * @param {number} x - arc center point x-axis
      * @param {number} y - arc center point y-axis
      * @param {number} radius
@@ -22615,8 +22384,6 @@ class TextureCache {
 
     /**
      * Stroke an ellipse at the specified coordinates with given radius
-     * @name strokeEllipse
-     * @memberof CanvasRenderer
      * @param {number} x - ellipse center point x-axis
      * @param {number} y - ellipse center point y-axis
      * @param {number} w - horizontal radius of the ellipse
@@ -22656,8 +22423,6 @@ class TextureCache {
 
     /**
      * Fill an ellipse at the specified coordinates with given radius
-     * @name fillEllipse
-     * @memberof CanvasRenderer
      * @param {number} x - ellipse center point x-axis
      * @param {number} y - ellipse center point y-axis
      * @param {number} w - horizontal radius of the ellipse
@@ -22669,8 +22434,6 @@ class TextureCache {
 
     /**
      * Stroke a line of the given two points
-     * @name strokeLine
-     * @memberof CanvasRenderer
      * @param {number} startX - the start x coordinate
      * @param {number} startY - the start y coordinate
      * @param {number} endX - the end x coordinate
@@ -22692,8 +22455,6 @@ class TextureCache {
 
     /**
      * Fill a line of the given two points
-     * @name fillLine
-     * @memberof CanvasRenderer
      * @param {number} startX - the start x coordinate
      * @param {number} startY - the start y coordinate
      * @param {number} endX - the end x coordinate
@@ -22705,8 +22466,6 @@ class TextureCache {
 
     /**
      * Stroke the given me.Polygon on the screen
-     * @name strokePolygon
-     * @memberof CanvasRenderer
      * @param {Polygon} poly - the shape to draw
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
@@ -22733,8 +22492,6 @@ class TextureCache {
 
     /**
      * Fill the given me.Polygon on the screen
-     * @name fillPolygon
-     * @memberof CanvasRenderer
      * @param {Polygon} poly - the shape to draw
      */
     fillPolygon(poly) {
@@ -22743,8 +22500,6 @@ class TextureCache {
 
     /**
      * Stroke a rectangle at the specified coordinates
-     * @name strokeRect
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      * @param {number} width
@@ -22763,8 +22518,6 @@ class TextureCache {
 
     /**
      * Draw a filled rectangle at the specified coordinates
-     * @name fillRect
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      * @param {number} width
@@ -22776,8 +22529,6 @@ class TextureCache {
 
     /**
      * Stroke a rounded rectangle at the specified coordinates
-     * @name strokeRoundRect
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      * @param {number} width
@@ -22799,8 +22550,6 @@ class TextureCache {
 
     /**
      * Draw a rounded filled rectangle at the specified coordinates
-     * @name fillRoundRect
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      * @param {number} width
@@ -22813,8 +22562,6 @@ class TextureCache {
 
     /**
      * Stroke a Point at the specified coordinates
-     * @name strokePoint
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      */
@@ -22824,8 +22571,6 @@ class TextureCache {
 
     /**
      * Draw a a point at the specified coordinates
-     * @name fillPoint
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      * @param {number} width
@@ -22837,8 +22582,6 @@ class TextureCache {
 
     /**
      * save the canvas context
-     * @name save
-     * @memberof CanvasRenderer
      */
     save() {
         this.getContext().save();
@@ -22846,8 +22589,6 @@ class TextureCache {
 
     /**
      * restores the canvas context
-     * @name restore
-     * @memberof CanvasRenderer
      */
     restore() {
         this.getContext().restore();
@@ -22860,8 +22601,6 @@ class TextureCache {
 
     /**
      * rotates the canvas context
-     * @name rotate
-     * @memberof CanvasRenderer
      * @param {number} angle - in radians
      */
     rotate(angle) {
@@ -22870,8 +22609,6 @@ class TextureCache {
 
     /**
      * scales the canvas context
-     * @name scale
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      */
@@ -22882,8 +22619,6 @@ class TextureCache {
     /**
      * Set the current fill & stroke style color.
      * By default, or upon reset, the value is set to #000000.
-     * @name setColor
-     * @memberof CanvasRenderer
      * @param {Color|string} color - css color value
      */
     setColor(color) {
@@ -22898,8 +22633,6 @@ class TextureCache {
 
     /**
      * Set the global alpha
-     * @name setGlobalAlpha
-     * @memberof CanvasRenderer
      * @param {number} alpha - 0.0 to 1.0 values accepted.
      */
     setGlobalAlpha(alpha) {
@@ -22908,8 +22641,6 @@ class TextureCache {
 
     /**
      * Return the global alpha
-     * @name getGlobalAlpha
-     * @memberof CanvasRenderer
      * @returns {number} global alpha value
      */
     getGlobalAlpha() {
@@ -22918,8 +22649,6 @@ class TextureCache {
 
     /**
      * Set the line width on the context
-     * @name setLineWidth
-     * @memberof CanvasRenderer
      * @param {number} width - Line width
      */
     setLineWidth(width) {
@@ -22929,8 +22658,6 @@ class TextureCache {
     /**
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.
-     * @name setTransform
-     * @memberof CanvasRenderer
      * @param {Matrix2d} mat2d - Matrix to transform by
      */
     setTransform(mat2d) {
@@ -22940,8 +22667,6 @@ class TextureCache {
 
     /**
      * Multiply given matrix into the renderer tranformation matrix
-     * @name transform
-     * @memberof CanvasRenderer
      * @param {Matrix2d} mat2d - Matrix to transform by
      */
     transform(mat2d) {
@@ -22963,8 +22688,6 @@ class TextureCache {
 
     /**
      * Translates the context to the given position
-     * @name translate
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      */
@@ -22982,8 +22705,6 @@ class TextureCache {
      * You can however save the current region using the save(),
      * and restore it (with the restore() method) any time in the future.
      * (<u>this is an experimental feature !</u>)
-     * @name clipRect
-     * @memberof CanvasRenderer
      * @param {number} x
      * @param {number} y
      * @param {number} width
@@ -23014,8 +22735,6 @@ class TextureCache {
      * A mask limits rendering elements to the shape and position of the given mask object.
      * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
      * Mask are not preserved through renderer context save and restore.
-     * @name setMask
-     * @memberof CanvasRenderer
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - the shape defining the mask to be applied
      * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
      */
@@ -23079,9 +22798,7 @@ class TextureCache {
 
     /**
      * disable (remove) the rendering mask set through setMask.
-     * @name clearMask
      * @see CanvasRenderer#setMask
-     * @memberof CanvasRenderer
      */
     clearMask() {
         if (this.maskLevel > 0) {
@@ -23682,12 +23399,12 @@ let globalFloatingCounter = 0;
         this.children = undefined;
 
         /**
-         * The property of the child object that should be used to sort on <br>
+         * The property of the child object that should be used to sort on this container
          * value : "x", "y", "z"
          * @type {string}
-         * @default me.game.sortOn
+         * @default "z"
          */
-        this.sortOn = game.sortOn;
+        this.sortOn = "z";
 
         /**
          * Specify if the children list should be automatically sorted when adding a new child
@@ -23795,9 +23512,9 @@ let globalFloatingCounter = 0;
      * Add a child to the container <br>
      * if auto-sort is disable, the object will be appended at the bottom of the list.
      * Adding a child to the container will automatically remove it from its other container.
-     * Meaning a child can only have one parent.  This is important if you add a renderable
-     * to a container then add it to the me.game.world container it will move it out of the
-     * orginal container. Then when the me.game.world.reset() is called the renderable
+     * Meaning a child can only have one parent. This is important if you add a renderable
+     * to a container then add it to the World container it will move it out of the
+     * orginal container. Then when the World container reset() method is called the renderable
      * will not be in any container. <br>
      * if the given child implements a onActivateEvent method, that method will be called
      * once the child is added to this container.
@@ -23844,7 +23561,7 @@ let globalFloatingCounter = 0;
 
         // force repaint in case this is a static non-animated object
         if (this.isAttachedToRoot() === true) {
-            game.repaint();
+            this.isDirty = true;
         }
 
         // force bounds update if required
@@ -23854,7 +23571,7 @@ let globalFloatingCounter = 0;
 
         // if a physic body is defined, add it to the game world
         if (child.body instanceof Body) {
-            game.world.addBody(child.body);
+            this.getRootAncestor().addBody(child.body);
         }
 
         // triggered callback if defined
@@ -23893,7 +23610,7 @@ let globalFloatingCounter = 0;
 
             // force repaint in case this is a static non-animated object
             if (this.isAttachedToRoot() === true) {
-                game.repaint();
+                this.isDirty = true;
             }
 
             // force bounds update if required
@@ -23903,7 +23620,7 @@ let globalFloatingCounter = 0;
 
             // if a physic body is defined, add it to the game world
             if (child.body instanceof Body) {
-                game.world.addBody(child.body);
+                this.getRootAncestor().addBody(child.body);
             }
 
             // triggered callback if defined
@@ -23925,14 +23642,14 @@ let globalFloatingCounter = 0;
      * @param {Function} callback - fnction to execute on each element
      * @param {object} [thisArg] - value to use as this(i.e reference Object) when executing callback.
      * @example
-     * // iterate through all children of the root container
-     * me.game.world.forEach((child) => {
+     * // iterate through all children of this container
+     * container.forEach((child) => {
      *    // do something with the child
      *    child.doSomething();
      * });
-     * me.game.world.forEach((child, index) => { ... });
-     * me.game.world.forEach((child, index, array) => { ... });
-     * me.game.world.forEach((child, index, array) => { ... }, thisArg);
+     * container.forEach((child, index) => { ... });
+     * container.forEach((child, index, array) => { ... });
+     * container.forEach((child, index, array) => { ... }, thisArg);
      */
     forEach(callback, thisArg) {
         var context = this, i = 0;
@@ -24036,15 +23753,15 @@ let globalFloatingCounter = 0;
      * var ent = myContainer.getChildByProp("name", "mainPlayer");
      *
      * // or query the whole world :
-     * var ent = me.game.world.getChildByProp("name", "mainPlayer");
+     * var ent = container.getChildByProp("name", "mainPlayer");
      *
      * // partial property matches are also allowed by using a RegExp.
      * // the following matches "redCOIN", "bluecoin", "bagOfCoins", etc :
-     * var allCoins = me.game.world.getChildByProp("name", /coin/i);
+     * var allCoins = container.getChildByProp("name", /coin/i);
      *
      * // searching for numbers or other data types :
-     * var zIndex10 = me.game.world.getChildByProp("z", 10);
-     * var inViewport = me.game.world.getChildByProp("inViewport", true);
+     * var zIndex10 = container.getChildByProp("z", 10);
+     * var inViewport = container.getChildByProp("inViewport", true);
      */
     getChildByProp(prop, value)    {
         var objList = [];
@@ -24156,7 +23873,6 @@ let globalFloatingCounter = 0;
 
     /**
      * Checks if this container is root or if it's attached to the root container.
-     * @private
      * @returns {boolean}
      */
     isAttachedToRoot() {
@@ -24171,6 +23887,25 @@ let globalFloatingCounter = 0;
                 ancestor = ancestor.ancestor;
             }
             return false;
+        }
+    }
+
+    /**
+     * Returns the instance of the root container (i.e. the current application World container).
+     * @returns {Container}
+     */
+    getRootAncestor() {
+        if (this.root === true) {
+            return this;
+        } else {
+            var ancestor = this.ancestor;
+            while (ancestor) {
+                if (ancestor.root === true) {
+                    break;
+                }
+                ancestor = ancestor.ancestor;
+            }
+            return ancestor;
         }
     }
 
@@ -24235,7 +23970,7 @@ let globalFloatingCounter = 0;
             // remove the body first to avoid a condition where a body can be detached
             // from its parent, before the body is removed from the game world
             if (child.body instanceof Body) {
-                game.world.removeBody(child.body);
+               this.getRootAncestor().removeBody(child.body);
             }
 
             if (!keepalive) {
@@ -24258,7 +23993,7 @@ let globalFloatingCounter = 0;
 
             // force repaint in case this is a static non-animated object
             if (this.isAttachedToRoot() === true) {
-                game.repaint();
+                this.isDirty = true;
             }
 
             // force bounds update if required
@@ -24371,7 +24106,7 @@ let globalFloatingCounter = 0;
                 // clear the defer id
                 this.pendingSort = null;
                 // make sure we redraw everything
-                game.repaint();
+                this.isDirty = true;
             }, this);
         }
     }
@@ -24440,7 +24175,7 @@ let globalFloatingCounter = 0;
 
     /**
      * container update function. <br>
-     * automatically called by the game manager {@link game}
+     * automatically called by the application update loop {@link Application}
      * @protected
      * @param {number} dt - time since the last update in milliseconds.
      * @returns {boolean} true if the Container is dirty
@@ -27205,12 +26940,12 @@ var loader = {
      * });
      *
      * // create a single sprite from a packed texture
-     * game.texture = new me.TextureAtlas(
+     * mytexture = new me.TextureAtlas(
      *     me.loader.getJSON("texture"),
      *     me.loader.getImage("texture")
      * );
      * var sprite = new me.Sprite(0, 0, {
-     *     image : game.texture,
+     *     image : mytexture,
      *     region : "npc2.png",
      * });
      */
@@ -27394,7 +27129,7 @@ var loader = {
      * // make the object flicker for 1 second
      * // and then remove it
      * this.flicker(1000, function () {
-     *     me.game.world.removeChild(this);
+     *     world.removeChild(this);
      * });
      */
     flicker(duration, callback) {
@@ -27534,7 +27269,7 @@ var loader = {
      *
      * // set "die" animation, and remove the object when finished
      * this.setCurrentAnimation("die", (function () {
-     *    me.game.world.removeChild(this);
+     *    world.removeChild(this);
      *    return false; // do not reset to first frame
      * }).bind(this));
      *
@@ -27616,7 +27351,7 @@ var loader = {
      * @returns {Sprite} Reference to this object for method chaining
      * @example
      * // change the sprite to "shadedDark13.png";
-     * mySprite.setRegion(game.texture.getRegion("shadedDark13.png"));
+     * mySprite.setRegion(mytexture.getRegion("shadedDark13.png"));
      */
     setRegion(region) {
         // set the source texture for the given region
@@ -28594,7 +28329,7 @@ class Timer {
      * @param {number} delay - the number of milliseconds (thousandths of a second) that the function call should be delayed by.
      * @param {boolean} [pauseable=true] - respects the pause state of the engine.
      * @param {...*} args - optional parameters which are passed through to the function specified by fn once the timer expires.
-     * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
+     * @returns {number} a positive integer value which identifies the timer created by the call to setTimeout(), which can be used later with me.timer.clearTimeout().
      * @example
      * // set a timer to call "myFunction" after 1000ms
      * me.timer.setTimeout(myFunction, 1000);
@@ -28620,7 +28355,7 @@ class Timer {
      * @param {number} delay - the number of milliseconds (thousandths of a second) on how often to execute the function
      * @param {boolean} [pauseable=true] - respects the pause state of the engine.
      * @param {...*} args - optional parameters which are passed through to the function specified by fn once the timer expires.
-     * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
+     * @returns {number} a numeric, non-zero value which identifies the timer created by the call to setInterval(), which can be used later with me.timer.clearInterval().
      * @example
      * // set a timer to call "myFunction" every 1000ms
      * me.timer.setInterval(myFunction, 1000);
@@ -28641,19 +28376,23 @@ class Timer {
     }
 
     /**
-     * Clears the delay set by me.timer.setTimeout().
-     * @param {number} timeoutID - ID of the timeout to be cleared
+     * Cancels a timeout previously established by calling setTimeout().
+     * @param {number} timeoutID - ID of the timeout to be cancelled
      */
     clearTimeout(timeoutID) {
-        utils.function.defer(this.clearTimer.bind(this), this, timeoutID);
+        if (timeoutID > 0) {
+            utils.function.defer(this.clearTimer.bind(this), this, timeoutID);
+        }
     }
 
     /**
-     * Clears the Interval set by me.timer.setInterval().
+     * cancels the timed, repeating action which was previously established by a call to setInterval().
      * @param {number} intervalID - ID of the interval to be cleared
      */
     clearInterval(intervalID) {
-        utils.function.defer(this.clearTimer.bind(this), this, intervalID);
+        if (intervalID > 0) {
+            utils.function.defer(this.clearTimer.bind(this), this, intervalID);
+        }
     }
 
     /**
@@ -31224,6 +30963,9 @@ var V_ARRAY = [
         if (pixels === null || typeof pixels.byteLength !== "undefined") {
             // if pixels is undefined, or if it's Uint8Array/Float32Array TypedArray
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels, 0);
+        } else if (pixels instanceof OffscreenCanvas) {
+            // convert to ImageBitmap first (else Safari 16.4 and higher will throw an TypeError exception)
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, pixels.transferToImageBitmap());
         } else {
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
         }
@@ -31644,7 +31386,7 @@ var V_ARRAY = [
 
     /**
      * Create a pattern with the specified repetition
-     * @param {Image} image - Source image
+     * @param {HTMLImageElement|SVGImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap|OffscreenCanvas|VideoFrame} image - Source image to be used as the pattern's image
      * @param {string} repeat - Define how the pattern should be repeated
      * @returns {TextureAtlas}
      * @see ImageLayer#repeat
@@ -31749,7 +31491,7 @@ var V_ARRAY = [
 
     /**
      * Draw an image to the gl context
-     * @param {Image} image - An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
+     * @param {HTMLImageElement|SVGImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap|OffscreenCanvas|VideoFrame} image - An element to draw into the context.
      * @param {number} sx - The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
      * @param {number} sy - The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
      * @param {number} sw - The width of the sub-rectangle of the source image to draw into the destination context. If not specified, the entire rectangle from the coordinates specified by sx and sy to the bottom-right corner of the image is used.
@@ -32497,6 +32239,66 @@ class CanvasTexture {
     }
 
     /**
+     * creates a Blob object representing the image contained in this canvas texture
+     * @param {Object} [options] - An object with the following properties:
+     * @param {String} [options.type="image/png"] - A string indicating the image format
+     * @param {Number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @return {Promise} A Promise returning a Blob object representing the image contained in this canvas texture
+     * @example
+     * canvasTexture.convertToBlob().then((blob) => console.log(blob));
+     */
+    toBlob(options) {
+        if (typeof this.canvas.convertToBlob === "function") {
+            return this.canvas.convertToBlob(options);
+        } else {
+            return new Promise(function(resolve) {
+                this.canvas.toBlob((blob) => {
+                    resolve(blob);
+                }, options ? options.type : undefined, options ? options.quality : undefined);
+            });
+        }
+    }
+
+    /**
+     * creates an ImageBitmap object from the most recently rendered image of this canvas texture
+     * @param {Object} [options] - An object with the following properties:
+     * @param {String} [options.type="image/png"] - A string indicating the image format
+     * @param {Number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @return {Promise} A Promise returning an ImageBitmap.
+     * @example
+     * canvasTexture.transferToImageBitmap().then((bitmap) => console.log(bitmap));
+     */
+    toImageBitmap(options) {
+        return new Promise((resolve) => {
+            if (typeof this.canvas.transferToImageBitmap === "function") {
+                resolve(this.canvas.transferToImageBitmap());
+            } else {
+                let image = new Image();
+                image.src = this.canvas.toDataURL(options);
+                image.onload = () => {
+                    createImageBitmap(image).then((bitmap) => resolve(bitmap));
+                };
+            }
+        });
+    }
+
+    /**
+     * returns a data URL containing a representation of the most recently rendered image of this canvas texture
+     * (not supported by OffscreenCanvas)
+     * @param {Object} [options] - An object with the following properties:
+     * @param {String} [options.type="image/png"] - A string indicating the image format
+     * @param {Number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @return {Promise} A Promise returning a string containing the requested data URL.
+     * @example
+     * renderer.toDataURL().then((dataURL) => console.log(dataURL));
+     */
+    toDataURL(options) {
+        return new Promise((resolve) => {
+            resolve(this.canvas.toDataURL(options));
+        });
+    }
+
+    /**
      * @ignore
      */
     destroy() {
@@ -33133,8 +32935,7 @@ class CanvasTexture {
 /**
  * @classdesc
  * This is a basic clickable container which you can use in your game UI.
- * Use this for example if you want to display a button which contains
- * text and images.
+ * Use this for example if you want to display a button which contains text and images.
  * @augments Container
  */
  class UIBaseElement extends Container {
@@ -33175,7 +32976,7 @@ class CanvasTexture {
         this.hover = false;
 
         // object has been updated (clicked,etc..)
-        this.holdTimeout = null;
+        this.holdTimeout = -1;
         this.released = true;
 
         // GUI items use screen coordinates
@@ -33195,9 +32996,7 @@ class CanvasTexture {
             this.dirty = true;
             this.released = false;
             if (this.isHoldable) {
-                if (this.holdTimeout !== null) {
-                    timer$1.clearTimeout(this.holdTimeout);
-                }
+                timer$1.clearTimeout(this.holdTimeout);
                 this.holdTimeout = timer$1.setTimeout(
                     this.hold.bind(this),
                     this.holdThreshold,
@@ -33264,6 +33063,7 @@ class CanvasTexture {
             this.released = true;
             this.dirty = true;
             timer$1.clearTimeout(this.holdTimeout);
+            this.holdTimeout = -1;
             return this.onRelease(event);
         }
     }
@@ -33282,6 +33082,7 @@ class CanvasTexture {
      */
     hold() {
         timer$1.clearTimeout(this.holdTimeout);
+        this.holdTimeout = -1;
         this.dirty = true;
         if (!this.released) {
             this.onHold();
@@ -33327,6 +33128,7 @@ class CanvasTexture {
         releasePointerEvent("pointerenter", this);
         releasePointerEvent("pointerleave", this);
         timer$1.clearTimeout(this.holdTimeout);
+        this.holdTimeout = -1;
     }
 }
 
@@ -33506,7 +33308,8 @@ const toPX = [12, 24, 0.75, 1];
         }
 
         // the canvas Texture used to render this text
-        this.canvasTexture = pool.pull("CanvasTexture", 2, 2, { offscreenCanvas: true });
+        // XXX: offscreenCanvas is currently disabled for text rendering due to issue in WebGL mode
+        this.canvasTexture = pool.pull("CanvasTexture", 2, 2, { offscreenCanvas: false });
 
         // instance to text metrics functions
         this.metrics = new TextMetrics(this);
@@ -34332,25 +34135,27 @@ const toPX = [12, 24, 0.75, 1];
  */
  class UITextButton extends UIBaseElement {
     /**
-     * A Text Button with an outlined background border, filled with background color.
+     * A Bitmap Text Button with an outlined background border, filled with background color.
      * It uses a RoundRect as background and changes the background color on hovering over.
      * The background will be drawn with 0.5 opacity, so that the background of the button is
      * slightly shining through.
      * @param {number} x - x pos of the button
      * @param {number} y - y pos of the button
      * @param {string} [settings.font] - The name of the BitmapText font to use
-     * @param {number} [settings.size] - The scale factor of the font (default: 1)
-     * @param {string} [settings.text] - The text to display (default: 'click me')
+     * @param {number} [settings.size=1] - The scale factor of the BitmapText
+     * @param {string} [settings.text] - The text to display
      * @param {string} [settings.bindKey] - The key to bind the action to (default: none)
-     * @param {string} [settings.backgroundColor] - The css value of a background color
-     * @param {string} [settings.hoverColor] - The css value of a color to be used if the pointer hovers over the button
-     * @param {string} [settings.borderStrokeColor] - The css value of a color to be used to draw the border
-     * @param {string} [settings.fillStyle] - The css value of a tint color to be used to tint the text
+     * @param {string} [settings.backgroundColor="#00aa0080"] - The css value of a background color
+     * @param {string} [settings.hoverColor="#00ff00ff"] - The css value of a color to be used if the pointer hovers over the button
+     * @param {string} [settings.borderStrokeColor="#000000"] - The css value of a color to be used to draw the border
+     * @param {string} [settings.fillStyle] - The css value of a tint color to be used to tint the BitmapText
+     * @param {string} [settings.textAlign="center"] - horizontal text alignment
+     * @param {string} [settings.textBaseline="middle"] - the text baseline
      * @param {number} [settings.borderWidth] - Width of the button
      * @param {number} [settings.borderHeight] - Height of the button
      * @example
      * // Create a new Button
-     * class PlayButton extends BaseTextButton {
+     * class PlayButton extends UITextButton {
      *      constructor(x,y) {
      *          super(x,y, {
      *              font: 'my-font',
@@ -34366,104 +34171,121 @@ const toPX = [12, 24, 0.75, 1];
      *      }
      * }
      *
-     * game.world.addChild(new PlayButton(15,200));
+     * world.addChild(new PlayButton(15,200));
      */
     constructor(x, y, settings) {
         super(x, y);
-        settings.font = settings.font || "24Outline";
-        settings.size = settings.size || 1;
-        settings.text = settings.text || "<Click Me>";
-        settings.bindKey = settings.bindKey || -1;
-        settings.backgroundColor = settings.backgroundColor || "#00aa00";
-        settings.hoverColor = settings.hoverColor || "#00ff00";
-        settings.borderStrokeColor = settings.borderStrokeColor || "#000000";
-        settings.fillStyle = settings.fillStyle || "#ffffff";
-        settings.lineWidth = settings.lineWidth || 1;
-        settings.anchorPoint = settings.anchorPoint || new Vector2d(0, 0);
 
-        let font = new BitmapText(x, y, settings);
-        let dimensions = font.measureText();
-        settings.borderWidth = settings.borderWidth || dimensions.width + 16;
-        settings.borderHeight = settings.borderHeight || dimensions.height + 16;
+        /**
+         * The key to bind the action to
+         * @type {string}
+         */
+        this.bindKey = settings.bindKey || -1;
 
-        let border = new RoundRect(
-            x,
-            y,
-            settings.borderWidth,
-            settings.borderHeight
+        /**
+         * The css value of a background color
+         * @type {string}
+         */
+        this.backgroundColor = settings.backgroundColor || "#00aa0080";
+
+        /**
+         * The css value of a color to be used if the pointer hovers over the button
+         * @type {string}
+         */
+        this.hoverColor = settings.hoverColor || "#00ff00ff";
+
+        /**
+         * The css value of a color to be used to draw the border
+         * @type {string}
+         */
+        this.borderStrokeColor = settings.borderStrokeColor || "#000000";
+
+        /**
+         * Set the default text alignment (or justification),<br>
+         * possible values are "left", "right", and "center".
+         * @public
+         * @type {string}
+         * @default "center"
+         */
+        this.textAlign = settings.textAlign = settings.textAlign || "center";
+
+        /**
+         * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
+         * possible values are "top", "hanging, "middle, "alphabetic, "ideographic, "bottom"<br>
+         * @public
+         * @type {string}
+         * @default "middle"
+         */
+        this.textBaseline = settings.textBaseline = settings.textBaseline || "middle";
+
+        /**
+         * the bitmapText used by the UITextButton class
+         * @type {BitmapText}
+         */
+        this.bitmapText = new BitmapText(0, 0, settings);
+
+        // "detect" the button size
+        this.dimensions = this.bitmapText.measureText();
+        settings.borderWidth = settings.borderWidth || this.dimensions.width + 16;
+        settings.borderHeight = settings.borderHeight || this.dimensions.height + 16;
+
+        // create the round rect button
+        this.border = new RoundRect(x, y, settings.borderWidth, settings.borderHeight);
+
+        // resize the container accordingly
+        this.resize(
+            this.border.getBounds().width,
+            this.border.getBounds().height
         );
-        super.setShape(
-            x,
-            y,
-            border.getBounds().width,
-            border.getBounds().height
-        );
 
-        // build up
-        this.font = font;
-        this.dimensions = dimensions;
-        this.border = border;
-        this.settings = settings;
+        // adjust size position
+        this.bitmapText.pos.set(this.width / 2, this.height / 2);
 
-        // adjust text position
-        this.font.pos.set(
-            Math.round((border.width - dimensions.width) / 2) + this.font.pos.x,
-            Math.round((border.height - dimensions.height) / 2) +
-                this.font.pos.y
-        );
+        // add bitmapText to the UI container
+        this.addChild(this.bitmapText);
     }
 
     draw(renderer) {
-        renderer.setGlobalAlpha(0.5);
-        if (!this.hover) {
-            renderer.setColor(this.settings.backgroundColor);
+        if (this.hover === true) {
+            renderer.setColor(this.hoverColor);
         } else {
-            renderer.setColor(this.settings.hoverColor);
+            renderer.setColor(this.backgroundColor);
         }
-
         renderer.fill(this.border);
-        renderer.setGlobalAlpha(1);
-        renderer.setColor(this.settings.borderStrokeColor);
+        renderer.setColor(this.borderStrokeColor);
         renderer.stroke(this.border);
-
-        // fix: supporting tint
-        renderer.setTint(this.font.tint, this.font.getOpacity());
-        this.font.draw(
-            renderer,
-            this.settings.text,
-            this.font.pos.x,
-            this.font.pos.y
-        );
+        this.bitmapText.preDraw(renderer);
+        this.bitmapText.draw(renderer);
+        this.bitmapText.postDraw(renderer);
+        super.draw(renderer);
     }
 }
 
 /**
  * @classdesc
- *  This is a basic sprite based button which you can use in your Game UI.
+ * This is a basic sprite based button which you can use in your Game UI.
  * @augments Sprite
  */
  class UISpriteElement extends Sprite {
     /**
-     * @param {number} x - the x coordinate of the GUI Object
-     * @param {number} y - the y coordinate of the GUI Object
+     * @param {number} x - the x coordinate of the UISpriteElement Object
+     * @param {number} y - the y coordinate of the UISpriteElement Object
      * @param {object} settings - See {@link Sprite}
      * @example
      * // create a basic GUI Object
      * class myButton extends UISpriteElement {
      *    constructor(x, y) {
-     *       var settings = {}
-     *       settings.image = "button";
-     *       settings.framewidth = 100;
-     *       settings.frameheight = 50;
-     *       // super constructor
-     *       super(x, y, settings);
-     *       // define the object z order
-     *       this.pos.z = 4;
+     *       // call the UISpriteElement parent constructor
+     *       super(x, y, {
+     *          image: "button",
+     *          framewidth: 100,
+     *          frameheight: 50
+     *       });
      *    }
      *
      *    // output something in the console
      *    // when the object is clicked
-     *    onClick:function (event) {
+     *    onClick(event) {
      *       console.log("clicked!");
      *       // don't propagate the event
      *       return false;
@@ -34471,7 +34293,7 @@ const toPX = [12, 24, 0.75, 1];
      * });
      *
      * // add the object at pos (10,10)
-     * me.game.world.addChild(new myButton(10,10));
+     * world.addChild(new myButton(10,10));
      */
     constructor(x, y, settings) {
 
@@ -34507,7 +34329,7 @@ const toPX = [12, 24, 0.75, 1];
         this.hover = false;
 
         // object has been updated (clicked,etc..)
-        this.holdTimeout = null;
+        this.holdTimeout = -1;
         this.released = true;
 
         // GUI items use screen coordinates
@@ -34527,9 +34349,7 @@ const toPX = [12, 24, 0.75, 1];
             this.dirty = true;
             this.released = false;
             if (this.isHoldable) {
-                if (this.holdTimeout !== null) {
-                    timer$1.clearTimeout(this.holdTimeout);
-                }
+                timer$1.clearTimeout(this.holdTimeout);
                 this.holdTimeout = timer$1.setTimeout(this.hold.bind(this), this.holdThreshold, false);
                 this.released = false;
             }
@@ -34592,6 +34412,7 @@ const toPX = [12, 24, 0.75, 1];
             this.released = true;
             this.dirty = true;
             timer$1.clearTimeout(this.holdTimeout);
+            this.holdTimeout = -1;
             return this.onRelease(event);
         }
     }
@@ -34610,6 +34431,7 @@ const toPX = [12, 24, 0.75, 1];
      */
     hold() {
         timer$1.clearTimeout(this.holdTimeout);
+        this.holdTimeout = -1;
         this.dirty = true;
         if (!this.released) {
             this.onHold();
@@ -34647,6 +34469,7 @@ const toPX = [12, 24, 0.75, 1];
         releasePointerEvent("pointerenter", this);
         releasePointerEvent("pointerleave", this);
         timer$1.clearTimeout(this.holdTimeout);
+        this.holdTimeout = -1;
     }
 }
 
@@ -34718,7 +34541,7 @@ const toPX = [12, 24, 0.75, 1];
      * @param {boolean} [settings.flatten] - Flatten all objects into the target container. See {@link level.load}
      * @param {boolean} [settings.setViewportBounds] - Resize the viewport to match the level. See {@link level.load}
      * @example
-     * me.game.world.addChild(new me.Trigger(
+     * world.addChild(new me.Trigger(
      *     x, y, {
      *         shapes: [new me.Rect(0, 0, 100, 100)],
      *         "duration" : 250,
@@ -34779,9 +34602,10 @@ const toPX = [12, 24, 0.75, 1];
      * @ignore
      */
      getTriggerSettings() {
+        var world = this.ancestor.getRootAncestor();
          // Lookup for the container instance
          if (typeof(this.triggerSettings.container) === "string") {
-             this.triggerSettings.container = game.world.getChildByName(this.triggerSettings.container)[0];
+             this.triggerSettings.container = world.getChildByName(this.triggerSettings.container)[0];
          }
          return this.triggerSettings;
      }
@@ -34790,8 +34614,9 @@ const toPX = [12, 24, 0.75, 1];
      * @ignore
      */
     onFadeComplete() {
+        var world = this.ancestor.getRootAncestor();
         level.load(this.gotolevel, this.getTriggerSettings());
-        game.viewport.fadeOut(this.fade, this.duration);
+        world.app.viewport.fadeOut(this.fade, this.duration);
     }
 
     /**
@@ -34802,6 +34627,7 @@ const toPX = [12, 24, 0.75, 1];
      */
     triggerEvent() {
         var triggerSettings = this.getTriggerSettings();
+        var world = this.ancestor.getRootAncestor();
 
         if (triggerSettings.event === "level") {
             this.gotolevel = triggerSettings.to;
@@ -34810,7 +34636,7 @@ const toPX = [12, 24, 0.75, 1];
             if (this.fade && this.duration) {
                 if (!this.fading) {
                     this.fading = true;
-                    game.viewport.fadeIn(this.fade, this.duration,
+                    world.app.viewport.fadeIn(this.fade, this.duration,
                             this.onFadeComplete.bind(this));
                 }
             } else {
@@ -37588,14 +37414,6 @@ function consoleHeader(app) {
         this.mergeGroup = true;
 
         /**
-         * Specify the property to be used when sorting renderables.
-         * Accepted values : "x", "y", "z"
-         * @type {string}
-         * @default "z"
-         */
-        this.sortOn = "z";
-
-        /**
          * Last time the game update loop was executed. <br>
          * Use this value to implement frame prediction in drawing events,
          * for creating smooth motion while running game update logic at
@@ -37736,7 +37554,7 @@ function consoleHeader(app) {
         }
 
         // create a new physic world
-        this.world = new World();
+        this.world = new World(0, 0, this.settings.width, this.settings.height);
         // set the reference to this application instance
         this.world.app = this;
         this.lastUpdate = globalThis.performance.now();
@@ -37762,6 +37580,19 @@ function consoleHeader(app) {
 
         // Refresh internal variables for framerate  limiting
         this.updateFrameRate();
+    }
+
+    /**
+     * Specify the property to be used when sorting renderables for this application game world.
+     * Accepted values : "x", "y", "z"
+     * @type {string}
+     * @see World.sortOn
+     */
+    get sortOn() {
+        return this.world.sortOn;
+    }
+    set sortOn(value) {
+        this.world.sortOn = value;
     }
 
     /**
@@ -37897,10 +37728,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "15.0.0"
+         * @default "15.1.0"
          * @name plugin.Base#version
          */
-        this.version = "15.0.0";
+        this.version = "15.1.0";
     }
 }
 
@@ -38113,7 +37944,7 @@ Renderer.prototype.getScreenContext = function()  {
      * @param {object} settings - See {@link Sprite}
      */
     constructor(x, y, settings) {
-        warning("GUI_Object", "UISpriteElement", "14.0.0");
+        warning("GUI_Object", "UISpriteElement or UITextButton", "14.0.0");
         super(x, y, settings);
     }
 }
@@ -38128,7 +37959,7 @@ Renderer.prototype.getScreenContext = function()  {
  * @name version
  * @type {string}
  */
-const version = "15.0.0";
+const version = "15.1.0";
 
 /**
  * a flag indicating that melonJS is fully initialized
@@ -38257,4 +38088,4 @@ onReady(() => {
     }
 });
 
-export { AUTO$1 as AUTO, Application, BitmapText, BitmapTextData, Body, Bounds, CANVAS$1 as CANVAS, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Compositor, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Point, Pointer, Polygon, PrimitiveCompositor, QuadCompositor, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, UIBaseElement, UISpriteElement, UITextButton, Vector2d, Vector3d, WEBGL$1 as WEBGL, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state$1 as state, timer$1 as timer, utils, version, video };
+export { AUTO$1 as AUTO, Application, BitmapText, BitmapTextData, Body, Bounds, CANVAS$1 as CANVAS, Camera2d, CanvasRenderer, CanvasTexture, Collectable, Color, ColorLayer, Compositor, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Point, Pointer, Polygon, PrimitiveCompositor, QuadCompositor, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, UIBaseElement, UISpriteElement, UITextButton, Vector2d, Vector3d, WEBGL$1 as WEBGL, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state$1 as state, timer$1 as timer, utils, version, video };

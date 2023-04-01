@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.0.0
+ * melonJS Game Engine - v15.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -113,7 +113,7 @@ Renderer.prototype.getScreenContext = function()  {
      * @param {object} settings - See {@link Sprite}
      */
     constructor(x, y, settings) {
-        warning("GUI_Object", "UISpriteElement", "14.0.0");
+        warning("GUI_Object", "UISpriteElement or UITextButton", "14.0.0");
         super(x, y, settings);
     }
 }

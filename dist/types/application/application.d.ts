@@ -64,13 +64,6 @@ export default class Application {
      */
     mergeGroup: boolean;
     /**
-     * Specify the property to be used when sorting renderables.
-     * Accepted values : "x", "y", "z"
-     * @type {string}
-     * @default "z"
-     */
-    sortOn: string;
-    /**
      * Last time the game update loop was executed. <br>
      * Use this value to implement frame prediction in drawing events,
      * for creating smooth motion while running game update logic at
@@ -109,6 +102,14 @@ export default class Application {
      * destroy all current objects
      */
     reset(): void;
+    set sortOn(arg: string);
+    /**
+     * Specify the property to be used when sorting renderables for this application game world.
+     * Accepted values : "x", "y", "z"
+     * @type {string}
+     * @see World.sortOn
+     */
+    get sortOn(): string;
     /**
      * Fired when a level is fully loaded and all renderable instantiated. <br>
      * Additionnaly the level id will also be passed to the called function.

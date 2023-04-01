@@ -27,12 +27,12 @@ export default class Sprite extends Renderable {
      * });
      *
      * // create a single sprite from a packed texture
-     * game.texture = new me.TextureAtlas(
+     * mytexture = new me.TextureAtlas(
      *     me.loader.getJSON("texture"),
      *     me.loader.getImage("texture")
      * );
      * var sprite = new me.Sprite(0, 0, {
-     *     image : game.texture,
+     *     image : mytexture,
      *     region : "npc2.png",
      * });
      */
@@ -119,7 +119,7 @@ export default class Sprite extends Renderable {
      * // make the object flicker for 1 second
      * // and then remove it
      * this.flicker(1000, function () {
-     *     me.game.world.removeChild(this);
+     *     world.removeChild(this);
      * });
      */
     flicker(duration: number, callback: Function): Sprite;
@@ -180,7 +180,7 @@ export default class Sprite extends Renderable {
      *
      * // set "die" animation, and remove the object when finished
      * this.setCurrentAnimation("die", (function () {
-     *    me.game.world.removeChild(this);
+     *    world.removeChild(this);
      *    return false; // do not reset to first frame
      * }).bind(this));
      *
@@ -227,7 +227,7 @@ export default class Sprite extends Renderable {
      * @returns {Sprite} Reference to this object for method chaining
      * @example
      * // change the sprite to "shadedDark13.png";
-     * mySprite.setRegion(game.texture.getRegion("shadedDark13.png"));
+     * mySprite.setRegion(mytexture.getRegion("shadedDark13.png"));
      */
     setRegion(region: object): Sprite;
     /**

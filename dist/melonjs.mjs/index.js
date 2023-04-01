@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.0.0
+ * melonJS Game Engine - v15.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -105,7 +105,7 @@ import { initKeyboardEvent } from './input/keyboard.js';
  * @name version
  * @type {string}
  */
-const version = "15.0.0";
+const version = "15.1.0";
 
 /**
  * a flag indicating that melonJS is fully initialized
@@ -229,4 +229,4 @@ onReady(() => {
     }
 });
 
-export { Application, BitmapText, BitmapTextData, Bounds, Collectable, Color, ColorLayer, Ellipse, Entity, ImageLayer, Light2d, Line, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, Point, Polygon, Rect, Renderable, RoundRect, Sprite, Text, Trigger, Tween, Vector2d, Vector3d, boot, game, initialized, pool, skipAutoInit, utils, version };
+export { Application, BitmapText, BitmapTextData, Bounds, CanvasTexture, Collectable, Color, ColorLayer, Ellipse, Entity, ImageLayer, Light2d, Line, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, Point, Polygon, Rect, Renderable, RoundRect, Sprite, Text, Trigger, Tween, Vector2d, Vector3d, boot, game, initialized, pool, skipAutoInit, utils, version };
