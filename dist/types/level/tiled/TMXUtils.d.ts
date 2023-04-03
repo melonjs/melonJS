@@ -1,11 +1,12 @@
 /**
- * decompress zlib/gzip data (NOT IMPLEMENTED)
+ * decompress and decode zlib/gzip data
  * @ignore
  * @name decompress
- * @param  {number[]} data- -  Array of bytes
- * @param  {string} format- -  compressed data format ("gzip","zlib")
+ * @param {string} input - Base64 encoded and compressed data
+ * @param {string} format - compressed data format ("gzip","zlib", "zstd")
+ * @returns {Uint32Array} Decoded and decompress data
  */
-export function decompress(): void;
+export function decompress(data: any, format: string): Uint32Array;
 /**
  * Decode a CSV encoded array into a binary array
  * @ignore
