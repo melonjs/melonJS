@@ -171,19 +171,14 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
      */
     onActivateEvent() {
         // register pointer events
-        registerPointerEvent(
-            "pointerdown",
-            this,
-            this.clicked.bind(this)
-        );
+        registerPointerEvent("pointerdown", this, this.clicked.bind(this));
         registerPointerEvent("pointerup", this, this.release.bind(this));
-        registerPointerEvent(
-            "pointercancel",
-            this,
-            this.release.bind(this)
-        );
+        registerPointerEvent("pointercancel", this, this.release.bind(this));
         registerPointerEvent("pointerenter", this, this.enter.bind(this));
         registerPointerEvent("pointerleave", this, this.leave.bind(this));
+
+        // call the parent function
+        super.onActivateEvent();
     }
 
     /**
@@ -192,12 +187,16 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
      */
     onDeactivateEvent() {
         // release pointer events
-        releasePointerEvent("pointerdown", this.hitbox);
+        releasePointerEvent("pointerdown", this);
         releasePointerEvent("pointerup", this);
         releasePointerEvent("pointercancel", this);
         releasePointerEvent("pointerenter", this);
         releasePointerEvent("pointerleave", this);
         timer.clearTimeout(this.holdTimeout);
         this.holdTimeout = -1;
+
+
+        // call the parent function
+        super.onDeactivateEvent();
     }
 }
