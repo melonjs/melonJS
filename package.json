@@ -61,7 +61,7 @@
   "devDependencies": {
     "@babel/eslint-parser": "^7.21.3",
     "@babel/plugin-syntax-import-assertions": "^7.20.0",
-    "@fastify/static": "^6.9.0",
+    "@fastify/static": "^6.10.0",
     "@melonjs/webdoc-theme": "^1.1.1",
     "@rollup/plugin-commonjs": "^24.0.1",
     "@rollup/plugin-image": "^3.0.2",
@@ -72,7 +72,7 @@
     "cross-env": "^7.0.3",
     "del-cli": "^5.0.0",
     "eslint": "^8.37.0",
-    "eslint-plugin-jsdoc": "^40.1.0",
+    "eslint-plugin-jsdoc": "^40.1.1",
     "expect": "^29.5.0",
     "expect-mocha-image-snapshot": "^3.0.8",
     "fastify": "^4.15.0",
