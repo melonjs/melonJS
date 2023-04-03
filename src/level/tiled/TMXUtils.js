@@ -1,4 +1,4 @@
-import { isBoolean, isNumeric } from "../../utils/string";
+import utils from "../../utils/utils.js";
 
 /**
  * set and interpret a TMX property value
@@ -25,11 +25,11 @@ function setTMXValue(name, type, value) {
 
         default :
             // try to parse it anyway
-            if (!value || isBoolean(value)) {
+            if (!value || utils.string.isBoolean(value)) {
                 // if value not defined or boolean
                 value = value ? (value === "true") : true;
             }
-            else if (isNumeric(value)) {
+            else if (utils.string.isNumeric(value)) {
                 // check if numeric
                 value = Number(value);
             }
@@ -96,14 +96,19 @@ function parseAttributes(obj, elt) {
 }
 
 /**
- * decompress zlib/gzip data (NOT IMPLEMENTED)
+ * decompress and decode zlib/gzip data
  * @ignore
  * @name decompress
- * @param  {number[]} data- -  Array of bytes
- * @param  {string} format- -  compressed data format ("gzip","zlib")
+ * @param {string} input - Base64 encoded and compressed data
+ * @param {string} format - compressed data format ("gzip","zlib", "zstd")
+ * @returns {Uint32Array} Decoded and decompress data
  */
-export function decompress() {
-    throw new Error("GZIP/ZLIB compressed TMX Tile Map not supported!");
+export function decompress(data, format) {
+    if (typeof utils.inflateb64 === "function") {
+        return utils.inflateb64(data, format);
+    } else {
+        throw new Error("GZIP/ZLIB compressed TMX Tile Map not supported!");
+    }
 }
 
 /**
@@ -160,12 +165,12 @@ export function decode(data, encoding, compression) {
             return decodeCSV(data);
 
         case "base64":
-            var decoded = decodeBase64AsArray(data, 4);
-            return (
-                (compression === "none") ?
-                decoded :
-                decompress(decoded, compression)
-            );
+            if (compression !== "none") {
+                data = decompress(data, compression);
+            } else {
+                data = decodeBase64AsArray(data, 4);
+            }
+            return data;
 
         case "none":
             return data;
