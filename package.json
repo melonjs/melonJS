@@ -53,7 +53,7 @@
   ],
   "dependencies": {
     "@teppeis/multimaps": "^3.0.0",
-    "core-js": "^3.29.1",
+    "core-js": "^3.30.0",
     "earcut": "2.2.4",
     "eventemitter3": "^5.0.0",
     "howler": "2.2.3"
@@ -78,7 +78,7 @@
     "fastify": "^4.15.0",
     "mocha": "^10.2.0",
     "npm-self-link": "^1.1.7",
-    "puppeteer": "^19.8.2",
+    "puppeteer": "^19.8.3",
     "rollup": "^3.20.2",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
