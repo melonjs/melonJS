@@ -45,12 +45,24 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
          */
         this.hover = false;
 
-        // object has been updated (clicked,etc..)
-        this.holdTimeout = -1;
+        /**
+         * false if the pointer is down, or true when the pointer status is up
+         * @type {boolean}
+         * @default false
+         */
         this.released = true;
 
-        // GUI items use screen coordinates
+        /**
+         * UI base elements use screen coordinates by default
+         * (Note: any child elements added to a UIBaseElement should set their floating property to false)
+         * @see Renderable.floating
+         * @type {boolean}
+         * @default false
+         */
         this.floating = true;
+
+        // object has been updated (clicked,etc..)
+        this.holdTimeout = -1;
 
         // enable event detection
         this.isKinematic = false;
