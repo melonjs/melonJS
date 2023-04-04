@@ -121,7 +121,7 @@ import pool from "./../system/pooling.js";
                 if (!this.fading) {
                     this.fading = true;
                     world.app.viewport.fadeIn(this.fade, this.duration,
-                            this.onFadeComplete.bind(this));
+                            () => this.onFadeComplete());
                 }
             } else {
                 level.load(this.gotolevel, triggerSettings);

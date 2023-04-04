@@ -181,8 +181,8 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
         }
 
         // register to the channel
-        event.on(event.WINDOW_ONRESIZE, () => { onresize(this); }, this);
-        event.on(event.WINDOW_ONORIENTATION_CHANGE, () => { onresize(this); }, this);
+        event.on(event.WINDOW_ONRESIZE, () => onresize(this), this);
+        event.on(event.WINDOW_ONORIENTATION_CHANGE, () => onresize(this), this);
 
         // add our canvas (default to document.body if settings.parent is undefined)
         this.parentElement = device.getElement(this.settings.parent);
@@ -200,7 +200,7 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
         // add an observer to detect when the dom tree is modified
         if ("MutationObserver" in globalThis) {
             // Create an observer instance linked to the callback function
-            var observer = new MutationObserver(onresize.bind(this, this));
+            var observer = new MutationObserver(() => onresize(this));
 
             // Start observing the target node for configured mutations
             observer.observe(this.parentElement, {

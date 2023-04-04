@@ -143,7 +143,7 @@ function onLoadingError(res) {
  * ];
  * ...
  * // set all resources to be loaded
- * me.loader.preload(game.resources, this.loaded.bind(this));
+ * me.loader.preload(game.resources, () => this.loaded());
  */
 export function preload(res, onloadcb, switchToLoadState = true) {
     // parse the resources
@@ -183,7 +183,7 @@ export function preload(res, onloadcb, switchToLoadState = true) {
  * @returns {number} the amount of corresponding resource to be preloaded
  * @example
  * // load an image asset
- * me.loader.load({name: "avatar",  type:"image",  src: "data/avatar.png"}, this.onload.bind(this), this.onerror.bind(this));
+ * me.loader.load({name: "avatar",  type:"image",  src: "data/avatar.png"}, () => this.onload(), () => this.onerror());
  * // load a base64 image asset
  *  me.loader.load({name: "avatar", type:"image", src: "data:image/png;base64,iVBORw0KAAAQAAAAEACA..."};
  * // start loading music

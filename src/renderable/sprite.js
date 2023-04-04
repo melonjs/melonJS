@@ -362,13 +362,13 @@ import Color from "../math/color.js";
      * this.setCurrentAnimation("eat", "walk");
      *
      * // set "die" animation, and remove the object when finished
-     * this.setCurrentAnimation("die", (function () {
+     * this.setCurrentAnimation("die", () => {
      *    world.removeChild(this);
      *    return false; // do not reset to first frame
-     * }).bind(this));
+     * });
      *
      * // set "attack" animation, and pause for a short duration
-     * this.setCurrentAnimation("die", (function () {
+     * this.setCurrentAnimation("die", () => {
      *    this.animationpause = true;
      *
      *    // back to "standing" animation after 1 second
@@ -377,7 +377,7 @@ import Color from "../math/color.js";
      *    }, 1000);
      *
      *    return false; // do not reset to first frame
-     * }).bind(this));
+     * });
      */
     setCurrentAnimation(name, resetAnim, preserve_dt = false) {
         if (typeof this.anim[name] !== "undefined") {

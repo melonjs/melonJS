@@ -36,10 +36,10 @@ export class Draggable extends Renderable {
      * @private
      */
     initEvents() {
-        input.registerPointerEvent("pointerdown", this, (e) => { event.emit(event.DRAGSTART, e, this); });
-        input.registerPointerEvent("pointerup", this,  (e) => { event.emit(event.DRAGEND, e, this); });
-        input.registerPointerEvent("pointercancel", this, (e) => { event.emit(event.DRAGEND, e, this); });
-        event.on(event.POINTERMOVE, this.dragMove.bind(this));
+        input.registerPointerEvent("pointerdown", this, (e) => event.emit(event.DRAGSTART, e, this));
+        input.registerPointerEvent("pointerup", this,  (e) => event.emit(event.DRAGEND, e, this));
+        input.registerPointerEvent("pointercancel", this, (e) => event.emit(event.DRAGEND, e, this));
+        event.on(event.POINTERMOVE, (e) => this.dragMove(e));
         event.on(event.DRAGSTART, (e, draggable) => {
             if (draggable === this) {
                 this.dragStart(e);
