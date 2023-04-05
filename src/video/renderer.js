@@ -29,6 +29,7 @@ import Point from "../geometries/point.js";
      * @param {boolean} [options.transparent=false] - Whether to enable transparency on the canvas
      * @param {boolean} [options.premultipliedAlpha=true] - in WebGL, whether the renderer will assume that colors have premultiplied alpha when canvas transparency is enabled
      * @param {boolean} [options.blendMode="normal"] - the default blend mode to use ("normal", "multiply")
+     * @param {boolean} [options.depthBuffer="sorting"] - ~Experimental~ the default method to sort object on the z axis in WebGL ("sorting", "z-buffer")
      * @param {boolean} [options.subPixel=false] - Whether to enable subpixel rendering (performance hit when enabled)
      * @param {boolean} [options.verbose=false] - Enable the verbose mode that provides additional details as to what the renderer is doing
      * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
@@ -62,6 +63,14 @@ import Point from "../geometries/point.js";
          * @type {boolean}
          */
         this.isContextValid = true;
+
+        /**
+         * the default method to sort object ("sorting", "z-buffer")
+         * @type {string}
+         * @default "sorting"
+         */
+        this.depthTest = "sorting";
+
 
         /**
          * The Path2D instance used by the renderer to draw primitives

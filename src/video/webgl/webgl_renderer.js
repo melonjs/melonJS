@@ -27,6 +27,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
      * @param {boolean} [options.premultipliedAlpha=true] - in WebGL, whether the renderer will assume that colors have premultiplied alpha when canvas transparency is enabled
      * @param {boolean} [options.subPixel=false] - Whether to enable subpixel renderering (performance hit when enabled)
      * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
+     * @param {boolean} [options.depthTest="sorting"] - ~Experimental~ the default method to sort object on the z axis in WebGL ("sorting", "z-buffer")
      * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
      * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
      * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
@@ -65,7 +66,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
          * @name gl
          * @type {WebGLRenderingContext}
          */
-        this.context = this.gl = this.getContextGL(this.getCanvas(), options.transparent);
+        this.context = this.gl = this.getContextGL(this.getCanvas(), options.transparent, options.depthTest === "z-buffer");
 
         /**
          * the vertex buffer used by this WebGL Renderer
@@ -131,9 +132,20 @@ import { isPowerOfTwo } from "./../../math/math.js";
         this.addCompositor(new (this.settings.compositor || QuadCompositor)(this), "quad", true);
         this.addCompositor(new (this.settings.compositor || PrimitiveCompositor)(this), "primitive");
 
+        // depth Test settings
+        this.depthTest = options.depthTest;
 
         // default WebGL state(s)
-        this.gl.disable(this.gl.DEPTH_TEST);
+        if (this.depthTest === "z-buffer") {
+            this.gl.enable(this.gl.DEPTH_TEST);
+            // https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/depthFunc
+            this.gl.depthFunc(this.gl.LEQUAL);
+            this.gl.depthMask(true);
+        } else {
+            this.gl.disable(this.gl.DEPTH_TEST);
+            this.gl.depthMask(false);
+        }
+
         this.gl.disable(this.gl.SCISSOR_TEST);
         this.gl.enable(this.gl.BLEND);
 
@@ -344,7 +356,11 @@ import { isPowerOfTwo } from "./../../math/math.js";
     clear() {
         var gl = this.gl;
         gl.clearColor(0, 0, 0, this.settings.transparent ? 0.0 : 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+        if (this.depthTest === "z-buffer") {
+            gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+        } else {
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+        }
     }
 
     /**
@@ -455,9 +471,10 @@ import { isPowerOfTwo } from "./../../math/math.js";
      * Returns the WebGL Context object of the given canvas element
      * @param {HTMLCanvasElement} canvas
      * @param {boolean} [transparent=false] - use true to enable transparency
+     * @param {boolean} [depth=false] - use true to enable depth buffer testing
      * @returns {WebGLRenderingContext}
      */
-    getContextGL(canvas, transparent = false) {
+    getContextGL(canvas, transparent = false, depth = false) {
         if (typeof canvas === "undefined" || canvas === null) {
             throw new Error(
                 "You must pass a canvas element in order to create " +
@@ -468,7 +485,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
         var attr = {
             alpha : transparent,
             antialias : this.settings.antiAlias,
-            depth : false,
+            depth : depth,
             stencil: true,
             preserveDrawingBuffer : false,
             premultipliedAlpha: transparent ? this.settings.premultipliedAlpha : false,

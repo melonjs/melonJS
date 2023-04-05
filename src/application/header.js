@@ -7,11 +7,12 @@ import * as device from "../system/device";
 export function consoleHeader(app) {
     var renderType = app.renderer.type;
     var gpu_renderer = (typeof app.renderer.GPURenderer === "string") ? " (" + app.renderer.GPURenderer + ")" : "";
+    var depthTesting = renderType.includes("WebGL") && app.renderer.depthTest === "z-buffer" ? "Depth Test | " : "";
     var audioType = device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
 
     // output video information in the console
     console.log(
-        renderType + " renderer" + gpu_renderer + " | " +
+        renderType + " renderer" + gpu_renderer + " | " + depthTesting +
         audioType + " | " +
         "pixel ratio " + device.devicePixelRatio + " | " +
         (device.platform.nodeJS ? "node.js" : device.platform.isMobile ? "mobile" : "desktop") + " | " +
