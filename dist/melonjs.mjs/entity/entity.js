@@ -114,7 +114,7 @@ import Body from '../physics/body.js';
                 pool.pull("Vector2d", 0,          this.height)
             ]);
         }
-        this.body = new Body(this, settings.shapes, this.onBodyUpdate.bind(this));
+        this.body = new Body(this, settings.shapes, () => this.onBodyUpdate());
 
         // resize the entity if required
         if (this.width === 0 && this.height === 0) {

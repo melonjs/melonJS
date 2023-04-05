@@ -387,10 +387,10 @@ var store$2 = sharedStore;
 (shared$3.exports = function (key, value) {
   return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 })('versions', []).push({
-  version: '3.29.1',
+  version: '3.30.0',
   mode: IS_PURE ? 'pure' : 'global',
   copyright: '© 2014-2023 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.29.1/LICENSE',
+  license: 'https://github.com/zloirock/core-js/blob/v3.30.0/LICENSE',
   source: 'https://github.com/zloirock/core-js'
 });
 
@@ -13430,7 +13430,7 @@ let baseURL = {};
  * me.loader.crossOrigin = "anonymous";
  *
  * // set all ressources to be loaded
- * me.loader.preload(game.resources, this.loaded.bind(this));
+ * me.loader.preload(game.resources, () => this.loaded());
  */
 let crossOrigin;
 
@@ -13448,7 +13448,7 @@ let crossOrigin;
  * me.loader.withCredentials = true;
  *
  * // set all ressources to be loaded
- * me.loader.preload(game.resources, this.loaded.bind(this));
+ * me.loader.preload(game.resources, () => this.loaded());
  */
 let withCredentials = false;
 
@@ -16930,7 +16930,7 @@ function unbindPointer(button) {
  *  // onActivate function
  *  onActivateEvent: function () {
  *     // register on the 'pointerdown' event
- *     me.input.registerPointerEvent('pointerdown', this, this.pointerDown.bind(this));
+ *     me.input.registerPointerEvent('pointerdown', this, (e) => this.pointerDown(e));
  *  },
  *
  *  // pointerDown event callback
@@ -20847,6 +20847,7 @@ class TMXObject {
      * @param {boolean} [options.transparent=false] - Whether to enable transparency on the canvas
      * @param {boolean} [options.premultipliedAlpha=true] - in WebGL, whether the renderer will assume that colors have premultiplied alpha when canvas transparency is enabled
      * @param {boolean} [options.blendMode="normal"] - the default blend mode to use ("normal", "multiply")
+     * @param {boolean} [options.depthBuffer="sorting"] - ~Experimental~ the default method to sort object on the z axis in WebGL ("sorting", "z-buffer")
      * @param {boolean} [options.subPixel=false] - Whether to enable subpixel rendering (performance hit when enabled)
      * @param {boolean} [options.verbose=false] - Enable the verbose mode that provides additional details as to what the renderer is doing
      * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
@@ -20880,6 +20881,14 @@ class TMXObject {
          * @type {boolean}
          */
         this.isContextValid = true;
+
+        /**
+         * the default method to sort object ("sorting", "z-buffer")
+         * @type {string}
+         * @default "sorting"
+         */
+        this.depthTest = "sorting";
+
 
         /**
          * The Path2D instance used by the renderer to draw primitives
@@ -26617,7 +26626,7 @@ function onLoadingError(res) {
  * ];
  * ...
  * // set all resources to be loaded
- * me.loader.preload(game.resources, this.loaded.bind(this));
+ * me.loader.preload(game.resources, () => this.loaded());
  */
 function preload(res, onloadcb, switchToLoadState = true) {
     // parse the resources
@@ -26657,7 +26666,7 @@ function preload(res, onloadcb, switchToLoadState = true) {
  * @returns {number} the amount of corresponding resource to be preloaded
  * @example
  * // load an image asset
- * me.loader.load({name: "avatar",  type:"image",  src: "data/avatar.png"}, this.onload.bind(this), this.onerror.bind(this));
+ * me.loader.load({name: "avatar",  type:"image",  src: "data/avatar.png"}, () => this.onload(), () => this.onerror());
  * // load a base64 image asset
  *  me.loader.load({name: "avatar", type:"image", src: "data:image/png;base64,iVBORw0KAAAQAAAAEACA..."};
  * // start loading music
@@ -27273,13 +27282,13 @@ var loader = {
      * this.setCurrentAnimation("eat", "walk");
      *
      * // set "die" animation, and remove the object when finished
-     * this.setCurrentAnimation("die", (function () {
+     * this.setCurrentAnimation("die", () => {
      *    world.removeChild(this);
      *    return false; // do not reset to first frame
-     * }).bind(this));
+     * });
      *
      * // set "attack" animation, and pause for a short duration
-     * this.setCurrentAnimation("die", (function () {
+     * this.setCurrentAnimation("die", () => {
      *    this.animationpause = true;
      *
      *    // back to "standing" animation after 1 second
@@ -27288,7 +27297,7 @@ var loader = {
      *    }, 1000);
      *
      *    return false; // do not reset to first frame
-     * }).bind(this));
+     * });
      */
     setCurrentAnimation(name, resetAnim, preserve_dt = false) {
         if (typeof this.anim[name] !== "undefined") {
@@ -28296,7 +28305,7 @@ class Timer {
             this.reset();
             this.now = this.last = 0;
             // register to the game before update event
-            on(GAME_BEFORE_UPDATE, this.update.bind(this));
+            on(GAME_BEFORE_UPDATE, (time) => this.update(time));
         });
 
         // reset timer
@@ -31137,6 +31146,7 @@ var V_ARRAY = [
      * @param {boolean} [options.premultipliedAlpha=true] - in WebGL, whether the renderer will assume that colors have premultiplied alpha when canvas transparency is enabled
      * @param {boolean} [options.subPixel=false] - Whether to enable subpixel renderering (performance hit when enabled)
      * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
+     * @param {boolean} [options.depthTest="sorting"] - ~Experimental~ the default method to sort object on the z axis in WebGL ("sorting", "z-buffer")
      * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
      * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
      * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
@@ -31175,7 +31185,7 @@ var V_ARRAY = [
          * @name gl
          * @type {WebGLRenderingContext}
          */
-        this.context = this.gl = this.getContextGL(this.getCanvas(), options.transparent);
+        this.context = this.gl = this.getContextGL(this.getCanvas(), options.transparent, options.depthTest === "z-buffer");
 
         /**
          * the vertex buffer used by this WebGL Renderer
@@ -31241,9 +31251,20 @@ var V_ARRAY = [
         this.addCompositor(new (this.settings.compositor || QuadCompositor)(this), "quad", true);
         this.addCompositor(new (this.settings.compositor || PrimitiveCompositor)(this), "primitive");
 
+        // depth Test settings
+        this.depthTest = options.depthTest;
 
         // default WebGL state(s)
-        this.gl.disable(this.gl.DEPTH_TEST);
+        if (this.depthTest === "z-buffer") {
+            this.gl.enable(this.gl.DEPTH_TEST);
+            // https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/depthFunc
+            this.gl.depthFunc(this.gl.LEQUAL);
+            this.gl.depthMask(true);
+        } else {
+            this.gl.disable(this.gl.DEPTH_TEST);
+            this.gl.depthMask(false);
+        }
+
         this.gl.disable(this.gl.SCISSOR_TEST);
         this.gl.enable(this.gl.BLEND);
 
@@ -31454,7 +31475,11 @@ var V_ARRAY = [
     clear() {
         var gl = this.gl;
         gl.clearColor(0, 0, 0, this.settings.transparent ? 0.0 : 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+        if (this.depthTest === "z-buffer") {
+            gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+        } else {
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+        }
     }
 
     /**
@@ -31565,9 +31590,10 @@ var V_ARRAY = [
      * Returns the WebGL Context object of the given canvas element
      * @param {HTMLCanvasElement} canvas
      * @param {boolean} [transparent=false] - use true to enable transparency
+     * @param {boolean} [depth=false] - use true to enable depth buffer testing
      * @returns {WebGLRenderingContext}
      */
-    getContextGL(canvas, transparent = false) {
+    getContextGL(canvas, transparent = false, depth = false) {
         if (typeof canvas === "undefined" || canvas === null) {
             throw new Error(
                 "You must pass a canvas element in order to create " +
@@ -31578,7 +31604,7 @@ var V_ARRAY = [
         var attr = {
             alpha : transparent,
             antialias : this.settings.antiAlias,
-            depth : false,
+            depth : depth,
             stencil: true,
             preserveDrawingBuffer : false,
             premultipliedAlpha: transparent ? this.settings.premultipliedAlpha : false,
@@ -32980,12 +33006,24 @@ class CanvasTexture {
          */
         this.hover = false;
 
-        // object has been updated (clicked,etc..)
-        this.holdTimeout = -1;
+        /**
+         * false if the pointer is down, or true when the pointer status is up
+         * @type {boolean}
+         * @default false
+         */
         this.released = true;
 
-        // GUI items use screen coordinates
+        /**
+         * UI base elements use screen coordinates by default
+         * (Note: any child elements added to a UIBaseElement should set their floating property to false)
+         * @see Renderable.floating
+         * @type {boolean}
+         * @default false
+         */
         this.floating = true;
+
+        // object has been updated (clicked,etc..)
+        this.holdTimeout = -1;
 
         // enable event detection
         this.isKinematic = false;
@@ -33003,7 +33041,7 @@ class CanvasTexture {
             if (this.isHoldable) {
                 timer$1.clearTimeout(this.holdTimeout);
                 this.holdTimeout = timer$1.setTimeout(
-                    this.hold.bind(this),
+                    () => this.hold(),
                     this.holdThreshold,
                     false
                 );
@@ -33106,19 +33144,14 @@ class CanvasTexture {
      */
     onActivateEvent() {
         // register pointer events
-        registerPointerEvent(
-            "pointerdown",
-            this,
-            this.clicked.bind(this)
-        );
-        registerPointerEvent("pointerup", this, this.release.bind(this));
-        registerPointerEvent(
-            "pointercancel",
-            this,
-            this.release.bind(this)
-        );
-        registerPointerEvent("pointerenter", this, this.enter.bind(this));
-        registerPointerEvent("pointerleave", this, this.leave.bind(this));
+        registerPointerEvent("pointerdown", this, (e) => this.clicked(e));
+        registerPointerEvent("pointerup", this, (e) => this.release(e));
+        registerPointerEvent("pointercancel", this, (e) => this.release(e));
+        registerPointerEvent("pointerenter", this, (e) => this.enter(e));
+        registerPointerEvent("pointerleave", this, (e) => this.leave(e));
+
+        // call the parent function
+        super.onActivateEvent();
     }
 
     /**
@@ -33127,13 +33160,17 @@ class CanvasTexture {
      */
     onDeactivateEvent() {
         // release pointer events
-        releasePointerEvent("pointerdown", this.hitbox);
+        releasePointerEvent("pointerdown", this);
         releasePointerEvent("pointerup", this);
         releasePointerEvent("pointercancel", this);
         releasePointerEvent("pointerenter", this);
         releasePointerEvent("pointerleave", this);
         timer$1.clearTimeout(this.holdTimeout);
         this.holdTimeout = -1;
+
+
+        // call the parent function
+        super.onDeactivateEvent();
     }
 }
 
@@ -34355,7 +34392,7 @@ const toPX = [12, 24, 0.75, 1];
             this.released = false;
             if (this.isHoldable) {
                 timer$1.clearTimeout(this.holdTimeout);
-                this.holdTimeout = timer$1.setTimeout(this.hold.bind(this), this.holdThreshold, false);
+                this.holdTimeout = timer$1.setTimeout(() => this.hold(), this.holdThreshold, false);
                 this.released = false;
             }
             return this.onClick(event);
@@ -34447,7 +34484,8 @@ const toPX = [12, 24, 0.75, 1];
      * function called when the object is pressed and held<br>
      * to be extended <br>
      */
-    onHold() {}
+    onHold() {
+    }
 
     /**
      * function called when added to the game world or a container
@@ -34455,11 +34493,11 @@ const toPX = [12, 24, 0.75, 1];
      */
     onActivateEvent() {
         // register pointer events
-        registerPointerEvent("pointerdown", this, this.clicked.bind(this));
-        registerPointerEvent("pointerup", this, this.release.bind(this));
-        registerPointerEvent("pointercancel", this, this.release.bind(this));
-        registerPointerEvent("pointerenter", this, this.enter.bind(this));
-        registerPointerEvent("pointerleave", this, this.leave.bind(this));
+        registerPointerEvent("pointerdown", this, (e) => this.clicked(e));
+        registerPointerEvent("pointerup", this, (e) => this.release(e));
+        registerPointerEvent("pointercancel", this, (e) => this.release(e));
+        registerPointerEvent("pointerenter", this, (e) => this.enter(e));
+        registerPointerEvent("pointerleave", this, (e) => this.leave(e));
     }
 
     /**
@@ -34642,7 +34680,7 @@ const toPX = [12, 24, 0.75, 1];
                 if (!this.fading) {
                     this.fading = true;
                     world.app.viewport.fadeIn(this.fade, this.duration,
-                            this.onFadeComplete.bind(this));
+                            () => this.onFadeComplete());
                 }
             } else {
                 level.load(this.gotolevel, triggerSettings);
@@ -35091,10 +35129,10 @@ class Draggable extends Renderable {
      * @private
      */
     initEvents() {
-        registerPointerEvent("pointerdown", this, (e) => { emit(DRAGSTART, e, this); });
-        registerPointerEvent("pointerup", this,  (e) => { emit(DRAGEND, e, this); });
-        registerPointerEvent("pointercancel", this, (e) => { emit(DRAGEND, e, this); });
-        on(POINTERMOVE, this.dragMove.bind(this));
+        registerPointerEvent("pointerdown", this, (e) => emit(DRAGSTART, e, this));
+        registerPointerEvent("pointerup", this,  (e) => emit(DRAGEND, e, this));
+        registerPointerEvent("pointercancel", this, (e) => emit(DRAGEND, e, this));
+        on(POINTERMOVE, (e) => this.dragMove(e));
         on(DRAGSTART, (e, draggable) => {
             if (draggable === this) {
                 this.dragStart(e);
@@ -37023,7 +37061,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
                 pool.pull("Vector2d", 0,          this.height)
             ]);
         }
-        this.body = new Body(this, settings.shapes, this.onBodyUpdate.bind(this));
+        this.body = new Body(this, settings.shapes, () => this.onBodyUpdate());
 
         // resize the entity if required
         if (this.width === 0 && this.height === 0) {
@@ -37340,11 +37378,12 @@ const defaultSettings = {
 function consoleHeader(app) {
     var renderType = app.renderer.type;
     var gpu_renderer = (typeof app.renderer.GPURenderer === "string") ? " (" + app.renderer.GPURenderer + ")" : "";
+    var depthTesting = renderType.includes("WebGL") && app.renderer.depthTest === "z-buffer" ? "Depth Test | " : "";
     var audioType = hasWebAudio ? "Web Audio" : "HTML5 Audio";
 
     // output video information in the console
     console.log(
-        renderType + " renderer" + gpu_renderer + " | " +
+        renderType + " renderer" + gpu_renderer + " | " + depthTesting +
         audioType + " | " +
         "pixel ratio " + devicePixelRatio + " | " +
         (platform.nodeJS ? "node.js" : platform.isMobile ? "mobile" : "desktop") + " | " +
@@ -37373,6 +37412,7 @@ function consoleHeader(app) {
      * @param {number|string} [options.scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)
      * @param {string} [options.scaleMethod="fit"] - screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
      * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
+     * @param {boolean} [options.depthTest="sorting"] - ~Experimental~ the default method to sort object on the z axis in WebGL ("sorting", "z-buffer")
      * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
      * @param {boolean} [options.transparent=false] - whether to allow transparent pixels in the front buffer (screen).
      * @param {boolean} [options.antiAlias=false] - whether to enable or not video scaling interpolation
@@ -37482,6 +37522,7 @@ function consoleHeader(app) {
         this.settings.transparent = !!(this.settings.transparent);
         this.settings.antiAlias = !!(this.settings.antiAlias);
         this.settings.failIfMajorPerformanceCaveat = !!(this.settings.failIfMajorPerformanceCaveat);
+        this.settings.depthTest = this.settings.depthTest === "z-buffer" ? "z-buffer" : "sorting";
         this.settings.subPixel = !!(this.settings.subPixel);
         this.settings.verbose = !!(this.settings.verbose);
         if (this.settings.scaleMethod.search(/^(fill-(min|max)|fit|flex(-(width|height))?|stretch)$/) !== -1) {
@@ -37527,8 +37568,8 @@ function consoleHeader(app) {
         }
 
         // register to the channel
-        on(WINDOW_ONRESIZE, () => { onresize(this); }, this);
-        on(WINDOW_ONORIENTATION_CHANGE, () => { onresize(this); }, this);
+        on(WINDOW_ONRESIZE, () => onresize(this), this);
+        on(WINDOW_ONORIENTATION_CHANGE, () => onresize(this), this);
 
         // add our canvas (default to document.body if settings.parent is undefined)
         this.parentElement = getElement(this.settings.parent);
@@ -37546,7 +37587,7 @@ function consoleHeader(app) {
         // add an observer to detect when the dom tree is modified
         if ("MutationObserver" in globalThis) {
             // Create an observer instance linked to the callback function
-            var observer = new MutationObserver(onresize.bind(this, this));
+            var observer = new MutationObserver(() => onresize(this));
 
             // Start observing the target node for configured mutations
             observer.observe(this.parentElement, {
@@ -37562,7 +37603,10 @@ function consoleHeader(app) {
         this.world = new World(0, 0, this.settings.width, this.settings.height);
         // set the reference to this application instance
         this.world.app = this;
+        // app starting time
         this.lastUpdate = globalThis.performance.now();
+        // manually sort child if depthTest setting is "sorting"
+        this.world.autoSort = !(this.renderer.type === "WEBGL" && this.settings.depthTest === "z-buffer");
 
         this.isInitialized = true;
 
@@ -37589,7 +37633,7 @@ function consoleHeader(app) {
 
     /**
      * Specify the property to be used when sorting renderables for this application game world.
-     * Accepted values : "x", "y", "z"
+     * Accepted values : "x", "y", "z", "depth"
      * @type {string}
      * @see World.sortOn
      */

@@ -52,12 +52,24 @@ import { registerPointerEvent, releasePointerEvent } from '../../input/pointerev
          */
         this.hover = false;
 
-        // object has been updated (clicked,etc..)
-        this.holdTimeout = -1;
+        /**
+         * false if the pointer is down, or true when the pointer status is up
+         * @type {boolean}
+         * @default false
+         */
         this.released = true;
 
-        // GUI items use screen coordinates
+        /**
+         * UI base elements use screen coordinates by default
+         * (Note: any child elements added to a UIBaseElement should set their floating property to false)
+         * @see Renderable.floating
+         * @type {boolean}
+         * @default false
+         */
         this.floating = true;
+
+        // object has been updated (clicked,etc..)
+        this.holdTimeout = -1;
 
         // enable event detection
         this.isKinematic = false;
@@ -75,7 +87,7 @@ import { registerPointerEvent, releasePointerEvent } from '../../input/pointerev
             if (this.isHoldable) {
                 timer.clearTimeout(this.holdTimeout);
                 this.holdTimeout = timer.setTimeout(
-                    this.hold.bind(this),
+                    () => this.hold(),
                     this.holdThreshold,
                     false
                 );
@@ -178,19 +190,14 @@ import { registerPointerEvent, releasePointerEvent } from '../../input/pointerev
      */
     onActivateEvent() {
         // register pointer events
-        registerPointerEvent(
-            "pointerdown",
-            this,
-            this.clicked.bind(this)
-        );
-        registerPointerEvent("pointerup", this, this.release.bind(this));
-        registerPointerEvent(
-            "pointercancel",
-            this,
-            this.release.bind(this)
-        );
-        registerPointerEvent("pointerenter", this, this.enter.bind(this));
-        registerPointerEvent("pointerleave", this, this.leave.bind(this));
+        registerPointerEvent("pointerdown", this, (e) => this.clicked(e));
+        registerPointerEvent("pointerup", this, (e) => this.release(e));
+        registerPointerEvent("pointercancel", this, (e) => this.release(e));
+        registerPointerEvent("pointerenter", this, (e) => this.enter(e));
+        registerPointerEvent("pointerleave", this, (e) => this.leave(e));
+
+        // call the parent function
+        super.onActivateEvent();
     }
 
     /**
@@ -199,13 +206,17 @@ import { registerPointerEvent, releasePointerEvent } from '../../input/pointerev
      */
     onDeactivateEvent() {
         // release pointer events
-        releasePointerEvent("pointerdown", this.hitbox);
+        releasePointerEvent("pointerdown", this);
         releasePointerEvent("pointerup", this);
         releasePointerEvent("pointercancel", this);
         releasePointerEvent("pointerenter", this);
         releasePointerEvent("pointerleave", this);
         timer.clearTimeout(this.holdTimeout);
         this.holdTimeout = -1;
+
+
+        // call the parent function
+        super.onDeactivateEvent();
     }
 }
 

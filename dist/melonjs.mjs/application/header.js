@@ -14,11 +14,12 @@ import { devicePixelRatio, platform, getScreenOrientation, language, hasWebAudio
 function consoleHeader(app) {
     var renderType = app.renderer.type;
     var gpu_renderer = (typeof app.renderer.GPURenderer === "string") ? " (" + app.renderer.GPURenderer + ")" : "";
+    var depthTesting = renderType.includes("WebGL") && app.renderer.depthTest === "z-buffer" ? "Depth Test | " : "";
     var audioType = hasWebAudio ? "Web Audio" : "HTML5 Audio";
 
     // output video information in the console
     console.log(
-        renderType + " renderer" + gpu_renderer + " | " +
+        renderType + " renderer" + gpu_renderer + " | " + depthTesting +
         audioType + " | " +
         "pixel ratio " + devicePixelRatio + " | " +
         (platform.nodeJS ? "node.js" : platform.isMobile ? "mobile" : "desktop") + " | " +

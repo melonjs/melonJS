@@ -36,8 +36,13 @@ export default class UIBaseElement extends Container {
      * @default false
      */
     hover: boolean;
-    holdTimeout: number;
+    /**
+     * false if the pointer is down, or true when the pointer status is up
+     * @type {boolean}
+     * @default false
+     */
     released: boolean;
+    holdTimeout: number;
     /**
      * function callback for the pointerdown event
      * @ignore

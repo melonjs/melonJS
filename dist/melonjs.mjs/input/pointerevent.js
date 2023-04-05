@@ -652,7 +652,7 @@ function unbindPointer(button) {
  *  // onActivate function
  *  onActivateEvent: function () {
  *     // register on the 'pointerdown' event
- *     me.input.registerPointerEvent('pointerdown', this, this.pointerDown.bind(this));
+ *     me.input.registerPointerEvent('pointerdown', this, (e) => this.pointerDown(e));
  *  },
  *
  *  // pointerDown event callback

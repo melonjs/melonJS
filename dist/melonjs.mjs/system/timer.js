@@ -78,7 +78,7 @@ class Timer {
             this.reset();
             this.now = this.last = 0;
             // register to the game before update event
-            on(GAME_BEFORE_UPDATE, this.update.bind(this));
+            on(GAME_BEFORE_UPDATE, (time) => this.update(time));
         });
 
         // reset timer

@@ -179,13 +179,13 @@ export default class Sprite extends Renderable {
      * this.setCurrentAnimation("eat", "walk");
      *
      * // set "die" animation, and remove the object when finished
-     * this.setCurrentAnimation("die", (function () {
+     * this.setCurrentAnimation("die", () => {
      *    world.removeChild(this);
      *    return false; // do not reset to first frame
-     * }).bind(this));
+     * });
      *
      * // set "attack" animation, and pause for a short duration
-     * this.setCurrentAnimation("die", (function () {
+     * this.setCurrentAnimation("die", () => {
      *    this.animationpause = true;
      *
      *    // back to "standing" animation after 1 second
@@ -194,7 +194,7 @@ export default class Sprite extends Renderable {
      *    }, 1000);
      *
      *    return false; // do not reset to first frame
-     * }).bind(this));
+     * });
      */
     setCurrentAnimation(name: string, resetAnim?: string | Function | undefined, preserve_dt?: boolean | undefined): Sprite;
     /**

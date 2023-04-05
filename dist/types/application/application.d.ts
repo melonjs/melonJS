@@ -14,6 +14,7 @@ export default class Application {
      * @param {number|string} [options.scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)
      * @param {string} [options.scaleMethod="fit"] - screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
      * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
+     * @param {boolean} [options.depthTest="sorting"] - ~Experimental~ the default method to sort object on the z axis in WebGL ("sorting", "z-buffer")
      * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
      * @param {boolean} [options.transparent=false] - whether to allow transparent pixels in the front buffer (screen).
      * @param {boolean} [options.antiAlias=false] - whether to enable or not video scaling interpolation
@@ -30,6 +31,7 @@ export default class Application {
         scale?: string | number | undefined;
         scaleMethod?: string | undefined;
         preferWebGL1?: boolean | undefined;
+        depthTest?: boolean | undefined;
         powerPreference?: string | undefined;
         transparent?: boolean | undefined;
         antiAlias?: boolean | undefined;
@@ -105,7 +107,7 @@ export default class Application {
     set sortOn(arg: string);
     /**
      * Specify the property to be used when sorting renderables for this application game world.
-     * Accepted values : "x", "y", "z"
+     * Accepted values : "x", "y", "z", "depth"
      * @type {string}
      * @see World.sortOn
      */

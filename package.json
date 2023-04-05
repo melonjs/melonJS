@@ -65,7 +65,7 @@
     "@melonjs/webdoc-theme": "^1.1.1",
     "@rollup/plugin-commonjs": "^24.0.1",
     "@rollup/plugin-image": "^3.0.2",
-    "@rollup/plugin-node-resolve": "^15.0.1",
+    "@rollup/plugin-node-resolve": "^15.0.2",
     "@rollup/plugin-replace": "^5.0.2",
     "@webdoc/cli": "^2.2.0",
     "chromedriver": "^111.0.0",

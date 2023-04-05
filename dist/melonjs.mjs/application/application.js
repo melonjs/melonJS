@@ -34,6 +34,7 @@ import { WEBGL, CANVAS, AUTO } from '../const.js';
      * @param {number|string} [options.scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)
      * @param {string} [options.scaleMethod="fit"] - screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
      * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
+     * @param {boolean} [options.depthTest="sorting"] - ~Experimental~ the default method to sort object on the z axis in WebGL ("sorting", "z-buffer")
      * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
      * @param {boolean} [options.transparent=false] - whether to allow transparent pixels in the front buffer (screen).
      * @param {boolean} [options.antiAlias=false] - whether to enable or not video scaling interpolation
@@ -143,6 +144,7 @@ import { WEBGL, CANVAS, AUTO } from '../const.js';
         this.settings.transparent = !!(this.settings.transparent);
         this.settings.antiAlias = !!(this.settings.antiAlias);
         this.settings.failIfMajorPerformanceCaveat = !!(this.settings.failIfMajorPerformanceCaveat);
+        this.settings.depthTest = this.settings.depthTest === "z-buffer" ? "z-buffer" : "sorting";
         this.settings.subPixel = !!(this.settings.subPixel);
         this.settings.verbose = !!(this.settings.verbose);
         if (this.settings.scaleMethod.search(/^(fill-(min|max)|fit|flex(-(width|height))?|stretch)$/) !== -1) {
@@ -188,8 +190,8 @@ import { WEBGL, CANVAS, AUTO } from '../const.js';
         }
 
         // register to the channel
-        on(WINDOW_ONRESIZE, () => { onresize(this); }, this);
-        on(WINDOW_ONORIENTATION_CHANGE, () => { onresize(this); }, this);
+        on(WINDOW_ONRESIZE, () => onresize(this), this);
+        on(WINDOW_ONORIENTATION_CHANGE, () => onresize(this), this);
 
         // add our canvas (default to document.body if settings.parent is undefined)
         this.parentElement = getElement(this.settings.parent);
@@ -207,7 +209,7 @@ import { WEBGL, CANVAS, AUTO } from '../const.js';
         // add an observer to detect when the dom tree is modified
         if ("MutationObserver" in globalThis) {
             // Create an observer instance linked to the callback function
-            var observer = new MutationObserver(onresize.bind(this, this));
+            var observer = new MutationObserver(() => onresize(this));
 
             // Start observing the target node for configured mutations
             observer.observe(this.parentElement, {
@@ -223,7 +225,10 @@ import { WEBGL, CANVAS, AUTO } from '../const.js';
         this.world = new World(0, 0, this.settings.width, this.settings.height);
         // set the reference to this application instance
         this.world.app = this;
+        // app starting time
         this.lastUpdate = globalThis.performance.now();
+        // manually sort child if depthTest setting is "sorting"
+        this.world.autoSort = !(this.renderer.type === "WEBGL" && this.settings.depthTest === "z-buffer");
 
         this.isInitialized = true;
 
@@ -250,7 +255,7 @@ import { WEBGL, CANVAS, AUTO } from '../const.js';
 
     /**
      * Specify the property to be used when sorting renderables for this application game world.
-     * Accepted values : "x", "y", "z"
+     * Accepted values : "x", "y", "z", "depth"
      * @type {string}
      * @see World.sortOn
      */

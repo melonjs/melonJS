@@ -35,7 +35,7 @@ export let baseURL: {};
  * me.loader.crossOrigin = "anonymous";
  *
  * // set all ressources to be loaded
- * me.loader.preload(game.resources, this.loaded.bind(this));
+ * me.loader.preload(game.resources, () => this.loaded());
  */
 export let crossOrigin: string;
 /**
@@ -52,6 +52,6 @@ export let crossOrigin: string;
  * me.loader.withCredentials = true;
  *
  * // set all ressources to be loaded
- * me.loader.preload(game.resources, this.loaded.bind(this));
+ * me.loader.preload(game.resources, () => this.loaded());
  */
 export let withCredentials: boolean;

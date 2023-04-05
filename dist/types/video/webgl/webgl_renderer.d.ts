@@ -15,6 +15,7 @@ export default class WebGLRenderer extends Renderer {
      * @param {boolean} [options.premultipliedAlpha=true] - in WebGL, whether the renderer will assume that colors have premultiplied alpha when canvas transparency is enabled
      * @param {boolean} [options.subPixel=false] - Whether to enable subpixel renderering (performance hit when enabled)
      * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
+     * @param {boolean} [options.depthTest="sorting"] - ~Experimental~ the default method to sort object on the z axis in WebGL ("sorting", "z-buffer")
      * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
      * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
      * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
@@ -30,6 +31,7 @@ export default class WebGLRenderer extends Renderer {
         premultipliedAlpha?: boolean | undefined;
         subPixel?: boolean | undefined;
         preferWebGL1?: boolean | undefined;
+        depthTest?: boolean | undefined;
         powerPreference?: string | undefined;
         zoomX?: number | undefined;
         zoomY?: number | undefined;
@@ -110,6 +112,7 @@ export default class WebGLRenderer extends Renderer {
      * @type {Map<WebGLCompositor>}
      */
     compositors: Map<WebGLCompositor, any>;
+    depthTest: boolean | undefined;
     customShader: any;
     cache: TextureCache;
     /**
@@ -204,9 +207,10 @@ export default class WebGLRenderer extends Renderer {
      * Returns the WebGL Context object of the given canvas element
      * @param {HTMLCanvasElement} canvas
      * @param {boolean} [transparent=false] - use true to enable transparency
+     * @param {boolean} [depth=false] - use true to enable depth buffer testing
      * @returns {WebGLRenderingContext}
      */
-    getContextGL(canvas: HTMLCanvasElement, transparent?: boolean | undefined): WebGLRenderingContext;
+    getContextGL(canvas: HTMLCanvasElement, transparent?: boolean | undefined, depth?: boolean | undefined): WebGLRenderingContext;
     /**
      * Returns the WebGLContext instance for the renderer
      * return a reference to the system 2d Context

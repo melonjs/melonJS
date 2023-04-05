@@ -98,7 +98,7 @@ import { registerPointerEvent, releasePointerEvent } from '../../input/pointerev
             this.released = false;
             if (this.isHoldable) {
                 timer.clearTimeout(this.holdTimeout);
-                this.holdTimeout = timer.setTimeout(this.hold.bind(this), this.holdThreshold, false);
+                this.holdTimeout = timer.setTimeout(() => this.hold(), this.holdThreshold, false);
                 this.released = false;
             }
             return this.onClick(event);
@@ -190,7 +190,8 @@ import { registerPointerEvent, releasePointerEvent } from '../../input/pointerev
      * function called when the object is pressed and held<br>
      * to be extended <br>
      */
-    onHold() {}
+    onHold() {
+    }
 
     /**
      * function called when added to the game world or a container
@@ -198,11 +199,11 @@ import { registerPointerEvent, releasePointerEvent } from '../../input/pointerev
      */
     onActivateEvent() {
         // register pointer events
-        registerPointerEvent("pointerdown", this, this.clicked.bind(this));
-        registerPointerEvent("pointerup", this, this.release.bind(this));
-        registerPointerEvent("pointercancel", this, this.release.bind(this));
-        registerPointerEvent("pointerenter", this, this.enter.bind(this));
-        registerPointerEvent("pointerleave", this, this.leave.bind(this));
+        registerPointerEvent("pointerdown", this, (e) => this.clicked(e));
+        registerPointerEvent("pointerup", this, (e) => this.release(e));
+        registerPointerEvent("pointercancel", this, (e) => this.release(e));
+        registerPointerEvent("pointerenter", this, (e) => this.enter(e));
+        registerPointerEvent("pointerleave", this, (e) => this.leave(e));
     }
 
     /**
