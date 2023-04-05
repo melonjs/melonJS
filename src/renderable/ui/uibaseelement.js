@@ -1,11 +1,13 @@
 import Container from "../container.js";
 import timer from "../../system/timer.js";
+import { on, off, POINTERMOVE } from "../../system/event.js";
 import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js";
+import pool from "../../system/pooling.js";
 
 /**
  * @classdesc
- * This is a basic clickable container which you can use in your game UI.
- * Use this for example if you want to display a button which contains text and images.
+ * This is a basic clickable and draggable container which you can use in your game UI.
+ * Use this for example if you want to display a panel that contains text, images or other UI elements.
  * @augments Container
  */
  export default class UIBaseElement extends Container {
@@ -13,16 +15,24 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
      *
      * @param {number} x - The x position of the container
      * @param {number} y - The y position of the container
-     * @param {number} w - width of the container (default: viewport width)
-     * @param {number} h - height of the container (default: viewport height)
+     * @param {number} w - width of the container
+     * @param {number} h - height of the container
      */
     constructor(x, y, w, h) {
         super(x, y, w, h);
         /**
          * object can be clicked or not
          * @type {boolean}
+         * @default true
          */
         this.isClickable = true;
+
+        /**
+         * object can be clicked or not
+         * @type {boolean}
+         * @default false
+         */
+        this.isDraggable = false;
 
         /**
          * Tap and hold threshold timeout in ms
@@ -57,7 +67,7 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
          * (Note: any child elements added to a UIBaseElement should set their floating property to false)
          * @see Renderable.floating
          * @type {boolean}
-         * @default false
+         * @default true
          */
         this.floating = true;
 
@@ -86,6 +96,10 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
                 );
                 this.released = false;
             }
+            if (this.isDraggable) {
+                this.grabOffset.set(event.gameX, event.gameY);
+                this.grabOffset.sub(this.pos);
+            }
             return this.onClick(event);
         }
     }
@@ -106,7 +120,35 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
     enter(event) {
         this.hover = true;
         this.dirty = true;
+        if (this.isDraggable === true) {
+            on(POINTERMOVE, this.pointerMove, this);
+            // to memorize where we grab the object
+            this.grabOffset = pool.pull("Vector2d", 0, 0);
+        }
         return this.onOver(event);
+    }
+
+    /**
+     * pointermove function
+     * @ignore
+     */
+    pointerMove(event) {
+        if (this.hover === true && this.released === false) {
+            // follow the pointer
+            this.pos.set(event.gameX, event.gameY, this.pos.z);
+            this.pos.sub(this.grabOffset);
+            // mark the container for redraw
+            this.isDirty = true;
+            return this.onMove(event);
+        }
+    }
+
+    /**
+     * function called when the pointer is moved over the object
+     * @param {Pointer} event - the event object
+     */
+    onMove(event) { // eslint-disable-line no-unused-vars
+        // to be extended
     }
 
     /**
@@ -124,6 +166,12 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
     leave(event) {
         this.hover = false;
         this.dirty = true;
+        if (this.isDraggable === true) {
+            // unregister on the global pointermove event
+            off(POINTERMOVE, this.pointerMove);
+            pool.push(this.grabOffset);
+            this.grabOffset = undefined;
+        }
         this.release(event);
         return this.onOut(event);
     }
@@ -207,6 +255,17 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
         timer.clearTimeout(this.holdTimeout);
         this.holdTimeout = -1;
 
+        // unregister on the global pointermove event
+        // note: this is just a precaution, in case
+        // the object is being remove from his parent
+        // container before the leave function is called
+        if (this.isDraggable === true) {
+            off(POINTERMOVE, this.pointerMove);
+            if (typeof this.grabOffset !== "undefined") {
+                pool.push(this.grabOffset);
+                this.grabOffset = undefined;
+            }
+        }
 
         // call the parent function
         super.onDeactivateEvent();

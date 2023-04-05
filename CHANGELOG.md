@@ -3,10 +3,11 @@
 ## [15.1.0] (melonJS 2) - _2023-xx-xx_
 
 ### Added
-- Renderer: add new `toBlob()`, `toDataURL()` and `toImageBitmap()` methods to `CanvasTexture`
-- Renderer: add new `toBlob()`, `toDataURL()` and `toImageBitmap()` methods to the all Renderers
+- Renderer: new `toBlob()`, `toDataURL()` and `toImageBitmap()` methods added to `CanvasTexture`
+- Renderer: new `toBlob()`, `toDataURL()` and `toImageBitmap()` methods added to all Renderers
 - Container: new `getRootAncestor()` method that returns the root container's parent (aka World Container)
 - TMX: add a "patcheable" entry point to allow for a tiled inflate (zlib/gzip/zstd) plugin
+- UI: new draggable feature for UIBaseElement (can be toggled on/off using `isDraggable`)
 
 ### Changed
 - Application: the `sortOn` property is now a proper getter/setter for the App World instance `sortOn` property
