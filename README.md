@@ -52,8 +52,8 @@ Input
 - Device motion & accelerometer support
 
 Level Editor
-- Tiled map format version +1.0 integration for easy level design
-    - Uncompressed Plain, Base64, CSV and JSON encoded XML tilemap loading
+- Tiled map format version +1.0 built-in support for easy level design
+    - Uncompressed and [compressed](https://github.com/melonjs/tiled-inflate-plugin) Plain, Base64, CSV and JSON encoded XML tilemap loading
     - Orthogonal, Isometric and Hexagonal maps (both normal and staggered)
     - Multiple layers (multiple background/foreground, collision and Image layers)
     - Animated and multiple Tileset support
