@@ -110,6 +110,7 @@ A few demos of melonJS capabilities :
 * [Masking Demo](https://melonjs.github.io/examples/masking/) (WARNING: may potentially trigger seizures for people with photosensitive epilepsy)
 * [Primitive Drawing Demo](https://melonjs.github.io/examples/graphics/)
 * [UI Demo](https://melonjs.github.io/examples/UI/)
+* [Tiled Map Loader Demo](https://melonjs.github.io/examples/tiled_example_loader/)
 
 More examples are available [here](https://melonjs.github.io/examples/)
 
