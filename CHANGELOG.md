@@ -11,6 +11,7 @@
 
 ### Changed
 - Application: the `sortOn` property is now a proper getter/setter for the App World instance `sortOn` property
+- Plugin: the 2nd parameter of the `register` method is now optional and will use the given plugin class name by default
 
 ### Fixed
 - Renderer: add missing export for the `CanvasTexture` class

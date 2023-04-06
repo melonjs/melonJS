@@ -90,7 +90,7 @@ export var plugin = {
      * @see Base
      * @public
      * @param {plugin.Base} pluginObj - Plugin object to instantiate and register
-     * @param {string} name
+     * @param {string} [name=pluginObj.constructor.name] - a unique name for this plugin
      * @param {object} [...arguments] - all extra parameters will be passed to the plugin constructor
      * @example
      * // register a new plugin
@@ -99,7 +99,7 @@ export var plugin = {
      * // under then me.plugins namespace
      * me.plugins.testPlugin.myfunction ();
      */
-    register : function (pluginObj, name) {
+    register : function (pluginObj, name = pluginObj.toString().match(/ (\w+)/)[1]) {
         // ensure me.plugins[name] is not already "used"
         if (plugins[name]) {
             throw new Error("plugin " + name + " already registered");
