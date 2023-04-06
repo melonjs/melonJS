@@ -50,7 +50,7 @@ import {clamp} from "./math.js";
     }
 
     set x(value) {
-        var ret = this.onUpdate.call(this.scope, value, this._y, this._x, this._y);
+        let ret = this.onUpdate.call(this.scope, value, this._y, this._x, this._y);
         if (ret && "x" in ret) {
             this._x = ret.x;
         } else {
@@ -72,7 +72,7 @@ import {clamp} from "./math.js";
     }
 
     set y(value) {
-        var ret = this.onUpdate.call(this.scope, this._x, value, this._x, this._y);
+        let ret = this.onUpdate.call(this.scope, this._x, value, this._x, this._y);
         if (ret && "y" in ret) {
             this._y = ret.y;
         } else {
@@ -82,7 +82,7 @@ import {clamp} from "./math.js";
 
     /** @ignore */
     _set(x, y) {
-        var ret = this.onUpdate.call(this.scope, x, y, this._x, this._y);
+        let ret = this.onUpdate.call(this.scope, x, y, this._x, this._y);
         if (ret && "x" in ret && "y" in ret) {
             this._x = ret.x;
             this._y = ret.y;
@@ -340,19 +340,19 @@ import {clamp} from "./math.js";
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
     rotate(angle, v) {
-        var cx = 0;
-        var cy = 0;
+        let cx = 0;
+        let cy = 0;
 
         if (typeof v === "object") {
             cx = v.x;
             cy = v.y;
         }
 
-        var x = this._x - cx;
-        var y = this._y - cy;
+        let x = this._x - cx;
+        let y = this._y - cy;
 
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
+        let c = Math.cos(angle);
+        let s = Math.sin(angle);
 
         return this._set(x * c - y * s + cx, x * s + y * c + cy);
     }
@@ -403,9 +403,9 @@ import {clamp} from "./math.js";
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
      moveTowards(target, step) {
-        var angle = Math.atan2(target.y - this._y, target.x - this._x);
+        let angle = Math.atan2(target.y - this._y, target.x - this._x);
 
-        var distance = this.distance(target);
+        let distance = this.distance(target);
 
         if (distance === 0 || (step >= 0 && distance <= step * step)) {
             return target;

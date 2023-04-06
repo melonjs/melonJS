@@ -150,8 +150,8 @@ let globalFloatingCounter = 0;
         }
 
         // delete all children
-        var children = this.getChildren();
-        for (var i = children.length, child; i >= 0; (child = children[--i])) {
+        let children = this.getChildren();
+        for (let i = children.length, child; i >= 0; (child = children[--i])) {
             // don't remove it if a persistent object
             if (child && child.isPersistent !== true) {
                 this.removeChildNow(child);
@@ -310,10 +310,10 @@ let globalFloatingCounter = 0;
      * container.forEach((child, index, array) => { ... }, thisArg);
      */
     forEach(callback, thisArg) {
-        var context = this, i = 0;
-        var children = this.getChildren();
+        let context = this, i = 0;
+        let children = this.getChildren();
 
-        var len = children.length;
+        let len = children.length;
 
         if (typeof callback !== "function") {
             throw new Error(callback + " is not a function");
@@ -335,12 +335,12 @@ let globalFloatingCounter = 0;
      * @param {Renderable} child2
      */
     swapChildren(child, child2) {
-        var index = this.getChildIndex(child);
-        var index2 = this.getChildIndex(child2);
+        let index = this.getChildIndex(child);
+        let index2 = this.getChildIndex(child2);
 
         if ((index !== -1) && (index2 !== -1)) {
             // swap z index
-            var _z = child.pos.z;
+            let _z = child.pos.z;
             child.pos.z = child2.pos.z;
             child2.pos.z = _z;
             // swap the positions..
@@ -383,7 +383,7 @@ let globalFloatingCounter = 0;
      * @returns {Renderable} child
      */
     getNextChild(child) {
-        var index = this.getChildren().indexOf(child) - 1;
+        let index = this.getChildren().indexOf(child) - 1;
         if (index >= 0 && index < this.getChildren().length) {
             return this.getChildAt(index);
         }
@@ -408,27 +408,27 @@ let globalFloatingCounter = 0;
      * @returns {Renderable[]} Array of childs
      * @example
      * // get the first child object called "mainPlayer" in a specific container :
-     * var ent = myContainer.getChildByProp("name", "mainPlayer");
+     * let ent = myContainer.getChildByProp("name", "mainPlayer");
      *
      * // or query the whole world :
-     * var ent = container.getChildByProp("name", "mainPlayer");
+     * let ent = container.getChildByProp("name", "mainPlayer");
      *
      * // partial property matches are also allowed by using a RegExp.
      * // the following matches "redCOIN", "bluecoin", "bagOfCoins", etc :
-     * var allCoins = container.getChildByProp("name", /coin/i);
+     * let allCoins = container.getChildByProp("name", /coin/i);
      *
      * // searching for numbers or other data types :
-     * var zIndex10 = container.getChildByProp("z", 10);
-     * var inViewport = container.getChildByProp("inViewport", true);
+     * let zIndex10 = container.getChildByProp("z", 10);
+     * let inViewport = container.getChildByProp("inViewport", true);
      */
     getChildByProp(prop, value)    {
-        var objList = [];
+        let objList = [];
 
         /**
          * @ignore
          */
         function compare(obj, prop) {
-            var v = obj[prop];
+            let v = obj[prop];
             if (value instanceof RegExp && typeof(v) === "string") {
                 if (value.test(v)) {
                     objList.push(obj);
@@ -455,7 +455,7 @@ let globalFloatingCounter = 0;
      * @returns {Renderable[]} Array of children
      */
     getChildByType(classType) {
-        var objList = [];
+        let objList = [];
 
         this.forEach((child) => {
             if (child instanceof classType) {
@@ -489,7 +489,7 @@ let globalFloatingCounter = 0;
      * @returns {Renderable} corresponding child or null
      */
     getChildByGUID(guid) {
-        var obj = this.getChildByProp("GUID", guid);
+        let obj = this.getChildByProp("GUID", guid);
         return (obj.length > 0) ? obj[0] : null;
     }
 
@@ -511,7 +511,7 @@ let globalFloatingCounter = 0;
      * @returns {Bounds} this shape bounding box Rectangle object
      */
     updateBounds(absolute = true) {
-        var bounds = this.getBounds();
+        let bounds = this.getBounds();
 
         // call parent method
         super.updateBounds(absolute);
@@ -519,7 +519,7 @@ let globalFloatingCounter = 0;
         if (this.enableChildBoundsUpdate === true) {
             this.forEach((child) => {
                 if (child.isRenderable) {
-                    var childBounds = child.getBounds();
+                    let childBounds = child.getBounds();
                     if (childBounds.isFinite()) {
                         bounds.addBounds(childBounds);
                     }
@@ -537,7 +537,7 @@ let globalFloatingCounter = 0;
         if (this.root === true) {
             return true;
         } else {
-            var ancestor = this.ancestor;
+            let ancestor = this.ancestor;
             while (ancestor) {
                 if (ancestor.root === true) {
                     return true;
@@ -556,7 +556,7 @@ let globalFloatingCounter = 0;
         if (this.root === true) {
             return this;
         } else {
-            var ancestor = this.ancestor;
+            let ancestor = this.ancestor;
             while (ancestor) {
                 if (ancestor.root === true) {
                     break;
@@ -643,7 +643,7 @@ let globalFloatingCounter = 0;
 
             // Don't cache the child index; another element might have been removed
             // by the child's `onDeactivateEvent` or `destroy` methods
-            var childIndex = this.getChildIndex(child);
+            let childIndex = this.getChildIndex(child);
             if (childIndex >= 0) {
                 this.getChildren().splice(childIndex, 1);
                 child.ancestor = undefined;
@@ -684,7 +684,7 @@ let globalFloatingCounter = 0;
      * @param {Renderable} child
      */
     moveUp(child) {
-        var childIndex = this.getChildIndex(child);
+        let childIndex = this.getChildIndex(child);
         if (childIndex - 1 >= 0) {
             // note : we use an inverted loop
             this.swapChildren(child, this.getChildAt(childIndex - 1));
@@ -698,7 +698,7 @@ let globalFloatingCounter = 0;
      * @param {Renderable} child
      */
     moveDown(child) {
-        var childIndex = this.getChildIndex(child);
+        let childIndex = this.getChildIndex(child);
         if (childIndex >= 0 && (childIndex + 1) < this.getChildren().length) {
             // note : we use an inverted loop
             this.swapChildren(child, this.getChildAt(childIndex + 1));
@@ -712,9 +712,9 @@ let globalFloatingCounter = 0;
      * @param {Renderable} child
      */
     moveToTop(child) {
-        var childIndex = this.getChildIndex(child);
+        let childIndex = this.getChildIndex(child);
         if (childIndex > 0) {
-            var children = this.getChildren();
+            let children = this.getChildren();
             // note : we use an inverted loop
             children.splice(0, 0, children.splice(childIndex, 1)[0]);
             // increment our child z value based on the previous child depth
@@ -729,8 +729,8 @@ let globalFloatingCounter = 0;
      * @param {Renderable} child
      */
     moveToBottom(child) {
-        var childIndex = this.getChildIndex(child);
-        var children = this.getChildren();
+        let childIndex = this.getChildIndex(child);
+        let children = this.getChildren();
         if (childIndex >= 0 && childIndex < (children.length - 1)) {
             // note : we use an inverted loop
             children.splice((children.length - 1), 0, children.splice(childIndex, 1)[0]);
@@ -804,7 +804,7 @@ let globalFloatingCounter = 0;
         if (!b.pos || !a.pos) {
             return (a.pos ? -Infinity : Infinity);
         }
-        var result = b.pos.z - a.pos.z;
+        let result = b.pos.z - a.pos.z;
         return (result ? result : (b.pos.x - a.pos.x));
     }
 
@@ -816,7 +816,7 @@ let globalFloatingCounter = 0;
         if (!b.pos || !a.pos) {
             return (a.pos ? -Infinity : Infinity);
         }
-        var result = b.pos.z - a.pos.z;
+        let result = b.pos.z - a.pos.z;
         return (result ? result : (b.pos.y - a.pos.y));
     }
 
@@ -839,11 +839,11 @@ let globalFloatingCounter = 0;
      * @returns {boolean} true if the Container is dirty
      */
     update(dt) {
-        var isFloating = false;
-        var isPaused = state.isPaused();
-        var children = this.getChildren();
+        let isFloating = false;
+        let isPaused = state.isPaused();
+        let children = this.getChildren();
 
-        for (var i = children.length, obj; i--, (obj = children[i]);) {
+        for (let i = children.length, obj; i--, (obj = children[i]);) {
             if (isPaused && (!obj.updateWhenPaused)) {
                 // skip this object
                 continue;
@@ -888,8 +888,8 @@ let globalFloatingCounter = 0;
      * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
     draw(renderer, viewport) {
-        var isFloating = false;
-        var bounds = this.getBounds();
+        let isFloating = false;
+        let bounds = this.getBounds();
 
         this.drawCount = 0;
 
@@ -911,8 +911,8 @@ let globalFloatingCounter = 0;
             renderer.clearColor(this.backgroundColor);
         }
 
-        var children = this.getChildren();
-        for (var i = children.length, obj; i--, (obj = children[i]);) {
+        let children = this.getChildren();
+        for (let i = children.length, obj; i--, (obj = children[i]);) {
             if (obj.isRenderable) {
 
                 isFloating = obj.floating === true;

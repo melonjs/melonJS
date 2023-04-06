@@ -191,7 +191,7 @@ export default class TMXObject {
      */
     setTile(tilesets) {
         // get the corresponding tileset
-        var tileset = tilesets.getTilesetByGid(this.gid);
+        let tileset = tilesets.getTilesetByGid(this.gid);
 
         if (tileset.isCollection === false) {
             // set width and height equal to tile size
@@ -209,8 +209,8 @@ export default class TMXObject {
      * @returns {Polygon[]|Line[]|Ellipse[]} an array of shape objects
      */
     parseTMXShapes() {
-        var i = 0;
-        var shapes = [];
+        let i = 0;
+        let shapes = [];
 
         // add an ellipse shape
         if (this.isEllipse === true) {
@@ -226,7 +226,7 @@ export default class TMXObject {
         } else {
             // add a polygon
             if (this.isPolygon === true) {
-                var _polygon = pool.pull("Polygon", 0, 0, this.points);
+                let _polygon = pool.pull("Polygon", 0, 0, this.points);
                 // make sure it's a convex polygon
                 if (_polygon.isConvex() === false ) {
                     throw new Error("collision polygones in Tiled should be defined as Convex");
@@ -234,9 +234,9 @@ export default class TMXObject {
                 shapes.push(_polygon.rotate(this.rotation));
 
             } else if (this.isPolyLine === true) {
-                var p = this.points;
-                var p1, p2;
-                var segments = p.length - 1;
+                let p = this.points;
+                let p1, p2;
+                let segments = p.length - 1;
                 for (i = 0; i < segments; i++) {
                     // clone the value before, as [i + 1]
                     // is reused later by the next segment

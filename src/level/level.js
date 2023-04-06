@@ -7,11 +7,11 @@ import TMXTileMap from "./tiled/TMXTileMap.js";
 
 
 // our levels
-var levels = {};
+let levels = {};
 // level index table
-var levelIdx = [];
+let levelIdx = [];
 // current level index
-var currentLevelIdx = 0;
+let currentLevelIdx = 0;
 
 /**
  * @ignore
@@ -58,7 +58,7 @@ function safeLoadLevel(levelId, options, restart) {
  * @ignore
  */
 function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
-    var level = levels[levelId];
+    let level = levels[levelId];
 
     // reset the GUID generator
     // and pass the level id as parameter
@@ -77,7 +77,7 @@ function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
  * @namespace level
  */
 
-var level = {
+let level = {
 
     /**
      * add a level into the game manager (usually called by the preloader)
@@ -132,7 +132,7 @@ var level = {
      * @example
      * // the game assets to be be preloaded
      * // TMX maps
-     * var resources = [
+     * let resources = [
      *     {name: "a4_level1",   type: "tmx",   src: "data/level/a4_level1.tmx"},
      *     {name: "a4_level2",   type: "tmx",   src: "data/level/a4_level2.tmx"},
      *     {name: "a4_level3",   type: "tmx",   src: "data/level/a4_level3.tmx"},
@@ -146,7 +146,7 @@ var level = {
      * ...
      * ...
      * // load a level into a specific container
-     * var levelContainer = new me.Container();
+     * let levelContainer = new me.Container();
      * me.level.load("a4_level2", {container:levelContainer});
      * // add a simple transformation
      * levelContainer.currentTransform.translate(levelContainer.width / 2, levelContainer.height / 2 );
@@ -171,7 +171,7 @@ var level = {
         if (levels[levelId] instanceof TMXTileMap) {
 
             // check the status of the state mngr
-            var wasRunning = state.isRunning();
+            let wasRunning = state.isRunning();
 
             if (wasRunning) {
                 // stop the game loop to avoid

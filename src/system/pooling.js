@@ -58,11 +58,11 @@ class ObjectPool {
      * me.pool.register("enemy", EnemyEntity, true);
      * // ...
      * // when we need to manually create a new bullet:
-     * var bullet = me.pool.pull("bullet", x, y, direction);
+     * let bullet = me.pool.pull("bullet", x, y, direction);
      * // ...
      * // params aren't a fixed number
      * // when we need new enemy we can add more params, that the object construct requires:
-     * var enemy = me.pool.pull("enemy", x, y, direction, speed, power, life);
+     * let enemy = me.pool.pull("enemy", x, y, direction, speed, power, life);
      * // ...
      * // when we want to destroy existing object, the remove
      * // function will ensure the object can then be reallocated later
@@ -70,9 +70,9 @@ class ObjectPool {
      * me.game.world.removeChild(bullet);
      */
     pull(name, ...args) {
-        var className = this.objectClass[name];
+        let className = this.objectClass[name];
         if (className) {
-            var proto = className["class"],
+            let proto = className["class"],
                 poolArray = className.pool,
                 obj;
 
@@ -98,7 +98,7 @@ class ObjectPool {
      * note: this will trigger the garbage collector
      */
     purge() {
-        for (var className in this.objectClass) {
+        for (let className in this.objectClass) {
             if (this.objectClass[className]) {
                 this.objectClass[className].pool = [];
             }
@@ -153,7 +153,7 @@ class ObjectPool {
      * }
      */
     poolable(obj) {
-        var className = obj.className;
+        let className = obj.className;
         return (typeof className !== "undefined") &&
                 (typeof obj.onResetEvent === "function") &&
                 (className in this.objectClass) &&
@@ -170,7 +170,7 @@ class ObjectPool {
     }
 }
 
-var pool = new ObjectPool();
+let pool = new ObjectPool();
 
 /**
  * a default global ObjectPool instance
@@ -181,7 +181,7 @@ var pool = new ObjectPool();
  * pool.register("bullet", BulletEntity, true);
  * // ...
  * // when we need to manually create a new bullet:
- * var bullet = pool.pull("bullet", x, y, direction, velocity);
+ * let bullet = pool.pull("bullet", x, y, direction, velocity);
  * // ...
  * // when we want to destroy existing object, the remove
  * // function will ensure the object can then be reallocated later

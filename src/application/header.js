@@ -5,10 +5,10 @@ import * as device from "../system/device";
  * @param {Application} game - the game application instance calling this function
  */
 export function consoleHeader(app) {
-    var renderType = app.renderer.type;
-    var gpu_renderer = (typeof app.renderer.GPURenderer === "string") ? " (" + app.renderer.GPURenderer + ")" : "";
-    var depthTesting = renderType.includes("WebGL") && app.renderer.depthTest === "z-buffer" ? "Depth Test | " : "";
-    var audioType = device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
+    let renderType = app.renderer.type;
+    let gpu_renderer = (typeof app.renderer.GPURenderer === "string") ? " (" + app.renderer.GPURenderer + ")" : "";
+    let depthTesting = renderType.includes("WebGL") && app.renderer.depthTest === "z-buffer" ? "Depth Test | " : "";
+    let audioType = device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
 
     // output video information in the console
     console.log(

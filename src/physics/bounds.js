@@ -62,7 +62,7 @@ import Vector2d from "./../math/vector2.js";
     }
 
     set x(value) {
-        var deltaX = this.max.x - this.min.x;
+        let deltaX = this.max.x - this.min.x;
         this.min.x = value;
         this.max.x = value + deltaX;
     }
@@ -76,7 +76,7 @@ import Vector2d from "./../math/vector2.js";
     }
 
     set y(value) {
-        var deltaY = this.max.y - this.min.y;
+        let deltaY = this.max.y - this.min.y;
 
         this.min.y = value;
         this.max.y = value + deltaY;
@@ -189,8 +189,8 @@ import Vector2d from "./../math/vector2.js";
         if (clear === true) {
             this.clear();
         }
-        for (var i = 0; i < vertices.length; i++) {
-            var vertex = vertices[i];
+        for (let i = 0; i < vertices.length; i++) {
+            let vertex = vertices[i];
             if (vertex.x > this.max.x) this.max.x = vertex.x;
             if (vertex.x < this.min.x) this.min.x = vertex.x;
             if (vertex.y > this.max.y) this.max.y = vertex.y;
@@ -242,7 +242,7 @@ import Vector2d from "./../math/vector2.js";
      * @param {Matrix2d} [m] - an optional transform to apply to the given frame coordinates
      */
     addFrame(x0, y0, x1, y1, m) {
-        var v = pool.pull("Point");
+        let v = pool.pull("Point");
 
         this.addPoint(v.set(x0, y0), m);
         this.addPoint(v.set(x1, y0), m);
@@ -267,8 +267,8 @@ import Vector2d from "./../math/vector2.js";
      * @returns {boolean} True if the bounds contain the point, otherwise false
      */
     contains() {
-        var arg0 = arguments[0];
-        var _x1, _x2, _y1, _y2;
+        let arg0 = arguments[0];
+        let _x1, _x2, _y1, _y2;
         if (arguments.length === 2) {
             // x, y
             _x1 = _x2 = arg0;
@@ -322,7 +322,7 @@ import Vector2d from "./../math/vector2.js";
      * @param {number} y
      */
     translate() {
-        var _x, _y;
+        let _x, _y;
         if (arguments.length === 2) {
             // x, y
             _x = arguments[0];
@@ -351,7 +351,7 @@ import Vector2d from "./../math/vector2.js";
      * @param {number} y
      */
     shift() {
-        var _x, _y;
+        let _x, _y;
 
         if (arguments.length === 2) {
             // x, y
@@ -363,7 +363,7 @@ import Vector2d from "./../math/vector2.js";
             _y = arguments[0].y;
         }
 
-        var deltaX = this.max.x - this.min.x,
+        let deltaX = this.max.x - this.min.x,
             deltaY = this.max.y - this.min.y;
 
         this.min.x = _x;
@@ -377,7 +377,7 @@ import Vector2d from "./../math/vector2.js";
      * @returns {Bounds}
      */
     clone() {
-        var bounds = new Bounds();
+        let bounds = new Bounds();
         bounds.addBounds(this);
         return bounds;
     }

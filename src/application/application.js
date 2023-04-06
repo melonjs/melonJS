@@ -34,7 +34,7 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
      * @param {boolean} [options.consoleHeader=true] - whether to display melonJS version and basic device information in the console
      * @throws Will throw an exception if it fails to instantiate a renderer
      * @example
-     * var my game = new Application(640, 480, {renderer: me.video.AUTO}) {
+     * let my game = new Application(640, 480, {renderer: me.video.AUTO}) {
      *     ....
      * }
      */
@@ -149,7 +149,7 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
         }
 
         // override renderer settings if &webgl or &canvas is defined in the URL
-        var uriFragment = utils.getUriFragment();
+        let uriFragment = utils.getUriFragment();
         if (uriFragment.webgl === true || uriFragment.webgl1 === true || uriFragment.webgl2 === true) {
             this.settings.renderer = WEBGL;
             if (uriFragment.webgl1 === true) {
@@ -177,7 +177,7 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
                     break;
             }
         } else {
-            var CustomRenderer = this.settings.renderer;
+            let CustomRenderer = this.settings.renderer;
             // a renderer class
             this.renderer = new CustomRenderer(this.settings);
         }
@@ -202,7 +202,7 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
         // add an observer to detect when the dom tree is modified
         if ("MutationObserver" in globalThis) {
             // Create an observer instance linked to the callback function
-            var observer = new MutationObserver(() => onresize(this));
+            let observer = new MutationObserver(() => onresize(this));
 
             // Start observing the target node for configured mutations
             observer.observe(this.parentElement, {
@@ -234,7 +234,7 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
      */
     reset() {
         // point to the current active stage "default" camera
-        var current = state.get();
+        let current = state.get();
         if (typeof current !== "undefined") {
             this.viewport = current.cameras.get("default");
         }

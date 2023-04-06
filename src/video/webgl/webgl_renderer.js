@@ -153,7 +153,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
         this.setBlendMode(this.settings.blendMode);
 
         // get GPU vendor and renderer
-        var debugInfo = this.gl.getExtension("WEBGL_debug_renderer_info");
+        let debugInfo = this.gl.getExtension("WEBGL_debug_renderer_info");
         if (debugInfo !== null) {
             this.GPUVendor = this.gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
             this.GPURenderer = this.gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
@@ -170,7 +170,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
         this.type =  "WebGL" + this.WebGLVersion;
 
         // to simulate context lost and restore in WebGL:
-        // var ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');
+        // let ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');
         // ctx.loseContext()
         this.getCanvas().addEventListener("webglcontextlost", (e) => {
             e.preventDefault();
@@ -298,24 +298,24 @@ import { isPowerOfTwo } from "./../../math/math.js";
      * @returns {TextureAtlas}
      * @see ImageLayer#repeat
      * @example
-     * var tileable   = renderer.createPattern(image, "repeat");
-     * var horizontal = renderer.createPattern(image, "repeat-x");
-     * var vertical   = renderer.createPattern(image, "repeat-y");
-     * var basic      = renderer.createPattern(image, "no-repeat");
+     * let tileable   = renderer.createPattern(image, "repeat");
+     * let horizontal = renderer.createPattern(image, "repeat-x");
+     * let vertical   = renderer.createPattern(image, "repeat-y");
+     * let basic      = renderer.createPattern(image, "no-repeat");
      */
     createPattern(image, repeat) {
 
         this.setCompositor("quad");
 
         if (renderer.WebGLVersion === 1 && (!isPowerOfTwo(image.width) || !isPowerOfTwo(image.height))) {
-            var src = typeof image.src !== "undefined" ? image.src : image;
+            let src = typeof image.src !== "undefined" ? image.src : image;
             throw new Error(
                 "[WebGL Renderer] " + src + " is not a POT texture " +
                 "(" + image.width + "x" + image.height + ")"
             );
         }
 
-        var texture = new TextureAtlas(createAtlas(image.width, image.height, "pattern", repeat), image);
+        let texture = new TextureAtlas(createAtlas(image.width, image.height, "pattern", repeat), image);
 
         // FIXME: Remove old cache entry and texture when changing the repeat mode
         this.currentCompositor.uploadTexture(texture);
@@ -354,7 +354,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
      * Clear the frame buffer
      */
     clear() {
-        var gl = this.gl;
+        let gl = this.gl;
         gl.clearColor(0, 0, 0, this.settings.transparent ? 0.0 : 1.0);
         if (this.depthTest === "z-buffer") {
             gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
@@ -369,13 +369,13 @@ import { isPowerOfTwo } from "./../../math/math.js";
      * @param {boolean} [opaque=false] - Allow transparency [default] or clear the surface completely [true]
      */
     clearColor(color = "#000000", opaque = false) {
-        var glArray;
-        var gl = this.gl;
+        let glArray;
+        let gl = this.gl;
 
         if (color instanceof Color) {
             glArray = color.toArray();
         } else {
-            var _color = pool.pull("me.Color");
+            let _color = pool.pull("me.Color");
             // reuse temporary the renderer default color object
             glArray = _color.parseCSS(color).toArray();
             pool.push(_color);
@@ -447,8 +447,8 @@ import { isPowerOfTwo } from "./../../math/math.js";
 
         this.setCompositor("quad");
 
-        var texture = this.cache.get(image);
-        var uvs = texture.getUVs(sx + "," + sy + "," + sw + "," + sh);
+        let texture = this.cache.get(image);
+        let uvs = texture.getUVs(sx + "," + sy + "," + sw + "," + sh);
         this.currentCompositor.addQuad(texture, dx, dy, dw, dh, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()));
     }
 
@@ -462,7 +462,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
      * @see WebGLRenderer#createPattern
      */
     drawPattern(pattern, x, y, width, height) {
-        var uvs = pattern.getUVs("0,0," + width + "," + height);
+        let uvs = pattern.getUVs("0,0," + width + "," + height);
         this.setCompositor("quad");
         this.currentCompositor.addQuad(pattern, x, y, width, height, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()));
     }
@@ -482,7 +482,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
             );
         }
 
-        var attr = {
+        let attr = {
             alpha : transparent,
             antialias : this.settings.antiAlias,
             depth : depth,
@@ -493,7 +493,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
             failIfMajorPerformanceCaveat : this.settings.failIfMajorPerformanceCaveat
         };
 
-        var gl;
+        let gl;
 
         // attempt to create a WebGL2 context if requested
         if (this.settings.preferWebGL1 === false) {
@@ -577,8 +577,8 @@ import { isPowerOfTwo } from "./../../math/math.js";
     restore() {
         // do nothing if there is no saved states
         if (this._matrixStack.length !== 0) {
-            var color = this._colorStack.pop();
-            var matrix = this._matrixStack.pop();
+            let color = this._colorStack.pop();
+            let matrix = this._matrixStack.pop();
 
             // restore the previous context
             this.currentColor.copy(color);
@@ -667,7 +667,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
      * @param {Color|string} color - css color string.
      */
     setColor(color) {
-        var alpha = this.currentColor.alpha;
+        let alpha = this.currentColor.alpha;
         this.currentColor.copy(color);
         this.currentColor.alpha *= alpha;
     }
@@ -783,8 +783,8 @@ import { isPowerOfTwo } from "./../../math/math.js";
         this.translate(poly.pos.x, poly.pos.y);
         this.path2D.beginPath();
 
-        var points = poly.points;
-        for (var i = 1; i < points.length; i++) {
+        let points = poly.points;
+        for (let i = 1; i < points.length; i++) {
             this.path2D.moveTo(points[i-1].x, points[i-1].y);
             this.path2D.lineTo(points[i].x, points[i].y);
         }
@@ -905,11 +905,11 @@ import { isPowerOfTwo } from "./../../math/math.js";
      * @param {Matrix2d} mat2d - Matrix to transform by
      */
     transform(mat2d) {
-        var currentTransform = this.currentTransform;
+        let currentTransform = this.currentTransform;
         currentTransform.multiply(mat2d);
         if (this.settings.subPixel === false) {
             // snap position values to pixel grid
-            var a = currentTransform.toArray();
+            let a = currentTransform.toArray();
             a[6] |= 0;
             a[7] |= 0;
         }
@@ -921,11 +921,11 @@ import { isPowerOfTwo } from "./../../math/math.js";
      * @param {number} y
      */
     translate(x, y) {
-        var currentTransform = this.currentTransform;
+        let currentTransform = this.currentTransform;
         currentTransform.translate(x, y);
         if (this.settings.subPixel === false) {
             // snap position values to pixel grid
-            var a = currentTransform.toArray();
+            let a = currentTransform.toArray();
             a[6] |= 0;
             a[7] |= 0;
         }
@@ -943,11 +943,11 @@ import { isPowerOfTwo } from "./../../math/math.js";
      * @param {number} height
      */
     clipRect(x, y, width, height) {
-        var canvas = this.getCanvas();
-        var gl = this.gl;
+        let canvas = this.getCanvas();
+        let gl = this.gl;
         // if requested box is different from the current canvas size
         if (x !== 0 || y !== 0 || width !== canvas.width || height !== canvas.height) {
-            var currentScissor = this.currentScissor;
+            let currentScissor = this.currentScissor;
             if (gl.isEnabled(gl.SCISSOR_TEST)) {
                 // if same as the current scissor box do nothing
                 if (currentScissor[0] === x && currentScissor[1] === y &&
@@ -986,7 +986,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
      * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
      */
     setMask(mask, invert = false) {
-        var gl = this.gl;
+        let gl = this.gl;
 
         // flush the compositor
         this.flush();

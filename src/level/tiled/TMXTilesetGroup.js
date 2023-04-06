@@ -36,13 +36,13 @@ import { TMX_CLEAR_BIT_MASK } from "./constants";
      * @returns {TMXTileset} corresponding tileset
      */
     getTilesetByGid(gid) {
-        var invalidRange = -1;
+        let invalidRange = -1;
 
         // clear the gid of all flip/rotation flags
         gid &= TMX_CLEAR_BIT_MASK;
 
         // cycle through all tilesets
-        for (var i = 0, len = this.tilesets.length; i < len; i++) {
+        for (let i = 0, len = this.tilesets.length; i < len; i++) {
             // return the corresponding tileset if matching
             if (this.tilesets[i].contains(gid)) {
                 return this.tilesets[i];

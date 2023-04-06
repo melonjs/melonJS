@@ -49,14 +49,14 @@ class TextureCache {
      * @ignore
      */
     get(image, atlas) {
-        var entry;
+        let entry;
 
         if (typeof atlas === "undefined") {
             entry = this.cache.get(image)[0];
         } else {
             // manage cases where a specific atlas is specified
             this.cache.forEach((value, key) => {
-                var _atlas = value.getAtlas()[0];
+                let _atlas = value.getAtlas()[0];
                 if (key === image && _atlas.width === atlas.framewidth && _atlas.height === atlas.frameheight) {
                     entry = value;
                 }
@@ -88,7 +88,7 @@ class TextureCache {
      */
     tint(src, color) {
         // make sure the src is in the cache
-        var image_cache = this.tinted.get(src);
+        let image_cache = this.tinted.get(src);
 
         if (image_cache === undefined) {
             image_cache = this.tinted.set(src, new Map());
@@ -105,12 +105,12 @@ class TextureCache {
      * @ignore
      */
     set(image, texture) {
-        var width = image.width;
-        var height = image.height;
+        let width = image.width;
+        let height = image.height;
 
         // warn if a non POT texture is added to the cache when using WebGL1
         if (renderer.WebGLVersion === 1 && (!isPowerOfTwo(width) || !isPowerOfTwo(height))) {
-            var src = typeof image.src !== "undefined" ? image.src : image;
+            let src = typeof image.src !== "undefined" ? image.src : image;
             console.warn(
                 "[Texture] " + src + " is not a POT texture " +
                 "(" + width + "x" + height + ")"

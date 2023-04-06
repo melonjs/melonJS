@@ -27,9 +27,9 @@ import { degToRad } from "./../../../math/math.js";
      * @ignore
      */
     pixelToTileCoords(x, y, v) {
-        var ret = v || new Vector2d();
+        let ret = v || new Vector2d();
 
-        var alignedX = x,
+        let alignedX = x,
             alignedY = y;
 
         if (this.staggerX) {
@@ -39,7 +39,7 @@ import { degToRad } from "./../../../math/math.js";
         }
 
         // Start with the coordinates of a grid-aligned tile
-        var referencePoint = pool.pull("Vector2d",
+        let referencePoint = pool.pull("Vector2d",
             Math.floor(alignedX / this.tilewidth),
             Math.floor(alignedY / this.tileheight)
         );
@@ -58,13 +58,13 @@ import { degToRad } from "./../../../math/math.js";
         }
 
         // Relative x and y position on the base square of the grid-aligned tile
-        var rel = pool.pull("Vector2d",
+        let rel = pool.pull("Vector2d",
             alignedX - referencePoint.x * this.tilewidth,
             alignedY - referencePoint.y * this.tileheight
         );
 
         // Check whether the cursor is in any of the corners (neighboring tiles)
-        var y_pos = rel.x * (this.tileheight / this.tilewidth);
+        let y_pos = rel.x * (this.tileheight / this.tilewidth);
 
         if (this.sideoffsety - y_pos > rel.y) {
             referencePoint = this.topLeft(referencePoint.x, referencePoint.y, referencePoint);

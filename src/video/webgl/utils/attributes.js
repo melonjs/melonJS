@@ -2,7 +2,7 @@
  * @ignore
  */
 export function extractAttributes(gl, shader) {
-    var attributes = {},
+    let attributes = {},
         attrRx = /attribute\s+\w+\s+(\w+)/g,
         match,
         i = 0;

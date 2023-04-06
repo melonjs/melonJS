@@ -47,7 +47,7 @@ import Bounds from "./../../../physics/bounds.js";
      * @returns {Bounds}
      */
     getBounds(layer) {
-        var bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
+        let bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
         bounds.setMinMax(
             0, 0,
             this.cols * this.tilewidth,

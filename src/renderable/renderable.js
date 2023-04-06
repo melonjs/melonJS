@@ -426,11 +426,11 @@ import Color from "./../math/color.js";
      * @returns {number} angle in radians
      */
     angleTo(target) {
-        var a = this.getBounds();
-        var ax, ay;
+        let a = this.getBounds();
+        let ax, ay;
 
         if (target instanceof Renderable) {
-            var b = target.getBounds();
+            let b = target.getBounds();
             ax = b.centerX - a.centerX;
             ay = b.centerY - a.centerY;
         } else { // vector object
@@ -447,11 +447,11 @@ import Color from "./../math/color.js";
      * @returns {number} distance
      */
     distanceTo(target) {
-        var a = this.getBounds();
-        var dx, dy;
+        let a = this.getBounds();
+        let dx, dy;
 
         if (target instanceof Renderable) {
-            var b = target.getBounds();
+            let b = target.getBounds();
             dx = a.centerX - b.centerX;
             dy = a.centerY - b.centerY;
         } else { // vector object
@@ -468,7 +468,7 @@ import Color from "./../math/color.js";
      * @returns {Renderable} Reference to this object for method chaining
      */
     lookAt(target) {
-        var position;
+        let position;
 
         if (target instanceof Renderable) {
             position = target.pos;
@@ -476,7 +476,7 @@ import Color from "./../math/color.js";
             position = target;
         }
 
-        var angle = this.angleTo(position);
+        let angle = this.angleTo(position);
 
         this.rotate(angle);
 
@@ -541,7 +541,7 @@ import Color from "./../math/color.js";
      */
     updateBounds(absolute = true) {
         if (this.isRenderable) {
-            var bounds = this.getBounds();
+            let bounds = this.getBounds();
 
             bounds.clear();
 
@@ -639,7 +639,7 @@ import Color from "./../math/color.js";
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
      */
     preDraw(renderer) {
-        var ax = this.width * this.anchorPoint.x,
+        let ax = this.width * this.anchorPoint.x,
             ay = this.height * this.anchorPoint.y;
 
         // save renderer context

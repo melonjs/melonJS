@@ -10,7 +10,7 @@
  * @name preventDefault
  * @memberof input
  */
-export var preventDefault = true;
+export let preventDefault = true;
 
 export * from "./pointerevent.js";
 export * from "./keyboard.js";

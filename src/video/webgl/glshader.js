@@ -18,7 +18,7 @@ import { minify } from "./utils/string.js";
      * @see https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_on_the_web/GLSL_Shaders
      * @example
      * // create a basic shader
-     * var myShader = new me.GLShader(
+     * let myShader = new me.GLShader(
      *    // WebGL rendering context
      *    gl,
      *    // vertex shader
@@ -93,7 +93,7 @@ import { minify } from "./utils/string.js";
      * @returns {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
      */
     getAttribLocation(name) {
-        var attr = this.attributes[name];
+        let attr = this.attributes[name];
         if (typeof attr !== "undefined") {
             return attr;
         } else {
@@ -109,7 +109,7 @@ import { minify } from "./utils/string.js";
      * myShader.setUniform("uProjectionMatrix", this.projectionMatrix);
      */
     setUniform(name, value) {
-        var uniforms = this.uniforms;
+        let uniforms = this.uniforms;
         if (typeof uniforms[name] !== "undefined") {
             if (typeof value === "object" && typeof value.toArray === "function") {
                 uniforms[name] = value.toArray();
@@ -129,9 +129,9 @@ import { minify } from "./utils/string.js";
      */
     setVertexAttributes(gl, attributes, vertexByteSize) {
         // set the vertex attributes
-        for (var index = 0; index < attributes.length; ++index) {
-            var element = attributes[index];
-            var location = this.getAttribLocation(element.name);
+        for (let index = 0; index < attributes.length; ++index) {
+            let element = attributes[index];
+            let location = this.getAttribLocation(element.name);
 
             if (location !== -1) {
                 gl.enableVertexAttribArray(location);

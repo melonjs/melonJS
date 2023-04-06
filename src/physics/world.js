@@ -140,7 +140,7 @@ import state from "./../state/state.js";
     bodyApplyGravity(body) {
         // apply gravity to the current velocity
         if (!body.ignoreGravity && body.gravityScale !== 0) {
-            var gravity = this.gravity;
+            let gravity = this.gravity;
 
             // apply gravity if defined
             body.force.x += (body.mass * gravity.x) * body.gravityScale;
@@ -154,7 +154,7 @@ import state from "./../state/state.js";
      * @returns {boolean} true if the word is dirty
      */
     update(dt) {
-        var isPaused = state.isPaused();
+        let isPaused = state.isPaused();
 
         // clear the quadtree
         this.broadphase.clear();
@@ -165,7 +165,7 @@ import state from "./../state/state.js";
         // iterate through all bodies
         this.bodies.forEach((body) => {
             if (!body.isStatic) {
-                var ancestor = body.ancestor;
+                let ancestor = body.ancestor;
                 // if the game is not paused, and ancestor can be updated
                 if (!(isPaused && (!ancestor.updateWhenPaused)) &&
                    (ancestor.inViewport || ancestor.alwaysUpdate)) {

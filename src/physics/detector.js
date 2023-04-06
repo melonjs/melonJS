@@ -45,7 +45,7 @@ export default class Detector {
      * @returns {boolean} true if they should collide, false otherwise
      */
     shouldCollide(a, b) {
-        var bodyA = a.body,
+        let bodyA = a.body,
             bodyB = b.body;
         return (
             (typeof bodyA === "object" && typeof bodyB === "object") &&
@@ -66,9 +66,9 @@ export default class Detector {
      */
     collides(bodyA, bodyB, response = this.response) {
         // for each shape in body A
-        for (var indexA = bodyA.shapes.length, shapeA; indexA--, (shapeA = bodyA.shapes[indexA]);) {
+        for (let indexA = bodyA.shapes.length, shapeA; indexA--, (shapeA = bodyA.shapes[indexA]);) {
             // for each shape in body B
-            for (var indexB = bodyB.shapes.length, shapeB; indexB--, (shapeB = bodyB.shapes[indexB]);) {
+            for (let indexB = bodyB.shapes.length, shapeB; indexB--, (shapeB = bodyB.shapes[indexB]);) {
                 // full SAT collision check
                 if (SAT["test" + shapeA.shapeType + shapeB.shapeType].call(
                         this,
@@ -98,9 +98,9 @@ export default class Detector {
      * @returns {boolean} in case of collision, false otherwise
      */
     collisions(objA) {
-        var collisionCounter = 0;
+        let collisionCounter = 0;
         // retreive a list of potential colliding objects from the game world
-        var candidates = this.world.broadphase.retrieve(objA);
+        let candidates = this.world.broadphase.retrieve(objA);
 
         boundsA.addBounds(objA.getBounds(), true);
         boundsA.addBounds(objA.body.getBounds());
@@ -142,7 +142,7 @@ export default class Detector {
      * @returns {Array.<Renderable>} an array of intersecting physic objects
      * @example
      *    // define a line accross the viewport
-     *    var ray = new me.Line(
+     *    let ray = new me.Line(
      *        // absolute position of the line
      *        0, 0, [
      *        // starting point relative to the initial position
@@ -159,28 +159,28 @@ export default class Detector {
      *    }
      */
     rayCast(line, result = []) {
-        var collisionCounter = 0;
+        let collisionCounter = 0;
 
         // retrieve a list of potential colliding objects from the game world
-        var candidates = this.world.broadphase.retrieve(line);
+        let candidates = this.world.broadphase.retrieve(line);
 
-        for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
+        for (let i = candidates.length, objB; i--, (objB = candidates[i]);) {
 
             // fast AABB check if both bounding boxes are overlaping
             if (objB.body && line.getBounds().overlaps(objB.getBounds())) {
 
                 // go trough all defined shapes in B (if any)
-                var bLen = objB.body.shapes.length;
+                let bLen = objB.body.shapes.length;
                 if ( objB.body.shapes.length === 0) {
                     continue;
                 }
 
-                var shapeA = line;
+                let shapeA = line;
 
                 // go through all defined shapes in B
-                var indexB = 0;
+                let indexB = 0;
                 do {
-                    var shapeB = objB.body.getShape(indexB);
+                    let shapeB = objB.body.getShape(indexB);
 
                     // full SAT collision check
                     if (SAT["test" + shapeA.shapeType + shapeB.shapeType]

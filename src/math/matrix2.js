@@ -95,7 +95,7 @@ import Matrix3d from "./matrix3.js";
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     setTransform() {
-        var a = this.val;
+        let a = this.val;
 
         if (arguments.length === 9) {
             a[0] = arguments[0]; // a - m00
@@ -142,8 +142,8 @@ import Matrix3d from "./matrix3.js";
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     fromMat3d(m) {
-        var b = m.val;
-        var a = this.val;
+        let b = m.val;
+        let a = this.val;
 
         a[0] = b[0];
         a[1] = b[1];
@@ -166,8 +166,8 @@ import Matrix3d from "./matrix3.js";
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     multiply(m) {
-        var b = m.val;
-        var a = this.val,
+        let b = m.val;
+        let a = this.val,
             a0 = a[0],
             a1 = a[1],
             a3 = a[3],
@@ -196,7 +196,7 @@ import Matrix3d from "./matrix3.js";
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     transpose() {
-        var a = this.val,
+        let a = this.val,
             a1 = a[1],
             a2 = a[2],
             a5 = a[5];
@@ -218,17 +218,17 @@ import Matrix3d from "./matrix3.js";
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     invert() {
-        var val = this.val;
+        let val = this.val;
 
-        var a = val[ 0 ], b = val[ 1 ], c = val[ 2 ],
+        let a = val[ 0 ], b = val[ 1 ], c = val[ 2 ],
             d = val[ 3 ], e = val[ 4 ], f = val[ 5 ],
             g = val[ 6 ], h = val[ 7 ], i = val[ 8 ];
 
-        var ta = i * e - f * h,
+        let ta = i * e - f * h,
             td = f * g - i * d,
             tg = h * d - e * g;
 
-        var n = a * ta + b * td + c * tg;
+        let n = a * ta + b * td + c * tg;
 
         val[ 0 ] = ta / n;
         val[ 1 ] = ( c * h - i * b ) / n;
@@ -253,7 +253,7 @@ import Matrix3d from "./matrix3.js";
     * @returns {Vector2d|Vector3d} result vector object.
     */
     apply(v) {
-        var a = this.val,
+        let a = this.val,
             x = v.x,
             y = v.y,
             z = (typeof v.z !== "undefined") ? v.z : 1;
@@ -276,11 +276,11 @@ import Matrix3d from "./matrix3.js";
      * @returns {Vector2d} result vector object.
      */
     applyInverse(v) {
-        var a = this.val,
+        let a = this.val,
             x = v.x,
             y = v.y;
 
-        var invD = 1 / ((a[0] * a[4]) + (a[3] * -a[1]));
+        let invD = 1 / ((a[0] * a[4]) + (a[3] * -a[1]));
 
         v.x = (a[4] * invD * x) + (-a[3] * invD * y) + (((a[7] * a[3]) - (a[6] * a[4])) * invD);
         v.y = (a[0] * invD * y) + (-a[1] * invD * x) + (((-a[7] * a[0]) + (a[6] * a[1])) * invD);
@@ -297,7 +297,7 @@ import Matrix3d from "./matrix3.js";
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     scale(x, y = x) {
-        var a = this.val;
+        let a = this.val;
 
         a[0] *= x;
         a[1] *= x;
@@ -349,7 +349,7 @@ import Matrix3d from "./matrix3.js";
      */
     rotate(angle) {
         if (angle !== 0) {
-            var a = this.val,
+            let a = this.val,
                 a00 = a[0],
                 a01 = a[1],
                 a02 = a[2],
@@ -387,8 +387,8 @@ import Matrix3d from "./matrix3.js";
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     translate() {
-        var a = this.val;
-        var _x, _y;
+        let a = this.val;
+        let _x, _y;
 
         if (arguments.length === 2) {
             // x, y
@@ -413,7 +413,7 @@ import Matrix3d from "./matrix3.js";
      * @returns {boolean}
      */
     isIdentity() {
-        var a = this.val;
+        let a = this.val;
 
         return (
             a[0] === 1 &&
@@ -436,8 +436,8 @@ import Matrix3d from "./matrix3.js";
      * @returns {boolean} true if both are equals
      */
     equals(m) {
-        var b = m.val;
-        var a = this.val;
+        let b = m.val;
+        let a = this.val;
 
         return (
             (a[0] === b[0]) &&
@@ -479,7 +479,7 @@ import Matrix3d from "./matrix3.js";
      * @returns {string}
      */
     toString() {
-        var a = this.val;
+        let a = this.val;
 
         return "me.Matrix2d(" +
             a[0] + ", " + a[1] + ", " + a[2] + ", " +

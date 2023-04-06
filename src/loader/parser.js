@@ -50,7 +50,7 @@ export function preloadFontFace(data, onload, onerror) {
         }
     }
 
-    var font = new FontFace(data.name, data.src);
+    let font = new FontFace(data.name, data.src);
 
     // loading promise
     font.load().then(() => {
@@ -97,9 +97,9 @@ export function preloadTMX(tmxData, onload, onerror) {
         return;
     }
 
-    var xmlhttp = new XMLHttpRequest();
+    let xmlhttp = new XMLHttpRequest();
     // check the data format ('tmx', 'json')
-    var format = fileUtil.getExtension(tmxData.src);
+    let format = fileUtil.getExtension(tmxData.src);
 
     if (xmlhttp.overrideMimeType) {
         if (format === "json") {
@@ -119,7 +119,7 @@ export function preloadTMX(tmxData, onload, onerror) {
             // status = 0 when file protocol is used, or cross-domain origin,
             // (With Chrome use "--allow-file-access-from-files --disable-web-security")
             if ((xmlhttp.status === 200) || ((xmlhttp.status === 0) && xmlhttp.responseText)) {
-                var result = null;
+                let result = null;
 
                 // parse response
                 switch (format) {
@@ -139,7 +139,7 @@ export function preloadTMX(tmxData, onload, onerror) {
                             result = xmlhttp.responseXML;
                         }
                         // converts to a JS object
-                        var data = TMXUtils.parse(result);
+                        var data = TMXUtils.parse(result); // <= "Unexpected lexical declaration in case block" if using let
                         switch (format) {
                             case "tmx":
                                 result = data.map;
@@ -184,7 +184,7 @@ export function preloadTMX(tmxData, onload, onerror) {
  * @ignore
  */
 export function preloadJSON(data, onload, onerror) {
-    var xmlhttp = new XMLHttpRequest();
+    let xmlhttp = new XMLHttpRequest();
 
     if (xmlhttp.overrideMimeType) {
         xmlhttp.overrideMimeType("application/json");
@@ -221,7 +221,7 @@ export function preloadJSON(data, onload, onerror) {
  * @ignore
  */
 export function preloadBinary(data, onload, onerror) {
-    var httpReq = new XMLHttpRequest();
+    let httpReq = new XMLHttpRequest();
 
     // load our file
     httpReq.open("GET", data.src + nocache, true);
@@ -229,11 +229,11 @@ export function preloadBinary(data, onload, onerror) {
     httpReq.responseType = "arraybuffer";
     httpReq.onerror = onerror;
     httpReq.onload = function () {
-        var arrayBuffer = httpReq.response;
+        let arrayBuffer = httpReq.response;
         if (arrayBuffer) {
-            var byteArray = new Uint8Array(arrayBuffer);
-            var buffer = [];
-            for (var i = 0; i < byteArray.byteLength; i++) {
+            let byteArray = new Uint8Array(arrayBuffer);
+            let buffer = [];
+            for (let i = 0; i < byteArray.byteLength; i++) {
                 buffer[i] = String.fromCharCode(byteArray[i]);
             }
             binList[data.name] = buffer.join("");
@@ -252,7 +252,7 @@ export function preloadBinary(data, onload, onerror) {
  * @ignore
  */
 export function preloadJavascript(data, onload, onerror) {
-    var script = document.createElement("script");
+    let script = document.createElement("script");
 
     script.src = data.src;
     script.type = "text/javascript";

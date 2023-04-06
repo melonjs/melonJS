@@ -6,7 +6,7 @@ import { version } from "./../index.js";
  * @see plugin.register
  * @namespace plugins
  */
-export var plugins = {};
+export let plugins = {};
 
 
 class BasePlugin {
@@ -27,7 +27,7 @@ class BasePlugin {
 /**
  * @namespace plugin
  */
-export var plugin = {
+export let plugin = {
 
     /**
      * a base Object for plugin <br>
@@ -64,14 +64,14 @@ export var plugin = {
         // reuse the logic behind object extends
         if (typeof(proto[name]) === "function") {
             // save the original function
-            var _parent = proto[name];
+            let _parent = proto[name];
             // override the function with the new one
             Object.defineProperty(proto, name, {
                 "configurable" : true,
                 "value" : (function (name, fn) {
                     return function () {
                         this._patched = _parent;
-                        var ret = fn.apply(this, arguments);
+                        let ret = fn.apply(this, arguments);
                         this._patched = null;
                         return ret;
                     };
@@ -106,7 +106,7 @@ export var plugin = {
         }
 
         // get extra arguments
-        var _args = [];
+        let _args = [];
         if (arguments.length > 2) {
             // store extra arguments if any
             _args = Array.prototype.slice.call(arguments, 1);
@@ -114,7 +114,7 @@ export var plugin = {
 
         // try to instantiate the plugin
         _args[0] = pluginObj;
-        var instance = new (pluginObj.bind.apply(pluginObj, _args))();
+        let instance = new (pluginObj.bind.apply(pluginObj, _args))();
 
         // inheritance check
         if (typeof instance === "undefined" || !(instance instanceof plugin.Base)) {

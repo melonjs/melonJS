@@ -125,8 +125,8 @@ import * as event from "./../../system/event.js";
      */
     clear() {
         if (this.settings.transparent === false) {
-            var canvas = this.getCanvas();
-            var context = this.getContext();
+            let canvas = this.getCanvas();
+            let context = this.getContext();
             context.clearRect(0, 0, canvas.width, canvas.height);
         }
     }
@@ -137,8 +137,8 @@ import * as event from "./../../system/event.js";
      * @param {boolean} [opaque=false] - Allow transparency [default] or clear the surface completely [true]
      */
     clearColor(color = "#000000", opaque = false) {
-        var canvas = this.getCanvas();
-        var context = this.getContext();
+        let canvas = this.getCanvas();
+        let context = this.getContext();
 
         this.save();
         this.resetTransform();
@@ -167,10 +167,10 @@ import * as event from "./../../system/event.js";
      * @returns {CanvasPattern}
      * @see ImageLayer#repeat
      * @example
-     * var tileable   = renderer.createPattern(image, "repeat");
-     * var horizontal = renderer.createPattern(image, "repeat-x");
-     * var vertical   = renderer.createPattern(image, "repeat-y");
-     * var basic      = renderer.createPattern(image, "no-repeat");
+     * let tileable   = renderer.createPattern(image, "repeat");
+     * let horizontal = renderer.createPattern(image, "repeat-x");
+     * let vertical   = renderer.createPattern(image, "repeat-y");
+     * let basic      = renderer.createPattern(image, "no-repeat");
      */
     createPattern(image, repeat) {
         return this.getContext().createPattern(image, repeat);
@@ -200,7 +200,7 @@ import * as event from "./../../system/event.js";
             // Fast path: don't draw fully transparent
             return;
         }
-        var context = this.getContext();
+        let context = this.getContext();
 
         if (typeof sw === "undefined") {
             sw = dw = image.width;
@@ -228,8 +228,8 @@ import * as event from "./../../system/event.js";
         }
 
         // apply a tint if required
-        var source = image;
-        var tint = this.currentTint.toArray();
+        let source = image;
+        let tint = this.currentTint.toArray();
         if (tint[0] !== 1.0 || tint[1] !== 1.0 || tint[2] !== 1.0) {
             // get a tinted version of this image from the texture cache
             source = this.cache.tint(image, this.currentTint.toRGB());
@@ -251,8 +251,8 @@ import * as event from "./../../system/event.js";
             // Fast path: don't draw fully transparent
             return;
         }
-        var context = this.getContext();
-        var fillStyle = context.fillStyle;
+        let context = this.getContext();
+        let fillStyle = context.fillStyle;
         context.fillStyle = pattern;
         context.fillRect(x, y, width, height);
         context.fillStyle = fillStyle;
@@ -273,7 +273,7 @@ import * as event from "./../../system/event.js";
             // Fast path: don't draw fully transparent
             return;
         }
-        var context = this.getContext();
+        let context = this.getContext();
 
         context.translate(x, y);
         context.beginPath();
@@ -308,16 +308,16 @@ import * as event from "./../../system/event.js";
             // Fast path: don't draw fully transparent
             return;
         }
-        var context = this.getContext();
+        let context = this.getContext();
 
-        var hw = w,
+        let hw = w,
             hh = h,
             lx = x - hw,
             rx = x + hw,
             ty = y - hh,
             by = y + hh;
 
-        var xmagic = hw * 0.551784,
+        let xmagic = hw * 0.551784,
             ymagic = hh * 0.551784,
             xmin = x - xmagic,
             xmax = x + xmagic,
@@ -358,7 +358,7 @@ import * as event from "./../../system/event.js";
             return;
         }
 
-        var context = this.getContext();
+        let context = this.getContext();
 
         context.beginPath();
         context.moveTo(startX, startY);
@@ -387,13 +387,13 @@ import * as event from "./../../system/event.js";
             // Fast path: don't draw fully transparent
             return;
         }
-        var context = this.getContext();
+        let context = this.getContext();
 
         this.translate(poly.pos.x, poly.pos.y);
         context.beginPath();
         context.moveTo(poly.points[0].x, poly.points[0].y);
-        var point;
-        for (var i = 1; i < poly.points.length; i++) {
+        let point;
+        for (let i = 1; i < poly.points.length; i++) {
             point = poly.points[i];
             context.lineTo(point.x, point.y);
         }
@@ -424,7 +424,7 @@ import * as event from "./../../system/event.js";
             // Fast path: don't draw fully transparent
             return;
         }
-        var context = this.getContext();
+        let context = this.getContext();
 
         context[fill === true ? "fillRect" : "strokeRect"](x, y, width, height);
     }
@@ -454,7 +454,7 @@ import * as event from "./../../system/event.js";
             // Fast path: don't draw fully transparent
             return;
         }
-        var context = this.getContext();
+        let context = this.getContext();
 
         context.beginPath();
         context.roundRect(x, y, width, height, radius);
@@ -535,7 +535,7 @@ import * as event from "./../../system/event.js";
      * @param {Color|string} color - css color value
      */
     setColor(color) {
-        var context = this.getContext();
+        let context = this.getContext();
         context.strokeStyle =
         context.fillStyle = (
             color instanceof Color ?
@@ -583,7 +583,7 @@ import * as event from "./../../system/event.js";
      * @param {Matrix2d} mat2d - Matrix to transform by
      */
     transform(mat2d) {
-        var m = mat2d.toArray(),
+        let m = mat2d.toArray(),
             a = m[0],
             b = m[1],
             c = m[3],
@@ -624,14 +624,14 @@ import * as event from "./../../system/event.js";
      * @param {number} height
      */
     clipRect(x, y, width, height) {
-        var canvas = this.getCanvas();
+        let canvas = this.getCanvas();
         // if requested box is different from the current canvas size;
         if (x !== 0 || y !== 0 || width !== canvas.width || height !== canvas.height) {
-            var currentScissor = this.currentScissor;
+            let currentScissor = this.currentScissor;
             // if different from the current scissor box
             if (currentScissor[0] !== x || currentScissor[1] !== y ||
                 currentScissor[2] !== width || currentScissor[3] !== height) {
-                var context = this.getContext();
+                let context = this.getContext();
                 context.beginPath();
                 context.rect(x, y, width, height);
                 context.clip();
@@ -652,7 +652,7 @@ import * as event from "./../../system/event.js";
      * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
      */
     setMask(mask, invert = false) {
-        var context = this.getContext();
+        let context = this.getContext();
 
         if (this.maskLevel === 0) {
             // only save context on the first mask
@@ -674,7 +674,7 @@ import * as event from "./../../system/event.js";
                 ty = _y - hh,
                 by = _y + hh;
 
-            var xmagic = hw * 0.551784,
+            let xmagic = hw * 0.551784,
                 ymagic = hh * 0.551784,
                 xmin = _x - xmagic,
                 xmax = _x + xmagic,
@@ -689,10 +689,10 @@ import * as event from "./../../system/event.js";
         } else {
             // polygon
             const _x = mask.pos.x, _y = mask.pos.y;
-            var point;
+            let point;
 
             context.moveTo(_x + mask.points[0].x, _y + mask.points[0].y);
-            for (var i = 1; i < mask.points.length; i++) {
+            for (let i = 1; i < mask.points.length; i++) {
                 point = mask.points[i];
                 context.lineTo(_x + point.x, _y + point.y);
             }

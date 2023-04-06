@@ -32,7 +32,7 @@ const PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
      */
     getKerning(ch) {
         if (this.kerning) {
-            var page = this.kerning[ch >>> LOG2_PAGE_SIZE];
+            let page = this.kerning[ch >>> LOG2_PAGE_SIZE];
             if (page) {
                 return page[ch & PAGE_SIZE - 1] || 0;
             }
@@ -47,7 +47,7 @@ const PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
         if (!this.kerning) {
             this.kerning = {};
         }
-        var page = this.kerning[ch >>> LOG2_PAGE_SIZE];
+        let page = this.kerning[ch >>> LOG2_PAGE_SIZE];
         if (typeof page === "undefined") {
             this.kerning[ch >>> LOG2_PAGE_SIZE] = {};
             page = this.kerning[ch >>> LOG2_PAGE_SIZE];

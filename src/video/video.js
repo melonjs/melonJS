@@ -149,7 +149,7 @@ export function init(width, height, options) {
  * @returns {HTMLCanvasElement|OffscreenCanvas}
  */
 export function createCanvas(width, height, returnOffscreenCanvas = false) {
-    var _canvas;
+    let _canvas;
 
     if (width === 0 || height === 0) {
         throw new Error("width or height was zero, Canvas could not be initialized !");

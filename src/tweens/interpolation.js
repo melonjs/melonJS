@@ -20,7 +20,7 @@ export let Interpolation = {
     /** @ignore */
     Linear: function ( v, k ) {
 
-        var m = v.length - 1, f = m * k, i = Math.floor( f ), fn = Interpolation.Utils.Linear;
+        let m = v.length - 1, f = m * k, i = Math.floor( f ), fn = Interpolation.Utils.Linear;
 
         if ( k < 0 ) return fn( v[ 0 ], v[ 1 ], f );
         if ( k > 1 ) return fn( v[ m ], v[ m - 1 ], m - f );
@@ -31,7 +31,7 @@ export let Interpolation = {
     /** @ignore */
     Bezier: function ( v, k ) {
 
-        var b = 0, n = v.length - 1, pw = Math.pow, bn = Interpolation.Utils.Bernstein, i;
+        let b = 0, n = v.length - 1, pw = Math.pow, bn = Interpolation.Utils.Bernstein, i;
 
         for ( i = 0; i <= n; i++ ) {
             b += pw( 1 - k, n - i ) * pw( k, i ) * v[ i ] * bn( n, i );
@@ -43,7 +43,7 @@ export let Interpolation = {
     /** @ignore */
     CatmullRom: function ( v, k ) {
 
-        var m = v.length - 1, f = m * k, i = Math.floor( f ), fn = Interpolation.Utils.CatmullRom;
+        let m = v.length - 1, f = m * k, i = Math.floor( f ), fn = Interpolation.Utils.CatmullRom;
 
         if ( v[ 0 ] === v[ m ] ) {
 
@@ -72,18 +72,18 @@ export let Interpolation = {
         /** @ignore */
         Bernstein: function ( n, i ) {
 
-            var fc = Interpolation.Utils.Factorial;
+            let fc = Interpolation.Utils.Factorial;
             return fc( n ) / fc( i ) / fc( n - i );
 
         },
         /* @ignore */
         Factorial: ( function () {
 
-            var a = [ 1 ];
+            let a = [ 1 ];
 
             return function ( n ) {
 
-                var s = 1, i;
+                let s = 1, i;
                 if ( a[ n ] ) return a[ n ];
                 for ( i = n; i > 1; i-- ) s *= i;
                 a[ n ] = s;
@@ -95,7 +95,7 @@ export let Interpolation = {
         /** @ignore */
         CatmullRom: function ( p0, p1, p2, p3, t ) {
 
-            var v0 = ( p2 - p0 ) * 0.5, v1 = ( p3 - p1 ) * 0.5, t2 = t * t, t3 = t * t2;
+            let v0 = ( p2 - p0 ) * 0.5, v1 = ( p3 - p1 ) * 0.5, t2 = t * t, t3 = t * t2;
             return ( 2 * p1 - 2 * p2 + v0 + v1 ) * t3 + ( - 3 * p1 + 3 * p2 - 2 * v0 - v1 ) * t2 + v0 * t + p1;
         }
     }

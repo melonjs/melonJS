@@ -29,16 +29,16 @@ const RIGHT_VORNOI_REGION = 1;
  * @type {Array.<Vector2d>}
  * @ignore
  */
-var T_VECTORS = [];
-for (var v = 0; v < 10; v++) { T_VECTORS.push(new Vector2d()); }
+let T_VECTORS = [];
+for (let v = 0; v < 10; v++) { T_VECTORS.push(new Vector2d()); }
 
 /**
  * A pool of arrays of numbers used in calculations to avoid allocating memory.
  * @type {Array.<Array.<number>>}
  * @ignore
  */
-var T_ARRAYS = [];
-for (var a = 0; a < 5; a++) { T_ARRAYS.push([]); }
+let T_ARRAYS = [];
+for (let a = 0; a < 5; a++) { T_ARRAYS.push([]); }
 
 
 /**
@@ -53,12 +53,12 @@ for (var a = 0; a < 5; a++) { T_ARRAYS.push([]); }
  *   result[1] will be the maximum value.
  */
 function flattenPointsOn(points, normal, result) {
-    var min = Number.MAX_VALUE;
-    var max = -Number.MAX_VALUE;
-    var len = points.length;
-    for (var i = 0; i < len; i++) {
+    let min = Number.MAX_VALUE;
+    let max = -Number.MAX_VALUE;
+    let len = points.length;
+    for (let i = 0; i < len; i++) {
         // The magnitude of the projection of the point onto the normal
-        var dot = points[i].dot(normal);
+        let dot = points[i].dot(normal);
         if (dot < min) { min = dot; }
         if (dot > max) { max = dot; }
     }
@@ -83,11 +83,11 @@ function flattenPointsOn(points, normal, result) {
  *   the direction of the overlap will be populated.
  */
 function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
-    var rangeA = T_ARRAYS.pop();
-    var rangeB = T_ARRAYS.pop();
+    let rangeA = T_ARRAYS.pop();
+    let rangeB = T_ARRAYS.pop();
     // The magnitude of the offset between the two polygons
-    var offsetV = T_VECTORS.pop().copy(bPos).sub(aPos);
-    var projectedOffset = offsetV.dot(axis);
+    let offsetV = T_VECTORS.pop().copy(bPos).sub(aPos);
+    let projectedOffset = offsetV.dot(axis);
 
     // Project the polygons onto the axis.
     flattenPointsOn(aPoints, axis, rangeA);
@@ -105,7 +105,7 @@ function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
 
     // This is not a separating axis. If we're calculating a response, calculate the overlap.
     if (response) {
-        var overlap = 0;
+        let overlap = 0;
         // A starts further left than B
         if (rangeA[0] < rangeB[0]) {
             response.aInB = false;
@@ -115,8 +115,8 @@ function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
                 response.bInA = false;
             // B is fully inside A.  Pick the shortest way out.
             } else {
-                var option1 = rangeA[1] - rangeB[0];
-                var option2 = rangeB[1] - rangeA[0];
+                let option1 = rangeA[1] - rangeB[0];
+                let option2 = rangeB[1] - rangeA[0];
                 overlap = option1 < option2 ? option1 : -option2;
             }
         // B starts further left than A
@@ -128,14 +128,14 @@ function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
                 response.aInB = false;
             // A is fully inside B.  Pick the shortest way out.
             } else {
-                var option11 = rangeA[1] - rangeB[0];
-                var option22 = rangeB[1] - rangeA[0];
+                let option11 = rangeA[1] - rangeB[0];
+                let option22 = rangeB[1] - rangeA[0];
                 overlap = option11 < option22 ? option11 : -option22;
             }
         }
 
         // If this is the smallest amount of overlap we've seen so far, set it as the minimum overlap.
-        var absOverlap = Math.abs(overlap);
+        let absOverlap = Math.abs(overlap);
         if (absOverlap < response.overlap) {
             response.overlap = absOverlap;
             response.overlapN.copy(axis);
@@ -168,8 +168,8 @@ function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
  *          RIGHT_VORNOI_REGION (1) if it is the right region.
  */
 function vornoiRegion(line, point) {
-    var len2 = line.length2();
-    var dp = point.dot(line);
+    let len2 = line.length2();
+    let dp = point.dot(line);
     if (dp < 0) {
         // If the point is beyond the start of the line, it is in the
         // left vornoi region.
@@ -196,16 +196,16 @@ function vornoiRegion(line, point) {
  */
 export function testPolygonPolygon(a, polyA, b, polyB, response) {
     // specific point for
-    var aPoints = polyA.points;
-    var aNormals = polyA.normals;
-    var aLen = aNormals.length;
-    var bPoints = polyB.points;
-    var bNormals = polyB.normals;
-    var bLen = bNormals.length;
+    let aPoints = polyA.points;
+    let aNormals = polyA.normals;
+    let aLen = aNormals.length;
+    let bPoints = polyB.points;
+    let bNormals = polyB.normals;
+    let bLen = bNormals.length;
     // aboslute shape position
-    var posA = T_VECTORS.pop().copy(a.pos).add(a.ancestor.getAbsolutePosition()).add(polyA.pos);
-    var posB = T_VECTORS.pop().copy(b.pos).add(b.ancestor.getAbsolutePosition()).add(polyB.pos);
-    var i;
+    let posA = T_VECTORS.pop().copy(a.pos).add(a.ancestor.getAbsolutePosition()).add(polyA.pos);
+    let posB = T_VECTORS.pop().copy(b.pos).add(b.ancestor.getAbsolutePosition()).add(polyB.pos);
+    let i;
 
     // If any of the edge normals of A is a separating axis, no intersection.
     for (i = 0; i < aLen; i++) {
@@ -252,13 +252,13 @@ export function testPolygonPolygon(a, polyA, b, polyB, response) {
 export function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
     // Check if the distance between the centers of the two
     // circles is greater than their combined radius.
-    var differenceV = T_VECTORS.pop().copy(b.pos).add(b.ancestor.getAbsolutePosition()).add(ellipseB.pos)
+    let differenceV = T_VECTORS.pop().copy(b.pos).add(b.ancestor.getAbsolutePosition()).add(ellipseB.pos)
         .sub(a.pos).add(a.ancestor.getAbsolutePosition()).sub(ellipseA.pos);
-    var radiusA = ellipseA.radius;
-    var radiusB = ellipseB.radius;
-    var totalRadius = radiusA + radiusB;
-    var totalRadiusSq = totalRadius * totalRadius;
-    var distanceSq = differenceV.length2();
+    let radiusA = ellipseA.radius;
+    let radiusB = ellipseB.radius;
+    let totalRadius = radiusA + radiusB;
+    let totalRadiusSq = totalRadius * totalRadius;
+    let distanceSq = differenceV.length2();
     // If the distance is bigger than the combined radius, they don't intersect.
     if (distanceSq > totalRadiusSq) {
         T_VECTORS.push(differenceV);
@@ -266,7 +266,7 @@ export function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
     }
     // They intersect.  If we're calculating a response, calculate the overlap.
     if (response) {
-        var dist = Math.sqrt(distanceSq);
+        let dist = Math.sqrt(distanceSq);
         response.a = a;
         response.b = b;
         response.overlap = totalRadius - dist;
@@ -291,24 +291,24 @@ export function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
  */
 export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
     // Get the position of the circle relative to the polygon.
-    var circlePos = T_VECTORS.pop().copy(b.pos).add(b.ancestor.getAbsolutePosition()).add(ellipseB.pos)
+    let circlePos = T_VECTORS.pop().copy(b.pos).add(b.ancestor.getAbsolutePosition()).add(ellipseB.pos)
         .sub(a.pos).add(a.ancestor.getAbsolutePosition()).sub(polyA.pos);
-    var radius = ellipseB.radius;
-    var radius2 = radius * radius;
-    var points = polyA.points;
-    var edges = polyA.edges;
-    var len = edges.length;
-    var edge = T_VECTORS.pop();
-    var normal = T_VECTORS.pop();
-    var point = T_VECTORS.pop();
-    var dist = 0;
+    let radius = ellipseB.radius;
+    let radius2 = radius * radius;
+    let points = polyA.points;
+    let edges = polyA.edges;
+    let len = edges.length;
+    let edge = T_VECTORS.pop();
+    let normal = T_VECTORS.pop();
+    let point = T_VECTORS.pop();
+    let dist = 0;
 
     // For each edge in the polygon:
-    for (var i = 0; i < len; i++) {
-        var next = i === len - 1 ? 0 : i + 1;
-        var prev = i === 0 ? len - 1 : i - 1;
-        var overlap = 0;
-        var overlapN = null;
+    for (let i = 0; i < len; i++) {
+        let next = i === len - 1 ? 0 : i + 1;
+        let prev = i === 0 ? len - 1 : i - 1;
+        let overlap = 0;
+        let overlapN = null;
 
         // Get the edge.
         edge.copy(edges[i]);
@@ -323,11 +323,11 @@ export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
         }
 
         // Calculate which Vornoi region the center of the circle is in.
-        var region = vornoiRegion(edge, point);
-        var inRegion = true;
+        let region = vornoiRegion(edge, point);
+        let inRegion = true;
         // If it's the left region:
         if (region === LEFT_VORNOI_REGION) {
-            var point2 = null;
+            let point2 = null;
             if (len > 1) {
                 // We need to make sure we're in the RIGHT_VORNOI_REGION of the previous edge.
                 edge.copy(edges[prev]);
@@ -401,7 +401,7 @@ export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
             // Find the perpendicular distance between the center of the
             // circle and the edge.
             dist = point.dot(normal);
-            var distAbs = Math.abs(dist);
+            let distAbs = Math.abs(dist);
             // If the circle is on the outside of the edge, there is no intersection.
             if ((len === 1 || dist > 0) && distAbs > radius) {
                 // No intersection
@@ -458,11 +458,11 @@ export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
  */
 export function testEllipsePolygon(a, ellipseA, b, polyB, response) {
     // Test the polygon against the circle.
-    var result = testPolygonEllipse(b, polyB, a, ellipseA, response);
+    let result = testPolygonEllipse(b, polyB, a, ellipseA, response);
     if (result && response) {
         // Swap A and B in the response.
-        var resa = response.a;
-        var aInB = response.aInB;
+        let resa = response.a;
+        let aInB = response.aInB;
         response.overlapN.negateSelf();
         response.overlapV.negateSelf();
         response.a = response.b;

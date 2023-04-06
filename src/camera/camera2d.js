@@ -16,7 +16,7 @@ import { game } from "../index.js";
 // some ref shortcut
 const MIN = Math.min, MAX = Math.max;
 
-var targetV = new Vector2d();
+let targetV = new Vector2d();
 
 /**
  * @classdesc
@@ -178,7 +178,7 @@ var targetV = new Vector2d();
 
     /** @ignore */
     _followH(target) {
-        var targetX = this.pos.x;
+        let targetX = this.pos.x;
         if ((target.x - this.pos.x) > (this.deadzone.right)) {
             targetX = MIN((target.x) - (this.deadzone.right), this.bounds.width - this.width);
         }
@@ -191,7 +191,7 @@ var targetV = new Vector2d();
 
     /** @ignore */
     _followV(target) {
-        var targetY = this.pos.y;
+        let targetY = this.pos.y;
         if ((target.y - this.pos.y) > (this.deadzone.bottom)) {
             targetY = MIN((target.y) - (this.deadzone.bottom), this.bounds.height - this.height);
         }
@@ -384,8 +384,8 @@ var targetV = new Vector2d();
      * @param {number} y
      */
     moveTo(x, y) {
-        var _x = this.pos.x;
-        var _y = this.pos.y;
+        let _x = this.pos.x;
+        let _y = this.pos.y;
 
         this.pos.x = clamp(
             x,
@@ -561,7 +561,7 @@ var targetV = new Vector2d();
      */
     fadeIn(color, duration = 1000, onComplete) {
         this._fadeIn.color = pool.pull("Color").copy(color);
-        var _alpha = this._fadeIn.color.alpha;
+        let _alpha = this._fadeIn.color.alpha;
         this._fadeIn.color.alpha = 0.0;
         this._fadeIn.tween = pool.pull("Tween", this._fadeIn.color)
             .to({ alpha: _alpha }, duration)
@@ -577,7 +577,7 @@ var targetV = new Vector2d();
      * @param {Renderable} target - the renderable to focus the camera on
      */
     focusOn(target) {
-        var bounds = target.getBounds();
+        let bounds = target.getBounds();
         this.moveTo(
             target.pos.x + bounds.left + (bounds.width / 2),
             target.pos.y + bounds.top + (bounds.height / 2)
@@ -687,8 +687,8 @@ var targetV = new Vector2d();
      * @ignore
      */
     draw(renderer, container) {
-        var translateX = this.pos.x + this.offset.x;
-        var translateY = this.pos.y + this.offset.y;
+        let translateX = this.pos.x + this.offset.x;
+        let translateY = this.pos.y + this.offset.y;
 
         // translate the world coordinates by default to screen coordinates
         container.currentTransform.translate(-translateX, -translateY);

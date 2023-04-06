@@ -51,7 +51,7 @@ import pool from "./../system/pooling.js";
     }
 
     set x(value) {
-        var ret = this.onUpdate.call(this.scope, value, this._y, this._z, this._x, this._y, this._z);
+        let ret = this.onUpdate.call(this.scope, value, this._y, this._z, this._x, this._y, this._z);
         if (ret && "x" in ret) {
             this._x = ret.x;
         } else {
@@ -72,7 +72,7 @@ import pool from "./../system/pooling.js";
     }
 
     set y(value) {
-        var ret = this.onUpdate.call(this.scope, this._x, value, this._z, this._x, this._y, this._z);
+        let ret = this.onUpdate.call(this.scope, this._x, value, this._z, this._x, this._y, this._z);
         if (ret && "y" in ret) {
             this._y = ret.y;
         } else {
@@ -95,7 +95,7 @@ import pool from "./../system/pooling.js";
     }
 
     set z(value) {
-        var ret = this.onUpdate.call(this.scope, this._x, this._y, value, this._x, this._y, this._z);
+        let ret = this.onUpdate.call(this.scope, this._x, this._y, value, this._x, this._y, this._z);
         if (ret && "z" in ret) {
             this._z = ret.z;
         } else {
@@ -107,7 +107,7 @@ import pool from "./../system/pooling.js";
      * @ignore
      */
     _set(x, y, z) {
-        var ret = this.onUpdate.call(this.scope, x, y, z, this._x, this._y, this._z);
+        let ret = this.onUpdate.call(this.scope, x, y, z, this._x, this._y, this._z);
         if (ret && "x" in ret && "y" in ret && "z" in ret) {
             this._x = ret.x;
             this._y = ret.y;
@@ -267,7 +267,7 @@ import pool from "./../system/pooling.js";
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     minV(v) {
-        var _vz = v.z || 0;
+        let _vz = v.z || 0;
         return this._set(
             (this._x < v.x) ? this._x : v.x,
             (this._y < v.y) ? this._y : v.y,
@@ -283,7 +283,7 @@ import pool from "./../system/pooling.js";
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     maxV(v) {
-        var _vz = v.z || 0;
+        let _vz = v.z || 0;
         return this._set(
             (this._x > v.x) ? this._x : v.x,
             (this._y > v.y) ? this._y : v.y,
@@ -408,8 +408,8 @@ import pool from "./../system/pooling.js";
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     rotate(angle, v) {
-        var cx = 0;
-        var cy = 0;
+        let cx = 0;
+        let cy = 0;
 
         if (typeof v === "object") {
             cx = v.x;
@@ -417,11 +417,11 @@ import pool from "./../system/pooling.js";
         }
 
         // TODO also rotate on the z axis if the given vector is a 3d one
-        var x = this.x - cx;
-        var y = this.y - cy;
+        let x = this.x - cx;
+        let y = this.y - cy;
 
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
+        let c = Math.cos(angle);
+        let s = Math.sin(angle);
 
         return this._set(x * c - y * s + cx, x * s + y * c + cy, this.z);
     }
@@ -445,8 +445,8 @@ import pool from "./../system/pooling.js";
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     cross(v) {
-        var ax = this._x, ay = this._y, az = this._z;
-        var bx = v.x, by = v.y, bz = v.z;
+        let ax = this._x, ay = this._y, az = this._z;
+        let bx = v.x, by = v.y, bz = v.z;
 
         return this._set(
             ay * bz - az * by,
@@ -480,12 +480,12 @@ import pool from "./../system/pooling.js";
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     moveTowards(target, step) {
-        var angle = Math.atan2(target.y - this._y, target.x - this._x);
+        let angle = Math.atan2(target.y - this._y, target.x - this._x);
 
-        var dx = this._x - target.x;
-        var dy = this._y - target.y;
+        let dx = this._x - target.x;
+        let dy = this._y - target.y;
 
-        var distance = Math.sqrt(dx * dx + dy * dy);
+        let distance = Math.sqrt(dx * dx + dy * dy);
 
         if (distance === 0 || (step >= 0 && distance <= step * step)) {
             return target;
@@ -506,9 +506,9 @@ import pool from "./../system/pooling.js";
      * @returns {number}
      */
     distance(v) {
-        var dx = this._x - v.x;
-        var dy = this._y - v.y;
-        var dz = this._z - (v.z || 0);
+        let dx = this._x - v.x;
+        let dy = this._y - v.y;
+        let dz = this._z - (v.z || 0);
         return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 

@@ -36,7 +36,7 @@ import TMXRenderer from "./TMXRenderer.js";
      * @ignore
      */
     pixelToTileCoords(x, y, v) {
-        var ret = v || new Vector2d();
+        let ret = v || new Vector2d();
         return ret.set(
             x / this.tilewidth,
             y / this.tileheight
@@ -49,7 +49,7 @@ import TMXRenderer from "./TMXRenderer.js";
      * @ignore
      */
     tileToPixelCoords(x, y, v) {
-        var ret = v || new Vector2d();
+        let ret = v || new Vector2d();
         return ret.set(
             x * this.tilewidth,
             y * this.tileheight
@@ -75,7 +75,7 @@ import TMXRenderer from "./TMXRenderer.js";
      * @ignore
      */
     drawTile(renderer, x, y, tmxTile) {
-        var tileset = tmxTile.tileset;
+        let tileset = tmxTile.tileset;
         // draw the tile
         tileset.drawTile(
             renderer,
@@ -90,16 +90,16 @@ import TMXRenderer from "./TMXRenderer.js";
      * @ignore
      */
     drawTileLayer(renderer, layer, rect) {
-        var incX = 1, incY = 1;
+        let incX = 1, incY = 1;
 
         // get top-left and bottom-right tile position
-        var start = this.pixelToTileCoords(
+        let start = this.pixelToTileCoords(
             Math.max(rect.pos.x - (layer.maxTileSize.width - layer.tilewidth), 0),
             Math.max(rect.pos.y - (layer.maxTileSize.height - layer.tileheight), 0),
             pool.pull("Vector2d")
         ).floorSelf();
 
-        var end = this.pixelToTileCoords(
+        let end = this.pixelToTileCoords(
             rect.pos.x + rect.width + this.tilewidth,
             rect.pos.y + rect.height + this.tileheight,
             pool.pull("Vector2d")
@@ -133,9 +133,9 @@ import TMXRenderer from "./TMXRenderer.js";
         }
 
         // main drawing loop
-        for (var y = start.y; y !== end.y; y+= incY) {
-            for (var x = start.x; x !== end.x; x+= incX) {
-                var tmxTile = layer.cellAt(x, y, false);
+        for (let y = start.y; y !== end.y; y+= incY) {
+            for (let x = start.x; x !== end.x; x+= incX) {
+                let tmxTile = layer.cellAt(x, y, false);
                 if (tmxTile) {
                     this.drawTile(renderer, x, y, tmxTile);
                 }

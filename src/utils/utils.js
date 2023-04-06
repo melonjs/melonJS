@@ -10,10 +10,10 @@ import * as fnUtils from "./function.js";
  */
 
 // guid default value
-var GUID_base  = "";
-var GUID_index = 0;
+let GUID_base  = "";
+let GUID_index = 0;
 
-var utils = {
+let utils = {
 
     agent : agentUtils,
     array : arrayUtils,
@@ -39,12 +39,12 @@ var utils = {
      * }
      */
     checkVersion : function (first, second) {
-        var a = first.split(".");
-        var b = second.split(".");
-        var len = Math.min(a.length, b.length);
-        var result = 0;
+        let a = first.split(".");
+        let b = second.split(".");
+        let len = Math.min(a.length, b.length);
+        let result = 0;
 
-        for (var i = 0; i < len; i++) {
+        for (let i = 0; i < len; i++) {
             if ((result = +a[i] - +b[i])) {
                 break;
             }
@@ -68,15 +68,15 @@ var utils = {
      * @property {string} [debugToggleKey="s"] show/hide the debug panel (if preloaded)
      * @example
      * // http://www.example.com/index.html#debug&hitbox=true&mytag=value
-     * var UriFragment = me.utils.getUriFragment();
+     * let UriFragment = me.utils.getUriFragment();
      * console.log(UriFragment["mytag"]); //> "value"
      */
     getUriFragment : function (url) {
-        var hash = {};
+        let hash = {};
 
         if (typeof url === "undefined") {
             if (typeof globalThis.document !== "undefined") {
-                var location = globalThis.document.location;
+                let location = globalThis.document.location;
 
                 if (location && location.hash) {
                     url = location.hash;
@@ -90,7 +90,7 @@ var utils = {
             }
         } else {
             // never cache if a url is passed as parameter
-            var index = url.indexOf("#");
+            let index = url.indexOf("#");
             if (index !== -1) {
                 url = url.slice(index, url.length);
             } else {
@@ -100,9 +100,9 @@ var utils = {
 
         // parse the url
         url.slice(1).split("&").filter((value) => value !== "").forEach((value) => {
-            var kv = value.split("=");
-            var k = kv.shift();
-            var v = kv.join("=");
+            let kv = value.split("=");
+            let k = kv.shift();
+            let v = kv.join("=");
             hash[k] = v || true;
         });
 

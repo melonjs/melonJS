@@ -5,7 +5,7 @@ import quadFragment from "./../shaders/quad.frag";
 import Compositor from "./compositor.js";
 
 // a pool of resuable vectors
-var V_ARRAY = [
+let V_ARRAY = [
     new Vector2d(),
     new Vector2d(),
     new Vector2d(),
@@ -49,8 +49,8 @@ var V_ARRAY = [
         super.reset();
 
         // delete all related bound texture
-        for (var i = 0; i < this.renderer.maxTextures; i++) {
-            var texture2D = this.getTexture2D(i);
+        for (let i = 0; i < this.renderer.maxTextures; i++) {
+            let texture2D = this.getTexture2D(i);
             if (typeof texture2D !== "undefined") {
                 this.deleteTexture2D(texture2D);
             }
@@ -71,12 +71,12 @@ var V_ARRAY = [
      * @returns {WebGLTexture} a WebGL texture
      */
     createTexture2D(unit, pixels = null, filter, repeat = "no-repeat", w = pixels.width, h = pixels.height, premultipliedAlpha = true, mipmap = true) {
-        var gl = this.gl;
-        var isPOT = isPowerOfTwo(w) && isPowerOfTwo(h);
-        var rs = (repeat.search(/^repeat(-x)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
-        var rt = (repeat.search(/^repeat(-y)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+        let gl = this.gl;
+        let isPOT = isPowerOfTwo(w) && isPowerOfTwo(h);
+        let rs = (repeat.search(/^repeat(-x)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+        let rt = (repeat.search(/^repeat(-y)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
 
-        var texture = gl.createTexture();
+        let texture = gl.createTexture();
 
         this.bindTexture2D(texture, unit);
 
@@ -130,7 +130,7 @@ var V_ARRAY = [
      * @param {number} unit - Texture unit to which the given texture is bound
      */
     bindTexture2D(texture, unit) {
-        var gl = this.gl;
+        let gl = this.gl;
 
         if (texture !== this.boundTextures[unit]) {
             this.flush();
@@ -172,8 +172,8 @@ var V_ARRAY = [
      * @ignore
      */
     uploadTexture(texture, w, h, force = false) {
-        var unit = this.renderer.cache.getUnit(texture);
-        var texture2D = this.boundTextures[unit];
+        let unit = this.renderer.cache.getUnit(texture);
+        let texture2D = this.boundTextures[unit];
 
         if (typeof texture2D === "undefined" || force) {
             this.createTexture2D(
@@ -206,7 +206,7 @@ var V_ARRAY = [
      * @param {number} tint - tint color to be applied to the texture in UINT32 (argb) format
      */
     addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint) {
-        var vertexData = this.vertexData;
+        let vertexData = this.vertexData;
 
         if (vertexData.isFull(6)) {
             // is the vertex buffer full if we add 6 more vertices
@@ -214,13 +214,13 @@ var V_ARRAY = [
         }
 
         // upload and activate the texture if necessary
-        var unit = this.uploadTexture(texture);
+        let unit = this.uploadTexture(texture);
 
         // set fragment sampler accordingly
         this.currentShader.setUniform("uSampler", unit);
 
         // Transform vertices
-        var m = this.viewMatrix,
+        let m = this.viewMatrix,
             vec0 = V_ARRAY[0].set(x, y),
             vec1 = V_ARRAY[1].set(x + w, y),
             vec2 = V_ARRAY[2].set(x, y + h),

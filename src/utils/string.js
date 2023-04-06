@@ -39,7 +39,7 @@ export function isNumeric(str) {
  * @returns {boolean} true if the string is either true or false
  */
 export function isBoolean(str) {
-    var trimmed = str.trim();
+    const trimmed = str.trim();
     return (trimmed === "true") || (trimmed === "false");
 }
 
@@ -52,7 +52,7 @@ export function isBoolean(str) {
  * @returns {string} the converted hexadecimal value
  */
 export function toHex(str) {
-    var res = "", c = 0;
+    let res = "", c = 0;
     while (c < str.length) {
         res += str.charCodeAt(c++).toString(16);
     }

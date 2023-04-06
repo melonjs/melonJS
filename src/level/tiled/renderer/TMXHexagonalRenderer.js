@@ -5,7 +5,7 @@ import TMXLayer from "./../TMXLayer.js";
 
 
 
-// scope global var & constants
+// scope global variables & constants
 const offsetsStaggerX = [
     {x:   0, y:   0},
     {x: + 1, y: - 1},
@@ -82,7 +82,7 @@ const offsetsStaggerY = [
      * @ignore
      */
     getBounds(layer) {
-        var bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
+        let bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
 
         // The map size is the same regardless of which indexes are shifted.
         if (this.staggerX) {
@@ -125,7 +125,7 @@ const offsetsStaggerY = [
      * @ignore
      */
     topLeft(x, y, v) {
-        var ret = v || new Vector2d();
+        let ret = v || new Vector2d();
 
         if (!this.staggerX) {
             if ((y & 1) ^ this.staggerEven) {
@@ -149,7 +149,7 @@ const offsetsStaggerY = [
      * @ignore
      */
     topRight(x, y, v) {
-        var ret = v || new Vector2d();
+        let ret = v || new Vector2d();
 
         if (!this.staggerX) {
             if ((y & 1) ^ this.staggerEven) {
@@ -174,7 +174,7 @@ const offsetsStaggerY = [
      * @ignore
      */
     bottomLeft(x, y, v) {
-        var ret = v || new Vector2d();
+        let ret = v || new Vector2d();
 
         if (!this.staggerX) {
             if ((y & 1) ^ this.staggerEven) {
@@ -198,7 +198,7 @@ const offsetsStaggerY = [
      * @ignore
      */
     bottomRight(x, y, v) {
-        var ret = v || new Vector2d();
+        let ret = v || new Vector2d();
 
         if (!this.staggerX) {
             if ((y & 1) ^ this.staggerEven) {
@@ -223,7 +223,7 @@ const offsetsStaggerY = [
      * @ignore
      */
     pixelToTileCoords(x, y, v) {
-        var ret = v || new Vector2d();
+        let ret = v || new Vector2d();
 
         if (this.staggerX) { //flat top
             x -= this.staggerEven ? this.tilewidth : this.sideoffsetx;
@@ -233,13 +233,13 @@ const offsetsStaggerY = [
         }
 
         // Start with the coordinates of a grid-aligned tile
-        var referencePoint = pool.pull("Vector2d",
+        let referencePoint = pool.pull("Vector2d",
             Math.floor(x / (this.columnwidth * 2)),
             Math.floor((y / (this.rowheight * 2)))
         );
 
         // Relative x and y position on the base square of the grid-aligned tile
-        var rel = pool.pull("Vector2d",
+        let rel = pool.pull("Vector2d",
             x - referencePoint.x * (this.columnwidth * 2),
             y - referencePoint.y * (this.rowheight * 2)
         );
@@ -259,7 +259,7 @@ const offsetsStaggerY = [
         }
 
         // Determine the nearest hexagon tile by the distance to the center
-        var left, top, centerX, centerY;
+        let left, top, centerX, centerY;
         if (this.staggerX) {
             left = this.sidelengthx / 2;
             centerX = left + this.columnwidth;
@@ -281,17 +281,17 @@ const offsetsStaggerY = [
             this.centers[3].set(centerX, centerY + this.rowheight);
         }
 
-        var nearest = 0;
-        var minDist = Number.MAX_VALUE;
-        for (var i = 0; i < 4; ++i) {
-            var dc = this.centers[i].sub(rel).length2();
+        let nearest = 0;
+        let minDist = Number.MAX_VALUE;
+        for (let i = 0; i < 4; ++i) {
+            let dc = this.centers[i].sub(rel).length2();
             if (dc < minDist) {
                 minDist = dc;
                 nearest = i;
             }
         }
 
-        var offsets = (this.staggerX) ? offsetsStaggerX : offsetsStaggerY;
+        let offsets = (this.staggerX) ? offsetsStaggerX : offsetsStaggerY;
 
         ret.set(
             referencePoint.x + offsets[nearest].x,
@@ -309,9 +309,9 @@ const offsetsStaggerY = [
      * @ignore
      */
     tileToPixelCoords(x, y, v) {
-        var tileX = Math.floor(x),
+        let tileX = Math.floor(x),
             tileY = Math.floor(y);
-        var ret = v || new Vector2d();
+        let ret = v || new Vector2d();
 
         if (this.staggerX) {
             ret.y = tileY * (this.tileheight + this.sidelengthy);
@@ -349,8 +349,8 @@ const offsetsStaggerY = [
      * @ignore
      */
     drawTile(renderer, x, y, tmxTile) {
-        var tileset = tmxTile.tileset;
-        var point = this.tileToPixelCoords(x, y, pool.pull("Vector2d"));
+        let tileset = tmxTile.tileset;
+        let point = this.tileToPixelCoords(x, y, pool.pull("Vector2d"));
 
         // draw the tile
         tileset.drawTile(
@@ -368,10 +368,10 @@ const offsetsStaggerY = [
      * @ignore
      */
     drawTileLayer(renderer, layer, rect) {
-        var tile;
+        let tile;
 
         // get top-left and bottom-right tile position
-        var startTile = this.pixelToTileCoords(
+        let startTile = this.pixelToTileCoords(
             rect.pos.x,
             rect.pos.y,
             pool.pull("Vector2d")
@@ -381,22 +381,22 @@ const offsetsStaggerY = [
         startTile.sub(layer.pos);
 
         // get top-left and bottom-right tile position
-        var startPos = this.tileToPixelCoords(
+        let startPos = this.tileToPixelCoords(
             startTile.x + layer.pos.x,
             startTile.y + layer.pos.y,
             pool.pull("Vector2d")
         );
 
-        var rowTile = startTile.clone();
-        var rowPos = startPos.clone();
+        let rowTile = startTile.clone();
+        let rowPos = startPos.clone();
 
        /* Determine in which half of the tile the top-left corner of the area we
         * need to draw is. If we're in the upper half, we need to start one row
         * up due to those tiles being visible as well. How we go up one row
         * depends on whether we're in the left or right half of the tile.
         */
-        var inUpperHalf = rect.pos.y - startPos.y < this.sideoffsety;
-        var inLeftHalf = rect.pos.x - startPos.x < this.sideoffsetx;
+        let inUpperHalf = rect.pos.y - startPos.y < this.sideoffsety;
+        let inLeftHalf = rect.pos.x - startPos.x < this.sideoffsetx;
 
         if (inUpperHalf) {
             startTile.y--;
@@ -405,8 +405,8 @@ const offsetsStaggerY = [
             startTile.x--;
         }
 
-        var endX = layer.cols;
-        var endY = layer.rows;
+        let endX = layer.cols;
+        let endY = layer.rows;
 
         if (this.staggerX) {
             //ensure we are in the valid tile range
@@ -419,7 +419,7 @@ const offsetsStaggerY = [
                 startPos
             );
 
-            var staggeredRow = this.doStaggerX(startTile.x + layer.pos.x);
+            let staggeredRow = this.doStaggerX(startTile.x + layer.pos.x);
 
             // main drawing loop
             for (; startPos.y < rect.bottom && startTile.y < endY; ) {

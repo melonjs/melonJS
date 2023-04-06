@@ -392,7 +392,7 @@ export let stopOnBlur = false;
 * @param {Function} fn - the function to be executed
 * @example
 * // small game skeleton
-* var game = {
+* let game = {
 *    // called by the me.device.onReady function
 *    onload = function () {
 *       // init video

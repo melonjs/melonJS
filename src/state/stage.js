@@ -4,10 +4,10 @@ import Camera2d from "./../camera/camera2d.js";
 import Color from "./../math/color.js";
 
 // a default camera instance to use across all stages
-var default_camera;
+let default_camera;
 
 // default stage settings
-var default_settings = {
+let default_settings = {
     cameras : []
 };
 
@@ -49,7 +49,7 @@ var default_settings = {
          * @see Stage.ambientLight
          * @example
          * // create a white spot light
-         * var whiteLight = new me.Light2d(0, 0, 140, "#fff", 0.7);
+         * let whiteLight = new me.Light2d(0, 0, 140, "#fff", 0.7);
          * // and add the light to this current stage
          * this.lights.set("whiteLight", whiteLight);
          * // set a dark ambient light
@@ -96,8 +96,8 @@ var default_settings = {
         // empty or no default camera
         if (this.cameras.has("default") === false) {
             if (typeof default_camera === "undefined") {
-                var width = renderer.getWidth();
-                var height = renderer.getHeight();
+                let width = renderer.getWidth();
+                let height = renderer.getHeight();
                 // new default camera instance
                 default_camera = new Camera2d(0, 0, width, height);
             }
@@ -121,7 +121,7 @@ var default_settings = {
      */
     update(dt) {
         // update all objects (and pass the elapsed time since last frame)
-        var isDirty = game.world.update(dt);
+        let isDirty = game.world.update(dt);
 
         // update the camera/viewport
         // iterate through all cameras

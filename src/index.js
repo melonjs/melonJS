@@ -189,7 +189,7 @@ export * from "./const.js";
  * @default false
  * @readonly
  */
-export var initialized = false;
+export let initialized = false;
 
 /**
  * disable melonJS auto-initialization
@@ -197,7 +197,7 @@ export var initialized = false;
  * @default false
  * @see boot
  */
-export var skipAutoInit = false;
+export let skipAutoInit = false;
 
 /*
  * game is a default instance of a melonJS Application and represents your current game,

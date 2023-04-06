@@ -3,16 +3,16 @@ import Renderable from "./renderable.js";
 
 /** @ignore */
 function createGradient(light) {
-    var context = light.texture.context;
+    let context = light.texture.context;
 
-    var x1 = light.texture.width / 2,
+    let x1 = light.texture.width / 2,
         y1 = light.texture.height / 2;
 
-    var radiusX = light.radiusX,
+    let radiusX = light.radiusX,
         radiusY = light.radiusY;
 
-    var scaleX, scaleY, invScaleX, invScaleY;
-    var gradient;
+    let scaleX, scaleY, invScaleX, invScaleY;
+    let gradient;
 
 
     light.texture.clear();

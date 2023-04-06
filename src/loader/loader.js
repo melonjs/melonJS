@@ -56,7 +56,7 @@ function checkLoadStatus(onloadcb) {
             clearTimeout(timerId);
             // trigger the onload callback
             // we call either the supplied callback (which takes precedence) or the global one
-            var callback = onloadcb || onload;
+            let callback = onloadcb || onload;
             setTimeout(() => {
                 callback();
                 event.emit(event.LOADER_COMPLETE);
@@ -82,7 +82,7 @@ function onResourceLoaded(res) {
     loadCount++;
 
     // currrent progress
-    var progress = loadCount / resourceCount;
+    let progress = loadCount / resourceCount;
 
     // call callback if defined
     if (typeof onProgress === "function") {
@@ -147,7 +147,7 @@ function onLoadingError(res) {
  */
 export function preload(res, onloadcb, switchToLoadState = true) {
     // parse the resources
-    for (var i = 0; i < res.length; i++) {
+    for (let i = 0; i < res.length; i++) {
         resourceCount += load(
             res[i],
             onResourceLoaded.bind(this, res[i]),
@@ -307,7 +307,7 @@ export function unload(res) {
  * @example me.loader.unloadAll();
  */
 export function unloadAll() {
-    var name;
+    let name;
 
     // unload all binary resources
     for (name in binList) {

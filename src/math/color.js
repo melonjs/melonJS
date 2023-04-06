@@ -21,7 +21,7 @@ const hex4Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
 const hex6Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
 const hex8Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
 
-var cssToRGB = new Map();
+let cssToRGB = new Map();
 
 [
     // CSS1
@@ -279,13 +279,13 @@ var cssToRGB = new Map();
      * @returns {Color} Reference to this object for method chaining
      */
     setHSV(h, s, v) {
-        var r, g, b;
+        let r, g, b;
 
-        var i = Math.floor(h * 6);
-        var f = h * 6 - i;
-        var p = v * (1 - s);
-        var q = v * (1 - f * s);
-        var t = v * (1 - (1 - f) * s);
+        let i = Math.floor(h * 6);
+        let f = h * 6 - i;
+        let p = v * (1 - s);
+        let q = v * (1 - f * s);
+        let t = v * (1 - (1 - f) * s);
 
         switch (i % 6) {
             case 0: r = v, g = t, b = p; break;
@@ -306,13 +306,13 @@ var cssToRGB = new Map();
      * @returns {Color} Reference to this object for method chaining
      */
     setHSL(h, s, l) {
-        var r, g, b;
+        let r, g, b;
 
         if (s === 0) {
             r = g = b = l; // achromatic
         } else {
-            var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-            var p = 2 * l - q;
+            let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            let p = 2 * l - q;
 
             r = hue2rgb(p, q, h + 1/3);
             g = hue2rgb(p, q, h);
@@ -462,7 +462,7 @@ var cssToRGB = new Map();
     parseRGB(rgbColor) {
         // TODO : Memoize this function by caching its input
 
-        var match = rgbaRx.exec(rgbColor);
+        let match = rgbaRx.exec(rgbColor);
         if (match) {
             return this.setColor(+match[1], +match[2], +match[3], +match[5]);
         }
@@ -480,7 +480,7 @@ var cssToRGB = new Map();
     parseHex(hexColor, argb = false) {
         // TODO : Memoize this function by caching its input
 
-        var match;
+        let match;
         if ((match = hex8Rx.exec(hexColor))) {
             // #AARRGGBB or #RRGGBBAA
             return this.setColor(
@@ -502,10 +502,10 @@ var cssToRGB = new Map();
 
         if ((match = hex4Rx.exec(hexColor))) {
             // #ARGB or #RGBA
-            var r = match[argb === false ? 1 : 2];
-            var g = match[argb === false ? 2 : 3];
-            var b = match[argb === false ? 3 : 4];
-            var a = match[argb === false ? 4 : 1];
+            let r = match[argb === false ? 1 : 2];
+            let g = match[argb === false ? 2 : 3];
+            let b = match[argb === false ? 3 : 4];
+            let a = match[argb === false ? 4 : 1];
             return this.setColor(
                 parseInt(r + r, 16), // r
                 parseInt(g + g, 16), // g
@@ -534,11 +534,11 @@ var cssToRGB = new Map();
      * @returns {number}
      */
     toUint32(alpha = 1.0) {
-        var a = this.glArray;
+        let a = this.glArray;
 
-        var ur = (a[0] * 255) & 0xff;
-        var ug = (a[1] * 255) & 0xff;
-        var ub = (a[2] * 255) & 0xff;
+        let ur = (a[0] * 255) & 0xff;
+        let ug = (a[1] * 255) & 0xff;
+        let ub = (a[2] * 255) & 0xff;
 
         return (((alpha * 255) & 0xff) << 24) + (ur << 16) + (ug << 8) + ub;
     }

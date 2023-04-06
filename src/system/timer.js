@@ -231,7 +231,7 @@ class Timer {
      * @ignore
      */
     clearTimer(timerId) {
-        for (var i = 0, len = this.timers.length; i < len; i++) {
+        for (let i = 0, len = this.timers.length; i < len; i++) {
             if (this.timers[i].timerId === timerId) {
                 this.timers.splice(i, 1);
                 break;
@@ -245,8 +245,8 @@ class Timer {
      * @ignore
      */
     updateTimers() {
-        for (var i = 0, len = this.timers.length; i < len; i++) {
-            var _timer = this.timers[i];
+        for (let i = 0, len = this.timers.length; i < len; i++) {
+            let _timer = this.timers[i];
             if (!(_timer.pauseable && state.isPaused())) {
                 _timer.elapsed += this.delta;
             }

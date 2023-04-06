@@ -57,7 +57,7 @@ export default class TMXGroup {
          */
         this.objects = [];
 
-        var visible = typeof(data.visible) !== "undefined" ? data.visible : true;
+        let visible = typeof(data.visible) !== "undefined" ? data.visible : true;
         this.opacity = (visible === true) ? clamp(+data.opacity || 1.0, 0.0, 1.0) : 0;
 
         // check if we have any user-defined properties
@@ -73,7 +73,7 @@ export default class TMXGroup {
 
         if (data.layers) {
             data.layers.forEach((data) => {
-                var layer = new TMXLayer(map, data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z++);
+                let layer = new TMXLayer(map, data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z++);
                 // set a renderer
                 layer.setRenderer(map.getRenderer());
                 // resize container accordingly

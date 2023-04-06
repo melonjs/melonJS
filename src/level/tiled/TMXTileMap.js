@@ -31,7 +31,7 @@ function readImageLayer(map, data, z) {
     applyTMXProperties(data.properties, data);
 
     // create the layer
-    var imageLayer = pool.pull("ImageLayer",
+    let imageLayer = pool.pull("ImageLayer",
         // x/y is deprecated since 0.15 and replace by offsetx/y
         +data.offsetx || +data.x || 0,
         +data.offsety || +data.y || 0,
@@ -47,7 +47,7 @@ function readImageLayer(map, data, z) {
 
 
     // set some additional flags
-    var visible = typeof(data.visible) !== "undefined" ? data.visible : true;
+    let visible = typeof(data.visible) !== "undefined" ? data.visible : true;
     imageLayer.setOpacity(visible ? +data.opacity : 0);
 
     return imageLayer;
@@ -80,7 +80,7 @@ function readObjectGroup(map, data, z) {
      * @param {object} data - TMX map in JSON format
      * @example
      * // create a new level object based on the TMX JSON object
-     * var level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
+     * let level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
      * // add the level to the game world container
      * level.addTo(me.game.world, true);
      */
@@ -242,7 +242,7 @@ function readObjectGroup(map, data, z) {
         }
 
         // to automatically increment z index
-        var zOrder = 0;
+        let zOrder = 0;
 
         // Tileset information
         if (!this.tilesets) {
@@ -252,7 +252,7 @@ function readObjectGroup(map, data, z) {
 
         // parse all tileset objects
         if (typeof (data.tilesets) !== "undefined") {
-            var tilesets = data.tilesets;
+            let tilesets = data.tilesets;
             tilesets.forEach((tileset) => {
                 // add the new tileset
                 this.tilesets.add(readTileset(tileset));
@@ -309,15 +309,15 @@ function readObjectGroup(map, data, z) {
      * @param {boolean} [setViewportBounds=false] - if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
      * @example
      * // create a new level object based on the TMX JSON object
-     * var level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
+     * let level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
      * // add the level to the game world container
      * level.addTo(me.game.world, true, true);
      */
     addTo(container, flatten, setViewportBounds) {
-        var _sort = container.autoSort;
-        var _depth = container.autoDepth;
+        let _sort = container.autoSort;
+        let _depth = container.autoDepth;
 
-        var levelBounds = this.getBounds();
+        let levelBounds = this.getBounds();
 
         // disable auto-sort and auto-depth
         container.autoSort = false;
@@ -383,15 +383,15 @@ function readObjectGroup(map, data, z) {
      * @returns {Renderable[]} Array of Objects
      */
     getObjects(flatten) {
-        var objects = [];
-        var isCollisionGroup = false;
-        var targetContainer;
+        let objects = [];
+        let isCollisionGroup = false;
+        let targetContainer;
 
         // parse the map for objects
         this.readMapObjects(this.data);
 
-        for (var g = 0; g < this.objectGroups.length; g++) {
-            var group = this.objectGroups[g];
+        for (let g = 0; g < this.objectGroups.length; g++) {
+            let group = this.objectGroups[g];
 
             // check if this is the collision shape group
             isCollisionGroup = group.name.toLowerCase().includes(COLLISION_GROUP);
@@ -415,13 +415,13 @@ function readObjectGroup(map, data, z) {
 
             // iterate through the group and add all object into their
             // corresponding target Container
-            for (var o = 0; o < group.objects.length; o++) {
+            for (let o = 0; o < group.objects.length; o++) {
                 // TMX object settings
-                var settings = group.objects[o];
+                let settings = group.objects[o];
                 // reference to the instantiated object
-                var obj;
+                let obj;
                 // a reference to the default shape
-                var shape;
+                let shape;
 
                 // Tiled uses 0,0 by default
                 if (typeof (settings.anchorPoint) === "undefined") {

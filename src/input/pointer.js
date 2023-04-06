@@ -9,7 +9,7 @@ import { locked } from "./pointerevent.js";
  * a temporary vector object
  * @ignore
  */
-var tmpVec = new Vector2d();
+let tmpVec = new Vector2d();
 
 /**
  * @classdesc

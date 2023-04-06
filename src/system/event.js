@@ -6,7 +6,7 @@ import EventEmitter from "eventemitter3";
  */
 
 // internal instance of the event emiter
-var eventEmitter = new EventEmitter();
+let eventEmitter = new EventEmitter();
 
 /**
  * event when the DOM is Ready is booting

@@ -42,7 +42,7 @@ import earcut from "earcut";
      * If the shape has already been closed or has only one point, this function does nothing.
      */
     closePath() {
-        var points = this.points;
+        let points = this.points;
         if (points.length > 1 && !points[points.length-1].equals(points[0])) {
             points.push(pool.pull("Point", points[0].x, points[0].y));
         }
@@ -53,10 +53,10 @@ import earcut from "earcut";
      * @returns {Point[]}
      */
     triangulatePath() {
-        var i = 0;
-        var points = this.points;
-        var vertices = this.vertices;
-        var indices = earcut(points.flatMap(p => [p.x, p.y]));
+        let i = 0;
+        let points = this.points;
+        let vertices = this.vertices;
+        let indices = earcut(points.flatMap(p => [p.x, p.y]));
 
         // pre-allocate vertices if necessary
         while (vertices.length < indices.length) {
@@ -65,7 +65,7 @@ import earcut from "earcut";
 
         // calculate all vertices
         for (i = 0; i < indices.length; i++ ) {
-            var point = points[indices[i]];
+            let point = points[indices[i]];
             vertices[i].set(point.x, point.y);
         }
 
@@ -107,11 +107,11 @@ import earcut from "earcut";
      * @param {boolean} [anticlockwise=false] - an optional boolean value. If true, draws the arc counter-clockwise between the start and end angles.
      */
     arc(x, y, radius, startAngle, endAngle, anticlockwise = false) {
-        var points = this.points;
+        let points = this.points;
         // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
         //bring angles all in [0, 2*PI] range
         if (startAngle === endAngle) return;
-        var fullCircle = anticlockwise ? Math.abs(startAngle-endAngle) >= (TAU) : Math.abs(endAngle-startAngle) >= (TAU);
+        const fullCircle = anticlockwise ? Math.abs(startAngle-endAngle) >= (TAU) : Math.abs(endAngle-startAngle) >= (TAU);
 
         startAngle = startAngle % (TAU);
         endAngle = endAngle % (TAU);
@@ -123,8 +123,8 @@ import earcut from "earcut";
             endAngle+= TAU;
         }
 
-        var diff = endAngle - startAngle;
-        var direction = 1;
+        let diff = endAngle - startAngle;
+        let direction = 1;
         if (anticlockwise) {
             direction = -1;
             diff = TAU - diff;
@@ -132,12 +132,12 @@ import earcut from "earcut";
 
         if (fullCircle) diff = TAU;
 
-        var length = diff * radius;
-        var nr_of_interpolation_points = length / this.arcResolution;
-        var dangle = diff / nr_of_interpolation_points;
+        const length = diff * radius;
+        const nr_of_interpolation_points = length / this.arcResolution;
+        const dangle = diff / nr_of_interpolation_points;
 
-        var angle = startAngle;
-        for (var j = 0; j < nr_of_interpolation_points; j++) {
+        let angle = startAngle;
+        for (let j = 0; j < nr_of_interpolation_points; j++) {
             points.push(pool.pull("Point", x + radius * Math.cos(angle), y + radius * Math.sin(angle)));
             angle += direction * dangle;
         }
@@ -153,38 +153,38 @@ import earcut from "earcut";
      * @param {number} radius - the arc's radius. Must be positive.
      */
     arcTo(x1, y1, x2, y2, radius) {
-        var points = this.points;
+        let points = this.points;
         // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
-        var x0 = points[points.length-1].x, y0 = points[points.length-1].y;
+        let x0 = points[points.length-1].x, y0 = points[points.length-1].y;
 
         //a = -incoming vector, b = outgoing vector to x1, y1
-        var a0 = x0 - x1, a1 = y0 - y1;
-        var b0 = x2 - x1, b1 = y2 - y1;
+        let a0 = x0 - x1, a1 = y0 - y1;
+        let b0 = x2 - x1, b1 = y2 - y1;
 
         //normalize
-        var l_a = Math.sqrt(Math.pow(a0, 2) + Math.pow(a1, 2));
-        var l_b = Math.sqrt(Math.pow(b0, 2) + Math.pow(b1, 2));
+        let l_a = Math.sqrt(Math.pow(a0, 2) + Math.pow(a1, 2));
+        let l_b = Math.sqrt(Math.pow(b0, 2) + Math.pow(b1, 2));
         a0 /= l_a; a1 /= l_a; b0 /= l_b; b1 /= l_b;
-        var angle = Math.atan2(a1, a0) - Math.atan2(b1, b0);
+        let angle = Math.atan2(a1, a0) - Math.atan2(b1, b0);
 
         //work out tangent points using tan(θ) = opposite / adjacent; angle/2 because hypotenuse is the bisection of a,b
-        var tan_angle_div2 = Math.tan(angle/2);
-        var adj_l = (radius/tan_angle_div2);
+        let tan_angle_div2 = Math.tan(angle/2);
+        let adj_l = (radius/tan_angle_div2);
 
-        var tangent1_pointx = x1 + a0 * adj_l, tangent1_pointy = y1 + a1 * adj_l;
-        var tangent2_pointx = x1 + b0 * adj_l, tangent2_pointy = y1 + b1 * adj_l;
+        let tangent1_pointx = x1 + a0 * adj_l, tangent1_pointy = y1 + a1 * adj_l;
+        let tangent2_pointx = x1 + b0 * adj_l, tangent2_pointy = y1 + b1 * adj_l;
 
         points.push(pool.pull("Point", tangent1_pointx, tangent1_pointy));
 
-        var bisec0 = (a0 + b0) / 2.0, bisec1 = (a1 + b1) / 2.0;
-        var bisec_l = Math.sqrt(Math.pow(bisec0, 2) + Math.pow(bisec1, 2));
+        let bisec0 = (a0 + b0) / 2.0, bisec1 = (a1 + b1) / 2.0;
+        let bisec_l = Math.sqrt(Math.pow(bisec0, 2) + Math.pow(bisec1, 2));
         bisec0 /= bisec_l; bisec1 /= bisec_l;
 
-        var hyp_l = Math.sqrt(Math.pow(radius, 2) + Math.pow(adj_l, 2));
-        var centerx = x1 + hyp_l * bisec0, centery = y1 + hyp_l * bisec1;
+        let hyp_l = Math.sqrt(Math.pow(radius, 2) + Math.pow(adj_l, 2));
+        let centerx = x1 + hyp_l * bisec0, centery = y1 + hyp_l * bisec1;
 
-        var startAngle = Math.atan2(tangent1_pointy - centery, tangent1_pointx - centerx);
-        var endAngle = Math.atan2(tangent2_pointy - centery, tangent2_pointx - centerx);
+        let startAngle = Math.atan2(tangent1_pointy - centery, tangent1_pointx - centerx);
+        let endAngle = Math.atan2(tangent2_pointy - centery, tangent2_pointx - centerx);
 
         this.arc(centerx, centery, radius, startAngle, endAngle);
     }
@@ -202,10 +202,10 @@ import earcut from "earcut";
      * @param {boolean} [anticlockwise=false] - an optional boolean value which, if true, draws the ellipse counterclockwise (anticlockwise).
      */
     ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle, anticlockwise = false) {
-        var points = this.points;
+        let points = this.points;
         // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
         if (startAngle === endAngle) return;
-        var fullCircle = anticlockwise ? Math.abs(startAngle-endAngle) >= (TAU) : Math.abs(endAngle-startAngle) >= (TAU);
+        let fullCircle = anticlockwise ? Math.abs(startAngle-endAngle) >= (TAU) : Math.abs(endAngle-startAngle) >= (TAU);
 
         //bring angles all in [0, 2*PI] range
         startAngle = startAngle % (TAU);
@@ -217,9 +217,9 @@ import earcut from "earcut";
             endAngle += TAU;
         }
 
-        var diff = endAngle - startAngle;
+        let diff = endAngle - startAngle;
 
-        var direction = 1;
+        let direction = 1;
         if (anticlockwise) {
             direction = -1;
             diff = TAU - diff;
@@ -227,18 +227,18 @@ import earcut from "earcut";
 
         if (fullCircle) diff = TAU;
 
-        var length = (diff * radiusX + diff * radiusY) / 2;
-        var nr_of_interpolation_points = length / this.arcResolution;
-        var dangle = diff / nr_of_interpolation_points;
+        const length = (diff * radiusX + diff * radiusY) / 2;
+        const nr_of_interpolation_points = length / this.arcResolution;
+        const dangle = diff / nr_of_interpolation_points;
 
-        var angle = startAngle;
-        var cos_rotation = Math.cos(rotation);
-        var sin_rotation = Math.sin(rotation);
-        for (var j = 0; j < nr_of_interpolation_points; j++) {
-            var _x1 = radiusX * Math.cos(angle);
-            var _y1 = radiusY * Math.sin(angle);
-            var _x2 = x + _x1 * cos_rotation - _y1 * sin_rotation;
-            var _y2 = y + _x1 * sin_rotation + _y1 * cos_rotation;
+        let angle = startAngle;
+        const cos_rotation = Math.cos(rotation);
+        const sin_rotation = Math.sin(rotation);
+        for (let j = 0; j < nr_of_interpolation_points; j++) {
+            let _x1 = radiusX * Math.cos(angle);
+            let _y1 = radiusY * Math.sin(angle);
+            let _x2 = x + _x1 * cos_rotation - _y1 * sin_rotation;
+            let _y2 = y + _x1 * sin_rotation + _y1 * cos_rotation;
             points.push(pool.pull("Point", _x2, _y2));
             angle += direction * dangle;
         }

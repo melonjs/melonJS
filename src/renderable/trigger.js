@@ -66,7 +66,7 @@ import pool from "./../system/pooling.js";
         });
 
         // add and configure the physic body
-        var shape = settings.shapes;
+        let shape = settings.shapes;
         if (typeof shape === "undefined") {
             shape = pool.pull("Polygon", 0, 0, [
                 pool.pull("Vector2d", 0,          0),
@@ -86,7 +86,7 @@ import pool from "./../system/pooling.js";
      * @ignore
      */
      getTriggerSettings() {
-        var world = this.ancestor.getRootAncestor();
+        let world = this.ancestor.getRootAncestor();
          // Lookup for the container instance
          if (typeof(this.triggerSettings.container) === "string") {
              this.triggerSettings.container = world.getChildByName(this.triggerSettings.container)[0];
@@ -98,7 +98,7 @@ import pool from "./../system/pooling.js";
      * @ignore
      */
     onFadeComplete() {
-        var world = this.ancestor.getRootAncestor();
+        let world = this.ancestor.getRootAncestor();
         level.load(this.gotolevel, this.getTriggerSettings());
         world.app.viewport.fadeOut(this.fade, this.duration);
     }
@@ -110,8 +110,8 @@ import pool from "./../system/pooling.js";
      * @protected
      */
     triggerEvent() {
-        var triggerSettings = this.getTriggerSettings();
-        var world = this.ancestor.getRootAncestor();
+        let triggerSettings = this.getTriggerSettings();
+        let world = this.ancestor.getRootAncestor();
 
         if (triggerSettings.event === "level") {
             this.gotolevel = triggerSettings.to;

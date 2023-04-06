@@ -212,7 +212,7 @@ import Point from "../geometries/point.js";
         // parses the given shapes array and add them
         if (typeof shapes !== "undefined") {
             if (Array.isArray(shapes)) {
-                for (var s = 0; s < shapes.length; s++) {
+                for (let s = 0; s < shapes.length; s++) {
                     this.addShape(shapes[s]);
                 }
             } else {
@@ -246,7 +246,7 @@ import Point from "../geometries/point.js";
      */
     addShape(shape) {
         if (shape instanceof Rect || shape instanceof Bounds) {
-            var poly = shape.toPolygon();
+            let poly = shape.toPolygon();
             this.shapes.push(poly);
             // update the body bounds
             this.bounds.add(poly.points);
@@ -297,7 +297,7 @@ import Point from "../geometries/point.js";
      * @param {boolean} [clear=true] - either to reset the body definition before adding the new vertices
      */
     setVertices(vertices, index = 0, clear = true) {
-        var polygon = this.getShape(index);
+        let polygon = this.getShape(index);
         if (polygon instanceof Polygon) {
             polygon.setShape(0, 0, vertices);
         } else {
@@ -336,7 +336,7 @@ import Point from "../geometries/point.js";
      * this.body.fromJSON(me.loader.getJSON("shapesdef"), "banana");
      */
     fromJSON(json, id) {
-        var data = json;
+        let data = json;
 
         if (typeof id !== "undefined" ) {
             data = json[id];
@@ -349,7 +349,7 @@ import Point from "../geometries/point.js";
 
         if (data.length) {
             // go through all shapes and add them to the body
-            for (var i = 0; i < data.length; i++) {
+            for (let i = 0; i < data.length; i++) {
                 this.addVertices(data[i].shape, i);
             }
             // apply density, friction and bounce properties from the first shape
@@ -391,7 +391,7 @@ import Point from "../geometries/point.js";
         // remove the shape from shape list
         arrayUtil.remove(this.shapes, shape);
         // add everything left back
-        for (var s = 0; s < this.shapes.length; s++) {
+        for (let s = 0; s < this.shapes.length; s++) {
             this.addShape(this.shapes[s]);
         }
         // return the length of the shape list
@@ -448,7 +448,7 @@ import Point from "../geometries/point.js";
      */
     respondToCollision(response) {
         // the overlap vector
-        var overlap = response.overlapV;
+        let overlap = response.overlapV;
 
         // FIXME: Respond proportionally to object mass
 
@@ -470,7 +470,7 @@ import Point from "../geometries/point.js";
 
             if (!this.ignoreGravity) {
                 // cancel the falling an jumping flags if necessary
-                var dir = this.falling === true ? 1 : this.jumping === true ? -1 : 0;
+                let dir = this.falling === true ? 1 : this.jumping === true ? -1 : 0;
                 this.falling = overlap.y >= dir;
                 this.jumping = overlap.y <= -dir;
             }
@@ -495,10 +495,10 @@ import Point from "../geometries/point.js";
      * mySprite.body.forEach((shape, index, array) => { ... }, thisArg);
      */
     forEach(callback, thisArg) {
-        var context = this, i = 0;
-        var shapes = this.shapes;
+        let context = this, i = 0;
+        let shapes = this.shapes;
 
-        var len = shapes.length;
+        let len = shapes.length;
 
         if (typeof callback !== "function") {
             throw new Error(callback + " is not a function");
@@ -527,7 +527,7 @@ import Point from "../geometries/point.js";
      * @returns {boolean} true if contains
      */
     contains() {
-        var _x, _y;
+        let _x, _y;
 
         if (arguments.length === 2) {
           // x, y
@@ -541,7 +541,7 @@ import Point from "../geometries/point.js";
 
         if (this.getBounds().contains(_x, _y)) {
              // cannot use forEach here as cannot break out with a return
-             for (var i = this.shapes.length, shape; i--, (shape = this.shapes[i]);) {
+             for (let i = this.shapes.length, shape; i--, (shape = this.shapes[i]);) {
                 if (shape.contains(_x, _y)) {
                     return true;
                 }
@@ -615,7 +615,7 @@ import Point from "../geometries/point.js";
     update(dt) { // eslint-disable-line no-unused-vars
         // apply timer.tick to delta time for linear interpolation (when enabled)
         // #761 add delta time in body update
-        var deltaTime = /* dt * */ timer.tick;
+        let deltaTime = /* dt * */ timer.tick;
 
         // apply force if defined
         if (this.force.x !== 0) {
@@ -627,7 +627,7 @@ import Point from "../geometries/point.js";
 
         // apply friction if defined
         if (this.friction.x > 0) {
-            var fx = this.friction.x * deltaTime,
+            let fx = this.friction.x * deltaTime,
                 nx = this.vel.x + fx,
                 x = this.vel.x - fx;
 
@@ -637,7 +637,7 @@ import Point from "../geometries/point.js";
             );
         }
         if (this.friction.y > 0) {
-            var fy = this.friction.y * deltaTime,
+            let fy = this.friction.y * deltaTime,
                 ny = this.vel.y + fy,
                 y = this.vel.y - fy;
 

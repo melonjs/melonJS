@@ -50,14 +50,14 @@ import setContextStyle from "./textstyle.js";
         if (this.ancestor instanceof Text) {
             return context.measureText(text).width;
         } else { // it's a BitmapText
-            var characters = text.split("");
-            var width = 0;
-            var lastGlyph = null;
-            for (var i = 0; i < characters.length; i++) {
-                var ch = characters[i].charCodeAt(0);
-                var glyph = this.ancestor.fontData.glyphs[ch];
+            let characters = text.split("");
+            let width = 0;
+            let lastGlyph = null;
+            for (let i = 0; i < characters.length; i++) {
+                let ch = characters[i].charCodeAt(0);
+                let glyph = this.ancestor.fontData.glyphs[ch];
                 if (typeof glyph !== "undefined") {
-                    var kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;
+                    let kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;
                     width += (glyph.xadvance + kerning) * this.ancestor.fontScale.x;
                     lastGlyph = glyph;
                 }
@@ -73,7 +73,7 @@ import setContextStyle from "./textstyle.js";
      * @returns {TextMetrics} this
      */
     measureText(text, context) {
-        var strings;
+        let strings;
 
         if (!Array.isArray(text)) {
             strings = ("" + text).split("\n");
@@ -92,7 +92,7 @@ import setContextStyle from "./textstyle.js";
         // compute the bounding box size
         this.width = this.height = 0;
 
-        for (var i = 0; i < strings.length; i++) {
+        for (let i = 0; i < strings.length; i++) {
             this.width = Math.max(this.lineWidth(strings[i].trimEnd(), context), this.width);
             this.height += this.lineHeight();
         }
@@ -123,9 +123,9 @@ import setContextStyle from "./textstyle.js";
      * @returns {string[]} an array of string representing wrapped text
      */
     wordWrap(text, width, context) {
-        var words;
-        var currentLine = "";
-        var output = [];
+        let words;
+        let currentLine = "";
+        let output = [];
 
         if (Array.isArray(text)) {
             // join into a single string
@@ -143,8 +143,8 @@ import setContextStyle from "./textstyle.js";
         }
 
         for (let i = 0; i < words.length; i++) {
-            var word = words[i];
-            var lineWidth = this.lineWidth(currentLine + word + " ", context);
+            let word = words[i];
+            let lineWidth = this.lineWidth(currentLine + word + " ", context);
             if (lineWidth < width) {
                 // add the word to the current line
                 currentLine += word + " ";
