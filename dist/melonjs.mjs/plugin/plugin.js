@@ -13,7 +13,7 @@ import { version } from '../index.js';
  * @see plugin.register
  * @namespace plugins
  */
-var plugins = {};
+let plugins = {};
 
 
 class BasePlugin {
@@ -34,7 +34,7 @@ class BasePlugin {
 /**
  * @namespace plugin
  */
-var plugin = {
+let plugin = {
 
     /**
      * a base Object for plugin <br>
@@ -71,14 +71,14 @@ var plugin = {
         // reuse the logic behind object extends
         if (typeof(proto[name]) === "function") {
             // save the original function
-            var _parent = proto[name];
+            let _parent = proto[name];
             // override the function with the new one
             Object.defineProperty(proto, name, {
                 "configurable" : true,
                 "value" : (function (name, fn) {
                     return function () {
                         this._patched = _parent;
-                        var ret = fn.apply(this, arguments);
+                        let ret = fn.apply(this, arguments);
                         this._patched = null;
                         return ret;
                     };
@@ -97,7 +97,7 @@ var plugin = {
      * @see Base
      * @public
      * @param {plugin.Base} pluginObj - Plugin object to instantiate and register
-     * @param {string} name
+     * @param {string} [name=pluginObj.constructor.name] - a unique name for this plugin
      * @param {object} [...arguments] - all extra parameters will be passed to the plugin constructor
      * @example
      * // register a new plugin
@@ -106,14 +106,14 @@ var plugin = {
      * // under then me.plugins namespace
      * me.plugins.testPlugin.myfunction ();
      */
-    register : function (pluginObj, name) {
+    register : function (pluginObj, name = pluginObj.toString().match(/ (\w+)/)[1]) {
         // ensure me.plugins[name] is not already "used"
         if (plugins[name]) {
             throw new Error("plugin " + name + " already registered");
         }
 
         // get extra arguments
-        var _args = [];
+        let _args = [];
         if (arguments.length > 2) {
             // store extra arguments if any
             _args = Array.prototype.slice.call(arguments, 1);
@@ -121,7 +121,7 @@ var plugin = {
 
         // try to instantiate the plugin
         _args[0] = pluginObj;
-        var instance = new (pluginObj.bind.apply(pluginObj, _args))();
+        let instance = new (pluginObj.bind.apply(pluginObj, _args))();
 
         // inheritance check
         if (typeof instance === "undefined" || !(instance instanceof plugin.Base)) {

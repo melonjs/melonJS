@@ -26,7 +26,7 @@ export default class BitmapText extends Renderable {
      *     { name: "arial", type: "image" src: "data/font/arial.png" },
      * ])
      * // Then create an instance of your bitmap font:
-     * var myFont = new me.BitmapText(x, y, {font:"arial", text:"Hello"});
+     * let myFont = new me.BitmapText(x, y, {font:"arial", text:"Hello"});
      * // two possibilities for using "myFont"
      * // either call the draw function from your Renderable draw function
      * myFont.draw(renderer, "Hello!", 0, 0);

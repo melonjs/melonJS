@@ -1,6 +1,6 @@
 # Changelog
 
-## [15.1.0] (melonJS 2) - _2023-xx-xx_
+## [15.1.0] (melonJS 2) - _2023-04-07_
 
 ### Added
 - Container: new `getRootAncestor()` method that returns the root container's parent (aka World Container)

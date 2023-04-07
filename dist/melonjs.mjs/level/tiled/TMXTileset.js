@@ -20,7 +20,7 @@ import { getTMX, getImage } from '../../loader/loader.js';
      *  @param {object} tileset - tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
      */
     constructor(tileset) {
-        var i = 0;
+        let i = 0;
         // first gid
 
         // tile properties (collidable, etc..)
@@ -33,8 +33,8 @@ import { getTMX, getImage } from '../../loader/loader.js';
 
         // check if an external tileset is defined
         if (typeof(tileset.source) !== "undefined") {
-            var src = tileset.source;
-            var ext = getExtension(src);
+            let src = tileset.source;
+            let ext = getExtension(src);
             if (ext === "tsx" || ext === "json") {
                 // load the external tileset (TSX/JSON)
                 tileset = getTMX(getBasename(src));
@@ -83,7 +83,7 @@ import { getTMX, getImage } from '../../loader/loader.js';
          */
         this._lastUpdate = 0;
 
-        var tiles = tileset.tiles;
+        let tiles = tileset.tiles;
         for (i in tiles) {
             if (tiles.hasOwnProperty(i)) {
                 if ("animation" in tiles[i]) {
@@ -98,8 +98,8 @@ import { getTMX, getImage } from '../../loader/loader.js';
                 // set tile properties, if any
                 if ("properties" in tiles[i]) {
                     if (Array.isArray(tiles[i].properties)) { // JSON (new format)
-                        var tileProperty = {};
-                        for (var j in tiles[i].properties) {
+                        let tileProperty = {};
+                        for (let j in tiles[i].properties) {
                             tileProperty[tiles[i].properties[j].name] = tiles[i].properties[j].value;
                         }
                         this.setTileProperty(+tiles[i].id + this.firstgid, tileProperty);
@@ -108,7 +108,7 @@ import { getTMX, getImage } from '../../loader/loader.js';
                     }
                 }
                 if ("image" in tiles[i]) {
-                    var image = getImage(tiles[i].image);
+                    let image = getImage(tiles[i].image);
                     if (!image) {
                         throw new Error("melonJS: '" + tiles[i].image + "' file for tile '" + (+i + this.firstgid) + "' not found!");
                     }
@@ -119,14 +119,14 @@ import { getTMX, getImage } from '../../loader/loader.js';
 
         this.isCollection = this.imageCollection.length > 0;
 
-        var offset = tileset.tileoffset;
+        let offset = tileset.tileoffset;
         if (offset) {
             this.tileoffset.x = +offset.x;
             this.tileoffset.y = +offset.y;
         }
 
         // set tile properties, if any (JSON old format)
-        var tileInfo = tileset.tileproperties;
+        let tileInfo = tileset.tileproperties;
         if (tileInfo) {
             for (i in tileInfo) {
                 if (tileInfo.hasOwnProperty(i)) {
@@ -155,8 +155,8 @@ import { getTMX, getImage } from '../../loader/loader.js';
             this.atlas = this.texture.getAtlas();
 
             // calculate the number of tiles per horizontal line
-            var hTileCount = +tileset.columns || Math.round(this.image.width / (this.tilewidth + this.spacing));
-            var vTileCount = Math.round(this.image.height / (this.tileheight + this.spacing));
+            let hTileCount = +tileset.columns || Math.round(this.image.width / (this.tilewidth + this.spacing));
+            let vTileCount = Math.round(this.image.height / (this.tileheight + this.spacing));
             if (tileset.tilecount % hTileCount > 0) {
                 ++vTileCount;
             }
@@ -205,7 +205,7 @@ import { getTMX, getImage } from '../../loader/loader.js';
      * @returns {number} View tile ID
      */
     getViewTileId(gid) {
-        var localId = gid - this.firstgid;
+        let localId = gid - this.firstgid;
 
         if (this.animations.has(localId)) {
             // return the current corresponding tile id if animated
@@ -226,7 +226,7 @@ import { getTMX, getImage } from '../../loader/loader.js';
 
     // update tile animations
     update(dt) {
-        var duration = 0,
+        let duration = 0,
             now = timer.getTime(),
             result = false;
 
@@ -274,7 +274,7 @@ import { getTMX, getImage } from '../../loader/loader.js';
             );
         } else {
             // use the tileset texture
-            var offset = this.atlas[this.getViewTileId(tmxTile.tileId)].offset;
+            let offset = this.atlas[this.getViewTileId(tmxTile.tileId)].offset;
             // draw the tile
             renderer.drawImage(
                 this.image,

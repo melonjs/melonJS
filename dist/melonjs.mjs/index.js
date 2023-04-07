@@ -113,7 +113,7 @@ const version = "15.1.0";
  * @default false
  * @readonly
  */
-var initialized = false;
+let initialized = false;
 
 /**
  * disable melonJS auto-initialization
@@ -121,7 +121,7 @@ var initialized = false;
  * @default false
  * @see boot
  */
-var skipAutoInit = false;
+let skipAutoInit = false;
 
 /*
  * game is a default instance of a melonJS Application and represents your current game,

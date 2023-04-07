@@ -27,7 +27,7 @@ declare namespace level {
      * @example
      * // the game assets to be be preloaded
      * // TMX maps
-     * var resources = [
+     * let resources = [
      *     {name: "a4_level1",   type: "tmx",   src: "data/level/a4_level1.tmx"},
      *     {name: "a4_level2",   type: "tmx",   src: "data/level/a4_level2.tmx"},
      *     {name: "a4_level3",   type: "tmx",   src: "data/level/a4_level3.tmx"},
@@ -41,7 +41,7 @@ declare namespace level {
      * ...
      * ...
      * // load a level into a specific container
-     * var levelContainer = new me.Container();
+     * let levelContainer = new me.Container();
      * me.level.load("a4_level2", {container:levelContainer});
      * // add a simple transformation
      * levelContainer.currentTransform.translate(levelContainer.width / 2, levelContainer.height / 2 );

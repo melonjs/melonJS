@@ -37,7 +37,7 @@ import Polygon from './poly.js';
      * @returns {boolean} true if contains
      */
     contains() {
-        var _x, _y;
+        let _x, _y;
 
         if (arguments.length === 2) {
           // x, y
@@ -53,8 +53,8 @@ import Polygon from './poly.js';
         // rather than creating temp translated vectors
         _x -= this.pos.x; // Cx
         _y -= this.pos.y; // Cy
-        var start = this.points[0]; // Ax/Ay
-        var end = this.points[1]; // Bx/By
+        let start = this.points[0]; // Ax/Ay
+        let end = this.points[1]; // Bx/By
 
         //(Cy - Ay) * (Bx - Ax) = (By - Ay) * (Cx - Ax)
         return (_y - start.y) * (end.x - start.x) === (end.y - start.y) * (_x - start.x);
@@ -68,12 +68,12 @@ import Polygon from './poly.js';
      * @returns {Line} this instance for objecf chaining
      */
     recalc() {
-        var edges = this.edges;
-        var normals = this.normals;
-        var indices = this.indices;
+        let edges = this.edges;
+        let normals = this.normals;
+        let indices = this.indices;
 
         // Copy the original points array and apply the offset/angle
-        var points = this.points;
+        let points = this.points;
 
         if (points.length !== 2) {
             throw new Error("Requires exactly 2 points");
@@ -103,7 +103,7 @@ import Polygon from './poly.js';
      * @returns {Line} new Line
      */
     clone() {
-        var copy = [];
+        let copy = [];
         this.points.forEach((point) => {
             copy.push(point.clone());
         });

@@ -40,10 +40,10 @@ import Compositor from './compositor.js';
      * @param {number} [vertexCount=verts.length] - amount of points defined in the points array
      */
     drawVertices(mode, verts, vertexCount = verts.length) {
-        var viewMatrix = this.viewMatrix;
-        var vertexData = this.vertexData;
-        var color = this.renderer.currentColor;
-        var alpha = this.renderer.getGlobalAlpha();
+        let viewMatrix = this.viewMatrix;
+        let vertexData = this.vertexData;
+        let color = this.renderer.currentColor;
+        let alpha = this.renderer.getGlobalAlpha();
 
         if (vertexData.isFull(vertexCount)) {
             // is the vertex buffer full if we add more vertices

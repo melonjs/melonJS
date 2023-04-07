@@ -192,7 +192,7 @@ function weightedRandom(min, max) {
  */
 function round(num, dec = 0) {
     // if only one argument use the object value
-    var powres = Math.pow(10, dec);
+    const powres = Math.pow(10, dec);
     return (~~(0.5 + num * powres) / powres);
 }
 

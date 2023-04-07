@@ -33,11 +33,11 @@ function prefixed(name, obj) {
         return obj[name];
     }
 
-    var uc_name = capitalize(name);
+    let uc_name = capitalize(name);
 
-    var result;
+    let result;
     vendors.some((vendor) => {
-        var name = vendor + uc_name;
+        let name = vendor + uc_name;
         return (result = (name in obj) ? obj[name] : undefined);
     });
     return result;
@@ -60,10 +60,10 @@ function setPrefixed(name, value, obj) {
         return;
     }
 
-    var uc_name = capitalize(name);
+    let uc_name = capitalize(name);
 
     vendors.some((vendor) => {
-        var name = vendor + uc_name;
+        let name = vendor + uc_name;
         if (name in obj) {
             obj[name] = value;
             return true;

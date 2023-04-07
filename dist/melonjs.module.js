@@ -1709,7 +1709,7 @@ function weightedRandom$1(min, max) {
  */
 function round(num, dec = 0) {
     // if only one argument use the object value
-    var powres = Math.pow(10, dec);
+    const powres = Math.pow(10, dec);
     return (~~(0.5 + num * powres) / powres);
 }
 
@@ -1811,11 +1811,11 @@ class ObjectPool {
      * me.pool.register("enemy", EnemyEntity, true);
      * // ...
      * // when we need to manually create a new bullet:
-     * var bullet = me.pool.pull("bullet", x, y, direction);
+     * let bullet = me.pool.pull("bullet", x, y, direction);
      * // ...
      * // params aren't a fixed number
      * // when we need new enemy we can add more params, that the object construct requires:
-     * var enemy = me.pool.pull("enemy", x, y, direction, speed, power, life);
+     * let enemy = me.pool.pull("enemy", x, y, direction, speed, power, life);
      * // ...
      * // when we want to destroy existing object, the remove
      * // function will ensure the object can then be reallocated later
@@ -1823,9 +1823,9 @@ class ObjectPool {
      * me.game.world.removeChild(bullet);
      */
     pull(name, ...args) {
-        var className = this.objectClass[name];
+        let className = this.objectClass[name];
         if (className) {
-            var proto = className["class"],
+            let proto = className["class"],
                 poolArray = className.pool,
                 obj;
 
@@ -1851,7 +1851,7 @@ class ObjectPool {
      * note: this will trigger the garbage collector
      */
     purge() {
-        for (var className in this.objectClass) {
+        for (let className in this.objectClass) {
             if (this.objectClass[className]) {
                 this.objectClass[className].pool = [];
             }
@@ -1906,7 +1906,7 @@ class ObjectPool {
      * }
      */
     poolable(obj) {
-        var className = obj.className;
+        let className = obj.className;
         return (typeof className !== "undefined") &&
                 (typeof obj.onResetEvent === "function") &&
                 (className in this.objectClass) &&
@@ -1923,7 +1923,7 @@ class ObjectPool {
     }
 }
 
-var pool = new ObjectPool();
+let pool = new ObjectPool();
 
 // convert a give color component to it hexadecimal value
 function toHex$1(component) {
@@ -1945,7 +1945,7 @@ const hex4Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
 const hex6Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
 const hex8Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
 
-var cssToRGB = new Map();
+let cssToRGB = new Map();
 
 [
     // CSS1
@@ -2203,13 +2203,13 @@ var cssToRGB = new Map();
      * @returns {Color} Reference to this object for method chaining
      */
     setHSV(h, s, v) {
-        var r, g, b;
+        let r, g, b;
 
-        var i = Math.floor(h * 6);
-        var f = h * 6 - i;
-        var p = v * (1 - s);
-        var q = v * (1 - f * s);
-        var t = v * (1 - (1 - f) * s);
+        let i = Math.floor(h * 6);
+        let f = h * 6 - i;
+        let p = v * (1 - s);
+        let q = v * (1 - f * s);
+        let t = v * (1 - (1 - f) * s);
 
         switch (i % 6) {
             case 0: r = v, g = t, b = p; break;
@@ -2230,13 +2230,13 @@ var cssToRGB = new Map();
      * @returns {Color} Reference to this object for method chaining
      */
     setHSL(h, s, l) {
-        var r, g, b;
+        let r, g, b;
 
         if (s === 0) {
             r = g = b = l; // achromatic
         } else {
-            var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-            var p = 2 * l - q;
+            let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            let p = 2 * l - q;
 
             r = hue2rgb(p, q, h + 1/3);
             g = hue2rgb(p, q, h);
@@ -2386,7 +2386,7 @@ var cssToRGB = new Map();
     parseRGB(rgbColor) {
         // TODO : Memoize this function by caching its input
 
-        var match = rgbaRx.exec(rgbColor);
+        let match = rgbaRx.exec(rgbColor);
         if (match) {
             return this.setColor(+match[1], +match[2], +match[3], +match[5]);
         }
@@ -2404,7 +2404,7 @@ var cssToRGB = new Map();
     parseHex(hexColor, argb = false) {
         // TODO : Memoize this function by caching its input
 
-        var match;
+        let match;
         if ((match = hex8Rx.exec(hexColor))) {
             // #AARRGGBB or #RRGGBBAA
             return this.setColor(
@@ -2426,10 +2426,10 @@ var cssToRGB = new Map();
 
         if ((match = hex4Rx.exec(hexColor))) {
             // #ARGB or #RGBA
-            var r = match[argb === false ? 1 : 2];
-            var g = match[argb === false ? 2 : 3];
-            var b = match[argb === false ? 3 : 4];
-            var a = match[argb === false ? 4 : 1];
+            let r = match[argb === false ? 1 : 2];
+            let g = match[argb === false ? 2 : 3];
+            let b = match[argb === false ? 3 : 4];
+            let a = match[argb === false ? 4 : 1];
             return this.setColor(
                 parseInt(r + r, 16), // r
                 parseInt(g + g, 16), // g
@@ -2458,11 +2458,11 @@ var cssToRGB = new Map();
      * @returns {number}
      */
     toUint32(alpha = 1.0) {
-        var a = this.glArray;
+        let a = this.glArray;
 
-        var ur = (a[0] * 255) & 0xff;
-        var ug = (a[1] * 255) & 0xff;
-        var ub = (a[2] * 255) & 0xff;
+        let ur = (a[0] * 255) & 0xff;
+        let ug = (a[1] * 255) & 0xff;
+        let ub = (a[2] * 255) & 0xff;
 
         return (((alpha * 255) & 0xff) << 24) + (ur << 16) + (ug << 8) + ub;
     }
@@ -2840,7 +2840,7 @@ var cssToRGB = new Map();
      * @returns {boolean}
      */
     equals() {
-        var _x, _y;
+        let _x, _y;
         if (arguments.length === 2) {
             // x, y
             _x = arguments[0];
@@ -2883,19 +2883,19 @@ var cssToRGB = new Map();
      * @returns {Vector2d} Reference to this object for method chaining
      */
     rotate(angle, v) {
-        var cx = 0;
-        var cy = 0;
+        let cx = 0;
+        let cy = 0;
 
         if (typeof v === "object") {
             cx = v.x;
             cy = v.y;
         }
 
-        var x = this.x - cx;
-        var y = this.y - cy;
+        let x = this.x - cx;
+        let y = this.y - cy;
 
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
+        let c = Math.cos(angle);
+        let s = Math.sin(angle);
 
         return this._set(x * c - y * s + cx, x * s + y * c + cy);
     }
@@ -2965,9 +2965,9 @@ var cssToRGB = new Map();
      * @returns {Vector2d} Reference to this object for method chaining
      */
      moveTowards(target, step) {
-        var angle = Math.atan2(target.y - this.y, target.x - this.x);
+        let angle = Math.atan2(target.y - this.y, target.x - this.x);
 
-        var distance = this.distance(target);
+        let distance = this.distance(target);
 
         if (distance === 0 || (step >= 0 && distance <= step * step)) {
             return target;
@@ -2987,7 +2987,7 @@ var cssToRGB = new Map();
      * @returns {number}
      */
     distance(v) {
-        var dx = this.x - v.x, dy = this.y - v.y;
+        let dx = this.x - v.x, dy = this.y - v.y;
         return Math.sqrt(dx * dx + dy * dy);
     }
 
@@ -3267,7 +3267,7 @@ var cssToRGB = new Map();
      * @returns {Vector3d} Reference to this object for method chaining
      */
     minV(v) {
-        var _vz = v.z || 0;
+        let _vz = v.z || 0;
         return this._set((this.x < v.x) ? this.x : v.x, (this.y < v.y) ? this.y : v.y, (this.z < _vz) ? this.z : _vz);
     }
 
@@ -3279,7 +3279,7 @@ var cssToRGB = new Map();
      * @returns {Vector3d} Reference to this object for method chaining
      */
     maxV(v) {
-        var _vz = v.z || 0;
+        let _vz = v.z || 0;
         return this._set((this.x > v.x) ? this.x : v.x, (this.y > v.y) ? this.y : v.y, (this.z > _vz) ? this.z : _vz);
     }
 
@@ -3372,7 +3372,7 @@ var cssToRGB = new Map();
      * @returns {boolean}
      */
     equals() {
-        var _x, _y, _z;
+        let _x, _y, _z;
         if (arguments.length >= 2) {
             // x, y, z
             _x = arguments[0];
@@ -3422,8 +3422,8 @@ var cssToRGB = new Map();
      * @returns {Vector3d} Reference to this object for method chaining
      */
     rotate(angle, v) {
-        var cx = 0;
-        var cy = 0;
+        let cx = 0;
+        let cy = 0;
 
         if (typeof v === "object") {
             cx = v.x;
@@ -3431,11 +3431,11 @@ var cssToRGB = new Map();
         }
 
         // TODO also rotate on the z axis if the given vector is a 3d one
-        var x = this.x - cx;
-        var y = this.y - cy;
+        let x = this.x - cx;
+        let y = this.y - cy;
 
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
+        let c = Math.cos(angle);
+        let s = Math.sin(angle);
 
         return this._set(x * c - y * s + cx, x * s + y * c + cy, this.z);
     }
@@ -3459,8 +3459,8 @@ var cssToRGB = new Map();
      * @returns {Vector3d} Reference to this object for method chaining
      */
     cross(v) {
-        var ax = this.x, ay = this.y, az = this.z;
-        var bx = v.x, by = v.y, bz = v.z;
+        let ax = this.x, ay = this.y, az = this.z;
+        let bx = v.x, by = v.y, bz = v.z;
 
         this.x = ay * bz - az * by;
         this.y = az * bx - ax * bz;
@@ -3513,12 +3513,12 @@ var cssToRGB = new Map();
      * @returns {Vector3d} Reference to this object for method chaining
      */
     moveTowards(target, step) {
-        var angle = Math.atan2(target.y - this.y, target.x - this.x);
+        let angle = Math.atan2(target.y - this.y, target.x - this.x);
 
-        var dx = this.x - target.x;
-        var dy = this.y - target.y;
+        let dx = this.x - target.x;
+        let dy = this.y - target.y;
 
-        var distance = Math.sqrt(dx * dx + dy * dy);
+        let distance = Math.sqrt(dx * dx + dy * dy);
 
         if (distance === 0 || (step >= 0 && distance <= step * step)) {
             return target;
@@ -3538,9 +3538,9 @@ var cssToRGB = new Map();
      * @returns {number}
      */
     distance(v) {
-        var dx = this.x - v.x;
-        var dy = this.y - v.y;
-        var dz = this.z - (v.z || 0);
+        let dx = this.x - v.x;
+        let dy = this.y - v.y;
+        let dz = this.z - (v.z || 0);
         return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 
@@ -3563,7 +3563,7 @@ var cssToRGB = new Map();
      * @returns {Vector3d} Reference to this object for method chaining
      */
     project(v) {
-        var ratio = this.dot(v) / v.length2();
+        let ratio = this.dot(v) / v.length2();
         return this.scale(ratio, ratio, ratio);
     }
 
@@ -3576,7 +3576,7 @@ var cssToRGB = new Map();
      * @returns {Vector3d} Reference to this object for method chaining
      */
     projectN(v) {
-        var ratio = this.dot(v) / v.length2();
+        let ratio = this.dot(v) / v.length2();
         return this.scale(ratio, ratio, ratio);
     }
 
@@ -3649,7 +3649,7 @@ var cssToRGB = new Map();
     }
 
     set x(value) {
-        var ret = this.onUpdate.call(this.scope, value, this._y, this._x, this._y);
+        let ret = this.onUpdate.call(this.scope, value, this._y, this._x, this._y);
         if (ret && "x" in ret) {
             this._x = ret.x;
         } else {
@@ -3671,7 +3671,7 @@ var cssToRGB = new Map();
     }
 
     set y(value) {
-        var ret = this.onUpdate.call(this.scope, this._x, value, this._x, this._y);
+        let ret = this.onUpdate.call(this.scope, this._x, value, this._x, this._y);
         if (ret && "y" in ret) {
             this._y = ret.y;
         } else {
@@ -3681,7 +3681,7 @@ var cssToRGB = new Map();
 
     /** @ignore */
     _set(x, y) {
-        var ret = this.onUpdate.call(this.scope, x, y, this._x, this._y);
+        let ret = this.onUpdate.call(this.scope, x, y, this._x, this._y);
         if (ret && "x" in ret && "y" in ret) {
             this._x = ret.x;
             this._y = ret.y;
@@ -3939,19 +3939,19 @@ var cssToRGB = new Map();
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
     rotate(angle, v) {
-        var cx = 0;
-        var cy = 0;
+        let cx = 0;
+        let cy = 0;
 
         if (typeof v === "object") {
             cx = v.x;
             cy = v.y;
         }
 
-        var x = this._x - cx;
-        var y = this._y - cy;
+        let x = this._x - cx;
+        let y = this._y - cy;
 
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
+        let c = Math.cos(angle);
+        let s = Math.sin(angle);
 
         return this._set(x * c - y * s + cx, x * s + y * c + cy);
     }
@@ -4002,9 +4002,9 @@ var cssToRGB = new Map();
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
      moveTowards(target, step) {
-        var angle = Math.atan2(target.y - this._y, target.x - this._x);
+        let angle = Math.atan2(target.y - this._y, target.x - this._x);
 
-        var distance = this.distance(target);
+        let distance = this.distance(target);
 
         if (distance === 0 || (step >= 0 && distance <= step * step)) {
             return target;
@@ -4107,7 +4107,7 @@ var cssToRGB = new Map();
     }
 
     set x(value) {
-        var ret = this.onUpdate.call(this.scope, value, this._y, this._z, this._x, this._y, this._z);
+        let ret = this.onUpdate.call(this.scope, value, this._y, this._z, this._x, this._y, this._z);
         if (ret && "x" in ret) {
             this._x = ret.x;
         } else {
@@ -4128,7 +4128,7 @@ var cssToRGB = new Map();
     }
 
     set y(value) {
-        var ret = this.onUpdate.call(this.scope, this._x, value, this._z, this._x, this._y, this._z);
+        let ret = this.onUpdate.call(this.scope, this._x, value, this._z, this._x, this._y, this._z);
         if (ret && "y" in ret) {
             this._y = ret.y;
         } else {
@@ -4151,7 +4151,7 @@ var cssToRGB = new Map();
     }
 
     set z(value) {
-        var ret = this.onUpdate.call(this.scope, this._x, this._y, value, this._x, this._y, this._z);
+        let ret = this.onUpdate.call(this.scope, this._x, this._y, value, this._x, this._y, this._z);
         if (ret && "z" in ret) {
             this._z = ret.z;
         } else {
@@ -4163,7 +4163,7 @@ var cssToRGB = new Map();
      * @ignore
      */
     _set(x, y, z) {
-        var ret = this.onUpdate.call(this.scope, x, y, z, this._x, this._y, this._z);
+        let ret = this.onUpdate.call(this.scope, x, y, z, this._x, this._y, this._z);
         if (ret && "x" in ret && "y" in ret && "z" in ret) {
             this._x = ret.x;
             this._y = ret.y;
@@ -4323,7 +4323,7 @@ var cssToRGB = new Map();
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     minV(v) {
-        var _vz = v.z || 0;
+        let _vz = v.z || 0;
         return this._set(
             (this._x < v.x) ? this._x : v.x,
             (this._y < v.y) ? this._y : v.y,
@@ -4339,7 +4339,7 @@ var cssToRGB = new Map();
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     maxV(v) {
-        var _vz = v.z || 0;
+        let _vz = v.z || 0;
         return this._set(
             (this._x > v.x) ? this._x : v.x,
             (this._y > v.y) ? this._y : v.y,
@@ -4464,8 +4464,8 @@ var cssToRGB = new Map();
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     rotate(angle, v) {
-        var cx = 0;
-        var cy = 0;
+        let cx = 0;
+        let cy = 0;
 
         if (typeof v === "object") {
             cx = v.x;
@@ -4473,11 +4473,11 @@ var cssToRGB = new Map();
         }
 
         // TODO also rotate on the z axis if the given vector is a 3d one
-        var x = this.x - cx;
-        var y = this.y - cy;
+        let x = this.x - cx;
+        let y = this.y - cy;
 
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
+        let c = Math.cos(angle);
+        let s = Math.sin(angle);
 
         return this._set(x * c - y * s + cx, x * s + y * c + cy, this.z);
     }
@@ -4501,8 +4501,8 @@ var cssToRGB = new Map();
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     cross(v) {
-        var ax = this._x, ay = this._y, az = this._z;
-        var bx = v.x, by = v.y, bz = v.z;
+        let ax = this._x, ay = this._y, az = this._z;
+        let bx = v.x, by = v.y, bz = v.z;
 
         return this._set(
             ay * bz - az * by,
@@ -4536,12 +4536,12 @@ var cssToRGB = new Map();
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     moveTowards(target, step) {
-        var angle = Math.atan2(target.y - this._y, target.x - this._x);
+        let angle = Math.atan2(target.y - this._y, target.x - this._x);
 
-        var dx = this._x - target.x;
-        var dy = this._y - target.y;
+        let dx = this._x - target.x;
+        let dy = this._y - target.y;
 
-        var distance = Math.sqrt(dx * dx + dy * dy);
+        let distance = Math.sqrt(dx * dx + dy * dy);
 
         if (distance === 0 || (step >= 0 && distance <= step * step)) {
             return target;
@@ -4562,9 +4562,9 @@ var cssToRGB = new Map();
      * @returns {number}
      */
     distance(v) {
-        var dx = this._x - v.x;
-        var dy = this._y - v.y;
-        var dz = this._z - (v.z || 0);
+        let dx = this._x - v.x;
+        let dy = this._y - v.y;
+        let dz = this._z - (v.z || 0);
         return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 
@@ -4708,7 +4708,7 @@ var cssToRGB = new Map();
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     setTransform(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33) {
-        var a = this.val;
+        let a = this.val;
 
         a[0] = m00;
         a[1] = m01;
@@ -4750,7 +4750,7 @@ var cssToRGB = new Map();
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     fromMat2d(m) {
-        var b = m.val;
+        let b = m.val;
         return this.setTransform(
             b[0], b[3], b[6], 0,
             b[1], b[4], b[7], 0,
@@ -4768,14 +4768,14 @@ var cssToRGB = new Map();
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     multiply(m) {
-        var a = this.val;
-        var b = m.val;
+        let a = this.val;
+        let b = m.val;
 
-        var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
-        var a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
-        var a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
-        var a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
-        var b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
+        let a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+        let a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+        let a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+        let a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+        let b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
 
         a[0] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
         a[1] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
@@ -4822,7 +4822,7 @@ var cssToRGB = new Map();
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     transpose() {
-        var a = this.val,
+        let a = this.val,
             a01 = a[1],
             a02 = a[2],
             a03 = a[3],
@@ -4853,30 +4853,30 @@ var cssToRGB = new Map();
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     invert() {
-         var a = this.val;
+         let a = this.val;
 
-         var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
-         var a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
-         var a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
-         var a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+         let a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+         let a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+         let a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+         let a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
 
-         var b00 = a00 * a11 - a01 * a10;
-         var b01 = a00 * a12 - a02 * a10;
-         var b02 = a00 * a13 - a03 * a10;
-         var b03 = a01 * a12 - a02 * a11;
+         let b00 = a00 * a11 - a01 * a10;
+         let b01 = a00 * a12 - a02 * a10;
+         let b02 = a00 * a13 - a03 * a10;
+         let b03 = a01 * a12 - a02 * a11;
 
-         var b04 = a01 * a13 - a03 * a11;
-         var b05 = a02 * a13 - a03 * a12;
-         var b06 = a20 * a31 - a21 * a30;
-         var b07 = a20 * a32 - a22 * a30;
+         let b04 = a01 * a13 - a03 * a11;
+         let b05 = a02 * a13 - a03 * a12;
+         let b06 = a20 * a31 - a21 * a30;
+         let b07 = a20 * a32 - a22 * a30;
 
-         var b08 = a20 * a33 - a23 * a30;
-         var b09 = a21 * a32 - a22 * a31;
-         var b10 = a21 * a33 - a23 * a31;
-         var b11 = a22 * a33 - a23 * a32;
+         let b08 = a20 * a33 - a23 * a30;
+         let b09 = a21 * a32 - a22 * a31;
+         let b10 = a21 * a33 - a23 * a31;
+         let b11 = a22 * a33 - a23 * a32;
 
          // Calculate the determinant
-         var det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+         let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
 
          if (!det)
          {
@@ -4913,12 +4913,12 @@ var cssToRGB = new Map();
      * @returns {Vector2d|Vector3d} result vector object.
      */
      apply(v) {
-        var a = this.val,
+        let a = this.val,
         x = v.x,
         y = v.y,
         z = (typeof v.z !== "undefined") ? v.z : 1;
 
-        var w = (a[3] * x + a[7] * y + a[11] * z + a[15]) || 1.0;
+        let w = (a[3] * x + a[7] * y + a[11] * z + a[15]) || 1.0;
 
         v.x = (a[0] * x + a[4] * y + a[8] * z + a[12]) / w;
         v.y = (a[1] * x + a[5] * y + a[9] * z + a[13]) / w;
@@ -4939,7 +4939,7 @@ var cssToRGB = new Map();
       */
      applyInverse(v) {
          // invert the current matrix
-         var im = pool.pull("Matrix3d", this).invert();
+         let im = pool.pull("Matrix3d", this).invert();
 
          // apply the inverted matrix
          im.apply(v);
@@ -4963,10 +4963,10 @@ var cssToRGB = new Map();
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     ortho(left, right, bottom, top, near, far) {
-        var a = this.val;
-        var leftRight = 1.0 / (left - right);
-        var bottomTop = 1.0 / (bottom - top);
-        var nearFar = 1.0 / (near - far);
+        let a = this.val;
+        let leftRight = 1.0 / (left - right);
+        let bottomTop = 1.0 / (bottom - top);
+        let nearFar = 1.0 / (near - far);
 
         a[0] = -2.0 * leftRight;
         a[1] = 0.0;
@@ -4998,7 +4998,7 @@ var cssToRGB = new Map();
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     scale(x, y = x, z = 0) {
-        var a = this.val;
+        let a = this.val;
 
         a[0] = a[0] * x;
         a[1] = a[1] * x;
@@ -5061,20 +5061,20 @@ var cssToRGB = new Map();
      */
     rotate(angle, v) {
         if (angle !== 0) {
-            var a = this.val,
+            let a = this.val,
                 x = v.x,
                 y = v.y,
                 z = v.z;
 
-            var len = Math.sqrt(x * x + y * y + z * z);
+            let len = Math.sqrt(x * x + y * y + z * z);
 
-            var s, c, t;
-            var a00, a01, a02, a03;
-            var a10, a11, a12, a13;
-            var a20, a21, a22, a23;
-            var b00, b01, b02;
-            var b10, b11, b12;
-            var b20, b21, b22;
+            let s, c, t;
+            let a00, a01, a02, a03;
+            let a10, a11, a12, a13;
+            let a20, a21, a22, a23;
+            let b00, b01, b02;
+            let b10, b11, b12;
+            let b20, b21, b22;
 
             if (len < EPSILON) {
                 return null;
@@ -5148,8 +5148,8 @@ var cssToRGB = new Map();
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     translate() {
-        var a = this.val;
-        var _x, _y, _z;
+        let a = this.val;
+        let _x, _y, _z;
 
         if (arguments.length > 1 ) {
             // x, y (, z)
@@ -5178,7 +5178,7 @@ var cssToRGB = new Map();
      * @returns {boolean}
      */
     isIdentity() {
-        var a = this.val;
+        let a = this.val;
 
         return (
             (a[0] === 1) &&
@@ -5208,8 +5208,8 @@ var cssToRGB = new Map();
      * @returns {boolean} true if both are equals
      */
     equals(m) {
-        var b = m.val;
-        var a = this.val;
+        let b = m.val;
+        let a = this.val;
 
         return (
             (a[0] === b[0]) &&
@@ -5258,7 +5258,7 @@ var cssToRGB = new Map();
      * @returns {string}
      */
     toString() {
-        var a = this.val;
+        let a = this.val;
 
         return "me.Matrix3d(" +
             a[0] + ", " + a[1] + ", " + a[2] + ", " + a[3] + ", " +
@@ -5363,7 +5363,7 @@ var cssToRGB = new Map();
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     setTransform() {
-        var a = this.val;
+        let a = this.val;
 
         if (arguments.length === 9) {
             a[0] = arguments[0]; // a - m00
@@ -5410,8 +5410,8 @@ var cssToRGB = new Map();
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     fromMat3d(m) {
-        var b = m.val;
-        var a = this.val;
+        let b = m.val;
+        let a = this.val;
 
         a[0] = b[0];
         a[1] = b[1];
@@ -5434,8 +5434,8 @@ var cssToRGB = new Map();
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     multiply(m) {
-        var b = m.val;
-        var a = this.val,
+        let b = m.val;
+        let a = this.val,
             a0 = a[0],
             a1 = a[1],
             a3 = a[3],
@@ -5464,7 +5464,7 @@ var cssToRGB = new Map();
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     transpose() {
-        var a = this.val,
+        let a = this.val,
             a1 = a[1],
             a2 = a[2],
             a5 = a[5];
@@ -5486,17 +5486,17 @@ var cssToRGB = new Map();
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     invert() {
-        var val = this.val;
+        let val = this.val;
 
-        var a = val[ 0 ], b = val[ 1 ], c = val[ 2 ],
+        let a = val[ 0 ], b = val[ 1 ], c = val[ 2 ],
             d = val[ 3 ], e = val[ 4 ], f = val[ 5 ],
             g = val[ 6 ], h = val[ 7 ], i = val[ 8 ];
 
-        var ta = i * e - f * h,
+        let ta = i * e - f * h,
             td = f * g - i * d,
             tg = h * d - e * g;
 
-        var n = a * ta + b * td + c * tg;
+        let n = a * ta + b * td + c * tg;
 
         val[ 0 ] = ta / n;
         val[ 1 ] = ( c * h - i * b ) / n;
@@ -5521,7 +5521,7 @@ var cssToRGB = new Map();
     * @returns {Vector2d|Vector3d} result vector object.
     */
     apply(v) {
-        var a = this.val,
+        let a = this.val,
             x = v.x,
             y = v.y,
             z = (typeof v.z !== "undefined") ? v.z : 1;
@@ -5544,11 +5544,11 @@ var cssToRGB = new Map();
      * @returns {Vector2d} result vector object.
      */
     applyInverse(v) {
-        var a = this.val,
+        let a = this.val,
             x = v.x,
             y = v.y;
 
-        var invD = 1 / ((a[0] * a[4]) + (a[3] * -a[1]));
+        let invD = 1 / ((a[0] * a[4]) + (a[3] * -a[1]));
 
         v.x = (a[4] * invD * x) + (-a[3] * invD * y) + (((a[7] * a[3]) - (a[6] * a[4])) * invD);
         v.y = (a[0] * invD * y) + (-a[1] * invD * x) + (((-a[7] * a[0]) + (a[6] * a[1])) * invD);
@@ -5565,7 +5565,7 @@ var cssToRGB = new Map();
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     scale(x, y = x) {
-        var a = this.val;
+        let a = this.val;
 
         a[0] *= x;
         a[1] *= x;
@@ -5617,7 +5617,7 @@ var cssToRGB = new Map();
      */
     rotate(angle) {
         if (angle !== 0) {
-            var a = this.val,
+            let a = this.val,
                 a00 = a[0],
                 a01 = a[1],
                 a02 = a[2],
@@ -5655,8 +5655,8 @@ var cssToRGB = new Map();
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     translate() {
-        var a = this.val;
-        var _x, _y;
+        let a = this.val;
+        let _x, _y;
 
         if (arguments.length === 2) {
             // x, y
@@ -5681,7 +5681,7 @@ var cssToRGB = new Map();
      * @returns {boolean}
      */
     isIdentity() {
-        var a = this.val;
+        let a = this.val;
 
         return (
             a[0] === 1 &&
@@ -5704,8 +5704,8 @@ var cssToRGB = new Map();
      * @returns {boolean} true if both are equals
      */
     equals(m) {
-        var b = m.val;
-        var a = this.val;
+        let b = m.val;
+        let a = this.val;
 
         return (
             (a[0] === b[0]) &&
@@ -5747,7 +5747,7 @@ var cssToRGB = new Map();
      * @returns {string}
      */
     toString() {
-        var a = this.val;
+        let a = this.val;
 
         return "me.Matrix2d(" +
             a[0] + ", " + a[1] + ", " + a[2] + ", " +
@@ -6562,7 +6562,7 @@ earcut.flatten = function (data) {
 
             } else {
                 // it's a flat array
-                for (var p = 0; p < vertices.length; p += 2) {
+                for (let p = 0; p < vertices.length; p += 2) {
                     this.points.push(pool.pull("Vector2d", vertices[p], vertices[p + 1]));
                 }
             }
@@ -6584,9 +6584,9 @@ earcut.flatten = function (data) {
      * @returns {Polygon} Reference to this object for method chaining
      */
     transform(m) {
-        var points = this.points;
-        var len = points.length;
-        for (var i = 0; i < len; i++) {
+        let points = this.points;
+        let len = points.length;
+        for (let i = 0; i < len; i++) {
             m.apply(points[i]);
         }
         this.recalc();
@@ -6624,9 +6624,9 @@ earcut.flatten = function (data) {
      */
     rotate(angle, v) {
         if (angle !== 0) {
-            var points = this.points;
-            var len = points.length;
-            for (var i = 0; i < len; i++) {
+            let points = this.points;
+            let len = points.length;
+            for (let i = 0; i < len; i++) {
                 points[i].rotate(angle, v);
             }
             this.recalc();
@@ -6644,9 +6644,9 @@ earcut.flatten = function (data) {
      * @returns {Polygon} Reference to this object for method chaining
      */
     scale(x, y = x) {
-        var points = this.points;
-        var len = points.length;
-        for (var i = 0; i < len; i++) {
+        let points = this.points;
+        let len = points.length;
+        for (let i = 0; i < len; i++) {
             points[i].scale(x, y);
         }
         this.recalc();
@@ -6673,14 +6673,14 @@ earcut.flatten = function (data) {
      * @returns {Polygon} Reference to this object for method chaining
      */
     recalc() {
-        var i;
-        var edges = this.edges;
-        var normals = this.normals;
-        var indices = this.indices;
+        let i;
+        let edges = this.edges;
+        let normals = this.normals;
+        let indices = this.indices;
 
         // Copy the original points array and apply the offset/angle
-        var points = this.points;
-        var len = points.length;
+        let points = this.points;
+        let len = points.length;
 
         if (len < 3) {
             throw new Error("Requires at least 3 points");
@@ -6732,7 +6732,7 @@ earcut.flatten = function (data) {
         // http://paulbourke.net/geometry/polygonmesh/
         // Copyright (c) Paul Bourke (use permitted)
 
-        var flag = 0,
+        let flag = 0,
             vertices = this.points,
             n = vertices.length,
             i,
@@ -6785,7 +6785,7 @@ earcut.flatten = function (data) {
      * @returns {Polygon} Reference to this object for method chaining
      */
     translate() {
-        var _x, _y;
+        let _x, _y;
 
         if (arguments.length === 2) {
             // x, y
@@ -6819,7 +6819,7 @@ earcut.flatten = function (data) {
      * @param {number} y
      */
     shift() {
-        var _x, _y;
+        let _x, _y;
         if (arguments.length === 2) {
             // x, y
             _x = arguments[0];
@@ -6856,7 +6856,7 @@ earcut.flatten = function (data) {
      * @returns {boolean} true if contains
      */
     contains() {
-        var _x, _y;
+        let _x, _y;
 
         if (arguments.length === 2) {
           // x, y
@@ -6868,14 +6868,14 @@ earcut.flatten = function (data) {
           _y = arguments[0].y;
         }
 
-        var intersects = false;
-        var posx = this.pos.x, posy = this.pos.y;
-        var points = this.points;
-        var len = points.length;
+        let intersects = false;
+        let posx = this.pos.x, posy = this.pos.y;
+        let points = this.points;
+        let len = points.length;
 
         //http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-        for (var i = 0, j = len - 1; i < len; j = i++) {
-            var iy = points[i].y + posy, ix = points[i].x + posx,
+        for (let i = 0, j = len - 1; i < len; j = i++) {
+            let iy = points[i].y + posy, ix = points[i].x + posx,
                 jy = points[j].y + posy, jx = points[j].x + posx;
             if (((iy > _y) !== (jy > _y)) && (_x < (jx - ix) * (_y - iy) / (jy - iy) + ix)) {
                 intersects = !intersects;
@@ -6904,7 +6904,7 @@ earcut.flatten = function (data) {
      * @returns {Bounds} this shape bounding box Rectangle object
      */
     updateBounds() {
-        var bounds = this.getBounds();
+        let bounds = this.getBounds();
 
         bounds.update(this.points);
         bounds.translate(this.pos);
@@ -6919,7 +6919,7 @@ earcut.flatten = function (data) {
      * @returns {Polygon} new Polygon
      */
     clone() {
-        var copy = [];
+        let copy = [];
         this.points.forEach((point) => {
             copy.push(point.clone());
         });
@@ -6956,7 +6956,7 @@ earcut.flatten = function (data) {
      * @returns {boolean} true if contains
      */
     contains() {
-        var _x, _y;
+        let _x, _y;
 
         if (arguments.length === 2) {
           // x, y
@@ -6972,8 +6972,8 @@ earcut.flatten = function (data) {
         // rather than creating temp translated vectors
         _x -= this.pos.x; // Cx
         _y -= this.pos.y; // Cy
-        var start = this.points[0]; // Ax/Ay
-        var end = this.points[1]; // Bx/By
+        let start = this.points[0]; // Ax/Ay
+        let end = this.points[1]; // Bx/By
 
         //(Cy - Ay) * (Bx - Ax) = (By - Ay) * (Cx - Ax)
         return (_y - start.y) * (end.x - start.x) === (end.y - start.y) * (_x - start.x);
@@ -6987,12 +6987,12 @@ earcut.flatten = function (data) {
      * @returns {Line} this instance for objecf chaining
      */
     recalc() {
-        var edges = this.edges;
-        var normals = this.normals;
-        var indices = this.indices;
+        let edges = this.edges;
+        let normals = this.normals;
+        let indices = this.indices;
 
         // Copy the original points array and apply the offset/angle
-        var points = this.points;
+        let points = this.points;
 
         if (points.length !== 2) {
             throw new Error("Requires exactly 2 points");
@@ -7022,7 +7022,7 @@ earcut.flatten = function (data) {
      * @returns {Line} new Line
      */
     clone() {
-        var copy = [];
+        let copy = [];
         this.points.forEach((point) => {
             copy.push(point.clone());
         });
@@ -7115,14 +7115,14 @@ earcut.flatten = function (data) {
      * @returns {Ellipse} this instance for objecf chaining
      */
     setShape(x, y, w, h) {
-        var hW = w / 2;
-        var hH = h / 2;
+        const hW = w / 2;
+        const hH = h / 2;
 
         this.pos.set(x, y);
         this.radius = Math.max(hW, hH);
         this.ratio.set(hW / this.radius, hH / this.radius);
         this.radiusV.set(this.radius, this.radius).scaleV(this.ratio);
-        var r = this.radius * this.radius;
+        const r = this.radius * this.radius;
         this.radiusSq.set(r, r).scaleV(this.ratio);
 
         // update the corresponding bounds
@@ -7206,7 +7206,7 @@ earcut.flatten = function (data) {
      * @returns {Ellipse} this ellipse
      */
     translate() {
-        var _x, _y;
+        let _x, _y;
 
         if (arguments.length === 2) {
             // x, y
@@ -7243,7 +7243,7 @@ earcut.flatten = function (data) {
      * @returns {boolean} true if contains
      */
     contains() {
-        var _x, _y;
+        let _x, _y;
 
         if (arguments.length === 2) {
           // x, y
@@ -7347,7 +7347,7 @@ earcut.flatten = function (data) {
      * @returns {boolean}
      */
      equals() {
-        var _x, _y;
+        let _x, _y;
         if (arguments.length === 2) {
             // x, y
             _x = arguments[0];
@@ -7408,7 +7408,7 @@ earcut.flatten = function (data) {
      * @returns {Rect} this rectangle
      */
     setShape(x, y, w, h) {
-        var points = w; // assume w is an array by default
+        let points = w; // assume w is an array by default
 
         this.pos.set(x, y);
 
@@ -7444,7 +7444,7 @@ earcut.flatten = function (data) {
      * @memberof Rect
      */
     get right() {
-        var w = this.width;
+        let w = this.width;
         return (this.left + w) || w;
     }
 
@@ -7467,7 +7467,7 @@ earcut.flatten = function (data) {
      * @memberof Rect
      */
     get bottom() {
-        var h = this.height;
+        let h = this.height;
         return (this.top + h) || h;
     }
 
@@ -7614,8 +7614,8 @@ earcut.flatten = function (data) {
      * @returns {Rect} the union(ed) rectangle
      */
     union(rect) {
-        var x1 = Math.min(this.left, rect.left);
-        var y1 = Math.min(this.top, rect.top);
+        let x1 = Math.min(this.left, rect.left);
+        let y1 = Math.min(this.top, rect.top);
 
         this.resize(
             Math.max(this.right, rect.right) - x1,
@@ -7670,8 +7670,8 @@ earcut.flatten = function (data) {
      * @returns {boolean} true if contains
      */
     contains() {
-        var arg0 = arguments[0];
-        var _x1, _x2, _y1, _y2;
+        let arg0 = arguments[0];
+        let _x1, _x2, _y1, _y2;
         if (arguments.length === 2) {
              // x, y
              _x1 = _x2 = arg0;
@@ -7819,8 +7819,8 @@ class RoundRect extends Rect {
      * @returns {boolean} true if contains
      */
     contains() {
-        var arg0 = arguments[0];
-        var _x, _y;
+        let arg0 = arguments[0];
+        let _x, _y;
         if (arguments.length === 2) {
              // x, y
              _x = arg0;
@@ -7847,9 +7847,9 @@ class RoundRect extends Rect {
         }
 
         // check whether point is in one of the rounded corner areas
-        var tx, ty;
-        var radiusX =  Math.max(0, Math.min(this.radius, this.width / 2));
-        var radiusY =  Math.max(0, Math.min(this.radius, this.height / 2));
+        let tx, ty;
+        const radiusX =  Math.max(0, Math.min(this.radius, this.width / 2));
+        const radiusY =  Math.max(0, Math.min(this.radius, this.height / 2));
 
         if (_x < this.left + radiusX && _y < this.top + radiusY) {
             tx = _x - this.left - radiusX;
@@ -7906,12 +7906,12 @@ class RoundRect extends Rect {
  * @param {Array} arr - array from which to remove an object
  * @param {object} obj - to be removed
  * @returns {Array} the modified Array
- * var arr = [ "foo", "bar", "baz" ];
+ * let arr = [ "foo", "bar", "baz" ];
  * // remove "foo" from the array
  * me.utils.array.remove(arr, "foo");
  */
 function remove(arr, obj) {
-    var i = Array.prototype.indexOf.call(arr, obj);
+    let i = Array.prototype.indexOf.call(arr, obj);
     if (i !== -1) {
         Array.prototype.splice.call(arr, i, 1);
     }
@@ -7927,7 +7927,7 @@ function remove(arr, obj) {
  * @returns {any} random member of array
  * @example
  * // Select a random array element
- * var arr = [ "foo", "bar", "baz" ];
+ * let arr = [ "foo", "bar", "baz" ];
  * console.log(me.utils.array.random(arr));
  */
 function random(arr) {
@@ -7963,7 +7963,7 @@ var arrayUtils = {
  * a pool of `QuadTree` objects
  * @ignore
  */
-var QT_ARRAY = [];
+let QT_ARRAY = [];
 
 /**
  * will pop a quadtree object from the array
@@ -7972,7 +7972,7 @@ var QT_ARRAY = [];
  */
 function QT_ARRAY_POP(world, bounds, max_objects = 4, max_levels = 4, level = 0) {
     if (QT_ARRAY.length > 0) {
-        var _qt =  QT_ARRAY.pop();
+        let _qt =  QT_ARRAY.pop();
         _qt.world = world;
         _qt.bounds = bounds;
         _qt.max_objects = max_objects;
@@ -7996,7 +7996,7 @@ function QT_ARRAY_PUSH(qt) {
  * a temporary vector object to be reused
  * @ignore
  */
-var QT_VECTOR = new Vector2d();
+let QT_VECTOR = new Vector2d();
 
 /**
  * @classdesc
@@ -8029,7 +8029,7 @@ var QT_VECTOR = new Vector2d();
      * Split the node into 4 subnodes
      */
     split() {
-        var nextLevel = this.level + 1,
+        let nextLevel = this.level + 1,
             subWidth  = this.bounds.width / 2,
             subHeight = this.bounds.height / 2,
             left = this.bounds.left,
@@ -8098,8 +8098,8 @@ var QT_VECTOR = new Vector2d();
      * @returns Integer index of the subnode (0-3), or -1 if rect cannot completely fit within a subnode and is part of the parent node
      */
     getIndex(item) {
-        var pos;
-        var bounds = item.getBounds();
+        let pos;
+        let bounds = item.getBounds();
 
         // use game world coordinates for floating items
         if (item.isFloating === true) {
@@ -8108,7 +8108,7 @@ var QT_VECTOR = new Vector2d();
             pos = QT_VECTOR.set(item.left, item.top);
         }
 
-        var index = -1,
+        let index = -1,
             rx = pos.x,
             ry = pos.y,
             rw = bounds.width,
@@ -8146,7 +8146,7 @@ var QT_VECTOR = new Vector2d();
      * @param {Container} container - group of objects to be added
      */
     insertContainer(container) {
-        for (var i = container.children.length, child; i--, (child = container.children[i]);) {
+        for (let i = container.children.length, child; i--, (child = container.children[i]);) {
             if (child.isKinematic !== true) {
                 if (typeof child.addChild === "function") {
                     if (child.name !== "rootContainer") {
@@ -8174,7 +8174,7 @@ var QT_VECTOR = new Vector2d();
      * @param {object} item - object to be added
      */
     insert(item) {
-        var index = -1;
+        let index = -1;
 
         //if we have subnodes ...
         if (this.nodes.length > 0) {
@@ -8195,7 +8195,7 @@ var QT_VECTOR = new Vector2d();
                 this.split();
             }
 
-            var i = 0;
+            let i = 0;
 
             //add all objects to there corresponding subnodes
             while (i < this.objects.length) {
@@ -8220,19 +8220,19 @@ var QT_VECTOR = new Vector2d();
      * @returns {object[]} array with all detected objects
      */
     retrieve(item, fn) {
-        var returnObjects = this.objects;
+        let returnObjects = this.objects;
 
         //if we have subnodes ...
         if (this.nodes.length > 0) {
 
-            var index = this.getIndex(item);
+            let index = this.getIndex(item);
 
             //if rect fits into a subnode ..
             if (index !== -1) {
                 returnObjects = returnObjects.concat(this.nodes[index].retrieve(item));
             } else {
                  //if rect does not fit into a subnode, check it against all subnodes
-                for (var i = 0; i < this.nodes.length; i = i + 1) {
+                for (let i = 0; i < this.nodes.length; i = i + 1) {
                     returnObjects = returnObjects.concat(this.nodes[i].retrieve(item));
                 }
             }
@@ -8254,7 +8254,7 @@ var QT_VECTOR = new Vector2d();
      * @returns {boolean} true if the item was found and removed.
      */
      remove(item) {
-        var found = false;
+        let found = false;
 
         if (typeof (item.getBounds) === "undefined") {
             // ignore object that cannot be added in the first place
@@ -8264,7 +8264,7 @@ var QT_VECTOR = new Vector2d();
         //if we have subnodes ...
         if (this.nodes.length > 0) {
             // determine to which node the item belongs to
-            var index = this.getIndex(item);
+            let index = this.getIndex(item);
 
             if (index !== -1) {
                 found = remove(this.nodes[index], item);
@@ -8303,8 +8303,8 @@ var QT_VECTOR = new Vector2d();
      * @returns {boolean} true if the node has any children
      */
     hasChildren() {
-        for (var i = 0; i < this.nodes.length; i = i + 1) {
-            var subnode = this.nodes[i];
+        for (let i = 0; i < this.nodes.length; i = i + 1) {
+            let subnode = this.nodes[i];
             if (subnode.length > 0 || subnode.objects.length > 0) {
                 return true;
             }
@@ -8321,7 +8321,7 @@ var QT_VECTOR = new Vector2d();
     clear(bounds) {
         this.objects.length = 0;
 
-        for (var i = 0; i < this.nodes.length; i++) {
+        for (let i = 0; i < this.nodes.length; i++) {
             this.nodes[i].clear();
             // recycle the quadTree object
             QT_ARRAY_PUSH(this.nodes[i]);
@@ -8397,7 +8397,7 @@ var QT_VECTOR = new Vector2d();
     }
 
     set x(value) {
-        var deltaX = this.max.x - this.min.x;
+        let deltaX = this.max.x - this.min.x;
         this.min.x = value;
         this.max.x = value + deltaX;
     }
@@ -8411,7 +8411,7 @@ var QT_VECTOR = new Vector2d();
     }
 
     set y(value) {
-        var deltaY = this.max.y - this.min.y;
+        let deltaY = this.max.y - this.min.y;
 
         this.min.y = value;
         this.max.y = value + deltaY;
@@ -8524,8 +8524,8 @@ var QT_VECTOR = new Vector2d();
         if (clear === true) {
             this.clear();
         }
-        for (var i = 0; i < vertices.length; i++) {
-            var vertex = vertices[i];
+        for (let i = 0; i < vertices.length; i++) {
+            let vertex = vertices[i];
             if (vertex.x > this.max.x) this.max.x = vertex.x;
             if (vertex.x < this.min.x) this.min.x = vertex.x;
             if (vertex.y > this.max.y) this.max.y = vertex.y;
@@ -8577,7 +8577,7 @@ var QT_VECTOR = new Vector2d();
      * @param {Matrix2d} [m] - an optional transform to apply to the given frame coordinates
      */
     addFrame(x0, y0, x1, y1, m) {
-        var v = pool.pull("Point");
+        let v = pool.pull("Point");
 
         this.addPoint(v.set(x0, y0), m);
         this.addPoint(v.set(x1, y0), m);
@@ -8602,8 +8602,8 @@ var QT_VECTOR = new Vector2d();
      * @returns {boolean} True if the bounds contain the point, otherwise false
      */
     contains() {
-        var arg0 = arguments[0];
-        var _x1, _x2, _y1, _y2;
+        let arg0 = arguments[0];
+        let _x1, _x2, _y1, _y2;
         if (arguments.length === 2) {
             // x, y
             _x1 = _x2 = arg0;
@@ -8657,7 +8657,7 @@ var QT_VECTOR = new Vector2d();
      * @param {number} y
      */
     translate() {
-        var _x, _y;
+        let _x, _y;
         if (arguments.length === 2) {
             // x, y
             _x = arguments[0];
@@ -8686,7 +8686,7 @@ var QT_VECTOR = new Vector2d();
      * @param {number} y
      */
     shift() {
-        var _x, _y;
+        let _x, _y;
 
         if (arguments.length === 2) {
             // x, y
@@ -8698,7 +8698,7 @@ var QT_VECTOR = new Vector2d();
             _y = arguments[0].y;
         }
 
-        var deltaX = this.max.x - this.min.x,
+        let deltaX = this.max.x - this.min.x,
             deltaY = this.max.y - this.min.y;
 
         this.min.x = _x;
@@ -8712,7 +8712,7 @@ var QT_VECTOR = new Vector2d();
      * @returns {Bounds}
      */
     clone() {
-        var bounds = new Bounds();
+        let bounds = new Bounds();
         bounds.addBounds(this);
         return bounds;
     }
@@ -8738,7 +8738,7 @@ var QT_VECTOR = new Vector2d();
  * @namespace collision
  */
 
-var collision = {
+let collision = {
 
      /**
       * The maximum number of children that a quadtree node can contain before it is split into sub-nodes.
@@ -8833,7 +8833,7 @@ var collision = {
      * @returns {Array.<Renderable>} an array of intersecting physic objects
      * @example
      *    // define a line accross the viewport
-     *    var ray = new me.Line(
+     *    let ray = new me.Line(
      *        // absolute position of the line
      *        0, 0, [
      *        // starting point relative to the initial position
@@ -8893,7 +8893,7 @@ function isNumeric(str) {
  * @returns {boolean} true if the string is either true or false
  */
 function isBoolean(str) {
-    var trimmed = str.trim();
+    const trimmed = str.trim();
     return (trimmed === "true") || (trimmed === "false");
 }
 
@@ -8906,7 +8906,7 @@ function isBoolean(str) {
  * @returns {string} the converted hexadecimal value
  */
 function toHex(str) {
-    var res = "", c = 0;
+    let res = "", c = 0;
     while (c < str.length) {
         res += str.charCodeAt(c++).toString(16);
     }
@@ -8961,11 +8961,11 @@ function prefixed(name, obj) {
         return obj[name];
     }
 
-    var uc_name = capitalize(name);
+    let uc_name = capitalize(name);
 
-    var result;
+    let result;
     vendors.some((vendor) => {
-        var name = vendor + uc_name;
+        let name = vendor + uc_name;
         return (result = (name in obj) ? obj[name] : undefined);
     });
     return result;
@@ -8988,10 +8988,10 @@ function setPrefixed(name, value, obj) {
         return;
     }
 
-    var uc_name = capitalize(name);
+    let uc_name = capitalize(name);
 
     vendors.some((vendor) => {
-        var name = vendor + uc_name;
+        let name = vendor + uc_name;
         if (name in obj) {
             obj[name] = value;
             return true;
@@ -9083,15 +9083,15 @@ function defer(func, thisArg, ...args) {
  * @returns {Function} the function that will be throttled
  */
 function throttle(fn, delay, no_trailing) {
-    var last = globalThis.performance.now(), deferTimer;
+    let last = globalThis.performance.now(), deferTimer;
     // `no_trailing` defaults to false.
     if (typeof no_trailing !== "boolean") {
         no_trailing = false;
     }
     return function () {
-        var now = globalThis.performance.now();
-        var elasped = now - last;
-        var args = arguments;
+        let now = globalThis.performance.now();
+        let elasped = now - last;
+        let args = arguments;
         if (elasped < delay) {
             if (no_trailing === false) {
                 // hold on to it
@@ -9121,10 +9121,10 @@ var fnUtils = {
  */
 
 // guid default value
-var GUID_base  = "";
-var GUID_index = 0;
+let GUID_base  = "";
+let GUID_index = 0;
 
-var utils = {
+let utils = {
 
     agent : agentUtils,
     array : arrayUtils,
@@ -9150,12 +9150,12 @@ var utils = {
      * }
      */
     checkVersion : function (first, second) {
-        var a = first.split(".");
-        var b = second.split(".");
-        var len = Math.min(a.length, b.length);
-        var result = 0;
+        let a = first.split(".");
+        let b = second.split(".");
+        let len = Math.min(a.length, b.length);
+        let result = 0;
 
-        for (var i = 0; i < len; i++) {
+        for (let i = 0; i < len; i++) {
             if ((result = +a[i] - +b[i])) {
                 break;
             }
@@ -9179,15 +9179,15 @@ var utils = {
      * @property {string} [debugToggleKey="s"] show/hide the debug panel (if preloaded)
      * @example
      * // http://www.example.com/index.html#debug&hitbox=true&mytag=value
-     * var UriFragment = me.utils.getUriFragment();
+     * let UriFragment = me.utils.getUriFragment();
      * console.log(UriFragment["mytag"]); //> "value"
      */
     getUriFragment : function (url) {
-        var hash = {};
+        let hash = {};
 
         if (typeof url === "undefined") {
             if (typeof globalThis.document !== "undefined") {
-                var location = globalThis.document.location;
+                let location = globalThis.document.location;
 
                 if (location && location.hash) {
                     url = location.hash;
@@ -9201,7 +9201,7 @@ var utils = {
             }
         } else {
             // never cache if a url is passed as parameter
-            var index = url.indexOf("#");
+            let index = url.indexOf("#");
             if (index !== -1) {
                 url = url.slice(index, url.length);
             } else {
@@ -9211,9 +9211,9 @@ var utils = {
 
         // parse the url
         url.slice(1).split("&").filter((value) => value !== "").forEach((value) => {
-            var kv = value.split("=");
-            var k = kv.shift();
-            var v = kv.join("=");
+            let kv = value.split("=");
+            let k = kv.shift();
+            let v = kv.join("=");
             hash[k] = v || true;
         });
 
@@ -9597,7 +9597,7 @@ var EventEmitter = eventemitter3Exports;
  */
 
 // internal instance of the event emiter
-var eventEmitter = new EventEmitter();
+let eventEmitter = new EventEmitter();
 
 /**
  * event when the DOM is Ready is booting
@@ -13529,7 +13529,7 @@ let soundLoadError = function (sound_name, onerror_cb) {
     // check the retry counter
     if (retry_counter++ > 3) {
         // something went wrong
-        var errmsg = "melonJS: failed loading " + sound_name;
+        let errmsg = "melonJS: failed loading " + sound_name;
         if (stopOnAudioError === false) {
             // disable audio
             disable();
@@ -13635,14 +13635,14 @@ function disable() {
  * @ignore
  */
 function load$1(sound, html5, onload_cb, onerror_cb) {
-    var urls = [];
+    let urls = [];
     if (audioExts.length === 0) {
         throw new Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
     }
     if (isDataUrl(sound.src) === true) {
         urls.push(sound.src);
     } else {
-        for (var i = 0; i < audioExts.length; i++) {
+        for (let i = 0; i < audioExts.length; i++) {
             urls.push(sound.src + sound.name + "." + audioExts[i] + nocache);
         }
     }
@@ -13691,9 +13691,9 @@ function load$1(sound, html5, onload_cb, onerror_cb) {
  * me.audio.play("gameover_sfx", false, null, 0.5);
  */
 function play(sound_name, loop = false, onend, volume) {
-    var sound = audioTracks[sound_name];
+    let sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
-        var id = sound.play();
+        let id = sound.play();
         if (typeof loop === "boolean") {
             // arg[0] can take different types in howler 2.0
             sound.loop(loop, id);
@@ -13723,7 +13723,7 @@ function play(sound_name, loop = false, onend, volume) {
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will fade.
  */
 function fade(sound_name, from, to, duration, id) {
-    var sound = audioTracks[sound_name];
+    let sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
         sound.fade(from, to, duration, id);
     } else {
@@ -13740,12 +13740,12 @@ function fade(sound_name, from, to, duration, id) {
  * @returns {number} return the current seek position (if no extra parameters were given)
  * @example
  * // return the current position of the background music
- * var current_pos = me.audio.seek("dst-gameforest");
+ * let current_pos = me.audio.seek("dst-gameforest");
  * // set back the position of the background music to the beginning
  * me.audio.seek("dst-gameforest", 0);
  */
 function seek(sound_name, ...args) {
-    var sound = audioTracks[sound_name];
+    let sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
         return sound.seek(...args);
     } else {
@@ -13762,12 +13762,12 @@ function seek(sound_name, ...args) {
  * @returns {number} return the current playback rate (if no extra parameters were given)
  * @example
  * // get the playback rate of the background music
- * var rate = me.audio.rate("dst-gameforest");
+ * let rate = me.audio.rate("dst-gameforest");
  * // speed up the playback of the background music
  * me.audio.rate("dst-gameforest", 2.0);
  */
 function rate(sound_name, ...args) {
-    var sound = audioTracks[sound_name];
+    let sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
         return sound.rate(...args);
     } else {
@@ -13785,7 +13785,7 @@ function rate(sound_name, ...args) {
  */
 function stop(sound_name, id) {
     if (typeof sound_name !== "undefined") {
-        var sound = audioTracks[sound_name];
+        let sound = audioTracks[sound_name];
         if (sound && typeof sound !== "undefined") {
             sound.stop(id);
             // remove the defined onend callback (if any defined)
@@ -13808,7 +13808,7 @@ function stop(sound_name, id) {
  * me.audio.pause("cling");
  */
 function pause(sound_name, id) {
-    var sound = audioTracks[sound_name];
+    let sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
         sound.pause(id);
     } else {
@@ -13823,7 +13823,7 @@ function pause(sound_name, id) {
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will resume.
  * @example
  * // play a audio clip
- * var id = me.audio.play("myClip");
+ * let id = me.audio.play("myClip");
  * ...
  * // pause it
  * me.audio.pause("myClip", id);
@@ -13832,7 +13832,7 @@ function pause(sound_name, id) {
  * me.audio.resume("myClip", id);
  */
 function resume(sound_name, id) {
-    var sound = audioTracks[sound_name];
+    let sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
         sound.play(id);
     } else {
@@ -13945,7 +13945,7 @@ function getVolume() {
  * me.audio.mute("awesome_music");
  */
 function mute(sound_name, id, mute = true) {
-    var sound = audioTracks[sound_name];
+    let sound = audioTracks[sound_name];
     if (sound && typeof(sound) !== "undefined") {
         sound.mute(mute, id);
     } else {
@@ -14014,7 +14014,7 @@ function unload$1(sound_name) {
  * me.audio.unloadAll();
  */
 function unloadAll$1() {
-    for (var sound_name in audioTracks) {
+    for (let sound_name in audioTracks) {
         if (audioTracks.hasOwnProperty(sound_name)) {
             unload$1(sound_name);
         }
@@ -14222,7 +14222,7 @@ function init(width, height, options) {
  * @returns {HTMLCanvasElement|OffscreenCanvas}
  */
 function createCanvas(width, height, returnOffscreenCanvas = false) {
-    var _canvas;
+    let _canvas;
 
     if (width === 0 || height === 0) {
         throw new Error("width or height was zero, Canvas could not be initialized !");
@@ -14297,7 +14297,7 @@ var video = {
  */
 
 // Variable to hold the object data
-var data = {};
+let data = {};
 
 let hasLocalStorage$1 = false;
 
@@ -14322,10 +14322,10 @@ function isReserved(key) {
 on(BOOT, () => {
     // Load previous data if local Storage is supported
     if (hasLocalStorage$1 === true) {
-        var me_save_content = globalThis.localStorage.getItem("me.save");
+        let me_save_content = globalThis.localStorage.getItem("me.save");
 
         if (typeof me_save_content === "string" && me_save_content.length > 0) {
-            var keys = JSON.parse(me_save_content) || [];
+            let keys = JSON.parse(me_save_content) || [];
             keys.forEach((key) => {
                 data[key] = JSON.parse(globalThis.localStorage.getItem("me.save." + key));
             });
@@ -14333,7 +14333,7 @@ on(BOOT, () => {
     }
 });
 
-var save = {
+let save = {
 
     /**
      * Add new keys to localStorage and set them to the given default values if they do not exist
@@ -14347,7 +14347,7 @@ var save = {
      * me.save.score = 1000;
      */
     add(props) {
-        var obj = save;
+        let obj = save;
 
         Object.keys(props).forEach((key) => {
             if (isReserved(key)) {
@@ -14916,7 +14916,7 @@ let stopOnBlur = false;
 * @param {Function} fn - the function to be executed
 * @example
 * // small game skeleton
-* var game = {
+* let game = {
 *    // called by the me.device.onReady function
 *    onload = function () {
 *       // init video
@@ -15461,30 +15461,30 @@ var device = {
 };
 
 // corresponding actions
-var _keyStatus = {};
+let _keyStatus = {};
 
 // lock enable flag for keys
-var _keyLock = {};
+let _keyLock = {};
 // actual lock status of each key
-var _keyLocked = {};
+let _keyLocked = {};
 
 // List of binded keys being held
-var _keyRefs = {};
+let _keyRefs = {};
 
 // whether default event should be prevented for a given keypress
-var _preventDefaultForKeys = {};
+let _preventDefaultForKeys = {};
 
 // list of binded keys
-var _keyBindings = {};
+let _keyBindings = {};
 
 /**
  * key down event
  * @ignore
  */
-var keyDownEvent = function (e, keyCode, mouseButton) {
+let keyDownEvent = function (e, keyCode, mouseButton) {
 
     keyCode = keyCode || e.keyCode || e.button;
-    var action = _keyBindings[keyCode];
+    let action = _keyBindings[keyCode];
 
     // publish a message for keydown event
     emit(KEYDOWN,
@@ -15495,7 +15495,7 @@ var keyDownEvent = function (e, keyCode, mouseButton) {
 
     if (action) {
         if (!_keyLocked[action]) {
-            var trigger = (typeof mouseButton !== "undefined") ? mouseButton : keyCode;
+            let trigger = (typeof mouseButton !== "undefined") ? mouseButton : keyCode;
             if (!_keyRefs[action][trigger]) {
                 _keyStatus[action]++;
                 _keyRefs[action][trigger] = true;
@@ -15519,15 +15519,15 @@ var keyDownEvent = function (e, keyCode, mouseButton) {
  * key up event
  * @ignore
  */
-var keyUpEvent = function (e, keyCode, mouseButton) {
+let keyUpEvent = function (e, keyCode, mouseButton) {
     keyCode = keyCode || e.keyCode || e.button;
-    var action = _keyBindings[keyCode];
+    let action = _keyBindings[keyCode];
 
     // publish a message for keydown event
     emit(KEYUP, action, keyCode);
 
     if (action) {
-        var trigger = (typeof mouseButton !== "undefined") ? mouseButton : keyCode;
+        let trigger = (typeof mouseButton !== "undefined") ? mouseButton : keyCode;
         _keyRefs[action][trigger] = undefined;
 
         if (_keyStatus[action] > 0) {
@@ -15560,7 +15560,7 @@ var keyUpEvent = function (e, keyCode, mouseButton) {
   * @name keyBoardEventTarget
   * @memberof input
   */
- var keyBoardEventTarget = null;
+ let keyBoardEventTarget = null;
 
 /**
  * standard keyboard constants
@@ -15909,7 +15909,7 @@ function unlockKey(action) {
  */
 function unbindKey(keycode) {
     // clear the event status
-    var keybinding = _keyBindings[keycode];
+    let keybinding = _keyBindings[keycode];
     _keyStatus[keybinding] = 0;
     _keyLock[keybinding] = false;
     _keyRefs[keybinding] = {};
@@ -15922,7 +15922,7 @@ function unbindKey(keycode) {
  * a temporary vector object
  * @ignore
  */
-var tmpVec = new Vector2d();
+let tmpVec = new Vector2d();
 
 /**
  * @classdesc
@@ -16301,22 +16301,22 @@ class Pointer extends Bounds {
  * @type {Array.<Vector2d>}
  * @ignore
  */
-var T_POINTERS = [];
+let T_POINTERS = [];
 
 // list of registered Event handlers
-var eventHandlers = new Map();
+let eventHandlers = new Map();
 
 // a cache rect represeting the current pointer area
-var currentPointer;
+let currentPointer;
 
 // some useful flags
-var pointerInitialized = false;
+let pointerInitialized = false;
 
 // Track last event timestamp to prevent firing events out of order
-var lastTimeStamp = 0;
+let lastTimeStamp = 0;
 
 // "active" list of supported events
-var activeEventList = [];
+let activeEventList = [];
 
 // internal constants
 const WHEEL           = ["wheel"];
@@ -16378,14 +16378,14 @@ const pointerEventMap = {
  * Array of normalized events (mouse, touch, pointer)
  * @ignore
  */
-var normalizedEvents = [];
+let normalizedEvents = [];
 
 /**
  * addEventListerner for the specified event list and callback
  * @ignore
  */
 function registerEventListener(eventList, callback) {
-    for (var x = 0; x < eventList.length; x++) {
+    for (let x = 0; x < eventList.length; x++) {
         if (POINTER_MOVE.indexOf(eventList[x]) === -1) {
             pointerEventTarget.addEventListener(eventList[x], callback, { passive: (preventDefault === false) });
         }
@@ -16403,7 +16403,7 @@ function enablePointerEvent() {
         currentPointer = new Rect(0, 0, 1, 1);
 
         // instantiate a pool of pointer catched
-        for (var v = 0; v < maxTouchPoints; v++) {
+        for (let v = 0; v < maxTouchPoints; v++) {
             T_POINTERS.push(new Pointer());
         }
 
@@ -16443,8 +16443,8 @@ function enablePointerEvent() {
         }
 
         // if time interval <= 16, disable the feature
-        var i;
-        var events = findAllActiveEvents(activeEventList, POINTER_MOVE);
+        let i;
+        let events = findAllActiveEvents(activeEventList, POINTER_MOVE);
         if (throttlingInterval < 17) {
             for (i = 0; i < events.length; i++) {
                 if (activeEventList.indexOf(events[i]) !== -1) {
@@ -16494,8 +16494,8 @@ function enablePointerEvent() {
  * @ignore
  */
 function findActiveEvent(activeEventList, eventTypes) {
-    for (var i = 0; i < eventTypes.length; i++) {
-        var event = activeEventList.indexOf(eventTypes[i]);
+    for (let i = 0; i < eventTypes.length; i++) {
+        let event = activeEventList.indexOf(eventTypes[i]);
         if (event !== -1) {
             return eventTypes[i];
         }
@@ -16506,9 +16506,9 @@ function findActiveEvent(activeEventList, eventTypes) {
  * @ignore
  */
 function findAllActiveEvents(activeEventList, eventTypes) {
-    var events = [];
-    for (var i = 0; i < eventTypes.length; i++) {
-        var event = activeEventList.indexOf(eventTypes[i]);
+    let events = [];
+    for (let i = 0; i < eventTypes.length; i++) {
+        let event = activeEventList.indexOf(eventTypes[i]);
         if (event !== -1) {
             events.push(eventTypes[i]);
         }
@@ -16521,10 +16521,10 @@ function findAllActiveEvents(activeEventList, eventTypes) {
  * @ignore
  */
 function triggerEvent(handlers, type, pointer, pointerId) {
-    var callback;
+    let callback;
     if (handlers.callbacks[type]) {
         handlers.pointerId = pointerId;
-        for (var i = handlers.callbacks[type].length - 1; (i >= 0) && (callback = handlers.callbacks[type][i]); i--) {
+        for (let i = handlers.callbacks[type].length - 1; (i >= 0) && (callback = handlers.callbacks[type][i]); i--) {
             if (callback(pointer) === false) {
                 // stop propagating the event if return false
                 return true;
@@ -16539,12 +16539,12 @@ function triggerEvent(handlers, type, pointer, pointerId) {
  * @ignore
  */
 function dispatchEvent(normalizedEvents) {
-    var handled = false;
+    let handled = false;
 
     while (normalizedEvents.length > 0) {
 
         // keep a reference to the last item
-        var pointer = normalizedEvents.pop();
+        let pointer = normalizedEvents.pop();
         // and put it back into our cache
         T_POINTERS.push(pointer);
 
@@ -16571,18 +16571,18 @@ function dispatchEvent(normalizedEvents) {
         }
 
         // fetch valid candiates from the game world container
-        var candidates = game.world.broadphase.retrieve(currentPointer, game.world._sortReverseZ);
+        let candidates = game.world.broadphase.retrieve(currentPointer, game.world._sortReverseZ);
 
         // add the main game viewport to the list of candidates
         candidates = candidates.concat([ game.viewport ]);
 
-        for (var c = candidates.length, candidate; c--, (candidate = candidates[c]);) {
+        for (let c = candidates.length, candidate; c--, (candidate = candidates[c]);) {
             if (eventHandlers.has(candidate) && (candidate.isKinematic !== true)) {
-                var handlers = eventHandlers.get(candidate);
-                var region = handlers.region;
-                var ancestor = region.ancestor;
-                var bounds = region.getBounds();
-                var eventInBounds = false;
+                let handlers = eventHandlers.get(candidate);
+                let region = handlers.region;
+                let ancestor = region.ancestor;
+                let bounds = region.getBounds();
+                let eventInBounds = false;
 
                 if (region.isFloating === true) {
                     pointer.gameX = pointer.gameLocalX = pointer.gameScreenX;
@@ -16595,7 +16595,7 @@ function dispatchEvent(normalizedEvents) {
                 // adjust gameLocalX to specify coordinates
                 // within the region ancestor container
                 if (typeof ancestor !== "undefined") {
-                    var parentBounds = ancestor.getBounds();
+                    let parentBounds = ancestor.getBounds();
                     pointer.gameLocalX = pointer.gameX - parentBounds.x;
                     pointer.gameLocalY = pointer.gameY - parentBounds.y;
                 }
@@ -16683,21 +16683,21 @@ function dispatchEvent(normalizedEvents) {
  * @ignore
  */
 function normalizeEvent(originalEvent) {
-    var _pointer;
+    let _pointer;
 
     // PointerEvent or standard Mouse event
     if (touchEvent && originalEvent.changedTouches) {
         // iOS/Android Touch event
-        for (var i = 0, l = originalEvent.changedTouches.length; i < l; i++) {
-            var touchEvent$1 = originalEvent.changedTouches[i];
+        for (let i = 0, l = originalEvent.changedTouches.length; i < l; i++) {
+            let touchEvent = originalEvent.changedTouches[i];
             _pointer = T_POINTERS.pop();
             _pointer.setEvent(
                 originalEvent,
-                touchEvent$1.pageX,
-                touchEvent$1.pageY,
-                touchEvent$1.clientX,
-                touchEvent$1.clientY,
-                touchEvent$1.identifier
+                touchEvent.pageX,
+                touchEvent.pageY,
+                touchEvent.clientX,
+                touchEvent.clientY,
+                touchEvent.identifier
             );
             normalizedEvents.push(_pointer);
         }
@@ -16746,7 +16746,7 @@ function onPointerEvent(e) {
     normalizeEvent(e);
 
     // remember/use the first "primary" normalized event for pointer.bind
-    var button = normalizedEvents[0].button;
+    let button = normalizedEvents[0].button;
 
     // dispatch event to registered objects
     if (dispatchEvent(normalizedEvents) || e.type === "wheel") {
@@ -16756,7 +16756,7 @@ function onPointerEvent(e) {
         }
     }
 
-    var keycode = pointer.bind[button];
+    let keycode = pointer.bind[button];
 
     // check if mapped to a key
     if (keycode) {
@@ -16775,7 +16775,7 @@ function onPointerEvent(e) {
   * @name pointerEventTarget
   * @memberof input
   */
- var pointerEventTarget = null;
+ let pointerEventTarget = null;
 
 /**
  * Pointer information (current position and size)
@@ -16784,7 +16784,7 @@ function onPointerEvent(e) {
  * @name pointer
  * @memberof input
  */
-var pointer = new Pointer(0, 0, 1, 1);
+let pointer = new Pointer(0, 0, 1, 1);
 
 
 /**
@@ -16794,7 +16794,7 @@ var pointer = new Pointer(0, 0, 1, 1);
  * @name locked
  * @memberof input
  */
-var locked = false;
+let locked = false;
 
 /**
  * time interval for event throttling in milliseconds<br>
@@ -16805,7 +16805,7 @@ var locked = false;
  * @name throttlingInterval
  * @memberof input
  */
-var throttlingInterval;
+let throttlingInterval;
 
 /**
  * Translate the specified x and y values from the global (absolute)
@@ -16820,17 +16820,17 @@ var throttlingInterval;
  * @example
  * onMouseEvent : function (pointer) {
  *    // convert the given into local (viewport) relative coordinates
- *    var pos = me.input.globalToLocal(pointer.clientX, pointer.clientY);
+ *    let pos = me.input.globalToLocal(pointer.clientX, pointer.clientY);
  *    // do something with pos !
  * };
  */
 function globalToLocal(x, y, v) {
     v = v || pool.pull("Vector2d");
-    var rect = getElementBounds(renderer.getCanvas());
-    var pixelRatio = globalThis.devicePixelRatio || 1;
+    let rect = getElementBounds(renderer.getCanvas());
+    let pixelRatio = globalThis.devicePixelRatio || 1;
     x -= rect.left + (globalThis.pageXOffset || 0);
     y -= rect.top + (globalThis.pageYOffset || 0);
-    var scale = renderer.scaleRatio;
+    let scale = renderer.scaleRatio;
     if (scale.x !== 1.0 || scale.y !== 1.0) {
         x /= scale.x;
         y /= scale.y;
@@ -16871,8 +16871,8 @@ function setTouchAction(element, value) {
  * me.input.bindPointer(me.input.pointer.RIGHT, me.input.KEY.X);
  */
 function bindPointer() {
-    var button = (arguments.length < 2) ? pointer.LEFT : arguments[0];
-    var keyCode = (arguments.length < 2) ? arguments[0] : arguments[1];
+    let button = (arguments.length < 2) ? pointer.LEFT : arguments[0];
+    let keyCode = (arguments.length < 2) ? arguments[0] : arguments[1];
 
     // make sure the mouse is initialized
     enablePointerEvent();
@@ -16953,7 +16953,7 @@ function registerPointerEvent(eventType, region, callback) {
         throw new Error("registerPointerEvent: region for " + toString(region) + " event is undefined ");
     }
 
-    var eventTypes = findAllActiveEvents(activeEventList, pointerEventMap[eventType]);
+    let eventTypes = findAllActiveEvents(activeEventList, pointerEventMap[eventType]);
 
     // register the event
     if (!eventHandlers.has(region)) {
@@ -16965,8 +16965,8 @@ function registerPointerEvent(eventType, region, callback) {
     }
 
     // allocate array if not defined
-    var handlers = eventHandlers.get(region);
-    for (var i = 0; i < eventTypes.length; i++) {
+    let handlers = eventHandlers.get(region);
+    for (let i = 0; i < eventTypes.length; i++) {
         eventType = eventTypes[i];
         if (handlers.callbacks[eventType]) {
             handlers.callbacks[eventType].push(callback);
@@ -16995,11 +16995,11 @@ function releasePointerEvent(eventType, region, callback) {
     }
 
     // convert to supported event type if pointerEvent not natively supported
-    var eventTypes = findAllActiveEvents(activeEventList, pointerEventMap[eventType]);
+    let eventTypes = findAllActiveEvents(activeEventList, pointerEventMap[eventType]);
 
-    var handlers = eventHandlers.get(region);
+    let handlers = eventHandlers.get(region);
     if (typeof (handlers) !== "undefined") {
-        for (var i = 0; i < eventTypes.length; i++) {
+        for (let i = 0; i < eventTypes.length; i++) {
             eventType = eventTypes[i];
             if (handlers.callbacks[eventType]) {
                 if (typeof (callback) !== "undefined") {
@@ -17033,7 +17033,7 @@ function releasePointerEvent(eventType, region, callback) {
  */
 function releaseAllPointerEvents(region) {
     if (eventHandlers.has(region)) {
-        for (var i = 0; i < pointerEventList.length; i++) {
+        for (let i = 0; i < pointerEventList.length; i++) {
             releasePointerEvent(pointerEventList[i], region);
         }
     }
@@ -17056,7 +17056,7 @@ function releaseAllPointerEvents(region) {
  */
 function requestPointerLock() {
     if (hasPointerLockSupport) {
-        var element = game.getParentElement();
+        let element = game.getParentElement();
         element.requestPointerLock();
         return true;
     }
@@ -17079,7 +17079,7 @@ function exitPointerLock() {
 }
 
 // Analog deadzone
-var deadzone = 0.1;
+let deadzone = 0.1;
 
 /**
  * Normalize axis values for wired Xbox 360
@@ -17117,10 +17117,10 @@ function ouyaNormalizeFn(value, axis, button) {
 }
 
 // Match vendor and product codes for Firefox
-var vendorProductRE = /^([0-9a-f]{1,4})-([0-9a-f]{1,4})-/i;
+const vendorProductRE = /^([0-9a-f]{1,4})-([0-9a-f]{1,4})-/i;
 
 // Match leading zeros
-var leadingZeroRE = /^0+/;
+const leadingZeroRE = /^0+/;
 
 /**
  * Firefox reports different ids for gamepads depending on the platform:
@@ -17131,11 +17131,11 @@ var leadingZeroRE = /^0+/;
  * @ignore
  */
 function addMapping(id, mapping) {
-    var expanded_id = id.replace(vendorProductRE, (_, a, b) =>
+    const expanded_id = id.replace(vendorProductRE, (_, a, b) =>
         "000".slice(a.length - 1) + a + "-" +
         "000".slice(b.length - 1) + b + "-"
     );
-    var sparse_id = id.replace(vendorProductRE, (_, a, b) =>
+    const sparse_id = id.replace(vendorProductRE, (_, a, b) =>
         a.replace(leadingZeroRE, "") + "-" +
         b.replace(leadingZeroRE, "") + "-"
     );
@@ -17149,12 +17149,12 @@ function addMapping(id, mapping) {
 }
 
 // binding list
-var bindings = {};
+let bindings = {};
 
 // mapping list
-var remap = new Map();
+let remap = new Map();
 
-var updateEventHandler;
+let updateEventHandler;
 
 // Default gamepad mappings
 [
@@ -17210,28 +17210,28 @@ var updateEventHandler;
  * Update gamepad status
  * @ignore
  */
-var updateGamepads = function () {
-    var gamepads = navigator.getGamepads();
+let updateGamepads = function () {
+    let gamepads = navigator.getGamepads();
 
     // Trigger button bindings
     Object.keys(bindings).forEach((index) => {
-        var gamepad = gamepads[index];
+        let gamepad = gamepads[index];
         if (!gamepad) {
             return;
         }
 
-        var mapping = null;
+        let mapping = null;
         if (gamepad.mapping !== "standard") {
             mapping = remap.get(gamepad.id);
         }
 
-        var binding = bindings[index];
+        let binding = bindings[index];
 
         // Iterate all buttons that have active bindings
         Object.keys(binding.buttons).forEach((button) => {
-            var last = binding.buttons[button];
-            var mapped_button = button;
-            var mapped_axis = -1;
+            let last = binding.buttons[button];
+            let mapped_button = button;
+            let mapped_axis = -1;
 
             // Remap buttons if necessary
             if (mapping) {
@@ -17244,12 +17244,12 @@ var updateGamepads = function () {
             }
 
             // Get mapped button
-            var current = gamepad.buttons[mapped_button] || {};
+            let current = gamepad.buttons[mapped_button] || {};
 
             // Remap an axis to an analog button
             if (mapping) {
                 if (mapped_axis >= 0) {
-                    var value = mapping.normalize_fn(gamepad.axes[mapped_axis], -1, +button);
+                    let value = mapping.normalize_fn(gamepad.axes[mapped_axis], -1, +button);
 
                     // Create a new object, because GamepadButton is read-only
                     current = {
@@ -17276,8 +17276,8 @@ var updateGamepads = function () {
 
         // Iterate all axes that have active bindings
         Object.keys(binding.axes).forEach((axis) => {
-            var last = binding.axes[axis];
-            var mapped_axis = axis;
+            let last = binding.axes[axis];
+            let mapped_axis = axis;
 
             // Remap buttons if necessary
             if (mapping) {
@@ -17289,7 +17289,7 @@ var updateGamepads = function () {
             }
 
             // retrieve the current value and normalize if necessary
-            var value = gamepad.axes[mapped_axis];
+            let value = gamepad.axes[mapped_axis];
             if (typeof(value) === "undefined") {
                 return;
             }
@@ -17297,11 +17297,11 @@ var updateGamepads = function () {
                 value = mapping.normalize_fn(value, +axis, -1);
             }
             // normalize value into a [-1, 1] range value (treat 0 as positive)
-            var range = Math.sign(value) || 1;
+            let range = Math.sign(value) || 1;
             if (last[range].keyCode === 0) {
                 return;
             }
-            var pressed = (Math.abs(value) >= (deadzone + Math.abs(last[range].threshold)));
+            let pressed = (Math.abs(value) >= (deadzone + Math.abs(last[range].threshold)));
 
             emit(GAMEPAD_UPDATE, index, "axes", +axis, value);
 
@@ -17352,7 +17352,7 @@ if (globalThis.navigator && typeof globalThis.navigator.getGamepads === "functio
  * @namespace GAMEPAD
  * @memberof input
  */
-var GAMEPAD = {
+let GAMEPAD = {
     /**
      * Standard gamepad mapping information for axes<br>
      * <ul>
@@ -17460,13 +17460,13 @@ function bindGamepad(index, button, keyCode) {
         };
     }
 
-    var mapping = {
+    let mapping = {
         "keyCode" : keyCode,
         "value" : 0,
         "pressed" : false,
         "threshold" : button.threshold // can be undefined
     };
-    var binding = bindings[index][button.type];
+    let binding = bindings[index][button.type];
 
     // Map the gamepad button or axis to the keycode
     if (button.type === "buttons") {
@@ -17474,12 +17474,12 @@ function bindGamepad(index, button, keyCode) {
         binding[button.code] = mapping;
     } else if (button.type === "axes") {
         // normalize threshold into a value that can represent both side of the axis
-        var range = (Math.sign(button.threshold) || 1);
+        let range = (Math.sign(button.threshold) || 1);
         // axes are defined using two objects; one for negative and one for positive
         if (!binding[button.code]) {
             binding[button.code] = {};
         }
-        var axes = binding[button.code];
+        let axes = binding[button.code];
         axes[range] = mapping;
 
         // Ensure the opposite axis exists
@@ -17560,7 +17560,7 @@ function setGamepadDeadzone(value) {
  *   }
  * });
  */
-var setGamepadMapping = addMapping;
+let setGamepadMapping = addMapping;
 
 /**
  * @namespace input
@@ -17574,7 +17574,7 @@ var setGamepadMapping = addMapping;
  * @name preventDefault
  * @memberof input
  */
-var preventDefault = true;
+let preventDefault = true;
 
 var input = {
 	__proto__: null,
@@ -18029,11 +18029,11 @@ var input = {
      * @returns {number} angle in radians
      */
     angleTo(target) {
-        var a = this.getBounds();
-        var ax, ay;
+        let a = this.getBounds();
+        let ax, ay;
 
         if (target instanceof Renderable) {
-            var b = target.getBounds();
+            let b = target.getBounds();
             ax = b.centerX - a.centerX;
             ay = b.centerY - a.centerY;
         } else { // vector object
@@ -18050,11 +18050,11 @@ var input = {
      * @returns {number} distance
      */
     distanceTo(target) {
-        var a = this.getBounds();
-        var dx, dy;
+        let a = this.getBounds();
+        let dx, dy;
 
         if (target instanceof Renderable) {
-            var b = target.getBounds();
+            let b = target.getBounds();
             dx = a.centerX - b.centerX;
             dy = a.centerY - b.centerY;
         } else { // vector object
@@ -18071,7 +18071,7 @@ var input = {
      * @returns {Renderable} Reference to this object for method chaining
      */
     lookAt(target) {
-        var position;
+        let position;
 
         if (target instanceof Renderable) {
             position = target.pos;
@@ -18079,7 +18079,7 @@ var input = {
             position = target;
         }
 
-        var angle = this.angleTo(position);
+        let angle = this.angleTo(position);
 
         this.rotate(angle);
 
@@ -18144,7 +18144,7 @@ var input = {
      */
     updateBounds(absolute = true) {
         if (this.isRenderable) {
-            var bounds = this.getBounds();
+            let bounds = this.getBounds();
 
             bounds.clear();
 
@@ -18242,7 +18242,7 @@ var input = {
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
      */
     preDraw(renderer) {
-        var ax = this.width * this.anchorPoint.x,
+        let ax = this.width * this.anchorPoint.x,
             ay = this.height * this.anchorPoint.y;
 
         // save renderer context
@@ -18420,7 +18420,7 @@ var input = {
 // some ref shortcut
 const MIN = Math.min, MAX = Math.max;
 
-var targetV = new Vector2d();
+let targetV = new Vector2d();
 
 /**
  * @classdesc
@@ -18582,7 +18582,7 @@ var targetV = new Vector2d();
 
     /** @ignore */
     _followH(target) {
-        var targetX = this.pos.x;
+        let targetX = this.pos.x;
         if ((target.x - this.pos.x) > (this.deadzone.right)) {
             targetX = MIN((target.x) - (this.deadzone.right), this.bounds.width - this.width);
         }
@@ -18595,7 +18595,7 @@ var targetV = new Vector2d();
 
     /** @ignore */
     _followV(target) {
-        var targetY = this.pos.y;
+        let targetY = this.pos.y;
         if ((target.y - this.pos.y) > (this.deadzone.bottom)) {
             targetY = MIN((target.y) - (this.deadzone.bottom), this.bounds.height - this.height);
         }
@@ -18788,8 +18788,8 @@ var targetV = new Vector2d();
      * @param {number} y
      */
     moveTo(x, y) {
-        var _x = this.pos.x;
-        var _y = this.pos.y;
+        let _x = this.pos.x;
+        let _y = this.pos.y;
 
         this.pos.x = clamp(
             x,
@@ -18965,7 +18965,7 @@ var targetV = new Vector2d();
      */
     fadeIn(color, duration = 1000, onComplete) {
         this._fadeIn.color = pool.pull("Color").copy(color);
-        var _alpha = this._fadeIn.color.alpha;
+        let _alpha = this._fadeIn.color.alpha;
         this._fadeIn.color.alpha = 0.0;
         this._fadeIn.tween = pool.pull("Tween", this._fadeIn.color)
             .to({ alpha: _alpha }, duration)
@@ -18981,7 +18981,7 @@ var targetV = new Vector2d();
      * @param {Renderable} target - the renderable to focus the camera on
      */
     focusOn(target) {
-        var bounds = target.getBounds();
+        let bounds = target.getBounds();
         this.moveTo(
             target.pos.x + bounds.left + (bounds.width / 2),
             target.pos.y + bounds.top + (bounds.height / 2)
@@ -19091,8 +19091,8 @@ var targetV = new Vector2d();
      * @ignore
      */
     draw(renderer, container) {
-        var translateX = this.pos.x + this.offset.x;
-        var translateY = this.pos.y + this.offset.y;
+        let translateX = this.pos.x + this.offset.x;
+        let translateY = this.pos.y + this.offset.y;
 
         // translate the world coordinates by default to screen coordinates
         container.currentTransform.translate(-translateX, -translateY);
@@ -19130,10 +19130,10 @@ var targetV = new Vector2d();
 }
 
 // a default camera instance to use across all stages
-var default_camera;
+let default_camera;
 
 // default stage settings
-var default_settings = {
+let default_settings = {
     cameras : []
 };
 
@@ -19175,7 +19175,7 @@ var default_settings = {
          * @see Stage.ambientLight
          * @example
          * // create a white spot light
-         * var whiteLight = new me.Light2d(0, 0, 140, "#fff", 0.7);
+         * let whiteLight = new me.Light2d(0, 0, 140, "#fff", 0.7);
          * // and add the light to this current stage
          * this.lights.set("whiteLight", whiteLight);
          * // set a dark ambient light
@@ -19222,8 +19222,8 @@ var default_settings = {
         // empty or no default camera
         if (this.cameras.has("default") === false) {
             if (typeof default_camera === "undefined") {
-                var width = renderer.getWidth();
-                var height = renderer.getHeight();
+                let width = renderer.getWidth();
+                let height = renderer.getHeight();
                 // new default camera instance
                 default_camera = new Camera2d(0, 0, width, height);
             }
@@ -19247,7 +19247,7 @@ var default_settings = {
      */
     update(dt) {
         // update all objects (and pass the elapsed time since last frame)
-        var isDirty = game.world.update(dt);
+        let isDirty = game.world.update(dt);
 
         // update the camera/viewport
         // iterate through all cameras
@@ -19377,7 +19377,7 @@ let jsonList = {};
      *  @param {object} tileset - tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
      */
     constructor(tileset) {
-        var i = 0;
+        let i = 0;
         // first gid
 
         // tile properties (collidable, etc..)
@@ -19390,8 +19390,8 @@ let jsonList = {};
 
         // check if an external tileset is defined
         if (typeof(tileset.source) !== "undefined") {
-            var src = tileset.source;
-            var ext = getExtension(src);
+            let src = tileset.source;
+            let ext = getExtension(src);
             if (ext === "tsx" || ext === "json") {
                 // load the external tileset (TSX/JSON)
                 tileset = getTMX(getBasename(src));
@@ -19440,7 +19440,7 @@ let jsonList = {};
          */
         this._lastUpdate = 0;
 
-        var tiles = tileset.tiles;
+        let tiles = tileset.tiles;
         for (i in tiles) {
             if (tiles.hasOwnProperty(i)) {
                 if ("animation" in tiles[i]) {
@@ -19455,8 +19455,8 @@ let jsonList = {};
                 // set tile properties, if any
                 if ("properties" in tiles[i]) {
                     if (Array.isArray(tiles[i].properties)) { // JSON (new format)
-                        var tileProperty = {};
-                        for (var j in tiles[i].properties) {
+                        let tileProperty = {};
+                        for (let j in tiles[i].properties) {
                             tileProperty[tiles[i].properties[j].name] = tiles[i].properties[j].value;
                         }
                         this.setTileProperty(+tiles[i].id + this.firstgid, tileProperty);
@@ -19465,7 +19465,7 @@ let jsonList = {};
                     }
                 }
                 if ("image" in tiles[i]) {
-                    var image = getImage(tiles[i].image);
+                    let image = getImage(tiles[i].image);
                     if (!image) {
                         throw new Error("melonJS: '" + tiles[i].image + "' file for tile '" + (+i + this.firstgid) + "' not found!");
                     }
@@ -19476,14 +19476,14 @@ let jsonList = {};
 
         this.isCollection = this.imageCollection.length > 0;
 
-        var offset = tileset.tileoffset;
+        let offset = tileset.tileoffset;
         if (offset) {
             this.tileoffset.x = +offset.x;
             this.tileoffset.y = +offset.y;
         }
 
         // set tile properties, if any (JSON old format)
-        var tileInfo = tileset.tileproperties;
+        let tileInfo = tileset.tileproperties;
         if (tileInfo) {
             for (i in tileInfo) {
                 if (tileInfo.hasOwnProperty(i)) {
@@ -19512,8 +19512,8 @@ let jsonList = {};
             this.atlas = this.texture.getAtlas();
 
             // calculate the number of tiles per horizontal line
-            var hTileCount = +tileset.columns || Math.round(this.image.width / (this.tilewidth + this.spacing));
-            var vTileCount = Math.round(this.image.height / (this.tileheight + this.spacing));
+            let hTileCount = +tileset.columns || Math.round(this.image.width / (this.tilewidth + this.spacing));
+            let vTileCount = Math.round(this.image.height / (this.tileheight + this.spacing));
             if (tileset.tilecount % hTileCount > 0) {
                 ++vTileCount;
             }
@@ -19562,7 +19562,7 @@ let jsonList = {};
      * @returns {number} View tile ID
      */
     getViewTileId(gid) {
-        var localId = gid - this.firstgid;
+        let localId = gid - this.firstgid;
 
         if (this.animations.has(localId)) {
             // return the current corresponding tile id if animated
@@ -19583,7 +19583,7 @@ let jsonList = {};
 
     // update tile animations
     update(dt) {
-        var duration = 0,
+        let duration = 0,
             now = timer$1.getTime(),
             result = false;
 
@@ -19631,7 +19631,7 @@ let jsonList = {};
             );
         } else {
             // use the tileset texture
-            var offset = this.atlas[this.getViewTileId(tmxTile.tileId)].offset;
+            let offset = this.atlas[this.getViewTileId(tmxTile.tileId)].offset;
             // draw the tile
             renderer.drawImage(
                 this.image,
@@ -19694,13 +19694,13 @@ const COLLISION_GROUP     = "collision";
      * @returns {TMXTileset} corresponding tileset
      */
     getTilesetByGid(gid) {
-        var invalidRange = -1;
+        let invalidRange = -1;
 
         // clear the gid of all flip/rotation flags
         gid &= TMX_CLEAR_BIT_MASK;
 
         // cycle through all tilesets
-        for (var i = 0, len = this.tilesets.length; i < len; i++) {
+        for (let i = 0, len = this.tilesets.length; i < len; i++) {
             // return the corresponding tileset if matching
             if (this.tilesets[i].contains(gid)) {
                 return this.tilesets[i];
@@ -19727,7 +19727,7 @@ const COLLISION_GROUP     = "collision";
  * @ignore
  */
 function setTMXValue(name, type, value) {
-    var match;
+    let match;
 
     if (typeof(value) !== "string") {
         // Value is already normalized (e.g. with JSON maps)
@@ -19804,8 +19804,8 @@ function setTMXValue(name, type, value) {
 function parseAttributes(obj, elt) {
     // do attributes
     if (elt.attributes && elt.attributes.length > 0) {
-        for (var j = 0; j < elt.attributes.length; j++) {
-            var attribute = elt.attributes.item(j);
+        for (let j = 0; j < elt.attributes.length; j++) {
+            let attribute = elt.attributes.item(j);
             if (typeof(attribute.name) !== "undefined") {
                 // DOM4 (Attr no longer inherit from Node)
                 obj[attribute.name] = attribute.value;
@@ -19841,10 +19841,10 @@ function decompress(data, format) {
  * @returns {number[]} Decoded data
  */
 function decodeCSV(input) {
-    var entries = input.replace("\n", "").trim().split(",");
+    let entries = input.replace("\n", "").trim().split(",");
 
-    var result = [];
-    for (var i = 0; i < entries.length; i++) {
+    let result = [];
+    for (let i = 0; i < entries.length; i++) {
         result.push(+entries[i]);
     }
     return result;
@@ -19861,9 +19861,9 @@ function decodeCSV(input) {
 function decodeBase64AsArray(input, bytes) {
     bytes = bytes || 1;
 
-    var i, j, len;
-    var dec = globalThis.atob(input.replace(/[^A-Za-z0-9\+\/\=]/g, ""));
-    var ar = new Uint32Array(dec.length / bytes);
+    let i, j, len;
+    let dec = globalThis.atob(input.replace(/[^A-Za-z0-9\+\/\=]/g, ""));
+    let ar = new Uint32Array(dec.length / bytes);
 
     for (i = 0, len = dec.length / bytes; i < len; i++) {
         ar[i] = 0;
@@ -19910,11 +19910,11 @@ function decode(data, encoding, compression) {
  * @ignore
  */
 function normalize(obj, item) {
-    var nodeName = item.nodeName;
+    let nodeName = item.nodeName;
 
     switch (nodeName) {
         case "data":
-            var data = parse(item);
+            var data = parse(item);  // <= "Unexpected lexical declaration in case block" if using let
 
             data.encoding = data.encoding || "xml";
 
@@ -19952,7 +19952,7 @@ function normalize(obj, item) {
         case "layer":
         case "objectgroup":
         case "group":
-            var layer = parse(item);
+            var layer = parse(item); //  // <= "Unexpected lexical declaration in case block" if using let
             layer.type = (nodeName === "layer" ? "tilelayer" : nodeName);
             if (layer.image) {
                 layer.image = layer.image.source;
@@ -19968,13 +19968,13 @@ function normalize(obj, item) {
 
         case "frame":
         case "object":
-            var name = nodeName + "s";
+            var name = nodeName + "s";  // <= "Unexpected lexical declaration in case block" if using let
             obj[name] = obj[name] || [];
             obj[name].push(parse(item));
             break;
 
         case "tile":
-            var tile = parse(item);
+            var tile = parse(item);  // <= "Unexpected lexical declaration in case block" if using let
             if (tile.image) {
                 tile.imagewidth = tile.image.width;
                 tile.imageheight = tile.image.height;
@@ -19985,7 +19985,7 @@ function normalize(obj, item) {
             break;
 
         case "tileset":
-            var tileset = parse(item);
+            var tileset = parse(item);  // <= "Unexpected lexical declaration in case block" if using let
             if (tileset.image) {
                 tileset.imagewidth = tileset.image.width;
                 tileset.imageheight = tileset.image.height;
@@ -20001,10 +20001,10 @@ function normalize(obj, item) {
             obj[nodeName] = [];
 
             // Get a point array
-            var points = parse(item).points.split(" ");
+            var points = parse(item).points.split(" ");  // <= "Unexpected lexical declaration in case block" if using let
 
             // And normalize them into an array of vectors
-            for (var i = 0, v; i < points.length; i++) {
+            for (let i = 0, v; i < points.length; i++) {
                 v = points[i].split(",");
                 obj[nodeName].push({
                     "x" : +v[0],
@@ -20019,7 +20019,7 @@ function normalize(obj, item) {
             break;
 
         case "property":
-            var property = parse(item);
+            var property = parse(item);  // <= "Unexpected lexical declaration in case block" if using let
             // for custom properties, text is used
             var value = (typeof property.value !== "undefined") ? property.value : property.text;
 
@@ -20043,9 +20043,9 @@ function normalize(obj, item) {
  */
 function parse(xml) {
     // Create the return object
-    var obj = {};
+    let obj = {};
 
-    var text = "";
+    let text = "";
 
     if (xml.nodeType === 1) {
         // do attributes
@@ -20080,14 +20080,14 @@ function parse(xml) {
  * @ignore
  */
 function applyTMXProperties(obj, data) {
-    var properties = data.properties;
-    var types = data.propertytypes;
+    let properties = data.properties;
+    let types = data.propertytypes;
     if (typeof(properties) !== "undefined") {
-        for (var property in properties) {
+        for (let property in properties) {
             if (properties.hasOwnProperty(property)) {
-                var type = "string";
-                var name = property;
-                var value = properties[property];
+                let type = "string";
+                let name = property;
+                let value = properties[property];
                 // proof-check for new and old JSON format
                 if (typeof properties[property].name !== "undefined") {
                     name = properties[property].name;
@@ -20120,14 +20120,14 @@ function applyTMXProperties(obj, data) {
      * @param {TMXTileset} tileset - the corresponding tileset object
      */
     constructor(x, y, gid, tileset) {
-        var width, height;
+        let width, height;
 
         // call the parent constructor
         super();
 
         // determine the tile size
         if (tileset.isCollection) {
-            var image = tileset.getTileImage(gid & TMX_CLEAR_BIT_MASK);
+            let image = tileset.getTileImage(gid & TMX_CLEAR_BIT_MASK);
             width = image.width;
             height = image.height;
         } else {
@@ -20224,12 +20224,12 @@ function applyTMXProperties(obj, data) {
      * @returns {Renderable} a me.Sprite object
      */
     getRenderable(settings) {
-        var renderable;
-        var tileset = this.tileset;
+        let renderable;
+        let tileset = this.tileset;
 
         if (tileset.animations.has(this.tileId)) {
-            var frames = [];
-            var frameId = [];
+            let frames = [];
+            let frameId = [];
             (tileset.animations.get(this.tileId).frames).forEach((frame) => {
                 frameId.push(frame.tileid);
                 frames.push({
@@ -20243,7 +20243,7 @@ function applyTMXProperties(obj, data) {
 
         } else {
             if (tileset.isCollection === true) {
-                var image = tileset.getTileImage(this.tileId);
+                let image = tileset.getTileImage(this.tileId);
                 renderable = new Sprite(0, 0,
                     Object.assign({
                         image: image
@@ -20459,7 +20459,7 @@ class TMXObject {
      */
     setTile(tilesets) {
         // get the corresponding tileset
-        var tileset = tilesets.getTilesetByGid(this.gid);
+        let tileset = tilesets.getTilesetByGid(this.gid);
 
         if (tileset.isCollection === false) {
             // set width and height equal to tile size
@@ -20477,8 +20477,8 @@ class TMXObject {
      * @returns {Polygon[]|Line[]|Ellipse[]} an array of shape objects
      */
     parseTMXShapes() {
-        var i = 0;
-        var shapes = [];
+        let i = 0;
+        let shapes = [];
 
         // add an ellipse shape
         if (this.isEllipse === true) {
@@ -20494,7 +20494,7 @@ class TMXObject {
         } else {
             // add a polygon
             if (this.isPolygon === true) {
-                var _polygon = pool.pull("Polygon", 0, 0, this.points);
+                let _polygon = pool.pull("Polygon", 0, 0, this.points);
                 // make sure it's a convex polygon
                 if (_polygon.isConvex() === false ) {
                     throw new Error("collision polygones in Tiled should be defined as Convex");
@@ -20502,9 +20502,9 @@ class TMXObject {
                 shapes.push(_polygon.rotate(this.rotation));
 
             } else if (this.isPolyLine === true) {
-                var p = this.points;
-                var p1, p2;
-                var segments = p.length - 1;
+                let p = this.points;
+                let p1, p2;
+                let segments = p.length - 1;
                 for (i = 0; i < segments; i++) {
                     // clone the value before, as [i + 1]
                     // is reused later by the next segment
@@ -20591,7 +20591,7 @@ class TMXObject {
      * If the shape has already been closed or has only one point, this function does nothing.
      */
     closePath() {
-        var points = this.points;
+        let points = this.points;
         if (points.length > 1 && !points[points.length-1].equals(points[0])) {
             points.push(pool.pull("Point", points[0].x, points[0].y));
         }
@@ -20602,10 +20602,10 @@ class TMXObject {
      * @returns {Point[]}
      */
     triangulatePath() {
-        var i = 0;
-        var points = this.points;
-        var vertices = this.vertices;
-        var indices = earcutExports(points.flatMap(p => [p.x, p.y]));
+        let i = 0;
+        let points = this.points;
+        let vertices = this.vertices;
+        let indices = earcutExports(points.flatMap(p => [p.x, p.y]));
 
         // pre-allocate vertices if necessary
         while (vertices.length < indices.length) {
@@ -20614,7 +20614,7 @@ class TMXObject {
 
         // calculate all vertices
         for (i = 0; i < indices.length; i++ ) {
-            var point = points[indices[i]];
+            let point = points[indices[i]];
             vertices[i].set(point.x, point.y);
         }
 
@@ -20656,11 +20656,11 @@ class TMXObject {
      * @param {boolean} [anticlockwise=false] - an optional boolean value. If true, draws the arc counter-clockwise between the start and end angles.
      */
     arc(x, y, radius, startAngle, endAngle, anticlockwise = false) {
-        var points = this.points;
+        let points = this.points;
         // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
         //bring angles all in [0, 2*PI] range
         if (startAngle === endAngle) return;
-        var fullCircle = anticlockwise ? Math.abs(startAngle-endAngle) >= (TAU) : Math.abs(endAngle-startAngle) >= (TAU);
+        const fullCircle = anticlockwise ? Math.abs(startAngle-endAngle) >= (TAU) : Math.abs(endAngle-startAngle) >= (TAU);
 
         startAngle = startAngle % (TAU);
         endAngle = endAngle % (TAU);
@@ -20672,8 +20672,8 @@ class TMXObject {
             endAngle+= TAU;
         }
 
-        var diff = endAngle - startAngle;
-        var direction = 1;
+        let diff = endAngle - startAngle;
+        let direction = 1;
         if (anticlockwise) {
             direction = -1;
             diff = TAU - diff;
@@ -20681,12 +20681,12 @@ class TMXObject {
 
         if (fullCircle) diff = TAU;
 
-        var length = diff * radius;
-        var nr_of_interpolation_points = length / this.arcResolution;
-        var dangle = diff / nr_of_interpolation_points;
+        const length = diff * radius;
+        const nr_of_interpolation_points = length / this.arcResolution;
+        const dangle = diff / nr_of_interpolation_points;
 
-        var angle = startAngle;
-        for (var j = 0; j < nr_of_interpolation_points; j++) {
+        let angle = startAngle;
+        for (let j = 0; j < nr_of_interpolation_points; j++) {
             points.push(pool.pull("Point", x + radius * Math.cos(angle), y + radius * Math.sin(angle)));
             angle += direction * dangle;
         }
@@ -20702,38 +20702,38 @@ class TMXObject {
      * @param {number} radius - the arc's radius. Must be positive.
      */
     arcTo(x1, y1, x2, y2, radius) {
-        var points = this.points;
+        let points = this.points;
         // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
-        var x0 = points[points.length-1].x, y0 = points[points.length-1].y;
+        let x0 = points[points.length-1].x, y0 = points[points.length-1].y;
 
         //a = -incoming vector, b = outgoing vector to x1, y1
-        var a0 = x0 - x1, a1 = y0 - y1;
-        var b0 = x2 - x1, b1 = y2 - y1;
+        let a0 = x0 - x1, a1 = y0 - y1;
+        let b0 = x2 - x1, b1 = y2 - y1;
 
         //normalize
-        var l_a = Math.sqrt(Math.pow(a0, 2) + Math.pow(a1, 2));
-        var l_b = Math.sqrt(Math.pow(b0, 2) + Math.pow(b1, 2));
+        let l_a = Math.sqrt(Math.pow(a0, 2) + Math.pow(a1, 2));
+        let l_b = Math.sqrt(Math.pow(b0, 2) + Math.pow(b1, 2));
         a0 /= l_a; a1 /= l_a; b0 /= l_b; b1 /= l_b;
-        var angle = Math.atan2(a1, a0) - Math.atan2(b1, b0);
+        let angle = Math.atan2(a1, a0) - Math.atan2(b1, b0);
 
         //work out tangent points using tan(θ) = opposite / adjacent; angle/2 because hypotenuse is the bisection of a,b
-        var tan_angle_div2 = Math.tan(angle/2);
-        var adj_l = (radius/tan_angle_div2);
+        let tan_angle_div2 = Math.tan(angle/2);
+        let adj_l = (radius/tan_angle_div2);
 
-        var tangent1_pointx = x1 + a0 * adj_l, tangent1_pointy = y1 + a1 * adj_l;
-        var tangent2_pointx = x1 + b0 * adj_l, tangent2_pointy = y1 + b1 * adj_l;
+        let tangent1_pointx = x1 + a0 * adj_l, tangent1_pointy = y1 + a1 * adj_l;
+        let tangent2_pointx = x1 + b0 * adj_l, tangent2_pointy = y1 + b1 * adj_l;
 
         points.push(pool.pull("Point", tangent1_pointx, tangent1_pointy));
 
-        var bisec0 = (a0 + b0) / 2.0, bisec1 = (a1 + b1) / 2.0;
-        var bisec_l = Math.sqrt(Math.pow(bisec0, 2) + Math.pow(bisec1, 2));
+        let bisec0 = (a0 + b0) / 2.0, bisec1 = (a1 + b1) / 2.0;
+        let bisec_l = Math.sqrt(Math.pow(bisec0, 2) + Math.pow(bisec1, 2));
         bisec0 /= bisec_l; bisec1 /= bisec_l;
 
-        var hyp_l = Math.sqrt(Math.pow(radius, 2) + Math.pow(adj_l, 2));
-        var centerx = x1 + hyp_l * bisec0, centery = y1 + hyp_l * bisec1;
+        let hyp_l = Math.sqrt(Math.pow(radius, 2) + Math.pow(adj_l, 2));
+        let centerx = x1 + hyp_l * bisec0, centery = y1 + hyp_l * bisec1;
 
-        var startAngle = Math.atan2(tangent1_pointy - centery, tangent1_pointx - centerx);
-        var endAngle = Math.atan2(tangent2_pointy - centery, tangent2_pointx - centerx);
+        let startAngle = Math.atan2(tangent1_pointy - centery, tangent1_pointx - centerx);
+        let endAngle = Math.atan2(tangent2_pointy - centery, tangent2_pointx - centerx);
 
         this.arc(centerx, centery, radius, startAngle, endAngle);
     }
@@ -20751,10 +20751,10 @@ class TMXObject {
      * @param {boolean} [anticlockwise=false] - an optional boolean value which, if true, draws the ellipse counterclockwise (anticlockwise).
      */
     ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle, anticlockwise = false) {
-        var points = this.points;
+        let points = this.points;
         // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
         if (startAngle === endAngle) return;
-        var fullCircle = anticlockwise ? Math.abs(startAngle-endAngle) >= (TAU) : Math.abs(endAngle-startAngle) >= (TAU);
+        let fullCircle = anticlockwise ? Math.abs(startAngle-endAngle) >= (TAU) : Math.abs(endAngle-startAngle) >= (TAU);
 
         //bring angles all in [0, 2*PI] range
         startAngle = startAngle % (TAU);
@@ -20766,9 +20766,9 @@ class TMXObject {
             endAngle += TAU;
         }
 
-        var diff = endAngle - startAngle;
+        let diff = endAngle - startAngle;
 
-        var direction = 1;
+        let direction = 1;
         if (anticlockwise) {
             direction = -1;
             diff = TAU - diff;
@@ -20776,18 +20776,18 @@ class TMXObject {
 
         if (fullCircle) diff = TAU;
 
-        var length = (diff * radiusX + diff * radiusY) / 2;
-        var nr_of_interpolation_points = length / this.arcResolution;
-        var dangle = diff / nr_of_interpolation_points;
+        const length = (diff * radiusX + diff * radiusY) / 2;
+        const nr_of_interpolation_points = length / this.arcResolution;
+        const dangle = diff / nr_of_interpolation_points;
 
-        var angle = startAngle;
-        var cos_rotation = Math.cos(rotation);
-        var sin_rotation = Math.sin(rotation);
-        for (var j = 0; j < nr_of_interpolation_points; j++) {
-            var _x1 = radiusX * Math.cos(angle);
-            var _y1 = radiusY * Math.sin(angle);
-            var _x2 = x + _x1 * cos_rotation - _y1 * sin_rotation;
-            var _y2 = y + _x1 * sin_rotation + _y1 * cos_rotation;
+        let angle = startAngle;
+        const cos_rotation = Math.cos(rotation);
+        const sin_rotation = Math.sin(rotation);
+        for (let j = 0; j < nr_of_interpolation_points; j++) {
+            let _x1 = radiusX * Math.cos(angle);
+            let _y1 = radiusY * Math.sin(angle);
+            let _x2 = x + _x1 * cos_rotation - _y1 * sin_rotation;
+            let _y2 = y + _x1 * sin_rotation + _y1 * cos_rotation;
             points.push(pool.pull("Point", _x2, _y2));
             angle += direction * dangle;
         }
@@ -21020,7 +21020,7 @@ class TMXObject {
             transparent = true;
         }
 
-        var _context = canvas.getContext("2d", {
+        let _context = canvas.getContext("2d", {
                 "alpha" : transparent
         });
 
@@ -21082,7 +21082,7 @@ class TMXObject {
      * @param {number} height - new height of the canvas
      */
     resize(width, height) {
-        var canvas = this.getCanvas();
+        let canvas = this.getCanvas();
         if (width !== canvas.width || height !== canvas.height) {
             canvas.width = width;
             canvas.height = height;
@@ -21101,7 +21101,7 @@ class TMXObject {
      * @param {boolean} [enable=false]
      */
     setAntiAlias(context, enable) {
-        var canvas = context.canvas;
+        let canvas = context.canvas;
 
         // enable/disable antialis on the given Context2d object
         setPrefixed("imageSmoothingEnabled", enable === true, context);
@@ -21181,8 +21181,8 @@ class TMXObject {
      * @returns {HTMLCanvasElement|OffscreenCanvas} a new canvas element representing the tinted image
      */
     tint(src, color, mode) {
-        var canvas = createCanvas(src.width, src.height, true);
-        var context = this.getContext2d(canvas);
+        let canvas = createCanvas(src.width, src.height, true);
+        let context = this.getContext2d(canvas);
 
         context.save();
 
@@ -21375,8 +21375,8 @@ class TextureAtlas {
         if (typeof (atlases) !== "undefined") {
             // normalize to array to keep the following code generic
             atlases = Array.isArray(atlases) ? atlases : [atlases];
-            for (var i in atlases) {
-                var atlas = atlases[i];
+            for (let i in atlases) {
+                let atlas = atlases[i];
 
                 if (typeof(atlas.meta) !== "undefined") {
                     // Texture Packer or Free Texture Packer
@@ -21385,7 +21385,7 @@ class TextureAtlas {
                         // set the texture
                         if (typeof(src) === "undefined") {
                             // get the texture name from the atlas meta data
-                            var image = getImage(atlas.meta.image);
+                            let image = getImage(atlas.meta.image);
                             if (!image) {
                                 throw new Error(
                                     "Atlas texture '" + image + "' not found"
@@ -21456,17 +21456,17 @@ class TextureAtlas {
      * @ignore
      */
     parse(data) {
-        var atlas = {};
+        let atlas = {};
 
         data.frames.forEach((frame) => {
             // fix wrongly formatted JSON (e.g. last dummy object in ShoeBox)
             if (frame.hasOwnProperty("filename")) {
                 // Source coordinates
-                var s = frame.frame;
+                let s = frame.frame;
 
-                var originX, originY;
+                let originX, originY;
                 // Pixel-based offset origin from the top-left of the source frame
-                var hasTextureAnchorPoint = (frame.spriteSourceSize && frame.sourceSize && frame.pivot);
+                let hasTextureAnchorPoint = (frame.spriteSourceSize && frame.sourceSize && frame.pivot);
                 if (hasTextureAnchorPoint) {
                     originX = (frame.sourceSize.w * frame.pivot.x) - ((frame.trimmed) ? frame.spriteSourceSize.x : 0);
                     originY = (frame.sourceSize.h * frame.pivot.y) - ((frame.trimmed) ? frame.spriteSourceSize.y : 0);
@@ -21493,16 +21493,16 @@ class TextureAtlas {
      * @ignore
      */
     parseFromSpriteSheet(data) {
-        var atlas = {};
-        var image = data.image;
-        var spacing = data.spacing || 0;
-        var margin = data.margin || 0;
+        let atlas = {};
+        let image = data.image;
+        let spacing = data.spacing || 0;
+        let margin = data.margin || 0;
 
-        var width = image.width;
-        var height = image.height;
+        let width = image.width;
+        let height = image.height;
 
         // calculate the sprite count (line, col)
-        var spritecount = pool.pull("Vector2d",
+        let spritecount = pool.pull("Vector2d",
             ~~((width - margin + spacing) / (data.framewidth + spacing)),
             ~~((height - margin + spacing) / (data.frameheight + spacing))
         );
@@ -21510,8 +21510,8 @@ class TextureAtlas {
         // verifying the texture size
         if ((width % (data.framewidth + spacing)) !== 0 ||
             (height % (data.frameheight + spacing)) !== 0) {
-            var computed_width = spritecount.x * (data.framewidth + spacing);
-            var computed_height = spritecount.y * (data.frameheight + spacing);
+            let computed_width = spritecount.x * (data.framewidth + spacing);
+            let computed_height = spritecount.y * (data.frameheight + spacing);
             if (computed_width - width !== spacing && computed_height - height !== spacing) {
                 // "truncate size" if delta is different from the spacing size
                 width = computed_width;
@@ -21527,8 +21527,8 @@ class TextureAtlas {
         }
 
         // build the local atlas
-        for (var frame = 0, count = spritecount.x * spritecount.y; frame < count; frame++) {
-            var name = "" + frame;
+        for (let frame = 0, count = spritecount.x * spritecount.y; frame < count; frame++) {
+            let name = "" + frame;
             atlas[name] = {
                 name        : name,
                 texture     : "default", // the source texture
@@ -21599,10 +21599,10 @@ class TextureAtlas {
             console.warn("Adding texture region", name, "for texture", this);
         }
 
-        var source = this.getTexture();
-        var atlas = this.getAtlas();
-        var dw = source.width;
-        var dh = source.height;
+        let source = this.getTexture();
+        let atlas = this.getAtlas();
+        let dw = source.width;
+        let dh = source.height;
 
         atlas[name] = {
             name    : name,
@@ -21624,7 +21624,7 @@ class TextureAtlas {
      * @returns {object}
      */
     getRegion(name, atlas) {
-        var region;
+        let region;
         if (typeof atlas === "string") {
             region = this.getAtlas(atlas)[name];
         } else {
@@ -21647,11 +21647,11 @@ class TextureAtlas {
      */
     getUVs(name) {
         // Get the source texture region
-        var region = this.getRegion(name);
+        let region = this.getRegion(name);
 
         if (typeof(region) === "undefined") {
             // TODO: Require proper atlas regions instead of caching arbitrary region keys
-            var keys = name.split(","),
+            let keys = name.split(","),
                 sx = +keys[0],
                 sy = +keys[1],
                 sw = +keys[2],
@@ -21673,9 +21673,9 @@ class TextureAtlas {
         // ignore if using the Canvas Renderer
         if (typeof renderer.gl !== "undefined") {
             // Source coordinates
-            var s = atlas[name].offset;
-            var sw = atlas[name].width;
-            var sh = atlas[name].height;
+            let s = atlas[name].offset;
+            let sw = atlas[name].width;
+            let sh = atlas[name].height;
 
             atlas[name].uvs = new Float32Array([
                 s.x / w,        // u0 (left)
@@ -21685,7 +21685,7 @@ class TextureAtlas {
             ]);
             // Cache source coordinates
             // TODO: Remove this when the Batcher only accepts a region name
-            var key = s.x + "," + s.y + "," + w + "," + h;
+            let key = s.x + "," + s.y + "," + w + "," + h;
             atlas[key] = atlas[name];
         }
         return atlas[name].uvs;
@@ -21706,13 +21706,13 @@ class TextureAtlas {
      * ...
      * ...
      * // create a new "coin" sprite
-     * var sprite = game.texture.createSpriteFromName("coin.png");
+     * let sprite = game.texture.createSpriteFromName("coin.png");
      * // set the renderable position to bottom center
      * sprite.anchorPoint.set(0.5, 1.0);
      * ...
      * ...
      * // create a 9-slice sprite
-     * var dialogPanel = game.texture.createSpriteFromName(
+     * let dialogPanel = game.texture.createSpriteFromName(
      *    "rpg_dialo.png",
      *    // width & height are mandatory for 9-slice sprites
      *    { width: this.width, height: this.height },
@@ -21745,7 +21745,7 @@ class TextureAtlas {
      * );
      *
      * // create a new Animated Sprite
-     * var sprite = game.texture.createAnimationFromName([
+     * let sprite = game.texture.createAnimationFromName([
      *     "walk0001.png", "walk0002.png", "walk0003.png",
      *     "walk0004.png", "walk0005.png", "walk0006.png",
      *     "walk0007.png", "walk0008.png", "walk0009.png",
@@ -21762,12 +21762,12 @@ class TextureAtlas {
      * sprite.anchorPoint.set(0.5, 1.0);
      */
     createAnimationFromName(names, settings) {
-        var tpAtlas = [], indices = {};
-        var width = 0, height = 0;
-        var region;
+        let tpAtlas = [], indices = {};
+        let width = 0, height = 0;
+        let region;
         // iterate through the given names
         // and create a "normalized" atlas
-        for (var i = 0; i < names.length; ++i) {
+        for (let i = 0; i < names.length; ++i) {
             region = this.getRegion(names[i]);
             if (region == null) {
                 // throw an error
@@ -22026,14 +22026,14 @@ class TextureCache {
      * @ignore
      */
     get(image, atlas) {
-        var entry;
+        let entry;
 
         if (typeof atlas === "undefined") {
             entry = this.cache.get(image)[0];
         } else {
             // manage cases where a specific atlas is specified
             this.cache.forEach((value, key) => {
-                var _atlas = value.getAtlas()[0];
+                let _atlas = value.getAtlas()[0];
                 if (key === image && _atlas.width === atlas.framewidth && _atlas.height === atlas.frameheight) {
                     entry = value;
                 }
@@ -22065,7 +22065,7 @@ class TextureCache {
      */
     tint(src, color) {
         // make sure the src is in the cache
-        var image_cache = this.tinted.get(src);
+        let image_cache = this.tinted.get(src);
 
         if (image_cache === undefined) {
             image_cache = this.tinted.set(src, new Map());
@@ -22082,12 +22082,12 @@ class TextureCache {
      * @ignore
      */
     set(image, texture) {
-        var width = image.width;
-        var height = image.height;
+        let width = image.width;
+        let height = image.height;
 
         // warn if a non POT texture is added to the cache when using WebGL1
         if (renderer.WebGLVersion === 1 && (!isPowerOfTwo(width) || !isPowerOfTwo(height))) {
-            var src = typeof image.src !== "undefined" ? image.src : image;
+            let src = typeof image.src !== "undefined" ? image.src : image;
             console.warn(
                 "[Texture] " + src + " is not a POT texture " +
                 "(" + width + "x" + height + ")"
@@ -22226,8 +22226,8 @@ class TextureCache {
      */
     clear() {
         if (this.settings.transparent === false) {
-            var canvas = this.getCanvas();
-            var context = this.getContext();
+            let canvas = this.getCanvas();
+            let context = this.getContext();
             context.clearRect(0, 0, canvas.width, canvas.height);
         }
     }
@@ -22238,8 +22238,8 @@ class TextureCache {
      * @param {boolean} [opaque=false] - Allow transparency [default] or clear the surface completely [true]
      */
     clearColor(color = "#000000", opaque = false) {
-        var canvas = this.getCanvas();
-        var context = this.getContext();
+        let canvas = this.getCanvas();
+        let context = this.getContext();
 
         this.save();
         this.resetTransform();
@@ -22268,10 +22268,10 @@ class TextureCache {
      * @returns {CanvasPattern}
      * @see ImageLayer#repeat
      * @example
-     * var tileable   = renderer.createPattern(image, "repeat");
-     * var horizontal = renderer.createPattern(image, "repeat-x");
-     * var vertical   = renderer.createPattern(image, "repeat-y");
-     * var basic      = renderer.createPattern(image, "no-repeat");
+     * let tileable   = renderer.createPattern(image, "repeat");
+     * let horizontal = renderer.createPattern(image, "repeat-x");
+     * let vertical   = renderer.createPattern(image, "repeat-y");
+     * let basic      = renderer.createPattern(image, "no-repeat");
      */
     createPattern(image, repeat) {
         return this.getContext().createPattern(image, repeat);
@@ -22301,7 +22301,7 @@ class TextureCache {
             // Fast path: don't draw fully transparent
             return;
         }
-        var context = this.getContext();
+        let context = this.getContext();
 
         if (typeof sw === "undefined") {
             sw = dw = image.width;
@@ -22329,8 +22329,8 @@ class TextureCache {
         }
 
         // apply a tint if required
-        var source = image;
-        var tint = this.currentTint.toArray();
+        let source = image;
+        let tint = this.currentTint.toArray();
         if (tint[0] !== 1.0 || tint[1] !== 1.0 || tint[2] !== 1.0) {
             // get a tinted version of this image from the texture cache
             source = this.cache.tint(image, this.currentTint.toRGB());
@@ -22352,8 +22352,8 @@ class TextureCache {
             // Fast path: don't draw fully transparent
             return;
         }
-        var context = this.getContext();
-        var fillStyle = context.fillStyle;
+        let context = this.getContext();
+        let fillStyle = context.fillStyle;
         context.fillStyle = pattern;
         context.fillRect(x, y, width, height);
         context.fillStyle = fillStyle;
@@ -22374,7 +22374,7 @@ class TextureCache {
             // Fast path: don't draw fully transparent
             return;
         }
-        var context = this.getContext();
+        let context = this.getContext();
 
         context.translate(x, y);
         context.beginPath();
@@ -22409,16 +22409,16 @@ class TextureCache {
             // Fast path: don't draw fully transparent
             return;
         }
-        var context = this.getContext();
+        let context = this.getContext();
 
-        var hw = w,
+        let hw = w,
             hh = h,
             lx = x - hw,
             rx = x + hw,
             ty = y - hh,
             by = y + hh;
 
-        var xmagic = hw * 0.551784,
+        let xmagic = hw * 0.551784,
             ymagic = hh * 0.551784,
             xmin = x - xmagic,
             xmax = x + xmagic,
@@ -22459,7 +22459,7 @@ class TextureCache {
             return;
         }
 
-        var context = this.getContext();
+        let context = this.getContext();
 
         context.beginPath();
         context.moveTo(startX, startY);
@@ -22488,13 +22488,13 @@ class TextureCache {
             // Fast path: don't draw fully transparent
             return;
         }
-        var context = this.getContext();
+        let context = this.getContext();
 
         this.translate(poly.pos.x, poly.pos.y);
         context.beginPath();
         context.moveTo(poly.points[0].x, poly.points[0].y);
-        var point;
-        for (var i = 1; i < poly.points.length; i++) {
+        let point;
+        for (let i = 1; i < poly.points.length; i++) {
             point = poly.points[i];
             context.lineTo(point.x, point.y);
         }
@@ -22525,7 +22525,7 @@ class TextureCache {
             // Fast path: don't draw fully transparent
             return;
         }
-        var context = this.getContext();
+        let context = this.getContext();
 
         context[fill === true ? "fillRect" : "strokeRect"](x, y, width, height);
     }
@@ -22555,7 +22555,7 @@ class TextureCache {
             // Fast path: don't draw fully transparent
             return;
         }
-        var context = this.getContext();
+        let context = this.getContext();
 
         context.beginPath();
         context.roundRect(x, y, width, height, radius);
@@ -22636,7 +22636,7 @@ class TextureCache {
      * @param {Color|string} color - css color value
      */
     setColor(color) {
-        var context = this.getContext();
+        let context = this.getContext();
         context.strokeStyle =
         context.fillStyle = (
             color instanceof Color ?
@@ -22684,7 +22684,7 @@ class TextureCache {
      * @param {Matrix2d} mat2d - Matrix to transform by
      */
     transform(mat2d) {
-        var m = mat2d.toArray(),
+        let m = mat2d.toArray(),
             a = m[0],
             b = m[1],
             c = m[3],
@@ -22725,14 +22725,14 @@ class TextureCache {
      * @param {number} height
      */
     clipRect(x, y, width, height) {
-        var canvas = this.getCanvas();
+        let canvas = this.getCanvas();
         // if requested box is different from the current canvas size;
         if (x !== 0 || y !== 0 || width !== canvas.width || height !== canvas.height) {
-            var currentScissor = this.currentScissor;
+            let currentScissor = this.currentScissor;
             // if different from the current scissor box
             if (currentScissor[0] !== x || currentScissor[1] !== y ||
                 currentScissor[2] !== width || currentScissor[3] !== height) {
-                var context = this.getContext();
+                let context = this.getContext();
                 context.beginPath();
                 context.rect(x, y, width, height);
                 context.clip();
@@ -22753,7 +22753,7 @@ class TextureCache {
      * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
      */
     setMask(mask, invert = false) {
-        var context = this.getContext();
+        let context = this.getContext();
 
         if (this.maskLevel === 0) {
             // only save context on the first mask
@@ -22775,7 +22775,7 @@ class TextureCache {
                 ty = _y - hh,
                 by = _y + hh;
 
-            var xmagic = hw * 0.551784,
+            let xmagic = hw * 0.551784,
                 ymagic = hh * 0.551784,
                 xmin = _x - xmagic,
                 xmax = _x + xmagic,
@@ -22790,10 +22790,10 @@ class TextureCache {
         } else {
             // polygon
             const _x = mask.pos.x, _y = mask.pos.y;
-            var point;
+            let point;
 
             context.moveTo(_x + mask.points[0].x, _y + mask.points[0].y);
-            for (var i = 1; i < mask.points.length; i++) {
+            for (let i = 1; i < mask.points.length; i++) {
                 point = mask.points[i];
                 context.lineTo(_x + point.x, _y + point.y);
             }
@@ -22828,10 +22828,10 @@ class TextureCache {
  */
 function initArray(rows, cols) {
     // initialize the array
-    var array = new Array(cols);
-    for (var col = 0; col < cols; col++) {
+    let array = new Array(cols);
+    for (let col = 0; col < cols; col++) {
         array[col] = new Array(rows);
-        for (var row = 0; row < rows; row++) {
+        for (let row = 0; row < rows; row++) {
             array[col][row] = null;
         }
     }
@@ -22843,8 +22843,8 @@ function initArray(rows, cols) {
  * @ignore
  */
 function setLayerData(layer, bounds, data) {
-    var idx = 0;
-    var width, height;
+    let idx = 0;
+    let width, height;
 
     // layer provide rows and cols, chunk width and height
     if (typeof bounds.rows === "undefined") {
@@ -22855,10 +22855,10 @@ function setLayerData(layer, bounds, data) {
         height = bounds.rows;
     }
     // set everything
-    for (var y = 0; y < height; y++) {
-        for (var x = 0; x < width; x++) {
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
             // get the value of the gid
-            var gid = data[idx++];
+            let gid = data[idx++];
             // fill the array
             if (gid !== 0) {
                 // add a new tile to the layer
@@ -22874,10 +22874,10 @@ function setLayerData(layer, bounds, data) {
  */
 function preRenderLayer(layer, renderer) {
     // set everything
-    for (var y = 0; y < layer.rows; y++) {
-        for (var x = 0; x < layer.cols; x++) {
+    for (let y = 0; y < layer.rows; y++) {
+        for (let x = 0; x < layer.cols; x++) {
             // get the value of the gid
-            var tile = layer.layerData[x][y];
+            let tile = layer.layerData[x][y];
             // draw the tile if defined
             if (tile instanceof Tile) {
                 // add a new tile to the layer
@@ -22943,8 +22943,8 @@ function preRenderLayer(layer, renderer) {
             "width" : 0,
             "height" : 0
         };
-        for (var i = 0; i < this.tilesets.length; i++) {
-            var tileset = this.tilesets.getTilesetByIndex(i);
+        for (let i = 0; i < this.tilesets.length; i++) {
+            let tileset = this.tilesets.getTilesetByIndex(i);
             this.maxTileSize.width = Math.max(this.maxTileSize.width, tileset.tilewidth);
             this.maxTileSize.height = Math.max(this.maxTileSize.height, tileset.tileheight);
         }
@@ -22987,7 +22987,7 @@ function preRenderLayer(layer, renderer) {
         this.rows = +data.height;
 
         // layer opacity
-        var visible = typeof(data.visible) !== "undefined" ? +data.visible : 1;
+        let visible = typeof(data.visible) !== "undefined" ? +data.visible : 1;
         this.setOpacity(visible ? +data.opacity : 0);
 
         // layer tint
@@ -23057,8 +23057,8 @@ function preRenderLayer(layer, renderer) {
         }
 
         if (this.tilesets) {
-            var tileset = this.tilesets.tilesets;
-            for (var i = 0; i < tileset.length; i++) {
+            let tileset = this.tilesets.tilesets;
+            for (let i = 0; i < tileset.length; i++) {
                 if (tileset[i].isAnimated) {
                     this.animatedTilesets.push(tileset[i]);
                 }
@@ -23096,7 +23096,7 @@ function preRenderLayer(layer, renderer) {
      * @param {TMXRenderer} renderer
      * @example
      * // use the parent map default renderer
-     * var layer = new me.TMXLayer(...);
+     * let layer = new me.TMXLayer(...);
      * layer.setRenderer(map.getRenderer());
      */
     setRenderer(renderer) {
@@ -23118,7 +23118,7 @@ function preRenderLayer(layer, renderer) {
      * @returns {number} TileId or null if there is no Tile at the given position
      */
     getTileId(x, y) {
-        var tile = this.getTile(x, y);
+        let tile = this.getTile(x, y);
         return (tile ? tile.tileId : null);
     }
 
@@ -23129,15 +23129,15 @@ function preRenderLayer(layer, renderer) {
      * @returns {Tile} corresponding tile or null if there is no defined tile at the coordinate or if outside of the layer bounds
      * @example
      * // get the TMX Map Layer called "Front layer"
-     * var layer = me.game.world.getChildByName("Front Layer")[0];
+     * let layer = me.game.world.getChildByName("Front Layer")[0];
      * // get the tile object corresponding to the latest pointer position
-     * var tile = layer.getTile(me.input.pointer.x, me.input.pointer.y);
+     * let tile = layer.getTile(me.input.pointer.x, me.input.pointer.y);
      */
     getTile(x, y) {
-        var tile = null;
+        let tile = null;
 
         if (this.contains(x, y)) {
-            var coord = this.getRenderer().pixelToTileCoords(x, y, pool.pull("Vector2d"));
+            let coord = this.getRenderer().pixelToTileCoords(x, y, pool.pull("Vector2d"));
             tile = this.cellAt(coord.x, coord.y);
             pool.push(coord);
         }
@@ -23179,13 +23179,13 @@ function preRenderLayer(layer, renderer) {
      * @returns {Tile} corresponding tile or null if there is no defined tile at the position or if outside of the layer bounds
      * @example
      * // return the first tile at offset 0, 0
-     * var tile = layer.cellAt(0, 0);
+     * let tile = layer.cellAt(0, 0);
      */
     cellAt(x, y, boundsCheck) {
-        var _x = ~~x;
-        var _y = ~~y;
+        let _x = ~~x;
+        let _y = ~~y;
 
-        var renderer = this.getRenderer();
+        let renderer = this.getRenderer();
         // boundsCheck only used internally by the tiled renderer, when the layer bound check was already done
         if (boundsCheck === false || (_x >= 0 && _x < renderer.cols && _y >= 0 && _y < renderer.rows)) {
             return this.layerData[_x][_y];
@@ -23219,8 +23219,8 @@ function preRenderLayer(layer, renderer) {
      */
     update(dt) {
         if (this.isAnimated) {
-            var result = false;
-            for (var i = 0; i < this.animatedTilesets.length; i++) {
+            let result = false;
+            for (let i = 0; i < this.animatedTilesets.length; i++) {
                 result = this.animatedTilesets[i].update(dt) || result;
             }
             return result;
@@ -23235,8 +23235,8 @@ function preRenderLayer(layer, renderer) {
     draw(renderer, rect) {
         // use the offscreen canvas
         if (this.preRender) {
-            var width = Math.min(rect.width, this.width);
-            var height = Math.min(rect.height, this.height);
+            const width = Math.min(rect.width, this.width);
+            const height = Math.min(rect.height, this.height);
 
             // draw using the cached canvas
             renderer.drawImage(
@@ -23309,7 +23309,7 @@ class TMXGroup {
          */
         this.objects = [];
 
-        var visible = typeof(data.visible) !== "undefined" ? data.visible : true;
+        let visible = typeof(data.visible) !== "undefined" ? data.visible : true;
         this.opacity = (visible === true) ? clamp(+data.opacity || 1.0, 0.0, 1.0) : 0;
 
         // check if we have any user-defined properties
@@ -23325,7 +23325,7 @@ class TMXGroup {
 
         if (data.layers) {
             data.layers.forEach((data) => {
-                var layer = new TMXLayer(map, data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z++);
+                let layer = new TMXLayer(map, data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z++);
                 // set a renderer
                 layer.setRenderer(map.getRenderer());
                 // resize container accordingly
@@ -23506,8 +23506,8 @@ let globalFloatingCounter = 0;
         }
 
         // delete all children
-        var children = this.getChildren();
-        for (var i = children.length, child; i >= 0; (child = children[--i])) {
+        let children = this.getChildren();
+        for (let i = children.length, child; i >= 0; (child = children[--i])) {
             // don't remove it if a persistent object
             if (child && child.isPersistent !== true) {
                 this.removeChildNow(child);
@@ -23666,10 +23666,10 @@ let globalFloatingCounter = 0;
      * container.forEach((child, index, array) => { ... }, thisArg);
      */
     forEach(callback, thisArg) {
-        var context = this, i = 0;
-        var children = this.getChildren();
+        let context = this, i = 0;
+        let children = this.getChildren();
 
-        var len = children.length;
+        let len = children.length;
 
         if (typeof callback !== "function") {
             throw new Error(callback + " is not a function");
@@ -23691,12 +23691,12 @@ let globalFloatingCounter = 0;
      * @param {Renderable} child2
      */
     swapChildren(child, child2) {
-        var index = this.getChildIndex(child);
-        var index2 = this.getChildIndex(child2);
+        let index = this.getChildIndex(child);
+        let index2 = this.getChildIndex(child2);
 
         if ((index !== -1) && (index2 !== -1)) {
             // swap z index
-            var _z = child.pos.z;
+            let _z = child.pos.z;
             child.pos.z = child2.pos.z;
             child2.pos.z = _z;
             // swap the positions..
@@ -23739,7 +23739,7 @@ let globalFloatingCounter = 0;
      * @returns {Renderable} child
      */
     getNextChild(child) {
-        var index = this.getChildren().indexOf(child) - 1;
+        let index = this.getChildren().indexOf(child) - 1;
         if (index >= 0 && index < this.getChildren().length) {
             return this.getChildAt(index);
         }
@@ -23764,27 +23764,27 @@ let globalFloatingCounter = 0;
      * @returns {Renderable[]} Array of childs
      * @example
      * // get the first child object called "mainPlayer" in a specific container :
-     * var ent = myContainer.getChildByProp("name", "mainPlayer");
+     * let ent = myContainer.getChildByProp("name", "mainPlayer");
      *
      * // or query the whole world :
-     * var ent = container.getChildByProp("name", "mainPlayer");
+     * let ent = container.getChildByProp("name", "mainPlayer");
      *
      * // partial property matches are also allowed by using a RegExp.
      * // the following matches "redCOIN", "bluecoin", "bagOfCoins", etc :
-     * var allCoins = container.getChildByProp("name", /coin/i);
+     * let allCoins = container.getChildByProp("name", /coin/i);
      *
      * // searching for numbers or other data types :
-     * var zIndex10 = container.getChildByProp("z", 10);
-     * var inViewport = container.getChildByProp("inViewport", true);
+     * let zIndex10 = container.getChildByProp("z", 10);
+     * let inViewport = container.getChildByProp("inViewport", true);
      */
     getChildByProp(prop, value)    {
-        var objList = [];
+        let objList = [];
 
         /**
          * @ignore
          */
         function compare(obj, prop) {
-            var v = obj[prop];
+            let v = obj[prop];
             if (value instanceof RegExp && typeof(v) === "string") {
                 if (value.test(v)) {
                     objList.push(obj);
@@ -23811,7 +23811,7 @@ let globalFloatingCounter = 0;
      * @returns {Renderable[]} Array of children
      */
     getChildByType(classType) {
-        var objList = [];
+        let objList = [];
 
         this.forEach((child) => {
             if (child instanceof classType) {
@@ -23845,7 +23845,7 @@ let globalFloatingCounter = 0;
      * @returns {Renderable} corresponding child or null
      */
     getChildByGUID(guid) {
-        var obj = this.getChildByProp("GUID", guid);
+        let obj = this.getChildByProp("GUID", guid);
         return (obj.length > 0) ? obj[0] : null;
     }
 
@@ -23867,7 +23867,7 @@ let globalFloatingCounter = 0;
      * @returns {Bounds} this shape bounding box Rectangle object
      */
     updateBounds(absolute = true) {
-        var bounds = this.getBounds();
+        let bounds = this.getBounds();
 
         // call parent method
         super.updateBounds(absolute);
@@ -23875,7 +23875,7 @@ let globalFloatingCounter = 0;
         if (this.enableChildBoundsUpdate === true) {
             this.forEach((child) => {
                 if (child.isRenderable) {
-                    var childBounds = child.getBounds();
+                    let childBounds = child.getBounds();
                     if (childBounds.isFinite()) {
                         bounds.addBounds(childBounds);
                     }
@@ -23893,7 +23893,7 @@ let globalFloatingCounter = 0;
         if (this.root === true) {
             return true;
         } else {
-            var ancestor = this.ancestor;
+            let ancestor = this.ancestor;
             while (ancestor) {
                 if (ancestor.root === true) {
                     return true;
@@ -23912,7 +23912,7 @@ let globalFloatingCounter = 0;
         if (this.root === true) {
             return this;
         } else {
-            var ancestor = this.ancestor;
+            let ancestor = this.ancestor;
             while (ancestor) {
                 if (ancestor.root === true) {
                     break;
@@ -23999,7 +23999,7 @@ let globalFloatingCounter = 0;
 
             // Don't cache the child index; another element might have been removed
             // by the child's `onDeactivateEvent` or `destroy` methods
-            var childIndex = this.getChildIndex(child);
+            let childIndex = this.getChildIndex(child);
             if (childIndex >= 0) {
                 this.getChildren().splice(childIndex, 1);
                 child.ancestor = undefined;
@@ -24040,7 +24040,7 @@ let globalFloatingCounter = 0;
      * @param {Renderable} child
      */
     moveUp(child) {
-        var childIndex = this.getChildIndex(child);
+        let childIndex = this.getChildIndex(child);
         if (childIndex - 1 >= 0) {
             // note : we use an inverted loop
             this.swapChildren(child, this.getChildAt(childIndex - 1));
@@ -24054,7 +24054,7 @@ let globalFloatingCounter = 0;
      * @param {Renderable} child
      */
     moveDown(child) {
-        var childIndex = this.getChildIndex(child);
+        let childIndex = this.getChildIndex(child);
         if (childIndex >= 0 && (childIndex + 1) < this.getChildren().length) {
             // note : we use an inverted loop
             this.swapChildren(child, this.getChildAt(childIndex + 1));
@@ -24068,9 +24068,9 @@ let globalFloatingCounter = 0;
      * @param {Renderable} child
      */
     moveToTop(child) {
-        var childIndex = this.getChildIndex(child);
+        let childIndex = this.getChildIndex(child);
         if (childIndex > 0) {
-            var children = this.getChildren();
+            let children = this.getChildren();
             // note : we use an inverted loop
             children.splice(0, 0, children.splice(childIndex, 1)[0]);
             // increment our child z value based on the previous child depth
@@ -24085,8 +24085,8 @@ let globalFloatingCounter = 0;
      * @param {Renderable} child
      */
     moveToBottom(child) {
-        var childIndex = this.getChildIndex(child);
-        var children = this.getChildren();
+        let childIndex = this.getChildIndex(child);
+        let children = this.getChildren();
         if (childIndex >= 0 && childIndex < (children.length - 1)) {
             // note : we use an inverted loop
             children.splice((children.length - 1), 0, children.splice(childIndex, 1)[0]);
@@ -24160,7 +24160,7 @@ let globalFloatingCounter = 0;
         if (!b.pos || !a.pos) {
             return (a.pos ? -Infinity : Infinity);
         }
-        var result = b.pos.z - a.pos.z;
+        let result = b.pos.z - a.pos.z;
         return (result ? result : (b.pos.x - a.pos.x));
     }
 
@@ -24172,7 +24172,7 @@ let globalFloatingCounter = 0;
         if (!b.pos || !a.pos) {
             return (a.pos ? -Infinity : Infinity);
         }
-        var result = b.pos.z - a.pos.z;
+        let result = b.pos.z - a.pos.z;
         return (result ? result : (b.pos.y - a.pos.y));
     }
 
@@ -24195,11 +24195,11 @@ let globalFloatingCounter = 0;
      * @returns {boolean} true if the Container is dirty
      */
     update(dt) {
-        var isFloating = false;
-        var isPaused = state$1.isPaused();
-        var children = this.getChildren();
+        let isFloating = false;
+        let isPaused = state$1.isPaused();
+        let children = this.getChildren();
 
-        for (var i = children.length, obj; i--, (obj = children[i]);) {
+        for (let i = children.length, obj; i--, (obj = children[i]);) {
             if (isPaused && (!obj.updateWhenPaused)) {
                 // skip this object
                 continue;
@@ -24244,8 +24244,8 @@ let globalFloatingCounter = 0;
      * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
     draw(renderer, viewport) {
-        var isFloating = false;
-        var bounds = this.getBounds();
+        let isFloating = false;
+        let bounds = this.getBounds();
 
         this.drawCount = 0;
 
@@ -24267,8 +24267,8 @@ let globalFloatingCounter = 0;
             renderer.clearColor(this.backgroundColor);
         }
 
-        var children = this.getChildren();
-        for (var i = children.length, obj; i--, (obj = children[i]);) {
+        let children = this.getChildren();
+        for (let i = children.length, obj; i--, (obj = children[i]);) {
             if (obj.isRenderable) {
 
                 isFloating = obj.floating === true;
@@ -24347,7 +24347,7 @@ let globalFloatingCounter = 0;
      * @returns {Bounds}
      */
     getBounds(layer) {
-        var bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
+        let bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
         bounds.setMinMax(
             0, 0,
             this.cols * this.tilewidth,
@@ -24436,7 +24436,7 @@ let globalFloatingCounter = 0;
      * @ignore
      */
     pixelToTileCoords(x, y, v) {
-        var ret = v || new Vector2d();
+        let ret = v || new Vector2d();
         return ret.set(
             x / this.tilewidth,
             y / this.tileheight
@@ -24449,7 +24449,7 @@ let globalFloatingCounter = 0;
      * @ignore
      */
     tileToPixelCoords(x, y, v) {
-        var ret = v || new Vector2d();
+        let ret = v || new Vector2d();
         return ret.set(
             x * this.tilewidth,
             y * this.tileheight
@@ -24475,7 +24475,7 @@ let globalFloatingCounter = 0;
      * @ignore
      */
     drawTile(renderer, x, y, tmxTile) {
-        var tileset = tmxTile.tileset;
+        let tileset = tmxTile.tileset;
         // draw the tile
         tileset.drawTile(
             renderer,
@@ -24490,16 +24490,16 @@ let globalFloatingCounter = 0;
      * @ignore
      */
     drawTileLayer(renderer, layer, rect) {
-        var incX = 1, incY = 1;
+        let incX = 1, incY = 1;
 
         // get top-left and bottom-right tile position
-        var start = this.pixelToTileCoords(
+        let start = this.pixelToTileCoords(
             Math.max(rect.pos.x - (layer.maxTileSize.width - layer.tilewidth), 0),
             Math.max(rect.pos.y - (layer.maxTileSize.height - layer.tileheight), 0),
             pool.pull("Vector2d")
         ).floorSelf();
 
-        var end = this.pixelToTileCoords(
+        let end = this.pixelToTileCoords(
             rect.pos.x + rect.width + this.tilewidth,
             rect.pos.y + rect.height + this.tileheight,
             pool.pull("Vector2d")
@@ -24533,9 +24533,9 @@ let globalFloatingCounter = 0;
         }
 
         // main drawing loop
-        for (var y = start.y; y !== end.y; y+= incY) {
-            for (var x = start.x; x !== end.x; x+= incX) {
-                var tmxTile = layer.cellAt(x, y, false);
+        for (let y = start.y; y !== end.y; y+= incY) {
+            for (let x = start.x; x !== end.x; x+= incX) {
+                let tmxTile = layer.cellAt(x, y, false);
                 if (tmxTile) {
                     this.drawTile(renderer, x, y, tmxTile);
                 }
@@ -24585,7 +24585,7 @@ let globalFloatingCounter = 0;
      * @ignore
      */
     getBounds(layer) {
-        var bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
+        let bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
         bounds.setMinMax(
             0, 0,
             (this.cols + this.rows) * (this.tilewidth / 2),
@@ -24599,7 +24599,7 @@ let globalFloatingCounter = 0;
      * @ignore
      */
     pixelToTileCoords(x, y, v) {
-        var ret = v || new Vector2d();
+        let ret = v || new Vector2d();
         return ret.set(
             (y / this.tileheight) + ((x - this.originX) / this.tilewidth),
             (y / this.tileheight) - ((x - this.originX) / this.tilewidth)
@@ -24611,7 +24611,7 @@ let globalFloatingCounter = 0;
      * @ignore
      */
     tileToPixelCoords(x, y, v) {
-        var ret = v || new Vector2d();
+        let ret = v || new Vector2d();
         return ret.set(
             (x - y) * this.hTilewidth + this.originX,
             (x + y) * this.hTileheight
@@ -24624,9 +24624,9 @@ let globalFloatingCounter = 0;
      * @ignore
      */
     adjustPosition(obj) {
-        var tileX = obj.x / this.hTilewidth;
-        var tileY = obj.y / this.tileheight;
-        var isoPos = pool.pull("Vector2d");
+        let tileX = obj.x / this.hTilewidth;
+        let tileY = obj.y / this.tileheight;
+        let isoPos = pool.pull("Vector2d");
 
         this.tileToPixelCoords(tileX, tileY, isoPos);
 
@@ -24641,7 +24641,7 @@ let globalFloatingCounter = 0;
      * @ignore
      */
     drawTile(renderer, x, y, tmxTile) {
-        var tileset = tmxTile.tileset;
+        let tileset = tmxTile.tileset;
         // draw the tile
         tileset.drawTile(
             renderer,
@@ -24657,24 +24657,24 @@ let globalFloatingCounter = 0;
      */
     drawTileLayer(renderer, layer, rect) {
         // cache a couple of useful references
-        var tileset = layer.tileset;
+        let tileset = layer.tileset;
 
         // get top-left and bottom-right tile position
-        var rowItr = this.pixelToTileCoords(
+        let rowItr = this.pixelToTileCoords(
             rect.pos.x - tileset.tilewidth,
             rect.pos.y - tileset.tileheight,
             pool.pull("Vector2d")
         ).floorSelf();
-        var tileEnd = this.pixelToTileCoords(
+        let tileEnd = this.pixelToTileCoords(
             rect.pos.x + rect.width + tileset.tilewidth,
             rect.pos.y + rect.height + tileset.tileheight,
             pool.pull("Vector2d")
         ).ceilSelf();
 
-        var rectEnd = this.tileToPixelCoords(tileEnd.x, tileEnd.y, pool.pull("Vector2d"));
+        let rectEnd = this.tileToPixelCoords(tileEnd.x, tileEnd.y, pool.pull("Vector2d"));
 
         // Determine the tile and pixel coordinates to start at
-        var startPos = this.tileToPixelCoords(rowItr.x, rowItr.y, pool.pull("Vector2d"));
+        let startPos = this.tileToPixelCoords(rowItr.x, rowItr.y, pool.pull("Vector2d"));
         startPos.x -= this.hTilewidth;
         startPos.y += this.tileheight;
 
@@ -24683,8 +24683,8 @@ let globalFloatingCounter = 0;
          * up due to those tiles being visible as well. How we go up one row
          * depends on whether we're in the left or right half of the tile.
          */
-        var inUpperHalf = startPos.y - rect.pos.y > this.hTileheight;
-        var inLeftHalf  = rect.pos.x - startPos.x < this.hTilewidth;
+        let inUpperHalf = startPos.y - rect.pos.y > this.hTileheight;
+        let inLeftHalf  = rect.pos.x - startPos.x < this.hTilewidth;
 
         if (inUpperHalf) {
             if (inLeftHalf) {
@@ -24699,21 +24699,21 @@ let globalFloatingCounter = 0;
         }
 
         // Determine whether the current row is shifted half a tile to the right
-        var shifted = inUpperHalf ^ inLeftHalf;
+        let shifted = inUpperHalf ^ inLeftHalf;
 
         // initialize the columItr vector
-        var columnItr = rowItr.clone();
+        let columnItr = rowItr.clone();
 
         // main drawing loop
-        for (var y = startPos.y * 2; y - this.tileheight * 2 < rectEnd.y * 2; y += this.tileheight) {
+        for (let y = startPos.y * 2; y - this.tileheight * 2 < rectEnd.y * 2; y += this.tileheight) {
             columnItr.setV(rowItr);
-            for (var x = startPos.x; x < rectEnd.x; x += this.tilewidth) {
-                var tmxTile = layer.cellAt(columnItr.x, columnItr.y);
+            for (let x = startPos.x; x < rectEnd.x; x += this.tilewidth) {
+                let tmxTile = layer.cellAt(columnItr.x, columnItr.y);
                 // render if a valid tile position
                 if (tmxTile) {
                     tileset = tmxTile.tileset;
                     // offset could be different per tileset
-                    var offset  = tileset.tileoffset;
+                    let offset  = tileset.tileoffset;
                     // draw our tile
                     tileset.drawTile(
                         renderer,
@@ -24749,7 +24749,7 @@ let globalFloatingCounter = 0;
     }
 }
 
-// scope global var & constants
+// scope global variables & constants
 const offsetsStaggerX = [
     {x:   0, y:   0},
     {x: + 1, y: - 1},
@@ -24826,7 +24826,7 @@ const offsetsStaggerY = [
      * @ignore
      */
     getBounds(layer) {
-        var bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
+        let bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
 
         // The map size is the same regardless of which indexes are shifted.
         if (this.staggerX) {
@@ -24869,7 +24869,7 @@ const offsetsStaggerY = [
      * @ignore
      */
     topLeft(x, y, v) {
-        var ret = v || new Vector2d();
+        let ret = v || new Vector2d();
 
         if (!this.staggerX) {
             if ((y & 1) ^ this.staggerEven) {
@@ -24893,7 +24893,7 @@ const offsetsStaggerY = [
      * @ignore
      */
     topRight(x, y, v) {
-        var ret = v || new Vector2d();
+        let ret = v || new Vector2d();
 
         if (!this.staggerX) {
             if ((y & 1) ^ this.staggerEven) {
@@ -24918,7 +24918,7 @@ const offsetsStaggerY = [
      * @ignore
      */
     bottomLeft(x, y, v) {
-        var ret = v || new Vector2d();
+        let ret = v || new Vector2d();
 
         if (!this.staggerX) {
             if ((y & 1) ^ this.staggerEven) {
@@ -24942,7 +24942,7 @@ const offsetsStaggerY = [
      * @ignore
      */
     bottomRight(x, y, v) {
-        var ret = v || new Vector2d();
+        let ret = v || new Vector2d();
 
         if (!this.staggerX) {
             if ((y & 1) ^ this.staggerEven) {
@@ -24967,7 +24967,7 @@ const offsetsStaggerY = [
      * @ignore
      */
     pixelToTileCoords(x, y, v) {
-        var ret = v || new Vector2d();
+        let ret = v || new Vector2d();
 
         if (this.staggerX) { //flat top
             x -= this.staggerEven ? this.tilewidth : this.sideoffsetx;
@@ -24977,13 +24977,13 @@ const offsetsStaggerY = [
         }
 
         // Start with the coordinates of a grid-aligned tile
-        var referencePoint = pool.pull("Vector2d",
+        let referencePoint = pool.pull("Vector2d",
             Math.floor(x / (this.columnwidth * 2)),
             Math.floor((y / (this.rowheight * 2)))
         );
 
         // Relative x and y position on the base square of the grid-aligned tile
-        var rel = pool.pull("Vector2d",
+        let rel = pool.pull("Vector2d",
             x - referencePoint.x * (this.columnwidth * 2),
             y - referencePoint.y * (this.rowheight * 2)
         );
@@ -25003,7 +25003,7 @@ const offsetsStaggerY = [
         }
 
         // Determine the nearest hexagon tile by the distance to the center
-        var left, top, centerX, centerY;
+        let left, top, centerX, centerY;
         if (this.staggerX) {
             left = this.sidelengthx / 2;
             centerX = left + this.columnwidth;
@@ -25025,17 +25025,17 @@ const offsetsStaggerY = [
             this.centers[3].set(centerX, centerY + this.rowheight);
         }
 
-        var nearest = 0;
-        var minDist = Number.MAX_VALUE;
-        for (var i = 0; i < 4; ++i) {
-            var dc = this.centers[i].sub(rel).length2();
+        let nearest = 0;
+        let minDist = Number.MAX_VALUE;
+        for (let i = 0; i < 4; ++i) {
+            let dc = this.centers[i].sub(rel).length2();
             if (dc < minDist) {
                 minDist = dc;
                 nearest = i;
             }
         }
 
-        var offsets = (this.staggerX) ? offsetsStaggerX : offsetsStaggerY;
+        let offsets = (this.staggerX) ? offsetsStaggerX : offsetsStaggerY;
 
         ret.set(
             referencePoint.x + offsets[nearest].x,
@@ -25053,9 +25053,9 @@ const offsetsStaggerY = [
      * @ignore
      */
     tileToPixelCoords(x, y, v) {
-        var tileX = Math.floor(x),
+        let tileX = Math.floor(x),
             tileY = Math.floor(y);
-        var ret = v || new Vector2d();
+        let ret = v || new Vector2d();
 
         if (this.staggerX) {
             ret.y = tileY * (this.tileheight + this.sidelengthy);
@@ -25093,8 +25093,8 @@ const offsetsStaggerY = [
      * @ignore
      */
     drawTile(renderer, x, y, tmxTile) {
-        var tileset = tmxTile.tileset;
-        var point = this.tileToPixelCoords(x, y, pool.pull("Vector2d"));
+        let tileset = tmxTile.tileset;
+        let point = this.tileToPixelCoords(x, y, pool.pull("Vector2d"));
 
         // draw the tile
         tileset.drawTile(
@@ -25112,10 +25112,10 @@ const offsetsStaggerY = [
      * @ignore
      */
     drawTileLayer(renderer, layer, rect) {
-        var tile;
+        let tile;
 
         // get top-left and bottom-right tile position
-        var startTile = this.pixelToTileCoords(
+        let startTile = this.pixelToTileCoords(
             rect.pos.x,
             rect.pos.y,
             pool.pull("Vector2d")
@@ -25125,22 +25125,22 @@ const offsetsStaggerY = [
         startTile.sub(layer.pos);
 
         // get top-left and bottom-right tile position
-        var startPos = this.tileToPixelCoords(
+        let startPos = this.tileToPixelCoords(
             startTile.x + layer.pos.x,
             startTile.y + layer.pos.y,
             pool.pull("Vector2d")
         );
 
-        var rowTile = startTile.clone();
-        var rowPos = startPos.clone();
+        let rowTile = startTile.clone();
+        let rowPos = startPos.clone();
 
        /* Determine in which half of the tile the top-left corner of the area we
         * need to draw is. If we're in the upper half, we need to start one row
         * up due to those tiles being visible as well. How we go up one row
         * depends on whether we're in the left or right half of the tile.
         */
-        var inUpperHalf = rect.pos.y - startPos.y < this.sideoffsety;
-        var inLeftHalf = rect.pos.x - startPos.x < this.sideoffsetx;
+        let inUpperHalf = rect.pos.y - startPos.y < this.sideoffsety;
+        let inLeftHalf = rect.pos.x - startPos.x < this.sideoffsetx;
 
         if (inUpperHalf) {
             startTile.y--;
@@ -25149,8 +25149,8 @@ const offsetsStaggerY = [
             startTile.x--;
         }
 
-        var endX = layer.cols;
-        var endY = layer.rows;
+        let endX = layer.cols;
+        let endY = layer.rows;
 
         if (this.staggerX) {
             //ensure we are in the valid tile range
@@ -25163,7 +25163,7 @@ const offsetsStaggerY = [
                 startPos
             );
 
-            var staggeredRow = this.doStaggerX(startTile.x + layer.pos.x);
+            let staggeredRow = this.doStaggerX(startTile.x + layer.pos.x);
 
             // main drawing loop
             for (; startPos.y < rect.bottom && startTile.y < endY; ) {
@@ -25262,9 +25262,9 @@ const offsetsStaggerY = [
      * @ignore
      */
     pixelToTileCoords(x, y, v) {
-        var ret = v || new Vector2d();
+        let ret = v || new Vector2d();
 
-        var alignedX = x,
+        let alignedX = x,
             alignedY = y;
 
         if (this.staggerX) {
@@ -25274,7 +25274,7 @@ const offsetsStaggerY = [
         }
 
         // Start with the coordinates of a grid-aligned tile
-        var referencePoint = pool.pull("Vector2d",
+        let referencePoint = pool.pull("Vector2d",
             Math.floor(alignedX / this.tilewidth),
             Math.floor(alignedY / this.tileheight)
         );
@@ -25293,13 +25293,13 @@ const offsetsStaggerY = [
         }
 
         // Relative x and y position on the base square of the grid-aligned tile
-        var rel = pool.pull("Vector2d",
+        let rel = pool.pull("Vector2d",
             alignedX - referencePoint.x * this.tilewidth,
             alignedY - referencePoint.y * this.tileheight
         );
 
         // Check whether the cursor is in any of the corners (neighboring tiles)
-        var y_pos = rel.x * (this.tileheight / this.tilewidth);
+        let y_pos = rel.x * (this.tileheight / this.tilewidth);
 
         if (this.sideoffsety - y_pos > rel.y) {
             referencePoint = this.topLeft(referencePoint.x, referencePoint.y, referencePoint);
@@ -25365,8 +25365,8 @@ function getNewTMXRenderer(map) {
  * @param {string} version - the version since when the lass,function or property is deprecated
  */
 function warning(deprecated, replacement, version) {
-    var msg = "melonJS: %s is deprecated since version %s, please use %s";
-    var stack = new Error().stack;
+    const msg = "melonJS: %s is deprecated since version %s, please use %s";
+    let stack = new Error().stack;
 
     if (console.groupCollapsed) {
         console.groupCollapsed(
@@ -25411,7 +25411,7 @@ function readImageLayer(map, data, z) {
     applyTMXProperties(data.properties, data);
 
     // create the layer
-    var imageLayer = pool.pull("ImageLayer",
+    let imageLayer = pool.pull("ImageLayer",
         // x/y is deprecated since 0.15 and replace by offsetx/y
         +data.offsetx || +data.x || 0,
         +data.offsety || +data.y || 0,
@@ -25427,7 +25427,7 @@ function readImageLayer(map, data, z) {
 
 
     // set some additional flags
-    var visible = typeof(data.visible) !== "undefined" ? data.visible : true;
+    let visible = typeof(data.visible) !== "undefined" ? data.visible : true;
     imageLayer.setOpacity(visible ? +data.opacity : 0);
 
     return imageLayer;
@@ -25460,7 +25460,7 @@ function readObjectGroup(map, data, z) {
      * @param {object} data - TMX map in JSON format
      * @example
      * // create a new level object based on the TMX JSON object
-     * var level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
+     * let level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
      * // add the level to the game world container
      * level.addTo(me.game.world, true);
      */
@@ -25622,7 +25622,7 @@ function readObjectGroup(map, data, z) {
         }
 
         // to automatically increment z index
-        var zOrder = 0;
+        let zOrder = 0;
 
         // Tileset information
         if (!this.tilesets) {
@@ -25632,7 +25632,7 @@ function readObjectGroup(map, data, z) {
 
         // parse all tileset objects
         if (typeof (data.tilesets) !== "undefined") {
-            var tilesets = data.tilesets;
+            let tilesets = data.tilesets;
             tilesets.forEach((tileset) => {
                 // add the new tileset
                 this.tilesets.add(readTileset(tileset));
@@ -25689,15 +25689,15 @@ function readObjectGroup(map, data, z) {
      * @param {boolean} [setViewportBounds=false] - if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
      * @example
      * // create a new level object based on the TMX JSON object
-     * var level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
+     * let level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
      * // add the level to the game world container
      * level.addTo(me.game.world, true, true);
      */
     addTo(container, flatten, setViewportBounds) {
-        var _sort = container.autoSort;
-        var _depth = container.autoDepth;
+        let _sort = container.autoSort;
+        let _depth = container.autoDepth;
 
-        var levelBounds = this.getBounds();
+        let levelBounds = this.getBounds();
 
         // disable auto-sort and auto-depth
         container.autoSort = false;
@@ -25763,15 +25763,15 @@ function readObjectGroup(map, data, z) {
      * @returns {Renderable[]} Array of Objects
      */
     getObjects(flatten) {
-        var objects = [];
-        var isCollisionGroup = false;
-        var targetContainer;
+        let objects = [];
+        let isCollisionGroup = false;
+        let targetContainer;
 
         // parse the map for objects
         this.readMapObjects(this.data);
 
-        for (var g = 0; g < this.objectGroups.length; g++) {
-            var group = this.objectGroups[g];
+        for (let g = 0; g < this.objectGroups.length; g++) {
+            let group = this.objectGroups[g];
 
             // check if this is the collision shape group
             isCollisionGroup = group.name.toLowerCase().includes(COLLISION_GROUP);
@@ -25795,13 +25795,13 @@ function readObjectGroup(map, data, z) {
 
             // iterate through the group and add all object into their
             // corresponding target Container
-            for (var o = 0; o < group.objects.length; o++) {
+            for (let o = 0; o < group.objects.length; o++) {
                 // TMX object settings
-                var settings = group.objects[o];
+                let settings = group.objects[o];
                 // reference to the instantiated object
-                var obj;
+                let obj;
                 // a reference to the default shape
-                var shape;
+                let shape;
 
                 // Tiled uses 0,0 by default
                 if (typeof (settings.anchorPoint) === "undefined") {
@@ -25948,11 +25948,11 @@ function readObjectGroup(map, data, z) {
 }
 
 // our levels
-var levels = {};
+let levels = {};
 // level index table
-var levelIdx = [];
+let levelIdx = [];
 // current level index
-var currentLevelIdx = 0;
+let currentLevelIdx = 0;
 
 /**
  * @ignore
@@ -25999,7 +25999,7 @@ function safeLoadLevel(levelId, options, restart) {
  * @ignore
  */
 function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
-    var level = levels[levelId];
+    let level = levels[levelId];
 
     // reset the GUID generator
     // and pass the level id as parameter
@@ -26018,7 +26018,7 @@ function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
  * @namespace level
  */
 
-var level = {
+let level = {
 
     /**
      * add a level into the game manager (usually called by the preloader)
@@ -26073,7 +26073,7 @@ var level = {
      * @example
      * // the game assets to be be preloaded
      * // TMX maps
-     * var resources = [
+     * let resources = [
      *     {name: "a4_level1",   type: "tmx",   src: "data/level/a4_level1.tmx"},
      *     {name: "a4_level2",   type: "tmx",   src: "data/level/a4_level2.tmx"},
      *     {name: "a4_level3",   type: "tmx",   src: "data/level/a4_level3.tmx"},
@@ -26087,7 +26087,7 @@ var level = {
      * ...
      * ...
      * // load a level into a specific container
-     * var levelContainer = new me.Container();
+     * let levelContainer = new me.Container();
      * me.level.load("a4_level2", {container:levelContainer});
      * // add a simple transformation
      * levelContainer.currentTransform.translate(levelContainer.width / 2, levelContainer.height / 2 );
@@ -26112,7 +26112,7 @@ var level = {
         if (levels[levelId] instanceof TMXTileMap) {
 
             // check the status of the state mngr
-            var wasRunning = state$1.isRunning();
+            let wasRunning = state$1.isRunning();
 
             if (wasRunning) {
                 // stop the game loop to avoid
@@ -26270,7 +26270,7 @@ function preloadFontFace(data, onload, onerror) {
         }
     }
 
-    var font = new FontFace(data.name, data.src);
+    let font = new FontFace(data.name, data.src);
 
     // loading promise
     font.load().then(() => {
@@ -26317,9 +26317,9 @@ function preloadTMX(tmxData, onload, onerror) {
         return;
     }
 
-    var xmlhttp = new XMLHttpRequest();
+    let xmlhttp = new XMLHttpRequest();
     // check the data format ('tmx', 'json')
-    var format = getExtension(tmxData.src);
+    let format = getExtension(tmxData.src);
 
     if (xmlhttp.overrideMimeType) {
         if (format === "json") {
@@ -26339,7 +26339,7 @@ function preloadTMX(tmxData, onload, onerror) {
             // status = 0 when file protocol is used, or cross-domain origin,
             // (With Chrome use "--allow-file-access-from-files --disable-web-security")
             if ((xmlhttp.status === 200) || ((xmlhttp.status === 0) && xmlhttp.responseText)) {
-                var result = null;
+                let result = null;
 
                 // parse response
                 switch (format) {
@@ -26359,7 +26359,7 @@ function preloadTMX(tmxData, onload, onerror) {
                             result = xmlhttp.responseXML;
                         }
                         // converts to a JS object
-                        var data = parse(result);
+                        var data = parse(result); // <= "Unexpected lexical declaration in case block" if using let
                         switch (format) {
                             case "tmx":
                                 result = data.map;
@@ -26404,7 +26404,7 @@ function preloadTMX(tmxData, onload, onerror) {
  * @ignore
  */
 function preloadJSON(data, onload, onerror) {
-    var xmlhttp = new XMLHttpRequest();
+    let xmlhttp = new XMLHttpRequest();
 
     if (xmlhttp.overrideMimeType) {
         xmlhttp.overrideMimeType("application/json");
@@ -26441,7 +26441,7 @@ function preloadJSON(data, onload, onerror) {
  * @ignore
  */
 function preloadBinary(data, onload, onerror) {
-    var httpReq = new XMLHttpRequest();
+    let httpReq = new XMLHttpRequest();
 
     // load our file
     httpReq.open("GET", data.src + nocache, true);
@@ -26449,11 +26449,11 @@ function preloadBinary(data, onload, onerror) {
     httpReq.responseType = "arraybuffer";
     httpReq.onerror = onerror;
     httpReq.onload = function () {
-        var arrayBuffer = httpReq.response;
+        let arrayBuffer = httpReq.response;
         if (arrayBuffer) {
-            var byteArray = new Uint8Array(arrayBuffer);
-            var buffer = [];
-            for (var i = 0; i < byteArray.byteLength; i++) {
+            let byteArray = new Uint8Array(arrayBuffer);
+            let buffer = [];
+            for (let i = 0; i < byteArray.byteLength; i++) {
                 buffer[i] = String.fromCharCode(byteArray[i]);
             }
             binList[data.name] = buffer.join("");
@@ -26472,7 +26472,7 @@ function preloadBinary(data, onload, onerror) {
  * @ignore
  */
 function preloadJavascript(data, onload, onerror) {
-    var script = document.createElement("script");
+    let script = document.createElement("script");
 
     script.src = data.src;
     script.type = "text/javascript";
@@ -26539,7 +26539,7 @@ function checkLoadStatus(onloadcb) {
             clearTimeout(timerId);
             // trigger the onload callback
             // we call either the supplied callback (which takes precedence) or the global one
-            var callback = onloadcb || onload;
+            let callback = onloadcb || onload;
             setTimeout(() => {
                 callback();
                 emit(LOADER_COMPLETE);
@@ -26565,7 +26565,7 @@ function onResourceLoaded(res) {
     loadCount++;
 
     // currrent progress
-    var progress = loadCount / resourceCount;
+    let progress = loadCount / resourceCount;
 
     // call callback if defined
     if (typeof onProgress === "function") {
@@ -26630,7 +26630,7 @@ function onLoadingError(res) {
  */
 function preload(res, onloadcb, switchToLoadState = true) {
     // parse the resources
-    for (var i = 0; i < res.length; i++) {
+    for (let i = 0; i < res.length; i++) {
         resourceCount += load(
             res[i],
             onResourceLoaded.bind(this, res[i]),
@@ -26790,7 +26790,7 @@ function unload(res) {
  * @example me.loader.unloadAll();
  */
 function unloadAll() {
-    var name;
+    let name;
 
     // unload all binary resources
     for (name in binList) {
@@ -26946,7 +26946,7 @@ var loader = {
      * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] - Anchor point to draw the frame at (defaults to the center of the frame).
      * @example
      * // create a single sprite from a standalone image, with anchor in the center
-     * var sprite = new me.Sprite(0, 0, {
+     * let sprite = new me.Sprite(0, 0, {
      *     image : "PlayerTexture",
      *     framewidth : 64,
      *     frameheight : 64,
@@ -26958,7 +26958,7 @@ var loader = {
      *     me.loader.getJSON("texture"),
      *     me.loader.getImage("texture")
      * );
-     * var sprite = new me.Sprite(0, 0, {
+     * let sprite = new me.Sprite(0, 0, {
      *     image : mytexture,
      *     region : "npc2.png",
      * });
@@ -27048,7 +27048,7 @@ var loader = {
             // check for defined region
             if (typeof (settings.region) !== "undefined") {
                 // use a texture atlas
-                var region = this.source.getRegion(settings.region);
+                let region = this.source.getRegion(settings.region);
                 if (region) {
                     // set the sprite region within the texture
                     this.setRegion(region);
@@ -27201,7 +27201,7 @@ var loader = {
         };
 
         // # of frames
-        var counter = 0;
+        let counter = 0;
 
         if (typeof (this.textureAtlas) !== "object") {
             return 0;
@@ -27217,9 +27217,9 @@ var loader = {
         }
 
         // set each frame configuration (offset, size, etc..)
-        for (var i = 0, len = index.length; i < len; i++) {
-            var frame = index[i];
-            var frameObject;
+        for (let i = 0, len = index.length; i < len; i++) {
+            let frame = index[i];
+            let frameObject;
             if (typeof(frame) === "number" || typeof(frame) === "string") {
                 frameObject = {
                     name: frame,
@@ -27229,7 +27229,7 @@ var loader = {
             else {
               frameObject = frame;
             }
-            var frameObjectName = frameObject.name;
+            let frameObjectName = frameObject.name;
             if (typeof(frameObjectName) === "number") {
                 if (typeof (this.textureAtlas[frameObjectName]) !== "undefined") {
                     // TODO: adding the cache source coordinates add undefined entries in webGL mode
@@ -27439,13 +27439,13 @@ var loader = {
     update(dt) {
         // Update animation if necessary
         if (!this.animationpause && this.current.length > 1) {
-            var duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
+            let duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
             this.dt += dt;
             while (this.dt >= duration) {
                 this.isDirty = true;
                 this.dt -= duration;
 
-                var nextFrame = (this.current.length > 1 ? this.current.idx + 1 : this.current.idx);
+                let nextFrame = (this.current.length > 1 ? this.current.idx + 1 : this.current.idx);
                 this.setAnimationFrame(nextFrame);
 
                 // Switch animation if we reach the end of the strip and a callback is defined
@@ -27508,18 +27508,18 @@ var loader = {
         }
 
         // the frame to draw
-        var frame = this.current;
+        let frame = this.current;
 
         // cache the current position and size
-        var xpos = this.pos.x,
+        let xpos = this.pos.x,
             ypos = this.pos.y;
 
-        var w = frame.width,
+        let w = frame.width,
             h = frame.height;
 
         // frame offset in the texture/atlas
-        var frame_offset = frame.offset;
-        var g_offset = this.offset;
+        let frame_offset = frame.offset;
+        let g_offset = this.offset;
 
 
         // remove image's TexturePacker/ShoeBox rotation
@@ -27608,7 +27608,7 @@ class DefaultLoadingScreen extends Stage {
      * @ignore
      */
     onResetEvent() {
-        var barHeight = 8;
+        const barHeight = 8;
 
         // set a background color
         game.world.backgroundColor.parseCSS("#202020");
@@ -27646,32 +27646,32 @@ class DefaultLoadingScreen extends Stage {
 }
 
 // current state
-var _state = -1;
+let _state = -1;
 
 // requestAnimeFrame Id
-var _animFrameId = -1;
+let _animFrameId = -1;
 
 // whether the game state is "paused"
-var _isPaused = false;
+let _isPaused = false;
 
 // list of stages
-var _stages = {};
+let _stages = {};
 
 // fading transition parameters between screen
-var _fade = {
+let _fade = {
     color : "",
     duration : 0
 };
 
 // callback when state switch is done
 /** @ignore */
-var _onSwitchComplete = null;
+let _onSwitchComplete = null;
 
 // just to keep track of possible extra arguments
-var _extraArgs = null;
+let _extraArgs = null;
 
 // store the elapsed time during pause/stop period
-var _pauseTime = 0;
+let _pauseTime = 0;
 
 /**
  * @ignore
@@ -27710,7 +27710,7 @@ function _pauseRunLoop() {
  * @ignore
  */
 function _renderFrame(time) {
-    var stage = _stages[_state].stage;
+    let stage = _stages[_state].stage;
     // update all game objects
     game.update(time, stage);
     // render all game objects
@@ -27833,7 +27833,7 @@ on(BOOT, () => {
  * a State Manager (state machine)
  * @namespace state
  */
-var state = {
+let state = {
 
     /**
      * default state ID for Loading Stage
@@ -27922,10 +27922,10 @@ var state = {
      * @name USER
      * @memberof state
      * @example
-     * var STATE_INFO = me.state.USER + 0;
-     * var STATE_WARN = me.state.USER + 1;
-     * var STATE_ERROR = me.state.USER + 2;
-     * var STATE_CUTSCENE = me.state.USER + 3;
+     * let STATE_INFO = me.state.USER + 0;
+     * let STATE_WARN = me.state.USER + 1;
+     * let STATE_ERROR = me.state.USER + 2;
+     * let STATE_CUTSCENE = me.state.USER + 3;
      */
     USER : 100,
 
@@ -28465,7 +28465,7 @@ class Timer {
      * @ignore
      */
     clearTimer(timerId) {
-        for (var i = 0, len = this.timers.length; i < len; i++) {
+        for (let i = 0, len = this.timers.length; i < len; i++) {
             if (this.timers[i].timerId === timerId) {
                 this.timers.splice(i, 1);
                 break;
@@ -28479,8 +28479,8 @@ class Timer {
      * @ignore
      */
     updateTimers() {
-        for (var i = 0, len = this.timers.length; i < len; i++) {
-            var _timer = this.timers[i];
+        for (let i = 0, len = this.timers.length; i < len; i++) {
+            let _timer = this.timers[i];
             if (!(_timer.pauseable && state$1.isPaused())) {
                 _timer.elapsed += this.delta;
             }
@@ -28717,7 +28717,7 @@ var timer$1 = timer;
         // parses the given shapes array and add them
         if (typeof shapes !== "undefined") {
             if (Array.isArray(shapes)) {
-                for (var s = 0; s < shapes.length; s++) {
+                for (let s = 0; s < shapes.length; s++) {
                     this.addShape(shapes[s]);
                 }
             } else {
@@ -28751,7 +28751,7 @@ var timer$1 = timer;
      */
     addShape(shape) {
         if (shape instanceof Rect || shape instanceof Bounds) {
-            var poly = shape.toPolygon();
+            let poly = shape.toPolygon();
             this.shapes.push(poly);
             // update the body bounds
             this.bounds.add(poly.points);
@@ -28802,7 +28802,7 @@ var timer$1 = timer;
      * @param {boolean} [clear=true] - either to reset the body definition before adding the new vertices
      */
     setVertices(vertices, index = 0, clear = true) {
-        var polygon = this.getShape(index);
+        let polygon = this.getShape(index);
         if (polygon instanceof Polygon) {
             polygon.setShape(0, 0, vertices);
         } else {
@@ -28841,7 +28841,7 @@ var timer$1 = timer;
      * this.body.fromJSON(me.loader.getJSON("shapesdef"), "banana");
      */
     fromJSON(json, id) {
-        var data = json;
+        let data = json;
 
         if (typeof id !== "undefined" ) {
             data = json[id];
@@ -28854,7 +28854,7 @@ var timer$1 = timer;
 
         if (data.length) {
             // go through all shapes and add them to the body
-            for (var i = 0; i < data.length; i++) {
+            for (let i = 0; i < data.length; i++) {
                 this.addVertices(data[i].shape, i);
             }
             // apply density, friction and bounce properties from the first shape
@@ -28896,7 +28896,7 @@ var timer$1 = timer;
         // remove the shape from shape list
         remove(this.shapes, shape);
         // add everything left back
-        for (var s = 0; s < this.shapes.length; s++) {
+        for (let s = 0; s < this.shapes.length; s++) {
             this.addShape(this.shapes[s]);
         }
         // return the length of the shape list
@@ -28953,7 +28953,7 @@ var timer$1 = timer;
      */
     respondToCollision(response) {
         // the overlap vector
-        var overlap = response.overlapV;
+        let overlap = response.overlapV;
 
         // FIXME: Respond proportionally to object mass
 
@@ -28975,7 +28975,7 @@ var timer$1 = timer;
 
             if (!this.ignoreGravity) {
                 // cancel the falling an jumping flags if necessary
-                var dir = this.falling === true ? 1 : this.jumping === true ? -1 : 0;
+                let dir = this.falling === true ? 1 : this.jumping === true ? -1 : 0;
                 this.falling = overlap.y >= dir;
                 this.jumping = overlap.y <= -dir;
             }
@@ -29000,10 +29000,10 @@ var timer$1 = timer;
      * mySprite.body.forEach((shape, index, array) => { ... }, thisArg);
      */
     forEach(callback, thisArg) {
-        var context = this, i = 0;
-        var shapes = this.shapes;
+        let context = this, i = 0;
+        let shapes = this.shapes;
 
-        var len = shapes.length;
+        let len = shapes.length;
 
         if (typeof callback !== "function") {
             throw new Error(callback + " is not a function");
@@ -29032,7 +29032,7 @@ var timer$1 = timer;
      * @returns {boolean} true if contains
      */
     contains() {
-        var _x, _y;
+        let _x, _y;
 
         if (arguments.length === 2) {
           // x, y
@@ -29046,7 +29046,7 @@ var timer$1 = timer;
 
         if (this.getBounds().contains(_x, _y)) {
              // cannot use forEach here as cannot break out with a return
-             for (var i = this.shapes.length, shape; i--, (shape = this.shapes[i]);) {
+             for (let i = this.shapes.length, shape; i--, (shape = this.shapes[i]);) {
                 if (shape.contains(_x, _y)) {
                     return true;
                 }
@@ -29120,7 +29120,7 @@ var timer$1 = timer;
     update(dt) { // eslint-disable-line no-unused-vars
         // apply timer.tick to delta time for linear interpolation (when enabled)
         // #761 add delta time in body update
-        var deltaTime = /* dt * */ timer$1.tick;
+        let deltaTime = /* dt * */ timer$1.tick;
 
         // apply force if defined
         if (this.force.x !== 0) {
@@ -29132,7 +29132,7 @@ var timer$1 = timer;
 
         // apply friction if defined
         if (this.friction.x > 0) {
-            var fx = this.friction.x * deltaTime,
+            let fx = this.friction.x * deltaTime,
                 nx = this.vel.x + fx,
                 x = this.vel.x - fx;
 
@@ -29142,7 +29142,7 @@ var timer$1 = timer;
             );
         }
         if (this.friction.y > 0) {
-            var fy = this.friction.y * deltaTime,
+            let fy = this.friction.y * deltaTime,
                 ny = this.vel.y + fy,
                 y = this.vel.y - fy;
 
@@ -29466,21 +29466,21 @@ let Easing = {
         /** @ignore */
         In: function ( k ) {
 
-            var s = 1.70158;
+            const s = 1.70158;
             return k * k * ( ( s + 1 ) * k - s );
 
         },
         /** @ignore */
         Out: function ( k ) {
 
-            var s = 1.70158;
+            const s = 1.70158;
             return --k * k * ( ( s + 1 ) * k + s ) + 1;
 
         },
         /** @ignore */
         InOut: function ( k ) {
 
-            var s = 1.70158 * 1.525;
+            const s = 1.70158 * 1.525;
             if ( ( k *= 2 ) < 1 ) return 0.5 * ( k * k * ( ( s + 1 ) * k - s ) );
             return 0.5 * ( ( k -= 2 ) * k * ( ( s + 1 ) * k + s ) + 2 );
 
@@ -29551,7 +29551,7 @@ let Interpolation = {
     /** @ignore */
     Linear: function ( v, k ) {
 
-        var m = v.length - 1, f = m * k, i = Math.floor( f ), fn = Interpolation.Utils.Linear;
+        let m = v.length - 1, f = m * k, i = Math.floor( f ), fn = Interpolation.Utils.Linear;
 
         if ( k < 0 ) return fn( v[ 0 ], v[ 1 ], f );
         if ( k > 1 ) return fn( v[ m ], v[ m - 1 ], m - f );
@@ -29562,7 +29562,7 @@ let Interpolation = {
     /** @ignore */
     Bezier: function ( v, k ) {
 
-        var b = 0, n = v.length - 1, pw = Math.pow, bn = Interpolation.Utils.Bernstein, i;
+        let b = 0, n = v.length - 1, pw = Math.pow, bn = Interpolation.Utils.Bernstein, i;
 
         for ( i = 0; i <= n; i++ ) {
             b += pw( 1 - k, n - i ) * pw( k, i ) * v[ i ] * bn( n, i );
@@ -29574,7 +29574,7 @@ let Interpolation = {
     /** @ignore */
     CatmullRom: function ( v, k ) {
 
-        var m = v.length - 1, f = m * k, i = Math.floor( f ), fn = Interpolation.Utils.CatmullRom;
+        let m = v.length - 1, f = m * k, i = Math.floor( f ), fn = Interpolation.Utils.CatmullRom;
 
         if ( v[ 0 ] === v[ m ] ) {
 
@@ -29603,18 +29603,18 @@ let Interpolation = {
         /** @ignore */
         Bernstein: function ( n, i ) {
 
-            var fc = Interpolation.Utils.Factorial;
+            let fc = Interpolation.Utils.Factorial;
             return fc( n ) / fc( i ) / fc( n - i );
 
         },
         /* @ignore */
         Factorial: ( function () {
 
-            var a = [ 1 ];
+            let a = [ 1 ];
 
             return function ( n ) {
 
-                var s = 1, i;
+                let s = 1, i;
                 if ( a[ n ] ) return a[ n ];
                 for ( i = n; i > 1; i-- ) s *= i;
                 a[ n ] = s;
@@ -29626,7 +29626,7 @@ let Interpolation = {
         /** @ignore */
         CatmullRom: function ( p0, p1, p2, p3, t ) {
 
-            var v0 = ( p2 - p0 ) * 0.5, v1 = ( p3 - p1 ) * 0.5, t2 = t * t, t3 = t * t2;
+            let v0 = ( p2 - p0 ) * 0.5, v1 = ( p3 - p1 ) * 0.5, t2 = t * t, t3 = t * t2;
             return ( 2 * p1 - 2 * p2 + v0 + v1 ) * t3 + ( - 3 * p1 + 3 * p2 - 2 * v0 - v1 ) * t2 + v0 * t + p1;
         }
     }
@@ -29711,7 +29711,7 @@ let Interpolation = {
         this.isRenderable = false;
 
         // Set all starting values present on the target object
-        for ( var field in object ) {
+        for ( let field in object ) {
             if (typeof object !== "object") {
                 this._valuesStart[ field ] = parseFloat(object[field]);
             }
@@ -29803,7 +29803,7 @@ let Interpolation = {
 
         this._startTime =  time + this._delayTime;
 
-        for ( var property in this._valuesEnd ) {
+        for ( let property in this._valuesEnd ) {
 
             // check if an Array was provided as property value
             if ( this._valuesEnd[ property ] instanceof Array ) {
@@ -29979,9 +29979,9 @@ let Interpolation = {
         // the original Tween implementation expect
         // a timestamp and not a time delta
         this._tweenTimeTracker = (game.lastUpdate > this._tweenTimeTracker) ? game.lastUpdate : this._tweenTimeTracker + dt;
-        var time = this._tweenTimeTracker;
+        let time = this._tweenTimeTracker;
 
-        var property;
+        let property;
 
         if ( time < this._startTime ) {
 
@@ -30001,15 +30001,15 @@ let Interpolation = {
 
         }
 
-        var elapsed = ( time - this._startTime ) / this._duration;
+        let elapsed = ( time - this._startTime ) / this._duration;
         elapsed = elapsed > 1 ? 1 : elapsed;
 
-        var value = this._easingFunction( elapsed );
+        let value = this._easingFunction( elapsed );
 
         for ( property in this._valuesEnd ) {
 
-            var start = this._valuesStart[ property ] || 0;
-            var end = this._valuesEnd[ property ];
+            let start = this._valuesStart[ property ] || 0;
+            let end = this._valuesEnd[ property ];
 
             if ( end instanceof Array ) {
 
@@ -30053,7 +30053,7 @@ let Interpolation = {
                     }
 
                     if (this._yoyo) {
-                        var tmp = this._valuesStartRepeat[ property ];
+                        let tmp = this._valuesStartRepeat[ property ];
                         this._valuesStartRepeat[ property ] = this._valuesEnd[ property ];
                         this._valuesEnd[ property ] = tmp;
                     }
@@ -30079,7 +30079,7 @@ let Interpolation = {
 
                 }
 
-                for ( var i = 0, numChainedTweens = this._chainedTweens.length; i < numChainedTweens; i ++ ) {
+                for ( let i = 0, numChainedTweens = this._chainedTweens.length; i < numChainedTweens; i ++ ) {
 
                     this._chainedTweens[ i ].start( time );
 
@@ -30125,7 +30125,7 @@ const fnHash = {
  * @ignore
  */
 function extractUniforms(gl, shader) {
-    var uniforms = {},
+    let uniforms = {},
         uniRx = /uniform\s+(\w+)\s+(\w+)/g,
         uniformsData = {},
         descriptor = {},
@@ -30141,7 +30141,7 @@ function extractUniforms(gl, shader) {
 
     // Get uniform references
     Object.keys(uniformsData).forEach((name) => {
-        var type = uniformsData[name];
+        let type = uniformsData[name];
         locations[name] = gl.getUniformLocation(shader.program, name);
 
         descriptor[name] = {
@@ -30167,7 +30167,7 @@ function extractUniforms(gl, shader) {
                      * A generic setter for uniform vectors
                      */
                     return function (val) {
-                        var fnv = fn;
+                        let fnv = fn;
                         if (val.length && fn.slice(-1) !== "v") {
                             fnv += "v";
                         }
@@ -30186,7 +30186,7 @@ function extractUniforms(gl, shader) {
  * @ignore
  */
 function extractAttributes(gl, shader) {
-    var attributes = {},
+    let attributes = {},
         attrRx = /attribute\s+\w+\s+(\w+)/g,
         match,
         i = 0;
@@ -30203,7 +30203,7 @@ function extractAttributes(gl, shader) {
  * @ignore
  */
 function compileShader(gl, type, source) {
-    var shader = gl.createShader(type);
+    let shader = gl.createShader(type);
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
 
@@ -30219,10 +30219,10 @@ function compileShader(gl, type, source) {
  * @ignore
  */
 function compileProgram(gl, vertex, fragment, attributes) {
-    var vertShader = compileShader(gl, gl.VERTEX_SHADER, vertex);
-    var fragShader = compileShader(gl, gl.FRAGMENT_SHADER, fragment);
+    let vertShader = compileShader(gl, gl.VERTEX_SHADER, vertex);
+    let fragShader = compileShader(gl, gl.FRAGMENT_SHADER, fragment);
 
-    var program = gl.createProgram();
+    let program = gl.createProgram();
 
     gl.attachShader(program, vertShader);
     gl.attachShader(program, fragShader);
@@ -30230,14 +30230,14 @@ function compileProgram(gl, vertex, fragment, attributes) {
 
     // force vertex attributes to use location 0 as starting location to prevent
     // browser to do complicated emulation when running on desktop OpenGL (e.g. on macOS)
-    for (var location in attributes) {
+    for (let location in attributes) {
         gl.bindAttribLocation(program, attributes[location], location);
     }
 
     gl.linkProgram(program);
 
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-        var error_msg =
+        let error_msg =
             "Error initializing Shader " + this + "\n" +
             "gl.VALIDATE_STATUS: " + gl.getProgramParameter(program, gl.VALIDATE_STATUS) + "\n" +
             "gl.getError()" + gl.getError() + "\n" +
@@ -30318,7 +30318,7 @@ function minify(src) {
      * @see https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_on_the_web/GLSL_Shaders
      * @example
      * // create a basic shader
-     * var myShader = new me.GLShader(
+     * let myShader = new me.GLShader(
      *    // WebGL rendering context
      *    gl,
      *    // vertex shader
@@ -30393,7 +30393,7 @@ function minify(src) {
      * @returns {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
      */
     getAttribLocation(name) {
-        var attr = this.attributes[name];
+        let attr = this.attributes[name];
         if (typeof attr !== "undefined") {
             return attr;
         } else {
@@ -30409,7 +30409,7 @@ function minify(src) {
      * myShader.setUniform("uProjectionMatrix", this.projectionMatrix);
      */
     setUniform(name, value) {
-        var uniforms = this.uniforms;
+        let uniforms = this.uniforms;
         if (typeof uniforms[name] !== "undefined") {
             if (typeof value === "object" && typeof value.toArray === "function") {
                 uniforms[name] = value.toArray();
@@ -30429,9 +30429,9 @@ function minify(src) {
      */
     setVertexAttributes(gl, attributes, vertexByteSize) {
         // set the vertex attributes
-        for (var index = 0; index < attributes.length; ++index) {
-            var element = attributes[index];
-            var location = this.getAttribLocation(element.name);
+        for (let index = 0; index < attributes.length; ++index) {
+            let element = attributes[index];
+            let location = this.getAttribLocation(element.name);
 
             if (location !== -1) {
                 gl.enableVertexAttribArray(location);
@@ -30511,7 +30511,7 @@ function minify(src) {
         }
 
         // save a reference to the previous data
-        var data = this.bufferF32;
+        let data = this.bufferF32;
 
         // recreate ArrayBuffer and views
         this.buffer = new ArrayBuffer(this.maxVertex * this.vertexSize * this.objSize);
@@ -30529,7 +30529,7 @@ function minify(src) {
      * @ignore
      */
     push(x, y, u, v, tint) {
-        var offset = this.vertexCount * this.vertexSize;
+        let offset = this.vertexCount * this.vertexSize;
 
         if (this.vertexCount >= this.maxVertex) {
             this.resize(this.vertexCount);
@@ -30796,12 +30796,12 @@ function minify(src) {
      * @param {number} [mode=gl.TRIANGLES] - the GL drawing mode
      */
     flush(mode = this.mode) {
-        var vertex = this.vertexData;
-        var vertexCount = vertex.vertexCount;
+        let vertex = this.vertexData;
+        let vertexCount = vertex.vertexCount;
 
         if (vertexCount > 0) {
-            var gl = this.gl;
-            var vertexSize = vertex.vertexSize;
+            let gl = this.gl;
+            let vertexSize = vertex.vertexSize;
 
             // Copy data into stream buffer
             if (this.renderer.WebGLVersion > 1) {
@@ -30853,10 +30853,10 @@ var primitiveFragment = "varying vec4 vColor;\n\nvoid main(void) {\n    gl_FragC
      * @param {number} [vertexCount=verts.length] - amount of points defined in the points array
      */
     drawVertices(mode, verts, vertexCount = verts.length) {
-        var viewMatrix = this.viewMatrix;
-        var vertexData = this.vertexData;
-        var color = this.renderer.currentColor;
-        var alpha = this.renderer.getGlobalAlpha();
+        let viewMatrix = this.viewMatrix;
+        let vertexData = this.vertexData;
+        let color = this.renderer.currentColor;
+        let alpha = this.renderer.getGlobalAlpha();
 
         if (vertexData.isFull(vertexCount)) {
             // is the vertex buffer full if we add more vertices
@@ -30892,7 +30892,7 @@ var quadVertex = "// Current vertex point\nattribute vec2 aVertex;\nattribute ve
 var quadFragment = "uniform sampler2D uSampler;\nvarying vec4 vColor;\nvarying vec2 vRegion;\n\nvoid main(void) {\n    gl_FragColor = texture2D(uSampler, vRegion) * vColor;\n}\n";
 
 // a pool of resuable vectors
-var V_ARRAY = [
+let V_ARRAY = [
     new Vector2d(),
     new Vector2d(),
     new Vector2d(),
@@ -30936,8 +30936,8 @@ var V_ARRAY = [
         super.reset();
 
         // delete all related bound texture
-        for (var i = 0; i < this.renderer.maxTextures; i++) {
-            var texture2D = this.getTexture2D(i);
+        for (let i = 0; i < this.renderer.maxTextures; i++) {
+            let texture2D = this.getTexture2D(i);
             if (typeof texture2D !== "undefined") {
                 this.deleteTexture2D(texture2D);
             }
@@ -30958,12 +30958,12 @@ var V_ARRAY = [
      * @returns {WebGLTexture} a WebGL texture
      */
     createTexture2D(unit, pixels = null, filter, repeat = "no-repeat", w = pixels.width, h = pixels.height, premultipliedAlpha = true, mipmap = true) {
-        var gl = this.gl;
-        var isPOT = isPowerOfTwo(w) && isPowerOfTwo(h);
-        var rs = (repeat.search(/^repeat(-x)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
-        var rt = (repeat.search(/^repeat(-y)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+        let gl = this.gl;
+        let isPOT = isPowerOfTwo(w) && isPowerOfTwo(h);
+        let rs = (repeat.search(/^repeat(-x)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+        let rt = (repeat.search(/^repeat(-y)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
 
-        var texture = gl.createTexture();
+        let texture = gl.createTexture();
 
         this.bindTexture2D(texture, unit);
 
@@ -31017,7 +31017,7 @@ var V_ARRAY = [
      * @param {number} unit - Texture unit to which the given texture is bound
      */
     bindTexture2D(texture, unit) {
-        var gl = this.gl;
+        let gl = this.gl;
 
         if (texture !== this.boundTextures[unit]) {
             this.flush();
@@ -31059,8 +31059,8 @@ var V_ARRAY = [
      * @ignore
      */
     uploadTexture(texture, w, h, force = false) {
-        var unit = this.renderer.cache.getUnit(texture);
-        var texture2D = this.boundTextures[unit];
+        let unit = this.renderer.cache.getUnit(texture);
+        let texture2D = this.boundTextures[unit];
 
         if (typeof texture2D === "undefined" || force) {
             this.createTexture2D(
@@ -31093,7 +31093,7 @@ var V_ARRAY = [
      * @param {number} tint - tint color to be applied to the texture in UINT32 (argb) format
      */
     addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint) {
-        var vertexData = this.vertexData;
+        let vertexData = this.vertexData;
 
         if (vertexData.isFull(6)) {
             // is the vertex buffer full if we add 6 more vertices
@@ -31101,13 +31101,13 @@ var V_ARRAY = [
         }
 
         // upload and activate the texture if necessary
-        var unit = this.uploadTexture(texture);
+        let unit = this.uploadTexture(texture);
 
         // set fragment sampler accordingly
         this.currentShader.setUniform("uSampler", unit);
 
         // Transform vertices
-        var m = this.viewMatrix,
+        let m = this.viewMatrix,
             vec0 = V_ARRAY[0].set(x, y),
             vec1 = V_ARRAY[1].set(x + w, y),
             vec2 = V_ARRAY[2].set(x, y + h),
@@ -31272,7 +31272,7 @@ var V_ARRAY = [
         this.setBlendMode(this.settings.blendMode);
 
         // get GPU vendor and renderer
-        var debugInfo = this.gl.getExtension("WEBGL_debug_renderer_info");
+        let debugInfo = this.gl.getExtension("WEBGL_debug_renderer_info");
         if (debugInfo !== null) {
             this.GPUVendor = this.gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
             this.GPURenderer = this.gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
@@ -31289,7 +31289,7 @@ var V_ARRAY = [
         this.type =  "WebGL" + this.WebGLVersion;
 
         // to simulate context lost and restore in WebGL:
-        // var ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');
+        // let ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');
         // ctx.loseContext()
         this.getCanvas().addEventListener("webglcontextlost", (e) => {
             e.preventDefault();
@@ -31417,24 +31417,24 @@ var V_ARRAY = [
      * @returns {TextureAtlas}
      * @see ImageLayer#repeat
      * @example
-     * var tileable   = renderer.createPattern(image, "repeat");
-     * var horizontal = renderer.createPattern(image, "repeat-x");
-     * var vertical   = renderer.createPattern(image, "repeat-y");
-     * var basic      = renderer.createPattern(image, "no-repeat");
+     * let tileable   = renderer.createPattern(image, "repeat");
+     * let horizontal = renderer.createPattern(image, "repeat-x");
+     * let vertical   = renderer.createPattern(image, "repeat-y");
+     * let basic      = renderer.createPattern(image, "no-repeat");
      */
     createPattern(image, repeat) {
 
         this.setCompositor("quad");
 
         if (renderer.WebGLVersion === 1 && (!isPowerOfTwo(image.width) || !isPowerOfTwo(image.height))) {
-            var src = typeof image.src !== "undefined" ? image.src : image;
+            let src = typeof image.src !== "undefined" ? image.src : image;
             throw new Error(
                 "[WebGL Renderer] " + src + " is not a POT texture " +
                 "(" + image.width + "x" + image.height + ")"
             );
         }
 
-        var texture = new TextureAtlas(createAtlas(image.width, image.height, "pattern", repeat), image);
+        let texture = new TextureAtlas(createAtlas(image.width, image.height, "pattern", repeat), image);
 
         // FIXME: Remove old cache entry and texture when changing the repeat mode
         this.currentCompositor.uploadTexture(texture);
@@ -31473,7 +31473,7 @@ var V_ARRAY = [
      * Clear the frame buffer
      */
     clear() {
-        var gl = this.gl;
+        let gl = this.gl;
         gl.clearColor(0, 0, 0, this.settings.transparent ? 0.0 : 1.0);
         if (this.depthTest === "z-buffer") {
             gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
@@ -31488,13 +31488,13 @@ var V_ARRAY = [
      * @param {boolean} [opaque=false] - Allow transparency [default] or clear the surface completely [true]
      */
     clearColor(color = "#000000", opaque = false) {
-        var glArray;
-        var gl = this.gl;
+        let glArray;
+        let gl = this.gl;
 
         if (color instanceof Color) {
             glArray = color.toArray();
         } else {
-            var _color = pool.pull("me.Color");
+            let _color = pool.pull("me.Color");
             // reuse temporary the renderer default color object
             glArray = _color.parseCSS(color).toArray();
             pool.push(_color);
@@ -31566,8 +31566,8 @@ var V_ARRAY = [
 
         this.setCompositor("quad");
 
-        var texture = this.cache.get(image);
-        var uvs = texture.getUVs(sx + "," + sy + "," + sw + "," + sh);
+        let texture = this.cache.get(image);
+        let uvs = texture.getUVs(sx + "," + sy + "," + sw + "," + sh);
         this.currentCompositor.addQuad(texture, dx, dy, dw, dh, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()));
     }
 
@@ -31581,7 +31581,7 @@ var V_ARRAY = [
      * @see WebGLRenderer#createPattern
      */
     drawPattern(pattern, x, y, width, height) {
-        var uvs = pattern.getUVs("0,0," + width + "," + height);
+        let uvs = pattern.getUVs("0,0," + width + "," + height);
         this.setCompositor("quad");
         this.currentCompositor.addQuad(pattern, x, y, width, height, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()));
     }
@@ -31601,7 +31601,7 @@ var V_ARRAY = [
             );
         }
 
-        var attr = {
+        let attr = {
             alpha : transparent,
             antialias : this.settings.antiAlias,
             depth : depth,
@@ -31612,7 +31612,7 @@ var V_ARRAY = [
             failIfMajorPerformanceCaveat : this.settings.failIfMajorPerformanceCaveat
         };
 
-        var gl;
+        let gl;
 
         // attempt to create a WebGL2 context if requested
         if (this.settings.preferWebGL1 === false) {
@@ -31696,8 +31696,8 @@ var V_ARRAY = [
     restore() {
         // do nothing if there is no saved states
         if (this._matrixStack.length !== 0) {
-            var color = this._colorStack.pop();
-            var matrix = this._matrixStack.pop();
+            let color = this._colorStack.pop();
+            let matrix = this._matrixStack.pop();
 
             // restore the previous context
             this.currentColor.copy(color);
@@ -31786,7 +31786,7 @@ var V_ARRAY = [
      * @param {Color|string} color - css color string.
      */
     setColor(color) {
-        var alpha = this.currentColor.alpha;
+        let alpha = this.currentColor.alpha;
         this.currentColor.copy(color);
         this.currentColor.alpha *= alpha;
     }
@@ -31902,8 +31902,8 @@ var V_ARRAY = [
         this.translate(poly.pos.x, poly.pos.y);
         this.path2D.beginPath();
 
-        var points = poly.points;
-        for (var i = 1; i < points.length; i++) {
+        let points = poly.points;
+        for (let i = 1; i < points.length; i++) {
             this.path2D.moveTo(points[i-1].x, points[i-1].y);
             this.path2D.lineTo(points[i].x, points[i].y);
         }
@@ -32024,11 +32024,11 @@ var V_ARRAY = [
      * @param {Matrix2d} mat2d - Matrix to transform by
      */
     transform(mat2d) {
-        var currentTransform = this.currentTransform;
+        let currentTransform = this.currentTransform;
         currentTransform.multiply(mat2d);
         if (this.settings.subPixel === false) {
             // snap position values to pixel grid
-            var a = currentTransform.toArray();
+            let a = currentTransform.toArray();
             a[6] |= 0;
             a[7] |= 0;
         }
@@ -32040,11 +32040,11 @@ var V_ARRAY = [
      * @param {number} y
      */
     translate(x, y) {
-        var currentTransform = this.currentTransform;
+        let currentTransform = this.currentTransform;
         currentTransform.translate(x, y);
         if (this.settings.subPixel === false) {
             // snap position values to pixel grid
-            var a = currentTransform.toArray();
+            let a = currentTransform.toArray();
             a[6] |= 0;
             a[7] |= 0;
         }
@@ -32062,11 +32062,11 @@ var V_ARRAY = [
      * @param {number} height
      */
     clipRect(x, y, width, height) {
-        var canvas = this.getCanvas();
-        var gl = this.gl;
+        let canvas = this.getCanvas();
+        let gl = this.gl;
         // if requested box is different from the current canvas size
         if (x !== 0 || y !== 0 || width !== canvas.width || height !== canvas.height) {
-            var currentScissor = this.currentScissor;
+            let currentScissor = this.currentScissor;
             if (gl.isEnabled(gl.SCISSOR_TEST)) {
                 // if same as the current scissor box do nothing
                 if (currentScissor[0] === x && currentScissor[1] === y &&
@@ -32105,7 +32105,7 @@ var V_ARRAY = [
      * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
      */
     setMask(mask, invert = false) {
-        var gl = this.gl;
+        let gl = this.gl;
 
         // flush the compositor
         this.flush();
@@ -32155,7 +32155,7 @@ var V_ARRAY = [
 }
 
 // default canvas settings
-var defaultAttributes = {
+let defaultAttributes = {
     offscreenCanvas : false,
     willReadFrequently : false,
     antiAlias : false,
@@ -32217,7 +32217,7 @@ class CanvasTexture {
      * @param {boolean} [enable=false]
      */
     setAntiAlias(enable = false) {
-        var canvas = this.canvas;
+        let canvas = this.canvas;
 
         // enable/disable antialias on the given Context2d object
         setPrefixed("imageSmoothingEnabled", enable, this.context);
@@ -32608,7 +32608,7 @@ class CanvasTexture {
      * @ignore
      */
     updateLayer(vpos) {
-        var rx = this.ratio.x,
+        const rx = this.ratio.x,
             ry = this.ratio.y;
 
         if (rx === 0 && ry === 0) {
@@ -32616,7 +32616,7 @@ class CanvasTexture {
             return;
         }
 
-        var width = this.width,
+        const width = this.width,
             height = this.height,
             bw = game.viewport.bounds.width,
             bh = game.viewport.bounds.height,
@@ -32682,13 +32682,14 @@ class CanvasTexture {
      * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
     draw(renderer, viewport) {
-        var width = this.width,
+        const width = this.width,
             height = this.height,
             bw = viewport.bounds.width,
             bh = viewport.bounds.height,
             ax = this.anchorPoint.x,
-            ay = this.anchorPoint.y,
-            x = this.pos.x,
+            ay = this.anchorPoint.y;
+
+        let x = this.pos.x,
             y = this.pos.y;
 
         if (this.ratio.x === 0 && this.ratio.y === 0) {
@@ -32813,18 +32814,18 @@ class CanvasTexture {
      */
     draw(renderer) {
         // the frame to draw
-        var frame = this.current;
+        let frame = this.current;
 
         // cache the current position and size
-        var dx = this.pos.x,
+        let dx = this.pos.x,
             dy = this.pos.y;
 
-        var w = frame.width,
+        let w = frame.width,
             h = frame.height;
 
         // frame offset in the texture/atlas
-        var frame_offset = frame.offset;
-        var g_offset = this.offset;
+        let frame_offset = frame.offset;
+        let g_offset = this.offset;
 
 
         // remove image's TexturePacker/ShoeBox rotation
@@ -32836,11 +32837,11 @@ class CanvasTexture {
             h = frame.width;
         }
 
-        var sx = g_offset.x + frame_offset.x,
+        let sx = g_offset.x + frame_offset.x,
             sy = g_offset.y + frame_offset.y;
 
         // should this be configurable ?
-        var corner_width = this.insetx || w / 4,
+        let corner_width = this.insetx || w / 4,
             corner_height = this.insety || h / 4;
 
         // OPTIMIZE ME !
@@ -32890,11 +32891,11 @@ class CanvasTexture {
 
 
         // DRAW SIDES and CENTER
-        var image_center_width = w - (corner_width << 1);
-        var image_center_height = h - (corner_height << 1);
+        let image_center_width = w - (corner_width << 1);
+        let image_center_height = h - (corner_height << 1);
 
-        var target_center_width = this.nss_width - (corner_width << 1);
-        var target_center_height = this.nss_height - (corner_height << 1);
+        let target_center_width = this.nss_width - (corner_width << 1);
+        let target_center_height = this.nss_height - (corner_height << 1);
 
         //Top center
         renderer.drawImage(
@@ -32965,8 +32966,8 @@ class CanvasTexture {
 
 /**
  * @classdesc
- * This is a basic clickable container which you can use in your game UI.
- * Use this for example if you want to display a button which contains text and images.
+ * This is a basic clickable and draggable container which you can use in your game UI.
+ * Use this for example if you want to display a panel that contains text, images or other UI elements.
  * @augments Container
  */
  class UIBaseElement extends Container {
@@ -32974,16 +32975,24 @@ class CanvasTexture {
      *
      * @param {number} x - The x position of the container
      * @param {number} y - The y position of the container
-     * @param {number} w - width of the container (default: viewport width)
-     * @param {number} h - height of the container (default: viewport height)
+     * @param {number} w - width of the container
+     * @param {number} h - height of the container
      */
     constructor(x, y, w, h) {
         super(x, y, w, h);
         /**
          * object can be clicked or not
          * @type {boolean}
+         * @default true
          */
         this.isClickable = true;
+
+        /**
+         * object can be clicked or not
+         * @type {boolean}
+         * @default false
+         */
+        this.isDraggable = false;
 
         /**
          * Tap and hold threshold timeout in ms
@@ -33018,7 +33027,7 @@ class CanvasTexture {
          * (Note: any child elements added to a UIBaseElement should set their floating property to false)
          * @see Renderable.floating
          * @type {boolean}
-         * @default false
+         * @default true
          */
         this.floating = true;
 
@@ -33047,6 +33056,10 @@ class CanvasTexture {
                 );
                 this.released = false;
             }
+            if (this.isDraggable) {
+                this.grabOffset.set(event.gameX, event.gameY);
+                this.grabOffset.sub(this.pos);
+            }
             return this.onClick(event);
         }
     }
@@ -33067,7 +33080,35 @@ class CanvasTexture {
     enter(event) {
         this.hover = true;
         this.dirty = true;
+        if (this.isDraggable === true) {
+            on(POINTERMOVE, this.pointerMove, this);
+            // to memorize where we grab the object
+            this.grabOffset = pool.pull("Vector2d", 0, 0);
+        }
         return this.onOver(event);
+    }
+
+    /**
+     * pointermove function
+     * @ignore
+     */
+    pointerMove(event) {
+        if (this.hover === true && this.released === false) {
+            // follow the pointer
+            this.pos.set(event.gameX, event.gameY, this.pos.z);
+            this.pos.sub(this.grabOffset);
+            // mark the container for redraw
+            this.isDirty = true;
+            return this.onMove(event);
+        }
+    }
+
+    /**
+     * function called when the pointer is moved over the object
+     * @param {Pointer} event - the event object
+     */
+    onMove(event) { // eslint-disable-line no-unused-vars
+        // to be extended
     }
 
     /**
@@ -33085,6 +33126,12 @@ class CanvasTexture {
     leave(event) {
         this.hover = false;
         this.dirty = true;
+        if (this.isDraggable === true) {
+            // unregister on the global pointermove event
+            off(POINTERMOVE, this.pointerMove);
+            pool.push(this.grabOffset);
+            this.grabOffset = undefined;
+        }
         this.release(event);
         return this.onOut(event);
     }
@@ -33168,6 +33215,17 @@ class CanvasTexture {
         timer$1.clearTimeout(this.holdTimeout);
         this.holdTimeout = -1;
 
+        // unregister on the global pointermove event
+        // note: this is just a precaution, in case
+        // the object is being remove from his parent
+        // container before the leave function is called
+        if (this.isDraggable === true) {
+            off(POINTERMOVE, this.pointerMove);
+            if (typeof this.grabOffset !== "undefined") {
+                pool.push(this.grabOffset);
+                this.grabOffset = undefined;
+            }
+        }
 
         // call the parent function
         super.onDeactivateEvent();
@@ -33221,7 +33279,7 @@ const toPX = [12, 24, 0.75, 1];
      * @param {number} [settings.wordWrapWidth] - the maximum length in CSS pixel for a single segment of text
      * @param {(string|string[])} [settings.text=""] - a string, or an array of strings
      * @example
-     * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
+     * let font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
      */
     constructor(x, y, settings) {
         // call the parent constructor
@@ -33391,7 +33449,7 @@ const toPX = [12, 24, 0.75, 1];
      */
     setFont(font, size = 10) {
         // font name and type
-        var font_names = font.split(",").map((value) => {
+        let font_names = font.split(",").map((value) => {
             value = value.trim();
             return (
                 !/(^".*"$)|(^'.*'$)/.test(value)
@@ -33404,7 +33462,7 @@ const toPX = [12, 24, 0.75, 1];
             size += "px";
         } else /* string */ {
             // extract the units and convert if necessary
-            var CSSval = size.match(/([-+]?[\d.]*)(.*)/);
+            let CSSval = size.match(/([-+]?[\d.]*)(.*)/);
             this.fontSize = parseFloat(CSSval[1]);
             if (CSSval[2]) {
                 this.fontSize *= toPX[runits.indexOf(CSSval[2])];
@@ -33427,7 +33485,7 @@ const toPX = [12, 24, 0.75, 1];
      * @returns {Text} this object for chaining
      */
     setText(value = "") {
-        var bounds = this.getBounds();
+        let bounds = this.getBounds();
 
         // set the next text
         if (this._text.toString() !== value.toString()) {
@@ -33447,7 +33505,7 @@ const toPX = [12, 24, 0.75, 1];
         bounds.addBounds(this.metrics.measureText(this._text, this.canvasTexture.context), true);
 
         // update the offScreenCanvas texture if required
-        var width = Math.ceil(this.metrics.width),
+        let width = Math.ceil(this.metrics.width),
             height = Math.ceil(this.metrics.height);
 
         if (typeof renderer.gl !== "undefined") {
@@ -33555,8 +33613,8 @@ const toPX = [12, 24, 0.75, 1];
     _drawFont(context, text, x, y) {
         setContextStyle(context, this);
 
-        for (var i = 0; i < text.length; i++) {
-            var string = text[i].trimEnd();
+        for (let i = 0; i < text.length; i++) {
+            let string = text[i].trimEnd();
             // draw the string
             if (this.fillStyle.alpha > 0) {
                 context.fillText(string, x, y);
@@ -33642,14 +33700,14 @@ const toPX = [12, 24, 0.75, 1];
         if (this.ancestor instanceof Text) {
             return context.measureText(text).width;
         } else { // it's a BitmapText
-            var characters = text.split("");
-            var width = 0;
-            var lastGlyph = null;
-            for (var i = 0; i < characters.length; i++) {
-                var ch = characters[i].charCodeAt(0);
-                var glyph = this.ancestor.fontData.glyphs[ch];
+            let characters = text.split("");
+            let width = 0;
+            let lastGlyph = null;
+            for (let i = 0; i < characters.length; i++) {
+                let ch = characters[i].charCodeAt(0);
+                let glyph = this.ancestor.fontData.glyphs[ch];
                 if (typeof glyph !== "undefined") {
-                    var kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;
+                    let kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;
                     width += (glyph.xadvance + kerning) * this.ancestor.fontScale.x;
                     lastGlyph = glyph;
                 }
@@ -33665,7 +33723,7 @@ const toPX = [12, 24, 0.75, 1];
      * @returns {TextMetrics} this
      */
     measureText(text, context) {
-        var strings;
+        let strings;
 
         if (!Array.isArray(text)) {
             strings = ("" + text).split("\n");
@@ -33684,7 +33742,7 @@ const toPX = [12, 24, 0.75, 1];
         // compute the bounding box size
         this.width = this.height = 0;
 
-        for (var i = 0; i < strings.length; i++) {
+        for (let i = 0; i < strings.length; i++) {
             this.width = Math.max(this.lineWidth(strings[i].trimEnd(), context), this.width);
             this.height += this.lineHeight();
         }
@@ -33715,9 +33773,9 @@ const toPX = [12, 24, 0.75, 1];
      * @returns {string[]} an array of string representing wrapped text
      */
     wordWrap(text, width, context) {
-        var words;
-        var currentLine = "";
-        var output = [];
+        let words;
+        let currentLine = "";
+        let output = [];
 
         if (Array.isArray(text)) {
             // join into a single string
@@ -33735,8 +33793,8 @@ const toPX = [12, 24, 0.75, 1];
         }
 
         for (let i = 0; i < words.length; i++) {
-            var word = words[i];
-            var lineWidth = this.lineWidth(currentLine + word + " ", context);
+            let word = words[i];
+            let lineWidth = this.lineWidth(currentLine + word + " ", context);
             if (lineWidth < width) {
                 // add the word to the current line
                 currentLine += word + " ";
@@ -33785,7 +33843,7 @@ const toPX = [12, 24, 0.75, 1];
      *     { name: "arial", type: "image" src: "data/font/arial.png" },
      * ])
      * // Then create an instance of your bitmap font:
-     * var myFont = new me.BitmapText(x, y, {font:"arial", text:"Hello"});
+     * let myFont = new me.BitmapText(x, y, {font:"arial", text:"Hello"});
      * // two possibilities for using "myFont"
      * // either call the draw function from your Renderable draw function
      * myFont.draw(renderer, "Hello!", 0, 0);
@@ -33940,12 +33998,12 @@ const toPX = [12, 24, 0.75, 1];
      * @returns {Bounds} this Bitmap Text bounding box Rectangle object
      */
     updateBounds(absolute = true) {
-        var bounds = this.getBounds();
+        let bounds = this.getBounds();
 
         bounds.clear();
 
         if (typeof this.metrics !== "undefined") {
-            var ax, ay;
+            let ax, ay;
 
             bounds.addBounds(this.metrics.measureText(this._text));
 
@@ -34044,7 +34102,7 @@ const toPX = [12, 24, 0.75, 1];
      */
     draw(renderer, text, x, y) {
         // save the previous global alpha value
-        var _alpha = renderer.globalAlpha();
+        let _alpha = renderer.globalAlpha();
 
         // allows to provide backward compatibility when
         // adding Bitmap Font to an object container
@@ -34058,15 +34116,15 @@ const toPX = [12, 24, 0.75, 1];
             y = this.pos.y;
         }
 
-        var lX = x;
-        var stringHeight = this.metrics.lineHeight();
-        var maxWidth = 0;
+        let lX = x;
+        let stringHeight = this.metrics.lineHeight();
+        let maxWidth = 0;
 
-        for (var i = 0; i < this._text.length; i++) {
+        for (let i = 0; i < this._text.length; i++) {
             x = lX;
-            var string = this._text[i].trimEnd();
+            let string = this._text[i].trimEnd();
             // adjust x pos based on alignment value
-            var stringWidth = this.metrics.lineWidth(string);
+            let stringWidth = this.metrics.lineWidth(string);
             switch (this.textAlign) {
                 case "right":
                     x -= stringWidth;
@@ -34108,18 +34166,18 @@ const toPX = [12, 24, 0.75, 1];
             }
 
             // draw the string
-            var lastGlyph = null;
-            for (var c = 0, len = string.length; c < len; c++) {
+            let lastGlyph = null;
+            for (let c = 0, len = string.length; c < len; c++) {
                 // calculate the char index
-                var ch = string.charCodeAt(c);
-                var glyph = this.fontData.glyphs[ch];
+                let ch = string.charCodeAt(c);
+                let glyph = this.fontData.glyphs[ch];
 
                 if (typeof glyph !== "undefined") {
-                    var glyphWidth = glyph.width;
-                    var glyphHeight = glyph.height;
-                    var kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;
-                    var scaleX = this.fontScale.x;
-                    var scaleY = this.fontScale.y;
+                    let glyphWidth = glyph.width;
+                    let glyphHeight = glyph.height;
+                    let kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;
+                    let scaleX = this.fontScale.x;
+                    let scaleY = this.fontScale.y;
 
                     // draw it
                     if (glyphWidth !== 0 && glyphHeight !== 0) {
@@ -34537,7 +34595,7 @@ const toPX = [12, 24, 0.75, 1];
         this.id = settings.id;
 
         // add and configure the physic body
-        var shape = settings.shapes;
+        let shape = settings.shapes;
         if (typeof shape === "undefined") {
             shape = pool.pull("Polygon", 0, 0, [
                 pool.pull("Vector2d", 0,          0),
@@ -34625,7 +34683,7 @@ const toPX = [12, 24, 0.75, 1];
         });
 
         // add and configure the physic body
-        var shape = settings.shapes;
+        let shape = settings.shapes;
         if (typeof shape === "undefined") {
             shape = pool.pull("Polygon", 0, 0, [
                 pool.pull("Vector2d", 0,          0),
@@ -34645,7 +34703,7 @@ const toPX = [12, 24, 0.75, 1];
      * @ignore
      */
      getTriggerSettings() {
-        var world = this.ancestor.getRootAncestor();
+        let world = this.ancestor.getRootAncestor();
          // Lookup for the container instance
          if (typeof(this.triggerSettings.container) === "string") {
              this.triggerSettings.container = world.getChildByName(this.triggerSettings.container)[0];
@@ -34657,7 +34715,7 @@ const toPX = [12, 24, 0.75, 1];
      * @ignore
      */
     onFadeComplete() {
-        var world = this.ancestor.getRootAncestor();
+        let world = this.ancestor.getRootAncestor();
         level.load(this.gotolevel, this.getTriggerSettings());
         world.app.viewport.fadeOut(this.fade, this.duration);
     }
@@ -34669,8 +34727,8 @@ const toPX = [12, 24, 0.75, 1];
      * @protected
      */
     triggerEvent() {
-        var triggerSettings = this.getTriggerSettings();
-        var world = this.ancestor.getRootAncestor();
+        let triggerSettings = this.getTriggerSettings();
+        let world = this.ancestor.getRootAncestor();
 
         if (triggerSettings.event === "level") {
             this.gotolevel = triggerSettings.to;
@@ -34709,16 +34767,16 @@ const toPX = [12, 24, 0.75, 1];
 
 /** @ignore */
 function createGradient(light) {
-    var context = light.texture.context;
+    let context = light.texture.context;
 
-    var x1 = light.texture.width / 2,
+    let x1 = light.texture.width / 2,
         y1 = light.texture.height / 2;
 
-    var radiusX = light.radiusX,
+    let radiusX = light.radiusX,
         radiusY = light.radiusY;
 
-    var scaleX, scaleY, invScaleX, invScaleY;
-    var gradient;
+    let scaleX, scaleY, invScaleX, invScaleY;
+    let gradient;
 
 
     light.texture.clear();
@@ -34884,7 +34942,7 @@ const PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
      */
     getKerning(ch) {
         if (this.kerning) {
-            var page = this.kerning[ch >>> LOG2_PAGE_SIZE];
+            let page = this.kerning[ch >>> LOG2_PAGE_SIZE];
             if (page) {
                 return page[ch & PAGE_SIZE - 1] || 0;
             }
@@ -34899,7 +34957,7 @@ const PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
         if (!this.kerning) {
             this.kerning = {};
         }
-        var page = this.kerning[ch >>> LOG2_PAGE_SIZE];
+        let page = this.kerning[ch >>> LOG2_PAGE_SIZE];
         if (typeof page === "undefined") {
             this.kerning[ch >>> LOG2_PAGE_SIZE] = {};
             page = this.kerning[ch >>> LOG2_PAGE_SIZE];
@@ -34916,7 +34974,7 @@ const capChars = ["M", "N", "B", "D", "C", "E", "F", "K", "A", "G", "H", "I", "J
  * @ignore
  */
 function getValueFromPair(string, pattern) {
-    var value = string.match(pattern);
+    let value = string.match(pattern);
     if (!value) {
         throw new Error("Could not find pattern " + pattern + " in string: " + string);
     }
@@ -34933,8 +34991,8 @@ function getValueFromPair(string, pattern) {
  * @returns {Glyph}
  */
 function getFirstGlyph(glyphs) {
-    var keys = Object.keys(glyphs);
-    for (var i = 0; i < keys.length; i++) {
+    let keys = Object.keys(glyphs);
+    for (let i = 0; i < keys.length; i++) {
         if (keys[i] > 32) {
             return glyphs[keys[i]];
         }
@@ -34950,8 +35008,8 @@ function getFirstGlyph(glyphs) {
  * @param {object} glyphs - the map of glyphs, each key is a char code
  */
 function createSpaceGlyph(glyphs) {
-    var spaceCharCode = " ".charCodeAt(0);
-    var glyph = glyphs[spaceCharCode];
+    let spaceCharCode = " ".charCodeAt(0);
+    let glyph = glyphs[spaceCharCode];
     if (!glyph) {
         glyph = new Glyph();
         glyph.id = spaceCharCode;
@@ -35010,12 +35068,12 @@ function createSpaceGlyph(glyphs) {
         if (!fontData) {
             throw new Error("File containing font data was empty, cannot load the bitmap font.");
         }
-        var lines = fontData.split(/\r\n|\n/);
-        var padding = fontData.match(/padding\=\d+,\d+,\d+,\d+/g);
+        let lines = fontData.split(/\r\n|\n/);
+        let padding = fontData.match(/padding\=\d+,\d+,\d+,\d+/g);
         if (!padding) {
             throw new Error("Padding not found in first line");
         }
-        var paddingValues = padding[0].split("=")[1].split(",");
+        let paddingValues = padding[0].split("=")[1].split(",");
         this.padTop = parseFloat(paddingValues[0]);
         this.padLeft = parseFloat(paddingValues[1]);
         this.padBottom = parseFloat(paddingValues[2]);
@@ -35023,24 +35081,24 @@ function createSpaceGlyph(glyphs) {
 
         this.lineHeight = parseFloat(getValueFromPair(lines[1], /lineHeight\=\d+/g));
 
-        var baseLine = parseFloat(getValueFromPair(lines[1], /base\=\d+/g));
+        let baseLine = parseFloat(getValueFromPair(lines[1], /base\=\d+/g));
 
-        var padY = this.padTop + this.padBottom;
+        let padY = this.padTop + this.padBottom;
 
-        var glyph = null;
+        let glyph = null;
 
-        var i;
+        let i;
 
         for (i = 4; i < lines.length; i++) {
-            var line = lines[i];
-            var characterValues = line.split(/=|\s+/);
+            let line = lines[i];
+            let characterValues = line.split(/=|\s+/);
             if (!line || /^kernings/.test(line)) {
                 continue;
             }
             if (/^kerning\s/.test(line)) {
-                var first = parseFloat(characterValues[2]);
-                var second = parseFloat(characterValues[4]);
-                var amount = parseFloat(characterValues[6]);
+                let first = parseFloat(characterValues[2]);
+                let second = parseFloat(characterValues[4]);
+                let amount = parseFloat(characterValues[6]);
 
                 glyph = this.glyphs[first];
                 if (glyph !== null && typeof glyph !== "undefined") {
@@ -35049,7 +35107,7 @@ function createSpaceGlyph(glyphs) {
             } else {
                 glyph = new Glyph();
 
-                var ch = parseFloat(characterValues[2]);
+                let ch = parseFloat(characterValues[2]);
                 glyph.id = ch;
                 glyph.x = parseFloat(characterValues[4]);
                 glyph.y = parseFloat(characterValues[6]);
@@ -35071,16 +35129,16 @@ function createSpaceGlyph(glyphs) {
 
         createSpaceGlyph(this.glyphs);
 
-        var capGlyph = null;
+        let capGlyph = null;
         for (i = 0; i < capChars.length; i++) {
-            var capChar = capChars[i];
+            let capChar = capChars[i];
             capGlyph = this.glyphs[capChar.charCodeAt(0)];
             if (capGlyph) {
                 break;
             }
         }
         if (!capGlyph) {
-            for (var charCode in this.glyphs) {
+            for (let charCode in this.glyphs) {
                 if (this.glyphs.hasOwnProperty(charCode)) {
                     glyph = this.glyphs[charCode];
                     if (glyph.height === 0 || glyph.width === 0) {
@@ -35336,16 +35394,16 @@ const RIGHT_VORNOI_REGION = 1;
  * @type {Array.<Vector2d>}
  * @ignore
  */
-var T_VECTORS = [];
-for (var v = 0; v < 10; v++) { T_VECTORS.push(new Vector2d()); }
+let T_VECTORS = [];
+for (let v = 0; v < 10; v++) { T_VECTORS.push(new Vector2d()); }
 
 /**
  * A pool of arrays of numbers used in calculations to avoid allocating memory.
  * @type {Array.<Array.<number>>}
  * @ignore
  */
-var T_ARRAYS = [];
-for (var a = 0; a < 5; a++) { T_ARRAYS.push([]); }
+let T_ARRAYS = [];
+for (let a = 0; a < 5; a++) { T_ARRAYS.push([]); }
 
 
 /**
@@ -35360,12 +35418,12 @@ for (var a = 0; a < 5; a++) { T_ARRAYS.push([]); }
  *   result[1] will be the maximum value.
  */
 function flattenPointsOn(points, normal, result) {
-    var min = Number.MAX_VALUE;
-    var max = -Number.MAX_VALUE;
-    var len = points.length;
-    for (var i = 0; i < len; i++) {
+    let min = Number.MAX_VALUE;
+    let max = -Number.MAX_VALUE;
+    let len = points.length;
+    for (let i = 0; i < len; i++) {
         // The magnitude of the projection of the point onto the normal
-        var dot = points[i].dot(normal);
+        let dot = points[i].dot(normal);
         if (dot < min) { min = dot; }
         if (dot > max) { max = dot; }
     }
@@ -35390,11 +35448,11 @@ function flattenPointsOn(points, normal, result) {
  *   the direction of the overlap will be populated.
  */
 function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
-    var rangeA = T_ARRAYS.pop();
-    var rangeB = T_ARRAYS.pop();
+    let rangeA = T_ARRAYS.pop();
+    let rangeB = T_ARRAYS.pop();
     // The magnitude of the offset between the two polygons
-    var offsetV = T_VECTORS.pop().copy(bPos).sub(aPos);
-    var projectedOffset = offsetV.dot(axis);
+    let offsetV = T_VECTORS.pop().copy(bPos).sub(aPos);
+    let projectedOffset = offsetV.dot(axis);
 
     // Project the polygons onto the axis.
     flattenPointsOn(aPoints, axis, rangeA);
@@ -35412,7 +35470,7 @@ function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
 
     // This is not a separating axis. If we're calculating a response, calculate the overlap.
     if (response) {
-        var overlap = 0;
+        let overlap = 0;
         // A starts further left than B
         if (rangeA[0] < rangeB[0]) {
             response.aInB = false;
@@ -35422,8 +35480,8 @@ function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
                 response.bInA = false;
             // B is fully inside A.  Pick the shortest way out.
             } else {
-                var option1 = rangeA[1] - rangeB[0];
-                var option2 = rangeB[1] - rangeA[0];
+                let option1 = rangeA[1] - rangeB[0];
+                let option2 = rangeB[1] - rangeA[0];
                 overlap = option1 < option2 ? option1 : -option2;
             }
         // B starts further left than A
@@ -35435,14 +35493,14 @@ function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
                 response.aInB = false;
             // A is fully inside B.  Pick the shortest way out.
             } else {
-                var option11 = rangeA[1] - rangeB[0];
-                var option22 = rangeB[1] - rangeA[0];
+                let option11 = rangeA[1] - rangeB[0];
+                let option22 = rangeB[1] - rangeA[0];
                 overlap = option11 < option22 ? option11 : -option22;
             }
         }
 
         // If this is the smallest amount of overlap we've seen so far, set it as the minimum overlap.
-        var absOverlap = Math.abs(overlap);
+        let absOverlap = Math.abs(overlap);
         if (absOverlap < response.overlap) {
             response.overlap = absOverlap;
             response.overlapN.copy(axis);
@@ -35475,8 +35533,8 @@ function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
  *          RIGHT_VORNOI_REGION (1) if it is the right region.
  */
 function vornoiRegion(line, point) {
-    var len2 = line.length2();
-    var dp = point.dot(line);
+    let len2 = line.length2();
+    let dp = point.dot(line);
     if (dp < 0) {
         // If the point is beyond the start of the line, it is in the
         // left vornoi region.
@@ -35503,16 +35561,16 @@ function vornoiRegion(line, point) {
  */
 function testPolygonPolygon(a, polyA, b, polyB, response) {
     // specific point for
-    var aPoints = polyA.points;
-    var aNormals = polyA.normals;
-    var aLen = aNormals.length;
-    var bPoints = polyB.points;
-    var bNormals = polyB.normals;
-    var bLen = bNormals.length;
+    let aPoints = polyA.points;
+    let aNormals = polyA.normals;
+    let aLen = aNormals.length;
+    let bPoints = polyB.points;
+    let bNormals = polyB.normals;
+    let bLen = bNormals.length;
     // aboslute shape position
-    var posA = T_VECTORS.pop().copy(a.pos).add(a.ancestor.getAbsolutePosition()).add(polyA.pos);
-    var posB = T_VECTORS.pop().copy(b.pos).add(b.ancestor.getAbsolutePosition()).add(polyB.pos);
-    var i;
+    let posA = T_VECTORS.pop().copy(a.pos).add(a.ancestor.getAbsolutePosition()).add(polyA.pos);
+    let posB = T_VECTORS.pop().copy(b.pos).add(b.ancestor.getAbsolutePosition()).add(polyB.pos);
+    let i;
 
     // If any of the edge normals of A is a separating axis, no intersection.
     for (i = 0; i < aLen; i++) {
@@ -35559,13 +35617,13 @@ function testPolygonPolygon(a, polyA, b, polyB, response) {
 function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
     // Check if the distance between the centers of the two
     // circles is greater than their combined radius.
-    var differenceV = T_VECTORS.pop().copy(b.pos).add(b.ancestor.getAbsolutePosition()).add(ellipseB.pos)
+    let differenceV = T_VECTORS.pop().copy(b.pos).add(b.ancestor.getAbsolutePosition()).add(ellipseB.pos)
         .sub(a.pos).add(a.ancestor.getAbsolutePosition()).sub(ellipseA.pos);
-    var radiusA = ellipseA.radius;
-    var radiusB = ellipseB.radius;
-    var totalRadius = radiusA + radiusB;
-    var totalRadiusSq = totalRadius * totalRadius;
-    var distanceSq = differenceV.length2();
+    let radiusA = ellipseA.radius;
+    let radiusB = ellipseB.radius;
+    let totalRadius = radiusA + radiusB;
+    let totalRadiusSq = totalRadius * totalRadius;
+    let distanceSq = differenceV.length2();
     // If the distance is bigger than the combined radius, they don't intersect.
     if (distanceSq > totalRadiusSq) {
         T_VECTORS.push(differenceV);
@@ -35573,7 +35631,7 @@ function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
     }
     // They intersect.  If we're calculating a response, calculate the overlap.
     if (response) {
-        var dist = Math.sqrt(distanceSq);
+        let dist = Math.sqrt(distanceSq);
         response.a = a;
         response.b = b;
         response.overlap = totalRadius - dist;
@@ -35598,24 +35656,24 @@ function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
  */
 function testPolygonEllipse(a, polyA, b, ellipseB, response) {
     // Get the position of the circle relative to the polygon.
-    var circlePos = T_VECTORS.pop().copy(b.pos).add(b.ancestor.getAbsolutePosition()).add(ellipseB.pos)
+    let circlePos = T_VECTORS.pop().copy(b.pos).add(b.ancestor.getAbsolutePosition()).add(ellipseB.pos)
         .sub(a.pos).add(a.ancestor.getAbsolutePosition()).sub(polyA.pos);
-    var radius = ellipseB.radius;
-    var radius2 = radius * radius;
-    var points = polyA.points;
-    var edges = polyA.edges;
-    var len = edges.length;
-    var edge = T_VECTORS.pop();
-    var normal = T_VECTORS.pop();
-    var point = T_VECTORS.pop();
-    var dist = 0;
+    let radius = ellipseB.radius;
+    let radius2 = radius * radius;
+    let points = polyA.points;
+    let edges = polyA.edges;
+    let len = edges.length;
+    let edge = T_VECTORS.pop();
+    let normal = T_VECTORS.pop();
+    let point = T_VECTORS.pop();
+    let dist = 0;
 
     // For each edge in the polygon:
-    for (var i = 0; i < len; i++) {
-        var next = i === len - 1 ? 0 : i + 1;
-        var prev = i === 0 ? len - 1 : i - 1;
-        var overlap = 0;
-        var overlapN = null;
+    for (let i = 0; i < len; i++) {
+        let next = i === len - 1 ? 0 : i + 1;
+        let prev = i === 0 ? len - 1 : i - 1;
+        let overlap = 0;
+        let overlapN = null;
 
         // Get the edge.
         edge.copy(edges[i]);
@@ -35630,11 +35688,11 @@ function testPolygonEllipse(a, polyA, b, ellipseB, response) {
         }
 
         // Calculate which Vornoi region the center of the circle is in.
-        var region = vornoiRegion(edge, point);
-        var inRegion = true;
+        let region = vornoiRegion(edge, point);
+        let inRegion = true;
         // If it's the left region:
         if (region === LEFT_VORNOI_REGION) {
-            var point2 = null;
+            let point2 = null;
             if (len > 1) {
                 // We need to make sure we're in the RIGHT_VORNOI_REGION of the previous edge.
                 edge.copy(edges[prev]);
@@ -35708,7 +35766,7 @@ function testPolygonEllipse(a, polyA, b, ellipseB, response) {
             // Find the perpendicular distance between the center of the
             // circle and the edge.
             dist = point.dot(normal);
-            var distAbs = Math.abs(dist);
+            let distAbs = Math.abs(dist);
             // If the circle is on the outside of the edge, there is no intersection.
             if ((len === 1 || dist > 0) && distAbs > radius) {
                 // No intersection
@@ -35765,11 +35823,11 @@ function testPolygonEllipse(a, polyA, b, ellipseB, response) {
  */
 function testEllipsePolygon(a, ellipseA, b, polyB, response) {
     // Test the polygon against the circle.
-    var result = testPolygonEllipse(b, polyB, a, ellipseA, response);
+    let result = testPolygonEllipse(b, polyB, a, ellipseA, response);
     if (result && response) {
         // Swap A and B in the response.
-        var resa = response.a;
-        var aInB = response.aInB;
+        let resa = response.a;
+        let aInB = response.aInB;
         response.overlapN.negateSelf();
         response.overlapV.negateSelf();
         response.a = response.b;
@@ -35877,7 +35935,7 @@ class Detector {
      * @returns {boolean} true if they should collide, false otherwise
      */
     shouldCollide(a, b) {
-        var bodyA = a.body,
+        let bodyA = a.body,
             bodyB = b.body;
         return (
             (typeof bodyA === "object" && typeof bodyB === "object") &&
@@ -35898,9 +35956,9 @@ class Detector {
      */
     collides(bodyA, bodyB, response = this.response) {
         // for each shape in body A
-        for (var indexA = bodyA.shapes.length, shapeA; indexA--, (shapeA = bodyA.shapes[indexA]);) {
+        for (let indexA = bodyA.shapes.length, shapeA; indexA--, (shapeA = bodyA.shapes[indexA]);) {
             // for each shape in body B
-            for (var indexB = bodyB.shapes.length, shapeB; indexB--, (shapeB = bodyB.shapes[indexB]);) {
+            for (let indexB = bodyB.shapes.length, shapeB; indexB--, (shapeB = bodyB.shapes[indexB]);) {
                 // full SAT collision check
                 if (SAT["test" + shapeA.shapeType + shapeB.shapeType].call(
                         this,
@@ -35930,9 +35988,9 @@ class Detector {
      * @returns {boolean} in case of collision, false otherwise
      */
     collisions(objA) {
-        var collisionCounter = 0;
+        let collisionCounter = 0;
         // retreive a list of potential colliding objects from the game world
-        var candidates = this.world.broadphase.retrieve(objA);
+        let candidates = this.world.broadphase.retrieve(objA);
 
         boundsA.addBounds(objA.getBounds(), true);
         boundsA.addBounds(objA.body.getBounds());
@@ -35974,7 +36032,7 @@ class Detector {
      * @returns {Array.<Renderable>} an array of intersecting physic objects
      * @example
      *    // define a line accross the viewport
-     *    var ray = new me.Line(
+     *    let ray = new me.Line(
      *        // absolute position of the line
      *        0, 0, [
      *        // starting point relative to the initial position
@@ -35991,28 +36049,28 @@ class Detector {
      *    }
      */
     rayCast(line, result = []) {
-        var collisionCounter = 0;
+        let collisionCounter = 0;
 
         // retrieve a list of potential colliding objects from the game world
-        var candidates = this.world.broadphase.retrieve(line);
+        let candidates = this.world.broadphase.retrieve(line);
 
-        for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
+        for (let i = candidates.length, objB; i--, (objB = candidates[i]);) {
 
             // fast AABB check if both bounding boxes are overlaping
             if (objB.body && line.getBounds().overlaps(objB.getBounds())) {
 
                 // go trough all defined shapes in B (if any)
-                var bLen = objB.body.shapes.length;
+                let bLen = objB.body.shapes.length;
                 if ( objB.body.shapes.length === 0) {
                     continue;
                 }
 
-                var shapeA = line;
+                let shapeA = line;
 
                 // go through all defined shapes in B
-                var indexB = 0;
+                let indexB = 0;
                 do {
-                    var shapeB = objB.body.getShape(indexB);
+                    let shapeB = objB.body.getShape(indexB);
 
                     // full SAT collision check
                     if (SAT["test" + shapeA.shapeType + shapeB.shapeType]
@@ -36174,7 +36232,7 @@ class Detector {
     bodyApplyGravity(body) {
         // apply gravity to the current velocity
         if (!body.ignoreGravity && body.gravityScale !== 0) {
-            var gravity = this.gravity;
+            let gravity = this.gravity;
 
             // apply gravity if defined
             body.force.x += (body.mass * gravity.x) * body.gravityScale;
@@ -36188,7 +36246,7 @@ class Detector {
      * @returns {boolean} true if the word is dirty
      */
     update(dt) {
-        var isPaused = state$1.isPaused();
+        let isPaused = state$1.isPaused();
 
         // clear the quadtree
         this.broadphase.clear();
@@ -36199,7 +36257,7 @@ class Detector {
         // iterate through all bodies
         this.bodies.forEach((body) => {
             if (!body.isStatic) {
-                var ancestor = body.ancestor;
+                let ancestor = body.ancestor;
                 // if the game is not paused, and ancestor can be updated
                 if (!(isPaused && (!ancestor.updateWhenPaused)) &&
                    (ancestor.inViewport || ancestor.alwaysUpdate)) {
@@ -36303,7 +36361,7 @@ const ParticleEmitterSettings = {
     angle : Math.PI / 2,
 
     /**
-     * Variation in the start angle for particle launch in Radians.
+     * letiation in the start angle for particle launch in Radians.
      * @public
      * @type {number}
      * @name angleVariation
@@ -36343,7 +36401,7 @@ const ParticleEmitterSettings = {
     speed : 2,
 
     /**
-     * Variation in the start speed of particles
+     * letiation in the start speed of particles
      * @public
      * @type {number}
      * @name speedVariation
@@ -36536,7 +36594,7 @@ const ParticleEmitterSettings = {
  * @ignore
  */
 function createDefaultParticleTexture(w = 8, h = 8) {
-    var defaultParticleTexture = pool.pull("CanvasTexture", w, h, { offscreenCanvas: true });
+    let defaultParticleTexture = pool.pull("CanvasTexture", w, h, { offscreenCanvas: true });
 
     defaultParticleTexture.context.fillStyle = "#fff";
     defaultParticleTexture.context.fillRect(0, 0, w, h);
@@ -36556,7 +36614,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
      * @param {ParticleEmitterSettings} [settings=ParticleEmitterSettings] - the settings for the particle emitter.
      * @example
      * // Create a particle emitter at position 100, 100
-     * var emitter = new ParticleEmitter(100, 100, {
+     * let emitter = new ParticleEmitter(100, 100, {
      *     width: 16,
      *     height : 16,
      *     tint: "#f00",
@@ -36672,7 +36730,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
     // Add count particles in the game world
     /** @ignore */
     addParticles(count) {
-        for (var i = 0; i < count; i++) {
+        for (let i = 0; i < count; i++) {
             // Add particle to the container
             this.addChild(pool.pull("Particle", this), this.pos.z);
         }
@@ -36752,7 +36810,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
             this._frequencyTimer += dt;
 
             // Check for new particles launch
-            var particlesCount = this.children.length;
+            const particlesCount = this.children.length;
             if ((particlesCount < this.settings.totalParticles) && (this._frequencyTimer >= this.settings.frequency)) {
                 if ((particlesCount + this.settings.maxParticles) <= this.settings.totalParticles) {
                     this.addParticles(this.settings.maxParticles);
@@ -36841,8 +36899,8 @@ function createDefaultParticleTexture(w = 8, h = 8) {
         }
 
         // Set the start particle Angle and Speed as defined in emitter
-        var angle = emitter.settings.angle + ((emitter.settings.angleVariation > 0) ? (randomFloat(0, 2) - 1) * emitter.settings.angleVariation : 0);
-        var speed = emitter.settings.speed + ((emitter.settings.speedVariation > 0) ? (randomFloat(0, 2) - 1) * emitter.settings.speedVariation : 0);
+        let angle = emitter.settings.angle + ((emitter.settings.angleVariation > 0) ? (randomFloat(0, 2) - 1) * emitter.settings.angleVariation : 0);
+        let speed = emitter.settings.speed + ((emitter.settings.speedVariation > 0) ? (randomFloat(0, 2) - 1) * emitter.settings.speedVariation : 0);
 
         // Set the start particle Velocity
         this.vel.set(speed * Math.cos(angle), -speed * Math.sin(angle));
@@ -36892,7 +36950,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
      */
     update(dt) {
         // move things forward independent of the current frame rate
-        var skew = dt * this._deltaInv;
+        let skew = dt * this._deltaInv;
 
         // Decrease particle life
         this.life = this.life > dt ? this.life - dt : 0;
@@ -36903,10 +36961,10 @@ function createDefaultParticleTexture(w = 8, h = 8) {
         }
 
         // Calculate the particle Age Ratio
-        var ageRatio = this.life / this.startLife;
+        let ageRatio = this.life / this.startLife;
 
         // Resize the particle as particle Age Ratio
-        var scale = this.startScale;
+        let scale = this.startScale;
         if (this.startScale > this.endScale) {
             scale *= ageRatio;
             scale = (scale < this.endScale) ? this.endScale : scale;
@@ -36924,7 +36982,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
         this.vel.y += this.gravity * skew;
 
         // If necessary update the rotation of particle in accordance the particle trajectory
-        var angle = this.followTrajectory ? Math.atan2(this.vel.y, this.vel.x) : this.angle;
+        let angle = this.followTrajectory ? Math.atan2(this.vel.y, this.vel.x) : this.angle;
 
         this.pos.x += this.vel.x * skew;
         this.pos.y += this.vel.y * skew;
@@ -36946,7 +37004,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
      * @ignore
      */
     draw(renderer) {
-        var w = this.width, h = this.height;
+        let w = this.width, h = this.height;
         renderer.drawImage(
             this.image,
             0, 0,
@@ -37113,7 +37171,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
      * @returns {Bounds} this entity bounding box Rectangle object
      */
     updateBounds(absolute = true) {
-        var bounds = this.getBounds();
+        let bounds = this.getBounds();
 
         bounds.clear();
         bounds.addFrame(
@@ -37183,7 +37241,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
      * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
     draw(renderer, viewport) {
-        var renderable = this.renderable;
+        let renderable = this.renderable;
         if (renderable instanceof Renderable) {
             // predraw (apply transforms)
             renderable.preDraw(renderer);
@@ -37250,14 +37308,14 @@ function autoDetectRenderer(options) {
  * @param {number} y - y scaling multiplier
  */
 function scale(game, x, y) {
-    var renderer = game.renderer;
-    var canvas = renderer.getCanvas();
-    var context = renderer.getContext();
-    var settings = renderer.settings;
-    var pixelRatio = devicePixelRatio;
+    let renderer = game.renderer;
+    let canvas = renderer.getCanvas();
+    let context = renderer.getContext();
+    let settings = renderer.settings;
+    let pixelRatio = devicePixelRatio;
 
-    var w = settings.zoomX = canvas.width * x * pixelRatio;
-    var h = settings.zoomY = canvas.height * y * pixelRatio;
+    let w = settings.zoomX = canvas.width * x * pixelRatio;
+    let h = settings.zoomY = canvas.height * y * pixelRatio;
 
     // update the global scale variable
     renderer.scaleRatio.set(x * pixelRatio, y * pixelRatio);
@@ -37280,37 +37338,37 @@ function scale(game, x, y) {
  * @param {Application} game - the game application instance triggering the resize
  */
 function onresize(game) {
-    var renderer = game.renderer;
-    var settings = renderer.settings;
-    var scaleX = 1, scaleY = 1;
+    let renderer = game.renderer;
+    let settings = renderer.settings;
+    let scaleX = 1, scaleY = 1;
 
     if (settings.autoScale) {
 
         // set max the canvas max size if CSS values are defined
-        var canvasMaxWidth = Infinity;
-        var canvasMaxHeight = Infinity;
+        let canvasMaxWidth = Infinity;
+        let canvasMaxHeight = Infinity;
 
         if (globalThis.getComputedStyle) {
-            var style = globalThis.getComputedStyle(renderer.getCanvas(), null);
+            let style = globalThis.getComputedStyle(renderer.getCanvas(), null);
             canvasMaxWidth = parseInt(style.maxWidth, 10) || Infinity;
             canvasMaxHeight = parseInt(style.maxHeight, 10) || Infinity;
         }
 
         // get the maximum canvas size within the parent div containing the canvas container
-        var nodeBounds = getParentBounds(game.getParentElement());
+        let nodeBounds = getParentBounds(game.getParentElement());
 
-        var _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
-        var _max_height = Math.min(canvasMaxHeight, nodeBounds.height);
+        let _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
+        let _max_height = Math.min(canvasMaxHeight, nodeBounds.height);
 
         // calculate final canvas width & height
-        var screenRatio = _max_width / _max_height;
+        let screenRatio = _max_width / _max_height;
 
         if ((settings.scaleMethod === "fill-min" && screenRatio > renderer.designRatio) ||
             (settings.scaleMethod === "fill-max" && screenRatio < renderer.designRatio) ||
             (settings.scaleMethod === "flex-width")
         ) {
             // resize the display canvas to fill the parent container
-            var sWidth = Math.min(canvasMaxWidth, settings.height * screenRatio);
+            let sWidth = Math.min(canvasMaxWidth, settings.height * screenRatio);
             scaleX = scaleY = _max_width / sWidth;
             renderer.resize(Math.floor(sWidth), settings.height);
         }
@@ -37319,7 +37377,7 @@ function onresize(game) {
                  (settings.scaleMethod === "flex-height")
         ) {
             // resize the display canvas to fill the parent container
-            var sHeight = Math.min(canvasMaxHeight, settings.width * (_max_height / _max_width));
+            let sHeight = Math.min(canvasMaxHeight, settings.width * (_max_height / _max_width));
             scaleX = scaleY = _max_height / sHeight;
             renderer.resize(settings.width, Math.floor(sHeight));
         }
@@ -37376,10 +37434,10 @@ const defaultSettings = {
  * @param {Application} game - the game application instance calling this function
  */
 function consoleHeader(app) {
-    var renderType = app.renderer.type;
-    var gpu_renderer = (typeof app.renderer.GPURenderer === "string") ? " (" + app.renderer.GPURenderer + ")" : "";
-    var depthTesting = renderType.includes("WebGL") && app.renderer.depthTest === "z-buffer" ? "Depth Test | " : "";
-    var audioType = hasWebAudio ? "Web Audio" : "HTML5 Audio";
+    let renderType = app.renderer.type;
+    let gpu_renderer = (typeof app.renderer.GPURenderer === "string") ? " (" + app.renderer.GPURenderer + ")" : "";
+    let depthTesting = renderType.includes("WebGL") && app.renderer.depthTest === "z-buffer" ? "Depth Test | " : "";
+    let audioType = hasWebAudio ? "Web Audio" : "HTML5 Audio";
 
     // output video information in the console
     console.log(
@@ -37419,7 +37477,7 @@ function consoleHeader(app) {
      * @param {boolean} [options.consoleHeader=true] - whether to display melonJS version and basic device information in the console
      * @throws Will throw an exception if it fails to instantiate a renderer
      * @example
-     * var my game = new Application(640, 480, {renderer: me.video.AUTO}) {
+     * let my game = new Application(640, 480, {renderer: me.video.AUTO}) {
      *     ....
      * }
      */
@@ -37534,7 +37592,7 @@ function consoleHeader(app) {
         }
 
         // override renderer settings if &webgl or &canvas is defined in the URL
-        var uriFragment = utils.getUriFragment();
+        let uriFragment = utils.getUriFragment();
         if (uriFragment.webgl === true || uriFragment.webgl1 === true || uriFragment.webgl2 === true) {
             this.settings.renderer = WEBGL$1;
             if (uriFragment.webgl1 === true) {
@@ -37562,7 +37620,7 @@ function consoleHeader(app) {
                     break;
             }
         } else {
-            var CustomRenderer = this.settings.renderer;
+            let CustomRenderer = this.settings.renderer;
             // a renderer class
             this.renderer = new CustomRenderer(this.settings);
         }
@@ -37587,7 +37645,7 @@ function consoleHeader(app) {
         // add an observer to detect when the dom tree is modified
         if ("MutationObserver" in globalThis) {
             // Create an observer instance linked to the callback function
-            var observer = new MutationObserver(() => onresize(this));
+            let observer = new MutationObserver(() => onresize(this));
 
             // Start observing the target node for configured mutations
             observer.observe(this.parentElement, {
@@ -37619,7 +37677,7 @@ function consoleHeader(app) {
      */
     reset() {
         // point to the current active stage "default" camera
-        var current = state$1.get();
+        let current = state$1.get();
         if (typeof current !== "undefined") {
             this.viewport = current.cameras.get("default");
         }
@@ -37766,7 +37824,7 @@ function consoleHeader(app) {
  * @see plugin.register
  * @namespace plugins
  */
-var plugins = {};
+let plugins = {};
 
 
 class BasePlugin {
@@ -37787,7 +37845,7 @@ class BasePlugin {
 /**
  * @namespace plugin
  */
-var plugin = {
+let plugin = {
 
     /**
      * a base Object for plugin <br>
@@ -37824,14 +37882,14 @@ var plugin = {
         // reuse the logic behind object extends
         if (typeof(proto[name]) === "function") {
             // save the original function
-            var _parent = proto[name];
+            let _parent = proto[name];
             // override the function with the new one
             Object.defineProperty(proto, name, {
                 "configurable" : true,
                 "value" : (function (name, fn) {
                     return function () {
                         this._patched = _parent;
-                        var ret = fn.apply(this, arguments);
+                        let ret = fn.apply(this, arguments);
                         this._patched = null;
                         return ret;
                     };
@@ -37850,7 +37908,7 @@ var plugin = {
      * @see Base
      * @public
      * @param {plugin.Base} pluginObj - Plugin object to instantiate and register
-     * @param {string} name
+     * @param {string} [name=pluginObj.constructor.name] - a unique name for this plugin
      * @param {object} [...arguments] - all extra parameters will be passed to the plugin constructor
      * @example
      * // register a new plugin
@@ -37859,14 +37917,14 @@ var plugin = {
      * // under then me.plugins namespace
      * me.plugins.testPlugin.myfunction ();
      */
-    register : function (pluginObj, name) {
+    register : function (pluginObj, name = pluginObj.toString().match(/ (\w+)/)[1]) {
         // ensure me.plugins[name] is not already "used"
         if (plugins[name]) {
             throw new Error("plugin " + name + " already registered");
         }
 
         // get extra arguments
-        var _args = [];
+        let _args = [];
         if (arguments.length > 2) {
             // store extra arguments if any
             _args = Array.prototype.slice.call(arguments, 1);
@@ -37874,7 +37932,7 @@ var plugin = {
 
         // try to instantiate the plugin
         _args[0] = pluginObj;
-        var instance = new (pluginObj.bind.apply(pluginObj, _args))();
+        let instance = new (pluginObj.bind.apply(pluginObj, _args))();
 
         // inheritance check
         if (typeof instance === "undefined" || !(instance instanceof plugin.Base)) {
@@ -38016,7 +38074,7 @@ const version = "15.1.0";
  * @default false
  * @readonly
  */
-var initialized = false;
+let initialized = false;
 
 /**
  * disable melonJS auto-initialization
@@ -38024,7 +38082,7 @@ var initialized = false;
  * @default false
  * @see boot
  */
-var skipAutoInit = false;
+let skipAutoInit = false;
 
 /*
  * game is a default instance of a melonJS Application and represents your current game,

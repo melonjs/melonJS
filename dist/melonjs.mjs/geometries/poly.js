@@ -127,7 +127,7 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
 
             } else {
                 // it's a flat array
-                for (var p = 0; p < vertices.length; p += 2) {
+                for (let p = 0; p < vertices.length; p += 2) {
                     this.points.push(pool.pull("Vector2d", vertices[p], vertices[p + 1]));
                 }
             }
@@ -149,9 +149,9 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
      * @returns {Polygon} Reference to this object for method chaining
      */
     transform(m) {
-        var points = this.points;
-        var len = points.length;
-        for (var i = 0; i < len; i++) {
+        let points = this.points;
+        let len = points.length;
+        for (let i = 0; i < len; i++) {
             m.apply(points[i]);
         }
         this.recalc();
@@ -189,9 +189,9 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
      */
     rotate(angle, v) {
         if (angle !== 0) {
-            var points = this.points;
-            var len = points.length;
-            for (var i = 0; i < len; i++) {
+            let points = this.points;
+            let len = points.length;
+            for (let i = 0; i < len; i++) {
                 points[i].rotate(angle, v);
             }
             this.recalc();
@@ -209,9 +209,9 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
      * @returns {Polygon} Reference to this object for method chaining
      */
     scale(x, y = x) {
-        var points = this.points;
-        var len = points.length;
-        for (var i = 0; i < len; i++) {
+        let points = this.points;
+        let len = points.length;
+        for (let i = 0; i < len; i++) {
             points[i].scale(x, y);
         }
         this.recalc();
@@ -238,14 +238,14 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
      * @returns {Polygon} Reference to this object for method chaining
      */
     recalc() {
-        var i;
-        var edges = this.edges;
-        var normals = this.normals;
-        var indices = this.indices;
+        let i;
+        let edges = this.edges;
+        let normals = this.normals;
+        let indices = this.indices;
 
         // Copy the original points array and apply the offset/angle
-        var points = this.points;
-        var len = points.length;
+        let points = this.points;
+        let len = points.length;
 
         if (len < 3) {
             throw new Error("Requires at least 3 points");
@@ -297,7 +297,7 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
         // http://paulbourke.net/geometry/polygonmesh/
         // Copyright (c) Paul Bourke (use permitted)
 
-        var flag = 0,
+        let flag = 0,
             vertices = this.points,
             n = vertices.length,
             i,
@@ -350,7 +350,7 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
      * @returns {Polygon} Reference to this object for method chaining
      */
     translate() {
-        var _x, _y;
+        let _x, _y;
 
         if (arguments.length === 2) {
             // x, y
@@ -384,7 +384,7 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
      * @param {number} y
      */
     shift() {
-        var _x, _y;
+        let _x, _y;
         if (arguments.length === 2) {
             // x, y
             _x = arguments[0];
@@ -421,7 +421,7 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
      * @returns {boolean} true if contains
      */
     contains() {
-        var _x, _y;
+        let _x, _y;
 
         if (arguments.length === 2) {
           // x, y
@@ -433,14 +433,14 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
           _y = arguments[0].y;
         }
 
-        var intersects = false;
-        var posx = this.pos.x, posy = this.pos.y;
-        var points = this.points;
-        var len = points.length;
+        let intersects = false;
+        let posx = this.pos.x, posy = this.pos.y;
+        let points = this.points;
+        let len = points.length;
 
         //http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-        for (var i = 0, j = len - 1; i < len; j = i++) {
-            var iy = points[i].y + posy, ix = points[i].x + posx,
+        for (let i = 0, j = len - 1; i < len; j = i++) {
+            let iy = points[i].y + posy, ix = points[i].x + posx,
                 jy = points[j].y + posy, jx = points[j].x + posx;
             if (((iy > _y) !== (jy > _y)) && (_x < (jx - ix) * (_y - iy) / (jy - iy) + ix)) {
                 intersects = !intersects;
@@ -469,7 +469,7 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
      * @returns {Bounds} this shape bounding box Rectangle object
      */
     updateBounds() {
-        var bounds = this.getBounds();
+        let bounds = this.getBounds();
 
         bounds.update(this.points);
         bounds.translate(this.pos);
@@ -484,7 +484,7 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
      * @returns {Polygon} new Polygon
      */
     clone() {
-        var copy = [];
+        let copy = [];
         this.points.forEach((point) => {
             copy.push(point.clone());
         });

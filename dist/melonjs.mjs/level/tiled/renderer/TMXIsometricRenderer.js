@@ -48,7 +48,7 @@ import TMXLayer from '../TMXLayer.js';
      * @ignore
      */
     getBounds(layer) {
-        var bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
+        let bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
         bounds.setMinMax(
             0, 0,
             (this.cols + this.rows) * (this.tilewidth / 2),
@@ -62,7 +62,7 @@ import TMXLayer from '../TMXLayer.js';
      * @ignore
      */
     pixelToTileCoords(x, y, v) {
-        var ret = v || new Vector2d();
+        let ret = v || new Vector2d();
         return ret.set(
             (y / this.tileheight) + ((x - this.originX) / this.tilewidth),
             (y / this.tileheight) - ((x - this.originX) / this.tilewidth)
@@ -74,7 +74,7 @@ import TMXLayer from '../TMXLayer.js';
      * @ignore
      */
     tileToPixelCoords(x, y, v) {
-        var ret = v || new Vector2d();
+        let ret = v || new Vector2d();
         return ret.set(
             (x - y) * this.hTilewidth + this.originX,
             (x + y) * this.hTileheight
@@ -87,9 +87,9 @@ import TMXLayer from '../TMXLayer.js';
      * @ignore
      */
     adjustPosition(obj) {
-        var tileX = obj.x / this.hTilewidth;
-        var tileY = obj.y / this.tileheight;
-        var isoPos = pool.pull("Vector2d");
+        let tileX = obj.x / this.hTilewidth;
+        let tileY = obj.y / this.tileheight;
+        let isoPos = pool.pull("Vector2d");
 
         this.tileToPixelCoords(tileX, tileY, isoPos);
 
@@ -104,7 +104,7 @@ import TMXLayer from '../TMXLayer.js';
      * @ignore
      */
     drawTile(renderer, x, y, tmxTile) {
-        var tileset = tmxTile.tileset;
+        let tileset = tmxTile.tileset;
         // draw the tile
         tileset.drawTile(
             renderer,
@@ -120,24 +120,24 @@ import TMXLayer from '../TMXLayer.js';
      */
     drawTileLayer(renderer, layer, rect) {
         // cache a couple of useful references
-        var tileset = layer.tileset;
+        let tileset = layer.tileset;
 
         // get top-left and bottom-right tile position
-        var rowItr = this.pixelToTileCoords(
+        let rowItr = this.pixelToTileCoords(
             rect.pos.x - tileset.tilewidth,
             rect.pos.y - tileset.tileheight,
             pool.pull("Vector2d")
         ).floorSelf();
-        var tileEnd = this.pixelToTileCoords(
+        let tileEnd = this.pixelToTileCoords(
             rect.pos.x + rect.width + tileset.tilewidth,
             rect.pos.y + rect.height + tileset.tileheight,
             pool.pull("Vector2d")
         ).ceilSelf();
 
-        var rectEnd = this.tileToPixelCoords(tileEnd.x, tileEnd.y, pool.pull("Vector2d"));
+        let rectEnd = this.tileToPixelCoords(tileEnd.x, tileEnd.y, pool.pull("Vector2d"));
 
         // Determine the tile and pixel coordinates to start at
-        var startPos = this.tileToPixelCoords(rowItr.x, rowItr.y, pool.pull("Vector2d"));
+        let startPos = this.tileToPixelCoords(rowItr.x, rowItr.y, pool.pull("Vector2d"));
         startPos.x -= this.hTilewidth;
         startPos.y += this.tileheight;
 
@@ -146,8 +146,8 @@ import TMXLayer from '../TMXLayer.js';
          * up due to those tiles being visible as well. How we go up one row
          * depends on whether we're in the left or right half of the tile.
          */
-        var inUpperHalf = startPos.y - rect.pos.y > this.hTileheight;
-        var inLeftHalf  = rect.pos.x - startPos.x < this.hTilewidth;
+        let inUpperHalf = startPos.y - rect.pos.y > this.hTileheight;
+        let inLeftHalf  = rect.pos.x - startPos.x < this.hTilewidth;
 
         if (inUpperHalf) {
             if (inLeftHalf) {
@@ -162,21 +162,21 @@ import TMXLayer from '../TMXLayer.js';
         }
 
         // Determine whether the current row is shifted half a tile to the right
-        var shifted = inUpperHalf ^ inLeftHalf;
+        let shifted = inUpperHalf ^ inLeftHalf;
 
         // initialize the columItr vector
-        var columnItr = rowItr.clone();
+        let columnItr = rowItr.clone();
 
         // main drawing loop
-        for (var y = startPos.y * 2; y - this.tileheight * 2 < rectEnd.y * 2; y += this.tileheight) {
+        for (let y = startPos.y * 2; y - this.tileheight * 2 < rectEnd.y * 2; y += this.tileheight) {
             columnItr.setV(rowItr);
-            for (var x = startPos.x; x < rectEnd.x; x += this.tilewidth) {
-                var tmxTile = layer.cellAt(columnItr.x, columnItr.y);
+            for (let x = startPos.x; x < rectEnd.x; x += this.tilewidth) {
+                let tmxTile = layer.cellAt(columnItr.x, columnItr.y);
                 // render if a valid tile position
                 if (tmxTile) {
                     tileset = tmxTile.tileset;
                     // offset could be different per tileset
-                    var offset  = tileset.tileoffset;
+                    let offset  = tileset.tileoffset;
                     // draw our tile
                     tileset.drawTile(
                         renderer,

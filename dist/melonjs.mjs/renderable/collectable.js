@@ -31,7 +31,7 @@ import pool from '../system/pooling.js';
         this.id = settings.id;
 
         // add and configure the physic body
-        var shape = settings.shapes;
+        let shape = settings.shapes;
         if (typeof shape === "undefined") {
             shape = pool.pull("Polygon", 0, 0, [
                 pool.pull("Vector2d", 0,          0),

@@ -14,32 +14,32 @@ import Stage from './stage.js';
 import DefaultLoadingScreen from '../loader/loadingscreen.js';
 
 // current state
-var _state = -1;
+let _state = -1;
 
 // requestAnimeFrame Id
-var _animFrameId = -1;
+let _animFrameId = -1;
 
 // whether the game state is "paused"
-var _isPaused = false;
+let _isPaused = false;
 
 // list of stages
-var _stages = {};
+let _stages = {};
 
 // fading transition parameters between screen
-var _fade = {
+let _fade = {
     color : "",
     duration : 0
 };
 
 // callback when state switch is done
 /** @ignore */
-var _onSwitchComplete = null;
+let _onSwitchComplete = null;
 
 // just to keep track of possible extra arguments
-var _extraArgs = null;
+let _extraArgs = null;
 
 // store the elapsed time during pause/stop period
-var _pauseTime = 0;
+let _pauseTime = 0;
 
 /**
  * @ignore
@@ -78,7 +78,7 @@ function _pauseRunLoop() {
  * @ignore
  */
 function _renderFrame(time) {
-    var stage = _stages[_state].stage;
+    let stage = _stages[_state].stage;
     // update all game objects
     game.update(time, stage);
     // render all game objects
@@ -189,7 +189,7 @@ on(BOOT, () => {
  * a State Manager (state machine)
  * @namespace state
  */
-var state = {
+let state = {
 
     /**
      * default state ID for Loading Stage
@@ -278,10 +278,10 @@ var state = {
      * @name USER
      * @memberof state
      * @example
-     * var STATE_INFO = me.state.USER + 0;
-     * var STATE_WARN = me.state.USER + 1;
-     * var STATE_ERROR = me.state.USER + 2;
-     * var STATE_CUTSCENE = me.state.USER + 3;
+     * let STATE_INFO = me.state.USER + 0;
+     * let STATE_WARN = me.state.USER + 1;
+     * let STATE_ERROR = me.state.USER + 2;
+     * let STATE_CUTSCENE = me.state.USER + 3;
      */
     USER : 100,
 

@@ -9,7 +9,7 @@
  * @ignore
  */
 function compileShader(gl, type, source) {
-    var shader = gl.createShader(type);
+    let shader = gl.createShader(type);
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
 
@@ -25,10 +25,10 @@ function compileShader(gl, type, source) {
  * @ignore
  */
 function compileProgram(gl, vertex, fragment, attributes) {
-    var vertShader = compileShader(gl, gl.VERTEX_SHADER, vertex);
-    var fragShader = compileShader(gl, gl.FRAGMENT_SHADER, fragment);
+    let vertShader = compileShader(gl, gl.VERTEX_SHADER, vertex);
+    let fragShader = compileShader(gl, gl.FRAGMENT_SHADER, fragment);
 
-    var program = gl.createProgram();
+    let program = gl.createProgram();
 
     gl.attachShader(program, vertShader);
     gl.attachShader(program, fragShader);
@@ -36,14 +36,14 @@ function compileProgram(gl, vertex, fragment, attributes) {
 
     // force vertex attributes to use location 0 as starting location to prevent
     // browser to do complicated emulation when running on desktop OpenGL (e.g. on macOS)
-    for (var location in attributes) {
+    for (let location in attributes) {
         gl.bindAttribLocation(program, attributes[location], location);
     }
 
     gl.linkProgram(program);
 
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-        var error_msg =
+        let error_msg =
             "Error initializing Shader " + this + "\n" +
             "gl.VALIDATE_STATUS: " + gl.getProgramParameter(program, gl.VALIDATE_STATUS) + "\n" +
             "gl.getError()" + gl.getError() + "\n" +

@@ -23,14 +23,14 @@ export * from "./const.js";
  * @default false
  * @readonly
  */
-export const initialized: boolean;
+export let initialized: boolean;
 /**
  * disable melonJS auto-initialization
  * @type {boolean}
  * @default false
  * @see boot
  */
-export const skipAutoInit: boolean;
+export let skipAutoInit: boolean;
 export const game: Application;
 import * as audio from "./audio/audio.js";
 import collision from "./physics/collision.js";

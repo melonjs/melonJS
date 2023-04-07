@@ -19,10 +19,10 @@ import { game } from '../../index.js';
  */
 function initArray(rows, cols) {
     // initialize the array
-    var array = new Array(cols);
-    for (var col = 0; col < cols; col++) {
+    let array = new Array(cols);
+    for (let col = 0; col < cols; col++) {
         array[col] = new Array(rows);
-        for (var row = 0; row < rows; row++) {
+        for (let row = 0; row < rows; row++) {
             array[col][row] = null;
         }
     }
@@ -34,8 +34,8 @@ function initArray(rows, cols) {
  * @ignore
  */
 function setLayerData(layer, bounds, data) {
-    var idx = 0;
-    var width, height;
+    let idx = 0;
+    let width, height;
 
     // layer provide rows and cols, chunk width and height
     if (typeof bounds.rows === "undefined") {
@@ -46,10 +46,10 @@ function setLayerData(layer, bounds, data) {
         height = bounds.rows;
     }
     // set everything
-    for (var y = 0; y < height; y++) {
-        for (var x = 0; x < width; x++) {
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
             // get the value of the gid
-            var gid = data[idx++];
+            let gid = data[idx++];
             // fill the array
             if (gid !== 0) {
                 // add a new tile to the layer
@@ -65,10 +65,10 @@ function setLayerData(layer, bounds, data) {
  */
 function preRenderLayer(layer, renderer) {
     // set everything
-    for (var y = 0; y < layer.rows; y++) {
-        for (var x = 0; x < layer.cols; x++) {
+    for (let y = 0; y < layer.rows; y++) {
+        for (let x = 0; x < layer.cols; x++) {
             // get the value of the gid
-            var tile = layer.layerData[x][y];
+            let tile = layer.layerData[x][y];
             // draw the tile if defined
             if (tile instanceof Tile) {
                 // add a new tile to the layer
@@ -134,8 +134,8 @@ function preRenderLayer(layer, renderer) {
             "width" : 0,
             "height" : 0
         };
-        for (var i = 0; i < this.tilesets.length; i++) {
-            var tileset = this.tilesets.getTilesetByIndex(i);
+        for (let i = 0; i < this.tilesets.length; i++) {
+            let tileset = this.tilesets.getTilesetByIndex(i);
             this.maxTileSize.width = Math.max(this.maxTileSize.width, tileset.tilewidth);
             this.maxTileSize.height = Math.max(this.maxTileSize.height, tileset.tileheight);
         }
@@ -178,7 +178,7 @@ function preRenderLayer(layer, renderer) {
         this.rows = +data.height;
 
         // layer opacity
-        var visible = typeof(data.visible) !== "undefined" ? +data.visible : 1;
+        let visible = typeof(data.visible) !== "undefined" ? +data.visible : 1;
         this.setOpacity(visible ? +data.opacity : 0);
 
         // layer tint
@@ -248,8 +248,8 @@ function preRenderLayer(layer, renderer) {
         }
 
         if (this.tilesets) {
-            var tileset = this.tilesets.tilesets;
-            for (var i = 0; i < tileset.length; i++) {
+            let tileset = this.tilesets.tilesets;
+            for (let i = 0; i < tileset.length; i++) {
                 if (tileset[i].isAnimated) {
                     this.animatedTilesets.push(tileset[i]);
                 }
@@ -287,7 +287,7 @@ function preRenderLayer(layer, renderer) {
      * @param {TMXRenderer} renderer
      * @example
      * // use the parent map default renderer
-     * var layer = new me.TMXLayer(...);
+     * let layer = new me.TMXLayer(...);
      * layer.setRenderer(map.getRenderer());
      */
     setRenderer(renderer) {
@@ -309,7 +309,7 @@ function preRenderLayer(layer, renderer) {
      * @returns {number} TileId or null if there is no Tile at the given position
      */
     getTileId(x, y) {
-        var tile = this.getTile(x, y);
+        let tile = this.getTile(x, y);
         return (tile ? tile.tileId : null);
     }
 
@@ -320,15 +320,15 @@ function preRenderLayer(layer, renderer) {
      * @returns {Tile} corresponding tile or null if there is no defined tile at the coordinate or if outside of the layer bounds
      * @example
      * // get the TMX Map Layer called "Front layer"
-     * var layer = me.game.world.getChildByName("Front Layer")[0];
+     * let layer = me.game.world.getChildByName("Front Layer")[0];
      * // get the tile object corresponding to the latest pointer position
-     * var tile = layer.getTile(me.input.pointer.x, me.input.pointer.y);
+     * let tile = layer.getTile(me.input.pointer.x, me.input.pointer.y);
      */
     getTile(x, y) {
-        var tile = null;
+        let tile = null;
 
         if (this.contains(x, y)) {
-            var coord = this.getRenderer().pixelToTileCoords(x, y, pool.pull("Vector2d"));
+            let coord = this.getRenderer().pixelToTileCoords(x, y, pool.pull("Vector2d"));
             tile = this.cellAt(coord.x, coord.y);
             pool.push(coord);
         }
@@ -370,13 +370,13 @@ function preRenderLayer(layer, renderer) {
      * @returns {Tile} corresponding tile or null if there is no defined tile at the position or if outside of the layer bounds
      * @example
      * // return the first tile at offset 0, 0
-     * var tile = layer.cellAt(0, 0);
+     * let tile = layer.cellAt(0, 0);
      */
     cellAt(x, y, boundsCheck) {
-        var _x = ~~x;
-        var _y = ~~y;
+        let _x = ~~x;
+        let _y = ~~y;
 
-        var renderer = this.getRenderer();
+        let renderer = this.getRenderer();
         // boundsCheck only used internally by the tiled renderer, when the layer bound check was already done
         if (boundsCheck === false || (_x >= 0 && _x < renderer.cols && _y >= 0 && _y < renderer.rows)) {
             return this.layerData[_x][_y];
@@ -410,8 +410,8 @@ function preRenderLayer(layer, renderer) {
      */
     update(dt) {
         if (this.isAnimated) {
-            var result = false;
-            for (var i = 0; i < this.animatedTilesets.length; i++) {
+            let result = false;
+            for (let i = 0; i < this.animatedTilesets.length; i++) {
                 result = this.animatedTilesets[i].update(dt) || result;
             }
             return result;
@@ -426,8 +426,8 @@ function preRenderLayer(layer, renderer) {
     draw(renderer, rect) {
         // use the offscreen canvas
         if (this.preRender) {
-            var width = Math.min(rect.width, this.width);
-            var height = Math.min(rect.height, this.height);
+            const width = Math.min(rect.width, this.width);
+            const height = Math.min(rect.height, this.height);
 
             // draw using the cached canvas
             renderer.drawImage(

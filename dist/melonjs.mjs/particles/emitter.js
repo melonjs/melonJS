@@ -14,7 +14,7 @@ import Container from '../renderable/container.js';
  * @ignore
  */
 function createDefaultParticleTexture(w = 8, h = 8) {
-    var defaultParticleTexture = pool.pull("CanvasTexture", w, h, { offscreenCanvas: true });
+    let defaultParticleTexture = pool.pull("CanvasTexture", w, h, { offscreenCanvas: true });
 
     defaultParticleTexture.context.fillStyle = "#fff";
     defaultParticleTexture.context.fillRect(0, 0, w, h);
@@ -34,7 +34,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
      * @param {ParticleEmitterSettings} [settings=ParticleEmitterSettings] - the settings for the particle emitter.
      * @example
      * // Create a particle emitter at position 100, 100
-     * var emitter = new ParticleEmitter(100, 100, {
+     * let emitter = new ParticleEmitter(100, 100, {
      *     width: 16,
      *     height : 16,
      *     tint: "#f00",
@@ -150,7 +150,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
     // Add count particles in the game world
     /** @ignore */
     addParticles(count) {
-        for (var i = 0; i < count; i++) {
+        for (let i = 0; i < count; i++) {
             // Add particle to the container
             this.addChild(pool.pull("Particle", this), this.pos.z);
         }
@@ -230,7 +230,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
             this._frequencyTimer += dt;
 
             // Check for new particles launch
-            var particlesCount = this.children.length;
+            const particlesCount = this.children.length;
             if ((particlesCount < this.settings.totalParticles) && (this._frequencyTimer >= this.settings.frequency)) {
                 if ((particlesCount + this.settings.maxParticles) <= this.settings.totalParticles) {
                     this.addParticles(this.settings.maxParticles);

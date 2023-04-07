@@ -152,13 +152,13 @@ export class TextureAtlas {
      * ...
      * ...
      * // create a new "coin" sprite
-     * var sprite = game.texture.createSpriteFromName("coin.png");
+     * let sprite = game.texture.createSpriteFromName("coin.png");
      * // set the renderable position to bottom center
      * sprite.anchorPoint.set(0.5, 1.0);
      * ...
      * ...
      * // create a 9-slice sprite
-     * var dialogPanel = game.texture.createSpriteFromName(
+     * let dialogPanel = game.texture.createSpriteFromName(
      *    "rpg_dialo.png",
      *    // width & height are mandatory for 9-slice sprites
      *    { width: this.width, height: this.height },
@@ -180,7 +180,7 @@ export class TextureAtlas {
      * );
      *
      * // create a new Animated Sprite
-     * var sprite = game.texture.createAnimationFromName([
+     * let sprite = game.texture.createAnimationFromName([
      *     "walk0001.png", "walk0002.png", "walk0003.png",
      *     "walk0004.png", "walk0005.png", "walk0006.png",
      *     "walk0007.png", "walk0008.png", "walk0009.png",

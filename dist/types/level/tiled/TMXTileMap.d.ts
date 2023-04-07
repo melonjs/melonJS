@@ -9,7 +9,7 @@ export default class TMXTileMap {
      * @param {object} data - TMX map in JSON format
      * @example
      * // create a new level object based on the TMX JSON object
-     * var level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
+     * let level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
      * // add the level to the game world container
      * level.addTo(me.game.world, true);
      */
@@ -115,7 +115,7 @@ export default class TMXTileMap {
      * @param {boolean} [setViewportBounds=false] - if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
      * @example
      * // create a new level object based on the TMX JSON object
-     * var level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
+     * let level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
      * // add the level to the game world container
      * level.addTo(me.game.world, true, true);
      */

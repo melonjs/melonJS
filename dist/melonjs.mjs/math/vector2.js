@@ -317,7 +317,7 @@ import pool from '../system/pooling.js';
      * @returns {boolean}
      */
     equals() {
-        var _x, _y;
+        let _x, _y;
         if (arguments.length === 2) {
             // x, y
             _x = arguments[0];
@@ -360,19 +360,19 @@ import pool from '../system/pooling.js';
      * @returns {Vector2d} Reference to this object for method chaining
      */
     rotate(angle, v) {
-        var cx = 0;
-        var cy = 0;
+        let cx = 0;
+        let cy = 0;
 
         if (typeof v === "object") {
             cx = v.x;
             cy = v.y;
         }
 
-        var x = this.x - cx;
-        var y = this.y - cy;
+        let x = this.x - cx;
+        let y = this.y - cy;
 
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
+        let c = Math.cos(angle);
+        let s = Math.sin(angle);
 
         return this._set(x * c - y * s + cx, x * s + y * c + cy);
     }
@@ -442,9 +442,9 @@ import pool from '../system/pooling.js';
      * @returns {Vector2d} Reference to this object for method chaining
      */
      moveTowards(target, step) {
-        var angle = Math.atan2(target.y - this.y, target.x - this.x);
+        let angle = Math.atan2(target.y - this.y, target.x - this.x);
 
-        var distance = this.distance(target);
+        let distance = this.distance(target);
 
         if (distance === 0 || (step >= 0 && distance <= step * step)) {
             return target;
@@ -464,7 +464,7 @@ import pool from '../system/pooling.js';
      * @returns {number}
      */
     distance(v) {
-        var dx = this.x - v.x, dy = this.y - v.y;
+        let dx = this.x - v.x, dy = this.y - v.y;
         return Math.sqrt(dx * dx + dy * dy);
     }
 

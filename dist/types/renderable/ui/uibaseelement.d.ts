@@ -1,7 +1,7 @@
 /**
  * @classdesc
- * This is a basic clickable container which you can use in your game UI.
- * Use this for example if you want to display a button which contains text and images.
+ * This is a basic clickable and draggable container which you can use in your game UI.
+ * Use this for example if you want to display a panel that contains text, images or other UI elements.
  * @augments Container
  */
 export default class UIBaseElement extends Container {
@@ -9,15 +9,22 @@ export default class UIBaseElement extends Container {
      *
      * @param {number} x - The x position of the container
      * @param {number} y - The y position of the container
-     * @param {number} w - width of the container (default: viewport width)
-     * @param {number} h - height of the container (default: viewport height)
+     * @param {number} w - width of the container
+     * @param {number} h - height of the container
      */
     constructor(x: number, y: number, w: number, h: number);
     /**
      * object can be clicked or not
      * @type {boolean}
+     * @default true
      */
     isClickable: boolean;
+    /**
+     * object can be clicked or not
+     * @type {boolean}
+     * @default false
+     */
+    isDraggable: boolean;
     /**
      * Tap and hold threshold timeout in ms
      * @type {number}
@@ -60,6 +67,17 @@ export default class UIBaseElement extends Container {
      * @ignore
      */
     enter(event: any): void;
+    grabOffset: object | undefined;
+    /**
+     * pointermove function
+     * @ignore
+     */
+    pointerMove(event: any): void;
+    /**
+     * function called when the pointer is moved over the object
+     * @param {Pointer} event - the event object
+     */
+    onMove(event: Pointer): void;
     /**
      * function called when the pointer is over the object
      * @param {Pointer} event - the event object

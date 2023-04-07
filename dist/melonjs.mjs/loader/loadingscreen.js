@@ -78,7 +78,7 @@ class DefaultLoadingScreen extends Stage {
      * @ignore
      */
     onResetEvent() {
-        var barHeight = 8;
+        const barHeight = 8;
 
         // set a background color
         game.world.backgroundColor.parseCSS("#202020");

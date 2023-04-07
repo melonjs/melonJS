@@ -23,22 +23,22 @@ import { game } from '../index.js';
  * @type {Array.<Vector2d>}
  * @ignore
  */
-var T_POINTERS = [];
+let T_POINTERS = [];
 
 // list of registered Event handlers
-var eventHandlers = new Map();
+let eventHandlers = new Map();
 
 // a cache rect represeting the current pointer area
-var currentPointer;
+let currentPointer;
 
 // some useful flags
-var pointerInitialized = false;
+let pointerInitialized = false;
 
 // Track last event timestamp to prevent firing events out of order
-var lastTimeStamp = 0;
+let lastTimeStamp = 0;
 
 // "active" list of supported events
-var activeEventList = [];
+let activeEventList = [];
 
 // internal constants
 const WHEEL           = ["wheel"];
@@ -100,14 +100,14 @@ const pointerEventMap = {
  * Array of normalized events (mouse, touch, pointer)
  * @ignore
  */
-var normalizedEvents = [];
+let normalizedEvents = [];
 
 /**
  * addEventListerner for the specified event list and callback
  * @ignore
  */
 function registerEventListener(eventList, callback) {
-    for (var x = 0; x < eventList.length; x++) {
+    for (let x = 0; x < eventList.length; x++) {
         if (POINTER_MOVE.indexOf(eventList[x]) === -1) {
             pointerEventTarget.addEventListener(eventList[x], callback, { passive: (preventDefault === false) });
         }
@@ -125,7 +125,7 @@ function enablePointerEvent() {
         currentPointer = new Rect(0, 0, 1, 1);
 
         // instantiate a pool of pointer catched
-        for (var v = 0; v < maxTouchPoints; v++) {
+        for (let v = 0; v < maxTouchPoints; v++) {
             T_POINTERS.push(new Pointer());
         }
 
@@ -165,8 +165,8 @@ function enablePointerEvent() {
         }
 
         // if time interval <= 16, disable the feature
-        var i;
-        var events = findAllActiveEvents(activeEventList, POINTER_MOVE);
+        let i;
+        let events = findAllActiveEvents(activeEventList, POINTER_MOVE);
         if (throttlingInterval < 17) {
             for (i = 0; i < events.length; i++) {
                 if (activeEventList.indexOf(events[i]) !== -1) {
@@ -216,8 +216,8 @@ function enablePointerEvent() {
  * @ignore
  */
 function findActiveEvent(activeEventList, eventTypes) {
-    for (var i = 0; i < eventTypes.length; i++) {
-        var event = activeEventList.indexOf(eventTypes[i]);
+    for (let i = 0; i < eventTypes.length; i++) {
+        let event = activeEventList.indexOf(eventTypes[i]);
         if (event !== -1) {
             return eventTypes[i];
         }
@@ -228,9 +228,9 @@ function findActiveEvent(activeEventList, eventTypes) {
  * @ignore
  */
 function findAllActiveEvents(activeEventList, eventTypes) {
-    var events = [];
-    for (var i = 0; i < eventTypes.length; i++) {
-        var event = activeEventList.indexOf(eventTypes[i]);
+    let events = [];
+    for (let i = 0; i < eventTypes.length; i++) {
+        let event = activeEventList.indexOf(eventTypes[i]);
         if (event !== -1) {
             events.push(eventTypes[i]);
         }
@@ -243,10 +243,10 @@ function findAllActiveEvents(activeEventList, eventTypes) {
  * @ignore
  */
 function triggerEvent(handlers, type, pointer, pointerId) {
-    var callback;
+    let callback;
     if (handlers.callbacks[type]) {
         handlers.pointerId = pointerId;
-        for (var i = handlers.callbacks[type].length - 1; (i >= 0) && (callback = handlers.callbacks[type][i]); i--) {
+        for (let i = handlers.callbacks[type].length - 1; (i >= 0) && (callback = handlers.callbacks[type][i]); i--) {
             if (callback(pointer) === false) {
                 // stop propagating the event if return false
                 return true;
@@ -261,12 +261,12 @@ function triggerEvent(handlers, type, pointer, pointerId) {
  * @ignore
  */
 function dispatchEvent(normalizedEvents) {
-    var handled = false;
+    let handled = false;
 
     while (normalizedEvents.length > 0) {
 
         // keep a reference to the last item
-        var pointer = normalizedEvents.pop();
+        let pointer = normalizedEvents.pop();
         // and put it back into our cache
         T_POINTERS.push(pointer);
 
@@ -293,18 +293,18 @@ function dispatchEvent(normalizedEvents) {
         }
 
         // fetch valid candiates from the game world container
-        var candidates = game.world.broadphase.retrieve(currentPointer, game.world._sortReverseZ);
+        let candidates = game.world.broadphase.retrieve(currentPointer, game.world._sortReverseZ);
 
         // add the main game viewport to the list of candidates
         candidates = candidates.concat([ game.viewport ]);
 
-        for (var c = candidates.length, candidate; c--, (candidate = candidates[c]);) {
+        for (let c = candidates.length, candidate; c--, (candidate = candidates[c]);) {
             if (eventHandlers.has(candidate) && (candidate.isKinematic !== true)) {
-                var handlers = eventHandlers.get(candidate);
-                var region = handlers.region;
-                var ancestor = region.ancestor;
-                var bounds = region.getBounds();
-                var eventInBounds = false;
+                let handlers = eventHandlers.get(candidate);
+                let region = handlers.region;
+                let ancestor = region.ancestor;
+                let bounds = region.getBounds();
+                let eventInBounds = false;
 
                 if (region.isFloating === true) {
                     pointer.gameX = pointer.gameLocalX = pointer.gameScreenX;
@@ -317,7 +317,7 @@ function dispatchEvent(normalizedEvents) {
                 // adjust gameLocalX to specify coordinates
                 // within the region ancestor container
                 if (typeof ancestor !== "undefined") {
-                    var parentBounds = ancestor.getBounds();
+                    let parentBounds = ancestor.getBounds();
                     pointer.gameLocalX = pointer.gameX - parentBounds.x;
                     pointer.gameLocalY = pointer.gameY - parentBounds.y;
                 }
@@ -405,21 +405,21 @@ function dispatchEvent(normalizedEvents) {
  * @ignore
  */
 function normalizeEvent(originalEvent) {
-    var _pointer;
+    let _pointer;
 
     // PointerEvent or standard Mouse event
     if (touchEvent && originalEvent.changedTouches) {
         // iOS/Android Touch event
-        for (var i = 0, l = originalEvent.changedTouches.length; i < l; i++) {
-            var touchEvent$1 = originalEvent.changedTouches[i];
+        for (let i = 0, l = originalEvent.changedTouches.length; i < l; i++) {
+            let touchEvent = originalEvent.changedTouches[i];
             _pointer = T_POINTERS.pop();
             _pointer.setEvent(
                 originalEvent,
-                touchEvent$1.pageX,
-                touchEvent$1.pageY,
-                touchEvent$1.clientX,
-                touchEvent$1.clientY,
-                touchEvent$1.identifier
+                touchEvent.pageX,
+                touchEvent.pageY,
+                touchEvent.clientX,
+                touchEvent.clientY,
+                touchEvent.identifier
             );
             normalizedEvents.push(_pointer);
         }
@@ -468,7 +468,7 @@ function onPointerEvent(e) {
     normalizeEvent(e);
 
     // remember/use the first "primary" normalized event for pointer.bind
-    var button = normalizedEvents[0].button;
+    let button = normalizedEvents[0].button;
 
     // dispatch event to registered objects
     if (dispatchEvent(normalizedEvents) || e.type === "wheel") {
@@ -478,7 +478,7 @@ function onPointerEvent(e) {
         }
     }
 
-    var keycode = pointer.bind[button];
+    let keycode = pointer.bind[button];
 
     // check if mapped to a key
     if (keycode) {
@@ -497,7 +497,7 @@ function onPointerEvent(e) {
   * @name pointerEventTarget
   * @memberof input
   */
- var pointerEventTarget = null;
+ let pointerEventTarget = null;
 
 /**
  * Pointer information (current position and size)
@@ -506,7 +506,7 @@ function onPointerEvent(e) {
  * @name pointer
  * @memberof input
  */
-var pointer = new Pointer(0, 0, 1, 1);
+let pointer = new Pointer(0, 0, 1, 1);
 
 
 /**
@@ -516,7 +516,7 @@ var pointer = new Pointer(0, 0, 1, 1);
  * @name locked
  * @memberof input
  */
-var locked = false;
+let locked = false;
 
 /**
  * time interval for event throttling in milliseconds<br>
@@ -527,7 +527,7 @@ var locked = false;
  * @name throttlingInterval
  * @memberof input
  */
-var throttlingInterval;
+let throttlingInterval;
 
 /**
  * Translate the specified x and y values from the global (absolute)
@@ -542,17 +542,17 @@ var throttlingInterval;
  * @example
  * onMouseEvent : function (pointer) {
  *    // convert the given into local (viewport) relative coordinates
- *    var pos = me.input.globalToLocal(pointer.clientX, pointer.clientY);
+ *    let pos = me.input.globalToLocal(pointer.clientX, pointer.clientY);
  *    // do something with pos !
  * };
  */
 function globalToLocal(x, y, v) {
     v = v || pool.pull("Vector2d");
-    var rect = getElementBounds(renderer.getCanvas());
-    var pixelRatio = globalThis.devicePixelRatio || 1;
+    let rect = getElementBounds(renderer.getCanvas());
+    let pixelRatio = globalThis.devicePixelRatio || 1;
     x -= rect.left + (globalThis.pageXOffset || 0);
     y -= rect.top + (globalThis.pageYOffset || 0);
-    var scale = renderer.scaleRatio;
+    let scale = renderer.scaleRatio;
     if (scale.x !== 1.0 || scale.y !== 1.0) {
         x /= scale.x;
         y /= scale.y;
@@ -593,8 +593,8 @@ function setTouchAction(element, value) {
  * me.input.bindPointer(me.input.pointer.RIGHT, me.input.KEY.X);
  */
 function bindPointer() {
-    var button = (arguments.length < 2) ? pointer.LEFT : arguments[0];
-    var keyCode = (arguments.length < 2) ? arguments[0] : arguments[1];
+    let button = (arguments.length < 2) ? pointer.LEFT : arguments[0];
+    let keyCode = (arguments.length < 2) ? arguments[0] : arguments[1];
 
     // make sure the mouse is initialized
     enablePointerEvent();
@@ -675,7 +675,7 @@ function registerPointerEvent(eventType, region, callback) {
         throw new Error("registerPointerEvent: region for " + toString(region) + " event is undefined ");
     }
 
-    var eventTypes = findAllActiveEvents(activeEventList, pointerEventMap[eventType]);
+    let eventTypes = findAllActiveEvents(activeEventList, pointerEventMap[eventType]);
 
     // register the event
     if (!eventHandlers.has(region)) {
@@ -687,8 +687,8 @@ function registerPointerEvent(eventType, region, callback) {
     }
 
     // allocate array if not defined
-    var handlers = eventHandlers.get(region);
-    for (var i = 0; i < eventTypes.length; i++) {
+    let handlers = eventHandlers.get(region);
+    for (let i = 0; i < eventTypes.length; i++) {
         eventType = eventTypes[i];
         if (handlers.callbacks[eventType]) {
             handlers.callbacks[eventType].push(callback);
@@ -717,11 +717,11 @@ function releasePointerEvent(eventType, region, callback) {
     }
 
     // convert to supported event type if pointerEvent not natively supported
-    var eventTypes = findAllActiveEvents(activeEventList, pointerEventMap[eventType]);
+    let eventTypes = findAllActiveEvents(activeEventList, pointerEventMap[eventType]);
 
-    var handlers = eventHandlers.get(region);
+    let handlers = eventHandlers.get(region);
     if (typeof (handlers) !== "undefined") {
-        for (var i = 0; i < eventTypes.length; i++) {
+        for (let i = 0; i < eventTypes.length; i++) {
             eventType = eventTypes[i];
             if (handlers.callbacks[eventType]) {
                 if (typeof (callback) !== "undefined") {
@@ -755,7 +755,7 @@ function releasePointerEvent(eventType, region, callback) {
  */
 function releaseAllPointerEvents(region) {
     if (eventHandlers.has(region)) {
-        for (var i = 0; i < pointerEventList.length; i++) {
+        for (let i = 0; i < pointerEventList.length; i++) {
             releasePointerEvent(pointerEventList[i], region);
         }
     }
@@ -778,7 +778,7 @@ function releaseAllPointerEvents(region) {
  */
 function requestPointerLock() {
     if (hasPointerLockSupport) {
-        var element = game.getParentElement();
+        let element = game.getParentElement();
         element.requestPointerLock();
         return true;
     }

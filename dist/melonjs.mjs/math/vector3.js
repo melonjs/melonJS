@@ -229,7 +229,7 @@ import pool from '../system/pooling.js';
      * @returns {Vector3d} Reference to this object for method chaining
      */
     minV(v) {
-        var _vz = v.z || 0;
+        let _vz = v.z || 0;
         return this._set((this.x < v.x) ? this.x : v.x, (this.y < v.y) ? this.y : v.y, (this.z < _vz) ? this.z : _vz);
     }
 
@@ -241,7 +241,7 @@ import pool from '../system/pooling.js';
      * @returns {Vector3d} Reference to this object for method chaining
      */
     maxV(v) {
-        var _vz = v.z || 0;
+        let _vz = v.z || 0;
         return this._set((this.x > v.x) ? this.x : v.x, (this.y > v.y) ? this.y : v.y, (this.z > _vz) ? this.z : _vz);
     }
 
@@ -334,7 +334,7 @@ import pool from '../system/pooling.js';
      * @returns {boolean}
      */
     equals() {
-        var _x, _y, _z;
+        let _x, _y, _z;
         if (arguments.length >= 2) {
             // x, y, z
             _x = arguments[0];
@@ -384,8 +384,8 @@ import pool from '../system/pooling.js';
      * @returns {Vector3d} Reference to this object for method chaining
      */
     rotate(angle, v) {
-        var cx = 0;
-        var cy = 0;
+        let cx = 0;
+        let cy = 0;
 
         if (typeof v === "object") {
             cx = v.x;
@@ -393,11 +393,11 @@ import pool from '../system/pooling.js';
         }
 
         // TODO also rotate on the z axis if the given vector is a 3d one
-        var x = this.x - cx;
-        var y = this.y - cy;
+        let x = this.x - cx;
+        let y = this.y - cy;
 
-        var c = Math.cos(angle);
-        var s = Math.sin(angle);
+        let c = Math.cos(angle);
+        let s = Math.sin(angle);
 
         return this._set(x * c - y * s + cx, x * s + y * c + cy, this.z);
     }
@@ -421,8 +421,8 @@ import pool from '../system/pooling.js';
      * @returns {Vector3d} Reference to this object for method chaining
      */
     cross(v) {
-        var ax = this.x, ay = this.y, az = this.z;
-        var bx = v.x, by = v.y, bz = v.z;
+        let ax = this.x, ay = this.y, az = this.z;
+        let bx = v.x, by = v.y, bz = v.z;
 
         this.x = ay * bz - az * by;
         this.y = az * bx - ax * bz;
@@ -475,12 +475,12 @@ import pool from '../system/pooling.js';
      * @returns {Vector3d} Reference to this object for method chaining
      */
     moveTowards(target, step) {
-        var angle = Math.atan2(target.y - this.y, target.x - this.x);
+        let angle = Math.atan2(target.y - this.y, target.x - this.x);
 
-        var dx = this.x - target.x;
-        var dy = this.y - target.y;
+        let dx = this.x - target.x;
+        let dy = this.y - target.y;
 
-        var distance = Math.sqrt(dx * dx + dy * dy);
+        let distance = Math.sqrt(dx * dx + dy * dy);
 
         if (distance === 0 || (step >= 0 && distance <= step * step)) {
             return target;
@@ -500,9 +500,9 @@ import pool from '../system/pooling.js';
      * @returns {number}
      */
     distance(v) {
-        var dx = this.x - v.x;
-        var dy = this.y - v.y;
-        var dz = this.z - (v.z || 0);
+        let dx = this.x - v.x;
+        let dy = this.y - v.y;
+        let dz = this.z - (v.z || 0);
         return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 
@@ -525,7 +525,7 @@ import pool from '../system/pooling.js';
      * @returns {Vector3d} Reference to this object for method chaining
      */
     project(v) {
-        var ratio = this.dot(v) / v.length2();
+        let ratio = this.dot(v) / v.length2();
         return this.scale(ratio, ratio, ratio);
     }
 
@@ -538,7 +538,7 @@ import pool from '../system/pooling.js';
      * @returns {Vector3d} Reference to this object for method chaining
      */
     projectN(v) {
-        var ratio = this.dot(v) / v.length2();
+        let ratio = this.dot(v) / v.length2();
         return this.scale(ratio, ratio, ratio);
     }
 

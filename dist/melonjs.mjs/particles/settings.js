@@ -85,7 +85,7 @@ const ParticleEmitterSettings = {
     angle : Math.PI / 2,
 
     /**
-     * Variation in the start angle for particle launch in Radians.
+     * letiation in the start angle for particle launch in Radians.
      * @public
      * @type {number}
      * @name angleVariation
@@ -125,7 +125,7 @@ const ParticleEmitterSettings = {
     speed : 2,
 
     /**
-     * Variation in the start speed of particles
+     * letiation in the start speed of particles
      * @public
      * @type {number}
      * @name speedVariation

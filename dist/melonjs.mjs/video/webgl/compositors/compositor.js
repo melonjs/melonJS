@@ -210,12 +210,12 @@ import GLShader from '../glshader.js';
      * @param {number} [mode=gl.TRIANGLES] - the GL drawing mode
      */
     flush(mode = this.mode) {
-        var vertex = this.vertexData;
-        var vertexCount = vertex.vertexCount;
+        let vertex = this.vertexData;
+        let vertexCount = vertex.vertexCount;
 
         if (vertexCount > 0) {
-            var gl = this.gl;
-            var vertexSize = vertex.vertexSize;
+            let gl = this.gl;
+            let vertexSize = vertex.vertexSize;
 
             // Copy data into stream buffer
             if (this.renderer.WebGLVersion > 1) {

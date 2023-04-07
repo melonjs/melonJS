@@ -11,7 +11,7 @@
  * @example
  * onMouseEvent : function (pointer) {
  *    // convert the given into local (viewport) relative coordinates
- *    var pos = me.input.globalToLocal(pointer.clientX, pointer.clientY);
+ *    let pos = me.input.globalToLocal(pointer.clientX, pointer.clientY);
  *    // do something with pos !
  * };
  */
@@ -151,7 +151,7 @@ export function exitPointerLock(): boolean;
  * @name pointerEventTarget
  * @memberof input
  */
-export const pointerEventTarget: EventTarget;
+export let pointerEventTarget: EventTarget;
 /**
  * Pointer information (current position and size)
  * @public
@@ -159,7 +159,7 @@ export const pointerEventTarget: EventTarget;
  * @name pointer
  * @memberof input
  */
-export const pointer: Rect;
+export let pointer: Rect;
 /**
  * indicates if the pointer is currently locked
  * @public
@@ -167,7 +167,7 @@ export const pointer: Rect;
  * @name locked
  * @memberof input
  */
-export const locked: boolean;
+export let locked: boolean;
 /**
  * time interval for event throttling in milliseconds<br>
  * default value : "1000/me.timer.maxfps" ms<br>
@@ -177,5 +177,5 @@ export const locked: boolean;
  * @name throttlingInterval
  * @memberof input
  */
-export const throttlingInterval: number;
+export let throttlingInterval: number;
 import Rect from "./../geometries/rectangle.js";

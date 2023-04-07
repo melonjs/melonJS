@@ -10,7 +10,7 @@ import { setPrefixed } from '../../utils/agent.js';
 import { clamp } from '../../math/math.js';
 
 // default canvas settings
-var defaultAttributes = {
+let defaultAttributes = {
     offscreenCanvas : false,
     willReadFrequently : false,
     antiAlias : false,
@@ -72,7 +72,7 @@ class CanvasTexture {
      * @param {boolean} [enable=false]
      */
     setAntiAlias(enable = false) {
-        var canvas = this.canvas;
+        let canvas = this.canvas;
 
         // enable/disable antialias on the given Context2d object
         setPrefixed("imageSmoothingEnabled", enable, this.context);

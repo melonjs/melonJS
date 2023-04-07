@@ -10,7 +10,7 @@
  * @param {Array} arr - array from which to remove an object
  * @param {object} obj - to be removed
  * @returns {Array} the modified Array
- * var arr = [ "foo", "bar", "baz" ];
+ * let arr = [ "foo", "bar", "baz" ];
  * // remove "foo" from the array
  * me.utils.array.remove(arr, "foo");
  */
@@ -24,7 +24,7 @@ export function remove(arr: any[], obj: object): any[];
  * @returns {any} random member of array
  * @example
  * // Select a random array element
- * var arr = [ "foo", "bar", "baz" ];
+ * let arr = [ "foo", "bar", "baz" ];
  * console.log(me.utils.array.random(arr));
  */
 export function random(arr: any[]): any;

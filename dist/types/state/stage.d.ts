@@ -38,7 +38,7 @@ export default class Stage {
      * @see Stage.ambientLight
      * @example
      * // create a white spot light
-     * var whiteLight = new me.Light2d(0, 0, 140, "#fff", 0.7);
+     * let whiteLight = new me.Light2d(0, 0, 140, "#fff", 0.7);
      * // and add the light to this current stage
      * this.lights.set("whiteLight", whiteLight);
      * // set a dark ambient light

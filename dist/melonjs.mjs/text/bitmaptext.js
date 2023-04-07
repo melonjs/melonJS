@@ -39,7 +39,7 @@ import TextMetrics from './textmetrics.js';
      *     { name: "arial", type: "image" src: "data/font/arial.png" },
      * ])
      * // Then create an instance of your bitmap font:
-     * var myFont = new me.BitmapText(x, y, {font:"arial", text:"Hello"});
+     * let myFont = new me.BitmapText(x, y, {font:"arial", text:"Hello"});
      * // two possibilities for using "myFont"
      * // either call the draw function from your Renderable draw function
      * myFont.draw(renderer, "Hello!", 0, 0);
@@ -194,12 +194,12 @@ import TextMetrics from './textmetrics.js';
      * @returns {Bounds} this Bitmap Text bounding box Rectangle object
      */
     updateBounds(absolute = true) {
-        var bounds = this.getBounds();
+        let bounds = this.getBounds();
 
         bounds.clear();
 
         if (typeof this.metrics !== "undefined") {
-            var ax, ay;
+            let ax, ay;
 
             bounds.addBounds(this.metrics.measureText(this._text));
 
@@ -298,7 +298,7 @@ import TextMetrics from './textmetrics.js';
      */
     draw(renderer, text, x, y) {
         // save the previous global alpha value
-        var _alpha = renderer.globalAlpha();
+        let _alpha = renderer.globalAlpha();
 
         // allows to provide backward compatibility when
         // adding Bitmap Font to an object container
@@ -312,15 +312,15 @@ import TextMetrics from './textmetrics.js';
             y = this.pos.y;
         }
 
-        var lX = x;
-        var stringHeight = this.metrics.lineHeight();
-        var maxWidth = 0;
+        let lX = x;
+        let stringHeight = this.metrics.lineHeight();
+        let maxWidth = 0;
 
-        for (var i = 0; i < this._text.length; i++) {
+        for (let i = 0; i < this._text.length; i++) {
             x = lX;
-            var string = this._text[i].trimEnd();
+            let string = this._text[i].trimEnd();
             // adjust x pos based on alignment value
-            var stringWidth = this.metrics.lineWidth(string);
+            let stringWidth = this.metrics.lineWidth(string);
             switch (this.textAlign) {
                 case "right":
                     x -= stringWidth;
@@ -356,18 +356,18 @@ import TextMetrics from './textmetrics.js';
             }
 
             // draw the string
-            var lastGlyph = null;
-            for (var c = 0, len = string.length; c < len; c++) {
+            let lastGlyph = null;
+            for (let c = 0, len = string.length; c < len; c++) {
                 // calculate the char index
-                var ch = string.charCodeAt(c);
-                var glyph = this.fontData.glyphs[ch];
+                let ch = string.charCodeAt(c);
+                let glyph = this.fontData.glyphs[ch];
 
                 if (typeof glyph !== "undefined") {
-                    var glyphWidth = glyph.width;
-                    var glyphHeight = glyph.height;
-                    var kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;
-                    var scaleX = this.fontScale.x;
-                    var scaleY = this.fontScale.y;
+                    let glyphWidth = glyph.width;
+                    let glyphHeight = glyph.height;
+                    let kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;
+                    let scaleX = this.fontScale.x;
+                    let scaleY = this.fontScale.y;
 
                     // draw it
                     if (glyphWidth !== 0 && glyphHeight !== 0) {

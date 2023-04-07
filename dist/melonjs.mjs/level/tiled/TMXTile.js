@@ -23,14 +23,14 @@ import { TMX_CLEAR_BIT_MASK, TMX_FLIP_H, TMX_FLIP_V, TMX_FLIP_AD } from './const
      * @param {TMXTileset} tileset - the corresponding tileset object
      */
     constructor(x, y, gid, tileset) {
-        var width, height;
+        let width, height;
 
         // call the parent constructor
         super();
 
         // determine the tile size
         if (tileset.isCollection) {
-            var image = tileset.getTileImage(gid & TMX_CLEAR_BIT_MASK);
+            let image = tileset.getTileImage(gid & TMX_CLEAR_BIT_MASK);
             width = image.width;
             height = image.height;
         } else {
@@ -127,12 +127,12 @@ import { TMX_CLEAR_BIT_MASK, TMX_FLIP_H, TMX_FLIP_V, TMX_FLIP_AD } from './const
      * @returns {Renderable} a me.Sprite object
      */
     getRenderable(settings) {
-        var renderable;
-        var tileset = this.tileset;
+        let renderable;
+        let tileset = this.tileset;
 
         if (tileset.animations.has(this.tileId)) {
-            var frames = [];
-            var frameId = [];
+            let frames = [];
+            let frameId = [];
             (tileset.animations.get(this.tileId).frames).forEach((frame) => {
                 frameId.push(frame.tileid);
                 frames.push({
@@ -146,7 +146,7 @@ import { TMX_CLEAR_BIT_MASK, TMX_FLIP_H, TMX_FLIP_V, TMX_FLIP_AD } from './const
 
         } else {
             if (tileset.isCollection === true) {
-                var image = tileset.getTileImage(this.tileId);
+                let image = tileset.getTileImage(this.tileId);
                 renderable = new Sprite(0, 0,
                     Object.assign({
                         image: image

@@ -32,7 +32,7 @@ const fnHash = {
  * @ignore
  */
 function extractUniforms(gl, shader) {
-    var uniforms = {},
+    let uniforms = {},
         uniRx = /uniform\s+(\w+)\s+(\w+)/g,
         uniformsData = {},
         descriptor = {},
@@ -48,7 +48,7 @@ function extractUniforms(gl, shader) {
 
     // Get uniform references
     Object.keys(uniformsData).forEach((name) => {
-        var type = uniformsData[name];
+        let type = uniformsData[name];
         locations[name] = gl.getUniformLocation(shader.program, name);
 
         descriptor[name] = {
@@ -74,7 +74,7 @@ function extractUniforms(gl, shader) {
                      * A generic setter for uniform vectors
                      */
                     return function (val) {
-                        var fnv = fn;
+                        let fnv = fn;
                         if (val.length && fn.slice(-1) !== "v") {
                             fnv += "v";
                         }

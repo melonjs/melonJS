@@ -19,7 +19,7 @@ export default class Sprite extends Renderable {
      * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] - Anchor point to draw the frame at (defaults to the center of the frame).
      * @example
      * // create a single sprite from a standalone image, with anchor in the center
-     * var sprite = new me.Sprite(0, 0, {
+     * let sprite = new me.Sprite(0, 0, {
      *     image : "PlayerTexture",
      *     framewidth : 64,
      *     frameheight : 64,
@@ -31,7 +31,7 @@ export default class Sprite extends Renderable {
      *     me.loader.getJSON("texture"),
      *     me.loader.getImage("texture")
      * );
-     * var sprite = new me.Sprite(0, 0, {
+     * let sprite = new me.Sprite(0, 0, {
      *     image : mytexture,
      *     region : "npc2.png",
      * });

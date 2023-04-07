@@ -93,8 +93,8 @@ class TextureAtlas {
         if (typeof (atlases) !== "undefined") {
             // normalize to array to keep the following code generic
             atlases = Array.isArray(atlases) ? atlases : [atlases];
-            for (var i in atlases) {
-                var atlas = atlases[i];
+            for (let i in atlases) {
+                let atlas = atlases[i];
 
                 if (typeof(atlas.meta) !== "undefined") {
                     // Texture Packer or Free Texture Packer
@@ -103,7 +103,7 @@ class TextureAtlas {
                         // set the texture
                         if (typeof(src) === "undefined") {
                             // get the texture name from the atlas meta data
-                            var image = getImage(atlas.meta.image);
+                            let image = getImage(atlas.meta.image);
                             if (!image) {
                                 throw new Error(
                                     "Atlas texture '" + image + "' not found"
@@ -174,17 +174,17 @@ class TextureAtlas {
      * @ignore
      */
     parse(data) {
-        var atlas = {};
+        let atlas = {};
 
         data.frames.forEach((frame) => {
             // fix wrongly formatted JSON (e.g. last dummy object in ShoeBox)
             if (frame.hasOwnProperty("filename")) {
                 // Source coordinates
-                var s = frame.frame;
+                let s = frame.frame;
 
-                var originX, originY;
+                let originX, originY;
                 // Pixel-based offset origin from the top-left of the source frame
-                var hasTextureAnchorPoint = (frame.spriteSourceSize && frame.sourceSize && frame.pivot);
+                let hasTextureAnchorPoint = (frame.spriteSourceSize && frame.sourceSize && frame.pivot);
                 if (hasTextureAnchorPoint) {
                     originX = (frame.sourceSize.w * frame.pivot.x) - ((frame.trimmed) ? frame.spriteSourceSize.x : 0);
                     originY = (frame.sourceSize.h * frame.pivot.y) - ((frame.trimmed) ? frame.spriteSourceSize.y : 0);
@@ -211,16 +211,16 @@ class TextureAtlas {
      * @ignore
      */
     parseFromSpriteSheet(data) {
-        var atlas = {};
-        var image = data.image;
-        var spacing = data.spacing || 0;
-        var margin = data.margin || 0;
+        let atlas = {};
+        let image = data.image;
+        let spacing = data.spacing || 0;
+        let margin = data.margin || 0;
 
-        var width = image.width;
-        var height = image.height;
+        let width = image.width;
+        let height = image.height;
 
         // calculate the sprite count (line, col)
-        var spritecount = pool.pull("Vector2d",
+        let spritecount = pool.pull("Vector2d",
             ~~((width - margin + spacing) / (data.framewidth + spacing)),
             ~~((height - margin + spacing) / (data.frameheight + spacing))
         );
@@ -228,8 +228,8 @@ class TextureAtlas {
         // verifying the texture size
         if ((width % (data.framewidth + spacing)) !== 0 ||
             (height % (data.frameheight + spacing)) !== 0) {
-            var computed_width = spritecount.x * (data.framewidth + spacing);
-            var computed_height = spritecount.y * (data.frameheight + spacing);
+            let computed_width = spritecount.x * (data.framewidth + spacing);
+            let computed_height = spritecount.y * (data.frameheight + spacing);
             if (computed_width - width !== spacing && computed_height - height !== spacing) {
                 // "truncate size" if delta is different from the spacing size
                 width = computed_width;
@@ -245,8 +245,8 @@ class TextureAtlas {
         }
 
         // build the local atlas
-        for (var frame = 0, count = spritecount.x * spritecount.y; frame < count; frame++) {
-            var name = "" + frame;
+        for (let frame = 0, count = spritecount.x * spritecount.y; frame < count; frame++) {
+            let name = "" + frame;
             atlas[name] = {
                 name        : name,
                 texture     : "default", // the source texture
@@ -317,10 +317,10 @@ class TextureAtlas {
             console.warn("Adding texture region", name, "for texture", this);
         }
 
-        var source = this.getTexture();
-        var atlas = this.getAtlas();
-        var dw = source.width;
-        var dh = source.height;
+        let source = this.getTexture();
+        let atlas = this.getAtlas();
+        let dw = source.width;
+        let dh = source.height;
 
         atlas[name] = {
             name    : name,
@@ -342,7 +342,7 @@ class TextureAtlas {
      * @returns {object}
      */
     getRegion(name, atlas) {
-        var region;
+        let region;
         if (typeof atlas === "string") {
             region = this.getAtlas(atlas)[name];
         } else {
@@ -365,11 +365,11 @@ class TextureAtlas {
      */
     getUVs(name) {
         // Get the source texture region
-        var region = this.getRegion(name);
+        let region = this.getRegion(name);
 
         if (typeof(region) === "undefined") {
             // TODO: Require proper atlas regions instead of caching arbitrary region keys
-            var keys = name.split(","),
+            let keys = name.split(","),
                 sx = +keys[0],
                 sy = +keys[1],
                 sw = +keys[2],
@@ -391,9 +391,9 @@ class TextureAtlas {
         // ignore if using the Canvas Renderer
         if (typeof renderer.gl !== "undefined") {
             // Source coordinates
-            var s = atlas[name].offset;
-            var sw = atlas[name].width;
-            var sh = atlas[name].height;
+            let s = atlas[name].offset;
+            let sw = atlas[name].width;
+            let sh = atlas[name].height;
 
             atlas[name].uvs = new Float32Array([
                 s.x / w,        // u0 (left)
@@ -403,7 +403,7 @@ class TextureAtlas {
             ]);
             // Cache source coordinates
             // TODO: Remove this when the Batcher only accepts a region name
-            var key = s.x + "," + s.y + "," + w + "," + h;
+            let key = s.x + "," + s.y + "," + w + "," + h;
             atlas[key] = atlas[name];
         }
         return atlas[name].uvs;
@@ -424,13 +424,13 @@ class TextureAtlas {
      * ...
      * ...
      * // create a new "coin" sprite
-     * var sprite = game.texture.createSpriteFromName("coin.png");
+     * let sprite = game.texture.createSpriteFromName("coin.png");
      * // set the renderable position to bottom center
      * sprite.anchorPoint.set(0.5, 1.0);
      * ...
      * ...
      * // create a 9-slice sprite
-     * var dialogPanel = game.texture.createSpriteFromName(
+     * let dialogPanel = game.texture.createSpriteFromName(
      *    "rpg_dialo.png",
      *    // width & height are mandatory for 9-slice sprites
      *    { width: this.width, height: this.height },
@@ -463,7 +463,7 @@ class TextureAtlas {
      * );
      *
      * // create a new Animated Sprite
-     * var sprite = game.texture.createAnimationFromName([
+     * let sprite = game.texture.createAnimationFromName([
      *     "walk0001.png", "walk0002.png", "walk0003.png",
      *     "walk0004.png", "walk0005.png", "walk0006.png",
      *     "walk0007.png", "walk0008.png", "walk0009.png",
@@ -480,12 +480,12 @@ class TextureAtlas {
      * sprite.anchorPoint.set(0.5, 1.0);
      */
     createAnimationFromName(names, settings) {
-        var tpAtlas = [], indices = {};
-        var width = 0, height = 0;
-        var region;
+        let tpAtlas = [], indices = {};
+        let width = 0, height = 0;
+        let region;
         // iterate through the given names
         // and create a "normalized" atlas
-        for (var i = 0; i < names.length; ++i) {
+        for (let i = 0; i < names.length; ++i) {
             region = this.getRegion(names[i]);
             if (region == null) {
                 // throw an error

@@ -60,7 +60,7 @@
         }
 
         // save a reference to the previous data
-        var data = this.bufferF32;
+        let data = this.bufferF32;
 
         // recreate ArrayBuffer and views
         this.buffer = new ArrayBuffer(this.maxVertex * this.vertexSize * this.objSize);
@@ -78,7 +78,7 @@
      * @ignore
      */
     push(x, y, u, v, tint) {
-        var offset = this.vertexCount * this.vertexSize;
+        let offset = this.vertexCount * this.vertexSize;
 
         if (this.vertexCount >= this.maxVertex) {
             this.resize(this.vertexCount);

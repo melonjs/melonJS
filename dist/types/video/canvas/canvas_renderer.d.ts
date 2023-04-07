@@ -70,10 +70,10 @@ export default class CanvasRenderer extends Renderer {
      * @returns {CanvasPattern}
      * @see ImageLayer#repeat
      * @example
-     * var tileable   = renderer.createPattern(image, "repeat");
-     * var horizontal = renderer.createPattern(image, "repeat-x");
-     * var vertical   = renderer.createPattern(image, "repeat-y");
-     * var basic      = renderer.createPattern(image, "no-repeat");
+     * let tileable   = renderer.createPattern(image, "repeat");
+     * let horizontal = renderer.createPattern(image, "repeat-x");
+     * let vertical   = renderer.createPattern(image, "repeat-y");
+     * let basic      = renderer.createPattern(image, "no-repeat");
      */
     createPattern(image: HTMLImageElement | SVGImageElement | HTMLVideoElement | HTMLCanvasElement | ImageBitmap | OffscreenCanvas | VideoFrame, repeat: string): CanvasPattern;
     /**

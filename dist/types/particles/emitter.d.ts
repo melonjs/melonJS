@@ -10,7 +10,7 @@ export default class ParticleEmitter extends Container {
      * @param {ParticleEmitterSettings} [settings=ParticleEmitterSettings] - the settings for the particle emitter.
      * @example
      * // Create a particle emitter at position 100, 100
-     * var emitter = new ParticleEmitter(100, 100, {
+     * let emitter = new ParticleEmitter(100, 100, {
      *     width: 16,
      *     height : 16,
      *     tint: "#f00",

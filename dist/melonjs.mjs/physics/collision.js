@@ -13,7 +13,7 @@ import { game } from '../index.js';
  * @namespace collision
  */
 
-var collision = {
+let collision = {
 
      /**
       * The maximum number of children that a quadtree node can contain before it is split into sub-nodes.
@@ -108,7 +108,7 @@ var collision = {
      * @returns {Array.<Renderable>} an array of intersecting physic objects
      * @example
      *    // define a line accross the viewport
-     *    var ray = new me.Line(
+     *    let ray = new me.Line(
      *        // absolute position of the line
      *        0, 0, [
      *        // starting point relative to the initial position

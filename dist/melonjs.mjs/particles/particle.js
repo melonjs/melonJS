@@ -67,8 +67,8 @@ import Renderable from '../renderable/renderable.js';
         }
 
         // Set the start particle Angle and Speed as defined in emitter
-        var angle = emitter.settings.angle + ((emitter.settings.angleVariation > 0) ? (randomFloat(0, 2) - 1) * emitter.settings.angleVariation : 0);
-        var speed = emitter.settings.speed + ((emitter.settings.speedVariation > 0) ? (randomFloat(0, 2) - 1) * emitter.settings.speedVariation : 0);
+        let angle = emitter.settings.angle + ((emitter.settings.angleVariation > 0) ? (randomFloat(0, 2) - 1) * emitter.settings.angleVariation : 0);
+        let speed = emitter.settings.speed + ((emitter.settings.speedVariation > 0) ? (randomFloat(0, 2) - 1) * emitter.settings.speedVariation : 0);
 
         // Set the start particle Velocity
         this.vel.set(speed * Math.cos(angle), -speed * Math.sin(angle));
@@ -118,7 +118,7 @@ import Renderable from '../renderable/renderable.js';
      */
     update(dt) {
         // move things forward independent of the current frame rate
-        var skew = dt * this._deltaInv;
+        let skew = dt * this._deltaInv;
 
         // Decrease particle life
         this.life = this.life > dt ? this.life - dt : 0;
@@ -129,10 +129,10 @@ import Renderable from '../renderable/renderable.js';
         }
 
         // Calculate the particle Age Ratio
-        var ageRatio = this.life / this.startLife;
+        let ageRatio = this.life / this.startLife;
 
         // Resize the particle as particle Age Ratio
-        var scale = this.startScale;
+        let scale = this.startScale;
         if (this.startScale > this.endScale) {
             scale *= ageRatio;
             scale = (scale < this.endScale) ? this.endScale : scale;
@@ -150,7 +150,7 @@ import Renderable from '../renderable/renderable.js';
         this.vel.y += this.gravity * skew;
 
         // If necessary update the rotation of particle in accordance the particle trajectory
-        var angle = this.followTrajectory ? Math.atan2(this.vel.y, this.vel.x) : this.angle;
+        let angle = this.followTrajectory ? Math.atan2(this.vel.y, this.vel.x) : this.angle;
 
         this.pos.x += this.vel.x * skew;
         this.pos.y += this.vel.y * skew;
@@ -172,7 +172,7 @@ import Renderable from '../renderable/renderable.js';
      * @ignore
      */
     draw(renderer) {
-        var w = this.width, h = this.height;
+        let w = this.width, h = this.height;
         renderer.drawImage(
             this.image,
             0, 0,

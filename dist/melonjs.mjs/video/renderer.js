@@ -209,7 +209,7 @@ import Point from '../geometries/point.js';
             transparent = true;
         }
 
-        var _context = canvas.getContext("2d", {
+        let _context = canvas.getContext("2d", {
                 "alpha" : transparent
         });
 
@@ -271,7 +271,7 @@ import Point from '../geometries/point.js';
      * @param {number} height - new height of the canvas
      */
     resize(width, height) {
-        var canvas = this.getCanvas();
+        let canvas = this.getCanvas();
         if (width !== canvas.width || height !== canvas.height) {
             canvas.width = width;
             canvas.height = height;
@@ -290,7 +290,7 @@ import Point from '../geometries/point.js';
      * @param {boolean} [enable=false]
      */
     setAntiAlias(context, enable) {
-        var canvas = context.canvas;
+        let canvas = context.canvas;
 
         // enable/disable antialis on the given Context2d object
         setPrefixed("imageSmoothingEnabled", enable === true, context);
@@ -370,8 +370,8 @@ import Point from '../geometries/point.js';
      * @returns {HTMLCanvasElement|OffscreenCanvas} a new canvas element representing the tinted image
      */
     tint(src, color, mode) {
-        var canvas = createCanvas(src.width, src.height, true);
-        var context = this.getContext2d(canvas);
+        let canvas = createCanvas(src.width, src.height, true);
+        let context = this.getContext2d(canvas);
 
         context.save();
 

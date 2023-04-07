@@ -3,8 +3,8 @@
  * @see plugin.register
  * @namespace plugins
  */
-export const plugins: {};
+export let plugins: {};
 /**
  * @namespace plugin
  */
-export const plugin: any;
+export let plugin: any;

@@ -10,30 +10,30 @@ import { emit, KEYDOWN, KEYUP } from '../system/event.js';
 import { isMobile } from '../system/platform.js';
 
 // corresponding actions
-var _keyStatus = {};
+let _keyStatus = {};
 
 // lock enable flag for keys
-var _keyLock = {};
+let _keyLock = {};
 // actual lock status of each key
-var _keyLocked = {};
+let _keyLocked = {};
 
 // List of binded keys being held
-var _keyRefs = {};
+let _keyRefs = {};
 
 // whether default event should be prevented for a given keypress
-var _preventDefaultForKeys = {};
+let _preventDefaultForKeys = {};
 
 // list of binded keys
-var _keyBindings = {};
+let _keyBindings = {};
 
 /**
  * key down event
  * @ignore
  */
-var keyDownEvent = function (e, keyCode, mouseButton) {
+let keyDownEvent = function (e, keyCode, mouseButton) {
 
     keyCode = keyCode || e.keyCode || e.button;
-    var action = _keyBindings[keyCode];
+    let action = _keyBindings[keyCode];
 
     // publish a message for keydown event
     emit(KEYDOWN,
@@ -44,7 +44,7 @@ var keyDownEvent = function (e, keyCode, mouseButton) {
 
     if (action) {
         if (!_keyLocked[action]) {
-            var trigger = (typeof mouseButton !== "undefined") ? mouseButton : keyCode;
+            let trigger = (typeof mouseButton !== "undefined") ? mouseButton : keyCode;
             if (!_keyRefs[action][trigger]) {
                 _keyStatus[action]++;
                 _keyRefs[action][trigger] = true;
@@ -68,15 +68,15 @@ var keyDownEvent = function (e, keyCode, mouseButton) {
  * key up event
  * @ignore
  */
-var keyUpEvent = function (e, keyCode, mouseButton) {
+let keyUpEvent = function (e, keyCode, mouseButton) {
     keyCode = keyCode || e.keyCode || e.button;
-    var action = _keyBindings[keyCode];
+    let action = _keyBindings[keyCode];
 
     // publish a message for keydown event
     emit(KEYUP, action, keyCode);
 
     if (action) {
-        var trigger = (typeof mouseButton !== "undefined") ? mouseButton : keyCode;
+        let trigger = (typeof mouseButton !== "undefined") ? mouseButton : keyCode;
         _keyRefs[action][trigger] = undefined;
 
         if (_keyStatus[action] > 0) {
@@ -109,7 +109,7 @@ var keyUpEvent = function (e, keyCode, mouseButton) {
   * @name keyBoardEventTarget
   * @memberof input
   */
- var keyBoardEventTarget = null;
+ let keyBoardEventTarget = null;
 
 /**
  * standard keyboard constants
@@ -458,7 +458,7 @@ function unlockKey(action) {
  */
 function unbindKey(keycode) {
     // clear the event status
-    var keybinding = _keyBindings[keycode];
+    let keybinding = _keyBindings[keycode];
     _keyStatus[keybinding] = 0;
     _keyLock[keybinding] = false;
     _keyRefs[keybinding] = {};

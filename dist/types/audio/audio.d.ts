@@ -90,7 +90,7 @@ export function fade(sound_name: string, from: number, to: number, duration: num
  * @returns {number} return the current seek position (if no extra parameters were given)
  * @example
  * // return the current position of the background music
- * var current_pos = me.audio.seek("dst-gameforest");
+ * let current_pos = me.audio.seek("dst-gameforest");
  * // set back the position of the background music to the beginning
  * me.audio.seek("dst-gameforest", 0);
  */
@@ -104,7 +104,7 @@ export function seek(sound_name: string, ...args: any[]): number;
  * @returns {number} return the current playback rate (if no extra parameters were given)
  * @example
  * // get the playback rate of the background music
- * var rate = me.audio.rate("dst-gameforest");
+ * let rate = me.audio.rate("dst-gameforest");
  * // speed up the playback of the background music
  * me.audio.rate("dst-gameforest", 2.0);
  */
@@ -135,7 +135,7 @@ export function pause(sound_name: string, id?: number | undefined): void;
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will resume.
  * @example
  * // play a audio clip
- * var id = me.audio.play("myClip");
+ * let id = me.audio.play("myClip");
  * ...
  * // pause it
  * me.audio.pause("myClip", id);

@@ -166,7 +166,7 @@ import Body from '../physics/body.js';
      * @returns {Bounds} this entity bounding box Rectangle object
      */
     updateBounds(absolute = true) {
-        var bounds = this.getBounds();
+        let bounds = this.getBounds();
 
         bounds.clear();
         bounds.addFrame(
@@ -236,7 +236,7 @@ import Body from '../physics/body.js';
      * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
     draw(renderer, viewport) {
-        var renderable = this.renderable;
+        let renderable = this.renderable;
         if (renderable instanceof Renderable) {
             // predraw (apply transforms)
             renderable.preDraw(renderer);

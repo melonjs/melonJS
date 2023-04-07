@@ -58,7 +58,7 @@
      * @returns {boolean}
      */
      equals() {
-        var _x, _y;
+        let _x, _y;
         if (arguments.length === 2) {
             // x, y
             _x = arguments[0];

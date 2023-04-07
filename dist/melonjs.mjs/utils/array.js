@@ -20,12 +20,12 @@ import { random as random$1, weightedRandom as weightedRandom$1 } from '../math/
  * @param {Array} arr - array from which to remove an object
  * @param {object} obj - to be removed
  * @returns {Array} the modified Array
- * var arr = [ "foo", "bar", "baz" ];
+ * let arr = [ "foo", "bar", "baz" ];
  * // remove "foo" from the array
  * me.utils.array.remove(arr, "foo");
  */
 function remove(arr, obj) {
-    var i = Array.prototype.indexOf.call(arr, obj);
+    let i = Array.prototype.indexOf.call(arr, obj);
     if (i !== -1) {
         Array.prototype.splice.call(arr, i, 1);
     }
@@ -41,7 +41,7 @@ function remove(arr, obj) {
  * @returns {any} random member of array
  * @example
  * // Select a random array element
- * var arr = [ "foo", "bar", "baz" ];
+ * let arr = [ "foo", "bar", "baz" ];
  * console.log(me.utils.array.random(arr));
  */
 function random(arr) {

@@ -164,18 +164,18 @@ export default class Container extends Renderable {
      * @returns {Renderable[]} Array of childs
      * @example
      * // get the first child object called "mainPlayer" in a specific container :
-     * var ent = myContainer.getChildByProp("name", "mainPlayer");
+     * let ent = myContainer.getChildByProp("name", "mainPlayer");
      *
      * // or query the whole world :
-     * var ent = container.getChildByProp("name", "mainPlayer");
+     * let ent = container.getChildByProp("name", "mainPlayer");
      *
      * // partial property matches are also allowed by using a RegExp.
      * // the following matches "redCOIN", "bluecoin", "bagOfCoins", etc :
-     * var allCoins = container.getChildByProp("name", /coin/i);
+     * let allCoins = container.getChildByProp("name", /coin/i);
      *
      * // searching for numbers or other data types :
-     * var zIndex10 = container.getChildByProp("z", 10);
-     * var inViewport = container.getChildByProp("inViewport", true);
+     * let zIndex10 = container.getChildByProp("z", 10);
+     * let inViewport = container.getChildByProp("inViewport", true);
      */
     getChildByProp(prop: string, value: string | RegExp | number | boolean): Renderable[];
     /**

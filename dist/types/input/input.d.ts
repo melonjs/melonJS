@@ -9,7 +9,7 @@
  * @name preventDefault
  * @memberof input
  */
-export const preventDefault: boolean;
+export let preventDefault: boolean;
 export * from "./pointerevent.js";
 export * from "./keyboard.js";
 export * from "./gamepad.js";

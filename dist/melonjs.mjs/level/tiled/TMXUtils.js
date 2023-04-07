@@ -12,7 +12,7 @@ import utils from '../../utils/utils.js';
  * @ignore
  */
 function setTMXValue(name, type, value) {
-    var match;
+    let match;
 
     if (typeof(value) !== "string") {
         // Value is already normalized (e.g. with JSON maps)
@@ -89,8 +89,8 @@ function setTMXValue(name, type, value) {
 function parseAttributes(obj, elt) {
     // do attributes
     if (elt.attributes && elt.attributes.length > 0) {
-        for (var j = 0; j < elt.attributes.length; j++) {
-            var attribute = elt.attributes.item(j);
+        for (let j = 0; j < elt.attributes.length; j++) {
+            let attribute = elt.attributes.item(j);
             if (typeof(attribute.name) !== "undefined") {
                 // DOM4 (Attr no longer inherit from Node)
                 obj[attribute.name] = attribute.value;
@@ -126,10 +126,10 @@ function decompress(data, format) {
  * @returns {number[]} Decoded data
  */
 function decodeCSV(input) {
-    var entries = input.replace("\n", "").trim().split(",");
+    let entries = input.replace("\n", "").trim().split(",");
 
-    var result = [];
-    for (var i = 0; i < entries.length; i++) {
+    let result = [];
+    for (let i = 0; i < entries.length; i++) {
         result.push(+entries[i]);
     }
     return result;
@@ -146,9 +146,9 @@ function decodeCSV(input) {
 function decodeBase64AsArray(input, bytes) {
     bytes = bytes || 1;
 
-    var i, j, len;
-    var dec = globalThis.atob(input.replace(/[^A-Za-z0-9\+\/\=]/g, ""));
-    var ar = new Uint32Array(dec.length / bytes);
+    let i, j, len;
+    let dec = globalThis.atob(input.replace(/[^A-Za-z0-9\+\/\=]/g, ""));
+    let ar = new Uint32Array(dec.length / bytes);
 
     for (i = 0, len = dec.length / bytes; i < len; i++) {
         ar[i] = 0;
@@ -195,11 +195,11 @@ function decode(data, encoding, compression) {
  * @ignore
  */
 function normalize(obj, item) {
-    var nodeName = item.nodeName;
+    let nodeName = item.nodeName;
 
     switch (nodeName) {
         case "data":
-            var data = parse(item);
+            var data = parse(item);  // <= "Unexpected lexical declaration in case block" if using let
 
             data.encoding = data.encoding || "xml";
 
@@ -237,7 +237,7 @@ function normalize(obj, item) {
         case "layer":
         case "objectgroup":
         case "group":
-            var layer = parse(item);
+            var layer = parse(item); //  // <= "Unexpected lexical declaration in case block" if using let
             layer.type = (nodeName === "layer" ? "tilelayer" : nodeName);
             if (layer.image) {
                 layer.image = layer.image.source;
@@ -253,13 +253,13 @@ function normalize(obj, item) {
 
         case "frame":
         case "object":
-            var name = nodeName + "s";
+            var name = nodeName + "s";  // <= "Unexpected lexical declaration in case block" if using let
             obj[name] = obj[name] || [];
             obj[name].push(parse(item));
             break;
 
         case "tile":
-            var tile = parse(item);
+            var tile = parse(item);  // <= "Unexpected lexical declaration in case block" if using let
             if (tile.image) {
                 tile.imagewidth = tile.image.width;
                 tile.imageheight = tile.image.height;
@@ -270,7 +270,7 @@ function normalize(obj, item) {
             break;
 
         case "tileset":
-            var tileset = parse(item);
+            var tileset = parse(item);  // <= "Unexpected lexical declaration in case block" if using let
             if (tileset.image) {
                 tileset.imagewidth = tileset.image.width;
                 tileset.imageheight = tileset.image.height;
@@ -286,10 +286,10 @@ function normalize(obj, item) {
             obj[nodeName] = [];
 
             // Get a point array
-            var points = parse(item).points.split(" ");
+            var points = parse(item).points.split(" ");  // <= "Unexpected lexical declaration in case block" if using let
 
             // And normalize them into an array of vectors
-            for (var i = 0, v; i < points.length; i++) {
+            for (let i = 0, v; i < points.length; i++) {
                 v = points[i].split(",");
                 obj[nodeName].push({
                     "x" : +v[0],
@@ -304,7 +304,7 @@ function normalize(obj, item) {
             break;
 
         case "property":
-            var property = parse(item);
+            var property = parse(item);  // <= "Unexpected lexical declaration in case block" if using let
             // for custom properties, text is used
             var value = (typeof property.value !== "undefined") ? property.value : property.text;
 
@@ -328,9 +328,9 @@ function normalize(obj, item) {
  */
 function parse(xml) {
     // Create the return object
-    var obj = {};
+    let obj = {};
 
-    var text = "";
+    let text = "";
 
     if (xml.nodeType === 1) {
         // do attributes
@@ -365,14 +365,14 @@ function parse(xml) {
  * @ignore
  */
 function applyTMXProperties(obj, data) {
-    var properties = data.properties;
-    var types = data.propertytypes;
+    let properties = data.properties;
+    let types = data.propertytypes;
     if (typeof(properties) !== "undefined") {
-        for (var property in properties) {
+        for (let property in properties) {
             if (properties.hasOwnProperty(property)) {
-                var type = "string";
-                var name = property;
-                var value = properties[property];
+                let type = "string";
+                let name = property;
+                let value = properties[property];
                 // proof-check for new and old JSON format
                 if (typeof properties[property].name !== "undefined") {
                     name = properties[property].name;

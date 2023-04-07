@@ -1,5 +1,5 @@
 export default pool;
-declare var pool: ObjectPool;
+declare let pool: ObjectPool;
 /**
  * @classdesc
  * Object pooling - a technique that might speed up your game if used properly.<br>
@@ -46,11 +46,11 @@ declare class ObjectPool {
      * me.pool.register("enemy", EnemyEntity, true);
      * // ...
      * // when we need to manually create a new bullet:
-     * var bullet = me.pool.pull("bullet", x, y, direction);
+     * let bullet = me.pool.pull("bullet", x, y, direction);
      * // ...
      * // params aren't a fixed number
      * // when we need new enemy we can add more params, that the object construct requires:
-     * var enemy = me.pool.pull("enemy", x, y, direction, speed, power, life);
+     * let enemy = me.pool.pull("enemy", x, y, direction, speed, power, life);
      * // ...
      * // when we want to destroy existing object, the remove
      * // function will ensure the object can then be reallocated later

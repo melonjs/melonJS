@@ -112,7 +112,7 @@ import { EPSILON } from './math.js';
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     setTransform(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33) {
-        var a = this.val;
+        let a = this.val;
 
         a[0] = m00;
         a[1] = m01;
@@ -154,7 +154,7 @@ import { EPSILON } from './math.js';
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     fromMat2d(m) {
-        var b = m.val;
+        let b = m.val;
         return this.setTransform(
             b[0], b[3], b[6], 0,
             b[1], b[4], b[7], 0,
@@ -172,14 +172,14 @@ import { EPSILON } from './math.js';
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     multiply(m) {
-        var a = this.val;
-        var b = m.val;
+        let a = this.val;
+        let b = m.val;
 
-        var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
-        var a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
-        var a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
-        var a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
-        var b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
+        let a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+        let a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+        let a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+        let a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+        let b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
 
         a[0] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
         a[1] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
@@ -226,7 +226,7 @@ import { EPSILON } from './math.js';
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     transpose() {
-        var a = this.val,
+        let a = this.val,
             a01 = a[1],
             a02 = a[2],
             a03 = a[3],
@@ -257,30 +257,30 @@ import { EPSILON } from './math.js';
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     invert() {
-         var a = this.val;
+         let a = this.val;
 
-         var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
-         var a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
-         var a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
-         var a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+         let a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+         let a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+         let a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+         let a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
 
-         var b00 = a00 * a11 - a01 * a10;
-         var b01 = a00 * a12 - a02 * a10;
-         var b02 = a00 * a13 - a03 * a10;
-         var b03 = a01 * a12 - a02 * a11;
+         let b00 = a00 * a11 - a01 * a10;
+         let b01 = a00 * a12 - a02 * a10;
+         let b02 = a00 * a13 - a03 * a10;
+         let b03 = a01 * a12 - a02 * a11;
 
-         var b04 = a01 * a13 - a03 * a11;
-         var b05 = a02 * a13 - a03 * a12;
-         var b06 = a20 * a31 - a21 * a30;
-         var b07 = a20 * a32 - a22 * a30;
+         let b04 = a01 * a13 - a03 * a11;
+         let b05 = a02 * a13 - a03 * a12;
+         let b06 = a20 * a31 - a21 * a30;
+         let b07 = a20 * a32 - a22 * a30;
 
-         var b08 = a20 * a33 - a23 * a30;
-         var b09 = a21 * a32 - a22 * a31;
-         var b10 = a21 * a33 - a23 * a31;
-         var b11 = a22 * a33 - a23 * a32;
+         let b08 = a20 * a33 - a23 * a30;
+         let b09 = a21 * a32 - a22 * a31;
+         let b10 = a21 * a33 - a23 * a31;
+         let b11 = a22 * a33 - a23 * a32;
 
          // Calculate the determinant
-         var det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+         let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
 
          if (!det)
          {
@@ -317,12 +317,12 @@ import { EPSILON } from './math.js';
      * @returns {Vector2d|Vector3d} result vector object.
      */
      apply(v) {
-        var a = this.val,
+        let a = this.val,
         x = v.x,
         y = v.y,
         z = (typeof v.z !== "undefined") ? v.z : 1;
 
-        var w = (a[3] * x + a[7] * y + a[11] * z + a[15]) || 1.0;
+        let w = (a[3] * x + a[7] * y + a[11] * z + a[15]) || 1.0;
 
         v.x = (a[0] * x + a[4] * y + a[8] * z + a[12]) / w;
         v.y = (a[1] * x + a[5] * y + a[9] * z + a[13]) / w;
@@ -343,7 +343,7 @@ import { EPSILON } from './math.js';
       */
      applyInverse(v) {
          // invert the current matrix
-         var im = pool.pull("Matrix3d", this).invert();
+         let im = pool.pull("Matrix3d", this).invert();
 
          // apply the inverted matrix
          im.apply(v);
@@ -367,10 +367,10 @@ import { EPSILON } from './math.js';
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     ortho(left, right, bottom, top, near, far) {
-        var a = this.val;
-        var leftRight = 1.0 / (left - right);
-        var bottomTop = 1.0 / (bottom - top);
-        var nearFar = 1.0 / (near - far);
+        let a = this.val;
+        let leftRight = 1.0 / (left - right);
+        let bottomTop = 1.0 / (bottom - top);
+        let nearFar = 1.0 / (near - far);
 
         a[0] = -2.0 * leftRight;
         a[1] = 0.0;
@@ -402,7 +402,7 @@ import { EPSILON } from './math.js';
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     scale(x, y = x, z = 0) {
-        var a = this.val;
+        let a = this.val;
 
         a[0] = a[0] * x;
         a[1] = a[1] * x;
@@ -465,20 +465,20 @@ import { EPSILON } from './math.js';
      */
     rotate(angle, v) {
         if (angle !== 0) {
-            var a = this.val,
+            let a = this.val,
                 x = v.x,
                 y = v.y,
                 z = v.z;
 
-            var len = Math.sqrt(x * x + y * y + z * z);
+            let len = Math.sqrt(x * x + y * y + z * z);
 
-            var s, c, t;
-            var a00, a01, a02, a03;
-            var a10, a11, a12, a13;
-            var a20, a21, a22, a23;
-            var b00, b01, b02;
-            var b10, b11, b12;
-            var b20, b21, b22;
+            let s, c, t;
+            let a00, a01, a02, a03;
+            let a10, a11, a12, a13;
+            let a20, a21, a22, a23;
+            let b00, b01, b02;
+            let b10, b11, b12;
+            let b20, b21, b22;
 
             if (len < EPSILON) {
                 return null;
@@ -552,8 +552,8 @@ import { EPSILON } from './math.js';
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     translate() {
-        var a = this.val;
-        var _x, _y, _z;
+        let a = this.val;
+        let _x, _y, _z;
 
         if (arguments.length > 1 ) {
             // x, y (, z)
@@ -582,7 +582,7 @@ import { EPSILON } from './math.js';
      * @returns {boolean}
      */
     isIdentity() {
-        var a = this.val;
+        let a = this.val;
 
         return (
             (a[0] === 1) &&
@@ -612,8 +612,8 @@ import { EPSILON } from './math.js';
      * @returns {boolean} true if both are equals
      */
     equals(m) {
-        var b = m.val;
-        var a = this.val;
+        let b = m.val;
+        let a = this.val;
 
         return (
             (a[0] === b[0]) &&
@@ -662,7 +662,7 @@ import { EPSILON } from './math.js';
      * @returns {string}
      */
     toString() {
-        var a = this.val;
+        let a = this.val;
 
         return "me.Matrix3d(" +
             a[0] + ", " + a[1] + ", " + a[2] + ", " + a[3] + ", " +

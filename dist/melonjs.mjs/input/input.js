@@ -21,6 +21,6 @@ export { GAMEPAD, bindGamepad, setGamepadDeadzone, setGamepadMapping, unbindGame
  * @name preventDefault
  * @memberof input
  */
-var preventDefault = true;
+let preventDefault = true;
 
 export { preventDefault };

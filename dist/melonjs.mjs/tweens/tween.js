@@ -89,7 +89,7 @@ import { Interpolation } from './interpolation.js';
         this.isRenderable = false;
 
         // Set all starting values present on the target object
-        for ( var field in object ) {
+        for ( let field in object ) {
             if (typeof object !== "object") {
                 this._valuesStart[ field ] = parseFloat(object[field]);
             }
@@ -181,7 +181,7 @@ import { Interpolation } from './interpolation.js';
 
         this._startTime =  time + this._delayTime;
 
-        for ( var property in this._valuesEnd ) {
+        for ( let property in this._valuesEnd ) {
 
             // check if an Array was provided as property value
             if ( this._valuesEnd[ property ] instanceof Array ) {
@@ -357,9 +357,9 @@ import { Interpolation } from './interpolation.js';
         // the original Tween implementation expect
         // a timestamp and not a time delta
         this._tweenTimeTracker = (game.lastUpdate > this._tweenTimeTracker) ? game.lastUpdate : this._tweenTimeTracker + dt;
-        var time = this._tweenTimeTracker;
+        let time = this._tweenTimeTracker;
 
-        var property;
+        let property;
 
         if ( time < this._startTime ) {
 
@@ -379,15 +379,15 @@ import { Interpolation } from './interpolation.js';
 
         }
 
-        var elapsed = ( time - this._startTime ) / this._duration;
+        let elapsed = ( time - this._startTime ) / this._duration;
         elapsed = elapsed > 1 ? 1 : elapsed;
 
-        var value = this._easingFunction( elapsed );
+        let value = this._easingFunction( elapsed );
 
         for ( property in this._valuesEnd ) {
 
-            var start = this._valuesStart[ property ] || 0;
-            var end = this._valuesEnd[ property ];
+            let start = this._valuesStart[ property ] || 0;
+            let end = this._valuesEnd[ property ];
 
             if ( end instanceof Array ) {
 
@@ -431,7 +431,7 @@ import { Interpolation } from './interpolation.js';
                     }
 
                     if (this._yoyo) {
-                        var tmp = this._valuesStartRepeat[ property ];
+                        let tmp = this._valuesStartRepeat[ property ];
                         this._valuesStartRepeat[ property ] = this._valuesEnd[ property ];
                         this._valuesEnd[ property ] = tmp;
                     }
@@ -457,7 +457,7 @@ import { Interpolation } from './interpolation.js';
 
                 }
 
-                for ( var i = 0, numChainedTweens = this._chainedTweens.length; i < numChainedTweens; i ++ ) {
+                for ( let i = 0, numChainedTweens = this._chainedTweens.length; i < numChainedTweens; i ++ ) {
 
                     this._chainedTweens[ i ].start( time );
 

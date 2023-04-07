@@ -13,7 +13,7 @@ import EventEmitter from '../node_modules/eventemitter3/index.js';
  */
 
 // internal instance of the event emiter
-var eventEmitter = new EventEmitter();
+let eventEmitter = new EventEmitter();
 
 /**
  * event when the DOM is Ready is booting

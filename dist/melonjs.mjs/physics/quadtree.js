@@ -18,7 +18,7 @@ import { remove } from '../utils/array.js';
  * a pool of `QuadTree` objects
  * @ignore
  */
-var QT_ARRAY = [];
+let QT_ARRAY = [];
 
 /**
  * will pop a quadtree object from the array
@@ -27,7 +27,7 @@ var QT_ARRAY = [];
  */
 function QT_ARRAY_POP(world, bounds, max_objects = 4, max_levels = 4, level = 0) {
     if (QT_ARRAY.length > 0) {
-        var _qt =  QT_ARRAY.pop();
+        let _qt =  QT_ARRAY.pop();
         _qt.world = world;
         _qt.bounds = bounds;
         _qt.max_objects = max_objects;
@@ -51,7 +51,7 @@ function QT_ARRAY_PUSH(qt) {
  * a temporary vector object to be reused
  * @ignore
  */
-var QT_VECTOR = new Vector2d();
+let QT_VECTOR = new Vector2d();
 
 /**
  * @classdesc
@@ -84,7 +84,7 @@ var QT_VECTOR = new Vector2d();
      * Split the node into 4 subnodes
      */
     split() {
-        var nextLevel = this.level + 1,
+        let nextLevel = this.level + 1,
             subWidth  = this.bounds.width / 2,
             subHeight = this.bounds.height / 2,
             left = this.bounds.left,
@@ -153,8 +153,8 @@ var QT_VECTOR = new Vector2d();
      * @returns Integer index of the subnode (0-3), or -1 if rect cannot completely fit within a subnode and is part of the parent node
      */
     getIndex(item) {
-        var pos;
-        var bounds = item.getBounds();
+        let pos;
+        let bounds = item.getBounds();
 
         // use game world coordinates for floating items
         if (item.isFloating === true) {
@@ -163,7 +163,7 @@ var QT_VECTOR = new Vector2d();
             pos = QT_VECTOR.set(item.left, item.top);
         }
 
-        var index = -1,
+        let index = -1,
             rx = pos.x,
             ry = pos.y,
             rw = bounds.width,
@@ -201,7 +201,7 @@ var QT_VECTOR = new Vector2d();
      * @param {Container} container - group of objects to be added
      */
     insertContainer(container) {
-        for (var i = container.children.length, child; i--, (child = container.children[i]);) {
+        for (let i = container.children.length, child; i--, (child = container.children[i]);) {
             if (child.isKinematic !== true) {
                 if (typeof child.addChild === "function") {
                     if (child.name !== "rootContainer") {
@@ -229,7 +229,7 @@ var QT_VECTOR = new Vector2d();
      * @param {object} item - object to be added
      */
     insert(item) {
-        var index = -1;
+        let index = -1;
 
         //if we have subnodes ...
         if (this.nodes.length > 0) {
@@ -250,7 +250,7 @@ var QT_VECTOR = new Vector2d();
                 this.split();
             }
 
-            var i = 0;
+            let i = 0;
 
             //add all objects to there corresponding subnodes
             while (i < this.objects.length) {
@@ -275,19 +275,19 @@ var QT_VECTOR = new Vector2d();
      * @returns {object[]} array with all detected objects
      */
     retrieve(item, fn) {
-        var returnObjects = this.objects;
+        let returnObjects = this.objects;
 
         //if we have subnodes ...
         if (this.nodes.length > 0) {
 
-            var index = this.getIndex(item);
+            let index = this.getIndex(item);
 
             //if rect fits into a subnode ..
             if (index !== -1) {
                 returnObjects = returnObjects.concat(this.nodes[index].retrieve(item));
             } else {
                  //if rect does not fit into a subnode, check it against all subnodes
-                for (var i = 0; i < this.nodes.length; i = i + 1) {
+                for (let i = 0; i < this.nodes.length; i = i + 1) {
                     returnObjects = returnObjects.concat(this.nodes[i].retrieve(item));
                 }
             }
@@ -309,7 +309,7 @@ var QT_VECTOR = new Vector2d();
      * @returns {boolean} true if the item was found and removed.
      */
      remove(item) {
-        var found = false;
+        let found = false;
 
         if (typeof (item.getBounds) === "undefined") {
             // ignore object that cannot be added in the first place
@@ -319,7 +319,7 @@ var QT_VECTOR = new Vector2d();
         //if we have subnodes ...
         if (this.nodes.length > 0) {
             // determine to which node the item belongs to
-            var index = this.getIndex(item);
+            let index = this.getIndex(item);
 
             if (index !== -1) {
                 found = remove(this.nodes[index], item);
@@ -358,8 +358,8 @@ var QT_VECTOR = new Vector2d();
      * @returns {boolean} true if the node has any children
      */
     hasChildren() {
-        for (var i = 0; i < this.nodes.length; i = i + 1) {
-            var subnode = this.nodes[i];
+        for (let i = 0; i < this.nodes.length; i = i + 1) {
+            let subnode = this.nodes[i];
             if (subnode.length > 0 || subnode.objects.length > 0) {
                 return true;
             }
@@ -376,7 +376,7 @@ var QT_VECTOR = new Vector2d();
     clear(bounds) {
         this.objects.length = 0;
 
-        for (var i = 0; i < this.nodes.length; i++) {
+        for (let i = 0; i < this.nodes.length; i++) {
             this.nodes[i].clear();
             // recycle the quadTree object
             QT_ARRAY_PUSH(this.nodes[i]);

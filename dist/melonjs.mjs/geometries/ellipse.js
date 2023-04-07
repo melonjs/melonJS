@@ -91,14 +91,14 @@ import pool from '../system/pooling.js';
      * @returns {Ellipse} this instance for objecf chaining
      */
     setShape(x, y, w, h) {
-        var hW = w / 2;
-        var hH = h / 2;
+        const hW = w / 2;
+        const hH = h / 2;
 
         this.pos.set(x, y);
         this.radius = Math.max(hW, hH);
         this.ratio.set(hW / this.radius, hH / this.radius);
         this.radiusV.set(this.radius, this.radius).scaleV(this.ratio);
-        var r = this.radius * this.radius;
+        const r = this.radius * this.radius;
         this.radiusSq.set(r, r).scaleV(this.ratio);
 
         // update the corresponding bounds
@@ -182,7 +182,7 @@ import pool from '../system/pooling.js';
      * @returns {Ellipse} this ellipse
      */
     translate() {
-        var _x, _y;
+        let _x, _y;
 
         if (arguments.length === 2) {
             // x, y
@@ -219,7 +219,7 @@ import pool from '../system/pooling.js';
      * @returns {boolean} true if contains
      */
     contains() {
-        var _x, _y;
+        let _x, _y;
 
         if (arguments.length === 2) {
           // x, y

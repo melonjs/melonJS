@@ -43,7 +43,7 @@ export default class Detector {
      * @returns {Array.<Renderable>} an array of intersecting physic objects
      * @example
      *    // define a line accross the viewport
-     *    var ray = new me.Line(
+     *    let ray = new me.Line(
      *        // absolute position of the line
      *        0, 0, [
      *        // starting point relative to the initial position

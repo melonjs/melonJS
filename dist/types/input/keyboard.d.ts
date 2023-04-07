@@ -97,7 +97,7 @@ export function unbindKey(keycode: number): void;
  * @name keyBoardEventTarget
  * @memberof input
  */
-export const keyBoardEventTarget: EventTarget;
+export let keyBoardEventTarget: EventTarget;
 /**
  * *
  */

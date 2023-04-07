@@ -17,14 +17,14 @@ import { getParentBounds, devicePixelRatio } from '../system/device.js';
  * @param {number} y - y scaling multiplier
  */
 function scale(game, x, y) {
-    var renderer = game.renderer;
-    var canvas = renderer.getCanvas();
-    var context = renderer.getContext();
-    var settings = renderer.settings;
-    var pixelRatio = devicePixelRatio;
+    let renderer = game.renderer;
+    let canvas = renderer.getCanvas();
+    let context = renderer.getContext();
+    let settings = renderer.settings;
+    let pixelRatio = devicePixelRatio;
 
-    var w = settings.zoomX = canvas.width * x * pixelRatio;
-    var h = settings.zoomY = canvas.height * y * pixelRatio;
+    let w = settings.zoomX = canvas.width * x * pixelRatio;
+    let h = settings.zoomY = canvas.height * y * pixelRatio;
 
     // update the global scale variable
     renderer.scaleRatio.set(x * pixelRatio, y * pixelRatio);
@@ -47,37 +47,37 @@ function scale(game, x, y) {
  * @param {Application} game - the game application instance triggering the resize
  */
 function onresize(game) {
-    var renderer = game.renderer;
-    var settings = renderer.settings;
-    var scaleX = 1, scaleY = 1;
+    let renderer = game.renderer;
+    let settings = renderer.settings;
+    let scaleX = 1, scaleY = 1;
 
     if (settings.autoScale) {
 
         // set max the canvas max size if CSS values are defined
-        var canvasMaxWidth = Infinity;
-        var canvasMaxHeight = Infinity;
+        let canvasMaxWidth = Infinity;
+        let canvasMaxHeight = Infinity;
 
         if (globalThis.getComputedStyle) {
-            var style = globalThis.getComputedStyle(renderer.getCanvas(), null);
+            let style = globalThis.getComputedStyle(renderer.getCanvas(), null);
             canvasMaxWidth = parseInt(style.maxWidth, 10) || Infinity;
             canvasMaxHeight = parseInt(style.maxHeight, 10) || Infinity;
         }
 
         // get the maximum canvas size within the parent div containing the canvas container
-        var nodeBounds = getParentBounds(game.getParentElement());
+        let nodeBounds = getParentBounds(game.getParentElement());
 
-        var _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
-        var _max_height = Math.min(canvasMaxHeight, nodeBounds.height);
+        let _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
+        let _max_height = Math.min(canvasMaxHeight, nodeBounds.height);
 
         // calculate final canvas width & height
-        var screenRatio = _max_width / _max_height;
+        let screenRatio = _max_width / _max_height;
 
         if ((settings.scaleMethod === "fill-min" && screenRatio > renderer.designRatio) ||
             (settings.scaleMethod === "fill-max" && screenRatio < renderer.designRatio) ||
             (settings.scaleMethod === "flex-width")
         ) {
             // resize the display canvas to fill the parent container
-            var sWidth = Math.min(canvasMaxWidth, settings.height * screenRatio);
+            let sWidth = Math.min(canvasMaxWidth, settings.height * screenRatio);
             scaleX = scaleY = _max_width / sWidth;
             renderer.resize(Math.floor(sWidth), settings.height);
         }
@@ -86,7 +86,7 @@ function onresize(game) {
                  (settings.scaleMethod === "flex-height")
         ) {
             // resize the display canvas to fill the parent container
-            var sHeight = Math.min(canvasMaxHeight, settings.width * (_max_height / _max_width));
+            let sHeight = Math.min(canvasMaxHeight, settings.width * (_max_height / _max_width));
             scaleX = scaleY = _max_height / sHeight;
             renderer.resize(settings.width, Math.floor(sHeight));
         }

@@ -189,7 +189,7 @@ import { isNumeric } from '../utils/string.js';
      * @ignore
      */
     updateLayer(vpos) {
-        var rx = this.ratio.x,
+        const rx = this.ratio.x,
             ry = this.ratio.y;
 
         if (rx === 0 && ry === 0) {
@@ -197,7 +197,7 @@ import { isNumeric } from '../utils/string.js';
             return;
         }
 
-        var width = this.width,
+        const width = this.width,
             height = this.height,
             bw = game.viewport.bounds.width,
             bh = game.viewport.bounds.height,
@@ -263,13 +263,14 @@ import { isNumeric } from '../utils/string.js';
      * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
     draw(renderer, viewport) {
-        var width = this.width,
+        const width = this.width,
             height = this.height,
             bw = viewport.bounds.width,
             bh = viewport.bounds.height,
             ax = this.anchorPoint.x,
-            ay = this.anchorPoint.y,
-            x = this.pos.x,
+            ay = this.anchorPoint.y;
+
+        let x = this.pos.x,
             y = this.pos.y;
 
         if (this.ratio.x === 0 && this.ratio.y === 0) {

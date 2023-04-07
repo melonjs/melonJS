@@ -93,18 +93,18 @@ import Sprite from './sprite.js';
      */
     draw(renderer) {
         // the frame to draw
-        var frame = this.current;
+        let frame = this.current;
 
         // cache the current position and size
-        var dx = this.pos.x,
+        let dx = this.pos.x,
             dy = this.pos.y;
 
-        var w = frame.width,
+        let w = frame.width,
             h = frame.height;
 
         // frame offset in the texture/atlas
-        var frame_offset = frame.offset;
-        var g_offset = this.offset;
+        let frame_offset = frame.offset;
+        let g_offset = this.offset;
 
 
         // remove image's TexturePacker/ShoeBox rotation
@@ -116,11 +116,11 @@ import Sprite from './sprite.js';
             h = frame.width;
         }
 
-        var sx = g_offset.x + frame_offset.x,
+        let sx = g_offset.x + frame_offset.x,
             sy = g_offset.y + frame_offset.y;
 
         // should this be configurable ?
-        var corner_width = this.insetx || w / 4,
+        let corner_width = this.insetx || w / 4,
             corner_height = this.insety || h / 4;
 
         // OPTIMIZE ME !
@@ -170,11 +170,11 @@ import Sprite from './sprite.js';
 
 
         // DRAW SIDES and CENTER
-        var image_center_width = w - (corner_width << 1);
-        var image_center_height = h - (corner_height << 1);
+        let image_center_width = w - (corner_width << 1);
+        let image_center_height = h - (corner_height << 1);
 
-        var target_center_width = this.nss_width - (corner_width << 1);
-        var target_center_height = this.nss_height - (corner_height << 1);
+        let target_center_width = this.nss_width - (corner_width << 1);
+        let target_center_height = this.nss_height - (corner_height << 1);
 
         //Top center
         renderer.drawImage(

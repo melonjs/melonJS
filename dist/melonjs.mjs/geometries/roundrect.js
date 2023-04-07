@@ -90,8 +90,8 @@ class RoundRect extends Rect {
      * @returns {boolean} true if contains
      */
     contains() {
-        var arg0 = arguments[0];
-        var _x, _y;
+        let arg0 = arguments[0];
+        let _x, _y;
         if (arguments.length === 2) {
              // x, y
              _x = arg0;
@@ -118,9 +118,9 @@ class RoundRect extends Rect {
         }
 
         // check whether point is in one of the rounded corner areas
-        var tx, ty;
-        var radiusX =  Math.max(0, Math.min(this.radius, this.width / 2));
-        var radiusY =  Math.max(0, Math.min(this.radius, this.height / 2));
+        let tx, ty;
+        const radiusX =  Math.max(0, Math.min(this.radius, this.width / 2));
+        const radiusY =  Math.max(0, Math.min(this.radius, this.height / 2));
 
         if (_x < this.left + radiusX && _y < this.top + radiusY) {
             tx = _x - this.left - radiusX;

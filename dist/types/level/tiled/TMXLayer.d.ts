@@ -75,7 +75,7 @@ export default class TMXLayer extends Renderable {
      * @param {TMXRenderer} renderer
      * @example
      * // use the parent map default renderer
-     * var layer = new me.TMXLayer(...);
+     * let layer = new me.TMXLayer(...);
      * layer.setRenderer(map.getRenderer());
      */
     setRenderer(renderer: TMXRenderer): void;
@@ -99,9 +99,9 @@ export default class TMXLayer extends Renderable {
      * @returns {Tile} corresponding tile or null if there is no defined tile at the coordinate or if outside of the layer bounds
      * @example
      * // get the TMX Map Layer called "Front layer"
-     * var layer = me.game.world.getChildByName("Front Layer")[0];
+     * let layer = me.game.world.getChildByName("Front Layer")[0];
      * // get the tile object corresponding to the latest pointer position
-     * var tile = layer.getTile(me.input.pointer.x, me.input.pointer.y);
+     * let tile = layer.getTile(me.input.pointer.x, me.input.pointer.y);
      */
     getTile(x: number, y: number): Tile;
     /**
@@ -128,7 +128,7 @@ export default class TMXLayer extends Renderable {
      * @returns {Tile} corresponding tile or null if there is no defined tile at the position or if outside of the layer bounds
      * @example
      * // return the first tile at offset 0, 0
-     * var tile = layer.cellAt(0, 0);
+     * let tile = layer.cellAt(0, 0);
      */
     cellAt(x: number, y: number, boundsCheck?: number | undefined): Tile;
     /**

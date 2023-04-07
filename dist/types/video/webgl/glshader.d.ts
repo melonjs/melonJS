@@ -11,7 +11,7 @@ export default class GLShader {
      * @see https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_on_the_web/GLSL_Shaders
      * @example
      * // create a basic shader
-     * var myShader = new me.GLShader(
+     * let myShader = new me.GLShader(
      *    // WebGL rendering context
      *    gl,
      *    // vertex shader

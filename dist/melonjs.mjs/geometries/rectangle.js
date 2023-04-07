@@ -47,7 +47,7 @@ import Polygon from './poly.js';
      * @returns {Rect} this rectangle
      */
     setShape(x, y, w, h) {
-        var points = w; // assume w is an array by default
+        let points = w; // assume w is an array by default
 
         this.pos.set(x, y);
 
@@ -83,7 +83,7 @@ import Polygon from './poly.js';
      * @memberof Rect
      */
     get right() {
-        var w = this.width;
+        let w = this.width;
         return (this.left + w) || w;
     }
 
@@ -106,7 +106,7 @@ import Polygon from './poly.js';
      * @memberof Rect
      */
     get bottom() {
-        var h = this.height;
+        let h = this.height;
         return (this.top + h) || h;
     }
 
@@ -253,8 +253,8 @@ import Polygon from './poly.js';
      * @returns {Rect} the union(ed) rectangle
      */
     union(rect) {
-        var x1 = Math.min(this.left, rect.left);
-        var y1 = Math.min(this.top, rect.top);
+        let x1 = Math.min(this.left, rect.left);
+        let y1 = Math.min(this.top, rect.top);
 
         this.resize(
             Math.max(this.right, rect.right) - x1,
@@ -309,8 +309,8 @@ import Polygon from './poly.js';
      * @returns {boolean} true if contains
      */
     contains() {
-        var arg0 = arguments[0];
-        var _x1, _x2, _y1, _y2;
+        let arg0 = arguments[0];
+        let _x1, _x2, _y1, _y2;
         if (arguments.length === 2) {
              // x, y
              _x1 = _x2 = arg0;

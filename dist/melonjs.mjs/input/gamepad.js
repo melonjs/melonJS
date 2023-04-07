@@ -9,7 +9,7 @@ import { getBindingKey, triggerKeyEvent } from './keyboard.js';
 import { emit, GAMEPAD_CONNECTED, GAMEPAD_DISCONNECTED, on, GAME_BEFORE_UPDATE, GAMEPAD_UPDATE } from '../system/event.js';
 
 // Analog deadzone
-var deadzone = 0.1;
+let deadzone = 0.1;
 
 /**
  * Normalize axis values for wired Xbox 360
@@ -47,10 +47,10 @@ function ouyaNormalizeFn(value, axis, button) {
 }
 
 // Match vendor and product codes for Firefox
-var vendorProductRE = /^([0-9a-f]{1,4})-([0-9a-f]{1,4})-/i;
+const vendorProductRE = /^([0-9a-f]{1,4})-([0-9a-f]{1,4})-/i;
 
 // Match leading zeros
-var leadingZeroRE = /^0+/;
+const leadingZeroRE = /^0+/;
 
 /**
  * Firefox reports different ids for gamepads depending on the platform:
@@ -61,11 +61,11 @@ var leadingZeroRE = /^0+/;
  * @ignore
  */
 function addMapping(id, mapping) {
-    var expanded_id = id.replace(vendorProductRE, (_, a, b) =>
+    const expanded_id = id.replace(vendorProductRE, (_, a, b) =>
         "000".slice(a.length - 1) + a + "-" +
         "000".slice(b.length - 1) + b + "-"
     );
-    var sparse_id = id.replace(vendorProductRE, (_, a, b) =>
+    const sparse_id = id.replace(vendorProductRE, (_, a, b) =>
         a.replace(leadingZeroRE, "") + "-" +
         b.replace(leadingZeroRE, "") + "-"
     );
@@ -79,12 +79,12 @@ function addMapping(id, mapping) {
 }
 
 // binding list
-var bindings = {};
+let bindings = {};
 
 // mapping list
-var remap = new Map();
+let remap = new Map();
 
-var updateEventHandler;
+let updateEventHandler;
 
 // Default gamepad mappings
 [
@@ -140,28 +140,28 @@ var updateEventHandler;
  * Update gamepad status
  * @ignore
  */
-var updateGamepads = function () {
-    var gamepads = navigator.getGamepads();
+let updateGamepads = function () {
+    let gamepads = navigator.getGamepads();
 
     // Trigger button bindings
     Object.keys(bindings).forEach((index) => {
-        var gamepad = gamepads[index];
+        let gamepad = gamepads[index];
         if (!gamepad) {
             return;
         }
 
-        var mapping = null;
+        let mapping = null;
         if (gamepad.mapping !== "standard") {
             mapping = remap.get(gamepad.id);
         }
 
-        var binding = bindings[index];
+        let binding = bindings[index];
 
         // Iterate all buttons that have active bindings
         Object.keys(binding.buttons).forEach((button) => {
-            var last = binding.buttons[button];
-            var mapped_button = button;
-            var mapped_axis = -1;
+            let last = binding.buttons[button];
+            let mapped_button = button;
+            let mapped_axis = -1;
 
             // Remap buttons if necessary
             if (mapping) {
@@ -174,12 +174,12 @@ var updateGamepads = function () {
             }
 
             // Get mapped button
-            var current = gamepad.buttons[mapped_button] || {};
+            let current = gamepad.buttons[mapped_button] || {};
 
             // Remap an axis to an analog button
             if (mapping) {
                 if (mapped_axis >= 0) {
-                    var value = mapping.normalize_fn(gamepad.axes[mapped_axis], -1, +button);
+                    let value = mapping.normalize_fn(gamepad.axes[mapped_axis], -1, +button);
 
                     // Create a new object, because GamepadButton is read-only
                     current = {
@@ -206,8 +206,8 @@ var updateGamepads = function () {
 
         // Iterate all axes that have active bindings
         Object.keys(binding.axes).forEach((axis) => {
-            var last = binding.axes[axis];
-            var mapped_axis = axis;
+            let last = binding.axes[axis];
+            let mapped_axis = axis;
 
             // Remap buttons if necessary
             if (mapping) {
@@ -219,7 +219,7 @@ var updateGamepads = function () {
             }
 
             // retrieve the current value and normalize if necessary
-            var value = gamepad.axes[mapped_axis];
+            let value = gamepad.axes[mapped_axis];
             if (typeof(value) === "undefined") {
                 return;
             }
@@ -227,11 +227,11 @@ var updateGamepads = function () {
                 value = mapping.normalize_fn(value, +axis, -1);
             }
             // normalize value into a [-1, 1] range value (treat 0 as positive)
-            var range = Math.sign(value) || 1;
+            let range = Math.sign(value) || 1;
             if (last[range].keyCode === 0) {
                 return;
             }
-            var pressed = (Math.abs(value) >= (deadzone + Math.abs(last[range].threshold)));
+            let pressed = (Math.abs(value) >= (deadzone + Math.abs(last[range].threshold)));
 
             emit(GAMEPAD_UPDATE, index, "axes", +axis, value);
 
@@ -282,7 +282,7 @@ if (globalThis.navigator && typeof globalThis.navigator.getGamepads === "functio
  * @namespace GAMEPAD
  * @memberof input
  */
-var GAMEPAD = {
+let GAMEPAD = {
     /**
      * Standard gamepad mapping information for axes<br>
      * <ul>
@@ -390,13 +390,13 @@ function bindGamepad(index, button, keyCode) {
         };
     }
 
-    var mapping = {
+    let mapping = {
         "keyCode" : keyCode,
         "value" : 0,
         "pressed" : false,
         "threshold" : button.threshold // can be undefined
     };
-    var binding = bindings[index][button.type];
+    let binding = bindings[index][button.type];
 
     // Map the gamepad button or axis to the keycode
     if (button.type === "buttons") {
@@ -404,12 +404,12 @@ function bindGamepad(index, button, keyCode) {
         binding[button.code] = mapping;
     } else if (button.type === "axes") {
         // normalize threshold into a value that can represent both side of the axis
-        var range = (Math.sign(button.threshold) || 1);
+        let range = (Math.sign(button.threshold) || 1);
         // axes are defined using two objects; one for negative and one for positive
         if (!binding[button.code]) {
             binding[button.code] = {};
         }
-        var axes = binding[button.code];
+        let axes = binding[button.code];
         axes[range] = mapping;
 
         // Ensure the opposite axis exists
@@ -490,6 +490,6 @@ function setGamepadDeadzone(value) {
  *   }
  * });
  */
-var setGamepadMapping = addMapping;
+let setGamepadMapping = addMapping;
 
 export { GAMEPAD, bindGamepad, setGamepadDeadzone, setGamepadMapping, unbindGamepad };

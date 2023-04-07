@@ -47,7 +47,7 @@ const toPX = [12, 24, 0.75, 1];
      * @param {number} [settings.wordWrapWidth] - the maximum length in CSS pixel for a single segment of text
      * @param {(string|string[])} [settings.text=""] - a string, or an array of strings
      * @example
-     * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
+     * let font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
      */
     constructor(x, y, settings) {
         // call the parent constructor
@@ -217,7 +217,7 @@ const toPX = [12, 24, 0.75, 1];
      */
     setFont(font, size = 10) {
         // font name and type
-        var font_names = font.split(",").map((value) => {
+        let font_names = font.split(",").map((value) => {
             value = value.trim();
             return (
                 !/(^".*"$)|(^'.*'$)/.test(value)
@@ -230,7 +230,7 @@ const toPX = [12, 24, 0.75, 1];
             size += "px";
         } else /* string */ {
             // extract the units and convert if necessary
-            var CSSval = size.match(/([-+]?[\d.]*)(.*)/);
+            let CSSval = size.match(/([-+]?[\d.]*)(.*)/);
             this.fontSize = parseFloat(CSSval[1]);
             if (CSSval[2]) {
                 this.fontSize *= toPX[runits.indexOf(CSSval[2])];
@@ -253,7 +253,7 @@ const toPX = [12, 24, 0.75, 1];
      * @returns {Text} this object for chaining
      */
     setText(value = "") {
-        var bounds = this.getBounds();
+        let bounds = this.getBounds();
 
         // set the next text
         if (this._text.toString() !== value.toString()) {
@@ -273,7 +273,7 @@ const toPX = [12, 24, 0.75, 1];
         bounds.addBounds(this.metrics.measureText(this._text, this.canvasTexture.context), true);
 
         // update the offScreenCanvas texture if required
-        var width = Math.ceil(this.metrics.width),
+        let width = Math.ceil(this.metrics.width),
             height = Math.ceil(this.metrics.height);
 
         if (typeof renderer.gl !== "undefined") {
@@ -381,8 +381,8 @@ const toPX = [12, 24, 0.75, 1];
     _drawFont(context, text, x, y) {
         setContextStyle(context, this);
 
-        for (var i = 0; i < text.length; i++) {
-            var string = text[i].trimEnd();
+        for (let i = 0; i < text.length; i++) {
+            let string = text[i].trimEnd();
             // draw the string
             if (this.fillStyle.alpha > 0) {
                 context.fillText(string, x, y);

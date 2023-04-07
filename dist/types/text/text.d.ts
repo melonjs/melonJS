@@ -20,7 +20,7 @@ export default class Text extends Renderable {
      * @param {number} [settings.wordWrapWidth] - the maximum length in CSS pixel for a single segment of text
      * @param {(string|string[])} [settings.text=""] - a string, or an array of strings
      * @example
-     * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
+     * let font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
      */
     constructor(x: number, y: number, settings: {
         font: string;

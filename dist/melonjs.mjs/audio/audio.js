@@ -49,7 +49,7 @@ let soundLoadError = function (sound_name, onerror_cb) {
     // check the retry counter
     if (retry_counter++ > 3) {
         // something went wrong
-        var errmsg = "melonJS: failed loading " + sound_name;
+        let errmsg = "melonJS: failed loading " + sound_name;
         {
             // throw an exception and stop everything !
             throw new Error(errmsg);
@@ -145,14 +145,14 @@ function disable() {
  * @ignore
  */
 function load(sound, html5, onload_cb, onerror_cb) {
-    var urls = [];
+    let urls = [];
     if (audioExts.length === 0) {
         throw new Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
     }
     if (isDataUrl(sound.src) === true) {
         urls.push(sound.src);
     } else {
-        for (var i = 0; i < audioExts.length; i++) {
+        for (let i = 0; i < audioExts.length; i++) {
             urls.push(sound.src + sound.name + "." + audioExts[i] + nocache);
         }
     }
@@ -201,9 +201,9 @@ function load(sound, html5, onload_cb, onerror_cb) {
  * me.audio.play("gameover_sfx", false, null, 0.5);
  */
 function play(sound_name, loop = false, onend, volume) {
-    var sound = audioTracks[sound_name];
+    let sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
-        var id = sound.play();
+        let id = sound.play();
         if (typeof loop === "boolean") {
             // arg[0] can take different types in howler 2.0
             sound.loop(loop, id);
@@ -233,7 +233,7 @@ function play(sound_name, loop = false, onend, volume) {
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will fade.
  */
 function fade(sound_name, from, to, duration, id) {
-    var sound = audioTracks[sound_name];
+    let sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
         sound.fade(from, to, duration, id);
     } else {
@@ -250,12 +250,12 @@ function fade(sound_name, from, to, duration, id) {
  * @returns {number} return the current seek position (if no extra parameters were given)
  * @example
  * // return the current position of the background music
- * var current_pos = me.audio.seek("dst-gameforest");
+ * let current_pos = me.audio.seek("dst-gameforest");
  * // set back the position of the background music to the beginning
  * me.audio.seek("dst-gameforest", 0);
  */
 function seek(sound_name, ...args) {
-    var sound = audioTracks[sound_name];
+    let sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
         return sound.seek(...args);
     } else {
@@ -272,12 +272,12 @@ function seek(sound_name, ...args) {
  * @returns {number} return the current playback rate (if no extra parameters were given)
  * @example
  * // get the playback rate of the background music
- * var rate = me.audio.rate("dst-gameforest");
+ * let rate = me.audio.rate("dst-gameforest");
  * // speed up the playback of the background music
  * me.audio.rate("dst-gameforest", 2.0);
  */
 function rate(sound_name, ...args) {
-    var sound = audioTracks[sound_name];
+    let sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
         return sound.rate(...args);
     } else {
@@ -295,7 +295,7 @@ function rate(sound_name, ...args) {
  */
 function stop(sound_name, id) {
     if (typeof sound_name !== "undefined") {
-        var sound = audioTracks[sound_name];
+        let sound = audioTracks[sound_name];
         if (sound && typeof sound !== "undefined") {
             sound.stop(id);
             // remove the defined onend callback (if any defined)
@@ -318,7 +318,7 @@ function stop(sound_name, id) {
  * me.audio.pause("cling");
  */
 function pause(sound_name, id) {
-    var sound = audioTracks[sound_name];
+    let sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
         sound.pause(id);
     } else {
@@ -333,7 +333,7 @@ function pause(sound_name, id) {
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will resume.
  * @example
  * // play a audio clip
- * var id = me.audio.play("myClip");
+ * let id = me.audio.play("myClip");
  * ...
  * // pause it
  * me.audio.pause("myClip", id);
@@ -342,7 +342,7 @@ function pause(sound_name, id) {
  * me.audio.resume("myClip", id);
  */
 function resume(sound_name, id) {
-    var sound = audioTracks[sound_name];
+    let sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
         sound.play(id);
     } else {
@@ -455,7 +455,7 @@ function getVolume() {
  * me.audio.mute("awesome_music");
  */
 function mute(sound_name, id, mute = true) {
-    var sound = audioTracks[sound_name];
+    let sound = audioTracks[sound_name];
     if (sound && typeof(sound) !== "undefined") {
         sound.mute(mute, id);
     } else {
@@ -524,7 +524,7 @@ function unload(sound_name) {
  * me.audio.unloadAll();
  */
 function unloadAll() {
-    for (var sound_name in audioTracks) {
+    for (let sound_name in audioTracks) {
         if (audioTracks.hasOwnProperty(sound_name)) {
             unload(sound_name);
         }

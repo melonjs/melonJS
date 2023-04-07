@@ -21,7 +21,7 @@ export default class Application {
      * @param {boolean} [options.consoleHeader=true] - whether to display melonJS version and basic device information in the console
      * @throws Will throw an exception if it fails to instantiate a renderer
      * @example
-     * var my game = new Application(640, 480, {renderer: me.video.AUTO}) {
+     * let my game = new Application(640, 480, {renderer: me.video.AUTO}) {
      *     ....
      * }
      */

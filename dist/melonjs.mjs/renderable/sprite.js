@@ -33,7 +33,7 @@ import Color from '../math/color.js';
      * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] - Anchor point to draw the frame at (defaults to the center of the frame).
      * @example
      * // create a single sprite from a standalone image, with anchor in the center
-     * var sprite = new me.Sprite(0, 0, {
+     * let sprite = new me.Sprite(0, 0, {
      *     image : "PlayerTexture",
      *     framewidth : 64,
      *     frameheight : 64,
@@ -45,7 +45,7 @@ import Color from '../math/color.js';
      *     me.loader.getJSON("texture"),
      *     me.loader.getImage("texture")
      * );
-     * var sprite = new me.Sprite(0, 0, {
+     * let sprite = new me.Sprite(0, 0, {
      *     image : mytexture,
      *     region : "npc2.png",
      * });
@@ -135,7 +135,7 @@ import Color from '../math/color.js';
             // check for defined region
             if (typeof (settings.region) !== "undefined") {
                 // use a texture atlas
-                var region = this.source.getRegion(settings.region);
+                let region = this.source.getRegion(settings.region);
                 if (region) {
                     // set the sprite region within the texture
                     this.setRegion(region);
@@ -288,7 +288,7 @@ import Color from '../math/color.js';
         };
 
         // # of frames
-        var counter = 0;
+        let counter = 0;
 
         if (typeof (this.textureAtlas) !== "object") {
             return 0;
@@ -304,9 +304,9 @@ import Color from '../math/color.js';
         }
 
         // set each frame configuration (offset, size, etc..)
-        for (var i = 0, len = index.length; i < len; i++) {
-            var frame = index[i];
-            var frameObject;
+        for (let i = 0, len = index.length; i < len; i++) {
+            let frame = index[i];
+            let frameObject;
             if (typeof(frame) === "number" || typeof(frame) === "string") {
                 frameObject = {
                     name: frame,
@@ -316,7 +316,7 @@ import Color from '../math/color.js';
             else {
               frameObject = frame;
             }
-            var frameObjectName = frameObject.name;
+            let frameObjectName = frameObject.name;
             if (typeof(frameObjectName) === "number") {
                 if (typeof (this.textureAtlas[frameObjectName]) !== "undefined") {
                     // TODO: adding the cache source coordinates add undefined entries in webGL mode
@@ -526,13 +526,13 @@ import Color from '../math/color.js';
     update(dt) {
         // Update animation if necessary
         if (!this.animationpause && this.current.length > 1) {
-            var duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
+            let duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
             this.dt += dt;
             while (this.dt >= duration) {
                 this.isDirty = true;
                 this.dt -= duration;
 
-                var nextFrame = (this.current.length > 1 ? this.current.idx + 1 : this.current.idx);
+                let nextFrame = (this.current.length > 1 ? this.current.idx + 1 : this.current.idx);
                 this.setAnimationFrame(nextFrame);
 
                 // Switch animation if we reach the end of the strip and a callback is defined
@@ -595,18 +595,18 @@ import Color from '../math/color.js';
         }
 
         // the frame to draw
-        var frame = this.current;
+        let frame = this.current;
 
         // cache the current position and size
-        var xpos = this.pos.x,
+        let xpos = this.pos.x,
             ypos = this.pos.y;
 
-        var w = frame.width,
+        let w = frame.width,
             h = frame.height;
 
         // frame offset in the texture/atlas
-        var frame_offset = frame.offset;
-        var g_offset = this.offset;
+        let frame_offset = frame.offset;
+        let g_offset = this.offset;
 
 
         // remove image's TexturePacker/ShoeBox rotation
