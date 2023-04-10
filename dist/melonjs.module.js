@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.0
+ * melonJS Game Engine - v15.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -23583,9 +23583,22 @@ let globalFloatingCounter = 0;
             this.updateBounds();
         }
 
-        // if a physic body is defined, add it to the game world
-        if (child.body instanceof Body) {
-            this.getRootAncestor().addBody(child.body);
+        // if a physic body(ies) to the game world
+        if (this.isAttachedToRoot()) {
+            var worldContainer = this.getRootAncestor();
+            if (child.body instanceof Body) {
+                worldContainer.addBody(child.body);
+            }
+            // if the child is a container
+            if (child instanceof Container) {
+                // add all container child bodies
+                // TODO: make it recursive ?
+                child.forEach((cchild) => {
+                    if (cchild.body instanceof Body) {
+                        worldContainer.addBody(cchild.body);
+                    }
+                });
+            }
         }
 
         // triggered callback if defined
@@ -23632,9 +23645,22 @@ let globalFloatingCounter = 0;
                 this.updateBounds();
             }
 
-            // if a physic body is defined, add it to the game world
-            if (child.body instanceof Body) {
-                this.getRootAncestor().addBody(child.body);
+            // if a physic body(ies) to the game world
+            if (this.isAttachedToRoot()) {
+                var worldContainer = this.getRootAncestor();
+                if (child.body instanceof Body) {
+                    worldContainer.addBody(child.body);
+                }
+                // if the child is a container
+                if (child instanceof Container) {
+                    // add all container child bodies
+                    // TODO: make it recursive ?
+                    child.forEach((cchild) => {
+                        if (cchild.body instanceof Body) {
+                            worldContainer.addBody(cchild.body);
+                        }
+                    });
+                }
             }
 
             // triggered callback if defined
@@ -37835,10 +37861,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "15.1.0"
+         * @default "15.1.1"
          * @name plugin.Base#version
          */
-        this.version = "15.1.0";
+        this.version = "15.1.1";
     }
 }
 
@@ -38066,7 +38092,7 @@ Renderer.prototype.getScreenContext = function()  {
  * @name version
  * @type {string}
  */
-const version = "15.1.0";
+const version = "15.1.1";
 
 /**
  * a flag indicating that melonJS is fully initialized
