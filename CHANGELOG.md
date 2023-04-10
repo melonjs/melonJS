@@ -1,5 +1,10 @@
 # Changelog
 
+## [15.1.1] (melonJS 2) - _2023-04-10_
+
+### Fixed
+- Container: fix a regression when creating a container with physic bodies, before adding it to the main world container, would throw an exception
+
 ## [15.1.0] (melonJS 2) - _2023-04-07_
 
 ### Added
@@ -1468,6 +1473,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[15.1.1]: https://github.com/melonjs/melonJS/compare/15.1.1...15.1.0
 [15.1.0]: https://github.com/melonjs/melonJS/compare/15.1.0...15.0.0
 [15.0.0]: https://github.com/melonjs/melonJS/compare/15.0.0...14.5.0
 [14.5.0]: https://github.com/melonjs/melonJS/compare/14.5.0...14.4.0
