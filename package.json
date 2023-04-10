@@ -71,10 +71,10 @@
     "chromedriver": "^112.0.0",
     "cross-env": "^7.0.3",
     "del-cli": "^5.0.0",
-    "eslint": "^8.37.0",
-    "eslint-plugin-jsdoc": "^40.1.1",
+    "eslint": "^8.38.0",
+    "eslint-plugin-jsdoc": "^40.1.2",
     "expect": "^29.5.0",
-    "expect-mocha-image-snapshot": "^3.0.8",
+    "expect-mocha-image-snapshot": "^3.0.10",
     "fastify": "^4.15.0",
     "mocha": "^10.2.0",
     "npm-self-link": "^1.1.7",
@@ -83,7 +83,7 @@
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
     "terser": "^5.16.8",
-    "typescript": "^5.0.3"
+    "typescript": "^5.0.4"
   },
   "scripts": {
     "build": "npm run lint && rollup -c --silent",
