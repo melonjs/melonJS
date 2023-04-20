@@ -34,7 +34,7 @@ let utils = {
      * @public
      * @memberof utils
      * @name checkVersion
-     * @param {string} first - Ffrst version string to compare
+     * @param {string} first - First version string to compare
      * @param {string} second - second version string to compare
      * @returns {number} comparison result <br>&lt; 0 : first &lt; second<br>
      * 0 : first == second<br>
