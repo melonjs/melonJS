@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.2
+ * melonJS Game Engine - v15.1.3
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -31149,7 +31149,7 @@ let V_ARRAY = [
         if (pixels === null || typeof pixels.byteLength !== "undefined") {
             // if pixels is undefined, or if it's Uint8Array/Float32Array TypedArray
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels, 0);
-        } else if (pixels instanceof OffscreenCanvas) {
+        } else if (typeof globalThis.OffscreenCanvas !== "undefined" && pixels instanceof globalThis.OffscreenCanvas) {
             // convert to ImageBitmap first (else Safari 16.4 and higher will throw an TypeError exception)
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, pixels.transferToImageBitmap());
         } else {
@@ -38007,10 +38007,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "15.1.2"
+         * @default "15.1.3"
          * @name plugin.Base#version
          */
-        this.version = "15.1.2";
+        this.version = "15.1.3";
     }
 }
 
@@ -38238,7 +38238,7 @@ Renderer.prototype.getScreenContext = function()  {
  * @name version
  * @type {string}
  */
-const version = "15.1.2";
+const version = "15.1.3";
 
 /**
  * a flag indicating that melonJS is fully initialized
