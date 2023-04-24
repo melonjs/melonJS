@@ -1,5 +1,9 @@
 # Changelog
 
+## [15.1.3] (melonJS 2) - _2023-04-24_
+
+# Changelog
+
 ## [15.1.2] (melonJS 2) - _2023-04-24_
 
 ### Fixed
@@ -1478,6 +1482,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[15.1.3]: https://github.com/melonjs/melonJS/compare/15.1.3...15.1.2
 [15.1.2]: https://github.com/melonjs/melonJS/compare/15.1.2...15.1.1
 [15.1.1]: https://github.com/melonjs/melonJS/compare/15.1.1...15.1.0
 [15.1.0]: https://github.com/melonjs/melonJS/compare/15.1.0...15.0.0
