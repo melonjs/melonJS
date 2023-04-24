@@ -2,7 +2,7 @@
 
 ## [15.1.3] (melonJS 2) - _2023-04-24_
 
-# Changelog
+- WebGL: fix a crash when creating/uploading a texture on browser(s) not supporting OffscreenCanvas
 
 ## [15.1.2] (melonJS 2) - _2023-04-24_
 
