@@ -307,11 +307,12 @@ function dispatchEvent(normalizedEvents) {
                     pointer.gameY = pointer.gameLocalY = pointer.gameWorldY;
                 }
 
-                // adjust gameLocalX to specify coordinates within the region ancestor container
-                if (region.floating === false && typeof ancestor !== "undefined") {
-                    let absPos = ancestor.getAbsolutePosition();
-                    pointer.gameLocalX = pointer.gameX - absPos.x;
-                    pointer.gameLocalY = pointer.gameY - absPos.y;
+                // adjust gameLocalX to specify coordinates
+                // within the region ancestor container
+                if (typeof ancestor !== "undefined") {
+                    let parentBounds = ancestor.getBounds();
+                    pointer.gameLocalX = pointer.gameX - parentBounds.x;
+                    pointer.gameLocalY = pointer.gameY - parentBounds.y;
                 }
 
                 eventInBounds = bounds.contains(pointer.gameX, pointer.gameY);
