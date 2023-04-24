@@ -155,7 +155,7 @@ export function createCanvas(width, height, returnOffscreenCanvas = false) {
         throw new Error("width or height was zero, Canvas could not be initialized !");
     }
 
-    if (device.offscreenCanvas === true && returnOffscreenCanvas === true) {
+    if (device.hasOffscreenCanvas === true && returnOffscreenCanvas === true) {
         _canvas = new globalThis.OffscreenCanvas(0, 0);
         // stubbing style for compatibility,
         // as OffscreenCanvas is detached from the DOM

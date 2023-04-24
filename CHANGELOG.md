@@ -1,5 +1,10 @@
 # Changelog
 
+## [15.1.2] (melonJS 2) - _2023-04-24_
+
+### Fixed
+- Core: fix detection of OffscreenCanvas support by browser (fix a crash with Waterfront, thanks @fr0st for reporting it)
+
 ## [15.1.1] (melonJS 2) - _2023-04-10_
 
 ### Fixed
@@ -1473,6 +1478,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[15.1.2]: https://github.com/melonjs/melonJS/compare/15.1.2...15.1.1
 [15.1.1]: https://github.com/melonjs/melonJS/compare/15.1.1...15.1.0
 [15.1.0]: https://github.com/melonjs/melonJS/compare/15.1.0...15.0.0
 [15.0.0]: https://github.com/melonjs/melonJS/compare/15.0.0...14.5.0
