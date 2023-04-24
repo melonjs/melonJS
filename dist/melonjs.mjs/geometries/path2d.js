@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.1
+ * melonJS Game Engine - v15.1.2
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -7,8 +7,7 @@
  */
 import pool from '../system/pooling.js';
 import { TAU } from '../math/math.js';
-import '../node_modules/earcut/src/earcut.js';
-import { exports as earcutExports } from '../_virtual/earcut.js';
+import earcut from '../node_modules/earcut/src/earcut.js';
 
 /**
  * @classdesc
@@ -64,7 +63,7 @@ import { exports as earcutExports } from '../_virtual/earcut.js';
         let i = 0;
         let points = this.points;
         let vertices = this.vertices;
-        let indices = earcutExports(points.flatMap(p => [p.x, p.y]));
+        let indices = earcut(points.flatMap(p => [p.x, p.y]));
 
         // pre-allocate vertices if necessary
         while (vertices.length < indices.length) {

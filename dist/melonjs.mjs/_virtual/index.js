@@ -1,14 +1,10 @@
 /*!
- * melonJS Game Engine - v15.1.1
+ * melonJS Game Engine - v15.1.2
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
-var eventemitter3Exports = {};
-var eventemitter3 = {
-  get exports(){ return eventemitter3Exports; },
-  set exports(v){ eventemitter3Exports = v; },
-};
+var eventemitter3 = {exports: {}};
 
-export { eventemitter3 as __module, eventemitter3Exports as exports };
+export { eventemitter3 as __module };

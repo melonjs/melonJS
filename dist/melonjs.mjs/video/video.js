@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.1
+ * melonJS Game Engine - v15.1.2
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -7,7 +7,7 @@
  */
 import { emit, WINDOW_ONRESIZE, WINDOW_ONORIENTATION_CHANGE, WINDOW_ONSCROLL, VIDEO_INIT } from '../system/event.js';
 import { game, initialized } from '../index.js';
-import { offscreenCanvas, screenOrientation } from '../system/device.js';
+import { screenOrientation } from '../system/device.js';
 import utils from '../utils/utils.js';
 import { CANVAS as CANVAS$1, WEBGL as WEBGL$1, AUTO as AUTO$1 } from '../const.js';
 
@@ -162,14 +162,7 @@ function createCanvas(width, height, returnOffscreenCanvas = false) {
         throw new Error("width or height was zero, Canvas could not be initialized !");
     }
 
-    if (offscreenCanvas === true && returnOffscreenCanvas === true) {
-        _canvas = new globalThis.OffscreenCanvas(0, 0);
-        // stubbing style for compatibility,
-        // as OffscreenCanvas is detached from the DOM
-        if (typeof _canvas.style === "undefined") {
-            _canvas.style = {};
-        }
-    } else {
+    {
         // "else" create a "standard" canvas
         _canvas = document.createElement("canvas");
     }

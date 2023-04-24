@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.1
+ * melonJS Game Engine - v15.1.2
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license

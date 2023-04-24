@@ -1,14 +1,10 @@
 /*!
- * melonJS Game Engine - v15.1.1
+ * melonJS Game Engine - v15.1.2
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
-var earcutExports = {};
-var earcut = {
-  get exports(){ return earcutExports; },
-  set exports(v){ earcutExports = v; },
-};
+var earcut = {exports: {}};
 
-export { earcut as __module, earcutExports as exports };
+export { earcut as __module };
