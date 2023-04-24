@@ -578,7 +578,7 @@ import Color from "./../math/color.js";
 
             if (absolute === true) {
                 bounds.centerOn(this.pos.x + bounds.x + bounds.width / 2,  this.pos.y + bounds.y + bounds.height / 2);
-                if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
+                if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function") {
                      bounds.translate(this.ancestor.getAbsolutePosition());
                 }
 
@@ -610,7 +610,7 @@ import Color from "./../math/color.js";
           }
           // XXX Cache me or something
           this._absPos.set(this.pos.x, this.pos.y);
-          if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
+          if (this.floating !== true && typeof this.ancestor !== "undefined" && typeof this.ancestor.getAbsolutePosition === "function") {
               this._absPos.add(this.ancestor.getAbsolutePosition());
           }
           return this._absPos;
