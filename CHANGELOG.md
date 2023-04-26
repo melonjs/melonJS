@@ -1,6 +1,11 @@
 # Changelog
 
-## [15.1.4] (melonJS 2) - _2023-04-xx_
+## [15.1.4] (melonJS 2) - _2023-04-26_
+
+### Fixed
+- Core: fix a regression with OffscreenCanvas support detection
+- Doc: fix broken hyperlinks in the audio documentation
+- TypeScript: fix documentation and typings for the loader API (thanks @edmundg)
 
 ## [15.1.3] (melonJS 2) - _2023-04-24_
 
