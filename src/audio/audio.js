@@ -123,7 +123,7 @@ export function hasAudio() {
  * enable audio output <br>
  * only useful if audio supported and previously disabled through
  * @function audio.enable
- * @see audio#disable
+ * @see audio.disable
  */
 export function enable() {
     unmuteAll();
@@ -375,7 +375,7 @@ export function playTrack(sound_name, volume) {
 /**
  * stop the current audio track
  * @function audio.stopTrack
- * @see audio#playTrack
+ * @see audio.playTrack
  * @example
  * // play a awesome music
  * me.audio.playTrack("awesome_music");
