@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.3
+ * melonJS Game Engine - v15.1.4
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -122,7 +122,7 @@ function hasAudio() {
  * enable audio output <br>
  * only useful if audio supported and previously disabled through
  * @function audio.enable
- * @see audio#disable
+ * @see audio.disable
  */
 function enable() {
     unmuteAll();
@@ -374,7 +374,7 @@ function playTrack(sound_name, volume) {
 /**
  * stop the current audio track
  * @function audio.stopTrack
- * @see audio#playTrack
+ * @see audio.playTrack
  * @example
  * // play a awesome music
  * me.audio.playTrack("awesome_music");

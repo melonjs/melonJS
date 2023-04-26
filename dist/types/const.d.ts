@@ -15,7 +15,7 @@ export const WEBGL: number;
 /**
  * constant to auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
  * @static
- * @type (number)
+ * @type {number}
  * @see Application
  */
-export const AUTO: any;
+export const AUTO: number;

@@ -84,7 +84,7 @@ export const WEBGL: number;
  * @memberof video
  * @static
  */
-export const AUTO: any;
+export const AUTO: number;
 /**
  * A reference to the active Canvas or WebGL active renderer renderer
  * @memberof video

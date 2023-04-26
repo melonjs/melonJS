@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.3
+ * melonJS Game Engine - v15.1.4
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -13758,7 +13758,7 @@ function hasAudio() {
  * enable audio output <br>
  * only useful if audio supported and previously disabled through
  * @function audio.enable
- * @see audio#disable
+ * @see audio.disable
  */
 function enable() {
     unmuteAll();
@@ -14010,7 +14010,7 @@ function playTrack(sound_name, volume) {
 /**
  * stop the current audio track
  * @function audio.stopTrack
- * @see audio#playTrack
+ * @see audio.playTrack
  * @example
  * // play a awesome music
  * me.audio.playTrack("awesome_music");
@@ -14218,7 +14218,7 @@ const WEBGL$1 = 1;
 /**
  * constant to auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
  * @static
- * @type (number)
+ * @type {number}
  * @see Application
  */
 const AUTO$1 = 2;
@@ -14374,7 +14374,7 @@ function createCanvas(width, height, returnOffscreenCanvas = false) {
         throw new Error("width or height was zero, Canvas could not be initialized !");
     }
 
-    if (undefined === true && returnOffscreenCanvas === true) {
+    if (offscreenCanvas === true && returnOffscreenCanvas === true) {
         _canvas = new globalThis.OffscreenCanvas(0, 0);
         // stubbing style for compatibility,
         // as OffscreenCanvas is detached from the DOM
@@ -26672,9 +26672,9 @@ function preloadJavascript(data, onload, onerror) {
 
 /**
  * onload callback
- * @name onload
  * @default undefined
  * @memberof loader
+ * @type {function}
  * @example
  * // set a callback when everything is loaded
  * me.loader.onload = this.loaded.bind(this);
@@ -26685,9 +26685,9 @@ let onload;
  * onProgress callback<br>
  * each time a resource is loaded, the loader will fire the specified function,
  * giving the actual progress [0 ... 1], as argument, and an object describing the resource loaded
- * @name onProgress
  * @default undefined
  * @memberof loader
+ * @type {function}
  * @example
  * // set a callback for progress notification
  * me.loader.onProgress = this.updateProgress.bind(this);
@@ -26756,19 +26756,24 @@ function onLoadingError(res) {
 }
 
 /**
- * set all the specified game resources to be preloaded.
- * @name preload
+ * an asset definition to be used with the loader
+ * @typedef {object} loader.Asset
+ * @property {string} name - name of the asset
+ * @property {string} type  - the type of the asset : "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
+ * @property {string} src  - path and/or file name of the resource (for audio assets only the path is required)
+ * @property {boolean} [stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
+ * @see loader.preload
+ * @see loader.load
+ */
+
+/**
+ * set all the specified game assets to be preloaded.
  * @memberof loader
- * @public
- * @param {object[]} res
- * @param {string} res.name - internal name of the resource
- * @param {string} res.type  - "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
- * @param {string} res.src  - path and/or file name of the resource (for audio assets only the path is required)
- * @param {boolean} [res.stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
- * @param {Function} [onload=loader.onload] - function to be called when all resources are loaded
+ * @param {loader.Asset[]} assets - list of assets to load
+ * @param {Function} [onloadcb=loader.onload] - function to be called when all resources are loaded
  * @param {boolean} [switchToLoadState=true] - automatically switch to the loading screen
  * @example
- * game_resources = [
+ * game.assets = [
  *   // PNG tileset
  *   {name: "tileset-platformer", type: "image",  src: "data/map/tileset.png"},
  *   // PNG packed texture
@@ -26798,15 +26803,15 @@ function onLoadingError(res) {
  * ];
  * ...
  * // set all resources to be loaded
- * me.loader.preload(game.resources, () => this.loaded());
+ * me.loader.preload(game.assets, () => this.loaded());
  */
-function preload(res, onloadcb, switchToLoadState = true) {
+function preload(assets, onloadcb, switchToLoadState = true) {
     // parse the resources
-    for (let i = 0; i < res.length; i++) {
+    for (let i = 0; i < assets.length; i++) {
         resourceCount += load(
-            res[i],
-            onResourceLoaded.bind(this, res[i]),
-            onLoadingError.bind(this, res[i])
+            assets[i],
+            onResourceLoaded.bind(this, assets[i]),
+            onLoadingError.bind(this, assets[i])
         );
     }
     // set the onload callback if defined
@@ -26824,15 +26829,9 @@ function preload(res, onloadcb, switchToLoadState = true) {
 }
 
 /**
- * Load a single resource (to be used if you need to load additional resource during the game)
- * @name load
+ * Load a single asset (to be used if you need to load additional asset(s) during the game)
  * @memberof loader
- * @public
- * @param {object} res
- * @param {string} res.name - internal name of the resource
- * @param {string} res.type  - "audio", binary", "image", "json", "tmx", "tsx"
- * @param {string} res.src  - path and/or file name of the resource (for audio assets only the path is required)
- * @param {boolean} [res.stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
+ * @param {loader.Asset} asset
  * @param {Function} [onload] - function to be called when the resource is loaded
  * @param {Function} [onerror] - function to be called in case of error
  * @returns {number} the amount of corresponding resource to be preloaded
@@ -26850,83 +26849,79 @@ function preload(res, onloadcb, switchToLoadState = true) {
  *     me.audio.play("bgmusic");
  * });
  */
-function load(res, onload, onerror) {
+function load(asset, onload, onerror) {
     // transform the url if necessary
-    if (typeof (baseURL[res.type]) !== "undefined") {
-        res.src = baseURL[res.type] + res.src;
+    if (typeof (baseURL[asset.type]) !== "undefined") {
+        asset.src = baseURL[asset.type] + asset.src;
     }
     // check ressource type
-    switch (res.type) {
+    switch (asset.type) {
         case "binary":
             // reuse the preloadImage fn
-            preloadBinary.call(this, res, onload, onerror);
+            preloadBinary.call(this, asset, onload, onerror);
             return 1;
 
         case "image":
             // reuse the preloadImage fn
-            preloadImage.call(this, res, onload, onerror);
+            preloadImage.call(this, asset, onload, onerror);
             return 1;
 
         case "json":
-            preloadJSON.call(this, res, onload, onerror);
+            preloadJSON.call(this, asset, onload, onerror);
             return 1;
 
         case "js":
-            preloadJavascript.call(this, res, onload, onerror);
+            preloadJavascript.call(this, asset, onload, onerror);
             return 1;
 
         case "tmx":
         case "tsx":
-            preloadTMX.call(this, res, onload, onerror);
+            preloadTMX.call(this, asset, onload, onerror);
             return 1;
 
         case "audio":
-            load$1(res, !!res.stream, onload, onerror);
+            load$1(asset, !!asset.stream, onload, onerror);
             return 1;
 
         case "fontface":
-            preloadFontFace.call(this, res, onload, onerror);
+            preloadFontFace.call(this, asset, onload, onerror);
             return 1;
 
         default:
-            throw new Error("load : unknown or invalid resource type : " + res.type);
+            throw new Error("load : unknown or invalid resource type : " + asset.type);
     }
 }
 
 /**
- * unload specified resource to free memory
- * @name unload
+ * unload the specified asset to free memory
  * @memberof loader
- * @public
- * @param {object} res
- * @param {string} res.name - internal name of the resource
- * @param {string} res.type  - "audio", binary", "image", "json", "tmx", "tsx"
+ * @param {loader.Asset} asset
  * @returns {boolean} true if unloaded
  * @example me.loader.unload({name: "avatar",  type:"image"});
  */
-function unload(res) {
-    switch (res.type) {
+function unload(asset) {
+    switch (asset.type) {
         case "binary":
-            if (!(res.name in binList)) {
+            if (!(asset.name in binList)) {
                 return false;
             }
 
-            delete binList[res.name];
+            delete binList[asset.name];
             return true;
 
         case "image":
-            if (!(res.name in imgList)) {
+            if (!(asset.name in imgList)) {
                 return false;
             }
-            delete imgList[res.name];
+            delete imgList[asset.name];
             return true;
 
         case "json":
-            if (!(res.name in jsonList)) {
+            if (!(asset.name in jsonList)) {
                 return false;
             }
 
-            delete jsonList[res.name];
+            delete jsonList[asset.name];
             return true;
 
         case "js":
@@ -26939,26 +26934,24 @@ function unload(res) {
 
         case "tmx":
         case "tsx":
-            if (!(res.name in tmxList)) {
+            if (!(asset.name in tmxList)) {
                 return false;
             }
 
-            delete tmxList[res.name];
+            delete tmxList[asset.name];
             return true;
 
         case "audio":
-            return unload$1(res.name);
+            return unload$1(asset.name);
 
         default:
-            throw new Error("unload : unknown or invalid resource type : " + res.type);
+            throw new Error("unload : unknown or invalid resource type : " + asset.type);
     }
 }
 
 /**
  * unload all resources to free memory
- * @name unloadAll
  * @memberof loader
- * @public
  * @example me.loader.unloadAll();
  */
 function unloadAll() {
@@ -27010,9 +27003,7 @@ function unloadAll() {
 
 /**
  * return the specified TMX/TSX object
- * @name getTMX
  * @memberof loader
- * @public
  * @param {string} elt - name of the tmx/tsx element ("map1");
  * @returns {object} requested element or null if not found
  */
@@ -27027,9 +27018,7 @@ function getTMX(elt) {
 
 /**
  * return the specified Binary object
- * @name getBinary
  * @memberof loader
- * @public
  * @param {string} elt - name of the binary object ("ymTrack");
  * @returns {object} requested element or null if not found
  */
@@ -27044,9 +27033,7 @@ function getBinary(elt) {
 
 /**
  * return the specified Image Object
- * @name getImage
  * @memberof loader
- * @public
  * @param {string} image - name of the Image element ("tileset-platformer");
  * @returns {HTMLImageElement} requested element or null if not found
  */
@@ -27062,9 +27049,7 @@ function getImage(image) {
 
 /**
  * return the specified JSON Object
- * @name getJSON
  * @memberof loader
- * @public
  * @param {string} elt - name of the json file to load
  * @returns {object}
  */
@@ -38007,10 +37992,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "15.1.3"
+         * @default "15.1.4"
          * @name plugin.Base#version
          */
-        this.version = "15.1.3";
+        this.version = "15.1.4";
     }
 }
 
@@ -38238,7 +38223,7 @@ Renderer.prototype.getScreenContext = function()  {
  * @name version
  * @type {string}
  */
-const version = "15.1.3";
+const version = "15.1.4";
 
 /**
  * a flag indicating that melonJS is fully initialized

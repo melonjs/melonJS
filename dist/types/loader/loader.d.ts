@@ -1,17 +1,21 @@
 /**
- * set all the specified game resources to be preloaded.
- * @name preload
+ * an asset definition to be used with the loader
+ * @typedef {object} loader.Asset
+ * @property {string} name - name of the asset
+ * @property {string} type  - the type of the asset : "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
+ * @property {string} src  - path and/or file name of the resource (for audio assets only the path is required)
+ * @property {boolean} [stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
+ * @see loader.preload
+ * @see loader.load
+ */
+/**
+ * set all the specified game assets to be preloaded.
  * @memberof loader
- * @public
- * @param {object[]} res
- * @param {string} res.name - internal name of the resource
- * @param {string} res.type  - "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
- * @param {string} res.src  - path and/or file name of the resource (for audio assets only the path is required)
- * @param {boolean} [res.stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
- * @param {Function} [onload=loader.onload] - function to be called when all resources are loaded
+ * @param {loader.Asset[]} assets - list of assets to load
+ * @param {Function} [onloadcb=loader.onload] - function to be called when all resources are loaded
  * @param {boolean} [switchToLoadState=true] - automatically switch to the loading screen
  * @example
- * game_resources = [
+ * game.assets = [
  *   // PNG tileset
  *   {name: "tileset-platformer", type: "image",  src: "data/map/tileset.png"},
  *   // PNG packed texture
@@ -41,24 +45,13 @@
  * ];
  * ...
  * // set all resources to be loaded
- * me.loader.preload(game.resources, () => this.loaded());
+ * me.loader.preload(game.assets, () => this.loaded());
  */
-export function preload(res: {
-    name: string;
-    type: string;
-    src: string;
-    stream?: boolean;
-}, onloadcb: any, switchToLoadState?: boolean | undefined): void;
+export function preload(assets: loader.Asset[], onloadcb?: Function | undefined, switchToLoadState?: boolean | undefined): void;
 /**
- * Load a single resource (to be used if you need to load additional resource during the game)
- * @name load
+ * Load a single asset (to be used if you need to load additional asset(s) during the game)
  * @memberof loader
- * @public
- * @param {object} res
- * @param {string} res.name - internal name of the resource
- * @param {string} res.type  - "audio", binary", "image", "json", "tmx", "tsx"
- * @param {string} res.src  - path and/or file name of the resource (for audio assets only the path is required)
- * @param {boolean} [res.stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
+ * @param {loader.Asset} asset
  * @param {Function} [onload] - function to be called when the resource is loaded
  * @param {Function} [onerror] - function to be called in case of error
  * @returns {number} the amount of corresponding resource to be preloaded
@@ -76,67 +69,45 @@ export function preload(res: {
  *     me.audio.play("bgmusic");
  * });
  */
-export function load(res: {
-    name: string;
-    type: string;
-    src: string;
-    stream?: boolean | undefined;
-}, onload?: Function | undefined, onerror?: Function | undefined): number;
+export function load(asset: loader.Asset, onload?: Function | undefined, onerror?: Function | undefined): number;
 /**
- * unload specified resource to free memory
- * @name unload
+ * unload the specified asset to free memory
  * @memberof loader
- * @public
- * @param {object} res
- * @param {string} res.name - internal name of the resource
- * @param {string} res.type  - "audio", binary", "image", "json", "tmx", "tsx"
+ * @param {loader.Asset} asset
  * @returns {boolean} true if unloaded
  * @example me.loader.unload({name: "avatar",  type:"image"});
  */
-export function unload(res: {
-    name: string;
-    type: string;
-}): boolean;
+export function unload(asset: loader.Asset): boolean;
 /**
  * unload all resources to free memory
- * @name unloadAll
  * @memberof loader
- * @public
  * @example me.loader.unloadAll();
  */
 export function unloadAll(): void;
 /**
  * return the specified TMX/TSX object
- * @name getTMX
  * @memberof loader
- * @public
  * @param {string} elt - name of the tmx/tsx element ("map1");
  * @returns {object} requested element or null if not found
  */
 export function getTMX(elt: string): object;
 /**
  * return the specified Binary object
- * @name getBinary
  * @memberof loader
- * @public
  * @param {string} elt - name of the binary object ("ymTrack");
  * @returns {object} requested element or null if not found
  */
 export function getBinary(elt: string): object;
 /**
  * return the specified Image Object
- * @name getImage
  * @memberof loader
- * @public
  * @param {string} image - name of the Image element ("tileset-platformer");
  * @returns {HTMLImageElement} requested element or null if not found
  */
 export function getImage(image: string): HTMLImageElement;
 /**
  * return the specified JSON Object
- * @name getJSON
  * @memberof loader
- * @public
  * @param {string} elt - name of the json file to load
  * @returns {object}
  */
@@ -144,23 +115,46 @@ export function getJSON(elt: string): object;
 export * from "./settings.js";
 /**
  * onload callback
- * @name onload
  * @default undefined
  * @memberof loader
+ * @type {function}
  * @example
  * // set a callback when everything is loaded
  * me.loader.onload = this.loaded.bind(this);
  */
-export let onload: any;
+export let onload: Function;
 /**
  * onProgress callback<br>
  * each time a resource is loaded, the loader will fire the specified function,
  * giving the actual progress [0 ... 1], as argument, and an object describing the resource loaded
- * @name onProgress
  * @default undefined
  * @memberof loader
+ * @type {function}
  * @example
  * // set a callback for progress notification
  * me.loader.onProgress = this.updateProgress.bind(this);
  */
-export let onProgress: any;
+export let onProgress: Function;
+export namespace loader {
+    /**
+     * an asset definition to be used with the loader
+     */
+    type Asset = {
+        /**
+         * - name of the asset
+         */
+        name: string;
+        /**
+         * - the type of the asset : "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
+         */
+        type: string;
+        /**
+         * - path and/or file name of the resource (for audio assets only the path is required)
+         */
+        src: string;
+        /**
+         * - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
+         */
+        stream?: boolean | undefined;
+    };
+}
