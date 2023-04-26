@@ -17,9 +17,9 @@ export * from "./settings.js";
 
 /**
  * onload callback
- * @name onload
  * @default undefined
  * @memberof loader
+ * @type {function}
  * @example
  * // set a callback when everything is loaded
  * me.loader.onload = this.loaded.bind(this);
@@ -30,9 +30,9 @@ export let onload;
  * onProgress callback<br>
  * each time a resource is loaded, the loader will fire the specified function,
  * giving the actual progress [0 ... 1], as argument, and an object describing the resource loaded
- * @name onProgress
  * @default undefined
  * @memberof loader
+ * @type {function}
  * @example
  * // set a callback for progress notification
  * me.loader.onProgress = this.updateProgress.bind(this);
@@ -101,19 +101,24 @@ function onLoadingError(res) {
 }
 
 /**
- * set all the specified game resources to be preloaded.
- * @name preload
+ * an asset definition to be used with the loader
+ * @typedef {object} loader.Asset
+ * @property {string} name - name of the asset
+ * @property {string} type  - the type of the asset : "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
+ * @property {string} src  - path and/or file name of the resource (for audio assets only the path is required)
+ * @property {boolean} [stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
+ * @see loader.preload
+ * @see loader.load
+ */
+
+/**
+ * set all the specified game assets to be preloaded.
  * @memberof loader
- * @public
- * @param {object[]} res
- * @param {string} res.name - internal name of the resource
- * @param {string} res.type  - "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
- * @param {string} res.src  - path and/or file name of the resource (for audio assets only the path is required)
- * @param {boolean} [res.stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
- * @param {Function} [onload=loader.onload] - function to be called when all resources are loaded
+ * @param {loader.Asset[]} assets - list of assets to load
+ * @param {Function} [onloadcb=loader.onload] - function to be called when all resources are loaded
  * @param {boolean} [switchToLoadState=true] - automatically switch to the loading screen
  * @example
- * game_resources = [
+ * game.assets = [
  *   // PNG tileset
  *   {name: "tileset-platformer", type: "image",  src: "data/map/tileset.png"},
  *   // PNG packed texture
@@ -143,15 +148,15 @@ function onLoadingError(res) {
  * ];
  * ...
  * // set all resources to be loaded
- * me.loader.preload(game.resources, () => this.loaded());
+ * me.loader.preload(game.assets, () => this.loaded());
  */
-export function preload(res, onloadcb, switchToLoadState = true) {
+export function preload(assets, onloadcb, switchToLoadState = true) {
     // parse the resources
-    for (let i = 0; i < res.length; i++) {
+    for (let i = 0; i < assets.length; i++) {
         resourceCount += load(
-            res[i],
-            onResourceLoaded.bind(this, res[i]),
-            onLoadingError.bind(this, res[i])
+            assets[i],
+            onResourceLoaded.bind(this, assets[i]),
+            onLoadingError.bind(this, assets[i])
         );
     }
     // set the onload callback if defined
@@ -169,15 +174,9 @@ export function preload(res, onloadcb, switchToLoadState = true) {
 }
 
 /**
- * Load a single resource (to be used if you need to load additional resource during the game)
- * @name load
+ * Load a single asset (to be used if you need to load additional asset(s) during the game)
  * @memberof loader
- * @public
- * @param {object} res
- * @param {string} res.name - internal name of the resource
- * @param {string} res.type  - "audio", binary", "image", "json", "tmx", "tsx"
- * @param {string} res.src  - path and/or file name of the resource (for audio assets only the path is required)
- * @param {boolean} [res.stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
+ * @param {loader.Asset} asset
  * @param {Function} [onload] - function to be called when the resource is loaded
  * @param {Function} [onerror] - function to be called in case of error
  * @returns {number} the amount of corresponding resource to be preloaded
@@ -195,83 +194,79 @@ export function preload(res, onloadcb, switchToLoadState = true) {
  *     me.audio.play("bgmusic");
  * });
  */
-export function load(res, onload, onerror) {
+export function load(asset, onload, onerror) {
     // transform the url if necessary
-    if (typeof (baseURL[res.type]) !== "undefined") {
-        res.src = baseURL[res.type] + res.src;
+    if (typeof (baseURL[asset.type]) !== "undefined") {
+        asset.src = baseURL[asset.type] + asset.src;
     }
     // check ressource type
-    switch (res.type) {
+    switch (asset.type) {
         case "binary":
             // reuse the preloadImage fn
-            preloadBinary.call(this, res, onload, onerror);
+            preloadBinary.call(this, asset, onload, onerror);
             return 1;
 
         case "image":
             // reuse the preloadImage fn
-            preloadImage.call(this, res, onload, onerror);
+            preloadImage.call(this, asset, onload, onerror);
             return 1;
 
         case "json":
-            preloadJSON.call(this, res, onload, onerror);
+            preloadJSON.call(this, asset, onload, onerror);
             return 1;
 
         case "js":
-            preloadJavascript.call(this, res, onload, onerror);
+            preloadJavascript.call(this, asset, onload, onerror);
             return 1;
 
         case "tmx":
         case "tsx":
-            preloadTMX.call(this, res, onload, onerror);
+            preloadTMX.call(this, asset, onload, onerror);
             return 1;
 
         case "audio":
-            audio.load(res, !!res.stream, onload, onerror);
+            audio.load(asset, !!asset.stream, onload, onerror);
             return 1;
 
         case "fontface":
-            preloadFontFace.call(this, res, onload, onerror);
+            preloadFontFace.call(this, asset, onload, onerror);
             return 1;
 
         default:
-            throw new Error("load : unknown or invalid resource type : " + res.type);
+            throw new Error("load : unknown or invalid resource type : " + asset.type);
     }
 }
 
 /**
- * unload specified resource to free memory
- * @name unload
+ * unload the specified asset to free memory
  * @memberof loader
- * @public
- * @param {object} res
- * @param {string} res.name - internal name of the resource
- * @param {string} res.type  - "audio", binary", "image", "json", "tmx", "tsx"
+ * @param {loader.Asset} asset
  * @returns {boolean} true if unloaded
  * @example me.loader.unload({name: "avatar",  type:"image"});
  */
-export function unload(res) {
-    switch (res.type) {
+export function unload(asset) {
+    switch (asset.type) {
         case "binary":
-            if (!(res.name in binList)) {
+            if (!(asset.name in binList)) {
                 return false;
             }
 
-            delete binList[res.name];
+            delete binList[asset.name];
             return true;
 
         case "image":
-            if (!(res.name in imgList)) {
+            if (!(asset.name in imgList)) {
                 return false;
             }
-            delete imgList[res.name];
+            delete imgList[asset.name];
             return true;
 
         case "json":
-            if (!(res.name in jsonList)) {
+            if (!(asset.name in jsonList)) {
                 return false;
             }
 
-            delete jsonList[res.name];
+            delete jsonList[asset.name];
             return true;
 
         case "js":
@@ -284,26 +279,24 @@ export function unload(res) {
 
         case "tmx":
         case "tsx":
-            if (!(res.name in tmxList)) {
+            if (!(asset.name in tmxList)) {
                 return false;
             }
 
-            delete tmxList[res.name];
+            delete tmxList[asset.name];
             return true;
 
         case "audio":
-            return audio.unload(res.name);
+            return audio.unload(asset.name);
 
         default:
-            throw new Error("unload : unknown or invalid resource type : " + res.type);
+            throw new Error("unload : unknown or invalid resource type : " + asset.type);
     }
 }
 
 /**
  * unload all resources to free memory
- * @name unloadAll
  * @memberof loader
- * @public
  * @example me.loader.unloadAll();
  */
 export function unloadAll() {
@@ -355,9 +348,7 @@ export function unloadAll() {
 
 /**
  * return the specified TMX/TSX object
- * @name getTMX
  * @memberof loader
- * @public
  * @param {string} elt - name of the tmx/tsx element ("map1");
  * @returns {object} requested element or null if not found
  */
@@ -372,9 +363,7 @@ export function getTMX(elt) {
 
 /**
  * return the specified Binary object
- * @name getBinary
  * @memberof loader
- * @public
  * @param {string} elt - name of the binary object ("ymTrack");
  * @returns {object} requested element or null if not found
  */
@@ -389,9 +378,7 @@ export function getBinary(elt) {
 
 /**
  * return the specified Image Object
- * @name getImage
  * @memberof loader
- * @public
  * @param {string} image - name of the Image element ("tileset-platformer");
  * @returns {HTMLImageElement} requested element or null if not found
  */
@@ -407,9 +394,7 @@ export function getImage(image) {
 
 /**
  * return the specified JSON Object
- * @name getJSON
  * @memberof loader
- * @public
  * @param {string} elt - name of the json file to load
  * @returns {object}
  */
