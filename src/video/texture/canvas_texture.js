@@ -38,7 +38,7 @@ class CanvasTexture {
          * the rendering context of this CanvasTexture
          * @type {CanvasRenderingContext2D}
          */
-        this.context = this.canvas.getContext("2d", { willReadFrequently: attributes.willReadFrequently });
+        this.context = this.canvas.getContext(attributes.context, { willReadFrequently: attributes.willReadFrequently });
 
         // enable or disable antiAlias if specified
         this.setAntiAlias(attributes.antiAlias);
