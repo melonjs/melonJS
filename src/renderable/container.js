@@ -552,13 +552,14 @@ let globalFloatingCounter = 0;
         if (this.enableChildBoundsUpdate === true) {
             this.forEach((child) => {
                 if (child.isRenderable) {
-                    let childBounds = child.getBounds();
+                    let childBounds = child.updateBounds(true);
                     if (childBounds.isFinite()) {
                         bounds.addBounds(childBounds);
                     }
                 }
             });
         }
+
         return bounds;
     }
 
