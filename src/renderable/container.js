@@ -193,10 +193,12 @@ let globalFloatingCounter = 0;
             }
         }
 
+        // add the new child
         child.ancestor = this;
         this.getChildren().push(child);
+
+        // update child bounds to reflect the new ancestor
         if (typeof child.updateBounds === "function") {
-            // update child bounds to reflect the new ancestor
             child.updateBounds();
         }
 
@@ -222,7 +224,7 @@ let globalFloatingCounter = 0;
             this.isDirty = true;
         }
 
-        // force bounds update if required
+        // force container bounds update if required
         if (this.enableChildBoundsUpdate === true) {
             this.updateBounds();
         }
@@ -271,9 +273,15 @@ let globalFloatingCounter = 0;
                     child.GUID = utils.createGUID();
                 }
             }
-            child.ancestor = this;
 
+            // add the new child
+            child.ancestor = this;
             this.getChildren().splice(index, 0, child);
+
+            // update child bounds to reflect the new ancestor
+            if (typeof child.updateBounds === "function") {
+                child.updateBounds();
+            }
 
             if (typeof child.onActivateEvent === "function" && this.isAttachedToRoot()) {
                 child.onActivateEvent();
@@ -284,7 +292,7 @@ let globalFloatingCounter = 0;
                 this.isDirty = true;
             }
 
-            // force bounds update if required
+            // force container bounds update if required
             if (this.enableChildBoundsUpdate === true) {
                 this.updateBounds();
             }
