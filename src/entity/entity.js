@@ -181,7 +181,7 @@ import Body from "./../physics/body.js";
 
         if (absolute === true) {
             bounds.centerOn(this.pos.x + bounds.x + bounds.width / 2,  this.pos.y + bounds.y + bounds.height / 2);
-             if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
+             if (typeof this.ancestor !== "undefined" && typeof this.ancestor.getAbsolutePosition === "function" && this.floating !== true) {
                  bounds.translate(this.ancestor.getAbsolutePosition());
              }
 
