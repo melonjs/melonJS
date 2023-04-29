@@ -539,10 +539,9 @@ let globalFloatingCounter = 0;
     }
 
     /**
-     * update the bounding box for this shape.
-     * @ignore
-     * @param {boolean} absolute - update the bounds size and position in (world) absolute coordinates
-     * @returns {Bounds} this shape bounding box Rectangle object
+     * update the bounding box for this container.
+     * @param {boolean} [absolute=true] - update the bounds size and position in (world) absolute coordinates
+     * @returns {Bounds} this container bounding box Rectangle object
      */
     updateBounds(absolute = true) {
         let bounds = this.getBounds();
