@@ -76,6 +76,9 @@ import pool from "../../system/pooling.js";
 
         // enable event detection
         this.isKinematic = false;
+
+        // update container and children bounds automatically
+        this.enableChildBoundsUpdate = true;
     }
 
     /**
