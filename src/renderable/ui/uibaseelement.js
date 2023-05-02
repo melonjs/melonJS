@@ -64,7 +64,7 @@ import pool from "../../system/pooling.js";
 
         /**
          * UI base elements use screen coordinates by default
-         * (Note: any child elements added to a UIBaseElement should set their floating property to false)
+         * (Note: any child elements added to a UIBaseElement should have their floating property to false)
          * @see Renderable.floating
          * @type {boolean}
          * @default true

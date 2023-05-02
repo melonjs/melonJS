@@ -73,7 +73,13 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
         this.holdTimeout = -1;
         this.released = true;
 
-        // GUI items use screen coordinates
+        /**
+         * if this UISpriteElement should use screen coordinates or local coordinates
+         * (Note: any UISpriteElement elements added to a floating parent container should have their floating property to false)
+         * @see Renderable.floating
+         * @type {boolean}
+         * @default true
+         */
         this.floating = true;
 
         // enable event detection
