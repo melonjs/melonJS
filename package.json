@@ -68,7 +68,7 @@
     "@rollup/plugin-node-resolve": "^15.0.2",
     "@rollup/plugin-replace": "^5.0.2",
     "@webdoc/cli": "^2.2.0",
-    "chromedriver": "^112.0.0",
+    "chromedriver": "^112.0.1",
     "cross-env": "^7.0.3",
     "del-cli": "^5.0.0",
     "eslint": "^8.39.0",
