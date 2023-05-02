@@ -199,6 +199,10 @@ let globalFloatingCounter = 0;
 
         // update child bounds to reflect the new ancestor
         if (typeof child.updateBounds === "function") {
+            if (this.isFloating === true) {
+                // only parent container can be floating
+                child.floating = false;
+            }
             child.updateBounds();
         }
 
@@ -280,6 +284,10 @@ let globalFloatingCounter = 0;
 
             // update child bounds to reflect the new ancestor
             if (typeof child.updateBounds === "function") {
+                if (this.isFloating === true) {
+                    // only parent container can be floating
+                    child.floating = false;
+                }
                 child.updateBounds();
             }
 
