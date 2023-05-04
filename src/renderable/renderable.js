@@ -263,12 +263,12 @@ import Color from "./../math/color.js";
     }
 
     /**
-     * Whether the renderable object is floating, or contained in a floating container
+     * Whether the renderable object is floating (i.e. used screen coordinates), or contained in a floating parent container
      * @see Renderable#floating
      * @type {boolean}
      */
     get isFloating() {
-        return this.floating === true || (typeof this.ancestor !== "undefined" && this.ancestor.floating === true);
+        return this.floating === true || (typeof this.ancestor !== "undefined" && this.ancestor.isFloating === true);
     }
 
     /**

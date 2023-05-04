@@ -6,6 +6,7 @@
 - Container: fix child bounds not being relaculated when a child is added through the `addChildAt()` method
 - Container: fix container not recursively updating child bounds when `enableChildBoundsUpdate` is enabled
 - Renderable: fix floating coordinates mismatch by forcing a child `floating` property to false when added to a floating container
+- Renderable: fix the `isFloating` getter to also return true when a renderable is added to nested floating containers
 - UI: fix initial UIBaseElement bound calculation when using nested UI containers
 
 ## [15.1.4] (melonJS 2) - _2023-04-26_
