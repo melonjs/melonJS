@@ -113,7 +113,7 @@ import pool from "../../system/pooling.js";
      * @returns {boolean} return false if we need to stop propagating the event
      */
     onClick(event) { // eslint-disable-line no-unused-vars
-        return false;
+        return true;
     }
 
     /**
@@ -206,7 +206,7 @@ import pool from "../../system/pooling.js";
      * @returns {boolean} return false if we need to stop propagating the event
      */
     onRelease() {
-        return false;
+        return true;
     }
 
     /**

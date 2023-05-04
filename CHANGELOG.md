@@ -8,6 +8,7 @@
 - Renderable: fix floating coordinates mismatch by forcing a child `floating` property to false when added to a floating container
 - Renderable: fix the `isFloating` getter to also return true when a renderable is added to nested floating containers
 - UI: fix initial UIBaseElement bound calculation when using nested UI containers
+- UI: fix UIBaseElement container not propagating events to child objects by default
 
 ## [15.1.4] (melonJS 2) - _2023-04-26_
 
