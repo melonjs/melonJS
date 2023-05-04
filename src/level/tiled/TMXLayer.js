@@ -42,7 +42,7 @@ function setLayerData(layer, bounds, data) {
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
             // get the value of the gid
-            let gid = data[idx++];
+            const gid = data[idx++];
             // fill the array
             if (gid !== 0) {
                 // add a new tile to the layer
@@ -61,7 +61,7 @@ function preRenderLayer(layer, renderer) {
     for (let y = 0; y < layer.rows; y++) {
         for (let x = 0; x < layer.cols; x++) {
             // get the value of the gid
-            let tile = layer.layerData[x][y];
+            const tile = layer.layerData[x][y];
             // draw the tile if defined
             if (tile instanceof Tile) {
                 // add a new tile to the layer
@@ -128,7 +128,7 @@ function preRenderLayer(layer, renderer) {
             "height" : 0
         };
         for (let i = 0; i < this.tilesets.length; i++) {
-            let tileset = this.tilesets.getTilesetByIndex(i);
+            const tileset = this.tilesets.getTilesetByIndex(i);
             this.maxTileSize.width = Math.max(this.maxTileSize.width, tileset.tilewidth);
             this.maxTileSize.height = Math.max(this.maxTileSize.height, tileset.tileheight);
         }

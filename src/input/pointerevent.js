@@ -210,7 +210,7 @@ function enablePointerEvent() {
  */
 function findActiveEvent(activeEventList, eventTypes) {
     for (let i = 0; i < eventTypes.length; i++) {
-        let event = activeEventList.indexOf(eventTypes[i]);
+        const event = activeEventList.indexOf(eventTypes[i]);
         if (event !== -1) {
             return eventTypes[i];
         }
@@ -223,7 +223,7 @@ function findActiveEvent(activeEventList, eventTypes) {
 function findAllActiveEvents(activeEventList, eventTypes) {
     let events = [];
     for (let i = 0; i < eventTypes.length; i++) {
-        let event = activeEventList.indexOf(eventTypes[i]);
+        const event = activeEventList.indexOf(eventTypes[i]);
         if (event !== -1) {
             events.push(eventTypes[i]);
         }
@@ -293,10 +293,10 @@ function dispatchEvent(normalizedEvents) {
 
         for (let c = candidates.length, candidate; c--, (candidate = candidates[c]);) {
             if (eventHandlers.has(candidate) && (candidate.isKinematic !== true)) {
-                let handlers = eventHandlers.get(candidate);
-                let region = handlers.region;
-                let ancestor = region.ancestor;
-                let bounds = region.getBounds();
+                const handlers = eventHandlers.get(candidate);
+                const region = handlers.region;
+                const ancestor = region.ancestor;
+                const bounds = region.getBounds();
                 let eventInBounds = false;
 
                 if (region.isFloating === true) {
@@ -404,7 +404,7 @@ function normalizeEvent(originalEvent) {
     if (device.touchEvent && originalEvent.changedTouches) {
         // iOS/Android Touch event
         for (let i = 0, l = originalEvent.changedTouches.length; i < l; i++) {
-            let touchEvent = originalEvent.changedTouches[i];
+            const touchEvent = originalEvent.changedTouches[i];
             _pointer = T_POINTERS.pop();
             _pointer.setEvent(
                 originalEvent,
@@ -682,7 +682,7 @@ export function registerPointerEvent(eventType, region, callback) {
     // allocate array if not defined
     let handlers = eventHandlers.get(region);
     for (let i = 0; i < eventTypes.length; i++) {
-        eventType = eventTypes[i];
+        const eventType = eventTypes[i];
         if (handlers.callbacks[eventType]) {
             handlers.callbacks[eventType].push(callback);
         } else {
@@ -715,7 +715,7 @@ export function releasePointerEvent(eventType, region, callback) {
     let handlers = eventHandlers.get(region);
     if (typeof (handlers) !== "undefined") {
         for (let i = 0; i < eventTypes.length; i++) {
-            eventType = eventTypes[i];
+            const eventType = eventTypes[i];
             if (handlers.callbacks[eventType]) {
                 if (typeof (callback) !== "undefined") {
                     remove(handlers.callbacks[eventType], callback);

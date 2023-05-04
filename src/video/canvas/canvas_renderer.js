@@ -392,9 +392,8 @@ import * as event from "./../../system/event.js";
         this.translate(poly.pos.x, poly.pos.y);
         context.beginPath();
         context.moveTo(poly.points[0].x, poly.points[0].y);
-        let point;
         for (let i = 1; i < poly.points.length; i++) {
-            point = poly.points[i];
+            const point = poly.points[i];
             context.lineTo(point.x, point.y);
         }
         context.lineTo(poly.points[0].x, poly.points[0].y);
@@ -689,11 +688,9 @@ import * as event from "./../../system/event.js";
         } else {
             // polygon
             const _x = mask.pos.x, _y = mask.pos.y;
-            let point;
-
             context.moveTo(_x + mask.points[0].x, _y + mask.points[0].y);
             for (let i = 1; i < mask.points.length; i++) {
-                point = mask.points[i];
+                const point = mask.points[i];
                 context.lineTo(_x + point.x, _y + point.y);
             }
         }

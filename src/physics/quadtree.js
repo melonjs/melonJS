@@ -352,7 +352,7 @@ let QT_VECTOR = new Vector2d();
      */
     hasChildren() {
         for (let i = 0; i < this.nodes.length; i = i + 1) {
-            let subnode = this.nodes[i];
+            const subnode = this.nodes[i];
             if (subnode.length > 0 || subnode.objects.length > 0) {
                 return true;
             }

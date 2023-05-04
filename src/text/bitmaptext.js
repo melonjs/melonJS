@@ -311,7 +311,7 @@ import TextMetrics from "./textmetrics.js";
 
         for (let i = 0; i < this._text.length; i++) {
             x = lX;
-            let string = this._text[i].trimEnd();
+            const string = this._text[i].trimEnd();
             // adjust x pos based on alignment value
             let stringWidth = this.metrics.lineWidth(string);
             switch (this.textAlign) {
