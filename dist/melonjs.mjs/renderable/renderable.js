@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.4
+ * melonJS Game Engine - v15.1.5
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -270,12 +270,12 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
     }
 
     /**
-     * Whether the renderable object is floating, or contained in a floating container
+     * Whether the renderable object is floating (i.e. used screen coordinates), or contained in a floating parent container
      * @see Renderable#floating
      * @type {boolean}
      */
     get isFloating() {
-        return this.floating === true || (typeof this.ancestor !== "undefined" && this.ancestor.floating === true);
+        return this.floating === true || (typeof this.ancestor !== "undefined" && this.ancestor.isFloating === true);
     }
 
     /**
@@ -584,11 +584,8 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
             }
 
             if (absolute === true) {
-                bounds.centerOn(this.pos.x + bounds.x + bounds.width / 2,  this.pos.y + bounds.y + bounds.height / 2);
-                if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
-                     bounds.translate(this.ancestor.getAbsolutePosition());
-                }
-
+                var absPos = this.getAbsolutePosition();
+                bounds.centerOn(absPos.x + bounds.x + bounds.width / 2,  absPos.y + bounds.y + bounds.height / 2);
             }
             return bounds;
 
@@ -617,7 +614,7 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
           }
           // XXX Cache me or something
           this._absPos.set(this.pos.x, this.pos.y);
-          if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
+          if (typeof this.ancestor !== "undefined" && typeof this.ancestor.getAbsolutePosition === "function" && this.floating !== true) {
               this._absPos.add(this.ancestor.getAbsolutePosition());
           }
           return this._absPos;

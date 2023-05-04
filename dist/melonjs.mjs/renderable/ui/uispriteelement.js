@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.4
+ * melonJS Game Engine - v15.1.5
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -80,7 +80,13 @@ import { registerPointerEvent, releasePointerEvent } from '../../input/pointerev
         this.holdTimeout = -1;
         this.released = true;
 
-        // GUI items use screen coordinates
+        /**
+         * if this UISpriteElement should use screen coordinates or local coordinates
+         * (Note: any UISpriteElement elements added to a floating parent container should have their floating property to false)
+         * @see Renderable.floating
+         * @type {boolean}
+         * @default true
+         */
         this.floating = true;
 
         // enable event detection

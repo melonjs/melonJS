@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.4
+ * melonJS Game Engine - v15.1.5
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -97,8 +97,9 @@ function onLoadingError(res) {
  * an asset definition to be used with the loader
  * @typedef {object} loader.Asset
  * @property {string} name - name of the asset
- * @property {string} type  - the type of the asset : "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
- * @property {string} src  - path and/or file name of the resource (for audio assets only the path is required)
+ * @property {string} type  - the type of the asset : "audio", binary", "image", "json", "js", "tmx", "tmj", "tsx", "tsj", "fontface"
+ * @property {string} [src]  - path and/or file name of the resource (for audio assets only the path is required)
+ * @property {string} [data]  - TMX data if not provided through a src url
  * @property {boolean} [stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
  * @see loader.preload
  * @see loader.load

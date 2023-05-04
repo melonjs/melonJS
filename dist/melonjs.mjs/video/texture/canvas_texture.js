@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.4
+ * melonJS Game Engine - v15.1.5
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -45,7 +45,7 @@ class CanvasTexture {
          * the rendering context of this CanvasTexture
          * @type {CanvasRenderingContext2D}
          */
-        this.context = this.canvas.getContext("2d", { willReadFrequently: attributes.willReadFrequently });
+        this.context = this.canvas.getContext(attributes.context, { willReadFrequently: attributes.willReadFrequently });
 
         // enable or disable antiAlias if specified
         this.setAntiAlias(attributes.antiAlias);

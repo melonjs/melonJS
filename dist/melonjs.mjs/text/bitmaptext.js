@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.4
+ * melonJS Game Engine - v15.1.5
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -239,7 +239,7 @@ import TextMetrics from './textmetrics.js';
         }
 
         if (absolute === true) {
-            if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
+            if (typeof this.ancestor !== "undefined" && typeof this.ancestor.getAbsolutePosition === "function" && this.floating !== true) {
                  bounds.translate(this.ancestor.getAbsolutePosition());
             }
         }

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.4
+ * melonJS Game Engine - v15.1.5
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -71,7 +71,7 @@ import { registerPointerEvent, releasePointerEvent } from '../../input/pointerev
 
         /**
          * UI base elements use screen coordinates by default
-         * (Note: any child elements added to a UIBaseElement should set their floating property to false)
+         * (Note: any child elements added to a UIBaseElement should have their floating property to false)
          * @see Renderable.floating
          * @type {boolean}
          * @default true
@@ -83,6 +83,9 @@ import { registerPointerEvent, releasePointerEvent } from '../../input/pointerev
 
         // enable event detection
         this.isKinematic = false;
+
+        // update container and children bounds automatically
+        this.enableChildBoundsUpdate = true;
     }
 
     /**

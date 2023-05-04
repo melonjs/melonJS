@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.4
+ * melonJS Game Engine - v15.1.5
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -200,10 +200,16 @@ let globalFloatingCounter = 0;
             }
         }
 
+        // add the new child
         child.ancestor = this;
         this.getChildren().push(child);
+
+        // update child bounds to reflect the new ancestor
         if (typeof child.updateBounds === "function") {
-            // update child bounds to reflect the new ancestor
+            if (this.isFloating === true) {
+                // only parent container can be floating
+                child.floating = false;
+            }
             child.updateBounds();
         }
 
@@ -229,7 +235,7 @@ let globalFloatingCounter = 0;
             this.isDirty = true;
         }
 
-        // force bounds update if required
+        // force container bounds update if required
         if (this.enableChildBoundsUpdate === true) {
             this.updateBounds();
         }
@@ -278,9 +284,19 @@ let globalFloatingCounter = 0;
                     child.GUID = utils.createGUID();
                 }
             }
-            child.ancestor = this;
 
+            // add the new child
+            child.ancestor = this;
             this.getChildren().splice(index, 0, child);
+
+            // update child bounds to reflect the new ancestor
+            if (typeof child.updateBounds === "function") {
+                if (this.isFloating === true) {
+                    // only parent container can be floating
+                    child.floating = false;
+                }
+                child.updateBounds();
+            }
 
             if (typeof child.onActivateEvent === "function" && this.isAttachedToRoot()) {
                 child.onActivateEvent();
@@ -291,7 +307,7 @@ let globalFloatingCounter = 0;
                 this.isDirty = true;
             }
 
-            // force bounds update if required
+            // force container bounds update if required
             if (this.enableChildBoundsUpdate === true) {
                 this.updateBounds();
             }
@@ -538,10 +554,9 @@ let globalFloatingCounter = 0;
     }
 
     /**
-     * update the bounding box for this shape.
-     * @ignore
-     * @param {boolean} absolute - update the bounds size and position in (world) absolute coordinates
-     * @returns {Bounds} this shape bounding box Rectangle object
+     * update the bounding box for this container.
+     * @param {boolean} [absolute=true] - update the bounds size and position in (world) absolute coordinates
+     * @returns {Bounds} this container bounding box Rectangle object
      */
     updateBounds(absolute = true) {
         let bounds = this.getBounds();
@@ -552,13 +567,14 @@ let globalFloatingCounter = 0;
         if (this.enableChildBoundsUpdate === true) {
             this.forEach((child) => {
                 if (child.isRenderable) {
-                    let childBounds = child.getBounds();
+                    let childBounds = child.updateBounds(true);
                     if (childBounds.isFinite()) {
                         bounds.addBounds(childBounds);
                     }
                 }
             });
         }
+
         return bounds;
     }
 

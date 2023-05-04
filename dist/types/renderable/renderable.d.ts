@@ -205,7 +205,7 @@ export default class Renderable extends Rect {
     };
     _inViewport: boolean;
     /**
-     * Whether the renderable object is floating, or contained in a floating container
+     * Whether the renderable object is floating (i.e. used screen coordinates), or contained in a floating parent container
      * @see Renderable#floating
      * @type {boolean}
      */

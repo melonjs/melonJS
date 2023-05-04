@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.4
+ * melonJS Game Engine - v15.1.5
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -18012,12 +18012,12 @@ var input = {
     }
 
     /**
-     * Whether the renderable object is floating, or contained in a floating container
+     * Whether the renderable object is floating (i.e. used screen coordinates), or contained in a floating parent container
      * @see Renderable#floating
      * @type {boolean}
      */
     get isFloating() {
-        return this.floating === true || (typeof this.ancestor !== "undefined" && this.ancestor.floating === true);
+        return this.floating === true || (typeof this.ancestor !== "undefined" && this.ancestor.isFloating === true);
     }
 
     /**
@@ -18326,11 +18326,8 @@ var input = {
             }
 
             if (absolute === true) {
-                bounds.centerOn(this.pos.x + bounds.x + bounds.width / 2,  this.pos.y + bounds.y + bounds.height / 2);
-                if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
-                     bounds.translate(this.ancestor.getAbsolutePosition());
-                }
-
+                var absPos = this.getAbsolutePosition();
+                bounds.centerOn(absPos.x + bounds.x + bounds.width / 2,  absPos.y + bounds.y + bounds.height / 2);
             }
             return bounds;
 
@@ -18359,7 +18356,7 @@ var input = {
           }
           // XXX Cache me or something
           this._absPos.set(this.pos.x, this.pos.y);
-          if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
+          if (typeof this.ancestor !== "undefined" && typeof this.ancestor.getAbsolutePosition === "function" && this.floating !== true) {
               this._absPos.add(this.ancestor.getAbsolutePosition());
           }
           return this._absPos;
@@ -23695,10 +23692,16 @@ let globalFloatingCounter = 0;
             }
         }
 
+        // add the new child
         child.ancestor = this;
         this.getChildren().push(child);
+
+        // update child bounds to reflect the new ancestor
         if (typeof child.updateBounds === "function") {
-            // update child bounds to reflect the new ancestor
+            if (this.isFloating === true) {
+                // only parent container can be floating
+                child.floating = false;
+            }
             child.updateBounds();
         }
 
@@ -23724,7 +23727,7 @@ let globalFloatingCounter = 0;
             this.isDirty = true;
         }
 
-        // force bounds update if required
+        // force container bounds update if required
         if (this.enableChildBoundsUpdate === true) {
             this.updateBounds();
         }
@@ -23773,9 +23776,19 @@ let globalFloatingCounter = 0;
                     child.GUID = utils.createGUID();
                 }
             }
-            child.ancestor = this;
 
+            // add the new child
+            child.ancestor = this;
             this.getChildren().splice(index, 0, child);
+
+            // update child bounds to reflect the new ancestor
+            if (typeof child.updateBounds === "function") {
+                if (this.isFloating === true) {
+                    // only parent container can be floating
+                    child.floating = false;
+                }
+                child.updateBounds();
+            }
 
             if (typeof child.onActivateEvent === "function" && this.isAttachedToRoot()) {
                 child.onActivateEvent();
@@ -23786,7 +23799,7 @@ let globalFloatingCounter = 0;
                 this.isDirty = true;
             }
 
-            // force bounds update if required
+            // force container bounds update if required
             if (this.enableChildBoundsUpdate === true) {
                 this.updateBounds();
             }
@@ -24033,10 +24046,9 @@ let globalFloatingCounter = 0;
     }
 
     /**
-     * update the bounding box for this shape.
-     * @ignore
-     * @param {boolean} absolute - update the bounds size and position in (world) absolute coordinates
-     * @returns {Bounds} this shape bounding box Rectangle object
+     * update the bounding box for this container.
+     * @param {boolean} [absolute=true] - update the bounds size and position in (world) absolute coordinates
+     * @returns {Bounds} this container bounding box Rectangle object
      */
     updateBounds(absolute = true) {
         let bounds = this.getBounds();
@@ -24047,13 +24059,14 @@ let globalFloatingCounter = 0;
         if (this.enableChildBoundsUpdate === true) {
             this.forEach((child) => {
                 if (child.isRenderable) {
-                    let childBounds = child.getBounds();
+                    let childBounds = child.updateBounds(true);
                     if (childBounds.isFinite()) {
                         bounds.addBounds(childBounds);
                     }
                 }
             });
         }
+
         return bounds;
     }
 
@@ -26759,8 +26772,9 @@ function onLoadingError(res) {
  * an asset definition to be used with the loader
  * @typedef {object} loader.Asset
  * @property {string} name - name of the asset
- * @property {string} type  - the type of the asset : "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
- * @property {string} src  - path and/or file name of the resource (for audio assets only the path is required)
+ * @property {string} type  - the type of the asset : "audio", binary", "image", "json", "js", "tmx", "tmj", "tsx", "tsj", "fontface"
+ * @property {string} [src]  - path and/or file name of the resource (for audio assets only the path is required)
+ * @property {string} [data]  - TMX data if not provided through a src url
  * @property {boolean} [stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
  * @see loader.preload
  * @see loader.load
@@ -32347,7 +32361,7 @@ class CanvasTexture {
          * the rendering context of this CanvasTexture
          * @type {CanvasRenderingContext2D}
          */
-        this.context = this.canvas.getContext("2d", { willReadFrequently: attributes.willReadFrequently });
+        this.context = this.canvas.getContext(attributes.context, { willReadFrequently: attributes.willReadFrequently });
 
         // enable or disable antiAlias if specified
         this.setAntiAlias(attributes.antiAlias);
@@ -33181,7 +33195,7 @@ class CanvasTexture {
 
         /**
          * UI base elements use screen coordinates by default
-         * (Note: any child elements added to a UIBaseElement should set their floating property to false)
+         * (Note: any child elements added to a UIBaseElement should have their floating property to false)
          * @see Renderable.floating
          * @type {boolean}
          * @default true
@@ -33193,6 +33207,9 @@ class CanvasTexture {
 
         // enable event detection
         this.isKinematic = false;
+
+        // update container and children bounds automatically
+        this.enableChildBoundsUpdate = true;
     }
 
     /**
@@ -34200,7 +34217,7 @@ const toPX = [12, 24, 0.75, 1];
         }
 
         if (absolute === true) {
-            if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
+            if (typeof this.ancestor !== "undefined" && typeof this.ancestor.getAbsolutePosition === "function" && this.floating !== true) {
                  bounds.translate(this.ancestor.getAbsolutePosition());
             }
         }
@@ -34589,7 +34606,13 @@ const toPX = [12, 24, 0.75, 1];
         this.holdTimeout = -1;
         this.released = true;
 
-        // GUI items use screen coordinates
+        /**
+         * if this UISpriteElement should use screen coordinates or local coordinates
+         * (Note: any UISpriteElement elements added to a floating parent container should have their floating property to false)
+         * @see Renderable.floating
+         * @type {boolean}
+         * @default true
+         */
         this.floating = true;
 
         // enable event detection
@@ -37348,11 +37371,8 @@ function createDefaultParticleTexture(w = 8, h = 8) {
         }
 
         if (absolute === true) {
-            bounds.centerOn(this.pos.x + bounds.x + bounds.width / 2,  this.pos.y + bounds.y + bounds.height / 2);
-             if (typeof this.ancestor !== "undefined" && typeof this.ancestor.addChild === "function" && this.floating !== true) {
-                 bounds.translate(this.ancestor.getAbsolutePosition());
-             }
-
+            var absPos = this.getAbsolutePosition();
+            bounds.centerOn(absPos.x + bounds.x + bounds.width / 2,  absPos.y + bounds.y + bounds.height / 2);
         }
 
         return bounds;
@@ -37992,10 +38012,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "15.1.4"
+         * @default "15.1.5"
          * @name plugin.Base#version
          */
-        this.version = "15.1.4";
+        this.version = "15.1.5";
     }
 }
 
@@ -38223,7 +38243,7 @@ Renderer.prototype.getScreenContext = function()  {
  * @name version
  * @type {string}
  */
-const version = "15.1.4";
+const version = "15.1.5";
 
 /**
  * a flag indicating that melonJS is fully initialized
