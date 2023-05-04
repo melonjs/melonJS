@@ -3,7 +3,7 @@
 ## [15.1.5] (melonJS 2) - _2023-05-xx_
 
 ### Fixed
-- Container: fix child bounds not being relaculated when a child is added through the `addChildAt()` method
+- Container: fix child bounds not being recalculated when a child is added through the `addChildAt()` method
 - Container: fix container not recursively updating child bounds when `enableChildBoundsUpdate` is enabled
 - Renderable: fix floating coordinates mismatch by forcing a child `floating` property to false when added to a floating container
 - Renderable: fix the `isFloating` getter to also return true when a renderable is added to nested floating containers
