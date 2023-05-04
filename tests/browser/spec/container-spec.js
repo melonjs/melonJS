@@ -40,19 +40,28 @@ describe("me.Container", function () {
 
         });
 
-        it("should return proper value for object in nested containers", function () {
+        it("should return proper position and bounds for object in nested containers", function () {
             var secondContainer = new Container(10, 10, 100, 100);
             var thirdContainer = new Container(10, 10, 100, 100);
             var renderable = new Renderable(50, 50, 100, 100)
 
-            secondContainer.addChild(thirdContainer);
+            // enable child bounds update
+            secondContainer.enableChildBoundsUpdate = true;
+            thirdContainer.enableChildBoundsUpdate = true;
+
             container.addChild(secondContainer);
-
+            secondContainer.addChild(thirdContainer);
             thirdContainer.addChild(renderable);
-
+           
             var absPos = renderable.getAbsolutePosition();
             expect(absPos.x).toEqual(70);
             expect(absPos.y).toEqual(70);
+
+            var bounds = renderable.getBounds();
+            // 20 because default anchor point is (0.5, 0.5)
+            expect(bounds.x).toEqual(20);
+            expect(bounds.y).toEqual(20);
+
         });
 
     });
