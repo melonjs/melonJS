@@ -1,6 +1,6 @@
 # Changelog
 
-## [15.1.5] (melonJS 2) - _2023-05-xx_
+## [15.1.5] (melonJS 2) - _2023-05-05_
 
 ### Fixed
 - Container: fix child bounds not being recalculated when a child is added through the `addChildAt()` method
