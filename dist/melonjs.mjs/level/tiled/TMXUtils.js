@@ -90,7 +90,7 @@ function parseAttributes(obj, elt) {
     // do attributes
     if (elt.attributes && elt.attributes.length > 0) {
         for (let j = 0; j < elt.attributes.length; j++) {
-            let attribute = elt.attributes.item(j);
+            const attribute = elt.attributes.item(j);
             if (typeof(attribute.name) !== "undefined") {
                 // DOM4 (Attr no longer inherit from Node)
                 obj[attribute.name] = attribute.value;
@@ -289,8 +289,8 @@ function normalize(obj, item) {
             var points = parse(item).points.split(" ");  // <= "Unexpected lexical declaration in case block" if using let
 
             // And normalize them into an array of vectors
-            for (let i = 0, v; i < points.length; i++) {
-                v = points[i].split(",");
+            for (let i = 0; i < points.length; i++) {
+                const v = points[i].split(",");
                 obj[nodeName].push({
                     "x" : +v[0],
                     "y" : +v[1]

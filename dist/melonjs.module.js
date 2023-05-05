@@ -7020,8 +7020,8 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
 
         //http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
         for (let i = 0, j = len - 1; i < len; j = i++) {
-            let iy = points[i].y + posy, ix = points[i].x + posx,
-                jy = points[j].y + posy, jx = points[j].x + posx;
+            const iy = points[i].y + posy, ix = points[i].x + posx,
+                  jy = points[j].y + posy, jx = points[j].x + posx;
             if (((iy > _y) !== (jy > _y)) && (_x < (jx - ix) * (_y - iy) / (jy - iy) + ix)) {
                 intersects = !intersects;
             }
@@ -8449,7 +8449,7 @@ let QT_VECTOR = new Vector2d();
      */
     hasChildren() {
         for (let i = 0; i < this.nodes.length; i = i + 1) {
-            let subnode = this.nodes[i];
+            const subnode = this.nodes[i];
             if (subnode.length > 0 || subnode.objects.length > 0) {
                 return true;
             }
@@ -8670,7 +8670,7 @@ let QT_VECTOR = new Vector2d();
             this.clear();
         }
         for (let i = 0; i < vertices.length; i++) {
-            let vertex = vertices[i];
+            const vertex = vertices[i];
             if (vertex.x > this.max.x) this.max.x = vertex.x;
             if (vertex.x < this.min.x) this.min.x = vertex.x;
             if (vertex.y > this.max.y) this.max.y = vertex.y;
@@ -16641,7 +16641,7 @@ function enablePointerEvent() {
  */
 function findActiveEvent(activeEventList, eventTypes) {
     for (let i = 0; i < eventTypes.length; i++) {
-        let event = activeEventList.indexOf(eventTypes[i]);
+        const event = activeEventList.indexOf(eventTypes[i]);
         if (event !== -1) {
             return eventTypes[i];
         }
@@ -16654,7 +16654,7 @@ function findActiveEvent(activeEventList, eventTypes) {
 function findAllActiveEvents(activeEventList, eventTypes) {
     let events = [];
     for (let i = 0; i < eventTypes.length; i++) {
-        let event = activeEventList.indexOf(eventTypes[i]);
+        const event = activeEventList.indexOf(eventTypes[i]);
         if (event !== -1) {
             events.push(eventTypes[i]);
         }
@@ -16724,10 +16724,10 @@ function dispatchEvent(normalizedEvents) {
 
         for (let c = candidates.length, candidate; c--, (candidate = candidates[c]);) {
             if (eventHandlers.has(candidate) && (candidate.isKinematic !== true)) {
-                let handlers = eventHandlers.get(candidate);
-                let region = handlers.region;
-                let ancestor = region.ancestor;
-                let bounds = region.getBounds();
+                const handlers = eventHandlers.get(candidate);
+                const region = handlers.region;
+                const ancestor = region.ancestor;
+                const bounds = region.getBounds();
                 let eventInBounds = false;
 
                 if (region.isFloating === true) {
@@ -16835,7 +16835,7 @@ function normalizeEvent(originalEvent) {
     if (touchEvent && originalEvent.changedTouches) {
         // iOS/Android Touch event
         for (let i = 0, l = originalEvent.changedTouches.length; i < l; i++) {
-            let touchEvent = originalEvent.changedTouches[i];
+            const touchEvent = originalEvent.changedTouches[i];
             _pointer = T_POINTERS.pop();
             _pointer.setEvent(
                 originalEvent,
@@ -17113,7 +17113,7 @@ function registerPointerEvent(eventType, region, callback) {
     // allocate array if not defined
     let handlers = eventHandlers.get(region);
     for (let i = 0; i < eventTypes.length; i++) {
-        eventType = eventTypes[i];
+        const eventType = eventTypes[i];
         if (handlers.callbacks[eventType]) {
             handlers.callbacks[eventType].push(callback);
         } else {
@@ -17146,7 +17146,7 @@ function releasePointerEvent(eventType, region, callback) {
     let handlers = eventHandlers.get(region);
     if (typeof (handlers) !== "undefined") {
         for (let i = 0; i < eventTypes.length; i++) {
-            eventType = eventTypes[i];
+            const eventType = eventTypes[i];
             if (handlers.callbacks[eventType]) {
                 if (typeof (callback) !== "undefined") {
                     remove(handlers.callbacks[eventType], callback);
@@ -19948,7 +19948,7 @@ function parseAttributes(obj, elt) {
     // do attributes
     if (elt.attributes && elt.attributes.length > 0) {
         for (let j = 0; j < elt.attributes.length; j++) {
-            let attribute = elt.attributes.item(j);
+            const attribute = elt.attributes.item(j);
             if (typeof(attribute.name) !== "undefined") {
                 // DOM4 (Attr no longer inherit from Node)
                 obj[attribute.name] = attribute.value;
@@ -20147,8 +20147,8 @@ function normalize(obj, item) {
             var points = parse(item).points.split(" ");  // <= "Unexpected lexical declaration in case block" if using let
 
             // And normalize them into an array of vectors
-            for (let i = 0, v; i < points.length; i++) {
-                v = points[i].split(",");
+            for (let i = 0; i < points.length; i++) {
+                const v = points[i].split(",");
                 obj[nodeName].push({
                     "x" : +v[0],
                     "y" : +v[1]
@@ -20927,10 +20927,10 @@ class TMXObject {
         const cos_rotation = Math.cos(rotation);
         const sin_rotation = Math.sin(rotation);
         for (let j = 0; j < nr_of_interpolation_points; j++) {
-            let _x1 = radiusX * Math.cos(angle);
-            let _y1 = radiusY * Math.sin(angle);
-            let _x2 = x + _x1 * cos_rotation - _y1 * sin_rotation;
-            let _y2 = y + _x1 * sin_rotation + _y1 * cos_rotation;
+            const _x1 = radiusX * Math.cos(angle);
+            const _y1 = radiusY * Math.sin(angle);
+            const _x2 = x + _x1 * cos_rotation - _y1 * sin_rotation;
+            const _y2 = y + _x1 * sin_rotation + _y1 * cos_rotation;
             points.push(pool.pull("Point", _x2, _y2));
             angle += direction * dangle;
         }
@@ -22636,9 +22636,8 @@ class TextureCache {
         this.translate(poly.pos.x, poly.pos.y);
         context.beginPath();
         context.moveTo(poly.points[0].x, poly.points[0].y);
-        let point;
         for (let i = 1; i < poly.points.length; i++) {
-            point = poly.points[i];
+            const point = poly.points[i];
             context.lineTo(point.x, point.y);
         }
         context.lineTo(poly.points[0].x, poly.points[0].y);
@@ -22933,11 +22932,9 @@ class TextureCache {
         } else {
             // polygon
             const _x = mask.pos.x, _y = mask.pos.y;
-            let point;
-
             context.moveTo(_x + mask.points[0].x, _y + mask.points[0].y);
             for (let i = 1; i < mask.points.length; i++) {
-                point = mask.points[i];
+                const point = mask.points[i];
                 context.lineTo(_x + point.x, _y + point.y);
             }
         }
@@ -23001,7 +22998,7 @@ function setLayerData(layer, bounds, data) {
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
             // get the value of the gid
-            let gid = data[idx++];
+            const gid = data[idx++];
             // fill the array
             if (gid !== 0) {
                 // add a new tile to the layer
@@ -23020,7 +23017,7 @@ function preRenderLayer(layer, renderer) {
     for (let y = 0; y < layer.rows; y++) {
         for (let x = 0; x < layer.cols; x++) {
             // get the value of the gid
-            let tile = layer.layerData[x][y];
+            const tile = layer.layerData[x][y];
             // draw the tile if defined
             if (tile instanceof Tile) {
                 // add a new tile to the layer
@@ -23087,7 +23084,7 @@ function preRenderLayer(layer, renderer) {
             "height" : 0
         };
         for (let i = 0; i < this.tilesets.length; i++) {
-            let tileset = this.tilesets.getTilesetByIndex(i);
+            const tileset = this.tilesets.getTilesetByIndex(i);
             this.maxTileSize.width = Math.max(this.maxTileSize.width, tileset.tilewidth);
             this.maxTileSize.height = Math.max(this.maxTileSize.height, tileset.tileheight);
         }
@@ -23722,11 +23719,6 @@ let globalFloatingCounter = 0;
             child.onActivateEvent();
         }
 
-        // force repaint in case this is a static non-animated object
-        if (this.isAttachedToRoot() === true) {
-            this.isDirty = true;
-        }
-
         // force container bounds update if required
         if (this.enableChildBoundsUpdate === true) {
             this.updateBounds();
@@ -23749,6 +23741,9 @@ let globalFloatingCounter = 0;
                 });
             }
         }
+
+        // mark the container for repaint
+        this.isDirty = true;
 
         // triggered callback if defined
         this.onChildChange.call(this, this.getChildren().length - 1);
@@ -23794,11 +23789,6 @@ let globalFloatingCounter = 0;
                 child.onActivateEvent();
             }
 
-            // force repaint in case this is a static non-animated object
-            if (this.isAttachedToRoot() === true) {
-                this.isDirty = true;
-            }
-
             // force container bounds update if required
             if (this.enableChildBoundsUpdate === true) {
                 this.updateBounds();
@@ -23821,6 +23811,9 @@ let globalFloatingCounter = 0;
                     });
                 }
             }
+
+            // mark the container for repaint
+            this.isDirty = true;
 
             // triggered callback if defined
             this.onChildChange.call(this, index);
@@ -24190,15 +24183,13 @@ let globalFloatingCounter = 0;
                 child.ancestor = undefined;
             }
 
-            // force repaint in case this is a static non-animated object
-            if (this.isAttachedToRoot() === true) {
-                this.isDirty = true;
-            }
-
             // force bounds update if required
             if (this.enableChildBoundsUpdate === true) {
                 this.updateBounds();
             }
+
+            // mark the container for repaint
+            this.isDirty = true;
 
             // triggered callback if defined
             this.onChildChange.call(this, childIndex);
@@ -24488,6 +24479,7 @@ let globalFloatingCounter = 0;
 }
 
 /* eslint-disable no-unused-vars */
+
 
 /**
  * @classdesc
@@ -25213,7 +25205,7 @@ const offsetsStaggerY = [
         let nearest = 0;
         let minDist = Number.MAX_VALUE;
         for (let i = 0; i < 4; ++i) {
-            let dc = this.centers[i].sub(rel).length2();
+            const dc = this.centers[i].sub(rel).length2();
             if (dc < minDist) {
                 minDist = dc;
                 nearest = i;
@@ -33244,7 +33236,7 @@ class CanvasTexture {
      * @returns {boolean} return false if we need to stop propagating the event
      */
     onClick(event) { // eslint-disable-line no-unused-vars
-        return false;
+        return true;
     }
 
     /**
@@ -33337,7 +33329,7 @@ class CanvasTexture {
      * @returns {boolean} return false if we need to stop propagating the event
      */
     onRelease() {
-        return false;
+        return true;
     }
 
     /**
@@ -33788,7 +33780,7 @@ const toPX = [12, 24, 0.75, 1];
         setContextStyle(context, this);
 
         for (let i = 0; i < text.length; i++) {
-            let string = text[i].trimEnd();
+            const string = text[i].trimEnd();
             // draw the string
             if (this.fillStyle.alpha > 0) {
                 context.fillText(string, x, y);
@@ -34296,7 +34288,7 @@ const toPX = [12, 24, 0.75, 1];
 
         for (let i = 0; i < this._text.length; i++) {
             x = lX;
-            let string = this._text[i].trimEnd();
+            const string = this._text[i].trimEnd();
             // adjust x pos based on alignment value
             let stringWidth = this.metrics.lineWidth(string);
             switch (this.textAlign) {
@@ -35550,6 +35542,7 @@ class DropTarget extends Renderable {
 * Available under the MIT License - https://github.com/jriecken/sat-js
 */
 
+
 /**
  * Constants for Vornoi regions
  * @ignore
@@ -35603,7 +35596,7 @@ function flattenPointsOn(points, normal, result) {
     let len = points.length;
     for (let i = 0; i < len; i++) {
         // The magnitude of the projection of the point onto the normal
-        let dot = points[i].dot(normal);
+        const dot = points[i].dot(normal);
         if (dot < min) { min = dot; }
         if (dot > max) { max = dot; }
     }
@@ -35850,8 +35843,8 @@ function testPolygonEllipse(a, polyA, b, ellipseB, response) {
 
     // For each edge in the polygon:
     for (let i = 0; i < len; i++) {
-        let next = i === len - 1 ? 0 : i + 1;
-        let prev = i === 0 ? len - 1 : i - 1;
+        const next = i === len - 1 ? 0 : i + 1;
+        const prev = i === 0 ? len - 1 : i - 1;
         let overlap = 0;
         let overlapN = null;
 
@@ -36240,7 +36233,7 @@ class Detector {
             if (objB.body && line.getBounds().overlaps(objB.getBounds())) {
 
                 // go trough all defined shapes in B (if any)
-                let bLen = objB.body.shapes.length;
+                const bLen = objB.body.shapes.length;
                 if ( objB.body.shapes.length === 0) {
                     continue;
                 }

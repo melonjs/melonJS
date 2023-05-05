@@ -12,6 +12,7 @@ import Vector2d from '../math/vector2.js';
 * Available under the MIT License - https://github.com/jriecken/sat-js
 */
 
+
 /**
  * Constants for Vornoi regions
  * @ignore
@@ -65,7 +66,7 @@ function flattenPointsOn(points, normal, result) {
     let len = points.length;
     for (let i = 0; i < len; i++) {
         // The magnitude of the projection of the point onto the normal
-        let dot = points[i].dot(normal);
+        const dot = points[i].dot(normal);
         if (dot < min) { min = dot; }
         if (dot > max) { max = dot; }
     }
@@ -312,8 +313,8 @@ function testPolygonEllipse(a, polyA, b, ellipseB, response) {
 
     // For each edge in the polygon:
     for (let i = 0; i < len; i++) {
-        let next = i === len - 1 ? 0 : i + 1;
-        let prev = i === 0 ? len - 1 : i - 1;
+        const next = i === len - 1 ? 0 : i + 1;
+        const prev = i === 0 ? len - 1 : i - 1;
         let overlap = 0;
         let overlapN = null;
 

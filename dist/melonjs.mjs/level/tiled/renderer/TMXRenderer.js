@@ -11,6 +11,7 @@ import Bounds from '../../../physics/bounds.js';
 
 /* eslint-disable no-unused-vars */
 
+
 /**
  * @classdesc
  * The map renderer base class

@@ -439,8 +439,8 @@ import pool from '../system/pooling.js';
 
         //http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
         for (let i = 0, j = len - 1; i < len; j = i++) {
-            let iy = points[i].y + posy, ix = points[i].x + posx,
-                jy = points[j].y + posy, jx = points[j].x + posx;
+            const iy = points[i].y + posy, ix = points[i].x + posx,
+                  jy = points[j].y + posy, jx = points[j].x + posx;
             if (((iy > _y) !== (jy > _y)) && (_x < (jx - ix) * (_y - iy) / (jy - iy) + ix)) {
                 intersects = !intersects;
             }

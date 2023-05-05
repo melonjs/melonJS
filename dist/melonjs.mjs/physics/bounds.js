@@ -197,7 +197,7 @@ import Vector2d from '../math/vector2.js';
             this.clear();
         }
         for (let i = 0; i < vertices.length; i++) {
-            let vertex = vertices[i];
+            const vertex = vertices[i];
             if (vertex.x > this.max.x) this.max.x = vertex.x;
             if (vertex.x < this.min.x) this.min.x = vertex.x;
             if (vertex.y > this.max.y) this.max.y = vertex.y;

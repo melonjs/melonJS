@@ -382,7 +382,7 @@ const toPX = [12, 24, 0.75, 1];
         setContextStyle(context, this);
 
         for (let i = 0; i < text.length; i++) {
-            let string = text[i].trimEnd();
+            const string = text[i].trimEnd();
             // draw the string
             if (this.fillStyle.alpha > 0) {
                 context.fillText(string, x, y);

@@ -177,7 +177,7 @@ class Detector {
             if (objB.body && line.getBounds().overlaps(objB.getBounds())) {
 
                 // go trough all defined shapes in B (if any)
-                let bLen = objB.body.shapes.length;
+                const bLen = objB.body.shapes.length;
                 if ( objB.body.shapes.length === 0) {
                     continue;
                 }

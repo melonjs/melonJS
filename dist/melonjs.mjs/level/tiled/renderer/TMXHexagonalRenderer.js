@@ -289,7 +289,7 @@ const offsetsStaggerY = [
         let nearest = 0;
         let minDist = Number.MAX_VALUE;
         for (let i = 0; i < 4; ++i) {
-            let dc = this.centers[i].sub(rel).length2();
+            const dc = this.centers[i].sub(rel).length2();
             if (dc < minDist) {
                 minDist = dc;
                 nearest = i;

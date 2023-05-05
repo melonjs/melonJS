@@ -242,10 +242,10 @@ import earcut from '../node_modules/earcut/src/earcut.js';
         const cos_rotation = Math.cos(rotation);
         const sin_rotation = Math.sin(rotation);
         for (let j = 0; j < nr_of_interpolation_points; j++) {
-            let _x1 = radiusX * Math.cos(angle);
-            let _y1 = radiusY * Math.sin(angle);
-            let _x2 = x + _x1 * cos_rotation - _y1 * sin_rotation;
-            let _y2 = y + _x1 * sin_rotation + _y1 * cos_rotation;
+            const _x1 = radiusX * Math.cos(angle);
+            const _y1 = radiusY * Math.sin(angle);
+            const _x2 = x + _x1 * cos_rotation - _y1 * sin_rotation;
+            const _y2 = y + _x1 * sin_rotation + _y1 * cos_rotation;
             points.push(pool.pull("Point", _x2, _y2));
             angle += direction * dangle;
         }
