@@ -223,11 +223,6 @@ let globalFloatingCounter = 0;
             child.onActivateEvent();
         }
 
-        // force repaint in case this is a static non-animated object
-        if (this.isAttachedToRoot() === true) {
-            this.isDirty = true;
-        }
-
         // force container bounds update if required
         if (this.enableChildBoundsUpdate === true) {
             this.updateBounds();
@@ -250,6 +245,9 @@ let globalFloatingCounter = 0;
                 });
             }
         }
+
+        // mark the container for repaint
+        this.isDirty = true;
 
         // triggered callback if defined
         this.onChildChange.call(this, this.getChildren().length - 1);
@@ -295,11 +293,6 @@ let globalFloatingCounter = 0;
                 child.onActivateEvent();
             }
 
-            // force repaint in case this is a static non-animated object
-            if (this.isAttachedToRoot() === true) {
-                this.isDirty = true;
-            }
-
             // force container bounds update if required
             if (this.enableChildBoundsUpdate === true) {
                 this.updateBounds();
@@ -322,6 +315,9 @@ let globalFloatingCounter = 0;
                     });
                 }
             }
+
+            // mark the container for repaint
+            this.isDirty = true;
 
             // triggered callback if defined
             this.onChildChange.call(this, index);
@@ -691,15 +687,13 @@ let globalFloatingCounter = 0;
                 child.ancestor = undefined;
             }
 
-            // force repaint in case this is a static non-animated object
-            if (this.isAttachedToRoot() === true) {
-                this.isDirty = true;
-            }
-
             // force bounds update if required
             if (this.enableChildBoundsUpdate === true) {
                 this.updateBounds();
             }
+
+            // mark the container for repaint
+            this.isDirty = true;
 
             // triggered callback if defined
             this.onChildChange.call(this, childIndex);
