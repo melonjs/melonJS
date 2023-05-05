@@ -79,7 +79,7 @@
     "mocha": "^10.2.0",
     "npm-self-link": "^1.1.7",
     "puppeteer": "^20.1.0",
-    "rollup": "^3.21.4",
+    "rollup": "^3.21.5",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
     "terser": "^5.17.1",
