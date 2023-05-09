@@ -88,7 +88,7 @@ import UISpriteElement from "./renderable/ui/uispriteelement.js";
 import Collectable from "./renderable/collectable.js";
 import Trigger from "./renderable/trigger.js";
 import Light2d from "./renderable/light2d.js";
-import { Draggable } from "./renderable/dragndrop.js";
+import { Draggable } from "./renderable/draggable.js";
 import { DropTarget } from "./renderable/dragndrop.js";
 import TMXRenderer from "./level/tiled/renderer/TMXRenderer.js";
 import TMXOrthogonalRenderer from "./level/tiled/renderer/TMXOrthogonalRenderer.js";

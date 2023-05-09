@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.5
+ * melonJS Game Engine - v15.1.6
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -18474,7 +18474,7 @@ var input = {
      * onCollision callback, triggered in case of collision,
      * when this renderable body is colliding with another one
      * @param {ResponseObject} response - the collision response object
-     * @param {Renderable} other - the other renderable touching this one (a reference to response.a or response.b)
+     * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} other - the other renderable touching this one (a reference to response.a or response.b)
      * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
      * @example
      * // colision handler
@@ -19121,7 +19121,7 @@ let targetV = new Vector2d();
      * set the camera position around the specified object
      * @name focusOn
      * @memberof Camera2d
-     * @param {Renderable} target - the renderable to focus the camera on
+     * @param {Renderable|Entity|Sprite|NineSliceSprite} target - the renderable to focus the camera on
      */
     focusOn(target) {
         let bounds = target.getBounds();
@@ -19135,7 +19135,7 @@ let targetV = new Vector2d();
      * check if the specified renderable is in the camera
      * @name isVisible
      * @memberof Camera2d
-     * @param {Renderable} obj - to be checked against
+     * @param {Renderable|Entity|Sprite|NineSliceSprite} obj - to be checked against
      * @param {boolean} [floating = obj.floating] - if visibility check should be done against screen coordinates
      * @returns {boolean}
      */
@@ -23672,7 +23672,7 @@ let globalFloatingCounter = 0;
      * will not be in any container. <br>
      * if the given child implements a onActivateEvent method, that method will be called
      * once the child is added to this container.
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      * @param {number} [z] - forces the z index of the child to the specified value
      * @returns {Renderable} the added child
      */
@@ -23754,7 +23754,7 @@ let globalFloatingCounter = 0;
     /**
      * Add a child to the container at the specified index<br>
      * (the list won't be sorted after insertion)
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      * @param {number} index
      * @returns {Renderable} the added child
      */
@@ -23865,8 +23865,8 @@ let globalFloatingCounter = 0;
 
     /**
      * Swaps the position (z-index) of 2 children
-     * @param {Renderable} child
-     * @param {Renderable} child2
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child2
      */
     swapChildren(child, child2) {
         let index = this.getChildIndex(child);
@@ -23904,7 +23904,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Returns the index of the given Child
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      * @returns {number} index
      */
     getChildIndex(child) {
@@ -23913,7 +23913,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Returns the next child within the container or undefined if none
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      * @returns {Renderable} child
      */
     getNextChild(child) {
@@ -23926,7 +23926,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Returns true if contains the specified Child
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      * @returns {boolean}
      */
     hasChild(child) {
@@ -24134,7 +24134,7 @@ let globalFloatingCounter = 0;
     /**
      * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed. <br>
      * if the given child implements a onDeactivateEvent() method, that method will be called once the child is removed from this container.
-     * @param {Renderable} child
+     * @param {RendRenderable|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapTexterable} child
      * @param {boolean} [keepalive=false] - true to prevent calling child.destroy()
      */
     removeChild(child, keepalive) {
@@ -24150,7 +24150,7 @@ let globalFloatingCounter = 0;
      * Removes (and optionally destroys) a child from the container.<br>
      * (removal is immediate and unconditional)<br>
      * Never use keepalive=true with objects from {@link pool}. Doing so will create a memory leak.
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      * @param {boolean} [keepalive=False] - True to prevent calling child.destroy()
      */
     removeChildNow(child, keepalive) {
@@ -24213,7 +24213,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Move the child in the group one step forward (z depth).
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      */
     moveUp(child) {
         let childIndex = this.getChildIndex(child);
@@ -24227,7 +24227,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Move the child in the group one step backward (z depth).
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      */
     moveDown(child) {
         let childIndex = this.getChildIndex(child);
@@ -24241,7 +24241,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Move the specified child to the top(z depth).
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      */
     moveToTop(child) {
         let childIndex = this.getChildIndex(child);
@@ -24258,7 +24258,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Move the specified child the bottom (z depth).
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      */
     moveToBottom(child) {
         let childIndex = this.getChildIndex(child);
@@ -28684,7 +28684,7 @@ var timer$1 = timer;
  */
  class Body {
     /**
-     * @param {Renderable} ancestor - the parent object this body is attached to
+     * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} ancestor - the parent object this body is attached to
      * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] - a initial shape, list of shapes, or JSON object defining the body
      * @param {Function} [onBodyUpdate] - callback for when the body is updated (e.g. add/remove shapes)
      */
@@ -28694,7 +28694,7 @@ var timer$1 = timer;
          * a reference to the parent object that contains this body,
          * or undefined if it has not been added to one.
          * @public
-         * @type {Renderable}
+         * @type {Renderable|Container|Entity|Sprite|NineSliceSprite}
          * @default undefined
          */
         this.ancestor = ancestor;
@@ -34925,7 +34925,7 @@ const toPX = [12, 24, 0.75, 1];
      * @name onCollision
      * @memberof Trigger
      * @param {ResponseObject} response - the collision response object
-     * @param {Renderable} other - the other renderable touching this one (a reference to response.a or response.b)
+     * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} other - the other renderable touching this one (a reference to response.a or response.b)
      * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
      */
     onCollision(response, other) { // eslint-disable-line no-unused-vars
@@ -35725,9 +35725,9 @@ function vornoiRegion(line, point) {
 /**
  * Checks whether polygons collide.
  * @ignore
- * @param {Renderable} a - a reference to the object A.
+ * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} a - a reference to the object A.
  * @param {Polygon} polyA - a reference to the object A Polygon to be tested
- * @param {Renderable} b - a reference to the object B.
+ * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} b - a reference to the object B.
  * @param {Polygon} polyB - a reference to the object B Polygon to be tested
  * @param {Response=} response - Response object (optional) that will be populated if they intersect.
  * @returns {boolean} true if they intersect, false if they don't.
@@ -35779,9 +35779,9 @@ function testPolygonPolygon(a, polyA, b, polyB, response) {
 /**
  * Check if two Ellipse collide.
  * @ignore
- * @param {Renderable} a - a reference to the object A.
+ * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} a - a reference to the object A.
  * @param {Ellipse} ellipseA - a reference to the object A Ellipse to be tested
- * @param {Renderable} b - a reference to the object B.
+ * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} b - a reference to the object B.
  * @param {Ellipse} ellipseB - a reference to the object B Ellipse to be tested
  * @param {Response=} response - Response object (optional) that will be populated if
  *   the circles intersect.
@@ -35820,9 +35820,9 @@ function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
 /**
  * Check if a polygon and an ellipse collide.
  * @ignore
- * @param {Renderable} a - a reference to the object A.
+ * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} a - a reference to the object A.
  * @param {Polygon} polyA - a reference to the object A Polygon to be tested
- * @param {Renderable} b - a reference to the object B.
+ * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} b - a reference to the object B.
  * @param {Ellipse} ellipseB - a reference to the object B Ellipse to be tested
  * @param {Response=} response - Response object (optional) that will be populated if they intersect.
  * @returns {boolean} true if they intersect, false if they don't.
@@ -35986,9 +35986,9 @@ function testPolygonEllipse(a, polyA, b, ellipseB, response) {
  * **NOTE:** This is slightly less efficient than testPolygonEllipse as it just
  * runs testPolygonEllipse and reverses the response at the end.
  * @ignore
- * @param {Renderable} a - a reference to the object A.
+ * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} a - a reference to the object A.
  * @param {Ellipse} ellipseA - a reference to the object A Ellipse to be tested
- * @param {Renderable} b - a reference to the object B.
+ * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} b - a reference to the object B.
  * @param {Polygon} polyB - a reference to the object B Polygon to be tested
  * @param {Response=} response - Response object (optional) that will be populated if
  *   they intersect.
@@ -36103,8 +36103,8 @@ class Detector {
     /**
      * determine if two objects should collide (based on both respective objects body collision mask and type).<br>
      * you can redefine this function if you need any specific rules over what should collide with what.
-     * @param {Renderable} a - a reference to the object A.
-     * @param {Renderable} b - a reference to the object B.
+     * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} a - a reference to the object A.
+     * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} b - a reference to the object B.
      * @returns {boolean} true if they should collide, false otherwise
      */
     shouldCollide(a, b) {
@@ -36157,7 +36157,7 @@ class Detector {
     /**
      * find all the collisions for the specified object using a broadphase algorithm
      * @ignore
-     * @param {Renderable} objA - object to be tested for collision
+     * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} objA - object to be tested for collision
      * @returns {boolean} in case of collision, false otherwise
      */
     collisions(objA) {
@@ -38005,10 +38005,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "15.1.5"
+         * @default "15.1.6"
          * @name plugin.Base#version
          */
-        this.version = "15.1.5";
+        this.version = "15.1.6";
     }
 }
 
@@ -38236,7 +38236,7 @@ Renderer.prototype.getScreenContext = function()  {
  * @name version
  * @type {string}
  */
-const version = "15.1.5";
+const version = "15.1.6";
 
 /**
  * a flag indicating that melonJS is fully initialized

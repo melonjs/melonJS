@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.5
+ * melonJS Game Engine - v15.1.6
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -577,7 +577,7 @@ let targetV = new Vector2d();
      * set the camera position around the specified object
      * @name focusOn
      * @memberof Camera2d
-     * @param {Renderable} target - the renderable to focus the camera on
+     * @param {Renderable|Entity|Sprite|NineSliceSprite} target - the renderable to focus the camera on
      */
     focusOn(target) {
         let bounds = target.getBounds();
@@ -591,7 +591,7 @@ let targetV = new Vector2d();
      * check if the specified renderable is in the camera
      * @name isVisible
      * @memberof Camera2d
-     * @param {Renderable} obj - to be checked against
+     * @param {Renderable|Entity|Sprite|NineSliceSprite} obj - to be checked against
      * @param {boolean} [floating = obj.floating] - if visibility check should be done against screen coordinates
      * @returns {boolean}
      */

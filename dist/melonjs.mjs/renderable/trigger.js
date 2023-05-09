@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.5
+ * melonJS Game Engine - v15.1.6
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -143,7 +143,7 @@ import pool from '../system/pooling.js';
      * @name onCollision
      * @memberof Trigger
      * @param {ResponseObject} response - the collision response object
-     * @param {Renderable} other - the other renderable touching this one (a reference to response.a or response.b)
+     * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} other - the other renderable touching this one (a reference to response.a or response.b)
      * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
      */
     onCollision(response, other) { // eslint-disable-line no-unused-vars

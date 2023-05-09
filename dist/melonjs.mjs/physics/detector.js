@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.5
+ * melonJS Game Engine - v15.1.6
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -47,8 +47,8 @@ class Detector {
     /**
      * determine if two objects should collide (based on both respective objects body collision mask and type).<br>
      * you can redefine this function if you need any specific rules over what should collide with what.
-     * @param {Renderable} a - a reference to the object A.
-     * @param {Renderable} b - a reference to the object B.
+     * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} a - a reference to the object A.
+     * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} b - a reference to the object B.
      * @returns {boolean} true if they should collide, false otherwise
      */
     shouldCollide(a, b) {
@@ -101,7 +101,7 @@ class Detector {
     /**
      * find all the collisions for the specified object using a broadphase algorithm
      * @ignore
-     * @param {Renderable} objA - object to be tested for collision
+     * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} objA - object to be tested for collision
      * @returns {boolean} in case of collision, false otherwise
      */
     collisions(objA) {

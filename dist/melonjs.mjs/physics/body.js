@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.5
+ * melonJS Game Engine - v15.1.6
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -23,7 +23,7 @@ import Point from '../geometries/point.js';
  */
  class Body {
     /**
-     * @param {Renderable} ancestor - the parent object this body is attached to
+     * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} ancestor - the parent object this body is attached to
      * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] - a initial shape, list of shapes, or JSON object defining the body
      * @param {Function} [onBodyUpdate] - callback for when the body is updated (e.g. add/remove shapes)
      */
@@ -33,7 +33,7 @@ import Point from '../geometries/point.js';
          * a reference to the parent object that contains this body,
          * or undefined if it has not been added to one.
          * @public
-         * @type {Renderable}
+         * @type {Renderable|Container|Entity|Sprite|NineSliceSprite}
          * @default undefined
          */
         this.ancestor = ancestor;

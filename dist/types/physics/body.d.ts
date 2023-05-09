@@ -5,19 +5,19 @@
  */
 export default class Body {
     /**
-     * @param {Renderable} ancestor - the parent object this body is attached to
+     * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} ancestor - the parent object this body is attached to
      * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] - a initial shape, list of shapes, or JSON object defining the body
      * @param {Function} [onBodyUpdate] - callback for when the body is updated (e.g. add/remove shapes)
      */
-    constructor(ancestor: Renderable, shapes?: Rect | Rect[] | Polygon | Polygon[] | Line | Line[] | Ellipse | Ellipse[] | Point | Point[] | Bounds | Bounds[] | object, onBodyUpdate?: Function | undefined);
+    constructor(ancestor: Renderable | Container | Entity | Sprite | NineSliceSprite, shapes?: Rect | Rect[] | Polygon | Polygon[] | Line | Line[] | Ellipse | Ellipse[] | Point | Point[] | Bounds | Bounds[] | object, onBodyUpdate?: Function | undefined);
     /**
      * a reference to the parent object that contains this body,
      * or undefined if it has not been added to one.
      * @public
-     * @type {Renderable}
+     * @type {Renderable|Container|Entity|Sprite|NineSliceSprite}
      * @default undefined
      */
-    public ancestor: Renderable;
+    public ancestor: Renderable | Container | Entity | Sprite | NineSliceSprite;
     /**
      * The AABB bounds box reprensenting this body
      * @public

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.5
+ * melonJS Game Engine - v15.1.6
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -7,7 +7,8 @@
  */
 import { TextureAtlas } from '../video/texture/atlas.js';
 import Renderer from '../video/renderer.js';
-import { Draggable, DropTarget } from '../renderable/dragndrop.js';
+import { Draggable } from '../renderable/draggable.js';
+import { DropTarget } from '../renderable/dragndrop.js';
 import UISpriteElement from '../renderable/ui/uispriteelement.js';
 import { warning } from './console.js';
 

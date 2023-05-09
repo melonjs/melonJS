@@ -93,19 +93,19 @@ export default class Container extends Renderable {
      * will not be in any container. <br>
      * if the given child implements a onActivateEvent method, that method will be called
      * once the child is added to this container.
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      * @param {number} [z] - forces the z index of the child to the specified value
      * @returns {Renderable} the added child
      */
-    addChild(child: Renderable, z?: number | undefined): Renderable;
+    addChild(child: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText, z?: number | undefined): Renderable;
     /**
      * Add a child to the container at the specified index<br>
      * (the list won't be sorted after insertion)
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      * @param {number} index
      * @returns {Renderable} the added child
      */
-    addChildAt(child: Renderable, index: number): Renderable;
+    addChildAt(child: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText, index: number): Renderable;
     /**
      * The forEach() method executes a provided function once per child element. <br>
      * the callback function is invoked with three arguments: <br>
@@ -127,10 +127,10 @@ export default class Container extends Renderable {
     forEach(callback: Function, thisArg?: object | undefined, ...args: any[]): void;
     /**
      * Swaps the position (z-index) of 2 children
-     * @param {Renderable} child
-     * @param {Renderable} child2
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child2
      */
-    swapChildren(child: Renderable, child2: Renderable): void;
+    swapChildren(child: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText, child2: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText): void;
     /**
      * Returns the Child at the specified index
      * @param {number} index
@@ -139,22 +139,22 @@ export default class Container extends Renderable {
     getChildAt(index: number): Renderable;
     /**
      * Returns the index of the given Child
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      * @returns {number} index
      */
-    getChildIndex(child: Renderable): number;
+    getChildIndex(child: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText): number;
     /**
      * Returns the next child within the container or undefined if none
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      * @returns {Renderable} child
      */
-    getNextChild(child: Renderable): Renderable;
+    getNextChild(child: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText): Renderable;
     /**
      * Returns true if contains the specified Child
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      * @returns {boolean}
      */
-    hasChild(child: Renderable): boolean;
+    hasChild(child: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText): boolean;
     /**
      * return the child corresponding to the given property and value.<br>
      * note : avoid calling this function every frame since
@@ -223,18 +223,18 @@ export default class Container extends Renderable {
     /**
      * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed. <br>
      * if the given child implements a onDeactivateEvent() method, that method will be called once the child is removed from this container.
-     * @param {Renderable} child
+     * @param {RendRenderable|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapTexterable} child
      * @param {boolean} [keepalive=false] - true to prevent calling child.destroy()
      */
-    removeChild(child: Renderable, keepalive?: boolean | undefined): void;
+    removeChild(child: RendRenderable | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapTexterable, keepalive?: boolean | undefined): void;
     /**
      * Removes (and optionally destroys) a child from the container.<br>
      * (removal is immediate and unconditional)<br>
      * Never use keepalive=true with objects from {@link pool}. Doing so will create a memory leak.
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      * @param {boolean} [keepalive=False] - True to prevent calling child.destroy()
      */
-    removeChildNow(child: Renderable, keepalive?: boolean | undefined): void;
+    removeChildNow(child: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText, keepalive?: boolean | undefined): void;
     /**
      * Automatically set the specified property of all childs to the given value
      * @param {string} prop - property name
@@ -244,24 +244,24 @@ export default class Container extends Renderable {
     setChildsProperty(prop: string, value: object, recursive?: boolean | undefined): void;
     /**
      * Move the child in the group one step forward (z depth).
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      */
-    moveUp(child: Renderable): void;
+    moveUp(child: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText): void;
     /**
      * Move the child in the group one step backward (z depth).
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      */
-    moveDown(child: Renderable): void;
+    moveDown(child: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText): void;
     /**
      * Move the specified child to the top(z depth).
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      */
-    moveToTop(child: Renderable): void;
+    moveToTop(child: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText): void;
     /**
      * Move the specified child the bottom (z depth).
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      */
-    moveToBottom(child: Renderable): void;
+    moveToBottom(child: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText): void;
     /**
      * Manually trigger the sort of all the childs in the container</p>
      * @param {boolean} [recursive=false] - recursively sort all containers if true

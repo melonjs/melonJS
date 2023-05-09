@@ -236,18 +236,18 @@ export default class Camera2d extends Renderable {
      * set the camera position around the specified object
      * @name focusOn
      * @memberof Camera2d
-     * @param {Renderable} target - the renderable to focus the camera on
+     * @param {Renderable|Entity|Sprite|NineSliceSprite} target - the renderable to focus the camera on
      */
-    focusOn(target: Renderable): void;
+    focusOn(target: Renderable | Entity | Sprite | NineSliceSprite): void;
     /**
      * check if the specified renderable is in the camera
      * @name isVisible
      * @memberof Camera2d
-     * @param {Renderable} obj - to be checked against
+     * @param {Renderable|Entity|Sprite|NineSliceSprite} obj - to be checked against
      * @param {boolean} [floating = obj.floating] - if visibility check should be done against screen coordinates
      * @returns {boolean}
      */
-    isVisible(obj: Renderable, floating?: boolean | undefined): boolean;
+    isVisible(obj: Renderable | Entity | Sprite | NineSliceSprite, floating?: boolean | undefined): boolean;
     /**
      * convert the given "local" (screen) coordinates into world coordinates
      * @name localToWorld

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.5
+ * melonJS Game Engine - v15.1.6
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -45,7 +45,8 @@ import Light2d from './renderable/light2d.js';
 import Text from './text/text.js';
 import BitmapText from './text/bitmaptext.js';
 import BitmapTextData from './text/bitmaptextdata.js';
-export { Draggable, DropTarget } from './renderable/dragndrop.js';
+export { Draggable } from './renderable/draggable.js';
+export { DropTarget } from './renderable/dragndrop.js';
 export { default as TMXRenderer } from './level/tiled/renderer/TMXRenderer.js';
 export { default as TMXOrthogonalRenderer } from './level/tiled/renderer/TMXOrthogonalRenderer.js';
 export { default as TMXIsometricRenderer } from './level/tiled/renderer/TMXIsometricRenderer.js';
@@ -105,7 +106,7 @@ import { initKeyboardEvent } from './input/keyboard.js';
  * @name version
  * @type {string}
  */
-const version = "15.1.5";
+const version = "15.1.6";
 
 /**
  * a flag indicating that melonJS is fully initialized
