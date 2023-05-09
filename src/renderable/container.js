@@ -176,7 +176,7 @@ let globalFloatingCounter = 0;
      * will not be in any container. <br>
      * if the given child implements a onActivateEvent method, that method will be called
      * once the child is added to this container.
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      * @param {number} [z] - forces the z index of the child to the specified value
      * @returns {Renderable} the added child
      */
@@ -258,7 +258,7 @@ let globalFloatingCounter = 0;
     /**
      * Add a child to the container at the specified index<br>
      * (the list won't be sorted after insertion)
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      * @param {number} index
      * @returns {Renderable} the added child
      */
@@ -369,8 +369,8 @@ let globalFloatingCounter = 0;
 
     /**
      * Swaps the position (z-index) of 2 children
-     * @param {Renderable} child
-     * @param {Renderable} child2
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child2
      */
     swapChildren(child, child2) {
         let index = this.getChildIndex(child);
@@ -408,7 +408,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Returns the index of the given Child
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      * @returns {number} index
      */
     getChildIndex(child) {
@@ -417,7 +417,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Returns the next child within the container or undefined if none
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      * @returns {Renderable} child
      */
     getNextChild(child) {
@@ -430,7 +430,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Returns true if contains the specified Child
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      * @returns {boolean}
      */
     hasChild(child) {
@@ -638,7 +638,7 @@ let globalFloatingCounter = 0;
     /**
      * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed. <br>
      * if the given child implements a onDeactivateEvent() method, that method will be called once the child is removed from this container.
-     * @param {Renderable} child
+     * @param {RendRenderable|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapTexterable} child
      * @param {boolean} [keepalive=false] - true to prevent calling child.destroy()
      */
     removeChild(child, keepalive) {
@@ -654,7 +654,7 @@ let globalFloatingCounter = 0;
      * Removes (and optionally destroys) a child from the container.<br>
      * (removal is immediate and unconditional)<br>
      * Never use keepalive=true with objects from {@link pool}. Doing so will create a memory leak.
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      * @param {boolean} [keepalive=False] - True to prevent calling child.destroy()
      */
     removeChildNow(child, keepalive) {
@@ -717,7 +717,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Move the child in the group one step forward (z depth).
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      */
     moveUp(child) {
         let childIndex = this.getChildIndex(child);
@@ -731,7 +731,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Move the child in the group one step backward (z depth).
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      */
     moveDown(child) {
         let childIndex = this.getChildIndex(child);
@@ -745,7 +745,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Move the specified child to the top(z depth).
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      */
     moveToTop(child) {
         let childIndex = this.getChildIndex(child);
@@ -762,7 +762,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Move the specified child the bottom (z depth).
-     * @param {Renderable} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
      */
     moveToBottom(child) {
         let childIndex = this.getChildIndex(child);

@@ -725,7 +725,7 @@ import Color from "./../math/color.js";
      * onCollision callback, triggered in case of collision,
      * when this renderable body is colliding with another one
      * @param {ResponseObject} response - the collision response object
-     * @param {Renderable} other - the other renderable touching this one (a reference to response.a or response.b)
+     * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} other - the other renderable touching this one (a reference to response.a or response.b)
      * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
      * @example
      * // colision handler
