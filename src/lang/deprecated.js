@@ -1,6 +1,7 @@
 import { TextureAtlas } from "./../video/texture/atlas.js";
 import Renderer from "./../video/renderer.js";
-import { Draggable, DropTarget } from "./../renderable/dragndrop.js";
+import { Draggable } from "./../renderable/draggable.js";
+import { DropTarget } from "./../renderable/dragndrop.js";
 import UISpriteElement from "./../renderable/ui/uispriteelement.js";
 import { warning } from "./console.js";
 
