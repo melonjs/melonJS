@@ -3,6 +3,7 @@
 
 ## [15.1.6] (melonJS 2) - _2023-05-xx_
 
+- TypeScript: fix typings for methods taking a renderable as argument, by enumerating all different class types
 
 ## [15.1.5] (melonJS 2) - _2023-05-05_
 
