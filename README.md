@@ -97,7 +97,7 @@ Tools integration and usage with melonJS is documented in our [Wiki](https://git
 
 You may find it useful to skim the overview found at the wiki [Details & Usage](https://github.com/melonjs/melonJS/wiki#details--usage)
 
-When starting your own projects, checkout our [es6 boilerplate](https://github.com/melonjs/es6-boilerplate)
+When starting your own projects, checkout our [ES6 x Webpack boilerplate](https://github.com/melonjs/es6-boilerplate) or the [TypeScript x Vite boilerplate](https://github.com/melonjs/typescript-boilerplate)
 
 Demos
 -------------------------------------------------------------------------------
@@ -165,7 +165,7 @@ melonJS 2 now only provides an ES6 Bundle :
 | `melonjs.mjs` | a tree-shakeable ES6 Module Directory |
 | `types/index.d.ts` | typescript declaration files for the ES6 Module (ESM) Bundle |
 
->Note: if you need your application to be compatible with ES5, refer to our [boilerplate](https://github.com/melonjs/es6-boilerplate) that provides automatic transpiling to ES5.
+>Note: if you need your application to be compatible with ES5, refer to our [boilerplate](#using-melonjs) that provides automatic transpiling to ES5.
 
 Alternatively, the latest version of melonJS can be installed through [NPM](https://www.npmjs.com/package/melonjs) :
 
