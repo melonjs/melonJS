@@ -1,6 +1,6 @@
 # Changelog
 
-## [15.2.0] (melonJS 2) - _2023-05-xx_
+## [15.2.0] (melonJS 2) - _2023-05-12_
 
 ### Changed
 - Plugin: the `Base` plugin class is now deprecated and replaced by `BasePlugin` (`Base` is just an alias now)
@@ -544,6 +544,7 @@
 
 -------------------------------------------------------------------------------
 
+[15.2.0]: https://github.com/melonjs/melonJS/compare/15.2.0...15.1.6
 [15.1.6]: https://github.com/melonjs/melonJS/compare/15.1.6...15.1.5
 [15.1.5]: https://github.com/melonjs/melonJS/compare/15.1.5...15.1.4
 [15.1.4]: https://github.com/melonjs/melonJS/compare/15.1.4...15.1.3
