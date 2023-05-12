@@ -25,10 +25,8 @@ export class BasePlugin {
         /**
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
-         * @public
          * @type {string}
          * @default "__VERSION__"
-         * @name plugin.Base#version
          */
         this.version = "__VERSION__";
     }
@@ -91,8 +89,8 @@ export function patch(proto, name, fn) {
  * @name register
  * @memberof plugin
  * @see BasePlugin
- * @param {plugin.Base} pluginObj - Plugin object to instantiate and register
- * @param {string} [name=pluginObj.constructor.name] - a unique name for this plugin
+ * @param {BasePlugin} plugin - Plugin object to instantiate and register
+ * @param {string} [name=plugin.constructor.name] - a unique name for this plugin
  * @param {object} [...arguments] - all extra parameters will be passed to the plugin constructor
  * @example
  * // register a new plugin
@@ -101,7 +99,7 @@ export function patch(proto, name, fn) {
  * // under then me.plugins namespace
  * me.plugins.testPlugin.myfunction ();
  */
-export function register(pluginObj, name = pluginObj.toString().match(/ (\w+)/)[1]) {
+export function register(plugin, name = plugin.toString().match(/ (\w+)/)[1]) {
     // ensure me.plugins[name] is not already "used"
     if (cache[name]) {
         throw new Error("plugin " + name + " already registered");
@@ -115,12 +113,12 @@ export function register(pluginObj, name = pluginObj.toString().match(/ (\w+)/)[
     }
 
     // try to instantiate the plugin
-    _args[0] = pluginObj;
-    let instance = new (pluginObj.bind.apply(pluginObj, _args))();
+    _args[0] = plugin;
+    let instance = new (plugin.bind.apply(plugin, _args))();
 
     // inheritance check
     if (typeof instance === "undefined" || !(instance instanceof BasePlugin)) {
-        throw new Error("Plugin should extend the me.plugin.Base Class !");
+        throw new Error("Plugin should extend the BasePlugin Class !");
     }
 
     // compatibility testing
