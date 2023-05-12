@@ -1,7 +1,7 @@
 import pool from "./../../system/pooling.js";
 import * as event from "./../../system/event.js";
 import { game } from "../../index.js";
-import utils from "./../../utils/utils.js";
+import { checkVersion } from "./../../utils/utils.js";
 import collision from "./../../physics/collision.js";
 import Body from "./../../physics/body.js";
 import TMXTileset from "./TMXTileset.js";
@@ -198,7 +198,7 @@ function readObjectGroup(map, data, z) {
         // if version is undefined or empty it usually means the map was not created with Tiled
         if (this.version !== "undefined" && this.version !== "") {
             // deprecation warning if map tiled version is older than 1.5
-            if (utils.checkVersion(this.version, "1.5") < 0) {
+            if (checkVersion(this.version, "1.5") < 0) {
                 warning("("+this.name+") Tiled Map format version 1.4 and below", "format 1.5 or higher", "10.4.4");
             }
         }

@@ -2,7 +2,7 @@ import { autoDetectRenderer } from "../video/utils/autodetect.js";
 import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
 import * as device from "./../system/device.js";
 import * as event from "./../system/event.js";
-import utils from "./../utils/utils.js";
+import { getUriFragment } from "./../utils/utils.js";
 import timer from "./../system/timer.js";
 import state from "./../state/state.js";
 import World from "./../physics/world.js";
@@ -149,7 +149,7 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
         }
 
         // override renderer settings if &webgl or &canvas is defined in the URL
-        let uriFragment = utils.getUriFragment();
+        let uriFragment = getUriFragment();
         if (uriFragment.webgl === true || uriFragment.webgl1 === true || uriFragment.webgl2 === true) {
             this.settings.renderer = WEBGL;
             if (uriFragment.webgl1 === true) {

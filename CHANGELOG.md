@@ -2,6 +2,12 @@
 
 ## [15.2.0] (melonJS 2) - _2023-05-xx_
 
+### Changed
+- Plugin: the `Base` plugin class is now deprecated and replaced by `BasePlugin` (`Base` is just an alias now)
+
+### Fixed
+- Typescript: fix typing for the `utils` and `plugin` API
+- Utils: fix "namespace" es6 declaration and export
 
 ## [15.1.6] (melonJS 2) - _2023-05-10_
 

@@ -1,4 +1,5 @@
-import utils from "./../utils/utils.js";
+import { resetGUID } from "./../utils/utils.js";
+import { defer } from "../utils/function.js";
 import * as event from "./../system/event.js";
 import state from "./../state/state.js";
 import { getTMX } from "./../loader/loader.js";
@@ -62,7 +63,7 @@ function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
 
     // reset the GUID generator
     // and pass the level id as parameter
-    utils.resetGUID(levelId, level.nextobjectid);
+    resetGUID(levelId, level.nextobjectid);
 
     // Tiled use 0,0 anchor coordinates
     container.anchorPoint.set(0, 0);
@@ -178,7 +179,7 @@ let level = {
                 // some silly side effects
                 state.stop();
 
-                utils.function.defer(safeLoadLevel, this, levelId, options, true);
+                defer(safeLoadLevel, this, levelId, options, true);
             }
             else {
                 safeLoadLevel(levelId, options);

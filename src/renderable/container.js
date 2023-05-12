@@ -1,5 +1,6 @@
 import Renderable from "./renderable";
-import utils from "../utils/utils.js";
+import { createGUID } from "../utils/utils";
+import { defer } from "../utils/function";
 import { game } from "../index.js";
 import * as event from "../system/event.js";
 import pool from "../system/pooling.js";
@@ -189,7 +190,7 @@ let globalFloatingCounter = 0;
             // (e.g. move one child from one container to another)
             if (child.isRenderable) {
                 // allocated a GUID value (use child.id as based index if defined)
-                child.GUID = utils.createGUID(child.id);
+                child.GUID = createGUID(child.id);
             }
         }
 
@@ -272,7 +273,7 @@ let globalFloatingCounter = 0;
                 // (e.g. move one child from one container to another)
                 if (child.isRenderable) {
                     // allocated a GUID value
-                    child.GUID = utils.createGUID();
+                    child.GUID = createGUID();
                 }
             }
 
@@ -643,7 +644,7 @@ let globalFloatingCounter = 0;
      */
     removeChild(child, keepalive) {
         if (this.hasChild(child)) {
-            utils.function.defer(deferredRemove, this, child, keepalive);
+            defer(deferredRemove, this, child, keepalive);
         }
         else {
             throw new Error("Child is not mine.");
@@ -794,7 +795,7 @@ let globalFloatingCounter = 0;
                 });
             }
             /** @ignore */
-            this.pendingSort = utils.function.defer(function () {
+            this.pendingSort = defer(function () {
                 // sort everything in this container
                 this.getChildren().sort(this["_sort" + this.sortOn.toUpperCase()]);
                 // clear the defer id

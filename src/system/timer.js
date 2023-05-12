@@ -1,4 +1,4 @@
-import utils from "./../utils/utils.js";
+import { defer } from "./../utils/function.js";
 import * as event from "./event.js";
 import state from "./../state/state.js";
 import { clamp } from "./../math/math.js";
@@ -161,7 +161,7 @@ class Timer {
      */
     clearTimeout(timeoutID) {
         if (timeoutID > 0) {
-            utils.function.defer(this.clearTimer.bind(this), this, timeoutID);
+            defer(this.clearTimer.bind(this), this, timeoutID);
         }
     }
 
@@ -171,7 +171,7 @@ class Timer {
      */
     clearInterval(intervalID) {
         if (intervalID > 0) {
-            utils.function.defer(this.clearTimer.bind(this), this, intervalID);
+            defer(this.clearTimer.bind(this), this, intervalID);
         }
     }
 
