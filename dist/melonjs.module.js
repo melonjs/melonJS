@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.6
+ * melonJS Game Engine - v15.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -56,7 +56,7 @@ var check = function (it) {
 };
 
 // https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
-var global$d =
+var global$e =
   // eslint-disable-next-line es/no-global-this -- safe
   check(typeof globalThis == 'object' && globalThis) ||
   check(typeof window == 'object' && window) ||
@@ -64,9 +64,9 @@ var global$d =
   check(typeof self == 'object' && self) ||
   check(typeof commonjsGlobal == 'object' && commonjsGlobal) ||
   // eslint-disable-next-line no-new-func -- fallback
-  (function () { return this; })() || Function('return this')();
+  (function () { return this; })() || commonjsGlobal || Function('return this')();
 
-var global$e = /*@__PURE__*/getDefaultExportFromCjs(global$d);
+var global$f = /*@__PURE__*/getDefaultExportFromCjs(global$e);
 
 var objectGetOwnPropertyDescriptor = {};
 
@@ -253,7 +253,7 @@ var isObject$5 = $documentAll.IS_HTMLDDA ? function (it) {
 
 var isObject$6 = /*@__PURE__*/getDefaultExportFromCjs(isObject$5);
 
-var global$c = global$d;
+var global$d = global$e;
 var isCallable$9 = isCallable$b;
 
 var aFunction = function (argument) {
@@ -261,7 +261,7 @@ var aFunction = function (argument) {
 };
 
 var getBuiltIn$2 = function (namespace, method) {
-  return arguments.length < 2 ? aFunction(global$c[namespace]) : global$c[namespace] && global$c[namespace][method];
+  return arguments.length < 2 ? aFunction(global$d[namespace]) : global$d[namespace] && global$d[namespace][method];
 };
 
 var getBuiltIn$3 = /*@__PURE__*/getDefaultExportFromCjs(getBuiltIn$2);
@@ -276,11 +276,11 @@ var engineUserAgent = typeof navigator != 'undefined' && String(navigator.userAg
 
 var engineUserAgent$1 = /*@__PURE__*/getDefaultExportFromCjs(engineUserAgent);
 
-var global$b = global$d;
+var global$c = global$e;
 var userAgent = engineUserAgent;
 
-var process = global$b.process;
-var Deno = global$b.Deno;
+var process = global$c.process;
+var Deno = global$c.Deno;
 var versions = process && process.versions || Deno && Deno.version;
 var v8 = versions && versions.v8;
 var match, version$1;
@@ -310,13 +310,18 @@ var engineV8Version$1 = /*@__PURE__*/getDefaultExportFromCjs(engineV8Version);
 
 var V8_VERSION = engineV8Version;
 var fails$5 = fails$9;
+var global$b = global$e;
+
+var $String$4 = global$b.String;
 
 // eslint-disable-next-line es/no-object-getownpropertysymbols -- required for testing
 var symbolConstructorDetection = !!Object.getOwnPropertySymbols && !fails$5(function () {
   var symbol = Symbol();
   // Chrome 38 Symbol has incorrect toString conversion
   // `get-own-property-symbols` polyfill symbols converted to object are not Symbol instances
-  return !String(symbol) || !(Object(symbol) instanceof Symbol) ||
+  // nb: Do not call `String` directly to avoid this being optimized out to `symbol+''` which will,
+  // of course, fail.
+  return !$String$4(symbol) || !(Object(symbol) instanceof Symbol) ||
     // Chrome 38-40 symbols are not inherited from DOM collections prototypes to instances
     !Symbol.sham && V8_VERSION && V8_VERSION < 41;
 });
@@ -410,7 +415,7 @@ var isPure = false;
 
 var isPure$1 = /*@__PURE__*/getDefaultExportFromCjs(isPure);
 
-var global$a = global$d;
+var global$a = global$e;
 
 // eslint-disable-next-line es/no-object-defineproperty -- safe
 var defineProperty$1 = Object.defineProperty;
@@ -425,7 +430,7 @@ var defineGlobalProperty$3 = function (key, value) {
 
 var defineGlobalProperty$4 = /*@__PURE__*/getDefaultExportFromCjs(defineGlobalProperty$3);
 
-var global$9 = global$d;
+var global$9 = global$e;
 var defineGlobalProperty$2 = defineGlobalProperty$3;
 
 var SHARED = '__core-js_shared__';
@@ -443,10 +448,10 @@ var store$2 = sharedStore;
 (shared$5.exports = function (key, value) {
   return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 })('versions', []).push({
-  version: '3.30.1',
+  version: '3.30.2',
   mode: IS_PURE ? 'pure' : 'global',
   copyright: '© 2014-2023 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.30.1/LICENSE',
+  license: 'https://github.com/zloirock/core-js/blob/v3.30.2/LICENSE',
   source: 'https://github.com/zloirock/core-js'
 });
 
@@ -491,7 +496,7 @@ var uid$2 = function (key) {
 
 var uid$3 = /*@__PURE__*/getDefaultExportFromCjs(uid$2);
 
-var global$8 = global$d;
+var global$8 = global$e;
 var shared$2 = sharedExports;
 var hasOwn$6 = hasOwnProperty_1;
 var uid$1 = uid$2;
@@ -552,7 +557,7 @@ var toPropertyKey$2 = function (argument) {
 
 var toPropertyKey$3 = /*@__PURE__*/getDefaultExportFromCjs(toPropertyKey$2);
 
-var global$7 = global$d;
+var global$7 = global$e;
 var isObject$2 = isObject$5;
 
 var document$1 = global$7.document;
@@ -728,7 +733,7 @@ var inspectSource$1 = store$1.inspectSource;
 
 var inspectSource$2 = /*@__PURE__*/getDefaultExportFromCjs(inspectSource$1);
 
-var global$6 = global$d;
+var global$6 = global$e;
 var isCallable$4 = isCallable$b;
 
 var WeakMap$1 = global$6.WeakMap;
@@ -753,7 +758,7 @@ var hiddenKeys$3 = {};
 var hiddenKeys$4 = /*@__PURE__*/getDefaultExportFromCjs(hiddenKeys$3);
 
 var NATIVE_WEAK_MAP = weakMapBasicDetection;
-var global$5 = global$d;
+var global$5 = global$e;
 var isObject = isObject$5;
 var createNonEnumerableProperty$1 = createNonEnumerableProperty$2;
 var hasOwn$3 = hasOwnProperty_1;
@@ -1128,7 +1133,7 @@ var isForced_1 = isForced$1;
 
 var isForced$2 = /*@__PURE__*/getDefaultExportFromCjs(isForced_1);
 
-var global$4 = global$d;
+var global$4 = global$e;
 var getOwnPropertyDescriptor = objectGetOwnPropertyDescriptor.f;
 var createNonEnumerableProperty = createNonEnumerableProperty$2;
 var defineBuiltIn = defineBuiltIn$1;
@@ -1186,7 +1191,7 @@ var _export = function (options, source) {
 var _export$1 = /*@__PURE__*/getDefaultExportFromCjs(_export);
 
 var $$4 = _export;
-var global$3 = global$d;
+var global$3 = global$e;
 
 // `globalThis` object
 // https://tc39.es/ecma262/#sec-globalthis
@@ -1196,7 +1201,7 @@ $$4({ global: true, forced: global$3.globalThis !== global$3 }, {
 
 // https://github.com/tc39/proposal-global
 
-var global$2 = global$d;
+var global$2 = global$e;
 
 var globalThis$1 = global$2;
 
@@ -1353,7 +1358,7 @@ $$2({ target: 'String', proto: true, name: 'trimStart', forced: ''.trimStart !==
   trimStart: trimStart$2
 });
 
-var global$1 = global$d;
+var global$1 = global$e;
 var uncurryThis = functionUncurryThis;
 
 var entryUnbind$2 = function (CONSTRUCTOR, METHOD) {
@@ -8091,7 +8096,7 @@ function weightedRandom(arr) {
     return arr[weightedRandom$1(0, arr.length)];
 }
 
-var arrayUtils = {
+var array$1 = {
 	__proto__: null,
 	random: random,
 	remove: remove,
@@ -8998,201 +9003,6 @@ let collision = {
 };
 
 /**
- * a collection of string utility functions
- * @namespace utils.string
- */
-
-/**
- * converts the first character of the given string to uppercase
- * @public
- * @memberof utils.string
- * @name capitalize
- * @param {string} str - the string to be capitalized
- * @returns {string} the capitalized string
- */
-function capitalize(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-/**
- * returns true if the given string contains a numeric integer or float value
- * @public
- * @memberof utils.string
- * @name isNumeric
- * @param {string} str - the string to be tested
- * @returns {boolean} true if string contains only digits
- */
-function isNumeric(str) {
-    if (typeof str === "string") {
-        str = str.trim();
-    }
-    return !isNaN(str) && /^[+-]?(\d+(\.\d+)?|\.\d+)$/.test(str);
-}
-
-/**
- * returns true if the given string contains a true or false
- * @public
- * @memberof utils.string
- * @name isBoolean
- * @param {string} str - the string to be tested
- * @returns {boolean} true if the string is either true or false
- */
-function isBoolean(str) {
-    const trimmed = str.trim();
-    return (trimmed === "true") || (trimmed === "false");
-}
-
-/**
- * convert a string to the corresponding hexadecimal value
- * @public
- * @memberof utils.string
- * @name toHex
- * @param {string} str - the string to be converted
- * @returns {string} the converted hexadecimal value
- */
-function toHex(str) {
-    let res = "", c = 0;
-    while (c < str.length) {
-        res += str.charCodeAt(c++).toString(16);
-    }
-    return res;
-}
-
-/**
- * returns true if the given string is a data url in the `data:[<mediatype>][;base64],<data>` format.
- * (this will not test the validity of the Data or Base64 encoding)
- * @public
- * @memberof utils.string
- * @name isDataUrl
- * @param {string} str - the string (url) to be tested
- * @returns {boolean} true if the string is a data url
- */
-function isDataUrl(str) {
-    return /^data:(.+);base64,(.+)$/.test(str);
-}
-
-var stringUtils = {
-	__proto__: null,
-	capitalize: capitalize,
-	isBoolean: isBoolean,
-	isDataUrl: isDataUrl,
-	isNumeric: isNumeric,
-	toHex: toHex
-};
-
-/**
- * a collection of utility functons to ease porting between different user agents.
- * @namespace utils.agent
- */
-
-/**
- * Known agent vendors
- * @ignore
- */
-const vendors = [ "ms", "MS", "moz", "webkit", "o" ];
-
-/**
- * Get a vendor-prefixed property
- * @public
- * @name prefixed
- * @param {string} name - Property name
- * @param {object} [obj=globalThis] - Object or element reference to access
- * @returns {string} Value of property
- * @memberof utils.agent
- */
-function prefixed(name, obj) {
-    obj = obj || globalThis;
-    if (name in obj) {
-        return obj[name];
-    }
-
-    let uc_name = capitalize(name);
-
-    let result;
-    vendors.some((vendor) => {
-        let name = vendor + uc_name;
-        return (result = (name in obj) ? obj[name] : undefined);
-    });
-    return result;
-}
-
-/**
- * Set a vendor-prefixed property
- * @public
- * @name setPrefixed
- * @param {string} name - Property name
- * @param {string} value - Property value
- * @param {object} [obj=globalThis] - Object or element reference to access
- * @returns {boolean} true if one of the vendor-prefixed property was found
- * @memberof utils.agent
- */
-function setPrefixed(name, value, obj) {
-    obj = obj || globalThis;
-    if (name in obj) {
-        obj[name] = value;
-        return;
-    }
-
-    let uc_name = capitalize(name);
-
-    vendors.some((vendor) => {
-        let name = vendor + uc_name;
-        if (name in obj) {
-            obj[name] = value;
-            return true;
-        }
-    });
-
-    return false;
-}
-
-var agentUtils = {
-	__proto__: null,
-	prefixed: prefixed,
-	setPrefixed: setPrefixed
-};
-
-/**
- * a collection of file utility functions
- * @namespace utils.file
- */
-
-// regexp to deal with file name & path
-const REMOVE_PATH = /^.*(\\|\/|\:)/;
-const REMOVE_EXT = /\.[^\.]*$/;
-
-
-/**
- * return the base name of the file without path info
- * @public
- * @memberof utils.file
- * @name getBasename
- * @param  {string} path- -  path containing the filename
- * @returns {string} the base name without path information.
- */
-function getBasename(path) {
-    return path.replace(REMOVE_PATH, "").replace(REMOVE_EXT, "");
-}
-
-/**
- * return the extension of the file in the given path
- * @public
- * @memberof utils.file
- * @name getExtension
- * @param  {string} path- -  path containing the filename
- * @returns {string} filename extension.
- */
-function getExtension(path) {
-    return path.substring(path.lastIndexOf(".") + 1, path.length);
-}
-
-var fileUtils = {
-	__proto__: null,
-	getBasename: getBasename,
-	getExtension: getExtension
-};
-
-/**
  * a collection of utility functions
  * @namespace utils.function
  */
@@ -9254,139 +9064,10 @@ function throttle(fn, delay, no_trailing) {
     };
 }
 
-var fnUtils = {
+var _function = {
 	__proto__: null,
 	defer: defer,
 	throttle: throttle
-};
-
-/**
- * a collection of utility functions
- * @namespace utils
- */
-
-// guid default value
-let GUID_base  = "";
-let GUID_index = 0;
-
-let utils = {
-
-    agent : agentUtils,
-    array : arrayUtils,
-    file : fileUtils,
-    string : stringUtils,
-    function : fnUtils,
-
-    /**
-     * Compare two version strings
-     * @public
-     * @memberof utils
-     * @name checkVersion
-     * @param {string} first - First version string to compare
-     * @param {string} second - second version string to compare
-     * @returns {number} comparison result <br>&lt; 0 : first &lt; second<br>
-     * 0 : first == second<br>
-     * &gt; 0 : first &gt; second
-     * @example
-     * if (me.utils.checkVersion("7.0.0") > 0) {
-     *     console.error(
-     *         "melonJS is too old. Expected: 7.0.0, Got: 6.3.0"
-     *     );
-     * }
-     */
-    checkVersion : function (first, second) {
-        let a = first.split(".");
-        let b = second.split(".");
-        let len = Math.min(a.length, b.length);
-        let result = 0;
-
-        for (let i = 0; i < len; i++) {
-            if ((result = +a[i] - +b[i])) {
-                break;
-            }
-        }
-
-        return result ? result : a.length - b.length;
-    },
-
-    /**
-     * parse the fragment (hash) from a URL and returns them into
-     * @public
-     * @memberof utils
-     * @name getUriFragment
-     * @param {string} [url=document.location] - an optional params string or URL containing fragment (hash) params to be parsed
-     * @returns {object} an object representing the deserialized params string.
-     * @property {boolean} [hitbox=false] draw the hitbox in the debug panel (if enabled)
-     * @property {boolean} [velocity=false] draw the entities velocity in the debug panel (if enabled)
-     * @property {boolean} [quadtree=false] draw the quadtree in the debug panel (if enabled)
-     * @property {boolean} [webgl=false] force the renderer to WebGL
-     * @property {boolean} [debug=false] display the debug panel (if preloaded)
-     * @property {string} [debugToggleKey="s"] show/hide the debug panel (if preloaded)
-     * @example
-     * // http://www.example.com/index.html#debug&hitbox=true&mytag=value
-     * let UriFragment = me.utils.getUriFragment();
-     * console.log(UriFragment["mytag"]); //> "value"
-     */
-    getUriFragment : function (url) {
-        let hash = {};
-
-        if (typeof url === "undefined") {
-            if (typeof globalThis.document !== "undefined") {
-                let location = globalThis.document.location;
-
-                if (location && location.hash) {
-                    url = location.hash;
-                } else {
-                    // No "document.location" exist for Wechat mini game platform.
-                    return hash;
-                }
-            } else {
-                // "document" undefined on node.js
-                return hash;
-            }
-        } else {
-            // never cache if a url is passed as parameter
-            let index = url.indexOf("#");
-            if (index !== -1) {
-                url = url.slice(index, url.length);
-            } else {
-                return hash;
-            }
-        }
-
-        // parse the url
-        url.slice(1).split("&").filter((value) => value !== "").forEach((value) => {
-            let kv = value.split("=");
-            let k = kv.shift();
-            let v = kv.join("=");
-            hash[k] = v || true;
-        });
-
-        return hash;
-    },
-
-    /**
-     * reset the GUID Base Name
-     * the idea here being to have a unique ID
-     * per level / object
-     * @ignore
-     */
-    resetGUID : function (base, index = 0) {
-        // also ensure it's only 8bit ASCII characters
-        GUID_base  = toHex(base.toString().toUpperCase());
-        GUID_index = index;
-    },
-
-    /**
-     * create and return a very simple GUID
-     * Game Unique ID
-     * @ignore
-     */
-    createGUID : function (index = 1) {
-        // to cover the case of undefined id for groups
-        GUID_index += index;
-        return GUID_base + "-" + (index || GUID_index);
-    }
 };
 
 var eventemitter3$1 = {exports: {}};
@@ -13637,6 +13318,89 @@ function setBaseURL(type, url) {
     }
 }
 
+/**
+ * a collection of string utility functions
+ * @namespace utils.string
+ */
+
+/**
+ * converts the first character of the given string to uppercase
+ * @public
+ * @memberof utils.string
+ * @name capitalize
+ * @param {string} str - the string to be capitalized
+ * @returns {string} the capitalized string
+ */
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+/**
+ * returns true if the given string contains a numeric integer or float value
+ * @public
+ * @memberof utils.string
+ * @name isNumeric
+ * @param {string} str - the string to be tested
+ * @returns {boolean} true if string contains only digits
+ */
+function isNumeric(str) {
+    if (typeof str === "string") {
+        str = str.trim();
+    }
+    return !isNaN(str) && /^[+-]?(\d+(\.\d+)?|\.\d+)$/.test(str);
+}
+
+/**
+ * returns true if the given string contains a true or false
+ * @public
+ * @memberof utils.string
+ * @name isBoolean
+ * @param {string} str - the string to be tested
+ * @returns {boolean} true if the string is either true or false
+ */
+function isBoolean(str) {
+    const trimmed = str.trim();
+    return (trimmed === "true") || (trimmed === "false");
+}
+
+/**
+ * convert a string to the corresponding hexadecimal value
+ * @public
+ * @memberof utils.string
+ * @name toHex
+ * @param {string} str - the string to be converted
+ * @returns {string} the converted hexadecimal value
+ */
+function toHex(str) {
+    let res = "", c = 0;
+    while (c < str.length) {
+        res += str.charCodeAt(c++).toString(16);
+    }
+    return res;
+}
+
+/**
+ * returns true if the given string is a data url in the `data:[<mediatype>][;base64],<data>` format.
+ * (this will not test the validity of the Data or Base64 encoding)
+ * @public
+ * @memberof utils.string
+ * @name isDataUrl
+ * @param {string} str - the string (url) to be tested
+ * @returns {boolean} true if the string is a data url
+ */
+function isDataUrl(str) {
+    return /^data:(.+);base64,(.+)$/.test(str);
+}
+
+var string$1 = {
+	__proto__: null,
+	capitalize: capitalize,
+	isBoolean: isBoolean,
+	isDataUrl: isDataUrl,
+	isNumeric: isNumeric,
+	toHex: toHex
+};
+
 // external import
 
 /**
@@ -14317,7 +14081,7 @@ function init(width, height, options) {
     //add a channel for the onresize/onorientationchange event
     globalThis.addEventListener(
         "resize",
-        utils.function.throttle(
+        throttle(
             (e) => {
                 emit(WINDOW_ONRESIZE, e);
             }, 100
@@ -14349,7 +14113,7 @@ function init(width, height, options) {
     }
 
     // Automatically update relative canvas position on scroll
-    globalThis.addEventListener("scroll", utils.function.throttle((e) => {
+    globalThis.addEventListener("scroll", throttle((e) => {
         emit(WINDOW_ONSCROLL, e);
     }, 100), false);
 
@@ -14554,6 +14318,78 @@ let save = {
             }
         }
     }
+};
+
+/**
+ * a collection of utility functons to ease porting between different user agents.
+ * @namespace utils.agent
+ */
+
+/**
+ * Known agent vendors
+ * @ignore
+ */
+const vendors = [ "ms", "MS", "moz", "webkit", "o" ];
+
+/**
+ * Get a vendor-prefixed property
+ * @public
+ * @name prefixed
+ * @param {string} name - Property name
+ * @param {object} [obj=globalThis] - Object or element reference to access
+ * @returns {string} Value of property
+ * @memberof utils.agent
+ */
+function prefixed(name, obj) {
+    obj = obj || globalThis;
+    if (name in obj) {
+        return obj[name];
+    }
+
+    let uc_name = capitalize(name);
+
+    let result;
+    vendors.some((vendor) => {
+        let name = vendor + uc_name;
+        return (result = (name in obj) ? obj[name] : undefined);
+    });
+    return result;
+}
+
+/**
+ * Set a vendor-prefixed property
+ * @public
+ * @name setPrefixed
+ * @param {string} name - Property name
+ * @param {string} value - Property value
+ * @param {object} [obj=globalThis] - Object or element reference to access
+ * @returns {boolean} true if one of the vendor-prefixed property was found
+ * @memberof utils.agent
+ */
+function setPrefixed(name, value, obj) {
+    obj = obj || globalThis;
+    if (name in obj) {
+        obj[name] = value;
+        return;
+    }
+
+    let uc_name = capitalize(name);
+
+    vendors.some((vendor) => {
+        let name = vendor + uc_name;
+        if (name in obj) {
+            obj[name] = value;
+            return true;
+        }
+    });
+
+    return false;
+}
+
+var agent$1 = {
+	__proto__: null,
+	prefixed: prefixed,
+	setPrefixed: setPrefixed
 };
 
 /**
@@ -19496,6 +19332,46 @@ let default_settings = {
 }
 
 /**
+ * a collection of file utility functions
+ * @namespace utils.file
+ */
+
+// regexp to deal with file name & path
+const REMOVE_PATH = /^.*(\\|\/|\:)/;
+const REMOVE_EXT = /\.[^\.]*$/;
+
+
+/**
+ * return the base name of the file without path info
+ * @public
+ * @memberof utils.file
+ * @name getBasename
+ * @param  {string} path- -  path containing the filename
+ * @returns {string} the base name without path information.
+ */
+function getBasename(path) {
+    return path.replace(REMOVE_PATH, "").replace(REMOVE_EXT, "");
+}
+
+/**
+ * return the extension of the file in the given path
+ * @public
+ * @memberof utils.file
+ * @name getExtension
+ * @param  {string} path- -  path containing the filename
+ * @returns {string} filename extension.
+ */
+function getExtension(path) {
+    return path.substring(path.lastIndexOf(".") + 1, path.length);
+}
+
+var file$1 = {
+	__proto__: null,
+	getBasename: getBasename,
+	getExtension: getExtension
+};
+
+/**
  * where all preloaded content is cached
  */
 
@@ -19510,6 +19386,139 @@ let binList = {};
 
 // contains all the JSON files
 let jsonList = {};
+
+/**
+ * a collection of utility functions
+ * @namespace utils
+ */
+
+// guid default value
+let GUID_base  = "";
+let GUID_index = 0;
+
+/**
+ * Compare two version strings
+ * @public
+ * @memberof utils
+ * @name checkVersion
+ * @param {string} first - First version string to compare
+ * @param {string} second - second version string to compare
+ * @returns {number} comparison result <br>&lt; 0 : first &lt; second<br>
+ * 0 : first == second<br>
+ * &gt; 0 : first &gt; second
+ * @example
+ * if (me.utils.checkVersion("7.0.0") > 0) {
+ *     console.error(
+ *         "melonJS is too old. Expected: 7.0.0, Got: 6.3.0"
+ *     );
+ * }
+ */
+function checkVersion(first, second) {
+    let a = first.split(".");
+    let b = second.split(".");
+    let len = Math.min(a.length, b.length);
+    let result = 0;
+
+    for (let i = 0; i < len; i++) {
+        if ((result = +a[i] - +b[i])) {
+            break;
+        }
+    }
+
+    return result ? result : a.length - b.length;
+}
+
+/**
+ * parse the fragment (hash) from a URL and returns them into
+ * @public
+ * @memberof utils
+ * @name getUriFragment
+ * @param {string} [url=document.location] - an optional params string or URL containing fragment (hash) params to be parsed
+ * @returns {object} an object representing the deserialized params string.
+ * @property {boolean} [hitbox=false] draw the hitbox in the debug panel (if enabled)
+ * @property {boolean} [velocity=false] draw the entities velocity in the debug panel (if enabled)
+ * @property {boolean} [quadtree=false] draw the quadtree in the debug panel (if enabled)
+ * @property {boolean} [webgl=false] force the renderer to WebGL
+ * @property {boolean} [debug=false] display the debug panel (if preloaded)
+ * @property {string} [debugToggleKey="s"] show/hide the debug panel (if preloaded)
+ * @example
+ * // http://www.example.com/index.html#debug&hitbox=true&mytag=value
+ * let UriFragment = me.utils.getUriFragment();
+ * console.log(UriFragment["mytag"]); //> "value"
+ */
+function getUriFragment(url) {
+    let hash = {};
+
+    if (typeof url === "undefined") {
+        if (typeof globalThis.document !== "undefined") {
+            let location = globalThis.document.location;
+
+            if (location && location.hash) {
+                url = location.hash;
+            } else {
+                // No "document.location" exist for Wechat mini game platform.
+                return hash;
+            }
+        } else {
+            // "document" undefined on node.js
+            return hash;
+        }
+    } else {
+        // never cache if a url is passed as parameter
+        let index = url.indexOf("#");
+        if (index !== -1) {
+            url = url.slice(index, url.length);
+        } else {
+            return hash;
+        }
+    }
+
+    // parse the url
+    url.slice(1).split("&").filter((value) => value !== "").forEach((value) => {
+        let kv = value.split("=");
+        let k = kv.shift();
+        let v = kv.join("=");
+        hash[k] = v || true;
+    });
+
+    return hash;
+}
+
+/**
+ * reset the GUID Base Name
+ * the idea here being to have a unique ID
+ * per level / object
+ * @ignore
+ */
+function resetGUID(base, index = 0) {
+    // also ensure it's only 8bit ASCII characters
+    GUID_base  = toHex(base.toString().toUpperCase());
+    GUID_index = index;
+}
+
+/**
+ * create and return a very simple GUID
+ * Game Unique ID
+ * @ignore
+ */
+function createGUID(index = 1) {
+    // to cover the case of undefined id for groups
+    GUID_index += index;
+    return GUID_base + "-" + (index || GUID_index);
+}
+
+var utils = {
+	__proto__: null,
+	agent: agent$1,
+	array: array$1,
+	checkVersion: checkVersion,
+	createGUID: createGUID,
+	file: file$1,
+	function: _function,
+	getUriFragment: getUriFragment,
+	resetGUID: resetGUID,
+	string: string$1
+};
 
 /**
  * @classdesc
@@ -19890,11 +19899,11 @@ function setTMXValue(name, type, value) {
 
         default :
             // try to parse it anyway
-            if (!value || utils.string.isBoolean(value)) {
+            if (!value || isBoolean(value)) {
                 // if value not defined or boolean
                 value = value ? (value === "true") : true;
             }
-            else if (utils.string.isNumeric(value)) {
+            else if (isNumeric(value)) {
                 // check if numeric
                 value = Number(value);
             }
@@ -19969,8 +19978,8 @@ function parseAttributes(obj, elt) {
  * @returns {Uint32Array} Decoded and decompress data
  */
 function decompress(data, format) {
-    if (typeof utils.inflateb64 === "function") {
-        return utils.inflateb64(data, format);
+    if (typeof undefined === "function") {
+        return undefined(data, format);
     } else {
         throw new Error("GZIP/ZLIB compressed TMX Tile Map not supported!");
     }
@@ -23685,7 +23694,7 @@ let globalFloatingCounter = 0;
             // (e.g. move one child from one container to another)
             if (child.isRenderable) {
                 // allocated a GUID value (use child.id as based index if defined)
-                child.GUID = utils.createGUID(child.id);
+                child.GUID = createGUID(child.id);
             }
         }
 
@@ -23768,7 +23777,7 @@ let globalFloatingCounter = 0;
                 // (e.g. move one child from one container to another)
                 if (child.isRenderable) {
                     // allocated a GUID value
-                    child.GUID = utils.createGUID();
+                    child.GUID = createGUID();
                 }
             }
 
@@ -24139,7 +24148,7 @@ let globalFloatingCounter = 0;
      */
     removeChild(child, keepalive) {
         if (this.hasChild(child)) {
-            utils.function.defer(deferredRemove, this, child, keepalive);
+            defer(deferredRemove, this, child, keepalive);
         }
         else {
             throw new Error("Child is not mine.");
@@ -24290,7 +24299,7 @@ let globalFloatingCounter = 0;
                 });
             }
             /** @ignore */
-            this.pendingSort = utils.function.defer(function () {
+            this.pendingSort = defer(function () {
                 // sort everything in this container
                 this.getChildren().sort(this["_sort" + this.sortOn.toUpperCase()]);
                 // clear the defer id
@@ -25755,7 +25764,7 @@ function readObjectGroup(map, data, z) {
         // if version is undefined or empty it usually means the map was not created with Tiled
         if (this.version !== "undefined" && this.version !== "") {
             // deprecation warning if map tiled version is older than 1.5
-            if (utils.checkVersion(this.version, "1.5") < 0) {
+            if (checkVersion(this.version, "1.5") < 0) {
                 warning("("+this.name+") Tiled Map format version 1.4 and below", "format 1.5 or higher", "10.4.4");
             }
         }
@@ -26180,7 +26189,7 @@ function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
 
     // reset the GUID generator
     // and pass the level id as parameter
-    utils.resetGUID(levelId, level.nextobjectid);
+    resetGUID(levelId, level.nextobjectid);
 
     // Tiled use 0,0 anchor coordinates
     container.anchorPoint.set(0, 0);
@@ -26296,7 +26305,7 @@ let level = {
                 // some silly side effects
                 state$1.stop();
 
-                utils.function.defer(safeLoadLevel, this, levelId, options, true);
+                defer(safeLoadLevel, this, levelId, options, true);
             }
             else {
                 safeLoadLevel(levelId, options);
@@ -28558,7 +28567,7 @@ class Timer {
      */
     clearTimeout(timeoutID) {
         if (timeoutID > 0) {
-            utils.function.defer(this.clearTimer.bind(this), this, timeoutID);
+            defer(this.clearTimer.bind(this), this, timeoutID);
         }
     }
 
@@ -28568,7 +28577,7 @@ class Timer {
      */
     clearInterval(intervalID) {
         if (intervalID > 0) {
-            utils.function.defer(this.clearTimer.bind(this), this, intervalID);
+            defer(this.clearTimer.bind(this), this, intervalID);
         }
     }
 
@@ -37762,7 +37771,7 @@ function consoleHeader(app) {
         }
 
         // override renderer settings if &webgl or &canvas is defined in the URL
-        let uriFragment = utils.getUriFragment();
+        let uriFragment = getUriFragment();
         if (uriFragment.webgl === true || uriFragment.webgl1 === true || uriFragment.webgl2 === true) {
             this.settings.renderer = WEBGL$1;
             if (uriFragment.webgl1 === true) {
@@ -37990,133 +37999,140 @@ function consoleHeader(app) {
 }
 
 /**
- * This namespace is a container for all registered plugins.
- * @see plugin.register
- * @namespace plugins
+ * Contains all registered plugins.
+ * @name cache
+ * @memberof plugin
  */
-let plugins = {};
+let cache = {};
 
+/**
+ * @namespace plugin
+ */
 
+/**
+ * a base Object class for plugin
+ * (plugin must be installed using the register function)
+ * @class
+ * @name BasePlugin
+ * @memberof plugin
+ */
 class BasePlugin {
 
     constructor() {
         /**
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
-         * @public
          * @type {string}
-         * @default "15.1.6"
-         * @name plugin.Base#version
+         * @default "15.2.0"
          */
-        this.version = "15.1.6";
+        this.version = "15.2.0";
+    }
+}
+
+
+/**
+ * @class
+ * @name Base
+ * @memberof plugin
+ * @deprecated since 15.1.6, see {@link plugin.BasePlugin}
+ */
+class Base extends BasePlugin {}
+
+/**
+ * patch a melonJS function
+ * @name patch
+ * @memberof plugin
+ * @param {object} proto - target object
+ * @param {string} name - target function
+ * @param {Function} fn - replacement function
+ * @example
+ * // redefine the me.game.update function with a new one
+ * me.plugin.patch(me.game, "update", function () {
+ *   // display something in the console
+ *   console.log("duh");
+ *   // call the original me.game.update function
+ *   this._patched();
+ * });
+ */
+function patch(proto, name, fn) {
+    // use the object prototype if possible
+    if (typeof proto.prototype !== "undefined") {
+        proto = proto.prototype;
+    }
+    // reuse the logic behind object extends
+    if (typeof(proto[name]) === "function") {
+        // save the original function
+        let _parent = proto[name];
+        // override the function with the new one
+        Object.defineProperty(proto, name, {
+            "configurable" : true,
+            "value" : (function (name, fn) {
+                return function () {
+                    this._patched = _parent;
+                    let ret = fn.apply(this, arguments);
+                    this._patched = null;
+                    return ret;
+                };
+            })(name, fn)
+        });
+    }
+    else {
+        throw new Error(name + " is not an existing function");
     }
 }
 
 /**
- * @namespace plugin
+ * Register a plugin.
+ * @name register
+ * @memberof plugin
+ * @param {plugin.BasePlugin} plugin - Plugin object to instantiate and register
+ * @param {string} [name=plugin.constructor.name] - a unique name for this plugin
+ * @param {object} [...arguments] - all extra parameters will be passed to the plugin constructor
+ * @example
+ * // register a new plugin
+ * me.plugin.register(TestPlugin, "testPlugin");
+ * // the plugin then also become available
+ * // under then me.plugins namespace
+ * me.plugins.testPlugin.myfunction ();
  */
-let plugin = {
-
-    /**
-     * a base Object for plugin <br>
-     * plugin must be installed using the register function
-     * @see plugin
-     * @class
-     * @name Base
-     * @memberof plugin
-     */
-    Base : BasePlugin,
-
-    /**
-     * patch a melonJS function
-     * @name patch
-     * @memberof plugin
-     * @public
-     * @param {object} proto - target object
-     * @param {string} name - target function
-     * @param {Function} fn - replacement function
-     * @example
-     * // redefine the me.game.update function with a new one
-     * me.plugin.patch(me.game, "update", function () {
-     *   // display something in the console
-     *   console.log("duh");
-     *   // call the original me.game.update function
-     *   this._patched();
-     * });
-     */
-    patch : function (proto, name, fn) {
-        // use the object prototype if possible
-        if (typeof proto.prototype !== "undefined") {
-            proto = proto.prototype;
-        }
-        // reuse the logic behind object extends
-        if (typeof(proto[name]) === "function") {
-            // save the original function
-            let _parent = proto[name];
-            // override the function with the new one
-            Object.defineProperty(proto, name, {
-                "configurable" : true,
-                "value" : (function (name, fn) {
-                    return function () {
-                        this._patched = _parent;
-                        let ret = fn.apply(this, arguments);
-                        this._patched = null;
-                        return ret;
-                    };
-                })(name, fn)
-            });
-        }
-        else {
-            throw new Error(name + " is not an existing function");
-        }
-    },
-
-    /**
-     * Register a plugin.
-     * @name register
-     * @memberof plugin
-     * @see Base
-     * @public
-     * @param {plugin.Base} pluginObj - Plugin object to instantiate and register
-     * @param {string} [name=pluginObj.constructor.name] - a unique name for this plugin
-     * @param {object} [...arguments] - all extra parameters will be passed to the plugin constructor
-     * @example
-     * // register a new plugin
-     * me.plugin.register(TestPlugin, "testPlugin");
-     * // the plugin then also become available
-     * // under then me.plugins namespace
-     * me.plugins.testPlugin.myfunction ();
-     */
-    register : function (pluginObj, name = pluginObj.toString().match(/ (\w+)/)[1]) {
-        // ensure me.plugins[name] is not already "used"
-        if (plugins[name]) {
-            throw new Error("plugin " + name + " already registered");
-        }
-
-        // get extra arguments
-        let _args = [];
-        if (arguments.length > 2) {
-            // store extra arguments if any
-            _args = Array.prototype.slice.call(arguments, 1);
-        }
-
-        // try to instantiate the plugin
-        _args[0] = pluginObj;
-        let instance = new (pluginObj.bind.apply(pluginObj, _args))();
-
-        // inheritance check
-        if (typeof instance === "undefined" || !(instance instanceof plugin.Base)) {
-            throw new Error("Plugin should extend the me.plugin.Base Class !");
-        }
-
-        // compatibility testing
-        if (utils.checkVersion(instance.version, version) > 0) {
-            throw new Error("Plugin version mismatch, expected: " + instance.version + ", got: " + version);
-        }
-
-        // create a reference to the new plugin
-        plugins[name] = instance;
+function register(plugin, name = plugin.toString().match(/ (\w+)/)[1]) {
+    // ensure me.plugins[name] is not already "used"
+    if (cache[name]) {
+        throw new Error("plugin " + name + " already registered");
     }
+
+    // get extra arguments
+    let _args = [];
+    if (arguments.length > 2) {
+        // store extra arguments if any
+        _args = Array.prototype.slice.call(arguments, 1);
+    }
+
+    // try to instantiate the plugin
+    _args[0] = plugin;
+    let instance = new (plugin.bind.apply(plugin, _args))();
+
+    // inheritance check
+    if (typeof instance === "undefined" || !(instance instanceof BasePlugin)) {
+        throw new Error("Plugin should extend the BasePlugin Class !");
+    }
+
+    // compatibility testing
+    if (checkVersion(instance.version, version) > 0) {
+        throw new Error("Plugin version mismatch, expected: " + instance.version + ", got: " + version);
+    }
+
+    // create a reference to the new plugin
+    cache[name] = instance;
+}
+
+var plugin = {
+	__proto__: null,
+	Base: Base,
+	BasePlugin: BasePlugin,
+	cache: cache,
+	patch: patch,
+	register: register
 };
 
 /*
@@ -38236,7 +38252,7 @@ Renderer.prototype.getScreenContext = function()  {
  * @name version
  * @type {string}
  */
-const version = "15.1.6";
+const version = "15.2.0";
 
 /**
  * a flag indicating that melonJS is fully initialized
@@ -38344,7 +38360,7 @@ function boot() {
     emit(BOOT);
 
     // enable/disable the cache
-    setNocache( utils.getUriFragment().nocache || false );
+    setNocache( getUriFragment().nocache || false );
 
     // automatically enable keyboard events
     initKeyboardEvent();
@@ -38365,4 +38381,4 @@ onReady(() => {
     }
 });
 
-export { AUTO$1 as AUTO, Application, BitmapText, BitmapTextData, Body, Bounds, CANVAS$1 as CANVAS, Camera2d, CanvasRenderer, CanvasTexture, Collectable, Color, ColorLayer, Compositor, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Point, Pointer, Polygon, PrimitiveCompositor, QuadCompositor, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, UIBaseElement, UISpriteElement, UITextButton, Vector2d, Vector3d, WEBGL$1 as WEBGL, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state$1 as state, timer$1 as timer, utils, version, video };
+export { AUTO$1 as AUTO, Application, BitmapText, BitmapTextData, Body, Bounds, CANVAS$1 as CANVAS, Camera2d, CanvasRenderer, CanvasTexture, Collectable, Color, ColorLayer, Compositor, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Point, Pointer, Polygon, PrimitiveCompositor, QuadCompositor, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, UIBaseElement, UISpriteElement, UITextButton, Vector2d, Vector3d, WEBGL$1 as WEBGL, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader, plugin, cache as plugins, pool, save, skipAutoInit, state$1 as state, timer$1 as timer, utils, version, video };

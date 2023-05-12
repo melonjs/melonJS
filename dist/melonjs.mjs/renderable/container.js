@@ -1,12 +1,13 @@
 /*!
- * melonJS Game Engine - v15.1.6
+ * melonJS Game Engine - v15.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 import Renderable from './renderable.js';
-import utils from '../utils/utils.js';
+import { createGUID } from '../utils/utils.js';
+import { defer } from '../utils/function.js';
 import { game } from '../index.js';
 import { on, CANVAS_ONRESIZE } from '../system/event.js';
 import pool from '../system/pooling.js';
@@ -196,7 +197,7 @@ let globalFloatingCounter = 0;
             // (e.g. move one child from one container to another)
             if (child.isRenderable) {
                 // allocated a GUID value (use child.id as based index if defined)
-                child.GUID = utils.createGUID(child.id);
+                child.GUID = createGUID(child.id);
             }
         }
 
@@ -279,7 +280,7 @@ let globalFloatingCounter = 0;
                 // (e.g. move one child from one container to another)
                 if (child.isRenderable) {
                     // allocated a GUID value
-                    child.GUID = utils.createGUID();
+                    child.GUID = createGUID();
                 }
             }
 
@@ -650,7 +651,7 @@ let globalFloatingCounter = 0;
      */
     removeChild(child, keepalive) {
         if (this.hasChild(child)) {
-            utils.function.defer(deferredRemove, this, child, keepalive);
+            defer(deferredRemove, this, child, keepalive);
         }
         else {
             throw new Error("Child is not mine.");
@@ -801,7 +802,7 @@ let globalFloatingCounter = 0;
                 });
             }
             /** @ignore */
-            this.pendingSort = utils.function.defer(function () {
+            this.pendingSort = defer(function () {
                 // sort everything in this container
                 this.getChildren().sort(this["_sort" + this.sortOn.toUpperCase()]);
                 // clear the defer id

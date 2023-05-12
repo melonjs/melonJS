@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.6
+ * melonJS Game Engine - v15.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -80,10 +80,14 @@ import * as loader from './loader/loader.js';
 export { loader };
 import * as math from './math/math.js';
 export { math as Math };
-import utils from './utils/utils.js';
+import { getUriFragment } from './utils/utils.js';
+import * as utils from './utils/utils.js';
+export { utils };
 import * as input from './input/input.js';
 export { input };
-export { plugin, plugins } from './plugin/plugin.js';
+import * as plugin from './plugin/plugin.js';
+export { plugin };
+export { cache as plugins } from './plugin/plugin.js';
 import * as video from './video/video.js';
 export { video };
 export { default as save } from './system/save.js';
@@ -106,7 +110,7 @@ import { initKeyboardEvent } from './input/keyboard.js';
  * @name version
  * @type {string}
  */
-const version = "15.1.6";
+const version = "15.2.0";
 
 /**
  * a flag indicating that melonJS is fully initialized
@@ -214,7 +218,7 @@ function boot() {
     emit(BOOT);
 
     // enable/disable the cache
-    setNocache( utils.getUriFragment().nocache || false );
+    setNocache( getUriFragment().nocache || false );
 
     // automatically enable keyboard events
     initKeyboardEvent();
@@ -230,4 +234,4 @@ onReady(() => {
     }
 });
 
-export { Application, BitmapText, BitmapTextData, Bounds, CanvasTexture, Collectable, Color, ColorLayer, Ellipse, Entity, ImageLayer, Light2d, Line, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, Point, Polygon, Rect, Renderable, RoundRect, Sprite, Text, Trigger, Tween, Vector2d, Vector3d, boot, game, initialized, pool, skipAutoInit, utils, version };
+export { Application, BitmapText, BitmapTextData, Bounds, CanvasTexture, Collectable, Color, ColorLayer, Ellipse, Entity, ImageLayer, Light2d, Line, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, Point, Polygon, Rect, Renderable, RoundRect, Sprite, Text, Trigger, Tween, Vector2d, Vector3d, boot, game, initialized, pool, skipAutoInit, version };

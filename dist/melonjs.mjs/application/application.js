@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.6
+ * melonJS Game Engine - v15.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -9,7 +9,7 @@ import { autoDetectRenderer } from '../video/utils/autodetect.js';
 import CanvasRenderer from '../video/canvas/canvas_renderer.js';
 import { getElement, platform, enableSwipe } from '../system/device.js';
 import { on, emit, GAME_AFTER_UPDATE, GAME_BEFORE_DRAW, GAME_AFTER_DRAW, WINDOW_ONRESIZE, WINDOW_ONORIENTATION_CHANGE, GAME_INIT, GAME_RESET, GAME_BEFORE_UPDATE, GAME_UPDATE } from '../system/event.js';
-import utils from '../utils/utils.js';
+import { getUriFragment } from '../utils/utils.js';
 import timer from '../system/timer.js';
 import state from '../state/state.js';
 import World from '../physics/world.js';
@@ -156,7 +156,7 @@ import { WEBGL, CANVAS, AUTO } from '../const.js';
         }
 
         // override renderer settings if &webgl or &canvas is defined in the URL
-        let uriFragment = utils.getUriFragment();
+        let uriFragment = getUriFragment();
         if (uriFragment.webgl === true || uriFragment.webgl1 === true || uriFragment.webgl2 === true) {
             this.settings.renderer = WEBGL;
             if (uriFragment.webgl1 === true) {

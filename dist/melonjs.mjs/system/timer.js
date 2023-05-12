@@ -1,11 +1,11 @@
 /*!
- * melonJS Game Engine - v15.1.6
+ * melonJS Game Engine - v15.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
-import utils from '../utils/utils.js';
+import { defer } from '../utils/function.js';
 import { on, GAME_BEFORE_UPDATE, BOOT, STATE_RESUME, STATE_RESTART, STATE_CHANGE } from './event.js';
 import state from '../state/state.js';
 import { clamp } from '../math/math.js';
@@ -168,7 +168,7 @@ class Timer {
      */
     clearTimeout(timeoutID) {
         if (timeoutID > 0) {
-            utils.function.defer(this.clearTimer.bind(this), this, timeoutID);
+            defer(this.clearTimer.bind(this), this, timeoutID);
         }
     }
 
@@ -178,7 +178,7 @@ class Timer {
      */
     clearInterval(intervalID) {
         if (intervalID > 0) {
-            utils.function.defer(this.clearTimer.bind(this), this, intervalID);
+            defer(this.clearTimer.bind(this), this, intervalID);
         }
     }
 

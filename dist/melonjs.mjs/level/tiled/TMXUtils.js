@@ -1,11 +1,11 @@
 /*!
- * melonJS Game Engine - v15.1.6
+ * melonJS Game Engine - v15.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
-import utils from '../../utils/utils.js';
+import { isBoolean, isNumeric } from '../../utils/string.js';
 
 /**
  * set and interpret a TMX property value
@@ -32,11 +32,11 @@ function setTMXValue(name, type, value) {
 
         default :
             // try to parse it anyway
-            if (!value || utils.string.isBoolean(value)) {
+            if (!value || isBoolean(value)) {
                 // if value not defined or boolean
                 value = value ? (value === "true") : true;
             }
-            else if (utils.string.isNumeric(value)) {
+            else if (isNumeric(value)) {
                 // check if numeric
                 value = Number(value);
             }
@@ -111,9 +111,7 @@ function parseAttributes(obj, elt) {
  * @returns {Uint32Array} Decoded and decompress data
  */
 function decompress(data, format) {
-    if (typeof utils.inflateb64 === "function") {
-        return utils.inflateb64(data, format);
-    } else {
+    {
         throw new Error("GZIP/ZLIB compressed TMX Tile Map not supported!");
     }
 }
@@ -173,7 +171,7 @@ function decode(data, encoding, compression) {
 
         case "base64":
             if (compression !== "none") {
-                data = decompress(data, compression);
+                data = decompress();
             } else {
                 data = decodeBase64AsArray(data, 4);
             }

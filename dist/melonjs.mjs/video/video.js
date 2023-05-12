@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.1.6
+ * melonJS Game Engine - v15.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -8,7 +8,7 @@
 import { emit, WINDOW_ONRESIZE, WINDOW_ONORIENTATION_CHANGE, WINDOW_ONSCROLL, VIDEO_INIT } from '../system/event.js';
 import { game, initialized } from '../index.js';
 import { offscreenCanvas, screenOrientation } from '../system/device.js';
-import utils from '../utils/utils.js';
+import { throttle } from '../utils/function.js';
 import { CANVAS as CANVAS$1, WEBGL as WEBGL$1, AUTO as AUTO$1 } from '../const.js';
 
 /**
@@ -105,7 +105,7 @@ function init(width, height, options) {
     //add a channel for the onresize/onorientationchange event
     globalThis.addEventListener(
         "resize",
-        utils.function.throttle(
+        throttle(
             (e) => {
                 emit(WINDOW_ONRESIZE, e);
             }, 100
@@ -137,7 +137,7 @@ function init(width, height, options) {
     }
 
     // Automatically update relative canvas position on scroll
-    globalThis.addEventListener("scroll", utils.function.throttle((e) => {
+    globalThis.addEventListener("scroll", throttle((e) => {
         emit(WINDOW_ONSCROLL, e);
     }, 100), false);
 
