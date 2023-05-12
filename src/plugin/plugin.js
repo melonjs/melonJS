@@ -88,8 +88,7 @@ export function patch(proto, name, fn) {
  * Register a plugin.
  * @name register
  * @memberof plugin
- * @see BasePlugin
- * @param {BasePlugin} plugin - Plugin object to instantiate and register
+ * @param {plugin.BasePlugin} plugin - Plugin object to instantiate and register
  * @param {string} [name=plugin.constructor.name] - a unique name for this plugin
  * @param {object} [...arguments] - all extra parameters will be passed to the plugin constructor
  * @example
