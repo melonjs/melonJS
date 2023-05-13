@@ -167,15 +167,15 @@ melonJS 2 now only provides an ES6 Bundle :
 
 >Note: if you need your application to be compatible with ES5, refer to our [boilerplate](#using-melonjs) that provides automatic transpiling to ES5.
 
-Alternatively, the latest version of melonJS can be installed through [NPM](https://www.npmjs.com/package/melonjs) :
+The latest version of melonJS can be installed through [NPM](https://www.npmjs.com/package/melonjs) :
 
     $ npm install melonjs
 
-If you need to import the ES6 module of melonjs (e.g. for Webpack):
+And then import melonjs in your project using :
 
-    $ import * as me from 'melonjs/dist/melonjs.module.js';
+    $ import * as me from 'melonjs';
 
-Or can simply be added to your html, using [jsDeliver](https://www.jsdelivr.com/package/npm/melonjs) content delivery network (CDN) :
+Or it can simply be added to your html, using [jsDeliver](https://www.jsdelivr.com/package/npm/melonjs) content delivery network (CDN) :
 
 ```html
 <!-- load the ES6 module bundle of melonJS v10.0 -->
