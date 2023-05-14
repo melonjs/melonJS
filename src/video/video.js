@@ -2,33 +2,31 @@ import * as event from "./../system/event.js";
 import { initialized, game } from "./../index.js";
 import * as device from "./../system/device.js";
 import { throttle } from "../utils/function.js";
-import * as vc from "../const";
 
 /**
  * @namespace video
  */
-
 
 /**
  * Select the HTML5 Canvas renderer
  * @memberof video
  * @static
  */
-export const CANVAS = vc.CANVAS;
+export { CANVAS } from "../const";
 
 /**
  * Select the WebGL renderer
  * @memberof video
  * @static
  */
-export const WEBGL = vc.WEBGL;
+export { WEBGL } from "../const";
 
 /**
  * Auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
  * @memberof video
  * @static
  */
-export const AUTO = vc.AUTO;
+export { AUTO } from "../const";
 
 /**
  * A reference to the active Canvas or WebGL active renderer renderer
