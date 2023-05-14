@@ -54,6 +54,7 @@ import TMXTileset from "./level/tiled/TMXTileset.js";
 import TMXTilesetGroup from "./level/tiled/TMXTilesetGroup.js";
 import TMXTileMap from "./level/tiled/TMXTileMap.js";
 import TMXLayer from "./level/tiled/TMXLayer.js";
+import * as TMXUtils from "./level/tiled/TMXUtils.js";
 import Pointer from "./input/pointer.js";
 import Stage from "./state/stage.js";
 import Camera2d from "./camera/camera2d.js";
@@ -167,6 +168,7 @@ export {
     TMXTilesetGroup,
     TMXTileMap,
     TMXLayer,
+    TMXUtils,
     Pointer,
     Stage,
     Camera2d,

@@ -1,5 +1,16 @@
 import { isBoolean, isNumeric } from "../../utils/string.js";
-import * as utils from "../../utils/utils.js";
+
+/**
+ * a collection of utility functions for parsing TMX maps
+ * @namespace TMXUtils
+ */
+
+
+/**
+ * the function used to decompress zlib/gzip data
+ * @ignore
+ */
+let inflateFunction;
 
 /**
  * set and interpret a TMX property value
@@ -97,98 +108,10 @@ function parseAttributes(obj, elt) {
 }
 
 /**
- * decompress and decode zlib/gzip data
- * @ignore
- * @name decompress
- * @param {string} input - Base64 encoded and compressed data
- * @param {string} format - compressed data format ("gzip","zlib", "zstd")
- * @returns {Uint32Array} Decoded and decompress data
- */
-export function decompress(data, format) {
-    if (typeof utils.inflateb64 === "function") {
-        return utils.inflateb64(data, format);
-    } else {
-        throw new Error("GZIP/ZLIB compressed TMX Tile Map not supported!");
-    }
-}
-
-/**
- * Decode a CSV encoded array into a binary array
- * @ignore
- * @name decodeCSV
- * @param  {string} input- -  CSV formatted data (only numbers, everything else will be converted to NaN)
- * @returns {number[]} Decoded data
- */
-export function decodeCSV(input) {
-    let entries = input.replace("\n", "").trim().split(",");
-
-    let result = [];
-    for (let i = 0; i < entries.length; i++) {
-        result.push(+entries[i]);
-    }
-    return result;
-}
-
-/**
- * Decode a base64 encoded string into a byte array
- * @ignore
- * @name decodeBase64AsArray
- * @param {string} input - Base64 encoded data
- * @param {number} [bytes] - number of bytes per array entry
- * @returns {Uint32Array} Decoded data
- */
-export function decodeBase64AsArray(input, bytes) {
-    bytes = bytes || 1;
-
-    let i, j, len;
-    let dec = globalThis.atob(input.replace(/[^A-Za-z0-9\+\/\=]/g, ""));
-    let ar = new Uint32Array(dec.length / bytes);
-
-    for (i = 0, len = dec.length / bytes; i < len; i++) {
-        ar[i] = 0;
-        for (j = bytes - 1; j >= 0; --j) {
-            ar[i] += dec.charCodeAt((i * bytes) + j) << (j << 3);
-        }
-    }
-    return ar;
-}
-
-/**
- * Decode the given data
- * @ignore
- */
-export function decode(data, encoding, compression) {
-    compression = compression || "none";
-    encoding = encoding || "none";
-
-    switch (encoding) {
-        case "csv":
-            return decodeCSV(data);
-
-        case "base64":
-            if (compression !== "none") {
-                data = decompress(data, compression);
-            } else {
-                data = decodeBase64AsArray(data, 4);
-            }
-            return data;
-
-        case "none":
-            return data;
-
-        case "xml":
-            throw new Error("XML encoding is deprecated, use base64 instead");
-
-        default:
-            throw new Error("Unknown layer encoding: " + encoding);
-    }
-}
-
-/**
  * Normalize TMX format to Tiled JSON format
  * @ignore
  */
-export function normalize(obj, item) {
+function normalize(obj, item) {
     let nodeName = item.nodeName;
 
     switch (nodeName) {
@@ -316,9 +239,113 @@ export function normalize(obj, item) {
     }
 }
 
+
+/**
+ * decompress and decode zlib/gzip data
+ * @name decompress
+ * @memberOf TMXUtils
+ * @param {string} input - Base64 encoded and compressed data
+ * @param {string} format - compressed data format ("gzip","zlib", "zstd")
+ * @returns {Uint32Array} Decoded and decompress data
+ */
+function decompress(data, format) {
+    if (typeof inflateFunction === "function") {
+        return inflateFunction(data, format);
+    } else {
+        throw new Error("GZIP/ZLIB compressed TMX Tile Map not supported!");
+    }
+}
+
+/**
+ * Decode a CSV encoded array into a binary array
+ * @name decodeCSV
+ * @memberOf TMXUtils
+ * @param  {string} input- -  CSV formatted data (only numbers, everything else will be converted to NaN)
+ * @returns {number[]} Decoded data
+ */
+function decodeCSV(input) {
+    let entries = input.replace("\n", "").trim().split(",");
+
+    let result = [];
+    for (let i = 0; i < entries.length; i++) {
+        result.push(+entries[i]);
+    }
+    return result;
+}
+
+/**
+ * Decode a base64 encoded string into a byte array
+ * @name decodeBase64AsArray
+ * @memberOf TMXUtils
+ * @param {string} input - Base64 encoded data
+ * @param {number} [bytes] - number of bytes per array entry
+ * @returns {Uint32Array} Decoded data
+ */
+function decodeBase64AsArray(input, bytes) {
+    bytes = bytes || 1;
+
+    let i, j, len;
+    let dec = globalThis.atob(input.replace(/[^A-Za-z0-9\+\/\=]/g, ""));
+    let ar = new Uint32Array(dec.length / bytes);
+
+    for (i = 0, len = dec.length / bytes; i < len; i++) {
+        ar[i] = 0;
+        for (j = bytes - 1; j >= 0; --j) {
+            ar[i] += dec.charCodeAt((i * bytes) + j) << (j << 3);
+        }
+    }
+    return ar;
+}
+
+/**
+ * set the function used to inflate gzip/zlib data
+ * @param {Func} fn - inflate function
+ */
+export function setInflateFunction(fn) {
+    inflateFunction = fn;
+}
+
+/**
+ * Decode a encoded array into a binary array
+ * @name decodeCSV
+ * @memberOf TMXUtils
+ * @param {string} data - data to be decoded
+ * @param {string} [encoding="none"] - data encoding ("csv", "base64", "xml")
+ * @returns {number[]} Decoded data
+ */
+export function decode(data, encoding, compression) {
+    compression = compression || "none";
+    encoding = encoding || "none";
+
+    switch (encoding) {
+        case "csv":
+            return decodeCSV(data);
+
+        case "base64":
+            if (compression !== "none") {
+                data = decompress(data, compression);
+            } else {
+                data = decodeBase64AsArray(data, 4);
+            }
+            return data;
+
+        case "none":
+            return data;
+
+        case "xml":
+            throw new Error("XML encoding is deprecated, use base64 instead");
+
+        default:
+            throw new Error("Unknown layer encoding: " + encoding);
+    }
+}
+
 /**
  * Parse a XML TMX object and returns the corresponding javascript object
- * @ignore
+ * @name parse
+ * @memberOf TMXUtils
+ * @param {Document} xml - XML TMX object
+ * @returns {object} Javascript object
  */
 export function parse(xml) {
     // Create the return object
@@ -356,7 +383,11 @@ export function parse(xml) {
 
 /**
  * Apply TMX Properties to the given object
- * @ignore
+ * @name applyTMXProperties
+ * @memberOf TMXUtils
+ * @param {object} obj - object to apply the properties to
+ * @param {object} data - TMX data object
+ * @returns {object} obj
  */
 export function applyTMXProperties(obj, data) {
     let properties = data.properties;
