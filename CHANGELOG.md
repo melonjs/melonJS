@@ -5,9 +5,6 @@
 ### Fixed
 - TMX: fix a regression with the inflate patch entry point
 
-### Changed
-- Plugin: the `Base` plugin class is now deprecated and replaced by `BasePlugin` (`Base` is just an alias now)
-
 ## [15.2.0] (melonJS 2) - _2023-05-12_
 
 ### Changed
