@@ -65,29 +65,9 @@ export function createCanvas(width: number, height: number, returnOffscreenCanva
  */
 export function getParent(): HTMLElement;
 /**
- * @namespace video
- */
-/**
- * Select the HTML5 Canvas renderer
- * @memberof video
- * @static
- */
-export const CANVAS: number;
-/**
- * Select the WebGL renderer
- * @memberof video
- * @static
- */
-export const WEBGL: number;
-/**
- * Auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
- * @memberof video
- * @static
- */
-export const AUTO: number;
-/**
  * A reference to the active Canvas or WebGL active renderer renderer
  * @memberof video
  * @type {CanvasRenderer|WebGLRenderer}
  */
 export let renderer: CanvasRenderer | WebGLRenderer;
+export { CANVAS, WEBGL, AUTO } from "../const";

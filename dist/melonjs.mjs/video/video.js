@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.2.0
+ * melonJS Game Engine - v15.2.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -9,33 +9,7 @@ import { emit, WINDOW_ONRESIZE, WINDOW_ONORIENTATION_CHANGE, WINDOW_ONSCROLL, VI
 import { game, initialized } from '../index.js';
 import { offscreenCanvas, screenOrientation } from '../system/device.js';
 import { throttle } from '../utils/function.js';
-import { CANVAS as CANVAS$1, WEBGL as WEBGL$1, AUTO as AUTO$1 } from '../const.js';
-
-/**
- * @namespace video
- */
-
-
-/**
- * Select the HTML5 Canvas renderer
- * @memberof video
- * @static
- */
-const CANVAS = CANVAS$1;
-
-/**
- * Select the WebGL renderer
- * @memberof video
- * @static
- */
-const WEBGL = WEBGL$1;
-
-/**
- * Auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
- * @memberof video
- * @static
- */
-const AUTO = AUTO$1;
+export { AUTO, CANVAS, WEBGL } from '../const.js';
 
 /**
  * A reference to the active Canvas or WebGL active renderer renderer
@@ -188,4 +162,4 @@ function getParent() {
     return game.getParentElement();
 }
 
-export { AUTO, CANVAS, WEBGL, createCanvas, getParent, init, renderer };
+export { createCanvas, getParent, init, renderer };

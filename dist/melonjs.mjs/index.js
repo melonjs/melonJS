@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.2.0
+ * melonJS Game Engine - v15.2.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -57,6 +57,8 @@ export { default as TMXTileset } from './level/tiled/TMXTileset.js';
 export { default as TMXTilesetGroup } from './level/tiled/TMXTilesetGroup.js';
 export { default as TMXTileMap } from './level/tiled/TMXTileMap.js';
 export { default as TMXLayer } from './level/tiled/TMXLayer.js';
+import * as TMXUtils from './level/tiled/TMXUtils.js';
+export { TMXUtils };
 export { default as Pointer } from './input/pointer.js';
 export { default as Stage } from './state/stage.js';
 export { default as Camera2d } from './camera/camera2d.js';
@@ -110,7 +112,7 @@ import { initKeyboardEvent } from './input/keyboard.js';
  * @name version
  * @type {string}
  */
-const version = "15.2.0";
+const version = "15.2.1";
 
 /**
  * a flag indicating that melonJS is fully initialized

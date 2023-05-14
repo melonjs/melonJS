@@ -1,48 +1,31 @@
 /**
- * decompress and decode zlib/gzip data
- * @ignore
- * @name decompress
- * @param {string} input - Base64 encoded and compressed data
- * @param {string} format - compressed data format ("gzip","zlib", "zstd")
- * @returns {Uint32Array} Decoded and decompress data
+ * set the function used to inflate gzip/zlib data
+ * @param {Func} fn - inflate function
  */
-export function decompress(data: any, format: string): Uint32Array;
+export function setInflateFunction(fn: Func): void;
 /**
- * Decode a CSV encoded array into a binary array
- * @ignore
+ * Decode a encoded array into a binary array
  * @name decodeCSV
- * @param  {string} input- -  CSV formatted data (only numbers, everything else will be converted to NaN)
+ * @memberOf TMXUtils
+ * @param {string} data - data to be decoded
+ * @param {string} [encoding="none"] - data encoding ("csv", "base64", "xml")
  * @returns {number[]} Decoded data
  */
-export function decodeCSV(input: any): number[];
-/**
- * Decode a base64 encoded string into a byte array
- * @ignore
- * @name decodeBase64AsArray
- * @param {string} input - Base64 encoded data
- * @param {number} [bytes] - number of bytes per array entry
- * @returns {Uint32Array} Decoded data
- */
-export function decodeBase64AsArray(input: string, bytes?: number | undefined): Uint32Array;
-/**
- * Decode the given data
- * @ignore
- */
-export function decode(data: any, encoding: any, compression: any): any;
-/**
- * Normalize TMX format to Tiled JSON format
- * @ignore
- */
-export function normalize(obj: any, item: any): void;
+export function decode(data: string, encoding?: string | undefined, compression: any): number[];
 /**
  * Parse a XML TMX object and returns the corresponding javascript object
- * @ignore
+ * @name parse
+ * @memberOf TMXUtils
+ * @param {Document} xml - XML TMX object
+ * @returns {object} Javascript object
  */
-export function parse(xml: any): {
-    text: string;
-};
+export function parse(xml: Document): object;
 /**
  * Apply TMX Properties to the given object
- * @ignore
+ * @name applyTMXProperties
+ * @memberOf TMXUtils
+ * @param {object} obj - object to apply the properties to
+ * @param {object} data - TMX data object
+ * @returns {object} obj
  */
-export function applyTMXProperties(obj: any, data: any): void;
+export function applyTMXProperties(obj: object, data: object): object;
