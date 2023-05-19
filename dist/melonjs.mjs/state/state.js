@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.2.1
+ * melonJS Game Engine - v15.2.2
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -267,7 +267,7 @@ let state = {
      * default state ID for the default Stage
      * (the default stage is the one running as soon as melonJS is started)
      * @constant
-     * @name SETTINGS
+     * @name DEFAULT
      * @memberof state
      */
     DEFAULT : 9,

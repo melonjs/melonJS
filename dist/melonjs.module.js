@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.2.1
+ * melonJS Game Engine - v15.2.2
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -28097,7 +28097,7 @@ let state = {
      * default state ID for the default Stage
      * (the default stage is the one running as soon as melonJS is started)
      * @constant
-     * @name SETTINGS
+     * @name DEFAULT
      * @memberof state
      */
     DEFAULT : 9,
@@ -38037,9 +38037,9 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "15.2.1"
+         * @default "15.2.2"
          */
-        this.version = "15.2.1";
+        this.version = "15.2.2";
     }
 }
 
@@ -38266,7 +38266,7 @@ Renderer.prototype.getScreenContext = function()  {
  * @name version
  * @type {string}
  */
-const version = "15.2.1";
+const version = "15.2.2";
 
 /**
  * a flag indicating that melonJS is fully initialized
