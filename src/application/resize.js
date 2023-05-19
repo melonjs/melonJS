@@ -57,7 +57,7 @@ export function onresize(game) {
         }
 
         // get the maximum canvas size within the parent div containing the canvas container
-        let nodeBounds = device.getParentBounds(game.getParentElement());
+        let nodeBounds = device.getElementBounds(game.getParentElement());
 
         let _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
         let _max_height = Math.min(canvasMaxHeight, nodeBounds.height);
