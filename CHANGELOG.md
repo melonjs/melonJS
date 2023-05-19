@@ -1,5 +1,10 @@
 # Changelog
 
+## [15.2.2] (melonJS 2) - _2023-05-xx_
+
+### Fixed
+- doc: fix the @name value of `state.DEFAULT` (thanks @johnhyde)
+
 ## [15.2.1] (melonJS 2) - _2023-05-14_
 
 ### Fixed
@@ -549,6 +554,7 @@
 
 -------------------------------------------------------------------------------
 
+[15.2.2]: https://github.com/melonjs/melonJS/compare/15.2.2...15.2.1
 [15.2.1]: https://github.com/melonjs/melonJS/compare/15.2.1...15.2.0
 [15.2.0]: https://github.com/melonjs/melonJS/compare/15.2.0...15.1.6
 [15.1.6]: https://github.com/melonjs/melonJS/compare/15.1.6...15.1.5
