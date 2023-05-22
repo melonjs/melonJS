@@ -10,6 +10,7 @@ import { throttle } from "../utils/function.js";
 /**
  * Select the HTML5 Canvas renderer
  * @memberof video
+ * @name CANVAS
  * @static
  */
 export { CANVAS } from "../const";
@@ -17,6 +18,7 @@ export { CANVAS } from "../const";
 /**
  * Select the WebGL renderer
  * @memberof video
+ * @name WEBGL
  * @static
  */
 export { WEBGL } from "../const";
@@ -24,6 +26,7 @@ export { WEBGL } from "../const";
 /**
  * Auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
  * @memberof video
+ * @name AUTO
  * @static
  */
 export { AUTO } from "../const";
@@ -37,34 +40,10 @@ export let renderer = null;
 
 /**
  * Initialize the "video" system (create a canvas based on the given arguments, and the related renderer). <br>
- * melonJS support various scaling mode, that can be enabled <u>once the scale option is set to <b>`auto`</b></u> : <br>
- *  - <i><b>`fit`</b></i> : Letterboxed; content is scaled to design aspect ratio <br>
- * <center><img src="images/scale-fit.png"/></center><br>
- *  - <i><b>`fill-min`</b></i> : Canvas is resized to fit minimum design resolution; content is scaled to design aspect ratio <br>
- * <center><img src="images/scale-fill-min.png"/></center><br>
- *  - <i><b>`fill-max`</b></i> : Canvas is resized to fit maximum design resolution; content is scaled to design aspect ratio <br>
- * <center><img src="images/scale-fill-max.png"/></center><br>
- *  - <i><b>`flex`</b><</i> : Canvas width & height is resized to fit; content is scaled to design aspect ratio <br>
- * <center><img src="images/scale-flex.png"/></center><br>
- *  - <i><b>`flex-width`</b></i> : Canvas width is resized to fit; content is scaled to design aspect ratio <br>
- * <center><img src="images/scale-flex-width.png"/></center><br>
- *  - <i><b>`flex-height`</b></i> : Canvas height is resized to fit; content is scaled to design aspect ratio <br>
- * <center><img src="images/scale-flex-height.png"/></center><br>
- *  - <i><b>`stretch`</b></i> : Canvas is resized to fit; content is scaled to screen aspect ratio
- * <center><img src="images/scale-stretch.png"/></center><br>
  * @memberof video
  * @param {number} width - The width of the canvas viewport
  * @param {number} height - The height of the canvas viewport
- * @param {object} [options] - The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
- * @param {string|HTMLElement} [options.parent=document.body] - the DOM parent element to hold the canvas in the HTML file
- * @param {number|Renderer} [options.renderer=video.AUTO] - renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO), or a custom renderer class
- * @param {number|string} [options.scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)
- * @param {string} [options.scaleMethod="fit"] - screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
- * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
- * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
- * @param {boolean} [options.transparent=false] - whether to allow transparent pixels in the front buffer (screen).
- * @param {boolean} [options.antiAlias=false] - whether to enable or not video scaling interpolation
- * @param {boolean} [options.consoleHeader=true] - whether to display melonJS version and basic device information in the console
+ * @param {Application.Settings} [options] - optional parameters for the renderer
  * @returns {boolean} false if initialization failed (canvas not supported)
  * @example
  * // init the video with a 640x480 canvas

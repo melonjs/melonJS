@@ -20,20 +20,7 @@ import Point from "../geometries/point.js";
  */
  export default class Renderer {
     /**
-     * @param {object} options - The renderer parameters
-     * @param {number} options.width - The width of the canvas without scaling
-     * @param {number} options.height - The height of the canvas without scaling
-     * @param {HTMLCanvasElement} [options.canvas] - The html canvas to draw to on screen
-     * @param {boolean} [options.antiAlias=false] - Whether to enable anti-aliasing, use false (default) for a pixelated effect.
-     * @param {boolean} [options.failIfMajorPerformanceCaveat=true] - If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
-     * @param {boolean} [options.transparent=false] - Whether to enable transparency on the canvas
-     * @param {boolean} [options.premultipliedAlpha=true] - in WebGL, whether the renderer will assume that colors have premultiplied alpha when canvas transparency is enabled
-     * @param {boolean} [options.blendMode="normal"] - the default blend mode to use ("normal", "multiply")
-     * @param {boolean} [options.depthBuffer="sorting"] - ~Experimental~ the default method to sort object on the z axis in WebGL ("sorting", "z-buffer")
-     * @param {boolean} [options.subPixel=false] - Whether to enable subpixel rendering (performance hit when enabled)
-     * @param {boolean} [options.verbose=false] - Enable the verbose mode that provides additional details as to what the renderer is doing
-     * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
-     * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
+     * @param {Application.Settings} [options] - optional parameters for the renderer
      */
     constructor(options) {
         /**

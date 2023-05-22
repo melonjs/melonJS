@@ -21,17 +21,7 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
     /**
      * @param {number} width - The width of the canvas viewport
      * @param {number} height - The height of the canvas viewport
-     * @param {object} [options] - The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
-     * @param {string|HTMLElement} [options.parent=document.body] - the DOM parent element to hold the canvas in the HTML file
-     * @param {number|Renderer} [options.renderer=AUTO] - renderer to use (CANVAS, WEBGL, AUTO), or a custom renderer class
-     * @param {number|string} [options.scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)
-     * @param {string} [options.scaleMethod="fit"] - screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
-     * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
-     * @param {boolean} [options.depthTest="sorting"] - ~Experimental~ the default method to sort object on the z axis in WebGL ("sorting", "z-buffer")
-     * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
-     * @param {boolean} [options.transparent=false] - whether to allow transparent pixels in the front buffer (screen).
-     * @param {boolean} [options.antiAlias=false] - whether to enable or not video scaling interpolation
-     * @param {boolean} [options.consoleHeader=true] - whether to display melonJS version and basic device information in the console
+     * @param {Application.Settings} [options] - The optional parameters for the application and default renderer
      * @throws Will throw an exception if it fails to instantiate a renderer
      * @example
      * let my game = new Application(640, 480, {renderer: me.video.AUTO}) {
