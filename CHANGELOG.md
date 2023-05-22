@@ -2,6 +2,10 @@
 
 ## [15.3.0] (melonJS 2) - _2023-05-xx_
 
+### Changed
+- Application: world steps and rendering update are now done through a new global `TICK` event
+- Application: further "decoupling" of Application, Stage and State (see #1091)
+
 ### Fixed
 - doc: fix the @name value of `state.DEFAULT` (thanks @johnhyde)
 

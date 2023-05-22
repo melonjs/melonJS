@@ -31,6 +31,17 @@ export const DOM_READY = "dom_ready";
 export const BOOT = "me.boot";
 
 /**
+ * event generated when the system update the engine and the renderer by one step
+ * @public
+ * @constant
+ * @type {string}
+ * @name TICK
+ * @memberof event
+ * @see event.on
+ */
+export const TICK = "me.tick";
+
+/**
  * event when the game is paused <br>
  * Data passed : none <br>
  * @public
@@ -88,6 +99,17 @@ export const STATE_RESTART = "me.state.onRestart";
  * @see event.on
  */
 export const STATE_CHANGE = "me.state.onChange";
+
+/**
+ * event for when a stage is resetted
+ * @public
+ * @constant
+ * @type {string}
+ * @name STAGE_RESET
+ * @memberof event
+ * @see event.on
+*/
+export const STAGE_RESET = "me.stage.onReset";
 
 /**
  * event for when the video is initialized<br>

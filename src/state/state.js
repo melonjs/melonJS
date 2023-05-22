@@ -72,11 +72,7 @@ function _pauseRunLoop() {
  * @ignore
  */
 function _renderFrame(time) {
-    let stage = _stages[_state].stage;
-    // update all game objects
-    game.update(time, stage);
-    // render all game objects
-    game.draw(stage);
+    event.emit(event.TICK, time);
     // schedule the next frame update
     if (_animFrameId !== -1) {
         _animFrameId = globalThis.requestAnimationFrame(_renderFrame);
@@ -125,9 +121,6 @@ function _switchState(state) {
         if (_onSwitchComplete) {
             _onSwitchComplete();
         }
-
-        // force repaint
-        game.repaint();
     }
 }
 
@@ -360,9 +353,6 @@ let state = {
 
             // calculate the elpased time
             _pauseTime = globalThis.performance.now() - _pauseTime;
-
-            // force repaint
-            game.repaint();
 
             // publish the restart notification
             event.emit(event.STATE_RESTART, _pauseTime);

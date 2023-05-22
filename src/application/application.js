@@ -226,6 +226,16 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
         this.isInitialized = true;
 
         event.emit(event.GAME_INIT, this);
+        event.on(event.STATE_CHANGE, this.repaint, this);
+        event.on(event.STATE_RESTART, this.repaint, this);
+        event.on(event.STATE_RESUME, this.repaint, this);
+        event.on(event.STAGE_RESET, this.reset, this);
+        event.on(event.TICK, (time) => {
+            // update all game objects
+            this.update(time);
+            // render all game objects
+            this.draw();
+        }, this);
     }
 
     /**
@@ -306,9 +316,8 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
     /**
      * update all objects related to this game active scene/stage
      * @param {number} time - current timestamp as provided by the RAF callback
-     * @param {Stage} stage - the current stage
      */
-    update(time, stage) {
+    update(time) {
         // handle frame skipping if required
         if ((++this.frameCounter % this.frameRate) === 0) {
             // reset the frame counter
@@ -332,7 +341,8 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
                 }
 
                 // update all objects (and pass the elapsed time since last frame)
-                this.isDirty = stage.update(this.updateDelta) || this.isDirty;
+                this.isDirty = this.world.update(this.updateDelta);
+                this.isDirty = state.current().update(this.updateDelta) || this.isDirty;
 
                 this.lastUpdate = globalThis.performance.now();
                 this.updateAverageDelta = this.lastUpdate - this.lastUpdateStart;
@@ -351,9 +361,8 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
 
     /**
      * draw the active scene/stage associated to this game
-     * @param {Stage} stage - the current stage
      */
-    draw(stage) {
+    draw() {
         if (this.renderer.isContextValid === true && (this.isDirty || this.isAlwaysDirty)) {
             // publish notification
             event.emit(event.GAME_BEFORE_DRAW, globalThis.performance.now());
@@ -362,7 +371,7 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
             this.renderer.clear();
 
             // render the stage
-            stage.draw(this.renderer);
+            state.current().draw(this.renderer, this.world);
 
             // set back to flag
             this.isDirty = false;
