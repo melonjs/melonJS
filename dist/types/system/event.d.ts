@@ -64,6 +64,16 @@ export const DOM_READY: string;
  */
 export const BOOT: string;
 /**
+ * event generated when the system update the engine and the renderer by one step
+ * @public
+ * @constant
+ * @type {string}
+ * @name TICK
+ * @memberof event
+ * @see event.on
+ */
+export const TICK: string;
+/**
  * event when the game is paused <br>
  * Data passed : none <br>
  * @public
@@ -117,6 +127,16 @@ export const STATE_RESTART: string;
  * @see event.on
  */
 export const STATE_CHANGE: string;
+/**
+ * event for when a stage is resetted
+ * @public
+ * @constant
+ * @type {string}
+ * @name STAGE_RESET
+ * @memberof event
+ * @see event.on
+*/
+export const STAGE_RESET: string;
 /**
  * event for when the video is initialized<br>
  * Data passed : none <br>

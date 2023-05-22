@@ -1,12 +1,12 @@
 /*!
- * melonJS Game Engine - v15.2.2
+ * melonJS Game Engine - v15.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 import { renderer } from '../video/video.js';
-import { game } from '../index.js';
+import { emit, STAGE_RESET } from '../system/event.js';
 import Camera2d from '../camera/camera2d.js';
 import Color from '../math/color.js';
 
@@ -94,7 +94,6 @@ let default_settings = {
      * @ignore
      */
     reset() {
-
         // add all defined cameras
         this.settings.cameras.forEach((camera) => {
             this.cameras.set(camera.name, camera);
@@ -112,7 +111,7 @@ let default_settings = {
         }
 
         // reset the game
-        game.reset();
+        emit(STAGE_RESET, this);
 
         // call the onReset Function
         this.onResetEvent.apply(this, arguments);
@@ -127,8 +126,7 @@ let default_settings = {
      * @returns {boolean}
      */
     update(dt) {
-        // update all objects (and pass the elapsed time since last frame)
-        let isDirty = game.world.update(dt);
+        let isDirty = false;
 
         // update the camera/viewport
         // iterate through all cameras
@@ -153,13 +151,15 @@ let default_settings = {
      * @name draw
      * @memberof Stage
      * @ignore
-     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
+     * @param {Renderer} renderer - the renderer object to draw with
+     * @param {World} world - the world object to draw
      */
-    draw(renderer) {
+    draw(renderer, world) {
+
         // iterate through all cameras
         this.cameras.forEach((camera) => {
             // render the root container
-            camera.draw(renderer, game.world);
+            camera.draw(renderer, world);
 
             // render the ambient light
             if (this.ambientLight.alpha !== 0) {
@@ -179,9 +179,9 @@ let default_settings = {
 
             // render all lights
             this.lights.forEach((light) => {
-                light.preDraw(renderer, game.world);
-                light.draw(renderer, game.world);
-                light.postDraw(renderer, game.world);
+                light.preDraw(renderer, world);
+                light.draw(renderer, world);
+                light.postDraw(renderer, world);
             });
         });
     }
@@ -216,7 +216,6 @@ let default_settings = {
         if (typeof this.settings.onResetEvent === "function") {
             this.settings.onResetEvent.apply(this, arguments);
         }
-
     }
 
     /**

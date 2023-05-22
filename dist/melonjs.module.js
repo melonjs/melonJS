@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.2.2
+ * melonJS Game Engine - v15.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -9447,6 +9447,17 @@ const DOM_READY = "dom_ready";
 const BOOT = "me.boot";
 
 /**
+ * event generated when the system update the engine and the renderer by one step
+ * @public
+ * @constant
+ * @type {string}
+ * @name TICK
+ * @memberof event
+ * @see event.on
+ */
+const TICK = "me.tick";
+
+/**
  * event when the game is paused <br>
  * Data passed : none <br>
  * @public
@@ -9504,6 +9515,17 @@ const STATE_RESTART = "me.state.onRestart";
  * @see event.on
  */
 const STATE_CHANGE = "me.state.onChange";
+
+/**
+ * event for when a stage is resetted
+ * @public
+ * @constant
+ * @type {string}
+ * @name STAGE_RESET
+ * @memberof event
+ * @see event.on
+*/
+const STAGE_RESET = "me.stage.onReset";
 
 /**
  * event for when the video is initialized<br>
@@ -9969,11 +9991,13 @@ var event = {
 	ONCONTEXT_RESTORED: ONCONTEXT_RESTORED,
 	POINTERLOCKCHANGE: POINTERLOCKCHANGE,
 	POINTERMOVE: POINTERMOVE,
+	STAGE_RESET: STAGE_RESET,
 	STATE_CHANGE: STATE_CHANGE,
 	STATE_PAUSE: STATE_PAUSE,
 	STATE_RESTART: STATE_RESTART,
 	STATE_RESUME: STATE_RESUME,
 	STATE_STOP: STATE_STOP,
+	TICK: TICK,
 	VIDEO_INIT: VIDEO_INIT,
 	VIEWPORT_ONCHANGE: VIEWPORT_ONCHANGE,
 	VIEWPORT_ONRESIZE: VIEWPORT_ONRESIZE,
@@ -13996,34 +14020,10 @@ let renderer = null;
 
 /**
  * Initialize the "video" system (create a canvas based on the given arguments, and the related renderer). <br>
- * melonJS support various scaling mode, that can be enabled <u>once the scale option is set to <b>`auto`</b></u> : <br>
- *  - <i><b>`fit`</b></i> : Letterboxed; content is scaled to design aspect ratio <br>
- * <center><img src="images/scale-fit.png"/></center><br>
- *  - <i><b>`fill-min`</b></i> : Canvas is resized to fit minimum design resolution; content is scaled to design aspect ratio <br>
- * <center><img src="images/scale-fill-min.png"/></center><br>
- *  - <i><b>`fill-max`</b></i> : Canvas is resized to fit maximum design resolution; content is scaled to design aspect ratio <br>
- * <center><img src="images/scale-fill-max.png"/></center><br>
- *  - <i><b>`flex`</b><</i> : Canvas width & height is resized to fit; content is scaled to design aspect ratio <br>
- * <center><img src="images/scale-flex.png"/></center><br>
- *  - <i><b>`flex-width`</b></i> : Canvas width is resized to fit; content is scaled to design aspect ratio <br>
- * <center><img src="images/scale-flex-width.png"/></center><br>
- *  - <i><b>`flex-height`</b></i> : Canvas height is resized to fit; content is scaled to design aspect ratio <br>
- * <center><img src="images/scale-flex-height.png"/></center><br>
- *  - <i><b>`stretch`</b></i> : Canvas is resized to fit; content is scaled to screen aspect ratio
- * <center><img src="images/scale-stretch.png"/></center><br>
  * @memberof video
  * @param {number} width - The width of the canvas viewport
  * @param {number} height - The height of the canvas viewport
- * @param {object} [options] - The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
- * @param {string|HTMLElement} [options.parent=document.body] - the DOM parent element to hold the canvas in the HTML file
- * @param {number|Renderer} [options.renderer=video.AUTO] - renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO), or a custom renderer class
- * @param {number|string} [options.scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)
- * @param {string} [options.scaleMethod="fit"] - screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
- * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
- * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
- * @param {boolean} [options.transparent=false] - whether to allow transparent pixels in the front buffer (screen).
- * @param {boolean} [options.antiAlias=false] - whether to enable or not video scaling interpolation
- * @param {boolean} [options.consoleHeader=true] - whether to display melonJS version and basic device information in the console
+ * @param {Application.Settings} [options] - optional parameters for the renderer
  * @returns {boolean} false if initialization failed (canvas not supported)
  * @example
  * // init the video with a 640x480 canvas
@@ -14525,6 +14525,7 @@ function hasOffscreenCanvas() {
 
 /**
  * used by [un]watchAccelerometer()
+ * @ignore
  */
 function onDeviceMotion(e) {
     // Accelerometer information
@@ -14535,6 +14536,7 @@ function onDeviceMotion(e) {
 
 /**
  * used by [un]watchDeviceOrientation()
+ * @ignore
  */
 function onDeviceRotate(e) {
     gamma = e.gamma;
@@ -19166,7 +19168,6 @@ let default_settings = {
      * @ignore
      */
     reset() {
-
         // add all defined cameras
         this.settings.cameras.forEach((camera) => {
             this.cameras.set(camera.name, camera);
@@ -19184,7 +19185,7 @@ let default_settings = {
         }
 
         // reset the game
-        game.reset();
+        emit(STAGE_RESET, this);
 
         // call the onReset Function
         this.onResetEvent.apply(this, arguments);
@@ -19199,8 +19200,7 @@ let default_settings = {
      * @returns {boolean}
      */
     update(dt) {
-        // update all objects (and pass the elapsed time since last frame)
-        let isDirty = game.world.update(dt);
+        let isDirty = false;
 
         // update the camera/viewport
         // iterate through all cameras
@@ -19225,13 +19225,15 @@ let default_settings = {
      * @name draw
      * @memberof Stage
      * @ignore
-     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
+     * @param {Renderer} renderer - the renderer object to draw with
+     * @param {World} world - the world object to draw
      */
-    draw(renderer) {
+    draw(renderer, world) {
+
         // iterate through all cameras
         this.cameras.forEach((camera) => {
             // render the root container
-            camera.draw(renderer, game.world);
+            camera.draw(renderer, world);
 
             // render the ambient light
             if (this.ambientLight.alpha !== 0) {
@@ -19251,9 +19253,9 @@ let default_settings = {
 
             // render all lights
             this.lights.forEach((light) => {
-                light.preDraw(renderer, game.world);
-                light.draw(renderer, game.world);
-                light.postDraw(renderer, game.world);
+                light.preDraw(renderer, world);
+                light.draw(renderer, world);
+                light.postDraw(renderer, world);
             });
         });
     }
@@ -19288,7 +19290,6 @@ let default_settings = {
         if (typeof this.settings.onResetEvent === "function") {
             this.settings.onResetEvent.apply(this, arguments);
         }
-
     }
 
     /**
@@ -19849,12 +19850,6 @@ const COLLISION_GROUP     = "collision";
 }
 
 /**
- * a collection of utility functions for parsing TMX maps
- * @namespace TMXUtils
- */
-
-
-/**
  * the function used to decompress zlib/gzip data
  * @ignore
  */
@@ -20087,11 +20082,14 @@ function normalize(obj, item) {
     }
 }
 
+/**
+ * a collection of utility functions for parsing TMX maps
+ * @namespace TMXUtils
+ */
 
 /**
  * decompress and decode zlib/gzip data
- * @name decompress
- * @memberOf TMXUtils
+ * @memberof TMXUtils
  * @param {string} input - Base64 encoded and compressed data
  * @param {string} format - compressed data format ("gzip","zlib", "zstd")
  * @returns {Uint32Array} Decoded and decompress data
@@ -20106,8 +20104,7 @@ function decompress(data, format) {
 
 /**
  * Decode a CSV encoded array into a binary array
- * @name decodeCSV
- * @memberOf TMXUtils
+ * @memberof TMXUtils
  * @param  {string} input- -  CSV formatted data (only numbers, everything else will be converted to NaN)
  * @returns {number[]} Decoded data
  */
@@ -20123,8 +20120,7 @@ function decodeCSV(input) {
 
 /**
  * Decode a base64 encoded string into a byte array
- * @name decodeBase64AsArray
- * @memberOf TMXUtils
+ * @memberof TMXUtils
  * @param {string} input - Base64 encoded data
  * @param {number} [bytes] - number of bytes per array entry
  * @returns {Uint32Array} Decoded data
@@ -20147,6 +20143,7 @@ function decodeBase64AsArray(input, bytes) {
 
 /**
  * set the function used to inflate gzip/zlib data
+ * @memberof TMXUtils
  * @param {Func} fn - inflate function
  */
 function setInflateFunction(fn) {
@@ -20155,8 +20152,7 @@ function setInflateFunction(fn) {
 
 /**
  * Decode a encoded array into a binary array
- * @name decodeCSV
- * @memberOf TMXUtils
+ * @memberof TMXUtils
  * @param {string} data - data to be decoded
  * @param {string} [encoding="none"] - data encoding ("csv", "base64", "xml")
  * @returns {number[]} Decoded data
@@ -20190,8 +20186,7 @@ function decode(data, encoding, compression) {
 
 /**
  * Parse a XML TMX object and returns the corresponding javascript object
- * @name parse
- * @memberOf TMXUtils
+ * @memberof TMXUtils
  * @param {Document} xml - XML TMX object
  * @returns {object} Javascript object
  */
@@ -20231,8 +20226,7 @@ function parse(xml) {
 
 /**
  * Apply TMX Properties to the given object
- * @name applyTMXProperties
- * @memberOf TMXUtils
+ * @memberof TMXUtils
  * @param {object} obj - object to apply the properties to
  * @param {object} data - TMX data object
  * @returns {object} obj
@@ -21004,20 +20998,7 @@ class TMXObject {
  */
  class Renderer {
     /**
-     * @param {object} options - The renderer parameters
-     * @param {number} options.width - The width of the canvas without scaling
-     * @param {number} options.height - The height of the canvas without scaling
-     * @param {HTMLCanvasElement} [options.canvas] - The html canvas to draw to on screen
-     * @param {boolean} [options.antiAlias=false] - Whether to enable anti-aliasing, use false (default) for a pixelated effect.
-     * @param {boolean} [options.failIfMajorPerformanceCaveat=true] - If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
-     * @param {boolean} [options.transparent=false] - Whether to enable transparency on the canvas
-     * @param {boolean} [options.premultipliedAlpha=true] - in WebGL, whether the renderer will assume that colors have premultiplied alpha when canvas transparency is enabled
-     * @param {boolean} [options.blendMode="normal"] - the default blend mode to use ("normal", "multiply")
-     * @param {boolean} [options.depthBuffer="sorting"] - ~Experimental~ the default method to sort object on the z axis in WebGL ("sorting", "z-buffer")
-     * @param {boolean} [options.subPixel=false] - Whether to enable subpixel rendering (performance hit when enabled)
-     * @param {boolean} [options.verbose=false] - Enable the verbose mode that provides additional details as to what the renderer is doing
-     * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
-     * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
+     * @param {Application.Settings} [options] - optional parameters for the renderer
      */
     constructor(options) {
         /**
@@ -22281,16 +22262,7 @@ class TextureCache {
  */
  class CanvasRenderer extends Renderer {
     /**
-     * @param {object} options - The renderer parameters
-     * @param {number} options.width - The width of the canvas without scaling
-     * @param {number} options.height - The height of the canvas without scaling
-     * @param {HTMLCanvasElement} [options.canvas] - The html canvas to draw to on screen
-     * @param {boolean} [options.antiAlias=false] - Whether to enable anti-aliasing
-     * @param {boolean} [options.transparent=false] - Whether to enable transparency on the canvas (performance hit when enabled)
-     * @param {boolean} [options.subPixel=false] - Whether to enable subpixel renderering (performance hit when enabled)
-     * @param {boolean} [options.textureSeamFix=true] - enable the texture seam fix when rendering Tile when antiAlias is off for the canvasRenderer
-     * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
-     * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
+     * @param {Application.Settings} [options] - optional parameters for the renderer
      */
     constructor(options) {
         // parent constructor
@@ -27896,11 +27868,7 @@ function _pauseRunLoop() {
  * @ignore
  */
 function _renderFrame(time) {
-    let stage = _stages[_state].stage;
-    // update all game objects
-    game.update(time, stage);
-    // render all game objects
-    game.draw(stage);
+    emit(TICK, time);
     // schedule the next frame update
     if (_animFrameId !== -1) {
         _animFrameId = globalThis.requestAnimationFrame(_renderFrame);
@@ -27949,9 +27917,6 @@ function _switchState(state) {
         if (_onSwitchComplete) {
             _onSwitchComplete();
         }
-
-        // force repaint
-        game.repaint();
     }
 }
 
@@ -28184,9 +28149,6 @@ let state = {
 
             // calculate the elpased time
             _pauseTime = globalThis.performance.now() - _pauseTime;
-
-            // force repaint
-            game.repaint();
 
             // publish the restart notification
             emit(STATE_RESTART, _pauseTime);
@@ -31322,21 +31284,7 @@ let V_ARRAY = [
  */
  class WebGLRenderer extends Renderer {
     /**
-     * @param {object} options - The renderer parameters
-     * @param {number} options.width - The width of the canvas without scaling
-     * @param {number} options.height - The height of the canvas without scaling
-     * @param {HTMLCanvasElement} [options.canvas] - The html canvas to draw to on screen
-     * @param {boolean} [options.antiAlias=false] - Whether to enable anti-aliasing
-     * @param {boolean} [options.failIfMajorPerformanceCaveat=true] - If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
-     * @param {boolean} [options.transparent=false] - Whether to enable transparency on the canvas
-     * @param {boolean} [options.premultipliedAlpha=true] - in WebGL, whether the renderer will assume that colors have premultiplied alpha when canvas transparency is enabled
-     * @param {boolean} [options.subPixel=false] - Whether to enable subpixel renderering (performance hit when enabled)
-     * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
-     * @param {boolean} [options.depthTest="sorting"] - ~Experimental~ the default method to sort object on the z axis in WebGL ("sorting", "z-buffer")
-     * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
-     * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
-     * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
-     * @param {Compositor} [options.compositor] - A class that implements the compositor API for sprite rendering
+     * @param {Application.Settings} [options] - optional parameters for the renderer
      */
     constructor(options) {
         // parent contructor
@@ -37623,6 +37571,40 @@ const defaultSettings = {
 };
 
 /**
+ * Application & Renderer Settings definition.
+ * @typedef {Object} Settings
+ * @property {string|HTMLElement} [parent=document.body] - the DOM parent element to hold the canvas in the HTML file
+ * @property {number|Renderer} [renderer=AUTO] - renderer to use (CANVAS, WEBGL, AUTO), or a custom renderer class
+ * @property {number|string} [scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)
+ * @property {string} [scaleMethod="fit"] - screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch') : <br>
+ *  - <i><b>`fit`</b></i> : Letterboxed; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-fit.png"/></center><br>
+ *  - <i><b>`fill-min`</b></i> : Canvas is resized to fit minimum design resolution; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-fill-min.png"/></center><br>
+ *  - <i><b>`fill-max`</b></i> : Canvas is resized to fit maximum design resolution; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-fill-max.png"/></center><br>
+ *  - <i><b>`flex`</b><</i> : Canvas width & height is resized to fit; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-flex.png"/></center><br>
+ *  - <i><b>`flex-width`</b></i> : Canvas width is resized to fit; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-flex-width.png"/></center><br>
+ *  - <i><b>`flex-height`</b></i> : Canvas height is resized to fit; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-flex-height.png"/></center><br>
+ *  - <i><b>`stretch`</b></i> : Canvas is resized to fit; content is scaled to screen aspect ratio <br>
+ * <center><img src="images/scale-stretch.png"/></center>
+ * @property {boolean} [preferWebGL1=false] - if true the renderer will only use WebGL 1
+ * @property {boolean} [depthTest="sorting"] - ~Experimental~ the default method to sort object on the z axis in WebGL ("sorting", "z-buffer")
+ * @property {string} [powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
+ * @property {boolean} [transparent=false] - whether to allow transparent pixels in the front buffer (screen).
+ * @property {boolean} [antiAlias=false] - whether to enable or not video scaling interpolation
+ * @property {boolean} [consoleHeader=true] - whether to display melonJS version and basic device information in the console
+ * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
+ * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
+ * @param {Compositor} [options.compositor] - a custom compositor class (WebGL only)
+ * @see Application
+ * @memberof Application
+ */
+
+/**
  * display information
  * @param {Application} game - the game application instance calling this function
  */
@@ -37657,17 +37639,7 @@ function consoleHeader(app) {
     /**
      * @param {number} width - The width of the canvas viewport
      * @param {number} height - The height of the canvas viewport
-     * @param {object} [options] - The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
-     * @param {string|HTMLElement} [options.parent=document.body] - the DOM parent element to hold the canvas in the HTML file
-     * @param {number|Renderer} [options.renderer=AUTO] - renderer to use (CANVAS, WEBGL, AUTO), or a custom renderer class
-     * @param {number|string} [options.scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)
-     * @param {string} [options.scaleMethod="fit"] - screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
-     * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
-     * @param {boolean} [options.depthTest="sorting"] - ~Experimental~ the default method to sort object on the z axis in WebGL ("sorting", "z-buffer")
-     * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
-     * @param {boolean} [options.transparent=false] - whether to allow transparent pixels in the front buffer (screen).
-     * @param {boolean} [options.antiAlias=false] - whether to enable or not video scaling interpolation
-     * @param {boolean} [options.consoleHeader=true] - whether to display melonJS version and basic device information in the console
+     * @param {Application.Settings} [options] - The optional parameters for the application and default renderer
      * @throws Will throw an exception if it fails to instantiate a renderer
      * @example
      * let my game = new Application(640, 480, {renderer: me.video.AUTO}) {
@@ -37862,6 +37834,16 @@ function consoleHeader(app) {
         this.isInitialized = true;
 
         emit(GAME_INIT, this);
+        on(STATE_CHANGE, this.repaint, this);
+        on(STATE_RESTART, this.repaint, this);
+        on(STATE_RESUME, this.repaint, this);
+        on(STAGE_RESET, this.reset, this);
+        on(TICK, (time) => {
+            // update all game objects
+            this.update(time);
+            // render all game objects
+            this.draw();
+        }, this);
     }
 
     /**
@@ -37942,9 +37924,8 @@ function consoleHeader(app) {
     /**
      * update all objects related to this game active scene/stage
      * @param {number} time - current timestamp as provided by the RAF callback
-     * @param {Stage} stage - the current stage
      */
-    update(time, stage) {
+    update(time) {
         // handle frame skipping if required
         if ((++this.frameCounter % this.frameRate) === 0) {
             // reset the frame counter
@@ -37968,7 +37949,8 @@ function consoleHeader(app) {
                 }
 
                 // update all objects (and pass the elapsed time since last frame)
-                this.isDirty = stage.update(this.updateDelta) || this.isDirty;
+                this.isDirty = this.world.update(this.updateDelta);
+                this.isDirty = state$1.current().update(this.updateDelta) || this.isDirty;
 
                 this.lastUpdate = globalThis.performance.now();
                 this.updateAverageDelta = this.lastUpdate - this.lastUpdateStart;
@@ -37987,9 +37969,8 @@ function consoleHeader(app) {
 
     /**
      * draw the active scene/stage associated to this game
-     * @param {Stage} stage - the current stage
      */
-    draw(stage) {
+    draw() {
         if (this.renderer.isContextValid === true && (this.isDirty || this.isAlwaysDirty)) {
             // publish notification
             emit(GAME_BEFORE_DRAW, globalThis.performance.now());
@@ -37998,7 +37979,7 @@ function consoleHeader(app) {
             this.renderer.clear();
 
             // render the stage
-            stage.draw(this.renderer);
+            state$1.current().draw(this.renderer, this.world);
 
             // set back to flag
             this.isDirty = false;
@@ -38037,9 +38018,9 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "15.2.2"
+         * @default "15.3.0"
          */
-        this.version = "15.2.2";
+        this.version = "15.3.0";
     }
 }
 
@@ -38266,7 +38247,7 @@ Renderer.prototype.getScreenContext = function()  {
  * @name version
  * @type {string}
  */
-const version = "15.2.2";
+const version = "15.3.0";
 
 /**
  * a flag indicating that melonJS is fully initialized

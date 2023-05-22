@@ -1,5 +1,6 @@
 /**
  * used by [un]watchDeviceOrientation()
+ * @ignore
  */
 export function onDeviceRotate(e: any): void;
 /**

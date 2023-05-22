@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.2.2
+ * melonJS Game Engine - v15.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -24,5 +24,39 @@ const defaultSettings = {
     consoleHeader : true,
     legacy : false
 };
+
+/**
+ * Application & Renderer Settings definition.
+ * @typedef {Object} Settings
+ * @property {string|HTMLElement} [parent=document.body] - the DOM parent element to hold the canvas in the HTML file
+ * @property {number|Renderer} [renderer=AUTO] - renderer to use (CANVAS, WEBGL, AUTO), or a custom renderer class
+ * @property {number|string} [scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)
+ * @property {string} [scaleMethod="fit"] - screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch') : <br>
+ *  - <i><b>`fit`</b></i> : Letterboxed; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-fit.png"/></center><br>
+ *  - <i><b>`fill-min`</b></i> : Canvas is resized to fit minimum design resolution; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-fill-min.png"/></center><br>
+ *  - <i><b>`fill-max`</b></i> : Canvas is resized to fit maximum design resolution; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-fill-max.png"/></center><br>
+ *  - <i><b>`flex`</b><</i> : Canvas width & height is resized to fit; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-flex.png"/></center><br>
+ *  - <i><b>`flex-width`</b></i> : Canvas width is resized to fit; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-flex-width.png"/></center><br>
+ *  - <i><b>`flex-height`</b></i> : Canvas height is resized to fit; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-flex-height.png"/></center><br>
+ *  - <i><b>`stretch`</b></i> : Canvas is resized to fit; content is scaled to screen aspect ratio <br>
+ * <center><img src="images/scale-stretch.png"/></center>
+ * @property {boolean} [preferWebGL1=false] - if true the renderer will only use WebGL 1
+ * @property {boolean} [depthTest="sorting"] - ~Experimental~ the default method to sort object on the z axis in WebGL ("sorting", "z-buffer")
+ * @property {string} [powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
+ * @property {boolean} [transparent=false] - whether to allow transparent pixels in the front buffer (screen).
+ * @property {boolean} [antiAlias=false] - whether to enable or not video scaling interpolation
+ * @property {boolean} [consoleHeader=true] - whether to display melonJS version and basic device information in the console
+ * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
+ * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
+ * @param {Compositor} [options.compositor] - a custom compositor class (WebGL only)
+ * @see Application
+ * @memberof Application
+ */
 
 export { defaultSettings };

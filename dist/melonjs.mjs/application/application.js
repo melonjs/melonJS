@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.2.2
+ * melonJS Game Engine - v15.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -8,7 +8,7 @@
 import { autoDetectRenderer } from '../video/utils/autodetect.js';
 import CanvasRenderer from '../video/canvas/canvas_renderer.js';
 import { getElement, platform, enableSwipe } from '../system/device.js';
-import { on, emit, GAME_AFTER_UPDATE, GAME_BEFORE_DRAW, GAME_AFTER_DRAW, WINDOW_ONRESIZE, WINDOW_ONORIENTATION_CHANGE, GAME_INIT, GAME_RESET, GAME_BEFORE_UPDATE, GAME_UPDATE } from '../system/event.js';
+import { on, emit, STATE_CHANGE, STATE_RESTART, STATE_RESUME, STAGE_RESET, GAME_AFTER_UPDATE, GAME_BEFORE_DRAW, GAME_AFTER_DRAW, WINDOW_ONRESIZE, WINDOW_ONORIENTATION_CHANGE, GAME_INIT, TICK, GAME_RESET, GAME_BEFORE_UPDATE, GAME_UPDATE } from '../system/event.js';
 import { getUriFragment } from '../utils/utils.js';
 import timer from '../system/timer.js';
 import state from '../state/state.js';
@@ -28,17 +28,7 @@ import { WEBGL, CANVAS, AUTO } from '../const.js';
     /**
      * @param {number} width - The width of the canvas viewport
      * @param {number} height - The height of the canvas viewport
-     * @param {object} [options] - The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
-     * @param {string|HTMLElement} [options.parent=document.body] - the DOM parent element to hold the canvas in the HTML file
-     * @param {number|Renderer} [options.renderer=AUTO] - renderer to use (CANVAS, WEBGL, AUTO), or a custom renderer class
-     * @param {number|string} [options.scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)
-     * @param {string} [options.scaleMethod="fit"] - screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
-     * @param {boolean} [options.preferWebGL1=false] - if true the renderer will only use WebGL 1
-     * @param {boolean} [options.depthTest="sorting"] - ~Experimental~ the default method to sort object on the z axis in WebGL ("sorting", "z-buffer")
-     * @param {string} [options.powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
-     * @param {boolean} [options.transparent=false] - whether to allow transparent pixels in the front buffer (screen).
-     * @param {boolean} [options.antiAlias=false] - whether to enable or not video scaling interpolation
-     * @param {boolean} [options.consoleHeader=true] - whether to display melonJS version and basic device information in the console
+     * @param {Application.Settings} [options] - The optional parameters for the application and default renderer
      * @throws Will throw an exception if it fails to instantiate a renderer
      * @example
      * let my game = new Application(640, 480, {renderer: me.video.AUTO}) {
@@ -233,6 +223,16 @@ import { WEBGL, CANVAS, AUTO } from '../const.js';
         this.isInitialized = true;
 
         emit(GAME_INIT, this);
+        on(STATE_CHANGE, this.repaint, this);
+        on(STATE_RESTART, this.repaint, this);
+        on(STATE_RESUME, this.repaint, this);
+        on(STAGE_RESET, this.reset, this);
+        on(TICK, (time) => {
+            // update all game objects
+            this.update(time);
+            // render all game objects
+            this.draw();
+        }, this);
     }
 
     /**
@@ -313,9 +313,8 @@ import { WEBGL, CANVAS, AUTO } from '../const.js';
     /**
      * update all objects related to this game active scene/stage
      * @param {number} time - current timestamp as provided by the RAF callback
-     * @param {Stage} stage - the current stage
      */
-    update(time, stage) {
+    update(time) {
         // handle frame skipping if required
         if ((++this.frameCounter % this.frameRate) === 0) {
             // reset the frame counter
@@ -339,7 +338,8 @@ import { WEBGL, CANVAS, AUTO } from '../const.js';
                 }
 
                 // update all objects (and pass the elapsed time since last frame)
-                this.isDirty = stage.update(this.updateDelta) || this.isDirty;
+                this.isDirty = this.world.update(this.updateDelta);
+                this.isDirty = state.current().update(this.updateDelta) || this.isDirty;
 
                 this.lastUpdate = globalThis.performance.now();
                 this.updateAverageDelta = this.lastUpdate - this.lastUpdateStart;
@@ -358,9 +358,8 @@ import { WEBGL, CANVAS, AUTO } from '../const.js';
 
     /**
      * draw the active scene/stage associated to this game
-     * @param {Stage} stage - the current stage
      */
-    draw(stage) {
+    draw() {
         if (this.renderer.isContextValid === true && (this.isDirty || this.isAlwaysDirty)) {
             // publish notification
             emit(GAME_BEFORE_DRAW, globalThis.performance.now());
@@ -369,7 +368,7 @@ import { WEBGL, CANVAS, AUTO } from '../const.js';
             this.renderer.clear();
 
             // render the stage
-            stage.draw(this.renderer);
+            state.current().draw(this.renderer, this.world);
 
             // set back to flag
             this.isDirty = false;

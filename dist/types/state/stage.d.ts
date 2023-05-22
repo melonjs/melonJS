@@ -86,9 +86,10 @@ export default class Stage {
      * @name draw
      * @memberof Stage
      * @ignore
-     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
+     * @param {Renderer} renderer - the renderer object to draw with
+     * @param {World} world - the world object to draw
      */
-    draw(renderer: CanvasRenderer | WebGLRenderer): void;
+    draw(renderer: Renderer, world: World): void;
     /**
      * destroy function
      * @ignore

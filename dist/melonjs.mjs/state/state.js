@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.2.2
+ * melonJS Game Engine - v15.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -7,7 +7,7 @@
  */
 import { pauseTrack, resumeTrack } from '../audio/audio.js';
 import { defer } from '../utils/function.js';
-import { on, VIDEO_INIT, BOOT, emit, STATE_STOP, STATE_PAUSE, STATE_RESTART, STATE_RESUME, STATE_CHANGE } from '../system/event.js';
+import { on, VIDEO_INIT, BOOT, emit, STATE_STOP, STATE_PAUSE, STATE_RESTART, STATE_RESUME, STATE_CHANGE, TICK } from '../system/event.js';
 import { game } from '../index.js';
 import { focus } from '../system/device.js';
 import Stage from './stage.js';
@@ -78,11 +78,7 @@ function _pauseRunLoop() {
  * @ignore
  */
 function _renderFrame(time) {
-    let stage = _stages[_state].stage;
-    // update all game objects
-    game.update(time, stage);
-    // render all game objects
-    game.draw(stage);
+    emit(TICK, time);
     // schedule the next frame update
     if (_animFrameId !== -1) {
         _animFrameId = globalThis.requestAnimationFrame(_renderFrame);
@@ -131,9 +127,6 @@ function _switchState(state) {
         if (_onSwitchComplete) {
             _onSwitchComplete();
         }
-
-        // force repaint
-        game.repaint();
     }
 }
 
@@ -354,9 +347,6 @@ let state = {
 
             // calculate the elpased time
             _pauseTime = globalThis.performance.now() - _pauseTime;
-
-            // force repaint
-            game.repaint();
 
             // publish the restart notification
             emit(STATE_RESTART, _pauseTime);

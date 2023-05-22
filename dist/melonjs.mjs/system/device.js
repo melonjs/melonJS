@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.2.2
+ * melonJS Game Engine - v15.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -52,6 +52,7 @@ function hasOffscreenCanvas() {
 
 /**
  * used by [un]watchAccelerometer()
+ * @ignore
  */
 function onDeviceMotion(e) {
     // Accelerometer information
@@ -62,6 +63,7 @@ function onDeviceMotion(e) {
 
 /**
  * used by [un]watchDeviceOrientation()
+ * @ignore
  */
 function onDeviceRotate(e) {
     gamma = e.gamma;

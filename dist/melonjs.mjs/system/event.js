@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.2.2
+ * melonJS Game Engine - v15.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -36,6 +36,17 @@ const DOM_READY = "dom_ready";
  * @see event.on
  */
 const BOOT = "me.boot";
+
+/**
+ * event generated when the system update the engine and the renderer by one step
+ * @public
+ * @constant
+ * @type {string}
+ * @name TICK
+ * @memberof event
+ * @see event.on
+ */
+const TICK = "me.tick";
 
 /**
  * event when the game is paused <br>
@@ -95,6 +106,17 @@ const STATE_RESTART = "me.state.onRestart";
  * @see event.on
  */
 const STATE_CHANGE = "me.state.onChange";
+
+/**
+ * event for when a stage is resetted
+ * @public
+ * @constant
+ * @type {string}
+ * @name STAGE_RESET
+ * @memberof event
+ * @see event.on
+*/
+const STAGE_RESET = "me.stage.onReset";
 
 /**
  * event for when the video is initialized<br>
@@ -534,4 +556,4 @@ function off(eventName, listener) {
     return eventEmitter.off(eventName, listener);
 }
 
-export { BOOT, CANVAS_ONRESIZE, DOM_READY, DRAGEND, DRAGSTART, GAMEPAD_CONNECTED, GAMEPAD_DISCONNECTED, GAMEPAD_UPDATE, GAME_AFTER_DRAW, GAME_AFTER_UPDATE, GAME_BEFORE_DRAW, GAME_BEFORE_UPDATE, GAME_INIT, GAME_RESET, GAME_UPDATE, KEYDOWN, KEYUP, LEVEL_LOADED, LOADER_COMPLETE, LOADER_PROGRESS, ONCONTEXT_LOST, ONCONTEXT_RESTORED, POINTERLOCKCHANGE, POINTERMOVE, STATE_CHANGE, STATE_PAUSE, STATE_RESTART, STATE_RESUME, STATE_STOP, VIDEO_INIT, VIEWPORT_ONCHANGE, VIEWPORT_ONRESIZE, WINDOW_ONORIENTATION_CHANGE, WINDOW_ONRESIZE, WINDOW_ONSCROLL, emit, off, on, once };
+export { BOOT, CANVAS_ONRESIZE, DOM_READY, DRAGEND, DRAGSTART, GAMEPAD_CONNECTED, GAMEPAD_DISCONNECTED, GAMEPAD_UPDATE, GAME_AFTER_DRAW, GAME_AFTER_UPDATE, GAME_BEFORE_DRAW, GAME_BEFORE_UPDATE, GAME_INIT, GAME_RESET, GAME_UPDATE, KEYDOWN, KEYUP, LEVEL_LOADED, LOADER_COMPLETE, LOADER_PROGRESS, ONCONTEXT_LOST, ONCONTEXT_RESTORED, POINTERLOCKCHANGE, POINTERMOVE, STAGE_RESET, STATE_CHANGE, STATE_PAUSE, STATE_RESTART, STATE_RESUME, STATE_STOP, TICK, VIDEO_INIT, VIEWPORT_ONCHANGE, VIEWPORT_ONRESIZE, WINDOW_ONORIENTATION_CHANGE, WINDOW_ONRESIZE, WINDOW_ONSCROLL, emit, off, on, once };
