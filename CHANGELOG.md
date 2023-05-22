@@ -8,6 +8,7 @@
 
 ### Fixed
 - doc: fix the @name value of `state.DEFAULT` (thanks @johnhyde)
+- doc: fix documentation for the `TMXUtils` namespace
 - TypeScript : fix optional arguments typings for all renderers and Application constructor
 
 ## [15.2.1] (melonJS 2) - _2023-05-14_

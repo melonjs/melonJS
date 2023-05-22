@@ -1,12 +1,6 @@
 import { isBoolean, isNumeric } from "../../utils/string.js";
 
 /**
- * a collection of utility functions for parsing TMX maps
- * @namespace TMXUtils
- */
-
-
-/**
  * the function used to decompress zlib/gzip data
  * @ignore
  */
@@ -239,11 +233,14 @@ function normalize(obj, item) {
     }
 }
 
+/**
+ * a collection of utility functions for parsing TMX maps
+ * @namespace TMXUtils
+ */
 
 /**
  * decompress and decode zlib/gzip data
- * @name decompress
- * @memberOf TMXUtils
+ * @memberof TMXUtils
  * @param {string} input - Base64 encoded and compressed data
  * @param {string} format - compressed data format ("gzip","zlib", "zstd")
  * @returns {Uint32Array} Decoded and decompress data
@@ -258,8 +255,7 @@ function decompress(data, format) {
 
 /**
  * Decode a CSV encoded array into a binary array
- * @name decodeCSV
- * @memberOf TMXUtils
+ * @memberof TMXUtils
  * @param  {string} input- -  CSV formatted data (only numbers, everything else will be converted to NaN)
  * @returns {number[]} Decoded data
  */
@@ -275,8 +271,7 @@ function decodeCSV(input) {
 
 /**
  * Decode a base64 encoded string into a byte array
- * @name decodeBase64AsArray
- * @memberOf TMXUtils
+ * @memberof TMXUtils
  * @param {string} input - Base64 encoded data
  * @param {number} [bytes] - number of bytes per array entry
  * @returns {Uint32Array} Decoded data
@@ -307,8 +302,7 @@ export function setInflateFunction(fn) {
 
 /**
  * Decode a encoded array into a binary array
- * @name decodeCSV
- * @memberOf TMXUtils
+ * @memberof TMXUtils
  * @param {string} data - data to be decoded
  * @param {string} [encoding="none"] - data encoding ("csv", "base64", "xml")
  * @returns {number[]} Decoded data
@@ -342,8 +336,7 @@ export function decode(data, encoding, compression) {
 
 /**
  * Parse a XML TMX object and returns the corresponding javascript object
- * @name parse
- * @memberOf TMXUtils
+ * @memberof TMXUtils
  * @param {Document} xml - XML TMX object
  * @returns {object} Javascript object
  */
@@ -383,8 +376,7 @@ export function parse(xml) {
 
 /**
  * Apply TMX Properties to the given object
- * @name applyTMXProperties
- * @memberOf TMXUtils
+ * @memberof TMXUtils
  * @param {object} obj - object to apply the properties to
  * @param {object} data - TMX data object
  * @returns {object} obj
