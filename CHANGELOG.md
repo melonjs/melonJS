@@ -563,7 +563,7 @@
 
 -------------------------------------------------------------------------------
 
-[15.2.2]: https://github.com/melonjs/melonJS/compare/15.2.2...15.2.1
+[15.3.0]: https://github.com/melonjs/melonJS/compare/15.3.0...15.2.1
 [15.2.1]: https://github.com/melonjs/melonJS/compare/15.2.1...15.2.0
 [15.2.0]: https://github.com/melonjs/melonJS/compare/15.2.0...15.1.6
 [15.1.6]: https://github.com/melonjs/melonJS/compare/15.1.6...15.1.5
