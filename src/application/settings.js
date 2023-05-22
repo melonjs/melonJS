@@ -5,6 +5,7 @@ export const defaultSettings = {
     autoScale : false,
     scale : 1.0,
     scaleMethod : "manual",
+    scaleTarget : undefined,
     transparent : false,
     premultipliedAlpha: true,
     blendMode : "normal",
@@ -39,6 +40,7 @@ export const defaultSettings = {
  * <center><img src="images/scale-flex-height.png"/></center><br>
  *  - <i><b>`stretch`</b></i> : Canvas is resized to fit; content is scaled to screen aspect ratio <br>
  * <center><img src="images/scale-stretch.png"/></center>
+ * @property {string|HTMLElement} [scaleTarget] - the HTML Element to be used as the reference target when using automatic scaling (by default melonJS will use the parent container of the div element containing the canvas)
  * @property {boolean} [preferWebGL1=false] - if true the renderer will only use WebGL 1
  * @property {boolean} [depthTest="sorting"] - ~Experimental~ the default method to sort object on the z axis in WebGL ("sorting", "z-buffer")
  * @property {string} [powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.

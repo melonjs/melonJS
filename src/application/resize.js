@@ -43,6 +43,7 @@ export function onresize(game) {
     let renderer = game.renderer;
     let settings = renderer.settings;
     let scaleX = 1, scaleY = 1;
+    let nodeBounds;
 
     if (settings.autoScale) {
 
@@ -56,8 +57,13 @@ export function onresize(game) {
             canvasMaxHeight = parseInt(style.maxHeight, 10) || Infinity;
         }
 
-        // get the maximum canvas size within the parent div containing the canvas container
-        let nodeBounds = device.getParentBounds(game.getParentElement());
+        if (typeof game.settings.scaleTarget !== "undefined") {
+            // get the bounds of the given scale target
+            nodeBounds = device.getElementBounds(game.settings.scaleTarget);
+        } else {
+            // get the maximum canvas size within the parent div containing the canvas container
+            nodeBounds = device.getParentBounds(game.getParentElement());
+        }
 
         let _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
         let _max_height = Math.min(canvasMaxHeight, nodeBounds.height);

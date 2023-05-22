@@ -2,6 +2,9 @@
 
 ## [15.3.0] (melonJS 2) - _2023-05-xx_
 
+### Added
+- Renderer: new `scaleTarget` that allows to specify which HTML element to be used as reference when scaling the canvas (@thanks johnhyde)
+
 ### Changed
 - Application: world steps and rendering update are now done through a new global `TICK` event
 - Application: further "decoupling" of Application, Stage and State (see #1091)

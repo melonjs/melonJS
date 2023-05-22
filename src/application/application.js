@@ -156,6 +156,12 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
         this.settings.zoomX = width * this.settings.scale;
         this.settings.zoomY = height * this.settings.scale;
 
+        // identify parent element and/or the html target for resizing
+        this.parentElement = device.getElement(this.settings.parent);
+        if (typeof this.settings.scaleTarget !== "undefined" ) {
+            this.settings.scaleTarget = device.getElement(this.settings.scaleTarget);
+        }
+
         if (typeof this.settings.renderer === "number") {
             switch (this.settings.renderer) {
                 case AUTO:
@@ -177,7 +183,6 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
         event.on(event.WINDOW_ONORIENTATION_CHANGE, () => onresize(this), this);
 
         // add our canvas (default to document.body if settings.parent is undefined)
-        this.parentElement = device.getElement(this.settings.parent);
         this.parentElement.appendChild(this.renderer.getCanvas());
 
         // Mobile browser hacks
