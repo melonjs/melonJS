@@ -1,6 +1,6 @@
 # Changelog
 
-## [15.2.2] (melonJS 2) - _2023-05-xx_
+## [15.3.0] (melonJS 2) - _2023-05-xx_
 
 ### Fixed
 - doc: fix the @name value of `state.DEFAULT` (thanks @johnhyde)
