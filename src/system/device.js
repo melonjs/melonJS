@@ -45,6 +45,7 @@ function hasOffscreenCanvas() {
 
 /**
  * used by [un]watchAccelerometer()
+ * @ignore
  */
 function onDeviceMotion(e) {
     // Accelerometer information
@@ -55,6 +56,7 @@ function onDeviceMotion(e) {
 
 /**
  * used by [un]watchDeviceOrientation()
+ * @ignore
  */
 export function onDeviceRotate(e) {
     gamma = e.gamma;

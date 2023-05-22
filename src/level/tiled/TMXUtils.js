@@ -294,6 +294,7 @@ function decodeBase64AsArray(input, bytes) {
 
 /**
  * set the function used to inflate gzip/zlib data
+ * @memberof TMXUtils
  * @param {Func} fn - inflate function
  */
 export function setInflateFunction(fn) {
