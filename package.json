@@ -78,11 +78,11 @@
     "fastify": "^4.17.0",
     "mocha": "^10.2.0",
     "npm-self-link": "^1.1.7",
-    "puppeteer": "^20.2.1",
-    "rollup": "^3.22.1",
+    "puppeteer": "^20.3.0",
+    "rollup": "^3.23.0",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
-    "terser": "^5.17.4",
+    "terser": "^5.17.5",
     "typescript": "^5.0.4"
   },
   "scripts": {
