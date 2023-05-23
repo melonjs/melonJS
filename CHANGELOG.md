@@ -1,6 +1,6 @@
 # Changelog
 
-## [15.3.0] (melonJS 2) - _2023-05-xx_
+## [15.3.0] (melonJS 2) - _2023-05-23_
 
 ### Added
 - Renderer: new `scaleTarget` that allows to specify which HTML element to be used as reference when scaling the canvas (@thanks johnhyde)
@@ -566,35 +566,35 @@
 
 -------------------------------------------------------------------------------
 
-[15.3.0]: https://github.com/melonjs/melonJS/compare/15.3.0...15.2.1
-[15.2.1]: https://github.com/melonjs/melonJS/compare/15.2.1...15.2.0
-[15.2.0]: https://github.com/melonjs/melonJS/compare/15.2.0...15.1.6
-[15.1.6]: https://github.com/melonjs/melonJS/compare/15.1.6...15.1.5
-[15.1.5]: https://github.com/melonjs/melonJS/compare/15.1.5...15.1.4
-[15.1.4]: https://github.com/melonjs/melonJS/compare/15.1.4...15.1.3
-[15.1.3]: https://github.com/melonjs/melonJS/compare/15.1.3...15.1.2
-[15.1.2]: https://github.com/melonjs/melonJS/compare/15.1.2...15.1.1
-[15.1.1]: https://github.com/melonjs/melonJS/compare/15.1.1...15.1.0
-[15.1.0]: https://github.com/melonjs/melonJS/compare/15.1.0...15.0.0
-[15.0.0]: https://github.com/melonjs/melonJS/compare/15.0.0...14.5.0
-[14.5.0]: https://github.com/melonjs/melonJS/compare/14.5.0...14.4.0
-[14.4.0]: https://github.com/melonjs/melonJS/compare/14.4.0...14.3.0
-[14.3.0]: https://github.com/melonjs/melonJS/compare/14.3.0...14.2.0
-[14.2.0]: https://github.com/melonjs/melonJS/compare/14.2.0...14.1.2
-[14.1.2]: https://github.com/melonjs/melonJS/compare/14.1.2...14.1.1
-[14.1.1]: https://github.com/melonjs/melonJS/compare/14.1.1...14.1.0
-[14.1.0]: https://github.com/melonjs/melonJS/compare/14.1.0...14.0.2
-[14.0.2]: https://github.com/melonjs/melonJS/compare/14.0.2...14.0.1
-[14.0.1]: https://github.com/melonjs/melonJS/compare/14.0.1...14.0.0
-[14.0.0]: https://github.com/melonjs/melonJS/compare/14.0.0...13.4.0
-[13.4.0]: https://github.com/melonjs/melonJS/compare/13.4.0...13.3.0
-[13.3.0]: https://github.com/melonjs/melonJS/compare/13.3.0...13.2.1
-[13.2.1]: https://github.com/melonjs/melonJS/compare/13.2.1...13.2.0
-[13.2.0]: https://github.com/melonjs/melonJS/compare/13.2.0...13.1.1
-[13.1.1]: https://github.com/melonjs/melonJS/compare/13.1.1...13.1.0
-[13.1.0]: https://github.com/melonjs/melonJS/compare/13.1.0...13.0.0
-[13.0.0]: https://github.com/melonjs/melonJS/compare/13.0.0...12.0.0
-[12.0.0]: https://github.com/melonjs/melonJS/compare/12.0.0...11.0.0
+[15.3.0]: https://github.com/melonjs/melonJS/compare/15.2.1...15.3.0
+[15.2.1]: https://github.com/melonjs/melonJS/compare/15.2.0...15.2.1
+[15.2.0]: https://github.com/melonjs/melonJS/compare/15.1.6...15.2.0
+[15.1.6]: https://github.com/melonjs/melonJS/compare/15.1.5...15.1.6
+[15.1.5]: https://github.com/melonjs/melonJS/compare/15.1.4...15.1.5
+[15.1.4]: https://github.com/melonjs/melonJS/compare/15.1.3...15.1.4
+[15.1.3]: https://github.com/melonjs/melonJS/compare/15.1.2...15.1.3
+[15.1.2]: https://github.com/melonjs/melonJS/compare/15.1.1...15.1.2
+[15.1.1]: https://github.com/melonjs/melonJS/compare/15.1.0...15.1.1
+[15.1.0]: https://github.com/melonjs/melonJS/compare/15.0.0...15.1.0
+[15.0.0]: https://github.com/melonjs/melonJS/compare/14.5.0...15.0.0
+[14.5.0]: https://github.com/melonjs/melonJS/compare/14.4.0...14.5.0
+[14.4.0]: https://github.com/melonjs/melonJS/compare/14.3.0...14.4.0
+[14.3.0]: https://github.com/melonjs/melonJS/compare/14.2.0...14.3.0
+[14.2.0]: https://github.com/melonjs/melonJS/compare/14.1.2...14.2.0
+[14.1.2]: https://github.com/melonjs/melonJS/compare/14.1.1...14.1.2
+[14.1.1]: https://github.com/melonjs/melonJS/compare/14.1.0...14.1.1
+[14.1.0]: https://github.com/melonjs/melonJS/compare/14.0.2...14.1.0
+[14.0.2]: https://github.com/melonjs/melonJS/compare/14.0.1...14.0.2
+[14.0.1]: https://github.com/melonjs/melonJS/compare/14.0.0...14.0.1
+[14.0.0]: https://github.com/melonjs/melonJS/compare/13.4.0...14.0.0
+[13.4.0]: https://github.com/melonjs/melonJS/compare/13.3.0...13.4.0
+[13.3.0]: https://github.com/melonjs/melonJS/compare/13.2.1...13.3.0
+[13.2.1]: https://github.com/melonjs/melonJS/compare/13.2.0...13.2.1
+[13.2.0]: https://github.com/melonjs/melonJS/compare/13.1.1...13.2.0
+[13.1.1]: https://github.com/melonjs/melonJS/compare/13.1.0...13.1.1
+[13.1.0]: https://github.com/melonjs/melonJS/compare/13.0.0...13.1.0
+[13.0.0]: https://github.com/melonjs/melonJS/compare/12.0.0...13.0.0
+[12.0.0]: https://github.com/melonjs/melonJS/compare/11.0.0...12.0.0
 [11.0.0]: https://github.com/melonjs/melonJS/compare/10.12.0...11.0.0
 [10.12.0]: https://github.com/melonjs/melonJS/compare/10.11.0...10.12.0
 [10.11.0]: https://github.com/melonjs/melonJS/compare/10.10.0...10.11.0
