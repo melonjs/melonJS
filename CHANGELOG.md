@@ -419,6 +419,7 @@
 
 ### Changed
 - Renderable : refactor of Text and BitmapText to isolate metrics related features/functions and standardize the api between the 2 classes
+- Renderable : faster implementation of the `tint` getter/setter, and Color `copy` method
 
 ### Fixed
 - Container: mark a container as dirty when changing own child(s) order using `MoveTo[Top/Bottom]`, `move[Up/Down]` and `swapChildren`
