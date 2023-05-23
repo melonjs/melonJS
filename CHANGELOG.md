@@ -8,10 +8,12 @@
 ### Changed
 - Application: world steps and rendering update are now done through a new global `TICK` event
 - Application: further "decoupling" of Application, Stage and State (see #1091)
+- Renderable : faster implementation of the `tint` getter/setter, and Color `copy` method
 
 ### Fixed
 - doc: fix the @name value of `state.DEFAULT` (thanks @johnhyde)
 - doc: fix documentation for the `TMXUtils` namespace
+- Renderer: fix potential memory leak in WebGL, where the renderer was not clearing the save/restore stack upon reset
 - TypeScript : fix optional arguments typings for all renderers and Application constructor
 
 ## [15.2.1] (melonJS 2) - _2023-05-14_
@@ -419,13 +421,12 @@
 
 ### Changed
 - Renderable : refactor of Text and BitmapText to isolate metrics related features/functions and standardize the api between the 2 classes
-- Renderable : faster implementation of the `tint` getter/setter, and Color `copy` method
 
 ### Fixed
 - Container: mark a container as dirty when changing own child(s) order using `MoveTo[Top/Bottom]`, `move[Up/Down]` and `swapChildren`
 - Renderable : fix NineSliceSprite bounding box not being properly scaled up
 - Renderer: fix blend mode in WebGL rendering mode
-- Renderer: fix potential memory leak in WebGL, where the renderer was not clearing the save/restore stack upon reset
+
 
 ## [10.5.2] (melonJS 2) - _2022-03-17_
 
