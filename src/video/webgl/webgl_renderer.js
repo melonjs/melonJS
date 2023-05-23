@@ -188,6 +188,17 @@ import { isPowerOfTwo } from "./../../math/math.js";
     reset() {
         super.reset();
 
+        // clear all stacks
+        this._colorStack.forEach((color) => {
+            pool.push(color);
+        });
+        this._matrixStack.forEach((matrix) => {
+            pool.push(matrix);
+        });
+        this._colorStack.length = 0;
+        this._matrixStack.length = 0;
+        this._blendStack.length = 0;
+
         // clear gl context
         this.clear();
 
