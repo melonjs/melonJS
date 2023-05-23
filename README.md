@@ -31,7 +31,7 @@ Compatibility
 
 Graphics
 - 2D sprite-based graphic engine
-- Fast WebGL 1 & 2 renderer for desktop and mobile devices with fallback to Canvas rendering
+- [Blazing Fast](https://melonjs.discourse.group/t/melonjs-benchmark/48/4) WebGL renderer for desktop and mobile devices with fallback to Canvas rendering
 - High DPI resolution & Canvas advanced auto scaling
 - Sprite with 9-slice scaling option, and animation management
 - built-in effects such as tinting and masking
