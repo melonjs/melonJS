@@ -204,6 +204,7 @@ export default class Renderable extends Rect {
         y: boolean;
     };
     _inViewport: boolean;
+    _tint: object;
     /**
      * Whether the renderable object is floating (i.e. used screen coordinates), or contained in a floating parent container
      * @see Renderable#floating
@@ -222,7 +223,6 @@ export default class Renderable extends Rect {
      * this.tint.setColor(255, 255, 255);
      */
     get tint(): Color;
-    _tint: object | undefined;
     set inViewport(arg: boolean);
     /**
      * Whether the renderable object is visible and within the viewport
@@ -411,4 +411,3 @@ export default class Renderable extends Rect {
 import Rect from "./../geometries/rectangle.js";
 import ObservableVector3d from "./../math/observable_vector3.js";
 import ObservableVector2d from "./../math/observable_vector2.js";
-import Color from "./../math/color.js";

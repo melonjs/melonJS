@@ -4,6 +4,7 @@ export namespace defaultSettings {
     const autoScale: boolean;
     const scale: number;
     const scaleMethod: string;
+    const scaleTarget: undefined;
     const transparent: boolean;
     const premultipliedAlpha: boolean;
     const blendMode: string;
@@ -50,6 +51,10 @@ export type Settings = {
      * <center><img src="images/scale-stretch.png"/></center>
      */
     scaleMethod?: string | undefined;
+    /**
+     * - the HTML Element to be used as the reference target when using automatic scaling (by default melonJS will use the parent container of the div element containing the canvas)
+     */
+    scaleTarget?: string | HTMLElement | undefined;
     /**
      * - if true the renderer will only use WebGL 1
      */

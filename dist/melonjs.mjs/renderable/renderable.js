@@ -10,7 +10,6 @@ import ObservableVector3d from '../math/observable_vector3.js';
 import Rect from '../geometries/rectangle.js';
 import pool from '../system/pooling.js';
 import { clamp } from '../math/math.js';
-import Color from '../math/color.js';
 import { releaseAllPointerEvents } from '../input/pointerevent.js';
 
 /**
@@ -265,6 +264,9 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
         // viewport flag
         this._inViewport = false;
 
+        // renderable cache tint value used by the getter/setter
+        this._tint = pool.pull("Color", 255, 255, 255, 1.0);
+
         // ensure it's fully opaque by default
         this.setOpacity(1.0);
     }
@@ -289,21 +291,11 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
      * this.tint.setColor(255, 255, 255);
      */
     get tint() {
-        if (typeof this._tint === "undefined") {
-            this._tint = pool.pull("Color", 255, 255, 255, 1.0);
-        }
         return this._tint;
     }
     set tint(value) {
-        if (typeof this._tint === "undefined") {
-            this._tint = pool.pull("Color", 255, 255, 255, 1.0);
-        }
-        if (value instanceof Color) {
-            this._tint.copy(value);
-        } else {
-            // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-            this._tint.parseCSS(value);
-        }
+        this._tint.copy(value);
+        this.isDirty = true;
     }
 
     /**

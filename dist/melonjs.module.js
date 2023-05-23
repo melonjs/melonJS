@@ -2409,12 +2409,12 @@ let cssToRGB = new Map();
      * @returns {Color} Reference to this object for method chaining
      */
     copy(color) {
-        if (color instanceof Color) {
+        if (typeof color === "string") {
+            return this.parseCSS(color);
+        } else {
             this.glArray.set(color.glArray);
             return this;
         }
-
-        return this.parseCSS(color);
     }
 
     /**
@@ -17819,6 +17819,9 @@ var input = {
         // viewport flag
         this._inViewport = false;
 
+        // renderable cache tint value used by the getter/setter
+        this._tint = pool.pull("Color", 255, 255, 255, 1.0);
+
         // ensure it's fully opaque by default
         this.setOpacity(1.0);
     }
@@ -17843,21 +17846,11 @@ var input = {
      * this.tint.setColor(255, 255, 255);
      */
     get tint() {
-        if (typeof this._tint === "undefined") {
-            this._tint = pool.pull("Color", 255, 255, 255, 1.0);
-        }
         return this._tint;
     }
     set tint(value) {
-        if (typeof this._tint === "undefined") {
-            this._tint = pool.pull("Color", 255, 255, 255, 1.0);
-        }
-        if (value instanceof Color) {
-            this._tint.copy(value);
-        } else {
-            // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-            this._tint.parseCSS(value);
-        }
+        this._tint.copy(value);
+        this.isDirty = true;
     }
 
     /**
@@ -31455,6 +31448,17 @@ let V_ARRAY = [
     reset() {
         super.reset();
 
+        // clear all stacks
+        this._colorStack.forEach((color) => {
+            pool.push(color);
+        });
+        this._matrixStack.forEach((matrix) => {
+            pool.push(matrix);
+        });
+        this._colorStack.length = 0;
+        this._matrixStack.length = 0;
+        this._blendStack.length = 0;
+
         // clear gl context
         this.clear();
 
@@ -37482,6 +37486,7 @@ function onresize(game) {
     let renderer = game.renderer;
     let settings = renderer.settings;
     let scaleX = 1, scaleY = 1;
+    let nodeBounds;
 
     if (settings.autoScale) {
 
@@ -37495,8 +37500,13 @@ function onresize(game) {
             canvasMaxHeight = parseInt(style.maxHeight, 10) || Infinity;
         }
 
-        // get the maximum canvas size within the parent div containing the canvas container
-        let nodeBounds = getParentBounds(game.getParentElement());
+        if (typeof game.settings.scaleTarget !== "undefined") {
+            // get the bounds of the given scale target
+            nodeBounds = getElementBounds(game.settings.scaleTarget);
+        } else {
+            // get the maximum canvas size within the parent div containing the canvas container
+            nodeBounds = getParentBounds(game.getParentElement());
+        }
 
         let _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
         let _max_height = Math.min(canvasMaxHeight, nodeBounds.height);
@@ -37557,6 +37567,7 @@ const defaultSettings = {
     autoScale : false,
     scale : 1.0,
     scaleMethod : "manual",
+    scaleTarget : undefined,
     transparent : false,
     premultipliedAlpha: true,
     blendMode : "normal",
@@ -37591,6 +37602,7 @@ const defaultSettings = {
  * <center><img src="images/scale-flex-height.png"/></center><br>
  *  - <i><b>`stretch`</b></i> : Canvas is resized to fit; content is scaled to screen aspect ratio <br>
  * <center><img src="images/scale-stretch.png"/></center>
+ * @property {string|HTMLElement} [scaleTarget] - the HTML Element to be used as the reference target when using automatic scaling (by default melonJS will use the parent container of the div element containing the canvas)
  * @property {boolean} [preferWebGL1=false] - if true the renderer will only use WebGL 1
  * @property {boolean} [depthTest="sorting"] - ~Experimental~ the default method to sort object on the z axis in WebGL ("sorting", "z-buffer")
  * @property {string} [powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
@@ -37774,6 +37786,12 @@ function consoleHeader(app) {
         this.settings.zoomX = width * this.settings.scale;
         this.settings.zoomY = height * this.settings.scale;
 
+        // identify parent element and/or the html target for resizing
+        this.parentElement = getElement(this.settings.parent);
+        if (typeof this.settings.scaleTarget !== "undefined" ) {
+            this.settings.scaleTarget = getElement(this.settings.scaleTarget);
+        }
+
         if (typeof this.settings.renderer === "number") {
             switch (this.settings.renderer) {
                 case AUTO:
@@ -37795,7 +37813,6 @@ function consoleHeader(app) {
         on(WINDOW_ONORIENTATION_CHANGE, () => onresize(this), this);
 
         // add our canvas (default to document.body if settings.parent is undefined)
-        this.parentElement = getElement(this.settings.parent);
         this.parentElement.appendChild(this.renderer.getCanvas());
 
         // Mobile browser hacks

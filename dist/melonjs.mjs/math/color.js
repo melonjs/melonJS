@@ -343,12 +343,12 @@ let cssToRGB = new Map();
      * @returns {Color} Reference to this object for method chaining
      */
     copy(color) {
-        if (color instanceof Color) {
+        if (typeof color === "string") {
+            return this.parseCSS(color);
+        } else {
             this.glArray.set(color.glArray);
             return this;
         }
-
-        return this.parseCSS(color);
     }
 
     /**

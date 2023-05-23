@@ -5,7 +5,7 @@
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
-import { getParentBounds, devicePixelRatio } from '../system/device.js';
+import { getElementBounds, getParentBounds, devicePixelRatio } from '../system/device.js';
 
 /**
  * scale the "displayed" canvas by the given scalar.
@@ -50,6 +50,7 @@ function onresize(game) {
     let renderer = game.renderer;
     let settings = renderer.settings;
     let scaleX = 1, scaleY = 1;
+    let nodeBounds;
 
     if (settings.autoScale) {
 
@@ -63,8 +64,13 @@ function onresize(game) {
             canvasMaxHeight = parseInt(style.maxHeight, 10) || Infinity;
         }
 
-        // get the maximum canvas size within the parent div containing the canvas container
-        let nodeBounds = getParentBounds(game.getParentElement());
+        if (typeof game.settings.scaleTarget !== "undefined") {
+            // get the bounds of the given scale target
+            nodeBounds = getElementBounds(game.settings.scaleTarget);
+        } else {
+            // get the maximum canvas size within the parent div containing the canvas container
+            nodeBounds = getParentBounds(game.getParentElement());
+        }
 
         let _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
         let _max_height = Math.min(canvasMaxHeight, nodeBounds.height);
