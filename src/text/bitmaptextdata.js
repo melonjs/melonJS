@@ -116,14 +116,11 @@ function createSpaceGlyph(glyphs) {
         this.lineHeight = parseFloat(getValueFromPair(lines[1], /lineHeight\=\d+/g));
 
         let baseLine = parseFloat(getValueFromPair(lines[1], /base\=\d+/g));
-
         let padY = this.padTop + this.padBottom;
-
         let glyph = null;
 
-        let i;
 
-        for (i = 4; i < lines.length; i++) {
+        for (let i = 4; i < lines.length; i++) {
             let line = lines[i];
             let characterValues = line.split(/=|\s+/);
             if (!line || /^kernings/.test(line)) {
@@ -164,7 +161,7 @@ function createSpaceGlyph(glyphs) {
         createSpaceGlyph(this.glyphs);
 
         let capGlyph = null;
-        for (i = 0; i < capChars.length; i++) {
+        for (let i = 0; i < capChars.length; i++) {
             let capChar = capChars[i];
             capGlyph = this.glyphs[capChar.charCodeAt(0)];
             if (capGlyph) {

@@ -276,16 +276,13 @@ function decodeCSV(input) {
  * @param {number} [bytes] - number of bytes per array entry
  * @returns {Uint32Array} Decoded data
  */
-function decodeBase64AsArray(input, bytes) {
-    bytes = bytes || 1;
-
-    let i, j, len;
+function decodeBase64AsArray(input, bytes = 1) {
     let dec = globalThis.atob(input.replace(/[^A-Za-z0-9\+\/\=]/g, ""));
     let ar = new Uint32Array(dec.length / bytes);
 
-    for (i = 0, len = dec.length / bytes; i < len; i++) {
+    for (let i = 0, len = dec.length / bytes; i < len; i++) {
         ar[i] = 0;
-        for (j = bytes - 1; j >= 0; --j) {
+        for (let j = bytes - 1; j >= 0; --j) {
             ar[i] += dec.charCodeAt((i * bytes) + j) << (j << 3);
         }
     }

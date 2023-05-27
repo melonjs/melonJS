@@ -158,10 +158,9 @@ function enablePointerEvent() {
         }
 
         // if time interval <= 16, disable the feature
-        let i;
         let events = findAllActiveEvents(activeEventList, POINTER_MOVE);
         if (throttlingInterval < 17) {
-            for (i = 0; i < events.length; i++) {
+            for (let i = 0; i < events.length; i++) {
                 if (activeEventList.indexOf(events[i]) !== -1) {
                     pointerEventTarget.addEventListener(
                         events[i],
@@ -173,7 +172,7 @@ function enablePointerEvent() {
             }
         }
         else {
-            for (i = 0; i < events.length; i++) {
+            for (let i = 0; i < events.length; i++) {
                 if (activeEventList.indexOf(events[i]) !== -1) {
                     pointerEventTarget.addEventListener(
                         events[i],

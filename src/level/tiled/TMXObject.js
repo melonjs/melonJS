@@ -209,7 +209,6 @@ export default class TMXObject {
      * @returns {Polygon[]|Line[]|Ellipse[]} an array of shape objects
      */
     parseTMXShapes() {
-        let i = 0;
         let shapes = [];
 
         // add an ellipse shape
@@ -237,7 +236,7 @@ export default class TMXObject {
                 let p = this.points;
                 let p1, p2;
                 let segments = p.length - 1;
-                for (i = 0; i < segments; i++) {
+                for (let i = 0; i < segments; i++) {
                     // clone the value before, as [i + 1]
                     // is reused later by the next segment
                     p1 = pool.pull("Vector2d", p[i].x, p[i].y);
@@ -264,7 +263,7 @@ export default class TMXObject {
 
         // Apply isometric projection
         if (this.orientation === "isometric") {
-            for (i = 0; i < shapes.length; i++) {
+            for (let i = 0; i < shapes.length; i++) {
                 if (typeof shapes[i].toIso === "function") {
                     shapes[i].toIso();
                 }

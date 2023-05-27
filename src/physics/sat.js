@@ -205,10 +205,9 @@ export function testPolygonPolygon(a, polyA, b, polyB, response) {
     // aboslute shape position
     let posA = T_VECTORS.pop().copy(a.pos).add(a.ancestor.getAbsolutePosition()).add(polyA.pos);
     let posB = T_VECTORS.pop().copy(b.pos).add(b.ancestor.getAbsolutePosition()).add(polyB.pos);
-    let i;
 
     // If any of the edge normals of A is a separating axis, no intersection.
-    for (i = 0; i < aLen; i++) {
+    for (let i = 0; i < aLen; i++) {
         if (isSeparatingAxis(posA, posB, aPoints, bPoints, aNormals[i], response)) {
             T_VECTORS.push(posA);
             T_VECTORS.push(posB);
@@ -217,7 +216,7 @@ export function testPolygonPolygon(a, polyA, b, polyB, response) {
     }
 
     // If any of the edge normals of B is a separating axis, no intersection.
-    for (i = 0; i < bLen; i++) {
+    for (let i = 0; i < bLen; i++) {
         if (isSeparatingAxis(posA, posB, aPoints, bPoints, bNormals[i], response)) {
             T_VECTORS.push(posA);
             T_VECTORS.push(posB);
