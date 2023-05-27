@@ -109,8 +109,8 @@ function normalize(obj, item) {
     let nodeName = item.nodeName;
 
     switch (nodeName) {
-        case "data":
-            var data = parse(item);  // <= "Unexpected lexical declaration in case block" if using let
+        case "data": {
+            let data = parse(item);
 
             data.encoding = data.encoding || "xml";
 
@@ -138,7 +138,7 @@ function normalize(obj, item) {
                 obj.encoding = "none";
             }
             break;
-
+        }
         case "chunk":
             obj.chunks = obj.chunks || [];
             obj.chunks.push(parse(item));
@@ -147,8 +147,8 @@ function normalize(obj, item) {
         case "imagelayer":
         case "layer":
         case "objectgroup":
-        case "group":
-            var layer = parse(item); //  // <= "Unexpected lexical declaration in case block" if using let
+        case "group": {
+            let layer = parse(item);
             layer.type = (nodeName === "layer" ? "tilelayer" : nodeName);
             if (layer.image) {
                 layer.image = layer.image.source;
@@ -157,20 +157,20 @@ function normalize(obj, item) {
             obj.layers = obj.layers || [];
             obj.layers.push(layer);
             break;
-
+        }
         case "animation":
             obj.animation = parse(item).frames;
             break;
 
         case "frame":
-        case "object":
-            var name = nodeName + "s";  // <= "Unexpected lexical declaration in case block" if using let
+        case "object": {
+            const name = nodeName + "s";
             obj[name] = obj[name] || [];
             obj[name].push(parse(item));
             break;
-
-        case "tile":
-            var tile = parse(item);  // <= "Unexpected lexical declaration in case block" if using let
+        }
+        case "tile": {
+            let tile = parse(item);
             if (tile.image) {
                 tile.imagewidth = tile.image.width;
                 tile.imageheight = tile.image.height;
@@ -179,9 +179,9 @@ function normalize(obj, item) {
             obj.tiles = obj.tiles || {};
             obj.tiles[tile.id] = tile;
             break;
-
-        case "tileset":
-            var tileset = parse(item);  // <= "Unexpected lexical declaration in case block" if using let
+        }
+        case "tileset": {
+            let tileset = parse(item);
             if (tileset.image) {
                 tileset.imagewidth = tileset.image.width;
                 tileset.imageheight = tileset.image.height;
@@ -191,13 +191,13 @@ function normalize(obj, item) {
             obj.tilesets = obj.tilesets || [];
             obj.tilesets.push(tileset);
             break;
-
+        }
         case "polygon":
-        case "polyline":
+        case "polyline": {
             obj[nodeName] = [];
 
             // Get a point array
-            var points = parse(item).points.split(" ");  // <= "Unexpected lexical declaration in case block" if using let
+            let points = parse(item).points.split(" ");
 
             // And normalize them into an array of vectors
             for (let i = 0; i < points.length; i++) {
@@ -209,15 +209,15 @@ function normalize(obj, item) {
             }
 
             break;
-
+        }
         case "properties":
             obj.properties = parse(item);
             break;
 
-        case "property":
-            var property = parse(item);  // <= "Unexpected lexical declaration in case block" if using let
+        case "property": {
+            const property = parse(item);
             // for custom properties, text is used
-            var value = (typeof property.value !== "undefined") ? property.value : property.text;
+            const value = (typeof property.value !== "undefined") ? property.value : property.text;
 
             obj[property.name] = setTMXValue(
                 property.name,
@@ -226,7 +226,7 @@ function normalize(obj, item) {
                 value
             );
             break;
-
+        }
         default:
             obj[nodeName] = parse(item);
             break;

@@ -231,7 +231,7 @@ let globalFloatingCounter = 0;
 
         // if a physic body(ies) to the game world
         if (this.isAttachedToRoot()) {
-            var worldContainer = this.getRootAncestor();
+            let worldContainer = this.getRootAncestor();
             if (child.body instanceof Body) {
                 worldContainer.addBody(child.body);
             }
@@ -301,7 +301,7 @@ let globalFloatingCounter = 0;
 
             // if a physic body(ies) to the game world
             if (this.isAttachedToRoot()) {
-                var worldContainer = this.getRootAncestor();
+                let worldContainer = this.getRootAncestor();
                 if (child.body instanceof Body) {
                     worldContainer.addBody(child.body);
                 }

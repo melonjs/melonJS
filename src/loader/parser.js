@@ -125,7 +125,7 @@ export function preloadTMX(tmxData, onload, onerror) {
                 switch (format) {
                     case "xml":
                     case "tmx":
-                    case "tsx":
+                    case "tsx": {
                         // ie9 does not fully implement the responseXML
                         if (ua.match(/msie/i) || !xmlhttp.responseXML) {
                             if (globalThis.DOMParser) {
@@ -139,7 +139,7 @@ export function preloadTMX(tmxData, onload, onerror) {
                             result = xmlhttp.responseXML;
                         }
                         // converts to a JS object
-                        var data = TMXUtils.parse(result); // <= "Unexpected lexical declaration in case block" if using let
+                        const data = TMXUtils.parse(result);
                         switch (format) {
                             case "tmx":
                                 result = data.map;
@@ -149,9 +149,8 @@ export function preloadTMX(tmxData, onload, onerror) {
                                 result = data.tilesets[0];
                                 break;
                         }
-
                         break;
-
+                    }
                     case "json":
                     case "tmj":
                     case "tsj":

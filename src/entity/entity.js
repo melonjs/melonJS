@@ -180,7 +180,7 @@ import Body from "./../physics/body.js";
         }
 
         if (absolute === true) {
-            var absPos = this.getAbsolutePosition();
+            let absPos = this.getAbsolutePosition();
             bounds.centerOn(absPos.x + bounds.x + bounds.width / 2,  absPos.y + bounds.y + bounds.height / 2);
         }
 
