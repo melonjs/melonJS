@@ -43,8 +43,9 @@ import earcut from "earcut";
      */
     closePath() {
         let points = this.points;
-        if (points.length > 1 && !points[points.length-1].equals(points[0])) {
-            points.push(pool.pull("Point", points[0].x, points[0].y));
+        let firstPoint = points[0];
+        if (points.length > 1 && !points[points.length-1].equals(firstPoint)) {
+            points.push(pool.pull("Point", firstPoint.x, firstPoint.y));
         }
     }
 
@@ -53,24 +54,24 @@ import earcut from "earcut";
      * @returns {Point[]}
      */
     triangulatePath() {
-        let i = 0;
         let points = this.points;
         let vertices = this.vertices;
         let indices = earcut(points.flatMap(p => [p.x, p.y]));
+        let indicesLength = indices.length;
 
         // pre-allocate vertices if necessary
-        while (vertices.length < indices.length) {
+        while (vertices.length < indicesLength) {
             vertices.push(pool.pull("Point"));
         }
 
         // calculate all vertices
-        for (i = 0; i < indices.length; i++ ) {
+        for (let i = 0; i < indicesLength; i++ ) {
             let point = points[indices[i]];
             vertices[i].set(point.x, point.y);
         }
 
         // recycle overhead from a previous triangulation
-        while (vertices.length > indices.length) {
+        while (vertices.length > indicesLength) {
             pool.push(vertices[vertices.length-1]);
             vertices.length -= 1;
         }
@@ -84,7 +85,7 @@ import earcut from "earcut";
      * @param {number} y - the y-axis (vertical) coordinate of the point.
      */
     moveTo(x, y) {
-      this.points.push(pool.pull("Point", x, y));
+        this.points.push(pool.pull("Point", x, y));
     }
 
     /**
@@ -135,11 +136,12 @@ import earcut from "earcut";
         const length = diff * radius;
         const nr_of_interpolation_points = length / this.arcResolution;
         const dangle = diff / nr_of_interpolation_points;
+        const angleStep = dangle * direction;
 
         let angle = startAngle;
         for (let j = 0; j < nr_of_interpolation_points; j++) {
             points.push(pool.pull("Point", x + radius * Math.cos(angle), y + radius * Math.sin(angle)));
-            angle += direction * dangle;
+            angle += angleStep;
         }
         points.push(pool.pull("Point", x + radius * Math.cos(endAngle), y + radius * Math.sin(endAngle)));
     }
@@ -230,6 +232,7 @@ import earcut from "earcut";
         const length = (diff * radiusX + diff * radiusY) / 2;
         const nr_of_interpolation_points = length / this.arcResolution;
         const dangle = diff / nr_of_interpolation_points;
+        const angleStep = dangle * direction;
 
         let angle = startAngle;
         const cos_rotation = Math.cos(rotation);
@@ -240,7 +243,7 @@ import earcut from "earcut";
             const _x2 = x + _x1 * cos_rotation - _y1 * sin_rotation;
             const _y2 = y + _x1 * sin_rotation + _y1 * cos_rotation;
             points.push(pool.pull("Point", _x2, _y2));
-            angle += direction * dangle;
+            angle += angleStep;
         }
     }
 
