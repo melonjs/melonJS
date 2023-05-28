@@ -1,5 +1,11 @@
 # Changelog
 
+## [15.3.1] (melonJS 2) - _2023-05-xx_
+
+### Fixed
+- Renderable : fix a potential issue with a Tile Layer not being properly redrawn when adding or clearing individual tiles
+- TMX : properly set the `preRender`flag for Tiled layer at runtime (when added to the root container)
+
 ## [15.3.0] (melonJS 2) - _2023-05-23_
 
 ### Added
