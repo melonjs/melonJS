@@ -4,7 +4,6 @@ import * as TMXUtils from "./TMXUtils.js";
 import Tile from "./TMXTile.js";
 import Renderable from "./../../renderable/renderable.js";
 import CanvasRenderer from "./../../video/canvas/canvas_renderer";
-import { game } from "../../index.js";
 
 /**
  * Create required arrays for the given layer object
@@ -192,11 +191,6 @@ function preRenderLayer(layer, renderer) {
         // check if we have any user-defined properties
         TMXUtils.applyTMXProperties(this, data);
 
-        // check for the correct rendering method
-        if (typeof (this.preRender) === "undefined") {
-            this.preRender = game.world.preRender;
-        }
-
         // set a renderer
         this.setRenderer(map.getRenderer());
 
@@ -251,8 +245,11 @@ function preRenderLayer(layer, renderer) {
 
         this.isAnimated = this.animatedTilesets.length > 0;
 
-        // Force pre-render off when tileset animation is used
-        if (this.isAnimated) {
+        // check for the correct rendering method
+        if (typeof this.preRender === "undefined" && this.isAnimated === false) {
+            this.preRender = this.ancestor.getRootAncestor().preRender;
+        } else {
+            // Force pre-render off when tileset animation is used
             this.preRender = false;
         }
 
