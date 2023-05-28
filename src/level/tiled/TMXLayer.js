@@ -266,6 +266,8 @@ function preRenderLayer(layer, renderer) {
             });
             preRenderLayer(this, this.canvasRenderer);
         }
+
+        this.isDirty = true;
     }
 
     // called when the layer is removed from the game world or a container
@@ -285,6 +287,7 @@ function preRenderLayer(layer, renderer) {
      */
     setRenderer(renderer) {
         this.renderer = renderer;
+        this.isDirty = true;
     }
 
     /**
@@ -337,6 +340,7 @@ function preRenderLayer(layer, renderer) {
      */
     setTile(tile, x, y) {
         this.layerData[x][y] = tile;
+        this.isDirty = true;
         return tile;
     }
 
@@ -395,6 +399,7 @@ function preRenderLayer(layer, renderer) {
         if (this.preRender) {
             this.canvasRenderer.clearRect(x * this.tilewidth, y * this.tileheight, this.tilewidth, this.tileheight);
         }
+        this.isDirty = true;
     }
 
     /**
@@ -402,14 +407,13 @@ function preRenderLayer(layer, renderer) {
      * @ignore
      */
     update(dt) {
+        let result = this.isDirty;
         if (this.isAnimated) {
-            let result = false;
             for (let i = 0; i < this.animatedTilesets.length; i++) {
                 result = this.animatedTilesets[i].update(dt) || result;
             }
-            return result;
         }
-        return false;
+        return result;
     }
 
     /**
