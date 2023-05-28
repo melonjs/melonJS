@@ -1,5 +1,6 @@
 import { getParent } from "./../video/video.js";
 import save from "./save.js";
+import * as event from "./../system/event.js";
 import { prefixed } from "./../utils/agent.js";
 import { DOMContentLoaded } from "./dom.js";
 import * as device_platform from "./platform.js"; // export * as name1 from …; // ECMAScript® 2020
@@ -432,6 +433,30 @@ export let stopOnBlur = false;
 * });
 */
 export function onReady(fn) {
+    // register on blur/focus and visibility event handlers
+    if (typeof globalThis.addEventListener === "function") {
+        // set pause/stop action on losing focus
+        globalThis.addEventListener("blur", () => {
+            event.emit(event.BLUR);
+        }, false);
+        // set restart/resume action on gaining focus
+        globalThis.addEventListener("focus", () => {
+            event.emit(event.FOCUS);
+        }, false);
+    }
+    if (typeof globalThis.document !== "undefined") {
+        if (typeof globalThis.document.addEventListener === "function") {
+            // register on the visibilitychange event if supported
+            globalThis.document.addEventListener("visibilitychange", () => {
+                if (globalThis.document.visibilityState === "visible") {
+                    event.emit(event.FOCUS);
+                } else {
+                    event.emit(event.BLUR);
+                }
+            }, false );
+        }
+    }
+    // call the supplied function
     DOMContentLoaded(fn);
 }
 

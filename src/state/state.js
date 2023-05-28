@@ -135,53 +135,29 @@ event.on(event.BOOT, () => {
         state.change(state.DEFAULT, true);
     });
 
-    if (typeof globalThis.addEventListener === "function") {
-        // set pause/stop action on losing focus
-        globalThis.addEventListener("blur", () => {
-            if (device.stopOnBlur) {
-                state.stop(true);
-            }
-            if (device.pauseOnBlur) {
-                state.pause(true);
-            }
-        }, false);
-        // set restart/resume action on gaining focus
-        globalThis.addEventListener("focus", () => {
-            if (device.stopOnBlur) {
-                state.restart(true);
-            }
-            if (device.resumeOnFocus) {
-                state.resume(true);
-            }
-            // force focus if autofocus is on
-            if (device.autoFocus) {
-                device.focus();
-            }
-        }, false);
-    }
-
-    if (typeof globalThis.document !== "undefined") {
-        if (typeof globalThis.document.addEventListener === "function") {
-            // register on the visibilitychange event if supported
-            globalThis.document.addEventListener("visibilitychange", () => {
-                if (globalThis.document.visibilityState === "visible") {
-                    if (device.stopOnBlur) {
-                        state.restart(true);
-                    }
-                    if (device.resumeOnFocus) {
-                        state.resume(true);
-                    }
-                } else {
-                    if (device.stopOnBlur) {
-                        state.stop(true);
-                    }
-                    if (device.pauseOnBlur) {
-                        state.pause(true);
-                    }
-                }
-            }, false );
+    // on blur event, pause the current
+    event.on(event.BLUR, () => {
+        if (device.stopOnBlur === true) {
+            state.stop(true);
         }
-    }
+        if (device.pauseOnBlur === true) {
+            state.pause(true);
+        }
+    });
+
+    // on focus event, restart or resume the current
+    event.on(event.FOCUS, () => {
+        if (device.stopOnBlur === true) {
+            state.restart(true);
+        }
+        if (device.resumeOnFocus === true) {
+            state.resume(true);
+        }
+        // force focus if autofocus is on
+        if (device.autoFocus === true) {
+            device.focus();
+        }
+    });
 });
 
 /**
