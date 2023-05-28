@@ -52,25 +52,6 @@ function setLayerData(layer, bounds, data) {
 }
 
 /**
- * preRender a tile layer using the given renderer
- * @ignore
- */
-function preRenderLayer(layer, renderer) {
-    // set everything
-    for (let y = 0; y < layer.rows; y++) {
-        for (let x = 0; x < layer.cols; x++) {
-            // get the value of the gid
-            const tile = layer.layerData[x][y];
-            // draw the tile if defined
-            if (tile instanceof Tile) {
-                // add a new tile to the layer
-                layer.getRenderer().drawTile(renderer, x, y, tile);
-            }
-        }
-    }
-}
-
-/**
  * @classdesc
  * a TMX Tile Layer Object
  * Tiled QT 0.7.x format
@@ -261,7 +242,8 @@ function preRenderLayer(layer, renderer) {
                 heigth : this.height,
                 transparent : true
             });
-            preRenderLayer(this, this.canvasRenderer);
+            // pre render the layer on the canvas
+            this.getRenderer().drawTileLayer(this.canvasRenderer, this, this);
         }
 
         this.isDirty = true;
