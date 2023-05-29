@@ -72,7 +72,7 @@
     "cross-env": "^7.0.3",
     "del-cli": "^5.0.0",
     "eslint": "^8.41.0",
-    "eslint-plugin-jsdoc": "^44.2.7",
+    "eslint-plugin-jsdoc": "^45.0.0",
     "expect": "^29.5.0",
     "expect-mocha-image-snapshot": "^3.0.13",
     "fastify": "^4.17.0",
