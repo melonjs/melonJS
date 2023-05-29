@@ -1,6 +1,6 @@
 # Changelog
 
-## [15.3.1] (melonJS 2) - _2023-05-xx_
+## [15.4.0] (melonJS 2) - _2023-05-xx_
 
 ### Changed
 - Core: visibility and focus/blur events are now managed internally through new global `BLUR` and `FOCUS` events
