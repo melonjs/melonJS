@@ -6,14 +6,14 @@
     constructor(x = 0, y = 0) {
         /**
          * the position of the point on the horizontal axis
-         * @type {Number}
+         * @type {number}
          * @default 0
          */
         this.x = x;
 
         /**
          * the position of the point on the vertical axis
-         * @type {Number}
+         * @type {number}
          * @default 0
          */
         this.y = y;
@@ -40,7 +40,7 @@
      * return true if the two points are the same
      * @name equals
      * @memberof Point
-     * @method
+     * @function
      * @param {Point} point
      * @returns {boolean}
      */

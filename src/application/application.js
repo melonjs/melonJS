@@ -81,7 +81,7 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
 
         /**
          * the given settings used when creating this application
-         * @type {Object}
+         * @type {object}
          */
         this.settings = undefined;
 
@@ -116,6 +116,9 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
 
     /**
      * init the game instance (create a physic world, update starting time, etc..)
+     * @param {number} width - The width of the canvas viewport
+     * @param {number} height - The height of the canvas viewport
+     * @param {Application.Settings} [options] - The optional parameters for the application and default renderer
      */
     init(width, height, options) {
 
@@ -295,7 +298,7 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
 
     /**
      * Returns the parent HTML Element holding the main canvas of this application
-     * @returns {HTMLElement}
+     * @returns {HTMLElement} the parent HTML element
      */
     getParentElement() {
         return this.parentElement;

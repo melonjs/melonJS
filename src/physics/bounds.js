@@ -256,7 +256,7 @@ import Vector2d from "./../math/vector2.js";
      * Returns true if the bounds contains the given point.
      * @name contains
      * @memberof Bounds
-     * @method
+     * @function
      * @param {Vector2d} point
      * @returns {boolean} True if the bounds contain the point, otherwise false
      */
@@ -313,7 +313,7 @@ import Vector2d from "./../math/vector2.js";
      * Translates the bounds by the given vector.
      * @name translate
      * @memberof Bounds
-     * @method
+     * @function
      * @param {Vector2d} vector
      */
     /**
@@ -342,7 +342,7 @@ import Vector2d from "./../math/vector2.js";
      * Shifts the bounds to the given position vector.
      * @name shift
      * @memberof Bounds
-     * @method
+     * @function
      * @param {Vector2d} position
      */
     /**

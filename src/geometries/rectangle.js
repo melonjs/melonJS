@@ -279,7 +279,7 @@ import Polygon from "./poly.js";
      * Returns true if the rectangle contains the given rectangle
      * @name contains
      * @memberof Rect
-     * @method
+     * @function
      * @param {Rect} rect
      * @returns {boolean} true if contains
      */
@@ -288,7 +288,7 @@ import Polygon from "./poly.js";
      * Returns true if the rectangle contains the given point
      * @name contains
      * @memberof Rect
-     * @method
+     * @function
      * @param  {number} x -  x coordinate
      * @param  {number} y -  y coordinate
      * @returns {boolean} true if contains

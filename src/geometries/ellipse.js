@@ -122,8 +122,8 @@ import pool from "./../system/pooling.js";
      * Scale this Ellipse by the specified scalar.
      * @name scale
      * @memberof Ellipse
-     * @param {number} x
-     * @param {number} [y=x]
+     * @param {number} x - the scale factor along the x-axis
+     * @param {number} [y=x] - the scale factor along the y-axis
      * @returns {Ellipse} Reference to this object for method chaining
      */
     scale(x, y = x) {
@@ -162,7 +162,7 @@ import pool from "./../system/pooling.js";
      * translate the circle/ellipse by the specified offset
      * @name translate
      * @memberof Ellipse
-     * @method
+     * @function
      * @param {number} x - x offset
      * @param {number} y - y offset
      * @returns {Ellipse} this ellipse
@@ -197,7 +197,7 @@ import pool from "./../system/pooling.js";
     /**
      * check if this circle/ellipse contains the specified point
      * @name contains
-     * @method
+     * @function
      * @memberof Ellipse
      * @param {Vector2d} point
      * @returns {boolean} true if contains

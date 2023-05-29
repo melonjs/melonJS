@@ -21,7 +21,7 @@ export const defaultSettings = {
 
 /**
  * Application & Renderer Settings definition.
- * @typedef {Object} Settings
+ * @typedef {object} Settings
  * @property {string|HTMLElement} [parent=document.body] - the DOM parent element to hold the canvas in the HTML file
  * @property {number|Renderer} [renderer=AUTO] - renderer to use (CANVAS, WEBGL, AUTO), or a custom renderer class
  * @property {number|string} [scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)

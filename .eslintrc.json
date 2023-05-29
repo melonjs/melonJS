@@ -19,7 +19,7 @@
     }
   },
   "plugins": ["eslint-plugin-jsdoc"],
-  "extends": "eslint:recommended",
+  "extends": "eslint:recommended", // unleash jsdoc hell with "plugin:jsdoc/recommended-typescript-flavor",
   "rules": {
     // http://eslint.org/docs/rules/
     "accessor-pairs": "error",
@@ -121,6 +121,7 @@
     "valid-typeof": ["error", { "requireStringLiterals": true }],
     "yield-star-spacing": ["error", "both"],
     "yoda": ["error", "never"],
-    "jsdoc/require-hyphen-before-param-description": 1
+    "jsdoc/require-hyphen-before-param-description": "error",
+    "jsdoc/no-undefined-types" : "off"
   }
 }

@@ -69,7 +69,7 @@ export default class RoundRect extends Rect {
      * Returns true if the rounded rectangle contains the given point
      * @name contains
      * @memberof RoundRect
-     * @method
+     * @function
      * @param  {number} x -  x coordinate
      * @param  {number} y -  y coordinate
      * @returns {boolean} true if contains

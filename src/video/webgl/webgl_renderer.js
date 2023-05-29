@@ -231,8 +231,8 @@ import { isPowerOfTwo } from "./../../math/math.js";
     /**
      * add a new compositor to this renderer
      * @param {Compositor} compositor - a compositor instance
-     * @param {String} name - a name uniquely identifying this compositor
-     * @param {Boolean} [activate=false] - true if the given compositor should be set as the active one
+     * @param {string} name - a name uniquely identifying this compositor
+     * @param {boolean} [activate=false] - true if the given compositor should be set as the active one
      */
     addCompositor(compositor, name = "default", activate = false) {
         // make sure there is no existing compositor with the same name
@@ -251,9 +251,9 @@ import { isPowerOfTwo } from "./../../math/math.js";
 
     /**
      * set the active compositor for this renderer
-     * @param {String} name - a compositor name
+     * @param {string} name - a compositor name
      * @param {GLShader} [shader] - an optional shader program to be used, instead of the default one, when activating the compositor
-     * @return {Compositor} an instance to the current active compositor
+     * @returns {Compositor} an instance to the current active compositor
      */
     setCompositor(name = "default", shader = this.customShader) {
         let compositor = this.compositors.get(name);
@@ -292,7 +292,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
      * Create a pattern with the specified repetition
      * @param {HTMLImageElement|SVGImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap|OffscreenCanvas|VideoFrame} image - Source image to be used as the pattern's image
      * @param {string} repeat - Define how the pattern should be repeated
-     * @returns {TextureAtlas}
+     * @returns {TextureAtlas} the patterned texture created
      * @see ImageLayer#repeat
      * @example
      * let tileable   = renderer.createPattern(image, "repeat");
@@ -329,7 +329,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
 
     /**
      * set/change the current projection matrix (WebGL only)
-     * @param {Matrix3d} matrix
+     * @param {Matrix3d} matrix - the new projection matrix
      */
     setProjection(matrix) {
         super.setProjection(matrix);
@@ -452,10 +452,10 @@ import { isPowerOfTwo } from "./../../math/math.js";
     /**
      * Draw a pattern within the given rectangle.
      * @param {TextureAtlas} pattern - Pattern object
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
+     * @param {number} x - x position where to draw the pattern
+     * @param {number} y - y position where to draw the pattern
+     * @param {number} width - width of the pattern
+     * @param {number} height - height of the pattern
      * @see WebGLRenderer#createPattern
      */
     drawPattern(pattern, x, y, width, height) {
@@ -466,10 +466,10 @@ import { isPowerOfTwo } from "./../../math/math.js";
 
     /**
      * Returns the WebGL Context object of the given canvas element
-     * @param {HTMLCanvasElement} canvas
+     * @param {HTMLCanvasElement} canvas - the canvas element
      * @param {boolean} [transparent=false] - use true to enable transparency
      * @param {boolean} [depth=false] - use true to enable depth buffer testing
-     * @returns {WebGLRenderingContext}
+     * @returns {WebGLRenderingContext} the WebGL Context object
      */
     getContextGL(canvas, transparent = false, depth = false) {
         if (typeof canvas === "undefined" || canvas === null) {
@@ -518,7 +518,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
     /**
      * Returns the WebGLContext instance for the renderer
      * return a reference to the system 2d Context
-     * @returns {WebGLRenderingContext}
+     * @returns {WebGLRenderingContext} the current WebGL context
      */
     getContext() {
         return this.gl;
@@ -537,7 +537,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
      * <img src="images/screen-blendmode.png" width="510"/> <br>
      * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
      * @param {string} [mode="normal"] - blend mode : "normal", "multiply", "lighter", "additive", "screen"
-     * @param {WebGLRenderingContext} [gl]
+     * @param {WebGLRenderingContext} [gl] - a WebGL context
      */
     setBlendMode(mode = "normal", gl = this.gl) {
 
@@ -626,8 +626,8 @@ import { isPowerOfTwo } from "./../../math/math.js";
 
     /**
      * scales the uniform matrix
-     * @param {number} x
-     * @param {number} y
+     * @param {number} x - x-axis scale
+     * @param {number} y - y-axis scale
      */
     scale(x, y) {
         this.currentTransform.scale(x, y);
@@ -681,11 +681,11 @@ import { isPowerOfTwo } from "./../../math/math.js";
      * Stroke an arc at the specified coordinates with given radius, start and end points
      * @param {number} x - arc center point x-axis
      * @param {number} y - arc center point y-axis
-     * @param {number} radius
+     * @param {number} radius - arc radius
      * @param {number} start - start angle in radians
      * @param {number} end - end angle in radians
      * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
-     * @param {boolean} [fill=false]
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeArc(x, y, radius, start, end, antiClockwise = false, fill = false) {
         this.setCompositor("primitive");
@@ -703,7 +703,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
      * Fill an arc at the specified coordinates with given radius, start and end points
      * @param {number} x - arc center point x-axis
      * @param {number} y - arc center point y-axis
-     * @param {number} radius
+     * @param {number} radius - arc radius
      * @param {number} start - start angle in radians
      * @param {number} end - end angle in radians
      * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
@@ -806,10 +806,10 @@ import { isPowerOfTwo } from "./../../math/math.js";
 
     /**
      * Draw a stroke rectangle at the specified coordinates
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
+     * @param {number} x - x axis of the coordinate for the rectangle starting point.
+     * @param {number} y - y axis of the coordinate for the rectangle starting point.
+     * @param {number} width - The rectangle's width.
+     * @param {number} height - The rectangle's height.
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeRect(x, y, width, height, fill = false) {
@@ -825,10 +825,10 @@ import { isPowerOfTwo } from "./../../math/math.js";
 
     /**
      * Draw a filled rectangle at the specified coordinates
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
+     * @param {number} x - x axis of the coordinate for the rectangle starting point.
+     * @param {number} y - y axis of the coordinate for the rectangle starting point.
+     * @param {number} width - The rectangle's width.
+     * @param {number} height - The rectangle's height.
      */
     fillRect(x, y, width, height) {
         this.strokeRect(x, y, width, height, true);
@@ -836,11 +836,11 @@ import { isPowerOfTwo } from "./../../math/math.js";
 
     /**
      * Stroke a rounded rectangle at the specified coordinates
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
-     * @param {number} radius
+     * @param {number} x - x axis of the coordinate for the rounded rectangle starting point.
+     * @param {number} y - y axis of the coordinate for the rounded rectangle starting point.
+     * @param {number} width - The rounded rectangle's width.
+     * @param {number} height - The rounded rectangle's height.
+     * @param {number} radius - The rounded corner's radius.
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeRoundRect(x, y, width, height, radius, fill = false) {
@@ -857,11 +857,11 @@ import { isPowerOfTwo } from "./../../math/math.js";
 
     /**
      * Draw a rounded filled rectangle at the specified coordinates
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
-     * @param {number} radius
+     * @param {number} x - x axis of the coordinate for the rounded rectangle starting point.
+     * @param {number} y - y axis of the coordinate for the rounded rectangle starting point.
+     * @param {number} width - The rounded rectangle's width.
+     * @param {number} height - The rounded rectangle's height.
+     * @param {number} radius - The rounded corner's radius.
      */
     fillRoundRect(x, y, width, height, radius) {
         this.strokeRoundRect(x, y, width, height, radius, true);
@@ -869,8 +869,8 @@ import { isPowerOfTwo } from "./../../math/math.js";
 
     /**
      * Stroke a Point at the specified coordinates
-     * @param {number} x
-     * @param {number} y
+     * @param {number} x - x axis of the coordinate for the point.
+     * @param {number} y - y axis of the coordinate for the point.
      */
     strokePoint(x, y) {
         this.strokeLine(x, y, x + 1, y + 1);
@@ -878,10 +878,8 @@ import { isPowerOfTwo } from "./../../math/math.js";
 
     /**
      * Draw a a point at the specified coordinates
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
+     * @param {number} x - x axis of the coordinate for the point.
+     * @param {number} y - y axis of the coordinate for the point.
      */
     fillPoint(x, y) {
         this.strokePoint(x, y);
@@ -914,8 +912,8 @@ import { isPowerOfTwo } from "./../../math/math.js";
 
     /**
      * Translates the uniform matrix by the given coordinates
-     * @param {number} x
-     * @param {number} y
+     * @param {number} x - x axis of the coordinate for the translation.
+     * @param {number} y - y axis of the coordinate for the translation.
      */
     translate(x, y) {
         let currentTransform = this.currentTransform;
@@ -934,10 +932,10 @@ import { isPowerOfTwo } from "./../../math/math.js";
      * You can however save the current region using the save(),
      * and restore it (with the restore() method) any time in the future.
      * (<u>this is an experimental feature !</u>)
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
+     * @param {number} x - x axis of the coordinate for the upper-left corner of the rectangle to start clipping from.
+     * @param {number} y - y axis of the coordinate for the upper-left corner of the rectangle to start clipping from.
+     * @param {number} width - the width of the rectangle to start clipping from.
+     * @param {number} height - the height of the rectangle to start clipping from.
      */
     clipRect(x, y, width, height) {
         let canvas = this.getCanvas();

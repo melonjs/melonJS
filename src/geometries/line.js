@@ -16,7 +16,7 @@ import Polygon from "./poly.js";
      * Returns true if the Line contains the given point
      * @name contains
      * @memberof Line
-     * @method
+     * @function
      * @param {Vector2d} point
      * @returns {boolean} true if contains
      */
@@ -25,8 +25,8 @@ import Polygon from "./poly.js";
      * Returns true if the Line contains the given point
      * @name contains
      * @memberof Line
-     * @param  {number} x -  x coordinate
-     * @param  {number} y -  y coordinate
+     * @param  {number} x - x coordinate
+     * @param  {number} y - y coordinate
      * @returns {boolean} true if contains
      */
     contains() {

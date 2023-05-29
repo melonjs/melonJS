@@ -123,7 +123,7 @@ export function init(width, height, options) {
  * @param {number} width - width
  * @param {number} height - height
  * @param {boolean} [returnOffscreenCanvas=false] - will return an OffscreenCanvas if supported
- * @returns {HTMLCanvasElement|OffscreenCanvas}
+ * @returns {HTMLCanvasElement|OffscreenCanvas} a new Canvas element of the given size
  */
 export function createCanvas(width, height, returnOffscreenCanvas = false) {
     let _canvas;
@@ -152,7 +152,7 @@ export function createCanvas(width, height, returnOffscreenCanvas = false) {
 /**
  * return a reference to the parent DOM element holding the main canvas
  * @memberof video
- * @returns {HTMLElement}
+ * @returns {HTMLElement} the HTML parent element
  */
 export function getParent() {
     return game.getParentElement();
