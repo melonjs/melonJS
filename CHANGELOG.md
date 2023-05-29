@@ -2,6 +2,9 @@
 
 ## [15.3.1] (melonJS 2) - _2023-05-xx_
 
+### Changed
+- Core: visibility and focus/blur events are now managed internally through new global `BLUR` and `FOCUS` events
+
 ### Fixed
 - Renderable : fix a potential issue with a Tile Layer not being properly redrawn when adding or clearing individual tiles
 - TMX : properly set the `preRender`flag for Tiled layer at runtime (when added to the root container)
