@@ -42,6 +42,28 @@ export const BOOT = "me.boot";
 export const TICK = "me.tick";
 
 /**
+ * event generated when the main browser or window is losing focus
+ * @public
+ * @constant
+ * @type {string}
+ * @name BLUR
+ * @memberof event
+ * @see event.on
+ */
+export const BLUR = "me.blur";
+
+/**
+ * event generated when the main browser or window is gaining back focus
+ * @public
+ * @constant
+ * @type {string}
+ * @name FOCUS
+ * @memberof event
+ * @see event.on
+ */
+export const FOCUS = "me.focus";
+
+/**
  * event when the game is paused <br>
  * Data passed : none <br>
  * @public
