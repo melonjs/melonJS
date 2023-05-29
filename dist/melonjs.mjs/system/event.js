@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.3.0
+ * melonJS Game Engine - v15.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -47,6 +47,28 @@ const BOOT = "me.boot";
  * @see event.on
  */
 const TICK = "me.tick";
+
+/**
+ * event generated when the main browser or window is losing focus
+ * @public
+ * @constant
+ * @type {string}
+ * @name BLUR
+ * @memberof event
+ * @see event.on
+ */
+const BLUR = "me.blur";
+
+/**
+ * event generated when the main browser or window is gaining back focus
+ * @public
+ * @constant
+ * @type {string}
+ * @name FOCUS
+ * @memberof event
+ * @see event.on
+ */
+const FOCUS = "me.focus";
 
 /**
  * event when the game is paused <br>
@@ -556,4 +578,4 @@ function off(eventName, listener) {
     return eventEmitter.off(eventName, listener);
 }
 
-export { BOOT, CANVAS_ONRESIZE, DOM_READY, DRAGEND, DRAGSTART, GAMEPAD_CONNECTED, GAMEPAD_DISCONNECTED, GAMEPAD_UPDATE, GAME_AFTER_DRAW, GAME_AFTER_UPDATE, GAME_BEFORE_DRAW, GAME_BEFORE_UPDATE, GAME_INIT, GAME_RESET, GAME_UPDATE, KEYDOWN, KEYUP, LEVEL_LOADED, LOADER_COMPLETE, LOADER_PROGRESS, ONCONTEXT_LOST, ONCONTEXT_RESTORED, POINTERLOCKCHANGE, POINTERMOVE, STAGE_RESET, STATE_CHANGE, STATE_PAUSE, STATE_RESTART, STATE_RESUME, STATE_STOP, TICK, VIDEO_INIT, VIEWPORT_ONCHANGE, VIEWPORT_ONRESIZE, WINDOW_ONORIENTATION_CHANGE, WINDOW_ONRESIZE, WINDOW_ONSCROLL, emit, off, on, once };
+export { BLUR, BOOT, CANVAS_ONRESIZE, DOM_READY, DRAGEND, DRAGSTART, FOCUS, GAMEPAD_CONNECTED, GAMEPAD_DISCONNECTED, GAMEPAD_UPDATE, GAME_AFTER_DRAW, GAME_AFTER_UPDATE, GAME_BEFORE_DRAW, GAME_BEFORE_UPDATE, GAME_INIT, GAME_RESET, GAME_UPDATE, KEYDOWN, KEYUP, LEVEL_LOADED, LOADER_COMPLETE, LOADER_PROGRESS, ONCONTEXT_LOST, ONCONTEXT_RESTORED, POINTERLOCKCHANGE, POINTERMOVE, STAGE_RESET, STATE_CHANGE, STATE_PAUSE, STATE_RESTART, STATE_RESUME, STATE_STOP, TICK, VIDEO_INIT, VIEWPORT_ONCHANGE, VIEWPORT_ONRESIZE, WINDOW_ONORIENTATION_CHANGE, WINDOW_ONRESIZE, WINDOW_ONSCROLL, emit, off, on, once };

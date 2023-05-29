@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.3.0
+ * melonJS Game Engine - v15.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -128,7 +128,7 @@ function preloadTMX(tmxData, onload, onerror) {
                 switch (format) {
                     case "xml":
                     case "tmx":
-                    case "tsx":
+                    case "tsx": {
                         // ie9 does not fully implement the responseXML
                         if (ua.match(/msie/i) || !xmlhttp.responseXML) {
                             if (globalThis.DOMParser) {
@@ -142,7 +142,7 @@ function preloadTMX(tmxData, onload, onerror) {
                             result = xmlhttp.responseXML;
                         }
                         // converts to a JS object
-                        var data = parse(result); // <= "Unexpected lexical declaration in case block" if using let
+                        const data = parse(result);
                         switch (format) {
                             case "tmx":
                                 result = data.map;
@@ -152,9 +152,8 @@ function preloadTMX(tmxData, onload, onerror) {
                                 result = data.tilesets[0];
                                 break;
                         }
-
                         break;
-
+                    }
                     case "json":
                     case "tmj":
                     case "tsj":

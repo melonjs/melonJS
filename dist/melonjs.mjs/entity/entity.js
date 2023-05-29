@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.3.0
+ * melonJS Game Engine - v15.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -186,7 +186,7 @@ import Body from '../physics/body.js';
         }
 
         if (absolute === true) {
-            var absPos = this.getAbsolutePosition();
+            let absPos = this.getAbsolutePosition();
             bounds.centerOn(absPos.x + bounds.x + bounds.width / 2,  absPos.y + bounds.y + bounds.height / 2);
         }
 

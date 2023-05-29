@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.3.0
+ * melonJS Game Engine - v15.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -20,9 +20,6 @@ import { getTMX, getImage } from '../../loader/loader.js';
      *  @param {object} tileset - tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
      */
     constructor(tileset) {
-        let i = 0;
-        // first gid
-
         // tile properties (collidable, etc..)
         this.TileProperties = [];
 
@@ -84,7 +81,7 @@ import { getTMX, getImage } from '../../loader/loader.js';
         this._lastUpdate = 0;
 
         let tiles = tileset.tiles;
-        for (i in tiles) {
+        for (let i in tiles) {
             if (tiles.hasOwnProperty(i)) {
                 if ("animation" in tiles[i]) {
                     this.isAnimated = true;
@@ -128,7 +125,7 @@ import { getTMX, getImage } from '../../loader/loader.js';
         // set tile properties, if any (JSON old format)
         let tileInfo = tileset.tileproperties;
         if (tileInfo) {
-            for (i in tileInfo) {
+            for (let i in tileInfo) {
                 if (tileInfo.hasOwnProperty(i)) {
                     this.setTileProperty(+i + this.firstgid, tileInfo[i]);
                 }

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.3.0
+ * melonJS Game Engine - v15.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -11,7 +11,6 @@ import { applyTMXProperties, decode } from './TMXUtils.js';
 import Tile from './TMXTile.js';
 import Renderable from '../../renderable/renderable.js';
 import CanvasRenderer from '../../video/canvas/canvas_renderer.js';
-import { game } from '../../index.js';
 
 /**
  * Create required arrays for the given layer object
@@ -54,25 +53,6 @@ function setLayerData(layer, bounds, data) {
             if (gid !== 0) {
                 // add a new tile to the layer
                 layer.layerData[x + bounds.x][y + bounds.y] = layer.getTileById(gid, x + bounds.x, y + bounds.y);
-            }
-        }
-    }
-}
-
-/**
- * preRender a tile layer using the given renderer
- * @ignore
- */
-function preRenderLayer(layer, renderer) {
-    // set everything
-    for (let y = 0; y < layer.rows; y++) {
-        for (let x = 0; x < layer.cols; x++) {
-            // get the value of the gid
-            const tile = layer.layerData[x][y];
-            // draw the tile if defined
-            if (tile instanceof Tile) {
-                // add a new tile to the layer
-                layer.getRenderer().drawTile(renderer, x, y, tile);
             }
         }
     }
@@ -199,11 +179,6 @@ function preRenderLayer(layer, renderer) {
         // check if we have any user-defined properties
         applyTMXProperties(this, data);
 
-        // check for the correct rendering method
-        if (typeof (this.preRender) === "undefined") {
-            this.preRender = game.world.preRender;
-        }
-
         // set a renderer
         this.setRenderer(map.getRenderer());
 
@@ -258,8 +233,11 @@ function preRenderLayer(layer, renderer) {
 
         this.isAnimated = this.animatedTilesets.length > 0;
 
-        // Force pre-render off when tileset animation is used
-        if (this.isAnimated) {
+        // check for the correct rendering method
+        if (typeof this.preRender === "undefined" && this.isAnimated === false) {
+            this.preRender = this.ancestor.getRootAncestor().preRender;
+        } else {
+            // Force pre-render off when tileset animation is used
             this.preRender = false;
         }
 
@@ -271,8 +249,11 @@ function preRenderLayer(layer, renderer) {
                 heigth : this.height,
                 transparent : true
             });
-            preRenderLayer(this, this.canvasRenderer);
+            // pre render the layer on the canvas
+            this.getRenderer().drawTileLayer(this.canvasRenderer, this, this);
         }
+
+        this.isDirty = true;
     }
 
     // called when the layer is removed from the game world or a container
@@ -292,6 +273,7 @@ function preRenderLayer(layer, renderer) {
      */
     setRenderer(renderer) {
         this.renderer = renderer;
+        this.isDirty = true;
     }
 
     /**
@@ -344,6 +326,7 @@ function preRenderLayer(layer, renderer) {
      */
     setTile(tile, x, y) {
         this.layerData[x][y] = tile;
+        this.isDirty = true;
         return tile;
     }
 
@@ -402,6 +385,7 @@ function preRenderLayer(layer, renderer) {
         if (this.preRender) {
             this.canvasRenderer.clearRect(x * this.tilewidth, y * this.tileheight, this.tilewidth, this.tileheight);
         }
+        this.isDirty = true;
     }
 
     /**
@@ -409,14 +393,13 @@ function preRenderLayer(layer, renderer) {
      * @ignore
      */
     update(dt) {
+        let result = this.isDirty;
         if (this.isAnimated) {
-            let result = false;
             for (let i = 0; i < this.animatedTilesets.length; i++) {
                 result = this.animatedTilesets[i].update(dt) || result;
             }
-            return result;
         }
-        return false;
+        return result;
     }
 
     /**

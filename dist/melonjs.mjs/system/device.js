@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.3.0
+ * melonJS Game Engine - v15.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -7,6 +7,7 @@
  */
 import { getParent } from '../video/video.js';
 import save from './save.js';
+import { emit, BLUR, FOCUS } from './event.js';
 import { prefixed } from '../utils/agent.js';
 import { DOMContentLoaded } from './dom.js';
 import * as platform$1 from './platform.js';
@@ -439,6 +440,30 @@ let stopOnBlur = false;
 * });
 */
 function onReady(fn) {
+    // register on blur/focus and visibility event handlers
+    if (typeof globalThis.addEventListener === "function") {
+        // set pause/stop action on losing focus
+        globalThis.addEventListener("blur", () => {
+            emit(BLUR);
+        }, false);
+        // set restart/resume action on gaining focus
+        globalThis.addEventListener("focus", () => {
+            emit(FOCUS);
+        }, false);
+    }
+    if (typeof globalThis.document !== "undefined") {
+        if (typeof globalThis.document.addEventListener === "function") {
+            // register on the visibilitychange event if supported
+            globalThis.document.addEventListener("visibilitychange", () => {
+                if (globalThis.document.visibilityState === "visible") {
+                    emit(FOCUS);
+                } else {
+                    emit(BLUR);
+                }
+            }, false );
+        }
+    }
+    // call the supplied function
     DOMContentLoaded(fn);
 }
 

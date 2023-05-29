@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.3.0
+ * melonJS Game Engine - v15.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -7,7 +7,7 @@
  */
 import { pauseTrack, resumeTrack } from '../audio/audio.js';
 import { defer } from '../utils/function.js';
-import { on, VIDEO_INIT, BOOT, emit, STATE_STOP, STATE_PAUSE, STATE_RESTART, STATE_RESUME, STATE_CHANGE, TICK } from '../system/event.js';
+import { on, VIDEO_INIT, BLUR, FOCUS, BOOT, emit, STATE_STOP, STATE_PAUSE, STATE_RESTART, STATE_RESUME, STATE_CHANGE, TICK } from '../system/event.js';
 import { game } from '../index.js';
 import { focus } from '../system/device.js';
 import Stage from './stage.js';
@@ -141,41 +141,23 @@ on(BOOT, () => {
         state.change(state.DEFAULT, true);
     });
 
-    if (typeof globalThis.addEventListener === "function") {
-        // set pause/stop action on losing focus
-        globalThis.addEventListener("blur", () => {
-            {
-                state.pause(true);
-            }
-        }, false);
-        // set restart/resume action on gaining focus
-        globalThis.addEventListener("focus", () => {
-            {
-                state.resume(true);
-            }
-            // force focus if autofocus is on
-            {
-                focus();
-            }
-        }, false);
-    }
-
-    if (typeof globalThis.document !== "undefined") {
-        if (typeof globalThis.document.addEventListener === "function") {
-            // register on the visibilitychange event if supported
-            globalThis.document.addEventListener("visibilitychange", () => {
-                if (globalThis.document.visibilityState === "visible") {
-                    {
-                        state.resume(true);
-                    }
-                } else {
-                    {
-                        state.pause(true);
-                    }
-                }
-            }, false );
+    // on blur event, pause the current
+    on(BLUR, () => {
+        {
+            state.pause(true);
         }
-    }
+    });
+
+    // on focus event, restart or resume the current
+    on(FOCUS, () => {
+        {
+            state.resume(true);
+        }
+        // force focus if autofocus is on
+        {
+            focus();
+        }
+    });
 });
 
 /**

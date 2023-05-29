@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.3.0
+ * melonJS Game Engine - v15.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -216,7 +216,6 @@ class TMXObject {
      * @returns {Polygon[]|Line[]|Ellipse[]} an array of shape objects
      */
     parseTMXShapes() {
-        let i = 0;
         let shapes = [];
 
         // add an ellipse shape
@@ -244,7 +243,7 @@ class TMXObject {
                 let p = this.points;
                 let p1, p2;
                 let segments = p.length - 1;
-                for (i = 0; i < segments; i++) {
+                for (let i = 0; i < segments; i++) {
                     // clone the value before, as [i + 1]
                     // is reused later by the next segment
                     p1 = pool.pull("Vector2d", p[i].x, p[i].y);
@@ -271,7 +270,7 @@ class TMXObject {
 
         // Apply isometric projection
         if (this.orientation === "isometric") {
-            for (i = 0; i < shapes.length; i++) {
+            for (let i = 0; i < shapes.length; i++) {
                 if (typeof shapes[i].toIso === "function") {
                     shapes[i].toIso();
                 }

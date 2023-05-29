@@ -65,9 +65,9 @@ export default class TMXLayer extends Renderable {
     name: any;
     cols: number;
     rows: number;
-    preRender: boolean;
     layerData: any[];
     onActivateEvent(): void;
+    preRender: any;
     canvasRenderer: CanvasRenderer | undefined;
     onDeactivateEvent(): void;
     /**

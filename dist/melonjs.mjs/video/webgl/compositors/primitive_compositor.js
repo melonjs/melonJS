@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.3.0
+ * melonJS Game Engine - v15.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -42,8 +42,8 @@ import Compositor from './compositor.js';
     drawVertices(mode, verts, vertexCount = verts.length) {
         let viewMatrix = this.viewMatrix;
         let vertexData = this.vertexData;
-        let color = this.renderer.currentColor;
         let alpha = this.renderer.getGlobalAlpha();
+        let colorUint32 = this.renderer.currentColor.toUint32(alpha);
 
         if (vertexData.isFull(vertexCount)) {
             // is the vertex buffer full if we add more vertices
@@ -59,11 +59,11 @@ import Compositor from './compositor.js';
         if (!viewMatrix.isIdentity()) {
             verts.forEach((vert) => {
                 viewMatrix.apply(vert);
-                vertexData.push(vert.x, vert.y, undefined, undefined, color.toUint32(alpha));
+                vertexData.push(vert.x, vert.y, undefined, undefined, colorUint32);
             });
         } else {
             verts.forEach((vert) => {
-                vertexData.push(vert.x, vert.y, undefined, undefined, color.toUint32(alpha));
+                vertexData.push(vert.x, vert.y, undefined, undefined, colorUint32);
             });
         }
 

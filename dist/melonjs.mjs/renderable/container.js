@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.3.0
+ * melonJS Game Engine - v15.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -238,7 +238,7 @@ let globalFloatingCounter = 0;
 
         // if a physic body(ies) to the game world
         if (this.isAttachedToRoot()) {
-            var worldContainer = this.getRootAncestor();
+            let worldContainer = this.getRootAncestor();
             if (child.body instanceof Body) {
                 worldContainer.addBody(child.body);
             }
@@ -308,7 +308,7 @@ let globalFloatingCounter = 0;
 
             // if a physic body(ies) to the game world
             if (this.isAttachedToRoot()) {
-                var worldContainer = this.getRootAncestor();
+                let worldContainer = this.getRootAncestor();
                 if (child.body instanceof Body) {
                     worldContainer.addBody(child.body);
                 }

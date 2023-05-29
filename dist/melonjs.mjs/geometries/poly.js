@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.3.0
+ * melonJS Game Engine - v15.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -237,7 +237,6 @@ import pool from '../system/pooling.js';
      * @returns {Polygon} Reference to this object for method chaining
      */
     recalc() {
-        let i;
         let edges = this.edges;
         let normals = this.normals;
         let indices = this.indices;
@@ -251,7 +250,7 @@ import pool from '../system/pooling.js';
         }
 
         // Calculate the edges/normals
-        for (i = 0; i < len; i++) {
+        for (let i = 0; i < len; i++) {
             if (edges[i] === undefined) {
                 edges[i] = pool.pull("Vector2d");
             }
@@ -298,20 +297,16 @@ import pool from '../system/pooling.js';
 
         let flag = 0,
             vertices = this.points,
-            n = vertices.length,
-            i,
-            j,
-            k,
-            z;
+            n = vertices.length;
 
         if (n < 3) {
             return null;
         }
 
-        for (i = 0; i < n; i++) {
-            j = (i + 1) % n;
-            k = (i + 2) % n;
-            z = (vertices[j].x - vertices[i].x) * (vertices[k].y - vertices[j].y);
+        for (let i = 0; i < n; i++) {
+            let j = (i + 1) % n;
+            let k = (i + 2) % n;
+            let z = (vertices[j].x - vertices[i].x) * (vertices[k].y - vertices[j].y);
             z -= (vertices[j].y - vertices[i].y) * (vertices[k].x - vertices[j].x);
 
             if (z < 0) {

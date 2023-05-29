@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.3.0
+ * melonJS Game Engine - v15.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -6823,7 +6823,6 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
      * @returns {Polygon} Reference to this object for method chaining
      */
     recalc() {
-        let i;
         let edges = this.edges;
         let normals = this.normals;
         let indices = this.indices;
@@ -6837,7 +6836,7 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
         }
 
         // Calculate the edges/normals
-        for (i = 0; i < len; i++) {
+        for (let i = 0; i < len; i++) {
             if (edges[i] === undefined) {
                 edges[i] = pool.pull("Vector2d");
             }
@@ -6884,20 +6883,16 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
 
         let flag = 0,
             vertices = this.points,
-            n = vertices.length,
-            i,
-            j,
-            k,
-            z;
+            n = vertices.length;
 
         if (n < 3) {
             return null;
         }
 
-        for (i = 0; i < n; i++) {
-            j = (i + 1) % n;
-            k = (i + 2) % n;
-            z = (vertices[j].x - vertices[i].x) * (vertices[k].y - vertices[j].y);
+        for (let i = 0; i < n; i++) {
+            let j = (i + 1) % n;
+            let k = (i + 2) % n;
+            let z = (vertices[j].x - vertices[i].x) * (vertices[k].y - vertices[j].y);
             z -= (vertices[j].y - vertices[i].y) * (vertices[k].x - vertices[j].x);
 
             if (z < 0) {
@@ -9458,6 +9453,28 @@ const BOOT = "me.boot";
 const TICK = "me.tick";
 
 /**
+ * event generated when the main browser or window is losing focus
+ * @public
+ * @constant
+ * @type {string}
+ * @name BLUR
+ * @memberof event
+ * @see event.on
+ */
+const BLUR = "me.blur";
+
+/**
+ * event generated when the main browser or window is gaining back focus
+ * @public
+ * @constant
+ * @type {string}
+ * @name FOCUS
+ * @memberof event
+ * @see event.on
+ */
+const FOCUS = "me.focus";
+
+/**
  * event when the game is paused <br>
  * Data passed : none <br>
  * @public
@@ -9967,11 +9984,13 @@ function off(eventName, listener) {
 
 var event = {
 	__proto__: null,
+	BLUR: BLUR,
 	BOOT: BOOT,
 	CANVAS_ONRESIZE: CANVAS_ONRESIZE,
 	DOM_READY: DOM_READY,
 	DRAGEND: DRAGEND,
 	DRAGSTART: DRAGSTART,
+	FOCUS: FOCUS,
 	GAMEPAD_CONNECTED: GAMEPAD_CONNECTED,
 	GAMEPAD_DISCONNECTED: GAMEPAD_DISCONNECTED,
 	GAMEPAD_UPDATE: GAMEPAD_UPDATE,
@@ -14912,6 +14931,30 @@ let stopOnBlur = false;
 * });
 */
 function onReady(fn) {
+    // register on blur/focus and visibility event handlers
+    if (typeof globalThis.addEventListener === "function") {
+        // set pause/stop action on losing focus
+        globalThis.addEventListener("blur", () => {
+            emit(BLUR);
+        }, false);
+        // set restart/resume action on gaining focus
+        globalThis.addEventListener("focus", () => {
+            emit(FOCUS);
+        }, false);
+    }
+    if (typeof globalThis.document !== "undefined") {
+        if (typeof globalThis.document.addEventListener === "function") {
+            // register on the visibilitychange event if supported
+            globalThis.document.addEventListener("visibilitychange", () => {
+                if (globalThis.document.visibilityState === "visible") {
+                    emit(FOCUS);
+                } else {
+                    emit(BLUR);
+                }
+            }, false );
+        }
+    }
+    // call the supplied function
     DOMContentLoaded(fn);
 }
 
@@ -16401,10 +16444,9 @@ function enablePointerEvent() {
         }
 
         // if time interval <= 16, disable the feature
-        let i;
         let events = findAllActiveEvents(activeEventList, POINTER_MOVE);
         if (throttlingInterval < 17) {
-            for (i = 0; i < events.length; i++) {
+            for (let i = 0; i < events.length; i++) {
                 if (activeEventList.indexOf(events[i]) !== -1) {
                     pointerEventTarget.addEventListener(
                         events[i],
@@ -16416,7 +16458,7 @@ function enablePointerEvent() {
             }
         }
         else {
-            for (i = 0; i < events.length; i++) {
+            for (let i = 0; i < events.length; i++) {
                 if (activeEventList.indexOf(events[i]) !== -1) {
                     pointerEventTarget.addEventListener(
                         events[i],
@@ -18131,7 +18173,7 @@ var input = {
             }
 
             if (absolute === true) {
-                var absPos = this.getAbsolutePosition();
+                let absPos = this.getAbsolutePosition();
                 bounds.centerOn(absPos.x + bounds.x + bounds.width / 2,  absPos.y + bounds.y + bounds.height / 2);
             }
             return bounds;
@@ -19497,9 +19539,6 @@ var utils = {
      *  @param {object} tileset - tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
      */
     constructor(tileset) {
-        let i = 0;
-        // first gid
-
         // tile properties (collidable, etc..)
         this.TileProperties = [];
 
@@ -19561,7 +19600,7 @@ var utils = {
         this._lastUpdate = 0;
 
         let tiles = tileset.tiles;
-        for (i in tiles) {
+        for (let i in tiles) {
             if (tiles.hasOwnProperty(i)) {
                 if ("animation" in tiles[i]) {
                     this.isAnimated = true;
@@ -19605,7 +19644,7 @@ var utils = {
         // set tile properties, if any (JSON old format)
         let tileInfo = tileset.tileproperties;
         if (tileInfo) {
-            for (i in tileInfo) {
+            for (let i in tileInfo) {
                 if (tileInfo.hasOwnProperty(i)) {
                     this.setTileProperty(+i + this.firstgid, tileInfo[i]);
                 }
@@ -19951,8 +19990,8 @@ function normalize(obj, item) {
     let nodeName = item.nodeName;
 
     switch (nodeName) {
-        case "data":
-            var data = parse(item);  // <= "Unexpected lexical declaration in case block" if using let
+        case "data": {
+            let data = parse(item);
 
             data.encoding = data.encoding || "xml";
 
@@ -19980,7 +20019,7 @@ function normalize(obj, item) {
                 obj.encoding = "none";
             }
             break;
-
+        }
         case "chunk":
             obj.chunks = obj.chunks || [];
             obj.chunks.push(parse(item));
@@ -19989,8 +20028,8 @@ function normalize(obj, item) {
         case "imagelayer":
         case "layer":
         case "objectgroup":
-        case "group":
-            var layer = parse(item); //  // <= "Unexpected lexical declaration in case block" if using let
+        case "group": {
+            let layer = parse(item);
             layer.type = (nodeName === "layer" ? "tilelayer" : nodeName);
             if (layer.image) {
                 layer.image = layer.image.source;
@@ -19999,20 +20038,20 @@ function normalize(obj, item) {
             obj.layers = obj.layers || [];
             obj.layers.push(layer);
             break;
-
+        }
         case "animation":
             obj.animation = parse(item).frames;
             break;
 
         case "frame":
-        case "object":
-            var name = nodeName + "s";  // <= "Unexpected lexical declaration in case block" if using let
+        case "object": {
+            const name = nodeName + "s";
             obj[name] = obj[name] || [];
             obj[name].push(parse(item));
             break;
-
-        case "tile":
-            var tile = parse(item);  // <= "Unexpected lexical declaration in case block" if using let
+        }
+        case "tile": {
+            let tile = parse(item);
             if (tile.image) {
                 tile.imagewidth = tile.image.width;
                 tile.imageheight = tile.image.height;
@@ -20021,9 +20060,9 @@ function normalize(obj, item) {
             obj.tiles = obj.tiles || {};
             obj.tiles[tile.id] = tile;
             break;
-
-        case "tileset":
-            var tileset = parse(item);  // <= "Unexpected lexical declaration in case block" if using let
+        }
+        case "tileset": {
+            let tileset = parse(item);
             if (tileset.image) {
                 tileset.imagewidth = tileset.image.width;
                 tileset.imageheight = tileset.image.height;
@@ -20033,13 +20072,13 @@ function normalize(obj, item) {
             obj.tilesets = obj.tilesets || [];
             obj.tilesets.push(tileset);
             break;
-
+        }
         case "polygon":
-        case "polyline":
+        case "polyline": {
             obj[nodeName] = [];
 
             // Get a point array
-            var points = parse(item).points.split(" ");  // <= "Unexpected lexical declaration in case block" if using let
+            let points = parse(item).points.split(" ");
 
             // And normalize them into an array of vectors
             for (let i = 0; i < points.length; i++) {
@@ -20051,15 +20090,15 @@ function normalize(obj, item) {
             }
 
             break;
-
+        }
         case "properties":
             obj.properties = parse(item);
             break;
 
-        case "property":
-            var property = parse(item);  // <= "Unexpected lexical declaration in case block" if using let
+        case "property": {
+            const property = parse(item);
             // for custom properties, text is used
-            var value = (typeof property.value !== "undefined") ? property.value : property.text;
+            const value = (typeof property.value !== "undefined") ? property.value : property.text;
 
             obj[property.name] = setTMXValue(
                 property.name,
@@ -20068,7 +20107,7 @@ function normalize(obj, item) {
                 value
             );
             break;
-
+        }
         default:
             obj[nodeName] = parse(item);
             break;
@@ -20118,16 +20157,13 @@ function decodeCSV(input) {
  * @param {number} [bytes] - number of bytes per array entry
  * @returns {Uint32Array} Decoded data
  */
-function decodeBase64AsArray(input, bytes) {
-    bytes = bytes || 1;
-
-    let i, j, len;
+function decodeBase64AsArray(input, bytes = 1) {
     let dec = globalThis.atob(input.replace(/[^A-Za-z0-9\+\/\=]/g, ""));
     let ar = new Uint32Array(dec.length / bytes);
 
-    for (i = 0, len = dec.length / bytes; i < len; i++) {
+    for (let i = 0, len = dec.length / bytes; i < len; i++) {
         ar[i] = 0;
-        for (j = bytes - 1; j >= 0; --j) {
+        for (let j = bytes - 1; j >= 0; --j) {
             ar[i] += dec.charCodeAt((i * bytes) + j) << (j << 3);
         }
     }
@@ -20630,7 +20666,6 @@ class TMXObject {
      * @returns {Polygon[]|Line[]|Ellipse[]} an array of shape objects
      */
     parseTMXShapes() {
-        let i = 0;
         let shapes = [];
 
         // add an ellipse shape
@@ -20658,7 +20693,7 @@ class TMXObject {
                 let p = this.points;
                 let p1, p2;
                 let segments = p.length - 1;
-                for (i = 0; i < segments; i++) {
+                for (let i = 0; i < segments; i++) {
                     // clone the value before, as [i + 1]
                     // is reused later by the next segment
                     p1 = pool.pull("Vector2d", p[i].x, p[i].y);
@@ -20685,7 +20720,7 @@ class TMXObject {
 
         // Apply isometric projection
         if (this.orientation === "isometric") {
-            for (i = 0; i < shapes.length; i++) {
+            for (let i = 0; i < shapes.length; i++) {
                 if (typeof shapes[i].toIso === "function") {
                     shapes[i].toIso();
                 }
@@ -20745,8 +20780,9 @@ class TMXObject {
      */
     closePath() {
         let points = this.points;
-        if (points.length > 1 && !points[points.length-1].equals(points[0])) {
-            points.push(pool.pull("Point", points[0].x, points[0].y));
+        let firstPoint = points[0];
+        if (points.length > 1 && !points[points.length-1].equals(firstPoint)) {
+            points.push(pool.pull("Point", firstPoint.x, firstPoint.y));
         }
     }
 
@@ -20755,24 +20791,24 @@ class TMXObject {
      * @returns {Point[]}
      */
     triangulatePath() {
-        let i = 0;
         let points = this.points;
         let vertices = this.vertices;
         let indices = earcut$1(points.flatMap(p => [p.x, p.y]));
+        let indicesLength = indices.length;
 
         // pre-allocate vertices if necessary
-        while (vertices.length < indices.length) {
+        while (vertices.length < indicesLength) {
             vertices.push(pool.pull("Point"));
         }
 
         // calculate all vertices
-        for (i = 0; i < indices.length; i++ ) {
+        for (let i = 0; i < indicesLength; i++ ) {
             let point = points[indices[i]];
             vertices[i].set(point.x, point.y);
         }
 
         // recycle overhead from a previous triangulation
-        while (vertices.length > indices.length) {
+        while (vertices.length > indicesLength) {
             pool.push(vertices[vertices.length-1]);
             vertices.length -= 1;
         }
@@ -20786,7 +20822,7 @@ class TMXObject {
      * @param {number} y - the y-axis (vertical) coordinate of the point.
      */
     moveTo(x, y) {
-      this.points.push(pool.pull("Point", x, y));
+        this.points.push(pool.pull("Point", x, y));
     }
 
     /**
@@ -20837,11 +20873,12 @@ class TMXObject {
         const length = diff * radius;
         const nr_of_interpolation_points = length / this.arcResolution;
         const dangle = diff / nr_of_interpolation_points;
+        const angleStep = dangle * direction;
 
         let angle = startAngle;
         for (let j = 0; j < nr_of_interpolation_points; j++) {
             points.push(pool.pull("Point", x + radius * Math.cos(angle), y + radius * Math.sin(angle)));
-            angle += direction * dangle;
+            angle += angleStep;
         }
         points.push(pool.pull("Point", x + radius * Math.cos(endAngle), y + radius * Math.sin(endAngle)));
     }
@@ -20932,6 +20969,7 @@ class TMXObject {
         const length = (diff * radiusX + diff * radiusY) / 2;
         const nr_of_interpolation_points = length / this.arcResolution;
         const dangle = diff / nr_of_interpolation_points;
+        const angleStep = dangle * direction;
 
         let angle = startAngle;
         const cos_rotation = Math.cos(rotation);
@@ -20942,7 +20980,7 @@ class TMXObject {
             const _x2 = x + _x1 * cos_rotation - _y1 * sin_rotation;
             const _y2 = y + _x1 * sin_rotation + _y1 * cos_rotation;
             points.push(pool.pull("Point", _x2, _y2));
-            angle += direction * dangle;
+            angle += angleStep;
         }
     }
 
@@ -22997,25 +23035,6 @@ function setLayerData(layer, bounds, data) {
 }
 
 /**
- * preRender a tile layer using the given renderer
- * @ignore
- */
-function preRenderLayer(layer, renderer) {
-    // set everything
-    for (let y = 0; y < layer.rows; y++) {
-        for (let x = 0; x < layer.cols; x++) {
-            // get the value of the gid
-            const tile = layer.layerData[x][y];
-            // draw the tile if defined
-            if (tile instanceof Tile) {
-                // add a new tile to the layer
-                layer.getRenderer().drawTile(renderer, x, y, tile);
-            }
-        }
-    }
-}
-
-/**
  * @classdesc
  * a TMX Tile Layer Object
  * Tiled QT 0.7.x format
@@ -23136,11 +23155,6 @@ function preRenderLayer(layer, renderer) {
         // check if we have any user-defined properties
         applyTMXProperties(this, data);
 
-        // check for the correct rendering method
-        if (typeof (this.preRender) === "undefined") {
-            this.preRender = game.world.preRender;
-        }
-
         // set a renderer
         this.setRenderer(map.getRenderer());
 
@@ -23195,8 +23209,11 @@ function preRenderLayer(layer, renderer) {
 
         this.isAnimated = this.animatedTilesets.length > 0;
 
-        // Force pre-render off when tileset animation is used
-        if (this.isAnimated) {
+        // check for the correct rendering method
+        if (typeof this.preRender === "undefined" && this.isAnimated === false) {
+            this.preRender = this.ancestor.getRootAncestor().preRender;
+        } else {
+            // Force pre-render off when tileset animation is used
             this.preRender = false;
         }
 
@@ -23208,8 +23225,11 @@ function preRenderLayer(layer, renderer) {
                 heigth : this.height,
                 transparent : true
             });
-            preRenderLayer(this, this.canvasRenderer);
+            // pre render the layer on the canvas
+            this.getRenderer().drawTileLayer(this.canvasRenderer, this, this);
         }
+
+        this.isDirty = true;
     }
 
     // called when the layer is removed from the game world or a container
@@ -23229,6 +23249,7 @@ function preRenderLayer(layer, renderer) {
      */
     setRenderer(renderer) {
         this.renderer = renderer;
+        this.isDirty = true;
     }
 
     /**
@@ -23281,6 +23302,7 @@ function preRenderLayer(layer, renderer) {
      */
     setTile(tile, x, y) {
         this.layerData[x][y] = tile;
+        this.isDirty = true;
         return tile;
     }
 
@@ -23339,6 +23361,7 @@ function preRenderLayer(layer, renderer) {
         if (this.preRender) {
             this.canvasRenderer.clearRect(x * this.tilewidth, y * this.tileheight, this.tilewidth, this.tileheight);
         }
+        this.isDirty = true;
     }
 
     /**
@@ -23346,14 +23369,13 @@ function preRenderLayer(layer, renderer) {
      * @ignore
      */
     update(dt) {
+        let result = this.isDirty;
         if (this.isAnimated) {
-            let result = false;
             for (let i = 0; i < this.animatedTilesets.length; i++) {
                 result = this.animatedTilesets[i].update(dt) || result;
             }
-            return result;
         }
-        return false;
+        return result;
     }
 
     /**
@@ -23714,7 +23736,7 @@ let globalFloatingCounter = 0;
 
         // if a physic body(ies) to the game world
         if (this.isAttachedToRoot()) {
-            var worldContainer = this.getRootAncestor();
+            let worldContainer = this.getRootAncestor();
             if (child.body instanceof Body) {
                 worldContainer.addBody(child.body);
             }
@@ -23784,7 +23806,7 @@ let globalFloatingCounter = 0;
 
             // if a physic body(ies) to the game world
             if (this.isAttachedToRoot()) {
-                var worldContainer = this.getRootAncestor();
+                let worldContainer = this.getRootAncestor();
                 if (child.body instanceof Body) {
                     worldContainer.addBody(child.body);
                 }
@@ -26510,7 +26532,7 @@ function preloadTMX(tmxData, onload, onerror) {
                 switch (format) {
                     case "xml":
                     case "tmx":
-                    case "tsx":
+                    case "tsx": {
                         // ie9 does not fully implement the responseXML
                         if (ua.match(/msie/i) || !xmlhttp.responseXML) {
                             if (globalThis.DOMParser) {
@@ -26524,7 +26546,7 @@ function preloadTMX(tmxData, onload, onerror) {
                             result = xmlhttp.responseXML;
                         }
                         // converts to a JS object
-                        var data = parse(result); // <= "Unexpected lexical declaration in case block" if using let
+                        const data = parse(result);
                         switch (format) {
                             case "tmx":
                                 result = data.map;
@@ -26534,9 +26556,8 @@ function preloadTMX(tmxData, onload, onerror) {
                                 result = data.tilesets[0];
                                 break;
                         }
-
                         break;
-
+                    }
                     case "json":
                     case "tmj":
                     case "tsj":
@@ -27924,53 +27945,29 @@ on(BOOT, () => {
         state.change(state.DEFAULT, true);
     });
 
-    if (typeof globalThis.addEventListener === "function") {
-        // set pause/stop action on losing focus
-        globalThis.addEventListener("blur", () => {
-            if (stopOnBlur) {
-                state.stop(true);
-            }
-            if (pauseOnBlur) {
-                state.pause(true);
-            }
-        }, false);
-        // set restart/resume action on gaining focus
-        globalThis.addEventListener("focus", () => {
-            if (stopOnBlur) {
-                state.restart(true);
-            }
-            if (resumeOnFocus) {
-                state.resume(true);
-            }
-            // force focus if autofocus is on
-            if (autoFocus) {
-                focus();
-            }
-        }, false);
-    }
-
-    if (typeof globalThis.document !== "undefined") {
-        if (typeof globalThis.document.addEventListener === "function") {
-            // register on the visibilitychange event if supported
-            globalThis.document.addEventListener("visibilitychange", () => {
-                if (globalThis.document.visibilityState === "visible") {
-                    if (stopOnBlur) {
-                        state.restart(true);
-                    }
-                    if (resumeOnFocus) {
-                        state.resume(true);
-                    }
-                } else {
-                    if (stopOnBlur) {
-                        state.stop(true);
-                    }
-                    if (pauseOnBlur) {
-                        state.pause(true);
-                    }
-                }
-            }, false );
+    // on blur event, pause the current
+    on(BLUR, () => {
+        if (stopOnBlur === true) {
+            state.stop(true);
         }
-    }
+        if (pauseOnBlur === true) {
+            state.pause(true);
+        }
+    });
+
+    // on focus event, restart or resume the current
+    on(FOCUS, () => {
+        if (stopOnBlur === true) {
+            state.restart(true);
+        }
+        if (resumeOnFocus === true) {
+            state.resume(true);
+        }
+        // force focus if autofocus is on
+        if (autoFocus === true) {
+            focus();
+        }
+    });
 });
 
 /**
@@ -30996,8 +30993,8 @@ var primitiveFragment = "varying vec4 vColor;\n\nvoid main(void) {\n    gl_FragC
     drawVertices(mode, verts, vertexCount = verts.length) {
         let viewMatrix = this.viewMatrix;
         let vertexData = this.vertexData;
-        let color = this.renderer.currentColor;
         let alpha = this.renderer.getGlobalAlpha();
+        let colorUint32 = this.renderer.currentColor.toUint32(alpha);
 
         if (vertexData.isFull(vertexCount)) {
             // is the vertex buffer full if we add more vertices
@@ -31013,11 +31010,11 @@ var primitiveFragment = "varying vec4 vColor;\n\nvoid main(void) {\n    gl_FragC
         if (!viewMatrix.isIdentity()) {
             verts.forEach((vert) => {
                 viewMatrix.apply(vert);
-                vertexData.push(vert.x, vert.y, undefined, undefined, color.toUint32(alpha));
+                vertexData.push(vert.x, vert.y, undefined, undefined, colorUint32);
             });
         } else {
             verts.forEach((vert) => {
-                vertexData.push(vert.x, vert.y, undefined, undefined, color.toUint32(alpha));
+                vertexData.push(vert.x, vert.y, undefined, undefined, colorUint32);
             });
         }
 
@@ -35229,14 +35226,11 @@ function createSpaceGlyph(glyphs) {
         this.lineHeight = parseFloat(getValueFromPair(lines[1], /lineHeight\=\d+/g));
 
         let baseLine = parseFloat(getValueFromPair(lines[1], /base\=\d+/g));
-
         let padY = this.padTop + this.padBottom;
-
         let glyph = null;
 
-        let i;
 
-        for (i = 4; i < lines.length; i++) {
+        for (let i = 4; i < lines.length; i++) {
             let line = lines[i];
             let characterValues = line.split(/=|\s+/);
             if (!line || /^kernings/.test(line)) {
@@ -35277,7 +35271,7 @@ function createSpaceGlyph(glyphs) {
         createSpaceGlyph(this.glyphs);
 
         let capGlyph = null;
-        for (i = 0; i < capChars.length; i++) {
+        for (let i = 0; i < capChars.length; i++) {
             let capChar = capChars[i];
             capGlyph = this.glyphs[capChar.charCodeAt(0)];
             if (capGlyph) {
@@ -35718,10 +35712,9 @@ function testPolygonPolygon(a, polyA, b, polyB, response) {
     // aboslute shape position
     let posA = T_VECTORS.pop().copy(a.pos).add(a.ancestor.getAbsolutePosition()).add(polyA.pos);
     let posB = T_VECTORS.pop().copy(b.pos).add(b.ancestor.getAbsolutePosition()).add(polyB.pos);
-    let i;
 
     // If any of the edge normals of A is a separating axis, no intersection.
-    for (i = 0; i < aLen; i++) {
+    for (let i = 0; i < aLen; i++) {
         if (isSeparatingAxis(posA, posB, aPoints, bPoints, aNormals[i], response)) {
             T_VECTORS.push(posA);
             T_VECTORS.push(posB);
@@ -35730,7 +35723,7 @@ function testPolygonPolygon(a, polyA, b, polyB, response) {
     }
 
     // If any of the edge normals of B is a separating axis, no intersection.
-    for (i = 0; i < bLen; i++) {
+    for (let i = 0; i < bLen; i++) {
         if (isSeparatingAxis(posA, posB, aPoints, bPoints, bNormals[i], response)) {
             T_VECTORS.push(posA);
             T_VECTORS.push(posB);
@@ -37339,7 +37332,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
         }
 
         if (absolute === true) {
-            var absPos = this.getAbsolutePosition();
+            let absPos = this.getAbsolutePosition();
             bounds.centerOn(absPos.x + bounds.x + bounds.width / 2,  absPos.y + bounds.y + bounds.height / 2);
         }
 
@@ -38035,9 +38028,9 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "15.3.0"
+         * @default "15.4.0"
          */
-        this.version = "15.3.0";
+        this.version = "15.4.0";
     }
 }
 
@@ -38264,7 +38257,7 @@ Renderer.prototype.getScreenContext = function()  {
  * @name version
  * @type {string}
  */
-const version = "15.3.0";
+const version = "15.4.0";
 
 /**
  * a flag indicating that melonJS is fully initialized
