@@ -60,9 +60,9 @@ export default class Application {
     isInitialized: boolean;
     /**
      * the given settings used when creating this application
-     * @type {Object}
+     * @type {object}
      */
-    settings: Object;
+    settings: object;
     isDirty: boolean;
     isAlwaysDirty: boolean;
     frameCounter: number;
@@ -76,8 +76,11 @@ export default class Application {
     updateAverageDelta: number;
     /**
      * init the game instance (create a physic world, update starting time, etc..)
+     * @param {number} width - The width of the canvas viewport
+     * @param {number} height - The height of the canvas viewport
+     * @param {Application.Settings} [options] - The optional parameters for the application and default renderer
      */
-    init(width: any, height: any, options: any): void;
+    init(width: number, height: number, options?: any): void;
     /**
      * reset the game Object manager
      * destroy all current objects
@@ -107,7 +110,7 @@ export default class Application {
     updateFrameRate(): void;
     /**
      * Returns the parent HTML Element holding the main canvas of this application
-     * @returns {HTMLElement}
+     * @returns {HTMLElement} the parent HTML element
      */
     getParentElement(): HTMLElement;
     /**

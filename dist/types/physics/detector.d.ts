@@ -25,7 +25,7 @@ export default class Detector {
      * detect collision between two bodies.
      * @param {Body} bodyA - a reference to body A.
      * @param {Body} bodyB - a reference to body B.
-     * @returns {Boolean} true if colliding
+     * @returns {boolean} true if colliding
      */
     collides(bodyA: Body, bodyB: Body, response?: ResponseObject): boolean;
     /**

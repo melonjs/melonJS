@@ -198,7 +198,6 @@ import Body from '../physics/body.js';
      * @ignore
      * @name onBodyUpdate
      * @memberof Entity
-     * @param {Body} body - the body whose bounds to update
      */
     onBodyUpdate() {
         this.updateBounds();

@@ -2976,7 +2976,7 @@ let cssToRGB = new Map();
      * return true if the two vectors are the same
      * @name equals
      * @memberof Vector2d
-     * @method
+     * @function
      * @param {Vector2d} v
      * @returns {boolean}
      */
@@ -3507,7 +3507,7 @@ let cssToRGB = new Map();
      * return true if the two vectors are the same
      * @name equals
      * @memberof Vector3d
-     * @method
+     * @function
      * @param {Vector2d|Vector3d} v
      * @returns {boolean}
      */
@@ -5283,7 +5283,7 @@ let cssToRGB = new Map();
      * translate the matrix position using the given vector
      * @name translate
      * @memberof Matrix3d
-     * @method
+     * @function
      * @param {number} x - a number representing the abscissa of the vector.
      * @param {number} [y=x] - a number representing the ordinate of the vector.
      * @param {number} [z=0] - a number representing the depth of the vector
@@ -5791,7 +5791,7 @@ let cssToRGB = new Map();
      * translate the matrix position on the horizontal and vertical axis
      * @name translate
      * @memberof Matrix2d
-     * @method
+     * @function
      * @param {number} x - the x coordindates to translate the matrix by
      * @param {number} y - the y coordindates to translate the matrix by
      * @returns {Matrix2d} Reference to this object for method chaining
@@ -6917,7 +6917,7 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
      * translate the Polygon by the specified offset
      * @name translate
      * @memberof Polygon
-     * @method
+     * @function
      * @param {number} x - x offset
      * @param {number} y - y offset
      * @returns {Polygon} this Polygon
@@ -6953,7 +6953,7 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
      * Shifts the Polygon to the given position vector.
      * @name shift
      * @memberof Polygon
-     * @method
+     * @function
      * @param {Vector2d} position
      */
     /**
@@ -6985,7 +6985,7 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
      *  bounding rect, as the function can be highly consuming with complex shapes)
      * @name contains
      * @memberof Polygon
-     * @method
+     * @function
      * @param {Vector2d} point
      * @returns {boolean} true if contains
      */
@@ -7087,7 +7087,7 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
      * Returns true if the Line contains the given point
      * @name contains
      * @memberof Line
-     * @method
+     * @function
      * @param {Vector2d} point
      * @returns {boolean} true if contains
      */
@@ -7096,8 +7096,8 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
      * Returns true if the Line contains the given point
      * @name contains
      * @memberof Line
-     * @param  {number} x -  x coordinate
-     * @param  {number} y -  y coordinate
+     * @param  {number} x - x coordinate
+     * @param  {number} y - y coordinate
      * @returns {boolean} true if contains
      */
     contains() {
@@ -7298,8 +7298,8 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
      * Scale this Ellipse by the specified scalar.
      * @name scale
      * @memberof Ellipse
-     * @param {number} x
-     * @param {number} [y=x]
+     * @param {number} x - the scale factor along the x-axis
+     * @param {number} [y=x] - the scale factor along the y-axis
      * @returns {Ellipse} Reference to this object for method chaining
      */
     scale(x, y = x) {
@@ -7338,7 +7338,7 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
      * translate the circle/ellipse by the specified offset
      * @name translate
      * @memberof Ellipse
-     * @method
+     * @function
      * @param {number} x - x offset
      * @param {number} y - y offset
      * @returns {Ellipse} this ellipse
@@ -7373,7 +7373,7 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
     /**
      * check if this circle/ellipse contains the specified point
      * @name contains
-     * @method
+     * @function
      * @memberof Ellipse
      * @param {Vector2d} point
      * @returns {boolean} true if contains
@@ -7447,14 +7447,14 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
     constructor(x = 0, y = 0) {
         /**
          * the position of the point on the horizontal axis
-         * @type {Number}
+         * @type {number}
          * @default 0
          */
         this.x = x;
 
         /**
          * the position of the point on the vertical axis
-         * @type {Number}
+         * @type {number}
          * @default 0
          */
         this.y = y;
@@ -7481,7 +7481,7 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
      * return true if the two points are the same
      * @name equals
      * @memberof Point
-     * @method
+     * @function
      * @param {Point} point
      * @returns {boolean}
      */
@@ -7792,7 +7792,7 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
      * Returns true if the rectangle contains the given rectangle
      * @name contains
      * @memberof Rect
-     * @method
+     * @function
      * @param {Rect} rect
      * @returns {boolean} true if contains
      */
@@ -7801,7 +7801,7 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
      * Returns true if the rectangle contains the given point
      * @name contains
      * @memberof Rect
-     * @method
+     * @function
      * @param  {number} x -  x coordinate
      * @param  {number} y -  y coordinate
      * @returns {boolean} true if contains
@@ -7950,7 +7950,7 @@ class RoundRect extends Rect {
      * Returns true if the rounded rectangle contains the given point
      * @name contains
      * @memberof RoundRect
-     * @method
+     * @function
      * @param  {number} x -  x coordinate
      * @param  {number} y -  y coordinate
      * @returns {boolean} true if contains
@@ -8736,7 +8736,7 @@ let QT_VECTOR = new Vector2d();
      * Returns true if the bounds contains the given point.
      * @name contains
      * @memberof Bounds
-     * @method
+     * @function
      * @param {Vector2d} point
      * @returns {boolean} True if the bounds contain the point, otherwise false
      */
@@ -8793,7 +8793,7 @@ let QT_VECTOR = new Vector2d();
      * Translates the bounds by the given vector.
      * @name translate
      * @memberof Bounds
-     * @method
+     * @function
      * @param {Vector2d} vector
      */
     /**
@@ -8822,7 +8822,7 @@ let QT_VECTOR = new Vector2d();
      * Shifts the bounds to the given position vector.
      * @name shift
      * @memberof Bounds
-     * @method
+     * @function
      * @param {Vector2d} position
      */
     /**
@@ -14122,7 +14122,7 @@ function init(width, height, options) {
  * @param {number} width - width
  * @param {number} height - height
  * @param {boolean} [returnOffscreenCanvas=false] - will return an OffscreenCanvas if supported
- * @returns {HTMLCanvasElement|OffscreenCanvas}
+ * @returns {HTMLCanvasElement|OffscreenCanvas} a new Canvas element of the given size
  */
 function createCanvas(width, height, returnOffscreenCanvas = false) {
     let _canvas;
@@ -14151,7 +14151,7 @@ function createCanvas(width, height, returnOffscreenCanvas = false) {
 /**
  * return a reference to the parent DOM element holding the main canvas
  * @memberof video
- * @returns {HTMLElement}
+ * @returns {HTMLElement} the HTML parent element
  */
 function getParent() {
     return game.getParentElement();
@@ -18601,8 +18601,8 @@ let targetV = new Vector2d();
      * reset the camera position to specified coordinates
      * @name reset
      * @memberof Camera2d
-     * @param {number} [x=0]
-     * @param {number} [y=0]
+     * @param {number} [x=0] - initial position of the camera on the x axis
+     * @param {number} [y=0] - initial position of the camera on the y axis
      */
     reset(x = 0, y = 0) {
         // reset the initial camera position to 0,0
@@ -18759,8 +18759,8 @@ let targetV = new Vector2d();
      * @name move
      * @memberof Camera2d
      * @see Camera2d.focusOn
-     * @param {number} x
-     * @param {number} y
+     * @param {number} x - horizontal offset
+     * @param {number} y - vertical offset
      * @example
      * // Move the camera up by four pixels
      * me.game.viewport.move(0, -4);
@@ -18984,7 +18984,7 @@ let targetV = new Vector2d();
      * @memberof Camera2d
      * @param {Renderable|Entity|Sprite|NineSliceSprite} obj - to be checked against
      * @param {boolean} [floating = obj.floating] - if visibility check should be done against screen coordinates
-     * @returns {boolean}
+     * @returns {boolean} true if within the viewport
      */
     isVisible(obj, floating = obj.floating) {
         if (floating === true || obj.floating === true) {
@@ -19000,10 +19000,9 @@ let targetV = new Vector2d();
      * convert the given "local" (screen) coordinates into world coordinates
      * @name localToWorld
      * @memberof Camera2d
-     * @param {number} x
-     * @param {number} y
-     * @param {number} [v] - an optional vector object where to set the
-     * converted value
+     * @param {number} x - the x coordinate of the local point to be converted
+     * @param {number} y - the y coordinate of the local point to be converted
+     * @param {number} [v] - an optional vector object where to set the converted value
      * @returns {Vector2d}
      */
     localToWorld(x, y, v) {
@@ -19022,9 +19021,8 @@ let targetV = new Vector2d();
      * @memberof Camera2d
      * @param {number} x
      * @param {number} y
-     * @param {number} [v] - an optional vector object where to set the
-     * converted value
-     * @returns {Vector2d}
+     * @param {number} [v] - an optional vector object where to set the converted value
+     * @returns {Vector2d} a vector with the converted local coordinates
      */
     worldToLocal(x, y, v) {
         // TODO memoization for one set of coords (multitouch)
@@ -20788,7 +20786,7 @@ class TMXObject {
 
     /**
      * triangulate the shape defined by this path into an array of triangles
-     * @returns {Point[]}
+     * @returns {Point[]} an array of vertices representing the triangulated path or shape
      */
     triangulatePath() {
         let points = this.points;
@@ -21042,7 +21040,7 @@ class TMXObject {
         /**
          * the requested video size ratio
          * @public
-         * @type {Number}
+         * @type {number}
          */
         this.designRatio = this.settings.width / this.settings.height;
 
@@ -21415,10 +21413,10 @@ class TMXObject {
 
     /**
      * creates a Blob object representing the last rendered frame
-     * @param {Object} [options] - An object with the following properties:
-     * @param {String} [options.type="image/png"] - A string indicating the image format
-     * @param {Number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
-     * @return {Promise} A Promise returning a Blob object representing the last rendered frame
+     * @param {object} [options] - An object with the following properties:
+     * @param {string} [options.type="image/png"] - A string indicating the image format
+     * @param {number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @returns {Promise} A Promise returning a Blob object representing the last rendered frame
      * @example
      * renderer.convertToBlob().then((blob) => console.log(blob));
      */
@@ -21435,10 +21433,10 @@ class TMXObject {
     /**
      * creates an ImageBitmap object of the last frame rendered
      * (not supported by standard Canvas)
-     * @param {Object} [options] - An object with the following properties:
-     * @param {String} [options.type="image/png"] - A string indicating the image format
-     * @param {Number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
-     * @return {Promise} A Promise returning an ImageBitmap.
+     * @param {object} [options] - An object with the following properties:
+     * @param {string} [options.type="image/png"] - A string indicating the image format
+     * @param {number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @returns {Promise} A Promise returning an ImageBitmap.
      * @example
      * renderer.transferToImageBitmap().then((image) => console.log(image));
      */
@@ -21456,10 +21454,10 @@ class TMXObject {
 
     /**
      * returns a data URL containing a representation of the last frame rendered
-     * @param {Object} [options] - An object with the following properties:
-     * @param {String} [options.type="image/png"] - A string indicating the image format
-     * @param {Number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
-     * @return {Promise} A Promise returning a string containing the requested data URL.
+     * @param {object} [options] - An object with the following properties:
+     * @param {string} [options.type="image/png"] - A string indicating the image format
+     * @param {number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @returns {Promise} A Promise returning a string containing the requested data URL.
      * @example
      * renderer.toDataURL().then((dataURL) => console.log(dataURL));
      */
@@ -23682,7 +23680,7 @@ let globalFloatingCounter = 0;
      * will not be in any container. <br>
      * if the given child implements a onActivateEvent method, that method will be called
      * once the child is added to this container.
-     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be added
      * @param {number} [z] - forces the z index of the child to the specified value
      * @returns {Renderable} the added child
      */
@@ -23764,8 +23762,8 @@ let globalFloatingCounter = 0;
     /**
      * Add a child to the container at the specified index<br>
      * (the list won't be sorted after insertion)
-     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
-     * @param {number} index
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be added
+     * @param {number} index - The index at which to insert the child
      * @returns {Renderable} the added child
      */
     addChildAt(child, index) {
@@ -23875,8 +23873,8 @@ let globalFloatingCounter = 0;
 
     /**
      * Swaps the position (z-index) of 2 children
-     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
-     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child2
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be added
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child2 - Child to be added
      */
     swapChildren(child, child2) {
         let index = this.getChildIndex(child);
@@ -23900,7 +23898,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Returns the Child at the specified index
-     * @param {number} index
+     * @param {number} index - The index of the child
      * @returns {Renderable} the child at the specified index
      */
     getChildAt(index) {
@@ -23914,7 +23912,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Returns the index of the given Child
-     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - The child object
      * @returns {number} index
      */
     getChildIndex(child) {
@@ -23923,7 +23921,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Returns the next child within the container or undefined if none
-     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - The child object
      * @returns {Renderable} child
      */
     getNextChild(child) {
@@ -23936,7 +23934,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Returns true if contains the specified Child
-     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - The child object
      * @returns {boolean}
      */
     hasChild(child) {
@@ -23995,7 +23993,7 @@ let globalFloatingCounter = 0;
 
     /**
      * returns the list of childs with the specified class type
-     * @param {object} classType
+     * @param {object} classType - Class type
      * @returns {Renderable[]} Array of children
      */
     getChildByType(classType) {
@@ -24075,7 +24073,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Checks if this container is root or if it's attached to the root container.
-     * @returns {boolean}
+     * @returns {boolean} true if this container is root or if it's attached to the root container
      */
     isAttachedToRoot() {
         if (this.root === true) {
@@ -24094,7 +24092,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Returns the instance of the root container (i.e. the current application World container).
-     * @returns {Container}
+     * @returns {Container} root container
      */
     getRootAncestor() {
         if (this.root === true) {
@@ -24144,7 +24142,7 @@ let globalFloatingCounter = 0;
     /**
      * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed. <br>
      * if the given child implements a onDeactivateEvent() method, that method will be called once the child is removed from this container.
-     * @param {RendRenderable|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapTexterable} child
+     * @param {RendRenderable|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapTexterable} child - Child to be removed
      * @param {boolean} [keepalive=false] - true to prevent calling child.destroy()
      */
     removeChild(child, keepalive) {
@@ -24160,7 +24158,7 @@ let globalFloatingCounter = 0;
      * Removes (and optionally destroys) a child from the container.<br>
      * (removal is immediate and unconditional)<br>
      * Never use keepalive=true with objects from {@link pool}. Doing so will create a memory leak.
-     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be removed
      * @param {boolean} [keepalive=False] - True to prevent calling child.destroy()
      */
     removeChildNow(child, keepalive) {
@@ -24223,7 +24221,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Move the child in the group one step forward (z depth).
-     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child -  Child to be moved
      */
     moveUp(child) {
         let childIndex = this.getChildIndex(child);
@@ -24237,7 +24235,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Move the child in the group one step backward (z depth).
-     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be moved
      */
     moveDown(child) {
         let childIndex = this.getChildIndex(child);
@@ -24251,7 +24249,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Move the specified child to the top(z depth).
-     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be moved
      */
     moveToTop(child) {
         let childIndex = this.getChildIndex(child);
@@ -24268,7 +24266,7 @@ let globalFloatingCounter = 0;
 
     /**
      * Move the specified child the bottom (z depth).
-     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child
+     * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be moved
      */
     moveToBottom(child) {
         let childIndex = this.getChildIndex(child);
@@ -24284,7 +24282,7 @@ let globalFloatingCounter = 0;
     }
 
     /**
-     * Manually trigger the sort of all the childs in the container</p>
+     * Manually trigger the sort of all the childs in the container
      * @param {boolean} [recursive=false] - recursively sort all containers if true
      */
     sort(recursive) {
@@ -29159,7 +29157,7 @@ var timer$1 = timer;
 
     /**
      * Returns true if the any of the shape composing the body contains the given point.
-     * @method Body#contains
+     * @function Body#contains
      * @param {Vector2d} point
      * @returns {boolean} true if contains
      */
@@ -30411,7 +30409,7 @@ function setPrecision(src, precision) {
 /**
  * return the highest precision format supported by this device for GL Shaders
  * @ignore
- * @param {WebGLRenderingContext} gl
+ * @param {WebGLRenderingContext} gl - the current WebGL context
  * @returns {boolean} "lowp", "mediump", or "highp"
  */
 function getMaxShaderPrecision(gl) {
@@ -30739,16 +30737,16 @@ function minify(src) {
  class Compositor {
     /**
      * @param {WebGLRenderer} renderer - the current WebGL renderer session
-     * @param {Object} settings - additional settings to initialize this compositors
-     * @param {object[]} attribute - an array of attributes definition
-     * @param {string} attribute.name - name of the attribute in the vertex shader
-     * @param {number} attribute.size - number of components per vertex attribute. Must be 1, 2, 3, or 4.
-     * @param {GLenum} attribute.type - data type of each component in the array
-     * @param {boolean} attribute.normalized - whether integer data values should be normalized into a certain range when being cast to a float
-     * @param {number} attribute.offset - offset in bytes of the first component in the vertex attribute array
-     * @param {object} shader - an array of attributes definition
-     * @param {string} shader.vertex - a string containing the GLSL source code to set
-     * @param {string} shader.fragment - a string containing the GLSL source code to set
+     * @param {object} settings - additional settings to initialize this compositors
+     * @param {object[]} settings.attribute - an array of attributes definition
+     * @param {string} settings.attribute.name - name of the attribute in the vertex shader
+     * @param {number} settings.attribute.size - number of components per vertex attribute. Must be 1, 2, 3, or 4.
+     * @param {GLenum} settings.attribute.type - data type of each component in the array
+     * @param {boolean} settings.attribute.normalized - whether integer data values should be normalized into a certain range when being cast to a float
+     * @param {number} settings.attribute.offset - offset in bytes of the first component in the vertex attribute array
+     * @param {object} settings.shader - an array of attributes definition
+     * @param {string} settings.shader.vertex - a string containing the GLSL source code to set
+     * @param {string} settings.shader.fragment - a string containing the GLSL source code to set
      */
     constructor (renderer, settings) {
         this.init(renderer, settings);
@@ -30850,7 +30848,6 @@ function minify(src) {
     }
 
     /**
-     * @ignore
      * called by the WebGL renderer when a compositor become the current one
      */
     bind() {
@@ -30923,7 +30920,7 @@ function minify(src) {
 
     /**
      * set/change the current projection matrix
-     * @param {Matrix3d} matrix
+     * @param {Matrix3d} matrix - the new projection matrix
      */
     setProjection(matrix) {
         this.currentShader.setUniform("uProjectionMatrix", matrix);
@@ -31133,7 +31130,6 @@ let V_ARRAY = [
     /**
      * delete the given WebGL texture
      * @param {WebGLTexture} [texture] - a WebGL texture to delete
-     * @param {number} [unit] - Texture unit to delete
      */
     deleteTexture2D(texture) {
         this.gl.deleteTexture(texture);
@@ -31488,8 +31484,8 @@ let V_ARRAY = [
     /**
      * add a new compositor to this renderer
      * @param {Compositor} compositor - a compositor instance
-     * @param {String} name - a name uniquely identifying this compositor
-     * @param {Boolean} [activate=false] - true if the given compositor should be set as the active one
+     * @param {string} name - a name uniquely identifying this compositor
+     * @param {boolean} [activate=false] - true if the given compositor should be set as the active one
      */
     addCompositor(compositor, name = "default", activate = false) {
         // make sure there is no existing compositor with the same name
@@ -31508,9 +31504,9 @@ let V_ARRAY = [
 
     /**
      * set the active compositor for this renderer
-     * @param {String} name - a compositor name
+     * @param {string} name - a compositor name
      * @param {GLShader} [shader] - an optional shader program to be used, instead of the default one, when activating the compositor
-     * @return {Compositor} an instance to the current active compositor
+     * @returns {Compositor} an instance to the current active compositor
      */
     setCompositor(name = "default", shader = this.customShader) {
         let compositor = this.compositors.get(name);
@@ -31549,7 +31545,7 @@ let V_ARRAY = [
      * Create a pattern with the specified repetition
      * @param {HTMLImageElement|SVGImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap|OffscreenCanvas|VideoFrame} image - Source image to be used as the pattern's image
      * @param {string} repeat - Define how the pattern should be repeated
-     * @returns {TextureAtlas}
+     * @returns {TextureAtlas} the patterned texture created
      * @see ImageLayer#repeat
      * @example
      * let tileable   = renderer.createPattern(image, "repeat");
@@ -31586,7 +31582,7 @@ let V_ARRAY = [
 
     /**
      * set/change the current projection matrix (WebGL only)
-     * @param {Matrix3d} matrix
+     * @param {Matrix3d} matrix - the new projection matrix
      */
     setProjection(matrix) {
         super.setProjection(matrix);
@@ -31709,10 +31705,10 @@ let V_ARRAY = [
     /**
      * Draw a pattern within the given rectangle.
      * @param {TextureAtlas} pattern - Pattern object
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
+     * @param {number} x - x position where to draw the pattern
+     * @param {number} y - y position where to draw the pattern
+     * @param {number} width - width of the pattern
+     * @param {number} height - height of the pattern
      * @see WebGLRenderer#createPattern
      */
     drawPattern(pattern, x, y, width, height) {
@@ -31723,10 +31719,10 @@ let V_ARRAY = [
 
     /**
      * Returns the WebGL Context object of the given canvas element
-     * @param {HTMLCanvasElement} canvas
+     * @param {HTMLCanvasElement} canvas - the canvas element
      * @param {boolean} [transparent=false] - use true to enable transparency
      * @param {boolean} [depth=false] - use true to enable depth buffer testing
-     * @returns {WebGLRenderingContext}
+     * @returns {WebGLRenderingContext} the WebGL Context object
      */
     getContextGL(canvas, transparent = false, depth = false) {
         if (typeof canvas === "undefined" || canvas === null) {
@@ -31775,7 +31771,7 @@ let V_ARRAY = [
     /**
      * Returns the WebGLContext instance for the renderer
      * return a reference to the system 2d Context
-     * @returns {WebGLRenderingContext}
+     * @returns {WebGLRenderingContext} the current WebGL context
      */
     getContext() {
         return this.gl;
@@ -31794,7 +31790,7 @@ let V_ARRAY = [
      * <img src="images/screen-blendmode.png" width="510"/> <br>
      * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
      * @param {string} [mode="normal"] - blend mode : "normal", "multiply", "lighter", "additive", "screen"
-     * @param {WebGLRenderingContext} [gl]
+     * @param {WebGLRenderingContext} [gl] - a WebGL context
      */
     setBlendMode(mode = "normal", gl = this.gl) {
 
@@ -31883,8 +31879,8 @@ let V_ARRAY = [
 
     /**
      * scales the uniform matrix
-     * @param {number} x
-     * @param {number} y
+     * @param {number} x - x-axis scale
+     * @param {number} y - y-axis scale
      */
     scale(x, y) {
         this.currentTransform.scale(x, y);
@@ -31938,11 +31934,11 @@ let V_ARRAY = [
      * Stroke an arc at the specified coordinates with given radius, start and end points
      * @param {number} x - arc center point x-axis
      * @param {number} y - arc center point y-axis
-     * @param {number} radius
+     * @param {number} radius - arc radius
      * @param {number} start - start angle in radians
      * @param {number} end - end angle in radians
      * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
-     * @param {boolean} [fill=false]
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeArc(x, y, radius, start, end, antiClockwise = false, fill = false) {
         this.setCompositor("primitive");
@@ -31960,7 +31956,7 @@ let V_ARRAY = [
      * Fill an arc at the specified coordinates with given radius, start and end points
      * @param {number} x - arc center point x-axis
      * @param {number} y - arc center point y-axis
-     * @param {number} radius
+     * @param {number} radius - arc radius
      * @param {number} start - start angle in radians
      * @param {number} end - end angle in radians
      * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
@@ -32063,10 +32059,10 @@ let V_ARRAY = [
 
     /**
      * Draw a stroke rectangle at the specified coordinates
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
+     * @param {number} x - x axis of the coordinate for the rectangle starting point.
+     * @param {number} y - y axis of the coordinate for the rectangle starting point.
+     * @param {number} width - The rectangle's width.
+     * @param {number} height - The rectangle's height.
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeRect(x, y, width, height, fill = false) {
@@ -32082,10 +32078,10 @@ let V_ARRAY = [
 
     /**
      * Draw a filled rectangle at the specified coordinates
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
+     * @param {number} x - x axis of the coordinate for the rectangle starting point.
+     * @param {number} y - y axis of the coordinate for the rectangle starting point.
+     * @param {number} width - The rectangle's width.
+     * @param {number} height - The rectangle's height.
      */
     fillRect(x, y, width, height) {
         this.strokeRect(x, y, width, height, true);
@@ -32093,11 +32089,11 @@ let V_ARRAY = [
 
     /**
      * Stroke a rounded rectangle at the specified coordinates
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
-     * @param {number} radius
+     * @param {number} x - x axis of the coordinate for the rounded rectangle starting point.
+     * @param {number} y - y axis of the coordinate for the rounded rectangle starting point.
+     * @param {number} width - The rounded rectangle's width.
+     * @param {number} height - The rounded rectangle's height.
+     * @param {number} radius - The rounded corner's radius.
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeRoundRect(x, y, width, height, radius, fill = false) {
@@ -32114,11 +32110,11 @@ let V_ARRAY = [
 
     /**
      * Draw a rounded filled rectangle at the specified coordinates
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
-     * @param {number} radius
+     * @param {number} x - x axis of the coordinate for the rounded rectangle starting point.
+     * @param {number} y - y axis of the coordinate for the rounded rectangle starting point.
+     * @param {number} width - The rounded rectangle's width.
+     * @param {number} height - The rounded rectangle's height.
+     * @param {number} radius - The rounded corner's radius.
      */
     fillRoundRect(x, y, width, height, radius) {
         this.strokeRoundRect(x, y, width, height, radius, true);
@@ -32126,8 +32122,8 @@ let V_ARRAY = [
 
     /**
      * Stroke a Point at the specified coordinates
-     * @param {number} x
-     * @param {number} y
+     * @param {number} x - x axis of the coordinate for the point.
+     * @param {number} y - y axis of the coordinate for the point.
      */
     strokePoint(x, y) {
         this.strokeLine(x, y, x + 1, y + 1);
@@ -32135,10 +32131,8 @@ let V_ARRAY = [
 
     /**
      * Draw a a point at the specified coordinates
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
+     * @param {number} x - x axis of the coordinate for the point.
+     * @param {number} y - y axis of the coordinate for the point.
      */
     fillPoint(x, y) {
         this.strokePoint(x, y);
@@ -32171,8 +32165,8 @@ let V_ARRAY = [
 
     /**
      * Translates the uniform matrix by the given coordinates
-     * @param {number} x
-     * @param {number} y
+     * @param {number} x - x axis of the coordinate for the translation.
+     * @param {number} y - y axis of the coordinate for the translation.
      */
     translate(x, y) {
         let currentTransform = this.currentTransform;
@@ -32191,10 +32185,10 @@ let V_ARRAY = [
      * You can however save the current region using the save(),
      * and restore it (with the restore() method) any time in the future.
      * (<u>this is an experimental feature !</u>)
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
+     * @param {number} x - x axis of the coordinate for the upper-left corner of the rectangle to start clipping from.
+     * @param {number} y - y axis of the coordinate for the upper-left corner of the rectangle to start clipping from.
+     * @param {number} width - the width of the rectangle to start clipping from.
+     * @param {number} height - the height of the rectangle to start clipping from.
      */
     clipRect(x, y, width, height) {
         let canvas = this.getCanvas();
@@ -32349,7 +32343,7 @@ class CanvasTexture {
 
     /**
      * enable/disable image smoothing (scaling interpolation)
-     * @param {boolean} [enable=false]
+     * @param {boolean} [enable=false] - whether to enable or not image smoothing (scaling interpolation)
      */
     setAntiAlias(enable = false) {
         let canvas = this.canvas;
@@ -32392,7 +32386,7 @@ class CanvasTexture {
      * @param {number} y - The y-axis coordinate of the top-left corner of the rectangle from which the ImageData will be extracted
      * @param {number} width - The width of the rectangle from which the ImageData will be extracted. Positive values are to the right, and negative to the left
      * @param {number} height - The height of the rectangle from which the ImageData will be extracted. Positive values are down, and negative are up
-     * @return {ImageData} The ImageData extracted from this CanvasTexture.
+     * @returns {ImageData} The ImageData extracted from this CanvasTexture.
      */
     getImageData(x, y, width, height) {
         // clamp values
@@ -32406,10 +32400,10 @@ class CanvasTexture {
 
     /**
      * creates a Blob object representing the image contained in this canvas texture
-     * @param {Object} [options] - An object with the following properties:
-     * @param {String} [options.type="image/png"] - A string indicating the image format
-     * @param {Number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
-     * @return {Promise} A Promise returning a Blob object representing the image contained in this canvas texture
+     * @param {object} [options] - An object with the following properties:
+     * @param {string} [options.type="image/png"] - A string indicating the image format
+     * @param {number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @returns {Promise} A Promise returning a Blob object representing the image contained in this canvas texture
      * @example
      * canvasTexture.convertToBlob().then((blob) => console.log(blob));
      */
@@ -32427,10 +32421,10 @@ class CanvasTexture {
 
     /**
      * creates an ImageBitmap object from the most recently rendered image of this canvas texture
-     * @param {Object} [options] - An object with the following properties:
-     * @param {String} [options.type="image/png"] - A string indicating the image format
-     * @param {Number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
-     * @return {Promise} A Promise returning an ImageBitmap.
+     * @param {object} [options] - An object with the following properties:
+     * @param {string} [options.type="image/png"] - A string indicating the image format
+     * @param {number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @returns {Promise} A Promise returning an ImageBitmap.
      * @example
      * canvasTexture.transferToImageBitmap().then((bitmap) => console.log(bitmap));
      */
@@ -32451,10 +32445,10 @@ class CanvasTexture {
     /**
      * returns a data URL containing a representation of the most recently rendered image of this canvas texture
      * (not supported by OffscreenCanvas)
-     * @param {Object} [options] - An object with the following properties:
-     * @param {String} [options.type="image/png"] - A string indicating the image format
-     * @param {Number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
-     * @return {Promise} A Promise returning a string containing the requested data URL.
+     * @param {object} [options] - An object with the following properties:
+     * @param {string} [options.type="image/png"] - A string indicating the image format
+     * @param {number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @returns {Promise} A Promise returning a string containing the requested data URL.
      * @example
      * renderer.toDataURL().then((dataURL) => console.log(dataURL));
      */
@@ -36093,7 +36087,7 @@ class Detector {
      * detect collision between two bodies.
      * @param {Body} bodyA - a reference to body A.
      * @param {Body} bodyB - a reference to body B.
-     * @returns {Boolean} true if colliding
+     * @returns {boolean} true if colliding
      */
     collides(bodyA, bodyB, response = this.response) {
         // for each shape in body A
@@ -37344,7 +37338,6 @@ function createDefaultParticleTexture(w = 8, h = 8) {
      * @ignore
      * @name onBodyUpdate
      * @memberof Entity
-     * @param {Body} body - the body whose bounds to update
      */
     onBodyUpdate() {
         this.updateBounds();
@@ -37576,7 +37569,7 @@ const defaultSettings = {
 
 /**
  * Application & Renderer Settings definition.
- * @typedef {Object} Settings
+ * @typedef {object} Settings
  * @property {string|HTMLElement} [parent=document.body] - the DOM parent element to hold the canvas in the HTML file
  * @property {number|Renderer} [renderer=AUTO] - renderer to use (CANVAS, WEBGL, AUTO), or a custom renderer class
  * @property {number|string} [scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)
@@ -37611,7 +37604,7 @@ const defaultSettings = {
 
 /**
  * display information
- * @param {Application} game - the game application instance calling this function
+ * @param {Application} app - the game application instance calling this function
  */
 function consoleHeader(app) {
     let renderType = app.renderer.type;
@@ -37704,7 +37697,7 @@ function consoleHeader(app) {
 
         /**
          * the given settings used when creating this application
-         * @type {Object}
+         * @type {object}
          */
         this.settings = undefined;
 
@@ -37739,6 +37732,9 @@ function consoleHeader(app) {
 
     /**
      * init the game instance (create a physic world, update starting time, etc..)
+     * @param {number} width - The width of the canvas viewport
+     * @param {number} height - The height of the canvas viewport
+     * @param {Application.Settings} [options] - The optional parameters for the application and default renderer
      */
     init(width, height, options) {
 
@@ -37918,7 +37914,7 @@ function consoleHeader(app) {
 
     /**
      * Returns the parent HTML Element holding the main canvas of this application
-     * @returns {HTMLElement}
+     * @returns {HTMLElement} the parent HTML element
      */
     getParentElement() {
         return this.parentElement;

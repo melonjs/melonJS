@@ -5,18 +5,30 @@
 export default class Compositor {
     /**
      * @param {WebGLRenderer} renderer - the current WebGL renderer session
-     * @param {Object} settings - additional settings to initialize this compositors
-     * @param {object[]} attribute - an array of attributes definition
-     * @param {string} attribute.name - name of the attribute in the vertex shader
-     * @param {number} attribute.size - number of components per vertex attribute. Must be 1, 2, 3, or 4.
-     * @param {GLenum} attribute.type - data type of each component in the array
-     * @param {boolean} attribute.normalized - whether integer data values should be normalized into a certain range when being cast to a float
-     * @param {number} attribute.offset - offset in bytes of the first component in the vertex attribute array
-     * @param {object} shader - an array of attributes definition
-     * @param {string} shader.vertex - a string containing the GLSL source code to set
-     * @param {string} shader.fragment - a string containing the GLSL source code to set
+     * @param {object} settings - additional settings to initialize this compositors
+     * @param {object[]} settings.attribute - an array of attributes definition
+     * @param {string} settings.attribute.name - name of the attribute in the vertex shader
+     * @param {number} settings.attribute.size - number of components per vertex attribute. Must be 1, 2, 3, or 4.
+     * @param {GLenum} settings.attribute.type - data type of each component in the array
+     * @param {boolean} settings.attribute.normalized - whether integer data values should be normalized into a certain range when being cast to a float
+     * @param {number} settings.attribute.offset - offset in bytes of the first component in the vertex attribute array
+     * @param {object} settings.shader - an array of attributes definition
+     * @param {string} settings.shader.vertex - a string containing the GLSL source code to set
+     * @param {string} settings.shader.fragment - a string containing the GLSL source code to set
      */
-    constructor(renderer: WebGLRenderer, settings: Object);
+    constructor(renderer: WebGLRenderer, settings: {
+        attribute: {
+            name: string;
+            size: number;
+            type: GLenum;
+            normalized: boolean;
+            offset: number;
+        };
+        shader: {
+            vertex: string;
+            fragment: string;
+        };
+    });
     /**
      * Initialize the compositor
      * @ignore
@@ -73,7 +85,6 @@ export default class Compositor {
      */
     reset(): void;
     /**
-     * @ignore
      * called by the WebGL renderer when a compositor become the current one
      */
     bind(): void;
@@ -94,7 +105,7 @@ export default class Compositor {
     addAttribute(name: string, size: number, type: GLenum, normalized: boolean, offset: number): void;
     /**
      * set/change the current projection matrix
-     * @param {Matrix3d} matrix
+     * @param {Matrix3d} matrix - the new projection matrix
      */
     setProjection(matrix: Matrix3d): void;
     /**

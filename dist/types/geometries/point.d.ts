@@ -6,13 +6,13 @@ export default class Point {
     constructor(x?: number, y?: number);
     /**
      * the position of the point on the horizontal axis
-     * @type {Number}
+     * @type {number}
      * @default 0
      */
     x: number;
     /**
      * the position of the point on the vertical axis
-     * @type {Number}
+     * @type {number}
      * @default 0
      */
     y: number;
@@ -29,7 +29,7 @@ export default class Point {
      * return true if the two points are the same
      * @name equals
      * @memberof Point
-     * @method
+     * @function
      * @param {Point} point
      * @returns {boolean}
      */

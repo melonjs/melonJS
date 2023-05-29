@@ -213,8 +213,8 @@ let targetV = new Vector2d();
      * reset the camera position to specified coordinates
      * @name reset
      * @memberof Camera2d
-     * @param {number} [x=0]
-     * @param {number} [y=0]
+     * @param {number} [x=0] - initial position of the camera on the x axis
+     * @param {number} [y=0] - initial position of the camera on the y axis
      */
     reset(x = 0, y = 0) {
         // reset the initial camera position to 0,0
@@ -371,8 +371,8 @@ let targetV = new Vector2d();
      * @name move
      * @memberof Camera2d
      * @see Camera2d.focusOn
-     * @param {number} x
-     * @param {number} y
+     * @param {number} x - horizontal offset
+     * @param {number} y - vertical offset
      * @example
      * // Move the camera up by four pixels
      * me.game.viewport.move(0, -4);
@@ -593,7 +593,7 @@ let targetV = new Vector2d();
      * @memberof Camera2d
      * @param {Renderable|Entity|Sprite|NineSliceSprite} obj - to be checked against
      * @param {boolean} [floating = obj.floating] - if visibility check should be done against screen coordinates
-     * @returns {boolean}
+     * @returns {boolean} true if within the viewport
      */
     isVisible(obj, floating = obj.floating) {
         if (floating === true || obj.floating === true) {
@@ -609,10 +609,9 @@ let targetV = new Vector2d();
      * convert the given "local" (screen) coordinates into world coordinates
      * @name localToWorld
      * @memberof Camera2d
-     * @param {number} x
-     * @param {number} y
-     * @param {number} [v] - an optional vector object where to set the
-     * converted value
+     * @param {number} x - the x coordinate of the local point to be converted
+     * @param {number} y - the y coordinate of the local point to be converted
+     * @param {number} [v] - an optional vector object where to set the converted value
      * @returns {Vector2d}
      */
     localToWorld(x, y, v) {
@@ -631,9 +630,8 @@ let targetV = new Vector2d();
      * @memberof Camera2d
      * @param {number} x
      * @param {number} y
-     * @param {number} [v] - an optional vector object where to set the
-     * converted value
-     * @returns {Vector2d}
+     * @param {number} [v] - an optional vector object where to set the converted value
+     * @returns {Vector2d} a vector with the converted local coordinates
      */
     worldToLocal(x, y, v) {
         // TODO memoization for one set of coords (multitouch)

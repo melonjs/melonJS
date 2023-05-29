@@ -21,13 +21,13 @@ export function init(width: number, height: number, options?: any): boolean;
  * @param {number} width - width
  * @param {number} height - height
  * @param {boolean} [returnOffscreenCanvas=false] - will return an OffscreenCanvas if supported
- * @returns {HTMLCanvasElement|OffscreenCanvas}
+ * @returns {HTMLCanvasElement|OffscreenCanvas} a new Canvas element of the given size
  */
 export function createCanvas(width: number, height: number, returnOffscreenCanvas?: boolean | undefined): HTMLCanvasElement | OffscreenCanvas;
 /**
  * return a reference to the parent DOM element holding the main canvas
  * @memberof video
- * @returns {HTMLElement}
+ * @returns {HTMLElement} the HTML parent element
  */
 export function getParent(): HTMLElement;
 /**

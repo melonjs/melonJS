@@ -115,7 +115,6 @@ let V_ARRAY = [
     /**
      * delete the given WebGL texture
      * @param {WebGLTexture} [texture] - a WebGL texture to delete
-     * @param {number} [unit] - Texture unit to delete
      */
     deleteTexture2D(texture) {
         this.gl.deleteTexture(texture);

@@ -196,7 +196,7 @@ export default class Vector3d {
      * return true if the two vectors are the same
      * @name equals
      * @memberof Vector3d
-     * @method
+     * @function
      * @param {Vector2d|Vector3d} v
      * @returns {boolean}
      */

@@ -85,15 +85,15 @@ export default class WebGLRenderer extends Renderer {
     /**
      * add a new compositor to this renderer
      * @param {Compositor} compositor - a compositor instance
-     * @param {String} name - a name uniquely identifying this compositor
-     * @param {Boolean} [activate=false] - true if the given compositor should be set as the active one
+     * @param {string} name - a name uniquely identifying this compositor
+     * @param {boolean} [activate=false] - true if the given compositor should be set as the active one
      */
     addCompositor(compositor: Compositor, name?: string, activate?: boolean | undefined): void;
     /**
      * set the active compositor for this renderer
-     * @param {String} name - a compositor name
+     * @param {string} name - a compositor name
      * @param {GLShader} [shader] - an optional shader program to be used, instead of the default one, when activating the compositor
-     * @return {Compositor} an instance to the current active compositor
+     * @returns {Compositor} an instance to the current active compositor
      */
     setCompositor(name?: string, shader?: any): Compositor;
     /**
@@ -104,7 +104,7 @@ export default class WebGLRenderer extends Renderer {
      * Create a pattern with the specified repetition
      * @param {HTMLImageElement|SVGImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap|OffscreenCanvas|VideoFrame} image - Source image to be used as the pattern's image
      * @param {string} repeat - Define how the pattern should be repeated
-     * @returns {TextureAtlas}
+     * @returns {TextureAtlas} the patterned texture created
      * @see ImageLayer#repeat
      * @example
      * let tileable   = renderer.createPattern(image, "repeat");
@@ -115,7 +115,7 @@ export default class WebGLRenderer extends Renderer {
     createPattern(image: HTMLImageElement | SVGImageElement | HTMLVideoElement | HTMLCanvasElement | ImageBitmap | OffscreenCanvas | VideoFrame, repeat: string): TextureAtlas;
     /**
      * set/change the current projection matrix (WebGL only)
-     * @param {Matrix3d} matrix
+     * @param {Matrix3d} matrix - the new projection matrix
      */
     setProjection(matrix: Matrix3d): void;
     /**
@@ -163,25 +163,25 @@ export default class WebGLRenderer extends Renderer {
     /**
      * Draw a pattern within the given rectangle.
      * @param {TextureAtlas} pattern - Pattern object
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
+     * @param {number} x - x position where to draw the pattern
+     * @param {number} y - y position where to draw the pattern
+     * @param {number} width - width of the pattern
+     * @param {number} height - height of the pattern
      * @see WebGLRenderer#createPattern
      */
     drawPattern(pattern: TextureAtlas, x: number, y: number, width: number, height: number): void;
     /**
      * Returns the WebGL Context object of the given canvas element
-     * @param {HTMLCanvasElement} canvas
+     * @param {HTMLCanvasElement} canvas - the canvas element
      * @param {boolean} [transparent=false] - use true to enable transparency
      * @param {boolean} [depth=false] - use true to enable depth buffer testing
-     * @returns {WebGLRenderingContext}
+     * @returns {WebGLRenderingContext} the WebGL Context object
      */
     getContextGL(canvas: HTMLCanvasElement, transparent?: boolean | undefined, depth?: boolean | undefined): WebGLRenderingContext;
     /**
      * Returns the WebGLContext instance for the renderer
      * return a reference to the system 2d Context
-     * @returns {WebGLRenderingContext}
+     * @returns {WebGLRenderingContext} the current WebGL context
      */
     getContext(): WebGLRenderingContext;
     /**
@@ -197,7 +197,7 @@ export default class WebGLRenderer extends Renderer {
      * <img src="images/screen-blendmode.png" width="510"/> <br>
      * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
      * @param {string} [mode="normal"] - blend mode : "normal", "multiply", "lighter", "additive", "screen"
-     * @param {WebGLRenderingContext} [gl]
+     * @param {WebGLRenderingContext} [gl] - a WebGL context
      */
     setBlendMode(mode?: string | undefined, gl?: WebGLRenderingContext | undefined): void;
     currentBlendMode: any;
@@ -216,8 +216,8 @@ export default class WebGLRenderer extends Renderer {
     rotate(angle: number): void;
     /**
      * scales the uniform matrix
-     * @param {number} x
-     * @param {number} y
+     * @param {number} x - x-axis scale
+     * @param {number} y - y-axis scale
      */
     scale(x: number, y: number): void;
     /**
@@ -250,18 +250,18 @@ export default class WebGLRenderer extends Renderer {
      * Stroke an arc at the specified coordinates with given radius, start and end points
      * @param {number} x - arc center point x-axis
      * @param {number} y - arc center point y-axis
-     * @param {number} radius
+     * @param {number} radius - arc radius
      * @param {number} start - start angle in radians
      * @param {number} end - end angle in radians
      * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
-     * @param {boolean} [fill=false]
+     * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeArc(x: number, y: number, radius: number, start: number, end: number, antiClockwise?: boolean | undefined, fill?: boolean | undefined): void;
     /**
      * Fill an arc at the specified coordinates with given radius, start and end points
      * @param {number} x - arc center point x-axis
      * @param {number} y - arc center point y-axis
-     * @param {number} radius
+     * @param {number} radius - arc radius
      * @param {number} start - start angle in radians
      * @param {number} end - end angle in radians
      * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
@@ -313,52 +313,50 @@ export default class WebGLRenderer extends Renderer {
     fillPolygon(poly: Polygon): void;
     /**
      * Draw a stroke rectangle at the specified coordinates
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
+     * @param {number} x - x axis of the coordinate for the rectangle starting point.
+     * @param {number} y - y axis of the coordinate for the rectangle starting point.
+     * @param {number} width - The rectangle's width.
+     * @param {number} height - The rectangle's height.
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeRect(x: number, y: number, width: number, height: number, fill?: boolean | undefined): void;
     /**
      * Draw a filled rectangle at the specified coordinates
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
+     * @param {number} x - x axis of the coordinate for the rectangle starting point.
+     * @param {number} y - y axis of the coordinate for the rectangle starting point.
+     * @param {number} width - The rectangle's width.
+     * @param {number} height - The rectangle's height.
      */
     fillRect(x: number, y: number, width: number, height: number): void;
     /**
      * Stroke a rounded rectangle at the specified coordinates
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
-     * @param {number} radius
+     * @param {number} x - x axis of the coordinate for the rounded rectangle starting point.
+     * @param {number} y - y axis of the coordinate for the rounded rectangle starting point.
+     * @param {number} width - The rounded rectangle's width.
+     * @param {number} height - The rounded rectangle's height.
+     * @param {number} radius - The rounded corner's radius.
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeRoundRect(x: number, y: number, width: number, height: number, radius: number, fill?: boolean | undefined): void;
     /**
      * Draw a rounded filled rectangle at the specified coordinates
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
-     * @param {number} radius
+     * @param {number} x - x axis of the coordinate for the rounded rectangle starting point.
+     * @param {number} y - y axis of the coordinate for the rounded rectangle starting point.
+     * @param {number} width - The rounded rectangle's width.
+     * @param {number} height - The rounded rectangle's height.
+     * @param {number} radius - The rounded corner's radius.
      */
     fillRoundRect(x: number, y: number, width: number, height: number, radius: number): void;
     /**
      * Stroke a Point at the specified coordinates
-     * @param {number} x
-     * @param {number} y
+     * @param {number} x - x axis of the coordinate for the point.
+     * @param {number} y - y axis of the coordinate for the point.
      */
     strokePoint(x: number, y: number): void;
     /**
      * Draw a a point at the specified coordinates
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
+     * @param {number} x - x axis of the coordinate for the point.
+     * @param {number} y - y axis of the coordinate for the point.
      */
     fillPoint(x: number, y: number): void;
     /**
@@ -374,8 +372,8 @@ export default class WebGLRenderer extends Renderer {
     transform(mat2d: Matrix2d): void;
     /**
      * Translates the uniform matrix by the given coordinates
-     * @param {number} x
-     * @param {number} y
+     * @param {number} x - x axis of the coordinate for the translation.
+     * @param {number} y - y axis of the coordinate for the translation.
      */
     translate(x: number, y: number): void;
     /**
@@ -384,10 +382,10 @@ export default class WebGLRenderer extends Renderer {
      * You can however save the current region using the save(),
      * and restore it (with the restore() method) any time in the future.
      * (<u>this is an experimental feature !</u>)
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
+     * @param {number} x - x axis of the coordinate for the upper-left corner of the rectangle to start clipping from.
+     * @param {number} y - y axis of the coordinate for the upper-left corner of the rectangle to start clipping from.
+     * @param {number} width - the width of the rectangle to start clipping from.
+     * @param {number} height - the height of the rectangle to start clipping from.
      */
     clipRect(x: number, y: number, width: number, height: number): void;
     /**

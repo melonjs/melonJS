@@ -58,7 +58,7 @@ import earcut from '../node_modules/earcut/src/earcut.js';
 
     /**
      * triangulate the shape defined by this path into an array of triangles
-     * @returns {Point[]}
+     * @returns {Point[]} an array of vertices representing the triangulated path or shape
      */
     triangulatePath() {
         let points = this.points;

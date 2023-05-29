@@ -320,7 +320,7 @@ import pool from '../system/pooling.js';
      * return true if the two vectors are the same
      * @name equals
      * @memberof Vector3d
-     * @method
+     * @function
      * @param {Vector2d|Vector3d} v
      * @returns {boolean}
      */

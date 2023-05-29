@@ -381,7 +381,7 @@ import Matrix3d from './matrix3.js';
      * translate the matrix position on the horizontal and vertical axis
      * @name translate
      * @memberof Matrix2d
-     * @method
+     * @function
      * @param {number} x - the x coordindates to translate the matrix by
      * @param {number} y - the y coordindates to translate the matrix by
      * @returns {Matrix2d} Reference to this object for method chaining

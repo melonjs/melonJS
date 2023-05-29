@@ -38,7 +38,7 @@ declare class CanvasTexture {
     clear(): void;
     /**
      * enable/disable image smoothing (scaling interpolation)
-     * @param {boolean} [enable=false]
+     * @param {boolean} [enable=false] - whether to enable or not image smoothing (scaling interpolation)
      */
     setAntiAlias(enable?: boolean | undefined): void;
     /**
@@ -54,15 +54,15 @@ declare class CanvasTexture {
      * @param {number} y - The y-axis coordinate of the top-left corner of the rectangle from which the ImageData will be extracted
      * @param {number} width - The width of the rectangle from which the ImageData will be extracted. Positive values are to the right, and negative to the left
      * @param {number} height - The height of the rectangle from which the ImageData will be extracted. Positive values are down, and negative are up
-     * @return {ImageData} The ImageData extracted from this CanvasTexture.
+     * @returns {ImageData} The ImageData extracted from this CanvasTexture.
      */
     getImageData(x: number, y: number, width: number, height: number): ImageData;
     /**
      * creates a Blob object representing the image contained in this canvas texture
-     * @param {Object} [options] - An object with the following properties:
-     * @param {String} [options.type="image/png"] - A string indicating the image format
-     * @param {Number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
-     * @return {Promise} A Promise returning a Blob object representing the image contained in this canvas texture
+     * @param {object} [options] - An object with the following properties:
+     * @param {string} [options.type="image/png"] - A string indicating the image format
+     * @param {number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @returns {Promise} A Promise returning a Blob object representing the image contained in this canvas texture
      * @example
      * canvasTexture.convertToBlob().then((blob) => console.log(blob));
      */
@@ -72,10 +72,10 @@ declare class CanvasTexture {
     } | undefined): Promise<any>;
     /**
      * creates an ImageBitmap object from the most recently rendered image of this canvas texture
-     * @param {Object} [options] - An object with the following properties:
-     * @param {String} [options.type="image/png"] - A string indicating the image format
-     * @param {Number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
-     * @return {Promise} A Promise returning an ImageBitmap.
+     * @param {object} [options] - An object with the following properties:
+     * @param {string} [options.type="image/png"] - A string indicating the image format
+     * @param {number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @returns {Promise} A Promise returning an ImageBitmap.
      * @example
      * canvasTexture.transferToImageBitmap().then((bitmap) => console.log(bitmap));
      */
@@ -86,10 +86,10 @@ declare class CanvasTexture {
     /**
      * returns a data URL containing a representation of the most recently rendered image of this canvas texture
      * (not supported by OffscreenCanvas)
-     * @param {Object} [options] - An object with the following properties:
-     * @param {String} [options.type="image/png"] - A string indicating the image format
-     * @param {Number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
-     * @return {Promise} A Promise returning a string containing the requested data URL.
+     * @param {object} [options] - An object with the following properties:
+     * @param {string} [options.type="image/png"] - A string indicating the image format
+     * @param {number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @returns {Promise} A Promise returning a string containing the requested data URL.
      * @example
      * renderer.toDataURL().then((dataURL) => console.log(dataURL));
      */

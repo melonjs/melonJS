@@ -9,7 +9,7 @@ import { devicePixelRatio, platform, getScreenOrientation, language, hasWebAudio
 
 /**
  * display information
- * @param {Application} game - the game application instance calling this function
+ * @param {Application} app - the game application instance calling this function
  */
 function consoleHeader(app) {
     let renderType = app.renderer.type;

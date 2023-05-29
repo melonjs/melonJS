@@ -192,7 +192,7 @@ export default class Vector2d {
      * return true if the two vectors are the same
      * @name equals
      * @memberof Vector2d
-     * @method
+     * @function
      * @param {Vector2d} v
      * @returns {boolean}
      */

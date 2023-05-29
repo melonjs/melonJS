@@ -272,7 +272,7 @@ export default class Body {
     forEach(callback: Function, thisArg?: object | undefined, ...args: any[]): void;
     /**
      * Returns true if the any of the shape composing the body contains the given point.
-     * @method Body#contains
+     * @function Body#contains
      * @param {Vector2d} point
      * @returns {boolean} true if contains
      */

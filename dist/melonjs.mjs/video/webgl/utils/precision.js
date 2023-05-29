@@ -20,7 +20,7 @@ function setPrecision(src, precision) {
 /**
  * return the highest precision format supported by this device for GL Shaders
  * @ignore
- * @param {WebGLRenderingContext} gl
+ * @param {WebGLRenderingContext} gl - the current WebGL context
  * @returns {boolean} "lowp", "mediump", or "highp"
  */
 function getMaxShaderPrecision(gl) {

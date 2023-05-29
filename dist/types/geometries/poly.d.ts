@@ -146,7 +146,7 @@ export default class Polygon {
      * translate the Polygon by the specified offset
      * @name translate
      * @memberof Polygon
-     * @method
+     * @function
      * @param {number} x - x offset
      * @param {number} y - y offset
      * @returns {Polygon} this Polygon
@@ -163,7 +163,7 @@ export default class Polygon {
      * Shifts the Polygon to the given position vector.
      * @name shift
      * @memberof Polygon
-     * @method
+     * @function
      * @param {Vector2d} position
      */
     /**
@@ -180,7 +180,7 @@ export default class Polygon {
      *  bounding rect, as the function can be highly consuming with complex shapes)
      * @name contains
      * @memberof Polygon
-     * @method
+     * @function
      * @param {Vector2d} point
      * @returns {boolean} true if contains
      */

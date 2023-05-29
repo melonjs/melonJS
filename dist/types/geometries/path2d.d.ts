@@ -27,7 +27,7 @@ export default class Path2D {
     closePath(): void;
     /**
      * triangulate the shape defined by this path into an array of triangles
-     * @returns {Point[]}
+     * @returns {Point[]} an array of vertices representing the triangulated path or shape
      */
     triangulatePath(): Point[];
     /**

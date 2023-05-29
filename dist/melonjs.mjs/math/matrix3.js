@@ -538,7 +538,7 @@ import { EPSILON } from './math.js';
      * translate the matrix position using the given vector
      * @name translate
      * @memberof Matrix3d
-     * @method
+     * @function
      * @param {number} x - a number representing the abscissa of the vector.
      * @param {number} [y=x] - a number representing the ordinate of the vector.
      * @param {number} [z=0] - a number representing the depth of the vector
