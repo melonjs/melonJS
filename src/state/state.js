@@ -2,7 +2,6 @@ import { pauseTrack, resumeTrack } from "./../audio/audio.js";
 import * as fctUtil from "./../utils/function.js";
 import * as event from "./../system/event.js";
 import { game } from "../index.js";
-import * as device from "./../system/device.js";
 import Stage from "./../state/stage.js";
 import DefaultLoadingScreen from "./../loader/loadingscreen.js";
 
@@ -133,30 +132,6 @@ event.on(event.BOOT, () => {
     // enable by default as soon as the display is initialized
     event.on(event.VIDEO_INIT, () => {
         state.change(state.DEFAULT, true);
-    });
-
-    // on blur event, pause the current
-    event.on(event.BLUR, () => {
-        if (device.stopOnBlur === true) {
-            state.stop(true);
-        }
-        if (device.pauseOnBlur === true) {
-            state.pause(true);
-        }
-    });
-
-    // on focus event, restart or resume the current
-    event.on(event.FOCUS, () => {
-        if (device.stopOnBlur === true) {
-            state.restart(true);
-        }
-        if (device.resumeOnFocus === true) {
-            state.resume(true);
-        }
-        // force focus if autofocus is on
-        if (device.autoFocus === true) {
-            device.focus();
-        }
     });
 });
 

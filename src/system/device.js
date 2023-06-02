@@ -350,6 +350,8 @@ export let alpha = 0;
  * Specify whether to pause the game when losing focus
  * @name pauseOnBlur
  * @memberof device
+ * @deprecated since 15.4.0
+ * @see Application.pauseOnBlur
  * @type {boolean}
  * @public
  * @default true
@@ -360,11 +362,26 @@ export let pauseOnBlur = true;
  * Specify whether to unpause the game when gaining focus
  * @name resumeOnFocus
  * @memberof device
+ * @deprecated since 15.4.0
+ * @see Application.resumeOnFocus
  * @type {boolean}
  * @public
  * @default true
  */
 export let resumeOnFocus = true;
+
+/**
+ * Specify whether to stop the game when losing focus or not.
+ * The engine restarts on focus if this is enabled.
+ * @name stopOnBlur
+ * @memberof device
+ * @deprecated since 15.4.0
+ * @see Application.stopOnBlur
+ * @type {boolean}
+ * @public
+ * @default false
+ */
+export let stopOnBlur = false;
 
 /**
  * Specify whether to automatically bring the window to the front
@@ -375,17 +392,6 @@ export let resumeOnFocus = true;
  * @default true
  */
 export let autoFocus = true;
-
-/**
- * Specify whether to stop the game when losing focus or not.
- * The engine restarts on focus if this is enabled.
- * @name stopOnBlur
- * @memberof device
- * @type {boolean}
- * @public
- * @default false
- */
-export let stopOnBlur = false;
 
 /**
 * specify a function to execute when the Device is fully loaded and ready
@@ -442,6 +448,10 @@ export function onReady(fn) {
         // set restart/resume action on gaining focus
         globalThis.addEventListener("focus", () => {
             event.emit(event.FOCUS);
+            // force focus if autofocus is on
+            if (autoFocus === true) {
+                this.focus();
+            }
         }, false);
     }
     if (typeof globalThis.document !== "undefined") {
@@ -450,6 +460,10 @@ export function onReady(fn) {
             globalThis.document.addEventListener("visibilitychange", () => {
                 if (globalThis.document.visibilityState === "visible") {
                     event.emit(event.FOCUS);
+                    // force focus if autofocus is on
+                    if (autoFocus === true) {
+                        this.focus();
+                    }
                 } else {
                     event.emit(event.BLUR);
                 }

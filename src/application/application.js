@@ -85,6 +85,30 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
          */
         this.settings = undefined;
 
+        /**
+         * Specify whether to pause this app when losing focus
+         * @type {boolean}
+         * @default true
+         * @example
+         *  // keep the default game instance running even when loosing focus
+         *  me.game.pauseOnBlur = false;
+         */
+        this.pauseOnBlur = true;
+
+        /**
+         * Specify whether to unpause this app when gaining back focus
+         * @type {boolean}
+         * @default true
+         */
+        this.resumeOnFocus = true;
+
+        /**
+         * Specify whether to stop this app when losing focus
+         * @type {boolean}
+         * @default false
+         */
+        this.stopOnBlur = false;
+
         // to know when we have to refresh the display
         this.isDirty = true;
 
@@ -234,6 +258,27 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
             // render all game objects
             this.draw();
         }, this);
+
+
+        // on blur event, pause the current
+        event.on(event.BLUR, () => {
+            if (this.stopOnBlur === true) {
+                state.stop(true);
+            }
+            if (this.pauseOnBlur === true) {
+                state.pause(true);
+            }
+        });
+
+        // on focus event, restart or resume the current
+        event.on(event.FOCUS, () => {
+            if (this.stopOnBlur === true) {
+                state.restart(true);
+            }
+            if (this.resumeOnFocus === true) {
+                state.resume(true);
+            }
+        });
     }
 
     /**

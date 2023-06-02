@@ -1,9 +1,13 @@
 # Changelog
 
-## [15.4.0] (melonJS 2) - _2023-05-xx_
+## [15.4.0] (melonJS 2) - _2023-06-xx_
+
+### Added
+- Application: new `pauseOnBlur`, `resumeOnFocus` and `stopOnBlur` properties to configure a game behavior on blur and focus events
 
 ### Changed
 - Core: visibility and focus/blur events are now managed internally through new global `BLUR` and `FOCUS` events
+- Device: `pauseOnBlur`, `resumeOnFocus` and `stopOnBlur` properties are now deprecated and replaced by their Application counterpart
 
 ### Fixed
 - Renderable : fix a potential issue with a Tile Layer not being properly redrawn when adding or clearing individual tiles
