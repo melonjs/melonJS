@@ -200,7 +200,6 @@ export default class WebGLRenderer extends Renderer {
      * @param {WebGLRenderingContext} [gl] - a WebGL context
      */
     setBlendMode(mode?: string | undefined, gl?: WebGLRenderingContext | undefined): void;
-    currentBlendMode: any;
     /**
      * restores the canvas context
      */

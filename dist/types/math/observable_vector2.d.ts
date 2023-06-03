@@ -18,7 +18,7 @@ export default class ObservableVector2d extends Vector2d {
     /**
      * @ignore
      */
-    onResetEvent(x: number | undefined, y: number | undefined, settings: any): ObservableVector2d;
+    onResetEvent(x: number | undefined, y: number | undefined, settings: any): this;
     public set x(arg: number);
     /**
      * x value of the vector
@@ -40,7 +40,7 @@ export default class ObservableVector2d extends Vector2d {
     public get y(): number;
     _y: any;
     /** @ignore */
-    _set(x: any, y: any): ObservableVector2d;
+    _set(x: any, y: any): this;
     /**
      * set the vector value without triggering the callback
      * @name setMuted

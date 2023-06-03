@@ -1,18 +1,18 @@
 export default collision;
 declare namespace collision {
-    const maxChildren: number;
-    const maxDepth: number;
+    let maxChildren: number;
+    let maxDepth: number;
     namespace types {
-        const NO_OBJECT: number;
-        const PLAYER_OBJECT: number;
-        const NPC_OBJECT: number;
-        const ENEMY_OBJECT: number;
-        const COLLECTABLE_OBJECT: number;
-        const ACTION_OBJECT: number;
-        const PROJECTILE_OBJECT: number;
-        const WORLD_SHAPE: number;
-        const USER: number;
-        const ALL_OBJECT: number;
+        let NO_OBJECT: number;
+        let PLAYER_OBJECT: number;
+        let NPC_OBJECT: number;
+        let ENEMY_OBJECT: number;
+        let COLLECTABLE_OBJECT: number;
+        let ACTION_OBJECT: number;
+        let PROJECTILE_OBJECT: number;
+        let WORLD_SHAPE: number;
+        let USER: number;
+        let ALL_OBJECT: number;
     }
     /**
      * Checks for object colliding with the given line

@@ -545,6 +545,8 @@ export let alpha: number;
  * Specify whether to pause the game when losing focus
  * @name pauseOnBlur
  * @memberof device
+ * @deprecated since 15.4.0
+ * @see Application.pauseOnBlur
  * @type {boolean}
  * @public
  * @default true
@@ -554,11 +556,25 @@ export let pauseOnBlur: boolean;
  * Specify whether to unpause the game when gaining focus
  * @name resumeOnFocus
  * @memberof device
+ * @deprecated since 15.4.0
+ * @see Application.resumeOnFocus
  * @type {boolean}
  * @public
  * @default true
  */
 export let resumeOnFocus: boolean;
+/**
+ * Specify whether to stop the game when losing focus or not.
+ * The engine restarts on focus if this is enabled.
+ * @name stopOnBlur
+ * @memberof device
+ * @deprecated since 15.4.0
+ * @see Application.stopOnBlur
+ * @type {boolean}
+ * @public
+ * @default false
+ */
+export let stopOnBlur: boolean;
 /**
  * Specify whether to automatically bring the window to the front
  * @name autoFocus
@@ -568,13 +584,3 @@ export let resumeOnFocus: boolean;
  * @default true
  */
 export let autoFocus: boolean;
-/**
- * Specify whether to stop the game when losing focus or not.
- * The engine restarts on focus if this is enabled.
- * @name stopOnBlur
- * @memberof device
- * @type {boolean}
- * @public
- * @default false
- */
-export let stopOnBlur: boolean;

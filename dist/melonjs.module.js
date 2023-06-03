@@ -14007,168 +14007,6 @@ var audio = {
 };
 
 /**
- * constant to select the HTML5 Canvas renderer
- * @type {number}
- * @static
- * @see Application
- */
-const CANVAS = 0;
-
-/**
- * constant to select select the WebGL renderer
- * @type {number}
- * @static
- * @see Application
- */
-const WEBGL = 1;
-
-/**
- * constant to auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
- * @static
- * @type {number}
- * @see Application
- */
-const AUTO = 2;
-
-/**
- * A reference to the active Canvas or WebGL active renderer renderer
- * @memberof video
- * @type {CanvasRenderer|WebGLRenderer}
- */
-let renderer = null;
-
-/**
- * Initialize the "video" system (create a canvas based on the given arguments, and the related renderer). <br>
- * @memberof video
- * @param {number} width - The width of the canvas viewport
- * @param {number} height - The height of the canvas viewport
- * @param {Application.Settings} [options] - optional parameters for the renderer
- * @returns {boolean} false if initialization failed (canvas not supported)
- * @example
- * // init the video with a 640x480 canvas
- * me.video.init(640, 480, {
- *     parent : "screen",
- *     renderer : me.video.AUTO,
- *     scale : "auto",
- *     scaleMethod : "fit"
- * });
- */
-function init(width, height, options) {
-    // ensure melonjs has been properly initialized
-    if (!initialized) {
-        throw new Error("me.video.init() called before engine initialization.");
-    }
-
-    try {
-         // initialize the default game Application with the given options
-        game.init(width, height, options);
-    } catch (e) {
-        console.log(e.message);
-        // me.video.init() historically returns false if failing at creating/using a HTML5 canvas
-        return false;
-    }
-
-    // assign the default renderer
-    renderer = game.renderer;
-
-    //add a channel for the onresize/onorientationchange event
-    globalThis.addEventListener(
-        "resize",
-        throttle(
-            (e) => {
-                emit(WINDOW_ONRESIZE, e);
-            }, 100
-        ), false
-    );
-
-    // Screen Orientation API
-    globalThis.addEventListener(
-        "orientationchange",
-        (e) => {
-            emit(WINDOW_ONORIENTATION_CHANGE, e);
-        },
-        false
-    );
-
-    // pre-fixed implementation on mozzila
-    globalThis.addEventListener(
-        "onmozorientationchange",
-        (e) => {
-            emit(WINDOW_ONORIENTATION_CHANGE, e);
-        },
-        false
-    );
-
-    if (screenOrientation === true) {
-        globalThis.screen.orientation.onchange = function (e) {
-            emit(WINDOW_ONORIENTATION_CHANGE, e);
-        };
-    }
-
-    // Automatically update relative canvas position on scroll
-    globalThis.addEventListener("scroll", throttle((e) => {
-        emit(WINDOW_ONSCROLL, e);
-    }, 100), false);
-
-    // notify the video has been initialized
-    emit(VIDEO_INIT);
-
-    return true;
-}
-
-/**
- * Create and return a new Canvas element
- * @memberof video
- * @param {number} width - width
- * @param {number} height - height
- * @param {boolean} [returnOffscreenCanvas=false] - will return an OffscreenCanvas if supported
- * @returns {HTMLCanvasElement|OffscreenCanvas} a new Canvas element of the given size
- */
-function createCanvas(width, height, returnOffscreenCanvas = false) {
-    let _canvas;
-
-    if (width === 0 || height === 0) {
-        throw new Error("width or height was zero, Canvas could not be initialized !");
-    }
-
-    if (offscreenCanvas === true && returnOffscreenCanvas === true) {
-        _canvas = new globalThis.OffscreenCanvas(0, 0);
-        // stubbing style for compatibility,
-        // as OffscreenCanvas is detached from the DOM
-        if (typeof _canvas.style === "undefined") {
-            _canvas.style = {};
-        }
-    } else {
-        // "else" create a "standard" canvas
-        _canvas = document.createElement("canvas");
-    }
-    _canvas.width = width;
-    _canvas.height = height;
-
-    return _canvas;
-}
-
-/**
- * return a reference to the parent DOM element holding the main canvas
- * @memberof video
- * @returns {HTMLElement} the HTML parent element
- */
-function getParent() {
-    return game.getParentElement();
-}
-
-var video = {
-	__proto__: null,
-	AUTO: AUTO,
-	CANVAS: CANVAS,
-	WEBGL: WEBGL,
-	createCanvas: createCanvas,
-	getParent: getParent,
-	init: init,
-	get renderer () { return renderer; }
-};
-
-/**
  * allow to access and manage the device localStorage
  * @example
  * // Initialize "score" and "lives" with default values
@@ -14848,6 +14686,8 @@ let alpha = 0;
  * Specify whether to pause the game when losing focus
  * @name pauseOnBlur
  * @memberof device
+ * @deprecated since 15.4.0
+ * @see Application.pauseOnBlur
  * @type {boolean}
  * @public
  * @default true
@@ -14858,11 +14698,26 @@ let pauseOnBlur = true;
  * Specify whether to unpause the game when gaining focus
  * @name resumeOnFocus
  * @memberof device
+ * @deprecated since 15.4.0
+ * @see Application.resumeOnFocus
  * @type {boolean}
  * @public
  * @default true
  */
 let resumeOnFocus = true;
+
+/**
+ * Specify whether to stop the game when losing focus or not.
+ * The engine restarts on focus if this is enabled.
+ * @name stopOnBlur
+ * @memberof device
+ * @deprecated since 15.4.0
+ * @see Application.stopOnBlur
+ * @type {boolean}
+ * @public
+ * @default false
+ */
+let stopOnBlur = false;
 
 /**
  * Specify whether to automatically bring the window to the front
@@ -14873,17 +14728,6 @@ let resumeOnFocus = true;
  * @default true
  */
 let autoFocus = true;
-
-/**
- * Specify whether to stop the game when losing focus or not.
- * The engine restarts on focus if this is enabled.
- * @name stopOnBlur
- * @memberof device
- * @type {boolean}
- * @public
- * @default false
- */
-let stopOnBlur = false;
 
 /**
 * specify a function to execute when the Device is fully loaded and ready
@@ -14940,6 +14784,10 @@ function onReady(fn) {
         // set restart/resume action on gaining focus
         globalThis.addEventListener("focus", () => {
             emit(FOCUS);
+            // force focus if autofocus is on
+            if (autoFocus === true) {
+                this.focus();
+            }
         }, false);
     }
     if (typeof globalThis.document !== "undefined") {
@@ -14948,6 +14796,10 @@ function onReady(fn) {
             globalThis.document.addEventListener("visibilitychange", () => {
                 if (globalThis.document.visibilityState === "visible") {
                     emit(FOCUS);
+                    // force focus if autofocus is on
+                    if (autoFocus === true) {
+                        this.focus();
+                    }
                 } else {
                     emit(BLUR);
                 }
@@ -15459,6 +15311,168 @@ var device = {
 	watchAccelerometer: watchAccelerometer,
 	watchDeviceOrientation: watchDeviceOrientation,
 	wheel: wheel
+};
+
+/**
+ * constant to select the HTML5 Canvas renderer
+ * @type {number}
+ * @static
+ * @see Application
+ */
+const CANVAS = 0;
+
+/**
+ * constant to select select the WebGL renderer
+ * @type {number}
+ * @static
+ * @see Application
+ */
+const WEBGL = 1;
+
+/**
+ * constant to auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
+ * @static
+ * @type {number}
+ * @see Application
+ */
+const AUTO = 2;
+
+/**
+ * A reference to the active Canvas or WebGL active renderer renderer
+ * @memberof video
+ * @type {CanvasRenderer|WebGLRenderer}
+ */
+let renderer = null;
+
+/**
+ * Initialize the "video" system (create a canvas based on the given arguments, and the related renderer). <br>
+ * @memberof video
+ * @param {number} width - The width of the canvas viewport
+ * @param {number} height - The height of the canvas viewport
+ * @param {Application.Settings} [options] - optional parameters for the renderer
+ * @returns {boolean} false if initialization failed (canvas not supported)
+ * @example
+ * // init the video with a 640x480 canvas
+ * me.video.init(640, 480, {
+ *     parent : "screen",
+ *     renderer : me.video.AUTO,
+ *     scale : "auto",
+ *     scaleMethod : "fit"
+ * });
+ */
+function init(width, height, options) {
+    // ensure melonjs has been properly initialized
+    if (!initialized) {
+        throw new Error("me.video.init() called before engine initialization.");
+    }
+
+    try {
+         // initialize the default game Application with the given options
+        game.init(width, height, options);
+    } catch (e) {
+        console.log(e.message);
+        // me.video.init() historically returns false if failing at creating/using a HTML5 canvas
+        return false;
+    }
+
+    // assign the default renderer
+    renderer = game.renderer;
+
+    //add a channel for the onresize/onorientationchange event
+    globalThis.addEventListener(
+        "resize",
+        throttle(
+            (e) => {
+                emit(WINDOW_ONRESIZE, e);
+            }, 100
+        ), false
+    );
+
+    // Screen Orientation API
+    globalThis.addEventListener(
+        "orientationchange",
+        (e) => {
+            emit(WINDOW_ONORIENTATION_CHANGE, e);
+        },
+        false
+    );
+
+    // pre-fixed implementation on mozzila
+    globalThis.addEventListener(
+        "onmozorientationchange",
+        (e) => {
+            emit(WINDOW_ONORIENTATION_CHANGE, e);
+        },
+        false
+    );
+
+    if (screenOrientation === true) {
+        globalThis.screen.orientation.onchange = function (e) {
+            emit(WINDOW_ONORIENTATION_CHANGE, e);
+        };
+    }
+
+    // Automatically update relative canvas position on scroll
+    globalThis.addEventListener("scroll", throttle((e) => {
+        emit(WINDOW_ONSCROLL, e);
+    }, 100), false);
+
+    // notify the video has been initialized
+    emit(VIDEO_INIT);
+
+    return true;
+}
+
+/**
+ * Create and return a new Canvas element
+ * @memberof video
+ * @param {number} width - width
+ * @param {number} height - height
+ * @param {boolean} [returnOffscreenCanvas=false] - will return an OffscreenCanvas if supported
+ * @returns {HTMLCanvasElement|OffscreenCanvas} a new Canvas element of the given size
+ */
+function createCanvas(width, height, returnOffscreenCanvas = false) {
+    let _canvas;
+
+    if (width === 0 || height === 0) {
+        throw new Error("width or height was zero, Canvas could not be initialized !");
+    }
+
+    if (offscreenCanvas === true && returnOffscreenCanvas === true) {
+        _canvas = new globalThis.OffscreenCanvas(0, 0);
+        // stubbing style for compatibility,
+        // as OffscreenCanvas is detached from the DOM
+        if (typeof _canvas.style === "undefined") {
+            _canvas.style = {};
+        }
+    } else {
+        // "else" create a "standard" canvas
+        _canvas = document.createElement("canvas");
+    }
+    _canvas.width = width;
+    _canvas.height = height;
+
+    return _canvas;
+}
+
+/**
+ * return a reference to the parent DOM element holding the main canvas
+ * @memberof video
+ * @returns {HTMLElement} the HTML parent element
+ */
+function getParent() {
+    return game.getParentElement();
+}
+
+var video = {
+	__proto__: null,
+	AUTO: AUTO,
+	CANVAS: CANVAS,
+	WEBGL: WEBGL,
+	createCanvas: createCanvas,
+	getParent: getParent,
+	init: init,
+	get renderer () { return renderer; }
 };
 
 // corresponding actions
@@ -27942,30 +27956,6 @@ on(BOOT, () => {
     on(VIDEO_INIT, () => {
         state.change(state.DEFAULT, true);
     });
-
-    // on blur event, pause the current
-    on(BLUR, () => {
-        if (stopOnBlur === true) {
-            state.stop(true);
-        }
-        if (pauseOnBlur === true) {
-            state.pause(true);
-        }
-    });
-
-    // on focus event, restart or resume the current
-    on(FOCUS, () => {
-        if (stopOnBlur === true) {
-            state.restart(true);
-        }
-        if (resumeOnFocus === true) {
-            state.resume(true);
-        }
-        // force focus if autofocus is on
-        if (autoFocus === true) {
-            focus();
-        }
-    });
 });
 
 /**
@@ -36277,13 +36267,10 @@ class Detector {
         this.gravity = new Vector2d(0, 0.98);
 
         /**
-         * Specify the rendering method for tile layers. <br>
-         * if false visible part of the layers are rendered dynamically,<br>
-         * if true the entire layers are first rendered into an offscreen canvas.<br>
-         * the "best" rendering method depends of your game
-         * (amount of layer, layer size, amount of tiles per layer, etc.)<br>
-         * note : rendering method is also configurable per layer by adding this
-         * property to your layer (in Tiled).
+         * Enabled pre-rendering for all tile layers. <br>
+         * If false layers are rendered dynamically, if true layers are first fully rendered into an offscreen canvas.<br>
+         * the "best" rendering method depends of your game (amount of layer, layer size, amount of tiles per layer, etc.)<br>
+         * Note : rendering method is also configurable per layer by adding a boolean "preRender" property to your layer in Tiled ({@link https://doc.mapeditor.org/en/stable/manual/custom-properties/#adding-properties}).
          * @type {boolean}
          * @default false
          */
@@ -37701,6 +37688,30 @@ function consoleHeader(app) {
          */
         this.settings = undefined;
 
+        /**
+         * Specify whether to pause this app when losing focus
+         * @type {boolean}
+         * @default true
+         * @example
+         *  // keep the default game instance running even when loosing focus
+         *  me.game.pauseOnBlur = false;
+         */
+        this.pauseOnBlur = true;
+
+        /**
+         * Specify whether to unpause this app when gaining back focus
+         * @type {boolean}
+         * @default true
+         */
+        this.resumeOnFocus = true;
+
+        /**
+         * Specify whether to stop this app when losing focus
+         * @type {boolean}
+         * @default false
+         */
+        this.stopOnBlur = false;
+
         // to know when we have to refresh the display
         this.isDirty = true;
 
@@ -37850,6 +37861,27 @@ function consoleHeader(app) {
             // render all game objects
             this.draw();
         }, this);
+
+
+        // on blur event, pause the current
+        on(BLUR, () => {
+            if (this.stopOnBlur === true) {
+                state$1.stop(true);
+            }
+            if (this.pauseOnBlur === true) {
+                state$1.pause(true);
+            }
+        });
+
+        // on focus event, restart or resume the current
+        on(FOCUS, () => {
+            if (this.stopOnBlur === true) {
+                state$1.restart(true);
+            }
+            if (this.resumeOnFocus === true) {
+                state$1.resume(true);
+            }
+        });
     }
 
     /**

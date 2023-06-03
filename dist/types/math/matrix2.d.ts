@@ -12,7 +12,7 @@ export default class Matrix2d {
     /**
      * @ignore
      */
-    onResetEvent(...args: any[]): Matrix2d;
+    onResetEvent(...args: any[]): this;
     val: Float32Array | undefined;
     /**
      * tx component of the matrix

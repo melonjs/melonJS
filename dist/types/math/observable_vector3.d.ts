@@ -19,7 +19,7 @@ export default class ObservableVector3d extends Vector3d {
     /**
      * @ignore
      */
-    onResetEvent(x: number | undefined, y: number | undefined, z: number | undefined, settings: any): ObservableVector3d;
+    onResetEvent(x: number | undefined, y: number | undefined, z: number | undefined, settings: any): this;
     public set x(arg: number);
     /**
      * x value of the vector
@@ -53,7 +53,7 @@ export default class ObservableVector3d extends Vector3d {
     /**
      * @ignore
      */
-    _set(x: any, y: any, z: any): ObservableVector3d;
+    _set(x: any, y: any, z: any): this;
     /**
      * set the vector value without triggering the callback
      * @name setMuted

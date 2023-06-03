@@ -12,14 +12,14 @@ export default class Vector3d {
     /**
      * @ignore
      */
-    onResetEvent(x?: number, y?: number, z?: number): Vector3d;
+    onResetEvent(x?: number, y?: number, z?: number): this;
     x: any;
     y: any;
     z: any;
     /**
      * @ignore
      */
-    _set(x: any, y: any, z?: number): Vector3d;
+    _set(x: any, y: any, z?: number): this;
     /**
      * set the Vector x and y properties to the given values<br>
      * @name set

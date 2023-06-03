@@ -11,13 +11,13 @@ export default class Vector2d {
     /**
      * @ignore
      */
-    onResetEvent(x?: number, y?: number): Vector2d;
+    onResetEvent(x?: number, y?: number): this;
     x: any;
     y: any;
     /**
      * @ignore
      */
-    _set(x: any, y: any): Vector2d;
+    _set(x: any, y: any): this;
     /**
      * set the Vector x and y properties to the given values<br>
      * @name set

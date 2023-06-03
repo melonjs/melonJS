@@ -30,13 +30,10 @@ export default class World extends Container {
      */
     gravity: Vector2d;
     /**
-     * Specify the rendering method for tile layers. <br>
-     * if false visible part of the layers are rendered dynamically,<br>
-     * if true the entire layers are first rendered into an offscreen canvas.<br>
-     * the "best" rendering method depends of your game
-     * (amount of layer, layer size, amount of tiles per layer, etc.)<br>
-     * note : rendering method is also configurable per layer by adding this
-     * property to your layer (in Tiled).
+     * Enabled pre-rendering for all tile layers. <br>
+     * If false layers are rendered dynamically, if true layers are first fully rendered into an offscreen canvas.<br>
+     * the "best" rendering method depends of your game (amount of layer, layer size, amount of tiles per layer, etc.)<br>
+     * Note : rendering method is also configurable per layer by adding a boolean "preRender" property to your layer in Tiled ({@link https://doc.mapeditor.org/en/stable/manual/custom-properties/#adding-properties}).
      * @type {boolean}
      * @default false
      */

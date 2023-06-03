@@ -17,6 +17,5 @@ export default class PrimitiveCompositor extends Compositor {
      * @param {number} [vertexCount=verts.length] - amount of points defined in the points array
      */
     drawVertices(mode: GLenum, verts: Point[], vertexCount?: number | undefined): void;
-    mode: any;
 }
 import Compositor from "./compositor.js";

@@ -1,16 +1,16 @@
 export default state;
 declare namespace state {
-    const LOADING: number;
-    const MENU: number;
-    const READY: number;
-    const PLAY: number;
-    const GAMEOVER: number;
-    const GAME_END: number;
-    const SCORE: number;
-    const CREDITS: number;
-    const SETTINGS: number;
-    const DEFAULT: number;
-    const USER: number;
+    let LOADING: number;
+    let MENU: number;
+    let READY: number;
+    let PLAY: number;
+    let GAMEOVER: number;
+    let GAME_END: number;
+    let SCORE: number;
+    let CREDITS: number;
+    let SETTINGS: number;
+    let DEFAULT: number;
+    let USER: number;
     /**
      * Stop the current stage.
      * @name stop

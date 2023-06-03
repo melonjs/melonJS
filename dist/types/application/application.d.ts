@@ -63,6 +63,27 @@ export default class Application {
      * @type {object}
      */
     settings: object;
+    /**
+     * Specify whether to pause this app when losing focus
+     * @type {boolean}
+     * @default true
+     * @example
+     *  // keep the default game instance running even when loosing focus
+     *  me.game.pauseOnBlur = false;
+     */
+    pauseOnBlur: boolean;
+    /**
+     * Specify whether to unpause this app when gaining back focus
+     * @type {boolean}
+     * @default true
+     */
+    resumeOnFocus: boolean;
+    /**
+     * Specify whether to stop this app when losing focus
+     * @type {boolean}
+     * @default false
+     */
+    stopOnBlur: boolean;
     isDirty: boolean;
     isAlwaysDirty: boolean;
     frameCounter: number;

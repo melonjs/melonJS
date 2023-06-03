@@ -5,12 +5,6 @@
  */
 export default class Renderable extends Rect {
     /**
-     * Position of the Renderable relative to its parent container
-     * @public
-     * @type {ObservableVector3d}
-     */
-    public pos: ObservableVector3d;
-    /**
      * The anchor point is used for attachment behavior, and/or when applying transformations.<br>
      * The coordinate system places the origin at the top left corner of the frame (0, 0) and (1, 1) means the bottom-right corner<br>
      * <img src="images/anchor_point.png"/><br>
@@ -333,7 +327,7 @@ export default class Renderable extends Rect {
      * update the renderable's bounding rect (private)
      * @ignore
      */
-    updateBoundsPos(newX?: number, newY?: number): void;
+    updateBoundsPos(newX?: any, newY?: any): void;
     /**
      * return the renderable absolute position in the game world
      * @returns {Vector2d}
@@ -409,5 +403,4 @@ export default class Renderable extends Rect {
     onDestroyEvent(): void;
 }
 import Rect from "./../geometries/rectangle.js";
-import ObservableVector3d from "./../math/observable_vector3.js";
 import ObservableVector2d from "./../math/observable_vector2.js";

@@ -50,11 +50,6 @@ export default class UITextButton extends UIBaseElement {
      */
     bindKey: string;
     /**
-     * The css value of a background color
-     * @type {string}
-     */
-    backgroundColor: string;
-    /**
      * The css value of a color to be used if the pointer hovers over the button
      * @type {string}
      */

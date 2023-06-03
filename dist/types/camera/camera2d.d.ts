@@ -81,7 +81,7 @@ export default class Camera2d extends Renderable {
      */
     invCurrentTransform: Matrix2d;
     offset: Vector2d;
-    target: Vector2d | ObservableVector3d | null;
+    target: Vector2d | null;
     follow_axis: number;
     _shake: {
         intensity: number;
@@ -100,9 +100,9 @@ export default class Camera2d extends Renderable {
     /** @ignore */
     _updateProjectionMatrix(): void;
     /** @ignore */
-    _followH(target: any): number;
+    _followH(target: any): any;
     /** @ignore */
-    _followV(target: any): number;
+    _followV(target: any): any;
     /**
      * reset the camera position to specified coordinates
      * @name reset
@@ -283,5 +283,4 @@ import Renderable from "./../renderable/renderable.js";
 import Matrix3d from "./../math/matrix3.js";
 import Matrix2d from "./../math/matrix2.js";
 import Vector2d from "./../math/vector2.js";
-import ObservableVector3d from "./../math/observable_vector3.js";
 import Rect from "./../geometries/rectangle.js";

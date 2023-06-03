@@ -27,12 +27,12 @@ export default class VertexArrayBuffer {
      * resize the vertex buffer, retaining its original contents
      * @ignore
      */
-    resize(vertexCount: any): VertexArrayBuffer;
+    resize(vertexCount: any): this;
     /**
      * push a new vertex to the buffer
      * @ignore
      */
-    push(x: any, y: any, u: any, v: any, tint: any): VertexArrayBuffer;
+    push(x: any, y: any, u: any, v: any, tint: any): this;
     /**
      * return a reference to the data in Float32 format
      * @ignore
