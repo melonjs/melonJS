@@ -450,7 +450,7 @@ export function onReady(fn) {
             event.emit(event.FOCUS);
             // force focus if autofocus is on
             if (autoFocus === true) {
-                this.focus();
+                focus();
             }
         }, false);
     }
@@ -462,7 +462,7 @@ export function onReady(fn) {
                     event.emit(event.FOCUS);
                     // force focus if autofocus is on
                     if (autoFocus === true) {
-                        this.focus();
+                        focus();
                     }
                 } else {
                     event.emit(event.BLUR);
