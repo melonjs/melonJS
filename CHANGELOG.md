@@ -13,6 +13,7 @@
 - Renderable : fix a potential issue with a Tile Layer not being properly redrawn when adding or clearing individual tiles
 - TMX : properly set the `preRender`flag for Tiled layer at runtime (when added to the root container)
 - TMX : fix pre-rendering for non-orthogonal maps
+- UI: fix dirty flag for base UI elements not being set due to wrong property name (thanks @yuta0315)
 
 ## [15.3.0] (melonJS 2) - _2023-05-23_
 

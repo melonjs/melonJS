@@ -88,7 +88,7 @@ import pool from "../../system/pooling.js";
     clicked(event) {
         // Check if left mouse button is pressed
         if (event.button === 0 && this.isClickable) {
-            this.dirty = true;
+            this.isDirty = true;
             this.released = false;
             if (this.isHoldable) {
                 timer.clearTimeout(this.holdTimeout);
@@ -122,7 +122,7 @@ import pool from "../../system/pooling.js";
      */
     enter(event) {
         this.hover = true;
-        this.dirty = true;
+        this.isDirty = true;
         if (this.isDraggable === true) {
             on(POINTERMOVE, this.pointerMove, this);
             // to memorize where we grab the object
@@ -168,7 +168,7 @@ import pool from "../../system/pooling.js";
      */
     leave(event) {
         this.hover = false;
-        this.dirty = true;
+        this.isDirty = true;
         if (this.isDraggable === true) {
             // unregister on the global pointermove event
             off(POINTERMOVE, this.pointerMove);
@@ -194,7 +194,7 @@ import pool from "../../system/pooling.js";
     release(event) {
         if (this.released === false) {
             this.released = true;
-            this.dirty = true;
+            this.isDirty = true;
             timer.clearTimeout(this.holdTimeout);
             this.holdTimeout = -1;
             return this.onRelease(event);
@@ -216,7 +216,7 @@ import pool from "../../system/pooling.js";
     hold() {
         timer.clearTimeout(this.holdTimeout);
         this.holdTimeout = -1;
-        this.dirty = true;
+        this.isDirty = true;
         if (!this.released) {
             this.onHold();
         }
