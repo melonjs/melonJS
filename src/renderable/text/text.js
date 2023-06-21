@@ -1,8 +1,8 @@
-import Color from "./../math/color.js";
-import { renderer as globalRenderer } from "./../video/video.js";
-import pool from "./../system/pooling.js";
-import Renderable from "./../renderable/renderable.js";
-import { nextPowerOfTwo } from "./../math/math.js";
+import Color from "../../math/color.js";
+import { renderer as globalRenderer } from "../../video/video.js";
+import pool from "../../system/pooling.js";
+import Renderable from "../renderable.js";
+import { nextPowerOfTwo } from "../../math/math.js";
 import setContextStyle from "./textstyle.js";
 import TextMetrics from "./textmetrics.js";
 

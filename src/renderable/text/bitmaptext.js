@@ -1,7 +1,7 @@
-import Color from "./../math/color.js";
-import pool from "./../system/pooling.js";
-import { getImage, getBinary } from "./../loader/loader.js";
-import Renderable from "./../renderable/renderable.js";
+import Color from "../../math/color.js";
+import pool from "../../system/pooling.js";
+import { getImage, getBinary } from "../../loader/loader.js";
+import Renderable from "../renderable.js";
 import TextMetrics from "./textmetrics.js";
 
 /**

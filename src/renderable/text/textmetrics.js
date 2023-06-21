@@ -1,4 +1,4 @@
-import Bounds from "./../physics/bounds.js";
+import Bounds from "../../physics/bounds.js";
 import Text from "./text.js";
 import setContextStyle from "./textstyle.js";
 
