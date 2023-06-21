@@ -12,7 +12,7 @@ import pool from '../system/pooling.js';
  * @classdesc
  * a generic 3D Vector Object
  */
- class Vector3d {
+class Vector3d {
     /**
      * @param {number} [x=0] - x value of the vector
      * @param {number} [y=0] - y value of the vector
@@ -431,7 +431,7 @@ import pool from '../system/pooling.js';
         return this;
     }
 
-   /**
+    /**
     * return the square length of this vector
     * @name length2
     * @memberof Vector3d

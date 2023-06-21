@@ -16,7 +16,7 @@ import { minify } from './utils/string.js';
  * @classdesc
  * a base GL Shader object
  */
- class GLShader {
+class GLShader {
     /**
      * @param {WebGLRenderingContext} gl - the current WebGL rendering context
      * @param {string} vertex - a string containing the GLSL source code to set

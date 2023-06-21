@@ -25,7 +25,7 @@ let V_ARRAY = [
  * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
  * @augments Compositor
  */
- class QuadCompositor extends Compositor {
+class QuadCompositor extends Compositor {
 
     /**
      * Initialize the compositor

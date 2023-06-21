@@ -15,7 +15,7 @@ import pool from '../system/pooling.js';
  * a basic collectable helper class for immovable object (e.g. a coin)
  * @augments Sprite
  */
- class Collectable extends Sprite {
+class Collectable extends Sprite {
     /**
      * @param {number} x - the x coordinates of the collectable
      * @param {number} y - the y coordinates of the collectable

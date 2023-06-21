@@ -145,12 +145,12 @@ export function requestPointerLock(): boolean;
  */
 export function exitPointerLock(): boolean;
 /**
- * the default target element for pointer events (usually the canvas element in which the game is rendered)
- * @public
- * @type {EventTarget}
- * @name pointerEventTarget
- * @memberof input
- */
+  * the default target element for pointer events (usually the canvas element in which the game is rendered)
+  * @public
+  * @type {EventTarget}
+  * @name pointerEventTarget
+  * @memberof input
+  */
 export let pointerEventTarget: EventTarget;
 /**
  * Pointer information (current position and size)

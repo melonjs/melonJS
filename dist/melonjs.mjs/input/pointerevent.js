@@ -489,14 +489,14 @@ function onPointerEvent(e) {
  * PUBLIC STUFF
  */
 
- /**
+/**
   * the default target element for pointer events (usually the canvas element in which the game is rendered)
   * @public
   * @type {EventTarget}
   * @name pointerEventTarget
   * @memberof input
   */
- let pointerEventTarget = null;
+let pointerEventTarget = null;
 
 /**
  * Pointer information (current position and size)
@@ -619,7 +619,7 @@ function unbindPointer(button) {
     // clear the event status
     pointer.bind[
         typeof(button) === "undefined" ?
-        pointer.LEFT : button
+            pointer.LEFT : button
     ] = null;
 }
 

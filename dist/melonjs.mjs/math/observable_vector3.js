@@ -14,7 +14,7 @@ import pool from '../system/pooling.js';
  * A Vector3d object that provide notification by executing the given callback when the vector is changed.
  * @augments Vector3d
  */
- class ObservableVector3d extends Vector3d {
+class ObservableVector3d extends Vector3d {
     /**
      * @param {number} x - x value of the vector
      * @param {number} y - y value of the vector
@@ -120,9 +120,9 @@ import pool from '../system/pooling.js';
             this._y = ret.y;
             this._z = ret.z;
         } else {
-          this._x = x;
-          this._y = y;
-          this._z = z || 0;
+            this._x = x;
+            this._y = y;
+            this._z = z || 0;
         }
         return this;
     }

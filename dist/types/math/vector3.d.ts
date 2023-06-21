@@ -251,11 +251,11 @@ export default class Vector3d {
      */
     cross(v: Vector3d): Vector3d;
     /**
-     * return the square length of this vector
-     * @name length2
-     * @memberof Vector3d
-     * @returns {number} The length^2 of this vector.
-     */
+    * return the square length of this vector
+    * @name length2
+    * @memberof Vector3d
+    * @returns {number} The length^2 of this vector.
+    */
     length2(): number;
     /**
      * return the length (magnitude) of this vector

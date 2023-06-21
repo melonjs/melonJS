@@ -96,12 +96,12 @@ export default class Matrix2d {
      */
     invert(): Matrix2d;
     /**
-     * apply the current transform to the given 2d or 3d vector
-     * @name apply
-     * @memberof Matrix2d
-     * @param {Vector2d|Vector3d} v - the vector object to be transformed
-     * @returns {Vector2d|Vector3d} result vector object.
-     */
+    * apply the current transform to the given 2d or 3d vector
+    * @name apply
+    * @memberof Matrix2d
+    * @param {Vector2d|Vector3d} v - the vector object to be transformed
+    * @returns {Vector2d|Vector3d} result vector object.
+    */
     apply(v: Vector2d | Vector3d): Vector2d | Vector3d;
     /**
      * apply the inverted current transform to the given 2d vector

@@ -448,10 +448,10 @@ var store$2 = sharedStore;
 (shared$5.exports = function (key, value) {
   return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 })('versions', []).push({
-  version: '3.30.2',
+  version: '3.31.0',
   mode: IS_PURE ? 'pure' : 'global',
   copyright: '© 2014-2023 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.30.2/LICENSE',
+  license: 'https://github.com/zloirock/core-js/blob/v3.31.0/LICENSE',
   source: 'https://github.com/zloirock/core-js'
 });
 
@@ -1437,235 +1437,235 @@ if (typeof globalThis !== "undefined") {
  */
 (() => {
 
-  "use strict";
-
-  /** @ignore */
-  function roundRect(x, y, w, h, radii) {
-
-    if (!([x, y, w, h].every((input) => Number.isFinite(input)))) {
-
-      return;
-
-    }
-
-    radii = parseRadiiArgument(radii);
-
-    let upperLeft, upperRight, lowerRight, lowerLeft;
-
-    if (radii.length === 4) {
-
-      upperLeft = toCornerPoint(radii[0]);
-      upperRight = toCornerPoint(radii[1]);
-      lowerRight = toCornerPoint(radii[2]);
-      lowerLeft = toCornerPoint(radii[3]);
-
-    } else if (radii.length === 3) {
-
-      upperLeft = toCornerPoint(radii[0]);
-      upperRight = toCornerPoint(radii[1]);
-      lowerLeft = toCornerPoint(radii[1]);
-      lowerRight = toCornerPoint(radii[2]);
-
-    } else if (radii.length === 2) {
-
-      upperLeft = toCornerPoint(radii[0]);
-      lowerRight = toCornerPoint(radii[0]);
-      upperRight = toCornerPoint(radii[1]);
-      lowerLeft = toCornerPoint(radii[1]);
-
-    } else if (radii.length === 1) {
-
-      upperLeft = toCornerPoint(radii[0]);
-      upperRight = toCornerPoint(radii[0]);
-      lowerRight = toCornerPoint(radii[0]);
-      lowerLeft = toCornerPoint(radii[0]);
-
-    } else {
-
-      throw new Error(radii.length + " is not a valid size for radii sequence.");
-
-    }
-
-    const corners = [upperLeft, upperRight, lowerRight, lowerLeft];
-    const negativeCorner = corners.find(({x, y}) => x < 0 || y < 0);
-    //const negativeValue = negativeCorner?.x < 0 ? negativeCorner.x : negativeCorner?.y
-
-    if (corners.some(({x, y}) => !Number.isFinite(x) || !Number.isFinite(y))) {
-
-      return;
-
-    }
-
-    if (negativeCorner) {
-
-      throw new Error("Radius value " + negativeCorner + " is negative.");
-
-    }
-
-    fixOverlappingCorners(corners);
-
-    if (w < 0 && h < 0) {
-
-      this.moveTo(x - upperLeft.x, y);
-      this.ellipse(x + w + upperRight.x, y - upperRight.y, upperRight.x, upperRight.y, 0, -Math.PI * 1.5, -Math.PI);
-      this.ellipse(x + w + lowerRight.x, y + h + lowerRight.y, lowerRight.x, lowerRight.y, 0, -Math.PI, -Math.PI / 2);
-      this.ellipse(x - lowerLeft.x, y + h + lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, -Math.PI / 2, 0);
-      this.ellipse(x - upperLeft.x, y - upperLeft.y, upperLeft.x, upperLeft.y, 0, 0, -Math.PI / 2);
-
-    } else if (w < 0) {
-
-      this.moveTo(x - upperLeft.x, y);
-      this.ellipse(x + w + upperRight.x, y + upperRight.y, upperRight.x, upperRight.y, 0, -Math.PI / 2, -Math.PI, 1);
-      this.ellipse(x + w + lowerRight.x, y + h - lowerRight.y, lowerRight.x, lowerRight.y, 0, -Math.PI, -Math.PI * 1.5, 1);
-      this.ellipse(x - lowerLeft.x, y + h - lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, Math.PI / 2, 0, 1);
-      this.ellipse(x - upperLeft.x, y + upperLeft.y, upperLeft.x, upperLeft.y, 0, 0, -Math.PI / 2, 1);
-
-    } else if (h < 0) {
-
-      this.moveTo(x + upperLeft.x, y);
-      this.ellipse(x + w - upperRight.x, y - upperRight.y, upperRight.x, upperRight.y, 0, Math.PI / 2, 0, 1);
-      this.ellipse(x + w - lowerRight.x, y + h + lowerRight.y, lowerRight.x, lowerRight.y, 0, 0, -Math.PI / 2, 1);
-      this.ellipse(x + lowerLeft.x, y + h + lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, -Math.PI / 2, -Math.PI, 1);
-      this.ellipse(x + upperLeft.x, y - upperLeft.y, upperLeft.x, upperLeft.y, 0, -Math.PI, -Math.PI * 1.5, 1);
-
-    } else {
-
-      this.moveTo(x + upperLeft.x, y);
-      this.ellipse(x + w - upperRight.x, y + upperRight.y, upperRight.x, upperRight.y, 0, -Math.PI / 2, 0);
-      this.ellipse(x + w - lowerRight.x, y + h - lowerRight.y, lowerRight.x, lowerRight.y, 0, 0, Math.PI / 2);
-      this.ellipse(x + lowerLeft.x, y + h - lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, Math.PI / 2, Math.PI);
-      this.ellipse(x + upperLeft.x, y + upperLeft.y, upperLeft.x, upperLeft.y, 0, Math.PI, Math.PI * 1.5);
-
-    }
-
-    this.closePath();
-    this.moveTo(x, y);
+    "use strict";
 
     /** @ignore */
-    function toDOMPointInit(value) {
+    function roundRect(x, y, w, h, radii) {
 
-      const {x, y, z, w} = value;
-      return {x, y, z, w};
+        if (!([x, y, w, h].every((input) => Number.isFinite(input)))) {
 
-    }
-
-    /** @ignore */
-    function parseRadiiArgument(value) {
-
-      // https://webidl.spec.whatwg.org/#es-union
-      // with 'optional (unrestricted double or DOMPointInit
-      //   or sequence<(unrestricted double or DOMPointInit)>) radii = 0'
-      const type = typeof value;
-
-      if (type === "undefined" || value === null) {
-
-        return [0];
-
-      }
-      if (type === "function") {
-
-        return [NaN];
-
-      }
-      if (type === "object") {
-
-        if (typeof value[Symbol.iterator] === "function") {
-
-          return [...value].map((elem) => {
-            // https://webidl.spec.whatwg.org/#es-union
-            // with '(unrestricted double or DOMPointInit)'
-            const elemType = typeof elem;
-            if (elemType === "undefined" || elem === null) {
-              return 0;
-            }
-            if (elemType === "function") {
-              return NaN;
-            }
-            if (elemType === "object") {
-              return toDOMPointInit(elem);
-            }
-            return toUnrestrictedNumber(elem);
-          });
+            return;
 
         }
 
-        return [toDOMPointInit(value)];
+        radii = parseRadiiArgument(radii);
 
-      }
+        let upperLeft, upperRight, lowerRight, lowerLeft;
 
-      return [toUnrestrictedNumber(value)];
+        if (radii.length === 4) {
 
+            upperLeft = toCornerPoint(radii[0]);
+            upperRight = toCornerPoint(radii[1]);
+            lowerRight = toCornerPoint(radii[2]);
+            lowerLeft = toCornerPoint(radii[3]);
+
+        } else if (radii.length === 3) {
+
+            upperLeft = toCornerPoint(radii[0]);
+            upperRight = toCornerPoint(radii[1]);
+            lowerLeft = toCornerPoint(radii[1]);
+            lowerRight = toCornerPoint(radii[2]);
+
+        } else if (radii.length === 2) {
+
+            upperLeft = toCornerPoint(radii[0]);
+            lowerRight = toCornerPoint(radii[0]);
+            upperRight = toCornerPoint(radii[1]);
+            lowerLeft = toCornerPoint(radii[1]);
+
+        } else if (radii.length === 1) {
+
+            upperLeft = toCornerPoint(radii[0]);
+            upperRight = toCornerPoint(radii[0]);
+            lowerRight = toCornerPoint(radii[0]);
+            lowerLeft = toCornerPoint(radii[0]);
+
+        } else {
+
+            throw new Error(radii.length + " is not a valid size for radii sequence.");
+
+        }
+
+        const corners = [upperLeft, upperRight, lowerRight, lowerLeft];
+        const negativeCorner = corners.find(({x, y}) => x < 0 || y < 0);
+        //const negativeValue = negativeCorner?.x < 0 ? negativeCorner.x : negativeCorner?.y
+
+        if (corners.some(({x, y}) => !Number.isFinite(x) || !Number.isFinite(y))) {
+
+            return;
+
+        }
+
+        if (negativeCorner) {
+
+            throw new Error("Radius value " + negativeCorner + " is negative.");
+
+        }
+
+        fixOverlappingCorners(corners);
+
+        if (w < 0 && h < 0) {
+
+            this.moveTo(x - upperLeft.x, y);
+            this.ellipse(x + w + upperRight.x, y - upperRight.y, upperRight.x, upperRight.y, 0, -Math.PI * 1.5, -Math.PI);
+            this.ellipse(x + w + lowerRight.x, y + h + lowerRight.y, lowerRight.x, lowerRight.y, 0, -Math.PI, -Math.PI / 2);
+            this.ellipse(x - lowerLeft.x, y + h + lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, -Math.PI / 2, 0);
+            this.ellipse(x - upperLeft.x, y - upperLeft.y, upperLeft.x, upperLeft.y, 0, 0, -Math.PI / 2);
+
+        } else if (w < 0) {
+
+            this.moveTo(x - upperLeft.x, y);
+            this.ellipse(x + w + upperRight.x, y + upperRight.y, upperRight.x, upperRight.y, 0, -Math.PI / 2, -Math.PI, 1);
+            this.ellipse(x + w + lowerRight.x, y + h - lowerRight.y, lowerRight.x, lowerRight.y, 0, -Math.PI, -Math.PI * 1.5, 1);
+            this.ellipse(x - lowerLeft.x, y + h - lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, Math.PI / 2, 0, 1);
+            this.ellipse(x - upperLeft.x, y + upperLeft.y, upperLeft.x, upperLeft.y, 0, 0, -Math.PI / 2, 1);
+
+        } else if (h < 0) {
+
+            this.moveTo(x + upperLeft.x, y);
+            this.ellipse(x + w - upperRight.x, y - upperRight.y, upperRight.x, upperRight.y, 0, Math.PI / 2, 0, 1);
+            this.ellipse(x + w - lowerRight.x, y + h + lowerRight.y, lowerRight.x, lowerRight.y, 0, 0, -Math.PI / 2, 1);
+            this.ellipse(x + lowerLeft.x, y + h + lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, -Math.PI / 2, -Math.PI, 1);
+            this.ellipse(x + upperLeft.x, y - upperLeft.y, upperLeft.x, upperLeft.y, 0, -Math.PI, -Math.PI * 1.5, 1);
+
+        } else {
+
+            this.moveTo(x + upperLeft.x, y);
+            this.ellipse(x + w - upperRight.x, y + upperRight.y, upperRight.x, upperRight.y, 0, -Math.PI / 2, 0);
+            this.ellipse(x + w - lowerRight.x, y + h - lowerRight.y, lowerRight.x, lowerRight.y, 0, 0, Math.PI / 2);
+            this.ellipse(x + lowerLeft.x, y + h - lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, Math.PI / 2, Math.PI);
+            this.ellipse(x + upperLeft.x, y + upperLeft.y, upperLeft.x, upperLeft.y, 0, Math.PI, Math.PI * 1.5);
+
+        }
+
+        this.closePath();
+        this.moveTo(x, y);
+
+        /** @ignore */
+        function toDOMPointInit(value) {
+
+            const {x, y, z, w} = value;
+            return {x, y, z, w};
+
+        }
+
+        /** @ignore */
+        function parseRadiiArgument(value) {
+
+            // https://webidl.spec.whatwg.org/#es-union
+            // with 'optional (unrestricted double or DOMPointInit
+            //   or sequence<(unrestricted double or DOMPointInit)>) radii = 0'
+            const type = typeof value;
+
+            if (type === "undefined" || value === null) {
+
+                return [0];
+
+            }
+            if (type === "function") {
+
+                return [NaN];
+
+            }
+            if (type === "object") {
+
+                if (typeof value[Symbol.iterator] === "function") {
+
+                    return [...value].map((elem) => {
+                        // https://webidl.spec.whatwg.org/#es-union
+                        // with '(unrestricted double or DOMPointInit)'
+                        const elemType = typeof elem;
+                        if (elemType === "undefined" || elem === null) {
+                            return 0;
+                        }
+                        if (elemType === "function") {
+                            return NaN;
+                        }
+                        if (elemType === "object") {
+                            return toDOMPointInit(elem);
+                        }
+                        return toUnrestrictedNumber(elem);
+                    });
+
+                }
+
+                return [toDOMPointInit(value)];
+
+            }
+
+            return [toUnrestrictedNumber(value)];
+
+        }
+
+        /** @ignore */
+        function toUnrestrictedNumber(value) {
+
+            return +value;
+
+        }
+
+        /** @ignore */
+        function toCornerPoint(value) {
+
+            const asNumber = toUnrestrictedNumber(value);
+            if (Number.isFinite(asNumber)) {
+
+                return {
+                    x: asNumber,
+                    y: asNumber
+                };
+
+            }
+            if (Object(value) === value) {
+
+                return {
+                    x: toUnrestrictedNumber(value.x || 0),
+                    y: toUnrestrictedNumber(value.y || 0)
+                };
+
+            }
+
+            return {
+                x: NaN,
+                y: NaN
+            };
+
+        }
+
+        /** @ignore */
+        function fixOverlappingCorners(corners) {
+            const [upperLeft, upperRight, lowerRight, lowerLeft] = corners;
+            const factors = [
+                Math.abs(w) / (upperLeft.x + upperRight.x),
+                Math.abs(h) / (upperRight.y + lowerRight.y),
+                Math.abs(w) / (lowerRight.x + lowerLeft.x),
+                Math.abs(h) / (upperLeft.y + lowerLeft.y)
+            ];
+            const minFactor = Math.min(...factors);
+            if (minFactor <= 1) {
+                corners.forEach((radii) => {
+                    radii.x *= minFactor;
+                    radii.y *= minFactor;
+                });
+            }
+        }
     }
 
-    /** @ignore */
-    function toUnrestrictedNumber(value) {
-
-      return +value;
-
+    if (globalThis.CanvasRenderingContext2D) {
+        if (typeof globalThis.Path2D.prototype.roundRect === "undefined") {
+            globalThis.Path2D.prototype.roundRect = roundRect;
+        }
     }
-
-    /** @ignore */
-    function toCornerPoint(value) {
-
-      const asNumber = toUnrestrictedNumber(value);
-      if (Number.isFinite(asNumber)) {
-
-        return {
-          x: asNumber,
-          y: asNumber
-        };
-
-      }
-      if (Object(value) === value) {
-
-        return {
-          x: toUnrestrictedNumber(value.x || 0),
-          y: toUnrestrictedNumber(value.y || 0)
-        };
-
-      }
-
-      return {
-        x: NaN,
-        y: NaN
-      };
-
+    if (globalThis.CanvasRenderingContext2D) {
+        if (typeof globalThis.CanvasRenderingContext2D.prototype.roundRect === "undefined") {
+            globalThis.CanvasRenderingContext2D.prototype.roundRect = roundRect;
+        }
     }
-
-    /** @ignore */
-    function fixOverlappingCorners(corners) {
-      const [upperLeft, upperRight, lowerRight, lowerLeft] = corners;
-      const factors = [
-        Math.abs(w) / (upperLeft.x + upperRight.x),
-        Math.abs(h) / (upperRight.y + lowerRight.y),
-        Math.abs(w) / (lowerRight.x + lowerLeft.x),
-        Math.abs(h) / (upperLeft.y + lowerLeft.y)
-      ];
-      const minFactor = Math.min(...factors);
-      if (minFactor <= 1) {
-        corners.forEach((radii) => {
-            radii.x *= minFactor;
-            radii.y *= minFactor;
-        });
-      }
+    if (globalThis.OffscreenCanvasRenderingContext2D) {
+        if (typeof globalThis.OffscreenCanvasRenderingContext2D.prototype.roundRect === "undefined") {
+            globalThis.OffscreenCanvasRenderingContext2D.prototype.roundRect = roundRect;
+        }
     }
-  }
-
-  if (globalThis.CanvasRenderingContext2D) {
-    if (typeof globalThis.Path2D.prototype.roundRect === "undefined") {
-        globalThis.Path2D.prototype.roundRect = roundRect;
-    }
-  }
-  if (globalThis.CanvasRenderingContext2D) {
-    if (typeof globalThis.CanvasRenderingContext2D.prototype.roundRect === "undefined") {
-        globalThis.CanvasRenderingContext2D.prototype.roundRect = roundRect;
-    }
-  }
-  if (globalThis.OffscreenCanvasRenderingContext2D) {
-    if (typeof globalThis.OffscreenCanvasRenderingContext2D.prototype.roundRect === "undefined") {
-        globalThis.OffscreenCanvasRenderingContext2D.prototype.roundRect = roundRect;
-    }
-  }
 
 })();
 
@@ -1940,15 +1940,15 @@ class ObjectPool {
      * me.pool.register("cherrysprite", Cherry, true);
      */
     register(className, classObj, recycling = false) {
-         if (typeof (classObj) !== "undefined") {
-             this.objectClass[className] = {
-                 "class" : classObj,
-                 "pool" : (recycling ? [] : undefined)
-             };
-         } else {
-             throw new Error("Cannot register object '" + className + "', invalid class");
-         }
-     }
+        if (typeof (classObj) !== "undefined") {
+            this.objectClass[className] = {
+                "class" : classObj,
+                "pool" : (recycling ? [] : undefined)
+            };
+        } else {
+            throw new Error("Cannot register object '" + className + "', invalid class");
+        }
+    }
 
     /**
      * Pull a new instance of the requested object (if added into the object pool)
@@ -2255,7 +2255,7 @@ let cssToRGB = new Map();
  * @classdesc
  * A color manipulation object.
  */
- class Color {
+class Color {
     /**
      * @param {number} [r=0] - red component or array of color components
      * @param {number} [g=0] - green component
@@ -2684,7 +2684,7 @@ let cssToRGB = new Map();
  * @classdesc
  * a generic 2D Vector Object
  */
- class Vector2d {
+class Vector2d {
     /**
      * @param {number} [x=0] - x value of the vector
      * @param {number} [y=0] - y value of the vector
@@ -3071,7 +3071,7 @@ let cssToRGB = new Map();
         return this.x * v.y - this.y * v.x;
     }
 
-   /**
+    /**
     * return the square length of this vector
     * @name length2
     * @memberof Vector2d
@@ -3113,7 +3113,7 @@ let cssToRGB = new Map();
      * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
      * @returns {Vector2d} Reference to this object for method chaining
      */
-     moveTowards(target, step) {
+    moveTowards(target, step) {
         let angle = Math.atan2(target.y - this.y, target.x - this.x);
 
         let distance = this.distance(target);
@@ -3199,7 +3199,7 @@ let cssToRGB = new Map();
  * @classdesc
  * a generic 3D Vector Object
  */
- class Vector3d {
+class Vector3d {
     /**
      * @param {number} [x=0] - x value of the vector
      * @param {number} [y=0] - y value of the vector
@@ -3618,7 +3618,7 @@ let cssToRGB = new Map();
         return this;
     }
 
-   /**
+    /**
     * return the square length of this vector
     * @name length2
     * @memberof Vector3d
@@ -3755,7 +3755,7 @@ let cssToRGB = new Map();
  * A Vector2d object that provide notification by executing the given callback when the vector is changed.
  * @augments Vector2d
  */
- class ObservableVector2d extends Vector2d {
+class ObservableVector2d extends Vector2d {
     /**
      * @param {number} x - x value of the vector
      * @param {number} y - y value of the vector
@@ -3835,10 +3835,10 @@ let cssToRGB = new Map();
             this._x = ret.x;
             this._y = ret.y;
         } else {
-          this._x = x;
-          this._y = y;
-       }
-       return this;
+            this._x = x;
+            this._y = y;
+        }
+        return this;
     }
 
     /**
@@ -4150,7 +4150,7 @@ let cssToRGB = new Map();
      * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
-     moveTowards(target, step) {
+    moveTowards(target, step) {
         let angle = Math.atan2(target.y - this._y, target.x - this._x);
 
         let distance = this.distance(target);
@@ -4212,7 +4212,7 @@ let cssToRGB = new Map();
  * A Vector3d object that provide notification by executing the given callback when the vector is changed.
  * @augments Vector3d
  */
- class ObservableVector3d extends Vector3d {
+class ObservableVector3d extends Vector3d {
     /**
      * @param {number} x - x value of the vector
      * @param {number} y - y value of the vector
@@ -4318,9 +4318,9 @@ let cssToRGB = new Map();
             this._y = ret.y;
             this._z = ret.z;
         } else {
-          this._x = x;
-          this._y = y;
-          this._z = z || 0;
+            this._x = x;
+            this._y = y;
+            this._z = z || 0;
         }
         return this;
     }
@@ -4757,7 +4757,7 @@ let cssToRGB = new Map();
  * @classdesc
  * a 4x4 Matrix3d Object
  */
- class Matrix3d {
+class Matrix3d {
     /**
      * @param {(Matrix3d|...number)} args - An instance of me.Matrix3d to copy from, or individual Matrix components (See {@link Matrix3d.setTransform}). If not arguments are given, the matrix will be set to Identity.
      */
@@ -4979,20 +4979,20 @@ let cssToRGB = new Map();
             a13 = a[7],
             a23 = a[11];
 
-         a[1] = a[4];
-         a[2] = a[8];
-         a[3] = a[12];
-         a[4] = a01;
-         a[6] = a[9];
-         a[7] = a[13];
-         a[8] = a02;
-         a[9] = a12;
-         a[11] = a[14];
-         a[12] = a03;
-         a[13] = a13;
-         a[14] = a23;
+        a[1] = a[4];
+        a[2] = a[8];
+        a[3] = a[12];
+        a[4] = a01;
+        a[6] = a[9];
+        a[7] = a[13];
+        a[8] = a02;
+        a[9] = a12;
+        a[11] = a[14];
+        a[12] = a03;
+        a[13] = a13;
+        a[14] = a23;
 
-         return this;
+        return this;
     }
 
     /**
@@ -5002,56 +5002,56 @@ let cssToRGB = new Map();
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     invert() {
-         let a = this.val;
+        let a = this.val;
 
-         let a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
-         let a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
-         let a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
-         let a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+        let a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+        let a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+        let a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+        let a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
 
-         let b00 = a00 * a11 - a01 * a10;
-         let b01 = a00 * a12 - a02 * a10;
-         let b02 = a00 * a13 - a03 * a10;
-         let b03 = a01 * a12 - a02 * a11;
+        let b00 = a00 * a11 - a01 * a10;
+        let b01 = a00 * a12 - a02 * a10;
+        let b02 = a00 * a13 - a03 * a10;
+        let b03 = a01 * a12 - a02 * a11;
 
-         let b04 = a01 * a13 - a03 * a11;
-         let b05 = a02 * a13 - a03 * a12;
-         let b06 = a20 * a31 - a21 * a30;
-         let b07 = a20 * a32 - a22 * a30;
+        let b04 = a01 * a13 - a03 * a11;
+        let b05 = a02 * a13 - a03 * a12;
+        let b06 = a20 * a31 - a21 * a30;
+        let b07 = a20 * a32 - a22 * a30;
 
-         let b08 = a20 * a33 - a23 * a30;
-         let b09 = a21 * a32 - a22 * a31;
-         let b10 = a21 * a33 - a23 * a31;
-         let b11 = a22 * a33 - a23 * a32;
+        let b08 = a20 * a33 - a23 * a30;
+        let b09 = a21 * a32 - a22 * a31;
+        let b10 = a21 * a33 - a23 * a31;
+        let b11 = a22 * a33 - a23 * a32;
 
-         // Calculate the determinant
-         let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+        // Calculate the determinant
+        let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
 
-         if (!det)
-         {
-             return null;
-         }
+        if (!det)
+        {
+            return null;
+        }
 
-         det = 1 / det;
+        det = 1 / det;
 
-         a[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
-         a[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
-         a[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
-         a[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
-         a[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
-         a[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
-         a[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
-         a[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
-         a[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
-         a[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
-         a[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
-         a[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
-         a[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
-         a[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
-         a[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
-         a[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+        a[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
+        a[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
+        a[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
+        a[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
+        a[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
+        a[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
+        a[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
+        a[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
+        a[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
+        a[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
+        a[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
+        a[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
+        a[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
+        a[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
+        a[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
+        a[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
 
-         return this;
+        return this;
     }
 
     /**
@@ -5061,11 +5061,11 @@ let cssToRGB = new Map();
      * @param {Vector2d|Vector3d} v - the vector object to be transformed
      * @returns {Vector2d|Vector3d} result vector object.
      */
-     apply(v) {
+    apply(v) {
         let a = this.val,
-        x = v.x,
-        y = v.y,
-        z = (typeof v.z !== "undefined") ? v.z : 1;
+            x = v.x,
+            y = v.y,
+            z = (typeof v.z !== "undefined") ? v.z : 1;
 
         let w = (a[3] * x + a[7] * y + a[11] * z + a[15]) || 1.0;
 
@@ -5077,26 +5077,26 @@ let cssToRGB = new Map();
         }
 
         return v;
-     }
+    }
 
-     /**
+    /**
       * apply the inverted current transform to the given 2d or 3d vector
       * @name applyInverse
       * @memberof Matrix3d
       * @param {Vector2d|Vector3d} v - the vector object to be transformed
       * @returns {Vector2d|Vector3d} result vector object.
       */
-     applyInverse(v) {
-         // invert the current matrix
-         let im = pool.pull("Matrix3d", this).invert();
+    applyInverse(v) {
+        // invert the current matrix
+        let im = pool.pull("Matrix3d", this).invert();
 
-         // apply the inverted matrix
-         im.apply(v);
+        // apply the inverted matrix
+        im.apply(v);
 
-         pool.push(im);
+        pool.push(im);
 
-         return v;
-     }
+        return v;
+    }
 
     /**
      * generate an orthogonal projection matrix, with the result replacing the current matrix
@@ -5424,7 +5424,7 @@ let cssToRGB = new Map();
  * the identity matrix and parameters position : <br>
  * <img src="images/identity-matrix_2x.png"/>
  */
- class Matrix2d {
+class Matrix2d {
     /**
      * @param {(Matrix2d|Matrix3d|...number)} args - an instance of me.Matrix2d or me.Matrix3d to copy from, or individual matrix components (See {@link Matrix2d.setTransform}). If not arguments are given, the matrix will be set to Identity.
      */
@@ -5662,7 +5662,7 @@ let cssToRGB = new Map();
         return this;
     }
 
-   /**
+    /**
     * apply the current transform to the given 2d or 3d vector
     * @name apply
     * @memberof Matrix2d
@@ -6605,7 +6605,7 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
  *
  * A polygon's `winding` is clockwise if its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
  */
- class Polygon {
+class Polygon {
     /**
      * @param {number} x - origin point of the Polygon
      * @param {number} y - origin point of the Polygon
@@ -6707,7 +6707,7 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
             if (typeof vertices[0] === "object") {
                 // array of {x,y} object
                 vertices.forEach((vertice) => {
-                   this.points.push(pool.pull("Vector2d", vertice.x, vertice.y));
+                    this.points.push(pool.pull("Vector2d", vertice.x, vertice.y));
                 });
 
             } else {
@@ -7004,13 +7004,13 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
         let _x, _y;
 
         if (arguments.length === 2) {
-          // x, y
-          _x = arguments[0];
-          _y = arguments[1];
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
         } else {
-          // vector
-          _x = arguments[0].x;
-          _y = arguments[0].y;
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
         }
 
         let intersects = false;
@@ -7021,7 +7021,7 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
         //http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
         for (let i = 0, j = len - 1; i < len; j = i++) {
             const iy = points[i].y + posy, ix = points[i].x + posx,
-                  jy = points[j].y + posy, jx = points[j].x + posx;
+                jy = points[j].y + posy, jx = points[j].x + posx;
             if (((iy > _y) !== (jy > _y)) && (_x < (jx - ix) * (_y - iy) / (jy - iy) + ix)) {
                 intersects = !intersects;
             }
@@ -7081,7 +7081,7 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
  * @param {Vector2d[]} points - array of vectors defining the Line
  */
 
- class Line extends Polygon {
+class Line extends Polygon {
 
     /**
      * Returns true if the Line contains the given point
@@ -7104,13 +7104,13 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
         let _x, _y;
 
         if (arguments.length === 2) {
-          // x, y
-          _x = arguments[0];
-          _y = arguments[1];
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
         } else {
-          // vector
-          _x = arguments[0].x;
-          _y = arguments[0].y;
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
         }
 
         // translate the given coordinates,
@@ -7180,7 +7180,7 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
  * @classdesc
  * an ellipse Object
  */
- class Ellipse {
+class Ellipse {
     /**
      * @param {number} x - the center x coordinate of the ellipse
      * @param {number} y - the center y coordinate of the ellipse
@@ -7391,13 +7391,13 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
         let _x, _y;
 
         if (arguments.length === 2) {
-          // x, y
-          _x = arguments[0];
-          _y = arguments[1];
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
         } else {
-          // vector
-          _x = arguments[0].x;
-          _y = arguments[0].y;
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
         }
 
         // Make position relative to object center point.
@@ -7443,7 +7443,7 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
  * @classdesc
  * represents a point in a 2d space
  */
- class Point {
+class Point {
     constructor(x = 0, y = 0) {
         /**
          * the position of the point on the horizontal axis
@@ -7491,7 +7491,7 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
      * @param {number} y
      * @returns {boolean}
      */
-     equals() {
+    equals() {
         let _x, _y;
         if (arguments.length === 2) {
             // x, y
@@ -7519,7 +7519,7 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
  * a rectangle Object
  * @augments Polygon
  */
- class Rect extends Polygon {
+class Rect extends Polygon {
     /**
      * @param {number} x - position of the Rectangle
      * @param {number} y - position of the Rectangle
@@ -7818,28 +7818,28 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
         let arg0 = arguments[0];
         let _x1, _x2, _y1, _y2;
         if (arguments.length === 2) {
-             // x, y
-             _x1 = _x2 = arg0;
-             _y1 = _y2 = arguments[1];
-         } else {
-             if (arg0 instanceof Rect) {
-                 // me.Rect
-                 _x1 = arg0.left;
-                 _x2 = arg0.right;
-                 _y1 = arg0.top;
-                 _y2 = arg0.bottom;
-             } else {
-                 // vector
-                 _x1 = _x2 = arg0.x;
-                 _y1 = _y2 = arg0.y;
-             }
-         }
-         return (
-             _x1 >= this.left &&
+            // x, y
+            _x1 = _x2 = arg0;
+            _y1 = _y2 = arguments[1];
+        } else {
+            if (arg0 instanceof Rect) {
+                // me.Rect
+                _x1 = arg0.left;
+                _x2 = arg0.right;
+                _y1 = arg0.top;
+                _y2 = arg0.bottom;
+            } else {
+                // vector
+                _x1 = _x2 = arg0.x;
+                _y1 = _y2 = arg0.y;
+            }
+        }
+        return (
+            _x1 >= this.left &&
              _x2 <= this.right &&
              _y1 >= this.top &&
              _y2 <= this.bottom
-         );
+        );
     }
 
     /**
@@ -7967,18 +7967,18 @@ class RoundRect extends Rect {
         let arg0 = arguments[0];
         let _x, _y;
         if (arguments.length === 2) {
-             // x, y
-             _x = arg0;
-             _y = arguments[1];
-         } else {
-             if (arg0 instanceof Rect) {
-                 // good enough
-                 return super.contains(arg0);
-             } else {
-                 // vector
+            // x, y
+            _x = arg0;
+            _y = arguments[1];
+        } else {
+            if (arg0 instanceof Rect) {
+                // good enough
+                return super.contains(arg0);
+            } else {
+                // vector
                 _x = arg0.x;
                 _y = arg0.y;
-             }
+            }
         }
 
         // check whether point is outside the bounding box
@@ -8148,7 +8148,7 @@ let QT_VECTOR = new Vector2d();
  * a QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
  * @see game.world.broadphase
  */
- class QuadTree {
+class QuadTree {
     /**
      * @param {World} world - the physic world this QuadTree belongs to
      * @param {Bounds} bounds - bounds of the node
@@ -8180,7 +8180,7 @@ let QT_VECTOR = new Vector2d();
             left = this.bounds.left,
             top = this.bounds.top;
 
-         //top right node
+        //top right node
         this.nodes[0] = QT_ARRAY_POP(
             this.world,
             {
@@ -8376,7 +8376,7 @@ let QT_VECTOR = new Vector2d();
             if (index !== -1) {
                 returnObjects = returnObjects.concat(this.nodes[index].retrieve(item));
             } else {
-                 //if rect does not fit into a subnode, check it against all subnodes
+                //if rect does not fit into a subnode, check it against all subnodes
                 for (let i = 0; i < this.nodes.length; i = i + 1) {
                     returnObjects = returnObjects.concat(this.nodes[i].retrieve(item));
                 }
@@ -8398,7 +8398,7 @@ let QT_VECTOR = new Vector2d();
      * @param {object} item - object to be removed
      * @returns {boolean} true if the item was found and removed.
      */
-     remove(item) {
+    remove(item) {
         let found = false;
 
         if (typeof (item.getBounds) === "undefined") {
@@ -8485,7 +8485,7 @@ let QT_VECTOR = new Vector2d();
  * @classdesc
  * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
  */
- class Bounds {
+class Bounds {
     /**
      * @param {Vector2d[]|Point[]} [vertices] - an array of Vector2d or Point
      */
@@ -8885,7 +8885,7 @@ let QT_VECTOR = new Vector2d();
 
 let collision = {
 
-     /**
+    /**
       * The maximum number of children that a quadtree node can contain before it is split into sub-nodes.
       * @name maxChildren
       * @memberof collision
@@ -8894,9 +8894,9 @@ let collision = {
       * @default 8
       * @see game.world.broadphase
       */
-     maxChildren : 8,
+    maxChildren : 8,
 
-     /**
+    /**
       * The maximum number of levels that the quadtree will create.
       * @name maxDepth
       * @memberof collision
@@ -8905,7 +8905,7 @@ let collision = {
       * @default 4
       * @see game.world.broadphase
       */
-     maxDepth : 4,
+    maxDepth : 4,
 
     /**
      * Enum for collision type values.
@@ -13535,7 +13535,7 @@ let stopOnAudioError = true;
  *     return;
  * }
  */
- function init$1(format = "mp3") {
+function init$1(format = "mp3") {
     // convert it into an array
     audioExts = format.split(",");
 
@@ -14224,23 +14224,23 @@ var agent$1 = {
 };
 
 /**
-  * The device platform type
-  * @namespace platform
-  * @memberof device
-  * @property {string} ua the user agent string for the current device
-  * @property {boolean} iOS `true` if the device is an iOS platform
-  * @property {boolean} android `true` if the device is an Android platform
-  * @property {boolean} android2 `true` if the device is an Android 2.x platform
-  * @property {boolean} linux `true` if the device is a Linux platform
-  * @property {boolean} chromeOS `true` if the device is running on ChromeOS.
-  * @property {boolean} wp `true` if the device is a Windows Phone platform
-  * @property {boolean} BlackBerry`true` if the device is a BlackBerry platform
-  * @property {boolean} Kindle`true` if the device is a Kindle platform
-  * @property {boolean} ejecta `true` if running under Ejecta
-  * @property {boolean} isWeixin `true` if running under Wechat
-  * @property {boolean} nodeJS `true` if running under node.js
-  * @property {boolean} isMobile `true` if a mobile device
-  */
+* The device platform type
+* @namespace platform
+* @memberof device
+* @property {string} ua the user agent string for the current device
+* @property {boolean} iOS `true` if the device is an iOS platform
+* @property {boolean} android `true` if the device is an Android platform
+* @property {boolean} android2 `true` if the device is an Android 2.x platform
+* @property {boolean} linux `true` if the device is a Linux platform
+* @property {boolean} chromeOS `true` if the device is running on ChromeOS.
+* @property {boolean} wp `true` if the device is a Windows Phone platform
+* @property {boolean} BlackBerry`true` if the device is a BlackBerry platform
+* @property {boolean} Kindle`true` if the device is a Kindle platform
+* @property {boolean} ejecta `true` if running under Ejecta
+* @property {boolean} isWeixin `true` if running under Wechat
+* @property {boolean} nodeJS `true` if running under node.js
+* @property {boolean} isMobile `true` if a mobile device
+*/
 
 const ua = typeof globalThis.navigator !== "undefined" ? globalThis.navigator.userAgent : "";
 const iOS = /iPhone|iPad|iPod/i.test(ua);
@@ -14786,7 +14786,7 @@ function onReady(fn) {
             emit(FOCUS);
             // force focus if autofocus is on
             if (autoFocus === true) {
-                this.focus();
+                focus();
             }
         }, false);
     }
@@ -14798,7 +14798,7 @@ function onReady(fn) {
                     emit(FOCUS);
                     // force focus if autofocus is on
                     if (autoFocus === true) {
-                        this.focus();
+                        focus();
                     }
                 } else {
                     emit(BLUR);
@@ -15367,7 +15367,7 @@ function init(width, height, options) {
     }
 
     try {
-         // initialize the default game Application with the given options
+        // initialize the default game Application with the given options
         game.init(width, height, options);
     } catch (e) {
         console.log(e.message);
@@ -15568,14 +15568,14 @@ let keyUpEvent = function (e, keyCode, mouseButton) {
  * PUBLIC STUFF
  */
 
- /**
+/**
   * the default target element for keyboard events (usually the window element in which the game is running)
   * @public
   * @type {EventTarget}
   * @name keyBoardEventTarget
   * @memberof input
   */
- let keyBoardEventTarget = null;
+let keyBoardEventTarget = null;
 
 /**
  * standard keyboard constants
@@ -16058,7 +16058,7 @@ class Pointer extends Bounds {
          */
         this.clientX = 0;
 
-       /**
+        /**
         * the vertical coordinate within the application's client area at which the event occurred
         * @public
         * @type {number}
@@ -16078,7 +16078,7 @@ class Pointer extends Bounds {
          */
         this.movementX = 0;
 
-       /**
+        /**
         * the difference in the Y coordinate of the pointer since the previous move event
         * @public
         * @type {number}
@@ -16202,7 +16202,7 @@ class Pointer extends Bounds {
          */
         this.gameLocalY = 0;
 
-       /**
+        /**
         * The unique identifier of the contact for a touch, mouse or pen
         * @public
         * @type {number}
@@ -16782,14 +16782,14 @@ function onPointerEvent(e) {
  * PUBLIC STUFF
  */
 
- /**
+/**
   * the default target element for pointer events (usually the canvas element in which the game is rendered)
   * @public
   * @type {EventTarget}
   * @name pointerEventTarget
   * @memberof input
   */
- let pointerEventTarget = null;
+let pointerEventTarget = null;
 
 /**
  * Pointer information (current position and size)
@@ -16912,7 +16912,7 @@ function unbindPointer(button) {
     // clear the event status
     pointer.bind[
         typeof(button) === "undefined" ?
-        pointer.LEFT : button
+            pointer.LEFT : button
     ] = null;
 }
 
@@ -17628,7 +17628,7 @@ var input = {
  * A base class for renderable objects.
  * @augments Rect
  */
- class Renderable extends Rect {
+class Renderable extends Rect {
     /**
      * @param {number} x - position of the renderable object (accessible through inherited pos.x property)
      * @param {number} y - position of the renderable object (accessible through inherited pos.y property)
@@ -17714,7 +17714,7 @@ var input = {
          */
         this.body = undefined;
 
-       /**
+        /**
         * (G)ame (U)nique (Id)entifier" <br>
         * a GUID will be allocated for any renderable object added <br>
         * to an object container (including the `me.game.world` container)
@@ -18203,25 +18203,25 @@ var input = {
      * update the renderable's bounding rect (private)
      * @ignore
      */
-     updateBoundsPos(newX = this.pos.x, newY = this.pos.y) {
+    updateBoundsPos(newX = this.pos.x, newY = this.pos.y) {
         this.getBounds().translate(newX - this.pos.x, newY - this.pos.y);
-     }
+    }
 
-     /**
+    /**
       * return the renderable absolute position in the game world
       * @returns {Vector2d}
       */
-      getAbsolutePosition() {
-          if (typeof this._absPos === "undefined") {
-              this._absPos = pool.pull("Vector2d");
-          }
-          // XXX Cache me or something
-          this._absPos.set(this.pos.x, this.pos.y);
-          if (typeof this.ancestor !== "undefined" && typeof this.ancestor.getAbsolutePosition === "function" && this.floating !== true) {
-              this._absPos.add(this.ancestor.getAbsolutePosition());
-          }
-          return this._absPos;
-      }
+    getAbsolutePosition() {
+        if (typeof this._absPos === "undefined") {
+            this._absPos = pool.pull("Vector2d");
+        }
+        // XXX Cache me or something
+        this._absPos.set(this.pos.x, this.pos.y);
+        if (typeof this.ancestor !== "undefined" && typeof this.ancestor.getAbsolutePosition === "function" && this.floating !== true) {
+            this._absPos.add(this.ancestor.getAbsolutePosition());
+        }
+        return this._absPos;
+    }
 
     /**
      * called when the anchor point value is changed
@@ -18229,14 +18229,14 @@ var input = {
      * @param {number} x - the new X value to be set for the anchor
      * @param {number} y - the new Y value to be set for the anchor
      */
-     onAnchorUpdate(x, y) {
-         // since the callback is called before setting the new value
-         // manually update the anchor point (required for updateBoundsPos)
-         this.anchorPoint.setMuted(x, y);
-         // then call updateBounds
-         this.updateBounds();
-         this.isDirty = true;
-     }
+    onAnchorUpdate(x, y) {
+        // since the callback is called before setting the new value
+        // manually update the anchor point (required for updateBoundsPos)
+        this.anchorPoint.setMuted(x, y);
+        // then call updateBounds
+        this.updateBounds();
+        this.isDirty = true;
+    }
 
     /**
      * Prepare the rendering context before drawing (automatically called by melonJS).
@@ -18431,7 +18431,7 @@ let targetV = new Vector2d();
  * a 2D orthographic camera
  * @augments Renderable
  */
- class Camera2d extends Renderable {
+class Camera2d extends Renderable {
     /**
      * @param {number} minX - start x offset
      * @param {number} minY - start y offset
@@ -19146,7 +19146,7 @@ let default_settings = {
  * through the state manager must inherit from this base class.
  * @see state
  */
- class Stage {
+class Stage {
 
     /**
      * @param {object} [settings] - The stage` parameters
@@ -19546,7 +19546,7 @@ var utils = {
  * @classdesc
  * a TMX Tile Set Object
  */
- class TMXTileset {
+class TMXTileset {
     /**
      *  @param {object} tileset - tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
      */
@@ -19833,7 +19833,7 @@ const COLLISION_GROUP     = "collision";
  * @classdesc
  * an object containing all tileset
  */
- class TMXTilesetGroup {
+class TMXTilesetGroup {
 
     constructor() {
         this.tilesets = [];
@@ -20313,7 +20313,7 @@ var TMXUtils = {
  * a basic tile object
  * @augments Bounds
  */
- class Tile extends Bounds {
+class Tile extends Bounds {
     /**
      * @param {number} x - x index of the Tile in the map
      * @param {number} y - y index of the Tile in the map
@@ -20413,8 +20413,8 @@ var TMXUtils = {
         }
         if (this.flippedY) {
             transform.scale(
-                 this.flippedAD ? -1 : 1, this.flippedAD ? 1 : -1
-             );
+                this.flippedAD ? -1 : 1, this.flippedAD ? 1 : -1
+            );
         }
         transform.translate(-this.width / 2, -this.height / 2);
     }
@@ -20755,7 +20755,7 @@ class TMXObject {
  * @classdesc
  * a simplified path2d implementation, supporting only one path
  */
- class Path2D {
+class Path2D {
     constructor() {
         /**
          * the points defining the current path
@@ -21022,7 +21022,7 @@ class TMXObject {
      * @param {number} height - the rectangle's height. Positive values are down, and negative are up.
      * @param {number} radius - the arc's radius to draw the borders. Must be positive.
      */
-     roundRect(x, y, width, height, radius) {
+    roundRect(x, y, width, height, radius) {
         this.moveTo(x + radius, y);
         this.lineTo(x + width - radius, y);
         this.arcTo(x + width, y, x + width, y + radius, radius);
@@ -21039,7 +21039,7 @@ class TMXObject {
  * @classdesc
  * a base renderer object
  */
- class Renderer {
+class Renderer {
     /**
      * @param {Application.Settings} [options] - optional parameters for the renderer
      */
@@ -21211,7 +21211,7 @@ class TMXObject {
         }
 
         let _context = canvas.getContext("2d", {
-                "alpha" : transparent
+            "alpha" : transparent
         });
 
         if (!_context.canvas) {
@@ -21489,18 +21489,18 @@ class TMXObject {
  * @ignore
  */
 function createAtlas(width, height, name = "default", repeat = "no-repeat") {
-   return {
-       "meta" : {
-           "app" : "melonJS",
-           "size" : { "w" : width, "h" : height },
-           "repeat" : repeat,
-           "image" : "default"
-       },
-       "frames" : [{
-           "filename" : name,
-           "frame" : { "x" : 0, "y" : 0, "w" : width, "h" : height }
-       }]
-   };
+    return {
+        "meta" : {
+            "app" : "melonJS",
+            "size" : { "w" : width, "h" : height },
+            "repeat" : repeat,
+            "image" : "default"
+        },
+        "frames" : [{
+            "filename" : name,
+            "frame" : { "x" : 0, "y" : 0, "w" : width, "h" : height }
+        }]
+    };
 }
 
 /**
@@ -22303,7 +22303,7 @@ class TextureCache {
  * a canvas renderer object
  * @augments Renderer
  */
- class CanvasRenderer extends Renderer {
+class CanvasRenderer extends Renderer {
     /**
      * @param {Application.Settings} [options] - optional parameters for the renderer
      */
@@ -22818,11 +22818,7 @@ class TextureCache {
     setColor(color) {
         let context = this.getContext();
         context.strokeStyle =
-        context.fillStyle = (
-            color instanceof Color ?
-            color.toRGBA() :
-            color
-        );
+        context.fillStyle = (color instanceof Color ? color.toRGBA() : color);
     }
 
     /**
@@ -23052,7 +23048,7 @@ function setLayerData(layer, bounds, data) {
  * Tiled QT 0.7.x format
  * @augments Renderable
  */
- class TMXLayer extends Renderable {
+class TMXLayer extends Renderable {
     /**
      * @param {object} map - layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
      * @param {object} data - layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
@@ -23539,7 +23535,7 @@ let globalFloatingCounter = 0;
  * Container represents a collection of child objects
  * @augments Renderable
  */
- class Container extends Renderable {
+class Container extends Renderable {
     /**
      * @param {number} [x=0] - position of the container (accessible via the inherited pos.x property)
      * @param {number} [y=0] - position of the container (accessible via the inherited pos.y property)
@@ -23727,7 +23723,7 @@ let globalFloatingCounter = 0;
         // set the child z value if required
         if (typeof(child.pos) !== "undefined") {
             if (typeof(z) === "number") {
-                    child.pos.z = z;
+                child.pos.z = z;
             } else if (this.autoDepth === true) {
                 child.pos.z = this.getChildren().length;
             }
@@ -24184,7 +24180,7 @@ let globalFloatingCounter = 0;
             // remove the body first to avoid a condition where a body can be detached
             // from its parent, before the body is removed from the game world
             if (child.body instanceof Body) {
-               this.getRootAncestor().removeBody(child.body);
+                this.getRootAncestor().removeBody(child.body);
             }
 
             if (!keepalive) {
@@ -24507,7 +24503,7 @@ let globalFloatingCounter = 0;
  * @classdesc
  * The map renderer base class
  */
- class TMXRenderer {
+class TMXRenderer {
     /**
      * @param {number} cols - width of the tilemap in tiles
      * @param {number} rows - height of the tilemap in tiles
@@ -24606,7 +24602,7 @@ let globalFloatingCounter = 0;
  * an Orthogonal Map Renderder
  * @augments TMXRenderer
  */
- class TMXOrthogonalRenderer extends TMXRenderer {
+class TMXOrthogonalRenderer extends TMXRenderer {
     /**
      * @param {TMXTileMap} map - the TMX map
      */
@@ -24751,7 +24747,7 @@ let globalFloatingCounter = 0;
  * an Isometric Map Renderder
  * @augments TMXRenderer
  */
- class TMXIsometricRenderer extends TMXRenderer {
+class TMXIsometricRenderer extends TMXRenderer {
     /**
      * @param {TMXTileMap} map - the TMX map
      */
@@ -24967,7 +24963,7 @@ const offsetsStaggerY = [
  * an Hexagonal Map Renderder
  * @augments TMXRenderer
  */
- class TMXHexagonalRenderer extends TMXRenderer {
+class TMXHexagonalRenderer extends TMXRenderer {
     /**
      * @param {TMXTileMap} map - the TMX map
      */
@@ -25333,7 +25329,7 @@ const offsetsStaggerY = [
         let rowTile = startTile.clone();
         let rowPos = startPos.clone();
 
-       /* Determine in which half of the tile the top-left corner of the area we
+        /* Determine in which half of the tile the top-left corner of the area we
         * need to draw is. If we're in the upper half, we need to start one row
         * up due to those tiles being visible as well. How we go up one row
         * depends on whether we're in the left or right half of the tile.
@@ -25443,7 +25439,7 @@ const offsetsStaggerY = [
  * a Staggered Map Renderder
  * @augments TMXHexagonalRenderer
  */
- class TMXStaggeredRenderer extends TMXHexagonalRenderer {
+class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 
     /**
      * return true if the renderer can render the specified layer
@@ -25653,7 +25649,7 @@ function readObjectGroup(map, data, z) {
  * a TMX Tile Map Object
  * Tiled QT +0.7.x format
  */
- class TMXTileMap {
+class TMXTileMap {
     /**
      * @param {string} levelId - name of TMX map
      * @param {object} data - TMX map in JSON format
@@ -25848,7 +25844,7 @@ function readObjectGroup(map, data, z) {
                         image : this.background_image,
                         z : zOrder++
                     }
-            ));
+                ));
         }
 
         data.layers.forEach((layer) => {
@@ -27114,7 +27110,7 @@ var loader = {
  * An object to display a fixed or animated sprite on screen.
  * @augments Renderable
  */
- class Sprite extends Renderable {
+class Sprite extends Renderable {
     /**
      * @param {number} x - the x coordinates of the sprite object
      * @param {number} y - the y coordinates of the sprite object
@@ -27411,7 +27407,7 @@ var loader = {
                 };
             }
             else {
-              frameObject = frame;
+                frameObject = frame;
             }
             let frameObjectName = frameObject.name;
             if (typeof(frameObjectName) === "number") {
@@ -28645,7 +28641,7 @@ var timer$1 = timer;
  * a Generic Physic Body Object with some physic properties and behavior functionality, to as a member of a Renderable.
  * @see Renderable.body
  */
- class Body {
+class Body {
     /**
      * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} ancestor - the parent object this body is attached to
      * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] - a initial shape, list of shapes, or JSON object defining the body
@@ -29161,18 +29157,18 @@ var timer$1 = timer;
         let _x, _y;
 
         if (arguments.length === 2) {
-          // x, y
-          _x = arguments[0];
-          _y = arguments[1];
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
         } else {
-          // vector
-          _x = arguments[0].x;
-          _y = arguments[0].y;
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
         }
 
         if (this.getBounds().contains(_x, _y)) {
-             // cannot use forEach here as cannot break out with a return
-             for (let i = this.shapes.length, shape; i--, (shape = this.shapes[i]);) {
+            // cannot use forEach here as cannot break out with a return
+            for (let i = this.shapes.length, shape; i--, (shape = this.shapes[i]);) {
                 if (shape.contains(_x, _y)) {
                     return true;
                 }
@@ -29264,7 +29260,7 @@ var timer$1 = timer;
 
             this.vel.x = (
                 (nx < 0) ? nx :
-                ( x > 0) ? x  : 0
+                    ( x > 0) ? x  : 0
             );
         }
         if (this.friction.y > 0) {
@@ -29274,7 +29270,7 @@ var timer$1 = timer;
 
             this.vel.y = (
                 (ny < 0) ? ny :
-                ( y > 0) ? y  : 0
+                    ( y > 0) ? y  : 0
             );
         }
 
@@ -29778,7 +29774,7 @@ let Interpolation = {
  * author lechecacharro<br>
  * author Josh Faul / http://jocafa.com/
  */
- class Tween {
+class Tween {
 
     /**
      * @param {object} object - object on which to apply the tween
@@ -30405,11 +30401,11 @@ function setPrecision(src, precision) {
 function getMaxShaderPrecision(gl) {
     if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT ).precision > 0 &&
         gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT ).precision > 0) {
-            return "highp";
+        return "highp";
     }
     if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT ).precision > 0 &&
         gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT ).precision > 0) {
-            return "mediump";
+        return "mediump";
     }
     return "lowp";
 }
@@ -30435,7 +30431,7 @@ function minify(src) {
  * @classdesc
  * a base GL Shader object
  */
- class GLShader {
+class GLShader {
     /**
      * @param {WebGLRenderingContext} gl - the current WebGL rendering context
      * @param {string} vertex - a string containing the GLSL source code to set
@@ -30589,7 +30585,7 @@ function minify(src) {
  * @ignore
  */
 
- class VertexArrayBuffer {
+class VertexArrayBuffer {
 
     constructor(vertex_size, vertex_per_obj) {
         // the size of one vertex in float
@@ -30622,7 +30618,7 @@ function minify(src) {
      * @ignore
      */
     isFull(vertex = this.objSize) {
-         return (this.vertexCount + vertex >= this.maxVertex);
+        return (this.vertexCount + vertex >= this.maxVertex);
     }
 
     /**
@@ -30724,7 +30720,7 @@ function minify(src) {
  * @classdesc
  * A base Compositor object.
  */
- class Compositor {
+class Compositor {
     /**
      * @param {WebGLRenderer} renderer - the current WebGL renderer session
      * @param {object} settings - additional settings to initialize this compositors
@@ -30953,7 +30949,7 @@ var primitiveFragment = "varying vec4 vColor;\n\nvoid main(void) {\n    gl_FragC
  * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
  * @augments Compositor
  */
- class PrimitiveCompositor extends Compositor {
+class PrimitiveCompositor extends Compositor {
 
     /**
      * Initialize the compositor
@@ -31030,7 +31026,7 @@ let V_ARRAY = [
  * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
  * @augments Compositor
  */
- class QuadCompositor extends Compositor {
+class QuadCompositor extends Compositor {
 
     /**
      * Initialize the compositor
@@ -31258,7 +31254,7 @@ let V_ARRAY = [
  * a WebGL renderer object
  * @augments Renderer
  */
- class WebGLRenderer extends Renderer {
+class WebGLRenderer extends Renderer {
     /**
      * @param {Application.Settings} [options] - optional parameters for the renderer
      */
@@ -32190,7 +32186,7 @@ let V_ARRAY = [
                 // if same as the current scissor box do nothing
                 if (currentScissor[0] === x && currentScissor[1] === y &&
                     currentScissor[2] === width && currentScissor[3] === height) {
-                        return;
+                    return;
                 }
             }
             // flush the compositor
@@ -32488,7 +32484,7 @@ class CanvasTexture {
  * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
  * @augments Renderable
  */
- class ColorLayer extends Renderable {
+class ColorLayer extends Renderable {
     /**
      * @param {string} name - Layer name
      * @param {Color|string} color - CSS color
@@ -32505,9 +32501,9 @@ class CanvasTexture {
          * @name color
          * @memberof ColorLayer#
          */
-         this.color = pool.pull("Color").parseCSS(color);
+        this.color = pool.pull("Color").parseCSS(color);
 
-         this.onResetEvent(name, color, z);
+        this.onResetEvent(name, color, z);
 
     }
 
@@ -32555,7 +32551,7 @@ class CanvasTexture {
  * a generic Image Layer Object
  * @augments Renderable
  */
- class ImageLayer extends Sprite {
+class ImageLayer extends Sprite {
     /**
      * @param {number} x - x coordinate
      * @param {number} y - y coordinate
@@ -32771,7 +32767,7 @@ class CanvasTexture {
         this.isDirty = true;
     }
 
-   /**
+    /**
     * override the default predraw function
     * as repeat and anchor are managed directly in the draw method
     * @ignore
@@ -32855,7 +32851,7 @@ class CanvasTexture {
  * @see https://en.wikipedia.org/wiki/9-slice_scaling
  * @augments Sprite
  */
- class NineSliceSprite extends Sprite {
+class NineSliceSprite extends Sprite {
     /**
      * @param {number} x - the x coordinates of the sprite object
      * @param {number} y - the y coordinates of the sprite object
@@ -33089,7 +33085,7 @@ class CanvasTexture {
  * Use this for example if you want to display a panel that contains text, images or other UI elements.
  * @augments Container
  */
- class UIBaseElement extends Container {
+class UIBaseElement extends Container {
     /**
      *
      * @param {number} x - The x position of the container
@@ -33167,7 +33163,7 @@ class CanvasTexture {
     clicked(event) {
         // Check if left mouse button is pressed
         if (event.button === 0 && this.isClickable) {
-            this.dirty = true;
+            this.isDirty = true;
             this.released = false;
             if (this.isHoldable) {
                 timer$1.clearTimeout(this.holdTimeout);
@@ -33201,7 +33197,7 @@ class CanvasTexture {
      */
     enter(event) {
         this.hover = true;
-        this.dirty = true;
+        this.isDirty = true;
         if (this.isDraggable === true) {
             on(POINTERMOVE, this.pointerMove, this);
             // to memorize where we grab the object
@@ -33247,7 +33243,7 @@ class CanvasTexture {
      */
     leave(event) {
         this.hover = false;
-        this.dirty = true;
+        this.isDirty = true;
         if (this.isDraggable === true) {
             // unregister on the global pointermove event
             off(POINTERMOVE, this.pointerMove);
@@ -33273,7 +33269,7 @@ class CanvasTexture {
     release(event) {
         if (this.released === false) {
             this.released = true;
-            this.dirty = true;
+            this.isDirty = true;
             timer$1.clearTimeout(this.holdTimeout);
             this.holdTimeout = -1;
             return this.onRelease(event);
@@ -33295,7 +33291,7 @@ class CanvasTexture {
     hold() {
         timer$1.clearTimeout(this.holdTimeout);
         this.holdTimeout = -1;
-        this.dirty = true;
+        this.isDirty = true;
         if (!this.released) {
             this.onHold();
         }
@@ -33375,7 +33371,6 @@ function setContextStyle(context, style) {
 * -> first char " " 32d (0x20);
 */
 
-
 const runits = ["ex", "em", "pt", "px"];
 const toPX = [12, 24, 0.75, 1];
 
@@ -33384,7 +33379,7 @@ const toPX = [12, 24, 0.75, 1];
  * a generic system font object.
  * @augments Renderable
  */
- class Text extends Renderable {
+class Text extends Renderable {
     /**
      * @param {number} x - position of the text object
      * @param {number} y - position of the text object
@@ -33437,16 +33432,16 @@ const toPX = [12, 24, 0.75, 1];
          * @name strokeStyle
          * @default black
          */
-         if (typeof settings.strokeStyle !== "undefined") {
-             if (settings.strokeStyle instanceof Color) {
-                 this.strokeStyle = settings.strokeStyle;
-             } else {
-                 // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-                 this.strokeStyle = pool.pull("Color").parseCSS(settings.strokeStyle);
-             }
-         } else {
-             this.strokeStyle = pool.pull("Color", 0, 0, 0);
-         }
+        if (typeof settings.strokeStyle !== "undefined") {
+            if (settings.strokeStyle instanceof Color) {
+                this.strokeStyle = settings.strokeStyle;
+            } else {
+                // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
+                this.strokeStyle = pool.pull("Color").parseCSS(settings.strokeStyle);
+            }
+        } else {
+            this.strokeStyle = pool.pull("Color", 0, 0, 0);
+        }
 
         /**
          * sets the current line width, in pixels, when drawing stroke
@@ -33779,7 +33774,7 @@ const toPX = [12, 24, 0.75, 1];
  * a Text Metrics object that contains helper for text manipulation
  * @augments Bounds
  */
- class TextMetrics extends Bounds {
+class TextMetrics extends Bounds {
 
     /**
      * @param {Text|BitmapText} ancestor - the parent object that contains this TextMetrics object
@@ -33942,7 +33937,7 @@ const toPX = [12, 24, 0.75, 1];
  * a bitmap font object
  * @augments Renderable
  */
- class BitmapText extends Renderable {
+class BitmapText extends Renderable {
     /**
      * @param {number} x - position of the text object
      * @param {number} y - position of the text object
@@ -34143,8 +34138,8 @@ const toPX = [12, 24, 0.75, 1];
                     break;
             }
 
-             // adjust y pos based on alignment value
-             switch (this.textBaseline) {
+            // adjust y pos based on alignment value
+            switch (this.textBaseline) {
                 case "middle":
                     ay = this.metrics.height * 0.5;
                     break;
@@ -34166,7 +34161,7 @@ const toPX = [12, 24, 0.75, 1];
 
         if (absolute === true) {
             if (typeof this.ancestor !== "undefined" && typeof this.ancestor.getAbsolutePosition === "function" && this.floating !== true) {
-                 bounds.translate(this.ancestor.getAbsolutePosition());
+                bounds.translate(this.ancestor.getAbsolutePosition());
             }
         }
 
@@ -34355,7 +34350,7 @@ const toPX = [12, 24, 0.75, 1];
  * This is a basic base text button which you can use in your Game UI.
  * @augments UIBaseElement
  */
- class UITextButton extends UIBaseElement {
+class UITextButton extends UIBaseElement {
     /**
      * A Bitmap Text Button with an outlined background border, filled with background color.
      * It uses a RoundRect as background and changes the background color on hovering over.
@@ -34488,7 +34483,7 @@ const toPX = [12, 24, 0.75, 1];
  * This is a basic sprite based button which you can use in your Game UI.
  * @augments Sprite
  */
- class UISpriteElement extends Sprite {
+class UISpriteElement extends Sprite {
     /**
      * @param {number} x - the x coordinate of the UISpriteElement Object
      * @param {number} y - the y coordinate of the UISpriteElement Object
@@ -34574,7 +34569,7 @@ const toPX = [12, 24, 0.75, 1];
     clicked(event) {
         // Check if left mouse button is pressed
         if (event.button === 0 && this.isClickable) {
-            this.dirty = true;
+            this.isDirty = true;
             this.released = false;
             if (this.isHoldable) {
                 timer$1.clearTimeout(this.holdTimeout);
@@ -34600,7 +34595,7 @@ const toPX = [12, 24, 0.75, 1];
      */
     enter(event) {
         this.hover = true;
-        this.dirty = true;
+        this.isDirty = true;
         return this.onOver(event);
     }
 
@@ -34618,7 +34613,7 @@ const toPX = [12, 24, 0.75, 1];
      */
     leave(event) {
         this.hover = false;
-        this.dirty = true;
+        this.isDirty = true;
         this.release(event);
         return this.onOut(event);
     }
@@ -34638,7 +34633,7 @@ const toPX = [12, 24, 0.75, 1];
     release(event) {
         if (this.released === false) {
             this.released = true;
-            this.dirty = true;
+            this.isDirty = true;
             timer$1.clearTimeout(this.holdTimeout);
             this.holdTimeout = -1;
             return this.onRelease(event);
@@ -34660,7 +34655,7 @@ const toPX = [12, 24, 0.75, 1];
     hold() {
         timer$1.clearTimeout(this.holdTimeout);
         this.holdTimeout = -1;
-        this.dirty = true;
+        this.isDirty = true;
         if (!this.released) {
             this.onHold();
         }
@@ -34707,7 +34702,7 @@ const toPX = [12, 24, 0.75, 1];
  * a basic collectable helper class for immovable object (e.g. a coin)
  * @augments Sprite
  */
- class Collectable extends Sprite {
+class Collectable extends Sprite {
     /**
      * @param {number} x - the x coordinates of the collectable
      * @param {number} y - the y coordinates of the collectable
@@ -34754,7 +34749,7 @@ const toPX = [12, 24, 0.75, 1];
  * trigger an event when colliding with another object
  * @augments Renderable
  */
- class Trigger extends Renderable {
+class Trigger extends Renderable {
     /**
      * @param {number} x - the x coordinates of the trigger area
      * @param {number} y - the y coordinates of the trigger area
@@ -34830,14 +34825,14 @@ const toPX = [12, 24, 0.75, 1];
     /**
      * @ignore
      */
-     getTriggerSettings() {
+    getTriggerSettings() {
         let world = this.ancestor.getRootAncestor();
-         // Lookup for the container instance
-         if (typeof(this.triggerSettings.container) === "string") {
-             this.triggerSettings.container = world.getChildByName(this.triggerSettings.container)[0];
-         }
-         return this.triggerSettings;
-     }
+        // Lookup for the container instance
+        if (typeof(this.triggerSettings.container) === "string") {
+            this.triggerSettings.container = world.getChildByName(this.triggerSettings.container)[0];
+        }
+        return this.triggerSettings;
+    }
 
     /**
      * @ignore
@@ -34866,7 +34861,7 @@ const toPX = [12, 24, 0.75, 1];
                 if (!this.fading) {
                     this.fading = true;
                     world.app.viewport.fadeIn(this.fade, this.duration,
-                            () => this.onFadeComplete());
+                        () => this.onFadeComplete());
                 }
             } else {
                 level.load(this.gotolevel, triggerSettings);
@@ -34941,8 +34936,8 @@ function createGradient(light) {
  * (multiple lights are not supported, alpha component of the ambient light is ignored)
  * @see stage.lights
  */
- class Light2d extends Renderable {
-   /**
+class Light2d extends Renderable {
+    /**
     * @param {number} x - The horizontal position of the light.
     * @param {number} y - The vertical position of the light.
     * @param {number} radiusX - The horizontal radius of the light.
@@ -35045,7 +35040,7 @@ const PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
  * a glyph representing a single character in a font
  * @ignore
  */
- class Glyph {
+class Glyph {
     /**
      * @ignore
      */
@@ -35150,9 +35145,9 @@ function createSpaceGlyph(glyphs) {
  * Class for storing relevant data from the font file.
  * @ignore
  */
- class BitmapTextData {
+class BitmapTextData {
 
-   /**
+    /**
     * @param {string} data - The bitmap font data pulled from the resource loader using me.loader.getBinary()
     */
     constructor(data) {
@@ -36086,13 +36081,13 @@ class Detector {
             for (let indexB = bodyB.shapes.length, shapeB; indexB--, (shapeB = bodyB.shapes[indexB]);) {
                 // full SAT collision check
                 if (SAT["test" + shapeA.shapeType + shapeB.shapeType].call(
-                        this,
-                        bodyA.ancestor, // a reference to the object A
-                        shapeA,
-                        bodyB.ancestor,  // a reference to the object B
-                        shapeB,
-                        // clear response object before reusing
-                        response.clear()) === true
+                    this,
+                    bodyA.ancestor, // a reference to the object A
+                    shapeA,
+                    bodyB.ancestor,  // a reference to the object B
+                    shapeB,
+                    // clear response object before reusing
+                    response.clear()) === true
                 ) {
 
                     // set the shape index
@@ -36205,7 +36200,7 @@ class Detector {
                             shapeA,
                             objB,  // a reference to the object B
                             shapeB
-                    )) {
+                        )) {
                         // we touched something !
                         result[collisionCounter] = objB;
                         collisionCounter++;
@@ -36228,7 +36223,7 @@ class Detector {
  * an object representing the physic world, and responsible for managing and updating all childs and physics
  * @augments Container
  */
- class World extends Container {
+class World extends Container {
     /**
      * @param {number} [x=0] - position of the container (accessible via the inherited pos.x property)
      * @param {number} [y=0] - position of the container (accessible via the inherited pos.y property)
@@ -36729,7 +36724,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
  * Particle Emitter Object.
  * @augments Container
  */
- class ParticleEmitter extends Container {
+class ParticleEmitter extends Container {
     /**
      * @param {number} x - x position of the particle emitter
      * @param {number} y - y position of the particle emitter
@@ -36969,7 +36964,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
  * Single Particle Object.
  * @augments Renderable
  */
- class Particle extends Renderable {
+class Particle extends Renderable {
     /**
      * @param {ParticleEmitter} emitter - the particle emitter
      */
@@ -37143,7 +37138,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
  * @augments Renderable
  * @see Renderable
  */
- class Entity extends Renderable {
+class Entity extends Renderable {
     /**
      * @param {number} x - the x coordinates of the entity object
      * @param {number} y - the y coordinates of the entity object
@@ -37458,7 +37453,7 @@ function scale(game, x, y) {
 function onresize(game) {
     let renderer = game.renderer;
     let settings = renderer.settings;
-    let scaleX = 1, scaleY = 1;
+    let scaleX = settings.scale, scaleY = settings.scale;
     let nodeBounds;
 
     if (settings.autoScale) {
@@ -37524,13 +37519,9 @@ function onresize(game) {
                 scaleX = scaleY = _max_height / settings.height;
             }
         }
-
-        // adjust scaling ratio based on the new scaling ratio
-        scale(game, scaleX, scaleY);
-    } else {
-        // adjust scaling ratio based on the given settings
-        scale(game, settings.scale, settings.scale);
     }
+    // adjust scaling ratio
+    scale(game, scaleX, scaleY);
 }
 
 // default settings
@@ -37620,7 +37611,7 @@ function consoleHeader(app) {
  * An Application is responsible for updating (each frame) all the related object status and draw them.
  * @see game
  */
- class Application {
+class Application {
     /**
      * @param {number} width - The width of the canvas viewport
      * @param {number} height - The height of the canvas viewport
@@ -38263,7 +38254,7 @@ Renderer.prototype.getScreenContext = function()  {
  * @deprecated since 14.0.0
  * @see UISpriteElement
  */
- class GUI_Object extends UISpriteElement {
+class GUI_Object extends UISpriteElement {
     /**
      * @param {number} x - the x coordinate of the GUI Object
      * @param {number} y - the y coordinate of the GUI Object
@@ -38410,7 +38401,7 @@ function boot() {
 // call the library init function when ready
 onReady(() => {
     if (skipAutoInit === false) {
-       boot();
+        boot();
     }
 });
 

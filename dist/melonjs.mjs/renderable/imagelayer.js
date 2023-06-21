@@ -17,7 +17,7 @@ import { isNumeric } from '../utils/string.js';
  * a generic Image Layer Object
  * @augments Renderable
  */
- class ImageLayer extends Sprite {
+class ImageLayer extends Sprite {
     /**
      * @param {number} x - x coordinate
      * @param {number} y - y coordinate
@@ -233,7 +233,7 @@ import { isNumeric } from '../utils/string.js';
         this.isDirty = true;
     }
 
-   /**
+    /**
     * override the default predraw function
     * as repeat and anchor are managed directly in the draw method
     * @ignore

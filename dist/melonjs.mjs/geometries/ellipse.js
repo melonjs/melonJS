@@ -11,7 +11,7 @@ import pool from '../system/pooling.js';
  * @classdesc
  * an ellipse Object
  */
- class Ellipse {
+class Ellipse {
     /**
      * @param {number} x - the center x coordinate of the ellipse
      * @param {number} y - the center y coordinate of the ellipse
@@ -222,13 +222,13 @@ import pool from '../system/pooling.js';
         let _x, _y;
 
         if (arguments.length === 2) {
-          // x, y
-          _x = arguments[0];
-          _y = arguments[1];
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
         } else {
-          // vector
-          _x = arguments[0].x;
-          _y = arguments[0].y;
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
         }
 
         // Make position relative to object center point.

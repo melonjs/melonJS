@@ -8,13 +8,13 @@
  */
 export default class Light2d extends Renderable {
     /**
-     * @param {number} x - The horizontal position of the light.
-     * @param {number} y - The vertical position of the light.
-     * @param {number} radiusX - The horizontal radius of the light.
-     * @param {number} [radiusY=radiusX] - The vertical radius of the light.
-     * @param {Color|string} [color="#FFF"] - the color of the light
-     * @param {number} [intensity=0.7] - The intensity of the light.
-     */
+    * @param {number} x - The horizontal position of the light.
+    * @param {number} y - The vertical position of the light.
+    * @param {number} radiusX - The horizontal radius of the light.
+    * @param {number} [radiusY=radiusX] - The vertical radius of the light.
+    * @param {Color|string} [color="#FFF"] - the color of the light
+    * @param {number} [intensity=0.7] - The intensity of the light.
+    */
     constructor(x: number, y: number, radiusX: number, radiusY?: number | undefined, color?: Color | string, intensity?: number | undefined);
     /**
      * the color of the light

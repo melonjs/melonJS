@@ -49,7 +49,7 @@ function scale(game, x, y) {
 function onresize(game) {
     let renderer = game.renderer;
     let settings = renderer.settings;
-    let scaleX = 1, scaleY = 1;
+    let scaleX = settings.scale, scaleY = settings.scale;
     let nodeBounds;
 
     if (settings.autoScale) {
@@ -115,13 +115,9 @@ function onresize(game) {
                 scaleX = scaleY = _max_height / settings.height;
             }
         }
-
-        // adjust scaling ratio based on the new scaling ratio
-        scale(game, scaleX, scaleY);
-    } else {
-        // adjust scaling ratio based on the given settings
-        scale(game, settings.scale, settings.scale);
     }
+    // adjust scaling ratio
+    scale(game, scaleX, scaleY);
 }
 
 export { onresize };

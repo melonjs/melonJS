@@ -15,7 +15,7 @@ import { getTMX, getImage } from '../../loader/loader.js';
  * @classdesc
  * a TMX Tile Set Object
  */
- class TMXTileset {
+class TMXTileset {
     /**
      *  @param {object} tileset - tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
      */

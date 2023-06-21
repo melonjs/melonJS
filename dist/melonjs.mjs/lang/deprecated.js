@@ -107,7 +107,7 @@ Renderer.prototype.getScreenContext = function()  {
  * @deprecated since 14.0.0
  * @see UISpriteElement
  */
- class GUI_Object extends UISpriteElement {
+class GUI_Object extends UISpriteElement {
     /**
      * @param {number} x - the x coordinate of the GUI Object
      * @param {number} y - the y coordinate of the GUI Object

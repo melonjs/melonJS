@@ -17,18 +17,18 @@ import { ETA } from '../../math/math.js';
  * @ignore
  */
 function createAtlas(width, height, name = "default", repeat = "no-repeat") {
-   return {
-       "meta" : {
-           "app" : "melonJS",
-           "size" : { "w" : width, "h" : height },
-           "repeat" : repeat,
-           "image" : "default"
-       },
-       "frames" : [{
-           "filename" : name,
-           "frame" : { "x" : 0, "y" : 0, "w" : width, "h" : height }
-       }]
-   };
+    return {
+        "meta" : {
+            "app" : "melonJS",
+            "size" : { "w" : width, "h" : height },
+            "repeat" : repeat,
+            "image" : "default"
+        },
+        "frames" : [{
+            "filename" : name,
+            "frame" : { "x" : 0, "y" : 0, "w" : width, "h" : height }
+        }]
+    };
 }
 
 /**

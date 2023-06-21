@@ -21,7 +21,7 @@ import Point from '../geometries/point.js';
  * a Generic Physic Body Object with some physic properties and behavior functionality, to as a member of a Renderable.
  * @see Renderable.body
  */
- class Body {
+class Body {
     /**
      * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} ancestor - the parent object this body is attached to
      * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] - a initial shape, list of shapes, or JSON object defining the body
@@ -537,18 +537,18 @@ import Point from '../geometries/point.js';
         let _x, _y;
 
         if (arguments.length === 2) {
-          // x, y
-          _x = arguments[0];
-          _y = arguments[1];
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
         } else {
-          // vector
-          _x = arguments[0].x;
-          _y = arguments[0].y;
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
         }
 
         if (this.getBounds().contains(_x, _y)) {
-             // cannot use forEach here as cannot break out with a return
-             for (let i = this.shapes.length, shape; i--, (shape = this.shapes[i]);) {
+            // cannot use forEach here as cannot break out with a return
+            for (let i = this.shapes.length, shape; i--, (shape = this.shapes[i]);) {
                 if (shape.contains(_x, _y)) {
                     return true;
                 }
@@ -640,7 +640,7 @@ import Point from '../geometries/point.js';
 
             this.vel.x = (
                 (nx < 0) ? nx :
-                ( x > 0) ? x  : 0
+                    ( x > 0) ? x  : 0
             );
         }
         if (this.friction.y > 0) {
@@ -650,7 +650,7 @@ import Point from '../geometries/point.js';
 
             this.vel.y = (
                 (ny < 0) ? ny :
-                ( y > 0) ? y  : 0
+                    ( y > 0) ? y  : 0
             );
         }
 

@@ -19,7 +19,7 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
  * a canvas renderer object
  * @augments Renderer
  */
- class CanvasRenderer extends Renderer {
+class CanvasRenderer extends Renderer {
     /**
      * @param {Application.Settings} [options] - optional parameters for the renderer
      */
@@ -534,11 +534,7 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
     setColor(color) {
         let context = this.getContext();
         context.strokeStyle =
-        context.fillStyle = (
-            color instanceof Color ?
-            color.toRGBA() :
-            color
-        );
+        context.fillStyle = (color instanceof Color ? color.toRGBA() : color);
     }
 
     /**

@@ -29,7 +29,7 @@ let globalFloatingCounter = 0;
  * Container represents a collection of child objects
  * @augments Renderable
  */
- class Container extends Renderable {
+class Container extends Renderable {
     /**
      * @param {number} [x=0] - position of the container (accessible via the inherited pos.x property)
      * @param {number} [y=0] - position of the container (accessible via the inherited pos.y property)
@@ -217,7 +217,7 @@ let globalFloatingCounter = 0;
         // set the child z value if required
         if (typeof(child.pos) !== "undefined") {
             if (typeof(z) === "number") {
-                    child.pos.z = z;
+                child.pos.z = z;
             } else if (this.autoDepth === true) {
                 child.pos.z = this.getChildren().length;
             }
@@ -674,7 +674,7 @@ let globalFloatingCounter = 0;
             // remove the body first to avoid a condition where a body can be detached
             // from its parent, before the body is removed from the game world
             if (child.body instanceof Body) {
-               this.getRootAncestor().removeBody(child.body);
+                this.getRootAncestor().removeBody(child.body);
             }
 
             if (!keepalive) {

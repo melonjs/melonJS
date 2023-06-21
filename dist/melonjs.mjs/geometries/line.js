@@ -17,7 +17,7 @@ import Polygon from './poly.js';
  * @param {Vector2d[]} points - array of vectors defining the Line
  */
 
- class Line extends Polygon {
+class Line extends Polygon {
 
     /**
      * Returns true if the Line contains the given point
@@ -40,13 +40,13 @@ import Polygon from './poly.js';
         let _x, _y;
 
         if (arguments.length === 2) {
-          // x, y
-          _x = arguments[0];
-          _y = arguments[1];
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
         } else {
-          // vector
-          _x = arguments[0].x;
-          _y = arguments[0].y;
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
         }
 
         // translate the given coordinates,

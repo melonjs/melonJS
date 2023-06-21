@@ -5,7 +5,7 @@
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
-import BitmapText from '../../text/bitmaptext.js';
+import BitmapText from '../text/bitmaptext.js';
 import RoundRect from '../../geometries/roundrect.js';
 import UIBaseElement from './uibaseelement.js';
 
@@ -14,7 +14,7 @@ import UIBaseElement from './uibaseelement.js';
  * This is a basic base text button which you can use in your Game UI.
  * @augments UIBaseElement
  */
- class UITextButton extends UIBaseElement {
+class UITextButton extends UIBaseElement {
     /**
      * A Bitmap Text Button with an outlined background border, filled with background color.
      * It uses a RoundRect as background and changes the background color on hovering over.

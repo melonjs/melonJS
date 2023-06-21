@@ -17,7 +17,7 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
  * A base class for renderable objects.
  * @augments Rect
  */
- class Renderable extends Rect {
+class Renderable extends Rect {
     /**
      * @param {number} x - position of the renderable object (accessible through inherited pos.x property)
      * @param {number} y - position of the renderable object (accessible through inherited pos.y property)
@@ -103,7 +103,7 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
          */
         this.body = undefined;
 
-       /**
+        /**
         * (G)ame (U)nique (Id)entifier" <br>
         * a GUID will be allocated for any renderable object added <br>
         * to an object container (including the `me.game.world` container)
@@ -592,25 +592,25 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
      * update the renderable's bounding rect (private)
      * @ignore
      */
-     updateBoundsPos(newX = this.pos.x, newY = this.pos.y) {
+    updateBoundsPos(newX = this.pos.x, newY = this.pos.y) {
         this.getBounds().translate(newX - this.pos.x, newY - this.pos.y);
-     }
+    }
 
-     /**
+    /**
       * return the renderable absolute position in the game world
       * @returns {Vector2d}
       */
-      getAbsolutePosition() {
-          if (typeof this._absPos === "undefined") {
-              this._absPos = pool.pull("Vector2d");
-          }
-          // XXX Cache me or something
-          this._absPos.set(this.pos.x, this.pos.y);
-          if (typeof this.ancestor !== "undefined" && typeof this.ancestor.getAbsolutePosition === "function" && this.floating !== true) {
-              this._absPos.add(this.ancestor.getAbsolutePosition());
-          }
-          return this._absPos;
-      }
+    getAbsolutePosition() {
+        if (typeof this._absPos === "undefined") {
+            this._absPos = pool.pull("Vector2d");
+        }
+        // XXX Cache me or something
+        this._absPos.set(this.pos.x, this.pos.y);
+        if (typeof this.ancestor !== "undefined" && typeof this.ancestor.getAbsolutePosition === "function" && this.floating !== true) {
+            this._absPos.add(this.ancestor.getAbsolutePosition());
+        }
+        return this._absPos;
+    }
 
     /**
      * called when the anchor point value is changed
@@ -618,14 +618,14 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
      * @param {number} x - the new X value to be set for the anchor
      * @param {number} y - the new Y value to be set for the anchor
      */
-     onAnchorUpdate(x, y) {
-         // since the callback is called before setting the new value
-         // manually update the anchor point (required for updateBoundsPos)
-         this.anchorPoint.setMuted(x, y);
-         // then call updateBounds
-         this.updateBounds();
-         this.isDirty = true;
-     }
+    onAnchorUpdate(x, y) {
+        // since the callback is called before setting the new value
+        // manually update the anchor point (required for updateBoundsPos)
+        this.anchorPoint.setMuted(x, y);
+        // then call updateBounds
+        this.updateBounds();
+        this.isDirty = true;
+    }
 
     /**
      * Prepare the rendering context before drawing (automatically called by melonJS).

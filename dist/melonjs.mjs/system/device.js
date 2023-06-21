@@ -457,7 +457,7 @@ function onReady(fn) {
             emit(FOCUS);
             // force focus if autofocus is on
             {
-                this.focus();
+                focus();
             }
         }, false);
     }
@@ -469,7 +469,7 @@ function onReady(fn) {
                     emit(FOCUS);
                     // force focus if autofocus is on
                     {
-                        this.focus();
+                        focus();
                     }
                 } else {
                     emit(BLUR);

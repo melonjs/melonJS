@@ -15,7 +15,7 @@ import { degToRad } from '../../../math/math.js';
  * a Staggered Map Renderder
  * @augments TMXHexagonalRenderer
  */
- class TMXStaggeredRenderer extends TMXHexagonalRenderer {
+class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 
     /**
      * return true if the renderer can render the specified layer

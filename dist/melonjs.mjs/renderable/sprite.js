@@ -17,7 +17,7 @@ import Color from '../math/color.js';
  * An object to display a fixed or animated sprite on screen.
  * @augments Renderable
  */
- class Sprite extends Renderable {
+class Sprite extends Renderable {
     /**
      * @param {number} x - the x coordinates of the sprite object
      * @param {number} y - the y coordinates of the sprite object
@@ -314,7 +314,7 @@ import Color from '../math/color.js';
                 };
             }
             else {
-              frameObject = frame;
+                frameObject = frame;
             }
             let frameObjectName = frameObject.name;
             if (typeof(frameObjectName) === "number") {

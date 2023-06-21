@@ -58,7 +58,7 @@ let QT_VECTOR = new Vector2d();
  * a QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
  * @see game.world.broadphase
  */
- class QuadTree {
+class QuadTree {
     /**
      * @param {World} world - the physic world this QuadTree belongs to
      * @param {Bounds} bounds - bounds of the node
@@ -90,7 +90,7 @@ let QT_VECTOR = new Vector2d();
             left = this.bounds.left,
             top = this.bounds.top;
 
-         //top right node
+        //top right node
         this.nodes[0] = QT_ARRAY_POP(
             this.world,
             {
@@ -286,7 +286,7 @@ let QT_VECTOR = new Vector2d();
             if (index !== -1) {
                 returnObjects = returnObjects.concat(this.nodes[index].retrieve(item));
             } else {
-                 //if rect does not fit into a subnode, check it against all subnodes
+                //if rect does not fit into a subnode, check it against all subnodes
                 for (let i = 0; i < this.nodes.length; i = i + 1) {
                     returnObjects = returnObjects.concat(this.nodes[i].retrieve(item));
                 }
@@ -308,7 +308,7 @@ let QT_VECTOR = new Vector2d();
      * @param {object} item - object to be removed
      * @returns {boolean} true if the item was found and removed.
      */
-     remove(item) {
+    remove(item) {
         let found = false;
 
         if (typeof (item.getBounds) === "undefined") {

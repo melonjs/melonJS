@@ -58,11 +58,11 @@ export default class Renderable extends Rect {
      */
     body: Body;
     /**
-     * (G)ame (U)nique (Id)entifier" <br>
-     * a GUID will be allocated for any renderable object added <br>
-     * to an object container (including the `me.game.world` container)
-     * @type {string}
-     */
+    * (G)ame (U)nique (Id)entifier" <br>
+    * a GUID will be allocated for any renderable object added <br>
+    * to an object container (including the `me.game.world` container)
+    * @type {string}
+    */
     GUID: string;
     /**
      * an event handler that is called when the renderable leave or enter a camera viewport
@@ -329,9 +329,9 @@ export default class Renderable extends Rect {
      */
     updateBoundsPos(newX?: any, newY?: any): void;
     /**
-     * return the renderable absolute position in the game world
-     * @returns {Vector2d}
-     */
+      * return the renderable absolute position in the game world
+      * @returns {Vector2d}
+      */
     getAbsolutePosition(): Vector2d;
     _absPos: object | undefined;
     /**

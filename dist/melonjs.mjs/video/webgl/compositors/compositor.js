@@ -12,7 +12,7 @@ import GLShader from '../glshader.js';
  * @classdesc
  * A base Compositor object.
  */
- class Compositor {
+class Compositor {
     /**
      * @param {WebGLRenderer} renderer - the current WebGL renderer session
      * @param {object} settings - additional settings to initialize this compositors

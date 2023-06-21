@@ -80,10 +80,10 @@ export default class UITextButton extends UIBaseElement {
      * @type {BitmapText}
      */
     bitmapText: BitmapText;
-    dimensions: import("../../text/textmetrics.js").default;
+    dimensions: import("../text/textmetrics.js").default;
     border: RoundRect;
     draw(renderer: any): void;
 }
 import UIBaseElement from "./uibaseelement.js";
-import BitmapText from "../../text/bitmaptext.js";
+import BitmapText from "../text/bitmaptext.js";
 import RoundRect from "../../geometries/roundrect.js";

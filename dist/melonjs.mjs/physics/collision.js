@@ -15,7 +15,7 @@ import { game } from '../index.js';
 
 let collision = {
 
-     /**
+    /**
       * The maximum number of children that a quadtree node can contain before it is split into sub-nodes.
       * @name maxChildren
       * @memberof collision
@@ -24,9 +24,9 @@ let collision = {
       * @default 8
       * @see game.world.broadphase
       */
-     maxChildren : 8,
+    maxChildren : 8,
 
-     /**
+    /**
       * The maximum number of levels that the quadtree will create.
       * @name maxDepth
       * @memberof collision
@@ -35,7 +35,7 @@ let collision = {
       * @default 4
       * @see game.world.broadphase
       */
-     maxDepth : 4,
+    maxDepth : 4,
 
     /**
      * Enum for collision type values.

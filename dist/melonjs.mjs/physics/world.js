@@ -18,7 +18,7 @@ import state from '../state/state.js';
  * an object representing the physic world, and responsible for managing and updating all childs and physics
  * @augments Container
  */
- class World extends Container {
+class World extends Container {
     /**
      * @param {number} [x=0] - position of the container (accessible via the inherited pos.x property)
      * @param {number} [y=0] - position of the container (accessible via the inherited pos.y property)

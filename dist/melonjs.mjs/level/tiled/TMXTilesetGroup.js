@@ -11,7 +11,7 @@ import { TMX_CLEAR_BIT_MASK } from './constants.js';
  * @classdesc
  * an object containing all tileset
  */
- class TMXTilesetGroup {
+class TMXTilesetGroup {
 
     constructor() {
         this.tilesets = [];

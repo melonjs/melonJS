@@ -102,14 +102,14 @@ let keyUpEvent = function (e, keyCode, mouseButton) {
  * PUBLIC STUFF
  */
 
- /**
+/**
   * the default target element for keyboard events (usually the window element in which the game is running)
   * @public
   * @type {EventTarget}
   * @name keyBoardEventTarget
   * @memberof input
   */
- let keyBoardEventTarget = null;
+let keyBoardEventTarget = null;
 
 /**
  * standard keyboard constants

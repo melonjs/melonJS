@@ -42,9 +42,9 @@ export { default as UISpriteElement } from './renderable/ui/uispriteelement.js';
 import Collectable from './renderable/collectable.js';
 import Trigger from './renderable/trigger.js';
 import Light2d from './renderable/light2d.js';
-import Text from './text/text.js';
-import BitmapText from './text/bitmaptext.js';
-import BitmapTextData from './text/bitmaptextdata.js';
+import Text from './renderable/text/text.js';
+import BitmapText from './renderable/text/bitmaptext.js';
+import BitmapTextData from './renderable/text/bitmaptextdata.js';
 export { Draggable } from './renderable/draggable.js';
 export { DropTarget } from './renderable/dragndrop.js';
 export { default as TMXRenderer } from './level/tiled/renderer/TMXRenderer.js';
@@ -232,7 +232,7 @@ function boot() {
 // call the library init function when ready
 onReady(() => {
     {
-       boot();
+        boot();
     }
 });
 

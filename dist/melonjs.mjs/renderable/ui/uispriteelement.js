@@ -14,7 +14,7 @@ import { registerPointerEvent, releasePointerEvent } from '../../input/pointerev
  * This is a basic sprite based button which you can use in your Game UI.
  * @augments Sprite
  */
- class UISpriteElement extends Sprite {
+class UISpriteElement extends Sprite {
     /**
      * @param {number} x - the x coordinate of the UISpriteElement Object
      * @param {number} y - the y coordinate of the UISpriteElement Object
@@ -100,7 +100,7 @@ import { registerPointerEvent, releasePointerEvent } from '../../input/pointerev
     clicked(event) {
         // Check if left mouse button is pressed
         if (event.button === 0 && this.isClickable) {
-            this.dirty = true;
+            this.isDirty = true;
             this.released = false;
             if (this.isHoldable) {
                 timer.clearTimeout(this.holdTimeout);
@@ -126,7 +126,7 @@ import { registerPointerEvent, releasePointerEvent } from '../../input/pointerev
      */
     enter(event) {
         this.hover = true;
-        this.dirty = true;
+        this.isDirty = true;
         return this.onOver(event);
     }
 
@@ -144,7 +144,7 @@ import { registerPointerEvent, releasePointerEvent } from '../../input/pointerev
      */
     leave(event) {
         this.hover = false;
-        this.dirty = true;
+        this.isDirty = true;
         this.release(event);
         return this.onOut(event);
     }
@@ -164,7 +164,7 @@ import { registerPointerEvent, releasePointerEvent } from '../../input/pointerev
     release(event) {
         if (this.released === false) {
             this.released = true;
-            this.dirty = true;
+            this.isDirty = true;
             timer.clearTimeout(this.holdTimeout);
             this.holdTimeout = -1;
             return this.onRelease(event);
@@ -186,7 +186,7 @@ import { registerPointerEvent, releasePointerEvent } from '../../input/pointerev
     hold() {
         timer.clearTimeout(this.holdTimeout);
         this.holdTimeout = -1;
-        this.dirty = true;
+        this.isDirty = true;
         if (!this.released) {
             this.onHold();
         }

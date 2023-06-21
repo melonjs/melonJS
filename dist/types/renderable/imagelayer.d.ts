@@ -83,10 +83,10 @@ export default class ImageLayer {
     updateLayer(vpos: any): void;
     isDirty: boolean | undefined;
     /**
-     * override the default predraw function
-     * as repeat and anchor are managed directly in the draw method
-     * @ignore
-     */
+    * override the default predraw function
+    * as repeat and anchor are managed directly in the draw method
+    * @ignore
+    */
     preDraw(renderer: any): void;
     /**
      * draw this ImageLayer (automatically called by melonJS)

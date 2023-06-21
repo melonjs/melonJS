@@ -81,7 +81,7 @@ function readObjectGroup(map, data, z) {
  * a TMX Tile Map Object
  * Tiled QT +0.7.x format
  */
- class TMXTileMap {
+class TMXTileMap {
     /**
      * @param {string} levelId - name of TMX map
      * @param {object} data - TMX map in JSON format
@@ -276,7 +276,7 @@ function readObjectGroup(map, data, z) {
                         image : this.background_image,
                         z : zOrder++
                     }
-            ));
+                ));
         }
 
         data.layers.forEach((layer) => {

@@ -16,7 +16,7 @@ import Body from '../physics/body.js';
  * @augments Renderable
  * @see Renderable
  */
- class Entity extends Renderable {
+class Entity extends Renderable {
     /**
      * @param {number} x - the x coordinates of the entity object
      * @param {number} y - the y coordinates of the entity object

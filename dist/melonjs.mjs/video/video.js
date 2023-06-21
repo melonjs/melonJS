@@ -41,7 +41,7 @@ function init(width, height, options) {
     }
 
     try {
-         // initialize the default game Application with the given options
+        // initialize the default game Application with the given options
         game.init(width, height, options);
     } catch (e) {
         console.log(e.message);

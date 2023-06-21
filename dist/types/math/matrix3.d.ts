@@ -115,12 +115,12 @@ export default class Matrix3d {
      */
     apply(v: Vector2d | Vector3d): Vector2d | Vector3d;
     /**
-     * apply the inverted current transform to the given 2d or 3d vector
-     * @name applyInverse
-     * @memberof Matrix3d
-     * @param {Vector2d|Vector3d} v - the vector object to be transformed
-     * @returns {Vector2d|Vector3d} result vector object.
-     */
+      * apply the inverted current transform to the given 2d or 3d vector
+      * @name applyInverse
+      * @memberof Matrix3d
+      * @param {Vector2d|Vector3d} v - the vector object to be transformed
+      * @returns {Vector2d|Vector3d} result vector object.
+      */
     applyInverse(v: Vector2d | Vector3d): Vector2d | Vector3d;
     /**
      * generate an orthogonal projection matrix, with the result replacing the current matrix

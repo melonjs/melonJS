@@ -92,7 +92,7 @@ let stopOnAudioError = true;
  *     return;
  * }
  */
- function init(format = "mp3") {
+function init(format = "mp3") {
     // convert it into an array
     audioExts = format.split(",");
 

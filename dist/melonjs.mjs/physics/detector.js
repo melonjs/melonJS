@@ -78,13 +78,13 @@ class Detector {
             for (let indexB = bodyB.shapes.length, shapeB; indexB--, (shapeB = bodyB.shapes[indexB]);) {
                 // full SAT collision check
                 if (sat["test" + shapeA.shapeType + shapeB.shapeType].call(
-                        this,
-                        bodyA.ancestor, // a reference to the object A
-                        shapeA,
-                        bodyB.ancestor,  // a reference to the object B
-                        shapeB,
-                        // clear response object before reusing
-                        response.clear()) === true
+                    this,
+                    bodyA.ancestor, // a reference to the object A
+                    shapeA,
+                    bodyB.ancestor,  // a reference to the object B
+                    shapeB,
+                    // clear response object before reusing
+                    response.clear()) === true
                 ) {
 
                     // set the shape index
@@ -197,7 +197,7 @@ class Detector {
                             shapeA,
                             objB,  // a reference to the object B
                             shapeB
-                    )) {
+                        )) {
                         // we touched something !
                         result[collisionCounter] = objB;
                         collisionCounter++;

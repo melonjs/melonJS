@@ -16,7 +16,7 @@ import Bounds from '../../../physics/bounds.js';
  * @classdesc
  * The map renderer base class
  */
- class TMXRenderer {
+class TMXRenderer {
     /**
      * @param {number} cols - width of the tilemap in tiles
      * @param {number} rows - height of the tilemap in tiles
