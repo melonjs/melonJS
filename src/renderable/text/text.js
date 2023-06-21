@@ -14,7 +14,6 @@ import TextMetrics from "./textmetrics.js";
 * -> first char " " 32d (0x20);
 */
 
-
 const runits = ["ex", "em", "pt", "px"];
 const toPX = [12, 24, 0.75, 1];
 
@@ -23,7 +22,7 @@ const toPX = [12, 24, 0.75, 1];
  * a generic system font object.
  * @augments Renderable
  */
- export default class Text extends Renderable {
+export default class Text extends Renderable {
     /**
      * @param {number} x - position of the text object
      * @param {number} y - position of the text object
@@ -76,16 +75,16 @@ const toPX = [12, 24, 0.75, 1];
          * @name strokeStyle
          * @default black
          */
-         if (typeof settings.strokeStyle !== "undefined") {
-             if (settings.strokeStyle instanceof Color) {
-                 this.strokeStyle = settings.strokeStyle;
-             } else {
-                 // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-                 this.strokeStyle = pool.pull("Color").parseCSS(settings.strokeStyle);
-             }
-         } else {
-             this.strokeStyle = pool.pull("Color", 0, 0, 0);
-         }
+        if (typeof settings.strokeStyle !== "undefined") {
+            if (settings.strokeStyle instanceof Color) {
+                this.strokeStyle = settings.strokeStyle;
+            } else {
+                // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
+                this.strokeStyle = pool.pull("Color").parseCSS(settings.strokeStyle);
+            }
+        } else {
+            this.strokeStyle = pool.pull("Color", 0, 0, 0);
+        }
 
         /**
          * sets the current line width, in pixels, when drawing stroke

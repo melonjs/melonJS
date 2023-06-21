@@ -8,7 +8,7 @@ import Compositor from "./compositor.js";
  * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
  * @augments Compositor
  */
- export default class PrimitiveCompositor extends Compositor {
+export default class PrimitiveCompositor extends Compositor {
 
     /**
      * Initialize the compositor

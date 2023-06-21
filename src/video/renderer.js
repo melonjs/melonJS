@@ -18,7 +18,7 @@ import Point from "../geometries/point.js";
  * @classdesc
  * a base renderer object
  */
- export default class Renderer {
+export default class Renderer {
     /**
      * @param {Application.Settings} [options] - optional parameters for the renderer
      */
@@ -190,7 +190,7 @@ import Point from "../geometries/point.js";
         }
 
         let _context = canvas.getContext("2d", {
-                "alpha" : transparent
+            "alpha" : transparent
         });
 
         if (!_context.canvas) {

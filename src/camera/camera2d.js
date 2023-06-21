@@ -23,7 +23,7 @@ let targetV = new Vector2d();
  * a 2D orthographic camera
  * @augments Renderable
  */
- export default class Camera2d extends Renderable {
+export default class Camera2d extends Renderable {
     /**
      * @param {number} minX - start x offset
      * @param {number} minY - start y offset

@@ -130,7 +130,7 @@ class Pointer extends Bounds {
          */
         this.clientX = 0;
 
-       /**
+        /**
         * the vertical coordinate within the application's client area at which the event occurred
         * @public
         * @type {number}
@@ -150,7 +150,7 @@ class Pointer extends Bounds {
          */
         this.movementX = 0;
 
-       /**
+        /**
         * the difference in the Y coordinate of the pointer since the previous move event
         * @public
         * @type {number}
@@ -274,7 +274,7 @@ class Pointer extends Bounds {
          */
         this.gameLocalY = 0;
 
-       /**
+        /**
         * The unique identifier of the contact for a touch, mouse or pen
         * @public
         * @type {number}

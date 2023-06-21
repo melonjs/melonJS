@@ -19,11 +19,11 @@ export function setPrecision(src, precision) {
 export function getMaxShaderPrecision(gl) {
     if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT ).precision > 0 &&
         gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT ).precision > 0) {
-            return "highp";
+        return "highp";
     }
     if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT ).precision > 0 &&
         gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT ).precision > 0) {
-            return "mediump";
+        return "mediump";
     }
     return "lowp";
 }

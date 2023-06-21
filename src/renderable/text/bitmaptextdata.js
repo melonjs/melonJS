@@ -56,9 +56,9 @@ function createSpaceGlyph(glyphs) {
  * Class for storing relevant data from the font file.
  * @ignore
  */
- export default class BitmapTextData {
+export default class BitmapTextData {
 
-   /**
+    /**
     * @param {string} data - The bitmap font data pulled from the resource loader using me.loader.getBinary()
     */
     constructor(data) {

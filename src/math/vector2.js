@@ -5,7 +5,7 @@ import pool from "./../system/pooling.js";
  * @classdesc
  * a generic 2D Vector Object
  */
- export default class Vector2d {
+export default class Vector2d {
     /**
      * @param {number} [x=0] - x value of the vector
      * @param {number} [y=0] - y value of the vector
@@ -392,7 +392,7 @@ import pool from "./../system/pooling.js";
         return this.x * v.y - this.y * v.x;
     }
 
-   /**
+    /**
     * return the square length of this vector
     * @name length2
     * @memberof Vector2d
@@ -434,7 +434,7 @@ import pool from "./../system/pooling.js";
      * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
      * @returns {Vector2d} Reference to this object for method chaining
      */
-     moveTowards(target, step) {
+    moveTowards(target, step) {
         let angle = Math.atan2(target.y - this.y, target.x - this.x);
 
         let distance = this.distance(target);

@@ -9,7 +9,7 @@ import TextMetrics from "./textmetrics.js";
  * a bitmap font object
  * @augments Renderable
  */
- export default class BitmapText extends Renderable {
+export default class BitmapText extends Renderable {
     /**
      * @param {number} x - position of the text object
      * @param {number} y - position of the text object
@@ -210,8 +210,8 @@ import TextMetrics from "./textmetrics.js";
                     break;
             }
 
-             // adjust y pos based on alignment value
-             switch (this.textBaseline) {
+            // adjust y pos based on alignment value
+            switch (this.textBaseline) {
                 case "middle":
                     ay = this.metrics.height * 0.5;
                     break;
@@ -233,7 +233,7 @@ import TextMetrics from "./textmetrics.js";
 
         if (absolute === true) {
             if (typeof this.ancestor !== "undefined" && typeof this.ancestor.getAbsolutePosition === "function" && this.floating !== true) {
-                 bounds.translate(this.ancestor.getAbsolutePosition());
+                bounds.translate(this.ancestor.getAbsolutePosition());
             }
         }
 

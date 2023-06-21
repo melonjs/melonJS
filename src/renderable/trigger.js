@@ -9,7 +9,7 @@ import pool from "./../system/pooling.js";
  * trigger an event when colliding with another object
  * @augments Renderable
  */
- export default class Trigger extends Renderable {
+export default class Trigger extends Renderable {
     /**
      * @param {number} x - the x coordinates of the trigger area
      * @param {number} y - the y coordinates of the trigger area
@@ -85,14 +85,14 @@ import pool from "./../system/pooling.js";
     /**
      * @ignore
      */
-     getTriggerSettings() {
+    getTriggerSettings() {
         let world = this.ancestor.getRootAncestor();
-         // Lookup for the container instance
-         if (typeof(this.triggerSettings.container) === "string") {
-             this.triggerSettings.container = world.getChildByName(this.triggerSettings.container)[0];
-         }
-         return this.triggerSettings;
-     }
+        // Lookup for the container instance
+        if (typeof(this.triggerSettings.container) === "string") {
+            this.triggerSettings.container = world.getChildByName(this.triggerSettings.container)[0];
+        }
+        return this.triggerSettings;
+    }
 
     /**
      * @ignore
@@ -121,7 +121,7 @@ import pool from "./../system/pooling.js";
                 if (!this.fading) {
                     this.fading = true;
                     world.app.viewport.fadeIn(this.fade, this.duration,
-                            () => this.onFadeComplete());
+                        () => this.onFadeComplete());
                 }
             } else {
                 level.load(this.gotolevel, triggerSettings);

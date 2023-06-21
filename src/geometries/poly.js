@@ -12,7 +12,7 @@ import pool from "./../system/pooling.js";
  *
  * A polygon's `winding` is clockwise if its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
  */
- export default class Polygon {
+export default class Polygon {
     /**
      * @param {number} x - origin point of the Polygon
      * @param {number} y - origin point of the Polygon
@@ -114,7 +114,7 @@ import pool from "./../system/pooling.js";
             if (typeof vertices[0] === "object") {
                 // array of {x,y} object
                 vertices.forEach((vertice) => {
-                   this.points.push(pool.pull("Vector2d", vertice.x, vertice.y));
+                    this.points.push(pool.pull("Vector2d", vertice.x, vertice.y));
                 });
 
             } else {
@@ -411,13 +411,13 @@ import pool from "./../system/pooling.js";
         let _x, _y;
 
         if (arguments.length === 2) {
-          // x, y
-          _x = arguments[0];
-          _y = arguments[1];
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
         } else {
-          // vector
-          _x = arguments[0].x;
-          _y = arguments[0].y;
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
         }
 
         let intersects = false;
@@ -428,7 +428,7 @@ import pool from "./../system/pooling.js";
         //http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
         for (let i = 0, j = len - 1; i < len; j = i++) {
             const iy = points[i].y + posy, ix = points[i].x + posx,
-                  jy = points[j].y + posy, jx = points[j].x + posx;
+                jy = points[j].y + posy, jx = points[j].x + posx;
             if (((iy > _y) !== (jy > _y)) && (_x < (jx - ix) * (_y - iy) / (jy - iy) + ix)) {
                 intersects = !intersects;
             }

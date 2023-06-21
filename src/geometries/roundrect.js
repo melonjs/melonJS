@@ -86,18 +86,18 @@ export default class RoundRect extends Rect {
         let arg0 = arguments[0];
         let _x, _y;
         if (arguments.length === 2) {
-             // x, y
-             _x = arg0;
-             _y = arguments[1];
-         } else {
-             if (arg0 instanceof Rect) {
-                 // good enough
-                 return super.contains(arg0);
-             } else {
-                 // vector
+            // x, y
+            _x = arg0;
+            _y = arguments[1];
+        } else {
+            if (arg0 instanceof Rect) {
+                // good enough
+                return super.contains(arg0);
+            } else {
+                // vector
                 _x = arg0.x;
                 _y = arg0.y;
-             }
+            }
         }
 
         // check whether point is outside the bounding box

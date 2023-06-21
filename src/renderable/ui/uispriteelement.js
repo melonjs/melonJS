@@ -7,7 +7,7 @@ import { registerPointerEvent, releasePointerEvent} from "./../../input/input.js
  * This is a basic sprite based button which you can use in your Game UI.
  * @augments Sprite
  */
- export default class UISpriteElement extends Sprite {
+export default class UISpriteElement extends Sprite {
     /**
      * @param {number} x - the x coordinate of the UISpriteElement Object
      * @param {number} y - the y coordinate of the UISpriteElement Object

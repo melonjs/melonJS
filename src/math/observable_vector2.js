@@ -7,7 +7,7 @@ import {clamp} from "./math.js";
  * A Vector2d object that provide notification by executing the given callback when the vector is changed.
  * @augments Vector2d
  */
- export default class ObservableVector2d extends Vector2d {
+export default class ObservableVector2d extends Vector2d {
     /**
      * @param {number} x - x value of the vector
      * @param {number} y - y value of the vector
@@ -87,10 +87,10 @@ import {clamp} from "./math.js";
             this._x = ret.x;
             this._y = ret.y;
         } else {
-          this._x = x;
-          this._y = y;
-       }
-       return this;
+            this._x = x;
+            this._y = y;
+        }
+        return this;
     }
 
     /**
@@ -402,7 +402,7 @@ import {clamp} from "./math.js";
      * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
-     moveTowards(target, step) {
+    moveTowards(target, step) {
         let angle = Math.atan2(target.y - this._y, target.x - this._x);
 
         let distance = this.distance(target);

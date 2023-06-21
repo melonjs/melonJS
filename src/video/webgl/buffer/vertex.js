@@ -5,7 +5,7 @@
  * @ignore
  */
 
- export default class VertexArrayBuffer {
+export default class VertexArrayBuffer {
 
     constructor(vertex_size, vertex_per_obj) {
         // the size of one vertex in float
@@ -38,7 +38,7 @@
      * @ignore
      */
     isFull(vertex = this.objSize) {
-         return (this.vertexCount + vertex >= this.maxVertex);
+        return (this.vertexCount + vertex >= this.maxVertex);
     }
 
     /**

@@ -8,7 +8,7 @@ import UIBaseElement from "./uibaseelement.js";
  * This is a basic base text button which you can use in your Game UI.
  * @augments UIBaseElement
  */
- export default class UITextButton extends UIBaseElement {
+export default class UITextButton extends UIBaseElement {
     /**
      * A Bitmap Text Button with an outlined background border, filled with background color.
      * It uses a RoundRect as background and changes the background color on hovering over.

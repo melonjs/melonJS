@@ -17,7 +17,7 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
  * An Application is responsible for updating (each frame) all the related object status and draw them.
  * @see game
  */
- export default class Application {
+export default class Application {
     /**
      * @param {number} width - The width of the canvas viewport
      * @param {number} height - The height of the canvas viewport

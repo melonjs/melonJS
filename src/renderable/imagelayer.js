@@ -11,7 +11,7 @@ import * as stringUtil from "./../utils/string.js";
  * a generic Image Layer Object
  * @augments Renderable
  */
- export default class ImageLayer extends Sprite {
+export default class ImageLayer extends Sprite {
     /**
      * @param {number} x - x coordinate
      * @param {number} y - y coordinate
@@ -227,7 +227,7 @@ import * as stringUtil from "./../utils/string.js";
         this.isDirty = true;
     }
 
-   /**
+    /**
     * override the default predraw function
     * as repeat and anchor are managed directly in the draw method
     * @ignore

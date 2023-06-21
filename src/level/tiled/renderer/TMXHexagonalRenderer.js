@@ -24,7 +24,7 @@ const offsetsStaggerY = [
  * an Hexagonal Map Renderder
  * @augments TMXRenderer
  */
- export default class TMXHexagonalRenderer extends TMXRenderer {
+export default class TMXHexagonalRenderer extends TMXRenderer {
     /**
      * @param {TMXTileMap} map - the TMX map
      */
@@ -390,7 +390,7 @@ const offsetsStaggerY = [
         let rowTile = startTile.clone();
         let rowPos = startPos.clone();
 
-       /* Determine in which half of the tile the top-left corner of the area we
+        /* Determine in which half of the tile the top-left corner of the area we
         * need to draw is. If we're in the upper half, we need to start one row
         * up due to those tiles being visible as well. How we go up one row
         * depends on whether we're in the left or right half of the tile.

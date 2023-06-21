@@ -7,7 +7,7 @@ import setContextStyle from "./textstyle.js";
  * a Text Metrics object that contains helper for text manipulation
  * @augments Bounds
  */
- export default class TextMetrics extends Bounds {
+export default class TextMetrics extends Bounds {
 
     /**
      * @param {Text|BitmapText} ancestor - the parent object that contains this TextMetrics object

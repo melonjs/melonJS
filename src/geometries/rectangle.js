@@ -6,7 +6,7 @@ import Polygon from "./poly.js";
  * a rectangle Object
  * @augments Polygon
  */
- export default class Rect extends Polygon {
+export default class Rect extends Polygon {
     /**
      * @param {number} x - position of the Rectangle
      * @param {number} y - position of the Rectangle
@@ -305,28 +305,28 @@ import Polygon from "./poly.js";
         let arg0 = arguments[0];
         let _x1, _x2, _y1, _y2;
         if (arguments.length === 2) {
-             // x, y
-             _x1 = _x2 = arg0;
-             _y1 = _y2 = arguments[1];
-         } else {
-             if (arg0 instanceof Rect) {
-                 // me.Rect
-                 _x1 = arg0.left;
-                 _x2 = arg0.right;
-                 _y1 = arg0.top;
-                 _y2 = arg0.bottom;
-             } else {
-                 // vector
-                 _x1 = _x2 = arg0.x;
-                 _y1 = _y2 = arg0.y;
-             }
-         }
-         return (
-             _x1 >= this.left &&
+            // x, y
+            _x1 = _x2 = arg0;
+            _y1 = _y2 = arguments[1];
+        } else {
+            if (arg0 instanceof Rect) {
+                // me.Rect
+                _x1 = arg0.left;
+                _x2 = arg0.right;
+                _y1 = arg0.top;
+                _y2 = arg0.bottom;
+            } else {
+                // vector
+                _x1 = _x2 = arg0.x;
+                _y1 = _y2 = arg0.y;
+            }
+        }
+        return (
+            _x1 >= this.left &&
              _x2 <= this.right &&
              _y1 >= this.top &&
              _y2 <= this.bottom
-         );
+        );
     }
 
     /**

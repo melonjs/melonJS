@@ -4,7 +4,7 @@ import { TMX_CLEAR_BIT_MASK } from "./constants";
  * @classdesc
  * an object containing all tileset
  */
- export default class TMXTilesetGroup {
+export default class TMXTilesetGroup {
 
     constructor() {
         this.tilesets = [];

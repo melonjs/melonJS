@@ -23,7 +23,7 @@ import { Interpolation } from "./interpolation.js";
  * author lechecacharro<br>
  * author Josh Faul / http://jocafa.com/
  */
- export default class Tween {
+export default class Tween {
 
     /**
      * @param {object} object - object on which to apply the tween

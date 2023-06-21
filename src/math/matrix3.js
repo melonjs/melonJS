@@ -5,7 +5,7 @@ import { EPSILON } from "./math.js";
  * @classdesc
  * a 4x4 Matrix3d Object
  */
- export default class Matrix3d {
+export default class Matrix3d {
     /**
      * @param {(Matrix3d|...number)} args - An instance of me.Matrix3d to copy from, or individual Matrix components (See {@link Matrix3d.setTransform}). If not arguments are given, the matrix will be set to Identity.
      */
@@ -227,20 +227,20 @@ import { EPSILON } from "./math.js";
             a13 = a[7],
             a23 = a[11];
 
-         a[1] = a[4];
-         a[2] = a[8];
-         a[3] = a[12];
-         a[4] = a01;
-         a[6] = a[9];
-         a[7] = a[13];
-         a[8] = a02;
-         a[9] = a12;
-         a[11] = a[14];
-         a[12] = a03;
-         a[13] = a13;
-         a[14] = a23;
+        a[1] = a[4];
+        a[2] = a[8];
+        a[3] = a[12];
+        a[4] = a01;
+        a[6] = a[9];
+        a[7] = a[13];
+        a[8] = a02;
+        a[9] = a12;
+        a[11] = a[14];
+        a[12] = a03;
+        a[13] = a13;
+        a[14] = a23;
 
-         return this;
+        return this;
     }
 
     /**
@@ -250,56 +250,56 @@ import { EPSILON } from "./math.js";
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     invert() {
-         let a = this.val;
+        let a = this.val;
 
-         let a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
-         let a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
-         let a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
-         let a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+        let a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+        let a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+        let a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+        let a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
 
-         let b00 = a00 * a11 - a01 * a10;
-         let b01 = a00 * a12 - a02 * a10;
-         let b02 = a00 * a13 - a03 * a10;
-         let b03 = a01 * a12 - a02 * a11;
+        let b00 = a00 * a11 - a01 * a10;
+        let b01 = a00 * a12 - a02 * a10;
+        let b02 = a00 * a13 - a03 * a10;
+        let b03 = a01 * a12 - a02 * a11;
 
-         let b04 = a01 * a13 - a03 * a11;
-         let b05 = a02 * a13 - a03 * a12;
-         let b06 = a20 * a31 - a21 * a30;
-         let b07 = a20 * a32 - a22 * a30;
+        let b04 = a01 * a13 - a03 * a11;
+        let b05 = a02 * a13 - a03 * a12;
+        let b06 = a20 * a31 - a21 * a30;
+        let b07 = a20 * a32 - a22 * a30;
 
-         let b08 = a20 * a33 - a23 * a30;
-         let b09 = a21 * a32 - a22 * a31;
-         let b10 = a21 * a33 - a23 * a31;
-         let b11 = a22 * a33 - a23 * a32;
+        let b08 = a20 * a33 - a23 * a30;
+        let b09 = a21 * a32 - a22 * a31;
+        let b10 = a21 * a33 - a23 * a31;
+        let b11 = a22 * a33 - a23 * a32;
 
-         // Calculate the determinant
-         let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+        // Calculate the determinant
+        let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
 
-         if (!det)
-         {
-             return null;
-         }
+        if (!det)
+        {
+            return null;
+        }
 
-         det = 1 / det;
+        det = 1 / det;
 
-         a[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
-         a[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
-         a[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
-         a[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
-         a[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
-         a[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
-         a[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
-         a[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
-         a[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
-         a[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
-         a[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
-         a[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
-         a[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
-         a[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
-         a[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
-         a[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+        a[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
+        a[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
+        a[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
+        a[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
+        a[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
+        a[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
+        a[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
+        a[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
+        a[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
+        a[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
+        a[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
+        a[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
+        a[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
+        a[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
+        a[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
+        a[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
 
-         return this;
+        return this;
     }
 
     /**
@@ -309,11 +309,11 @@ import { EPSILON } from "./math.js";
      * @param {Vector2d|Vector3d} v - the vector object to be transformed
      * @returns {Vector2d|Vector3d} result vector object.
      */
-     apply(v) {
+    apply(v) {
         let a = this.val,
-        x = v.x,
-        y = v.y,
-        z = (typeof v.z !== "undefined") ? v.z : 1;
+            x = v.x,
+            y = v.y,
+            z = (typeof v.z !== "undefined") ? v.z : 1;
 
         let w = (a[3] * x + a[7] * y + a[11] * z + a[15]) || 1.0;
 
@@ -325,26 +325,26 @@ import { EPSILON } from "./math.js";
         }
 
         return v;
-     }
+    }
 
-     /**
+    /**
       * apply the inverted current transform to the given 2d or 3d vector
       * @name applyInverse
       * @memberof Matrix3d
       * @param {Vector2d|Vector3d} v - the vector object to be transformed
       * @returns {Vector2d|Vector3d} result vector object.
       */
-     applyInverse(v) {
-         // invert the current matrix
-         let im = pool.pull("Matrix3d", this).invert();
+    applyInverse(v) {
+        // invert the current matrix
+        let im = pool.pull("Matrix3d", this).invert();
 
-         // apply the inverted matrix
-         im.apply(v);
+        // apply the inverted matrix
+        im.apply(v);
 
-         pool.push(im);
+        pool.push(im);
 
-         return v;
-     }
+        return v;
+    }
 
     /**
      * generate an orthogonal projection matrix, with the result replacing the current matrix

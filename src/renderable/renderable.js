@@ -10,7 +10,7 @@ import { clamp } from "./../math/math.js";
  * A base class for renderable objects.
  * @augments Rect
  */
- export default class Renderable extends Rect {
+export default class Renderable extends Rect {
     /**
      * @param {number} x - position of the renderable object (accessible through inherited pos.x property)
      * @param {number} y - position of the renderable object (accessible through inherited pos.y property)
@@ -96,7 +96,7 @@ import { clamp } from "./../math/math.js";
          */
         this.body = undefined;
 
-       /**
+        /**
         * (G)ame (U)nique (Id)entifier" <br>
         * a GUID will be allocated for any renderable object added <br>
         * to an object container (including the `me.game.world` container)
@@ -589,7 +589,7 @@ import { clamp } from "./../math/math.js";
         this.getBounds().translate(newX - this.pos.x, newY - this.pos.y);
     }
 
-     /**
+    /**
       * return the renderable absolute position in the game world
       * @returns {Vector2d}
       */

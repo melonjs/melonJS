@@ -310,6 +310,6 @@ export function boot() {
 // call the library init function when ready
 device.onReady(() => {
     if (skipAutoInit === false) {
-       boot();
+        boot();
     }
 });

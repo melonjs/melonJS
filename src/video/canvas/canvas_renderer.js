@@ -12,7 +12,7 @@ import * as event from "./../../system/event.js";
  * a canvas renderer object
  * @augments Renderer
  */
- export default class CanvasRenderer extends Renderer {
+export default class CanvasRenderer extends Renderer {
     /**
      * @param {Application.Settings} [options] - optional parameters for the renderer
      */
@@ -527,11 +527,7 @@ import * as event from "./../../system/event.js";
     setColor(color) {
         let context = this.getContext();
         context.strokeStyle =
-        context.fillStyle = (
-            color instanceof Color ?
-            color.toRGBA() :
-            color
-        );
+        context.fillStyle = (color instanceof Color ? color.toRGBA() : color);
     }
 
     /**

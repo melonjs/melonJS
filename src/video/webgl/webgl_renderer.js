@@ -15,7 +15,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
  * a WebGL renderer object
  * @augments Renderer
  */
- export default class WebGLRenderer extends Renderer {
+export default class WebGLRenderer extends Renderer {
     /**
      * @param {Application.Settings} [options] - optional parameters for the renderer
      */
@@ -947,7 +947,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
                 // if same as the current scissor box do nothing
                 if (currentScissor[0] === x && currentScissor[1] === y &&
                     currentScissor[2] === width && currentScissor[3] === height) {
-                        return;
+                    return;
                 }
             }
             // flush the compositor

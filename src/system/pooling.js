@@ -38,15 +38,15 @@ class ObjectPool {
      * me.pool.register("cherrysprite", Cherry, true);
      */
     register(className, classObj, recycling = false) {
-         if (typeof (classObj) !== "undefined") {
-             this.objectClass[className] = {
-                 "class" : classObj,
-                 "pool" : (recycling ? [] : undefined)
-             };
-         } else {
-             throw new Error("Cannot register object '" + className + "', invalid class");
-         }
-     }
+        if (typeof (classObj) !== "undefined") {
+            this.objectClass[className] = {
+                "class" : classObj,
+                "pool" : (recycling ? [] : undefined)
+            };
+        } else {
+            throw new Error("Cannot register object '" + className + "', invalid class");
+        }
+    }
 
     /**
      * Pull a new instance of the requested object (if added into the object pool)

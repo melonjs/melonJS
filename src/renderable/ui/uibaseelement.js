@@ -10,7 +10,7 @@ import pool from "../../system/pooling.js";
  * Use this for example if you want to display a panel that contains text, images or other UI elements.
  * @augments Container
  */
- export default class UIBaseElement extends Container {
+export default class UIBaseElement extends Container {
     /**
      *
      * @param {number} x - The x position of the container

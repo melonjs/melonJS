@@ -8,7 +8,7 @@ import { TMX_FLIP_V, TMX_FLIP_H, TMX_FLIP_AD, TMX_CLEAR_BIT_MASK } from "./const
  * a basic tile object
  * @augments Bounds
  */
- export default class Tile extends Bounds {
+export default class Tile extends Bounds {
     /**
      * @param {number} x - x index of the Tile in the map
      * @param {number} y - y index of the Tile in the map
@@ -108,8 +108,8 @@ import { TMX_FLIP_V, TMX_FLIP_H, TMX_FLIP_AD, TMX_CLEAR_BIT_MASK } from "./const
         }
         if (this.flippedY) {
             transform.scale(
-                 this.flippedAD ? -1 : 1, this.flippedAD ? 1 : -1
-             );
+                this.flippedAD ? -1 : 1, this.flippedAD ? 1 : -1
+            );
         }
         transform.translate(-this.width / 2, -this.height / 2);
     }

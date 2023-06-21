@@ -6,7 +6,7 @@ import earcut from "earcut";
  * @classdesc
  * a simplified path2d implementation, supporting only one path
  */
- export default class Path2D {
+export default class Path2D {
     constructor() {
         /**
          * the points defining the current path
@@ -273,7 +273,7 @@ import earcut from "earcut";
      * @param {number} height - the rectangle's height. Positive values are down, and negative are up.
      * @param {number} radius - the arc's radius to draw the borders. Must be positive.
      */
-     roundRect(x, y, width, height, radius) {
+    roundRect(x, y, width, height, radius) {
         this.moveTo(x + radius, y);
         this.lineTo(x + width - radius, y);
         this.arcTo(x + width, y, x + width, y + radius, radius);

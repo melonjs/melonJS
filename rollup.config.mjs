@@ -46,10 +46,10 @@ export default [
             bundleSize()
         ],
         output: {
-          file: "build/melonjs.module.js",
-          banner: license,
-          freeze: false,
-          format: "es"
+            file: "build/melonjs.module.js",
+            banner: license,
+            freeze: false,
+            format: "es"
         },
         treeshake: false
     },
@@ -81,12 +81,12 @@ export default [
             image()
         ],
         output: {
-          dir: "build/melonjs.mjs",
-          banner: license,
-          format: "es",
-          freeze: false,
-          preserveModules: true,
-          preserveModulesRoot: "src"
+            dir: "build/melonjs.mjs",
+            banner: license,
+            format: "es",
+            freeze: false,
+            preserveModules: true,
+            preserveModulesRoot: "src"
         }
     }
 ];

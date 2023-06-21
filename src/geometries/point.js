@@ -2,7 +2,7 @@
  * @classdesc
  * represents a point in a 2d space
  */
- export default class Point {
+export default class Point {
     constructor(x = 0, y = 0) {
         /**
          * the position of the point on the horizontal axis
@@ -50,7 +50,7 @@
      * @param {number} y
      * @returns {boolean}
      */
-     equals() {
+    equals() {
         let _x, _y;
         if (arguments.length === 2) {
             // x, y
