@@ -254,17 +254,17 @@ export default class Bounds {
 
     /**
      * Returns true if the bounds contains the given point.
-     * @name contains
-     * @memberof Bounds
-     * @function
-     * @param {Vector2d} point
+     * @param {number|Vector2d} x -  x coordinate or a vector point to check
+     * @param {number} [y] - y coordinate
      * @returns {boolean} True if the bounds contain the point, otherwise false
-     */
-    /**
-     * Returns true if the bounds contains the given point.
-     * @param {number} x
-     * @param {number} y
-     * @returns {boolean} True if the bounds contain the point, otherwise false
+     * @example
+     * if (bounds.contains(10, 10)) {
+     *   // do something
+     * }
+     * // or
+     * if (bounds.contains(myVector2d)) {
+     *   // do something
+     * }
      */
     contains() {
         let arg0 = arguments[0];
@@ -310,16 +310,13 @@ export default class Bounds {
     }
 
     /**
-     * Translates the bounds by the given vector.
-     * @name translate
-     * @memberof Bounds
-     * @function
-     * @param {Vector2d} vector
-     */
-    /**
-     * Translates the bounds by x on the x axis, and y on the y axis
-     * @param {number} x
-     * @param {number} y
+     * Translates the bounds by the given point
+     * @param {number|Vector2d} x -  x coordinate or a vector point to translate by
+     * @param {number} [y]
+     * @example
+     * bounds.translate(10, 10);
+     * // or
+     * bounds.translate(myVector2d);
      */
     translate() {
         let _x, _y;
@@ -339,16 +336,13 @@ export default class Bounds {
     }
 
     /**
-     * Shifts the bounds to the given position vector.
-     * @name shift
-     * @memberof Bounds
-     * @function
-     * @param {Vector2d} position
-     */
-    /**
      * Shifts the bounds to the given x, y position.
-     * @param {number} x
-     * @param {number} y
+     * @param {number|Vector2d} x -  x coordinate or a vector point to shift to
+     * @param {number} [y]
+     * @example
+     * bounds.shift(10, 10);
+     * // or
+     * bounds.shift(myVector2d);
      */
     shift() {
         let _x, _y;

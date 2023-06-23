@@ -23,8 +23,7 @@ export function defer(func, thisArg, ...args) {
 }
 
 /**
- * returns a function that, when invoked will only be triggered at most
- * once during a given window of time
+ * returns a function that, when invoked will only be triggered at most once during a given window of time
  * @public
  * @memberof utils.function
  * @name throttle

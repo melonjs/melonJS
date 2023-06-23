@@ -15,7 +15,7 @@ describe("Shape : me.RoundRect", function () {
             expect(rrect.radius).toEqual(40);
         });
 
-        describe("contains point", function () {
+        describe("contains", function () {
             var rect = new me.Rect(50, 50, 100, 100);
             it("a rect of the same dimension does contain 51, 51", function () {
                 expect(rect.contains(51, 51)).toEqual(true);
@@ -41,6 +41,16 @@ describe("Shape : me.RoundRect", function () {
             });
             it("rrect does not contain 149, 149", function () {
                 expect(rrect.contains(149, 149)).toEqual(false);
+            });
+
+            it("should contain another Rect fully within", function () {
+                var innerRRect = new me.Rect(100, 100, 10, 10, 10);
+                expect(rrect.contains(innerRRect)).toEqual(true);
+            });
+    
+            it("should not contain another Rect partially outside", function () {
+                var innerRRect = new me.Rect(75, 75, 175, 25, 10);
+                expect(rrect.contains(innerRRect)).toEqual(false);
             });
         });
 

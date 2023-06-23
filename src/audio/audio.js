@@ -76,15 +76,13 @@ export let stopOnAudioError = true;
 
 /**
  * Initialize and configure the audio support.<br>
- * melonJS supports a wide array of audio codecs that have varying browser support :
- * <i> ("mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac")</i>.<br>
  * For a maximum browser coverage the recommendation is to use at least two of them,
  * typically default to webm and then fallback to mp3 for the best balance of small filesize and high quality,
  * webm has nearly full browser coverage with a great combination of compression and quality, and mp3 will fallback gracefully for other browsers.
  * It is important to remember that melonJS selects the first compatible sound based on the list of extensions and given order passed here.
  * So if you want webm to be used before mp3, you need to put the audio format in that order.
  * @function audio.init
- * @param {string} [format="mp3"] - audio format to prioritize
+ * @param {"mp3"|"mpeg"|"opus"|"ogg"|"oga"|"wav"|"aac"|"caf"|"m4a"|"m4b"|"mp4"|"weba"|"webm"|"dolby"|"flac"} [format="mp3"] - audio format to prioritize
  * @returns {boolean} Indicates whether audio initialization was successful
  * @example
  * // initialize the "sound engine", giving "webm" as default desired audio format, and "mp3" as a fallback
@@ -103,7 +101,7 @@ export function init(format = "mp3") {
 /**
  * check if the given audio format is supported
  * @function audio.hasFormat
- * @param {string} codec - audio format : "mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac"
+ * @param {"mp3"|"mpeg"|"opus"|"ogg"|"oga"|"wav"|"aac"|"caf"|"m4a"|"m4b"|"mp4"|"weba"|"webm"|"dolby"|"flac"} codec - the audio format to check for support
  * @returns {boolean} return true if the given audio format is supported
  */
 export function hasFormat(codec) {

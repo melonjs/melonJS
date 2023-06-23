@@ -32,11 +32,8 @@ export default class RoundRect extends Rect {
 
     /**
      * the radius of the rounded corner
-     * @public
      * @type {number}
      * @default 20
-     * @name radius
-     * @memberof RoundRect
      */
     get radius() {
         return this._radius;
@@ -54,8 +51,6 @@ export default class RoundRect extends Rect {
 
     /**
      * copy the position, size and radius of the given rounded rectangle into this one
-     * @name copy
-     * @memberof RoundRect
      * @param {RoundRect} rrect - source rounded rectangle
      * @returns {RoundRect} new rectangle
      */
@@ -66,21 +61,21 @@ export default class RoundRect extends Rect {
     }
 
     /**
-     * Returns true if the rounded rectangle contains the given point
-     * @name contains
-     * @memberof RoundRect
-     * @function
-     * @param  {number} x -  x coordinate
-     * @param  {number} y -  y coordinate
-     * @returns {boolean} true if contains
-     */
-
-    /**
-     * Returns true if the rounded rectangle contains the given point
-     * @name contains
-     * @memberof RoundRect
-     * @param {Vector2d} point
-     * @returns {boolean} true if contains
+     * Returns true if the rounded rectangle contains the given point or rectangle
+     * @param {number|Vector2d|Rect} x -  x coordinate or a vector point, or a Rect to test
+     * @param {number} [y] - y coordinate
+     * @returns {boolean} True if the rounded rectangle contain the given point or rectangle, otherwise false
+     * @example
+     * if (rect.contains(10, 10)) {
+     *   // do something
+     * }
+     * // or
+     * if (rect.contains(myVector2d)) {
+     *   // do something
+     * }
+     * if (rect.contains(myRect)) {
+     *   // do something
+     * }
      */
     contains() {
         let arg0 = arguments[0];
@@ -90,11 +85,11 @@ export default class RoundRect extends Rect {
             _x = arg0;
             _y = arguments[1];
         } else {
-            if (arg0 instanceof Rect) {
-                // good enough
+            if ((typeof arg0.radius === "undefined") && (typeof arg0.bottom === "number")) {
+                // it's a rect
                 return super.contains(arg0);
             } else {
-                // vector
+                // else a vector or point
                 _x = arg0.x;
                 _y = arg0.y;
             }
@@ -137,8 +132,6 @@ export default class RoundRect extends Rect {
 
     /**
      * check if this RoundRect is identical to the specified one
-     * @name equals
-     * @memberof RoundRect
      * @param {RoundRect} rrect
      * @returns {boolean} true if equals
      */
@@ -148,8 +141,6 @@ export default class RoundRect extends Rect {
 
     /**
      * clone this RoundRect
-     * @name clone
-     * @memberof RoundRect
      * @returns {RoundRect} new RoundRect
      */
     clone() {
