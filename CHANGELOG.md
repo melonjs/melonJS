@@ -8,6 +8,7 @@
 ### Changed
 - Core: visibility and focus/blur events are now managed internally through new global `BLUR` and `FOCUS` events
 - Device: `pauseOnBlur`, `resumeOnFocus` and `stopOnBlur` properties are now deprecated and replaced by their Application counterpart
+- Geometry: optimize Rect `contains` method by using typeof instead of instanceof to identify given parameter type
 
 ### Fixed
 - Renderable : fix a potential issue with a Tile Layer not being properly redrawn when adding or clearing individual tiles
