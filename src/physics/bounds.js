@@ -274,8 +274,8 @@ export default class Bounds {
             _x1 = _x2 = arg0;
             _y1 = _y2 = arguments[1];
         } else {
-            if (arg0 instanceof Bounds) {
-                // bounds
+            if (typeof arg0.max !== "undefined") {
+                // only bounds define min and max properties
                 _x1 = arg0.min.x;
                 _x2 = arg0.max.x;
                 _y1 = arg0.min.y;
