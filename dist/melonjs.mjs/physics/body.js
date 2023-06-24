@@ -523,15 +523,17 @@ class Body {
 
     /**
      * Returns true if the any of the shape composing the body contains the given point.
-     * @function Body#contains
-     * @param {Vector2d} point
+     * @param {number|Vector2d} x -  x coordinate or a vector point to check
+     * @param {number} [y] -  y coordinate
      * @returns {boolean} true if contains
-     */
-    /**
-     * Returns true if the any of the shape composing the body contains the given point.
-     * @param  {number} x -  x coordinate
-     * @param  {number} y -  y coordinate
-     * @returns {boolean} true if contains
+     * @example
+     * if (mySprite.body.contains(10, 10)) {
+     *   // do something
+     * }
+     * // or
+     * if (mySprite.body.contains(myVector2d)) {
+     *   // do something
+     * }
      */
     contains() {
         let _x, _y;

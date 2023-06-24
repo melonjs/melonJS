@@ -2714,8 +2714,6 @@ class Vector2d {
 
     /**
      * set the Vector x and y properties to the given values<br>
-     * @name set
-     * @memberof Vector2d
      * @param {number} x
      * @param {number} y
      * @returns {Vector2d} Reference to this object for method chaining
@@ -2750,8 +2748,6 @@ class Vector2d {
 
     /**
      * set the Vector x and y properties to 0
-     * @name setZero
-     * @memberof Vector2d
      * @returns {Vector2d} Reference to this object for method chaining
      */
     setZero() {
@@ -2760,8 +2756,6 @@ class Vector2d {
 
     /**
      * set the Vector x and y properties using the passed vector
-     * @name setV
-     * @memberof Vector2d
      * @param {Vector2d} v
      * @returns {Vector2d} Reference to this object for method chaining
      */
@@ -2771,8 +2765,6 @@ class Vector2d {
 
     /**
      * Add the passed vector to this vector
-     * @name add
-     * @memberof Vector2d
      * @param {Vector2d} v
      * @returns {Vector2d} Reference to this object for method chaining
      */
@@ -2782,8 +2774,6 @@ class Vector2d {
 
     /**
      * Substract the passed vector to this vector
-     * @name sub
-     * @memberof Vector2d
      * @param {Vector2d} v
      * @returns {Vector2d} Reference to this object for method chaining
      */
@@ -2793,8 +2783,6 @@ class Vector2d {
 
     /**
      * Multiply this vector values by the given scalar
-     * @name scale
-     * @memberof Vector2d
      * @param {number} x
      * @param {number} [y=x]
      * @returns {Vector2d} Reference to this object for method chaining
@@ -2805,8 +2793,6 @@ class Vector2d {
 
     /**
      * Convert this vector into isometric coordinate space
-     * @name toIso
-     * @memberof Vector2d
      * @returns {Vector2d} Reference to this object for method chaining
      */
     toIso() {
@@ -2815,8 +2801,6 @@ class Vector2d {
 
     /**
      * Convert this vector into 2d coordinate space
-     * @name to2d
-     * @memberof Vector2d
      * @returns {Vector2d} Reference to this object for method chaining
      */
     to2d() {
@@ -2825,8 +2809,6 @@ class Vector2d {
 
     /**
      * Multiply this vector values by the passed vector
-     * @name scaleV
-     * @memberof Vector2d
      * @param {Vector2d} v
      * @returns {Vector2d} Reference to this object for method chaining
      */
@@ -2836,8 +2818,6 @@ class Vector2d {
 
     /**
      * Divide this vector values by the passed value
-     * @name div
-     * @memberof Vector2d
      * @param {number} n - the value to divide the vector by
      * @returns {Vector2d} Reference to this object for method chaining
      */
@@ -2847,8 +2827,6 @@ class Vector2d {
 
     /**
      * Update this vector values to absolute values
-     * @name abs
-     * @memberof Vector2d
      * @returns {Vector2d} Reference to this object for method chaining
      */
     abs() {
@@ -2857,8 +2835,6 @@ class Vector2d {
 
     /**
      * Clamp the vector value within the specified value range
-     * @name clamp
-     * @memberof Vector2d
      * @param {number} low
      * @param {number} high
      * @returns {Vector2d} new me.Vector2d
@@ -2869,8 +2845,6 @@ class Vector2d {
 
     /**
      * Clamp this vector value within the specified value range
-     * @name clampSelf
-     * @memberof Vector2d
      * @param {number} low
      * @param {number} high
      * @returns {Vector2d} Reference to this object for method chaining
@@ -2881,8 +2855,6 @@ class Vector2d {
 
     /**
      * Update this vector with the minimum value between this and the passed vector
-     * @name minV
-     * @memberof Vector2d
      * @param {Vector2d} v
      * @returns {Vector2d} Reference to this object for method chaining
      */
@@ -2892,8 +2864,6 @@ class Vector2d {
 
     /**
      * Update this vector with the maximum value between this and the passed vector
-     * @name maxV
-     * @memberof Vector2d
      * @param {Vector2d} v
      * @returns {Vector2d} Reference to this object for method chaining
      */
@@ -2903,8 +2873,6 @@ class Vector2d {
 
     /**
      * Floor the vector values
-     * @name floor
-     * @memberof Vector2d
      * @returns {Vector2d} new me.Vector2d
      */
     floor() {
@@ -2913,8 +2881,6 @@ class Vector2d {
 
     /**
      * Floor this vector values
-     * @name floorSelf
-     * @memberof Vector2d
      * @returns {Vector2d} Reference to this object for method chaining
      */
     floorSelf() {
@@ -2923,8 +2889,6 @@ class Vector2d {
 
     /**
      * Ceil the vector values
-     * @name ceil
-     * @memberof Vector2d
      * @returns {Vector2d} new me.Vector2d
      */
     ceil() {
@@ -2933,8 +2897,6 @@ class Vector2d {
 
     /**
      * Ceil this vector values
-     * @name ceilSelf
-     * @memberof Vector2d
      * @returns {Vector2d} Reference to this object for method chaining
      */
     ceilSelf() {
@@ -2943,8 +2905,6 @@ class Vector2d {
 
     /**
      * Negate the vector values
-     * @name negate
-     * @memberof Vector2d
      * @returns {Vector2d} new me.Vector2d
      */
     negate() {
@@ -2953,8 +2913,6 @@ class Vector2d {
 
     /**
      * Negate this vector values
-     * @name negateSelf
-     * @memberof Vector2d
      * @returns {Vector2d} Reference to this object for method chaining
      */
     negateSelf() {
@@ -2963,8 +2921,6 @@ class Vector2d {
 
     /**
      * Copy the x,y values of the passed vector to this one
-     * @name copy
-     * @memberof Vector2d
      * @param {Vector2d} v
      * @returns {Vector2d} Reference to this object for method chaining
      */
@@ -2973,19 +2929,9 @@ class Vector2d {
     }
 
     /**
-     * return true if the two vectors are the same
-     * @name equals
-     * @memberof Vector2d
-     * @function
-     * @param {Vector2d} v
-     * @returns {boolean}
-     */
-    /**
-     * return true if this vector is equal to the given values
-     * @name equals
-     * @memberof Vector2d
-     * @param {number} x
-     * @param {number} y
+     * return true if this vector is equal to the given values or vector
+     * @param {number|Vector2d|ObservableVector2d} x
+     * @param {number} [y]
      * @returns {boolean}
      */
     equals() {
@@ -3004,8 +2950,6 @@ class Vector2d {
 
     /**
      * normalize this vector (scale the vector so that its magnitude is 1)
-     * @name normalize
-     * @memberof Vector2d
      * @returns {Vector2d} Reference to this object for method chaining
      */
     normalize() {
@@ -3015,8 +2959,6 @@ class Vector2d {
     /**
      * change this vector to be perpendicular to what it was before.<br>
      * (Effectively rotates it 90 degrees in a clockwise direction)
-     * @name perp
-     * @memberof Vector2d
      * @returns {Vector2d} Reference to this object for method chaining
      */
     perp() {
@@ -3025,8 +2967,6 @@ class Vector2d {
 
     /**
      * Rotate this vector (counter-clockwise) by the specified angle (in radians).
-     * @name rotate
-     * @memberof Vector2d
      * @param {number} angle - The angle to rotate (in radians)
      * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
      * @returns {Vector2d} Reference to this object for method chaining
@@ -3051,8 +2991,6 @@ class Vector2d {
 
     /**
      * return the dot product of this vector and the passed one
-     * @name dot
-     * @memberof Vector2d
      * @param {Vector2d} v
      * @returns {number} The dot product.
      */
@@ -3062,8 +3000,6 @@ class Vector2d {
 
     /**
      * return the cross product of this vector and the passed one
-     * @name cross
-     * @memberof Vector2d
      * @param {Vector2d} v
      * @returns {number} The cross product.
      */
@@ -3073,8 +3009,6 @@ class Vector2d {
 
     /**
     * return the square length of this vector
-    * @name length2
-    * @memberof Vector2d
     * @returns {number} The length^2 of this vector.
     */
     length2() {
@@ -3083,8 +3017,6 @@ class Vector2d {
 
     /**
      * return the length (magnitude) of this vector
-     * @name length
-     * @memberof Vector2d
      * @returns {number} the length of this vector
      */
     length() {
@@ -3093,8 +3025,6 @@ class Vector2d {
 
     /**
      * Linearly interpolate between this vector and the given one.
-     * @name lerp
-     * @memberof Vector2d
      * @param {Vector2d} v
      * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
      * @returns {Vector2d} Reference to this object for method chaining
@@ -3107,8 +3037,6 @@ class Vector2d {
 
     /**
      * interpolate the position of this vector towards the given one by the given maximum step.
-     * @name moveTowards
-     * @memberof Vector2d
      * @param {Vector2d} target
      * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
      * @returns {Vector2d} Reference to this object for method chaining
@@ -3130,8 +3058,6 @@ class Vector2d {
 
     /**
      * return the distance between this vector and the passed one
-     * @name distance
-     * @memberof Vector2d
      * @param {Vector2d} v
      * @returns {number}
      */
@@ -3142,8 +3068,6 @@ class Vector2d {
 
     /**
      * return the angle between this vector and the passed one
-     * @name angle
-     * @memberof Vector2d
      * @param {Vector2d} v
      * @returns {number} angle in radians
      */
@@ -3153,8 +3077,6 @@ class Vector2d {
 
     /**
      * project this vector on to another vector.
-     * @name project
-     * @memberof Vector2d
      * @param {Vector2d} v - The vector to project onto.
      * @returns {Vector2d} Reference to this object for method chaining
      */
@@ -3165,8 +3087,6 @@ class Vector2d {
     /**
      * Project this vector onto a vector of unit length.<br>
      * This is slightly more efficient than `project` when dealing with unit vectors.
-     * @name projectN
-     * @memberof Vector2d
      * @param {Vector2d} v - The unit vector to project onto.
      * @returns {Vector2d} Reference to this object for method chaining
      */
@@ -3176,8 +3096,6 @@ class Vector2d {
 
     /**
      * return a clone copy of this vector
-     * @name clone
-     * @memberof Vector2d
      * @returns {Vector2d} new me.Vector2d
      */
     clone() {
@@ -3186,8 +3104,6 @@ class Vector2d {
 
     /**
      * convert the object to a string representation
-     * @name toString
-     * @memberof Vector2d
      * @returns {string}
      */
     toString() {
@@ -3232,8 +3148,6 @@ class Vector3d {
 
     /**
      * set the Vector x and y properties to the given values<br>
-     * @name set
-     * @memberof Vector3d
      * @param {number} x
      * @param {number} y
      * @param {number} [z=0]
@@ -3278,8 +3192,6 @@ class Vector3d {
 
     /**
      * set the Vector x and y properties to 0
-     * @name setZero
-     * @memberof Vector3d
      * @returns {Vector3d} Reference to this object for method chaining
      */
     setZero() {
@@ -3288,8 +3200,6 @@ class Vector3d {
 
     /**
      * set the Vector x and y properties using the passed vector
-     * @name setV
-     * @memberof Vector3d
      * @param {Vector2d|Vector3d} v
      * @returns {Vector3d} Reference to this object for method chaining
      */
@@ -3299,8 +3209,6 @@ class Vector3d {
 
     /**
      * Add the passed vector to this vector
-     * @name add
-     * @memberof Vector3d
      * @param {Vector2d|Vector3d} v
      * @returns {Vector3d} Reference to this object for method chaining
      */
@@ -3310,8 +3218,6 @@ class Vector3d {
 
     /**
      * Substract the passed vector to this vector
-     * @name sub
-     * @memberof Vector3d
      * @param {Vector2d|Vector3d} v
      * @returns {Vector3d} Reference to this object for method chaining
      */
@@ -3321,8 +3227,6 @@ class Vector3d {
 
     /**
      * Multiply this vector values by the given scalar
-     * @name scale
-     * @memberof Vector3d
      * @param {number} x
      * @param {number} [y=x]
      * @param {number} [z=1]
@@ -3334,8 +3238,6 @@ class Vector3d {
 
     /**
      * Multiply this vector values by the passed vector
-     * @name scaleV
-     * @memberof Vector3d
      * @param {Vector2d|Vector3d} v
      * @returns {Vector3d} Reference to this object for method chaining
      */
@@ -3345,8 +3247,6 @@ class Vector3d {
 
     /**
      * Convert this vector into isometric coordinate space
-     * @name toIso
-     * @memberof Vector3d
      * @returns {Vector3d} Reference to this object for method chaining
      */
     toIso() {
@@ -3355,8 +3255,6 @@ class Vector3d {
 
     /**
      * Convert this vector into 2d coordinate space
-     * @name to2d
-     * @memberof Vector3d
      * @returns {Vector3d} Reference to this object for method chaining
      */
     to2d() {
@@ -3365,8 +3263,6 @@ class Vector3d {
 
     /**
      * Divide this vector values by the passed value
-     * @name div
-     * @memberof Vector3d
      * @param {number} n - the value to divide the vector by
      * @returns {Vector3d} Reference to this object for method chaining
      */
@@ -3376,8 +3272,6 @@ class Vector3d {
 
     /**
      * Update this vector values to absolute values
-     * @name abs
-     * @memberof Vector3d
      * @returns {Vector3d} Reference to this object for method chaining
      */
     abs() {
@@ -3386,8 +3280,6 @@ class Vector3d {
 
     /**
      * Clamp the vector value within the specified value range
-     * @name clamp
-     * @memberof Vector3d
      * @param {number} low
      * @param {number} high
      * @returns {Vector3d} new me.Vector3d
@@ -3398,8 +3290,6 @@ class Vector3d {
 
     /**
      * Clamp this vector value within the specified value range
-     * @name clampSelf
-     * @memberof Vector3d
      * @param {number} low
      * @param {number} high
      * @returns {Vector3d} Reference to this object for method chaining
@@ -3410,8 +3300,6 @@ class Vector3d {
 
     /**
      * Update this vector with the minimum value between this and the passed vector
-     * @name minV
-     * @memberof Vector3d
      * @param {Vector2d|Vector3d} v
      * @returns {Vector3d} Reference to this object for method chaining
      */
@@ -3422,8 +3310,6 @@ class Vector3d {
 
     /**
      * Update this vector with the maximum value between this and the passed vector
-     * @name maxV
-     * @memberof Vector3d
      * @param {Vector2d|Vector3d} v
      * @returns {Vector3d} Reference to this object for method chaining
      */
@@ -3434,8 +3320,6 @@ class Vector3d {
 
     /**
      * Floor the vector values
-     * @name floor
-     * @memberof Vector3d
      * @returns {Vector3d} new me.Vector3d
      */
     floor() {
@@ -3444,8 +3328,6 @@ class Vector3d {
 
     /**
      * Floor this vector values
-     * @name floorSelf
-     * @memberof Vector3d
      * @returns {Vector3d} Reference to this object for method chaining
      */
     floorSelf() {
@@ -3454,8 +3336,6 @@ class Vector3d {
 
     /**
      * Ceil the vector values
-     * @name ceil
-     * @memberof Vector3d
      * @returns {Vector3d} new me.Vector3d
      */
     ceil() {
@@ -3464,8 +3344,6 @@ class Vector3d {
 
     /**
      * Ceil this vector values
-     * @name ceilSelf
-     * @memberof Vector3d
      * @returns {Vector3d} Reference to this object for method chaining
      */
     ceilSelf() {
@@ -3474,8 +3352,6 @@ class Vector3d {
 
     /**
      * Negate the vector values
-     * @name negate
-     * @memberof Vector3d
      * @returns {Vector3d} new me.Vector3d
      */
     negate() {
@@ -3484,8 +3360,6 @@ class Vector3d {
 
     /**
      * Negate this vector values
-     * @name negateSelf
-     * @memberof Vector3d
      * @returns {Vector3d} Reference to this object for method chaining
      */
     negateSelf() {
@@ -3494,8 +3368,6 @@ class Vector3d {
 
     /**
      * Copy the components of the given vector into this one
-     * @name copy
-     * @memberof Vector3d
      * @param {Vector2d|Vector3d} v
      * @returns {Vector3d} Reference to this object for method chaining
      */
@@ -3504,19 +3376,9 @@ class Vector3d {
     }
 
     /**
-     * return true if the two vectors are the same
-     * @name equals
-     * @memberof Vector3d
-     * @function
-     * @param {Vector2d|Vector3d} v
-     * @returns {boolean}
-     */
-    /**
-     * return true if this vector is equal to the given values
-     * @name equals
-     * @memberof Vector3d
-     * @param {number} x
-     * @param {number} y
+     * return true if this vector is equal to the given values or vector
+     * @param {number|Vector2d|ObservableVector2d|Vector3d|ObservableVector3d} x
+     * @param {number} [y]
      * @param {number} [z]
      * @returns {boolean}
      */
@@ -3543,8 +3405,6 @@ class Vector3d {
 
     /**
      * normalize this vector (scale the vector so that its magnitude is 1)
-     * @name normalize
-     * @memberof Vector3d
      * @returns {Vector3d} Reference to this object for method chaining
      */
     normalize() {
@@ -3554,8 +3414,6 @@ class Vector3d {
     /**
      * change this vector to be perpendicular to what it was before.<br>
      * (Effectively rotates it 90 degrees in a clockwise direction around the z axis)
-     * @name perp
-     * @memberof Vector3d
      * @returns {Vector3d} Reference to this object for method chaining
      */
     perp() {
@@ -3564,8 +3422,6 @@ class Vector3d {
 
     /**
      * Rotate this vector (counter-clockwise) by the specified angle (in radians) around the z axis
-     * @name rotate
-     * @memberof Vector3d
      * @param {number} angle - The angle to rotate (in radians)
      * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around (on the same z axis)
      * @returns {Vector3d} Reference to this object for method chaining
@@ -3591,8 +3447,6 @@ class Vector3d {
 
     /**
      * return the dot product of this vector and the passed one
-     * @name dot
-     * @memberof Vector3d
      * @param {Vector2d|Vector3d} v
      * @returns {number} The dot product.
      */
@@ -3602,8 +3456,6 @@ class Vector3d {
 
     /**
      * calculate the cross product of this vector and the passed one
-     * @name cross
-     * @memberof Vector3d
      * @param {Vector3d} v
      * @returns {Vector3d} Reference to this object for method chaining
      */
@@ -3620,8 +3472,6 @@ class Vector3d {
 
     /**
     * return the square length of this vector
-    * @name length2
-    * @memberof Vector3d
     * @returns {number} The length^2 of this vector.
     */
     length2() {
@@ -3630,8 +3480,6 @@ class Vector3d {
 
     /**
      * return the length (magnitude) of this vector
-     * @name length
-     * @memberof Vector3d
      * @returns {number} the length of this vector
      */
     length() {
@@ -3640,8 +3488,6 @@ class Vector3d {
 
     /**
      * Linearly interpolate between this vector and the given one.
-     * @name lerp
-     * @memberof Vector3d
      * @param {Vector3d} v
      * @param {number} alpha - distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
      * @returns {Vector3d} Reference to this object for method chaining
@@ -3655,8 +3501,6 @@ class Vector3d {
 
     /**
      * interpolate the position of this vector on the x and y axis towards the given one by the given maximum step.
-     * @name moveTowards
-     * @memberof Vector3d
      * @param {Vector2d|Vector3d} target
      * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
      * @returns {Vector3d} Reference to this object for method chaining
@@ -3681,8 +3525,6 @@ class Vector3d {
 
     /**
      * return the distance between this vector and the passed one
-     * @name distance
-     * @memberof Vector3d
      * @param {Vector2d|Vector3d} v
      * @returns {number}
      */
@@ -3695,8 +3537,6 @@ class Vector3d {
 
     /**
      * return the angle between this vector and the passed one
-     * @name angle
-     * @memberof Vector3d
      * @param {Vector2d|Vector3d} v
      * @returns {number} angle in radians
      */
@@ -3706,8 +3546,6 @@ class Vector3d {
 
     /**
      * project this vector on to another vector.
-     * @name project
-     * @memberof Vector3d
      * @param {Vector2d|Vector3d} v - The vector to project onto.
      * @returns {Vector3d} Reference to this object for method chaining
      */
@@ -3719,8 +3557,6 @@ class Vector3d {
     /**
      * Project this vector onto a vector of unit length.<br>
      * This is slightly more efficient than `project` when dealing with unit vectors.
-     * @name projectN
-     * @memberof Vector3d
      * @param {Vector2d|Vector3d} v - The unit vector to project onto.
      * @returns {Vector3d} Reference to this object for method chaining
      */
@@ -3731,8 +3567,6 @@ class Vector3d {
 
     /**
      * return a clone copy of this vector
-     * @name clone
-     * @memberof Vector3d
      * @returns {Vector3d} new me.Vector3d
      */
     clone() {
@@ -3741,8 +3575,6 @@ class Vector3d {
 
     /**
      * convert the object to a string representation
-     * @name toString
-     * @memberof Vector3d
      * @returns {string}
      */
     toString() {
@@ -4786,10 +4618,7 @@ class Matrix3d {
 
     /**
      * tx component of the matrix
-     * @public
      * @type {number}
-     * @name tx
-     * @memberof Matrix3d
      */
     get tx() {
         return this.val[12];
@@ -4797,10 +4626,7 @@ class Matrix3d {
 
     /**
      * ty component of the matrix
-     * @public
      * @type {number}
-     * @name ty
-     * @memberof Matrix3d
      */
     get ty() {
         return this.val[13];
@@ -4808,10 +4634,7 @@ class Matrix3d {
 
     /**
      * ty component of the matrix
-     * @public
      * @type {number}
-     * @name tz
-     * @memberof Matrix3d
      */
     get tz() {
         return this.val[14];
@@ -4821,8 +4644,6 @@ class Matrix3d {
      * reset the transformation matrix to the identity matrix (no transformation).<br>
      * the identity matrix and parameters position : <br>
      * <img src="images/identity-matrix_2x.png"/>
-     * @name identity
-     * @memberof Matrix3d
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     identity() {
@@ -4836,8 +4657,6 @@ class Matrix3d {
 
     /**
      * set the matrix to the specified value
-     * @name setTransform
-     * @memberof Matrix3d
      * @param {number} m00
      * @param {number} m01
      * @param {number} m02
@@ -4881,8 +4700,6 @@ class Matrix3d {
 
     /**
      * Copies over the values from another me.Matrix3d.
-     * @name copy
-     * @memberof Matrix3d
      * @param {Matrix3d} m - the matrix object to copy from
      * @returns {Matrix3d} Reference to this object for method chaining
      */
@@ -4893,8 +4710,6 @@ class Matrix3d {
 
     /**
      * Copies over the upper-left 2x2 values from the given me.Matrix2d
-     * @name fromMat2d
-     * @memberof Matrix3d
      * @param {Matrix2d} m - the matrix object to copy from
      * @returns {Matrix2d} Reference to this object for method chaining
      */
@@ -4911,8 +4726,6 @@ class Matrix3d {
 
     /**
      * multiply both matrix
-     * @name multiply
-     * @memberof Matrix3d
      * @param {Matrix3d} m - Other matrix
      * @returns {Matrix3d} Reference to this object for method chaining
      */
@@ -4966,8 +4779,6 @@ class Matrix3d {
 
     /**
      * Transpose the value of this matrix.
-     * @name transpose
-     * @memberof Matrix3d
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     transpose() {
@@ -4997,8 +4808,6 @@ class Matrix3d {
 
     /**
      * invert this matrix, causing it to apply the opposite transformation.
-     * @name invert
-     * @memberof Matrix3d
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     invert() {
@@ -5056,8 +4865,6 @@ class Matrix3d {
 
     /**
      * apply the current transform to the given 2d or 3d vector
-     * @name apply
-     * @memberof Matrix3d
      * @param {Vector2d|Vector3d} v - the vector object to be transformed
      * @returns {Vector2d|Vector3d} result vector object.
      */
@@ -5081,8 +4888,6 @@ class Matrix3d {
 
     /**
       * apply the inverted current transform to the given 2d or 3d vector
-      * @name applyInverse
-      * @memberof Matrix3d
       * @param {Vector2d|Vector3d} v - the vector object to be transformed
       * @returns {Vector2d|Vector3d} result vector object.
       */
@@ -5101,8 +4906,6 @@ class Matrix3d {
     /**
      * generate an orthogonal projection matrix, with the result replacing the current matrix
      * <img src="images/glOrtho.gif"/><br>
-     * @name ortho
-     * @memberof Matrix3d
      * @param {number} left - farthest left on the x-axis
      * @param {number} right - farthest right on the x-axis
      * @param {number} bottom - farthest down on the y-axis
@@ -5139,8 +4942,6 @@ class Matrix3d {
 
     /**
      * scale the matrix
-     * @name scale
-     * @memberof Matrix3d
      * @param {number} x - a number representing the abscissa of the scaling vector.
      * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
      * @param {number} [z=0] - a number representing the depth vector
@@ -5169,8 +4970,6 @@ class Matrix3d {
 
     /**
      * adds a 2D scaling transformation.
-     * @name scaleV
-     * @memberof Matrix3d
      * @param {Vector2d|Vector3d} v - scaling vector
      * @returns {Matrix3d} Reference to this object for method chaining
      */
@@ -5180,8 +4979,6 @@ class Matrix3d {
 
     /**
      * specifies a 2D scale operation using the [sx, 1] scaling vector
-     * @name scaleX
-     * @memberof Matrix3d
      * @param {number} x - x scaling vector
      * @returns {Matrix3d} Reference to this object for method chaining
      */
@@ -5191,8 +4988,6 @@ class Matrix3d {
 
     /**
      * specifies a 2D scale operation using the [1,sy] scaling vector
-     * @name scaleY
-     * @memberof Matrix3d
      * @param {number} y - y scaling vector
      * @returns {Matrix3d} Reference to this object for method chaining
      */
@@ -5202,8 +4997,6 @@ class Matrix3d {
 
     /**
      * rotate this matrix (counter-clockwise) by the specified angle (in radians).
-     * @name rotate
-     * @memberof Matrix3d
      * @param {number} angle - Rotation angle in radians.
      * @param {Vector3d} v - the axis to rotate around
      * @returns {Matrix3d} Reference to this object for method chaining
@@ -5281,19 +5074,9 @@ class Matrix3d {
 
     /**
      * translate the matrix position using the given vector
-     * @name translate
-     * @memberof Matrix3d
-     * @function
-     * @param {number} x - a number representing the abscissa of the vector.
-     * @param {number} [y=x] - a number representing the ordinate of the vector.
+     * @param {number|Vector2d|Vector3d} x - a number representing the abscissa of the vector, or a vector object
+     * @param {number} [y] - a number representing the ordinate of the vector.
      * @param {number} [z=0] - a number representing the depth of the vector
-     * @returns {Matrix3d} Reference to this object for method chaining
-     */
-    /**
-     * translate the matrix by a vector on the horizontal and vertical axis
-     * @name translateV
-     * @memberof Matrix3d
-     * @param {Vector2d|Vector3d} v - the vector to translate the matrix by
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     translate() {
@@ -5322,8 +5105,6 @@ class Matrix3d {
 
     /**
      * returns true if the matrix is an identity matrix.
-     * @name isIdentity
-     * @memberof Matrix3d
      * @returns {boolean}
      */
     isIdentity() {
@@ -5351,8 +5132,6 @@ class Matrix3d {
 
     /**
      * return true if the two matrices are identical
-     * @name equals
-     * @memberof Matrix3d
      * @param {Matrix3d} m - the other matrix
      * @returns {boolean} true if both are equals
      */
@@ -5382,8 +5161,6 @@ class Matrix3d {
 
     /**
      * Clone the Matrix
-     * @name clone
-     * @memberof Matrix3d
      * @returns {Matrix3d}
      */
     clone() {
@@ -5392,8 +5169,6 @@ class Matrix3d {
 
     /**
      * return an array representation of this Matrix
-     * @name toArray
-     * @memberof Matrix3d
      * @returns {Float32Array}
      */
     toArray() {
@@ -5402,8 +5177,6 @@ class Matrix3d {
 
     /**
      * convert the object to a string representation
-     * @name toString
-     * @memberof Matrix3d
      * @returns {string}
      */
     toString() {
@@ -5457,11 +5230,8 @@ class Matrix2d {
 
     /**
      * tx component of the matrix
-     * @public
      * @type {number}
      * @see Matrix2d.translate
-     * @name tx
-     * @memberof Matrix2d
      */
     get tx() {
         return this.val[6];
@@ -5469,11 +5239,8 @@ class Matrix2d {
 
     /**
      * ty component of the matrix
-     * @public
      * @type {number}
      * @see Matrix2d.translate
-     * @name ty
-     * @memberof Matrix2d
      */
     get ty() {
         return this.val[7];
@@ -5483,8 +5250,6 @@ class Matrix2d {
      * reset the transformation matrix to the identity matrix (no transformation).<br>
      * the identity matrix and parameters position : <br>
      * <img src="images/identity-matrix_2x.png"/>
-     * @name identity
-     * @memberof Matrix2d
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     identity() {
@@ -5498,8 +5263,6 @@ class Matrix2d {
 
     /**
      * set the matrix to the specified value
-     * @name setTransform
-     * @memberof Matrix2d
      * @param {number} a
      * @param {number} b
      * @param {number} c
@@ -5541,8 +5304,6 @@ class Matrix2d {
 
     /**
      * Copies over the values from another me.Matrix2d.
-     * @name copy
-     * @memberof Matrix2d
      * @param {Matrix2d} m - the matrix object to copy from
      * @returns {Matrix2d} Reference to this object for method chaining
      */
@@ -5553,8 +5314,6 @@ class Matrix2d {
 
     /**
      * Copies over the upper-left 3x3 values from the given me.Matrix3d
-     * @name fromMat3d
-     * @memberof Matrix2d
      * @param {Matrix3d} m - the matrix object to copy from
      * @returns {Matrix2d} Reference to this object for method chaining
      */
@@ -5577,8 +5336,6 @@ class Matrix2d {
 
     /**
      * multiply both matrix
-     * @name multiply
-     * @memberof Matrix2d
      * @param {Matrix2d} m - the other matrix
      * @returns {Matrix2d} Reference to this object for method chaining
      */
@@ -5608,8 +5365,6 @@ class Matrix2d {
 
     /**
      * Transpose the value of this matrix.
-     * @name transpose
-     * @memberof Matrix2d
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     transpose() {
@@ -5630,8 +5385,6 @@ class Matrix2d {
 
     /**
      * invert this matrix, causing it to apply the opposite transformation.
-     * @name invert
-     * @memberof Matrix2d
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     invert() {
@@ -5664,8 +5417,6 @@ class Matrix2d {
 
     /**
     * apply the current transform to the given 2d or 3d vector
-    * @name apply
-    * @memberof Matrix2d
     * @param {Vector2d|Vector3d} v - the vector object to be transformed
     * @returns {Vector2d|Vector3d} result vector object.
     */
@@ -5687,8 +5438,6 @@ class Matrix2d {
 
     /**
      * apply the inverted current transform to the given 2d vector
-     * @name applyInverse
-     * @memberof Matrix2d
      * @param {Vector2d} v - the vector object to be transformed
      * @returns {Vector2d} result vector object.
      */
@@ -5707,8 +5456,6 @@ class Matrix2d {
 
     /**
      * scale the matrix
-     * @name scale
-     * @memberof Matrix2d
      * @param {number} x - a number representing the abscissa of the scaling vector.
      * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
      * @returns {Matrix2d} Reference to this object for method chaining
@@ -5726,8 +5473,6 @@ class Matrix2d {
 
     /**
      * adds a 2D scaling transformation.
-     * @name scaleV
-     * @memberof Matrix2d
      * @param {Vector2d} v - scaling vector
      * @returns {Matrix2d} Reference to this object for method chaining
      */
@@ -5737,8 +5482,6 @@ class Matrix2d {
 
     /**
      * specifies a 2D scale operation using the [sx, 1] scaling vector
-     * @name scaleX
-     * @memberof Matrix2d
      * @param {number} x - x scaling vector
      * @returns {Matrix2d} Reference to this object for method chaining
      */
@@ -5748,8 +5491,6 @@ class Matrix2d {
 
     /**
      * specifies a 2D scale operation using the [1,sy] scaling vector
-     * @name scaleY
-     * @memberof Matrix2d
      * @param {number} y - y scaling vector
      * @returns {Matrix2d} Reference to this object for method chaining
      */
@@ -5759,8 +5500,6 @@ class Matrix2d {
 
     /**
      * rotate the matrix (counter-clockwise) by the specified angle (in radians).
-     * @name rotate
-     * @memberof Matrix2d
      * @param {number} angle - Rotation angle in radians.
      * @returns {Matrix2d} Reference to this object for method chaining
      */
@@ -5789,18 +5528,8 @@ class Matrix2d {
 
     /**
      * translate the matrix position on the horizontal and vertical axis
-     * @name translate
-     * @memberof Matrix2d
-     * @function
-     * @param {number} x - the x coordindates to translate the matrix by
-     * @param {number} y - the y coordindates to translate the matrix by
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    /**
-     * translate the matrix by a vector on the horizontal and vertical axis
-     * @name translateV
-     * @memberof Matrix2d
-     * @param {Vector2d} v - the vector to translate the matrix by
+     * @param {number|Vector2d} x - the x coordindates or a vector to translate the matrix by
+     * @param {number} [y] - the y coordindates to translate the matrix by
      * @returns {Matrix2d} Reference to this object for method chaining
      */
     translate() {
@@ -5825,8 +5554,6 @@ class Matrix2d {
 
     /**
      * returns true if the matrix is an identity matrix.
-     * @name isIdentity
-     * @memberof Matrix2d
      * @returns {boolean}
      */
     isIdentity() {
@@ -5847,8 +5574,6 @@ class Matrix2d {
 
     /**
      * return true if the two matrices are identical
-     * @name equals
-     * @memberof Matrix2d
      * @param {Matrix2d} m - the other matrix
      * @returns {boolean} true if both are equals
      */
@@ -5871,8 +5596,6 @@ class Matrix2d {
 
     /**
      * Clone the Matrix
-     * @name clone
-     * @memberof Matrix2d
      * @returns {Matrix2d}
      */
     clone() {
@@ -5881,8 +5604,6 @@ class Matrix2d {
 
     /**
      * return an array representation of this Matrix
-     * @name toArray
-     * @memberof Matrix2d
      * @returns {Float32Array}
      */
     toArray() {
@@ -5891,8 +5612,6 @@ class Matrix2d {
 
     /**
      * convert the object to a string representation
-     * @name toString
-     * @memberof Matrix2d
      * @returns {string}
      */
     toString() {
@@ -6614,10 +6333,7 @@ class Polygon {
     constructor(x, y, points) {
         /**
          * origin point of the Polygon
-         * @public
          * @type {Vector2d}
-         * @name pos
-         * @memberof Polygon
          */
         this.pos = pool.pull("Vector2d");
 
@@ -6625,18 +6341,13 @@ class Polygon {
          * The bounding rectangle for this shape
          * @ignore
          * @member {Bounds}
-         * @name _bounds
-         * @memberof Polygon
          */
         this._bounds;
 
         /**
          * Array of points defining the Polygon <br>
          * Note: If you manually change `points`, you **must** call `recalc`afterwards so that the changes get applied correctly.
-         * @public
          * @type {Vector2d[]}
-         * @name points
-         * @memberof Polygon
          */
         this.points = [];
 
@@ -6674,8 +6385,6 @@ class Polygon {
 
     /**
      * set new value to the Polygon
-     * @name setShape
-     * @memberof Polygon
      * @param {number} x - position of the Polygon
      * @param {number} y - position of the Polygon
      * @param {Vector2d[]|number[]} points - array of vector or vertice defining the Polygon
@@ -6689,8 +6398,6 @@ class Polygon {
 
     /**
      * set the vertices defining this Polygon
-     * @name setVertices
-     * @memberof Polygon
      * @param {Vector2d[]} vertices - array of vector or vertice defining the Polygon
      * @returns {Polygon} this instance for objecf chaining
      */
@@ -6728,8 +6435,6 @@ class Polygon {
 
     /**
      * apply the given transformation matrix to this Polygon
-     * @name transform
-     * @memberof Polygon
      * @param {Matrix2d} m - the transformation matrix
      * @returns {Polygon} Reference to this object for method chaining
      */
@@ -6746,8 +6451,6 @@ class Polygon {
 
     /**
      * apply an isometric projection to this shape
-     * @name toIso
-     * @memberof Polygon
      * @returns {Polygon} Reference to this object for method chaining
      */
     toIso() {
@@ -6755,9 +6458,7 @@ class Polygon {
     }
 
     /**
-     * apply a 2d projection to this shape
-     * @name to2d
-     * @memberof Polygon
+     * apply a 2d projection to this shapen
      * @returns {Polygon} Reference to this object for method chaining
      */
     to2d() {
@@ -6766,8 +6467,6 @@ class Polygon {
 
     /**
      * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
-     * @name rotate
-     * @memberof Polygon
      * @param {number} angle - The angle to rotate (in radians)
      * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
      * @returns {Polygon} Reference to this object for method chaining
@@ -6787,8 +6486,6 @@ class Polygon {
 
     /**
      * Scale this Polygon by the given scalar.
-     * @name scale
-     * @memberof Polygon
      * @param {number} x
      * @param {number} [y=x]
      * @returns {Polygon} Reference to this object for method chaining
@@ -6806,8 +6503,6 @@ class Polygon {
 
     /**
      * Scale this Polygon by the given vector
-     * @name scaleV
-     * @memberof Polygon
      * @param {Vector2d} v
      * @returns {Polygon} Reference to this object for method chaining
      */
@@ -6818,8 +6513,6 @@ class Polygon {
     /**
      * Computes the calculated collision polygon.
      * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
-     * @name recalc
-     * @memberof Polygon
      * @returns {Polygon} Reference to this object for method chaining
      */
     recalc() {
@@ -6860,8 +6553,6 @@ class Polygon {
 
     /**
      * returns a list of indices for all triangles defined in this polygon
-     * @name getIndices
-     * @memberof Polygon
      * @returns {Array} an array of vertex indices for all triangles forming this polygon.
      */
     getIndices() {
@@ -6873,8 +6564,6 @@ class Polygon {
 
     /**
      * Returns true if the vertices composing this polygon form a convex shape (vertices must be in clockwise order).
-     * @name isConvex
-     * @memberof Polygon
      * @returns {boolean} true if the vertices are convex, false if not, null if not computable
      */
     isConvex() {
@@ -6915,19 +6604,13 @@ class Polygon {
 
     /**
      * translate the Polygon by the specified offset
-     * @name translate
-     * @memberof Polygon
-     * @function
-     * @param {number} x - x offset
-     * @param {number} y - y offset
-     * @returns {Polygon} this Polygon
-     */
-    /**
-     * translate the Polygon by the specified vector
-     * @name translate
-     * @memberof Polygon
-     * @param {Vector2d} v - vector offset
+     * @param {number|Vector2d} x -  x offset or a vector point to translate by
+     * @param {number} [y] - y offset
      * @returns {Polygon} Reference to this object for method chaining
+     * @example
+     * polygon.translate(10, 10);
+     * // or
+     * polygon.translate(myVector2d);
      */
     translate() {
         let _x, _y;
@@ -6951,17 +6634,12 @@ class Polygon {
 
     /**
      * Shifts the Polygon to the given position vector.
-     * @name shift
-     * @memberof Polygon
-     * @function
-     * @param {Vector2d} position
-     */
-    /**
-     * Shifts the Polygon to the given x, y position.
-     * @name shift
-     * @memberof Polygon
-     * @param {number} x
-     * @param {number} y
+     * @param {number|Vector2d} x -  x coordinate or a vector point to shift to
+     * @param {number} [y]
+     * @example
+     * polygon.shift(10, 10);
+     * // or
+     * polygon.shift(myVector2d);
      */
     shift() {
         let _x, _y;
@@ -6980,25 +6658,20 @@ class Polygon {
     }
 
     /**
-     * Returns true if the polygon contains the given point.
-     * (Note: it is highly recommended to first do a hit test on the corresponding <br>
-     *  bounding rect, as the function can be highly consuming with complex shapes)
-     * @name contains
-     * @memberof Polygon
-     * @function
-     * @param {Vector2d} point
-     * @returns {boolean} true if contains
-     */
-
-    /**
      * Returns true if the polygon contains the given point. <br>
      * (Note: it is highly recommended to first do a hit test on the corresponding <br>
      *  bounding rect, as the function can be highly consuming with complex shapes)
-     * @name contains
-     * @memberof Polygon
-     * @param  {number} x -  x coordinate
-     * @param  {number} y -  y coordinate
-     * @returns {boolean} true if contains
+     * @param {number|Vector2d} x -  x coordinate or a vector point to check
+     * @param {number} [y] - y coordinate
+     * @returns {boolean} True if the polygon contain the point, otherwise false
+     * @example
+     * if (polygon.contains(10, 10)) {
+     *   // do something
+     * }
+     * // or
+     * if (polygon.contains(myVector2d)) {
+     *   // do something
+     * }
      */
     contains() {
         let _x, _y;
@@ -7031,8 +6704,6 @@ class Polygon {
 
     /**
      * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
-     * @name getBounds
-     * @memberof Polygon
      * @returns {Bounds} this shape bounding box Rectangle object
      */
     getBounds() {
@@ -7044,8 +6715,6 @@ class Polygon {
 
     /**
      * update the bounding box for this shape.
-     * @name updateBounds
-     * @memberof Polygon
      * @returns {Bounds} this shape bounding box Rectangle object
      */
     updateBounds() {
@@ -7059,8 +6728,6 @@ class Polygon {
 
     /**
      * clone this Polygon
-     * @name clone
-     * @memberof Polygon
      * @returns {Polygon} new Polygon
      */
     clone() {
@@ -7085,20 +6752,17 @@ class Line extends Polygon {
 
     /**
      * Returns true if the Line contains the given point
-     * @name contains
-     * @memberof Line
-     * @function
-     * @param {Vector2d} point
+     * @param {number|Vector2d} x -  x coordinate or a vector point to check
+     * @param {number} [y] -  y coordinate
      * @returns {boolean} true if contains
-     */
-
-    /**
-     * Returns true if the Line contains the given point
-     * @name contains
-     * @memberof Line
-     * @param  {number} x - x coordinate
-     * @param  {number} y - y coordinate
-     * @returns {boolean} true if contains
+     * @example
+     * if (line.contains(10, 10)) {
+     *   // do something
+     * }
+     * // or
+     * if (line.contains(myVector2d)) {
+     *   // do something
+     * }
      */
     contains() {
         let _x, _y;
@@ -7127,8 +6791,6 @@ class Line extends Polygon {
     /**
      * Computes the calculated collision edges and normals.
      * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
-     * @name recalc
-     * @memberof Line
      * @returns {Line} this instance for objecf chaining
      */
     recalc() {
@@ -7162,8 +6824,6 @@ class Line extends Polygon {
 
     /**
      * clone this line segment
-     * @name clone
-     * @memberof Line
      * @returns {Line} new Line
      */
     clone() {
@@ -7192,8 +6852,6 @@ class Ellipse {
          * the center coordinates of the ellipse
          * @public
          * @type {Vector2d}
-         * @name pos
-         * @memberof Ellipse
          */
         this.pos = pool.pull("Vector2d");
 
@@ -7207,8 +6865,6 @@ class Ellipse {
          * Maximum radius of the ellipse
          * @public
          * @type {number}
-         * @name radius
-         * @memberof Ellipse
          */
         this.radius = NaN;
 
@@ -7216,8 +6872,6 @@ class Ellipse {
          * Pre-scaled radius vector for ellipse
          * @public
          * @type {Vector2d}
-         * @name radiusV
-         * @memberof Ellipse
          */
         this.radiusV = pool.pull("Vector2d");
 
@@ -7225,8 +6879,6 @@ class Ellipse {
          * Radius squared, for pythagorean theorom
          * @public
          * @type {Vector2d}
-         * @name radiusSq
-         * @memberof Ellipse
          */
         this.radiusSq = pool.pull("Vector2d");
 
@@ -7234,8 +6886,6 @@ class Ellipse {
          * x/y scaling ratio for ellipse
          * @public
          * @type {Vector2d}
-         * @name ratio
-         * @memberof Ellipse
          */
         this.ratio = pool.pull("Vector2d");
 
@@ -7251,8 +6901,6 @@ class Ellipse {
 
     /**
      * set new value to the Ellipse shape
-     * @name setShape
-     * @memberof Ellipse
      * @param {number} x - the center x coordinate of the ellipse
      * @param {number} y - the center y coordinate of the ellipse
      * @param {number} w - width (diameter) of the ellipse
@@ -7280,8 +6928,6 @@ class Ellipse {
 
     /**
      * Rotate this Ellipse (counter-clockwise) by the specified angle (in radians).
-     * @name rotate
-     * @memberof Ellipse
      * @param {number} angle - The angle to rotate (in radians)
      * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
      * @returns {Ellipse} Reference to this object for method chaining
@@ -7296,8 +6942,6 @@ class Ellipse {
 
     /**
      * Scale this Ellipse by the specified scalar.
-     * @name scale
-     * @memberof Ellipse
      * @param {number} x - the scale factor along the x-axis
      * @param {number} [y=x] - the scale factor along the y-axis
      * @returns {Ellipse} Reference to this object for method chaining
@@ -7313,8 +6957,6 @@ class Ellipse {
 
     /**
      * Scale this Ellipse by the specified vector.
-     * @name scale
-     * @memberof Ellipse
      * @param {Vector2d} v
      * @returns {Ellipse} Reference to this object for method chaining
      */
@@ -7324,8 +6966,6 @@ class Ellipse {
 
     /**
      * apply the given transformation matrix to this ellipse
-     * @name transform
-     * @memberof Ellipse
      * @param {Matrix2d} matrix - the transformation matrix
      * @returns {Polygon} Reference to this object for method chaining
      */
@@ -7336,19 +6976,13 @@ class Ellipse {
 
     /**
      * translate the circle/ellipse by the specified offset
-     * @name translate
-     * @memberof Ellipse
-     * @function
-     * @param {number} x - x offset
-     * @param {number} y - y offset
+     * @param {number|Vector2d} x -  x coordinate or a vector point to translate by
+     * @param {number} [y] - y offset
      * @returns {Ellipse} this ellipse
-     */
-    /**
-     * translate the circle/ellipse by the specified vector
-     * @name translate
-     * @memberof Ellipse
-     * @param {Vector2d} v - vector offset
-     * @returns {Ellipse} this ellipse
+     * @example
+     * ellipse.translate(10, 10);
+     * // or
+     * ellipse.translate(myVector2d);
      */
     translate() {
         let _x, _y;
@@ -7372,20 +7006,17 @@ class Ellipse {
 
     /**
      * check if this circle/ellipse contains the specified point
-     * @name contains
-     * @function
-     * @memberof Ellipse
-     * @param {Vector2d} point
+     * @param {number|Vector2d} x -  x coordinate or a vector point to check
+     * @param {number} [y] -  y coordinate
      * @returns {boolean} true if contains
-     */
-
-    /**
-     * check if this circle/ellipse contains the specified point
-     * @name contains
-     * @memberof Ellipse
-     * @param  {number} x -  x coordinate
-     * @param  {number} y -  y coordinate
-     * @returns {boolean} true if contains
+     * @example
+     * if (circle.contains(10, 10)) {
+     *   // do something
+     * }
+     * // or
+     * if (circle.contains(myVector2d)) {
+     *  // do something
+     * }
      */
     contains() {
         let _x, _y;
@@ -7412,8 +7043,6 @@ class Ellipse {
 
     /**
      * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
-     * @name getBounds
-     * @memberof Ellipse
      * @returns {Bounds} this shape bounding box Rectangle object
      */
     getBounds() {
@@ -7425,8 +7054,6 @@ class Ellipse {
 
     /**
      * clone this Ellipse
-     * @name clone
-     * @memberof Ellipse
      * @returns {Ellipse} new Ellipse
      */
     clone() {
@@ -7478,17 +7105,9 @@ class Point {
     }
 
     /**
-     * return true if the two points are the same
-     * @name equals
-     * @memberof Point
-     * @function
-     * @param {Point} point
-     * @returns {boolean}
-     */
-    /**
-     * return true if this point is equal to the given values
-     * @param {number} x
-     * @param {number} y
+     * return true if this point is equal to the given point
+     * @param {number|Point|Vector2d} x
+     * @param {number} [y]
      * @returns {boolean}
      */
     equals() {
@@ -7544,8 +7163,6 @@ class Rect extends Polygon {
 
     /**
      * set new value to the rectangle shape
-     * @name setShape
-     * @memberof Rect
      * @param {number} x - position of the Rectangle
      * @param {number} y - position of the Rectangle
      * @param {number|Vector2d[]} w - width of the rectangle, or an array of vector defining the rectangle
@@ -7572,10 +7189,7 @@ class Rect extends Polygon {
 
     /**
      * left coordinate of the Rectangle
-     * @public
      * @type {number}
-     * @name left
-     * @memberof Rect
      */
     get left() {
         return this.pos.x;
@@ -7583,10 +7197,7 @@ class Rect extends Polygon {
 
     /**
      * right coordinate of the Rectangle
-     * @public
      * @type {number}
-     * @name right
-     * @memberof Rect
      */
     get right() {
         let w = this.width;
@@ -7595,10 +7206,7 @@ class Rect extends Polygon {
 
     /**
      * top coordinate of the Rectangle
-     * @public
      * @type {number}
-     * @name top
-     * @memberof Rect
      */
     get top() {
         return this.pos.y;
@@ -7606,10 +7214,7 @@ class Rect extends Polygon {
 
     /**
      * bottom coordinate of the Rectangle
-     * @public
      * @type {number}
-     * @name bottom
-     * @memberof Rect
      */
     get bottom() {
         let h = this.height;
@@ -7618,10 +7223,7 @@ class Rect extends Polygon {
 
     /**
      * width of the Rectangle
-     * @public
      * @type {number}
-     * @name width
-     * @memberof Rect
      */
     get width() {
         return this.points[2].x;
@@ -7634,10 +7236,7 @@ class Rect extends Polygon {
 
     /**
      * height of the Rectangle
-     * @public
      * @type {number}
-     * @name height
-     * @memberof Rect
      */
     get height() {
         return this.points[2].y;
@@ -7650,10 +7249,7 @@ class Rect extends Polygon {
 
     /**
      * absolute center of this rectangle on the horizontal axis
-     * @public
      * @type {number}
-     * @name centerX
-     * @memberof Rect
      */
     get centerX() {
         if (isFinite(this.width)) {
@@ -7670,10 +7266,7 @@ class Rect extends Polygon {
 
     /**
      * absolute center of this rectangle on the vertical axis
-     * @public
      * @type {number}
-     * @name centerY
-     * @memberof Rect
      */
     get centerY() {
         if (isFinite(this.height)) {
@@ -7690,8 +7283,6 @@ class Rect extends Polygon {
 
     /**
      * center the rectangle position around the given coordinates
-     * @name centerOn
-     * @memberof Rect
      * @param {number} x - the x coordinate around which to center this rectangle
      * @param {number} y - the y coordinate around which to center this rectangle
      * @returns {Rect} this rectangle
@@ -7704,8 +7295,6 @@ class Rect extends Polygon {
 
     /**
      * resize the rectangle
-     * @name resize
-     * @memberof Rect
      * @param {number} w - new width of the rectangle
      * @param {number} h - new height of the rectangle
      * @returns {Rect} this rectangle
@@ -7718,8 +7307,6 @@ class Rect extends Polygon {
 
     /**
      * scale the rectangle
-     * @name scale
-     * @memberof Rect
      * @param {number} x - a number representing the abscissa of the scaling vector.
      * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
      * @returns {Rect} this rectangle
@@ -7732,8 +7319,6 @@ class Rect extends Polygon {
 
     /**
      * clone this rectangle
-     * @name clone
-     * @memberof Rect
      * @returns {Rect} new rectangle
      */
     clone() {
@@ -7742,8 +7327,6 @@ class Rect extends Polygon {
 
     /**
      * copy the position and size of the given rectangle into this one
-     * @name copy
-     * @memberof Rect
      * @param {Rect} rect - Source rectangle
      * @returns {Rect} new rectangle
      */
@@ -7753,8 +7336,6 @@ class Rect extends Polygon {
 
     /**
      * merge this rectangle with another one
-     * @name union
-     * @memberof Rect
      * @param {Rect} rect - other rectangle to union with
      * @returns {Rect} the union(ed) rectangle
      */
@@ -7774,8 +7355,6 @@ class Rect extends Polygon {
 
     /**
      * check if this rectangle is intersecting with the specified one
-     * @name overlaps
-     * @memberof Rect
      * @param {Rect} rect
      * @returns {boolean} true if overlaps
      */
@@ -7789,30 +7368,21 @@ class Rect extends Polygon {
     }
 
     /**
-     * Returns true if the rectangle contains the given rectangle
-     * @name contains
-     * @memberof Rect
-     * @function
-     * @param {Rect} rect
-     * @returns {boolean} true if contains
-     */
-
-    /**
-     * Returns true if the rectangle contains the given point
-     * @name contains
-     * @memberof Rect
-     * @function
-     * @param  {number} x -  x coordinate
-     * @param  {number} y -  y coordinate
-     * @returns {boolean} true if contains
-     */
-
-    /**
-     * Returns true if the rectangle contains the given point
-     * @name contains
-     * @memberof Rect
-     * @param {Vector2d} point
-     * @returns {boolean} true if contains
+     * Returns true if the rectangle contains the given point or rectangle
+     * @param {number|Vector2d|Rect} x -  x coordinate or a vector point, or a rectangle to test
+     * @param {number} [y] - y coordinate
+     * @returns {boolean} True if the rectangle contain the given point or rectangle, otherwise false
+     * @example
+     * if (rect.contains(10, 10)) {
+     *   // do something
+     * }
+     * // or
+     * if (rect.contains(myVector2d)) {
+     *   // do something
+     * }
+     * if (rect.contains(myRect)) {
+     *   // do something
+     * }
      */
     contains() {
         let arg0 = arguments[0];
@@ -7822,7 +7392,8 @@ class Rect extends Polygon {
             _x1 = _x2 = arg0;
             _y1 = _y2 = arguments[1];
         } else {
-            if (arg0 instanceof Rect) {
+            // only Rect based objects define a top and bottom properties
+            if (typeof arg0.bottom === "number") {
                 // me.Rect
                 _x1 = arg0.left;
                 _x2 = arg0.right;
@@ -7844,8 +7415,6 @@ class Rect extends Polygon {
 
     /**
      * check if this rectangle is identical to the specified one
-     * @name equals
-     * @memberof Rect
      * @param {Rect} rect
      * @returns {boolean} true if equals
      */
@@ -7860,8 +7429,6 @@ class Rect extends Polygon {
 
     /**
      * determines whether all coordinates of this rectangle are finite numbers.
-     * @name isFinite
-     * @memberof Rect
      * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
      */
     isFinite() {
@@ -7870,8 +7437,6 @@ class Rect extends Polygon {
 
     /**
      * Returns a polygon whose edges are the same as this box.
-     * @name toPolygon
-     * @memberof Rect
      * @returns {Polygon} a new Polygon that represents this rectangle.
      */
     toPolygon() {
@@ -7913,11 +7478,8 @@ class RoundRect extends Rect {
 
     /**
      * the radius of the rounded corner
-     * @public
      * @type {number}
      * @default 20
-     * @name radius
-     * @memberof RoundRect
      */
     get radius() {
         return this._radius;
@@ -7935,8 +7497,6 @@ class RoundRect extends Rect {
 
     /**
      * copy the position, size and radius of the given rounded rectangle into this one
-     * @name copy
-     * @memberof RoundRect
      * @param {RoundRect} rrect - source rounded rectangle
      * @returns {RoundRect} new rectangle
      */
@@ -7947,21 +7507,21 @@ class RoundRect extends Rect {
     }
 
     /**
-     * Returns true if the rounded rectangle contains the given point
-     * @name contains
-     * @memberof RoundRect
-     * @function
-     * @param  {number} x -  x coordinate
-     * @param  {number} y -  y coordinate
-     * @returns {boolean} true if contains
-     */
-
-    /**
-     * Returns true if the rounded rectangle contains the given point
-     * @name contains
-     * @memberof RoundRect
-     * @param {Vector2d} point
-     * @returns {boolean} true if contains
+     * Returns true if the rounded rectangle contains the given point or rectangle
+     * @param {number|Vector2d|Rect} x -  x coordinate or a vector point, or a Rect to test
+     * @param {number} [y] - y coordinate
+     * @returns {boolean} True if the rounded rectangle contain the given point or rectangle, otherwise false
+     * @example
+     * if (rect.contains(10, 10)) {
+     *   // do something
+     * }
+     * // or
+     * if (rect.contains(myVector2d)) {
+     *   // do something
+     * }
+     * if (rect.contains(myRect)) {
+     *   // do something
+     * }
      */
     contains() {
         let arg0 = arguments[0];
@@ -7971,11 +7531,11 @@ class RoundRect extends Rect {
             _x = arg0;
             _y = arguments[1];
         } else {
-            if (arg0 instanceof Rect) {
-                // good enough
+            if ((typeof arg0.radius === "undefined") && (typeof arg0.bottom === "number")) {
+                // it's a rect
                 return super.contains(arg0);
             } else {
-                // vector
+                // else a vector or point
                 _x = arg0.x;
                 _y = arg0.y;
             }
@@ -8018,8 +7578,6 @@ class RoundRect extends Rect {
 
     /**
      * check if this RoundRect is identical to the specified one
-     * @name equals
-     * @memberof RoundRect
      * @param {RoundRect} rrect
      * @returns {boolean} true if equals
      */
@@ -8029,8 +7587,6 @@ class RoundRect extends Rect {
 
     /**
      * clone this RoundRect
-     * @name clone
-     * @memberof RoundRect
      * @returns {RoundRect} new RoundRect
      */
     clone() {
@@ -8734,17 +8290,17 @@ class Bounds {
 
     /**
      * Returns true if the bounds contains the given point.
-     * @name contains
-     * @memberof Bounds
-     * @function
-     * @param {Vector2d} point
+     * @param {number|Vector2d} x -  x coordinate or a vector point to check
+     * @param {number} [y] - y coordinate
      * @returns {boolean} True if the bounds contain the point, otherwise false
-     */
-    /**
-     * Returns true if the bounds contains the given point.
-     * @param {number} x
-     * @param {number} y
-     * @returns {boolean} True if the bounds contain the point, otherwise false
+     * @example
+     * if (bounds.contains(10, 10)) {
+     *   // do something
+     * }
+     * // or
+     * if (bounds.contains(myVector2d)) {
+     *   // do something
+     * }
      */
     contains() {
         let arg0 = arguments[0];
@@ -8754,8 +8310,8 @@ class Bounds {
             _x1 = _x2 = arg0;
             _y1 = _y2 = arguments[1];
         } else {
-            if (arg0 instanceof Bounds) {
-                // bounds
+            if (typeof arg0.max !== "undefined") {
+                // only bounds define min and max properties
                 _x1 = arg0.min.x;
                 _x2 = arg0.max.x;
                 _y1 = arg0.min.y;
@@ -8790,16 +8346,13 @@ class Bounds {
     }
 
     /**
-     * Translates the bounds by the given vector.
-     * @name translate
-     * @memberof Bounds
-     * @function
-     * @param {Vector2d} vector
-     */
-    /**
-     * Translates the bounds by x on the x axis, and y on the y axis
-     * @param {number} x
-     * @param {number} y
+     * Translates the bounds by the given point
+     * @param {number|Vector2d} x -  x coordinate or a vector point to translate by
+     * @param {number} [y]
+     * @example
+     * bounds.translate(10, 10);
+     * // or
+     * bounds.translate(myVector2d);
      */
     translate() {
         let _x, _y;
@@ -8819,16 +8372,13 @@ class Bounds {
     }
 
     /**
-     * Shifts the bounds to the given position vector.
-     * @name shift
-     * @memberof Bounds
-     * @function
-     * @param {Vector2d} position
-     */
-    /**
      * Shifts the bounds to the given x, y position.
-     * @param {number} x
-     * @param {number} y
+     * @param {number|Vector2d} x -  x coordinate or a vector point to shift to
+     * @param {number} [y]
+     * @example
+     * bounds.shift(10, 10);
+     * // or
+     * bounds.shift(myVector2d);
      */
     shift() {
         let _x, _y;
@@ -9022,8 +8572,7 @@ function defer(func, thisArg, ...args) {
 }
 
 /**
- * returns a function that, when invoked will only be triggered at most
- * once during a given window of time
+ * returns a function that, when invoked will only be triggered at most once during a given window of time
  * @public
  * @memberof utils.function
  * @name throttle
@@ -13518,15 +13067,13 @@ let stopOnAudioError = true;
 
 /**
  * Initialize and configure the audio support.<br>
- * melonJS supports a wide array of audio codecs that have varying browser support :
- * <i> ("mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac")</i>.<br>
  * For a maximum browser coverage the recommendation is to use at least two of them,
  * typically default to webm and then fallback to mp3 for the best balance of small filesize and high quality,
  * webm has nearly full browser coverage with a great combination of compression and quality, and mp3 will fallback gracefully for other browsers.
  * It is important to remember that melonJS selects the first compatible sound based on the list of extensions and given order passed here.
  * So if you want webm to be used before mp3, you need to put the audio format in that order.
  * @function audio.init
- * @param {string} [format="mp3"] - audio format to prioritize
+ * @param {"mp3"|"mpeg"|"opus"|"ogg"|"oga"|"wav"|"aac"|"caf"|"m4a"|"m4b"|"mp4"|"weba"|"webm"|"dolby"|"flac"} [format="mp3"] - audio format to prioritize
  * @returns {boolean} Indicates whether audio initialization was successful
  * @example
  * // initialize the "sound engine", giving "webm" as default desired audio format, and "mp3" as a fallback
@@ -13545,7 +13092,7 @@ function init$1(format = "mp3") {
 /**
  * check if the given audio format is supported
  * @function audio.hasFormat
- * @param {string} codec - audio format : "mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac"
+ * @param {"mp3"|"mpeg"|"opus"|"ogg"|"oga"|"wav"|"aac"|"caf"|"m4a"|"m4b"|"mp4"|"weba"|"webm"|"dolby"|"flac"} codec - the audio format to check for support
  * @returns {boolean} return true if the given audio format is supported
  */
 function hasFormat(codec) {
@@ -29143,15 +28690,17 @@ class Body {
 
     /**
      * Returns true if the any of the shape composing the body contains the given point.
-     * @function Body#contains
-     * @param {Vector2d} point
+     * @param {number|Vector2d} x -  x coordinate or a vector point to check
+     * @param {number} [y] -  y coordinate
      * @returns {boolean} true if contains
-     */
-    /**
-     * Returns true if the any of the shape composing the body contains the given point.
-     * @param  {number} x -  x coordinate
-     * @param  {number} y -  y coordinate
-     * @returns {boolean} true if contains
+     * @example
+     * if (mySprite.body.contains(10, 10)) {
+     *   // do something
+     * }
+     * // or
+     * if (mySprite.body.contains(myVector2d)) {
+     *   // do something
+     * }
      */
     contains() {
         let _x, _y;
@@ -32560,7 +32109,7 @@ class ImageLayer extends Sprite {
      * @param {string} [settings.name="me.ImageLayer"] - layer name
      * @param {number} [settings.z=0] - z-index position
      * @param {number|Vector2d} [settings.ratio=1.0] - Scrolling ratio to be applied. See {@link ImageLayer#ratio}
-     * @param {string} [settings.repeat='repeat'] - define if and how an Image Layer should be repeated (accepted values are 'repeat', 'repeat-x', 'repeat-y', 'no-repeat'). See {@link ImageLayer#repeat}
+     * @param {"repeat"|"repeat-x"|"repeat-y"|"no-repeat"} [settings.repeat="repeat"] - define if and how an Image Layer should be repeated. See {@link ImageLayer#repeat}
      * @param {number|Vector2d} [settings.anchorPoint=0.0] - Image origin. See {@link ImageLayer#anchorPoint}
      * @example
      * // create a repetitive background pattern on the X axis using the citycloud image asset
@@ -37551,7 +37100,7 @@ const defaultSettings = {
  * @property {string|HTMLElement} [parent=document.body] - the DOM parent element to hold the canvas in the HTML file
  * @property {number|Renderer} [renderer=AUTO] - renderer to use (CANVAS, WEBGL, AUTO), or a custom renderer class
  * @property {number|string} [scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)
- * @property {string} [scaleMethod="fit"] - screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch') : <br>
+ * @property {"fit"|"fill-min"|"fill-max"|"flex"|"flex-width"|"flex-height"|"stretch"} [scaleMethod="fit"] - screen scaling modes : <br>
  *  - <i><b>`fit`</b></i> : Letterboxed; content is scaled to design aspect ratio <br>
  * <center><img src="images/scale-fit.png"/></center><br>
  *  - <i><b>`fill-min`</b></i> : Canvas is resized to fit minimum design resolution; content is scaled to design aspect ratio <br>
@@ -37568,8 +37117,8 @@ const defaultSettings = {
  * <center><img src="images/scale-stretch.png"/></center>
  * @property {string|HTMLElement} [scaleTarget] - the HTML Element to be used as the reference target when using automatic scaling (by default melonJS will use the parent container of the div element containing the canvas)
  * @property {boolean} [preferWebGL1=false] - if true the renderer will only use WebGL 1
- * @property {boolean} [depthTest="sorting"] - ~Experimental~ the default method to sort object on the z axis in WebGL ("sorting", "z-buffer")
- * @property {string} [powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
+ * @property {"sorting"|"z-buffer"} [depthTest="sorting"] - ~Experimental~ the default method to sort object on the z axis in WebGL
+ * @property {("default"|"high-performance"|"low-power")} [powerPreference="default"] - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context. To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
  * @property {boolean} [transparent=false] - whether to allow transparent pixels in the front buffer (screen).
  * @property {boolean} [antiAlias=false] - whether to enable or not video scaling interpolation
  * @property {boolean} [consoleHeader=true] - whether to display melonJS version and basic device information in the console

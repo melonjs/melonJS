@@ -12,7 +12,7 @@ export default class ImageLayer {
      * @param {string} [settings.name="me.ImageLayer"] - layer name
      * @param {number} [settings.z=0] - z-index position
      * @param {number|Vector2d} [settings.ratio=1.0] - Scrolling ratio to be applied. See {@link ImageLayer#ratio}
-     * @param {string} [settings.repeat='repeat'] - define if and how an Image Layer should be repeated (accepted values are 'repeat', 'repeat-x', 'repeat-y', 'no-repeat'). See {@link ImageLayer#repeat}
+     * @param {"repeat"|"repeat-x"|"repeat-y"|"no-repeat"} [settings.repeat="repeat"] - define if and how an Image Layer should be repeated. See {@link ImageLayer#repeat}
      * @param {number|Vector2d} [settings.anchorPoint=0.0] - Image origin. See {@link ImageLayer#anchorPoint}
      * @example
      * // create a repetitive background pattern on the X axis using the citycloud image asset
@@ -26,7 +26,7 @@ export default class ImageLayer {
         name?: string | undefined;
         z?: number | undefined;
         ratio?: number | Vector2d;
-        repeat?: string | undefined;
+        repeat?: "repeat" | "no-repeat" | "repeat-x" | "repeat-y" | undefined;
         anchorPoint?: number | Vector2d;
     });
     floating: boolean;

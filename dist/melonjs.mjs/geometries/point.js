@@ -44,17 +44,9 @@ class Point {
     }
 
     /**
-     * return true if the two points are the same
-     * @name equals
-     * @memberof Point
-     * @function
-     * @param {Point} point
-     * @returns {boolean}
-     */
-    /**
-     * return true if this point is equal to the given values
-     * @param {number} x
-     * @param {number} y
+     * return true if this point is equal to the given point
+     * @param {number|Point|Vector2d} x
+     * @param {number} [y]
      * @returns {boolean}
      */
     equals() {

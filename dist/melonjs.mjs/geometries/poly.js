@@ -28,10 +28,7 @@ class Polygon {
     constructor(x, y, points) {
         /**
          * origin point of the Polygon
-         * @public
          * @type {Vector2d}
-         * @name pos
-         * @memberof Polygon
          */
         this.pos = pool.pull("Vector2d");
 
@@ -39,18 +36,13 @@ class Polygon {
          * The bounding rectangle for this shape
          * @ignore
          * @member {Bounds}
-         * @name _bounds
-         * @memberof Polygon
          */
         this._bounds;
 
         /**
          * Array of points defining the Polygon <br>
          * Note: If you manually change `points`, you **must** call `recalc`afterwards so that the changes get applied correctly.
-         * @public
          * @type {Vector2d[]}
-         * @name points
-         * @memberof Polygon
          */
         this.points = [];
 
@@ -88,8 +80,6 @@ class Polygon {
 
     /**
      * set new value to the Polygon
-     * @name setShape
-     * @memberof Polygon
      * @param {number} x - position of the Polygon
      * @param {number} y - position of the Polygon
      * @param {Vector2d[]|number[]} points - array of vector or vertice defining the Polygon
@@ -103,8 +93,6 @@ class Polygon {
 
     /**
      * set the vertices defining this Polygon
-     * @name setVertices
-     * @memberof Polygon
      * @param {Vector2d[]} vertices - array of vector or vertice defining the Polygon
      * @returns {Polygon} this instance for objecf chaining
      */
@@ -142,8 +130,6 @@ class Polygon {
 
     /**
      * apply the given transformation matrix to this Polygon
-     * @name transform
-     * @memberof Polygon
      * @param {Matrix2d} m - the transformation matrix
      * @returns {Polygon} Reference to this object for method chaining
      */
@@ -160,8 +146,6 @@ class Polygon {
 
     /**
      * apply an isometric projection to this shape
-     * @name toIso
-     * @memberof Polygon
      * @returns {Polygon} Reference to this object for method chaining
      */
     toIso() {
@@ -169,9 +153,7 @@ class Polygon {
     }
 
     /**
-     * apply a 2d projection to this shape
-     * @name to2d
-     * @memberof Polygon
+     * apply a 2d projection to this shapen
      * @returns {Polygon} Reference to this object for method chaining
      */
     to2d() {
@@ -180,8 +162,6 @@ class Polygon {
 
     /**
      * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
-     * @name rotate
-     * @memberof Polygon
      * @param {number} angle - The angle to rotate (in radians)
      * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
      * @returns {Polygon} Reference to this object for method chaining
@@ -201,8 +181,6 @@ class Polygon {
 
     /**
      * Scale this Polygon by the given scalar.
-     * @name scale
-     * @memberof Polygon
      * @param {number} x
      * @param {number} [y=x]
      * @returns {Polygon} Reference to this object for method chaining
@@ -220,8 +198,6 @@ class Polygon {
 
     /**
      * Scale this Polygon by the given vector
-     * @name scaleV
-     * @memberof Polygon
      * @param {Vector2d} v
      * @returns {Polygon} Reference to this object for method chaining
      */
@@ -232,8 +208,6 @@ class Polygon {
     /**
      * Computes the calculated collision polygon.
      * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
-     * @name recalc
-     * @memberof Polygon
      * @returns {Polygon} Reference to this object for method chaining
      */
     recalc() {
@@ -274,8 +248,6 @@ class Polygon {
 
     /**
      * returns a list of indices for all triangles defined in this polygon
-     * @name getIndices
-     * @memberof Polygon
      * @returns {Array} an array of vertex indices for all triangles forming this polygon.
      */
     getIndices() {
@@ -287,8 +259,6 @@ class Polygon {
 
     /**
      * Returns true if the vertices composing this polygon form a convex shape (vertices must be in clockwise order).
-     * @name isConvex
-     * @memberof Polygon
      * @returns {boolean} true if the vertices are convex, false if not, null if not computable
      */
     isConvex() {
@@ -329,19 +299,13 @@ class Polygon {
 
     /**
      * translate the Polygon by the specified offset
-     * @name translate
-     * @memberof Polygon
-     * @function
-     * @param {number} x - x offset
-     * @param {number} y - y offset
-     * @returns {Polygon} this Polygon
-     */
-    /**
-     * translate the Polygon by the specified vector
-     * @name translate
-     * @memberof Polygon
-     * @param {Vector2d} v - vector offset
+     * @param {number|Vector2d} x -  x offset or a vector point to translate by
+     * @param {number} [y] - y offset
      * @returns {Polygon} Reference to this object for method chaining
+     * @example
+     * polygon.translate(10, 10);
+     * // or
+     * polygon.translate(myVector2d);
      */
     translate() {
         let _x, _y;
@@ -365,17 +329,12 @@ class Polygon {
 
     /**
      * Shifts the Polygon to the given position vector.
-     * @name shift
-     * @memberof Polygon
-     * @function
-     * @param {Vector2d} position
-     */
-    /**
-     * Shifts the Polygon to the given x, y position.
-     * @name shift
-     * @memberof Polygon
-     * @param {number} x
-     * @param {number} y
+     * @param {number|Vector2d} x -  x coordinate or a vector point to shift to
+     * @param {number} [y]
+     * @example
+     * polygon.shift(10, 10);
+     * // or
+     * polygon.shift(myVector2d);
      */
     shift() {
         let _x, _y;
@@ -394,25 +353,20 @@ class Polygon {
     }
 
     /**
-     * Returns true if the polygon contains the given point.
-     * (Note: it is highly recommended to first do a hit test on the corresponding <br>
-     *  bounding rect, as the function can be highly consuming with complex shapes)
-     * @name contains
-     * @memberof Polygon
-     * @function
-     * @param {Vector2d} point
-     * @returns {boolean} true if contains
-     */
-
-    /**
      * Returns true if the polygon contains the given point. <br>
      * (Note: it is highly recommended to first do a hit test on the corresponding <br>
      *  bounding rect, as the function can be highly consuming with complex shapes)
-     * @name contains
-     * @memberof Polygon
-     * @param  {number} x -  x coordinate
-     * @param  {number} y -  y coordinate
-     * @returns {boolean} true if contains
+     * @param {number|Vector2d} x -  x coordinate or a vector point to check
+     * @param {number} [y] - y coordinate
+     * @returns {boolean} True if the polygon contain the point, otherwise false
+     * @example
+     * if (polygon.contains(10, 10)) {
+     *   // do something
+     * }
+     * // or
+     * if (polygon.contains(myVector2d)) {
+     *   // do something
+     * }
      */
     contains() {
         let _x, _y;
@@ -445,8 +399,6 @@ class Polygon {
 
     /**
      * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
-     * @name getBounds
-     * @memberof Polygon
      * @returns {Bounds} this shape bounding box Rectangle object
      */
     getBounds() {
@@ -458,8 +410,6 @@ class Polygon {
 
     /**
      * update the bounding box for this shape.
-     * @name updateBounds
-     * @memberof Polygon
      * @returns {Bounds} this shape bounding box Rectangle object
      */
     updateBounds() {
@@ -473,8 +423,6 @@ class Polygon {
 
     /**
      * clone this Polygon
-     * @name clone
-     * @memberof Polygon
      * @returns {Polygon} new Polygon
      */
     clone() {

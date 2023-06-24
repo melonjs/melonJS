@@ -38,8 +38,6 @@ class Rect extends Polygon {
 
     /**
      * set new value to the rectangle shape
-     * @name setShape
-     * @memberof Rect
      * @param {number} x - position of the Rectangle
      * @param {number} y - position of the Rectangle
      * @param {number|Vector2d[]} w - width of the rectangle, or an array of vector defining the rectangle
@@ -66,10 +64,7 @@ class Rect extends Polygon {
 
     /**
      * left coordinate of the Rectangle
-     * @public
      * @type {number}
-     * @name left
-     * @memberof Rect
      */
     get left() {
         return this.pos.x;
@@ -77,10 +72,7 @@ class Rect extends Polygon {
 
     /**
      * right coordinate of the Rectangle
-     * @public
      * @type {number}
-     * @name right
-     * @memberof Rect
      */
     get right() {
         let w = this.width;
@@ -89,10 +81,7 @@ class Rect extends Polygon {
 
     /**
      * top coordinate of the Rectangle
-     * @public
      * @type {number}
-     * @name top
-     * @memberof Rect
      */
     get top() {
         return this.pos.y;
@@ -100,10 +89,7 @@ class Rect extends Polygon {
 
     /**
      * bottom coordinate of the Rectangle
-     * @public
      * @type {number}
-     * @name bottom
-     * @memberof Rect
      */
     get bottom() {
         let h = this.height;
@@ -112,10 +98,7 @@ class Rect extends Polygon {
 
     /**
      * width of the Rectangle
-     * @public
      * @type {number}
-     * @name width
-     * @memberof Rect
      */
     get width() {
         return this.points[2].x;
@@ -128,10 +111,7 @@ class Rect extends Polygon {
 
     /**
      * height of the Rectangle
-     * @public
      * @type {number}
-     * @name height
-     * @memberof Rect
      */
     get height() {
         return this.points[2].y;
@@ -144,10 +124,7 @@ class Rect extends Polygon {
 
     /**
      * absolute center of this rectangle on the horizontal axis
-     * @public
      * @type {number}
-     * @name centerX
-     * @memberof Rect
      */
     get centerX() {
         if (isFinite(this.width)) {
@@ -164,10 +141,7 @@ class Rect extends Polygon {
 
     /**
      * absolute center of this rectangle on the vertical axis
-     * @public
      * @type {number}
-     * @name centerY
-     * @memberof Rect
      */
     get centerY() {
         if (isFinite(this.height)) {
@@ -184,8 +158,6 @@ class Rect extends Polygon {
 
     /**
      * center the rectangle position around the given coordinates
-     * @name centerOn
-     * @memberof Rect
      * @param {number} x - the x coordinate around which to center this rectangle
      * @param {number} y - the y coordinate around which to center this rectangle
      * @returns {Rect} this rectangle
@@ -198,8 +170,6 @@ class Rect extends Polygon {
 
     /**
      * resize the rectangle
-     * @name resize
-     * @memberof Rect
      * @param {number} w - new width of the rectangle
      * @param {number} h - new height of the rectangle
      * @returns {Rect} this rectangle
@@ -212,8 +182,6 @@ class Rect extends Polygon {
 
     /**
      * scale the rectangle
-     * @name scale
-     * @memberof Rect
      * @param {number} x - a number representing the abscissa of the scaling vector.
      * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
      * @returns {Rect} this rectangle
@@ -226,8 +194,6 @@ class Rect extends Polygon {
 
     /**
      * clone this rectangle
-     * @name clone
-     * @memberof Rect
      * @returns {Rect} new rectangle
      */
     clone() {
@@ -236,8 +202,6 @@ class Rect extends Polygon {
 
     /**
      * copy the position and size of the given rectangle into this one
-     * @name copy
-     * @memberof Rect
      * @param {Rect} rect - Source rectangle
      * @returns {Rect} new rectangle
      */
@@ -247,8 +211,6 @@ class Rect extends Polygon {
 
     /**
      * merge this rectangle with another one
-     * @name union
-     * @memberof Rect
      * @param {Rect} rect - other rectangle to union with
      * @returns {Rect} the union(ed) rectangle
      */
@@ -268,8 +230,6 @@ class Rect extends Polygon {
 
     /**
      * check if this rectangle is intersecting with the specified one
-     * @name overlaps
-     * @memberof Rect
      * @param {Rect} rect
      * @returns {boolean} true if overlaps
      */
@@ -283,30 +243,21 @@ class Rect extends Polygon {
     }
 
     /**
-     * Returns true if the rectangle contains the given rectangle
-     * @name contains
-     * @memberof Rect
-     * @function
-     * @param {Rect} rect
-     * @returns {boolean} true if contains
-     */
-
-    /**
-     * Returns true if the rectangle contains the given point
-     * @name contains
-     * @memberof Rect
-     * @function
-     * @param  {number} x -  x coordinate
-     * @param  {number} y -  y coordinate
-     * @returns {boolean} true if contains
-     */
-
-    /**
-     * Returns true if the rectangle contains the given point
-     * @name contains
-     * @memberof Rect
-     * @param {Vector2d} point
-     * @returns {boolean} true if contains
+     * Returns true if the rectangle contains the given point or rectangle
+     * @param {number|Vector2d|Rect} x -  x coordinate or a vector point, or a rectangle to test
+     * @param {number} [y] - y coordinate
+     * @returns {boolean} True if the rectangle contain the given point or rectangle, otherwise false
+     * @example
+     * if (rect.contains(10, 10)) {
+     *   // do something
+     * }
+     * // or
+     * if (rect.contains(myVector2d)) {
+     *   // do something
+     * }
+     * if (rect.contains(myRect)) {
+     *   // do something
+     * }
      */
     contains() {
         let arg0 = arguments[0];
@@ -316,7 +267,8 @@ class Rect extends Polygon {
             _x1 = _x2 = arg0;
             _y1 = _y2 = arguments[1];
         } else {
-            if (arg0 instanceof Rect) {
+            // only Rect based objects define a top and bottom properties
+            if (typeof arg0.bottom === "number") {
                 // me.Rect
                 _x1 = arg0.left;
                 _x2 = arg0.right;
@@ -338,8 +290,6 @@ class Rect extends Polygon {
 
     /**
      * check if this rectangle is identical to the specified one
-     * @name equals
-     * @memberof Rect
      * @param {Rect} rect
      * @returns {boolean} true if equals
      */
@@ -354,8 +304,6 @@ class Rect extends Polygon {
 
     /**
      * determines whether all coordinates of this rectangle are finite numbers.
-     * @name isFinite
-     * @memberof Rect
      * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
      */
     isFinite() {
@@ -364,8 +312,6 @@ class Rect extends Polygon {
 
     /**
      * Returns a polygon whose edges are the same as this box.
-     * @name toPolygon
-     * @memberof Rect
      * @returns {Polygon} a new Polygon that represents this rectangle.
      */
     toPolygon() {

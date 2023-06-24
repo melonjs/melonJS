@@ -23,8 +23,6 @@ class Ellipse {
          * the center coordinates of the ellipse
          * @public
          * @type {Vector2d}
-         * @name pos
-         * @memberof Ellipse
          */
         this.pos = pool.pull("Vector2d");
 
@@ -38,8 +36,6 @@ class Ellipse {
          * Maximum radius of the ellipse
          * @public
          * @type {number}
-         * @name radius
-         * @memberof Ellipse
          */
         this.radius = NaN;
 
@@ -47,8 +43,6 @@ class Ellipse {
          * Pre-scaled radius vector for ellipse
          * @public
          * @type {Vector2d}
-         * @name radiusV
-         * @memberof Ellipse
          */
         this.radiusV = pool.pull("Vector2d");
 
@@ -56,8 +50,6 @@ class Ellipse {
          * Radius squared, for pythagorean theorom
          * @public
          * @type {Vector2d}
-         * @name radiusSq
-         * @memberof Ellipse
          */
         this.radiusSq = pool.pull("Vector2d");
 
@@ -65,8 +57,6 @@ class Ellipse {
          * x/y scaling ratio for ellipse
          * @public
          * @type {Vector2d}
-         * @name ratio
-         * @memberof Ellipse
          */
         this.ratio = pool.pull("Vector2d");
 
@@ -82,8 +72,6 @@ class Ellipse {
 
     /**
      * set new value to the Ellipse shape
-     * @name setShape
-     * @memberof Ellipse
      * @param {number} x - the center x coordinate of the ellipse
      * @param {number} y - the center y coordinate of the ellipse
      * @param {number} w - width (diameter) of the ellipse
@@ -111,8 +99,6 @@ class Ellipse {
 
     /**
      * Rotate this Ellipse (counter-clockwise) by the specified angle (in radians).
-     * @name rotate
-     * @memberof Ellipse
      * @param {number} angle - The angle to rotate (in radians)
      * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
      * @returns {Ellipse} Reference to this object for method chaining
@@ -127,8 +113,6 @@ class Ellipse {
 
     /**
      * Scale this Ellipse by the specified scalar.
-     * @name scale
-     * @memberof Ellipse
      * @param {number} x - the scale factor along the x-axis
      * @param {number} [y=x] - the scale factor along the y-axis
      * @returns {Ellipse} Reference to this object for method chaining
@@ -144,8 +128,6 @@ class Ellipse {
 
     /**
      * Scale this Ellipse by the specified vector.
-     * @name scale
-     * @memberof Ellipse
      * @param {Vector2d} v
      * @returns {Ellipse} Reference to this object for method chaining
      */
@@ -155,8 +137,6 @@ class Ellipse {
 
     /**
      * apply the given transformation matrix to this ellipse
-     * @name transform
-     * @memberof Ellipse
      * @param {Matrix2d} matrix - the transformation matrix
      * @returns {Polygon} Reference to this object for method chaining
      */
@@ -167,19 +147,13 @@ class Ellipse {
 
     /**
      * translate the circle/ellipse by the specified offset
-     * @name translate
-     * @memberof Ellipse
-     * @function
-     * @param {number} x - x offset
-     * @param {number} y - y offset
+     * @param {number|Vector2d} x -  x coordinate or a vector point to translate by
+     * @param {number} [y] - y offset
      * @returns {Ellipse} this ellipse
-     */
-    /**
-     * translate the circle/ellipse by the specified vector
-     * @name translate
-     * @memberof Ellipse
-     * @param {Vector2d} v - vector offset
-     * @returns {Ellipse} this ellipse
+     * @example
+     * ellipse.translate(10, 10);
+     * // or
+     * ellipse.translate(myVector2d);
      */
     translate() {
         let _x, _y;
@@ -203,20 +177,17 @@ class Ellipse {
 
     /**
      * check if this circle/ellipse contains the specified point
-     * @name contains
-     * @function
-     * @memberof Ellipse
-     * @param {Vector2d} point
+     * @param {number|Vector2d} x -  x coordinate or a vector point to check
+     * @param {number} [y] -  y coordinate
      * @returns {boolean} true if contains
-     */
-
-    /**
-     * check if this circle/ellipse contains the specified point
-     * @name contains
-     * @memberof Ellipse
-     * @param  {number} x -  x coordinate
-     * @param  {number} y -  y coordinate
-     * @returns {boolean} true if contains
+     * @example
+     * if (circle.contains(10, 10)) {
+     *   // do something
+     * }
+     * // or
+     * if (circle.contains(myVector2d)) {
+     *  // do something
+     * }
      */
     contains() {
         let _x, _y;
@@ -243,8 +214,6 @@ class Ellipse {
 
     /**
      * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
-     * @name getBounds
-     * @memberof Ellipse
      * @returns {Bounds} this shape bounding box Rectangle object
      */
     getBounds() {
@@ -256,8 +225,6 @@ class Ellipse {
 
     /**
      * clone this Ellipse
-     * @name clone
-     * @memberof Ellipse
      * @returns {Ellipse} new Ellipse
      */
     clone() {

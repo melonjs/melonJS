@@ -34,7 +34,7 @@ export type Settings = {
      */
     scale?: string | number | undefined;
     /**
-     * - screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch') : <br>
+     * - screen scaling modes : <br>
      * - <i><b>`fit`</b></i> : Letterboxed; content is scaled to design aspect ratio <br>
      * <center><img src="images/scale-fit.png"/></center><br>
      * - <i><b>`fill-min`</b></i> : Canvas is resized to fit minimum design resolution; content is scaled to design aspect ratio <br>
@@ -50,7 +50,7 @@ export type Settings = {
      * - <i><b>`stretch`</b></i> : Canvas is resized to fit; content is scaled to screen aspect ratio <br>
      * <center><img src="images/scale-stretch.png"/></center>
      */
-    scaleMethod?: string | undefined;
+    scaleMethod?: "flex" | "fill-min" | "fill-max" | "flex-width" | "flex-height" | "stretch" | "fit" | undefined;
     /**
      * - the HTML Element to be used as the reference target when using automatic scaling (by default melonJS will use the parent container of the div element containing the canvas)
      */
@@ -60,13 +60,13 @@ export type Settings = {
      */
     preferWebGL1?: boolean | undefined;
     /**
-     * - ~Experimental~ the default method to sort object on the z axis in WebGL ("sorting", "z-buffer")
+     * - ~Experimental~ the default method to sort object on the z axis in WebGL
      */
-    depthTest?: boolean | undefined;
+    depthTest?: "sorting" | "z-buffer" | undefined;
     /**
-     * - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
+     * - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context. To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
      */
-    powerPreference?: string | undefined;
+    powerPreference?: "default" | "high-performance" | "low-power" | undefined;
     /**
      * - whether to allow transparent pixels in the front buffer (screen).
      */
