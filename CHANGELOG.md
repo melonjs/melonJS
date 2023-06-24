@@ -1,6 +1,6 @@
 # Changelog
 
-## [15.4.0] (melonJS 2) - _2023-06-xx_
+## [15.4.0] (melonJS 2) - _2023-06-24_
 
 ### Added
 - Application: new `pauseOnBlur`, `resumeOnFocus` and `stopOnBlur` properties to configure a game behavior on blur and focus events
@@ -582,6 +582,7 @@
 
 -------------------------------------------------------------------------------
 
+[15.4.0]: https://github.com/melonjs/melonJS/compare/15.3.0...15.4.0
 [15.3.0]: https://github.com/melonjs/melonJS/compare/15.2.1...15.3.0
 [15.2.1]: https://github.com/melonjs/melonJS/compare/15.2.0...15.2.1
 [15.2.0]: https://github.com/melonjs/melonJS/compare/15.1.6...15.2.0
