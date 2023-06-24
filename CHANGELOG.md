@@ -3,7 +3,7 @@
 ## [15.4.1] (melonJS 2) - _2023-06-24_
 
 ### Fixed
-- Audio : fix a TypesSript definition issue introduced in the previous version (on the audio `init` method)
+- Audio : fix a TypeScript definition issue introduced in the previous version (on the audio `init` method)
 
 ## [15.4.0] (melonJS 2) - _2023-06-24_
 
