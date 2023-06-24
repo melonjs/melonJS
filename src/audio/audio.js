@@ -82,7 +82,7 @@ export let stopOnAudioError = true;
  * It is important to remember that melonJS selects the first compatible sound based on the list of extensions and given order passed here.
  * So if you want webm to be used before mp3, you need to put the audio format in that order.
  * @function audio.init
- * @param {"mp3"|"mpeg"|"opus"|"ogg"|"oga"|"wav"|"aac"|"caf"|"m4a"|"m4b"|"mp4"|"weba"|"webm"|"dolby"|"flac"} [format="mp3"] - audio format to prioritize
+ * @param {string} [format="mp3"] - audio format to prioritize ("mp3"|"mpeg"|"opus"|"ogg"|"oga"|"wav"|"aac"|"caf"|"m4a"|"m4b"|"mp4"|"weba"|"webm"|"dolby"|"flac")
  * @returns {boolean} Indicates whether audio initialization was successful
  * @example
  * // initialize the "sound engine", giving "webm" as default desired audio format, and "mp3" as a fallback
