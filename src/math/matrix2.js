@@ -1,5 +1,4 @@
 import pool from "./../system/pooling.js";
-import Matrix3d from "./matrix3.js";
 
 /**
  * @classdesc
@@ -19,23 +18,29 @@ export default class Matrix2d {
      * @ignore
      */
     onResetEvent() {
-        if (typeof(this.val) === "undefined") {
+        const arg0 = arguments[0];
+        const argLen = arguments.length;
+
+        if (typeof this.val === "undefined") {
             this.val = new Float32Array(9);
         }
 
-        if (arguments.length && arguments[0] instanceof Matrix2d) {
-            this.copy(arguments[0]);
-        }
-        else if (arguments.length && arguments[0] instanceof Matrix3d) {
-            this.fromMat3d(arguments[0]);
-        }
-        else if (arguments.length >= 6) {
+        if (argLen === 1) {
+            // matrix2d or matrix3d
+            if (arg0.val.length === 9) {
+                this.copy(arg0);
+            } else if (arg0.val.length === 16) {
+                this.fromMat3d(arguments[0]);
+            } else {
+                throw new Error("invalid Matrix2d constructor parameter");
+            }
+        } else if (arguments.length >= 6) {
+            // individual components
             this.setTransform.apply(this, arguments);
-        }
-        else {
+        } else {
+            // invalid or no arguments
             this.identity();
         }
-        return this;
     }
 
     /**
