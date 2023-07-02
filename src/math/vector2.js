@@ -21,7 +21,6 @@ export default class Vector2d {
         // this is to enable proper object pooling
         this.x = x;
         this.y = y;
-        return this;
     }
 
     /**

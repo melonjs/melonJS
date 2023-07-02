@@ -34,7 +34,6 @@ export default class ObservableVector2d extends Vector2d {
         if (typeof settings !== "undefined") {
             this.setCallback(settings.onUpdate, settings.scope);
         }
-        return this;
     }
 
     /**
