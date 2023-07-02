@@ -226,9 +226,12 @@ export default class TMXObject {
             // add a polygon
             if (this.isPolygon === true) {
                 let _polygon = pool.pull("Polygon", 0, 0, this.points);
+                let isConvex = _polygon.isConvex();
                 // make sure it's a convex polygon
-                if (_polygon.isConvex() === false ) {
+                if (isConvex === false ) {
                     throw new Error("collision polygones in Tiled should be defined as Convex");
+                } else if (isConvex === null) {
+                    throw new Error("invalide polygone");
                 }
                 shapes.push(_polygon.rotate(this.rotation));
 
