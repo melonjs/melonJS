@@ -2,6 +2,9 @@
 
 ## [15.5.0] (melonJS 2) - _2023-xx-xx
 
+### Fixed
+- Physic: fix a potential memory leak when recalculating a polygon edges and normals
+
 ## [15.4.1] (melonJS 2) - _2023-06-24_
 
 ### Fixed

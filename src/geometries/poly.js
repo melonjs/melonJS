@@ -218,19 +218,29 @@ export default class Polygon {
 
         // Calculate the edges/normals
         for (let i = 0; i < len; i++) {
-            if (edges[i] === undefined) {
-                edges[i] = pool.pull("Vector2d");
+            let edge = edges[i];
+            if (typeof edge === "undefined") {
+                edge = edges[i] = pool.pull("Vector2d");
             }
-            edges[i].copy(points[(i + 1) % len]).sub(points[i]);
+            edge.copy(points[(i + 1) % len]).sub(points[i]);
 
-            if (normals[i] === undefined) {
-                normals[i] = pool.pull("Vector2d");
+            let normal = normals[i];
+            if (typeof normal === "undefined") {
+                normal = normals[i] = pool.pull("Vector2d");
             }
-            normals[i].copy(edges[i]).perp().normalize();
+            normal.copy(edge).perp().normalize();
         }
+
+        // Release any existing Vector2d objects back to the pool
+        for (let i = len; i < edges.length; i++) {
+            pool.push(edges[i]);
+            pool.push(normals[i]);
+        }
+
         // trunc array
         edges.length = len;
         normals.length = len;
+
         // do not do anything here, indices will be computed by
         // getIndices if array is empty upon function call
         indices.length = 0;
