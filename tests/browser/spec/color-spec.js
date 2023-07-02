@@ -220,6 +220,57 @@ describe("me.Color", function () {
         });
     });
 
+    describe("Color toUint32 function", function() {
+        let color = new me.Color();
+        it("should return an unsigned 32-bit ARGB value", function() {
+            let color = new me.Color(255, 0, 0);
+            let uint32 = color.toUint32(1.0);
+            //expect(uint32).toEqual(0xFFFF0000);
+            // jasmine test the value as signed int32
+            expect(uint32).toEqual(-65536);
+        });
+        
+        it("should handle alpha values", function() {
+            let color = new me.Color(255, 0, 0);
+            let uint32 = color.toUint32(0.5);
+            //expect(color.toUint32()).toEqual(0x7FFF0000);
+            // jasmine test the value as signed int32
+            expect(uint32).toEqual(2147418112);
+        });
+        
+        it("should shift the alpha value to the first byte", function() {
+            let color = new me.Color(0, 0, 0);
+            let uint32 = color.toUint32(0.25);
+            //expect(uint32).toEqual(0x3F000000);
+            // jasmine test the value as signed int32
+            expect(uint32).toEqual(1056964608);
+        });
+        
+        it("should shift the red value to the second byte", function() {
+            let color = new me.Color(255, 0, 0);
+            let uint32 = color.toUint32(1.0);
+            //expect(uint32).toEqual(0xFFFF0000);
+            // jasmine test the value as signed int32
+            expect(uint32).toEqual(-65536);
+        });
+        
+        it("should shift the green value to the third byte", function() {
+            let color = new me.Color(0, 255, 0);
+            let uint32 = color.toUint32(1.0);
+            //expect(uint32).toEqual(0xFF00FF00);
+            // jasmine test the value as signed int32
+            expect(uint32).toEqual(-16711936);
+        });
+        
+        it("should leave the blue value in the fourth byte", function() {
+            let color = new me.Color(0, 0, 255);
+            let uint32 = color.toUint32(1.0);
+            //expect(uint32).toEqual(0xFF0000FF);
+            // jasmine test the value as signed int32
+            expect(uint32).toEqual(-16776961);
+        });
+      });
+
     describe("color clone function", function () {
         it("cloned color hex value is #2060FF", function () {
             var _color = new me.Color().parseHex("#2060FF");
