@@ -1,5 +1,7 @@
 # Changelog
 
+## [15.5.0] (melonJS 2) - _2023-xx-xx
+
 ## [15.4.1] (melonJS 2) - _2023-06-24_
 
 ### Fixed
@@ -587,6 +589,7 @@
 
 -------------------------------------------------------------------------------
 
+[15.5.0]: https://github.com/melonjs/melonJS/compare/15.4.1...15.5.0
 [15.4.1]: https://github.com/melonjs/melonJS/compare/15.4.0...15.4.1
 [15.4.0]: https://github.com/melonjs/melonJS/compare/15.3.0...15.4.0
 [15.3.0]: https://github.com/melonjs/melonJS/compare/15.2.1...15.3.0
