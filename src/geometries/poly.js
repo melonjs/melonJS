@@ -1,5 +1,4 @@
 import earcut from "earcut";
-import Vector2d from "./../math/vector2.js";
 import pool from "./../system/pooling.js";
 
 /**
@@ -90,30 +89,28 @@ export default class Polygon {
      * @returns {Polygon} this instance for objecf chaining
      */
     setVertices(vertices) {
-
         if (!Array.isArray(vertices)) {
             return this;
         }
 
-        // convert given points to me.Vector2d if required
-        if (!(vertices[0] instanceof Vector2d)) {
-            this.points.length = 0;
-
-            if (typeof vertices[0] === "object") {
-                // array of {x,y} object
+        if (typeof vertices[0] === "object") {
+            if (typeof vertices[0].setV === "function") {
+                // array of Vector2d
+                this.points = vertices;
+            } else {
+                // array of {x,y} objects
+                this.points.length = 0; // fix potential memory leak
                 vertices.forEach((vertice) => {
                     this.points.push(pool.pull("Vector2d", vertice.x, vertice.y));
                 });
-
-            } else {
-                // it's a flat array
-                for (let p = 0; p < vertices.length; p += 2) {
-                    this.points.push(pool.pull("Vector2d", vertices[p], vertices[p + 1]));
-                }
             }
         } else {
-            // array of me.Vector2d
-            this.points = vertices;
+            // it's a flat array of numbers
+            let verticesLength = vertices.length;
+            this.points.length = 0; // fix potential memory leak
+            for (let p = 0; p < verticesLength; p += 2) {
+                this.points.push(pool.pull("Vector2d", vertices[p], vertices[p + 1]));
+            }
         }
 
         this.recalc();
