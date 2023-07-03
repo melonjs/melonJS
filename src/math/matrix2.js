@@ -280,8 +280,11 @@ export default class Matrix2d {
 
         a[0] *= x;
         a[1] *= x;
+        //a[2] *= x; // z axis remains unchanged for 2d scale operation
+
         a[3] *= y;
         a[4] *= y;
+        //a[5] *= y; // w axis remains unchanged for 2d scale operation
 
         return this;
     }
