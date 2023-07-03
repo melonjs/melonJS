@@ -16,16 +16,35 @@ export default class Vector3d {
     }
 
     /**
+     * @param {number} [x=0]
+     * @param {number} [y=0]
+     * @param {number} [z=0]
      * @ignore
      */
     onResetEvent(x = 0, y = 0, z = 0) {
-        // this is to enable proper object pooling
+        /**
+         * x value of the vector
+         * @type {number}
+         */
         this.x = x;
+
+        /**
+         * y value of the vector
+         * @type {number}
+         */
         this.y = y;
+
+        /**
+         * z value of the vector
+         * @type {number}
+         */
         this.z = z;
     }
 
     /**
+     * @param {number} x
+     * @param {number} y
+     * @param {number} [z=0]
      * @ignore
      */
     _set(x, y, z = 0) {
@@ -36,7 +55,7 @@ export default class Vector3d {
     }
 
     /**
-     * set the Vector x and y properties to the given values<br>
+     * set the Vector x and y properties to the given values
      * @param {number} x
      * @param {number} y
      * @param {number} [z=0]
@@ -48,34 +67,6 @@ export default class Vector3d {
                 "invalid x, y, z parameters (not a number)"
             );
         }
-
-        /**
-         * x value of the vector
-         * @public
-         * @member {number}
-         * @name x
-         * @memberof Vector3d
-         */
-        //this.x = x;
-
-        /**
-         * y value of the vector
-         * @public
-         * @member {number}
-         * @name y
-         * @memberof Vector3d
-         */
-        //this.y = y;
-
-        /**
-         * z value of the vector
-         * @public
-         * @member {number}
-         * @name z
-         * @memberof Vector3d
-         */
-        //this.z = z;
-
         return this._set(x, y, z);
     }
 

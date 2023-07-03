@@ -15,15 +15,26 @@ export default class Vector2d {
     }
 
     /**
+     * @param {number} [x=0] - x value of the vector
+     * @param {number} [y=0] - y value of the vector
      * @ignore
      */
     onResetEvent(x = 0, y = 0) {
-        // this is to enable proper object pooling
+        /**
+         * x value of the vector
+         * @type {number}
+         */
         this.x = x;
+        /**
+         * y value of the vector
+         * @type {number}
+         */
         this.y = y;
     }
 
     /**
+     * @param {number} [x=0] - x value of the vector
+     * @param {number} [y=0] - y value of the vector
      * @ignore
      */
     _set(x, y) {
@@ -33,7 +44,7 @@ export default class Vector2d {
     }
 
     /**
-     * set the Vector x and y properties to the given values<br>
+     * set the Vector x and y properties to the given values
      * @param {number} x
      * @param {number} y
      * @returns {Vector2d} Reference to this object for method chaining
@@ -44,25 +55,6 @@ export default class Vector2d {
                 "invalid x,y parameters (not a number)"
             );
         }
-
-        /**
-         * x value of the vector
-         * @public
-         * @member {number}
-         * @name x
-         * @memberof Vector2d
-         */
-        //this.x = x;
-
-        /**
-         * y value of the vector
-         * @public
-         * @member {number}
-         * @name y
-         * @memberof Vector2d
-         */
-        //this.y = y;
-
         return this._set(x, y);
     }
 
