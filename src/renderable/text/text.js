@@ -44,91 +44,66 @@ export default class Text extends Renderable {
     constructor(x, y, settings) {
         // call the parent constructor
         super(x, y, settings.width || 0, settings.height || 0);
-        this.onResetEvent(x, y, settings);
-    }
-
-    /** @ignore */
-    onResetEvent(x, y, settings) {
 
         /**
-         * defines the color used to draw the font.<br>
-         * @public
+         * defines the color used to draw the font.
          * @type {Color}
-         * @name Text#fillStyle
          * @default black
          */
-        if (typeof settings.fillStyle !== "undefined") {
-            if (settings.fillStyle instanceof Color) {
-                this.fillStyle = settings.fillStyle;
-            } else {
-                // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-                this.fillStyle = pool.pull("Color").parseCSS(settings.fillStyle);
-            }
-        } else {
-            this.fillStyle = pool.pull("Color", 0, 0, 0);
-        }
+        this.fillStyle = pool.pull("Color", 0, 0, 0);
 
         /**
          * defines the color used to draw the font stroke.<br>
-         * @public
          * @type {Color}
-         * @name strokeStyle
          * @default black
          */
-        if (typeof settings.strokeStyle !== "undefined") {
-            if (settings.strokeStyle instanceof Color) {
-                this.strokeStyle = settings.strokeStyle;
-            } else {
-                // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-                this.strokeStyle = pool.pull("Color").parseCSS(settings.strokeStyle);
-            }
-        } else {
-            this.strokeStyle = pool.pull("Color", 0, 0, 0);
-        }
+        this.strokeStyle = pool.pull("Color", 0, 0, 0);
 
         /**
          * sets the current line width, in pixels, when drawing stroke
-         * @public
          * @type {number}
          * @default 0
          */
-        this.lineWidth = settings.lineWidth || 0;
+        this.lineWidth = 0;
 
         /**
          * Set the default text alignment (or justification),<br>
          * possible values are "left", "right", and "center".<br>
-         * @public
          * @type {string}
          * @default "left"
          */
-        this.textAlign = settings.textAlign || "left";
+        this.textAlign = "left";
 
         /**
          * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
          * possible values are "top", "hanging, "middle, "alphabetic, "ideographic, "bottom"<br>
-         * @public
          * @type {string}
          * @default "top"
          */
-        this.textBaseline = settings.textBaseline || "top";
+        this.textBaseline = "top";
 
         /**
          * Set the line spacing height (when displaying multi-line strings). <br>
          * Current font height will be multiplied with this value to set the line height.
-         * @public
          * @type {number}
          * @default 1.0
          */
-        this.lineHeight = settings.lineHeight || 1.0;
+        this.lineHeight = 1.0;
 
         /**
          * the maximum length in CSS pixel for a single segment of text.
          * (use -1 to disable word wrapping)
-         * @public
          * @type {number}
          * @default -1
          */
-        this.wordWrapWidth = settings.wordWrapWidth || -1;
+        this.wordWrapWidth = -1;
+
+        /**
+         * the font size (in px)
+         * @type {number}
+         * @default 10
+         */
+        this.fontSize = 10;
 
         /**
          * the text to be displayed
@@ -136,12 +111,44 @@ export default class Text extends Renderable {
          */
         this._text = [];
 
-        /**
-         * the font size (in px)
-         * @public
-         * @type {number}
-         * @default 10
-         */
+        // initalize the object based on the given settings
+        this.onResetEvent(x, y, settings);
+    }
+
+    /** @ignore */
+    onResetEvent(x, y, settings) {
+
+        if (typeof this.fillStyle === "undefined") {
+            this.fillStyle = pool.pull("Color", 0, 0, 0);
+        }
+
+        if (typeof this.strokeStyle === "undefined") {
+            this.strokeStyle = pool.pull("Color", 0, 0, 0);
+        }
+
+        if (typeof settings.fillStyle !== "undefined") {
+            if (settings.fillStyle instanceof Color) {
+                this.fillStyle.copy(settings.fillStyle);
+            } else {
+                // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
+                this.fillStyle.parseCSS(settings.fillStyle);
+            }
+        }
+
+        if (typeof settings.strokeStyle !== "undefined") {
+            if (settings.strokeStyle instanceof Color) {
+                this.strokeStyle.copy(settings.strokeStyle);
+            } else {
+                // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
+                this.strokeStyle.parseCSS(settings.strokeStyle);
+            }
+        }
+
+        this.lineWidth = settings.lineWidth || 0;
+        this.textAlign = settings.textAlign || "left";
+        this.textBaseline = settings.textBaseline || "top";
+        this.lineHeight = settings.lineHeight || 1.0;
+        this.wordWrapWidth = settings.wordWrapWidth || -1;
         this.fontSize = 10;
 
         // anchor point
