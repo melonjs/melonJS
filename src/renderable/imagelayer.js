@@ -9,7 +9,7 @@ import * as stringUtil from "./../utils/string.js";
 /**
  * @classdesc
  * a generic Image Layer Object
- * @augments Renderable
+ * @augments Sprite
  */
 export default class ImageLayer extends Sprite {
     /**
@@ -21,7 +21,7 @@ export default class ImageLayer extends Sprite {
      * @param {number} [settings.z=0] - z-index position
      * @param {number|Vector2d} [settings.ratio=1.0] - Scrolling ratio to be applied. See {@link ImageLayer#ratio}
      * @param {"repeat"|"repeat-x"|"repeat-y"|"no-repeat"} [settings.repeat="repeat"] - define if and how an Image Layer should be repeated. See {@link ImageLayer#repeat}
-     * @param {number|Vector2d} [settings.anchorPoint=0.0] - Image origin. See {@link ImageLayer#anchorPoint}
+     * @param {number|Vector2d} [settings.anchorPoint=<0.0,0.0>] - Define how the image is anchored to the viewport bound. By default, its upper-left corner is anchored to the viewport bounds upper left corner.
      * @example
      * // create a repetitive background pattern on the X axis using the citycloud image asset
      * me.game.world.addChild(new me.ImageLayer(0, 0, {
@@ -46,10 +46,8 @@ export default class ImageLayer extends Sprite {
          * To specify a value through Tiled, use one of the following format : <br>
          * - a number, to change the value for both axis <br>
          * - a json expression like `json:{"x":0.5,"y":0.5}` if you wish to specify a different value for both x and y
-         * @public
          * @type {Vector2d}
          * @default <1.0,1.0>
-         * @name ImageLayer#ratio
          */
         this.ratio = pool.pull("Vector2d", 1.0, 1.0);
 
@@ -63,22 +61,6 @@ export default class ImageLayer extends Sprite {
         }
 
         if (typeof(settings.anchorPoint) === "undefined") {
-            /**
-             * Define how the image is anchored to the viewport bounds<br>
-             * By default, its upper-left corner is anchored to the viewport bounds upper left corner.<br>
-             * The anchorPoint is a unit vector where each component falls in range [0.0,1.0].<br>
-             * Some common examples:<br>
-             * - &lt;0.0,0.0&gt; : (Default) Anchor image to the upper-left corner of viewport bounds
-             * - &lt;0.5,0.5&gt; : Center the image within viewport bounds
-             * - &lt;1.0,1.0&gt; : Anchor image to the lower-right corner of viewport bounds
-             * To specify a value through Tiled, use one of the following format : <br>
-             * - a number, to change the value for both axis <br>
-             * - a json expression like `json:{"x":0.5,"y":0.5}` if you wish to specify a different value for both x and y
-             * @public
-             * @type {Vector2d}
-             * @default <0.0,0.0>
-             * @name ImageLayer#anchorPoint
-             */
             this.anchorPoint.set(0, 0);
         }
         else {
@@ -104,12 +86,9 @@ export default class ImageLayer extends Sprite {
      * - 'repeat-x' - The background image will be repeated only horizontally.<br>
      * - 'repeat-y' - The background image will be repeated only vertically.<br>
      * - 'no-repeat' - The background-image will not be repeated.<br>
-     * @public
      * @type {string}
      * @default 'repeat'
-     * @name ImageLayer#repeat
      */
-
     get repeat() {
         return this._repeat;
     }
@@ -158,8 +137,6 @@ export default class ImageLayer extends Sprite {
 
     /**
      * resize the Image Layer to match the given size
-     * @name resize
-     * @memberof ImageLayer
      * @param {number} w - new width
      * @param {number} h - new height
      */
@@ -250,8 +227,6 @@ export default class ImageLayer extends Sprite {
 
     /**
      * draw this ImageLayer (automatically called by melonJS)
-     * @name draw
-     * @memberof ImageLayer
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
      * @param {Camera2d} [viewport] - the viewport to (re)draw
@@ -291,7 +266,7 @@ export default class ImageLayer extends Sprite {
     }
 
     /**
-     * Destroy function<br>
+     * Destroy function
      * @ignore
      */
     destroy() {
