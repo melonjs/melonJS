@@ -8,7 +8,6 @@ import pool from "./../system/pooling.js";
  * A polygon is convex when all line segments connecting two points in the interior do not cross any edge of the polygon
  * (which means that all angles are less than 180 degrees), as described here below : <br>
  * <center><img src="images/convex_polygon.png"/></center><br>
- *
  * A polygon's `winding` is clockwise if its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
  */
 export default class Polygon {
@@ -23,13 +22,6 @@ export default class Polygon {
          * @type {Vector2d}
          */
         this.pos = pool.pull("Vector2d");
-
-        /**
-         * The bounding rectangle for this shape
-         * @ignore
-         * @type {Bounds}
-         */
-        this._bounds;
 
         /**
          * Array of points defining the Polygon <br>
@@ -59,6 +51,9 @@ export default class Polygon {
          * @ignore
          */
         this.normals = [];
+
+        // The bounding rectangle for this shape
+        this._bounds;
 
         // the shape type
         this.shapeType = "Polygon";
