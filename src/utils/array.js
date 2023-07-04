@@ -10,9 +10,9 @@ import {random as mathRandom, weightedRandom as mathWeightedRandom} from "./../m
  * @public
  * @memberof utils.array
  * @name remove
- * @param {Array} arr - array from which to remove an object
+ * @param {Array.<number|string|Object>} arr - array from which to remove an object
  * @param {object} obj - to be removed
- * @returns {Array} the modified Array
+ * @returns {Array.<number|string|Object>} the modified Array
  * let arr = [ "foo", "bar", "baz" ];
  * // remove "foo" from the array
  * me.utils.array.remove(arr, "foo");
@@ -30,7 +30,7 @@ export function remove(arr, obj) {
  * @public
  * @memberof utils.array
  * @name random
- * @param {Array} arr - array to pick a element
+ * @param {Array.<number|string|Object>} arr - array to pick a element
  * @returns {any} random member of array
  * @example
  * // Select a random array element
@@ -46,7 +46,7 @@ export function random(arr) {
  * @public
  * @memberof utils.array
  * @name weightedRandom
- * @param {Array} arr - array to pick a element
+ * @param {Array.<number|string|Object>} arr - array to pick a element
  * @returns {any} random member of array
  */
 export function weightedRandom(arr) {

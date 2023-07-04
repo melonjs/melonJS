@@ -62,7 +62,7 @@ export default class Compositor {
         /**
          * an array of vertex attribute properties
          * @see WebGLCompositor.addAttribute
-         * @type {Array}
+         * @type {Array.<Object>}
          */
         this.attributes = [];
 

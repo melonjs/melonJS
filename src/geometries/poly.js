@@ -248,7 +248,7 @@ export default class Polygon {
 
     /**
      * returns a list of indices for all triangles defined in this polygon
-     * @returns {Array} an array of vertex indices for all triangles forming this polygon.
+     * @returns {Array.<number>} an array of vertex indices for all triangles forming this polygon.
      */
     getIndices() {
         if (this.indices.length === 0) {
