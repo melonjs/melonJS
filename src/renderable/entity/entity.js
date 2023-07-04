@@ -1,7 +1,7 @@
-import pool from "./../system/pooling.js";
-import Renderable from "./../renderable/renderable.js";
-import Sprite from "./../renderable/sprite.js";
-import Body from "./../physics/body.js";
+import pool from "../../system/pooling.js";
+import Renderable from "../renderable.js";
+import Sprite from "../sprite.js";
+import Body from "../../physics/body.js";
 
 
 /**
@@ -240,7 +240,7 @@ export default class Entity extends Renderable {
     }
 
     /**
-     * Destroy function<br>
+     * Destroy function
      * @ignore
      */
     destroy() {
@@ -255,8 +255,7 @@ export default class Entity extends Renderable {
     }
 
     /**
-     * onDeactivateEvent Notification function<br>
-     * Called by engine before deleting the object
+     * onDeactivateEvent Notification function
      * @name onDeactivateEvent
      * @memberof Entity
      */

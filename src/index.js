@@ -63,7 +63,7 @@ import World from "./physics/world.js";
 import ParticleEmitterSettings from "./particles/settings.js";
 import ParticleEmitter from "./particles/emitter.js";
 import Particle from "./particles/particle.js";
-import Entity from "./entity/entity.js";
+import Entity from "./renderable/entity/entity.js";
 import Application from "./application/application.js";
 
 // utility classes
