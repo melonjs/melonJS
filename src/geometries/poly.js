@@ -27,7 +27,7 @@ export default class Polygon {
         /**
          * The bounding rectangle for this shape
          * @ignore
-         * @member {Bounds}
+         * @type {Bounds}
          */
         this._bounds;
 

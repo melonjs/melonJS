@@ -53,7 +53,7 @@ export default class Text extends Renderable {
         /**
          * defines the color used to draw the font.<br>
          * @public
-         * @member {Color}
+         * @type {Color}
          * @name Text#fillStyle
          * @default black
          */
@@ -71,7 +71,7 @@ export default class Text extends Renderable {
         /**
          * defines the color used to draw the font stroke.<br>
          * @public
-         * @member {Color}
+         * @type {Color}
          * @name strokeStyle
          * @default black
          */

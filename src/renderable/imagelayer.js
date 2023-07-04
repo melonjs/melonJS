@@ -75,7 +75,7 @@ export default class ImageLayer extends Sprite {
              * - a number, to change the value for both axis <br>
              * - a json expression like `json:{"x":0.5,"y":0.5}` if you wish to specify a different value for both x and y
              * @public
-             * @member {Vector2d}
+             * @type {Vector2d}
              * @default <0.0,0.0>
              * @name ImageLayer#anchorPoint
              */

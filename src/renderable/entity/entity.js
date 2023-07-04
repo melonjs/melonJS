@@ -95,7 +95,7 @@ export default class Entity extends Renderable {
         /**
          * the entity body object
          * @public
-         * @member {Body}
+         * @type {Body}
          * @name body
          * @memberof Entity
          */
