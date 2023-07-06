@@ -18,7 +18,7 @@ export default class ObservableVector2d extends Vector2d {
     /**
      * @ignore
      */
-    onResetEvent(x: number | undefined, y: number | undefined, settings: any): this;
+    onResetEvent(x: number | undefined, y: number | undefined, settings: any): void;
     public set x(arg: number);
     /**
      * x value of the vector

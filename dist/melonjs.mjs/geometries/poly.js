@@ -1,12 +1,11 @@
 /*!
- * melonJS Game Engine - v15.4.1
+ * melonJS Game Engine - v15.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 import earcut from '../node_modules/earcut/src/earcut.js';
-import Vector2d from '../math/vector2.js';
 import pool from '../system/pooling.js';
 
 /**
@@ -16,7 +15,6 @@ import pool from '../system/pooling.js';
  * A polygon is convex when all line segments connecting two points in the interior do not cross any edge of the polygon
  * (which means that all angles are less than 180 degrees), as described here below : <br>
  * <center><img src="images/convex_polygon.png"/></center><br>
- *
  * A polygon's `winding` is clockwise if its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
  */
 class Polygon {
@@ -31,13 +29,6 @@ class Polygon {
          * @type {Vector2d}
          */
         this.pos = pool.pull("Vector2d");
-
-        /**
-         * The bounding rectangle for this shape
-         * @ignore
-         * @member {Bounds}
-         */
-        this._bounds;
 
         /**
          * Array of points defining the Polygon <br>
@@ -68,6 +59,9 @@ class Polygon {
          */
         this.normals = [];
 
+        // The bounding rectangle for this shape
+        this._bounds;
+
         // the shape type
         this.shapeType = "Polygon";
         this.setShape(x, y, points);
@@ -97,30 +91,28 @@ class Polygon {
      * @returns {Polygon} this instance for objecf chaining
      */
     setVertices(vertices) {
-
         if (!Array.isArray(vertices)) {
             return this;
         }
 
-        // convert given points to me.Vector2d if required
-        if (!(vertices[0] instanceof Vector2d)) {
-            this.points.length = 0;
-
-            if (typeof vertices[0] === "object") {
-                // array of {x,y} object
+        if (typeof vertices[0] === "object") {
+            if (typeof vertices[0].setV === "function") {
+                // array of Vector2d
+                this.points = vertices;
+            } else {
+                // array of {x,y} objects
+                this.points.length = 0; // fix potential memory leak
                 vertices.forEach((vertice) => {
                     this.points.push(pool.pull("Vector2d", vertice.x, vertice.y));
                 });
-
-            } else {
-                // it's a flat array
-                for (let p = 0; p < vertices.length; p += 2) {
-                    this.points.push(pool.pull("Vector2d", vertices[p], vertices[p + 1]));
-                }
             }
         } else {
-            // array of me.Vector2d
-            this.points = vertices;
+            // it's a flat array of numbers
+            let verticesLength = vertices.length;
+            this.points.length = 0; // fix potential memory leak
+            for (let p = 0; p < verticesLength; p += 2) {
+                this.points.push(pool.pull("Vector2d", vertices[p], vertices[p + 1]));
+            }
         }
 
         this.recalc();
@@ -225,19 +217,29 @@ class Polygon {
 
         // Calculate the edges/normals
         for (let i = 0; i < len; i++) {
-            if (edges[i] === undefined) {
-                edges[i] = pool.pull("Vector2d");
+            let edge = edges[i];
+            if (typeof edge === "undefined") {
+                edge = edges[i] = pool.pull("Vector2d");
             }
-            edges[i].copy(points[(i + 1) % len]).sub(points[i]);
+            edge.copy(points[(i + 1) % len]).sub(points[i]);
 
-            if (normals[i] === undefined) {
-                normals[i] = pool.pull("Vector2d");
+            let normal = normals[i];
+            if (typeof normal === "undefined") {
+                normal = normals[i] = pool.pull("Vector2d");
             }
-            normals[i].copy(edges[i]).perp().normalize();
+            normal.copy(edge).perp().normalize();
         }
+
+        // Release any existing Vector2d objects back to the pool
+        for (let i = len; i < edges.length; i++) {
+            pool.push(edges[i]);
+            pool.push(normals[i]);
+        }
+
         // trunc array
         edges.length = len;
         normals.length = len;
+
         // do not do anything here, indices will be computed by
         // getIndices if array is empty upon function call
         indices.length = 0;
@@ -248,7 +250,7 @@ class Polygon {
 
     /**
      * returns a list of indices for all triangles defined in this polygon
-     * @returns {Array} an array of vertex indices for all triangles forming this polygon.
+     * @returns {Array.<number>} an array of vertex indices for all triangles forming this polygon.
      */
     getIndices() {
         if (this.indices.length === 0) {

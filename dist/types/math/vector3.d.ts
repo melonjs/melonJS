@@ -10,18 +10,36 @@ export default class Vector3d {
      */
     constructor(x?: number | undefined, y?: number | undefined, z?: number | undefined);
     /**
+     * @param {number} [x=0]
+     * @param {number} [y=0]
+     * @param {number} [z=0]
      * @ignore
      */
-    onResetEvent(x?: number, y?: number, z?: number): this;
-    x: any;
-    y: any;
-    z: any;
+    onResetEvent(x?: number | undefined, y?: number | undefined, z?: number | undefined): void;
     /**
+     * x value of the vector
+     * @type {number}
+     */
+    x: number | undefined;
+    /**
+     * y value of the vector
+     * @type {number}
+     */
+    y: number | undefined;
+    /**
+     * z value of the vector
+     * @type {number}
+     */
+    z: number | undefined;
+    /**
+     * @param {number} x
+     * @param {number} y
+     * @param {number} [z=0]
      * @ignore
      */
-    _set(x: any, y: any, z?: number): this;
+    _set(x: number, y: number, z?: number | undefined): this;
     /**
-     * set the Vector x and y properties to the given values<br>
+     * set the Vector x and y properties to the given values
      * @param {number} x
      * @param {number} y
      * @param {number} [z=0]

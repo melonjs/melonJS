@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.4.1
+ * melonJS Game Engine - v15.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -69,7 +69,7 @@ class Compositor {
         /**
          * an array of vertex attribute properties
          * @see WebGLCompositor.addAttribute
-         * @type {Array}
+         * @type {Array.<Object>}
          */
         this.attributes = [];
 

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.4.1
+ * melonJS Game Engine - v15.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -448,10 +448,10 @@ var store$2 = sharedStore;
 (shared$5.exports = function (key, value) {
   return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 })('versions', []).push({
-  version: '3.31.0',
+  version: '3.31.1',
   mode: IS_PURE ? 'pure' : 'global',
   copyright: '© 2014-2023 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.31.0/LICENSE',
+  license: 'https://github.com/zloirock/core-js/blob/v3.31.1/LICENSE',
   source: 'https://github.com/zloirock/core-js'
 });
 
@@ -2075,8 +2075,10 @@ class ObjectPool {
 let pool = new ObjectPool();
 
 // convert a give color component to it hexadecimal value
+const charLookup = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"];
+
 function toHex$1(component) {
-    return "0123456789ABCDEF".charAt((component - (component % 16)) >> 4) + "0123456789ABCDEF".charAt(component % 16);
+    return charLookup[(component & 0xF0) >> 4] + charLookup[component & 0x0F];
 }
 
 function hue2rgb(p, q, t) {
@@ -2270,12 +2272,11 @@ class Color {
      * @ignore
      */
     onResetEvent(r = 0, g = 0, b = 0, alpha = 1.0) {
-        if (typeof (this.glArray) === "undefined") {
+        if (typeof this.glArray === "undefined") {
             // Color components in a Float32Array suitable for WebGL
             this.glArray = new Float32Array([ 0.0, 0.0, 0.0, 1.0 ]);
         }
-
-        return this.setColor(r, g, b, alpha);
+        this.setColor(r, g, b, alpha);
     }
 
     /**
@@ -2602,18 +2603,18 @@ class Color {
     }
 
     /**
-     * Pack this color into a Uint32 ARGB representation
+     * Pack this color RGB components into a Uint32 ARGB representation
      * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
      * @returns {number}
      */
     toUint32(alpha = 1.0) {
-        let a = this.glArray;
+        const a = this.glArray;
 
-        let ur = (a[0] * 255) & 0xff;
-        let ug = (a[1] * 255) & 0xff;
-        let ub = (a[2] * 255) & 0xff;
+        const ur = (a[0] * 255) >> 0;
+        const ug = (a[1] * 255) >> 0;
+        const ub = (a[2] * 255) >> 0;
 
-        return (((alpha * 255) & 0xff) << 24) + (ur << 16) + (ug << 8) + ub;
+        return (((alpha * 255) >> 0) << 24) | (ur << 16) | (ug << 8) | ub;
     }
 
     /**
@@ -2694,16 +2695,26 @@ class Vector2d {
     }
 
     /**
+     * @param {number} [x=0] - x value of the vector
+     * @param {number} [y=0] - y value of the vector
      * @ignore
      */
     onResetEvent(x = 0, y = 0) {
-        // this is to enable proper object pooling
+        /**
+         * x value of the vector
+         * @type {number}
+         */
         this.x = x;
+        /**
+         * y value of the vector
+         * @type {number}
+         */
         this.y = y;
-        return this;
     }
 
     /**
+     * @param {number} [x=0] - x value of the vector
+     * @param {number} [y=0] - y value of the vector
      * @ignore
      */
     _set(x, y) {
@@ -2713,7 +2724,7 @@ class Vector2d {
     }
 
     /**
-     * set the Vector x and y properties to the given values<br>
+     * set the Vector x and y properties to the given values
      * @param {number} x
      * @param {number} y
      * @returns {Vector2d} Reference to this object for method chaining
@@ -2724,25 +2735,6 @@ class Vector2d {
                 "invalid x,y parameters (not a number)"
             );
         }
-
-        /**
-         * x value of the vector
-         * @public
-         * @member {number}
-         * @name x
-         * @memberof Vector2d
-         */
-        //this.x = x;
-
-        /**
-         * y value of the vector
-         * @public
-         * @member {number}
-         * @name y
-         * @memberof Vector2d
-         */
-        //this.y = y;
-
         return this._set(x, y);
     }
 
@@ -3126,17 +3118,35 @@ class Vector3d {
     }
 
     /**
+     * @param {number} [x=0]
+     * @param {number} [y=0]
+     * @param {number} [z=0]
      * @ignore
      */
     onResetEvent(x = 0, y = 0, z = 0) {
-        // this is to enable proper object pooling
+        /**
+         * x value of the vector
+         * @type {number}
+         */
         this.x = x;
+
+        /**
+         * y value of the vector
+         * @type {number}
+         */
         this.y = y;
+
+        /**
+         * z value of the vector
+         * @type {number}
+         */
         this.z = z;
-        return this;
     }
 
     /**
+     * @param {number} x
+     * @param {number} y
+     * @param {number} [z=0]
      * @ignore
      */
     _set(x, y, z = 0) {
@@ -3147,7 +3157,7 @@ class Vector3d {
     }
 
     /**
-     * set the Vector x and y properties to the given values<br>
+     * set the Vector x and y properties to the given values
      * @param {number} x
      * @param {number} y
      * @param {number} [z=0]
@@ -3159,34 +3169,6 @@ class Vector3d {
                 "invalid x, y, z parameters (not a number)"
             );
         }
-
-        /**
-         * x value of the vector
-         * @public
-         * @member {number}
-         * @name x
-         * @memberof Vector3d
-         */
-        //this.x = x;
-
-        /**
-         * y value of the vector
-         * @public
-         * @member {number}
-         * @name y
-         * @memberof Vector3d
-         */
-        //this.y = y;
-
-        /**
-         * z value of the vector
-         * @public
-         * @member {number}
-         * @name z
-         * @memberof Vector3d
-         */
-        //this.z = z;
-
         return this._set(x, y, z);
     }
 
@@ -3614,7 +3596,6 @@ class ObservableVector2d extends Vector2d {
         if (typeof settings !== "undefined") {
             this.setCallback(settings.onUpdate, settings.scope);
         }
-        return this;
     }
 
     /**
@@ -4587,6 +4568,449 @@ class ObservableVector3d extends Vector3d {
 
 /**
  * @classdesc
+ * a Matrix2d Object.<br>
+ * the identity matrix and parameters position : <br>
+ * <img src="images/identity-matrix_2x.png"/>
+ */
+class Matrix2d {
+    /**
+     * @param {(Matrix2d|Matrix3d|...number)} args - an instance of me.Matrix2d or me.Matrix3d to copy from, or individual matrix components (See {@link Matrix2d.setTransform}). If not arguments are given, the matrix will be set to Identity.
+     */
+    constructor(...args) {
+        this.onResetEvent(...args);
+    }
+
+    /**
+     * @ignore
+     */
+    onResetEvent() {
+        const arg0 = arguments[0];
+        const argLen = arguments.length;
+
+        if (typeof this.val === "undefined") {
+            this.val = new Float32Array(9);
+        }
+
+        if (argLen === 1) {
+            // matrix2d or matrix3d
+            if (arg0.val.length === 9) {
+                this.copy(arg0);
+            } else if (arg0.val.length === 16) {
+                this.fromMat3d(arguments[0]);
+            } else {
+                throw new Error("invalid Matrix2d constructor parameter");
+            }
+        } else if (arguments.length >= 6) {
+            // individual components
+            this.setTransform.apply(this, arguments);
+        } else {
+            // invalid or no arguments
+            this.identity();
+        }
+    }
+
+    /**
+     * tx component of the matrix
+     * @type {number}
+     * @see Matrix2d.translate
+     */
+    get tx() {
+        return this.val[6];
+    }
+
+    /**
+     * ty component of the matrix
+     * @type {number}
+     * @see Matrix2d.translate
+     */
+    get ty() {
+        return this.val[7];
+    }
+
+    /**
+     * reset the transformation matrix to the identity matrix (no transformation).<br>
+     * the identity matrix and parameters position : <br>
+     * <img src="images/identity-matrix_2x.png"/>
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    identity() {
+        this.setTransform(
+            1, 0, 0,
+            0, 1, 0,
+            0, 0, 1
+        );
+        return this;
+    }
+
+    /**
+     * set the matrix to the specified value
+     * @param {number} a
+     * @param {number} b
+     * @param {number} c
+     * @param {number} d
+     * @param {number} e
+     * @param {number} f
+     * @param {number} [g=0]
+     * @param {number} [h=0]
+     * @param {number} [i=1]
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    setTransform() {
+        let a = this.val;
+
+        if (arguments.length === 9) {
+            a[0] = arguments[0]; // a - m00
+            a[1] = arguments[1]; // b - m10
+            a[2] = arguments[2]; // c - m20
+            a[3] = arguments[3]; // d - m01
+            a[4] = arguments[4]; // e - m11
+            a[5] = arguments[5]; // f - m21
+            a[6] = arguments[6]; // g - m02
+            a[7] = arguments[7]; // h - m12
+            a[8] = arguments[8]; // i - m22
+        } else if (arguments.length === 6) {
+            a[0] = arguments[0]; // a
+            a[1] = arguments[2]; // c
+            a[2] = arguments[4]; // e
+            a[3] = arguments[1]; // b
+            a[4] = arguments[3]; // d
+            a[5] = arguments[5]; // f
+            a[6] = 0; // g
+            a[7] = 0; // h
+            a[8] = 1; // i
+        }
+
+        return this;
+    }
+
+    /**
+     * Copies over the values from another me.Matrix2d.
+     * @param {Matrix2d} m - the matrix object to copy from
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    copy(m) {
+        this.val.set(m.val);
+        return this;
+    }
+
+    /**
+     * Copies over the upper-left 3x3 values from the given me.Matrix3d
+     * @param {Matrix3d} m - the matrix object to copy from
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    fromMat3d(m) {
+        let b = m.val;
+        let a = this.val;
+
+        a[0] = b[0];
+        a[1] = b[1];
+        a[2] = b[2];
+        a[3] = b[4];
+        a[4] = b[5];
+        a[5] = b[6];
+        a[6] = b[8];
+        a[7] = b[9];
+        a[8] = b[10];
+
+        return this;
+    }
+
+    /**
+     * multiply both matrix
+     * @param {Matrix2d} m - the other matrix
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    multiply(m) {
+        let b = m.val;
+        let a = this.val,
+            a0 = a[0],
+            a1 = a[1],
+            a3 = a[3],
+            a4 = a[4],
+            b0 = b[0],
+            b1 = b[1],
+            b3 = b[3],
+            b4 = b[4],
+            b6 = b[6],
+            b7 = b[7];
+
+        a[0] = a0 * b0 + a3 * b1;
+        a[1] = a1 * b0 + a4 * b1;
+        a[3] = a0 * b3 + a3 * b4;
+        a[4] = a1 * b3 + a4 * b4;
+        a[6] += a0 * b6 + a3 * b7;
+        a[7] += a1 * b6 + a4 * b7;
+
+        return this;
+    }
+
+    /**
+     * Transpose the value of this matrix.
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    transpose() {
+        let a = this.val,
+            a1 = a[1],
+            a2 = a[2],
+            a5 = a[5];
+
+        a[1] = a[3];
+        a[2] = a[6];
+        a[3] = a1;
+        a[5] = a[7];
+        a[6] = a2;
+        a[7] = a5;
+
+        return this;
+    }
+
+    /**
+     * invert this matrix, causing it to apply the opposite transformation.
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    invert() {
+        let val = this.val;
+
+        let a = val[ 0 ], b = val[ 1 ], c = val[ 2 ],
+            d = val[ 3 ], e = val[ 4 ], f = val[ 5 ],
+            g = val[ 6 ], h = val[ 7 ], i = val[ 8 ];
+
+        let ta = i * e - f * h,
+            td = f * g - i * d,
+            tg = h * d - e * g;
+
+        let n = a * ta + b * td + c * tg;
+
+        val[ 0 ] = ta / n;
+        val[ 1 ] = ( c * h - i * b ) / n;
+        val[ 2 ] = ( f * b - c * e ) / n;
+
+        val[ 3 ] = td / n;
+        val[ 4 ] = ( i * a - c * g ) / n;
+        val[ 5 ] = ( c * d - f * a ) / n;
+
+        val[ 6 ] = tg / n;
+        val[ 7 ] = ( b * g - h * a ) / n;
+        val[ 8 ] = ( e * a - b * d ) / n;
+
+        return this;
+    }
+
+    /**
+    * apply the current transform to the given 2d or 3d vector
+    * @param {Vector2d|Vector3d} v - the vector object to be transformed
+    * @returns {Vector2d|Vector3d} result vector object.
+    */
+    apply(v) {
+        let a = this.val,
+            x = v.x,
+            y = v.y,
+            z = (typeof v.z !== "undefined") ? v.z : 1;
+
+        v.x = x * a[0] + y * a[3] + z * a[6];
+        v.y = x * a[1] + y * a[4] + z * a[7];
+
+        if (typeof v.z !== "undefined") {
+            v.z = x * a[2] + y * a[5] + z * a[8];
+        }
+
+        return v;
+    }
+
+    /**
+     * apply the inverted current transform to the given 2d vector
+     * @param {Vector2d} v - the vector object to be transformed
+     * @returns {Vector2d} result vector object.
+     */
+    applyInverse(v) {
+        let a = this.val,
+            x = v.x,
+            y = v.y;
+
+        let invD = 1 / ((a[0] * a[4]) + (a[3] * -a[1]));
+
+        v.x = (a[4] * invD * x) + (-a[3] * invD * y) + (((a[7] * a[3]) - (a[6] * a[4])) * invD);
+        v.y = (a[0] * invD * y) + (-a[1] * invD * x) + (((-a[7] * a[0]) + (a[6] * a[1])) * invD);
+
+        return v;
+    }
+
+    /**
+     * scale the matrix
+     * @param {number} x - a number representing the abscissa of the scaling vector.
+     * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    scale(x, y = x) {
+        let a = this.val;
+
+        a[0] *= x;
+        a[1] *= x;
+        //a[2] *= x; // z axis remains unchanged for 2d scale operation
+
+        a[3] *= y;
+        a[4] *= y;
+        //a[5] *= y; // w axis remains unchanged for 2d scale operation
+
+        return this;
+    }
+
+    /**
+     * adds a 2D scaling transformation.
+     * @param {Vector2d} v - scaling vector
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    scaleV(v) {
+        return this.scale(v.x, v.y);
+    }
+
+    /**
+     * specifies a 2D scale operation using the [sx, 1] scaling vector
+     * @param {number} x - x scaling vector
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    scaleX(x) {
+        return this.scale(x, 1);
+    }
+
+    /**
+     * specifies a 2D scale operation using the [1,sy] scaling vector
+     * @param {number} y - y scaling vector
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    scaleY(y) {
+        return this.scale(1, y);
+    }
+
+    /**
+     * rotate the matrix (counter-clockwise) by the specified angle (in radians).
+     * @param {number} angle - Rotation angle in radians.
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    rotate(angle) {
+        if (angle !== 0) {
+            let a = this.val,
+                a00 = a[0],
+                a01 = a[1],
+                a02 = a[2],
+                a10 = a[3],
+                a11 = a[4],
+                a12 = a[5],
+                s = Math.sin(angle),
+                c = Math.cos(angle);
+
+            a[0] = c * a00 + s * a10;
+            a[1] = c * a01 + s * a11;
+            a[2] = c * a02 + s * a12;
+
+            a[3] = c * a10 - s * a00;
+            a[4] = c * a11 - s * a01;
+            a[5] = c * a12 - s * a02;
+        }
+        return this;
+    }
+
+    /**
+     * translate the matrix position on the horizontal and vertical axis
+     * @param {number|Vector2d} x - the x coordindates or a vector to translate the matrix by
+     * @param {number} [y] - the y coordindates to translate the matrix by
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    translate() {
+        let a = this.val;
+        let _x, _y;
+
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+
+        a[6] += a[0] * _x + a[3] * _y;
+        a[7] += a[1] * _x + a[4] * _y;
+
+        return this;
+    }
+
+    /**
+     * returns true if the matrix is an identity matrix.
+     * @returns {boolean}
+     */
+    isIdentity() {
+        let a = this.val;
+
+        return (
+            a[0] === 1 &&
+            a[1] === 0 &&
+            a[2] === 0 &&
+            a[3] === 0 &&
+            a[4] === 1 &&
+            a[5] === 0 &&
+            a[6] === 0 &&
+            a[7] === 0 &&
+            a[8] === 1
+        );
+    }
+
+    /**
+     * return true if the two matrices are identical
+     * @param {Matrix2d} m - the other matrix
+     * @returns {boolean} true if both are equals
+     */
+    equals(m) {
+        let b = m.val;
+        let a = this.val;
+
+        return (
+            (a[0] === b[0]) &&
+            (a[1] === b[1]) &&
+            (a[2] === b[2]) &&
+            (a[3] === b[3]) &&
+            (a[4] === b[4]) &&
+            (a[5] === b[5]) &&
+            (a[6] === b[6]) &&
+            (a[7] === b[7]) &&
+            (a[8] === b[8])
+        );
+    }
+
+    /**
+     * Clone the Matrix
+     * @returns {Matrix2d}
+     */
+    clone() {
+        return pool.pull("Matrix2d", this);
+    }
+
+    /**
+     * return an array representation of this Matrix
+     * @returns {Float32Array}
+     */
+    toArray() {
+        return this.val;
+    }
+
+    /**
+     * convert the object to a string representation
+     * @returns {string}
+     */
+    toString() {
+        let a = this.val;
+
+        return "me.Matrix2d(" +
+            a[0] + ", " + a[1] + ", " + a[2] + ", " +
+            a[3] + ", " + a[4] + ", " + a[5] + ", " +
+            a[6] + ", " + a[7] + ", " + a[8] +
+        ")";
+    }
+}
+
+/**
+ * @classdesc
  * a 4x4 Matrix3d Object
  */
 class Matrix3d {
@@ -4601,17 +5025,21 @@ class Matrix3d {
      * @ignore
      */
     onResetEvent() {
+        const arg0 = arguments[0];
+        const argLen = arguments.length;
+
         if (typeof this.val === "undefined") {
             this.val = new Float32Array(16);
         }
 
-        if (arguments.length && arguments[0] instanceof Matrix3d) {
-            this.copy(arguments[0]);
-        }
-        else if (arguments.length === 16) {
+        if (argLen === 1 && arg0.val.length === 16) {
+            // matrix3d
+            this.copy(arg0);
+        } else if (argLen === 16) {
+            // individual components
             this.setTransform.apply(this, arguments);
-        }
-        else {
+        } else {
+            // invalid or no arguments
             this.identity();
         }
     }
@@ -5187,440 +5615,6 @@ class Matrix3d {
             a[4] + ", " + a[5] + ", " + a[6] + ", " + a[7] + ", " +
             a[8] + ", " + a[9] + ", " + a[10] + ", " + a[11] + ", " +
             a[12] + ", " + a[13] + ", " + a[14] + ", " + a[15] +
-        ")";
-    }
-}
-
-/**
- * @classdesc
- * a Matrix2d Object.<br>
- * the identity matrix and parameters position : <br>
- * <img src="images/identity-matrix_2x.png"/>
- */
-class Matrix2d {
-    /**
-     * @param {(Matrix2d|Matrix3d|...number)} args - an instance of me.Matrix2d or me.Matrix3d to copy from, or individual matrix components (See {@link Matrix2d.setTransform}). If not arguments are given, the matrix will be set to Identity.
-     */
-    constructor(...args) {
-        this.onResetEvent(...args);
-    }
-
-    /**
-     * @ignore
-     */
-    onResetEvent() {
-        if (typeof(this.val) === "undefined") {
-            this.val = new Float32Array(9);
-        }
-
-        if (arguments.length && arguments[0] instanceof Matrix2d) {
-            this.copy(arguments[0]);
-        }
-        else if (arguments.length && arguments[0] instanceof Matrix3d) {
-            this.fromMat3d(arguments[0]);
-        }
-        else if (arguments.length >= 6) {
-            this.setTransform.apply(this, arguments);
-        }
-        else {
-            this.identity();
-        }
-        return this;
-    }
-
-    /**
-     * tx component of the matrix
-     * @type {number}
-     * @see Matrix2d.translate
-     */
-    get tx() {
-        return this.val[6];
-    }
-
-    /**
-     * ty component of the matrix
-     * @type {number}
-     * @see Matrix2d.translate
-     */
-    get ty() {
-        return this.val[7];
-    }
-
-    /**
-     * reset the transformation matrix to the identity matrix (no transformation).<br>
-     * the identity matrix and parameters position : <br>
-     * <img src="images/identity-matrix_2x.png"/>
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    identity() {
-        this.setTransform(
-            1, 0, 0,
-            0, 1, 0,
-            0, 0, 1
-        );
-        return this;
-    }
-
-    /**
-     * set the matrix to the specified value
-     * @param {number} a
-     * @param {number} b
-     * @param {number} c
-     * @param {number} d
-     * @param {number} e
-     * @param {number} f
-     * @param {number} [g=0]
-     * @param {number} [h=0]
-     * @param {number} [i=1]
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    setTransform() {
-        let a = this.val;
-
-        if (arguments.length === 9) {
-            a[0] = arguments[0]; // a - m00
-            a[1] = arguments[1]; // b - m10
-            a[2] = arguments[2]; // c - m20
-            a[3] = arguments[3]; // d - m01
-            a[4] = arguments[4]; // e - m11
-            a[5] = arguments[5]; // f - m21
-            a[6] = arguments[6]; // g - m02
-            a[7] = arguments[7]; // h - m12
-            a[8] = arguments[8]; // i - m22
-        } else if (arguments.length === 6) {
-            a[0] = arguments[0]; // a
-            a[1] = arguments[2]; // c
-            a[2] = arguments[4]; // e
-            a[3] = arguments[1]; // b
-            a[4] = arguments[3]; // d
-            a[5] = arguments[5]; // f
-            a[6] = 0; // g
-            a[7] = 0; // h
-            a[8] = 1; // i
-        }
-
-        return this;
-    }
-
-    /**
-     * Copies over the values from another me.Matrix2d.
-     * @param {Matrix2d} m - the matrix object to copy from
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    copy(m) {
-        this.val.set(m.val);
-        return this;
-    }
-
-    /**
-     * Copies over the upper-left 3x3 values from the given me.Matrix3d
-     * @param {Matrix3d} m - the matrix object to copy from
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    fromMat3d(m) {
-        let b = m.val;
-        let a = this.val;
-
-        a[0] = b[0];
-        a[1] = b[1];
-        a[2] = b[2];
-        a[3] = b[4];
-        a[4] = b[5];
-        a[5] = b[6];
-        a[6] = b[8];
-        a[7] = b[9];
-        a[8] = b[10];
-
-        return this;
-    }
-
-    /**
-     * multiply both matrix
-     * @param {Matrix2d} m - the other matrix
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    multiply(m) {
-        let b = m.val;
-        let a = this.val,
-            a0 = a[0],
-            a1 = a[1],
-            a3 = a[3],
-            a4 = a[4],
-            b0 = b[0],
-            b1 = b[1],
-            b3 = b[3],
-            b4 = b[4],
-            b6 = b[6],
-            b7 = b[7];
-
-        a[0] = a0 * b0 + a3 * b1;
-        a[1] = a1 * b0 + a4 * b1;
-        a[3] = a0 * b3 + a3 * b4;
-        a[4] = a1 * b3 + a4 * b4;
-        a[6] += a0 * b6 + a3 * b7;
-        a[7] += a1 * b6 + a4 * b7;
-
-        return this;
-    }
-
-    /**
-     * Transpose the value of this matrix.
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    transpose() {
-        let a = this.val,
-            a1 = a[1],
-            a2 = a[2],
-            a5 = a[5];
-
-        a[1] = a[3];
-        a[2] = a[6];
-        a[3] = a1;
-        a[5] = a[7];
-        a[6] = a2;
-        a[7] = a5;
-
-        return this;
-    }
-
-    /**
-     * invert this matrix, causing it to apply the opposite transformation.
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    invert() {
-        let val = this.val;
-
-        let a = val[ 0 ], b = val[ 1 ], c = val[ 2 ],
-            d = val[ 3 ], e = val[ 4 ], f = val[ 5 ],
-            g = val[ 6 ], h = val[ 7 ], i = val[ 8 ];
-
-        let ta = i * e - f * h,
-            td = f * g - i * d,
-            tg = h * d - e * g;
-
-        let n = a * ta + b * td + c * tg;
-
-        val[ 0 ] = ta / n;
-        val[ 1 ] = ( c * h - i * b ) / n;
-        val[ 2 ] = ( f * b - c * e ) / n;
-
-        val[ 3 ] = td / n;
-        val[ 4 ] = ( i * a - c * g ) / n;
-        val[ 5 ] = ( c * d - f * a ) / n;
-
-        val[ 6 ] = tg / n;
-        val[ 7 ] = ( b * g - h * a ) / n;
-        val[ 8 ] = ( e * a - b * d ) / n;
-
-        return this;
-    }
-
-    /**
-    * apply the current transform to the given 2d or 3d vector
-    * @param {Vector2d|Vector3d} v - the vector object to be transformed
-    * @returns {Vector2d|Vector3d} result vector object.
-    */
-    apply(v) {
-        let a = this.val,
-            x = v.x,
-            y = v.y,
-            z = (typeof v.z !== "undefined") ? v.z : 1;
-
-        v.x = x * a[0] + y * a[3] + z * a[6];
-        v.y = x * a[1] + y * a[4] + z * a[7];
-
-        if (typeof v.z !== "undefined") {
-            v.z = x * a[2] + y * a[5] + z * a[8];
-        }
-
-        return v;
-    }
-
-    /**
-     * apply the inverted current transform to the given 2d vector
-     * @param {Vector2d} v - the vector object to be transformed
-     * @returns {Vector2d} result vector object.
-     */
-    applyInverse(v) {
-        let a = this.val,
-            x = v.x,
-            y = v.y;
-
-        let invD = 1 / ((a[0] * a[4]) + (a[3] * -a[1]));
-
-        v.x = (a[4] * invD * x) + (-a[3] * invD * y) + (((a[7] * a[3]) - (a[6] * a[4])) * invD);
-        v.y = (a[0] * invD * y) + (-a[1] * invD * x) + (((-a[7] * a[0]) + (a[6] * a[1])) * invD);
-
-        return v;
-    }
-
-    /**
-     * scale the matrix
-     * @param {number} x - a number representing the abscissa of the scaling vector.
-     * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    scale(x, y = x) {
-        let a = this.val;
-
-        a[0] *= x;
-        a[1] *= x;
-        a[3] *= y;
-        a[4] *= y;
-
-        return this;
-    }
-
-    /**
-     * adds a 2D scaling transformation.
-     * @param {Vector2d} v - scaling vector
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    scaleV(v) {
-        return this.scale(v.x, v.y);
-    }
-
-    /**
-     * specifies a 2D scale operation using the [sx, 1] scaling vector
-     * @param {number} x - x scaling vector
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    scaleX(x) {
-        return this.scale(x, 1);
-    }
-
-    /**
-     * specifies a 2D scale operation using the [1,sy] scaling vector
-     * @param {number} y - y scaling vector
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    scaleY(y) {
-        return this.scale(1, y);
-    }
-
-    /**
-     * rotate the matrix (counter-clockwise) by the specified angle (in radians).
-     * @param {number} angle - Rotation angle in radians.
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    rotate(angle) {
-        if (angle !== 0) {
-            let a = this.val,
-                a00 = a[0],
-                a01 = a[1],
-                a02 = a[2],
-                a10 = a[3],
-                a11 = a[4],
-                a12 = a[5],
-                s = Math.sin(angle),
-                c = Math.cos(angle);
-
-            a[0] = c * a00 + s * a10;
-            a[1] = c * a01 + s * a11;
-            a[2] = c * a02 + s * a12;
-
-            a[3] = c * a10 - s * a00;
-            a[4] = c * a11 - s * a01;
-            a[5] = c * a12 - s * a02;
-        }
-        return this;
-    }
-
-    /**
-     * translate the matrix position on the horizontal and vertical axis
-     * @param {number|Vector2d} x - the x coordindates or a vector to translate the matrix by
-     * @param {number} [y] - the y coordindates to translate the matrix by
-     * @returns {Matrix2d} Reference to this object for method chaining
-     */
-    translate() {
-        let a = this.val;
-        let _x, _y;
-
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-
-        a[6] += a[0] * _x + a[3] * _y;
-        a[7] += a[1] * _x + a[4] * _y;
-
-        return this;
-    }
-
-    /**
-     * returns true if the matrix is an identity matrix.
-     * @returns {boolean}
-     */
-    isIdentity() {
-        let a = this.val;
-
-        return (
-            a[0] === 1 &&
-            a[1] === 0 &&
-            a[2] === 0 &&
-            a[3] === 0 &&
-            a[4] === 1 &&
-            a[5] === 0 &&
-            a[6] === 0 &&
-            a[7] === 0 &&
-            a[8] === 1
-        );
-    }
-
-    /**
-     * return true if the two matrices are identical
-     * @param {Matrix2d} m - the other matrix
-     * @returns {boolean} true if both are equals
-     */
-    equals(m) {
-        let b = m.val;
-        let a = this.val;
-
-        return (
-            (a[0] === b[0]) &&
-            (a[1] === b[1]) &&
-            (a[2] === b[2]) &&
-            (a[3] === b[3]) &&
-            (a[4] === b[4]) &&
-            (a[5] === b[5]) &&
-            (a[6] === b[6]) &&
-            (a[7] === b[7]) &&
-            (a[8] === b[8])
-        );
-    }
-
-    /**
-     * Clone the Matrix
-     * @returns {Matrix2d}
-     */
-    clone() {
-        return pool.pull("Matrix2d", this);
-    }
-
-    /**
-     * return an array representation of this Matrix
-     * @returns {Float32Array}
-     */
-    toArray() {
-        return this.val;
-    }
-
-    /**
-     * convert the object to a string representation
-     * @returns {string}
-     */
-    toString() {
-        let a = this.val;
-
-        return "me.Matrix2d(" +
-            a[0] + ", " + a[1] + ", " + a[2] + ", " +
-            a[3] + ", " + a[4] + ", " + a[5] + ", " +
-            a[6] + ", " + a[7] + ", " + a[8] +
         ")";
     }
 }
@@ -6321,7 +6315,6 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
  * A polygon is convex when all line segments connecting two points in the interior do not cross any edge of the polygon
  * (which means that all angles are less than 180 degrees), as described here below : <br>
  * <center><img src="images/convex_polygon.png"/></center><br>
- *
  * A polygon's `winding` is clockwise if its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
  */
 class Polygon {
@@ -6336,13 +6329,6 @@ class Polygon {
          * @type {Vector2d}
          */
         this.pos = pool.pull("Vector2d");
-
-        /**
-         * The bounding rectangle for this shape
-         * @ignore
-         * @member {Bounds}
-         */
-        this._bounds;
 
         /**
          * Array of points defining the Polygon <br>
@@ -6373,6 +6359,9 @@ class Polygon {
          */
         this.normals = [];
 
+        // The bounding rectangle for this shape
+        this._bounds;
+
         // the shape type
         this.shapeType = "Polygon";
         this.setShape(x, y, points);
@@ -6402,30 +6391,28 @@ class Polygon {
      * @returns {Polygon} this instance for objecf chaining
      */
     setVertices(vertices) {
-
         if (!Array.isArray(vertices)) {
             return this;
         }
 
-        // convert given points to me.Vector2d if required
-        if (!(vertices[0] instanceof Vector2d)) {
-            this.points.length = 0;
-
-            if (typeof vertices[0] === "object") {
-                // array of {x,y} object
+        if (typeof vertices[0] === "object") {
+            if (typeof vertices[0].setV === "function") {
+                // array of Vector2d
+                this.points = vertices;
+            } else {
+                // array of {x,y} objects
+                this.points.length = 0; // fix potential memory leak
                 vertices.forEach((vertice) => {
                     this.points.push(pool.pull("Vector2d", vertice.x, vertice.y));
                 });
-
-            } else {
-                // it's a flat array
-                for (let p = 0; p < vertices.length; p += 2) {
-                    this.points.push(pool.pull("Vector2d", vertices[p], vertices[p + 1]));
-                }
             }
         } else {
-            // array of me.Vector2d
-            this.points = vertices;
+            // it's a flat array of numbers
+            let verticesLength = vertices.length;
+            this.points.length = 0; // fix potential memory leak
+            for (let p = 0; p < verticesLength; p += 2) {
+                this.points.push(pool.pull("Vector2d", vertices[p], vertices[p + 1]));
+            }
         }
 
         this.recalc();
@@ -6530,19 +6517,29 @@ class Polygon {
 
         // Calculate the edges/normals
         for (let i = 0; i < len; i++) {
-            if (edges[i] === undefined) {
-                edges[i] = pool.pull("Vector2d");
+            let edge = edges[i];
+            if (typeof edge === "undefined") {
+                edge = edges[i] = pool.pull("Vector2d");
             }
-            edges[i].copy(points[(i + 1) % len]).sub(points[i]);
+            edge.copy(points[(i + 1) % len]).sub(points[i]);
 
-            if (normals[i] === undefined) {
-                normals[i] = pool.pull("Vector2d");
+            let normal = normals[i];
+            if (typeof normal === "undefined") {
+                normal = normals[i] = pool.pull("Vector2d");
             }
-            normals[i].copy(edges[i]).perp().normalize();
+            normal.copy(edge).perp().normalize();
         }
+
+        // Release any existing Vector2d objects back to the pool
+        for (let i = len; i < edges.length; i++) {
+            pool.push(edges[i]);
+            pool.push(normals[i]);
+        }
+
         // trunc array
         edges.length = len;
         normals.length = len;
+
         // do not do anything here, indices will be computed by
         // getIndices if array is empty upon function call
         indices.length = 0;
@@ -6553,7 +6550,7 @@ class Polygon {
 
     /**
      * returns a list of indices for all triangles defined in this polygon
-     * @returns {Array} an array of vertex indices for all triangles forming this polygon.
+     * @returns {Array.<number>} an array of vertex indices for all triangles forming this polygon.
      */
     getIndices() {
         if (this.indices.length === 0) {
@@ -6910,18 +6907,20 @@ class Ellipse {
     setShape(x, y, w, h) {
         const hW = w / 2;
         const hH = h / 2;
+        const radius = Math.max(hW, hH);
+        const r = radius * radius;
 
         this.pos.set(x, y);
-        this.radius = Math.max(hW, hH);
-        this.ratio.set(hW / this.radius, hH / this.radius);
-        this.radiusV.set(this.radius, this.radius).scaleV(this.ratio);
-        const r = this.radius * this.radius;
+        this.radius = radius;
+        this.ratio.set(hW / radius, hH / radius);
+        this.radiusV.set(radius, radius).scaleV(this.ratio);
         this.radiusSq.set(r, r).scaleV(this.ratio);
 
+        let bounds = this.getBounds();
         // update the corresponding bounds
-        this.getBounds().setMinMax(x, y, x + w, x + h);
+        bounds.setMinMax(x, y, x + w, x + h);
         // elipse position is the center of the cirble, bounds position are top left
-        this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
+        bounds.translate(-this.radiusV.x, -this.radiusV.y);
 
         return this;
     }
@@ -6933,10 +6932,11 @@ class Ellipse {
      * @returns {Ellipse} Reference to this object for method chaining
      */
     rotate(angle, v) {
+        let bounds = this.getBounds();
         // TODO : only works for circle
         this.pos.rotate(angle, v);
-        this.getBounds().shift(this.pos);
-        this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
+        bounds.shift(this.pos);
+        bounds.translate(-this.radiusV.x, -this.radiusV.y);
         return this;
     }
 
@@ -7604,9 +7604,9 @@ class RoundRect extends Rect {
  * @public
  * @memberof utils.array
  * @name remove
- * @param {Array} arr - array from which to remove an object
+ * @param {Array.<number|string|Object>} arr - array from which to remove an object
  * @param {object} obj - to be removed
- * @returns {Array} the modified Array
+ * @returns {Array.<number|string|Object>} the modified Array
  * let arr = [ "foo", "bar", "baz" ];
  * // remove "foo" from the array
  * me.utils.array.remove(arr, "foo");
@@ -7624,7 +7624,7 @@ function remove(arr, obj) {
  * @public
  * @memberof utils.array
  * @name random
- * @param {Array} arr - array to pick a element
+ * @param {Array.<number|string|Object>} arr - array to pick a element
  * @returns {any} random member of array
  * @example
  * // Select a random array element
@@ -7640,7 +7640,7 @@ function random(arr) {
  * @public
  * @memberof utils.array
  * @name weightedRandom
- * @param {Array} arr - array to pick a element
+ * @param {Array.<number|string|Object>} arr - array to pick a element
  * @returns {any} random member of array
  */
 function weightedRandom(arr) {
@@ -20242,9 +20242,12 @@ class TMXObject {
             // add a polygon
             if (this.isPolygon === true) {
                 let _polygon = pool.pull("Polygon", 0, 0, this.points);
+                let isConvex = _polygon.isConvex();
                 // make sure it's a convex polygon
-                if (_polygon.isConvex() === false ) {
+                if (isConvex === false ) {
                     throw new Error("collision polygones in Tiled should be defined as Convex");
+                } else if (isConvex === null) {
+                    throw new Error("invalide polygone");
                 }
                 shapes.push(_polygon.rotate(this.rotation));
 
@@ -30326,7 +30329,7 @@ class Compositor {
         /**
          * an array of vertex attribute properties
          * @see WebGLCompositor.addAttribute
-         * @type {Array}
+         * @type {Array.<Object>}
          */
         this.attributes = [];
 
@@ -32098,7 +32101,7 @@ class ColorLayer extends Renderable {
 /**
  * @classdesc
  * a generic Image Layer Object
- * @augments Renderable
+ * @augments Sprite
  */
 class ImageLayer extends Sprite {
     /**
@@ -32110,7 +32113,7 @@ class ImageLayer extends Sprite {
      * @param {number} [settings.z=0] - z-index position
      * @param {number|Vector2d} [settings.ratio=1.0] - Scrolling ratio to be applied. See {@link ImageLayer#ratio}
      * @param {"repeat"|"repeat-x"|"repeat-y"|"no-repeat"} [settings.repeat="repeat"] - define if and how an Image Layer should be repeated. See {@link ImageLayer#repeat}
-     * @param {number|Vector2d} [settings.anchorPoint=0.0] - Image origin. See {@link ImageLayer#anchorPoint}
+     * @param {number|Vector2d} [settings.anchorPoint=<0.0,0.0>] - Define how the image is anchored to the viewport bound. By default, its upper-left corner is anchored to the viewport bounds upper left corner.
      * @example
      * // create a repetitive background pattern on the X axis using the citycloud image asset
      * me.game.world.addChild(new me.ImageLayer(0, 0, {
@@ -32135,10 +32138,8 @@ class ImageLayer extends Sprite {
          * To specify a value through Tiled, use one of the following format : <br>
          * - a number, to change the value for both axis <br>
          * - a json expression like `json:{"x":0.5,"y":0.5}` if you wish to specify a different value for both x and y
-         * @public
          * @type {Vector2d}
          * @default <1.0,1.0>
-         * @name ImageLayer#ratio
          */
         this.ratio = pool.pull("Vector2d", 1.0, 1.0);
 
@@ -32152,22 +32153,6 @@ class ImageLayer extends Sprite {
         }
 
         if (typeof(settings.anchorPoint) === "undefined") {
-            /**
-             * Define how the image is anchored to the viewport bounds<br>
-             * By default, its upper-left corner is anchored to the viewport bounds upper left corner.<br>
-             * The anchorPoint is a unit vector where each component falls in range [0.0,1.0].<br>
-             * Some common examples:<br>
-             * - &lt;0.0,0.0&gt; : (Default) Anchor image to the upper-left corner of viewport bounds
-             * - &lt;0.5,0.5&gt; : Center the image within viewport bounds
-             * - &lt;1.0,1.0&gt; : Anchor image to the lower-right corner of viewport bounds
-             * To specify a value through Tiled, use one of the following format : <br>
-             * - a number, to change the value for both axis <br>
-             * - a json expression like `json:{"x":0.5,"y":0.5}` if you wish to specify a different value for both x and y
-             * @public
-             * @member {Vector2d}
-             * @default <0.0,0.0>
-             * @name ImageLayer#anchorPoint
-             */
             this.anchorPoint.set(0, 0);
         }
         else {
@@ -32193,12 +32178,9 @@ class ImageLayer extends Sprite {
      * - 'repeat-x' - The background image will be repeated only horizontally.<br>
      * - 'repeat-y' - The background image will be repeated only vertically.<br>
      * - 'no-repeat' - The background-image will not be repeated.<br>
-     * @public
      * @type {string}
      * @default 'repeat'
-     * @name ImageLayer#repeat
      */
-
     get repeat() {
         return this._repeat;
     }
@@ -32247,8 +32229,6 @@ class ImageLayer extends Sprite {
 
     /**
      * resize the Image Layer to match the given size
-     * @name resize
-     * @memberof ImageLayer
      * @param {number} w - new width
      * @param {number} h - new height
      */
@@ -32339,8 +32319,6 @@ class ImageLayer extends Sprite {
 
     /**
      * draw this ImageLayer (automatically called by melonJS)
-     * @name draw
-     * @memberof ImageLayer
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
      * @param {Camera2d} [viewport] - the viewport to (re)draw
@@ -32380,7 +32358,7 @@ class ImageLayer extends Sprite {
     }
 
     /**
-     * Destroy function<br>
+     * Destroy function
      * @ignore
      */
     destroy() {
@@ -32950,91 +32928,66 @@ class Text extends Renderable {
     constructor(x, y, settings) {
         // call the parent constructor
         super(x, y, settings.width || 0, settings.height || 0);
-        this.onResetEvent(x, y, settings);
-    }
-
-    /** @ignore */
-    onResetEvent(x, y, settings) {
 
         /**
-         * defines the color used to draw the font.<br>
-         * @public
-         * @member {Color}
-         * @name Text#fillStyle
+         * defines the color used to draw the font.
+         * @type {Color}
          * @default black
          */
-        if (typeof settings.fillStyle !== "undefined") {
-            if (settings.fillStyle instanceof Color) {
-                this.fillStyle = settings.fillStyle;
-            } else {
-                // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-                this.fillStyle = pool.pull("Color").parseCSS(settings.fillStyle);
-            }
-        } else {
-            this.fillStyle = pool.pull("Color", 0, 0, 0);
-        }
+        this.fillStyle = pool.pull("Color", 0, 0, 0);
 
         /**
          * defines the color used to draw the font stroke.<br>
-         * @public
-         * @member {Color}
-         * @name strokeStyle
+         * @type {Color}
          * @default black
          */
-        if (typeof settings.strokeStyle !== "undefined") {
-            if (settings.strokeStyle instanceof Color) {
-                this.strokeStyle = settings.strokeStyle;
-            } else {
-                // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-                this.strokeStyle = pool.pull("Color").parseCSS(settings.strokeStyle);
-            }
-        } else {
-            this.strokeStyle = pool.pull("Color", 0, 0, 0);
-        }
+        this.strokeStyle = pool.pull("Color", 0, 0, 0);
 
         /**
          * sets the current line width, in pixels, when drawing stroke
-         * @public
          * @type {number}
          * @default 0
          */
-        this.lineWidth = settings.lineWidth || 0;
+        this.lineWidth = 0;
 
         /**
          * Set the default text alignment (or justification),<br>
          * possible values are "left", "right", and "center".<br>
-         * @public
          * @type {string}
          * @default "left"
          */
-        this.textAlign = settings.textAlign || "left";
+        this.textAlign = "left";
 
         /**
          * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
          * possible values are "top", "hanging, "middle, "alphabetic, "ideographic, "bottom"<br>
-         * @public
          * @type {string}
          * @default "top"
          */
-        this.textBaseline = settings.textBaseline || "top";
+        this.textBaseline = "top";
 
         /**
          * Set the line spacing height (when displaying multi-line strings). <br>
          * Current font height will be multiplied with this value to set the line height.
-         * @public
          * @type {number}
          * @default 1.0
          */
-        this.lineHeight = settings.lineHeight || 1.0;
+        this.lineHeight = 1.0;
 
         /**
          * the maximum length in CSS pixel for a single segment of text.
          * (use -1 to disable word wrapping)
-         * @public
          * @type {number}
          * @default -1
          */
-        this.wordWrapWidth = settings.wordWrapWidth || -1;
+        this.wordWrapWidth = -1;
+
+        /**
+         * the font size (in px)
+         * @type {number}
+         * @default 10
+         */
+        this.fontSize = 10;
 
         /**
          * the text to be displayed
@@ -33042,12 +32995,44 @@ class Text extends Renderable {
          */
         this._text = [];
 
-        /**
-         * the font size (in px)
-         * @public
-         * @type {number}
-         * @default 10
-         */
+        // initalize the object based on the given settings
+        this.onResetEvent(x, y, settings);
+    }
+
+    /** @ignore */
+    onResetEvent(x, y, settings) {
+
+        if (typeof this.fillStyle === "undefined") {
+            this.fillStyle = pool.pull("Color", 0, 0, 0);
+        }
+
+        if (typeof this.strokeStyle === "undefined") {
+            this.strokeStyle = pool.pull("Color", 0, 0, 0);
+        }
+
+        if (typeof settings.fillStyle !== "undefined") {
+            if (settings.fillStyle instanceof Color) {
+                this.fillStyle.copy(settings.fillStyle);
+            } else {
+                // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
+                this.fillStyle.parseCSS(settings.fillStyle);
+            }
+        }
+
+        if (typeof settings.strokeStyle !== "undefined") {
+            if (settings.strokeStyle instanceof Color) {
+                this.strokeStyle.copy(settings.strokeStyle);
+            } else {
+                // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
+                this.strokeStyle.parseCSS(settings.strokeStyle);
+            }
+        }
+
+        this.lineWidth = settings.lineWidth || 0;
+        this.textAlign = settings.textAlign || "left";
+        this.textBaseline = settings.textBaseline || "top";
+        this.lineHeight = settings.lineHeight || 1.0;
+        this.wordWrapWidth = settings.wordWrapWidth || -1;
         this.fontSize = 10;
 
         // anchor point
@@ -36685,7 +36670,6 @@ class Particle extends Renderable {
  * @classdesc
  * a Generic Object Entity
  * @augments Renderable
- * @see Renderable
  */
 class Entity extends Renderable {
     /**
@@ -36743,39 +36727,23 @@ class Entity extends Renderable {
 
         /**
          * object type (as defined in Tiled)
-         * @public
          * @type {string}
-         * @name type
-         * @memberof Entity
          */
         this.type = settings.type || "";
 
         /**
          * object unique ID (as defined in Tiled)
-         * @public
          * @type {number}
-         * @name id
-         * @memberof Entity
          */
         this.id = settings.id || "";
 
         /**
          * dead/living state of the entity<br>
          * default value : true
-         * @public
          * @type {boolean}
-         * @name alive
-         * @memberof Entity
          */
         this.alive = true;
 
-        /**
-         * the entity body object
-         * @public
-         * @member {Body}
-         * @name body
-         * @memberof Entity
-         */
         // initialize the default body
         if (typeof settings.shapes === "undefined") {
             settings.shapes = pool.pull("Polygon", 0, 0, [
@@ -36785,6 +36753,11 @@ class Entity extends Renderable {
                 pool.pull("Vector2d", 0,          this.height)
             ]);
         }
+
+        /**
+         * the entity body object
+         * @type {Body}
+         */
         this.body = new Body(this, settings.shapes, () => this.onBodyUpdate());
 
         // resize the entity if required
@@ -36803,10 +36776,7 @@ class Entity extends Renderable {
 
     /**
      * The entity renderable component (can be any objects deriving from me.Renderable, like me.Sprite for example)
-     * @public
      * @type {Renderable}
-     * @name renderable
-     * @memberof Entity
      */
 
     get renderable() {
@@ -36866,9 +36836,6 @@ class Entity extends Renderable {
 
     /**
      * update the bounds when the body is modified
-     * @ignore
-     * @name onBodyUpdate
-     * @memberof Entity
      */
     onBodyUpdate() {
         this.updateBounds();
@@ -36896,8 +36863,6 @@ class Entity extends Renderable {
 
     /**
      * draw this entity (automatically called by melonJS)
-     * @name draw
-     * @memberof Entity
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
      * @param {Camera2d} [viewport] - the viewport to (re)draw
@@ -36917,7 +36882,7 @@ class Entity extends Renderable {
     }
 
     /**
-     * Destroy function<br>
+     * Destroy function
      * @ignore
      */
     destroy() {
@@ -36932,10 +36897,7 @@ class Entity extends Renderable {
     }
 
     /**
-     * onDeactivateEvent Notification function<br>
-     * Called by engine before deleting the object
-     * @name onDeactivateEvent
-     * @memberof Entity
+     * onDeactivateEvent Notification function
      */
     onDeactivateEvent() {
         if (this.renderable && this.renderable.onDeactivateEvent) {
@@ -37596,9 +37558,9 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "15.4.1"
+         * @default "15.5.0"
          */
-        this.version = "15.4.1";
+        this.version = "15.5.0";
     }
 }
 
@@ -37825,7 +37787,7 @@ class GUI_Object extends UISpriteElement {
  * @name version
  * @type {string}
  */
-const version = "15.4.1";
+const version = "15.5.0";
 
 /**
  * a flag indicating that melonJS is fully initialized

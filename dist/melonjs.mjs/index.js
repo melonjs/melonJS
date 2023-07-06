@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.4.1
+ * melonJS Game Engine - v15.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -67,7 +67,7 @@ export { default as World } from './physics/world.js';
 export { default as ParticleEmitterSettings } from './particles/settings.js';
 export { default as ParticleEmitter } from './particles/emitter.js';
 import Particle from './particles/particle.js';
-import Entity from './entity/entity.js';
+import Entity from './renderable/entity/entity.js';
 import Application from './application/application.js';
 import * as audio from './audio/audio.js';
 export { audio };
@@ -112,7 +112,7 @@ import { initKeyboardEvent } from './input/keyboard.js';
  * @name version
  * @type {string}
  */
-const version = "15.4.1";
+const version = "15.5.0";
 
 /**
  * a flag indicating that melonJS is fully initialized

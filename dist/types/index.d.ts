@@ -109,6 +109,6 @@ import World from "./physics/world.js";
 import ParticleEmitter from "./particles/emitter.js";
 import ParticleEmitterSettings from "./particles/settings.js";
 import Particle from "./particles/particle.js";
-import Entity from "./entity/entity.js";
+import Entity from "./renderable/entity/entity.js";
 import Application from "./application/application.js";
 export { audio, collision, device, event, loader, level, input, Math, plugin, plugins, utils, save, timer, pool, state, video, Color, Vector2d, Vector3d, ObservableVector2d, ObservableVector3d, Matrix2d, Matrix3d, Polygon, Line, Ellipse, Point, Rect, RoundRect, Tween, QuadTree, GLShader, Compositor, PrimitiveCompositor, QuadCompositor, Renderer, WebGLRenderer, CanvasRenderer, CanvasTexture, TextureAtlas, Renderable, Body, Bounds, Text, BitmapText, BitmapTextData, ColorLayer, ImageLayer, Sprite, NineSliceSprite, UIBaseElement, UITextButton, UISpriteElement, Collectable, Trigger, Light2d, Draggable, DropTarget, TMXRenderer, TMXOrthogonalRenderer, TMXIsometricRenderer, TMXHexagonalRenderer, TMXStaggeredRenderer, Tile, TMXTileset, TMXTilesetGroup, TMXTileMap, TMXLayer, TMXUtils, Pointer, Stage, Camera2d, Container, World, ParticleEmitter, ParticleEmitterSettings, Particle, Entity, Application };

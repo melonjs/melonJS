@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.4.1
+ * melonJS Game Engine - v15.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -81,18 +81,20 @@ class Ellipse {
     setShape(x, y, w, h) {
         const hW = w / 2;
         const hH = h / 2;
+        const radius = Math.max(hW, hH);
+        const r = radius * radius;
 
         this.pos.set(x, y);
-        this.radius = Math.max(hW, hH);
-        this.ratio.set(hW / this.radius, hH / this.radius);
-        this.radiusV.set(this.radius, this.radius).scaleV(this.ratio);
-        const r = this.radius * this.radius;
+        this.radius = radius;
+        this.ratio.set(hW / radius, hH / radius);
+        this.radiusV.set(radius, radius).scaleV(this.ratio);
         this.radiusSq.set(r, r).scaleV(this.ratio);
 
+        let bounds = this.getBounds();
         // update the corresponding bounds
-        this.getBounds().setMinMax(x, y, x + w, x + h);
+        bounds.setMinMax(x, y, x + w, x + h);
         // elipse position is the center of the cirble, bounds position are top left
-        this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
+        bounds.translate(-this.radiusV.x, -this.radiusV.y);
 
         return this;
     }
@@ -104,10 +106,11 @@ class Ellipse {
      * @returns {Ellipse} Reference to this object for method chaining
      */
     rotate(angle, v) {
+        let bounds = this.getBounds();
         // TODO : only works for circle
         this.pos.rotate(angle, v);
-        this.getBounds().shift(this.pos);
-        this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
+        bounds.shift(this.pos);
+        bounds.translate(-this.radiusV.x, -this.radiusV.y);
         return this;
     }
 

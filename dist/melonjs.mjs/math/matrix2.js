@@ -1,12 +1,11 @@
 /*!
- * melonJS Game Engine - v15.4.1
+ * melonJS Game Engine - v15.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 import pool from '../system/pooling.js';
-import Matrix3d from './matrix3.js';
 
 /**
  * @classdesc
@@ -26,23 +25,29 @@ class Matrix2d {
      * @ignore
      */
     onResetEvent() {
-        if (typeof(this.val) === "undefined") {
+        const arg0 = arguments[0];
+        const argLen = arguments.length;
+
+        if (typeof this.val === "undefined") {
             this.val = new Float32Array(9);
         }
 
-        if (arguments.length && arguments[0] instanceof Matrix2d) {
-            this.copy(arguments[0]);
-        }
-        else if (arguments.length && arguments[0] instanceof Matrix3d) {
-            this.fromMat3d(arguments[0]);
-        }
-        else if (arguments.length >= 6) {
+        if (argLen === 1) {
+            // matrix2d or matrix3d
+            if (arg0.val.length === 9) {
+                this.copy(arg0);
+            } else if (arg0.val.length === 16) {
+                this.fromMat3d(arguments[0]);
+            } else {
+                throw new Error("invalid Matrix2d constructor parameter");
+            }
+        } else if (arguments.length >= 6) {
+            // individual components
             this.setTransform.apply(this, arguments);
-        }
-        else {
+        } else {
+            // invalid or no arguments
             this.identity();
         }
-        return this;
     }
 
     /**
@@ -282,8 +287,11 @@ class Matrix2d {
 
         a[0] *= x;
         a[1] *= x;
+        //a[2] *= x; // z axis remains unchanged for 2d scale operation
+
         a[3] *= y;
         a[4] *= y;
+        //a[5] *= y; // w axis remains unchanged for 2d scale operation
 
         return this;
     }

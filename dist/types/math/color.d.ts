@@ -13,7 +13,7 @@ export default class Color {
     /**
      * @ignore
      */
-    onResetEvent(r?: number, g?: number, b?: number, alpha?: number): Color;
+    onResetEvent(r?: number, g?: number, b?: number, alpha?: number): void;
     glArray: Float32Array | undefined;
     set r(arg: number);
     /**
@@ -136,7 +136,7 @@ export default class Color {
      */
     parseHex(hexColor: string, argb?: boolean | undefined): Color;
     /**
-     * Pack this color into a Uint32 ARGB representation
+     * Pack this color RGB components into a Uint32 ARGB representation
      * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
      * @returns {number}
      */

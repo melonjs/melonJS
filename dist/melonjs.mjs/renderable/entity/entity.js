@@ -5,16 +5,15 @@
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
-import pool from '../system/pooling.js';
-import Renderable from '../renderable/renderable.js';
-import Sprite from '../renderable/sprite.js';
-import Body from '../physics/body.js';
+import pool from '../../system/pooling.js';
+import Renderable from '../renderable.js';
+import Sprite from '../sprite.js';
+import Body from '../../physics/body.js';
 
 /**
  * @classdesc
  * a Generic Object Entity
  * @augments Renderable
- * @see Renderable
  */
 class Entity extends Renderable {
     /**
@@ -72,39 +71,23 @@ class Entity extends Renderable {
 
         /**
          * object type (as defined in Tiled)
-         * @public
          * @type {string}
-         * @name type
-         * @memberof Entity
          */
         this.type = settings.type || "";
 
         /**
          * object unique ID (as defined in Tiled)
-         * @public
          * @type {number}
-         * @name id
-         * @memberof Entity
          */
         this.id = settings.id || "";
 
         /**
          * dead/living state of the entity<br>
          * default value : true
-         * @public
          * @type {boolean}
-         * @name alive
-         * @memberof Entity
          */
         this.alive = true;
 
-        /**
-         * the entity body object
-         * @public
-         * @member {Body}
-         * @name body
-         * @memberof Entity
-         */
         // initialize the default body
         if (typeof settings.shapes === "undefined") {
             settings.shapes = pool.pull("Polygon", 0, 0, [
@@ -114,6 +97,11 @@ class Entity extends Renderable {
                 pool.pull("Vector2d", 0,          this.height)
             ]);
         }
+
+        /**
+         * the entity body object
+         * @type {Body}
+         */
         this.body = new Body(this, settings.shapes, () => this.onBodyUpdate());
 
         // resize the entity if required
@@ -132,10 +120,7 @@ class Entity extends Renderable {
 
     /**
      * The entity renderable component (can be any objects deriving from me.Renderable, like me.Sprite for example)
-     * @public
      * @type {Renderable}
-     * @name renderable
-     * @memberof Entity
      */
 
     get renderable() {
@@ -195,9 +180,6 @@ class Entity extends Renderable {
 
     /**
      * update the bounds when the body is modified
-     * @ignore
-     * @name onBodyUpdate
-     * @memberof Entity
      */
     onBodyUpdate() {
         this.updateBounds();
@@ -225,8 +207,6 @@ class Entity extends Renderable {
 
     /**
      * draw this entity (automatically called by melonJS)
-     * @name draw
-     * @memberof Entity
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
      * @param {Camera2d} [viewport] - the viewport to (re)draw
@@ -246,7 +226,7 @@ class Entity extends Renderable {
     }
 
     /**
-     * Destroy function<br>
+     * Destroy function
      * @ignore
      */
     destroy() {
@@ -261,10 +241,7 @@ class Entity extends Renderable {
     }
 
     /**
-     * onDeactivateEvent Notification function<br>
-     * Called by engine before deleting the object
-     * @name onDeactivateEvent
-     * @memberof Entity
+     * onDeactivateEvent Notification function
      */
     onDeactivateEvent() {
         if (this.renderable && this.renderable.onDeactivateEvent) {

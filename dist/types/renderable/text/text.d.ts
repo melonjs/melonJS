@@ -35,61 +35,65 @@ export default class Text extends Renderable {
         wordWrapWidth?: number | undefined;
         text?: string | string[] | undefined;
     });
-    /** @ignore */
-    onResetEvent(x: any, y: any, settings: any): void;
-    fillStyle: any;
-    strokeStyle: any;
+    /**
+     * defines the color used to draw the font.
+     * @type {Color}
+     * @default black
+     */
+    fillStyle: Color;
+    /**
+     * defines the color used to draw the font stroke.<br>
+     * @type {Color}
+     * @default black
+     */
+    strokeStyle: Color;
     /**
      * sets the current line width, in pixels, when drawing stroke
-     * @public
      * @type {number}
      * @default 0
      */
-    public lineWidth: number | undefined;
+    lineWidth: number;
     /**
      * Set the default text alignment (or justification),<br>
      * possible values are "left", "right", and "center".<br>
-     * @public
      * @type {string}
      * @default "left"
      */
-    public textAlign: string | undefined;
+    textAlign: string;
     /**
      * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
      * possible values are "top", "hanging, "middle, "alphabetic, "ideographic, "bottom"<br>
-     * @public
      * @type {string}
      * @default "top"
      */
-    public textBaseline: string | undefined;
+    textBaseline: string;
     /**
      * Set the line spacing height (when displaying multi-line strings). <br>
      * Current font height will be multiplied with this value to set the line height.
-     * @public
      * @type {number}
      * @default 1.0
      */
-    public lineHeight: number | undefined;
+    lineHeight: number;
     /**
      * the maximum length in CSS pixel for a single segment of text.
      * (use -1 to disable word wrapping)
-     * @public
      * @type {number}
      * @default -1
      */
-    public wordWrapWidth: number | undefined;
+    wordWrapWidth: number;
+    /**
+     * the font size (in px)
+     * @type {number}
+     * @default 10
+     */
+    fontSize: number;
     /**
      * the text to be displayed
      * @private
      */
     private _text;
-    /**
-     * the font size (in px)
-     * @public
-     * @type {number}
-     * @default 10
-     */
-    public fontSize: number | undefined;
+    /** @ignore */
+    onResetEvent(x: any, y: any, settings: any): void;
     canvasTexture: object | undefined;
     metrics: TextMetrics | undefined;
     /**
@@ -155,5 +159,5 @@ export default class Text extends Renderable {
     destroy(): void;
 }
 import Renderable from "../renderable.js";
-import TextMetrics from "./textmetrics.js";
 import Color from "../../math/color.js";
+import TextMetrics from "./textmetrics.js";

@@ -5,7 +5,6 @@
  * A polygon is convex when all line segments connecting two points in the interior do not cross any edge of the polygon
  * (which means that all angles are less than 180 degrees), as described here below : <br>
  * <center><img src="images/convex_polygon.png"/></center><br>
- *
  * A polygon's `winding` is clockwise if its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
  */
 export default class Polygon {
@@ -106,9 +105,9 @@ export default class Polygon {
     recalc(): Polygon;
     /**
      * returns a list of indices for all triangles defined in this polygon
-     * @returns {Array} an array of vertex indices for all triangles forming this polygon.
+     * @returns {Array.<number>} an array of vertex indices for all triangles forming this polygon.
      */
-    getIndices(): any[];
+    getIndices(): Array<number>;
     /**
      * Returns true if the vertices composing this polygon form a convex shape (vertices must be in clockwise order).
      * @returns {boolean} true if the vertices are convex, false if not, null if not computable
@@ -169,4 +168,3 @@ export default class Polygon {
      */
     clone(): Polygon;
 }
-import Vector2d from "./../math/vector2.js";

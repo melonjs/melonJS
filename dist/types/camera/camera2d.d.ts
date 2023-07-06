@@ -81,7 +81,7 @@ export default class Camera2d extends Renderable {
      */
     invCurrentTransform: Matrix2d;
     offset: Vector2d;
-    target: Vector2d | null;
+    target: any;
     follow_axis: number;
     _shake: {
         intensity: number;

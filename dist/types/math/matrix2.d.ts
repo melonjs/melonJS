@@ -12,7 +12,7 @@ export default class Matrix2d {
     /**
      * @ignore
      */
-    onResetEvent(...args: any[]): this;
+    onResetEvent(...args: any[]): void;
     val: Float32Array | undefined;
     /**
      * tx component of the matrix
@@ -152,4 +152,3 @@ export default class Matrix2d {
      */
     toString(): string;
 }
-import Matrix3d from "./matrix3.js";

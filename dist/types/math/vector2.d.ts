@@ -9,17 +9,29 @@ export default class Vector2d {
      */
     constructor(x?: number | undefined, y?: number | undefined);
     /**
+     * @param {number} [x=0] - x value of the vector
+     * @param {number} [y=0] - y value of the vector
      * @ignore
      */
-    onResetEvent(x?: number, y?: number): this;
-    x: any;
-    y: any;
+    onResetEvent(x?: number | undefined, y?: number | undefined): void;
     /**
+     * x value of the vector
+     * @type {number}
+     */
+    x: number | undefined;
+    /**
+     * y value of the vector
+     * @type {number}
+     */
+    y: number | undefined;
+    /**
+     * @param {number} [x=0] - x value of the vector
+     * @param {number} [y=0] - y value of the vector
      * @ignore
      */
-    _set(x: any, y: any): this;
+    _set(x?: number | undefined, y?: number | undefined): this;
     /**
-     * set the Vector x and y properties to the given values<br>
+     * set the Vector x and y properties to the given values
      * @param {number} x
      * @param {number} y
      * @returns {Vector2d} Reference to this object for method chaining

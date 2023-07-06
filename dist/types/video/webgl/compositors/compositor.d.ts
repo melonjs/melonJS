@@ -57,9 +57,9 @@ export default class Compositor {
     /**
      * an array of vertex attribute properties
      * @see WebGLCompositor.addAttribute
-     * @type {Array}
+     * @type {Array.<Object>}
      */
-    attributes: any[] | undefined;
+    attributes: Object[] | undefined;
     /**
      * the size of a single vertex in bytes
      * (will automatically be calculated as attributes definitions are added)

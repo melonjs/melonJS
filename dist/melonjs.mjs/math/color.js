@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.4.1
+ * melonJS Game Engine - v15.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -9,8 +9,10 @@ import { clamp, random } from './math.js';
 import pool from '../system/pooling.js';
 
 // convert a give color component to it hexadecimal value
+const charLookup = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"];
+
 function toHex(component) {
-    return "0123456789ABCDEF".charAt((component - (component % 16)) >> 4) + "0123456789ABCDEF".charAt(component % 16);
+    return charLookup[(component & 0xF0) >> 4] + charLookup[component & 0x0F];
 }
 
 function hue2rgb(p, q, t) {
@@ -204,12 +206,11 @@ class Color {
      * @ignore
      */
     onResetEvent(r = 0, g = 0, b = 0, alpha = 1.0) {
-        if (typeof (this.glArray) === "undefined") {
+        if (typeof this.glArray === "undefined") {
             // Color components in a Float32Array suitable for WebGL
             this.glArray = new Float32Array([ 0.0, 0.0, 0.0, 1.0 ]);
         }
-
-        return this.setColor(r, g, b, alpha);
+        this.setColor(r, g, b, alpha);
     }
 
     /**
@@ -536,18 +537,18 @@ class Color {
     }
 
     /**
-     * Pack this color into a Uint32 ARGB representation
+     * Pack this color RGB components into a Uint32 ARGB representation
      * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
      * @returns {number}
      */
     toUint32(alpha = 1.0) {
-        let a = this.glArray;
+        const a = this.glArray;
 
-        let ur = (a[0] * 255) & 0xff;
-        let ug = (a[1] * 255) & 0xff;
-        let ub = (a[2] * 255) & 0xff;
+        const ur = (a[0] * 255) >> 0;
+        const ug = (a[1] * 255) >> 0;
+        const ub = (a[2] * 255) >> 0;
 
-        return (((alpha * 255) & 0xff) << 24) + (ur << 16) + (ug << 8) + ub;
+        return (((alpha * 255) >> 0) << 24) | (ur << 16) | (ug << 8) | ub;
     }
 
     /**

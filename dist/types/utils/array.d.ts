@@ -7,33 +7,33 @@
  * @public
  * @memberof utils.array
  * @name remove
- * @param {Array} arr - array from which to remove an object
+ * @param {Array.<number|string|Object>} arr - array from which to remove an object
  * @param {object} obj - to be removed
- * @returns {Array} the modified Array
+ * @returns {Array.<number|string|Object>} the modified Array
  * let arr = [ "foo", "bar", "baz" ];
  * // remove "foo" from the array
  * me.utils.array.remove(arr, "foo");
  */
-export function remove(arr: any[], obj: object): any[];
+export function remove(arr: Array<number | string | Object>, obj: object): Array<number | string | Object>;
 /**
  * return a random array element
  * @public
  * @memberof utils.array
  * @name random
- * @param {Array} arr - array to pick a element
+ * @param {Array.<number|string|Object>} arr - array to pick a element
  * @returns {any} random member of array
  * @example
  * // Select a random array element
  * let arr = [ "foo", "bar", "baz" ];
  * console.log(me.utils.array.random(arr));
  */
-export function random(arr: any[]): any;
+export function random(arr: Array<number | string | Object>): any;
 /**
  * return a weighted random array element, favoring the earlier entries
  * @public
  * @memberof utils.array
  * @name weightedRandom
- * @param {Array} arr - array to pick a element
+ * @param {Array.<number|string|Object>} arr - array to pick a element
  * @returns {any} random member of array
  */
-export function weightedRandom(arr: any[]): any;
+export function weightedRandom(arr: Array<number | string | Object>): any;

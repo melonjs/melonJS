@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.4.1
+ * melonJS Game Engine - v15.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -24,17 +24,21 @@ class Matrix3d {
      * @ignore
      */
     onResetEvent() {
+        const arg0 = arguments[0];
+        const argLen = arguments.length;
+
         if (typeof this.val === "undefined") {
             this.val = new Float32Array(16);
         }
 
-        if (arguments.length && arguments[0] instanceof Matrix3d) {
-            this.copy(arguments[0]);
-        }
-        else if (arguments.length === 16) {
+        if (argLen === 1 && arg0.val.length === 16) {
+            // matrix3d
+            this.copy(arg0);
+        } else if (argLen === 16) {
+            // individual components
             this.setTransform.apply(this, arguments);
-        }
-        else {
+        } else {
+            // invalid or no arguments
             this.identity();
         }
     }

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.4.1
+ * melonJS Game Engine - v15.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -17,9 +17,9 @@ import { random as random$1, weightedRandom as weightedRandom$1 } from '../math/
  * @public
  * @memberof utils.array
  * @name remove
- * @param {Array} arr - array from which to remove an object
+ * @param {Array.<number|string|Object>} arr - array from which to remove an object
  * @param {object} obj - to be removed
- * @returns {Array} the modified Array
+ * @returns {Array.<number|string|Object>} the modified Array
  * let arr = [ "foo", "bar", "baz" ];
  * // remove "foo" from the array
  * me.utils.array.remove(arr, "foo");
@@ -37,7 +37,7 @@ function remove(arr, obj) {
  * @public
  * @memberof utils.array
  * @name random
- * @param {Array} arr - array to pick a element
+ * @param {Array.<number|string|Object>} arr - array to pick a element
  * @returns {any} random member of array
  * @example
  * // Select a random array element
@@ -53,7 +53,7 @@ function random(arr) {
  * @public
  * @memberof utils.array
  * @name weightedRandom
- * @param {Array} arr - array to pick a element
+ * @param {Array.<number|string|Object>} arr - array to pick a element
  * @returns {any} random member of array
  */
 function weightedRandom(arr) {

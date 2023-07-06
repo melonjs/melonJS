@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.4.1
+ * melonJS Game Engine - v15.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -233,9 +233,12 @@ class TMXObject {
             // add a polygon
             if (this.isPolygon === true) {
                 let _polygon = pool.pull("Polygon", 0, 0, this.points);
+                let isConvex = _polygon.isConvex();
                 // make sure it's a convex polygon
-                if (_polygon.isConvex() === false ) {
+                if (isConvex === false ) {
                     throw new Error("collision polygones in Tiled should be defined as Convex");
+                } else if (isConvex === null) {
+                    throw new Error("invalide polygone");
                 }
                 shapes.push(_polygon.rotate(this.rotation));
 
