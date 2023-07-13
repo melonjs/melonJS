@@ -238,7 +238,7 @@ class TMXObject {
                 if (isConvex === false ) {
                     throw new Error("collision polygones in Tiled should be defined as Convex");
                 } else if (isConvex === null) {
-                    throw new Error("invalide polygone");
+                    throw new Error("invalid polygone");
                 }
                 shapes.push(_polygon.rotate(this.rotation));
 
