@@ -3,10 +3,17 @@
 ## [15.5.0] (melonJS 2) - _2023-xx-xx
 
 ### Changed
+- Color: optimze conversion function such as `toHex` and `toUint32`
+- Geonetry: optimize cirle/ellispe creation and recycling
 - Renderable: revert previous changes on the flip[X/Y] optimization since it's causing backward compatibility issue
 
 ### Fixed
+- Doc: fix multiple incorrect `@type` tags across the API
+- Doc: fix `ImageLayer`` extending `Sprite` and not `Renderable`
+- Doc: fix missing `fillStyle` and `StrokeStyle` properties for text elements
 - Physic: fix a potential memory leak when recalculating a polygon edges and normals
+- TypeScript: fix missing typings for Vector[2d/3d] `x`, `y` and `z` properties
+- TypeScript: fix typings for Array parameter type
 
 ## [15.4.1] (melonJS 2) - _2023-06-24_
 
