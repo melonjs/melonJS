@@ -1,6 +1,6 @@
 # Changelog
 
-## [15.5.0] (melonJS 2) - _2023-xx-xx
+## [15.5.0] (melonJS 2) - _2023-07-13_
 
 ### Changed
 - Color: optimze conversion function such as `toHex` and `toUint32`
