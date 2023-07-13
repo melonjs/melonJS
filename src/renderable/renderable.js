@@ -376,11 +376,8 @@ export default class Renderable extends Rect {
      * @returns {Renderable} Reference to this object for method chaining
      */
     flipX(flip = true) {
-        if (this.isFlippedX !== flip) {
-            this._flip.x = !!flip;
-            this.scale(-1, 1);
-            this.isDirty = true;
-        }
+        this._flip.x = !!flip;
+        this.isDirty = true;
         return this;
     }
 
@@ -391,11 +388,8 @@ export default class Renderable extends Rect {
      * @returns {Renderable} Reference to this object for method chaining
      */
     flipY(flip = true) {
-        if (this.isFlippedY !== flip) {
-            this._flip.y = !!flip;
-            this.scale(1, -1);
-            this.isDirty = true;
-        }
+        this._flip.y = !!flip;
+        this.isDirty = true;
         return this;
     }
 
@@ -636,6 +630,16 @@ export default class Renderable extends Rect {
 
         // apply the defined alpha value
         renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
+
+        // apply flip
+        if (this._flip.x || this._flip.y) {
+            var dx = this._flip.x ? this.centerX - ax : 0,
+                dy = this._flip.y ? this.centerY - ay : 0;
+
+            renderer.translate(dx, dy);
+            renderer.scale(this._flip.x  ? -1 : 1, this._flip.y  ? -1 : 1);
+            renderer.translate(-dx, -dy);
+        }
 
         // apply stencil mask if defined
         if (typeof this.mask !== "undefined") {

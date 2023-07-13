@@ -2,6 +2,9 @@
 
 ## [15.5.0] (melonJS 2) - _2023-xx-xx
 
+### Changed
+- Renderable: revert previous changes on the flip[X/Y] optimization since it's causing backward compatibility issue
+
 ### Fixed
 - Physic: fix a potential memory leak when recalculating a polygon edges and normals
 
