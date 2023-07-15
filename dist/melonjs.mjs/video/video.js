@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.5.0
+ * melonJS Game Engine - v15.6.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -121,7 +121,7 @@ function createCanvas(width, height, returnOffscreenCanvas = false) {
         }
     } else {
         // "else" create a "standard" canvas
-        _canvas = document.createElement("canvas");
+        _canvas = globalThis.document.createElement("canvas");
     }
     _canvas.width = width;
     _canvas.height = height;

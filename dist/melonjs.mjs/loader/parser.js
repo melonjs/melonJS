@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.5.0
+ * melonJS Game Engine - v15.6.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -15,6 +15,10 @@ import { nocache, withCredentials } from './settings.js';
 
 /**
  * load Images
+ * @param {loader.Asset} img
+ * @param {Function} [onload] - function to be called when the resource is loaded
+ * @param {Function} [onerror] - function to be called in case of error
+ * @ignore
  * @example
  * preloadImages([
  *     { name : 'image1', src : 'images/image1.png'},
@@ -22,7 +26,6 @@ import { nocache, withCredentials } from './settings.js';
  *     { name : 'image3', src : 'images/image3.png'},
  *     { name : 'image4', src : 'images/image4.png'}
  * ]);
- * @ignore
  */
 function preloadImage(img, onload, onerror) {
     // create new Image object and add to list
@@ -34,15 +37,20 @@ function preloadImage(img, onload, onerror) {
         imgList[img.name].onerror = onerror;
     }
     imgList[img.name].src = img.src + nocache;
+
+    return 1;
 }
 
 /**
- * load a font face
+ * preload a font face
+ * @param {loader.Asset} data - asset data
+ * @param {Function} [onload] - function to be called when the asset is loaded
+ * @param {Function} [onerror] - function to be called in case of error
+ * @ignore
  * @example
  * preloadFontFace(
  *     name: "'kenpixel'", type: "fontface",  src: "url('data/font/kenvector_future.woff2')"
  * ]);
- * @ignore
  */
 function preloadFontFace(data, onload, onerror) {
 
@@ -70,10 +78,15 @@ function preloadFontFace(data, onload, onerror) {
             onerror(data.name);
         }
     });
+
+    return 1;
 }
 
 /**
- * preload TMX files
+ * preload a TMX file
+ * @param {loader.Asset} data - asset data
+ * @param {Function} [onload] - function to be called when the asset is loaded
+ * @param {Function} [onerror] - function to be called in case of error
  * @ignore
  */
 function preloadTMX(tmxData, onload, onerror) {
@@ -179,10 +192,15 @@ function preloadTMX(tmxData, onload, onerror) {
     };
     // send the request
     xmlhttp.send();
+
+    return 1;
 }
 
 /**
- * preload JSON files
+ * preload a JSON files
+ * @param {loader.Asset} data - asset data
+ * @param {Function} [onload] - function to be called when the asset is loaded
+ * @param {Function} [onerror] - function to be called in case of error
  * @ignore
  */
 function preloadJSON(data, onload, onerror) {
@@ -216,10 +234,15 @@ function preloadJSON(data, onload, onerror) {
     };
     // send the request
     xmlhttp.send();
+
+    return 1;
 }
 
 /**
- * preload Binary files
+ * preload a Binary file
+ * @param {loader.Asset} data - asset data
+ * @param {Function} [onload] - function to be called when the asset is loaded
+ * @param {Function} [onerror] - function to be called in case of error
  * @ignore
  */
 function preloadBinary(data, onload, onerror) {
@@ -247,10 +270,15 @@ function preloadBinary(data, onload, onerror) {
         }
     };
     httpReq.send();
+
+    return 1;
 }
 
 /**
- * preload Binary files
+ * preload a Javascript files
+ * @param {loader.Asset} data - asset data
+ * @param {Function} [onload] - function to be called when the asset is loaded
+ * @param {Function} [onerror] - function to be called in case of error
  * @ignore
  */
 function preloadJavascript(data, onload, onerror) {
@@ -275,6 +303,8 @@ function preloadJavascript(data, onload, onerror) {
     }
 
     document.getElementsByTagName("body")[0].appendChild(script);
+
+    return 1;
 }
 
 export { preloadBinary, preloadFontFace, preloadImage, preloadJSON, preloadJavascript, preloadTMX };

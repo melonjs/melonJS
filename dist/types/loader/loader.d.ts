@@ -1,15 +1,4 @@
 /**
- * an asset definition to be used with the loader
- * @typedef {object} loader.Asset
- * @property {string} name - name of the asset
- * @property {string} type  - the type of the asset : "audio", binary", "image", "json", "js", "tmx", "tmj", "tsx", "tsj", "fontface"
- * @property {string} [src]  - path and/or file name of the resource (for audio assets only the path is required)
- * @property {string} [data]  - TMX data if not provided through a src url
- * @property {boolean} [stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
- * @see loader.preload
- * @see loader.load
- */
-/**
  * set all the specified game assets to be preloaded.
  * @memberof loader
  * @param {loader.Asset[]} assets - list of assets to load
@@ -53,7 +42,7 @@ export function preload(assets: loader.Asset[], onloadcb?: Function | undefined,
  * Load a single asset (to be used if you need to load additional asset(s) during the game)
  * @memberof loader
  * @param {loader.Asset} asset
- * @param {Function} [onload] - function to be called when the resource is loaded
+ * @param {Function} [onload] - function to be called when the asset is loaded
  * @param {Function} [onerror] - function to be called in case of error
  * @returns {number} the amount of corresponding resource to be preloaded
  * @example
@@ -146,9 +135,9 @@ export namespace loader {
          */
         name: string;
         /**
-         * - the type of the asset : "audio", binary", "image", "json", "js", "tmx", "tmj", "tsx", "tsj", "fontface"
+         * - the type of the asset
          */
-        type: string;
+        type: "audio" | "binary" | "image" | "json" | "js" | "tmx" | "tmj" | "tsx" | "tsj" | "fontface";
         /**
          * - path and/or file name of the resource (for audio assets only the path is required)
          */

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.5.0
+ * melonJS Game Engine - v15.6.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -13127,14 +13127,14 @@ function disable() {
 }
 
 /**
- * Load an audio file.<br>
- * <br>
- * sound item must contain the following fields :<br>
- * - name    : name of the sound<br>
- * - src     : source path<br>
- * @ignore
+ * Load an audio file
+ * @function audio.load
+ * @param {loader.Asset} sound
+ * @param {Function} [onloadcb] - function to be called when the resource is loaded
+ * @param {Function} [onerrorcb] - function to be called in case of error
+ * @returns {number} the amount of asset loaded (always 1 if successfull)
  */
-function load$1(sound, html5, onload_cb, onerror_cb) {
+function load$1(sound, onloadcb, onerrorcb) {
     let urls = [];
     if (audioExts.length === 0) {
         throw new Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
@@ -13150,21 +13150,15 @@ function load$1(sound, html5, onload_cb, onerror_cb) {
     audioTracks[sound.name] = new howler$1.Howl({
         src : urls,
         volume : howler$1.Howler.volume(),
-        html5 : html5 === true,
+        html5 : sound.stream === true ||  sound.html5 === true,
         xhrWithCredentials : withCredentials,
-        /**
-         * @ignore
-         */
         onloaderror() {
-            soundLoadError.call(this, sound.name, onerror_cb);
+            soundLoadError.call(this, sound.name, onerrorcb);
         },
-        /**
-         * @ignore
-         */
         onload() {
             retry_counter = 0;
-            if (onload_cb) {
-                onload_cb();
+            if (typeof onloadcb === "function") {
+                onloadcb();
             }
         }
     });
@@ -14994,7 +14988,7 @@ function createCanvas(width, height, returnOffscreenCanvas = false) {
         }
     } else {
         // "else" create a "standard" canvas
-        _canvas = document.createElement("canvas");
+        _canvas = globalThis.document.createElement("canvas");
     }
     _canvas.width = width;
     _canvas.height = height;
@@ -16038,9 +16032,9 @@ function enablePointerEvent() {
 
         // set a on change listener on pointerlock if supported
         if (hasPointerLockSupport) {
-            document.addEventListener("pointerlockchange", () => {
+            globalThis.document.addEventListener("pointerlockchange", () => {
                 // change the locked status accordingly
-                locked = document.pointerLockElement === game.getParentElement();
+                locked = globalThis.document.pointerLockElement === game.getParentElement();
                 // emit the corresponding internal event
                 emit(POINTERLOCKCHANGE, locked);
             }, true);
@@ -16633,7 +16627,7 @@ function requestPointerLock() {
  */
 function exitPointerLock() {
     if (hasPointerLockSupport) {
-        document.exitPointerLock();
+        globalThis.document.exitPointerLock();
         return true;
     }
     return false;
@@ -18961,6 +18955,80 @@ let binList = {};
 let jsonList = {};
 
 /**
+ * parse/preload an image
+ * @param {loader.Asset} img
+ * @param {Function} [onload] - function to be called when the resource is loaded
+ * @param {Function} [onerror] - function to be called in case of error
+ * @returns {number} the amount of corresponding resource parsed/preloaded
+ * @ignore
+ * @example
+ * preloadImages([
+ *     { name : 'image1', src : 'images/image1.png'},
+ *     { name : 'image2', src : 'images/image2.png'},
+ *     { name : 'image3', src : 'images/image3.png'},
+ *     { name : 'image4', src : 'images/image4.png'}
+ * ]);
+ */
+function preloadImage(img, onload, onerror) {
+    // create new Image object and add to list
+    imgList[img.name] = new Image();
+    if (typeof onload === "function") {
+        imgList[img.name].onload = onload;
+    }
+    if (typeof onerror === "function") {
+        imgList[img.name].onerror = onerror;
+    }
+    if (typeof (crossOrigin) === "string") {
+        imgList[img.name].crossOrigin = crossOrigin;
+    }
+    imgList[img.name].src = img.src + nocache;
+
+    return 1;
+}
+
+/**
+ * parse/preload a font face
+ * @param {loader.Asset} data - asset data
+ * @param {Function} [onload] - function to be called when the asset is loaded
+ * @param {Function} [onerror] - function to be called in case of error
+ * @returns {number} the amount of corresponding resource parsed/preloaded
+ * @ignore
+ * @example
+ * preloadFontFace(
+ *     name: "'kenpixel'", type: "fontface",  src: "url('data/font/kenvector_future.woff2')"
+ * ]);
+ */
+function preloadFontFace(data, onload, onerror) {
+
+    if (isDataUrl(data.src) === true) {
+        // make sure it in the `url(data:[<mediatype>][;base64],<data>)` format as expected by FontFace
+        if (!data.src.startsWith("url(")) {
+            data.src = "url(" + data.src + ")";
+        }
+    }
+
+    let font = new FontFace(data.name, data.src);
+
+    // loading promise
+    font.load().then(() => {
+        // apply the font after the font has finished downloading
+        globalThis.document.fonts.add(font);
+        globalThis.document.body.style.fontFamily = data.name;
+        if (typeof onload === "function") {
+            // onloaded callback
+            onload();
+        }
+    }, () => {
+        if (typeof onerror === "function") {
+            // rejected
+            onerror(data.name);
+        }
+    });
+
+    return 1;
+}
+
+/**
  * a collection of utility functions
  * @namespace utils
  */
@@ -20665,7 +20733,7 @@ class Renderer {
         // create the main screen canvas
         if (platform.ejecta === true) {
             // a main canvas is already automatically created by Ejecta
-            this.canvas = document.getElementById("canvas");
+            this.canvas = globalThis.document.getElementById("canvas");
         } else if (typeof globalThis.canvas !== "undefined") {
             // a global canvas is available, e.g. webapp adapter for wechat
             this.canvas = globalThis.canvas;
@@ -25977,69 +26045,11 @@ let level = {
 };
 
 /**
- * load Images
- * @example
- * preloadImages([
- *     { name : 'image1', src : 'images/image1.png'},
- *     { name : 'image2', src : 'images/image2.png'},
- *     { name : 'image3', src : 'images/image3.png'},
- *     { name : 'image4', src : 'images/image4.png'}
- * ]);
- * @ignore
- */
-function preloadImage(img, onload, onerror) {
-    // create new Image object and add to list
-    imgList[img.name] = new Image();
-    if (typeof onload === "function") {
-        imgList[img.name].onload = onload;
-    }
-    if (typeof onerror === "function") {
-        imgList[img.name].onerror = onerror;
-    }
-    if (typeof (crossOrigin) === "string") {
-        imgList[img.name].crossOrigin = crossOrigin;
-    }
-    imgList[img.name].src = img.src + nocache;
-}
-
-/**
- * load a font face
- * @example
- * preloadFontFace(
- *     name: "'kenpixel'", type: "fontface",  src: "url('data/font/kenvector_future.woff2')"
- * ]);
- * @ignore
- */
-function preloadFontFace(data, onload, onerror) {
-
-    if (isDataUrl(data.src) === true) {
-        // make sure it in the `url(data:[<mediatype>][;base64],<data>)` format as expected by FontFace
-        if (!data.src.startsWith("url(")) {
-            data.src = "url(" + data.src + ")";
-        }
-    }
-
-    let font = new FontFace(data.name, data.src);
-
-    // loading promise
-    font.load().then(() => {
-        // apply the font after the font has finished downloading
-        document.fonts.add(font);
-        document.body.style.fontFamily = data.name;
-        if (typeof onload === "function") {
-            // onloaded callback
-            onload();
-        }
-    }, () => {
-        if (typeof onerror === "function") {
-            // rejected
-            onerror(data.name);
-        }
-    });
-}
-
-/**
- * preload TMX files
+ * parse/preload a TMX file
+ * @param {loader.Asset} data - asset data
+ * @param {Function} [onload] - function to be called when the asset is loaded
+ * @param {Function} [onerror] - function to be called in case of error
+ * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
  */
 function preloadTMX(tmxData, onload, onerror) {
@@ -26145,10 +26155,16 @@ function preloadTMX(tmxData, onload, onerror) {
     };
     // send the request
     xmlhttp.send();
+
+    return 1;
 }
 
 /**
- * preload JSON files
+ * parse/preload a JSON files
+ * @param {loader.Asset} data - asset data
+ * @param {Function} [onload] - function to be called when the asset is loaded
+ * @param {Function} [onerror] - function to be called in case of error
+ * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
  */
 function preloadJSON(data, onload, onerror) {
@@ -26182,10 +26198,16 @@ function preloadJSON(data, onload, onerror) {
     };
     // send the request
     xmlhttp.send();
+
+    return 1;
 }
 
 /**
- * preload Binary files
+ * parse/preload a Binary file
+ * @param {loader.Asset} data - asset data
+ * @param {Function} [onload] - function to be called when the asset is loaded
+ * @param {Function} [onerror] - function to be called in case of error
+ * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
  */
 function preloadBinary(data, onload, onerror) {
@@ -26213,13 +26235,18 @@ function preloadBinary(data, onload, onerror) {
         }
     };
     httpReq.send();
+
+    return 1;
 }
 
 /**
- * preload Binary files
+ * parse/preload a Javascript files
+ * @param {loader.Asset} data - asset data
+ * @param {Function} [onload] - function to be called when the asset is loaded
+ * @param {Function} [onerror] - function to be called in case of error
  * @ignore
  */
-function preloadJavascript(data, onload, onerror) {
+function preloadJavascript$1(data, onload, onerror) {
     let script = document.createElement("script");
 
     script.src = data.src;
@@ -26244,6 +26271,45 @@ function preloadJavascript(data, onload, onerror) {
     }
 
     document.getElementsByTagName("body")[0].appendChild(script);
+
+    return 1;
+}
+
+/**
+ * parse/preload a Javascript files
+ * @param {loader.Asset} data - asset data
+ * @param {Function} [onload] - function to be called when the asset is loaded
+ * @param {Function} [onerror] - function to be called in case of error
+ * @returns {number} the amount of corresponding resource parsed/preloaded
+ * @ignore
+ */
+function preloadJavascript(data, onload, onerror) {
+    let script = globalThis.document.createElement("script");
+
+    script.src = data.src;
+    script.type = "text/javascript";
+    if (typeof (crossOrigin) === "string") {
+        script.crossOrigin = crossOrigin;
+    }
+    script.defer = true;
+
+    if (typeof onload === "function") {
+        script.onload = () => {
+            // callback
+            onload();
+        };
+    }
+
+    if (typeof onerror === "function") {
+        script.onerror = () => {
+            // callback
+            onerror(data.name);
+        };
+    }
+
+    globalThis.document.getElementsByTagName("body")[0].appendChild(script);
+
+    return 1;
 }
 
 /**
@@ -26270,10 +26336,37 @@ let onload;
  */
 let onProgress;
 
+/**
+ * list of parser function for supported format type
+ */
+let parsers = new Map();
+
+/**
+ * keep track if parsers were registered
+ */
+let parserInitialized = false;
+
 // flag to check loading status
 let resourceCount = 0;
 let loadCount = 0;
 let timerId = 0;
+
+
+/**
+ * init all supported parsers
+ * @ignore
+ */
+function initParsers() {
+    setParser("binary", preloadBinary);
+    setParser("image", preloadImage);
+    setParser("json", preloadJSON);
+    setParser("js", preloadJavascript);
+    setParser("tmx", preloadTMX);
+    setParser("tsx", preloadTMX);
+    setParser("audio", load$1);
+    setParser("fontface", preloadFontFace);
+    parserInitialized = true;
+}
 
 /**
  * check the loading status
@@ -26335,13 +26428,73 @@ function onLoadingError(res) {
  * an asset definition to be used with the loader
  * @typedef {object} loader.Asset
  * @property {string} name - name of the asset
- * @property {string} type  - the type of the asset : "audio", binary", "image", "json", "js", "tmx", "tmj", "tsx", "tsj", "fontface"
+ * @property {"audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface"} type  - the type of the asset
  * @property {string} [src]  - path and/or file name of the resource (for audio assets only the path is required)
  * @property {string} [data]  - TMX data if not provided through a src url
- * @property {boolean} [stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
+ * @property {boolean} [stream=false] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
  * @see loader.preload
  * @see loader.load
+ * @example
+ *   // PNG tileset
+ *   {name: "tileset-platformer", type: "image",  src: "data/map/tileset.png"}
+ *   // PNG packed texture
+ *   {name: "texture", type:"image", src: "data/gfx/texture.png"}
+ *   // PNG base64 encoded image
+ *   {name: "texture", type:"image", src: "data:image/png;base64,iVBORw0KAAAQAAAAEACA..."}
+ *   // TSX file
+ *   {name: "meta_tiles", type: "tsx", src: "data/map/meta_tiles.tsx"}
+ *   // TMX level (XML & JSON)
+ *   {name: "map1", type: "tmx", src: "data/map/map1.json"}
+ *   {name: "map2", type: "tmx", src: "data/map/map2.tmx"}
+ *   {name: "map3", type: "tmx", format: "json", data: {"height":15,"layers":[...],"tilewidth":32,"version":1,"width":20}}
+ *   {name: "map4", type: "tmx", format: "xml", data: {xml representation of tmx}}
+ *   // audio resources
+ *   {name: "bgmusic", type: "audio",  src: "data/audio/"}
+ *   {name: "cling",   type: "audio",  src: "data/audio/"}
+ *   // base64 encoded audio resources
+ *   {name: "band",   type: "audio",  src: "data:audio/wav;base64,..."}
+ *   // binary file
+ *   {name: "ymTrack", type: "binary", src: "data/audio/main.ym"}
+ *   // JSON file (used for texturePacker)
+ *   {name: "texture", type: "json", src: "data/gfx/texture.json"}
+ *   // JavaScript file
+ *   {name: "plugin", type: "js", src: "data/js/plugin.js"}
+ *   // Font Face
+ *   { name: "'kenpixel'", type: "fontface",  src: "url('data/font/kenvector_future.woff2')" }
  */
+
+/**
+ * specify a parser/preload function for the given asset type
+ * @memberof loader
+ * @param {string} type - asset type
+ * @param {function} parserFn - parser function
+ * @see loader.Asset.type
+ * @example
+ * // specify a custom function for "abc" format
+ * function customAbcParser(data, onload, onerror) {
+ *    // preload and do something with the data
+ *    let parsedData = doSomething(data);
+ *    // when done, call the onload callback with the parsed data
+ *    onload(parsedData);
+ *    // in case of error, call the onerror callback
+ *    onerror();
+ *    // return the amount of asset parsed
+ *    return 1
+ * }
+ * // set the parser for the custom format
+ * loader.setParser("abc", customAbcParser);
+ */
+function setParser(type, parserFn) {
+    if (typeof parserFn !== "function") {
+        throw new Error("invalid parser function for " + type);
+    }
+
+    if (typeof parsers.get(type) !== "undefined") {
+        warning("overriding parser for " + type + " format");
+    }
+
+    parsers.set(type, parserFn);
+}
 
 /**
  * set all the specified game assets to be preloaded.
@@ -26409,7 +26562,7 @@ function preload(assets, onloadcb, switchToLoadState = true) {
  * Load a single asset (to be used if you need to load additional asset(s) during the game)
  * @memberof loader
  * @param {loader.Asset} asset
- * @param {Function} [onload] - function to be called when the resource is loaded
+ * @param {Function} [onload] - function to be called when the asset is loaded
  * @param {Function} [onerror] - function to be called in case of error
  * @returns {number} the amount of corresponding resource to be preloaded
  * @example
@@ -26427,46 +26580,25 @@ function preload(assets, onloadcb, switchToLoadState = true) {
  * });
  */
 function load(asset, onload, onerror) {
+
+    // make sure all parsers have been initialized
+    if (parserInitialized === false) {
+        initParsers();
+    }
+
     // transform the url if necessary
     if (typeof (baseURL[asset.type]) !== "undefined") {
         asset.src = baseURL[asset.type] + asset.src;
     }
-    // check ressource type
-    switch (asset.type) {
-        case "binary":
-            // reuse the preloadImage fn
-            preloadBinary.call(this, asset, onload, onerror);
-            return 1;
 
-        case "image":
-            // reuse the preloadImage fn
-            preloadImage.call(this, asset, onload, onerror);
-            return 1;
+    let parser = parsers.get(asset.type);
 
-        case "json":
-            preloadJSON.call(this, asset, onload, onerror);
-            return 1;
-
-        case "js":
-            preloadJavascript.call(this, asset, onload, onerror);
-            return 1;
-
-        case "tmx":
-        case "tsx":
-            preloadTMX.call(this, asset, onload, onerror);
-            return 1;
-
-        case "audio":
-            load$1(asset, !!asset.stream, onload, onerror);
-            return 1;
-
-        case "fontface":
-            preloadFontFace.call(this, asset, onload, onerror);
-            return 1;
-
-        default:
-            throw new Error("load : unknown or invalid resource type : " + asset.type);
+    if (typeof parser === "undefined") {
+        throw new Error("load : unknown or invalid resource type : " + asset.type);
     }
+
+    // parser returns the amount of asset to be loaded (usually 1 unless an asset is splitted into several ones)
+    return parser.call(this, asset, onload, onerror);
 }
 
 /**
@@ -37562,9 +37694,9 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "15.5.0"
+         * @default "15.6.0"
          */
-        this.version = "15.5.0";
+        this.version = "15.6.0";
     }
 }
 
@@ -37791,7 +37923,7 @@ class GUI_Object extends UISpriteElement {
  * @name version
  * @type {string}
  */
-const version = "15.5.0";
+const version = "15.6.0";
 
 /**
  * a flag indicating that melonJS is fully initialized

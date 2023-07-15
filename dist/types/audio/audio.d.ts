@@ -42,14 +42,14 @@ export function enable(): void;
  */
 export function disable(): void;
 /**
- * Load an audio file.<br>
- * <br>
- * sound item must contain the following fields :<br>
- * - name    : name of the sound<br>
- * - src     : source path<br>
- * @ignore
+ * Load an audio file
+ * @function audio.load
+ * @param {loader.Asset} sound
+ * @param {Function} [onloadcb] - function to be called when the resource is loaded
+ * @param {Function} [onerrorcb] - function to be called in case of error
+ * @returns {number} the amount of asset loaded (always 1 if successfull)
  */
-export function load(sound: any, html5: any, onload_cb: any, onerror_cb: any): number;
+export function load(sound: loader.Asset, onloadcb?: Function | undefined, onerrorcb?: Function | undefined): number;
 /**
  * play the specified sound
  * @function audio.play

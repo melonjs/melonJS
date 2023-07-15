@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.5.0
+ * melonJS Game Engine - v15.6.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -198,9 +198,9 @@ function enablePointerEvent() {
 
         // set a on change listener on pointerlock if supported
         if (hasPointerLockSupport) {
-            document.addEventListener("pointerlockchange", () => {
+            globalThis.document.addEventListener("pointerlockchange", () => {
                 // change the locked status accordingly
-                locked = document.pointerLockElement === game.getParentElement();
+                locked = globalThis.document.pointerLockElement === game.getParentElement();
                 // emit the corresponding internal event
                 emit(POINTERLOCKCHANGE, locked);
             }, true);
@@ -793,7 +793,7 @@ function requestPointerLock() {
  */
 function exitPointerLock() {
     if (hasPointerLockSupport) {
-        document.exitPointerLock();
+        globalThis.document.exitPointerLock();
         return true;
     }
     return false;

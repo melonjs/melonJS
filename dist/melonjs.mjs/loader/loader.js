@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.5.0
+ * melonJS Game Engine - v15.6.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -7,12 +7,18 @@
  */
 import { getBasename } from '../utils/file.js';
 import { emit, LOADER_COMPLETE, LOADER_PROGRESS } from '../system/event.js';
-import { load as load$1, unload as unload$1, unloadAll as unloadAll$1 } from '../audio/audio.js';
+import { unload as unload$1, unloadAll as unloadAll$1, load as load$1 } from '../audio/audio.js';
 import state from '../state/state.js';
 import { tmxList, jsonList, imgList, binList } from './cache.js';
-import { preloadFontFace, preloadTMX, preloadJavascript, preloadJSON, preloadImage, preloadBinary } from './parser.js';
+import { preloadImage } from './parsers/image.js';
+import { preloadFontFace } from './parsers/fontface.js';
+import { preloadTMX } from './parsers/tmx.js';
+import { preloadJSON } from './parsers/json.js';
+import { preloadBinary } from './parsers/binary.js';
+import { preloadJavascript } from './parsers/script.js';
 import { baseURL } from './settings.js';
 export { crossOrigin, nocache, setBaseURL, setNocache, withCredentials } from './settings.js';
+import { warning } from '../lang/console.js';
 
 /**
  * onload callback
@@ -38,10 +44,37 @@ let onload;
  */
 let onProgress;
 
+/**
+ * list of parser function for supported format type
+ */
+let parsers = new Map();
+
+/**
+ * keep track if parsers were registered
+ */
+let parserInitialized = false;
+
 // flag to check loading status
 let resourceCount = 0;
 let loadCount = 0;
 let timerId = 0;
+
+
+/**
+ * init all supported parsers
+ * @ignore
+ */
+function initParsers() {
+    setParser("binary", preloadBinary);
+    setParser("image", preloadImage);
+    setParser("json", preloadJSON);
+    setParser("js", preloadJavascript);
+    setParser("tmx", preloadTMX);
+    setParser("tsx", preloadTMX);
+    setParser("audio", load$1);
+    setParser("fontface", preloadFontFace);
+    parserInitialized = true;
+}
 
 /**
  * check the loading status
@@ -97,13 +130,73 @@ function onLoadingError(res) {
  * an asset definition to be used with the loader
  * @typedef {object} loader.Asset
  * @property {string} name - name of the asset
- * @property {string} type  - the type of the asset : "audio", binary", "image", "json", "js", "tmx", "tmj", "tsx", "tsj", "fontface"
+ * @property {"audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface"} type  - the type of the asset
  * @property {string} [src]  - path and/or file name of the resource (for audio assets only the path is required)
  * @property {string} [data]  - TMX data if not provided through a src url
- * @property {boolean} [stream] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
+ * @property {boolean} [stream=false] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
  * @see loader.preload
  * @see loader.load
+ * @example
+ *   // PNG tileset
+ *   {name: "tileset-platformer", type: "image",  src: "data/map/tileset.png"}
+ *   // PNG packed texture
+ *   {name: "texture", type:"image", src: "data/gfx/texture.png"}
+ *   // PNG base64 encoded image
+ *   {name: "texture", type:"image", src: "data:image/png;base64,iVBORw0KAAAQAAAAEACA..."}
+ *   // TSX file
+ *   {name: "meta_tiles", type: "tsx", src: "data/map/meta_tiles.tsx"}
+ *   // TMX level (XML & JSON)
+ *   {name: "map1", type: "tmx", src: "data/map/map1.json"}
+ *   {name: "map2", type: "tmx", src: "data/map/map2.tmx"}
+ *   {name: "map3", type: "tmx", format: "json", data: {"height":15,"layers":[...],"tilewidth":32,"version":1,"width":20}}
+ *   {name: "map4", type: "tmx", format: "xml", data: {xml representation of tmx}}
+ *   // audio resources
+ *   {name: "bgmusic", type: "audio",  src: "data/audio/"}
+ *   {name: "cling",   type: "audio",  src: "data/audio/"}
+ *   // base64 encoded audio resources
+ *   {name: "band",   type: "audio",  src: "data:audio/wav;base64,..."}
+ *   // binary file
+ *   {name: "ymTrack", type: "binary", src: "data/audio/main.ym"}
+ *   // JSON file (used for texturePacker)
+ *   {name: "texture", type: "json", src: "data/gfx/texture.json"}
+ *   // JavaScript file
+ *   {name: "plugin", type: "js", src: "data/js/plugin.js"}
+ *   // Font Face
+ *   { name: "'kenpixel'", type: "fontface",  src: "url('data/font/kenvector_future.woff2')" }
  */
+
+/**
+ * specify a parser/preload function for the given asset type
+ * @memberof loader
+ * @param {string} type - asset type
+ * @param {function} parserFn - parser function
+ * @see loader.Asset.type
+ * @example
+ * // specify a custom function for "abc" format
+ * function customAbcParser(data, onload, onerror) {
+ *    // preload and do something with the data
+ *    let parsedData = doSomething(data);
+ *    // when done, call the onload callback with the parsed data
+ *    onload(parsedData);
+ *    // in case of error, call the onerror callback
+ *    onerror();
+ *    // return the amount of asset parsed
+ *    return 1
+ * }
+ * // set the parser for the custom format
+ * loader.setParser("abc", customAbcParser);
+ */
+function setParser(type, parserFn) {
+    if (typeof parserFn !== "function") {
+        throw new Error("invalid parser function for " + type);
+    }
+
+    if (typeof parsers.get(type) !== "undefined") {
+        warning("overriding parser for " + type + " format");
+    }
+
+    parsers.set(type, parserFn);
+}
 
 /**
  * set all the specified game assets to be preloaded.
@@ -171,7 +264,7 @@ function preload(assets, onloadcb, switchToLoadState = true) {
  * Load a single asset (to be used if you need to load additional asset(s) during the game)
  * @memberof loader
  * @param {loader.Asset} asset
- * @param {Function} [onload] - function to be called when the resource is loaded
+ * @param {Function} [onload] - function to be called when the asset is loaded
  * @param {Function} [onerror] - function to be called in case of error
  * @returns {number} the amount of corresponding resource to be preloaded
  * @example
@@ -189,46 +282,25 @@ function preload(assets, onloadcb, switchToLoadState = true) {
  * });
  */
 function load(asset, onload, onerror) {
+
+    // make sure all parsers have been initialized
+    if (parserInitialized === false) {
+        initParsers();
+    }
+
     // transform the url if necessary
     if (typeof (baseURL[asset.type]) !== "undefined") {
         asset.src = baseURL[asset.type] + asset.src;
     }
-    // check ressource type
-    switch (asset.type) {
-        case "binary":
-            // reuse the preloadImage fn
-            preloadBinary.call(this, asset, onload, onerror);
-            return 1;
 
-        case "image":
-            // reuse the preloadImage fn
-            preloadImage.call(this, asset, onload, onerror);
-            return 1;
+    let parser = parsers.get(asset.type);
 
-        case "json":
-            preloadJSON.call(this, asset, onload, onerror);
-            return 1;
-
-        case "js":
-            preloadJavascript.call(this, asset, onload, onerror);
-            return 1;
-
-        case "tmx":
-        case "tsx":
-            preloadTMX.call(this, asset, onload, onerror);
-            return 1;
-
-        case "audio":
-            load$1(asset, !!asset.stream, onload, onerror);
-            return 1;
-
-        case "fontface":
-            preloadFontFace.call(this, asset, onload, onerror);
-            return 1;
-
-        default:
-            throw new Error("load : unknown or invalid resource type : " + asset.type);
+    if (typeof parser === "undefined") {
+        throw new Error("load : unknown or invalid resource type : " + asset.type);
     }
+
+    // parser returns the amount of asset to be loaded (usually 1 unless an asset is splitted into several ones)
+    return parser.call(this, asset, onload, onerror);
 }
 
 /**

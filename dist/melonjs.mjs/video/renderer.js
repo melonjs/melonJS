@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.5.0
+ * melonJS Game Engine - v15.6.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -97,7 +97,7 @@ class Renderer {
         // create the main screen canvas
         if (platform.ejecta === true) {
             // a main canvas is already automatically created by Ejecta
-            this.canvas = document.getElementById("canvas");
+            this.canvas = globalThis.document.getElementById("canvas");
         } else if (typeof globalThis.canvas !== "undefined") {
             // a global canvas is available, e.g. webapp adapter for wechat
             this.canvas = globalThis.canvas;
