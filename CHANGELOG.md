@@ -4,8 +4,8 @@
 
 ### Added
 - Audio: expose the audio `load` method in the documentation and typings
-- Loader: melonJS now dynamically assign parser/preload functions to known file types
-- Loader: add the possibility to specify a user defined parser/preload function for a given file type
+- Loader: melonJS now dynamically assign parser/preload functions to known asset types
+- Loader: add the possibility to specify a user defined parser/preload function for a given asset type
 
 ## [15.5.0] (melonJS 2) - _2023-07-13_
 

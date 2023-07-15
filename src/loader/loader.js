@@ -168,10 +168,11 @@ function onLoadingError(res) {
  */
 
 /**
- * specify a parser/preload function for the given format type
+ * specify a parser/preload function for the given asset type
  * @memberof loader
- * @param {string} type - format type
+ * @param {string} type - asset type
  * @param {function} parserFn - parser function
+ * @see loader.Asset.type
  * @example
  * // specify a custom function for "abc" format
  * function customAbcParser(data, onload, onerror) {
@@ -195,7 +196,7 @@ function setParser(type, parserFn) {
     if (typeof parsers.get(type) !== "undefined") {
         warning("overriding parser for " + type + " format");
     }
-    
+
     parsers.set(type, parserFn);
 }
 
@@ -265,7 +266,7 @@ export function preload(assets, onloadcb, switchToLoadState = true) {
  * Load a single asset (to be used if you need to load additional asset(s) during the game)
  * @memberof loader
  * @param {loader.Asset} asset
- * @param {Function} [onload] - function to be called when the resource is loaded
+ * @param {Function} [onload] - function to be called when the asset is loaded
  * @param {Function} [onerror] - function to be called in case of error
  * @returns {number} the amount of corresponding resource to be preloaded
  * @example
