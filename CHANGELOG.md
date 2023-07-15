@@ -10,8 +10,8 @@
 ## [15.5.0] (melonJS 2) - _2023-07-13_
 
 ### Changed
-- Color: optimze conversion function such as `toHex` and `toUint32`
-- Geometry: optimize cirle/ellispe creation and recycling
+- Color: optimize conversion function such as `toHex` and `toUint32`
+- Geometry: optimize circle/ellispe creation and recycling
 - Renderable: revert previous changes on the flip[X/Y] optimization since it's causing backward compatibility issue
 
 ### Fixed
