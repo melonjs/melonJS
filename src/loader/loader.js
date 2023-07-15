@@ -3,7 +3,12 @@ import * as event from "./../system/event.js";
 import * as audio from "./../audio/audio.js";
 import state from "./../state/state.js";
 import { imgList, tmxList, binList, jsonList } from "./cache.js";
-import { preloadImage, preloadFontFace, preloadTMX, preloadJSON, preloadBinary, preloadJavascript } from "./parser.js";
+import { preloadImage } from "./parsers/image.js";
+import { preloadFontFace } from "./parsers/fontface.js";
+import { preloadTMX } from "./parsers/tmx.js";
+import { preloadJSON } from "./parsers/json.js";
+import { preloadBinary } from "./parsers/binary.js";
+import { preloadJavascript } from "./parsers/script.js";
 import { baseURL } from "./settings.js";
 import { warning } from "../lang/console.js";
 
