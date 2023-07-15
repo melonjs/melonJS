@@ -112,7 +112,7 @@ export function init(width, height, options) {
     }, 100), false);
 
     // notify the video has been initialized
-    event.emit(event.VIDEO_INIT);
+    event.emit(event.VIDEO_INIT, game.renderer);
 
     return true;
 }

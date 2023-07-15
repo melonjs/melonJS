@@ -135,7 +135,7 @@ export const STAGE_RESET = "me.stage.onReset";
 
 /**
  * event for when the video is initialized<br>
- * Data passed : none <br>
+ * Data passed : {Renderer} the renderer instance created
  * @public
  * @constant
  * @type {string}

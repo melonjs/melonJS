@@ -6,6 +6,7 @@
 - Audio: expose the audio `load` method in the documentation and typings
 - Loader: melonJS now dynamically assign parser/preload functions to known asset types
 - Loader: add the possibility to specify a user defined parser/preload function for a given asset type
+- Renderer: the default renderer instance is now passed as parameter when emitting the global `VIDEO_INIT` event
 
 ### Fixed
 - Core: fix some leftover direct global references to `document` (now using `globalThis.document`)
