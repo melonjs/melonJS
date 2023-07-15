@@ -31,6 +31,8 @@ export function preloadImage(img, onload, onerror) {
         imgList[img.name].crossOrigin = crossOrigin;
     }
     imgList[img.name].src = img.src + nocache;
+
+    return 1;
 }
 
 /**
@@ -67,6 +69,8 @@ export function preloadFontFace(data, onload, onerror) {
             onerror(data.name);
         }
     });
+
+    return 1;
 }
 
 /**
@@ -176,6 +180,8 @@ export function preloadTMX(tmxData, onload, onerror) {
     };
     // send the request
     xmlhttp.send();
+
+    return 1;
 }
 
 /**
@@ -213,6 +219,8 @@ export function preloadJSON(data, onload, onerror) {
     };
     // send the request
     xmlhttp.send();
+
+    return 1;
 }
 
 /**
@@ -244,6 +252,8 @@ export function preloadBinary(data, onload, onerror) {
         }
     };
     httpReq.send();
+
+    return 1;
 }
 
 /**
@@ -275,4 +285,6 @@ export function preloadJavascript(data, onload, onerror) {
     }
 
     document.getElementsByTagName("body")[0].appendChild(script);
+
+    return 1;
 }
