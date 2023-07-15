@@ -2,6 +2,9 @@
 
 ## [15.6.0] (melonJS 2) - _2023-xx-xx_
 
+### Added
+- Audio: expose the audio `load` method in the documentation and typings
+
 ## [15.5.0] (melonJS 2) - _2023-07-13_
 
 ### Changed

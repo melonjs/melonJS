@@ -136,14 +136,14 @@ export function disable() {
 }
 
 /**
- * Load an audio file.<br>
- * <br>
- * sound item must contain the following fields :<br>
- * - name    : name of the sound<br>
- * - src     : source path<br>
- * @ignore
+ * Load an audio file
+ * @function audio.load
+ * @param {loader.Asset} sound
+ * @param {Function} [onloadcb] - function to be called when the resource is loaded
+ * @param {Function} [onerrorcb] - function to be called in case of error
+ * @returns {number} the amount of asset loaded (always 1 if successfull)
  */
-export function load(sound, html5, onload_cb, onerror_cb) {
+export function load(sound, onloadcb, onerrorcb) {
     let urls = [];
     if (audioExts.length === 0) {
         throw new Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
@@ -159,21 +159,15 @@ export function load(sound, html5, onload_cb, onerror_cb) {
     audioTracks[sound.name] = new Howl({
         src : urls,
         volume : Howler.volume(),
-        html5 : html5 === true,
+        html5 : sound.stream === true ||  sound.html5 === true,
         xhrWithCredentials : withCredentials,
-        /**
-         * @ignore
-         */
         onloaderror() {
-            soundLoadError.call(this, sound.name, onerror_cb);
+            soundLoadError.call(this, sound.name, onerrorcb);
         },
-        /**
-         * @ignore
-         */
         onload() {
             retry_counter = 0;
-            if (onload_cb) {
-                onload_cb();
+            if (typeof onloadcb === "function") {
+                onloadcb();
             }
         }
     });
