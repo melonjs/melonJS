@@ -7,6 +7,9 @@
 - Loader: melonJS now dynamically assign parser/preload functions to known asset types
 - Loader: add the possibility to specify a user defined parser/preload function for a given asset type
 
+### Fixed
+- Core: fix some leftover direct global references to `document` (now using `globalThis.document`)
+
 ## [15.5.0] (melonJS 2) - _2023-07-13_
 
 ### Changed

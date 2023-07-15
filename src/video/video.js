@@ -141,7 +141,7 @@ export function createCanvas(width, height, returnOffscreenCanvas = false) {
         }
     } else {
         // "else" create a "standard" canvas
-        _canvas = document.createElement("canvas");
+        _canvas = globalThis.document.createElement("canvas");
     }
     _canvas.width = width;
     _canvas.height = height;

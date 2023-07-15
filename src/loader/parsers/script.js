@@ -9,7 +9,7 @@ import { crossOrigin } from "../settings.js";
  * @ignore
  */
 export function preloadJavascript(data, onload, onerror) {
-    let script = document.createElement("script");
+    let script = globalThis.document.createElement("script");
 
     script.src = data.src;
     script.type = "text/javascript";
@@ -32,7 +32,7 @@ export function preloadJavascript(data, onload, onerror) {
         };
     }
 
-    document.getElementsByTagName("body")[0].appendChild(script);
+    globalThis.document.getElementsByTagName("body")[0].appendChild(script);
 
     return 1;
 }

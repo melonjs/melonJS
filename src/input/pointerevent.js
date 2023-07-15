@@ -191,9 +191,9 @@ function enablePointerEvent() {
 
         // set a on change listener on pointerlock if supported
         if (device.hasPointerLockSupport) {
-            document.addEventListener("pointerlockchange", () => {
+            globalThis.document.addEventListener("pointerlockchange", () => {
                 // change the locked status accordingly
-                locked = document.pointerLockElement === game.getParentElement();
+                locked = globalThis.document.pointerLockElement === game.getParentElement();
                 // emit the corresponding internal event
                 event.emit(event.POINTERLOCKCHANGE, locked);
             }, true);
@@ -786,7 +786,7 @@ export function requestPointerLock() {
  */
 export function exitPointerLock() {
     if (device.hasPointerLockSupport) {
-        document.exitPointerLock();
+        globalThis.document.exitPointerLock();
         return true;
     }
     return false;

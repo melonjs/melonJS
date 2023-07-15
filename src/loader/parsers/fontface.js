@@ -26,8 +26,8 @@ export function preloadFontFace(data, onload, onerror) {
     // loading promise
     font.load().then(() => {
         // apply the font after the font has finished downloading
-        document.fonts.add(font);
-        document.body.style.fontFamily = data.name;
+        globalThis.document.fonts.add(font);
+        globalThis.document.body.style.fontFamily = data.name;
         if (typeof onload === "function") {
             // onloaded callback
             onload();
