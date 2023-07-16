@@ -197,6 +197,82 @@ export default class Matrix3d {
         return this;
     }
 
+      /**
+   * strassen's multiply both matrix
+   * @param x, y - two 2x2 matrices
+   * @returns the product of x*y a 2x2 matrix
+   */
+
+  strassen(x, y) {
+    const a = x[0],
+      b = x[1],
+      c = x[2],
+      d = x[3];
+    const e = y[0],
+      f = y[1],
+      g = y[2],
+      h = y[3];
+
+    const p1 = a * (f - h);
+    const p2 = h * (a + b);
+    const p3 = e * (c + d);
+    const p4 = d * (g - e);
+    const p5 = (a + d) * (e + h);
+    const p6 = (b - d) * (g + h);
+    const p7 = (a - c) * (e + f);
+
+    return [p5 + p4 - p2 + p6, p1 + p2, p3 + p4, p1 + p5 - p3 - p7];
+  }
+
+  add(x, y) {
+    return [x[0] + y[0], x[1] + y[1], x[2] + y[2], x[3] + y[3]];
+  }
+
+  /**
+   * multiply both matrix
+   * @param {Matrix3d} m - Other matrix
+   * @returns {Matrix3d} Reference to this object for method chaining
+   */
+
+  fastMul(m) {
+    let a = this.val;
+    let b = m.val;
+
+    const A11 = [a[0], a[1], a[4], a[5]];
+    const A12 = [a[2], a[3], a[6], a[7]];
+    const A21 = [a[8], a[9], a[12], a[13]];
+    const A22 = [a[10], a[11], a[14], a[15]];
+
+    const B11 = [b[0], b[1], b[4], b[5]];
+    const B12 = [b[2], b[3], b[6], b[7]];
+    const B21 = [b[8], b[9], b[12], b[13]];
+    const B22 = [b[10], b[11], b[14], b[15]];
+
+    const C11 = this.add(this.strassen(A11, B11), this.strassen(A12, B21));
+    const C12 = this.add(this.strassen(A11, B12), this.strassen(A12, B22));
+    const C21 = this.add(this.strassen(A21, B11), this.strassen(A22, B21));
+    const C22 = this.add(this.strassen(A21, B12), this.strassen(A22, B22));
+
+    a[0] = C11[0];
+    a[1] = C11[1];
+    a[2] = C12[0];
+    a[3] = C12[1];
+    a[4] = C11[2];
+    a[5] = C11[3];
+    a[6] = C12[2];
+    a[7] = C12[3];
+    a[8] = C21[0];
+    a[9] = C21[1];
+    a[10] = C22[0];
+    a[11] = C22[1];
+    a[12] = C21[2];
+    a[13] = C21[3];
+    a[14] = C22[2];
+    a[15] = C22[3];
+
+    return this;
+  }
+
     /**
      * Transpose the value of this matrix.
      * @returns {Matrix3d} Reference to this object for method chaining
