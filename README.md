@@ -104,13 +104,13 @@ Demos
 
 A few demos of melonJS capabilities :
 
-* [Platformer Demo](https://melonjs.github.io/examples/platformer/)
-* [Isometric Demo](https://melonjs.github.io/examples/isometric_rpg/)
-* [Sprite Demo](https://melonjs.github.io/examples/sprite/)
-* [Masking Demo](https://melonjs.github.io/examples/masking/) (WARNING: may potentially trigger seizures for people with photosensitive epilepsy)
-* [Primitive Drawing Demo](https://melonjs.github.io/examples/graphics/)
-* [UI Demo](https://melonjs.github.io/examples/UI/)
-* [Tiled Map Loader Demo](https://melonjs.github.io/examples/tiled_example_loader/)
+* [Platformer Demo](https://melonjs.github.io/examples/platformer/) ([source](https://github.com/melonjs/examples/tree/master/platformer))
+* [Isometric Demo](https://melonjs.github.io/examples/isometric_rpg/) ([source](https://github.com/melonjs/examples/tree/master/isometric_rpg))
+* [Sprite Demo](https://melonjs.github.io/examples/sprite/) ([source](https://github.com/melonjs/examples/tree/master/sprite))
+* [Masking Demo](https://melonjs.github.io/examples/masking/) ([source](https://github.com/melonjs/examples/tree/master/masking)) (WARNING: may potentially trigger seizures for people with photosensitive epilepsy)
+* [Primitive Drawing Demo](https://melonjs.github.io/examples/graphics/) ([source](https://github.com/melonjs/examples/tree/master/graphics))
+* [UI Demo](https://melonjs.github.io/examples/UI/) ([source](https://github.com/melonjs/examples/tree/master/UI))
+* [Tiled Map Loader Demo](https://melonjs.github.io/examples/tiled_example_loader/) ([source](https://github.com/melonjs/examples/tree/master/tiled_example_loader))
 
 More examples are available [here](https://melonjs.github.io/examples/)
 
