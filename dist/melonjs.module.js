@@ -9095,7 +9095,7 @@ const STAGE_RESET = "me.stage.onReset";
 
 /**
  * event for when the video is initialized<br>
- * Data passed : none <br>
+ * Data passed : {Renderer} the renderer instance created
  * @public
  * @constant
  * @type {string}
@@ -14959,7 +14959,7 @@ function init(width, height, options) {
     }, 100), false);
 
     // notify the video has been initialized
-    emit(VIDEO_INIT);
+    emit(VIDEO_INIT, game.renderer);
 
     return true;
 }
@@ -20394,6 +20394,9 @@ class Path2D {
 
         /* @ignore */
         this.vertices = [];
+
+        /* @ignore */
+        this.isDirty = false;
     }
 
     /**
@@ -20404,6 +20407,7 @@ class Path2D {
         this.points.forEach((point) => {
             pool.push(point);
         });
+        this.isDirty = true;
         this.points.length = 0;
     }
 
@@ -20418,6 +20422,7 @@ class Path2D {
         if (points.length > 1 && !points[points.length-1].equals(firstPoint)) {
             points.push(pool.pull("Point", firstPoint.x, firstPoint.y));
         }
+        this.isDirty = true;
     }
 
     /**
@@ -20425,26 +20430,30 @@ class Path2D {
      * @returns {Point[]} an array of vertices representing the triangulated path or shape
      */
     triangulatePath() {
-        let points = this.points;
         let vertices = this.vertices;
-        let indices = earcut$1(points.flatMap(p => [p.x, p.y]));
-        let indicesLength = indices.length;
 
-        // pre-allocate vertices if necessary
-        while (vertices.length < indicesLength) {
-            vertices.push(pool.pull("Point"));
-        }
+        if (this.isDirty) {
+            let points = this.points;
+            let indices = earcut$1(points.flatMap(p => [p.x, p.y]));
+            let indicesLength = indices.length;
 
-        // calculate all vertices
-        for (let i = 0; i < indicesLength; i++ ) {
-            let point = points[indices[i]];
-            vertices[i].set(point.x, point.y);
-        }
+            // pre-allocate vertices if necessary
+            while (vertices.length < indicesLength) {
+                vertices.push(pool.pull("Point"));
+            }
 
-        // recycle overhead from a previous triangulation
-        while (vertices.length > indicesLength) {
-            pool.push(vertices[vertices.length-1]);
-            vertices.length -= 1;
+            // calculate all vertices
+            for (let i = 0; i < indicesLength; i++ ) {
+                let point = points[indices[i]];
+                vertices[i].set(point.x, point.y);
+            }
+
+            // recycle overhead from a previous triangulation
+            while (vertices.length > indicesLength) {
+                pool.push(vertices[vertices.length-1]);
+                vertices.length -= 1;
+            }
+            this.isDirty = false;
         }
 
         return vertices;
@@ -20457,6 +20466,7 @@ class Path2D {
      */
     moveTo(x, y) {
         this.points.push(pool.pull("Point", x, y));
+        this.isDirty = true;
     }
 
     /**
@@ -20466,6 +20476,8 @@ class Path2D {
      */
     lineTo(x, y) {
         this.points.push(pool.pull("Point", x, y));
+        this.moveTo(x, y);
+        this.isDirty = true;
     }
 
     /**
@@ -20515,6 +20527,7 @@ class Path2D {
             angle += angleStep;
         }
         points.push(pool.pull("Point", x + radius * Math.cos(endAngle), y + radius * Math.sin(endAngle)));
+        this.isDirty = true;
     }
 
     /**
@@ -20616,6 +20629,7 @@ class Path2D {
             points.push(pool.pull("Point", _x2, _y2));
             angle += angleStep;
         }
+        this.isDirty = true;
     }
 
     /**
@@ -20634,6 +20648,7 @@ class Path2D {
         this.lineTo(x, y + height);
         this.moveTo(x, y + height);
         this.lineTo(x, y);
+        this.isDirty = true;
     }
 
     /**
@@ -20654,6 +20669,7 @@ class Path2D {
         this.arcTo(x, y + height, x, y + height - radius, radius);
         this.lineTo(x, y + radius);
         this.arcTo(x, y, x + radius, y, radius);
+        this.isDirty = true;
     }
 }
 
@@ -22161,6 +22177,98 @@ class CanvasRenderer extends Renderer {
         context.fillRect(x, y, width, height);
         context.fillStyle = fillStyle;
     }
+
+    /**
+     * starts a new path by emptying the list of sub-paths. Call this method when you want to create a new path
+     * @example
+     * // First path
+     * renderer.beginPath();
+     * renderer.setColor("blue");
+     * renderer.moveTo(20, 20);
+     * renderer.lineTo(200, 20);
+     * renderer.stroke();
+     * // Second path
+     * renderer.beginPath();
+     * renderer.setColor("green");
+     * renderer.moveTo(20, 20);
+     * renderer.lineTo(120, 120);
+     * renderer.stroke();
+     */
+    beginPath() {
+        this.getContext().beginPath();
+    }
+
+    /**
+     * begins a new sub-path at the point specified by the given (x, y) coordinates.
+     * @param {number} x - The x axis of the point.
+     * @param {number} y - The y axis of the point.
+     */
+    moveTo(x, y) {
+        this.getContext().moveTo(x, y);
+    }
+
+    /**
+     * adds a straight line to the current sub-path by connecting the sub-path's last point to the specified (x, y) coordinates.
+     */
+    lineTo(x, y) {
+        this.getContext().lineTo(x, y);
+    }
+
+    /**
+     * creates a rectangular path whose starting point is at (x, y) and whose size is specified by width and height.
+     * @param {number} x - The x axis of the coordinate for the rectangle starting point.
+     * @param {number} y - The y axis of the coordinate for the rectangle starting point.
+     * @param {number} width - The rectangle's width.
+     * @param {number} height - The rectangle's height.
+     */
+    rect(x, y, width, height) {
+        this.getContext().rect(x, y, width, height);
+    }
+
+    /**
+     * adds a rounded rectangle to the current path.
+     * @param {number} x - The x axis of the coordinate for the rectangle starting point.
+     * @param {number} y - The y axis of the coordinate for the rectangle starting point.
+     * @param {number} width - The rectangle's width.
+     * @param {number} height - The rectangle's height.
+     * @param {number} radius - The corner radius.
+     */
+    roundRect(x, y, width, height, radii) {
+        this.getContext().roundRect(x, y, width, height, radii);
+    }
+
+    /**
+     * stroke the given shape or the current defined path
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [shape] - a shape object to stroke
+     * @param {boolean} [fill=false] - fill the shape with the current color if true
+     */
+    stroke(shape, fill) {
+        if (typeof shape === "undefined") {
+            if (fill === true) {
+                this.getContext().fill();
+            } else {
+                this.getContext().stroke();
+            }
+        } else {
+            super.stroke(shape, fill);
+        }
+    }
+
+    /**
+     * fill the given shape or the current defined path
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [shape] - a shape object to fill
+     */
+    fill(shape) {
+        this.stroke(shape, true);
+    }
+
+    /**
+     * add a straight line from the current point to the start of the current sub-path. If the shape has already been closed or has only one point, this function does nothing
+    */
+    closePath() {
+        this.getContext().closePath();
+    }
+
 
     /**
      * Stroke an arc at the specified coordinates with given radius, start and end points
@@ -31389,6 +31497,99 @@ class WebGLRenderer extends Renderer {
         let uvs = pattern.getUVs("0,0," + width + "," + height);
         this.setCompositor("quad");
         this.currentCompositor.addQuad(pattern, x, y, width, height, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()));
+    }
+
+
+    /**
+     * starts a new path by emptying the list of sub-paths. Call this method when you want to create a new path
+     * @example
+     * // First path
+     * renderer.beginPath();
+     * renderer.setColor("blue");
+     * renderer.moveTo(20, 20);
+     * renderer.lineTo(200, 20);
+     * renderer.stroke();
+     * // Second path
+     * renderer.beginPath();
+     * renderer.setColor("green");
+     * renderer.moveTo(20, 20);
+     * renderer.lineTo(120, 120);
+     * renderer.stroke();
+     */
+    beginPath() {
+        this.path2D.beginPath();
+    }
+
+    /**
+     * begins a new sub-path at the point specified by the given (x, y) coordinates.
+     * @param {number} x - The x axis of the point.
+     * @param {number} y - The y axis of the point.
+     */
+    moveTo(x, y) {
+        this.path2D.moveTo(x, y);
+    }
+
+    /**
+     * adds a straight line to the current sub-path by connecting the sub-path's last point to the specified (x, y) coordinates.
+     */
+    lineTo(x, y) {
+        this.path2D.lineTo(x, y);
+    }
+
+    /**
+     * creates a rectangular path whose starting point is at (x, y) and whose size is specified by width and height.
+     * @param {number} x - The x axis of the coordinate for the rectangle starting point.
+     * @param {number} y - The y axis of the coordinate for the rectangle starting point.
+     * @param {number} width - The rectangle's width.
+     * @param {number} height - The rectangle's height.
+     */
+    rect(x, y, width, height) {
+        this.path2D.rect(x, y, width, height);
+    }
+
+    /**
+     * adds a rounded rectangle to the current path.
+     * @param {number} x - The x axis of the coordinate for the rectangle starting point.
+     * @param {number} y - The y axis of the coordinate for the rectangle starting point.
+     * @param {number} width - The rectangle's width.
+     * @param {number} height - The rectangle's height.
+     * @param {number} radius - The corner radius.
+     */
+    roundRect(x, y, width, height, radii) {
+        this.path2D.roundRect(x, y, width, height, radii);
+    }
+
+    /**
+     * stroke the given shape or the current defined path
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [shape] - a shape object to stroke
+     * @param {boolean} [fill=false] - fill the shape with the current color if true
+     */
+    stroke(shape, fill) {
+        if (typeof shape === "undefined") {
+            if (fill === true) {
+                // draw all triangles
+                this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
+            } else {
+                this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+            }
+        } else {
+            super.stroke(shape, fill);
+        }
+    }
+
+    /**
+     * fill the given shape or the current defined path
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [shape] - a shape object to fill
+     */
+    fill(shape) {
+        this.stroke(shape, true);
+    }
+
+    /**
+     * add a straight line from the current point to the start of the current sub-path. If the shape has already been closed or has only one point, this function does nothing
+    */
+    closePath() {
+        this.path2D.closePath();
     }
 
     /**

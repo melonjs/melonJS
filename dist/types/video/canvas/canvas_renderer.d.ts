@@ -84,6 +84,65 @@ export default class CanvasRenderer extends Renderer {
      */
     drawPattern(pattern: CanvasPattern, x: number, y: number, width: number, height: number): void;
     /**
+     * starts a new path by emptying the list of sub-paths. Call this method when you want to create a new path
+     * @example
+     * // First path
+     * renderer.beginPath();
+     * renderer.setColor("blue");
+     * renderer.moveTo(20, 20);
+     * renderer.lineTo(200, 20);
+     * renderer.stroke();
+     * // Second path
+     * renderer.beginPath();
+     * renderer.setColor("green");
+     * renderer.moveTo(20, 20);
+     * renderer.lineTo(120, 120);
+     * renderer.stroke();
+     */
+    beginPath(): void;
+    /**
+     * begins a new sub-path at the point specified by the given (x, y) coordinates.
+     * @param {number} x - The x axis of the point.
+     * @param {number} y - The y axis of the point.
+     */
+    moveTo(x: number, y: number): void;
+    /**
+     * adds a straight line to the current sub-path by connecting the sub-path's last point to the specified (x, y) coordinates.
+     */
+    lineTo(x: any, y: any): void;
+    /**
+     * creates a rectangular path whose starting point is at (x, y) and whose size is specified by width and height.
+     * @param {number} x - The x axis of the coordinate for the rectangle starting point.
+     * @param {number} y - The y axis of the coordinate for the rectangle starting point.
+     * @param {number} width - The rectangle's width.
+     * @param {number} height - The rectangle's height.
+     */
+    rect(x: number, y: number, width: number, height: number): void;
+    /**
+     * adds a rounded rectangle to the current path.
+     * @param {number} x - The x axis of the coordinate for the rectangle starting point.
+     * @param {number} y - The y axis of the coordinate for the rectangle starting point.
+     * @param {number} width - The rectangle's width.
+     * @param {number} height - The rectangle's height.
+     * @param {number} radius - The corner radius.
+     */
+    roundRect(x: number, y: number, width: number, height: number, radii: any): void;
+    /**
+     * stroke the given shape or the current defined path
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [shape] - a shape object to stroke
+     * @param {boolean} [fill=false] - fill the shape with the current color if true
+     */
+    stroke(shape?: Rect | RoundRect | Polygon | Line | Ellipse, fill?: boolean | undefined): void;
+    /**
+     * fill the given shape or the current defined path
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [shape] - a shape object to fill
+     */
+    fill(shape?: Rect | RoundRect | Polygon | Line | Ellipse): void;
+    /**
+     * add a straight line from the current point to the start of the current sub-path. If the shape has already been closed or has only one point, this function does nothing
+    */
+    closePath(): void;
+    /**
      * Stroke an arc at the specified coordinates with given radius, start and end points
      * @param {number} x - arc center point x-axis
      * @param {number} y - arc center point y-axis

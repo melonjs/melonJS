@@ -15,6 +15,7 @@ export default class Path2D {
      */
     arcResolution: number;
     vertices: any[];
+    isDirty: boolean;
     /**
      * begin a new path
      */

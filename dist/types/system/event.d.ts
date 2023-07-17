@@ -159,7 +159,7 @@ export const STATE_CHANGE: string;
 export const STAGE_RESET: string;
 /**
  * event for when the video is initialized<br>
- * Data passed : none <br>
+ * Data passed : {Renderer} the renderer instance created
  * @public
  * @constant
  * @type {string}

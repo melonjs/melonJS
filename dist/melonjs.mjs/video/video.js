@@ -92,7 +92,7 @@ function init(width, height, options) {
     }, 100), false);
 
     // notify the video has been initialized
-    emit(VIDEO_INIT);
+    emit(VIDEO_INIT, game.renderer);
 
     return true;
 }
