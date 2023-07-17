@@ -8,8 +8,12 @@
 - Loader: add the possibility to specify a user defined parser/preload function for a given asset type
 - Renderer: the default renderer instance is now passed as parameter when emitting the global `VIDEO_INIT` event
 
+### Changed
+- Geometry: optimize Path2d triangulation by only recalulcating all triangless when the path is modified
+
 ### Fixed
 - Core: fix some leftover direct global references to `document` (now using `globalThis.document`)
+- Geometry: fix consecutive Path2d line stroke in WebGL mode
 
 ## [15.5.0] (melonJS 2) - _2023-07-13_
 

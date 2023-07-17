@@ -23,6 +23,9 @@ export default class Path2D {
 
         /* @ignore */
         this.vertices = [];
+
+        /* @ignore */
+        this.isDirty = false;
     }
 
     /**
@@ -33,6 +36,7 @@ export default class Path2D {
         this.points.forEach((point) => {
             pool.push(point);
         });
+        this.isDirty = true;
         this.points.length = 0;
     }
 
@@ -47,6 +51,7 @@ export default class Path2D {
         if (points.length > 1 && !points[points.length-1].equals(firstPoint)) {
             points.push(pool.pull("Point", firstPoint.x, firstPoint.y));
         }
+        this.isDirty = true;
     }
 
     /**
@@ -54,26 +59,30 @@ export default class Path2D {
      * @returns {Point[]} an array of vertices representing the triangulated path or shape
      */
     triangulatePath() {
-        let points = this.points;
         let vertices = this.vertices;
-        let indices = earcut(points.flatMap(p => [p.x, p.y]));
-        let indicesLength = indices.length;
 
-        // pre-allocate vertices if necessary
-        while (vertices.length < indicesLength) {
-            vertices.push(pool.pull("Point"));
-        }
+        if (this.isDirty) {
+            let points = this.points;
+            let indices = earcut(points.flatMap(p => [p.x, p.y]));
+            let indicesLength = indices.length;
 
-        // calculate all vertices
-        for (let i = 0; i < indicesLength; i++ ) {
-            let point = points[indices[i]];
-            vertices[i].set(point.x, point.y);
-        }
+            // pre-allocate vertices if necessary
+            while (vertices.length < indicesLength) {
+                vertices.push(pool.pull("Point"));
+            }
 
-        // recycle overhead from a previous triangulation
-        while (vertices.length > indicesLength) {
-            pool.push(vertices[vertices.length-1]);
-            vertices.length -= 1;
+            // calculate all vertices
+            for (let i = 0; i < indicesLength; i++ ) {
+                let point = points[indices[i]];
+                vertices[i].set(point.x, point.y);
+            }
+
+            // recycle overhead from a previous triangulation
+            while (vertices.length > indicesLength) {
+                pool.push(vertices[vertices.length-1]);
+                vertices.length -= 1;
+            }
+            this.isDirty = false;
         }
 
         return vertices;
@@ -86,6 +95,7 @@ export default class Path2D {
      */
     moveTo(x, y) {
         this.points.push(pool.pull("Point", x, y));
+        this.isDirty = true;
     }
 
     /**
@@ -95,6 +105,8 @@ export default class Path2D {
      */
     lineTo(x, y) {
         this.points.push(pool.pull("Point", x, y));
+        this.moveTo(x, y);
+        this.isDirty = true;
     }
 
     /**
@@ -144,6 +156,7 @@ export default class Path2D {
             angle += angleStep;
         }
         points.push(pool.pull("Point", x + radius * Math.cos(endAngle), y + radius * Math.sin(endAngle)));
+        this.isDirty = true;
     }
 
     /**
@@ -245,6 +258,7 @@ export default class Path2D {
             points.push(pool.pull("Point", _x2, _y2));
             angle += angleStep;
         }
+        this.isDirty = true;
     }
 
     /**
@@ -263,6 +277,7 @@ export default class Path2D {
         this.lineTo(x, y + height);
         this.moveTo(x, y + height);
         this.lineTo(x, y);
+        this.isDirty = true;
     }
 
     /**
@@ -283,5 +298,6 @@ export default class Path2D {
         this.arcTo(x, y + height, x, y + height - radius, radius);
         this.lineTo(x, y + radius);
         this.arcTo(x, y, x + radius, y, radius);
+        this.isDirty = true;
     }
 }
