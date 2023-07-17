@@ -464,6 +464,99 @@ export default class WebGLRenderer extends Renderer {
         this.currentCompositor.addQuad(pattern, x, y, width, height, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()));
     }
 
+
+    /**
+     * starts a new path by emptying the list of sub-paths. Call this method when you want to create a new path
+     * @example
+     * // First path
+     * renderer.beginPath();
+     * renderer.setColor("blue");
+     * renderer.moveTo(20, 20);
+     * renderer.lineTo(200, 20);
+     * renderer.stroke();
+     * // Second path
+     * renderer.beginPath();
+     * renderer.setColor("green");
+     * renderer.moveTo(20, 20);
+     * renderer.lineTo(120, 120);
+     * renderer.stroke();
+     */
+    beginPath() {
+        this.path2D.beginPath();
+    }
+
+    /**
+     * begins a new sub-path at the point specified by the given (x, y) coordinates.
+     * @param {number} x - The x axis of the point.
+     * @param {number} y - The y axis of the point.
+     */
+    moveTo(x, y) {
+        this.path2D.moveTo(x, y);
+    }
+
+    /**
+     * adds a straight line to the current sub-path by connecting the sub-path's last point to the specified (x, y) coordinates.
+     */
+    lineTo(x, y) {
+        this.path2D.lineTo(x, y);
+    }
+
+    /**
+     * creates a rectangular path whose starting point is at (x, y) and whose size is specified by width and height.
+     * @param {number} x - The x axis of the coordinate for the rectangle starting point.
+     * @param {number} y - The y axis of the coordinate for the rectangle starting point.
+     * @param {number} width - The rectangle's width.
+     * @param {number} height - The rectangle's height.
+     */
+    rect(x, y, width, height) {
+        this.path2D.rect(x, y, width, height);
+    }
+
+    /**
+     * adds a rounded rectangle to the current path.
+     * @param {number} x - The x axis of the coordinate for the rectangle starting point.
+     * @param {number} y - The y axis of the coordinate for the rectangle starting point.
+     * @param {number} width - The rectangle's width.
+     * @param {number} height - The rectangle's height.
+     * @param {number} radius - The corner radius.
+     */
+    roundRect(x, y, width, height, radii) {
+        this.path2D.roundRect(x, y, width, height, radii);
+    }
+
+    /**
+     * stroke the given shape or the current defined path
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [shape] - a shape object to stroke
+     * @param {boolean} [fill=false] - fill the shape with the current color if true
+     */
+    stroke(shape, fill) {
+        if (typeof shape === "undefined") {
+            if (fill === true) {
+                // draw all triangles
+                this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
+            } else {
+                this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+            }
+        } else {
+            super.stroke(shape, fill);
+        }
+    }
+
+    /**
+     * fill the given shape or the current defined path
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [shape] - a shape object to fill
+     */
+    fill(shape) {
+        this.stroke(shape, true);
+    }
+
+    /**
+     * add a straight line from the current point to the start of the current sub-path. If the shape has already been closed or has only one point, this function does nothing
+    */
+    closePath() {
+        this.path2D.closePath();
+    }
+
     /**
      * Returns the WebGL Context object of the given canvas element
      * @param {HTMLCanvasElement} canvas - the canvas element
