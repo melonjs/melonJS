@@ -787,7 +787,6 @@ export default class WebGLRenderer extends Renderer {
         if (fill === false) {
             this.currentCompositor.drawVertices(this.gl.LINE_STRIP, this.path2D.points);
         } else {
-            this.path2D.closePath();
             this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
         }
     }
@@ -817,7 +816,6 @@ export default class WebGLRenderer extends Renderer {
         this.setCompositor("primitive");
         this.path2D.beginPath();
         this.path2D.ellipse(x, y, w, h, 0, 0, 360);
-        this.path2D.closePath();
         if (fill === false) {
             this.currentCompositor.drawVertices(this.gl.LINE_STRIP, this.path2D.points);
         } else {
@@ -869,16 +867,16 @@ export default class WebGLRenderer extends Renderer {
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokePolygon(poly, fill = false) {
+        let points = poly.points;
+
         this.setCompositor("primitive");
         this.translate(poly.pos.x, poly.pos.y);
-        this.path2D.beginPath();
 
-        let points = poly.points;
+        this.path2D.beginPath();
         for (let i = 1; i < points.length; i++) {
             this.path2D.moveTo(points[i-1].x, points[i-1].y);
             this.path2D.lineTo(points[i].x, points[i].y);
         }
-        this.path2D.lineTo(points[points.length - 1].x, points[points.length - 1].y);
         this.path2D.closePath();
         if (fill === false) {
             this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
@@ -943,7 +941,6 @@ export default class WebGLRenderer extends Renderer {
         if (fill === false) {
             this.currentCompositor.drawVertices(this.gl.LINE_STRIP, this.path2D.points);
         } else {
-            this.path2D.closePath();
             this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
         }
     }

@@ -25,6 +25,9 @@ export default class Path2D {
         this.vertices = [];
 
         /* @ignore */
+        this.startPoint = pool.pull("Point");
+
+        /* @ignore */
         this.isDirty = false;
     }
 
@@ -38,6 +41,7 @@ export default class Path2D {
         });
         this.isDirty = true;
         this.points.length = 0;
+        this.startPoint.set(0, 0);
     }
 
     /**
@@ -47,11 +51,13 @@ export default class Path2D {
      */
     closePath() {
         let points = this.points;
-        let firstPoint = points[0];
-        if (points.length > 1 && !points[points.length-1].equals(firstPoint)) {
-            points.push(pool.pull("Point", firstPoint.x, firstPoint.y));
+        if (points.length > 0) {
+            let firstPoint = points[0];
+            if (!firstPoint.equals(points[points.length-1])) {
+                this.lineTo(firstPoint.x, firstPoint.y);
+            }
+            this.isDirty = true;
         }
-        this.isDirty = true;
     }
 
     /**
@@ -94,18 +100,30 @@ export default class Path2D {
      * @param {number} y - the y-axis (vertical) coordinate of the point.
      */
     moveTo(x, y) {
-        this.points.push(pool.pull("Point", x, y));
+        this.startPoint.set(x, y);
         this.isDirty = true;
     }
 
     /**
-     * connects the last point in the current patch to the (x, y) coordinates with a straight line.
+     * connects the last point in the current path to the (x, y) coordinates with a straight line.
      * @param {number} x - the x-axis coordinate of the line's end point.
      * @param {number} y - the y-axis coordinate of the line's end point.
      */
     lineTo(x, y) {
-        this.points.push(pool.pull("Point", x, y));
-        this.moveTo(x, y);
+        let points = this.points;
+        let startPoint = this.startPoint;
+        let lastPoint = points.length === 0 ? startPoint : points[points.length-1];
+
+        if (!startPoint.equals(lastPoint)) {
+            points.push(pool.pull("Point", startPoint.x, startPoint.y));
+        } else {
+            points.push(pool.pull("Point", lastPoint.x, lastPoint.y));
+        }
+        points.push(pool.pull("Point", x, y));
+
+        startPoint.x = x;
+        startPoint.y = y;
+
         this.isDirty = true;
     }
 
@@ -271,12 +289,16 @@ export default class Path2D {
     rect(x, y, width, height) {
         this.moveTo(x, y);
         this.lineTo(x + width, y);
+
         this.moveTo(x + width, y);
         this.lineTo(x + width, y + height);
+
         this.moveTo(x + width, y + height);
         this.lineTo(x, y + height);
+
         this.moveTo(x, y + height);
         this.lineTo(x, y);
+
         this.isDirty = true;
     }
 
@@ -292,12 +314,19 @@ export default class Path2D {
         this.moveTo(x + radius, y);
         this.lineTo(x + width - radius, y);
         this.arcTo(x + width, y, x + width, y + radius, radius);
+
+        this.moveTo(x + width, y + radius);
         this.lineTo(x + width, y + height - radius);
         this.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+
+        this.moveTo(x + width - radius, y + height);
         this.lineTo(x + radius, y + height);
         this.arcTo(x, y + height, x, y + height - radius, radius);
+
+        this.moveTo(x, y + height - radius);
         this.lineTo(x, y + radius);
         this.arcTo(x, y, x + radius, y, radius);
+
         this.isDirty = true;
     }
 }
