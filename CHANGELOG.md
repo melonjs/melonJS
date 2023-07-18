@@ -10,7 +10,7 @@
 - Renderer: add path like methods (`beginPath`, `lineTo`, `moveTo`, `rect`, `roundRect`, `closePath`, `fill` and `stroke`)
 
 ### Changed
-- Geometry: optimize Path2d triangulation by only recalulcating all triangless when the path is modified
+- Geometry: optimize Path2d triangulation by only recalculating all triangles when the path is modified
 
 ### Fixed
 - Core: fix some leftover direct global references to `document` (now using `globalThis.document`)
