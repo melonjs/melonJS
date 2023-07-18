@@ -530,6 +530,7 @@ export default class WebGLRenderer extends Renderer {
      * @param {boolean} [fill=false] - fill the shape with the current color if true
      */
     stroke(shape, fill) {
+        this.setCompositor("primitive");
         if (typeof shape === "undefined") {
             if (fill === true) {
                 // draw all triangles
