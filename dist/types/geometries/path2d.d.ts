@@ -15,6 +15,7 @@ export default class Path2D {
      */
     arcResolution: number;
     vertices: any[];
+    startPoint: object;
     isDirty: boolean;
     /**
      * begin a new path
@@ -38,7 +39,7 @@ export default class Path2D {
      */
     moveTo(x: number, y: number): void;
     /**
-     * connects the last point in the current patch to the (x, y) coordinates with a straight line.
+     * connects the last point in the current path to the (x, y) coordinates with a straight line.
      * @param {number} x - the x-axis coordinate of the line's end point.
      * @param {number} y - the y-axis coordinate of the line's end point.
      */
