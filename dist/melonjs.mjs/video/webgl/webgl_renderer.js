@@ -537,6 +537,7 @@ class WebGLRenderer extends Renderer {
      * @param {boolean} [fill=false] - fill the shape with the current color if true
      */
     stroke(shape, fill) {
+        this.setCompositor("primitive");
         if (typeof shape === "undefined") {
             if (fill === true) {
                 // draw all triangles
@@ -874,23 +875,29 @@ class WebGLRenderer extends Renderer {
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokePolygon(poly, fill = false) {
-        let points = poly.points;
+        const points = poly.points;
+        const len = points.length;
 
         this.setCompositor("primitive");
+
         this.translate(poly.pos.x, poly.pos.y);
 
         this.path2D.beginPath();
-        for (let i = 1; i < points.length; i++) {
-            this.path2D.moveTo(points[i-1].x, points[i-1].y);
-            this.path2D.lineTo(points[i].x, points[i].y);
+        for (let i = 0; i < len - 1; i++) {
+            const curPoint = points[i];
+            const nextPoint = points[i+1];
+            this.path2D.moveTo(curPoint.x, curPoint.y);
+            this.path2D.lineTo(nextPoint.x, nextPoint.y);
         }
         this.path2D.closePath();
+
         if (fill === false) {
             this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
         } else {
             // draw all triangles
             this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
         }
+
         this.translate(-poly.pos.x, -poly.pos.y);
     }
 

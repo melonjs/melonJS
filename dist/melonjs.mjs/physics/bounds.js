@@ -193,10 +193,11 @@ class Bounds {
      * @param {boolean} [clear=false] - either to reset the bounds before adding the new vertices
      */
     add(vertices, clear = false) {
+        const verticeCount = vertices.length;
         if (clear === true) {
             this.clear();
         }
-        for (let i = 0; i < vertices.length; i++) {
+        for (let i = 0; i < verticeCount; i++) {
             const vertex = vertices[i];
             if (vertex.x > this.max.x) this.max.x = vertex.x;
             if (vertex.x < this.min.x) this.min.x = vertex.x;

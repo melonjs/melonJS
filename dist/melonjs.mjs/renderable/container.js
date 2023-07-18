@@ -886,8 +886,9 @@ class Container extends Renderable {
         let isFloating = false;
         let isPaused = state.isPaused();
         let children = this.getChildren();
+        const childrenLength = children.length;
 
-        for (let i = children.length, obj; i--, (obj = children[i]);) {
+        for (let i = childrenLength, obj; i--, (obj = children[i]);) {
             if (isPaused && (!obj.updateWhenPaused)) {
                 // skip this object
                 continue;

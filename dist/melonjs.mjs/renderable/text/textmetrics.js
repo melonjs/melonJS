@@ -58,9 +58,10 @@ class TextMetrics extends Bounds {
             return context.measureText(text).width;
         } else { // it's a BitmapText
             let characters = text.split("");
+            const charactersLength = characters.length;
             let width = 0;
             let lastGlyph = null;
-            for (let i = 0; i < characters.length; i++) {
+            for (let i = 0; i < charactersLength; i++) {
                 let ch = characters[i].charCodeAt(0);
                 let glyph = this.ancestor.fontData.glyphs[ch];
                 if (typeof glyph !== "undefined") {

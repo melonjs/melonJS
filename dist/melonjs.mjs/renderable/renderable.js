@@ -299,6 +299,18 @@ class Renderable extends Rect {
     }
 
     /**
+     * the depth of this renderable on the z axis
+     * @type {number}
+     */
+    get depth() {
+        return this.pos.z;
+    }
+    set depth(value) {
+        this.pos.z = value;
+        this.isDirty = true;
+    }
+
+    /**
      * Whether the renderable object is visible and within the viewport
      * @type {boolean}
      * @default false

@@ -7844,7 +7844,9 @@ class QuadTree {
      * @param {Container} container - group of objects to be added
      */
     insertContainer(container) {
-        for (let i = container.children.length, child; i--, (child = container.children[i]);) {
+        const children = container.children;
+        const childrenLength = children.length;
+        for (let i = childrenLength, child; i--, (child = children[i]);) {
             if (child.isKinematic !== true) {
                 if (typeof child.addChild === "function") {
                     if (child.name !== "rootContainer") {
@@ -8219,10 +8221,11 @@ class Bounds {
      * @param {boolean} [clear=false] - either to reset the bounds before adding the new vertices
      */
     add(vertices, clear = false) {
+        const verticeCount = vertices.length;
         if (clear === true) {
             this.clear();
         }
-        for (let i = 0; i < vertices.length; i++) {
+        for (let i = 0; i < verticeCount; i++) {
             const vertex = vertices[i];
             if (vertex.x > this.max.x) this.max.x = vertex.x;
             if (vertex.x < this.min.x) this.min.x = vertex.x;
@@ -17448,6 +17451,18 @@ class Renderable extends Rect {
     }
 
     /**
+     * the depth of this renderable on the z axis
+     * @type {number}
+     */
+    get depth() {
+        return this.pos.z;
+    }
+    set depth(value) {
+        this.pos.z = value;
+        this.isDirty = true;
+    }
+
+    /**
      * Whether the renderable object is visible and within the viewport
      * @type {boolean}
      * @default false
@@ -22426,17 +22441,22 @@ class CanvasRenderer extends Renderer {
             return;
         }
         let context = this.getContext();
+        let points = poly.points;
+        let pointsLength = points.length;
+        let firstPoint = points[0];
 
         this.translate(poly.pos.x, poly.pos.y);
+
         context.beginPath();
-        context.moveTo(poly.points[0].x, poly.points[0].y);
-        for (let i = 1; i < poly.points.length; i++) {
-            const point = poly.points[i];
+        context.moveTo(firstPoint.x, firstPoint.y);
+        for (let i = 1; i < pointsLength; i++) {
+            const point = points[i];
             context.lineTo(point.x, point.y);
         }
-        context.lineTo(poly.points[0].x, poly.points[0].y);
+        context.lineTo(firstPoint.x, firstPoint.y);
         context[fill === true ? "fill" : "stroke"]();
         context.closePath();
+
         this.translate(-poly.pos.x, -poly.pos.y);
     }
 
@@ -24148,8 +24168,9 @@ class Container extends Renderable {
         let isFloating = false;
         let isPaused = state$1.isPaused();
         let children = this.getChildren();
+        const childrenLength = children.length;
 
-        for (let i = children.length, obj; i--, (obj = children[i]);) {
+        for (let i = childrenLength, obj; i--, (obj = children[i]);) {
             if (isPaused && (!obj.updateWhenPaused)) {
                 // skip this object
                 continue;
@@ -31591,6 +31612,7 @@ class WebGLRenderer extends Renderer {
      * @param {boolean} [fill=false] - fill the shape with the current color if true
      */
     stroke(shape, fill) {
+        this.setCompositor("primitive");
         if (typeof shape === "undefined") {
             if (fill === true) {
                 // draw all triangles
@@ -31928,23 +31950,29 @@ class WebGLRenderer extends Renderer {
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokePolygon(poly, fill = false) {
-        let points = poly.points;
+        const points = poly.points;
+        const len = points.length;
 
         this.setCompositor("primitive");
+
         this.translate(poly.pos.x, poly.pos.y);
 
         this.path2D.beginPath();
-        for (let i = 1; i < points.length; i++) {
-            this.path2D.moveTo(points[i-1].x, points[i-1].y);
-            this.path2D.lineTo(points[i].x, points[i].y);
+        for (let i = 0; i < len - 1; i++) {
+            const curPoint = points[i];
+            const nextPoint = points[i+1];
+            this.path2D.moveTo(curPoint.x, curPoint.y);
+            this.path2D.lineTo(nextPoint.x, nextPoint.y);
         }
         this.path2D.closePath();
+
         if (fill === false) {
             this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
         } else {
             // draw all triangles
             this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
         }
+
         this.translate(-poly.pos.x, -poly.pos.y);
     }
 
@@ -33712,9 +33740,10 @@ class TextMetrics extends Bounds {
             return context.measureText(text).width;
         } else { // it's a BitmapText
             let characters = text.split("");
+            const charactersLength = characters.length;
             let width = 0;
             let lastGlyph = null;
-            for (let i = 0; i < characters.length; i++) {
+            for (let i = 0; i < charactersLength; i++) {
                 let ch = characters[i].charCodeAt(0);
                 let glyph = this.ancestor.fontData.glyphs[ch];
                 if (typeof glyph !== "undefined") {

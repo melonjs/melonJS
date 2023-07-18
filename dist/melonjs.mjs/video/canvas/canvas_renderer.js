@@ -478,17 +478,22 @@ class CanvasRenderer extends Renderer {
             return;
         }
         let context = this.getContext();
+        let points = poly.points;
+        let pointsLength = points.length;
+        let firstPoint = points[0];
 
         this.translate(poly.pos.x, poly.pos.y);
+
         context.beginPath();
-        context.moveTo(poly.points[0].x, poly.points[0].y);
-        for (let i = 1; i < poly.points.length; i++) {
-            const point = poly.points[i];
+        context.moveTo(firstPoint.x, firstPoint.y);
+        for (let i = 1; i < pointsLength; i++) {
+            const point = points[i];
             context.lineTo(point.x, point.y);
         }
-        context.lineTo(poly.points[0].x, poly.points[0].y);
+        context.lineTo(firstPoint.x, firstPoint.y);
         context[fill === true ? "fill" : "stroke"]();
         context.closePath();
+
         this.translate(-poly.pos.x, -poly.pos.y);
     }
 

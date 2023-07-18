@@ -217,6 +217,12 @@ export default class Renderable extends Rect {
      * this.tint.setColor(255, 255, 255);
      */
     get tint(): Color;
+    set depth(arg: number);
+    /**
+     * the depth of this renderable on the z axis
+     * @type {number}
+     */
+    get depth(): number;
     set inViewport(arg: boolean);
     /**
      * Whether the renderable object is visible and within the viewport
