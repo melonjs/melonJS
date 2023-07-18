@@ -1,5 +1,7 @@
 # Changelog
 
+## [15.7.0] (melonJS 2) - _2023-xx-xx_
+
 ## [15.6.0] (melonJS 2) - _2023-07-18_
 
 ### Added
