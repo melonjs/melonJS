@@ -194,7 +194,9 @@ export default class QuadTree {
      * @param {Container} container - group of objects to be added
      */
     insertContainer(container) {
-        for (let i = container.children.length, child; i--, (child = container.children[i]);) {
+        const children = container.children;
+        const childrenLength = children.length;
+        for (let i = childrenLength, child; i--, (child = children[i]);) {
             if (child.isKinematic !== true) {
                 if (typeof child.addChild === "function") {
                     if (child.name !== "rootContainer") {
