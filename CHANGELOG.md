@@ -7,6 +7,7 @@
 
 ### Fixed
 - Renderer: fix how alpha and globalAlpha values are applied in the Canvas Renderer to match with WebGL
+- TypeScript : fix loader.Asset definition typings (causing an error with the Vite-Typescript boilerplate)
 
 ## [15.6.0] (melonJS 2) - _2023-07-18_
 

@@ -137,7 +137,7 @@ function onLoadingError(res) {
  * an asset definition to be used with the loader
  * @typedef {object} loader.Asset
  * @property {string} name - name of the asset
- * @property {"audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface"} type  - the type of the asset
+ * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface")
  * @property {string} [src]  - path and/or file name of the resource (for audio assets only the path is required)
  * @property {string} [data]  - TMX data if not provided through a src url
  * @property {boolean} [stream=false] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
