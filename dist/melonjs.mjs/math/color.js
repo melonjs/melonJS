@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.6.0
+ * melonJS Game Engine - v15.7.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -192,11 +192,12 @@ let cssToRGB = new Map();
  * A color manipulation object.
  */
 class Color {
+
     /**
-     * @param {number} [r=0] - red component or array of color components
-     * @param {number} [g=0] - green component
-     * @param {number} [b=0] - blue component
-     * @param {number} [alpha=1.0] - alpha value
+     * @param {number} [r=0] - red component [0 .. 255]
+     * @param {number} [g=0] - green component [0 .. 255]
+     * @param {number} [b=0] - blue component [0 .. 255]
+     * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
      */
     constructor(r = 0, g = 0, b = 0, alpha = 1.0) {
         this.onResetEvent(r, g, b, alpha);
@@ -262,7 +263,6 @@ class Color {
         this.glArray[3] = clamp(+value, 0, 1.0);
     }
 
-
     /**
      * Set this color to the specified value.
      * @param {number} r - red component [0 .. 255]
@@ -276,6 +276,23 @@ class Color {
         this.g = g;
         this.b = b;
         this.alpha = alpha;
+        return this;
+    }
+
+    /**
+     * set this color to the specified normalized float values
+     * @param {number} r - red component [0.0 .. 1.0]
+     * @param {number} g - green component [0.0 .. 1.0]
+     * @param {number} b - blue component [0.0 .. 1.0]
+     * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
+     * @returns {Color} Reference to this object for method chaining
+     */
+    setFloat(r, g, b, alpha = 1.0) {
+        const a = this.glArray;
+        a[0] = clamp(+r, 0, 1.0);
+        a[1] = clamp(+g, 0, 1.0);
+        a[2] = clamp(+b, 0, 1.0);
+        a[3] = clamp(+alpha, 0, 1.0);
         return this;
     }
 
@@ -552,7 +569,7 @@ class Color {
     }
 
     /**
-     * return an array representation of this object
+     * return an Float Array representation of this object
      * @returns {Float32Array}
      */
     toArray() {

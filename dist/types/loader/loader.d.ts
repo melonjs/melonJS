@@ -135,9 +135,9 @@ export namespace loader {
          */
         name: string;
         /**
-         * - the type of the asset
+         * - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface")
          */
-        type: "audio" | "binary" | "image" | "json" | "js" | "tmx" | "tmj" | "tsx" | "tsj" | "fontface";
+        type: string;
         /**
          * - path and/or file name of the resource (for audio assets only the path is required)
          */

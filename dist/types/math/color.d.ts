@@ -4,10 +4,10 @@
  */
 export default class Color {
     /**
-     * @param {number} [r=0] - red component or array of color components
-     * @param {number} [g=0] - green component
-     * @param {number} [b=0] - blue component
-     * @param {number} [alpha=1.0] - alpha value
+     * @param {number} [r=0] - red component [0 .. 255]
+     * @param {number} [g=0] - green component [0 .. 255]
+     * @param {number} [b=0] - blue component [0 .. 255]
+     * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
      */
     constructor(r?: number | undefined, g?: number | undefined, b?: number | undefined, alpha?: number | undefined);
     /**
@@ -48,6 +48,15 @@ export default class Color {
      * @returns {Color} Reference to this object for method chaining
      */
     setColor(r: number, g: number, b: number, alpha?: number | undefined): Color;
+    /**
+     * set this color to the specified normalized float values
+     * @param {number} r - red component [0.0 .. 1.0]
+     * @param {number} g - green component [0.0 .. 1.0]
+     * @param {number} b - blue component [0.0 .. 1.0]
+     * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
+     * @returns {Color} Reference to this object for method chaining
+     */
+    setFloat(r: number, g: number, b: number, alpha?: number | undefined): Color;
     /**
      * set this color to the specified HSV value
      * @param {number} h - hue (a value from 0 to 1)
@@ -142,7 +151,7 @@ export default class Color {
      */
     toUint32(alpha?: number | undefined): number;
     /**
-     * return an array representation of this object
+     * return an Float Array representation of this object
      * @returns {Float32Array}
      */
     toArray(): Float32Array;

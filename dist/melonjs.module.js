@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.6.0
+ * melonJS Game Engine - v15.7.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -2255,11 +2255,12 @@ let cssToRGB = new Map();
  * A color manipulation object.
  */
 class Color {
+
     /**
-     * @param {number} [r=0] - red component or array of color components
-     * @param {number} [g=0] - green component
-     * @param {number} [b=0] - blue component
-     * @param {number} [alpha=1.0] - alpha value
+     * @param {number} [r=0] - red component [0 .. 255]
+     * @param {number} [g=0] - green component [0 .. 255]
+     * @param {number} [b=0] - blue component [0 .. 255]
+     * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
      */
     constructor(r = 0, g = 0, b = 0, alpha = 1.0) {
         this.onResetEvent(r, g, b, alpha);
@@ -2325,7 +2326,6 @@ class Color {
         this.glArray[3] = clamp(+value, 0, 1.0);
     }
 
-
     /**
      * Set this color to the specified value.
      * @param {number} r - red component [0 .. 255]
@@ -2339,6 +2339,23 @@ class Color {
         this.g = g;
         this.b = b;
         this.alpha = alpha;
+        return this;
+    }
+
+    /**
+     * set this color to the specified normalized float values
+     * @param {number} r - red component [0.0 .. 1.0]
+     * @param {number} g - green component [0.0 .. 1.0]
+     * @param {number} b - blue component [0.0 .. 1.0]
+     * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
+     * @returns {Color} Reference to this object for method chaining
+     */
+    setFloat(r, g, b, alpha = 1.0) {
+        const a = this.glArray;
+        a[0] = clamp(+r, 0, 1.0);
+        a[1] = clamp(+g, 0, 1.0);
+        a[2] = clamp(+b, 0, 1.0);
+        a[3] = clamp(+alpha, 0, 1.0);
         return this;
     }
 
@@ -2615,7 +2632,7 @@ class Color {
     }
 
     /**
-     * return an array representation of this object
+     * return an Float Array representation of this object
      * @returns {Float32Array}
      */
     toArray() {
@@ -21101,7 +21118,7 @@ class Renderer {
      */
     clearTint() {
         // reset to default
-        this.currentTint.setColor(255, 255, 255, 1.0);
+        this.currentTint.setFloat(1.0, 1.0, 1.0, 1.0);
     }
 
     /**
@@ -22592,9 +22609,13 @@ class CanvasRenderer extends Renderer {
      * @param {Color|string} color - css color value
      */
     setColor(color) {
+        let currentColor = this.currentColor;
         let context = this.getContext();
-        context.strokeStyle =
-        context.fillStyle = (color instanceof Color ? color.toRGBA() : color);
+
+        currentColor.copy(color);
+        // globalAlpha is applied at rendering time by the canvas
+
+        context.strokeStyle = context.fillStyle = currentColor.toRGBA();
     }
 
     /**
@@ -22602,7 +22623,7 @@ class CanvasRenderer extends Renderer {
      * @param {number} alpha - 0.0 to 1.0 values accepted.
      */
     setGlobalAlpha(alpha) {
-        this.getContext().globalAlpha = this.currentColor.glArray[3] = alpha;
+        this.getContext().globalAlpha = alpha;
     }
 
     /**
@@ -26583,7 +26604,7 @@ function onLoadingError(res) {
  * an asset definition to be used with the loader
  * @typedef {object} loader.Asset
  * @property {string} name - name of the asset
- * @property {"audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface"} type  - the type of the asset
+ * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface")
  * @property {string} [src]  - path and/or file name of the resource (for audio assets only the path is required)
  * @property {string} [data]  - TMX data if not provided through a src url
  * @property {boolean} [stream=false] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
@@ -37947,9 +37968,9 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "15.6.0"
+         * @default "15.7.0"
          */
-        this.version = "15.6.0";
+        this.version = "15.7.0";
     }
 }
 
@@ -38176,7 +38197,7 @@ class GUI_Object extends UISpriteElement {
  * @name version
  * @type {string}
  */
-const version = "15.6.0";
+const version = "15.7.0";
 
 /**
  * a flag indicating that melonJS is fully initialized

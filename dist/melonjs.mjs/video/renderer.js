@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.6.0
+ * melonJS Game Engine - v15.7.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -408,7 +408,7 @@ class Renderer {
      */
     clearTint() {
         // reset to default
-        this.currentTint.setColor(255, 255, 255, 1.0);
+        this.currentTint.setFloat(1.0, 1.0, 1.0, 1.0);
     }
 
     /**
