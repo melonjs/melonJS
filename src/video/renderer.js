@@ -401,7 +401,7 @@ export default class Renderer {
      */
     clearTint() {
         // reset to default
-        this.currentTint.setColor(255, 255, 255, 1.0);
+        this.currentTint.setFloat(1.0, 1.0, 1.0, 1.0);
     }
 
     /**

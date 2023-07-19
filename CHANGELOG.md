@@ -2,6 +2,9 @@
 
 ## [15.7.0] (melonJS 2) - _2023-xx-xx_
 
+### Added
+- Color: new `setFloat` method allowing to specify RGBA components in a normalized float format
+
 ## [15.6.0] (melonJS 2) - _2023-07-18_
 
 ### Added

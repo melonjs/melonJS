@@ -185,11 +185,12 @@ let cssToRGB = new Map();
  * A color manipulation object.
  */
 export default class Color {
+
     /**
-     * @param {number} [r=0] - red component or array of color components
-     * @param {number} [g=0] - green component
-     * @param {number} [b=0] - blue component
-     * @param {number} [alpha=1.0] - alpha value
+     * @param {number} [r=0] - red component [0 .. 255]
+     * @param {number} [g=0] - green component [0 .. 255]
+     * @param {number} [b=0] - blue component [0 .. 255]
+     * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
      */
     constructor(r = 0, g = 0, b = 0, alpha = 1.0) {
         this.onResetEvent(r, g, b, alpha);
@@ -255,7 +256,6 @@ export default class Color {
         this.glArray[3] = clamp(+value, 0, 1.0);
     }
 
-
     /**
      * Set this color to the specified value.
      * @param {number} r - red component [0 .. 255]
@@ -269,6 +269,23 @@ export default class Color {
         this.g = g;
         this.b = b;
         this.alpha = alpha;
+        return this;
+    }
+
+    /**
+     * set this color to the specified normalized float values
+     * @param {number} r - red component [0.0 .. 1.0]
+     * @param {number} g - green component [0.0 .. 1.0]
+     * @param {number} b - blue component [0.0 .. 1.0]
+     * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
+     * @returns {Color} Reference to this object for method chaining
+     */
+    setFloat(r, g, b, alpha = 1.0) {
+        const a = this.glArray;
+        a[0] = r;
+        a[1] = g;
+        a[2] = b;
+        a[3] = alpha;
         return this;
     }
 
@@ -545,7 +562,7 @@ export default class Color {
     }
 
     /**
-     * return an array representation of this object
+     * return an Float Array representation of this object
      * @returns {Float32Array}
      */
     toArray() {
