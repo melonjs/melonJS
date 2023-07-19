@@ -622,9 +622,13 @@ export default class CanvasRenderer extends Renderer {
      * @param {Color|string} color - css color value
      */
     setColor(color) {
+        let currentColor = this.currentColor;
         let context = this.getContext();
-        context.strokeStyle =
-        context.fillStyle = (color instanceof Color ? color.toRGBA() : color);
+
+        currentColor.copy(color);
+        // globalAlpha is applied at rendering time by the canvas
+
+        context.strokeStyle = context.fillStyle = currentColor.toRGBA();
     }
 
     /**
@@ -632,7 +636,7 @@ export default class CanvasRenderer extends Renderer {
      * @param {number} alpha - 0.0 to 1.0 values accepted.
      */
     setGlobalAlpha(alpha) {
-        this.getContext().globalAlpha = this.currentColor.glArray[3] = alpha;
+        this.getContext().globalAlpha = alpha;
     }
 
     /**

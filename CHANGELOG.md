@@ -5,6 +5,9 @@
 ### Added
 - Color: new `setFloat` method allowing to specify RGBA components in a normalized float format
 
+### Fixed
+- Renderer: fix how alpha and globalAlpha values are applied in the Canvas Renderer to match with WebGL
+
 ## [15.6.0] (melonJS 2) - _2023-07-18_
 
 ### Added
