@@ -282,10 +282,10 @@ export default class Color {
      */
     setFloat(r, g, b, alpha = 1.0) {
         const a = this.glArray;
-        a[0] = r;
-        a[1] = g;
-        a[2] = b;
-        a[3] = alpha;
+        a[0] = clamp(+r, 0, 1.0);
+        a[1] = clamp(+g, 0, 1.0);
+        a[2] = clamp(+b, 0, 1.0);
+        a[3] = clamp(+alpha, 0, 1.0);
         return this;
     }
 
