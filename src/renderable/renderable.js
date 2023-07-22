@@ -790,8 +790,8 @@ export default class Renderable extends Rect {
 
         this.ancestor = undefined;
 
-        // destroy the physic body if defined
-        if (typeof this.body !== "undefined") {
+        // destroy the physic body if defined and is a builtin body object
+        if ((typeof this.body !== "undefined") && (typeof this.body.destroy === "function")) {
             this.body.destroy.apply(this.body, arguments);
             this.body = undefined;
         }
