@@ -9,6 +9,7 @@ export const defaultSettings = {
     transparent : false,
     premultipliedAlpha: true,
     blendMode : "normal",
+    physic : "builtin",
     antiAlias : false,
     failIfMajorPerformanceCaveat : true,
     subPixel : false,
@@ -50,6 +51,7 @@ export const defaultSettings = {
  * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
  * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
  * @param {Compositor} [options.compositor] - a custom compositor class (WebGL only)
+ * @param {string} [option.physic="builtin"] - the physic system to use (default: "builtin", or "none" to disable builtin physic)
  * @see Application
  * @memberof Application
  */

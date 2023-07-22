@@ -2,6 +2,9 @@
 
 ## [15.8.0] (melonJS 2) - _2023-xx-xx_
 
+### Added
+- Physic: new application/world `physic` prorperty allowing to disable the builtin physic implementation
+
 ## [15.7.0] (melonJS 2) - _2023-07-19_
 
 ### Added
