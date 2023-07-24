@@ -3,6 +3,7 @@
 ## [15.8.0] (melonJS 2) - _2023-xx-xx_
 
 ### Added
+- Doc: add proper documentation and example for Renderer drawing-related APIs
 - Physic: new `physic` flag allowing to disable the builtin physic implementation
 
 ### Fixed
