@@ -7,6 +7,7 @@
 - Physic: new `physic` flag allowing to disable the builtin physic implementation
 
 ### Fixed
+- Doc: fix missing default `game` application instance
 - Renderer: properly deallocate and reallocate texture unit after a texture deletion in WebGL rendering mode
 
 ## [15.7.0] (melonJS 2) - _2023-07-19_
