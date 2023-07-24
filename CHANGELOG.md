@@ -5,6 +5,9 @@
 ### Added
 - Physic: new `physic` flag allowing to disable the builtin physic implementation
 
+### Fixed
+- Renderer: properly deallocate and reallocate texture unit after a texture deletion in WebGL rendering mode
+
 ## [15.7.0] (melonJS 2) - _2023-07-19_
 
 ### Added

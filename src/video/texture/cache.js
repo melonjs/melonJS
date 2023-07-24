@@ -1,8 +1,8 @@
 import { renderer } from "./../video.js";
 import * as fileUtil from "./../../utils/file.js";
 import { TextureAtlas, createAtlas } from "./atlas.js";
-import { isPowerOfTwo} from "./../../math/math.js";
-import {ArrayMultimap} from "@teppeis/multimaps";
+import { isPowerOfTwo } from "./../../math/math.js";
+import { ArrayMultimap } from "@teppeis/multimaps";
 
 /**
  * a basic texture cache object
@@ -13,12 +13,13 @@ class TextureCache {
     /**
      * @ignore
      */
-    constructor(max_size) {
+    constructor(max_size = Infinity) {
         // cache uses an array to allow for duplicated key
         this.cache = new ArrayMultimap();
         this.tinted = new Map();
         this.units = new Map();
-        this.max_size = max_size || Infinity;
+        this.usedUnits = new Set();
+        this.max_size = max_size;
         this.clear();
     }
 
@@ -29,19 +30,42 @@ class TextureCache {
         this.cache.clear();
         this.tinted.clear();
         this.units.clear();
-        this.length = 0;
+        this.usedUnits.clear();
+        this.usedUnits = new Set();
     }
 
     /**
      * @ignore
      */
-    validate() {
-        if (this.length >= this.max_size) {
-            // TODO: Merge textures instead of throwing an exception
-            throw new Error(
-                "Texture cache overflow: " + this.max_size +
-                " texture units available for this GPU."
-            );
+    allocateTextureUnit() {
+        // find the first unit available among the max_size
+        for (let unit = 0; unit < this.max_size; unit++) {
+            // Check if unit is available
+            if (!this.usedUnits.has(unit)) {
+                // Add to used set
+                this.usedUnits.add(unit);
+                // return the new unit
+                return unit;
+            }
+        }
+
+        // No units available
+        // TODO: Merge textures instead of throwing an exception
+        throw new Error(
+            "Texture cache overflow: " + this.max_size +
+            " texture units available for this GPU."
+        );
+    }
+
+    /**
+     * @ignore
+     */
+    freeTextureUnit(texture) {
+        let unit = this.units.get(texture);
+        // was a texture unit allocated ?
+        if (typeof unit !== "undefined") {
+            this.usedUnits.delete(unit);
+            this.units.delete(texture);
         }
     }
 
@@ -78,7 +102,11 @@ class TextureCache {
      * @ignore
      */
     delete(image) {
-        if (!this.cache.has(image)) {
+        if (this.cache.has(image)) {
+            let texture = this.cache.get(image)[0];
+            if (typeof texture !== "undefined") {
+                this.freeTextureUnit(texture);
+            }
             this.cache.delete(image);
         }
     }
@@ -124,8 +152,7 @@ class TextureCache {
      */
     getUnit(texture) {
         if (!this.units.has(texture)) {
-            this.validate();
-            this.units.set(texture, this.length++);
+            this.units.set(texture, this.allocateTextureUnit());
         }
         return this.units.get(texture);
     }
