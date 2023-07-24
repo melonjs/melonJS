@@ -11,7 +11,7 @@ import Point from "../geometries/point.js";
 
 /**
  * @classdesc
- * a Generic Physic Body Object with some physic properties and behavior functionality, to as a member of a Renderable.
+ * a Generic Physic Body Object with some physic properties and behavior functionality, to add as a member of a Renderable.
  * @see Renderable.body
  */
 export default class Body {
