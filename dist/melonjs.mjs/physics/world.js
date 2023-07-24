@@ -42,6 +42,17 @@ class World extends Container {
         this.app = undefined;
 
         /**
+         * the physic engine used by melonJS
+         * @see Application.Settings.physic
+         * @type {string}
+         * @default "builtin"
+         * @example
+         * // disable builtin physic
+         * me.game.world.physic = "none";
+         */
+        this.physic = "builtin";
+
+        /**
          * the rate at which the game world is updated,
          * may be greater than or lower than the display fps
          * @default 60
@@ -73,7 +84,7 @@ class World extends Container {
         this.bodies = new Set();
 
         /**
-         * the instance of the game world quadtree used for broadphase
+         * the instance of the game world quadtree used for broadphase (used by the builtin physic and pointer event implementation)
          * @type {QuadTree}
          */
         this.broadphase = new QuadTree(this, this.getBounds().clone(), collision.maxChildren, collision.maxDepth);
@@ -119,8 +130,10 @@ class World extends Container {
      * @returns {World} this game world
      */
     addBody(body) {
-        //add it to the list of active body
-        this.bodies.add(body);
+        //add it to the list of active body if builtin physic is enabled
+        if (this.physic === "builtin") {
+            this.bodies.add(body);
+        }
         return this;
     }
 
@@ -131,8 +144,10 @@ class World extends Container {
      * @returns {World} this game world
      */
     removeBody(body) {
-        //remove from the list of active body
-        this.bodies.delete(body);
+        //remove from the list of active body if builtin physic is enabled
+        if (this.physic === "builtin") {
+            this.bodies.delete(body);
+        }
         return this;
     }
 
@@ -166,27 +181,30 @@ class World extends Container {
         // insert the world container (children) into the quadtree
         this.broadphase.insertContainer(this);
 
-        // iterate through all bodies
-        this.bodies.forEach((body) => {
-            if (!body.isStatic) {
-                let ancestor = body.ancestor;
-                // if the game is not paused, and ancestor can be updated
-                if (!(isPaused && (!ancestor.updateWhenPaused)) &&
-                   (ancestor.inViewport || ancestor.alwaysUpdate)) {
-                    // apply gravity to this body
-                    this.bodyApplyGravity(body);
-                    // body update function (this moves it)
-                    if (body.update(dt) === true) {
-                        // mark ancestor as dirty
-                        ancestor.isDirty = true;
+        // only iterate through object is builtin physic is enabled
+        if (this.physic === "builtin") {
+            // iterate through all bodies
+            this.bodies.forEach((body) => {
+                if (!body.isStatic) {
+                    let ancestor = body.ancestor;
+                    // if the game is not paused, and ancestor can be updated
+                    if (!(isPaused && (!ancestor.updateWhenPaused)) &&
+                    (ancestor.inViewport || ancestor.alwaysUpdate)) {
+                        // apply gravity to this body
+                        this.bodyApplyGravity(body);
+                        // body update function (this moves it)
+                        if (body.update(dt) === true) {
+                            // mark ancestor as dirty
+                            ancestor.isDirty = true;
+                        }
+                        // handle collisions against other objects
+                        this.detector.collisions(ancestor);
+                        // clear body force
+                        body.force.set(0, 0);
                     }
-                    // handle collisions against other objects
-                    this.detector.collisions(ancestor);
-                    // clear body force
-                    body.force.set(0, 0);
                 }
-            }
-        });
+            });
+        }
 
         // call the super constructor
         return super.update(dt);

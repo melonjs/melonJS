@@ -8,6 +8,7 @@ export namespace defaultSettings {
     let transparent: boolean;
     let premultipliedAlpha: boolean;
     let blendMode: string;
+    let physic: string;
     let antiAlias: boolean;
     let failIfMajorPerformanceCaveat: boolean;
     let subPixel: boolean;

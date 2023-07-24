@@ -7,20 +7,24 @@ declare class TextureCache {
     /**
      * @ignore
      */
-    constructor(max_size: any);
+    constructor(max_size?: number);
     cache: ArrayMultimap<any, any>;
     tinted: Map<any, any>;
     units: Map<any, any>;
-    max_size: any;
+    usedUnits: Set<any>;
+    max_size: number;
     /**
      * @ignore
      */
     clear(): void;
-    length: number | undefined;
     /**
      * @ignore
      */
-    validate(): void;
+    allocateTextureUnit(): number;
+    /**
+     * @ignore
+     */
+    freeTextureUnit(texture: any): void;
     /**
      * @ignore
      */

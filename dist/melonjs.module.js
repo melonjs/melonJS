@@ -17966,8 +17966,8 @@ class Renderable extends Rect {
 
         this.ancestor = undefined;
 
-        // destroy the physic body if defined
-        if (typeof this.body !== "undefined") {
+        // destroy the physic body if defined and is a builtin body object
+        if ((typeof this.body !== "undefined") && (typeof this.body.destroy === "function")) {
             this.body.destroy.apply(this.body, arguments);
             this.body = undefined;
         }
@@ -21876,12 +21876,13 @@ class TextureCache {
     /**
      * @ignore
      */
-    constructor(max_size) {
+    constructor(max_size = Infinity) {
         // cache uses an array to allow for duplicated key
         this.cache = new ArrayMultimap();
         this.tinted = new Map();
         this.units = new Map();
-        this.max_size = max_size || Infinity;
+        this.usedUnits = new Set();
+        this.max_size = max_size;
         this.clear();
     }
 
@@ -21892,19 +21893,42 @@ class TextureCache {
         this.cache.clear();
         this.tinted.clear();
         this.units.clear();
-        this.length = 0;
+        this.usedUnits.clear();
+        this.usedUnits = new Set();
     }
 
     /**
      * @ignore
      */
-    validate() {
-        if (this.length >= this.max_size) {
-            // TODO: Merge textures instead of throwing an exception
-            throw new Error(
-                "Texture cache overflow: " + this.max_size +
-                " texture units available for this GPU."
-            );
+    allocateTextureUnit() {
+        // find the first unit available among the max_size
+        for (let unit = 0; unit < this.max_size; unit++) {
+            // Check if unit is available
+            if (!this.usedUnits.has(unit)) {
+                // Add to used set
+                this.usedUnits.add(unit);
+                // return the new unit
+                return unit;
+            }
+        }
+
+        // No units available
+        // TODO: Merge textures instead of throwing an exception
+        throw new Error(
+            "Texture cache overflow: " + this.max_size +
+            " texture units available for this GPU."
+        );
+    }
+
+    /**
+     * @ignore
+     */
+    freeTextureUnit(texture) {
+        let unit = this.units.get(texture);
+        // was a texture unit allocated ?
+        if (typeof unit !== "undefined") {
+            this.usedUnits.delete(unit);
+            this.units.delete(texture);
         }
     }
 
@@ -21941,7 +21965,11 @@ class TextureCache {
      * @ignore
      */
     delete(image) {
-        if (!this.cache.has(image)) {
+        if (this.cache.has(image)) {
+            let texture = this.cache.get(image)[0];
+            if (typeof texture !== "undefined") {
+                this.freeTextureUnit(texture);
+            }
             this.cache.delete(image);
         }
     }
@@ -21987,8 +22015,7 @@ class TextureCache {
      */
     getUnit(texture) {
         if (!this.units.has(texture)) {
-            this.validate();
-            this.units.set(texture, this.length++);
+            this.units.set(texture, this.allocateTextureUnit());
         }
         return this.units.get(texture);
     }
@@ -22568,14 +22595,17 @@ class CanvasRenderer extends Renderer {
     }
 
     /**
-     * save the canvas context
-     */
-    save() {
-        this.getContext().save();
-    }
-
-    /**
-     * restores the canvas context
+     * restores the most recently saved renderer state by popping the top entry in the drawing state stack
+     * @example
+     * // Save the current state
+     * renderer.save();
+     *
+     * // apply a transform and draw a rect
+     * renderer.tranform(matrix);
+     * renderer.fillRect(10, 10, 100, 100);
+     *
+     * // Restore to the state saved by the most recent call to save()
+     * renderer.restore();
      */
     restore() {
         this.getContext().restore();
@@ -22587,17 +22617,42 @@ class CanvasRenderer extends Renderer {
     }
 
     /**
-     * rotates the canvas context
-     * @param {number} angle - in radians
+     * saves the entire state of the renderer by pushing the current state onto a stack.
+     * @example
+     * // Save the current state
+     * renderer.save();
+     *
+     * // apply a transform and draw a rect
+     * renderer.tranform(matrix);
+     * renderer.fillRect(10, 10, 100, 100);
+     *
+     * // Restore to the state saved by the most recent call to save()
+     * renderer.restore();
+     */
+    save() {
+        this.getContext().save();
+    }
+
+    /**
+     * adds a rotation to the transformation matrix.
+     * @param {number} angle - the rotation angle, clockwise in radians
+     * @example
+     * // Rotated rectangle
+     * renderer.rotate((45 * Math.PI) / 180);
+     * renderer.setColor("red");
+     * renderer.fillRect(10, 10, 100, 100);
+     *
+     * // Reset transformation matrix to the identity matrix
+     * renderer.setTransform(1, 0, 0, 1, 0, 0);
      */
     rotate(angle) {
         this.getContext().rotate(angle);
     }
 
     /**
-     * scales the canvas context
-     * @param {number} x
-     * @param {number} y
+     * adds a scaling transformation to the renderer units horizontally and/or vertically
+     * @param {number} x - Scaling factor in the horizontal direction. A negative value flips pixels across the vertical axis. A value of 1 results in no horizontal scaling.
+     * @param {number} y - Scaling factor in the vertical direction. A negative value flips pixels across the horizontal axis. A value of 1 results in no vertical scaling
      */
     scale(x, y) {
         this.getContext().scale(x, y);
@@ -22674,9 +22729,9 @@ class CanvasRenderer extends Renderer {
     }
 
     /**
-     * Translates the context to the given position
-     * @param {number} x
-     * @param {number} y
+     * adds a translation transformation to the current matrix.
+     * @param {number} x - Distance to move in the horizontal direction. Positive values are to the right, and negative to the left.
+     * @param {number} y - Distance to move in the vertical direction. Positive values are down, and negative are up.
      */
     translate(x, y) {
         if (this.settings.subPixel === false) {
@@ -31766,7 +31821,17 @@ class WebGLRenderer extends Renderer {
     }
 
     /**
-     * restores the canvas context
+     * restores the most recently saved renderer state by popping the top entry in the drawing state stack
+     * @example
+     * // Save the current state
+     * renderer.save();
+     *
+     * // apply a transform and draw a rect
+     * renderer.tranform(matrix);
+     * renderer.fillRect(10, 10, 100, 100);
+     *
+     * // Restore to the state saved by the most recent call to save()
+     * renderer.restore();
      */
     restore() {
         // do nothing if there is no saved states
@@ -31799,7 +31864,17 @@ class WebGLRenderer extends Renderer {
     }
 
     /**
-     * saves the canvas context
+     * saves the entire state of the renderer by pushing the current state onto a stack.
+     * @example
+     * // Save the current state
+     * renderer.save();
+     *
+     * // apply a transform and draw a rect
+     * renderer.tranform(matrix);
+     * renderer.fillRect(10, 10, 100, 100);
+     *
+     * // Restore to the state saved by the most recent call to save()
+     * renderer.restore();
      */
     save() {
         this._colorStack.push(this.currentColor.clone());
@@ -31814,17 +31889,25 @@ class WebGLRenderer extends Renderer {
     }
 
     /**
-     * rotates the uniform matrix
-     * @param {number} angle - in radians
+     * adds a rotation to the transformation matrix.
+     * @param {number} angle - the rotation angle, clockwise in radians
+     * @example
+     * // Rotated rectangle
+     * renderer.rotate((45 * Math.PI) / 180);
+     * renderer.setColor("red");
+     * renderer.fillRect(10, 10, 100, 100);
+     *
+     * // Reset transformation matrix to the identity matrix
+     * renderer.setTransform(1, 0, 0, 1, 0, 0);
      */
     rotate(angle) {
         this.currentTransform.rotate(angle);
     }
 
     /**
-     * scales the uniform matrix
-     * @param {number} x - x-axis scale
-     * @param {number} y - y-axis scale
+     * adds a scaling transformation to the renderer units horizontally and/or vertically
+     * @param {number} x - Scaling factor in the horizontal direction. A negative value flips pixels across the vertical axis. A value of 1 results in no horizontal scaling.
+     * @param {number} y - Scaling factor in the vertical direction. A negative value flips pixels across the horizontal axis. A value of 1 results in no vertical scaling
      */
     scale(x, y) {
         this.currentTransform.scale(x, y);
@@ -32111,9 +32194,9 @@ class WebGLRenderer extends Renderer {
     }
 
     /**
-     * Translates the uniform matrix by the given coordinates
-     * @param {number} x - x axis of the coordinate for the translation.
-     * @param {number} y - y axis of the coordinate for the translation.
+     * adds a translation transformation to the current matrix.
+     * @param {number} x - Distance to move in the horizontal direction. Positive values are to the right, and negative to the left.
+     * @param {number} y - Distance to move in the vertical direction. Positive values are down, and negative are up.
      */
     translate(x, y) {
         let currentTransform = this.currentTransform;
@@ -36191,6 +36274,17 @@ class World extends Container {
         this.app = undefined;
 
         /**
+         * the physic engine used by melonJS
+         * @see Application.Settings.physic
+         * @type {string}
+         * @default "builtin"
+         * @example
+         * // disable builtin physic
+         * me.game.world.physic = "none";
+         */
+        this.physic = "builtin";
+
+        /**
          * the rate at which the game world is updated,
          * may be greater than or lower than the display fps
          * @default 60
@@ -36222,7 +36316,7 @@ class World extends Container {
         this.bodies = new Set();
 
         /**
-         * the instance of the game world quadtree used for broadphase
+         * the instance of the game world quadtree used for broadphase (used by the builtin physic and pointer event implementation)
          * @type {QuadTree}
          */
         this.broadphase = new QuadTree(this, this.getBounds().clone(), collision.maxChildren, collision.maxDepth);
@@ -36268,8 +36362,10 @@ class World extends Container {
      * @returns {World} this game world
      */
     addBody(body) {
-        //add it to the list of active body
-        this.bodies.add(body);
+        //add it to the list of active body if builtin physic is enabled
+        if (this.physic === "builtin") {
+            this.bodies.add(body);
+        }
         return this;
     }
 
@@ -36280,8 +36376,10 @@ class World extends Container {
      * @returns {World} this game world
      */
     removeBody(body) {
-        //remove from the list of active body
-        this.bodies.delete(body);
+        //remove from the list of active body if builtin physic is enabled
+        if (this.physic === "builtin") {
+            this.bodies.delete(body);
+        }
         return this;
     }
 
@@ -36315,27 +36413,30 @@ class World extends Container {
         // insert the world container (children) into the quadtree
         this.broadphase.insertContainer(this);
 
-        // iterate through all bodies
-        this.bodies.forEach((body) => {
-            if (!body.isStatic) {
-                let ancestor = body.ancestor;
-                // if the game is not paused, and ancestor can be updated
-                if (!(isPaused && (!ancestor.updateWhenPaused)) &&
-                   (ancestor.inViewport || ancestor.alwaysUpdate)) {
-                    // apply gravity to this body
-                    this.bodyApplyGravity(body);
-                    // body update function (this moves it)
-                    if (body.update(dt) === true) {
-                        // mark ancestor as dirty
-                        ancestor.isDirty = true;
+        // only iterate through object is builtin physic is enabled
+        if (this.physic === "builtin") {
+            // iterate through all bodies
+            this.bodies.forEach((body) => {
+                if (!body.isStatic) {
+                    let ancestor = body.ancestor;
+                    // if the game is not paused, and ancestor can be updated
+                    if (!(isPaused && (!ancestor.updateWhenPaused)) &&
+                    (ancestor.inViewport || ancestor.alwaysUpdate)) {
+                        // apply gravity to this body
+                        this.bodyApplyGravity(body);
+                        // body update function (this moves it)
+                        if (body.update(dt) === true) {
+                            // mark ancestor as dirty
+                            ancestor.isDirty = true;
+                        }
+                        // handle collisions against other objects
+                        this.detector.collisions(ancestor);
+                        // clear body force
+                        body.force.set(0, 0);
                     }
-                    // handle collisions against other objects
-                    this.detector.collisions(ancestor);
-                    // clear body force
-                    body.force.set(0, 0);
                 }
-            }
-        });
+            });
+        }
 
         // call the super constructor
         return super.update(dt);
@@ -37456,6 +37557,7 @@ const defaultSettings = {
     transparent : false,
     premultipliedAlpha: true,
     blendMode : "normal",
+    physic : "builtin",
     antiAlias : false,
     failIfMajorPerformanceCaveat : true,
     subPixel : false,
@@ -37497,6 +37599,7 @@ const defaultSettings = {
  * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
  * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
  * @param {Compositor} [options.compositor] - a custom compositor class (WebGL only)
+ * @param {string} [option.physic="builtin"] - the physic system to use (default: "builtin", or "none" to disable builtin physic)
  * @see Application
  * @memberof Application
  */
@@ -37596,7 +37699,7 @@ class Application {
 
         /**
          * the given settings used when creating this application
-         * @type {object}
+         * @type {Application.settings}
          */
         this.settings = undefined;
 
@@ -37753,8 +37856,12 @@ class Application {
 
         // create a new physic world
         this.world = new World(0, 0, this.settings.width, this.settings.height);
+
         // set the reference to this application instance
         this.world.app = this;
+        // set the reference to this application instance
+        this.world.physic = this.settings.physic;
+
         // app starting time
         this.lastUpdate = globalThis.performance.now();
         // manually sort child if depthTest setting is "sorting"

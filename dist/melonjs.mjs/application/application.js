@@ -88,7 +88,7 @@ class Application {
 
         /**
          * the given settings used when creating this application
-         * @type {object}
+         * @type {Application.settings}
          */
         this.settings = undefined;
 
@@ -245,8 +245,12 @@ class Application {
 
         // create a new physic world
         this.world = new World(0, 0, this.settings.width, this.settings.height);
+
         // set the reference to this application instance
         this.world.app = this;
+        // set the reference to this application instance
+        this.world.physic = this.settings.physic;
+
         // app starting time
         this.lastUpdate = globalThis.performance.now();
         // manually sort child if depthTest setting is "sorting"

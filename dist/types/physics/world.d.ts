@@ -17,6 +17,16 @@ export default class World extends Container {
      */
     app: Application;
     /**
+     * the physic engine used by melonJS
+     * @see Application.Settings.physic
+     * @type {string}
+     * @default "builtin"
+     * @example
+     * // disable builtin physic
+     * me.game.world.physic = "none";
+     */
+    physic: string;
+    /**
      * the rate at which the game world is updated,
      * may be greater than or lower than the display fps
      * @default 60
@@ -44,7 +54,7 @@ export default class World extends Container {
      */
     bodies: Set<Body>;
     /**
-     * the instance of the game world quadtree used for broadphase
+     * the instance of the game world quadtree used for broadphase (used by the builtin physic and pointer event implementation)
      * @type {QuadTree}
      */
     broadphase: QuadTree;

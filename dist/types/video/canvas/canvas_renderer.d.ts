@@ -258,22 +258,50 @@ export default class CanvasRenderer extends Renderer {
      */
     fillPoint(x: number, y: number): void;
     /**
-     * save the canvas context
-     */
-    save(): void;
-    /**
-     * restores the canvas context
+     * restores the most recently saved renderer state by popping the top entry in the drawing state stack
+     * @example
+     * // Save the current state
+     * renderer.save();
+     *
+     * // apply a transform and draw a rect
+     * renderer.tranform(matrix);
+     * renderer.fillRect(10, 10, 100, 100);
+     *
+     * // Restore to the state saved by the most recent call to save()
+     * renderer.restore();
      */
     restore(): void;
     /**
-     * rotates the canvas context
-     * @param {number} angle - in radians
+     * saves the entire state of the renderer by pushing the current state onto a stack.
+     * @example
+     * // Save the current state
+     * renderer.save();
+     *
+     * // apply a transform and draw a rect
+     * renderer.tranform(matrix);
+     * renderer.fillRect(10, 10, 100, 100);
+     *
+     * // Restore to the state saved by the most recent call to save()
+     * renderer.restore();
+     */
+    save(): void;
+    /**
+     * adds a rotation to the transformation matrix.
+     * @param {number} angle - the rotation angle, clockwise in radians
+     * @example
+     * // Rotated rectangle
+     * renderer.rotate((45 * Math.PI) / 180);
+     * renderer.setColor("red");
+     * renderer.fillRect(10, 10, 100, 100);
+     *
+     * // Reset transformation matrix to the identity matrix
+     * renderer.setTransform(1, 0, 0, 1, 0, 0);
      */
     rotate(angle: number): void;
     /**
-     * scales the canvas context
-     * @param {number} x
-     * @param {number} y
+     * adds a scaling transformation to the renderer units horizontally and/or vertically
+     * @param {number} x - Scaling factor in the horizontal direction. A negative value flips pixels across the vertical axis. A value of 1 results in no horizontal scaling.
+     * @param {number} y - Scaling factor in the vertical direction. A negative value flips pixels across the horizontal axis. A value of 1 results in no vertical scaling
      */
     scale(x: number, y: number): void;
     /**
@@ -309,9 +337,9 @@ export default class CanvasRenderer extends Renderer {
      */
     transform(mat2d: Matrix2d): void;
     /**
-     * Translates the context to the given position
-     * @param {number} x
-     * @param {number} y
+     * adds a translation transformation to the current matrix.
+     * @param {number} x - Distance to move in the horizontal direction. Positive values are to the right, and negative to the left.
+     * @param {number} y - Distance to move in the vertical direction. Positive values are down, and negative are up.
      */
     translate(x: number, y: number): void;
     /**

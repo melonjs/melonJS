@@ -60,9 +60,9 @@ export default class Application {
     isInitialized: boolean;
     /**
      * the given settings used when creating this application
-     * @type {object}
+     * @type {Application.settings}
      */
-    settings: object;
+    settings: Application.settings;
     /**
      * Specify whether to pause this app when losing focus
      * @type {boolean}
