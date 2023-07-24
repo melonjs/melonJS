@@ -31,7 +31,6 @@ class TextureCache {
         this.tinted.clear();
         this.units.clear();
         this.usedUnits.clear();
-        this.usedUnits = new Set();
     }
 
     /**
