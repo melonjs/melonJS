@@ -695,6 +695,7 @@ export default class CanvasRenderer extends Renderer {
 
     /**
      * Multiply given matrix into the renderer tranformation matrix
+     * @see {@link CanvasRenderer.setTransform} which will reset the current transform matrix prior to performing the new transformation
      * @param {Matrix2d} mat2d - Matrix to transform by
      */
     transform(mat2d) {
