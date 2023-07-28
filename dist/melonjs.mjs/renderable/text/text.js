@@ -282,19 +282,14 @@ class Text extends Renderable {
         let width = Math.ceil(this.metrics.width),
             height = Math.ceil(this.metrics.height);
 
-        if (typeof renderer.gl !== "undefined") {
-            // make sure the right compositor is active
-            renderer.setCompositor("quad");
-            // invalidate the previous corresponding texture so that it can reuploaded once changed
-            this.glTextureUnit = renderer.cache.getUnit(renderer.cache.get(this.canvasTexture.canvas));
-            renderer.currentCompositor.unbindTexture2D(null, this.glTextureUnit);
-
-            if (renderer.WebGLVersion === 1) {
-                // round size to next Pow2
-                width = nextPowerOfTwo(this.metrics.width);
-                height = nextPowerOfTwo(this.metrics.height);
-            }
+        if (renderer.WebGLVersion === 1) {
+            // round size to next Pow2
+            width = nextPowerOfTwo(this.metrics.width);
+            height = nextPowerOfTwo(this.metrics.height);
         }
+
+        // invalidate the texture
+        this.canvasTexture.invalidate(renderer);
 
         // resize the cache canvas if necessary
         if (this.canvasTexture.width < width || this.canvasTexture.height < height) {

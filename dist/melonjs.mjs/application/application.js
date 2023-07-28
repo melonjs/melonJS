@@ -20,8 +20,7 @@ import { WEBGL, CANVAS, AUTO } from '../const.js';
 
 /**
  * @classdesc
- * An Application represents a single melonJS game.
- * An Application is responsible for updating (each frame) all the related object status and draw them.
+ * An Application represents a single melonJS game, and is responsible for updating (each frame) all the related object status and draw them.
  * @see game
  */
 class Application {
@@ -30,10 +29,6 @@ class Application {
      * @param {number} height - The height of the canvas viewport
      * @param {Application.Settings} [options] - The optional parameters for the application and default renderer
      * @throws Will throw an exception if it fails to instantiate a renderer
-     * @example
-     * let my game = new Application(640, 480, {renderer: me.video.AUTO}) {
-     *     ....
-     * }
      */
     constructor(width, height, options) {
 

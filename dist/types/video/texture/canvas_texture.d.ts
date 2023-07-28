@@ -1,6 +1,7 @@
 export default CanvasTexture;
 /**
  * Creates a Canvas Texture of the given size
+ * (when using WebGL, use `invalidate` to force a reupload of the corresponding texture)
  */
 declare class CanvasTexture {
     /**
@@ -97,6 +98,13 @@ declare class CanvasTexture {
         type?: string | undefined;
         quality?: number | undefined;
     } | undefined): Promise<any>;
+    /**
+     * invalidate the current CanvasTexture, and force a reupload of the corresponding texture
+     * (call this if you modify the canvas content between two draw calls)
+     * @param {CanvasRenderer|WebGLRenderer} renderer - the renderer to which this canvas texture is attached
+     */
+    invalidate(renderer: CanvasRenderer | WebGLRenderer): void;
+    glTextureUnit: any;
     /**
      * @ignore
      */

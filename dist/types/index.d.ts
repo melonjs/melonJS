@@ -31,6 +31,12 @@ export let initialized: boolean;
  * @see boot
  */
 export let skipAutoInit: boolean;
+/**
+ * game is a default instance of a melonJS Application and represents your current game,
+ * it contains all the objects, tilemap layers, current viewport, collision map, etc...<br>
+ * @namespace game
+ * @see Application
+ */
 export const game: Application;
 import * as audio from "./audio/audio.js";
 import collision from "./physics/collision.js";

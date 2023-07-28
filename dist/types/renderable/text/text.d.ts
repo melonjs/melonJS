@@ -123,7 +123,6 @@ export default class Text extends Renderable {
      * @returns {Text} this object for chaining
      */
     setText(value?: number | string | string[]): Text;
-    glTextureUnit: any;
     /**
      * measure the given text size in pixels
      * @param {CanvasRenderer|WebGLRenderer} renderer - reference to the active renderer
@@ -157,6 +156,7 @@ export default class Text extends Renderable {
      * @ignore
      */
     destroy(): void;
+    glTextureUnit: any;
 }
 import Renderable from "../renderable.js";
 import Color from "../../math/color.js";
