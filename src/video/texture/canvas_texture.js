@@ -12,6 +12,7 @@ let defaultAttributes = {
 
 /**
  * Creates a Canvas Texture of the given size
+ * (when using WebGL, use `invalidate` to force a reupload of the corresponding texture)
  */
 class CanvasTexture {
     /**
@@ -175,6 +176,21 @@ class CanvasTexture {
         return new Promise((resolve) => {
             resolve(this.canvas.toDataURL(options));
         });
+    }
+
+    /**
+     * invalidate the current CanvasTexture, and force a reupload of the corresponding texture
+     * (call this if you modify the canvas content between two draw calls)
+     * @param {CanvasRenderer|WebGLRenderer} renderer - the renderer to which this canvas texture is attached
+     */
+    invalidate(renderer) {
+        if (typeof renderer.gl !== "undefined") {
+            // make sure the right compositor is active
+            renderer.setCompositor("quad");
+            // invalidate the previous corresponding texture so that it can reuploaded once changed
+            this.glTextureUnit = renderer.cache.getUnit(renderer.cache.get(this.canvas));
+            renderer.currentCompositor.unbindTexture2D(null, this.glTextureUnit);
+        }
     }
 
     /**

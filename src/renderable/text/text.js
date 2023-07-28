@@ -275,19 +275,14 @@ export default class Text extends Renderable {
         let width = Math.ceil(this.metrics.width),
             height = Math.ceil(this.metrics.height);
 
-        if (typeof globalRenderer.gl !== "undefined") {
-            // make sure the right compositor is active
-            globalRenderer.setCompositor("quad");
-            // invalidate the previous corresponding texture so that it can reuploaded once changed
-            this.glTextureUnit = globalRenderer.cache.getUnit(globalRenderer.cache.get(this.canvasTexture.canvas));
-            globalRenderer.currentCompositor.unbindTexture2D(null, this.glTextureUnit);
-
-            if (globalRenderer.WebGLVersion === 1) {
-                // round size to next Pow2
-                width = nextPowerOfTwo(this.metrics.width);
-                height = nextPowerOfTwo(this.metrics.height);
-            }
+        if (globalRenderer.WebGLVersion === 1) {
+            // round size to next Pow2
+            width = nextPowerOfTwo(this.metrics.width);
+            height = nextPowerOfTwo(this.metrics.height);
         }
+
+        // invalidate the texture
+        this.canvasTexture.invalidate(globalRenderer);
 
         // resize the cache canvas if necessary
         if (this.canvasTexture.width < width || this.canvasTexture.height < height) {

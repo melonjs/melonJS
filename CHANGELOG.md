@@ -5,6 +5,7 @@
 ### Added
 - Doc: add proper documentation and example for Renderer drawing-related APIs
 - Physic: new `physic` flag allowing to disable the builtin physic implementation
+- Renderer: new TextureCanvas `invalidate()` method to force reuploading the corresponding WebGL Texture
 
 ### Fixed
 - Doc: fix missing default `game` application instance
