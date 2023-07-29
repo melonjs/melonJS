@@ -1,6 +1,6 @@
 # Changelog
 
-## [15.8.0] (melonJS 2) - _2023-xx-xx_
+## [15.8.0] (melonJS 2) - _2023-07-29_
 
 ### Added
 - Doc: add proper documentation and example for Renderer drawing-related APIs
