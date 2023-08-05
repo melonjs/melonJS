@@ -814,7 +814,7 @@ export default class WebGLRenderer extends Renderer {
         this.path2D.beginPath();
         this.path2D.arc(x, y, radius, start, end, antiClockwise);
         if (fill === false) {
-            this.currentCompositor.drawVertices(this.gl.LINE_STRIP, this.path2D.points);
+            this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
         } else {
             this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
         }
@@ -846,7 +846,7 @@ export default class WebGLRenderer extends Renderer {
         this.path2D.beginPath();
         this.path2D.ellipse(x, y, w, h, 0, 0, 360);
         if (fill === false) {
-            this.currentCompositor.drawVertices(this.gl.LINE_STRIP, this.path2D.points);
+            this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
         } else {
             this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
         }
@@ -974,7 +974,7 @@ export default class WebGLRenderer extends Renderer {
         this.path2D.beginPath();
         this.path2D.roundRect(x, y, width, height, radius);
         if (fill === false) {
-            this.currentCompositor.drawVertices(this.gl.LINE_STRIP, this.path2D.points);
+            this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
         } else {
             this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
         }
