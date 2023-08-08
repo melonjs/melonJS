@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.8.0
+ * melonJS Game Engine - v15.9.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -20620,7 +20620,6 @@ class Path2D {
      * @param {boolean} [anticlockwise=false] - an optional boolean value. If true, draws the arc counter-clockwise between the start and end angles.
      */
     arc(x, y, radius, startAngle, endAngle, anticlockwise = false) {
-        let points = this.points;
         // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
         //bring angles all in [0, 2*PI] range
         if (startAngle === endAngle) return;
@@ -20650,12 +20649,16 @@ class Path2D {
         const dangle = diff / nr_of_interpolation_points;
         const angleStep = dangle * direction;
 
+        this.moveTo(x + radius * Math.cos(startAngle), y + radius * Math.sin(startAngle));
+
         let angle = startAngle;
         for (let j = 0; j < nr_of_interpolation_points; j++) {
-            points.push(pool.pull("Point", x + radius * Math.cos(angle), y + radius * Math.sin(angle)));
+            this.lineTo(x + radius * Math.cos(angle), y + radius * Math.sin(angle));
             angle += angleStep;
         }
-        points.push(pool.pull("Point", x + radius * Math.cos(endAngle), y + radius * Math.sin(endAngle)));
+
+        this.lineTo(x + radius * Math.cos(endAngle), y + radius * Math.sin(endAngle));
+
         this.isDirty = true;
     }
 
@@ -20689,7 +20692,7 @@ class Path2D {
         let tangent1_pointx = x1 + a0 * adj_l, tangent1_pointy = y1 + a1 * adj_l;
         let tangent2_pointx = x1 + b0 * adj_l, tangent2_pointy = y1 + b1 * adj_l;
 
-        points.push(pool.pull("Point", tangent1_pointx, tangent1_pointy));
+        this.moveTo(tangent1_pointx, tangent1_pointy);
 
         let bisec0 = (a0 + b0) / 2.0, bisec1 = (a1 + b1) / 2.0;
         let bisec_l = Math.sqrt(Math.pow(bisec0, 2) + Math.pow(bisec1, 2));
@@ -20717,7 +20720,6 @@ class Path2D {
      * @param {boolean} [anticlockwise=false] - an optional boolean value which, if true, draws the ellipse counterclockwise (anticlockwise).
      */
     ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle, anticlockwise = false) {
-        let points = this.points;
         // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
         if (startAngle === endAngle) return;
         let fullCircle = anticlockwise ? Math.abs(startAngle-endAngle) >= (TAU) : Math.abs(endAngle-startAngle) >= (TAU);
@@ -20750,14 +20752,19 @@ class Path2D {
         let angle = startAngle;
         const cos_rotation = Math.cos(rotation);
         const sin_rotation = Math.sin(rotation);
+
+        this.moveTo(x + radiusX * Math.cos(startAngle), y + radiusY * Math.sin(startAngle));
+
         for (let j = 0; j < nr_of_interpolation_points; j++) {
             const _x1 = radiusX * Math.cos(angle);
             const _y1 = radiusY * Math.sin(angle);
             const _x2 = x + _x1 * cos_rotation - _y1 * sin_rotation;
             const _y2 = y + _x1 * sin_rotation + _y1 * cos_rotation;
-            points.push(pool.pull("Point", _x2, _y2));
+            this.lineTo( _x2, _y2);
             angle += angleStep;
         }
+        // close the ellipse
+        this.lineTo(x + radiusX * Math.cos(startAngle), y + radiusY * Math.sin(startAngle));
         this.isDirty = true;
     }
 
@@ -32054,7 +32061,7 @@ class WebGLRenderer extends Renderer {
         this.path2D.beginPath();
         this.path2D.arc(x, y, radius, start, end, antiClockwise);
         if (fill === false) {
-            this.currentCompositor.drawVertices(this.gl.LINE_STRIP, this.path2D.points);
+            this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
         } else {
             this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
         }
@@ -32086,7 +32093,7 @@ class WebGLRenderer extends Renderer {
         this.path2D.beginPath();
         this.path2D.ellipse(x, y, w, h, 0, 0, 360);
         if (fill === false) {
-            this.currentCompositor.drawVertices(this.gl.LINE_STRIP, this.path2D.points);
+            this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
         } else {
             this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
         }
@@ -32214,7 +32221,7 @@ class WebGLRenderer extends Renderer {
         this.path2D.beginPath();
         this.path2D.roundRect(x, y, width, height, radius);
         if (fill === false) {
-            this.currentCompositor.drawVertices(this.gl.LINE_STRIP, this.path2D.points);
+            this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
         } else {
             this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
         }
@@ -38164,9 +38171,9 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "15.8.0"
+         * @default "15.9.0"
          */
-        this.version = "15.8.0";
+        this.version = "15.9.0";
     }
 }
 
@@ -38393,7 +38400,7 @@ class GUI_Object extends UISpriteElement {
  * @name version
  * @type {string}
  */
-const version = "15.8.0";
+const version = "15.9.0";
 
 /**
  * a flag indicating that melonJS is fully initialized
