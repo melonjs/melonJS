@@ -98,7 +98,7 @@
     "doc": "npm run doc-prod",
     "serve": "python3 -m http.server",
     "prepublishOnly": "npm run dist && npm run test",
-    "clean": "del-cli --force build/*.* dist/*.* docs",
+    "clean": "del-cli --force build/*.* dist/** docs",
     "types": "tsc"
   }
 }
