@@ -2,6 +2,8 @@
 
 ## [15.9.0] (melonJS 2) - _2023-08-xx_
 
+### Added
+- Renderer: fix/enable batching for all ellipse & arc(To) WebGL stroke operations
 
 ## [15.8.0] (melonJS 2) - _2023-07-29_
 
