@@ -5,6 +5,7 @@ import Container from "../renderable/container.js";
 import collision from "./collision.js";
 import Detector from "./detector.js";
 import state from "./../state/state.js";
+import { hasRegisteredEvents } from "../input/pointerevent.js";
 
 /**
  * @classdesc
@@ -168,11 +169,13 @@ export default class World extends Container {
     update(dt) {
         let isPaused = state.isPaused();
 
-        // clear the quadtree
-        this.broadphase.clear();
-
-        // insert the world container (children) into the quadtree
-        this.broadphase.insertContainer(this);
+        // only update the quadtree if necessary
+        if (this.physic === "builtin" || hasRegisteredEvents() === true) {
+            // clear the quadtree
+            this.broadphase.clear();
+            // insert the world container (children) into the quadtree
+            this.broadphase.insertContainer(this);
+        }
 
         // only iterate through object is builtin physic is enabled
         if (this.physic === "builtin") {
