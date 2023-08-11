@@ -531,6 +531,16 @@ export function hasActiveEvents() {
 }
 
 /**
+ * return true if there are register pointer events
+ * @memberof input
+ * @see registerPointerEvent
+ * @returns true if there are pending events
+ */
+export function hasRegisteredEvents() {
+    return eventHandlers.size > 0;
+}
+
+/**
  * Translate the specified x and y values from the global (absolute)
  * coordinate to local (viewport) relative coordinate.
  * @memberof input

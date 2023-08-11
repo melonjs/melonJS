@@ -4,6 +4,7 @@
 
 ### Added
 - Input: new `hasActiveEvents` returning true if there are any pending events in the queue
+- Input: new `hasRegisteredEvents` returning true if there are registered pointer event listeners
 - Renderer: fix/enable batching for all ellipse & arc(To) WebGL stroke operations
 
 ## [15.8.0] (melonJS 2) - _2023-07-29_
