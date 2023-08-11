@@ -164,11 +164,9 @@ export default class World extends Container {
     /**
      * update the game world
      * @param {number} dt - the time passed since the last frame update
-     * @returns {boolean} true if the word is dirty
+     * @returns {boolean} true if the world is dirty
      */
     update(dt) {
-        let isPaused = state.isPaused();
-
         // only update the quadtree if necessary
         if (this.physic === "builtin" || hasRegisteredEvents() === true) {
             // clear the quadtree
@@ -177,15 +175,26 @@ export default class World extends Container {
             this.broadphase.insertContainer(this);
         }
 
-        // only iterate through object is builtin physic is enabled
+        // update the builtin physic simulation
+        this.step(dt);
+
+        // call the super constructor
+        return super.update(dt);
+    }
+
+    /**
+     * update the builtin physic simulation by one step (called by the game world update method)
+     * @param {number} dt - the time passed since the last frame update
+     */
+    step(dt) {
         if (this.physic === "builtin") {
+            let isPaused = state.isPaused();
             // iterate through all bodies
             this.bodies.forEach((body) => {
                 if (!body.isStatic) {
                     let ancestor = body.ancestor;
                     // if the game is not paused, and ancestor can be updated
-                    if (!(isPaused && (!ancestor.updateWhenPaused)) &&
-                    (ancestor.inViewport || ancestor.alwaysUpdate)) {
+                    if (!(isPaused && (!ancestor.updateWhenPaused)) && (ancestor.inViewport || ancestor.alwaysUpdate)) {
                         // apply gravity to this body
                         this.bodyApplyGravity(body);
                         // body update function (this moves it)
@@ -201,9 +210,7 @@ export default class World extends Container {
                 }
             });
         }
-
-        // call the super constructor
-        return super.update(dt);
+        event.emit(event.WORLD_STEP, dt);
     }
 }
 

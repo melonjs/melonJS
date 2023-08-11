@@ -230,6 +230,19 @@ export const GAME_BEFORE_DRAW = "me.game.beforeDraw";
  */
 export const GAME_AFTER_DRAW = "me.game.afterDraw";
 
+
+/**
+ * Event for when the physic world is updated
+ * Data passed : {number} time the current time stamp
+ * @public
+ * @constant
+ * @type {string}
+ * @name WORLD_STEP
+ * @memberof event
+ * @see event.on
+ */
+export const WORLD_STEP = "me.world.step";
+
 /**
  * Event for when a level is loaded <br>
  * Data passed : {string} Level Name

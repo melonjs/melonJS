@@ -5,7 +5,11 @@
 ### Added
 - Input: new `hasActiveEvents` returning true if there are any pending events in the queue
 - Input: new `hasRegisteredEvents` returning true if there are registered pointer event listeners
+- Physic: new `WORLD_STEP` event emmitted after the builtin physic world has been updated (if enabled)
 - Renderer: fix/enable batching for all ellipse & arc(To) WebGL stroke operations
+
+### Changed
+- Physic: split the world update method into a separate step for clearer code when using custom update logic.
 
 ## [15.8.0] (melonJS 2) - _2023-07-29_
 
