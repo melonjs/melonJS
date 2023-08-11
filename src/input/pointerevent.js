@@ -522,6 +522,15 @@ export let locked = false;
 export let throttlingInterval;
 
 /**
+ * return true if there are pending events in the queue
+ * @memberof input
+ * @returns true if there are pending events
+ */
+export function hasActiveEvents() {
+    return normalizedEvents.length > 0;
+};
+
+/**
  * Translate the specified x and y values from the global (absolute)
  * coordinate to local (viewport) relative coordinate.
  * @name globalToLocal
