@@ -59,7 +59,7 @@
     "howler": "2.2.3"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.22.9",
+    "@babel/eslint-parser": "^7.22.10",
     "@babel/plugin-syntax-import-assertions": "^7.22.5",
     "@fastify/static": "^6.10.2",
     "@melonjs/webdoc-theme": "^1.1.1",
@@ -68,7 +68,7 @@
     "@rollup/plugin-node-resolve": "^15.1.0",
     "@rollup/plugin-replace": "^5.0.2",
     "@webdoc/cli": "^2.2.0",
-    "chromedriver": "^115.0.0",
+    "chromedriver": "^115.0.1",
     "cross-env": "^7.0.3",
     "del-cli": "^5.0.0",
     "eslint": "^8.46.0",
@@ -78,8 +78,8 @@
     "fastify": "^4.21.0",
     "mocha": "^10.2.0",
     "npm-self-link": "^1.1.7",
-    "puppeteer": "^21.0.1",
-    "rollup": "^3.27.2",
+    "puppeteer": "^21.0.2",
+    "rollup": "^3.28.0",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
     "terser": "^5.19.2",
