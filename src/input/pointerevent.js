@@ -528,7 +528,7 @@ export let throttlingInterval;
  */
 export function hasActiveEvents() {
     return normalizedEvents.length > 0;
-};
+}
 
 /**
  * Translate the specified x and y values from the global (absolute)
