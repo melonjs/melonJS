@@ -522,7 +522,7 @@ export let locked = false;
 export let throttlingInterval;
 
 /**
- * return true if there are pending events in the queue
+ * return true if there are pending pointer events in the queue
  * @memberof input
  * @returns true if there are pending events
  */
