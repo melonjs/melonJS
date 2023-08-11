@@ -83,6 +83,11 @@ export default class World extends Container {
      * @param {Body} body
      */
     private bodyApplyGravity;
+    /**
+     * update the builtin physic simulation by one step (called by the game world update method)
+     * @param {number} dt - the time passed since the last frame update
+     */
+    step(dt: number): void;
 }
 import Container from "../renderable/container.js";
 import Vector2d from "./../math/vector2.js";

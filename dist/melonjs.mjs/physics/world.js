@@ -6,12 +6,13 @@
  * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 import Vector2d from '../math/vector2.js';
-import { on, GAME_RESET, LEVEL_LOADED } from '../system/event.js';
+import { on, GAME_RESET, emit, LEVEL_LOADED, WORLD_STEP } from '../system/event.js';
 import QuadTree from './quadtree.js';
 import Container from '../renderable/container.js';
 import collision from './collision.js';
 import Detector from './detector.js';
 import state from '../state/state.js';
+import { hasRegisteredEvents } from '../input/pointerevent.js';
 
 /**
  * @classdesc
@@ -170,26 +171,37 @@ class World extends Container {
     /**
      * update the game world
      * @param {number} dt - the time passed since the last frame update
-     * @returns {boolean} true if the word is dirty
+     * @returns {boolean} true if the world is dirty
      */
     update(dt) {
-        let isPaused = state.isPaused();
+        // only update the quadtree if necessary
+        if (this.physic === "builtin" || hasRegisteredEvents() === true) {
+            // clear the quadtree
+            this.broadphase.clear();
+            // insert the world container (children) into the quadtree
+            this.broadphase.insertContainer(this);
+        }
 
-        // clear the quadtree
-        this.broadphase.clear();
+        // update the builtin physic simulation
+        this.step(dt);
 
-        // insert the world container (children) into the quadtree
-        this.broadphase.insertContainer(this);
+        // call the super constructor
+        return super.update(dt);
+    }
 
-        // only iterate through object is builtin physic is enabled
+    /**
+     * update the builtin physic simulation by one step (called by the game world update method)
+     * @param {number} dt - the time passed since the last frame update
+     */
+    step(dt) {
         if (this.physic === "builtin") {
+            let isPaused = state.isPaused();
             // iterate through all bodies
             this.bodies.forEach((body) => {
                 if (!body.isStatic) {
                     let ancestor = body.ancestor;
                     // if the game is not paused, and ancestor can be updated
-                    if (!(isPaused && (!ancestor.updateWhenPaused)) &&
-                    (ancestor.inViewport || ancestor.alwaysUpdate)) {
+                    if (!(isPaused && (!ancestor.updateWhenPaused)) && (ancestor.inViewport || ancestor.alwaysUpdate)) {
                         // apply gravity to this body
                         this.bodyApplyGravity(body);
                         // body update function (this moves it)
@@ -205,9 +217,7 @@ class World extends Container {
                 }
             });
         }
-
-        // call the super constructor
-        return super.update(dt);
+        emit(WORLD_STEP, dt);
     }
 }
 

@@ -247,6 +247,17 @@ export const GAME_BEFORE_DRAW: string;
  */
 export const GAME_AFTER_DRAW: string;
 /**
+ * Event for when the physic world is updated
+ * Data passed : {number} time the current time stamp
+ * @public
+ * @constant
+ * @type {string}
+ * @name WORLD_STEP
+ * @memberof event
+ * @see event.on
+ */
+export const WORLD_STEP: string;
+/**
  * Event for when a level is loaded <br>
  * Data passed : {string} Level Name
  * @public

@@ -9289,6 +9289,19 @@ const GAME_BEFORE_DRAW = "me.game.beforeDraw";
  */
 const GAME_AFTER_DRAW = "me.game.afterDraw";
 
+
+/**
+ * Event for when the physic world is updated
+ * Data passed : {number} time the current time stamp
+ * @public
+ * @constant
+ * @type {string}
+ * @name WORLD_STEP
+ * @memberof event
+ * @see event.on
+ */
+const WORLD_STEP = "me.world.step";
+
 /**
  * Event for when a level is loaded <br>
  * Data passed : {string} Level Name
@@ -9671,6 +9684,7 @@ var event = {
 	WINDOW_ONORIENTATION_CHANGE: WINDOW_ONORIENTATION_CHANGE,
 	WINDOW_ONRESIZE: WINDOW_ONRESIZE,
 	WINDOW_ONSCROLL: WINDOW_ONSCROLL,
+	WORLD_STEP: WORLD_STEP,
 	emit: emit,
 	off: off,
 	on: on,
@@ -16462,11 +16476,28 @@ let locked = false;
 let throttlingInterval;
 
 /**
+ * return true if there are pending pointer events in the queue
+ * @memberof input
+ * @returns true if there are pending events
+ */
+function hasActiveEvents() {
+    return normalizedEvents.length > 0;
+}
+
+/**
+ * return true if there are register pointer events
+ * @memberof input
+ * @see registerPointerEvent
+ * @returns true if there are pending events
+ */
+function hasRegisteredEvents() {
+    return eventHandlers.size > 0;
+}
+
+/**
  * Translate the specified x and y values from the global (absolute)
  * coordinate to local (viewport) relative coordinate.
- * @name globalToLocal
  * @memberof input
- * @public
  * @param {number} x - the global x coordinate to be translated.
  * @param {number} y - the global y coordinate to be translated.
  * @param {Vector2d} [v] - an optional vector object where to set the translated coordinates
@@ -16495,10 +16526,8 @@ function globalToLocal(x, y, v) {
 /**
  * enable/disable all gestures on the given element.<br>
  * by default melonJS will disable browser handling of all panning and zooming gestures.
- * @name setTouchAction
  * @memberof input
  * @see https://developer.mozilla.org/en-US/docs/Web/CSS/touch-action
- * @public
  * @param {HTMLCanvasElement} element
  * @param {string} [value="none"]
  */
@@ -16511,9 +16540,7 @@ function setTouchAction(element, value) {
  * Left button – 0
  * Middle button – 1
  * Right button – 2
- * @name bindPointer
  * @memberof input
- * @public
  * @param {number} [button=input.pointer.LEFT] - (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
  * @param {input.KEY} keyCode
  * @example
@@ -16541,9 +16568,7 @@ function bindPointer() {
 
 /**
  * unbind the defined keycode
- * @name unbindPointer
  * @memberof input
- * @public
  * @param {number} [button=input.pointer.LEFT] - (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
  * @example
  * me.input.unbindPointer(me.input.pointer.LEFT);
@@ -16562,9 +16587,7 @@ function unbindPointer(button) {
  * melonJS will pass a me.Pointer object to the defined callback.
  * @see Pointer
  * @see {@link http://www.w3.org/TR/pointerevents/#list-of-pointer-events|W3C Pointer Event list}
- * @name registerPointerEvent
  * @memberof input
- * @public
  * @param {string} eventType - The event type for which the object is registering <br>
  * melonJS currently supports: <br>
  * <ul>
@@ -16633,9 +16656,7 @@ function registerPointerEvent(eventType, region, callback) {
 /**
  * allows the removal of event listeners from the object target.
  * @see {@link http://www.w3.org/TR/pointerevents/#list-of-pointer-events|W3C Pointer Event list}
- * @name releasePointerEvent
  * @memberof input
- * @public
  * @param {string} eventType - The event type for which the object was registered. See {@link input.registerPointerEvent}
  * @param {Rect|Polygon|Line|Ellipse} region - the registered region to release for this event
  * @param {Function} [callback="all"] - if specified unregister the event only for the specific callback
@@ -16677,9 +16698,7 @@ function releasePointerEvent(eventType, region, callback) {
 
 /**
  * allows the removal of all registered event listeners from the object target.
- * @name releaseAllPointerEvents
  * @memberof input
- * @public
  * @param {Rect|Polygon|Line|Ellipse} region - the registered region to release event from
  * @example
  * // release all registered event on the
@@ -16696,9 +16715,7 @@ function releaseAllPointerEvents(region) {
 /**
  * request for the pointer to be locked on the parent DOM element.
  * (Must be called in a click event or an event that requires user interaction)
- * @name requestPointerLock
  * @memberof input
- * @public
  * @returns {boolean} return true if the request was successfully submitted
  * @example
  * // register on the pointer lock change event
@@ -16719,9 +16736,7 @@ function requestPointerLock() {
 
 /**
  * Initiates an exit from pointer lock state
- * @name exitPointerLock
  * @memberof input
- * @public
  * @returns {boolean} return true if the request was successfully submitted
  */
 function exitPointerLock() {
@@ -17240,6 +17255,8 @@ var input = {
 	exitPointerLock: exitPointerLock,
 	getBindingKey: getBindingKey,
 	globalToLocal: globalToLocal,
+	hasActiveEvents: hasActiveEvents,
+	hasRegisteredEvents: hasRegisteredEvents,
 	initKeyboardEvent: initKeyboardEvent,
 	isKeyPressed: isKeyPressed,
 	get keyBoardEventTarget () { return keyBoardEventTarget; },
@@ -36503,26 +36520,37 @@ class World extends Container {
     /**
      * update the game world
      * @param {number} dt - the time passed since the last frame update
-     * @returns {boolean} true if the word is dirty
+     * @returns {boolean} true if the world is dirty
      */
     update(dt) {
-        let isPaused = state$1.isPaused();
+        // only update the quadtree if necessary
+        if (this.physic === "builtin" || hasRegisteredEvents() === true) {
+            // clear the quadtree
+            this.broadphase.clear();
+            // insert the world container (children) into the quadtree
+            this.broadphase.insertContainer(this);
+        }
 
-        // clear the quadtree
-        this.broadphase.clear();
+        // update the builtin physic simulation
+        this.step(dt);
 
-        // insert the world container (children) into the quadtree
-        this.broadphase.insertContainer(this);
+        // call the super constructor
+        return super.update(dt);
+    }
 
-        // only iterate through object is builtin physic is enabled
+    /**
+     * update the builtin physic simulation by one step (called by the game world update method)
+     * @param {number} dt - the time passed since the last frame update
+     */
+    step(dt) {
         if (this.physic === "builtin") {
+            let isPaused = state$1.isPaused();
             // iterate through all bodies
             this.bodies.forEach((body) => {
                 if (!body.isStatic) {
                     let ancestor = body.ancestor;
                     // if the game is not paused, and ancestor can be updated
-                    if (!(isPaused && (!ancestor.updateWhenPaused)) &&
-                    (ancestor.inViewport || ancestor.alwaysUpdate)) {
+                    if (!(isPaused && (!ancestor.updateWhenPaused)) && (ancestor.inViewport || ancestor.alwaysUpdate)) {
                         // apply gravity to this body
                         this.bodyApplyGravity(body);
                         // body update function (this moves it)
@@ -36538,9 +36566,7 @@ class World extends Container {
                 }
             });
         }
-
-        // call the super constructor
-        return super.update(dt);
+        emit(WORLD_STEP, dt);
     }
 }
 

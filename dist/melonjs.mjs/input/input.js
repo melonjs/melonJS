@@ -5,7 +5,7 @@
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
-export { bindPointer, exitPointerLock, globalToLocal, locked, pointer, pointerEventTarget, registerPointerEvent, releaseAllPointerEvents, releasePointerEvent, requestPointerLock, setTouchAction, throttlingInterval, unbindPointer } from './pointerevent.js';
+export { bindPointer, exitPointerLock, globalToLocal, hasActiveEvents, hasRegisteredEvents, locked, pointer, pointerEventTarget, registerPointerEvent, releaseAllPointerEvents, releasePointerEvent, requestPointerLock, setTouchAction, throttlingInterval, unbindPointer } from './pointerevent.js';
 export { KEY, bindKey, getBindingKey, initKeyboardEvent, isKeyPressed, keyBoardEventTarget, keyStatus, triggerKeyEvent, unbindKey, unlockKey } from './keyboard.js';
 export { GAMEPAD, bindGamepad, setGamepadDeadzone, setGamepadMapping, unbindGamepad } from './gamepad.js';
 
