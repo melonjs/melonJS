@@ -533,9 +533,7 @@ export function hasActiveEvents() {
 /**
  * Translate the specified x and y values from the global (absolute)
  * coordinate to local (viewport) relative coordinate.
- * @name globalToLocal
  * @memberof input
- * @public
  * @param {number} x - the global x coordinate to be translated.
  * @param {number} y - the global y coordinate to be translated.
  * @param {Vector2d} [v] - an optional vector object where to set the translated coordinates
@@ -564,10 +562,8 @@ export function globalToLocal(x, y, v) {
 /**
  * enable/disable all gestures on the given element.<br>
  * by default melonJS will disable browser handling of all panning and zooming gestures.
- * @name setTouchAction
  * @memberof input
  * @see https://developer.mozilla.org/en-US/docs/Web/CSS/touch-action
- * @public
  * @param {HTMLCanvasElement} element
  * @param {string} [value="none"]
  */
@@ -580,9 +576,7 @@ export function setTouchAction(element, value) {
  * Left button – 0
  * Middle button – 1
  * Right button – 2
- * @name bindPointer
  * @memberof input
- * @public
  * @param {number} [button=input.pointer.LEFT] - (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
  * @param {input.KEY} keyCode
  * @example
@@ -610,9 +604,7 @@ export function bindPointer() {
 
 /**
  * unbind the defined keycode
- * @name unbindPointer
  * @memberof input
- * @public
  * @param {number} [button=input.pointer.LEFT] - (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
  * @example
  * me.input.unbindPointer(me.input.pointer.LEFT);
@@ -631,9 +623,7 @@ export function unbindPointer(button) {
  * melonJS will pass a me.Pointer object to the defined callback.
  * @see Pointer
  * @see {@link http://www.w3.org/TR/pointerevents/#list-of-pointer-events|W3C Pointer Event list}
- * @name registerPointerEvent
  * @memberof input
- * @public
  * @param {string} eventType - The event type for which the object is registering <br>
  * melonJS currently supports: <br>
  * <ul>
@@ -702,9 +692,7 @@ export function registerPointerEvent(eventType, region, callback) {
 /**
  * allows the removal of event listeners from the object target.
  * @see {@link http://www.w3.org/TR/pointerevents/#list-of-pointer-events|W3C Pointer Event list}
- * @name releasePointerEvent
  * @memberof input
- * @public
  * @param {string} eventType - The event type for which the object was registered. See {@link input.registerPointerEvent}
  * @param {Rect|Polygon|Line|Ellipse} region - the registered region to release for this event
  * @param {Function} [callback="all"] - if specified unregister the event only for the specific callback
@@ -746,9 +734,7 @@ export function releasePointerEvent(eventType, region, callback) {
 
 /**
  * allows the removal of all registered event listeners from the object target.
- * @name releaseAllPointerEvents
  * @memberof input
- * @public
  * @param {Rect|Polygon|Line|Ellipse} region - the registered region to release event from
  * @example
  * // release all registered event on the
@@ -765,9 +751,7 @@ export function releaseAllPointerEvents(region) {
 /**
  * request for the pointer to be locked on the parent DOM element.
  * (Must be called in a click event or an event that requires user interaction)
- * @name requestPointerLock
  * @memberof input
- * @public
  * @returns {boolean} return true if the request was successfully submitted
  * @example
  * // register on the pointer lock change event
@@ -788,9 +772,7 @@ export function requestPointerLock() {
 
 /**
  * Initiates an exit from pointer lock state
- * @name exitPointerLock
  * @memberof input
- * @public
  * @returns {boolean} return true if the request was successfully submitted
  */
 export function exitPointerLock() {
