@@ -94,9 +94,8 @@ export function patch(proto, name, fn) {
  * @example
  * // register a new plugin
  * me.plugin.register(TestPlugin, "testPlugin");
- * // the plugin then also become available
- * // under then me.plugins namespace
- * me.plugins.testPlugin.myfunction ();
+ * // the `testPlugin` class instance can also be accessed through me.plugin.cache
+ * me.plugin.cache.testPlugin.myfunction ();
  */
 export function register(plugin, name = plugin.toString().match(/ (\w+)/)[1]) {
     // ensure me.plugins[name] is not already "used"
