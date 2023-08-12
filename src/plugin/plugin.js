@@ -1,5 +1,6 @@
 import { checkVersion } from "./../utils/utils.js";
 import { version } from "./../index.js";
+import { warning } from "../lang/console.js";
 
 /**
  * Contains all registered plugins.
@@ -32,14 +33,19 @@ export class BasePlugin {
     }
 }
 
-
 /**
  * @class
  * @name Base
  * @memberof plugin
  * @deprecated since 15.1.6, see {@link plugin.BasePlugin}
  */
-export class Base extends BasePlugin {}
+export class Base extends BasePlugin {
+
+    constructor() {
+        warning("plugin.Base", "plugin.BasePlugin", "15.1.6");
+        super();
+    }
+}
 
 /**
  * patch a melonJS function

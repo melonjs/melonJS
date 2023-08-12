@@ -8,6 +8,9 @@
 - Physic: new `WORLD_STEP` event emmitted after the builtin physic world has been updated (if enabled)
 - Renderer: fix/enable batching for all ellipse & arc(To) WebGL stroke operations
 
+### Fixed
+- Plugin: add missing deprecation warning for `plugin.Base` (deprecated since [15.1.6] and replaced by `BasePlugin`)
+
 ### Changed
 - Physic: split the world update method into a separate step for clearer code when using custom update logic.
 
