@@ -328,15 +328,25 @@ export default class CanvasRenderer extends Renderer {
     /**
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.
-     * @param {Matrix2d} mat2d - Matrix to transform by
+     * @param {Matrix2d|number} a - a matrix2d to transform by, or a the a component to multiply the current matrix by
+     * @param {number} b - the b component to multiply the current matrix by
+     * @param {number} c - the c component to multiply the current matrix by
+     * @param {number} d - the d component to multiply the current matrix by
+     * @param {number} e - the e component to multiply the current matrix by
+     * @param {number} f - the f component to multiply the current matrix by
      */
-    setTransform(mat2d: Matrix2d): void;
+    setTransform(a: Matrix2d | number, b: number, c: number, d: number, e: number, f: number): void;
     /**
      * Multiply given matrix into the renderer tranformation matrix
      * @see {@link CanvasRenderer.setTransform} which will reset the current transform matrix prior to performing the new transformation
-     * @param {Matrix2d} mat2d - Matrix to transform by
+     * @param {Matrix2d|number} a - a matrix2d to transform by, or a the a component to multiply the current matrix by
+     * @param {number} b - the b component to multiply the current matrix by
+     * @param {number} c - the c component to multiply the current matrix by
+     * @param {number} d - the d component to multiply the current matrix by
+     * @param {number} e - the e component to multiply the current matrix by
+     * @param {number} f - the f component to multiply the current matrix by
      */
-    transform(mat2d: Matrix2d): void;
+    transform(a: Matrix2d | number, b: number, c: number, d: number, e: number, f: number): void;
     /**
      * adds a translation transformation to the current matrix.
      * @param {number} x - Distance to move in the horizontal direction. Positive values are to the right, and negative to the left.

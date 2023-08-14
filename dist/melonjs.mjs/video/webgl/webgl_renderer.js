@@ -1020,24 +1020,38 @@ class WebGLRenderer extends Renderer {
     /**
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.
-     * @param {Matrix2d} mat2d - Matrix to transform by
+     * @param {Matrix2d|number} a - a matrix2d to transform by, or a the a component to multiply the current matrix by
+     * @param {number} b - the b component to multiply the current matrix by
+     * @param {number} c - the c component to multiply the current matrix by
+     * @param {number} d - the d component to multiply the current matrix by
+     * @param {number} e - the e component to multiply the current matrix by
+     * @param {number} f - the f component to multiply the current matrix by
      */
-    setTransform(mat2d) {
+    setTransform(a, b, c, d, e, f) {
         this.resetTransform();
-        this.transform(mat2d);
+        this.transform(a, b, c, d, e, f);
     }
 
     /**
      * Multiply given matrix into the renderer tranformation matrix
      * @see {@link WebGLRenderer.setTransform} which will reset the current transform matrix prior to performing the new transformation
-     * @param {Matrix2d} mat2d - Matrix to transform by
+     * @param {Matrix2d|number} a - a matrix2d to transform by, or a the a component to multiply the current matrix by
+     * @param {number} b - the b component to multiply the current matrix by
+     * @param {number} c - the c component to multiply the current matrix by
+     * @param {number} d - the d component to multiply the current matrix by
+     * @param {number} e - the e component to multiply the current matrix by
+     * @param {number} f - the f component to multiply the current matrix by
      */
-    transform(mat2d) {
-        let currentTransform = this.currentTransform;
-        currentTransform.multiply(mat2d);
+    transform(a, b, c, d, e, f) {
+        if (typeof a === "object") {
+            this.currentTransform.multiply(a);
+        } else {
+            // indivudual component
+            this.currentTransform.transform(a, b, c, d, e, f);
+        }
         if (this.settings.subPixel === false) {
             // snap position values to pixel grid
-            let a = currentTransform.toArray();
+            let a = this.currentTransform.toArray();
             a[6] |= 0;
             a[7] |= 0;
         }

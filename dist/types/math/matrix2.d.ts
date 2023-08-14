@@ -48,6 +48,17 @@ export default class Matrix2d {
      */
     setTransform(...args: any[]): Matrix2d;
     /**
+     * Multiplies the current transformation with the matrix described by the arguments of this method
+     * @param {number} a
+     * @param {number} b
+     * @param {number} c
+     * @param {number} d
+     * @param {number} e
+     * @param {number} f
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    transform(a: number, b: number, c: number, d: number, e: number, f: number): Matrix2d;
+    /**
      * Copies over the values from another me.Matrix2d.
      * @param {Matrix2d} m - the matrix object to copy from
      * @returns {Matrix2d} Reference to this object for method chaining

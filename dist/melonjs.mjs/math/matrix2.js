@@ -125,6 +125,40 @@ class Matrix2d {
     }
 
     /**
+     * Multiplies the current transformation with the matrix described by the arguments of this method
+     * @param {number} a
+     * @param {number} b
+     * @param {number} c
+     * @param {number} d
+     * @param {number} e
+     * @param {number} f
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    transform(a, b, c, d, e, f) {
+        let v = this.val,
+            a0 = v[0],
+            a1 = v[1],
+            a3 = v[3],
+            a4 = v[4],
+
+            b0 = a,
+            b1 = b,
+            b3 = c,
+            b4 = d,
+            b6 = e,
+            b7 = f;
+
+        v[0] = a0 * b0 + a3 * b1;
+        v[1] = a1 * b0 + a4 * b1;
+        v[3] = a0 * b3 + a3 * b4;
+        v[4] = a1 * b3 + a4 * b4;
+        v[6] += a0 * b6 + a3 * b7;
+        v[7] += a1 * b6 + a4 * b7;
+
+        return this;
+    }
+
+    /**
      * Copies over the values from another me.Matrix2d.
      * @param {Matrix2d} m - the matrix object to copy from
      * @returns {Matrix2d} Reference to this object for method chaining

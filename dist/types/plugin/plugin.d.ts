@@ -25,9 +25,8 @@ export function patch(proto: object, name: string, fn: Function): void;
  * @example
  * // register a new plugin
  * me.plugin.register(TestPlugin, "testPlugin");
- * // the plugin then also become available
- * // under then me.plugins namespace
- * me.plugins.testPlugin.myfunction ();
+ * // the `testPlugin` class instance can also be accessed through me.plugin.cache
+ * me.plugin.cache.testPlugin.myfunction ();
  */
 export function register(plugin: plugin.BasePlugin, name?: string | undefined, ...args: any[]): void;
 /**

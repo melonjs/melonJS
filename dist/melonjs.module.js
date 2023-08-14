@@ -4780,6 +4780,40 @@ class Matrix2d {
     }
 
     /**
+     * Multiplies the current transformation with the matrix described by the arguments of this method
+     * @param {number} a
+     * @param {number} b
+     * @param {number} c
+     * @param {number} d
+     * @param {number} e
+     * @param {number} f
+     * @returns {Matrix2d} Reference to this object for method chaining
+     */
+    transform(a, b, c, d, e, f) {
+        let v = this.val,
+            a0 = v[0],
+            a1 = v[1],
+            a3 = v[3],
+            a4 = v[4],
+
+            b0 = a,
+            b1 = b,
+            b3 = c,
+            b4 = d,
+            b6 = e,
+            b7 = f;
+
+        v[0] = a0 * b0 + a3 * b1;
+        v[1] = a1 * b0 + a4 * b1;
+        v[3] = a0 * b3 + a3 * b4;
+        v[4] = a1 * b3 + a4 * b4;
+        v[6] += a0 * b6 + a3 * b7;
+        v[7] += a1 * b6 + a4 * b7;
+
+        return this;
+    }
+
+    /**
      * Copies over the values from another me.Matrix2d.
      * @param {Matrix2d} m - the matrix object to copy from
      * @returns {Matrix2d} Reference to this object for method chaining
@@ -22805,26 +22839,39 @@ class CanvasRenderer extends Renderer {
     /**
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.
-     * @param {Matrix2d} mat2d - Matrix to transform by
+     * @param {Matrix2d|number} a - a matrix2d to transform by, or a the a component to multiply the current matrix by
+     * @param {number} b - the b component to multiply the current matrix by
+     * @param {number} c - the c component to multiply the current matrix by
+     * @param {number} d - the d component to multiply the current matrix by
+     * @param {number} e - the e component to multiply the current matrix by
+     * @param {number} f - the f component to multiply the current matrix by
      */
-    setTransform(mat2d) {
+    setTransform(a, b, c, d, e, f) {
         this.resetTransform();
-        this.transform(mat2d);
+        this.transform(a, b, c, d, e, f);
     }
 
     /**
      * Multiply given matrix into the renderer tranformation matrix
      * @see {@link CanvasRenderer.setTransform} which will reset the current transform matrix prior to performing the new transformation
-     * @param {Matrix2d} mat2d - Matrix to transform by
+     * @param {Matrix2d|number} a - a matrix2d to transform by, or a the a component to multiply the current matrix by
+     * @param {number} b - the b component to multiply the current matrix by
+     * @param {number} c - the c component to multiply the current matrix by
+     * @param {number} d - the d component to multiply the current matrix by
+     * @param {number} e - the e component to multiply the current matrix by
+     * @param {number} f - the f component to multiply the current matrix by
      */
-    transform(mat2d) {
-        let m = mat2d.toArray(),
-            a = m[0],
-            b = m[1],
-            c = m[3],
-            d = m[4],
-            e = m[6],
+    transform(a, b, c, d, e, f) {
+        if (typeof a === "object") {
+            let m = a.toArray();
+            a = m[0];
+            b = m[1];
+            c = m[3];
+            d = m[4];
+            e = m[6];
             f = m[7];
+        }
+        // else individual components
 
         if (this.settings.subPixel === false) {
             e |= 0;
@@ -32277,24 +32324,38 @@ class WebGLRenderer extends Renderer {
     /**
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.
-     * @param {Matrix2d} mat2d - Matrix to transform by
+     * @param {Matrix2d|number} a - a matrix2d to transform by, or a the a component to multiply the current matrix by
+     * @param {number} b - the b component to multiply the current matrix by
+     * @param {number} c - the c component to multiply the current matrix by
+     * @param {number} d - the d component to multiply the current matrix by
+     * @param {number} e - the e component to multiply the current matrix by
+     * @param {number} f - the f component to multiply the current matrix by
      */
-    setTransform(mat2d) {
+    setTransform(a, b, c, d, e, f) {
         this.resetTransform();
-        this.transform(mat2d);
+        this.transform(a, b, c, d, e, f);
     }
 
     /**
      * Multiply given matrix into the renderer tranformation matrix
      * @see {@link WebGLRenderer.setTransform} which will reset the current transform matrix prior to performing the new transformation
-     * @param {Matrix2d} mat2d - Matrix to transform by
+     * @param {Matrix2d|number} a - a matrix2d to transform by, or a the a component to multiply the current matrix by
+     * @param {number} b - the b component to multiply the current matrix by
+     * @param {number} c - the c component to multiply the current matrix by
+     * @param {number} d - the d component to multiply the current matrix by
+     * @param {number} e - the e component to multiply the current matrix by
+     * @param {number} f - the f component to multiply the current matrix by
      */
-    transform(mat2d) {
-        let currentTransform = this.currentTransform;
-        currentTransform.multiply(mat2d);
+    transform(a, b, c, d, e, f) {
+        if (typeof a === "object") {
+            this.currentTransform.multiply(a);
+        } else {
+            // indivudual component
+            this.currentTransform.transform(a, b, c, d, e, f);
+        }
         if (this.settings.subPixel === false) {
             // snap position values to pixel grid
-            let a = currentTransform.toArray();
+            let a = this.currentTransform.toArray();
             a[6] |= 0;
             a[7] |= 0;
         }
@@ -38203,14 +38264,19 @@ class BasePlugin {
     }
 }
 
-
 /**
  * @class
  * @name Base
  * @memberof plugin
  * @deprecated since 15.1.6, see {@link plugin.BasePlugin}
  */
-class Base extends BasePlugin {}
+class Base extends BasePlugin {
+
+    constructor() {
+        warning("plugin.Base", "plugin.BasePlugin", "15.1.6");
+        super();
+    }
+}
 
 /**
  * patch a melonJS function
@@ -38265,9 +38331,8 @@ function patch(proto, name, fn) {
  * @example
  * // register a new plugin
  * me.plugin.register(TestPlugin, "testPlugin");
- * // the plugin then also become available
- * // under then me.plugins namespace
- * me.plugins.testPlugin.myfunction ();
+ * // the `testPlugin` class instance can also be accessed through me.plugin.cache
+ * me.plugin.cache.testPlugin.myfunction ();
  */
 function register(plugin, name = plugin.toString().match(/ (\w+)/)[1]) {
     // ensure me.plugins[name] is not already "used"

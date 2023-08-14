@@ -7,6 +7,7 @@
  */
 import { checkVersion } from '../utils/utils.js';
 import { version } from '../index.js';
+import { warning } from '../lang/console.js';
 
 /**
  * Contains all registered plugins.
@@ -39,14 +40,19 @@ class BasePlugin {
     }
 }
 
-
 /**
  * @class
  * @name Base
  * @memberof plugin
  * @deprecated since 15.1.6, see {@link plugin.BasePlugin}
  */
-class Base extends BasePlugin {}
+class Base extends BasePlugin {
+
+    constructor() {
+        warning("plugin.Base", "plugin.BasePlugin", "15.1.6");
+        super();
+    }
+}
 
 /**
  * patch a melonJS function
@@ -101,9 +107,8 @@ function patch(proto, name, fn) {
  * @example
  * // register a new plugin
  * me.plugin.register(TestPlugin, "testPlugin");
- * // the plugin then also become available
- * // under then me.plugins namespace
- * me.plugins.testPlugin.myfunction ();
+ * // the `testPlugin` class instance can also be accessed through me.plugin.cache
+ * me.plugin.cache.testPlugin.myfunction ();
  */
 function register(plugin, name = plugin.toString().match(/ (\w+)/)[1]) {
     // ensure me.plugins[name] is not already "used"
