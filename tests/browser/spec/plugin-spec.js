@@ -34,7 +34,7 @@ describe("me.plugin", function () {
     });
 
     describe("register", function () {
-        class Plugin extends me.plugin.Base {
+        class Plugin extends me.plugin.BasePlugin {
             constructor() {
                 super();
                 this.name = "myPlugin";
