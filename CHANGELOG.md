@@ -7,7 +7,7 @@
 - Input: new `hasRegisteredEvents` returning true if there are registered pointer event listeners
 - Physic: new `WORLD_STEP` event emmitted after the builtin physic world has been updated (if enabled)
 - Renderer: fix/enable batching for all ellipse & arc(To) WebGL stroke operations
-- Renderer: the `renderer.transform()` method now also accepts individual components to match the CanvasRenderingContext2D API
+- Renderer: the `setTransform` and `transform()` methods now also accept individual components to match the CanvasRenderingContext2D API
  
 ### Fixed
 - Plugin: add missing deprecation warning for `plugin.Base` (deprecated since [15.1.6] and replaced by `BasePlugin`)

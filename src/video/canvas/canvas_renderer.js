@@ -686,11 +686,16 @@ export default class CanvasRenderer extends Renderer {
     /**
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.
-     * @param {Matrix2d} mat2d - Matrix to transform by
+     * @param {Matrix2d|number} a - a matrix2d to transform by, or a the a component to multiply the current matrix by
+     * @param {number} b - the b component to multiply the current matrix by
+     * @param {number} c - the c component to multiply the current matrix by
+     * @param {number} d - the d component to multiply the current matrix by
+     * @param {number} e - the e component to multiply the current matrix by
+     * @param {number} f - the f component to multiply the current matrix by
      */
-    setTransform(mat2d) {
+    setTransform(a, b, c, d, e, f) {
         this.resetTransform();
-        this.transform(mat2d);
+        this.transform(a, b, c, d, e, f);
     }
 
     /**
@@ -704,7 +709,7 @@ export default class CanvasRenderer extends Renderer {
      * @param {number} f - the f component to multiply the current matrix by
      */
     transform(a, b, c, d, e, f) {
-        if (arguments.length === 1) {
+        if (typeof a === "object") {
             let m = a.toArray();
             a = m[0];
             b = m[1];
