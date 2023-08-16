@@ -1,6 +1,6 @@
 # Changelog
 
-## [15.9.0] (melonJS 2) - _2023-08-xx_
+## [15.9.0] (melonJS 2) - _2023-08-16_
 
 ### Added
 - Input: new `hasActiveEvents` returning true if there are any pending events in the queue
