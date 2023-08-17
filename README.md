@@ -79,12 +79,15 @@ And Also
 
 Tools integration
 -------------------------------------------------------------------------------
+melonJS is supporting the below tools and frameworks natively or through our official plugin(s) :
+
  [![Free Texture Packer](https://user-images.githubusercontent.com/4033090/136762061-1d3a0dfe-dbe0-4d3d-808d-47a49ecf5309.png "Free Texture Packer")](http://free-tex-packer.com)
  [![TexturePacker](https://user-images.githubusercontent.com/4033090/136762472-bc55a638-c69b-4ff5-9d03-c684c8bea0ea.png "TexturePacker")](https://www.codeandweb.com/texturepacker)
  [![PhysicsEditor](https://user-images.githubusercontent.com/4033090/136762890-b1010c7f-cb19-4d35-a3f1-f5048db07835.png "PhysicsEditor")](https://www.codeandweb.com/physicseditor)
  [![ShoeBox](https://user-images.githubusercontent.com/4033090/136762705-92027d94-d87c-4a95-b051-26647410248d.png "ShoeBox")](https://renderhjs.net/shoebox/)
  [![Tiled](https://user-images.githubusercontent.com/4033090/136762999-5a7f377b-4136-4205-9fe0-83728c90cb9b.png "Tiled")](https://www.mapeditor.org)
  [![Cordova](https://user-images.githubusercontent.com/4033090/136763147-6d157ce6-6921-437e-bb8f-0287b86109da.png "Cordova")](https://cordova.apache.org)
+  [![Spine](https://github.com/melonjs/melonJS/assets/4033090/7a8d81b8-bc80-47bd-80dc-d9a054c78c96 "Spine")](http://esotericsoftware.com)
 
 Tools integration and usage with melonJS is documented in our [Wiki](https://github.com/melonjs/melonJS/wiki#third-party-tools-usage).
 
@@ -151,6 +154,18 @@ Documentation
 
 To enable an offline version of the documentation, navigate to the settings page and enable `offline storage`:
 <img width="297" alt="186643536-854af31e-9c94-412e-a764-4bb7f93f15c3" src="https://user-images.githubusercontent.com/4033090/187061867-cf8c4c8a-437b-4f76-9138-610adda0ca23.png">
+
+
+Plugins
+-------------------------------------------------------------------------------
+melonJS provide a plugin system allowing to extend the engine capabilities.
+
+Here is the list of official plugins maintained by the melonJS team:
+- [debug-plugin](https://github.com/melonjs/debug-plugin) - a debug panel for inspecting game objects
+- [tiled-inflate-plugin](https://github.com/melonjs/tiled-inflate-plugin) - enable loading and parsing of zlib and gzip compressed [Tiled](https://www.mapeditor.org/) maps
+- [spine-plugin](https://github.com/melonjs/spine-plugin) - [Spine](http://esotericsoftware.com) runtime integration to render Spine skeletal animations
+
+If you wish to develop your own plugin, we also provide a [plugin template](https://github.com/melonjs/plugin-template) to help you get started.
 
 Download melonJS
 -------------------------------------------------------------------------------
