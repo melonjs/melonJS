@@ -238,8 +238,8 @@ export default class TMXLayer extends Renderable {
         if ((this.preRender === true) && (!this.canvasRenderer)) {
             this.canvasRenderer = new CanvasRenderer({
                 canvas : createCanvas(this.width, this.height),
-                widht : this.width,
-                heigth : this.height,
+                width : this.width,
+                height : this.height,
                 transparent : true
             });
             // pre render the layer on the canvas
