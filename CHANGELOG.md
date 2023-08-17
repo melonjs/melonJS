@@ -2,6 +2,9 @@
 
 ## [15.9.1] (melonJS 2) - _2023-08-xx_
 
+### Fixed
+- TMX: fix CanvasRenderer option typo when using TMXLayer pre-rendering option (thanks @0o001)
+
 ## [15.9.0] (melonJS 2) - _2023-08-16_
 
 ### Added
