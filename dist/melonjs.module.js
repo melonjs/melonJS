@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.9.0
+ * melonJS Game Engine - v15.9.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -17394,6 +17394,7 @@ class Renderable extends Rect {
          *          this.body.setMaxVelocity(3, 15);
          *          this.body.setFriction(0.4, 0);
          *          this.body.force.set(3, 0);
+         *          this.isKinematic = false;
          *
          *          // set the display to follow our position on both axis
          *          me.game.viewport.follow(this.pos, me.game.viewport.AXIS.BOTH);
@@ -38258,9 +38259,9 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "15.9.0"
+         * @default "15.9.1"
          */
-        this.version = "15.9.0";
+        this.version = "15.9.1";
     }
 }
 
@@ -38491,7 +38492,7 @@ class GUI_Object extends UISpriteElement {
  * @name version
  * @type {string}
  */
-const version = "15.9.0";
+const version = "15.9.1";
 
 /**
  * a flag indicating that melonJS is fully initialized

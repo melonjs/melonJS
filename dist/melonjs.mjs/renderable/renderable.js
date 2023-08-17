@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.9.0
+ * melonJS Game Engine - v15.9.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -92,6 +92,7 @@ class Renderable extends Rect {
          *          this.body.setMaxVelocity(3, 15);
          *          this.body.setFriction(0.4, 0);
          *          this.body.force.set(3, 0);
+         *          this.isKinematic = false;
          *
          *          // set the display to follow our position on both axis
          *          me.game.viewport.follow(this.pos, me.game.viewport.AXIS.BOTH);
