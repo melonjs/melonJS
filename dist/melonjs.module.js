@@ -6449,11 +6449,11 @@ var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
  */
 class Polygon {
     /**
-     * @param {number} x - origin point of the Polygon
-     * @param {number} y - origin point of the Polygon
+     * @param {number} [x=0] - origin point of the Polygon
+     * @param {number} [y=0] - origin point of the Polygon
      * @param {Vector2d[]} points - array of vector defining the Polygon
      */
-    constructor(x, y, points) {
+    constructor(x = 0, y = 0, points) {
         /**
          * origin point of the Polygon
          * @type {Vector2d}

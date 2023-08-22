@@ -9,11 +9,11 @@
  */
 export default class Polygon {
     /**
-     * @param {number} x - origin point of the Polygon
-     * @param {number} y - origin point of the Polygon
+     * @param {number} [x=0] - origin point of the Polygon
+     * @param {number} [y=0] - origin point of the Polygon
      * @param {Vector2d[]} points - array of vector defining the Polygon
      */
-    constructor(x: number, y: number, points: Vector2d[]);
+    constructor(x?: number | undefined, y?: number | undefined, points: Vector2d[]);
     /**
      * origin point of the Polygon
      * @type {Vector2d}
