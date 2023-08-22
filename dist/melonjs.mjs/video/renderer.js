@@ -383,7 +383,7 @@ class Renderer {
      * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
      */
     // eslint-disable-next-line no-unused-vars
-    setMask(mask) {}
+    setMask(mask, invert = false) {}
 
     /**
      * disable (remove) the rendering mask set through setMask.

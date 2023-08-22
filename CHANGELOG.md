@@ -4,6 +4,7 @@
 
 ### Fixed
 - TMX: fix CanvasRenderer option typo when using TMXLayer pre-rendering option (thanks @0o001)
+- TypeScript: fix missing parameter for `setMask()` in the parent `Renderer` class
 
 ## [15.9.0] (melonJS 2) - _2023-08-16_
 
