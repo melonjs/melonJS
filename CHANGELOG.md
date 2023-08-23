@@ -3,7 +3,7 @@
 ## [15.9.1] (melonJS 2) - _2023-08-xx_
 
 ### Fixed
-- Geometry: add default parameters to the `Polygon`` constructor, allowing to instantiate "empty" polygons
+- Geometry: add default parameters to the `Polygon` constructor, allowing to instantiate "empty" polygons
 - TMX: fix CanvasRenderer option typo when using TMXLayer pre-rendering option (thanks @0o001)
 - TypeScript: fix missing parameter for `setMask()` in the parent `Renderer` class
 
