@@ -1,6 +1,6 @@
 # Changelog
 
-## [15.9.1] (melonJS 2) - _2023-08-xx_
+## [15.9.1] (melonJS 2) - _2023-08-24_
 
 ### Fixed
 - Geometry: add default parameters to the `Polygon` constructor, allowing to instantiate "empty" polygons
