@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.9.1
+ * melonJS Game Engine - v15.10.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -38259,9 +38259,9 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "15.9.1"
+         * @default "15.10.0"
          */
-        this.version = "15.9.1";
+        this.version = "15.10.0";
     }
 }
 
@@ -38492,7 +38492,7 @@ class GUI_Object extends UISpriteElement {
  * @name version
  * @type {string}
  */
-const version = "15.9.1";
+const version = "15.10.0";
 
 /**
  * a flag indicating that melonJS is fully initialized
