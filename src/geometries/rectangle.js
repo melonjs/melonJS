@@ -21,7 +21,13 @@ export default class Rect extends Polygon {
             pool.pull("Vector2d", w, h), // 1, 1
             pool.pull("Vector2d", 0, h)  // 0, 1
         ]);
-        this.shapeType = "Rectangle";
+
+        /**
+         * the shape type (used internally)
+         * @type {string}
+         * @default "Rectangle"
+         */
+        this.type = "Rectangle";
     }
 
     /** @ignore */

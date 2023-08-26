@@ -53,8 +53,12 @@ export default class Ellipse {
          */
         this.ratio = pool.pull("Vector2d");
 
-        // the shape type
-        this.shapeType = "Ellipse";
+        /**
+         * the shape type (used internally)
+         * @type {string}
+         * @default "Ellipse"
+         */
+        this.type = "Ellipse";
         this.setShape(x, y, w, h);
     }
 

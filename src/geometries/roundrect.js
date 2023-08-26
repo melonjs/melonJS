@@ -19,6 +19,13 @@ export default class RoundRect extends Rect {
         // parent constructor
         super(x, y, width, height);
 
+        /**
+         * the shape type (used internally)
+         * @type {string}
+         * @default "RoundRect"
+         */
+        this.type = "RoundRect";
+
         // set the corner radius
         this.radius = radius;
     }

@@ -70,7 +70,7 @@ export default class Detector {
             // for each shape in body B
             for (let indexB = bodyB.shapes.length, shapeB; indexB--, (shapeB = bodyB.shapes[indexB]);) {
                 // full SAT collision check
-                if (SAT["test" + shapeA.shapeType + shapeB.shapeType].call(
+                if (SAT["test" + shapeA.type + shapeB.type].call(
                     this,
                     bodyA.ancestor, // a reference to the object A
                     shapeA,
@@ -183,7 +183,7 @@ export default class Detector {
                     let shapeB = objB.body.getShape(indexB);
 
                     // full SAT collision check
-                    if (SAT["test" + shapeA.shapeType + shapeB.shapeType]
+                    if (SAT["test" + shapeA.type + shapeB.type]
                         .call(
                             this,
                             dummyObj, // a reference to the object A

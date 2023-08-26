@@ -55,8 +55,12 @@ export default class Polygon {
         // The bounding rectangle for this shape
         this._bounds;
 
-        // the shape type
-        this.shapeType = "Polygon";
+        /**
+         * the shape type (used internally)
+         * @type {string}
+         * @default "Polygon"
+         */
+        this.type = "Polygon";
         this.setShape(x, y, points);
     }
 

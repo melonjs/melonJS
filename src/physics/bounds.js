@@ -13,6 +13,13 @@ export default class Bounds {
         // @ignore
         this._center = new Vector2d();
         this.onResetEvent(vertices);
+
+        /**
+         * the object type (used internally)
+         * @type {string}
+         * @default "Bounds"
+         */
+        this.type = "Bounds";
     }
 
     /**

@@ -1,10 +1,6 @@
 import Color from "./../../math/color.js";
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture/cache.js";
-import Ellipse from "./../../geometries/ellipse.js";
-import RoundRect from "./../../geometries/roundrect.js";
-import Rect from "./../../geometries/rectangle.js";
-import Bounds from "./../../physics/bounds.js";
 import * as event from "./../../system/event.js";
 
 /**
@@ -789,40 +785,59 @@ export default class CanvasRenderer extends Renderer {
             context.beginPath();
         }
 
-        // https://github.com/melonjs/melonJS/issues/648
-        if (mask instanceof RoundRect) {
-            context.roundRect(mask.top, mask.left, mask.width, mask.height, mask.radius);
-        } else if (mask instanceof Rect || mask instanceof Bounds) {
-            context.rect(mask.top, mask.left, mask.width, mask.height);
-        } else if (mask instanceof Ellipse) {
-            const _x = mask.pos.x, _y = mask.pos.y,
-                hw = mask.radiusV.x,
-                hh = mask.radiusV.y,
-                lx = _x - hw,
-                rx = _x + hw,
-                ty = _y - hh,
-                by = _y + hh;
+        switch (mask.type) {
 
-            let xmagic = hw * 0.551784,
-                ymagic = hh * 0.551784,
-                xmin = _x - xmagic,
-                xmax = _x + xmagic,
-                ymin = _y - ymagic,
-                ymax = _y + ymagic;
+            // RoundRect
+            case "RoundRect":
+                context.roundRect(mask.top, mask.left, mask.width, mask.height, mask.radius);
+                break;
 
-            context.moveTo(_x, ty);
-            context.bezierCurveTo(xmax, ty, rx, ymin, rx, _y);
-            context.bezierCurveTo(rx, ymax, xmax, by, _x, by);
-            context.bezierCurveTo(xmin, by, lx, ymax, lx, _y);
-            context.bezierCurveTo(lx, ymin, xmin, ty, _x, ty);
-        } else {
-            // polygon
-            const _x = mask.pos.x, _y = mask.pos.y;
-            context.moveTo(_x + mask.points[0].x, _y + mask.points[0].y);
-            for (let i = 1; i < mask.points.length; i++) {
-                const point = mask.points[i];
-                context.lineTo(_x + point.x, _y + point.y);
-            }
+            // Rect or Bounds
+            case "Rectangle":
+            case "Bounds":
+                context.rect(mask.top, mask.left, mask.width, mask.height);
+                break;
+
+            // Polygon or Line
+            case "Polygon":
+                {
+                    // polygon
+                    const _x = mask.pos.x, _y = mask.pos.y;
+                    context.moveTo(_x + mask.points[0].x, _y + mask.points[0].y);
+                    for (let i = 1; i < mask.points.length; i++) {
+                        const point = mask.points[i];
+                        context.lineTo(_x + point.x, _y + point.y);
+                    }
+                }
+                break;
+
+            case "Ellipse":
+                {
+                    const _x = mask.pos.x, _y = mask.pos.y,
+                        hw = mask.radiusV.x,
+                        hh = mask.radiusV.y,
+                        lx = _x - hw,
+                        rx = _x + hw,
+                        ty = _y - hh,
+                        by = _y + hh;
+
+                    let xmagic = hw * 0.551784,
+                        ymagic = hh * 0.551784,
+                        xmin = _x - xmagic,
+                        xmax = _x + xmagic,
+                        ymin = _y - ymagic,
+                        ymax = _y + ymagic;
+
+                    context.moveTo(_x, ty);
+                    context.bezierCurveTo(xmax, ty, rx, ymin, rx, _y);
+                    context.bezierCurveTo(rx, ymax, xmax, by, _x, by);
+                    context.bezierCurveTo(xmin, by, lx, ymax, lx, _y);
+                    context.bezierCurveTo(lx, ymin, xmin, ty, _x, ty);
+                }
+                break;
+
+            default:
+                throw new Error("Invalid geometry for setMask");
         }
 
         this.maskLevel++;

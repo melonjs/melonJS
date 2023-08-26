@@ -17,6 +17,13 @@ export default class Point {
          * @default 0
          */
         this.y = y;
+
+        /**
+         * the shape type (used internally)
+         * @type {string}
+         * @default "Point"
+         */
+        this.type = "Point";
     }
 
     /** @ignore */
