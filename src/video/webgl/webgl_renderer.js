@@ -1115,8 +1115,9 @@ export default class WebGLRenderer extends Renderer {
 
     /**
      * A mask limits rendering elements to the shape and position of the given mask object.
-     * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
-     * Mask are not preserved through renderer context save and restore.
+     * If the drawing or rendering area is larger than the mask, only the intersecting part of the renderable will be visible.
+     * (Note Mask are not preserved through renderer context save and restore and need so be manually cleared)
+     * @see CanvasRenderer#clearMask
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - a shape defining the mask to be applied
      * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
      */

@@ -771,8 +771,9 @@ export default class CanvasRenderer extends Renderer {
 
     /**
      * A mask limits rendering elements to the shape and position of the given mask object.
-     * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
-     * Mask are not preserved through renderer context save and restore.
+     * If the drawing or rendering area is larger than the mask, only the intersecting part of the renderable will be visible.
+     * (Note Mask are not preserved through renderer context save and restore and need so be manually cleared)
+     * @see CanvasRenderer#clearMask
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - the shape defining the mask to be applied
      * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
      */
@@ -782,62 +783,66 @@ export default class CanvasRenderer extends Renderer {
         if (this.maskLevel === 0) {
             // only save context on the first mask
             context.save();
-            context.beginPath();
+            if (typeof mask !== "undefined") {
+                context.beginPath();
+            }
+            // else use the current path
         }
 
-        switch (mask.type) {
+        if (typeof mask !== "undefined") {
+            switch (mask.type) {
+                // RoundRect
+                case "RoundRect":
+                    context.roundRect(mask.top, mask.left, mask.width, mask.height, mask.radius);
+                    break;
 
-            // RoundRect
-            case "RoundRect":
-                context.roundRect(mask.top, mask.left, mask.width, mask.height, mask.radius);
-                break;
+                // Rect or Bounds
+                case "Rectangle":
+                case "Bounds":
+                    context.rect(mask.top, mask.left, mask.width, mask.height);
+                    break;
 
-            // Rect or Bounds
-            case "Rectangle":
-            case "Bounds":
-                context.rect(mask.top, mask.left, mask.width, mask.height);
-                break;
-
-            // Polygon or Line
-            case "Polygon":
-                {
-                    // polygon
-                    const _x = mask.pos.x, _y = mask.pos.y;
-                    context.moveTo(_x + mask.points[0].x, _y + mask.points[0].y);
-                    for (let i = 1; i < mask.points.length; i++) {
-                        const point = mask.points[i];
-                        context.lineTo(_x + point.x, _y + point.y);
+                // Polygon or Line
+                case "Polygon":
+                    {
+                        // polygon
+                        const _x = mask.pos.x, _y = mask.pos.y;
+                        context.moveTo(_x + mask.points[0].x, _y + mask.points[0].y);
+                        for (let i = 1; i < mask.points.length; i++) {
+                            const point = mask.points[i];
+                            context.lineTo(_x + point.x, _y + point.y);
+                        }
                     }
-                }
-                break;
+                    break;
 
-            case "Ellipse":
-                {
-                    const _x = mask.pos.x, _y = mask.pos.y,
-                        hw = mask.radiusV.x,
-                        hh = mask.radiusV.y,
-                        lx = _x - hw,
-                        rx = _x + hw,
-                        ty = _y - hh,
-                        by = _y + hh;
+                case "Ellipse":
+                    {
+                        const _x = mask.pos.x, _y = mask.pos.y,
+                            hw = mask.radiusV.x,
+                            hh = mask.radiusV.y,
+                            lx = _x - hw,
+                            rx = _x + hw,
+                            ty = _y - hh,
+                            by = _y + hh;
 
-                    let xmagic = hw * 0.551784,
-                        ymagic = hh * 0.551784,
-                        xmin = _x - xmagic,
-                        xmax = _x + xmagic,
-                        ymin = _y - ymagic,
-                        ymax = _y + ymagic;
+                        let xmagic = hw * 0.551784,
+                            ymagic = hh * 0.551784,
+                            xmin = _x - xmagic,
+                            xmax = _x + xmagic,
+                            ymin = _y - ymagic,
+                            ymax = _y + ymagic;
 
-                    context.moveTo(_x, ty);
-                    context.bezierCurveTo(xmax, ty, rx, ymin, rx, _y);
-                    context.bezierCurveTo(rx, ymax, xmax, by, _x, by);
-                    context.bezierCurveTo(xmin, by, lx, ymax, lx, _y);
-                    context.bezierCurveTo(lx, ymin, xmin, ty, _x, ty);
-                }
-                break;
+                        context.moveTo(_x, ty);
+                        context.bezierCurveTo(xmax, ty, rx, ymin, rx, _y);
+                        context.bezierCurveTo(rx, ymax, xmax, by, _x, by);
+                        context.bezierCurveTo(xmin, by, lx, ymax, lx, _y);
+                        context.bezierCurveTo(lx, ymin, xmin, ty, _x, ty);
+                    }
+                    break;
 
-            default:
-                throw new Error("Invalid geometry for setMask");
+                default:
+                    throw new Error("Invalid geometry for setMask");
+            }
         }
 
         this.maskLevel++;
