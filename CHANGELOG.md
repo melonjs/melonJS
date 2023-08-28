@@ -3,7 +3,8 @@
 ## [15.9.2] (melonJS 2) - _2023-08-xx_
 
 ### Fixed
-- Renderer: fix the Canvas Renderer `setMask()` method ignoring the default path when no argument is passed 
+- Renderer: fix the Canvas Renderer `setMask()` method ignoring the default path when no argument is passed
+- Geometries: fix missing `type` property for all geometry and use internally for type checking instead of relying on `instanceof`
 
 ## [15.9.1] (melonJS 2) - _2023-08-24_
 
