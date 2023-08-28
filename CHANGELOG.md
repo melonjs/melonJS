@@ -1,6 +1,6 @@
 # Changelog
 
-## [15.9.2] (melonJS 2) - _2023-08-xx_
+## [15.9.2] (melonJS 2) - _2023-08-28_
 
 ### Fixed
 - Renderer: fix the Canvas Renderer `setMask()` method ignoring the default path when no argument is passed
@@ -667,6 +667,7 @@
 
 -------------------------------------------------------------------------------
 
+[15.9.2]: https://github.com/melonjs/melonJS/compare/15.9.1...15.9.2
 [15.9.1]: https://github.com/melonjs/melonJS/compare/15.9.0...15.9.1
 [15.9.0]: https://github.com/melonjs/melonJS/compare/15.8.0...15.9.0
 [15.8.0]: https://github.com/melonjs/melonJS/compare/15.7.0...15.8.0
