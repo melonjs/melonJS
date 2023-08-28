@@ -46,15 +46,6 @@ declare class Pointer extends Bounds {
      */
     public event: PointerEvent | TouchEvent | MouseEvent;
     /**
-     * a string containing the event's type.
-     * @public
-     * @type {string}
-     * @name type
-     * @see https://developer.mozilla.org/en-US/docs/Web/API/Event/type
-     * @memberof Pointer
-     */
-    public type: string;
-    /**
      * the button property indicates which button was pressed on the mouse to trigger the event.
      * @public
      * @type {number}

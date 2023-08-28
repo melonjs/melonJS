@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.10.0
+ * melonJS Game Engine - v15.9.2
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -6492,8 +6492,12 @@ class Polygon {
         // The bounding rectangle for this shape
         this._bounds;
 
-        // the shape type
-        this.shapeType = "Polygon";
+        /**
+         * the shape type (used internally)
+         * @type {string}
+         * @default "Polygon"
+         */
+        this.type = "Polygon";
         this.setShape(x, y, points);
     }
 
@@ -7016,8 +7020,12 @@ class Ellipse {
          */
         this.ratio = pool.pull("Vector2d");
 
-        // the shape type
-        this.shapeType = "Ellipse";
+        /**
+         * the shape type (used internally)
+         * @type {string}
+         * @default "Ellipse"
+         */
+        this.type = "Ellipse";
         this.setShape(x, y, w, h);
     }
 
@@ -7215,6 +7223,13 @@ class Point {
          * @default 0
          */
         this.y = y;
+
+        /**
+         * the shape type (used internally)
+         * @type {string}
+         * @default "Point"
+         */
+        this.type = "Point";
     }
 
     /** @ignore */
@@ -7283,7 +7298,13 @@ class Rect extends Polygon {
             pool.pull("Vector2d", w, h), // 1, 1
             pool.pull("Vector2d", 0, h)  // 0, 1
         ]);
-        this.shapeType = "Rectangle";
+
+        /**
+         * the shape type (used internally)
+         * @type {string}
+         * @default "Rectangle"
+         */
+        this.type = "Rectangle";
     }
 
     /** @ignore */
@@ -7594,6 +7615,13 @@ class RoundRect extends Rect {
     constructor(x, y, width, height, radius = 20) {
         // parent constructor
         super(x, y, width, height);
+
+        /**
+         * the shape type (used internally)
+         * @type {string}
+         * @default "RoundRect"
+         */
+        this.type = "RoundRect";
 
         // set the corner radius
         this.radius = radius;
@@ -8181,6 +8209,13 @@ class Bounds {
         // @ignore
         this._center = new Vector2d();
         this.onResetEvent(vertices);
+
+        /**
+         * the object type (used internally)
+         * @type {string}
+         * @default "Bounds"
+         */
+        this.type = "Bounds";
     }
 
     /**
@@ -21163,33 +21198,37 @@ class Renderer {
      * @param {boolean} [fill=false] - fill the shape with the current color if true
      */
     stroke(shape, fill) {
-        if (shape instanceof RoundRect) {
-            this.strokeRoundRect(shape.left, shape.top, shape.width, shape.height, shape.radius, fill);
-            return;
+        switch (shape.type) {
+
+            // RoundRect
+            case "RoundRect":
+                this.strokeRoundRect(shape.left, shape.top, shape.width, shape.height, shape.radius, fill);
+                break;
+
+            // Rect or Bounds
+            case "Rectangle":
+            case "Bounds":
+                this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
+                break;
+
+            // Polygon or Line
+            case "Polygon":
+            case "Line":
+                this.strokePolygon(shape, fill);
+                break;
+
+            case "Ellipse":
+                this.strokeEllipse(shape.pos.x, shape.pos.y, shape.radiusV.x, shape.radiusV.y, fill);
+                break;
+
+            // Point
+            case "Point":
+                this.strokePoint(shape.x, shape.y);
+                break;
+
+            default:
+                throw new Error("Invalid geometry for fill/stroke");
         }
-        if (shape instanceof Rect || shape instanceof Bounds) {
-            this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
-            return;
-        }
-        if (shape instanceof Line || shape instanceof Polygon) {
-            this.strokePolygon(shape, fill);
-            return;
-        }
-        if (shape instanceof Ellipse) {
-            this.strokeEllipse(
-                shape.pos.x,
-                shape.pos.y,
-                shape.radiusV.x,
-                shape.radiusV.y,
-                fill
-            );
-            return;
-        }
-        if (shape instanceof Point) {
-            this.strokePoint(shape.x, shape.y);
-            return;
-        }
-        throw new Error("Invalid geometry for fill/stroke");
     }
 
     /**
@@ -22929,8 +22968,9 @@ class CanvasRenderer extends Renderer {
 
     /**
      * A mask limits rendering elements to the shape and position of the given mask object.
-     * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
-     * Mask are not preserved through renderer context save and restore.
+     * If the drawing or rendering area is larger than the mask, only the intersecting part of the renderable will be visible.
+     * (Note Mask are not preserved through renderer context save and restore and need so be manually cleared)
+     * @see CanvasRenderer#clearMask
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - the shape defining the mask to be applied
      * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
      */
@@ -22940,42 +22980,65 @@ class CanvasRenderer extends Renderer {
         if (this.maskLevel === 0) {
             // only save context on the first mask
             context.save();
-            context.beginPath();
+            if (typeof mask !== "undefined") {
+                context.beginPath();
+            }
+            // else use the current path
         }
 
-        // https://github.com/melonjs/melonJS/issues/648
-        if (mask instanceof RoundRect) {
-            context.roundRect(mask.top, mask.left, mask.width, mask.height, mask.radius);
-        } else if (mask instanceof Rect || mask instanceof Bounds) {
-            context.rect(mask.top, mask.left, mask.width, mask.height);
-        } else if (mask instanceof Ellipse) {
-            const _x = mask.pos.x, _y = mask.pos.y,
-                hw = mask.radiusV.x,
-                hh = mask.radiusV.y,
-                lx = _x - hw,
-                rx = _x + hw,
-                ty = _y - hh,
-                by = _y + hh;
+        if (typeof mask !== "undefined") {
+            switch (mask.type) {
+                // RoundRect
+                case "RoundRect":
+                    context.roundRect(mask.top, mask.left, mask.width, mask.height, mask.radius);
+                    break;
 
-            let xmagic = hw * 0.551784,
-                ymagic = hh * 0.551784,
-                xmin = _x - xmagic,
-                xmax = _x + xmagic,
-                ymin = _y - ymagic,
-                ymax = _y + ymagic;
+                // Rect or Bounds
+                case "Rectangle":
+                case "Bounds":
+                    context.rect(mask.top, mask.left, mask.width, mask.height);
+                    break;
 
-            context.moveTo(_x, ty);
-            context.bezierCurveTo(xmax, ty, rx, ymin, rx, _y);
-            context.bezierCurveTo(rx, ymax, xmax, by, _x, by);
-            context.bezierCurveTo(xmin, by, lx, ymax, lx, _y);
-            context.bezierCurveTo(lx, ymin, xmin, ty, _x, ty);
-        } else {
-            // polygon
-            const _x = mask.pos.x, _y = mask.pos.y;
-            context.moveTo(_x + mask.points[0].x, _y + mask.points[0].y);
-            for (let i = 1; i < mask.points.length; i++) {
-                const point = mask.points[i];
-                context.lineTo(_x + point.x, _y + point.y);
+                // Polygon or Line
+                case "Polygon":
+                    {
+                        // polygon
+                        const _x = mask.pos.x, _y = mask.pos.y;
+                        context.moveTo(_x + mask.points[0].x, _y + mask.points[0].y);
+                        for (let i = 1; i < mask.points.length; i++) {
+                            const point = mask.points[i];
+                            context.lineTo(_x + point.x, _y + point.y);
+                        }
+                    }
+                    break;
+
+                case "Ellipse":
+                    {
+                        const _x = mask.pos.x, _y = mask.pos.y,
+                            hw = mask.radiusV.x,
+                            hh = mask.radiusV.y,
+                            lx = _x - hw,
+                            rx = _x + hw,
+                            ty = _y - hh,
+                            by = _y + hh;
+
+                        let xmagic = hw * 0.551784,
+                            ymagic = hh * 0.551784,
+                            xmin = _x - xmagic,
+                            xmax = _x + xmagic,
+                            ymin = _y - ymagic,
+                            ymax = _y + ymagic;
+
+                        context.moveTo(_x, ty);
+                        context.bezierCurveTo(xmax, ty, rx, ymin, rx, _y);
+                        context.bezierCurveTo(rx, ymax, xmax, by, _x, by);
+                        context.bezierCurveTo(xmin, by, lx, ymax, lx, _y);
+                        context.bezierCurveTo(lx, ymin, xmin, ty, _x, ty);
+                    }
+                    break;
+
+                default:
+                    throw new Error("Invalid geometry for setMask");
             }
         }
 
@@ -32427,8 +32490,9 @@ class WebGLRenderer extends Renderer {
 
     /**
      * A mask limits rendering elements to the shape and position of the given mask object.
-     * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
-     * Mask are not preserved through renderer context save and restore.
+     * If the drawing or rendering area is larger than the mask, only the intersecting part of the renderable will be visible.
+     * (Note Mask are not preserved through renderer context save and restore and need so be manually cleared)
+     * @see CanvasRenderer#clearMask
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - a shape defining the mask to be applied
      * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
      */
@@ -36287,7 +36351,7 @@ class Detector {
             // for each shape in body B
             for (let indexB = bodyB.shapes.length, shapeB; indexB--, (shapeB = bodyB.shapes[indexB]);) {
                 // full SAT collision check
-                if (SAT["test" + shapeA.shapeType + shapeB.shapeType].call(
+                if (SAT["test" + shapeA.type + shapeB.type].call(
                     this,
                     bodyA.ancestor, // a reference to the object A
                     shapeA,
@@ -36400,7 +36464,7 @@ class Detector {
                     let shapeB = objB.body.getShape(indexB);
 
                     // full SAT collision check
-                    if (SAT["test" + shapeA.shapeType + shapeB.shapeType]
+                    if (SAT["test" + shapeA.type + shapeB.type]
                         .call(
                             this,
                             dummyObj, // a reference to the object A
@@ -38259,9 +38323,9 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "15.10.0"
+         * @default "15.9.2"
          */
-        this.version = "15.10.0";
+        this.version = "15.9.2";
     }
 }
 
@@ -38492,7 +38556,7 @@ class GUI_Object extends UISpriteElement {
  * @name version
  * @type {string}
  */
-const version = "15.10.0";
+const version = "15.9.2";
 
 /**
  * a flag indicating that melonJS is fully initialized

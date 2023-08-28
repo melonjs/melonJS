@@ -365,18 +365,7 @@ export default class CanvasRenderer extends Renderer {
      * @param {number} height
      */
     clipRect(x: number, y: number, width: number, height: number): void;
-    /**
-     * A mask limits rendering elements to the shape and position of the given mask object.
-     * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
-     * Mask are not preserved through renderer context save and restore.
-     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - the shape defining the mask to be applied
-     * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
-     */
-    setMask(mask?: Rect | RoundRect | Polygon | Line | Ellipse, invert?: boolean | undefined): void;
 }
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture/cache.js";
 import Color from "./../../math/color.js";
-import Rect from "./../../geometries/rectangle.js";
-import RoundRect from "./../../geometries/roundrect.js";
-import Ellipse from "./../../geometries/ellipse.js";

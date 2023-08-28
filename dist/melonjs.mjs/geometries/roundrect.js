@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.10.0
+ * melonJS Game Engine - v15.9.2
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -25,6 +25,13 @@ class RoundRect extends Rect {
     constructor(x, y, width, height, radius = 20) {
         // parent constructor
         super(x, y, width, height);
+
+        /**
+         * the shape type (used internally)
+         * @type {string}
+         * @default "RoundRect"
+         */
+        this.type = "RoundRect";
 
         // set the corner radius
         this.radius = radius;

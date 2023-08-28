@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.10.0
+ * melonJS Game Engine - v15.9.2
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -77,7 +77,7 @@ class Detector {
             // for each shape in body B
             for (let indexB = bodyB.shapes.length, shapeB; indexB--, (shapeB = bodyB.shapes[indexB]);) {
                 // full SAT collision check
-                if (sat["test" + shapeA.shapeType + shapeB.shapeType].call(
+                if (sat["test" + shapeA.type + shapeB.type].call(
                     this,
                     bodyA.ancestor, // a reference to the object A
                     shapeA,
@@ -190,7 +190,7 @@ class Detector {
                     let shapeB = objB.body.getShape(indexB);
 
                     // full SAT collision check
-                    if (sat["test" + shapeA.shapeType + shapeB.shapeType]
+                    if (sat["test" + shapeA.type + shapeB.type]
                         .call(
                             this,
                             dummyObj, // a reference to the object A

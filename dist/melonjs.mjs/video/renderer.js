@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.10.0
+ * melonJS Game Engine - v15.9.2
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -11,15 +11,8 @@ import { createCanvas } from './video.js';
 import { emit, once, CANVAS_ONRESIZE, GAME_AFTER_DRAW } from '../system/event.js';
 import { platform } from '../system/device.js';
 import { setPrefixed } from '../utils/agent.js';
-import Rect from '../geometries/rectangle.js';
-import RoundRect from '../geometries/roundrect.js';
-import Ellipse from '../geometries/ellipse.js';
-import Polygon from '../geometries/poly.js';
-import Line from '../geometries/line.js';
-import Bounds from '../physics/bounds.js';
 import Path2D from '../geometries/path2d.js';
 import Vector2d from '../math/vector2.js';
-import Point from '../geometries/point.js';
 
 /**
  * @classdesc
@@ -312,33 +305,37 @@ class Renderer {
      * @param {boolean} [fill=false] - fill the shape with the current color if true
      */
     stroke(shape, fill) {
-        if (shape instanceof RoundRect) {
-            this.strokeRoundRect(shape.left, shape.top, shape.width, shape.height, shape.radius, fill);
-            return;
+        switch (shape.type) {
+
+            // RoundRect
+            case "RoundRect":
+                this.strokeRoundRect(shape.left, shape.top, shape.width, shape.height, shape.radius, fill);
+                break;
+
+            // Rect or Bounds
+            case "Rectangle":
+            case "Bounds":
+                this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
+                break;
+
+            // Polygon or Line
+            case "Polygon":
+            case "Line":
+                this.strokePolygon(shape, fill);
+                break;
+
+            case "Ellipse":
+                this.strokeEllipse(shape.pos.x, shape.pos.y, shape.radiusV.x, shape.radiusV.y, fill);
+                break;
+
+            // Point
+            case "Point":
+                this.strokePoint(shape.x, shape.y);
+                break;
+
+            default:
+                throw new Error("Invalid geometry for fill/stroke");
         }
-        if (shape instanceof Rect || shape instanceof Bounds) {
-            this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
-            return;
-        }
-        if (shape instanceof Line || shape instanceof Polygon) {
-            this.strokePolygon(shape, fill);
-            return;
-        }
-        if (shape instanceof Ellipse) {
-            this.strokeEllipse(
-                shape.pos.x,
-                shape.pos.y,
-                shape.radiusV.x,
-                shape.radiusV.y,
-                fill
-            );
-            return;
-        }
-        if (shape instanceof Point) {
-            this.strokePoint(shape.x, shape.y);
-            return;
-        }
-        throw new Error("Invalid geometry for fill/stroke");
     }
 
     /**

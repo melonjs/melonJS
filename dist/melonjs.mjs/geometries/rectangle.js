@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.10.0
+ * melonJS Game Engine - v15.9.2
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -28,7 +28,13 @@ class Rect extends Polygon {
             pool.pull("Vector2d", w, h), // 1, 1
             pool.pull("Vector2d", 0, h)  // 0, 1
         ]);
-        this.shapeType = "Rectangle";
+
+        /**
+         * the shape type (used internally)
+         * @type {string}
+         * @default "Rectangle"
+         */
+        this.type = "Rectangle";
     }
 
     /** @ignore */

@@ -16,6 +16,12 @@ export default class Point {
      * @default 0
      */
     y: number;
+    /**
+     * the shape type (used internally)
+     * @type {string}
+     * @default "Point"
+     */
+    type: string;
     /** @ignore */
     onResetEvent(x?: number, y?: number): void;
     /**

@@ -169,7 +169,7 @@ export default class Renderer {
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - the shape defining the mask to be applied
      * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
      */
-    setMask(mask?: Polygon | Line | Ellipse | Rect | RoundRect | undefined, invert?: boolean | undefined): void;
+    setMask(mask?: Rect | RoundRect | Polygon | Line | Ellipse, invert?: boolean | undefined): void;
     /**
      * disable (remove) the rendering mask set through setMask.
      * @see Renderer#setMask
@@ -231,9 +231,3 @@ import Vector2d from "../math/vector2.js";
 import Path2D from "./../geometries/path2d.js";
 import Color from "./../math/color.js";
 import Matrix3d from "./../math/matrix3.js";
-import Rect from "./../geometries/rectangle.js";
-import Bounds from "./../physics/bounds.js";
-import RoundRect from "./../geometries/roundrect.js";
-import Polygon from "./../geometries/poly.js";
-import Line from "./../geometries/line.js";
-import Ellipse from "./../geometries/ellipse.js";

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.10.0
+ * melonJS Game Engine - v15.9.2
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -62,8 +62,12 @@ class Polygon {
         // The bounding rectangle for this shape
         this._bounds;
 
-        // the shape type
-        this.shapeType = "Polygon";
+        /**
+         * the shape type (used internally)
+         * @type {string}
+         * @default "Polygon"
+         */
+        this.type = "Polygon";
         this.setShape(x, y, points);
     }
 

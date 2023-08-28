@@ -46,11 +46,6 @@ export default class Entity extends Renderable {
      */
     get renderable(): Renderable;
     /**
-     * object type (as defined in Tiled)
-     * @type {string}
-     */
-    type: string;
-    /**
      * object unique ID (as defined in Tiled)
      * @type {number}
      */

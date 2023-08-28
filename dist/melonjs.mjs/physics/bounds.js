@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.10.0
+ * melonJS Game Engine - v15.9.2
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -20,6 +20,13 @@ class Bounds {
         // @ignore
         this._center = new Vector2d();
         this.onResetEvent(vertices);
+
+        /**
+         * the object type (used internally)
+         * @type {string}
+         * @default "Bounds"
+         */
+        this.type = "Bounds";
     }
 
     /**

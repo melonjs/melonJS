@@ -485,14 +485,6 @@ export default class WebGLRenderer extends Renderer {
      * @param {number} height - the height of the rectangle to start clipping from.
      */
     clipRect(x: number, y: number, width: number, height: number): void;
-    /**
-     * A mask limits rendering elements to the shape and position of the given mask object.
-     * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
-     * Mask are not preserved through renderer context save and restore.
-     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - a shape defining the mask to be applied
-     * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
-     */
-    setMask(mask?: Rect | RoundRect | Polygon | Line | Ellipse, invert?: boolean | undefined): void;
 }
 import Renderer from "./../renderer.js";
 import Matrix2d from "./../../math/matrix2.js";

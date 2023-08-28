@@ -45,7 +45,12 @@ export default class Ellipse {
      * @type {Vector2d}
      */
     public ratio: Vector2d;
-    shapeType: string;
+    /**
+     * the shape type (used internally)
+     * @type {string}
+     * @default "Ellipse"
+     */
+    type: string;
     /** @ignore */
     onResetEvent(x: any, y: any, w: any, h: any): void;
     /**

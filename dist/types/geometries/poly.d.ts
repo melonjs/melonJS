@@ -44,7 +44,12 @@ export default class Polygon {
      * @ignore
      */
     normals: any[];
-    shapeType: string;
+    /**
+     * the shape type (used internally)
+     * @type {string}
+     * @default "Polygon"
+     */
+    type: string;
     /** @ignore */
     onResetEvent(x: any, y: any, points: any): void;
     /**

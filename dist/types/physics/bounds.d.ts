@@ -9,6 +9,12 @@ export default class Bounds {
     constructor(vertices?: Vector2d[] | Point[] | undefined);
     _center: Vector2d;
     /**
+     * the object type (used internally)
+     * @type {string}
+     * @default "Bounds"
+     */
+    type: string;
+    /**
      * @ignore
      */
     onResetEvent(vertices: any): void;
