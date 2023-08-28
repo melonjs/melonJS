@@ -59,7 +59,7 @@
     "howler": "2.2.3"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.22.10",
+    "@babel/eslint-parser": "^7.22.11",
     "@babel/plugin-syntax-import-assertions": "^7.22.5",
     "@fastify/static": "^6.10.2",
     "@melonjs/webdoc-theme": "^1.1.1",
@@ -70,12 +70,12 @@
     "@webdoc/cli": "^2.2.0",
     "chromedriver": "^116.0.0",
     "cross-env": "^7.0.3",
-    "del-cli": "^5.0.0",
-    "eslint": "^8.47.0",
+    "del-cli": "^5.0.1",
+    "eslint": "^8.48.0",
     "eslint-plugin-jsdoc": "^46.5.0",
-    "expect": "^29.6.3",
+    "expect": "^29.6.4",
     "expect-mocha-image-snapshot": "^3.0.15",
-    "fastify": "^4.21.0",
+    "fastify": "^4.22.0",
     "mocha": "^10.2.0",
     "npm-self-link": "^1.1.7",
     "puppeteer": "^21.1.0",
@@ -83,7 +83,7 @@
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
     "terser": "^5.19.2",
-    "typescript": "^5.1.6"
+    "typescript": "^5.2.2"
   },
   "scripts": {
     "build": "npm run lint && rollup -c --silent",
