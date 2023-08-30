@@ -94,7 +94,7 @@
     "test": "npm run test-node && mocha ./tests/browser/spec/*.js --reporter spec --bail --timeout 10000",
     "test-node": "node build/melonjs.module.js",
     "doc-prod": "mkdirp docs/docs && webdoc --quiet --site-root melonJS/docs/ -R README.md",
-    "doc-local": "mkdirp docs/docs && webdoc --quiet --site-root /docs -R README.md",
+    "doc-local": "mkdirp docs/docs && webdoc --quiet --site-root /docs/docs -R README.md",
     "doc": "npm run doc-prod",
     "serve": "python3 -m http.server",
     "prepublishOnly": "npm run dist && npm run test",
