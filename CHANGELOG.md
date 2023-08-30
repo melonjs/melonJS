@@ -3,6 +3,7 @@
 ## [15.10.0] (melonJS 2) - _2023-08-xx_
 
 - Chore: new "docs" directory where production documentation is generated, and properly published using Github Workflows
+- Chore: update NPM dependencies
 
 ## [15.9.2] (melonJS 2) - _2023-08-28_
 
