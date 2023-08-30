@@ -1,0 +1,23 @@
+.header {
+  height: 36px;
+  min-height: 32px;
+}
+
+.explorer__header__title {
+  font-size: 18px;
+  font-weight: lighter;
+}
+
+.header__link {
+  align-items: center;
+  color: #333;
+  display: flex;
+  font-size: 0.875em;
+  height: 100%;
+  text-decoration: none;
+}
+
+.header__link__current {
+  color: var(--color-primary-text);
+  border-bottom: 3px solid var(--color-primary-text);
+}

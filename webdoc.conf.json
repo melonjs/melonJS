@@ -8,8 +8,8 @@
     ],
     "opts": {
         "encoding"      : "utf8",
-        "destination"   : "docs",
-        "export"        : "docs/melonjs.api.json"
+        "destination"   : "docs/docs",
+        "export"        : "docs//docs/melonjs.api.json"
     },
     "template": {
         "applicationName": "melonJS",

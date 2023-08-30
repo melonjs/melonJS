@@ -1,0 +1,37 @@
+.tutorials .document h1 {
+  color: #333;
+  font-size: 4.375em;
+  font-weight: 400;
+  margin-top: 40px;
+  line-height: 1.1em;
+}
+
+.tutorials .document > :is(h2, h3, h4, h5, h6) {
+  color: #333;
+  font-weight: 400;
+  margin-top: 28px;
+  line-height: 1.1em;
+}
+
+.tutorials .document h2 {
+  font-size: 2.1875em;
+}
+
+.tutorials .document h3 {
+  font-size: 1.75em;
+}
+
+.tutorials .document h4 {
+  font-family: Roboto Mono, Courier New;
+  font-size: 1.5em;
+  line-height: 48px;
+}
+
+.tutorials .document h1+h2 {
+  margin-top: 0;
+}
+
+.tutorials .document h1:first-child+h2+p, .tutorials .document h1:first-child+p {
+  box-shadow: 0px 0px 0 2px #d1d4d9, 10px 10px 0 0 #d1d4d9;
+  margin-bottom: 24px;
+}

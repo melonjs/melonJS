@@ -1,0 +1,119 @@
+:root {
+  --color-primary: #e15d55;
+  --color-primary-light: #ffcc00;
+  --color-primary-text: #55aa00;
+}
+
+.explorer {
+  background-color: #4d4d4d;
+  border-right: 8px solid var(--color-primary-text);
+  color: white;
+}
+
+.explorer__header__title {
+  margin-left: 4px;
+}
+
+.explorer-tree__target {
+  margin: 4px 0 !important;
+  color: white;
+}
+
+.explorer-tree__target > div > div:last-child {
+  font-size: 0.875em !important;
+  color: white;
+}
+
+.explorer-tree__parent > div > div:first-child > svg, .explorer-tree__target > div > div:last-child > a {
+  color: white !important;
+}
+
+.explorer-tree__selected > div > div:last-child > a {
+  color: var(--color-primary-text) !important;
+}
+
+.explorer-tree__parent > div > div:last-child {
+    color: white !important;
+    font-weight: 500 !important;
+}
+
+.page {
+  background: white;
+}
+
+.tutorials .page-content {
+  padding-left: 22px;
+}
+
+.document > p, .document > ul, .document > ol {
+  font-size: 1em;
+}
+
+.tutorials .document {
+  font-size: 1em;
+}
+
+.tutorials .document > :not(h1, h2, h3) {
+  background-color: white;
+  padding: 14px;
+}
+
+.tutorials .document > pre {
+  border-radius: 0;
+  background-color: white !important;
+  width: auto !important;
+}
+
+.tutorials .document > pre > code {
+  border-radius: 0;
+  font-family: 'Roboto Mono';
+  width: 100%;
+}
+
+.tutorials .document > :not(h1) {
+  margin-bottom: 0;
+}
+
+.tutorials .document > ul, .document > ol {
+  padding-left: 4em;
+}
+
+.tutorials .document > :not(h1, h2, h3, h1:first-child+p, h1:first-child+h2+p) + :not(h1, h2, h3) {
+  /* Remove margin because we added padding */
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.api-docs .document {
+  background-color: white;
+  padding: 18px;
+  margin-right: 24px
+}
+
+.docs, .document, .explorer-tree__target > div > div:last-child, .page-content,.footer {
+  font-family: "Droid Sans", Tahoma, "Lucida Grande", sans-serif, "Helvetica Neue", Helvetica, Arial, "Malgun gothic", 돋움, AppleSDGothicNeo;
+}
+
+.signature, code {
+  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  margin: 0 !important;
+}
+
+.footer__container {
+  margin: 0;
+  padding: 4px 12px 4px 4px;
+  font-size: .8em;
+}
+
+.footer__container a {
+  color: inherit;
+  text-decoration: underline;
+}

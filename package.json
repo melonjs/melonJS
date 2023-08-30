@@ -93,12 +93,12 @@
     "pretest": "mkdirp tests/browser/public/lib && cp -f build/melonjs.module.js tests/browser/public/lib",
     "test": "npm run test-node && mocha ./tests/browser/spec/*.js --reporter spec --bail --timeout 10000",
     "test-node": "node build/melonjs.module.js",
-    "doc-prod": "mkdirp docs && webdoc --quiet --site-root melonJS/docs -R README.md",
-    "doc-local": "mkdirp docs && webdoc --quiet --site-root /docs -R README.md",
+    "doc-prod": "mkdirp docs/docs && webdoc --quiet --site-root melonJS/docs/ -R README.md",
+    "doc-local": "mkdirp docs/docs && webdoc --quiet --site-root /docs -R README.md",
     "doc": "npm run doc-prod",
     "serve": "python3 -m http.server",
     "prepublishOnly": "npm run dist && npm run test",
-    "clean": "del-cli --force build/*.* dist/** docs",
+    "clean": "del-cli --force build/*.* dist/** docs/docs/**",
     "types": "tsc"
   }
 }
