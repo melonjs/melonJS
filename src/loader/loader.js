@@ -193,7 +193,7 @@ function onLoadingError(res) {
  * // set the parser for the custom format
  * loader.setParser("abc", customAbcParser);
  */
-function setParser(type, parserFn) {
+export function setParser(type, parserFn) {
     if (typeof parserFn !== "function") {
         throw new Error("invalid parser function for " + type);
     }
