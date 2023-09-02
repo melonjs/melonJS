@@ -9,6 +9,9 @@
 - Chore: new "docs" directory where production documentation is generated, and properly published using Github Workflows
 - Chore: update NPM dependencies
 
+### Fixed
+- Loader: fix the `setParser()` method not being exported (and therefore preventing from setting custom parser) 
+
 ## [15.9.2] (melonJS 2) - _2023-08-28_
 
 ### Fixed
