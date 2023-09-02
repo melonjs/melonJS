@@ -42,7 +42,7 @@ describe("utils", function () {
     });
 
     describe("File", function () {
-        var filename = "bar/foo.baz";
+        var filename = "/src/bar/foo.baz";
 
         it("file basename", function () {
             expect(me.utils.file.getBasename(filename)).toEqual("foo");
@@ -51,6 +51,11 @@ describe("utils", function () {
         it("file extension", function () {
             expect(me.utils.file.getExtension(filename)).toEqual("baz");
         });
+
+        it("file path", function () {
+            expect(me.utils.file.getPath(filename)).toEqual("/src/bar/");
+        });
+        
     });
 
     describe("String", function () {

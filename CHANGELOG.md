@@ -2,6 +2,10 @@
 
 ## [15.10.0] (melonJS 2) - _2023-08-xx_
 
+### Added
+- utils: new file `getPath()` method that return the file path
+
+### Changed
 - Chore: new "docs" directory where production documentation is generated, and properly published using Github Workflows
 - Chore: update NPM dependencies
 
