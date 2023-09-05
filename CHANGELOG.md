@@ -1,6 +1,6 @@
 # Changelog
 
-## [15.10.0] (melonJS 2) - _2023-08-xx_
+## [15.10.0] (melonJS 2) - _2023-09-05_
 
 ### Added
 - utils: new file `getPath()` method that return the path element of a full file path
