@@ -3,14 +3,14 @@
 ## [15.10.0] (melonJS 2) - _2023-08-xx_
 
 ### Added
-- utils: new file `getPath()` method that return the file path
+- utils: new file `getPath()` method that return the path element of a full file path
 
 ### Changed
 - Chore: new "docs" directory where production documentation is generated, and properly published using Github Workflows
 - Chore: update NPM dependencies
 
 ### Fixed
-- Loader: fix the `setParser()` method not being exported (and therefore preventing from setting custom parser) 
+- Loader: fix the `setParser()` method not being exported (and therefore preventing from using and setting custom parser) 
 
 ## [15.9.2] (melonJS 2) - _2023-08-28_
 
