@@ -473,4 +473,4 @@ function getJSON(elt) {
     return null;
 }
 
-export { baseURL, getBinary, getImage, getJSON, getTMX, load, onProgress, onload, preload, unload, unloadAll };
+export { baseURL, getBinary, getImage, getJSON, getTMX, load, onProgress, onload, preload, setParser, unload, unloadAll };

@@ -11,8 +11,8 @@
  */
 
 // regexp to deal with file name & path
-const REMOVE_PATH = /^.*(\\|\/|\:)/;
-const REMOVE_EXT = /\.[^\.]*$/;
+const PATH = /^.*(\\|\/|\:)/;
+const EXT = /\.[^\.]*$/;
 
 
 /**
@@ -20,11 +20,23 @@ const REMOVE_EXT = /\.[^\.]*$/;
  * @public
  * @memberof utils.file
  * @name getBasename
- * @param  {string} path- -  path containing the filename
+ * @param  {string} path -  path containing the basename to extract
  * @returns {string} the base name without path information.
  */
 function getBasename(path) {
-    return path.replace(REMOVE_PATH, "").replace(REMOVE_EXT, "");
+    return path.replace(PATH, "").replace(EXT, "");
+}
+
+/**
+ * return the path of the file
+ * @public
+ * @memberof utils.file
+ * @name getPath
+ * @param  {string} path - the copmplete file path to extract the path from
+ * @returns {string} the extracted path
+ */
+function getPath(path) {
+    return path.match(PATH)[0];
 }
 
 /**
@@ -32,11 +44,11 @@ function getBasename(path) {
  * @public
  * @memberof utils.file
  * @name getExtension
- * @param  {string} path- -  path containing the filename
+ * @param  {string} path - path containing the filename and extension to extract
  * @returns {string} filename extension.
  */
 function getExtension(path) {
     return path.substring(path.lastIndexOf(".") + 1, path.length);
 }
 
-export { getBasename, getExtension };
+export { getBasename, getExtension, getPath };

@@ -1,4 +1,64 @@
 /**
+ * an asset definition to be used with the loader
+ * @typedef {object} loader.Asset
+ * @property {string} name - name of the asset
+ * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface")
+ * @property {string} [src]  - path and/or file name of the resource (for audio assets only the path is required)
+ * @property {string} [data]  - TMX data if not provided through a src url
+ * @property {boolean} [stream=false] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
+ * @see loader.preload
+ * @see loader.load
+ * @example
+ *   // PNG tileset
+ *   {name: "tileset-platformer", type: "image",  src: "data/map/tileset.png"}
+ *   // PNG packed texture
+ *   {name: "texture", type:"image", src: "data/gfx/texture.png"}
+ *   // PNG base64 encoded image
+ *   {name: "texture", type:"image", src: "data:image/png;base64,iVBORw0KAAAQAAAAEACA..."}
+ *   // TSX file
+ *   {name: "meta_tiles", type: "tsx", src: "data/map/meta_tiles.tsx"}
+ *   // TMX level (XML & JSON)
+ *   {name: "map1", type: "tmx", src: "data/map/map1.json"}
+ *   {name: "map2", type: "tmx", src: "data/map/map2.tmx"}
+ *   {name: "map3", type: "tmx", format: "json", data: {"height":15,"layers":[...],"tilewidth":32,"version":1,"width":20}}
+ *   {name: "map4", type: "tmx", format: "xml", data: {xml representation of tmx}}
+ *   // audio resources
+ *   {name: "bgmusic", type: "audio",  src: "data/audio/"}
+ *   {name: "cling",   type: "audio",  src: "data/audio/"}
+ *   // base64 encoded audio resources
+ *   {name: "band",   type: "audio",  src: "data:audio/wav;base64,..."}
+ *   // binary file
+ *   {name: "ymTrack", type: "binary", src: "data/audio/main.ym"}
+ *   // JSON file (used for texturePacker)
+ *   {name: "texture", type: "json", src: "data/gfx/texture.json"}
+ *   // JavaScript file
+ *   {name: "plugin", type: "js", src: "data/js/plugin.js"}
+ *   // Font Face
+ *   { name: "'kenpixel'", type: "fontface",  src: "url('data/font/kenvector_future.woff2')" }
+ */
+/**
+ * specify a parser/preload function for the given asset type
+ * @memberof loader
+ * @param {string} type - asset type
+ * @param {function} parserFn - parser function
+ * @see loader.Asset.type
+ * @example
+ * // specify a custom function for "abc" format
+ * function customAbcParser(data, onload, onerror) {
+ *    // preload and do something with the data
+ *    let parsedData = doSomething(data);
+ *    // when done, call the onload callback with the parsed data
+ *    onload(parsedData);
+ *    // in case of error, call the onerror callback
+ *    onerror();
+ *    // return the amount of asset parsed
+ *    return 1
+ * }
+ * // set the parser for the custom format
+ * loader.setParser("abc", customAbcParser);
+ */
+export function setParser(type: string, parserFn: Function): void;
+/**
  * set all the specified game assets to be preloaded.
  * @memberof loader
  * @param {loader.Asset[]} assets - list of assets to load
