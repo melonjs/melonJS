@@ -1,5 +1,5 @@
 import { checkVersion } from "./../utils/utils.js";
-import { version } from "./../index.js";
+import { game, version } from "./../index.js";
 import { warning } from "../lang/console.js";
 
 /**
@@ -22,7 +22,10 @@ export let cache = {};
  */
 export class BasePlugin {
 
-    constructor() {
+    /**
+     * @param {Application} [app] - a reference to the app/game that registered this plugin
+     */
+    constructor(app = game) {
         /**
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
@@ -30,6 +33,12 @@ export class BasePlugin {
          * @default "__VERSION__"
          */
         this.version = "__VERSION__";
+
+        /**
+         * a reference to the app/game that registered this plugin
+         * @type {Application}
+         */
+        this.app = app;
     }
 }
 
@@ -132,4 +141,19 @@ export function register(plugin, name = plugin.toString().match(/ (\w+)/)[1]) {
 
     // create a reference to the new plugin
     cache[name] = instance;
+}
+
+/**
+ * returns the the plugin instance with the specified class type or registered name
+ * @name get
+ * @memberof plugin
+ * @param {object|string} classType - the Class Object or registered name of the plugin to retreive
+ * @returns {BasePlugin} a plugin instance or undefined
+ */
+export function get(classType) {
+    for (const name in cache) {
+        if ((typeof classType === "string" && classType === name) || cache[name] instanceof classType) {
+            return cache[name];
+        }
+    }
 }

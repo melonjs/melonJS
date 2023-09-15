@@ -1,5 +1,11 @@
 # Changelog
 
+## [15.11.0] (melonJS 2) - _2023-09-05_
+
+### Added
+- plugin: the `BasePlugin` class now holds a reference to the app or game instance that registered the plugin
+- plugin: new `plugin.get()` method to retrieve a plugin instance by its Class Type or registered name
+
 ## [15.10.0] (melonJS 2) - _2023-09-05_
 
 ### Added
