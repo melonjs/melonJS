@@ -1,12 +1,12 @@
 /*!
- * melonJS Game Engine - v15.10.0
+ * melonJS Game Engine - v15.11.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 import { checkVersion } from '../utils/utils.js';
-import { version } from '../index.js';
+import { game, version } from '../index.js';
 import { warning } from '../lang/console.js';
 
 /**
@@ -29,14 +29,23 @@ let cache = {};
  */
 class BasePlugin {
 
-    constructor() {
+    /**
+     * @param {Application} [app] - a reference to the app/game that registered this plugin
+     */
+    constructor(app = game) {
         /**
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "15.10.0"
+         * @default "15.11.0"
          */
-        this.version = "15.10.0";
+        this.version = "15.11.0";
+
+        /**
+         * a reference to the app/game that registered this plugin
+         * @type {Application}
+         */
+        this.app = app;
     }
 }
 
@@ -141,4 +150,19 @@ function register(plugin, name = plugin.toString().match(/ (\w+)/)[1]) {
     cache[name] = instance;
 }
 
-export { Base, BasePlugin, cache, patch, register };
+/**
+ * returns the the plugin instance with the specified class type or registered name
+ * @name get
+ * @memberof plugin
+ * @param {object|string} classType - the Class Object or registered name of the plugin to retreive
+ * @returns {BasePlugin} a plugin instance or undefined
+ */
+function get(classType) {
+    for (const name in cache) {
+        if ((typeof classType === "string" && classType === name) || cache[name] instanceof classType) {
+            return cache[name];
+        }
+    }
+}
+
+export { Base, BasePlugin, cache, get, patch, register };

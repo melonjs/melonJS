@@ -30,6 +30,14 @@ export function patch(proto: object, name: string, fn: Function): void;
  */
 export function register(plugin: plugin.BasePlugin, name?: string | undefined, ...args: any[]): void;
 /**
+ * returns the the plugin instance with the specified class type or registered name
+ * @name get
+ * @memberof plugin
+ * @param {object|string} classType - the Class Object or registered name of the plugin to retreive
+ * @returns {BasePlugin} a plugin instance or undefined
+ */
+export function get(classType: object | string): BasePlugin;
+/**
  * Contains all registered plugins.
  * @name cache
  * @memberof plugin
@@ -47,12 +55,21 @@ export let cache: {};
  */
 export class BasePlugin {
     /**
+     * @param {Application} [app] - a reference to the app/game that registered this plugin
+     */
+    constructor(app?: any);
+    /**
      * define the minimum required version of melonJS<br>
      * this can be overridden by the plugin
      * @type {string}
      * @default "__VERSION__"
      */
     version: string;
+    /**
+     * a reference to the app/game that registered this plugin
+     * @type {Application}
+     */
+    app: Application;
 }
 /**
  * @class
@@ -61,4 +78,5 @@ export class BasePlugin {
  * @deprecated since 15.1.6, see {@link plugin.BasePlugin}
  */
 export class Base extends BasePlugin {
+    constructor();
 }

@@ -4,7 +4,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>melonJS: setParser</title>
+    <title>melonJS: get</title>
 
     
 
@@ -74,54 +74,30 @@
         &gt;
       
       
-        <a href=/melonJS/docs/melonjs/loader.html>loader</a>
+        <a href=/melonJS/docs/melonjs/plugin.html>plugin</a>
         &gt;
       
-      <span>setParser</span>
+      <span>get</span>
     </div>
     <section class="document__title ">
       <h1>
-        loader.setParser
+        plugin.get
       </h1>
       
     </section>
 
     
-<pre class="signature__container"><code class="signature">setParser(type: string, parserFn: Function) → {}</code></pre>
+<pre class="signature__container"><code class="signature">get(classType: object | string) → {BasePlugin}</code></pre>
 
 
     <div class="document__brief"></div>
     <div class="document__description">
-<p>specify a parser/preload function for the given asset type</p>
+<p>returns the the plugin instance with the specified class type or registered name</p>
 </div>
 
     
-      
-<pre><code><span class="hljs-comment">// specify a custom function for &quot;abc&quot; format</span>
-<span class="hljs-keyword">function</span> custom<span class="hljs-constructor">AbcParser(<span class="hljs-params">data</span>, <span class="hljs-params">onload</span>, <span class="hljs-params">onerror</span>)</span> {
-   <span class="hljs-comment">// preload and do something with the data</span>
-   <span class="hljs-keyword">let</span> parsedData = <span class="hljs-keyword">do</span><span class="hljs-constructor">Something(<span class="hljs-params">data</span>)</span>;
-   <span class="hljs-comment">// when done, call the onload callback with the parsed data</span>
-   onload(parsedData);
-   <span class="hljs-comment">// in case of error, call the onerror callback</span>
-   onerror<span class="hljs-literal">()</span>;
-   <span class="hljs-comment">// return the amount of asset parsed</span>
-   return <span class="hljs-number">1</span>
-}
-<span class="hljs-comment">// set the parser for the custom format</span>
-loader.set<span class="hljs-constructor">Parser(<span class="hljs-string">&quot;abc&quot;</span>, <span class="hljs-params">customAbcParser</span>)</span>;</code></pre>
 
     
-
-    
-
-<section class="member__see">
-  <span>See: </span>
-  
-    <span><a href=/melonJS/docs/melonjs/loader/Asset.html#type>loader.Asset.type</a></span>
-  
-</section>
-
 
     
        
@@ -140,27 +116,15 @@ loader.set<span class="hljs-constructor">Parser(<span class="hljs-string">&quot;
     <tbody class="member-parameters__body">
       <tr class="member-parameter">
         <td class="member-parameter__name">
-          type
+          classType
         </td>
         <td class="member-parameter__type">
-          string
+          object | string
         </td>
         
         
         <td class="member-parameter__description">
-<p>asset type</p>
-</td>
-      </tr><tr class="member-parameter">
-        <td class="member-parameter__name">
-          parserFn
-        </td>
-        <td class="member-parameter__type">
-          Function
-        </td>
-        
-        
-        <td class="member-parameter__description">
-<p>parser function</p>
+<p>the Class Object or registered name of the plugin to retreive</p>
 </td>
       </tr>
     </tbody>
@@ -178,7 +142,16 @@ loader.set<span class="hljs-constructor">Parser(<span class="hljs-string">&quot;
       </tr>
     </thead>
     <tbody class="member-returns__body">
-      
+      <tr class="member-return">
+        <td class="member-return__type">
+          BasePlugin
+        </td>
+        <td class="member-return__description">
+          
+<p>a plugin instance or undefined</p>
+
+        </td>
+      </tr>
     </tbody>
   </table>
 </div>

@@ -1,6 +1,6 @@
 # Changelog
 
-## [15.11.0] (melonJS 2) - _2023-09-05_
+## [15.11.0] (melonJS 2) - _2023-09-15_
 
 ### Added
 - plugin: the `BasePlugin` class now holds a reference to the app or game instance that registered the plugin
@@ -685,6 +685,7 @@
 
 -------------------------------------------------------------------------------
 
+[15.11.0]: https://github.com/melonjs/melonJS/compare/15.10.0...15.11.0
 [15.10.0]: https://github.com/melonjs/melonJS/compare/15.9.2...15.10.0
 [15.9.2]: https://github.com/melonjs/melonJS/compare/15.9.1...15.9.2
 [15.9.1]: https://github.com/melonjs/melonJS/compare/15.9.0...15.9.1

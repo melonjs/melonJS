@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.10.0
+ * melonJS Game Engine - v15.11.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -473,10 +473,10 @@ var store$2 = sharedStore;
 (shared$5.exports = function (key, value) {
   return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 })('versions', []).push({
-  version: '3.32.1',
+  version: '3.32.2',
   mode: IS_PURE ? 'pure' : 'global',
   copyright: '© 2014-2023 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.32.1/LICENSE',
+  license: 'https://github.com/zloirock/core-js/blob/v3.32.2/LICENSE',
   source: 'https://github.com/zloirock/core-js'
 });
 
@@ -813,16 +813,16 @@ var hiddenKeys$2 = hiddenKeys$3;
 var OBJECT_ALREADY_INITIALIZED = 'Object already initialized';
 var TypeError$1 = global$5.TypeError;
 var WeakMap = global$5.WeakMap;
-var set, get, has;
+var set, get$1, has;
 
 var enforce = function (it) {
-  return has(it) ? get(it) : set(it, {});
+  return has(it) ? get$1(it) : set(it, {});
 };
 
 var getterFor = function (TYPE) {
   return function (it) {
     var state;
-    if (!isObject(it) || (state = get(it)).type !== TYPE) {
+    if (!isObject(it) || (state = get$1(it)).type !== TYPE) {
       throw TypeError$1('Incompatible receiver, ' + TYPE + ' required');
     } return state;
   };
@@ -841,7 +841,7 @@ if (NATIVE_WEAK_MAP || shared.state) {
     store.set(it, metadata);
     return metadata;
   };
-  get = function (it) {
+  get$1 = function (it) {
     return store.get(it) || {};
   };
   has = function (it) {
@@ -856,7 +856,7 @@ if (NATIVE_WEAK_MAP || shared.state) {
     createNonEnumerableProperty$1(it, STATE, metadata);
     return metadata;
   };
-  get = function (it) {
+  get$1 = function (it) {
     return hasOwn$3(it, STATE) ? it[STATE] : {};
   };
   has = function (it) {
@@ -866,7 +866,7 @@ if (NATIVE_WEAK_MAP || shared.state) {
 
 var internalState = {
   set: set,
-  get: get,
+  get: get$1,
   has: has,
   enforce: enforce,
   getterFor: getterFor
@@ -38332,14 +38332,23 @@ let cache = {};
  */
 class BasePlugin {
 
-    constructor() {
+    /**
+     * @param {Application} [app] - a reference to the app/game that registered this plugin
+     */
+    constructor(app = game) {
         /**
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "15.10.0"
+         * @default "15.11.0"
          */
-        this.version = "15.10.0";
+        this.version = "15.11.0";
+
+        /**
+         * a reference to the app/game that registered this plugin
+         * @type {Application}
+         */
+        this.app = app;
     }
 }
 
@@ -38444,11 +38453,27 @@ function register(plugin, name = plugin.toString().match(/ (\w+)/)[1]) {
     cache[name] = instance;
 }
 
+/**
+ * returns the the plugin instance with the specified class type or registered name
+ * @name get
+ * @memberof plugin
+ * @param {object|string} classType - the Class Object or registered name of the plugin to retreive
+ * @returns {BasePlugin} a plugin instance or undefined
+ */
+function get(classType) {
+    for (const name in cache) {
+        if ((typeof classType === "string" && classType === name) || cache[name] instanceof classType) {
+            return cache[name];
+        }
+    }
+}
+
 var plugin = {
 	__proto__: null,
 	Base: Base,
 	BasePlugin: BasePlugin,
 	cache: cache,
+	get: get,
 	patch: patch,
 	register: register
 };
@@ -38570,7 +38595,7 @@ class GUI_Object extends UISpriteElement {
  * @name version
  * @type {string}
  */
-const version = "15.10.0";
+const version = "15.11.0";
 
 /**
  * a flag indicating that melonJS is fully initialized
