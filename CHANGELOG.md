@@ -2,7 +2,11 @@
 
 ## [15.12.0] (melonJS 2) - _2023-09-xx_
 
+### Added
 - Renderer: add proper `width` and `height` (getter/setter) properties and deprecate `getHeight()` and `getWidth()`
+
+### Changed
+- Audio: update howler.js to version 2.2.4
 
 ## [15.11.0] (melonJS 2) - _2023-09-15_
 
