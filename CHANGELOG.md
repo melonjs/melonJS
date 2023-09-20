@@ -1,5 +1,9 @@
 # Changelog
 
+## [15.12.0] (melonJS 2) - _2023-09-xx_
+
+- Renderer: add proper `width` and `height` (getter/setter) properties and deprecate `getHeight()` and `getWidth()`
+
 ## [15.11.0] (melonJS 2) - _2023-09-15_
 
 ### Added
@@ -685,6 +689,7 @@
 
 -------------------------------------------------------------------------------
 
+[15.12.0]: https://github.com/melonjs/melonJS/compare/15.11.0...15.12.0
 [15.11.0]: https://github.com/melonjs/melonJS/compare/15.10.0...15.11.0
 [15.10.0]: https://github.com/melonjs/melonJS/compare/15.9.2...15.10.0
 [15.9.2]: https://github.com/melonjs/melonJS/compare/15.9.1...15.9.2

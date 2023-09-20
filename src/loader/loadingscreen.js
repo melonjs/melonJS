@@ -44,7 +44,7 @@ class ProgressBar extends Renderable {
     draw(renderer, viewport) {
         // draw the progress bar
         renderer.setColor("black");
-        renderer.fillRect(this.pos.x, viewport.centerY, renderer.getWidth(), this.barHeight / 2);
+        renderer.fillRect(this.pos.x, viewport.centerY, renderer.width, this.barHeight / 2);
 
         renderer.setColor("#55aa00");
         renderer.fillRect(this.pos.x, viewport.centerY, this.progress, this.barHeight / 2);
@@ -80,8 +80,8 @@ class DefaultLoadingScreen extends Stage {
         // progress bar
         game.world.addChild(new ProgressBar(
             0,
-            renderer.getHeight() / 2,
-            renderer.getWidth(),
+            renderer.height / 2,
+            renderer.width,
             barHeight
         ), 1);
 
@@ -89,8 +89,8 @@ class DefaultLoadingScreen extends Stage {
         load({name: "melonjs_logo", type: "image", src: logo_url}, () => {
             // melonJS logo
             game.world.addChild(new Sprite(
-                renderer.getWidth() / 2,
-                renderer.getHeight() / 2, {
+                renderer.width / 2,
+                renderer.height / 2, {
                     image : "melonjs_logo",
                     framewidth : 256,
                     frameheight : 256

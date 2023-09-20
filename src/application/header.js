@@ -21,6 +21,6 @@ export function consoleHeader(app) {
     );
 
     console.log( "resolution: " + "requested " + app.settings.width + "x" + app.settings.height +
-        ", got " + app.renderer.getWidth() + "x" + app.renderer.getHeight()
+        ", got " + app.renderer.width + "x" + app.renderer.height
     );
 }
