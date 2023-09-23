@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.11.0
+ * melonJS Game Engine - v15.12.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -68,6 +68,7 @@ function setPrefixed(name, value, obj) {
             obj[name] = value;
             return true;
         }
+        return false;
     });
 
     return false;

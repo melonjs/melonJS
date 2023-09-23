@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.11.0
+ * melonJS Game Engine - v15.12.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -9763,7 +9763,7 @@ var event = {
 var howler$1 = {};
 
 /*!
- *  howler.js v2.2.3
+ *  howler.js v2.2.4
  *  howlerjs.com
  *
  *  (c) 2013-2020, James Simpson of GoldFire Studios
@@ -10030,7 +10030,7 @@ var howler$1 = {};
 
 	      // Opera version <33 has mixed MP3 support, so we need to check for and block it.
 	      var ua = self._navigator ? self._navigator.userAgent : '';
-	      var checkOpera = ua.match(/OPR\/([0-6].)/g);
+	      var checkOpera = ua.match(/OPR\/(\d+)/g);
 	      var isOldOpera = (checkOpera && parseInt(checkOpera[0].split('/')[1], 10) < 33);
 	      var checkSafari = ua.indexOf('Safari') !== -1 && ua.indexOf('Chrome') === -1;
 	      var safariVersion = ua.match(/Version\/(.*?) /);
@@ -11932,6 +11932,10 @@ var howler$1 = {};
 	      var self = this;
 	      var isIOS = Howler._navigator && Howler._navigator.vendor.indexOf('Apple') >= 0;
 
+	      if (!node.bufferSource) {
+	        return self;
+	      }
+
 	      if (Howler._scratchBuffer && node.bufferSource) {
 	        node.bufferSource.onended = null;
 	        node.bufferSource.disconnect(0);
@@ -12351,7 +12355,7 @@ var howler$1 = {};
 	/*!
 	 *  Spatial Plugin - Adds support for stereo and 3D audio where Web Audio is supported.
 	 *  
-	 *  howler.js v2.2.3
+	 *  howler.js v2.2.4
 	 *  howlerjs.com
 	 *
 	 *  (c) 2013-2020, James Simpson of GoldFire Studios
@@ -12864,18 +12868,9 @@ var howler$1 = {};
 	          panningModel: typeof o.panningModel !== 'undefined' ? o.panningModel : pa.panningModel
 	        };
 
-	        // Update the panner values or create a new panner if none exists.
+	        // Create a new panner node if one doesn't already exist.
 	        var panner = sound._panner;
-	        if (panner) {
-	          panner.coneInnerAngle = pa.coneInnerAngle;
-	          panner.coneOuterAngle = pa.coneOuterAngle;
-	          panner.coneOuterGain = pa.coneOuterGain;
-	          panner.distanceModel = pa.distanceModel;
-	          panner.maxDistance = pa.maxDistance;
-	          panner.refDistance = pa.refDistance;
-	          panner.rolloffFactor = pa.rolloffFactor;
-	          panner.panningModel = pa.panningModel;
-	        } else {
+	        if (!panner) {
 	          // Make sure we have a position to setup the node with.
 	          if (!sound._pos) {
 	            sound._pos = self._pos || [0, 0, -0.5];
@@ -12883,7 +12878,18 @@ var howler$1 = {};
 
 	          // Create a new panner node.
 	          setupPanner(sound, 'spatial');
+	          panner = sound._panner;
 	        }
+
+	        // Update the panner values or create a new panner if none exists.
+	        panner.coneInnerAngle = pa.coneInnerAngle;
+	        panner.coneOuterAngle = pa.coneOuterAngle;
+	        panner.coneOuterGain = pa.coneOuterGain;
+	        panner.distanceModel = pa.distanceModel;
+	        panner.maxDistance = pa.maxDistance;
+	        panner.refDistance = pa.refDistance;
+	        panner.rolloffFactor = pa.rolloffFactor;
+	        panner.panningModel = pa.panningModel;
 	      }
 	    }
 
@@ -13935,6 +13941,7 @@ function setPrefixed(name, value, obj) {
             obj[name] = value;
             return true;
         }
+        return false;
     });
 
     return false;
@@ -18966,8 +18973,8 @@ class Stage {
         // empty or no default camera
         if (this.cameras.has("default") === false) {
             if (typeof default_camera === "undefined") {
-                let width = renderer.getWidth();
-                let height = renderer.getHeight();
+                let width = renderer.width;
+                let height = renderer.height;
                 // new default camera instance
                 default_camera = new Camera2d(0, 0, width, height);
             }
@@ -21020,6 +21027,30 @@ class Renderer {
     }
 
     /**
+     * return the height of the canvas which this renderer draws to
+     * @returns {number} height of the system Canvas
+     */
+    get height() {
+        return this.getCanvas().height;
+    }
+
+    set height(value) {
+        this.resize(this.width, value);
+    }
+
+    /**
+     * return the width of the canvas which this renderer draws to
+     * @returns {number} width of the system Canvas
+     */
+    get width() {
+        return this.getCanvas().width;
+    }
+
+    set width(value) {
+        this.resize(value, this.height);
+    }
+
+    /**
      * prepare the framebuffer for drawing a new frame
      */
     clear() {}
@@ -21040,8 +21071,8 @@ class Renderer {
         this.cache.clear();
         this.currentScissor[0] = 0;
         this.currentScissor[1] = 0;
-        this.currentScissor[2] = this.getCanvas().width;
-        this.currentScissor[3] = this.getCanvas().height;
+        this.currentScissor[2] = this.width;
+        this.currentScissor[3] = this.height;
         this.clearMask();
     }
 
@@ -21052,7 +21083,6 @@ class Renderer {
     getCanvas() {
         return this.canvas;
     }
-
 
     /**
      * return a reference to this renderer canvas corresponding Context
@@ -21107,22 +21137,6 @@ class Renderer {
     }
 
     /**
-     * return the width of the system Canvas
-     * @returns {number}
-     */
-    getWidth() {
-        return this.getCanvas().width;
-    }
-
-    /**
-     * return the height of the system Canvas
-     * @returns {number} height of the system Canvas
-     */
-    getHeight() {
-        return this.getCanvas().height;
-    }
-
-    /**
      * get the current fill & stroke style color.
      * @returns {Color} current global color
      */
@@ -21145,11 +21159,10 @@ class Renderer {
      */
     overlaps(bounds) {
         return (
-            bounds.left <= this.getWidth() && bounds.right >= 0 &&
-            bounds.top <= this.getHeight() && bounds.bottom >= 0
+            bounds.left <= this.width && bounds.right >= 0 &&
+            bounds.top <= this.height && bounds.bottom >= 0
         );
     }
-
 
     /**
      * resizes the system canvas
@@ -27908,7 +27921,7 @@ class ProgressBar extends Renderable {
     draw(renderer, viewport) {
         // draw the progress bar
         renderer.setColor("black");
-        renderer.fillRect(this.pos.x, viewport.centerY, renderer.getWidth(), this.barHeight / 2);
+        renderer.fillRect(this.pos.x, viewport.centerY, renderer.width, this.barHeight / 2);
 
         renderer.setColor("#55aa00");
         renderer.fillRect(this.pos.x, viewport.centerY, this.progress, this.barHeight / 2);
@@ -27944,8 +27957,8 @@ class DefaultLoadingScreen extends Stage {
         // progress bar
         game.world.addChild(new ProgressBar(
             0,
-            renderer.getHeight() / 2,
-            renderer.getWidth(),
+            renderer.height / 2,
+            renderer.width,
             barHeight
         ), 1);
 
@@ -27953,8 +27966,8 @@ class DefaultLoadingScreen extends Stage {
         load({name: "melonjs_logo", type: "image", src: img}, () => {
             // melonJS logo
             game.world.addChild(new Sprite(
-                renderer.getWidth() / 2,
-                renderer.getHeight() / 2, {
+                renderer.width / 2,
+                renderer.height / 2, {
                     image : "melonjs_logo",
                     framewidth : 256,
                     frameheight : 256
@@ -37892,7 +37905,7 @@ function consoleHeader(app) {
     );
 
     console.log( "resolution: " + "requested " + app.settings.width + "x" + app.settings.height +
-        ", got " + app.renderer.getWidth() + "x" + app.renderer.getHeight()
+        ", got " + app.renderer.width + "x" + app.renderer.height
     );
 }
 
@@ -38340,9 +38353,9 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "15.11.0"
+         * @default "15.12.0"
          */
-        this.version = "15.11.0";
+        this.version = "15.12.0";
 
         /**
          * a reference to the app/game that registered this plugin
@@ -38585,6 +38598,35 @@ class GUI_Object extends UISpriteElement {
     }
 }
 
+
+/**
+ * return the width of the system Canvas
+ * @public
+ * @name getWidth
+ * @class
+ * @memberof Renderer#
+ * @deprecated since 15.12.0
+ * @see width
+ */
+Renderer.prototype.getWidth = function()  {
+    warning("getWidth", "width", "15.12.0");
+    return this.width;
+};
+
+/**
+ * return the height of the system Canvas
+ * @public
+ * @name getHeight
+ * @class
+ * @memberof Renderer#
+ * @deprecated since 15.12.0
+ * @see height
+ */
+Renderer.prototype.getHeight = function()  {
+    warning("getHeight", "height", "15.12.0");
+    return this.height;
+};
+
 // ES5/ES6 polyfills
 
 
@@ -38595,7 +38637,7 @@ class GUI_Object extends UISpriteElement {
  * @name version
  * @type {string}
  */
-const version = "15.11.0";
+const version = "15.12.0";
 
 /**
  * a flag indicating that melonJS is fully initialized

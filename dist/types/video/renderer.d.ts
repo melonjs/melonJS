@@ -65,6 +65,18 @@ export default class Renderer {
     currentTint: Color;
     projectionMatrix: Matrix3d;
     uvOffset: number;
+    set height(arg: number);
+    /**
+     * return the height of the canvas which this renderer draws to
+     * @returns {number} height of the system Canvas
+     */
+    get height(): number;
+    set width(arg: number);
+    /**
+     * return the width of the canvas which this renderer draws to
+     * @returns {number} width of the system Canvas
+     */
+    get width(): number;
     /**
      * prepare the framebuffer for drawing a new frame
      */
@@ -100,16 +112,6 @@ export default class Renderer {
      * @returns {CanvasRenderingContext2D}
      */
     getContext2d(canvas: HTMLCanvasElement, transparent?: boolean | undefined): CanvasRenderingContext2D;
-    /**
-     * return the width of the system Canvas
-     * @returns {number}
-     */
-    getWidth(): number;
-    /**
-     * return the height of the system Canvas
-     * @returns {number} height of the system Canvas
-     */
-    getHeight(): number;
     /**
      * get the current fill & stroke style color.
      * @returns {Color} current global color

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.11.0
+ * melonJS Game Engine - v15.12.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -118,5 +118,34 @@ class GUI_Object extends UISpriteElement {
         super(x, y, settings);
     }
 }
+
+
+/**
+ * return the width of the system Canvas
+ * @public
+ * @name getWidth
+ * @class
+ * @memberof Renderer#
+ * @deprecated since 15.12.0
+ * @see width
+ */
+Renderer.prototype.getWidth = function()  {
+    warning("getWidth", "width", "15.12.0");
+    return this.width;
+};
+
+/**
+ * return the height of the system Canvas
+ * @public
+ * @name getHeight
+ * @class
+ * @memberof Renderer#
+ * @deprecated since 15.12.0
+ * @see height
+ */
+Renderer.prototype.getHeight = function()  {
+    warning("getHeight", "height", "15.12.0");
+    return this.height;
+};
 
 export { DraggableEntity, DroptargetEntity, GUI_Object };

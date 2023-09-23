@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.11.0
+ * melonJS Game Engine - v15.12.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -114,6 +114,30 @@ class Renderer {
     }
 
     /**
+     * return the height of the canvas which this renderer draws to
+     * @returns {number} height of the system Canvas
+     */
+    get height() {
+        return this.getCanvas().height;
+    }
+
+    set height(value) {
+        this.resize(this.width, value);
+    }
+
+    /**
+     * return the width of the canvas which this renderer draws to
+     * @returns {number} width of the system Canvas
+     */
+    get width() {
+        return this.getCanvas().width;
+    }
+
+    set width(value) {
+        this.resize(value, this.height);
+    }
+
+    /**
      * prepare the framebuffer for drawing a new frame
      */
     clear() {}
@@ -134,8 +158,8 @@ class Renderer {
         this.cache.clear();
         this.currentScissor[0] = 0;
         this.currentScissor[1] = 0;
-        this.currentScissor[2] = this.getCanvas().width;
-        this.currentScissor[3] = this.getCanvas().height;
+        this.currentScissor[2] = this.width;
+        this.currentScissor[3] = this.height;
         this.clearMask();
     }
 
@@ -146,7 +170,6 @@ class Renderer {
     getCanvas() {
         return this.canvas;
     }
-
 
     /**
      * return a reference to this renderer canvas corresponding Context
@@ -201,22 +224,6 @@ class Renderer {
     }
 
     /**
-     * return the width of the system Canvas
-     * @returns {number}
-     */
-    getWidth() {
-        return this.getCanvas().width;
-    }
-
-    /**
-     * return the height of the system Canvas
-     * @returns {number} height of the system Canvas
-     */
-    getHeight() {
-        return this.getCanvas().height;
-    }
-
-    /**
      * get the current fill & stroke style color.
      * @returns {Color} current global color
      */
@@ -239,11 +246,10 @@ class Renderer {
      */
     overlaps(bounds) {
         return (
-            bounds.left <= this.getWidth() && bounds.right >= 0 &&
-            bounds.top <= this.getHeight() && bounds.bottom >= 0
+            bounds.left <= this.width && bounds.right >= 0 &&
+            bounds.top <= this.height && bounds.bottom >= 0
         );
     }
-
 
     /**
      * resizes the system canvas

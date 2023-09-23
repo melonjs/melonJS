@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.11.0
+ * melonJS Game Engine - v15.12.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -102,8 +102,8 @@ class Stage {
         // empty or no default camera
         if (this.cameras.has("default") === false) {
             if (typeof default_camera === "undefined") {
-                let width = renderer.getWidth();
-                let height = renderer.getHeight();
+                let width = renderer.width;
+                let height = renderer.height;
                 // new default camera instance
                 default_camera = new Camera2d(0, 0, width, height);
             }
