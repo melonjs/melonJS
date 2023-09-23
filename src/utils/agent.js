@@ -61,6 +61,7 @@ export function setPrefixed(name, value, obj) {
             obj[name] = value;
             return true;
         }
+        return false;
     });
 
     return false;

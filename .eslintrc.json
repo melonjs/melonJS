@@ -19,6 +19,7 @@
   "rules": {
     // http://eslint.org/docs/rules/
     "accessor-pairs": "error",
+    "array-callback-return": "error",
     "arrow-body-style": ["error", "as-needed"],
     "arrow-spacing": ["error", { "before": true, "after": true }],
     "block-spacing": ["error", "always"],
@@ -34,6 +35,7 @@
     "eol-last": "error",
     "eqeqeq": ["error", "allow-null"],
     "func-call-spacing": ["error", "never"],
+    "for-direction": "error",
     "handle-callback-err": ["error", "^(err|error)$" ],
     "indent": ["error", 4, { "ignoredNodes": ["SwitchCase"]}],
     "key-spacing": ["off", { "beforeColon": false, "afterColon": true }],
@@ -68,7 +70,7 @@
     "no-negated-in-lhs": "error",
     "no-new": "error",
     "no-new-func": "error",
-    "no-new-object": "error",
+    "no-object-constructor": "error",
     "no-new-native-nonconstructor": "error",
     "no-new-require": "error",
     "no-new-wrappers": "error",
@@ -76,6 +78,7 @@
     "no-path-concat": "error",
     "no-proto": "error",
     "no-prototype-builtins": "off",
+    "no-promise-executor-return": "error",
     "no-return-assign": ["error", "except-parens"],
     "no-self-compare": "error",
     "no-sequences": "off",
