@@ -1,5 +1,10 @@
 # Changelog
 
+## [15.12.1] (melonJS 2) - _2023-09-xx_
+
+### Fixed
+UI - fix duplicated text rendering in UITextButton
+
 ## [15.12.0] (melonJS 2) - _2023-09-23_
 
 ### Added

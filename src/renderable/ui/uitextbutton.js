@@ -38,6 +38,8 @@ export default class UITextButton extends UIBaseElement {
      *              // if you omit the next two, size is calculated by the size of the text
      *              borderWidth: 200,
      *              borderHeight: 20,
+     *              backgroundColor: '#00aa0080',
+     *              hoverColor: '#00ff00ff'
      *          });
      *      }
      *
@@ -129,9 +131,6 @@ export default class UITextButton extends UIBaseElement {
         renderer.fill(this.border);
         renderer.setColor(this.borderStrokeColor);
         renderer.stroke(this.border);
-        this.bitmapText.preDraw(renderer);
-        this.bitmapText.draw(renderer);
-        this.bitmapText.postDraw(renderer);
         super.draw(renderer);
     }
 }
