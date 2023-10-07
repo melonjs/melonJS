@@ -20,8 +20,8 @@ export default class UITextButton extends UIBaseElement {
      * @param {number} [settings.size=1] - The scale factor of the BitmapText
      * @param {string} [settings.text] - The text to display
      * @param {string} [settings.bindKey] - The key to bind the action to (default: none)
-     * @param {string} [settings.backgroundColor="#00aa0080"] - The css value of a background color
-     * @param {string} [settings.hoverColor="#00ff00ff"] - The css value of a color to be used if the pointer hovers over the button
+     * @param {string} [settings.hoverOffColor="#00aa0080"] - The css value of a color to be used if the pointer is not hovering over the button
+     * @param {string} [settings.hoverOnColor="#00ff00ff"] - The css value of a color to be used if the pointer hovers over the button
      * @param {string} [settings.borderStrokeColor="#000000"] - The css value of a color to be used to draw the border
      * @param {string} [settings.fillStyle] - The css value of a tint color to be used to tint the BitmapText
      * @param {string} [settings.textAlign="center"] - horizontal text alignment
@@ -60,16 +60,18 @@ export default class UITextButton extends UIBaseElement {
         this.bindKey = settings.bindKey || -1;
 
         /**
-         * The css value of a background color
+         * The css value of a color to be used if the pointer is nothovering over the button
          * @type {string}
          */
-        this.backgroundColor = settings.backgroundColor || "#00aa0080";
+        // keep settings.backgroundColor for backward compatibility
+        this.hoverOffColor = settings.hoverOffColor || settings.backgroundColor || "#00aa0080";
 
         /**
          * The css value of a color to be used if the pointer hovers over the button
          * @type {string}
          */
-        this.hoverColor = settings.hoverColor || "#00ff00ff";
+        // keep settings.hoverColor for backward compatibility
+        this.hoverOnColor = settings.hoverOnColor || settings.hoverColor || "#00ff00ff";
 
         /**
          * The css value of a color to be used to draw the border
@@ -124,9 +126,9 @@ export default class UITextButton extends UIBaseElement {
 
     draw(renderer) {
         if (this.hover === true) {
-            renderer.setColor(this.hoverColor);
+            renderer.setColor(this.hoverOnColor);
         } else {
-            renderer.setColor(this.backgroundColor);
+            renderer.setColor(this.hoverOffColor);
         }
         renderer.fill(this.border);
         renderer.setColor(this.borderStrokeColor);
