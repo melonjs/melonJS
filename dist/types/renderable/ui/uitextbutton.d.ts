@@ -15,8 +15,8 @@ export default class UITextButton extends UIBaseElement {
      * @param {number} [settings.size=1] - The scale factor of the BitmapText
      * @param {string} [settings.text] - The text to display
      * @param {string} [settings.bindKey] - The key to bind the action to (default: none)
-     * @param {string} [settings.backgroundColor="#00aa0080"] - The css value of a background color
-     * @param {string} [settings.hoverColor="#00ff00ff"] - The css value of a color to be used if the pointer hovers over the button
+     * @param {string} [settings.hoverOffColor="#00aa0080"] - The css value of a color to be used if the pointer is not hovering over the button
+     * @param {string} [settings.hoverOnColor="#00ff00ff"] - The css value of a color to be used if the pointer hovers over the button
      * @param {string} [settings.borderStrokeColor="#000000"] - The css value of a color to be used to draw the border
      * @param {string} [settings.fillStyle] - The css value of a tint color to be used to tint the BitmapText
      * @param {string} [settings.textAlign="center"] - horizontal text alignment
@@ -33,6 +33,8 @@ export default class UITextButton extends UIBaseElement {
      *              // if you omit the next two, size is calculated by the size of the text
      *              borderWidth: 200,
      *              borderHeight: 20,
+     *              backgroundColor: '#00aa0080',
+     *              hoverColor: '#00ff00ff'
      *          });
      *      }
      *
@@ -50,10 +52,15 @@ export default class UITextButton extends UIBaseElement {
      */
     bindKey: string;
     /**
+     * The css value of a color to be used if the pointer is nothovering over the button
+     * @type {string}
+     */
+    hoverOffColor: string;
+    /**
      * The css value of a color to be used if the pointer hovers over the button
      * @type {string}
      */
-    hoverColor: string;
+    hoverOnColor: string;
     /**
      * The css value of a color to be used to draw the border
      * @type {string}

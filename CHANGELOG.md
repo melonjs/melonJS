@@ -1,6 +1,6 @@
 # Changelog
 
-## [15.13.0] (melonJS 2) - _2023-09-xx_
+## [15.13.0] (melonJS 2) - _2023-10-07_
 
 ### Changed
 - UI: UITextButton `backgroundColor` and `hoverColor` properties are now deprecated in favor of `hoverOffColor` and `hoverOnColor`
@@ -702,6 +702,7 @@
 
 -------------------------------------------------------------------------------
 
+[15.13.0]: https://github.com/melonjs/melonJS/compare/15.12.0...15.13.0
 [15.12.0]: https://github.com/melonjs/melonJS/compare/15.11.0...15.12.0
 [15.11.0]: https://github.com/melonjs/melonJS/compare/15.10.0...15.11.0
 [15.10.0]: https://github.com/melonjs/melonJS/compare/15.9.2...15.10.0

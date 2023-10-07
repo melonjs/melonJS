@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.12.0
+ * melonJS Game Engine - v15.13.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -205,7 +205,7 @@ var $TypeError$5 = TypeError;
 // `RequireObjectCoercible` abstract operation
 // https://tc39.es/ecma262/#sec-requireobjectcoercible
 var requireObjectCoercible$3 = function (it) {
-  if (isNullOrUndefined$1(it)) throw $TypeError$5("Can't call method on " + it);
+  if (isNullOrUndefined$1(it)) throw new $TypeError$5("Can't call method on " + it);
   return it;
 };
 
@@ -393,7 +393,7 @@ var $TypeError$4 = TypeError;
 // `Assert: IsCallable(argument) is true`
 var aCallable$1 = function (argument) {
   if (isCallable$7(argument)) return argument;
-  throw $TypeError$4(tryToString(argument) + ' is not a function');
+  throw new $TypeError$4(tryToString(argument) + ' is not a function');
 };
 
 var aCallable$2 = /*@__PURE__*/getDefaultExportFromCjs(aCallable$1);
@@ -425,7 +425,7 @@ var ordinaryToPrimitive$1 = function (input, pref) {
   if (pref === 'string' && isCallable$6(fn = input.toString) && !isObject$4(val = call$2(fn, input))) return val;
   if (isCallable$6(fn = input.valueOf) && !isObject$4(val = call$2(fn, input))) return val;
   if (pref !== 'string' && isCallable$6(fn = input.toString) && !isObject$4(val = call$2(fn, input))) return val;
-  throw $TypeError$3("Can't convert object to primitive value");
+  throw new $TypeError$3("Can't convert object to primitive value");
 };
 
 var ordinaryToPrimitive$2 = /*@__PURE__*/getDefaultExportFromCjs(ordinaryToPrimitive$1);
@@ -473,10 +473,10 @@ var store$2 = sharedStore;
 (shared$5.exports = function (key, value) {
   return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 })('versions', []).push({
-  version: '3.32.2',
+  version: '3.33.0',
   mode: IS_PURE ? 'pure' : 'global',
   copyright: '© 2014-2023 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.32.2/LICENSE',
+  license: 'https://github.com/zloirock/core-js/blob/v3.33.0/LICENSE',
   source: 'https://github.com/zloirock/core-js'
 });
 
@@ -567,7 +567,7 @@ var toPrimitive$1 = function (input, pref) {
     if (pref === undefined) pref = 'default';
     result = call$1(exoticToPrim, input, pref);
     if (!isObject$3(result) || isSymbol$1(result)) return result;
-    throw $TypeError$2("Can't convert object to primitive value");
+    throw new $TypeError$2("Can't convert object to primitive value");
   }
   if (pref === undefined) pref = 'number';
   return ordinaryToPrimitive(input, pref);
@@ -668,7 +668,7 @@ var $TypeError$1 = TypeError;
 // `Assert: Type(argument) is Object`
 var anObject$2 = function (argument) {
   if (isObject$1(argument)) return argument;
-  throw $TypeError$1($String$2(argument) + ' is not an object');
+  throw new $TypeError$1($String$2(argument) + ' is not an object');
 };
 
 var anObject$3 = /*@__PURE__*/getDefaultExportFromCjs(anObject$2);
@@ -713,7 +713,7 @@ var f$2 = objectDefineProperty.f = DESCRIPTORS$3 ? V8_PROTOTYPE_DEFINE_BUG ? fun
   if (IE8_DOM_DEFINE) try {
     return $defineProperty(O, P, Attributes);
   } catch (error) { /* empty */ }
-  if ('get' in Attributes || 'set' in Attributes) throw $TypeError('Accessors not supported');
+  if ('get' in Attributes || 'set' in Attributes) throw new $TypeError('Accessors not supported');
   if ('value' in Attributes) O[P] = Attributes.value;
   return O;
 };
@@ -823,7 +823,7 @@ var getterFor = function (TYPE) {
   return function (it) {
     var state;
     if (!isObject(it) || (state = get$1(it)).type !== TYPE) {
-      throw TypeError$1('Incompatible receiver, ' + TYPE + ' required');
+      throw new TypeError$1('Incompatible receiver, ' + TYPE + ' required');
     } return state;
   };
 };
@@ -836,7 +836,7 @@ if (NATIVE_WEAK_MAP || shared.state) {
   store.set = store.set;
   /* eslint-enable no-self-assign -- prototype methods protection */
   set = function (it, metadata) {
-    if (store.has(it)) throw TypeError$1(OBJECT_ALREADY_INITIALIZED);
+    if (store.has(it)) throw new TypeError$1(OBJECT_ALREADY_INITIALIZED);
     metadata.facade = it;
     store.set(it, metadata);
     return metadata;
@@ -851,7 +851,7 @@ if (NATIVE_WEAK_MAP || shared.state) {
   var STATE = sharedKey('state');
   hiddenKeys$2[STATE] = true;
   set = function (it, metadata) {
-    if (hasOwn$3(it, STATE)) throw TypeError$1(OBJECT_ALREADY_INITIALIZED);
+    if (hasOwn$3(it, STATE)) throw new TypeError$1(OBJECT_ALREADY_INITIALIZED);
     metadata.facade = it;
     createNonEnumerableProperty$1(it, STATE, metadata);
     return metadata;
@@ -1326,7 +1326,7 @@ var classof = classof$1;
 var $String = String;
 
 var toString$2 = function (argument) {
-  if (classof(argument) === 'Symbol') throw TypeError('Cannot convert a Symbol value to a string');
+  if (classof(argument) === 'Symbol') throw new TypeError('Cannot convert a Symbol value to a string');
   return $String(argument);
 };
 
@@ -34660,8 +34660,8 @@ class UITextButton extends UIBaseElement {
      * @param {number} [settings.size=1] - The scale factor of the BitmapText
      * @param {string} [settings.text] - The text to display
      * @param {string} [settings.bindKey] - The key to bind the action to (default: none)
-     * @param {string} [settings.backgroundColor="#00aa0080"] - The css value of a background color
-     * @param {string} [settings.hoverColor="#00ff00ff"] - The css value of a color to be used if the pointer hovers over the button
+     * @param {string} [settings.hoverOffColor="#00aa0080"] - The css value of a color to be used if the pointer is not hovering over the button
+     * @param {string} [settings.hoverOnColor="#00ff00ff"] - The css value of a color to be used if the pointer hovers over the button
      * @param {string} [settings.borderStrokeColor="#000000"] - The css value of a color to be used to draw the border
      * @param {string} [settings.fillStyle] - The css value of a tint color to be used to tint the BitmapText
      * @param {string} [settings.textAlign="center"] - horizontal text alignment
@@ -34678,6 +34678,8 @@ class UITextButton extends UIBaseElement {
      *              // if you omit the next two, size is calculated by the size of the text
      *              borderWidth: 200,
      *              borderHeight: 20,
+     *              backgroundColor: '#00aa0080',
+     *              hoverColor: '#00ff00ff'
      *          });
      *      }
      *
@@ -34698,16 +34700,18 @@ class UITextButton extends UIBaseElement {
         this.bindKey = settings.bindKey || -1;
 
         /**
-         * The css value of a background color
+         * The css value of a color to be used if the pointer is nothovering over the button
          * @type {string}
          */
-        this.backgroundColor = settings.backgroundColor || "#00aa0080";
+        // keep settings.backgroundColor for backward compatibility
+        this.hoverOffColor = settings.hoverOffColor || settings.backgroundColor || "#00aa0080";
 
         /**
          * The css value of a color to be used if the pointer hovers over the button
          * @type {string}
          */
-        this.hoverColor = settings.hoverColor || "#00ff00ff";
+        // keep settings.hoverColor for backward compatibility
+        this.hoverOnColor = settings.hoverOnColor || settings.hoverColor || "#00ff00ff";
 
         /**
          * The css value of a color to be used to draw the border
@@ -34762,16 +34766,13 @@ class UITextButton extends UIBaseElement {
 
     draw(renderer) {
         if (this.hover === true) {
-            renderer.setColor(this.hoverColor);
+            renderer.setColor(this.hoverOnColor);
         } else {
-            renderer.setColor(this.backgroundColor);
+            renderer.setColor(this.hoverOffColor);
         }
         renderer.fill(this.border);
         renderer.setColor(this.borderStrokeColor);
         renderer.stroke(this.border);
-        this.bitmapText.preDraw(renderer);
-        this.bitmapText.draw(renderer);
-        this.bitmapText.postDraw(renderer);
         super.draw(renderer);
     }
 }
@@ -38353,9 +38354,9 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "15.12.0"
+         * @default "15.13.0"
          */
-        this.version = "15.12.0";
+        this.version = "15.13.0";
 
         /**
          * a reference to the app/game that registered this plugin
@@ -38637,7 +38638,7 @@ Renderer.prototype.getHeight = function()  {
  * @name version
  * @type {string}
  */
-const version = "15.12.0";
+const version = "15.13.0";
 
 /**
  * a flag indicating that melonJS is fully initialized
