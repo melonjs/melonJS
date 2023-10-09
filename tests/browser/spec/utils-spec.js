@@ -42,10 +42,10 @@ describe("utils", function () {
     });
 
     describe("File", function () {
-        var filename = "/src/bar/foo.baz";
+        var filename = "/src/bar/foo.bar-test.bar.baz";
 
         it("file basename", function () {
-            expect(me.utils.file.getBasename(filename)).toEqual("foo");
+            expect(me.utils.file.getBasename(filename)).toEqual("foo.bar-test.bar");
         });
 
         it("file extension", function () {
