@@ -46,6 +46,19 @@ export let onload;
 export let onProgress;
 
 /**
+ * onError callback<br>
+ * each time a resource loading is failed, the loader will fire the specified function,
+ * giving the actual progress [0 ... 1], as argument, and an object describing the resource loaded
+ * @default undefined
+ * @memberof loader
+ * @type {function}
+ * @example
+ * // set a callback for progress notification
+ * me.loader.onProgress = this.updateProgress.bind(this);
+ */
+export let onError;
+
+/**
  * list of parser function for supported format type
  */
 let parsers = new Map();
@@ -60,6 +73,10 @@ let resourceCount = 0;
 let loadCount = 0;
 let timerId = 0;
 
+/**
+ * Assets uploaded with an error
+ */
+const failureLoadedAssets = {}
 
 /**
  * init all supported parsers
@@ -111,6 +128,7 @@ function checkLoadStatus(onloadcb) {
  * @ignore
  */
 function onResourceLoaded(res) {
+    delete failureLoadedAssets[res.src]
     // increment the loading counter
     loadCount++;
 
@@ -127,9 +145,15 @@ function onResourceLoaded(res) {
 
 /**
  * on error callback for image loading
+ * @param {loader.Asset} asset - asset that loaded with failure
  * @ignore
  */
 function onLoadingError(res) {
+    failureLoadedAssets[res.src] = res
+    if (this.onError) {
+        this.onError(res);
+    }
+    emit(event.LOADER_ERROR, res);
     throw new Error("Failed loading resource " + res.src);
 }
 
@@ -265,6 +289,35 @@ export function preload(assets, onloadcb, switchToLoadState = true) {
 
     // check load status
     checkLoadStatus(onload);
+}
+
+/**
+ * preload assets after failure load
+ * @memberof loader
+ * @param {string} src - src of failure loaded asset
+ * @example 
+ *  event.on(
+ *      event.LOADER_ERROR,
+ *      (res) => {
+ *          // custom function
+ *          showErrorNotification({
+ *              text: `Error during loading content: ${res.name}`,
+ *              done: loader.rePreload(res.src);
+ *          })
+ *      }
+ *  );
+**/
+export function rePreload(src) {
+    const assetToReload = failureLoadedAssets[src];
+    this.unload(assetToReload)
+    resourceCount -= 1
+    resourceCount += this.load(
+        assetToReload,
+        this.onResourceLoaded.bind(this, assetToReload),
+        this.onLoadingError.bind(this, assetToReload)
+    )
+    // check load status
+    checkLoadStatus(this.onload);
 }
 
 /**
