@@ -11,6 +11,10 @@ import { nocache, withCredentials } from "../settings.js";
  * @ignore
  */
 export function preloadJSON(data, onload, onerror) {
+    if (jsonList[data.name]) {
+        onload()
+        return
+    }
     let xmlhttp = new XMLHttpRequest();
 
     if (xmlhttp.overrideMimeType) {
