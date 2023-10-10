@@ -48,7 +48,7 @@ export let onProgress;
 /**
  * onError callback<br>
  * each time a resource loading is failed, the loader will fire the specified function,
- * giving the actual progress [0 ... 1], as argument, and an object describing the resource loaded
+ * giving the actual asset, as argument, describing the resource
  * @default undefined
  * @memberof loader
  * @type {function}
