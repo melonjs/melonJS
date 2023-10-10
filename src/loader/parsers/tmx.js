@@ -15,9 +15,9 @@ import { nocache, withCredentials } from "../settings.js";
  * @ignore
  */
 export function preloadTMX(tmxData, onload, onerror) {
-    if (tmxList[tmxData.name]) {
-        onload()
-        return
+    if (tmxList[tmxData.name] !== "undefined") {
+        onload();
+        return;
     }
     /**
      * @ignore
