@@ -206,7 +206,7 @@ export default class BitmapText extends Renderable {
                     break;
 
                 default :
-                    ax = this.metrics.width * 0.0;
+                    ax = 0; //this.metrics.width * 0.0;
                     break;
             }
 
@@ -223,7 +223,7 @@ export default class BitmapText extends Renderable {
                     break;
 
                 default :
-                    ay = this.metrics.height * 0.0;
+                    ay = 0; //this.metrics.height * 0.0;
                     break;
             }
 
