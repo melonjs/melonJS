@@ -76,7 +76,7 @@ let timerId = 0;
 /**
  * Assets uploaded with an error
  */
-const failureLoadedAssets = {}
+const failureLoadedAssets = {};
 
 /**
  * init all supported parsers
@@ -128,7 +128,7 @@ function checkLoadStatus(onloadcb) {
  * @ignore
  */
 function onResourceLoaded(res) {
-    delete failureLoadedAssets[res.src]
+    delete failureLoadedAssets[res.src];
     // increment the loading counter
     loadCount++;
 
@@ -149,11 +149,11 @@ function onResourceLoaded(res) {
  * @ignore
  */
 function onLoadingError(res) {
-    failureLoadedAssets[res.src] = res
+    failureLoadedAssets[res.src] = res;
     if (this.onError) {
         this.onError(res);
     }
-    emit(event.LOADER_ERROR, res);
+    event.emit(event.LOADER_ERROR, res);
     throw new Error("Failed loading resource " + res.src);
 }
 
@@ -295,7 +295,7 @@ export function preload(assets, onloadcb, switchToLoadState = true) {
  * preload assets after failure load
  * @memberof loader
  * @param {string} src - src of failure loaded asset
- * @example 
+ * @example
  *  event.on(
  *      event.LOADER_ERROR,
  *      (res) => {
@@ -309,13 +309,13 @@ export function preload(assets, onloadcb, switchToLoadState = true) {
 **/
 export function rePreload(src) {
     const assetToReload = failureLoadedAssets[src];
-    this.unload(assetToReload)
-    resourceCount -= 1
+    this.unload(assetToReload);
+    resourceCount -= 1;
     resourceCount += this.load(
         assetToReload,
         this.onResourceLoaded.bind(this, assetToReload),
         this.onLoadingError.bind(this, assetToReload)
-    )
+    );
     // check load status
     checkLoadStatus(this.onload);
 }
