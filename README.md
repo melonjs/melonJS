@@ -100,7 +100,7 @@ Tools integration and usage with melonJS is documented in our [Wiki](https://git
 
 You may find it useful to skim the overview found at the wiki [Details & Usage](https://github.com/melonjs/melonJS/wiki#details--usage)
 
-When starting your own projects, checkout our [ES6 x Webpack boilerplate](https://github.com/melonjs/es6-boilerplate) or the [TypeScript x Vite boilerplate](https://github.com/melonjs/typescript-boilerplate)
+When starting your own projects, checkout our [ES6 x Vite boilerplate](https://github.com/melonjs/es6-boilerplate) or the [TypeScript x Vite boilerplate](https://github.com/melonjs/typescript-boilerplate)
 
 Demos
 -------------------------------------------------------------------------------
