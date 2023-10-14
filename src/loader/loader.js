@@ -302,12 +302,12 @@ export function preload(assets, onloadcb, switchToLoadState = true) {
  *          // custom function
  *          showErrorNotification({
  *              text: `Error during loading content: ${res.name}`,
- *              done: loader.rePreload(res.src);
+ *              done: loader.reload(res.src);
  *          })
  *      }
  *  );
 **/
-export function rePreload(src) {
+export function reload(src) {
     const assetToReload = failureLoadedAssets[src];
     this.unload(assetToReload);
     resourceCount -= 1;
