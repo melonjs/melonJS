@@ -280,6 +280,18 @@ export const LOADER_COMPLETE = "me.loader.onload";
 export const LOADER_PROGRESS = "me.loader.onProgress";
 
 /**
+ * Event for displaying a error during loading <br>
+ * Data passed : {Resource} resource object<br>
+ * @public
+ * @constant
+ * @type {string}
+ * @name LOADER_ERROR
+ * @memberof event
+ * @see event.on
+ */
+export const LOADER_ERROR = "me.loader.onError";
+
+/**
  * Event for pressing a binded key <br>
  * Data passed : {string} user-defined action, {number} keyCode,
  * {boolean} edge state <br>
