@@ -11,10 +11,11 @@ import { nocache, withCredentials } from "../settings.js";
  * @ignore
  */
 export function preloadJSON(data, onload, onerror) {
-    if (jsonList[data.name] !== "undefined") {
-        onload();
-        return;
+    if (typeof jsonList[data.name] !== "undefined") {
+        // already loaded
+        return 0;
     }
+
     let xmlhttp = new XMLHttpRequest();
 
     if (xmlhttp.overrideMimeType) {

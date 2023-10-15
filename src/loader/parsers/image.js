@@ -17,10 +17,11 @@ import { crossOrigin, nocache } from "../settings.js";
  * ]);
  */
 export function preloadImage(img, onload, onerror) {
-    if (imgList[img.name] !== "undefined") {
-        onload();
-        return;
+    if (typeof imgList[img.name] !== "undefined") {
+        // already loaded
+        return 0;
     }
+
     // create new Image object and add to list
     imgList[img.name] = new Image();
     if (typeof onload === "function") {
