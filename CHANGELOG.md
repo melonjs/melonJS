@@ -4,7 +4,7 @@
 
 ### Added
 - loader: prevent loading of previously loaded resources. e.g. duplicated resources across mutliple manifest (@thanks @z0mb1)
-
+- loaer: add handling of asset load error, enabling to retry loading failed assets (@thanks @z0mb1)
 
 ## [15.13.0] (melonJS 2) - _2023-10-07_
 
