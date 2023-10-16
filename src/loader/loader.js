@@ -47,14 +47,13 @@ export let onProgress;
 
 /**
  * onError callback<br>
- * each time a resource loading is failed, the loader will fire the specified function,
- * giving the actual asset, as argument, describing the resource
+ * each time a resource loading is failed, the loader will fire the specified function giving the actual asset as argument.
  * @default undefined
  * @memberof loader
  * @type {function}
  * @example
- * // set a callback for progress notification
- * me.loader.onProgress = this.updateProgress.bind(this);
+ * // set a callback for error notification
+ * me.loader.onError = this.loaderError.bind(this);
  */
 export let onError;
 
