@@ -3,8 +3,8 @@
 ## [15.14.0] (melonJS 2) - _2023-10-17_
 
 ### Added
-- loader: prevent loading of previously loaded resources. e.g. duplicated resources across mutliple manifest (@thanks @z0mb1)
-- loader: add handling of asset load error, enabling to retry loading failed assets (@thanks @z0mb1)
+- loader: prevent loading of previously loaded resources. e.g. duplicated resources across mutliple manifest (thanks @z0mb1)
+- loader: add handling of asset load error, enabling to retry loading failed assets (thanks @z0mb1)
 
 ### Changed
 - UI: small optimization when rendering BitmapText
