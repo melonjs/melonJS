@@ -280,7 +280,7 @@ export const LOADER_COMPLETE = "me.loader.onload";
 export const LOADER_PROGRESS = "me.loader.onProgress";
 
 /**
- * Event for displaying a error during loading <br>
+ * Event for when an error occur during preloading <br>
  * Data passed : {Resource} resource object<br>
  * @public
  * @constant
