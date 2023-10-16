@@ -99,6 +99,23 @@ export function setParser(type: string, parserFn: Function): void;
  */
 export function preload(assets: loader.Asset[], onloadcb?: Function | undefined, switchToLoadState?: boolean | undefined): void;
 /**
+ * preload assets after failure load
+ * @memberof loader
+ * @param {string} src - src of failure loaded asset
+ * @example
+ *  event.on(
+ *      event.LOADER_ERROR,
+ *      (res) => {
+ *          // custom function
+ *          showErrorNotification({
+ *              text: `Error during loading content: ${res.name}`,
+ *              done: loader.reload(res.src);
+ *          })
+ *      }
+ *  );
+**/
+export function reload(src: string): void;
+/**
  * Load a single asset (to be used if you need to load additional asset(s) during the game)
  * @memberof loader
  * @param {loader.Asset} asset
@@ -185,6 +202,18 @@ export let onload: Function;
  * me.loader.onProgress = this.updateProgress.bind(this);
  */
 export let onProgress: Function;
+/**
+ * onError callback<br>
+ * each time a resource loading is failed, the loader will fire the specified function,
+ * giving the actual asset, as argument, describing the resource
+ * @default undefined
+ * @memberof loader
+ * @type {function}
+ * @example
+ * // set a callback for progress notification
+ * me.loader.onProgress = this.updateProgress.bind(this);
+ */
+export let onError: Function;
 export namespace loader {
     /**
      * an asset definition to be used with the loader
