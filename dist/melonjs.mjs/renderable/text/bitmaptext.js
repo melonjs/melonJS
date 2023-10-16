@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.13.0
+ * melonJS Game Engine - v15.14.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -213,7 +213,7 @@ class BitmapText extends Renderable {
                     break;
 
                 default :
-                    ax = this.metrics.width * 0.0;
+                    ax = 0; //this.metrics.width * 0.0;
                     break;
             }
 
@@ -230,7 +230,7 @@ class BitmapText extends Renderable {
                     break;
 
                 default :
-                    ay = this.metrics.height * 0.0;
+                    ay = 0; //this.metrics.height * 0.0;
                     break;
             }
 

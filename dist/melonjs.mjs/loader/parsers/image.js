@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.13.0
+ * melonJS Game Engine - v15.14.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -24,6 +24,11 @@ import { nocache } from '../settings.js';
  * ]);
  */
 function preloadImage(img, onload, onerror) {
+    if (typeof imgList[img.name] !== "undefined") {
+        // already loaded
+        return 0;
+    }
+
     // create new Image object and add to list
     imgList[img.name] = new Image();
     if (typeof onload === "function") {

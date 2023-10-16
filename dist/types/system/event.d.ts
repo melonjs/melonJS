@@ -291,6 +291,17 @@ export const LOADER_COMPLETE: string;
  */
 export const LOADER_PROGRESS: string;
 /**
+ * Event for when an error occur during preloading <br>
+ * Data passed : {Resource} resource object<br>
+ * @public
+ * @constant
+ * @type {string}
+ * @name LOADER_ERROR
+ * @memberof event
+ * @see event.on
+ */
+export const LOADER_ERROR: string;
+/**
  * Event for pressing a binded key <br>
  * Data passed : {string} user-defined action, {number} keyCode,
  * {boolean} edge state <br>

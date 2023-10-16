@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.13.0
+ * melonJS Game Engine - v15.14.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -21,6 +21,11 @@ import { nocache, withCredentials } from '../settings.js';
  * @ignore
  */
 function preloadTMX(tmxData, onload, onerror) {
+    if (typeof tmxList[tmxData.name] !== "undefined") {
+        // already loaded
+        return 0;
+    }
+
     /**
      * @ignore
      */

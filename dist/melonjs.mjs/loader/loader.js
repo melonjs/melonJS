@@ -1,12 +1,12 @@
 /*!
- * melonJS Game Engine - v15.13.0
+ * melonJS Game Engine - v15.14.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 import { getBasename } from '../utils/file.js';
-import { emit, LOADER_COMPLETE, LOADER_PROGRESS } from '../system/event.js';
+import { emit, LOADER_COMPLETE, LOADER_PROGRESS, LOADER_ERROR } from '../system/event.js';
 import { unload as unload$1, unloadAll as unloadAll$1, load as load$1 } from '../audio/audio.js';
 import state from '../state/state.js';
 import { tmxList, jsonList, imgList, binList } from './cache.js';
@@ -45,6 +45,18 @@ let onload;
 let onProgress;
 
 /**
+ * onError callback<br>
+ * each time a resource loading is failed, the loader will fire the specified function giving the actual asset as argument.
+ * @default undefined
+ * @memberof loader
+ * @type {function}
+ * @example
+ * // set a callback for error notification
+ * me.loader.onError = this.loaderError.bind(this);
+ */
+let onError;
+
+/**
  * list of parser function for supported format type
  */
 let parsers = new Map();
@@ -59,6 +71,10 @@ let resourceCount = 0;
 let loadCount = 0;
 let timerId = 0;
 
+/**
+ * Assets uploaded with an error
+ */
+const failureLoadedAssets = {};
 
 /**
  * init all supported parsers
@@ -110,6 +126,7 @@ function checkLoadStatus(onloadcb) {
  * @ignore
  */
 function onResourceLoaded(res) {
+    delete failureLoadedAssets[res.src];
     // increment the loading counter
     loadCount++;
 
@@ -120,9 +137,15 @@ function onResourceLoaded(res) {
 
 /**
  * on error callback for image loading
+ * @param {loader.Asset} asset - asset that loaded with failure
  * @ignore
  */
 function onLoadingError(res) {
+    failureLoadedAssets[res.src] = res;
+    if (this.onError) {
+        this.onError(res);
+    }
+    emit(LOADER_ERROR, res);
     throw new Error("Failed loading resource " + res.src);
 }
 
@@ -258,6 +281,35 @@ function preload(assets, onloadcb, switchToLoadState = true) {
 
     // check load status
     checkLoadStatus(onload);
+}
+
+/**
+ * retry loading assets after a loading failure
+ * @memberof loader
+ * @param {string} src - src of asset to reload
+ * @example
+ *  event.on(
+ *      event.LOADER_ERROR,
+ *      (res) => {
+ *          // custom function
+ *          showErrorNotification({
+ *              text: `Error during loading content: ${res.name}`,
+ *              done: loader.reload(res.src);
+ *          })
+ *      }
+ *  );
+**/
+function reload(src) {
+    const assetToReload = failureLoadedAssets[src];
+    this.unload(assetToReload);
+    resourceCount -= 1;
+    resourceCount += this.load(
+        assetToReload,
+        this.onResourceLoaded.bind(this, assetToReload),
+        this.onLoadingError.bind(this, assetToReload)
+    );
+    // check load status
+    checkLoadStatus(this.onload);
 }
 
 /**
@@ -473,4 +525,4 @@ function getJSON(elt) {
     return null;
 }
 
-export { baseURL, getBinary, getImage, getJSON, getTMX, load, onProgress, onload, preload, setParser, unload, unloadAll };
+export { baseURL, getBinary, getImage, getJSON, getTMX, load, onError, onProgress, onload, preload, reload, setParser, unload, unloadAll };

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v15.13.0
+ * melonJS Game Engine - v15.14.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -9408,6 +9408,18 @@ const LOADER_COMPLETE = "me.loader.onload";
 const LOADER_PROGRESS = "me.loader.onProgress";
 
 /**
+ * Event for when an error occur during preloading <br>
+ * Data passed : {Resource} resource object<br>
+ * @public
+ * @constant
+ * @type {string}
+ * @name LOADER_ERROR
+ * @memberof event
+ * @see event.on
+ */
+const LOADER_ERROR = "me.loader.onError";
+
+/**
  * Event for pressing a binded key <br>
  * Data passed : {string} user-defined action, {number} keyCode,
  * {boolean} edge state <br>
@@ -9735,6 +9747,7 @@ var event = {
 	KEYUP: KEYUP,
 	LEVEL_LOADED: LEVEL_LOADED,
 	LOADER_COMPLETE: LOADER_COMPLETE,
+	LOADER_ERROR: LOADER_ERROR,
 	LOADER_PROGRESS: LOADER_PROGRESS,
 	ONCONTEXT_LOST: ONCONTEXT_LOST,
 	ONCONTEXT_RESTORED: ONCONTEXT_RESTORED,
@@ -19188,6 +19201,11 @@ let jsonList = {};
  * ]);
  */
 function preloadImage(img, onload, onerror) {
+    if (typeof imgList[img.name] !== "undefined") {
+        // already loaded
+        return 0;
+    }
+
     // create new Image object and add to list
     imgList[img.name] = new Image();
     if (typeof onload === "function") {
@@ -26527,6 +26545,11 @@ let level = {
  * @ignore
  */
 function preloadTMX(tmxData, onload, onerror) {
+    if (typeof tmxList[tmxData.name] !== "undefined") {
+        // already loaded
+        return 0;
+    }
+
     /**
      * @ignore
      */
@@ -26642,6 +26665,11 @@ function preloadTMX(tmxData, onload, onerror) {
  * @ignore
  */
 function preloadJSON(data, onload, onerror) {
+    if (typeof jsonList[data.name] !== "undefined") {
+        // already loaded
+        return 0;
+    }
+
     let xmlhttp = new XMLHttpRequest();
 
     if (xmlhttp.overrideMimeType) {
@@ -26811,6 +26839,18 @@ let onload;
 let onProgress;
 
 /**
+ * onError callback<br>
+ * each time a resource loading is failed, the loader will fire the specified function giving the actual asset as argument.
+ * @default undefined
+ * @memberof loader
+ * @type {function}
+ * @example
+ * // set a callback for error notification
+ * me.loader.onError = this.loaderError.bind(this);
+ */
+let onError;
+
+/**
  * list of parser function for supported format type
  */
 let parsers = new Map();
@@ -26825,6 +26865,10 @@ let resourceCount = 0;
 let loadCount = 0;
 let timerId = 0;
 
+/**
+ * Assets uploaded with an error
+ */
+const failureLoadedAssets = {};
 
 /**
  * init all supported parsers
@@ -26876,6 +26920,7 @@ function checkLoadStatus(onloadcb) {
  * @ignore
  */
 function onResourceLoaded(res) {
+    delete failureLoadedAssets[res.src];
     // increment the loading counter
     loadCount++;
 
@@ -26892,9 +26937,15 @@ function onResourceLoaded(res) {
 
 /**
  * on error callback for image loading
+ * @param {loader.Asset} asset - asset that loaded with failure
  * @ignore
  */
 function onLoadingError(res) {
+    failureLoadedAssets[res.src] = res;
+    if (this.onError) {
+        this.onError(res);
+    }
+    emit(LOADER_ERROR, res);
     throw new Error("Failed loading resource " + res.src);
 }
 
@@ -27030,6 +27081,35 @@ function preload(assets, onloadcb, switchToLoadState = true) {
 
     // check load status
     checkLoadStatus(onload);
+}
+
+/**
+ * retry loading assets after a loading failure
+ * @memberof loader
+ * @param {string} src - src of asset to reload
+ * @example
+ *  event.on(
+ *      event.LOADER_ERROR,
+ *      (res) => {
+ *          // custom function
+ *          showErrorNotification({
+ *              text: `Error during loading content: ${res.name}`,
+ *              done: loader.reload(res.src);
+ *          })
+ *      }
+ *  );
+**/
+function reload(src) {
+    const assetToReload = failureLoadedAssets[src];
+    this.unload(assetToReload);
+    resourceCount -= 1;
+    resourceCount += this.load(
+        assetToReload,
+        this.onResourceLoaded.bind(this, assetToReload),
+        this.onLoadingError.bind(this, assetToReload)
+    );
+    // check load status
+    checkLoadStatus(this.onload);
 }
 
 /**
@@ -27255,9 +27335,11 @@ var loader = {
 	getTMX: getTMX,
 	load: load,
 	get nocache () { return nocache; },
+	onError: onError,
 	onProgress: onProgress,
 	get onload () { return onload; },
 	preload: preload,
+	reload: reload,
 	setBaseURL: setBaseURL,
 	setNocache: setNocache,
 	setParser: setParser,
@@ -34432,7 +34514,7 @@ class BitmapText extends Renderable {
                     break;
 
                 default :
-                    ax = this.metrics.width * 0.0;
+                    ax = 0; //this.metrics.width * 0.0;
                     break;
             }
 
@@ -34449,7 +34531,7 @@ class BitmapText extends Renderable {
                     break;
 
                 default :
-                    ay = this.metrics.height * 0.0;
+                    ay = 0; //this.metrics.height * 0.0;
                     break;
             }
 
@@ -38354,9 +38436,9 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "15.13.0"
+         * @default "15.14.0"
          */
-        this.version = "15.13.0";
+        this.version = "15.14.0";
 
         /**
          * a reference to the app/game that registered this plugin
@@ -38638,7 +38720,7 @@ Renderer.prototype.getHeight = function()  {
  * @name version
  * @type {string}
  */
-const version = "15.13.0";
+const version = "15.14.0";
 
 /**
  * a flag indicating that melonJS is fully initialized
