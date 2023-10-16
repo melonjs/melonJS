@@ -292,9 +292,9 @@ export function preload(assets, onloadcb, switchToLoadState = true) {
 }
 
 /**
- * preload assets after failure load
+ * retry loading assets after a loading failure
  * @memberof loader
- * @param {string} src - src of failure loaded asset
+ * @param {string} src - src of asset to reload
  * @example
  *  event.on(
  *      event.LOADER_ERROR,
