@@ -14,7 +14,7 @@ import Point from "../geometries/point.js";
  * a Generic Physic Body Object with some physic properties and behavior functionality, to add as a member of a Renderable.
  * @see Renderable.body
  */
-export default class Body {
+export default class BodyObject {
     /**
      * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} ancestor - the parent object this body is attached to
      * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] - a initial shape, list of shapes, or JSON object defining the body
@@ -75,7 +75,7 @@ export default class Body {
             /**
              * The current velocity of the body.
              * See to apply a force if you need to modify a body velocity
-             * @see Body.force
+             * @see BodyObject.force
              * @public
              * @type {Vector2d}
              * @default <0,0>
@@ -91,7 +91,7 @@ export default class Body {
              * @public
              * @type {Vector2d}
              * @default <0,0>
-             * @see Body.setMaxVelocity
+             * @see BodyObject.setMaxVelocity
              * @example
              * // define a default maximum acceleration, initial force and friction
              * this.body.force.set(1, 0);
@@ -556,8 +556,8 @@ export default class Body {
      * Rotate this body (counter-clockwise) by the specified angle (in radians).
      * Unless specified the body will be rotated around its center point
      * @param {number} angle - The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v=Body.getBounds().center] - an optional point to rotate around
-     * @returns {Body} Reference to this object for method chaining
+     * @param {Vector2d|ObservableVector2d} [v=BodyObject.getBounds().center] - an optional point to rotate around
+     * @returns {BodyObject} Reference to this object for method chaining
      */
     rotate(angle, v = this.getBounds().center) {
         if (angle !== 0) {
@@ -605,11 +605,11 @@ export default class Body {
      * Updates the parent's position as well as computes the new body's velocity based
      * on the values of force/friction.  Velocity chages are proportional to the
      * me.timer.tick value (which can be used to scale velocities).  The approach to moving the
-     * parent renderable is to compute new values of the Body.vel property then add them to
-     * the parent.pos value thus changing the postion the amount of Body.vel each time the
+     * parent renderable is to compute new values of the BodyObject.vel property then add them to
+     * the parent.pos value thus changing the postion the amount of BodyObject.vel each time the
      * update call is made. <br>
-     * Updates to Body.vel are bounded by maxVel (which defaults to viewport size if not set) <br>
-     * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the constructor arguments.
+     * Updates to BodyObject.vel are bounded by maxVel (which defaults to viewport size if not set) <br>
+     * At this time a call to BodyObject.Update does not call the onBodyUpdate callback that is listed in the constructor arguments.
      * @protected
      * @param {number} dt - time since the last update in milliseconds.
      * @returns {boolean} true if resulting velocity is different than 0

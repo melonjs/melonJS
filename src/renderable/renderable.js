@@ -61,7 +61,7 @@ export default class Renderable extends Rect {
 
         /**
          * the renderable physic body
-         * @type {Body}
+         * @type {BodyObject}
          * @example
          *  // define a new Player Class
          *  class PlayerEntity extends me.Sprite {
@@ -78,7 +78,7 @@ export default class Renderable extends Rect {
          *          this.setCurrentAnimation("stand");
          *
          *          // add a physic body
-         *          this.body = new me.Body(this);
+         *          this.body = new me.BodyObject(this);
          *          // add a default collision shape
          *          this.body.addShape(new me.Rect(0, 0, this.width, this.height));
          *          // configure max speed, friction, and initial force to be applied
