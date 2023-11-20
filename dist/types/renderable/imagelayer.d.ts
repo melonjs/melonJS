@@ -67,7 +67,7 @@ export default class ImageLayer extends Sprite {
      * updateLayer function
      * @ignore
      */
-    updateLayer(vpos: any): void;
+    updateLayer(): void;
     /**
     * override the default predraw function
     * as repeat and anchor are managed directly in the draw method

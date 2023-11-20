@@ -199,7 +199,13 @@ export default class Renderable extends Rect {
         y: boolean;
     };
     _inViewport: boolean;
+    _parentApp: any;
     _tint: object;
+    /**
+     * returns the parent application (or game) to which this renderable is attached to
+     * @return {Application} the parent application or undefined if not attached to any container/app
+     */
+    get parentApp(): Application;
     /**
      * Whether the renderable object is floating (i.e. used screen coordinates), or contained in a floating parent container
      * @see Renderable#floating

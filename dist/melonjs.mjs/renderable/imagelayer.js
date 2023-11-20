@@ -1,12 +1,12 @@
 /*!
- * melonJS Game Engine - v15.14.0
+ * melonJS Game Engine - v15.15.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
  */
 import { renderer } from '../video/video.js';
-import { on, ONCONTEXT_RESTORED, VIEWPORT_ONCHANGE, VIEWPORT_ONRESIZE, once, off, LEVEL_LOADED } from '../system/event.js';
+import { on, ONCONTEXT_RESTORED, VIEWPORT_ONCHANGE, VIEWPORT_ONRESIZE, LEVEL_LOADED, off } from '../system/event.js';
 import pool from '../system/pooling.js';
 import { game } from '../index.js';
 import Sprite from './sprite.js';
@@ -130,14 +130,12 @@ class ImageLayer extends Sprite {
         on(VIEWPORT_ONCHANGE, this.updateLayer, this);
         on(VIEWPORT_ONRESIZE, this.resize, this);
         // force a first refresh when the level is loaded
-        once(LEVEL_LOADED, () => {
-            this.updateLayer(game.viewport.pos);
-        });
+        on(LEVEL_LOADED, this.updateLayer, this);
         // in case the level is not added to the root container,
         // the onActivateEvent call happens after the LEVEL_LOADED event
         // so we need to force a first update
         if (this.ancestor.root !== true) {
-            this.updateLayer(game.viewport.pos);
+            this.updateLayer();
         }
     }
 
@@ -165,9 +163,11 @@ class ImageLayer extends Sprite {
      * updateLayer function
      * @ignore
      */
-    updateLayer(vpos) {
+    updateLayer() {
         const rx = this.ratio.x,
             ry = this.ratio.y;
+
+        const viewport = game.viewport;
 
         if (rx === 0 && ry === 0) {
             // static image
@@ -176,8 +176,8 @@ class ImageLayer extends Sprite {
 
         const width = this.width,
             height = this.height,
-            bw = game.viewport.bounds.width,
-            bh = game.viewport.bounds.height,
+            bw = viewport.bounds.width,
+            bh = viewport.bounds.height,
             ax = this.anchorPoint.x,
             ay = this.anchorPoint.y,
 
@@ -187,8 +187,8 @@ class ImageLayer extends Sprite {
              * See https://github.com/melonjs/melonJS/issues/741#issuecomment-138431532
              * for a thorough description of how this works.
              */
-            x = ax * (rx - 1) * (bw - game.viewport.width) + this.offset.x - rx * vpos.x,
-            y = ay * (ry - 1) * (bh - game.viewport.height) + this.offset.y - ry * vpos.y;
+            x = ax * (rx - 1) * (bw - viewport.width) + this.offset.x - rx * viewport.pos.x,
+            y = ay * (ry - 1) * (bh - viewport.height) + this.offset.y - ry * viewport.pos.y;
 
 
         // Repeat horizontally; start drawing from left boundary
@@ -269,6 +269,7 @@ class ImageLayer extends Sprite {
         // cancel all event subscriptions
         off(VIEWPORT_ONCHANGE, this.updateLayer);
         off(VIEWPORT_ONRESIZE, this.resize);
+        off(LEVEL_LOADED, this.updateLayer);
     }
 
     /**
