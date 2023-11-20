@@ -1,5 +1,11 @@
 # Changelog
 
+## [15.15.0] (melonJS 2) - _2023-11-20_
+
+### Added
+- Renderable : new `parentApp` getter that returns the parent application/game instance to which a renderable belongs to.
+
+
 ## [15.14.0] (melonJS 2) - _2023-10-17_
 
 ### Added

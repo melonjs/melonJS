@@ -258,11 +258,28 @@ export default class Renderable extends Rect {
         // viewport flag
         this._inViewport = false;
 
+        // cache value for the parentApp
+        this._parentApp = undefined;
+
         // renderable cache tint value used by the getter/setter
         this._tint = pool.pull("Color", 255, 255, 255, 1.0);
 
         // ensure it's fully opaque by default
         this.setOpacity(1.0);
+    }
+
+    /**
+     * returns the parent application (or game) to which this renderable is attached to
+     * @return {Application} the parent application or undefined if not attached to any container/app
+     */
+    get parentApp() {
+        if (typeof this._parentApp === "undefined") {
+            if (typeof this.ancestor !== "undefined" && typeof this.ancestor.getRootAncestor === "function") {
+                // the `app` property is only defined in the world "root" container
+                this._parentApp = this.ancestor.getRootAncestor().app;
+            }
+        }
+        return this._parentApp;
     }
 
     /**
@@ -790,6 +807,7 @@ export default class Renderable extends Rect {
         }
 
         this.ancestor = undefined;
+        this._parentApp = undefined;
 
         // destroy the physic body if defined and is a builtin body object
         if ((typeof this.body !== "undefined") && (typeof this.body.destroy === "function")) {
