@@ -5,6 +5,8 @@
 ### Added
 - Renderable : new `parentApp` getter that returns the parent application/game instance to which a renderable belongs to.
 
+### Fixed
+- ImageLayer: fix a regression when loading a level within a sub container (thanks @rcl)
 
 ## [15.14.0] (melonJS 2) - _2023-10-17_
 

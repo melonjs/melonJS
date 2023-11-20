@@ -124,14 +124,12 @@ export default class ImageLayer extends Sprite {
         event.on(event.VIEWPORT_ONCHANGE, this.updateLayer, this);
         event.on(event.VIEWPORT_ONRESIZE, this.resize, this);
         // force a first refresh when the level is loaded
-        event.once(event.LEVEL_LOADED, () => {
-            this.updateLayer(game.viewport.pos);
-        });
+        event.on(event.LEVEL_LOADED, this.updateLayer, this);
         // in case the level is not added to the root container,
         // the onActivateEvent call happens after the LEVEL_LOADED event
         // so we need to force a first update
         if (this.ancestor.root !== true) {
-            this.updateLayer(game.viewport.pos);
+            this.updateLayer();
         }
     }
 
@@ -159,9 +157,11 @@ export default class ImageLayer extends Sprite {
      * updateLayer function
      * @ignore
      */
-    updateLayer(vpos) {
+    updateLayer() {
         const rx = this.ratio.x,
             ry = this.ratio.y;
+
+        const viewport = game.viewport;
 
         if (rx === 0 && ry === 0) {
             // static image
@@ -170,8 +170,8 @@ export default class ImageLayer extends Sprite {
 
         const width = this.width,
             height = this.height,
-            bw = game.viewport.bounds.width,
-            bh = game.viewport.bounds.height,
+            bw = viewport.bounds.width,
+            bh = viewport.bounds.height,
             ax = this.anchorPoint.x,
             ay = this.anchorPoint.y,
 
@@ -181,8 +181,8 @@ export default class ImageLayer extends Sprite {
              * See https://github.com/melonjs/melonJS/issues/741#issuecomment-138431532
              * for a thorough description of how this works.
              */
-            x = ax * (rx - 1) * (bw - game.viewport.width) + this.offset.x - rx * vpos.x,
-            y = ay * (ry - 1) * (bh - game.viewport.height) + this.offset.y - ry * vpos.y;
+            x = ax * (rx - 1) * (bw - viewport.width) + this.offset.x - rx * viewport.pos.x,
+            y = ay * (ry - 1) * (bh - viewport.height) + this.offset.y - ry * viewport.pos.y;
 
 
         // Repeat horizontally; start drawing from left boundary
@@ -263,6 +263,7 @@ export default class ImageLayer extends Sprite {
         // cancel all event subscriptions
         event.off(event.VIEWPORT_ONCHANGE, this.updateLayer);
         event.off(event.VIEWPORT_ONRESIZE, this.resize);
+        event.off(event.LEVEL_LOADED, this.updateLayer);
     }
 
     /**
