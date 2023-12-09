@@ -56,7 +56,8 @@
     "core-js": "^3.33.3",
     "earcut": "2.2.4",
     "eventemitter3": "^5.0.1",
-    "howler": "2.2.4"
+    "howler": "2.2.4",
+    "whatwg-fetch": "^3.6.19"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.23.3",
