@@ -13,16 +13,16 @@ import "whatwg-fetch";
 export function preloadBinary(data, onload, onerror) {
 
     fetch(data.src + nocache, {
-        method: 'GET',
-        credentials: withCredentials ? 'include' : 'omit'
+        method: "GET",
+        credentials: withCredentials ? "include" : "omit"
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`Network response was not ok ${response.statusText}`)
-        }
-        return response.arrayBuffer();
-    })
-    .then(arrayBuffer => {
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Network response was not ok ${response.statusText}`);
+            }
+            return response.arrayBuffer();
+        })
+        .then(arrayBuffer => {
         /* ===== This code is one way to do it, left it here just in case, since I don't know entire codebase, this might be the best way still =====
         let byteArray = new Uint8Array(arrayBuffer);
         let buffer = [];
@@ -32,23 +32,22 @@ export function preloadBinary(data, onload, onerror) {
         binList[data.name] = buffer.join("");
         */
 
-        // this method is native and might be slightly more efficient
-        const decoder = new TextDecoder(); // the default for this is 'utf-8'
-        binList[data.name] = decoder.decode(arrayBuffer);
+            // this method is native and might be slightly more efficient
+            const decoder = new TextDecoder(); // the default for this is 'utf-8'
+            binList[data.name] = decoder.decode(arrayBuffer);
 
-        if (typeof onload === "function") {
-            // callback
-            onload();
-        }
-    })
-    .catch(error => {
-        if (typeof onerror === "function") {
-            onerror(error);
-        }
-    });
+            if (typeof onload === "function") {
+                // callback
+                onload();
+            }
+        })
+        .catch(error => {
+            if (typeof onerror === "function") {
+                onerror(error);
+            }
+        });
 
     return 1;
-    
     /* ===== This is the code that was here before changing to fetch =====
     let httpReq = new XMLHttpRequest();
 
