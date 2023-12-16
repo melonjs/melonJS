@@ -1,6 +1,5 @@
 import { jsonList } from "../cache.js";
-import { nocache, withCredentials } from "../settings.js";
-
+import { fetchData } from "./fetchdata.js";
 
 /**
  * parse/preload a JSON files
@@ -16,36 +15,20 @@ export function preloadJSON(data, onload, onerror) {
         return 0;
     }
 
-    let xmlhttp = new XMLHttpRequest();
 
-    if (xmlhttp.overrideMimeType) {
-        xmlhttp.overrideMimeType("application/json");
-    }
-
-    xmlhttp.open("GET", data.src + nocache, true);
-    xmlhttp.withCredentials = withCredentials;
-
-    // set the callbacks
-    xmlhttp.ontimeout = onerror;
-    xmlhttp.onreadystatechange = function () {
-        if (xmlhttp.readyState === 4) {
-            // status = 0 when file protocol is used, or cross-domain origin,
-            // (With Chrome use "--allow-file-access-from-files --disable-web-security")
-            if ((xmlhttp.status === 200) || ((xmlhttp.status === 0) && xmlhttp.responseText)) {
-                // get the Texture Packer Atlas content
-                jsonList[data.name] = JSON.parse(xmlhttp.responseText);
-                if (typeof onload === "function") {
-                    // fire the callback
-                    onload();
-                }
+    fetchData(data.src, "json")
+        .then(response => {
+            jsonList[data.name] = response;
+            if (typeof onload === "function") {
+                // callback
+                onload();
             }
-            else if (typeof onerror === "function") {
-                onerror(data.name);
+        })
+        .catch(error => {
+            if (typeof onerror === "function") {
+                onerror(error);
             }
-        }
-    };
-    // send the request
-    xmlhttp.send();
+        });
 
     return 1;
 }

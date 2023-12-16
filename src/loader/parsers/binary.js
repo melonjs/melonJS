@@ -1,6 +1,6 @@
 import { binList } from "../cache.js";
-import { crossOrigin, nocache, withCredentials } from "../settings.js";
-import "whatwg-fetch";
+import { crossOrigin } from "../settings.js";
+import { fetchData } from "./fetchdata.js";
 
 /**
  * parse/preload a Binary file
@@ -12,22 +12,8 @@ import "whatwg-fetch";
  */
 export function preloadBinary(data, onload, onerror) {
 
-    fetch(data.src + nocache, {
-        method: "GET",
-        credentials: withCredentials ? "include" : "omit"
-    })
+    fetchData(data.src, "arrayBuffer")
         .then(response => {
-            if (!response.ok) {
-                // status = 0 when file protocol is used, or cross-domain origin
-                if (response.status !== 0) {
-                    if (typeof onerror === "function") {
-                        onerror(`Network response was not ok ${response.statusText}`);
-                    }
-                }
-            }
-            return response.arrayBuffer();
-        })
-        .then((response) => {
             // this method is native and might be slightly more efficient
             const decoder = new TextDecoder(); // the default for this is 'utf-8'
             binList[data.name] = decoder.decode(response);
