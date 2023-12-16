@@ -15,7 +15,6 @@ export function preloadJSON(data, onload, onerror) {
         return 0;
     }
 
-
     fetchData(data.src, "json")
         .then(response => {
             jsonList[data.name] = response;
