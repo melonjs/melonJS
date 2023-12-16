@@ -18,23 +18,17 @@ export function preloadBinary(data, onload, onerror) {
     })
         .then(response => {
             if (!response.ok) {
-                throw new Error(`Network response was not ok ${response.statusText}`);
+                // status = 0 when file protocol is used, or cross-domain origin
+                if (response.status !== 0) {
+                    throw new Error(`Network response was not ok ${response.statusText}`);
+                }
             }
             return response.arrayBuffer();
         })
-        .then(arrayBuffer => {
-        /* ===== This code is one way to do it, left it here just in case, since I don't know entire codebase, this might be the best way still =====
-        let byteArray = new Uint8Array(arrayBuffer);
-        let buffer = [];
-        for (let i = 0; i < byteArray.byteLength; i++) {
-            buffer[i] = String.fromCharCode(byteArray[i]);
-        }
-        binList[data.name] = buffer.join("");
-        */
-
+        .then((response) => {
             // this method is native and might be slightly more efficient
             const decoder = new TextDecoder(); // the default for this is 'utf-8'
-            binList[data.name] = decoder.decode(arrayBuffer);
+            binList[data.name] = decoder.decode(response);
 
             if (typeof onload === "function") {
                 // callback
@@ -42,40 +36,13 @@ export function preloadBinary(data, onload, onerror) {
             }
         })
         .catch(error => {
+            console.error(error);
             if (typeof onerror === "function") {
                 onerror(error);
             }
         });
 
     return 1;
-    /* ===== This is the code that was here before changing to fetch =====
-    let httpReq = new XMLHttpRequest();
-
-    // load our file
-    httpReq.open("GET", data.src + nocache, true);
-    httpReq.withCredentials = withCredentials;
-    httpReq.responseType = "arraybuffer";
-    httpReq.onerror = onerror;
-    httpReq.onload = function () {
-        let arrayBuffer = httpReq.response;
-        if (arrayBuffer) {
-            let byteArray = new Uint8Array(arrayBuffer);
-            let buffer = [];
-            for (let i = 0; i < byteArray.byteLength; i++) {
-                buffer[i] = String.fromCharCode(byteArray[i]);
-            }
-            binList[data.name] = buffer.join("");
-            if (typeof onload === "function") {
-                // callback
-                onload();
-            }
-
-        }
-    };
-    httpReq.send();
-
-    return 1;
-    */
 }
 
 /**
