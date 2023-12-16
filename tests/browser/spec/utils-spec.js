@@ -149,4 +149,16 @@ describe("utils", function () {
             expect(params.mytag).toEqual("value");
         });
     });
+
+    describe("checkVersion", function () {
+        it("version match", function () {
+            // > 0 if the first string is greater, 
+            // < 0 if the second string is greater 
+            // === 0 if the strings are equal
+            expect(me.utils.checkVersion("15.13.0", "15.12.0") > 0).toEqual(true);
+            expect(me.utils.checkVersion("7.0.0", "15.5.0") < 0).toEqual(true);
+            expect(me.utils.checkVersion("15.12.0", "15.12.0") === 0).toEqual(true);
+            
+        });
+    });
 });

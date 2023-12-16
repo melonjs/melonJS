@@ -135,7 +135,7 @@ export function register(plugin, name = plugin.toString().match(/ (\w+)/)[1]) {
     }
 
     // compatibility testing
-    if (checkVersion(instance.version, version) > 0) {
+    if (checkVersion(instance.version, version) < 0) {
         throw new Error("Plugin version mismatch, expected: " + instance.version + ", got: " + version);
     }
 
