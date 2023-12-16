@@ -20,7 +20,9 @@ export function preloadBinary(data, onload, onerror) {
             if (!response.ok) {
                 // status = 0 when file protocol is used, or cross-domain origin
                 if (response.status !== 0) {
-                    throw new Error(`Network response was not ok ${response.statusText}`);
+                    if (typeof onerror === "function") {
+                        onerror(`Network response was not ok ${response.statusText}`);
+                    }
                 }
             }
             return response.arrayBuffer();
@@ -36,7 +38,6 @@ export function preloadBinary(data, onload, onerror) {
             }
         })
         .catch(error => {
-            console.error(error);
             if (typeof onerror === "function") {
                 onerror(error);
             }
