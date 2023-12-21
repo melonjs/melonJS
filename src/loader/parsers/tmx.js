@@ -1,9 +1,7 @@
 import * as fileUtil from "../../utils/file.js";
-import { ua } from "../../system/platform.js";
 import level from "../../level/level.js";
 import * as TMXUtils from "../../level/tiled/TMXUtils.js";
 import { tmxList } from "../cache.js";
-import { nocache, withCredentials } from "../settings.js";
 import { fetchData } from "./fetchdata.js";
 
 
@@ -16,7 +14,7 @@ import { fetchData } from "./fetchdata.js";
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
  */
-export async function preloadTMX(tmxData, onload, onerror) {
+export function preloadTMX(tmxData, onload, onerror) {
     if (typeof tmxList[tmxData.name] !== "undefined") {
         // already loaded
         return 0;
@@ -44,58 +42,60 @@ export async function preloadTMX(tmxData, onload, onerror) {
         return;
     }
 
-    try {
-        const response = await fetchData(`${tmxData.src}${nocache}`, "text", withCredentials);
-
-        if (typeof response !== "string") {
-            throw new Error("Invalid response type");
-        }
-
-        let result;
-
-        switch (fileUtil.getExtension(tmxData.src)) {
-            case "xml":
-            case "tmx":
-            case "tsx": {
-                // IE9 does not fully implement the responseXML
-                if (ua.match(/msi/i) || !(new DOMParser()).parseFromString) {
-                    throw new Error(
-                        "XML file format loading supported, use the JSON file format instead"
-                    );
-                }
-                const xmlDoc = (new DOMParser()).parseFromString(response, "text/xml");
-                const data = TMXUtils.parse(xmlDoc);
-
-                switch (fileUtil.getExtension(tmxData.src)) {
-                case "tmx":
-                    result = data.map;
-                    break;
-
-                case "tsx":
-                    result = data.tilesets[0];
-                    break;
-                }
-                break;
+    fetchData(tmxData.src, "text")
+        .then(response => {
+            if (typeof response !== "string") {
+                throw new Error("Invalid response type");
             }
-            case "json":
-            case "tmj":
-            case "tsj":
-                result = JSON.parse(response);
-                break;
-            default:
-                throw new Error(`TMX file format not supported: ${fileUtil.getExtension(tmxData.src)}`);
-        }
 
-        addToTMXList(result);
+            let result;
 
-        if (typeof onload === "function") {
-            onload();
-        }
-    } catch (error) {
-        if (typeof onerror === "function") {
-            onerror(tmxData.name);
-        }
-    }
+            switch (fileUtil.getExtension(tmxData.src)) {
+                case "xml":
+                case "tmx":
+                case "tsx": {
+                    const parser = new DOMParser();
+
+                    if (typeof parser.parseFromString === "undefined") {
+                        throw new Error(
+                            "XML file format loading supported, use the JSON file format instead"
+                        );
+                    }
+
+                    const xmlDoc = parser.parseFromString(response, "text/xml");
+                    const data = TMXUtils.parse(xmlDoc);
+
+                    switch (fileUtil.getExtension(tmxData.src)) {
+                        case "tmx":
+                            result = data.map;
+                            break;
+
+                        case "tsx":
+                            result = data.tilesets[0];
+                            break;
+                    }
+                    break;
+                }
+                case "json":
+                case "tmj":
+                case "tsj":
+                    result = JSON.parse(response);
+                    break;
+                default:
+                    throw new Error(`TMX file format not supported: ${fileUtil.getExtension(tmxData.src)}`);
+            }
+
+            addToTMXList(result);
+
+            if (typeof onload === "function") {
+                onload();
+            }
+        })
+        .catch(error => {
+            if (typeof onerror === "function") {
+                onerror(error);
+            }
+        });
 
     return 1;
 }
