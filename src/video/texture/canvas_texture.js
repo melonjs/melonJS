@@ -156,7 +156,7 @@ class CanvasTexture {
                 let image = new Image();
                 image.src = this.canvas.toDataURL(options);
                 image.onload = () => {
-                    createImageBitmap(image).then((bitmap) => resolve(bitmap));
+                    globalThis.createImageBitmap(image).then((bitmap) => resolve(bitmap));
                 };
             }
         });
