@@ -1,5 +1,5 @@
 import "whatwg-fetch";
-import { nocache, withCredentials } from "../settings.js";
+import { nocache, crossOrigin, withCredentials } from "../settings.js";
 
 /**
  * Fetches data from the specified URL.
@@ -17,9 +17,13 @@ import { nocache, withCredentials } from "../settings.js";
  */
 export function fetchData(url, responseType) {
     return new Promise((resolve, reject) => {
-        fetch(url + nocache, {
+        fetch(url, {
             method: "GET",
-            credentials: withCredentials ? "include" : "omit"
+            // internally nocache is a string with a generated random number
+            cache: nocache === "" ? "no-cache" : "reload",
+            credentials: withCredentials ? "include" : "omit",
+            // see setting.crossorigin, "anonymous" is used for cross-origin requests
+            mode: crossOrigin === "anonymous" ? "cors" : "no-cors"
         })
             .then(response => {
                 if (!response.ok) {
