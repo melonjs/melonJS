@@ -13,6 +13,10 @@ const __dirname = dirname(__filename);
 let server;
 before(async () => {
     global.browser = await puppeteer.launch({
+        args: [
+            "--disable-web-security",
+            "--disable-site-isolation-trials"
+        ],
         headless: "new" // Enable this to see what's going on in the browser
     });
     server = global.server = fastify();

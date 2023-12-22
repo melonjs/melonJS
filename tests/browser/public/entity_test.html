@@ -12,31 +12,32 @@
       me.boot();
       me.video.init(800, 600, {parent : "screen", scale : "auto", renderer : me.video.AUTO});
       
+      me.loader.crossOrigin = "anonymous";
+
       // load test assets
-      me.loader.load(
-      {
+      await me.loader.load({
           name: "rect",
           type: "image",
           src: "./data/img/rect.png",
       },
-      null,
+      function () {
+          // a test entity object
+          globalThis.entity = new me.Entity(0, 0, {
+              width: 32,
+              height: 64,
+              image: "rect",
+              shapes: [],
+          });
+
+          // all current test are based on anchorpoint being 0, 0
+          globalThis.entity.renderable.anchorPoint.set(0, 0);
+
+          // a default rect shape
+          globalThis.defaultRectShape = new me.Rect(10, 10, 32, 64);
+      },
       function () {
           throw new Error("Failed to load `rect.png`");
       });
-
-      // a test entity object
-      globalThis.entity = new me.Entity(0, 0, {
-          width: 32,
-          height: 64,
-          image: "rect",
-          shapes: [],
-      });
-
-      // all current test are based on anchorpoint being 0, 0
-      globalThis.entity.renderable.anchorPoint.set(0, 0);
-
-      // a default rect shape
-      globalThis.defaultRectShape = new me.Rect(10, 10, 32, 64);
   </script>
 </body>
 </html>

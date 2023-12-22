@@ -1,6 +1,5 @@
 import { imgList } from "../cache.js";
-import { crossOrigin, nocache } from "../settings.js";
-
+import { fetchData } from "./fetchdata.js";
 /**
  * parse/preload an image
  * @param {loader.Asset} img
@@ -22,18 +21,22 @@ export function preloadImage(img, onload, onerror) {
         return 0;
     }
 
-    // create new Image object and add to list
-    imgList[img.name] = new Image();
-    if (typeof onload === "function") {
-        imgList[img.name].onload = onload;
-    }
-    if (typeof onerror === "function") {
-        imgList[img.name].onerror = onerror;
-    }
-    if (typeof (crossOrigin) === "string") {
-        imgList[img.name].crossOrigin = crossOrigin;
-    }
-    imgList[img.name].src = img.src + nocache;
+    fetchData(img.src, "blob")
+        .then(blob => {
+            globalThis.createImageBitmap(blob)
+                .then((bitmap) => {
+                    imgList[img.name] = bitmap;
+                    if (typeof onload === "function") {
+                        // callback
+                        onload();
+                    }
+                });
+        })
+        .catch(error => {
+            if (typeof onerror === "function") {
+                onerror(error);
+            }
+        });
 
     return 1;
 }

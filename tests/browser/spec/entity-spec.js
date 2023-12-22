@@ -1,13 +1,17 @@
 import { expect } from "expect";
+import {loader, Entity} from "./../public/lib/melonjs.module.js";
 
 describe("Entity", function () {
     var page;
 
     before(async () => {
         page = await browser.newPage();
+        await page.setBypassCSP(true);
         await page.goto("http://localhost:8042/entity_test.html", {'waitUntil':'load'});
+        await page.waitForNetworkIdle();
     });
 
+   
     it("has an empty set of shapes", async () => {
         expect(await page.evaluate(() => globalThis.entity.body.shapes.length)).toEqual(0);
     });
