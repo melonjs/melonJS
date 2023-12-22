@@ -2,6 +2,9 @@
 
 ## [16.0.0] (melonJS 2) - _2024-xx-xx_
 
+### Changed
+- loader: replaced XHR by Fetch for assets preloading (thanks @Edwardscb)
+
 ## [15.15.0] (melonJS 2) - _2023-11-20_
 
 ### Added
