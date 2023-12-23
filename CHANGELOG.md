@@ -4,6 +4,7 @@
 
 ### Changed
 - loader: replaced XHR by Fetch for assets preloading (thanks @Edwardscb)
+- Renderer: fix `toBlob`, `toDataURL` and `toImageBitmap` method signature to better match with the W3C API
 
 ## [15.15.0] (melonJS 2) - _2023-11-20_
 
