@@ -1,4 +1,3 @@
-import "whatwg-fetch";
 import { nocache, crossOrigin, withCredentials } from "../settings.js";
 
 /**
