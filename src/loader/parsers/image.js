@@ -1,5 +1,7 @@
 import { imgList } from "../cache.js";
 import { fetchData } from "./fetchdata.js";
+import * as fileUtil from "./../../utils/file.js";
+
 /**
  * parse/preload an image
  * @param {loader.Asset} img
@@ -21,22 +23,50 @@ export function preloadImage(img, onload, onerror) {
         return 0;
     }
 
-    fetchData(img.src, "blob")
-        .then(blob => {
-            globalThis.createImageBitmap(blob)
-                .then((bitmap) => {
-                    imgList[img.name] = bitmap;
+    // handle SVG file loading
+    if (fileUtil.getExtension(img.src) === "svg") {
+        // handle SVG file
+        fetchData(img.src, "text")
+            .then(svgText => {
+                const svgImage = new Image();
+                svgImage.onload = function() {
+                    imgList[img.name] = svgImage;
                     if (typeof onload === "function") {
                         // callback
                         onload();
                     }
-                });
-        })
-        .catch(error => {
-            if (typeof onerror === "function") {
-                onerror(error);
-            }
-        });
+                };
+                svgImage.onerror = function(error) {
+                    if (typeof onerror === "function") {
+                        onerror(error);
+                    }
+                };
+                svgImage.src = "data:image/svg+xml;charset=utf8," + encodeURIComponent(svgText);
+            })
+            .catch(error => {
+                if (typeof onerror === "function") {
+                    onerror(error);
+                }
+            });
+    } else {
+        // handle all other image files
+        fetchData(img.src, "blob")
+            .then(blob => {
+                globalThis.createImageBitmap(blob)
+                    .then((bitmap) => {
+                        imgList[img.name] = bitmap;
+                        if (typeof onload === "function") {
+                            // callback
+                            onload();
+                        }
+                    });
+            })
+            .catch(error => {
+                if (typeof onerror === "function") {
+                    onerror(error);
+                }
+            });
+    }
 
     return 1;
 }
