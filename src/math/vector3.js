@@ -262,18 +262,14 @@ export default class Vector3d {
      * @param {number} [z]
      * @returns {boolean}
      */
-    equals() {
+    equals(...args) {
         let _x, _y, _z;
-        if (arguments.length >= 2) {
+        if (args.length >= 2) {
             // x, y, z
-            _x = arguments[0];
-            _y = arguments[1];
-            _z = arguments[2];
+            [_x, _y, _z] = args;
         } else {
             // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-            _z = arguments[0].z;
+            [_x, _y, _z] = [args[0].x, args[0].y, args[0].z];
         }
 
         if (typeof _z === "undefined") {

@@ -189,17 +189,15 @@ export default class Ellipse {
      *  // do something
      * }
      */
-    contains() {
+    contains(...args) {
         let _x, _y;
 
-        if (arguments.length === 2) {
+        if (args.length === 2) {
             // x, y
-            _x = arguments[0];
-            _y = arguments[1];
+            [_x, _y] = args;
         } else {
             // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
+            [_x, _y] = [args[0].x, args[0].y];
         }
 
         // Make position relative to object center point.

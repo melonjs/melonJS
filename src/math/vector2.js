@@ -246,18 +246,16 @@ export default class Vector2d {
      * @param {number} [y]
      * @returns {boolean}
      */
-    equals() {
+    equals(...args) {
         let _x, _y;
-        if (arguments.length === 2) {
+        if (args.length === 2) {
             // x, y
-            _x = arguments[0];
-            _y = arguments[1];
+            [_x, _y] = args;
         } else {
             // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
+            [_x, _y] = [args[0].x, args[0].y];
         }
-        return ((this.x === _x) && (this.y === _y));
+        return this.x === _x && this.y === _y;
     }
 
     /**
