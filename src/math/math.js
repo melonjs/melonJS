@@ -207,3 +207,13 @@ export function round(num, dec = 0) {
 export function toBeCloseTo(expected, actual, precision = 2) {
     return Math.abs(expected - actual) < (Math.pow(10, -precision) / 2);
 }
+
+
+/**
+ * Calculates the power of a number.
+ * @param {number} n - The number to be raised to the power of 2.
+ * @returns {number} The result of raising the number to the power of 2.
+ */
+export function pow(n) {
+    return Math.pow(n, 2);
+}

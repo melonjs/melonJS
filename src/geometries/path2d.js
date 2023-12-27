@@ -1,13 +1,13 @@
 import pool from "./../system/pooling.js";
 import { TAU } from "./../math/math.js";
 import earcut from "earcut";
-
+import { endpointToCenterParameterization } from "./toarccanvas.js";
 /**
  * @classdesc
  * a simplified path2d implementation, supporting only one path
  */
 export default class Path2D {
-    constructor() {
+    constructor(svgPath) {
         /**
          * the points defining the current path
          * @type {Point[]}
@@ -29,7 +29,74 @@ export default class Path2D {
 
         /* @ignore */
         this.isDirty = false;
+
+        if (typeof svgPath === "string") {
+            this.parseSVGPath(svgPath);
+        }
     }
+
+    /**
+     * Parses an SVG path string and adds the points to the current path.
+     * @param {string} svgPath - The SVG path string to parse.
+     */
+    parseSVGPath(svgPath) {
+        // Split path into commands and coordinates
+        const pathCommands = svgPath.match(/([a-df-z])[^a-df-z]*/gi);
+        const points = this.points;
+        const startPoint = this.startPoint;
+        let lastPoint = startPoint;
+
+        this.beginPath();
+
+        // Process each command and corresponding coordinates
+        for (let i = 0; i < pathCommands.length; i++) {
+            const pathCommand = pathCommands[i];
+            const command = pathCommand[0].toUpperCase();
+            const coordinates = pathCommand.slice(1).trim().split(/[\s,]+/).map(parseFloat);
+
+            switch (command) {
+                case "A": {
+                    // A command takes 5 coordinates
+                    const p = endpointToCenterParameterization(...coordinates);
+                    this.arc(p.x, p.y, p.radiusX, p.radiusY, p.rotation, p.startAngle, p.endAngle, p.applyanticlockwise);
+                }
+                    break;
+                case "H":
+                    // H take 1 coordinate
+                    lastPoint = points.length === 0 ? startPoint : points[points.length-1];
+                    this.lineTo(lastPoint.x + coordinates[0], lastPoint.y);
+                    break;
+                case "V":
+                    // V take 1 coordinate
+                    lastPoint = points.length === 0 ? startPoint : points[points.length-1];
+                    this.lineTo(lastPoint.x, lastPoint.y + coordinates[0]);
+                    break;
+                case "M":
+                    // M takes 2 coordinates
+                    this.moveTo(...coordinates);
+                    break;
+                case "L":
+                    // L takes 2 coordinates
+                    this.lineTo(...coordinates);
+                    break;
+                case "Q":
+                    // Q takes 4 coordinates
+                    this.quadraticCurveTo(...coordinates);
+                    break;
+                case "C":
+                    // C takes 6 coordinates
+                    this.bezierCurveTo(...coordinates);
+                    break;
+                case "Z":
+                    this.closePath();
+                    break;
+                default:
+                    console.warn("Unsupported command:", command);
+                    break;
+            }
+        }
+    }
+
 
     /**
      * begin a new path
@@ -190,9 +257,11 @@ export default class Path2D {
      */
     arcTo(x1, y1, x2, y2, radius) {
         let points = this.points;
-        // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
-        let x0 = points[points.length-1].x, y0 = points[points.length-1].y;
+        let startPoint = this.startPoint;
+        let lastPoint = points.length === 0 ? startPoint : points[points.length-1];
 
+        // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
+        let x0 = lastPoint.x, y0 = lastPoint.y;
         //a = -incoming vector, b = outgoing vector to x1, y1
         let a0 = x0 - x1, a1 = y0 - y1;
         let b0 = x2 - x1, b1 = y2 - y1;
@@ -283,6 +352,62 @@ export default class Path2D {
         }
         // close the ellipse
         this.lineTo(x + radiusX * Math.cos(startAngle), y + radiusY * Math.sin(startAngle));
+        this.isDirty = true;
+    }
+
+    /**
+     * Adds a quadratic Bézier curve to the path.
+     * @param {number} cpX - The x-coordinate of the control point.
+     * @param {number} cpY - The y-coordinate of the control point.
+     * @param {number} x - The x-coordinate of the end point of the curve.
+     * @param {number} y - The y-coordinate of the end point of the curve.
+     */
+    quadraticCurveTo(cpX, cpY, x, y) {
+        const points = this.points;
+        const startPoint = this.startPoint;
+        const lastPoint = points.length === 0 ? startPoint : points[points.length-1];
+        const endPoint = pool.pull("Point").set(x, y);
+        const controlPoint = pool.pull("Point").set(cpX, cpY);
+        const resolution = this.arcResolution;
+
+        const t = 1 / resolution;
+        for (let i = 1; i <= resolution; i++) {
+            this.lineTo(
+                lastPoint.x * Math.pow(1 - t * i, 2) + controlPoint.x * 2 * (1 - t * i) * t * i + endPoint.x * Math.pow(t * i, 2),
+                lastPoint.y * Math.pow(1 - t * i, 2) + controlPoint.y * 2 * (1 - t * i) * t * i + endPoint.y * Math.pow(t * i, 2)
+            );
+        }
+        pool.push(endPoint, controlPoint);
+        this.isDirty = true;
+    }
+
+    /**
+     * Adds a cubic Bézier curve to the path.
+     * @param {number} cp1X - The x-coordinate of the first control point.
+     * @param {number} cp1Y - The y-coordinate of the first control point.
+     * @param {number} cp2X - The x-coordinate of the second control point.
+     * @param {number} cp2Y - The y-coordinate of the second control point.
+     * @param {number} x - The x-coordinate of the end point of the curve.
+     * @param {number} y - The y-coordinate of the end point of the curve.
+     */
+    bezierCurveTo(cp1X, cp1Y, cp2X, cp2Y, x, y) {
+        const points = this.points;
+        const startPoint = this.startPoint;
+        const lastPoint = points.length === 0 ? startPoint : points[points.length-1];
+        const endPoint = pool.pull("Point").set(x, y);
+        const controlPoint1 = pool.pull("Point").set(cp1X, cp1Y);
+        const controlPoint2 = pool.pull("Point").set(cp2X, cp2Y);
+        const resolution = this.arcResolution;
+
+        const t = 1 / resolution;
+        for (let i = 1; i <= resolution; i++) {
+            this.lineTo(
+                lastPoint.x * Math.pow(1 - t * i, 3) + controlPoint1.x * 3 * Math.pow(1 - t * i, 2) * t * i + controlPoint2.x * 3 * (1 - t * i) * Math.pow(t * i, 2) + endPoint.x * Math.pow(t * i, 3),
+                lastPoint.y * Math.pow(1 - t * i, 3) + controlPoint1.y * 3 * Math.pow(1 - t * i, 2) * t * i + controlPoint2.y * 3 * (1 - t * i) * Math.pow(t * i, 2) + endPoint.y * Math.pow(t * i, 3)
+            );
+        }
+
+        pool.push(endPoint, controlPoint1, controlPoint2);
         this.isDirty = true;
     }
 
