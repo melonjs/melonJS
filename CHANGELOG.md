@@ -725,6 +725,8 @@
 
 -------------------------------------------------------------------------------
 
+[16.0.0]: https://github.com/melonjs/melonJS/compare/15.15.0...16.0.0
+[15.15.0]: https://github.com/melonjs/melonJS/compare/15.14.0...15.15.0
 [15.14.0]: https://github.com/melonjs/melonJS/compare/15.13.0...15.14.0
 [15.13.0]: https://github.com/melonjs/melonJS/compare/15.12.0...15.13.0
 [15.12.0]: https://github.com/melonjs/melonJS/compare/15.11.0...15.12.0
