@@ -3,6 +3,7 @@
 ## [16.0.0] (melonJS 2) - _2024-xx-xx_
 
 ### Changed
+- Chore: update to npm 10, Node.js 20 and friends
 - loader: replaced XHR by Fetch for assets preloading (thanks @Edwardscb)
 - Renderer: fix `toBlob`, `toDataURL` and `toImageBitmap` method signature to better match with the W3C API
 
