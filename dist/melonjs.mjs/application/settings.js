@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v15.15.0
+ * melonJS Game Engine - v16.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2024 Olivier Biot (AltByte Pte Ltd)
  */
 // default settings
 const defaultSettings = {
@@ -24,13 +24,15 @@ const defaultSettings = {
     powerPreference : "default",
     verbose : false,
     consoleHeader : true,
-    legacy : false
+    legacy : false,
+    canvas : undefined
 };
 
 /**
  * Application & Renderer Settings definition.
  * @typedef {object} Settings
  * @property {string|HTMLElement} [parent=document.body] - the DOM parent element to hold the canvas in the HTML file
+ * @property {HTMLCanvasElement} [canvas] - an existing canvas element to use as the renderer target (by default melonJS will create its own canvas based on given parameters)
  * @property {number|Renderer} [renderer=AUTO] - renderer to use (CANVAS, WEBGL, AUTO), or a custom renderer class
  * @property {number|string} [scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)
  * @property {"fit"|"fill-min"|"fill-max"|"flex"|"flex-width"|"flex-height"|"stretch"} [scaleMethod="fit"] - screen scaling modes : <br>

@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v15.15.0
+ * melonJS Game Engine - v16.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2024 Olivier Biot (AltByte Pte Ltd)
  */
 import Vector2d from '../../../math/vector2.js';
 import { isPowerOfTwo } from '../../../math/math.js';
@@ -99,7 +99,9 @@ class QuadCompositor extends Compositor {
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels, 0);
         } else if (typeof globalThis.OffscreenCanvas !== "undefined" && pixels instanceof globalThis.OffscreenCanvas) {
             // convert to ImageBitmap first (else Safari 16.4 and higher will throw an TypeError exception)
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, pixels.transferToImageBitmap());
+            const imageBitmap = pixels.transferToImageBitmap();
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, imageBitmap);
+            imageBitmap.close();
         } else {
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
         }

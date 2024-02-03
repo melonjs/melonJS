@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v15.15.0
+ * melonJS Game Engine - v16.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2024 Olivier Biot (AltByte Pte Ltd)
  */
 import { clamp } from './math.js';
 import pool from '../system/pooling.js';
@@ -269,18 +269,14 @@ class Vector3d {
      * @param {number} [z]
      * @returns {boolean}
      */
-    equals() {
+    equals(...args) {
         let _x, _y, _z;
-        if (arguments.length >= 2) {
+        if (args.length >= 2) {
             // x, y, z
-            _x = arguments[0];
-            _y = arguments[1];
-            _z = arguments[2];
+            [_x, _y, _z] = args;
         } else {
             // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-            _z = arguments[0].z;
+            [_x, _y, _z] = [args[0].x, args[0].y, args[0].z];
         }
 
         if (typeof _z === "undefined") {

@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v15.15.0
+ * melonJS Game Engine - v16.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2024 Olivier Biot (AltByte Pte Ltd)
  */
 import { defer } from '../utils/function.js';
 import { on, GAME_BEFORE_UPDATE, BOOT, STATE_RESUME, STATE_RESTART, STATE_CHANGE } from './event.js';
@@ -271,20 +271,4 @@ class Timer {
 
 const timer = new Timer();
 
-/**
- * the default global Timer instance
- * @namespace timer
- * @see Timer
- * @example
- * // set a timer to call "myFunction" after 1000ms
- * timer.setTimeout(myFunction, 1000);
- * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
- * timer.setTimeout(myFunction, 1000, true, param1, param2);
- * // set a timer to call "myFunction" every 1000ms
- * timer.setInterval(myFunction, 1000);
- * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
- * timer.setInterval(myFunction, 1000, true, param1, param2);
- */
-var timer$1 = timer;
-
-export { timer$1 as default };
+export { timer as default };

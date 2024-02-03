@@ -38,25 +38,25 @@ export default class Bounds {
      * @param {number} maxY
      */
     setMinMax(minX: number, minY: number, maxX: number, maxY: number): void;
-    set x(arg: number);
+    set x(value: number);
     /**
      * x position of the bound
      * @type {number}
      */
     get x(): number;
-    set y(arg: number);
+    set y(value: number);
     /**
      * y position of the bounds
      * @type {number}
      */
     get y(): number;
-    set width(arg: number);
+    set width(value: number);
     /**
      * width of the bounds
      * @type {number}
      */
     get width(): number;
-    set height(arg: number);
+    set height(value: number);
     /**
      * width of the bounds
      * @type {number}

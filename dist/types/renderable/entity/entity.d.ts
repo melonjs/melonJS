@@ -39,7 +39,7 @@ export default class Entity extends Renderable {
      * @ignore
      */
     children: any[];
-    set renderable(arg: Renderable);
+    set renderable(value: Renderable);
     /**
      * The entity renderable component (can be any objects deriving from me.Renderable, like me.Sprite for example)
      * @type {Renderable}

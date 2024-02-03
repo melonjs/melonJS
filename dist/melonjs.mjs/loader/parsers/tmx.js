@@ -1,22 +1,22 @@
 /*!
- * melonJS Game Engine - v15.15.0
+ * melonJS Game Engine - v16.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2024 Olivier Biot (AltByte Pte Ltd)
  */
 import { getExtension } from '../../utils/file.js';
-import { ua } from '../../system/platform.js';
 import level from '../../level/level.js';
 import { parse } from '../../level/tiled/TMXUtils.js';
 import { tmxList } from '../cache.js';
-import { nocache, withCredentials } from '../settings.js';
+import { fetchData } from './fetchdata.js';
 
 /**
  * parse/preload a TMX file
  * @param {loader.Asset} data - asset data
  * @param {Function} [onload] - function to be called when the asset is loaded
  * @param {Function} [onerror] - function to be called in case of error
+ * @param {Function} [fetchData] - function to use instead of default window.fetch, has some error handling and things
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
  */
@@ -39,7 +39,6 @@ function preloadTMX(tmxData, onload, onerror) {
         }
     }
 
-
     //if the data is in the tmxData object, don't get it via a XMLHTTPRequest
     if (tmxData.data) {
         addToTMXList(tmxData.data);
@@ -49,85 +48,60 @@ function preloadTMX(tmxData, onload, onerror) {
         return;
     }
 
-    let xmlhttp = new XMLHttpRequest();
-    // check the data format ('tmx', 'json')
-    let format = getExtension(tmxData.src);
+    fetchData(tmxData.src, "text")
+        .then(response => {
+            if (typeof response !== "string") {
+                throw new Error("Invalid response type");
+            }
 
-    if (xmlhttp.overrideMimeType) {
-        if (format === "json") {
-            xmlhttp.overrideMimeType("application/json");
-        }
-        else {
-            xmlhttp.overrideMimeType("text/xml");
-        }
-    }
+            let result;
 
-    xmlhttp.open("GET", tmxData.src + nocache, true);
-    xmlhttp.withCredentials = withCredentials;
-    // set the callbacks
-    xmlhttp.ontimeout = onerror;
-    xmlhttp.onreadystatechange = function () {
-        if (xmlhttp.readyState === 4) {
-            // status = 0 when file protocol is used, or cross-domain origin,
-            // (With Chrome use "--allow-file-access-from-files --disable-web-security")
-            if ((xmlhttp.status === 200) || ((xmlhttp.status === 0) && xmlhttp.responseText)) {
-                let result = null;
+            switch (getExtension(tmxData.src)) {
+                case "xml":
+                case "tmx":
+                case "tsx": {
+                    const parser = new DOMParser();
 
-                // parse response
-                switch (format) {
-                    case "xml":
-                    case "tmx":
-                    case "tsx": {
-                        // ie9 does not fully implement the responseXML
-                        if (ua.match(/msie/i) || !xmlhttp.responseXML) {
-                            if (globalThis.DOMParser) {
-                                // manually create the XML DOM
-                                result = (new DOMParser()).parseFromString(xmlhttp.responseText, "text/xml");
-                            } else {
-                                throw new Error("XML file format loading not supported, use the JSON file format instead");
-                            }
-                        }
-                        else {
-                            result = xmlhttp.responseXML;
-                        }
-                        // converts to a JS object
-                        const data = parse(result);
-                        switch (format) {
-                            case "tmx":
-                                result = data.map;
-                                break;
-
-                            case "tsx":
-                                result = data.tilesets[0];
-                                break;
-                        }
-                        break;
+                    if (typeof parser.parseFromString === "undefined") {
+                        throw new Error(
+                            "XML file format loading supported, use the JSON file format instead"
+                        );
                     }
-                    case "json":
-                    case "tmj":
-                    case "tsj":
-                        result = JSON.parse(xmlhttp.responseText);
-                        break;
 
-                    default:
-                        throw new Error("TMX file format " + format + " not supported !");
+                    const xmlDoc = parser.parseFromString(response, "text/xml");
+                    const data = parse(xmlDoc);
+
+                    switch (getExtension(tmxData.src)) {
+                        case "tmx":
+                            result = data.map;
+                            break;
+
+                        case "tsx":
+                            result = data.tilesets[0];
+                            break;
+                    }
+                    break;
                 }
-
-                //set the TMX content
-                addToTMXList(result);
-
-                // fire the callback
-                if (typeof onload === "function") {
-                    onload();
-                }
+                case "json":
+                case "tmj":
+                case "tsj":
+                    result = JSON.parse(response);
+                    break;
+                default:
+                    throw new Error(`TMX file format not supported: ${getExtension(tmxData.src)}`);
             }
-            else if (typeof onerror === "function") {
-                onerror(tmxData.name);
+
+            addToTMXList(result);
+
+            if (typeof onload === "function") {
+                onload();
             }
-        }
-    };
-    // send the request
-    xmlhttp.send();
+        })
+        .catch(error => {
+            if (typeof onerror === "function") {
+                onerror(error);
+            }
+        });
 
     return 1;
 }

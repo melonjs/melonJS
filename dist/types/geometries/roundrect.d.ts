@@ -12,7 +12,7 @@ export default class RoundRect extends Rect {
      * @param {number} [radius=20] - the radius of the rounded corner
      */
     constructor(x: number, y: number, width: number, height: number, radius?: number | undefined);
-    set radius(arg: number);
+    set radius(value: number);
     /**
      * the radius of the rounded corner
      * @type {number}

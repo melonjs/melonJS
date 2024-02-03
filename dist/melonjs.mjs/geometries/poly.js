@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v15.15.0
+ * melonJS Game Engine - v16.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2024 Olivier Biot (AltByte Pte Ltd)
  */
 import earcut from '../node_modules/earcut/src/earcut.js';
 import pool from '../system/pooling.js';
@@ -374,18 +374,8 @@ class Polygon {
      *   // do something
      * }
      */
-    contains() {
-        let _x, _y;
-
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
+    contains(...args) {
+        let [_x, _y] = args.length === 2 ? args : [args[0].x, args[0].y];
 
         let intersects = false;
         let posx = this.pos.x, posy = this.pos.y;

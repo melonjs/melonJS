@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v15.15.0
+ * melonJS Game Engine - v16.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2024 Olivier Biot (AltByte Pte Ltd)
  */
 import { createCanvas } from '../video.js';
 import { setPrefixed } from '../../utils/agent.js';
@@ -127,43 +127,41 @@ class CanvasTexture {
 
     /**
      * creates a Blob object representing the image contained in this canvas texture
-     * @param {object} [options] - An object with the following properties:
-     * @param {string} [options.type="image/png"] - A string indicating the image format
-     * @param {number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @param {string} [type="image/png"] - A string indicating the image format
+     * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
      * @returns {Promise} A Promise returning a Blob object representing the image contained in this canvas texture
      * @example
      * canvasTexture.convertToBlob().then((blob) => console.log(blob));
      */
-    toBlob(options) {
+    toBlob(type = "image/png", quality) {
         if (typeof this.canvas.convertToBlob === "function") {
-            return this.canvas.convertToBlob(options);
+            return this.canvas.convertToBlob(type, quality);
         } else {
             return new Promise(function(resolve) {
                 this.canvas.toBlob((blob) => {
                     resolve(blob);
-                }, options ? options.type : undefined, options ? options.quality : undefined);
+                }, type, quality);
             });
         }
     }
 
     /**
      * creates an ImageBitmap object from the most recently rendered image of this canvas texture
-     * @param {object} [options] - An object with the following properties:
-     * @param {string} [options.type="image/png"] - A string indicating the image format
-     * @param {number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @param {string} [type="image/png"] - A string indicating the image format
+     * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
      * @returns {Promise} A Promise returning an ImageBitmap.
      * @example
      * canvasTexture.transferToImageBitmap().then((bitmap) => console.log(bitmap));
      */
-    toImageBitmap(options) {
+    toImageBitmap(type = "image/png", quality) {
         return new Promise((resolve) => {
             if (typeof this.canvas.transferToImageBitmap === "function") {
                 resolve(this.canvas.transferToImageBitmap());
             } else {
                 let image = new Image();
-                image.src = this.canvas.toDataURL(options);
+                image.src = this.canvas.toDataURL(type, quality);
                 image.onload = () => {
-                    createImageBitmap(image).then((bitmap) => resolve(bitmap));
+                    globalThis.createImageBitmap(image).then((bitmap) => resolve(bitmap));
                 };
             }
         });
@@ -172,16 +170,15 @@ class CanvasTexture {
     /**
      * returns a data URL containing a representation of the most recently rendered image of this canvas texture
      * (not supported by OffscreenCanvas)
-     * @param {object} [options] - An object with the following properties:
-     * @param {string} [options.type="image/png"] - A string indicating the image format
-     * @param {number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @param {string} [type="image/png"] - A string indicating the image format
+     * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
      * @returns {Promise} A Promise returning a string containing the requested data URL.
      * @example
      * renderer.toDataURL().then((dataURL) => console.log(dataURL));
      */
-    toDataURL(options) {
+    toDataURL(type = "image/png", quality) {
         return new Promise((resolve) => {
-            resolve(this.canvas.toDataURL(options));
+            resolve(this.canvas.toDataURL(type, quality));
         });
     }
 

@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v15.15.0
+ * melonJS Game Engine - v16.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2024 Olivier Biot (AltByte Pte Ltd)
  */
 /**
  * a collection of math utility functions
@@ -215,4 +215,14 @@ function toBeCloseTo(expected, actual, precision = 2) {
     return Math.abs(expected - actual) < (Math.pow(10, -precision) / 2);
 }
 
-export { DEG_TO_RAD, EPSILON, ETA, RAD_TO_DEG, TAU, clamp, degToRad, isPowerOfTwo, nextPowerOfTwo, radToDeg, random, randomFloat, round, toBeCloseTo, weightedRandom };
+
+/**
+ * Calculates the power of a number.
+ * @param {number} n - The number to be raised to the power of 2.
+ * @returns {number} The result of raising the number to the power of 2.
+ */
+function pow(n) {
+    return Math.pow(n, 2);
+}
+
+export { DEG_TO_RAD, EPSILON, ETA, RAD_TO_DEG, TAU, clamp, degToRad, isPowerOfTwo, nextPowerOfTwo, pow, radToDeg, random, randomFloat, round, toBeCloseTo, weightedRandom };

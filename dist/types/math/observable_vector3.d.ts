@@ -20,7 +20,7 @@ export default class ObservableVector3d extends Vector3d {
      * @ignore
      */
     onResetEvent(x: number | undefined, y: number | undefined, z: number | undefined, settings: any): this;
-    public set x(arg: number);
+    public set x(value: number);
     /**
      * x value of the vector
      * @public
@@ -30,7 +30,7 @@ export default class ObservableVector3d extends Vector3d {
      */
     public get x(): number;
     _x: any;
-    public set y(arg: number);
+    public set y(value: number);
     /**
      * y value of the vector
      * @public
@@ -40,7 +40,7 @@ export default class ObservableVector3d extends Vector3d {
      */
     public get y(): number;
     _y: any;
-    public set z(arg: number);
+    public set z(value: number);
     /**
      * z value of the vector
      * @public

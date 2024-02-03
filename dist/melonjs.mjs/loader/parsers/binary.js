@@ -1,12 +1,12 @@
 /*!
- * melonJS Game Engine - v15.15.0
+ * melonJS Game Engine - v16.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2024 Olivier Biot (AltByte Pte Ltd)
  */
 import { binList } from '../cache.js';
-import { nocache, withCredentials } from '../settings.js';
+import { fetchData } from './fetchdata.js';
 
 /**
  * parse/preload a Binary file
@@ -17,30 +17,23 @@ import { nocache, withCredentials } from '../settings.js';
  * @ignore
  */
 function preloadBinary(data, onload, onerror) {
-    let httpReq = new XMLHttpRequest();
 
-    // load our file
-    httpReq.open("GET", data.src + nocache, true);
-    httpReq.withCredentials = withCredentials;
-    httpReq.responseType = "arraybuffer";
-    httpReq.onerror = onerror;
-    httpReq.onload = function () {
-        let arrayBuffer = httpReq.response;
-        if (arrayBuffer) {
-            let byteArray = new Uint8Array(arrayBuffer);
-            let buffer = [];
-            for (let i = 0; i < byteArray.byteLength; i++) {
-                buffer[i] = String.fromCharCode(byteArray[i]);
-            }
-            binList[data.name] = buffer.join("");
+    fetchData(data.src, "arrayBuffer")
+        .then(response => {
+            // this method is native and might be slightly more efficient
+            const decoder = new TextDecoder(); // the default for this is 'utf-8'
+            binList[data.name] = decoder.decode(response);
+
             if (typeof onload === "function") {
                 // callback
                 onload();
             }
-
-        }
-    };
-    httpReq.send();
+        })
+        .catch(error => {
+            if (typeof onerror === "function") {
+                onerror(error);
+            }
+        });
 
     return 1;
 }

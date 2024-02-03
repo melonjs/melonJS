@@ -120,6 +120,12 @@ export function round(num: number, dec?: number | undefined): number;
  */
 export function toBeCloseTo(expected: number, actual: number, precision?: number | undefined): boolean;
 /**
+ * Calculates the power of a number.
+ * @param {number} n - The number to be raised to the power of 2.
+ * @returns {number} The result of raising the number to the power of 2.
+ */
+export function pow(n: number): number;
+/**
  * a collection of math utility functions
  * @namespace Math
  */

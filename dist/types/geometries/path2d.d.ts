@@ -3,6 +3,7 @@
  * a simplified path2d implementation, supporting only one path
  */
 export default class Path2D {
+    constructor(svgPath: any);
     /**
      * the points defining the current path
      * @type {Point[]}
@@ -17,6 +18,11 @@ export default class Path2D {
     vertices: any[];
     startPoint: object;
     isDirty: boolean;
+    /**
+     * Parses an SVG path string and adds the points to the current path.
+     * @param {string} svgPath - The SVG path string to parse.
+     */
+    parseSVGPath(svgPath: string): void;
     /**
      * begin a new path
      */
@@ -77,6 +83,24 @@ export default class Path2D {
      * @param {boolean} [anticlockwise=false] - an optional boolean value which, if true, draws the ellipse counterclockwise (anticlockwise).
      */
     ellipse(x: number, y: number, radiusX: number, radiusY: number, rotation: number, startAngle: number, endAngle: number, anticlockwise?: boolean | undefined): void;
+    /**
+     * Adds a quadratic Bézier curve to the path.
+     * @param {number} cpX - The x-coordinate of the control point.
+     * @param {number} cpY - The y-coordinate of the control point.
+     * @param {number} x - The x-coordinate of the end point of the curve.
+     * @param {number} y - The y-coordinate of the end point of the curve.
+     */
+    quadraticCurveTo(cpX: number, cpY: number, x: number, y: number): void;
+    /**
+     * Adds a cubic Bézier curve to the path.
+     * @param {number} cp1X - The x-coordinate of the first control point.
+     * @param {number} cp1Y - The y-coordinate of the first control point.
+     * @param {number} cp2X - The x-coordinate of the second control point.
+     * @param {number} cp2Y - The y-coordinate of the second control point.
+     * @param {number} x - The x-coordinate of the end point of the curve.
+     * @param {number} y - The y-coordinate of the end point of the curve.
+     */
+    bezierCurveTo(cp1X: number, cp1Y: number, cp2X: number, cp2Y: number, x: number, y: number): void;
     /**
      * creates a path for a rectangle at position (x, y) with a size that is determined by width and height.
      * @param {number} x - the x-axis coordinate of the rectangle's starting point.

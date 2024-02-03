@@ -40,7 +40,7 @@ export default class ImageLayer extends Sprite {
      * @default <1.0,1.0>
      */
     ratio: Vector2d;
-    set repeat(arg: string);
+    set repeat(value: string);
     /**
      * Define if and how an Image Layer should be repeated.<br>
      * By default, an Image Layer is repeated both vertically and horizontally.<br>

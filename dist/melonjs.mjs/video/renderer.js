@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v15.15.0
+ * melonJS Game Engine - v16.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2024 Olivier Biot (AltByte Pte Ltd)
  */
 import Color from '../math/color.js';
 import Matrix3d from '../math/matrix3.js';
@@ -416,19 +416,18 @@ class Renderer {
 
     /**
      * creates a Blob object representing the last rendered frame
-     * @param {object} [options] - An object with the following properties:
-     * @param {string} [options.type="image/png"] - A string indicating the image format
-     * @param {number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @param {string} [type="image/png"] - A string indicating the image format
+     * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
      * @returns {Promise} A Promise returning a Blob object representing the last rendered frame
      * @example
      * renderer.convertToBlob().then((blob) => console.log(blob));
      */
-    toBlob(options) {
+    toBlob(type = "image/png", quality) {
         return new Promise((resolve) => {
             once(GAME_AFTER_DRAW, () => {
                 this.canvas.toBlob((blob) => {
                     resolve(blob);
-                }, options ? options.type : undefined, options ? options.quality : undefined);
+                }, type, quality);
             });
         });
     }
@@ -436,18 +435,17 @@ class Renderer {
     /**
      * creates an ImageBitmap object of the last frame rendered
      * (not supported by standard Canvas)
-     * @param {object} [options] - An object with the following properties:
-     * @param {string} [options.type="image/png"] - A string indicating the image format
-     * @param {number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @param {string} [type="image/png"] - A string indicating the image format
+     * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
      * @returns {Promise} A Promise returning an ImageBitmap.
      * @example
      * renderer.transferToImageBitmap().then((image) => console.log(image));
      */
-    toImageBitmap(options) {
+    toImageBitmap(type = "image/png", quality) {
         return new Promise((resolve) => {
             once(GAME_AFTER_DRAW, () => {
                 let image = new Image();
-                image.src = this.canvas.toDataURL(options);
+                image.src = this.canvas.toDataURL(type, quality);
                 image.onload = () => {
                     createImageBitmap(image).then((bitmap) => resolve(bitmap));
                 };
@@ -457,17 +455,16 @@ class Renderer {
 
     /**
      * returns a data URL containing a representation of the last frame rendered
-     * @param {object} [options] - An object with the following properties:
-     * @param {string} [options.type="image/png"] - A string indicating the image format
-     * @param {number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @param {string} [type="image/png"] - A string indicating the image format
+     * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
      * @returns {Promise} A Promise returning a string containing the requested data URL.
      * @example
      * renderer.toDataURL().then((dataURL) => console.log(dataURL));
      */
-    toDataURL(options) {
+    toDataURL(type = "image/png", quality) {
         return new Promise((resolve) => {
             once(GAME_AFTER_DRAW, () => {
-                resolve(this.canvas.toDataURL(options));
+                resolve(this.canvas.toDataURL(type, quality));
             });
         });
     }

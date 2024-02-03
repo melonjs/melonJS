@@ -212,7 +212,7 @@ export default class Renderable extends Rect {
      * @type {boolean}
      */
     get isFloating(): boolean;
-    set tint(arg: Color);
+    set tint(value: Color);
     /**
      * define a tint for this renderable. a (255, 255, 255) r, g, b value will remove the tint effect.
      * @type {Color}
@@ -224,13 +224,13 @@ export default class Renderable extends Rect {
      * this.tint.setColor(255, 255, 255);
      */
     get tint(): Color;
-    set depth(arg: number);
+    set depth(value: number);
     /**
      * the depth of this renderable on the z axis
      * @type {number}
      */
     get depth(): number;
-    set inViewport(arg: boolean);
+    set inViewport(value: boolean);
     /**
      * Whether the renderable object is visible and within the viewport
      * @type {boolean}

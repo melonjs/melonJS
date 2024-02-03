@@ -42,25 +42,25 @@ export default class Rect extends Polygon {
      * @type {number}
      */
     get bottom(): number;
-    set width(arg: number);
+    set width(value: number);
     /**
      * width of the Rectangle
      * @type {number}
      */
     get width(): number;
-    set height(arg: number);
+    set height(value: number);
     /**
      * height of the Rectangle
      * @type {number}
      */
     get height(): number;
-    set centerX(arg: number);
+    set centerX(value: number);
     /**
      * absolute center of this rectangle on the horizontal axis
      * @type {number}
      */
     get centerX(): number;
-    set centerY(arg: number);
+    set centerY(value: number);
     /**
      * absolute center of this rectangle on the vertical axis
      * @type {number}

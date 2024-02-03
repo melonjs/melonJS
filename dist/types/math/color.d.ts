@@ -15,25 +15,25 @@ export default class Color {
      */
     onResetEvent(r?: number, g?: number, b?: number, alpha?: number): void;
     glArray: Float32Array | undefined;
-    set r(arg: number);
+    set r(value: number);
     /**
      * Color Red Component [0 .. 255]
      * @type {number}
      */
     get r(): number;
-    set g(arg: number);
+    set g(value: number);
     /**
      * Color Green Component [0 .. 255]
      * @type {number}
      */
     get g(): number;
-    set b(arg: number);
+    set b(value: number);
     /**
      * Color Blue Component [0 .. 255]
      * @type {number}
      */
     get b(): number;
-    set alpha(arg: number);
+    set alpha(value: number);
     /**
      * Color Alpha Component [0.0 .. 1.0]
      * @type {number}

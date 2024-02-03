@@ -1,12 +1,13 @@
 /*!
- * melonJS Game Engine - v15.15.0
+ * melonJS Game Engine - v16.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2024 Olivier Biot (AltByte Pte Ltd)
  */
 import { imgList } from '../cache.js';
-import { nocache } from '../settings.js';
+import { fetchData } from './fetchdata.js';
+import { getExtension } from '../../utils/file.js';
 
 /**
  * parse/preload an image
@@ -29,15 +30,50 @@ function preloadImage(img, onload, onerror) {
         return 0;
     }
 
-    // create new Image object and add to list
-    imgList[img.name] = new Image();
-    if (typeof onload === "function") {
-        imgList[img.name].onload = onload;
+    // handle SVG file loading
+    if (getExtension(img.src) === "svg") {
+        // handle SVG file
+        fetchData(img.src, "text")
+            .then(svgText => {
+                const svgImage = new Image();
+                svgImage.onload = function() {
+                    imgList[img.name] = svgImage;
+                    if (typeof onload === "function") {
+                        // callback
+                        onload();
+                    }
+                };
+                svgImage.onerror = function(error) {
+                    if (typeof onerror === "function") {
+                        onerror(error);
+                    }
+                };
+                svgImage.src = "data:image/svg+xml;charset=utf8," + encodeURIComponent(svgText);
+            })
+            .catch(error => {
+                if (typeof onerror === "function") {
+                    onerror(error);
+                }
+            });
+    } else {
+        // handle all other image files
+        fetchData(img.src, "blob")
+            .then(blob => {
+                globalThis.createImageBitmap(blob)
+                    .then((bitmap) => {
+                        imgList[img.name] = bitmap;
+                        if (typeof onload === "function") {
+                            // callback
+                            onload();
+                        }
+                    });
+            })
+            .catch(error => {
+                if (typeof onerror === "function") {
+                    onerror(error);
+                }
+            });
     }
-    if (typeof onerror === "function") {
-        imgList[img.name].onerror = onerror;
-    }
-    imgList[img.name].src = img.src + nocache;
 
     return 1;
 }

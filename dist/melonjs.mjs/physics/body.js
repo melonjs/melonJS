@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v15.15.0
+ * melonJS Game Engine - v16.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2024 Olivier Biot (AltByte Pte Ltd)
  */
 import Rect from '../geometries/rectangle.js';
 import Ellipse from '../geometries/ellipse.js';
@@ -535,17 +535,15 @@ class Body {
      *   // do something
      * }
      */
-    contains() {
+    contains(...args) {
         let _x, _y;
 
-        if (arguments.length === 2) {
+        if (args.length === 2) {
             // x, y
-            _x = arguments[0];
-            _y = arguments[1];
+            [_x, _y] = args;
         } else {
             // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
+            [_x, _y] = [args[0].x, args[0].y];
         }
 
         if (this.getBounds().contains(_x, _y)) {

@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v15.15.0
+ * melonJS Game Engine - v16.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2024 Olivier Biot (AltByte Pte Ltd)
  */
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -224,28 +224,14 @@ var toIndexedObject$3 = function (it) {
 var toIndexedObject$4 = /*@__PURE__*/getDefaultExportFromCjs(toIndexedObject$3);
 
 'use strict';
-var documentAll$2 = typeof document == 'object' && document.all;
-
 // https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot
-// eslint-disable-next-line unicorn/no-typeof-undefined -- required for testing
-var IS_HTMLDDA = typeof documentAll$2 == 'undefined' && documentAll$2 !== undefined;
-
-var documentAll_1 = {
-  all: documentAll$2,
-  IS_HTMLDDA: IS_HTMLDDA
-};
-
-var documentAll$3 = /*@__PURE__*/getDefaultExportFromCjs(documentAll_1);
-
-'use strict';
-var $documentAll$1 = documentAll_1;
-
-var documentAll$1 = $documentAll$1.all;
+var documentAll = typeof document == 'object' && document.all;
 
 // `IsCallable` abstract operation
 // https://tc39.es/ecma262/#sec-iscallable
-var isCallable$b = $documentAll$1.IS_HTMLDDA ? function (argument) {
-  return typeof argument == 'function' || argument === documentAll$1;
+// eslint-disable-next-line unicorn/no-typeof-undefined -- required for testing
+var isCallable$b = typeof documentAll == 'undefined' && documentAll !== undefined ? function (argument) {
+  return typeof argument == 'function' || argument === documentAll;
 } : function (argument) {
   return typeof argument == 'function';
 };
@@ -254,13 +240,8 @@ var isCallable$c = /*@__PURE__*/getDefaultExportFromCjs(isCallable$b);
 
 'use strict';
 var isCallable$a = isCallable$b;
-var $documentAll = documentAll_1;
 
-var documentAll = $documentAll.all;
-
-var isObject$5 = $documentAll.IS_HTMLDDA ? function (it) {
-  return typeof it == 'object' ? it !== null : isCallable$a(it) || it === documentAll;
-} : function (it) {
+var isObject$5 = function (it) {
   return typeof it == 'object' ? it !== null : isCallable$a(it);
 };
 
@@ -474,10 +455,10 @@ var store$2 = sharedStore;
 (shared$5.exports = function (key, value) {
   return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 })('versions', []).push({
-  version: '3.33.3',
+  version: '3.35.1',
   mode: IS_PURE ? 'pure' : 'global',
-  copyright: '© 2014-2023 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.33.3/LICENSE',
+  copyright: '© 2014-2024 Denis Pushkarev (zloirock.ru)',
+  license: 'https://github.com/zloirock/core-js/blob/v3.35.1/LICENSE',
   source: 'https://github.com/zloirock/core-js'
 });
 
@@ -904,7 +885,7 @@ var TEMPLATE = String(String).split('String');
 
 var makeBuiltIn$1 = makeBuiltIn$3.exports = function (value, name, options) {
   if (stringSlice($String$1(name), 0, 7) === 'Symbol(') {
-    name = '[' + replace$1($String$1(name), /^Symbol\(([^)]*)\)/, '$1') + ']';
+    name = '[' + replace$1($String$1(name), /^Symbol\(([^)]*)\).*$/, '$1') + ']';
   }
   if (options && options.getter) name = 'get ' + name;
   if (options && options.setter) name = 'set ' + name;
@@ -1020,7 +1001,8 @@ var min = Math.min;
 // `ToLength` abstract operation
 // https://tc39.es/ecma262/#sec-tolength
 var toLength$1 = function (argument) {
-  return argument > 0 ? min(toIntegerOrInfinity(argument), 0x1FFFFFFFFFFFFF) : 0; // 2 ** 53 - 1 == 9007199254740991
+  var len = toIntegerOrInfinity(argument);
+  return len > 0 ? min(len, 0x1FFFFFFFFFFFFF) : 0; // 2 ** 53 - 1 == 9007199254740991
 };
 
 var toLength$2 = /*@__PURE__*/getDefaultExportFromCjs(toLength$1);
@@ -1227,7 +1209,7 @@ var _export = function (options, source) {
   } else if (STATIC) {
     target = global$4[TARGET] || defineGlobalProperty(TARGET, {});
   } else {
-    target = (global$4[TARGET] || {}).prototype;
+    target = global$4[TARGET] && global$4[TARGET].prototype;
   }
   if (target) for (key in source) {
     sourceProperty = source[key];
@@ -1749,6 +1731,649 @@ if (typeof globalThis !== "undefined") {
 
 })();
 
+/* eslint-disable no-prototype-builtins */
+var g =
+  (typeof globalThis !== 'undefined' && globalThis) ||
+  (typeof self !== 'undefined' && self) ||
+  // eslint-disable-next-line no-undef
+  (typeof global !== 'undefined' && global) ||
+  {};
+
+var support = {
+  searchParams: 'URLSearchParams' in g,
+  iterable: 'Symbol' in g && 'iterator' in Symbol,
+  blob:
+    'FileReader' in g &&
+    'Blob' in g &&
+    (function() {
+      try {
+        new Blob();
+        return true
+      } catch (e) {
+        return false
+      }
+    })(),
+  formData: 'FormData' in g,
+  arrayBuffer: 'ArrayBuffer' in g
+};
+
+function isDataView(obj) {
+  return obj && DataView.prototype.isPrototypeOf(obj)
+}
+
+if (support.arrayBuffer) {
+  var viewClasses = [
+    '[object Int8Array]',
+    '[object Uint8Array]',
+    '[object Uint8ClampedArray]',
+    '[object Int16Array]',
+    '[object Uint16Array]',
+    '[object Int32Array]',
+    '[object Uint32Array]',
+    '[object Float32Array]',
+    '[object Float64Array]'
+  ];
+
+  var isArrayBufferView =
+    ArrayBuffer.isView ||
+    function(obj) {
+      return obj && viewClasses.indexOf(Object.prototype.toString.call(obj)) > -1
+    };
+}
+
+function normalizeName(name) {
+  if (typeof name !== 'string') {
+    name = String(name);
+  }
+  if (/[^a-z0-9\-#$%&'*+.^_`|~!]/i.test(name) || name === '') {
+    throw new TypeError('Invalid character in header field name: "' + name + '"')
+  }
+  return name.toLowerCase()
+}
+
+function normalizeValue(value) {
+  if (typeof value !== 'string') {
+    value = String(value);
+  }
+  return value
+}
+
+// Build a destructive iterator for the value list
+function iteratorFor(items) {
+  var iterator = {
+    next: function() {
+      var value = items.shift();
+      return {done: value === undefined, value: value}
+    }
+  };
+
+  if (support.iterable) {
+    iterator[Symbol.iterator] = function() {
+      return iterator
+    };
+  }
+
+  return iterator
+}
+
+function Headers(headers) {
+  this.map = {};
+
+  if (headers instanceof Headers) {
+    headers.forEach(function(value, name) {
+      this.append(name, value);
+    }, this);
+  } else if (Array.isArray(headers)) {
+    headers.forEach(function(header) {
+      if (header.length != 2) {
+        throw new TypeError('Headers constructor: expected name/value pair to be length 2, found' + header.length)
+      }
+      this.append(header[0], header[1]);
+    }, this);
+  } else if (headers) {
+    Object.getOwnPropertyNames(headers).forEach(function(name) {
+      this.append(name, headers[name]);
+    }, this);
+  }
+}
+
+Headers.prototype.append = function(name, value) {
+  name = normalizeName(name);
+  value = normalizeValue(value);
+  var oldValue = this.map[name];
+  this.map[name] = oldValue ? oldValue + ', ' + value : value;
+};
+
+Headers.prototype['delete'] = function(name) {
+  delete this.map[normalizeName(name)];
+};
+
+Headers.prototype.get = function(name) {
+  name = normalizeName(name);
+  return this.has(name) ? this.map[name] : null
+};
+
+Headers.prototype.has = function(name) {
+  return this.map.hasOwnProperty(normalizeName(name))
+};
+
+Headers.prototype.set = function(name, value) {
+  this.map[normalizeName(name)] = normalizeValue(value);
+};
+
+Headers.prototype.forEach = function(callback, thisArg) {
+  for (var name in this.map) {
+    if (this.map.hasOwnProperty(name)) {
+      callback.call(thisArg, this.map[name], name, this);
+    }
+  }
+};
+
+Headers.prototype.keys = function() {
+  var items = [];
+  this.forEach(function(value, name) {
+    items.push(name);
+  });
+  return iteratorFor(items)
+};
+
+Headers.prototype.values = function() {
+  var items = [];
+  this.forEach(function(value) {
+    items.push(value);
+  });
+  return iteratorFor(items)
+};
+
+Headers.prototype.entries = function() {
+  var items = [];
+  this.forEach(function(value, name) {
+    items.push([name, value]);
+  });
+  return iteratorFor(items)
+};
+
+if (support.iterable) {
+  Headers.prototype[Symbol.iterator] = Headers.prototype.entries;
+}
+
+function consumed(body) {
+  if (body._noBody) return
+  if (body.bodyUsed) {
+    return Promise.reject(new TypeError('Already read'))
+  }
+  body.bodyUsed = true;
+}
+
+function fileReaderReady(reader) {
+  return new Promise(function(resolve, reject) {
+    reader.onload = function() {
+      resolve(reader.result);
+    };
+    reader.onerror = function() {
+      reject(reader.error);
+    };
+  })
+}
+
+function readBlobAsArrayBuffer(blob) {
+  var reader = new FileReader();
+  var promise = fileReaderReady(reader);
+  reader.readAsArrayBuffer(blob);
+  return promise
+}
+
+function readBlobAsText(blob) {
+  var reader = new FileReader();
+  var promise = fileReaderReady(reader);
+  var match = /charset=([A-Za-z0-9_-]+)/.exec(blob.type);
+  var encoding = match ? match[1] : 'utf-8';
+  reader.readAsText(blob, encoding);
+  return promise
+}
+
+function readArrayBufferAsText(buf) {
+  var view = new Uint8Array(buf);
+  var chars = new Array(view.length);
+
+  for (var i = 0; i < view.length; i++) {
+    chars[i] = String.fromCharCode(view[i]);
+  }
+  return chars.join('')
+}
+
+function bufferClone(buf) {
+  if (buf.slice) {
+    return buf.slice(0)
+  } else {
+    var view = new Uint8Array(buf.byteLength);
+    view.set(new Uint8Array(buf));
+    return view.buffer
+  }
+}
+
+function Body$1() {
+  this.bodyUsed = false;
+
+  this._initBody = function(body) {
+    /*
+      fetch-mock wraps the Response object in an ES6 Proxy to
+      provide useful test harness features such as flush. However, on
+      ES5 browsers without fetch or Proxy support pollyfills must be used;
+      the proxy-pollyfill is unable to proxy an attribute unless it exists
+      on the object before the Proxy is created. This change ensures
+      Response.bodyUsed exists on the instance, while maintaining the
+      semantic of setting Request.bodyUsed in the constructor before
+      _initBody is called.
+    */
+    // eslint-disable-next-line no-self-assign
+    this.bodyUsed = this.bodyUsed;
+    this._bodyInit = body;
+    if (!body) {
+      this._noBody = true;
+      this._bodyText = '';
+    } else if (typeof body === 'string') {
+      this._bodyText = body;
+    } else if (support.blob && Blob.prototype.isPrototypeOf(body)) {
+      this._bodyBlob = body;
+    } else if (support.formData && FormData.prototype.isPrototypeOf(body)) {
+      this._bodyFormData = body;
+    } else if (support.searchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
+      this._bodyText = body.toString();
+    } else if (support.arrayBuffer && support.blob && isDataView(body)) {
+      this._bodyArrayBuffer = bufferClone(body.buffer);
+      // IE 10-11 can't handle a DataView body.
+      this._bodyInit = new Blob([this._bodyArrayBuffer]);
+    } else if (support.arrayBuffer && (ArrayBuffer.prototype.isPrototypeOf(body) || isArrayBufferView(body))) {
+      this._bodyArrayBuffer = bufferClone(body);
+    } else {
+      this._bodyText = body = Object.prototype.toString.call(body);
+    }
+
+    if (!this.headers.get('content-type')) {
+      if (typeof body === 'string') {
+        this.headers.set('content-type', 'text/plain;charset=UTF-8');
+      } else if (this._bodyBlob && this._bodyBlob.type) {
+        this.headers.set('content-type', this._bodyBlob.type);
+      } else if (support.searchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
+        this.headers.set('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
+      }
+    }
+  };
+
+  if (support.blob) {
+    this.blob = function() {
+      var rejected = consumed(this);
+      if (rejected) {
+        return rejected
+      }
+
+      if (this._bodyBlob) {
+        return Promise.resolve(this._bodyBlob)
+      } else if (this._bodyArrayBuffer) {
+        return Promise.resolve(new Blob([this._bodyArrayBuffer]))
+      } else if (this._bodyFormData) {
+        throw new Error('could not read FormData body as blob')
+      } else {
+        return Promise.resolve(new Blob([this._bodyText]))
+      }
+    };
+  }
+
+  this.arrayBuffer = function() {
+    if (this._bodyArrayBuffer) {
+      var isConsumed = consumed(this);
+      if (isConsumed) {
+        return isConsumed
+      } else if (ArrayBuffer.isView(this._bodyArrayBuffer)) {
+        return Promise.resolve(
+          this._bodyArrayBuffer.buffer.slice(
+            this._bodyArrayBuffer.byteOffset,
+            this._bodyArrayBuffer.byteOffset + this._bodyArrayBuffer.byteLength
+          )
+        )
+      } else {
+        return Promise.resolve(this._bodyArrayBuffer)
+      }
+    } else if (support.blob) {
+      return this.blob().then(readBlobAsArrayBuffer)
+    } else {
+      throw new Error('could not read as ArrayBuffer')
+    }
+  };
+
+  this.text = function() {
+    var rejected = consumed(this);
+    if (rejected) {
+      return rejected
+    }
+
+    if (this._bodyBlob) {
+      return readBlobAsText(this._bodyBlob)
+    } else if (this._bodyArrayBuffer) {
+      return Promise.resolve(readArrayBufferAsText(this._bodyArrayBuffer))
+    } else if (this._bodyFormData) {
+      throw new Error('could not read FormData body as text')
+    } else {
+      return Promise.resolve(this._bodyText)
+    }
+  };
+
+  if (support.formData) {
+    this.formData = function() {
+      return this.text().then(decode$1)
+    };
+  }
+
+  this.json = function() {
+    return this.text().then(JSON.parse)
+  };
+
+  return this
+}
+
+// HTTP methods whose capitalization should be normalized
+var methods = ['CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT', 'TRACE'];
+
+function normalizeMethod(method) {
+  var upcased = method.toUpperCase();
+  return methods.indexOf(upcased) > -1 ? upcased : method
+}
+
+function Request(input, options) {
+  if (!(this instanceof Request)) {
+    throw new TypeError('Please use the "new" operator, this DOM object constructor cannot be called as a function.')
+  }
+
+  options = options || {};
+  var body = options.body;
+
+  if (input instanceof Request) {
+    if (input.bodyUsed) {
+      throw new TypeError('Already read')
+    }
+    this.url = input.url;
+    this.credentials = input.credentials;
+    if (!options.headers) {
+      this.headers = new Headers(input.headers);
+    }
+    this.method = input.method;
+    this.mode = input.mode;
+    this.signal = input.signal;
+    if (!body && input._bodyInit != null) {
+      body = input._bodyInit;
+      input.bodyUsed = true;
+    }
+  } else {
+    this.url = String(input);
+  }
+
+  this.credentials = options.credentials || this.credentials || 'same-origin';
+  if (options.headers || !this.headers) {
+    this.headers = new Headers(options.headers);
+  }
+  this.method = normalizeMethod(options.method || this.method || 'GET');
+  this.mode = options.mode || this.mode || null;
+  this.signal = options.signal || this.signal || (function () {
+    if ('AbortController' in g) {
+      var ctrl = new AbortController();
+      return ctrl.signal;
+    }
+  }());
+  this.referrer = null;
+
+  if ((this.method === 'GET' || this.method === 'HEAD') && body) {
+    throw new TypeError('Body not allowed for GET or HEAD requests')
+  }
+  this._initBody(body);
+
+  if (this.method === 'GET' || this.method === 'HEAD') {
+    if (options.cache === 'no-store' || options.cache === 'no-cache') {
+      // Search for a '_' parameter in the query string
+      var reParamSearch = /([?&])_=[^&]*/;
+      if (reParamSearch.test(this.url)) {
+        // If it already exists then set the value with the current time
+        this.url = this.url.replace(reParamSearch, '$1_=' + new Date().getTime());
+      } else {
+        // Otherwise add a new '_' parameter to the end with the current time
+        var reQueryString = /\?/;
+        this.url += (reQueryString.test(this.url) ? '&' : '?') + '_=' + new Date().getTime();
+      }
+    }
+  }
+}
+
+Request.prototype.clone = function() {
+  return new Request(this, {body: this._bodyInit})
+};
+
+function decode$1(body) {
+  var form = new FormData();
+  body
+    .trim()
+    .split('&')
+    .forEach(function(bytes) {
+      if (bytes) {
+        var split = bytes.split('=');
+        var name = split.shift().replace(/\+/g, ' ');
+        var value = split.join('=').replace(/\+/g, ' ');
+        form.append(decodeURIComponent(name), decodeURIComponent(value));
+      }
+    });
+  return form
+}
+
+function parseHeaders(rawHeaders) {
+  var headers = new Headers();
+  // Replace instances of \r\n and \n followed by at least one space or horizontal tab with a space
+  // https://tools.ietf.org/html/rfc7230#section-3.2
+  var preProcessedHeaders = rawHeaders.replace(/\r?\n[\t ]+/g, ' ');
+  // Avoiding split via regex to work around a common IE11 bug with the core-js 3.6.0 regex polyfill
+  // https://github.com/github/fetch/issues/748
+  // https://github.com/zloirock/core-js/issues/751
+  preProcessedHeaders
+    .split('\r')
+    .map(function(header) {
+      return header.indexOf('\n') === 0 ? header.substr(1, header.length) : header
+    })
+    .forEach(function(line) {
+      var parts = line.split(':');
+      var key = parts.shift().trim();
+      if (key) {
+        var value = parts.join(':').trim();
+        try {
+          headers.append(key, value);
+        } catch (error) {
+          console.warn('Response ' + error.message);
+        }
+      }
+    });
+  return headers
+}
+
+Body$1.call(Request.prototype);
+
+function Response(bodyInit, options) {
+  if (!(this instanceof Response)) {
+    throw new TypeError('Please use the "new" operator, this DOM object constructor cannot be called as a function.')
+  }
+  if (!options) {
+    options = {};
+  }
+
+  this.type = 'default';
+  this.status = options.status === undefined ? 200 : options.status;
+  if (this.status < 200 || this.status > 599) {
+    throw new RangeError("Failed to construct 'Response': The status provided (0) is outside the range [200, 599].")
+  }
+  this.ok = this.status >= 200 && this.status < 300;
+  this.statusText = options.statusText === undefined ? '' : '' + options.statusText;
+  this.headers = new Headers(options.headers);
+  this.url = options.url || '';
+  this._initBody(bodyInit);
+}
+
+Body$1.call(Response.prototype);
+
+Response.prototype.clone = function() {
+  return new Response(this._bodyInit, {
+    status: this.status,
+    statusText: this.statusText,
+    headers: new Headers(this.headers),
+    url: this.url
+  })
+};
+
+Response.error = function() {
+  var response = new Response(null, {status: 200, statusText: ''});
+  response.ok = false;
+  response.status = 0;
+  response.type = 'error';
+  return response
+};
+
+var redirectStatuses = [301, 302, 303, 307, 308];
+
+Response.redirect = function(url, status) {
+  if (redirectStatuses.indexOf(status) === -1) {
+    throw new RangeError('Invalid status code')
+  }
+
+  return new Response(null, {status: status, headers: {location: url}})
+};
+
+var DOMException = g.DOMException;
+try {
+  new DOMException();
+} catch (err) {
+  DOMException = function(message, name) {
+    this.message = message;
+    this.name = name;
+    var error = Error(message);
+    this.stack = error.stack;
+  };
+  DOMException.prototype = Object.create(Error.prototype);
+  DOMException.prototype.constructor = DOMException;
+}
+
+function fetch$1(input, init) {
+  return new Promise(function(resolve, reject) {
+    var request = new Request(input, init);
+
+    if (request.signal && request.signal.aborted) {
+      return reject(new DOMException('Aborted', 'AbortError'))
+    }
+
+    var xhr = new XMLHttpRequest();
+
+    function abortXhr() {
+      xhr.abort();
+    }
+
+    xhr.onload = function() {
+      var options = {
+        statusText: xhr.statusText,
+        headers: parseHeaders(xhr.getAllResponseHeaders() || '')
+      };
+      // This check if specifically for when a user fetches a file locally from the file system
+      // Only if the status is out of a normal range
+      if (request.url.indexOf('file://') === 0 && (xhr.status < 200 || xhr.status > 599)) {
+        options.status = 200;
+      } else {
+        options.status = xhr.status;
+      }
+      options.url = 'responseURL' in xhr ? xhr.responseURL : options.headers.get('X-Request-URL');
+      var body = 'response' in xhr ? xhr.response : xhr.responseText;
+      setTimeout(function() {
+        resolve(new Response(body, options));
+      }, 0);
+    };
+
+    xhr.onerror = function() {
+      setTimeout(function() {
+        reject(new TypeError('Network request failed'));
+      }, 0);
+    };
+
+    xhr.ontimeout = function() {
+      setTimeout(function() {
+        reject(new TypeError('Network request timed out'));
+      }, 0);
+    };
+
+    xhr.onabort = function() {
+      setTimeout(function() {
+        reject(new DOMException('Aborted', 'AbortError'));
+      }, 0);
+    };
+
+    function fixUrl(url) {
+      try {
+        return url === '' && g.location.href ? g.location.href : url
+      } catch (e) {
+        return url
+      }
+    }
+
+    xhr.open(request.method, fixUrl(request.url), true);
+
+    if (request.credentials === 'include') {
+      xhr.withCredentials = true;
+    } else if (request.credentials === 'omit') {
+      xhr.withCredentials = false;
+    }
+
+    if ('responseType' in xhr) {
+      if (support.blob) {
+        xhr.responseType = 'blob';
+      } else if (
+        support.arrayBuffer
+      ) {
+        xhr.responseType = 'arraybuffer';
+      }
+    }
+
+    if (init && typeof init.headers === 'object' && !(init.headers instanceof Headers || (g.Headers && init.headers instanceof g.Headers))) {
+      var names = [];
+      Object.getOwnPropertyNames(init.headers).forEach(function(name) {
+        names.push(normalizeName(name));
+        xhr.setRequestHeader(name, normalizeValue(init.headers[name]));
+      });
+      request.headers.forEach(function(value, name) {
+        if (names.indexOf(name) === -1) {
+          xhr.setRequestHeader(name, value);
+        }
+      });
+    } else {
+      request.headers.forEach(function(value, name) {
+        xhr.setRequestHeader(name, value);
+      });
+    }
+
+    if (request.signal) {
+      request.signal.addEventListener('abort', abortXhr);
+
+      xhr.onreadystatechange = function() {
+        // DONE (success or failure)
+        if (xhr.readyState === 4) {
+          request.signal.removeEventListener('abort', abortXhr);
+        }
+      };
+    }
+
+    xhr.send(typeof request._bodyInit === 'undefined' ? null : request._bodyInit);
+  })
+}
+
+fetch$1.polyfill = true;
+
+if (!g.fetch) {
+  g.fetch = fetch$1;
+  g.Headers = Headers;
+  g.Request = Request;
+  g.Response = Response;
+}
+
 // https://github.com/melonjs/melonJS/issues/1092
 
 /**
@@ -1961,6 +2586,16 @@ function toBeCloseTo(expected, actual, precision = 2) {
     return Math.abs(expected - actual) < (Math.pow(10, -precision) / 2);
 }
 
+
+/**
+ * Calculates the power of a number.
+ * @param {number} n - The number to be raised to the power of 2.
+ * @returns {number} The result of raising the number to the power of 2.
+ */
+function pow(n) {
+    return Math.pow(n, 2);
+}
+
 var math = {
 	__proto__: null,
 	DEG_TO_RAD: DEG_TO_RAD,
@@ -1972,6 +2607,7 @@ var math = {
 	degToRad: degToRad,
 	isPowerOfTwo: isPowerOfTwo,
 	nextPowerOfTwo: nextPowerOfTwo,
+	pow: pow,
 	radToDeg: radToDeg,
 	random: random$1,
 	randomFloat: randomFloat,
@@ -3023,18 +3659,16 @@ class Vector2d {
      * @param {number} [y]
      * @returns {boolean}
      */
-    equals() {
+    equals(...args) {
         let _x, _y;
-        if (arguments.length === 2) {
+        if (args.length === 2) {
             // x, y
-            _x = arguments[0];
-            _y = arguments[1];
+            [_x, _y] = args;
         } else {
             // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
+            [_x, _y] = [args[0].x, args[0].y];
         }
-        return ((this.x === _x) && (this.y === _y));
+        return this.x === _x && this.y === _y;
     }
 
     /**
@@ -3461,18 +4095,14 @@ class Vector3d {
      * @param {number} [z]
      * @returns {boolean}
      */
-    equals() {
+    equals(...args) {
         let _x, _y, _z;
-        if (arguments.length >= 2) {
+        if (args.length >= 2) {
             // x, y, z
-            _x = arguments[0];
-            _y = arguments[1];
-            _z = arguments[2];
+            [_x, _y, _z] = args;
         } else {
             // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-            _z = arguments[0].z;
+            [_x, _y, _z] = [args[0].x, args[0].y, args[0].z];
         }
 
         if (typeof _z === "undefined") {
@@ -6805,18 +7435,8 @@ class Polygon {
      *   // do something
      * }
      */
-    contains() {
-        let _x, _y;
-
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
+    contains(...args) {
+        let [_x, _y] = args.length === 2 ? args : [args[0].x, args[0].y];
 
         let intersects = false;
         let posx = this.pos.x, posy = this.pos.y;
@@ -7157,17 +7777,15 @@ class Ellipse {
      *  // do something
      * }
      */
-    contains() {
+    contains(...args) {
         let _x, _y;
 
-        if (arguments.length === 2) {
+        if (args.length === 2) {
             // x, y
-            _x = arguments[0];
-            _y = arguments[1];
+            [_x, _y] = args;
         } else {
             // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
+            [_x, _y] = [args[0].x, args[0].y];
         }
 
         // Make position relative to object center point.
@@ -7256,18 +7874,16 @@ class Point {
      * @param {number} [y]
      * @returns {boolean}
      */
-    equals() {
+    equals(...args) {
         let _x, _y;
-        if (arguments.length === 2) {
+        if (args.length === 2) {
             // x, y
-            _x = arguments[0];
-            _y = arguments[1];
+            [_x, _y] = args;
         } else {
             // point
-            _x = arguments[0].x;
-            _y = arguments[0].y;
+            [_x, _y] = [args[0].x, args[0].y];
         }
-        return ((this.x === _x) && (this.y === _y));
+        return this.x === _x && this.y === _y;
     }
 
     /**
@@ -19205,6 +19821,58 @@ let binList = {};
 let jsonList = {};
 
 /**
+ * Fetches data from the specified URL.
+ * @param {string} url - The URL to fetch the data from.
+ * @param {string} responseType - The type of response expected ('json', 'text', 'blob', 'arrayBuffer').
+ * @returns {Promise} A promise that resolves with the fetched data or rejects with an error.
+ * @example
+ * fetchData('https://api.example.com/data', 'json')
+ *     .then(data => {
+ *         // Handle the fetched JSON data
+ *     })
+ *     .catch(error => {
+ *         // Handle the error
+ *     });
+ */
+function fetchData(url, responseType) {
+    return new Promise((resolve, reject) => {
+        fetch(url, {
+            method: "GET",
+            // internally nocache is a string with a generated random number
+            cache: nocache === "" ? "no-cache" : "reload",
+            credentials: withCredentials ? "include" : "omit",
+            // see setting.crossorigin, "anonymous" is used for cross-origin requests
+            mode: crossOrigin === "anonymous" ? "cors" : "no-cors"
+        })
+            .then(response => {
+                if (!response.ok) {
+                    // status = 0 when file protocol is used, or cross-domain origin
+                    if (response.status !== 0) {
+                        if (typeof onerror === "function") {
+                            reject(new Error("`Network response was not ok ${response.statusText}`"));
+                        }
+                    }
+                }
+
+                switch (responseType) {
+                    case "json":
+                        return response.json();
+                    case "text":
+                        return response.text();
+                    case "blob":
+                        return response.blob();
+                    case "arrayBuffer":
+                        return response.arrayBuffer();
+                    default:
+                        reject(new Error("Invalid response type"));
+                }
+            })
+            .then(data => resolve(data))
+            .catch(error => reject(error));
+    });
+}
+
+/**
  * parse/preload an image
  * @param {loader.Asset} img
  * @param {Function} [onload] - function to be called when the resource is loaded
@@ -19225,18 +19893,50 @@ function preloadImage(img, onload, onerror) {
         return 0;
     }
 
-    // create new Image object and add to list
-    imgList[img.name] = new Image();
-    if (typeof onload === "function") {
-        imgList[img.name].onload = onload;
+    // handle SVG file loading
+    if (getExtension(img.src) === "svg") {
+        // handle SVG file
+        fetchData(img.src, "text")
+            .then(svgText => {
+                const svgImage = new Image();
+                svgImage.onload = function() {
+                    imgList[img.name] = svgImage;
+                    if (typeof onload === "function") {
+                        // callback
+                        onload();
+                    }
+                };
+                svgImage.onerror = function(error) {
+                    if (typeof onerror === "function") {
+                        onerror(error);
+                    }
+                };
+                svgImage.src = "data:image/svg+xml;charset=utf8," + encodeURIComponent(svgText);
+            })
+            .catch(error => {
+                if (typeof onerror === "function") {
+                    onerror(error);
+                }
+            });
+    } else {
+        // handle all other image files
+        fetchData(img.src, "blob")
+            .then(blob => {
+                globalThis.createImageBitmap(blob)
+                    .then((bitmap) => {
+                        imgList[img.name] = bitmap;
+                        if (typeof onload === "function") {
+                            // callback
+                            onload();
+                        }
+                    });
+            })
+            .catch(error => {
+                if (typeof onerror === "function") {
+                    onerror(error);
+                }
+            });
     }
-    if (typeof onerror === "function") {
-        imgList[img.name].onerror = onerror;
-    }
-    if (typeof (crossOrigin) === "string") {
-        imgList[img.name].crossOrigin = crossOrigin;
-    }
-    imgList[img.name].src = img.src + nocache;
 
     return 1;
 }
@@ -20628,12 +21328,105 @@ class TMXObject {
     }
 }
 
+function correctRadii(signedRx, signedRy, x1p, y1p) {
+    const prx = Math.abs(signedRx);
+    const pry = Math.abs(signedRy);
+
+    const A = pow(x1p) / pow(prx) + pow(y1p) / pow(pry);
+
+    const rx = A > 1 ? Math.sqrt(A) * prx : prx;
+    const ry = A > 1 ? Math.sqrt(A) * pry : pry;
+
+    return [rx, ry];
+}
+
+function mat2DotVec2([m00, m01, m10, m11], [vx, vy]) {
+    return [m00 * vx + m01 * vy, m10 * vx + m11 * vy];
+}
+
+function vec2Add([ux, uy], [vx, vy]) {
+    return [ux + vx, uy + vy];
+}
+
+function vec2Scale([a0, a1], scalar) {
+    return [a0 * scalar, a1 * scalar];
+}
+
+function vec2Dot([ux, uy], [vx, vy]) {
+    return ux * vx + uy * vy;
+}
+
+function vec2Mag([ux, uy]) {
+    return Math.sqrt(ux ** 2 + uy ** 2);
+}
+
+function vec2Angle(u, v) {
+    const [ux, uy] = u;
+    const [vx, vy] = v;
+    const sign = ux * vy - uy * vx >= 0 ? 1 : -1;
+    return sign * Math.acos(vec2Dot(u, v) / (vec2Mag(u) * vec2Mag(v)));
+}
+
+// From https://svgwg.org/svg2-draft/implnote.html#ArcConversionEndpointToCenter
+function endpointToCenterParameterization(x1, y1, x2, y2, largeArcFlag, sweepFlag, srx, sry, xAxisRotationDeg) {
+    const xAxisRotation = degToRad(xAxisRotationDeg);
+
+    const cosphi = Math.cos(xAxisRotation);
+    const sinphi = Math.sin(xAxisRotation);
+
+    const [x1p, y1p] = mat2DotVec2(
+        [cosphi, sinphi, -sinphi, cosphi],
+        [(x1 - x2) / 2, (y1 - y2) / 2]
+    );
+
+    const [rx, ry] = correctRadii(srx, sry, x1p, y1p);
+
+    const sign = largeArcFlag !== sweepFlag ? 1 : -1;
+    const n = pow(rx) * pow(ry) - pow(rx) * pow(y1p) - pow(ry) * pow(x1p);
+    const d = pow(rx) * pow(y1p) + pow(ry) * pow(x1p);
+
+    const [cxp, cyp] = vec2Scale(
+        [(rx * y1p) / ry, (-ry * x1p) / rx],
+        sign * Math.sqrt(Math.abs(n / d))
+    );
+
+    const [cx, cy] = vec2Add(
+        mat2DotVec2([cosphi, -sinphi, sinphi, cosphi], [cxp, cyp]),
+        [(x1 + x2) / 2, (y1 + y2) / 2]
+    );
+
+    const a = [(x1p - cxp) / rx, (y1p - cyp) / ry];
+    const b = [(-x1p - cxp) / rx, (-y1p - cyp) / ry];
+    const startAngle = vec2Angle([1, 0], a);
+    const deltaAngle0 = vec2Angle(a, b) % (2 * Math.PI);
+
+    const deltaAngle =
+          !sweepFlag && deltaAngle0 > 0
+              ? deltaAngle0 - 2 * Math.PI
+              : sweepFlag && deltaAngle0 < 0
+                  ? deltaAngle0 + 2 * Math.PI
+                  : deltaAngle0;
+
+    const endAngle = startAngle + deltaAngle;
+
+    return {
+        cx,
+        cy,
+        rx,
+        ry,
+        startAngle,
+        endAngle,
+        xAxisRotation,
+        anticlockwise: deltaAngle < 0
+    };
+}
+
 /**
  * @classdesc
  * a simplified path2d implementation, supporting only one path
  */
 class Path2D {
-    constructor() {
+    constructor(svgPath) {
         /**
          * the points defining the current path
          * @type {Point[]}
@@ -20655,7 +21448,74 @@ class Path2D {
 
         /* @ignore */
         this.isDirty = false;
+
+        if (typeof svgPath === "string") {
+            this.parseSVGPath(svgPath);
+        }
     }
+
+    /**
+     * Parses an SVG path string and adds the points to the current path.
+     * @param {string} svgPath - The SVG path string to parse.
+     */
+    parseSVGPath(svgPath) {
+        // Split path into commands and coordinates
+        const pathCommands = svgPath.match(/([a-df-z])[^a-df-z]*/gi);
+        const points = this.points;
+        const startPoint = this.startPoint;
+        let lastPoint = startPoint;
+
+        this.beginPath();
+
+        // Process each command and corresponding coordinates
+        for (let i = 0; i < pathCommands.length; i++) {
+            const pathCommand = pathCommands[i];
+            const command = pathCommand[0].toUpperCase();
+            const coordinates = pathCommand.slice(1).trim().split(/[\s,]+/).map(parseFloat);
+
+            switch (command) {
+                case "A": {
+                    // A command takes 5 coordinates
+                    const p = endpointToCenterParameterization(...coordinates);
+                    this.arc(p.x, p.y, p.radiusX, p.radiusY, p.rotation, p.startAngle, p.endAngle, p.applyanticlockwise);
+                }
+                    break;
+                case "H":
+                    // H take 1 coordinate
+                    lastPoint = points.length === 0 ? startPoint : points[points.length-1];
+                    this.lineTo(lastPoint.x + coordinates[0], lastPoint.y);
+                    break;
+                case "V":
+                    // V take 1 coordinate
+                    lastPoint = points.length === 0 ? startPoint : points[points.length-1];
+                    this.lineTo(lastPoint.x, lastPoint.y + coordinates[0]);
+                    break;
+                case "M":
+                    // M takes 2 coordinates
+                    this.moveTo(...coordinates);
+                    break;
+                case "L":
+                    // L takes 2 coordinates
+                    this.lineTo(...coordinates);
+                    break;
+                case "Q":
+                    // Q takes 4 coordinates
+                    this.quadraticCurveTo(...coordinates);
+                    break;
+                case "C":
+                    // C takes 6 coordinates
+                    this.bezierCurveTo(...coordinates);
+                    break;
+                case "Z":
+                    this.closePath();
+                    break;
+                default:
+                    console.warn("Unsupported command:", command);
+                    break;
+            }
+        }
+    }
+
 
     /**
      * begin a new path
@@ -20816,9 +21676,11 @@ class Path2D {
      */
     arcTo(x1, y1, x2, y2, radius) {
         let points = this.points;
-        // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
-        let x0 = points[points.length-1].x, y0 = points[points.length-1].y;
+        let startPoint = this.startPoint;
+        let lastPoint = points.length === 0 ? startPoint : points[points.length-1];
 
+        // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
+        let x0 = lastPoint.x, y0 = lastPoint.y;
         //a = -incoming vector, b = outgoing vector to x1, y1
         let a0 = x0 - x1, a1 = y0 - y1;
         let b0 = x2 - x1, b1 = y2 - y1;
@@ -20909,6 +21771,62 @@ class Path2D {
         }
         // close the ellipse
         this.lineTo(x + radiusX * Math.cos(startAngle), y + radiusY * Math.sin(startAngle));
+        this.isDirty = true;
+    }
+
+    /**
+     * Adds a quadratic Bézier curve to the path.
+     * @param {number} cpX - The x-coordinate of the control point.
+     * @param {number} cpY - The y-coordinate of the control point.
+     * @param {number} x - The x-coordinate of the end point of the curve.
+     * @param {number} y - The y-coordinate of the end point of the curve.
+     */
+    quadraticCurveTo(cpX, cpY, x, y) {
+        const points = this.points;
+        const startPoint = this.startPoint;
+        const lastPoint = points.length === 0 ? startPoint : points[points.length-1];
+        const endPoint = pool.pull("Point").set(x, y);
+        const controlPoint = pool.pull("Point").set(cpX, cpY);
+        const resolution = this.arcResolution;
+
+        const t = 1 / resolution;
+        for (let i = 1; i <= resolution; i++) {
+            this.lineTo(
+                lastPoint.x * Math.pow(1 - t * i, 2) + controlPoint.x * 2 * (1 - t * i) * t * i + endPoint.x * Math.pow(t * i, 2),
+                lastPoint.y * Math.pow(1 - t * i, 2) + controlPoint.y * 2 * (1 - t * i) * t * i + endPoint.y * Math.pow(t * i, 2)
+            );
+        }
+        pool.push(endPoint, controlPoint);
+        this.isDirty = true;
+    }
+
+    /**
+     * Adds a cubic Bézier curve to the path.
+     * @param {number} cp1X - The x-coordinate of the first control point.
+     * @param {number} cp1Y - The y-coordinate of the first control point.
+     * @param {number} cp2X - The x-coordinate of the second control point.
+     * @param {number} cp2Y - The y-coordinate of the second control point.
+     * @param {number} x - The x-coordinate of the end point of the curve.
+     * @param {number} y - The y-coordinate of the end point of the curve.
+     */
+    bezierCurveTo(cp1X, cp1Y, cp2X, cp2Y, x, y) {
+        const points = this.points;
+        const startPoint = this.startPoint;
+        const lastPoint = points.length === 0 ? startPoint : points[points.length-1];
+        const endPoint = pool.pull("Point").set(x, y);
+        const controlPoint1 = pool.pull("Point").set(cp1X, cp1Y);
+        const controlPoint2 = pool.pull("Point").set(cp2X, cp2Y);
+        const resolution = this.arcResolution;
+
+        const t = 1 / resolution;
+        for (let i = 1; i <= resolution; i++) {
+            this.lineTo(
+                lastPoint.x * Math.pow(1 - t * i, 3) + controlPoint1.x * 3 * Math.pow(1 - t * i, 2) * t * i + controlPoint2.x * 3 * (1 - t * i) * Math.pow(t * i, 2) + endPoint.x * Math.pow(t * i, 3),
+                lastPoint.y * Math.pow(1 - t * i, 3) + controlPoint1.y * 3 * Math.pow(1 - t * i, 2) * t * i + controlPoint2.y * 3 * (1 - t * i) * Math.pow(t * i, 2) + endPoint.y * Math.pow(t * i, 3)
+            );
+        }
+
+        pool.push(endPoint, controlPoint1, controlPoint2);
         this.isDirty = true;
     }
 
@@ -21366,19 +22284,18 @@ class Renderer {
 
     /**
      * creates a Blob object representing the last rendered frame
-     * @param {object} [options] - An object with the following properties:
-     * @param {string} [options.type="image/png"] - A string indicating the image format
-     * @param {number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @param {string} [type="image/png"] - A string indicating the image format
+     * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
      * @returns {Promise} A Promise returning a Blob object representing the last rendered frame
      * @example
      * renderer.convertToBlob().then((blob) => console.log(blob));
      */
-    toBlob(options) {
+    toBlob(type = "image/png", quality) {
         return new Promise((resolve) => {
             once(GAME_AFTER_DRAW, () => {
                 this.canvas.toBlob((blob) => {
                     resolve(blob);
-                }, options ? options.type : undefined, options ? options.quality : undefined);
+                }, type, quality);
             });
         });
     }
@@ -21386,18 +22303,17 @@ class Renderer {
     /**
      * creates an ImageBitmap object of the last frame rendered
      * (not supported by standard Canvas)
-     * @param {object} [options] - An object with the following properties:
-     * @param {string} [options.type="image/png"] - A string indicating the image format
-     * @param {number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @param {string} [type="image/png"] - A string indicating the image format
+     * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
      * @returns {Promise} A Promise returning an ImageBitmap.
      * @example
      * renderer.transferToImageBitmap().then((image) => console.log(image));
      */
-    toImageBitmap(options) {
+    toImageBitmap(type = "image/png", quality) {
         return new Promise((resolve) => {
             once(GAME_AFTER_DRAW, () => {
                 let image = new Image();
-                image.src = this.canvas.toDataURL(options);
+                image.src = this.canvas.toDataURL(type, quality);
                 image.onload = () => {
                     createImageBitmap(image).then((bitmap) => resolve(bitmap));
                 };
@@ -21407,17 +22323,16 @@ class Renderer {
 
     /**
      * returns a data URL containing a representation of the last frame rendered
-     * @param {object} [options] - An object with the following properties:
-     * @param {string} [options.type="image/png"] - A string indicating the image format
-     * @param {number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @param {string} [type="image/png"] - A string indicating the image format
+     * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
      * @returns {Promise} A Promise returning a string containing the requested data URL.
      * @example
      * renderer.toDataURL().then((dataURL) => console.log(dataURL));
      */
-    toDataURL(options) {
+    toDataURL(type = "image/png", quality) {
         return new Promise((resolve) => {
             once(GAME_AFTER_DRAW, () => {
-                resolve(this.canvas.toDataURL(options));
+                resolve(this.canvas.toDataURL(type, quality));
             });
         });
     }
@@ -21592,13 +22507,25 @@ class TextureAtlas {
             if (frame.hasOwnProperty("filename")) {
                 // Source coordinates
                 let s = frame.frame;
+                let trimmed = !!frame.trimmed;
+
+                let trim;
+
+                if (trimmed) {
+                    trim = {
+                        x : frame.spriteSourceSize.x,
+                        y : frame.spriteSourceSize.y,
+                        w : frame.spriteSourceSize.w,
+                        h : frame.spriteSourceSize.h
+                    };
+                }
 
                 let originX, originY;
                 // Pixel-based offset origin from the top-left of the source frame
-                let hasTextureAnchorPoint = (frame.spriteSourceSize && frame.sourceSize && frame.pivot);
+                let hasTextureAnchorPoint = (frame.sourceSize && frame.pivot);
                 if (hasTextureAnchorPoint) {
-                    originX = (frame.sourceSize.w * frame.pivot.x) - ((frame.trimmed) ? frame.spriteSourceSize.x : 0);
-                    originY = (frame.sourceSize.h * frame.pivot.y) - ((frame.trimmed) ? frame.spriteSourceSize.y : 0);
+                    originX = (frame.sourceSize.w * frame.pivot.x) - ((trimmed) ? trim.x : 0);
+                    originY = (frame.sourceSize.h * frame.pivot.y) - ((trimmed) ? trim.y : 0);
                 }
 
                 atlas[frame.filename] = {
@@ -21606,7 +22533,8 @@ class TextureAtlas {
                     texture      : data.meta.image || "default", // the source texture
                     offset       : new Vector2d(s.x, s.y),
                     anchorPoint  : (hasTextureAnchorPoint) ? new Vector2d(originX / s.w, originY / s.h) : null,
-                    trimmed      : !!frame.trimmed,
+                    trimmed      : trimmed,
+                    trim         : trim,
                     width        : s.w,
                     height       : s.h,
                     angle        : (frame.rotated === true) ? -ETA : 0
@@ -21659,17 +22587,18 @@ class TextureAtlas {
         for (let frame = 0, count = spritecount.x * spritecount.y; frame < count; frame++) {
             let name = "" + frame;
             atlas[name] = {
-                name        : name,
-                texture     : "default", // the source texture
-                offset      : new Vector2d(
+                name            : name,
+                texture         : "default", // the source texture
+                offset          : new Vector2d(
                     margin + (spacing + data.framewidth) * (frame % spritecount.x),
                     margin + (spacing + data.frameheight) * ~~(frame / spritecount.x)
                 ),
-                anchorPoint : (data.anchorPoint || null),
-                trimmed     : false,
-                width       : data.framewidth,
-                height      : data.frameheight,
-                angle       : 0
+                anchorPoint     : (data.anchorPoint || null),
+                trimmed         : false,
+                trim            : undefined,
+                width           : data.framewidth,
+                height          : data.frameheight,
+                angle           : 0
             };
             this.addUVs(atlas, name, width, height);
         }
@@ -24522,7 +25451,7 @@ class Container extends Renderable {
      */
     update(dt) {
         let isFloating = false;
-        let isPaused = state$1.isPaused();
+        let isPaused = state.isPaused();
         let children = this.getChildren();
         const childrenLength = children.length;
 
@@ -24541,7 +25470,7 @@ class Container extends Renderable {
                 // check if object is in any active cameras
                 obj.inViewport = false;
                 // iterate through all cameras
-                state$1.current().cameras.forEach((camera) => {
+                state.current().cameras.forEach((camera) => {
                     if (camera.isVisible(obj, isFloating)) {
                         obj.inViewport = true;
                     }
@@ -26311,7 +27240,7 @@ function safeLoadLevel(levelId, options, restart) {
 
     if (restart) {
         // resume the game loop if it was previously running
-        state$1.restart();
+        state.restart();
     }
 }
 
@@ -26440,12 +27369,12 @@ let level = {
         if (levels[levelId] instanceof TMXTileMap) {
 
             // check the status of the state mngr
-            let wasRunning = state$1.isRunning();
+            let wasRunning = state.isRunning();
 
             if (wasRunning) {
                 // stop the game loop to avoid
                 // some silly side effects
-                state$1.stop();
+                state.stop();
 
                 defer(safeLoadLevel, this, levelId, options, true);
             }
@@ -26560,6 +27489,7 @@ let level = {
  * @param {loader.Asset} data - asset data
  * @param {Function} [onload] - function to be called when the asset is loaded
  * @param {Function} [onerror] - function to be called in case of error
+ * @param {Function} [fetchData] - function to use instead of default window.fetch, has some error handling and things
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
  */
@@ -26582,7 +27512,6 @@ function preloadTMX(tmxData, onload, onerror) {
         }
     }
 
-
     //if the data is in the tmxData object, don't get it via a XMLHTTPRequest
     if (tmxData.data) {
         addToTMXList(tmxData.data);
@@ -26592,85 +27521,60 @@ function preloadTMX(tmxData, onload, onerror) {
         return;
     }
 
-    let xmlhttp = new XMLHttpRequest();
-    // check the data format ('tmx', 'json')
-    let format = getExtension(tmxData.src);
+    fetchData(tmxData.src, "text")
+        .then(response => {
+            if (typeof response !== "string") {
+                throw new Error("Invalid response type");
+            }
 
-    if (xmlhttp.overrideMimeType) {
-        if (format === "json") {
-            xmlhttp.overrideMimeType("application/json");
-        }
-        else {
-            xmlhttp.overrideMimeType("text/xml");
-        }
-    }
+            let result;
 
-    xmlhttp.open("GET", tmxData.src + nocache, true);
-    xmlhttp.withCredentials = withCredentials;
-    // set the callbacks
-    xmlhttp.ontimeout = onerror;
-    xmlhttp.onreadystatechange = function () {
-        if (xmlhttp.readyState === 4) {
-            // status = 0 when file protocol is used, or cross-domain origin,
-            // (With Chrome use "--allow-file-access-from-files --disable-web-security")
-            if ((xmlhttp.status === 200) || ((xmlhttp.status === 0) && xmlhttp.responseText)) {
-                let result = null;
+            switch (getExtension(tmxData.src)) {
+                case "xml":
+                case "tmx":
+                case "tsx": {
+                    const parser = new DOMParser();
 
-                // parse response
-                switch (format) {
-                    case "xml":
-                    case "tmx":
-                    case "tsx": {
-                        // ie9 does not fully implement the responseXML
-                        if (ua.match(/msie/i) || !xmlhttp.responseXML) {
-                            if (globalThis.DOMParser) {
-                                // manually create the XML DOM
-                                result = (new DOMParser()).parseFromString(xmlhttp.responseText, "text/xml");
-                            } else {
-                                throw new Error("XML file format loading not supported, use the JSON file format instead");
-                            }
-                        }
-                        else {
-                            result = xmlhttp.responseXML;
-                        }
-                        // converts to a JS object
-                        const data = parse(result);
-                        switch (format) {
-                            case "tmx":
-                                result = data.map;
-                                break;
-
-                            case "tsx":
-                                result = data.tilesets[0];
-                                break;
-                        }
-                        break;
+                    if (typeof parser.parseFromString === "undefined") {
+                        throw new Error(
+                            "XML file format loading supported, use the JSON file format instead"
+                        );
                     }
-                    case "json":
-                    case "tmj":
-                    case "tsj":
-                        result = JSON.parse(xmlhttp.responseText);
-                        break;
 
-                    default:
-                        throw new Error("TMX file format " + format + " not supported !");
+                    const xmlDoc = parser.parseFromString(response, "text/xml");
+                    const data = parse(xmlDoc);
+
+                    switch (getExtension(tmxData.src)) {
+                        case "tmx":
+                            result = data.map;
+                            break;
+
+                        case "tsx":
+                            result = data.tilesets[0];
+                            break;
+                    }
+                    break;
                 }
-
-                //set the TMX content
-                addToTMXList(result);
-
-                // fire the callback
-                if (typeof onload === "function") {
-                    onload();
-                }
+                case "json":
+                case "tmj":
+                case "tsj":
+                    result = JSON.parse(response);
+                    break;
+                default:
+                    throw new Error(`TMX file format not supported: ${getExtension(tmxData.src)}`);
             }
-            else if (typeof onerror === "function") {
-                onerror(tmxData.name);
+
+            addToTMXList(result);
+
+            if (typeof onload === "function") {
+                onload();
             }
-        }
-    };
-    // send the request
-    xmlhttp.send();
+        })
+        .catch(error => {
+            if (typeof onerror === "function") {
+                onerror(error);
+            }
+        });
 
     return 1;
 }
@@ -26689,36 +27593,19 @@ function preloadJSON(data, onload, onerror) {
         return 0;
     }
 
-    let xmlhttp = new XMLHttpRequest();
-
-    if (xmlhttp.overrideMimeType) {
-        xmlhttp.overrideMimeType("application/json");
-    }
-
-    xmlhttp.open("GET", data.src + nocache, true);
-    xmlhttp.withCredentials = withCredentials;
-
-    // set the callbacks
-    xmlhttp.ontimeout = onerror;
-    xmlhttp.onreadystatechange = function () {
-        if (xmlhttp.readyState === 4) {
-            // status = 0 when file protocol is used, or cross-domain origin,
-            // (With Chrome use "--allow-file-access-from-files --disable-web-security")
-            if ((xmlhttp.status === 200) || ((xmlhttp.status === 0) && xmlhttp.responseText)) {
-                // get the Texture Packer Atlas content
-                jsonList[data.name] = JSON.parse(xmlhttp.responseText);
-                if (typeof onload === "function") {
-                    // fire the callback
-                    onload();
-                }
+    fetchData(data.src, "json")
+        .then(response => {
+            jsonList[data.name] = response;
+            if (typeof onload === "function") {
+                // callback
+                onload();
             }
-            else if (typeof onerror === "function") {
-                onerror(data.name);
+        })
+        .catch(error => {
+            if (typeof onerror === "function") {
+                onerror(error);
             }
-        }
-    };
-    // send the request
-    xmlhttp.send();
+        });
 
     return 1;
 }
@@ -26732,66 +27619,23 @@ function preloadJSON(data, onload, onerror) {
  * @ignore
  */
 function preloadBinary(data, onload, onerror) {
-    let httpReq = new XMLHttpRequest();
 
-    // load our file
-    httpReq.open("GET", data.src + nocache, true);
-    httpReq.withCredentials = withCredentials;
-    httpReq.responseType = "arraybuffer";
-    httpReq.onerror = onerror;
-    httpReq.onload = function () {
-        let arrayBuffer = httpReq.response;
-        if (arrayBuffer) {
-            let byteArray = new Uint8Array(arrayBuffer);
-            let buffer = [];
-            for (let i = 0; i < byteArray.byteLength; i++) {
-                buffer[i] = String.fromCharCode(byteArray[i]);
-            }
-            binList[data.name] = buffer.join("");
+    fetchData(data.src, "arrayBuffer")
+        .then(response => {
+            // this method is native and might be slightly more efficient
+            const decoder = new TextDecoder(); // the default for this is 'utf-8'
+            binList[data.name] = decoder.decode(response);
+
             if (typeof onload === "function") {
                 // callback
                 onload();
             }
-
-        }
-    };
-    httpReq.send();
-
-    return 1;
-}
-
-/**
- * parse/preload a Javascript files
- * @param {loader.Asset} data - asset data
- * @param {Function} [onload] - function to be called when the asset is loaded
- * @param {Function} [onerror] - function to be called in case of error
- * @ignore
- */
-function preloadJavascript$1(data, onload, onerror) {
-    let script = document.createElement("script");
-
-    script.src = data.src;
-    script.type = "text/javascript";
-    if (typeof (crossOrigin) === "string") {
-        script.crossOrigin = crossOrigin;
-    }
-    script.defer = true;
-
-    if (typeof onload === "function") {
-        script.onload = () => {
-            // callback
-            onload();
-        };
-    }
-
-    if (typeof onerror === "function") {
-        script.onerror = () => {
-            // callback
-            onerror(data.name);
-        };
-    }
-
-    document.getElementsByTagName("body")[0].appendChild(script);
+        })
+        .catch(error => {
+            if (typeof onerror === "function") {
+                onerror(error);
+            }
+        });
 
     return 1;
 }
@@ -27095,7 +27939,7 @@ function preload(assets, onloadcb, switchToLoadState = true) {
 
     if (switchToLoadState === true) {
         // swith to the loading screen
-        state$1.change(state$1.LOADING);
+        state.change(state.LOADING);
     }
 
     // check load status
@@ -28619,7 +29463,6 @@ let state = {
     }
 
 };
-var state$1 = state;
 
 /**
  * @classdesc
@@ -28865,7 +29708,7 @@ class Timer {
     updateTimers() {
         for (let i = 0, len = this.timers.length; i < len; i++) {
             let _timer = this.timers[i];
-            if (!(_timer.pauseable && state$1.isPaused())) {
+            if (!(_timer.pauseable && state.isPaused())) {
                 _timer.elapsed += this.delta;
             }
             if (_timer.elapsed >= _timer.delay) {
@@ -29417,17 +30260,15 @@ class Body {
      *   // do something
      * }
      */
-    contains() {
+    contains(...args) {
         let _x, _y;
 
-        if (arguments.length === 2) {
+        if (args.length === 2) {
             // x, y
-            _x = arguments[0];
-            _y = arguments[1];
+            [_x, _y] = args;
         } else {
             // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
+            [_x, _y] = [args[0].x, args[0].y];
         }
 
         if (this.getBounds().contains(_x, _y)) {
@@ -31364,7 +32205,9 @@ class QuadCompositor extends Compositor {
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels, 0);
         } else if (typeof globalThis.OffscreenCanvas !== "undefined" && pixels instanceof globalThis.OffscreenCanvas) {
             // convert to ImageBitmap first (else Safari 16.4 and higher will throw an TypeError exception)
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, pixels.transferToImageBitmap());
+            const imageBitmap = pixels.transferToImageBitmap();
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, imageBitmap);
+            imageBitmap.close();
         } else {
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
         }
@@ -32792,43 +33635,41 @@ class CanvasTexture {
 
     /**
      * creates a Blob object representing the image contained in this canvas texture
-     * @param {object} [options] - An object with the following properties:
-     * @param {string} [options.type="image/png"] - A string indicating the image format
-     * @param {number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @param {string} [type="image/png"] - A string indicating the image format
+     * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
      * @returns {Promise} A Promise returning a Blob object representing the image contained in this canvas texture
      * @example
      * canvasTexture.convertToBlob().then((blob) => console.log(blob));
      */
-    toBlob(options) {
+    toBlob(type = "image/png", quality) {
         if (typeof this.canvas.convertToBlob === "function") {
-            return this.canvas.convertToBlob(options);
+            return this.canvas.convertToBlob(type, quality);
         } else {
             return new Promise(function(resolve) {
                 this.canvas.toBlob((blob) => {
                     resolve(blob);
-                }, options ? options.type : undefined, options ? options.quality : undefined);
+                }, type, quality);
             });
         }
     }
 
     /**
      * creates an ImageBitmap object from the most recently rendered image of this canvas texture
-     * @param {object} [options] - An object with the following properties:
-     * @param {string} [options.type="image/png"] - A string indicating the image format
-     * @param {number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @param {string} [type="image/png"] - A string indicating the image format
+     * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
      * @returns {Promise} A Promise returning an ImageBitmap.
      * @example
      * canvasTexture.transferToImageBitmap().then((bitmap) => console.log(bitmap));
      */
-    toImageBitmap(options) {
+    toImageBitmap(type = "image/png", quality) {
         return new Promise((resolve) => {
             if (typeof this.canvas.transferToImageBitmap === "function") {
                 resolve(this.canvas.transferToImageBitmap());
             } else {
                 let image = new Image();
-                image.src = this.canvas.toDataURL(options);
+                image.src = this.canvas.toDataURL(type, quality);
                 image.onload = () => {
-                    createImageBitmap(image).then((bitmap) => resolve(bitmap));
+                    globalThis.createImageBitmap(image).then((bitmap) => resolve(bitmap));
                 };
             }
         });
@@ -32837,16 +33678,15 @@ class CanvasTexture {
     /**
      * returns a data URL containing a representation of the most recently rendered image of this canvas texture
      * (not supported by OffscreenCanvas)
-     * @param {object} [options] - An object with the following properties:
-     * @param {string} [options.type="image/png"] - A string indicating the image format
-     * @param {number} [options.quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @param {string} [type="image/png"] - A string indicating the image format
+     * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
      * @returns {Promise} A Promise returning a string containing the requested data URL.
      * @example
      * renderer.toDataURL().then((dataURL) => console.log(dataURL));
      */
-    toDataURL(options) {
+    toDataURL(type = "image/png", quality) {
         return new Promise((resolve) => {
-            resolve(this.canvas.toDataURL(options));
+            resolve(this.canvas.toDataURL(type, quality));
         });
     }
 
@@ -36800,7 +37640,7 @@ class World extends Container {
      */
     step(dt) {
         if (this.physic === "builtin") {
-            let isPaused = state$1.isPaused();
+            let isPaused = state.isPaused();
             // iterate through all bodies
             this.bodies.forEach((body) => {
                 if (!body.isStatic) {
@@ -37948,13 +38788,15 @@ const defaultSettings = {
     powerPreference : "default",
     verbose : false,
     consoleHeader : true,
-    legacy : false
+    legacy : false,
+    canvas : undefined
 };
 
 /**
  * Application & Renderer Settings definition.
  * @typedef {object} Settings
  * @property {string|HTMLElement} [parent=document.body] - the DOM parent element to hold the canvas in the HTML file
+ * @property {HTMLCanvasElement} [canvas] - an existing canvas element to use as the renderer target (by default melonJS will create its own canvas based on given parameters)
  * @property {number|Renderer} [renderer=AUTO] - renderer to use (CANVAS, WEBGL, AUTO), or a custom renderer class
  * @property {number|string} [scale=1.0] - enable scaling of the canvas ('auto' for automatic scaling)
  * @property {"fit"|"fill-min"|"fill-max"|"flex"|"flex-width"|"flex-height"|"stretch"} [scaleMethod="fit"] - screen scaling modes : <br>
@@ -38263,20 +39105,20 @@ class Application {
         // on blur event, pause the current
         on(BLUR, () => {
             if (this.stopOnBlur === true) {
-                state$1.stop(true);
+                state.stop(true);
             }
             if (this.pauseOnBlur === true) {
-                state$1.pause(true);
+                state.pause(true);
             }
         });
 
         // on focus event, restart or resume the current
         on(FOCUS, () => {
             if (this.stopOnBlur === true) {
-                state$1.restart(true);
+                state.restart(true);
             }
             if (this.resumeOnFocus === true) {
-                state$1.resume(true);
+                state.resume(true);
             }
         });
     }
@@ -38287,7 +39129,7 @@ class Application {
      */
     reset() {
         // point to the current active stage "default" camera
-        let current = state$1.get();
+        let current = state.get();
         if (typeof current !== "undefined") {
             this.viewport = current.cameras.get("default");
         }
@@ -38379,13 +39221,13 @@ class Application {
                 this.lastUpdateStart = globalThis.performance.now();
 
                 // game update event
-                if (state$1.isPaused() !== true) {
+                if (state.isPaused() !== true) {
                     emit(GAME_UPDATE, time);
                 }
 
                 // update all objects (and pass the elapsed time since last frame)
                 this.isDirty = this.world.update(this.updateDelta);
-                this.isDirty = state$1.current().update(this.updateDelta) || this.isDirty;
+                this.isDirty = state.current().update(this.updateDelta) || this.isDirty;
 
                 this.lastUpdate = globalThis.performance.now();
                 this.updateAverageDelta = this.lastUpdate - this.lastUpdateStart;
@@ -38414,7 +39256,7 @@ class Application {
             this.renderer.clear();
 
             // render the stage
-            state$1.current().draw(this.renderer, this.world);
+            state.current().draw(this.renderer, this.world);
 
             // set back to flag
             this.isDirty = false;
@@ -38456,9 +39298,9 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "15.15.0"
+         * @default "16.0.0"
          */
-        this.version = "15.15.0";
+        this.version = "16.0.0";
 
         /**
          * a reference to the app/game that registered this plugin
@@ -38561,7 +39403,7 @@ function register(plugin, name = plugin.toString().match(/ (\w+)/)[1]) {
     }
 
     // compatibility testing
-    if (checkVersion(instance.version, version) > 0) {
+    if (checkVersion(instance.version, version) < 0) {
         throw new Error("Plugin version mismatch, expected: " + instance.version + ", got: " + version);
     }
 
@@ -38740,7 +39582,7 @@ Renderer.prototype.getHeight = function()  {
  * @name version
  * @type {string}
  */
-const version = "15.15.0";
+const version = "16.0.0";
 
 /**
  * a flag indicating that melonJS is fully initialized
@@ -38869,4 +39711,4 @@ onReady(() => {
     }
 });
 
-export { AUTO, Application, BitmapText, BitmapTextData, Body, Bounds, CANVAS, Camera2d, CanvasRenderer, CanvasTexture, Collectable, Color, ColorLayer, Compositor, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Point, Pointer, Polygon, PrimitiveCompositor, QuadCompositor, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, TMXUtils, Text, TextureAtlas, Tile, Trigger, Tween, UIBaseElement, UISpriteElement, UITextButton, Vector2d, Vector3d, WEBGL, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader, plugin, cache as plugins, pool, save, skipAutoInit, state$1 as state, timer$1 as timer, utils, version, video };
+export { AUTO, Application, BitmapText, BitmapTextData, Body, Bounds, CANVAS, Camera2d, CanvasRenderer, CanvasTexture, Collectable, Color, ColorLayer, Compositor, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Point, Pointer, Polygon, PrimitiveCompositor, QuadCompositor, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, TMXUtils, Text, TextureAtlas, Tile, Trigger, Tween, UIBaseElement, UISpriteElement, UITextButton, Vector2d, Vector3d, WEBGL, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader, plugin, cache as plugins, pool, save, skipAutoInit, state, timer$1 as timer, utils, version, video };

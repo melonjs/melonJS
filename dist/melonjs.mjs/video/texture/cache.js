@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v15.15.0
+ * melonJS Game Engine - v16.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2024 Olivier Biot (AltByte Pte Ltd)
  */
 import { renderer } from '../video.js';
 import { getBasename } from '../../utils/file.js';
@@ -163,6 +163,5 @@ class TextureCache {
         return this.units.get(texture);
     }
 }
-var TextureCache$1 = TextureCache;
 
-export { TextureCache$1 as default };
+export { TextureCache as default };

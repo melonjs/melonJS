@@ -17,6 +17,7 @@ export namespace defaultSettings {
     let verbose: boolean;
     let consoleHeader: boolean;
     let legacy: boolean;
+    let canvas: undefined;
 }
 /**
  * Application & Renderer Settings definition.
@@ -26,6 +27,10 @@ export type Settings = {
      * - the DOM parent element to hold the canvas in the HTML file
      */
     parent?: string | HTMLElement | undefined;
+    /**
+     * - an existing canvas element to use as the renderer target (by default melonJS will create its own canvas based on given parameters)
+     */
+    canvas?: HTMLCanvasElement | undefined;
     /**
      * - renderer to use (CANVAS, WEBGL, AUTO), or a custom renderer class
      */

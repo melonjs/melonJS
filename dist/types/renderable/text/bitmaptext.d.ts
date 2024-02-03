@@ -98,7 +98,7 @@ export default class BitmapText extends Renderable {
      * @private
      */
     private fontData;
-    public set fillStyle(arg: Color);
+    public set fillStyle(value: Color);
     /**
      * defines the color used to tint the bitmap text
      * @public

@@ -102,7 +102,7 @@ export default class Application {
      * destroy all current objects
      */
     reset(): void;
-    set sortOn(arg: string);
+    set sortOn(value: string);
     /**
      * Specify the property to be used when sorting renderables for this application game world.
      * Accepted values : "x", "y", "z", "depth"

@@ -19,7 +19,7 @@ export default class ObservableVector2d extends Vector2d {
      * @ignore
      */
     onResetEvent(x: number | undefined, y: number | undefined, settings: any): void;
-    public set x(arg: number);
+    public set x(value: number);
     /**
      * x value of the vector
      * @public
@@ -29,7 +29,7 @@ export default class ObservableVector2d extends Vector2d {
      */
     public get x(): number;
     _x: any;
-    public set y(arg: number);
+    public set y(value: number);
     /**
      * y value of the vector
      * @public

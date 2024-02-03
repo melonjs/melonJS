@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v15.15.0
+ * melonJS Game Engine - v16.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2024 Olivier Biot (AltByte Pte Ltd)
  */
 import { game } from '../index.js';
 import { renderer } from '../video/video.js';
@@ -12,7 +12,7 @@ import Sprite from '../renderable/sprite.js';
 import Renderable from '../renderable/renderable.js';
 import Stage from '../state/stage.js';
 import { load, unload } from './loader.js';
-import logo_url from './melonjs_logo.png.js';
+import img from './melonjs_logo.png.js';
 
 // a basic progress bar object
 class ProgressBar extends Renderable {
@@ -92,7 +92,7 @@ class DefaultLoadingScreen extends Stage {
         ), 1);
 
         // load the melonJS logo
-        load({name: "melonjs_logo", type: "image", src: logo_url}, () => {
+        load({name: "melonjs_logo", type: "image", src: img}, () => {
             // melonJS logo
             game.world.addChild(new Sprite(
                 renderer.width / 2,

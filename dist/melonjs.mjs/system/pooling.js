@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v15.15.0
+ * melonJS Game Engine - v16.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2023 Olivier Biot (AltByte Pte Ltd)
+ * @copyright (C) 2011 - 2024 Olivier Biot (AltByte Pte Ltd)
  */
 /**
  * @classdesc
@@ -179,21 +179,4 @@ class ObjectPool {
 
 let pool = new ObjectPool();
 
-/**
- * a default global ObjectPool instance
- * @namespace pool
- * @see ObjectPool
- * @example
- * // register our bullet object into the object pool
- * pool.register("bullet", BulletEntity, true);
- * // ...
- * // when we need to manually create a new bullet:
- * let bullet = pool.pull("bullet", x, y, direction, velocity);
- * // ...
- * // when we want to destroy existing object, the remove
- * // function will ensure the object can then be reallocated later
- * game.world.removeChild(bullet);
- */
-var pool$1 = pool;
-
-export { pool$1 as default };
+export { pool as default };

@@ -7,11 +7,3 @@
  * @ignore
  */
 export function preloadBinary(data: loader.Asset, onload?: Function | undefined, onerror?: Function | undefined): number;
-/**
- * parse/preload a Javascript files
- * @param {loader.Asset} data - asset data
- * @param {Function} [onload] - function to be called when the asset is loaded
- * @param {Function} [onerror] - function to be called in case of error
- * @ignore
- */
-export function preloadJavascript(data: loader.Asset, onload?: Function | undefined, onerror?: Function | undefined): number;
