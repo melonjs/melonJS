@@ -1,5 +1,7 @@
 # Changelog
 
+## [16.1.0] (melonJS 2) - _2024-02-xx_
+
 ## [16.0.0] (melonJS 2) - _2024-02-03_
 
 ### Added
@@ -729,6 +731,7 @@
 
 -------------------------------------------------------------------------------
 
+[16.1.0]: https://github.com/melonjs/melonJS/compare/16.0.0...16.1.0
 [16.0.0]: https://github.com/melonjs/melonJS/compare/15.15.0...16.0.0
 [15.15.0]: https://github.com/melonjs/melonJS/compare/15.14.0...15.15.0
 [15.14.0]: https://github.com/melonjs/melonJS/compare/15.13.0...15.14.0
