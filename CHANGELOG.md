@@ -1,6 +1,6 @@
 # Changelog
 
-## [16.0.0] (melonJS 2) - _2024-02-02_
+## [16.0.0] (melonJS 2) - _2024-02-03_
 
 ### Added
 - Path2d: preliminary SVG path parsing to the Path2D class (WIP)
