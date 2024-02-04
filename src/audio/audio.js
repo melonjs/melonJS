@@ -159,7 +159,9 @@ export function load(sound, onloadcb, onerrorcb) {
     audioTracks[sound.name] = new Howl({
         src : urls,
         volume : Howler.volume(),
-        html5 : sound.stream === true ||  sound.html5 === true,
+        autoplay : sound.autoplay === true,
+        loop : sound.loop = true,
+        html5 : sound.stream === true || sound.html5 === true,
         xhrWithCredentials : withCredentials,
         onloaderror() {
             soundLoadError.call(this, sound.name, onerrorcb);
