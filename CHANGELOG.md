@@ -2,6 +2,9 @@
 
 ## [16.1.0] (melonJS 2) - _2024-02-xx_
 
+### Added
+- loader: add support for loading/preloading of HTMLVideoElement
+
 ## [16.0.0] (melonJS 2) - _2024-02-03_
 
 ### Added

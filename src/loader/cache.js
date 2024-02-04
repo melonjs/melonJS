@@ -14,3 +14,6 @@ export let binList = {};
 
 // contains all the JSON files
 export let jsonList = {};
+
+// contains all the video files
+export let videoList = {};

@@ -2,13 +2,14 @@ import * as fileUtil from "./../utils/file.js";
 import * as event from "./../system/event.js";
 import * as audio from "./../audio/audio.js";
 import state from "./../state/state.js";
-import { imgList, tmxList, binList, jsonList } from "./cache.js";
+import { imgList, tmxList, binList, jsonList, videoList } from "./cache.js";
 import { preloadImage } from "./parsers/image.js";
 import { preloadFontFace } from "./parsers/fontface.js";
 import { preloadTMX } from "./parsers/tmx.js";
 import { preloadJSON } from "./parsers/json.js";
 import { preloadBinary } from "./parsers/binary.js";
 import { preloadJavascript } from "./parsers/script.js";
+import { preloadVideo } from "./parsers/video.js";
 import { baseURL } from "./settings.js";
 import { warning } from "../lang/console.js";
 
@@ -90,6 +91,7 @@ function initParsers() {
     setParser("tsx", preloadTMX);
     setParser("audio", audio.load);
     setParser("fontface", preloadFontFace);
+    setParser("video", preloadVideo);
     parserInitialized = true;
 }
 
@@ -160,10 +162,12 @@ function onLoadingError(res) {
  * an asset definition to be used with the loader
  * @typedef {object} loader.Asset
  * @property {string} name - name of the asset
- * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface")
+ * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface"|"video")
  * @property {string} [src]  - path and/or file name of the resource (for audio assets only the path is required)
  * @property {string} [data]  - TMX data if not provided through a src url
- * @property {boolean} [stream=false] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
+ * @property {boolean} [stream=false] - Set to true to not to wait for large audio or video file to be downloaded before playing.
+ * @property {boolean} [autoplay=false] - Set to true to automatically start playing audio or video when loaded or added to a scene (using autoplay might require user iteraction to enable it)
+ * @property {boolean} [loop=false] - Set to true to automatically loop the audio or video when playing
  * @see loader.preload
  * @see loader.load
  * @example
@@ -193,6 +197,8 @@ function onLoadingError(res) {
  *   {name: "plugin", type: "js", src: "data/js/plugin.js"}
  *   // Font Face
  *   { name: "'kenpixel'", type: "fontface",  src: "url('data/font/kenvector_future.woff2')" }
+ *   // video resources
+ *   {name: "intro", type: "video",  src: "data/video/"}
  */
 
 /**
@@ -261,7 +267,9 @@ export function setParser(type, parserFn) {
  *   // JavaScript file
  *   {name: "plugin", type: "js", src: "data/js/plugin.js"},
  *   // Font Face
- *   { name: "'kenpixel'", type: "fontface",  src: "url('data/font/kenvector_future.woff2')" }
+ *   { name: "'kenpixel'", type: "fontface",  src: "url('data/font/kenvector_future.woff2')" },
+ *   // video resources
+ *   {name: "intro", type: "video",  src: "data/video/"}
  * ];
  * ...
  * // set all resources to be loaded
@@ -414,6 +422,14 @@ export function unload(asset) {
         case "audio":
             return audio.unload(asset.name);
 
+        case "video":
+            if (!(asset.name in videoList)) {
+                return false;
+            }
+
+            delete videoList[asset.name];
+            return true;
+
         default:
             throw new Error("unload : unknown or invalid resource type : " + asset.type);
     }
@@ -457,9 +473,19 @@ export function unloadAll() {
         }
     }
 
-    // unload all in json resources
+    // unload all json resources
     for (name in jsonList) {
         if (jsonList.hasOwnProperty(name)) {
+            unload({
+                "name" : name,
+                "type" : "json"
+            });
+        }
+    }
+
+    // unload all video resources
+    for (name in videoList) {
+        if (videoList.hasOwnProperty(name)) {
             unload({
                 "name" : name,
                 "type" : "json"
@@ -520,8 +546,8 @@ export function getImage(image) {
 /**
  * return the specified JSON Object
  * @memberof loader
- * @param {string} elt - name of the json file to load
- * @returns {object}
+ * @param {string} elt - name of the json file
+ * @returns {JSON}
  */
 export function getJSON(elt) {
     // force as string
@@ -531,3 +557,19 @@ export function getJSON(elt) {
     }
     return null;
 }
+
+/**
+ * return the specified Video Object
+ * @memberof loader
+ * @param {string} elt - name of the video file
+ * @returns {HTMLVideoElement}
+ */
+export function getVideo(elt) {
+    // force as string
+    elt = "" + elt;
+    if (elt in videoList) {
+        return videoList[elt];
+    }
+    return null;
+}
+
