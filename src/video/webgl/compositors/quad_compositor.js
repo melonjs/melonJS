@@ -205,8 +205,9 @@ export default class QuadCompositor extends Compositor {
      * @param {number} u1 - Texture UV (u1) value.
      * @param {number} v1 - Texture UV (v1) value.
      * @param {number} tint - tint color to be applied to the texture in UINT32 (argb) format
+     * @param {boolean} reupload - Force the texture to be reuploaded even if already bound
      */
-    addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint) {
+    addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint, reupload = false) {
         let vertexData = this.vertexData;
 
         if (vertexData.isFull(6)) {
@@ -215,7 +216,7 @@ export default class QuadCompositor extends Compositor {
         }
 
         // upload and activate the texture if necessary
-        let unit = this.uploadTexture(texture);
+        let unit = this.uploadTexture(texture, w, h, reupload);
 
         // set fragment sampler accordingly
         this.currentShader.setUniform("uSampler", unit);

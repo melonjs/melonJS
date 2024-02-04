@@ -443,10 +443,11 @@ export default class WebGLRenderer extends Renderer {
         }
 
         this.setCompositor("quad");
-
+        // force reuploading if the given image is a HTMLVideoElement
+        let reupload = typeof image.videoWidth !== "undefined";
         let texture = this.cache.get(image);
         let uvs = texture.getUVs(sx + "," + sy + "," + sw + "," + sh);
-        this.currentCompositor.addQuad(texture, dx, dy, dw, dh, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()));
+        this.currentCompositor.addQuad(texture, dx, dy, dw, dh, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()), reupload);
     }
 
     /**

@@ -3,7 +3,9 @@
 ## [16.1.0] (melonJS 2) - _2024-02-xx_
 
 ### Added
-- loader: add support for loading/preloading of HTMLVideoElement
+- Loader: add optional `autoplay` and `loop` parameters when `[pre]loading` audio and video assets (`false` by default)
+- Loader: add support for loading/preloading of HTMLVideoElement
+- Sprite: HTMLVideoElement can now be passed as a source when creating Sprite object
 
 ## [16.0.0] (melonJS 2) - _2024-02-03_
 

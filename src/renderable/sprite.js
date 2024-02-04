@@ -15,7 +15,7 @@ export default class Sprite extends Renderable {
      * @param {number} x - the x coordinates of the sprite object
      * @param {number} y - the y coordinates of the sprite object
      * @param {object} settings - Configuration parameters for the Sprite object
-     * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image - reference to spritesheet image, a texture atlas or to a texture atlas
+     * @param {HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|TextureAtlas|string} settings.image - reference to spritesheet image, a texture atlas, a video element, or to a texture atlas
      * @param {string} [settings.name=""] - name of this object
      * @param {string} [settings.region] - region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
      * @param {number} [settings.framewidth] - Width of a single frame within the spritesheet
@@ -77,6 +77,16 @@ export default class Sprite extends Renderable {
         this.offset = pool.pull("Vector2d", 0, 0);
 
         /**
+         * true if this is a video sprite (e.g. a HTMLVideoElement was passed as as source)
+         * @public
+         * @type {boolean}
+         * @default false
+         * @name isVideo
+         * @memberof Sprite#
+         */
+        this.isVideo = false;
+
+        /**
          * The source texture object this sprite object is using
          * @public
          * @type {TextureAtlas}
@@ -99,7 +109,7 @@ export default class Sprite extends Renderable {
             // length of the current animation name
             length : 0,
             //current frame texture offset
-            offset : pool.pull("Vector2d"),
+            offset : pool.pull("Vector2d", 0, 0),
             // current frame size
             width : 0,
             height : 0,
@@ -138,17 +148,30 @@ export default class Sprite extends Renderable {
                 }
             }
         } else {
-            // HTMLImageElement/Canvas or {string}
+            // HTMLImageElement/HTMLVideoElementCanvas or {string}
             this.image = (typeof settings.image === "object") ? settings.image : getImage(settings.image);
             // throw an error if image ends up being null/undefined
             if (!this.image) {
                 throw new Error("me.Sprite: '" + settings.image + "' image/texture not found!");
             }
-            // update the default "current" frame size
-            this.width = this.current.width = settings.framewidth = settings.framewidth || this.image.width;
-            this.height = this.current.height = settings.frameheight = settings.frameheight || this.image.height;
-            this.source = renderer.cache.get(this.image, settings);
-            this.textureAtlas = this.source.getAtlas();
+
+            this.isVideo = HTMLVideoElement && this.image instanceof HTMLVideoElement;
+
+            if (this.isVideo) {
+                this.width = this.current.width = settings.framewidth = settings.framewidth || this.image.videoWidth;
+                this.height = this.current.height = settings.frameheight = settings.frameheight || this.image.videoHeight;
+                // video specific parameter
+                this.animationpause = this.image.autoplay !== true;
+                if (this.animationpause) {
+                    this.image.pause();
+                }
+            } else {
+                // update the default "current" frame size
+                this.width = this.current.width = settings.framewidth = settings.framewidth || this.image.width;
+                this.height = this.current.height = settings.frameheight = settings.frameheight || this.image.height;
+                this.source = renderer.cache.get(this.image, settings);
+                this.textureAtlas = this.source.getAtlas();
+            }
         }
 
         // store/reset the current atlas information if specified
@@ -196,7 +219,7 @@ export default class Sprite extends Renderable {
         }
 
         // addAnimation will return 0 if no texture atlas is defined
-        if (this.addAnimation("default", null) !== 0) {
+        if (!this.isVideo && this.addAnimation("default", null) !== 0) {
             // set as default
             this.setCurrentAnimation("default");
         }
@@ -210,6 +233,24 @@ export default class Sprite extends Renderable {
      */
     isFlickering() {
         return this._flicker.isFlickering;
+    }
+
+    /**
+     * play or resume the current animation or video
+     * @name play
+     * @memberof Sprite
+     */
+    play() {
+        this.animationpause = false;
+    }
+
+    /**
+     * play or resume the current animation or video
+     * @name pause
+     * @memberof Sprite
+     */
+    pause() {
+        this.animationpause = true;
     }
 
     /**
@@ -517,31 +558,41 @@ export default class Sprite extends Renderable {
      * @returns {boolean} true if the Sprite is dirty
      */
     update(dt) {
-        // Update animation if necessary
-        if (!this.animationpause && this.current.length > 1) {
-            let duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
-            this.dt += dt;
-            while (this.dt >= duration) {
-                this.isDirty = true;
-                this.dt -= duration;
+        // play/pause video if necessary
+        if (this.isVideo) {
+            if (this.animationpause) {
+                this.image.pause();
+            } else if (this.image.paused) {
+                this.image.play();
+            }
+            this.isDirty = !this.image.paused;
+        } else {
+            // Update animation if necessary
+            if (!this.animationpause && this.current.length > 1) {
+                let duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
+                this.dt += dt;
+                while (this.dt >= duration) {
+                    this.isDirty = true;
+                    this.dt -= duration;
 
-                let nextFrame = (this.current.length > 1 ? this.current.idx + 1 : this.current.idx);
-                this.setAnimationFrame(nextFrame);
+                    let nextFrame = (this.current.length > 1 ? this.current.idx + 1 : this.current.idx);
+                    this.setAnimationFrame(nextFrame);
 
-                // Switch animation if we reach the end of the strip and a callback is defined
-                if (this.current.idx === 0 && typeof this.resetAnim === "function") {
-                    // Otherwise is must be callable
-                    if (this.resetAnim() === false) {
-                        // Reset to last frame
-                        this.setAnimationFrame(this.current.length - 1);
+                    // Switch animation if we reach the end of the strip and a callback is defined
+                    if (this.current.idx === 0 && typeof this.resetAnim === "function") {
+                        // Otherwise is must be callable
+                        if (this.resetAnim() === false) {
+                            // Reset to last frame
+                            this.setAnimationFrame(this.current.length - 1);
 
-                        // Bail early without skipping any more frames.
-                        this.dt %= duration;
-                        break;
+                            // Bail early without skipping any more frames.
+                            this.dt %= duration;
+                            break;
+                        }
                     }
+                    // Get next frame duration
+                    duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
                 }
-                // Get next frame duration
-                duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
             }
         }
 
@@ -558,16 +609,6 @@ export default class Sprite extends Renderable {
         }
 
         return super.update(dt);
-    }
-
-    /**
-     * Destroy function<br>
-     * @ignore
-     */
-    destroy() {
-        pool.push(this.offset);
-        this.offset = undefined;
-        super.destroy();
     }
 
     /**
@@ -619,5 +660,20 @@ export default class Sprite extends Renderable {
             xpos, ypos,                  // dx,dy
             w, h                         // dw,dh
         );
+    }
+
+    /**
+     * Destroy function<br>
+     * @ignore
+     */
+    destroy() {
+        pool.push(this.offset);
+        this.offset = undefined;
+        if (this.isVideo) {
+            this.image.pause();
+            this.image.currentTime = 0;
+        }
+        this.image = undefined;
+        super.destroy();
     }
 }
