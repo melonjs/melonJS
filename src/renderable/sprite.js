@@ -184,6 +184,10 @@ export default class Sprite extends Renderable {
                 // call the onended when the video has ended
                 this.image.onended = () => {
                     if (typeof this.onended === "function") {
+                        // prevent the video from restarting if video.loop is false
+                        if (!this.image.loop) {
+                            this.animationpause = true;
+                        }
                         this.onended();
                     }
                 };
