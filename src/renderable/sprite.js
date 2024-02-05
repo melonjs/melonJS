@@ -50,7 +50,7 @@ export default class Sprite extends Renderable {
         super(x, y, 0, 0);
 
         /**
-         * pause and resume animation
+         * pause and resume the current animation or video
          * @public
          * @type {boolean}
          * @default false
@@ -86,6 +86,16 @@ export default class Sprite extends Renderable {
          * @memberof Sprite#
          */
         this.isVideo = false;
+
+        /**
+         * a callback fired when the end of a video or current animation was reached
+         * @public
+         * @type {Function}
+         * @default undefined
+         * @name onended
+         * @memberof Sprite#
+         */
+        this.onended;
 
         /**
          * The source texture object this sprite object is using
@@ -167,8 +177,16 @@ export default class Sprite extends Renderable {
                     this.image.pause();
                 }
 
+                // pause the video when losing focus
                 this._onBlurFn = () => { this.image.pause(); };
                 event.on(event.STATE_PAUSE, this._onBlurFn);
+
+                // call the onended when the video has ended
+                this.image.onended = () => {
+                    if (typeof this.onended === "function") {
+                        this.onended();
+                    }
+                };
 
             } else {
                 // update the default "current" frame size
@@ -584,15 +602,20 @@ export default class Sprite extends Renderable {
                     this.setAnimationFrame(nextFrame);
 
                     // Switch animation if we reach the end of the strip and a callback is defined
-                    if (this.current.idx === 0 && typeof this.resetAnim === "function") {
-                        // Otherwise is must be callable
-                        if (this.resetAnim() === false) {
-                            // Reset to last frame
-                            this.setAnimationFrame(this.current.length - 1);
+                    if (this.current.idx === 0) {
+                        if (typeof this.onended === "function") {
+                            this.onended();
+                        }
+                        if (typeof this.resetAnim === "function") {
+                            // Otherwise is must be callable
+                            if (this.resetAnim() === false) {
+                                // Reset to last frame
+                                this.setAnimationFrame(this.current.length - 1);
 
-                            // Bail early without skipping any more frames.
-                            this.dt %= duration;
-                            break;
+                                // Bail early without skipping any more frames.
+                                this.dt %= duration;
+                                break;
+                            }
                         }
                     }
                     // Get next frame duration
@@ -677,6 +700,7 @@ export default class Sprite extends Renderable {
         if (this.isVideo) {
             event.off(event.STATE_PAUSE, this._onBlurFn);
             this._onBlurFn = undefined;
+            this.image.onended = undefined;
             this.image.pause();
             this.image.currentTime = 0;
         }
