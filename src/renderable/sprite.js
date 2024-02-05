@@ -43,6 +43,16 @@ export default class Sprite extends Renderable {
      *     image : mytexture,
      *     region : "npc2.png",
      * });
+     *
+     * // create a video sprite
+     * let videoSprite = new me.Sprite(0, 0, {
+     *     image : me.loader.getVideo("bigbunny"),
+     *     anchorPoint : new me.Vector2d(0.5, 0.5)
+     * });
+     * // scale the video sprite
+     * videoSprite.currentTransform.scale(2);
+     * // start playing the video (if video is preloaded with `autoplay` set to false)
+     * videoSprite.play();
      */
     constructor(x, y, settings) {
 
