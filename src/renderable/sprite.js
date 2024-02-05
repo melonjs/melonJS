@@ -4,6 +4,7 @@ import { getImage } from "./../loader/loader.js";
 import { TextureAtlas } from "./../video/texture/atlas.js";
 import Renderable from "./renderable.js";
 import Color from "../math/color.js";
+import * as event from "../system/event.js";
 
 /**
  * @classdesc
@@ -165,6 +166,10 @@ export default class Sprite extends Renderable {
                 if (this.animationpause) {
                     this.image.pause();
                 }
+
+                this._onBlurFn = () => { this.image.pause(); };
+                event.on(event.STATE_PAUSE, this._onBlurFn);
+
             } else {
                 // update the default "current" frame size
                 this.width = this.current.width = settings.framewidth = settings.framewidth || this.image.width;
@@ -670,6 +675,8 @@ export default class Sprite extends Renderable {
         pool.push(this.offset);
         this.offset = undefined;
         if (this.isVideo) {
+            event.off(event.STATE_PAUSE, this._onBlurFn);
+            this._onBlurFn = undefined;
             this.image.pause();
             this.image.currentTime = 0;
         }
