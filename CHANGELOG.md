@@ -1,6 +1,6 @@
 # Changelog
 
-## [16.1.0] (melonJS 2) - _2024-02-xx_
+## [16.1.0] (melonJS 2) - _2024-02-06_
 
 ### Added
 - Loader: add optional `autoplay` and `loop` parameters when `[pre]loading` audio and video assets (`false` by default)
