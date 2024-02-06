@@ -57,9 +57,7 @@ export default class NineSliceSprite extends Sprite {
 
     /**
      * width of the NineSliceSprite
-     * @public
      * @type {number}
-     * @name width
      */
     get width() {
         return super.width;
@@ -70,9 +68,7 @@ export default class NineSliceSprite extends Sprite {
 
     /**
      * height of the NineSliceSprite
-     * @public
      * @type {number}
-     * @name height
      */
     get height() {
         return super.height;
