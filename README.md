@@ -114,6 +114,7 @@ A few demos of melonJS capabilities :
 * [Primitive Drawing Demo](https://melonjs.github.io/examples/graphics/) ([source](https://github.com/melonjs/examples/tree/master/graphics))
 * [UI Demo](https://melonjs.github.io/examples/UI/) ([source](https://github.com/melonjs/examples/tree/master/UI))
 * [Tiled Map Loader Demo](https://melonjs.github.io/examples/tiled_example_loader/) ([source](https://github.com/melonjs/examples/tree/master/tiled_example_loader))
+* [Video Demo](https://melonjs.github.io/examples/video/) ([source](https://github.com/melonjs/examples/tree/master/video))
 
 More examples are available [here](https://melonjs.github.io/examples/)
 
