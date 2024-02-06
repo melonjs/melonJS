@@ -20,11 +20,18 @@ export function preloadVideo(data, onload, onerror) {
         return 0;
     }
 
-    if (!hasVideoFormat(fileUtil.getExtension(data.src))) {
-        throw new Error(`Video file format not supported: ${fileUtil.getExtension(data.src)}`);
-    }
-
     let videoElement = videoList[data.name] = document.createElement("video");
+
+    if (isDataUrl(data.src)) {
+        const mimeType = data.src.match(/[^:]\w+\/[\w-+\d.]+(?=;|,)/)[0];
+        if (!mimeType || videoElement.canPlayType(mimeType) === "") {
+            throw new Error(`Invalid dataURL or Video file format not supported: ${mimeType}`);
+        }
+    } else {
+        if (!hasVideoFormat(fileUtil.getExtension(data.src))) {
+            throw new Error(`Video file format not supported: ${fileUtil.getExtension(data.src)}`);
+        }
+    }
 
     if (isDataUrl(data.src)) {
         fetchData(data.src, "blob")

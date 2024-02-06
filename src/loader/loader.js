@@ -267,9 +267,11 @@ export function setParser(type, parserFn) {
  *   // JavaScript file
  *   {name: "plugin", type: "js", src: "data/js/plugin.js"},
  *   // Font Face
- *   { name: "'kenpixel'", type: "fontface",  src: "url('data/font/kenvector_future.woff2')" },
+ *   {name: "'kenpixel'", type: "fontface",  src: "url('data/font/kenvector_future.woff2')"},
  *   // video resources
- *   {name: "intro", type: "video",  src: "data/video/"}
+ *   {name: "intro", type: "video",  src: "data/video/"},
+ *   // base64 encoded video asset
+ *   me.loader.load({name: "avatar", type:"video", src: "data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZ..."};
  * ];
  * ...
  * // set all resources to be loaded
@@ -339,6 +341,12 @@ export function reload(src) {
  * me.loader.load({name: "avatar",  type:"image",  src: "data/avatar.png"}, () => this.onload(), () => this.onerror());
  * // load a base64 image asset
  *  me.loader.load({name: "avatar", type:"image", src: "data:image/png;base64,iVBORw0KAAAQAAAAEACA..."};
+ *  // load a base64 video asset
+ *  me.loader.load({
+ *     name: "avatar",
+ *     type:"video",
+ *     src: "data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZ.."
+ *  };
  * // start loading music
  * me.loader.load({
  *     name   : "bgmusic",
