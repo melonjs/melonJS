@@ -292,6 +292,13 @@ export function unwatchDeviceOrientation(): void;
  */
 export function vibrate(pattern: number | number[]): void;
 /**
+ * detect if the given video format is supported
+ * @function hasVideoFormat
+ * @param {"h264"|"h265"|"ogg"|"mp4"|"m4v"|"webm"|"vp9"|"hls"} codec - the video format to check for support
+ * @returns {boolean} return true if the given video format is supported
+ */
+export function hasVideoFormat(codec: "h264" | "h265" | "ogg" | "mp4" | "m4v" | "webm" | "vp9" | "hls"): boolean;
+/**
  * the device platform type
  * @name platform
  * @memberof device
@@ -422,6 +429,15 @@ export const hasHTML5Audio: boolean;
  * @public
  */
 export const sound: boolean;
+/**
+ * Device Video Support
+ * @name hasVideo
+ * @memberof device
+ * @type {boolean}
+ * @readonly
+ * @public
+ */
+export const hasVideo: boolean;
 /**
  * Browser Local Storage capabilities <br>
  * (this flag will be set to false if cookies are blocked)

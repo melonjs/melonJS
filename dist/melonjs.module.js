@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v16.0.0
+ * melonJS Game Engine - v16.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -13653,7 +13653,7 @@ let baseURL = {};
 
 
 /**
- * crossOrigin attribute to configure the CORS requests for Image data element.
+ * crossOrigin attribute to configure the CORS requests for Image and Video data element.
  * By default (that is, when the attribute is not specified), CORS is not used at all.
  * The "anonymous" keyword means that there will be no exchange of user credentials via cookies,
  * client-side SSL certificates or HTTP authentication as described in the Terminology section of the CORS specification.<br>
@@ -13663,7 +13663,7 @@ let baseURL = {};
  * @memberof loader
  * @see https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes
  * @example
- *  // allow for cross-origin texture loading in WebGL
+ *  // allow for cross-origin texture loading
  * me.loader.crossOrigin = "anonymous";
  *
  * // set all ressources to be loaded
@@ -13703,7 +13703,7 @@ function setNocache(enable = false) {
  * @name setBaseURL
  * @memberof loader
  * @public
- * @param {string} type  - "*", "audio", binary", "image", "json", "js", "tmx", "tsx"
+ * @param {string} type  - "*", "audio", "video", "binary", "image", "json", "js", "tmx", "tsx"
  * @param {string} [url="./"] - default base URL
  * @example
  * // change the base URL relative address for audio assets
@@ -13717,6 +13717,7 @@ function setBaseURL(type, url) {
     } else {
         // "wildcards"
         baseURL["audio"] = url;
+        baseURL["video"] = url;
         baseURL["binary"] = url;
         baseURL["image"] = url;
         baseURL["json"] = url;
@@ -13968,7 +13969,9 @@ function load$1(sound, onloadcb, onerrorcb) {
     audioTracks[sound.name] = new howler$1.Howl({
         src : urls,
         volume : howler$1.Howler.volume(),
-        html5 : sound.stream === true ||  sound.html5 === true,
+        autoplay : sound.autoplay === true,
+        loop : sound.loop = true,
+        html5 : sound.stream === true || sound.html5 === true,
         xhrWithCredentials : withCredentials,
         onloaderror() {
             soundLoadError.call(this, sound.name, onerrorcb);
@@ -14713,6 +14716,9 @@ let swipeEnabled = true;
 // a cache DOMRect object
 let domRect = {left: 0, top: 0, x: 0, y: 0, width: 0, height: 0, right: 0, bottom: 0};
 
+// a list of supported videoCodecs;
+let videoCodecs;
+
 function disableSwipeFn(e) {
     e.preventDefault();
     if (typeof globalThis.scroll === "function") {
@@ -14910,6 +14916,18 @@ const hasHTML5Audio = (typeof globalThis.Audio !== "undefined");
  * @public
  */
 const sound = hasWebAudio || hasHTML5Audio;
+
+
+/**
+ * Device Video Support
+ * @name hasVideo
+ * @memberof device
+ * @type {boolean}
+ * @readonly
+ * @public
+ */
+const hasVideo = typeof globalThis.document !== "undefined" &&  !!globalThis.document.createElement("video").canPlayType;
+
 
 /**
  * Browser Local Storage capabilities <br>
@@ -15616,6 +15634,34 @@ function vibrate(pattern) {
     }
 }
 
+/**
+ * detect if the given video format is supported
+ * @function hasVideoFormat
+ * @param {"h264"|"h265"|"ogg"|"mp4"|"m4v"|"webm"|"vp9"|"hls"} codec - the video format to check for support
+ * @returns {boolean} return true if the given video format is supported
+ */
+function hasVideoFormat(codec) {
+    let result = false;
+    if (hasVideo === true) {
+        if (typeof videoCodecs === "undefined") {
+            // check for support
+            const videoElement = document.createElement("video");
+            videoCodecs = {
+                h264:videoElement.canPlayType('video/mp4; codecs="avc1.42E01E"').replace(/^no$/, ""),
+                h265:videoElement.canPlayType('video/mp4; codecs="hev1"').replace(/^no$/, ""),
+                ogg:videoElement.canPlayType('video/ogg; codecs="theora"').replace(/^no$/, ""),
+                mp4:videoElement.canPlayType('video/mp4; codecs="avc1.42E01E"').replace(/^no$/, ""),
+                m4v:videoElement.canPlayType("video/x-m4v").replace(/^no$/, ""),
+                webm:videoElement.canPlayType('video/webm; codecs="vp8, vorbis"').replace(/^no$/, ""),
+                vp9:videoElement.canPlayType('video/webm; codecs="vp9"').replace(/^no$/, ""),
+                hls:videoElement.canPlayType('application/x-mpegURL; codecs="avc1.42E01E"').replace(/^no$/, "")
+            };
+        }
+        result = !!videoCodecs[codec];
+    }
+    return result;
+}
+
 var device = {
 	__proto__: null,
 	get accelerationX () { return accelerationX; },
@@ -15640,6 +15686,8 @@ var device = {
 	hasFullscreenSupport: hasFullscreenSupport,
 	hasHTML5Audio: hasHTML5Audio,
 	hasPointerLockSupport: hasPointerLockSupport,
+	hasVideo: hasVideo,
+	hasVideoFormat: hasVideoFormat,
 	hasWebAudio: hasWebAudio,
 	isFullscreen: isFullscreen,
 	isLandscape: isLandscape,
@@ -19820,6 +19868,9 @@ let binList = {};
 // contains all the JSON files
 let jsonList = {};
 
+// contains all the video files
+let videoList = {};
+
 /**
  * Fetches data from the specified URL.
  * @param {string} url - The URL to fetch the data from.
@@ -23123,7 +23174,7 @@ class TextureCache {
 
         if (typeof entry === "undefined") {
             if (!atlas) {
-                atlas = createAtlas(image.width, image.height, image.src ? getBasename(image.src) : undefined);
+                atlas = createAtlas(image.width || image.videoWidth, image.videoHeight, image.src ? getBasename(image.src) : undefined);
             }
             entry = new TextureAtlas(atlas, image, false);
             this.set(image, entry);
@@ -23167,8 +23218,8 @@ class TextureCache {
      * @ignore
      */
     set(image, texture) {
-        let width = image.width;
-        let height = image.height;
+        let width = image.width || image.videoWidth;
+        let height = image.height || image.videoHeight;
 
         // warn if a non POT texture is added to the cache when using WebGL1
         if (renderer.WebGLVersion === 1 && (!isPowerOfTwo(width) || !isPowerOfTwo(height))) {
@@ -27678,6 +27729,89 @@ function preloadJavascript(data, onload, onerror) {
 }
 
 /**
+ * parse/preload a Video file
+ * @param {loader.Asset} data - asset data
+ * @param {Function} [onload] - function to be called when the asset is loaded
+ * @param {Function} [onerror] - function to be called in case of error
+ * @returns {number} the amount of corresponding resource parsed/preloaded
+ * @ignore
+ */
+function preloadVideo(data, onload, onerror) {
+
+    if (typeof videoList[data.name] !== "undefined") {
+        // Video already preloaded
+        return 0;
+    }
+
+    let videoElement = videoList[data.name] = document.createElement("video");
+
+    if (isDataUrl(data.src)) {
+        const mimeType = data.src.match(/[^:]\w+\/[\w-+\d.]+(?=;|,)/)[0];
+        if (!mimeType || videoElement.canPlayType(mimeType) === "") {
+            throw new Error(`Invalid dataURL or Video file format not supported: ${mimeType}`);
+        }
+    } else {
+        if (!hasVideoFormat(getExtension(data.src))) {
+            throw new Error(`Video file format not supported: ${getExtension(data.src)}`);
+        }
+    }
+
+    if (isDataUrl(data.src)) {
+        fetchData(data.src, "blob")
+            .then(blob => {
+                videoElement.src = globalThis.URL.createObjectURL(blob);
+            })
+            .catch(error => {
+                if (typeof onerror === "function") {
+                    onerror(error);
+                }
+            });
+    } else {
+        // just a url path
+        videoElement.src = data.src;
+    }
+
+    videoElement.setAttribute("preload", data.stream === true ? "metadata" : "auto");
+    videoElement.setAttribute("playsinline", "true");
+    videoElement.setAttribute("disablePictureInPicture", "true");
+    videoElement.setAttribute("controls", "false");
+    videoElement.setAttribute("crossorigin", crossOrigin);
+
+    if (data.autoplay === true) {
+        videoElement.setAttribute("autoplay", "true");
+    }
+    if (data.loop === true) {
+        videoElement.setAttribute("loop", "true");
+    }
+
+    if (typeof onload === "function") {
+        if (data.stream === true) {
+            videoElement.onloadedmetadata = () => {
+                if (typeof onload === "function") {
+                    onload();
+                }
+            };
+        } else {
+            videoElement.oncanplay = () => {
+                if (typeof onload === "function") {
+                    onload();
+                }
+            };
+        }
+    }
+
+    if (typeof onerror === "function") {
+        videoElement.onerror = () => {
+            onerror();
+        };
+    }
+
+    videoElement.load();
+
+    return 1;
+}
+
+/**
  * onload callback
  * @default undefined
  * @memberof loader
@@ -27746,6 +27880,7 @@ function initParsers() {
     setParser("tsx", preloadTMX);
     setParser("audio", load$1);
     setParser("fontface", preloadFontFace);
+    setParser("video", preloadVideo);
     parserInitialized = true;
 }
 
@@ -27816,10 +27951,12 @@ function onLoadingError(res) {
  * an asset definition to be used with the loader
  * @typedef {object} loader.Asset
  * @property {string} name - name of the asset
- * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface")
+ * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface"|"video")
  * @property {string} [src]  - path and/or file name of the resource (for audio assets only the path is required)
  * @property {string} [data]  - TMX data if not provided through a src url
- * @property {boolean} [stream=false] - Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
+ * @property {boolean} [stream=false] - Set to true to not to wait for large audio or video file to be downloaded before playing.
+ * @property {boolean} [autoplay=false] - Set to true to automatically start playing audio or video when loaded or added to a scene (using autoplay might require user iteraction to enable it)
+ * @property {boolean} [loop=false] - Set to true to automatically loop the audio or video when playing
  * @see loader.preload
  * @see loader.load
  * @example
@@ -27849,6 +27986,8 @@ function onLoadingError(res) {
  *   {name: "plugin", type: "js", src: "data/js/plugin.js"}
  *   // Font Face
  *   { name: "'kenpixel'", type: "fontface",  src: "url('data/font/kenvector_future.woff2')" }
+ *   // video resources
+ *   {name: "intro", type: "video",  src: "data/video/"}
  */
 
 /**
@@ -27917,7 +28056,11 @@ function setParser(type, parserFn) {
  *   // JavaScript file
  *   {name: "plugin", type: "js", src: "data/js/plugin.js"},
  *   // Font Face
- *   { name: "'kenpixel'", type: "fontface",  src: "url('data/font/kenvector_future.woff2')" }
+ *   {name: "'kenpixel'", type: "fontface",  src: "url('data/font/kenvector_future.woff2')"},
+ *   // video resources
+ *   {name: "intro", type: "video",  src: "data/video/"},
+ *   // base64 encoded video asset
+ *   me.loader.load({name: "avatar", type:"video", src: "data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZ..."};
  * ];
  * ...
  * // set all resources to be loaded
@@ -27987,6 +28130,12 @@ function reload(src) {
  * me.loader.load({name: "avatar",  type:"image",  src: "data/avatar.png"}, () => this.onload(), () => this.onerror());
  * // load a base64 image asset
  *  me.loader.load({name: "avatar", type:"image", src: "data:image/png;base64,iVBORw0KAAAQAAAAEACA..."};
+ *  // load a base64 video asset
+ *  me.loader.load({
+ *     name: "avatar",
+ *     type:"video",
+ *     src: "data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZ.."
+ *  };
  * // start loading music
  * me.loader.load({
  *     name   : "bgmusic",
@@ -28070,6 +28219,14 @@ function unload(asset) {
         case "audio":
             return unload$1(asset.name);
 
+        case "video":
+            if (!(asset.name in videoList)) {
+                return false;
+            }
+
+            delete videoList[asset.name];
+            return true;
+
         default:
             throw new Error("unload : unknown or invalid resource type : " + asset.type);
     }
@@ -28113,9 +28270,19 @@ function unloadAll() {
         }
     }
 
-    // unload all in json resources
+    // unload all json resources
     for (name in jsonList) {
         if (jsonList.hasOwnProperty(name)) {
+            unload({
+                "name" : name,
+                "type" : "json"
+            });
+        }
+    }
+
+    // unload all video resources
+    for (name in videoList) {
+        if (videoList.hasOwnProperty(name)) {
             unload({
                 "name" : name,
                 "type" : "json"
@@ -28176,14 +28343,29 @@ function getImage(image) {
 /**
  * return the specified JSON Object
  * @memberof loader
- * @param {string} elt - name of the json file to load
- * @returns {object}
+ * @param {string} elt - name of the json file
+ * @returns {JSON}
  */
 function getJSON(elt) {
     // force as string
     elt = "" + elt;
     if (elt in jsonList) {
         return jsonList[elt];
+    }
+    return null;
+}
+
+/**
+ * return the specified Video Object
+ * @memberof loader
+ * @param {string} elt - name of the video file
+ * @returns {HTMLVideoElement}
+ */
+function getVideo(elt) {
+    // force as string
+    elt = "" + elt;
+    if (elt in videoList) {
+        return videoList[elt];
     }
     return null;
 }
@@ -28196,6 +28378,7 @@ var loader = {
 	getImage: getImage,
 	getJSON: getJSON,
 	getTMX: getTMX,
+	getVideo: getVideo,
 	load: load,
 	get nocache () { return nocache; },
 	onError: onError,
@@ -28221,7 +28404,7 @@ class Sprite extends Renderable {
      * @param {number} x - the x coordinates of the sprite object
      * @param {number} y - the y coordinates of the sprite object
      * @param {object} settings - Configuration parameters for the Sprite object
-     * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image - reference to spritesheet image, a texture atlas or to a texture atlas
+     * @param {HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|TextureAtlas|string} settings.image - reference to spritesheet image, a texture atlas, a video element, or to a texture atlas
      * @param {string} [settings.name=""] - name of this object
      * @param {string} [settings.region] - region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
      * @param {number} [settings.framewidth] - Width of a single frame within the spritesheet
@@ -28248,6 +28431,16 @@ class Sprite extends Renderable {
      *     image : mytexture,
      *     region : "npc2.png",
      * });
+     *
+     * // create a video sprite
+     * let videoSprite = new me.Sprite(0, 0, {
+     *     image : me.loader.getVideo("bigbunny"),
+     *     anchorPoint : new me.Vector2d(0.5, 0.5)
+     * });
+     * // scale the video sprite
+     * videoSprite.currentTransform.scale(2);
+     * // start playing the video (if video is preloaded with `autoplay` set to false)
+     * videoSprite.play();
      */
     constructor(x, y, settings) {
 
@@ -28255,39 +28448,42 @@ class Sprite extends Renderable {
         super(x, y, 0, 0);
 
         /**
-         * pause and resume animation
-         * @public
          * @type {boolean}
          * @default false
-         * @name Sprite#animationpause
          */
         this.animationpause = false;
 
         /**
          * animation cycling speed (delay between frame in ms)
-         * @public
          * @type {number}
          * @default 100
-         * @name Sprite#animationspeed
          */
         this.animationspeed = 100;
 
         /**
          * global offset for the position to draw from on the source image.
-         * @public
          * @type {Vector2d}
          * @default <0.0,0.0>
-         * @name offset
-         * @memberof Sprite#
          */
         this.offset = pool.pull("Vector2d", 0, 0);
 
         /**
+         * true if this is a video sprite (e.g. a HTMLVideoElement was passed as as source)
+         * @type {boolean}
+         * @default false
+         */
+        this.isVideo = false;
+
+        /**
+         * a callback fired when the end of a video or current animation was reached
+         * @type {Function}
+         * @default undefined
+         */
+        this.onended;
+
+        /**
          * The source texture object this sprite object is using
-         * @public
          * @type {TextureAtlas}
-         * @name source
-         * @memberof Sprite#
          */
         this.source = null;
 
@@ -28305,7 +28501,7 @@ class Sprite extends Renderable {
             // length of the current animation name
             length : 0,
             //current frame texture offset
-            offset : pool.pull("Vector2d"),
+            offset : pool.pull("Vector2d", 0, 0),
             // current frame size
             width : 0,
             height : 0,
@@ -28344,17 +28540,46 @@ class Sprite extends Renderable {
                 }
             }
         } else {
-            // HTMLImageElement/Canvas or {string}
+            // HTMLImageElement/HTMLVideoElementCanvas or {string}
             this.image = (typeof settings.image === "object") ? settings.image : getImage(settings.image);
             // throw an error if image ends up being null/undefined
             if (!this.image) {
                 throw new Error("me.Sprite: '" + settings.image + "' image/texture not found!");
             }
-            // update the default "current" frame size
-            this.width = this.current.width = settings.framewidth = settings.framewidth || this.image.width;
-            this.height = this.current.height = settings.frameheight = settings.frameheight || this.image.height;
-            this.source = renderer.cache.get(this.image, settings);
-            this.textureAtlas = this.source.getAtlas();
+
+            this.isVideo = HTMLVideoElement && this.image instanceof HTMLVideoElement;
+
+            if (this.isVideo) {
+                this.width = this.current.width = settings.framewidth = settings.framewidth || this.image.videoWidth;
+                this.height = this.current.height = settings.frameheight = settings.frameheight || this.image.videoHeight;
+                // video specific parameter
+                this.animationpause = this.image.autoplay !== true;
+                if (this.animationpause) {
+                    this.image.pause();
+                }
+
+                // pause the video when losing focus
+                this._onBlurFn = () => { this.image.pause(); };
+                on(STATE_PAUSE, this._onBlurFn);
+
+                // call the onended when the video has ended
+                this.image.onended = () => {
+                    if (typeof this.onended === "function") {
+                        // prevent the video from restarting if video.loop is false
+                        if (!this.image.loop) {
+                            this.animationpause = true;
+                        }
+                        this.onended();
+                    }
+                };
+
+            } else {
+                // update the default "current" frame size
+                this.width = this.current.width = settings.framewidth = settings.framewidth || this.image.width;
+                this.height = this.current.height = settings.frameheight = settings.frameheight || this.image.height;
+                this.source = renderer.cache.get(this.image, settings);
+                this.textureAtlas = this.source.getAtlas();
+            }
         }
 
         // store/reset the current atlas information if specified
@@ -28402,7 +28627,7 @@ class Sprite extends Renderable {
         }
 
         // addAnimation will return 0 if no texture atlas is defined
-        if (this.addAnimation("default", null) !== 0) {
+        if (!this.isVideo && this.addAnimation("default", null) !== 0) {
             // set as default
             this.setCurrentAnimation("default");
         }
@@ -28410,8 +28635,6 @@ class Sprite extends Renderable {
 
     /**
      * return the flickering state of the object
-     * @name isFlickering
-     * @memberof Sprite
      * @returns {boolean}
      */
     isFlickering() {
@@ -28419,9 +28642,21 @@ class Sprite extends Renderable {
     }
 
     /**
+     * play or resume the current animation or video
+     */
+    play() {
+        this.animationpause = false;
+    }
+
+    /**
+     * play or resume the current animation or video
+     */
+    pause() {
+        this.animationpause = true;
+    }
+
+    /**
      * make the object flicker
-     * @name flicker
-     * @memberof Sprite
      * @param {number} duration - expressed in milliseconds
      * @param {Function} callback - Function to call when flickering ends
      * @returns {Sprite} Reference to this object for method chaining
@@ -28450,11 +28685,8 @@ class Sprite extends Renderable {
      * For fixed-sized cell sprite sheet, the index list must follow the
      * logic as per the following example :<br>
      * <img src="images/spritesheet_grid.png"/>
-     * @name addAnimation
-     * @memberof Sprite
      * @param {string} name - animation id
-     * @param {number[]|string[]|object[]} index - list of sprite index or name
-     * defining the animation. Can also use objects to specify delay for each frame, see below
+     * @param {number[]|string[]|object[]} index - list of sprite index or name defining the animation. Can also use objects to specify delay for each frame, see below
      * @param {number} [animationspeed] - cycling speed for animation in ms
      * @returns {number} frame amount of frame added to the animation (delay between each frame).
      * @see Sprite#animationspeed
@@ -28549,8 +28781,6 @@ class Sprite extends Renderable {
     /**
      * set the current animation
      * this will always change the animation & set the frame to zero
-     * @name setCurrentAnimation
-     * @memberof Sprite
      * @param {string} name - animation id
      * @param {string|Function} [resetAnim] - animation id to switch to when complete, or callback
      * @param {boolean} [preserve_dt=false] - if false will reset the elapsed time counter since last frame
@@ -28611,8 +28841,6 @@ class Sprite extends Renderable {
 
     /**
      * reverse the given or current animation if none is specified
-     * @name reverseAnimation
-     * @memberof Sprite
      * @param {string} [name] - animation id
      * @returns {Sprite} Reference to this object for method chaining
      * @see Sprite#animationspeed
@@ -28629,8 +28857,6 @@ class Sprite extends Renderable {
 
     /**
      * return true if the specified animation is the current one.
-     * @name isCurrentAnimation
-     * @memberof Sprite
      * @param {string} name - animation id
      * @returns {boolean}
      * @example
@@ -28645,8 +28871,6 @@ class Sprite extends Renderable {
     /**
      * change the current texture atlas region for this sprite
      * @see Texture.getRegion
-     * @name setRegion
-     * @memberof Sprite
      * @param {object} region - typically returned through me.Texture.getRegion()
      * @returns {Sprite} Reference to this object for method chaining
      * @example
@@ -28678,8 +28902,6 @@ class Sprite extends Renderable {
 
     /**
      * force the current animation frame index.
-     * @name setAnimationFrame
-     * @memberof Sprite
      * @param {number} [index=0] - animation frame index
      * @returns {Sprite} Reference to this object for method chaining
      * @example
@@ -28693,8 +28915,6 @@ class Sprite extends Renderable {
 
     /**
      * return the current animation frame index.
-     * @name getCurrentAnimationFrame
-     * @memberof Sprite
      * @returns {number} current animation frame index
      */
     getCurrentAnimationFrame() {
@@ -28703,8 +28923,6 @@ class Sprite extends Renderable {
 
     /**
      * Returns the frame object by the index.
-     * @name getAnimationFrameObjectByIndex
-     * @memberof Sprite
      * @ignore
      * @param {number} id - the frame id
      * @returns {number} if using number indices. Returns {object} containing frame data if using texture atlas
@@ -28716,38 +28934,51 @@ class Sprite extends Renderable {
     /**
      * update function. <br>
      * automatically called by the game manager {@link game}
-     * @name update
-     * @memberof Sprite
      * @protected
      * @param {number} dt - time since the last update in milliseconds.
      * @returns {boolean} true if the Sprite is dirty
      */
     update(dt) {
-        // Update animation if necessary
-        if (!this.animationpause && this.current.length > 1) {
-            let duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
-            this.dt += dt;
-            while (this.dt >= duration) {
-                this.isDirty = true;
-                this.dt -= duration;
+        // play/pause video if necessary
+        if (this.isVideo) {
+            if (this.animationpause) {
+                this.image.pause();
+            } else if (this.image.paused) {
+                this.image.play();
+            }
+            this.isDirty = !this.image.paused;
+        } else {
+            // Update animation if necessary
+            if (!this.animationpause && this.current.length > 1) {
+                let duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
+                this.dt += dt;
+                while (this.dt >= duration) {
+                    this.isDirty = true;
+                    this.dt -= duration;
 
-                let nextFrame = (this.current.length > 1 ? this.current.idx + 1 : this.current.idx);
-                this.setAnimationFrame(nextFrame);
+                    let nextFrame = (this.current.length > 1 ? this.current.idx + 1 : this.current.idx);
+                    this.setAnimationFrame(nextFrame);
 
-                // Switch animation if we reach the end of the strip and a callback is defined
-                if (this.current.idx === 0 && typeof this.resetAnim === "function") {
-                    // Otherwise is must be callable
-                    if (this.resetAnim() === false) {
-                        // Reset to last frame
-                        this.setAnimationFrame(this.current.length - 1);
+                    // Switch animation if we reach the end of the strip and a callback is defined
+                    if (this.current.idx === 0) {
+                        if (typeof this.onended === "function") {
+                            this.onended();
+                        }
+                        if (typeof this.resetAnim === "function") {
+                            // Otherwise is must be callable
+                            if (this.resetAnim() === false) {
+                                // Reset to last frame
+                                this.setAnimationFrame(this.current.length - 1);
 
-                        // Bail early without skipping any more frames.
-                        this.dt %= duration;
-                        break;
+                                // Bail early without skipping any more frames.
+                                this.dt %= duration;
+                                break;
+                            }
+                        }
                     }
+                    // Get next frame duration
+                    duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
                 }
-                // Get next frame duration
-                duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
             }
         }
 
@@ -28767,19 +28998,7 @@ class Sprite extends Renderable {
     }
 
     /**
-     * Destroy function<br>
-     * @ignore
-     */
-    destroy() {
-        pool.push(this.offset);
-        this.offset = undefined;
-        super.destroy();
-    }
-
-    /**
      * draw this srite (automatically called by melonJS)
-     * @name draw
-     * @memberof Sprite
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
      * @param {Camera2d} [viewport] - the viewport to (re)draw
@@ -28825,6 +29044,24 @@ class Sprite extends Renderable {
             xpos, ypos,                  // dx,dy
             w, h                         // dw,dh
         );
+    }
+
+    /**
+     * Destroy function<br>
+     * @ignore
+     */
+    destroy() {
+        pool.push(this.offset);
+        this.offset = undefined;
+        if (this.isVideo) {
+            off(STATE_PAUSE, this._onBlurFn);
+            this._onBlurFn = undefined;
+            this.image.onended = undefined;
+            this.image.pause();
+            this.image.currentTime = 0;
+        }
+        this.image = undefined;
+        super.destroy();
     }
 }
 
@@ -32318,8 +32555,9 @@ class QuadCompositor extends Compositor {
      * @param {number} u1 - Texture UV (u1) value.
      * @param {number} v1 - Texture UV (v1) value.
      * @param {number} tint - tint color to be applied to the texture in UINT32 (argb) format
+     * @param {boolean} reupload - Force the texture to be reuploaded even if already bound
      */
-    addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint) {
+    addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint, reupload = false) {
         let vertexData = this.vertexData;
 
         if (vertexData.isFull(6)) {
@@ -32328,7 +32566,7 @@ class QuadCompositor extends Compositor {
         }
 
         // upload and activate the texture if necessary
-        let unit = this.uploadTexture(texture);
+        let unit = this.uploadTexture(texture, w, h, reupload);
 
         // set fragment sampler accordingly
         this.currentShader.setUniform("uSampler", unit);
@@ -32789,10 +33027,11 @@ class WebGLRenderer extends Renderer {
         }
 
         this.setCompositor("quad");
-
+        // force reuploading if the given image is a HTMLVideoElement
+        let reupload = typeof image.videoWidth !== "undefined";
         let texture = this.cache.get(image);
         let uvs = texture.getUVs(sx + "," + sy + "," + sw + "," + sh);
-        this.currentCompositor.addQuad(texture, dx, dy, dw, dh, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()));
+        this.currentCompositor.addQuad(texture, dx, dy, dw, dh, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()), reupload);
     }
 
     /**
@@ -34137,9 +34376,7 @@ class NineSliceSprite extends Sprite {
 
     /**
      * width of the NineSliceSprite
-     * @public
      * @type {number}
-     * @name width
      */
     get width() {
         return super.width;
@@ -34150,9 +34387,7 @@ class NineSliceSprite extends Sprite {
 
     /**
      * height of the NineSliceSprite
-     * @public
      * @type {number}
-     * @name height
      */
     get height() {
         return super.height;
@@ -39298,9 +39533,9 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "16.0.0"
+         * @default "16.1.0"
          */
-        this.version = "16.0.0";
+        this.version = "16.1.0";
 
         /**
          * a reference to the app/game that registered this plugin
@@ -39582,7 +39817,7 @@ Renderer.prototype.getHeight = function()  {
  * @name version
  * @type {string}
  */
-const version = "16.0.0";
+const version = "16.1.0";
 
 /**
  * a flag indicating that melonJS is fully initialized

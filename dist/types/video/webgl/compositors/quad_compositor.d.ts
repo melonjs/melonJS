@@ -65,7 +65,8 @@ export default class QuadCompositor extends Compositor {
      * @param {number} u1 - Texture UV (u1) value.
      * @param {number} v1 - Texture UV (v1) value.
      * @param {number} tint - tint color to be applied to the texture in UINT32 (argb) format
+     * @param {boolean} reupload - Force the texture to be reuploaded even if already bound
      */
-    addQuad(texture: TextureAtlas, x: number, y: number, w: number, h: number, u0: number, v0: number, u1: number, v1: number, tint: number): void;
+    addQuad(texture: TextureAtlas, x: number, y: number, w: number, h: number, u0: number, v0: number, u1: number, v1: number, tint: number, reupload?: boolean): void;
 }
 import Compositor from "./compositor.js";

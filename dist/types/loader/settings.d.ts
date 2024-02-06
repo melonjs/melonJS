@@ -9,7 +9,7 @@ export function setNocache(enable?: boolean): void;
  * @name setBaseURL
  * @memberof loader
  * @public
- * @param {string} type  - "*", "audio", binary", "image", "json", "js", "tmx", "tsx"
+ * @param {string} type  - "*", "audio", "video", "binary", "image", "json", "js", "tmx", "tsx"
  * @param {string} [url="./"] - default base URL
  * @example
  * // change the base URL relative address for audio assets
@@ -21,7 +21,7 @@ export function setBaseURL(type: string, url?: string | undefined): void;
 export let nocache: string;
 export let baseURL: {};
 /**
- * crossOrigin attribute to configure the CORS requests for Image data element.
+ * crossOrigin attribute to configure the CORS requests for Image and Video data element.
  * By default (that is, when the attribute is not specified), CORS is not used at all.
  * The "anonymous" keyword means that there will be no exchange of user credentials via cookies,
  * client-side SSL certificates or HTTP authentication as described in the Terminology section of the CORS specification.<br>
@@ -31,7 +31,7 @@ export let baseURL: {};
  * @memberof loader
  * @see https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes
  * @example
- *  // allow for cross-origin texture loading in WebGL
+ *  // allow for cross-origin texture loading
  * me.loader.crossOrigin = "anonymous";
  *
  * // set all ressources to be loaded

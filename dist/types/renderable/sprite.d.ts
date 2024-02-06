@@ -8,7 +8,7 @@ export default class Sprite extends Renderable {
      * @param {number} x - the x coordinates of the sprite object
      * @param {number} y - the y coordinates of the sprite object
      * @param {object} settings - Configuration parameters for the Sprite object
-     * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image - reference to spritesheet image, a texture atlas or to a texture atlas
+     * @param {HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|TextureAtlas|string} settings.image - reference to spritesheet image, a texture atlas, a video element, or to a texture atlas
      * @param {string} [settings.name=""] - name of this object
      * @param {string} [settings.region] - region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
      * @param {number} [settings.framewidth] - Width of a single frame within the spritesheet
@@ -35,9 +35,19 @@ export default class Sprite extends Renderable {
      *     image : mytexture,
      *     region : "npc2.png",
      * });
+     *
+     * // create a video sprite
+     * let videoSprite = new me.Sprite(0, 0, {
+     *     image : me.loader.getVideo("bigbunny"),
+     *     anchorPoint : new me.Vector2d(0.5, 0.5)
+     * });
+     * // scale the video sprite
+     * videoSprite.currentTransform.scale(2);
+     * // start playing the video (if video is preloaded with `autoplay` set to false)
+     * videoSprite.play();
      */
     constructor(x: number, y: number, settings: {
-        image: HTMLImageElement | HTMLCanvasElement | TextureAtlas | string;
+        image: HTMLImageElement | HTMLCanvasElement | HTMLVideoElement | TextureAtlas | string;
         name?: string | undefined;
         region?: string | undefined;
         framewidth?: number | undefined;
@@ -48,38 +58,39 @@ export default class Sprite extends Renderable {
         anchorPoint?: any;
     });
     /**
-     * pause and resume animation
-     * @public
      * @type {boolean}
      * @default false
-     * @name Sprite#animationpause
      */
-    public animationpause: boolean;
+    animationpause: boolean;
     /**
      * animation cycling speed (delay between frame in ms)
-     * @public
      * @type {number}
      * @default 100
-     * @name Sprite#animationspeed
      */
-    public animationspeed: number;
+    animationspeed: number;
     /**
      * global offset for the position to draw from on the source image.
-     * @public
      * @type {Vector2d}
      * @default <0.0,0.0>
-     * @name offset
-     * @memberof Sprite#
      */
-    public offset: Vector2d;
+    offset: Vector2d;
+    /**
+     * true if this is a video sprite (e.g. a HTMLVideoElement was passed as as source)
+     * @type {boolean}
+     * @default false
+     */
+    isVideo: boolean;
+    /**
+     * a callback fired when the end of a video or current animation was reached
+     * @type {Function}
+     * @default undefined
+     */
+    onended: Function;
     /**
      * The source texture object this sprite object is using
-     * @public
      * @type {TextureAtlas}
-     * @name source
-     * @memberof Sprite#
      */
-    public source: TextureAtlas;
+    source: TextureAtlas;
     anim: {};
     resetAnim: Function | (() => Sprite) | undefined;
     current: {
@@ -98,20 +109,27 @@ export default class Sprite extends Renderable {
         callback: null;
         state: boolean;
     };
-    image: HTMLCanvasElement | HTMLImageElement;
+    image: HTMLCanvasElement | HTMLImageElement | HTMLVideoElement;
     textureAtlas: any;
+    width: any;
+    height: any;
+    _onBlurFn: (() => void) | undefined;
     atlasIndices: any;
     /**
      * return the flickering state of the object
-     * @name isFlickering
-     * @memberof Sprite
      * @returns {boolean}
      */
     isFlickering(): boolean;
     /**
+     * play or resume the current animation or video
+     */
+    play(): void;
+    /**
+     * play or resume the current animation or video
+     */
+    pause(): void;
+    /**
      * make the object flicker
-     * @name flicker
-     * @memberof Sprite
      * @param {number} duration - expressed in milliseconds
      * @param {Function} callback - Function to call when flickering ends
      * @returns {Sprite} Reference to this object for method chaining
@@ -128,11 +146,8 @@ export default class Sprite extends Renderable {
      * For fixed-sized cell sprite sheet, the index list must follow the
      * logic as per the following example :<br>
      * <img src="images/spritesheet_grid.png"/>
-     * @name addAnimation
-     * @memberof Sprite
      * @param {string} name - animation id
-     * @param {number[]|string[]|object[]} index - list of sprite index or name
-     * defining the animation. Can also use objects to specify delay for each frame, see below
+     * @param {number[]|string[]|object[]} index - list of sprite index or name defining the animation. Can also use objects to specify delay for each frame, see below
      * @param {number} [animationspeed] - cycling speed for animation in ms
      * @returns {number} frame amount of frame added to the animation (delay between each frame).
      * @see Sprite#animationspeed
@@ -160,8 +175,6 @@ export default class Sprite extends Renderable {
     /**
      * set the current animation
      * this will always change the animation & set the frame to zero
-     * @name setCurrentAnimation
-     * @memberof Sprite
      * @param {string} name - animation id
      * @param {string|Function} [resetAnim] - animation id to switch to when complete, or callback
      * @param {boolean} [preserve_dt=false] - if false will reset the elapsed time counter since last frame
@@ -199,8 +212,6 @@ export default class Sprite extends Renderable {
     setCurrentAnimation(name: string, resetAnim?: string | Function | undefined, preserve_dt?: boolean | undefined): Sprite;
     /**
      * reverse the given or current animation if none is specified
-     * @name reverseAnimation
-     * @memberof Sprite
      * @param {string} [name] - animation id
      * @returns {Sprite} Reference to this object for method chaining
      * @see Sprite#animationspeed
@@ -208,8 +219,6 @@ export default class Sprite extends Renderable {
     reverseAnimation(name?: string | undefined): Sprite;
     /**
      * return true if the specified animation is the current one.
-     * @name isCurrentAnimation
-     * @memberof Sprite
      * @param {string} name - animation id
      * @returns {boolean}
      * @example
@@ -221,8 +230,6 @@ export default class Sprite extends Renderable {
     /**
      * change the current texture atlas region for this sprite
      * @see Texture.getRegion
-     * @name setRegion
-     * @memberof Sprite
      * @param {object} region - typically returned through me.Texture.getRegion()
      * @returns {Sprite} Reference to this object for method chaining
      * @example
@@ -232,8 +239,6 @@ export default class Sprite extends Renderable {
     setRegion(region: object): Sprite;
     /**
      * force the current animation frame index.
-     * @name setAnimationFrame
-     * @memberof Sprite
      * @param {number} [index=0] - animation frame index
      * @returns {Sprite} Reference to this object for method chaining
      * @example
@@ -243,15 +248,11 @@ export default class Sprite extends Renderable {
     setAnimationFrame(index?: number | undefined): Sprite;
     /**
      * return the current animation frame index.
-     * @name getCurrentAnimationFrame
-     * @memberof Sprite
      * @returns {number} current animation frame index
      */
     getCurrentAnimationFrame(): number;
     /**
      * Returns the frame object by the index.
-     * @name getAnimationFrameObjectByIndex
-     * @memberof Sprite
      * @ignore
      * @param {number} id - the frame id
      * @returns {number} if using number indices. Returns {object} containing frame data if using texture atlas

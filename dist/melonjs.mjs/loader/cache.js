@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v16.0.0
+ * melonJS Game Engine - v16.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -21,4 +21,7 @@ let binList = {};
 // contains all the JSON files
 let jsonList = {};
 
-export { binList, imgList, jsonList, tmxList };
+// contains all the video files
+let videoList = {};
+
+export { binList, imgList, jsonList, tmxList, videoList };

@@ -47,6 +47,18 @@ export default class NineSliceSprite extends Sprite {
         flipY?: number | undefined;
         anchorPoint?: any;
     });
+    set width(value: number);
+    /**
+     * width of the NineSliceSprite
+     * @type {number}
+     */
+    get width(): number;
+    set height(value: number);
+    /**
+     * height of the NineSliceSprite
+     * @type {number}
+     */
+    get height(): number;
     nss_width: number;
     nss_height: number;
     insetx: number | undefined;

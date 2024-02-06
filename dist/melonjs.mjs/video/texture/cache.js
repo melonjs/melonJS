@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v16.0.0
+ * melonJS Game Engine - v16.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -95,7 +95,7 @@ class TextureCache {
 
         if (typeof entry === "undefined") {
             if (!atlas) {
-                atlas = createAtlas(image.width, image.height, image.src ? getBasename(image.src) : undefined);
+                atlas = createAtlas(image.width || image.videoWidth, image.videoHeight, image.src ? getBasename(image.src) : undefined);
             }
             entry = new TextureAtlas(atlas, image, false);
             this.set(image, entry);
@@ -139,8 +139,8 @@ class TextureCache {
      * @ignore
      */
     set(image, texture) {
-        let width = image.width;
-        let height = image.height;
+        let width = image.width || image.videoWidth;
+        let height = image.height || image.videoHeight;
 
         // warn if a non POT texture is added to the cache when using WebGL1
         if (renderer.WebGLVersion === 1 && (!isPowerOfTwo(width) || !isPowerOfTwo(height))) {

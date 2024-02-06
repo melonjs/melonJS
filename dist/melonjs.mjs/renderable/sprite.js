@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v16.0.0
+ * melonJS Game Engine - v16.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -11,6 +11,7 @@ import { getImage } from '../loader/loader.js';
 import { TextureAtlas } from '../video/texture/atlas.js';
 import Renderable from './renderable.js';
 import Color from '../math/color.js';
+import { on, STATE_PAUSE, off } from '../system/event.js';
 
 /**
  * @classdesc
@@ -22,7 +23,7 @@ class Sprite extends Renderable {
      * @param {number} x - the x coordinates of the sprite object
      * @param {number} y - the y coordinates of the sprite object
      * @param {object} settings - Configuration parameters for the Sprite object
-     * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image - reference to spritesheet image, a texture atlas or to a texture atlas
+     * @param {HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|TextureAtlas|string} settings.image - reference to spritesheet image, a texture atlas, a video element, or to a texture atlas
      * @param {string} [settings.name=""] - name of this object
      * @param {string} [settings.region] - region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
      * @param {number} [settings.framewidth] - Width of a single frame within the spritesheet
@@ -49,6 +50,16 @@ class Sprite extends Renderable {
      *     image : mytexture,
      *     region : "npc2.png",
      * });
+     *
+     * // create a video sprite
+     * let videoSprite = new me.Sprite(0, 0, {
+     *     image : me.loader.getVideo("bigbunny"),
+     *     anchorPoint : new me.Vector2d(0.5, 0.5)
+     * });
+     * // scale the video sprite
+     * videoSprite.currentTransform.scale(2);
+     * // start playing the video (if video is preloaded with `autoplay` set to false)
+     * videoSprite.play();
      */
     constructor(x, y, settings) {
 
@@ -56,39 +67,42 @@ class Sprite extends Renderable {
         super(x, y, 0, 0);
 
         /**
-         * pause and resume animation
-         * @public
          * @type {boolean}
          * @default false
-         * @name Sprite#animationpause
          */
         this.animationpause = false;
 
         /**
          * animation cycling speed (delay between frame in ms)
-         * @public
          * @type {number}
          * @default 100
-         * @name Sprite#animationspeed
          */
         this.animationspeed = 100;
 
         /**
          * global offset for the position to draw from on the source image.
-         * @public
          * @type {Vector2d}
          * @default <0.0,0.0>
-         * @name offset
-         * @memberof Sprite#
          */
         this.offset = pool.pull("Vector2d", 0, 0);
 
         /**
+         * true if this is a video sprite (e.g. a HTMLVideoElement was passed as as source)
+         * @type {boolean}
+         * @default false
+         */
+        this.isVideo = false;
+
+        /**
+         * a callback fired when the end of a video or current animation was reached
+         * @type {Function}
+         * @default undefined
+         */
+        this.onended;
+
+        /**
          * The source texture object this sprite object is using
-         * @public
          * @type {TextureAtlas}
-         * @name source
-         * @memberof Sprite#
          */
         this.source = null;
 
@@ -106,7 +120,7 @@ class Sprite extends Renderable {
             // length of the current animation name
             length : 0,
             //current frame texture offset
-            offset : pool.pull("Vector2d"),
+            offset : pool.pull("Vector2d", 0, 0),
             // current frame size
             width : 0,
             height : 0,
@@ -145,17 +159,46 @@ class Sprite extends Renderable {
                 }
             }
         } else {
-            // HTMLImageElement/Canvas or {string}
+            // HTMLImageElement/HTMLVideoElementCanvas or {string}
             this.image = (typeof settings.image === "object") ? settings.image : getImage(settings.image);
             // throw an error if image ends up being null/undefined
             if (!this.image) {
                 throw new Error("me.Sprite: '" + settings.image + "' image/texture not found!");
             }
-            // update the default "current" frame size
-            this.width = this.current.width = settings.framewidth = settings.framewidth || this.image.width;
-            this.height = this.current.height = settings.frameheight = settings.frameheight || this.image.height;
-            this.source = renderer.cache.get(this.image, settings);
-            this.textureAtlas = this.source.getAtlas();
+
+            this.isVideo = HTMLVideoElement && this.image instanceof HTMLVideoElement;
+
+            if (this.isVideo) {
+                this.width = this.current.width = settings.framewidth = settings.framewidth || this.image.videoWidth;
+                this.height = this.current.height = settings.frameheight = settings.frameheight || this.image.videoHeight;
+                // video specific parameter
+                this.animationpause = this.image.autoplay !== true;
+                if (this.animationpause) {
+                    this.image.pause();
+                }
+
+                // pause the video when losing focus
+                this._onBlurFn = () => { this.image.pause(); };
+                on(STATE_PAUSE, this._onBlurFn);
+
+                // call the onended when the video has ended
+                this.image.onended = () => {
+                    if (typeof this.onended === "function") {
+                        // prevent the video from restarting if video.loop is false
+                        if (!this.image.loop) {
+                            this.animationpause = true;
+                        }
+                        this.onended();
+                    }
+                };
+
+            } else {
+                // update the default "current" frame size
+                this.width = this.current.width = settings.framewidth = settings.framewidth || this.image.width;
+                this.height = this.current.height = settings.frameheight = settings.frameheight || this.image.height;
+                this.source = renderer.cache.get(this.image, settings);
+                this.textureAtlas = this.source.getAtlas();
+            }
         }
 
         // store/reset the current atlas information if specified
@@ -203,7 +246,7 @@ class Sprite extends Renderable {
         }
 
         // addAnimation will return 0 if no texture atlas is defined
-        if (this.addAnimation("default", null) !== 0) {
+        if (!this.isVideo && this.addAnimation("default", null) !== 0) {
             // set as default
             this.setCurrentAnimation("default");
         }
@@ -211,8 +254,6 @@ class Sprite extends Renderable {
 
     /**
      * return the flickering state of the object
-     * @name isFlickering
-     * @memberof Sprite
      * @returns {boolean}
      */
     isFlickering() {
@@ -220,9 +261,21 @@ class Sprite extends Renderable {
     }
 
     /**
+     * play or resume the current animation or video
+     */
+    play() {
+        this.animationpause = false;
+    }
+
+    /**
+     * play or resume the current animation or video
+     */
+    pause() {
+        this.animationpause = true;
+    }
+
+    /**
      * make the object flicker
-     * @name flicker
-     * @memberof Sprite
      * @param {number} duration - expressed in milliseconds
      * @param {Function} callback - Function to call when flickering ends
      * @returns {Sprite} Reference to this object for method chaining
@@ -251,11 +304,8 @@ class Sprite extends Renderable {
      * For fixed-sized cell sprite sheet, the index list must follow the
      * logic as per the following example :<br>
      * <img src="images/spritesheet_grid.png"/>
-     * @name addAnimation
-     * @memberof Sprite
      * @param {string} name - animation id
-     * @param {number[]|string[]|object[]} index - list of sprite index or name
-     * defining the animation. Can also use objects to specify delay for each frame, see below
+     * @param {number[]|string[]|object[]} index - list of sprite index or name defining the animation. Can also use objects to specify delay for each frame, see below
      * @param {number} [animationspeed] - cycling speed for animation in ms
      * @returns {number} frame amount of frame added to the animation (delay between each frame).
      * @see Sprite#animationspeed
@@ -350,8 +400,6 @@ class Sprite extends Renderable {
     /**
      * set the current animation
      * this will always change the animation & set the frame to zero
-     * @name setCurrentAnimation
-     * @memberof Sprite
      * @param {string} name - animation id
      * @param {string|Function} [resetAnim] - animation id to switch to when complete, or callback
      * @param {boolean} [preserve_dt=false] - if false will reset the elapsed time counter since last frame
@@ -412,8 +460,6 @@ class Sprite extends Renderable {
 
     /**
      * reverse the given or current animation if none is specified
-     * @name reverseAnimation
-     * @memberof Sprite
      * @param {string} [name] - animation id
      * @returns {Sprite} Reference to this object for method chaining
      * @see Sprite#animationspeed
@@ -430,8 +476,6 @@ class Sprite extends Renderable {
 
     /**
      * return true if the specified animation is the current one.
-     * @name isCurrentAnimation
-     * @memberof Sprite
      * @param {string} name - animation id
      * @returns {boolean}
      * @example
@@ -446,8 +490,6 @@ class Sprite extends Renderable {
     /**
      * change the current texture atlas region for this sprite
      * @see Texture.getRegion
-     * @name setRegion
-     * @memberof Sprite
      * @param {object} region - typically returned through me.Texture.getRegion()
      * @returns {Sprite} Reference to this object for method chaining
      * @example
@@ -479,8 +521,6 @@ class Sprite extends Renderable {
 
     /**
      * force the current animation frame index.
-     * @name setAnimationFrame
-     * @memberof Sprite
      * @param {number} [index=0] - animation frame index
      * @returns {Sprite} Reference to this object for method chaining
      * @example
@@ -494,8 +534,6 @@ class Sprite extends Renderable {
 
     /**
      * return the current animation frame index.
-     * @name getCurrentAnimationFrame
-     * @memberof Sprite
      * @returns {number} current animation frame index
      */
     getCurrentAnimationFrame() {
@@ -504,8 +542,6 @@ class Sprite extends Renderable {
 
     /**
      * Returns the frame object by the index.
-     * @name getAnimationFrameObjectByIndex
-     * @memberof Sprite
      * @ignore
      * @param {number} id - the frame id
      * @returns {number} if using number indices. Returns {object} containing frame data if using texture atlas
@@ -517,38 +553,51 @@ class Sprite extends Renderable {
     /**
      * update function. <br>
      * automatically called by the game manager {@link game}
-     * @name update
-     * @memberof Sprite
      * @protected
      * @param {number} dt - time since the last update in milliseconds.
      * @returns {boolean} true if the Sprite is dirty
      */
     update(dt) {
-        // Update animation if necessary
-        if (!this.animationpause && this.current.length > 1) {
-            let duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
-            this.dt += dt;
-            while (this.dt >= duration) {
-                this.isDirty = true;
-                this.dt -= duration;
+        // play/pause video if necessary
+        if (this.isVideo) {
+            if (this.animationpause) {
+                this.image.pause();
+            } else if (this.image.paused) {
+                this.image.play();
+            }
+            this.isDirty = !this.image.paused;
+        } else {
+            // Update animation if necessary
+            if (!this.animationpause && this.current.length > 1) {
+                let duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
+                this.dt += dt;
+                while (this.dt >= duration) {
+                    this.isDirty = true;
+                    this.dt -= duration;
 
-                let nextFrame = (this.current.length > 1 ? this.current.idx + 1 : this.current.idx);
-                this.setAnimationFrame(nextFrame);
+                    let nextFrame = (this.current.length > 1 ? this.current.idx + 1 : this.current.idx);
+                    this.setAnimationFrame(nextFrame);
 
-                // Switch animation if we reach the end of the strip and a callback is defined
-                if (this.current.idx === 0 && typeof this.resetAnim === "function") {
-                    // Otherwise is must be callable
-                    if (this.resetAnim() === false) {
-                        // Reset to last frame
-                        this.setAnimationFrame(this.current.length - 1);
+                    // Switch animation if we reach the end of the strip and a callback is defined
+                    if (this.current.idx === 0) {
+                        if (typeof this.onended === "function") {
+                            this.onended();
+                        }
+                        if (typeof this.resetAnim === "function") {
+                            // Otherwise is must be callable
+                            if (this.resetAnim() === false) {
+                                // Reset to last frame
+                                this.setAnimationFrame(this.current.length - 1);
 
-                        // Bail early without skipping any more frames.
-                        this.dt %= duration;
-                        break;
+                                // Bail early without skipping any more frames.
+                                this.dt %= duration;
+                                break;
+                            }
+                        }
                     }
+                    // Get next frame duration
+                    duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
                 }
-                // Get next frame duration
-                duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
             }
         }
 
@@ -568,19 +617,7 @@ class Sprite extends Renderable {
     }
 
     /**
-     * Destroy function<br>
-     * @ignore
-     */
-    destroy() {
-        pool.push(this.offset);
-        this.offset = undefined;
-        super.destroy();
-    }
-
-    /**
      * draw this srite (automatically called by melonJS)
-     * @name draw
-     * @memberof Sprite
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
      * @param {Camera2d} [viewport] - the viewport to (re)draw
@@ -626,6 +663,24 @@ class Sprite extends Renderable {
             xpos, ypos,                  // dx,dy
             w, h                         // dw,dh
         );
+    }
+
+    /**
+     * Destroy function<br>
+     * @ignore
+     */
+    destroy() {
+        pool.push(this.offset);
+        this.offset = undefined;
+        if (this.isVideo) {
+            off(STATE_PAUSE, this._onBlurFn);
+            this._onBlurFn = undefined;
+            this.image.onended = undefined;
+            this.image.pause();
+            this.image.currentTime = 0;
+        }
+        this.image = undefined;
+        super.destroy();
     }
 }
 

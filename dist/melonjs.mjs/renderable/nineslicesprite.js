@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v16.0.0
+ * melonJS Game Engine - v16.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -64,9 +64,7 @@ class NineSliceSprite extends Sprite {
 
     /**
      * width of the NineSliceSprite
-     * @public
      * @type {number}
-     * @name width
      */
     get width() {
         return super.width;
@@ -77,9 +75,7 @@ class NineSliceSprite extends Sprite {
 
     /**
      * height of the NineSliceSprite
-     * @public
      * @type {number}
-     * @name height
      */
     get height() {
         return super.height;

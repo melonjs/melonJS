@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v16.0.0
+ * melonJS Game Engine - v16.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -23,6 +23,9 @@ let deviceOrientationInitialized = false;
 let swipeEnabled = true;
 // a cache DOMRect object
 let domRect = {left: 0, top: 0, x: 0, y: 0, width: 0, height: 0, right: 0, bottom: 0};
+
+// a list of supported videoCodecs;
+let videoCodecs;
 
 function disableSwipeFn(e) {
     e.preventDefault();
@@ -221,6 +224,18 @@ const hasHTML5Audio = (typeof globalThis.Audio !== "undefined");
  * @public
  */
 const sound = hasWebAudio || hasHTML5Audio;
+
+
+/**
+ * Device Video Support
+ * @name hasVideo
+ * @memberof device
+ * @type {boolean}
+ * @readonly
+ * @public
+ */
+const hasVideo = typeof globalThis.document !== "undefined" &&  !!globalThis.document.createElement("video").canPlayType;
+
 
 /**
  * Browser Local Storage capabilities <br>
@@ -927,4 +942,32 @@ function vibrate(pattern) {
     }
 }
 
-export { accelerationX, accelerationY, accelerationZ, alpha, autoFocus, beta, devicePixelRatio, enableSwipe, exitFullscreen, focus, gamma, getElement, getElementBounds, getParentBounds, getParentElement, getScreenOrientation, getStorage, hasAccelerometer, hasDeviceOrientation, hasFullscreenSupport, hasHTML5Audio, hasPointerLockSupport, hasWebAudio, isFullscreen, isLandscape, isMobile, isPortrait, isWebGLSupported, language, localStorage, lockOrientation, maxTouchPoints, nativeBase64, offscreenCanvas, onDeviceRotate, onReady, pauseOnBlur, platform, pointerEvent, requestFullscreen, resumeOnFocus, screenOrientation, sound, stopOnBlur, touch, touchEvent, unlockOrientation, unwatchAccelerometer, unwatchDeviceOrientation, vibrate, watchAccelerometer, watchDeviceOrientation, wheel };
+/**
+ * detect if the given video format is supported
+ * @function hasVideoFormat
+ * @param {"h264"|"h265"|"ogg"|"mp4"|"m4v"|"webm"|"vp9"|"hls"} codec - the video format to check for support
+ * @returns {boolean} return true if the given video format is supported
+ */
+function hasVideoFormat(codec) {
+    let result = false;
+    if (hasVideo === true) {
+        if (typeof videoCodecs === "undefined") {
+            // check for support
+            const videoElement = document.createElement("video");
+            videoCodecs = {
+                h264:videoElement.canPlayType('video/mp4; codecs="avc1.42E01E"').replace(/^no$/, ""),
+                h265:videoElement.canPlayType('video/mp4; codecs="hev1"').replace(/^no$/, ""),
+                ogg:videoElement.canPlayType('video/ogg; codecs="theora"').replace(/^no$/, ""),
+                mp4:videoElement.canPlayType('video/mp4; codecs="avc1.42E01E"').replace(/^no$/, ""),
+                m4v:videoElement.canPlayType("video/x-m4v").replace(/^no$/, ""),
+                webm:videoElement.canPlayType('video/webm; codecs="vp8, vorbis"').replace(/^no$/, ""),
+                vp9:videoElement.canPlayType('video/webm; codecs="vp9"').replace(/^no$/, ""),
+                hls:videoElement.canPlayType('application/x-mpegURL; codecs="avc1.42E01E"').replace(/^no$/, "")
+            };
+        }
+        result = !!videoCodecs[codec];
+    }
+    return result;
+}
+
+export { accelerationX, accelerationY, accelerationZ, alpha, autoFocus, beta, devicePixelRatio, enableSwipe, exitFullscreen, focus, gamma, getElement, getElementBounds, getParentBounds, getParentElement, getScreenOrientation, getStorage, hasAccelerometer, hasDeviceOrientation, hasFullscreenSupport, hasHTML5Audio, hasPointerLockSupport, hasVideo, hasVideoFormat, hasWebAudio, isFullscreen, isLandscape, isMobile, isPortrait, isWebGLSupported, language, localStorage, lockOrientation, maxTouchPoints, nativeBase64, offscreenCanvas, onDeviceRotate, onReady, pauseOnBlur, platform, pointerEvent, requestFullscreen, resumeOnFocus, screenOrientation, sound, stopOnBlur, touch, touchEvent, unlockOrientation, unwatchAccelerometer, unwatchDeviceOrientation, vibrate, watchAccelerometer, watchDeviceOrientation, wheel };

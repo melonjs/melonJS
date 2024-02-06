@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v16.0.0
+ * melonJS Game Engine - v16.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -158,7 +158,9 @@ function load(sound, onloadcb, onerrorcb) {
     audioTracks[sound.name] = new howler.Howl({
         src : urls,
         volume : howler.Howler.volume(),
-        html5 : sound.stream === true ||  sound.html5 === true,
+        autoplay : sound.autoplay === true,
+        loop : sound.loop = true,
+        html5 : sound.stream === true || sound.html5 === true,
         xhrWithCredentials : withCredentials,
         onloaderror() {
             soundLoadError.call(this, sound.name, onerrorcb);
