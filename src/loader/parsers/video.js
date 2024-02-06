@@ -62,7 +62,8 @@ export function preloadVideo(data, onload, onerror) {
     }
 
     if (typeof onload === "function") {
-        if (data.stream === true) {
+        // some mobile browser (e.g. safari) won't emit the canplay event if autoplay is disabled
+        if (data.stream === true || data.autoplay === false) {
             videoElement.onloadedmetadata = () => {
                 if (typeof onload === "function") {
                     onload();

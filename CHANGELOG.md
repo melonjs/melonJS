@@ -1,5 +1,10 @@
 # Changelog
 
+## [16.1.1] (melonJS 2) - _2024-02-06_
+
+### Fixed
+- Loader: fix an issue where some mobile browser (e.g. safari) would not emit the canplay event for video assets if autoplay is disabled
+
 ## [16.1.0] (melonJS 2) - _2024-02-06_
 
 ### Added
