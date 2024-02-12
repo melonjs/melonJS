@@ -1,5 +1,10 @@
 # Changelog
 
+## [16.1.2] (melonJS 2) - _2024-02-xx_
+
+### Fixed
+- Renderable: fix Light2d renderables not always triggering a screen refresh
+
 ## [16.1.1] (melonJS 2) - _2024-02-06_
 
 ### Fixed
