@@ -4,6 +4,7 @@
 
 ### Fixed
 - Renderable: fix Light2d renderables not always triggering a screen refresh
+- Plugin: fix version comparaison once and for all using the official semver package
 
 ## [16.1.1] (melonJS 2) - _2024-02-06_
 

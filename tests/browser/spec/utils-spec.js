@@ -167,7 +167,7 @@ describe("utils", function () {
             expect(me.utils.checkVersion("15.13.0", "15.12.0") > 0).toEqual(true);
             expect(me.utils.checkVersion("7.0.0", "15.5.0") < 0).toEqual(true);
             expect(me.utils.checkVersion("15.12.0", "15.12.0") === 0).toEqual(true);
-            
+            expect(me.utils.checkVersion("15.12.1", "16.1.1") < 0).toEqual(true);
         });
     });
 });
