@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v16.1.1
+ * melonJS Game Engine - v16.1.2
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -37,9 +37,9 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "16.1.1"
+         * @default "16.1.2"
          */
-        this.version = "16.1.1";
+        this.version = "16.1.2";
 
         /**
          * a reference to the app/game that registered this plugin
@@ -142,7 +142,7 @@ function register(plugin, name = plugin.toString().match(/ (\w+)/)[1]) {
     }
 
     // compatibility testing
-    if (checkVersion(instance.version, version) < 0) {
+    if (checkVersion(instance.version, version) > 0) {
         throw new Error("Plugin version mismatch, expected: " + instance.version + ", got: " + version);
     }
 
