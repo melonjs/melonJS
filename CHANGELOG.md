@@ -3,7 +3,6 @@
 ## [16.1.2] (melonJS 2) - _2024-02-xx_
 
 ### Fixed
-- Doc: fix relative paths in documentation (thanks @Waltibaba)
 - Renderable: fix Light2d renderables not always triggering a screen refresh
 - Plugin: fix version comparaison once and for all using the official semver package
 
