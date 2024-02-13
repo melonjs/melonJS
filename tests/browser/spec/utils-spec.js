@@ -165,9 +165,18 @@ describe("utils", function () {
             // < 0 if the second string is greater 
             // === 0 if the strings are equal
             expect(me.utils.checkVersion("15.13.0", "15.12.0") > 0).toEqual(true);
+            expect(me.utils.checkVersion("15.13", "15.12.0") > 0).toEqual(true);
+            expect(me.utils.checkVersion("16", "15.12.0") > 0).toEqual(true);
+            expect(me.utils.checkVersion("16", "15") > 0).toEqual(true);
             expect(me.utils.checkVersion("7.0.0", "15.5.0") < 0).toEqual(true);
             expect(me.utils.checkVersion("15.12.0", "15.12.0") === 0).toEqual(true);
-            
+            expect(me.utils.checkVersion("15.12.0", "15.12") === 0).toEqual(true);
+            expect(me.utils.checkVersion("15.0.0", "15.0") === 0).toEqual(true);
+            expect(me.utils.checkVersion("15.0.0", "15") === 0).toEqual(true);
+            expect(me.utils.checkVersion("15.12.1", "16.1.1") < 0).toEqual(true);
+            expect(me.utils.checkVersion("15.12.1", "16.1") < 0).toEqual(true);
+            expect(me.utils.checkVersion("15.12.1", "16") < 0).toEqual(true);
+            expect(me.utils.checkVersion("15", "16") < 0).toEqual(true);
         });
     });
 });

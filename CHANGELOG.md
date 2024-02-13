@@ -1,5 +1,14 @@
 # Changelog
 
+## [16.2.0] (melonJS 2) - _2024-02-xx_
+
+
+## [16.1.2] (melonJS 2) - _2024-02-12_
+
+### Fixed
+- Renderable: fix Light2d renderables not always triggering a screen refresh
+- Plugin: fix version comparaison once and for all using the official semver package
+
 ## [16.1.1] (melonJS 2) - _2024-02-06_
 
 ### Fixed
@@ -741,6 +750,9 @@
 
 -------------------------------------------------------------------------------
 
+[16.1.3]: https://github.com/melonjs/melonJS/compare/16.1.2...16.1.3
+[16.1.2]: https://github.com/melonjs/melonJS/compare/16.1.1...16.1.2
+[16.1.1]: https://github.com/melonjs/melonJS/compare/16.2.0...16.1.1
 [16.1.0]: https://github.com/melonjs/melonJS/compare/16.0.0...16.1.0
 [16.0.0]: https://github.com/melonjs/melonJS/compare/15.15.0...16.0.0
 [15.15.0]: https://github.com/melonjs/melonJS/compare/15.14.0...15.15.0

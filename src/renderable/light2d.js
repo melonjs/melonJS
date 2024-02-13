@@ -119,6 +119,15 @@ export default class Light2d extends Renderable {
     }
 
     /**
+     * update function
+     * @param {number} dt - time since the last update in milliseconds.
+     * @returns {boolean} true if dirty
+     */
+    update(dt) { // eslint-disable-line no-unused-vars
+        return true;
+    }
+
+    /**
      * draw this Light2d (automatically called by melonJS)
      * @name draw
      * @memberof Light2d

@@ -6,6 +6,8 @@ export * as file from "./file.js";
 export * as string from "./string.js";
 export * as function from "./function.js";
 
+import { compare } from "semver";
+
 /**
  * a collection of utility functions
  * @namespace utils
@@ -20,11 +22,9 @@ let GUID_index = 0;
  * @public
  * @memberof utils
  * @name checkVersion
- * @param {string} first - First version string to compare
- * @param {string} second - second version string to compare
- * @returns {number} comparison result <br>&lt; 0 : first &lt; second<br>
- * 0 : first == second<br>
- * &gt; 0 : first &gt; second
+ * @param {string} v1 - First version string to compare
+ * @param {string} v2 - second version string to compare
+ * @returns {number} Return 0 if v1 == v2, or 1 if v1 is greater, or -1 if v2 is greater
  * @example
  * if (me.utils.checkVersion("7.0.0") > 0) {
  *     console.error(
@@ -32,19 +32,19 @@ let GUID_index = 0;
  *     );
  * }
  */
-export function checkVersion(first, second) {
-    let a = first.split(".");
-    let b = second.split(".");
-    let len = Math.min(a.length, b.length);
-    let result = 0;
-
-    for (let i = 0; i < len; i++) {
-        if ((result = +a[i] - +b[i])) {
-            break;
-        }
+export function checkVersion(v1, v2) {
+    // Convert to proper "x.y.z" format if necessary
+    if (/^\d+$/.test(v1)) {
+        v1 += ".0.0";
+    } else if (/^\d+\.\d+$/.test(v1)) {
+        v1 += ".0";
     }
-
-    return result ? result : a.length - b.length;
+    if (/^\d+$/.test(v2)) {
+        v2 += ".0.0";
+    } else if (/^\d+\.\d+$/.test(v2)) {
+        v2 += ".0";
+    }
+    return compare(v1, v2);
 }
 
 /**

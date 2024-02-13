@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v16.1.1
+ * melonJS Game Engine - v16.1.3
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -123,6 +123,15 @@ class Light2d extends Renderable {
      */
     getVisibleArea() {
         return this.visibleArea.setShape(this.getBounds().centerX, this.getBounds().centerY, this.width, this.height);
+    }
+
+    /**
+     * update function
+     * @param {number} dt - time since the last update in milliseconds.
+     * @returns {boolean} true if dirty
+     */
+    update(dt) { // eslint-disable-line no-unused-vars
+        return true;
     }
 
     /**

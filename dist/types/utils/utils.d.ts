@@ -3,11 +3,9 @@
  * @public
  * @memberof utils
  * @name checkVersion
- * @param {string} first - First version string to compare
- * @param {string} second - second version string to compare
- * @returns {number} comparison result <br>&lt; 0 : first &lt; second<br>
- * 0 : first == second<br>
- * &gt; 0 : first &gt; second
+ * @param {string} v1 - First version string to compare
+ * @param {string} v2 - second version string to compare
+ * @returns {number} Return 0 if v1 == v2, or 1 if v1 is greater, or -1 if v2 is greater
  * @example
  * if (me.utils.checkVersion("7.0.0") > 0) {
  *     console.error(
@@ -15,7 +13,7 @@
  *     );
  * }
  */
-export function checkVersion(first: string, second: string): number;
+export function checkVersion(v1: string, v2: string): number;
 /**
  * parse the fragment (hash) from a URL and returns them into
  * @public

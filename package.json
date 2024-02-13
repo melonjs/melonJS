@@ -1,6 +1,6 @@
 {
   "name": "melonjs",
-  "version": "16.1.1",
+  "version": "16.2.0",
   "description": "melonJS Game Engine",
   "homepage": "http://www.melonjs.org/",
   "type": "module",
@@ -57,6 +57,7 @@
     "earcut": "2.2.4",
     "eventemitter3": "^5.0.1",
     "howler": "2.2.4",
+    "semver": "^7.6.0",
     "whatwg-fetch": "^3.6.20"
   },
   "devDependencies": {
@@ -97,7 +98,7 @@
     "test-node": "node build/melonjs.module.js",
     "doc-prod": "mkdirp docs/docs && webdoc --quiet --site-root melonJS/docs/ -R README.md",
     "doc-local": "mkdirp docs/docs && webdoc --quiet --site-root /docs/docs -R README.md",
-    "doc": "cd docker && ./generate-docs.sh && cd ..",
+    "doc": "npm run doc-prod",
     "serve": "python3 -m http.server",
     "prepublishOnly": "npm run dist && npm run test",
     "clean": "del-cli --force build/*.* dist/** docs/docs/**",
