@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v16.1.2
+ * melonJS Game Engine - v16.1.3
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -23184,6 +23184,17 @@ let GUID_index = 0;
  * }
  */
 function checkVersion(v1, v2) {
+    // Convert to proper "x.y.z" format if necessary
+    if (/^\d+$/.test(v1)) {
+        v1 += ".0.0";
+    } else if (/^\d+\.\d+$/.test(v1)) {
+        v1 += ".0";
+    }
+    if (/^\d+$/.test(v2)) {
+        v2 += ".0.0";
+    } else if (/^\d+\.\d+$/.test(v2)) {
+        v2 += ".0";
+    }
     return semver.compare(v1, v2);
 }
 
@@ -42655,9 +42666,9 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "16.1.2"
+         * @default "16.1.3"
          */
-        this.version = "16.1.2";
+        this.version = "16.1.3";
 
         /**
          * a reference to the app/game that registered this plugin
@@ -42939,7 +42950,7 @@ Renderer.prototype.getHeight = function()  {
  * @name version
  * @type {string}
  */
-const version = "16.1.2";
+const version = "16.1.3";
 
 /**
  * a flag indicating that melonJS is fully initialized

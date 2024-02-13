@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v16.1.2
+ * melonJS Game Engine - v16.1.3
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -43,6 +43,17 @@ let GUID_index = 0;
  * }
  */
 function checkVersion(v1, v2) {
+    // Convert to proper "x.y.z" format if necessary
+    if (/^\d+$/.test(v1)) {
+        v1 += ".0.0";
+    } else if (/^\d+\.\d+$/.test(v1)) {
+        v1 += ".0";
+    }
+    if (/^\d+$/.test(v2)) {
+        v2 += ".0.0";
+    } else if (/^\d+\.\d+$/.test(v2)) {
+        v2 += ".0";
+    }
     return semver.compare(v1, v2);
 }
 
