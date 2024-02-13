@@ -72,6 +72,7 @@
     "chromedriver": "^121.0.0",
     "cross-env": "^7.0.3",
     "del-cli": "^5.1.0",
+    "docker": "^1.0.0",
     "eslint": "^8.56.0",
     "eslint-plugin-jsdoc": "^48.0.5",
     "expect": "^29.7.0",
