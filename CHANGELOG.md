@@ -3,7 +3,7 @@
 ## [16.1.3] (melonJS 2) - _2024-02-13_
 
 ### Fixed
-- Loader: fix a regression with TMX map loading related to a semver version comparaison (`compare()` requires a "x.y.z" version format)
+- Loader: fix a regression with TMX map loading related to semver version comparison (`compare()` requires a "x.y.z" version format)
 
 ## [16.1.2] (melonJS 2) - _2024-02-12_
 
