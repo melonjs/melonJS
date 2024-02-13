@@ -33,6 +33,17 @@ let GUID_index = 0;
  * }
  */
 export function checkVersion(v1, v2) {
+    // Convert to proper "x.y.z" format if necessary
+    if (/^\d+$/.test(v1)) {
+        v1 += ".0.0";
+    } else if (/^\d+\.\d+$/.test(v1)) {
+        v1 += ".0";
+    }
+    if (/^\d+$/.test(v2)) {
+        v2 += ".0.0";
+    } else if (/^\d+\.\d+$/.test(v2)) {
+        v2 += ".0";
+    }
     return compare(v1, v2);
 }
 
