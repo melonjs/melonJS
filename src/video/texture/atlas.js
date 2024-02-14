@@ -3,7 +3,8 @@ import Sprite from "./../../renderable/sprite.js";
 import { renderer } from "./../video.js";
 import pool from "./../../system/pooling.js";
 import { getImage } from "./../../loader/loader.js";
-import { ETA } from "./../../math/math.js";
+import { parseTexturePacker } from "./parser/texturepacker.js";
+import { parseSpriteSheet } from "./parser/spritesheet.js";
 
 /**
  * create a simple 1 frame texture atlas based on the given parameters
@@ -107,9 +108,7 @@ export class TextureAtlas {
                             this.sources.set(atlas.meta.image || "default", typeof src === "string" ? getImage(src) : src);
                         }
                         this.repeat = "no-repeat";
-                    }
-                    // ShoeBox
-                    else if (atlas.meta.app.includes("ShoeBox")) {
+                    } else if (atlas.meta.app.includes("ShoeBox")) {
                         if (!atlas.meta.exporter || !atlas.meta.exporter.includes("melonJS")) {
                             throw new Error(
                                 "ShoeBox requires the JSON exporter : " +
@@ -126,8 +125,9 @@ export class TextureAtlas {
                         this.repeat = atlas.meta.repeat || "no-repeat";
                         this.sources.set("default", typeof src === "string" ? getImage(src) : src);
                     }
+
                     // initialize the atlas
-                    this.atlases.set(atlas.meta.image || "default", this.parse(atlas));
+                    this.atlases.set(atlas.meta.image || "default", parseTexturePacker(atlas, this));
 
                 } else {
                     // a regular spritesheet
@@ -141,7 +141,7 @@ export class TextureAtlas {
                             atlas.image = typeof src === "string" ? getImage(src) : src;
                         }
                         // initialize the atlas
-                        this.atlases.set("default", this.parseFromSpriteSheet(atlas));
+                        this.atlases.set("default", parseSpriteSheet(atlas, this));
                         this.sources.set("default", atlas.image);
 
                     }
@@ -160,119 +160,6 @@ export class TextureAtlas {
                 renderer.cache.set(source, this);
             });
         }
-    }
-
-    /**
-     * build an atlas from the given data
-     * @ignore
-     */
-    parse(data) {
-        let atlas = {};
-
-        data.frames.forEach((frame) => {
-            // fix wrongly formatted JSON (e.g. last dummy object in ShoeBox)
-            if (frame.hasOwnProperty("filename")) {
-                // Source coordinates
-                let s = frame.frame;
-                let trimmed = !!frame.trimmed;
-
-                let trim;
-
-                if (trimmed) {
-                    trim = {
-                        x : frame.spriteSourceSize.x,
-                        y : frame.spriteSourceSize.y,
-                        w : frame.spriteSourceSize.w,
-                        h : frame.spriteSourceSize.h
-                    };
-                }
-
-                let originX, originY;
-                // Pixel-based offset origin from the top-left of the source frame
-                let hasTextureAnchorPoint = (frame.sourceSize && frame.pivot);
-                if (hasTextureAnchorPoint) {
-                    originX = (frame.sourceSize.w * frame.pivot.x) - ((trimmed) ? trim.x : 0);
-                    originY = (frame.sourceSize.h * frame.pivot.y) - ((trimmed) ? trim.y : 0);
-                }
-
-                atlas[frame.filename] = {
-                    name         : frame.filename, // frame name
-                    texture      : data.meta.image || "default", // the source texture
-                    offset       : new Vector2d(s.x, s.y),
-                    anchorPoint  : (hasTextureAnchorPoint) ? new Vector2d(originX / s.w, originY / s.h) : null,
-                    trimmed      : trimmed,
-                    trim         : trim,
-                    width        : s.w,
-                    height       : s.h,
-                    angle        : (frame.rotated === true) ? -ETA : 0
-                };
-                this.addUVs(atlas, frame.filename, data.meta.size.w, data.meta.size.h);
-            }
-        });
-        return atlas;
-    }
-
-    /**
-     * build an atlas from the given spritesheet
-     * @ignore
-     */
-    parseFromSpriteSheet(data) {
-        let atlas = {};
-        let image = data.image;
-        let spacing = data.spacing || 0;
-        let margin = data.margin || 0;
-
-        let width = image.width;
-        let height = image.height;
-
-        // calculate the sprite count (line, col)
-        let spritecount = pool.pull("Vector2d",
-            ~~((width - margin + spacing) / (data.framewidth + spacing)),
-            ~~((height - margin + spacing) / (data.frameheight + spacing))
-        );
-
-        // verifying the texture size
-        if ((width % (data.framewidth + spacing)) !== 0 ||
-            (height % (data.frameheight + spacing)) !== 0) {
-            let computed_width = spritecount.x * (data.framewidth + spacing);
-            let computed_height = spritecount.y * (data.frameheight + spacing);
-            if (computed_width - width !== spacing && computed_height - height !== spacing) {
-                // "truncate size" if delta is different from the spacing size
-                width = computed_width;
-                height = computed_height;
-                // warning message
-                console.warn(
-                    "Spritesheet Texture for image: " + image.src +
-                    " is not divisible by " + (data.framewidth + spacing) +
-                    "x" + (data.frameheight + spacing) +
-                    ", truncating effective size to " + width + "x" + height
-                );
-            }
-        }
-
-        // build the local atlas
-        for (let frame = 0, count = spritecount.x * spritecount.y; frame < count; frame++) {
-            let name = "" + frame;
-            atlas[name] = {
-                name            : name,
-                texture         : "default", // the source texture
-                offset          : new Vector2d(
-                    margin + (spacing + data.framewidth) * (frame % spritecount.x),
-                    margin + (spacing + data.frameheight) * ~~(frame / spritecount.x)
-                ),
-                anchorPoint     : (data.anchorPoint || null),
-                trimmed         : false,
-                trim            : undefined,
-                width           : data.framewidth,
-                height          : data.frameheight,
-                angle           : 0
-            };
-            this.addUVs(atlas, name, width, height);
-        }
-
-        pool.push(spritecount);
-
-        return atlas;
     }
 
     /**
