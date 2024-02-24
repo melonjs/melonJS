@@ -1,6 +1,6 @@
 # Changelog
 
-## [16.2.0] (melonJS 2) - _2024-02-xx_
+## [17.0.0] (melonJS 2) - _2024-02-xx_
 
 ### Added
 - Sprite: add support for aseprite texture atlas  
