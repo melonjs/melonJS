@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v16.1.3
+ * melonJS Game Engine - v17.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -78,6 +78,7 @@ export { event };
 import { onReady } from './system/device.js';
 import * as device from './system/device.js';
 export { device };
+import { setNocache } from './loader/loader.js';
 import * as loader from './loader/loader.js';
 export { loader };
 import * as math from './math/math.js';
@@ -99,7 +100,6 @@ export { default as state } from './state/state.js';
 export { default as level } from './level/level.js';
 export { DraggableEntity, DroptargetEntity, GUI_Object } from './lang/deprecated.js';
 export { AUTO, CANVAS, WEBGL } from './const.js';
-import { setNocache } from './loader/settings.js';
 import { initKeyboardEvent } from './input/keyboard.js';
 
 // ES5/ES6 polyfills
@@ -112,7 +112,7 @@ import { initKeyboardEvent } from './input/keyboard.js';
  * @name version
  * @type {string}
  */
-const version = "16.1.3";
+const version = "17.0.0";
 
 /**
  * a flag indicating that melonJS is fully initialized

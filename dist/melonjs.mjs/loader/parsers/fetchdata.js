@@ -1,16 +1,15 @@
 /*!
- * melonJS Game Engine - v16.1.3
+ * melonJS Game Engine - v17.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2024 Olivier Biot (AltByte Pte Ltd)
  */
-import { nocache } from '../settings.js';
-
 /**
  * Fetches data from the specified URL.
  * @param {string} url - The URL to fetch the data from.
  * @param {string} responseType - The type of response expected ('json', 'text', 'blob', 'arrayBuffer').
+ * @param {Object} [settings] - custom settings to apply to the request (@link https://developer.mozilla.org/en-US/docs/Web/API/fetch#options)
  * @returns {Promise} A promise that resolves with the fetched data or rejects with an error.
  * @example
  * fetchData('https://api.example.com/data', 'json')
@@ -21,15 +20,15 @@ import { nocache } from '../settings.js';
  *         // Handle the error
  *     });
  */
-function fetchData(url, responseType) {
+function fetchData(url, responseType, settings = {}) {
     return new Promise((resolve, reject) => {
         fetch(url, {
             method: "GET",
             // internally nocache is a string with a generated random number
-            cache: nocache === "" ? "no-cache" : "reload",
-            credentials: "omit",
+            cache: settings.nocache === "" ? "no-cache" : "reload",
+            credentials: settings.withCredentials === true ? "include" : "omit",
             // see setting.crossorigin, "anonymous" is used for cross-origin requests
-            mode: "no-cors"
+            mode: settings.crossOrigin === "anonymous" ? "cors" : "no-cors"
         })
             .then(response => {
                 if (!response.ok) {

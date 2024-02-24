@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v16.1.3
+ * melonJS Game Engine - v17.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -243,6 +243,13 @@ class Sprite extends Renderable {
         // displaying order
         if (typeof settings.z !== "undefined") {
             this.pos.z = settings.z;
+        }
+
+        // add predefined animations if defined (e.g. aseprite)
+        if (typeof settings.anims !== "undefined") {
+            for (const anim in settings.anims) {
+                this.addAnimation(settings.anims[anim].name, settings.anims[anim].index, settings.anims[anim].speed);
+            }
         }
 
         // addAnimation will return 0 if no texture atlas is defined

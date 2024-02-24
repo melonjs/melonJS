@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v16.1.3
+ * melonJS Game Engine - v17.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -14,6 +14,7 @@ import { getExtension } from '../../utils/file.js';
  * @param {loader.Asset} img
  * @param {Function} [onload] - function to be called when the resource is loaded
  * @param {Function} [onerror] - function to be called in case of error
+ * @param {Object} [settings] - Additional settings to be passed when loading the asset
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
  * @example
@@ -24,7 +25,7 @@ import { getExtension } from '../../utils/file.js';
  *     { name : 'image4', src : 'images/image4.png'}
  * ]);
  */
-function preloadImage(img, onload, onerror) {
+function preloadImage(img, onload, onerror, settings) {
     if (typeof imgList[img.name] !== "undefined") {
         // already loaded
         return 0;
@@ -33,7 +34,7 @@ function preloadImage(img, onload, onerror) {
     // handle SVG file loading
     if (getExtension(img.src) === "svg") {
         // handle SVG file
-        fetchData(img.src, "text")
+        fetchData(img.src, "text", settings)
             .then(svgText => {
                 const svgImage = new Image();
                 svgImage.onload = function() {
@@ -57,7 +58,7 @@ function preloadImage(img, onload, onerror) {
             });
     } else {
         // handle all other image files
-        fetchData(img.src, "blob")
+        fetchData(img.src, "blob", settings)
             .then(blob => {
                 globalThis.createImageBitmap(blob)
                     .then((bitmap) => {

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v16.1.3
+ * melonJS Game Engine - v17.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -37,9 +37,9 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "16.1.3"
+         * @default "17.0.0"
          */
-        this.version = "16.1.3";
+        this.version = "17.0.0";
 
         /**
          * a reference to the app/game that registered this plugin

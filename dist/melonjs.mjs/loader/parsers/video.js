@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v16.1.3
+ * melonJS Game Engine - v17.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -9,18 +9,18 @@ import { videoList } from '../cache.js';
 import { fetchData } from './fetchdata.js';
 import { hasVideoFormat } from '../../system/device.js';
 import { getExtension } from '../../utils/file.js';
-import { crossOrigin } from '../settings.js';
 import { isDataUrl } from '../../utils/string.js';
 
 /**
  * parse/preload a Video file
  * @param {loader.Asset} data - asset data
- * @param {Function} [onload] - function to be called when the asset is loaded
+ * @param {Function} [onload] - function to be called when the resource is loaded
  * @param {Function} [onerror] - function to be called in case of error
+ * @param {Object} [settings] - Additional settings to be passed when loading the asset
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
  */
-function preloadVideo(data, onload, onerror) {
+function preloadVideo(data, onload, onerror, settings) {
 
     if (typeof videoList[data.name] !== "undefined") {
         // Video already preloaded
@@ -41,7 +41,7 @@ function preloadVideo(data, onload, onerror) {
     }
 
     if (isDataUrl(data.src)) {
-        fetchData(data.src, "blob")
+        fetchData(data.src, "blob", settings)
             .then(blob => {
                 videoElement.src = globalThis.URL.createObjectURL(blob);
             })
@@ -59,7 +59,7 @@ function preloadVideo(data, onload, onerror) {
     videoElement.setAttribute("playsinline", "true");
     videoElement.setAttribute("disablePictureInPicture", "true");
     videoElement.setAttribute("controls", "false");
-    videoElement.setAttribute("crossorigin", crossOrigin);
+    videoElement.setAttribute("crossorigin", settings.crossOrigin);
 
     if (data.autoplay === true) {
         videoElement.setAttribute("autoplay", "true");

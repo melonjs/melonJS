@@ -23,12 +23,18 @@ export function createAtlas(width: any, height: any, name?: string, repeat?: str
     }[];
 };
 /**
+ * return a string that identifies the texture atlas type
+ * @ignore
+ */
+export function identifyFormat(app: any): "melonJS" | "texturepacker" | "shoebox" | "aseprite";
+/**
  * @classdesc
  * A Texture atlas class, currently supports : <br>
  * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export (standard and multipack texture atlas) <br>
+ * - [Free Texture Packer]{@link http://free-tex-packer.com/app/} : through JSON export (standard and multipack texture atlas) <br>
+ * - [aseprite]{@link https://www.aseprite.org/} : through JSON export (standard and multipack texture atlas) <br>
  * - [ShoeBox]{@link http://renderhjs.net/shoebox/} : through JSON export using the
  * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx} <br>
- * - [Free Texture Packer]{@link http://free-tex-packer.com/app/} : through JSON export (standard and multipack texture atlas) <br>
  * - Standard (fixed cell size) spritesheet : through a {framewidth:xx, frameheight:xx, anchorPoint:me.Vector2d} object
  * );
  */
@@ -78,16 +84,6 @@ export class TextureAtlas {
      */
     atlases: Map<any, any>;
     repeat: any;
-    /**
-     * build an atlas from the given data
-     * @ignore
-     */
-    parse(data: any): {};
-    /**
-     * build an atlas from the given spritesheet
-     * @ignore
-     */
-    parseFromSpriteSheet(data: any): {};
     /**
      * return the default or specified atlas dictionnary
      * @param {string} [name] - atlas name in case of multipack textures
@@ -168,7 +164,7 @@ export class TextureAtlas {
     createSpriteFromName(name: string, settings?: object | undefined, nineSlice?: boolean | undefined): Sprite | NineSliceSprite;
     /**
      * Create an animation object using the first region found using all specified names
-     * @param {string[]|number[]} names - list of names for each sprite
+     * @param {string[]|number[]} [names] - list of names for each sprite (if not specified all defined names/entries in the atlas will be added)
      * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)
      * @param {object} [settings] - Additional settings passed to the {@link Sprite} contructor
      * @returns {Sprite}
@@ -196,6 +192,6 @@ export class TextureAtlas {
      * // set the renderable position to bottom center
      * sprite.anchorPoint.set(0.5, 1.0);
      */
-    createAnimationFromName(names: string[] | number[], settings?: object | undefined): Sprite;
+    createAnimationFromName(names?: string[] | number[] | undefined, settings?: object | undefined): Sprite;
 }
 import Sprite from "./../../renderable/sprite.js";

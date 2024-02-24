@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v16.1.3
+ * melonJS Game Engine - v17.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -54,7 +54,7 @@ var check = function (it) {
 };
 
 // https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
-var global$e =
+var global$d =
   // eslint-disable-next-line es/no-global-this -- safe
   check(typeof globalThis == 'object' && globalThis) ||
   check(typeof window == 'object' && window) ||
@@ -65,7 +65,7 @@ var global$e =
   // eslint-disable-next-line no-new-func -- fallback
   (function () { return this; })() || Function('return this')();
 
-var global$f = /*@__PURE__*/getDefaultExportFromCjs(global$e);
+var global$e = /*@__PURE__*/getDefaultExportFromCjs(global$d);
 
 var objectGetOwnPropertyDescriptor = {};
 
@@ -248,7 +248,7 @@ var isObject$5 = function (it) {
 var isObject$6 = /*@__PURE__*/getDefaultExportFromCjs(isObject$5);
 
 'use strict';
-var global$d = global$e;
+var global$c = global$d;
 var isCallable$9 = isCallable$b;
 
 var aFunction = function (argument) {
@@ -256,7 +256,7 @@ var aFunction = function (argument) {
 };
 
 var getBuiltIn$2 = function (namespace, method) {
-  return arguments.length < 2 ? aFunction(global$d[namespace]) : global$d[namespace] && global$d[namespace][method];
+  return arguments.length < 2 ? aFunction(global$c[namespace]) : global$c[namespace] && global$c[namespace][method];
 };
 
 var getBuiltIn$3 = /*@__PURE__*/getDefaultExportFromCjs(getBuiltIn$2);
@@ -274,11 +274,11 @@ var engineUserAgent = typeof navigator != 'undefined' && String(navigator.userAg
 var engineUserAgent$1 = /*@__PURE__*/getDefaultExportFromCjs(engineUserAgent);
 
 'use strict';
-var global$c = global$e;
+var global$b = global$d;
 var userAgent = engineUserAgent;
 
-var process$1 = global$c.process;
-var Deno = global$c.Deno;
+var process$1 = global$b.process;
+var Deno = global$b.Deno;
 var versions = process$1 && process$1.versions || Deno && Deno.version;
 var v8 = versions && versions.v8;
 var match, version$1;
@@ -308,9 +308,9 @@ var engineV8Version$1 = /*@__PURE__*/getDefaultExportFromCjs(engineV8Version);
 /* eslint-disable es/no-symbol -- required for testing */
 var V8_VERSION = engineV8Version;
 var fails$5 = fails$9;
-var global$b = global$e;
+var global$a = global$d;
 
-var $String$4 = global$b.String;
+var $String$4 = global$a.String;
 
 // eslint-disable-next-line es/no-object-getownpropertysymbols -- required for testing
 var symbolConstructorDetection = !!Object.getOwnPropertySymbols && !fails$5(function () {
@@ -412,7 +412,7 @@ var ordinaryToPrimitive$1 = function (input, pref) {
 
 var ordinaryToPrimitive$2 = /*@__PURE__*/getDefaultExportFromCjs(ordinaryToPrimitive$1);
 
-var shared$5 = {exports: {}};
+var sharedStore$2 = {exports: {}};
 
 'use strict';
 var isPure = false;
@@ -420,50 +420,50 @@ var isPure = false;
 var isPure$1 = /*@__PURE__*/getDefaultExportFromCjs(isPure);
 
 'use strict';
-var global$a = global$e;
+var global$9 = global$d;
 
 // eslint-disable-next-line es/no-object-defineproperty -- safe
 var defineProperty$1 = Object.defineProperty;
 
 var defineGlobalProperty$3 = function (key, value) {
   try {
-    defineProperty$1(global$a, key, { value: value, configurable: true, writable: true });
+    defineProperty$1(global$9, key, { value: value, configurable: true, writable: true });
   } catch (error) {
-    global$a[key] = value;
+    global$9[key] = value;
   } return value;
 };
 
 var defineGlobalProperty$4 = /*@__PURE__*/getDefaultExportFromCjs(defineGlobalProperty$3);
 
-'use strict';
-var global$9 = global$e;
-var defineGlobalProperty$2 = defineGlobalProperty$3;
-
-var SHARED = '__core-js_shared__';
-var store$3 = global$9[SHARED] || defineGlobalProperty$2(SHARED, {});
-
-var sharedStore = store$3;
-
-var sharedStore$1 = /*@__PURE__*/getDefaultExportFromCjs(sharedStore);
-
-var shared$3 = shared$5.exports;
+var sharedStore = sharedStore$2.exports;
 
 'use strict';
 var IS_PURE = isPure;
-var store$2 = sharedStore;
+var globalThis$3 = global$d;
+var defineGlobalProperty$2 = defineGlobalProperty$3;
 
-(shared$5.exports = function (key, value) {
-  return store$2[key] || (store$2[key] = value !== undefined ? value : {});
-})('versions', []).push({
-  version: '3.35.1',
+var SHARED = '__core-js_shared__';
+var store$3 = sharedStore$2.exports = globalThis$3[SHARED] || defineGlobalProperty$2(SHARED, {});
+
+(store$3.versions || (store$3.versions = [])).push({
+  version: '3.36.0',
   mode: IS_PURE ? 'pure' : 'global',
   copyright: '© 2014-2024 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.35.1/LICENSE',
+  license: 'https://github.com/zloirock/core-js/blob/v3.36.0/LICENSE',
   source: 'https://github.com/zloirock/core-js'
 });
 
-var sharedExports = shared$5.exports;
-var shared$4 = /*@__PURE__*/getDefaultExportFromCjs(sharedExports);
+var sharedStoreExports = sharedStore$2.exports;
+var sharedStore$1 = /*@__PURE__*/getDefaultExportFromCjs(sharedStoreExports);
+
+'use strict';
+var store$2 = sharedStoreExports;
+
+var shared$3 = function (key, value) {
+  return store$2[key] || (store$2[key] = value || {});
+};
+
+var shared$4 = /*@__PURE__*/getDefaultExportFromCjs(shared$3);
 
 'use strict';
 var requireObjectCoercible$1 = requireObjectCoercible$3;
@@ -507,8 +507,8 @@ var uid$2 = function (key) {
 var uid$3 = /*@__PURE__*/getDefaultExportFromCjs(uid$2);
 
 'use strict';
-var global$8 = global$e;
-var shared$2 = sharedExports;
+var global$8 = global$d;
+var shared$2 = shared$3;
 var hasOwn$6 = hasOwnProperty_1;
 var uid$1 = uid$2;
 var NATIVE_SYMBOL = symbolConstructorDetection;
@@ -571,7 +571,7 @@ var toPropertyKey$2 = function (argument) {
 var toPropertyKey$3 = /*@__PURE__*/getDefaultExportFromCjs(toPropertyKey$2);
 
 'use strict';
-var global$7 = global$e;
+var global$7 = global$d;
 var isObject$2 = isObject$5;
 
 var document$1 = global$7.document;
@@ -740,7 +740,7 @@ var functionName$1 = /*@__PURE__*/getDefaultExportFromCjs(functionName);
 'use strict';
 var uncurryThis$5 = functionUncurryThis;
 var isCallable$5 = isCallable$b;
-var store$1 = sharedStore;
+var store$1 = sharedStoreExports;
 
 var functionToString = uncurryThis$5(Function.toString);
 
@@ -756,7 +756,7 @@ var inspectSource$1 = store$1.inspectSource;
 var inspectSource$2 = /*@__PURE__*/getDefaultExportFromCjs(inspectSource$1);
 
 'use strict';
-var global$6 = global$e;
+var global$6 = global$d;
 var isCallable$4 = isCallable$b;
 
 var WeakMap$1 = global$6.WeakMap;
@@ -766,7 +766,7 @@ var weakMapBasicDetection = isCallable$4(WeakMap$1) && /native code/.test(String
 var weakMapBasicDetection$1 = /*@__PURE__*/getDefaultExportFromCjs(weakMapBasicDetection);
 
 'use strict';
-var shared$1 = sharedExports;
+var shared$1 = shared$3;
 var uid = uid$2;
 
 var keys = shared$1('keys');
@@ -784,11 +784,11 @@ var hiddenKeys$4 = /*@__PURE__*/getDefaultExportFromCjs(hiddenKeys$3);
 
 'use strict';
 var NATIVE_WEAK_MAP = weakMapBasicDetection;
-var global$5 = global$e;
+var global$5 = global$d;
 var isObject = isObject$5;
 var createNonEnumerableProperty$1 = createNonEnumerableProperty$2;
 var hasOwn$3 = hasOwnProperty_1;
-var shared = sharedStore;
+var shared = sharedStoreExports;
 var sharedKey = sharedKey$1;
 var hiddenKeys$2 = hiddenKeys$3;
 
@@ -1028,6 +1028,7 @@ var createMethod$1 = function (IS_INCLUDES) {
   return function ($this, el, fromIndex) {
     var O = toIndexedObject$1($this);
     var length = lengthOfArrayLike(O);
+    if (length === 0) return !IS_INCLUDES && -1;
     var index = toAbsoluteIndex(fromIndex, length);
     var value;
     // Array#includes uses SameValueZero equality algorithm
@@ -1176,7 +1177,7 @@ var isForced_1 = isForced$1;
 var isForced$2 = /*@__PURE__*/getDefaultExportFromCjs(isForced_1);
 
 'use strict';
-var global$4 = global$e;
+var global$4 = global$d;
 var getOwnPropertyDescriptor = objectGetOwnPropertyDescriptor.f;
 var createNonEnumerableProperty = createNonEnumerableProperty$2;
 var defineBuiltIn = defineBuiltIn$1;
@@ -1235,7 +1236,7 @@ var _export$1 = /*@__PURE__*/getDefaultExportFromCjs(_export);
 
 'use strict';
 var $$4 = _export;
-var global$3 = global$e;
+var global$3 = global$d;
 
 // `globalThis` object
 // https://tc39.es/ecma262/#sec-globalthis
@@ -1248,7 +1249,7 @@ $$4({ global: true, forced: global$3.globalThis !== global$3 }, {
 'use strict';
 // https://github.com/tc39/proposal-global
 
-var global$2 = global$e;
+var global$2 = global$d;
 
 var globalThis$1 = global$2;
 
@@ -1414,7 +1415,7 @@ $$2({ target: 'String', proto: true, name: 'trimStart', forced: ''.trimStart !==
 });
 
 'use strict';
-var global$1 = global$e;
+var global$1 = global$d;
 var uncurryThis = functionUncurryThis;
 
 var entryUnbind$2 = function (CONSTRUCTOR, METHOD) {
@@ -13645,90 +13646,6 @@ var howler$1 = {};
 
 var howler = /*@__PURE__*/getDefaultExportFromCjs(howler$1);
 
-//  to enable/disable caching
-let nocache = "";
-
-// baseURL
-let baseURL = {};
-
-
-/**
- * crossOrigin attribute to configure the CORS requests for Image and Video data element.
- * By default (that is, when the attribute is not specified), CORS is not used at all.
- * The "anonymous" keyword means that there will be no exchange of user credentials via cookies,
- * client-side SSL certificates or HTTP authentication as described in the Terminology section of the CORS specification.<br>
- * @type {string}
- * @name crossOrigin
- * @default undefined
- * @memberof loader
- * @see https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes
- * @example
- *  // allow for cross-origin texture loading
- * me.loader.crossOrigin = "anonymous";
- *
- * // set all ressources to be loaded
- * me.loader.preload(game.resources, () => this.loaded());
- */
-let crossOrigin;
-
-/**
- * indicates whether or not cross-site Access-Control requests should be made using credentials such as cookies,
- * authorization headers or TLS client certificates. Setting withCredentials has no effect on same-site requests.
- * @public
- * @type {boolean}
- * @name withCredentials
- * @default false
- * @memberof loader
- * @see https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials
- * @example
- *  // enable withCredentials
- * me.loader.withCredentials = true;
- *
- * // set all ressources to be loaded
- * me.loader.preload(game.resources, () => this.loaded());
- */
-let withCredentials = false;
-
-/**
- * enable the nocache mechanism
- * @ignore
- */
-function setNocache(enable = false) {
-    nocache = enable ? "?" + ~~(Math.random() * 10000000) : "";
-}
-
-/**
- * change the default baseURL for the given asset type.<br>
- * (this will prepend the asset URL and must finish with a '/')
- * @name setBaseURL
- * @memberof loader
- * @public
- * @param {string} type  - "*", "audio", "video", "binary", "image", "json", "js", "tmx", "tsx"
- * @param {string} [url="./"] - default base URL
- * @example
- * // change the base URL relative address for audio assets
- * me.loader.setBaseURL("audio", "data/audio/");
- * // change the base URL absolute address for all object types
- * me.loader.setBaseURL("*", "http://myurl.com/")
- */
-function setBaseURL(type, url) {
-    if (type !== "*") {
-        baseURL[type] = url;
-    } else {
-        // "wildcards"
-        baseURL["audio"] = url;
-        baseURL["video"] = url;
-        baseURL["binary"] = url;
-        baseURL["image"] = url;
-        baseURL["json"] = url;
-        baseURL["js"] = url;
-        baseURL["tmx"] = url;
-        baseURL["tsx"] = url;
-        // XXX ?
-        //baseURL["fontface"] = url;
-    }
-}
-
 /**
  * a collection of string utility functions
  * @namespace utils.string
@@ -13951,9 +13868,10 @@ function disable() {
  * @param {loader.Asset} sound
  * @param {Function} [onloadcb] - function to be called when the resource is loaded
  * @param {Function} [onerrorcb] - function to be called in case of error
+ * @param {Object} [settings] - custom settings to apply to the request (@link https://developer.mozilla.org/en-US/docs/Web/API/fetch#options)
  * @returns {number} the amount of asset loaded (always 1 if successfull)
  */
-function load$1(sound, onloadcb, onerrorcb) {
+function load$1(sound, onloadcb, onerrorcb, settings = {}) {
     let urls = [];
     if (audioExts.length === 0) {
         throw new Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
@@ -13962,7 +13880,7 @@ function load$1(sound, onloadcb, onerrorcb) {
         urls.push(sound.src);
     } else {
         for (let i = 0; i < audioExts.length; i++) {
-            urls.push(sound.src + sound.name + "." + audioExts[i] + nocache);
+            urls.push(sound.src + sound.name + "." + audioExts[i] + settings.nocache);
         }
     }
 
@@ -13972,7 +13890,7 @@ function load$1(sound, onloadcb, onerrorcb) {
         autoplay : sound.autoplay === true,
         loop : sound.loop = true,
         html5 : sound.stream === true || sound.html5 === true,
-        xhrWithCredentials : withCredentials,
+        xhrWithCredentials : settings.withCredentials,
         onloaderror() {
             soundLoadError.call(this, sound.name, onerrorcb);
         },
@@ -19875,6 +19793,7 @@ let videoList = {};
  * Fetches data from the specified URL.
  * @param {string} url - The URL to fetch the data from.
  * @param {string} responseType - The type of response expected ('json', 'text', 'blob', 'arrayBuffer').
+ * @param {Object} [settings] - custom settings to apply to the request (@link https://developer.mozilla.org/en-US/docs/Web/API/fetch#options)
  * @returns {Promise} A promise that resolves with the fetched data or rejects with an error.
  * @example
  * fetchData('https://api.example.com/data', 'json')
@@ -19885,15 +19804,15 @@ let videoList = {};
  *         // Handle the error
  *     });
  */
-function fetchData(url, responseType) {
+function fetchData(url, responseType, settings = {}) {
     return new Promise((resolve, reject) => {
         fetch(url, {
             method: "GET",
             // internally nocache is a string with a generated random number
-            cache: nocache === "" ? "no-cache" : "reload",
-            credentials: withCredentials ? "include" : "omit",
+            cache: settings.nocache === "" ? "no-cache" : "reload",
+            credentials: settings.withCredentials === true ? "include" : "omit",
             // see setting.crossorigin, "anonymous" is used for cross-origin requests
-            mode: crossOrigin === "anonymous" ? "cors" : "no-cors"
+            mode: settings.crossOrigin === "anonymous" ? "cors" : "no-cors"
         })
             .then(response => {
                 if (!response.ok) {
@@ -19928,6 +19847,7 @@ function fetchData(url, responseType) {
  * @param {loader.Asset} img
  * @param {Function} [onload] - function to be called when the resource is loaded
  * @param {Function} [onerror] - function to be called in case of error
+ * @param {Object} [settings] - Additional settings to be passed when loading the asset
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
  * @example
@@ -19938,7 +19858,7 @@ function fetchData(url, responseType) {
  *     { name : 'image4', src : 'images/image4.png'}
  * ]);
  */
-function preloadImage(img, onload, onerror) {
+function preloadImage(img, onload, onerror, settings) {
     if (typeof imgList[img.name] !== "undefined") {
         // already loaded
         return 0;
@@ -19947,7 +19867,7 @@ function preloadImage(img, onload, onerror) {
     // handle SVG file loading
     if (getExtension(img.src) === "svg") {
         // handle SVG file
-        fetchData(img.src, "text")
+        fetchData(img.src, "text", settings)
             .then(svgText => {
                 const svgImage = new Image();
                 svgImage.onload = function() {
@@ -19971,7 +19891,7 @@ function preloadImage(img, onload, onerror) {
             });
     } else {
         // handle all other image files
-        fetchData(img.src, "blob")
+        fetchData(img.src, "blob", settings)
             .then(blob => {
                 globalThis.createImageBitmap(blob)
                     .then((bitmap) => {
@@ -25513,6 +25433,192 @@ class Renderer {
 }
 
 /**
+ * parse the given data and return a corresponding atlas
+ * @param {Object} data - atlas data information. See {@link loader.getJSON}
+ * @param {TextureAtlas} textureAtlas - the texture atlas class calling the parser
+ * @returns {Object} the corresponding Atlas
+ * @ignore
+ */
+function parseTexturePacker(data, textureAtlas) {
+    let atlas = {};
+
+    data.frames.forEach((frame) => {
+        // fix wrongly formatted JSON (e.g. last dummy object in ShoeBox)
+        if (frame.hasOwnProperty("filename")) {
+            // Source coordinates
+            let s = frame.frame;
+            let trimmed = !!frame.trimmed;
+
+            let trim;
+
+            if (trimmed) {
+                trim = {
+                    x : frame.spriteSourceSize.x,
+                    y : frame.spriteSourceSize.y,
+                    w : frame.spriteSourceSize.w,
+                    h : frame.spriteSourceSize.h
+                };
+            }
+
+            let originX, originY;
+            // Pixel-based offset origin from the top-left of the source frame
+            let hasTextureAnchorPoint = (frame.sourceSize && frame.pivot);
+            if (hasTextureAnchorPoint) {
+                originX = (frame.sourceSize.w * frame.pivot.x) - ((trimmed) ? trim.x : 0);
+                originY = (frame.sourceSize.h * frame.pivot.y) - ((trimmed) ? trim.y : 0);
+            }
+
+            atlas[frame.filename] = {
+                name         : frame.filename, // frame name
+                texture      : data.meta.image || "default", // the source texture
+                offset       : new Vector2d(s.x, s.y),
+                anchorPoint  : (hasTextureAnchorPoint) ? new Vector2d(originX / s.w, originY / s.h) : null,
+                trimmed      : trimmed,
+                trim         : trim,
+                width        : s.w,
+                height       : s.h,
+                angle        : (frame.rotated === true) ? -ETA : 0
+            };
+            textureAtlas.addUVs(atlas, frame.filename, data.meta.size.w, data.meta.size.h);
+        }
+    });
+    return atlas;
+}
+
+/**
+ * parse the given data and return a corresponding atlas
+ * @param {Object} data - atlas data information. See {@link loader.getJSON}
+ * @param {TextureAtlas} textureAtlas - the texture atlas class calling the parser
+ * @returns {Object} the corresponding Atlas
+ * @ignore
+ */
+function parseSpriteSheet(data, textureAtlas) {
+    let atlas = {};
+    let image = data.image;
+    let spacing = data.spacing || 0;
+    let margin = data.margin || 0;
+
+    let width = image.width;
+    let height = image.height;
+
+    // calculate the sprite count (line, col)
+    let spritecount = pool.pull("Vector2d",
+        ~~((width - margin + spacing) / (data.framewidth + spacing)),
+        ~~((height - margin + spacing) / (data.frameheight + spacing))
+    );
+
+    // verifying the texture size
+    if ((width % (data.framewidth + spacing)) !== 0 ||
+        (height % (data.frameheight + spacing)) !== 0) {
+        let computed_width = spritecount.x * (data.framewidth + spacing);
+        let computed_height = spritecount.y * (data.frameheight + spacing);
+        if (computed_width - width !== spacing && computed_height - height !== spacing) {
+            // "truncate size" if delta is different from the spacing size
+            width = computed_width;
+            height = computed_height;
+            // warning message
+            console.warn(
+                "Spritesheet Texture for image: " + image.src +
+                " is not divisible by " + (data.framewidth + spacing) +
+                "x" + (data.frameheight + spacing) +
+                ", truncating effective size to " + width + "x" + height
+            );
+        }
+    }
+
+    // build the local atlas
+    for (let frame = 0, count = spritecount.x * spritecount.y; frame < count; frame++) {
+        let name = "" + frame;
+        atlas[name] = {
+            name            : name,
+            texture         : "default", // the source texture
+            offset          : new Vector2d(
+                margin + (spacing + data.framewidth) * (frame % spritecount.x),
+                margin + (spacing + data.frameheight) * ~~(frame / spritecount.x)
+            ),
+            anchorPoint     : (data.anchorPoint || null),
+            trimmed         : false,
+            trim            : undefined,
+            width           : data.framewidth,
+            height          : data.frameheight,
+            angle           : 0
+        };
+        textureAtlas.addUVs(atlas, name, width, height);
+    }
+
+    pool.push(spritecount);
+
+    return atlas;
+}
+
+/**
+ * parse the given data and return a corresponding atlas
+ * @param {Object} data - atlas data information. See {@link loader.getJSON}
+ * @param {TextureAtlas} textureAtlas - the texture atlas class calling the parser
+ * @returns {Object} the corresponding Atlas
+ * @ignore
+ */
+function parseAseprite(data, textureAtlas) {
+    let atlas = {};
+
+    const frames = data.frames;
+    for (const name in frames) {
+        let frame = frames[name].frame;
+        let trimmed = !!frame.trimmed;
+
+        let trim;
+
+        if (trimmed) {
+            trim = {
+                x : frame.spriteSourceSize.x,
+                y : frame.spriteSourceSize.y,
+                w : frame.spriteSourceSize.w,
+                h : frame.spriteSourceSize.h
+            };
+        }
+
+        let originX, originY;
+        // Pixel-based offset origin from the top-left of the source frame
+        let hasTextureAnchorPoint = (frame.sourceSize && frame.pivot);
+        if (hasTextureAnchorPoint) {
+            originX = (frame.sourceSize.w * frame.pivot.x) - ((trimmed) ? trim.x : 0);
+            originY = (frame.sourceSize.h * frame.pivot.y) - ((trimmed) ? trim.y : 0);
+        }
+
+        atlas[name] = {
+            name         : name, // frame name
+            texture      : data.meta.image || "default", // the source texture
+            offset       : new Vector2d(frame.x, frame.y),
+            anchorPoint  : (hasTextureAnchorPoint) ? new Vector2d(originX / frame.w, originY / frame.h) : null,
+            trimmed      : trimmed,
+            trim         : trim,
+            width        : frame.w,
+            height       : frame.h,
+            angle        : (frame.rotated === true) ? -ETA : 0
+        };
+        textureAtlas.addUVs(atlas, name, data.meta.size.w, data.meta.size.h);
+    }
+
+    const anims = {};
+    for (const name in data.meta.frameTags) {
+        const anim = data.meta.frameTags[name];
+        // aseprite provide a range from [from] to [to], so build the corresponding index array
+        const indexArray = Array.from({ length: anim.to - anim.from + 1 }, (_, i) => anim.from + i);
+        anims[name] = {
+            name: anim.name,
+            index: indexArray,
+            // aseprite provide animation speed between frame, melonJS expect total duration for a given animation
+            speed: 10 * (indexArray.length - 1),
+            // only "forward" is supported for now
+            direction: anim.direction
+        };
+    }
+    atlas.anims = anims;
+
+    return atlas;
+}
+
+/**
  * create a simple 1 frame texture atlas based on the given parameters
  * @ignore
  */
@@ -25532,12 +25638,33 @@ function createAtlas(width, height, name = "default", repeat = "no-repeat") {
 }
 
 /**
+ * return a string that identifies the texture atlas type
+ * @ignore
+ */
+function identifyFormat(app) {
+    if (app.includes("texturepacker") || app.includes("free-tex-packer")) {
+        return "texturepacker";
+    } else if (app.includes("shoebox")) {
+        return "shoebox";
+    } else if (app.includes("aseprite")) {
+        return "aseprite";
+    } else if (app.includes("melonJS")) {
+        return "melonJS";
+    } else {
+        throw new Error("Unknown texture atlas format: " + app);
+    }
+
+
+}
+
+/**
  * @classdesc
  * A Texture atlas class, currently supports : <br>
  * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export (standard and multipack texture atlas) <br>
+ * - [Free Texture Packer]{@link http://free-tex-packer.com/app/} : through JSON export (standard and multipack texture atlas) <br>
+ * - [aseprite]{@link https://www.aseprite.org/} : through JSON export (standard and multipack texture atlas) <br>
  * - [ShoeBox]{@link http://renderhjs.net/shoebox/} : through JSON export using the
  * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx} <br>
- * - [Free Texture Packer]{@link http://free-tex-packer.com/app/} : through JSON export (standard and multipack texture atlas) <br>
  * - Standard (fixed cell size) spritesheet : through a {framewidth:xx, frameheight:xx, anchorPoint:me.Vector2d} object
  * );
  */
@@ -25597,45 +25724,50 @@ class TextureAtlas {
                 let atlas = atlases[i];
 
                 if (typeof(atlas.meta) !== "undefined") {
-                    // Texture Packer or Free Texture Packer
-                    if (atlas.meta.app.includes("texturepacker") || atlas.meta.app.includes("free-tex-packer")) {
-                        this.format = "texturepacker";
-                        // set the texture
-                        if (typeof(src) === "undefined") {
-                            // get the texture name from the atlas meta data
-                            let image = getImage(atlas.meta.image);
-                            if (!image) {
+                    this.format = identifyFormat(atlas.meta.app);
+                    this.repeat = atlas.meta.repeat || "no-repeat";
+                    switch (this.format) {
+                        case "texturepacker":
+                        case "aseprite":
+                            // set the texture
+                            if (typeof(src) === "undefined") {
+                                // get the texture name from the atlas meta data
+                                let image = getImage(atlas.meta.image);
+                                if (!image) {
+                                    throw new Error(
+                                        "Atlas texture '" + image + "' not found"
+                                    );
+                                }
+                                this.sources.set(atlas.meta.image, image);
+                            } else {
+                                this.sources.set(atlas.meta.image || "default", typeof src === "string" ? getImage(src) : src);
+                            }
+                            // initialize the atlas
+                            if (this.format === "texturepacker") {
+                                this.atlases.set(atlas.meta.image || "default", parseTexturePacker(atlas, this));
+                            } else {
+                                this.atlases.set(atlas.meta.image || "default", parseAseprite(atlas, this));
+                            }
+                            break;
+                        case "shoebox":
+                            if (!atlas.meta.exporter || !atlas.meta.exporter.includes("melonJS")) {
                                 throw new Error(
-                                    "Atlas texture '" + image + "' not found"
+                                    "ShoeBox requires the JSON exporter : " +
+                                    "https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx"
                                 );
                             }
-                            this.sources.set(atlas.meta.image, image);
-                        } else {
-                            this.sources.set(atlas.meta.image || "default", typeof src === "string" ? getImage(src) : src);
-                        }
-                        this.repeat = "no-repeat";
+                            this.sources.set("default", typeof src === "string" ? getImage(src) : src);
+                            // initialize the atlas
+                            this.atlases.set(atlas.meta.image || "default", parseTexturePacker(atlas, this));
+                            break;
+                        case "melonJS":
+                            this.sources.set("default", typeof src === "string" ? getImage(src) : src);
+                            // initialize the atlas
+                            this.atlases.set(atlas.meta.image || "default", parseTexturePacker(atlas, this));
+                            break;
+                        default:
+                            throw new Error("Unknown texture atlas format: " + atlas.meta.app);
                     }
-                    // ShoeBox
-                    else if (atlas.meta.app.includes("ShoeBox")) {
-                        if (!atlas.meta.exporter || !atlas.meta.exporter.includes("melonJS")) {
-                            throw new Error(
-                                "ShoeBox requires the JSON exporter : " +
-                                "https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx"
-                            );
-                        }
-                        this.format = "ShoeBox";
-                        this.repeat = "no-repeat";
-                        this.sources.set("default", typeof src === "string" ? getImage(src) : src);
-                    }
-                    // Internal texture atlas
-                    else if (atlas.meta.app.includes("melonJS")) {
-                        this.format = "melonJS";
-                        this.repeat = atlas.meta.repeat || "no-repeat";
-                        this.sources.set("default", typeof src === "string" ? getImage(src) : src);
-                    }
-                    // initialize the atlas
-                    this.atlases.set(atlas.meta.image || "default", this.parse(atlas));
-
                 } else {
                     // a regular spritesheet
                     if (typeof(atlas.framewidth) !== "undefined" &&
@@ -25648,7 +25780,7 @@ class TextureAtlas {
                             atlas.image = typeof src === "string" ? getImage(src) : src;
                         }
                         // initialize the atlas
-                        this.atlases.set("default", this.parseFromSpriteSheet(atlas));
+                        this.atlases.set("default", parseSpriteSheet(atlas, this));
                         this.sources.set("default", atlas.image);
 
                     }
@@ -25667,119 +25799,6 @@ class TextureAtlas {
                 renderer.cache.set(source, this);
             });
         }
-    }
-
-    /**
-     * build an atlas from the given data
-     * @ignore
-     */
-    parse(data) {
-        let atlas = {};
-
-        data.frames.forEach((frame) => {
-            // fix wrongly formatted JSON (e.g. last dummy object in ShoeBox)
-            if (frame.hasOwnProperty("filename")) {
-                // Source coordinates
-                let s = frame.frame;
-                let trimmed = !!frame.trimmed;
-
-                let trim;
-
-                if (trimmed) {
-                    trim = {
-                        x : frame.spriteSourceSize.x,
-                        y : frame.spriteSourceSize.y,
-                        w : frame.spriteSourceSize.w,
-                        h : frame.spriteSourceSize.h
-                    };
-                }
-
-                let originX, originY;
-                // Pixel-based offset origin from the top-left of the source frame
-                let hasTextureAnchorPoint = (frame.sourceSize && frame.pivot);
-                if (hasTextureAnchorPoint) {
-                    originX = (frame.sourceSize.w * frame.pivot.x) - ((trimmed) ? trim.x : 0);
-                    originY = (frame.sourceSize.h * frame.pivot.y) - ((trimmed) ? trim.y : 0);
-                }
-
-                atlas[frame.filename] = {
-                    name         : frame.filename, // frame name
-                    texture      : data.meta.image || "default", // the source texture
-                    offset       : new Vector2d(s.x, s.y),
-                    anchorPoint  : (hasTextureAnchorPoint) ? new Vector2d(originX / s.w, originY / s.h) : null,
-                    trimmed      : trimmed,
-                    trim         : trim,
-                    width        : s.w,
-                    height       : s.h,
-                    angle        : (frame.rotated === true) ? -ETA : 0
-                };
-                this.addUVs(atlas, frame.filename, data.meta.size.w, data.meta.size.h);
-            }
-        });
-        return atlas;
-    }
-
-    /**
-     * build an atlas from the given spritesheet
-     * @ignore
-     */
-    parseFromSpriteSheet(data) {
-        let atlas = {};
-        let image = data.image;
-        let spacing = data.spacing || 0;
-        let margin = data.margin || 0;
-
-        let width = image.width;
-        let height = image.height;
-
-        // calculate the sprite count (line, col)
-        let spritecount = pool.pull("Vector2d",
-            ~~((width - margin + spacing) / (data.framewidth + spacing)),
-            ~~((height - margin + spacing) / (data.frameheight + spacing))
-        );
-
-        // verifying the texture size
-        if ((width % (data.framewidth + spacing)) !== 0 ||
-            (height % (data.frameheight + spacing)) !== 0) {
-            let computed_width = spritecount.x * (data.framewidth + spacing);
-            let computed_height = spritecount.y * (data.frameheight + spacing);
-            if (computed_width - width !== spacing && computed_height - height !== spacing) {
-                // "truncate size" if delta is different from the spacing size
-                width = computed_width;
-                height = computed_height;
-                // warning message
-                console.warn(
-                    "Spritesheet Texture for image: " + image.src +
-                    " is not divisible by " + (data.framewidth + spacing) +
-                    "x" + (data.frameheight + spacing) +
-                    ", truncating effective size to " + width + "x" + height
-                );
-            }
-        }
-
-        // build the local atlas
-        for (let frame = 0, count = spritecount.x * spritecount.y; frame < count; frame++) {
-            let name = "" + frame;
-            atlas[name] = {
-                name            : name,
-                texture         : "default", // the source texture
-                offset          : new Vector2d(
-                    margin + (spacing + data.framewidth) * (frame % spritecount.x),
-                    margin + (spacing + data.frameheight) * ~~(frame / spritecount.x)
-                ),
-                anchorPoint     : (data.anchorPoint || null),
-                trimmed         : false,
-                trim            : undefined,
-                width           : data.framewidth,
-                height          : data.frameheight,
-                angle           : 0
-            };
-            this.addUVs(atlas, name, width, height);
-        }
-
-        pool.push(spritecount);
-
-        return atlas;
     }
 
     /**
@@ -25965,7 +25984,7 @@ class TextureAtlas {
 
     /**
      * Create an animation object using the first region found using all specified names
-     * @param {string[]|number[]} names - list of names for each sprite
+     * @param {string[]|number[]} [names] - list of names for each sprite (if not specified all defined names/entries in the atlas will be added)
      * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)
      * @param {object} [settings] - Additional settings passed to the {@link Sprite} contructor
      * @returns {Sprite}
@@ -25996,22 +26015,29 @@ class TextureAtlas {
     createAnimationFromName(names, settings) {
         let tpAtlas = [], indices = {};
         let width = 0, height = 0;
-        let region;
+        const textureAtlas = this.getAtlas();
         // iterate through the given names
         // and create a "normalized" atlas
-        for (let i = 0; i < names.length; ++i) {
-            region = this.getRegion(names[i]);
+
+        if (typeof names === "undefined") {
+            names = textureAtlas;
+        }
+
+        for (const i in names) {
+            const name = Array.isArray(names) ? names[i] : i;
+            const region = this.getRegion(name);
             if (region == null) {
                 // throw an error
-                throw new Error("Texture - region for " + names[i] + " not found");
+                throw new Error("Texture - region for " + name + " not found");
             }
-            tpAtlas[i] = region;
+            tpAtlas.push(region);
             // save the corresponding index
-            indices[names[i]] = i;
+            indices[name] = tpAtlas.length - 1;
             // calculate the max size of a frame
             width = Math.max(region.width, width);
             height = Math.max(region.height, height);
         }
+
         // instantiate a new animation sheet object
         return new Sprite(0, 0, Object.assign({
             image: this,
@@ -26020,6 +26046,7 @@ class TextureAtlas {
             margin: 0,
             spacing: 0,
             atlas: tpAtlas,
+            anims: textureAtlas.anims,
             atlasIndices: indices
         }, settings || {}));
     }
@@ -30662,12 +30689,13 @@ let level = {
  * parse/preload a TMX file
  * @param {loader.Asset} data - asset data
  * @param {Function} [onload] - function to be called when the asset is loaded
+ * @param {Function} [onload] - function to be called when the resource is loaded
  * @param {Function} [onerror] - function to be called in case of error
- * @param {Function} [fetchData] - function to use instead of default window.fetch, has some error handling and things
+ * @param {Object} [settings] - Additional settings to be passed when loading the asset
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
  */
-function preloadTMX(tmxData, onload, onerror) {
+function preloadTMX(tmxData, onload, onerror, settings) {
     if (typeof tmxList[tmxData.name] !== "undefined") {
         // already loaded
         return 0;
@@ -30695,7 +30723,7 @@ function preloadTMX(tmxData, onload, onerror) {
         return;
     }
 
-    fetchData(tmxData.src, "text")
+    fetchData(tmxData.src, "text", settings)
         .then(response => {
             if (typeof response !== "string") {
                 throw new Error("Invalid response type");
@@ -30756,18 +30784,19 @@ function preloadTMX(tmxData, onload, onerror) {
 /**
  * parse/preload a JSON files
  * @param {loader.Asset} data - asset data
- * @param {Function} [onload] - function to be called when the asset is loaded
+ * @param {Function} [onload] - function to be called when the resource is loaded
  * @param {Function} [onerror] - function to be called in case of error
+ * @param {Object} [settings] - Additional settings to be passed when loading the asset
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
  */
-function preloadJSON(data, onload, onerror) {
+function preloadJSON(data, onload, onerror, settings) {
     if (typeof jsonList[data.name] !== "undefined") {
         // already loaded
         return 0;
     }
 
-    fetchData(data.src, "json")
+    fetchData(data.src, "json", settings)
         .then(response => {
             jsonList[data.name] = response;
             if (typeof onload === "function") {
@@ -30789,12 +30818,13 @@ function preloadJSON(data, onload, onerror) {
  * @param {loader.Asset} data - asset data
  * @param {Function} [onload] - function to be called when the asset is loaded
  * @param {Function} [onerror] - function to be called in case of error
+ * @param {Object} [settings] - Additional settings to be passed when loading the asset
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
  */
-function preloadBinary(data, onload, onerror) {
+function preloadBinary(data, onload, onerror, settings) {
 
-    fetchData(data.src, "arrayBuffer")
+    fetchData(data.src, "arrayBuffer", settings)
         .then(response => {
             // this method is native and might be slightly more efficient
             const decoder = new TextDecoder(); // the default for this is 'utf-8'
@@ -30817,18 +30847,19 @@ function preloadBinary(data, onload, onerror) {
 /**
  * parse/preload a Javascript files
  * @param {loader.Asset} data - asset data
- * @param {Function} [onload] - function to be called when the asset is loaded
+ * @param {Function} [onload] - function to be called when the resource is loaded
  * @param {Function} [onerror] - function to be called in case of error
+ * @param {Object} [settings] - Additional settings to be passed when loading the asset
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
  */
-function preloadJavascript(data, onload, onerror) {
+function preloadJavascript(data, onload, onerror, settings) {
     let script = globalThis.document.createElement("script");
 
     script.src = data.src;
     script.type = "text/javascript";
     if (typeof (crossOrigin) === "string") {
-        script.crossOrigin = crossOrigin;
+        script.crossOrigin = settings.crossOrigin;
     }
     script.defer = true;
 
@@ -30854,12 +30885,13 @@ function preloadJavascript(data, onload, onerror) {
 /**
  * parse/preload a Video file
  * @param {loader.Asset} data - asset data
- * @param {Function} [onload] - function to be called when the asset is loaded
+ * @param {Function} [onload] - function to be called when the resource is loaded
  * @param {Function} [onerror] - function to be called in case of error
+ * @param {Object} [settings] - Additional settings to be passed when loading the asset
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
  */
-function preloadVideo(data, onload, onerror) {
+function preloadVideo(data, onload, onerror, settings) {
 
     if (typeof videoList[data.name] !== "undefined") {
         // Video already preloaded
@@ -30880,7 +30912,7 @@ function preloadVideo(data, onload, onerror) {
     }
 
     if (isDataUrl(data.src)) {
-        fetchData(data.src, "blob")
+        fetchData(data.src, "blob", settings)
             .then(blob => {
                 videoElement.src = globalThis.URL.createObjectURL(blob);
             })
@@ -30898,7 +30930,7 @@ function preloadVideo(data, onload, onerror) {
     videoElement.setAttribute("playsinline", "true");
     videoElement.setAttribute("disablePictureInPicture", "true");
     videoElement.setAttribute("controls", "false");
-    videoElement.setAttribute("crossorigin", crossOrigin);
+    videoElement.setAttribute("crossorigin", settings.crossOrigin);
 
     if (data.autoplay === true) {
         videoElement.setAttribute("autoplay", "true");
@@ -30933,6 +30965,126 @@ function preloadVideo(data, onload, onerror) {
     videoElement.load();
 
     return 1;
+}
+
+/**
+ * a small class to manage loading of stuff and manage resources
+ * @namespace loader
+ */
+
+
+//  to enable/disable caching
+let nocache = "";
+
+// baseURL
+let baseURL = {};
+
+/**
+ * crossOrigin attribute to configure the CORS requests for Image and Video data element.
+ * By default (that is, when the attribute is not specified), CORS is not used at all.
+ * The "anonymous" keyword means that there will be no exchange of user credentials via cookies,
+ * client-side SSL certificates or HTTP authentication as described in the Terminology section of the CORS specification.<br>
+ * @type {string}
+ * @name crossOrigin
+ * @default undefined
+ * @see loader.setOptions
+ * @memberof loader
+ * @see https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes
+ * @example
+ *  // allow for cross-origin texture loading
+ * me.loader.crossOrigin = "anonymous";
+ *
+ * // set all ressources to be loaded
+ * me.loader.preload(game.resources, () => this.loaded());
+ */
+let crossOrigin$1;
+
+/**
+ * indicates whether or not cross-site Access-Control requests should be made using credentials such as cookies,
+ * authorization headers or TLS client certificates. Setting withCredentials has no effect on same-site requests.
+ * @public
+ * @type {boolean}
+ * @name withCredentials
+ * @see loader.setOptions
+ * @default false
+ * @memberof loader
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials
+ * @example
+ *  // enable withCredentials
+ * me.loader.withCredentials = true;
+ *
+ * // set all ressources to be loaded
+ * me.loader.preload(game.resources, () => this.loaded());
+ */
+let withCredentials = false;
+
+/**
+ * enable the nocache mechanism
+ * @ignore
+ */
+function setNocache(enable = false) {
+    nocache = enable ? "?" + ~~(Math.random() * 10000000) : "";
+}
+
+/**
+ * Sets the options for the loader.
+ * @memberof loader
+ * @param {Object} options - The options to set.
+ * @param {string} [options.crossOrigin] - The crossOrigin attribute to configure the CORS requests for Image and Video data element.
+ * @param {boolean} [options.nocache] - Enable or disable the nocache mechanism.
+ * @param {boolean} [options.withCredentials] - Indicates whether or not cross-site Access-Control requests should be made using credentials.
+ * @example
+ * // Set the crossOrigin attribute to "anonymous"
+ * me.loader.setOptions({ crossOrigin: "anonymous" });
+ *
+ * // Enable the nocache mechanism
+ * me.loader.setOptions({ nocache: true });
+ *
+ * // Enable withCredentials
+ * me.loader.setOptions({ withCredentials: true });
+ */
+function setOptions(options) {
+    if (options.crossOrigin !== undefined) {
+        crossOrigin$1 = options.crossOrigin;
+    }
+    if (options.nocache !== undefined) {
+        setNocache(options.nocache);
+    }
+    if (options.withCredentials !== undefined) {
+        withCredentials = options.withCredentials;
+    }
+}
+
+/**
+ * change the default baseURL for the given asset type.<br>
+ * (this will prepend the asset URL and must finish with a '/')
+ * @name setBaseURL
+ * @memberof loader
+ * @public
+ * @param {string} type  - "*", "audio", "video", "binary", "image", "json", "js", "tmx", "tsx"
+ * @param {string} [url="./"] - default base URL
+ * @example
+ * // change the base URL relative address for audio assets
+ * me.loader.setBaseURL("audio", "data/audio/");
+ * // change the base URL absolute address for all object types
+ * me.loader.setBaseURL("*", "http://myurl.com/")
+ */
+function setBaseURL(type, url) {
+    if (type !== "*") {
+        baseURL[type] = url;
+    } else {
+        // "wildcards"
+        baseURL["audio"] = url;
+        baseURL["video"] = url;
+        baseURL["binary"] = url;
+        baseURL["image"] = url;
+        baseURL["json"] = url;
+        baseURL["js"] = url;
+        baseURL["tmx"] = url;
+        baseURL["tsx"] = url;
+        // XXX ?
+        //baseURL["fontface"] = url;
+    }
 }
 
 /**
@@ -31288,7 +31440,11 @@ function load(asset, onload, onerror) {
     }
 
     // parser returns the amount of asset to be loaded (usually 1 unless an asset is splitted into several ones)
-    return parser.call(this, asset, onload, onerror);
+    return parser.call(this, asset, onload, onerror, {
+        nocache: nocache,
+        crossOrigin: crossOrigin$1,
+        withCredentials: withCredentials
+    });
 }
 
 /**
@@ -31497,7 +31653,7 @@ function getVideo(elt) {
 var loader = {
 	__proto__: null,
 	baseURL: baseURL,
-	crossOrigin: crossOrigin,
+	get crossOrigin () { return crossOrigin$1; },
 	getBinary: getBinary,
 	getImage: getImage,
 	getJSON: getJSON,
@@ -31512,10 +31668,11 @@ var loader = {
 	reload: reload,
 	setBaseURL: setBaseURL,
 	setNocache: setNocache,
+	setOptions: setOptions,
 	setParser: setParser,
 	unload: unload,
 	unloadAll: unloadAll,
-	withCredentials: withCredentials
+	get withCredentials () { return withCredentials; }
 };
 
 /**
@@ -31748,6 +31905,13 @@ class Sprite extends Renderable {
         // displaying order
         if (typeof settings.z !== "undefined") {
             this.pos.z = settings.z;
+        }
+
+        // add predefined animations if defined (e.g. aseprite)
+        if (typeof settings.anims !== "undefined") {
+            for (const anim in settings.anims) {
+                this.addAnimation(settings.anims[anim].name, settings.anims[anim].index, settings.anims[anim].speed);
+            }
         }
 
         // addAnimation will return 0 if no texture atlas is defined
@@ -42666,9 +42830,9 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "16.1.3"
+         * @default "17.0.0"
          */
-        this.version = "16.1.3";
+        this.version = "17.0.0";
 
         /**
          * a reference to the app/game that registered this plugin
@@ -42950,7 +43114,7 @@ Renderer.prototype.getHeight = function()  {
  * @name version
  * @type {string}
  */
-const version = "16.1.3";
+const version = "17.0.0";
 
 /**
  * a flag indicating that melonJS is fully initialized
