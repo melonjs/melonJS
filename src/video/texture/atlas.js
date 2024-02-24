@@ -412,7 +412,8 @@ export class TextureAtlas {
             names = textureAtlas;
         }
 
-        for (const name in names) {
+        for (const i in names) {
+            const name = Array.isArray(names) ? names[i] : i;
             const region = this.getRegion(name);
             if (region == null) {
                 // throw an error
