@@ -14,9 +14,6 @@
  *     });
  */
 export function fetchData(url, responseType, settings = {}) {
-    console.log("cache", settings.nocache);
-    console.log("crossOrigin", settings.crossOrigin);
-    console.log("withCredentials", settings.withCredentials);
     return new Promise((resolve, reject) => {
         fetch(url, {
             method: "GET",
