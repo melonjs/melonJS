@@ -9,12 +9,13 @@ import { fetchData } from "./fetchdata.js";
  * parse/preload a TMX file
  * @param {loader.Asset} data - asset data
  * @param {Function} [onload] - function to be called when the asset is loaded
+ * @param {Function} [onload] - function to be called when the resource is loaded
  * @param {Function} [onerror] - function to be called in case of error
- * @param {Function} [fetchData] - function to use instead of default window.fetch, has some error handling and things
+ * @param {Object} [settings] - Additional settings to be passed when loading the asset
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
  */
-export function preloadTMX(tmxData, onload, onerror) {
+export function preloadTMX(tmxData, onload, onerror, settings) {
     if (typeof tmxList[tmxData.name] !== "undefined") {
         // already loaded
         return 0;
@@ -42,7 +43,7 @@ export function preloadTMX(tmxData, onload, onerror) {
         return;
     }
 
-    fetchData(tmxData.src, "text")
+    fetchData(tmxData.src, "text", settings)
         .then(response => {
             if (typeof response !== "string") {
                 throw new Error("Invalid response type");

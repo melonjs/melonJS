@@ -7,6 +7,7 @@ import * as fileUtil from "./../../utils/file.js";
  * @param {loader.Asset} img
  * @param {Function} [onload] - function to be called when the resource is loaded
  * @param {Function} [onerror] - function to be called in case of error
+ * @param {Object} [settings] - Additional settings to be passed when loading the asset
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
  * @example
@@ -17,7 +18,7 @@ import * as fileUtil from "./../../utils/file.js";
  *     { name : 'image4', src : 'images/image4.png'}
  * ]);
  */
-export function preloadImage(img, onload, onerror) {
+export function preloadImage(img, onload, onerror, settings) {
     if (typeof imgList[img.name] !== "undefined") {
         // already loaded
         return 0;
@@ -26,7 +27,7 @@ export function preloadImage(img, onload, onerror) {
     // handle SVG file loading
     if (fileUtil.getExtension(img.src) === "svg") {
         // handle SVG file
-        fetchData(img.src, "text")
+        fetchData(img.src, "text", settings)
             .then(svgText => {
                 const svgImage = new Image();
                 svgImage.onload = function() {
@@ -50,7 +51,7 @@ export function preloadImage(img, onload, onerror) {
             });
     } else {
         // handle all other image files
-        fetchData(img.src, "blob")
+        fetchData(img.src, "blob", settings)
             .then(blob => {
                 globalThis.createImageBitmap(blob)
                     .then((bitmap) => {

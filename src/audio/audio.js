@@ -1,7 +1,6 @@
 // external import
 import {Howl, Howler} from "howler";
 import {clamp} from "./../math/math.js";
-import { nocache, withCredentials} from "./../loader/settings.js";
 import { isDataUrl } from "./../utils/string.js";
 
 /**
@@ -141,9 +140,10 @@ export function disable() {
  * @param {loader.Asset} sound
  * @param {Function} [onloadcb] - function to be called when the resource is loaded
  * @param {Function} [onerrorcb] - function to be called in case of error
+ * @param {Object} [settings] - custom settings to apply to the request (@link https://developer.mozilla.org/en-US/docs/Web/API/fetch#options)
  * @returns {number} the amount of asset loaded (always 1 if successfull)
  */
-export function load(sound, onloadcb, onerrorcb) {
+export function load(sound, onloadcb, onerrorcb, settings = {}) {
     let urls = [];
     if (audioExts.length === 0) {
         throw new Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
@@ -152,7 +152,7 @@ export function load(sound, onloadcb, onerrorcb) {
         urls.push(sound.src);
     } else {
         for (let i = 0; i < audioExts.length; i++) {
-            urls.push(sound.src + sound.name + "." + audioExts[i] + nocache);
+            urls.push(sound.src + sound.name + "." + audioExts[i] + settings.nocache);
         }
     }
 
@@ -162,7 +162,7 @@ export function load(sound, onloadcb, onerrorcb) {
         autoplay : sound.autoplay === true,
         loop : sound.loop = true,
         html5 : sound.stream === true || sound.html5 === true,
-        xhrWithCredentials : withCredentials,
+        xhrWithCredentials : settings.withCredentials,
         onloaderror() {
             soundLoadError.call(this, sound.name, onerrorcb);
         },

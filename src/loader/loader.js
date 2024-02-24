@@ -10,17 +10,127 @@ import { preloadJSON } from "./parsers/json.js";
 import { preloadBinary } from "./parsers/binary.js";
 import { preloadJavascript } from "./parsers/script.js";
 import { preloadVideo } from "./parsers/video.js";
-import { baseURL } from "./settings.js";
 import { warning } from "../lang/console.js";
-
 
 /**
  * a small class to manage loading of stuff and manage resources
  * @namespace loader
  */
 
-// for backward compatibility
-export * from "./settings.js";
+
+//  to enable/disable caching
+export let nocache = "";
+
+// baseURL
+export let baseURL = {};
+
+/**
+ * crossOrigin attribute to configure the CORS requests for Image and Video data element.
+ * By default (that is, when the attribute is not specified), CORS is not used at all.
+ * The "anonymous" keyword means that there will be no exchange of user credentials via cookies,
+ * client-side SSL certificates or HTTP authentication as described in the Terminology section of the CORS specification.<br>
+ * @type {string}
+ * @name crossOrigin
+ * @default undefined
+ * @see loader.setOptions
+ * @memberof loader
+ * @see https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes
+ * @example
+ *  // allow for cross-origin texture loading
+ * me.loader.crossOrigin = "anonymous";
+ *
+ * // set all ressources to be loaded
+ * me.loader.preload(game.resources, () => this.loaded());
+ */
+export let crossOrigin;
+
+/**
+ * indicates whether or not cross-site Access-Control requests should be made using credentials such as cookies,
+ * authorization headers or TLS client certificates. Setting withCredentials has no effect on same-site requests.
+ * @public
+ * @type {boolean}
+ * @name withCredentials
+ * @see loader.setOptions
+ * @default false
+ * @memberof loader
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials
+ * @example
+ *  // enable withCredentials
+ * me.loader.withCredentials = true;
+ *
+ * // set all ressources to be loaded
+ * me.loader.preload(game.resources, () => this.loaded());
+ */
+export let withCredentials = false;
+
+/**
+ * enable the nocache mechanism
+ * @ignore
+ */
+export function setNocache(enable = false) {
+    nocache = enable ? "?" + ~~(Math.random() * 10000000) : "";
+}
+
+/**
+ * Sets the options for the loader.
+ * @memberof loader
+ * @param {Object} options - The options to set.
+ * @param {string} [options.crossOrigin] - The crossOrigin attribute to configure the CORS requests for Image and Video data element.
+ * @param {boolean} [options.nocache] - Enable or disable the nocache mechanism.
+ * @param {boolean} [options.withCredentials] - Indicates whether or not cross-site Access-Control requests should be made using credentials.
+ * @example
+ * // Set the crossOrigin attribute to "anonymous"
+ * me.loader.setOptions({ crossOrigin: "anonymous" });
+ *
+ * // Enable the nocache mechanism
+ * me.loader.setOptions({ nocache: true });
+ *
+ * // Enable withCredentials
+ * me.loader.setOptions({ withCredentials: true });
+ */
+export function setOptions(options) {
+    if (options.crossOrigin !== undefined) {
+        crossOrigin = options.crossOrigin;
+    }
+    if (options.nocache !== undefined) {
+        setNocache(options.nocache);
+    }
+    if (options.withCredentials !== undefined) {
+        withCredentials = options.withCredentials;
+    }
+}
+
+/**
+ * change the default baseURL for the given asset type.<br>
+ * (this will prepend the asset URL and must finish with a '/')
+ * @name setBaseURL
+ * @memberof loader
+ * @public
+ * @param {string} type  - "*", "audio", "video", "binary", "image", "json", "js", "tmx", "tsx"
+ * @param {string} [url="./"] - default base URL
+ * @example
+ * // change the base URL relative address for audio assets
+ * me.loader.setBaseURL("audio", "data/audio/");
+ * // change the base URL absolute address for all object types
+ * me.loader.setBaseURL("*", "http://myurl.com/")
+ */
+export function setBaseURL(type, url) {
+    if (type !== "*") {
+        baseURL[type] = url;
+    } else {
+        // "wildcards"
+        baseURL["audio"] = url;
+        baseURL["video"] = url;
+        baseURL["binary"] = url;
+        baseURL["image"] = url;
+        baseURL["json"] = url;
+        baseURL["js"] = url;
+        baseURL["tmx"] = url;
+        baseURL["tsx"] = url;
+        // XXX ?
+        //baseURL["fontface"] = url;
+    }
+}
 
 /**
  * onload callback
@@ -375,7 +485,11 @@ export function load(asset, onload, onerror) {
     }
 
     // parser returns the amount of asset to be loaded (usually 1 unless an asset is splitted into several ones)
-    return parser.call(this, asset, onload, onerror);
+    return parser.call(this, asset, onload, onerror, {
+        nocache: nocache,
+        crossOrigin: crossOrigin,
+        withCredentials: withCredentials
+    });
 }
 
 /**

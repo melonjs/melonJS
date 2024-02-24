@@ -1,9 +1,8 @@
-import { nocache, crossOrigin, withCredentials } from "../settings.js";
-
 /**
  * Fetches data from the specified URL.
  * @param {string} url - The URL to fetch the data from.
  * @param {string} responseType - The type of response expected ('json', 'text', 'blob', 'arrayBuffer').
+ * @param {Object} [settings] - custom settings to apply to the request (@link https://developer.mozilla.org/en-US/docs/Web/API/fetch#options)
  * @returns {Promise} A promise that resolves with the fetched data or rejects with an error.
  * @example
  * fetchData('https://api.example.com/data', 'json')
@@ -14,15 +13,18 @@ import { nocache, crossOrigin, withCredentials } from "../settings.js";
  *         // Handle the error
  *     });
  */
-export function fetchData(url, responseType) {
+export function fetchData(url, responseType, settings = {}) {
+    console.log("cache", settings.nocache);
+    console.log("crossOrigin", settings.crossOrigin);
+    console.log("withCredentials", settings.withCredentials);
     return new Promise((resolve, reject) => {
         fetch(url, {
             method: "GET",
             // internally nocache is a string with a generated random number
-            cache: nocache === "" ? "no-cache" : "reload",
-            credentials: withCredentials ? "include" : "omit",
+            cache: settings.nocache === "" ? "no-cache" : "reload",
+            credentials: settings.withCredentials === true ? "include" : "omit",
             // see setting.crossorigin, "anonymous" is used for cross-origin requests
-            mode: crossOrigin === "anonymous" ? "cors" : "no-cors"
+            mode: settings.crossOrigin === "anonymous" ? "cors" : "no-cors"
         })
             .then(response => {
                 if (!response.ok) {
