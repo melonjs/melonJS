@@ -12,7 +12,7 @@ describe("me.loader", function () {
 
     it("configure the preloader", async () => {
         expect(await page.evaluate(() => {
-            loader.crossOrigin = "anonymous";
+            loader.setOptions({crossOrigin : "anonymous"});
             return loader.crossOrigin === "anonymous";
         })).toEqual(true);
     });

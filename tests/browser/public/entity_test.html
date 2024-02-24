@@ -12,7 +12,7 @@
         me.boot();
         me.video.init(800, 600, {parent : "screen", scale : "auto", renderer : me.video.AUTO});
 
-        me.loader.crossOrigin = "anonymous";
+        me.loader.setOptions({crossOrigin : "anonymous"});
 
         // a dummy sprite object
         const entity_sprite = new me.Sprite(0, 0, {
