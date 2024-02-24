@@ -2,6 +2,9 @@
 
 ## [16.2.0] (melonJS 2) - _2024-02-xx_
 
+### Added
+- Sprite: add support for aseprite texture atlas  
+- Atlas: `createSpritefromAnim` parameter is now optional, and if not defined will use all defined index in the corresponding atlas
 
 ## [16.1.2] (melonJS 2) - _2024-02-12_
 

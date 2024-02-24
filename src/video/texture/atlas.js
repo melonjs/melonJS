@@ -5,6 +5,7 @@ import pool from "./../../system/pooling.js";
 import { getImage } from "./../../loader/loader.js";
 import { parseTexturePacker } from "./parser/texturepacker.js";
 import { parseSpriteSheet } from "./parser/spritesheet.js";
+import { parseAseprite } from "./parser/aseprite.js";
 
 /**
  * create a simple 1 frame texture atlas based on the given parameters
@@ -26,12 +27,33 @@ export function createAtlas(width, height, name = "default", repeat = "no-repeat
 }
 
 /**
+ * return a string that identifies the texture atlas type
+ * @ignore
+ */
+export function identifyFormat(app) {
+    if (app.includes("texturepacker") || app.includes("free-tex-packer")) {
+        return "texturepacker";
+    } else if (app.includes("shoebox")) {
+        return "shoebox";
+    } else if (app.includes("aseprite")) {
+        return "aseprite";
+    } else if (app.includes("melonJS")) {
+        return "melonJS";
+    } else {
+        throw new Error("Unknown texture atlas format: " + app);
+    }
+
+
+}
+
+/**
  * @classdesc
  * A Texture atlas class, currently supports : <br>
  * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export (standard and multipack texture atlas) <br>
+ * - [Free Texture Packer]{@link http://free-tex-packer.com/app/} : through JSON export (standard and multipack texture atlas) <br>
+ * - [aseprite]{@link https://www.aseprite.org/} : through JSON export (standard and multipack texture atlas) <br>
  * - [ShoeBox]{@link http://renderhjs.net/shoebox/} : through JSON export using the
  * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx} <br>
- * - [Free Texture Packer]{@link http://free-tex-packer.com/app/} : through JSON export (standard and multipack texture atlas) <br>
  * - Standard (fixed cell size) spritesheet : through a {framewidth:xx, frameheight:xx, anchorPoint:me.Vector2d} object
  * );
  */
@@ -91,44 +113,50 @@ export class TextureAtlas {
                 let atlas = atlases[i];
 
                 if (typeof(atlas.meta) !== "undefined") {
-                    // Texture Packer or Free Texture Packer
-                    if (atlas.meta.app.includes("texturepacker") || atlas.meta.app.includes("free-tex-packer")) {
-                        this.format = "texturepacker";
-                        // set the texture
-                        if (typeof(src) === "undefined") {
-                            // get the texture name from the atlas meta data
-                            let image = getImage(atlas.meta.image);
-                            if (!image) {
+                    this.format = identifyFormat(atlas.meta.app);
+                    this.repeat = atlas.meta.repeat || "no-repeat";
+                    switch (this.format) {
+                        case "texturepacker":
+                        case "aseprite":
+                            // set the texture
+                            if (typeof(src) === "undefined") {
+                                // get the texture name from the atlas meta data
+                                let image = getImage(atlas.meta.image);
+                                if (!image) {
+                                    throw new Error(
+                                        "Atlas texture '" + image + "' not found"
+                                    );
+                                }
+                                this.sources.set(atlas.meta.image, image);
+                            } else {
+                                this.sources.set(atlas.meta.image || "default", typeof src === "string" ? getImage(src) : src);
+                            }
+                            // initialize the atlas
+                            if (this.format === "texturepacker") {
+                                this.atlases.set(atlas.meta.image || "default", parseTexturePacker(atlas, this));
+                            } else {
+                                this.atlases.set(atlas.meta.image || "default", parseAseprite(atlas, this));
+                            }
+                            break;
+                        case "shoebox":
+                            if (!atlas.meta.exporter || !atlas.meta.exporter.includes("melonJS")) {
                                 throw new Error(
-                                    "Atlas texture '" + image + "' not found"
+                                    "ShoeBox requires the JSON exporter : " +
+                                    "https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx"
                                 );
                             }
-                            this.sources.set(atlas.meta.image, image);
-                        } else {
-                            this.sources.set(atlas.meta.image || "default", typeof src === "string" ? getImage(src) : src);
-                        }
-                        this.repeat = "no-repeat";
-                    } else if (atlas.meta.app.includes("ShoeBox")) {
-                        if (!atlas.meta.exporter || !atlas.meta.exporter.includes("melonJS")) {
-                            throw new Error(
-                                "ShoeBox requires the JSON exporter : " +
-                                "https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx"
-                            );
-                        }
-                        this.format = "ShoeBox";
-                        this.repeat = "no-repeat";
-                        this.sources.set("default", typeof src === "string" ? getImage(src) : src);
+                            this.sources.set("default", typeof src === "string" ? getImage(src) : src);
+                            // initialize the atlas
+                            this.atlases.set(atlas.meta.image || "default", parseTexturePacker(atlas, this));
+                            break;
+                        case "melonJS":
+                            this.sources.set("default", typeof src === "string" ? getImage(src) : src);
+                            // initialize the atlas
+                            this.atlases.set(atlas.meta.image || "default", parseTexturePacker(atlas, this));
+                            break;
+                        default:
+                            throw new Error("Unknown texture atlas format: " + atlas.meta.app);
                     }
-                    // Internal texture atlas
-                    else if (atlas.meta.app.includes("melonJS")) {
-                        this.format = "melonJS";
-                        this.repeat = atlas.meta.repeat || "no-repeat";
-                        this.sources.set("default", typeof src === "string" ? getImage(src) : src);
-                    }
-
-                    // initialize the atlas
-                    this.atlases.set(atlas.meta.image || "default", parseTexturePacker(atlas, this));
-
                 } else {
                     // a regular spritesheet
                     if (typeof(atlas.framewidth) !== "undefined" &&
@@ -345,7 +373,7 @@ export class TextureAtlas {
 
     /**
      * Create an animation object using the first region found using all specified names
-     * @param {string[]|number[]} names - list of names for each sprite
+     * @param {string[]|number[]} [names] - list of names for each sprite (if not specified all defined names/entries in the atlas will be added)
      * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)
      * @param {object} [settings] - Additional settings passed to the {@link Sprite} contructor
      * @returns {Sprite}
@@ -376,22 +404,28 @@ export class TextureAtlas {
     createAnimationFromName(names, settings) {
         let tpAtlas = [], indices = {};
         let width = 0, height = 0;
-        let region;
+        const textureAtlas = this.getAtlas();
         // iterate through the given names
         // and create a "normalized" atlas
-        for (let i = 0; i < names.length; ++i) {
-            region = this.getRegion(names[i]);
+
+        if (typeof names === "undefined") {
+            names = textureAtlas;
+        }
+
+        for (const name in names) {
+            const region = this.getRegion(name);
             if (region == null) {
                 // throw an error
-                throw new Error("Texture - region for " + names[i] + " not found");
+                throw new Error("Texture - region for " + name + " not found");
             }
-            tpAtlas[i] = region;
+            tpAtlas.push(region);
             // save the corresponding index
-            indices[names[i]] = i;
+            indices[name] = tpAtlas.length - 1;
             // calculate the max size of a frame
             width = Math.max(region.width, width);
             height = Math.max(region.height, height);
         }
+
         // instantiate a new animation sheet object
         return new Sprite(0, 0, Object.assign({
             image: this,
@@ -400,6 +434,7 @@ export class TextureAtlas {
             margin: 0,
             spacing: 0,
             atlas: tpAtlas,
+            anims: textureAtlas.anims,
             atlasIndices: indices
         }, settings || {}));
     }

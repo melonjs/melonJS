@@ -238,6 +238,13 @@ export default class Sprite extends Renderable {
             this.pos.z = settings.z;
         }
 
+        // add predefined animations if defined (e.g. aseprite)
+        if (typeof settings.anims !== "undefined") {
+            for (const anim in settings.anims) {
+                this.addAnimation(settings.anims[anim].name, settings.anims[anim].index, settings.anims[anim].speed);
+            }
+        }
+
         // addAnimation will return 0 if no texture atlas is defined
         if (!this.isVideo && this.addAnimation("default", null) !== 0) {
             // set as default

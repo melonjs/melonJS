@@ -87,10 +87,10 @@ melonJS is supporting the below tools and frameworks natively or through our off
  [![ShoeBox](https://user-images.githubusercontent.com/4033090/136762705-92027d94-d87c-4a95-b051-26647410248d.png "ShoeBox")](https://renderhjs.net/shoebox/)
  [![Tiled](https://user-images.githubusercontent.com/4033090/136762999-5a7f377b-4136-4205-9fe0-83728c90cb9b.png "Tiled")](https://www.mapeditor.org)
  [![Cordova](https://user-images.githubusercontent.com/4033090/136763147-6d157ce6-6921-437e-bb8f-0287b86109da.png "Cordova")](https://cordova.apache.org)
-  [![Spine](https://github.com/melonjs/melonJS/assets/4033090/7a8d81b8-bc80-47bd-80dc-d9a054c78c96 "Spine")](http://esotericsoftware.com)
+[![Spine](https://github.com/melonjs/melonJS/assets/4033090/7a8d81b8-bc80-47bd-80dc-d9a054c78c96 "Spine")](http://esotericsoftware.com)
+[![aseprite](https://github.com/melonjs/melonJS/assets/4033090/65d19fef-2eba-461a-b925-cc2ad3bb270c "aseprite")](https://www.aseprite.org)
 
 Tools integration and usage with melonJS is documented in our [Wiki](https://github.com/melonjs/melonJS/wiki#third-party-tools-usage).
-
 
 # Using melonJS
 
