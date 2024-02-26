@@ -5,54 +5,42 @@
 
 /**
  * constant to convert from degrees to radians
- * @public
  * @type {number}
- * @name DEG_TO_RAD
  * @memberof Math
  */
 export const DEG_TO_RAD = Math.PI / 180.0;
 
 /**
  * constant to convert from radians to degrees
- * @public
  * @type {number}
- * @name RAD_TO_DEG
  * @memberof Math
  */
 export const RAD_TO_DEG = 180.0 / Math.PI;
 
 /**
  * constant equals to 2 times pi
- * @public
  * @type {number}
- * @name TAU
  * @memberof Math
  */
 export const TAU = Math.PI * 2;
 
 /**
  * constant equals to half pi
- * @public
  * @type {number}
- * @name ETA
  * @memberof Math
  */
 export const ETA = Math.PI * 0.5;
 
 /**
  * the difference between 1 and the smallest floating point number greater than 1
- * @public
  * @type {number}
- * @name EPSILON
  * @memberof Math
  */
 export const EPSILON = 0.000001;
 
 /**
  * returns true if the given value is a power of two
- * @public
  * @memberof Math
- * @name isPowerOfTwo
  * @param {number} val
  * @returns {boolean}
  */
@@ -62,9 +50,7 @@ export function isPowerOfTwo(val) {
 
 /**
  * returns the next power of two for the given value
- * @public
  * @memberof Math
- * @name nextPowerOfTwo
  * @param {number} val
  * @returns {boolean}
  */
@@ -81,9 +67,7 @@ export function nextPowerOfTwo(val) {
 
 /**
  * Converts an angle in degrees to an angle in radians
- * @public
  * @memberof Math
- * @name degToRad
  * @param {number} angle - angle in degrees
  * @returns {number} corresponding angle in radians
  * @example
@@ -96,9 +80,7 @@ export function degToRad(angle) {
 
 /**
  * Converts an angle in radians to an angle in degrees.
- * @public
  * @memberof Math
- * @name radToDeg
  * @param {number} radians - angle in radians
  * @returns {number} corresponding angle in degrees
  * @example
@@ -111,9 +93,7 @@ export function radToDeg(radians) {
 
 /**
  * clamp the given value
- * @public
  * @memberof Math
- * @name clamp
  * @param {number} val - the value to clamp
  * @param {number} low - lower limit
  * @param {number} high - higher limit
@@ -125,9 +105,7 @@ export function clamp(val, low, high) {
 
 /**
  * return a random integer between min (included) and max (excluded)
- * @public
  * @memberof Math
- * @name random
  * @param {number} min - minimum value.
  * @param {number} max - maximum value.
  * @returns {number} random value
@@ -141,9 +119,7 @@ export function random(min, max) {
 
 /**
  * return a random float between min, max (exclusive)
- * @public
  * @memberof Math
- * @name randomFloat
  * @param {number} min - minimum value.
  * @param {number} max - maximum value.
  * @returns {number} random value
@@ -157,9 +133,7 @@ export function randomFloat(min, max) {
 
 /**
  * return a weighted random between min, max (exclusive)
- * @public
  * @memberof Math
- * @name weightedRandom
  * @param {number} min - minimum value.
  * @param {number} max - maximum value.
  * @returns {number} random value
@@ -173,9 +147,7 @@ export function weightedRandom(min, max) {
 
 /**
  * round a value to the specified number of digit
- * @public
  * @memberof Math
- * @name round
  * @param {number} num - value to be rounded.
  * @param {number} [dec=0] - number of decimal digit to be rounded to.
  * @returns {number} rounded value
@@ -191,9 +163,7 @@ export function round(num, dec = 0) {
 
 /**
  * check if the given value is close to the expected one
- * @public
  * @memberof Math
- * @name toBeCloseTo
  * @param {number} expected - value to be compared with.
  * @param {number} actual - actual value to compare
  * @param {number} [precision=2] - float precision for the comparison
@@ -211,6 +181,7 @@ export function toBeCloseTo(expected, actual, precision = 2) {
 
 /**
  * Calculates the power of a number.
+ * @memberof Math
  * @param {number} n - The number to be raised to the power of 2.
  * @returns {number} The result of raising the number to the power of 2.
  */
