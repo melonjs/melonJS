@@ -840,7 +840,7 @@ export function hasVideoFormat(codec) {
     if (hasVideo === true) {
         if (typeof videoCodecs === "undefined") {
             // check for support
-            const videoElement = document.createElement("video");
+            const videoElement = globalThis.document.createElement("video");
             videoCodecs = {
                 h264:videoElement.canPlayType('video/mp4; codecs="avc1.42E01E"').replace(/^no$/, ""),
                 h265:videoElement.canPlayType('video/mp4; codecs="hev1"').replace(/^no$/, ""),
