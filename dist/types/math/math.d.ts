@@ -1,26 +1,20 @@
 /**
  * returns true if the given value is a power of two
- * @public
  * @memberof Math
- * @name isPowerOfTwo
  * @param {number} val
  * @returns {boolean}
  */
 export function isPowerOfTwo(val: number): boolean;
 /**
  * returns the next power of two for the given value
- * @public
  * @memberof Math
- * @name nextPowerOfTwo
  * @param {number} val
  * @returns {boolean}
  */
 export function nextPowerOfTwo(val: number): boolean;
 /**
  * Converts an angle in degrees to an angle in radians
- * @public
  * @memberof Math
- * @name degToRad
  * @param {number} angle - angle in degrees
  * @returns {number} corresponding angle in radians
  * @example
@@ -30,9 +24,7 @@ export function nextPowerOfTwo(val: number): boolean;
 export function degToRad(angle: number): number;
 /**
  * Converts an angle in radians to an angle in degrees.
- * @public
  * @memberof Math
- * @name radToDeg
  * @param {number} radians - angle in radians
  * @returns {number} corresponding angle in degrees
  * @example
@@ -42,9 +34,7 @@ export function degToRad(angle: number): number;
 export function radToDeg(radians: number): number;
 /**
  * clamp the given value
- * @public
  * @memberof Math
- * @name clamp
  * @param {number} val - the value to clamp
  * @param {number} low - lower limit
  * @param {number} high - higher limit
@@ -53,9 +43,7 @@ export function radToDeg(radians: number): number;
 export function clamp(val: number, low: number, high: number): number;
 /**
  * return a random integer between min (included) and max (excluded)
- * @public
  * @memberof Math
- * @name random
  * @param {number} min - minimum value.
  * @param {number} max - maximum value.
  * @returns {number} random value
@@ -66,9 +54,7 @@ export function clamp(val: number, low: number, high: number): number;
 export function random(min: number, max: number): number;
 /**
  * return a random float between min, max (exclusive)
- * @public
  * @memberof Math
- * @name randomFloat
  * @param {number} min - minimum value.
  * @param {number} max - maximum value.
  * @returns {number} random value
@@ -79,9 +65,7 @@ export function random(min: number, max: number): number;
 export function randomFloat(min: number, max: number): number;
 /**
  * return a weighted random between min, max (exclusive)
- * @public
  * @memberof Math
- * @name weightedRandom
  * @param {number} min - minimum value.
  * @param {number} max - maximum value.
  * @returns {number} random value
@@ -92,9 +76,7 @@ export function randomFloat(min: number, max: number): number;
 export function weightedRandom(min: number, max: number): number;
 /**
  * round a value to the specified number of digit
- * @public
  * @memberof Math
- * @name round
  * @param {number} num - value to be rounded.
  * @param {number} [dec=0] - number of decimal digit to be rounded to.
  * @returns {number} rounded value
@@ -105,9 +87,7 @@ export function weightedRandom(min: number, max: number): number;
 export function round(num: number, dec?: number | undefined): number;
 /**
  * check if the given value is close to the expected one
- * @public
  * @memberof Math
- * @name toBeCloseTo
  * @param {number} expected - value to be compared with.
  * @param {number} actual - actual value to compare
  * @param {number} [precision=2] - float precision for the comparison
@@ -121,6 +101,7 @@ export function round(num: number, dec?: number | undefined): number;
 export function toBeCloseTo(expected: number, actual: number, precision?: number | undefined): boolean;
 /**
  * Calculates the power of a number.
+ * @memberof Math
  * @param {number} n - The number to be raised to the power of 2.
  * @returns {number} The result of raising the number to the power of 2.
  */
@@ -131,41 +112,31 @@ export function pow(n: number): number;
  */
 /**
  * constant to convert from degrees to radians
- * @public
  * @type {number}
- * @name DEG_TO_RAD
  * @memberof Math
  */
 export const DEG_TO_RAD: number;
 /**
  * constant to convert from radians to degrees
- * @public
  * @type {number}
- * @name RAD_TO_DEG
  * @memberof Math
  */
 export const RAD_TO_DEG: number;
 /**
  * constant equals to 2 times pi
- * @public
  * @type {number}
- * @name TAU
  * @memberof Math
  */
 export const TAU: number;
 /**
  * constant equals to half pi
- * @public
  * @type {number}
- * @name ETA
  * @memberof Math
  */
 export const ETA: number;
 /**
  * the difference between 1 and the smallest floating point number greater than 1
- * @public
  * @type {number}
- * @name EPSILON
  * @memberof Math
  */
 export const EPSILON: number;

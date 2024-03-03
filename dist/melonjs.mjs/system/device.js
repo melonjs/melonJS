@@ -77,51 +77,41 @@ function onDeviceRotate(e) {
 
 /**
  * the device platform type
- * @name platform
  * @memberof device
  * @readonly
- * @public
  * @type {device.platform}
  */
 let platform = platform$1;
 
 /**
  * True if the browser supports Touch Events
- * @name touchEvent
  * @memberof device
  * @type {boolean}
  * @readonly
- * @public
  */
 const touchEvent = !!("ontouchstart" in globalThis);
 
 /**
  * True if the browser supports Pointer Events
- * @name pointerEvent
  * @memberof device
  * @type {boolean}
  * @readonly
- * @public
  */
 const pointerEvent = !!globalThis.PointerEvent;
 
 /**
  * Touch capabilities (support either Touch or Pointer events)
- * @name touch
  * @memberof device
  * @type {boolean}
  * @readonly
- * @public
  */
 const touch = touchEvent || (pointerEvent && globalThis.navigator.maxTouchPoints > 0);
 
 /**
  * the maximum number of simultaneous touch contact points are supported by the current device.
- * @name maxTouchPoints
  * @memberof device
  * @type {number}
  * @readonly
- * @public
  * @example
  * if (me.device.maxTouchPoints > 1) {
  *     // device supports multi-touch
@@ -131,63 +121,51 @@ const maxTouchPoints = touch ? (pointerEvent ? globalThis.navigator.maxTouchPoin
 
 /**
  * W3C standard wheel events
- * @name wheel
  * @memberof device
  * @type {boolean}
  * @readonly
- * @public
  */
 const wheel = typeof globalThis.document !== "undefined" && "onwheel" in globalThis.document.createElement("div");
 
 
 /**
  * Browser pointerlock api support
- * @name hasPointerLockSupport
  * @memberof device
  * @type {boolean}
  * @readonly
- * @public
  */
 const hasPointerLockSupport = typeof globalThis.document !== "undefined" && typeof globalThis.document.pointerLockElement !== "undefined";
 
 /**
  * Browser device orientation
- * @name hasDeviceOrientation
  * @memberof device
  * @readonly
- * @public
  * @type {boolean}
  */
 const hasDeviceOrientation = !!globalThis.DeviceOrientationEvent;
 
 /**
  * Supports the ScreenOrientation API
- * @name screenOrientation
  * @memberof device
  * @see https://developer.mozilla.org/en-US/docs/Web/API/ScreenOrientation/onchange
  * @type {boolean}
  * @readonly
- * @public
  */
 const screenOrientation = (typeof screen !== "undefined") && (typeof screen.orientation !== "undefined");
 
 /**
  * Browser accelerometer capabilities
- * @name hasAccelerometer
  * @memberof device
  * @readonly
- * @public
  * @type {boolean}
  */
 const hasAccelerometer = !!globalThis.DeviceMotionEvent;
 
 /**
  * Browser full screen support
- * @name hasFullscreenSupport
  * @memberof device
  * @type {boolean}
  * @readonly
- * @public
  */
 const hasFullscreenSupport = typeof globalThis.document !== "undefined" && (prefixed("fullscreenEnabled", globalThis.document) || globalThis.document.mozFullScreenEnabled);
 
@@ -197,42 +175,34 @@ if (hasFullscreenSupport === true) {
 
 /**
  * Device WebAudio Support
- * @name hasWebAudio
  * @memberof device
  * @type {boolean}
  * @readonly
- * @public
  */
 const hasWebAudio = !!(globalThis.AudioContext || globalThis.webkitAudioContext);
 
 /**
  * Device HTML5Audio Support
- * @name hasHTML5Audio
  * @memberof device
  * @type {boolean}
  * @readonly
- * @public
  */
 const hasHTML5Audio = (typeof globalThis.Audio !== "undefined");
 
 /**
  * Returns true if the browser/device has audio capabilities.
- * @name sound
  * @memberof device
  * @type {boolean}
  * @readonly
- * @public
  */
 const sound = hasWebAudio || hasHTML5Audio;
 
 
 /**
  * Device Video Support
- * @name hasVideo
  * @memberof device
  * @type {boolean}
  * @readonly
- * @public
  */
 const hasVideo = typeof globalThis.document !== "undefined" &&  !!globalThis.document.createElement("video").canPlayType;
 
@@ -240,118 +210,96 @@ const hasVideo = typeof globalThis.document !== "undefined" &&  !!globalThis.doc
 /**
  * Browser Local Storage capabilities <br>
  * (this flag will be set to false if cookies are blocked)
- * @name localStorage
  * @memberof device
  * @readonly
- * @public
  * @type {boolean}
  */
 const localStorage = hasLocalStorage();
 
 /**
  * equals to true if the device browser supports OffScreenCanvas.
- * @name offscreenCanvas
  * @memberof device
  * @type {boolean}
  * @readonly
- * @public
  */
 const offscreenCanvas = hasOffscreenCanvas();
 
 /**
  * Browser Base64 decoding capability
- * @name nativeBase64
  * @memberof device
  * @type {boolean}
  * @readonly
- * @public
  */
 const nativeBase64 = (typeof(globalThis.atob) === "function");
 
 /**
  * a string representing the preferred language of the user, usually the language of the browser UI.
  * (will default to "en" if the information is not available)
- * @name language
  * @memberof device
  * @type {string}
  * @readonly
- * @public
  * @see http://www.w3schools.com/tags/ref_language_codes.asp
  */
 const language = typeof globalThis.navigator !== "undefined" ? globalThis.navigator.language || globalThis.navigator.browserLanguage || globalThis.navigator.userLanguage || "en" : "en";
 
 /**
  * Ratio of the resolution in physical pixels to the resolution in CSS pixels for the current display device.
- * @name devicePixelRatio
  * @memberof device
  * @type {number}
  * @readonly
- * @public
  */
 const devicePixelRatio = globalThis.devicePixelRatio || 1;
 
 /**
  * equals to true if a mobile device.
  * (Android | iPhone | iPad | iPod | BlackBerry | Windows Phone | Kindle)
- * @name isMobile
  * @memberof device
  * @type {boolean}
  * @readonly
- * @public
  */
 const isMobile = platform.isMobile;
 
 /**
  * contains the g-force acceleration along the x-axis.
- * @name accelerationX
  * @memberof device
  * @type {number}
  * @readonly
- * @public
  * @see device.watchAccelerometer
  */
 let accelerationX = 0;
 
 /**
  * contains the g-force acceleration along the y-axis.
- * @name accelerationY
  * @memberof device
  * @type {number}
  * @readonly
- * @public
  * @see device.watchAccelerometer
  */
 let accelerationY = 0;
 
 /**
  * contains the g-force acceleration along the z-axis.
- * @name accelerationZ
  * @memberof device
  * @type {number}
  * @readonly
- * @public
  * @see device.watchAccelerometer
  */
 let accelerationZ = 0;
 
 /**
  * Device orientation Gamma property. Gives angle on tilting a portrait held phone left or right
- * @name gamma
  * @memberof device
  * @type {number}
  * @readonly
- * @public
  * @see device.watchDeviceOrientation
  */
 let gamma = 0;
 
 /**
  * Device orientation Beta property. Gives angle on tilting a portrait held phone forward or backward
- * @name beta
  * @memberof device
  * @type {number}
  * @readonly
- * @public
  * @see device.watchDeviceOrientation
  */
 let beta = 0;
@@ -359,35 +307,29 @@ let beta = 0;
 /**
  * Device orientation Alpha property. Gives angle based on the rotation of the phone around its z axis.
  * The z-axis is perpendicular to the phone, facing out from the center of the screen.
- * @name alpha
  * @memberof device
  * @type {number}
  * @readonly
- * @public
  * @see device.watchDeviceOrientation
  */
 let alpha = 0;
 
 /**
  * Specify whether to pause the game when losing focus
- * @name pauseOnBlur
  * @memberof device
  * @deprecated since 15.4.0
  * @see Application.pauseOnBlur
  * @type {boolean}
- * @public
  * @default true
  */
 let pauseOnBlur = true;
 
 /**
  * Specify whether to unpause the game when gaining focus
- * @name resumeOnFocus
  * @memberof device
  * @deprecated since 15.4.0
  * @see Application.resumeOnFocus
  * @type {boolean}
- * @public
  * @default true
  */
 let resumeOnFocus = true;
@@ -395,31 +337,25 @@ let resumeOnFocus = true;
 /**
  * Specify whether to stop the game when losing focus or not.
  * The engine restarts on focus if this is enabled.
- * @name stopOnBlur
  * @memberof device
  * @deprecated since 15.4.0
  * @see Application.stopOnBlur
  * @type {boolean}
- * @public
  * @default false
  */
 let stopOnBlur = false;
 
 /**
  * Specify whether to automatically bring the window to the front
- * @name autoFocus
  * @memberof device
  * @type {boolean}
- * @public
  * @default true
  */
 let autoFocus = true;
 
 /**
 * specify a function to execute when the Device is fully loaded and ready
-* @function onReady
 * @memberof device
-* @public
 * @param {Function} fn - the function to be executed
 * @example
 * // small game skeleton
@@ -498,9 +434,7 @@ function onReady(fn) {
 
 /**
  * enable/disable swipe on WebView.
- * @function enableSwipe
  * @memberof device
- * @public
  * @param {boolean} [enable=true] - enable or disable swipe.
  */
 function enableSwipe(enable) {
@@ -518,9 +452,7 @@ function enableSwipe(enable) {
 
 /**
  * Returns true if the browser/device is in full screen mode.
- * @function isFullscreen
  * @memberof device
- * @public
  * @returns {boolean}
  */
 function isFullscreen() {
@@ -533,9 +465,7 @@ function isFullscreen() {
 
 /**
  * Triggers a fullscreen request. Requires fullscreen support from the browser/device.
- * @function requestFullscreen
  * @memberof device
- * @public
  * @param {Element} [element] - the element to be set in full-screen mode.
  * @example
  * // add a keyboard shortcut to toggle Fullscreen mode on/off
@@ -559,9 +489,7 @@ function requestFullscreen(element) {
 
 /**
  * Exit fullscreen mode. Requires fullscreen support from the browser/device.
- * @function exitFullscreen
  * @memberof device
- * @public
  */
 function exitFullscreen() {
     if (hasFullscreenSupport && isFullscreen()) {
@@ -572,9 +500,7 @@ function exitFullscreen() {
 /**
  * Return a string representing the orientation of the device screen.
  * It can be "any", "natural", "landscape", "portrait", "portrait-primary", "portrait-secondary", "landscape-primary", "landscape-secondary"
- * @function getScreenOrientation
  * @memberof device
- * @public
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/orientation
  * @returns {string} the screen orientation
  */
@@ -608,9 +534,7 @@ function getScreenOrientation() {
 /**
  * locks the device screen into the specified orientation.<br>
  * This method only works for installed Web apps or for Web pages in full-screen mode.
- * @function lockOrientation
  * @memberof device
- * @public
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
  * @param {string|string[]} orientation - The orientation into which to lock the screen.
  * @returns {boolean} true if the orientation was unsuccessfully locked
@@ -629,9 +553,7 @@ function lockOrientation(orientation) {
 /**
  * unlocks the device screen into the specified orientation.<br>
  * This method only works for installed Web apps or for Web pages in full-screen mode.
- * @function unlockOrientation
  * @memberof device
- * @public
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
  * @returns {boolean} true if the orientation was unsuccessfully unlocked
  */
@@ -648,9 +570,7 @@ function unlockOrientation() {
 
 /**
  * return true if the device screen orientation is in Portrait mode
- * @function isPortrait
  * @memberof device
- * @public
  * @returns {boolean}
  */
 function isPortrait() {
@@ -659,9 +579,7 @@ function isPortrait() {
 
 /**
  * return true if the device screen orientation is in Portrait mode
- * @function isLandscape
  * @memberof device
- * @public
  * @returns {boolean}
  */
 function isLandscape() {
@@ -670,9 +588,7 @@ function isLandscape() {
 
 /**
  * return the device storage
- * @function getStorage
  * @memberof device
- * @public
  * @see save
  * @param {string} [type="local"]
  * @returns {object} a reference to the device storage
@@ -689,9 +605,7 @@ function getStorage(type = "local") {
 
 /**
  * return the parent DOM element for the given parent name or HTMLElement object
- * @function getParentElement
  * @memberof device
- * @public
  * @param {string|HTMLElement} element - the parent element name or a HTMLElement object
  * @returns {HTMLElement} the parent Element
  */
@@ -707,9 +621,7 @@ function getParentElement(element) {
 
 /**
  * return the DOM element for the given element name or HTMLElement object
- * @function getElement
  * @memberof device
- * @public
  * @param {string|HTMLElement} element - the parent element name or a HTMLElement object
  * @returns {HTMLElement} the corresponding DOM Element or null if not existing
  */
@@ -736,9 +648,7 @@ function getElement(element) {
 /**
  * returns the size of the given HTMLElement and its position relative to the viewport
  * <br><img src="images/element-box-diagram.png"/>
- * @function getElementBounds
  * @memberof device
- * @public
  * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
  * @param {string|HTMLElement} element - an HTMLElement object
  * @returns {DOMRect} the size and position of the element relatively to the viewport
@@ -756,9 +666,7 @@ function getElementBounds(element) {
 /**
  * returns the size of the given HTMLElement Parent and its position relative to the viewport
  * <br><img src="images/element-box-diagram.png"/>
- * @function getParentBounds
  * @memberof device
- * @public
  * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
  * @param {string|HTMLElement} element - an HTMLElement object
  * @returns {DOMRect} the size and position of the given element parent relative to the viewport
@@ -769,9 +677,7 @@ function getParentBounds(element) {
 
 /**
  * returns true if the device supports WebGL
- * @function isWebGLSupported
  * @memberof device
- * @public
  * @param {object} [options] - context creation options
  * @param {boolean} [options.failIfMajorPerformanceCaveat=true] - If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
  * @returns {boolean} true if WebGL is supported
@@ -794,9 +700,7 @@ function isWebGLSupported(options) {
 
 /**
  * Makes a request to bring this device window to the front.
- * @function focus
  * @memberof device
- * @public
  * @example
  *  if (clicked) {
  *    me.device.focus();
@@ -811,9 +715,7 @@ function focus() {
 /**
  * Enable monitor of the device accelerator to detect the amount of physical force of acceleration the device is receiving.
  * (one some device a first user gesture will be required before calling this function)
- * @function watchAccelerometer
  * @memberof device
- * @public
  * @see device.accelerationX
  * @see device.accelerationY
  * @see device.accelerationZ
@@ -853,9 +755,7 @@ function watchAccelerometer() {
 
 /**
  * unwatch Accelerometor event
- * @function unwatchAccelerometer
  * @memberof device
- * @public
  */
 function unwatchAccelerometer() {
     if (accelInitialized) {
@@ -868,9 +768,7 @@ function unwatchAccelerometer() {
 /**
  * Enable monitor of the device orientation to detect the current orientation of the device as compared to the Earth coordinate frame.
  * (one some device a first user gesture will be required before calling this function)
- * @function watchDeviceOrientation
  * @memberof device
- * @public
  * @see device.alpha
  * @see device.beta
  * @see device.gamma
@@ -906,9 +804,7 @@ function watchDeviceOrientation() {
 
 /**
  * unwatch Device orientation event
- * @function unwatchDeviceOrientation
  * @memberof device
- * @public
  */
 function unwatchDeviceOrientation() {
     if (deviceOrientationInitialized) {
@@ -922,9 +818,7 @@ function unwatchDeviceOrientation() {
  * If the device doesn't support vibration, this method has no effect. <br>
  * If a vibration pattern is already in progress when this method is called,
  * the previous pattern is halted and the new one begins instead.
- * @function vibrate
  * @memberof device
- * @public
  * @param {number|number[]} pattern - pattern of vibration and pause intervals
  * @example
  * // vibrate for 1000 ms
@@ -944,7 +838,7 @@ function vibrate(pattern) {
 
 /**
  * detect if the given video format is supported
- * @function hasVideoFormat
+ * @memberof device
  * @param {"h264"|"h265"|"ogg"|"mp4"|"m4v"|"webm"|"vp9"|"hls"} codec - the video format to check for support
  * @returns {boolean} return true if the given video format is supported
  */
@@ -953,7 +847,7 @@ function hasVideoFormat(codec) {
     if (hasVideo === true) {
         if (typeof videoCodecs === "undefined") {
             // check for support
-            const videoElement = document.createElement("video");
+            const videoElement = globalThis.document.createElement("video");
             videoCodecs = {
                 h264:videoElement.canPlayType('video/mp4; codecs="avc1.42E01E"').replace(/^no$/, ""),
                 h265:videoElement.canPlayType('video/mp4; codecs="hev1"').replace(/^no$/, ""),
