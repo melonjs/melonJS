@@ -1,6 +1,8 @@
 import os
 import re
 
+# fix badly formatted hyperlinks in the documentation (see https://github.com/melonjs/melonJS/issues/1216)
+
 def replace_urls(directory):
     old_url_pattern = r'https://github.com/melonjs/melonJS/blob/master//Users/obiot/Documents/GitHub/melonJS/src/(.*?)(?=["\'>])'
     new_url_base = 'https://github.com/melonjs/melonJS/blob/master/src/'
