@@ -3,14 +3,16 @@
 ## [17.0.0] (melonJS 2) - _2024-03-05_
 
 ### Added
-- Sprite: add support for aseprite texture atlas  
+- Sprite: add support for aseprite texture atlas (including animation)
 - Atlas: `createSpritefromAnim` parameter is now optional, and if not defined will use all defined index in the corresponding atlas
 - Loader: new `setOptions` method that allows specifying custom settings to be applied to fetch requests (crossOrigin, withCredentials, etc..)
 
+### Changed
+- Loader: loader settings such as `crossOrigin` and `withCredentials` are now deprecated and have to be set through the `setOptions` method
+
 ### Fixed
 - Doc: fix hyperlinks to source code within documentation (thanks @Waltibaba)
-- Loader: fix settings for the fetch request not being applied in es6 builds (thanks @B0sh)
-
+- Loader: fix settings for the fetch request not being applied in ES6 builds (thanks @B0sh)
 
 ## [16.1.2] (melonJS 2) - _2024-02-12_
 
