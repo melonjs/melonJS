@@ -77,7 +77,7 @@
     "eslint-plugin-jsdoc": "^48.2.0",
     "expect": "^29.7.0",
     "expect-mocha-image-snapshot": "^3.0.16",
-    "fastify": "^4.26.1",
+    "fastify": "^4.26.2",
     "mocha": "^10.3.0",
     "npm-self-link": "^1.1.7",
     "puppeteer": "^22.3.0",
