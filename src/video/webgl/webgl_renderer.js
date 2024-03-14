@@ -21,15 +21,7 @@ export default class WebGLRenderer extends Renderer {
      */
     constructor(options) {
         // parent contructor
-        super(options);
-
-        /**
-         * The WebGL version used by this renderer (1 or 2)
-         * @type {number}
-         * @default 1
-         * @readonly
-         */
-        this.WebGLVersion = 1;
+        super(Object.assign(options, { context: "webgl" }));
 
         /**
          * The vendor string of the underlying graphics driver.
@@ -52,7 +44,7 @@ export default class WebGLRenderer extends Renderer {
          * @name gl
          * @type {WebGLRenderingContext}
          */
-        this.context = this.gl = this.getContextGL(this.getCanvas(), options.transparent, options.depthTest === "z-buffer");
+        this.gl = this.renderTarget.context;
 
         /**
          * the vertex buffer used by this WebGL Renderer
@@ -180,6 +172,16 @@ export default class WebGLRenderer extends Renderer {
             this.flush();
             this.setViewport(0, 0, width, height);
         });
+    }
+
+    /**
+     * The WebGL version used by this renderer (1 or 2)
+     * @type {number}
+     * @default 1
+     * @readonly
+     */
+    get WebGLVersion() {
+        return this.renderTarget.WebGLVersion;
     }
 
     /**
@@ -557,57 +559,6 @@ export default class WebGLRenderer extends Renderer {
     */
     closePath() {
         this.path2D.closePath();
-    }
-
-    /**
-     * Returns the WebGL Context object of the given canvas element
-     * @param {HTMLCanvasElement} canvas - the canvas element
-     * @param {boolean} [transparent=false] - use true to enable transparency
-     * @param {boolean} [depth=false] - use true to enable depth buffer testing
-     * @returns {WebGLRenderingContext} the WebGL Context object
-     */
-    getContextGL(canvas, transparent = false, depth = false) {
-        if (typeof canvas === "undefined" || canvas === null) {
-            throw new Error(
-                "You must pass a canvas element in order to create " +
-                "a GL context"
-            );
-        }
-
-        let attr = {
-            alpha : transparent,
-            antialias : this.settings.antiAlias,
-            depth : depth,
-            stencil: true,
-            preserveDrawingBuffer : false,
-            premultipliedAlpha: transparent ? this.settings.premultipliedAlpha : false,
-            powerPreference: this.settings.powerPreference,
-            failIfMajorPerformanceCaveat : this.settings.failIfMajorPerformanceCaveat
-        };
-
-        let gl;
-
-        // attempt to create a WebGL2 context if requested
-        if (this.settings.preferWebGL1 === false) {
-            gl = canvas.getContext("webgl2", attr);
-            if (gl) {
-                this.WebGLVersion = 2;
-            }
-        }
-
-        // fallback to WebGL1
-        if (!gl) {
-            this.WebGLVersion = 1;
-            gl = canvas.getContext("webgl", attr) || canvas.getContext("experimental-webgl", attr);
-        }
-
-        if (!gl) {
-            throw new Error(
-                "A WebGL context could not be created."
-            );
-        }
-
-        return gl;
     }
 
     /**

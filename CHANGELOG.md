@@ -2,6 +2,12 @@
 
 ## [17.1.0] (melonJS 2) - _2024-xx-xx_
 
+### Added
+- Renderer: new `renderTarget` property specifying the default `CanvasRenderTarget` to use when rendering
+
+### Changed
+- Renderer: `CanvasTexture` is now deprecated and replaced by a new `CanvasRenderTarget` class
+
 ## [17.0.0] (melonJS 2) - _2024-03-05_
 
 ### Added

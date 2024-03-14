@@ -3,9 +3,9 @@ import Matrix3d from "./../math/matrix3.js";
 import { createCanvas } from "./video.js";
 import * as event from "./../system/event.js";
 import { platform } from "../system/device.js";
-import { setPrefixed } from "./../utils/agent.js";
 import Path2D from "./../geometries/path2d.js";
 import Vector2d from "../math/vector2.js";
+import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
 
 /**
  * @classdesc
@@ -16,6 +16,14 @@ export default class Renderer {
      * @param {Application.Settings} [options] - optional parameters for the renderer
      */
     constructor(options) {
+
+        /**
+         * The renderer renderTarget
+         * @name renderTarget
+         * @type {CanvasRenderTarget}
+         */
+        this.renderTarget = new CanvasRenderTarget(options.width, options.height, options);
+
         /**
          * The given constructor options
          * @public
@@ -161,7 +169,7 @@ export default class Renderer {
      * @returns {HTMLCanvasElement}
      */
     getCanvas() {
-        return this.canvas;
+        return this.renderTarget.canvas;
     }
 
     /**
@@ -169,7 +177,7 @@ export default class Renderer {
      * @returns {CanvasRenderingContext2D|WebGLRenderingContext}
      */
     getContext() {
-        return this.context;
+        return this.renderTarget.context;
     }
 
     /**
@@ -269,25 +277,7 @@ export default class Renderer {
      * @param {boolean} [enable=false]
      */
     setAntiAlias(context, enable) {
-        let canvas = context.canvas;
-
-        // enable/disable antialis on the given Context2d object
-        setPrefixed("imageSmoothingEnabled", enable === true, context);
-
-        // set antialias CSS property on the main canvas
-        if (enable !== true) {
-            // https://developer.mozilla.org/en-US/docs/Web/CSS/image-rendering
-            canvas.style["image-rendering"] = "optimizeSpeed"; // legal fallback
-            canvas.style["image-rendering"] = "-moz-crisp-edges"; // Firefox
-            canvas.style["image-rendering"] = "-o-crisp-edges"; // Opera
-            canvas.style["image-rendering"] = "-webkit-optimize-contrast"; // Safari
-            canvas.style["image-rendering"] = "optimize-contrast"; // CSS 3
-            canvas.style["image-rendering"] = "crisp-edges"; // CSS 4
-            canvas.style["image-rendering"] = "pixelated"; // CSS 4
-            canvas.style.msInterpolationMode = "nearest-neighbor"; // IE8+
-        } else {
-            canvas.style["image-rendering"] = "auto";
-        }
+        this.renderTarget.setAntiAlias(context, enable);
     }
 
     /**
@@ -416,13 +406,7 @@ export default class Renderer {
      * renderer.convertToBlob().then((blob) => console.log(blob));
      */
     toBlob(type = "image/png", quality) {
-        return new Promise((resolve) => {
-            event.once(event.GAME_AFTER_DRAW, () => {
-                this.canvas.toBlob((blob) => {
-                    resolve(blob);
-                }, type, quality);
-            });
-        });
+        return this.renderTarget.toBlob(type, quality);
     }
 
     /**
@@ -435,15 +419,7 @@ export default class Renderer {
      * renderer.transferToImageBitmap().then((image) => console.log(image));
      */
     toImageBitmap(type = "image/png", quality) {
-        return new Promise((resolve) => {
-            event.once(event.GAME_AFTER_DRAW, () => {
-                let image = new Image();
-                image.src = this.canvas.toDataURL(type, quality);
-                image.onload = () => {
-                    createImageBitmap(image).then((bitmap) => resolve(bitmap));
-                };
-            });
-        });
+        return this.renderTarget.toImageBitmap(type, quality);
     }
 
     /**
@@ -455,10 +431,6 @@ export default class Renderer {
      * renderer.toDataURL().then((dataURL) => console.log(dataURL));
      */
     toDataURL(type = "image/png", quality) {
-        return new Promise((resolve) => {
-            event.once(event.GAME_AFTER_DRAW, () => {
-                resolve(this.canvas.toDataURL(type, quality));
-            });
-        });
+        return this.renderTarget.toDataURL(type, quality);
     }
 }

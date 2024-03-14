@@ -176,7 +176,7 @@ export default class Text extends Renderable {
 
         // the canvas Texture used to render this text
         // XXX: offscreenCanvas is currently disabled for text rendering due to issue in WebGL mode
-        this.canvasTexture = pool.pull("CanvasTexture", 2, 2, { offscreenCanvas: false });
+        this.canvasTexture = pool.pull("CanvasRenderTarget", 2, 2, { offscreenCanvas: false });
 
         // instance to text metrics functions
         this.metrics = new TextMetrics(this);

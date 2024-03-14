@@ -1,5 +1,5 @@
-import { createCanvas } from "./../video.js";
-import { setPrefixed } from "./../../utils/agent.js";
+import { createCanvas } from "../video.js";
+import { setPrefixed } from "../../utils/agent.js";
 import { clamp } from "../../math/math.js";
 
 // default canvas settings
@@ -7,14 +7,72 @@ let defaultAttributes = {
     offscreenCanvas : false,
     willReadFrequently : false,
     antiAlias : false,
-    context: "2d"
+    context: "2d",
+    transparent : false,
+    premultipliedAlpha: true,
+    stencil: true,
+    blendMode : "normal",
+    failIfMajorPerformanceCaveat : true,
+    preferWebGL1 : false,
+    powerPreference : "default"
 };
 
+// WebGL version (if a gl context is created)
+let WebGLVersion;
+
+// a helper function to create the 2d/webgl context
+function createContext(canvas, attributes) {
+    let context;
+
+    if (attributes.context === "2d") {
+        // 2d/canvas mode
+        context = canvas.getContext(attributes.context, { willReadFrequently: attributes.willReadFrequently });
+    } else if (attributes.context === "webgl") {
+
+        let attr = {
+            alpha : attributes.transparent,
+            antialias : attributes.antiAlias,
+            depth : attributes.depth,
+            stencil: true,
+            preserveDrawingBuffer : false,
+            premultipliedAlpha: attributes.transparent ? attributes.premultipliedAlpha : false,
+            powerPreference: attributes.powerPreference,
+            failIfMajorPerformanceCaveat : attributes.failIfMajorPerformanceCaveat
+        };
+
+        // attempt to create a WebGL2 context if requested
+        if (attributes.preferWebGL1 === false) {
+            context = canvas.getContext("webgl2", attr);
+            if (context) {
+                WebGLVersion = 2;
+            }
+        }
+
+        // fallback to WebGL1
+        if (!context) {
+            WebGLVersion = 1;
+            context = canvas.getContext("webgl", attr) || canvas.getContext("experimental-webgl", attr);
+        }
+
+        if (!context) {
+            throw new Error(
+                "A WebGL context could not be created."
+            );
+        }
+    } else {
+        throw new Error(
+            "Invalid context type. Must be one of '2d' or 'webgl'"
+        );
+    }
+
+    // set the context size
+    return context;
+}
+
 /**
- * Creates a Canvas Texture of the given size
- * (when using WebGL, use `invalidate` to force a reupload of the corresponding texture)
+ * CanvasRenderTarget is 2D render target which exposes a Canvas interface.
  */
-class CanvasTexture {
+class CanvasRenderTarget {
     /**
      * @param {number} width - the desired width of the canvas
      * @param {number} height - the desired height of the canvas
@@ -25,24 +83,35 @@ class CanvasTexture {
      * @param {boolean} [attributes.antiAlias=false] - Whether to enable anti-aliasing, use false (default) for a pixelated effect.
      */
     constructor(width, height, attributes = defaultAttributes) {
-
-        // clean up the given attributes
-        attributes = Object.assign(defaultAttributes, attributes || {});
-
         /**
-         * the canvas created for this CanvasTexture
+         * the canvas created for this CanvasRenderTarget
          * @type {HTMLCanvasElement|OffscreenCanvas}
          */
-        this.canvas = createCanvas(width, height, attributes.offscreenCanvas);
+        this.canvas;
 
         /**
-         * the rendering context of this CanvasTexture
-         * @type {CanvasRenderingContext2D}
+         * the rendering context of this CanvasRenderTarget
+         * @type {CanvasRenderingContext2D|WebGLRenderingContext}
          */
-        this.context = this.canvas.getContext(attributes.context, { willReadFrequently: attributes.willReadFrequently });
+        this.context;
+
+        // clean up the given attributes
+        this.attributes = Object.assign(attributes || {}, defaultAttributes);
+
+        // used the given canvas if any
+        if (typeof attributes.canvas !== "undefined") {
+            this.canvas = attributes.canvas;
+        } else {
+            this.canvas = createCanvas(width, height, this.attributes.offscreenCanvas);
+        }
+
+        // create the context
+        this.context = createContext(this.canvas, this.attributes);
+
+        this.WebGLVersion = WebGLVersion;
 
         // enable or disable antiAlias if specified
-        this.setAntiAlias(attributes.antiAlias);
+        this.setAntiAlias(this.attributes.antiAlias);
     }
 
     /**
@@ -106,7 +175,7 @@ class CanvasTexture {
      * @param {number} y - The y-axis coordinate of the top-left corner of the rectangle from which the ImageData will be extracted
      * @param {number} width - The width of the rectangle from which the ImageData will be extracted. Positive values are to the right, and negative to the left
      * @param {number} height - The height of the rectangle from which the ImageData will be extracted. Positive values are down, and negative are up
-     * @returns {ImageData} The ImageData extracted from this CanvasTexture.
+     * @returns {ImageData} The ImageData extracted from this CanvasRenderTarget.
      */
     getImageData(x, y, width, height) {
         // clamp values
@@ -124,7 +193,7 @@ class CanvasTexture {
      * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
      * @returns {Promise} A Promise returning a Blob object representing the image contained in this canvas texture
      * @example
-     * canvasTexture.convertToBlob().then((blob) => console.log(blob));
+     * renderTarget.convertToBlob().then((blob) => console.log(blob));
      */
     toBlob(type = "image/png", quality) {
         if (typeof this.canvas.convertToBlob === "function") {
@@ -144,7 +213,7 @@ class CanvasTexture {
      * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
      * @returns {Promise} A Promise returning an ImageBitmap.
      * @example
-     * canvasTexture.transferToImageBitmap().then((bitmap) => console.log(bitmap));
+     * renderTarget.transferToImageBitmap().then((bitmap) => console.log(bitmap));
      */
     toImageBitmap(type = "image/png", quality) {
         return new Promise((resolve) => {
@@ -176,7 +245,7 @@ class CanvasTexture {
     }
 
     /**
-     * invalidate the current CanvasTexture, and force a reupload of the corresponding texture
+     * invalidate the current CanvasRenderTarget, and force a reupload of the corresponding texture
      * (call this if you modify the canvas content between two draw calls)
      * @param {CanvasRenderer|WebGLRenderer} renderer - the renderer to which this canvas texture is attached
      */
@@ -225,4 +294,4 @@ class CanvasTexture {
     }
 }
 
-export default CanvasTexture;
+export default CanvasRenderTarget;

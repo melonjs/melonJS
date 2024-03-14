@@ -26,7 +26,7 @@ import QuadCompositor from "./video/webgl/compositors/quad_compositor.js";
 import Renderer from "./video/renderer.js";
 import WebGLRenderer from "./video/webgl/webgl_renderer.js";
 import CanvasRenderer from "./video/canvas/canvas_renderer.js";
-import CanvasTexture from "./video/texture/canvas_texture.js";
+import CanvasRenderTarget from "./video/rendertarget/canvasrendertarget.js";
 import { TextureAtlas } from "./video/texture/atlas.js";
 import Renderable from "./renderable/renderable.js";
 import ColorLayer from "./renderable/colorlayer.js";
@@ -138,7 +138,7 @@ export {
     Renderer,
     WebGLRenderer,
     CanvasRenderer,
-    CanvasTexture,
+    CanvasRenderTarget,
     TextureAtlas,
     Renderable,
     Body,
@@ -287,7 +287,7 @@ export function boot() {
     pool.register("Point", Point, true);
     pool.register("Ellipse", Ellipse, true);
     pool.register("Bounds", Bounds, true);
-    pool.register("CanvasTexture", CanvasTexture, true);
+    pool.register("CanvasRenderTarget", CanvasRenderTarget, true);
 
     // publish Boot notification
     event.emit(event.BOOT);

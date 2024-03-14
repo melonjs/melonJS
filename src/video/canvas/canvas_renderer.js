@@ -16,9 +16,6 @@ export default class CanvasRenderer extends Renderer {
         // parent constructor
         super(options);
 
-        // defined the 2d context
-        this.context = this.getContext2d(this.getCanvas(), this.settings.transparent);
-
         this.setBlendMode(this.settings.blendMode);
 
         // apply the default color to the 2d context
