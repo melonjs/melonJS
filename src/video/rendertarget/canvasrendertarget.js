@@ -96,7 +96,7 @@ class CanvasRenderTarget {
         this.context;
 
         // clean up the given attributes
-        this.attributes = Object.assign(attributes || {}, defaultAttributes);
+        this.attributes = Object.assign({}, defaultAttributes, attributes);
 
         // used the given canvas if any
         if (typeof attributes.canvas !== "undefined") {
