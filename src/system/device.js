@@ -20,6 +20,9 @@ let domRect = {left: 0, top: 0, x: 0, y: 0, width: 0, height: 0, right: 0, botto
 // a list of supported videoCodecs;
 let videoCodecs;
 
+// internal flag to avoid rechecking for support
+let WebGLSupport = -1;
+
 function disableSwipeFn(e) {
     e.preventDefault();
     if (typeof globalThis.scroll === "function") {
@@ -676,19 +679,21 @@ export function getParentBounds(element) {
  * @returns {boolean} true if WebGL is supported
  */
 export function isWebGLSupported(options) {
-    let _supported = false;
-    try {
-        let canvas = globalThis.document.createElement("canvas");
-        let ctxOptions = {
-            stencil: true,
-            failIfMajorPerformanceCaveat: options.failIfMajorPerformanceCaveat
-        };
-        _supported = !! (globalThis.WebGLRenderingContext && (canvas.getContext("webgl", ctxOptions) || canvas.getContext("experimental-webgl", ctxOptions)));
-    } catch (e) {
-        _supported = false;
+    if (WebGLSupport === -1) {
+        let _supported = false;
+        try {
+            let canvas = globalThis.document.createElement("canvas");
+            let ctxOptions = {
+                stencil: true,
+                failIfMajorPerformanceCaveat: options.failIfMajorPerformanceCaveat
+            };
+            _supported = !! (globalThis.WebGLRenderingContext && (canvas.getContext("webgl", ctxOptions) || canvas.getContext("experimental-webgl", ctxOptions)));
+            WebGLSupport = _supported ? 1 : 0;
+        } catch (e) {
+            WebGLSupport = 0;
+        }
     }
-
-    return _supported;
+    return WebGLSupport === 1;
 }
 
 /**
