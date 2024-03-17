@@ -4,9 +4,13 @@
 
 ### Added
 - Renderer: new `renderTarget` property specifying the default `CanvasRenderTarget` to use when rendering
+- Loader: image resources can now take an array of `src` urls with different format (preparing for later usage)
 
 ### Changed
 - Renderer: `CanvasTexture` is now deprecated and replaced by a new `CanvasRenderTarget` class
+
+### Fixed
+- Core: prevent multiple temporary canvas creation when calling `isWebGLSupported` multiple times
 
 ## [17.0.0] (melonJS 2) - _2024-03-05_
 
