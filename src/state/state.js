@@ -124,13 +124,13 @@ function _switchState(state) {
 }
 
 // initialize me.state on system boot
-event.on(event.BOOT, () => {
+event.once(event.BOOT, () => {
     // set the built-in loading stage
     state.set(state.LOADING, new DefaultLoadingScreen());
     // set and enable the default stage
     state.set(state.DEFAULT, new Stage());
     // enable by default as soon as the display is initialized
-    event.on(event.VIDEO_INIT, () => {
+    event.once(event.VIDEO_INIT, () => {
         state.change(state.DEFAULT, true);
     });
 });

@@ -65,8 +65,8 @@ class Timer {
         this.timers = [];
         this.timerId = 0;
 
-        // Initialize mtimer on Boot event
-        event.on(event.BOOT, () => {
+        // Initialize timer on Boot event
+        event.once(event.BOOT, () => {
             // reset variables to initial state
             this.reset();
             this.now = this.last = 0;

@@ -54,7 +54,7 @@ function isReserved(key) {
 
 
 // Initialize me.save on Boot event
-event.on(event.BOOT, () => {
+event.once(event.BOOT, () => {
     // Load previous data if local Storage is supported
     if (hasLocalStorage === true) {
         let me_save_content = globalThis.localStorage.getItem("me.save");
