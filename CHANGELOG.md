@@ -3,6 +3,7 @@
 ## [17.1.0] (melonJS 2) - _2024-xx-xx_
 
 ### Added
+- Audio: added/exposed 3D Spatial Audio method (`stereo()`, `position()`, `orientation()` and `panner()`)
 - Renderer: new `renderTarget` property specifying the default `CanvasRenderTarget` to use when rendering
 - Loader: image resources can now take an array of `src` urls with different format (preparing for later usage)
 

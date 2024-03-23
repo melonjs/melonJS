@@ -39,7 +39,7 @@ Graphics
 - System & Bitmap Text
 
 Sound
-- Web Audio support with spatial audio or stereo panning based on [Howler](https://howlerjs.com)
+- Web Audio support with 3D spatial audio or stereo panning based on [Howler](https://howlerjs.com)
 - fallback to Multi-channel HTML5 audio for legacy browsers
 
 Physic
