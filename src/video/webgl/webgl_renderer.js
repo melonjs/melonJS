@@ -209,8 +209,8 @@ export default class WebGLRenderer extends Renderer {
 
     /**
      * return true if the given compressed texture format is supported
-     * @param {Number} format 
-     * @returns 
+     * @param {Number} format
+     * @returns
      */
     hasSupportedCompressedFormats(format) {
         const supportedFormats = this.getSupportedCompressedTextureFormats();
