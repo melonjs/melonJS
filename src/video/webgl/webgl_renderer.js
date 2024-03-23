@@ -10,6 +10,9 @@ import * as event from "./../../system/event.js";
 import pool from "./../../system/pooling.js";
 import { isPowerOfTwo } from "./../../math/math.js";
 
+// list of supported compressed texture formats
+let supportedCompressedTextureFormats;
+
 /**
  * @classdesc
  * a WebGL renderer object
@@ -182,6 +185,43 @@ export default class WebGLRenderer extends Renderer {
      */
     get WebGLVersion() {
         return this.renderTarget.WebGLVersion;
+    }
+
+    /**
+     * return the list of supported compressed texture formats
+     * @return {Object}
+     */
+    getSupportedCompressedTextureFormats() {
+        if (typeof supportedCompressedTextureFormats === "undefined") {
+            const gl = this.gl;
+            supportedCompressedTextureFormats =  {
+                astc: gl.getExtension("WEBGL_compressed_texture_astc") || this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_astc"),
+                bptc: gl.getExtension("EXT_texture_compression_bptc") || this._gl.getExtension("WEBKIT_EXT_texture_compression_bptc"),
+                s3tc: gl.getExtension("WEBGL_compressed_texture_s3tc") || this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_s3tc"),
+                s3tc_srgb: gl.getExtension("WEBGL_compressed_texture_s3tc_srgb") || this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_s3tc_srgb"),
+                pvrtc: gl.getExtension("WEBGL_compressed_texture_pvrtc") || this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_pvrtc"),
+                etc1: gl.getExtension("WEBGL_compressed_texture_etc1") || this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_etc1"),
+                etc2: gl.getExtension("WEBGL_compressed_texture_etc") || gl.getExtension("WEBKIT_WEBGL_compressed_texture_etc") || gl.getExtension("WEBGL_compressed_texture_es3_0")
+            };
+        }
+        return supportedCompressedTextureFormats;
+    }
+
+    /**
+     * return true if the given compressed texture format is supported
+     * @param {Number} format 
+     * @returns 
+     */
+    hasSupportedCompressedFormats(format) {
+        const supportedFormats = this.getSupportedCompressedTextureFormats();
+        for (var supportedFormat in supportedFormats) {
+            for (var extension in supportedFormats[supportedFormat]) {
+                if (format === supportedFormats[supportedFormat][extension]) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**

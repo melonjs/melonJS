@@ -7,9 +7,6 @@ import Path2D from "./../geometries/path2d.js";
 import Vector2d from "../math/vector2.js";
 import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
 
-// list of supported compressed texture formats
-let supportedCompressedTextureFormats;
-
 /**
  * @classdesc
  * a base renderer object
@@ -189,22 +186,6 @@ export default class Renderer {
      */
     getBlendMode() {
         return this.currentBlendMode;
-    }
-
-    getSupportedCompressedTextureFormats() {
-        if (typeof supportedCompressedTextureFormats === "undefined") {
-            const gl = this.gl;
-            supportedCompressedTextureFormats =  {
-                astc: gl.getExtension("WEBGL_compressed_texture_astc") || this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_astc"),
-                bptc: gl.getExtension("EXT_texture_compression_bptc") || this._gl.getExtension("WEBKIT_EXT_texture_compression_bptc"),
-                s3tc: gl.getExtension("WEBGL_compressed_texture_s3tc") || this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_s3tc"),
-                s3tc_srgb: gl.getExtension("WEBGL_compressed_texture_s3tc_srgb") || this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_s3tc_srgb"),
-                pvrtc: gl.getExtension("WEBGL_compressed_texture_pvrtc") || this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_pvrtc"),
-                etc1: gl.getExtension("WEBGL_compressed_texture_etc1") || this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_etc1"),
-                etc2: gl.getExtension("WEBGL_compressed_texture_etc") || gl.getExtension("WEBKIT_WEBGL_compressed_texture_etc") || gl.getExtension("WEBGL_compressed_texture_es3_0")
-            };
-        }
-        return supportedCompressedTextureFormats;
     }
 
     /**

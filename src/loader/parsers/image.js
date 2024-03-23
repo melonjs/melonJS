@@ -1,19 +1,7 @@
 import { imgList } from "../cache.js";
 import { fetchData } from "./fetchdata.js";
 import * as fileUtil from "./../../utils/file.js";
-import * as event from "../../system/event.js";
-import { parseDDS } from "./compressed_textures/parseDDS.js";
-import { parseKTX } from "./compressed_textures/parseKTX.js";
-import { parseKTX2 } from "./compressed_textures/parseKTX2.js";
-import { parsePVR } from "./compressed_textures/parsePVR.js";
-import { parsePKM } from "./compressed_textures/parsePKM.js";
-
-let _renderer;
-
-// gracefully capture a reference to the active renderer without adding more cyclic redundancy
-event.once(event.VIDEO_INIT, (renderer) => {
-    _renderer = renderer;
-});
+import { parseCompressedImage } from "./compressed_textures/compressed_image.js";
 
 /**
  * parse/preload an image
@@ -38,12 +26,11 @@ export function preloadImage(img, onload, onerror, settings) {
     }
 
     let sources = Array.isArray(img.src) ? img.src : [img.src];
+    let isFormatSupported = false;
 
     for (const imgPath of sources) {
         const imgExt = fileUtil.getExtension(imgPath);
-        let isFormatSupported = false;
-
-        // switch case will stop as soon as a first format is detected
+        // loop will stop as soon as a first supported format is detected
         switch (imgExt) {
             // Compressed texture
             case "dds":
@@ -51,49 +38,24 @@ export function preloadImage(img, onload, onerror, settings) {
             case "pkm":
             case "ktx":
             case "ktx2":
-                // check if the current renderer is WebGL
-                if (_renderer.type.includes("WebGL")) {
-                    fetchData(imgPath, "arrayBuffer", settings)
-                        .then(arrayBuffer => {
-                            let texture;
-                            try {
-                                const textureFormats = _renderer.getSupportedCompressedTextureFormats();
-                                switch (imgExt) {
-                                    // Compressed texture
-                                    case "dds":
-                                        texture = parseDDS(arrayBuffer, textureFormats);
-                                        break;
-                                    case "pvr":
-                                        texture = parsePVR(arrayBuffer, textureFormats);
-                                        break;
-                                    case "pkm":
-                                        texture = parsePKM(arrayBuffer, textureFormats);
-                                        break;
-                                    case "ktx":
-                                        texture = parseKTX(arrayBuffer, textureFormats);
-                                        break;
-                                    case "ktx2":
-                                        texture = parseKTX2(arrayBuffer, textureFormats);
-                                        break;
-                                }
-                                texture.isCompressed = true;
-                                imgList[img.name] = texture;
-                                isFormatSupported = true;
-                                if (typeof onload === "function") {
-                                    // callback
-                                    onload();
-                                }
-                            } catch (error) {
-                                // if parse function throw an error;
+                fetchData(imgPath, "arrayBuffer", settings)
+                    .then(arrayBuffer => {
+                        try {
+                            imgList[img.name] = parseCompressedImage(arrayBuffer, imgExt);
+                            isFormatSupported = true;
+                            if (typeof onload === "function") {
+                                // callback
+                                onload();
                             }
-                        })
-                        .catch(error => {
-                            if (typeof onerror === "function") {
-                                // file cannot be loaded
-                                onerror(error);
-                            }
-                        });
-                }
+                        } catch (e) {
+                            // parseCompressedImage will throw an error if a format is not supported or badly formatted
+                        }
+                    }).catch(error => {
+                        if (typeof onerror === "function") {
+                            // file cannot be loaded
+                            onerror(error);
+                        }
+                    });
                 break;
 
             // SVG file
