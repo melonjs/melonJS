@@ -4,8 +4,9 @@
 
 ### Added
 - Audio: added/exposed 3D Spatial Audio method (`stereo()`, `position()`, `orientation()` and `panner()`)
-- Renderer: new `renderTarget` property specifying the default `CanvasRenderTarget` to use when rendering
 - Loader: image resources can now take an array of `src` urls with different format (preparing for later usage)
+- Math: added a `isPowerOfFour()` method
+- Renderer: new `renderTarget` property specifying the default `CanvasRenderTarget` to use when rendering
 
 ### Changed
 - Renderer: `CanvasTexture` is now deprecated and replaced by a new `CanvasRenderTarget` class

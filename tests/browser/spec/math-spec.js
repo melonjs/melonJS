@@ -98,6 +98,22 @@ describe("me.Math", function () {
         });
     });
 
+
+    describe("Power of 4", function () {
+        it("16 is a Power of 4", function () {
+            expect(me.Math.isPowerOfFour(16)).toEqual(true);
+        });
+        it("64 is a Power of 4", function () {
+            expect(me.Math.isPowerOfFour(64)).toEqual(true);
+        });
+        it("3 is not a Power of 4", function () {
+            expect(me.Math.isPowerOfFour(3)).toEqual(false);
+        });
+        it("15 is not a Power of 4", function () {
+            expect(me.Math.isPowerOfFour(15)).toEqual(false);
+        });
+    });
+
     describe("toBeCloseTo", function () {
         it("4.3546731 is closed to 4.3547", function () {
             var value = 4.3546731;

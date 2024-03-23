@@ -49,6 +49,28 @@ export function isPowerOfTwo(val) {
 }
 
 /**
+ * returns true if the given value is a power of four
+ * @memberof Math
+ * @param {number} val
+ * @returns {boolean}
+ */
+export function isPowerOfFour(val) {
+    if (val === 0 || val === 2 || val === 3) {
+        return false;
+    }
+    if (val === 1) {
+        return true;
+    }
+
+    if ((val & (val - 1)) === 0) {
+        if ((val & 0xAAAAAAAA) === 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
  * returns the next power of two for the given value
  * @memberof Math
  * @param {number} val
