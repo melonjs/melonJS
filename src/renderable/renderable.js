@@ -4,6 +4,11 @@ import Rect from "./../geometries/rectangle.js";
 import pool from "./../system/pooling.js";
 import { releaseAllPointerEvents } from "./../input/input.js";
 import { clamp } from "./../math/math.js";
+import Body from "./../physics/body.js";
+import Bounds from "./../physics/bounds.js";
+import GLShader from "./../video/webgl/glshader.js";
+import Color from "./../math/color.js";
+
 
 /**
  * @classdesc
@@ -791,8 +796,10 @@ export default class Renderable extends Rect {
             this._absPos = undefined;
         }
 
-        pool.push(this._bounds);
-        this._bounds = undefined;
+        if (this._bounds instanceof Bounds) {
+            pool.push(this._bounds);
+            this._bounds = undefined;
+        }
 
         this.onVisibilityChange = undefined;
 
@@ -801,16 +808,22 @@ export default class Renderable extends Rect {
             this.mask = undefined;
         }
 
-        if (typeof this._tint !== "undefined") {
+        if (this._tint instanceof Color) {
             pool.push(this._tint);
             this._tint = undefined;
         }
 
+        // cannot import and reference a Container from a Renderable, since Container extends Renderable, creating a circular dependency
+        //if (this.ancestor instanceof Container || this.ancestor instanceof Entity) {
         this.ancestor = undefined;
-        this._parentApp = undefined;
 
-        // destroy the physic body if defined and is a builtin body object
-        if ((typeof this.body !== "undefined") && (typeof this.body.destroy === "function")) {
+        // cannot import and reference a Application from a Renderable, messsing up class order in the bundle
+        //if (this._parentApp instanceof Application) {
+        this._parentApp = undefined;
+        //}
+
+        // destroy the physic body if a builtin body object
+        if (this.body instanceof Body) {
             this.body.destroy.apply(this.body, arguments);
             this.body = undefined;
         }
@@ -822,7 +835,7 @@ export default class Renderable extends Rect {
         this.onDestroyEvent.apply(this, arguments);
 
         // destroy any shader object if not done by the user through onDestroyEvent()
-        if (typeof this.shader === "object") {
+        if (this.shader instanceof GLShader) {
             this.shader.destroy();
             this.shader = undefined;
         }
