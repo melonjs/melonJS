@@ -2,14 +2,16 @@
   "compilerOptions": {
       "target": "es2020",
       "allowJs": true,
+      "checkJs": false,
       "emitDeclarationOnly": true,
       "declaration": true,
       "declarationDir": "dist/types",
       "removeComments": false,
       "strict": true,
       "noImplicitAny": true,
-      "moduleResolution": "node",
-      "resolveJsonModule": true,
+      "module": "node16",
+      "moduleResolution": "node16",
+      "resolveJsonModule": true
   },
   "include": ["src/**/*.js"],
   "exclude": ["node_modules", "test/*.*"]
