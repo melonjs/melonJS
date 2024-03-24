@@ -1,4 +1,4 @@
-import Renderable from "./renderable";
+import Renderable from "./renderable.js";
 import { createGUID } from "../utils/utils";
 import { defer } from "../utils/function";
 import { game } from "../index.js";
