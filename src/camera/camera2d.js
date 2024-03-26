@@ -623,6 +623,7 @@ export default class Camera2d extends Renderable {
 
     /**
      * convert the given world coordinates into "local" (screen) coordinates
+     * If a transform is applied to the camera, apply it to the x,y and world position
      * @name worldToLocal
      * @memberof Camera2d
      * @param {number} x
@@ -634,10 +635,15 @@ export default class Camera2d extends Renderable {
         // TODO memoization for one set of coords (multitouch)
         v = v || pool.pull("Vector2d");
         v.set(x, y);
+
+        let worldPos = pool.pull("Vector2d")
+        worldPos.set(game.world.pos.x, game.world.pos.y)
+        
         if (!this.currentTransform.isIdentity()) {
             this.currentTransform.apply(v);
+            this.currentTransform.apply(worldPos);
         }
-        return v.sub(this.pos).add(game.world.pos);
+        return v.sub(this.pos).add(worldPos);
     }
 
     /**
