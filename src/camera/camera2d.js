@@ -636,8 +636,8 @@ export default class Camera2d extends Renderable {
         v = v || pool.pull("Vector2d");
         v.set(x, y);
 
-        let worldPos = pool.pull("Vector2d")
-        worldPos.set(game.world.pos.x, game.world.pos.y)
+        let worldPos = pool.pull("Vector2d");
+        worldPos.set(game.world.pos.x, game.world.pos.y);
         
         if (!this.currentTransform.isIdentity()) {
             this.currentTransform.apply(v);
