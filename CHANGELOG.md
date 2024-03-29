@@ -1,6 +1,6 @@
 # Changelog
 
-## [17.1.0] (melonJS 2) - _2024-xx-xx_
+## [17.1.0] (melonJS 2) - _2024-03-29_
 
 ### Added
 - Audio: added/exposed 3D Spatial Audio method (`stereo()`, `position()`, `orientation()` and `panner()`)
@@ -775,6 +775,7 @@
 
 -------------------------------------------------------------------------------
 
+[17.1.0]: https://github.com/melonjs/melonJS/compare/17.0.0...17.1.0
 [17.0.0]: https://github.com/melonjs/melonJS/compare/16.1.3...17.0.0
 [16.1.3]: https://github.com/melonjs/melonJS/compare/16.1.2...16.1.3
 [16.1.2]: https://github.com/melonjs/melonJS/compare/16.1.1...16.1.2
