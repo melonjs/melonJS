@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.0.0
+ * melonJS Game Engine - v17.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -26,6 +26,9 @@ let domRect = {left: 0, top: 0, x: 0, y: 0, width: 0, height: 0, right: 0, botto
 
 // a list of supported videoCodecs;
 let videoCodecs;
+
+// internal flag to avoid rechecking for support
+let WebGLSupport = -1;
 
 function disableSwipeFn(e) {
     e.preventDefault();
@@ -683,19 +686,21 @@ function getParentBounds(element) {
  * @returns {boolean} true if WebGL is supported
  */
 function isWebGLSupported(options) {
-    let _supported = false;
-    try {
-        let canvas = globalThis.document.createElement("canvas");
-        let ctxOptions = {
-            stencil: true,
-            failIfMajorPerformanceCaveat: options.failIfMajorPerformanceCaveat
-        };
-        _supported = !! (globalThis.WebGLRenderingContext && (canvas.getContext("webgl", ctxOptions) || canvas.getContext("experimental-webgl", ctxOptions)));
-    } catch (e) {
-        _supported = false;
+    if (WebGLSupport === -1) {
+        let _supported = false;
+        try {
+            let canvas = globalThis.document.createElement("canvas");
+            let ctxOptions = {
+                stencil: true,
+                failIfMajorPerformanceCaveat: options.failIfMajorPerformanceCaveat
+            };
+            _supported = !! (globalThis.WebGLRenderingContext && (canvas.getContext("webgl", ctxOptions) || canvas.getContext("experimental-webgl", ctxOptions)));
+            WebGLSupport = _supported ? 1 : 0;
+        } catch (e) {
+            WebGLSupport = 0;
+        }
     }
-
-    return _supported;
+    return WebGLSupport === 1;
 }
 
 /**

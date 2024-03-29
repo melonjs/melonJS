@@ -101,7 +101,7 @@ export default class Stage {
      * this is typically where you will load a level, add renderables, etc...
      * @name onResetEvent
      * @memberof Stage
-     * @param {object} [...arguments] - optional arguments passed when switching state
+     * @param {...*} [args] - optional arguments passed when switching state
      * @see state#change
      */
     onResetEvent(...args: any[]): void;

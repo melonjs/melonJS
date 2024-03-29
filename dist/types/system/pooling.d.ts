@@ -39,7 +39,7 @@ declare class ObjectPool {
     /**
      * Pull a new instance of the requested object (if added into the object pool)
      * @param {string} name - as used in {@link pool.register}
-     * @param {object} [...arguments] - arguments to be passed when instantiating/reinitializing the object
+     * @param {...*} [args] - arguments to be passed when instantiating/reinitializing the object
      * @returns {object} the instance of the requested object
      * @example
      * me.pool.register("bullet", BulletEntity, true);
@@ -57,7 +57,7 @@ declare class ObjectPool {
      * me.game.world.removeChild(enemy);
      * me.game.world.removeChild(bullet);
      */
-    pull(name: string, ...args: any[]): object;
+    pull(name: string, ...args?: any[] | undefined): object;
     /**
      * purge the object pool from any inactive object <br>
      * Object pooling must be enabled for this function to work<br>

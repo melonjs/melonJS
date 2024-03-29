@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.0.0
+ * melonJS Game Engine - v17.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -7,7 +7,7 @@
  */
 import { pauseTrack, resumeTrack } from '../audio/audio.js';
 import { defer } from '../utils/function.js';
-import { on, VIDEO_INIT, BOOT, emit, STATE_STOP, STATE_PAUSE, STATE_RESTART, STATE_RESUME, STATE_CHANGE, TICK } from '../system/event.js';
+import { once, VIDEO_INIT, BOOT, emit, STATE_STOP, STATE_PAUSE, STATE_RESTART, STATE_RESUME, STATE_CHANGE, TICK } from '../system/event.js';
 import { game } from '../index.js';
 import Stage from './stage.js';
 import DefaultLoadingScreen from '../loader/loadingscreen.js';
@@ -130,13 +130,13 @@ function _switchState(state) {
 }
 
 // initialize me.state on system boot
-on(BOOT, () => {
+once(BOOT, () => {
     // set the built-in loading stage
     state.set(state.LOADING, new DefaultLoadingScreen());
     // set and enable the default stage
     state.set(state.DEFAULT, new Stage());
     // enable by default as soon as the display is initialized
-    on(VIDEO_INIT, () => {
+    once(VIDEO_INIT, () => {
         state.change(state.DEFAULT, true);
     });
 });
@@ -485,7 +485,7 @@ let state = {
      * @public
      * @param {number} state - State ID (see constants)
      * @param {boolean} forceChange - if true the state will be changed immediately
-     * @param {object} [...arguments] - extra arguments to be passed to the reset functions
+     * @param {...*} [args] - extra arguments to be passed to the reset functions
      * @example
      * // The onResetEvent method on the play screen will receive two args:
      * // "level_1" and the number 3

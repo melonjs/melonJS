@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.0.0
+ * melonJS Game Engine - v17.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -17,6 +17,9 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET, CANVAS_ONRESI
 import pool from '../../system/pooling.js';
 import { isPowerOfTwo } from '../../math/math.js';
 
+// list of supported compressed texture formats
+let supportedCompressedTextureFormats;
+
 /**
  * @classdesc
  * a WebGL renderer object
@@ -28,15 +31,7 @@ class WebGLRenderer extends Renderer {
      */
     constructor(options) {
         // parent contructor
-        super(options);
-
-        /**
-         * The WebGL version used by this renderer (1 or 2)
-         * @type {number}
-         * @default 1
-         * @readonly
-         */
-        this.WebGLVersion = 1;
+        super(Object.assign(options, { context: "webgl" }));
 
         /**
          * The vendor string of the underlying graphics driver.
@@ -59,7 +54,7 @@ class WebGLRenderer extends Renderer {
          * @name gl
          * @type {WebGLRenderingContext}
          */
-        this.context = this.gl = this.getContextGL(this.getCanvas(), options.transparent, options.depthTest === "z-buffer");
+        this.gl = this.renderTarget.context;
 
         /**
          * the vertex buffer used by this WebGL Renderer
@@ -187,6 +182,53 @@ class WebGLRenderer extends Renderer {
             this.flush();
             this.setViewport(0, 0, width, height);
         });
+    }
+
+    /**
+     * The WebGL version used by this renderer (1 or 2)
+     * @type {number}
+     * @default 1
+     * @readonly
+     */
+    get WebGLVersion() {
+        return this.renderTarget.WebGLVersion;
+    }
+
+    /**
+     * return the list of supported compressed texture formats
+     * @return {Object}
+     */
+    getSupportedCompressedTextureFormats() {
+        if (typeof supportedCompressedTextureFormats === "undefined") {
+            const gl = this.gl;
+            supportedCompressedTextureFormats =  {
+                astc: gl.getExtension("WEBGL_compressed_texture_astc") || this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_astc"),
+                bptc: gl.getExtension("EXT_texture_compression_bptc") || this._gl.getExtension("WEBKIT_EXT_texture_compression_bptc"),
+                s3tc: gl.getExtension("WEBGL_compressed_texture_s3tc") || this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_s3tc"),
+                s3tc_srgb: gl.getExtension("WEBGL_compressed_texture_s3tc_srgb") || this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_s3tc_srgb"),
+                pvrtc: gl.getExtension("WEBGL_compressed_texture_pvrtc") || this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_pvrtc"),
+                etc1: gl.getExtension("WEBGL_compressed_texture_etc1") || this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_etc1"),
+                etc2: gl.getExtension("WEBGL_compressed_texture_etc") || gl.getExtension("WEBKIT_WEBGL_compressed_texture_etc") || gl.getExtension("WEBGL_compressed_texture_es3_0")
+            };
+        }
+        return supportedCompressedTextureFormats;
+    }
+
+    /**
+     * return true if the given compressed texture format is supported
+     * @param {Number} format
+     * @returns
+     */
+    hasSupportedCompressedFormats(format) {
+        const supportedFormats = this.getSupportedCompressedTextureFormats();
+        for (var supportedFormat in supportedFormats) {
+            for (var extension in supportedFormats[supportedFormat]) {
+                if (format === supportedFormats[supportedFormat][extension]) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -564,57 +606,6 @@ class WebGLRenderer extends Renderer {
     */
     closePath() {
         this.path2D.closePath();
-    }
-
-    /**
-     * Returns the WebGL Context object of the given canvas element
-     * @param {HTMLCanvasElement} canvas - the canvas element
-     * @param {boolean} [transparent=false] - use true to enable transparency
-     * @param {boolean} [depth=false] - use true to enable depth buffer testing
-     * @returns {WebGLRenderingContext} the WebGL Context object
-     */
-    getContextGL(canvas, transparent = false, depth = false) {
-        if (typeof canvas === "undefined" || canvas === null) {
-            throw new Error(
-                "You must pass a canvas element in order to create " +
-                "a GL context"
-            );
-        }
-
-        let attr = {
-            alpha : transparent,
-            antialias : this.settings.antiAlias,
-            depth : depth,
-            stencil: true,
-            preserveDrawingBuffer : false,
-            premultipliedAlpha: transparent ? this.settings.premultipliedAlpha : false,
-            powerPreference: this.settings.powerPreference,
-            failIfMajorPerformanceCaveat : this.settings.failIfMajorPerformanceCaveat
-        };
-
-        let gl;
-
-        // attempt to create a WebGL2 context if requested
-        if (this.settings.preferWebGL1 === false) {
-            gl = canvas.getContext("webgl2", attr);
-            if (gl) {
-                this.WebGLVersion = 2;
-            }
-        }
-
-        // fallback to WebGL1
-        if (!gl) {
-            this.WebGLVersion = 1;
-            gl = canvas.getContext("webgl", attr) || canvas.getContext("experimental-webgl", attr);
-        }
-
-        if (!gl) {
-            throw new Error(
-                "A WebGL context could not be created."
-            );
-        }
-
-        return gl;
     }
 
     /**

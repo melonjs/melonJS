@@ -1,9 +1,8 @@
-export default CanvasTexture;
+export default CanvasRenderTarget;
 /**
- * Creates a Canvas Texture of the given size
- * (when using WebGL, use `invalidate` to force a reupload of the corresponding texture)
+ * CanvasRenderTarget is 2D render target which exposes a Canvas interface.
  */
-declare class CanvasTexture {
+declare class CanvasRenderTarget {
     /**
      * @param {number} width - the desired width of the canvas
      * @param {number} height - the desired height of the canvas
@@ -20,15 +19,17 @@ declare class CanvasTexture {
         antiAlias?: boolean | undefined;
     });
     /**
-     * the canvas created for this CanvasTexture
+     * the canvas created for this CanvasRenderTarget
      * @type {HTMLCanvasElement|OffscreenCanvas}
      */
     canvas: HTMLCanvasElement | OffscreenCanvas;
     /**
-     * the rendering context of this CanvasTexture
-     * @type {CanvasRenderingContext2D}
+     * the rendering context of this CanvasRenderTarget
+     * @type {CanvasRenderingContext2D|WebGLRenderingContext}
      */
-    context: CanvasRenderingContext2D;
+    context: CanvasRenderingContext2D | WebGLRenderingContext;
+    attributes: never;
+    WebGLVersion: any;
     /**
      * @ignore
      */
@@ -55,7 +56,7 @@ declare class CanvasTexture {
      * @param {number} y - The y-axis coordinate of the top-left corner of the rectangle from which the ImageData will be extracted
      * @param {number} width - The width of the rectangle from which the ImageData will be extracted. Positive values are to the right, and negative to the left
      * @param {number} height - The height of the rectangle from which the ImageData will be extracted. Positive values are down, and negative are up
-     * @returns {ImageData} The ImageData extracted from this CanvasTexture.
+     * @returns {ImageData} The ImageData extracted from this CanvasRenderTarget.
      */
     getImageData(x: number, y: number, width: number, height: number): ImageData;
     /**
@@ -64,7 +65,7 @@ declare class CanvasTexture {
      * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
      * @returns {Promise} A Promise returning a Blob object representing the image contained in this canvas texture
      * @example
-     * canvasTexture.convertToBlob().then((blob) => console.log(blob));
+     * renderTarget.convertToBlob().then((blob) => console.log(blob));
      */
     toBlob(type?: string | undefined, quality?: number | undefined): Promise<any>;
     /**
@@ -73,7 +74,7 @@ declare class CanvasTexture {
      * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
      * @returns {Promise} A Promise returning an ImageBitmap.
      * @example
-     * canvasTexture.transferToImageBitmap().then((bitmap) => console.log(bitmap));
+     * renderTarget.transferToImageBitmap().then((bitmap) => console.log(bitmap));
      */
     toImageBitmap(type?: string | undefined, quality?: number | undefined): Promise<any>;
     /**
@@ -87,7 +88,7 @@ declare class CanvasTexture {
      */
     toDataURL(type?: string | undefined, quality?: number | undefined): Promise<any>;
     /**
-     * invalidate the current CanvasTexture, and force a reupload of the corresponding texture
+     * invalidate the current CanvasRenderTarget, and force a reupload of the corresponding texture
      * (call this if you modify the canvas content between two draw calls)
      * @param {CanvasRenderer|WebGLRenderer} renderer - the renderer to which this canvas texture is attached
      */

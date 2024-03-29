@@ -8,6 +8,12 @@ export default class Renderer {
      */
     constructor(options?: any);
     /**
+     * The renderer renderTarget
+     * @name renderTarget
+     * @type {CanvasRenderTarget}
+     */
+    renderTarget: CanvasRenderTarget;
+    /**
      * The given constructor options
      * @public
      * @type {object}
@@ -217,6 +223,7 @@ export default class Renderer {
      */
     toDataURL(type?: string | undefined, quality?: number | undefined): Promise<any>;
 }
+import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
 import Vector2d from "../math/vector2.js";
 import Path2D from "./../geometries/path2d.js";
 import Color from "./../math/color.js";

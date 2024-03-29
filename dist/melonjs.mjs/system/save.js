@@ -1,11 +1,11 @@
 /*!
- * melonJS Game Engine - v17.0.0
+ * melonJS Game Engine - v17.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2024 Olivier Biot (AltByte Pte Ltd)
  */
-import { on, BOOT } from './event.js';
+import { once, BOOT } from './event.js';
 
 /**
  * allow to access and manage the device localStorage
@@ -61,7 +61,7 @@ function isReserved(key) {
 
 
 // Initialize me.save on Boot event
-on(BOOT, () => {
+once(BOOT, () => {
     // Load previous data if local Storage is supported
     if (hasLocalStorage === true) {
         let me_save_content = globalThis.localStorage.getItem("me.save");

@@ -36,4 +36,3 @@ export function getParent(): HTMLElement;
  * @type {CanvasRenderer|WebGLRenderer}
  */
 export let renderer: CanvasRenderer | WebGLRenderer;
-export { CANVAS, WEBGL, AUTO } from "../const";

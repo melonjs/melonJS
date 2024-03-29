@@ -38,7 +38,6 @@ export default class Trigger extends Renderable {
     triggerSettings: {
         event: string;
     };
-    body: Body;
     /**
      * @ignore
      */
@@ -58,4 +57,3 @@ export default class Trigger extends Renderable {
     protected triggerEvent(): void;
 }
 import Renderable from "./renderable.js";
-import Body from "./../physics/body.js";

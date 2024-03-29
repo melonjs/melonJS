@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.0.0
+ * melonJS Game Engine - v17.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -8,6 +8,7 @@
 import { imgList } from '../cache.js';
 import { fetchData } from './fetchdata.js';
 import { getExtension } from '../../utils/file.js';
+import { parseCompressedImage } from './compressed_textures/compressed_image.js';
 
 /**
  * parse/preload an image
@@ -31,52 +32,98 @@ function preloadImage(img, onload, onerror, settings) {
         return 0;
     }
 
-    // handle SVG file loading
-    if (getExtension(img.src) === "svg") {
-        // handle SVG file
-        fetchData(img.src, "text", settings)
-            .then(svgText => {
-                const svgImage = new Image();
-                svgImage.onload = function() {
-                    imgList[img.name] = svgImage;
-                    if (typeof onload === "function") {
-                        // callback
-                        onload();
-                    }
-                };
-                svgImage.onerror = function(error) {
-                    if (typeof onerror === "function") {
-                        onerror(error);
-                    }
-                };
-                svgImage.src = "data:image/svg+xml;charset=utf8," + encodeURIComponent(svgText);
-            })
-            .catch(error => {
-                if (typeof onerror === "function") {
-                    onerror(error);
-                }
-            });
-    } else {
-        // handle all other image files
-        fetchData(img.src, "blob", settings)
-            .then(blob => {
-                globalThis.createImageBitmap(blob)
-                    .then((bitmap) => {
-                        imgList[img.name] = bitmap;
-                        if (typeof onload === "function") {
-                            // callback
-                            onload();
+    let sources = Array.isArray(img.src) ? img.src : [img.src];
+    let isFormatSupported = false;
+
+    for (const imgPath of sources) {
+        const imgExt = getExtension(imgPath);
+        // loop will stop as soon as a first supported format is detected
+        switch (imgExt) {
+            // Compressed texture
+            case "dds":
+            case "pvr":
+            case "pkm":
+            case "ktx":
+            case "ktx2":
+                fetchData(imgPath, "arrayBuffer", settings)
+                    .then(arrayBuffer => {
+                        try {
+                            imgList[img.name] = parseCompressedImage(arrayBuffer, imgExt);
+                            isFormatSupported = true;
+                            if (typeof onload === "function") {
+                                // callback
+                                onload();
+                            }
+                        } catch (e) {
+                            // parseCompressedImage will throw an error if a format is not supported or badly formatted
+                        }
+                    }).catch(error => {
+                        if (typeof onerror === "function") {
+                            // file cannot be loaded
+                            onerror(error);
                         }
                     });
-            })
-            .catch(error => {
-                if (typeof onerror === "function") {
-                    onerror(error);
-                }
-            });
+                break;
+
+            // SVG file
+            case "svg":
+                fetchData(imgPath, "text", settings)
+                    .then(svgText => {
+                        const svgImage = new Image();
+                        svgImage.onload = function() {
+                            imgList[img.name] = svgImage;
+                            if (typeof onload === "function") {
+                                // callback
+                                onload();
+                            }
+                        };
+                        svgImage.onerror = function(error) {
+                            if (typeof onerror === "function") {
+                                onerror(error);
+                            }
+                        };
+                        svgImage.src = "data:image/svg+xml;charset=utf8," + encodeURIComponent(svgText);
+                    })
+                    .catch(error => {
+                        if (typeof onerror === "function") {
+                            onerror(error);
+                        }
+                    });
+                isFormatSupported = true;
+                break;
+
+            // default is regular images (jpg, png and friends)
+            default:
+                fetchData(imgPath, "blob", settings)
+                    .then(blob => {
+                        globalThis.createImageBitmap(blob)
+                            .then((bitmap) => {
+                                imgList[img.name] = bitmap;
+                                if (typeof onload === "function") {
+                                    // callback
+                                    onload();
+                                }
+                            });
+                    })
+                    .catch(error => {
+                        if (typeof onerror === "function") {
+                            onerror(error);
+                        }
+                    });
+                isFormatSupported = true;
+                break;
+        }
+
+        // exit the loop as soon as the first supported format is detected
+        if (isFormatSupported === true) {
+            return 1;
+        }
     }
 
-    return 1;
+    // no compatible format was found
+    throw new Error(
+        "No suppported Image file format found for " + img.name
+    );
 }
 
 export { preloadImage };

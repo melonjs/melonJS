@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.0.0
+ * melonJS Game Engine - v17.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -446,10 +446,10 @@ var SHARED = '__core-js_shared__';
 var store$3 = sharedStore$2.exports = globalThis$3[SHARED] || defineGlobalProperty$2(SHARED, {});
 
 (store$3.versions || (store$3.versions = [])).push({
-  version: '3.36.0',
+  version: '3.36.1',
   mode: IS_PURE ? 'pure' : 'global',
   copyright: '© 2014-2024 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.36.0/LICENSE',
+  license: 'https://github.com/zloirock/core-js/blob/v3.36.1/LICENSE',
   source: 'https://github.com/zloirock/core-js'
 });
 
@@ -2428,6 +2428,28 @@ function isPowerOfTwo(val) {
 }
 
 /**
+ * returns true if the given value is a power of four
+ * @memberof Math
+ * @param {number} val
+ * @returns {boolean}
+ */
+function isPowerOfFour(val) {
+    if (val === 0 || val === 2 || val === 3) {
+        return false;
+    }
+    if (val === 1) {
+        return true;
+    }
+
+    if ((val & (val - 1)) === 0) {
+        if ((val & 0xAAAAAAAA) === 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
  * returns the next power of two for the given value
  * @memberof Math
  * @param {number} val
@@ -2577,6 +2599,7 @@ var math = {
 	TAU: TAU,
 	clamp: clamp,
 	degToRad: degToRad,
+	isPowerOfFour: isPowerOfFour,
 	isPowerOfTwo: isPowerOfTwo,
 	nextPowerOfTwo: nextPowerOfTwo,
 	pow: pow,
@@ -2641,7 +2664,7 @@ class ObjectPool {
     /**
      * Pull a new instance of the requested object (if added into the object pool)
      * @param {string} name - as used in {@link pool.register}
-     * @param {object} [...arguments] - arguments to be passed when instantiating/reinitializing the object
+     * @param {...*} [args] - arguments to be passed when instantiating/reinitializing the object
      * @returns {object} the instance of the requested object
      * @example
      * me.pool.register("bullet", BulletEntity, true);
@@ -10260,7 +10283,7 @@ const ONCONTEXT_RESTORED = "renderer.contextrestored";
  * calls each of the listeners registered for a given event.
  * @function event.emit
  * @param {string|symbol} eventName - The event name.
- * @param {object} [...arguments] - arguments to be passed to all listeners
+ * @param {...*} [args] - arguments to be passed to all listeners
  * @returns {boolean} true if the event had listeners, false otherwise.
  * @example
  * me.event.emit("event-name", a, b, c);
@@ -13765,7 +13788,6 @@ let soundLoadError = function (sound_name, onerror_cb) {
  * if true, melonJS will throw an exception and stop loading<br>
  * if false, melonJS will disable sounds and output a warning message
  * in the console<br>
- * @name stopOnAudioError
  * @type {boolean}
  * @default true
  * @memberof audio
@@ -13779,7 +13801,7 @@ let stopOnAudioError = true;
  * webm has nearly full browser coverage with a great combination of compression and quality, and mp3 will fallback gracefully for other browsers.
  * It is important to remember that melonJS selects the first compatible sound based on the list of extensions and given order passed here.
  * So if you want webm to be used before mp3, you need to put the audio format in that order.
- * @function audio.init
+ * @memberof audio
  * @param {string} [format="mp3"] - audio format to prioritize ("mp3"|"mpeg"|"opus"|"ogg"|"oga"|"wav"|"aac"|"caf"|"m4a"|"m4b"|"mp4"|"weba"|"webm"|"dolby"|"flac")
  * @returns {boolean} Indicates whether audio initialization was successful
  * @example
@@ -13798,7 +13820,7 @@ function init$1(format = "mp3") {
 
 /**
  * check if the given audio format is supported
- * @function audio.hasFormat
+ * @memberof audio
  * @param {"mp3"|"mpeg"|"opus"|"ogg"|"oga"|"wav"|"aac"|"caf"|"m4a"|"m4b"|"mp4"|"weba"|"webm"|"dolby"|"flac"} codec - the audio format to check for support
  * @returns {boolean} return true if the given audio format is supported
  */
@@ -13808,7 +13830,7 @@ function hasFormat(codec) {
 
 /**
  * check if audio (HTML5 or WebAudio) is supported
- * @function audio.hasAudio
+ * @memberof audio
  * @returns {boolean} return true if audio (HTML5 or WebAudio) is supported
  */
 function hasAudio() {
@@ -13818,7 +13840,7 @@ function hasAudio() {
 /**
  * enable audio output <br>
  * only useful if audio supported and previously disabled through
- * @function audio.enable
+ * @memberof audio
  * @see audio.disable
  */
 function enable() {
@@ -13827,7 +13849,7 @@ function enable() {
 
 /**
  * disable audio output
- * @function audio.disable
+ * @memberof audio
  */
 function disable() {
     muteAll();
@@ -13835,7 +13857,7 @@ function disable() {
 
 /**
  * Load an audio file
- * @function audio.load
+ * @memberof audio
  * @param {loader.Asset} sound
  * @param {Function} [onloadcb] - function to be called when the resource is loaded
  * @param {Function} [onerrorcb] - function to be called in case of error
@@ -13878,7 +13900,7 @@ function load$1(sound, onloadcb, onerrorcb, settings = {}) {
 
 /**
  * play the specified sound
- * @function audio.play
+ * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {boolean} [loop=false] - loop audio
  * @param {Function} [onend] - Function to call when sound instance ends playing.
@@ -13919,7 +13941,7 @@ function play(sound_name, loop = false, onend, volume) {
 
 /**
  * Fade a currently playing sound between two volumee.
- * @function audio.fade
+ * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} from - Volume to fade from (0.0 to 1.0).
  * @param {number} to - Volume to fade to (0.0 to 1.0).
@@ -13937,7 +13959,7 @@ function fade(sound_name, from, to, duration, id) {
 
 /**
  * get/set the position of playback for a sound.
- * @function audio.seek
+ * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} [seek] - the position to move current playback to (in seconds).
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will changed.
@@ -13959,7 +13981,7 @@ function seek(sound_name, ...args) {
 
 /**
  * get or set the rate of playback for a sound.
- * @function audio.rate
+ * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} [rate] - playback rate : 0.5 to 4.0, with 1.0 being normal speed.
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will be changed.
@@ -13980,8 +14002,95 @@ function rate(sound_name, ...args) {
 }
 
 /**
+ * get or set the stereo panning for the specified sound.
+ * @memberof audio
+ * @param {string} sound_name - audio clip name - case sensitive
+ * @param {number} [pan] - the panning value - A value of -1.0 is all the way left and 1.0 is all the way right.
+ * @return {number} the current panning value
+ * @example
+ * me.audio.stereo("cling", -1);
+ */
+function stereo(sound_name, pan) {
+    let sound = audioTracks[sound_name];
+    if (sound && typeof sound !== "undefined") {
+        return sound.stereo(pan);
+    } else {
+        throw new Error("audio clip " + sound_name + " does not exist");
+    }
+}
+
+/**
+ * get or set the 3D spatial position for the specified sound.
+ * @memberof audio
+ * @param {string} sound_name - audio clip name - case sensitive
+ * @param  {Number} x - the x-position of the audio source.
+ * @param  {Number} y - the y-position of the audio source.
+ * @param  {Number} z - the z-position of the audio source.
+ * @return {Array} the current 3D spatial position: [x, y, z]
+ */
+function position(sound_name, x, y, z) {
+    let sound = audioTracks[sound_name];
+    if (sound && typeof sound !== "undefined") {
+        return sound.pos(x, y, z);
+    } else {
+        throw new Error("audio clip " + sound_name + " does not exist");
+    }
+}
+
+/**
+ * Get/set the direction the audio source is pointing in the 3D cartesian coordinate space.
+ * Depending on how direction the sound is, based on the `cone` attributes, a sound pointing away from the listener can be quiet or silent.
+ * @memberof audio
+ * @param {string} sound_name - audio clip name - case sensitive
+ * @param  {Number} x - the x-orientation of the audio source.
+ * @param  {Number} y - the y-orientation of the audio source.
+ * @param  {Number} z - the z-orientation of the audio source.
+ * @return {Array} the current 3D spatial orientation: [x, y, z]
+ */
+function orientation(sound_name, x, y, z) {
+    let sound = audioTracks[sound_name];
+    if (sound && typeof sound !== "undefined") {
+        return sound.orientation(x, y, z);
+    } else {
+        throw new Error("audio clip " + sound_name + " does not exist");
+    }
+}
+
+/**
+ * get or set the panner node's attributes for a sound or group of sounds.
+ * See {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Web_audio_spatialization_basics#creating_a_panner_node}
+ * @memberof audio
+ * @param {string} sound_name - audio clip name - case sensitive
+ * @param {object} [attribute] - the panner attributes to set
+ * @param {string} [settings.coneInnerAngle=360] - A parameter for directional audio sources, this is an angle, in degrees, inside of which there will be no volume reduction.
+ * @param {string} [settings.coneOuterAngle=360] - A parameter for directional audio sources, this is an angle, in degrees, outside of which the volume will be reduced to a constant value of `coneOuterGain`.
+ * @param {string} [settings.coneOuterGain=0] - A parameter for directional audio sources, this is the gain outside of the `coneOuterAngle`. It is a linear value in the range `[0, 1]`.
+ * @param {string} [settings.distanceModel="inverse"] - Determines algorithm used to reduce volume as audio moves away from listener. Can be `linear`, `inverse` or `exponential.
+ * @param {string} [settings.maxDistance=10000] - The maximum distance between source and listener, after which the volume will not be reduced any further.
+ * @param {string} [settings.refDistance=1] - A reference distance for reducing volume as source moves further from the listener. This is simply a variable of the distance model and has a different effect depending on which model is used and the scale of your coordinates. Generally, volume will be equal to 1 at this distance.
+ * @param {string} [settings.rolloffFactor=1] - How quickly the volume reduces as source moves from listener. This is simply a variable of the distance model and can be in the range of `[0, 1]` with `linear` and `[0, ∞]` with `inverse` and `exponential`.
+ * @param {string} [settings.panningModel="HRTF"] - Determines which spatialization algorithm is used to position audio. Can be `HRTF` or `equalpower`.
+ * @return {Object} current panner attributes.
+ * @example
+ * me.audio.panner("cling", {
+ *    panningModel: 'HRTF',
+ *    refDistance: 0.8,
+ *    rolloffFactor: 2.5,
+ *    distanceModel: 'exponential'
+ * });
+ */
+function panner(sound_name, attributes) {
+    let sound = audioTracks[sound_name];
+    if (sound && typeof sound !== "undefined") {
+        return sound.pannerAttr(attributes);
+    } else {
+        throw new Error("audio clip " + sound_name + " does not exist");
+    }
+}
+
+/**
  * stop the specified sound on all channels
- * @function audio.stop
+ * @memberof audio
  * @param {string} [sound_name] - audio clip name (case sensitive). If none is passed, all sounds are stopped.
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will stop.
  * @example
@@ -14005,7 +14114,7 @@ function stop(sound_name, id) {
 /**
  * pause the specified sound on all channels<br>
  * this function does not reset the currentTime property
- * @function audio.pause
+ * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will pause.
  * @example
@@ -14022,7 +14131,7 @@ function pause(sound_name, id) {
 
 /**
  * resume the specified sound on all channels<br>
- * @function audio.resume
+ * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will resume.
  * @example
@@ -14048,7 +14157,7 @@ function resume(sound_name, id) {
  * play the specified audio track<br>
  * this function automatically set the loop property to true<br>
  * and keep track of the current sound being played.
- * @function audio.playTrack
+ * @memberof audio
  * @param {string} sound_name - audio track name - case sensitive
  * @param {number} [volume=default] - Float specifying volume (0.0 - 1.0 values accepted).
  * @returns {number} the sound instance ID.
@@ -14067,7 +14176,7 @@ function playTrack(sound_name, volume) {
 
 /**
  * stop the current audio track
- * @function audio.stopTrack
+ * @memberof audio
  * @see audio.playTrack
  * @example
  * // play a awesome music
@@ -14084,7 +14193,7 @@ function stopTrack() {
 
 /**
  * pause the current audio track
- * @function audio.pauseTrack
+ * @memberof audio
  * @example
  * me.audio.pauseTrack();
  */
@@ -14096,7 +14205,7 @@ function pauseTrack() {
 
 /**
  * resume the previously paused audio track
- * @function audio.resumeTrack
+ * @memberof audio
  * @example
  * // play an awesome music
  * me.audio.playTrack("awesome_music");
@@ -14113,7 +14222,7 @@ function resumeTrack() {
 
 /**
  * returns the current track Id
- * @function audio.getCurrentTrack
+ * @memberof audio
  * @returns {string} audio track name
  */
 function getCurrentTrack() {
@@ -14122,7 +14231,7 @@ function getCurrentTrack() {
 
 /**
  * set the default global volume
- * @function audio.setVolume
+ * @memberof audio
  * @param {number} volume - Float specifying volume (0.0 - 1.0 values accepted).
  */
 function setVolume(volume) {
@@ -14131,7 +14240,7 @@ function setVolume(volume) {
 
 /**
  * get the default global volume
- * @function audio.getVolume
+ * @memberof audio
  * @returns {number} current volume value in Float [0.0 - 1.0] .
  */
 function getVolume() {
@@ -14140,7 +14249,7 @@ function getVolume() {
 
 /**
  * mute or unmute the specified sound, but does not pause the playback.
- * @function audio.mute
+ * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will mute.
  * @param {boolean} [mute=true] - True to mute and false to unmute
@@ -14159,7 +14268,7 @@ function mute(sound_name, id, mute = true) {
 
 /**
  * unmute the specified sound
- * @function audio.unmute
+ * @memberof audio
  * @param {string} sound_name - audio clip name
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will unmute.
  */
@@ -14169,7 +14278,7 @@ function unmute(sound_name, id) {
 
 /**
  * mute all audio
- * @function audio.muteAll
+ * @memberof audio
  */
 function muteAll() {
     howler$1.Howler.mute(true);
@@ -14177,7 +14286,7 @@ function muteAll() {
 
 /**
  * unmute all audio
- * @function audio.unmuteAll
+ * @memberof audio
  */
 function unmuteAll() {
     howler$1.Howler.mute(false);
@@ -14185,7 +14294,7 @@ function unmuteAll() {
 
 /**
  * Returns true if audio is muted globally.
- * @function audio.muted
+ * @memberof audio
  * @returns {boolean} true if audio is muted globally
  */
 function muted() {
@@ -14194,7 +14303,7 @@ function muted() {
 
 /**
  * unload specified audio track to free memory
- * @function audio.unload
+ * @memberof audio
  * @param {string} sound_name - audio track name - case sensitive
  * @returns {boolean} true if unloaded
  * @example
@@ -14213,7 +14322,7 @@ function unload$1(sound_name) {
 
 /**
  * unload all audio to free memory
- * @function audio.unloadAll
+ * @memberof audio
  * @example
  * me.audio.unloadAll();
  */
@@ -14239,15 +14348,19 @@ var audio = {
 	mute: mute,
 	muteAll: muteAll,
 	muted: muted,
+	orientation: orientation,
+	panner: panner,
 	pause: pause,
 	pauseTrack: pauseTrack,
 	play: play,
 	playTrack: playTrack,
+	position: position,
 	rate: rate,
 	resume: resume,
 	resumeTrack: resumeTrack,
 	seek: seek,
 	setVolume: setVolume,
+	stereo: stereo,
 	stop: stop,
 	stopOnAudioError: stopOnAudioError,
 	stopTrack: stopTrack,
@@ -14311,7 +14424,7 @@ function isReserved(key) {
 
 
 // Initialize me.save on Boot event
-on(BOOT, () => {
+once(BOOT, () => {
     // Load previous data if local Storage is supported
     if (hasLocalStorage$1 === true) {
         let me_save_content = globalThis.localStorage.getItem("me.save");
@@ -14607,6 +14720,9 @@ let domRect = {left: 0, top: 0, x: 0, y: 0, width: 0, height: 0, right: 0, botto
 
 // a list of supported videoCodecs;
 let videoCodecs;
+
+// internal flag to avoid rechecking for support
+let WebGLSupport = -1;
 
 function disableSwipeFn(e) {
     e.preventDefault();
@@ -15264,19 +15380,21 @@ function getParentBounds(element) {
  * @returns {boolean} true if WebGL is supported
  */
 function isWebGLSupported(options) {
-    let _supported = false;
-    try {
-        let canvas = globalThis.document.createElement("canvas");
-        let ctxOptions = {
-            stencil: true,
-            failIfMajorPerformanceCaveat: options.failIfMajorPerformanceCaveat
-        };
-        _supported = !! (globalThis.WebGLRenderingContext && (canvas.getContext("webgl", ctxOptions) || canvas.getContext("experimental-webgl", ctxOptions)));
-    } catch (e) {
-        _supported = false;
+    if (WebGLSupport === -1) {
+        let _supported = false;
+        try {
+            let canvas = globalThis.document.createElement("canvas");
+            let ctxOptions = {
+                stencil: true,
+                failIfMajorPerformanceCaveat: options.failIfMajorPerformanceCaveat
+            };
+            _supported = !! (globalThis.WebGLRenderingContext && (canvas.getContext("webgl", ctxOptions) || canvas.getContext("experimental-webgl", ctxOptions)));
+            WebGLSupport = _supported ? 1 : 0;
+        } catch (e) {
+            WebGLSupport = 0;
+        }
     }
-
-    return _supported;
+    return WebGLSupport === 1;
 }
 
 /**
@@ -17818,6 +17936,364 @@ var input = {
 };
 
 /**
+ * Hash map of GLSL data types to WebGL Uniform methods
+ * @ignore
+ */
+const fnHash = {
+    "bool"      : "1i",
+    "int"       : "1i",
+    "float"     : "1f",
+    "vec2"      : "2fv",
+    "vec3"      : "3fv",
+    "vec4"      : "4fv",
+    "bvec2"     : "2iv",
+    "bvec3"     : "3iv",
+    "bvec4"     : "4iv",
+    "ivec2"     : "2iv",
+    "ivec3"     : "3iv",
+    "ivec4"     : "4iv",
+    "mat2"      : "Matrix2fv",
+    "mat3"      : "Matrix3fv",
+    "mat4"      : "Matrix4fv",
+    "sampler2D" : "1i"
+};
+
+/**
+ * @ignore
+ */
+function extractUniforms(gl, shader) {
+    let uniforms = {},
+        uniRx = /uniform\s+(\w+)\s+(\w+)/g,
+        uniformsData = {},
+        descriptor = {},
+        locations = {},
+        match;
+
+    // Detect all uniform names and types
+    [ shader.vertex, shader.fragment ].forEach((shader) => {
+        while ((match = uniRx.exec(shader))) {
+            uniformsData[match[2]] = match[1];
+        }
+    });
+
+    // Get uniform references
+    Object.keys(uniformsData).forEach((name) => {
+        let type = uniformsData[name];
+        locations[name] = gl.getUniformLocation(shader.program, name);
+
+        descriptor[name] = {
+            "get" : (function (name) {
+                /*
+                 * A getter for the uniform location
+                 */
+                return function () {
+                    return locations[name];
+                };
+            })(name),
+            "set" : (function (name, type, fn) {
+                if (type.indexOf("mat") === 0) {
+                    /*
+                     * A generic setter for uniform matrices
+                     */
+                    return function (val) {
+                        gl[fn](locations[name], false, val);
+                    };
+                }
+                else {
+                    /*
+                     * A generic setter for uniform vectors
+                     */
+                    return function (val) {
+                        let fnv = fn;
+                        if (val.length && fn.slice(-1) !== "v") {
+                            fnv += "v";
+                        }
+                        gl[fnv](locations[name], val);
+                    };
+                }
+            })(name, type, "uniform" + fnHash[type])
+        };
+    });
+    Object.defineProperties(uniforms, descriptor);
+
+    return uniforms;
+}
+
+/**
+ * @ignore
+ */
+function extractAttributes(gl, shader) {
+    let attributes = {},
+        attrRx = /attribute\s+\w+\s+(\w+)/g,
+        match,
+        i = 0;
+
+    // Detect all attribute names
+    while ((match = attrRx.exec(shader.vertex))) {
+        attributes[match[1]] = i++;
+    }
+
+    return attributes;
+}
+
+/**
+ * @ignore
+ */
+function compileShader(gl, type, source) {
+    let shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        throw new Error(gl.getShaderInfoLog(shader));
+    }
+
+    return shader;
+}
+
+/**
+ * Compile GLSL into a shader object
+ * @ignore
+ */
+function compileProgram(gl, vertex, fragment, attributes) {
+    let vertShader = compileShader(gl, gl.VERTEX_SHADER, vertex);
+    let fragShader = compileShader(gl, gl.FRAGMENT_SHADER, fragment);
+
+    let program = gl.createProgram();
+
+    gl.attachShader(program, vertShader);
+    gl.attachShader(program, fragShader);
+
+
+    // force vertex attributes to use location 0 as starting location to prevent
+    // browser to do complicated emulation when running on desktop OpenGL (e.g. on macOS)
+    for (let location in attributes) {
+        gl.bindAttribLocation(program, attributes[location], location);
+    }
+
+    gl.linkProgram(program);
+
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        let error_msg =
+            "Error initializing Shader " + this + "\n" +
+            "gl.VALIDATE_STATUS: " + gl.getProgramParameter(program, gl.VALIDATE_STATUS) + "\n" +
+            "gl.getError()" + gl.getError() + "\n" +
+            "gl.getProgramInfoLog()" + gl.getProgramInfoLog(program);
+        // house cleaning
+        gl.deleteProgram(program);
+        program = null;
+        // throw the exception
+        throw new Error(error_msg);
+    }
+
+    gl.useProgram(program);
+
+    // clean-up
+    gl.deleteShader(vertShader);
+    gl.deleteShader(fragShader);
+
+    return program;
+}
+
+/**
+ * set precision for the fiven shader source
+ * won't do anything if the precision is already specified
+ * @ignore
+ */
+function setPrecision(src, precision) {
+    if (src.substring(0, 9) !== "precision") {
+        return "precision " + precision + " float;" + src;
+    }
+    return src;
+}
+
+/**
+ * return the highest precision format supported by this device for GL Shaders
+ * @ignore
+ * @param {WebGLRenderingContext} gl - the current WebGL context
+ * @returns {boolean} "lowp", "mediump", or "highp"
+ */
+function getMaxShaderPrecision(gl) {
+    if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT ).precision > 0 &&
+        gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT ).precision > 0) {
+        return "highp";
+    }
+    if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT ).precision > 0 &&
+        gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT ).precision > 0) {
+        return "mediump";
+    }
+    return "lowp";
+}
+
+/**
+ * clean the given source from space, comments, etc...
+ * @ignore
+ */
+function minify(src) {
+    // remove comments
+    src = src.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, "$1");
+    // Remove leading and trailing whitespace from lines
+    src = src.replace(/(\\n\s+)|(\s+\\n)/g, "");
+    // Remove line breaks
+    src = src.replace(/(\\r|\\n)+/g, "");
+    // Remove unnecessary whitespace
+    src = src.replace(/\s*([;,[\](){}\\\/\-+*|^&!=<>?~%])\s*/g, "$1");
+
+    return src;
+}
+
+/**
+ * @classdesc
+ * a base GL Shader object
+ */
+class GLShader {
+    /**
+     * @param {WebGLRenderingContext} gl - the current WebGL rendering context
+     * @param {string} vertex - a string containing the GLSL source code to set
+     * @param {string} fragment - a string containing the GLSL source code to set
+     * @param {string} [precision=auto detected] - float precision ('lowp', 'mediump' or 'highp').
+     * @see https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_on_the_web/GLSL_Shaders
+     * @example
+     * // create a basic shader
+     * let myShader = new me.GLShader(
+     *    // WebGL rendering context
+     *    gl,
+     *    // vertex shader
+     *    [
+     *        "void main() {",
+     *        "    gl_Position = doMathToMakeClipspaceCoordinates;",
+     *        "}"
+     *    ].join("\n"),
+     *    // fragment shader
+     *    [
+     *        "void main() {",
+     *        "    gl_FragColor = doMathToMakeAColor;",
+     *        "}"
+     *    ].join("\n")
+     *  )
+     * // use the shader
+     * myShader.bind();
+     */
+    constructor(gl, vertex, fragment, precision) {
+
+        /**
+         * the active gl rendering context
+         * @type {WebGLRenderingContext}
+         */
+        this.gl = gl;
+
+        /**
+         * the vertex shader source code
+         * @type {string}
+         */
+        this.vertex = setPrecision(minify(vertex), precision || getMaxShaderPrecision(this.gl));
+
+        /**
+         * the fragment shader source code
+         * @type {string}
+         */
+        this.fragment = setPrecision(minify(fragment), precision || getMaxShaderPrecision(this.gl));
+
+        /**
+         * the location attributes of the shader
+         * @type {GLint[]}
+         */
+        this.attributes = extractAttributes(this.gl, this);
+
+
+        /**
+         * a reference to the shader program (once compiled)
+         * @type {WebGLProgram}
+         */
+        this.program = compileProgram(this.gl, this.vertex, this.fragment, this.attributes);
+
+        /**
+         * the uniforms of the shader
+         * @type {object}
+         */
+        this.uniforms = extractUniforms(this.gl, this);
+
+        // destroy the shader on context lost (will be recreated on context restore)
+        on(ONCONTEXT_LOST, this.destroy, this);
+    }
+
+    /**
+     * Installs this shader program as part of current rendering state
+     */
+    bind() {
+        this.gl.useProgram(this.program);
+    }
+
+    /**
+     * returns the location of an attribute variable in this shader program
+     * @param {string} name - the name of the attribute variable whose location to get.
+     * @returns {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
+     */
+    getAttribLocation(name) {
+        let attr = this.attributes[name];
+        if (typeof attr !== "undefined") {
+            return attr;
+        } else {
+            return -1;
+        }
+    }
+
+    /**
+     * Set the uniform to the given value
+     * @param {string} name - the uniform name
+     * @param {object|Float32Array} value - the value to assign to that uniform
+     * @example
+     * myShader.setUniform("uProjectionMatrix", this.projectionMatrix);
+     */
+    setUniform(name, value) {
+        let uniforms = this.uniforms;
+        if (typeof uniforms[name] !== "undefined") {
+            if (typeof value === "object" && typeof value.toArray === "function") {
+                uniforms[name] = value.toArray();
+            } else {
+                uniforms[name] = value;
+            }
+        } else {
+            throw new Error("undefined (" + name + ") uniform for shader " + this);
+        }
+    }
+
+    /**
+     * activate the given vertex attribute for this shader
+     * @param {WebGLRenderingContext} gl - the current WebGL rendering context
+     * @param {object[]} attributes - an array of vertex attributes
+     * @param {number} vertexByteSize - the size of a single vertex in bytes
+     */
+    setVertexAttributes(gl, attributes, vertexByteSize) {
+        // set the vertex attributes
+        for (let index = 0; index < attributes.length; ++index) {
+            let element = attributes[index];
+            let location = this.getAttribLocation(element.name);
+
+            if (location !== -1) {
+                gl.enableVertexAttribArray(location);
+                gl.vertexAttribPointer(location, element.size, element.type, element.normalized, vertexByteSize, element.offset);
+            } else {
+                gl.disableVertexAttribArray(index);
+            }
+        }
+    }
+
+    /**
+     * destroy this shader objects resources (program, attributes, uniforms)
+     */
+    destroy() {
+        this.uniforms = null;
+        this.attributes = null;
+
+        this.gl.deleteProgram(this.program);
+
+        this.vertex = null;
+        this.fragment = null;
+    }
+}
+
+/**
  * @classdesc
  * A base class for renderable objects.
  * @augments Rect
@@ -18603,8 +19079,10 @@ class Renderable extends Rect {
             this._absPos = undefined;
         }
 
-        pool.push(this._bounds);
-        this._bounds = undefined;
+        if (this._bounds instanceof Bounds) {
+            pool.push(this._bounds);
+            this._bounds = undefined;
+        }
 
         this.onVisibilityChange = undefined;
 
@@ -18613,16 +19091,22 @@ class Renderable extends Rect {
             this.mask = undefined;
         }
 
-        if (typeof this._tint !== "undefined") {
+        if (this._tint instanceof Color) {
             pool.push(this._tint);
             this._tint = undefined;
         }
 
+        // cannot import and reference a Container from a Renderable, since Container extends Renderable, creating a circular dependency
+        //if (this.ancestor instanceof Container || this.ancestor instanceof Entity) {
         this.ancestor = undefined;
-        this._parentApp = undefined;
 
-        // destroy the physic body if defined and is a builtin body object
-        if ((typeof this.body !== "undefined") && (typeof this.body.destroy === "function")) {
+        // cannot import and reference a Application from a Renderable, messsing up class order in the bundle
+        //if (this._parentApp instanceof Application) {
+        this._parentApp = undefined;
+        //}
+
+        // destroy the physic body if a builtin body object
+        if (this.body instanceof Body) {
             this.body.destroy.apply(this.body, arguments);
             this.body = undefined;
         }
@@ -18634,7 +19118,7 @@ class Renderable extends Rect {
         this.onDestroyEvent.apply(this, arguments);
 
         // destroy any shader object if not done by the user through onDestroyEvent()
-        if (typeof this.shader === "object") {
+        if (this.shader instanceof GLShader) {
             this.shader.destroy();
             this.shader = undefined;
         }
@@ -19558,7 +20042,7 @@ class Stage {
      * this is typically where you will load a level, add renderables, etc...
      * @name onResetEvent
      * @memberof Stage
-     * @param {object} [...arguments] - optional arguments passed when switching state
+     * @param {...*} [args] - optional arguments passed when switching state
      * @see state#change
      */
     onResetEvent() {
@@ -19708,6 +20192,197 @@ function fetchData(url, responseType, settings = {}) {
     });
 }
 
+// parse and return the compressed texture
+function parseDDS(/*data, formats*/) {
+    throw new Error("unsupported format");
+}
+
+// parse and return the compressed texture
+function parseKTX(/*data, formats*/) {
+    throw new Error("unsupported format");
+}
+
+// parse and return the compressed texture
+function parseKTX2(/*data, formats*/) {
+    throw new Error("unsupported format");
+}
+
+/*
+const COMPRESSED_RGB_PVRTC_4BPPV1_IMG = 0x8C00;
+const COMPRESSED_RGB_PVRTC_2BPPV1_IMG = 0x8C01;
+const COMPRESSED_RGBA_PVRTC_4BPPV1_IMG = 0x8C02;
+const COMPRESSED_RGBA_PVRTC_2BPPV1_IMG = 0x8C03;
+
+const COMPRESSED_RGB_ETC1_WEBGL = 0x8D64;
+
+const PVR_HEADER_LENGTH = 13; // The header length in 32 bit ints.
+//const PVR_MAGIC = 0x03525650; //0x50565203;
+
+// Offsets into the header array.
+//const PVR_HEADER_MAGIC = 0;
+const PVR_HEADER_FORMAT = 2;
+const PVR_HEADER_HEIGHT = 6;
+const PVR_HEADER_WIDTH = 7;
+const PVR_HEADER_MIPMAPCOUNT = 11;
+const PVR_HEADER_METADATA = 12;
+
+const PVR_FORMAT_2BPP_RGB = 0;
+const PVR_FORMAT_2BPP_RGBA = 1;
+const PVR_FORMAT_4BPP_RGB = 2;
+const PVR_FORMAT_4BPP_RGBA = 3;
+//const PVR_COLOR_SPACE = 4;
+const PVR_FORMAT_ETC1 = 6;
+const PVR_FORMAT_DXT1 = 7;
+const PVR_FORMAT_DXT3 = 9;
+const PVR_FORMAT_DXT5 = 5;
+
+const COMPRESSED_RGB_S3TC_DXT1_EXT = 0x83F0;
+//const COMPRESSED_RGBA_S3TC_DXT1_EXT = 0x83F1;
+const COMPRESSED_RGBA_S3TC_DXT3_EXT = 0x83F2;
+const COMPRESSED_RGBA_S3TC_DXT5_EXT = 0x83F3;
+
+const PVR_TO_WEBGL_FORMAT = {
+    [PVR_FORMAT_2BPP_RGB] : COMPRESSED_RGB_PVRTC_2BPPV1_IMG,
+    [PVR_FORMAT_2BPP_RGBA] : COMPRESSED_RGBA_PVRTC_2BPPV1_IMG,
+    [PVR_FORMAT_4BPP_RGB] : COMPRESSED_RGB_PVRTC_4BPPV1_IMG,
+    [PVR_FORMAT_4BPP_RGBA] : COMPRESSED_RGBA_PVRTC_4BPPV1_IMG,
+    [PVR_FORMAT_ETC1] : COMPRESSED_RGB_ETC1_WEBGL,
+    [PVR_FORMAT_DXT1] : COMPRESSED_RGB_S3TC_DXT1_EXT,
+    [PVR_FORMAT_DXT3] : COMPRESSED_RGBA_S3TC_DXT3_EXT,
+    [PVR_FORMAT_DXT5] : COMPRESSED_RGBA_S3TC_DXT5_EXT
+};
+
+function levelBufferSize(format, width, height) {
+    switch (format) {
+        case COMPRESSED_RGB_S3TC_DXT1_EXT:
+        case COMPRESSED_RGB_ETC1_WEBGL:
+            return ((width + 3) >> 2) * ((height + 3) >> 2) * 8;
+
+        case COMPRESSED_RGBA_S3TC_DXT3_EXT:
+        case COMPRESSED_RGBA_S3TC_DXT5_EXT:
+            return ((width + 3) >> 2) * ((height + 3) >> 2) * 16;
+
+        case COMPRESSED_RGB_PVRTC_4BPPV1_IMG:
+        case COMPRESSED_RGBA_PVRTC_4BPPV1_IMG:
+            return Math.floor((Math.max(width, 8) * Math.max(height, 8) * 4 + 7) / 8);
+
+        case COMPRESSED_RGB_PVRTC_2BPPV1_IMG:
+        case COMPRESSED_RGBA_PVRTC_2BPPV1_IMG:
+            return Math.floor((Math.max(width, 16) * Math.max(height, 8) * 2 + 7) / 8);
+
+        default:
+            return 0;
+    }
+}
+*/
+
+// parse and return the compressed texture
+function parsePVR() {
+
+    throw new Error("unsupported format");
+
+    /*
+
+    // Create a new DataView from the data
+    let header = new Uint32Array(data, 0, PVR_HEADER_LENGTH);
+
+    //console.log(header);
+
+    // VERSION
+    //const version = header[PVR_HEADER_FORMAT];
+    //const versionMatch = version === PVR_MAGIC;
+
+    //  PIXEL_FORMAT_INDEX
+    const pvrFormat = PVR_TO_WEBGL_FORMAT[header[PVR_HEADER_FORMAT]] || -1;
+    const width = header[PVR_HEADER_WIDTH];
+    const height = header[PVR_HEADER_HEIGHT];
+    const dataOffset = header[PVR_HEADER_METADATA] + 52;
+    //const colorSpace = header[PVR_COLOR_SPACE];
+    const mipmapCount = header[PVR_HEADER_MIPMAPCOUNT];
+
+    var image = new Uint8Array(data, dataOffset);
+    var mipmaps = new Array(mipmapCount);
+
+    var offset = 0;
+    var levelWidth = width;
+    var levelHeight = height;
+
+    for (var i = 0; i < mipmapCount; i++)
+    {
+        var levelSize = levelBufferSize(pvrFormat, levelWidth, levelHeight);
+
+        mipmaps[i] = {
+            data: new Uint8Array(image.buffer, image.byteOffset + offset, levelSize),
+            width: levelWidth,
+            height: levelHeight
+        };
+
+        levelWidth = Math.max(1, levelWidth >> 1);
+        levelHeight = Math.max(1, levelHeight >> 1);
+
+        offset += levelSize;
+    }
+
+    return {
+        mipmaps: mipmaps,
+        width: width,
+        height: height,
+        format: pvrFormat,
+        compressed: true,
+        generateMipmap: false
+    };
+
+    */
+}
+
+// parse and return the compressed texture
+function parsePKM(/*data, formats*/) {
+    throw new Error("unsupported format");
+}
+
+let _renderer;
+
+// gracefully capture a reference to the active renderer without adding more cyclic redundancy
+once(VIDEO_INIT, (renderer) => {
+    _renderer = renderer;
+});
+
+
+function parseCompressedImage(arrayBuffer, imgExt) {
+    let texture;
+
+    // check if the current renderer is WebGL
+    if (_renderer.type.includes("WebGL")) {
+        switch (imgExt) {
+            // Compressed texture
+            case "dds":
+                texture = parseDDS(arrayBuffer);
+                break;
+            case "pvr":
+                texture = parsePVR(arrayBuffer);
+                break;
+            case "pkm":
+                texture = parsePKM(arrayBuffer);
+                break;
+            case "ktx":
+                texture = parseKTX(arrayBuffer);
+                break;
+            case "ktx2":
+                texture = parseKTX2(arrayBuffer);
+                break;
+        }
+    }
+
+    if (typeof texture !== "undefined") {
+        if (_renderer.hasSupportedCompressedFormats(texture.format)) {
+            console.log("Compressed texture format supported: " + texture.format);
+            return texture;
+        }
+    }
+
+    throw ("unsupported texture format:" + imgExt + texture ? " (" + texture.format + ")" : "");
+}
+
 /**
  * parse/preload an image
  * @param {loader.Asset} img
@@ -19730,52 +20405,98 @@ function preloadImage(img, onload, onerror, settings) {
         return 0;
     }
 
-    // handle SVG file loading
-    if (getExtension(img.src) === "svg") {
-        // handle SVG file
-        fetchData(img.src, "text", settings)
-            .then(svgText => {
-                const svgImage = new Image();
-                svgImage.onload = function() {
-                    imgList[img.name] = svgImage;
-                    if (typeof onload === "function") {
-                        // callback
-                        onload();
-                    }
-                };
-                svgImage.onerror = function(error) {
-                    if (typeof onerror === "function") {
-                        onerror(error);
-                    }
-                };
-                svgImage.src = "data:image/svg+xml;charset=utf8," + encodeURIComponent(svgText);
-            })
-            .catch(error => {
-                if (typeof onerror === "function") {
-                    onerror(error);
-                }
-            });
-    } else {
-        // handle all other image files
-        fetchData(img.src, "blob", settings)
-            .then(blob => {
-                globalThis.createImageBitmap(blob)
-                    .then((bitmap) => {
-                        imgList[img.name] = bitmap;
-                        if (typeof onload === "function") {
-                            // callback
-                            onload();
+    let sources = Array.isArray(img.src) ? img.src : [img.src];
+    let isFormatSupported = false;
+
+    for (const imgPath of sources) {
+        const imgExt = getExtension(imgPath);
+        // loop will stop as soon as a first supported format is detected
+        switch (imgExt) {
+            // Compressed texture
+            case "dds":
+            case "pvr":
+            case "pkm":
+            case "ktx":
+            case "ktx2":
+                fetchData(imgPath, "arrayBuffer", settings)
+                    .then(arrayBuffer => {
+                        try {
+                            imgList[img.name] = parseCompressedImage(arrayBuffer, imgExt);
+                            isFormatSupported = true;
+                            if (typeof onload === "function") {
+                                // callback
+                                onload();
+                            }
+                        } catch (e) {
+                            // parseCompressedImage will throw an error if a format is not supported or badly formatted
+                        }
+                    }).catch(error => {
+                        if (typeof onerror === "function") {
+                            // file cannot be loaded
+                            onerror(error);
                         }
                     });
-            })
-            .catch(error => {
-                if (typeof onerror === "function") {
-                    onerror(error);
-                }
-            });
+                break;
+
+            // SVG file
+            case "svg":
+                fetchData(imgPath, "text", settings)
+                    .then(svgText => {
+                        const svgImage = new Image();
+                        svgImage.onload = function() {
+                            imgList[img.name] = svgImage;
+                            if (typeof onload === "function") {
+                                // callback
+                                onload();
+                            }
+                        };
+                        svgImage.onerror = function(error) {
+                            if (typeof onerror === "function") {
+                                onerror(error);
+                            }
+                        };
+                        svgImage.src = "data:image/svg+xml;charset=utf8," + encodeURIComponent(svgText);
+                    })
+                    .catch(error => {
+                        if (typeof onerror === "function") {
+                            onerror(error);
+                        }
+                    });
+                isFormatSupported = true;
+                break;
+
+            // default is regular images (jpg, png and friends)
+            default:
+                fetchData(imgPath, "blob", settings)
+                    .then(blob => {
+                        globalThis.createImageBitmap(blob)
+                            .then((bitmap) => {
+                                imgList[img.name] = bitmap;
+                                if (typeof onload === "function") {
+                                    // callback
+                                    onload();
+                                }
+                            });
+                    })
+                    .catch(error => {
+                        if (typeof onerror === "function") {
+                            onerror(error);
+                        }
+                    });
+                isFormatSupported = true;
+                break;
+        }
+
+        // exit the loop as soon as the first supported format is detected
+        if (isFormatSupported === true) {
+            return 1;
+        }
     }
 
-    return 1;
+    // no compatible format was found
+    throw new Error(
+        "No suppported Image file format found for " + img.name
+    );
 }
 
 /**
@@ -24842,6 +25563,298 @@ class Path2D {
     }
 }
 
+// default canvas settings
+let defaultAttributes = {
+    offscreenCanvas : false,
+    willReadFrequently : false,
+    antiAlias : false,
+    context: "2d",
+    transparent : false,
+    premultipliedAlpha: true,
+    stencil: true,
+    blendMode : "normal",
+    failIfMajorPerformanceCaveat : true,
+    preferWebGL1 : false,
+    powerPreference : "default"
+};
+
+// WebGL version (if a gl context is created)
+let WebGLVersion;
+
+// a helper function to create the 2d/webgl context
+function createContext(canvas, attributes) {
+    let context;
+
+    if (attributes.context === "2d") {
+        // 2d/canvas mode
+        context = canvas.getContext(attributes.context, { willReadFrequently: attributes.willReadFrequently });
+    } else if (attributes.context === "webgl") {
+
+        let attr = {
+            alpha : attributes.transparent,
+            antialias : attributes.antiAlias,
+            depth : attributes.depth,
+            stencil: true,
+            preserveDrawingBuffer : false,
+            premultipliedAlpha: attributes.transparent ? attributes.premultipliedAlpha : false,
+            powerPreference: attributes.powerPreference,
+            failIfMajorPerformanceCaveat : attributes.failIfMajorPerformanceCaveat
+        };
+
+        // attempt to create a WebGL2 context if requested
+        if (attributes.preferWebGL1 === false) {
+            context = canvas.getContext("webgl2", attr);
+            if (context) {
+                WebGLVersion = 2;
+            }
+        }
+
+        // fallback to WebGL1
+        if (!context) {
+            WebGLVersion = 1;
+            context = canvas.getContext("webgl", attr) || canvas.getContext("experimental-webgl", attr);
+        }
+
+        if (!context) {
+            throw new Error(
+                "A WebGL context could not be created."
+            );
+        }
+    } else {
+        throw new Error(
+            "Invalid context type. Must be one of '2d' or 'webgl'"
+        );
+    }
+
+    // set the context size
+    return context;
+}
+
+/**
+ * CanvasRenderTarget is 2D render target which exposes a Canvas interface.
+ */
+class CanvasRenderTarget {
+    /**
+     * @param {number} width - the desired width of the canvas
+     * @param {number} height - the desired height of the canvas
+     * @param {object} attributes - The attributes to create both the canvas and context
+     * @param {boolean} [attributes.context="2d"] - the context type to be created ("2d", "webgl", "webgl2")
+     * @param {boolean} [attributes.offscreenCanvas=false] - will create an offscreenCanvas if true instead of a standard canvas
+     * @param {boolean} [attributes.willReadFrequently=false] - Indicates whether or not a lot of read-back operations are planned
+     * @param {boolean} [attributes.antiAlias=false] - Whether to enable anti-aliasing, use false (default) for a pixelated effect.
+     */
+    constructor(width, height, attributes = defaultAttributes) {
+        /**
+         * the canvas created for this CanvasRenderTarget
+         * @type {HTMLCanvasElement|OffscreenCanvas}
+         */
+        this.canvas;
+
+        /**
+         * the rendering context of this CanvasRenderTarget
+         * @type {CanvasRenderingContext2D|WebGLRenderingContext}
+         */
+        this.context;
+
+        // clean up the given attributes
+        this.attributes = Object.assign({}, defaultAttributes, attributes);
+
+        // used the given canvas if any
+        if (typeof attributes.canvas !== "undefined") {
+            this.canvas = attributes.canvas;
+        } else {
+            this.canvas = createCanvas(width, height, this.attributes.offscreenCanvas);
+        }
+
+        // create the context
+        this.context = createContext(this.canvas, this.attributes);
+
+        this.WebGLVersion = WebGLVersion;
+
+        // enable or disable antiAlias if specified
+        this.setAntiAlias(this.attributes.antiAlias);
+    }
+
+    /**
+     * @ignore
+     */
+    onResetEvent(width, height) {
+        this.clear();
+        this.resize(width, height);
+    }
+
+    /**
+     * Clears the content of the canvas texture
+     */
+    clear() {
+        this.context.setTransform(1, 0, 0, 1, 0, 0);
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+
+    /**
+     * enable/disable image smoothing (scaling interpolation)
+     * @param {boolean} [enable=false] - whether to enable or not image smoothing (scaling interpolation)
+     */
+    setAntiAlias(enable = false) {
+        let canvas = this.canvas;
+
+        // enable/disable antialias on the given Context2d object
+        setPrefixed("imageSmoothingEnabled", enable, this.context);
+
+        // set antialias CSS property on the main canvas
+        if (typeof canvas.style !== "undefined") {
+            if (enable !== true) {
+                // https://developer.mozilla.org/en-US/docs/Web/CSS/image-rendering
+                canvas.style["image-rendering"] = "optimizeSpeed"; // legal fallback
+                canvas.style["image-rendering"] = "-moz-crisp-edges"; // Firefox
+                canvas.style["image-rendering"] = "-o-crisp-edges"; // Opera
+                canvas.style["image-rendering"] = "-webkit-optimize-contrast"; // Safari
+                canvas.style["image-rendering"] = "optimize-contrast"; // CSS 3
+                canvas.style["image-rendering"] = "crisp-edges"; // CSS 4
+                canvas.style["image-rendering"] = "pixelated"; // CSS 4
+                canvas.style.msInterpolationMode = "nearest-neighbor"; // IE8+
+            } else {
+                canvas.style["image-rendering"] = "auto";
+            }
+        }
+    }
+
+    /**
+     * Resizes the canvas texture to the given width and height.
+     * @param {number} width - the desired width
+     * @param {number} height - the desired height
+     */
+    resize(width, height) {
+        this.canvas.width = Math.round(width);
+        this.canvas.height = Math.round(height);
+    }
+
+    /**
+     * Returns an ImageData object representing the underlying pixel data for a specified portion of this canvas texture.
+     * (Note: when using getImageData(), it is highly recommended to use the `willReadFrequently` attribute when creatimg the corresponding canvas texture)
+     * @param {number} x - The x-axis coordinate of the top-left corner of the rectangle from which the ImageData will be extracted
+     * @param {number} y - The y-axis coordinate of the top-left corner of the rectangle from which the ImageData will be extracted
+     * @param {number} width - The width of the rectangle from which the ImageData will be extracted. Positive values are to the right, and negative to the left
+     * @param {number} height - The height of the rectangle from which the ImageData will be extracted. Positive values are down, and negative are up
+     * @returns {ImageData} The ImageData extracted from this CanvasRenderTarget.
+     */
+    getImageData(x, y, width, height) {
+        // clamp values
+        x = clamp(Math.floor(x), 0, this.canvas.width - 1);
+        y = clamp(Math.floor(y), 0, this.canvas.height - 1);
+        width = clamp(width, 1, this.canvas.width - x);
+        height = clamp(height, 1, this.canvas.height - y);
+        // return imageData
+        return this.context.getImageData(x, y, width, height);
+    }
+
+    /**
+     * creates a Blob object representing the image contained in this canvas texture
+     * @param {string} [type="image/png"] - A string indicating the image format
+     * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @returns {Promise} A Promise returning a Blob object representing the image contained in this canvas texture
+     * @example
+     * renderTarget.convertToBlob().then((blob) => console.log(blob));
+     */
+    toBlob(type = "image/png", quality) {
+        if (typeof this.canvas.convertToBlob === "function") {
+            return this.canvas.convertToBlob(type, quality);
+        } else {
+            return new Promise(function(resolve) {
+                this.canvas.toBlob((blob) => {
+                    resolve(blob);
+                }, type, quality);
+            });
+        }
+    }
+
+    /**
+     * creates an ImageBitmap object from the most recently rendered image of this canvas texture
+     * @param {string} [type="image/png"] - A string indicating the image format
+     * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @returns {Promise} A Promise returning an ImageBitmap.
+     * @example
+     * renderTarget.transferToImageBitmap().then((bitmap) => console.log(bitmap));
+     */
+    toImageBitmap(type = "image/png", quality) {
+        return new Promise((resolve) => {
+            if (typeof this.canvas.transferToImageBitmap === "function") {
+                resolve(this.canvas.transferToImageBitmap());
+            } else {
+                let image = new Image();
+                image.src = this.canvas.toDataURL(type, quality);
+                image.onload = () => {
+                    globalThis.createImageBitmap(image).then((bitmap) => resolve(bitmap));
+                };
+            }
+        });
+    }
+
+    /**
+     * returns a data URL containing a representation of the most recently rendered image of this canvas texture
+     * (not supported by OffscreenCanvas)
+     * @param {string} [type="image/png"] - A string indicating the image format
+     * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
+     * @returns {Promise} A Promise returning a string containing the requested data URL.
+     * @example
+     * renderer.toDataURL().then((dataURL) => console.log(dataURL));
+     */
+    toDataURL(type = "image/png", quality) {
+        return new Promise((resolve) => {
+            resolve(this.canvas.toDataURL(type, quality));
+        });
+    }
+
+    /**
+     * invalidate the current CanvasRenderTarget, and force a reupload of the corresponding texture
+     * (call this if you modify the canvas content between two draw calls)
+     * @param {CanvasRenderer|WebGLRenderer} renderer - the renderer to which this canvas texture is attached
+     */
+    invalidate(renderer) {
+        if (typeof renderer.gl !== "undefined") {
+            // make sure the right compositor is active
+            renderer.setCompositor("quad");
+            // invalidate the previous corresponding texture so that it can reuploaded once changed
+            this.glTextureUnit = renderer.cache.getUnit(renderer.cache.get(this.canvas));
+            renderer.currentCompositor.unbindTexture2D(null, this.glTextureUnit);
+        }
+    }
+
+    /**
+     * @ignore
+     */
+    destroy() {
+        this.context = undefined;
+        this.canvas = undefined;
+    }
+
+    /**
+     * The width of this canvas texture in pixels
+     * @public
+     * @type {number}
+     */
+    get width() {
+        return this.canvas.width;
+    }
+
+    set width(val) {
+        this.canvas.width = Math.round(val);
+    }
+
+    /**
+     * The height of this canvas texture in pixels
+     * @public
+     * @type {number}
+     */
+    get height() {
+        return this.canvas.height;
+    }
+
+    set height(val) {
+        this.canvas.height = Math.round(val);
+    }
+}
+
 /**
  * @classdesc
  * a base renderer object
@@ -24851,6 +25864,14 @@ class Renderer {
      * @param {Application.Settings} [options] - optional parameters for the renderer
      */
     constructor(options) {
+
+        /**
+         * The renderer renderTarget
+         * @name renderTarget
+         * @type {CanvasRenderTarget}
+         */
+        this.renderTarget = new CanvasRenderTarget(options.width, options.height, options);
+
         /**
          * The given constructor options
          * @public
@@ -24996,7 +26017,7 @@ class Renderer {
      * @returns {HTMLCanvasElement}
      */
     getCanvas() {
-        return this.canvas;
+        return this.renderTarget.canvas;
     }
 
     /**
@@ -25004,7 +26025,7 @@ class Renderer {
      * @returns {CanvasRenderingContext2D|WebGLRenderingContext}
      */
     getContext() {
-        return this.context;
+        return this.renderTarget.context;
     }
 
     /**
@@ -25104,25 +26125,7 @@ class Renderer {
      * @param {boolean} [enable=false]
      */
     setAntiAlias(context, enable) {
-        let canvas = context.canvas;
-
-        // enable/disable antialis on the given Context2d object
-        setPrefixed("imageSmoothingEnabled", enable === true, context);
-
-        // set antialias CSS property on the main canvas
-        if (enable !== true) {
-            // https://developer.mozilla.org/en-US/docs/Web/CSS/image-rendering
-            canvas.style["image-rendering"] = "optimizeSpeed"; // legal fallback
-            canvas.style["image-rendering"] = "-moz-crisp-edges"; // Firefox
-            canvas.style["image-rendering"] = "-o-crisp-edges"; // Opera
-            canvas.style["image-rendering"] = "-webkit-optimize-contrast"; // Safari
-            canvas.style["image-rendering"] = "optimize-contrast"; // CSS 3
-            canvas.style["image-rendering"] = "crisp-edges"; // CSS 4
-            canvas.style["image-rendering"] = "pixelated"; // CSS 4
-            canvas.style.msInterpolationMode = "nearest-neighbor"; // IE8+
-        } else {
-            canvas.style["image-rendering"] = "auto";
-        }
+        this.renderTarget.setAntiAlias(context, enable);
     }
 
     /**
@@ -25251,13 +26254,7 @@ class Renderer {
      * renderer.convertToBlob().then((blob) => console.log(blob));
      */
     toBlob(type = "image/png", quality) {
-        return new Promise((resolve) => {
-            once(GAME_AFTER_DRAW, () => {
-                this.canvas.toBlob((blob) => {
-                    resolve(blob);
-                }, type, quality);
-            });
-        });
+        return this.renderTarget.toBlob(type, quality);
     }
 
     /**
@@ -25270,15 +26267,7 @@ class Renderer {
      * renderer.transferToImageBitmap().then((image) => console.log(image));
      */
     toImageBitmap(type = "image/png", quality) {
-        return new Promise((resolve) => {
-            once(GAME_AFTER_DRAW, () => {
-                let image = new Image();
-                image.src = this.canvas.toDataURL(type, quality);
-                image.onload = () => {
-                    createImageBitmap(image).then((bitmap) => resolve(bitmap));
-                };
-            });
-        });
+        return this.renderTarget.toImageBitmap(type, quality);
     }
 
     /**
@@ -25290,11 +26279,7 @@ class Renderer {
      * renderer.toDataURL().then((dataURL) => console.log(dataURL));
      */
     toDataURL(type = "image/png", quality) {
-        return new Promise((resolve) => {
-            once(GAME_AFTER_DRAW, () => {
-                resolve(this.canvas.toDataURL(type, quality));
-            });
-        });
+        return this.renderTarget.toDataURL(type, quality);
     }
 }
 
@@ -26271,9 +27256,6 @@ class CanvasRenderer extends Renderer {
     constructor(options) {
         // parent constructor
         super(options);
-
-        // defined the 2d context
-        this.context = this.getContext2d(this.getCanvas(), this.settings.transparent);
 
         this.setBlendMode(this.settings.blendMode);
 
@@ -32440,13 +33422,13 @@ function _switchState(state) {
 }
 
 // initialize me.state on system boot
-on(BOOT, () => {
+once(BOOT, () => {
     // set the built-in loading stage
     state.set(state.LOADING, new DefaultLoadingScreen());
     // set and enable the default stage
     state.set(state.DEFAULT, new Stage());
     // enable by default as soon as the display is initialized
-    on(VIDEO_INIT, () => {
+    once(VIDEO_INIT, () => {
         state.change(state.DEFAULT, true);
     });
 });
@@ -32795,7 +33777,7 @@ let state = {
      * @public
      * @param {number} state - State ID (see constants)
      * @param {boolean} forceChange - if true the state will be changed immediately
-     * @param {object} [...arguments] - extra arguments to be passed to the reset functions
+     * @param {...*} [args] - extra arguments to be passed to the reset functions
      * @example
      * // The onResetEvent method on the play screen will receive two args:
      * // "level_1" and the number 3
@@ -32917,8 +33899,8 @@ class Timer {
         this.timers = [];
         this.timerId = 0;
 
-        // Initialize mtimer on Boot event
-        on(BOOT, () => {
+        // Initialize timer on Boot event
+        once(BOOT, () => {
             // reset variables to initial state
             this.reset();
             this.now = this.last = 0;
@@ -34717,364 +35699,6 @@ class Tween {
 }
 
 /**
- * Hash map of GLSL data types to WebGL Uniform methods
- * @ignore
- */
-const fnHash = {
-    "bool"      : "1i",
-    "int"       : "1i",
-    "float"     : "1f",
-    "vec2"      : "2fv",
-    "vec3"      : "3fv",
-    "vec4"      : "4fv",
-    "bvec2"     : "2iv",
-    "bvec3"     : "3iv",
-    "bvec4"     : "4iv",
-    "ivec2"     : "2iv",
-    "ivec3"     : "3iv",
-    "ivec4"     : "4iv",
-    "mat2"      : "Matrix2fv",
-    "mat3"      : "Matrix3fv",
-    "mat4"      : "Matrix4fv",
-    "sampler2D" : "1i"
-};
-
-/**
- * @ignore
- */
-function extractUniforms(gl, shader) {
-    let uniforms = {},
-        uniRx = /uniform\s+(\w+)\s+(\w+)/g,
-        uniformsData = {},
-        descriptor = {},
-        locations = {},
-        match;
-
-    // Detect all uniform names and types
-    [ shader.vertex, shader.fragment ].forEach((shader) => {
-        while ((match = uniRx.exec(shader))) {
-            uniformsData[match[2]] = match[1];
-        }
-    });
-
-    // Get uniform references
-    Object.keys(uniformsData).forEach((name) => {
-        let type = uniformsData[name];
-        locations[name] = gl.getUniformLocation(shader.program, name);
-
-        descriptor[name] = {
-            "get" : (function (name) {
-                /*
-                 * A getter for the uniform location
-                 */
-                return function () {
-                    return locations[name];
-                };
-            })(name),
-            "set" : (function (name, type, fn) {
-                if (type.indexOf("mat") === 0) {
-                    /*
-                     * A generic setter for uniform matrices
-                     */
-                    return function (val) {
-                        gl[fn](locations[name], false, val);
-                    };
-                }
-                else {
-                    /*
-                     * A generic setter for uniform vectors
-                     */
-                    return function (val) {
-                        let fnv = fn;
-                        if (val.length && fn.slice(-1) !== "v") {
-                            fnv += "v";
-                        }
-                        gl[fnv](locations[name], val);
-                    };
-                }
-            })(name, type, "uniform" + fnHash[type])
-        };
-    });
-    Object.defineProperties(uniforms, descriptor);
-
-    return uniforms;
-}
-
-/**
- * @ignore
- */
-function extractAttributes(gl, shader) {
-    let attributes = {},
-        attrRx = /attribute\s+\w+\s+(\w+)/g,
-        match,
-        i = 0;
-
-    // Detect all attribute names
-    while ((match = attrRx.exec(shader.vertex))) {
-        attributes[match[1]] = i++;
-    }
-
-    return attributes;
-}
-
-/**
- * @ignore
- */
-function compileShader(gl, type, source) {
-    let shader = gl.createShader(type);
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        throw new Error(gl.getShaderInfoLog(shader));
-    }
-
-    return shader;
-}
-
-/**
- * Compile GLSL into a shader object
- * @ignore
- */
-function compileProgram(gl, vertex, fragment, attributes) {
-    let vertShader = compileShader(gl, gl.VERTEX_SHADER, vertex);
-    let fragShader = compileShader(gl, gl.FRAGMENT_SHADER, fragment);
-
-    let program = gl.createProgram();
-
-    gl.attachShader(program, vertShader);
-    gl.attachShader(program, fragShader);
-
-
-    // force vertex attributes to use location 0 as starting location to prevent
-    // browser to do complicated emulation when running on desktop OpenGL (e.g. on macOS)
-    for (let location in attributes) {
-        gl.bindAttribLocation(program, attributes[location], location);
-    }
-
-    gl.linkProgram(program);
-
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-        let error_msg =
-            "Error initializing Shader " + this + "\n" +
-            "gl.VALIDATE_STATUS: " + gl.getProgramParameter(program, gl.VALIDATE_STATUS) + "\n" +
-            "gl.getError()" + gl.getError() + "\n" +
-            "gl.getProgramInfoLog()" + gl.getProgramInfoLog(program);
-        // house cleaning
-        gl.deleteProgram(program);
-        program = null;
-        // throw the exception
-        throw new Error(error_msg);
-    }
-
-    gl.useProgram(program);
-
-    // clean-up
-    gl.deleteShader(vertShader);
-    gl.deleteShader(fragShader);
-
-    return program;
-}
-
-/**
- * set precision for the fiven shader source
- * won't do anything if the precision is already specified
- * @ignore
- */
-function setPrecision(src, precision) {
-    if (src.substring(0, 9) !== "precision") {
-        return "precision " + precision + " float;" + src;
-    }
-    return src;
-}
-
-/**
- * return the highest precision format supported by this device for GL Shaders
- * @ignore
- * @param {WebGLRenderingContext} gl - the current WebGL context
- * @returns {boolean} "lowp", "mediump", or "highp"
- */
-function getMaxShaderPrecision(gl) {
-    if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT ).precision > 0 &&
-        gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT ).precision > 0) {
-        return "highp";
-    }
-    if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT ).precision > 0 &&
-        gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT ).precision > 0) {
-        return "mediump";
-    }
-    return "lowp";
-}
-
-/**
- * clean the given source from space, comments, etc...
- * @ignore
- */
-function minify(src) {
-    // remove comments
-    src = src.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, "$1");
-    // Remove leading and trailing whitespace from lines
-    src = src.replace(/(\\n\s+)|(\s+\\n)/g, "");
-    // Remove line breaks
-    src = src.replace(/(\\r|\\n)+/g, "");
-    // Remove unnecessary whitespace
-    src = src.replace(/\s*([;,[\](){}\\\/\-+*|^&!=<>?~%])\s*/g, "$1");
-
-    return src;
-}
-
-/**
- * @classdesc
- * a base GL Shader object
- */
-class GLShader {
-    /**
-     * @param {WebGLRenderingContext} gl - the current WebGL rendering context
-     * @param {string} vertex - a string containing the GLSL source code to set
-     * @param {string} fragment - a string containing the GLSL source code to set
-     * @param {string} [precision=auto detected] - float precision ('lowp', 'mediump' or 'highp').
-     * @see https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_on_the_web/GLSL_Shaders
-     * @example
-     * // create a basic shader
-     * let myShader = new me.GLShader(
-     *    // WebGL rendering context
-     *    gl,
-     *    // vertex shader
-     *    [
-     *        "void main() {",
-     *        "    gl_Position = doMathToMakeClipspaceCoordinates;",
-     *        "}"
-     *    ].join("\n"),
-     *    // fragment shader
-     *    [
-     *        "void main() {",
-     *        "    gl_FragColor = doMathToMakeAColor;",
-     *        "}"
-     *    ].join("\n")
-     *  )
-     * // use the shader
-     * myShader.bind();
-     */
-    constructor(gl, vertex, fragment, precision) {
-
-        /**
-         * the active gl rendering context
-         * @type {WebGLRenderingContext}
-         */
-        this.gl = gl;
-
-        /**
-         * the vertex shader source code
-         * @type {string}
-         */
-        this.vertex = setPrecision(minify(vertex), precision || getMaxShaderPrecision(this.gl));
-
-        /**
-         * the fragment shader source code
-         * @type {string}
-         */
-        this.fragment = setPrecision(minify(fragment), precision || getMaxShaderPrecision(this.gl));
-
-        /**
-         * the location attributes of the shader
-         * @type {GLint[]}
-         */
-        this.attributes = extractAttributes(this.gl, this);
-
-
-        /**
-         * a reference to the shader program (once compiled)
-         * @type {WebGLProgram}
-         */
-        this.program = compileProgram(this.gl, this.vertex, this.fragment, this.attributes);
-
-        /**
-         * the uniforms of the shader
-         * @type {object}
-         */
-        this.uniforms = extractUniforms(this.gl, this);
-
-        // destroy the shader on context lost (will be recreated on context restore)
-        on(ONCONTEXT_LOST, this.destroy, this);
-    }
-
-    /**
-     * Installs this shader program as part of current rendering state
-     */
-    bind() {
-        this.gl.useProgram(this.program);
-    }
-
-    /**
-     * returns the location of an attribute variable in this shader program
-     * @param {string} name - the name of the attribute variable whose location to get.
-     * @returns {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
-     */
-    getAttribLocation(name) {
-        let attr = this.attributes[name];
-        if (typeof attr !== "undefined") {
-            return attr;
-        } else {
-            return -1;
-        }
-    }
-
-    /**
-     * Set the uniform to the given value
-     * @param {string} name - the uniform name
-     * @param {object|Float32Array} value - the value to assign to that uniform
-     * @example
-     * myShader.setUniform("uProjectionMatrix", this.projectionMatrix);
-     */
-    setUniform(name, value) {
-        let uniforms = this.uniforms;
-        if (typeof uniforms[name] !== "undefined") {
-            if (typeof value === "object" && typeof value.toArray === "function") {
-                uniforms[name] = value.toArray();
-            } else {
-                uniforms[name] = value;
-            }
-        } else {
-            throw new Error("undefined (" + name + ") uniform for shader " + this);
-        }
-    }
-
-    /**
-     * activate the given vertex attribute for this shader
-     * @param {WebGLRenderingContext} gl - the current WebGL rendering context
-     * @param {object[]} attributes - an array of vertex attributes
-     * @param {number} vertexByteSize - the size of a single vertex in bytes
-     */
-    setVertexAttributes(gl, attributes, vertexByteSize) {
-        // set the vertex attributes
-        for (let index = 0; index < attributes.length; ++index) {
-            let element = attributes[index];
-            let location = this.getAttribLocation(element.name);
-
-            if (location !== -1) {
-                gl.enableVertexAttribArray(location);
-                gl.vertexAttribPointer(location, element.size, element.type, element.normalized, vertexByteSize, element.offset);
-            } else {
-                gl.disableVertexAttribArray(index);
-            }
-        }
-    }
-
-    /**
-     * destroy this shader objects resources (program, attributes, uniforms)
-     */
-    destroy() {
-        this.uniforms = null;
-        this.attributes = null;
-
-        this.gl.deleteProgram(this.program);
-
-        this.vertex = null;
-        this.fragment = null;
-    }
-}
-
-/**
  * @classdesc
  * a Vertex Buffer object
  * @class VertexArrayBuffer
@@ -35748,6 +36372,9 @@ class QuadCompositor extends Compositor {
     }
 }
 
+// list of supported compressed texture formats
+let supportedCompressedTextureFormats;
+
 /**
  * @classdesc
  * a WebGL renderer object
@@ -35759,15 +36386,7 @@ class WebGLRenderer extends Renderer {
      */
     constructor(options) {
         // parent contructor
-        super(options);
-
-        /**
-         * The WebGL version used by this renderer (1 or 2)
-         * @type {number}
-         * @default 1
-         * @readonly
-         */
-        this.WebGLVersion = 1;
+        super(Object.assign(options, { context: "webgl" }));
 
         /**
          * The vendor string of the underlying graphics driver.
@@ -35790,7 +36409,7 @@ class WebGLRenderer extends Renderer {
          * @name gl
          * @type {WebGLRenderingContext}
          */
-        this.context = this.gl = this.getContextGL(this.getCanvas(), options.transparent, options.depthTest === "z-buffer");
+        this.gl = this.renderTarget.context;
 
         /**
          * the vertex buffer used by this WebGL Renderer
@@ -35918,6 +36537,53 @@ class WebGLRenderer extends Renderer {
             this.flush();
             this.setViewport(0, 0, width, height);
         });
+    }
+
+    /**
+     * The WebGL version used by this renderer (1 or 2)
+     * @type {number}
+     * @default 1
+     * @readonly
+     */
+    get WebGLVersion() {
+        return this.renderTarget.WebGLVersion;
+    }
+
+    /**
+     * return the list of supported compressed texture formats
+     * @return {Object}
+     */
+    getSupportedCompressedTextureFormats() {
+        if (typeof supportedCompressedTextureFormats === "undefined") {
+            const gl = this.gl;
+            supportedCompressedTextureFormats =  {
+                astc: gl.getExtension("WEBGL_compressed_texture_astc") || this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_astc"),
+                bptc: gl.getExtension("EXT_texture_compression_bptc") || this._gl.getExtension("WEBKIT_EXT_texture_compression_bptc"),
+                s3tc: gl.getExtension("WEBGL_compressed_texture_s3tc") || this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_s3tc"),
+                s3tc_srgb: gl.getExtension("WEBGL_compressed_texture_s3tc_srgb") || this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_s3tc_srgb"),
+                pvrtc: gl.getExtension("WEBGL_compressed_texture_pvrtc") || this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_pvrtc"),
+                etc1: gl.getExtension("WEBGL_compressed_texture_etc1") || this._gl.getExtension("WEBKIT_WEBGL_compressed_texture_etc1"),
+                etc2: gl.getExtension("WEBGL_compressed_texture_etc") || gl.getExtension("WEBKIT_WEBGL_compressed_texture_etc") || gl.getExtension("WEBGL_compressed_texture_es3_0")
+            };
+        }
+        return supportedCompressedTextureFormats;
+    }
+
+    /**
+     * return true if the given compressed texture format is supported
+     * @param {Number} format
+     * @returns
+     */
+    hasSupportedCompressedFormats(format) {
+        const supportedFormats = this.getSupportedCompressedTextureFormats();
+        for (var supportedFormat in supportedFormats) {
+            for (var extension in supportedFormats[supportedFormat]) {
+                if (format === supportedFormats[supportedFormat][extension]) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -36295,57 +36961,6 @@ class WebGLRenderer extends Renderer {
     */
     closePath() {
         this.path2D.closePath();
-    }
-
-    /**
-     * Returns the WebGL Context object of the given canvas element
-     * @param {HTMLCanvasElement} canvas - the canvas element
-     * @param {boolean} [transparent=false] - use true to enable transparency
-     * @param {boolean} [depth=false] - use true to enable depth buffer testing
-     * @returns {WebGLRenderingContext} the WebGL Context object
-     */
-    getContextGL(canvas, transparent = false, depth = false) {
-        if (typeof canvas === "undefined" || canvas === null) {
-            throw new Error(
-                "You must pass a canvas element in order to create " +
-                "a GL context"
-            );
-        }
-
-        let attr = {
-            alpha : transparent,
-            antialias : this.settings.antiAlias,
-            depth : depth,
-            stencil: true,
-            preserveDrawingBuffer : false,
-            premultipliedAlpha: transparent ? this.settings.premultipliedAlpha : false,
-            powerPreference: this.settings.powerPreference,
-            failIfMajorPerformanceCaveat : this.settings.failIfMajorPerformanceCaveat
-        };
-
-        let gl;
-
-        // attempt to create a WebGL2 context if requested
-        if (this.settings.preferWebGL1 === false) {
-            gl = canvas.getContext("webgl2", attr);
-            if (gl) {
-                this.WebGLVersion = 2;
-            }
-        }
-
-        // fallback to WebGL1
-        if (!gl) {
-            this.WebGLVersion = 1;
-            gl = canvas.getContext("webgl", attr) || canvas.getContext("experimental-webgl", attr);
-        }
-
-        if (!gl) {
-            throw new Error(
-                "A WebGL context could not be created."
-            );
-        }
-
-        return gl;
     }
 
     /**
@@ -36907,229 +37522,6 @@ class WebGLRenderer extends Renderer {
             this.maskLevel = 0;
             this.gl.disable(this.gl.STENCIL_TEST);
         }
-    }
-}
-
-// default canvas settings
-let defaultAttributes = {
-    offscreenCanvas : false,
-    willReadFrequently : false,
-    antiAlias : false,
-    context: "2d"
-};
-
-/**
- * Creates a Canvas Texture of the given size
- * (when using WebGL, use `invalidate` to force a reupload of the corresponding texture)
- */
-class CanvasTexture {
-    /**
-     * @param {number} width - the desired width of the canvas
-     * @param {number} height - the desired height of the canvas
-     * @param {object} attributes - The attributes to create both the canvas and context
-     * @param {boolean} [attributes.context="2d"] - the context type to be created ("2d", "webgl", "webgl2")
-     * @param {boolean} [attributes.offscreenCanvas=false] - will create an offscreenCanvas if true instead of a standard canvas
-     * @param {boolean} [attributes.willReadFrequently=false] - Indicates whether or not a lot of read-back operations are planned
-     * @param {boolean} [attributes.antiAlias=false] - Whether to enable anti-aliasing, use false (default) for a pixelated effect.
-     */
-    constructor(width, height, attributes = defaultAttributes) {
-
-        // clean up the given attributes
-        attributes = Object.assign(defaultAttributes, attributes || {});
-
-        /**
-         * the canvas created for this CanvasTexture
-         * @type {HTMLCanvasElement|OffscreenCanvas}
-         */
-        this.canvas = createCanvas(width, height, attributes.offscreenCanvas);
-
-        /**
-         * the rendering context of this CanvasTexture
-         * @type {CanvasRenderingContext2D}
-         */
-        this.context = this.canvas.getContext(attributes.context, { willReadFrequently: attributes.willReadFrequently });
-
-        // enable or disable antiAlias if specified
-        this.setAntiAlias(attributes.antiAlias);
-    }
-
-    /**
-     * @ignore
-     */
-    onResetEvent(width, height) {
-        this.clear();
-        this.resize(width, height);
-    }
-
-    /**
-     * Clears the content of the canvas texture
-     */
-    clear() {
-        this.context.setTransform(1, 0, 0, 1, 0, 0);
-        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    }
-
-    /**
-     * enable/disable image smoothing (scaling interpolation)
-     * @param {boolean} [enable=false] - whether to enable or not image smoothing (scaling interpolation)
-     */
-    setAntiAlias(enable = false) {
-        let canvas = this.canvas;
-
-        // enable/disable antialias on the given Context2d object
-        setPrefixed("imageSmoothingEnabled", enable, this.context);
-
-        // set antialias CSS property on the main canvas
-        if (typeof canvas.style !== "undefined") {
-            if (enable !== true) {
-                // https://developer.mozilla.org/en-US/docs/Web/CSS/image-rendering
-                canvas.style["image-rendering"] = "optimizeSpeed"; // legal fallback
-                canvas.style["image-rendering"] = "-moz-crisp-edges"; // Firefox
-                canvas.style["image-rendering"] = "-o-crisp-edges"; // Opera
-                canvas.style["image-rendering"] = "-webkit-optimize-contrast"; // Safari
-                canvas.style["image-rendering"] = "optimize-contrast"; // CSS 3
-                canvas.style["image-rendering"] = "crisp-edges"; // CSS 4
-                canvas.style["image-rendering"] = "pixelated"; // CSS 4
-                canvas.style.msInterpolationMode = "nearest-neighbor"; // IE8+
-            } else {
-                canvas.style["image-rendering"] = "auto";
-            }
-        }
-    }
-
-    /**
-     * Resizes the canvas texture to the given width and height.
-     * @param {number} width - the desired width
-     * @param {number} height - the desired height
-     */
-    resize(width, height) {
-        this.canvas.width = Math.round(width);
-        this.canvas.height = Math.round(height);
-    }
-
-    /**
-     * Returns an ImageData object representing the underlying pixel data for a specified portion of this canvas texture.
-     * (Note: when using getImageData(), it is highly recommended to use the `willReadFrequently` attribute when creatimg the corresponding canvas texture)
-     * @param {number} x - The x-axis coordinate of the top-left corner of the rectangle from which the ImageData will be extracted
-     * @param {number} y - The y-axis coordinate of the top-left corner of the rectangle from which the ImageData will be extracted
-     * @param {number} width - The width of the rectangle from which the ImageData will be extracted. Positive values are to the right, and negative to the left
-     * @param {number} height - The height of the rectangle from which the ImageData will be extracted. Positive values are down, and negative are up
-     * @returns {ImageData} The ImageData extracted from this CanvasTexture.
-     */
-    getImageData(x, y, width, height) {
-        // clamp values
-        x = clamp(Math.floor(x), 0, this.canvas.width - 1);
-        y = clamp(Math.floor(y), 0, this.canvas.height - 1);
-        width = clamp(width, 1, this.canvas.width - x);
-        height = clamp(height, 1, this.canvas.height - y);
-        // return imageData
-        return this.context.getImageData(x, y, width, height);
-    }
-
-    /**
-     * creates a Blob object representing the image contained in this canvas texture
-     * @param {string} [type="image/png"] - A string indicating the image format
-     * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
-     * @returns {Promise} A Promise returning a Blob object representing the image contained in this canvas texture
-     * @example
-     * canvasTexture.convertToBlob().then((blob) => console.log(blob));
-     */
-    toBlob(type = "image/png", quality) {
-        if (typeof this.canvas.convertToBlob === "function") {
-            return this.canvas.convertToBlob(type, quality);
-        } else {
-            return new Promise(function(resolve) {
-                this.canvas.toBlob((blob) => {
-                    resolve(blob);
-                }, type, quality);
-            });
-        }
-    }
-
-    /**
-     * creates an ImageBitmap object from the most recently rendered image of this canvas texture
-     * @param {string} [type="image/png"] - A string indicating the image format
-     * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
-     * @returns {Promise} A Promise returning an ImageBitmap.
-     * @example
-     * canvasTexture.transferToImageBitmap().then((bitmap) => console.log(bitmap));
-     */
-    toImageBitmap(type = "image/png", quality) {
-        return new Promise((resolve) => {
-            if (typeof this.canvas.transferToImageBitmap === "function") {
-                resolve(this.canvas.transferToImageBitmap());
-            } else {
-                let image = new Image();
-                image.src = this.canvas.toDataURL(type, quality);
-                image.onload = () => {
-                    globalThis.createImageBitmap(image).then((bitmap) => resolve(bitmap));
-                };
-            }
-        });
-    }
-
-    /**
-     * returns a data URL containing a representation of the most recently rendered image of this canvas texture
-     * (not supported by OffscreenCanvas)
-     * @param {string} [type="image/png"] - A string indicating the image format
-     * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
-     * @returns {Promise} A Promise returning a string containing the requested data URL.
-     * @example
-     * renderer.toDataURL().then((dataURL) => console.log(dataURL));
-     */
-    toDataURL(type = "image/png", quality) {
-        return new Promise((resolve) => {
-            resolve(this.canvas.toDataURL(type, quality));
-        });
-    }
-
-    /**
-     * invalidate the current CanvasTexture, and force a reupload of the corresponding texture
-     * (call this if you modify the canvas content between two draw calls)
-     * @param {CanvasRenderer|WebGLRenderer} renderer - the renderer to which this canvas texture is attached
-     */
-    invalidate(renderer) {
-        if (typeof renderer.gl !== "undefined") {
-            // make sure the right compositor is active
-            renderer.setCompositor("quad");
-            // invalidate the previous corresponding texture so that it can reuploaded once changed
-            this.glTextureUnit = renderer.cache.getUnit(renderer.cache.get(this.canvas));
-            renderer.currentCompositor.unbindTexture2D(null, this.glTextureUnit);
-        }
-    }
-
-    /**
-     * @ignore
-     */
-    destroy() {
-        this.context = undefined;
-        this.canvas = undefined;
-    }
-
-    /**
-     * The width of this canvas texture in pixels
-     * @public
-     * @type {number}
-     */
-    get width() {
-        return this.canvas.width;
-    }
-
-    set width(val) {
-        this.canvas.width = Math.round(val);
-    }
-
-    /**
-     * The height of this canvas texture in pixels
-     * @public
-     * @type {number}
-     */
-    get height() {
-        return this.canvas.height;
-    }
-
-    set height(val) {
-        this.canvas.height = Math.round(val);
     }
 }
 
@@ -38159,7 +38551,7 @@ class Text extends Renderable {
 
         // the canvas Texture used to render this text
         // XXX: offscreenCanvas is currently disabled for text rendering due to issue in WebGL mode
-        this.canvasTexture = pool.pull("CanvasTexture", 2, 2, { offscreenCanvas: false });
+        this.canvasTexture = pool.pull("CanvasRenderTarget", 2, 2, { offscreenCanvas: false });
 
         // instance to text metrics functions
         this.metrics = new TextMetrics(this);
@@ -39618,7 +40010,7 @@ class Light2d extends Renderable {
         this.visibleArea = pool.pull("Ellipse", this.centerX, this.centerY, this.width, this.height);
 
         /** @ignore */
-        this.texture = pool.pull("CanvasTexture", this.width, this.height, { offscreenCanvas: false });
+        this.texture = pool.pull("CanvasRenderTarget", this.width, this.height, { offscreenCanvas: false });
 
         this.anchorPoint.set(0, 0);
 
@@ -41377,7 +41769,7 @@ const ParticleEmitterSettings = {
  * @ignore
  */
 function createDefaultParticleTexture(w = 8, h = 8) {
-    let defaultParticleTexture = pool.pull("CanvasTexture", w, h, { offscreenCanvas: true });
+    let defaultParticleTexture = pool.pull("CanvasRenderTarget", w, h, { offscreenCanvas: true });
 
     defaultParticleTexture.context.fillStyle = "#fff";
     defaultParticleTexture.context.fillRect(0, 0, w, h);
@@ -42696,9 +43088,9 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "17.0.0"
+         * @default "17.1.0"
          */
-        this.version = "17.0.0";
+        this.version = "17.1.0";
 
         /**
          * a reference to the app/game that registered this plugin
@@ -42771,7 +43163,7 @@ function patch(proto, name, fn) {
  * @memberof plugin
  * @param {plugin.BasePlugin} plugin - Plugin object to instantiate and register
  * @param {string} [name=plugin.constructor.name] - a unique name for this plugin
- * @param {object} [...arguments] - all extra parameters will be passed to the plugin constructor
+ * @param {...*} [args] - all extra parameters will be passed to the plugin constructor
  * @example
  * // register a new plugin
  * me.plugin.register(TestPlugin, "testPlugin");
@@ -42970,6 +43362,27 @@ Renderer.prototype.getHeight = function()  {
     return this.height;
 };
 
+/**
+ * @classdesc
+ * @deprecated since 17.1.0
+ * @see CanvasRenderTarget
+ */
+class CanvasTexture extends CanvasRenderTarget {
+    /**
+     * @param {number} width - the desired width of the canvas
+     * @param {number} height - the desired height of the canvas
+     * @param {object} attributes - The attributes to create both the canvas and context
+     * @param {boolean} [attributes.context="2d"] - the context type to be created ("2d", "webgl", "webgl2")
+     * @param {boolean} [attributes.offscreenCanvas=false] - will create an offscreenCanvas if true instead of a standard canvas
+     * @param {boolean} [attributes.willReadFrequently=false] - Indicates whether or not a lot of read-back operations are planned
+     * @param {boolean} [attributes.antiAlias=false] - Whether to enable anti-aliasing, use false (default) for a pixelated effect.
+     */
+    constructor(width, height, attributes) {
+        warning("CanvasTexture", "CanvasRenderTarget", "17.1.0");
+        super(width, height, attributes);
+    }
+}
+
 // ES5/ES6 polyfills
 
 
@@ -42980,7 +43393,7 @@ Renderer.prototype.getHeight = function()  {
  * @name version
  * @type {string}
  */
-const version = "17.0.0";
+const version = "17.1.0";
 
 /**
  * a flag indicating that melonJS is fully initialized
@@ -43082,7 +43495,7 @@ function boot() {
     pool.register("Point", Point, true);
     pool.register("Ellipse", Ellipse, true);
     pool.register("Bounds", Bounds, true);
-    pool.register("CanvasTexture", CanvasTexture, true);
+    pool.register("CanvasRenderTarget", CanvasRenderTarget, true);
 
     // publish Boot notification
     emit(BOOT);
@@ -43109,4 +43522,4 @@ onReady(() => {
     }
 });
 
-export { AUTO, Application, BitmapText, BitmapTextData, Body, Bounds, CANVAS, Camera2d, CanvasRenderer, CanvasTexture, Collectable, Color, ColorLayer, Compositor, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Point, Pointer, Polygon, PrimitiveCompositor, QuadCompositor, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, TMXUtils, Text, TextureAtlas, Tile, Trigger, Tween, UIBaseElement, UISpriteElement, UITextButton, Vector2d, Vector3d, WEBGL, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader, plugin, cache as plugins, pool, save, skipAutoInit, state, timer$1 as timer, utils, version, video };
+export { AUTO, Application, BitmapText, BitmapTextData, Body, Bounds, CANVAS, Camera2d, CanvasRenderTarget, CanvasRenderer, CanvasTexture, Collectable, Color, ColorLayer, Compositor, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Point, Pointer, Polygon, PrimitiveCompositor, QuadCompositor, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, TMXUtils, Text, TextureAtlas, Tile, Trigger, Tween, UIBaseElement, UISpriteElement, UITextButton, Vector2d, Vector3d, WEBGL, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader, plugin, cache as plugins, pool, save, skipAutoInit, state, timer$1 as timer, utils, version, video };

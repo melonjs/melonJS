@@ -2,12 +2,12 @@
  * calls each of the listeners registered for a given event.
  * @function event.emit
  * @param {string|symbol} eventName - The event name.
- * @param {object} [...arguments] - arguments to be passed to all listeners
+ * @param {...*} [args] - arguments to be passed to all listeners
  * @returns {boolean} true if the event had listeners, false otherwise.
  * @example
  * me.event.emit("event-name", a, b, c);
  */
-export function emit(eventName: string | symbol, ...args: any[]): boolean;
+export function emit(eventName: string | symbol, ...args?: any[] | undefined): boolean;
 /**
  * Add a listener for a given event.
  * @function event.on
@@ -19,7 +19,7 @@ export function emit(eventName: string | symbol, ...args: any[]): boolean;
  * @example
  * me.event.on("event-name", myFunction, this);
  */
-export function on(eventName: string | symbol, listener: Function, context?: any): EventEmitter;
+export function on(eventName: string | symbol, listener: Function, context?: any): typeof EventEmitter;
 /**
  * Add a one-time listener for a given event.
  * @function event.once
@@ -31,7 +31,7 @@ export function on(eventName: string | symbol, listener: Function, context?: any
  * @example
  * me.event.once("event-name", myFunction, this);
  */
-export function once(eventName: string | symbol, listener: Function, context?: any): EventEmitter;
+export function once(eventName: string | symbol, listener: Function, context?: any): typeof EventEmitter;
 /**
  * remove the given listener for a given event.
  * @function event.off
@@ -42,7 +42,7 @@ export function once(eventName: string | symbol, listener: Function, context?: a
  * @example
  * me.event.off("event-name", myFunction);
  */
-export function off(eventName: string | symbol, listener: Function): EventEmitter;
+export function off(eventName: string | symbol, listener: Function): typeof EventEmitter;
 /**
  * event when the DOM is Ready is booting
  * @public

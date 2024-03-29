@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.0.0
+ * melonJS Game Engine - v17.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -14,7 +14,7 @@ import Container from '../renderable/container.js';
  * @ignore
  */
 function createDefaultParticleTexture(w = 8, h = 8) {
-    let defaultParticleTexture = pool.pull("CanvasTexture", w, h, { offscreenCanvas: true });
+    let defaultParticleTexture = pool.pull("CanvasRenderTarget", w, h, { offscreenCanvas: true });
 
     defaultParticleTexture.context.fillStyle = "#fff";
     defaultParticleTexture.context.fillRect(0, 0, w, h);

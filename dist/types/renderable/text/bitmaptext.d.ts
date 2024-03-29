@@ -121,6 +121,12 @@ export default class BitmapText extends Renderable {
      */
     setText(value?: number | string | string[]): BitmapText;
     /**
+     * update the bounding box for this Bitmap Text.
+     * @param {boolean} [absolute=true] - update the bounds size and position in (world) absolute coordinates
+     * @returns {Bounds} this Bitmap Text bounding box Rectangle object
+     */
+    updateBounds(absolute?: boolean | undefined): Bounds;
+    /**
      * change the font display size
      * @param {number} scale - ratio
      * @returns {BitmapText} this object for chaining

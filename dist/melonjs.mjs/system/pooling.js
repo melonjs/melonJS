@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.0.0
+ * melonJS Game Engine - v17.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -58,7 +58,7 @@ class ObjectPool {
     /**
      * Pull a new instance of the requested object (if added into the object pool)
      * @param {string} name - as used in {@link pool.register}
-     * @param {object} [...arguments] - arguments to be passed when instantiating/reinitializing the object
+     * @param {...*} [args] - arguments to be passed when instantiating/reinitializing the object
      * @returns {object} the instance of the requested object
      * @example
      * me.pool.register("bullet", BulletEntity, true);

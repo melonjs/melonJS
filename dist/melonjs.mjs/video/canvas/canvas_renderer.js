@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.0.0
+ * melonJS Game Engine - v17.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -22,9 +22,6 @@ class CanvasRenderer extends Renderer {
     constructor(options) {
         // parent constructor
         super(options);
-
-        // defined the 2d context
-        this.context = this.getContext2d(this.getCanvas(), this.settings.transparent);
 
         this.setBlendMode(this.settings.blendMode);
 

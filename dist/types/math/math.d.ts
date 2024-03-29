@@ -6,6 +6,13 @@
  */
 export function isPowerOfTwo(val: number): boolean;
 /**
+ * returns true if the given value is a power of four
+ * @memberof Math
+ * @param {number} val
+ * @returns {boolean}
+ */
+export function isPowerOfFour(val: number): boolean;
+/**
  * returns the next power of two for the given value
  * @memberof Math
  * @param {number} val

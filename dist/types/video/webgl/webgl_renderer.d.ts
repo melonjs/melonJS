@@ -5,13 +5,6 @@
  */
 export default class WebGLRenderer extends Renderer {
     /**
-     * The WebGL version used by this renderer (1 or 2)
-     * @type {number}
-     * @default 1
-     * @readonly
-     */
-    readonly WebGLVersion: number;
-    /**
      * The vendor string of the underlying graphics driver.
      * @type {string}
      * @default undefined
@@ -30,7 +23,6 @@ export default class WebGLRenderer extends Renderer {
      * @name gl
      * @type {WebGLRenderingContext}
      */
-    context: WebGLRenderingContext;
     gl: WebGLRenderingContext;
     /**
      * the vertex buffer used by this WebGL Renderer
@@ -82,6 +74,24 @@ export default class WebGLRenderer extends Renderer {
     depthTest: any;
     customShader: any;
     cache: TextureCache;
+    /**
+     * The WebGL version used by this renderer (1 or 2)
+     * @type {number}
+     * @default 1
+     * @readonly
+     */
+    readonly get WebGLVersion(): number;
+    /**
+     * return the list of supported compressed texture formats
+     * @return {Object}
+     */
+    getSupportedCompressedTextureFormats(): Object;
+    /**
+     * return true if the given compressed texture format is supported
+     * @param {Number} format
+     * @returns
+     */
+    hasSupportedCompressedFormats(format: number): boolean;
     /**
      * add a new compositor to this renderer
      * @param {Compositor} compositor - a compositor instance
@@ -229,14 +239,6 @@ export default class WebGLRenderer extends Renderer {
      * add a straight line from the current point to the start of the current sub-path. If the shape has already been closed or has only one point, this function does nothing
     */
     closePath(): void;
-    /**
-     * Returns the WebGL Context object of the given canvas element
-     * @param {HTMLCanvasElement} canvas - the canvas element
-     * @param {boolean} [transparent=false] - use true to enable transparency
-     * @param {boolean} [depth=false] - use true to enable depth buffer testing
-     * @returns {WebGLRenderingContext} the WebGL Context object
-     */
-    getContextGL(canvas: HTMLCanvasElement, transparent?: boolean | undefined, depth?: boolean | undefined): WebGLRenderingContext;
     /**
      * Returns the WebGLContext instance for the renderer
      * return a reference to the system 2d Context

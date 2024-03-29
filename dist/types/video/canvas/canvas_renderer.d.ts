@@ -4,7 +4,6 @@
  * @augments Renderer
  */
 export default class CanvasRenderer extends Renderer {
-    context: CanvasRenderingContext2D;
     cache: TextureCache;
     /**
      * Reset the canvas transform to identity

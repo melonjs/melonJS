@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.0.0
+ * melonJS Game Engine - v17.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -208,7 +208,7 @@ class Stage {
      * this is typically where you will load a level, add renderables, etc...
      * @name onResetEvent
      * @memberof Stage
-     * @param {object} [...arguments] - optional arguments passed when switching state
+     * @param {...*} [args] - optional arguments passed when switching state
      * @see state#change
      */
     onResetEvent() {

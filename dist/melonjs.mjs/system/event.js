@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.0.0
+ * melonJS Game Engine - v17.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -550,7 +550,7 @@ const ONCONTEXT_RESTORED = "renderer.contextrestored";
  * calls each of the listeners registered for a given event.
  * @function event.emit
  * @param {string|symbol} eventName - The event name.
- * @param {object} [...arguments] - arguments to be passed to all listeners
+ * @param {...*} [args] - arguments to be passed to all listeners
  * @returns {boolean} true if the event had listeners, false otherwise.
  * @example
  * me.event.emit("event-name", a, b, c);

@@ -150,7 +150,7 @@ declare namespace state {
      * @public
      * @param {number} state - State ID (see constants)
      * @param {boolean} forceChange - if true the state will be changed immediately
-     * @param {object} [...arguments] - extra arguments to be passed to the reset functions
+     * @param {...*} [args] - extra arguments to be passed to the reset functions
      * @example
      * // The onResetEvent method on the play screen will receive two args:
      * // "level_1" and the number 3

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.0.0
+ * melonJS Game Engine - v17.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -53,6 +53,28 @@ const EPSILON = 0.000001;
  */
 function isPowerOfTwo(val) {
     return (val & (val - 1)) === 0;
+}
+
+/**
+ * returns true if the given value is a power of four
+ * @memberof Math
+ * @param {number} val
+ * @returns {boolean}
+ */
+function isPowerOfFour(val) {
+    if (val === 0 || val === 2 || val === 3) {
+        return false;
+    }
+    if (val === 1) {
+        return true;
+    }
+
+    if ((val & (val - 1)) === 0) {
+        if ((val & 0xAAAAAAAA) === 0) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /**
@@ -196,4 +218,4 @@ function pow(n) {
     return Math.pow(n, 2);
 }
 
-export { DEG_TO_RAD, EPSILON, ETA, RAD_TO_DEG, TAU, clamp, degToRad, isPowerOfTwo, nextPowerOfTwo, pow, radToDeg, random, randomFloat, round, toBeCloseTo, weightedRandom };
+export { DEG_TO_RAD, EPSILON, ETA, RAD_TO_DEG, TAU, clamp, degToRad, isPowerOfFour, isPowerOfTwo, nextPowerOfTwo, pow, radToDeg, random, randomFloat, round, toBeCloseTo, weightedRandom };

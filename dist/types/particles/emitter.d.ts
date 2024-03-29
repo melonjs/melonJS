@@ -45,14 +45,21 @@ export default class ParticleEmitter extends Container {
         angleVariation: number;
         minLife: number;
         maxLife: number;
-        speed: number;
+        speed: number; /** @ignore */
         speedVariation: number;
         minRotation: number;
         maxRotation: number;
         minStartScale: number;
-        maxStartScale: number;
-        minEndScale: number;
+        maxStartScale: number; /**
+         * returns a random point on the x axis within the bounds of this emitter
+         * @returns {number}
+         */
+        minEndScale: number; /**
+         * returns a random point on the y axis within the bounds this emitter
+         * @returns {number}
+         */
         maxEndScale: number;
+        /** @ignore */
         gravity: number;
         wind: number;
         followTrajectory: boolean;
@@ -83,14 +90,21 @@ export default class ParticleEmitter extends Container {
         angleVariation: number;
         minLife: number;
         maxLife: number;
-        speed: number;
+        speed: number; /** @ignore */
         speedVariation: number;
         minRotation: number;
         maxRotation: number;
         minStartScale: number;
-        maxStartScale: number;
-        minEndScale: number;
+        maxStartScale: number; /**
+         * returns a random point on the x axis within the bounds of this emitter
+         * @returns {number}
+         */
+        minEndScale: number; /**
+         * returns a random point on the y axis within the bounds this emitter
+         * @returns {number}
+         */
         maxEndScale: number;
+        /** @ignore */
         gravity: number;
         wind: number;
         followTrajectory: boolean;
@@ -128,14 +142,21 @@ export default class ParticleEmitter extends Container {
         angleVariation: number;
         minLife: number;
         maxLife: number;
-        speed: number;
+        speed: number; /** @ignore */
         speedVariation: number;
         minRotation: number;
         maxRotation: number;
         minStartScale: number;
-        maxStartScale: number;
-        minEndScale: number;
+        maxStartScale: number; /**
+         * returns a random point on the x axis within the bounds of this emitter
+         * @returns {number}
+         */
+        minEndScale: number; /**
+         * returns a random point on the y axis within the bounds this emitter
+         * @returns {number}
+         */
         maxEndScale: number;
+        /** @ignore */
         gravity: number;
         wind: number;
         followTrajectory: boolean;

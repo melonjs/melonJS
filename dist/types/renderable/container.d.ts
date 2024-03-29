@@ -207,6 +207,12 @@ export default class Container extends Renderable {
      */
     getChildren(): Renderable[];
     /**
+     * update the bounding box for this container.
+     * @param {boolean} [absolute=true] - update the bounds size and position in (world) absolute coordinates
+     * @returns {Bounds} this container bounding box Rectangle object
+     */
+    updateBounds(absolute?: boolean | undefined): Bounds;
+    /**
      * Checks if this container is root or if it's attached to the root container.
      * @returns {boolean} true if this container is root or if it's attached to the root container
      */
@@ -292,4 +298,4 @@ export default class Container extends Renderable {
      */
     _sortY(a: any, b: any): number;
 }
-import Renderable from "./renderable";
+import Renderable from "./renderable.js";

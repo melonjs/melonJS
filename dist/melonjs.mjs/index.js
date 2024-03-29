@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.0.0
+ * melonJS Game Engine - v17.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -29,7 +29,7 @@ export { default as QuadCompositor } from './video/webgl/compositors/quad_compos
 export { default as Renderer } from './video/renderer.js';
 export { default as WebGLRenderer } from './video/webgl/webgl_renderer.js';
 export { default as CanvasRenderer } from './video/canvas/canvas_renderer.js';
-import CanvasTexture from './video/texture/canvas_texture.js';
+import CanvasRenderTarget from './video/rendertarget/canvasrendertarget.js';
 export { TextureAtlas } from './video/texture/atlas.js';
 import Renderable from './renderable/renderable.js';
 import ColorLayer from './renderable/colorlayer.js';
@@ -98,7 +98,7 @@ export { default as timer } from './system/timer.js';
 import pool from './system/pooling.js';
 export { default as state } from './state/state.js';
 export { default as level } from './level/level.js';
-export { DraggableEntity, DroptargetEntity, GUI_Object } from './lang/deprecated.js';
+export { CanvasTexture, DraggableEntity, DroptargetEntity, GUI_Object } from './lang/deprecated.js';
 export { AUTO, CANVAS, WEBGL } from './const.js';
 import { initKeyboardEvent } from './input/keyboard.js';
 
@@ -112,7 +112,7 @@ import { initKeyboardEvent } from './input/keyboard.js';
  * @name version
  * @type {string}
  */
-const version = "17.0.0";
+const version = "17.1.0";
 
 /**
  * a flag indicating that melonJS is fully initialized
@@ -214,7 +214,7 @@ function boot() {
     pool.register("Point", Point, true);
     pool.register("Ellipse", Ellipse, true);
     pool.register("Bounds", Bounds, true);
-    pool.register("CanvasTexture", CanvasTexture, true);
+    pool.register("CanvasRenderTarget", CanvasRenderTarget, true);
 
     // publish Boot notification
     emit(BOOT);
@@ -236,4 +236,4 @@ onReady(() => {
     }
 });
 
-export { Application, BitmapText, BitmapTextData, Bounds, CanvasTexture, Collectable, Color, ColorLayer, Ellipse, Entity, ImageLayer, Light2d, Line, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, Point, Polygon, Rect, Renderable, RoundRect, Sprite, Text, Trigger, Tween, Vector2d, Vector3d, boot, game, initialized, pool, skipAutoInit, version };
+export { Application, BitmapText, BitmapTextData, Bounds, CanvasRenderTarget, Collectable, Color, ColorLayer, Ellipse, Entity, ImageLayer, Light2d, Line, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, Point, Polygon, Rect, Renderable, RoundRect, Sprite, Text, Trigger, Tween, Vector2d, Vector3d, boot, game, initialized, pool, skipAutoInit, version };

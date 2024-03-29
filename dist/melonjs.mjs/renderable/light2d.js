@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.0.0
+ * melonJS Game Engine - v17.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -108,7 +108,7 @@ class Light2d extends Renderable {
         this.visibleArea = pool.pull("Ellipse", this.centerX, this.centerY, this.width, this.height);
 
         /** @ignore */
-        this.texture = pool.pull("CanvasTexture", this.width, this.height, { offscreenCanvas: false });
+        this.texture = pool.pull("CanvasRenderTarget", this.width, this.height, { offscreenCanvas: false });
 
         this.anchorPoint.set(0, 0);
 

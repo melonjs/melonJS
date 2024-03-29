@@ -68,7 +68,7 @@ export default class TMXLayer extends Renderable {
     layerData: any[];
     onActivateEvent(): void;
     preRender: any;
-    canvasRenderer: CanvasRenderer | undefined;
+    canvasRenderer: any;
     onDeactivateEvent(): void;
     /**
      * Set the TMX renderer for this layer object
@@ -154,5 +154,4 @@ export default class TMXLayer extends Renderable {
     draw(renderer: any, rect: any): void;
 }
 import Renderable from "./../../renderable/renderable.js";
-import CanvasRenderer from "./../../video/canvas/canvas_renderer";
 import Tile from "./TMXTile.js";

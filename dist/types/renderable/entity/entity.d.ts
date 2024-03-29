@@ -59,6 +59,12 @@ export default class Entity extends Renderable {
     /** @ignore */
     update(dt: any): boolean;
     /**
+     * update the bounding box for this entity.
+     * @param {boolean} [absolute=true] - update the bounds size and position in (world) absolute coordinates
+     * @returns {Bounds} this entity bounding box Rectangle object
+     */
+    updateBounds(absolute?: boolean | undefined): Bounds;
+    /**
      * update the bounds when the body is modified
      */
     onBodyUpdate(): void;

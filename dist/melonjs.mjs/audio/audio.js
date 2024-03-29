@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.0.0
+ * melonJS Game Engine - v17.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -65,7 +65,6 @@ let soundLoadError = function (sound_name, onerror_cb) {
  * if true, melonJS will throw an exception and stop loading<br>
  * if false, melonJS will disable sounds and output a warning message
  * in the console<br>
- * @name stopOnAudioError
  * @type {boolean}
  * @default true
  * @memberof audio
@@ -79,7 +78,7 @@ let stopOnAudioError = true;
  * webm has nearly full browser coverage with a great combination of compression and quality, and mp3 will fallback gracefully for other browsers.
  * It is important to remember that melonJS selects the first compatible sound based on the list of extensions and given order passed here.
  * So if you want webm to be used before mp3, you need to put the audio format in that order.
- * @function audio.init
+ * @memberof audio
  * @param {string} [format="mp3"] - audio format to prioritize ("mp3"|"mpeg"|"opus"|"ogg"|"oga"|"wav"|"aac"|"caf"|"m4a"|"m4b"|"mp4"|"weba"|"webm"|"dolby"|"flac")
  * @returns {boolean} Indicates whether audio initialization was successful
  * @example
@@ -98,7 +97,7 @@ function init(format = "mp3") {
 
 /**
  * check if the given audio format is supported
- * @function audio.hasFormat
+ * @memberof audio
  * @param {"mp3"|"mpeg"|"opus"|"ogg"|"oga"|"wav"|"aac"|"caf"|"m4a"|"m4b"|"mp4"|"weba"|"webm"|"dolby"|"flac"} codec - the audio format to check for support
  * @returns {boolean} return true if the given audio format is supported
  */
@@ -108,7 +107,7 @@ function hasFormat(codec) {
 
 /**
  * check if audio (HTML5 or WebAudio) is supported
- * @function audio.hasAudio
+ * @memberof audio
  * @returns {boolean} return true if audio (HTML5 or WebAudio) is supported
  */
 function hasAudio() {
@@ -118,7 +117,7 @@ function hasAudio() {
 /**
  * enable audio output <br>
  * only useful if audio supported and previously disabled through
- * @function audio.enable
+ * @memberof audio
  * @see audio.disable
  */
 function enable() {
@@ -127,7 +126,7 @@ function enable() {
 
 /**
  * disable audio output
- * @function audio.disable
+ * @memberof audio
  */
 function disable() {
     muteAll();
@@ -135,7 +134,7 @@ function disable() {
 
 /**
  * Load an audio file
- * @function audio.load
+ * @memberof audio
  * @param {loader.Asset} sound
  * @param {Function} [onloadcb] - function to be called when the resource is loaded
  * @param {Function} [onerrorcb] - function to be called in case of error
@@ -178,7 +177,7 @@ function load(sound, onloadcb, onerrorcb, settings = {}) {
 
 /**
  * play the specified sound
- * @function audio.play
+ * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {boolean} [loop=false] - loop audio
  * @param {Function} [onend] - Function to call when sound instance ends playing.
@@ -219,7 +218,7 @@ function play(sound_name, loop = false, onend, volume) {
 
 /**
  * Fade a currently playing sound between two volumee.
- * @function audio.fade
+ * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} from - Volume to fade from (0.0 to 1.0).
  * @param {number} to - Volume to fade to (0.0 to 1.0).
@@ -237,7 +236,7 @@ function fade(sound_name, from, to, duration, id) {
 
 /**
  * get/set the position of playback for a sound.
- * @function audio.seek
+ * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} [seek] - the position to move current playback to (in seconds).
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will changed.
@@ -259,7 +258,7 @@ function seek(sound_name, ...args) {
 
 /**
  * get or set the rate of playback for a sound.
- * @function audio.rate
+ * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} [rate] - playback rate : 0.5 to 4.0, with 1.0 being normal speed.
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will be changed.
@@ -280,8 +279,95 @@ function rate(sound_name, ...args) {
 }
 
 /**
+ * get or set the stereo panning for the specified sound.
+ * @memberof audio
+ * @param {string} sound_name - audio clip name - case sensitive
+ * @param {number} [pan] - the panning value - A value of -1.0 is all the way left and 1.0 is all the way right.
+ * @return {number} the current panning value
+ * @example
+ * me.audio.stereo("cling", -1);
+ */
+function stereo(sound_name, pan) {
+    let sound = audioTracks[sound_name];
+    if (sound && typeof sound !== "undefined") {
+        return sound.stereo(pan);
+    } else {
+        throw new Error("audio clip " + sound_name + " does not exist");
+    }
+}
+
+/**
+ * get or set the 3D spatial position for the specified sound.
+ * @memberof audio
+ * @param {string} sound_name - audio clip name - case sensitive
+ * @param  {Number} x - the x-position of the audio source.
+ * @param  {Number} y - the y-position of the audio source.
+ * @param  {Number} z - the z-position of the audio source.
+ * @return {Array} the current 3D spatial position: [x, y, z]
+ */
+function position(sound_name, x, y, z) {
+    let sound = audioTracks[sound_name];
+    if (sound && typeof sound !== "undefined") {
+        return sound.pos(x, y, z);
+    } else {
+        throw new Error("audio clip " + sound_name + " does not exist");
+    }
+}
+
+/**
+ * Get/set the direction the audio source is pointing in the 3D cartesian coordinate space.
+ * Depending on how direction the sound is, based on the `cone` attributes, a sound pointing away from the listener can be quiet or silent.
+ * @memberof audio
+ * @param {string} sound_name - audio clip name - case sensitive
+ * @param  {Number} x - the x-orientation of the audio source.
+ * @param  {Number} y - the y-orientation of the audio source.
+ * @param  {Number} z - the z-orientation of the audio source.
+ * @return {Array} the current 3D spatial orientation: [x, y, z]
+ */
+function orientation(sound_name, x, y, z) {
+    let sound = audioTracks[sound_name];
+    if (sound && typeof sound !== "undefined") {
+        return sound.orientation(x, y, z);
+    } else {
+        throw new Error("audio clip " + sound_name + " does not exist");
+    }
+}
+
+/**
+ * get or set the panner node's attributes for a sound or group of sounds.
+ * See {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Web_audio_spatialization_basics#creating_a_panner_node}
+ * @memberof audio
+ * @param {string} sound_name - audio clip name - case sensitive
+ * @param {object} [attribute] - the panner attributes to set
+ * @param {string} [settings.coneInnerAngle=360] - A parameter for directional audio sources, this is an angle, in degrees, inside of which there will be no volume reduction.
+ * @param {string} [settings.coneOuterAngle=360] - A parameter for directional audio sources, this is an angle, in degrees, outside of which the volume will be reduced to a constant value of `coneOuterGain`.
+ * @param {string} [settings.coneOuterGain=0] - A parameter for directional audio sources, this is the gain outside of the `coneOuterAngle`. It is a linear value in the range `[0, 1]`.
+ * @param {string} [settings.distanceModel="inverse"] - Determines algorithm used to reduce volume as audio moves away from listener. Can be `linear`, `inverse` or `exponential.
+ * @param {string} [settings.maxDistance=10000] - The maximum distance between source and listener, after which the volume will not be reduced any further.
+ * @param {string} [settings.refDistance=1] - A reference distance for reducing volume as source moves further from the listener. This is simply a variable of the distance model and has a different effect depending on which model is used and the scale of your coordinates. Generally, volume will be equal to 1 at this distance.
+ * @param {string} [settings.rolloffFactor=1] - How quickly the volume reduces as source moves from listener. This is simply a variable of the distance model and can be in the range of `[0, 1]` with `linear` and `[0, ∞]` with `inverse` and `exponential`.
+ * @param {string} [settings.panningModel="HRTF"] - Determines which spatialization algorithm is used to position audio. Can be `HRTF` or `equalpower`.
+ * @return {Object} current panner attributes.
+ * @example
+ * me.audio.panner("cling", {
+ *    panningModel: 'HRTF',
+ *    refDistance: 0.8,
+ *    rolloffFactor: 2.5,
+ *    distanceModel: 'exponential'
+ * });
+ */
+function panner(sound_name, attributes) {
+    let sound = audioTracks[sound_name];
+    if (sound && typeof sound !== "undefined") {
+        return sound.pannerAttr(attributes);
+    } else {
+        throw new Error("audio clip " + sound_name + " does not exist");
+    }
+}
+
+/**
  * stop the specified sound on all channels
- * @function audio.stop
+ * @memberof audio
  * @param {string} [sound_name] - audio clip name (case sensitive). If none is passed, all sounds are stopped.
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will stop.
  * @example
@@ -305,7 +391,7 @@ function stop(sound_name, id) {
 /**
  * pause the specified sound on all channels<br>
  * this function does not reset the currentTime property
- * @function audio.pause
+ * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will pause.
  * @example
@@ -322,7 +408,7 @@ function pause(sound_name, id) {
 
 /**
  * resume the specified sound on all channels<br>
- * @function audio.resume
+ * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will resume.
  * @example
@@ -348,7 +434,7 @@ function resume(sound_name, id) {
  * play the specified audio track<br>
  * this function automatically set the loop property to true<br>
  * and keep track of the current sound being played.
- * @function audio.playTrack
+ * @memberof audio
  * @param {string} sound_name - audio track name - case sensitive
  * @param {number} [volume=default] - Float specifying volume (0.0 - 1.0 values accepted).
  * @returns {number} the sound instance ID.
@@ -367,7 +453,7 @@ function playTrack(sound_name, volume) {
 
 /**
  * stop the current audio track
- * @function audio.stopTrack
+ * @memberof audio
  * @see audio.playTrack
  * @example
  * // play a awesome music
@@ -384,7 +470,7 @@ function stopTrack() {
 
 /**
  * pause the current audio track
- * @function audio.pauseTrack
+ * @memberof audio
  * @example
  * me.audio.pauseTrack();
  */
@@ -396,7 +482,7 @@ function pauseTrack() {
 
 /**
  * resume the previously paused audio track
- * @function audio.resumeTrack
+ * @memberof audio
  * @example
  * // play an awesome music
  * me.audio.playTrack("awesome_music");
@@ -413,7 +499,7 @@ function resumeTrack() {
 
 /**
  * returns the current track Id
- * @function audio.getCurrentTrack
+ * @memberof audio
  * @returns {string} audio track name
  */
 function getCurrentTrack() {
@@ -422,7 +508,7 @@ function getCurrentTrack() {
 
 /**
  * set the default global volume
- * @function audio.setVolume
+ * @memberof audio
  * @param {number} volume - Float specifying volume (0.0 - 1.0 values accepted).
  */
 function setVolume(volume) {
@@ -431,7 +517,7 @@ function setVolume(volume) {
 
 /**
  * get the default global volume
- * @function audio.getVolume
+ * @memberof audio
  * @returns {number} current volume value in Float [0.0 - 1.0] .
  */
 function getVolume() {
@@ -440,7 +526,7 @@ function getVolume() {
 
 /**
  * mute or unmute the specified sound, but does not pause the playback.
- * @function audio.mute
+ * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will mute.
  * @param {boolean} [mute=true] - True to mute and false to unmute
@@ -459,7 +545,7 @@ function mute(sound_name, id, mute = true) {
 
 /**
  * unmute the specified sound
- * @function audio.unmute
+ * @memberof audio
  * @param {string} sound_name - audio clip name
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will unmute.
  */
@@ -469,7 +555,7 @@ function unmute(sound_name, id) {
 
 /**
  * mute all audio
- * @function audio.muteAll
+ * @memberof audio
  */
 function muteAll() {
     howler.Howler.mute(true);
@@ -477,7 +563,7 @@ function muteAll() {
 
 /**
  * unmute all audio
- * @function audio.unmuteAll
+ * @memberof audio
  */
 function unmuteAll() {
     howler.Howler.mute(false);
@@ -485,7 +571,7 @@ function unmuteAll() {
 
 /**
  * Returns true if audio is muted globally.
- * @function audio.muted
+ * @memberof audio
  * @returns {boolean} true if audio is muted globally
  */
 function muted() {
@@ -494,7 +580,7 @@ function muted() {
 
 /**
  * unload specified audio track to free memory
- * @function audio.unload
+ * @memberof audio
  * @param {string} sound_name - audio track name - case sensitive
  * @returns {boolean} true if unloaded
  * @example
@@ -513,7 +599,7 @@ function unload(sound_name) {
 
 /**
  * unload all audio to free memory
- * @function audio.unloadAll
+ * @memberof audio
  * @example
  * me.audio.unloadAll();
  */
@@ -525,4 +611,4 @@ function unloadAll() {
     }
 }
 
-export { disable, enable, fade, getCurrentTrack, getVolume, hasAudio, hasFormat, init, load, mute, muteAll, muted, pause, pauseTrack, play, playTrack, rate, resume, resumeTrack, seek, setVolume, stop, stopOnAudioError, stopTrack, unload, unloadAll, unmute, unmuteAll };
+export { disable, enable, fade, getCurrentTrack, getVolume, hasAudio, hasFormat, init, load, mute, muteAll, muted, orientation, panner, pause, pauseTrack, play, playTrack, position, rate, resume, resumeTrack, seek, setVolume, stereo, stop, stopOnAudioError, stopTrack, unload, unloadAll, unmute, unmuteAll };

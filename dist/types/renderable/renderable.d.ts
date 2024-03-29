@@ -252,6 +252,11 @@ export default class Renderable extends Rect {
      */
     public get isFlippedY(): boolean;
     /**
+     * returns the bounding box for this renderable
+     * @returns {Bounds} bounding box Rectangle object
+     */
+    getBounds(): Bounds;
+    /**
      * get the renderable alpha channel value<br>
      * @returns {number} current opacity value between 0 and 1
      */
@@ -417,3 +422,7 @@ export default class Renderable extends Rect {
 }
 import Rect from "./../geometries/rectangle.js";
 import ObservableVector2d from "./../math/observable_vector2.js";
+import Body from "./../physics/body.js";
+import GLShader from "./../video/webgl/glshader.js";
+import Color from "./../math/color.js";
+import Bounds from "./../physics/bounds.js";
