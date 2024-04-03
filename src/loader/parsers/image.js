@@ -63,14 +63,14 @@ export function preloadImage(img, onload, onerror, settings) {
                 fetchData(imgPath, "text", settings)
                     .then(svgText => {
                         const svgImage = new Image();
-                        svgImage.onload = function () {
+                        svgImage.onload = function() {
                             imgList[img.name] = svgImage;
                             if (typeof onload === "function") {
                                 // callback
                                 onload();
                             }
                         };
-                        svgImage.onerror = function (error) {
+                        svgImage.onerror = function(error) {
                             if (typeof onerror === "function") {
                                 onerror(error);
                             }
