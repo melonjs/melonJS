@@ -115,6 +115,6 @@ export function preloadImage(img, onload, onerror, settings) {
 
     // no compatible format was found
     throw new Error(
-        "No suppported Image file format found for " + img.name
+        "No supported Image file format found for " + img.name
     );
 }
