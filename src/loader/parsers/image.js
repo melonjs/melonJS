@@ -63,14 +63,14 @@ export function preloadImage(img, onload, onerror, settings) {
                 fetchData(imgPath, "text", settings)
                     .then(svgText => {
                         const svgImage = new Image();
-                        svgImage.onload = function() {
+                        svgImage.onload = function () {
                             imgList[img.name] = svgImage;
                             if (typeof onload === "function") {
                                 // callback
                                 onload();
                             }
                         };
-                        svgImage.onerror = function(error) {
+                        svgImage.onerror = function (error) {
                             if (typeof onerror === "function") {
                                 onerror(error);
                             }
@@ -115,6 +115,6 @@ export function preloadImage(img, onload, onerror, settings) {
 
     // no compatible format was found
     throw new Error(
-        "No suppported Image file format found for " + img.name
+        "No supported Image file format found for " + img.name
     );
 }
