@@ -369,9 +369,9 @@ export default class Vector3d {
      * @returns {Vector3d} Reference to this object for method chaining
      */
     lerp(v, alpha) {
-        this.x += ( v.x - this.x ) * alpha;
-        this.y += ( v.y - this.y ) * alpha;
-        this.z += ( v.z - this.z ) * alpha;
+        this.x += (v.x - this.x) * alpha;
+        this.y += (v.y - this.y) * alpha;
+        this.z += (v.z - this.z) * alpha;
         return this;
     }
 

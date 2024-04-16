@@ -47,7 +47,7 @@ export function preloadImage(img, onload, onerror, settings) {
                                 // callback
                                 onload();
                             }
-                        } catch (e) {
+                        } catch {
                             // parseCompressedImage will throw an error if a format is not supported or badly formatted
                         }
                     }).catch(error => {

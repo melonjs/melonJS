@@ -20,20 +20,20 @@ function createGradient(light) {
     if (radiusX >= radiusY) {
         scaleX = 1;
         invScaleX = 1;
-        scaleY = radiusY/radiusX;
-        invScaleY = radiusX/radiusY;
+        scaleY = radiusY / radiusX;
+        invScaleY = radiusX / radiusY;
         gradient = context.createRadialGradient(x1, y1 * invScaleY, 0, x1, radiusY * invScaleY, radiusX);
     }
     else {
         scaleY = 1;
         invScaleY = 1;
-        scaleX = radiusX/radiusY;
-        invScaleX = radiusY/radiusX;
+        scaleX = radiusX / radiusY;
+        invScaleX = radiusY / radiusX;
         gradient = context.createRadialGradient(x1 * invScaleX, y1, 0, x1 * invScaleX, y1, radiusY);
     }
 
-    gradient.addColorStop( 0, light.color.toRGBA(light.intensity));
-    gradient.addColorStop( 1, light.color.toRGBA(0.0));
+    gradient.addColorStop(0, light.color.toRGBA(light.intensity));
+    gradient.addColorStop(1, light.color.toRGBA(0.0));
 
     context.fillStyle = gradient;
 

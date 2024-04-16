@@ -503,7 +503,7 @@ export default class Matrix3d {
         let a = this.val;
         let _x, _y, _z;
 
-        if (arguments.length > 1 ) {
+        if (arguments.length > 1) {
             // x, y (, z)
             _x = arguments[0];
             _y = arguments[1];

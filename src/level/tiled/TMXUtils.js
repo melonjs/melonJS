@@ -45,7 +45,7 @@ function setTMXValue(name, type, value) {
                 try {
                     value = JSON.parse(match);
                 }
-                catch (e) {
+                catch {
                     throw new Error("Unable to parse JSON: " + match);
                 }
             }
@@ -56,7 +56,7 @@ function setTMXValue(name, type, value) {
                     // eslint-disable-next-line
                     value = Function("'use strict';return (" + match + ")")();
                 }
-                catch (e) {
+                catch {
                     throw new Error("Unable to evaluate: " + match);
                 }
             }

@@ -199,7 +199,7 @@ export default class TMXTileMap {
         if (this.version !== "undefined" && this.version !== "") {
             // deprecation warning if map tiled version is older than 1.5
             if (checkVersion(this.version, "1.5") < 0) {
-                warning("("+this.name+") Tiled Map format version 1.4 and below", "format 1.5 or higher", "10.4.4");
+                warning("(" + this.name + ") Tiled Map format version 1.4 and below", "format 1.5 or higher", "10.4.4");
             }
         }
 

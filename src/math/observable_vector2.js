@@ -388,8 +388,8 @@ export default class ObservableVector2d extends Vector2d {
      */
     lerp(v, alpha) {
         return this._set(
-            this._x + ( v.x - this._x ) * alpha,
-            this._y + ( v.y - this._y ) * alpha
+            this._x + (v.x - this._x) * alpha,
+            this._y + (v.y - this._y) * alpha
         );
     }
 

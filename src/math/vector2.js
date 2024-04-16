@@ -340,8 +340,8 @@ export default class Vector2d {
      * @returns {Vector2d} Reference to this object for method chaining
      */
     lerp(v, alpha) {
-        this.x += ( v.x - this.x ) * alpha;
-        this.y += ( v.y - this.y ) * alpha;
+        this.x += (v.x - this.x) * alpha;
+        this.y += (v.y - this.y) * alpha;
         return this;
     }
 

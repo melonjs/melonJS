@@ -34,7 +34,7 @@ function disableSwipeFn(e) {
 function hasLocalStorage() {
     try {
         return !!globalThis.localStorage;
-    } catch (e) {
+    } catch {
         // the above generates an exception when cookies are blocked
         return false;
     }
@@ -44,8 +44,8 @@ function hasOffscreenCanvas() {
     try {
         // some browser (e.g. Safari) implements WebGL1 and WebGL2 contexts only
         // https://bugzilla.mozilla.org/show_bug.cgi?id=801176
-        return (typeof globalThis.OffscreenCanvas !== "undefined") && ((new globalThis.OffscreenCanvas(0, 0).getContext( "2d" )) !== null);
-    } catch (e) {
+        return (typeof globalThis.OffscreenCanvas !== "undefined") && ((new globalThis.OffscreenCanvas(0, 0).getContext("2d")) !== null);
+    } catch {
         return false;
     }
 }
@@ -421,7 +421,7 @@ export function onReady(fn) {
                 } else {
                     event.emit(event.BLUR);
                 }
-            }, false );
+            }, false);
         }
     }
     // call the supplied function
@@ -689,7 +689,7 @@ export function isWebGLSupported(options) {
             };
             _supported = !! (globalThis.WebGLRenderingContext && (canvas.getContext("webgl", ctxOptions) || canvas.getContext("experimental-webgl", ctxOptions)));
             WebGLSupport = _supported ? 1 : 0;
-        } catch (e) {
+        } catch {
             WebGLSupport = 0;
         }
     }

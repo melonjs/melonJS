@@ -118,7 +118,7 @@ class ObjectPool {
      */
     push(obj, throwOnError = true) {
         if (!this.poolable(obj)) {
-            if (throwOnError === true ) {
+            if (throwOnError === true) {
                 throw new Error("me.pool: object " + obj + " cannot be recycled");
             } else {
                 return false;

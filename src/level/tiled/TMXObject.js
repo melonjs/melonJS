@@ -228,7 +228,7 @@ export default class TMXObject {
                 let _polygon = pool.pull("Polygon", 0, 0, this.points);
                 let isConvex = _polygon.isConvex();
                 // make sure it's a convex polygon
-                if (isConvex === false ) {
+                if (isConvex === false) {
                     throw new Error("collision polygones in Tiled should be defined as Convex");
                 } else if (isConvex === null) {
                     throw new Error("invalid polygone");

@@ -672,7 +672,7 @@ export default class Container extends Renderable {
 
             if (!keepalive) {
                 // attempt at recycling the object
-                if (pool.push(child, false) === false ) {
+                if (pool.push(child, false) === false) {
                     //  else just destroy it
                     if (typeof child.destroy === "function") {
                         child.destroy();

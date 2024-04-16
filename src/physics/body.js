@@ -338,7 +338,7 @@ export default class Body {
     fromJSON(json, id) {
         let data = json;
 
-        if (typeof id !== "undefined" ) {
+        if (typeof id !== "undefined") {
             data = json[id];
         }
 
@@ -633,7 +633,7 @@ export default class Body {
 
             this.vel.x = (
                 (nx < 0) ? nx :
-                    ( x > 0) ? x  : 0
+                    (x > 0) ? x  : 0
             );
         }
         if (this.friction.y > 0) {
@@ -643,7 +643,7 @@ export default class Body {
 
             this.vel.y = (
                 (ny < 0) ? ny :
-                    ( y > 0) ? y  : 0
+                    (y > 0) ? y  : 0
             );
         }
 

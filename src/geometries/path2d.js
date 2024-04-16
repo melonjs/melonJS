@@ -63,12 +63,12 @@ export default class Path2D {
                     break;
                 case "H":
                     // H take 1 coordinate
-                    lastPoint = points.length === 0 ? startPoint : points[points.length-1];
+                    lastPoint = points.length === 0 ? startPoint : points[points.length - 1];
                     this.lineTo(lastPoint.x + coordinates[0], lastPoint.y);
                     break;
                 case "V":
                     // V take 1 coordinate
-                    lastPoint = points.length === 0 ? startPoint : points[points.length-1];
+                    lastPoint = points.length === 0 ? startPoint : points[points.length - 1];
                     this.lineTo(lastPoint.x, lastPoint.y + coordinates[0]);
                     break;
                 case "M":
@@ -120,7 +120,7 @@ export default class Path2D {
         let points = this.points;
         if (points.length > 0) {
             let firstPoint = points[0];
-            if (!firstPoint.equals(points[points.length-1])) {
+            if (!firstPoint.equals(points[points.length - 1])) {
                 this.lineTo(firstPoint.x, firstPoint.y);
             }
             this.isDirty = true;
@@ -145,14 +145,14 @@ export default class Path2D {
             }
 
             // calculate all vertices
-            for (let i = 0; i < indicesLength; i++ ) {
+            for (let i = 0; i < indicesLength; i++) {
                 let point = points[indices[i]];
                 vertices[i].set(point.x, point.y);
             }
 
             // recycle overhead from a previous triangulation
             while (vertices.length > indicesLength) {
-                pool.push(vertices[vertices.length-1]);
+                pool.push(vertices[vertices.length - 1]);
                 vertices.length -= 1;
             }
             this.isDirty = false;
@@ -179,7 +179,7 @@ export default class Path2D {
     lineTo(x, y) {
         let points = this.points;
         let startPoint = this.startPoint;
-        let lastPoint = points.length === 0 ? startPoint : points[points.length-1];
+        let lastPoint = points.length === 0 ? startPoint : points[points.length - 1];
 
         if (!startPoint.equals(lastPoint)) {
             points.push(pool.pull("Point", startPoint.x, startPoint.y));
@@ -208,7 +208,7 @@ export default class Path2D {
         // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
         //bring angles all in [0, 2*PI] range
         if (startAngle === endAngle) return;
-        const fullCircle = anticlockwise ? Math.abs(startAngle-endAngle) >= (TAU) : Math.abs(endAngle-startAngle) >= (TAU);
+        const fullCircle = anticlockwise ? Math.abs(startAngle - endAngle) >= (TAU) : Math.abs(endAngle - startAngle) >= (TAU);
 
         startAngle = startAngle % (TAU);
         endAngle = endAngle % (TAU);
@@ -217,7 +217,7 @@ export default class Path2D {
         if (endAngle < 0) endAngle += TAU;
 
         if (startAngle >= endAngle) {
-            endAngle+= TAU;
+            endAngle += TAU;
         }
 
         let diff = endAngle - startAngle;
@@ -258,7 +258,7 @@ export default class Path2D {
     arcTo(x1, y1, x2, y2, radius) {
         let points = this.points;
         let startPoint = this.startPoint;
-        let lastPoint = points.length === 0 ? startPoint : points[points.length-1];
+        let lastPoint = points.length === 0 ? startPoint : points[points.length - 1];
 
         // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
         let x0 = lastPoint.x, y0 = lastPoint.y;
@@ -273,8 +273,8 @@ export default class Path2D {
         let angle = Math.atan2(a1, a0) - Math.atan2(b1, b0);
 
         //work out tangent points using tan(θ) = opposite / adjacent; angle/2 because hypotenuse is the bisection of a,b
-        let tan_angle_div2 = Math.tan(angle/2);
-        let adj_l = (radius/tan_angle_div2);
+        let tan_angle_div2 = Math.tan(angle / 2);
+        let adj_l = (radius / tan_angle_div2);
 
         let tangent1_pointx = x1 + a0 * adj_l, tangent1_pointy = y1 + a1 * adj_l;
         let tangent2_pointx = x1 + b0 * adj_l, tangent2_pointy = y1 + b1 * adj_l;
@@ -309,7 +309,7 @@ export default class Path2D {
     ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle, anticlockwise = false) {
         // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
         if (startAngle === endAngle) return;
-        let fullCircle = anticlockwise ? Math.abs(startAngle-endAngle) >= (TAU) : Math.abs(endAngle-startAngle) >= (TAU);
+        let fullCircle = anticlockwise ? Math.abs(startAngle - endAngle) >= (TAU) : Math.abs(endAngle - startAngle) >= (TAU);
 
         //bring angles all in [0, 2*PI] range
         startAngle = startAngle % (TAU);
@@ -317,7 +317,7 @@ export default class Path2D {
         if (startAngle < 0) startAngle += TAU;
         if (endAngle < 0) endAngle += TAU;
 
-        if (startAngle>=endAngle) {
+        if (startAngle >= endAngle) {
             endAngle += TAU;
         }
 
@@ -347,7 +347,7 @@ export default class Path2D {
             const _y1 = radiusY * Math.sin(angle);
             const _x2 = x + _x1 * cos_rotation - _y1 * sin_rotation;
             const _y2 = y + _x1 * sin_rotation + _y1 * cos_rotation;
-            this.lineTo( _x2, _y2);
+            this.lineTo(_x2, _y2);
             angle += angleStep;
         }
         // close the ellipse
@@ -365,7 +365,7 @@ export default class Path2D {
     quadraticCurveTo(cpX, cpY, x, y) {
         const points = this.points;
         const startPoint = this.startPoint;
-        const lastPoint = points.length === 0 ? startPoint : points[points.length-1];
+        const lastPoint = points.length === 0 ? startPoint : points[points.length - 1];
         const endPoint = pool.pull("Point").set(x, y);
         const controlPoint = pool.pull("Point").set(cpX, cpY);
         const resolution = this.arcResolution;
@@ -393,7 +393,7 @@ export default class Path2D {
     bezierCurveTo(cp1X, cp1Y, cp2X, cp2Y, x, y) {
         const points = this.points;
         const startPoint = this.startPoint;
-        const lastPoint = points.length === 0 ? startPoint : points[points.length-1];
+        const lastPoint = points.length === 0 ? startPoint : points[points.length - 1];
         const endPoint = pool.pull("Point").set(x, y);
         const controlPoint1 = pool.pull("Point").set(cp1X, cp1Y);
         const controlPoint2 = pool.pull("Point").set(cp2X, cp2Y);

@@ -20,7 +20,7 @@ export function consoleHeader(app) {
         device.language
     );
 
-    console.log( "resolution: " + "requested " + app.settings.width + "x" + app.settings.height +
+    console.log("resolution: " + "requested " + app.settings.width + "x" + app.settings.height +
         ", got " + app.renderer.width + "x" + app.renderer.height
     );
 }

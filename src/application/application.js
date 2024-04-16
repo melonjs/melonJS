@@ -180,7 +180,7 @@ export default class Application {
 
         // identify parent element and/or the html target for resizing
         this.parentElement = device.getElement(this.settings.parent);
-        if (typeof this.settings.scaleTarget !== "undefined" ) {
+        if (typeof this.settings.scaleTarget !== "undefined") {
             this.settings.scaleTarget = device.getElement(this.settings.scaleTarget);
         }
 

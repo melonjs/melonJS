@@ -58,7 +58,7 @@ class Timer {
         this.now = 0;
         this.delta = 0;
         // for timeout/interval update
-        this.step =0;
+        this.step = 0;
         this.minstep = 0;
 
         // list of defined timer function

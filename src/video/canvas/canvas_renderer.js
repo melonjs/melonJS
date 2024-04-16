@@ -37,12 +37,12 @@ export default class CanvasRenderer extends Renderer {
             e.preventDefault();
             this.isContextValid = false;
             event.emit(event.ONCONTEXT_LOST, this);
-        }, false );
+        }, false);
         // ctx.restoreContext()
         this.getCanvas().addEventListener("contextrestored", () => {
             this.isContextValid = true;
             event.emit(event.ONCONTEXT_RESTORED, this);
-        }, false );
+        }, false);
 
         // reset the renderer on game reset
         event.on(event.GAME_RESET, () => {

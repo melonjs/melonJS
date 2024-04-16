@@ -250,16 +250,16 @@ export default class Matrix2d {
         let n = a * ta + b * td + c * tg;
 
         val[ 0 ] = ta / n;
-        val[ 1 ] = ( c * h - i * b ) / n;
-        val[ 2 ] = ( f * b - c * e ) / n;
+        val[ 1 ] = (c * h - i * b) / n;
+        val[ 2 ] = (f * b - c * e) / n;
 
         val[ 3 ] = td / n;
-        val[ 4 ] = ( i * a - c * g ) / n;
-        val[ 5 ] = ( c * d - f * a ) / n;
+        val[ 4 ] = (i * a - c * g) / n;
+        val[ 5 ] = (c * d - f * a) / n;
 
         val[ 6 ] = tg / n;
-        val[ 7 ] = ( b * g - h * a ) / n;
-        val[ 8 ] = ( e * a - b * d ) / n;
+        val[ 7 ] = (b * g - h * a) / n;
+        val[ 8 ] = (e * a - b * d) / n;
 
         return this;
     }

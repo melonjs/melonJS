@@ -39,7 +39,7 @@ let hasLocalStorage = false;
 try {
     // true if localStorage is supported
     hasLocalStorage = typeof globalThis !== "undefined" && typeof globalThis.localStorage !== "undefined";
-} catch (e) {
+} catch {
     // the above generates an exception when cookies are blocked
     hasLocalStorage = false;
 }

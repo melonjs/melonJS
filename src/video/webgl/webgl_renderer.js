@@ -157,13 +157,13 @@ export default class WebGLRenderer extends Renderer {
             e.preventDefault();
             this.isContextValid = false;
             event.emit(event.ONCONTEXT_LOST, this);
-        }, false );
+        }, false);
         // ctx.restoreContext()
         this.getCanvas().addEventListener("webglcontextrestored", () => {
             this.reset();
             this.isContextValid = true;
             event.emit(event.ONCONTEXT_RESTORED, this);
-        }, false );
+        }, false);
 
         // reset the renderer on game reset
         event.on(event.GAME_RESET, () => {
@@ -898,7 +898,7 @@ export default class WebGLRenderer extends Renderer {
         this.path2D.beginPath();
         for (let i = 0; i < len - 1; i++) {
             const curPoint = points[i];
-            const nextPoint = points[i+1];
+            const nextPoint = points[i + 1];
             this.path2D.moveTo(curPoint.x, curPoint.y);
             this.path2D.lineTo(nextPoint.x, nextPoint.y);
         }
@@ -1090,7 +1090,7 @@ export default class WebGLRenderer extends Renderer {
             gl.scissor(
                 // scissor does not account for currentTransform, so manually adjust
                 x + this.currentTransform.tx,
-                canvas.height -height -y -this.currentTransform.ty,
+                canvas.height - height - y - this.currentTransform.ty,
                 width,
                 height
             );

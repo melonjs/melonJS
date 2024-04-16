@@ -171,7 +171,7 @@ export default class Detector {
 
                 // go trough all defined shapes in B (if any)
                 const bLen = objB.body.shapes.length;
-                if ( objB.body.shapes.length === 0) {
+                if (objB.body.shapes.length === 0) {
                     continue;
                 }
 

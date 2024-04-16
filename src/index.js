@@ -226,7 +226,7 @@ export function boot() {
     }
 
     // output melonJS version in the console
-    console.log("melonJS 2 (v" + version + ") | http://melonjs.org" );
+    console.log("melonJS 2 (v" + version + ") | http://melonjs.org");
 
     // register all built-ins objects into the object pool
     pool.register("me.Entity", Entity);
@@ -293,7 +293,7 @@ export function boot() {
     event.emit(event.BOOT);
 
     // enable/disable the cache
-    loader.setNocache( utils.getUriFragment().nocache || false );
+    loader.setNocache(utils.getUriFragment().nocache || false);
 
     // automatically enable keyboard events
     input.initKeyboardEvent();

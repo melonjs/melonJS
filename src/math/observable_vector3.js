@@ -465,9 +465,9 @@ export default class ObservableVector3d extends Vector3d {
      */
     lerp(v, alpha) {
         return this._set(
-            this._x + ( v.x - this._x ) * alpha,
-            this._y + ( v.y - this._y ) * alpha,
-            this._z + ( v.z - this._z ) * alpha
+            this._x + (v.x - this._x) * alpha,
+            this._y + (v.y - this._y) * alpha,
+            this._z + (v.z - this._z) * alpha
         );
     }
 

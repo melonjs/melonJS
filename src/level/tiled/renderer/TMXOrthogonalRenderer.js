@@ -133,8 +133,8 @@ export default class TMXOrthogonalRenderer extends TMXRenderer {
         }
 
         // main drawing loop
-        for (let y = start.y; y !== end.y; y+= incY) {
-            for (let x = start.x; x !== end.x; x+= incX) {
+        for (let y = start.y; y !== end.y; y += incY) {
+            for (let x = start.x; x !== end.x; x += incX) {
                 let tmxTile = layer.cellAt(x, y, false);
                 if (tmxTile) {
                     this.drawTile(renderer, x, y, tmxTile);
