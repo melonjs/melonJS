@@ -62,7 +62,7 @@
     "whatwg-fetch": "^3.6.20"
   },
   "devDependencies": {
-    "@fastify/static": "^7.0.1",
+    "@fastify/static": "^7.0.3",
     "@melonjs/webdoc-theme": "^1.1.1",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-image": "^3.0.3",
@@ -70,7 +70,7 @@
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-replace": "^5.0.5",
     "@webdoc/cli": "^2.2.0",
-    "chromedriver": "^123.0.1",
+    "chromedriver": "^123.0.3",
     "cross-env": "^7.0.3",
     "del-cli": "^5.1.0",
     "eslint": "^9.0.0",
@@ -80,12 +80,12 @@
     "fastify": "^4.26.2",
     "mocha": "^10.4.0",
     "npm-self-link": "^1.1.7",
-    "puppeteer": "^22.6.1",
+    "puppeteer": "^22.6.5",
     "rollup": "^4.14.3",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
-    "terser": "^5.30.0",
-    "typescript": "^5.4.3"
+    "terser": "^5.30.3",
+    "typescript": "^5.4.5"
   },
   "scripts": {
     "build": "npm run lint && rollup -c --silent",
