@@ -3,12 +3,20 @@ import jsdoc from "eslint-plugin-jsdoc";
 
 export default [
     {
+        // globally ignore below directories and files
+        ignores: [
+            "*.config.mjs",
+            "dist/**/*",
+            "build/**/*",
+            "tests/**/*",
+            "docs/**/*"]
+    },
+    {
         languageOptions: {
             "ecmaVersion" : 2020,
             "sourceType": "module"
         },
         files: ["src/**/*.js"],
-        ignores: ["*.config.mjs"],
         plugins: {
             jsdoc
         },

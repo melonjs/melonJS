@@ -91,7 +91,7 @@
     "build": "npm run lint && rollup -c --silent",
     "build:cd": "npm run lint && rollup -c --failAfterWarnings",
     "dist": " npm run clean && npm run build && mkdirp dist && cp -fR build/*.* dist/ && npm run types && npm run doc",
-    "lint": "eslint src/**",
+    "lint": "eslint",
     "pretest": "mkdirp tests/browser/public/lib && cp -f build/melonjs.module.js tests/browser/public/lib",
     "test": "npm run test-node && mocha ./tests/browser/spec/*.js --reporter spec --bail --timeout 10000",
     "test-node": "node build/melonjs.module.js",
