@@ -4,18 +4,12 @@
     "browser"   : true,
     "node"      : true
 },
-  "parser": "@babel/eslint-parser",
   "parserOptions": {
-    "sourceType": "module",
-    "requireConfigFile": false,
-    "babelOptions": {
-      "plugins": [
-        "@babel/plugin-syntax-import-assertions"
-      ]
-    }
+    "sourceType": "module"
   },
   "plugins": ["eslint-plugin-jsdoc"],
   "extends": "eslint:recommended", // unleash jsdoc hell with "plugin:jsdoc/recommended-typescript-flavor",
+  "ignorePatterns": ["rollup.config.mjs"], // import assertion is not supported
   "rules": {
     // http://eslint.org/docs/rules/
     "accessor-pairs": "error",

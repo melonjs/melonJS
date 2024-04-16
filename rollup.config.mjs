@@ -4,7 +4,8 @@ import image from "@rollup/plugin-image";
 import bundleSize from "rollup-plugin-bundle-size";
 import commonjs from "@rollup/plugin-commonjs";
 import resolve from "@rollup/plugin-node-resolve";
-import pkg from "./package.json" assert { type: "json" };
+import json from '@rollup/plugin-json';
+import pkg from "./package.json" assert { type: 'json' };
 
 // credit/license information
 const license = [
@@ -42,6 +43,9 @@ export default [
                     "**/*.vert"
                 ]
             }),
+            json({
+                compact: true
+            }),
             image(),
             bundleSize()
         ],
@@ -77,6 +81,9 @@ export default [
                     "**/*.frag",
                     "**/*.vert"
                 ]
+            }),
+            json({
+                compact: true
             }),
             image()
         ],
