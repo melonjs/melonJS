@@ -75,9 +75,10 @@ class CanvasRenderTarget {
     /**
      * @param {number} width - the desired width of the canvas
      * @param {number} height - the desired height of the canvas
-     * @param {object} attributes - The attributes to create both the canvas and context
+     * @param {Settings} attributes - The attributes to create both the canvas and context
      * @param {boolean} [attributes.context="2d"] - the context type to be created ("2d", "webgl")
      * @param {boolean} [attributes.preferWebGL1=false] - set to true for force using WebGL1 instead of WebGL2 (if supported)
+     * @param {boolean} [attributes.transparent=false] - specify if the canvas contains an alpha channel
      * @param {boolean} [attributes.offscreenCanvas=false] - will create an offscreenCanvas if true instead of a standard canvas
      * @param {boolean} [attributes.willReadFrequently=false] - Indicates whether or not a lot of read-back operations are planned
      * @param {boolean} [attributes.antiAlias=false] - Whether to enable anti-aliasing, use false (default) for a pixelated effect.
