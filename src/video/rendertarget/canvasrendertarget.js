@@ -28,7 +28,6 @@ function createContext(canvas, attributes) {
         // 2d/canvas mode
         context = canvas.getContext(attributes.context, { willReadFrequently: attributes.willReadFrequently });
     } else if (attributes.context === "webgl") {
-
         let attr = {
             alpha : attributes.transparent,
             antialias : attributes.antiAlias,
@@ -40,8 +39,8 @@ function createContext(canvas, attributes) {
             failIfMajorPerformanceCaveat : attributes.failIfMajorPerformanceCaveat
         };
 
-        // attempt to create a WebGL2 context if requested
-        if (attributes.preferWebGL1 === false) {
+        // attempt to create a WebGL2 context unless not requested
+        if (attributes.preferWebGL1 !== true) {
             context = canvas.getContext("webgl2", attr);
             if (context) {
                 WebGLVersion = 2;
@@ -77,7 +76,8 @@ class CanvasRenderTarget {
      * @param {number} width - the desired width of the canvas
      * @param {number} height - the desired height of the canvas
      * @param {object} attributes - The attributes to create both the canvas and context
-     * @param {boolean} [attributes.context="2d"] - the context type to be created ("2d", "webgl", "webgl2")
+     * @param {boolean} [attributes.context="2d"] - the context type to be created ("2d", "webgl")
+     * @param {boolean} [attributes.preferWebGL1=false] - set to true for force using WebGL1 instead of WebGL2 (if supported)
      * @param {boolean} [attributes.offscreenCanvas=false] - will create an offscreenCanvas if true instead of a standard canvas
      * @param {boolean} [attributes.willReadFrequently=false] - Indicates whether or not a lot of read-back operations are planned
      * @param {boolean} [attributes.antiAlias=false] - Whether to enable anti-aliasing, use false (default) for a pixelated effect.
@@ -97,6 +97,11 @@ class CanvasRenderTarget {
 
         // clean up the given attributes
         this.attributes = Object.assign({}, defaultAttributes, attributes);
+
+        // make sure context is defined
+        if (typeof attributes.context === "undefined") {
+            attributes.context = "2d";
+        }
 
         // used the given canvas if any
         if (typeof attributes.canvas !== "undefined") {

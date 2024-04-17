@@ -2,8 +2,11 @@
 
 ## [17.2.0] (melonJS 2) - _2024-xx-xx_
 
-### Chored
+### Chores
 - Update to eslint 9.0
+
+### Fixed 
+- Renderer: fix a regression when forcing WebGL1 rendering mode
 
 ## [17.1.0] (melonJS 2) - _2024-03-29_
 
