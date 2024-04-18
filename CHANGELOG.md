@@ -5,7 +5,8 @@
 ### Chores
 - Update to eslint 9.0
 
-### Fixed 
+### Fixed
+- Renderer: fix a regression when a global canvas is available (e.g. webapp adapter for wechat)
 - Renderer: fix a regression when forcing WebGL1 rendering mode (leading to an exception)
 - Renderer: fix a regression when using the canvas rendering mode where antialias setting was not being applied on cached tinted elements
 

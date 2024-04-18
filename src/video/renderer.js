@@ -1,8 +1,6 @@
 import Color from "./../math/color.js";
 import Matrix3d from "./../math/matrix3.js";
-import { createCanvas } from "./video.js";
 import * as event from "./../system/event.js";
-import { platform } from "../system/device.js";
 import Path2D from "./../geometries/path2d.js";
 import Vector2d from "../math/vector2.js";
 import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
@@ -22,7 +20,10 @@ export default class Renderer {
          * @name renderTarget
          * @type {CanvasRenderTarget}
          */
-        this.renderTarget = new CanvasRenderTarget(options.width, options.height, options);
+        this.renderTarget = new CanvasRenderTarget(options.width, options.height,
+            // support case when a global canvas is available, e.g. webapp adapter for wechat
+            typeof globalThis.canvas !== "undefined" ? Object.assign(options, { canvas: globalThis.canvas }) : options
+        );
 
         /**
          * The given constructor options
@@ -88,19 +89,6 @@ export default class Renderer {
          */
         this.currentBlendMode = "none";
 
-        // create the main screen canvas
-        if (platform.ejecta === true) {
-            // a main canvas is already automatically created by Ejecta
-            this.canvas = globalThis.document.getElementById("canvas");
-        } else if (typeof globalThis.canvas !== "undefined") {
-            // a global canvas is available, e.g. webapp adapter for wechat
-            this.canvas = globalThis.canvas;
-        } else if (typeof this.settings.canvas !== "undefined") {
-            this.canvas = this.settings.canvas;
-        } else {
-            this.canvas = createCanvas(this.settings.width, this.settings.height);
-        }
-
         // global color
         this.currentColor = new Color(0, 0, 0, 1.0);
 
@@ -165,7 +153,7 @@ export default class Renderer {
     }
 
     /**
-     * return a reference to the canvas which this renderer draws to
+     * return a reference to the current render target corresponding canvas which this renderer draws to
      * @returns {HTMLCanvasElement}
      */
     getCanvas() {
@@ -173,7 +161,7 @@ export default class Renderer {
     }
 
     /**
-     * return a reference to this renderer canvas corresponding Context
+     * return a reference to the current render target corresponding Context
      * @returns {CanvasRenderingContext2D|WebGLRenderingContext}
      */
     getContext() {
@@ -236,7 +224,7 @@ export default class Renderer {
     }
 
     /**
-     * enable/disable image smoothing (scaling interpolation) for the given context
+     * enable/disable image smoothing (scaling interpolation) for the current render target
      * @param {boolean} [enable=false]
      */
     setAntiAlias(enable) {
