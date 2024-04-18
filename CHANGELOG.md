@@ -5,6 +5,9 @@
 ### Chores
 - Update to eslint 9.0
 
+### Added
+- Core: add platform detection if running as a standalone web app
+
 ### Fixed
 - Renderer: fix a regression when a global canvas is available (e.g. webapp adapter for wechat)
 - Renderer: fix a regression when forcing WebGL1 rendering mode (leading to an exception)

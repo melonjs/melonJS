@@ -15,6 +15,7 @@
 * @property {boolean} isWeixin `true` if running under Wechat
 * @property {boolean} nodeJS `true` if running under node.js
 * @property {boolean} isMobile `true` if a mobile device
+* @property {boolean} webApp `true` if running as a standalone web app
 */
 
 export const ua = typeof globalThis.navigator !== "undefined" ? globalThis.navigator.userAgent : "";
@@ -30,3 +31,4 @@ export const ejecta = (typeof globalThis.ejecta !== "undefined");
 export const isWeixin = /MicroMessenger/i.test(ua);
 export const nodeJS = (typeof globalThis.process !== "undefined") && (typeof globalThis.process.release !== "undefined") && (globalThis.process.release.name === "node");
 export const isMobile = /Mobi/i.test(ua) || iOS || android || wp || BlackBerry || Kindle || false;
+export const webApp = (typeof globalThis.navigator !== "undefined" && globalThis.navigator.standalone === true) || (typeof globalThis.matchMedia !== "undefined" && globalThis.matchMedia('(display-mode: standalone)').matches);
