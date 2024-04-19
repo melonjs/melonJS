@@ -31,4 +31,4 @@ export const ejecta = (typeof globalThis.ejecta !== "undefined");
 export const isWeixin = /MicroMessenger/i.test(ua);
 export const nodeJS = (typeof globalThis.process !== "undefined") && (typeof globalThis.process.release !== "undefined") && (globalThis.process.release.name === "node");
 export const isMobile = /Mobi/i.test(ua) || iOS || android || wp || BlackBerry || Kindle || false;
-export const webApp = (typeof globalThis.navigator !== "undefined" && globalThis.navigator.standalone === true) || (typeof globalThis.matchMedia !== "undefined" && globalThis.matchMedia('(display-mode: standalone)').matches);
+export const webApp = (typeof globalThis.navigator !== "undefined" && globalThis.navigator.standalone === true) || (typeof globalThis.matchMedia !== "undefined" && globalThis.matchMedia("(display-mode: standalone)").matches);
