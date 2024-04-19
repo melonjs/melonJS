@@ -6,6 +6,7 @@
 - Update to eslint 9.0
 
 ### Added
+- Audio: add missing optional id parameter to 3D / Spatial audio methods
 - Core: add platform detection if running as a standalone web app
 
 ### Fixed
