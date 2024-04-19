@@ -3,6 +3,7 @@ import jsdoc from "eslint-plugin-jsdoc";
 
 export default [
     {
+        name: "eslint/global-ignores",
         // globally ignore below directories and files
         ignores: [
             "*.config.mjs",
@@ -12,6 +13,7 @@ export default [
             "docs/**/*"]
     },
     {
+        name: "eslint/global-rules",
         languageOptions: {
             "ecmaVersion" : 2020,
             "sourceType": "module"
