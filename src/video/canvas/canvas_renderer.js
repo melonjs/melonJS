@@ -587,12 +587,13 @@ export default class CanvasRenderer extends Renderer {
      * renderer.restore();
      */
     restore() {
+        const canvas = this.getCanvas();
         this.getContext().restore();
         this.currentColor.glArray[3] = this.getGlobalAlpha();
         this.currentScissor[0] = 0;
         this.currentScissor[1] = 0;
-        this.currentScissor[2] = this.getCanvas().width;
-        this.currentScissor[3] = this.getCanvas().height;
+        this.currentScissor[2] = canvas.width;
+        this.currentScissor[3] = canvas.height;
     }
 
     /**

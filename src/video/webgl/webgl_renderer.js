@@ -688,12 +688,13 @@ export default class WebGLRenderer extends Renderer {
             // FIXME : prevent `scissor` object realloc and GC
             this.currentScissor.set(this._scissorStack.pop());
         } else {
+            const canvas = this.getCanvas();
             // turn off scissor test
             this.gl.disable(this.gl.SCISSOR_TEST);
             this.currentScissor[0] = 0;
             this.currentScissor[1] = 0;
-            this.currentScissor[2] = this.getCanvas().width;
-            this.currentScissor[3] = this.getCanvas().height;
+            this.currentScissor[2] = canvas.width;
+            this.currentScissor[3] = canvas.height;
         }
     }
 
