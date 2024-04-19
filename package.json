@@ -53,7 +53,7 @@
   ],
   "dependencies": {
     "@teppeis/multimaps": "^3.0.0",
-    "core-js": "^3.36.1",
+    "core-js": "^3.37.0",
     "earcut": "2.2.4",
     "eventemitter3": "^5.0.1",
     "howler": "2.2.4",
@@ -70,7 +70,7 @@
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-replace": "^5.0.5",
     "@webdoc/cli": "^2.2.0",
-    "chromedriver": "^123.0.3",
+    "chromedriver": "^123.0.4",
     "cross-env": "^7.0.3",
     "del-cli": "^5.1.0",
     "eslint": "^9.1.0",
