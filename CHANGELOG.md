@@ -2,9 +2,6 @@
 
 ## [17.2.0] (melonJS 2) - _2024-xx-xx_
 
-### Chores
-- Update to eslint 9.0
-
 ### Added
 - Audio: add missing optional id parameter to 3D / Spatial audio methods
 - Core: add platform detection if running as a standalone web app
@@ -13,6 +10,9 @@
 - Renderer: fix a regression when a global canvas is available (e.g. webapp adapter for wechat)
 - Renderer: fix a regression when forcing WebGL1 rendering mode (leading to an exception)
 - Renderer: fix a regression when using the canvas rendering mode where antialias setting was not being applied on cached tinted elements
+
+### Chores
+- Chore: Update to eslint 9
 
 ## [17.1.0] (melonJS 2) - _2024-03-29_
 
