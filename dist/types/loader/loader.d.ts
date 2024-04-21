@@ -243,6 +243,13 @@ export function getJSON(elt: string): JSON;
  */
 export function getVideo(elt: string): HTMLVideoElement;
 /**
+ * return the specified FontFace Object
+ * @memberof loader
+ * @param {string} elt - name of the font file
+ * @returns {FontFace}
+ */
+export function getFont(elt: string): FontFace;
+/**
  * a small class to manage loading of stuff and manage resources
  * @namespace loader
  */

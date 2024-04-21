@@ -66,7 +66,6 @@ export default class Renderer {
      * @ignore
      */
     currentBlendMode: string;
-    canvas: any;
     currentColor: Color;
     currentTint: Color;
     projectionMatrix: Matrix3d;
@@ -96,12 +95,12 @@ export default class Renderer {
      */
     reset(): void;
     /**
-     * return a reference to the canvas which this renderer draws to
+     * return a reference to the current render target corresponding canvas which this renderer draws to
      * @returns {HTMLCanvasElement}
      */
     getCanvas(): HTMLCanvasElement;
     /**
-     * return a reference to this renderer canvas corresponding Context
+     * return a reference to the current render target corresponding Context
      * @returns {CanvasRenderingContext2D|WebGLRenderingContext}
      */
     getContext(): CanvasRenderingContext2D | WebGLRenderingContext;
@@ -110,14 +109,6 @@ export default class Renderer {
      * @returns {string} blend mode
      */
     getBlendMode(): string;
-    /**
-     * Returns the 2D Context object of the given Canvas<br>
-     * Also configures anti-aliasing and blend modes based on constructor options.
-     * @param {HTMLCanvasElement} canvas
-     * @param {boolean} [transparent=true] - use false to disable transparency
-     * @returns {CanvasRenderingContext2D}
-     */
-    getContext2d(canvas: HTMLCanvasElement, transparent?: boolean | undefined): CanvasRenderingContext2D;
     /**
      * get the current fill & stroke style color.
      * @returns {Color} current global color
@@ -141,11 +132,10 @@ export default class Renderer {
      */
     resize(width: number, height: number): void;
     /**
-     * enable/disable image smoothing (scaling interpolation) for the given context
-     * @param {CanvasRenderingContext2D} context
+     * enable/disable image smoothing (scaling interpolation) for the current render target
      * @param {boolean} [enable=false]
      */
-    setAntiAlias(context: CanvasRenderingContext2D, enable?: boolean | undefined): void;
+    setAntiAlias(enable?: boolean | undefined): void;
     /**
      * set/change the current projection matrix (WebGL only)
      * @param {Matrix3d} matrix
@@ -167,7 +157,7 @@ export default class Renderer {
      * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} src - the source image to be tinted
      * @param {Color|string} color - the color that will be used to tint the image
      * @param {string} [mode="multiply"] - the composition mode used to tint the image
-     * @returns {HTMLCanvasElement|OffscreenCanvas} a new canvas element representing the tinted image
+     * @returns {HTMLCanvasElement|OffscreenCanvas} a new canvas or offscreencanvas (if supported) element representing the tinted image
      */
     tint(src: HTMLImageElement | HTMLCanvasElement | OffscreenCanvas, color: Color | string, mode?: string | undefined): HTMLCanvasElement | OffscreenCanvas;
     /**

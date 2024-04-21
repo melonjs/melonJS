@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -510,7 +510,7 @@ class Matrix3d {
         let a = this.val;
         let _x, _y, _z;
 
-        if (arguments.length > 1 ) {
+        if (arguments.length > 1) {
             // x, y (, z)
             _x = arguments[0];
             _y = arguments[1];

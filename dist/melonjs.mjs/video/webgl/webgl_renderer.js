@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -164,13 +164,13 @@ class WebGLRenderer extends Renderer {
             e.preventDefault();
             this.isContextValid = false;
             emit(ONCONTEXT_LOST, this);
-        }, false );
+        }, false);
         // ctx.restoreContext()
         this.getCanvas().addEventListener("webglcontextrestored", () => {
             this.reset();
             this.isContextValid = true;
             emit(ONCONTEXT_RESTORED, this);
-        }, false );
+        }, false);
 
         // reset the renderer on game reset
         on(GAME_RESET, () => {
@@ -695,12 +695,13 @@ class WebGLRenderer extends Renderer {
             // FIXME : prevent `scissor` object realloc and GC
             this.currentScissor.set(this._scissorStack.pop());
         } else {
+            const canvas = this.getCanvas();
             // turn off scissor test
             this.gl.disable(this.gl.SCISSOR_TEST);
             this.currentScissor[0] = 0;
             this.currentScissor[1] = 0;
-            this.currentScissor[2] = this.getCanvas().width;
-            this.currentScissor[3] = this.getCanvas().height;
+            this.currentScissor[2] = canvas.width;
+            this.currentScissor[3] = canvas.height;
         }
     }
 
@@ -905,7 +906,7 @@ class WebGLRenderer extends Renderer {
         this.path2D.beginPath();
         for (let i = 0; i < len - 1; i++) {
             const curPoint = points[i];
-            const nextPoint = points[i+1];
+            const nextPoint = points[i + 1];
             this.path2D.moveTo(curPoint.x, curPoint.y);
             this.path2D.lineTo(nextPoint.x, nextPoint.y);
         }
@@ -1097,7 +1098,7 @@ class WebGLRenderer extends Renderer {
             gl.scissor(
                 // scissor does not account for currentTransform, so manually adjust
                 x + this.currentTransform.tx,
-                canvas.height -height -y -this.currentTransform.ty,
+                canvas.height - height - y - this.currentTransform.ty,
                 width,
                 height
             );

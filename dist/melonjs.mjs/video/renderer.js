@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -7,9 +7,7 @@
  */
 import Color from '../math/color.js';
 import Matrix3d from '../math/matrix3.js';
-import { createCanvas } from './video.js';
 import { emit, CANVAS_ONRESIZE } from '../system/event.js';
-import { platform } from '../system/device.js';
 import Path2D from '../geometries/path2d.js';
 import Vector2d from '../math/vector2.js';
 import CanvasRenderTarget from './rendertarget/canvasrendertarget.js';
@@ -29,7 +27,10 @@ class Renderer {
          * @name renderTarget
          * @type {CanvasRenderTarget}
          */
-        this.renderTarget = new CanvasRenderTarget(options.width, options.height, options);
+        this.renderTarget = new CanvasRenderTarget(options.width, options.height,
+            // support case when a global canvas is available, e.g. webapp adapter for wechat
+            typeof globalThis.canvas !== "undefined" ? Object.assign(options, { canvas: globalThis.canvas }) : options
+        );
 
         /**
          * The given constructor options
@@ -95,19 +96,6 @@ class Renderer {
          */
         this.currentBlendMode = "none";
 
-        // create the main screen canvas
-        if (platform.ejecta === true) {
-            // a main canvas is already automatically created by Ejecta
-            this.canvas = globalThis.document.getElementById("canvas");
-        } else if (typeof globalThis.canvas !== "undefined") {
-            // a global canvas is available, e.g. webapp adapter for wechat
-            this.canvas = globalThis.canvas;
-        } else if (typeof this.settings.canvas !== "undefined") {
-            this.canvas = this.settings.canvas;
-        } else {
-            this.canvas = createCanvas(this.settings.width, this.settings.height);
-        }
-
         // global color
         this.currentColor = new Color(0, 0, 0, 1.0);
 
@@ -172,7 +160,7 @@ class Renderer {
     }
 
     /**
-     * return a reference to the canvas which this renderer draws to
+     * return a reference to the current render target corresponding canvas which this renderer draws to
      * @returns {HTMLCanvasElement}
      */
     getCanvas() {
@@ -180,7 +168,7 @@ class Renderer {
     }
 
     /**
-     * return a reference to this renderer canvas corresponding Context
+     * return a reference to the current render target corresponding Context
      * @returns {CanvasRenderingContext2D|WebGLRenderingContext}
      */
     getContext() {
@@ -193,42 +181,6 @@ class Renderer {
      */
     getBlendMode() {
         return this.currentBlendMode;
-    }
-
-    /**
-     * Returns the 2D Context object of the given Canvas<br>
-     * Also configures anti-aliasing and blend modes based on constructor options.
-     * @param {HTMLCanvasElement} canvas
-     * @param {boolean} [transparent=true] - use false to disable transparency
-     * @returns {CanvasRenderingContext2D}
-     */
-    getContext2d(canvas, transparent) {
-        if (typeof canvas === "undefined" || canvas === null) {
-            throw new Error(
-                "You must pass a canvas element in order to create " +
-                "a 2d context"
-            );
-        }
-
-        if (typeof canvas.getContext === "undefined") {
-            throw new Error(
-                "Your browser does not support HTML5 canvas."
-            );
-        }
-
-        if (typeof transparent !== "boolean") {
-            transparent = true;
-        }
-
-        let _context = canvas.getContext("2d", {
-            "alpha" : transparent
-        });
-
-        if (!_context.canvas) {
-            _context.canvas = canvas;
-        }
-        this.setAntiAlias(_context, this.settings.antiAlias);
-        return _context;
     }
 
     /**
@@ -279,12 +231,11 @@ class Renderer {
     }
 
     /**
-     * enable/disable image smoothing (scaling interpolation) for the given context
-     * @param {CanvasRenderingContext2D} context
+     * enable/disable image smoothing (scaling interpolation) for the current render target
      * @param {boolean} [enable=false]
      */
-    setAntiAlias(context, enable) {
-        this.renderTarget.setAntiAlias(context, enable);
+    setAntiAlias(enable) {
+        this.renderTarget.setAntiAlias(enable);
     }
 
     /**
@@ -347,25 +298,22 @@ class Renderer {
      * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} src - the source image to be tinted
      * @param {Color|string} color - the color that will be used to tint the image
      * @param {string} [mode="multiply"] - the composition mode used to tint the image
-     * @returns {HTMLCanvasElement|OffscreenCanvas} a new canvas element representing the tinted image
+     * @returns {HTMLCanvasElement|OffscreenCanvas} a new canvas or offscreencanvas (if supported) element representing the tinted image
      */
-    tint(src, color, mode) {
-        let canvas = createCanvas(src.width, src.height, true);
-        let context = this.getContext2d(canvas);
-
-        context.save();
+    tint(src, color, mode = "multiply") {
+        const attributes = { context:"2d", offscreenCanvas: true, transparent: true, antiAlias: this.settings.antiAlias };
+        let canvasTexture = new CanvasRenderTarget(src.width, src.height, attributes);
+        let context = canvasTexture.context;
 
         context.fillStyle = color instanceof Color ? color.toRGB() : color;
         context.fillRect(0, 0, src.width, src.height);
 
-        context.globalCompositeOperation = mode || "multiply";
+        context.globalCompositeOperation = mode;
         context.drawImage(src, 0, 0);
         context.globalCompositeOperation = "destination-atop";
         context.drawImage(src, 0, 0);
 
-        context.restore();
-
-        return canvas;
+        return canvasTexture.canvas;
     }
 
     /**

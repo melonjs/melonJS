@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -45,7 +45,7 @@ class Tween {
      *       autoStart : true
      * }).onComplete(myFunc);
      */
-    constructor ( object ) {
+    constructor (object) {
         this.setProperties(object);
     }
 
@@ -53,7 +53,7 @@ class Tween {
      * reset the tween object to default value
      * @ignore
      */
-    onResetEvent( object ) {
+    onResetEvent(object) {
         this.setProperties(object);
     }
 
@@ -89,7 +89,7 @@ class Tween {
         this.isRenderable = false;
 
         // Set all starting values present on the target object
-        for ( let field in object ) {
+        for (let field in object) {
             if (typeof object !== "object") {
                 this._valuesStart[ field ] = parseFloat(object[field]);
             }
@@ -139,7 +139,7 @@ class Tween {
      * @param {boolean} [options.autoStart] - allow this tween to start automatically. Otherwise call me.Tween.start().
      * @returns {Tween} this instance for object chaining
      */
-    to( properties, options ) {
+    to(properties, options) {
 
         this._valuesEnd = properties;
 
@@ -172,7 +172,7 @@ class Tween {
      * @param {number} [time] - the current time when the tween was started
      * @returns {Tween} this instance for object chaining
      */
-    start( time = timer.getTime() ) {
+    start(time = timer.getTime()) {
 
         this._onStartCallbackFired = false;
 
@@ -181,25 +181,25 @@ class Tween {
 
         this._startTime =  time + this._delayTime;
 
-        for ( let property in this._valuesEnd ) {
+        for (let property in this._valuesEnd) {
 
             // check if an Array was provided as property value
-            if ( this._valuesEnd[ property ] instanceof Array ) {
+            if (this._valuesEnd[ property ] instanceof Array) {
 
-                if ( this._valuesEnd[ property ].length === 0 ) {
+                if (this._valuesEnd[ property ].length === 0) {
 
                     continue;
 
                 }
 
                 // create a local copy of the Array with the start value at the front
-                this._valuesEnd[ property ] = [ this._object[ property ] ].concat( this._valuesEnd[ property ] );
+                this._valuesEnd[ property ] = [ this._object[ property ] ].concat(this._valuesEnd[ property ]);
 
             }
 
             this._valuesStart[ property ] = this._object[ property ];
 
-            if ( ( this._valuesStart[ property ] instanceof Array ) === false ) {
+            if ((this._valuesStart[ property ] instanceof Array) === false) {
                 this._valuesStart[ property ] *= 1.0; // Ensures we're using numbers, not strings
             }
 
@@ -231,7 +231,7 @@ class Tween {
      * @param {number} amount - delay amount expressed in milliseconds
      * @returns {Tween} this instance for object chaining
      */
-    delay( amount ) {
+    delay(amount) {
 
         this._delayTime = amount;
         return this;
@@ -246,7 +246,7 @@ class Tween {
      * @param {number} times - amount of times the tween should be repeated
      * @returns {Tween} this instance for object chaining
      */
-    repeat( times ) {
+    repeat(times) {
 
         this._repeat = times;
         return this;
@@ -263,7 +263,7 @@ class Tween {
      * @param {boolean} yoyo
      * @returns {Tween} this instance for object chaining
      */
-    yoyo( yoyo ) {
+    yoyo(yoyo) {
 
         this._yoyo = yoyo;
         return this;
@@ -278,7 +278,7 @@ class Tween {
      * @param {Tween.Easing} easing - easing function
      * @returns {Tween} this instance for object chaining
      */
-    easing( easing ) {
+    easing(easing) {
         if (typeof easing !== "function") {
             throw new Error("invalid easing function for me.Tween.easing()");
         }
@@ -294,7 +294,7 @@ class Tween {
      * @param {Tween.Interpolation} interpolation - interpolation function
      * @returns {Tween} this instance for object chaining
      */
-    interpolation( interpolation ) {
+    interpolation(interpolation) {
         this._interpolationFunction = interpolation;
         return this;
     }
@@ -320,7 +320,7 @@ class Tween {
      * @param {Function} onStartCallback - callback
      * @returns {Tween} this instance for object chaining
      */
-    onStart( onStartCallback ) {
+    onStart(onStartCallback) {
         this._onStartCallback = onStartCallback;
         return this;
     }
@@ -333,7 +333,7 @@ class Tween {
      * @param {Function} onUpdateCallback - callback
      * @returns {Tween} this instance for object chaining
      */
-    onUpdate( onUpdateCallback ) {
+    onUpdate(onUpdateCallback) {
         this._onUpdateCallback = onUpdateCallback;
         return this;
     }
@@ -346,13 +346,13 @@ class Tween {
      * @param {Function} onCompleteCallback - callback
      * @returns {Tween} this instance for object chaining
      */
-    onComplete( onCompleteCallback ) {
+    onComplete(onCompleteCallback) {
         this._onCompleteCallback = onCompleteCallback;
         return this;
     }
 
     /** @ignore */
-    update( dt ) {
+    update(dt) {
 
         // the original Tween implementation expect
         // a timestamp and not a time delta
@@ -361,17 +361,17 @@ class Tween {
 
         let property;
 
-        if ( time < this._startTime ) {
+        if (time < this._startTime) {
 
             return true;
 
         }
 
-        if ( this._onStartCallbackFired === false ) {
+        if (this._onStartCallbackFired === false) {
 
-            if ( this._onStartCallback !== null ) {
+            if (this._onStartCallback !== null) {
 
-                this._onStartCallback.call( this._object );
+                this._onStartCallback.call(this._object);
 
             }
 
@@ -379,54 +379,54 @@ class Tween {
 
         }
 
-        let elapsed = ( time - this._startTime ) / this._duration;
+        let elapsed = (time - this._startTime) / this._duration;
         elapsed = elapsed > 1 ? 1 : elapsed;
 
-        let value = this._easingFunction( elapsed );
+        let value = this._easingFunction(elapsed);
 
-        for ( property in this._valuesEnd ) {
+        for (property in this._valuesEnd) {
 
             let start = this._valuesStart[ property ] || 0;
             let end = this._valuesEnd[ property ];
 
-            if ( end instanceof Array ) {
+            if (end instanceof Array) {
 
-                this._object[ property ] = this._interpolationFunction( end, value );
+                this._object[ property ] = this._interpolationFunction(end, value);
 
             } else {
 
                 // Parses relative end values with start as base (e.g.: +10, -3)
-                if ( typeof(end) === "string" ) {
+                if (typeof(end) === "string") {
                     end = start + parseFloat(end);
                 }
 
                 // protect against non numeric properties.
-                if ( typeof(end) === "number" ) {
-                    this._object[ property ] = start + ( end - start ) * value;
+                if (typeof(end) === "number") {
+                    this._object[ property ] = start + (end - start) * value;
                 }
 
             }
 
         }
 
-        if ( this._onUpdateCallback !== null ) {
+        if (this._onUpdateCallback !== null) {
 
-            this._onUpdateCallback.call( this._object, value );
+            this._onUpdateCallback.call(this._object, value);
 
         }
 
-        if ( elapsed === 1 ) {
+        if (elapsed === 1) {
 
-            if ( this._repeat > 0 ) {
+            if (this._repeat > 0) {
 
-                if ( isFinite( this._repeat ) ) {
+                if (isFinite(this._repeat)) {
                     this._repeat--;
                 }
 
                 // reassign starting values, restart by making startTime = now
-                for ( property in this._valuesStartRepeat ) {
+                for (property in this._valuesStartRepeat) {
 
-                    if ( typeof( this._valuesEnd[ property ] ) === "string" ) {
+                    if (typeof(this._valuesEnd[ property ]) === "string") {
                         this._valuesStartRepeat[ property ] = this._valuesStartRepeat[ property ] + parseFloat(this._valuesEnd[ property ]);
                     }
 
@@ -451,15 +451,15 @@ class Tween {
                 // remove the tween from the world container
                 game.world.removeChildNow(this);
 
-                if ( this._onCompleteCallback !== null ) {
+                if (this._onCompleteCallback !== null) {
 
-                    this._onCompleteCallback.call( this._object );
+                    this._onCompleteCallback.call(this._object);
 
                 }
 
-                for ( let i = 0, numChainedTweens = this._chainedTweens.length; i < numChainedTweens; i ++ ) {
+                for (let i = 0, numChainedTweens = this._chainedTweens.length; i < numChainedTweens; i ++) {
 
-                    this._chainedTweens[ i ].start( time );
+                    this._chainedTweens[ i ].start(time);
 
                 }
 

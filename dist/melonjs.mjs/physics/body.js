@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -345,7 +345,7 @@ class Body {
     fromJSON(json, id) {
         let data = json;
 
-        if (typeof id !== "undefined" ) {
+        if (typeof id !== "undefined") {
             data = json[id];
         }
 
@@ -640,7 +640,7 @@ class Body {
 
             this.vel.x = (
                 (nx < 0) ? nx :
-                    ( x > 0) ? x  : 0
+                    (x > 0) ? x  : 0
             );
         }
         if (this.friction.y > 0) {
@@ -650,7 +650,7 @@ class Body {
 
             this.vel.y = (
                 (ny < 0) ? ny :
-                    ( y > 0) ? y  : 0
+                    (y > 0) ? y  : 0
             );
         }
 

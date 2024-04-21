@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -248,7 +248,7 @@ let state = {
      * @public
      * @param {boolean} [pauseTrack=false] - pause current track on screen stop.
      */
-    stop(pauseTrack=false) {
+    stop(pauseTrack = false) {
         // only stop when we are not loading stuff
         if ((_state !== this.LOADING) && this.isRunning()) {
             // stop the main loop
@@ -274,7 +274,7 @@ let state = {
      * @public
      * @param {boolean} [music=false] - pause current music track on screen pause
      */
-    pause(music=false) {
+    pause(music = false) {
         // only pause when we are not loading stuff
         if ((_state !== this.LOADING) && !this.isPaused()) {
             // stop the main loop
@@ -299,7 +299,7 @@ let state = {
      * @public
      * @param {boolean} [music=false] - resume current music track on screen resume
      */
-    restart(music=false) {
+    restart(music = false) {
         if (!this.isRunning()) {
             // restart the main loop
             _startRunLoop();
@@ -323,7 +323,7 @@ let state = {
      * @public
      * @param {boolean} [music=false] - resume current music track on screen resume
      */
-    resume(music=false) {
+    resume(music = false) {
         if (this.isPaused()) {
             // resume the main loop
             _resumeRunLoop();

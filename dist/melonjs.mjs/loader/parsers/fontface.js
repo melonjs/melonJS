@@ -1,10 +1,11 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2024 Olivier Biot (AltByte Pte Ltd)
  */
+import { fontList } from '../cache.js';
 import { isDataUrl } from '../../utils/string.js';
 
 /**
@@ -20,6 +21,7 @@ import { isDataUrl } from '../../utils/string.js';
  * ]);
  */
 function preloadFontFace(data, onload, onerror) {
+    const fontFaceSet = typeof globalThis.document !== "undefined" ? globalThis.document.fonts : undefined;
 
     if (isDataUrl(data.src) === true) {
         // make sure it in the `url(data:[<mediatype>][;base64],<data>)` format as expected by FontFace
@@ -28,23 +30,31 @@ function preloadFontFace(data, onload, onerror) {
         }
     }
 
-    let font = new FontFace(data.name, data.src);
-
-    // loading promise
-    font.load().then(() => {
-        // apply the font after the font has finished downloading
-        globalThis.document.fonts.add(font);
-        globalThis.document.body.style.fontFamily = data.name;
-        if (typeof onload === "function") {
+    if (typeof fontFaceSet !== "undefined") {
+        // create a new font face
+        let font = new FontFace(data.name, data.src);
+        // loading promise
+        font.load().then(() => {
+            // add the font to the cache
+            fontList[data.name] = font;
+            // add the font to the document
+            fontFaceSet.add(font);
             // onloaded callback
-            onload();
-        }
-    }, () => {
-        if (typeof onerror === "function") {
+            if (typeof onload === "function") {
+                onload();
+            }
+        }, () => {
             // rejected
-            onerror(data.name);
+            if (typeof onerror === "function") {
+                onerror(data.name);
+            }
+        });
+
+    } else {
+        if (typeof onerror === "function") {
+            onerror(error);
         }
-    });
+    }
 
     return 1;
 }

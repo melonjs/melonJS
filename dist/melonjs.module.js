@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -446,10 +446,10 @@ var SHARED = '__core-js_shared__';
 var store$3 = sharedStore$2.exports = globalThis$3[SHARED] || defineGlobalProperty$2(SHARED, {});
 
 (store$3.versions || (store$3.versions = [])).push({
-  version: '3.36.1',
+  version: '3.37.0',
   mode: IS_PURE ? 'pure' : 'global',
   copyright: '© 2014-2024 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.36.1/LICENSE',
+  license: 'https://github.com/zloirock/core-js/blob/v3.37.0/LICENSE',
   source: 'https://github.com/zloirock/core-js'
 });
 
@@ -2731,7 +2731,7 @@ class ObjectPool {
      */
     push(obj, throwOnError = true) {
         if (!this.poolable(obj)) {
-            if (throwOnError === true ) {
+            if (throwOnError === true) {
                 throw new Error("me.pool: object " + obj + " cannot be recycled");
             } else {
                 return false;
@@ -2795,9 +2795,9 @@ function toHex$1(component) {
 function hue2rgb(p, q, t) {
     if (t < 0) t += 1;
     if (t > 1) t -= 1;
-    if (t < 1/6) return p + (q - p) * 6 * t;
-    if (t < 1/2) return q;
-    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
     return p;
 }
 
@@ -3116,9 +3116,9 @@ class Color {
             let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
             let p = 2 * l - q;
 
-            r = hue2rgb(p, q, h + 1/3);
+            r = hue2rgb(p, q, h + 1 / 3);
             g = hue2rgb(p, q, h);
-            b = hue2rgb(p, q, h - 1/3);
+            b = hue2rgb(p, q, h - 1 / 3);
         }
 
         return this.setColor(r * 255, g * 255, b * 255);
@@ -3748,8 +3748,8 @@ class Vector2d {
      * @returns {Vector2d} Reference to this object for method chaining
      */
     lerp(v, alpha) {
-        this.x += ( v.x - this.x ) * alpha;
-        this.y += ( v.y - this.y ) * alpha;
+        this.x += (v.x - this.x) * alpha;
+        this.y += (v.y - this.y) * alpha;
         return this;
     }
 
@@ -4197,9 +4197,9 @@ class Vector3d {
      * @returns {Vector3d} Reference to this object for method chaining
      */
     lerp(v, alpha) {
-        this.x += ( v.x - this.x ) * alpha;
-        this.y += ( v.y - this.y ) * alpha;
-        this.z += ( v.z - this.z ) * alpha;
+        this.x += (v.x - this.x) * alpha;
+        this.y += (v.y - this.y) * alpha;
+        this.z += (v.z - this.z) * alpha;
         return this;
     }
 
@@ -4672,8 +4672,8 @@ class ObservableVector2d extends Vector2d {
      */
     lerp(v, alpha) {
         return this._set(
-            this._x + ( v.x - this._x ) * alpha,
-            this._y + ( v.y - this._y ) * alpha
+            this._x + (v.x - this._x) * alpha,
+            this._y + (v.y - this._y) * alpha
         );
     }
 
@@ -5205,9 +5205,9 @@ class ObservableVector3d extends Vector3d {
      */
     lerp(v, alpha) {
         return this._set(
-            this._x + ( v.x - this._x ) * alpha,
-            this._y + ( v.y - this._y ) * alpha,
-            this._z + ( v.z - this._z ) * alpha
+            this._x + (v.x - this._x) * alpha,
+            this._y + (v.y - this._y) * alpha,
+            this._z + (v.z - this._z) * alpha
         );
     }
 
@@ -5538,16 +5538,16 @@ class Matrix2d {
         let n = a * ta + b * td + c * tg;
 
         val[ 0 ] = ta / n;
-        val[ 1 ] = ( c * h - i * b ) / n;
-        val[ 2 ] = ( f * b - c * e ) / n;
+        val[ 1 ] = (c * h - i * b) / n;
+        val[ 2 ] = (f * b - c * e) / n;
 
         val[ 3 ] = td / n;
-        val[ 4 ] = ( i * a - c * g ) / n;
-        val[ 5 ] = ( c * d - f * a ) / n;
+        val[ 4 ] = (i * a - c * g) / n;
+        val[ 5 ] = (c * d - f * a) / n;
 
         val[ 6 ] = tg / n;
-        val[ 7 ] = ( b * g - h * a ) / n;
-        val[ 8 ] = ( e * a - b * d ) / n;
+        val[ 7 ] = (b * g - h * a) / n;
+        val[ 8 ] = (e * a - b * d) / n;
 
         return this;
     }
@@ -6267,7 +6267,7 @@ class Matrix3d {
         let a = this.val;
         let _x, _y, _z;
 
-        if (arguments.length > 1 ) {
+        if (arguments.length > 1) {
             // x, y (, z)
             _x = arguments[0];
             _y = arguments[1];
@@ -14006,14 +14006,15 @@ function rate(sound_name, ...args) {
  * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} [pan] - the panning value - A value of -1.0 is all the way left and 1.0 is all the way right.
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will be changed.
  * @return {number} the current panning value
  * @example
  * me.audio.stereo("cling", -1);
  */
-function stereo(sound_name, pan) {
+function stereo(sound_name, pan, id) {
     let sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
-        return sound.stereo(pan);
+        return sound.stereo(pan, id);
     } else {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
@@ -14026,12 +14027,13 @@ function stereo(sound_name, pan) {
  * @param  {Number} x - the x-position of the audio source.
  * @param  {Number} y - the y-position of the audio source.
  * @param  {Number} z - the z-position of the audio source.
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will be changed.
  * @return {Array} the current 3D spatial position: [x, y, z]
  */
-function position(sound_name, x, y, z) {
+function position(sound_name, x, y, z, id) {
     let sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
-        return sound.pos(x, y, z);
+        return sound.pos(x, y, z, id);
     } else {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
@@ -14045,12 +14047,13 @@ function position(sound_name, x, y, z) {
  * @param  {Number} x - the x-orientation of the audio source.
  * @param  {Number} y - the y-orientation of the audio source.
  * @param  {Number} z - the z-orientation of the audio source.
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will be changed.
  * @return {Array} the current 3D spatial orientation: [x, y, z]
  */
-function orientation(sound_name, x, y, z) {
+function orientation(sound_name, x, y, z, id) {
     let sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
-        return sound.orientation(x, y, z);
+        return sound.orientation(x, y, z, id);
     } else {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
@@ -14070,6 +14073,7 @@ function orientation(sound_name, x, y, z) {
  * @param {string} [settings.refDistance=1] - A reference distance for reducing volume as source moves further from the listener. This is simply a variable of the distance model and has a different effect depending on which model is used and the scale of your coordinates. Generally, volume will be equal to 1 at this distance.
  * @param {string} [settings.rolloffFactor=1] - How quickly the volume reduces as source moves from listener. This is simply a variable of the distance model and can be in the range of `[0, 1]` with `linear` and `[0, ∞]` with `inverse` and `exponential`.
  * @param {string} [settings.panningModel="HRTF"] - Determines which spatialization algorithm is used to position audio. Can be `HRTF` or `equalpower`.
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will be changed.
  * @return {Object} current panner attributes.
  * @example
  * me.audio.panner("cling", {
@@ -14079,10 +14083,10 @@ function orientation(sound_name, x, y, z) {
  *    distanceModel: 'exponential'
  * });
  */
-function panner(sound_name, attributes) {
+function panner(sound_name, attributes, id) {
     let sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
-        return sound.pannerAttr(attributes);
+        return sound.pannerAttr(attributes, id);
     } else {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
@@ -14409,7 +14413,7 @@ let hasLocalStorage$1 = false;
 try {
     // true if localStorage is supported
     hasLocalStorage$1 = typeof globalThis !== "undefined" && typeof globalThis.localStorage !== "undefined";
-} catch (e) {
+} catch {
     // the above generates an exception when cookies are blocked
     hasLocalStorage$1 = false;
 }
@@ -14605,6 +14609,7 @@ var agent$1 = {
 * @property {boolean} isWeixin `true` if running under Wechat
 * @property {boolean} nodeJS `true` if running under node.js
 * @property {boolean} isMobile `true` if a mobile device
+* @property {boolean} webApp `true` if running as a standalone web app
 */
 
 const ua = typeof globalThis.navigator !== "undefined" ? globalThis.navigator.userAgent : "";
@@ -14620,6 +14625,7 @@ const ejecta = (typeof globalThis.ejecta !== "undefined");
 const isWeixin = /MicroMessenger/i.test(ua);
 const nodeJS = (typeof globalThis.process !== "undefined") && (typeof globalThis.process.release !== "undefined") && (globalThis.process.release.name === "node");
 const isMobile$1 = /Mobi/i.test(ua) || iOS || android || wp || BlackBerry || Kindle || false;
+const webApp = (typeof globalThis.navigator !== "undefined" && globalThis.navigator.standalone === true) || (typeof globalThis.matchMedia !== "undefined" && globalThis.matchMedia("(display-mode: standalone)").matches);
 
 var device_platform = {
 	__proto__: null,
@@ -14635,6 +14641,7 @@ var device_platform = {
 	linux: linux,
 	nodeJS: nodeJS,
 	ua: ua,
+	webApp: webApp,
 	wp: wp
 };
 
@@ -14735,7 +14742,7 @@ function disableSwipeFn(e) {
 function hasLocalStorage() {
     try {
         return !!globalThis.localStorage;
-    } catch (e) {
+    } catch {
         // the above generates an exception when cookies are blocked
         return false;
     }
@@ -14745,8 +14752,8 @@ function hasOffscreenCanvas() {
     try {
         // some browser (e.g. Safari) implements WebGL1 and WebGL2 contexts only
         // https://bugzilla.mozilla.org/show_bug.cgi?id=801176
-        return (typeof globalThis.OffscreenCanvas !== "undefined") && ((new globalThis.OffscreenCanvas(0, 0).getContext( "2d" )) !== null);
-    } catch (e) {
+        return (typeof globalThis.OffscreenCanvas !== "undefined") && ((new globalThis.OffscreenCanvas(0, 0).getContext("2d")) !== null);
+    } catch {
         return false;
     }
 }
@@ -15122,7 +15129,7 @@ function onReady(fn) {
                 } else {
                     emit(BLUR);
                 }
-            }, false );
+            }, false);
         }
     }
     // call the supplied function
@@ -15390,7 +15397,7 @@ function isWebGLSupported(options) {
             };
             _supported = !! (globalThis.WebGLRenderingContext && (canvas.getContext("webgl", ctxOptions) || canvas.getContext("experimental-webgl", ctxOptions)));
             WebGLSupport = _supported ? 1 : 0;
-        } catch (e) {
+        } catch {
             WebGLSupport = 0;
         }
     }
@@ -16752,7 +16759,7 @@ function enablePointerEvent() {
         // set the PointerMove/touchMove/MouseMove event
         if (typeof(throttlingInterval) === "undefined") {
             // set the default value
-            throttlingInterval = ~~(1000 / timer$1.maxfps);
+            throttlingInterval = ~~(1000 / timer.maxfps);
         }
 
         if (autoFocus === true) {
@@ -18114,12 +18121,12 @@ function setPrecision(src, precision) {
  * @returns {boolean} "lowp", "mediump", or "highp"
  */
 function getMaxShaderPrecision(gl) {
-    if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT ).precision > 0 &&
-        gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT ).precision > 0) {
+    if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT).precision > 0 &&
+        gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT).precision > 0) {
         return "highp";
     }
-    if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT ).precision > 0 &&
-        gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT ).precision > 0) {
+    if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT).precision > 0 &&
+        gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT).precision > 0) {
         return "mediump";
     }
     return "lowp";
@@ -20138,6 +20145,9 @@ let jsonList = {};
 // contains all the video files
 let videoList = {};
 
+// contains all the font files
+let fontList = {};
+
 /**
  * Fetches data from the specified URL.
  * @param {string} url - The URL to fetch the data from.
@@ -20427,7 +20437,7 @@ function preloadImage(img, onload, onerror, settings) {
                                 // callback
                                 onload();
                             }
-                        } catch (e) {
+                        } catch {
                             // parseCompressedImage will throw an error if a format is not supported or badly formatted
                         }
                     }).catch(error => {
@@ -20495,7 +20505,7 @@ function preloadImage(img, onload, onerror, settings) {
 
     // no compatible format was found
     throw new Error(
-        "No suppported Image file format found for " + img.name
+        "No supported Image file format found for " + img.name
     );
 }
 
@@ -20512,6 +20522,7 @@ function preloadImage(img, onload, onerror, settings) {
  * ]);
  */
 function preloadFontFace(data, onload, onerror) {
+    const fontFaceSet = typeof globalThis.document !== "undefined" ? globalThis.document.fonts : undefined;
 
     if (isDataUrl(data.src) === true) {
         // make sure it in the `url(data:[<mediatype>][;base64],<data>)` format as expected by FontFace
@@ -20520,23 +20531,31 @@ function preloadFontFace(data, onload, onerror) {
         }
     }
 
-    let font = new FontFace(data.name, data.src);
-
-    // loading promise
-    font.load().then(() => {
-        // apply the font after the font has finished downloading
-        globalThis.document.fonts.add(font);
-        globalThis.document.body.style.fontFamily = data.name;
-        if (typeof onload === "function") {
+    if (typeof fontFaceSet !== "undefined") {
+        // create a new font face
+        let font = new FontFace(data.name, data.src);
+        // loading promise
+        font.load().then(() => {
+            // add the font to the cache
+            fontList[data.name] = font;
+            // add the font to the document
+            fontFaceSet.add(font);
             // onloaded callback
-            onload();
-        }
-    }, () => {
-        if (typeof onerror === "function") {
+            if (typeof onload === "function") {
+                onload();
+            }
+        }, () => {
             // rejected
-            onerror(data.name);
+            if (typeof onerror === "function") {
+                onerror(data.name);
+            }
+        });
+
+    } else {
+        if (typeof onerror === "function") {
+            onerror(error);
         }
-    });
+    }
 
     return 1;
 }
@@ -24010,7 +24029,7 @@ class TMXTileset {
     // update tile animations
     update(dt) {
         let duration = 0,
-            now = timer$1.getTime(),
+            now = timer.getTime(),
             result = false;
 
         if (this._lastUpdate !== now) {
@@ -24193,7 +24212,7 @@ function setTMXValue(name, type, value) {
                 try {
                     value = JSON.parse(match);
                 }
-                catch (e) {
+                catch {
                     throw new Error("Unable to parse JSON: " + match);
                 }
             }
@@ -24204,7 +24223,7 @@ function setTMXValue(name, type, value) {
                     // eslint-disable-next-line
                     value = Function("'use strict';return (" + match + ")")();
                 }
-                catch (e) {
+                catch {
                     throw new Error("Unable to evaluate: " + match);
                 }
             }
@@ -24952,7 +24971,7 @@ class TMXObject {
                 let _polygon = pool.pull("Polygon", 0, 0, this.points);
                 let isConvex = _polygon.isConvex();
                 // make sure it's a convex polygon
-                if (isConvex === false ) {
+                if (isConvex === false) {
                     throw new Error("collision polygones in Tiled should be defined as Convex");
                 } else if (isConvex === null) {
                     throw new Error("invalid polygone");
@@ -25163,12 +25182,12 @@ class Path2D {
                     break;
                 case "H":
                     // H take 1 coordinate
-                    lastPoint = points.length === 0 ? startPoint : points[points.length-1];
+                    lastPoint = points.length === 0 ? startPoint : points[points.length - 1];
                     this.lineTo(lastPoint.x + coordinates[0], lastPoint.y);
                     break;
                 case "V":
                     // V take 1 coordinate
-                    lastPoint = points.length === 0 ? startPoint : points[points.length-1];
+                    lastPoint = points.length === 0 ? startPoint : points[points.length - 1];
                     this.lineTo(lastPoint.x, lastPoint.y + coordinates[0]);
                     break;
                 case "M":
@@ -25220,7 +25239,7 @@ class Path2D {
         let points = this.points;
         if (points.length > 0) {
             let firstPoint = points[0];
-            if (!firstPoint.equals(points[points.length-1])) {
+            if (!firstPoint.equals(points[points.length - 1])) {
                 this.lineTo(firstPoint.x, firstPoint.y);
             }
             this.isDirty = true;
@@ -25245,14 +25264,14 @@ class Path2D {
             }
 
             // calculate all vertices
-            for (let i = 0; i < indicesLength; i++ ) {
+            for (let i = 0; i < indicesLength; i++) {
                 let point = points[indices[i]];
                 vertices[i].set(point.x, point.y);
             }
 
             // recycle overhead from a previous triangulation
             while (vertices.length > indicesLength) {
-                pool.push(vertices[vertices.length-1]);
+                pool.push(vertices[vertices.length - 1]);
                 vertices.length -= 1;
             }
             this.isDirty = false;
@@ -25279,7 +25298,7 @@ class Path2D {
     lineTo(x, y) {
         let points = this.points;
         let startPoint = this.startPoint;
-        let lastPoint = points.length === 0 ? startPoint : points[points.length-1];
+        let lastPoint = points.length === 0 ? startPoint : points[points.length - 1];
 
         if (!startPoint.equals(lastPoint)) {
             points.push(pool.pull("Point", startPoint.x, startPoint.y));
@@ -25308,7 +25327,7 @@ class Path2D {
         // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
         //bring angles all in [0, 2*PI] range
         if (startAngle === endAngle) return;
-        const fullCircle = anticlockwise ? Math.abs(startAngle-endAngle) >= (TAU) : Math.abs(endAngle-startAngle) >= (TAU);
+        const fullCircle = anticlockwise ? Math.abs(startAngle - endAngle) >= (TAU) : Math.abs(endAngle - startAngle) >= (TAU);
 
         startAngle = startAngle % (TAU);
         endAngle = endAngle % (TAU);
@@ -25317,7 +25336,7 @@ class Path2D {
         if (endAngle < 0) endAngle += TAU;
 
         if (startAngle >= endAngle) {
-            endAngle+= TAU;
+            endAngle += TAU;
         }
 
         let diff = endAngle - startAngle;
@@ -25358,7 +25377,7 @@ class Path2D {
     arcTo(x1, y1, x2, y2, radius) {
         let points = this.points;
         let startPoint = this.startPoint;
-        let lastPoint = points.length === 0 ? startPoint : points[points.length-1];
+        let lastPoint = points.length === 0 ? startPoint : points[points.length - 1];
 
         // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
         let x0 = lastPoint.x, y0 = lastPoint.y;
@@ -25373,8 +25392,8 @@ class Path2D {
         let angle = Math.atan2(a1, a0) - Math.atan2(b1, b0);
 
         //work out tangent points using tan(θ) = opposite / adjacent; angle/2 because hypotenuse is the bisection of a,b
-        let tan_angle_div2 = Math.tan(angle/2);
-        let adj_l = (radius/tan_angle_div2);
+        let tan_angle_div2 = Math.tan(angle / 2);
+        let adj_l = (radius / tan_angle_div2);
 
         let tangent1_pointx = x1 + a0 * adj_l, tangent1_pointy = y1 + a1 * adj_l;
         let tangent2_pointx = x1 + b0 * adj_l, tangent2_pointy = y1 + b1 * adj_l;
@@ -25409,7 +25428,7 @@ class Path2D {
     ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle, anticlockwise = false) {
         // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
         if (startAngle === endAngle) return;
-        let fullCircle = anticlockwise ? Math.abs(startAngle-endAngle) >= (TAU) : Math.abs(endAngle-startAngle) >= (TAU);
+        let fullCircle = anticlockwise ? Math.abs(startAngle - endAngle) >= (TAU) : Math.abs(endAngle - startAngle) >= (TAU);
 
         //bring angles all in [0, 2*PI] range
         startAngle = startAngle % (TAU);
@@ -25417,7 +25436,7 @@ class Path2D {
         if (startAngle < 0) startAngle += TAU;
         if (endAngle < 0) endAngle += TAU;
 
-        if (startAngle>=endAngle) {
+        if (startAngle >= endAngle) {
             endAngle += TAU;
         }
 
@@ -25447,7 +25466,7 @@ class Path2D {
             const _y1 = radiusY * Math.sin(angle);
             const _x2 = x + _x1 * cos_rotation - _y1 * sin_rotation;
             const _y2 = y + _x1 * sin_rotation + _y1 * cos_rotation;
-            this.lineTo( _x2, _y2);
+            this.lineTo(_x2, _y2);
             angle += angleStep;
         }
         // close the ellipse
@@ -25465,7 +25484,7 @@ class Path2D {
     quadraticCurveTo(cpX, cpY, x, y) {
         const points = this.points;
         const startPoint = this.startPoint;
-        const lastPoint = points.length === 0 ? startPoint : points[points.length-1];
+        const lastPoint = points.length === 0 ? startPoint : points[points.length - 1];
         const endPoint = pool.pull("Point").set(x, y);
         const controlPoint = pool.pull("Point").set(cpX, cpY);
         const resolution = this.arcResolution;
@@ -25493,7 +25512,7 @@ class Path2D {
     bezierCurveTo(cp1X, cp1Y, cp2X, cp2Y, x, y) {
         const points = this.points;
         const startPoint = this.startPoint;
-        const lastPoint = points.length === 0 ? startPoint : points[points.length-1];
+        const lastPoint = points.length === 0 ? startPoint : points[points.length - 1];
         const endPoint = pool.pull("Point").set(x, y);
         const controlPoint1 = pool.pull("Point").set(cp1X, cp1Y);
         const controlPoint2 = pool.pull("Point").set(cp2X, cp2Y);
@@ -25589,7 +25608,6 @@ function createContext(canvas, attributes) {
         // 2d/canvas mode
         context = canvas.getContext(attributes.context, { willReadFrequently: attributes.willReadFrequently });
     } else if (attributes.context === "webgl") {
-
         let attr = {
             alpha : attributes.transparent,
             antialias : attributes.antiAlias,
@@ -25601,8 +25619,8 @@ function createContext(canvas, attributes) {
             failIfMajorPerformanceCaveat : attributes.failIfMajorPerformanceCaveat
         };
 
-        // attempt to create a WebGL2 context if requested
-        if (attributes.preferWebGL1 === false) {
+        // attempt to create a WebGL2 context unless not requested
+        if (attributes.preferWebGL1 !== true) {
             context = canvas.getContext("webgl2", attr);
             if (context) {
                 WebGLVersion = 2;
@@ -25637,8 +25655,10 @@ class CanvasRenderTarget {
     /**
      * @param {number} width - the desired width of the canvas
      * @param {number} height - the desired height of the canvas
-     * @param {object} attributes - The attributes to create both the canvas and context
-     * @param {boolean} [attributes.context="2d"] - the context type to be created ("2d", "webgl", "webgl2")
+     * @param {Settings} attributes - The attributes to create both the canvas and context
+     * @param {boolean} [attributes.context="2d"] - the context type to be created ("2d", "webgl")
+     * @param {boolean} [attributes.preferWebGL1=false] - set to true for force using WebGL1 instead of WebGL2 (if supported)
+     * @param {boolean} [attributes.transparent=false] - specify if the canvas contains an alpha channel
      * @param {boolean} [attributes.offscreenCanvas=false] - will create an offscreenCanvas if true instead of a standard canvas
      * @param {boolean} [attributes.willReadFrequently=false] - Indicates whether or not a lot of read-back operations are planned
      * @param {boolean} [attributes.antiAlias=false] - Whether to enable anti-aliasing, use false (default) for a pixelated effect.
@@ -25658,6 +25678,11 @@ class CanvasRenderTarget {
 
         // clean up the given attributes
         this.attributes = Object.assign({}, defaultAttributes, attributes);
+
+        // make sure context is defined
+        if (typeof attributes.context === "undefined") {
+            attributes.context = "2d";
+        }
 
         // used the given canvas if any
         if (typeof attributes.canvas !== "undefined") {
@@ -25870,7 +25895,10 @@ class Renderer {
          * @name renderTarget
          * @type {CanvasRenderTarget}
          */
-        this.renderTarget = new CanvasRenderTarget(options.width, options.height, options);
+        this.renderTarget = new CanvasRenderTarget(options.width, options.height,
+            // support case when a global canvas is available, e.g. webapp adapter for wechat
+            typeof globalThis.canvas !== "undefined" ? Object.assign(options, { canvas: globalThis.canvas }) : options
+        );
 
         /**
          * The given constructor options
@@ -25936,19 +25964,6 @@ class Renderer {
          */
         this.currentBlendMode = "none";
 
-        // create the main screen canvas
-        if (platform.ejecta === true) {
-            // a main canvas is already automatically created by Ejecta
-            this.canvas = globalThis.document.getElementById("canvas");
-        } else if (typeof globalThis.canvas !== "undefined") {
-            // a global canvas is available, e.g. webapp adapter for wechat
-            this.canvas = globalThis.canvas;
-        } else if (typeof this.settings.canvas !== "undefined") {
-            this.canvas = this.settings.canvas;
-        } else {
-            this.canvas = createCanvas(this.settings.width, this.settings.height);
-        }
-
         // global color
         this.currentColor = new Color(0, 0, 0, 1.0);
 
@@ -26013,7 +26028,7 @@ class Renderer {
     }
 
     /**
-     * return a reference to the canvas which this renderer draws to
+     * return a reference to the current render target corresponding canvas which this renderer draws to
      * @returns {HTMLCanvasElement}
      */
     getCanvas() {
@@ -26021,7 +26036,7 @@ class Renderer {
     }
 
     /**
-     * return a reference to this renderer canvas corresponding Context
+     * return a reference to the current render target corresponding Context
      * @returns {CanvasRenderingContext2D|WebGLRenderingContext}
      */
     getContext() {
@@ -26034,42 +26049,6 @@ class Renderer {
      */
     getBlendMode() {
         return this.currentBlendMode;
-    }
-
-    /**
-     * Returns the 2D Context object of the given Canvas<br>
-     * Also configures anti-aliasing and blend modes based on constructor options.
-     * @param {HTMLCanvasElement} canvas
-     * @param {boolean} [transparent=true] - use false to disable transparency
-     * @returns {CanvasRenderingContext2D}
-     */
-    getContext2d(canvas, transparent) {
-        if (typeof canvas === "undefined" || canvas === null) {
-            throw new Error(
-                "You must pass a canvas element in order to create " +
-                "a 2d context"
-            );
-        }
-
-        if (typeof canvas.getContext === "undefined") {
-            throw new Error(
-                "Your browser does not support HTML5 canvas."
-            );
-        }
-
-        if (typeof transparent !== "boolean") {
-            transparent = true;
-        }
-
-        let _context = canvas.getContext("2d", {
-            "alpha" : transparent
-        });
-
-        if (!_context.canvas) {
-            _context.canvas = canvas;
-        }
-        this.setAntiAlias(_context, this.settings.antiAlias);
-        return _context;
     }
 
     /**
@@ -26120,12 +26099,11 @@ class Renderer {
     }
 
     /**
-     * enable/disable image smoothing (scaling interpolation) for the given context
-     * @param {CanvasRenderingContext2D} context
+     * enable/disable image smoothing (scaling interpolation) for the current render target
      * @param {boolean} [enable=false]
      */
-    setAntiAlias(context, enable) {
-        this.renderTarget.setAntiAlias(context, enable);
+    setAntiAlias(enable) {
+        this.renderTarget.setAntiAlias(enable);
     }
 
     /**
@@ -26188,25 +26166,22 @@ class Renderer {
      * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} src - the source image to be tinted
      * @param {Color|string} color - the color that will be used to tint the image
      * @param {string} [mode="multiply"] - the composition mode used to tint the image
-     * @returns {HTMLCanvasElement|OffscreenCanvas} a new canvas element representing the tinted image
+     * @returns {HTMLCanvasElement|OffscreenCanvas} a new canvas or offscreencanvas (if supported) element representing the tinted image
      */
-    tint(src, color, mode) {
-        let canvas = createCanvas(src.width, src.height, true);
-        let context = this.getContext2d(canvas);
-
-        context.save();
+    tint(src, color, mode = "multiply") {
+        const attributes = { context:"2d", offscreenCanvas: true, transparent: true, antiAlias: this.settings.antiAlias };
+        let canvasTexture = new CanvasRenderTarget(src.width, src.height, attributes);
+        let context = canvasTexture.context;
 
         context.fillStyle = color instanceof Color ? color.toRGB() : color;
         context.fillRect(0, 0, src.width, src.height);
 
-        context.globalCompositeOperation = mode || "multiply";
+        context.globalCompositeOperation = mode;
         context.drawImage(src, 0, 0);
         context.globalCompositeOperation = "destination-atop";
         context.drawImage(src, 0, 0);
 
-        context.restore();
-
-        return canvas;
+        return canvasTexture.canvas;
     }
 
     /**
@@ -27278,12 +27253,12 @@ class CanvasRenderer extends Renderer {
             e.preventDefault();
             this.isContextValid = false;
             emit(ONCONTEXT_LOST, this);
-        }, false );
+        }, false);
         // ctx.restoreContext()
         this.getCanvas().addEventListener("contextrestored", () => {
             this.isContextValid = true;
             emit(ONCONTEXT_RESTORED, this);
-        }, false );
+        }, false);
 
         // reset the renderer on game reset
         on(GAME_RESET, () => {
@@ -27828,12 +27803,13 @@ class CanvasRenderer extends Renderer {
      * renderer.restore();
      */
     restore() {
+        const canvas = this.getCanvas();
         this.getContext().restore();
         this.currentColor.glArray[3] = this.getGlobalAlpha();
         this.currentScissor[0] = 0;
         this.currentScissor[1] = 0;
-        this.currentScissor[2] = this.getCanvas().width;
-        this.currentScissor[3] = this.getCanvas().height;
+        this.currentScissor[2] = canvas.width;
+        this.currentScissor[3] = canvas.height;
     }
 
     /**
@@ -29295,7 +29271,7 @@ class Container extends Renderable {
 
             if (!keepalive) {
                 // attempt at recycling the object
-                if (pool.push(child, false) === false ) {
+                if (pool.push(child, false) === false) {
                     //  else just destroy it
                     if (typeof child.destroy === "function") {
                         child.destroy();
@@ -29839,8 +29815,8 @@ class TMXOrthogonalRenderer extends TMXRenderer {
         }
 
         // main drawing loop
-        for (let y = start.y; y !== end.y; y+= incY) {
-            for (let x = start.x; x !== end.x; x+= incX) {
+        for (let y = start.y; y !== end.y; y += incY) {
+            for (let x = start.x; x !== end.x; x += incX) {
                 let tmxTile = layer.cellAt(x, y, false);
                 if (tmxTile) {
                     this.drawTile(renderer, x, y, tmxTile);
@@ -30235,10 +30211,10 @@ class TMXHexagonalRenderer extends TMXRenderer {
             }
         } else {
             if ((x & 1) ^ this.staggerEven) {
-                ret.set(x -1, y + 1);
+                ret.set(x - 1, y + 1);
             }
             else {
-                ret.set(x -1, y);
+                ret.set(x - 1, y);
             }
         }
         return ret;
@@ -30472,11 +30448,11 @@ class TMXHexagonalRenderer extends TMXRenderer {
             let staggeredRow = this.doStaggerX(startTile.x + layer.pos.x);
 
             // main drawing loop
-            for (; startPos.y < rect.bottom && startTile.y < endY; ) {
+            for (; startPos.y < rect.bottom && startTile.y < endY;) {
                 rowTile.setV(startTile);
                 rowPos.setV(startPos);
 
-                for (; rowPos.x < rect.right && rowTile.x < endX; rowTile.x+=2) {
+                for (; rowPos.x < rect.right && rowTile.x < endX; rowTile.x += 2) {
                     tile = layer.cellAt(rowTile.x, rowTile.y, false);
                     if (tile) {
                         // draw the tile
@@ -30885,7 +30861,7 @@ class TMXTileMap {
         if (this.version !== "undefined" && this.version !== "") {
             // deprecation warning if map tiled version is older than 1.5
             if (checkVersion(this.version, "1.5") < 0) {
-                warning("("+this.name+") Tiled Map format version 1.4 and below", "format 1.5 or higher", "10.4.4");
+                warning("(" + this.name + ") Tiled Map format version 1.4 and below", "format 1.5 or higher", "10.4.4");
             }
         }
 
@@ -32332,8 +32308,12 @@ function unload(asset) {
             return true;
 
         case "fontface":
-            // ??
-            return true;
+            if (typeof typeof globalThis.document !== "undefined" && typeof globalThis.document.fonts !== "undefined") {
+                globalThis.document.fonts.delete(fontList[asset.name]);
+                delete fontList[asset.name];
+                return true;
+            }
+            return false;
 
         case "tmx":
         case "tsx":
@@ -32418,6 +32398,16 @@ function unloadAll() {
         }
     }
 
+    // unload all video resources
+    for (name in fontList) {
+        if (fontList.hasOwnProperty(name)) {
+            unload({
+                "name" : name,
+                "type" : "font"
+            });
+        }
+    }
+
     // unload all audio resources
     unloadAll$1();
 }
@@ -32498,11 +32488,27 @@ function getVideo(elt) {
     return null;
 }
 
+/**
+ * return the specified FontFace Object
+ * @memberof loader
+ * @param {string} elt - name of the font file
+ * @returns {FontFace}
+ */
+function getFont(elt) {
+    // force as string
+    elt = "" + elt;
+    if (elt in fontList) {
+        return fontList[elt];
+    }
+    return null;
+}
+
 var loader = {
 	__proto__: null,
 	baseURL: baseURL,
 	get crossOrigin () { return crossOrigin$1; },
 	getBinary: getBinary,
+	getFont: getFont,
 	getImage: getImage,
 	getJSON: getJSON,
 	getTMX: getTMX,
@@ -33540,7 +33546,7 @@ let state = {
      * @public
      * @param {boolean} [pauseTrack=false] - pause current track on screen stop.
      */
-    stop(pauseTrack=false) {
+    stop(pauseTrack = false) {
         // only stop when we are not loading stuff
         if ((_state !== this.LOADING) && this.isRunning()) {
             // stop the main loop
@@ -33566,7 +33572,7 @@ let state = {
      * @public
      * @param {boolean} [music=false] - pause current music track on screen pause
      */
-    pause(music=false) {
+    pause(music = false) {
         // only pause when we are not loading stuff
         if ((_state !== this.LOADING) && !this.isPaused()) {
             // stop the main loop
@@ -33591,7 +33597,7 @@ let state = {
      * @public
      * @param {boolean} [music=false] - resume current music track on screen resume
      */
-    restart(music=false) {
+    restart(music = false) {
         if (!this.isRunning()) {
             // restart the main loop
             _startRunLoop();
@@ -33615,7 +33621,7 @@ let state = {
      * @public
      * @param {boolean} [music=false] - resume current music track on screen resume
      */
-    resume(music=false) {
+    resume(music = false) {
         if (this.isPaused()) {
             // resume the main loop
             _resumeRunLoop();
@@ -33892,7 +33898,7 @@ class Timer {
         this.now = 0;
         this.delta = 0;
         // for timeout/interval update
-        this.step =0;
+        this.step = 0;
         this.minstep = 0;
 
         // list of defined timer function
@@ -34097,22 +34103,6 @@ class Timer {
 }
 
 const timer = new Timer();
-
-/**
- * the default global Timer instance
- * @namespace timer
- * @see Timer
- * @example
- * // set a timer to call "myFunction" after 1000ms
- * timer.setTimeout(myFunction, 1000);
- * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
- * timer.setTimeout(myFunction, 1000, true, param1, param2);
- * // set a timer to call "myFunction" every 1000ms
- * timer.setInterval(myFunction, 1000);
- * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
- * timer.setInterval(myFunction, 1000, true, param1, param2);
- */
-var timer$1 = timer;
 
 /**
  * @classdesc
@@ -34443,7 +34433,7 @@ class Body {
     fromJSON(json, id) {
         let data = json;
 
-        if (typeof id !== "undefined" ) {
+        if (typeof id !== "undefined") {
             data = json[id];
         }
 
@@ -34720,7 +34710,7 @@ class Body {
     update(dt) { // eslint-disable-line no-unused-vars
         // apply timer.tick to delta time for linear interpolation (when enabled)
         // #761 add delta time in body update
-        let deltaTime = /* dt * */ timer$1.tick;
+        let deltaTime = /* dt * */ timer.tick;
 
         // apply force if defined
         if (this.force.x !== 0) {
@@ -34738,7 +34728,7 @@ class Body {
 
             this.vel.x = (
                 (nx < 0) ? nx :
-                    ( x > 0) ? x  : 0
+                    (x > 0) ? x  : 0
             );
         }
         if (this.friction.y > 0) {
@@ -34748,7 +34738,7 @@ class Body {
 
             this.vel.y = (
                 (ny < 0) ? ny :
-                    ( y > 0) ? y  : 0
+                    (y > 0) ? y  : 0
             );
         }
 
@@ -34806,8 +34796,6 @@ class Body {
  * https://github.com/tweenjs/tween.js
  */
 
-/* eslint-disable quotes, keyword-spacing, comma-spacing, no-return-assign */
-
 /**
  * Easing Function :<br>
  * <p>
@@ -34853,7 +34841,7 @@ let Easing = {
 
     Linear: {
         /** @ignore */
-        None: function ( k ) {
+        None: function (k) {
 
             return k;
 
@@ -34863,22 +34851,22 @@ let Easing = {
 
     Quadratic: {
         /** @ignore */
-        In: function ( k ) {
+        In: function (k) {
 
             return k * k;
 
         },
         /** @ignore */
-        Out: function ( k ) {
+        Out: function (k) {
 
-            return k * ( 2 - k );
+            return k * (2 - k);
 
         },
         /** @ignore */
-        InOut: function ( k ) {
+        InOut: function (k) {
 
-            if ( ( k *= 2 ) < 1 ) return 0.5 * k * k;
-            return - 0.5 * ( --k * ( k - 2 ) - 1 );
+            if ((k *= 2) < 1) return 0.5 * k * k;
+            return - 0.5 * (--k * (k - 2) - 1);
 
         }
 
@@ -34886,22 +34874,22 @@ let Easing = {
 
     Cubic: {
         /** @ignore */
-        In: function ( k ) {
+        In: function (k) {
 
             return k * k * k;
 
         },
         /** @ignore */
-        Out: function ( k ) {
+        Out: function (k) {
 
             return --k * k * k + 1;
 
         },
         /** @ignore */
-        InOut: function ( k ) {
+        InOut: function (k) {
 
-            if ( ( k *= 2 ) < 1 ) return 0.5 * k * k * k;
-            return 0.5 * ( ( k -= 2 ) * k * k + 2 );
+            if ((k *= 2) < 1) return 0.5 * k * k * k;
+            return 0.5 * ((k -= 2) * k * k + 2);
 
         }
 
@@ -34909,22 +34897,22 @@ let Easing = {
 
     Quartic: {
         /** @ignore */
-        In: function ( k ) {
+        In: function (k) {
 
             return k * k * k * k;
 
         },
         /** @ignore */
-        Out: function ( k ) {
+        Out: function (k) {
 
-            return 1 - ( --k * k * k * k );
+            return 1 - (--k * k * k * k);
 
         },
         /** @ignore */
-        InOut: function ( k ) {
+        InOut: function (k) {
 
-            if ( ( k *= 2 ) < 1) return 0.5 * k * k * k * k;
-            return - 0.5 * ( ( k -= 2 ) * k * k * k - 2 );
+            if ((k *= 2) < 1) return 0.5 * k * k * k * k;
+            return - 0.5 * ((k -= 2) * k * k * k - 2);
 
         }
 
@@ -34932,22 +34920,22 @@ let Easing = {
 
     Quintic: {
         /** @ignore */
-        In: function ( k ) {
+        In: function (k) {
 
             return k * k * k * k * k;
 
         },
         /** @ignore */
-        Out: function ( k ) {
+        Out: function (k) {
 
             return --k * k * k * k * k + 1;
 
         },
         /** @ignore */
-        InOut: function ( k ) {
+        InOut: function (k) {
 
-            if ( ( k *= 2 ) < 1 ) return 0.5 * k * k * k * k * k;
-            return 0.5 * ( ( k -= 2 ) * k * k * k * k + 2 );
+            if ((k *= 2) < 1) return 0.5 * k * k * k * k * k;
+            return 0.5 * ((k -= 2) * k * k * k * k + 2);
 
         }
 
@@ -34955,21 +34943,21 @@ let Easing = {
 
     Sinusoidal: {
         /** @ignore */
-        In: function ( k ) {
+        In: function (k) {
 
-            return 1 - Math.cos( k * Math.PI / 2 );
-
-        },
-        /** @ignore */
-        Out: function ( k ) {
-
-            return Math.sin( k * Math.PI / 2 );
+            return 1 - Math.cos(k * Math.PI / 2);
 
         },
         /** @ignore */
-        InOut: function ( k ) {
+        Out: function (k) {
 
-            return 0.5 * ( 1 - Math.cos( Math.PI * k ) );
+            return Math.sin(k * Math.PI / 2);
+
+        },
+        /** @ignore */
+        InOut: function (k) {
+
+            return 0.5 * (1 - Math.cos(Math.PI * k));
 
         }
 
@@ -34977,24 +34965,24 @@ let Easing = {
 
     Exponential: {
         /** @ignore */
-        In: function ( k ) {
+        In: function (k) {
 
-            return k === 0 ? 0 : Math.pow( 1024, k - 1 );
-
-        },
-        /** @ignore */
-        Out: function ( k ) {
-
-            return k === 1 ? 1 : 1 - Math.pow( 2, - 10 * k );
+            return k === 0 ? 0 : Math.pow(1024, k - 1);
 
         },
         /** @ignore */
-        InOut: function ( k ) {
+        Out: function (k) {
 
-            if ( k === 0 ) return 0;
-            if ( k === 1 ) return 1;
-            if ( ( k *= 2 ) < 1 ) return 0.5 * Math.pow( 1024, k - 1 );
-            return 0.5 * ( - Math.pow( 2, - 10 * ( k - 1 ) ) + 2 );
+            return k === 1 ? 1 : 1 - Math.pow(2, - 10 * k);
+
+        },
+        /** @ignore */
+        InOut: function (k) {
+
+            if (k === 0) return 0;
+            if (k === 1) return 1;
+            if ((k *= 2) < 1) return 0.5 * Math.pow(1024, k - 1);
+            return 0.5 * (- Math.pow(2, - 10 * (k - 1)) + 2);
 
         }
 
@@ -35002,22 +34990,22 @@ let Easing = {
 
     Circular: {
         /** @ignore */
-        In: function ( k ) {
+        In: function (k) {
 
-            return 1 - Math.sqrt( 1 - k * k );
-
-        },
-        /** @ignore */
-        Out: function ( k ) {
-
-            return Math.sqrt( 1 - ( --k * k ) );
+            return 1 - Math.sqrt(1 - k * k);
 
         },
         /** @ignore */
-        InOut: function ( k ) {
+        Out: function (k) {
 
-            if ( ( k *= 2 ) < 1) return - 0.5 * ( Math.sqrt( 1 - k * k) - 1);
-            return 0.5 * ( Math.sqrt( 1 - ( k -= 2) * k) + 1);
+            return Math.sqrt(1 - (--k * k));
+
+        },
+        /** @ignore */
+        InOut: function (k) {
+
+            if ((k *= 2) < 1) return - 0.5 * (Math.sqrt(1 - k * k) - 1);
+            return 0.5 * (Math.sqrt(1 - (k -= 2) * k) + 1);
 
         }
 
@@ -35025,7 +35013,7 @@ let Easing = {
 
     Elastic: {
         /** @ignore */
-        In: function ( k ) {
+        In: function (k) {
             if (k === 0) {
                 return 0;
             }
@@ -35035,7 +35023,7 @@ let Easing = {
             return -Math.pow(2, 10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI);
         },
         /** @ignore */
-        Out: function ( k ) {
+        Out: function (k) {
             if (k === 0) {
                 return 0;
             }
@@ -35046,7 +35034,7 @@ let Easing = {
 
         },
         /** @ignore */
-        InOut: function ( k ) {
+        InOut: function (k) {
             if (k === 0) {
                 return 0;
             }
@@ -35064,25 +35052,25 @@ let Easing = {
 
     Back: {
         /** @ignore */
-        In: function ( k ) {
+        In: function (k) {
 
             const s = 1.70158;
-            return k * k * ( ( s + 1 ) * k - s );
+            return k * k * ((s + 1) * k - s);
 
         },
         /** @ignore */
-        Out: function ( k ) {
+        Out: function (k) {
 
             const s = 1.70158;
-            return --k * k * ( ( s + 1 ) * k + s ) + 1;
+            return --k * k * ((s + 1) * k + s) + 1;
 
         },
         /** @ignore */
-        InOut: function ( k ) {
+        InOut: function (k) {
 
             const s = 1.70158 * 1.525;
-            if ( ( k *= 2 ) < 1 ) return 0.5 * ( k * k * ( ( s + 1 ) * k - s ) );
-            return 0.5 * ( ( k -= 2 ) * k * ( ( s + 1 ) * k + s ) + 2 );
+            if ((k *= 2) < 1) return 0.5 * (k * k * ((s + 1) * k - s));
+            return 0.5 * ((k -= 2) * k * ((s + 1) * k + s) + 2);
 
         }
 
@@ -35090,38 +35078,38 @@ let Easing = {
 
     Bounce: {
         /** @ignore */
-        In: function ( k ) {
+        In: function (k) {
 
-            return 1 - Easing.Bounce.Out( 1 - k );
+            return 1 - Easing.Bounce.Out(1 - k);
 
         },
         /** @ignore */
-        Out: function ( k ) {
+        Out: function (k) {
 
-            if ( k < ( 1 / 2.75 ) ) {
+            if (k < (1 / 2.75)) {
 
                 return 7.5625 * k * k;
 
-            } else if ( k < ( 2 / 2.75 ) ) {
+            } else if (k < (2 / 2.75)) {
 
-                return 7.5625 * ( k -= ( 1.5 / 2.75 ) ) * k + 0.75;
+                return 7.5625 * (k -= (1.5 / 2.75)) * k + 0.75;
 
-            } else if ( k < ( 2.5 / 2.75 ) ) {
+            } else if (k < (2.5 / 2.75)) {
 
-                return 7.5625 * ( k -= ( 2.25 / 2.75 ) ) * k + 0.9375;
+                return 7.5625 * (k -= (2.25 / 2.75)) * k + 0.9375;
 
             } else {
 
-                return 7.5625 * ( k -= ( 2.625 / 2.75 ) ) * k + 0.984375;
+                return 7.5625 * (k -= (2.625 / 2.75)) * k + 0.984375;
 
             }
 
         },
         /** @ignore */
-        InOut: function ( k ) {
+        InOut: function (k) {
 
-            if ( k < 0.5 ) return Easing.Bounce.In( k * 2 ) * 0.5;
-            return Easing.Bounce.Out( k * 2 - 1 ) * 0.5 + 0.5;
+            if (k < 0.5) return Easing.Bounce.In(k * 2) * 0.5;
+            return Easing.Bounce.Out(k * 2 - 1) * 0.5 + 0.5;
 
         }
 
@@ -35149,45 +35137,45 @@ let Easing = {
  */
 let Interpolation = {
     /** @ignore */
-    Linear: function ( v, k ) {
+    Linear: function (v, k) {
 
-        let m = v.length - 1, f = m * k, i = Math.floor( f ), fn = Interpolation.Utils.Linear;
+        let m = v.length - 1, f = m * k, i = Math.floor(f), fn = Interpolation.Utils.Linear;
 
-        if ( k < 0 ) return fn( v[ 0 ], v[ 1 ], f );
-        if ( k > 1 ) return fn( v[ m ], v[ m - 1 ], m - f );
+        if (k < 0) return fn(v[ 0 ], v[ 1 ], f);
+        if (k > 1) return fn(v[ m ], v[ m - 1 ], m - f);
 
-        return fn( v[ i ], v[ i + 1 > m ? m : i + 1 ], f - i );
+        return fn(v[ i ], v[ i + 1 > m ? m : i + 1 ], f - i);
 
     },
     /** @ignore */
-    Bezier: function ( v, k ) {
+    Bezier: function (v, k) {
 
         let b = 0, n = v.length - 1, pw = Math.pow, bn = Interpolation.Utils.Bernstein, i;
 
-        for ( i = 0; i <= n; i++ ) {
-            b += pw( 1 - k, n - i ) * pw( k, i ) * v[ i ] * bn( n, i );
+        for (i = 0; i <= n; i++) {
+            b += pw(1 - k, n - i) * pw(k, i) * v[ i ] * bn(n, i);
         }
 
         return b;
 
     },
     /** @ignore */
-    CatmullRom: function ( v, k ) {
+    CatmullRom: function (v, k) {
 
-        let m = v.length - 1, f = m * k, i = Math.floor( f ), fn = Interpolation.Utils.CatmullRom;
+        let m = v.length - 1, f = m * k, i = Math.floor(f), fn = Interpolation.Utils.CatmullRom;
 
-        if ( v[ 0 ] === v[ m ] ) {
+        if (v[ 0 ] === v[ m ]) {
 
-            if ( k < 0 ) i = Math.floor( f = m * ( 1 + k ) );
+            if (k < 0) i = Math.floor(f = m * (1 + k));
 
-            return fn( v[ ( i - 1 + m ) % m ], v[ i ], v[ ( i + 1 ) % m ], v[ ( i + 2 ) % m ], f - i );
+            return fn(v[ (i - 1 + m) % m ], v[ i ], v[ (i + 1) % m ], v[ (i + 2) % m ], f - i);
 
         } else {
 
-            if ( k < 0 ) return v[ 0 ] - ( fn( v[ 0 ], v[ 0 ], v[ 1 ], v[ 1 ], -f ) - v[ 0 ] );
-            if ( k > 1 ) return v[ m ] - ( fn( v[ m ], v[ m ], v[ m - 1 ], v[ m - 1 ], f - m ) - v[ m ] );
+            if (k < 0) return v[ 0 ] - (fn(v[ 0 ], v[ 0 ], v[ 1 ], v[ 1 ], -f) - v[ 0 ]);
+            if (k > 1) return v[ m ] - (fn(v[ m ], v[ m ], v[ m - 1 ], v[ m - 1 ], f - m) - v[ m ]);
 
-            return fn( v[ i ? i - 1 : 0 ], v[ i ], v[ m < i + 1 ? m : i + 1 ], v[ m < i + 2 ? m : i + 2 ], f - i );
+            return fn(v[ i ? i - 1 : 0 ], v[ i ], v[ m < i + 1 ? m : i + 1 ], v[ m < i + 2 ? m : i + 2 ], f - i);
 
         }
 
@@ -35195,39 +35183,39 @@ let Interpolation = {
 
     Utils: {
         /** @ignore */
-        Linear: function ( p0, p1, t ) {
+        Linear: function (p0, p1, t) {
 
-            return ( p1 - p0 ) * t + p0;
+            return (p1 - p0) * t + p0;
 
         },
         /** @ignore */
-        Bernstein: function ( n, i ) {
+        Bernstein: function (n, i) {
 
             let fc = Interpolation.Utils.Factorial;
-            return fc( n ) / fc( i ) / fc( n - i );
+            return fc(n) / fc(i) / fc(n - i);
 
         },
         /* @ignore */
-        Factorial: ( function () {
+        Factorial: (function () {
 
             let a = [ 1 ];
 
-            return function ( n ) {
+            return function (n) {
 
                 let s = 1, i;
-                if ( a[ n ] ) return a[ n ];
-                for ( i = n; i > 1; i-- ) s *= i;
+                if (a[ n ]) return a[ n ];
+                for (i = n; i > 1; i--) s *= i;
                 a[ n ] = s;
                 return s;
 
             };
 
-        } )(),
+        })(),
         /** @ignore */
-        CatmullRom: function ( p0, p1, p2, p3, t ) {
+        CatmullRom: function (p0, p1, p2, p3, t) {
 
-            let v0 = ( p2 - p0 ) * 0.5, v1 = ( p3 - p1 ) * 0.5, t2 = t * t, t3 = t * t2;
-            return ( 2 * p1 - 2 * p2 + v0 + v1 ) * t3 + ( - 3 * p1 + 3 * p2 - 2 * v0 - v1 ) * t2 + v0 * t + p1;
+            let v0 = (p2 - p0) * 0.5, v1 = (p3 - p1) * 0.5, t2 = t * t, t3 = t * t2;
+            return (2 * p1 - 2 * p2 + v0 + v1) * t3 + (- 3 * p1 + 3 * p2 - 2 * v0 - v1) * t2 + v0 * t + p1;
         }
     }
 
@@ -35267,7 +35255,7 @@ class Tween {
      *       autoStart : true
      * }).onComplete(myFunc);
      */
-    constructor ( object ) {
+    constructor (object) {
         this.setProperties(object);
     }
 
@@ -35275,7 +35263,7 @@ class Tween {
      * reset the tween object to default value
      * @ignore
      */
-    onResetEvent( object ) {
+    onResetEvent(object) {
         this.setProperties(object);
     }
 
@@ -35311,7 +35299,7 @@ class Tween {
         this.isRenderable = false;
 
         // Set all starting values present on the target object
-        for ( let field in object ) {
+        for (let field in object) {
             if (typeof object !== "object") {
                 this._valuesStart[ field ] = parseFloat(object[field]);
             }
@@ -35361,7 +35349,7 @@ class Tween {
      * @param {boolean} [options.autoStart] - allow this tween to start automatically. Otherwise call me.Tween.start().
      * @returns {Tween} this instance for object chaining
      */
-    to( properties, options ) {
+    to(properties, options) {
 
         this._valuesEnd = properties;
 
@@ -35394,7 +35382,7 @@ class Tween {
      * @param {number} [time] - the current time when the tween was started
      * @returns {Tween} this instance for object chaining
      */
-    start( time = timer$1.getTime() ) {
+    start(time = timer.getTime()) {
 
         this._onStartCallbackFired = false;
 
@@ -35403,25 +35391,25 @@ class Tween {
 
         this._startTime =  time + this._delayTime;
 
-        for ( let property in this._valuesEnd ) {
+        for (let property in this._valuesEnd) {
 
             // check if an Array was provided as property value
-            if ( this._valuesEnd[ property ] instanceof Array ) {
+            if (this._valuesEnd[ property ] instanceof Array) {
 
-                if ( this._valuesEnd[ property ].length === 0 ) {
+                if (this._valuesEnd[ property ].length === 0) {
 
                     continue;
 
                 }
 
                 // create a local copy of the Array with the start value at the front
-                this._valuesEnd[ property ] = [ this._object[ property ] ].concat( this._valuesEnd[ property ] );
+                this._valuesEnd[ property ] = [ this._object[ property ] ].concat(this._valuesEnd[ property ]);
 
             }
 
             this._valuesStart[ property ] = this._object[ property ];
 
-            if ( ( this._valuesStart[ property ] instanceof Array ) === false ) {
+            if ((this._valuesStart[ property ] instanceof Array) === false) {
                 this._valuesStart[ property ] *= 1.0; // Ensures we're using numbers, not strings
             }
 
@@ -35453,7 +35441,7 @@ class Tween {
      * @param {number} amount - delay amount expressed in milliseconds
      * @returns {Tween} this instance for object chaining
      */
-    delay( amount ) {
+    delay(amount) {
 
         this._delayTime = amount;
         return this;
@@ -35468,7 +35456,7 @@ class Tween {
      * @param {number} times - amount of times the tween should be repeated
      * @returns {Tween} this instance for object chaining
      */
-    repeat( times ) {
+    repeat(times) {
 
         this._repeat = times;
         return this;
@@ -35485,7 +35473,7 @@ class Tween {
      * @param {boolean} yoyo
      * @returns {Tween} this instance for object chaining
      */
-    yoyo( yoyo ) {
+    yoyo(yoyo) {
 
         this._yoyo = yoyo;
         return this;
@@ -35500,7 +35488,7 @@ class Tween {
      * @param {Tween.Easing} easing - easing function
      * @returns {Tween} this instance for object chaining
      */
-    easing( easing ) {
+    easing(easing) {
         if (typeof easing !== "function") {
             throw new Error("invalid easing function for me.Tween.easing()");
         }
@@ -35516,7 +35504,7 @@ class Tween {
      * @param {Tween.Interpolation} interpolation - interpolation function
      * @returns {Tween} this instance for object chaining
      */
-    interpolation( interpolation ) {
+    interpolation(interpolation) {
         this._interpolationFunction = interpolation;
         return this;
     }
@@ -35542,7 +35530,7 @@ class Tween {
      * @param {Function} onStartCallback - callback
      * @returns {Tween} this instance for object chaining
      */
-    onStart( onStartCallback ) {
+    onStart(onStartCallback) {
         this._onStartCallback = onStartCallback;
         return this;
     }
@@ -35555,7 +35543,7 @@ class Tween {
      * @param {Function} onUpdateCallback - callback
      * @returns {Tween} this instance for object chaining
      */
-    onUpdate( onUpdateCallback ) {
+    onUpdate(onUpdateCallback) {
         this._onUpdateCallback = onUpdateCallback;
         return this;
     }
@@ -35568,13 +35556,13 @@ class Tween {
      * @param {Function} onCompleteCallback - callback
      * @returns {Tween} this instance for object chaining
      */
-    onComplete( onCompleteCallback ) {
+    onComplete(onCompleteCallback) {
         this._onCompleteCallback = onCompleteCallback;
         return this;
     }
 
     /** @ignore */
-    update( dt ) {
+    update(dt) {
 
         // the original Tween implementation expect
         // a timestamp and not a time delta
@@ -35583,17 +35571,17 @@ class Tween {
 
         let property;
 
-        if ( time < this._startTime ) {
+        if (time < this._startTime) {
 
             return true;
 
         }
 
-        if ( this._onStartCallbackFired === false ) {
+        if (this._onStartCallbackFired === false) {
 
-            if ( this._onStartCallback !== null ) {
+            if (this._onStartCallback !== null) {
 
-                this._onStartCallback.call( this._object );
+                this._onStartCallback.call(this._object);
 
             }
 
@@ -35601,54 +35589,54 @@ class Tween {
 
         }
 
-        let elapsed = ( time - this._startTime ) / this._duration;
+        let elapsed = (time - this._startTime) / this._duration;
         elapsed = elapsed > 1 ? 1 : elapsed;
 
-        let value = this._easingFunction( elapsed );
+        let value = this._easingFunction(elapsed);
 
-        for ( property in this._valuesEnd ) {
+        for (property in this._valuesEnd) {
 
             let start = this._valuesStart[ property ] || 0;
             let end = this._valuesEnd[ property ];
 
-            if ( end instanceof Array ) {
+            if (end instanceof Array) {
 
-                this._object[ property ] = this._interpolationFunction( end, value );
+                this._object[ property ] = this._interpolationFunction(end, value);
 
             } else {
 
                 // Parses relative end values with start as base (e.g.: +10, -3)
-                if ( typeof(end) === "string" ) {
+                if (typeof(end) === "string") {
                     end = start + parseFloat(end);
                 }
 
                 // protect against non numeric properties.
-                if ( typeof(end) === "number" ) {
-                    this._object[ property ] = start + ( end - start ) * value;
+                if (typeof(end) === "number") {
+                    this._object[ property ] = start + (end - start) * value;
                 }
 
             }
 
         }
 
-        if ( this._onUpdateCallback !== null ) {
+        if (this._onUpdateCallback !== null) {
 
-            this._onUpdateCallback.call( this._object, value );
+            this._onUpdateCallback.call(this._object, value);
 
         }
 
-        if ( elapsed === 1 ) {
+        if (elapsed === 1) {
 
-            if ( this._repeat > 0 ) {
+            if (this._repeat > 0) {
 
-                if ( isFinite( this._repeat ) ) {
+                if (isFinite(this._repeat)) {
                     this._repeat--;
                 }
 
                 // reassign starting values, restart by making startTime = now
-                for ( property in this._valuesStartRepeat ) {
+                for (property in this._valuesStartRepeat) {
 
-                    if ( typeof( this._valuesEnd[ property ] ) === "string" ) {
+                    if (typeof(this._valuesEnd[ property ]) === "string") {
                         this._valuesStartRepeat[ property ] = this._valuesStartRepeat[ property ] + parseFloat(this._valuesEnd[ property ]);
                     }
 
@@ -35673,15 +35661,15 @@ class Tween {
                 // remove the tween from the world container
                 game.world.removeChildNow(this);
 
-                if ( this._onCompleteCallback !== null ) {
+                if (this._onCompleteCallback !== null) {
 
-                    this._onCompleteCallback.call( this._object );
+                    this._onCompleteCallback.call(this._object);
 
                 }
 
-                for ( let i = 0, numChainedTweens = this._chainedTweens.length; i < numChainedTweens; i ++ ) {
+                for (let i = 0, numChainedTweens = this._chainedTweens.length; i < numChainedTweens; i ++) {
 
-                    this._chainedTweens[ i ].start( time );
+                    this._chainedTweens[ i ].start(time);
 
                 }
 
@@ -36519,13 +36507,13 @@ class WebGLRenderer extends Renderer {
             e.preventDefault();
             this.isContextValid = false;
             emit(ONCONTEXT_LOST, this);
-        }, false );
+        }, false);
         // ctx.restoreContext()
         this.getCanvas().addEventListener("webglcontextrestored", () => {
             this.reset();
             this.isContextValid = true;
             emit(ONCONTEXT_RESTORED, this);
-        }, false );
+        }, false);
 
         // reset the renderer on game reset
         on(GAME_RESET, () => {
@@ -37050,12 +37038,13 @@ class WebGLRenderer extends Renderer {
             // FIXME : prevent `scissor` object realloc and GC
             this.currentScissor.set(this._scissorStack.pop());
         } else {
+            const canvas = this.getCanvas();
             // turn off scissor test
             this.gl.disable(this.gl.SCISSOR_TEST);
             this.currentScissor[0] = 0;
             this.currentScissor[1] = 0;
-            this.currentScissor[2] = this.getCanvas().width;
-            this.currentScissor[3] = this.getCanvas().height;
+            this.currentScissor[2] = canvas.width;
+            this.currentScissor[3] = canvas.height;
         }
     }
 
@@ -37260,7 +37249,7 @@ class WebGLRenderer extends Renderer {
         this.path2D.beginPath();
         for (let i = 0; i < len - 1; i++) {
             const curPoint = points[i];
-            const nextPoint = points[i+1];
+            const nextPoint = points[i + 1];
             this.path2D.moveTo(curPoint.x, curPoint.y);
             this.path2D.lineTo(nextPoint.x, nextPoint.y);
         }
@@ -37452,7 +37441,7 @@ class WebGLRenderer extends Renderer {
             gl.scissor(
                 // scissor does not account for currentTransform, so manually adjust
                 x + this.currentTransform.tx,
-                canvas.height -height -y -this.currentTransform.ty,
+                canvas.height - height - y - this.currentTransform.ty,
                 width,
                 height
             );
@@ -38184,8 +38173,8 @@ class UIBaseElement extends Container {
             this.isDirty = true;
             this.released = false;
             if (this.isHoldable) {
-                timer$1.clearTimeout(this.holdTimeout);
-                this.holdTimeout = timer$1.setTimeout(
+                timer.clearTimeout(this.holdTimeout);
+                this.holdTimeout = timer.setTimeout(
                     () => this.hold(),
                     this.holdThreshold,
                     false
@@ -38288,7 +38277,7 @@ class UIBaseElement extends Container {
         if (this.released === false) {
             this.released = true;
             this.isDirty = true;
-            timer$1.clearTimeout(this.holdTimeout);
+            timer.clearTimeout(this.holdTimeout);
             this.holdTimeout = -1;
             return this.onRelease(event);
         }
@@ -38307,7 +38296,7 @@ class UIBaseElement extends Container {
      * @ignore
      */
     hold() {
-        timer$1.clearTimeout(this.holdTimeout);
+        timer.clearTimeout(this.holdTimeout);
         this.holdTimeout = -1;
         this.isDirty = true;
         if (!this.released) {
@@ -38348,7 +38337,7 @@ class UIBaseElement extends Container {
         releasePointerEvent("pointercancel", this);
         releasePointerEvent("pointerenter", this);
         releasePointerEvent("pointerleave", this);
-        timer$1.clearTimeout(this.holdTimeout);
+        timer.clearTimeout(this.holdTimeout);
         this.holdTimeout = -1;
 
         // unregister on the global pointermove event
@@ -39594,8 +39583,8 @@ class UISpriteElement extends Sprite {
             this.isDirty = true;
             this.released = false;
             if (this.isHoldable) {
-                timer$1.clearTimeout(this.holdTimeout);
-                this.holdTimeout = timer$1.setTimeout(() => this.hold(), this.holdThreshold, false);
+                timer.clearTimeout(this.holdTimeout);
+                this.holdTimeout = timer.setTimeout(() => this.hold(), this.holdThreshold, false);
                 this.released = false;
             }
             return this.onClick(event);
@@ -39656,7 +39645,7 @@ class UISpriteElement extends Sprite {
         if (this.released === false) {
             this.released = true;
             this.isDirty = true;
-            timer$1.clearTimeout(this.holdTimeout);
+            timer.clearTimeout(this.holdTimeout);
             this.holdTimeout = -1;
             return this.onRelease(event);
         }
@@ -39675,7 +39664,7 @@ class UISpriteElement extends Sprite {
      * @ignore
      */
     hold() {
-        timer$1.clearTimeout(this.holdTimeout);
+        timer.clearTimeout(this.holdTimeout);
         this.holdTimeout = -1;
         this.isDirty = true;
         if (!this.released) {
@@ -39714,7 +39703,7 @@ class UISpriteElement extends Sprite {
         releasePointerEvent("pointercancel", this);
         releasePointerEvent("pointerenter", this);
         releasePointerEvent("pointerleave", this);
-        timer$1.clearTimeout(this.holdTimeout);
+        timer.clearTimeout(this.holdTimeout);
         this.holdTimeout = -1;
     }
 }
@@ -39929,20 +39918,20 @@ function createGradient(light) {
     if (radiusX >= radiusY) {
         scaleX = 1;
         invScaleX = 1;
-        scaleY = radiusY/radiusX;
-        invScaleY = radiusX/radiusY;
+        scaleY = radiusY / radiusX;
+        invScaleY = radiusX / radiusY;
         gradient = context.createRadialGradient(x1, y1 * invScaleY, 0, x1, radiusY * invScaleY, radiusX);
     }
     else {
         scaleY = 1;
         invScaleY = 1;
-        scaleX = radiusX/radiusY;
-        invScaleX = radiusY/radiusX;
+        scaleX = radiusX / radiusY;
+        invScaleX = radiusY / radiusX;
         gradient = context.createRadialGradient(x1 * invScaleX, y1, 0, x1 * invScaleX, y1, radiusY);
     }
 
-    gradient.addColorStop( 0, light.color.toRGBA(light.intensity));
-    gradient.addColorStop( 1, light.color.toRGBA(0.0));
+    gradient.addColorStop(0, light.color.toRGBA(light.intensity));
+    gradient.addColorStop(1, light.color.toRGBA(0.0));
 
     context.fillStyle = gradient;
 
@@ -41212,7 +41201,7 @@ class Detector {
 
                 // go trough all defined shapes in B (if any)
                 const bLen = objB.body.shapes.length;
-                if ( objB.body.shapes.length === 0) {
+                if (objB.body.shapes.length === 0) {
                     continue;
                 }
 
@@ -42108,7 +42097,7 @@ class Particle extends Renderable {
         this.onlyInViewport = emitter.settings.onlyInViewport;
 
         // cache inverse of the expected delta time
-        this._deltaInv = timer$1.maxfps / 1000;
+        this._deltaInv = timer.maxfps / 1000;
 
         // Set the start particle rotation as defined in emitter
         // if the particle not follow trajectory
@@ -42639,7 +42628,7 @@ function consoleHeader(app) {
         language
     );
 
-    console.log( "resolution: " + "requested " + app.settings.width + "x" + app.settings.height +
+    console.log("resolution: " + "requested " + app.settings.width + "x" + app.settings.height +
         ", got " + app.renderer.width + "x" + app.renderer.height
     );
 }
@@ -42813,7 +42802,7 @@ class Application {
 
         // identify parent element and/or the html target for resizing
         this.parentElement = getElement(this.settings.parent);
-        if (typeof this.settings.scaleTarget !== "undefined" ) {
+        if (typeof this.settings.scaleTarget !== "undefined") {
             this.settings.scaleTarget = getElement(this.settings.scaleTarget);
         }
 
@@ -42961,7 +42950,7 @@ class Application {
     updateFrameRate() {
         // reset the frame counter
         this.frameCounter = 0;
-        this.frameRate = ~~(0.5 + 60 / timer$1.maxfps);
+        this.frameRate = ~~(0.5 + 60 / timer.maxfps);
 
         // set step size based on the updatesPerSecond
         this.stepSize = (1000 / this.world.fps);
@@ -42970,7 +42959,7 @@ class Application {
 
         // display should always re-draw when update speed doesn't match fps
         // this means the user intends to write position prediction drawing logic
-        this.isAlwaysDirty = (timer$1.maxfps > this.world.fps);
+        this.isAlwaysDirty = (timer.maxfps > this.world.fps);
     }
 
     /**
@@ -43001,13 +42990,13 @@ class Application {
             // publish notification
             emit(GAME_BEFORE_UPDATE, time);
 
-            this.accumulator += timer$1.getDelta();
+            this.accumulator += timer.getDelta();
             this.accumulator = Math.min(this.accumulator, this.accumulatorMax);
 
-            this.updateDelta = (timer$1.interpolation) ? timer$1.getDelta() : this.stepSize;
-            this.accumulatorUpdateDelta = (timer$1.interpolation) ? this.updateDelta : Math.max(this.updateDelta, this.updateAverageDelta);
+            this.updateDelta = (timer.interpolation) ? timer.getDelta() : this.stepSize;
+            this.accumulatorUpdateDelta = (timer.interpolation) ? this.updateDelta : Math.max(this.updateDelta, this.updateAverageDelta);
 
-            while (this.accumulator >= this.accumulatorUpdateDelta || timer$1.interpolation) {
+            while (this.accumulator >= this.accumulatorUpdateDelta || timer.interpolation) {
                 this.lastUpdateStart = globalThis.performance.now();
 
                 // game update event
@@ -43023,7 +43012,7 @@ class Application {
                 this.updateAverageDelta = this.lastUpdate - this.lastUpdateStart;
 
                 this.accumulator -= this.accumulatorUpdateDelta;
-                if (timer$1.interpolation) {
+                if (timer.interpolation) {
                     this.accumulator = 0;
                     break;
                 }
@@ -43088,9 +43077,9 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "17.1.0"
+         * @default "17.2.0"
          */
-        this.version = "17.1.0";
+        this.version = "17.2.0";
 
         /**
          * a reference to the app/game that registered this plugin
@@ -43393,7 +43382,7 @@ class CanvasTexture extends CanvasRenderTarget {
  * @name version
  * @type {string}
  */
-const version = "17.1.0";
+const version = "17.2.0";
 
 /**
  * a flag indicating that melonJS is fully initialized
@@ -43434,7 +43423,7 @@ function boot() {
     }
 
     // output melonJS version in the console
-    console.log("melonJS 2 (v" + version + ") | http://melonjs.org" );
+    console.log("melonJS 2 (v" + version + ") | http://melonjs.org");
 
     // register all built-ins objects into the object pool
     pool.register("me.Entity", Entity);
@@ -43501,7 +43490,7 @@ function boot() {
     emit(BOOT);
 
     // enable/disable the cache
-    setNocache( getUriFragment().nocache || false );
+    setNocache(getUriFragment().nocache || false);
 
     // automatically enable keyboard events
     initKeyboardEvent();
@@ -43522,4 +43511,4 @@ onReady(() => {
     }
 });
 
-export { AUTO, Application, BitmapText, BitmapTextData, Body, Bounds, CANVAS, Camera2d, CanvasRenderTarget, CanvasRenderer, CanvasTexture, Collectable, Color, ColorLayer, Compositor, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Point, Pointer, Polygon, PrimitiveCompositor, QuadCompositor, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, TMXUtils, Text, TextureAtlas, Tile, Trigger, Tween, UIBaseElement, UISpriteElement, UITextButton, Vector2d, Vector3d, WEBGL, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader, plugin, cache as plugins, pool, save, skipAutoInit, state, timer$1 as timer, utils, version, video };
+export { AUTO, Application, BitmapText, BitmapTextData, Body, Bounds, CANVAS, Camera2d, CanvasRenderTarget, CanvasRenderer, CanvasTexture, Collectable, Color, ColorLayer, Compositor, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Point, Pointer, Polygon, PrimitiveCompositor, QuadCompositor, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, TMXUtils, Text, TextureAtlas, Tile, Trigger, Tween, UIBaseElement, UISpriteElement, UITextButton, Vector2d, Vector3d, WEBGL, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader, plugin, cache as plugins, pool, save, skipAutoInit, state, timer, utils, version, video };

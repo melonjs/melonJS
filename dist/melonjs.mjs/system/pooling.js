@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -125,7 +125,7 @@ class ObjectPool {
      */
     push(obj, throwOnError = true) {
         if (!this.poolable(obj)) {
-            if (throwOnError === true ) {
+            if (throwOnError === true) {
                 throw new Error("me.pool: object " + obj + " cannot be recycled");
             } else {
                 return false;

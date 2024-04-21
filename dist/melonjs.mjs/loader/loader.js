@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -9,7 +9,7 @@ import { getBasename } from '../utils/file.js';
 import { emit, LOADER_COMPLETE, LOADER_PROGRESS, LOADER_ERROR } from '../system/event.js';
 import { unload as unload$1, unloadAll as unloadAll$1, load as load$1 } from '../audio/audio.js';
 import state from '../state/state.js';
-import { videoList, tmxList, jsonList, imgList, binList } from './cache.js';
+import { videoList, tmxList, fontList, jsonList, imgList, binList } from './cache.js';
 import { preloadImage } from './parsers/image.js';
 import { preloadFontFace } from './parsers/fontface.js';
 import { preloadTMX } from './parsers/tmx.js';
@@ -530,8 +530,12 @@ function unload(asset) {
             return true;
 
         case "fontface":
-            // ??
-            return true;
+            if (typeof typeof globalThis.document !== "undefined" && typeof globalThis.document.fonts !== "undefined") {
+                globalThis.document.fonts.delete(fontList[asset.name]);
+                delete fontList[asset.name];
+                return true;
+            }
+            return false;
 
         case "tmx":
         case "tsx":
@@ -616,6 +620,16 @@ function unloadAll() {
         }
     }
 
+    // unload all video resources
+    for (name in fontList) {
+        if (fontList.hasOwnProperty(name)) {
+            unload({
+                "name" : name,
+                "type" : "font"
+            });
+        }
+    }
+
     // unload all audio resources
     unloadAll$1();
 }
@@ -696,4 +710,19 @@ function getVideo(elt) {
     return null;
 }
 
-export { baseURL, crossOrigin, getBinary, getImage, getJSON, getTMX, getVideo, load, nocache, onError, onProgress, onload, preload, reload, setBaseURL, setNocache, setOptions, setParser, unload, unloadAll, withCredentials };
+/**
+ * return the specified FontFace Object
+ * @memberof loader
+ * @param {string} elt - name of the font file
+ * @returns {FontFace}
+ */
+function getFont(elt) {
+    // force as string
+    elt = "" + elt;
+    if (elt in fontList) {
+        return fontList[elt];
+    }
+    return null;
+}
+
+export { baseURL, crossOrigin, getBinary, getFont, getImage, getJSON, getTMX, getVideo, load, nocache, onError, onProgress, onload, preload, reload, setBaseURL, setNocache, setOptions, setParser, unload, unloadAll, withCredentials };

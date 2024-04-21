@@ -15,6 +15,7 @@
 * @property {boolean} isWeixin `true` if running under Wechat
 * @property {boolean} nodeJS `true` if running under node.js
 * @property {boolean} isMobile `true` if a mobile device
+* @property {boolean} webApp `true` if running as a standalone web app
 */
 export const ua: string;
 export const iOS: boolean;
@@ -29,3 +30,4 @@ export const ejecta: boolean;
 export const isWeixin: boolean;
 export const nodeJS: boolean;
 export const isMobile: boolean;
+export const webApp: boolean;

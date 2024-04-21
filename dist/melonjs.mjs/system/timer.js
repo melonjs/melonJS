@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -65,7 +65,7 @@ class Timer {
         this.now = 0;
         this.delta = 0;
         // for timeout/interval update
-        this.step =0;
+        this.step = 0;
         this.minstep = 0;
 
         // list of defined timer function

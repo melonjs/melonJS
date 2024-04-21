@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -22,6 +22,7 @@
 * @property {boolean} isWeixin `true` if running under Wechat
 * @property {boolean} nodeJS `true` if running under node.js
 * @property {boolean} isMobile `true` if a mobile device
+* @property {boolean} webApp `true` if running as a standalone web app
 */
 
 const ua = typeof globalThis.navigator !== "undefined" ? globalThis.navigator.userAgent : "";
@@ -37,5 +38,6 @@ const ejecta = (typeof globalThis.ejecta !== "undefined");
 const isWeixin = /MicroMessenger/i.test(ua);
 const nodeJS = (typeof globalThis.process !== "undefined") && (typeof globalThis.process.release !== "undefined") && (globalThis.process.release.name === "node");
 const isMobile = /Mobi/i.test(ua) || iOS || android || wp || BlackBerry || Kindle || false;
+const webApp = (typeof globalThis.navigator !== "undefined" && globalThis.navigator.standalone === true) || (typeof globalThis.matchMedia !== "undefined" && globalThis.matchMedia("(display-mode: standalone)").matches);
 
-export { BlackBerry, Kindle, android, android2, chromeOS, ejecta, iOS, isMobile, isWeixin, linux, nodeJS, ua, wp };
+export { BlackBerry, Kindle, android, android2, chromeOS, ejecta, iOS, isMobile, isWeixin, linux, nodeJS, ua, webApp, wp };

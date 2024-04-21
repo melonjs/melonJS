@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -395,8 +395,8 @@ class ObservableVector2d extends Vector2d {
      */
     lerp(v, alpha) {
         return this._set(
-            this._x + ( v.x - this._x ) * alpha,
-            this._y + ( v.y - this._y ) * alpha
+            this._x + (v.x - this._x) * alpha,
+            this._y + (v.y - this._y) * alpha
         );
     }
 

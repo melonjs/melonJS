@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -138,8 +138,8 @@ class TMXOrthogonalRenderer extends TMXRenderer {
         }
 
         // main drawing loop
-        for (let y = start.y; y !== end.y; y+= incY) {
-            for (let x = start.x; x !== end.x; x+= incX) {
+        for (let y = start.y; y !== end.y; y += incY) {
+            for (let x = start.x; x !== end.x; x += incX) {
                 let tmxTile = layer.cellAt(x, y, false);
                 if (tmxTile) {
                     this.drawTile(renderer, x, y, tmxTile);

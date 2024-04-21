@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -46,7 +46,7 @@ let hasLocalStorage = false;
 try {
     // true if localStorage is supported
     hasLocalStorage = typeof globalThis !== "undefined" && typeof globalThis.localStorage !== "undefined";
-} catch (e) {
+} catch {
     // the above generates an exception when cookies are blocked
     hasLocalStorage = false;
 }

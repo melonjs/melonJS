@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -52,7 +52,7 @@ function setTMXValue(name, type, value) {
                 try {
                     value = JSON.parse(match);
                 }
-                catch (e) {
+                catch {
                     throw new Error("Unable to parse JSON: " + match);
                 }
             }
@@ -63,7 +63,7 @@ function setTMXValue(name, type, value) {
                     // eslint-disable-next-line
                     value = Function("'use strict';return (" + match + ")")();
                 }
-                catch (e) {
+                catch {
                     throw new Error("Unable to evaluate: " + match);
                 }
             }

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -115,6 +115,4 @@ class DefaultLoadingScreen extends Stage {
     }
 }
 
-var DefaultLoadingScreen$1 = DefaultLoadingScreen;
-
-export { DefaultLoadingScreen$1 as default };
+export { DefaultLoadingScreen as default };

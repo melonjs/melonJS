@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -679,7 +679,7 @@ class Container extends Renderable {
 
             if (!keepalive) {
                 // attempt at recycling the object
-                if (pool.push(child, false) === false ) {
+                if (pool.push(child, false) === false) {
                     //  else just destroy it
                     if (typeof child.destroy === "function") {
                         child.destroy();

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -187,7 +187,7 @@ class Application {
 
         // identify parent element and/or the html target for resizing
         this.parentElement = getElement(this.settings.parent);
-        if (typeof this.settings.scaleTarget !== "undefined" ) {
+        if (typeof this.settings.scaleTarget !== "undefined") {
             this.settings.scaleTarget = getElement(this.settings.scaleTarget);
         }
 

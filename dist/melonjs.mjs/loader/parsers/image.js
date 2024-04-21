@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -54,7 +54,7 @@ function preloadImage(img, onload, onerror, settings) {
                                 // callback
                                 onload();
                             }
-                        } catch (e) {
+                        } catch {
                             // parseCompressedImage will throw an error if a format is not supported or badly formatted
                         }
                     }).catch(error => {
@@ -122,7 +122,7 @@ function preloadImage(img, onload, onerror, settings) {
 
     // no compatible format was found
     throw new Error(
-        "No suppported Image file format found for " + img.name
+        "No supported Image file format found for " + img.name
     );
 }
 

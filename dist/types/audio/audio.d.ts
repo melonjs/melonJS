@@ -113,11 +113,12 @@ export function rate(sound_name: string, ...args: any[]): number;
  * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} [pan] - the panning value - A value of -1.0 is all the way left and 1.0 is all the way right.
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will be changed.
  * @return {number} the current panning value
  * @example
  * me.audio.stereo("cling", -1);
  */
-export function stereo(sound_name: string, pan?: number | undefined): number;
+export function stereo(sound_name: string, pan?: number | undefined, id?: number | undefined): number;
 /**
  * get or set the 3D spatial position for the specified sound.
  * @memberof audio
@@ -125,9 +126,10 @@ export function stereo(sound_name: string, pan?: number | undefined): number;
  * @param  {Number} x - the x-position of the audio source.
  * @param  {Number} y - the y-position of the audio source.
  * @param  {Number} z - the z-position of the audio source.
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will be changed.
  * @return {Array} the current 3D spatial position: [x, y, z]
  */
-export function position(sound_name: string, x: number, y: number, z: number): any[];
+export function position(sound_name: string, x: number, y: number, z: number, id?: number | undefined): any[];
 /**
  * Get/set the direction the audio source is pointing in the 3D cartesian coordinate space.
  * Depending on how direction the sound is, based on the `cone` attributes, a sound pointing away from the listener can be quiet or silent.
@@ -136,9 +138,10 @@ export function position(sound_name: string, x: number, y: number, z: number): a
  * @param  {Number} x - the x-orientation of the audio source.
  * @param  {Number} y - the y-orientation of the audio source.
  * @param  {Number} z - the z-orientation of the audio source.
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will be changed.
  * @return {Array} the current 3D spatial orientation: [x, y, z]
  */
-export function orientation(sound_name: string, x: number, y: number, z: number): any[];
+export function orientation(sound_name: string, x: number, y: number, z: number, id?: number | undefined): any[];
 /**
  * get or set the panner node's attributes for a sound or group of sounds.
  * See {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Web_audio_spatialization_basics#creating_a_panner_node}
@@ -153,6 +156,7 @@ export function orientation(sound_name: string, x: number, y: number, z: number)
  * @param {string} [settings.refDistance=1] - A reference distance for reducing volume as source moves further from the listener. This is simply a variable of the distance model and has a different effect depending on which model is used and the scale of your coordinates. Generally, volume will be equal to 1 at this distance.
  * @param {string} [settings.rolloffFactor=1] - How quickly the volume reduces as source moves from listener. This is simply a variable of the distance model and can be in the range of `[0, 1]` with `linear` and `[0, ∞]` with `inverse` and `exponential`.
  * @param {string} [settings.panningModel="HRTF"] - Determines which spatialization algorithm is used to position audio. Can be `HRTF` or `equalpower`.
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will be changed.
  * @return {Object} current panner attributes.
  * @example
  * me.audio.panner("cling", {
@@ -162,7 +166,7 @@ export function orientation(sound_name: string, x: number, y: number, z: number)
  *    distanceModel: 'exponential'
  * });
  */
-export function panner(sound_name: string, attributes: any): Object;
+export function panner(sound_name: string, attributes: any, id?: number | undefined): Object;
 /**
  * stop the specified sound on all channels
  * @memberof audio

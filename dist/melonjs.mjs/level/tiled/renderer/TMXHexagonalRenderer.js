@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -190,10 +190,10 @@ class TMXHexagonalRenderer extends TMXRenderer {
             }
         } else {
             if ((x & 1) ^ this.staggerEven) {
-                ret.set(x -1, y + 1);
+                ret.set(x - 1, y + 1);
             }
             else {
-                ret.set(x -1, y);
+                ret.set(x - 1, y);
             }
         }
         return ret;
@@ -427,11 +427,11 @@ class TMXHexagonalRenderer extends TMXRenderer {
             let staggeredRow = this.doStaggerX(startTile.x + layer.pos.x);
 
             // main drawing loop
-            for (; startPos.y < rect.bottom && startTile.y < endY; ) {
+            for (; startPos.y < rect.bottom && startTile.y < endY;) {
                 rowTile.setV(startTile);
                 rowPos.setV(startPos);
 
-                for (; rowPos.x < rect.right && rowTile.x < endX; rowTile.x+=2) {
+                for (; rowPos.x < rect.right && rowTile.x < endX; rowTile.x += 2) {
                     tile = layer.cellAt(rowTile.x, rowTile.y, false);
                     if (tile) {
                         // draw the tile

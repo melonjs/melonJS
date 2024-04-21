@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -347,8 +347,8 @@ class Vector2d {
      * @returns {Vector2d} Reference to this object for method chaining
      */
     lerp(v, alpha) {
-        this.x += ( v.x - this.x ) * alpha;
-        this.y += ( v.y - this.y ) * alpha;
+        this.x += (v.x - this.x) * alpha;
+        this.y += (v.y - this.y) * alpha;
         return this;
     }
 

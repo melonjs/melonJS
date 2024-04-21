@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -27,7 +27,7 @@ function consoleHeader(app) {
         language
     );
 
-    console.log( "resolution: " + "requested " + app.settings.width + "x" + app.settings.height +
+    console.log("resolution: " + "requested " + app.settings.width + "x" + app.settings.height +
         ", got " + app.renderer.width + "x" + app.renderer.height
     );
 }

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -112,7 +112,7 @@ import { initKeyboardEvent } from './input/keyboard.js';
  * @name version
  * @type {string}
  */
-const version = "17.1.0";
+const version = "17.2.0";
 
 /**
  * a flag indicating that melonJS is fully initialized
@@ -153,7 +153,7 @@ function boot() {
     }
 
     // output melonJS version in the console
-    console.log("melonJS 2 (v" + version + ") | http://melonjs.org" );
+    console.log("melonJS 2 (v" + version + ") | http://melonjs.org");
 
     // register all built-ins objects into the object pool
     pool.register("me.Entity", Entity);
@@ -220,7 +220,7 @@ function boot() {
     emit(BOOT);
 
     // enable/disable the cache
-    setNocache( getUriFragment().nocache || false );
+    setNocache(getUriFragment().nocache || false);
 
     // automatically enable keyboard events
     initKeyboardEvent();

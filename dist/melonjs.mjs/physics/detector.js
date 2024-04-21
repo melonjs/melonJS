@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -178,7 +178,7 @@ class Detector {
 
                 // go trough all defined shapes in B (if any)
                 const bLen = objB.body.shapes.length;
-                if ( objB.body.shapes.length === 0) {
+                if (objB.body.shapes.length === 0) {
                     continue;
                 }
 

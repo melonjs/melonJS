@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.1.0
+ * melonJS Game Engine - v17.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -283,14 +283,15 @@ function rate(sound_name, ...args) {
  * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} [pan] - the panning value - A value of -1.0 is all the way left and 1.0 is all the way right.
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will be changed.
  * @return {number} the current panning value
  * @example
  * me.audio.stereo("cling", -1);
  */
-function stereo(sound_name, pan) {
+function stereo(sound_name, pan, id) {
     let sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
-        return sound.stereo(pan);
+        return sound.stereo(pan, id);
     } else {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
@@ -303,12 +304,13 @@ function stereo(sound_name, pan) {
  * @param  {Number} x - the x-position of the audio source.
  * @param  {Number} y - the y-position of the audio source.
  * @param  {Number} z - the z-position of the audio source.
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will be changed.
  * @return {Array} the current 3D spatial position: [x, y, z]
  */
-function position(sound_name, x, y, z) {
+function position(sound_name, x, y, z, id) {
     let sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
-        return sound.pos(x, y, z);
+        return sound.pos(x, y, z, id);
     } else {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
@@ -322,12 +324,13 @@ function position(sound_name, x, y, z) {
  * @param  {Number} x - the x-orientation of the audio source.
  * @param  {Number} y - the y-orientation of the audio source.
  * @param  {Number} z - the z-orientation of the audio source.
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will be changed.
  * @return {Array} the current 3D spatial orientation: [x, y, z]
  */
-function orientation(sound_name, x, y, z) {
+function orientation(sound_name, x, y, z, id) {
     let sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
-        return sound.orientation(x, y, z);
+        return sound.orientation(x, y, z, id);
     } else {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
@@ -347,6 +350,7 @@ function orientation(sound_name, x, y, z) {
  * @param {string} [settings.refDistance=1] - A reference distance for reducing volume as source moves further from the listener. This is simply a variable of the distance model and has a different effect depending on which model is used and the scale of your coordinates. Generally, volume will be equal to 1 at this distance.
  * @param {string} [settings.rolloffFactor=1] - How quickly the volume reduces as source moves from listener. This is simply a variable of the distance model and can be in the range of `[0, 1]` with `linear` and `[0, ∞]` with `inverse` and `exponential`.
  * @param {string} [settings.panningModel="HRTF"] - Determines which spatialization algorithm is used to position audio. Can be `HRTF` or `equalpower`.
+ * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will be changed.
  * @return {Object} current panner attributes.
  * @example
  * me.audio.panner("cling", {
@@ -356,10 +360,10 @@ function orientation(sound_name, x, y, z) {
  *    distanceModel: 'exponential'
  * });
  */
-function panner(sound_name, attributes) {
+function panner(sound_name, attributes, id) {
     let sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
-        return sound.pannerAttr(attributes);
+        return sound.pannerAttr(attributes, id);
     } else {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
