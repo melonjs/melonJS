@@ -17,3 +17,6 @@ export let jsonList = {};
 
 // contains all the video files
 export let videoList = {};
+
+// contains all the font files
+export let fontList = {};

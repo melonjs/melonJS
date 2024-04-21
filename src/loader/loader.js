@@ -2,7 +2,7 @@ import * as fileUtil from "./../utils/file.js";
 import * as event from "./../system/event.js";
 import * as audio from "./../audio/audio.js";
 import state from "./../state/state.js";
-import { imgList, tmxList, binList, jsonList, videoList } from "./cache.js";
+import { imgList, tmxList, binList, jsonList, videoList, fontList } from "./cache.js";
 import { preloadImage } from "./parsers/image.js";
 import { preloadFontFace } from "./parsers/fontface.js";
 import { preloadTMX } from "./parsers/tmx.js";
@@ -529,8 +529,12 @@ export function unload(asset) {
             return true;
 
         case "fontface":
-            // ??
-            return true;
+            if (typeof typeof globalThis.document !== "undefined" && typeof globalThis.document.fonts !== "undefined") {
+                globalThis.document.fonts.delete(fontList[asset.name]);
+                delete fontList[asset.name];
+                return true;
+            }
+            return false;
 
         case "tmx":
         case "tsx":
@@ -615,6 +619,16 @@ export function unloadAll() {
         }
     }
 
+    // unload all video resources
+    for (name in fontList) {
+        if (fontList.hasOwnProperty(name)) {
+            unload({
+                "name" : name,
+                "type" : "font"
+            });
+        }
+    }
+
     // unload all audio resources
     audio.unloadAll();
 }
@@ -694,4 +708,20 @@ export function getVideo(elt) {
     }
     return null;
 }
+
+/**
+ * return the specified FontFace Object
+ * @memberof loader
+ * @param {string} elt - name of the font file
+ * @returns {FontFace}
+ */
+export function getFont(elt) {
+    // force as string
+    elt = "" + elt;
+    if (elt in fontList) {
+        return fontList[elt];
+    }
+    return null;
+}
+
 

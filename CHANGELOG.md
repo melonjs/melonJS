@@ -5,6 +5,8 @@
 ### Added
 - Audio: add missing optional id parameter to 3D / Spatial audio methods
 - Core: add platform detection if running as a standalone web app
+- Loader: properly return an error when attempting to load FontFace assets on non-browser platforms
+- Loader: add missing `unload` implementation for font assets
 
 ### Fixed
 - Renderer: fix a regression when a global canvas is available (e.g. webapp adapter for wechat)
