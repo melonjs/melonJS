@@ -66,7 +66,7 @@ export function preloadTMX(tmxData, onload, onerror, settings) {
                     const xmlDoc = parser.parseFromString(response, "text/xml");
                     const data = TMXUtils.parse(xmlDoc);
 
-                    switch (fileUtil.getExtension(tmxData.src)) {
+                    switch (tmxData.type || fileUtil.getExtension(tmxData.src)) {
                         case "tmx":
                             result = data.map;
                             break;
@@ -74,6 +74,9 @@ export function preloadTMX(tmxData, onload, onerror, settings) {
                         case "tsx":
                             result = data.tilesets[0];
                             break;
+
+                        default:
+                            result = data;
                     }
                     break;
                 }
