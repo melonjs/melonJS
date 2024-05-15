@@ -105,6 +105,14 @@ export class TextureAtlas {
          */
         this.atlases = new Map();
 
+        /**
+         * the default "active" atlas (used for multiAtlas)
+         * @type {Map}
+         * @ignore
+         */
+        this.activeAtlas = undefined;
+
+
         // parse given atlas(es) paremeters
         if (typeof (atlases) !== "undefined") {
             // normalize to array to keep the following code generic
@@ -171,10 +179,10 @@ export class TextureAtlas {
                         // initialize the atlas
                         this.atlases.set("default", parseSpriteSheet(atlas, this));
                         this.sources.set("default", atlas.image);
-
                     }
                 }
             } // end forEach
+            this.activeAtlas = this.atlases.keys().next().value;
         }
 
         // if format not recognized
@@ -199,7 +207,7 @@ export class TextureAtlas {
         if (typeof name === "string") {
             return this.atlases.get(name);
         } else {
-            return this.atlases.values().next().value;
+            return this.atlases.get(this.activeAtlas);
         }
     }
 
@@ -220,7 +228,8 @@ export class TextureAtlas {
         if ((typeof region === "object") && (typeof region.texture === "string")) {
             return this.sources.get(region.texture);
         } else {
-            return this.sources.values().next().value;
+            return this.sources.get(this.activeAtlas);
+
         }
     }
 

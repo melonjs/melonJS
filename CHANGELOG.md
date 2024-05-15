@@ -1,5 +1,10 @@
 # Changelog
 
+## [17.3.0] (melonJS 2) - _2024-04-xx_
+
+### Fixed
+- Renderer: fix animation when using multi-texture atlas in WebGL mode
+
 ## [17.2.0] (melonJS 2) - _2024-04-22_
 
 ### Added
@@ -791,6 +796,7 @@
 
 -------------------------------------------------------------------------------
 
+[17.3.0]: https://github.com/melonjs/melonJS/compare/17.2.0...17.3.0
 [17.2.0]: https://github.com/melonjs/melonJS/compare/17.1.0...17.2.0
 [17.1.0]: https://github.com/melonjs/melonJS/compare/17.0.0...17.1.0
 [17.0.0]: https://github.com/melonjs/melonJS/compare/16.1.3...17.0.0
