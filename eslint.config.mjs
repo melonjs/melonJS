@@ -51,6 +51,7 @@ export default [
             "no-array-constructor": "error",
             "no-caller": "error",
             "no-class-assign": "error",
+            "no-case-declarations": "error",
             "no-constructor-return": "error",
             "no-duplicate-imports": "error",
             "no-dupe-class-members": "error",
