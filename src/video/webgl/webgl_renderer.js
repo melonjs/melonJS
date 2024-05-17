@@ -871,7 +871,7 @@ export default class WebGLRenderer extends Renderer {
             this.path2D.moveTo(startX, startY);
             this.path2D.lineTo(endX, endY);
             this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
-        } else {
+        } else if (this.lineWidth > 1) {
             const halfWidth = this.lineWidth / 2;
             const angle = Math.atan2(endY - startY, endX - startX);
             const dx = Math.sin(angle) * halfWidth;
