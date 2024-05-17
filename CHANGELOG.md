@@ -2,6 +2,12 @@
 
 ## [17.3.0] (melonJS 2) - _2024-05-xx_
 
+### Added
+- Renderer: add support for line thickness when using `strokeLine()` in WebGL
+
+### Changed
+- Renderer: the `setLineWidth()` method is now deprecated and replaced by a `lineWidth` class property
+
 ### Fixed
 - Renderer: fix animation when using multi-texture atlas in WebGL mode
 - TMX: fix tsx file type import when using a React / Vue build step (thanks @customautosys)

@@ -5,6 +5,8 @@ import { DropTarget } from "./../renderable/dragndrop.js";
 import UISpriteElement from "./../renderable/ui/uispriteelement.js";
 import { warning } from "./console.js";
 import CanvasRenderTarget from "../video/rendertarget/canvasrendertarget.js";
+import CanvasRenderer from "../video/canvas/canvas_renderer.js";
+import WebGLRenderer from "../video/webgl/webgl_renderer.js";
 
 /*
  * placeholder for all deprecated classes and corresponding alias for backward compatibility
@@ -132,7 +134,6 @@ Renderer.prototype.getWidth = function()  {
  * return the height of the system Canvas
  * @public
  * @name getHeight
- * @class
  * @memberof Renderer#
  * @deprecated since 15.12.0
  * @see height
@@ -162,4 +163,30 @@ export class CanvasTexture extends CanvasRenderTarget {
         super(width, height, attributes);
     }
 }
+
+/**
+ * return the height of the system Canvas
+ * @public
+ * @name setLineWidth
+ * @memberof CanvasRenderer#
+ * @deprecated since 17.3.0
+ * @see lineWidth
+ */
+CanvasRenderer.prototype.setLineWidth = function(width)  {
+    warning("setLineWidth", "lineWidth", "17.3.0");
+    this.lineWidth = width;
+};
+
+/**
+ * return the height of the system Canvas
+ * @public
+ * @name setLineWidth
+ * @memberof WebGLRenderer#
+ * @deprecated since 17.3.0
+ * @see lineWidth
+ */
+WebGLRenderer.prototype.setLineWidth = function(width)  {
+    warning("setLineWidth", "lineWidth", "17.3.0");
+    this.lineWidth = width;
+};
 

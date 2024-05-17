@@ -50,6 +50,14 @@ export default class WebGLRenderer extends Renderer {
         this.gl = this.renderTarget.context;
 
         /**
+         * sets or returns the thickness of lines for shape drawing (limited to strokeLine)
+         * @type {number}
+         * @default 1
+         * @see WebGLRenderer#strokeLine
+         */
+        this.lineWidth = 1;
+
+        /**
          * the vertex buffer used by this WebGL Renderer
          * @type {WebGLBuffer}
          */
@@ -395,6 +403,7 @@ export default class WebGLRenderer extends Renderer {
     clear() {
         let gl = this.gl;
         gl.clearColor(0, 0, 0, this.settings.transparent ? 0.0 : 1.0);
+        this.lineWidth = 1;
         if (this.depthTest === "z-buffer") {
             gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
         } else {
@@ -785,14 +794,6 @@ export default class WebGLRenderer extends Renderer {
     }
 
     /**
-     * Set the line width
-     * @param {number} width - Line width
-     */
-    setLineWidth(width) {
-        this.getContext().lineWidth(width);
-    }
-
-    /**
      * Stroke an arc at the specified coordinates with given radius, start and end points
      * @param {number} x - arc center point x-axis
      * @param {number} y - arc center point y-axis
@@ -865,10 +866,34 @@ export default class WebGLRenderer extends Renderer {
      */
     strokeLine(startX, startY, endX, endY) {
         this.setCompositor("primitive");
-        this.path2D.beginPath();
-        this.path2D.moveTo(startX, startY);
-        this.path2D.lineTo(endX, endY);
-        this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+        if (this.lineWidth === 1) {
+            this.path2D.beginPath();
+            this.path2D.moveTo(startX, startY);
+            this.path2D.lineTo(endX, endY);
+            this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+        } else {
+            const halfWidth = this.lineWidth / 2;
+            const angle = Math.atan2(endY - startY, endX - startX);
+            const dx = Math.sin(angle) * halfWidth;
+            const dy = Math.cos(angle) * halfWidth;
+            const x1 = startX - dx;
+            const y1 = startY + dy;
+            const x2 = startX + dx;
+            const y2 = startY - dy;
+            const x3 = endX + dx;
+            const y3 = endY - dy;
+            const x4 = endX - dx;
+            const y4 = endY + dy;
+
+            this.path2D.beginPath();
+            this.path2D.moveTo(x1, y1);
+            this.path2D.lineTo(x2, y2);
+            this.path2D.lineTo(x3, y3);
+            this.path2D.lineTo(x4, y4);
+            this.path2D.closePath();
+            // draw all triangles
+            this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
+        }
     }
 
 

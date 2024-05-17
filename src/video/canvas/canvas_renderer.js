@@ -670,11 +670,18 @@ export default class CanvasRenderer extends Renderer {
     }
 
     /**
-     * Set the line width on the context
-     * @param {number} width - Line width
+     * sets or returns the thickness of lines for shape drawing
      */
-    setLineWidth(width) {
-        this.getContext().lineWidth = width;
+    get lineWidth() {
+        return this.getContext().lineWidth;
+    }
+
+    /**
+     * @ignore
+     */
+    set lineWidth(value) {
+        this.getContext().lineWidth = value;
+        return value;
     }
 
     /**
