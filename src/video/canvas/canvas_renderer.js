@@ -10,7 +10,7 @@ import * as event from "./../../system/event.js";
  */
 export default class CanvasRenderer extends Renderer {
     /**
-     * @param {Application.Settings} [options] - optional parameters for the renderer
+     * @param {ApplicationSettings} [options] - optional parameters for the renderer
      */
     constructor(options) {
         // parent constructor

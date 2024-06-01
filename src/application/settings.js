@@ -1,29 +1,6 @@
-// default settings
-export const defaultSettings = {
-    parent : undefined,
-    renderer : 2, // AUTO
-    autoScale : false,
-    scale : 1.0,
-    scaleMethod : "manual",
-    scaleTarget : undefined,
-    transparent : false,
-    premultipliedAlpha: true,
-    blendMode : "normal",
-    physic : "builtin",
-    antiAlias : false,
-    failIfMajorPerformanceCaveat : true,
-    subPixel : false,
-    preferWebGL1 : false,
-    powerPreference : "default",
-    verbose : false,
-    consoleHeader : true,
-    legacy : false,
-    canvas : undefined
-};
-
 /**
  * Application & Renderer Settings definition.
- * @typedef {object} Settings
+ * @typedef {Object} ApplicationSettings
  * @property {string|HTMLElement} [parent=document.body] - the DOM parent element to hold the canvas in the HTML file
  * @property {HTMLCanvasElement} [canvas] - an existing canvas element to use as the renderer target (by default melonJS will create its own canvas based on given parameters)
  * @property {number|Renderer} [renderer=AUTO] - renderer to use (CANVAS, WEBGL, AUTO), or a custom renderer class
@@ -50,10 +27,30 @@ export const defaultSettings = {
  * @property {boolean} [transparent=false] - whether to allow transparent pixels in the front buffer (screen).
  * @property {boolean} [antiAlias=false] - whether to enable or not video scaling interpolation
  * @property {boolean} [consoleHeader=true] - whether to display melonJS version and basic device information in the console
- * @param {number} [options.zoomX=width] - The actual width of the canvas with scaling applied
- * @param {number} [options.zoomY=height] - The actual height of the canvas with scaling applied
- * @param {Compositor} [options.compositor] - a custom compositor class (WebGL only)
- * @param {string} [option.physic="builtin"] - the physic system to use (default: "builtin", or "none" to disable builtin physic)
- * @see Application
- * @memberof Application
+ * @property {number} [zoomX=width] - The actual width of the canvas with scaling applied
+ * @property {number} [zoomY=height] - The actual height of the canvas with scaling applied
+ * @property {Compositor} [compositor] - a custom compositor class (WebGL only)
+ * @property {string} [physic="builtin"] - the physic system to use (default: "builtin", or "none" to disable builtin physic)
  */
+export const ApplicationSettings = {
+    parent : undefined,
+    canvas : undefined,
+    renderer : 2, // AUTO
+    autoScale : false,
+    scale : 1.0,
+    scaleMethod : "manual",
+    scaleTarget : undefined,
+    preferWebGL1 : false,
+    depthTest: "sorting",
+    powerPreference : "default",
+    transparent : false,
+    antiAlias : false,
+    consoleHeader : true,
+    premultipliedAlpha: true,
+    blendMode : "normal",
+    physic : "builtin",
+    failIfMajorPerformanceCaveat : true,
+    subPixel : false,
+    verbose : false,
+    legacy : false
+};

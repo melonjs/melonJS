@@ -20,7 +20,7 @@ let supportedCompressedTextureFormats;
  */
 export default class WebGLRenderer extends Renderer {
     /**
-     * @param {Application.Settings} [options] - optional parameters for the renderer
+     * @param {ApplicationSettings} [options] - optional parameters for the renderer
      */
     constructor(options) {
         // parent contructor

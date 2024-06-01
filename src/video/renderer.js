@@ -11,7 +11,7 @@ import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
  */
 export default class Renderer {
     /**
-     * @param {Application.Settings} [options] - optional parameters for the renderer
+     * @param {ApplicationSettings} [options] - optional parameters for the renderer
      */
     constructor(options) {
 

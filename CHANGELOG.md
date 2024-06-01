@@ -1,6 +1,6 @@
 # Changelog
 
-## [17.3.0] (melonJS 2) - _2024-05-xx_
+## [17.3.0] (melonJS 2) - _2024-06-xx_
 
 ### Added
 - Renderer: add support for line thickness when using `strokeLine()` in WebGL
@@ -11,6 +11,7 @@
 ### Fixed
 - Renderer: fix animation when using multi-texture atlas in WebGL mode
 - TMX: fix tsx file type import when using a React / Vue build step (thanks @customautosys)
+- Typedef: fix missing definition for `video.init()` settings parameter, and `Application` constructor parameter
 
 ## [17.2.0] (melonJS 2) - _2024-04-22_
 
