@@ -1,6 +1,6 @@
 # Changelog
 
-## [17.3.0] (melonJS 2) - _2024-06-xx_
+## [17.3.0] (melonJS 2) - _2024-06-04_
 
 ### Added
 - Renderer: add support for line thickness when using `strokeLine()` in WebGL
