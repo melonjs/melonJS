@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.2.0
+ * melonJS Game Engine - v17.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -72,15 +72,8 @@ function preloadTMX(tmxData, onload, onerror, settings) {
                     const xmlDoc = parser.parseFromString(response, "text/xml");
                     const data = parse(xmlDoc);
 
-                    switch (getExtension(tmxData.src)) {
-                        case "tmx":
-                            result = data.map;
-                            break;
+                    result = data.map || data.tilesets[0] || data;
 
-                        case "tsx":
-                            result = data.tilesets[0];
-                            break;
-                    }
                     break;
                 }
                 case "json":

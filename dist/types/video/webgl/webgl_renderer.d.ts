@@ -1,6 +1,6 @@
 /**
  * @classdesc
- * a WebGL renderer object
+ * a WebGL renderer draw
  * @augments Renderer
  */
 export default class WebGLRenderer extends Renderer {
@@ -24,6 +24,13 @@ export default class WebGLRenderer extends Renderer {
      * @type {WebGLRenderingContext}
      */
     gl: WebGLRenderingContext;
+    /**
+     * sets or returns the thickness of lines for shape drawing (limited to strokeLine)
+     * @type {number}
+     * @default 1
+     * @see WebGLRenderer#strokeLine
+     */
+    lineWidth: number;
     /**
      * the vertex buffer used by this WebGL Renderer
      * @type {WebGLBuffer}
@@ -329,11 +336,6 @@ export default class WebGLRenderer extends Renderer {
      * @param {Color|string} color - css color string.
      */
     setColor(color: Color | string): void;
-    /**
-     * Set the line width
-     * @param {number} width - Line width
-     */
-    setLineWidth(width: number): void;
     /**
      * Stroke an arc at the specified coordinates with given radius, start and end points
      * @param {number} x - arc center point x-axis

@@ -320,10 +320,13 @@ export default class CanvasRenderer extends Renderer {
      */
     getGlobalAlpha(): number;
     /**
-     * Set the line width on the context
-     * @param {number} width - Line width
+     * @ignore
      */
-    setLineWidth(width: number): void;
+    set lineWidth(value: number | ((width: number) => void));
+    /**
+     * sets or returns the thickness of lines for shape drawing
+     */
+    get lineWidth(): number | ((width: number) => void);
     /**
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.

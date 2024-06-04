@@ -18,7 +18,7 @@ export default class World extends Container {
     app: Application;
     /**
      * the physic engine used by melonJS
-     * @see Application.Settings.physic
+     * @see ApplicationSettings.physic
      * @type {string}
      * @default "builtin"
      * @example

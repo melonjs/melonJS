@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.2.0
+ * melonJS Game Engine - v17.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -14,7 +14,7 @@ import timer from '../system/timer.js';
 import state from '../state/state.js';
 import World from '../physics/world.js';
 import { onresize } from './resize.js';
-import { defaultSettings } from './settings.js';
+import { ApplicationSettings } from './settings.js';
 import { consoleHeader } from './header.js';
 import { WEBGL, CANVAS, AUTO } from '../const.js';
 
@@ -27,7 +27,7 @@ class Application {
     /**
      * @param {number} width - The width of the canvas viewport
      * @param {number} height - The height of the canvas viewport
-     * @param {Application.Settings} [options] - The optional parameters for the application and default renderer
+     * @param {ApplicationSettings} [options] - The optional parameters for the application and default renderer
      * @throws Will throw an exception if it fails to instantiate a renderer
      */
     constructor(width, height, options) {
@@ -83,7 +83,7 @@ class Application {
 
         /**
          * the given settings used when creating this application
-         * @type {Application.settings}
+         * @type {ApplicationSettings}
          */
         this.settings = undefined;
 
@@ -144,11 +144,11 @@ class Application {
      * init the game instance (create a physic world, update starting time, etc..)
      * @param {number} width - The width of the canvas viewport
      * @param {number} height - The height of the canvas viewport
-     * @param {Application.Settings} [options] - The optional parameters for the application and default renderer
+     * @param {ApplicationSettings} [options] - The optional parameters for the application and default renderer
      */
     init(width, height, options) {
 
-        this.settings = Object.assign(defaultSettings, options || {});
+        this.settings = Object.assign(ApplicationSettings, options || {});
 
         // sanitize potential given parameters
         this.settings.width = width;

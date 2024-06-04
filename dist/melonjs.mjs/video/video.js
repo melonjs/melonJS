@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.2.0
+ * melonJS Game Engine - v17.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -9,6 +9,7 @@ import { emit, WINDOW_ONRESIZE, WINDOW_ONORIENTATION_CHANGE, WINDOW_ONSCROLL, VI
 import { game, initialized } from '../index.js';
 import { offscreenCanvas, screenOrientation } from '../system/device.js';
 import { throttle } from '../utils/function.js';
+import { ApplicationSettings } from '../application/settings.js';
 export { AUTO, CANVAS, WEBGL } from '../const.js';
 
 /**
@@ -23,7 +24,7 @@ let renderer = null;
  * @memberof video
  * @param {number} width - The width of the canvas viewport
  * @param {number} height - The height of the canvas viewport
- * @param {Application.Settings} [options] - optional parameters for the renderer
+ * @param {ApplicationSettings} [options] - optional parameters for the renderer
  * @returns {boolean} false if initialization failed (canvas not supported)
  * @example
  * // init the video with a 640x480 canvas
@@ -42,7 +43,7 @@ function init(width, height, options) {
 
     try {
         // initialize the default game Application with the given options
-        game.init(width, height, options);
+        game.init(width, height, Object.assign(ApplicationSettings, options || {}));
     } catch (e) {
         console.log(e.message);
         // me.video.init() historically returns false if failing at creating/using a HTML5 canvas

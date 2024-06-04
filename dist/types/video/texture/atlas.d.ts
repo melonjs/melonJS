@@ -83,6 +83,12 @@ export class TextureAtlas {
      * @ignore
      */
     atlases: Map<any, any>;
+    /**
+     * the default "active" atlas (used for multiAtlas)
+     * @type {Map}
+     * @ignore
+     */
+    activeAtlas: Map<any, any>;
     repeat: any;
     /**
      * return the default or specified atlas dictionnary

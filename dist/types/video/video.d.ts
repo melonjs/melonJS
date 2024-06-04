@@ -3,7 +3,7 @@
  * @memberof video
  * @param {number} width - The width of the canvas viewport
  * @param {number} height - The height of the canvas viewport
- * @param {Application.Settings} [options] - optional parameters for the renderer
+ * @param {ApplicationSettings} [options] - optional parameters for the renderer
  * @returns {boolean} false if initialization failed (canvas not supported)
  * @example
  * // init the video with a 640x480 canvas
@@ -14,7 +14,7 @@
  *     scaleMethod : "fit"
  * });
  */
-export function init(width: number, height: number, options?: any): boolean;
+export function init(width: number, height: number, options?: ApplicationSettings | undefined): boolean;
 /**
  * Create and return a new Canvas element
  * @memberof video
@@ -36,3 +36,4 @@ export function getParent(): HTMLElement;
  * @type {CanvasRenderer|WebGLRenderer}
  */
 export let renderer: CanvasRenderer | WebGLRenderer;
+import { ApplicationSettings } from "../application/settings.js";

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.2.0
+ * melonJS Game Engine - v17.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -60,7 +60,7 @@ function endpointToCenterParameterization(x1, y1, x2, y2, largeArcFlag, sweepFla
 
     const [rx, ry] = correctRadii(srx, sry, x1p, y1p);
 
-    const sign = -1;
+    const sign = largeArcFlag !== sweepFlag ? 1 : -1;
     const n = pow(rx) * pow(ry) - pow(rx) * pow(y1p) - pow(ry) * pow(x1p);
     const d = pow(rx) * pow(y1p) + pow(ry) * pow(x1p);
 
@@ -80,9 +80,11 @@ function endpointToCenterParameterization(x1, y1, x2, y2, largeArcFlag, sweepFla
     const deltaAngle0 = vec2Angle(a, b) % (2 * Math.PI);
 
     const deltaAngle =
-          deltaAngle0 > 0
+          !sweepFlag && deltaAngle0 > 0
               ? deltaAngle0 - 2 * Math.PI
-              : deltaAngle0;
+              : sweepFlag && deltaAngle0 < 0
+                  ? deltaAngle0 + 2 * Math.PI
+                  : deltaAngle0;
 
     const endAngle = startAngle + deltaAngle;
 

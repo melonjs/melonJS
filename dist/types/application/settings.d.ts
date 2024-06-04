@@ -1,28 +1,7 @@
-export namespace defaultSettings {
-    let parent: undefined;
-    let renderer: number;
-    let autoScale: boolean;
-    let scale: number;
-    let scaleMethod: string;
-    let scaleTarget: undefined;
-    let transparent: boolean;
-    let premultipliedAlpha: boolean;
-    let blendMode: string;
-    let physic: string;
-    let antiAlias: boolean;
-    let failIfMajorPerformanceCaveat: boolean;
-    let subPixel: boolean;
-    let preferWebGL1: boolean;
-    let powerPreference: string;
-    let verbose: boolean;
-    let consoleHeader: boolean;
-    let legacy: boolean;
-    let canvas: undefined;
-}
 /**
  * Application & Renderer Settings definition.
  */
-export type Settings = {
+export type ApplicationSettings = {
     /**
      * - the DOM parent element to hold the canvas in the HTML file
      */
@@ -56,7 +35,7 @@ export type Settings = {
      * - <i><b>`stretch`</b></i> : Canvas is resized to fit; content is scaled to screen aspect ratio <br>
      * <center><img src="images/scale-stretch.png"/></center>
      */
-    scaleMethod?: "flex" | "fill-min" | "fill-max" | "flex-width" | "flex-height" | "stretch" | "fit" | undefined;
+    scaleMethod?: "flex" | "fit" | "fill-min" | "fill-max" | "flex-width" | "flex-height" | "stretch" | undefined;
     /**
      * - the HTML Element to be used as the reference target when using automatic scaling (by default melonJS will use the parent container of the div element containing the canvas)
      */
@@ -85,4 +64,42 @@ export type Settings = {
      * - whether to display melonJS version and basic device information in the console
      */
     consoleHeader?: boolean | undefined;
+    /**
+     * - The actual width of the canvas with scaling applied
+     */
+    zoomX?: number | undefined;
+    /**
+     * - The actual height of the canvas with scaling applied
+     */
+    zoomY?: number | undefined;
+    /**
+     * - a custom compositor class (WebGL only)
+     */
+    compositor?: any;
+    /**
+     * - the physic system to use (default: "builtin", or "none" to disable builtin physic)
+     */
+    physic?: string | undefined;
 };
+export namespace ApplicationSettings {
+    let parent: undefined;
+    let canvas: undefined;
+    let renderer: number;
+    let autoScale: boolean;
+    let scale: number;
+    let scaleMethod: string;
+    let scaleTarget: undefined;
+    let preferWebGL1: boolean;
+    let depthTest: string;
+    let powerPreference: string;
+    let transparent: boolean;
+    let antiAlias: boolean;
+    let consoleHeader: boolean;
+    let premultipliedAlpha: boolean;
+    let blendMode: string;
+    let physic: string;
+    let failIfMajorPerformanceCaveat: boolean;
+    let subPixel: boolean;
+    let verbose: boolean;
+    let legacy: boolean;
+}

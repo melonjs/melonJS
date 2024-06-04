@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.2.0
+ * melonJS Game Engine - v17.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -67,26 +67,55 @@ class TextureCache {
      * @ignore
      */
     freeTextureUnit(texture) {
-        let unit = this.units.get(texture);
+        let source = texture.sources.get(texture.activeAtlas);
+        let unit = this.units.get(source);
         // was a texture unit allocated ?
         if (typeof unit !== "undefined") {
-            this.usedUnits.delete(unit);
-            this.units.delete(texture);
+            this.usedUnits.delete(source);
+            this.units.delete(source);
         }
     }
 
     /**
      * @ignore
      */
-    get(image, atlas) {
-        let entry;
+    getUnit(texture) {
+        let source = texture.sources.get(texture.activeAtlas);
+        if (!this.units.has(source)) {
+            this.units.set(source, this.allocateTextureUnit());
+        }
+        return this.units.get(source);
+    }
 
-        if (typeof atlas === "undefined") {
-            entry = this.cache.get(image)[0];
-        } else {
-            // manage cases where a specific atlas is specified
+    /**
+     * @ignore
+     * cache the textureAltas for the given image
+     */
+    set(image, textureAtlas) {
+        let width = image.width || image.videoWidth;
+        let height = image.height || image.videoHeight;
+
+        // warn if a non POT texture is added to the cache when using WebGL1
+        if (renderer.WebGLVersion === 1 && (!isPowerOfTwo(width) || !isPowerOfTwo(height))) {
+            let src = typeof image.src !== "undefined" ? image.src : image;
+            console.warn(
+                "[Texture] " + src + " is not a POT texture " +
+                "(" + width + "x" + height + ")"
+            );
+        }
+        return this.cache.put(image, textureAtlas);
+    }
+
+    /**
+     * @ignore
+     * return the textureAltas for the given image
+     */
+    get(image, atlas) {
+        let entry = this.cache.get(image)[0];
+
+        if (typeof entry !== "undefined" && typeof atlas !== "undefined") {
             this.cache.forEach((value, key) => {
-                let _atlas = value.getAtlas()[0];
+                let _atlas = value.getAtlas();
                 if (key === image && _atlas.width === atlas.framewidth && _atlas.height === atlas.frameheight) {
                     entry = value;
                 }
@@ -94,11 +123,28 @@ class TextureCache {
         }
 
         if (typeof entry === "undefined") {
+            console.log("cache miss");
             if (!atlas) {
-                atlas = createAtlas(image.width || image.videoWidth, image.videoHeight, image.src ? getBasename(image.src) : undefined);
+                atlas = createAtlas(image.width || image.videoWidth, image.height || image.videoHeight, image.src ? getBasename(image.src) : undefined);
             }
             entry = new TextureAtlas(atlas, image, false);
             this.set(image, entry);
+        }
+
+        // "activate" the corresponding sources (in case of multi texture atlas)
+        if (typeof entry.sources !== "undefined" && entry.sources.size > 1) {
+            console.log(entry);
+            // manage cases where a specific atlas is specified
+            for (const [key, value] of entry.sources.entries()) {
+                // Check if the imageData matches the provided image
+                if (value === image) {
+                    console.log("cache hit");
+                    // If a match is found, return the corresponding entry from cache.atlases
+                    console.log(key);
+                    //return entry.atlases.get(key);
+                    entry.activeAtlas = key;
+                }
+            }
         }
 
         return entry;
@@ -135,33 +181,6 @@ class TextureCache {
         return image_cache.get(color);
     }
 
-    /**
-     * @ignore
-     */
-    set(image, texture) {
-        let width = image.width || image.videoWidth;
-        let height = image.height || image.videoHeight;
-
-        // warn if a non POT texture is added to the cache when using WebGL1
-        if (renderer.WebGLVersion === 1 && (!isPowerOfTwo(width) || !isPowerOfTwo(height))) {
-            let src = typeof image.src !== "undefined" ? image.src : image;
-            console.warn(
-                "[Texture] " + src + " is not a POT texture " +
-                "(" + width + "x" + height + ")"
-            );
-        }
-        return this.cache.put(image, texture);
-    }
-
-    /**
-     * @ignore
-     */
-    getUnit(texture) {
-        if (!this.units.has(texture)) {
-            this.units.set(texture, this.allocateTextureUnit());
-        }
-        return this.units.get(texture);
-    }
 }
 
 export { TextureCache as default };

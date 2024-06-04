@@ -7,10 +7,10 @@ export default class Application {
     /**
      * @param {number} width - The width of the canvas viewport
      * @param {number} height - The height of the canvas viewport
-     * @param {Application.Settings} [options] - The optional parameters for the application and default renderer
+     * @param {ApplicationSettings} [options] - The optional parameters for the application and default renderer
      * @throws Will throw an exception if it fails to instantiate a renderer
      */
-    constructor(width: number, height: number, options?: any);
+    constructor(width: number, height: number, options?: ApplicationSettings | undefined);
     /**
      * the parent HTML element holding the main canvas of this application
      * @type {HTMLElement}
@@ -55,9 +55,9 @@ export default class Application {
     isInitialized: boolean;
     /**
      * the given settings used when creating this application
-     * @type {Application.settings}
+     * @type {ApplicationSettings}
      */
-    settings: Application.settings;
+    settings: ApplicationSettings;
     /**
      * Specify whether to pause this app when losing focus
      * @type {boolean}
@@ -94,9 +94,9 @@ export default class Application {
      * init the game instance (create a physic world, update starting time, etc..)
      * @param {number} width - The width of the canvas viewport
      * @param {number} height - The height of the canvas viewport
-     * @param {Application.Settings} [options] - The optional parameters for the application and default renderer
+     * @param {ApplicationSettings} [options] - The optional parameters for the application and default renderer
      */
-    init(width: number, height: number, options?: any): void;
+    init(width: number, height: number, options?: ApplicationSettings | undefined): void;
     /**
      * reset the game Object manager
      * destroy all current objects
@@ -145,3 +145,4 @@ export default class Application {
 }
 import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
 import World from "./../physics/world.js";
+import { ApplicationSettings } from "./settings.js";

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.2.0
+ * melonJS Game Engine - v17.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -17,7 +17,7 @@ import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../
  */
 class CanvasRenderer extends Renderer {
     /**
-     * @param {Application.Settings} [options] - optional parameters for the renderer
+     * @param {ApplicationSettings} [options] - optional parameters for the renderer
      */
     constructor(options) {
         // parent constructor
@@ -677,11 +677,18 @@ class CanvasRenderer extends Renderer {
     }
 
     /**
-     * Set the line width on the context
-     * @param {number} width - Line width
+     * sets or returns the thickness of lines for shape drawing
      */
-    setLineWidth(width) {
-        this.getContext().lineWidth = width;
+    get lineWidth() {
+        return this.getContext().lineWidth;
+    }
+
+    /**
+     * @ignore
+     */
+    set lineWidth(value) {
+        this.getContext().lineWidth = value;
+        return value;
     }
 
     /**

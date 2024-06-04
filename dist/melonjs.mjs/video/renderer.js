@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.2.0
+ * melonJS Game Engine - v17.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -18,7 +18,7 @@ import CanvasRenderTarget from './rendertarget/canvasrendertarget.js';
  */
 class Renderer {
     /**
-     * @param {Application.Settings} [options] - optional parameters for the renderer
+     * @param {ApplicationSettings} [options] - optional parameters for the renderer
      */
     constructor(options) {
 

@@ -28,6 +28,16 @@ declare class TextureCache {
     /**
      * @ignore
      */
+    getUnit(texture: any): any;
+    /**
+     * @ignore
+     * cache the textureAltas for the given image
+     */
+    set(image: any, textureAtlas: any): boolean;
+    /**
+     * @ignore
+     * return the textureAltas for the given image
+     */
     get(image: any, atlas: any): any;
     /**
      * @ignore
@@ -37,13 +47,5 @@ declare class TextureCache {
      * @ignore
      */
     tint(src: any, color: any): any;
-    /**
-     * @ignore
-     */
-    set(image: any, texture: any): boolean;
-    /**
-     * @ignore
-     */
-    getUnit(texture: any): any;
 }
 import { ArrayMultimap } from "@teppeis/multimaps";
