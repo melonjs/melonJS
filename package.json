@@ -57,7 +57,6 @@
     "earcut": "2.2.4",
     "eventemitter3": "^5.0.1",
     "howler": "2.2.4",
-    "save-dev": "^0.0.1-security",
     "semver": "^7.6.2",
     "whatwg-fetch": "^3.6.20"
   },
