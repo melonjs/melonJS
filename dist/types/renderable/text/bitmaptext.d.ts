@@ -34,7 +34,7 @@ export default class BitmapText extends Renderable {
      * me.game.world.addChild(myFont);
      */
     constructor(x: number, y: number, settings: {
-        font: string | (new (width?: number | undefined, height?: number | undefined) => HTMLImageElement);
+        font: string | (new (width?: number, height?: number) => HTMLImageElement);
         fontData?: string | undefined;
         size?: number | undefined;
         fillStyle?: string | Color | undefined;

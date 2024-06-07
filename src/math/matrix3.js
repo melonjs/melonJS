@@ -2,6 +2,10 @@ import pool from "./../system/pooling.js";
 import { EPSILON } from "./math.js";
 
 /**
+ * @import Matrix3d from "./matrix3.js";
+ */
+
+/**
  * @classdesc
  * a 4x4 Matrix3d Object
  */

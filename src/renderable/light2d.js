@@ -1,6 +1,12 @@
 import pool from "./../system/pooling.js";
 import Renderable from "./renderable.js";
 
+/**
+ * @import Color from "./../math/color.js";
+ * @import Ellipse from "./../geometries/ellipse.js";
+ */
+
+
 /** @ignore */
 function createGradient(light) {
     let context = light.texture.context;

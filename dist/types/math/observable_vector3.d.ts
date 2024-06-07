@@ -1,4 +1,7 @@
 /**
+ * @import ObservableVector3d from "./observable_vector3.js";
+ */
+/**
  * @classdesc
  * A Vector3d object that provide notification by executing the given callback when the vector is changed.
  * @augments Vector3d
@@ -234,6 +237,14 @@ export default class ObservableVector3d extends Vector3d {
      */
     rotate(angle: number, v?: Vector2d | ObservableVector2d): ObservableVector3d;
     /**
+     * return the dot product of this vector and the passed one
+     * @name dot
+     * @memberof ObservableVector3d
+     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
+     * @returns {number} The dot product.
+     */
+    dot(v: Vector2d | Vector3d | ObservableVector2d | ObservableVector3d): number;
+    /**
      * calculate the cross product of this vector and the passed one
      * @name cross
      * @memberof ObservableVector3d
@@ -260,6 +271,14 @@ export default class ObservableVector3d extends Vector3d {
      */
     moveTowards(target: Vector2d | ObservableVector2d | Vector3d | ObservableVector3d, step: number): ObservableVector3d;
     /**
+     * return the distance between this vector and the passed one
+     * @name distance
+     * @memberof ObservableVector3d
+     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
+     * @returns {number}
+     */
+    distance(v: Vector2d | Vector3d | ObservableVector2d | ObservableVector3d): number;
+    /**
      * return a clone copy of this vector
      * @name clone
      * @memberof ObservableVector3d
@@ -275,3 +294,4 @@ export default class ObservableVector3d extends Vector3d {
     toVector3d(): Vector3d;
 }
 import Vector3d from "./vector3.js";
+import type ObservableVector3d from "./observable_vector3.js";

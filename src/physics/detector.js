@@ -3,6 +3,15 @@ import ResponseObject from "./response.js";
 import Vector2d from "./../math/vector2.js";
 import Bounds from "./bounds.js";
 
+/**
+ * @import Entity from "./../renderable/entity/entity.js";
+ * @import Container from "./../renderable/container.js";
+ * @import Renderable from "./../renderable/renderable.js";
+ * @import Sprite from "./../renderable/sprite.js";
+ * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
+ * @import Line from "./../geometries/line.js";
+ */
+
 // a dummy object when using Line for raycasting
 let dummyObj = {
     pos : new Vector2d(0, 0),

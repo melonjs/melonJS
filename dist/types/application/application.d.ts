@@ -1,4 +1,8 @@
 /**
+ * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
+ * @import Camera2d from "./../camera/camera2d.js";
+ */
+/**
  * @classdesc
  * An Application represents a single melonJS game, and is responsible for updating (each frame) all the related object status and draw them.
  * @see game
@@ -144,5 +148,7 @@ export default class Application {
     draw(): void;
 }
 import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
+import type WebGLRenderer from "./../video/webgl/webgl_renderer.js";
+import type Camera2d from "./../camera/camera2d.js";
 import World from "./../physics/world.js";
 import { ApplicationSettings } from "./settings.js";

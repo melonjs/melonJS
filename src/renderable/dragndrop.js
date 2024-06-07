@@ -1,6 +1,9 @@
 import * as event from "./../system/event.js";
 import Renderable from "./../renderable/renderable.js";
 
+/**
+ * @import Draggable from "./draggable.js";
+ */
 
 /**
  * @classdesc

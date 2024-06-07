@@ -7,6 +7,10 @@
 
 ### Fixed
 - Renderer: fix `fillEllipse()` operations\ in WebGL mode (that was stroking the ellipse instead)
+- TypeScript: fix most (if not all) missing class declarations
+
+### Chores
+- Chore: Update to TypeScript 5.5 Beta
 
 ## [17.3.0] (melonJS 2) - _2024-06-04_
 

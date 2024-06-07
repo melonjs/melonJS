@@ -1,6 +1,12 @@
 import Vector2d from "./../math/vector2.js";
 import * as arrayUtil from "./../utils/array.js";
 
+/**
+ * @import World from "./world.js";
+ * @import Container from "./../renderable/container.js";
+ * @import Bounds from "./bounds.js";
+ */
+
 /*
  * A QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
  * Based on the QuadTree Library by Timo Hausmann and released under the MIT license

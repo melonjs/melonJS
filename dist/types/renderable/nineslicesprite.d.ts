@@ -1,4 +1,8 @@
 /**
+ * @import Color from "./../math/color.js";
+ * @import { TextureAtlas } from "./../video/texture/atlas.js";
+ */
+/**
  * @classdesc
  * A NineSliceSprite is similar to a Sprite, but it uses 9-slice scaling to strech its inner area to fit the size of the Renderable,
  * by proportionally scaling a sprite by splitting it in a grid of nine parts (with only parts 1, 3, 7, 9 not being scaled). <br>
@@ -37,12 +41,12 @@ export default class NineSliceSprite extends Sprite {
         height: number;
         insetx?: number | undefined;
         insety?: number | undefined;
-        image: HTMLImageElement | HTMLCanvasElement | TextureAtlas | string;
+        image: string | HTMLCanvasElement | HTMLImageElement | TextureAtlas;
         name?: string | undefined;
         region?: string | undefined;
         framewidth?: number | undefined;
         frameheight?: number | undefined;
-        tint?: string | Color;
+        tint?: string | Color | undefined;
         flipX?: number | undefined;
         flipY?: number | undefined;
         anchorPoint?: any;
@@ -69,3 +73,5 @@ export default class NineSliceSprite extends Sprite {
     draw(renderer: any): void;
 }
 import Sprite from "./sprite.js";
+import type Color from "./../math/color.js";
+import type { TextureAtlas } from "./../video/texture/atlas.js";

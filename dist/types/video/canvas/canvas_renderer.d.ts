@@ -1,4 +1,12 @@
 /**
+ * @import Rect from "./../../geometries/rect.js";
+ * @import RoundRect from "./../../geometries/roundrect.js";
+ * @import Polygon from "./../../geometries/poly.js";
+ * @import Line from "./../../geometries/line.js";
+ * @import Ellipse from "./../../geometries/ellipse.js";
+ * @import Matrix2d from "./../../math/matrix2.js";
+ */
+/**
  * @classdesc
  * a canvas renderer object
  * @augments Renderer
@@ -131,12 +139,12 @@ export default class CanvasRenderer extends Renderer {
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [shape] - a shape object to stroke
      * @param {boolean} [fill=false] - fill the shape with the current color if true
      */
-    stroke(shape?: Rect | RoundRect | Polygon | Line | Ellipse, fill?: boolean | undefined): void;
+    stroke(shape?: any, fill?: boolean | undefined): void;
     /**
      * fill the given shape or the current defined path
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [shape] - a shape object to fill
      */
-    fill(shape?: Rect | RoundRect | Polygon | Line | Ellipse): void;
+    fill(shape?: any): void;
     /**
      * add a straight line from the current point to the start of the current sub-path. If the shape has already been closed or has only one point, this function does nothing
     */
@@ -322,11 +330,11 @@ export default class CanvasRenderer extends Renderer {
     /**
      * @ignore
      */
-    set lineWidth(value: number | ((width: number) => void));
+    set lineWidth(value: number | ((width: GLfloat) => void));
     /**
      * sets or returns the thickness of lines for shape drawing
      */
-    get lineWidth(): number | ((width: number) => void);
+    get lineWidth(): number | ((width: GLfloat) => void);
     /**
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.
@@ -337,7 +345,7 @@ export default class CanvasRenderer extends Renderer {
      * @param {number} e - the e component to multiply the current matrix by
      * @param {number} f - the f component to multiply the current matrix by
      */
-    setTransform(a: Matrix2d | number, b: number, c: number, d: number, e: number, f: number): void;
+    setTransform(a: number | Matrix2d, b: number, c: number, d: number, e: number, f: number): void;
     /**
      * Multiply given matrix into the renderer tranformation matrix
      * @see {@link CanvasRenderer.setTransform} which will reset the current transform matrix prior to performing the new transformation
@@ -348,7 +356,7 @@ export default class CanvasRenderer extends Renderer {
      * @param {number} e - the e component to multiply the current matrix by
      * @param {number} f - the f component to multiply the current matrix by
      */
-    transform(a: Matrix2d | number, b: number, c: number, d: number, e: number, f: number): void;
+    transform(a: number | Matrix2d, b: number, c: number, d: number, e: number, f: number): void;
     /**
      * adds a translation transformation to the current matrix.
      * @param {number} x - Distance to move in the horizontal direction. Positive values are to the right, and negative to the left.
@@ -371,3 +379,5 @@ export default class CanvasRenderer extends Renderer {
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture/cache.js";
 import Color from "./../../math/color.js";
+import type Polygon from "./../../geometries/poly.js";
+import type Matrix2d from "./../../math/matrix2.js";

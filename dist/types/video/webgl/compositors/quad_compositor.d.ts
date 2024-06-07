@@ -24,7 +24,7 @@ export default class QuadCompositor extends Compositor {
      * @param {boolean} [mipmap=true] - Whether mipmap levels should be generated for this texture
      * @returns {WebGLTexture} a WebGL texture
      */
-    createTexture2D(unit: number, pixels?: HTMLCanvasElement | ImageData | (new (width?: number | undefined, height?: number | undefined) => HTMLImageElement) | Uint8Array[] | Float32Array[] | undefined, filter: number, repeat?: string | undefined, w?: number | undefined, h?: number | undefined, premultipliedAlpha?: boolean | undefined, mipmap?: boolean | undefined): WebGLTexture;
+    createTexture2D(unit: number, pixels?: HTMLCanvasElement | ImageData | (new (width?: number, height?: number) => HTMLImageElement) | Uint8Array[] | Float32Array[] | undefined, filter: number, repeat?: string | undefined, w?: number | undefined, h?: number | undefined, premultipliedAlpha?: boolean | undefined, mipmap?: boolean | undefined): WebGLTexture;
     /**
      * delete the given WebGL texture
      * @param {WebGLTexture} [texture] - a WebGL texture to delete

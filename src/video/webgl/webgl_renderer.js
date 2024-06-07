@@ -10,6 +10,16 @@ import * as event from "./../../system/event.js";
 import pool from "./../../system/pooling.js";
 import { isPowerOfTwo } from "./../../math/math.js";
 
+/**
+ * @import Rect from "./../../geometries/rect.js";
+ * @import RoundRect from "./../../geometries/roundrect.js";
+ * @import Polygon from "./../../geometries/poly.js";
+ * @import Line from "./../../geometries/line.js";
+ * @import Ellipse from "./../../geometries/ellipse.js";
+ * @import Matrix3d from "./../../math/matrix3.js";
+ * @import Compositor from "./compositors/compositor.js";
+ */
+
 // list of supported compressed texture formats
 let supportedCompressedTextureFormats;
 
@@ -100,7 +110,7 @@ export default class WebGLRenderer extends Renderer {
 
         /**
          * The current compositor used by the renderer
-         * @type {WebGLCompositor}
+         * @type {Compositor}
          */
         this.currentCompositor = undefined;
 
@@ -112,7 +122,7 @@ export default class WebGLRenderer extends Renderer {
 
         /**
          * The list of active compositors
-         * @type {Map<WebGLCompositor>}
+         * @type {Map<Compositor>}
          */
         this.compositors = new Map();
 
@@ -191,7 +201,6 @@ export default class WebGLRenderer extends Renderer {
      * The WebGL version used by this renderer (1 or 2)
      * @type {number}
      * @default 1
-     * @readonly
      */
     get WebGLVersion() {
         return this.renderTarget.WebGLVersion;

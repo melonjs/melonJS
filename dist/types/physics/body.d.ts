@@ -1,4 +1,13 @@
 /**
+ * @import Entity from "./../renderable/entity/entity.js";
+ * @import Container from "./../renderable/container.js";
+ * @import Renderable from "./../renderable/renderable.js";
+ * @import Sprite from "./../renderable/sprite.js";
+ * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
+ * @import Line from "./../geometries/line.js";
+ * @import Vector2d from "./../math/vector2.js";
+ **/
+/**
  * @classdesc
  * a Generic Physic Body Object with some physic properties and behavior functionality, to add as a member of a Renderable.
  * @see Renderable.body
@@ -9,7 +18,7 @@ export default class Body {
      * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] - a initial shape, list of shapes, or JSON object defining the body
      * @param {Function} [onBodyUpdate] - callback for when the body is updated (e.g. add/remove shapes)
      */
-    constructor(ancestor: Renderable | Container | Entity | Sprite | NineSliceSprite, shapes?: Rect | Rect[] | Polygon | Polygon[] | Line | Line[] | Ellipse | Ellipse[] | Point | Point[] | Bounds | Bounds[] | object, onBodyUpdate?: Function | undefined);
+    constructor(ancestor: Renderable | Container | Sprite | NineSliceSprite | Entity, shapes?: object | Polygon | Line | Point | Rect | Bounds | Point[] | Ellipse | Rect[] | Polygon[] | Line[] | Ellipse[] | Bounds[] | undefined, onBodyUpdate?: Function | undefined);
     /**
      * a reference to the parent object that contains this body,
      * or undefined if it has not been added to one.
@@ -17,7 +26,7 @@ export default class Body {
      * @type {Renderable|Container|Entity|Sprite|NineSliceSprite}
      * @default undefined
      */
-    public ancestor: Renderable | Container | Entity | Sprite | NineSliceSprite;
+    public ancestor: Renderable | Container | Sprite | NineSliceSprite | Entity;
     /**
      * The AABB bounds box reprensenting this body
      * @public
@@ -29,7 +38,7 @@ export default class Body {
      * @ignore
      * @type {Polygon[]|Line[]|Ellipse[]|Point|Point[]}
      */
-    shapes: Polygon[] | Line[] | Ellipse[] | Point | Point[];
+    shapes: Point | Point[] | Polygon[] | Line[] | Ellipse[];
     /**
      * The body collision mask, that defines what should collide with what.<br>
      * (by default will collide with all entities)
@@ -173,7 +182,7 @@ export default class Body {
      * // add a shape from a JSON object
      * this.body.addShape(me.loader.getJSON("shapesdef").banana);
      */
-    addShape(shape: Rect | Polygon | Line | Ellipse | Point | Point[] | Bounds | object): number;
+    addShape(shape: object | Polygon | Line | Point | Rect | Bounds | Point[] | Ellipse): number;
     /**
      * set the body vertices to the given one
      * @param {Vector2d[]} vertices - an array of me.Vector2d points defining a convex hull
@@ -292,7 +301,7 @@ export default class Body {
      * @param {Vector2d|ObservableVector2d} [v=Body.getBounds().center] - an optional point to rotate around
      * @returns {Body} Reference to this object for method chaining
      */
-    rotate(angle: number, v?: Vector2d | ObservableVector2d): Body;
+    rotate(angle: number, v?: any): Body;
     /**
      * cap the body velocity (body.maxVel property) to the specified value<br>
      * @param {number} x - max velocity on x axis
@@ -325,8 +334,15 @@ export default class Body {
      */
     destroy(): void;
 }
+import type Renderable from "./../renderable/renderable.js";
+import type Container from "./../renderable/container.js";
+import type Sprite from "./../renderable/sprite.js";
+import type NineSliceSprite from "./../renderable/nineslicesprite.js";
+import type Entity from "./../renderable/entity/entity.js";
 import Bounds from "./bounds.js";
 import Polygon from "./../geometries/poly.js";
 import Ellipse from "./../geometries/ellipse.js";
 import Point from "../geometries/point.js";
+import type Line from "./../geometries/line.js";
+import type Vector2d from "./../math/vector2.js";
 import Rect from "./../geometries/rectangle.js";

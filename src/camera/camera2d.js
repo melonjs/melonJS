@@ -12,6 +12,13 @@ import Renderable from "./../renderable/renderable.js";
 import {clamp, toBeCloseTo} from "./../math/math.js";
 import { game } from "../index.js";
 
+/**
+ * @import Bounds from "./../physics/bounds.js";
+ * @import Color from "./../math/color.js";
+ * @import Entity from "./../renderable/entity/entity.js";
+ * @import Sprite from "./../renderable/sprite.js";
+ * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
+ */
 
 // some ref shortcut
 const MIN = Math.min, MAX = Math.max;

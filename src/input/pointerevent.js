@@ -12,6 +12,10 @@ import Rect from "./../geometries/rectangle.js";
 import { game } from "../index.js";
 
 /**
+ * @import Vector2d from "./../math/vector2.js";
+ */
+
+/**
  * A pool of `Pointer` objects to cache pointer/touch event coordinates.
  * @type {Array.<Vector2d>}
  * @ignore

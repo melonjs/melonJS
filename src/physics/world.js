@@ -8,6 +8,10 @@ import state from "./../state/state.js";
 import { hasRegisteredEvents } from "../input/pointerevent.js";
 
 /**
+ * @import Application from "./../application/application.js";
+ */
+
+/**
  * @classdesc
  * an object representing the physic world, and responsible for managing and updating all childs and physics
  * @augments Container

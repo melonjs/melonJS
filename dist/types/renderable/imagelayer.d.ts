@@ -1,4 +1,7 @@
 /**
+ * @import Vector2d from "./../math/vector2.js";
+ */
+/**
  * @classdesc
  * a generic Image Layer Object
  * @augments Sprite
@@ -25,9 +28,9 @@ export default class ImageLayer extends Sprite {
         image: HTMLImageElement | HTMLCanvasElement | string;
         name?: string | undefined;
         z?: number | undefined;
-        ratio?: number | Vector2d;
+        ratio?: number | Vector2d | undefined;
         repeat?: "repeat" | "no-repeat" | "repeat-x" | "repeat-y" | undefined;
-        anchorPoint?: number | Vector2d;
+        anchorPoint?: number | Vector2d | undefined;
     });
     /**
      * Define the image scrolling ratio<br>
@@ -77,3 +80,4 @@ export default class ImageLayer extends Sprite {
     onDeactivateEvent(): void;
 }
 import Sprite from "./sprite.js";
+import type Vector2d from "./../math/vector2.js";

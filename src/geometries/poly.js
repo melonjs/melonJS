@@ -2,6 +2,10 @@ import earcut from "earcut";
 import pool from "./../system/pooling.js";
 
 /**
+ * @import Vector2d from "./../math/vector2.js";
+ */
+
+/**
  * @classdesc
  * a polygon Object.<br>
  * Please do note that melonJS implements a simple Axis-Aligned Boxes collision algorithm, which requires all polygons used for collision to be convex with all vertices defined with clockwise winding.

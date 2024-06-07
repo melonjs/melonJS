@@ -84,7 +84,7 @@
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
     "terser": "^5.31.1",
-    "typescript": "^5.4.5"
+    "typescript": "^5.5.0-beta"
   },
   "scripts": {
     "build": "npm run lint && rollup -c --silent",

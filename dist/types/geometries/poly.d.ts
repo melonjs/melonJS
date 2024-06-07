@@ -1,4 +1,7 @@
 /**
+ * @import Vector2d from "./../math/vector2.js";
+ */
+/**
  * @classdesc
  * a polygon Object.<br>
  * Please do note that melonJS implements a simple Axis-Aligned Boxes collision algorithm, which requires all polygons used for collision to be convex with all vertices defined with clockwise winding.
@@ -59,7 +62,7 @@ export default class Polygon {
      * @param {Vector2d[]|number[]} points - array of vector or vertice defining the Polygon
      * @returns {Polygon} this instance for objecf chaining
      */
-    setShape(x: number, y: number, points: Vector2d[] | number[]): Polygon;
+    setShape(x: number, y: number, points: number[] | Vector2d[]): Polygon;
     /**
      * set the vertices defining this Polygon
      * @param {Vector2d[]} vertices - array of vector or vertice defining the Polygon
@@ -88,7 +91,7 @@ export default class Polygon {
      * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
      * @returns {Polygon} Reference to this object for method chaining
      */
-    rotate(angle: number, v?: Vector2d | ObservableVector2d): Polygon;
+    rotate(angle: number, v?: any): Polygon;
     /**
      * Scale this Polygon by the given scalar.
      * @param {number} x
@@ -173,3 +176,4 @@ export default class Polygon {
      */
     clone(): Polygon;
 }
+import type Vector2d from "./../math/vector2.js";

@@ -1,4 +1,7 @@
 /**
+ * @import ParticleEmitter from "./emitter.js";
+ */
+/**
  * @classdesc
  * Single Particle Object.
  * @augments Renderable
@@ -30,3 +33,4 @@ export default class Particle extends Renderable {
     draw(renderer: any): void;
 }
 import Renderable from "./../renderable/renderable.js";
+import type ParticleEmitter from "./emitter.js";

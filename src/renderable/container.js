@@ -8,6 +8,30 @@ import state from "../state/state.js";
 import Body from "../physics/body.js";
 
 /**
+ * @import Color from "./../math/color.js";
+ * @import Entity from "./../renderable/entity/entity.js";
+ * @import Renderable from "./renderable.js";
+ * @import Entity from "./../renderable/entity/entity.js";
+ * @import Sprite from "./../renderable/sprite.js";
+ * @import Collectable from "./../renderable/collectable.js";
+ * @import Trigger from "./../renderable/trigger.js";
+ * @import Draggable from "./../renderable/draggable.js";
+ * @import DropTarget from "./../renderable/droptarget.js";
+ * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
+ * @import ImageLayer from "./../renderable/imagelayer.js";
+ * @import ColorLayer from "./../renderable/colorlayer.js";
+ * @import Light2d from "./../renderable/light2d.js";
+ * @import UIBaseElement from "./../renderable/uibaseelement.js";
+ * @import UISpriteElement from "./../renderable/uispriteelement.js";
+ * @import UITextButton from "./../renderable/uitextbutton.js";
+ * @import Text from "./../renderable/text.js";
+ * @import BitmapText from "./../renderable/bitmaptext.js";
+ * @import Bounds from "./../physics/bounds.js";
+ * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
+ */
+
+/**
  * Private function to re-use for object removal in a defer
  * @ignore
  */
@@ -920,8 +944,7 @@ export default class Container extends Renderable {
     }
 
     /**
-      * draw this renderable (automatically called by melonJS)
-     * @protected
+     * draw this renderable (automatically called by melonJS)
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
      * @param {Camera2d} [viewport] - the viewport to (re)draw
      */

@@ -26,7 +26,7 @@ export function hasRegisteredEvents(): boolean;
  *    // do something with pos !
  * };
  */
-export function globalToLocal(x: number, y: number, v?: any): Vector2d;
+export function globalToLocal(x: number, y: number, v?: Vector2d | undefined): Vector2d;
 /**
  * enable/disable all gestures on the given element.<br>
  * by default melonJS will disable browser handling of all panning and zooming gestures.
@@ -173,4 +173,5 @@ export let locked: boolean;
  * @memberof input
  */
 export let throttlingInterval: number;
+import type Vector2d from "./../math/vector2.js";
 import Rect from "./../geometries/rectangle.js";

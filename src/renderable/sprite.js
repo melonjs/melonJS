@@ -7,6 +7,10 @@ import Color from "../math/color.js";
 import * as event from "../system/event.js";
 
 /**
+ * @import Vector2d from "./../math/vector2.js";
+ */
+
+/**
  * @classdesc
  * An object to display a fixed or animated sprite on screen.
  * @augments Renderable

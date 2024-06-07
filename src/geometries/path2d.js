@@ -2,6 +2,11 @@ import pool from "./../system/pooling.js";
 import { TAU } from "./../math/math.js";
 import earcut from "earcut";
 import { endpointToCenterParameterization } from "./toarccanvas.js";
+
+/**
+ * @import Point from "./point.js";
+ */
+
 /**
  * @classdesc
  * a simplified path2d implementation, supporting only one path

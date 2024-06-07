@@ -133,7 +133,7 @@ declare namespace state {
      * @param {Color|string} color - a CSS color value
      * @param {number} [duration=1000] - expressed in milliseconds
      */
-    function transition(effect: string, color: any, duration?: number | undefined): void;
+    function transition(effect: string, color: Color | string, duration?: number | undefined): void;
     /**
      * enable/disable the transition to a particular state (by default enabled for all)
      * @name setTransition

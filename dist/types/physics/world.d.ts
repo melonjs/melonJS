@@ -1,4 +1,7 @@
 /**
+ * @import Application from "./../application/application.js";
+ */
+/**
  * @classdesc
  * an object representing the physic world, and responsible for managing and updating all childs and physics
  * @augments Container
@@ -90,6 +93,7 @@ export default class World extends Container {
     step(dt: number): void;
 }
 import Container from "../renderable/container.js";
+import type Application from "./../application/application.js";
 import Vector2d from "./../math/vector2.js";
 import QuadTree from "./quadtree.js";
 import Detector from "./detector.js";

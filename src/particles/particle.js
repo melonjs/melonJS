@@ -4,6 +4,10 @@ import { randomFloat, clamp } from "./../math/math.js";
 import Renderable from "./../renderable/renderable.js";
 
 /**
+ * @import ParticleEmitter from "./emitter.js";
+ */
+
+/**
  * @classdesc
  * Single Particle Object.
  * @augments Renderable

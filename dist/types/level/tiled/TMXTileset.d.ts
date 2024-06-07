@@ -50,7 +50,7 @@ export default class TMXTileset {
      * @param {number} gid
      * @returns {Image} corresponding image or undefined
      */
-    getTileImage(gid: number): new (width?: number | undefined, height?: number | undefined) => HTMLImageElement;
+    getTileImage(gid: number): new (width?: number, height?: number) => HTMLImageElement;
     /**
      * set the tile properties
      * @ignore

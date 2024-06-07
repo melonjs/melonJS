@@ -1,6 +1,11 @@
 import { game } from "../index.js";
 
 /**
+ * @import Line from "./../geometries/line.js";
+ * @import Renderable from "./../renderable/renderable.js";
+ **/
+
+/**
  * Collision detection (and projection-based collision response) of 2D shapes.<br>
  * Based on the Separating Axis Theorem and supports detecting collisions between simple Axis-Aligned Boxes, convex polygons and circles based shapes.
  * @namespace collision

@@ -1,6 +1,9 @@
 import pool from "./../system/pooling.js";
 import Renderable from "./renderable.js";
 
+/**
+ * @import Color from "./../math/color.js";
+ */
 
 /**
  * @classdesc

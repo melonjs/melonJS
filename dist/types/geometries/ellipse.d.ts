@@ -1,4 +1,10 @@
 /**
+ * @import Vector2d from "./../math/vector2.js";
+ * @import ObservableVector2d from "./../math/observable_vector2.js";
+ * @import Matrix2d from "./../math/matrix2.js";
+ * @import Bounds from "./../physics/bounds.js";
+ */
+/**
  * @classdesc
  * an ellipse Object
  */
@@ -68,7 +74,7 @@ export default class Ellipse {
      * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
      * @returns {Ellipse} Reference to this object for method chaining
      */
-    rotate(angle: number, v?: Vector2d | ObservableVector2d): Ellipse;
+    rotate(angle: number, v?: Vector2d | ObservableVector2d | undefined): Ellipse;
     /**
      * Scale this Ellipse by the specified scalar.
      * @param {number} x - the scale factor along the x-axis
@@ -85,9 +91,9 @@ export default class Ellipse {
     /**
      * apply the given transformation matrix to this ellipse
      * @param {Matrix2d} matrix - the transformation matrix
-     * @returns {Polygon} Reference to this object for method chaining
+     * @returns {Ellipse} Reference to this object for method chaining
      */
-    transform(matrix: Matrix2d): Polygon;
+    transform(matrix: Matrix2d): Ellipse;
     /**
      * translate the circle/ellipse by the specified offset
      * @param {number|Vector2d} x -  x coordinate or a vector point to translate by
@@ -125,3 +131,7 @@ export default class Ellipse {
      */
     clone(): Ellipse;
 }
+import type Vector2d from "./../math/vector2.js";
+import type ObservableVector2d from "./../math/observable_vector2.js";
+import type Matrix2d from "./../math/matrix2.js";
+import type Bounds from "./../physics/bounds.js";

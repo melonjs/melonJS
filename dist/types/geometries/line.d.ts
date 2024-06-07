@@ -1,4 +1,7 @@
 /**
+ * @import Vector2d from "./../math/vector2d.js";
+ */
+/**
  * @classdesc
  * a line segment Object
  * @augments Polygon

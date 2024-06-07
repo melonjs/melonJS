@@ -1,6 +1,6 @@
 /**
  * @classdesc
- * a WebGL renderer draw
+ * a WebGL renderer object
  * @augments Renderer
  */
 export default class WebGLRenderer extends Renderer {
@@ -25,10 +25,12 @@ export default class WebGLRenderer extends Renderer {
      */
     gl: WebGLRenderingContext;
     /**
-     * sets or returns the thickness of lines for shape drawing (limited to strokeLine)
+     * sets or returns the thickness of lines for shape drawing (limited to strokeLine, strokePolygon and strokeRect)
      * @type {number}
      * @default 1
      * @see WebGLRenderer#strokeLine
+     * @see WebGLRenderer#strokePolygon
+     * @see WebGLRenderer#strokeRect
      */
     lineWidth: number;
     /**
@@ -65,9 +67,9 @@ export default class WebGLRenderer extends Renderer {
     currentTransform: Matrix2d;
     /**
      * The current compositor used by the renderer
-     * @type {WebGLCompositor}
+     * @type {Compositor}
      */
-    currentCompositor: WebGLCompositor;
+    currentCompositor: Compositor;
     /**
      * a reference to the current shader program used by the renderer
      * @type {WebGLProgram}
@@ -75,9 +77,9 @@ export default class WebGLRenderer extends Renderer {
     currentProgram: WebGLProgram;
     /**
      * The list of active compositors
-     * @type {Map<WebGLCompositor>}
+     * @type {Map<Compositor>}
      */
-    compositors: Map<WebGLCompositor, any>;
+    compositors: Map<Compositor, any>;
     depthTest: any;
     customShader: any;
     cache: TextureCache;
@@ -85,9 +87,8 @@ export default class WebGLRenderer extends Renderer {
      * The WebGL version used by this renderer (1 or 2)
      * @type {number}
      * @default 1
-     * @readonly
      */
-    readonly get WebGLVersion(): number;
+    get WebGLVersion(): number;
     /**
      * return the list of supported compressed texture formats
      * @return {Object}
@@ -130,11 +131,6 @@ export default class WebGLRenderer extends Renderer {
      * let basic      = renderer.createPattern(image, "no-repeat");
      */
     createPattern(image: HTMLImageElement | SVGImageElement | HTMLVideoElement | HTMLCanvasElement | ImageBitmap | OffscreenCanvas | VideoFrame, repeat: string): TextureAtlas;
-    /**
-     * set/change the current projection matrix (WebGL only)
-     * @param {Matrix3d} matrix - the new projection matrix
-     */
-    setProjection(matrix: Matrix3d): void;
     /**
      * Sets the WebGL viewport, which specifies the affine transformation of x and y from normalized device coordinates to window coordinates
      * @param {number} [x = 0] - x the horizontal coordinate for the lower left corner of the viewport origin
@@ -236,12 +232,12 @@ export default class WebGLRenderer extends Renderer {
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [shape] - a shape object to stroke
      * @param {boolean} [fill=false] - fill the shape with the current color if true
      */
-    stroke(shape?: Rect | RoundRect | Polygon | Line | Ellipse, fill?: boolean | undefined): void;
+    stroke(shape?: any, fill?: boolean | undefined): void;
     /**
      * fill the given shape or the current defined path
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [shape] - a shape object to fill
      */
-    fill(shape?: Rect | RoundRect | Polygon | Line | Ellipse): void;
+    fill(shape?: any): void;
     /**
      * add a straight line from the current point to the start of the current sub-path. If the shape has already been closed or has only one point, this function does nothing
     */
@@ -391,7 +387,7 @@ export default class WebGLRenderer extends Renderer {
      */
     fillLine(startX: number, startY: number, endX: number, endY: number): void;
     /**
-     * Stroke a me.Polygon on the screen with a specified color
+     * Stroke a Polygon on the screen with a specified color
      * @param {Polygon} poly - the shape to draw
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
@@ -492,6 +488,8 @@ export default class WebGLRenderer extends Renderer {
 }
 import Renderer from "./../renderer.js";
 import Matrix2d from "./../../math/matrix2.js";
+import type Compositor from "./compositors/compositor.js";
 import TextureCache from "./../texture/cache.js";
 import { TextureAtlas } from "./../texture/atlas.js";
 import Color from "./../../math/color.js";
+import type Polygon from "./../../geometries/poly.js";

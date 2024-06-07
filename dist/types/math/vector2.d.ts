@@ -158,7 +158,7 @@ export default class Vector2d {
     copy(v: Vector2d): Vector2d;
     /**
      * return true if this vector is equal to the given values or vector
-     * @param {number|Vector2d|ObservableVector2d} x
+     * @param {number|Vector2d} x
      * @param {number} [y]
      * @returns {boolean}
      */
@@ -177,10 +177,10 @@ export default class Vector2d {
     /**
      * Rotate this vector (counter-clockwise) by the specified angle (in radians).
      * @param {number} angle - The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
+     * @param {Vector2d} [v] - an optional point to rotate around
      * @returns {Vector2d} Reference to this object for method chaining
      */
-    rotate(angle: number, v?: Vector2d | ObservableVector2d): Vector2d;
+    rotate(angle: number, v?: Vector2d | undefined): Vector2d;
     /**
      * return the dot product of this vector and the passed one
      * @param {Vector2d} v

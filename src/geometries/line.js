@@ -2,6 +2,10 @@ import pool from "./../system/pooling.js";
 import Polygon from "./poly.js";
 
 /**
+ * @import Vector2d from "./../math/vector2d.js";
+ */
+
+/**
  * @classdesc
  * a line segment Object
  * @augments Polygon

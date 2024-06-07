@@ -1,9 +1,19 @@
+import Vector2d from "./../math/vector2.js";
+
 /*
 * Separating Axis Theorem implementation, based on the SAT.js library by Jim Riecken <jimr@jimr.ca>
 * Available under the MIT License - https://github.com/jriecken/sat-js
 */
 
-import Vector2d from "./../math/vector2.js";
+/**
+ * @import Entity from "./../renderable/entity/entity.js";
+ * @import Container from "./../renderable/container.js";
+ * @import Renderable from "./../renderable/renderable.js";
+ * @import Sprite from "./../renderable/sprite.js";
+ * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
+ * @import Polygon from "./../geometries/poly.js";
+ * @import Ellipse from "./../geometries/ellipse.js";
+ */
 
 /**
  * Constants for Vornoi regions

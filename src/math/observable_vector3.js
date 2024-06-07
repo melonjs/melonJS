@@ -3,6 +3,10 @@ import {clamp} from "./math.js";
 import pool from "./../system/pooling.js";
 
 /**
+ * @import ObservableVector3d from "./observable_vector3.js";
+ */
+
+/**
  * @classdesc
  * A Vector3d object that provide notification by executing the given callback when the vector is changed.
  * @augments Vector3d

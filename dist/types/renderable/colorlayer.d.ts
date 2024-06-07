@@ -1,4 +1,7 @@
 /**
+ * @import Color from "./../math/color.js";
+ */
+/**
  * @classdesc
  * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
  * @augments Renderable
@@ -9,7 +12,7 @@ export default class ColorLayer extends Renderable {
      * @param {Color|string} color - CSS color
      * @param {number} [z = 0] - z-index position
      */
-    constructor(name: string, color: Color | string, z?: number | undefined);
+    constructor(name: string, color: string | Color, z?: number | undefined);
     /**
      * the layer color component
      * @public
@@ -20,9 +23,19 @@ export default class ColorLayer extends Renderable {
     public color: Color;
     onResetEvent(name: any, color: any, z?: number): void;
     /**
+     * draw this color layer (automatically called by melonJS)
+     * @name draw
+     * @memberof ColorLayer
+     * @protected
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+     * @param {Camera2d} [viewport] - the viewport to (re)draw
+     */
+    protected draw(renderer: CanvasRenderer | WebGLRenderer, viewport?: any): void;
+    /**
      * Destroy function
      * @ignore
      */
     destroy(): void;
 }
 import Renderable from "./renderable.js";
+import type Color from "./../math/color.js";

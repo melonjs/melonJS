@@ -3,6 +3,10 @@ import { game, version } from "./../index.js";
 import { warning } from "../lang/console.js";
 
 /**
+ * @import Application from "./../application/application.js";
+ */
+
+/**
  * Contains all registered plugins.
  * @name cache
  * @memberof plugin
@@ -103,7 +107,7 @@ export function patch(proto, name, fn) {
  * Register a plugin.
  * @name register
  * @memberof plugin
- * @param {plugin.BasePlugin} plugin - Plugin object to instantiate and register
+ * @param {BasePlugin} plugin - Plugin object to instantiate and register
  * @param {string} [name=plugin.constructor.name] - a unique name for this plugin
  * @param {...*} [args] - all extra parameters will be passed to the plugin constructor
  * @example

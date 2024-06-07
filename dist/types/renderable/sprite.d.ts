@@ -1,4 +1,7 @@
 /**
+ * @import Vector2d from "./../math/vector2.js";
+ */
+/**
  * @classdesc
  * An object to display a fixed or animated sprite on screen.
  * @augments Renderable
@@ -55,7 +58,7 @@ export default class Sprite extends Renderable {
         tint?: string | Color | undefined;
         flipX?: number | undefined;
         flipY?: number | undefined;
-        anchorPoint?: any;
+        anchorPoint?: Vector2d | undefined;
     });
     /**
      * @type {boolean}
@@ -259,11 +262,19 @@ export default class Sprite extends Renderable {
      */
     getAnimationFrameObjectByIndex(id: number): number;
     /**
+     * draw this srite (automatically called by melonJS)
+     * @protected
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+     * @param {Camera2d} [viewport] - the viewport to (re)draw
+     */
+    protected draw(renderer: CanvasRenderer | WebGLRenderer, viewport?: any): void;
+    /**
      * Destroy function<br>
      * @ignore
      */
     destroy(): void;
 }
 import Renderable from "./renderable.js";
+import type Vector2d from "./../math/vector2.js";
 import { TextureAtlas } from "./../video/texture/atlas.js";
 import Color from "../math/color.js";

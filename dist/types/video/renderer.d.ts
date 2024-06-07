@@ -1,4 +1,12 @@
 /**
+ * @import Rect from "./../geometries/rect.js";
+ * @import RoundRect from "./../geometries/roundrect.js";
+ * @import Polygon from "./../geometries/poly.js";
+ * @import Line from "./../geometries/line.js";
+ * @import Ellipse from "./../geometries/ellipse.js";
+ * @import Bounds from "./../physics/bounds.js";
+ */
+/**
  * @classdesc
  * a base renderer object
  */
@@ -124,7 +132,7 @@ export default class Renderer {
      * @param {Rect|Bounds} bounds
      * @returns {boolean} true if overlaps
      */
-    overlaps(bounds: Rect | Bounds): boolean;
+    overlaps(bounds: any): boolean;
     /**
      * resizes the system canvas
      * @param {number} width - new width of the canvas
@@ -146,12 +154,12 @@ export default class Renderer {
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape - a shape object to stroke
      * @param {boolean} [fill=false] - fill the shape with the current color if true
      */
-    stroke(shape: Rect | RoundRect | Polygon | Line | Ellipse, fill?: boolean | undefined): void;
+    stroke(shape: any, fill?: boolean | undefined): void;
     /**
      * fill the given shape
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape - a shape object to fill
      */
-    fill(shape: Rect | RoundRect | Polygon | Line | Ellipse): void;
+    fill(shape: any): void;
     /**
      * tint the given image or canvas using the given color
      * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} src - the source image to be tinted
@@ -167,7 +175,7 @@ export default class Renderer {
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - the shape defining the mask to be applied
      * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
      */
-    setMask(mask?: Rect | RoundRect | Polygon | Line | Ellipse, invert?: boolean | undefined): void;
+    setMask(mask?: any, invert?: boolean | undefined): void;
     /**
      * disable (remove) the rendering mask set through setMask.
      * @see Renderer#setMask

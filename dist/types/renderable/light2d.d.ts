@@ -15,7 +15,7 @@ export default class Light2d extends Renderable {
     * @param {Color|string} [color="#FFF"] - the color of the light
     * @param {number} [intensity=0.7] - The intensity of the light.
     */
-    constructor(x: number, y: number, radiusX: number, radiusY?: number | undefined, color?: Color | string, intensity?: number | undefined);
+    constructor(x: number, y: number, radiusX: number, radiusY?: number | undefined, color?: string | Color | undefined, intensity?: number | undefined);
     /**
      * the color of the light
      * @type {Color}
@@ -50,9 +50,20 @@ export default class Light2d extends Renderable {
      */
     getVisibleArea(): Ellipse;
     /**
+     * draw this Light2d (automatically called by melonJS)
+     * @name draw
+     * @memberof Light2d
+     * @protected
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+     * @param {Camera2d} [viewport] - the viewport to (re)draw
+     */
+    protected draw(renderer: CanvasRenderer | WebGLRenderer, viewport?: any): void;
+    /**
      * Destroy function<br>
      * @ignore
      */
     destroy(): void;
 }
 import Renderable from "./renderable.js";
+import type Color from "./../math/color.js";
+import type Ellipse from "./../geometries/ellipse.js";

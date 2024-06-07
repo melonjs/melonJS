@@ -1,4 +1,7 @@
 /**
+ * @import Draggable from "./draggable.js";
+ */
+/**
  * @classdesc
  * a base drop target object
  * @see Draggable

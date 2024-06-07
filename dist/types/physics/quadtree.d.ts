@@ -75,5 +75,8 @@ export default class QuadTree {
      * @memberof QuadTree
      * @param {Bounds} [bounds=this.bounds] - the bounds to be cleared
      */
-    clear(bounds?: any): void;
+    clear(bounds?: Bounds | undefined): void;
 }
+import type World from "./world.js";
+import type Bounds from "./bounds.js";
+import type Container from "./../renderable/container.js";

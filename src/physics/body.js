@@ -10,6 +10,16 @@ import { clamp } from "./../math/math.js";
 import Point from "../geometries/point.js";
 
 /**
+ * @import Entity from "./../renderable/entity/entity.js";
+ * @import Container from "./../renderable/container.js";
+ * @import Renderable from "./../renderable/renderable.js";
+ * @import Sprite from "./../renderable/sprite.js";
+ * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
+ * @import Line from "./../geometries/line.js";
+ * @import Vector2d from "./../math/vector2.js";
+ **/
+
+/**
  * @classdesc
  * a Generic Physic Body Object with some physic properties and behavior functionality, to add as a member of a Renderable.
  * @see Renderable.body

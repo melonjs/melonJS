@@ -13,5 +13,6 @@ export default class Collectable extends Sprite {
     name: any;
     type: any;
     id: any;
+    body: any;
 }
 import Sprite from "./sprite.js";

@@ -2,6 +2,10 @@ import {clamp} from "./math.js";
 import pool from "./../system/pooling.js";
 
 /**
+ * @import Vector2d from "./vector2.js";
+ */
+
+/**
  * @classdesc
  * a generic 3D Vector Object
  */

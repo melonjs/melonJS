@@ -1,4 +1,7 @@
 /**
+ * @import Vector2d from "./vector2.js";
+ */
+/**
  * @classdesc
  * a generic 3D Vector Object
  */
@@ -191,7 +194,7 @@ export default class Vector3d {
      * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around (on the same z axis)
      * @returns {Vector3d} Reference to this object for method chaining
      */
-    rotate(angle: number, v?: Vector2d | ObservableVector2d): Vector3d;
+    rotate(angle: number, v?: any): Vector3d;
     /**
      * return the dot product of this vector and the passed one
      * @param {Vector2d|Vector3d} v
@@ -264,3 +267,4 @@ export default class Vector3d {
      */
     toString(): string;
 }
+import type Vector2d from "./vector2.js";

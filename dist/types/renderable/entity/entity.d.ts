@@ -26,7 +26,7 @@ export default class Entity extends Renderable {
         height: number;
         name?: string | undefined;
         id?: string | undefined;
-        image?: string | (new (width?: number | undefined, height?: number | undefined) => HTMLImageElement) | undefined;
+        image?: string | (new (width?: number, height?: number) => HTMLImageElement) | undefined;
         anchorPoint?: any;
         framewidth?: number | undefined;
         frameheight?: number | undefined;
@@ -69,6 +69,13 @@ export default class Entity extends Renderable {
      */
     onBodyUpdate(): void;
     preDraw(renderer: any): void;
+    /**
+     * draw this entity (automatically called by melonJS)
+     * @protected
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+     * @param {Camera2d} [viewport] - the viewport to (re)draw
+     */
+    protected draw(renderer: CanvasRenderer | WebGLRenderer, viewport?: any): void;
     /**
      * onDeactivateEvent Notification function
      */

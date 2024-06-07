@@ -1,4 +1,7 @@
 /**
+ * @import Vector2d from "./../math/vector2.js";
+ **/
+/**
  * @classdesc
  * a rectangle Object
  * @augments Polygon
@@ -128,3 +131,4 @@ export default class Rect extends Polygon {
     toPolygon(): Polygon;
 }
 import Polygon from "./poly.js";
+import type Vector2d from "./../math/vector2.js";

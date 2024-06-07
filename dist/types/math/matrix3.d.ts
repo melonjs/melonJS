@@ -1,4 +1,7 @@
 /**
+ * @import Matrix3d from "./matrix3.js";
+ */
+/**
  * @classdesc
  * a 4x4 Matrix3d Object
  */
@@ -175,3 +178,4 @@ export default class Matrix3d {
      */
     toString(): string;
 }
+import type Matrix3d from "./matrix3.js";

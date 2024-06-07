@@ -2,6 +2,12 @@ import pool from "./../system/pooling.js";
 import Vector2d from "./../math/vector2.js";
 
 /**
+ * @import Point from "./../geometries/point.js";
+ * @import Rect from "./../geometries/rectangle.js";
+ * @import Polygon from "./../geometries/poly.js";
+ **/
+
+/**
  * @classdesc
  * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
  */

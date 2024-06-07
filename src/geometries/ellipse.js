@@ -1,6 +1,13 @@
 import pool from "./../system/pooling.js";
 
 /**
+ * @import Vector2d from "./../math/vector2.js";
+ * @import ObservableVector2d from "./../math/observable_vector2.js";
+ * @import Matrix2d from "./../math/matrix2.js";
+ * @import Bounds from "./../physics/bounds.js";
+ */
+
+/**
  * @classdesc
  * an ellipse Object
  */
@@ -138,7 +145,7 @@ export default class Ellipse {
     /**
      * apply the given transformation matrix to this ellipse
      * @param {Matrix2d} matrix - the transformation matrix
-     * @returns {Polygon} Reference to this object for method chaining
+     * @returns {Ellipse} Reference to this object for method chaining
      */
     transform(matrix) { // eslint-disable-line no-unused-vars
         // TODO

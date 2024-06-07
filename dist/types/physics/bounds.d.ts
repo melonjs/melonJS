@@ -1,4 +1,9 @@
 /**
+ * @import Point from "./../geometries/point.js";
+ * @import Rect from "./../geometries/rectangle.js";
+ * @import Polygon from "./../geometries/poly.js";
+ **/
+/**
  * @classdesc
  * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
  */
@@ -155,7 +160,7 @@ export default class Bounds {
      * @param {Bounds|Rect} bounds
      * @returns {boolean} True if the bounds overlap, otherwise false
      */
-    overlaps(bounds: Bounds | Rect): boolean;
+    overlaps(bounds: Rect | Bounds): boolean;
     /**
      * determines whether all coordinates of this bounds are finite numbers.
      * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
@@ -193,3 +198,6 @@ export default class Bounds {
     toPolygon(): Polygon;
 }
 import Vector2d from "./../math/vector2.js";
+import type Point from "./../geometries/point.js";
+import type Rect from "./../geometries/rectangle.js";
+import type Polygon from "./../geometries/poly.js";

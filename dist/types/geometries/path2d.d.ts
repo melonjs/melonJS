@@ -1,4 +1,7 @@
 /**
+ * @import Point from "./point.js";
+ */
+/**
  * @classdesc
  * a simplified path2d implementation, supporting only one path
  */
@@ -119,3 +122,4 @@ export default class Path2D {
      */
     roundRect(x: number, y: number, width: number, height: number, radius: number): void;
 }
+import type Point from "./point.js";

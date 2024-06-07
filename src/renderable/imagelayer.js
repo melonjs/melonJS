@@ -5,6 +5,9 @@ import { game } from "../index.js";
 import Sprite from "./sprite.js";
 import * as stringUtil from "./../utils/string.js";
 
+/**
+ * @import Vector2d from "./../math/vector2.js";
+ */
 
 /**
  * @classdesc

@@ -1,4 +1,18 @@
 /**
+ * @import Vector2d from "./../math/vector2.js";
+ * @import Vector3d from "./../math/vector3.js";
+ * @import Matrix2d from "./../math/matrix2.js";
+ * @import Entity from "./../renderable/entity/entity.js";
+ * @import Container from "./../renderable/container.js";
+ * @import Line from "./../geometries/line.js";
+ * @import Ellipse from "./../geometries/ellipse.js";
+ * @import Polygon from "./../geometries/poly.js";
+ * @import Application from "./../application/application.js";
+ * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
+ * @import ResponseObject from "./../physics/response.js";
+ **/
+/**
  * @classdesc
  * A base class for renderable objects.
  * @augments Rect
@@ -156,7 +170,7 @@ export default class Renderable extends Rect {
      *    {x: -14, y: 30}
      * ]);
      */
-    mask: Rect | RoundRect | Polygon | Line | Ellipse;
+    mask: any;
     /**
       * (Experimental) an optional shader, to be used instead of the default built-in one, when drawing this renderable (WebGL only)
       * @type {GLShader}
@@ -292,26 +306,26 @@ export default class Renderable extends Rect {
      * @param {Renderable|Vector2d|Vector3d} target
      * @returns {number} angle in radians
      */
-    angleTo(target: Renderable | Vector2d | Vector3d): number;
+    angleTo(target: Vector2d | Vector3d | Renderable): number;
     /**
      * return the distance to the specified target
      * @param {Renderable|Vector2d|Vector3d} target
      * @returns {number} distance
      */
-    distanceTo(target: Renderable | Vector2d | Vector3d): number;
+    distanceTo(target: Vector2d | Vector3d | Renderable): number;
     /**
      * Rotate this renderable towards the given target.
      * @param {Renderable|Vector2d|Vector3d} target - the renderable or position to look at
      * @returns {Renderable} Reference to this object for method chaining
      */
-    lookAt(target: Renderable | Vector2d | Vector3d): Renderable;
+    lookAt(target: Vector2d | Vector3d | Renderable): Renderable;
     /**
      * Rotate this renderable by the specified angle (in radians).
      * @param {number} angle - The angle to rotate (in radians)
      * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
      * @returns {Renderable} Reference to this object for method chaining
      */
-    rotate(angle: number, v?: Vector2d | ObservableVector2d): Renderable;
+    rotate(angle: number, v?: Vector2d | ObservableVector2d | undefined): Renderable;
     /**
      * scale the renderable around his anchor point.  Scaling actually applies changes
      * to the currentTransform member wich is used by the renderer to scale the object
@@ -345,7 +359,7 @@ export default class Renderable extends Rect {
      * update the renderable's bounding rect (private)
      * @ignore
      */
-    updateBoundsPos(newX?: any, newY?: any): void;
+    updateBoundsPos(newX?: number | undefined, newY?: number | undefined): void;
     /**
       * return the renderable absolute position in the game world
       * @returns {Vector2d}
@@ -408,7 +422,7 @@ export default class Renderable extends Rect {
      *     return true;
      * },
      */
-    onCollision(response: ResponseObject, other: Renderable | Container | Entity | Sprite | NineSliceSprite): boolean;
+    onCollision(response: ResponseObject, other: any): boolean;
     /**
      * Destroy function<br>
      * @ignore
@@ -422,7 +436,16 @@ export default class Renderable extends Rect {
 }
 import Rect from "./../geometries/rectangle.js";
 import ObservableVector2d from "./../math/observable_vector2.js";
+import type Matrix2d from "./../math/matrix2.js";
 import Body from "./../physics/body.js";
+import type Container from "./../renderable/container.js";
+import type Entity from "./../renderable/entity/entity.js";
 import GLShader from "./../video/webgl/glshader.js";
+import type Application from "./../application/application.js";
 import Color from "./../math/color.js";
 import Bounds from "./../physics/bounds.js";
+import type Vector2d from "./../math/vector2.js";
+import type Vector3d from "./../math/vector3.js";
+import type CanvasRenderer from "./../video/canvas/canvas_renderer.js";
+import type WebGLRenderer from "./../video/webgl/webgl_renderer.js";
+import type ResponseObject from "./../physics/response.js";
