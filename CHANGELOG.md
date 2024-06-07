@@ -10,7 +10,7 @@
 - TypeScript: fix most (if not all) missing class declarations
 
 ### Chores
-- Chore: Update to TypeScript 5.5 Beta
+- Update to TypeScript 5.5 Beta
 
 ## [17.3.0] (melonJS 2) - _2024-06-04_
 
@@ -39,7 +39,7 @@
 - Renderer: fix a regression when using the canvas rendering mode where antialias setting was not being applied on cached tinted elements
 
 ### Chores
-- Chore: Update to eslint 9
+- Update to eslint 9
 
 ## [17.1.0] (melonJS 2) - _2024-03-29_
 
