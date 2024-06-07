@@ -13,7 +13,7 @@ export type ApplicationSettings = {
     /**
      * - renderer to use (CANVAS, WEBGL, AUTO), or a custom renderer class
      */
-    renderer?: number | Renderer;
+    renderer?: number | Renderer | undefined;
     /**
      * - enable scaling of the canvas ('auto' for automatic scaling)
      */
@@ -103,3 +103,4 @@ export namespace ApplicationSettings {
     let verbose: boolean;
     let legacy: boolean;
 }
+import type Renderer from "./../video/renderer.js";

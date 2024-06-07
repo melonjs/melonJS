@@ -1,6 +1,10 @@
 import * as device from "./../system/device";
 
 /**
+ * @import Application from "./application.js";
+ */
+
+/**
  * scale the "displayed" canvas by the given scalar.
  * this will modify the size of canvas element directly.
  * Only use this if you are not using the automatic scaling feature.

@@ -1,6 +1,10 @@
 import * as device from "../system/device";
 
 /**
+ * @import Application from "./application.js";
+ */
+
+/**
  * display information
  * @param {Application} app - the game application instance calling this function
  */

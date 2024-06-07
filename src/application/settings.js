@@ -1,4 +1,8 @@
 /**
+ * @import Renderer from "./../video/renderer.js";
+ */
+
+/**
  * Application & Renderer Settings definition.
  * @typedef {Object} ApplicationSettings
  * @property {string|HTMLElement} [parent=document.body] - the DOM parent element to hold the canvas in the HTML file
