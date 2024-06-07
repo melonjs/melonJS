@@ -2,6 +2,12 @@
 
 ## [17.4.0] (melonJS 2) - _2024-xx-xx_
 
+### Added
+- Renderer: add support for line thickness for `strokePolygon` and `strokeRect` operations in WebGL
+
+### Fixed
+- Renderer: fix `fillEllipse()` operations\ in WebGL mode (that was stroking the ellipse instead)
+
 ## [17.3.0] (melonJS 2) - _2024-06-04_
 
 ### Added

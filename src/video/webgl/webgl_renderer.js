@@ -15,7 +15,7 @@ let supportedCompressedTextureFormats;
 
 /**
  * @classdesc
- * a WebGL renderer draw
+ * a WebGL renderer object
  * @augments Renderer
  */
 export default class WebGLRenderer extends Renderer {
@@ -50,10 +50,12 @@ export default class WebGLRenderer extends Renderer {
         this.gl = this.renderTarget.context;
 
         /**
-         * sets or returns the thickness of lines for shape drawing (limited to strokeLine)
+         * sets or returns the thickness of lines for shape drawing (limited to strokeLine, strokePolygon and strokeRect)
          * @type {number}
          * @default 1
          * @see WebGLRenderer#strokeLine
+         * @see WebGLRenderer#strokePolygon
+         * @see WebGLRenderer#strokeRect
          */
         this.lineWidth = 1;
 
@@ -854,7 +856,7 @@ export default class WebGLRenderer extends Renderer {
      * @param {number} h - vertical radius of the ellipse
      */
     fillEllipse(x, y, w, h) {
-        this.strokeEllipse(x, y, w, h, false);
+        this.strokeEllipse(x, y, w, h, true);
     }
 
     /**
@@ -909,7 +911,7 @@ export default class WebGLRenderer extends Renderer {
     }
 
     /**
-     * Stroke a me.Polygon on the screen with a specified color
+     * Stroke a Polygon on the screen with a specified color
      * @param {Polygon} poly - the shape to draw
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
@@ -917,24 +919,38 @@ export default class WebGLRenderer extends Renderer {
         const points = poly.points;
         const len = points.length;
 
-        this.setCompositor("primitive");
-
         this.translate(poly.pos.x, poly.pos.y);
 
-        this.path2D.beginPath();
-        for (let i = 0; i < len - 1; i++) {
-            const curPoint = points[i];
-            const nextPoint = points[i + 1];
-            this.path2D.moveTo(curPoint.x, curPoint.y);
-            this.path2D.lineTo(nextPoint.x, nextPoint.y);
-        }
-        this.path2D.closePath();
-
-        if (fill === false) {
-            this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+        if (fill === false && this.lineWidth > 1) {
+            const radius = this.lineWidth / 2;
+            for (let i = 0; i < len - 1; i++) {
+                const curPoint = points[i];
+                const nextPoint = points[i + 1];
+                this.fillEllipse(nextPoint.x, nextPoint.y, radius, radius);
+                this.strokeLine(curPoint.x, curPoint.y, nextPoint.x, nextPoint.y);
+            }
+            const lastPoint = points[len - 1];
+            const firstPoint = points[0];
+            if (!lastPoint.equals(firstPoint)) {
+                this.fillEllipse(firstPoint.x, firstPoint.y, radius, radius);
+                this.strokeLine(lastPoint.x, lastPoint.y, firstPoint.x, firstPoint.y);
+            }
         } else {
-            // draw all triangles
-            this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
+            this.setCompositor("primitive");
+            this.path2D.beginPath();
+            for (let i = 0; i < len - 1; i++) {
+                const curPoint = points[i];
+                const nextPoint = points[i + 1];
+                this.path2D.moveTo(curPoint.x, curPoint.y);
+                this.path2D.lineTo(nextPoint.x, nextPoint.y);
+            }
+            this.path2D.closePath();
+            if (fill === false) {
+                this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+            } else {
+                // draw all triangles
+                this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
+            }
         }
 
         this.translate(-poly.pos.x, -poly.pos.y);
@@ -957,13 +973,25 @@ export default class WebGLRenderer extends Renderer {
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeRect(x, y, width, height, fill = false) {
-        this.setCompositor("primitive");
-        this.path2D.beginPath();
-        this.path2D.rect(x, y, width, height);
-        if (fill === false) {
-            this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+        if (fill === false && this.lineWidth > 1) {
+            const radius = this.lineWidth / 2;
+            this.strokeLine(x, y, x + width, y);
+            this.strokeLine(x + width, y, x + width, y + height);
+            this.strokeLine(x + width, y + height, x, y + height);
+            this.strokeLine(x, y + height, x, y);
+            this.fillEllipse(x, y, radius, radius);
+            this.fillEllipse(x + width, y, radius, radius);
+            this.fillEllipse(x + width, y + height, radius, radius);
+            this.fillEllipse(x, y + height, radius, radius);
         } else {
-            this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
+            this.setCompositor("primitive");
+            this.path2D.beginPath();
+            this.path2D.rect(x, y, width, height);
+            if (fill === false) {
+                this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+            } else {
+                this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
+            }
         }
     }
 
