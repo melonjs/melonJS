@@ -2,6 +2,11 @@ import { createCanvas } from "../video.js";
 import { setPrefixed } from "../../utils/agent.js";
 import { clamp } from "../../math/math.js";
 
+/**
+ * @import CanvasRenderer from "./../canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "./../webgl/webgl_renderer.js";
+ */
+
 // default canvas settings
 let defaultAttributes = {
     offscreenCanvas : false,
@@ -75,8 +80,8 @@ class CanvasRenderTarget {
     /**
      * @param {number} width - the desired width of the canvas
      * @param {number} height - the desired height of the canvas
-     * @param {Settings} attributes - The attributes to create both the canvas and context
-     * @param {boolean} [attributes.context="2d"] - the context type to be created ("2d", "webgl")
+     * @param {object} attributes - The attributes to create both the canvas and context
+     * @param {string} [attributes.context="2d"] - the context type to be created ("2d", "webgl")
      * @param {boolean} [attributes.preferWebGL1=false] - set to true for force using WebGL1 instead of WebGL2 (if supported)
      * @param {boolean} [attributes.transparent=false] - specify if the canvas contains an alpha channel
      * @param {boolean} [attributes.offscreenCanvas=false] - will create an offscreenCanvas if true instead of a standard canvas

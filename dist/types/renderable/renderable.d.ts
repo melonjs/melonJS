@@ -380,7 +380,7 @@ export default class Renderable extends Rect {
      * @see Renderable#postDraw
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
      */
-    preDraw(renderer: CanvasRenderer | WebGLRenderer): void;
+    preDraw(renderer: WebGLRenderer | CanvasRenderer): void;
     /**
      * Draw this renderable (automatically called by melonJS).
      * All draw operations for renderable are made respectively
@@ -394,14 +394,14 @@ export default class Renderable extends Rect {
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
      * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
-    draw(renderer: CanvasRenderer | WebGLRenderer, viewport?: any): void;
+    draw(renderer: WebGLRenderer | CanvasRenderer, viewport?: any): void;
     /**
      * restore the rendering context after drawing (automatically called by melonJS).
      * @see Renderable#preDraw
      * @see Renderable#draw
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
      */
-    postDraw(renderer: CanvasRenderer | WebGLRenderer): void;
+    postDraw(renderer: WebGLRenderer | CanvasRenderer): void;
     /**
      * onCollision callback, triggered in case of collision,
      * when this renderable body is colliding with another one
@@ -446,6 +446,6 @@ import Color from "./../math/color.js";
 import Bounds from "./../physics/bounds.js";
 import type Vector2d from "./../math/vector2.js";
 import type Vector3d from "./../math/vector3.js";
-import type CanvasRenderer from "./../video/canvas/canvas_renderer.js";
 import type WebGLRenderer from "./../video/webgl/webgl_renderer.js";
+import type CanvasRenderer from "./../video/canvas/canvas_renderer.js";
 import type ResponseObject from "./../physics/response.js";

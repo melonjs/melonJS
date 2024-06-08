@@ -24,7 +24,7 @@ export default class Application {
      * a reference to the active Canvas or WebGL active renderer renderer
      * @type {CanvasRenderer|WebGLRenderer}
      */
-    renderer: CanvasRenderer | WebGLRenderer;
+    renderer: WebGLRenderer | CanvasRenderer;
     /**
      * the active stage "default" camera
      * @type {Camera2d}

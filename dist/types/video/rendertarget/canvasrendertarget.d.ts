@@ -6,15 +6,22 @@ declare class CanvasRenderTarget {
     /**
      * @param {number} width - the desired width of the canvas
      * @param {number} height - the desired height of the canvas
-     * @param {Settings} attributes - The attributes to create both the canvas and context
-     * @param {boolean} [attributes.context="2d"] - the context type to be created ("2d", "webgl")
+     * @param {object} attributes - The attributes to create both the canvas and context
+     * @param {string} [attributes.context="2d"] - the context type to be created ("2d", "webgl")
      * @param {boolean} [attributes.preferWebGL1=false] - set to true for force using WebGL1 instead of WebGL2 (if supported)
      * @param {boolean} [attributes.transparent=false] - specify if the canvas contains an alpha channel
      * @param {boolean} [attributes.offscreenCanvas=false] - will create an offscreenCanvas if true instead of a standard canvas
      * @param {boolean} [attributes.willReadFrequently=false] - Indicates whether or not a lot of read-back operations are planned
      * @param {boolean} [attributes.antiAlias=false] - Whether to enable anti-aliasing, use false (default) for a pixelated effect.
      */
-    constructor(width: number, height: number, attributes?: Settings);
+    constructor(width: number, height: number, attributes?: {
+        context?: string | undefined;
+        preferWebGL1?: boolean | undefined;
+        transparent?: boolean | undefined;
+        offscreenCanvas?: boolean | undefined;
+        willReadFrequently?: boolean | undefined;
+        antiAlias?: boolean | undefined;
+    });
     /**
      * the canvas created for this CanvasRenderTarget
      * @type {HTMLCanvasElement|OffscreenCanvas}
@@ -25,7 +32,26 @@ declare class CanvasRenderTarget {
      * @type {CanvasRenderingContext2D|WebGLRenderingContext}
      */
     context: CanvasRenderingContext2D | WebGLRenderingContext;
-    attributes: any;
+    attributes: {
+        offscreenCanvas: boolean;
+        willReadFrequently: boolean;
+        antiAlias: boolean;
+        context: string;
+        transparent: boolean;
+        premultipliedAlpha: boolean;
+        stencil: boolean;
+        blendMode: string;
+        failIfMajorPerformanceCaveat: boolean;
+        preferWebGL1: boolean;
+        powerPreference: string;
+    } & {
+        context?: string | undefined;
+        preferWebGL1?: boolean | undefined;
+        transparent?: boolean | undefined;
+        offscreenCanvas?: boolean | undefined;
+        willReadFrequently?: boolean | undefined;
+        antiAlias?: boolean | undefined;
+    };
     WebGLVersion: any;
     /**
      * @ignore
@@ -89,7 +115,7 @@ declare class CanvasRenderTarget {
      * (call this if you modify the canvas content between two draw calls)
      * @param {CanvasRenderer|WebGLRenderer} renderer - the renderer to which this canvas texture is attached
      */
-    invalidate(renderer: CanvasRenderer | WebGLRenderer): void;
+    invalidate(renderer: WebGLRenderer | CanvasRenderer): void;
     glTextureUnit: any;
     /**
      * @ignore
@@ -110,3 +136,5 @@ declare class CanvasRenderTarget {
      */
     public get height(): number;
 }
+import type WebGLRenderer from "./../webgl/webgl_renderer.js";
+import type CanvasRenderer from "./../canvas/canvas_renderer.js";
