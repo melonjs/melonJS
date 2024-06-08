@@ -4747,7 +4747,8 @@ class ObservableVector2d extends Vector2d {
 }
 
 /**
- * @import ObservableVector3d from "./observable_vector3.js";
+ * @import ObservableVector2d from "./observable_vector2.js";
+ * @import Vector2d from "./vector2.js";
  */
 
 /**
@@ -5297,6 +5298,13 @@ class ObservableVector3d extends Vector3d {
 }
 
 /**
+ * @import Matrix3d from "./matrix3.js";
+ * @import Vector2d from "./vector2.js";
+ * @import Vector3d from "./vector3.js";
+ */
+
+
+/**
  * @classdesc
  * a Matrix2d Object.<br>
  * the identity matrix and parameters position : <br>
@@ -5774,7 +5782,9 @@ class Matrix2d {
 }
 
 /**
- * @import Matrix3d from "./matrix3.js";
+ * @import Matrix2d from "./matrix2.js";
+ * @import Vector2d from "./vector2.js";
+ * @import Vector3d from "./vector3.js";
  */
 
 /**
@@ -13778,6 +13788,10 @@ var string$1 = {
 // external import
 
 /**
+ * @import Asset from "./../loader/loader.js";
+ */
+
+/**
  * @namespace audio
  */
 
@@ -13910,7 +13924,7 @@ function disable() {
 /**
  * Load an audio file
  * @memberof audio
- * @param {loader.Asset} sound
+ * @param {Asset} sound
  * @param {Function} [onloadcb] - function to be called when the resource is loaded
  * @param {Function} [onerrorcb] - function to be called in case of error
  * @param {Object} [settings] - custom settings to apply to the request (@link https://developer.mozilla.org/en-US/docs/Web/API/fetch#options)
@@ -18421,8 +18435,8 @@ class GLShader {
  * @import Vector2d from "./../math/vector2.js";
  * @import Vector3d from "./../math/vector3.js";
  * @import Matrix2d from "./../math/matrix2.js";
- * @import Entity from "./../renderable/entity/entity.js";
- * @import Container from "./../renderable/container.js";
+ * @import Entity from "./entity/entity.js";
+ * @import Container from "./container.js";
  * @import Line from "./../geometries/line.js";
  * @import Ellipse from "./../geometries/ellipse.js";
  * @import Polygon from "./../geometries/poly.js";
@@ -24976,6 +24990,11 @@ class Path2D {
     }
 }
 
+/**
+ * @import CanvasRenderer from "./../canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "./../webgl/webgl_renderer.js";
+ */
+
 // default canvas settings
 let defaultAttributes = {
     offscreenCanvas : false,
@@ -25049,8 +25068,8 @@ class CanvasRenderTarget {
     /**
      * @param {number} width - the desired width of the canvas
      * @param {number} height - the desired height of the canvas
-     * @param {Settings} attributes - The attributes to create both the canvas and context
-     * @param {boolean} [attributes.context="2d"] - the context type to be created ("2d", "webgl")
+     * @param {object} attributes - The attributes to create both the canvas and context
+     * @param {string} [attributes.context="2d"] - the context type to be created ("2d", "webgl")
      * @param {boolean} [attributes.preferWebGL1=false] - set to true for force using WebGL1 instead of WebGL2 (if supported)
      * @param {boolean} [attributes.transparent=false] - specify if the canvas contains an alpha channel
      * @param {boolean} [attributes.offscreenCanvas=false] - will create an offscreenCanvas if true instead of a standard canvas
@@ -28055,23 +28074,21 @@ class TMXGroup {
 
 /**
  * @import Color from "./../math/color.js";
- * @import Entity from "./../renderable/entity/entity.js";
- * @import Renderable from "./renderable.js";
- * @import Entity from "./../renderable/entity/entity.js";
- * @import Sprite from "./../renderable/sprite.js";
- * @import Collectable from "./../renderable/collectable.js";
- * @import Trigger from "./../renderable/trigger.js";
- * @import Draggable from "./../renderable/draggable.js";
- * @import DropTarget from "./../renderable/droptarget.js";
- * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
- * @import ImageLayer from "./../renderable/imagelayer.js";
- * @import ColorLayer from "./../renderable/colorlayer.js";
- * @import Light2d from "./../renderable/light2d.js";
- * @import UIBaseElement from "./../renderable/uibaseelement.js";
- * @import UISpriteElement from "./../renderable/uispriteelement.js";
- * @import UITextButton from "./../renderable/uitextbutton.js";
- * @import Text from "./../renderable/text.js";
- * @import BitmapText from "./../renderable/bitmaptext.js";
+ * @import Entity from "./entity/entity.js";
+ * @import Sprite from "./sprite.js";
+ * @import Collectable from "./collectable.js";
+ * @import Trigger from "./trigger.js";
+ * @import { Draggable } from "./draggable.js";
+ * @import { DropTarget } from "./droptarget.js";
+ * @import NineSliceSprite from "./nineslicesprite.js";
+ * @import ImageLayer from "./imagelayer.js";
+ * @import ColorLayer from "./colorlayer.js";
+ * @import Light2d from "./light2d.js";
+ * @import UIBaseElement from "./ui/uibaseelement.js";
+ * @import UISpriteElement from "./ui/uispriteelement.js";
+ * @import UITextButton from "./ui/uitextbutton.js";
+ * @import Text from "./text/text.js";
+ * @import BitmapText from "./text/bitmaptext.js";
  * @import Bounds from "./../physics/bounds.js";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
@@ -28709,7 +28726,7 @@ class Container extends Renderable {
     /**
      * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed. <br>
      * if the given child implements a onDeactivateEvent() method, that method will be called once the child is removed from this container.
-     * @param {RendRenderable|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapTexterable} child - Child to be removed
+     * @param {Renderable|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapTexterable} child - Child to be removed
      * @param {boolean} [keepalive=false] - true to prevent calling child.destroy()
      */
     removeChild(child, keepalive) {
@@ -31498,7 +31515,7 @@ function onResourceLoaded(res) {
 
 /**
  * on error callback for image loading
- * @param {loader.Asset} asset - asset that loaded with failure
+ * @param {Asset} asset - asset that loaded with failure
  * @ignore
  */
 function onLoadingError(res) {
@@ -31512,7 +31529,9 @@ function onLoadingError(res) {
 
 /**
  * an asset definition to be used with the loader
- * @typedef {object} loader.Asset
+ * @typedef {object} Asset
+ * @export
+ * @memberof loader
  * @property {string} name - name of the asset
  * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface"|"video")
  * @property {string} [src]  - path and/or file name of the resource (for audio assets only the path is required)
@@ -31558,7 +31577,7 @@ function onLoadingError(res) {
  * @memberof loader
  * @param {string} type - asset type
  * @param {function} parserFn - parser function
- * @see loader.Asset.type
+ * @see Asset.type
  * @example
  * // specify a custom function for "abc" format
  * function customAbcParser(data, onload, onerror) {
@@ -31589,7 +31608,7 @@ function setParser(type, parserFn) {
 /**
  * set all the specified game assets to be preloaded.
  * @memberof loader
- * @param {loader.Asset[]} assets - list of assets to load
+ * @param {Asset[]} assets - list of assets to load
  * @param {Function} [onloadcb=loader.onload] - function to be called when all resources are loaded
  * @param {boolean} [switchToLoadState=true] - automatically switch to the loading screen
  * @example
@@ -31684,7 +31703,7 @@ function reload(src) {
 /**
  * Load a single asset (to be used if you need to load additional asset(s) during the game)
  * @memberof loader
- * @param {loader.Asset} asset
+ * @param {Asset} asset
  * @param {Function} [onload] - function to be called when the asset is loaded
  * @param {Function} [onerror] - function to be called in case of error
  * @returns {number} the amount of corresponding resource to be preloaded
@@ -31737,7 +31756,7 @@ function load(asset, onload, onerror) {
 /**
  * unload the specified asset to free memory
  * @memberof loader
- * @param {loader.Asset} asset
+ * @param {Asset} asset
  * @returns {boolean} true if unloaded
  * @example me.loader.unload({name: "avatar",  type:"image"});
  */
@@ -31994,6 +32013,8 @@ var loader = {
 
 /**
  * @import Vector2d from "./../math/vector2.js";
+ * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
  */
 
 /**
@@ -32608,7 +32629,6 @@ class Sprite extends Renderable {
 
     /**
      * draw this srite (automatically called by melonJS)
-     * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
      * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
@@ -39308,6 +39328,14 @@ class Collectable extends Sprite {
 }
 
 /**
+ * @import ResponseObject from "./../physics/response.js";
+ * @import NiceSliceSprite from "./niceslicesprite.js";
+ * @import Entity from "./entity/entity.js";
+ * @import Sprite from "./sprite.js";
+ * @import Container from "./container.js";
+ */
+
+/**
  * @classdesc
  * trigger an event when colliding with another object
  * @augments Renderable
@@ -39454,6 +39482,8 @@ class Trigger extends Renderable {
 /**
  * @import Color from "./../math/color.js";
  * @import Ellipse from "./../geometries/ellipse.js";
+ * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
  */
 
 
@@ -39587,7 +39617,6 @@ class Light2d extends Renderable {
      * draw this Light2d (automatically called by melonJS)
      * @name draw
      * @memberof Light2d
-     * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
      * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
@@ -39961,7 +39990,7 @@ class Draggable extends Renderable {
 }
 
 /**
- * @import Draggable from "./draggable.js";
+ * @import { Draggable } from "./draggable.js";
  */
 
 /**
@@ -41768,6 +41797,16 @@ class Particle extends Renderable {
 }
 
 /**
+ * @import Line from "./../../geometries/line.js";
+ * @import Rect from "./../../geometries/rectangle.js";
+ * @import Ellipse from "./../../geometries/ellipse.js";
+ * @import Polygon from "./../../geometries/poly.js";
+ * @import Bounds from "./../../physics/bounds.js";
+ * @import CanvasRenderer from "./../../video/canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "./../../video/webgl/webgl_renderer.js";
+ **/
+
+/**
  * @classdesc
  * a Generic Object Entity
  * @augments Renderable
@@ -41964,7 +42003,6 @@ class Entity extends Renderable {
 
     /**
      * draw this entity (automatically called by melonJS)
-     * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
      * @param {Camera2d} [viewport] - the viewport to (re)draw
      */

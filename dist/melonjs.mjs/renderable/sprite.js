@@ -15,6 +15,8 @@ import { on, STATE_PAUSE, off } from '../system/event.js';
 
 /**
  * @import Vector2d from "./../math/vector2.js";
+ * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
  */
 
 /**
@@ -629,7 +631,6 @@ class Sprite extends Renderable {
 
     /**
      * draw this srite (automatically called by melonJS)
-     * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
      * @param {Camera2d} [viewport] - the viewport to (re)draw
      */

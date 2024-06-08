@@ -257,7 +257,7 @@ function onResourceLoaded(res) {
 
 /**
  * on error callback for image loading
- * @param {loader.Asset} asset - asset that loaded with failure
+ * @param {Asset} asset - asset that loaded with failure
  * @ignore
  */
 function onLoadingError(res) {
@@ -271,7 +271,9 @@ function onLoadingError(res) {
 
 /**
  * an asset definition to be used with the loader
- * @typedef {object} loader.Asset
+ * @typedef {object} Asset
+ * @export
+ * @memberof loader
  * @property {string} name - name of the asset
  * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface"|"video")
  * @property {string} [src]  - path and/or file name of the resource (for audio assets only the path is required)
@@ -317,7 +319,7 @@ function onLoadingError(res) {
  * @memberof loader
  * @param {string} type - asset type
  * @param {function} parserFn - parser function
- * @see loader.Asset.type
+ * @see Asset.type
  * @example
  * // specify a custom function for "abc" format
  * function customAbcParser(data, onload, onerror) {
@@ -348,7 +350,7 @@ function setParser(type, parserFn) {
 /**
  * set all the specified game assets to be preloaded.
  * @memberof loader
- * @param {loader.Asset[]} assets - list of assets to load
+ * @param {Asset[]} assets - list of assets to load
  * @param {Function} [onloadcb=loader.onload] - function to be called when all resources are loaded
  * @param {boolean} [switchToLoadState=true] - automatically switch to the loading screen
  * @example
@@ -443,7 +445,7 @@ function reload(src) {
 /**
  * Load a single asset (to be used if you need to load additional asset(s) during the game)
  * @memberof loader
- * @param {loader.Asset} asset
+ * @param {Asset} asset
  * @param {Function} [onload] - function to be called when the asset is loaded
  * @param {Function} [onerror] - function to be called in case of error
  * @returns {number} the amount of corresponding resource to be preloaded
@@ -496,7 +498,7 @@ function load(asset, onload, onerror) {
 /**
  * unload the specified asset to free memory
  * @memberof loader
- * @param {loader.Asset} asset
+ * @param {Asset} asset
  * @returns {boolean} true if unloaded
  * @example me.loader.unload({name: "avatar",  type:"image"});
  */

@@ -13,6 +13,10 @@ import { __exports as howler } from '../_virtual/howler.js';
 // external import
 
 /**
+ * @import Asset from "./../loader/loader.js";
+ */
+
+/**
  * @namespace audio
  */
 
@@ -135,7 +139,7 @@ function disable() {
 /**
  * Load an audio file
  * @memberof audio
- * @param {loader.Asset} sound
+ * @param {Asset} sound
  * @param {Function} [onloadcb] - function to be called when the resource is loaded
  * @param {Function} [onerrorcb] - function to be called in case of error
  * @param {Object} [settings] - custom settings to apply to the request (@link https://developer.mozilla.org/en-US/docs/Web/API/fetch#options)

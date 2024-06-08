@@ -9,7 +9,7 @@ import { on, DRAGEND, off } from '../system/event.js';
 import Renderable from './renderable.js';
 
 /**
- * @import Draggable from "./draggable.js";
+ * @import { Draggable } from "./draggable.js";
  */
 
 /**
