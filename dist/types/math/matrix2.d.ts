@@ -1,4 +1,9 @@
 /**
+ * @import Matrix3d from "./matrix3.js";
+ * @import Vector2d from "./vector2.js";
+ * @import Vector3d from "./vector3.js";
+ */
+/**
  * @classdesc
  * a Matrix2d Object.<br>
  * the identity matrix and parameters position : <br>
@@ -163,3 +168,6 @@ export default class Matrix2d {
      */
     toString(): string;
 }
+import type Matrix3d from "./matrix3.js";
+import type Vector2d from "./vector2.js";
+import type Vector3d from "./vector3.js";

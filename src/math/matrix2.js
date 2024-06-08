@@ -1,6 +1,13 @@
 import pool from "./../system/pooling.js";
 
 /**
+ * @import Matrix3d from "./matrix3.js";
+ * @import Vector2d from "./vector2.js";
+ * @import Vector3d from "./vector3.js";
+ */
+
+
+/**
  * @classdesc
  * a Matrix2d Object.<br>
  * the identity matrix and parameters position : <br>

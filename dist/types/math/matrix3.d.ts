@@ -1,5 +1,7 @@
 /**
- * @import Matrix3d from "./matrix3.js";
+ * @import Matrix2d from "./matrix2.js";
+ * @import Vector2d from "./vector2.js";
+ * @import Vector3d from "./vector3.js";
  */
 /**
  * @classdesc
@@ -178,4 +180,6 @@ export default class Matrix3d {
      */
     toString(): string;
 }
-import type Matrix3d from "./matrix3.js";
+import type Matrix2d from "./matrix2.js";
+import type Vector2d from "./vector2.js";
+import type Vector3d from "./vector3.js";
