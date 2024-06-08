@@ -20,7 +20,7 @@ export default class Detector {
      * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} b - a reference to the object B.
      * @returns {boolean} true if they should collide, false otherwise
      */
-    shouldCollide(a: Renderable | Container | Sprite | NineSliceSprite | Entity, b: Renderable | Container | Sprite | NineSliceSprite | Entity): boolean;
+    shouldCollide(a: Renderable | Container | Sprite | Entity | NineSliceSprite, b: Renderable | Container | Sprite | Entity | NineSliceSprite): boolean;
     /**
      * detect collision between two bodies.
      * @param {Body} bodyA - a reference to body A.
@@ -34,7 +34,7 @@ export default class Detector {
      * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} objA - object to be tested for collision
      * @returns {boolean} in case of collision, false otherwise
      */
-    collisions(objA: Renderable | Container | Sprite | NineSliceSprite | Entity): boolean;
+    collisions(objA: Renderable | Container | Sprite | Entity | NineSliceSprite): boolean;
     /**
      * Checks for object colliding with the given line
      * @ignore
@@ -65,6 +65,6 @@ import type Container from "./../renderable/container.js";
 import ResponseObject from "./response.js";
 import type Renderable from "./../renderable/renderable.js";
 import type Sprite from "./../renderable/sprite.js";
-import type NineSliceSprite from "./../renderable/nineslicesprite.js";
 import type Entity from "./../renderable/entity/entity.js";
+import type NineSliceSprite from "./../renderable/nineslicesprite.js";
 import type Line from "./../geometries/line.js";

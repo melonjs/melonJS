@@ -18,7 +18,7 @@ export default class Body {
      * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] - a initial shape, list of shapes, or JSON object defining the body
      * @param {Function} [onBodyUpdate] - callback for when the body is updated (e.g. add/remove shapes)
      */
-    constructor(ancestor: Renderable | Container | Sprite | NineSliceSprite | Entity, shapes?: object | Polygon | Line | Point | Rect | Bounds | Point[] | Ellipse | Rect[] | Polygon[] | Line[] | Ellipse[] | Bounds[] | undefined, onBodyUpdate?: Function | undefined);
+    constructor(ancestor: Renderable | Container | Sprite | Entity | NineSliceSprite, shapes?: object | Polygon | Line | Point | Rect | Bounds | Point[] | Ellipse | Rect[] | Polygon[] | Line[] | Ellipse[] | Bounds[] | undefined, onBodyUpdate?: Function | undefined);
     /**
      * a reference to the parent object that contains this body,
      * or undefined if it has not been added to one.
@@ -26,7 +26,7 @@ export default class Body {
      * @type {Renderable|Container|Entity|Sprite|NineSliceSprite}
      * @default undefined
      */
-    public ancestor: Renderable | Container | Sprite | NineSliceSprite | Entity;
+    public ancestor: Renderable | Container | Sprite | Entity | NineSliceSprite;
     /**
      * The AABB bounds box reprensenting this body
      * @public
@@ -337,8 +337,8 @@ export default class Body {
 import type Renderable from "./../renderable/renderable.js";
 import type Container from "./../renderable/container.js";
 import type Sprite from "./../renderable/sprite.js";
-import type NineSliceSprite from "./../renderable/nineslicesprite.js";
 import type Entity from "./../renderable/entity/entity.js";
+import type NineSliceSprite from "./../renderable/nineslicesprite.js";
 import Bounds from "./bounds.js";
 import Polygon from "./../geometries/poly.js";
 import Ellipse from "./../geometries/ellipse.js";

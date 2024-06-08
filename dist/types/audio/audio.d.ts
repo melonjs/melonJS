@@ -44,13 +44,13 @@ export function disable(): void;
 /**
  * Load an audio file
  * @memberof audio
- * @param {loader.Asset} sound
+ * @param {Asset} sound
  * @param {Function} [onloadcb] - function to be called when the resource is loaded
  * @param {Function} [onerrorcb] - function to be called in case of error
  * @param {Object} [settings] - custom settings to apply to the request (@link https://developer.mozilla.org/en-US/docs/Web/API/fetch#options)
  * @returns {number} the amount of asset loaded (always 1 if successfull)
  */
-export function load(sound: loader.Asset, onloadcb?: Function | undefined, onerrorcb?: Function | undefined, settings?: Object | undefined): number;
+export function load(sound: Asset, onloadcb?: Function | undefined, onerrorcb?: Function | undefined, settings?: Object | undefined): number;
 /**
  * play the specified sound
  * @memberof audio

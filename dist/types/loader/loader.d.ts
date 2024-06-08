@@ -42,7 +42,9 @@ export function setOptions(options: {
 export function setBaseURL(type: string, url?: string | undefined): void;
 /**
  * an asset definition to be used with the loader
- * @typedef {object} loader.Asset
+ * @typedef {object} Asset
+ * @export
+ * @memberof loader
  * @property {string} name - name of the asset
  * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface"|"video")
  * @property {string} [src]  - path and/or file name of the resource (for audio assets only the path is required)
@@ -87,7 +89,7 @@ export function setBaseURL(type: string, url?: string | undefined): void;
  * @memberof loader
  * @param {string} type - asset type
  * @param {function} parserFn - parser function
- * @see loader.Asset.type
+ * @see Asset.type
  * @example
  * // specify a custom function for "abc" format
  * function customAbcParser(data, onload, onerror) {
@@ -107,7 +109,7 @@ export function setParser(type: string, parserFn: Function): void;
 /**
  * set all the specified game assets to be preloaded.
  * @memberof loader
- * @param {loader.Asset[]} assets - list of assets to load
+ * @param {Asset[]} assets - list of assets to load
  * @param {Function} [onloadcb=loader.onload] - function to be called when all resources are loaded
  * @param {boolean} [switchToLoadState=true] - automatically switch to the loading screen
  * @example
@@ -147,7 +149,7 @@ export function setParser(type: string, parserFn: Function): void;
  * // set all resources to be loaded
  * me.loader.preload(game.assets, () => this.loaded());
  */
-export function preload(assets: loader.Asset[], onloadcb?: Function | undefined, switchToLoadState?: boolean | undefined): void;
+export function preload(assets: Asset[], onloadcb?: Function | undefined, switchToLoadState?: boolean | undefined): void;
 /**
  * retry loading assets after a loading failure
  * @memberof loader
@@ -168,7 +170,7 @@ export function reload(src: string): void;
 /**
  * Load a single asset (to be used if you need to load additional asset(s) during the game)
  * @memberof loader
- * @param {loader.Asset} asset
+ * @param {Asset} asset
  * @param {Function} [onload] - function to be called when the asset is loaded
  * @param {Function} [onerror] - function to be called in case of error
  * @returns {number} the amount of corresponding resource to be preloaded
@@ -192,15 +194,15 @@ export function reload(src: string): void;
  *     me.audio.play("bgmusic");
  * });
  */
-export function load(asset: loader.Asset, onload?: Function | undefined, onerror?: Function | undefined): number;
+export function load(asset: Asset, onload?: Function | undefined, onerror?: Function | undefined): number;
 /**
  * unload the specified asset to free memory
  * @memberof loader
- * @param {loader.Asset} asset
+ * @param {Asset} asset
  * @returns {boolean} true if unloaded
  * @example me.loader.unload({name: "avatar",  type:"image"});
  */
-export function unload(asset: loader.Asset): boolean;
+export function unload(asset: Asset): boolean;
 /**
  * unload all resources to free memory
  * @memberof loader
@@ -325,38 +327,7 @@ export let onProgress: Function;
  * me.loader.onError = this.loaderError.bind(this);
  */
 export let onError: Function;
-export namespace loader {
-    /**
-     * an asset definition to be used with the loader
-     */
-    type Asset = {
-        /**
-         * - name of the asset
-         */
-        name: string;
-        /**
-         * - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface"|"video")
-         */
-        type: string;
-        /**
-         * - path and/or file name of the resource (for audio assets only the path is required)
-         */
-        src?: string | undefined;
-        /**
-         * - TMX data if not provided through a src url
-         */
-        data?: string | undefined;
-        /**
-         * - Set to true to not to wait for large audio or video file to be downloaded before playing.
-         */
-        stream?: boolean | undefined;
-        /**
-         * - Set to true to automatically start playing audio or video when loaded or added to a scene (using autoplay might require user iteraction to enable it)
-         */
-        autoplay?: boolean | undefined;
-        /**
-         * - Set to true to automatically loop the audio or video when playing
-         */
-        loop?: boolean | undefined;
-    };
-}
+/**
+ * an asset definition to be used with the loader
+ */
+export type Asset = object;

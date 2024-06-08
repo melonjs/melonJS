@@ -238,7 +238,7 @@ export default class Camera2d extends Renderable {
      * @memberof Camera2d
      * @param {Renderable|Entity|Sprite|NineSliceSprite} target - the renderable to focus the camera on
      */
-    focusOn(target: Renderable | Sprite | NineSliceSprite | Entity): void;
+    focusOn(target: Renderable | Sprite | Entity | NineSliceSprite): void;
     /**
      * check if the specified renderable is in the camera
      * @name isVisible
@@ -247,7 +247,7 @@ export default class Camera2d extends Renderable {
      * @param {boolean} [floating = obj.floating] - if visibility check should be done against screen coordinates
      * @returns {boolean} true if within the viewport
      */
-    isVisible(obj: Renderable | Sprite | NineSliceSprite | Entity, floating?: boolean | undefined): boolean;
+    isVisible(obj: Renderable | Sprite | Entity | NineSliceSprite, floating?: boolean | undefined): boolean;
     /**
      * convert the given "local" (screen) coordinates into world coordinates
      * @name localToWorld
@@ -287,5 +287,5 @@ import Vector2d from "./../math/vector2.js";
 import Rect from "./../geometries/rectangle.js";
 import type Color from "./../math/color.js";
 import type Sprite from "./../renderable/sprite.js";
-import type NineSliceSprite from "./../renderable/nineslicesprite.js";
 import type Entity from "./../renderable/entity/entity.js";
+import type NineSliceSprite from "./../renderable/nineslicesprite.js";
