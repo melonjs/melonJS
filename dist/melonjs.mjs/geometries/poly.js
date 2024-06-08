@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.3.0
+ * melonJS Game Engine - v17.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -7,6 +7,10 @@
  */
 import earcut from '../node_modules/earcut/src/earcut.js';
 import pool from '../system/pooling.js';
+
+/**
+ * @import Vector2d from "./../math/vector2.js";
+ */
 
 /**
  * @classdesc

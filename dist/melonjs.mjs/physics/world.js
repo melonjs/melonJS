@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.3.0
+ * melonJS Game Engine - v17.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -13,6 +13,10 @@ import collision from './collision.js';
 import Detector from './detector.js';
 import state from '../state/state.js';
 import { hasRegisteredEvents } from '../input/pointerevent.js';
+
+/**
+ * @import Application from "./../application/application.js";
+ */
 
 /**
  * @classdesc

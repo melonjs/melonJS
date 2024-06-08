@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.3.0
+ * melonJS Game Engine - v17.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -11,6 +11,15 @@ import { emit, CANVAS_ONRESIZE } from '../system/event.js';
 import Path2D from '../geometries/path2d.js';
 import Vector2d from '../math/vector2.js';
 import CanvasRenderTarget from './rendertarget/canvasrendertarget.js';
+
+/**
+ * @import Rect from "./../geometries/rect.js";
+ * @import RoundRect from "./../geometries/roundrect.js";
+ * @import Polygon from "./../geometries/poly.js";
+ * @import Line from "./../geometries/line.js";
+ * @import Ellipse from "./../geometries/ellipse.js";
+ * @import Bounds from "./../physics/bounds.js";
+ */
 
 /**
  * @classdesc

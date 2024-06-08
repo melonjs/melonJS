@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.3.0
+ * melonJS Game Engine - v17.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -9,6 +9,10 @@ import pool from '../system/pooling.js';
 import timer from '../system/timer.js';
 import { randomFloat, clamp } from '../math/math.js';
 import Renderable from '../renderable/renderable.js';
+
+/**
+ * @import ParticleEmitter from "./emitter.js";
+ */
 
 /**
  * @classdesc

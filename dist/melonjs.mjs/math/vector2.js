@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.3.0
+ * melonJS Game Engine - v17.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -249,7 +249,7 @@ class Vector2d {
 
     /**
      * return true if this vector is equal to the given values or vector
-     * @param {number|Vector2d|ObservableVector2d} x
+     * @param {number|Vector2d} x
      * @param {number} [y]
      * @returns {boolean}
      */
@@ -285,7 +285,7 @@ class Vector2d {
     /**
      * Rotate this vector (counter-clockwise) by the specified angle (in radians).
      * @param {number} angle - The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
+     * @param {Vector2d} [v] - an optional point to rotate around
      * @returns {Vector2d} Reference to this object for method chaining
      */
     rotate(angle, v) {

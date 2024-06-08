@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.3.0
+ * melonJS Game Engine - v17.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -3650,7 +3650,7 @@ class Vector2d {
 
     /**
      * return true if this vector is equal to the given values or vector
-     * @param {number|Vector2d|ObservableVector2d} x
+     * @param {number|Vector2d} x
      * @param {number} [y]
      * @returns {boolean}
      */
@@ -3686,7 +3686,7 @@ class Vector2d {
     /**
      * Rotate this vector (counter-clockwise) by the specified angle (in radians).
      * @param {number} angle - The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
+     * @param {Vector2d} [v] - an optional point to rotate around
      * @returns {Vector2d} Reference to this object for method chaining
      */
     rotate(angle, v) {
@@ -3828,6 +3828,10 @@ class Vector2d {
         return "x:" + this.x + ",y:" + this.y;
     }
 }
+
+/**
+ * @import Vector2d from "./vector2.js";
+ */
 
 /**
  * @classdesc
@@ -4741,6 +4745,10 @@ class ObservableVector2d extends Vector2d {
         return "x:" + this._x + ",y:" + this._y;
     }
 }
+
+/**
+ * @import ObservableVector3d from "./observable_vector3.js";
+ */
 
 /**
  * @classdesc
@@ -5764,6 +5772,10 @@ class Matrix2d {
         ")";
     }
 }
+
+/**
+ * @import Matrix3d from "./matrix3.js";
+ */
 
 /**
  * @classdesc
@@ -7065,6 +7077,10 @@ var earcutExports = earcut$2.exports;
 var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
 
 /**
+ * @import Vector2d from "./../math/vector2.js";
+ */
+
+/**
  * @classdesc
  * a polygon Object.<br>
  * Please do note that melonJS implements a simple Axis-Aligned Boxes collision algorithm, which requires all polygons used for collision to be convex with all vertices defined with clockwise winding.
@@ -7487,6 +7503,10 @@ class Polygon {
 }
 
 /**
+ * @import Vector2d from "./../math/vector2d.js";
+ */
+
+/**
  * @classdesc
  * a line segment Object
  * @augments Polygon
@@ -7582,6 +7602,13 @@ class Line extends Polygon {
     }
 
 }
+
+/**
+ * @import Vector2d from "./../math/vector2.js";
+ * @import ObservableVector2d from "./../math/observable_vector2.js";
+ * @import Matrix2d from "./../math/matrix2.js";
+ * @import Bounds from "./../physics/bounds.js";
+ */
 
 /**
  * @classdesc
@@ -7721,7 +7748,7 @@ class Ellipse {
     /**
      * apply the given transformation matrix to this ellipse
      * @param {Matrix2d} matrix - the transformation matrix
-     * @returns {Polygon} Reference to this object for method chaining
+     * @returns {Ellipse} Reference to this object for method chaining
      */
     transform(matrix) { // eslint-disable-line no-unused-vars
         // TODO
@@ -7819,6 +7846,10 @@ class Ellipse {
 }
 
 /**
+ * @import Vector2d from "./../math/vector2.js";
+ **/
+
+/**
  * @classdesc
  * represents a point in a 2d space
  */
@@ -7889,6 +7920,10 @@ class Point {
         return new Point(this.x, this.y);
     }
 }
+
+/**
+ * @import Vector2d from "./../math/vector2.js";
+ **/
 
 /**
  * @classdesc
@@ -8424,6 +8459,12 @@ var array$1 = {
 	weightedRandom: weightedRandom
 };
 
+/**
+ * @import World from "./world.js";
+ * @import Container from "./../renderable/container.js";
+ * @import Bounds from "./bounds.js";
+ */
+
 /*
  * A QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
  * Based on the QuadTree Library by Timo Hausmann and released under the MIT license
@@ -8808,6 +8849,12 @@ class QuadTree {
         }
     }
 }
+
+/**
+ * @import Point from "./../geometries/point.js";
+ * @import Rect from "./../geometries/rectangle.js";
+ * @import Polygon from "./../geometries/poly.js";
+ **/
 
 /**
  * @classdesc
@@ -9206,6 +9253,11 @@ class Bounds {
     }
 
 }
+
+/**
+ * @import Line from "./../geometries/line.js";
+ * @import Renderable from "./../renderable/renderable.js";
+ **/
 
 /**
  * Collision detection (and projection-based collision response) of 2D shapes.<br>
@@ -15630,6 +15682,10 @@ var device = {
 };
 
 /**
+ * @import Renderer from "./../video/renderer.js";
+ */
+
+/**
  * Application & Renderer Settings definition.
  * @typedef {Object} ApplicationSettings
  * @property {string|HTMLElement} [parent=document.body] - the DOM parent element to hold the canvas in the HTML file
@@ -16683,6 +16739,10 @@ class Pointer extends Bounds {
         }
     }
 }
+
+/**
+ * @import Vector2d from "./../math/vector2.js";
+ */
 
 /**
  * A pool of `Pointer` objects to cache pointer/touch event coordinates.
@@ -18358,6 +18418,22 @@ class GLShader {
 }
 
 /**
+ * @import Vector2d from "./../math/vector2.js";
+ * @import Vector3d from "./../math/vector3.js";
+ * @import Matrix2d from "./../math/matrix2.js";
+ * @import Entity from "./../renderable/entity/entity.js";
+ * @import Container from "./../renderable/container.js";
+ * @import Line from "./../geometries/line.js";
+ * @import Ellipse from "./../geometries/ellipse.js";
+ * @import Polygon from "./../geometries/poly.js";
+ * @import Application from "./../application/application.js";
+ * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
+ * @import ResponseObject from "./../physics/response.js";
+ **/
+
+
+/**
  * @classdesc
  * A base class for renderable objects.
  * @augments Rect
@@ -19197,6 +19273,14 @@ class Renderable extends Rect {
     }
 
 }
+
+/**
+ * @import Bounds from "./../physics/bounds.js";
+ * @import Color from "./../math/color.js";
+ * @import Entity from "./../renderable/entity/entity.js";
+ * @import Sprite from "./../renderable/sprite.js";
+ * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
+ */
 
 // some ref shortcut
 const MIN = Math.min, MAX = Math.max;
@@ -24428,6 +24512,10 @@ function endpointToCenterParameterization(x1, y1, x2, y2, largeArcFlag, sweepFla
 }
 
 /**
+ * @import Point from "./point.js";
+ */
+
+/**
  * @classdesc
  * a simplified path2d implementation, supporting only one path
  */
@@ -25185,6 +25273,15 @@ class CanvasRenderTarget {
         this.canvas.height = Math.round(val);
     }
 }
+
+/**
+ * @import Rect from "./../geometries/rect.js";
+ * @import RoundRect from "./../geometries/roundrect.js";
+ * @import Polygon from "./../geometries/poly.js";
+ * @import Line from "./../geometries/line.js";
+ * @import Ellipse from "./../geometries/ellipse.js";
+ * @import Bounds from "./../physics/bounds.js";
+ */
 
 /**
  * @classdesc
@@ -26552,6 +26649,15 @@ class TextureCache {
     }
 
 }
+
+/**
+ * @import Rect from "./../../geometries/rect.js";
+ * @import RoundRect from "./../../geometries/roundrect.js";
+ * @import Polygon from "./../../geometries/poly.js";
+ * @import Line from "./../../geometries/line.js";
+ * @import Ellipse from "./../../geometries/ellipse.js";
+ * @import Matrix2d from "./../../math/matrix2.js";
+ */
 
 /**
  * @classdesc
@@ -27948,6 +28054,30 @@ class TMXGroup {
 }
 
 /**
+ * @import Color from "./../math/color.js";
+ * @import Entity from "./../renderable/entity/entity.js";
+ * @import Renderable from "./renderable.js";
+ * @import Entity from "./../renderable/entity/entity.js";
+ * @import Sprite from "./../renderable/sprite.js";
+ * @import Collectable from "./../renderable/collectable.js";
+ * @import Trigger from "./../renderable/trigger.js";
+ * @import Draggable from "./../renderable/draggable.js";
+ * @import DropTarget from "./../renderable/droptarget.js";
+ * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
+ * @import ImageLayer from "./../renderable/imagelayer.js";
+ * @import ColorLayer from "./../renderable/colorlayer.js";
+ * @import Light2d from "./../renderable/light2d.js";
+ * @import UIBaseElement from "./../renderable/uibaseelement.js";
+ * @import UISpriteElement from "./../renderable/uispriteelement.js";
+ * @import UITextButton from "./../renderable/uitextbutton.js";
+ * @import Text from "./../renderable/text.js";
+ * @import BitmapText from "./../renderable/bitmaptext.js";
+ * @import Bounds from "./../physics/bounds.js";
+ * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
+ */
+
+/**
  * Private function to re-use for object removal in a defer
  * @ignore
  */
@@ -28860,8 +28990,7 @@ class Container extends Renderable {
     }
 
     /**
-      * draw this renderable (automatically called by melonJS)
-     * @protected
+     * draw this renderable (automatically called by melonJS)
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
      * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
@@ -31864,6 +31993,10 @@ var loader = {
 };
 
 /**
+ * @import Vector2d from "./../math/vector2.js";
+ */
+
+/**
  * @classdesc
  * An object to display a fixed or animated sprite on screen.
  * @augments Renderable
@@ -33437,6 +33570,16 @@ class Timer {
 }
 
 const timer = new Timer();
+
+/**
+ * @import Entity from "./../renderable/entity/entity.js";
+ * @import Container from "./../renderable/container.js";
+ * @import Renderable from "./../renderable/renderable.js";
+ * @import Sprite from "./../renderable/sprite.js";
+ * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
+ * @import Line from "./../geometries/line.js";
+ * @import Vector2d from "./../math/vector2.js";
+ **/
 
 /**
  * @classdesc
@@ -35694,12 +35837,22 @@ class QuadCompositor extends Compositor {
     }
 }
 
+/**
+ * @import Rect from "./../../geometries/rect.js";
+ * @import RoundRect from "./../../geometries/roundrect.js";
+ * @import Polygon from "./../../geometries/poly.js";
+ * @import Line from "./../../geometries/line.js";
+ * @import Ellipse from "./../../geometries/ellipse.js";
+ * @import Matrix3d from "./../../math/matrix3.js";
+ * @import Compositor from "./compositors/compositor.js";
+ */
+
 // list of supported compressed texture formats
 let supportedCompressedTextureFormats;
 
 /**
  * @classdesc
- * a WebGL renderer draw
+ * a WebGL renderer object
  * @augments Renderer
  */
 class WebGLRenderer extends Renderer {
@@ -35734,10 +35887,12 @@ class WebGLRenderer extends Renderer {
         this.gl = this.renderTarget.context;
 
         /**
-         * sets or returns the thickness of lines for shape drawing (limited to strokeLine)
+         * sets or returns the thickness of lines for shape drawing (limited to strokeLine, strokePolygon and strokeRect)
          * @type {number}
          * @default 1
          * @see WebGLRenderer#strokeLine
+         * @see WebGLRenderer#strokePolygon
+         * @see WebGLRenderer#strokeRect
          */
         this.lineWidth = 1;
 
@@ -35782,7 +35937,7 @@ class WebGLRenderer extends Renderer {
 
         /**
          * The current compositor used by the renderer
-         * @type {WebGLCompositor}
+         * @type {Compositor}
          */
         this.currentCompositor = undefined;
 
@@ -35794,7 +35949,7 @@ class WebGLRenderer extends Renderer {
 
         /**
          * The list of active compositors
-         * @type {Map<WebGLCompositor>}
+         * @type {Map<Compositor>}
          */
         this.compositors = new Map();
 
@@ -35873,7 +36028,6 @@ class WebGLRenderer extends Renderer {
      * The WebGL version used by this renderer (1 or 2)
      * @type {number}
      * @default 1
-     * @readonly
      */
     get WebGLVersion() {
         return this.renderTarget.WebGLVersion;
@@ -36538,7 +36692,7 @@ class WebGLRenderer extends Renderer {
      * @param {number} h - vertical radius of the ellipse
      */
     fillEllipse(x, y, w, h) {
-        this.strokeEllipse(x, y, w, h, false);
+        this.strokeEllipse(x, y, w, h, true);
     }
 
     /**
@@ -36593,7 +36747,7 @@ class WebGLRenderer extends Renderer {
     }
 
     /**
-     * Stroke a me.Polygon on the screen with a specified color
+     * Stroke a Polygon on the screen with a specified color
      * @param {Polygon} poly - the shape to draw
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
@@ -36601,24 +36755,38 @@ class WebGLRenderer extends Renderer {
         const points = poly.points;
         const len = points.length;
 
-        this.setCompositor("primitive");
-
         this.translate(poly.pos.x, poly.pos.y);
 
-        this.path2D.beginPath();
-        for (let i = 0; i < len - 1; i++) {
-            const curPoint = points[i];
-            const nextPoint = points[i + 1];
-            this.path2D.moveTo(curPoint.x, curPoint.y);
-            this.path2D.lineTo(nextPoint.x, nextPoint.y);
-        }
-        this.path2D.closePath();
-
-        if (fill === false) {
-            this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+        if (fill === false && this.lineWidth > 1) {
+            const radius = this.lineWidth / 2;
+            for (let i = 0; i < len - 1; i++) {
+                const curPoint = points[i];
+                const nextPoint = points[i + 1];
+                this.fillEllipse(nextPoint.x, nextPoint.y, radius, radius);
+                this.strokeLine(curPoint.x, curPoint.y, nextPoint.x, nextPoint.y);
+            }
+            const lastPoint = points[len - 1];
+            const firstPoint = points[0];
+            if (!lastPoint.equals(firstPoint)) {
+                this.fillEllipse(firstPoint.x, firstPoint.y, radius, radius);
+                this.strokeLine(lastPoint.x, lastPoint.y, firstPoint.x, firstPoint.y);
+            }
         } else {
-            // draw all triangles
-            this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
+            this.setCompositor("primitive");
+            this.path2D.beginPath();
+            for (let i = 0; i < len - 1; i++) {
+                const curPoint = points[i];
+                const nextPoint = points[i + 1];
+                this.path2D.moveTo(curPoint.x, curPoint.y);
+                this.path2D.lineTo(nextPoint.x, nextPoint.y);
+            }
+            this.path2D.closePath();
+            if (fill === false) {
+                this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+            } else {
+                // draw all triangles
+                this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
+            }
         }
 
         this.translate(-poly.pos.x, -poly.pos.y);
@@ -36641,13 +36809,25 @@ class WebGLRenderer extends Renderer {
      * @param {boolean} [fill=false] - also fill the shape with the current color if true
      */
     strokeRect(x, y, width, height, fill = false) {
-        this.setCompositor("primitive");
-        this.path2D.beginPath();
-        this.path2D.rect(x, y, width, height);
-        if (fill === false) {
-            this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+        if (fill === false && this.lineWidth > 1) {
+            const radius = this.lineWidth / 2;
+            this.strokeLine(x, y, x + width, y);
+            this.strokeLine(x + width, y, x + width, y + height);
+            this.strokeLine(x + width, y + height, x, y + height);
+            this.strokeLine(x, y + height, x, y);
+            this.fillEllipse(x, y, radius, radius);
+            this.fillEllipse(x + width, y, radius, radius);
+            this.fillEllipse(x + width, y + height, radius, radius);
+            this.fillEllipse(x, y + height, radius, radius);
         } else {
-            this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
+            this.setCompositor("primitive");
+            this.path2D.beginPath();
+            this.path2D.rect(x, y, width, height);
+            if (fill === false) {
+                this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+            } else {
+                this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
+            }
         }
     }
 
@@ -36874,6 +37054,10 @@ class WebGLRenderer extends Renderer {
 }
 
 /**
+ * @import Color from "./../math/color.js";
+ */
+
+/**
  * @classdesc
  * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
  * @augments Renderable
@@ -36939,6 +37123,10 @@ class ColorLayer extends Renderable {
     }
 
 }
+
+/**
+ * @import Vector2d from "./../math/vector2.js";
+ */
 
 /**
  * @classdesc
@@ -37212,6 +37400,11 @@ class ImageLayer extends Sprite {
     }
 
 }
+
+/**
+ * @import Color from "./../math/color.js";
+ * @import { TextureAtlas } from "./../video/texture/atlas.js";
+ */
 
 /**
  * @classdesc
@@ -39258,6 +39451,12 @@ class Trigger extends Renderable {
 
 }
 
+/**
+ * @import Color from "./../math/color.js";
+ * @import Ellipse from "./../geometries/ellipse.js";
+ */
+
+
 /** @ignore */
 function createGradient(light) {
     let context = light.texture.context;
@@ -39762,6 +39961,10 @@ class Draggable extends Renderable {
 }
 
 /**
+ * @import Draggable from "./draggable.js";
+ */
+
+/**
  * @classdesc
  * a base drop target object
  * @see Draggable
@@ -39869,6 +40072,15 @@ class DropTarget extends Renderable {
 * Available under the MIT License - https://github.com/jriecken/sat-js
 */
 
+/**
+ * @import Entity from "./../renderable/entity/entity.js";
+ * @import Container from "./../renderable/container.js";
+ * @import Renderable from "./../renderable/renderable.js";
+ * @import Sprite from "./../renderable/sprite.js";
+ * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
+ * @import Polygon from "./../geometries/poly.js";
+ * @import Ellipse from "./../geometries/ellipse.js";
+ */
 
 /**
  * Constants for Vornoi regions
@@ -40392,6 +40604,15 @@ class ResponseObject {
     }
 }
 
+/**
+ * @import Entity from "./../renderable/entity/entity.js";
+ * @import Container from "./../renderable/container.js";
+ * @import Renderable from "./../renderable/renderable.js";
+ * @import Sprite from "./../renderable/sprite.js";
+ * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
+ * @import Line from "./../geometries/line.js";
+ */
+
 // a dummy object when using Line for raycasting
 let dummyObj = {
     pos : new Vector2d(0, 0),
@@ -40596,6 +40817,10 @@ class Detector {
         return result;
     }
 }
+
+/**
+ * @import Application from "./../application/application.js";
+ */
 
 /**
  * @classdesc
@@ -41366,6 +41591,10 @@ class ParticleEmitter extends Container {
 }
 
 /**
+ * @import ParticleEmitter from "./emitter.js";
+ */
+
+/**
  * @classdesc
  * Single Particle Object.
  * @augments Renderable
@@ -41795,6 +42024,10 @@ function autoDetectRenderer(options) {
 }
 
 /**
+ * @import Application from "./application.js";
+ */
+
+/**
  * scale the "displayed" canvas by the given scalar.
  * this will modify the size of canvas element directly.
  * Only use this if you are not using the automatic scaling feature.
@@ -41908,6 +42141,10 @@ function onresize(game) {
 }
 
 /**
+ * @import Application from "./application.js";
+ */
+
+/**
  * display information
  * @param {Application} app - the game application instance calling this function
  */
@@ -41931,6 +42168,11 @@ function consoleHeader(app) {
         ", got " + app.renderer.width + "x" + app.renderer.height
     );
 }
+
+/**
+ * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
+ * @import Camera2d from "./../camera/camera2d.js";
+ */
 
 /**
  * @classdesc
@@ -42349,6 +42591,10 @@ class Application {
 }
 
 /**
+ * @import Application from "./../application/application.js";
+ */
+
+/**
  * Contains all registered plugins.
  * @name cache
  * @memberof plugin
@@ -42376,9 +42622,9 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "17.3.0"
+         * @default "17.4.0"
          */
-        this.version = "17.3.0";
+        this.version = "17.4.0";
 
         /**
          * a reference to the app/game that registered this plugin
@@ -42449,7 +42695,7 @@ function patch(proto, name, fn) {
  * Register a plugin.
  * @name register
  * @memberof plugin
- * @param {plugin.BasePlugin} plugin - Plugin object to instantiate and register
+ * @param {BasePlugin} plugin - Plugin object to instantiate and register
  * @param {string} [name=plugin.constructor.name] - a unique name for this plugin
  * @param {...*} [args] - all extra parameters will be passed to the plugin constructor
  * @example
@@ -42706,7 +42952,7 @@ WebGLRenderer.prototype.setLineWidth = function(width)  {
  * @name version
  * @type {string}
  */
-const version = "17.3.0";
+const version = "17.4.0";
 
 /**
  * a flag indicating that melonJS is fully initialized

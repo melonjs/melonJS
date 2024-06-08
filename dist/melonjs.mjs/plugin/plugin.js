@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.3.0
+ * melonJS Game Engine - v17.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -8,6 +8,10 @@
 import { checkVersion } from '../utils/utils.js';
 import { game, version } from '../index.js';
 import { warning } from '../lang/console.js';
+
+/**
+ * @import Application from "./../application/application.js";
+ */
 
 /**
  * Contains all registered plugins.
@@ -37,9 +41,9 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @type {string}
-         * @default "17.3.0"
+         * @default "17.4.0"
          */
-        this.version = "17.3.0";
+        this.version = "17.4.0";
 
         /**
          * a reference to the app/game that registered this plugin
@@ -110,7 +114,7 @@ function patch(proto, name, fn) {
  * Register a plugin.
  * @name register
  * @memberof plugin
- * @param {plugin.BasePlugin} plugin - Plugin object to instantiate and register
+ * @param {BasePlugin} plugin - Plugin object to instantiate and register
  * @param {string} [name=plugin.constructor.name] - a unique name for this plugin
  * @param {...*} [args] - all extra parameters will be passed to the plugin constructor
  * @example

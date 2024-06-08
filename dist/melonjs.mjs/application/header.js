@@ -1,11 +1,15 @@
 /*!
- * melonJS Game Engine - v17.3.0
+ * melonJS Game Engine - v17.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2024 Olivier Biot (AltByte Pte Ltd)
  */
 import { devicePixelRatio, platform, getScreenOrientation, language, hasWebAudio } from '../system/device.js';
+
+/**
+ * @import Application from "./application.js";
+ */
 
 /**
  * display information

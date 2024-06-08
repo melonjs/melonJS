@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.3.0
+ * melonJS Game Engine - v17.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -9,6 +9,15 @@ import * as sat from './sat.js';
 import ResponseObject from './response.js';
 import Vector2d from '../math/vector2.js';
 import Bounds from './bounds.js';
+
+/**
+ * @import Entity from "./../renderable/entity/entity.js";
+ * @import Container from "./../renderable/container.js";
+ * @import Renderable from "./../renderable/renderable.js";
+ * @import Sprite from "./../renderable/sprite.js";
+ * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
+ * @import Line from "./../geometries/line.js";
+ */
 
 // a dummy object when using Line for raycasting
 let dummyObj = {

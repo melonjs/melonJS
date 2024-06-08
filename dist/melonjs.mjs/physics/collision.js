@@ -1,11 +1,16 @@
 /*!
- * melonJS Game Engine - v17.3.0
+ * melonJS Game Engine - v17.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2024 Olivier Biot (AltByte Pte Ltd)
  */
 import { game } from '../index.js';
+
+/**
+ * @import Line from "./../geometries/line.js";
+ * @import Renderable from "./../renderable/renderable.js";
+ **/
 
 /**
  * Collision detection (and projection-based collision response) of 2D shapes.<br>

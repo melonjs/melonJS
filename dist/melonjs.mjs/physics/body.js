@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.3.0
+ * melonJS Game Engine - v17.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -15,6 +15,16 @@ import { remove } from '../utils/array.js';
 import timer from '../system/timer.js';
 import { clamp } from '../math/math.js';
 import Point from '../geometries/point.js';
+
+/**
+ * @import Entity from "./../renderable/entity/entity.js";
+ * @import Container from "./../renderable/container.js";
+ * @import Renderable from "./../renderable/renderable.js";
+ * @import Sprite from "./../renderable/sprite.js";
+ * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
+ * @import Line from "./../geometries/line.js";
+ * @import Vector2d from "./../math/vector2.js";
+ **/
 
 /**
  * @classdesc

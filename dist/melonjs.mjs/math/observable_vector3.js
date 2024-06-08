@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.3.0
+ * melonJS Game Engine - v17.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -8,6 +8,10 @@
 import Vector3d from './vector3.js';
 import { clamp } from './math.js';
 import pool from '../system/pooling.js';
+
+/**
+ * @import ObservableVector3d from "./observable_vector3.js";
+ */
 
 /**
  * @classdesc

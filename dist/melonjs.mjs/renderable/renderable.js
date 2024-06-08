@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.3.0
+ * melonJS Game Engine - v17.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -15,6 +15,22 @@ import Bounds from '../physics/bounds.js';
 import GLShader from '../video/webgl/glshader.js';
 import Color from '../math/color.js';
 import { releaseAllPointerEvents } from '../input/pointerevent.js';
+
+/**
+ * @import Vector2d from "./../math/vector2.js";
+ * @import Vector3d from "./../math/vector3.js";
+ * @import Matrix2d from "./../math/matrix2.js";
+ * @import Entity from "./../renderable/entity/entity.js";
+ * @import Container from "./../renderable/container.js";
+ * @import Line from "./../geometries/line.js";
+ * @import Ellipse from "./../geometries/ellipse.js";
+ * @import Polygon from "./../geometries/poly.js";
+ * @import Application from "./../application/application.js";
+ * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
+ * @import ResponseObject from "./../physics/response.js";
+ **/
+
 
 /**
  * @classdesc

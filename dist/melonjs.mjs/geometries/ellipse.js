@@ -1,11 +1,18 @@
 /*!
- * melonJS Game Engine - v17.3.0
+ * melonJS Game Engine - v17.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2024 Olivier Biot (AltByte Pte Ltd)
  */
 import pool from '../system/pooling.js';
+
+/**
+ * @import Vector2d from "./../math/vector2.js";
+ * @import ObservableVector2d from "./../math/observable_vector2.js";
+ * @import Matrix2d from "./../math/matrix2.js";
+ * @import Bounds from "./../physics/bounds.js";
+ */
 
 /**
  * @classdesc
@@ -145,7 +152,7 @@ class Ellipse {
     /**
      * apply the given transformation matrix to this ellipse
      * @param {Matrix2d} matrix - the transformation matrix
-     * @returns {Polygon} Reference to this object for method chaining
+     * @returns {Ellipse} Reference to this object for method chaining
      */
     transform(matrix) { // eslint-disable-line no-unused-vars
         // TODO

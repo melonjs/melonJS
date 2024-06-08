@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.3.0
+ * melonJS Game Engine - v17.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -17,6 +17,11 @@ import { onresize } from './resize.js';
 import { ApplicationSettings } from './settings.js';
 import { consoleHeader } from './header.js';
 import { WEBGL, CANVAS, AUTO } from '../const.js';
+
+/**
+ * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
+ * @import Camera2d from "./../camera/camera2d.js";
+ */
 
 /**
  * @classdesc

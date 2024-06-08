@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.3.0
+ * melonJS Game Engine - v17.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -7,6 +7,12 @@
  */
 import pool from '../system/pooling.js';
 import Renderable from './renderable.js';
+
+/**
+ * @import Color from "./../math/color.js";
+ * @import Ellipse from "./../geometries/ellipse.js";
+ */
+
 
 /** @ignore */
 function createGradient(light) {

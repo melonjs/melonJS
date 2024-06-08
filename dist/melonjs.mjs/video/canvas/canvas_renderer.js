@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.3.0
+ * melonJS Game Engine - v17.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -9,6 +9,15 @@ import Color from '../../math/color.js';
 import Renderer from '../renderer.js';
 import TextureCache from '../texture/cache.js';
 import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../system/event.js';
+
+/**
+ * @import Rect from "./../../geometries/rect.js";
+ * @import RoundRect from "./../../geometries/roundrect.js";
+ * @import Polygon from "./../../geometries/poly.js";
+ * @import Line from "./../../geometries/line.js";
+ * @import Ellipse from "./../../geometries/ellipse.js";
+ * @import Matrix2d from "./../../math/matrix2.js";
+ */
 
 /**
  * @classdesc

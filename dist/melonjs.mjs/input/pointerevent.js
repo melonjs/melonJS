@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.3.0
+ * melonJS Game Engine - v17.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -17,6 +17,10 @@ import { getElementBounds, hasPointerLockSupport, maxTouchPoints, touch, pointer
 import Pointer from './pointer.js';
 import Rect from '../geometries/rectangle.js';
 import { game } from '../index.js';
+
+/**
+ * @import Vector2d from "./../math/vector2.js";
+ */
 
 /**
  * A pool of `Pointer` objects to cache pointer/touch event coordinates.
