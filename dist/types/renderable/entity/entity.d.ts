@@ -1,4 +1,13 @@
 /**
+ * @import Line from "./../../geometries/line.js";
+ * @import Rect from "./../../geometries/rectangle.js";
+ * @import Ellipse from "./../../geometries/ellipse.js";
+ * @import Polygon from "./../../geometries/poly.js";
+ * @import Bounds from "./../../physics/bounds.js";
+ * @import CanvasRenderer from "./../../video/canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "./../../video/webgl/webgl_renderer.js";
+ **/
+/**
  * @classdesc
  * a Generic Object Entity
  * @augments Renderable
@@ -59,26 +68,17 @@ export default class Entity extends Renderable {
     /** @ignore */
     update(dt: any): boolean;
     /**
-     * update the bounding box for this entity.
-     * @param {boolean} [absolute=true] - update the bounds size and position in (world) absolute coordinates
-     * @returns {Bounds} this entity bounding box Rectangle object
-     */
-    updateBounds(absolute?: boolean | undefined): Bounds;
-    /**
      * update the bounds when the body is modified
      */
     onBodyUpdate(): void;
     preDraw(renderer: any): void;
-    /**
-     * draw this entity (automatically called by melonJS)
-     * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
-     * @param {Camera2d} [viewport] - the viewport to (re)draw
-     */
-    protected draw(renderer: CanvasRenderer | WebGLRenderer, viewport?: any): void;
     /**
      * onDeactivateEvent Notification function
      */
     onDeactivateEvent(): void;
 }
 import Renderable from "../renderable.js";
+import type Rect from "./../../geometries/rectangle.js";
+import type Polygon from "./../../geometries/poly.js";
+import type Line from "./../../geometries/line.js";
+import type Ellipse from "./../../geometries/ellipse.js";
