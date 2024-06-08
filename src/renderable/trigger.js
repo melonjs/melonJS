@@ -5,6 +5,14 @@ import level from "./../level/level.js";
 import pool from "./../system/pooling.js";
 
 /**
+ * @import ResponseObject from "./../physics/response.js";
+ * @import NiceSliceSprite from "./niceslicesprite.js";
+ * @import Entity from "./entity/entity.js";
+ * @import Sprite from "./sprite.js";
+ * @import Container from "./container.js";
+ */
+
+/**
  * @classdesc
  * trigger an event when colliding with another object
  * @augments Renderable

@@ -1,5 +1,7 @@
 /**
  * @import Vector2d from "./../math/vector2.js";
+ * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
  */
 /**
  * @classdesc
@@ -261,13 +263,6 @@ export default class Sprite extends Renderable {
      * @returns {number} if using number indices. Returns {object} containing frame data if using texture atlas
      */
     getAnimationFrameObjectByIndex(id: number): number;
-    /**
-     * draw this srite (automatically called by melonJS)
-     * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
-     * @param {Camera2d} [viewport] - the viewport to (re)draw
-     */
-    protected draw(renderer: CanvasRenderer | WebGLRenderer, viewport?: any): void;
     /**
      * Destroy function<br>
      * @ignore

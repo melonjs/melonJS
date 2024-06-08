@@ -115,7 +115,7 @@ declare class CanvasRenderTarget {
      * (call this if you modify the canvas content between two draw calls)
      * @param {CanvasRenderer|WebGLRenderer} renderer - the renderer to which this canvas texture is attached
      */
-    invalidate(renderer: WebGLRenderer | CanvasRenderer): void;
+    invalidate(renderer: CanvasRenderer | WebGLRenderer): void;
     glTextureUnit: any;
     /**
      * @ignore
@@ -136,5 +136,5 @@ declare class CanvasRenderTarget {
      */
     public get height(): number;
 }
-import type WebGLRenderer from "./../webgl/webgl_renderer.js";
 import type CanvasRenderer from "./../canvas/canvas_renderer.js";
+import type WebGLRenderer from "./../webgl/webgl_renderer.js";

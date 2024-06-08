@@ -4,6 +4,8 @@ import Renderable from "./renderable.js";
 /**
  * @import Color from "./../math/color.js";
  * @import Ellipse from "./../geometries/ellipse.js";
+ * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
  */
 
 
@@ -137,7 +139,6 @@ export default class Light2d extends Renderable {
      * draw this Light2d (automatically called by melonJS)
      * @name draw
      * @memberof Light2d
-     * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
      * @param {Camera2d} [viewport] - the viewport to (re)draw
      */

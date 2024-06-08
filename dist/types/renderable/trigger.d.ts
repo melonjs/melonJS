@@ -1,4 +1,11 @@
 /**
+ * @import ResponseObject from "./../physics/response.js";
+ * @import NiceSliceSprite from "./niceslicesprite.js";
+ * @import Entity from "./entity/entity.js";
+ * @import Sprite from "./sprite.js";
+ * @import Container from "./container.js";
+ */
+/**
  * @classdesc
  * trigger an event when colliding with another object
  * @augments Renderable
@@ -56,14 +63,5 @@ export default class Trigger extends Renderable {
      * @protected
      */
     protected triggerEvent(): void;
-    /**
-     * onCollision callback, triggered in case of collision with this trigger
-     * @name onCollision
-     * @memberof Trigger
-     * @param {ResponseObject} response - the collision response object
-     * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} other - the other renderable touching this one (a reference to response.a or response.b)
-     * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
-     */
-    onCollision(response: ResponseObject, other: Renderable | Container | Entity | Sprite | NineSliceSprite): boolean;
 }
 import Renderable from "./renderable.js";

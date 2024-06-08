@@ -50,15 +50,6 @@ export default class Light2d extends Renderable {
      */
     getVisibleArea(): Ellipse;
     /**
-     * draw this Light2d (automatically called by melonJS)
-     * @name draw
-     * @memberof Light2d
-     * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
-     * @param {Camera2d} [viewport] - the viewport to (re)draw
-     */
-    protected draw(renderer: CanvasRenderer | WebGLRenderer, viewport?: any): void;
-    /**
      * Destroy function<br>
      * @ignore
      */

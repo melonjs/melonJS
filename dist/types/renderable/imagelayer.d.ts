@@ -77,6 +77,13 @@ export default class ImageLayer extends Sprite {
     * @ignore
     */
     preDraw(renderer: any): void;
+    /**
+     * draw this ImageLayer (automatically called by melonJS)
+     * @protected
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+     * @param {Camera2d} [viewport] - the viewport to (re)draw
+     */
+    protected draw(renderer: CanvasRenderer | WebGLRenderer, viewport?: any): void;
     onDeactivateEvent(): void;
 }
 import Sprite from "./sprite.js";

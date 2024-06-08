@@ -2,8 +2,8 @@
  * @import Vector2d from "./../math/vector2.js";
  * @import Vector3d from "./../math/vector3.js";
  * @import Matrix2d from "./../math/matrix2.js";
- * @import Entity from "./../renderable/entity/entity.js";
- * @import Container from "./../renderable/container.js";
+ * @import Entity from "./entity/entity.js";
+ * @import Container from "./container.js";
  * @import Line from "./../geometries/line.js";
  * @import Ellipse from "./../geometries/ellipse.js";
  * @import Polygon from "./../geometries/poly.js";
@@ -380,7 +380,7 @@ export default class Renderable extends Rect {
      * @see Renderable#postDraw
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
      */
-    preDraw(renderer: WebGLRenderer | CanvasRenderer): void;
+    preDraw(renderer: CanvasRenderer | WebGLRenderer): void;
     /**
      * Draw this renderable (automatically called by melonJS).
      * All draw operations for renderable are made respectively
@@ -394,14 +394,14 @@ export default class Renderable extends Rect {
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
      * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
-    draw(renderer: WebGLRenderer | CanvasRenderer, viewport?: any): void;
+    draw(renderer: CanvasRenderer | WebGLRenderer, viewport?: any): void;
     /**
      * restore the rendering context after drawing (automatically called by melonJS).
      * @see Renderable#preDraw
      * @see Renderable#draw
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
      */
-    postDraw(renderer: WebGLRenderer | CanvasRenderer): void;
+    postDraw(renderer: CanvasRenderer | WebGLRenderer): void;
     /**
      * onCollision callback, triggered in case of collision,
      * when this renderable body is colliding with another one
@@ -438,14 +438,14 @@ import Rect from "./../geometries/rectangle.js";
 import ObservableVector2d from "./../math/observable_vector2.js";
 import type Matrix2d from "./../math/matrix2.js";
 import Body from "./../physics/body.js";
-import type Container from "./../renderable/container.js";
-import type Entity from "./../renderable/entity/entity.js";
+import type Container from "./container.js";
+import type Entity from "./entity/entity.js";
 import GLShader from "./../video/webgl/glshader.js";
 import type Application from "./../application/application.js";
 import Color from "./../math/color.js";
 import Bounds from "./../physics/bounds.js";
 import type Vector2d from "./../math/vector2.js";
 import type Vector3d from "./../math/vector3.js";
-import type WebGLRenderer from "./../video/webgl/webgl_renderer.js";
 import type CanvasRenderer from "./../video/canvas/canvas_renderer.js";
+import type WebGLRenderer from "./../video/webgl/webgl_renderer.js";
 import type ResponseObject from "./../physics/response.js";

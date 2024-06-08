@@ -1,5 +1,5 @@
 /**
- * @import Draggable from "./draggable.js";
+ * @import { Draggable } from "./draggable.js";
  */
 /**
  * @classdesc
@@ -67,3 +67,4 @@ export class DropTarget extends Renderable {
     destroy(): void;
 }
 import Renderable from "./../renderable/renderable.js";
+import type { Draggable } from "./draggable.js";

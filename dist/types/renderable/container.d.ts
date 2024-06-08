@@ -223,7 +223,7 @@ export default class Container extends Renderable {
     /**
      * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed. <br>
      * if the given child implements a onDeactivateEvent() method, that method will be called once the child is removed from this container.
-     * @param {RendRenderable|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapTexterable} child - Child to be removed
+     * @param {Renderable|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapTexterable} child - Child to be removed
      * @param {boolean} [keepalive=false] - true to prevent calling child.destroy()
      */
     removeChild(child: any, keepalive?: boolean | undefined): void;

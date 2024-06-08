@@ -9,23 +9,21 @@ import Body from "../physics/body.js";
 
 /**
  * @import Color from "./../math/color.js";
- * @import Entity from "./../renderable/entity/entity.js";
- * @import Renderable from "./renderable.js";
- * @import Entity from "./../renderable/entity/entity.js";
- * @import Sprite from "./../renderable/sprite.js";
- * @import Collectable from "./../renderable/collectable.js";
- * @import Trigger from "./../renderable/trigger.js";
- * @import Draggable from "./../renderable/draggable.js";
- * @import DropTarget from "./../renderable/droptarget.js";
- * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
- * @import ImageLayer from "./../renderable/imagelayer.js";
- * @import ColorLayer from "./../renderable/colorlayer.js";
- * @import Light2d from "./../renderable/light2d.js";
- * @import UIBaseElement from "./../renderable/uibaseelement.js";
- * @import UISpriteElement from "./../renderable/uispriteelement.js";
- * @import UITextButton from "./../renderable/uitextbutton.js";
- * @import Text from "./../renderable/text.js";
- * @import BitmapText from "./../renderable/bitmaptext.js";
+ * @import Entity from "./entity/entity.js";
+ * @import Sprite from "./sprite.js";
+ * @import Collectable from "./collectable.js";
+ * @import Trigger from "./trigger.js";
+ * @import { Draggable } from "./draggable.js";
+ * @import { DropTarget } from "./droptarget.js";
+ * @import NineSliceSprite from "./nineslicesprite.js";
+ * @import ImageLayer from "./imagelayer.js";
+ * @import ColorLayer from "./colorlayer.js";
+ * @import Light2d from "./light2d.js";
+ * @import UIBaseElement from "./ui/uibaseelement.js";
+ * @import UISpriteElement from "./ui/uispriteelement.js";
+ * @import UITextButton from "./ui/uitextbutton.js";
+ * @import Text from "./text/text.js";
+ * @import BitmapText from "./text/bitmaptext.js";
  * @import Bounds from "./../physics/bounds.js";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
@@ -663,7 +661,7 @@ export default class Container extends Renderable {
     /**
      * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed. <br>
      * if the given child implements a onDeactivateEvent() method, that method will be called once the child is removed from this container.
-     * @param {RendRenderable|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapTexterable} child - Child to be removed
+     * @param {Renderable|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapTexterable} child - Child to be removed
      * @param {boolean} [keepalive=false] - true to prevent calling child.destroy()
      */
     removeChild(child, keepalive) {
