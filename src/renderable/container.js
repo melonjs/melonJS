@@ -7,9 +7,20 @@ import pool from "../system/pooling.js";
 import state from "../state/state.js";
 import Body from "../physics/body.js";
 
+
+/**
+ * Private function to re-use for object removal in a defer
+ * @ignore
+ */
+function deferredRemove(child, keepalive) {
+    this.removeChildNow(child, keepalive);
+}
+
+let globalFloatingCounter = 0;
+
 /**
  * @import Color from "./../math/color.js";
- * @import Entity from "./entity/entity.js";
+ * @import Entity from "./../renderable/entity.js";
  * @import Sprite from "./sprite.js";
  * @import Collectable from "./collectable.js";
  * @import Trigger from "./trigger.js";
@@ -28,16 +39,6 @@ import Body from "../physics/body.js";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
  */
-
-/**
- * Private function to re-use for object removal in a defer
- * @ignore
- */
-function deferredRemove(child, keepalive) {
-    this.removeChildNow(child, keepalive);
-}
-
-let globalFloatingCounter = 0;
 
 /**
  * @classdesc

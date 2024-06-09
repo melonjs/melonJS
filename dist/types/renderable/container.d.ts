@@ -1,4 +1,25 @@
 /**
+ * @import Color from "./../math/color.js";
+ * @import Entity from "./../renderable/entity.js";
+ * @import Sprite from "./sprite.js";
+ * @import Collectable from "./collectable.js";
+ * @import Trigger from "./trigger.js";
+ * @import { Draggable } from "./draggable.js";
+ * @import { DropTarget } from "./droptarget.js";
+ * @import NineSliceSprite from "./nineslicesprite.js";
+ * @import ImageLayer from "./imagelayer.js";
+ * @import ColorLayer from "./colorlayer.js";
+ * @import Light2d from "./light2d.js";
+ * @import UIBaseElement from "./ui/uibaseelement.js";
+ * @import UISpriteElement from "./ui/uispriteelement.js";
+ * @import UITextButton from "./ui/uitextbutton.js";
+ * @import Text from "./text/text.js";
+ * @import BitmapText from "./text/bitmaptext.js";
+ * @import Bounds from "./../physics/bounds.js";
+ * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
+ */
+/**
  * @classdesc
  * Container represents a collection of child objects
  * @augments Renderable

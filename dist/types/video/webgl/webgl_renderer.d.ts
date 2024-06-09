@@ -34,6 +34,13 @@ export default class WebGLRenderer extends Renderer {
      */
     lineWidth: number;
     /**
+     * sets or returns the shape used to join two line segments where they meet.
+     * Out of the three possible values for this property: "round", "bevel", and "miter", only "round" is supported for now in WebGL
+     * @type {string}
+     * @default "round"
+     */
+    lineJoin: string;
+    /**
      * the vertex buffer used by this WebGL Renderer
      * @type {WebGLBuffer}
      */

@@ -1,5 +1,8 @@
 /**
  * @import Color from "./../math/color.js";
+ * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
+ * @import Camera2d from "./../camera/camera2d.js";
  */
 /**
  * @classdesc
@@ -24,13 +27,10 @@ export default class ColorLayer extends Renderable {
     onResetEvent(name: any, color: any, z?: number): void;
     /**
      * draw this color layer (automatically called by melonJS)
-     * @name draw
-     * @memberof ColorLayer
-     * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
      * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
-    protected draw(renderer: CanvasRenderer | WebGLRenderer, viewport?: any): void;
+    draw(renderer: CanvasRenderer | WebGLRenderer, viewport?: Camera2d | undefined): void;
     /**
      * Destroy function
      * @ignore
@@ -39,3 +39,6 @@ export default class ColorLayer extends Renderable {
 }
 import Renderable from "./renderable.js";
 import type Color from "./../math/color.js";
+import type CanvasRenderer from "./../video/canvas/canvas_renderer.js";
+import type WebGLRenderer from "./../video/webgl/webgl_renderer.js";
+import type Camera2d from "./../camera/camera2d.js";

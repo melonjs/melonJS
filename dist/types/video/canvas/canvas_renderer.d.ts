@@ -330,11 +330,24 @@ export default class CanvasRenderer extends Renderer {
     /**
      * @ignore
      */
-    set lineWidth(value: number | ((width: GLfloat) => void));
+    set lineWidth(value: number);
     /**
      * sets or returns the thickness of lines for shape drawing
+     * @type {number}
+     * @default 1
      */
-    get lineWidth(): number | ((width: GLfloat) => void);
+    get lineWidth(): number;
+    /**
+     * @ignore
+     */
+    set lineJoin(value: string);
+    /**
+     * sets or returns the shape used to join two line segments where they meet.
+     * There are three possible values for this property: "round", "bevel", and "miter"
+     * @type {string}
+     * @default "miter"
+     */
+    get lineJoin(): string;
     /**
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.
