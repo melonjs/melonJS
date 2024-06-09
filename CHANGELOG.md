@@ -3,6 +3,7 @@
 ## [17.4.0] (melonJS 2) - _2024-xx-xx_
 
 ### Added
+- Renderer: new `lineJoin` property to set the line join style (only support "round" for now in WebGL mode)
 - Renderer: add support for line thickness for `strokePolygon` and `strokeRect` operations in WebGL
 
 ### Fixed

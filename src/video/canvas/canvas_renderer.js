@@ -680,6 +680,8 @@ export default class CanvasRenderer extends Renderer {
 
     /**
      * sets or returns the thickness of lines for shape drawing
+     * @type {number}
+     * @default 1
      */
     get lineWidth() {
         return this.getContext().lineWidth;
@@ -691,6 +693,25 @@ export default class CanvasRenderer extends Renderer {
     set lineWidth(value) {
         this.getContext().lineWidth = value;
         return value;
+    }
+
+    /**
+     * sets or returns the shape used to join two line segments where they meet.
+     * There are three possible values for this property: "round", "bevel", and "miter"
+     * @type {string}
+     * @default "miter"
+     */
+    get lineJoin() {
+        return this.getContext().lineJoin;
+    }
+
+    /**
+     * @ignore
+     */
+    set lineJoin(value) {
+        let context = this.getContext();
+        context.lineJoin = value;
+        return context.lineJoin;
     }
 
     /**
