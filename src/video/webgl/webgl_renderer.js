@@ -11,7 +11,7 @@ import pool from "./../../system/pooling.js";
 import { isPowerOfTwo } from "./../../math/math.js";
 
 /**
- * @import Rect from "./../../geometries/rect.js";
+ * @import Rect from "./../../geometries/rectangle.js";
  * @import RoundRect from "./../../geometries/roundrect.js";
  * @import Polygon from "./../../geometries/poly.js";
  * @import Line from "./../../geometries/line.js";
@@ -778,10 +778,11 @@ export default class WebGLRenderer extends Renderer {
 
     /**
      * not used by this renderer?
+     * @param {boolean} [enable=false]
      * @ignore
      */
-    setAntiAlias(context, enable) {
-        super.setAntiAlias(context, enable);
+    setAntiAlias(enable = false) {
+        super.setAntiAlias(enable);
         // TODO: perhaps handle GLNEAREST or other options with texture binding
     }
 
