@@ -17,6 +17,7 @@ import Point from "../geometries/point.js";
  * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
  * @import Line from "./../geometries/line.js";
  * @import Vector2d from "./../math/vector2.js";
+ * @import ObservableVector2d from "./../math/observable_vector2.js";
  **/
 
 /**
