@@ -4,7 +4,7 @@ import TextureCache from "./../texture/cache.js";
 import * as event from "./../../system/event.js";
 
 /**
- * @import Rect from "./../../geometries/rect.js";
+ * @import Rect from "./../../geometries/rectangle.js";
  * @import RoundRect from "./../../geometries/roundrect.js";
  * @import Polygon from "./../../geometries/poly.js";
  * @import Line from "./../../geometries/line.js";
