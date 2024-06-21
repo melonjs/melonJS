@@ -236,7 +236,7 @@ export default class Renderer {
      * enable/disable image smoothing (scaling interpolation) for the current render target
      * @param {boolean} [enable=false]
      */
-    setAntiAlias(enable) {
+    setAntiAlias(enable = false) {
         this.renderTarget.setAntiAlias(enable);
     }
 
