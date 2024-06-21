@@ -11,7 +11,7 @@
 - TypeScript: fix most (if not all) missing class declarations
 
 ### Chores
-- Update to TypeScript 5.5 Beta
+- Update to TypeScript 5.5
 
 ## [17.3.0] (melonJS 2) - _2024-06-04_
 
