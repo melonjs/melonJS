@@ -1,11 +1,11 @@
 /**
  * @import Color from "./../math/color.js";
- * @import Entity from "./../renderable/entity.js";
+ * @import Entity from "./entity/entity.js";
  * @import Sprite from "./sprite.js";
  * @import Collectable from "./collectable.js";
  * @import Trigger from "./trigger.js";
  * @import { Draggable } from "./draggable.js";
- * @import { DropTarget } from "./droptarget.js";
+ * @import { DropTarget } from "./dragndrop.js";
  * @import NineSliceSprite from "./nineslicesprite.js";
  * @import ImageLayer from "./imagelayer.js";
  * @import ColorLayer from "./colorlayer.js";
@@ -118,7 +118,7 @@ export default class Container extends Renderable {
      * @param {number} [z] - forces the z index of the child to the specified value
      * @returns {Renderable} the added child
      */
-    addChild(child: any, z?: number | undefined): Renderable;
+    addChild(child: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText, z?: number | undefined): Renderable;
     /**
      * Add a child to the container at the specified index<br>
      * (the list won't be sorted after insertion)
@@ -126,7 +126,7 @@ export default class Container extends Renderable {
      * @param {number} index - The index at which to insert the child
      * @returns {Renderable} the added child
      */
-    addChildAt(child: any, index: number): Renderable;
+    addChildAt(child: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText, index: number): Renderable;
     /**
      * The forEach() method executes a provided function once per child element. <br>
      * the callback function is invoked with three arguments: <br>
@@ -151,7 +151,7 @@ export default class Container extends Renderable {
      * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be added
      * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child2 - Child to be added
      */
-    swapChildren(child: any, child2: any): void;
+    swapChildren(child: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText, child2: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText): void;
     /**
      * Returns the Child at the specified index
      * @param {number} index - The index of the child
@@ -163,19 +163,19 @@ export default class Container extends Renderable {
      * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - The child object
      * @returns {number} index
      */
-    getChildIndex(child: any): number;
+    getChildIndex(child: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText): number;
     /**
      * Returns the next child within the container or undefined if none
      * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - The child object
      * @returns {Renderable} child
      */
-    getNextChild(child: any): Renderable;
+    getNextChild(child: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText): Renderable;
     /**
      * Returns true if contains the specified Child
      * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - The child object
      * @returns {boolean}
      */
-    hasChild(child: any): boolean;
+    hasChild(child: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText): boolean;
     /**
      * return the child corresponding to the given property and value.<br>
      * note : avoid calling this function every frame since
@@ -244,10 +244,10 @@ export default class Container extends Renderable {
     /**
      * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed. <br>
      * if the given child implements a onDeactivateEvent() method, that method will be called once the child is removed from this container.
-     * @param {Renderable|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapTexterable} child - Child to be removed
+     * @param {Renderable|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be removed
      * @param {boolean} [keepalive=false] - true to prevent calling child.destroy()
      */
-    removeChild(child: any, keepalive?: boolean | undefined): void;
+    removeChild(child: Renderable | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText, keepalive?: boolean | undefined): void;
     /**
      * Removes (and optionally destroys) a child from the container.<br>
      * (removal is immediate and unconditional)<br>
@@ -255,7 +255,7 @@ export default class Container extends Renderable {
      * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be removed
      * @param {boolean} [keepalive=False] - True to prevent calling child.destroy()
      */
-    removeChildNow(child: any, keepalive?: boolean | undefined): void;
+    removeChildNow(child: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText, keepalive?: boolean | undefined): void;
     /**
      * Automatically set the specified property of all childs to the given value
      * @param {string} prop - property name
@@ -267,22 +267,22 @@ export default class Container extends Renderable {
      * Move the child in the group one step forward (z depth).
      * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child -  Child to be moved
      */
-    moveUp(child: any): void;
+    moveUp(child: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText): void;
     /**
      * Move the child in the group one step backward (z depth).
      * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be moved
      */
-    moveDown(child: any): void;
+    moveDown(child: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText): void;
     /**
      * Move the specified child to the top(z depth).
      * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be moved
      */
-    moveToTop(child: any): void;
+    moveToTop(child: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText): void;
     /**
      * Move the specified child the bottom (z depth).
      * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be moved
      */
-    moveToBottom(child: any): void;
+    moveToBottom(child: Renderable | Entity | Sprite | Collectable | Trigger | Draggable | DropTarget | NineSliceSprite | ImageLayer | ColorLayer | Light2d | UIBaseElement | UISpriteElement | UITextButton | Text | BitmapText): void;
     /**
      * Manually trigger the sort of all the childs in the container
      * @param {boolean} [recursive=false] - recursively sort all containers if true
@@ -315,3 +315,18 @@ export default class Container extends Renderable {
 }
 import Renderable from "./renderable.js";
 import type Color from "./../math/color.js";
+import type Entity from "./entity/entity.js";
+import type Sprite from "./sprite.js";
+import type Collectable from "./collectable.js";
+import type Trigger from "./trigger.js";
+import type { Draggable } from "./draggable.js";
+import type { DropTarget } from "./dragndrop.js";
+import type NineSliceSprite from "./nineslicesprite.js";
+import type ImageLayer from "./imagelayer.js";
+import type ColorLayer from "./colorlayer.js";
+import type Light2d from "./light2d.js";
+import type UIBaseElement from "./ui/uibaseelement.js";
+import type UISpriteElement from "./ui/uispriteelement.js";
+import type UITextButton from "./ui/uitextbutton.js";
+import type Text from "./text/text.js";
+import type BitmapText from "./text/bitmaptext.js";

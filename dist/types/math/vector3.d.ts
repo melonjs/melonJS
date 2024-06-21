@@ -171,10 +171,10 @@ export default class Vector3d {
     copy(v: Vector2d | Vector3d): Vector3d;
     /**
      * return true if this vector is equal to the given values or vector
-     * @param {number|Vector2d|ObservableVector2d|Vector3d|ObservableVector3d} x
+     * @param {number|Vector2d|Vector3d} x
      * @param {number} [y]
      * @param {number} [z]
-     * @returns {boolean}
+     * @returns {boolean} true if both vectros are equals
      */
     equals(...args: any[]): boolean;
     /**
@@ -191,10 +191,10 @@ export default class Vector3d {
     /**
      * Rotate this vector (counter-clockwise) by the specified angle (in radians) around the z axis
      * @param {number} angle - The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around (on the same z axis)
+     * @param {Vector2d} [v] - an optional point to rotate around (on the same z axis)
      * @returns {Vector3d} Reference to this object for method chaining
      */
-    rotate(angle: number, v?: any): Vector3d;
+    rotate(angle: number, v?: Vector2d | undefined): Vector3d;
     /**
      * return the dot product of this vector and the passed one
      * @param {Vector2d|Vector3d} v

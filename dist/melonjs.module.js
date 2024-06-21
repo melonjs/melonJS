@@ -4089,10 +4089,10 @@ class Vector3d {
 
     /**
      * return true if this vector is equal to the given values or vector
-     * @param {number|Vector2d|ObservableVector2d|Vector3d|ObservableVector3d} x
+     * @param {number|Vector2d|Vector3d} x
      * @param {number} [y]
      * @param {number} [z]
-     * @returns {boolean}
+     * @returns {boolean} true if both vectros are equals
      */
     equals(...args) {
         let _x, _y, _z;
@@ -4131,7 +4131,7 @@ class Vector3d {
     /**
      * Rotate this vector (counter-clockwise) by the specified angle (in radians) around the z axis
      * @param {number} angle - The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around (on the same z axis)
+     * @param {Vector2d} [v] - an optional point to rotate around (on the same z axis)
      * @returns {Vector3d} Reference to this object for method chaining
      */
     rotate(angle, v) {
@@ -18440,6 +18440,7 @@ class GLShader {
  * @import Line from "./../geometries/line.js";
  * @import Ellipse from "./../geometries/ellipse.js";
  * @import Polygon from "./../geometries/poly.js";
+ * @import RoundRect from "./../geometries/roundrect.js";
  * @import Application from "./../application/application.js";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
@@ -19193,7 +19194,7 @@ class Renderable extends Rect {
      * onCollision callback, triggered in case of collision,
      * when this renderable body is colliding with another one
      * @param {ResponseObject} response - the collision response object
-     * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} other - the other renderable touching this one (a reference to response.a or response.b)
+     * @param {Renderable} other - the other renderable touching this one (a reference to response.a or response.b)
      * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
      * @example
      * // colision handler
@@ -21691,48 +21692,54 @@ var coerce_1 = coerce$1;
 
 var coerce$2 = /*@__PURE__*/getDefaultExportFromCjs(coerce_1);
 
-class LRUCache {
-  constructor () {
-    this.max = 1000;
-    this.map = new Map();
-  }
+var lrucache;
+var hasRequiredLrucache;
 
-  get (key) {
-    const value = this.map.get(key);
-    if (value === undefined) {
-      return undefined
-    } else {
-      // Remove the key from the map and add it to the end
-      this.map.delete(key);
-      this.map.set(key, value);
-      return value
-    }
-  }
+function requireLrucache () {
+	if (hasRequiredLrucache) return lrucache;
+	hasRequiredLrucache = 1;
+	class LRUCache {
+	  constructor () {
+	    this.max = 1000;
+	    this.map = new Map();
+	  }
 
-  delete (key) {
-    return this.map.delete(key)
-  }
+	  get (key) {
+	    const value = this.map.get(key);
+	    if (value === undefined) {
+	      return undefined
+	    } else {
+	      // Remove the key from the map and add it to the end
+	      this.map.delete(key);
+	      this.map.set(key, value);
+	      return value
+	    }
+	  }
 
-  set (key, value) {
-    const deleted = this.delete(key);
+	  delete (key) {
+	    return this.map.delete(key)
+	  }
 
-    if (!deleted && value !== undefined) {
-      // If cache is full, delete the least recently used item
-      if (this.map.size >= this.max) {
-        const firstKey = this.map.keys().next().value;
-        this.delete(firstKey);
-      }
+	  set (key, value) {
+	    const deleted = this.delete(key);
 
-      this.map.set(key, value);
-    }
+	    if (!deleted && value !== undefined) {
+	      // If cache is full, delete the least recently used item
+	      if (this.map.size >= this.max) {
+	        const firstKey = this.map.keys().next().value;
+	        this.delete(firstKey);
+	      }
 
-    return this
-  }
+	      this.map.set(key, value);
+	    }
+
+	    return this
+	  }
+	}
+
+	lrucache = LRUCache;
+	return lrucache;
 }
-
-var lrucache = LRUCache;
-
-var lrucache$1 = /*@__PURE__*/getDefaultExportFromCjs(lrucache);
 
 var range;
 var hasRequiredRange;
@@ -21940,7 +21947,7 @@ function requireRange () {
 
 	range = Range;
 
-	const LRU = lrucache;
+	const LRU = requireLrucache();
 	const cache = new LRU();
 
 	const parseOptions = parseOptions_1;
@@ -25294,7 +25301,7 @@ class CanvasRenderTarget {
 }
 
 /**
- * @import Rect from "./../geometries/rect.js";
+ * @import Rect from "./../geometries/rectangle.js";
  * @import RoundRect from "./../geometries/roundrect.js";
  * @import Polygon from "./../geometries/poly.js";
  * @import Line from "./../geometries/line.js";
@@ -25524,7 +25531,7 @@ class Renderer {
      * enable/disable image smoothing (scaling interpolation) for the current render target
      * @param {boolean} [enable=false]
      */
-    setAntiAlias(enable) {
+    setAntiAlias(enable = false) {
         this.renderTarget.setAntiAlias(enable);
     }
 
@@ -25865,6 +25872,10 @@ function parseAseprite(data, textureAtlas) {
 
     return atlas;
 }
+
+/**
+ * @import NineSliceSprite from "./../../renderable/nineslicesprite.js";
+ */
 
 /**
  * create a simple 1 frame texture atlas based on the given parameters
@@ -26670,7 +26681,7 @@ class TextureCache {
 }
 
 /**
- * @import Rect from "./../../geometries/rect.js";
+ * @import Rect from "./../../geometries/rectangle.js";
  * @import RoundRect from "./../../geometries/roundrect.js";
  * @import Polygon from "./../../geometries/poly.js";
  * @import Line from "./../../geometries/line.js";
@@ -27346,6 +27357,8 @@ class CanvasRenderer extends Renderer {
 
     /**
      * sets or returns the thickness of lines for shape drawing
+     * @type {number}
+     * @default 1
      */
     get lineWidth() {
         return this.getContext().lineWidth;
@@ -27357,6 +27370,25 @@ class CanvasRenderer extends Renderer {
     set lineWidth(value) {
         this.getContext().lineWidth = value;
         return value;
+    }
+
+    /**
+     * sets or returns the shape used to join two line segments where they meet.
+     * There are three possible values for this property: "round", "bevel", and "miter"
+     * @type {string}
+     * @default "miter"
+     */
+    get lineJoin() {
+        return this.getContext().lineJoin;
+    }
+
+    /**
+     * @ignore
+     */
+    set lineJoin(value) {
+        let context = this.getContext();
+        context.lineJoin = value;
+        return context.lineJoin;
     }
 
     /**
@@ -28073,13 +28105,23 @@ class TMXGroup {
 }
 
 /**
+ * Private function to re-use for object removal in a defer
+ * @ignore
+ */
+function deferredRemove(child, keepalive) {
+    this.removeChildNow(child, keepalive);
+}
+
+let globalFloatingCounter = 0;
+
+/**
  * @import Color from "./../math/color.js";
  * @import Entity from "./entity/entity.js";
  * @import Sprite from "./sprite.js";
  * @import Collectable from "./collectable.js";
  * @import Trigger from "./trigger.js";
  * @import { Draggable } from "./draggable.js";
- * @import { DropTarget } from "./droptarget.js";
+ * @import { DropTarget } from "./dragndrop.js";
  * @import NineSliceSprite from "./nineslicesprite.js";
  * @import ImageLayer from "./imagelayer.js";
  * @import ColorLayer from "./colorlayer.js";
@@ -28093,16 +28135,6 @@ class TMXGroup {
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
  */
-
-/**
- * Private function to re-use for object removal in a defer
- * @ignore
- */
-function deferredRemove(child, keepalive) {
-    this.removeChildNow(child, keepalive);
-}
-
-let globalFloatingCounter = 0;
 
 /**
  * @classdesc
@@ -28726,7 +28758,7 @@ class Container extends Renderable {
     /**
      * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed. <br>
      * if the given child implements a onDeactivateEvent() method, that method will be called once the child is removed from this container.
-     * @param {Renderable|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapTexterable} child - Child to be removed
+     * @param {Renderable|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be removed
      * @param {boolean} [keepalive=false] - true to prevent calling child.destroy()
      */
     removeChild(child, keepalive) {
@@ -33599,6 +33631,7 @@ const timer = new Timer();
  * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
  * @import Line from "./../geometries/line.js";
  * @import Vector2d from "./../math/vector2.js";
+ * @import ObservableVector2d from "./../math/observable_vector2.js";
  **/
 
 /**
@@ -35858,7 +35891,7 @@ class QuadCompositor extends Compositor {
 }
 
 /**
- * @import Rect from "./../../geometries/rect.js";
+ * @import Rect from "./../../geometries/rectangle.js";
  * @import RoundRect from "./../../geometries/roundrect.js";
  * @import Polygon from "./../../geometries/poly.js";
  * @import Line from "./../../geometries/line.js";
@@ -35915,6 +35948,14 @@ class WebGLRenderer extends Renderer {
          * @see WebGLRenderer#strokeRect
          */
         this.lineWidth = 1;
+
+        /**
+         * sets or returns the shape used to join two line segments where they meet.
+         * Out of the three possible values for this property: "round", "bevel", and "miter", only "round" is supported for now in WebGL
+         * @type {string}
+         * @default "round"
+         */
+        this.lineJoin = "round";
 
         /**
          * the vertex buffer used by this WebGL Renderer
@@ -36617,10 +36658,11 @@ class WebGLRenderer extends Renderer {
 
     /**
      * not used by this renderer?
+     * @param {boolean} [enable=false]
      * @ignore
      */
-    setAntiAlias(context, enable) {
-        super.setAntiAlias(context, enable);
+    setAntiAlias(enable = false) {
+        super.setAntiAlias(enable);
         // TODO: perhaps handle GLNEAREST or other options with texture binding
     }
 
@@ -37075,6 +37117,9 @@ class WebGLRenderer extends Renderer {
 
 /**
  * @import Color from "./../math/color.js";
+ * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
+ * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
+ * @import Camera2d from "./../camera/camera2d.js";
  */
 
 /**
@@ -37116,9 +37161,6 @@ class ColorLayer extends Renderable {
 
     /**
      * draw this color layer (automatically called by melonJS)
-     * @name draw
-     * @memberof ColorLayer
-     * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
      * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
@@ -39329,10 +39371,6 @@ class Collectable extends Sprite {
 
 /**
  * @import ResponseObject from "./../physics/response.js";
- * @import NiceSliceSprite from "./niceslicesprite.js";
- * @import Entity from "./entity/entity.js";
- * @import Sprite from "./sprite.js";
- * @import Container from "./container.js";
  */
 
 /**
@@ -39467,7 +39505,7 @@ class Trigger extends Renderable {
      * @name onCollision
      * @memberof Trigger
      * @param {ResponseObject} response - the collision response object
-     * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} other - the other renderable touching this one (a reference to response.a or response.b)
+     * @param {Renderable} other - the other renderable touching this one (a reference to response.a or response.b)
      * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
      */
     onCollision(response, other) { // eslint-disable-line no-unused-vars

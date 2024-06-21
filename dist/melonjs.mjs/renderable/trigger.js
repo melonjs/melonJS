@@ -13,10 +13,6 @@ import pool from '../system/pooling.js';
 
 /**
  * @import ResponseObject from "./../physics/response.js";
- * @import NiceSliceSprite from "./niceslicesprite.js";
- * @import Entity from "./entity/entity.js";
- * @import Sprite from "./sprite.js";
- * @import Container from "./container.js";
  */
 
 /**
@@ -151,7 +147,7 @@ class Trigger extends Renderable {
      * @name onCollision
      * @memberof Trigger
      * @param {ResponseObject} response - the collision response object
-     * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} other - the other renderable touching this one (a reference to response.a or response.b)
+     * @param {Renderable} other - the other renderable touching this one (a reference to response.a or response.b)
      * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
      */
     onCollision(response, other) { // eslint-disable-line no-unused-vars

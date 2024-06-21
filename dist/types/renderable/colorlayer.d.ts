@@ -15,7 +15,7 @@ export default class ColorLayer extends Renderable {
      * @param {Color|string} color - CSS color
      * @param {number} [z = 0] - z-index position
      */
-    constructor(name: string, color: string | Color, z?: number | undefined);
+    constructor(name: string, color: Color | string, z?: number | undefined);
     /**
      * the layer color component
      * @public

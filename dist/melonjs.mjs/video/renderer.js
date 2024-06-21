@@ -13,7 +13,7 @@ import Vector2d from '../math/vector2.js';
 import CanvasRenderTarget from './rendertarget/canvasrendertarget.js';
 
 /**
- * @import Rect from "./../geometries/rect.js";
+ * @import Rect from "./../geometries/rectangle.js";
  * @import RoundRect from "./../geometries/roundrect.js";
  * @import Polygon from "./../geometries/poly.js";
  * @import Line from "./../geometries/line.js";
@@ -243,7 +243,7 @@ class Renderer {
      * enable/disable image smoothing (scaling interpolation) for the current render target
      * @param {boolean} [enable=false]
      */
-    setAntiAlias(enable) {
+    setAntiAlias(enable = false) {
         this.renderTarget.setAntiAlias(enable);
     }
 

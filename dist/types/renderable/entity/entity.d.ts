@@ -41,7 +41,7 @@ export default class Entity extends Renderable {
         frameheight?: number | undefined;
         type?: string | undefined;
         collisionMask?: number | undefined;
-        shapes?: Rect[] | Polygon[] | Line[] | Ellipse[] | undefined;
+        shapes?: Polygon[] | Line[] | Ellipse[] | Rect[] | undefined;
     });
     /**
      * The array of renderable children of this entity.
@@ -78,7 +78,7 @@ export default class Entity extends Renderable {
     onDeactivateEvent(): void;
 }
 import Renderable from "../renderable.js";
-import type Rect from "./../../geometries/rectangle.js";
 import type Polygon from "./../../geometries/poly.js";
 import type Line from "./../../geometries/line.js";
 import type Ellipse from "./../../geometries/ellipse.js";
+import type Rect from "./../../geometries/rectangle.js";

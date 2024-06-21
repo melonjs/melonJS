@@ -62,7 +62,7 @@ export default class Polygon {
      * @param {Vector2d[]|number[]} points - array of vector or vertice defining the Polygon
      * @returns {Polygon} this instance for objecf chaining
      */
-    setShape(x: number, y: number, points: number[] | Vector2d[]): Polygon;
+    setShape(x: number, y: number, points: Vector2d[] | number[]): Polygon;
     /**
      * set the vertices defining this Polygon
      * @param {Vector2d[]} vertices - array of vector or vertice defining the Polygon
@@ -91,7 +91,7 @@ export default class Polygon {
      * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
      * @returns {Polygon} Reference to this object for method chaining
      */
-    rotate(angle: number, v?: any): Polygon;
+    rotate(angle: number, v?: Vector2d | ObservableVector2d): Polygon;
     /**
      * Scale this Polygon by the given scalar.
      * @param {number} x

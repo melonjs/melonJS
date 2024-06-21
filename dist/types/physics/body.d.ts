@@ -6,6 +6,7 @@
  * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
  * @import Line from "./../geometries/line.js";
  * @import Vector2d from "./../math/vector2.js";
+ * @import ObservableVector2d from "./../math/observable_vector2.js";
  **/
 /**
  * @classdesc
@@ -18,7 +19,7 @@ export default class Body {
      * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] - a initial shape, list of shapes, or JSON object defining the body
      * @param {Function} [onBodyUpdate] - callback for when the body is updated (e.g. add/remove shapes)
      */
-    constructor(ancestor: Renderable | Container | NineSliceSprite | Sprite | Entity, shapes?: object | Polygon | Line | Point | Rect | Bounds | Point[] | Ellipse | Rect[] | Polygon[] | Line[] | Ellipse[] | Bounds[] | undefined, onBodyUpdate?: Function | undefined);
+    constructor(ancestor: Renderable | Container | Entity | Sprite | NineSliceSprite, shapes?: object | Polygon | Line | Point | Rect | Bounds | Point[] | Ellipse | Polygon[] | Line[] | Ellipse[] | Rect[] | Bounds[] | undefined, onBodyUpdate?: Function | undefined);
     /**
      * a reference to the parent object that contains this body,
      * or undefined if it has not been added to one.
@@ -26,7 +27,7 @@ export default class Body {
      * @type {Renderable|Container|Entity|Sprite|NineSliceSprite}
      * @default undefined
      */
-    public ancestor: Renderable | Container | NineSliceSprite | Sprite | Entity;
+    public ancestor: Renderable | Container | Entity | Sprite | NineSliceSprite;
     /**
      * The AABB bounds box reprensenting this body
      * @public
@@ -38,7 +39,7 @@ export default class Body {
      * @ignore
      * @type {Polygon[]|Line[]|Ellipse[]|Point|Point[]}
      */
-    shapes: Point | Point[] | Polygon[] | Line[] | Ellipse[];
+    shapes: Polygon[] | Line[] | Ellipse[] | Point | Point[];
     /**
      * The body collision mask, that defines what should collide with what.<br>
      * (by default will collide with all entities)
@@ -182,7 +183,7 @@ export default class Body {
      * // add a shape from a JSON object
      * this.body.addShape(me.loader.getJSON("shapesdef").banana);
      */
-    addShape(shape: object | Polygon | Line | Point | Rect | Bounds | Point[] | Ellipse): number;
+    addShape(shape: Rect | Polygon | Line | Ellipse | Point | Point[] | Bounds | object): number;
     /**
      * set the body vertices to the given one
      * @param {Vector2d[]} vertices - an array of me.Vector2d points defining a convex hull
@@ -301,7 +302,7 @@ export default class Body {
      * @param {Vector2d|ObservableVector2d} [v=Body.getBounds().center] - an optional point to rotate around
      * @returns {Body} Reference to this object for method chaining
      */
-    rotate(angle: number, v?: any): Body;
+    rotate(angle: number, v?: Vector2d | ObservableVector2d | undefined): Body;
     /**
      * cap the body velocity (body.maxVel property) to the specified value<br>
      * @param {number} x - max velocity on x axis
@@ -336,13 +337,14 @@ export default class Body {
 }
 import type Renderable from "./../renderable/renderable.js";
 import type Container from "./../renderable/container.js";
-import type NineSliceSprite from "./../renderable/nineslicesprite.js";
-import type Sprite from "./../renderable/sprite.js";
 import type Entity from "./../renderable/entity/entity.js";
+import type Sprite from "./../renderable/sprite.js";
+import type NineSliceSprite from "./../renderable/nineslicesprite.js";
 import Bounds from "./bounds.js";
 import Polygon from "./../geometries/poly.js";
+import type Line from "./../geometries/line.js";
 import Ellipse from "./../geometries/ellipse.js";
 import Point from "../geometries/point.js";
-import type Line from "./../geometries/line.js";
 import type Vector2d from "./../math/vector2.js";
 import Rect from "./../geometries/rectangle.js";
+import type ObservableVector2d from "./../math/observable_vector2.js";

@@ -15,13 +15,23 @@ import state from '../state/state.js';
 import Body from '../physics/body.js';
 
 /**
+ * Private function to re-use for object removal in a defer
+ * @ignore
+ */
+function deferredRemove(child, keepalive) {
+    this.removeChildNow(child, keepalive);
+}
+
+let globalFloatingCounter = 0;
+
+/**
  * @import Color from "./../math/color.js";
  * @import Entity from "./entity/entity.js";
  * @import Sprite from "./sprite.js";
  * @import Collectable from "./collectable.js";
  * @import Trigger from "./trigger.js";
  * @import { Draggable } from "./draggable.js";
- * @import { DropTarget } from "./droptarget.js";
+ * @import { DropTarget } from "./dragndrop.js";
  * @import NineSliceSprite from "./nineslicesprite.js";
  * @import ImageLayer from "./imagelayer.js";
  * @import ColorLayer from "./colorlayer.js";
@@ -35,16 +45,6 @@ import Body from '../physics/body.js';
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
  */
-
-/**
- * Private function to re-use for object removal in a defer
- * @ignore
- */
-function deferredRemove(child, keepalive) {
-    this.removeChildNow(child, keepalive);
-}
-
-let globalFloatingCounter = 0;
 
 /**
  * @classdesc
@@ -668,7 +668,7 @@ class Container extends Renderable {
     /**
      * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed. <br>
      * if the given child implements a onDeactivateEvent() method, that method will be called once the child is removed from this container.
-     * @param {Renderable|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapTexterable} child - Child to be removed
+     * @param {Renderable|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be removed
      * @param {boolean} [keepalive=false] - true to prevent calling child.destroy()
      */
     removeChild(child, keepalive) {

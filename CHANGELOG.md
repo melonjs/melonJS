@@ -8,7 +8,7 @@
 
 ### Fixed
 - Renderer: fix `fillEllipse()` operations in WebGL mode (that was stroking the ellipse instead)
-- TypeScript: fix most (if not all) missing class declarations
+- TypeScript: fix most (if not all) missing declarations
 
 ### Chores
 - Update to TypeScript 5.5

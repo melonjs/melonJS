@@ -1,9 +1,5 @@
 /**
  * @import ResponseObject from "./../physics/response.js";
- * @import NiceSliceSprite from "./niceslicesprite.js";
- * @import Entity from "./entity/entity.js";
- * @import Sprite from "./sprite.js";
- * @import Container from "./container.js";
  */
 /**
  * @classdesc
@@ -45,7 +41,6 @@ export default class Trigger extends Renderable {
     triggerSettings: {
         event: string;
     };
-    body: any;
     /**
      * @ignore
      */

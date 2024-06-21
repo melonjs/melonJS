@@ -41,7 +41,7 @@ export default class NineSliceSprite extends Sprite {
         height: number;
         insetx?: number | undefined;
         insety?: number | undefined;
-        image: string | HTMLCanvasElement | HTMLImageElement | TextureAtlas;
+        image: HTMLImageElement | HTMLCanvasElement | TextureAtlas | string;
         name?: string | undefined;
         region?: string | undefined;
         framewidth?: number | undefined;
@@ -73,5 +73,5 @@ export default class NineSliceSprite extends Sprite {
     draw(renderer: any): void;
 }
 import Sprite from "./sprite.js";
-import type Color from "./../math/color.js";
 import type { TextureAtlas } from "./../video/texture/atlas.js";
+import type Color from "./../math/color.js";

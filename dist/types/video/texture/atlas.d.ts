@@ -1,4 +1,7 @@
 /**
+ * @import NineSliceSprite from "./../../renderable/nineslicesprite.js";
+ */
+/**
  * create a simple 1 frame texture atlas based on the given parameters
  * @ignore
  */
@@ -26,7 +29,7 @@ export function createAtlas(width: any, height: any, name?: string, repeat?: str
  * return a string that identifies the texture atlas type
  * @ignore
  */
-export function identifyFormat(app: any): "melonJS" | "texturepacker" | "shoebox" | "aseprite";
+export function identifyFormat(app: any): "texturepacker" | "shoebox" | "aseprite" | "melonJS";
 /**
  * @classdesc
  * A Texture atlas class, currently supports : <br>
@@ -201,3 +204,4 @@ export class TextureAtlas {
     createAnimationFromName(names?: string[] | number[] | undefined, settings?: object | undefined): Sprite;
 }
 import Sprite from "./../../renderable/sprite.js";
+import type NineSliceSprite from "./../../renderable/nineslicesprite.js";

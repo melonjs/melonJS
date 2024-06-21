@@ -47,7 +47,7 @@ export type ApplicationSettings = {
     /**
      * - ~Experimental~ the default method to sort object on the z axis in WebGL
      */
-    depthTest?: "z-buffer" | "sorting" | undefined;
+    depthTest?: "sorting" | "z-buffer" | undefined;
     /**
      * - a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context. To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
      */

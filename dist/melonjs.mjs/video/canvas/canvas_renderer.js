@@ -11,7 +11,7 @@ import TextureCache from '../texture/cache.js';
 import { emit, on, ONCONTEXT_LOST, ONCONTEXT_RESTORED, GAME_RESET } from '../../system/event.js';
 
 /**
- * @import Rect from "./../../geometries/rect.js";
+ * @import Rect from "./../../geometries/rectangle.js";
  * @import RoundRect from "./../../geometries/roundrect.js";
  * @import Polygon from "./../../geometries/poly.js";
  * @import Line from "./../../geometries/line.js";
@@ -687,6 +687,8 @@ class CanvasRenderer extends Renderer {
 
     /**
      * sets or returns the thickness of lines for shape drawing
+     * @type {number}
+     * @default 1
      */
     get lineWidth() {
         return this.getContext().lineWidth;
@@ -698,6 +700,25 @@ class CanvasRenderer extends Renderer {
     set lineWidth(value) {
         this.getContext().lineWidth = value;
         return value;
+    }
+
+    /**
+     * sets or returns the shape used to join two line segments where they meet.
+     * There are three possible values for this property: "round", "bevel", and "miter"
+     * @type {string}
+     * @default "miter"
+     */
+    get lineJoin() {
+        return this.getContext().lineJoin;
+    }
+
+    /**
+     * @ignore
+     */
+    set lineJoin(value) {
+        let context = this.getContext();
+        context.lineJoin = value;
+        return context.lineJoin;
     }
 
     /**

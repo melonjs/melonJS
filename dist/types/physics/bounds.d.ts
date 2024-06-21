@@ -160,7 +160,7 @@ export default class Bounds {
      * @param {Bounds|Rect} bounds
      * @returns {boolean} True if the bounds overlap, otherwise false
      */
-    overlaps(bounds: Rect | Bounds): boolean;
+    overlaps(bounds: Bounds | Rect): boolean;
     /**
      * determines whether all coordinates of this bounds are finite numbers.
      * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.

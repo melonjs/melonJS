@@ -40,7 +40,7 @@ declare namespace collision {
      *        // ...
      *    }
      */
-    function rayCast(line: Line, result?: Renderable[] | undefined): Renderable[];
+    function rayCast(line: Line, result?: Renderable[] | undefined): Array<Renderable>;
 }
 import type Line from "./../geometries/line.js";
 import type Renderable from "./../renderable/renderable.js";

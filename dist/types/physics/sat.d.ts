@@ -8,7 +8,7 @@
  * @param {Response=} response - Response object (optional) that will be populated if they intersect.
  * @returns {boolean} true if they intersect, false if they don't.
  */
-export function testPolygonPolygon(a: Renderable | Container | NineSliceSprite | Sprite | Entity, polyA: Polygon, b: Renderable | Container | NineSliceSprite | Sprite | Entity, polyB: Polygon, response?: Response | undefined): boolean;
+export function testPolygonPolygon(a: Renderable | Container | Entity | Sprite | NineSliceSprite, polyA: Polygon, b: Renderable | Container | Entity | Sprite | NineSliceSprite, polyB: Polygon, response?: Response | undefined): boolean;
 /**
  * Check if two Ellipse collide.
  * @ignore
@@ -20,7 +20,7 @@ export function testPolygonPolygon(a: Renderable | Container | NineSliceSprite |
  *   the circles intersect.
  * @returns {boolean} true if the circles intersect, false if they don't.
  */
-export function testEllipseEllipse(a: Renderable | Container | NineSliceSprite | Sprite | Entity, ellipseA: Ellipse, b: Renderable | Container | NineSliceSprite | Sprite | Entity, ellipseB: Ellipse, response?: Response | undefined): boolean;
+export function testEllipseEllipse(a: Renderable | Container | Entity | Sprite | NineSliceSprite, ellipseA: Ellipse, b: Renderable | Container | Entity | Sprite | NineSliceSprite, ellipseB: Ellipse, response?: Response | undefined): boolean;
 /**
  * Check if a polygon and an ellipse collide.
  * @ignore
@@ -31,7 +31,7 @@ export function testEllipseEllipse(a: Renderable | Container | NineSliceSprite |
  * @param {Response=} response - Response object (optional) that will be populated if they intersect.
  * @returns {boolean} true if they intersect, false if they don't.
  */
-export function testPolygonEllipse(a: Renderable | Container | NineSliceSprite | Sprite | Entity, polyA: Polygon, b: Renderable | Container | NineSliceSprite | Sprite | Entity, ellipseB: Ellipse, response?: Response | undefined): boolean;
+export function testPolygonEllipse(a: Renderable | Container | Entity | Sprite | NineSliceSprite, polyA: Polygon, b: Renderable | Container | Entity | Sprite | NineSliceSprite, ellipseB: Ellipse, response?: Response | undefined): boolean;
 /**
  * Check if an ellipse and a polygon collide. <br>
  * **NOTE:** This is slightly less efficient than testPolygonEllipse as it just
@@ -45,11 +45,11 @@ export function testPolygonEllipse(a: Renderable | Container | NineSliceSprite |
  *   they intersect.
  * @returns {boolean} true if they intersect, false if they don't.
  */
-export function testEllipsePolygon(a: Renderable | Container | NineSliceSprite | Sprite | Entity, ellipseA: Ellipse, b: Renderable | Container | NineSliceSprite | Sprite | Entity, polyB: Polygon, response?: Response | undefined): boolean;
+export function testEllipsePolygon(a: Renderable | Container | Entity | Sprite | NineSliceSprite, ellipseA: Ellipse, b: Renderable | Container | Entity | Sprite | NineSliceSprite, polyB: Polygon, response?: Response | undefined): boolean;
 import type Renderable from "./../renderable/renderable.js";
 import type Container from "./../renderable/container.js";
-import type NineSliceSprite from "./../renderable/nineslicesprite.js";
-import type Sprite from "./../renderable/sprite.js";
 import type Entity from "./../renderable/entity/entity.js";
+import type Sprite from "./../renderable/sprite.js";
+import type NineSliceSprite from "./../renderable/nineslicesprite.js";
 import type Polygon from "./../geometries/poly.js";
 import type Ellipse from "./../geometries/ellipse.js";

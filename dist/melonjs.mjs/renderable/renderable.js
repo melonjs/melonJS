@@ -25,6 +25,7 @@ import { releaseAllPointerEvents } from '../input/pointerevent.js';
  * @import Line from "./../geometries/line.js";
  * @import Ellipse from "./../geometries/ellipse.js";
  * @import Polygon from "./../geometries/poly.js";
+ * @import RoundRect from "./../geometries/roundrect.js";
  * @import Application from "./../application/application.js";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
@@ -778,7 +779,7 @@ class Renderable extends Rect {
      * onCollision callback, triggered in case of collision,
      * when this renderable body is colliding with another one
      * @param {ResponseObject} response - the collision response object
-     * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} other - the other renderable touching this one (a reference to response.a or response.b)
+     * @param {Renderable} other - the other renderable touching this one (a reference to response.a or response.b)
      * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
      * @example
      * // colision handler

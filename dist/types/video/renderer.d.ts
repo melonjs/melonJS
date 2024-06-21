@@ -1,5 +1,5 @@
 /**
- * @import Rect from "./../geometries/rect.js";
+ * @import Rect from "./../geometries/rectangle.js";
  * @import RoundRect from "./../geometries/roundrect.js";
  * @import Polygon from "./../geometries/poly.js";
  * @import Line from "./../geometries/line.js";
@@ -132,7 +132,7 @@ export default class Renderer {
      * @param {Rect|Bounds} bounds
      * @returns {boolean} true if overlaps
      */
-    overlaps(bounds: any): boolean;
+    overlaps(bounds: Rect | Bounds): boolean;
     /**
      * resizes the system canvas
      * @param {number} width - new width of the canvas
@@ -154,12 +154,12 @@ export default class Renderer {
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape - a shape object to stroke
      * @param {boolean} [fill=false] - fill the shape with the current color if true
      */
-    stroke(shape: any, fill?: boolean | undefined): void;
+    stroke(shape: Rect | RoundRect | Polygon | Line | Ellipse, fill?: boolean | undefined): void;
     /**
      * fill the given shape
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape - a shape object to fill
      */
-    fill(shape: any): void;
+    fill(shape: Rect | RoundRect | Polygon | Line | Ellipse): void;
     /**
      * tint the given image or canvas using the given color
      * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} src - the source image to be tinted
@@ -175,7 +175,7 @@ export default class Renderer {
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - the shape defining the mask to be applied
      * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
      */
-    setMask(mask?: any, invert?: boolean | undefined): void;
+    setMask(mask?: Polygon | Line | Rect | Ellipse | RoundRect | undefined, invert?: boolean | undefined): void;
     /**
      * disable (remove) the rendering mask set through setMask.
      * @see Renderer#setMask
@@ -226,3 +226,9 @@ import Vector2d from "../math/vector2.js";
 import Path2D from "./../geometries/path2d.js";
 import Color from "./../math/color.js";
 import Matrix3d from "./../math/matrix3.js";
+import type Rect from "./../geometries/rectangle.js";
+import type Bounds from "./../physics/bounds.js";
+import type RoundRect from "./../geometries/roundrect.js";
+import type Polygon from "./../geometries/poly.js";
+import type Line from "./../geometries/line.js";
+import type Ellipse from "./../geometries/ellipse.js";

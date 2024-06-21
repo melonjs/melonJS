@@ -218,7 +218,7 @@ export default class Camera2d extends Renderable {
      *     me.game.viewport.fadeOut("#fff", 150);
      * });
      */
-    fadeOut(color: string | Color, duration?: number | undefined, onComplete?: Function | undefined): void;
+    fadeOut(color: Color | string, duration?: number | undefined, onComplete?: Function | undefined): void;
     /**
      * fadeIn effect <p>
      * fade to the specified color
@@ -231,14 +231,14 @@ export default class Camera2d extends Renderable {
      * // flash the camera to white for 75ms
      * me.game.viewport.fadeIn("#FFFFFF", 75);
      */
-    fadeIn(color: string | Color, duration?: number | undefined, onComplete?: Function | undefined): void;
+    fadeIn(color: Color | string, duration?: number | undefined, onComplete?: Function | undefined): void;
     /**
      * set the camera position around the specified object
      * @name focusOn
      * @memberof Camera2d
      * @param {Renderable|Entity|Sprite|NineSliceSprite} target - the renderable to focus the camera on
      */
-    focusOn(target: Renderable | NineSliceSprite | Sprite | Entity): void;
+    focusOn(target: Renderable | Entity | Sprite | NineSliceSprite): void;
     /**
      * check if the specified renderable is in the camera
      * @name isVisible
@@ -247,7 +247,7 @@ export default class Camera2d extends Renderable {
      * @param {boolean} [floating = obj.floating] - if visibility check should be done against screen coordinates
      * @returns {boolean} true if within the viewport
      */
-    isVisible(obj: Renderable | NineSliceSprite | Sprite | Entity, floating?: boolean | undefined): boolean;
+    isVisible(obj: Renderable | Entity | Sprite | NineSliceSprite, floating?: boolean | undefined): boolean;
     /**
      * convert the given "local" (screen) coordinates into world coordinates
      * @name localToWorld
@@ -286,6 +286,6 @@ import Matrix2d from "./../math/matrix2.js";
 import Vector2d from "./../math/vector2.js";
 import Rect from "./../geometries/rectangle.js";
 import type Color from "./../math/color.js";
-import type NineSliceSprite from "./../renderable/nineslicesprite.js";
-import type Sprite from "./../renderable/sprite.js";
 import type Entity from "./../renderable/entity/entity.js";
+import type Sprite from "./../renderable/sprite.js";
+import type NineSliceSprite from "./../renderable/nineslicesprite.js";

@@ -270,7 +270,7 @@ export default class ObservableVector3d extends Vector3d {
      * @param {number} step - the maximum step per iteration (Negative values will push the vector away from the target)
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
-    moveTowards(target: Vector2d | Vector3d | ObservableVector2d | ObservableVector3d, step: number): ObservableVector3d;
+    moveTowards(target: Vector2d | ObservableVector2d | Vector3d | ObservableVector3d, step: number): ObservableVector3d;
     /**
      * return the distance between this vector and the passed one
      * @name distance

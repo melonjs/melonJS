@@ -7,6 +7,7 @@
  * @import Line from "./../geometries/line.js";
  * @import Ellipse from "./../geometries/ellipse.js";
  * @import Polygon from "./../geometries/poly.js";
+ * @import RoundRect from "./../geometries/roundrect.js";
  * @import Application from "./../application/application.js";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
@@ -170,7 +171,7 @@ export default class Renderable extends Rect {
      *    {x: -14, y: 30}
      * ]);
      */
-    mask: any;
+    mask: Rect | RoundRect | Polygon | Line | Ellipse;
     /**
       * (Experimental) an optional shader, to be used instead of the default built-in one, when drawing this renderable (WebGL only)
       * @type {GLShader}
@@ -306,19 +307,19 @@ export default class Renderable extends Rect {
      * @param {Renderable|Vector2d|Vector3d} target
      * @returns {number} angle in radians
      */
-    angleTo(target: Vector2d | Vector3d | Renderable): number;
+    angleTo(target: Renderable | Vector2d | Vector3d): number;
     /**
      * return the distance to the specified target
      * @param {Renderable|Vector2d|Vector3d} target
      * @returns {number} distance
      */
-    distanceTo(target: Vector2d | Vector3d | Renderable): number;
+    distanceTo(target: Renderable | Vector2d | Vector3d): number;
     /**
      * Rotate this renderable towards the given target.
      * @param {Renderable|Vector2d|Vector3d} target - the renderable or position to look at
      * @returns {Renderable} Reference to this object for method chaining
      */
-    lookAt(target: Vector2d | Vector3d | Renderable): Renderable;
+    lookAt(target: Renderable | Vector2d | Vector3d): Renderable;
     /**
      * Rotate this renderable by the specified angle (in radians).
      * @param {number} angle - The angle to rotate (in radians)
@@ -406,7 +407,7 @@ export default class Renderable extends Rect {
      * onCollision callback, triggered in case of collision,
      * when this renderable body is colliding with another one
      * @param {ResponseObject} response - the collision response object
-     * @param {Renderable|Container|Entity|Sprite|NineSliceSprite} other - the other renderable touching this one (a reference to response.a or response.b)
+     * @param {Renderable} other - the other renderable touching this one (a reference to response.a or response.b)
      * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
      * @example
      * // colision handler
@@ -422,7 +423,7 @@ export default class Renderable extends Rect {
      *     return true;
      * },
      */
-    onCollision(response: ResponseObject, other: any): boolean;
+    onCollision(response: ResponseObject, other: Renderable): boolean;
     /**
      * Destroy function<br>
      * @ignore
@@ -440,6 +441,10 @@ import type Matrix2d from "./../math/matrix2.js";
 import Body from "./../physics/body.js";
 import type Container from "./container.js";
 import type Entity from "./entity/entity.js";
+import type RoundRect from "./../geometries/roundrect.js";
+import type Polygon from "./../geometries/poly.js";
+import type Line from "./../geometries/line.js";
+import type Ellipse from "./../geometries/ellipse.js";
 import GLShader from "./../video/webgl/glshader.js";
 import type Application from "./../application/application.js";
 import Color from "./../math/color.js";

@@ -18,7 +18,7 @@ import pool from '../../system/pooling.js';
 import { isPowerOfTwo } from '../../math/math.js';
 
 /**
- * @import Rect from "./../../geometries/rect.js";
+ * @import Rect from "./../../geometries/rectangle.js";
  * @import RoundRect from "./../../geometries/roundrect.js";
  * @import Polygon from "./../../geometries/poly.js";
  * @import Line from "./../../geometries/line.js";
@@ -75,6 +75,14 @@ class WebGLRenderer extends Renderer {
          * @see WebGLRenderer#strokeRect
          */
         this.lineWidth = 1;
+
+        /**
+         * sets or returns the shape used to join two line segments where they meet.
+         * Out of the three possible values for this property: "round", "bevel", and "miter", only "round" is supported for now in WebGL
+         * @type {string}
+         * @default "round"
+         */
+        this.lineJoin = "round";
 
         /**
          * the vertex buffer used by this WebGL Renderer
@@ -777,10 +785,11 @@ class WebGLRenderer extends Renderer {
 
     /**
      * not used by this renderer?
+     * @param {boolean} [enable=false]
      * @ignore
      */
-    setAntiAlias(context, enable) {
-        super.setAntiAlias(context, enable);
+    setAntiAlias(enable = false) {
+        super.setAntiAlias(enable);
         // TODO: perhaps handle GLNEAREST or other options with texture binding
     }
 
