@@ -7,7 +7,7 @@
 - Renderer: add support for line thickness for `strokePolygon` and `strokeRect` operations in WebGL
 
 ### Fixed
-- Renderer: fix `fillEllipse()` operations in WebGL mode (that was stroking the ellipse instead)
+- Renderer: fix `fillEllipse()` method in WebGL mode (that was stroking the ellipse instead)
 - TypeScript: fix most (if not all) missing declarations
 
 ### Chores
