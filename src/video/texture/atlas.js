@@ -8,6 +8,10 @@ import { parseSpriteSheet } from "./parser/spritesheet.js";
 import { parseAseprite } from "./parser/aseprite.js";
 
 /**
+ * @import NineSliceSprite from "./../../renderable/nineslicesprite.js";
+ */
+
+/**
  * create a simple 1 frame texture atlas based on the given parameters
  * @ignore
  */
