@@ -9,6 +9,7 @@ import { on, DRAGEND, off } from '../system/event.js';
 import Renderable from './renderable.js';
 
 /**
+ * additional import for TypeScript
  * @import { Draggable } from "./draggable.js";
  */
 

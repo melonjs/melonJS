@@ -1,4 +1,5 @@
 /**
+ * additional import for TypeScript
  * @import Vector2d from "./../math/vector2.js";
  * @import ObservableVector2d from "./../math/observable_vector2.js";
  * @import Matrix2d from "./../math/matrix2.js";

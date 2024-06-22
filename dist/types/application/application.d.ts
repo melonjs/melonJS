@@ -1,4 +1,5 @@
 /**
+ * additional import for TypeScript
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
  * @import Camera2d from "./../camera/camera2d.js";
  */

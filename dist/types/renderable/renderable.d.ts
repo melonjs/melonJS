@@ -1,4 +1,5 @@
 /**
+ * additional import for TypeScript
  * @import Vector2d from "./../math/vector2.js";
  * @import Vector3d from "./../math/vector3.js";
  * @import Matrix2d from "./../math/matrix2.js";
@@ -267,11 +268,6 @@ export default class Renderable extends Rect {
      */
     public get isFlippedY(): boolean;
     /**
-     * returns the bounding box for this renderable
-     * @returns {Bounds} bounding box Rectangle object
-     */
-    getBounds(): Bounds;
-    /**
      * get the renderable alpha channel value<br>
      * @returns {number} current opacity value between 0 and 1
      */
@@ -448,9 +444,9 @@ import type Ellipse from "./../geometries/ellipse.js";
 import GLShader from "./../video/webgl/glshader.js";
 import type Application from "./../application/application.js";
 import Color from "./../math/color.js";
-import Bounds from "./../physics/bounds.js";
 import type Vector2d from "./../math/vector2.js";
 import type Vector3d from "./../math/vector3.js";
+import Bounds from "./../physics/bounds.js";
 import type CanvasRenderer from "./../video/canvas/canvas_renderer.js";
 import type WebGLRenderer from "./../video/webgl/webgl_renderer.js";
 import type ResponseObject from "./../physics/response.js";

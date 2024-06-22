@@ -11,6 +11,7 @@ import earcut from '../node_modules/earcut/src/earcut.js';
 import { endpointToCenterParameterization } from './toarccanvas.js';
 
 /**
+ * additional import for TypeScript
  * @import Point from "./point.js";
  */
 

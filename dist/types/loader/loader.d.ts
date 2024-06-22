@@ -43,7 +43,6 @@ export function setBaseURL(type: string, url?: string | undefined): void;
 /**
  * an asset definition to be used with the loader
  * @typedef {object} Asset
- * @export
  * @memberof loader
  * @property {string} name - name of the asset
  * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface"|"video")

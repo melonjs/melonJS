@@ -19,7 +19,7 @@ export default class Body {
      * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] - a initial shape, list of shapes, or JSON object defining the body
      * @param {Function} [onBodyUpdate] - callback for when the body is updated (e.g. add/remove shapes)
      */
-    constructor(ancestor: Renderable | Container | Entity | Sprite | NineSliceSprite, shapes?: object | Polygon | Line | Point | Rect | Bounds | Point[] | Ellipse | Polygon[] | Line[] | Ellipse[] | Rect[] | Bounds[] | undefined, onBodyUpdate?: Function | undefined);
+    constructor(ancestor: Renderable | Container | Entity | Sprite | NineSliceSprite, shapes?: object | Point | Rect | Polygon | Bounds | Point[] | Line | Ellipse | Polygon[] | Line[] | Ellipse[] | Rect[] | Bounds[] | undefined, onBodyUpdate?: Function | undefined);
     /**
      * a reference to the parent object that contains this body,
      * or undefined if it has not been added to one.

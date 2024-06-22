@@ -8,6 +8,7 @@
 import { getElementBounds, getParentBounds, devicePixelRatio } from '../system/device.js';
 
 /**
+ * additional import for TypeScript
  * @import Application from "./application.js";
  */
 

@@ -1,4 +1,5 @@
 /**
+ * additional import for TypeScript
  * @import Color from "./../math/color.js";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";

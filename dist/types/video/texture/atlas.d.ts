@@ -1,4 +1,5 @@
 /**
+ * additional import for TypeScript
  * @import NineSliceSprite from "./../../renderable/nineslicesprite.js";
  */
 /**

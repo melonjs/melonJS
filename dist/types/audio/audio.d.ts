@@ -50,7 +50,7 @@ export function disable(): void;
  * @param {Object} [settings] - custom settings to apply to the request (@link https://developer.mozilla.org/en-US/docs/Web/API/fetch#options)
  * @returns {number} the amount of asset loaded (always 1 if successfull)
  */
-export function load(sound: Howl, onloadcb?: Function | undefined, onerrorcb?: Function | undefined, settings?: Object | undefined): number;
+export function load(sound: Asset, onloadcb?: Function | undefined, onerrorcb?: Function | undefined, settings?: Object | undefined): number;
 /**
  * play the specified sound
  * @memberof audio
@@ -322,3 +322,4 @@ export function unloadAll(): void;
  * @memberof audio
  */
 export let stopOnAudioError: boolean;
+import type { Asset } from "./../loader/loader.js";

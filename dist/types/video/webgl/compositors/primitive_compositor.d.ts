@@ -1,4 +1,8 @@
 /**
+ * additional import for TypeScript
+ * @import Point from "./../../../geometries/point.js";
+ */
+/**
  * @classdesc
  * A WebGL Compositor object. This class handles all of the WebGL state<br>
  * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
@@ -19,3 +23,4 @@ export default class PrimitiveCompositor extends Compositor {
     drawVertices(mode: GLenum, verts: Point[], vertexCount?: number | undefined): void;
 }
 import Compositor from "./compositor.js";
+import type Point from "./../../../geometries/point.js";

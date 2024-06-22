@@ -1,4 +1,5 @@
 /**
+ * additional import for TypeScript
  * @import Application from "./application.js";
  */
 /**

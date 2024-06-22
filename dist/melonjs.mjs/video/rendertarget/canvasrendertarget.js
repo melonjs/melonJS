@@ -10,6 +10,7 @@ import { setPrefixed } from '../../utils/agent.js';
 import { clamp } from '../../math/math.js';
 
 /**
+ * additional import for TypeScript
  * @import CanvasRenderer from "./../canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../webgl/webgl_renderer.js";
  */

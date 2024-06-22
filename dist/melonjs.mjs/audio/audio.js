@@ -13,7 +13,8 @@ import { __exports as howler } from '../_virtual/howler.js';
 // external import
 
 /**
- * @import Asset from "./../loader/loader.js";
+ * additional import for TypeScript
+ * @import { Asset } from "./../loader/loader.js";
  */
 
 /**

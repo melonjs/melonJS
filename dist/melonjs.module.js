@@ -3830,6 +3830,7 @@ class Vector2d {
 }
 
 /**
+ * additional import for TypeScript
  * @import Vector2d from "./vector2.js";
  */
 
@@ -4747,6 +4748,7 @@ class ObservableVector2d extends Vector2d {
 }
 
 /**
+ * additional import for TypeScript
  * @import ObservableVector2d from "./observable_vector2.js";
  * @import Vector2d from "./vector2.js";
  */
@@ -5298,6 +5300,7 @@ class ObservableVector3d extends Vector3d {
 }
 
 /**
+ * additional import for TypeScript
  * @import Matrix3d from "./matrix3.js";
  * @import Vector2d from "./vector2.js";
  * @import Vector3d from "./vector3.js";
@@ -5782,6 +5785,7 @@ class Matrix2d {
 }
 
 /**
+ * additional import for TypeScript
  * @import Matrix2d from "./matrix2.js";
  * @import Vector2d from "./vector2.js";
  * @import Vector3d from "./vector3.js";
@@ -7087,7 +7091,11 @@ var earcutExports = earcut$2.exports;
 var earcut$1 = /*@__PURE__*/getDefaultExportFromCjs(earcutExports);
 
 /**
+ * additional import for TypeScript
  * @import Vector2d from "./../math/vector2.js";
+ * @import ObservableVector2d from "./../math/observable_vector2.js";
+ * @import Matrix2d from "./../math/matrix2.js";
+ * @import Bounds from "./../physics/bounds.js";
  */
 
 /**
@@ -7513,6 +7521,7 @@ class Polygon {
 }
 
 /**
+ * additional import for TypeScript
  * @import Vector2d from "./../math/vector2d.js";
  */
 
@@ -7614,6 +7623,7 @@ class Line extends Polygon {
 }
 
 /**
+ * additional import for TypeScript
  * @import Vector2d from "./../math/vector2.js";
  * @import ObservableVector2d from "./../math/observable_vector2.js";
  * @import Matrix2d from "./../math/matrix2.js";
@@ -7856,6 +7866,7 @@ class Ellipse {
 }
 
 /**
+ * additional import for TypeScript
  * @import Vector2d from "./../math/vector2.js";
  **/
 
@@ -7932,6 +7943,7 @@ class Point {
 }
 
 /**
+ * additional import for TypeScript
  * @import Vector2d from "./../math/vector2.js";
  **/
 
@@ -13788,7 +13800,8 @@ var string$1 = {
 // external import
 
 /**
- * @import Asset from "./../loader/loader.js";
+ * additional import for TypeScript
+ * @import { Asset } from "./../loader/loader.js";
  */
 
 /**
@@ -15696,6 +15709,7 @@ var device = {
 };
 
 /**
+ * additional import for TypeScript
  * @import Renderer from "./../video/renderer.js";
  */
 
@@ -18432,6 +18446,7 @@ class GLShader {
 }
 
 /**
+ * additional import for TypeScript
  * @import Vector2d from "./../math/vector2.js";
  * @import Vector3d from "./../math/vector3.js";
  * @import Matrix2d from "./../math/matrix2.js";
@@ -21692,54 +21707,48 @@ var coerce_1 = coerce$1;
 
 var coerce$2 = /*@__PURE__*/getDefaultExportFromCjs(coerce_1);
 
-var lrucache;
-var hasRequiredLrucache;
+class LRUCache {
+  constructor () {
+    this.max = 1000;
+    this.map = new Map();
+  }
 
-function requireLrucache () {
-	if (hasRequiredLrucache) return lrucache;
-	hasRequiredLrucache = 1;
-	class LRUCache {
-	  constructor () {
-	    this.max = 1000;
-	    this.map = new Map();
-	  }
+  get (key) {
+    const value = this.map.get(key);
+    if (value === undefined) {
+      return undefined
+    } else {
+      // Remove the key from the map and add it to the end
+      this.map.delete(key);
+      this.map.set(key, value);
+      return value
+    }
+  }
 
-	  get (key) {
-	    const value = this.map.get(key);
-	    if (value === undefined) {
-	      return undefined
-	    } else {
-	      // Remove the key from the map and add it to the end
-	      this.map.delete(key);
-	      this.map.set(key, value);
-	      return value
-	    }
-	  }
+  delete (key) {
+    return this.map.delete(key)
+  }
 
-	  delete (key) {
-	    return this.map.delete(key)
-	  }
+  set (key, value) {
+    const deleted = this.delete(key);
 
-	  set (key, value) {
-	    const deleted = this.delete(key);
+    if (!deleted && value !== undefined) {
+      // If cache is full, delete the least recently used item
+      if (this.map.size >= this.max) {
+        const firstKey = this.map.keys().next().value;
+        this.delete(firstKey);
+      }
 
-	    if (!deleted && value !== undefined) {
-	      // If cache is full, delete the least recently used item
-	      if (this.map.size >= this.max) {
-	        const firstKey = this.map.keys().next().value;
-	        this.delete(firstKey);
-	      }
+      this.map.set(key, value);
+    }
 
-	      this.map.set(key, value);
-	    }
-
-	    return this
-	  }
-	}
-
-	lrucache = LRUCache;
-	return lrucache;
+    return this
+  }
 }
+
+var lrucache = LRUCache;
+
+var lrucache$1 = /*@__PURE__*/getDefaultExportFromCjs(lrucache);
 
 var range;
 var hasRequiredRange;
@@ -21947,7 +21956,7 @@ function requireRange () {
 
 	range = Range;
 
-	const LRU = requireLrucache();
+	const LRU = lrucache;
 	const cache = new LRU();
 
 	const parseOptions = parseOptions_1;
@@ -24533,6 +24542,7 @@ function endpointToCenterParameterization(x1, y1, x2, y2, largeArcFlag, sweepFla
 }
 
 /**
+ * additional import for TypeScript
  * @import Point from "./point.js";
  */
 
@@ -24998,6 +25008,7 @@ class Path2D {
 }
 
 /**
+ * additional import for TypeScript
  * @import CanvasRenderer from "./../canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../webgl/webgl_renderer.js";
  */
@@ -25874,6 +25885,7 @@ function parseAseprite(data, textureAtlas) {
 }
 
 /**
+ * additional import for TypeScript
  * @import NineSliceSprite from "./../../renderable/nineslicesprite.js";
  */
 
@@ -26681,6 +26693,7 @@ class TextureCache {
 }
 
 /**
+ * additional import for TypeScript
  * @import Rect from "./../../geometries/rectangle.js";
  * @import RoundRect from "./../../geometries/roundrect.js";
  * @import Polygon from "./../../geometries/poly.js";
@@ -28115,6 +28128,7 @@ function deferredRemove(child, keepalive) {
 let globalFloatingCounter = 0;
 
 /**
+ * additional import for TypeScript
  * @import Color from "./../math/color.js";
  * @import Entity from "./entity/entity.js";
  * @import Sprite from "./sprite.js";
@@ -31562,7 +31576,6 @@ function onLoadingError(res) {
 /**
  * an asset definition to be used with the loader
  * @typedef {object} Asset
- * @export
  * @memberof loader
  * @property {string} name - name of the asset
  * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface"|"video")
@@ -32044,6 +32057,7 @@ var loader = {
 };
 
 /**
+ * additional import for TypeScript
  * @import Vector2d from "./../math/vector2.js";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
@@ -35355,6 +35369,12 @@ class VertexArrayBuffer {
 }
 
 /**
+ * additional import for TypeScript
+ * @import WebGLRenderer from "./../webgl_renderer.js";
+ * @import Matrix3d from "./../../../math/matrix3.js";
+ */
+
+/**
  * @classdesc
  * A base Compositor object.
  */
@@ -35582,6 +35602,11 @@ var primitiveVertex = "// Current vertex point\nattribute vec2 aVertex;\nattribu
 var primitiveFragment = "varying vec4 vColor;\n\nvoid main(void) {\n    gl_FragColor = vColor;\n}\n";
 
 /**
+ * additional import for TypeScript
+ * @import Point from "./../../../geometries/point.js";
+ */
+
+/**
  * @classdesc
  * A WebGL Compositor object. This class handles all of the WebGL state<br>
  * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
@@ -35649,6 +35674,11 @@ class PrimitiveCompositor extends Compositor {
 var quadVertex = "// Current vertex point\nattribute vec2 aVertex;\nattribute vec2 aRegion;\nattribute vec4 aColor;\n\n// Projection matrix\nuniform mat4 uProjectionMatrix;\n\nvarying vec2 vRegion;\nvarying vec4 vColor;\n\nvoid main(void) {\n    // Transform the vertex position by the projection matrix\n    gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);\n    // Pass the remaining attributes to the fragment shader\n    vColor = vec4(aColor.bgr * aColor.a, aColor.a);\n    vRegion = aRegion;\n}\n";
 
 var quadFragment = "uniform sampler2D uSampler;\nvarying vec4 vColor;\nvarying vec2 vRegion;\n\nvoid main(void) {\n    gl_FragColor = texture2D(uSampler, vRegion) * vColor;\n}\n";
+
+/**
+ * additional import for TypeScript
+ * @import {TextureAtlas} from "./../../texture/atlas.js";
+ */
 
 // a pool of resuable vectors
 let V_ARRAY = [
@@ -35891,6 +35921,7 @@ class QuadCompositor extends Compositor {
 }
 
 /**
+ * additional import for TypeScript
  * @import Rect from "./../../geometries/rectangle.js";
  * @import RoundRect from "./../../geometries/roundrect.js";
  * @import Polygon from "./../../geometries/poly.js";
@@ -37116,6 +37147,7 @@ class WebGLRenderer extends Renderer {
 }
 
 /**
+ * additional import for TypeScript
  * @import Color from "./../math/color.js";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
@@ -37187,6 +37219,7 @@ class ColorLayer extends Renderable {
 }
 
 /**
+ * additional import for TypeScript
  * @import Vector2d from "./../math/vector2.js";
  */
 
@@ -37464,6 +37497,7 @@ class ImageLayer extends Sprite {
 }
 
 /**
+ * additional import for TypeScript
  * @import Color from "./../math/color.js";
  * @import { TextureAtlas } from "./../video/texture/atlas.js";
  */
@@ -39370,6 +39404,7 @@ class Collectable extends Sprite {
 }
 
 /**
+ * additional import for TypeScript
  * @import ResponseObject from "./../physics/response.js";
  */
 
@@ -39518,6 +39553,7 @@ class Trigger extends Renderable {
 }
 
 /**
+ * additional import for TypeScript
  * @import Color from "./../math/color.js";
  * @import Ellipse from "./../geometries/ellipse.js";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
@@ -40028,6 +40064,7 @@ class Draggable extends Renderable {
 }
 
 /**
+ * additional import for TypeScript
  * @import { Draggable } from "./draggable.js";
  */
 
@@ -42100,6 +42137,7 @@ function autoDetectRenderer(options) {
 }
 
 /**
+ * additional import for TypeScript
  * @import Application from "./application.js";
  */
 
@@ -42217,6 +42255,7 @@ function onresize(game) {
 }
 
 /**
+ * additional import for TypeScript
  * @import Application from "./application.js";
  */
 
@@ -42246,6 +42285,7 @@ function consoleHeader(app) {
 }
 
 /**
+ * additional import for TypeScript
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
  * @import Camera2d from "./../camera/camera2d.js";
  */

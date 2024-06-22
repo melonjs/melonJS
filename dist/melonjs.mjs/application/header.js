@@ -8,6 +8,7 @@
 import { devicePixelRatio, platform, getScreenOrientation, language, hasWebAudio } from '../system/device.js';
 
 /**
+ * additional import for TypeScript
  * @import Application from "./application.js";
  */
 

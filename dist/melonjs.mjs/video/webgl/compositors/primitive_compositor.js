@@ -10,6 +10,11 @@ import primitiveFragment from '../shaders/primitive.frag.js';
 import Compositor from './compositor.js';
 
 /**
+ * additional import for TypeScript
+ * @import Point from "./../../../geometries/point.js";
+ */
+
+/**
  * @classdesc
  * A WebGL Compositor object. This class handles all of the WebGL state<br>
  * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU

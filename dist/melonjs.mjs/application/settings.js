@@ -6,6 +6,7 @@
  * @copyright (C) 2011 - 2024 Olivier Biot (AltByte Pte Ltd)
  */
 /**
+ * additional import for TypeScript
  * @import Renderer from "./../video/renderer.js";
  */
 

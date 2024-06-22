@@ -70,3 +70,4 @@ export default class QuadCompositor extends Compositor {
     addQuad(texture: TextureAtlas, x: number, y: number, w: number, h: number, u0: number, v0: number, u1: number, v1: number, tint: number, reupload?: boolean): void;
 }
 import Compositor from "./compositor.js";
+import type { TextureAtlas } from "./../../texture/atlas.js";

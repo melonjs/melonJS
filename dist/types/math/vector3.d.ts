@@ -1,4 +1,5 @@
 /**
+ * additional import for TypeScript
  * @import Vector2d from "./vector2.js";
  */
 /**

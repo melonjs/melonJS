@@ -1,5 +1,9 @@
 /**
+ * additional import for TypeScript
  * @import Vector2d from "./../math/vector2.js";
+ * @import ObservableVector2d from "./../math/observable_vector2.js";
+ * @import Matrix2d from "./../math/matrix2.js";
+ * @import Bounds from "./../physics/bounds.js";
  */
 /**
  * @classdesc
@@ -91,7 +95,7 @@ export default class Polygon {
      * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
      * @returns {Polygon} Reference to this object for method chaining
      */
-    rotate(angle: number, v?: Vector2d | ObservableVector2d): Polygon;
+    rotate(angle: number, v?: Vector2d | ObservableVector2d | undefined): Polygon;
     /**
      * Scale this Polygon by the given scalar.
      * @param {number} x
@@ -177,3 +181,6 @@ export default class Polygon {
     clone(): Polygon;
 }
 import type Vector2d from "./../math/vector2.js";
+import type Matrix2d from "./../math/matrix2.js";
+import type ObservableVector2d from "./../math/observable_vector2.js";
+import type Bounds from "./../physics/bounds.js";

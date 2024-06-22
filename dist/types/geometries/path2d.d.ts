@@ -1,4 +1,5 @@
 /**
+ * additional import for TypeScript
  * @import Point from "./point.js";
  */
 /**

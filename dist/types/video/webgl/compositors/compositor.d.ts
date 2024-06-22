@@ -1,4 +1,9 @@
 /**
+ * additional import for TypeScript
+ * @import WebGLRenderer from "./../webgl_renderer.js";
+ * @import Matrix3d from "./../../../math/matrix3.js";
+ */
+/**
  * @classdesc
  * A base Compositor object.
  */
@@ -116,3 +121,5 @@ export default class Compositor {
 }
 import GLShader from "../glshader.js";
 import VertexArrayBuffer from "../buffer/vertex.js";
+import type Matrix3d from "./../../../math/matrix3.js";
+import type WebGLRenderer from "./../webgl_renderer.js";

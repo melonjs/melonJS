@@ -8,6 +8,7 @@
 import Sprite from './sprite.js';
 
 /**
+ * additional import for TypeScript
  * @import Color from "./../math/color.js";
  * @import { TextureAtlas } from "./../video/texture/atlas.js";
  */

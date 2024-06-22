@@ -1,4 +1,5 @@
 /**
+ * additional import for TypeScript
  * @import ResponseObject from "./../physics/response.js";
  */
 /**

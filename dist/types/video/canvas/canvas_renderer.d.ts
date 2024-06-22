@@ -1,4 +1,5 @@
 /**
+ * additional import for TypeScript
  * @import Rect from "./../../geometries/rectangle.js";
  * @import RoundRect from "./../../geometries/roundrect.js";
  * @import Polygon from "./../../geometries/poly.js";
@@ -139,12 +140,12 @@ export default class CanvasRenderer extends Renderer {
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [shape] - a shape object to stroke
      * @param {boolean} [fill=false] - fill the shape with the current color if true
      */
-    stroke(shape?: Polygon | Line | Rect | Ellipse | RoundRect | undefined, fill?: boolean | undefined): void;
+    stroke(shape?: Rect | Polygon | Line | Ellipse | RoundRect | undefined, fill?: boolean | undefined): void;
     /**
      * fill the given shape or the current defined path
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [shape] - a shape object to fill
      */
-    fill(shape?: Polygon | Line | Rect | Ellipse | RoundRect | undefined): void;
+    fill(shape?: Rect | Polygon | Line | Ellipse | RoundRect | undefined): void;
     /**
      * add a straight line from the current point to the start of the current sub-path. If the shape has already been closed or has only one point, this function does nothing
     */
@@ -392,9 +393,9 @@ export default class CanvasRenderer extends Renderer {
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture/cache.js";
 import Color from "./../../math/color.js";
+import type Rect from "./../../geometries/rectangle.js";
 import type Polygon from "./../../geometries/poly.js";
 import type Line from "./../../geometries/line.js";
-import type Rect from "./../../geometries/rectangle.js";
 import type Ellipse from "./../../geometries/ellipse.js";
 import type RoundRect from "./../../geometries/roundrect.js";
 import type Matrix2d from "./../../math/matrix2.js";
