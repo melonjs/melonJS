@@ -2,6 +2,11 @@ import VertexArrayBuffer from "../buffer/vertex.js";
 import GLShader from "../glshader.js";
 
 /**
+ * @import WebGLRenderer from "./../webgl_renderer.js";
+ * @import Matrix3d from "./../../../math/matrix3.js";
+ */
+
+/**
  * @classdesc
  * A base Compositor object.
  */

@@ -4,6 +4,11 @@ import quadVertex from "./../shaders/quad.vert";
 import quadFragment from "./../shaders/quad.frag";
 import Compositor from "./compositor.js";
 
+/**
+ * // additional import for TypeScript
+ * @import {TextureAtlas} from "./../../texture/atlas.js";
+ */
+
 // a pool of resuable vectors
 let V_ARRAY = [
     new Vector2d(),
