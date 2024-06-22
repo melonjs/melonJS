@@ -102,5 +102,6 @@
     "prepublishOnly": "npm run dist && npm run test",
     "clean": "del-cli --force build/*.* dist/** docs/docs/**",
     "types": "tsc"
-  }
+  },
+  "packageManager": "npm@10.7.0"
 }
