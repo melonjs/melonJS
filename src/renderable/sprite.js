@@ -166,7 +166,7 @@ export default class Sprite extends Renderable {
                 throw new Error("me.Sprite: '" + settings.image + "' image/texture not found!");
             }
 
-            this.isVideo = HTMLVideoElement && this.image instanceof HTMLVideoElement;
+            this.isVideo = globalThis.HTMLVideoElement && this.image instanceof globalThis.HTMLVideoElement;
 
             if (this.isVideo) {
                 this.width = this.current.width = settings.framewidth = settings.framewidth || this.image.videoWidth;

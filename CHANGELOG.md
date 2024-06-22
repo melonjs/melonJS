@@ -1,5 +1,10 @@
 # Changelog
 
+## [17.4.1] (melonJS 2) - _2024-06-xx_
+
+### Fixed
+- Video: fix implicit global reference to HTMLVideoElement
+
 ## [17.4.0] (melonJS 2) - _2024-06-22_
 
 ### Added
@@ -12,7 +17,6 @@
 ### Fixed
 - Renderer: fix `fillEllipse()` method in WebGL mode (that was stroking the ellipse instead)
 - TypeScript: fix most (if not all) missing declarations
-
 
 ## [17.3.0] (melonJS 2) - _2024-06-04_
 
@@ -818,6 +822,7 @@
 
 -------------------------------------------------------------------------------
 
+[17.4.1]: https://github.com/melonjs/melonJS/compare/17.4.0...17.4.1
 [17.4.0]: https://github.com/melonjs/melonJS/compare/17.3.0...17.4.0
 [17.3.0]: https://github.com/melonjs/melonJS/compare/17.2.0...17.3.0
 [17.2.0]: https://github.com/melonjs/melonJS/compare/17.1.0...17.2.0
