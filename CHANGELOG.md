@@ -1,17 +1,18 @@
 # Changelog
 
-## [17.4.0] (melonJS 2) - _2024-xx-xx_
+## [17.4.0] (melonJS 2) - _2024-06-22_
 
 ### Added
 - Renderer: new `lineJoin` property to set the line join style (only support "round" for now in WebGL mode)
 - Renderer: add support for line thickness for `strokePolygon` and `strokeRect` operations in WebGL
 
+### Changed
+- Chore: Update to TypeScript 5.5
+
 ### Fixed
 - Renderer: fix `fillEllipse()` method in WebGL mode (that was stroking the ellipse instead)
 - TypeScript: fix most (if not all) missing declarations
 
-### Chores
-- Update to TypeScript 5.5
 
 ## [17.3.0] (melonJS 2) - _2024-06-04_
 
