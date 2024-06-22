@@ -4,7 +4,8 @@ import {clamp} from "./../math/math.js";
 import { isDataUrl } from "./../utils/string.js";
 
 /**
- * @import Asset from "./../loader/loader.js";
+ * additional import for TypeScript
+ * @import { Asset } from "./../loader/loader.js";
  */
 
 /**
