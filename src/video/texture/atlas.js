@@ -8,6 +8,7 @@ import { parseSpriteSheet } from "./parser/spritesheet.js";
 import { parseAseprite } from "./parser/aseprite.js";
 
 /**
+ * additional import for TypeScript
  * @import NineSliceSprite from "./../../renderable/nineslicesprite.js";
  */
 

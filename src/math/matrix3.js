@@ -2,6 +2,7 @@ import pool from "./../system/pooling.js";
 import { EPSILON } from "./math.js";
 
 /**
+ * additional import for TypeScript
  * @import Matrix2d from "./matrix2.js";
  * @import Vector2d from "./vector2.js";
  * @import Vector3d from "./vector3.js";

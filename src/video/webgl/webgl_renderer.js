@@ -11,6 +11,7 @@ import pool from "./../../system/pooling.js";
 import { isPowerOfTwo } from "./../../math/math.js";
 
 /**
+ * additional import for TypeScript
  * @import Rect from "./../../geometries/rectangle.js";
  * @import RoundRect from "./../../geometries/roundrect.js";
  * @import Polygon from "./../../geometries/poly.js";

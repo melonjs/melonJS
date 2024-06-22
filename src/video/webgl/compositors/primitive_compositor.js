@@ -3,6 +3,7 @@ import primitiveFragment from "./../shaders/primitive.frag";
 import Compositor from "./compositor.js";
 
 /**
+ * additional import for TypeScript
  * @import Point from "./../../../geometries/point.js";
  */
 

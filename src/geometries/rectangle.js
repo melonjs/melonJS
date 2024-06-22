@@ -2,6 +2,7 @@ import pool from "./../system/pooling.js";
 import Polygon from "./poly.js";
 
 /**
+ * additional import for TypeScript
  * @import Vector2d from "./../math/vector2.js";
  **/
 

@@ -1,6 +1,7 @@
 import pool from "./../system/pooling.js";
 
 /**
+ * additional import for TypeScript
  * @import Matrix3d from "./matrix3.js";
  * @import Vector2d from "./vector2.js";
  * @import Vector3d from "./vector3.js";

@@ -3,6 +3,7 @@ import {clamp} from "./math.js";
 import pool from "./../system/pooling.js";
 
 /**
+ * additional import for TypeScript
  * @import ObservableVector2d from "./observable_vector2.js";
  * @import Vector2d from "./vector2.js";
  */

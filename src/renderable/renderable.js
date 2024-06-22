@@ -10,6 +10,7 @@ import GLShader from "./../video/webgl/glshader.js";
 import Color from "./../math/color.js";
 
 /**
+ * additional import for TypeScript
  * @import Vector2d from "./../math/vector2.js";
  * @import Vector3d from "./../math/vector3.js";
  * @import Matrix2d from "./../math/matrix2.js";

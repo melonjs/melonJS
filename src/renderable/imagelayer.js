@@ -6,6 +6,7 @@ import Sprite from "./sprite.js";
 import * as stringUtil from "./../utils/string.js";
 
 /**
+ * additional import for TypeScript
  * @import Vector2d from "./../math/vector2.js";
  */
 

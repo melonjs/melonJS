@@ -4,6 +4,7 @@ import earcut from "earcut";
 import { endpointToCenterParameterization } from "./toarccanvas.js";
 
 /**
+ * additional import for TypeScript
  * @import Point from "./point.js";
  */
 

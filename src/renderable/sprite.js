@@ -7,6 +7,7 @@ import Color from "../math/color.js";
 import * as event from "../system/event.js";
 
 /**
+ * additional import for TypeScript
  * @import Vector2d from "./../math/vector2.js";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";

@@ -1,4 +1,5 @@
 /**
+ * additional import for TypeScript
  * @import Renderer from "./../video/renderer.js";
  */
 

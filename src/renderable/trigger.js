@@ -5,6 +5,7 @@ import level from "./../level/level.js";
 import pool from "./../system/pooling.js";
 
 /**
+ * additional import for TypeScript
  * @import ResponseObject from "./../physics/response.js";
  */
 

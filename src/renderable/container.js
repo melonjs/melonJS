@@ -19,6 +19,7 @@ function deferredRemove(child, keepalive) {
 let globalFloatingCounter = 0;
 
 /**
+ * additional import for TypeScript
  * @import Color from "./../math/color.js";
  * @import Entity from "./entity/entity.js";
  * @import Sprite from "./sprite.js";

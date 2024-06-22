@@ -2,6 +2,7 @@ import pool from "./../system/pooling.js";
 import Renderable from "./renderable.js";
 
 /**
+ * additional import for TypeScript
  * @import Color from "./../math/color.js";
  * @import Ellipse from "./../geometries/ellipse.js";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
