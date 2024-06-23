@@ -62,13 +62,11 @@
   },
   "devDependencies": {
     "@fastify/static": "^7.0.4",
-    "@melonjs/webdoc-theme": "^1.1.1",
     "@rollup/plugin-commonjs": "^26.0.1",
     "@rollup/plugin-image": "^3.0.3",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-replace": "^5.0.7",
-    "@webdoc/cli": "^2.2.0",
     "chromedriver": "^126.0.2",
     "cross-env": "^7.0.3",
     "del-cli": "^5.1.0",
@@ -84,23 +82,22 @@
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
     "terser": "^5.31.1",
+    "typedoc": "^0.26.1",
     "typescript": "^5.5.2"
   },
   "scripts": {
     "build": "npm run lint && rollup -c --silent",
     "build:cd": "npm run lint && rollup -c --failAfterWarnings",
-    "dist": " npm run clean && npm run build && mkdirp dist && cp -fR build/*.* dist/ && npm run types && npm run doc",
+    "dist": " npm run clean && npm run build && mkdirp dist && cp -fR build/*.* dist/ && npm run types",
     "lint": "eslint",
     "pretest": "mkdirp tests/browser/public/lib && cp -f build/melonjs.module.js tests/browser/public/lib",
     "test": "npm run test-node && mocha ./tests/browser/spec/*.js --reporter spec --bail --timeout 10000",
     "test-node": "node build/melonjs.module.js",
-    "doc-prod": "mkdirp docs/docs && webdoc --quiet --site-root melonJS/docs/ -R README.md && npm run fix_doc",
-    "doc-local": "mkdirp docs/docs && webdoc --quiet --site-root /docs/docs -R README.md && npm run fix_doc",
-    "doc": "npm run doc-prod",
+    "doc": "typedoc src/index.js",
     "fix_doc": "python3 ./scripts/fix_doc.py",
     "serve": "python3 -m http.server",
     "prepublishOnly": "npm run dist && npm run test",
-    "clean": "del-cli --force build/*.* dist/** docs/docs/**",
+    "clean": "del-cli --force build/*.* dist/**",
     "types": "tsc"
   }
 }
