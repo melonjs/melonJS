@@ -67,6 +67,7 @@
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-replace": "^5.0.7",
+    "@stylistic/eslint-plugin": "^2.2.2",
     "chromedriver": "^126.0.2",
     "cross-env": "^7.0.3",
     "del-cli": "^5.1.0",

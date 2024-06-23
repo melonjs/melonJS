@@ -1,5 +1,5 @@
-// eslint.config.js
 import jsdoc from "eslint-plugin-jsdoc";
+import stylistic from "@stylistic/eslint-plugin"
 
 export default [
     {
@@ -20,25 +20,18 @@ export default [
         },
         files: ["src/**/*.js"],
         plugins: {
-            jsdoc
+            jsdoc,
+            '@stylistic': stylistic
         },
         rules: {
              // http://eslint.org/docs/rules/
             "accessor-pairs": "error",
             "array-callback-return": "error",
             "arrow-body-style": ["error", "as-needed"],
-            "arrow-spacing": ["error", { "before": true, "after": true }],
-            "block-spacing": ["error", "always"],
             "block-scoped-var": "error",
-            "brace-style": ["off", "1tbs", { "allowSingleLine": true }],
             "camelcase": ["off", { "properties": "never" }],
-            "comma-dangle": ["error", "never"],
-            "comma-spacing": ["error", { "before": false, "after": true }],
-            "comma-style": ["error", "last"],
             "constructor-super": "error",
             "curly": ["error", "multi-line"],
-            "dot-location": ["error", "property"],
-            "eol-last": "error",
             "eqeqeq": ["error", "allow-null"],
             "func-call-spacing": ["error", "never"],
             "for-direction": "error",
@@ -114,7 +107,6 @@ export default [
             "prefer-arrow-callback" : "error",
             "quotes": ["error", "double", { "avoidEscape": true, "allowTemplateLiterals": true }],
             "rest-spread-spacing": ["error", "never"],
-            "semi": ["error", "always"],
             "semi-spacing": ["error", { "before": false, "after": true }],
             "space-before-blocks": ["error", "always"],
             "space-before-function-paren": ["off", "always"],
@@ -128,7 +120,19 @@ export default [
             "yield-star-spacing": ["error", "both"],
             "yoda": ["error", "never"],
             "jsdoc/require-hyphen-before-param-description": "error",
-            "jsdoc/no-undefined-types" : "off"
+            "jsdoc/no-undefined-types" : "off",
+
+            // https://eslint.style/rules
+            "@stylistic/arrow-spacing": ["error", { "before": true, "after": true }],
+            "@stylistic/block-spacing": ["error", "always"],
+            "@stylistic/brace-style": ["off", "1tbs", { "allowSingleLine": true }],
+            "@stylistic/comma-dangle": ["error", "never"],
+            "@stylistic/comma-spacing": ["error", { "before": false, "after": true }],
+            "@stylistic/comma-style": ["error", "last"],
+            "@stylistic/semi": ["error", "always"],
+            "@stylistic/dot-location": ["error", "property"],
+            "@stylistic/eol-last": ["error"],
+            "@stylistic/linebreak-style": ["error", "unix"]
         }
     }
 ];
