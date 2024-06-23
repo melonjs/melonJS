@@ -8,7 +8,7 @@
  * This technique is also used by the engine to instantiate objects defined in the map,
  * which means, that on level loading the engine will try to instantiate every object
  * found in the map, based on the user defined name in each Object Properties<br>
- * <img src="images/object_properties.png"/><br>
+ * <img src="../images/object_properties.png"/><br>
  * @see {@link pool} the default global instance of ObjectPool
  */
 class ObjectPool {

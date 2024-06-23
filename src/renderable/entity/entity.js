@@ -21,7 +21,7 @@ export default class Entity extends Renderable {
      * @param {number} x - the x coordinates of the entity object
      * @param {number} y - the y coordinates of the entity object
      * @param {object} settings - Entity properties, to be defined through Tiled or when calling the entity constructor
-     * <img src="images/object_properties.png"/>
+     * <img src="../../images/object_properties.png"/>
      * @param {number} settings.width - the physical width the entity takes up in game
      * @param {number} settings.height - the physical height the entity takes up in game
      * @param {string} [settings.name] - object entity name
