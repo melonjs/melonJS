@@ -19,7 +19,7 @@
  * me.utils.function.defer(myFunc, this, 1, 2, 3);
  */
 export function defer(func, thisArg, ...args) {
-    return setTimeout(func.bind(thisArg), 0.01, ...args);
+	return setTimeout(func.bind(thisArg), 0.01, ...args);
 }
 
 /**
@@ -33,28 +33,28 @@ export function defer(func, thisArg, ...args) {
  * @returns {Function} the function that will be throttled
  */
 export function throttle(fn, delay, no_trailing) {
-    let last = globalThis.performance.now(), deferTimer;
-    // `no_trailing` defaults to false.
-    if (typeof no_trailing !== "boolean") {
-        no_trailing = false;
-    }
-    return function () {
-        let now = globalThis.performance.now();
-        let elasped = now - last;
-        let args = arguments;
-        if (elasped < delay) {
-            if (no_trailing === false) {
-                // hold on to it
-                clearTimeout(deferTimer);
-                deferTimer = setTimeout(() => {
-                    last = now;
-                    return fn.apply(null, args);
-                }, elasped);
-            }
-        }
-        else {
-            last = now;
-            return fn.apply(null, args);
-        }
-    };
+	let last = globalThis.performance.now(),
+		deferTimer;
+	// `no_trailing` defaults to false.
+	if (typeof no_trailing !== "boolean") {
+		no_trailing = false;
+	}
+	return function () {
+		let now = globalThis.performance.now();
+		let elasped = now - last;
+		let args = arguments;
+		if (elasped < delay) {
+			if (no_trailing === false) {
+				// hold on to it
+				clearTimeout(deferTimer);
+				deferTimer = setTimeout(() => {
+					last = now;
+					return fn.apply(null, args);
+				}, elasped);
+			}
+		} else {
+			last = now;
+			return fn.apply(null, args);
+		}
+	};
 }

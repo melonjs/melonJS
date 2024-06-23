@@ -9,47 +9,54 @@ import Vector2d from "./../../../math/vector2.js";
  * @ignore
  */
 export function parseTexturePacker(data, textureAtlas) {
-    let atlas = {};
+	let atlas = {};
 
-    data.frames.forEach((frame) => {
-        // fix wrongly formatted JSON (e.g. last dummy object in ShoeBox)
-        if (frame.hasOwnProperty("filename")) {
-            // Source coordinates
-            let s = frame.frame;
-            let trimmed = !!frame.trimmed;
+	data.frames.forEach((frame) => {
+		// fix wrongly formatted JSON (e.g. last dummy object in ShoeBox)
+		if (frame.hasOwnProperty("filename")) {
+			// Source coordinates
+			let s = frame.frame;
+			let trimmed = !!frame.trimmed;
 
-            let trim;
+			let trim;
 
-            if (trimmed) {
-                trim = {
-                    x : frame.spriteSourceSize.x,
-                    y : frame.spriteSourceSize.y,
-                    w : frame.spriteSourceSize.w,
-                    h : frame.spriteSourceSize.h
-                };
-            }
+			if (trimmed) {
+				trim = {
+					x: frame.spriteSourceSize.x,
+					y: frame.spriteSourceSize.y,
+					w: frame.spriteSourceSize.w,
+					h: frame.spriteSourceSize.h,
+				};
+			}
 
-            let originX, originY;
-            // Pixel-based offset origin from the top-left of the source frame
-            let hasTextureAnchorPoint = (frame.sourceSize && frame.pivot);
-            if (hasTextureAnchorPoint) {
-                originX = (frame.sourceSize.w * frame.pivot.x) - ((trimmed) ? trim.x : 0);
-                originY = (frame.sourceSize.h * frame.pivot.y) - ((trimmed) ? trim.y : 0);
-            }
+			let originX, originY;
+			// Pixel-based offset origin from the top-left of the source frame
+			let hasTextureAnchorPoint = frame.sourceSize && frame.pivot;
+			if (hasTextureAnchorPoint) {
+				originX = frame.sourceSize.w * frame.pivot.x - (trimmed ? trim.x : 0);
+				originY = frame.sourceSize.h * frame.pivot.y - (trimmed ? trim.y : 0);
+			}
 
-            atlas[frame.filename] = {
-                name         : frame.filename, // frame name
-                texture      : data.meta.image || "default", // the source texture
-                offset       : new Vector2d(s.x, s.y),
-                anchorPoint  : (hasTextureAnchorPoint) ? new Vector2d(originX / s.w, originY / s.h) : null,
-                trimmed      : trimmed,
-                trim         : trim,
-                width        : s.w,
-                height       : s.h,
-                angle        : (frame.rotated === true) ? -ETA : 0
-            };
-            textureAtlas.addUVs(atlas, frame.filename, data.meta.size.w, data.meta.size.h);
-        }
-    });
-    return atlas;
+			atlas[frame.filename] = {
+				name: frame.filename, // frame name
+				texture: data.meta.image || "default", // the source texture
+				offset: new Vector2d(s.x, s.y),
+				anchorPoint: hasTextureAnchorPoint
+					? new Vector2d(originX / s.w, originY / s.h)
+					: null,
+				trimmed: trimmed,
+				trim: trim,
+				width: s.w,
+				height: s.h,
+				angle: frame.rotated === true ? -ETA : 0,
+			};
+			textureAtlas.addUVs(
+				atlas,
+				frame.filename,
+				data.meta.size.w,
+				data.meta.size.h,
+			);
+		}
+	});
+	return atlas;
 }

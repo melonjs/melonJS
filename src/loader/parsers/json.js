@@ -11,25 +11,24 @@ import { fetchData } from "./fetchdata.js";
  * @ignore
  */
 export function preloadJSON(data, onload, onerror, settings) {
-    if (typeof jsonList[data.name] !== "undefined") {
-        // already loaded
-        return 0;
-    }
+	if (typeof jsonList[data.name] !== "undefined") {
+		// already loaded
+		return 0;
+	}
 
-    fetchData(data.src, "json", settings)
-        .then(response => {
-            jsonList[data.name] = response;
-            if (typeof onload === "function") {
-                // callback
-                onload();
-            }
-        })
-        .catch(error => {
-            if (typeof onerror === "function") {
-                onerror(error);
-            }
-        });
+	fetchData(data.src, "json", settings)
+		.then((response) => {
+			jsonList[data.name] = response;
+			if (typeof onload === "function") {
+				// callback
+				onload();
+			}
+		})
+		.catch((error) => {
+			if (typeof onerror === "function") {
+				onerror(error);
+			}
+		});
 
-    return 1;
+	return 1;
 }
-

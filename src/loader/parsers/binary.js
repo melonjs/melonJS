@@ -11,23 +11,22 @@ import { fetchData } from "./fetchdata.js";
  * @ignore
  */
 export function preloadBinary(data, onload, onerror, settings) {
+	fetchData(data.src, "arrayBuffer", settings)
+		.then((response) => {
+			// this method is native and might be slightly more efficient
+			const decoder = new TextDecoder(); // the default for this is 'utf-8'
+			binList[data.name] = decoder.decode(response);
 
-    fetchData(data.src, "arrayBuffer", settings)
-        .then(response => {
-            // this method is native and might be slightly more efficient
-            const decoder = new TextDecoder(); // the default for this is 'utf-8'
-            binList[data.name] = decoder.decode(response);
+			if (typeof onload === "function") {
+				// callback
+				onload();
+			}
+		})
+		.catch((error) => {
+			if (typeof onerror === "function") {
+				onerror(error);
+			}
+		});
 
-            if (typeof onload === "function") {
-                // callback
-                onload();
-            }
-        })
-        .catch(error => {
-            if (typeof onerror === "function") {
-                onerror(error);
-            }
-        });
-
-    return 1;
+	return 1;
 }

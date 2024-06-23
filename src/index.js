@@ -84,7 +84,6 @@ import pool from "./system/pooling.js";
 import state from "./state/state.js";
 import level from "./level/level.js";
 
-
 /**
  * current melonJS version
  * @static
@@ -96,89 +95,89 @@ export const version = "__VERSION__";
 
 // export all utility function
 export {
-    audio,
-    collision,
-    device,
-    event,
-    loader,
-    level,
-    input,
-    Math,
-    plugin,
-    plugins,
-    utils,
-    save,
-    timer,
-    pool,
-    state,
-    video
+	audio,
+	collision,
+	device,
+	event,
+	loader,
+	level,
+	input,
+	Math,
+	plugin,
+	plugins,
+	utils,
+	save,
+	timer,
+	pool,
+	state,
+	video,
 };
 
 // export all class definition
 export {
-    Color,
-    Vector2d,
-    Vector3d,
-    ObservableVector2d,
-    ObservableVector3d,
-    Matrix2d,
-    Matrix3d,
-    Polygon,
-    Line,
-    Ellipse,
-    Point,
-    Rect,
-    RoundRect,
-    Tween,
-    QuadTree,
-    GLShader,
-    Compositor,
-    PrimitiveCompositor,
-    QuadCompositor,
-    Renderer,
-    WebGLRenderer,
-    CanvasRenderer,
-    CanvasRenderTarget,
-    TextureAtlas,
-    Renderable,
-    Body,
-    Bounds,
-    Text,
-    BitmapText,
-    BitmapTextData,
-    ColorLayer,
-    ImageLayer,
-    Sprite,
-    NineSliceSprite,
-    UIBaseElement,
-    UITextButton,
-    UISpriteElement,
-    Collectable,
-    Trigger,
-    Light2d,
-    Draggable,
-    DropTarget,
-    TMXRenderer,
-    TMXOrthogonalRenderer,
-    TMXIsometricRenderer,
-    TMXHexagonalRenderer,
-    TMXStaggeredRenderer,
-    Tile,
-    TMXTileset,
-    TMXTilesetGroup,
-    TMXTileMap,
-    TMXLayer,
-    TMXUtils,
-    Pointer,
-    Stage,
-    Camera2d,
-    Container,
-    World,
-    ParticleEmitter,
-    ParticleEmitterSettings,
-    Particle,
-    Entity,
-    Application
+	Color,
+	Vector2d,
+	Vector3d,
+	ObservableVector2d,
+	ObservableVector3d,
+	Matrix2d,
+	Matrix3d,
+	Polygon,
+	Line,
+	Ellipse,
+	Point,
+	Rect,
+	RoundRect,
+	Tween,
+	QuadTree,
+	GLShader,
+	Compositor,
+	PrimitiveCompositor,
+	QuadCompositor,
+	Renderer,
+	WebGLRenderer,
+	CanvasRenderer,
+	CanvasRenderTarget,
+	TextureAtlas,
+	Renderable,
+	Body,
+	Bounds,
+	Text,
+	BitmapText,
+	BitmapTextData,
+	ColorLayer,
+	ImageLayer,
+	Sprite,
+	NineSliceSprite,
+	UIBaseElement,
+	UITextButton,
+	UISpriteElement,
+	Collectable,
+	Trigger,
+	Light2d,
+	Draggable,
+	DropTarget,
+	TMXRenderer,
+	TMXOrthogonalRenderer,
+	TMXIsometricRenderer,
+	TMXHexagonalRenderer,
+	TMXStaggeredRenderer,
+	Tile,
+	TMXTileset,
+	TMXTilesetGroup,
+	TMXTileMap,
+	TMXLayer,
+	TMXUtils,
+	Pointer,
+	Stage,
+	Camera2d,
+	Container,
+	World,
+	ParticleEmitter,
+	ParticleEmitterSettings,
+	Particle,
+	Entity,
+	Application,
 };
 
 // Backward compatibility for deprecated method or properties
@@ -209,7 +208,7 @@ export let skipAutoInit = false;
  * @namespace game
  * @see Application
  */
-export const game = new Application(0, 0, {legacy:true});
+export const game = new Application(0, 0, { legacy: true });
 
 /**
  * initialize the melonJS library.
@@ -220,96 +219,96 @@ export const game = new Application(0, 0, {legacy:true});
  * @public
  */
 export function boot() {
-    // don't do anything if already initialized (should not happen anyway)
-    if (initialized === true) {
-        return;
-    }
+	// don't do anything if already initialized (should not happen anyway)
+	if (initialized === true) {
+		return;
+	}
 
-    // output melonJS version in the console
-    console.log("melonJS 2 (v" + version + ") | http://melonjs.org");
+	// output melonJS version in the console
+	console.log("melonJS 2 (v" + version + ") | http://melonjs.org");
 
-    // register all built-ins objects into the object pool
-    pool.register("me.Entity", Entity);
-    pool.register("me.Collectable", Collectable);
-    pool.register("me.Trigger", Trigger);
-    pool.register("me.Light2d", Light2d);
-    pool.register("me.Tween", Tween, true);
-    pool.register("me.Color", Color, true);
-    pool.register("me.Particle", Particle, true);
-    pool.register("me.Sprite", Sprite);
-    pool.register("me.NineSliceSprite", NineSliceSprite);
-    pool.register("me.Renderable", Renderable);
-    pool.register("me.Text", Text, true);
-    pool.register("me.BitmapText", BitmapText);
-    pool.register("me.BitmapTextData", BitmapTextData, true);
-    pool.register("me.ImageLayer", ImageLayer);
-    pool.register("me.ColorLayer", ColorLayer, true);
-    pool.register("me.Vector2d", Vector2d, true);
-    pool.register("me.Vector3d", Vector3d, true);
-    pool.register("me.ObservableVector2d", ObservableVector2d, true);
-    pool.register("me.ObservableVector3d", ObservableVector3d, true);
-    pool.register("me.Matrix2d", Matrix2d, true);
-    pool.register("me.Matrix3d", Matrix3d, true);
-    pool.register("me.Rect", Rect, true);
-    pool.register("me.RoundRect", RoundRect, true);
-    pool.register("me.Polygon", Polygon, true);
-    pool.register("me.Line", Line, true);
-    pool.register("me.Point", Point, true);
-    pool.register("me.Ellipse", Ellipse, true);
-    pool.register("me.Bounds", Bounds, true);
+	// register all built-ins objects into the object pool
+	pool.register("me.Entity", Entity);
+	pool.register("me.Collectable", Collectable);
+	pool.register("me.Trigger", Trigger);
+	pool.register("me.Light2d", Light2d);
+	pool.register("me.Tween", Tween, true);
+	pool.register("me.Color", Color, true);
+	pool.register("me.Particle", Particle, true);
+	pool.register("me.Sprite", Sprite);
+	pool.register("me.NineSliceSprite", NineSliceSprite);
+	pool.register("me.Renderable", Renderable);
+	pool.register("me.Text", Text, true);
+	pool.register("me.BitmapText", BitmapText);
+	pool.register("me.BitmapTextData", BitmapTextData, true);
+	pool.register("me.ImageLayer", ImageLayer);
+	pool.register("me.ColorLayer", ColorLayer, true);
+	pool.register("me.Vector2d", Vector2d, true);
+	pool.register("me.Vector3d", Vector3d, true);
+	pool.register("me.ObservableVector2d", ObservableVector2d, true);
+	pool.register("me.ObservableVector3d", ObservableVector3d, true);
+	pool.register("me.Matrix2d", Matrix2d, true);
+	pool.register("me.Matrix3d", Matrix3d, true);
+	pool.register("me.Rect", Rect, true);
+	pool.register("me.RoundRect", RoundRect, true);
+	pool.register("me.Polygon", Polygon, true);
+	pool.register("me.Line", Line, true);
+	pool.register("me.Point", Point, true);
+	pool.register("me.Ellipse", Ellipse, true);
+	pool.register("me.Bounds", Bounds, true);
 
-    // duplicate all entries if use with no namespace (e.g. es6)
-    pool.register("Entity", Entity);
-    pool.register("Collectable", Collectable);
-    pool.register("Trigger", Trigger);
-    pool.register("Light2d", Light2d);
-    pool.register("Tween", Tween, true);
-    pool.register("Color", Color, true);
-    pool.register("Particle", Particle, true);
-    pool.register("Sprite", Sprite);
-    pool.register("NineSliceSprite", NineSliceSprite);
-    pool.register("Renderable", Renderable);
-    pool.register("Text", Text, true);
-    pool.register("BitmapText", BitmapText);
-    pool.register("BitmapTextData", BitmapTextData, true);
-    pool.register("ImageLayer", ImageLayer);
-    pool.register("ColorLayer", ColorLayer, true);
-    pool.register("Vector2d", Vector2d, true);
-    pool.register("Vector3d", Vector3d, true);
-    pool.register("ObservableVector2d", ObservableVector2d, true);
-    pool.register("ObservableVector3d", ObservableVector3d, true);
-    pool.register("Matrix2d", Matrix2d, true);
-    pool.register("Matrix3d", Matrix3d, true);
-    pool.register("Rect", Rect, true);
-    pool.register("RoundRect", RoundRect, true);
-    pool.register("Polygon", Polygon, true);
-    pool.register("Line", Line, true);
-    pool.register("Point", Point, true);
-    pool.register("Ellipse", Ellipse, true);
-    pool.register("Bounds", Bounds, true);
-    pool.register("CanvasRenderTarget", CanvasRenderTarget, true);
+	// duplicate all entries if use with no namespace (e.g. es6)
+	pool.register("Entity", Entity);
+	pool.register("Collectable", Collectable);
+	pool.register("Trigger", Trigger);
+	pool.register("Light2d", Light2d);
+	pool.register("Tween", Tween, true);
+	pool.register("Color", Color, true);
+	pool.register("Particle", Particle, true);
+	pool.register("Sprite", Sprite);
+	pool.register("NineSliceSprite", NineSliceSprite);
+	pool.register("Renderable", Renderable);
+	pool.register("Text", Text, true);
+	pool.register("BitmapText", BitmapText);
+	pool.register("BitmapTextData", BitmapTextData, true);
+	pool.register("ImageLayer", ImageLayer);
+	pool.register("ColorLayer", ColorLayer, true);
+	pool.register("Vector2d", Vector2d, true);
+	pool.register("Vector3d", Vector3d, true);
+	pool.register("ObservableVector2d", ObservableVector2d, true);
+	pool.register("ObservableVector3d", ObservableVector3d, true);
+	pool.register("Matrix2d", Matrix2d, true);
+	pool.register("Matrix3d", Matrix3d, true);
+	pool.register("Rect", Rect, true);
+	pool.register("RoundRect", RoundRect, true);
+	pool.register("Polygon", Polygon, true);
+	pool.register("Line", Line, true);
+	pool.register("Point", Point, true);
+	pool.register("Ellipse", Ellipse, true);
+	pool.register("Bounds", Bounds, true);
+	pool.register("CanvasRenderTarget", CanvasRenderTarget, true);
 
-    // publish Boot notification
-    event.emit(event.BOOT);
+	// publish Boot notification
+	event.emit(event.BOOT);
 
-    // enable/disable the cache
-    loader.setNocache(utils.getUriFragment().nocache || false);
+	// enable/disable the cache
+	loader.setNocache(utils.getUriFragment().nocache || false);
 
-    // automatically enable keyboard events
-    input.initKeyboardEvent();
+	// automatically enable keyboard events
+	input.initKeyboardEvent();
 
-    // mark melonJS as initialized
-    initialized = true;
+	// mark melonJS as initialized
+	initialized = true;
 
-    /// if auto init is disable and this function was called manually
-    if (skipAutoInit === true) {
-        event.emit(event.DOM_READY);
-    }
+	/// if auto init is disable and this function was called manually
+	if (skipAutoInit === true) {
+		event.emit(event.DOM_READY);
+	}
 }
 
 // call the library init function when ready
 device.onReady(() => {
-    if (skipAutoInit === false) {
-        boot();
-    }
+	if (skipAutoInit === false) {
+		boot();
+	}
 });

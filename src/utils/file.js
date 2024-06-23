@@ -1,4 +1,3 @@
-
 /**
  * a collection of file utility functions
  * @namespace utils.file
@@ -7,7 +6,6 @@
 // regexp to deal with file name & path
 const PATH = /^.*(\\|\/|\:)/;
 const EXT = /\.[^\.]*$/;
-
 
 /**
  * return the base name of the file without path info
@@ -18,7 +16,7 @@ const EXT = /\.[^\.]*$/;
  * @returns {string} the base name without path information.
  */
 export function getBasename(path) {
-    return path.replace(PATH, "").replace(EXT, "");
+	return path.replace(PATH, "").replace(EXT, "");
 }
 
 /**
@@ -30,7 +28,7 @@ export function getBasename(path) {
  * @returns {string} the extracted path
  */
 export function getPath(path) {
-    return path.match(PATH)[0];
+	return path.match(PATH)[0];
 }
 
 /**
@@ -42,5 +40,5 @@ export function getPath(path) {
  * @returns {string} filename extension.
  */
 export function getExtension(path) {
-    return path.substring(path.lastIndexOf(".") + 1, path.length);
+	return path.substring(path.lastIndexOf(".") + 1, path.length);
 }

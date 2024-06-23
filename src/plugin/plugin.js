@@ -25,25 +25,24 @@ export let cache = {};
  * @memberof plugin
  */
 export class BasePlugin {
+	/**
+	 * @param {Application} [app] - a reference to the app/game that registered this plugin
+	 */
+	constructor(app = game) {
+		/**
+		 * define the minimum required version of melonJS<br>
+		 * this can be overridden by the plugin
+		 * @type {string}
+		 * @default "__VERSION__"
+		 */
+		this.version = "__VERSION__";
 
-    /**
-     * @param {Application} [app] - a reference to the app/game that registered this plugin
-     */
-    constructor(app = game) {
-        /**
-         * define the minimum required version of melonJS<br>
-         * this can be overridden by the plugin
-         * @type {string}
-         * @default "__VERSION__"
-         */
-        this.version = "__VERSION__";
-
-        /**
-         * a reference to the app/game that registered this plugin
-         * @type {Application}
-         */
-        this.app = app;
-    }
+		/**
+		 * a reference to the app/game that registered this plugin
+		 * @type {Application}
+		 */
+		this.app = app;
+	}
 }
 
 /**
@@ -53,11 +52,10 @@ export class BasePlugin {
  * @deprecated since 15.1.6, see {@link plugin.BasePlugin}
  */
 export class Base extends BasePlugin {
-
-    constructor() {
-        warning("plugin.Base", "plugin.BasePlugin", "15.1.6");
-        super();
-    }
+	constructor() {
+		warning("plugin.Base", "plugin.BasePlugin", "15.1.6");
+		super();
+	}
 }
 
 /**
@@ -77,30 +75,29 @@ export class Base extends BasePlugin {
  * });
  */
 export function patch(proto, name, fn) {
-    // use the object prototype if possible
-    if (typeof proto.prototype !== "undefined") {
-        proto = proto.prototype;
-    }
-    // reuse the logic behind object extends
-    if (typeof(proto[name]) === "function") {
-        // save the original function
-        let _parent = proto[name];
-        // override the function with the new one
-        Object.defineProperty(proto, name, {
-            "configurable" : true,
-            "value" : (function (name, fn) {
-                return function () {
-                    this._patched = _parent;
-                    let ret = fn.apply(this, arguments);
-                    this._patched = null;
-                    return ret;
-                };
-            })(name, fn)
-        });
-    }
-    else {
-        throw new Error(name + " is not an existing function");
-    }
+	// use the object prototype if possible
+	if (typeof proto.prototype !== "undefined") {
+		proto = proto.prototype;
+	}
+	// reuse the logic behind object extends
+	if (typeof proto[name] === "function") {
+		// save the original function
+		let _parent = proto[name];
+		// override the function with the new one
+		Object.defineProperty(proto, name, {
+			configurable: true,
+			value: (function (name, fn) {
+				return function () {
+					this._patched = _parent;
+					let ret = fn.apply(this, arguments);
+					this._patched = null;
+					return ret;
+				};
+			})(name, fn),
+		});
+	} else {
+		throw new Error(name + " is not an existing function");
+	}
 }
 
 /**
@@ -117,34 +114,39 @@ export function patch(proto, name, fn) {
  * me.plugin.cache.testPlugin.myfunction ();
  */
 export function register(plugin, name = plugin.toString().match(/ (\w+)/)[1]) {
-    // ensure me.plugins[name] is not already "used"
-    if (cache[name]) {
-        throw new Error("plugin " + name + " already registered");
-    }
+	// ensure me.plugins[name] is not already "used"
+	if (cache[name]) {
+		throw new Error("plugin " + name + " already registered");
+	}
 
-    // get extra arguments
-    let _args = [];
-    if (arguments.length > 2) {
-        // store extra arguments if any
-        _args = Array.prototype.slice.call(arguments, 1);
-    }
+	// get extra arguments
+	let _args = [];
+	if (arguments.length > 2) {
+		// store extra arguments if any
+		_args = Array.prototype.slice.call(arguments, 1);
+	}
 
-    // try to instantiate the plugin
-    _args[0] = plugin;
-    let instance = new (plugin.bind.apply(plugin, _args))();
+	// try to instantiate the plugin
+	_args[0] = plugin;
+	let instance = new (plugin.bind.apply(plugin, _args))();
 
-    // inheritance check
-    if (typeof instance === "undefined" || !(instance instanceof BasePlugin)) {
-        throw new Error("Plugin should extend the BasePlugin Class !");
-    }
+	// inheritance check
+	if (typeof instance === "undefined" || !(instance instanceof BasePlugin)) {
+		throw new Error("Plugin should extend the BasePlugin Class !");
+	}
 
-    // compatibility testing
-    if (checkVersion(instance.version, version) > 0) {
-        throw new Error("Plugin version mismatch, expected: " + instance.version + ", got: " + version);
-    }
+	// compatibility testing
+	if (checkVersion(instance.version, version) > 0) {
+		throw new Error(
+			"Plugin version mismatch, expected: " +
+				instance.version +
+				", got: " +
+				version,
+		);
+	}
 
-    // create a reference to the new plugin
-    cache[name] = instance;
+	// create a reference to the new plugin
+	cache[name] = instance;
 }
 
 /**
@@ -155,9 +157,12 @@ export function register(plugin, name = plugin.toString().match(/ (\w+)/)[1]) {
  * @returns {BasePlugin} a plugin instance or undefined
  */
 export function get(classType) {
-    for (const name in cache) {
-        if ((typeof classType === "string" && classType === name) || cache[name] instanceof classType) {
-            return cache[name];
-        }
-    }
+	for (const name in cache) {
+		if (
+			(typeof classType === "string" && classType === name) ||
+			cache[name] instanceof classType
+		) {
+			return cache[name];
+		}
+	}
 }

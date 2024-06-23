@@ -22,13 +22,13 @@ import WebGLRenderer from "../video/webgl/webgl_renderer.js";
  * @see TextureAtlas
  */
 Object.defineProperty(Renderer.prototype, "Texture", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        warning("me.video.renderer.Texture", "me.TextureAtlas", "10.4.0");
-        return TextureAtlas;
-    }
+	/**
+	 * @ignore
+	 */
+	get: function () {
+		warning("me.video.renderer.Texture", "me.TextureAtlas", "10.4.0");
+		return TextureAtlas;
+	},
 });
 
 /**
@@ -39,15 +39,15 @@ Object.defineProperty(Renderer.prototype, "Texture", {
  * @see Draggable
  */
 export class DraggableEntity extends Draggable {
-    /**
-     * @param {number} x - the x coordinates of the draggable object
-     * @param {number} y - the y coordinates of the draggable object
-     * @param {object} settings - Entity properties (see {@link Entity})
-     */
-    constructor(x, y, settings) {
-        warning("DraggableEntity", "Draggable", "10.5.0");
-        super(x, y, settings.width, settings.height);
-    }
+	/**
+	 * @param {number} x - the x coordinates of the draggable object
+	 * @param {number} y - the y coordinates of the draggable object
+	 * @param {object} settings - Entity properties (see {@link Entity})
+	 */
+	constructor(x, y, settings) {
+		warning("DraggableEntity", "Draggable", "10.5.0");
+		super(x, y, settings.width, settings.height);
+	}
 }
 
 /**
@@ -58,15 +58,15 @@ export class DraggableEntity extends Draggable {
  * @see DropTarget
  */
 export class DroptargetEntity extends DropTarget {
-    /**
-     * @param {number} x - the x coordinates of the draggable object
-     * @param {number} y - the y coordinates of the draggable object
-     * @param {object} settings - Entity properties (see {@link Entity})
-     */
-    constructor(x, y, settings) {
-        warning("DroptargetEntity", "DropTarget", "10.5.0");
-        super(x, y, settings.width, settings.height);
-    }
+	/**
+	 * @param {number} x - the x coordinates of the draggable object
+	 * @param {number} y - the y coordinates of the draggable object
+	 * @param {object} settings - Entity properties (see {@link Entity})
+	 */
+	constructor(x, y, settings) {
+		warning("DroptargetEntity", "DropTarget", "10.5.0");
+		super(x, y, settings.width, settings.height);
+	}
 }
 
 /**
@@ -77,9 +77,9 @@ export class DroptargetEntity extends DropTarget {
  * @deprecated since 13.1.0
  * @see getCanvas();
  */
-Renderer.prototype.getScreenCanvas = function() {
-    warning("getScreenCanvas", "getCanvas", "13.1.0");
-    return this.getCanvas();
+Renderer.prototype.getScreenCanvas = function () {
+	warning("getScreenCanvas", "getCanvas", "13.1.0");
+	return this.getCanvas();
 };
 
 /**
@@ -91,9 +91,9 @@ Renderer.prototype.getScreenCanvas = function() {
  * @deprecated since 13.1.0
  * @see getContext();
  */
-Renderer.prototype.getScreenContext = function()  {
-    warning("getScreenContext", "getContext", "13.1.0");
-    return this.getContext();
+Renderer.prototype.getScreenContext = function () {
+	warning("getScreenContext", "getContext", "13.1.0");
+	return this.getContext();
 };
 
 /**
@@ -104,17 +104,16 @@ Renderer.prototype.getScreenContext = function()  {
  * @see UISpriteElement
  */
 export class GUI_Object extends UISpriteElement {
-    /**
-     * @param {number} x - the x coordinate of the GUI Object
-     * @param {number} y - the y coordinate of the GUI Object
-     * @param {object} settings - See {@link Sprite}
-     */
-    constructor(x, y, settings) {
-        warning("GUI_Object", "UISpriteElement or UITextButton", "14.0.0");
-        super(x, y, settings);
-    }
+	/**
+	 * @param {number} x - the x coordinate of the GUI Object
+	 * @param {number} y - the y coordinate of the GUI Object
+	 * @param {object} settings - See {@link Sprite}
+	 */
+	constructor(x, y, settings) {
+		warning("GUI_Object", "UISpriteElement or UITextButton", "14.0.0");
+		super(x, y, settings);
+	}
 }
-
 
 /**
  * return the width of the system Canvas
@@ -125,9 +124,9 @@ export class GUI_Object extends UISpriteElement {
  * @deprecated since 15.12.0
  * @see width
  */
-Renderer.prototype.getWidth = function()  {
-    warning("getWidth", "width", "15.12.0");
-    return this.width;
+Renderer.prototype.getWidth = function () {
+	warning("getWidth", "width", "15.12.0");
+	return this.width;
 };
 
 /**
@@ -138,9 +137,9 @@ Renderer.prototype.getWidth = function()  {
  * @deprecated since 15.12.0
  * @see height
  */
-Renderer.prototype.getHeight = function()  {
-    warning("getHeight", "height", "15.12.0");
-    return this.height;
+Renderer.prototype.getHeight = function () {
+	warning("getHeight", "height", "15.12.0");
+	return this.height;
 };
 
 /**
@@ -149,19 +148,19 @@ Renderer.prototype.getHeight = function()  {
  * @see CanvasRenderTarget
  */
 export class CanvasTexture extends CanvasRenderTarget {
-    /**
-     * @param {number} width - the desired width of the canvas
-     * @param {number} height - the desired height of the canvas
-     * @param {object} attributes - The attributes to create both the canvas and context
-     * @param {boolean} [attributes.context="2d"] - the context type to be created ("2d", "webgl", "webgl2")
-     * @param {boolean} [attributes.offscreenCanvas=false] - will create an offscreenCanvas if true instead of a standard canvas
-     * @param {boolean} [attributes.willReadFrequently=false] - Indicates whether or not a lot of read-back operations are planned
-     * @param {boolean} [attributes.antiAlias=false] - Whether to enable anti-aliasing, use false (default) for a pixelated effect.
-     */
-    constructor(width, height, attributes) {
-        warning("CanvasTexture", "CanvasRenderTarget", "17.1.0");
-        super(width, height, attributes);
-    }
+	/**
+	 * @param {number} width - the desired width of the canvas
+	 * @param {number} height - the desired height of the canvas
+	 * @param {object} attributes - The attributes to create both the canvas and context
+	 * @param {boolean} [attributes.context="2d"] - the context type to be created ("2d", "webgl", "webgl2")
+	 * @param {boolean} [attributes.offscreenCanvas=false] - will create an offscreenCanvas if true instead of a standard canvas
+	 * @param {boolean} [attributes.willReadFrequently=false] - Indicates whether or not a lot of read-back operations are planned
+	 * @param {boolean} [attributes.antiAlias=false] - Whether to enable anti-aliasing, use false (default) for a pixelated effect.
+	 */
+	constructor(width, height, attributes) {
+		warning("CanvasTexture", "CanvasRenderTarget", "17.1.0");
+		super(width, height, attributes);
+	}
 }
 
 /**
@@ -172,9 +171,9 @@ export class CanvasTexture extends CanvasRenderTarget {
  * @deprecated since 17.3.0
  * @see lineWidth
  */
-CanvasRenderer.prototype.setLineWidth = function(width)  {
-    warning("setLineWidth", "lineWidth", "17.3.0");
-    this.lineWidth = width;
+CanvasRenderer.prototype.setLineWidth = function (width) {
+	warning("setLineWidth", "lineWidth", "17.3.0");
+	this.lineWidth = width;
 };
 
 /**
@@ -185,8 +184,7 @@ CanvasRenderer.prototype.setLineWidth = function(width)  {
  * @deprecated since 17.3.0
  * @see lineWidth
  */
-WebGLRenderer.prototype.setLineWidth = function(width)  {
-    warning("setLineWidth", "lineWidth", "17.3.0");
-    this.lineWidth = width;
+WebGLRenderer.prototype.setLineWidth = function (width) {
+	warning("setLineWidth", "lineWidth", "17.3.0");
+	this.lineWidth = width;
 };
-

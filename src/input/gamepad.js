@@ -1,6 +1,5 @@
-import {getBindingKey, triggerKeyEvent} from "./keyboard.js";
+import { getBindingKey, triggerKeyEvent } from "./keyboard.js";
 import * as event from "./../system/event.js";
-
 
 // Analog deadzone
 let deadzone = 0.1;
@@ -10,10 +9,13 @@ let deadzone = 0.1;
  * @ignore
  */
 function wiredXbox360NormalizeFn(value, axis, button) {
-    if (button === this.GAMEPAD.BUTTONS.L2 || button === this.GAMEPAD.BUTTONS.R2) {
-        return (value + 1) / 2;
-    }
-    return value;
+	if (
+		button === this.GAMEPAD.BUTTONS.L2 ||
+		button === this.GAMEPAD.BUTTONS.R2
+	) {
+		return (value + 1) / 2;
+	}
+	return value;
 }
 
 /**
@@ -21,23 +23,21 @@ function wiredXbox360NormalizeFn(value, axis, button) {
  * @ignore
  */
 function ouyaNormalizeFn(value, axis, button) {
-    if (value > 0) {
-        if (button === this.GAMEPAD.BUTTONS.L2) {
-            // L2 is wonky; seems like the deadzone is around 20000
-            // (That's over 15% of the total range!)
-            value = Math.max(0, value - 20000) / 111070;
-        }
-        else {
-            // Normalize [1..65536] => [0.0..0.5]
-            value = (value - 1) / 131070;
-        }
-    }
-    else {
-        // Normalize [-65536..-1] => [0.5..1.0]
-        value = (65536 + value) / 131070 + 0.5;
-    }
+	if (value > 0) {
+		if (button === this.GAMEPAD.BUTTONS.L2) {
+			// L2 is wonky; seems like the deadzone is around 20000
+			// (That's over 15% of the total range!)
+			value = Math.max(0, value - 20000) / 111070;
+		} else {
+			// Normalize [1..65536] => [0.0..0.5]
+			value = (value - 1) / 131070;
+		}
+	} else {
+		// Normalize [-65536..-1] => [0.5..1.0]
+		value = (65536 + value) / 131070 + 0.5;
+	}
 
-    return value;
+	return value;
 }
 
 // Match vendor and product codes for Firefox
@@ -55,21 +55,27 @@ const leadingZeroRE = /^0+/;
  * @ignore
  */
 function addMapping(id, mapping) {
-    const expanded_id = id.replace(vendorProductRE, (_, a, b) =>
-        "000".slice(a.length - 1) + a + "-" +
-        "000".slice(b.length - 1) + b + "-"
-    );
-    const sparse_id = id.replace(vendorProductRE, (_, a, b) =>
-        a.replace(leadingZeroRE, "") + "-" +
-        b.replace(leadingZeroRE, "") + "-"
-    );
+	const expanded_id = id.replace(
+		vendorProductRE,
+		(_, a, b) =>
+			"000".slice(a.length - 1) + a + "-" + "000".slice(b.length - 1) + b + "-",
+	);
+	const sparse_id = id.replace(
+		vendorProductRE,
+		(_, a, b) =>
+			a.replace(leadingZeroRE, "") + "-" + b.replace(leadingZeroRE, "") + "-",
+	);
 
-    // Normalize optional parameters
-    mapping.analog = mapping.analog || mapping.buttons.map(() => -1);
-    mapping.normalize_fn = mapping.normalize_fn || function (value) { return value; };
+	// Normalize optional parameters
+	mapping.analog = mapping.analog || mapping.buttons.map(() => -1);
+	mapping.normalize_fn =
+		mapping.normalize_fn ||
+		function (value) {
+			return value;
+		};
 
-    remap.set(expanded_id, mapping);
-    remap.set(sparse_id, mapping);
+	remap.set(expanded_id, mapping);
+	remap.set(sparse_id, mapping);
 }
 
 // binding list
@@ -82,52 +88,58 @@ let updateEventHandler;
 
 // Default gamepad mappings
 [
-    // Firefox mappings
-    [
-        "45e-28e-Xbox 360 Wired Controller",
-        {
-            "axes" : [ 0, 1, 3, 4 ],
-            "buttons" : [ 11, 12, 13, 14, 8, 9, -1, -1, 5, 4, 6, 7, 0, 1, 2, 3, 10 ],
-            "analog" : [ -1, -1, -1, -1, -1, -1, 2, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1 ],
-            "normalize_fn" : wiredXbox360NormalizeFn
-        }
-    ],
-    [
-        "54c-268-PLAYSTATION(R)3 Controller",
-        {
-            "axes" : [ 0, 1, 2, 3 ],
-            "buttons" : [ 14, 13, 15, 12, 10, 11, 8, 9, 0, 3, 1, 2, 4, 6, 7, 5, 16 ]
-        }
-    ],
-    [
-        "54c-5c4-Wireless Controller", // PS4 Controller
-        {
-            "axes" : [ 0, 1, 2, 3 ],
-            "buttons" : [ 1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 16, 17, 12, 13 ]
-        }
-    ],
-    [
-        "2836-1-OUYA Game Controller",
-        {
-            "axes" : [ 0, 3, 7, 9 ],
-            "buttons" : [ 3, 6, 4, 5, 7, 8, 15, 16, -1, -1, 9, 10, 11, 12, 13, 14, -1 ],
-            "analog" : [ -1, -1, -1, -1, -1, -1, 5, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1 ],
-            "normalize_fn" : ouyaNormalizeFn
-        }
-    ],
+	// Firefox mappings
+	[
+		"45e-28e-Xbox 360 Wired Controller",
+		{
+			axes: [0, 1, 3, 4],
+			buttons: [11, 12, 13, 14, 8, 9, -1, -1, 5, 4, 6, 7, 0, 1, 2, 3, 10],
+			analog: [
+				-1, -1, -1, -1, -1, -1, 2, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+			],
+			normalize_fn: wiredXbox360NormalizeFn,
+		},
+	],
+	[
+		"54c-268-PLAYSTATION(R)3 Controller",
+		{
+			axes: [0, 1, 2, 3],
+			buttons: [14, 13, 15, 12, 10, 11, 8, 9, 0, 3, 1, 2, 4, 6, 7, 5, 16],
+		},
+	],
+	[
+		"54c-5c4-Wireless Controller", // PS4 Controller
+		{
+			axes: [0, 1, 2, 3],
+			buttons: [1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 16, 17, 12, 13],
+		},
+	],
+	[
+		"2836-1-OUYA Game Controller",
+		{
+			axes: [0, 3, 7, 9],
+			buttons: [3, 6, 4, 5, 7, 8, 15, 16, -1, -1, 9, 10, 11, 12, 13, 14, -1],
+			analog: [
+				-1, -1, -1, -1, -1, -1, 5, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+			],
+			normalize_fn: ouyaNormalizeFn,
+		},
+	],
 
-    // Chrome mappings
-    [
-        "OUYA Game Controller (Vendor: 2836 Product: 0001)",
-        {
-            "axes" : [ 0, 1, 3, 4 ],
-            "buttons" : [ 0, 3, 1, 2, 4, 5, 12, 13, -1, -1, 6, 7, 8, 9, 10, 11, -1 ],
-            "analog" : [ -1, -1, -1, -1, -1, -1, 2, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1 ],
-            "normalize_fn" : ouyaNormalizeFn
-        }
-    ]
+	// Chrome mappings
+	[
+		"OUYA Game Controller (Vendor: 2836 Product: 0001)",
+		{
+			axes: [0, 1, 3, 4],
+			buttons: [0, 3, 1, 2, 4, 5, 12, 13, -1, -1, 6, 7, 8, 9, 10, 11, -1],
+			analog: [
+				-1, -1, -1, -1, -1, -1, 2, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+			],
+			normalize_fn: ouyaNormalizeFn,
+		},
+	],
 ].forEach((value) => {
-    addMapping(value[0], value[1]);
+	addMapping(value[0], value[1]);
 });
 
 /**
@@ -135,135 +147,149 @@ let updateEventHandler;
  * @ignore
  */
 let updateGamepads = function () {
-    let gamepads = navigator.getGamepads();
+	let gamepads = navigator.getGamepads();
 
-    // Trigger button bindings
-    Object.keys(bindings).forEach((index) => {
-        let gamepad = gamepads[index];
-        if (!gamepad) {
-            return;
-        }
+	// Trigger button bindings
+	Object.keys(bindings).forEach((index) => {
+		let gamepad = gamepads[index];
+		if (!gamepad) {
+			return;
+		}
 
-        let mapping = null;
-        if (gamepad.mapping !== "standard") {
-            mapping = remap.get(gamepad.id);
-        }
+		let mapping = null;
+		if (gamepad.mapping !== "standard") {
+			mapping = remap.get(gamepad.id);
+		}
 
-        let binding = bindings[index];
+		let binding = bindings[index];
 
-        // Iterate all buttons that have active bindings
-        Object.keys(binding.buttons).forEach((button) => {
-            let last = binding.buttons[button];
-            let mapped_button = button;
-            let mapped_axis = -1;
+		// Iterate all buttons that have active bindings
+		Object.keys(binding.buttons).forEach((button) => {
+			let last = binding.buttons[button];
+			let mapped_button = button;
+			let mapped_axis = -1;
 
-            // Remap buttons if necessary
-            if (mapping) {
-                mapped_button = mapping.buttons[button];
-                mapped_axis = mapping.analog[button];
-                if (mapped_button < 0 && mapped_axis < 0) {
-                    // Button is not mapped
-                    return;
-                }
-            }
+			// Remap buttons if necessary
+			if (mapping) {
+				mapped_button = mapping.buttons[button];
+				mapped_axis = mapping.analog[button];
+				if (mapped_button < 0 && mapped_axis < 0) {
+					// Button is not mapped
+					return;
+				}
+			}
 
-            // Get mapped button
-            let current = gamepad.buttons[mapped_button] || {};
+			// Get mapped button
+			let current = gamepad.buttons[mapped_button] || {};
 
-            // Remap an axis to an analog button
-            if (mapping) {
-                if (mapped_axis >= 0) {
-                    let value = mapping.normalize_fn(gamepad.axes[mapped_axis], -1, +button);
+			// Remap an axis to an analog button
+			if (mapping) {
+				if (mapped_axis >= 0) {
+					let value = mapping.normalize_fn(
+						gamepad.axes[mapped_axis],
+						-1,
+						+button,
+					);
 
-                    // Create a new object, because GamepadButton is read-only
-                    current = {
-                        "value" : value,
-                        "pressed" : current.pressed || (Math.abs(value) >= deadzone)
-                    };
-                }
-            }
+					// Create a new object, because GamepadButton is read-only
+					current = {
+						value: value,
+						pressed: current.pressed || Math.abs(value) >= deadzone,
+					};
+				}
+			}
 
-            event.emit(event.GAMEPAD_UPDATE, index, "buttons", +button, current);
+			event.emit(event.GAMEPAD_UPDATE, index, "buttons", +button, current);
 
-            // Edge detection
-            if (!last.pressed && current.pressed) {
-                triggerKeyEvent(last.keyCode, true, mapped_button + 256);
-            }
-            else if (last.pressed && !current.pressed) {
-                triggerKeyEvent(last.keyCode, false, mapped_button + 256);
-            }
+			// Edge detection
+			if (!last.pressed && current.pressed) {
+				triggerKeyEvent(last.keyCode, true, mapped_button + 256);
+			} else if (last.pressed && !current.pressed) {
+				triggerKeyEvent(last.keyCode, false, mapped_button + 256);
+			}
 
-            // Update last button state
-            last.value = current.value;
-            last.pressed = current.pressed;
-        });
+			// Update last button state
+			last.value = current.value;
+			last.pressed = current.pressed;
+		});
 
-        // Iterate all axes that have active bindings
-        Object.keys(binding.axes).forEach((axis) => {
-            let last = binding.axes[axis];
-            let mapped_axis = axis;
+		// Iterate all axes that have active bindings
+		Object.keys(binding.axes).forEach((axis) => {
+			let last = binding.axes[axis];
+			let mapped_axis = axis;
 
-            // Remap buttons if necessary
-            if (mapping) {
-                mapped_axis = mapping.axes[axis];
-                if (mapped_axis < 0) {
-                    // axe is not mapped
-                    return;
-                }
-            }
+			// Remap buttons if necessary
+			if (mapping) {
+				mapped_axis = mapping.axes[axis];
+				if (mapped_axis < 0) {
+					// axe is not mapped
+					return;
+				}
+			}
 
-            // retrieve the current value and normalize if necessary
-            let value = gamepad.axes[mapped_axis];
-            if (typeof(value) === "undefined") {
-                return;
-            }
-            if (mapping) {
-                value = mapping.normalize_fn(value, +axis, -1);
-            }
-            // normalize value into a [-1, 1] range value (treat 0 as positive)
-            let range = Math.sign(value) || 1;
-            if (last[range].keyCode === 0) {
-                return;
-            }
-            let pressed = (Math.abs(value) >= (deadzone + Math.abs(last[range].threshold)));
+			// retrieve the current value and normalize if necessary
+			let value = gamepad.axes[mapped_axis];
+			if (typeof value === "undefined") {
+				return;
+			}
+			if (mapping) {
+				value = mapping.normalize_fn(value, +axis, -1);
+			}
+			// normalize value into a [-1, 1] range value (treat 0 as positive)
+			let range = Math.sign(value) || 1;
+			if (last[range].keyCode === 0) {
+				return;
+			}
+			let pressed =
+				Math.abs(value) >= deadzone + Math.abs(last[range].threshold);
 
-            event.emit(event.GAMEPAD_UPDATE, index, "axes", +axis, value);
+			event.emit(event.GAMEPAD_UPDATE, index, "axes", +axis, value);
 
-            // Edge detection
-            if (!last[range].pressed && pressed) {
-                // Release the opposite direction, if necessary
-                if (last[-range].pressed) {
-                    triggerKeyEvent(last[-range].keyCode, false, mapped_axis + 256);
-                    last[-range].value = 0;
-                    last[-range].pressed = false;
-                }
+			// Edge detection
+			if (!last[range].pressed && pressed) {
+				// Release the opposite direction, if necessary
+				if (last[-range].pressed) {
+					triggerKeyEvent(last[-range].keyCode, false, mapped_axis + 256);
+					last[-range].value = 0;
+					last[-range].pressed = false;
+				}
 
-                triggerKeyEvent(last[range].keyCode, true, mapped_axis + 256);
-            }
-            else if ((last[range].pressed || last[-range].pressed) && !pressed) {
-                range = last[range].pressed ? range : -range;
-                triggerKeyEvent(last[range].keyCode, false, mapped_axis + 256);
-            }
+				triggerKeyEvent(last[range].keyCode, true, mapped_axis + 256);
+			} else if ((last[range].pressed || last[-range].pressed) && !pressed) {
+				range = last[range].pressed ? range : -range;
+				triggerKeyEvent(last[range].keyCode, false, mapped_axis + 256);
+			}
 
-            // Update last axis state
-            last[range].value = value;
-            last[range].pressed = pressed;
-        });
-    });
+			// Update last axis state
+			last[range].value = value;
+			last[range].pressed = pressed;
+		});
+	});
 };
 
 // gamepad connected callback
-if (globalThis.navigator && typeof globalThis.navigator.getGamepads === "function") {
-    globalThis.addEventListener("gamepadconnected", (e) => {
-        event.emit(event.GAMEPAD_CONNECTED, e.gamepad);
-    }, false);
+if (
+	globalThis.navigator &&
+	typeof globalThis.navigator.getGamepads === "function"
+) {
+	globalThis.addEventListener(
+		"gamepadconnected",
+		(e) => {
+			event.emit(event.GAMEPAD_CONNECTED, e.gamepad);
+		},
+		false,
+	);
 
-    /*
-     * gamepad disconnected callback
-     */
-    globalThis.addEventListener("gamepaddisconnected", (e) => {
-        event.emit(event.GAMEPAD_DISCONNECTED, e.gamepad);
-    }, false);
+	/*
+	 * gamepad disconnected callback
+	 */
+	globalThis.addEventListener(
+		"gamepaddisconnected",
+		(e) => {
+			event.emit(event.GAMEPAD_DISCONNECTED, e.gamepad);
+		},
+		false,
+	);
 }
 
 /*
@@ -277,71 +303,71 @@ if (globalThis.navigator && typeof globalThis.navigator.getGamepads === "functio
  * @memberof input
  */
 export let GAMEPAD = {
-    /**
-     * Standard gamepad mapping information for axes<br>
-     * <ul>
-     *   <li>Left control stick: <code>LX</code> (horizontal), <code>LY</code> (vertical)</li>
-     *   <li>Right control stick: <code>RX</code> (horizontal), <code>RY</code> (vertical)</li>
-     *   <li>Extras: <code>EXTRA_1</code>, <code>EXTRA_2</code>, <code>EXTRA_3</code>, <code>EXTRA_4</code></li>
-     * </ul>
-     * @public
-     * @name AXES
-     * @enum {number}
-     * @memberof input.GAMEPAD
-     * @see https://w3c.github.io/gamepad/#remapping
-     */
-    "AXES" : {
-        "LX"        : 0,
-        "LY"        : 1,
-        "RX"        : 2,
-        "RY"        : 3,
-        "EXTRA_1"   : 4,
-        "EXTRA_2"   : 5,
-        "EXTRA_3"   : 6,
-        "EXTRA_4"   : 7
-    },
+	/**
+	 * Standard gamepad mapping information for axes<br>
+	 * <ul>
+	 *   <li>Left control stick: <code>LX</code> (horizontal), <code>LY</code> (vertical)</li>
+	 *   <li>Right control stick: <code>RX</code> (horizontal), <code>RY</code> (vertical)</li>
+	 *   <li>Extras: <code>EXTRA_1</code>, <code>EXTRA_2</code>, <code>EXTRA_3</code>, <code>EXTRA_4</code></li>
+	 * </ul>
+	 * @public
+	 * @name AXES
+	 * @enum {number}
+	 * @memberof input.GAMEPAD
+	 * @see https://w3c.github.io/gamepad/#remapping
+	 */
+	AXES: {
+		LX: 0,
+		LY: 1,
+		RX: 2,
+		RY: 3,
+		EXTRA_1: 4,
+		EXTRA_2: 5,
+		EXTRA_3: 6,
+		EXTRA_4: 7,
+	},
 
-    /**
-     * Standard gamepad mapping information for buttons<br>
-     * <ul>
-     *   <li>Face buttons: <code>FACE_1</code>, <code>FACE_2</code>, <code>FACE_3</code>, <code>FACE_4</code></li>
-     *   <li>D-Pad: <code>UP</code>, <code>DOWN</code>, <code>LEFT</code>, <code>RIGHT</code></li>
-     *   <li>Shoulder buttons: <code>L1</code>, <code>L2</code>, <code>R1</code>, <code>R2</code></li>
-     *   <li>Analog stick (clicks): <code>L3</code>, <code>R3</code></li>
-     *   <li>Navigation: <code>SELECT</code> (<code>BACK</code>), <code>START</code> (<code>FORWARD</code>), <code>HOME</code></li>
-     *   <li>Extras: <code>EXTRA_1</code>, <code>EXTRA_2</code>, <code>EXTRA_3</code>, <code>EXTRA_4</code></li>
-     * </ul>
-     * @public
-     * @name BUTTONS
-     * @enum {number}
-     * @memberof input.GAMEPAD
-     * @see https://w3c.github.io/gamepad/#remapping
-     */
-    "BUTTONS" : {
-        "FACE_1"    : 0,
-        "FACE_2"    : 1,
-        "FACE_3"    : 2,
-        "FACE_4"    : 3,
-        "L1"        : 4,
-        "R1"        : 5,
-        "L2"        : 6,
-        "R2"        : 7,
-        "SELECT"    : 8,
-        "BACK"      : 8,
-        "START"     : 9,
-        "FORWARD"   : 9,
-        "L3"        : 10,
-        "R3"        : 11,
-        "UP"        : 12,
-        "DOWN"      : 13,
-        "LEFT"      : 14,
-        "RIGHT"     : 15,
-        "HOME"      : 16,
-        "EXTRA_1"   : 17,
-        "EXTRA_2"   : 18,
-        "EXTRA_3"   : 19,
-        "EXTRA_4"   : 20
-    }
+	/**
+	 * Standard gamepad mapping information for buttons<br>
+	 * <ul>
+	 *   <li>Face buttons: <code>FACE_1</code>, <code>FACE_2</code>, <code>FACE_3</code>, <code>FACE_4</code></li>
+	 *   <li>D-Pad: <code>UP</code>, <code>DOWN</code>, <code>LEFT</code>, <code>RIGHT</code></li>
+	 *   <li>Shoulder buttons: <code>L1</code>, <code>L2</code>, <code>R1</code>, <code>R2</code></li>
+	 *   <li>Analog stick (clicks): <code>L3</code>, <code>R3</code></li>
+	 *   <li>Navigation: <code>SELECT</code> (<code>BACK</code>), <code>START</code> (<code>FORWARD</code>), <code>HOME</code></li>
+	 *   <li>Extras: <code>EXTRA_1</code>, <code>EXTRA_2</code>, <code>EXTRA_3</code>, <code>EXTRA_4</code></li>
+	 * </ul>
+	 * @public
+	 * @name BUTTONS
+	 * @enum {number}
+	 * @memberof input.GAMEPAD
+	 * @see https://w3c.github.io/gamepad/#remapping
+	 */
+	BUTTONS: {
+		FACE_1: 0,
+		FACE_2: 1,
+		FACE_3: 2,
+		FACE_4: 3,
+		L1: 4,
+		R1: 5,
+		L2: 6,
+		R2: 7,
+		SELECT: 8,
+		BACK: 8,
+		START: 9,
+		FORWARD: 9,
+		L3: 10,
+		R3: 11,
+		UP: 12,
+		DOWN: 13,
+		LEFT: 14,
+		RIGHT: 15,
+		HOME: 16,
+		EXTRA_1: 17,
+		EXTRA_2: 18,
+		EXTRA_3: 19,
+		EXTRA_4: 20,
+	},
 };
 
 /**
@@ -365,57 +391,60 @@ export let GAMEPAD = {
  * me.input.bindGamepad(0, {type:"axes", code: me.input.GAMEPAD.AXES.LX, threshold: -0.5}, me.input.KEY.LEFT);
  */
 export function bindGamepad(index, button, keyCode) {
-    // Throw an exception if no action is defined for the specified keycode
-    if (!getBindingKey(keyCode)) {
-        throw new Error("no action defined for keycode " + keyCode);
-    }
+	// Throw an exception if no action is defined for the specified keycode
+	if (!getBindingKey(keyCode)) {
+		throw new Error("no action defined for keycode " + keyCode);
+	}
 
-    // register to the the update event if not yet done and supported by the browser
-    // if not supported, the function will fail silently (-> update loop won't be called)
-    if (typeof updateEventHandler === "undefined" && typeof navigator.getGamepads === "function") {
-        updateEventHandler = event.on(event.GAME_BEFORE_UPDATE, updateGamepads);
-    }
+	// register to the the update event if not yet done and supported by the browser
+	// if not supported, the function will fail silently (-> update loop won't be called)
+	if (
+		typeof updateEventHandler === "undefined" &&
+		typeof navigator.getGamepads === "function"
+	) {
+		updateEventHandler = event.on(event.GAME_BEFORE_UPDATE, updateGamepads);
+	}
 
-    // Allocate bindings if not defined
-    if (!bindings[index]) {
-        bindings[index] = {
-            "axes" : {},
-            "buttons" : {}
-        };
-    }
+	// Allocate bindings if not defined
+	if (!bindings[index]) {
+		bindings[index] = {
+			axes: {},
+			buttons: {},
+		};
+	}
 
-    let mapping = {
-        "keyCode" : keyCode,
-        "value" : 0,
-        "pressed" : false,
-        "threshold" : button.threshold // can be undefined
-    };
-    let binding = bindings[index][button.type];
+	let mapping = {
+		keyCode: keyCode,
+		value: 0,
+		pressed: false,
+		threshold: button.threshold, // can be undefined
+	};
+	let binding = bindings[index][button.type];
 
-    // Map the gamepad button or axis to the keycode
-    if (button.type === "buttons") {
-        // buttons are defined by a `gamePadButton` object
-        binding[button.code] = mapping;
-    } else if (button.type === "axes") {
-        // normalize threshold into a value that can represent both side of the axis
-        let range = (Math.sign(button.threshold) || 1);
-        // axes are defined using two objects; one for negative and one for positive
-        if (!binding[button.code]) {
-            binding[button.code] = {};
-        }
-        let axes = binding[button.code];
-        axes[range] = mapping;
+	// Map the gamepad button or axis to the keycode
+	if (button.type === "buttons") {
+		// buttons are defined by a `gamePadButton` object
+		binding[button.code] = mapping;
+	} else if (button.type === "axes") {
+		// normalize threshold into a value that can represent both side of the axis
+		let range = Math.sign(button.threshold) || 1;
+		// axes are defined using two objects; one for negative and one for positive
+		if (!binding[button.code]) {
+			binding[button.code] = {};
+		}
+		let axes = binding[button.code];
+		axes[range] = mapping;
 
-        // Ensure the opposite axis exists
-        if (!axes[-range]) {
-            axes[-range] = {
-                "keyCode" : 0,
-                "value" : 0,
-                "pressed" : false,
-                "threshold" : -range
-            };
-        }
-    }
+		// Ensure the opposite axis exists
+		if (!axes[-range]) {
+			axes[-range] = {
+				keyCode: 0,
+				value: 0,
+				pressed: false,
+				threshold: -range,
+			};
+		}
+	}
 }
 
 /**
@@ -429,10 +458,10 @@ export function bindGamepad(index, button, keyCode) {
  * me.input.unbindGamepad(0, me.input.GAMEPAD.BUTTONS.FACE_1);
  */
 export function unbindGamepad(index, button) {
-    if (!bindings[index]) {
-        throw new Error("no bindings for gamepad " + index);
-    }
-    bindings[index].buttons[button] = {};
+	if (!bindings[index]) {
+		throw new Error("no bindings for gamepad " + index);
+	}
+	bindings[index].buttons[button] = {};
 }
 
 /**
@@ -444,7 +473,7 @@ export function unbindGamepad(index, button) {
  * @param {number} value - Deadzone value
  */
 export function setGamepadDeadzone(value) {
-    deadzone = value;
+	deadzone = value;
 }
 
 /**
