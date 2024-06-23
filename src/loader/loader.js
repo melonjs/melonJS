@@ -21,7 +21,9 @@ import { warning } from "../lang/console.js";
 //  to enable/disable caching
 export let nocache = "";
 
-// baseURL
+/**
+ * @type {Object.<string, string>}
+ */
 export let baseURL = {};
 
 /**
@@ -114,7 +116,7 @@ export function setOptions(options) {
  * // change the base URL absolute address for all object types
  * me.loader.setBaseURL("*", "http://myurl.com/")
  */
-export function setBaseURL(type, url) {
+export function setBaseURL(type, url = "./") {
     if (type !== "*") {
         baseURL[type] = url;
     } else {
