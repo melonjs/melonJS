@@ -5,9 +5,7 @@ import TMXLayer from "./../TMXLayer.js";
 
 
 /**
- * @classdesc
  * an Isometric Map Renderder
- * @augments TMXRenderer
  */
 export default class TMXIsometricRenderer extends TMXRenderer {
     /**

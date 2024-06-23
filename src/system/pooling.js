@@ -1,5 +1,4 @@
 /**
- * @classdesc
  * Object pooling - a technique that might speed up your game if used properly.<br>
  * If some of your classes will be instantiated and removed a lot at a time, it is a
  * good idea to add the class to this object pool. A separate pool for that class

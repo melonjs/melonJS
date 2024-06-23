@@ -8,7 +8,6 @@ import Vector2d from "./../math/vector2.js";
  **/
 
 /**
- * @classdesc
  * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
  */
 export default class Bounds {

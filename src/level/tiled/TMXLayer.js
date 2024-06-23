@@ -52,10 +52,8 @@ function setLayerData(layer, bounds, data) {
 }
 
 /**
- * @classdesc
  * a TMX Tile Layer Object
  * Tiled QT 0.7.x format
- * @augments Renderable
  */
 export default class TMXLayer extends Renderable {
     /**

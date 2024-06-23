@@ -32,9 +32,7 @@ Object.defineProperty(Renderer.prototype, "Texture", {
 });
 
 /**
- * @classdesc
  * Used to make a game entity draggable
- * @augments Entity
  * @deprecated since 10.5.0
  * @see Draggable
  */
@@ -51,9 +49,7 @@ export class DraggableEntity extends Draggable {
 }
 
 /**
- * @classdesc
  * Used to make a game entity a droptarget
- * @augments Entity
  * @deprecated since 10.5.0
  * @see DropTarget
  */
@@ -97,9 +93,7 @@ Renderer.prototype.getScreenContext = function()  {
 };
 
 /**
- * @classdesc
  * A very basic object to manage GUI elements
- * @augments Sprite
  * @deprecated since 14.0.0
  * @see UISpriteElement
  */
@@ -144,7 +138,6 @@ Renderer.prototype.getHeight = function()  {
 };
 
 /**
- * @classdesc
  * @deprecated since 17.1.0
  * @see CanvasRenderTarget
  */

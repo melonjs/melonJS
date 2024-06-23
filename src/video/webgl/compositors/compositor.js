@@ -8,7 +8,6 @@ import GLShader from "../glshader.js";
  */
 
 /**
- * @classdesc
  * A base Compositor object.
  */
 export default class Compositor {

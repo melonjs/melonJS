@@ -4,7 +4,6 @@ import TMXLayer from "./TMXLayer.js";
 import { clamp } from "./../../math/math.js";
 
 /**
- * @classdesc
  * object group definition as defined in Tiled.
  * (group definition is translated into the virtual `me.game.world` using `me.Container`)
  * @ignore

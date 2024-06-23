@@ -10,9 +10,7 @@ import pool from "./../system/pooling.js";
  */
 
 /**
- * @classdesc
  * trigger an event when colliding with another object
- * @augments Renderable
  */
 export default class Trigger extends Renderable {
     /**

@@ -12,10 +12,7 @@ import { locked } from "./pointerevent.js";
 let tmpVec = new Vector2d();
 
 /**
- * @classdesc
  * a pointer object, representing a single finger on a touch enabled device.
- * @class Pointer
- * @augments Bounds
  */
 class Pointer extends Bounds {
 

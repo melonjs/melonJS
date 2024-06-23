@@ -25,9 +25,7 @@ import { isPowerOfTwo } from "./../../math/math.js";
 let supportedCompressedTextureFormats;
 
 /**
- * @classdesc
  * a WebGL renderer object
- * @augments Renderer
  */
 export default class WebGLRenderer extends Renderer {
     /**

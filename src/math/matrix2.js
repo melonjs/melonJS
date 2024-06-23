@@ -9,7 +9,6 @@ import pool from "./../system/pooling.js";
 
 
 /**
- * @classdesc
  * a Matrix2d Object.<br>
  * the identity matrix and parameters position : <br>
  * <img src="images/identity-matrix_2x.png"/>

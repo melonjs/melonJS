@@ -14,9 +14,7 @@ import Body from "../../physics/body.js";
  **/
 
 /**
- * @classdesc
  * a Generic Object Entity
- * @augments Renderable
  */
 export default class Entity extends Renderable {
     /**

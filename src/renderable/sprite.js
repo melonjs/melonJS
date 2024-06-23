@@ -14,9 +14,7 @@ import * as event from "../system/event.js";
  */
 
 /**
- * @classdesc
  * An object to display a fixed or animated sprite on screen.
- * @augments Renderable
  */
 export default class Sprite extends Renderable {
     /**

@@ -3,9 +3,7 @@ import pool from "./../../../system/pooling.js";
 import TMXRenderer from "./TMXRenderer.js";
 
 /**
- * @classdesc
  * an Orthogonal Map Renderder
- * @augments TMXRenderer
  */
 export default class TMXOrthogonalRenderer extends TMXRenderer {
     /**

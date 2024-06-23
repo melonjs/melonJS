@@ -14,9 +14,7 @@ import * as event from "./../../system/event.js";
  */
 
 /**
- * @classdesc
  * a canvas renderer object
- * @augments Renderer
  */
 export default class CanvasRenderer extends Renderer {
     /**
