@@ -1,6 +1,8 @@
 import jsdoc from "eslint-plugin-jsdoc";
 import stylistic from "@stylistic/eslint-plugin"
+import globals from "globals"
 
+/** @type {import('eslint').Linter.FlatConfig[]} */
 export default [
     {
         name: "eslint/global-ignores",
@@ -16,7 +18,10 @@ export default [
         name: "eslint/global-rules",
         languageOptions: {
             "ecmaVersion" : 2020,
-            "sourceType": "module"
+            "sourceType": "module",
+            globals: {
+                ...globals.browser
+            }
         },
         files: ["src/**/*.js"],
         plugins: {
@@ -87,6 +92,7 @@ export default [
             "no-this-before-super": "error",
             "no-throw-literal": "off",
             "no-trailing-spaces": "error",
+            "no-undef": ["error"],
             "no-undef-init": "error",
             "no-unmodified-loop-condition": "error",
             "no-unneeded-ternary": ["off", { "defaultAssignment": false }],

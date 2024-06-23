@@ -76,6 +76,7 @@
     "expect": "^29.7.0",
     "expect-mocha-image-snapshot": "^3.0.16",
     "fastify": "^4.28.0",
+    "globals": "^15.6.0",
     "mocha": "^10.4.0",
     "npm-self-link": "^1.1.7",
     "puppeteer": "^22.11.2",
