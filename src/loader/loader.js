@@ -2,7 +2,14 @@ import * as fileUtil from "./../utils/file.js";
 import * as event from "./../system/event.js";
 import * as audio from "./../audio/audio.js";
 import state from "./../state/state.js";
-import { imgList, tmxList, binList, jsonList, videoList, fontList } from "./cache.js";
+import {
+	imgList,
+	tmxList,
+	binList,
+	jsonList,
+	videoList,
+	fontList,
+} from "./cache.js";
 import { preloadImage } from "./parsers/image.js";
 import { preloadFontFace } from "./parsers/fontface.js";
 import { preloadTMX } from "./parsers/tmx.js";
@@ -16,7 +23,6 @@ import { warning } from "../lang/console.js";
  * a small class to manage loading of stuff and manage resources
  * @namespace loader
  */
-
 
 //  to enable/disable caching
 export let nocache = "";
@@ -70,7 +76,7 @@ export let withCredentials = false;
  * @ignore
  */
 export function setNocache(enable = false) {
-    nocache = enable ? "?" + ~~(Math.random() * 10000000) : "";
+	nocache = enable ? "?" + ~~(Math.random() * 10000000) : "";
 }
 
 /**
@@ -91,15 +97,15 @@ export function setNocache(enable = false) {
  * me.loader.setOptions({ withCredentials: true });
  */
 export function setOptions(options) {
-    if (options.crossOrigin !== undefined) {
-        crossOrigin = options.crossOrigin;
-    }
-    if (options.nocache !== undefined) {
-        setNocache(options.nocache);
-    }
-    if (options.withCredentials !== undefined) {
-        withCredentials = options.withCredentials;
-    }
+	if (options.crossOrigin !== undefined) {
+		crossOrigin = options.crossOrigin;
+	}
+	if (options.nocache !== undefined) {
+		setNocache(options.nocache);
+	}
+	if (options.withCredentials !== undefined) {
+		withCredentials = options.withCredentials;
+	}
 }
 
 /**
@@ -117,21 +123,21 @@ export function setOptions(options) {
  * me.loader.setBaseURL("*", "http://myurl.com/")
  */
 export function setBaseURL(type, url = "./") {
-    if (type !== "*") {
-        baseURL[type] = url;
-    } else {
-        // "wildcards"
-        baseURL["audio"] = url;
-        baseURL["video"] = url;
-        baseURL["binary"] = url;
-        baseURL["image"] = url;
-        baseURL["json"] = url;
-        baseURL["js"] = url;
-        baseURL["tmx"] = url;
-        baseURL["tsx"] = url;
-        // XXX ?
-        //baseURL["fontface"] = url;
-    }
+	if (type !== "*") {
+		baseURL[type] = url;
+	} else {
+		// "wildcards"
+		baseURL["audio"] = url;
+		baseURL["video"] = url;
+		baseURL["binary"] = url;
+		baseURL["image"] = url;
+		baseURL["json"] = url;
+		baseURL["js"] = url;
+		baseURL["tmx"] = url;
+		baseURL["tsx"] = url;
+		// XXX ?
+		//baseURL["fontface"] = url;
+	}
 }
 
 /**
@@ -195,16 +201,16 @@ const failureLoadedAssets = {};
  * @ignore
  */
 function initParsers() {
-    setParser("binary", preloadBinary);
-    setParser("image", preloadImage);
-    setParser("json", preloadJSON);
-    setParser("js", preloadJavascript);
-    setParser("tmx", preloadTMX);
-    setParser("tsx", preloadTMX);
-    setParser("audio", audio.load);
-    setParser("fontface", preloadFontFace);
-    setParser("video", preloadVideo);
-    parserInitialized = true;
+	setParser("binary", preloadBinary);
+	setParser("image", preloadImage);
+	setParser("json", preloadJSON);
+	setParser("js", preloadJavascript);
+	setParser("tmx", preloadTMX);
+	setParser("tsx", preloadTMX);
+	setParser("audio", audio.load);
+	setParser("fontface", preloadFontFace);
+	setParser("video", preloadVideo);
+	parserInitialized = true;
 }
 
 /**
@@ -212,28 +218,26 @@ function initParsers() {
  * @ignore
  */
 function checkLoadStatus(onloadcb) {
-    if (loadCount === resourceCount) {
-        // wait 1/2s and execute callback (cheap workaround to ensure everything is loaded)
-        if (typeof onloadcb === "function" || onload) {
-            // make sure we clear the timer
-            clearTimeout(timerId);
-            // trigger the onload callback
-            // we call either the supplied callback (which takes precedence) or the global one
-            let callback = onloadcb || onload;
-            setTimeout(() => {
-                callback();
-                event.emit(event.LOADER_COMPLETE);
-            }, 300);
-        }
-        else {
-            throw new Error("no load callback defined");
-        }
-    }
-    else {
-        timerId = setTimeout(() => {
-            checkLoadStatus(onloadcb);
-        }, 100);
-    }
+	if (loadCount === resourceCount) {
+		// wait 1/2s and execute callback (cheap workaround to ensure everything is loaded)
+		if (typeof onloadcb === "function" || onload) {
+			// make sure we clear the timer
+			clearTimeout(timerId);
+			// trigger the onload callback
+			// we call either the supplied callback (which takes precedence) or the global one
+			let callback = onloadcb || onload;
+			setTimeout(() => {
+				callback();
+				event.emit(event.LOADER_COMPLETE);
+			}, 300);
+		} else {
+			throw new Error("no load callback defined");
+		}
+	} else {
+		timerId = setTimeout(() => {
+			checkLoadStatus(onloadcb);
+		}, 100);
+	}
 }
 
 /**
@@ -241,19 +245,19 @@ function checkLoadStatus(onloadcb) {
  * @ignore
  */
 function onResourceLoaded(res) {
-    delete failureLoadedAssets[res.src];
-    // increment the loading counter
-    loadCount++;
+	delete failureLoadedAssets[res.src];
+	// increment the loading counter
+	loadCount++;
 
-    // currrent progress
-    let progress = loadCount / resourceCount;
+	// currrent progress
+	let progress = loadCount / resourceCount;
 
-    // call callback if defined
-    if (typeof onProgress === "function") {
-        // pass the load progress in percent, as parameter
-        onProgress(progress, res);
-    }
-    event.emit(event.LOADER_PROGRESS, progress, res);
+	// call callback if defined
+	if (typeof onProgress === "function") {
+		// pass the load progress in percent, as parameter
+		onProgress(progress, res);
+	}
+	event.emit(event.LOADER_PROGRESS, progress, res);
 }
 
 /**
@@ -262,12 +266,12 @@ function onResourceLoaded(res) {
  * @ignore
  */
 function onLoadingError(res) {
-    failureLoadedAssets[res.src] = res;
-    if (this.onError) {
-        this.onError(res);
-    }
-    event.emit(event.LOADER_ERROR, res);
-    throw new Error("Failed loading resource " + res.src);
+	failureLoadedAssets[res.src] = res;
+	if (this.onError) {
+		this.onError(res);
+	}
+	event.emit(event.LOADER_ERROR, res);
+	throw new Error("Failed loading resource " + res.src);
 }
 
 /**
@@ -336,15 +340,15 @@ function onLoadingError(res) {
  * loader.setParser("abc", customAbcParser);
  */
 export function setParser(type, parserFn) {
-    if (typeof parserFn !== "function") {
-        throw new Error("invalid parser function for " + type);
-    }
+	if (typeof parserFn !== "function") {
+		throw new Error("invalid parser function for " + type);
+	}
 
-    if (typeof parsers.get(type) !== "undefined") {
-        warning("overriding parser for " + type + " format");
-    }
+	if (typeof parsers.get(type) !== "undefined") {
+		warning("overriding parser for " + type + " format");
+	}
 
-    parsers.set(type, parserFn);
+	parsers.set(type, parserFn);
 }
 
 /**
@@ -391,26 +395,26 @@ export function setParser(type, parserFn) {
  * me.loader.preload(game.assets, () => this.loaded());
  */
 export function preload(assets, onloadcb, switchToLoadState = true) {
-    // parse the resources
-    for (let i = 0; i < assets.length; i++) {
-        resourceCount += load(
-            assets[i],
-            onResourceLoaded.bind(this, assets[i]),
-            onLoadingError.bind(this, assets[i])
-        );
-    }
-    // set the onload callback if defined
-    if (typeof(onloadcb) !== "undefined") {
-        onload = onloadcb;
-    }
+	// parse the resources
+	for (let i = 0; i < assets.length; i++) {
+		resourceCount += load(
+			assets[i],
+			onResourceLoaded.bind(this, assets[i]),
+			onLoadingError.bind(this, assets[i]),
+		);
+	}
+	// set the onload callback if defined
+	if (typeof onloadcb !== "undefined") {
+		onload = onloadcb;
+	}
 
-    if (switchToLoadState === true) {
-        // swith to the loading screen
-        state.change(state.LOADING);
-    }
+	if (switchToLoadState === true) {
+		// swith to the loading screen
+		state.change(state.LOADING);
+	}
 
-    // check load status
-    checkLoadStatus(onload);
+	// check load status
+	checkLoadStatus(onload);
 }
 
 /**
@@ -428,18 +432,18 @@ export function preload(assets, onloadcb, switchToLoadState = true) {
  *          })
  *      }
  *  );
-**/
+ **/
 export function reload(src) {
-    const assetToReload = failureLoadedAssets[src];
-    this.unload(assetToReload);
-    resourceCount -= 1;
-    resourceCount += this.load(
-        assetToReload,
-        this.onResourceLoaded.bind(this, assetToReload),
-        this.onLoadingError.bind(this, assetToReload)
-    );
-    // check load status
-    checkLoadStatus(this.onload);
+	const assetToReload = failureLoadedAssets[src];
+	this.unload(assetToReload);
+	resourceCount -= 1;
+	resourceCount += this.load(
+		assetToReload,
+		this.onResourceLoaded.bind(this, assetToReload),
+		this.onLoadingError.bind(this, assetToReload),
+	);
+	// check load status
+	checkLoadStatus(this.onload);
 }
 
 /**
@@ -470,29 +474,28 @@ export function reload(src) {
  * });
  */
 export function load(asset, onload, onerror) {
+	// make sure all parsers have been initialized
+	if (parserInitialized === false) {
+		initParsers();
+	}
 
-    // make sure all parsers have been initialized
-    if (parserInitialized === false) {
-        initParsers();
-    }
+	// transform the url if necessary
+	if (typeof baseURL[asset.type] !== "undefined") {
+		asset.src = baseURL[asset.type] + asset.src;
+	}
 
-    // transform the url if necessary
-    if (typeof (baseURL[asset.type]) !== "undefined") {
-        asset.src = baseURL[asset.type] + asset.src;
-    }
+	let parser = parsers.get(asset.type);
 
-    let parser = parsers.get(asset.type);
+	if (typeof parser === "undefined") {
+		throw new Error("load : unknown or invalid resource type : " + asset.type);
+	}
 
-    if (typeof parser === "undefined") {
-        throw new Error("load : unknown or invalid resource type : " + asset.type);
-    }
-
-    // parser returns the amount of asset to be loaded (usually 1 unless an asset is splitted into several ones)
-    return parser.call(this, asset, onload, onerror, {
-        nocache: nocache,
-        crossOrigin: crossOrigin,
-        withCredentials: withCredentials
-    });
+	// parser returns the amount of asset to be loaded (usually 1 unless an asset is splitted into several ones)
+	return parser.call(this, asset, onload, onerror, {
+		nocache: nocache,
+		crossOrigin: crossOrigin,
+		withCredentials: withCredentials,
+	});
 }
 
 /**
@@ -503,65 +506,70 @@ export function load(asset, onload, onerror) {
  * @example me.loader.unload({name: "avatar",  type:"image"});
  */
 export function unload(asset) {
-    switch (asset.type) {
-        case "binary":
-            if (!(asset.name in binList)) {
-                return false;
-            }
+	switch (asset.type) {
+		case "binary":
+			if (!(asset.name in binList)) {
+				return false;
+			}
 
-            delete binList[asset.name];
-            return true;
+			delete binList[asset.name];
+			return true;
 
-        case "image":
-            if (!(asset.name in imgList)) {
-                return false;
-            }
-            delete imgList[asset.name];
-            return true;
+		case "image":
+			if (!(asset.name in imgList)) {
+				return false;
+			}
+			delete imgList[asset.name];
+			return true;
 
-        case "json":
-            if (!(asset.name in jsonList)) {
-                return false;
-            }
+		case "json":
+			if (!(asset.name in jsonList)) {
+				return false;
+			}
 
-            delete jsonList[asset.name];
-            return true;
+			delete jsonList[asset.name];
+			return true;
 
-        case "js":
-            // ??
-            return true;
+		case "js":
+			// ??
+			return true;
 
-        case "fontface":
-            if (typeof typeof globalThis.document !== "undefined" && typeof globalThis.document.fonts !== "undefined") {
-                globalThis.document.fonts.delete(fontList[asset.name]);
-                delete fontList[asset.name];
-                return true;
-            }
-            return false;
+		case "fontface":
+			if (
+				typeof typeof globalThis.document !== "undefined" &&
+				typeof globalThis.document.fonts !== "undefined"
+			) {
+				globalThis.document.fonts.delete(fontList[asset.name]);
+				delete fontList[asset.name];
+				return true;
+			}
+			return false;
 
-        case "tmx":
-        case "tsx":
-            if (!(asset.name in tmxList)) {
-                return false;
-            }
+		case "tmx":
+		case "tsx":
+			if (!(asset.name in tmxList)) {
+				return false;
+			}
 
-            delete tmxList[asset.name];
-            return true;
+			delete tmxList[asset.name];
+			return true;
 
-        case "audio":
-            return audio.unload(asset.name);
+		case "audio":
+			return audio.unload(asset.name);
 
-        case "video":
-            if (!(asset.name in videoList)) {
-                return false;
-            }
+		case "video":
+			if (!(asset.name in videoList)) {
+				return false;
+			}
 
-            delete videoList[asset.name];
-            return true;
+			delete videoList[asset.name];
+			return true;
 
-        default:
-            throw new Error("unload : unknown or invalid resource type : " + asset.type);
-    }
+		default:
+			throw new Error(
+				"unload : unknown or invalid resource type : " + asset.type,
+			);
+	}
 }
 
 /**
@@ -570,70 +578,70 @@ export function unload(asset) {
  * @example me.loader.unloadAll();
  */
 export function unloadAll() {
-    let name;
+	let name;
 
-    // unload all binary resources
-    for (name in binList) {
-        if (binList.hasOwnProperty(name)) {
-            unload({
-                "name" : name,
-                "type" : "binary"
-            });
-        }
-    }
+	// unload all binary resources
+	for (name in binList) {
+		if (binList.hasOwnProperty(name)) {
+			unload({
+				name: name,
+				type: "binary",
+			});
+		}
+	}
 
-    // unload all image resources
-    for (name in imgList) {
-        if (imgList.hasOwnProperty(name)) {
-            unload({
-                "name" : name,
-                "type" : "image"
-            });
-        }
-    }
+	// unload all image resources
+	for (name in imgList) {
+		if (imgList.hasOwnProperty(name)) {
+			unload({
+				name: name,
+				type: "image",
+			});
+		}
+	}
 
-    // unload all tmx resources
-    for (name in tmxList) {
-        if (tmxList.hasOwnProperty(name)) {
-            unload({
-                "name" : name,
-                "type" : "tmx"
-            });
-        }
-    }
+	// unload all tmx resources
+	for (name in tmxList) {
+		if (tmxList.hasOwnProperty(name)) {
+			unload({
+				name: name,
+				type: "tmx",
+			});
+		}
+	}
 
-    // unload all json resources
-    for (name in jsonList) {
-        if (jsonList.hasOwnProperty(name)) {
-            unload({
-                "name" : name,
-                "type" : "json"
-            });
-        }
-    }
+	// unload all json resources
+	for (name in jsonList) {
+		if (jsonList.hasOwnProperty(name)) {
+			unload({
+				name: name,
+				type: "json",
+			});
+		}
+	}
 
-    // unload all video resources
-    for (name in videoList) {
-        if (videoList.hasOwnProperty(name)) {
-            unload({
-                "name" : name,
-                "type" : "json"
-            });
-        }
-    }
+	// unload all video resources
+	for (name in videoList) {
+		if (videoList.hasOwnProperty(name)) {
+			unload({
+				name: name,
+				type: "json",
+			});
+		}
+	}
 
-    // unload all video resources
-    for (name in fontList) {
-        if (fontList.hasOwnProperty(name)) {
-            unload({
-                "name" : name,
-                "type" : "font"
-            });
-        }
-    }
+	// unload all video resources
+	for (name in fontList) {
+		if (fontList.hasOwnProperty(name)) {
+			unload({
+				name: name,
+				type: "font",
+			});
+		}
+	}
 
-    // unload all audio resources
-    audio.unloadAll();
+	// unload all audio resources
+	audio.unloadAll();
 }
 
 /**
@@ -643,12 +651,12 @@ export function unloadAll() {
  * @returns {object} requested element or null if not found
  */
 export function getTMX(elt) {
-    // force as string
-    elt = "" + elt;
-    if (elt in tmxList) {
-        return tmxList[elt];
-    }
-    return null;
+	// force as string
+	elt = "" + elt;
+	if (elt in tmxList) {
+		return tmxList[elt];
+	}
+	return null;
 }
 
 /**
@@ -658,12 +666,12 @@ export function getTMX(elt) {
  * @returns {object} requested element or null if not found
  */
 export function getBinary(elt) {
-    // force as string
-    elt = "" + elt;
-    if (elt in binList) {
-        return binList[elt];
-    }
-    return null;
+	// force as string
+	elt = "" + elt;
+	if (elt in binList) {
+		return binList[elt];
+	}
+	return null;
 }
 
 /**
@@ -673,13 +681,13 @@ export function getBinary(elt) {
  * @returns {HTMLImageElement} requested element or null if not found
  */
 export function getImage(image) {
-    // force as string and extract the base name
-    image = fileUtil.getBasename("" + image);
-    if (image in imgList) {
-        // return the corresponding Image object
-        return imgList[image];
-    }
-    return null;
+	// force as string and extract the base name
+	image = fileUtil.getBasename("" + image);
+	if (image in imgList) {
+		// return the corresponding Image object
+		return imgList[image];
+	}
+	return null;
 }
 
 /**
@@ -689,12 +697,12 @@ export function getImage(image) {
  * @returns {JSON}
  */
 export function getJSON(elt) {
-    // force as string
-    elt = "" + elt;
-    if (elt in jsonList) {
-        return jsonList[elt];
-    }
-    return null;
+	// force as string
+	elt = "" + elt;
+	if (elt in jsonList) {
+		return jsonList[elt];
+	}
+	return null;
 }
 
 /**
@@ -704,12 +712,12 @@ export function getJSON(elt) {
  * @returns {HTMLVideoElement}
  */
 export function getVideo(elt) {
-    // force as string
-    elt = "" + elt;
-    if (elt in videoList) {
-        return videoList[elt];
-    }
-    return null;
+	// force as string
+	elt = "" + elt;
+	if (elt in videoList) {
+		return videoList[elt];
+	}
+	return null;
 }
 
 /**
@@ -719,12 +727,10 @@ export function getVideo(elt) {
  * @returns {FontFace}
  */
 export function getFont(elt) {
-    // force as string
-    elt = "" + elt;
-    if (elt in fontList) {
-        return fontList[elt];
-    }
-    return null;
+	// force as string
+	elt = "" + elt;
+	if (elt in fontList) {
+		return fontList[elt];
+	}
+	return null;
 }
-
-

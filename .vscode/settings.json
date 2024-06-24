@@ -1,6 +1,10 @@
 {
-  "files.eol": "\n",
-  "editor.codeActionsOnSave": {
-    "source.fixAll": "explicit"
-  }
+	"editor.formatOnSave": true,
+	"[javascript]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
+	"files.eol": "\n",
+	"editor.codeActionsOnSave": {
+		"source.fixAll": "explicit"
+	}
 }

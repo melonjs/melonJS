@@ -1,3 +1,3 @@
 import { cp } from "node:fs/promises";
 
-await cp("build", "dist", {recursive:true});
+await cp("build", "dist", { recursive: true });

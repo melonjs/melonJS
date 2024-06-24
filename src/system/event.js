@@ -130,7 +130,7 @@ export const STATE_CHANGE = "me.state.onChange";
  * @name STAGE_RESET
  * @memberof event
  * @see event.on
-*/
+ */
 export const STAGE_RESET = "me.stage.onReset";
 
 /**
@@ -229,7 +229,6 @@ export const GAME_BEFORE_DRAW = "me.game.beforeDraw";
  * @see event.on
  */
 export const GAME_AFTER_DRAW = "me.game.afterDraw";
-
 
 /**
  * Event for when the physic world is updated
@@ -549,7 +548,7 @@ export const ONCONTEXT_RESTORED = "renderer.contextrestored";
  * me.event.emit("event-name", a, b, c);
  */
 export function emit(eventName, ...args) {
-    return eventEmitter.emit(eventName, ...args);
+	return eventEmitter.emit(eventName, ...args);
 }
 
 /**
@@ -564,7 +563,7 @@ export function emit(eventName, ...args) {
  * me.event.on("event-name", myFunction, this);
  */
 export function on(eventName, listener, context) {
-    return eventEmitter.on(eventName, listener, context);
+	return eventEmitter.on(eventName, listener, context);
 }
 
 /**
@@ -579,7 +578,7 @@ export function on(eventName, listener, context) {
  * me.event.once("event-name", myFunction, this);
  */
 export function once(eventName, listener, context) {
-    return eventEmitter.once(eventName, listener, context);
+	return eventEmitter.once(eventName, listener, context);
 }
 
 /**
@@ -593,5 +592,5 @@ export function once(eventName, listener, context) {
  * me.event.off("event-name", myFunction);
  */
 export function off(eventName, listener) {
-    return eventEmitter.off(eventName, listener);
+	return eventEmitter.off(eventName, listener);
 }

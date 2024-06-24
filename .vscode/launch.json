@@ -1,15 +1,13 @@
 {
-    "version": "1.0.0",
-    "configurations": [
-        {
-            "name": "NPM Build",
-            "type": "node",
-            "request": "launch",
-            "cwd": "${workspaceRoot}",
-            "runtimeExecutable": "npm",
-            "runtimeArgs": [
-                "run", "build"
-            ]
-        }
-    ]
+	"version": "1.0.0",
+	"configurations": [
+		{
+			"name": "NPM Build",
+			"type": "node",
+			"request": "launch",
+			"cwd": "${workspaceRoot}",
+			"runtimeExecutable": "npm",
+			"runtimeArgs": ["run", "build"]
+		}
+	]
 }

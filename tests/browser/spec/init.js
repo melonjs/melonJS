@@ -12,23 +12,20 @@ const __dirname = dirname(__filename);
 
 let server;
 before(async () => {
-    global.browser = await puppeteer.launch({
-        args: [
-            "--disable-web-security",
-            "--disable-site-isolation-trials"
-        ],
-        headless: "new" // Enable this to see what's going on in the browser
-    });
-    server = global.server = fastify();
-    server.register(fastifyStatic, {
-        root: join(__dirname, "..", "public"),
-    });
-    await server.listen({ port: 8042 });
+	global.browser = await puppeteer.launch({
+		args: ["--disable-web-security", "--disable-site-isolation-trials"],
+		headless: "new", // Enable this to see what's going on in the browser
+	});
+	server = global.server = fastify();
+	server.register(fastifyStatic, {
+		root: join(__dirname, "..", "public"),
+	});
+	await server.listen({ port: 8042 });
 });
 
 after(() => {
-    server?.close();
-    process.exit(0);
+	server?.close();
+	process.exit(0);
 });
 
 // process.on("uncaughtException", function (err) {

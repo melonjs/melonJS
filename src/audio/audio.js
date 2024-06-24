@@ -1,6 +1,6 @@
 // external import
-import {Howl, Howler} from "howler";
-import {clamp} from "./../math/math.js";
+import { Howl, Howler } from "howler";
+import { clamp } from "./../math/math.js";
 import { isDataUrl } from "./../utils/string.js";
 
 /**
@@ -41,29 +41,27 @@ let audioExts = [];
  * @ignore
  */
 let soundLoadError = function (sound_name, onerror_cb) {
-    // check the retry counter
-    if (retry_counter++ > 3) {
-        // something went wrong
-        let errmsg = "melonJS: failed loading " + sound_name;
-        if (stopOnAudioError === false) {
-            // disable audio
-            disable();
-            // call error callback if defined
-            if (onerror_cb) {
-                onerror_cb();
-            }
-            // warning
-            console.log(errmsg + ", disabling audio");
-        }
-        else {
-            // throw an exception and stop everything !
-            throw new Error(errmsg);
-        }
-    // else try loading again !
-    }
-    else {
-        audioTracks[sound_name].load();
-    }
+	// check the retry counter
+	if (retry_counter++ > 3) {
+		// something went wrong
+		let errmsg = "melonJS: failed loading " + sound_name;
+		if (stopOnAudioError === false) {
+			// disable audio
+			disable();
+			// call error callback if defined
+			if (onerror_cb) {
+				onerror_cb();
+			}
+			// warning
+			console.log(errmsg + ", disabling audio");
+		} else {
+			// throw an exception and stop everything !
+			throw new Error(errmsg);
+		}
+		// else try loading again !
+	} else {
+		audioTracks[sound_name].load();
+	}
 };
 
 /**
@@ -95,10 +93,10 @@ export let stopOnAudioError = true;
  * }
  */
 export function init(format = "mp3") {
-    // convert it into an array
-    audioExts = format.split(",");
+	// convert it into an array
+	audioExts = format.split(",");
 
-    return !Howler.noAudio;
+	return !Howler.noAudio;
 }
 
 /**
@@ -108,7 +106,7 @@ export function init(format = "mp3") {
  * @returns {boolean} return true if the given audio format is supported
  */
 export function hasFormat(codec) {
-    return hasAudio() && Howler.codecs(codec);
+	return hasAudio() && Howler.codecs(codec);
 }
 
 /**
@@ -117,7 +115,7 @@ export function hasFormat(codec) {
  * @returns {boolean} return true if audio (HTML5 or WebAudio) is supported
  */
 export function hasAudio() {
-    return !Howler.noAudio;
+	return !Howler.noAudio;
 }
 
 /**
@@ -127,7 +125,7 @@ export function hasAudio() {
  * @see audio.disable
  */
 export function enable() {
-    unmuteAll();
+	unmuteAll();
 }
 
 /**
@@ -135,7 +133,7 @@ export function enable() {
  * @memberof audio
  */
 export function disable() {
-    muteAll();
+	muteAll();
 }
 
 /**
@@ -148,37 +146,39 @@ export function disable() {
  * @returns {number} the amount of asset loaded (always 1 if successfull)
  */
 export function load(sound, onloadcb, onerrorcb, settings = {}) {
-    let urls = [];
-    if (audioExts.length === 0) {
-        throw new Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
-    }
-    if (isDataUrl(sound.src) === true) {
-        urls.push(sound.src);
-    } else {
-        for (let i = 0; i < audioExts.length; i++) {
-            urls.push(sound.src + sound.name + "." + audioExts[i] + settings.nocache);
-        }
-    }
+	let urls = [];
+	if (audioExts.length === 0) {
+		throw new Error(
+			"target audio extension(s) should be set through me.audio.init() before calling the preloader.",
+		);
+	}
+	if (isDataUrl(sound.src) === true) {
+		urls.push(sound.src);
+	} else {
+		for (let i = 0; i < audioExts.length; i++) {
+			urls.push(sound.src + sound.name + "." + audioExts[i] + settings.nocache);
+		}
+	}
 
-    audioTracks[sound.name] = new Howl({
-        src : urls,
-        volume : Howler.volume(),
-        autoplay : sound.autoplay === true,
-        loop : sound.loop = true,
-        html5 : sound.stream === true || sound.html5 === true,
-        xhrWithCredentials : settings.withCredentials,
-        onloaderror() {
-            soundLoadError.call(this, sound.name, onerrorcb);
-        },
-        onload() {
-            retry_counter = 0;
-            if (typeof onloadcb === "function") {
-                onloadcb();
-            }
-        }
-    });
+	audioTracks[sound.name] = new Howl({
+		src: urls,
+		volume: Howler.volume(),
+		autoplay: sound.autoplay === true,
+		loop: (sound.loop = true),
+		html5: sound.stream === true || sound.html5 === true,
+		xhrWithCredentials: settings.withCredentials,
+		onloaderror() {
+			soundLoadError.call(this, sound.name, onerrorcb);
+		},
+		onload() {
+			retry_counter = 0;
+			if (typeof onloadcb === "function") {
+				onloadcb();
+			}
+		},
+	});
 
-    return 1;
+	return 1;
 }
 
 /**
@@ -200,26 +200,28 @@ export function load(sound, onloadcb, onerrorcb, settings = {}) {
  * me.audio.play("gameover_sfx", false, null, 0.5);
  */
 export function play(sound_name, loop = false, onend, volume) {
-    let sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        let id = sound.play();
-        if (typeof loop === "boolean") {
-            // arg[0] can take different types in howler 2.0
-            sound.loop(loop, id);
-        }
-        sound.volume(typeof(volume) === "number" ? clamp(volume, 0.0, 1.0) : Howler.volume(), id);
-        if (typeof(onend) === "function") {
-            if (loop === true) {
-                sound.on("end", onend, id);
-            }
-            else {
-                sound.once("end", onend, id);
-            }
-        }
-        return id;
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
+	let sound = audioTracks[sound_name];
+	if (sound && typeof sound !== "undefined") {
+		let id = sound.play();
+		if (typeof loop === "boolean") {
+			// arg[0] can take different types in howler 2.0
+			sound.loop(loop, id);
+		}
+		sound.volume(
+			typeof volume === "number" ? clamp(volume, 0.0, 1.0) : Howler.volume(),
+			id,
+		);
+		if (typeof onend === "function") {
+			if (loop === true) {
+				sound.on("end", onend, id);
+			} else {
+				sound.once("end", onend, id);
+			}
+		}
+		return id;
+	} else {
+		throw new Error("audio clip " + sound_name + " does not exist");
+	}
 }
 
 /**
@@ -232,12 +234,12 @@ export function play(sound_name, loop = false, onend, volume) {
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will fade.
  */
 export function fade(sound_name, from, to, duration, id) {
-    let sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        sound.fade(from, to, duration, id);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
+	let sound = audioTracks[sound_name];
+	if (sound && typeof sound !== "undefined") {
+		sound.fade(from, to, duration, id);
+	} else {
+		throw new Error("audio clip " + sound_name + " does not exist");
+	}
 }
 
 /**
@@ -254,12 +256,12 @@ export function fade(sound_name, from, to, duration, id) {
  * me.audio.seek("dst-gameforest", 0);
  */
 export function seek(sound_name, ...args) {
-    let sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        return sound.seek(...args);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
+	let sound = audioTracks[sound_name];
+	if (sound && typeof sound !== "undefined") {
+		return sound.seek(...args);
+	} else {
+		throw new Error("audio clip " + sound_name + " does not exist");
+	}
 }
 
 /**
@@ -276,12 +278,12 @@ export function seek(sound_name, ...args) {
  * me.audio.rate("dst-gameforest", 2.0);
  */
 export function rate(sound_name, ...args) {
-    let sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        return sound.rate(...args);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
+	let sound = audioTracks[sound_name];
+	if (sound && typeof sound !== "undefined") {
+		return sound.rate(...args);
+	} else {
+		throw new Error("audio clip " + sound_name + " does not exist");
+	}
 }
 
 /**
@@ -295,12 +297,12 @@ export function rate(sound_name, ...args) {
  * me.audio.stereo("cling", -1);
  */
 export function stereo(sound_name, pan, id) {
-    let sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        return sound.stereo(pan, id);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
+	let sound = audioTracks[sound_name];
+	if (sound && typeof sound !== "undefined") {
+		return sound.stereo(pan, id);
+	} else {
+		throw new Error("audio clip " + sound_name + " does not exist");
+	}
 }
 
 /**
@@ -314,12 +316,12 @@ export function stereo(sound_name, pan, id) {
  * @return {Array} the current 3D spatial position: [x, y, z]
  */
 export function position(sound_name, x, y, z, id) {
-    let sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        return sound.pos(x, y, z, id);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
+	let sound = audioTracks[sound_name];
+	if (sound && typeof sound !== "undefined") {
+		return sound.pos(x, y, z, id);
+	} else {
+		throw new Error("audio clip " + sound_name + " does not exist");
+	}
 }
 
 /**
@@ -334,12 +336,12 @@ export function position(sound_name, x, y, z, id) {
  * @return {Array} the current 3D spatial orientation: [x, y, z]
  */
 export function orientation(sound_name, x, y, z, id) {
-    let sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        return sound.orientation(x, y, z, id);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
+	let sound = audioTracks[sound_name];
+	if (sound && typeof sound !== "undefined") {
+		return sound.orientation(x, y, z, id);
+	} else {
+		throw new Error("audio clip " + sound_name + " does not exist");
+	}
 }
 
 /**
@@ -367,12 +369,12 @@ export function orientation(sound_name, x, y, z, id) {
  * });
  */
 export function panner(sound_name, attributes, id) {
-    let sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        return sound.pannerAttr(attributes, id);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
+	let sound = audioTracks[sound_name];
+	if (sound && typeof sound !== "undefined") {
+		return sound.pannerAttr(attributes, id);
+	} else {
+		throw new Error("audio clip " + sound_name + " does not exist");
+	}
 }
 
 /**
@@ -384,18 +386,18 @@ export function panner(sound_name, attributes, id) {
  * me.audio.stop("cling");
  */
 export function stop(sound_name, id) {
-    if (typeof sound_name !== "undefined") {
-        let sound = audioTracks[sound_name];
-        if (sound && typeof sound !== "undefined") {
-            sound.stop(id);
-            // remove the defined onend callback (if any defined)
-            sound.off("end", undefined, id);
-        } else {
-            throw new Error("audio clip " + sound_name + " does not exist");
-        }
-    } else {
-        Howler.stop();
-    }
+	if (typeof sound_name !== "undefined") {
+		let sound = audioTracks[sound_name];
+		if (sound && typeof sound !== "undefined") {
+			sound.stop(id);
+			// remove the defined onend callback (if any defined)
+			sound.off("end", undefined, id);
+		} else {
+			throw new Error("audio clip " + sound_name + " does not exist");
+		}
+	} else {
+		Howler.stop();
+	}
 }
 
 /**
@@ -408,12 +410,12 @@ export function stop(sound_name, id) {
  * me.audio.pause("cling");
  */
 export function pause(sound_name, id) {
-    let sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        sound.pause(id);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
+	let sound = audioTracks[sound_name];
+	if (sound && typeof sound !== "undefined") {
+		sound.pause(id);
+	} else {
+		throw new Error("audio clip " + sound_name + " does not exist");
+	}
 }
 
 /**
@@ -432,12 +434,12 @@ export function pause(sound_name, id) {
  * me.audio.resume("myClip", id);
  */
 export function resume(sound_name, id) {
-    let sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        sound.play(id);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
+	let sound = audioTracks[sound_name];
+	if (sound && typeof sound !== "undefined") {
+		sound.play(id);
+	} else {
+		throw new Error("audio clip " + sound_name + " does not exist");
+	}
 }
 
 /**
@@ -452,13 +454,8 @@ export function resume(sound_name, id) {
  * me.audio.playTrack("awesome_music");
  */
 export function playTrack(sound_name, volume) {
-    current_track_id = sound_name;
-    return play(
-        current_track_id,
-        true,
-        null,
-        volume
-    );
+	current_track_id = sound_name;
+	return play(current_track_id, true, null, volume);
 }
 
 /**
@@ -472,10 +469,10 @@ export function playTrack(sound_name, volume) {
  * me.audio.stopTrack();
  */
 export function stopTrack() {
-    if (current_track_id !== null) {
-        audioTracks[current_track_id].stop();
-        current_track_id = null;
-    }
+	if (current_track_id !== null) {
+		audioTracks[current_track_id].stop();
+		current_track_id = null;
+	}
 }
 
 /**
@@ -485,9 +482,9 @@ export function stopTrack() {
  * me.audio.pauseTrack();
  */
 export function pauseTrack() {
-    if (current_track_id !== null) {
-        audioTracks[current_track_id].pause();
-    }
+	if (current_track_id !== null) {
+		audioTracks[current_track_id].pause();
+	}
 }
 
 /**
@@ -502,9 +499,9 @@ export function pauseTrack() {
  * me.audio.resumeTrack();
  */
 export function resumeTrack() {
-    if (current_track_id !== null) {
-        audioTracks[current_track_id].play();
-    }
+	if (current_track_id !== null) {
+		audioTracks[current_track_id].play();
+	}
 }
 
 /**
@@ -513,7 +510,7 @@ export function resumeTrack() {
  * @returns {string} audio track name
  */
 export function getCurrentTrack() {
-    return current_track_id;
+	return current_track_id;
 }
 
 /**
@@ -522,7 +519,7 @@ export function getCurrentTrack() {
  * @param {number} volume - Float specifying volume (0.0 - 1.0 values accepted).
  */
 export function setVolume(volume) {
-    Howler.volume(volume);
+	Howler.volume(volume);
 }
 
 /**
@@ -531,7 +528,7 @@ export function setVolume(volume) {
  * @returns {number} current volume value in Float [0.0 - 1.0] .
  */
 export function getVolume() {
-    return Howler.volume();
+	return Howler.volume();
 }
 
 /**
@@ -545,12 +542,12 @@ export function getVolume() {
  * me.audio.mute("awesome_music");
  */
 export function mute(sound_name, id, mute = true) {
-    let sound = audioTracks[sound_name];
-    if (sound && typeof(sound) !== "undefined") {
-        sound.mute(mute, id);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
+	let sound = audioTracks[sound_name];
+	if (sound && typeof sound !== "undefined") {
+		sound.mute(mute, id);
+	} else {
+		throw new Error("audio clip " + sound_name + " does not exist");
+	}
 }
 
 /**
@@ -560,7 +557,7 @@ export function mute(sound_name, id, mute = true) {
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will unmute.
  */
 export function unmute(sound_name, id) {
-    mute(sound_name, id, false);
+	mute(sound_name, id, false);
 }
 
 /**
@@ -568,7 +565,7 @@ export function unmute(sound_name, id) {
  * @memberof audio
  */
 export function muteAll() {
-    Howler.mute(true);
+	Howler.mute(true);
 }
 
 /**
@@ -576,7 +573,7 @@ export function muteAll() {
  * @memberof audio
  */
 export function unmuteAll() {
-    Howler.mute(false);
+	Howler.mute(false);
 }
 
 /**
@@ -585,7 +582,7 @@ export function unmuteAll() {
  * @returns {boolean} true if audio is muted globally
  */
 export function muted() {
-    return Howler._muted;
+	return Howler._muted;
 }
 
 /**
@@ -597,14 +594,14 @@ export function muted() {
  * me.audio.unload("awesome_music");
  */
 export function unload(sound_name) {
-    if (!(sound_name in audioTracks)) {
-        return false;
-    }
+	if (!(sound_name in audioTracks)) {
+		return false;
+	}
 
-    // destroy the Howl object
-    audioTracks[sound_name].unload();
-    delete audioTracks[sound_name];
-    return true;
+	// destroy the Howl object
+	audioTracks[sound_name].unload();
+	delete audioTracks[sound_name];
+	return true;
 }
 
 /**
@@ -614,9 +611,9 @@ export function unload(sound_name) {
  * me.audio.unloadAll();
  */
 export function unloadAll() {
-    for (let sound_name in audioTracks) {
-        if (audioTracks.hasOwnProperty(sound_name)) {
-            unload(sound_name);
-        }
-    }
+	for (let sound_name in audioTracks) {
+		if (audioTracks.hasOwnProperty(sound_name)) {
+			unload(sound_name);
+		}
+	}
 }

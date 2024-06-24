@@ -56,66 +56,69 @@ export let renderer = null;
  * });
  */
 export function init(width, height, options) {
-    // ensure melonjs has been properly initialized
-    if (!initialized) {
-        throw new Error("me.video.init() called before engine initialization.");
-    }
+	// ensure melonjs has been properly initialized
+	if (!initialized) {
+		throw new Error("me.video.init() called before engine initialization.");
+	}
 
-    try {
-        // initialize the default game Application with the given options
-        game.init(width, height, Object.assign(ApplicationSettings, options || {}));
-    } catch (e) {
-        console.log(e.message);
-        // me.video.init() historically returns false if failing at creating/using a HTML5 canvas
-        return false;
-    }
+	try {
+		// initialize the default game Application with the given options
+		game.init(width, height, Object.assign(ApplicationSettings, options || {}));
+	} catch (e) {
+		console.log(e.message);
+		// me.video.init() historically returns false if failing at creating/using a HTML5 canvas
+		return false;
+	}
 
-    // assign the default renderer
-    renderer = game.renderer;
+	// assign the default renderer
+	renderer = game.renderer;
 
-    //add a channel for the onresize/onorientationchange event
-    globalThis.addEventListener(
-        "resize",
-        throttle(
-            (e) => {
-                event.emit(event.WINDOW_ONRESIZE, e);
-            }, 100
-        ), false
-    );
+	//add a channel for the onresize/onorientationchange event
+	globalThis.addEventListener(
+		"resize",
+		throttle((e) => {
+			event.emit(event.WINDOW_ONRESIZE, e);
+		}, 100),
+		false,
+	);
 
-    // Screen Orientation API
-    globalThis.addEventListener(
-        "orientationchange",
-        (e) => {
-            event.emit(event.WINDOW_ONORIENTATION_CHANGE, e);
-        },
-        false
-    );
+	// Screen Orientation API
+	globalThis.addEventListener(
+		"orientationchange",
+		(e) => {
+			event.emit(event.WINDOW_ONORIENTATION_CHANGE, e);
+		},
+		false,
+	);
 
-    // pre-fixed implementation on mozzila
-    globalThis.addEventListener(
-        "onmozorientationchange",
-        (e) => {
-            event.emit(event.WINDOW_ONORIENTATION_CHANGE, e);
-        },
-        false
-    );
+	// pre-fixed implementation on mozzila
+	globalThis.addEventListener(
+		"onmozorientationchange",
+		(e) => {
+			event.emit(event.WINDOW_ONORIENTATION_CHANGE, e);
+		},
+		false,
+	);
 
-    if (device.screenOrientation === true) {
-        globalThis.screen.orientation.onchange = function (e) {
-            event.emit(event.WINDOW_ONORIENTATION_CHANGE, e);
-        };
-    }
+	if (device.screenOrientation === true) {
+		globalThis.screen.orientation.onchange = function (e) {
+			event.emit(event.WINDOW_ONORIENTATION_CHANGE, e);
+		};
+	}
 
-    // Automatically update relative canvas position on scroll
-    globalThis.addEventListener("scroll", throttle((e) => {
-        event.emit(event.WINDOW_ONSCROLL, e);
-    }, 100), false);
+	// Automatically update relative canvas position on scroll
+	globalThis.addEventListener(
+		"scroll",
+		throttle((e) => {
+			event.emit(event.WINDOW_ONSCROLL, e);
+		}, 100),
+		false,
+	);
 
-    // notify the video has been initialized
-    event.emit(event.VIDEO_INIT, game.renderer);
+	// notify the video has been initialized
+	event.emit(event.VIDEO_INIT, game.renderer);
 
-    return true;
+	return true;
 }
 
 /**
@@ -127,27 +130,29 @@ export function init(width, height, options) {
  * @returns {HTMLCanvasElement|OffscreenCanvas} a new Canvas element of the given size
  */
 export function createCanvas(width, height, returnOffscreenCanvas = false) {
-    let _canvas;
+	let _canvas;
 
-    if (width === 0 || height === 0) {
-        throw new Error("width or height was zero, Canvas could not be initialized !");
-    }
+	if (width === 0 || height === 0) {
+		throw new Error(
+			"width or height was zero, Canvas could not be initialized !",
+		);
+	}
 
-    if (device.offscreenCanvas === true && returnOffscreenCanvas === true) {
-        _canvas = new globalThis.OffscreenCanvas(0, 0);
-        // stubbing style for compatibility,
-        // as OffscreenCanvas is detached from the DOM
-        if (typeof _canvas.style === "undefined") {
-            _canvas.style = {};
-        }
-    } else {
-        // "else" create a "standard" canvas
-        _canvas = globalThis.document.createElement("canvas");
-    }
-    _canvas.width = width;
-    _canvas.height = height;
+	if (device.offscreenCanvas === true && returnOffscreenCanvas === true) {
+		_canvas = new globalThis.OffscreenCanvas(0, 0);
+		// stubbing style for compatibility,
+		// as OffscreenCanvas is detached from the DOM
+		if (typeof _canvas.style === "undefined") {
+			_canvas.style = {};
+		}
+	} else {
+		// "else" create a "standard" canvas
+		_canvas = globalThis.document.createElement("canvas");
+	}
+	_canvas.width = width;
+	_canvas.height = height;
 
-    return _canvas;
+	return _canvas;
 }
 
 /**
@@ -156,5 +161,5 @@ export function createCanvas(width, height, returnOffscreenCanvas = false) {
  * @returns {HTMLElement} the HTML parent element
  */
 export function getParent() {
-    return game.getParentElement();
+	return game.getParentElement();
 }
