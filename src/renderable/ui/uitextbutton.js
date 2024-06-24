@@ -3,9 +3,7 @@ import RoundRect from "../../geometries/roundrect.js";
 import UIBaseElement from "./uibaseelement.js";
 
 /**
- * @classdesc
  * This is a basic base text button which you can use in your Game UI.
- * @augments UIBaseElement
  */
 export default class UITextButton extends UIBaseElement {
 	/**

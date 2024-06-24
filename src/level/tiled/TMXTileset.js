@@ -5,7 +5,6 @@ import timer from "./../../system/timer.js";
 import { getTMX, getImage } from "./../../loader/loader.js";
 
 /**
- * @classdesc
  * a TMX Tile Set Object
  */
 export default class TMXTileset {

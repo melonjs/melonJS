@@ -6,9 +6,7 @@ import {
 } from "./../../input/input.js";
 
 /**
- * @classdesc
  * This is a basic sprite based button which you can use in your Game UI.
- * @augments Sprite
  */
 export default class UISpriteElement extends Sprite {
 	/**

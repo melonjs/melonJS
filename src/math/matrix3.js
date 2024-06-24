@@ -9,7 +9,6 @@ import { EPSILON } from "./math.js";
  */
 
 /**
- * @classdesc
  * a 4x4 Matrix3d Object
  */
 export default class Matrix3d {

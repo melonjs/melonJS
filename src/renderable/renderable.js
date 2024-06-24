@@ -27,9 +27,7 @@ import Color from "./../math/color.js";
  **/
 
 /**
- * @classdesc
  * A base class for renderable objects.
- * @augments Rect
  */
 export default class Renderable extends Rect {
 	/**

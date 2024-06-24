@@ -6,7 +6,6 @@ import { setPrecision, getMaxShaderPrecision } from "./utils/precision.js";
 import { minify } from "./utils/string.js";
 
 /**
- * @classdesc
  * a base GL Shader object
  */
 export default class GLShader {

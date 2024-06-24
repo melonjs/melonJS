@@ -14,16 +14,14 @@ import Body from "../../physics/body.js";
  **/
 
 /**
- * @classdesc
  * a Generic Object Entity
- * @augments Renderable
  */
 export default class Entity extends Renderable {
 	/**
 	 * @param {number} x - the x coordinates of the entity object
 	 * @param {number} y - the y coordinates of the entity object
 	 * @param {object} settings - Entity properties, to be defined through Tiled or when calling the entity constructor
-	 * <img src="images/object_properties.png"/>
+	 * <img src="../../images/object_properties.png"/>
 	 * @param {number} settings.width - the physical width the entity takes up in game
 	 * @param {number} settings.height - the physical height the entity takes up in game
 	 * @param {string} [settings.name] - object entity name
@@ -37,16 +35,6 @@ export default class Entity extends Renderable {
 	 * @param {Rect[]|Polygon[]|Line[]|Ellipse[]} [settings.shapes] - the initial list of collision shapes (usually populated through Tiled)
 	 */
 	constructor(x, y, settings) {
-		// ensure mandatory properties are defined
-		if (
-			typeof settings.width !== "number" ||
-			typeof settings.height !== "number"
-		) {
-			throw new Error(
-				"height and width properties are mandatory when passing settings parameters to an object entity",
-			);
-		}
-
 		// call the super constructor
 		super(x, y, settings.width, settings.height);
 

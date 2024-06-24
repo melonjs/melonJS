@@ -20,8 +20,6 @@ export let cache = {};
 /**
  * a base Object class for plugin
  * (plugin must be installed using the register function)
- * @class
- * @name BasePlugin
  * @memberof plugin
  */
 export class BasePlugin {
@@ -46,8 +44,6 @@ export class BasePlugin {
 }
 
 /**
- * @class
- * @name Base
  * @memberof plugin
  * @deprecated since 15.1.6, see {@link plugin.BasePlugin}
  */

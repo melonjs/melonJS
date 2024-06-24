@@ -4,9 +4,7 @@ import TMXHexagonalRenderer from "./TMXHexagonalRenderer.js";
 import { degToRad } from "./../../../math/math.js";
 
 /**
- * @classdesc
  * a Staggered Map Renderder
- * @augments TMXHexagonalRenderer
  */
 export default class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 	/**

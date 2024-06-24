@@ -9,7 +9,6 @@ import { endpointToCenterParameterization } from "./toarccanvas.js";
  */
 
 /**
- * @classdesc
  * a simplified path2d implementation, supporting only one path
  */
 export default class Path2D {

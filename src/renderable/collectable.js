@@ -4,9 +4,7 @@ import collision from "./../physics/collision.js";
 import pool from "./../system/pooling.js";
 
 /**
- * @classdesc
  * a basic collectable helper class for immovable object (e.g. a coin)
- * @augments Sprite
  */
 export default class Collectable extends Sprite {
 	/**

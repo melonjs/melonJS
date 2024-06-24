@@ -9,9 +9,7 @@ import pool from "./../system/pooling.js";
  */
 
 /**
- * @classdesc
  * A Vector3d object that provide notification by executing the given callback when the vector is changed.
- * @augments Vector3d
  */
 export default class ObservableVector3d extends Vector3d {
 	/**

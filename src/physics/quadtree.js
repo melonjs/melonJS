@@ -59,7 +59,6 @@ function QT_ARRAY_PUSH(qt) {
 let QT_VECTOR = new Vector2d();
 
 /**
- * @classdesc
  * a QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
  * @see game.world.broadphase
  */

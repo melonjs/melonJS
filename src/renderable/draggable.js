@@ -4,10 +4,8 @@ import * as event from "./../system/event.js";
 import Renderable from "./../renderable/renderable.js";
 
 /**
- * @classdesc
  * A Draggable base object
  * @see DropTarget
- * @augments Renderable
  */
 export class Draggable extends Renderable {
 	/**

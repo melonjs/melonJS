@@ -7,9 +7,7 @@ import Polygon from "./poly.js";
  **/
 
 /**
- * @classdesc
  * a rectangle Object
- * @augments Polygon
  */
 export default class Rect extends Polygon {
 	/**

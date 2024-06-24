@@ -1,7 +1,5 @@
 /**
- * @classdesc
  * a Vertex Buffer object
- * @class VertexArrayBuffer
  * @ignore
  */
 

@@ -1,7 +1,6 @@
 import Vector2d from "./../math/vector2.js";
 
 /**
- * @classdesc
  * An object representing the result of an intersection.
  * @property {Renderable} a The first object participating in the intersection
  * @property {Renderable} b The second object participating in the intersection

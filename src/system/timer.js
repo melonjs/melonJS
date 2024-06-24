@@ -4,7 +4,6 @@ import state from "./../state/state.js";
 import { clamp } from "./../math/math.js";
 
 /**
- * @classdesc
  * a Timer class to manage timing related function (FPS, Game Tick, Time...)
  * @see {@link timer} the default global timer instance
  */

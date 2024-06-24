@@ -13,10 +13,8 @@ import Compositor from "./compositor.js";
 let V_ARRAY = [new Vector2d(), new Vector2d(), new Vector2d(), new Vector2d()];
 
 /**
- * @classdesc
  * A WebGL Compositor object. This class handles all of the WebGL state<br>
  * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
- * @augments Compositor
  */
 export default class QuadCompositor extends Compositor {
 	/**

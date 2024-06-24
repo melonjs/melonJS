@@ -7,7 +7,6 @@ import pool from "./../system/pooling.js";
  */
 
 /**
- * @classdesc
  * a generic 3D Vector Object
  */
 export default class Vector3d {

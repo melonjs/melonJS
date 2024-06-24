@@ -18,7 +18,6 @@ import { CANVAS, WEBGL, AUTO } from "../const.js";
  */
 
 /**
- * @classdesc
  * An Application represents a single melonJS game, and is responsible for updating (each frame) all the related object status and draw them.
  * @see game
  */

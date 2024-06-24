@@ -7,10 +7,8 @@ import Renderable from "./../renderable/renderable.js";
  */
 
 /**
- * @classdesc
  * a base drop target object
  * @see Draggable
- * @augments Renderable
  */
 export class DropTarget extends Renderable {
 	/**

@@ -2,7 +2,6 @@ import { clamp } from "./math.js";
 import pool from "./../system/pooling.js";
 
 /**
- * @classdesc
  * a generic 2D Vector Object
  */
 export default class Vector2d {

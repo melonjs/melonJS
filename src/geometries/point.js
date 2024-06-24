@@ -4,7 +4,6 @@
  **/
 
 /**
- * @classdesc
  * represents a point in a 2d space
  */
 export default class Point {

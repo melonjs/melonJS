@@ -41,9 +41,7 @@ let globalFloatingCounter = 0;
  */
 
 /**
- * @classdesc
  * Container represents a collection of child objects
- * @augments Renderable
  */
 export default class Container extends Renderable {
 	/**
