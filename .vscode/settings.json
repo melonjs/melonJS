@@ -1,3 +1,6 @@
 {
-  "files.eol": "\n"
+  "files.eol": "\n",
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit"
+  }
 }
