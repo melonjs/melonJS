@@ -2,136 +2,136 @@ import { expect } from "expect";
 import * as me from "./../public/lib/melonjs.module.js";
 
 describe("me.Matrix2d", function () {
-    it("should be initialized to a 3x3 identity matrix", function () {
-        var matA = new me.Matrix2d();
-        var result = "me.Matrix2d(1, 0, 0, 0, 1, 0, 0, 0, 1)";
+	it("should be initialized to a 3x3 identity matrix", function () {
+		var matA = new me.Matrix2d();
+		var result = "me.Matrix2d(1, 0, 0, 0, 1, 0, 0, 0, 1)";
 
-        expect(matA.toString() === result).toEqual(true);
-    });
+		expect(matA.toString() === result).toEqual(true);
+	});
 
-    it("should be initialized properly with a 2x2 identity matrix", function () {
-        var matA = new me.Matrix2d(1, 0, 0, 1, 0, 0);
+	it("should be initialized properly with a 2x2 identity matrix", function () {
+		var matA = new me.Matrix2d(1, 0, 0, 1, 0, 0);
 
-        expect(matA.isIdentity()).toEqual(true);
-    });
+		expect(matA.isIdentity()).toEqual(true);
+	});
 
-    it("could be initialized using a given 4x4 matrix", function () {
-        var matA = new me.Matrix2d();
-        var matB = new me.Matrix3d(
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8,
-            9,
-            10,
-            11,
-            12,
-            13,
-            14,
-            15,
-            16
-        );
-        var result = "me.Matrix2d(1, 2, 3, 5, 6, 7, 9, 10, 11)";
+	it("could be initialized using a given 4x4 matrix", function () {
+		var matA = new me.Matrix2d();
+		var matB = new me.Matrix3d(
+			1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14,
+			15,
+			16,
+		);
+		var result = "me.Matrix2d(1, 2, 3, 5, 6, 7, 9, 10, 11)";
 
-        matA.fromMat3d(matB);
+		matA.fromMat3d(matB);
 
-        expect(matA.toString() === result).toEqual(true);
-    });
+		expect(matA.toString() === result).toEqual(true);
+	});
 
-    it("should multiply all values properly", function () {
-        var matA = new me.Matrix2d(1, 2, 0, 3, 4, 0, 5, 6, 1);
-        var matB = new me.Matrix2d(7, 8, 0, 9, 10, 0, 11, 12, 1);
-        var result = "me.Matrix2d(31, 46, 0, 39, 58, 0, 52, 76, 1)";
+	it("should multiply all values properly", function () {
+		var matA = new me.Matrix2d(1, 2, 0, 3, 4, 0, 5, 6, 1);
+		var matB = new me.Matrix2d(7, 8, 0, 9, 10, 0, 11, 12, 1);
+		var result = "me.Matrix2d(31, 46, 0, 39, 58, 0, 52, 76, 1)";
 
-        matA.multiply(matB);
+		matA.multiply(matB);
 
-        expect(matA.toString() === result).toEqual(true);
-    });
+		expect(matA.toString() === result).toEqual(true);
+	});
 
-    it("should reset to an identity matrix", function () {
-        var matA = new me.Matrix2d(1, 2, 3, 4, 5, 6, 7, 8, 9);
+	it("should reset to an identity matrix", function () {
+		var matA = new me.Matrix2d(1, 2, 3, 4, 5, 6, 7, 8, 9);
 
-        matA.identity();
+		matA.identity();
 
-        expect(matA.isIdentity()).toEqual(true);
-    });
+		expect(matA.isIdentity()).toEqual(true);
+	});
 
-    it("should rotate all values properly", function () {
-        var matA = new me.Matrix2d(1, 2, 0, 3, 4, 0, 5, 6, 1);
-        var result = "me.Matrix2d(3, 4, 0, -1, -2, 0, 5, 6, 1)";
+	it("should rotate all values properly", function () {
+		var matA = new me.Matrix2d(1, 2, 0, 3, 4, 0, 5, 6, 1);
+		var result = "me.Matrix2d(3, 4, 0, -1, -2, 0, 5, 6, 1)";
 
-        matA.rotate(Math.PI * 0.5);
+		matA.rotate(Math.PI * 0.5);
 
-        expect(matA.toString() === result).toEqual(true);
-    });
+		expect(matA.toString() === result).toEqual(true);
+	});
 
-    it("should scale all values properly", function () {
-        var matA = new me.Matrix2d().setTransform(1, 2, 0, 3, 4, 0, 5, 6, 1);
-        var result = "me.Matrix2d(2, 4, 0, 9, 12, 0, 5, 6, 1)";
+	it("should scale all values properly", function () {
+		var matA = new me.Matrix2d().setTransform(1, 2, 0, 3, 4, 0, 5, 6, 1);
+		var result = "me.Matrix2d(2, 4, 0, 9, 12, 0, 5, 6, 1)";
 
-        matA.scale(2, 3);
+		matA.scale(2, 3);
 
-        expect(matA.toString() === result).toEqual(true);
-    });
+		expect(matA.toString() === result).toEqual(true);
+	});
 
-    it("should translate all values properly", function () {
-        var matA = new me.Matrix2d(1, 2, 0, 3, 4, 0, 5, 6, 1);
-        var result = "me.Matrix2d(1, 2, 0, 3, 4, 0, 16, 22, 1)";
+	it("should translate all values properly", function () {
+		var matA = new me.Matrix2d(1, 2, 0, 3, 4, 0, 5, 6, 1);
+		var result = "me.Matrix2d(1, 2, 0, 3, 4, 0, 16, 22, 1)";
 
-        matA.translate(2, 3);
+		matA.translate(2, 3);
 
-        expect(matA.toString() === result).toEqual(true);
-        expect(matA.tx === 16).toEqual(true);
-        expect(matA.ty === 22).toEqual(true);
-    });
+		expect(matA.toString() === result).toEqual(true);
+		expect(matA.tx === 16).toEqual(true);
+		expect(matA.ty === 22).toEqual(true);
+	});
 
-    it("should transpose the matrix properly", function () {
-        var matA = new me.Matrix2d(1, 2, 3, 4, 5, 6, 7, 8, 9);
-        var result = "me.Matrix2d(1, 4, 7, 2, 5, 8, 3, 6, 9)";
+	it("should transpose the matrix properly", function () {
+		var matA = new me.Matrix2d(1, 2, 3, 4, 5, 6, 7, 8, 9);
+		var result = "me.Matrix2d(1, 4, 7, 2, 5, 8, 3, 6, 9)";
 
-        matA.transpose();
+		matA.transpose();
 
-        expect(matA.toString() === result).toEqual(true);
-    });
+		expect(matA.toString() === result).toEqual(true);
+	});
 
-    it("should invert the matrix properly", function () {
-        var matA = new me.Matrix2d(4, 2, 3, 3, 1, 3, 2, -1, 4);
-        var result = "me.Matrix2d(7, -11, 3, -6, 10, -3, -5, 8, -2)";
+	it("should invert the matrix properly", function () {
+		var matA = new me.Matrix2d(4, 2, 3, 3, 1, 3, 2, -1, 4);
+		var result = "me.Matrix2d(7, -11, 3, -6, 10, -3, -5, 8, -2)";
 
-        matA.invert();
+		matA.invert();
 
-        expect(matA.toString() === result).toEqual(true);
-    });
+		expect(matA.toString() === result).toEqual(true);
+	});
 
-    it("should multiply a 2d vector properly with the inverted matrix", function () {
-        var matA = new me.Matrix2d(1, 2, 3, 4, 5, 6, 7, 8, 9);
-        var vecA = new me.Vector2d(3, 7);
+	it("should multiply a 2d vector properly with the inverted matrix", function () {
+		var matA = new me.Matrix2d(1, 2, 3, 4, 5, 6, 7, 8, 9);
+		var vecA = new me.Vector2d(3, 7);
 
-        matA.apply(vecA);
-        // multiply back with the inverted matrix
-        matA.applyInverse(vecA);
+		matA.apply(vecA);
+		// multiply back with the inverted matrix
+		matA.applyInverse(vecA);
 
-        // and we should have back the original vector values
-        expect(vecA.toString()).toEqual("x:3,y:7");
-    });
+		// and we should have back the original vector values
+		expect(vecA.toString()).toEqual("x:3,y:7");
+	});
 
-    it("should be clonable", function () {
-        var matA = new me.Matrix2d(1, 2, 3, 4, 5, 6, 7, 8, 9);
-        var matB = matA.clone();
+	it("should be clonable", function () {
+		var matA = new me.Matrix2d(1, 2, 3, 4, 5, 6, 7, 8, 9);
+		var matB = matA.clone();
 
-        // and we should have back the original vector values
-        expect(matA.equals(matB)).toEqual(true);
-    });
+		// and we should have back the original vector values
+		expect(matA.equals(matB)).toEqual(true);
+	});
 
-    it("should be copiable", function () {
-        var matA = new me.Matrix2d(1, 2, 3, 4, 5, 6, 7, 8, 9);
-        var matB = new me.Matrix2d().copy(matA);
+	it("should be copiable", function () {
+		var matA = new me.Matrix2d(1, 2, 3, 4, 5, 6, 7, 8, 9);
+		var matB = new me.Matrix2d().copy(matA);
 
-        // and we should have back the original vector values
-        expect(matA.equals(matB)).toEqual(true);
-    });
+		// and we should have back the original vector values
+		expect(matA.equals(matB)).toEqual(true);
+	});
 });

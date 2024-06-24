@@ -12,7 +12,7 @@
  * @returns {string} the capitalized string
  */
 export function capitalize(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
+	return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 /**
@@ -24,10 +24,10 @@ export function capitalize(str) {
  * @returns {boolean} true if string contains only digits
  */
 export function isNumeric(str) {
-    if (typeof str === "string") {
-        str = str.trim();
-    }
-    return !isNaN(str) && /^[+-]?(\d+(\.\d+)?|\.\d+)$/.test(str);
+	if (typeof str === "string") {
+		str = str.trim();
+	}
+	return !isNaN(str) && /^[+-]?(\d+(\.\d+)?|\.\d+)$/.test(str);
 }
 
 /**
@@ -39,8 +39,8 @@ export function isNumeric(str) {
  * @returns {boolean} true if the string is either true or false
  */
 export function isBoolean(str) {
-    const trimmed = str.trim();
-    return (trimmed === "true") || (trimmed === "false");
+	const trimmed = str.trim();
+	return trimmed === "true" || trimmed === "false";
 }
 
 /**
@@ -52,11 +52,12 @@ export function isBoolean(str) {
  * @returns {string} the converted hexadecimal value
  */
 export function toHex(str) {
-    let res = "", c = 0;
-    while (c < str.length) {
-        res += str.charCodeAt(c++).toString(16);
-    }
-    return res;
+	let res = "",
+		c = 0;
+	while (c < str.length) {
+		res += str.charCodeAt(c++).toString(16);
+	}
+	return res;
 }
 
 /**
@@ -69,5 +70,5 @@ export function toHex(str) {
  * @returns {boolean} true if the string is a data url
  */
 export function isDataUrl(str) {
-    return /^data:(.+);base64,(.+)$/.test(str);
+	return /^data:(.+);base64,(.+)$/.test(str);
 }

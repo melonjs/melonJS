@@ -6,160 +6,176 @@ import setContextStyle from "./textstyle.js";
  * a Text Metrics object that contains helper for text manipulation
  */
 export default class TextMetrics extends Bounds {
+	/**
+	 * @param {Text|BitmapText} ancestor - the parent object that contains this TextMetrics object
+	 */
+	constructor(ancestor) {
+		// parent constructor
+		super();
 
-    /**
-     * @param {Text|BitmapText} ancestor - the parent object that contains this TextMetrics object
-     */
-    constructor(ancestor) {
+		/**
+		 * a reference to the parent object that contains this TextMetrics object
+		 * @public
+		 * @type {Renderable}
+		 * @default undefined
+		 */
+		this.ancestor = ancestor;
 
-        // parent constructor
-        super();
+		this.setMinMax(0, 0, 0, 0);
+	}
 
-        /**
-         * a reference to the parent object that contains this TextMetrics object
-         * @public
-         * @type {Renderable}
-         * @default undefined
-         */
-        this.ancestor = ancestor;
+	/**
+	 * Returns the height of a segment of inline text in CSS pixels.
+	 * @returns {number} the height of a segment of inline text in CSS pixels.
+	 */
+	lineHeight() {
+		if (this.ancestor instanceof Text) {
+			return this.ancestor.fontSize * this.ancestor.lineHeight;
+		} else {
+			// it's a BitmapText
+			return (
+				this.ancestor.fontData.capHeight *
+				this.ancestor.lineHeight *
+				this.ancestor.fontScale.y
+			);
+		}
+	}
 
-        this.setMinMax(0, 0, 0, 0);
-    }
+	/**
+	 * Returns the width of the given segment of inline text in CSS pixels.
+	 * @param {string} text - the text to be measured
+	 * @param {CanvasRenderingContext2D} [context] - reference to an active 2d context for canvas rendering
+	 * @returns {number} the width of the given segment of inline text in CSS pixels.
+	 */
+	lineWidth(text, context) {
+		if (this.ancestor instanceof Text) {
+			return context.measureText(text).width;
+		} else {
+			// it's a BitmapText
+			let characters = text.split("");
+			const charactersLength = characters.length;
+			let width = 0;
+			let lastGlyph = null;
+			for (let i = 0; i < charactersLength; i++) {
+				let ch = characters[i].charCodeAt(0);
+				let glyph = this.ancestor.fontData.glyphs[ch];
+				if (typeof glyph !== "undefined") {
+					let kerning =
+						lastGlyph && lastGlyph.kerning ? lastGlyph.getKerning(ch) : 0;
+					width += (glyph.xadvance + kerning) * this.ancestor.fontScale.x;
+					lastGlyph = glyph;
+				}
+			}
+			return width;
+		}
+	}
 
-    /**
-     * Returns the height of a segment of inline text in CSS pixels.
-     * @returns {number} the height of a segment of inline text in CSS pixels.
-     */
-    lineHeight() {
-        if (this.ancestor instanceof Text) {
-            return this.ancestor.fontSize * this.ancestor.lineHeight;
-        } else { // it's a BitmapText
-            return this.ancestor.fontData.capHeight * this.ancestor.lineHeight * this.ancestor.fontScale.y;
-        }
-    }
+	/**
+	 * measure the given text size in CSS pixels
+	 * @param {string} text - the text to be measured
+	 * @param {CanvasRenderingContext2D} [context] - reference to an active 2d context for canvas rendering
+	 * @returns {TextMetrics} this
+	 */
+	measureText(text, context) {
+		let strings;
 
-    /**
-     * Returns the width of the given segment of inline text in CSS pixels.
-     * @param {string} text - the text to be measured
-     * @param {CanvasRenderingContext2D} [context] - reference to an active 2d context for canvas rendering
-     * @returns {number} the width of the given segment of inline text in CSS pixels.
-     */
-    lineWidth(text, context) {
-        if (this.ancestor instanceof Text) {
-            return context.measureText(text).width;
-        } else { // it's a BitmapText
-            let characters = text.split("");
-            const charactersLength = characters.length;
-            let width = 0;
-            let lastGlyph = null;
-            for (let i = 0; i < charactersLength; i++) {
-                let ch = characters[i].charCodeAt(0);
-                let glyph = this.ancestor.fontData.glyphs[ch];
-                if (typeof glyph !== "undefined") {
-                    let kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;
-                    width += (glyph.xadvance + kerning) * this.ancestor.fontScale.x;
-                    lastGlyph = glyph;
-                }
-            }
-            return width;
-        }
-    }
+		if (!Array.isArray(text)) {
+			strings = ("" + text).split("\n");
+		} else {
+			strings = text;
+		}
 
-    /**
-     * measure the given text size in CSS pixels
-     * @param {string} text - the text to be measured
-     * @param {CanvasRenderingContext2D} [context] - reference to an active 2d context for canvas rendering
-     * @returns {TextMetrics} this
-     */
-    measureText(text, context) {
-        let strings;
+		if (typeof context !== "undefined") {
+			// save the previous context
+			context.save();
 
-        if (!Array.isArray(text)) {
-            strings = ("" + text).split("\n");
-        } else {
-            strings = text;
-        }
+			// apply the style font
+			setContextStyle(context, this.ancestor);
+		}
 
-        if (typeof context !== "undefined") {
-            // save the previous context
-            context.save();
+		// compute the bounding box size
+		this.width = this.height = 0;
 
-            // apply the style font
-            setContextStyle(context, this.ancestor);
-        }
+		for (let i = 0; i < strings.length; i++) {
+			this.width = Math.max(
+				this.lineWidth(strings[i].trimEnd(), context),
+				this.width,
+			);
+			this.height += this.lineHeight();
+		}
+		this.width = Math.ceil(this.width);
+		this.height = Math.ceil(this.height);
 
-        // compute the bounding box size
-        this.width = this.height = 0;
+		// compute the bounding box position
+		this.x = Math.floor(
+			this.ancestor.textAlign === "right"
+				? this.ancestor.pos.x - this.width
+				: this.ancestor.textAlign === "center"
+					? this.ancestor.pos.x - this.width / 2
+					: this.ancestor.pos.x,
+		);
+		this.y = Math.floor(
+			this.ancestor.textBaseline.search(/^(top|hanging)$/) === 0
+				? this.ancestor.pos.y
+				: this.ancestor.textBaseline === "middle"
+					? this.ancestor.pos.y - this.lineHeight() / 2
+					: this.ancestor.pos.y - this.lineHeight(),
+		);
 
-        for (let i = 0; i < strings.length; i++) {
-            this.width = Math.max(this.lineWidth(strings[i].trimEnd(), context), this.width);
-            this.height += this.lineHeight();
-        }
-        this.width = Math.ceil(this.width);
-        this.height = Math.ceil(this.height);
+		if (typeof context !== "undefined") {
+			// restore the context
+			context.restore();
+		}
 
-        // compute the bounding box position
-        this.x = Math.floor((this.ancestor.textAlign === "right" ? this.ancestor.pos.x - this.width : (
-            this.ancestor.textAlign === "center" ? this.ancestor.pos.x - (this.width / 2) : this.ancestor.pos.x
-        )));
-        this.y = Math.floor((this.ancestor.textBaseline.search(/^(top|hanging)$/) === 0) ? this.ancestor.pos.y : (
-            this.ancestor.textBaseline === "middle" ? this.ancestor.pos.y - (this.lineHeight() / 2) : this.ancestor.pos.y - this.lineHeight()
-        ));
+		return this;
+	}
 
-        if (typeof context !== "undefined") {
-            // restore the context
-            context.restore();
-        }
+	/**
+	 * wrap the given text based on the given width
+	 * @param {string|string[]} text - the text to be wrapped
+	 * @param {number} width - maximum width of one segment of text in css pixel
+	 * @param {CanvasRenderingContext2D} [context] - reference to an active 2d context for canvas rendering
+	 * @returns {string[]} an array of string representing wrapped text
+	 */
+	wordWrap(text, width, context) {
+		let words;
+		let currentLine = "";
+		let output = [];
 
-        return this;
-    }
+		if (Array.isArray(text)) {
+			// join into a single string
+			text = text.join(" ");
+		}
+		// word splitting to be improved as it replaces \n by space if present
+		words = text.replace(/[\r\n]+/g, " ").split(" ");
 
-    /**
-     * wrap the given text based on the given width
-     * @param {string|string[]} text - the text to be wrapped
-     * @param {number} width - maximum width of one segment of text in css pixel
-     * @param {CanvasRenderingContext2D} [context] - reference to an active 2d context for canvas rendering
-     * @returns {string[]} an array of string representing wrapped text
-     */
-    wordWrap(text, width, context) {
-        let words;
-        let currentLine = "";
-        let output = [];
+		if (typeof context !== "undefined") {
+			// save the previous context
+			context.save();
 
-        if (Array.isArray(text)) {
-            // join into a single string
-            text = text.join(" ");
-        }
-        // word splitting to be improved as it replaces \n by space if present
-        words = text.replace(/[\r\n]+/g, " ").split(" ");
+			// apply the style font
+			setContextStyle(context, this.ancestor);
+		}
 
-        if (typeof context !== "undefined") {
-            // save the previous context
-            context.save();
+		for (let i = 0; i < words.length; i++) {
+			let word = words[i];
+			let lineWidth = this.lineWidth(currentLine + word + " ", context);
+			if (lineWidth < width) {
+				// add the word to the current line
+				currentLine += word + " ";
+			} else {
+				output.push(currentLine + "\n");
+				currentLine = word + " ";
+			}
+		}
+		// last line
+		output.push(currentLine);
 
-            // apply the style font
-            setContextStyle(context, this.ancestor);
-        }
+		if (typeof context !== "undefined") {
+			// restore the context
+			context.restore();
+		}
 
-        for (let i = 0; i < words.length; i++) {
-            let word = words[i];
-            let lineWidth = this.lineWidth(currentLine + word + " ", context);
-            if (lineWidth < width) {
-                // add the word to the current line
-                currentLine += word + " ";
-            } else {
-                output.push(currentLine + "\n");
-                currentLine = word + " ";
-            }
-        }
-        // last line
-        output.push(currentLine);
-
-        if (typeof context !== "undefined") {
-            // restore the context
-            context.restore();
-        }
-
-        return output;
-    }
+		return output;
+	}
 }

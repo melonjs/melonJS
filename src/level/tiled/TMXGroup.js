@@ -9,102 +9,107 @@ import { clamp } from "./../../math/math.js";
  * @ignore
  */
 export default class TMXGroup {
+	constructor(map, data, z) {
+		/**
+		 * group name
+		 * @type {string}
+		 */
+		this.name = data.name;
 
-    constructor(map, data, z) {
+		/**
+		 * group width
+		 * @type {number}
+		 */
+		this.width = data.width || 0;
 
-        /**
-         * group name
-         * @type {string}
-         */
-        this.name = data.name;
+		/**
+		 * group height
+		 * @type {number}
+		 */
+		this.height = data.height || 0;
 
-        /**
-         * group width
-         * @type {number}
-         */
-        this.width = data.width || 0;
+		/**
+		 * tint color
+		 * @type {string}
+		 */
+		this.tintcolor = data.tintcolor;
 
-        /**
-         * group height
-         * @type {number}
-         */
-        this.height = data.height || 0;
+		/**
+		 * the group class
+		 * @type {string}
+		 */
+		this.class = data.class;
 
-        /**
-         * tint color
-         * @type {string}
-         */
-        this.tintcolor = data.tintcolor;
+		/**
+		 * group z order
+		 * @type {number}
+		 */
+		this.z = z;
 
+		/**
+		 * group objects list definition
+		 * @see TMXObject
+		 * @type {object[]}
+		 */
+		this.objects = [];
 
-        /**
-         * the group class
-         * @type {string}
-         */
-        this.class = data.class;
+		let visible = typeof data.visible !== "undefined" ? data.visible : true;
+		this.opacity = visible === true ? clamp(+data.opacity || 1.0, 0.0, 1.0) : 0;
 
-        /**
-         * group z order
-         * @type {number}
-         */
-        this.z = z;
+		// check if we have any user-defined properties
+		applyTMXProperties(this, data);
 
-        /**
-         * group objects list definition
-         * @see TMXObject
-         * @type {object[]}
-         */
-        this.objects = [];
+		// parse all child objects/layers
+		if (data.objects) {
+			data.objects.forEach((object) => {
+				object.tintcolor = this.tintcolor;
+				this.objects.push(new TMXObject(map, object, z));
+			});
+		}
 
-        let visible = typeof(data.visible) !== "undefined" ? data.visible : true;
-        this.opacity = (visible === true) ? clamp(+data.opacity || 1.0, 0.0, 1.0) : 0;
+		if (data.layers) {
+			data.layers.forEach((data) => {
+				let layer = new TMXLayer(
+					map,
+					data,
+					map.tilewidth,
+					map.tileheight,
+					map.orientation,
+					map.tilesets,
+					z++,
+				);
+				// set a renderer
+				layer.setRenderer(map.getRenderer());
+				// resize container accordingly
+				this.width = Math.max(this.width, layer.width);
+				this.height = Math.max(this.height, layer.height);
+				this.objects.push(layer);
+			});
+		}
+	}
 
-        // check if we have any user-defined properties
-        applyTMXProperties(this, data);
+	/**
+	 * reset function
+	 * @ignore
+	 */
+	destroy() {
+		// clear all allocated objects
+		this.objects = null;
+	}
 
-        // parse all child objects/layers
-        if (data.objects) {
-            data.objects.forEach((object) => {
-                object.tintcolor = this.tintcolor;
-                this.objects.push(new TMXObject(map, object, z));
-            });
-        }
+	/**
+	 * return the object count
+	 * @ignore
+	 */
+	getObjectCount() {
+		return this.objects.length;
+	}
 
-        if (data.layers) {
-            data.layers.forEach((data) => {
-                let layer = new TMXLayer(map, data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z++);
-                // set a renderer
-                layer.setRenderer(map.getRenderer());
-                // resize container accordingly
-                this.width = Math.max(this.width, layer.width);
-                this.height = Math.max(this.height, layer.height);
-                this.objects.push(layer);
-            });
-        }
-    }
-
-    /**
-     * reset function
-     * @ignore
-     */
-    destroy() {
-        // clear all allocated objects
-        this.objects = null;
-    }
-
-    /**
-     * return the object count
-     * @ignore
-     */
-    getObjectCount() {
-        return this.objects.length;
-    }
-
-    /**
-     * returns the object at the specified index
-     * @ignore
-     */
-    getObjectByIndex(idx) {
-        return this.objects[idx];
-    }
+	/**
+	 * returns the object at the specified index
+	 * @ignore
+	 */
+	getObjectByIndex(idx) {
+		return this.objects[idx];
+	}
 }

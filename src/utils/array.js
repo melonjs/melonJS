@@ -1,4 +1,7 @@
-import {random as mathRandom, weightedRandom as mathWeightedRandom} from "./../math/math.js";
+import {
+	random as mathRandom,
+	weightedRandom as mathWeightedRandom,
+} from "./../math/math.js";
 
 /**
  * a collection of array utility functions
@@ -18,11 +21,11 @@ import {random as mathRandom, weightedRandom as mathWeightedRandom} from "./../m
  * me.utils.array.remove(arr, "foo");
  */
 export function remove(arr, obj) {
-    let i = Array.prototype.indexOf.call(arr, obj);
-    if (i !== -1) {
-        Array.prototype.splice.call(arr, i, 1);
-    }
-    return arr;
+	let i = Array.prototype.indexOf.call(arr, obj);
+	if (i !== -1) {
+		Array.prototype.splice.call(arr, i, 1);
+	}
+	return arr;
 }
 
 /**
@@ -38,7 +41,7 @@ export function remove(arr, obj) {
  * console.log(me.utils.array.random(arr));
  */
 export function random(arr) {
-    return arr[mathRandom(0, arr.length)];
+	return arr[mathRandom(0, arr.length)];
 }
 
 /**
@@ -50,5 +53,5 @@ export function random(arr) {
  * @returns {any} random member of array
  */
 export function weightedRandom(arr) {
-    return arr[mathWeightedRandom(0, arr.length)];
+	return arr[mathWeightedRandom(0, arr.length)];
 }

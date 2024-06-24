@@ -3,10 +3,10 @@
  * @ignore
  */
 export default function setContextStyle(context, style) {
-    context.font = style.font;
-    context.fillStyle = style.fillStyle.toRGBA();
-    context.strokeStyle = style.strokeStyle.toRGBA();
-    context.lineWidth = style.lineWidth;
-    context.textAlign = style.textAlign;
-    context.textBaseline = style.textBaseline;
+	context.font = style.font;
+	context.fillStyle = style.fillStyle.toRGBA();
+	context.strokeStyle = style.strokeStyle.toRGBA();
+	context.lineWidth = style.lineWidth;
+	context.textAlign = style.textAlign;
+	context.textBaseline = style.textBaseline;
 }

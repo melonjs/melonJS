@@ -1,0 +1,11 @@
+{
+	"$schema": "https://biomejs.dev/schemas/1.8.2/schema.json",
+	"organizeImports": {
+		"enabled": false
+	},
+	"files": {
+		"ignore": ["docs/", "dist/", "build/", "tests/browser/public/lib"]
+	},
+	"formatter": { "enabled": true },
+	"linter": { "enabled": false }
+}

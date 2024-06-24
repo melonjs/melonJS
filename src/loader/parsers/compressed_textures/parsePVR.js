@@ -69,10 +69,9 @@ function levelBufferSize(format, width, height) {
 
 // parse and return the compressed texture
 export function parsePVR() {
+	throw new Error("unsupported format");
 
-    throw new Error("unsupported format");
-
-    /*
+	/*
 
     // Create a new DataView from the data
     let header = new Uint32Array(data, 0, PVR_HEADER_LENGTH);
