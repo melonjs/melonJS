@@ -20,9 +20,7 @@ const offsetsStaggerY = [
 ];
 
 /**
- * @classdesc
  * an Hexagonal Map Renderder
- * @augments TMXRenderer
  */
 export default class TMXHexagonalRenderer extends TMXRenderer {
     /**

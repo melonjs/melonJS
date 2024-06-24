@@ -18,10 +18,8 @@ let V_ARRAY = [
 ];
 
 /**
- * @classdesc
  * A WebGL Compositor object. This class handles all of the WebGL state<br>
  * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
- * @augments Compositor
  */
 export default class QuadCompositor extends Compositor {
 

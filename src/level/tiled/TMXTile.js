@@ -4,9 +4,7 @@ import Bounds from "./../../physics/bounds.js";
 import { TMX_FLIP_V, TMX_FLIP_H, TMX_FLIP_AD, TMX_CLEAR_BIT_MASK } from "./constants.js";
 
 /**
- * @classdesc
  * a basic tile object
- * @augments Bounds
  */
 export default class Tile extends Bounds {
     /**

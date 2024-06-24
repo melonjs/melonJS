@@ -181,7 +181,6 @@ let cssToRGB = new Map();
 });
 
 /**
- * @classdesc
  * A color manipulation object.
  */
 export default class Color {

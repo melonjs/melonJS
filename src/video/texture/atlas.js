@@ -52,7 +52,6 @@ export function identifyFormat(app) {
 }
 
 /**
- * @classdesc
  * A Texture atlas class, currently supports : <br>
  * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export (standard and multipack texture atlas) <br>
  * - [Free Texture Packer]{@link http://free-tex-packer.com/app/} : through JSON export (standard and multipack texture atlas) <br>

@@ -47,11 +47,9 @@ always check our [discussions](https://github.com/melonjs/melonJS/discussions/ca
 
 Similarly, you can build your own copy of the docs locally by running :
 
-    $ npm run doc-local
+    $ npm run doc
 
-The documentation will be generated under the `docs` directory, and can be accessed using :
-
-    $ npm run serve
+The documentation will be generated under the `docs` directory, and can be accessed by opening index.html in your web browser.
 
 ## WIP Builds
 

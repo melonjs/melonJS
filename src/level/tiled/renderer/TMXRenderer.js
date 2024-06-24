@@ -5,7 +5,6 @@ import TMXLayer from "./../TMXLayer.js";
 import Bounds from "./../../../physics/bounds.js";
 
 /**
- * @classdesc
  * The map renderer base class
  */
 export default class TMXRenderer {

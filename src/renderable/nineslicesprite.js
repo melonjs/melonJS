@@ -7,12 +7,10 @@ import Sprite from "./sprite.js";
  */
 
 /**
- * @classdesc
  * A NineSliceSprite is similar to a Sprite, but it uses 9-slice scaling to strech its inner area to fit the size of the Renderable,
  * by proportionally scaling a sprite by splitting it in a grid of nine parts (with only parts 1, 3, 7, 9 not being scaled). <br>
  * <img src="images/9-slice-scaling.png"/><br>
  * @see https://en.wikipedia.org/wiki/9-slice_scaling
- * @augments Sprite
  */
 export default class NineSliceSprite extends Sprite {
     /**
