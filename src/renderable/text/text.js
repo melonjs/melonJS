@@ -18,9 +18,7 @@ const runits = ["ex", "em", "pt", "px"];
 const toPX = [12, 24, 0.75, 1];
 
 /**
- * @classdesc
  * a generic system font object.
- * @augments Renderable
  */
 export default class Text extends Renderable {
     /**

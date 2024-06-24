@@ -11,9 +11,7 @@ import * as stringUtil from "./../utils/string.js";
  */
 
 /**
- * @classdesc
  * a generic Image Layer Object
- * @augments Sprite
  */
 export default class ImageLayer extends Sprite {
     /**

@@ -26,3 +26,4 @@ build/*
 !.placeholder
 /_SpecRunner.html
 package-lock.json
+docs/

@@ -9,7 +9,6 @@ import pool from "./../system/pooling.js";
  */
 
 /**
- * @classdesc
  * an ellipse Object
  */
 export default class Ellipse {

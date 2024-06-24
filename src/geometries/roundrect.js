@@ -3,9 +3,7 @@ import Rect from "./rectangle.js";
 // https://developer.chrome.com/blog/canvas2d/#round-rect
 
 /**
- * @classdesc
  * a rectangle object with rounded corners
- * @augments Rect
  */
 export default class RoundRect extends Rect {
     /**

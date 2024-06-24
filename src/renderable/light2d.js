@@ -51,7 +51,6 @@ function createGradient(light) {
 }
 
 /**
- * @classdesc
  * A 2D point light.
  * Note: this is a very experimental and work in progress feature, that provides a simple spot light effect.
  * The light effect is best rendered in WebGL, as they are few limitations when using the Canvas Renderer

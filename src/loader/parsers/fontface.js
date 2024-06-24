@@ -45,7 +45,7 @@ export function preloadFontFace(data, onload, onerror) {
 
     } else {
         if (typeof onerror === "function") {
-            onerror(error);
+            onerror();
         }
     }
 
