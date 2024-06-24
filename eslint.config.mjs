@@ -18,7 +18,7 @@ export default [
 	{
 		name: "eslint/global-rules",
 		languageOptions: {
-			ecmaVersion: 2020,
+			ecmaVersion: 2022,
 			sourceType: "module",
 			globals: {
 				...globals.browser,
