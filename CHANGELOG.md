@@ -1,9 +1,18 @@
 # Changelog
 
-## [17.4.1] (melonJS 2) - _2024-06-xx_
+## [17.5.0] (melonJS 2) - _2024-06-xx_
+
+### Added
+- Chore: new GitHub Workflow for running the tests (thanks @hornta)
+- Chore: new GitHub Workflow for doc generation and publishing (thanks @hornta)
 
 ### Fixed
 - Video: fix implicit global reference to HTMLVideoElement
+- Chore: fix running test on windows machine (thanks @hornta)
+
+### Changed
+- Chore: replace webdoc with typedoc (thanks @hornta)
+
 
 ## [17.4.0] (melonJS 2) - _2024-06-22_
 
@@ -822,7 +831,7 @@
 
 -------------------------------------------------------------------------------
 
-[17.4.1]: https://github.com/melonjs/melonJS/compare/17.4.0...17.4.1
+[17.5.0]: https://github.com/melonjs/melonJS/compare/17.4.0...17.5.0
 [17.4.0]: https://github.com/melonjs/melonJS/compare/17.3.0...17.4.0
 [17.3.0]: https://github.com/melonjs/melonJS/compare/17.2.0...17.3.0
 [17.2.0]: https://github.com/melonjs/melonJS/compare/17.1.0...17.2.0
