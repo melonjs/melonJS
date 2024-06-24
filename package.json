@@ -89,9 +89,9 @@
   "scripts": {
     "build": "npm run lint && rollup -c --silent",
     "build:cd": "npm run lint && rollup -c --failAfterWarnings",
-    "dist": " npm run clean && npm run build && mkdirp dist && cp -fR build/*.* dist/ && npm run types && npm run doc",
+    "dist": " npm run clean && npm run build && mkdirp dist && node scripts/dist.js && npm run types && npm run doc",
     "lint": "eslint",
-    "pretest": "mkdirp tests/browser/public/lib && cp -f build/melonjs.module.js tests/browser/public/lib",
+    "pretest": "mkdirp tests/browser/public/lib && node scripts/pretest.js",
     "test": "npm run test-node && mocha ./tests/browser/spec/*.js --reporter spec --bail --timeout 10000",
     "test-node": "node build/melonjs.module.js",
     "doc-prod": "mkdirp docs/docs && webdoc --quiet --site-root melonJS/docs/ -R README.md && npm run fix_doc",
@@ -102,5 +102,6 @@
     "prepublishOnly": "npm run dist && npm run test",
     "clean": "del-cli --force build/*.* dist/** docs/docs/**",
     "types": "tsc"
-  }
+  },
+  "packageManager": "npm@10.7.0"
 }

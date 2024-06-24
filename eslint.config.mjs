@@ -15,10 +15,10 @@ export default [
     {
         name: "eslint/global-rules",
         languageOptions: {
-            "ecmaVersion" : 2020,
+            "ecmaVersion" : 2022,
             "sourceType": "module"
         },
-        files: ["src/**/*.js"],
+        files: ["src/**/*.js", "scripts/**"],
         plugins: {
             jsdoc
         },
