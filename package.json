@@ -96,7 +96,6 @@
     "test": "npm run test-node && mocha ./tests/browser/spec/*.js --reporter spec --bail --timeout 10000",
     "test-node": "node build/melonjs.module.js",
     "doc": "typedoc src/index.js",
-    "fix_doc": "python3 ./scripts/fix_doc.py",
     "serve": "python3 -m http.server",
     "prepublishOnly": "npm run dist && npm run test",
     "clean": "del-cli --force build/*.* dist/**",
