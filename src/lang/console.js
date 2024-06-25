@@ -5,6 +5,9 @@
  * @param {string} version - the version since when the lass,function or property is deprecated
  */
 export function warning(deprecated, replacement, version) {
+	if ("__vitest_browser__" in window) {
+		return;
+	}
 	const msg = "melonJS: %s is deprecated since version %s, please use %s";
 	let stack = new Error().stack;
 

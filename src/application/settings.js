@@ -50,7 +50,7 @@ export const ApplicationSettings = {
 	powerPreference: "default",
 	transparent: false,
 	antiAlias: false,
-	consoleHeader: true,
+	consoleHeader: !("__vitest_browser__" in window),
 	premultipliedAlpha: true,
 	blendMode: "normal",
 	physic: "builtin",

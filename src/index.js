@@ -231,7 +231,9 @@ export function boot() {
 	}
 
 	// output melonJS version in the console
-	console.log("melonJS 2 (v" + version + ") | http://melonjs.org");
+	if (!("__vitest_browser__" in window)) {
+		console.log("melonJS 2 (v" + version + ") | http://melonjs.org");
+	}
 
 	// register all built-ins objects into the object pool
 	pool.register("me.Entity", Entity);

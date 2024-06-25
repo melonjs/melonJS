@@ -31,11 +31,9 @@ describe("loader", () => {
 						src: "/data/sfx/",
 					},
 					() => {
-						console.log("resolve");
 						resolve(true);
 					},
 					() => {
-						console.log("reject");
 						reject(new Error("Failed to load `rect.png`"));
 					},
 				);
