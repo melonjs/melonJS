@@ -3,8 +3,12 @@
 	"[javascript]": {
 		"editor.defaultFormatter": "biomejs.biome"
 	},
+	"[typescript]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
 	"files.eol": "\n",
 	"editor.codeActionsOnSave": {
-		"source.fixAll": "explicit"
+		"source.fixAll": "explicit",
+		"quickfix.biome": "explicit"
 	}
 }

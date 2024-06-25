@@ -215,9 +215,9 @@ class CanvasRenderTarget {
 	 */
 	toBlob(type = "image/png", quality) {
 		if (typeof this.canvas.convertToBlob === "function") {
-			return this.canvas.convertToBlob(type, quality);
+			return this.canvas.convertToBlob({ type, quality });
 		} else {
-			return new Promise(function (resolve) {
+			return new Promise((resolve) => {
 				this.canvas.toBlob(
 					(blob) => {
 						resolve(blob);
