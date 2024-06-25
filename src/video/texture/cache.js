@@ -129,7 +129,6 @@ class TextureCache {
 		}
 
 		if (typeof entry === "undefined") {
-			console.log("cache miss");
 			if (!atlas) {
 				atlas = createAtlas(
 					image.width || image.videoWidth,
