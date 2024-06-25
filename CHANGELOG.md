@@ -7,12 +7,14 @@
 - Chore: new GitHub Workflow for doc generation and publishing (thanks @hornta)
 
 ### Fixed
+- CanvasRenderTarget: fix arguments passed to `convertToBlob()` (thanks @hornta)
 - Chore: fix running test on windows machine (thanks @hornta)
 - TypeScript: fix missing `OffscreenCanvas` argument type for the TextureAtlas constructor
 - Video: fix implicit global reference to HTMLVideoElement
 
 ### Changed
-- Chore: replace webdoc with typedoc (thanks @hornta)
+- Chore: replaced webdoc with typedoc (thanks @hornta)
+- Chore: replaced mocha and puppeteer with vitest (thanks @hornta)
 
 
 ## [17.4.0] (melonJS 2) - _2024-06-22_
