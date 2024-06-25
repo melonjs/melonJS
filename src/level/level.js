@@ -1,5 +1,4 @@
 import { resetGUID } from "./../utils/utils.js";
-import { defer } from "../utils/function.js";
 import * as event from "./../system/event.js";
 import state from "./../state/state.js";
 import { getTMX } from "./../loader/loader.js";
@@ -182,7 +181,9 @@ let level = {
 				// some silly side effects
 				state.stop();
 
-				defer(safeLoadLevel, this, levelId, options, true);
+				setTimeout(() => {
+					safeLoadLevel(levelId, options, true);
+				});
 			} else {
 				safeLoadLevel(levelId, options);
 			}

@@ -81,6 +81,7 @@
 		"rollup": "^4.18.0",
 		"rollup-plugin-bundle-size": "^1.0.3",
 		"rollup-plugin-string": "^3.0.0",
+		"serve": "^14.2.3",
 		"typedoc": "^0.26.1",
 		"typescript": "^5.5.2",
 		"vite-plugin-glsl": "^1.3.0",
@@ -93,7 +94,8 @@
 		"lint": "eslint",
 		"test": "vitest",
 		"doc": "typedoc src/index.js",
-		"serve": "python3 -m http.server",
+		"doc:watch": "typedoc src/index.js --watch",
+		"serve": "serve docs",
 		"prepublishOnly": "npm run dist && npm run test",
 		"clean": "del-cli --force build/*.* dist/** dist",
 		"types": "tsc --project tsconfig.build.json"

@@ -10,25 +10,16 @@ import { ApplicationSettings } from "../application/settings.js";
 
 /**
  * Select the HTML5 Canvas renderer
- * @memberof video
- * @name CANVAS
- * @static
  */
 export { CANVAS } from "../const";
 
 /**
  * Select the WebGL renderer
- * @memberof video
- * @name WEBGL
- * @static
  */
 export { WEBGL } from "../const";
 
 /**
  * Auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
- * @memberof video
- * @name AUTO
- * @static
  */
 export { AUTO } from "../const";
 

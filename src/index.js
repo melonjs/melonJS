@@ -86,10 +86,6 @@ import level from "./level/level.js";
 
 /**
  * current melonJS version
- * @static
- * @constant
- * @name version
- * @type {string}
  */
 export const version = "__VERSION__";
 
@@ -212,7 +208,6 @@ export let skipAutoInit = false;
  * game is a default instance of a melonJS Application and represents your current game,
  * it contains all the objects, tilemap layers, current viewport, collision map, etc...<br>
  * @namespace game
- * @see Application
  */
 export const game = new Application(0, 0, { legacy: true });
 

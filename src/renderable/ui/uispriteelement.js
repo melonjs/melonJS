@@ -96,7 +96,7 @@ export default class UISpriteElement extends Sprite {
 			this.isDirty = true;
 			this.released = false;
 			if (this.isHoldable) {
-				timer.clearTimeout(this.holdTimeout);
+				timer.clearTimer(this.holdTimeout);
 				this.holdTimeout = timer.setTimeout(
 					() => this.hold(),
 					this.holdThreshold,
@@ -110,7 +110,6 @@ export default class UISpriteElement extends Sprite {
 
 	/**
 	 * function called when the object is pressed (to be extended)
-	 * @param {Pointer} event - the event object
 	 * @returns {boolean} return false if we need to stop propagating the event
 	 */
 	onClick() {
@@ -162,7 +161,7 @@ export default class UISpriteElement extends Sprite {
 		if (this.released === false) {
 			this.released = true;
 			this.isDirty = true;
-			timer.clearTimeout(this.holdTimeout);
+			timer.clearTimer(this.holdTimeout);
 			this.holdTimeout = -1;
 			return this.onRelease(event);
 		}
@@ -181,7 +180,7 @@ export default class UISpriteElement extends Sprite {
 	 * @ignore
 	 */
 	hold() {
-		timer.clearTimeout(this.holdTimeout);
+		timer.clearTimer(this.holdTimeout);
 		this.holdTimeout = -1;
 		this.isDirty = true;
 		if (!this.released) {
@@ -219,7 +218,7 @@ export default class UISpriteElement extends Sprite {
 		releasePointerEvent("pointercancel", this);
 		releasePointerEvent("pointerenter", this);
 		releasePointerEvent("pointerleave", this);
-		timer.clearTimeout(this.holdTimeout);
+		timer.clearTimer(this.holdTimeout);
 		this.holdTimeout = -1;
 	}
 }

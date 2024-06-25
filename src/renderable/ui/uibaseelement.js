@@ -92,7 +92,7 @@ export default class UIBaseElement extends Container {
 			this.isDirty = true;
 			this.released = false;
 			if (this.isHoldable) {
-				timer.clearTimeout(this.holdTimeout);
+				timer.clearTimer(this.holdTimeout);
 				this.holdTimeout = timer.setTimeout(
 					() => this.hold(),
 					this.holdThreshold,
@@ -196,7 +196,7 @@ export default class UIBaseElement extends Container {
 		if (this.released === false) {
 			this.released = true;
 			this.isDirty = true;
-			timer.clearTimeout(this.holdTimeout);
+			timer.clearTimer(this.holdTimeout);
 			this.holdTimeout = -1;
 			return this.onRelease(event);
 		}
@@ -215,7 +215,7 @@ export default class UIBaseElement extends Container {
 	 * @ignore
 	 */
 	hold() {
-		timer.clearTimeout(this.holdTimeout);
+		timer.clearTimer(this.holdTimeout);
 		this.holdTimeout = -1;
 		this.isDirty = true;
 		if (!this.released) {
@@ -256,7 +256,7 @@ export default class UIBaseElement extends Container {
 		releasePointerEvent("pointercancel", this);
 		releasePointerEvent("pointerenter", this);
 		releasePointerEvent("pointerleave", this);
-		timer.clearTimeout(this.holdTimeout);
+		timer.clearTimer(this.holdTimeout);
 		this.holdTimeout = -1;
 
 		// unregister on the global pointermove event

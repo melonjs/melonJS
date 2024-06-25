@@ -298,9 +298,6 @@ if (
 
 /**
  * Namespace for standard gamepad mapping constants
- * @public
- * @namespace GAMEPAD
- * @memberof input
  */
 export let GAMEPAD = {
 	/**
@@ -310,10 +307,6 @@ export let GAMEPAD = {
 	 *   <li>Right control stick: <code>RX</code> (horizontal), <code>RY</code> (vertical)</li>
 	 *   <li>Extras: <code>EXTRA_1</code>, <code>EXTRA_2</code>, <code>EXTRA_3</code>, <code>EXTRA_4</code></li>
 	 * </ul>
-	 * @public
-	 * @name AXES
-	 * @enum {number}
-	 * @memberof input.GAMEPAD
 	 * @see https://w3c.github.io/gamepad/#remapping
 	 */
 	AXES: {
@@ -337,10 +330,6 @@ export let GAMEPAD = {
 	 *   <li>Navigation: <code>SELECT</code> (<code>BACK</code>), <code>START</code> (<code>FORWARD</code>), <code>HOME</code></li>
 	 *   <li>Extras: <code>EXTRA_1</code>, <code>EXTRA_2</code>, <code>EXTRA_3</code>, <code>EXTRA_4</code></li>
 	 * </ul>
-	 * @public
-	 * @name BUTTONS
-	 * @enum {number}
-	 * @memberof input.GAMEPAD
 	 * @see https://w3c.github.io/gamepad/#remapping
 	 */
 	BUTTONS: {
@@ -372,13 +361,10 @@ export let GAMEPAD = {
 
 /**
  * Associate a gamepad event to a keycode
- * @name bindGamepad
- * @memberof input
- * @public
  * @param {number} index - Gamepad index
  * @param {object} button - Button/Axis definition
  * @param {string} button.type - "buttons" or "axes"
- * @param {number} button.code - button or axis code id (See {@link input.GAMEPAD.BUTTONS}, {@link input.GAMEPAD.AXES})
+ * @param {number} button.code - button or axis code id (See {@link input.GAMEPAD})
  * @param {number} [button.threshold=1] - value indicating when the axis should trigger the keycode (e.g. -0.5 or 0.5)
  * @param {number} keyCode - (See {@link input.KEY})
  * @example
@@ -449,11 +435,8 @@ export function bindGamepad(index, button, keyCode) {
 
 /**
  * unbind the defined keycode
- * @name unbindGamepad
- * @memberof input
- * @public
  * @param {number} index - Gamepad index
- * @param {number} button - (See {@link input.GAMEPAD.BUTTONS})
+ * @param {number} button - (See {@link input.GAMEPAD})
  * @example
  * me.input.unbindGamepad(0, me.input.GAMEPAD.BUTTONS.FACE_1);
  */
@@ -467,9 +450,6 @@ export function unbindGamepad(index, button) {
 /**
  * Set deadzone for analog gamepad inputs<br>
  * The default deadzone is 0.1 (10%) Analog values less than this will be ignored
- * @name setGamepadDeadzone
- * @memberof input
- * @public
  * @param {number} value - Deadzone value
  */
 export function setGamepadDeadzone(value) {
@@ -480,9 +460,6 @@ export function setGamepadDeadzone(value) {
  * specify a custom mapping for a specific gamepad id<br>
  * see below for the default mapping : <br>
  * <center><img src="images/gamepad_diagram.png"/></center><br>
- * @name setGamepadMapping
- * @memberof input
- * @public
  * @param {string} id - Gamepad id string
  * @param {object} mapping - A hash table
  * @param {number[]} mapping.axes - Standard analog control stick axis locations
