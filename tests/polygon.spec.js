@@ -1,7 +1,7 @@
 import { Polygon, Vector2d } from "../src/index.js";
 import { beforeAll, describe, expect, it } from "vitest";
 
-describe("Shape : me.Polygon", () => {
+describe("Shape : Polygon", () => {
 	describe("Polygon", () => {
 		var stars, bounds;
 

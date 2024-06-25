@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { Point } from "../src/index.js";
 
-describe("Shape : me.Point", () => {
+describe("Shape : Point", () => {
 	describe("Point", () => {
 		var point;
 
