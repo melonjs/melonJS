@@ -18,4 +18,5 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: npm ci
       - run: npm run build
+      - run: npx playwright install --with-deps
       - run: npm test
