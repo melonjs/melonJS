@@ -69,7 +69,7 @@ export function identifyFormat(app) {
 export class TextureAtlas {
 	/**
 	 * @param {object|object[]} atlases - atlas information. See {@link loader.getJSON}
-	 * @param {HTMLImageElement|HTMLCanvasElement|string|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] - Image source
+	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|string|OffscreenCanvas[]|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] - Image source
 	 * @param {boolean} [cache=false] - Use true to skip caching this Texture
 	 * @example
 	 * // create a texture atlas from a JSON Object
