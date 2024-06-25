@@ -3,7 +3,6 @@
  * @import Vector2d from "./../math/vector2.js";
  **/
 /**
- * @classdesc
  * represents a point in a 2d space
  */
 export default class Point {

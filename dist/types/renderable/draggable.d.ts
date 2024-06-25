@@ -1,8 +1,6 @@
 /**
- * @classdesc
  * A Draggable base object
  * @see DropTarget
- * @augments Renderable
  */
 export class Draggable extends Renderable {
     dragging: boolean;

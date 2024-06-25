@@ -9,7 +9,6 @@
  * @import ObservableVector2d from "./../math/observable_vector2.js";
  **/
 /**
- * @classdesc
  * a Generic Physic Body Object with some physic properties and behavior functionality, to add as a member of a Renderable.
  * @see Renderable.body
  */
@@ -328,7 +327,7 @@ export default class Body {
      * @param {number} dt - time since the last update in milliseconds.
      * @returns {boolean} true if resulting velocity is different than 0
      */
-    protected update(dt: number): boolean;
+    protected update(): boolean;
     /**
      * Destroy function<br>
      * @ignore

@@ -1,9 +1,6 @@
 export default Pointer;
 /**
- * @classdesc
  * a pointer object, representing a single finger on a touch enabled device.
- * @class Pointer
- * @augments Bounds
  */
 declare class Pointer extends Bounds {
     /**
@@ -91,13 +88,13 @@ declare class Pointer extends Bounds {
      */
     public clientX: number;
     /**
-    * the vertical coordinate within the application's client area at which the event occurred
-    * @public
-    * @type {number}
-    * @name clientY
-    * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientY
-    * @memberof Pointer
-    */
+     * the vertical coordinate within the application's client area at which the event occurred
+     * @public
+     * @type {number}
+     * @name clientY
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientY
+     * @memberof Pointer
+     */
     public clientY: number;
     /**
      * the difference in the X coordinate of the pointer since the previous move event
@@ -109,13 +106,13 @@ declare class Pointer extends Bounds {
      */
     public movementX: number;
     /**
-    * the difference in the Y coordinate of the pointer since the previous move event
-    * @public
-    * @type {number}
-    * @name movementY
-    * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/movementY
-    * @memberof Pointer
-    */
+     * the difference in the Y coordinate of the pointer since the previous move event
+     * @public
+     * @type {number}
+     * @name movementY
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/movementY
+     * @memberof Pointer
+     */
     public movementY: number;
     /**
      * an unsigned long representing the unit of the delta values scroll amount
@@ -220,13 +217,13 @@ declare class Pointer extends Bounds {
      */
     public gameLocalY: number;
     /**
-    * The unique identifier of the contact for a touch, mouse or pen
-    * @public
-    * @type {number}
-    * @name pointerId
-    * @memberof Pointer
-    * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/pointerId
-    */
+     * The unique identifier of the contact for a touch, mouse or pen
+     * @public
+     * @type {number}
+     * @name pointerId
+     * @memberof Pointer
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/pointerId
+     */
     public pointerId: number;
     /**
      * true if not originally a pointer event

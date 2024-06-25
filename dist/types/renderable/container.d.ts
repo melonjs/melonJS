@@ -21,9 +21,7 @@
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
  */
 /**
- * @classdesc
  * Container represents a collection of child objects
- * @augments Renderable
  */
 export default class Container extends Renderable {
     /**
@@ -78,7 +76,7 @@ export default class Container extends Renderable {
      * a callback to be extended, triggered after a child has been added or removed
      * @param {number} index - added or removed child index
      */
-    onChildChange: (index: number) => void;
+    onChildChange: () => void;
     /**
      * Specify if the container bounds should automatically take in account
      * all child bounds when updated (this is expensive and disabled by default,
@@ -313,6 +311,20 @@ export default class Container extends Renderable {
      * @ignore
      */
     _sortY(a: any, b: any): number;
+    /**
+     * container update function. <br>
+     * automatically called by the application update loop {@link Application}
+     * @protected
+     * @param {number} dt - time since the last update in milliseconds.
+     * @returns {boolean} true if the Container is dirty
+     */
+    protected update(dt: number): boolean;
+    /**
+     * draw this renderable (automatically called by melonJS)
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+     * @param {Camera2d} [viewport] - the viewport to (re)draw
+     */
+    draw(renderer: CanvasRenderer | WebGLRenderer, viewport?: any): void;
 }
 import Renderable from "./renderable.js";
 import type Color from "./../math/color.js";
@@ -331,3 +343,5 @@ import type UISpriteElement from "./ui/uispriteelement.js";
 import type UITextButton from "./ui/uitextbutton.js";
 import type Text from "./text/text.js";
 import type BitmapText from "./text/bitmaptext.js";
+import type CanvasRenderer from "./../video/canvas/canvas_renderer.js";
+import type WebGLRenderer from "./../video/webgl/webgl_renderer.js";

@@ -1,7 +1,5 @@
 /**
- * @classdesc
  * This is a basic sprite based button which you can use in your Game UI.
- * @augments Sprite
  */
 export default class UISpriteElement extends Sprite {
     /**
@@ -69,7 +67,7 @@ export default class UISpriteElement extends Sprite {
      * @param {Pointer} event - the event object
      * @returns {boolean} return false if we need to stop propagating the event
      */
-    onClick(event: Pointer): boolean;
+    onClick(): boolean;
     /**
      * function callback for the pointerEnter event
      * @ignore
@@ -79,7 +77,7 @@ export default class UISpriteElement extends Sprite {
      * function called when the pointer is over the object
      * @param {Pointer} event - the event object
      */
-    onOver(event: Pointer): void;
+    onOver(): void;
     /**
      * function callback for the pointerLeave event
      * @ignore
@@ -89,7 +87,7 @@ export default class UISpriteElement extends Sprite {
      * function called when the pointer is leaving the object area
      * @param {Pointer} event - the event object
      */
-    onOut(event: Pointer): void;
+    onOut(): void;
     /**
      * function callback for the pointerup event
      * @ignore

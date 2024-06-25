@@ -1,7 +1,5 @@
 /**
- * @classdesc
  * a bitmap font object
- * @augments Renderable
  */
 export default class BitmapText extends Renderable {
     /**

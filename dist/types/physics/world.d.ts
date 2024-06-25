@@ -2,9 +2,7 @@
  * @import Application from "./../application/application.js";
  */
 /**
- * @classdesc
  * an object representing the physic world, and responsible for managing and updating all childs and physics
- * @augments Container
  */
 export default class World extends Container {
     /**

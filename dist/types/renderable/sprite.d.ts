@@ -5,9 +5,7 @@
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
  */
 /**
- * @classdesc
  * An object to display a fixed or animated sprite on screen.
- * @augments Renderable
  */
 export default class Sprite extends Renderable {
     /**
@@ -265,6 +263,20 @@ export default class Sprite extends Renderable {
      */
     getAnimationFrameObjectByIndex(id: number): number;
     /**
+     * update function. <br>
+     * automatically called by the game manager {@link game}
+     * @protected
+     * @param {number} dt - time since the last update in milliseconds.
+     * @returns {boolean} true if the Sprite is dirty
+     */
+    protected update(dt: number): boolean;
+    /**
+     * draw this srite (automatically called by melonJS)
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+     * @param {Camera2d} [viewport] - the viewport to (re)draw
+     */
+    draw(renderer: CanvasRenderer | WebGLRenderer): void;
+    /**
      * Destroy function<br>
      * @ignore
      */
@@ -273,4 +285,6 @@ export default class Sprite extends Renderable {
 import Renderable from "./renderable.js";
 import type Vector2d from "./../math/vector2.js";
 import { TextureAtlas } from "./../video/texture/atlas.js";
+import type CanvasRenderer from "./../video/canvas/canvas_renderer.js";
+import type WebGLRenderer from "./../video/webgl/webgl_renderer.js";
 import Color from "../math/color.js";

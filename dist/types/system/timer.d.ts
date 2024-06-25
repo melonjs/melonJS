@@ -1,7 +1,6 @@
 export default timer;
 declare const timer: Timer;
 /**
- * @classdesc
  * a Timer class to manage timing related function (FPS, Game Tick, Time...)
  * @see {@link timer} the default global timer instance
  */

@@ -3,9 +3,7 @@
  * @import Vector2d from "./../math/vector2.js";
  */
 /**
- * @classdesc
  * a generic Image Layer Object
- * @augments Sprite
  */
 export default class ImageLayer extends Sprite {
     /**
@@ -73,10 +71,10 @@ export default class ImageLayer extends Sprite {
      */
     updateLayer(): void;
     /**
-    * override the default predraw function
-    * as repeat and anchor are managed directly in the draw method
-    * @ignore
-    */
+     * override the default predraw function
+     * as repeat and anchor are managed directly in the draw method
+     * @ignore
+     */
     preDraw(renderer: any): void;
     /**
      * draw this ImageLayer (automatically called by melonJS)

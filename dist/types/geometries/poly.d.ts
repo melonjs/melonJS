@@ -6,7 +6,6 @@
  * @import Bounds from "./../physics/bounds.js";
  */
 /**
- * @classdesc
  * a polygon Object.<br>
  * Please do note that melonJS implements a simple Axis-Aligned Boxes collision algorithm, which requires all polygons used for collision to be convex with all vertices defined with clockwise winding.
  * A polygon is convex when all line segments connecting two points in the interior do not cross any edge of the polygon

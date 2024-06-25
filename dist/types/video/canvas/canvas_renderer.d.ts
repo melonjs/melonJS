@@ -8,9 +8,7 @@
  * @import Matrix2d from "./../../math/matrix2.js";
  */
 /**
- * @classdesc
  * a canvas renderer object
- * @augments Renderer
  */
 export default class CanvasRenderer extends Renderer {
     cache: TextureCache;
@@ -22,13 +20,13 @@ export default class CanvasRenderer extends Renderer {
      * set a blend mode for the given context. <br>
      * Supported blend mode between Canvas and WebGL remderer : <br>
      * - "normal" : this is the default mode and draws new content on top of the existing content <br>
-     * <img src="images/normal-blendmode.png" width="510"/> <br>
+     * <img src="../images/normal-blendmode.png" width="510"/> <br>
      * - "multiply" : the pixels of the top layer are multiplied with the corresponding pixel of the bottom layer. A darker picture is the result. <br>
-     * <img src="images/multiply-blendmode.png" width="510"/> <br>
+     * <img src="../images/multiply-blendmode.png" width="510"/> <br>
      * - "additive or lighter" : where both content overlap the color is determined by adding color values. <br>
-     * <img src="images/lighter-blendmode.png" width="510"/> <br>
+     * <img src="../images/lighter-blendmode.png" width="510"/> <br>
      * - "screen" : The pixels are inverted, multiplied, and inverted again. A lighter picture is the result (opposite of multiply) <br>
-     * <img src="images/screen-blendmode.png" width="510"/> <br>
+     * <img src="../images/screen-blendmode.png" width="510"/> <br>
      * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
      * @param {string} [mode="normal"] - blend mode : "normal", "multiply", "lighter, "additive", "screen"
      * @param {CanvasRenderingContext2D} [context]
@@ -148,7 +146,7 @@ export default class CanvasRenderer extends Renderer {
     fill(shape?: Rect | Polygon | Line | Ellipse | RoundRect | undefined): void;
     /**
      * add a straight line from the current point to the start of the current sub-path. If the shape has already been closed or has only one point, this function does nothing
-    */
+     */
     closePath(): void;
     /**
      * Stroke an arc at the specified coordinates with given radius, start and end points

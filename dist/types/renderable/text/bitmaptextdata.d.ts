@@ -4,8 +4,8 @@
  */
 export default class BitmapTextData {
     /**
-    * @param {string} data - The bitmap font data pulled from the resource loader using me.loader.getBinary()
-    */
+     * @param {string} data - The bitmap font data pulled from the resource loader using me.loader.getBinary()
+     */
     constructor(data: string);
     /**
      * @ignore

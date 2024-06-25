@@ -164,7 +164,7 @@ export function preload(assets: Asset[], onloadcb?: Function | undefined, switch
  *          })
  *      }
  *  );
-**/
+ **/
 export function reload(src: string): void;
 /**
  * Load a single asset (to be used if you need to load additional asset(s) during the game)
@@ -255,7 +255,12 @@ export function getFont(elt: string): FontFace;
  * @namespace loader
  */
 export let nocache: string;
-export let baseURL: {};
+/**
+ * @type {Object.<string, string>}
+ */
+export let baseURL: {
+    [x: string]: string;
+};
 /**
  * crossOrigin attribute to configure the CORS requests for Image and Video data element.
  * By default (that is, when the attribute is not specified), CORS is not used at all.

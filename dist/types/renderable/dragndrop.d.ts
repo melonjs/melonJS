@@ -3,10 +3,8 @@
  * @import { Draggable } from "./draggable.js";
  */
 /**
- * @classdesc
  * a base drop target object
  * @see Draggable
- * @augments Renderable
  */
 export class DropTarget extends Renderable {
     /**
@@ -58,7 +56,7 @@ export class DropTarget extends Renderable {
      * @memberof DropTarget
      * @param {Draggable} draggable - the draggable object that is dropped
      */
-    drop(draggable: Draggable): void;
+    drop(): void;
     /**
      * Destructor
      * @name destroy

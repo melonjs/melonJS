@@ -3,7 +3,6 @@
  * @import Vector2d from "./vector2.js";
  */
 /**
- * @classdesc
  * a generic 3D Vector Object
  */
 export default class Vector3d {
@@ -209,9 +208,9 @@ export default class Vector3d {
      */
     cross(v: Vector3d): Vector3d;
     /**
-    * return the square length of this vector
-    * @returns {number} The length^2 of this vector.
-    */
+     * return the square length of this vector
+     * @returns {number} The length^2 of this vector.
+     */
     length2(): number;
     /**
      * return the length (magnitude) of this vector

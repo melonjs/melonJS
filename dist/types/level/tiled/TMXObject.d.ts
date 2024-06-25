@@ -1,5 +1,4 @@
 /**
- * @classdesc
  * a TMX Object defintion, as defined in Tiled
  * (Object definition is translated into the virtual `me.game.world` using `me.Renderable`)
  * @ignore

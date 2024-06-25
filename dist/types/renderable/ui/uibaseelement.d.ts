@@ -1,8 +1,6 @@
 /**
- * @classdesc
  * This is a basic clickable and draggable container which you can use in your game UI.
  * Use this for example if you want to display a panel that contains text, images or other UI elements.
- * @augments Container
  */
 export default class UIBaseElement extends Container {
     /**
@@ -60,7 +58,7 @@ export default class UIBaseElement extends Container {
      * @param {Pointer} event - the event object
      * @returns {boolean} return false if we need to stop propagating the event
      */
-    onClick(event: Pointer): boolean;
+    onClick(): boolean;
     /**
      * function callback for the pointerEnter event
      * @ignore
@@ -76,12 +74,12 @@ export default class UIBaseElement extends Container {
      * function called when the pointer is moved over the object
      * @param {Pointer} event - the event object
      */
-    onMove(event: Pointer): void;
+    onMove(): void;
     /**
      * function called when the pointer is over the object
      * @param {Pointer} event - the event object
      */
-    onOver(event: Pointer): void;
+    onOver(): void;
     /**
      * function callback for the pointerLeave event
      * @ignore
@@ -91,7 +89,7 @@ export default class UIBaseElement extends Container {
      * function called when the pointer is leaving the object area
      * @param {Pointer} event - the event object
      */
-    onOut(event: Pointer): void;
+    onOut(): void;
     /**
      * function callback for the pointerup event
      * @ignore

@@ -1,5 +1,4 @@
 /**
- * @classdesc
  * an object containing all tileset
  */
 export default class TMXTilesetGroup {

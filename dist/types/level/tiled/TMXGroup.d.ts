@@ -1,5 +1,4 @@
 /**
- * @classdesc
  * object group definition as defined in Tiled.
  * (group definition is translated into the virtual `me.game.world` using `me.Container`)
  * @ignore

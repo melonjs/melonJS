@@ -3,7 +3,6 @@
  * @import Point from "./point.js";
  */
 /**
- * @classdesc
  * a simplified path2d implementation, supporting only one path
  */
 export default class Path2D {

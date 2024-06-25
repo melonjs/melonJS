@@ -1,5 +1,4 @@
 /**
- * @classdesc
  * The map renderer base class
  */
 export default class TMXRenderer {

@@ -6,7 +6,6 @@
  * @import Bounds from "./../physics/bounds.js";
  */
 /**
- * @classdesc
  * an ellipse Object
  */
 export default class Ellipse {
@@ -94,7 +93,7 @@ export default class Ellipse {
      * @param {Matrix2d} matrix - the transformation matrix
      * @returns {Ellipse} Reference to this object for method chaining
      */
-    transform(matrix: Matrix2d): Ellipse;
+    transform(): Ellipse;
     /**
      * translate the circle/ellipse by the specified offset
      * @param {number|Vector2d} x -  x coordinate or a vector point to translate by
@@ -134,5 +133,4 @@ export default class Ellipse {
 }
 import type Vector2d from "./../math/vector2.js";
 import type ObservableVector2d from "./../math/observable_vector2.js";
-import type Matrix2d from "./../math/matrix2.js";
 import type Bounds from "./../physics/bounds.js";

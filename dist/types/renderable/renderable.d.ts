@@ -15,9 +15,7 @@
  * @import ResponseObject from "./../physics/response.js";
  **/
 /**
- * @classdesc
  * A base class for renderable objects.
- * @augments Rect
  */
 export default class Renderable extends Rect {
     /**
@@ -75,11 +73,11 @@ export default class Renderable extends Rect {
      */
     body: Body;
     /**
-    * (G)ame (U)nique (Id)entifier" <br>
-    * a GUID will be allocated for any renderable object added <br>
-    * to an object container (including the `me.game.world` container)
-    * @type {string}
-    */
+     * (G)ame (U)nique (Id)entifier" <br>
+     * a GUID will be allocated for any renderable object added <br>
+     * to an object container (including the `me.game.world` container)
+     * @type {string}
+     */
     GUID: string;
     /**
      * an event handler that is called when the renderable leave or enter a camera viewport
@@ -174,10 +172,10 @@ export default class Renderable extends Rect {
      */
     mask: Rect | RoundRect | Polygon | Line | Ellipse;
     /**
-      * (Experimental) an optional shader, to be used instead of the default built-in one, when drawing this renderable (WebGL only)
-      * @type {GLShader}
-      * @default undefined
-    */
+     * (Experimental) an optional shader, to be used instead of the default built-in one, when drawing this renderable (WebGL only)
+     * @type {GLShader}
+     * @default undefined
+     */
     shader: GLShader;
     /**
      * the blend mode to be applied to this renderable (see renderer setBlendMode for available blend mode)
@@ -345,7 +343,7 @@ export default class Renderable extends Rect {
      * @param {number} dt - time since the last update in milliseconds.
      * @returns {boolean} true if the renderable is dirty
      */
-    update(dt: number): boolean;
+    update(): boolean;
     /**
      * update the bounding box for this shape.
      * @param {boolean} [absolute=true] - update the bounds size and position in (world) absolute coordinates
@@ -358,9 +356,9 @@ export default class Renderable extends Rect {
      */
     updateBoundsPos(newX?: number | undefined, newY?: number | undefined): void;
     /**
-      * return the renderable absolute position in the game world
-      * @returns {Vector2d}
-      */
+     * return the renderable absolute position in the game world
+     * @returns {Vector2d}
+     */
     getAbsolutePosition(): Vector2d;
     _absPos: object | undefined;
     /**
@@ -391,7 +389,7 @@ export default class Renderable extends Rect {
      * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
      * @param {Camera2d} [viewport] - the viewport to (re)draw
      */
-    draw(renderer: CanvasRenderer | WebGLRenderer, viewport?: any): void;
+    draw(): void;
     /**
      * restore the rendering context after drawing (automatically called by melonJS).
      * @see Renderable#preDraw
@@ -419,7 +417,7 @@ export default class Renderable extends Rect {
      *     return true;
      * },
      */
-    onCollision(response: ResponseObject, other: Renderable): boolean;
+    onCollision(): boolean;
     /**
      * Destroy function<br>
      * @ignore
@@ -449,4 +447,3 @@ import type Vector3d from "./../math/vector3.js";
 import Bounds from "./../physics/bounds.js";
 import type CanvasRenderer from "./../video/canvas/canvas_renderer.js";
 import type WebGLRenderer from "./../video/webgl/webgl_renderer.js";
-import type ResponseObject from "./../physics/response.js";

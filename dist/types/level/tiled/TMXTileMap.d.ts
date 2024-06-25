@@ -1,5 +1,4 @@
 /**
- * @classdesc
  * a TMX Tile Map Object
  * Tiled QT +0.7.x format
  */

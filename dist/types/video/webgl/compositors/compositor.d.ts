@@ -4,7 +4,6 @@
  * @import Matrix3d from "./../../../math/matrix3.js";
  */
 /**
- * @classdesc
  * A base Compositor object.
  */
 export default class Compositor {
