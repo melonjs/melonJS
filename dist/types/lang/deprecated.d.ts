@@ -1,11 +1,9 @@
 /**
- * @classdesc
  * Used to make a game entity draggable
- * @augments Entity
  * @deprecated since 10.5.0
  * @see Draggable
  */
-export class DraggableEntity {
+export class DraggableEntity extends Draggable {
     /**
      * @param {number} x - the x coordinates of the draggable object
      * @param {number} y - the y coordinates of the draggable object
@@ -14,13 +12,11 @@ export class DraggableEntity {
     constructor(x: number, y: number, settings: object);
 }
 /**
- * @classdesc
  * Used to make a game entity a droptarget
- * @augments Entity
  * @deprecated since 10.5.0
  * @see DropTarget
  */
-export class DroptargetEntity {
+export class DroptargetEntity extends DropTarget {
     /**
      * @param {number} x - the x coordinates of the draggable object
      * @param {number} y - the y coordinates of the draggable object
@@ -29,22 +25,13 @@ export class DroptargetEntity {
     constructor(x: number, y: number, settings: object);
 }
 /**
- * @classdesc
  * A very basic object to manage GUI elements
- * @augments Sprite
  * @deprecated since 14.0.0
  * @see UISpriteElement
  */
-export class GUI_Object {
-    /**
-     * @param {number} x - the x coordinate of the GUI Object
-     * @param {number} y - the y coordinate of the GUI Object
-     * @param {object} settings - See {@link Sprite}
-     */
-    constructor(x: number, y: number, settings: object);
+export class GUI_Object extends UISpriteElement {
 }
 /**
- * @classdesc
  * @deprecated since 17.1.0
  * @see CanvasRenderTarget
  */
@@ -65,4 +52,7 @@ export class CanvasTexture extends CanvasRenderTarget {
         antiAlias?: boolean | undefined;
     });
 }
+import { Draggable } from "./../renderable/draggable.js";
+import { DropTarget } from "./../renderable/dragndrop.js";
+import UISpriteElement from "./../renderable/ui/uispriteelement.js";
 import CanvasRenderTarget from "../video/rendertarget/canvasrendertarget.js";

@@ -91,12 +91,12 @@ export function unlockKey(action: string): void;
  */
 export function unbindKey(keycode: number): void;
 /**
-  * the default target element for keyboard events (usually the window element in which the game is running)
-  * @public
-  * @type {EventTarget}
-  * @name keyBoardEventTarget
-  * @memberof input
-  */
+ * the default target element for keyboard events (usually the window element in which the game is running)
+ * @public
+ * @type {EventTarget}
+ * @name keyBoardEventTarget
+ * @memberof input
+ */
 export let keyBoardEventTarget: EventTarget;
 /**
  * *

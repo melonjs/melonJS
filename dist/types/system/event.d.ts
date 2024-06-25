@@ -155,7 +155,7 @@ export const STATE_CHANGE: string;
  * @name STAGE_RESET
  * @memberof event
  * @see event.on
-*/
+ */
 export const STAGE_RESET: string;
 /**
  * event for when the video is initialized<br>

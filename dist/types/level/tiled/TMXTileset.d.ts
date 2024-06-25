@@ -1,5 +1,4 @@
 /**
- * @classdesc
  * a TMX Tile Set Object
  */
 export default class TMXTileset {

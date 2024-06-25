@@ -1,7 +1,5 @@
 /**
- * @classdesc
  * a rectangle object with rounded corners
- * @augments Rect
  */
 export default class RoundRect extends Rect {
     /**

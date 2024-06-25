@@ -1,7 +1,5 @@
 /**
- * @classdesc
  * Particle Emitter Object.
- * @augments Container
  */
 export default class ParticleEmitter extends Container {
     /**

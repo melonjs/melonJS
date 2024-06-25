@@ -1,5 +1,4 @@
 /**
- * @classdesc
  * a generic 2D Vector Object
  */
 export default class Vector2d {
@@ -194,9 +193,9 @@ export default class Vector2d {
      */
     cross(v: Vector2d): number;
     /**
-    * return the square length of this vector
-    * @returns {number} The length^2 of this vector.
-    */
+     * return the square length of this vector
+     * @returns {number} The length^2 of this vector.
+     */
     length2(): number;
     /**
      * return the length (magnitude) of this vector

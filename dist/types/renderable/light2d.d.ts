@@ -1,5 +1,4 @@
 /**
- * @classdesc
  * A 2D point light.
  * Note: this is a very experimental and work in progress feature, that provides a simple spot light effect.
  * The light effect is best rendered in WebGL, as they are few limitations when using the Canvas Renderer
@@ -8,13 +7,13 @@
  */
 export default class Light2d extends Renderable {
     /**
-    * @param {number} x - The horizontal position of the light.
-    * @param {number} y - The vertical position of the light.
-    * @param {number} radiusX - The horizontal radius of the light.
-    * @param {number} [radiusY=radiusX] - The vertical radius of the light.
-    * @param {Color|string} [color="#FFF"] - the color of the light
-    * @param {number} [intensity=0.7] - The intensity of the light.
-    */
+     * @param {number} x - The horizontal position of the light.
+     * @param {number} y - The vertical position of the light.
+     * @param {number} radiusX - The horizontal radius of the light.
+     * @param {number} [radiusY=radiusX] - The vertical radius of the light.
+     * @param {Color|string} [color="#FFF"] - the color of the light
+     * @param {number} [intensity=0.7] - The intensity of the light.
+     */
     constructor(x: number, y: number, radiusX: number, radiusY?: number | undefined, color?: string | Color | undefined, intensity?: number | undefined);
     /**
      * the color of the light
@@ -50,6 +49,14 @@ export default class Light2d extends Renderable {
      */
     getVisibleArea(): Ellipse;
     /**
+     * draw this Light2d (automatically called by melonJS)
+     * @name draw
+     * @memberof Light2d
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+     * @param {Camera2d} [viewport] - the viewport to (re)draw
+     */
+    draw(renderer: CanvasRenderer | WebGLRenderer): void;
+    /**
      * Destroy function<br>
      * @ignore
      */
@@ -58,3 +65,5 @@ export default class Light2d extends Renderable {
 import Renderable from "./renderable.js";
 import type Color from "./../math/color.js";
 import type Ellipse from "./../geometries/ellipse.js";
+import type CanvasRenderer from "./../video/canvas/canvas_renderer.js";
+import type WebGLRenderer from "./../video/webgl/webgl_renderer.js";

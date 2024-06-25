@@ -8,16 +8,14 @@
  * @import WebGLRenderer from "./../../video/webgl/webgl_renderer.js";
  **/
 /**
- * @classdesc
  * a Generic Object Entity
- * @augments Renderable
  */
 export default class Entity extends Renderable {
     /**
      * @param {number} x - the x coordinates of the entity object
      * @param {number} y - the y coordinates of the entity object
      * @param {object} settings - Entity properties, to be defined through Tiled or when calling the entity constructor
-     * <img src="images/object_properties.png"/>
+     * <img src="../../images/object_properties.png"/>
      * @param {number} settings.width - the physical width the entity takes up in game
      * @param {number} settings.height - the physical height the entity takes up in game
      * @param {string} [settings.name] - object entity name
@@ -73,11 +71,19 @@ export default class Entity extends Renderable {
     onBodyUpdate(): void;
     preDraw(renderer: any): void;
     /**
+     * draw this entity (automatically called by melonJS)
+     * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+     * @param {Camera2d} [viewport] - the viewport to (re)draw
+     */
+    draw(renderer: CanvasRenderer | WebGLRenderer, viewport?: any): void;
+    /**
      * onDeactivateEvent Notification function
      */
     onDeactivateEvent(): void;
 }
 import Renderable from "../renderable.js";
+import type CanvasRenderer from "./../../video/canvas/canvas_renderer.js";
+import type WebGLRenderer from "./../../video/webgl/webgl_renderer.js";
 import type Polygon from "./../../geometries/poly.js";
 import type Line from "./../../geometries/line.js";
 import type Ellipse from "./../../geometries/ellipse.js";

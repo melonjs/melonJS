@@ -1,5 +1,4 @@
 /**
- * @classdesc
  * a QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
  * @see game.world.broadphase
  */

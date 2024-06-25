@@ -4,48 +4,48 @@
  */
 export function onDeviceRotate(e: any): void;
 /**
-* specify a function to execute when the Device is fully loaded and ready
-* @memberof device
-* @param {Function} fn - the function to be executed
-* @example
-* // small game skeleton
-* let game = {
-*    // called by the me.device.onReady function
-*    onload = function () {
-*       // init video
-*       if (!me.video.init('screen', 640, 480, true)) {
-*          alert("Sorry but your browser does not support html 5 canvas.");
-*          return;
-*       }
-*
-*       // initialize the "audio"
-*       me.audio.init("mp3,ogg");
-*
-*       // set callback for ressources loaded event
-*       me.loader.onload = this.loaded.bind(this);
-*
-*       // set all ressources to be loaded
-*       me.loader.preload(game.assets);
-*
-*       // load everything & display a loading screen
-*       me.state.change(me.state.LOADING);
-*    };
-*
-*    // callback when everything is loaded
-*    loaded = function () {
-*       // define stuff
-*       // ....
-*
-*       // change to the menu screen
-*       me.state.change(me.state.PLAY);
-*    }
-* }; // game
-*
-* // "bootstrap"
-* me.device.onReady(function () {
-*    game.onload();
-* });
-*/
+ * specify a function to execute when the Device is fully loaded and ready
+ * @memberof device
+ * @param {Function} fn - the function to be executed
+ * @example
+ * // small game skeleton
+ * let game = {
+ *    // called by the me.device.onReady function
+ *    onload = function () {
+ *       // init video
+ *       if (!me.video.init('screen', 640, 480, true)) {
+ *          alert("Sorry but your browser does not support html 5 canvas.");
+ *          return;
+ *       }
+ *
+ *       // initialize the "audio"
+ *       me.audio.init("mp3,ogg");
+ *
+ *       // set callback for ressources loaded event
+ *       me.loader.onload = this.loaded.bind(this);
+ *
+ *       // set all ressources to be loaded
+ *       me.loader.preload(game.assets);
+ *
+ *       // load everything & display a loading screen
+ *       me.state.change(me.state.LOADING);
+ *    };
+ *
+ *    // callback when everything is loaded
+ *    loaded = function () {
+ *       // define stuff
+ *       // ....
+ *
+ *       // change to the menu screen
+ *       me.state.change(me.state.PLAY);
+ *    }
+ * }; // game
+ *
+ * // "bootstrap"
+ * me.device.onReady(function () {
+ *    game.onload();
+ * });
+ */
 export function onReady(fn: Function): void;
 /**
  * enable/disable swipe on WebView.

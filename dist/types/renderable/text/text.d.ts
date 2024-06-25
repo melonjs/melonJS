@@ -1,7 +1,5 @@
 /**
- * @classdesc
  * a generic system font object.
- * @augments Renderable
  */
 export default class Text extends Renderable {
     /**

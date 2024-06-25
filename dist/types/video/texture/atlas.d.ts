@@ -32,7 +32,6 @@ export function createAtlas(width: any, height: any, name?: string, repeat?: str
  */
 export function identifyFormat(app: any): "texturepacker" | "shoebox" | "aseprite" | "melonJS";
 /**
- * @classdesc
  * A Texture atlas class, currently supports : <br>
  * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export (standard and multipack texture atlas) <br>
  * - [Free Texture Packer]{@link http://free-tex-packer.com/app/} : through JSON export (standard and multipack texture atlas) <br>
@@ -45,7 +44,7 @@ export function identifyFormat(app: any): "texturepacker" | "shoebox" | "aseprit
 export class TextureAtlas {
     /**
      * @param {object|object[]} atlases - atlas information. See {@link loader.getJSON}
-     * @param {HTMLImageElement|HTMLCanvasElement|string|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] - Image source
+     * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|string|OffscreenCanvas[]|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] - Image source
      * @param {boolean} [cache=false] - Use true to skip caching this Texture
      * @example
      * // create a texture atlas from a JSON Object
@@ -69,7 +68,7 @@ export class TextureAtlas {
      *     },
      *     me.loader.getImage("spritesheet")
      */
-    constructor(atlases: object | object[], src?: string | string[] | HTMLCanvasElement | HTMLImageElement | HTMLImageElement[] | HTMLCanvasElement[] | undefined, cache?: boolean | undefined);
+    constructor(atlases: object | object[], src?: string | string[] | OffscreenCanvas | HTMLCanvasElement | HTMLImageElement | HTMLImageElement[] | OffscreenCanvas[] | HTMLCanvasElement[] | undefined, cache?: boolean | undefined);
     /**
      * to identify the atlas format (e.g. texture packer)
      * @ignore

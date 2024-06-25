@@ -1,7 +1,5 @@
 /**
- * @classdesc
  * an Orthogonal Map Renderder
- * @augments TMXRenderer
  */
 export default class TMXOrthogonalRenderer extends TMXRenderer {
     /**

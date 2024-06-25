@@ -1,7 +1,5 @@
 /**
- * @classdesc
  * a Text Metrics object that contains helper for text manipulation
- * @augments Bounds
  */
 export default class TextMetrics extends Bounds {
     /**

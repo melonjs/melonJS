@@ -7,7 +7,6 @@
  * @import Bounds from "./../physics/bounds.js";
  */
 /**
- * @classdesc
  * a base renderer object
  */
 export default class Renderer {

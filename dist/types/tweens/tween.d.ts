@@ -1,5 +1,4 @@
 /**
- * @classdesc
  * Javascript Tweening Engine<p>
  * Super simple, fast and easy to use tweening engine which incorporates optimised Robert Penner's equation<p>
  * <a href="https://github.com/sole/Tween.js">https://github.com/sole/Tween.js</a><p>

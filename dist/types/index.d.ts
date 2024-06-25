@@ -46,6 +46,7 @@ import * as loader from "./loader/loader.js";
 import level from "./level/level.js";
 import * as input from "./input/input.js";
 import * as Math from "./math/math.js";
+export const math: typeof Math;
 import * as plugin from "./plugin/plugin.js";
 import { cache as plugins } from "./plugin/plugin.js";
 import * as utils from "./utils/utils.js";

@@ -2,9 +2,7 @@
  * @import ParticleEmitter from "./emitter.js";
  */
 /**
- * @classdesc
  * Single Particle Object.
- * @augments Renderable
  */
 export default class Particle extends Renderable {
     /**
@@ -27,6 +25,13 @@ export default class Particle extends Renderable {
     onlyInViewport: any;
     _deltaInv: number | undefined;
     angle: number | undefined;
+    /**
+     * Update the Particle <br>
+     * This is automatically called by the game manager {@link game}
+     * @ignore
+     * @param {number} dt - time since the last update in milliseconds
+     */
+    update(dt: number): boolean;
     /**
      * @ignore
      */

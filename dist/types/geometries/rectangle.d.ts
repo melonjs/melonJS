@@ -3,9 +3,7 @@
  * @import Vector2d from "./../math/vector2.js";
  **/
 /**
- * @classdesc
  * a rectangle Object
- * @augments Polygon
  */
 export default class Rect extends Polygon {
     /**

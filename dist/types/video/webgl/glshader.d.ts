@@ -1,5 +1,4 @@
 /**
- * @classdesc
  * a base GL Shader object
  */
 export default class GLShader {

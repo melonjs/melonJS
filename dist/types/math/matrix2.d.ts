@@ -5,7 +5,6 @@
  * @import Vector3d from "./vector3.js";
  */
 /**
- * @classdesc
  * a Matrix2d Object.<br>
  * the identity matrix and parameters position : <br>
  * <img src="images/identity-matrix_2x.png"/>
@@ -93,10 +92,10 @@ export default class Matrix2d {
      */
     invert(): Matrix2d;
     /**
-    * apply the current transform to the given 2d or 3d vector
-    * @param {Vector2d|Vector3d} v - the vector object to be transformed
-    * @returns {Vector2d|Vector3d} result vector object.
-    */
+     * apply the current transform to the given 2d or 3d vector
+     * @param {Vector2d|Vector3d} v - the vector object to be transformed
+     * @returns {Vector2d|Vector3d} result vector object.
+     */
     apply(v: Vector2d | Vector3d): Vector2d | Vector3d;
     /**
      * apply the inverted current transform to the given 2d vector

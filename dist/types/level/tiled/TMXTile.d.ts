@@ -1,7 +1,5 @@
 /**
- * @classdesc
  * a basic tile object
- * @augments Bounds
  */
 export default class Tile extends Bounds {
     /**

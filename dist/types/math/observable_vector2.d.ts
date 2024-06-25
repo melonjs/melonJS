@@ -1,7 +1,5 @@
 /**
- * @classdesc
  * A Vector2d object that provide notification by executing the given callback when the vector is changed.
- * @augments Vector2d
  */
 export default class ObservableVector2d extends Vector2d {
     /**

@@ -1,7 +1,6 @@
 export default pool;
 declare let pool: ObjectPool;
 /**
- * @classdesc
  * Object pooling - a technique that might speed up your game if used properly.<br>
  * If some of your classes will be instantiated and removed a lot at a time, it is a
  * good idea to add the class to this object pool. A separate pool for that class
@@ -11,7 +10,7 @@ declare let pool: ObjectPool;
  * This technique is also used by the engine to instantiate objects defined in the map,
  * which means, that on level loading the engine will try to instantiate every object
  * found in the map, based on the user defined name in each Object Properties<br>
- * <img src="images/object_properties.png"/><br>
+ * <img src="../images/object_properties.png"/><br>
  * @see {@link pool} the default global instance of ObjectPool
  */
 declare class ObjectPool {

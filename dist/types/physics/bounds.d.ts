@@ -4,7 +4,6 @@
  * @import Polygon from "./../geometries/poly.js";
  **/
 /**
- * @classdesc
  * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
  */
 export default class Bounds {

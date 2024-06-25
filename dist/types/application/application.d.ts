@@ -4,7 +4,6 @@
  * @import Camera2d from "./../camera/camera2d.js";
  */
 /**
- * @classdesc
  * An Application represents a single melonJS game, and is responsible for updating (each frame) all the related object status and draw them.
  * @see game
  */
