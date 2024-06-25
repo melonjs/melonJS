@@ -1,4 +1,3 @@
-import { defer } from "./../utils/function.js";
 import * as event from "./event.js";
 import state from "./../state/state.js";
 import { clamp } from "./../math/math.js";
@@ -153,26 +152,6 @@ class Timer {
 	}
 
 	/**
-	 * Cancels a timeout previously established by calling setTimeout().
-	 * @param {number} timeoutID - ID of the timeout to be cancelled
-	 */
-	clearTimeout(timeoutID) {
-		if (timeoutID > 0) {
-			defer(this.clearTimer.bind(this), this, timeoutID);
-		}
-	}
-
-	/**
-	 * cancels the timed, repeating action which was previously established by a call to setInterval().
-	 * @param {number} intervalID - ID of the interval to be cleared
-	 */
-	clearInterval(intervalID) {
-		if (intervalID > 0) {
-			defer(this.clearTimer.bind(this), this, intervalID);
-		}
-	}
-
-	/**
 	 * Return the current timestamp in milliseconds <br>
 	 * since the game has started or since linux epoch (based on browser support for High Resolution Timer)
 	 * @returns {number}
@@ -235,7 +214,7 @@ class Timer {
 	 * @ignore
 	 */
 	clearTimer(timerId) {
-		for (let i = 0, len = this.timers.length; i < len; i++) {
+		for (let i = 0; i < this.timers.length; i++) {
 			if (this.timers[i].timerId === timerId) {
 				this.timers.splice(i, 1);
 				break;
@@ -248,17 +227,17 @@ class Timer {
 	 * @ignore
 	 */
 	updateTimers() {
-		for (let i = 0, len = this.timers.length; i < len; i++) {
-			let _timer = this.timers[i];
-			if (!(_timer.pauseable && state.isPaused())) {
-				_timer.elapsed += this.delta;
+		for (const timer of this.timers) {
+			if (!(timer.pauseable && state.isPaused())) {
+				timer.elapsed += this.delta;
 			}
-			if (_timer.elapsed >= _timer.delay) {
-				_timer.fn.apply(null, _timer.args);
-				if (_timer.repeat === true) {
-					_timer.elapsed -= _timer.delay;
+			if (timer.elapsed >= timer.delay) {
+				timer.fn(...timer.args);
+
+				if (timer.repeat) {
+					timer.elapsed -= timer.delay;
 				} else {
-					this.clearTimeout(_timer.timerId);
+					this.clearTimer(timer.timerId);
 				}
 			}
 		}
