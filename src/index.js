@@ -93,6 +93,8 @@ import level from "./level/level.js";
  */
 export const version = "__VERSION__";
 
+const math = Math;
+
 // export all utility function
 export {
 	audio,
@@ -102,7 +104,11 @@ export {
 	loader,
 	level,
 	input,
+	/**
+	 * @deprecated Use lowercase `math` export instead.
+	 */
 	Math,
+	math,
 	plugin,
 	plugins,
 	utils,

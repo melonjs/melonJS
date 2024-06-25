@@ -1,0 +1,16 @@
+{
+	"compilerOptions": {
+		"target": "es2020",
+		"allowJs": true,
+		"checkJs": false,
+		"emitDeclarationOnly": true,
+		"declaration": true,
+		"declarationDir": "dist/types",
+		"removeComments": false,
+		"strict": true,
+		"noImplicitAny": true,
+		"module": "node16",
+		"moduleResolution": "node16",
+		"resolveJsonModule": true
+	}
+}

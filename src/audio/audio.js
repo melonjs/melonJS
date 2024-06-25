@@ -49,12 +49,11 @@ let soundLoadError = function (sound_name, onerror_cb) {
 			// disable audio
 			disable();
 			// call error callback if defined
-			if (onerror_cb) {
-				onerror_cb();
-			}
+			onerror_cb?.();
 			// warning
 			console.log(errmsg + ", disabling audio");
 		} else {
+			onerror_cb?.();
 			// throw an exception and stop everything !
 			throw new Error(errmsg);
 		}

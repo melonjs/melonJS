@@ -7,13 +7,7 @@ export default [
 	{
 		name: "eslint/global-ignores",
 		// globally ignore below directories and files
-		ignores: [
-			"*.config.mjs",
-			"dist/**/*",
-			"build/**/*",
-			"tests/**/*",
-			"docs/**/*",
-		],
+		ignores: ["dist/**/*", "build/**/*", "docs/**/*", "rollup.config.mjs"],
 	},
 	{
 		name: "eslint/global-rules",
@@ -24,7 +18,7 @@ export default [
 				...globals.browser,
 			},
 		},
-		files: ["src/**/*.js"],
+		files: ["src/**/*.js", "tests/**/*.ts"],
 		plugins: {
 			jsdoc,
 			"@stylistic": stylistic,
@@ -90,6 +84,7 @@ export default [
 			"no-this-before-super": "error",
 			"no-throw-literal": "off",
 			"no-trailing-spaces": "error",
+			"no-undef": "error",
 			"no-undef-init": "error",
 			"no-unmodified-loop-condition": "error",
 			"no-unneeded-ternary": ["off", { defaultAssignment: false }],
