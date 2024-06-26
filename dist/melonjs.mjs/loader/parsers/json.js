@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.4.0
+ * melonJS Game Engine - v17.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -18,26 +18,26 @@ import { fetchData } from './fetchdata.js';
  * @ignore
  */
 function preloadJSON(data, onload, onerror, settings) {
-    if (typeof jsonList[data.name] !== "undefined") {
-        // already loaded
-        return 0;
-    }
+	if (typeof jsonList[data.name] !== "undefined") {
+		// already loaded
+		return 0;
+	}
 
-    fetchData(data.src, "json", settings)
-        .then(response => {
-            jsonList[data.name] = response;
-            if (typeof onload === "function") {
-                // callback
-                onload();
-            }
-        })
-        .catch(error => {
-            if (typeof onerror === "function") {
-                onerror(error);
-            }
-        });
+	fetchData(data.src, "json", settings)
+		.then((response) => {
+			jsonList[data.name] = response;
+			if (typeof onload === "function") {
+				// callback
+				onload();
+			}
+		})
+		.catch((error) => {
+			if (typeof onerror === "function") {
+				onerror(error);
+			}
+		});
 
-    return 1;
+	return 1;
 }
 
 export { preloadJSON };

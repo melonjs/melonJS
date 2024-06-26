@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.4.0
+ * melonJS Game Engine - v17.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -24,7 +24,7 @@ import { s as semver } from '../node_modules/semver/index.js';
  */
 
 // guid default value
-let GUID_base  = "";
+let GUID_base = "";
 let GUID_index = 0;
 
 /**
@@ -43,18 +43,18 @@ let GUID_index = 0;
  * }
  */
 function checkVersion(v1, v2) {
-    // Convert to proper "x.y.z" format if necessary
-    if (/^\d+$/.test(v1)) {
-        v1 += ".0.0";
-    } else if (/^\d+\.\d+$/.test(v1)) {
-        v1 += ".0";
-    }
-    if (/^\d+$/.test(v2)) {
-        v2 += ".0.0";
-    } else if (/^\d+\.\d+$/.test(v2)) {
-        v2 += ".0";
-    }
-    return semver.compare(v1, v2);
+	// Convert to proper "x.y.z" format if necessary
+	if (/^\d+$/.test(v1)) {
+		v1 += ".0.0";
+	} else if (/^\d+\.\d+$/.test(v1)) {
+		v1 += ".0";
+	}
+	if (/^\d+$/.test(v2)) {
+		v2 += ".0.0";
+	} else if (/^\d+\.\d+$/.test(v2)) {
+		v2 += ".0";
+	}
+	return semver.compare(v1, v2);
 }
 
 /**
@@ -76,41 +76,45 @@ function checkVersion(v1, v2) {
  * console.log(UriFragment["mytag"]); //> "value"
  */
 function getUriFragment(url) {
-    let hash = {};
+	let hash = {};
 
-    if (typeof url === "undefined") {
-        if (typeof globalThis.document !== "undefined") {
-            let location = globalThis.document.location;
+	if (typeof url === "undefined") {
+		if (typeof globalThis.document !== "undefined") {
+			let location = globalThis.document.location;
 
-            if (location && location.hash) {
-                url = location.hash;
-            } else {
-                // No "document.location" exist for Wechat mini game platform.
-                return hash;
-            }
-        } else {
-            // "document" undefined on node.js
-            return hash;
-        }
-    } else {
-        // never cache if a url is passed as parameter
-        let index = url.indexOf("#");
-        if (index !== -1) {
-            url = url.slice(index, url.length);
-        } else {
-            return hash;
-        }
-    }
+			if (location && location.hash) {
+				url = location.hash;
+			} else {
+				// No "document.location" exist for Wechat mini game platform.
+				return hash;
+			}
+		} else {
+			// "document" undefined on node.js
+			return hash;
+		}
+	} else {
+		// never cache if a url is passed as parameter
+		let index = url.indexOf("#");
+		if (index !== -1) {
+			url = url.slice(index, url.length);
+		} else {
+			return hash;
+		}
+	}
 
-    // parse the url
-    url.slice(1).split("&").filter((value) => value !== "").forEach((value) => {
-        let kv = value.split("=");
-        let k = kv.shift();
-        let v = kv.join("=");
-        hash[k] = v || true;
-    });
+	// parse the url
+	url
+		.slice(1)
+		.split("&")
+		.filter((value) => value !== "")
+		.forEach((value) => {
+			let kv = value.split("=");
+			let k = kv.shift();
+			let v = kv.join("=");
+			hash[k] = v || true;
+		});
 
-    return hash;
+	return hash;
 }
 
 /**
@@ -120,9 +124,9 @@ function getUriFragment(url) {
  * @ignore
  */
 function resetGUID(base, index = 0) {
-    // also ensure it's only 8bit ASCII characters
-    GUID_base  = toHex(base.toString().toUpperCase());
-    GUID_index = index;
+	// also ensure it's only 8bit ASCII characters
+	GUID_base = toHex(base.toString().toUpperCase());
+	GUID_index = index;
 }
 
 /**
@@ -131,9 +135,9 @@ function resetGUID(base, index = 0) {
  * @ignore
  */
 function createGUID(index = 1) {
-    // to cover the case of undefined id for groups
-    GUID_index += index;
-    return GUID_base + "-" + (index || GUID_index);
+	// to cover the case of undefined id for groups
+	GUID_index += index;
+	return GUID_base + "-" + (index || GUID_index);
 }
 
 export { checkVersion, createGUID, getUriFragment, resetGUID };

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.4.0
+ * melonJS Game Engine - v17.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -76,10 +76,9 @@ function levelBufferSize(format, width, height) {
 
 // parse and return the compressed texture
 function parsePVR() {
+	throw new Error("unsupported format");
 
-    throw new Error("unsupported format");
-
-    /*
+	/*
 
     // Create a new DataView from the data
     let header = new Uint32Array(data, 0, PVR_HEADER_LENGTH);

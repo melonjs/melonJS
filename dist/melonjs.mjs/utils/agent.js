@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.4.0
+ * melonJS Game Engine - v17.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -16,7 +16,7 @@ import { capitalize } from './string.js';
  * Known agent vendors
  * @ignore
  */
-const vendors = [ "ms", "MS", "moz", "webkit", "o" ];
+const vendors = ["ms", "MS", "moz", "webkit", "o"];
 
 /**
  * Get a vendor-prefixed property
@@ -28,19 +28,19 @@ const vendors = [ "ms", "MS", "moz", "webkit", "o" ];
  * @memberof utils.agent
  */
 function prefixed(name, obj) {
-    obj = obj || globalThis;
-    if (name in obj) {
-        return obj[name];
-    }
+	obj = obj || globalThis;
+	if (name in obj) {
+		return obj[name];
+	}
 
-    let uc_name = capitalize(name);
+	let uc_name = capitalize(name);
 
-    let result;
-    vendors.some((vendor) => {
-        let name = vendor + uc_name;
-        return (result = (name in obj) ? obj[name] : undefined);
-    });
-    return result;
+	let result;
+	vendors.some((vendor) => {
+		let name = vendor + uc_name;
+		return (result = name in obj ? obj[name] : undefined);
+	});
+	return result;
 }
 
 /**
@@ -54,24 +54,24 @@ function prefixed(name, obj) {
  * @memberof utils.agent
  */
 function setPrefixed(name, value, obj) {
-    obj = obj || globalThis;
-    if (name in obj) {
-        obj[name] = value;
-        return;
-    }
+	obj = obj || globalThis;
+	if (name in obj) {
+		obj[name] = value;
+		return;
+	}
 
-    let uc_name = capitalize(name);
+	let uc_name = capitalize(name);
 
-    vendors.some((vendor) => {
-        let name = vendor + uc_name;
-        if (name in obj) {
-            obj[name] = value;
-            return true;
-        }
-        return false;
-    });
+	vendors.some((vendor) => {
+		let name = vendor + uc_name;
+		if (name in obj) {
+			obj[name] = value;
+			return true;
+		}
+		return false;
+	});
 
-    return false;
+	return false;
 }
 
 export { prefixed, setPrefixed };

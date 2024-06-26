@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.4.0
+ * melonJS Game Engine - v17.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -19,7 +19,7 @@
  * @returns {string} the capitalized string
  */
 function capitalize(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
+	return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 /**
@@ -31,10 +31,10 @@ function capitalize(str) {
  * @returns {boolean} true if string contains only digits
  */
 function isNumeric(str) {
-    if (typeof str === "string") {
-        str = str.trim();
-    }
-    return !isNaN(str) && /^[+-]?(\d+(\.\d+)?|\.\d+)$/.test(str);
+	if (typeof str === "string") {
+		str = str.trim();
+	}
+	return !isNaN(str) && /^[+-]?(\d+(\.\d+)?|\.\d+)$/.test(str);
 }
 
 /**
@@ -46,8 +46,8 @@ function isNumeric(str) {
  * @returns {boolean} true if the string is either true or false
  */
 function isBoolean(str) {
-    const trimmed = str.trim();
-    return (trimmed === "true") || (trimmed === "false");
+	const trimmed = str.trim();
+	return trimmed === "true" || trimmed === "false";
 }
 
 /**
@@ -59,11 +59,12 @@ function isBoolean(str) {
  * @returns {string} the converted hexadecimal value
  */
 function toHex(str) {
-    let res = "", c = 0;
-    while (c < str.length) {
-        res += str.charCodeAt(c++).toString(16);
-    }
-    return res;
+	let res = "",
+		c = 0;
+	while (c < str.length) {
+		res += str.charCodeAt(c++).toString(16);
+	}
+	return res;
 }
 
 /**
@@ -76,7 +77,7 @@ function toHex(str) {
  * @returns {boolean} true if the string is a data url
  */
 function isDataUrl(str) {
-    return /^data:(.+);base64,(.+)$/.test(str);
+	return /^data:(.+);base64,(.+)$/.test(str);
 }
 
 export { capitalize, isBoolean, isDataUrl, isNumeric, toHex };

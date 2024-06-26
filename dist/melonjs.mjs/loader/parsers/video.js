@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.4.0
+ * melonJS Game Engine - v17.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -21,79 +21,86 @@ import { isDataUrl } from '../../utils/string.js';
  * @ignore
  */
 function preloadVideo(data, onload, onerror, settings) {
+	if (typeof videoList[data.name] !== "undefined") {
+		// Video already preloaded
+		return 0;
+	}
 
-    if (typeof videoList[data.name] !== "undefined") {
-        // Video already preloaded
-        return 0;
-    }
+	let videoElement = (videoList[data.name] =
+		globalThis.document.createElement("video"));
 
-    let videoElement = videoList[data.name] = globalThis.document.createElement("video");
+	if (isDataUrl(data.src)) {
+		const mimeType = data.src.match(/[^:]\w+\/[\w-+\d.]+(?=;|,)/)[0];
+		if (!mimeType || videoElement.canPlayType(mimeType) === "") {
+			throw new Error(
+				`Invalid dataURL or Video file format not supported: ${mimeType}`,
+			);
+		}
+	} else {
+		if (!hasVideoFormat(getExtension(data.src))) {
+			throw new Error(
+				`Video file format not supported: ${getExtension(data.src)}`,
+			);
+		}
+	}
 
-    if (isDataUrl(data.src)) {
-        const mimeType = data.src.match(/[^:]\w+\/[\w-+\d.]+(?=;|,)/)[0];
-        if (!mimeType || videoElement.canPlayType(mimeType) === "") {
-            throw new Error(`Invalid dataURL or Video file format not supported: ${mimeType}`);
-        }
-    } else {
-        if (!hasVideoFormat(getExtension(data.src))) {
-            throw new Error(`Video file format not supported: ${getExtension(data.src)}`);
-        }
-    }
+	if (isDataUrl(data.src)) {
+		fetchData(data.src, "blob", settings)
+			.then((blob) => {
+				videoElement.src = globalThis.URL.createObjectURL(blob);
+			})
+			.catch((error) => {
+				if (typeof onerror === "function") {
+					onerror(error);
+				}
+			});
+	} else {
+		// just a url path
+		videoElement.src = data.src;
+	}
 
-    if (isDataUrl(data.src)) {
-        fetchData(data.src, "blob", settings)
-            .then(blob => {
-                videoElement.src = globalThis.URL.createObjectURL(blob);
-            })
-            .catch(error => {
-                if (typeof onerror === "function") {
-                    onerror(error);
-                }
-            });
-    } else {
-        // just a url path
-        videoElement.src = data.src;
-    }
+	videoElement.setAttribute(
+		"preload",
+		data.stream === true ? "metadata" : "auto",
+	);
+	videoElement.setAttribute("playsinline", "true");
+	videoElement.setAttribute("disablePictureInPicture", "true");
+	videoElement.setAttribute("controls", "false");
+	videoElement.setAttribute("crossorigin", settings.crossOrigin);
 
-    videoElement.setAttribute("preload", data.stream === true ? "metadata" : "auto");
-    videoElement.setAttribute("playsinline", "true");
-    videoElement.setAttribute("disablePictureInPicture", "true");
-    videoElement.setAttribute("controls", "false");
-    videoElement.setAttribute("crossorigin", settings.crossOrigin);
+	if (data.autoplay === true) {
+		videoElement.setAttribute("autoplay", "true");
+	}
+	if (data.loop === true) {
+		videoElement.setAttribute("loop", "true");
+	}
 
-    if (data.autoplay === true) {
-        videoElement.setAttribute("autoplay", "true");
-    }
-    if (data.loop === true) {
-        videoElement.setAttribute("loop", "true");
-    }
+	if (typeof onload === "function") {
+		// some mobile browser (e.g. safari) won't emit the canplay event if autoplay is disabled
+		if (data.stream === true || data.autoplay === false) {
+			videoElement.onloadedmetadata = () => {
+				if (typeof onload === "function") {
+					onload();
+				}
+			};
+		} else {
+			videoElement.oncanplay = () => {
+				if (typeof onload === "function") {
+					onload();
+				}
+			};
+		}
+	}
 
-    if (typeof onload === "function") {
-        // some mobile browser (e.g. safari) won't emit the canplay event if autoplay is disabled
-        if (data.stream === true || data.autoplay === false) {
-            videoElement.onloadedmetadata = () => {
-                if (typeof onload === "function") {
-                    onload();
-                }
-            };
-        } else {
-            videoElement.oncanplay = () => {
-                if (typeof onload === "function") {
-                    onload();
-                }
-            };
-        }
-    }
+	if (typeof onerror === "function") {
+		videoElement.onerror = () => {
+			onerror();
+		};
+	}
 
-    if (typeof onerror === "function") {
-        videoElement.onerror = () => {
-            onerror();
-        };
-    }
+	videoElement.load();
 
-    videoElement.load();
-
-    return 1;
+	return 1;
 }
 
 export { preloadVideo };

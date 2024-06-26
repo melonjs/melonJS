@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.4.0
+ * melonJS Game Engine - v17.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -15,10 +15,6 @@ import { __exports as howler } from '../_virtual/howler.js';
 /**
  * additional import for TypeScript
  * @import { Asset } from "./../loader/loader.js";
- */
-
-/**
- * @namespace audio
  */
 
 /**
@@ -50,19 +46,19 @@ let audioExts = [];
  * @ignore
  */
 let soundLoadError = function (sound_name, onerror_cb) {
-    // check the retry counter
-    if (retry_counter++ > 3) {
-        // something went wrong
-        let errmsg = "melonJS: failed loading " + sound_name;
-        {
-            // throw an exception and stop everything !
-            throw new Error(errmsg);
-        }
-    // else try loading again !
-    }
-    else {
-        audioTracks[sound_name].load();
-    }
+	// check the retry counter
+	if (retry_counter++ > 3) {
+		// something went wrong
+		let errmsg = "melonJS: failed loading " + sound_name;
+		{
+			onerror_cb?.();
+			// throw an exception and stop everything !
+			throw new Error(errmsg);
+		}
+		// else try loading again !
+	} else {
+		audioTracks[sound_name].load();
+	}
 };
 
 /**
@@ -70,9 +66,7 @@ let soundLoadError = function (sound_name, onerror_cb) {
  * if true, melonJS will throw an exception and stop loading<br>
  * if false, melonJS will disable sounds and output a warning message
  * in the console<br>
- * @type {boolean}
  * @default true
- * @memberof audio
  */
 let stopOnAudioError = true;
 
@@ -83,7 +77,6 @@ let stopOnAudioError = true;
  * webm has nearly full browser coverage with a great combination of compression and quality, and mp3 will fallback gracefully for other browsers.
  * It is important to remember that melonJS selects the first compatible sound based on the list of extensions and given order passed here.
  * So if you want webm to be used before mp3, you need to put the audio format in that order.
- * @memberof audio
  * @param {string} [format="mp3"] - audio format to prioritize ("mp3"|"mpeg"|"opus"|"ogg"|"oga"|"wav"|"aac"|"caf"|"m4a"|"m4b"|"mp4"|"weba"|"webm"|"dolby"|"flac")
  * @returns {boolean} Indicates whether audio initialization was successful
  * @example
@@ -94,52 +87,47 @@ let stopOnAudioError = true;
  * }
  */
 function init(format = "mp3") {
-    // convert it into an array
-    audioExts = format.split(",");
+	// convert it into an array
+	audioExts = format.split(",");
 
-    return !howler.Howler.noAudio;
+	return !howler.Howler.noAudio;
 }
 
 /**
  * check if the given audio format is supported
- * @memberof audio
  * @param {"mp3"|"mpeg"|"opus"|"ogg"|"oga"|"wav"|"aac"|"caf"|"m4a"|"m4b"|"mp4"|"weba"|"webm"|"dolby"|"flac"} codec - the audio format to check for support
  * @returns {boolean} return true if the given audio format is supported
  */
 function hasFormat(codec) {
-    return hasAudio() && howler.Howler.codecs(codec);
+	return hasAudio() && howler.Howler.codecs(codec);
 }
 
 /**
  * check if audio (HTML5 or WebAudio) is supported
- * @memberof audio
  * @returns {boolean} return true if audio (HTML5 or WebAudio) is supported
  */
 function hasAudio() {
-    return !howler.Howler.noAudio;
+	return !howler.Howler.noAudio;
 }
 
 /**
  * enable audio output <br>
  * only useful if audio supported and previously disabled through
- * @memberof audio
  * @see audio.disable
  */
 function enable() {
-    unmuteAll();
+	unmuteAll();
 }
 
 /**
  * disable audio output
- * @memberof audio
  */
 function disable() {
-    muteAll();
+	muteAll();
 }
 
 /**
  * Load an audio file
- * @memberof audio
  * @param {Asset} sound
  * @param {Function} [onloadcb] - function to be called when the resource is loaded
  * @param {Function} [onerrorcb] - function to be called in case of error
@@ -147,42 +135,43 @@ function disable() {
  * @returns {number} the amount of asset loaded (always 1 if successfull)
  */
 function load(sound, onloadcb, onerrorcb, settings = {}) {
-    let urls = [];
-    if (audioExts.length === 0) {
-        throw new Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
-    }
-    if (isDataUrl(sound.src) === true) {
-        urls.push(sound.src);
-    } else {
-        for (let i = 0; i < audioExts.length; i++) {
-            urls.push(sound.src + sound.name + "." + audioExts[i] + settings.nocache);
-        }
-    }
+	let urls = [];
+	if (audioExts.length === 0) {
+		throw new Error(
+			"target audio extension(s) should be set through me.audio.init() before calling the preloader.",
+		);
+	}
+	if (isDataUrl(sound.src) === true) {
+		urls.push(sound.src);
+	} else {
+		for (let i = 0; i < audioExts.length; i++) {
+			urls.push(sound.src + sound.name + "." + audioExts[i] + settings.nocache);
+		}
+	}
 
-    audioTracks[sound.name] = new howler.Howl({
-        src : urls,
-        volume : howler.Howler.volume(),
-        autoplay : sound.autoplay === true,
-        loop : sound.loop = true,
-        html5 : sound.stream === true || sound.html5 === true,
-        xhrWithCredentials : settings.withCredentials,
-        onloaderror() {
-            soundLoadError.call(this, sound.name, onerrorcb);
-        },
-        onload() {
-            retry_counter = 0;
-            if (typeof onloadcb === "function") {
-                onloadcb();
-            }
-        }
-    });
+	audioTracks[sound.name] = new howler.Howl({
+		src: urls,
+		volume: howler.Howler.volume(),
+		autoplay: sound.autoplay === true,
+		loop: (sound.loop = true),
+		html5: sound.stream === true || sound.html5 === true,
+		xhrWithCredentials: settings.withCredentials,
+		onloaderror() {
+			soundLoadError.call(this, sound.name, onerrorcb);
+		},
+		onload() {
+			retry_counter = 0;
+			if (typeof onloadcb === "function") {
+				onloadcb();
+			}
+		},
+	});
 
-    return 1;
+	return 1;
 }
 
 /**
  * play the specified sound
- * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {boolean} [loop=false] - loop audio
  * @param {Function} [onend] - Function to call when sound instance ends playing.
@@ -199,31 +188,32 @@ function load(sound, onloadcb, onerrorcb, settings = {}) {
  * me.audio.play("gameover_sfx", false, null, 0.5);
  */
 function play(sound_name, loop = false, onend, volume) {
-    let sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        let id = sound.play();
-        if (typeof loop === "boolean") {
-            // arg[0] can take different types in howler 2.0
-            sound.loop(loop, id);
-        }
-        sound.volume(typeof(volume) === "number" ? clamp(volume, 0.0, 1.0) : howler.Howler.volume(), id);
-        if (typeof(onend) === "function") {
-            if (loop === true) {
-                sound.on("end", onend, id);
-            }
-            else {
-                sound.once("end", onend, id);
-            }
-        }
-        return id;
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
+	let sound = audioTracks[sound_name];
+	if (sound && typeof sound !== "undefined") {
+		let id = sound.play();
+		if (typeof loop === "boolean") {
+			// arg[0] can take different types in howler 2.0
+			sound.loop(loop, id);
+		}
+		sound.volume(
+			typeof volume === "number" ? clamp(volume, 0.0, 1.0) : howler.Howler.volume(),
+			id,
+		);
+		if (typeof onend === "function") {
+			if (loop === true) {
+				sound.on("end", onend, id);
+			} else {
+				sound.once("end", onend, id);
+			}
+		}
+		return id;
+	} else {
+		throw new Error("audio clip " + sound_name + " does not exist");
+	}
 }
 
 /**
  * Fade a currently playing sound between two volumee.
- * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} from - Volume to fade from (0.0 to 1.0).
  * @param {number} to - Volume to fade to (0.0 to 1.0).
@@ -231,17 +221,16 @@ function play(sound_name, loop = false, onend, volume) {
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will fade.
  */
 function fade(sound_name, from, to, duration, id) {
-    let sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        sound.fade(from, to, duration, id);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
+	let sound = audioTracks[sound_name];
+	if (sound && typeof sound !== "undefined") {
+		sound.fade(from, to, duration, id);
+	} else {
+		throw new Error("audio clip " + sound_name + " does not exist");
+	}
 }
 
 /**
  * get/set the position of playback for a sound.
- * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} [seek] - the position to move current playback to (in seconds).
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will changed.
@@ -253,17 +242,16 @@ function fade(sound_name, from, to, duration, id) {
  * me.audio.seek("dst-gameforest", 0);
  */
 function seek(sound_name, ...args) {
-    let sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        return sound.seek(...args);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
+	let sound = audioTracks[sound_name];
+	if (sound && typeof sound !== "undefined") {
+		return sound.seek(...args);
+	} else {
+		throw new Error("audio clip " + sound_name + " does not exist");
+	}
 }
 
 /**
  * get or set the rate of playback for a sound.
- * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} [rate] - playback rate : 0.5 to 4.0, with 1.0 being normal speed.
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will be changed.
@@ -275,17 +263,16 @@ function seek(sound_name, ...args) {
  * me.audio.rate("dst-gameforest", 2.0);
  */
 function rate(sound_name, ...args) {
-    let sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        return sound.rate(...args);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
+	let sound = audioTracks[sound_name];
+	if (sound && typeof sound !== "undefined") {
+		return sound.rate(...args);
+	} else {
+		throw new Error("audio clip " + sound_name + " does not exist");
+	}
 }
 
 /**
  * get or set the stereo panning for the specified sound.
- * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} [pan] - the panning value - A value of -1.0 is all the way left and 1.0 is all the way right.
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will be changed.
@@ -294,17 +281,16 @@ function rate(sound_name, ...args) {
  * me.audio.stereo("cling", -1);
  */
 function stereo(sound_name, pan, id) {
-    let sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        return sound.stereo(pan, id);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
+	let sound = audioTracks[sound_name];
+	if (sound && typeof sound !== "undefined") {
+		return sound.stereo(pan, id);
+	} else {
+		throw new Error("audio clip " + sound_name + " does not exist");
+	}
 }
 
 /**
  * get or set the 3D spatial position for the specified sound.
- * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param  {Number} x - the x-position of the audio source.
  * @param  {Number} y - the y-position of the audio source.
@@ -313,18 +299,17 @@ function stereo(sound_name, pan, id) {
  * @return {Array} the current 3D spatial position: [x, y, z]
  */
 function position(sound_name, x, y, z, id) {
-    let sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        return sound.pos(x, y, z, id);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
+	let sound = audioTracks[sound_name];
+	if (sound && typeof sound !== "undefined") {
+		return sound.pos(x, y, z, id);
+	} else {
+		throw new Error("audio clip " + sound_name + " does not exist");
+	}
 }
 
 /**
  * Get/set the direction the audio source is pointing in the 3D cartesian coordinate space.
  * Depending on how direction the sound is, based on the `cone` attributes, a sound pointing away from the listener can be quiet or silent.
- * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param  {Number} x - the x-orientation of the audio source.
  * @param  {Number} y - the y-orientation of the audio source.
@@ -333,18 +318,17 @@ function position(sound_name, x, y, z, id) {
  * @return {Array} the current 3D spatial orientation: [x, y, z]
  */
 function orientation(sound_name, x, y, z, id) {
-    let sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        return sound.orientation(x, y, z, id);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
+	let sound = audioTracks[sound_name];
+	if (sound && typeof sound !== "undefined") {
+		return sound.orientation(x, y, z, id);
+	} else {
+		throw new Error("audio clip " + sound_name + " does not exist");
+	}
 }
 
 /**
  * get or set the panner node's attributes for a sound or group of sounds.
  * See {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Web_audio_spatialization_basics#creating_a_panner_node}
- * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {object} [attribute] - the panner attributes to set
  * @param {string} [settings.coneInnerAngle=360] - A parameter for directional audio sources, this is an angle, in degrees, inside of which there will be no volume reduction.
@@ -366,58 +350,55 @@ function orientation(sound_name, x, y, z, id) {
  * });
  */
 function panner(sound_name, attributes, id) {
-    let sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        return sound.pannerAttr(attributes, id);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
+	let sound = audioTracks[sound_name];
+	if (sound && typeof sound !== "undefined") {
+		return sound.pannerAttr(attributes, id);
+	} else {
+		throw new Error("audio clip " + sound_name + " does not exist");
+	}
 }
 
 /**
  * stop the specified sound on all channels
- * @memberof audio
  * @param {string} [sound_name] - audio clip name (case sensitive). If none is passed, all sounds are stopped.
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will stop.
  * @example
  * me.audio.stop("cling");
  */
 function stop(sound_name, id) {
-    if (typeof sound_name !== "undefined") {
-        let sound = audioTracks[sound_name];
-        if (sound && typeof sound !== "undefined") {
-            sound.stop(id);
-            // remove the defined onend callback (if any defined)
-            sound.off("end", undefined, id);
-        } else {
-            throw new Error("audio clip " + sound_name + " does not exist");
-        }
-    } else {
-        howler.Howler.stop();
-    }
+	if (typeof sound_name !== "undefined") {
+		let sound = audioTracks[sound_name];
+		if (sound && typeof sound !== "undefined") {
+			sound.stop(id);
+			// remove the defined onend callback (if any defined)
+			sound.off("end", undefined, id);
+		} else {
+			throw new Error("audio clip " + sound_name + " does not exist");
+		}
+	} else {
+		howler.Howler.stop();
+	}
 }
 
 /**
  * pause the specified sound on all channels<br>
  * this function does not reset the currentTime property
- * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will pause.
  * @example
  * me.audio.pause("cling");
  */
 function pause(sound_name, id) {
-    let sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        sound.pause(id);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
+	let sound = audioTracks[sound_name];
+	if (sound && typeof sound !== "undefined") {
+		sound.pause(id);
+	} else {
+		throw new Error("audio clip " + sound_name + " does not exist");
+	}
 }
 
 /**
  * resume the specified sound on all channels<br>
- * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will resume.
  * @example
@@ -431,19 +412,18 @@ function pause(sound_name, id) {
  * me.audio.resume("myClip", id);
  */
 function resume(sound_name, id) {
-    let sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        sound.play(id);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
+	let sound = audioTracks[sound_name];
+	if (sound && typeof sound !== "undefined") {
+		sound.play(id);
+	} else {
+		throw new Error("audio clip " + sound_name + " does not exist");
+	}
 }
 
 /**
  * play the specified audio track<br>
  * this function automatically set the loop property to true<br>
  * and keep track of the current sound being played.
- * @memberof audio
  * @param {string} sound_name - audio track name - case sensitive
  * @param {number} [volume=default] - Float specifying volume (0.0 - 1.0 values accepted).
  * @returns {number} the sound instance ID.
@@ -451,18 +431,12 @@ function resume(sound_name, id) {
  * me.audio.playTrack("awesome_music");
  */
 function playTrack(sound_name, volume) {
-    current_track_id = sound_name;
-    return play(
-        current_track_id,
-        true,
-        null,
-        volume
-    );
+	current_track_id = sound_name;
+	return play(current_track_id, true, null, volume);
 }
 
 /**
  * stop the current audio track
- * @memberof audio
  * @see audio.playTrack
  * @example
  * // play a awesome music
@@ -471,27 +445,25 @@ function playTrack(sound_name, volume) {
  * me.audio.stopTrack();
  */
 function stopTrack() {
-    if (current_track_id !== null) {
-        audioTracks[current_track_id].stop();
-        current_track_id = null;
-    }
+	if (current_track_id !== null) {
+		audioTracks[current_track_id].stop();
+		current_track_id = null;
+	}
 }
 
 /**
  * pause the current audio track
- * @memberof audio
  * @example
  * me.audio.pauseTrack();
  */
 function pauseTrack() {
-    if (current_track_id !== null) {
-        audioTracks[current_track_id].pause();
-    }
+	if (current_track_id !== null) {
+		audioTracks[current_track_id].pause();
+	}
 }
 
 /**
  * resume the previously paused audio track
- * @memberof audio
  * @example
  * // play an awesome music
  * me.audio.playTrack("awesome_music");
@@ -501,41 +473,37 @@ function pauseTrack() {
  * me.audio.resumeTrack();
  */
 function resumeTrack() {
-    if (current_track_id !== null) {
-        audioTracks[current_track_id].play();
-    }
+	if (current_track_id !== null) {
+		audioTracks[current_track_id].play();
+	}
 }
 
 /**
  * returns the current track Id
- * @memberof audio
  * @returns {string} audio track name
  */
 function getCurrentTrack() {
-    return current_track_id;
+	return current_track_id;
 }
 
 /**
  * set the default global volume
- * @memberof audio
  * @param {number} volume - Float specifying volume (0.0 - 1.0 values accepted).
  */
 function setVolume(volume) {
-    howler.Howler.volume(volume);
+	howler.Howler.volume(volume);
 }
 
 /**
  * get the default global volume
- * @memberof audio
  * @returns {number} current volume value in Float [0.0 - 1.0] .
  */
 function getVolume() {
-    return howler.Howler.volume();
+	return howler.Howler.volume();
 }
 
 /**
  * mute or unmute the specified sound, but does not pause the playback.
- * @memberof audio
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will mute.
  * @param {boolean} [mute=true] - True to mute and false to unmute
@@ -544,80 +512,74 @@ function getVolume() {
  * me.audio.mute("awesome_music");
  */
 function mute(sound_name, id, mute = true) {
-    let sound = audioTracks[sound_name];
-    if (sound && typeof(sound) !== "undefined") {
-        sound.mute(mute, id);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
+	let sound = audioTracks[sound_name];
+	if (sound && typeof sound !== "undefined") {
+		sound.mute(mute, id);
+	} else {
+		throw new Error("audio clip " + sound_name + " does not exist");
+	}
 }
 
 /**
  * unmute the specified sound
- * @memberof audio
  * @param {string} sound_name - audio clip name
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will unmute.
  */
 function unmute(sound_name, id) {
-    mute(sound_name, id, false);
+	mute(sound_name, id, false);
 }
 
 /**
  * mute all audio
- * @memberof audio
  */
 function muteAll() {
-    howler.Howler.mute(true);
+	howler.Howler.mute(true);
 }
 
 /**
  * unmute all audio
- * @memberof audio
  */
 function unmuteAll() {
-    howler.Howler.mute(false);
+	howler.Howler.mute(false);
 }
 
 /**
  * Returns true if audio is muted globally.
- * @memberof audio
  * @returns {boolean} true if audio is muted globally
  */
 function muted() {
-    return howler.Howler._muted;
+	return howler.Howler._muted;
 }
 
 /**
  * unload specified audio track to free memory
- * @memberof audio
  * @param {string} sound_name - audio track name - case sensitive
  * @returns {boolean} true if unloaded
  * @example
  * me.audio.unload("awesome_music");
  */
 function unload(sound_name) {
-    if (!(sound_name in audioTracks)) {
-        return false;
-    }
+	if (!(sound_name in audioTracks)) {
+		return false;
+	}
 
-    // destroy the Howl object
-    audioTracks[sound_name].unload();
-    delete audioTracks[sound_name];
-    return true;
+	// destroy the Howl object
+	audioTracks[sound_name].unload();
+	delete audioTracks[sound_name];
+	return true;
 }
 
 /**
  * unload all audio to free memory
- * @memberof audio
  * @example
  * me.audio.unloadAll();
  */
 function unloadAll() {
-    for (let sound_name in audioTracks) {
-        if (audioTracks.hasOwnProperty(sound_name)) {
-            unload(sound_name);
-        }
-    }
+	for (let sound_name in audioTracks) {
+		if (audioTracks.hasOwnProperty(sound_name)) {
+			unload(sound_name);
+		}
+	}
 }
 
 export { disable, enable, fade, getCurrentTrack, getVolume, hasAudio, hasFormat, init, load, mute, muteAll, muted, orientation, panner, pause, pauseTrack, play, playTrack, position, rate, resume, resumeTrack, seek, setVolume, stereo, stop, stopOnAudioError, stopTrack, unload, unloadAll, unmute, unmuteAll };

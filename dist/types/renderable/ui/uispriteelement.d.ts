@@ -64,7 +64,6 @@ export default class UISpriteElement extends Sprite {
     clicked(event: any): boolean | undefined;
     /**
      * function called when the object is pressed (to be extended)
-     * @param {Pointer} event - the event object
      * @returns {boolean} return false if we need to stop propagating the event
      */
     onClick(): boolean;

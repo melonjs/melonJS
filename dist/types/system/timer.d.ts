@@ -82,16 +82,6 @@ declare class Timer {
      */
     setInterval(fn: Function, delay: number, pauseable?: boolean | undefined, ...args: any[]): number;
     /**
-     * Cancels a timeout previously established by calling setTimeout().
-     * @param {number} timeoutID - ID of the timeout to be cancelled
-     */
-    clearTimeout(timeoutID: number): void;
-    /**
-     * cancels the timed, repeating action which was previously established by a call to setInterval().
-     * @param {number} intervalID - ID of the interval to be cleared
-     */
-    clearInterval(intervalID: number): void;
-    /**
      * Return the current timestamp in milliseconds <br>
      * since the game has started or since linux epoch (based on browser support for High Resolution Timer)
      * @returns {number}

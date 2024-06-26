@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.4.0
+ * melonJS Game Engine - v17.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -15,32 +15,32 @@
  * @ignore
  */
 function preloadJavascript(data, onload, onerror, settings) {
-    let script = globalThis.document.createElement("script");
+	let script = globalThis.document.createElement("script");
 
-    script.src = data.src;
-    script.type = "text/javascript";
-    if (typeof (crossOrigin) === "string") {
-        script.crossOrigin = settings.crossOrigin;
-    }
-    script.defer = true;
+	script.src = data.src;
+	script.type = "text/javascript";
+	if (typeof crossOrigin === "string") {
+		script.crossOrigin = settings.crossOrigin;
+	}
+	script.defer = true;
 
-    if (typeof onload === "function") {
-        script.onload = () => {
-            // callback
-            onload();
-        };
-    }
+	if (typeof onload === "function") {
+		script.onload = () => {
+			// callback
+			onload();
+		};
+	}
 
-    if (typeof onerror === "function") {
-        script.onerror = () => {
-            // callback
-            onerror(data.name);
-        };
-    }
+	if (typeof onerror === "function") {
+		script.onerror = () => {
+			// callback
+			onerror(data.name);
+		};
+	}
 
-    globalThis.document.getElementsByTagName("body")[0].appendChild(script);
+	globalThis.document.getElementsByTagName("body")[0].appendChild(script);
 
-    return 1;
+	return 1;
 }
 
 export { preloadJavascript };

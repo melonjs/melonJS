@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.4.0
+ * melonJS Game Engine - v17.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -52,7 +52,7 @@ const EPSILON = 0.000001;
  * @returns {boolean}
  */
 function isPowerOfTwo(val) {
-    return (val & (val - 1)) === 0;
+	return (val & (val - 1)) === 0;
 }
 
 /**
@@ -62,19 +62,19 @@ function isPowerOfTwo(val) {
  * @returns {boolean}
  */
 function isPowerOfFour(val) {
-    if (val === 0 || val === 2 || val === 3) {
-        return false;
-    }
-    if (val === 1) {
-        return true;
-    }
+	if (val === 0 || val === 2 || val === 3) {
+		return false;
+	}
+	if (val === 1) {
+		return true;
+	}
 
-    if ((val & (val - 1)) === 0) {
-        if ((val & 0xAAAAAAAA) === 0) {
-            return true;
-        }
-    }
-    return false;
+	if ((val & (val - 1)) === 0) {
+		if ((val & 0xaaaaaaaa) === 0) {
+			return true;
+		}
+	}
+	return false;
 }
 
 /**
@@ -84,14 +84,14 @@ function isPowerOfFour(val) {
  * @returns {boolean}
  */
 function nextPowerOfTwo(val) {
-    val --;
-    val |= val >> 1;
-    val |= val >> 2;
-    val |= val >> 4;
-    val |= val >> 8;
-    val |= val >> 16;
-    val ++;
-    return val;
+	val--;
+	val |= val >> 1;
+	val |= val >> 2;
+	val |= val >> 4;
+	val |= val >> 8;
+	val |= val >> 16;
+	val++;
+	return val;
 }
 
 /**
@@ -104,7 +104,7 @@ function nextPowerOfTwo(val) {
  * me.Math.degToRad(60); // return 1.0471...
  */
 function degToRad(angle) {
-    return angle * DEG_TO_RAD;
+	return angle * DEG_TO_RAD;
 }
 
 /**
@@ -117,7 +117,7 @@ function degToRad(angle) {
  * me.Math.radToDeg(1.0471975511965976); // return 60
  */
 function radToDeg(radians) {
-    return radians * RAD_TO_DEG;
+	return radians * RAD_TO_DEG;
 }
 
 /**
@@ -129,7 +129,7 @@ function radToDeg(radians) {
  * @returns {number} clamped value
  */
 function clamp(val, low, high) {
-    return val < low ? low : val > high ? high : +val;
+	return val < low ? low : val > high ? high : +val;
 }
 
 /**
@@ -143,7 +143,7 @@ function clamp(val, low, high) {
  * console.log(me.Math.random(5, 10) );
  */
 function random(min, max) {
-    return (~~(Math.random() * (max - min)) + min);
+	return ~~(Math.random() * (max - min)) + min;
 }
 
 /**
@@ -157,7 +157,7 @@ function random(min, max) {
  * console.log(me.Math.randomFloat(5, 10) );
  */
 function randomFloat(min, max) {
-    return (Math.random() * (max - min)) + min;
+	return Math.random() * (max - min) + min;
 }
 
 /**
@@ -171,7 +171,7 @@ function randomFloat(min, max) {
  * console.log(me.Math.weightedRandom(5, 10) );
  */
 function weightedRandom(min, max) {
-    return (~~(Math.pow(Math.random(), 2) * (max - min)) + min);
+	return ~~(Math.pow(Math.random(), 2) * (max - min)) + min;
 }
 
 /**
@@ -185,9 +185,9 @@ function weightedRandom(min, max) {
  * me.Math.round(10.33333, 2); // return 10.33
  */
 function round(num, dec = 0) {
-    // if only one argument use the object value
-    const powres = Math.pow(10, dec);
-    return (~~(0.5 + num * powres) / powres);
+	// if only one argument use the object value
+	const powres = Math.pow(10, dec);
+	return ~~(0.5 + num * powres) / powres;
 }
 
 /**
@@ -204,9 +204,8 @@ function round(num, dec = 0) {
  * }
  */
 function toBeCloseTo(expected, actual, precision = 2) {
-    return Math.abs(expected - actual) < (Math.pow(10, -precision) / 2);
+	return Math.abs(expected - actual) < Math.pow(10, -precision) / 2;
 }
-
 
 /**
  * Calculates the power of a number.
@@ -215,7 +214,7 @@ function toBeCloseTo(expected, actual, precision = 2) {
  * @returns {number} The result of raising the number to the power of 2.
  */
 function pow(n) {
-    return Math.pow(n, 2);
+	return Math.pow(n, 2);
 }
 
 export { DEG_TO_RAD, EPSILON, ETA, RAD_TO_DEG, TAU, clamp, degToRad, isPowerOfFour, isPowerOfTwo, nextPowerOfTwo, pow, radToDeg, random, randomFloat, round, toBeCloseTo, weightedRandom };

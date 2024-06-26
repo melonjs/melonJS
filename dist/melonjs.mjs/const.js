@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.4.0
+ * melonJS Game Engine - v17.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -7,25 +7,16 @@
  */
 /**
  * constant to select the HTML5 Canvas renderer
- * @type {number}
- * @static
- * @see Application
  */
 const CANVAS = 0;
 
 /**
  * constant to select select the WebGL renderer
- * @type {number}
- * @static
- * @see Application
  */
 const WEBGL = 1;
 
 /**
  * constant to auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
- * @static
- * @type {number}
- * @see Application
  */
 const AUTO = 2;
 

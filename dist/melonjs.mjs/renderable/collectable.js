@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.4.0
+ * melonJS Game Engine - v17.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -11,50 +11,45 @@ import collision from '../physics/collision.js';
 import pool from '../system/pooling.js';
 
 /**
- * @classdesc
  * a basic collectable helper class for immovable object (e.g. a coin)
- * @augments Sprite
  */
 class Collectable extends Sprite {
-    /**
-     * @param {number} x - the x coordinates of the collectable
-     * @param {number} y - the y coordinates of the collectable
-     * @param {object} settings - See {@link Sprite}
-     */
-    constructor(x, y, settings) {
+	/**
+	 * @param {number} x - the x coordinates of the collectable
+	 * @param {number} y - the y coordinates of the collectable
+	 * @param {object} settings - See {@link Sprite}
+	 */
+	constructor(x, y, settings) {
+		// call the super constructor
+		super(x, y, settings);
 
-        // call the super constructor
-        super(x, y, settings);
+		this.name = settings.name;
+		this.type = settings.type;
+		this.id = settings.id;
 
-        this.name = settings.name;
-        this.type = settings.type;
-        this.id = settings.id;
+		// add and configure the physic body
+		let shape = settings.shapes;
+		if (typeof shape === "undefined") {
+			shape = pool.pull("Polygon", 0, 0, [
+				pool.pull("Vector2d", 0, 0),
+				pool.pull("Vector2d", this.width, 0),
+				pool.pull("Vector2d", this.width, this.height),
+			]);
+		}
+		this.body = new Body(this, shape);
+		this.body.collisionType = collision.types.COLLECTABLE_OBJECT;
+		// by default only collides with PLAYER_OBJECT
+		this.body.setCollisionMask(collision.types.PLAYER_OBJECT);
+		this.body.setStatic(true);
 
-        // add and configure the physic body
-        let shape = settings.shapes;
-        if (typeof shape === "undefined") {
-            shape = pool.pull("Polygon", 0, 0, [
-                pool.pull("Vector2d", 0,          0),
-                pool.pull("Vector2d", this.width, 0),
-                pool.pull("Vector2d", this.width, this.height)
-            ]);
-        }
-        this.body = new Body(this, shape);
-        this.body.collisionType = collision.types.COLLECTABLE_OBJECT;
-        // by default only collides with PLAYER_OBJECT
-        this.body.setCollisionMask(collision.types.PLAYER_OBJECT);
-        this.body.setStatic(true);
-
-        // Update anchorPoint
-        if (settings.anchorPoint) {
-            this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
-        } else {
-            // for backward compatibility
-            this.anchorPoint.set(0, 0);
-        }
-
-    }
-
+		// Update anchorPoint
+		if (settings.anchorPoint) {
+			this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
+		} else {
+			// for backward compatibility
+			this.anchorPoint.set(0, 0);
+		}
+	}
 }
 
 export { Collectable as default };

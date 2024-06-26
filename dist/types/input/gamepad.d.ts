@@ -1,12 +1,9 @@
 /**
  * Associate a gamepad event to a keycode
- * @name bindGamepad
- * @memberof input
- * @public
  * @param {number} index - Gamepad index
  * @param {object} button - Button/Axis definition
  * @param {string} button.type - "buttons" or "axes"
- * @param {number} button.code - button or axis code id (See {@link input.GAMEPAD.BUTTONS}, {@link input.GAMEPAD.AXES})
+ * @param {number} button.code - button or axis code id (See {@link input.GAMEPAD})
  * @param {number} [button.threshold=1] - value indicating when the axis should trigger the keycode (e.g. -0.5 or 0.5)
  * @param {number} keyCode - (See {@link input.KEY})
  * @example
@@ -25,11 +22,8 @@ export function bindGamepad(index: number, button: {
 }, keyCode: number): void;
 /**
  * unbind the defined keycode
- * @name unbindGamepad
- * @memberof input
- * @public
  * @param {number} index - Gamepad index
- * @param {number} button - (See {@link input.GAMEPAD.BUTTONS})
+ * @param {number} button - (See {@link input.GAMEPAD})
  * @example
  * me.input.unbindGamepad(0, me.input.GAMEPAD.BUTTONS.FACE_1);
  */
@@ -37,9 +31,6 @@ export function unbindGamepad(index: number, button: number): void;
 /**
  * Set deadzone for analog gamepad inputs<br>
  * The default deadzone is 0.1 (10%) Analog values less than this will be ignored
- * @name setGamepadDeadzone
- * @memberof input
- * @public
  * @param {number} value - Deadzone value
  */
 export function setGamepadDeadzone(value: number): void;

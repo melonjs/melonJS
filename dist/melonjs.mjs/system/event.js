@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.4.0
+ * melonJS Game Engine - v17.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -137,7 +137,7 @@ const STATE_CHANGE = "me.state.onChange";
  * @name STAGE_RESET
  * @memberof event
  * @see event.on
-*/
+ */
 const STAGE_RESET = "me.stage.onReset";
 
 /**
@@ -236,7 +236,6 @@ const GAME_BEFORE_DRAW = "me.game.beforeDraw";
  * @see event.on
  */
 const GAME_AFTER_DRAW = "me.game.afterDraw";
-
 
 /**
  * Event for when the physic world is updated
@@ -556,7 +555,7 @@ const ONCONTEXT_RESTORED = "renderer.contextrestored";
  * me.event.emit("event-name", a, b, c);
  */
 function emit(eventName, ...args) {
-    return eventEmitter.emit(eventName, ...args);
+	return eventEmitter.emit(eventName, ...args);
 }
 
 /**
@@ -571,7 +570,7 @@ function emit(eventName, ...args) {
  * me.event.on("event-name", myFunction, this);
  */
 function on(eventName, listener, context) {
-    return eventEmitter.on(eventName, listener, context);
+	return eventEmitter.on(eventName, listener, context);
 }
 
 /**
@@ -586,7 +585,7 @@ function on(eventName, listener, context) {
  * me.event.once("event-name", myFunction, this);
  */
 function once(eventName, listener, context) {
-    return eventEmitter.once(eventName, listener, context);
+	return eventEmitter.once(eventName, listener, context);
 }
 
 /**
@@ -600,7 +599,7 @@ function once(eventName, listener, context) {
  * me.event.off("event-name", myFunction);
  */
 function off(eventName, listener) {
-    return eventEmitter.off(eventName, listener);
+	return eventEmitter.off(eventName, listener);
 }
 
 export { BLUR, BOOT, CANVAS_ONRESIZE, DOM_READY, DRAGEND, DRAGSTART, FOCUS, GAMEPAD_CONNECTED, GAMEPAD_DISCONNECTED, GAMEPAD_UPDATE, GAME_AFTER_DRAW, GAME_AFTER_UPDATE, GAME_BEFORE_DRAW, GAME_BEFORE_UPDATE, GAME_INIT, GAME_RESET, GAME_UPDATE, KEYDOWN, KEYUP, LEVEL_LOADED, LOADER_COMPLETE, LOADER_ERROR, LOADER_PROGRESS, ONCONTEXT_LOST, ONCONTEXT_RESTORED, POINTERLOCKCHANGE, POINTERMOVE, STAGE_RESET, STATE_CHANGE, STATE_PAUSE, STATE_RESTART, STATE_RESUME, STATE_STOP, TICK, VIDEO_INIT, VIEWPORT_ONCHANGE, VIEWPORT_ONRESIZE, WINDOW_ONORIENTATION_CHANGE, WINDOW_ONRESIZE, WINDOW_ONSCROLL, WORLD_STEP, emit, off, on, once };

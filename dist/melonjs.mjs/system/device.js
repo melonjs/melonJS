@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.4.0
+ * melonJS Game Engine - v17.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -22,7 +22,16 @@ let deviceOrientationInitialized = false;
 // swipe utility fn & flag
 let swipeEnabled = true;
 // a cache DOMRect object
-let domRect = {left: 0, top: 0, x: 0, y: 0, width: 0, height: 0, right: 0, bottom: 0};
+let domRect = {
+	left: 0,
+	top: 0,
+	x: 0,
+	y: 0,
+	width: 0,
+	height: 0,
+	right: 0,
+	bottom: 0,
+};
 
 // a list of supported videoCodecs;
 let videoCodecs;
@@ -31,30 +40,33 @@ let videoCodecs;
 let WebGLSupport = -1;
 
 function disableSwipeFn(e) {
-    e.preventDefault();
-    if (typeof globalThis.scroll === "function") {
-        globalThis.scroll(0, 0);
-    }
-    return false;
+	e.preventDefault();
+	if (typeof globalThis.scroll === "function") {
+		globalThis.scroll(0, 0);
+	}
+	return false;
 }
 
 function hasLocalStorage() {
-    try {
-        return !!globalThis.localStorage;
-    } catch {
-        // the above generates an exception when cookies are blocked
-        return false;
-    }
+	try {
+		return !!globalThis.localStorage;
+	} catch {
+		// the above generates an exception when cookies are blocked
+		return false;
+	}
 }
 
 function hasOffscreenCanvas() {
-    try {
-        // some browser (e.g. Safari) implements WebGL1 and WebGL2 contexts only
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=801176
-        return (typeof globalThis.OffscreenCanvas !== "undefined") && ((new globalThis.OffscreenCanvas(0, 0).getContext("2d")) !== null);
-    } catch {
-        return false;
-    }
+	try {
+		// some browser (e.g. Safari) implements WebGL1 and WebGL2 contexts only
+		// https://bugzilla.mozilla.org/show_bug.cgi?id=801176
+		return (
+			typeof globalThis.OffscreenCanvas !== "undefined" &&
+			new globalThis.OffscreenCanvas(0, 0).getContext("2d") !== null
+		);
+	} catch {
+		return false;
+	}
 }
 
 /**
@@ -62,10 +74,10 @@ function hasOffscreenCanvas() {
  * @ignore
  */
 function onDeviceMotion(e) {
-    // Accelerometer information
-    accelerationX = e.accelerationIncludingGravity.x;
-    accelerationY = e.accelerationIncludingGravity.y;
-    accelerationZ = e.accelerationIncludingGravity.z;
+	// Accelerometer information
+	accelerationX = e.accelerationIncludingGravity.x;
+	accelerationY = e.accelerationIncludingGravity.y;
+	accelerationZ = e.accelerationIncludingGravity.z;
 }
 
 /**
@@ -73,9 +85,9 @@ function onDeviceMotion(e) {
  * @ignore
  */
 function onDeviceRotate(e) {
-    gamma = e.gamma;
-    beta = e.beta;
-    alpha = e.alpha;
+	gamma = e.gamma;
+	beta = e.beta;
+	alpha = e.alpha;
 }
 
 /**
@@ -108,7 +120,8 @@ const pointerEvent = !!globalThis.PointerEvent;
  * @type {boolean}
  * @readonly
  */
-const touch = touchEvent || (pointerEvent && globalThis.navigator.maxTouchPoints > 0);
+const touch =
+	touchEvent || (pointerEvent && globalThis.navigator.maxTouchPoints > 0);
 
 /**
  * the maximum number of simultaneous touch contact points are supported by the current device.
@@ -120,7 +133,11 @@ const touch = touchEvent || (pointerEvent && globalThis.navigator.maxTouchPoints
  *     // device supports multi-touch
  * }
  */
-const maxTouchPoints = touch ? (pointerEvent ? globalThis.navigator.maxTouchPoints || 1 : 10) : 1;
+const maxTouchPoints = touch
+	? pointerEvent
+		? globalThis.navigator.maxTouchPoints || 1
+		: 10
+	: 1;
 
 /**
  * W3C standard wheel events
@@ -128,8 +145,9 @@ const maxTouchPoints = touch ? (pointerEvent ? globalThis.navigator.maxTouchPoin
  * @type {boolean}
  * @readonly
  */
-const wheel = typeof globalThis.document !== "undefined" && "onwheel" in globalThis.document.createElement("div");
-
+const wheel =
+	typeof globalThis.document !== "undefined" &&
+	"onwheel" in globalThis.document.createElement("div");
 
 /**
  * Browser pointerlock api support
@@ -137,7 +155,9 @@ const wheel = typeof globalThis.document !== "undefined" && "onwheel" in globalT
  * @type {boolean}
  * @readonly
  */
-const hasPointerLockSupport = typeof globalThis.document !== "undefined" && typeof globalThis.document.pointerLockElement !== "undefined";
+const hasPointerLockSupport =
+	typeof globalThis.document !== "undefined" &&
+	typeof globalThis.document.pointerLockElement !== "undefined";
 
 /**
  * Browser device orientation
@@ -154,7 +174,8 @@ const hasDeviceOrientation = !!globalThis.DeviceOrientationEvent;
  * @type {boolean}
  * @readonly
  */
-const screenOrientation = (typeof screen !== "undefined") && (typeof screen.orientation !== "undefined");
+const screenOrientation =
+	typeof screen !== "undefined" && typeof screen.orientation !== "undefined";
 
 /**
  * Browser accelerometer capabilities
@@ -170,10 +191,15 @@ const hasAccelerometer = !!globalThis.DeviceMotionEvent;
  * @type {boolean}
  * @readonly
  */
-const hasFullscreenSupport = typeof globalThis.document !== "undefined" && (prefixed("fullscreenEnabled", globalThis.document) || globalThis.document.mozFullScreenEnabled);
+const hasFullscreenSupport =
+	typeof globalThis.document !== "undefined" &&
+	(prefixed("fullscreenEnabled", globalThis.document) ||
+		globalThis.document.mozFullScreenEnabled);
 
 if (hasFullscreenSupport === true) {
-    globalThis.document.exitFullscreen = prefixed("cancelFullScreen", globalThis.document) || prefixed("exitFullscreen", globalThis.document);
+	globalThis.document.exitFullscreen =
+		prefixed("cancelFullScreen", globalThis.document) ||
+		prefixed("exitFullscreen", globalThis.document);
 }
 
 /**
@@ -182,7 +208,9 @@ if (hasFullscreenSupport === true) {
  * @type {boolean}
  * @readonly
  */
-const hasWebAudio = !!(globalThis.AudioContext || globalThis.webkitAudioContext);
+const hasWebAudio = !!(
+	globalThis.AudioContext || globalThis.webkitAudioContext
+);
 
 /**
  * Device HTML5Audio Support
@@ -190,7 +218,7 @@ const hasWebAudio = !!(globalThis.AudioContext || globalThis.webkitAudioContext)
  * @type {boolean}
  * @readonly
  */
-const hasHTML5Audio = (typeof globalThis.Audio !== "undefined");
+const hasHTML5Audio = typeof globalThis.Audio !== "undefined";
 
 /**
  * Returns true if the browser/device has audio capabilities.
@@ -200,15 +228,15 @@ const hasHTML5Audio = (typeof globalThis.Audio !== "undefined");
  */
 const sound = hasWebAudio || hasHTML5Audio;
 
-
 /**
  * Device Video Support
  * @memberof device
  * @type {boolean}
  * @readonly
  */
-const hasVideo = typeof globalThis.document !== "undefined" &&  !!globalThis.document.createElement("video").canPlayType;
-
+const hasVideo =
+	typeof globalThis.document !== "undefined" &&
+	!!globalThis.document.createElement("video").canPlayType;
 
 /**
  * Browser Local Storage capabilities <br>
@@ -233,7 +261,7 @@ const offscreenCanvas = hasOffscreenCanvas();
  * @type {boolean}
  * @readonly
  */
-const nativeBase64 = (typeof(globalThis.atob) === "function");
+const nativeBase64 = typeof globalThis.atob === "function";
 
 /**
  * a string representing the preferred language of the user, usually the language of the browser UI.
@@ -243,7 +271,13 @@ const nativeBase64 = (typeof(globalThis.atob) === "function");
  * @readonly
  * @see http://www.w3schools.com/tags/ref_language_codes.asp
  */
-const language = typeof globalThis.navigator !== "undefined" ? globalThis.navigator.language || globalThis.navigator.browserLanguage || globalThis.navigator.userLanguage || "en" : "en";
+const language =
+	typeof globalThis.navigator !== "undefined"
+		? globalThis.navigator.language ||
+			globalThis.navigator.browserLanguage ||
+			globalThis.navigator.userLanguage ||
+			"en"
+		: "en";
 
 /**
  * Ratio of the resolution in physical pixels to the resolution in CSS pixels for the current display device.
@@ -357,82 +391,94 @@ let stopOnBlur = false;
 let autoFocus = true;
 
 /**
-* specify a function to execute when the Device is fully loaded and ready
-* @memberof device
-* @param {Function} fn - the function to be executed
-* @example
-* // small game skeleton
-* let game = {
-*    // called by the me.device.onReady function
-*    onload = function () {
-*       // init video
-*       if (!me.video.init('screen', 640, 480, true)) {
-*          alert("Sorry but your browser does not support html 5 canvas.");
-*          return;
-*       }
-*
-*       // initialize the "audio"
-*       me.audio.init("mp3,ogg");
-*
-*       // set callback for ressources loaded event
-*       me.loader.onload = this.loaded.bind(this);
-*
-*       // set all ressources to be loaded
-*       me.loader.preload(game.assets);
-*
-*       // load everything & display a loading screen
-*       me.state.change(me.state.LOADING);
-*    };
-*
-*    // callback when everything is loaded
-*    loaded = function () {
-*       // define stuff
-*       // ....
-*
-*       // change to the menu screen
-*       me.state.change(me.state.PLAY);
-*    }
-* }; // game
-*
-* // "bootstrap"
-* me.device.onReady(function () {
-*    game.onload();
-* });
-*/
+ * specify a function to execute when the Device is fully loaded and ready
+ * @memberof device
+ * @param {Function} fn - the function to be executed
+ * @example
+ * // small game skeleton
+ * let game = {
+ *    // called by the me.device.onReady function
+ *    onload = function () {
+ *       // init video
+ *       if (!me.video.init('screen', 640, 480, true)) {
+ *          alert("Sorry but your browser does not support html 5 canvas.");
+ *          return;
+ *       }
+ *
+ *       // initialize the "audio"
+ *       me.audio.init("mp3,ogg");
+ *
+ *       // set callback for ressources loaded event
+ *       me.loader.onload = this.loaded.bind(this);
+ *
+ *       // set all ressources to be loaded
+ *       me.loader.preload(game.assets);
+ *
+ *       // load everything & display a loading screen
+ *       me.state.change(me.state.LOADING);
+ *    };
+ *
+ *    // callback when everything is loaded
+ *    loaded = function () {
+ *       // define stuff
+ *       // ....
+ *
+ *       // change to the menu screen
+ *       me.state.change(me.state.PLAY);
+ *    }
+ * }; // game
+ *
+ * // "bootstrap"
+ * me.device.onReady(function () {
+ *    game.onload();
+ * });
+ */
 function onReady(fn) {
-    // register on blur/focus and visibility event handlers
-    if (typeof globalThis.addEventListener === "function") {
-        // set pause/stop action on losing focus
-        globalThis.addEventListener("blur", () => {
-            emit(BLUR);
-        }, false);
-        // set restart/resume action on gaining focus
-        globalThis.addEventListener("focus", () => {
-            emit(FOCUS);
-            // force focus if autofocus is on
-            {
-                focus();
-            }
-        }, false);
-    }
-    if (typeof globalThis.document !== "undefined") {
-        if (typeof globalThis.document.addEventListener === "function") {
-            // register on the visibilitychange event if supported
-            globalThis.document.addEventListener("visibilitychange", () => {
-                if (globalThis.document.visibilityState === "visible") {
-                    emit(FOCUS);
-                    // force focus if autofocus is on
-                    {
-                        focus();
-                    }
-                } else {
-                    emit(BLUR);
-                }
-            }, false);
-        }
-    }
-    // call the supplied function
-    DOMContentLoaded(fn);
+	// register on blur/focus and visibility event handlers
+	if (typeof globalThis.addEventListener === "function") {
+		// set pause/stop action on losing focus
+		globalThis.addEventListener(
+			"blur",
+			() => {
+				emit(BLUR);
+			},
+			false,
+		);
+		// set restart/resume action on gaining focus
+		globalThis.addEventListener(
+			"focus",
+			() => {
+				emit(FOCUS);
+				// force focus if autofocus is on
+				{
+					focus();
+				}
+			},
+			false,
+		);
+	}
+	if (typeof globalThis.document !== "undefined") {
+		if (typeof globalThis.document.addEventListener === "function") {
+			// register on the visibilitychange event if supported
+			globalThis.document.addEventListener(
+				"visibilitychange",
+				() => {
+					if (globalThis.document.visibilityState === "visible") {
+						emit(FOCUS);
+						// force focus if autofocus is on
+						{
+							focus();
+						}
+					} else {
+						emit(BLUR);
+					}
+				},
+				false,
+			);
+		}
+	}
+	// call the supplied function
+	DOMContentLoaded(fn);
 }
 
 /**
@@ -441,16 +487,22 @@ function onReady(fn) {
  * @param {boolean} [enable=true] - enable or disable swipe.
  */
 function enableSwipe(enable) {
-    let moveEvent = pointerEvent ? "pointermove" : (touchEvent ? "touchmove" : "mousemove");
-    if (enable !== false) {
-        if (swipeEnabled === false) {
-            globalThis.document.removeEventListener(moveEvent, disableSwipeFn);
-            swipeEnabled = true;
-        }
-    } else if (swipeEnabled === true) {
-        globalThis.document.addEventListener(moveEvent, disableSwipeFn, { passive: false });
-        swipeEnabled = false;
-    }
+	let moveEvent = pointerEvent
+		? "pointermove"
+		: touchEvent
+			? "touchmove"
+			: "mousemove";
+	if (enable !== false) {
+		if (swipeEnabled === false) {
+			globalThis.document.removeEventListener(moveEvent, disableSwipeFn);
+			swipeEnabled = true;
+		}
+	} else if (swipeEnabled === true) {
+		globalThis.document.addEventListener(moveEvent, disableSwipeFn, {
+			passive: false,
+		});
+		swipeEnabled = false;
+	}
 }
 
 /**
@@ -459,11 +511,14 @@ function enableSwipe(enable) {
  * @returns {boolean}
  */
 function isFullscreen() {
-    if (hasFullscreenSupport) {
-        return !!(prefixed("fullscreenElement", globalThis.document) || globalThis.document.mozFullScreenElement);
-    } else {
-        return false;
-    }
+	if (hasFullscreenSupport) {
+		return !!(
+			prefixed("fullscreenElement", globalThis.document) ||
+			globalThis.document.mozFullScreenElement
+		);
+	} else {
+		return false;
+	}
 }
 
 /**
@@ -483,11 +538,12 @@ function isFullscreen() {
  * });
  */
 function requestFullscreen(element) {
-    if (hasFullscreenSupport && !isFullscreen()) {
-        element = element || getParent();
-        element.requestFullscreen = prefixed("requestFullscreen", element) || element.mozRequestFullScreen;
-        element.requestFullscreen();
-    }
+	if (hasFullscreenSupport && !isFullscreen()) {
+		element = element || getParent();
+		element.requestFullscreen =
+			prefixed("requestFullscreen", element) || element.mozRequestFullScreen;
+		element.requestFullscreen();
+	}
 }
 
 /**
@@ -495,9 +551,9 @@ function requestFullscreen(element) {
  * @memberof device
  */
 function exitFullscreen() {
-    if (hasFullscreenSupport && isFullscreen()) {
-        globalThis.document.exitFullscreen();
-    }
+	if (hasFullscreenSupport && isFullscreen()) {
+		globalThis.document.exitFullscreen();
+	}
 }
 
 /**
@@ -508,30 +564,33 @@ function exitFullscreen() {
  * @returns {string} the screen orientation
  */
 function getScreenOrientation() {
-    const PORTRAIT = "portrait";
-    const LANDSCAPE = "landscape";
+	const PORTRAIT = "portrait";
+	const LANDSCAPE = "landscape";
 
-    let screen = globalThis.screen;
+	let screen = globalThis.screen;
 
-    // first try using "standard" values
-    if (screenOrientation === true) {
-        let orientation = prefixed("orientation", screen);
-        if (typeof orientation !== "undefined" && typeof orientation.type === "string") {
-            // Screen Orientation API specification
-            return orientation.type;
-        } else if (typeof orientation === "string") {
-            // moz/ms-orientation are strings
-            return orientation;
-        }
-    }
+	// first try using "standard" values
+	if (screenOrientation === true) {
+		let orientation = prefixed("orientation", screen);
+		if (
+			typeof orientation !== "undefined" &&
+			typeof orientation.type === "string"
+		) {
+			// Screen Orientation API specification
+			return orientation.type;
+		} else if (typeof orientation === "string") {
+			// moz/ms-orientation are strings
+			return orientation;
+		}
+	}
 
-    // check using the deprecated API
-    if (typeof globalThis.orientation === "number") {
-        return (Math.abs(globalThis.orientation) === 90) ? LANDSCAPE : PORTRAIT;
-    }
+	// check using the deprecated API
+	if (typeof globalThis.orientation === "number") {
+		return Math.abs(globalThis.orientation) === 90 ? LANDSCAPE : PORTRAIT;
+	}
 
-    // fallback to window size check
-    return (globalThis.outerWidth > globalThis.outerHeight) ? LANDSCAPE : PORTRAIT;
+	// fallback to window size check
+	return globalThis.outerWidth > globalThis.outerHeight ? LANDSCAPE : PORTRAIT;
 }
 
 /**
@@ -543,14 +602,14 @@ function getScreenOrientation() {
  * @returns {boolean} true if the orientation was unsuccessfully locked
  */
 function lockOrientation(orientation) {
-    let screen = globalThis.screen;
-    if (typeof screen !== "undefined") {
-        let _lockOrientation = prefixed("lockOrientation", screen);
-        if (typeof _lockOrientation !== "undefined") {
-            return _lockOrientation(orientation);
-        }
-    }
-    return false;
+	let screen = globalThis.screen;
+	if (typeof screen !== "undefined") {
+		let _lockOrientation = prefixed("lockOrientation", screen);
+		if (typeof _lockOrientation !== "undefined") {
+			return _lockOrientation(orientation);
+		}
+	}
+	return false;
 }
 
 /**
@@ -561,14 +620,14 @@ function lockOrientation(orientation) {
  * @returns {boolean} true if the orientation was unsuccessfully unlocked
  */
 function unlockOrientation() {
-    let screen = globalThis.screen;
-    if (typeof screen !== "undefined") {
-        let _unlockOrientation = prefixed("unlockOrientation", screen);
-        if (typeof _unlockOrientation !== "undefined") {
-            return _unlockOrientation();
-        }
-    }
-    return false;
+	let screen = globalThis.screen;
+	if (typeof screen !== "undefined") {
+		let _unlockOrientation = prefixed("unlockOrientation", screen);
+		if (typeof _unlockOrientation !== "undefined") {
+			return _unlockOrientation();
+		}
+	}
+	return false;
 }
 
 /**
@@ -577,7 +636,7 @@ function unlockOrientation() {
  * @returns {boolean}
  */
 function isPortrait() {
-    return getScreenOrientation().includes("portrait");
+	return getScreenOrientation().includes("portrait");
 }
 
 /**
@@ -586,7 +645,7 @@ function isPortrait() {
  * @returns {boolean}
  */
 function isLandscape() {
-    return getScreenOrientation().includes("landscape");
+	return getScreenOrientation().includes("landscape");
 }
 
 /**
@@ -597,13 +656,13 @@ function isLandscape() {
  * @returns {object} a reference to the device storage
  */
 function getStorage(type = "local") {
-    switch (type) {
-        case "local" :
-            return save;
+	switch (type) {
+		case "local":
+			return save;
 
-        default :
-            throw new Error("storage type " + type + " not supported");
-    }
+		default:
+			throw new Error("storage type " + type + " not supported");
+	}
 }
 
 /**
@@ -613,13 +672,13 @@ function getStorage(type = "local") {
  * @returns {HTMLElement} the parent Element
  */
 function getParentElement(element) {
-    let target = getElement(element);
+	let target = getElement(element);
 
-    if (target.parentNode !== null) {
-        target = target.parentNode;
-    }
+	if (target.parentNode !== null) {
+		target = target.parentNode;
+	}
 
-    return target;
+	return target;
 }
 
 /**
@@ -629,23 +688,26 @@ function getParentElement(element) {
  * @returns {HTMLElement} the corresponding DOM Element or null if not existing
  */
 function getElement(element) {
-    let target = null;
+	let target = null;
 
-    if (element !== "undefined") {
-        if (typeof element === "string") {
-            target = globalThis.document.getElementById(element);
-        } else if (typeof element === "object" && element.nodeType === Node.ELEMENT_NODE) {
-            target = element;
-        }
-    }
+	if (element !== "undefined") {
+		if (typeof element === "string") {
+			target = globalThis.document.getElementById(element);
+		} else if (
+			typeof element === "object" &&
+			element.nodeType === Node.ELEMENT_NODE
+		) {
+			target = element;
+		}
+	}
 
-    // fallback, if invalid target or non HTMLElement object
-    if (!target)  {
-        //default to document.body
-        target = globalThis.document.body;
-    }
+	// fallback, if invalid target or non HTMLElement object
+	if (!target) {
+		//default to document.body
+		target = globalThis.document.body;
+	}
 
-    return target;
+	return target;
 }
 
 /**
@@ -657,13 +719,17 @@ function getElement(element) {
  * @returns {DOMRect} the size and position of the element relatively to the viewport
  */
 function getElementBounds(element) {
-    if (typeof element === "object" && element !== globalThis.document.body && typeof element.getBoundingClientRect !== "undefined") {
-        return element.getBoundingClientRect();
-    } else {
-        domRect.width = domRect.right = globalThis.innerWidth;
-        domRect.height = domRect.bottom = globalThis.innerHeight;
-        return domRect;
-    }
+	if (
+		typeof element === "object" &&
+		element !== globalThis.document.body &&
+		typeof element.getBoundingClientRect !== "undefined"
+	) {
+		return element.getBoundingClientRect();
+	} else {
+		domRect.width = domRect.right = globalThis.innerWidth;
+		domRect.height = domRect.bottom = globalThis.innerHeight;
+		return domRect;
+	}
 }
 
 /**
@@ -675,7 +741,7 @@ function getElementBounds(element) {
  * @returns {DOMRect} the size and position of the given element parent relative to the viewport
  */
 function getParentBounds(element) {
-    return getElementBounds(getParentElement(element));
+	return getElementBounds(getParentElement(element));
 }
 
 /**
@@ -686,21 +752,25 @@ function getParentBounds(element) {
  * @returns {boolean} true if WebGL is supported
  */
 function isWebGLSupported(options) {
-    if (WebGLSupport === -1) {
-        let _supported = false;
-        try {
-            let canvas = globalThis.document.createElement("canvas");
-            let ctxOptions = {
-                stencil: true,
-                failIfMajorPerformanceCaveat: options.failIfMajorPerformanceCaveat
-            };
-            _supported = !! (globalThis.WebGLRenderingContext && (canvas.getContext("webgl", ctxOptions) || canvas.getContext("experimental-webgl", ctxOptions)));
-            WebGLSupport = _supported ? 1 : 0;
-        } catch {
-            WebGLSupport = 0;
-        }
-    }
-    return WebGLSupport === 1;
+	if (WebGLSupport === -1) {
+		let _supported = false;
+		try {
+			let canvas = globalThis.document.createElement("canvas");
+			let ctxOptions = {
+				stencil: true,
+				failIfMajorPerformanceCaveat: options.failIfMajorPerformanceCaveat,
+			};
+			_supported = !!(
+				globalThis.WebGLRenderingContext &&
+				(canvas.getContext("webgl", ctxOptions) ||
+					canvas.getContext("experimental-webgl", ctxOptions))
+			);
+			WebGLSupport = _supported ? 1 : 0;
+		} catch {
+			WebGLSupport = 0;
+		}
+	}
+	return WebGLSupport === 1;
 }
 
 /**
@@ -712,9 +782,9 @@ function isWebGLSupported(options) {
  *  }
  */
 function focus() {
-    if (typeof (globalThis.focus) === "function") {
-        globalThis.focus();
-    }
+	if (typeof globalThis.focus === "function") {
+		globalThis.focus();
+	}
 }
 
 /**
@@ -739,23 +809,27 @@ function focus() {
  * });
  */
 function watchAccelerometer() {
-    if (hasAccelerometer && !accelInitialized) {
-        if (DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
-            DeviceOrientationEvent.requestPermission()
-                .then(response => {
-                    if (response === "granted") {
-                        // add a listener for the devicemotion event
-                        globalThis.addEventListener("devicemotion", onDeviceMotion, false);
-                        accelInitialized = true;
-                    }
-                }).catch(console.error);
-        } else {
-            // add a listener for the devicemotion event
-            globalThis.addEventListener("devicemotion", onDeviceMotion, false);
-            accelInitialized = true;
-        }
-    }
-    return accelInitialized;
+	if (hasAccelerometer && !accelInitialized) {
+		if (
+			DeviceOrientationEvent &&
+			typeof DeviceOrientationEvent.requestPermission === "function"
+		) {
+			DeviceOrientationEvent.requestPermission()
+				.then((response) => {
+					if (response === "granted") {
+						// add a listener for the devicemotion event
+						globalThis.addEventListener("devicemotion", onDeviceMotion, false);
+						accelInitialized = true;
+					}
+				})
+				.catch(console.error);
+		} else {
+			// add a listener for the devicemotion event
+			globalThis.addEventListener("devicemotion", onDeviceMotion, false);
+			accelInitialized = true;
+		}
+	}
+	return accelInitialized;
 }
 
 /**
@@ -763,11 +837,11 @@ function watchAccelerometer() {
  * @memberof device
  */
 function unwatchAccelerometer() {
-    if (accelInitialized) {
-        // remove the listener for the devicemotion event
-        globalThis.removeEventListener("devicemotion", onDeviceMotion, false);
-        accelInitialized = false;
-    }
+	if (accelInitialized) {
+		// remove the listener for the devicemotion event
+		globalThis.removeEventListener("devicemotion", onDeviceMotion, false);
+		accelInitialized = false;
+	}
 }
 
 /**
@@ -790,21 +864,26 @@ function unwatchAccelerometer() {
  * });
  */
 function watchDeviceOrientation() {
-    if (hasDeviceOrientation && !deviceOrientationInitialized) {
-        if (typeof DeviceOrientationEvent.requestPermission === "function") {
-            DeviceOrientationEvent.requestPermission()
-                .then(response => {
-                    if (response === "granted") {
-                        globalThis.addEventListener("deviceorientation", onDeviceRotate, false);
-                        deviceOrientationInitialized = true;
-                    }
-                }).catch(console.error);
-        } else {
-            globalThis.addEventListener("deviceorientation", onDeviceRotate, false);
-            deviceOrientationInitialized = true;
-        }
-    }
-    return deviceOrientationInitialized;
+	if (hasDeviceOrientation && !deviceOrientationInitialized) {
+		if (typeof DeviceOrientationEvent.requestPermission === "function") {
+			DeviceOrientationEvent.requestPermission()
+				.then((response) => {
+					if (response === "granted") {
+						globalThis.addEventListener(
+							"deviceorientation",
+							onDeviceRotate,
+							false,
+						);
+						deviceOrientationInitialized = true;
+					}
+				})
+				.catch(console.error);
+		} else {
+			globalThis.addEventListener("deviceorientation", onDeviceRotate, false);
+			deviceOrientationInitialized = true;
+		}
+	}
+	return deviceOrientationInitialized;
 }
 
 /**
@@ -812,10 +891,10 @@ function watchDeviceOrientation() {
  * @memberof device
  */
 function unwatchDeviceOrientation() {
-    if (deviceOrientationInitialized) {
-        globalThis.removeEventListener("deviceorientation", onDeviceRotate, false);
-        deviceOrientationInitialized = false;
-    }
+	if (deviceOrientationInitialized) {
+		globalThis.removeEventListener("deviceorientation", onDeviceRotate, false);
+		deviceOrientationInitialized = false;
+	}
 }
 
 /**
@@ -836,9 +915,12 @@ function unwatchDeviceOrientation() {
  * me.device.vibrate(0);
  */
 function vibrate(pattern) {
-    if (typeof globalThis.navigator !== "undefined" && typeof globalThis.navigator.vibrate === "function") {
-        globalThis.navigator.vibrate(pattern);
-    }
+	if (
+		typeof globalThis.navigator !== "undefined" &&
+		typeof globalThis.navigator.vibrate === "function"
+	) {
+		globalThis.navigator.vibrate(pattern);
+	}
 }
 
 /**
@@ -848,25 +930,39 @@ function vibrate(pattern) {
  * @returns {boolean} return true if the given video format is supported
  */
 function hasVideoFormat(codec) {
-    let result = false;
-    if (hasVideo === true) {
-        if (typeof videoCodecs === "undefined") {
-            // check for support
-            const videoElement = globalThis.document.createElement("video");
-            videoCodecs = {
-                h264:videoElement.canPlayType('video/mp4; codecs="avc1.42E01E"').replace(/^no$/, ""),
-                h265:videoElement.canPlayType('video/mp4; codecs="hev1"').replace(/^no$/, ""),
-                ogg:videoElement.canPlayType('video/ogg; codecs="theora"').replace(/^no$/, ""),
-                mp4:videoElement.canPlayType('video/mp4; codecs="avc1.42E01E"').replace(/^no$/, ""),
-                m4v:videoElement.canPlayType("video/x-m4v").replace(/^no$/, ""),
-                webm:videoElement.canPlayType('video/webm; codecs="vp8, vorbis"').replace(/^no$/, ""),
-                vp9:videoElement.canPlayType('video/webm; codecs="vp9"').replace(/^no$/, ""),
-                hls:videoElement.canPlayType('application/x-mpegURL; codecs="avc1.42E01E"').replace(/^no$/, "")
-            };
-        }
-        result = !!videoCodecs[codec];
-    }
-    return result;
+	let result = false;
+	if (hasVideo === true) {
+		if (typeof videoCodecs === "undefined") {
+			// check for support
+			const videoElement = globalThis.document.createElement("video");
+			videoCodecs = {
+				h264: videoElement
+					.canPlayType('video/mp4; codecs="avc1.42E01E"')
+					.replace(/^no$/, ""),
+				h265: videoElement
+					.canPlayType('video/mp4; codecs="hev1"')
+					.replace(/^no$/, ""),
+				ogg: videoElement
+					.canPlayType('video/ogg; codecs="theora"')
+					.replace(/^no$/, ""),
+				mp4: videoElement
+					.canPlayType('video/mp4; codecs="avc1.42E01E"')
+					.replace(/^no$/, ""),
+				m4v: videoElement.canPlayType("video/x-m4v").replace(/^no$/, ""),
+				webm: videoElement
+					.canPlayType('video/webm; codecs="vp8, vorbis"')
+					.replace(/^no$/, ""),
+				vp9: videoElement
+					.canPlayType('video/webm; codecs="vp9"')
+					.replace(/^no$/, ""),
+				hls: videoElement
+					.canPlayType('application/x-mpegURL; codecs="avc1.42E01E"')
+					.replace(/^no$/, ""),
+			};
+		}
+		result = !!videoCodecs[codec];
+	}
+	return result;
 }
 
 export { accelerationX, accelerationY, accelerationZ, alpha, autoFocus, beta, devicePixelRatio, enableSwipe, exitFullscreen, focus, gamma, getElement, getElementBounds, getParentBounds, getParentElement, getScreenOrientation, getStorage, hasAccelerometer, hasDeviceOrientation, hasFullscreenSupport, hasHTML5Audio, hasPointerLockSupport, hasVideo, hasVideoFormat, hasWebAudio, isFullscreen, isLandscape, isMobile, isPortrait, isWebGLSupported, language, localStorage, lockOrientation, maxTouchPoints, nativeBase64, offscreenCanvas, onDeviceRotate, onReady, pauseOnBlur, platform, pointerEvent, requestFullscreen, resumeOnFocus, screenOrientation, sound, stopOnBlur, touch, touchEvent, unlockOrientation, unwatchAccelerometer, unwatchDeviceOrientation, vibrate, watchAccelerometer, watchDeviceOrientation, wheel };

@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.4.0
+ * melonJS Game Engine - v17.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -8,7 +8,6 @@
 import Vector2d from '../math/vector2.js';
 
 /**
- * @classdesc
  * An object representing the result of an intersection.
  * @property {Renderable} a The first object participating in the intersection
  * @property {Renderable} b The second object participating in the intersection
@@ -23,35 +22,35 @@ import Vector2d from '../math/vector2.js';
  * @public
  */
 class ResponseObject {
-    constructor() {
-        this.a = null;
-        this.b = null;
-        this.overlapN = new Vector2d();
-        this.overlapV = new Vector2d();
-        this.aInB = true;
-        this.bInA = true;
-        this.indexShapeA = -1;
-        this.indexShapeB = -1;
-        this.overlap = Number.MAX_VALUE;
-    }
+	constructor() {
+		this.a = null;
+		this.b = null;
+		this.overlapN = new Vector2d();
+		this.overlapV = new Vector2d();
+		this.aInB = true;
+		this.bInA = true;
+		this.indexShapeA = -1;
+		this.indexShapeB = -1;
+		this.overlap = Number.MAX_VALUE;
+	}
 
-    /**
-     * Set some values of the response back to their defaults. <br>
-     * Call this between tests if you are going to reuse a single <br>
-     * Response object for multiple intersection tests <br>
-     * (recommended as it will avoid allocating extra memory) <br>
-     * @name clear
-     * @public
-     * @returns {object} this object for chaining
-     */
-    clear () {
-        this.aInB = true;
-        this.bInA = true;
-        this.overlap = Number.MAX_VALUE;
-        this.indexShapeA = -1;
-        this.indexShapeB = -1;
-        return this;
-    }
+	/**
+	 * Set some values of the response back to their defaults. <br>
+	 * Call this between tests if you are going to reuse a single <br>
+	 * Response object for multiple intersection tests <br>
+	 * (recommended as it will avoid allocating extra memory) <br>
+	 * @name clear
+	 * @public
+	 * @returns {object} this object for chaining
+	 */
+	clear() {
+		this.aInB = true;
+		this.bInA = true;
+		this.overlap = Number.MAX_VALUE;
+		this.indexShapeA = -1;
+		this.indexShapeB = -1;
+		return this;
+	}
 }
 
 export { ResponseObject as default };

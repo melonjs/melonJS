@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.4.0
+ * melonJS Game Engine - v17.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -25,11 +25,11 @@ import { random as random$1, weightedRandom as weightedRandom$1 } from '../math/
  * me.utils.array.remove(arr, "foo");
  */
 function remove(arr, obj) {
-    let i = Array.prototype.indexOf.call(arr, obj);
-    if (i !== -1) {
-        Array.prototype.splice.call(arr, i, 1);
-    }
-    return arr;
+	let i = Array.prototype.indexOf.call(arr, obj);
+	if (i !== -1) {
+		Array.prototype.splice.call(arr, i, 1);
+	}
+	return arr;
 }
 
 /**
@@ -45,7 +45,7 @@ function remove(arr, obj) {
  * console.log(me.utils.array.random(arr));
  */
 function random(arr) {
-    return arr[random$1(0, arr.length)];
+	return arr[random$1(0, arr.length)];
 }
 
 /**
@@ -57,7 +57,7 @@ function random(arr) {
  * @returns {any} random member of array
  */
 function weightedRandom(arr) {
-    return arr[weightedRandom$1(0, arr.length)];
+	return arr[weightedRandom$1(0, arr.length)];
 }
 
 export { random, remove, weightedRandom };

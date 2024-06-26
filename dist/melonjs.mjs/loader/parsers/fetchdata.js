@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.4.0
+ * melonJS Game Engine - v17.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -22,41 +22,45 @@
  *     });
  */
 function fetchData(url, responseType, settings = {}) {
-    return new Promise((resolve, reject) => {
-        fetch(url, {
-            method: "GET",
-            // internally nocache is a string with a generated random number
-            cache: settings.nocache === "" ? "no-cache" : "reload",
-            credentials: settings.withCredentials === true ? "include" : "omit",
-            // see setting.crossorigin, "anonymous" is used for cross-origin requests
-            mode: settings.crossOrigin === "anonymous" ? "cors" : "no-cors"
-        })
-            .then(response => {
-                if (!response.ok) {
-                    // status = 0 when file protocol is used, or cross-domain origin
-                    if (response.status !== 0) {
-                        if (typeof onerror === "function") {
-                            reject(new Error("`Network response was not ok ${response.statusText}`"));
-                        }
-                    }
-                }
+	return new Promise((resolve, reject) => {
+		fetch(url, {
+			method: "GET",
+			// internally nocache is a string with a generated random number
+			cache: settings.nocache === "" ? "no-cache" : "reload",
+			credentials: settings.withCredentials === true ? "include" : "omit",
+			// see setting.crossorigin, "anonymous" is used for cross-origin requests
+			mode: settings.crossOrigin === "anonymous" ? "cors" : "no-cors",
+		})
+			.then((response) => {
+				if (!response.ok) {
+					// status = 0 when file protocol is used, or cross-domain origin
+					if (response.status !== 0) {
+						if (typeof onerror === "function") {
+							reject(
+								new Error(
+									"`Network response was not ok ${response.statusText}`",
+								),
+							);
+						}
+					}
+				}
 
-                switch (responseType) {
-                    case "json":
-                        return response.json();
-                    case "text":
-                        return response.text();
-                    case "blob":
-                        return response.blob();
-                    case "arrayBuffer":
-                        return response.arrayBuffer();
-                    default:
-                        reject(new Error("Invalid response type"));
-                }
-            })
-            .then(data => resolve(data))
-            .catch(error => reject(error));
-    });
+				switch (responseType) {
+					case "json":
+						return response.json();
+					case "text":
+						return response.text();
+					case "blob":
+						return response.blob();
+					case "arrayBuffer":
+						return response.arrayBuffer();
+					default:
+						reject(new Error("Invalid response type"));
+				}
+			})
+			.then((data) => resolve(data))
+			.catch((error) => reject(error));
+	});
 }
 
 export { fetchData };

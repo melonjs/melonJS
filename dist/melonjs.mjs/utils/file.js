@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.4.0
+ * melonJS Game Engine - v17.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -14,7 +14,6 @@
 const PATH = /^.*(\\|\/|\:)/;
 const EXT = /\.[^\.]*$/;
 
-
 /**
  * return the base name of the file without path info
  * @public
@@ -24,7 +23,7 @@ const EXT = /\.[^\.]*$/;
  * @returns {string} the base name without path information.
  */
 function getBasename(path) {
-    return path.replace(PATH, "").replace(EXT, "");
+	return path.replace(PATH, "").replace(EXT, "");
 }
 
 /**
@@ -36,7 +35,7 @@ function getBasename(path) {
  * @returns {string} the extracted path
  */
 function getPath(path) {
-    return path.match(PATH)[0];
+	return path.match(PATH)[0];
 }
 
 /**
@@ -48,7 +47,7 @@ function getPath(path) {
  * @returns {string} filename extension.
  */
 function getExtension(path) {
-    return path.substring(path.lastIndexOf(".") + 1, path.length);
+	return path.substring(path.lastIndexOf(".") + 1, path.length);
 }
 
 export { getBasename, getExtension, getPath };

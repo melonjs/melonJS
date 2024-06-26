@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.4.0
+ * melonJS Game Engine - v17.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -45,26 +45,26 @@
  * @property {string} [physic="builtin"] - the physic system to use (default: "builtin", or "none" to disable builtin physic)
  */
 const ApplicationSettings = {
-    parent : undefined,
-    canvas : undefined,
-    renderer : 2, // AUTO
-    autoScale : false,
-    scale : 1.0,
-    scaleMethod : "manual",
-    scaleTarget : undefined,
-    preferWebGL1 : false,
-    depthTest: "sorting",
-    powerPreference : "default",
-    transparent : false,
-    antiAlias : false,
-    consoleHeader : true,
-    premultipliedAlpha: true,
-    blendMode : "normal",
-    physic : "builtin",
-    failIfMajorPerformanceCaveat : true,
-    subPixel : false,
-    verbose : false,
-    legacy : false
+	parent: undefined,
+	canvas: undefined,
+	renderer: 2, // AUTO
+	autoScale: false,
+	scale: 1.0,
+	scaleMethod: "manual",
+	scaleTarget: undefined,
+	preferWebGL1: false,
+	depthTest: "sorting",
+	powerPreference: "default",
+	transparent: false,
+	antiAlias: false,
+	consoleHeader: !("__vitest_browser__" in window),
+	premultipliedAlpha: true,
+	blendMode: "normal",
+	physic: "builtin",
+	failIfMajorPerformanceCaveat: true,
+	subPixel: false,
+	verbose: false,
+	legacy: false,
 };
 
 export { ApplicationSettings };

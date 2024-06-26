@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.4.0
+ * melonJS Game Engine - v17.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -10,12 +10,12 @@
  * @ignore
  */
 function setContextStyle(context, style) {
-    context.font = style.font;
-    context.fillStyle = style.fillStyle.toRGBA();
-    context.strokeStyle = style.strokeStyle.toRGBA();
-    context.lineWidth = style.lineWidth;
-    context.textAlign = style.textAlign;
-    context.textBaseline = style.textBaseline;
+	context.font = style.font;
+	context.fillStyle = style.fillStyle.toRGBA();
+	context.strokeStyle = style.strokeStyle.toRGBA();
+	context.lineWidth = style.lineWidth;
+	context.textAlign = style.textAlign;
+	context.textBaseline = style.textBaseline;
 }
 
 export { setContextStyle as default };

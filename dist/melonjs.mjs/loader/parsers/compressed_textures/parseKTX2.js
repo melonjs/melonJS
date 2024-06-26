@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.4.0
+ * melonJS Game Engine - v17.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -7,7 +7,7 @@
  */
 // parse and return the compressed texture
 function parseKTX2(/*data, formats*/) {
-    throw new Error("unsupported format");
+	throw new Error("unsupported format");
 }
 
 export { parseKTX2 };

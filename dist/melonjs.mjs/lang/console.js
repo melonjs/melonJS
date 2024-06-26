@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v17.4.0
+ * melonJS Game Engine - v17.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -12,33 +12,31 @@
  * @param {string} version - the version since when the lass,function or property is deprecated
  */
 function warning(deprecated, replacement, version) {
-    const msg = "melonJS: %s is deprecated since version %s, please use %s";
-    let stack = new Error().stack;
+	if ("__vitest_browser__" in window) {
+		return;
+	}
+	const msg = "melonJS: %s is deprecated since version %s, please use %s";
+	let stack = new Error().stack;
 
-    if (console.groupCollapsed) {
-        console.groupCollapsed(
-            "%c" + msg,
-            "font-weight:normal;color:yellow;",
-            deprecated,
-            version,
-            replacement
-        );
-    } else {
-        console.warn(
-            msg,
-            deprecated,
-            version,
-            replacement
-        );
-    }
+	if (console.groupCollapsed) {
+		console.groupCollapsed(
+			"%c" + msg,
+			"font-weight:normal;color:yellow;",
+			deprecated,
+			version,
+			replacement,
+		);
+	} else {
+		console.warn(msg, deprecated, version, replacement);
+	}
 
-    if (typeof stack !== "undefined") {
-        console.warn(stack);
-    }
+	if (typeof stack !== "undefined") {
+		console.warn(stack);
+	}
 
-    if (console.groupCollapsed) {
-        console.groupEnd();
-    }
+	if (console.groupCollapsed) {
+		console.groupEnd();
+	}
 }
 
 export { warning };
