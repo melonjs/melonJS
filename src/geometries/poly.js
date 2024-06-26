@@ -1,5 +1,5 @@
-import earcut from "earcut";
 import pool from "./../system/pooling.js";
+import { earcut } from "./earcut.js";
 
 /**
  * additional import for TypeScript

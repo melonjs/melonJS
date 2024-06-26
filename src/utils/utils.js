@@ -1,3 +1,4 @@
+import { compare } from "./semver.js";
 import { toHex } from "./string.js";
 
 export * as agent from "./agent.js";
@@ -5,8 +6,6 @@ export * as array from "./array.js";
 export * as file from "./file.js";
 export * as string from "./string.js";
 export * as function from "./function.js";
-
-import { compare } from "semver";
 
 /**
  * a collection of utility functions

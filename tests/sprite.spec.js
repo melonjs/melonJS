@@ -46,7 +46,7 @@ describe("Sprite", () => {
 					bounds.height === 64,
 			).toEqual(true);
 
-			var bounds = sprite.getBounds();
+			bounds = sprite.getBounds();
 			// scale back to original size
 			sprite.scale(0.5);
 			expect(
@@ -67,21 +67,21 @@ describe("Sprite", () => {
 				bounds.x === 50 + 0 && bounds.y === 50 - 32,
 			).toEqual(true);
 
-			var bounds = sprite.getBounds();
+			bounds = sprite.getBounds();
 			sprite.anchorPoint.set(0.5, 0.5);
 			expect(
 				// container pos - half sprite size, container pos - half sprite size
 				bounds.x === 50 - 16 && bounds.y === 50 - 16,
 			).toEqual(true);
 
-			var bounds = sprite.getBounds();
+			bounds = sprite.getBounds();
 			sprite.anchorPoint.set(1, 0);
 			expect(
 				// container pos - sprite size, container pos + 0
 				bounds.x === 50 - 32 && bounds.y === 50 + 0,
 			).toEqual(true);
 
-			var bounds = sprite.getBounds();
+			bounds = sprite.getBounds();
 			sprite.anchorPoint.set(1, 1);
 			expect(
 				// container pos - sprite size, container pos - sprite size

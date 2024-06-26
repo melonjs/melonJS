@@ -1,7 +1,7 @@
 import pool from "./../system/pooling.js";
 import { TAU } from "./../math/math.js";
-import earcut from "earcut";
 import { endpointToCenterParameterization } from "./toarccanvas.js";
+import { earcut } from "./earcut.js";
 
 /**
  * additional import for TypeScript

@@ -6,6 +6,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import resolve from "@rollup/plugin-node-resolve";
 import json from "@rollup/plugin-json";
 import pkg from "./package.json" with { type: "json" };
+// import typescript from "@rollup/plugin-typescript";
 
 // credit/license information
 const license = [
@@ -18,6 +19,7 @@ const license = [
 	" */",
 ].join("\n");
 
+/** @type {import('rollup').RollupOptions} */
 export default [
 	{
 		input: "src/index.js",
@@ -27,9 +29,11 @@ export default [
 				browser: true,
 				preferBuiltins: false,
 			}),
+			// typescript(),
 			commonjs({
 				include: "node_modules/**",
 				sourceMap: false,
+				// extensions: ["*.js", "*.ts"],
 			}),
 			replace({
 				values: {
@@ -63,9 +67,11 @@ export default [
 				browser: true,
 				preferBuiltins: false,
 			}),
+			// typescript(),
 			commonjs({
 				include: "node_modules/**",
 				sourceMap: false,
+				// extensions: ["*.js", "*.ts"],
 			}),
 			replace({
 				values: {

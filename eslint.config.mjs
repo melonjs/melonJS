@@ -1,9 +1,10 @@
 import jsdoc from "eslint-plugin-jsdoc";
-import stylistic from "@stylistic/eslint-plugin";
 import globals from "globals";
+import tseslint from "typescript-eslint";
+import eslint from "@eslint/js";
 
-/** @type {import('eslint').Linter.FlatConfig[]} */
-export default [
+export default tseslint.config(
+	eslint.configs.recommended,
 	{
 		name: "eslint/global-ignores",
 		// globally ignore below directories and files
@@ -18,10 +19,9 @@ export default [
 				...globals.browser,
 			},
 		},
-		files: ["src/**/*.js", "tests/**/*.ts"],
+		files: ["src/**/*.js", "tests/**/*.js"],
 		plugins: {
 			jsdoc,
-			"@stylistic": stylistic,
 		},
 		rules: {
 			// http://eslint.org/docs/rules/
@@ -140,17 +140,6 @@ export default [
 			yoda: ["error", "never"],
 			"jsdoc/require-hyphen-before-param-description": "error",
 			"jsdoc/no-undefined-types": "off",
-
-			// https://eslint.style/rules
-			"@stylistic/arrow-spacing": ["error", { before: true, after: true }],
-			"@stylistic/block-spacing": ["error", "always"],
-			"@stylistic/brace-style": ["off", "1tbs", { allowSingleLine: true }],
-			"@stylistic/comma-spacing": ["error", { before: false, after: true }],
-			"@stylistic/comma-style": ["error", "last"],
-			"@stylistic/semi": ["error", "always"],
-			"@stylistic/dot-location": ["error", "property"],
-			"@stylistic/eol-last": ["error"],
-			"@stylistic/linebreak-style": ["error", "unix"],
 		},
 	},
-];
+);

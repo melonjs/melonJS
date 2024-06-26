@@ -9,8 +9,8 @@
 		"removeComments": false,
 		"strict": true,
 		"noImplicitAny": true,
-		"module": "node16",
-		"moduleResolution": "node16",
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
 		"resolveJsonModule": true
 	}
 }
