@@ -8,7 +8,7 @@ import { locked } from "./pointerevent.js";
  * a temporary vector object
  * @ignore
  */
-let tmpVec = new Vector2d();
+const tmpVec = new Vector2d();
 
 /**
  * a pointer object, representing a single finger on a touch enabled device.

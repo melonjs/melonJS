@@ -20,10 +20,10 @@ import { game } from "../index.js";
  * @type {Array.<Vector2d>}
  * @ignore
  */
-let T_POINTERS = [];
+const T_POINTERS = [];
 
 // list of registered Event handlers
-let eventHandlers = new Map();
+const eventHandlers = new Map();
 
 // a cache rect represeting the current pointer area
 let currentPointer;
@@ -97,7 +97,7 @@ const pointerEventMap = {
  * Array of normalized events (mouse, touch, pointer)
  * @ignore
  */
-let normalizedEvents = [];
+const normalizedEvents = [];
 
 /**
  * addEventListerner for the specified event list and callback
@@ -163,7 +163,7 @@ function enablePointerEvent() {
 		}
 
 		// if time interval <= 16, disable the feature
-		let events = findAllActiveEvents(activeEventList, POINTER_MOVE);
+		const events = findAllActiveEvents(activeEventList, POINTER_MOVE);
 		if (throttlingInterval < 17) {
 			for (let i = 0; i < events.length; i++) {
 				if (activeEventList.indexOf(events[i]) !== -1) {
@@ -224,7 +224,7 @@ function findActiveEvent(activeEventList, eventTypes) {
  * @ignore
  */
 function findAllActiveEvents(activeEventList, eventTypes) {
-	let events = [];
+	const events = [];
 	for (let i = 0; i < eventTypes.length; i++) {
 		const event = activeEventList.indexOf(eventTypes[i]);
 		if (event !== -1) {
@@ -265,7 +265,7 @@ function dispatchEvent(normalizedEvents) {
 
 	while (normalizedEvents.length > 0) {
 		// keep a reference to the last item
-		let pointer = normalizedEvents.pop();
+		const pointer = normalizedEvents.pop();
 		// and put it back into our cache
 		T_POINTERS.push(pointer);
 
@@ -325,7 +325,7 @@ function dispatchEvent(normalizedEvents) {
 				// adjust gameLocalX to specify coordinates
 				// within the region ancestor container
 				if (typeof ancestor !== "undefined") {
-					let parentBounds = ancestor.getBounds();
+					const parentBounds = ancestor.getBounds();
 					pointer.gameLocalX = pointer.gameX - parentBounds.x;
 					pointer.gameLocalY = pointer.gameY - parentBounds.y;
 				}
@@ -495,7 +495,7 @@ function onPointerEvent(e) {
 	normalizeEvent(e);
 
 	// remember/use the first "primary" normalized event for pointer.bind
-	let button = normalizedEvents[0].button;
+	const button = normalizedEvents[0].button;
 
 	// dispatch event to registered objects
 	if (dispatchEvent(normalizedEvents) || e.type === "wheel") {
@@ -505,7 +505,7 @@ function onPointerEvent(e) {
 		}
 	}
 
-	let keycode = pointer.bind[button];
+	const keycode = pointer.bind[button];
 
 	// check if mapped to a key
 	if (keycode) {
@@ -533,7 +533,7 @@ export let pointerEventTarget = null;
  * @name pointer
  * @memberof input
  */
-export let pointer = new Pointer(0, 0, 1, 1);
+export const pointer = new Pointer(0, 0, 1, 1);
 
 /**
  * indicates if the pointer is currently locked
@@ -591,11 +591,11 @@ export function hasRegisteredEvents() {
  */
 export function globalToLocal(x, y, v) {
 	v = v || pool.pull("Vector2d");
-	let rect = device.getElementBounds(renderer.getCanvas());
-	let pixelRatio = globalThis.devicePixelRatio || 1;
+	const rect = device.getElementBounds(renderer.getCanvas());
+	const pixelRatio = globalThis.devicePixelRatio || 1;
 	x -= rect.left + (globalThis.pageXOffset || 0);
 	y -= rect.top + (globalThis.pageYOffset || 0);
-	let scale = renderer.scaleRatio;
+	const scale = renderer.scaleRatio;
 	if (scale.x !== 1.0 || scale.y !== 1.0) {
 		x /= scale.x;
 		y /= scale.y;
@@ -632,8 +632,8 @@ export function setTouchAction(element, value) {
  * me.input.bindPointer(me.input.pointer.RIGHT, me.input.KEY.X);
  */
 export function bindPointer() {
-	let button = arguments.length < 2 ? pointer.LEFT : arguments[0];
-	let keyCode = arguments.length < 2 ? arguments[0] : arguments[1];
+	const button = arguments.length < 2 ? pointer.LEFT : arguments[0];
+	const keyCode = arguments.length < 2 ? arguments[0] : arguments[1];
 
 	// make sure the mouse is initialized
 	enablePointerEvent();
@@ -710,7 +710,7 @@ export function registerPointerEvent(eventType, region, callback) {
 		);
 	}
 
-	let eventTypes = findAllActiveEvents(
+	const eventTypes = findAllActiveEvents(
 		activeEventList,
 		pointerEventMap[eventType],
 	);
@@ -725,7 +725,7 @@ export function registerPointerEvent(eventType, region, callback) {
 	}
 
 	// allocate array if not defined
-	let handlers = eventHandlers.get(region);
+	const handlers = eventHandlers.get(region);
 	for (let i = 0; i < eventTypes.length; i++) {
 		const eventType = eventTypes[i];
 		if (handlers.callbacks[eventType]) {
@@ -753,12 +753,12 @@ export function releasePointerEvent(eventType, region, callback) {
 	}
 
 	// convert to supported event type if pointerEvent not natively supported
-	let eventTypes = findAllActiveEvents(
+	const eventTypes = findAllActiveEvents(
 		activeEventList,
 		pointerEventMap[eventType],
 	);
 
-	let handlers = eventHandlers.get(region);
+	const handlers = eventHandlers.get(region);
 	if (typeof handlers !== "undefined") {
 		for (let i = 0; i < eventTypes.length; i++) {
 			const eventType = eventTypes[i];
@@ -813,7 +813,7 @@ export function releaseAllPointerEvents(region) {
  */
 export function requestPointerLock() {
 	if (device.hasPointerLockSupport) {
-		let element = game.getParentElement();
+		const element = game.getParentElement();
 		element.requestPointerLock();
 		return true;
 	}

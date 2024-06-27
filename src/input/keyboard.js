@@ -3,29 +3,29 @@ import * as event from "./../system/event.js";
 import { isMobile } from "./../system/platform.js";
 
 // corresponding actions
-let _keyStatus = {};
+const _keyStatus = {};
 
 // lock enable flag for keys
-let _keyLock = {};
+const _keyLock = {};
 // actual lock status of each key
-let _keyLocked = {};
+const _keyLocked = {};
 
 // List of binded keys being held
-let _keyRefs = {};
+const _keyRefs = {};
 
 // whether default event should be prevented for a given keypress
-let _preventDefaultForKeys = {};
+const _preventDefaultForKeys = {};
 
 // list of binded keys
-let _keyBindings = {};
+const _keyBindings = {};
 
 /**
  * key down event
  * @ignore
  */
-let keyDownEvent = function (e, keyCode, mouseButton) {
+const keyDownEvent = function (e, keyCode, mouseButton) {
 	keyCode = keyCode || e.keyCode || e.button;
-	let action = _keyBindings[keyCode];
+	const action = _keyBindings[keyCode];
 
 	// publish a message for keydown event
 	event.emit(
@@ -37,7 +37,8 @@ let keyDownEvent = function (e, keyCode, mouseButton) {
 
 	if (action) {
 		if (!_keyLocked[action]) {
-			let trigger = typeof mouseButton !== "undefined" ? mouseButton : keyCode;
+			const trigger =
+				typeof mouseButton !== "undefined" ? mouseButton : keyCode;
 			if (!_keyRefs[action][trigger]) {
 				_keyStatus[action]++;
 				_keyRefs[action][trigger] = true;
@@ -62,15 +63,15 @@ let keyDownEvent = function (e, keyCode, mouseButton) {
  * key up event
  * @ignore
  */
-let keyUpEvent = function (e, keyCode, mouseButton) {
+const keyUpEvent = function (e, keyCode, mouseButton) {
 	keyCode = keyCode || e.keyCode || e.button;
-	let action = _keyBindings[keyCode];
+	const action = _keyBindings[keyCode];
 
 	// publish a message for keydown event
 	event.emit(event.KEYUP, action, keyCode);
 
 	if (action) {
-		let trigger = typeof mouseButton !== "undefined" ? mouseButton : keyCode;
+		const trigger = typeof mouseButton !== "undefined" ? mouseButton : keyCode;
 		_keyRefs[action][trigger] = undefined;
 
 		if (_keyStatus[action] > 0) {
@@ -456,7 +457,7 @@ export function unlockKey(action) {
  */
 export function unbindKey(keycode) {
 	// clear the event status
-	let keybinding = _keyBindings[keycode];
+	const keybinding = _keyBindings[keycode];
 	_keyStatus[keybinding] = 0;
 	_keyLock[keybinding] = false;
 	_keyRefs[keybinding] = {};
