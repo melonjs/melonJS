@@ -345,37 +345,6 @@ export let beta = 0;
 export let alpha = 0;
 
 /**
- * Specify whether to pause the game when losing focus
- * @memberof device
- * @deprecated since 15.4.0
- * @see Application.pauseOnBlur
- * @type {boolean}
- * @default true
- */
-export const pauseOnBlur = true;
-
-/**
- * Specify whether to unpause the game when gaining focus
- * @memberof device
- * @deprecated since 15.4.0
- * @see Application.resumeOnFocus
- * @type {boolean}
- * @default true
- */
-export const resumeOnFocus = true;
-
-/**
- * Specify whether to stop the game when losing focus or not.
- * The engine restarts on focus if this is enabled.
- * @memberof device
- * @deprecated since 15.4.0
- * @see Application.stopOnBlur
- * @type {boolean}
- * @default false
- */
-export const stopOnBlur = false;
-
-/**
  * Specify whether to automatically bring the window to the front
  * @memberof device
  * @type {boolean}
