@@ -31,7 +31,7 @@ describe("Math", () => {
 	});
 
 	describe("random", () => {
-		var a = math.random(1, 10);
+		const a = math.random(1, 10);
 
 		it("should be >= 1", () => {
 			expect(a).toBeGreaterThanOrEqual(1);
@@ -47,7 +47,7 @@ describe("Math", () => {
 	});
 
 	describe("randomFloat", () => {
-		var a = math.randomFloat(1, 10);
+		const a = math.randomFloat(1, 10);
 
 		it("should be >= 1", () => {
 			expect(a).toBeGreaterThanOrEqual(1);
@@ -59,7 +59,7 @@ describe("Math", () => {
 	});
 
 	describe("weightedRandom", () => {
-		var a = math.weightedRandom(1, 10);
+		const a = math.weightedRandom(1, 10);
 
 		it("should be >= 1", () => {
 			expect(a).toBeGreaterThanOrEqual(1);
@@ -75,7 +75,7 @@ describe("Math", () => {
 	});
 
 	describe("round", () => {
-		var a = math.round(Math.PI, 4);
+		const a = math.round(Math.PI, 4);
 
 		it("Pi should be 3.1416", () => {
 			expect(a).toEqual(3.1416);
@@ -115,7 +115,7 @@ describe("Math", () => {
 
 	describe("toBeCloseTo", () => {
 		it("4.3546731 is closed to 4.3547", () => {
-			var value = 4.3546731;
+			const value = 4.3546731;
 			expect(math.toBeCloseTo(4.3547, value, 0)).toEqual(true);
 			expect(math.toBeCloseTo(4.3547, value, 1)).toEqual(true);
 			expect(math.toBeCloseTo(4.3547, value, 2)).toEqual(true);
@@ -126,7 +126,7 @@ describe("Math", () => {
 		});
 
 		it("4.8 is closed to 5 but not to 4", () => {
-			var value = 4.8;
+			const value = 4.8;
 			expect(math.toBeCloseTo(5, value, 0)).toEqual(true);
 			expect(math.toBeCloseTo(4, value, 0)).toEqual(false);
 		});

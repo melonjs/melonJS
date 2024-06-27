@@ -4,9 +4,9 @@ import { Ellipse } from "../src/index.js";
 describe("Shape : Ellipse", () => {
 	// define a ellipse object
 	describe("Ellipse ", () => {
-		var circle;
-		var circleA;
-		var circleB;
+		let circle;
+		let circleA;
+		let circleB;
 
 		beforeAll(() => {
 			circle = new Ellipse(50, 50, 100, 100);
@@ -63,7 +63,8 @@ describe("Shape : Ellipse", () => {
 	});
 
 	describe("Ellipse Bounding Rect", () => {
-		var circle, bounds;
+		let circle;
+		let bounds;
 
 		beforeAll(() => {
 			circle = new Ellipse(50, 50, 100, 100);

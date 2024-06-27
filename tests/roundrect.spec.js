@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { Rect, RoundRect, Vector2d, pool } from "../src/index.js";
 
 describe("Shape : RoundRect", () => {
-	var rrect;
+	let rrect;
 	beforeEach(() => {
 		pool.register("Vector2d", Vector2d, true);
 		rrect = new RoundRect(50, 50, 100, 100, 40);
@@ -19,7 +19,7 @@ describe("Shape : RoundRect", () => {
 	});
 
 	describe("contains", () => {
-		var rect;
+		let rect;
 		beforeEach(() => {
 			pool.register("Vector2d", Vector2d, true);
 			rect = new Rect(50, 50, 100, 100);
@@ -52,18 +52,18 @@ describe("Shape : RoundRect", () => {
 		});
 
 		it("should contain another Rect fully within", () => {
-			var innerRRect = new Rect(100, 100, 10, 10, 10);
+			const innerRRect = new Rect(100, 100, 10, 10, 10);
 			expect(rrect.contains(innerRRect)).toEqual(true);
 		});
 
 		it("should not contain another Rect partially outside", () => {
-			var innerRRect = new Rect(75, 75, 175, 25, 10);
+			const innerRRect = new Rect(75, 75, 175, 25, 10);
 			expect(rrect.contains(innerRRect)).toEqual(false);
 		});
 	});
 
 	describe("copy, clone & equality", () => {
-		var _rect;
+		let _rect;
 		beforeEach(() => {
 			pool.register("Vector2d", Vector2d, true);
 			_rect = new RoundRect(1, 1, 1, 1);
@@ -74,7 +74,7 @@ describe("Shape : RoundRect", () => {
 			expect(_rect.equals(rrect)).toEqual(true);
 		});
 		it("clone rect and test radius", () => {
-			var cloneRect = _rect.clone();
+			const cloneRect = _rect.clone();
 			expect(cloneRect.radius).toEqual(40);
 		});
 	});

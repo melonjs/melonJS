@@ -3,7 +3,8 @@ import { Line } from "../src/index.js";
 
 describe("Shape : Line", () => {
 	describe("Line", () => {
-		var line, bounds;
+		let line;
+		let bounds;
 
 		beforeAll(() => {
 			line = new Line(0, 0, [
@@ -80,8 +81,8 @@ describe("Shape : Line", () => {
 		});
 
 		it("Line cloning", () => {
-			var clone = line.clone();
-			var cloneBounds = clone.getBounds();
+			const clone = line.clone();
+			const cloneBounds = clone.getBounds();
 			expect(line.pos.equals(clone.pos)).toEqual(true);
 			expect(bounds.width).toEqual(cloneBounds.width);
 			expect(bounds.height).toEqual(cloneBounds.height);

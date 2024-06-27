@@ -2,14 +2,19 @@ import { describe, expect, it } from "vitest";
 import { ObservableVector2d, Vector2d, math } from "../src/index.js";
 
 describe("ObservableVector2d", () => {
-	var x = 1,
-		y = 2;
+	const x = 1;
+	const y = 2;
 
-	var a, b, c;
+	let a;
+	let b;
+	let c;
 
-	var _newX, _newY, _oldX, _oldY;
+	let _newX;
+	let _newY;
+	let _oldX;
+	let _oldY;
 
-	var callback = function (newX, newY, oldX, oldY) {
+	const callback = function (newX, newY, oldX, oldY) {
 		// this will also validate the argument list
 		_newX = newX;
 		_newY = newY;
@@ -17,7 +22,7 @@ describe("ObservableVector2d", () => {
 		_oldY = oldY;
 	};
 
-	var callback_with_ret = function () {
+	const callback_with_ret = function () {
 		return {
 			x: 10,
 			y: 10,
@@ -44,7 +49,7 @@ describe("ObservableVector2d", () => {
 	});
 
 	it("callback returns a vector value", function () {
-		var d = new ObservableVector2d(0, 0, {
+		const d = new ObservableVector2d(0, 0, {
 			onUpdate: callback_with_ret.bind(this),
 		});
 		d.set(100, 100);

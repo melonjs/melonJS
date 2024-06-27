@@ -3,7 +3,7 @@ import { Point } from "../src/index.js";
 
 describe("Shape : Point", () => {
 	describe("Point", () => {
-		var point;
+		let point;
 
 		beforeAll(() => {
 			point = new Point(1, 2);
@@ -15,7 +15,7 @@ describe("Shape : Point", () => {
 		});
 
 		it("point is equal or not to another one", () => {
-			var point2 = new Point(1, 2);
+			const point2 = new Point(1, 2);
 			expect(point.equals(point2)).toEqual(true);
 			expect(point.equals(point2.x, point2.y)).toEqual(true);
 			point2.set(3, 4);

@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import { Vector2d, math } from "../src/index.js";
 
 describe("Vector2d", () => {
-	var x = 1,
-		y = 2;
+	const x = 1;
+	const y = 2;
 
-	var a, b, c;
+	let a;
+	let b;
+	let c;
 
 	it("should be initialized to a (0, 0) 2d vector", () => {
 		a = new Vector2d();

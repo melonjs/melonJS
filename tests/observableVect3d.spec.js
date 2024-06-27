@@ -2,15 +2,23 @@ import { describe, expect, it } from "vitest";
 import { ObservableVector3d, Vector3d, math } from "../src/index.js";
 
 describe("ObservableVector3d", () => {
-	var x = 1,
-		y = 2,
-		z = 3;
+	const x = 1;
+	const y = 2;
+	const z = 3;
 
-	var a, b, c, d;
+	let a;
+	let b;
+	let c;
+	let d;
 
-	var _newX, _newY, _newZ, _oldX, _oldY, _oldZ;
+	let _newX;
+	let _newY;
+	let _newZ;
+	let _oldX;
+	let _oldY;
+	let _oldZ;
 
-	var callback = function (newX, newY, newZ, oldX, oldY, oldZ) {
+	const callback = function (newX, newY, newZ, oldX, oldY, oldZ) {
 		// this will also validate the argument list
 		_newX = newX;
 		_newY = newY;
@@ -20,7 +28,7 @@ describe("ObservableVector3d", () => {
 		_oldZ = oldZ;
 	};
 
-	var callback_with_ret = function () {
+	const callback_with_ret = function () {
 		return {
 			x: 10,
 			y: 10,
@@ -53,7 +61,7 @@ describe("ObservableVector3d", () => {
 	});
 
 	it("callback returns a vector value", function () {
-		var d = new ObservableVector3d(0, 0, 0, {
+		const d = new ObservableVector3d(0, 0, 0, {
 			onUpdate: callback_with_ret.bind(this),
 		});
 		d.set(100, 100, 100);
@@ -100,7 +108,7 @@ describe("ObservableVector3d", () => {
 		a.set(2, 3, 4);
 		b.set(5, 6, 7);
 
-		var crossed = new Vector3d(-3, 6, -3);
+		const crossed = new Vector3d(-3, 6, -3);
 
 		// calculate the cross product
 		a.cross(b);

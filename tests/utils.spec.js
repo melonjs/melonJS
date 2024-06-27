@@ -32,7 +32,7 @@ describe("utils", () => {
     */
 
 	describe("Array", () => {
-		var arr = ["foo", "bar", "baz"];
+		const arr = ["foo", "bar", "baz"];
 
 		it("base", () => {
 			expect(utils.array.remove(arr, "foo").includes("foo")).toEqual(false);
@@ -40,7 +40,7 @@ describe("utils", () => {
 	});
 
 	describe("File", () => {
-		var filename = "/src/bar/foo.bar-test.bar.baz";
+		const filename = "/src/bar/foo.bar-test.bar.baz";
 
 		it("file basename", () => {
 			expect(utils.file.getBasename(filename)).toEqual("foo.bar-test.bar");
@@ -56,7 +56,7 @@ describe("utils", () => {
 	});
 
 	describe("String", () => {
-		var untrimmed_str = " start and end with white space ";
+		const untrimmed_str = " start and end with white space ";
 
 		it("trim left side", () => {
 			expect(untrimmed_str.trimLeft()).toEqual(
@@ -137,17 +137,17 @@ describe("utils", () => {
 	});
 
 	describe("UriFragment", () => {
-		var url1 = "http://www.example.com/index.html";
-		var url2 =
+		const url1 = "http://www.example.com/index.html";
+		const url2 =
 			"http://www.example.com/index.html#debug&hitbox=true&mytag=value";
 
 		it("empty arguments", () => {
-			var params = utils.getUriFragment(url1);
+			const params = utils.getUriFragment(url1);
 			expect(Object.entries(params).length).toEqual(0);
 		});
 
 		it("extract arguments", () => {
-			var params = utils.getUriFragment(url2);
+			const params = utils.getUriFragment(url2);
 			expect(params.debug).toEqual(true);
 			expect(params.hitbox).toEqual("true");
 			expect(params.mytag).toEqual("value");

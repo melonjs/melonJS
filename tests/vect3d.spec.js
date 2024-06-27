@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 import { Vector2d, Vector3d, math } from "../src/index.js";
 
 describe("Vector3d", () => {
-	var x = 1,
-		y = 2,
-		z = 3;
+	const x = 1;
+	const y = 2;
+	const z = 3;
 
-	var a, b, c, d;
+	let a;
+	let b;
+	let c;
+	let d;
 
 	it("should be initialized to a (0, 0, 0) 3d vector", () => {
 		a = new Vector3d();
@@ -35,7 +38,7 @@ describe("Vector3d", () => {
 	});
 
 	it("use a 2d vector to set this vector", () => {
-		var vec2 = new Vector2d(x, y);
+		const vec2 = new Vector2d(x, y);
 		a.setV(vec2);
 		expect(a.toString()).toEqual("x:" + x + ",y:" + y + ",z:0");
 
@@ -92,7 +95,7 @@ describe("Vector3d", () => {
 		a.set(2, 3, 4);
 		b.set(5, 6, 7);
 
-		var crossed = new Vector3d(-3, 6, -3);
+		const crossed = new Vector3d(-3, 6, -3);
 
 		// calculate the cross product
 		a.cross(b);

@@ -27,7 +27,7 @@ describe("Sprite", () => {
 
 	describe("isAttachedToRoot", () => {
 		it("Sprite bounds return the visible part of the sprite", async () => {
-			var bounds = sprite.getBounds();
+			const bounds = sprite.getBounds();
 			expect(
 				bounds.x === 50 &&
 					bounds.y === 50 &&
@@ -37,7 +37,7 @@ describe("Sprite", () => {
 		});
 
 		it("Sprite bounds should be updated when the sprite is scaled", async () => {
-			var bounds = sprite.getBounds();
+			let bounds = sprite.getBounds();
 			sprite.scale(2.0);
 			expect(
 				bounds.x === 50 &&
@@ -60,7 +60,7 @@ describe("Sprite", () => {
 		});
 
 		it("Sprite bounds should be updated when the anchor is changed", async () => {
-			var bounds = sprite.getBounds();
+			let bounds = sprite.getBounds();
 			sprite.anchorPoint.set(0, 1);
 			expect(
 				// container pos + 0, container pos - sprite size
@@ -132,12 +132,12 @@ describe("Sprite", () => {
 					sprite.isCurrentAnimation("yoyo") === true,
 			).toEqual(true);
 
-			for (var i = -1; i < 8; i++) {
+			for (let i = -1; i < 8; i++) {
 				sprite.update(16);
 			}
 			expect(sprite.isCurrentAnimation("yoyo")).toEqual(true);
 
-			for (var j = -1; j < 8; j++) {
+			for (let j = -1; j < 8; j++) {
 				sprite.update(16);
 			}
 			expect(

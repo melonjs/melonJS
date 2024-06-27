@@ -16,7 +16,7 @@ describe("local Storage", () => {
 	it("remove keys", () => {
 		if (device.localStorage === true) {
 			// access through getStorage
-			var localStorage = device.getStorage("local");
+			const localStorage = device.getStorage("local");
 			// both value should still be there
 			expect(localStorage.testKey1).toBe(1);
 			expect(localStorage.testKey2).toBe(2);

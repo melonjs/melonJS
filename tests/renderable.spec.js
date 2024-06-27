@@ -3,14 +3,14 @@ import { Container, Renderable } from "../src/index.js";
 
 describe("Renderable", () => {
 	describe("bounds updates", () => {
-		var renderable;
+		let renderable;
 		beforeEach(() => {
 			renderable = new Renderable(50, 50, 100, 100);
 			renderable.anchorPoint.set(0, 0);
 		});
 
 		it("renderable has correct bounds", () => {
-			var bounds = renderable.getBounds();
+			const bounds = renderable.getBounds();
 			expect(bounds.x).toEqual(50);
 			expect(bounds.y).toEqual(50);
 			expect(bounds.width).toEqual(100);
@@ -19,7 +19,7 @@ describe("Renderable", () => {
 
 		it("renderable has correct bounds when changing anchor point", () => {
 			renderable.anchorPoint.set(0.5, 0.5);
-			var bounds = renderable.getBounds();
+			const bounds = renderable.getBounds();
 			expect(bounds.x).toEqual(0);
 			expect(bounds.y).toEqual(0);
 			expect(bounds.width).toEqual(100);
@@ -46,9 +46,9 @@ describe("Renderable", () => {
 	});
 
 	describe("getAbsoluteBounds returns the correct value", () => {
-		var rootContainer;
-		var childContainer;
-		var renderable;
+		let rootContainer;
+		let childContainer;
+		let renderable;
 		beforeAll(() => {
 			rootContainer = new Container(0, 0, 1000, 1000, true);
 			childContainer = new Container(100, 100, 500, 500);

@@ -2,9 +2,9 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { Color } from "../src/index.js";
 
 describe("Color", () => {
-	var red_color;
-	var green_color;
-	var blue_color;
+	let red_color;
+	let green_color;
+	let blue_color;
 	//ToDo changing this to 'beforeEach' shows that currently tests leak their state into other tests, which is not good
 	beforeAll(() => {
 		red_color = new Color(255, 0, 0, 0.5);
@@ -165,8 +165,8 @@ describe("Color", () => {
 
 	describe("color lerp function", () => {
 		it("Linearly interpolates between colors", () => {
-			var _colorA = new Color(0, 0, 0);
-			var _colorB = new Color(255, 128, 64);
+			const _colorA = new Color(0, 0, 0);
+			const _colorB = new Color(255, 128, 64);
 
 			_colorA.lerp(_colorB, 0.5);
 
@@ -178,9 +178,9 @@ describe("Color", () => {
 
 	describe("color random function", () => {
 		it("generate random colors using different ranges", () => {
-			var _colorA = new Color().random();
-			var _colorB = new Color().random(64, 127);
-			var _colorC = new Color().random(-1, 256);
+			const _colorA = new Color().random();
+			const _colorB = new Color().random(64, 127);
+			const _colorC = new Color().random(-1, 256);
 
 			// they should all be between 0 and 255
 			expect(_colorA.r).toBeGreaterThan(-1);
@@ -208,48 +208,48 @@ describe("Color", () => {
 
 	describe("Color toUint32 function", () => {
 		it("should return an unsigned 32-bit ARGB value", () => {
-			let color = new Color(255, 0, 0);
-			let uint32 = color.toUint32(1.0);
+			const color = new Color(255, 0, 0);
+			const uint32 = color.toUint32(1.0);
 			//expect(uint32).toEqual(0xFFFF0000);
 			// jasmine test the value as signed int32
 			expect(uint32).toEqual(-65536);
 		});
 
 		it("should handle alpha values", () => {
-			let color = new Color(255, 0, 0);
-			let uint32 = color.toUint32(0.5);
+			const color = new Color(255, 0, 0);
+			const uint32 = color.toUint32(0.5);
 			//expect(color.toUint32()).toEqual(0x7FFF0000);
 			// jasmine test the value as signed int32
 			expect(uint32).toEqual(2147418112);
 		});
 
 		it("should shift the alpha value to the first byte", () => {
-			let color = new Color(0, 0, 0);
-			let uint32 = color.toUint32(0.25);
+			const color = new Color(0, 0, 0);
+			const uint32 = color.toUint32(0.25);
 			//expect(uint32).toEqual(0x3F000000);
 			// jasmine test the value as signed int32
 			expect(uint32).toEqual(1056964608);
 		});
 
 		it("should shift the red value to the second byte", () => {
-			let color = new Color(255, 0, 0);
-			let uint32 = color.toUint32(1.0);
+			const color = new Color(255, 0, 0);
+			const uint32 = color.toUint32(1.0);
 			//expect(uint32).toEqual(0xFFFF0000);
 			// jasmine test the value as signed int32
 			expect(uint32).toEqual(-65536);
 		});
 
 		it("should shift the green value to the third byte", () => {
-			let color = new Color(0, 255, 0);
-			let uint32 = color.toUint32(1.0);
+			const color = new Color(0, 255, 0);
+			const uint32 = color.toUint32(1.0);
 			//expect(uint32).toEqual(0xFF00FF00);
 			// jasmine test the value as signed int32
 			expect(uint32).toEqual(-16711936);
 		});
 
 		it("should leave the blue value in the fourth byte", () => {
-			let color = new Color(0, 0, 255);
-			let uint32 = color.toUint32(1.0);
+			const color = new Color(0, 0, 255);
+			const uint32 = color.toUint32(1.0);
 			//expect(uint32).toEqual(0xFF0000FF);
 			// jasmine test the value as signed int32
 			expect(uint32).toEqual(-16776961);
@@ -258,8 +258,8 @@ describe("Color", () => {
 
 	describe("color clone function", () => {
 		it("cloned color hex value is #2060FF", () => {
-			var _color = new Color().parseHex("#2060FF");
-			var clone = _color.clone();
+			const _color = new Color().parseHex("#2060FF");
+			const clone = _color.clone();
 			expect(clone.r).toEqual(32);
 			expect(clone.g).toEqual(96);
 			expect(clone.b).toEqual(255);
@@ -268,8 +268,8 @@ describe("Color", () => {
 
 	describe("color copy function", () => {
 		it("copied color hex value is #8040FF", () => {
-			var _color = new Color().parseHex("#8040FF");
-			var copy = new Color().copy(_color);
+			const _color = new Color().parseHex("#8040FF");
+			const copy = new Color().copy(_color);
 			expect(copy.toHex()).toEqual("#8040FF");
 		});
 	});

@@ -3,14 +3,14 @@ import { Bounds, Matrix2d, math } from "../src/index.js";
 
 describe("Physics : Bounds", () => {
 	it("works", () => {});
-	var bound1 = new Bounds([
+	const bound1 = new Bounds([
 		{ x: 0, y: 0 },
 		{ x: 50, y: 0 },
 		{ x: 50, y: 100 },
 		{ x: 0, y: 100 },
 	]);
-	var bound2 = bound1.clone();
-	var bound3 = bound2.clone();
+	const bound2 = bound1.clone();
+	const bound3 = bound2.clone();
 	describe("bound coordinates", () => {
 		it("bound1 has finite coordinates", () => {
 			expect(bound1.isFinite()).toEqual(true);
@@ -71,7 +71,7 @@ describe("Physics : Bounds", () => {
 			expect(bound1.contains(125, 150)).toEqual(true);
 		});
 		it("union with another bound", () => {
-			var bound2 = new Bounds([
+			const bound2 = new Bounds([
 				{ x: 0, y: 0 },
 				{ x: 200, y: 0 },
 				{ x: 200, y: 150 },
@@ -124,7 +124,7 @@ describe("Physics : Bounds", () => {
 			expect(bound2.height).toEqual(200);
 		});
 		it("bound2 is defined using addFrame with transformation", () => {
-			var m = new Matrix2d();
+			const m = new Matrix2d();
 			// rotate 90 degrees clockwise
 			m.rotate(math.degToRad(90));
 			bound2.clear();
@@ -138,7 +138,7 @@ describe("Physics : Bounds", () => {
 	});
 	describe("bound with complex vertices", () => {
 		// define a polygon object (star from the the shape example)
-		var star = [
+		const star = [
 			// draw a star
 			{ x: 0, y: 0 },
 			{ x: 28, y: 60 },

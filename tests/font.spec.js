@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { Text, boot, video } from "../src/index.js";
 
 describe("Font : Text", () => {
-	var font;
+	let font;
 
 	beforeAll(async () => {
 		boot();

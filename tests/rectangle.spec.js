@@ -2,12 +2,12 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { Bounds, Rect, math, pool } from "../src/index.js";
 
 describe("Shape : Rect", () => {
-	var rect1;
-	var rect2;
-	var rect3;
-	var rect4;
-	var rect5;
-	var rect6;
+	let rect1;
+	let rect2;
+	let rect3;
+	let rect4;
+	let rect5;
+	let rect6;
 
 	beforeAll(() => {
 		// test fail without this

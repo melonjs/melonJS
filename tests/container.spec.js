@@ -2,14 +2,14 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Container, Renderable } from "../src/index.js";
 
 describe("Container", () => {
-	var container;
+	let container;
 
 	beforeEach(() => {
 		container = new Container(0, 0, 100, 100, true);
 	});
 
 	describe("isAttachedToRoot", () => {
-		var secondContainer;
+		let secondContainer;
 		beforeAll(() => {
 			secondContainer = new Container(0, 0, 100, 100);
 		});
@@ -30,7 +30,7 @@ describe("Container", () => {
 
 	describe("object absolute position in containers", () => {
 		it("should return 50,50 for renderable container", () => {
-			var renderable = new Renderable(50, 50, 100, 100);
+			const renderable = new Renderable(50, 50, 100, 100);
 
 			expect(container.getAbsolutePosition().x).toEqual(0);
 			expect(container.getAbsolutePosition().y).toEqual(0);
@@ -42,9 +42,9 @@ describe("Container", () => {
 		});
 
 		it("should return proper position and bounds for object in nested containers", () => {
-			var secondContainer = new Container(10, 10, 100, 100);
-			var thirdContainer = new Container(10, 10, 100, 100);
-			var renderable = new Renderable(50, 50, 100, 100);
+			const secondContainer = new Container(10, 10, 100, 100);
+			const thirdContainer = new Container(10, 10, 100, 100);
+			const renderable = new Renderable(50, 50, 100, 100);
 
 			// enable child bounds update
 			secondContainer.enableChildBoundsUpdate = true;
@@ -54,11 +54,11 @@ describe("Container", () => {
 			secondContainer.addChild(thirdContainer);
 			thirdContainer.addChild(renderable);
 
-			var absPos = renderable.getAbsolutePosition();
+			const absPos = renderable.getAbsolutePosition();
 			expect(absPos.x).toEqual(70);
 			expect(absPos.y).toEqual(70);
 
-			var bounds = renderable.getBounds();
+			const bounds = renderable.getBounds();
 			// 20 because default anchor point is (0.5, 0.5)
 			expect(bounds.x).toEqual(20);
 			expect(bounds.y).toEqual(20);
@@ -67,7 +67,7 @@ describe("Container", () => {
 
 	describe("Container bounds test", () => {
 		it("Container bounds return default assigned size", () => {
-			var bounds = container.getBounds();
+			const bounds = container.getBounds();
 			expect(bounds.x).toEqual(0);
 			expect(bounds.y).toEqual(0);
 			expect(bounds.width).toEqual(100);
@@ -79,7 +79,7 @@ describe("Container", () => {
 			container.addChild(new Renderable(50, 50, 100, 100));
 			container.addChild(new Renderable(100, 100, 100, 100));
 
-			var bounds = container.getBounds();
+			const bounds = container.getBounds();
 			expect(bounds.x).toEqual(0); // because of default 0.5 anchor point
 			expect(bounds.y).toEqual(0); // because of default 0.5 anchor point
 			expect(bounds.width).toEqual(150); // because of default 0.5 anchor point
@@ -89,7 +89,7 @@ describe("Container", () => {
 
 	describe("Container utility function", () => {
 		it("forEach iterate through all children", () => {
-			var counter = 0;
+			let counter = 0;
 			container.addChild(new Renderable(50, 50, 100, 100));
 			container.addChild(new Renderable(100, 100, 100, 100));
 			container.forEach((child) => {
@@ -100,7 +100,7 @@ describe("Container", () => {
 			expect(counter).toEqual(2);
 		});
 		it("onChildChange callback", () => {
-			var counter = 0;
+			let counter = 0;
 			container.onChildChange = function () {
 				// just count how many times this one is called
 				counter++;

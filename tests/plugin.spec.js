@@ -18,7 +18,7 @@ describe("plugin", () => {
 			this.name = "John Smith";
 		});
 
-		var obj;
+		let obj;
 		beforeEach(() => {
 			obj = new BaseObject();
 			obj.setType("something_awesome");

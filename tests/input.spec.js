@@ -2,8 +2,8 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { Renderable, game, input, video } from "../src/index.js";
 
 describe("input", () => {
-	var renderable;
-	var evenType;
+	let renderable;
+	let evenType;
 	beforeAll(() => {
 		renderable = new Renderable(0, 0, 32, 32);
 		renderable.isKinematic = false;
@@ -34,7 +34,7 @@ describe("input", () => {
 			});
 
 			// Create the event.
-			var event = new CustomEvent(evenType);
+			const event = new CustomEvent(evenType);
 
 			// configure the event
 			event.pointerId = 1;

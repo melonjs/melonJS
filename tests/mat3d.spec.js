@@ -3,14 +3,15 @@ import { Matrix3d, Vector2d, Vector3d } from "../src/index.js";
 
 describe("Matrix3d", () => {
 	it("should be initialized to a 4x4 identity matrix", () => {
-		var matA = new Matrix3d();
-		var result = "me.Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)";
+		const matA = new Matrix3d();
+		const result =
+			"me.Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)";
 
 		expect(matA.toString() === result).toEqual(true);
 	});
 
 	it("should be initialized to a 4x4 accordingly to given parameters", () => {
-		var matA = new Matrix3d(
+		const matA = new Matrix3d(
 			0,
 			1,
 			2,
@@ -28,16 +29,17 @@ describe("Matrix3d", () => {
 			14,
 			15,
 		);
-		var result =
+		const result =
 			"me.Matrix3d(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)";
 
 		expect(matA.toString() === result).toEqual(true);
 	});
 
 	it("should multiply all values properly", () => {
-		var matA = new Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1);
-		var matB = new Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 4, 5, 6, 1);
-		var result = "me.Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 5, 7, 9, 1)";
+		const matA = new Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1);
+		const matB = new Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 4, 5, 6, 1);
+		const result =
+			"me.Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 5, 7, 9, 1)";
 
 		matA.multiply(matB);
 
@@ -45,8 +47,8 @@ describe("Matrix3d", () => {
 	});
 
 	it("should copy all values properly", () => {
-		var matA = new Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1);
-		var matB = new Matrix3d();
+		const matA = new Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1);
+		const matB = new Matrix3d();
 
 		matA.copy(matB);
 
@@ -54,7 +56,7 @@ describe("Matrix3d", () => {
 	});
 
 	it("should reset to an identity matrix", () => {
-		var matA = new Matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9);
+		const matA = new Matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9);
 
 		matA.identity();
 
@@ -62,10 +64,10 @@ describe("Matrix3d", () => {
 	});
 
 	it("should rotate all values properly", () => {
-		var matA = new Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1);
-		var angle = Math.PI * 0.5;
-		var axis = new Vector3d(1, 0, 0);
-		var result = new Matrix3d(
+		const matA = new Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1);
+		const angle = Math.PI * 0.5;
+		const axis = new Vector3d(1, 0, 0);
+		const result = new Matrix3d(
 			1,
 			0,
 			0,
@@ -90,7 +92,7 @@ describe("Matrix3d", () => {
 	});
 
 	it("should scale all values properly", () => {
-		var matA = new Matrix3d().setTransform(
+		const matA = new Matrix3d().setTransform(
 			1,
 			0,
 			0,
@@ -108,7 +110,8 @@ describe("Matrix3d", () => {
 			3,
 			1,
 		);
-		var result = "me.Matrix3d(4, 0, 0, 0, 0, 5, 0, 0, 0, 0, 6, 0, 1, 2, 3, 1)";
+		const result =
+			"me.Matrix3d(4, 0, 0, 0, 0, 5, 0, 0, 0, 0, 6, 0, 1, 2, 3, 1)";
 
 		matA.scale(4, 5, 6);
 
@@ -116,8 +119,9 @@ describe("Matrix3d", () => {
 	});
 
 	it("should translate all values properly", () => {
-		var matA = new Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1);
-		var result = "me.Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 2, 4, 6, 1)";
+		const matA = new Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1);
+		const result =
+			"me.Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 2, 4, 6, 1)";
 
 		matA.translate(1, 2, 3);
 
@@ -128,9 +132,10 @@ describe("Matrix3d", () => {
 	});
 
 	it("a 2d vector should translate all values properly", () => {
-		var matA = new Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1);
-		var result = "me.Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 2, 4, 3, 1)";
-		var vecA = new Vector2d(1, 2);
+		const matA = new Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1);
+		const result =
+			"me.Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 2, 4, 3, 1)";
+		const vecA = new Vector2d(1, 2);
 
 		matA.translate(vecA);
 
@@ -141,8 +146,9 @@ describe("Matrix3d", () => {
 	});
 
 	it("should transpose the matrix properly", () => {
-		var matA = new Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1);
-		var result = "me.Matrix3d(1, 0, 0, 1, 0, 1, 0, 2, 0, 0, 1, 3, 0, 0, 0, 1)";
+		const matA = new Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1);
+		const result =
+			"me.Matrix3d(1, 0, 0, 1, 0, 1, 0, 2, 0, 0, 1, 3, 0, 0, 0, 1)";
 
 		matA.transpose();
 
@@ -150,8 +156,8 @@ describe("Matrix3d", () => {
 	});
 
 	it("should invert the matrix properly", () => {
-		var matA = new Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1);
-		var result =
+		const matA = new Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1);
+		const result =
 			"me.Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -1, -2, -3, 1)";
 
 		matA.invert();
@@ -160,8 +166,8 @@ describe("Matrix3d", () => {
 	});
 
 	it("should multiply a 2d vector properly", () => {
-		var matA = new Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
-		var vecA = new Vector2d(1, 2);
+		const matA = new Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+		const vecA = new Vector2d(1, 2);
 
 		matA.apply(vecA);
 		//multiply back with the inverted matrix
@@ -172,8 +178,8 @@ describe("Matrix3d", () => {
 	});
 
 	it("should multiply a 3d vector properly with the inverted matrix", () => {
-		var matA = new Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1);
-		var vecA = new Vector3d(3, 7, 1);
+		const matA = new Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1);
+		const vecA = new Vector3d(3, 7, 1);
 
 		matA.apply(vecA);
 		// multiply back with the inverted matrix
@@ -184,7 +190,7 @@ describe("Matrix3d", () => {
 	});
 
 	it("should be clonable", () => {
-		var matA = new Matrix3d(
+		const matA = new Matrix3d(
 			0,
 			1,
 			2,
@@ -202,14 +208,14 @@ describe("Matrix3d", () => {
 			14,
 			15,
 		);
-		var matB = matA.clone();
+		const matB = matA.clone();
 
 		// and we should have back the original vector values
 		expect(matA.equals(matB)).toEqual(true);
 	});
 
 	it("should be copiable", () => {
-		var matA = new Matrix3d(
+		const matA = new Matrix3d(
 			0,
 			1,
 			2,
@@ -227,7 +233,7 @@ describe("Matrix3d", () => {
 			14,
 			15,
 		);
-		var matB = new Matrix3d().copy(matA);
+		const matB = new Matrix3d().copy(matA);
 
 		// and we should have back the original vector values
 		expect(matA.equals(matB)).toEqual(true);

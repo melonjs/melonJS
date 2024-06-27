@@ -117,7 +117,7 @@ describe("Entity", () => {
 	});
 
 	it("has the correct body bounds: C", async () => {
-		var bounds = entity.body.getBounds();
+		const bounds = entity.body.getBounds();
 		expect(
 			bounds.x === 10 &&
 				bounds.y === 10 &&
@@ -137,7 +137,7 @@ describe("Entity", () => {
 	});
 
 	it("has the correct entity bounds: C", async () => {
-		var bounds = entity.getBounds();
+		const bounds = entity.getBounds();
 		expect(
 			bounds.x === 0 &&
 				bounds.y === 0 &&
@@ -161,7 +161,7 @@ describe("Entity", () => {
 	});
 
 	it("has the correct body bounds: D", async () => {
-		var bounds = entity.body.getBounds();
+		const bounds = entity.body.getBounds();
 		expect(
 			bounds.x === 10 &&
 				bounds.y === 10 &&
@@ -171,7 +171,7 @@ describe("Entity", () => {
 	});
 
 	it("has the correct renderable bounds: D", async () => {
-		var renderable = entity.renderable;
+		const renderable = entity.renderable;
 		expect(
 			renderable.pos.x === 0 &&
 				renderable.pos.y === 0 &&
@@ -181,7 +181,7 @@ describe("Entity", () => {
 	});
 
 	it("has the correct entity bounds: D", async () => {
-		var bounds = entity.getBounds();
+		const bounds = entity.getBounds();
 		expect(
 			bounds.x === 120 &&
 				bounds.y === 150 &&
