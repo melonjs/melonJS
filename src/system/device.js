@@ -350,7 +350,7 @@ export let alpha = 0;
  * @type {boolean}
  * @default true
  */
-export const autoFocus = true;
+export let autoFocus = true; // eslint-disable-line prefer-const
 
 /**
  * specify a function to execute when the Device is fully loaded and ready
