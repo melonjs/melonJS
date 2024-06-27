@@ -92,7 +92,7 @@ export default class Matrix2d {
 	 * @returns {Matrix2d} Reference to this object for method chaining
 	 */
 	setTransform() {
-		let a = this.val;
+		const a = this.val;
 
 		if (arguments.length === 9) {
 			a[0] = arguments[0]; // a - m00
@@ -130,17 +130,17 @@ export default class Matrix2d {
 	 * @returns {Matrix2d} Reference to this object for method chaining
 	 */
 	transform(a, b, c, d, e, f) {
-		let v = this.val,
-			a0 = v[0],
-			a1 = v[1],
-			a3 = v[3],
-			a4 = v[4],
-			b0 = a,
-			b1 = b,
-			b3 = c,
-			b4 = d,
-			b6 = e,
-			b7 = f;
+		const v = this.val;
+		const a0 = v[0];
+		const a1 = v[1];
+		const a3 = v[3];
+		const a4 = v[4];
+		const b0 = a;
+		const b1 = b;
+		const b3 = c;
+		const b4 = d;
+		const b6 = e;
+		const b7 = f;
 
 		v[0] = a0 * b0 + a3 * b1;
 		v[1] = a1 * b0 + a4 * b1;
@@ -168,8 +168,8 @@ export default class Matrix2d {
 	 * @returns {Matrix2d} Reference to this object for method chaining
 	 */
 	fromMat3d(m) {
-		let b = m.val;
-		let a = this.val;
+		const b = m.val;
+		const a = this.val;
 
 		a[0] = b[0];
 		a[1] = b[1];
@@ -190,18 +190,18 @@ export default class Matrix2d {
 	 * @returns {Matrix2d} Reference to this object for method chaining
 	 */
 	multiply(m) {
-		let b = m.val;
-		let a = this.val,
-			a0 = a[0],
-			a1 = a[1],
-			a3 = a[3],
-			a4 = a[4],
-			b0 = b[0],
-			b1 = b[1],
-			b3 = b[3],
-			b4 = b[4],
-			b6 = b[6],
-			b7 = b[7];
+		const b = m.val;
+		const a = this.val;
+		const a0 = a[0];
+		const a1 = a[1];
+		const a3 = a[3];
+		const a4 = a[4];
+		const b0 = b[0];
+		const b1 = b[1];
+		const b3 = b[3];
+		const b4 = b[4];
+		const b6 = b[6];
+		const b7 = b[7];
 
 		a[0] = a0 * b0 + a3 * b1;
 		a[1] = a1 * b0 + a4 * b1;
@@ -218,10 +218,10 @@ export default class Matrix2d {
 	 * @returns {Matrix2d} Reference to this object for method chaining
 	 */
 	transpose() {
-		let a = this.val,
-			a1 = a[1],
-			a2 = a[2],
-			a5 = a[5];
+		const a = this.val;
+		const a1 = a[1];
+		const a2 = a[2];
+		const a5 = a[5];
 
 		a[1] = a[3];
 		a[2] = a[6];
@@ -238,23 +238,23 @@ export default class Matrix2d {
 	 * @returns {Matrix2d} Reference to this object for method chaining
 	 */
 	invert() {
-		let val = this.val;
+		const val = this.val;
 
-		let a = val[0],
-			b = val[1],
-			c = val[2],
-			d = val[3],
-			e = val[4],
-			f = val[5],
-			g = val[6],
-			h = val[7],
-			i = val[8];
+		const a = val[0];
+		const b = val[1];
+		const c = val[2];
+		const d = val[3];
+		const e = val[4];
+		const f = val[5];
+		const g = val[6];
+		const h = val[7];
+		const i = val[8];
 
-		let ta = i * e - f * h,
-			td = f * g - i * d,
-			tg = h * d - e * g;
+		const ta = i * e - f * h;
+		const td = f * g - i * d;
+		const tg = h * d - e * g;
 
-		let n = a * ta + b * td + c * tg;
+		const n = a * ta + b * td + c * tg;
 
 		val[0] = ta / n;
 		val[1] = (c * h - i * b) / n;
@@ -277,10 +277,10 @@ export default class Matrix2d {
 	 * @returns {Vector2d|Vector3d} result vector object.
 	 */
 	apply(v) {
-		let a = this.val,
-			x = v.x,
-			y = v.y,
-			z = typeof v.z !== "undefined" ? v.z : 1;
+		const a = this.val;
+		const x = v.x;
+		const y = v.y;
+		const z = typeof v.z !== "undefined" ? v.z : 1;
 
 		v.x = x * a[0] + y * a[3] + z * a[6];
 		v.y = x * a[1] + y * a[4] + z * a[7];
@@ -298,11 +298,11 @@ export default class Matrix2d {
 	 * @returns {Vector2d} result vector object.
 	 */
 	applyInverse(v) {
-		let a = this.val,
-			x = v.x,
-			y = v.y;
+		const a = this.val;
+		const x = v.x;
+		const y = v.y;
 
-		let invD = 1 / (a[0] * a[4] + a[3] * -a[1]);
+		const invD = 1 / (a[0] * a[4] + a[3] * -a[1]);
 
 		v.x =
 			a[4] * invD * x + -a[3] * invD * y + (a[7] * a[3] - a[6] * a[4]) * invD;
@@ -319,7 +319,7 @@ export default class Matrix2d {
 	 * @returns {Matrix2d} Reference to this object for method chaining
 	 */
 	scale(x, y = x) {
-		let a = this.val;
+		const a = this.val;
 
 		a[0] *= x;
 		a[1] *= x;
@@ -366,15 +366,15 @@ export default class Matrix2d {
 	 */
 	rotate(angle) {
 		if (angle !== 0) {
-			let a = this.val,
-				a00 = a[0],
-				a01 = a[1],
-				a02 = a[2],
-				a10 = a[3],
-				a11 = a[4],
-				a12 = a[5],
-				s = Math.sin(angle),
-				c = Math.cos(angle);
+			const a = this.val;
+			const a00 = a[0];
+			const a01 = a[1];
+			const a02 = a[2];
+			const a10 = a[3];
+			const a11 = a[4];
+			const a12 = a[5];
+			const s = Math.sin(angle);
+			const c = Math.cos(angle);
 
 			a[0] = c * a00 + s * a10;
 			a[1] = c * a01 + s * a11;
@@ -394,8 +394,9 @@ export default class Matrix2d {
 	 * @returns {Matrix2d} Reference to this object for method chaining
 	 */
 	translate() {
-		let a = this.val;
-		let _x, _y;
+		const a = this.val;
+		let _x;
+		let _y;
 
 		if (arguments.length === 2) {
 			// x, y
@@ -418,7 +419,7 @@ export default class Matrix2d {
 	 * @returns {boolean}
 	 */
 	isIdentity() {
-		let a = this.val;
+		const a = this.val;
 
 		return (
 			a[0] === 1 &&
@@ -439,8 +440,8 @@ export default class Matrix2d {
 	 * @returns {boolean} true if both are equals
 	 */
 	equals(m) {
-		let b = m.val;
-		let a = this.val;
+		const b = m.val;
+		const a = this.val;
 
 		return (
 			a[0] === b[0] &&
@@ -476,7 +477,7 @@ export default class Matrix2d {
 	 * @returns {string}
 	 */
 	toString() {
-		let a = this.val;
+		const a = this.val;
 
 		return (
 			"me.Matrix2d(" +

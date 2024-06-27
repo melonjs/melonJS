@@ -19,14 +19,15 @@ export default class Tile extends Bounds {
 	 * @param {TMXTileset} tileset - the corresponding tileset object
 	 */
 	constructor(x, y, gid, tileset) {
-		let width, height;
+		let width;
+		let height;
 
 		// call the parent constructor
 		super();
 
 		// determine the tile size
 		if (tileset.isCollection) {
-			let image = tileset.getTileImage(gid & TMX_CLEAR_BIT_MASK);
+			const image = tileset.getTileImage(gid & TMX_CLEAR_BIT_MASK);
 			width = image.width;
 			height = image.height;
 		} else {
@@ -120,11 +121,11 @@ export default class Tile extends Bounds {
 	 */
 	getRenderable(settings) {
 		let renderable;
-		let tileset = this.tileset;
+		const tileset = this.tileset;
 
 		if (tileset.animations.has(this.tileId)) {
-			let frames = [];
-			let frameId = [];
+			const frames = [];
+			const frameId = [];
 			tileset.animations.get(this.tileId).frames.forEach((frame) => {
 				frameId.push(frame.tileid);
 				frames.push({
@@ -137,7 +138,7 @@ export default class Tile extends Bounds {
 			renderable.setCurrentAnimation(this.tileId - tileset.firstgid);
 		} else {
 			if (tileset.isCollection === true) {
-				let image = tileset.getTileImage(this.tileId);
+				const image = tileset.getTileImage(this.tileId);
 				renderable = new Sprite(
 					0,
 					0,

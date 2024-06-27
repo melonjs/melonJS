@@ -41,7 +41,7 @@ const hex6Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
 const hex8Rx =
 	/^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
 
-let cssToRGB = new Map();
+const cssToRGB = new Map();
 
 [
 	// CSS1
@@ -311,13 +311,15 @@ export default class Color {
 	 * @returns {Color} Reference to this object for method chaining
 	 */
 	setHSV(h, s, v) {
-		let r, g, b;
+		let r;
+		let g;
+		let b;
 
-		let i = Math.floor(h * 6);
-		let f = h * 6 - i;
-		let p = v * (1 - s);
-		let q = v * (1 - f * s);
-		let t = v * (1 - (1 - f) * s);
+		const i = Math.floor(h * 6);
+		const f = h * 6 - i;
+		const p = v * (1 - s);
+		const q = v * (1 - f * s);
+		const t = v * (1 - (1 - f) * s);
 
 		switch (i % 6) {
 			case 0:
@@ -350,13 +352,15 @@ export default class Color {
 	 * @returns {Color} Reference to this object for method chaining
 	 */
 	setHSL(h, s, l) {
-		let r, g, b;
+		let r;
+		let g;
+		let b;
 
 		if (s === 0) {
 			r = g = b = l; // achromatic
 		} else {
-			let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-			let p = 2 * l - q;
+			const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+			const p = 2 * l - q;
 
 			r = hue2rgb(p, q, h + 1 / 3);
 			g = hue2rgb(p, q, h);
@@ -518,7 +522,7 @@ export default class Color {
 	parseRGB(rgbColor) {
 		// TODO : Memoize this function by caching its input
 
-		let match = rgbaRx.exec(rgbColor);
+		const match = rgbaRx.exec(rgbColor);
 		if (match) {
 			return this.setColor(+match[1], +match[2], +match[3], +match[5]);
 		}
@@ -560,10 +564,10 @@ export default class Color {
 
 		if ((match = hex4Rx.exec(hexColor))) {
 			// #ARGB or #RGBA
-			let r = match[argb === false ? 1 : 2];
-			let g = match[argb === false ? 2 : 3];
-			let b = match[argb === false ? 3 : 4];
-			let a = match[argb === false ? 4 : 1];
+			const r = match[argb === false ? 1 : 2];
+			const g = match[argb === false ? 2 : 3];
+			const b = match[argb === false ? 3 : 4];
+			const a = match[argb === false ? 4 : 1];
 			return this.setColor(
 				parseInt(r + r, 16), // r
 				parseInt(g + g, 16), // g

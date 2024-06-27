@@ -11,7 +11,7 @@ import CanvasRenderer from "./../../video/canvas/canvas_renderer";
  */
 function initArray(rows, cols) {
 	// initialize the array
-	let array = new Array(cols);
+	const array = new Array(cols);
 	for (let col = 0; col < cols; col++) {
 		array[col] = new Array(rows);
 		for (let row = 0; row < rows; row++) {
@@ -27,7 +27,8 @@ function initArray(rows, cols) {
  */
 function setLayerData(layer, bounds, data) {
 	let idx = 0;
-	let width, height;
+	let width;
+	let height;
 
 	// layer provide rows and cols, chunk width and height
 	if (typeof bounds.rows === "undefined") {
@@ -159,7 +160,7 @@ export default class TMXLayer extends Renderable {
 		this.rows = +data.height;
 
 		// layer opacity
-		let visible = typeof data.visible !== "undefined" ? +data.visible : 1;
+		const visible = typeof data.visible !== "undefined" ? +data.visible : 1;
 		this.setOpacity(visible ? +data.opacity : 0);
 
 		// layer tint
@@ -213,7 +214,7 @@ export default class TMXLayer extends Renderable {
 		}
 
 		if (this.tilesets) {
-			let tileset = this.tilesets.tilesets;
+			const tileset = this.tilesets.tilesets;
 			for (let i = 0; i < tileset.length; i++) {
 				if (tileset[i].isAnimated) {
 					this.animatedTilesets.push(tileset[i]);
@@ -281,7 +282,7 @@ export default class TMXLayer extends Renderable {
 	 * @returns {number} TileId or null if there is no Tile at the given position
 	 */
 	getTileId(x, y) {
-		let tile = this.getTile(x, y);
+		const tile = this.getTile(x, y);
 		return tile ? tile.tileId : null;
 	}
 
@@ -300,7 +301,7 @@ export default class TMXLayer extends Renderable {
 		let tile = null;
 
 		if (this.contains(x, y)) {
-			let coord = this.getRenderer().pixelToTileCoords(
+			const coord = this.getRenderer().pixelToTileCoords(
 				x,
 				y,
 				pool.pull("Vector2d"),
@@ -350,10 +351,10 @@ export default class TMXLayer extends Renderable {
 	 * let tile = layer.cellAt(0, 0);
 	 */
 	cellAt(x, y, boundsCheck) {
-		let _x = ~~x;
-		let _y = ~~y;
+		const _x = ~~x;
+		const _y = ~~y;
 
-		let renderer = this.getRenderer();
+		const renderer = this.getRenderer();
 		// boundsCheck only used internally by the tiled renderer, when the layer bound check was already done
 		if (
 			boundsCheck === false ||

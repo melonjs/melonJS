@@ -53,7 +53,7 @@ export default class ObservableVector3d extends Vector3d {
 	}
 
 	set x(value) {
-		let ret = this.onUpdate.call(
+		const ret = this.onUpdate.call(
 			this.scope,
 			value,
 			this._y,
@@ -82,7 +82,7 @@ export default class ObservableVector3d extends Vector3d {
 	}
 
 	set y(value) {
-		let ret = this.onUpdate.call(
+		const ret = this.onUpdate.call(
 			this.scope,
 			this._x,
 			value,
@@ -111,7 +111,7 @@ export default class ObservableVector3d extends Vector3d {
 	}
 
 	set z(value) {
-		let ret = this.onUpdate.call(
+		const ret = this.onUpdate.call(
 			this.scope,
 			this._x,
 			this._y,
@@ -131,7 +131,7 @@ export default class ObservableVector3d extends Vector3d {
 	 * @ignore
 	 */
 	_set(x, y, z) {
-		let ret = this.onUpdate.call(
+		const ret = this.onUpdate.call(
 			this.scope,
 			x,
 			y,
@@ -297,7 +297,7 @@ export default class ObservableVector3d extends Vector3d {
 	 * @returns {ObservableVector3d} Reference to this object for method chaining
 	 */
 	minV(v) {
-		let _vz = v.z || 0;
+		const _vz = v.z || 0;
 		return this._set(
 			this._x < v.x ? this._x : v.x,
 			this._y < v.y ? this._y : v.y,
@@ -313,7 +313,7 @@ export default class ObservableVector3d extends Vector3d {
 	 * @returns {ObservableVector3d} Reference to this object for method chaining
 	 */
 	maxV(v) {
-		let _vz = v.z || 0;
+		const _vz = v.z || 0;
 		return this._set(
 			this._x > v.x ? this._x : v.x,
 			this._y > v.y ? this._y : v.y,
@@ -453,11 +453,11 @@ export default class ObservableVector3d extends Vector3d {
 		}
 
 		// TODO also rotate on the z axis if the given vector is a 3d one
-		let x = this.x - cx;
-		let y = this.y - cy;
+		const x = this.x - cx;
+		const y = this.y - cy;
 
-		let c = Math.cos(angle);
-		let s = Math.sin(angle);
+		const c = Math.cos(angle);
+		const s = Math.sin(angle);
 
 		return this._set(x * c - y * s + cx, x * s + y * c + cy, this.z);
 	}
@@ -481,12 +481,12 @@ export default class ObservableVector3d extends Vector3d {
 	 * @returns {ObservableVector3d} Reference to this object for method chaining
 	 */
 	cross(v) {
-		let ax = this._x,
-			ay = this._y,
-			az = this._z;
-		let bx = v.x,
-			by = v.y,
-			bz = v.z;
+		const ax = this._x;
+		const ay = this._y;
+		const az = this._z;
+		const bx = v.x;
+		const by = v.y;
+		const bz = v.z;
 
 		return this._set(ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx);
 	}
@@ -516,12 +516,12 @@ export default class ObservableVector3d extends Vector3d {
 	 * @returns {ObservableVector3d} Reference to this object for method chaining
 	 */
 	moveTowards(target, step) {
-		let angle = Math.atan2(target.y - this._y, target.x - this._x);
+		const angle = Math.atan2(target.y - this._y, target.x - this._x);
 
-		let dx = this._x - target.x;
-		let dy = this._y - target.y;
+		const dx = this._x - target.x;
+		const dy = this._y - target.y;
 
-		let distance = Math.sqrt(dx * dx + dy * dy);
+		const distance = Math.sqrt(dx * dx + dy * dy);
 
 		if (distance === 0 || (step >= 0 && distance <= step * step)) {
 			return target;
@@ -542,9 +542,9 @@ export default class ObservableVector3d extends Vector3d {
 	 * @returns {number}
 	 */
 	distance(v) {
-		let dx = this._x - v.x;
-		let dy = this._y - v.y;
-		let dz = this._z - (v.z || 0);
+		const dx = this._x - v.x;
+		const dy = this._y - v.y;
+		const dz = this._z - (v.z || 0);
 		return Math.sqrt(dx * dx + dy * dy + dz * dz);
 	}
 

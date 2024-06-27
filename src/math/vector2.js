@@ -247,7 +247,8 @@ export default class Vector2d {
 	 * @returns {boolean}
 	 */
 	equals(...args) {
-		let _x, _y;
+		let _x;
+		let _y;
 		if (args.length === 2) {
 			// x, y
 			[_x, _y] = args;
@@ -290,11 +291,11 @@ export default class Vector2d {
 			cy = v.y;
 		}
 
-		let x = this.x - cx;
-		let y = this.y - cy;
+		const x = this.x - cx;
+		const y = this.y - cy;
 
-		let c = Math.cos(angle);
-		let s = Math.sin(angle);
+		const c = Math.cos(angle);
+		const s = Math.sin(angle);
 
 		return this._set(x * c - y * s + cx, x * s + y * c + cy);
 	}
@@ -352,9 +353,9 @@ export default class Vector2d {
 	 * @returns {Vector2d} Reference to this object for method chaining
 	 */
 	moveTowards(target, step) {
-		let angle = Math.atan2(target.y - this.y, target.x - this.x);
+		const angle = Math.atan2(target.y - this.y, target.x - this.x);
 
-		let distance = this.distance(target);
+		const distance = this.distance(target);
 
 		if (distance === 0 || (step >= 0 && distance <= step * step)) {
 			return target;
@@ -372,8 +373,8 @@ export default class Vector2d {
 	 * @returns {number}
 	 */
 	distance(v) {
-		let dx = this.x - v.x,
-			dy = this.y - v.y;
+		const dx = this.x - v.x;
+		const dy = this.y - v.y;
 		return Math.sqrt(dx * dx + dy * dy);
 	}
 

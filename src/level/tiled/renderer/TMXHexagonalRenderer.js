@@ -69,7 +69,8 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	getBounds(layer) {
-		let bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
+		const bounds =
+			layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
 
 		// The map size is the same regardless of which indexes are shifted.
 		if (this.staggerX) {
@@ -114,7 +115,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	topLeft(x, y, v) {
-		let ret = v || new Vector2d();
+		const ret = v || new Vector2d();
 
 		if (!this.staggerX) {
 			if ((y & 1) ^ this.staggerEven) {
@@ -136,7 +137,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	topRight(x, y, v) {
-		let ret = v || new Vector2d();
+		const ret = v || new Vector2d();
 
 		if (!this.staggerX) {
 			if ((y & 1) ^ this.staggerEven) {
@@ -158,7 +159,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	bottomLeft(x, y, v) {
-		let ret = v || new Vector2d();
+		const ret = v || new Vector2d();
 
 		if (!this.staggerX) {
 			if ((y & 1) ^ this.staggerEven) {
@@ -180,7 +181,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	bottomRight(x, y, v) {
-		let ret = v || new Vector2d();
+		const ret = v || new Vector2d();
 
 		if (!this.staggerX) {
 			if ((y & 1) ^ this.staggerEven) {
@@ -203,7 +204,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	pixelToTileCoords(x, y, v) {
-		let ret = v || new Vector2d();
+		const ret = v || new Vector2d();
 
 		if (this.staggerX) {
 			//flat top
@@ -214,14 +215,14 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 		}
 
 		// Start with the coordinates of a grid-aligned tile
-		let referencePoint = pool.pull(
+		const referencePoint = pool.pull(
 			"Vector2d",
 			Math.floor(x / (this.columnwidth * 2)),
 			Math.floor(y / (this.rowheight * 2)),
 		);
 
 		// Relative x and y position on the base square of the grid-aligned tile
-		let rel = pool.pull(
+		const rel = pool.pull(
 			"Vector2d",
 			x - referencePoint.x * (this.columnwidth * 2),
 			y - referencePoint.y * (this.rowheight * 2),
@@ -241,7 +242,10 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 		}
 
 		// Determine the nearest hexagon tile by the distance to the center
-		let left, top, centerX, centerY;
+		let left;
+		let top;
+		let centerX;
+		let centerY;
 		if (this.staggerX) {
 			left = this.sidelengthx / 2;
 			centerX = left + this.columnwidth;
@@ -272,7 +276,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 			}
 		}
 
-		let offsets = this.staggerX ? offsetsStaggerX : offsetsStaggerY;
+		const offsets = this.staggerX ? offsetsStaggerX : offsetsStaggerY;
 
 		ret.set(
 			referencePoint.x + offsets[nearest].x,
@@ -290,9 +294,9 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	tileToPixelCoords(x, y, v) {
-		let tileX = Math.floor(x),
-			tileY = Math.floor(y);
-		let ret = v || new Vector2d();
+		const tileX = Math.floor(x);
+		const tileY = Math.floor(y);
+		const ret = v || new Vector2d();
 
 		if (this.staggerX) {
 			ret.y = tileY * (this.tileheight + this.sidelengthy);
@@ -330,8 +334,8 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	drawTile(renderer, x, y, tmxTile) {
-		let tileset = tmxTile.tileset;
-		let point = this.tileToPixelCoords(x, y, pool.pull("Vector2d"));
+		const tileset = tmxTile.tileset;
+		const point = this.tileToPixelCoords(x, y, pool.pull("Vector2d"));
 
 		// draw the tile
 		tileset.drawTile(
@@ -352,7 +356,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 		let tile;
 
 		// get top-left and bottom-right tile position
-		let startTile = this.pixelToTileCoords(
+		const startTile = this.pixelToTileCoords(
 			rect.pos.x,
 			rect.pos.y,
 			pool.pull("Vector2d"),
@@ -368,16 +372,16 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 			pool.pull("Vector2d"),
 		);
 
-		let rowTile = startTile.clone();
-		let rowPos = startPos.clone();
+		const rowTile = startTile.clone();
+		const rowPos = startPos.clone();
 
 		/* Determine in which half of the tile the top-left corner of the area we
 		 * need to draw is. If we're in the upper half, we need to start one row
 		 * up due to those tiles being visible as well. How we go up one row
 		 * depends on whether we're in the left or right half of the tile.
 		 */
-		let inUpperHalf = rect.pos.y - startPos.y < this.sideoffsety;
-		let inLeftHalf = rect.pos.x - startPos.x < this.sideoffsetx;
+		const inUpperHalf = rect.pos.y - startPos.y < this.sideoffsety;
+		const inLeftHalf = rect.pos.x - startPos.x < this.sideoffsetx;
 
 		if (inUpperHalf) {
 			startTile.y--;
@@ -386,8 +390,8 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 			startTile.x--;
 		}
 
-		let endX = layer.cols;
-		let endY = layer.rows;
+		const endX = layer.cols;
+		const endY = layer.rows;
 
 		if (this.staggerX) {
 			//ensure we are in the valid tile range

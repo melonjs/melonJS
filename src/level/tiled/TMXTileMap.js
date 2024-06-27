@@ -39,7 +39,7 @@ function readImageLayer(map, data, z) {
 	applyTMXProperties(data.properties, data);
 
 	// create the layer
-	let imageLayer = pool.pull(
+	const imageLayer = pool.pull(
 		"ImageLayer",
 		// x/y is deprecated since 0.15 and replace by offsetx/y
 		+data.offsetx || +data.x || 0,
@@ -65,7 +65,7 @@ function readImageLayer(map, data, z) {
 	);
 
 	// set some additional flags
-	let visible = typeof data.visible !== "undefined" ? data.visible : true;
+	const visible = typeof data.visible !== "undefined" ? data.visible : true;
 	imageLayer.setOpacity(visible ? +data.opacity : 0);
 
 	return imageLayer;
@@ -273,7 +273,7 @@ export default class TMXTileMap {
 
 		// parse all tileset objects
 		if (typeof data.tilesets !== "undefined") {
-			let tilesets = data.tilesets;
+			const tilesets = data.tilesets;
 			tilesets.forEach((tileset) => {
 				// add the new tileset
 				this.tilesets.add(readTileset(tileset));
@@ -333,10 +333,10 @@ export default class TMXTileMap {
 	 * level.addTo(me.game.world, true, true);
 	 */
 	addTo(container, flatten, setViewportBounds) {
-		let _sort = container.autoSort;
-		let _depth = container.autoDepth;
+		const _sort = container.autoSort;
+		const _depth = container.autoDepth;
 
-		let levelBounds = this.getBounds();
+		const levelBounds = this.getBounds();
 
 		// disable auto-sort and auto-depth
 		container.autoSort = false;
@@ -403,7 +403,7 @@ export default class TMXTileMap {
 	 * @returns {Renderable[]} Array of Objects
 	 */
 	getObjects(flatten) {
-		let objects = [];
+		const objects = [];
 		let isCollisionGroup = false;
 		let targetContainer;
 
@@ -411,7 +411,7 @@ export default class TMXTileMap {
 		this.readMapObjects(this.data);
 
 		for (let g = 0; g < this.objectGroups.length; g++) {
-			let group = this.objectGroups[g];
+			const group = this.objectGroups[g];
 
 			// check if this is the collision shape group
 			isCollisionGroup = group.name.toLowerCase().includes(COLLISION_GROUP);
@@ -437,7 +437,7 @@ export default class TMXTileMap {
 			// corresponding target Container
 			for (let o = 0; o < group.objects.length; o++) {
 				// TMX object settings
-				let settings = group.objects[o];
+				const settings = group.objects[o];
 				// reference to the instantiated object
 				let obj;
 				// a reference to the default shape

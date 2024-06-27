@@ -9,7 +9,7 @@ export function warning(deprecated, replacement, version) {
 		return;
 	}
 	const msg = "melonJS: %s is deprecated since version %s, please use %s";
-	let stack = new Error().stack;
+	const stack = new Error().stack;
 
 	if (console.groupCollapsed) {
 		console.groupCollapsed(

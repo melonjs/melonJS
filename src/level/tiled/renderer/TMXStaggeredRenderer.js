@@ -22,8 +22,8 @@ export default class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 	pixelToTileCoords(x, y, v) {
 		let ret = v || new Vector2d();
 
-		let alignedX = x,
-			alignedY = y;
+		let alignedX = x;
+		let alignedY = y;
 
 		if (this.staggerX) {
 			alignedX -= this.staggerEven ? this.sideoffsetx : 0;
@@ -52,14 +52,14 @@ export default class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 		}
 
 		// Relative x and y position on the base square of the grid-aligned tile
-		let rel = pool.pull(
+		const rel = pool.pull(
 			"Vector2d",
 			alignedX - referencePoint.x * this.tilewidth,
 			alignedY - referencePoint.y * this.tileheight,
 		);
 
 		// Check whether the cursor is in any of the corners (neighboring tiles)
-		let y_pos = rel.x * (this.tileheight / this.tilewidth);
+		const y_pos = rel.x * (this.tileheight / this.tilewidth);
 
 		if (this.sideoffsety - y_pos > rel.y) {
 			referencePoint = this.topLeft(

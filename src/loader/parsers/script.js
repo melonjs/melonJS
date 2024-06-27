@@ -8,7 +8,7 @@
  * @ignore
  */
 export function preloadJavascript(data, onload, onerror, settings) {
-	let script = globalThis.document.createElement("script");
+	const script = globalThis.document.createElement("script");
 
 	script.src = data.src;
 	script.type = "text/javascript";

@@ -53,7 +53,7 @@ export default class TMXGroup {
 		 */
 		this.objects = [];
 
-		let visible = typeof data.visible !== "undefined" ? data.visible : true;
+		const visible = typeof data.visible !== "undefined" ? data.visible : true;
 		this.opacity = visible === true ? clamp(+data.opacity || 1.0, 0.0, 1.0) : 0;
 
 		// check if we have any user-defined properties
@@ -69,7 +69,7 @@ export default class TMXGroup {
 
 		if (data.layers) {
 			data.layers.forEach((data) => {
-				let layer = new TMXLayer(
+				const layer = new TMXLayer(
 					map,
 					data,
 					map.tilewidth,

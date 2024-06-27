@@ -25,7 +25,7 @@ export function preloadImage(img, onload, onerror, settings) {
 		return 0;
 	}
 
-	let sources = Array.isArray(img.src) ? img.src : [img.src];
+	const sources = Array.isArray(img.src) ? img.src : [img.src];
 	let isFormatSupported = false;
 
 	for (const imgPath of sources) {

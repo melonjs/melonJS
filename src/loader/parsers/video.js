@@ -19,7 +19,7 @@ export function preloadVideo(data, onload, onerror, settings) {
 		return 0;
 	}
 
-	let videoElement = (videoList[data.name] =
+	const videoElement = (videoList[data.name] =
 		globalThis.document.createElement("video"));
 
 	if (isDataUrl(data.src)) {

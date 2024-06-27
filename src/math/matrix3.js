@@ -114,7 +114,7 @@ export default class Matrix3d {
 		m32,
 		m33,
 	) {
-		let a = this.val;
+		const a = this.val;
 
 		a[0] = m00;
 		a[1] = m01;
@@ -152,7 +152,7 @@ export default class Matrix3d {
 	 * @returns {Matrix2d} Reference to this object for method chaining
 	 */
 	fromMat2d(m) {
-		let b = m.val;
+		const b = m.val;
 		return this.setTransform(
 			b[0],
 			b[3],
@@ -179,29 +179,29 @@ export default class Matrix3d {
 	 * @returns {Matrix3d} Reference to this object for method chaining
 	 */
 	multiply(m) {
-		let a = this.val;
-		let b = m.val;
+		const a = this.val;
+		const b = m.val;
 
-		let a00 = a[0],
-			a01 = a[1],
-			a02 = a[2],
-			a03 = a[3];
-		let a10 = a[4],
-			a11 = a[5],
-			a12 = a[6],
-			a13 = a[7];
-		let a20 = a[8],
-			a21 = a[9],
-			a22 = a[10],
-			a23 = a[11];
-		let a30 = a[12],
-			a31 = a[13],
-			a32 = a[14],
-			a33 = a[15];
-		let b0 = b[0],
-			b1 = b[1],
-			b2 = b[2],
-			b3 = b[3];
+		const a00 = a[0];
+		const a01 = a[1];
+		const a02 = a[2];
+		const a03 = a[3];
+		const a10 = a[4];
+		const a11 = a[5];
+		const a12 = a[6];
+		const a13 = a[7];
+		const a20 = a[8];
+		const a21 = a[9];
+		const a22 = a[10];
+		const a23 = a[11];
+		const a30 = a[12];
+		const a31 = a[13];
+		const a32 = a[14];
+		const a33 = a[15];
+		let b0 = b[0];
+		let b1 = b[1];
+		let b2 = b[2];
+		let b3 = b[3];
 
 		a[0] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
 		a[1] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
@@ -246,13 +246,13 @@ export default class Matrix3d {
 	 * @returns {Matrix3d} Reference to this object for method chaining
 	 */
 	transpose() {
-		let a = this.val,
-			a01 = a[1],
-			a02 = a[2],
-			a03 = a[3],
-			a12 = a[6],
-			a13 = a[7],
-			a23 = a[11];
+		const a = this.val;
+		const a01 = a[1];
+		const a02 = a[2];
+		const a03 = a[3];
+		const a12 = a[6];
+		const a13 = a[7];
+		const a23 = a[11];
 
 		a[1] = a[4];
 		a[2] = a[8];
@@ -275,39 +275,39 @@ export default class Matrix3d {
 	 * @returns {Matrix3d} Reference to this object for method chaining
 	 */
 	invert() {
-		let a = this.val;
+		const a = this.val;
 
-		let a00 = a[0],
-			a01 = a[1],
-			a02 = a[2],
-			a03 = a[3];
-		let a10 = a[4],
-			a11 = a[5],
-			a12 = a[6],
-			a13 = a[7];
-		let a20 = a[8],
-			a21 = a[9],
-			a22 = a[10],
-			a23 = a[11];
-		let a30 = a[12],
-			a31 = a[13],
-			a32 = a[14],
-			a33 = a[15];
+		const a00 = a[0];
+		const a01 = a[1];
+		const a02 = a[2];
+		const a03 = a[3];
+		const a10 = a[4];
+		const a11 = a[5];
+		const a12 = a[6];
+		const a13 = a[7];
+		const a20 = a[8];
+		const a21 = a[9];
+		const a22 = a[10];
+		const a23 = a[11];
+		const a30 = a[12];
+		const a31 = a[13];
+		const a32 = a[14];
+		const a33 = a[15];
 
-		let b00 = a00 * a11 - a01 * a10;
-		let b01 = a00 * a12 - a02 * a10;
-		let b02 = a00 * a13 - a03 * a10;
-		let b03 = a01 * a12 - a02 * a11;
+		const b00 = a00 * a11 - a01 * a10;
+		const b01 = a00 * a12 - a02 * a10;
+		const b02 = a00 * a13 - a03 * a10;
+		const b03 = a01 * a12 - a02 * a11;
 
-		let b04 = a01 * a13 - a03 * a11;
-		let b05 = a02 * a13 - a03 * a12;
-		let b06 = a20 * a31 - a21 * a30;
-		let b07 = a20 * a32 - a22 * a30;
+		const b04 = a01 * a13 - a03 * a11;
+		const b05 = a02 * a13 - a03 * a12;
+		const b06 = a20 * a31 - a21 * a30;
+		const b07 = a20 * a32 - a22 * a30;
 
-		let b08 = a20 * a33 - a23 * a30;
-		let b09 = a21 * a32 - a22 * a31;
-		let b10 = a21 * a33 - a23 * a31;
-		let b11 = a22 * a33 - a23 * a32;
+		const b08 = a20 * a33 - a23 * a30;
+		const b09 = a21 * a32 - a22 * a31;
+		const b10 = a21 * a33 - a23 * a31;
+		const b11 = a22 * a33 - a23 * a32;
 
 		// Calculate the determinant
 		let det =
@@ -345,12 +345,12 @@ export default class Matrix3d {
 	 * @returns {Vector2d|Vector3d} result vector object.
 	 */
 	apply(v) {
-		let a = this.val,
-			x = v.x,
-			y = v.y,
-			z = typeof v.z !== "undefined" ? v.z : 1;
+		const a = this.val;
+		const x = v.x;
+		const y = v.y;
+		const z = typeof v.z !== "undefined" ? v.z : 1;
 
-		let w = a[3] * x + a[7] * y + a[11] * z + a[15] || 1.0;
+		const w = a[3] * x + a[7] * y + a[11] * z + a[15] || 1.0;
 
 		v.x = (a[0] * x + a[4] * y + a[8] * z + a[12]) / w;
 		v.y = (a[1] * x + a[5] * y + a[9] * z + a[13]) / w;
@@ -369,7 +369,7 @@ export default class Matrix3d {
 	 */
 	applyInverse(v) {
 		// invert the current matrix
-		let im = pool.pull("Matrix3d", this).invert();
+		const im = pool.pull("Matrix3d", this).invert();
 
 		// apply the inverted matrix
 		im.apply(v);
@@ -391,10 +391,10 @@ export default class Matrix3d {
 	 * @returns {Matrix3d} Reference to this object for method chaining
 	 */
 	ortho(left, right, bottom, top, near, far) {
-		let a = this.val;
-		let leftRight = 1.0 / (left - right);
-		let bottomTop = 1.0 / (bottom - top);
-		let nearFar = 1.0 / (near - far);
+		const a = this.val;
+		const leftRight = 1.0 / (left - right);
+		const bottomTop = 1.0 / (bottom - top);
+		const nearFar = 1.0 / (near - far);
 
 		a[0] = -2.0 * leftRight;
 		a[1] = 0.0;
@@ -424,7 +424,7 @@ export default class Matrix3d {
 	 * @returns {Matrix3d} Reference to this object for method chaining
 	 */
 	scale(x, y = x, z = 0) {
-		let a = this.val;
+		const a = this.val;
 
 		a[0] = a[0] * x;
 		a[1] = a[1] * x;
@@ -479,20 +479,12 @@ export default class Matrix3d {
 	 */
 	rotate(angle, v) {
 		if (angle !== 0) {
-			let a = this.val,
-				x = v.x,
-				y = v.y,
-				z = v.z;
+			const a = this.val;
+			let x = v.x;
+			let y = v.y;
+			let z = v.z;
 
 			let len = Math.sqrt(x * x + y * y + z * z);
-
-			let s, c, t;
-			let a00, a01, a02, a03;
-			let a10, a11, a12, a13;
-			let a20, a21, a22, a23;
-			let b00, b01, b02;
-			let b10, b11, b12;
-			let b20, b21, b22;
 
 			if (len < EPSILON) {
 				return null;
@@ -503,33 +495,33 @@ export default class Matrix3d {
 			y *= len;
 			z *= len;
 
-			s = Math.sin(angle);
-			c = Math.cos(angle);
-			t = 1 - c;
+			const s = Math.sin(angle);
+			const c = Math.cos(angle);
+			const t = 1 - c;
 
-			a00 = a[0];
-			a01 = a[1];
-			a02 = a[2];
-			a03 = a[3];
-			a10 = a[4];
-			a11 = a[5];
-			a12 = a[6];
-			a13 = a[7];
-			a20 = a[8];
-			a21 = a[9];
-			a22 = a[10];
-			a23 = a[11];
+			const a00 = a[0];
+			const a01 = a[1];
+			const a02 = a[2];
+			const a03 = a[3];
+			const a10 = a[4];
+			const a11 = a[5];
+			const a12 = a[6];
+			const a13 = a[7];
+			const a20 = a[8];
+			const a21 = a[9];
+			const a22 = a[10];
+			const a23 = a[11];
 
 			// Construct the elements of the rotation matrix
-			b00 = x * x * t + c;
-			b01 = y * x * t + z * s;
-			b02 = z * x * t - y * s;
-			b10 = x * y * t - z * s;
-			b11 = y * y * t + c;
-			b12 = z * y * t + x * s;
-			b20 = x * z * t + y * s;
-			b21 = y * z * t - x * s;
-			b22 = z * z * t + c;
+			const b00 = x * x * t + c;
+			const b01 = y * x * t + z * s;
+			const b02 = z * x * t - y * s;
+			const b10 = x * y * t - z * s;
+			const b11 = y * y * t + c;
+			const b12 = z * y * t + x * s;
+			const b20 = x * z * t + y * s;
+			const b21 = y * z * t - x * s;
+			const b22 = z * z * t + c;
 
 			// Perform rotation-specific matrix multiplication
 			a[0] = a00 * b00 + a10 * b01 + a20 * b02;
@@ -556,8 +548,10 @@ export default class Matrix3d {
 	 * @returns {Matrix3d} Reference to this object for method chaining
 	 */
 	translate() {
-		let a = this.val;
-		let _x, _y, _z;
+		const a = this.val;
+		let _x;
+		let _y;
+		let _z;
 
 		if (arguments.length > 1) {
 			// x, y (, z)
@@ -584,7 +578,7 @@ export default class Matrix3d {
 	 * @returns {boolean}
 	 */
 	isIdentity() {
-		let a = this.val;
+		const a = this.val;
 
 		return (
 			a[0] === 1 &&
@@ -612,8 +606,8 @@ export default class Matrix3d {
 	 * @returns {boolean} true if both are equals
 	 */
 	equals(m) {
-		let b = m.val;
-		let a = this.val;
+		const b = m.val;
+		const a = this.val;
 
 		return (
 			a[0] === b[0] &&
@@ -656,7 +650,7 @@ export default class Matrix3d {
 	 * @returns {string}
 	 */
 	toString() {
-		let a = this.val;
+		const a = this.val;
 
 		return (
 			"me.Matrix3d(" +

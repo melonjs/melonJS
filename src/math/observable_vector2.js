@@ -45,7 +45,13 @@ export default class ObservableVector2d extends Vector2d {
 	}
 
 	set x(value) {
-		let ret = this.onUpdate.call(this.scope, value, this._y, this._x, this._y);
+		const ret = this.onUpdate.call(
+			this.scope,
+			value,
+			this._y,
+			this._x,
+			this._y,
+		);
 		if (ret && "x" in ret) {
 			this._x = ret.x;
 		} else {
@@ -66,7 +72,13 @@ export default class ObservableVector2d extends Vector2d {
 	}
 
 	set y(value) {
-		let ret = this.onUpdate.call(this.scope, this._x, value, this._x, this._y);
+		const ret = this.onUpdate.call(
+			this.scope,
+			this._x,
+			value,
+			this._x,
+			this._y,
+		);
 		if (ret && "y" in ret) {
 			this._y = ret.y;
 		} else {
@@ -76,7 +88,7 @@ export default class ObservableVector2d extends Vector2d {
 
 	/** @ignore */
 	_set(x, y) {
-		let ret = this.onUpdate.call(this.scope, x, y, this._x, this._y);
+		const ret = this.onUpdate.call(this.scope, x, y, this._x, this._y);
 		if (ret && "x" in ret && "y" in ret) {
 			this._x = ret.x;
 			this._y = ret.y;
@@ -362,11 +374,11 @@ export default class ObservableVector2d extends Vector2d {
 			cy = v.y;
 		}
 
-		let x = this._x - cx;
-		let y = this._y - cy;
+		const x = this._x - cx;
+		const y = this._y - cy;
 
-		let c = Math.cos(angle);
-		let s = Math.sin(angle);
+		const c = Math.cos(angle);
+		const s = Math.sin(angle);
 
 		return this._set(x * c - y * s + cx, x * s + y * c + cy);
 	}
@@ -417,9 +429,9 @@ export default class ObservableVector2d extends Vector2d {
 	 * @returns {ObservableVector2d} Reference to this object for method chaining
 	 */
 	moveTowards(target, step) {
-		let angle = Math.atan2(target.y - this._y, target.x - this._x);
+		const angle = Math.atan2(target.y - this._y, target.x - this._x);
 
-		let distance = this.distance(target);
+		const distance = this.distance(target);
 
 		if (distance === 0 || (step >= 0 && distance <= step * step)) {
 			return target;

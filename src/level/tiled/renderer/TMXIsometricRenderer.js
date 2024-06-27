@@ -31,7 +31,8 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	getBounds(layer) {
-		let bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
+		const bounds =
+			layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
 		bounds.setMinMax(
 			0,
 			0,
@@ -46,7 +47,7 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	pixelToTileCoords(x, y, v) {
-		let ret = v || new Vector2d();
+		const ret = v || new Vector2d();
 		return ret.set(
 			y / this.tileheight + (x - this.originX) / this.tilewidth,
 			y / this.tileheight - (x - this.originX) / this.tilewidth,
@@ -58,7 +59,7 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	tileToPixelCoords(x, y, v) {
-		let ret = v || new Vector2d();
+		const ret = v || new Vector2d();
 		return ret.set(
 			(x - y) * this.hTilewidth + this.originX,
 			(x + y) * this.hTileheight,
@@ -71,9 +72,9 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	adjustPosition(obj) {
-		let tileX = obj.x / this.hTilewidth;
-		let tileY = obj.y / this.tileheight;
-		let isoPos = pool.pull("Vector2d");
+		const tileX = obj.x / this.hTilewidth;
+		const tileY = obj.y / this.tileheight;
+		const isoPos = pool.pull("Vector2d");
 
 		this.tileToPixelCoords(tileX, tileY, isoPos);
 
@@ -88,7 +89,7 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	drawTile(renderer, x, y, tmxTile) {
-		let tileset = tmxTile.tileset;
+		const tileset = tmxTile.tileset;
 		// draw the tile
 		tileset.drawTile(
 			renderer,
@@ -107,25 +108,25 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 		let tileset = layer.tileset;
 
 		// get top-left and bottom-right tile position
-		let rowItr = this.pixelToTileCoords(
+		const rowItr = this.pixelToTileCoords(
 			rect.pos.x - tileset.tilewidth,
 			rect.pos.y - tileset.tileheight,
 			pool.pull("Vector2d"),
 		).floorSelf();
-		let tileEnd = this.pixelToTileCoords(
+		const tileEnd = this.pixelToTileCoords(
 			rect.pos.x + rect.width + tileset.tilewidth,
 			rect.pos.y + rect.height + tileset.tileheight,
 			pool.pull("Vector2d"),
 		).ceilSelf();
 
-		let rectEnd = this.tileToPixelCoords(
+		const rectEnd = this.tileToPixelCoords(
 			tileEnd.x,
 			tileEnd.y,
 			pool.pull("Vector2d"),
 		);
 
 		// Determine the tile and pixel coordinates to start at
-		let startPos = this.tileToPixelCoords(
+		const startPos = this.tileToPixelCoords(
 			rowItr.x,
 			rowItr.y,
 			pool.pull("Vector2d"),
@@ -138,8 +139,8 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 		 * up due to those tiles being visible as well. How we go up one row
 		 * depends on whether we're in the left or right half of the tile.
 		 */
-		let inUpperHalf = startPos.y - rect.pos.y > this.hTileheight;
-		let inLeftHalf = rect.pos.x - startPos.x < this.hTilewidth;
+		const inUpperHalf = startPos.y - rect.pos.y > this.hTileheight;
+		const inLeftHalf = rect.pos.x - startPos.x < this.hTilewidth;
 
 		if (inUpperHalf) {
 			if (inLeftHalf) {
@@ -156,7 +157,7 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 		let shifted = inUpperHalf ^ inLeftHalf;
 
 		// initialize the columItr vector
-		let columnItr = rowItr.clone();
+		const columnItr = rowItr.clone();
 
 		// main drawing loop
 		for (
@@ -166,12 +167,12 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 		) {
 			columnItr.setV(rowItr);
 			for (let x = startPos.x; x < rectEnd.x; x += this.tilewidth) {
-				let tmxTile = layer.cellAt(columnItr.x, columnItr.y);
+				const tmxTile = layer.cellAt(columnItr.x, columnItr.y);
 				// render if a valid tile position
 				if (tmxTile) {
 					tileset = tmxTile.tileset;
 					// offset could be different per tileset
-					let offset = tileset.tileoffset;
+					const offset = tileset.tileoffset;
 					// draw our tile
 					tileset.drawTile(
 						renderer,

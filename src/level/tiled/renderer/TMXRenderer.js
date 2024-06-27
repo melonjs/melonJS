@@ -46,7 +46,8 @@ export default class TMXRenderer {
 	 * @returns {Bounds}
 	 */
 	getBounds(layer) {
-		let bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
+		const bounds =
+			layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
 		bounds.setMinMax(
 			0,
 			0,

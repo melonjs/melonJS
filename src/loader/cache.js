@@ -3,19 +3,19 @@
  */
 
 // contains all the images loaded
-export let imgList = {};
+export const imgList = {};
 
 // contains all the TMX loaded
-export let tmxList = {};
+export const tmxList = {};
 
 // contains all the binary files loaded
-export let binList = {};
+export const binList = {};
 
 // contains all the JSON files
-export let jsonList = {};
+export const jsonList = {};
 
 // contains all the video files
-export let videoList = {};
+export const videoList = {};
 
 // contains all the font files
-export let fontList = {};
+export const fontList = {};

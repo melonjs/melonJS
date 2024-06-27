@@ -99,11 +99,11 @@ function parseAttributes(obj, elt) {
  * @ignore
  */
 function normalize(obj, item) {
-	let nodeName = item.nodeName;
+	const nodeName = item.nodeName;
 
 	switch (nodeName) {
 		case "data": {
-			let data = parse(item);
+			const data = parse(item);
 
 			data.encoding = data.encoding || "xml";
 
@@ -144,7 +144,7 @@ function normalize(obj, item) {
 		case "layer":
 		case "objectgroup":
 		case "group": {
-			let layer = parse(item);
+			const layer = parse(item);
 			layer.type = nodeName === "layer" ? "tilelayer" : nodeName;
 			if (layer.image) {
 				layer.image = layer.image.source;
@@ -166,7 +166,7 @@ function normalize(obj, item) {
 			break;
 		}
 		case "tile": {
-			let tile = parse(item);
+			const tile = parse(item);
 			if (tile.image) {
 				tile.imagewidth = tile.image.width;
 				tile.imageheight = tile.image.height;
@@ -177,7 +177,7 @@ function normalize(obj, item) {
 			break;
 		}
 		case "tileset": {
-			let tileset = parse(item);
+			const tileset = parse(item);
 			if (tileset.image) {
 				tileset.imagewidth = tileset.image.width;
 				tileset.imageheight = tileset.image.height;
@@ -193,7 +193,7 @@ function normalize(obj, item) {
 			obj[nodeName] = [];
 
 			// Get a point array
-			let points = parse(item).points.split(" ");
+			const points = parse(item).points.split(" ");
 
 			// And normalize them into an array of vectors
 			for (let i = 0; i < points.length; i++) {
@@ -257,9 +257,9 @@ function decompress(data, format) {
  * @returns {number[]} Decoded data
  */
 function decodeCSV(input) {
-	let entries = input.replace("\n", "").trim().split(",");
+	const entries = input.replace("\n", "").trim().split(",");
 
-	let result = [];
+	const result = [];
 	for (let i = 0; i < entries.length; i++) {
 		result.push(+entries[i]);
 	}
@@ -274,8 +274,8 @@ function decodeCSV(input) {
  * @returns {Uint32Array} Decoded data
  */
 function decodeBase64AsArray(input, bytes = 1) {
-	let dec = globalThis.atob(input.replace(/[^A-Za-z0-9\+\/\=]/g, ""));
-	let ar = new Uint32Array(dec.length / bytes);
+	const dec = globalThis.atob(input.replace(/[^A-Za-z0-9\+\/\=]/g, ""));
+	const ar = new Uint32Array(dec.length / bytes);
 
 	for (let i = 0, len = dec.length / bytes; i < len; i++) {
 		ar[i] = 0;
@@ -337,7 +337,7 @@ export function decode(data, encoding, compression) {
  */
 export function parse(xml) {
 	// Create the return object
-	let obj = {};
+	const obj = {};
 
 	let text = "";
 
@@ -348,7 +348,7 @@ export function parse(xml) {
 
 	// do children
 	if (xml.hasChildNodes()) {
-		let children = xml.childNodes;
+		const children = xml.childNodes;
 		for (const node of children) {
 			switch (node.nodeType) {
 				case 1:
@@ -377,10 +377,10 @@ export function parse(xml) {
  * @returns {object} obj
  */
 export function applyTMXProperties(obj, data) {
-	let properties = data.properties;
-	let types = data.propertytypes;
+	const properties = data.properties;
+	const types = data.propertytypes;
 	if (typeof properties !== "undefined") {
-		for (let property in properties) {
+		for (const property in properties) {
 			if (properties.hasOwnProperty(property)) {
 				let type = "string";
 				let name = property;
