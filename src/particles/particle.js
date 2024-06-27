@@ -56,12 +56,12 @@ export default class Particle extends Renderable {
 		}
 
 		// Set the start particle Angle and Speed as defined in emitter
-		let angle =
+		const angle =
 			emitter.settings.angle +
 			(emitter.settings.angleVariation > 0
 				? (randomFloat(0, 2) - 1) * emitter.settings.angleVariation
 				: 0);
-		let speed =
+		const speed =
 			emitter.settings.speed +
 			(emitter.settings.speedVariation > 0
 				? (randomFloat(0, 2) - 1) * emitter.settings.speedVariation
@@ -121,7 +121,7 @@ export default class Particle extends Renderable {
 	 */
 	update(dt) {
 		// move things forward independent of the current frame rate
-		let skew = dt * this._deltaInv;
+		const skew = dt * this._deltaInv;
 
 		// Decrease particle life
 		this.life = this.life > dt ? this.life - dt : 0;
@@ -132,7 +132,7 @@ export default class Particle extends Renderable {
 		}
 
 		// Calculate the particle Age Ratio
-		let ageRatio = this.life / this.startLife;
+		const ageRatio = this.life / this.startLife;
 
 		// Resize the particle as particle Age Ratio
 		let scale = this.startScale;
@@ -152,7 +152,7 @@ export default class Particle extends Renderable {
 		this.vel.y += this.gravity * skew;
 
 		// If necessary update the rotation of particle in accordance the particle trajectory
-		let angle = this.followTrajectory
+		const angle = this.followTrajectory
 			? Math.atan2(this.vel.y, this.vel.x)
 			: this.angle;
 
@@ -174,8 +174,8 @@ export default class Particle extends Renderable {
 	 * @ignore
 	 */
 	draw(renderer) {
-		let w = this.width,
-			h = this.height;
+		const w = this.width;
+		const h = this.height;
 		renderer.drawImage(this.image, 0, 0, w, h, -w / 2, -h / 2, w, h);
 	}
 }

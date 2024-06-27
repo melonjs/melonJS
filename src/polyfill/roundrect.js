@@ -13,7 +13,10 @@
 
 		radii = parseRadiiArgument(radii);
 
-		let upperLeft, upperRight, lowerRight, lowerLeft;
+		let upperLeft;
+		let upperRight;
+		let lowerRight;
+		let lowerLeft;
 
 		if (radii.length === 4) {
 			upperLeft = toCornerPoint(radii[0]);

@@ -125,8 +125,8 @@ export default class CanvasRenderer extends Renderer {
 	 */
 	clear() {
 		if (this.settings.transparent === false) {
-			let canvas = this.getCanvas();
-			let context = this.getContext();
+			const canvas = this.getCanvas();
+			const context = this.getContext();
 			context.clearRect(0, 0, canvas.width, canvas.height);
 		}
 	}
@@ -137,8 +137,8 @@ export default class CanvasRenderer extends Renderer {
 	 * @param {boolean} [opaque=false] - Allow transparency [default] or clear the surface completely [true]
 	 */
 	clearColor(color = "#000000", opaque = false) {
-		let canvas = this.getCanvas();
-		let context = this.getContext();
+		const canvas = this.getCanvas();
+		const context = this.getContext();
 
 		this.save();
 		this.resetTransform();
@@ -200,7 +200,7 @@ export default class CanvasRenderer extends Renderer {
 			// Fast path: don't draw fully transparent
 			return;
 		}
-		let context = this.getContext();
+		const context = this.getContext();
 
 		if (typeof sw === "undefined") {
 			sw = dw = image.width;
@@ -228,7 +228,7 @@ export default class CanvasRenderer extends Renderer {
 
 		// apply a tint if required
 		let source = image;
-		let tint = this.currentTint.toArray();
+		const tint = this.currentTint.toArray();
 		if (tint[0] !== 1.0 || tint[1] !== 1.0 || tint[2] !== 1.0) {
 			// get a tinted version of this image from the texture cache
 			source = this.cache.tint(image, this.currentTint.toRGB());
@@ -250,8 +250,8 @@ export default class CanvasRenderer extends Renderer {
 			// Fast path: don't draw fully transparent
 			return;
 		}
-		let context = this.getContext();
-		let fillStyle = context.fillStyle;
+		const context = this.getContext();
+		const fillStyle = context.fillStyle;
 		context.fillStyle = pattern;
 		context.fillRect(x, y, width, height);
 		context.fillStyle = fillStyle;
@@ -363,7 +363,7 @@ export default class CanvasRenderer extends Renderer {
 			// Fast path: don't draw fully transparent
 			return;
 		}
-		let context = this.getContext();
+		const context = this.getContext();
 
 		context.translate(x, y);
 		context.beginPath();
@@ -398,21 +398,21 @@ export default class CanvasRenderer extends Renderer {
 			// Fast path: don't draw fully transparent
 			return;
 		}
-		let context = this.getContext();
+		const context = this.getContext();
 
-		let hw = w,
-			hh = h,
-			lx = x - hw,
-			rx = x + hw,
-			ty = y - hh,
-			by = y + hh;
+		const hw = w;
+		const hh = h;
+		const lx = x - hw;
+		const rx = x + hw;
+		const ty = y - hh;
+		const by = y + hh;
 
-		let xmagic = hw * 0.551784,
-			ymagic = hh * 0.551784,
-			xmin = x - xmagic,
-			xmax = x + xmagic,
-			ymin = y - ymagic,
-			ymax = y + ymagic;
+		const xmagic = hw * 0.551784;
+		const ymagic = hh * 0.551784;
+		const xmin = x - xmagic;
+		const xmax = x + xmagic;
+		const ymin = y - ymagic;
+		const ymax = y + ymagic;
 
 		context.beginPath();
 		context.moveTo(x, ty);
@@ -448,7 +448,7 @@ export default class CanvasRenderer extends Renderer {
 			return;
 		}
 
-		let context = this.getContext();
+		const context = this.getContext();
 
 		context.beginPath();
 		context.moveTo(startX, startY);
@@ -477,10 +477,10 @@ export default class CanvasRenderer extends Renderer {
 			// Fast path: don't draw fully transparent
 			return;
 		}
-		let context = this.getContext();
-		let points = poly.points;
-		let pointsLength = points.length;
-		let firstPoint = points[0];
+		const context = this.getContext();
+		const points = poly.points;
+		const pointsLength = points.length;
+		const firstPoint = points[0];
 
 		this.translate(poly.pos.x, poly.pos.y);
 
@@ -518,7 +518,7 @@ export default class CanvasRenderer extends Renderer {
 			// Fast path: don't draw fully transparent
 			return;
 		}
-		let context = this.getContext();
+		const context = this.getContext();
 
 		context[fill === true ? "fillRect" : "strokeRect"](x, y, width, height);
 	}
@@ -548,7 +548,7 @@ export default class CanvasRenderer extends Renderer {
 			// Fast path: don't draw fully transparent
 			return;
 		}
-		let context = this.getContext();
+		const context = this.getContext();
 
 		context.beginPath();
 		context.roundRect(x, y, width, height, radius);
@@ -658,8 +658,8 @@ export default class CanvasRenderer extends Renderer {
 	 * @param {Color|string} color - css color value
 	 */
 	setColor(color) {
-		let currentColor = this.currentColor;
-		let context = this.getContext();
+		const currentColor = this.currentColor;
+		const context = this.getContext();
 
 		currentColor.copy(color);
 		// globalAlpha is applied at rendering time by the canvas
@@ -713,7 +713,7 @@ export default class CanvasRenderer extends Renderer {
 	 * @ignore
 	 */
 	set lineJoin(value) {
-		let context = this.getContext();
+		const context = this.getContext();
 		context.lineJoin = value;
 	}
 
@@ -744,7 +744,7 @@ export default class CanvasRenderer extends Renderer {
 	 */
 	transform(a, b, c, d, e, f) {
 		if (typeof a === "object") {
-			let m = a.toArray();
+			const m = a.toArray();
 			a = m[0];
 			b = m[1];
 			c = m[3];
@@ -787,7 +787,7 @@ export default class CanvasRenderer extends Renderer {
 	 * @param {number} height
 	 */
 	clipRect(x, y, width, height) {
-		let canvas = this.getCanvas();
+		const canvas = this.getCanvas();
 		// if requested box is different from the current canvas size;
 		if (
 			x !== 0 ||
@@ -795,7 +795,7 @@ export default class CanvasRenderer extends Renderer {
 			width !== canvas.width ||
 			height !== canvas.height
 		) {
-			let currentScissor = this.currentScissor;
+			const currentScissor = this.currentScissor;
 			// if different from the current scissor box
 			if (
 				currentScissor[0] !== x ||
@@ -803,7 +803,7 @@ export default class CanvasRenderer extends Renderer {
 				currentScissor[2] !== width ||
 				currentScissor[3] !== height
 			) {
-				let context = this.getContext();
+				const context = this.getContext();
 				context.beginPath();
 				context.rect(x, y, width, height);
 				context.clip();
@@ -825,7 +825,7 @@ export default class CanvasRenderer extends Renderer {
 	 * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
 	 */
 	setMask(mask, invert = false) {
-		let context = this.getContext();
+		const context = this.getContext();
 
 		if (this.maskLevel === 0) {
 			// only save context on the first mask
@@ -859,8 +859,8 @@ export default class CanvasRenderer extends Renderer {
 				case "Polygon":
 					{
 						// polygon
-						const _x = mask.pos.x,
-							_y = mask.pos.y;
+						const _x = mask.pos.x;
+						const _y = mask.pos.y;
 						context.moveTo(_x + mask.points[0].x, _y + mask.points[0].y);
 						for (let i = 1; i < mask.points.length; i++) {
 							const point = mask.points[i];
@@ -871,21 +871,21 @@ export default class CanvasRenderer extends Renderer {
 
 				case "Ellipse":
 					{
-						const _x = mask.pos.x,
-							_y = mask.pos.y,
-							hw = mask.radiusV.x,
-							hh = mask.radiusV.y,
-							lx = _x - hw,
-							rx = _x + hw,
-							ty = _y - hh,
-							by = _y + hh;
+						const _x = mask.pos.x;
+						const _y = mask.pos.y;
+						const hw = mask.radiusV.x;
+						const hh = mask.radiusV.y;
+						const lx = _x - hw;
+						const rx = _x + hw;
+						const ty = _y - hh;
+						const by = _y + hh;
 
-						let xmagic = hw * 0.551784,
-							ymagic = hh * 0.551784,
-							xmin = _x - xmagic,
-							xmax = _x + xmagic,
-							ymin = _y - ymagic,
-							ymax = _y + ymagic;
+						const xmagic = hw * 0.551784;
+						const ymagic = hh * 0.551784;
+						const xmin = _x - xmagic;
+						const xmax = _x + xmagic;
+						const ymin = _y - ymagic;
+						const ymax = _y + ymagic;
 
 						context.moveTo(_x, ty);
 						context.bezierCurveTo(xmax, ty, rx, ymin, rx, _y);

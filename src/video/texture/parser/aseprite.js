@@ -9,12 +9,12 @@ import Vector2d from "../../../math/vector2.js";
  * @ignore
  */
 export function parseAseprite(data, textureAtlas) {
-	let atlas = {};
+	const atlas = {};
 
 	const frames = data.frames;
 	for (const name in frames) {
-		let frame = frames[name].frame;
-		let trimmed = !!frame.trimmed;
+		const frame = frames[name].frame;
+		const trimmed = !!frame.trimmed;
 
 		let trim;
 
@@ -27,9 +27,10 @@ export function parseAseprite(data, textureAtlas) {
 			};
 		}
 
-		let originX, originY;
+		let originX;
+		let originY;
 		// Pixel-based offset origin from the top-left of the source frame
-		let hasTextureAnchorPoint = frame.sourceSize && frame.pivot;
+		const hasTextureAnchorPoint = frame.sourceSize && frame.pivot;
 		if (hasTextureAnchorPoint) {
 			originX = frame.sourceSize.w * frame.pivot.x - (trimmed ? trim.x : 0);
 			originY = frame.sourceSize.h * frame.pivot.y - (trimmed ? trim.y : 0);

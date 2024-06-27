@@ -60,8 +60,8 @@ class TextureCache {
 	 * @ignore
 	 */
 	freeTextureUnit(texture) {
-		let source = texture.sources.get(texture.activeAtlas);
-		let unit = this.units.get(source);
+		const source = texture.sources.get(texture.activeAtlas);
+		const unit = this.units.get(source);
 		// was a texture unit allocated ?
 		if (typeof unit !== "undefined") {
 			this.usedUnits.delete(source);
@@ -73,7 +73,7 @@ class TextureCache {
 	 * @ignore
 	 */
 	getUnit(texture) {
-		let source = texture.sources.get(texture.activeAtlas);
+		const source = texture.sources.get(texture.activeAtlas);
 		if (!this.units.has(source)) {
 			this.units.set(source, this.allocateTextureUnit());
 		}
@@ -85,15 +85,15 @@ class TextureCache {
 	 * cache the textureAltas for the given image
 	 */
 	set(image, textureAtlas) {
-		let width = image.width || image.videoWidth;
-		let height = image.height || image.videoHeight;
+		const width = image.width || image.videoWidth;
+		const height = image.height || image.videoHeight;
 
 		// warn if a non POT texture is added to the cache when using WebGL1
 		if (
 			renderer.WebGLVersion === 1 &&
 			(!isPowerOfTwo(width) || !isPowerOfTwo(height))
 		) {
-			let src = typeof image.src !== "undefined" ? image.src : image;
+			const src = typeof image.src !== "undefined" ? image.src : image;
 			console.warn(
 				"[Texture] " +
 					src +
@@ -117,7 +117,7 @@ class TextureCache {
 
 		if (typeof entry !== "undefined" && typeof atlas !== "undefined") {
 			this.cache.forEach((value, key) => {
-				let _atlas = value.getAtlas();
+				const _atlas = value.getAtlas();
 				if (
 					key === image &&
 					_atlas.width === atlas.framewidth &&
@@ -164,7 +164,7 @@ class TextureCache {
 	 */
 	delete(image) {
 		if (this.cache.has(image)) {
-			let texture = this.cache.get(image)[0];
+			const texture = this.cache.get(image)[0];
 			if (typeof texture !== "undefined") {
 				this.freeTextureUnit(texture);
 			}

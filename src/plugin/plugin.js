@@ -11,7 +11,7 @@ import { warning } from "../lang/console.js";
  * @name cache
  * @memberof plugin
  */
-export let cache = {};
+export const cache = {};
 
 /**
  * @namespace plugin
@@ -78,14 +78,14 @@ export function patch(proto, name, fn) {
 	// reuse the logic behind object extends
 	if (typeof proto[name] === "function") {
 		// save the original function
-		let _parent = proto[name];
+		const _parent = proto[name];
 		// override the function with the new one
 		Object.defineProperty(proto, name, {
 			configurable: true,
 			value: (function (name, fn) {
 				return function () {
 					this._patched = _parent;
-					let ret = fn.apply(this, arguments);
+					const ret = fn.apply(this, arguments);
 					this._patched = null;
 					return ret;
 				};
@@ -124,7 +124,7 @@ export function register(plugin, name = plugin.toString().match(/ (\w+)/)[1]) {
 
 	// try to instantiate the plugin
 	_args[0] = plugin;
-	let instance = new (plugin.bind.apply(plugin, _args))();
+	const instance = new (plugin.bind.apply(plugin, _args))();
 
 	// inheritance check
 	if (typeof instance === "undefined" || !(instance instanceof BasePlugin)) {

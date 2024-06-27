@@ -125,8 +125,8 @@ export class TextureAtlas {
 		if (typeof atlases !== "undefined") {
 			// normalize to array to keep the following code generic
 			atlases = Array.isArray(atlases) ? atlases : [atlases];
-			for (let i in atlases) {
-				let atlas = atlases[i];
+			for (const i in atlases) {
+				const atlas = atlases[i];
 
 				if (typeof atlas.meta !== "undefined") {
 					this.format = identifyFormat(atlas.meta.app);
@@ -137,7 +137,7 @@ export class TextureAtlas {
 							// set the texture
 							if (typeof src === "undefined") {
 								// get the texture name from the atlas meta data
-								let image = getImage(atlas.meta.image);
+								const image = getImage(atlas.meta.image);
 								if (!image) {
 									throw new Error("Atlas texture '" + image + "' not found");
 								}
@@ -281,10 +281,10 @@ export class TextureAtlas {
 			console.warn("Adding texture region", name, "for texture", this);
 		}
 
-		let source = this.getTexture();
-		let atlas = this.getAtlas();
-		let dw = source.width;
-		let dh = source.height;
+		const source = this.getTexture();
+		const atlas = this.getAtlas();
+		const dw = source.width;
+		const dh = source.height;
 
 		atlas[name] = {
 			name: name,
@@ -311,7 +311,7 @@ export class TextureAtlas {
 			region = this.getAtlas(atlas)[name];
 		} else {
 			// look for the given region in each existing atlas
-			for (let atlas of this.atlases.values()) {
+			for (const atlas of this.atlases.values()) {
 				if (typeof atlas[name] !== "undefined") {
 					// there should be only one
 					region = atlas[name];
@@ -333,11 +333,11 @@ export class TextureAtlas {
 
 		if (typeof region === "undefined") {
 			// TODO: Require proper atlas regions instead of caching arbitrary region keys
-			let keys = name.split(","),
-				sx = +keys[0],
-				sy = +keys[1],
-				sw = +keys[2],
-				sh = +keys[3];
+			const keys = name.split(",");
+			const sx = +keys[0];
+			const sy = +keys[1];
+			const sw = +keys[2];
+			const sh = +keys[3];
 			region = this.addRegion(name, sx, sy, sw, sh);
 		}
 		return region.uvs;
@@ -355,9 +355,9 @@ export class TextureAtlas {
 		// ignore if using the Canvas Renderer
 		if (typeof renderer.gl !== "undefined") {
 			// Source coordinates
-			let s = atlas[name].offset;
-			let sw = atlas[name].width;
-			let sh = atlas[name].height;
+			const s = atlas[name].offset;
+			const sw = atlas[name].width;
+			const sh = atlas[name].height;
 
 			atlas[name].uvs = new Float32Array([
 				s.x / w, // u0 (left)
@@ -367,7 +367,7 @@ export class TextureAtlas {
 			]);
 			// Cache source coordinates
 			// TODO: Remove this when the Batcher only accepts a region name
-			let key = s.x + "," + s.y + "," + w + "," + h;
+			const key = s.x + "," + s.y + "," + w + "," + h;
 			atlas[key] = atlas[name];
 		}
 		return atlas[name].uvs;
@@ -448,10 +448,10 @@ export class TextureAtlas {
 	 * sprite.anchorPoint.set(0.5, 1.0);
 	 */
 	createAnimationFromName(names, settings) {
-		let tpAtlas = [],
-			indices = {};
-		let width = 0,
-			height = 0;
+		const tpAtlas = [];
+		const indices = {};
+		let width = 0;
+		let height = 0;
 		const textureAtlas = this.getAtlas();
 		// iterate through the given names
 		// and create a "normalized" atlas

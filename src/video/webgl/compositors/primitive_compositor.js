@@ -48,10 +48,10 @@ export default class PrimitiveCompositor extends Compositor {
 	 * @param {number} [vertexCount=verts.length] - amount of points defined in the points array
 	 */
 	drawVertices(mode, verts, vertexCount = verts.length) {
-		let viewMatrix = this.viewMatrix;
-		let vertexData = this.vertexData;
-		let alpha = this.renderer.getGlobalAlpha();
-		let colorUint32 = this.renderer.currentColor.toUint32(alpha);
+		const viewMatrix = this.viewMatrix;
+		const vertexData = this.vertexData;
+		const alpha = this.renderer.getGlobalAlpha();
+		const colorUint32 = this.renderer.currentColor.toUint32(alpha);
 
 		if (vertexData.isFull(vertexCount)) {
 			// is the vertex buffer full if we add more vertices

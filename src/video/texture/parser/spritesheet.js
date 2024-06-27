@@ -9,16 +9,16 @@ import Vector2d from "./../../../math/vector2.js";
  * @ignore
  */
 export function parseSpriteSheet(data, textureAtlas) {
-	let atlas = {};
-	let image = data.image;
-	let spacing = data.spacing || 0;
-	let margin = data.margin || 0;
+	const atlas = {};
+	const image = data.image;
+	const spacing = data.spacing || 0;
+	const margin = data.margin || 0;
 
 	let width = image.width;
 	let height = image.height;
 
 	// calculate the sprite count (line, col)
-	let spritecount = pool.pull(
+	const spritecount = pool.pull(
 		"Vector2d",
 		~~((width - margin + spacing) / (data.framewidth + spacing)),
 		~~((height - margin + spacing) / (data.frameheight + spacing)),
@@ -29,8 +29,8 @@ export function parseSpriteSheet(data, textureAtlas) {
 		width % (data.framewidth + spacing) !== 0 ||
 		height % (data.frameheight + spacing) !== 0
 	) {
-		let computed_width = spritecount.x * (data.framewidth + spacing);
-		let computed_height = spritecount.y * (data.frameheight + spacing);
+		const computed_width = spritecount.x * (data.framewidth + spacing);
+		const computed_height = spritecount.y * (data.frameheight + spacing);
 		if (
 			computed_width - width !== spacing &&
 			computed_height - height !== spacing
@@ -60,7 +60,7 @@ export function parseSpriteSheet(data, textureAtlas) {
 		frame < count;
 		frame++
 	) {
-		let name = "" + frame;
+		const name = "" + frame;
 		atlas[name] = {
 			name: name,
 			texture: "default", // the source texture

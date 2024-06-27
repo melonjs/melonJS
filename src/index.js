@@ -202,7 +202,7 @@ export let initialized = false;
  * @default false
  * @see boot
  */
-export let skipAutoInit = false;
+export let skipAutoInit = false; // eslint-disable-line prefer-const
 
 /**
  * game is a default instance of a melonJS Application and represents your current game,

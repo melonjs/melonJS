@@ -7,7 +7,7 @@ import Container from "./../renderable/container.js";
  * @ignore
  */
 function createDefaultParticleTexture(w = 8, h = 8) {
-	let defaultParticleTexture = pool.pull("CanvasRenderTarget", w, h, {
+	const defaultParticleTexture = pool.pull("CanvasRenderTarget", w, h, {
 		offscreenCanvas: true,
 	});
 

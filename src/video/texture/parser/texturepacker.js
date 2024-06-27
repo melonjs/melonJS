@@ -9,14 +9,14 @@ import Vector2d from "./../../../math/vector2.js";
  * @ignore
  */
 export function parseTexturePacker(data, textureAtlas) {
-	let atlas = {};
+	const atlas = {};
 
 	data.frames.forEach((frame) => {
 		// fix wrongly formatted JSON (e.g. last dummy object in ShoeBox)
 		if (frame.hasOwnProperty("filename")) {
 			// Source coordinates
-			let s = frame.frame;
-			let trimmed = !!frame.trimmed;
+			const s = frame.frame;
+			const trimmed = !!frame.trimmed;
 
 			let trim;
 
@@ -29,9 +29,10 @@ export function parseTexturePacker(data, textureAtlas) {
 				};
 			}
 
-			let originX, originY;
+			let originX;
+			let originY;
 			// Pixel-based offset origin from the top-left of the source frame
-			let hasTextureAnchorPoint = frame.sourceSize && frame.pivot;
+			const hasTextureAnchorPoint = frame.sourceSize && frame.pivot;
 			if (hasTextureAnchorPoint) {
 				originX = frame.sourceSize.w * frame.pivot.x - (trimmed ? trim.x : 0);
 				originY = frame.sourceSize.h * frame.pivot.y - (trimmed ? trim.y : 0);

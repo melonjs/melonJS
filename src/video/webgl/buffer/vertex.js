@@ -50,7 +50,7 @@ export default class VertexArrayBuffer {
 		}
 
 		// save a reference to the previous data
-		let data = this.bufferF32;
+		const data = this.bufferF32;
 
 		// recreate ArrayBuffer and views
 		this.buffer = new ArrayBuffer(

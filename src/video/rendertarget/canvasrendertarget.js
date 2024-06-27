@@ -9,7 +9,7 @@ import { clamp } from "../../math/math.js";
  */
 
 // default canvas settings
-let defaultAttributes = {
+const defaultAttributes = {
 	offscreenCanvas: false,
 	willReadFrequently: false,
 	antiAlias: false,
@@ -36,7 +36,7 @@ function createContext(canvas, attributes) {
 			willReadFrequently: attributes.willReadFrequently,
 		});
 	} else if (attributes.context === "webgl") {
-		let attr = {
+		const attr = {
 			alpha: attributes.transparent,
 			antialias: attributes.antiAlias,
 			depth: attributes.depth,
@@ -153,7 +153,7 @@ class CanvasRenderTarget {
 	 * @param {boolean} [enable=false] - whether to enable or not image smoothing (scaling interpolation)
 	 */
 	setAntiAlias(enable = false) {
-		let canvas = this.canvas;
+		const canvas = this.canvas;
 
 		// enable/disable antialias on the given Context2d object
 		setPrefixed("imageSmoothingEnabled", enable, this.context);
@@ -242,7 +242,7 @@ class CanvasRenderTarget {
 			if (typeof this.canvas.transferToImageBitmap === "function") {
 				resolve(this.canvas.transferToImageBitmap());
 			} else {
-				let image = new Image();
+				const image = new Image();
 				image.src = this.canvas.toDataURL(type, quality);
 				image.onload = () => {
 					globalThis.createImageBitmap(image).then((bitmap) => resolve(bitmap));

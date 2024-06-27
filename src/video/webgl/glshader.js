@@ -101,7 +101,7 @@ export default class GLShader {
 	 * @returns {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
 	 */
 	getAttribLocation(name) {
-		let attr = this.attributes[name];
+		const attr = this.attributes[name];
 		if (typeof attr !== "undefined") {
 			return attr;
 		} else {
@@ -117,7 +117,7 @@ export default class GLShader {
 	 * myShader.setUniform("uProjectionMatrix", this.projectionMatrix);
 	 */
 	setUniform(name, value) {
-		let uniforms = this.uniforms;
+		const uniforms = this.uniforms;
 		if (typeof uniforms[name] !== "undefined") {
 			if (typeof value === "object" && typeof value.toArray === "function") {
 				uniforms[name] = value.toArray();
@@ -138,8 +138,8 @@ export default class GLShader {
 	setVertexAttributes(gl, attributes, vertexByteSize) {
 		// set the vertex attributes
 		for (let index = 0; index < attributes.length; ++index) {
-			let element = attributes[index];
-			let location = this.getAttribLocation(element.name);
+			const element = attributes[index];
+			const location = this.getAttribLocation(element.name);
 
 			if (location !== -1) {
 				gl.enableVertexAttribArray(location);

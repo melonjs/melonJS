@@ -220,12 +220,12 @@ export default class Compositor {
 	 * @param {number} [mode=gl.TRIANGLES] - the GL drawing mode
 	 */
 	flush(mode = this.mode) {
-		let vertex = this.vertexData;
-		let vertexCount = vertex.vertexCount;
+		const vertex = this.vertexData;
+		const vertexCount = vertex.vertexCount;
 
 		if (vertexCount > 0) {
-			let gl = this.gl;
-			let vertexSize = vertex.vertexSize;
+			const gl = this.gl;
+			const vertexSize = vertex.vertexSize;
 
 			// Copy data into stream buffer
 			if (this.renderer.WebGLVersion > 1) {

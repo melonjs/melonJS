@@ -227,7 +227,7 @@ export default class Renderer {
 	 * @param {number} height - new height of the canvas
 	 */
 	resize(width, height) {
-		let canvas = this.getCanvas();
+		const canvas = this.getCanvas();
 		if (width !== canvas.width || height !== canvas.height) {
 			canvas.width = width;
 			canvas.height = height;
@@ -329,12 +329,12 @@ export default class Renderer {
 			transparent: true,
 			antiAlias: this.settings.antiAlias,
 		};
-		let canvasTexture = new CanvasRenderTarget(
+		const canvasTexture = new CanvasRenderTarget(
 			src.width,
 			src.height,
 			attributes,
 		);
-		let context = canvasTexture.context;
+		const context = canvasTexture.context;
 
 		context.fillStyle = color instanceof Color ? color.toRGB() : color;
 		context.fillRect(0, 0, src.width, src.height);

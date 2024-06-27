@@ -10,7 +10,12 @@ import Compositor from "./compositor.js";
  */
 
 // a pool of resuable vectors
-let V_ARRAY = [new Vector2d(), new Vector2d(), new Vector2d(), new Vector2d()];
+const V_ARRAY = [
+	new Vector2d(),
+	new Vector2d(),
+	new Vector2d(),
+	new Vector2d(),
+];
 
 /**
  * A WebGL Compositor object. This class handles all of the WebGL state<br>
@@ -66,7 +71,7 @@ export default class QuadCompositor extends Compositor {
 
 		// delete all related bound texture
 		for (let i = 0; i < this.renderer.maxTextures; i++) {
-			let texture2D = this.getTexture2D(i);
+			const texture2D = this.getTexture2D(i);
 			if (typeof texture2D !== "undefined") {
 				this.deleteTexture2D(texture2D);
 			}
@@ -96,20 +101,20 @@ export default class QuadCompositor extends Compositor {
 		premultipliedAlpha = true,
 		mipmap = true,
 	) {
-		let gl = this.gl;
-		let isPOT = isPowerOfTwo(w) && isPowerOfTwo(h);
-		let rs =
+		const gl = this.gl;
+		const isPOT = isPowerOfTwo(w) && isPowerOfTwo(h);
+		const rs =
 			repeat.search(/^repeat(-x)?$/) === 0 &&
 			(isPOT || this.renderer.WebGLVersion > 1)
 				? gl.REPEAT
 				: gl.CLAMP_TO_EDGE;
-		let rt =
+		const rt =
 			repeat.search(/^repeat(-y)?$/) === 0 &&
 			(isPOT || this.renderer.WebGLVersion > 1)
 				? gl.REPEAT
 				: gl.CLAMP_TO_EDGE;
 
-		let texture = gl.createTexture();
+		const texture = gl.createTexture();
 
 		this.bindTexture2D(texture, unit);
 
@@ -192,7 +197,7 @@ export default class QuadCompositor extends Compositor {
 	 * @param {number} unit - Texture unit to which the given texture is bound
 	 */
 	bindTexture2D(texture, unit) {
-		let gl = this.gl;
+		const gl = this.gl;
 
 		if (texture !== this.boundTextures[unit]) {
 			this.flush();
@@ -233,8 +238,8 @@ export default class QuadCompositor extends Compositor {
 	 * @ignore
 	 */
 	uploadTexture(texture, w, h, force = false) {
-		let unit = this.renderer.cache.getUnit(texture);
-		let texture2D = this.boundTextures[unit];
+		const unit = this.renderer.cache.getUnit(texture);
+		const texture2D = this.boundTextures[unit];
 
 		if (typeof texture2D === "undefined" || force) {
 			this.createTexture2D(
@@ -268,7 +273,7 @@ export default class QuadCompositor extends Compositor {
 	 * @param {boolean} reupload - Force the texture to be reuploaded even if already bound
 	 */
 	addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint, reupload = false) {
-		let vertexData = this.vertexData;
+		const vertexData = this.vertexData;
 
 		if (vertexData.isFull(6)) {
 			// is the vertex buffer full if we add 6 more vertices
@@ -276,17 +281,17 @@ export default class QuadCompositor extends Compositor {
 		}
 
 		// upload and activate the texture if necessary
-		let unit = this.uploadTexture(texture, w, h, reupload);
+		const unit = this.uploadTexture(texture, w, h, reupload);
 
 		// set fragment sampler accordingly
 		this.currentShader.setUniform("uSampler", unit);
 
 		// Transform vertices
-		let m = this.viewMatrix,
-			vec0 = V_ARRAY[0].set(x, y),
-			vec1 = V_ARRAY[1].set(x + w, y),
-			vec2 = V_ARRAY[2].set(x, y + h),
-			vec3 = V_ARRAY[3].set(x + w, y + h);
+		const m = this.viewMatrix;
+		const vec0 = V_ARRAY[0].set(x, y);
+		const vec1 = V_ARRAY[1].set(x + w, y);
+		const vec2 = V_ARRAY[2].set(x, y + h);
+		const vec3 = V_ARRAY[3].set(x + w, y + h);
 
 		if (!m.isIdentity()) {
 			m.apply(vec0);

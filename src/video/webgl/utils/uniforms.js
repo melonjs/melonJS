@@ -25,12 +25,12 @@ const fnHash = {
  * @ignore
  */
 export function extractUniforms(gl, shader) {
-	let uniforms = {},
-		uniRx = /uniform\s+(\w+)\s+(\w+)/g,
-		uniformsData = {},
-		descriptor = {},
-		locations = {},
-		match;
+	const uniforms = {};
+	const uniRx = /uniform\s+(\w+)\s+(\w+)/g;
+	const uniformsData = {};
+	const descriptor = {};
+	const locations = {};
+	let match;
 
 	// Detect all uniform names and types
 	[shader.vertex, shader.fragment].forEach((shader) => {
@@ -41,7 +41,7 @@ export function extractUniforms(gl, shader) {
 
 	// Get uniform references
 	Object.keys(uniformsData).forEach((name) => {
-		let type = uniformsData[name];
+		const type = uniformsData[name];
 		locations[name] = gl.getUniformLocation(shader.program, name);
 
 		descriptor[name] = {

@@ -168,7 +168,7 @@ export default class WebGLRenderer extends Renderer {
 		this.setBlendMode(this.settings.blendMode);
 
 		// get GPU vendor and renderer
-		let debugInfo = this.gl.getExtension("WEBGL_debug_renderer_info");
+		const debugInfo = this.gl.getExtension("WEBGL_debug_renderer_info");
 		if (debugInfo !== null) {
 			this.GPUVendor = this.gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
 			this.GPURenderer = this.gl.getParameter(
@@ -272,8 +272,8 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	hasSupportedCompressedFormats(format) {
 		const supportedFormats = this.getSupportedCompressedTextureFormats();
-		for (var supportedFormat in supportedFormats) {
-			for (var extension in supportedFormats[supportedFormat]) {
+		for (const supportedFormat in supportedFormats) {
+			for (const extension in supportedFormats[supportedFormat]) {
 				if (format === supportedFormats[supportedFormat][extension]) {
 					return true;
 				}
@@ -358,7 +358,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @returns {Compositor} an instance to the current active compositor
 	 */
 	setCompositor(name = "default", shader = this.customShader) {
-		let compositor = this.compositors.get(name);
+		const compositor = this.compositors.get(name);
 
 		if (typeof compositor === "undefined") {
 			throw new Error("Invalid Compositor");
@@ -409,7 +409,7 @@ export default class WebGLRenderer extends Renderer {
 			renderer.WebGLVersion === 1 &&
 			(!isPowerOfTwo(image.width) || !isPowerOfTwo(image.height))
 		) {
-			let src = typeof image.src !== "undefined" ? image.src : image;
+			const src = typeof image.src !== "undefined" ? image.src : image;
 			throw new Error(
 				"[WebGL Renderer] " +
 					src +
@@ -422,7 +422,7 @@ export default class WebGLRenderer extends Renderer {
 			);
 		}
 
-		let texture = new TextureAtlas(
+		const texture = new TextureAtlas(
 			createAtlas(image.width, image.height, "pattern", repeat),
 			image,
 		);
@@ -469,7 +469,7 @@ export default class WebGLRenderer extends Renderer {
 	 * Clear the frame buffer
 	 */
 	clear() {
-		let gl = this.gl;
+		const gl = this.gl;
 		gl.clearColor(0, 0, 0, this.settings.transparent ? 0.0 : 1.0);
 		this.lineWidth = 1;
 		if (this.depthTest === "z-buffer") {
@@ -488,12 +488,12 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	clearColor(color = "#000000", opaque = false) {
 		let glArray;
-		let gl = this.gl;
+		const gl = this.gl;
 
 		if (color instanceof Color) {
 			glArray = color.toArray();
 		} else {
-			let _color = pool.pull("me.Color");
+			const _color = pool.pull("me.Color");
 			// reuse temporary the renderer default color object
 			glArray = _color.parseCSS(color).toArray();
 			pool.push(_color);
@@ -569,9 +569,9 @@ export default class WebGLRenderer extends Renderer {
 
 		this.setCompositor("quad");
 		// force reuploading if the given image is a HTMLVideoElement
-		let reupload = typeof image.videoWidth !== "undefined";
-		let texture = this.cache.get(image);
-		let uvs = texture.getUVs(sx + "," + sy + "," + sw + "," + sh);
+		const reupload = typeof image.videoWidth !== "undefined";
+		const texture = this.cache.get(image);
+		const uvs = texture.getUVs(sx + "," + sy + "," + sw + "," + sh);
 		this.currentCompositor.addQuad(
 			texture,
 			dx,
@@ -597,7 +597,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @see WebGLRenderer#createPattern
 	 */
 	drawPattern(pattern, x, y, width, height) {
-		let uvs = pattern.getUVs("0,0," + width + "," + height);
+		const uvs = pattern.getUVs("0,0," + width + "," + height);
 		this.setCompositor("quad");
 		this.currentCompositor.addQuad(
 			pattern,
@@ -777,8 +777,8 @@ export default class WebGLRenderer extends Renderer {
 	restore() {
 		// do nothing if there is no saved states
 		if (this._matrixStack.length !== 0) {
-			let color = this._colorStack.pop();
-			let matrix = this._matrixStack.pop();
+			const color = this._colorStack.pop();
+			const matrix = this._matrixStack.pop();
 
 			// restore the previous context
 			this.currentColor.copy(color);
@@ -887,7 +887,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {Color|string} color - css color string.
 	 */
 	setColor(color) {
-		let alpha = this.currentColor.alpha;
+		const alpha = this.currentColor.alpha;
 		this.currentColor.copy(color);
 		this.currentColor.alpha *= alpha;
 	}
@@ -1204,7 +1204,7 @@ export default class WebGLRenderer extends Renderer {
 		}
 		if (this.settings.subPixel === false) {
 			// snap position values to pixel grid
-			let a = this.currentTransform.toArray();
+			const a = this.currentTransform.toArray();
 			a[6] |= 0;
 			a[7] |= 0;
 		}
@@ -1216,11 +1216,11 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} y - Distance to move in the vertical direction. Positive values are down, and negative are up.
 	 */
 	translate(x, y) {
-		let currentTransform = this.currentTransform;
+		const currentTransform = this.currentTransform;
 		currentTransform.translate(x, y);
 		if (this.settings.subPixel === false) {
 			// snap position values to pixel grid
-			let a = currentTransform.toArray();
+			const a = currentTransform.toArray();
 			a[6] |= 0;
 			a[7] |= 0;
 		}
@@ -1238,8 +1238,8 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} height - the height of the rectangle to start clipping from.
 	 */
 	clipRect(x, y, width, height) {
-		let canvas = this.getCanvas();
-		let gl = this.gl;
+		const canvas = this.getCanvas();
+		const gl = this.gl;
 		// if requested box is different from the current canvas size
 		if (
 			x !== 0 ||
@@ -1247,7 +1247,7 @@ export default class WebGLRenderer extends Renderer {
 			width !== canvas.width ||
 			height !== canvas.height
 		) {
-			let currentScissor = this.currentScissor;
+			const currentScissor = this.currentScissor;
 			if (gl.isEnabled(gl.SCISSOR_TEST)) {
 				// if same as the current scissor box do nothing
 				if (
@@ -1291,7 +1291,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
 	 */
 	setMask(mask, invert = false) {
-		let gl = this.gl;
+		const gl = this.gl;
 
 		// flush the compositor
 		this.flush();
