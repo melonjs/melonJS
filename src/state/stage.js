@@ -7,7 +7,7 @@ import Color from "./../math/color.js";
 let default_camera;
 
 // default stage settings
-let default_settings = {
+const default_settings = {
 	cameras: [],
 };
 
@@ -93,8 +93,8 @@ export default class Stage {
 		// empty or no default camera
 		if (this.cameras.has("default") === false) {
 			if (typeof default_camera === "undefined") {
-				let width = renderer.width;
-				let height = renderer.height;
+				const width = renderer.width;
+				const height = renderer.height;
 				// new default camera instance
 				default_camera = new Camera2d(0, 0, width, height);
 			}

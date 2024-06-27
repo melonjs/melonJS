@@ -44,7 +44,7 @@
  * @name Easing
  * @memberof Tween
  */
-export let Easing = {
+export const Easing = {
 	Linear: {
 		/** @ignore */
 		None: function (k) {

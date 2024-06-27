@@ -6,7 +6,7 @@
 import { EventEmitter } from "./eventemitter.js";
 
 // internal instance of the event emiter
-let eventEmitter = new EventEmitter();
+const eventEmitter = new EventEmitter();
 
 /**
  * event when the DOM is Ready is booting

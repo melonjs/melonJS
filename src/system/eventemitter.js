@@ -40,8 +40,8 @@ function addListener(emitter, event, fn, context, once) {
 		throw new TypeError("The listener must be a function");
 	}
 
-	var listener = new EE(fn, context || emitter, once),
-		evt = prefix ? prefix + event : event;
+	const listener = new EE(fn, context || emitter, once);
+	const evt = prefix ? prefix + event : event;
 
 	if (!emitter._events[evt])
 		(emitter._events[evt] = listener), emitter._eventsCount++;
@@ -77,14 +77,14 @@ export class EventEmitter {
 	 * @public
 	 */
 	emit(event, a1, a2, a3, a4, a5) {
-		var evt = prefix ? prefix + event : event;
+		const evt = prefix ? prefix + event : event;
 
 		if (!this._events[evt]) return false;
 
-		var listeners = this._events[evt],
-			len = arguments.length,
-			args,
-			i;
+		const listeners = this._events[evt];
+		const len = arguments.length;
+		let args;
+		let i;
 
 		if (listeners.fn) {
 			if (listeners.once)
@@ -111,8 +111,8 @@ export class EventEmitter {
 
 			listeners.fn.apply(listeners.context, args);
 		} else {
-			var length = listeners.length,
-				j;
+			const length = listeners.length;
+			let j;
 
 			for (i = 0; i < length; i++) {
 				if (listeners[i].once)
@@ -182,7 +182,7 @@ export class EventEmitter {
 	 * @public
 	 */
 	removeListener(event, fn, context, once) {
-		var evt = prefix ? prefix + event : event;
+		const evt = prefix ? prefix + event : event;
 
 		if (!this._events[evt]) return this;
 		if (!fn) {
@@ -190,7 +190,7 @@ export class EventEmitter {
 			return this;
 		}
 
-		var listeners = this._events[evt];
+		const listeners = this._events[evt];
 
 		if (listeners.fn) {
 			if (
@@ -201,8 +201,8 @@ export class EventEmitter {
 				clearEvent(this, evt);
 			}
 		} else {
-			let events = [];
-			for (var i = 0, length = listeners.length; i < length; i++) {
+			const events = [];
+			for (let i = 0, length = listeners.length; i < length; i++) {
 				if (
 					listeners[i].fn !== fn ||
 					(once && !listeners[i].once) ||

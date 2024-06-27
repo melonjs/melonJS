@@ -32,7 +32,7 @@ import * as event from "./event.js";
  */
 
 // Variable to hold the object data
-let data = {};
+const data = {};
 
 let hasLocalStorage = false;
 
@@ -58,10 +58,10 @@ function isReserved(key) {
 event.once(event.BOOT, () => {
 	// Load previous data if local Storage is supported
 	if (hasLocalStorage === true) {
-		let me_save_content = globalThis.localStorage.getItem("me.save");
+		const me_save_content = globalThis.localStorage.getItem("me.save");
 
 		if (typeof me_save_content === "string" && me_save_content.length > 0) {
-			let keys = JSON.parse(me_save_content) || [];
+			const keys = JSON.parse(me_save_content) || [];
 			keys.forEach((key) => {
 				data[key] = JSON.parse(
 					globalThis.localStorage.getItem("me.save." + key),
@@ -71,7 +71,7 @@ event.once(event.BOOT, () => {
 	}
 });
 
-let save = {
+const save = {
 	/**
 	 * Add new keys to localStorage and set them to the given default values if they do not exist
 	 * @name add
@@ -84,7 +84,7 @@ let save = {
 	 * me.save.score = 1000;
 	 */
 	add(props) {
-		let obj = save;
+		const obj = save;
 
 		Object.keys(props).forEach((key) => {
 			if (isReserved(key)) {

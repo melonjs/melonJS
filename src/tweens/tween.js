@@ -80,7 +80,7 @@ export default class Tween {
 		this.isRenderable = false;
 
 		// Set all starting values present on the target object
-		for (let field in object) {
+		for (const field in object) {
 			if (typeof object !== "object") {
 				this._valuesStart[field] = parseFloat(object[field]);
 			}
@@ -180,7 +180,7 @@ export default class Tween {
 
 		this._startTime = time + this._delayTime;
 
-		for (let property in this._valuesEnd) {
+		for (const property in this._valuesEnd) {
 			// check if an Array was provided as property value
 			if (this._valuesEnd[property] instanceof Array) {
 				if (this._valuesEnd[property].length === 0) {
@@ -348,7 +348,7 @@ export default class Tween {
 			game.lastUpdate > this._tweenTimeTracker
 				? game.lastUpdate
 				: this._tweenTimeTracker + dt;
-		let time = this._tweenTimeTracker;
+		const time = this._tweenTimeTracker;
 
 		let property;
 
@@ -367,10 +367,10 @@ export default class Tween {
 		let elapsed = (time - this._startTime) / this._duration;
 		elapsed = elapsed > 1 ? 1 : elapsed;
 
-		let value = this._easingFunction(elapsed);
+		const value = this._easingFunction(elapsed);
 
 		for (property in this._valuesEnd) {
-			let start = this._valuesStart[property] || 0;
+			const start = this._valuesStart[property] || 0;
 			let end = this._valuesEnd[property];
 
 			if (end instanceof Array) {
@@ -407,7 +407,7 @@ export default class Tween {
 					}
 
 					if (this._yoyo) {
-						let tmp = this._valuesStartRepeat[property];
+						const tmp = this._valuesStartRepeat[property];
 						this._valuesStartRepeat[property] = this._valuesEnd[property];
 						this._valuesEnd[property] = tmp;
 					}

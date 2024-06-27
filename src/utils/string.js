@@ -52,8 +52,8 @@ export function isBoolean(str) {
  * @returns {string} the converted hexadecimal value
  */
 export function toHex(str) {
-	let res = "",
-		c = 0;
+	let res = "";
+	let c = 0;
 	while (c < str.length) {
 		res += str.charCodeAt(c++).toString(16);
 	}

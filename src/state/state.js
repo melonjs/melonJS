@@ -15,10 +15,10 @@ let _animFrameId = -1;
 let _isPaused = false;
 
 // list of stages
-let _stages = {};
+const _stages = {};
 
 // fading transition parameters between screen
-let _fade = {
+const _fade = {
 	color: "",
 	duration: 0,
 };
@@ -138,7 +138,7 @@ event.once(event.BOOT, () => {
  * a State Manager (state machine)
  * @namespace state
  */
-let state = {
+const state = {
 	/**
 	 * default state ID for Loading Stage
 	 * @constant

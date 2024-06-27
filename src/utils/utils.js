@@ -65,11 +65,11 @@ export function checkVersion(v1, v2) {
  * console.log(UriFragment["mytag"]); //> "value"
  */
 export function getUriFragment(url) {
-	let hash = {};
+	const hash = {};
 
 	if (typeof url === "undefined") {
 		if (typeof globalThis.document !== "undefined") {
-			let location = globalThis.document.location;
+			const location = globalThis.document.location;
 
 			if (location && location.hash) {
 				url = location.hash;
@@ -83,7 +83,7 @@ export function getUriFragment(url) {
 		}
 	} else {
 		// never cache if a url is passed as parameter
-		let index = url.indexOf("#");
+		const index = url.indexOf("#");
 		if (index !== -1) {
 			url = url.slice(index, url.length);
 		} else {
@@ -97,9 +97,9 @@ export function getUriFragment(url) {
 		.split("&")
 		.filter((value) => value !== "")
 		.forEach((value) => {
-			let kv = value.split("=");
-			let k = kv.shift();
-			let v = kv.join("=");
+			const kv = value.split("=");
+			const k = kv.shift();
+			const v = kv.join("=");
 			hash[k] = v || true;
 		});
 

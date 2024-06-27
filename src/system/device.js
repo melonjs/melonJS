@@ -15,7 +15,7 @@ let deviceOrientationInitialized = false;
 // swipe utility fn & flag
 let swipeEnabled = true;
 // a cache DOMRect object
-let domRect = {
+const domRect = {
 	left: 0,
 	top: 0,
 	x: 0,
@@ -89,7 +89,7 @@ export function onDeviceRotate(e) {
  * @readonly
  * @type {device.platform}
  */
-export let platform = device_platform;
+export const platform = device_platform;
 
 /**
  * True if the browser supports Touch Events
@@ -352,7 +352,7 @@ export let alpha = 0;
  * @type {boolean}
  * @default true
  */
-export let pauseOnBlur = true;
+export const pauseOnBlur = true;
 
 /**
  * Specify whether to unpause the game when gaining focus
@@ -362,7 +362,7 @@ export let pauseOnBlur = true;
  * @type {boolean}
  * @default true
  */
-export let resumeOnFocus = true;
+export const resumeOnFocus = true;
 
 /**
  * Specify whether to stop the game when losing focus or not.
@@ -373,7 +373,7 @@ export let resumeOnFocus = true;
  * @type {boolean}
  * @default false
  */
-export let stopOnBlur = false;
+export const stopOnBlur = false;
 
 /**
  * Specify whether to automatically bring the window to the front
@@ -381,7 +381,7 @@ export let stopOnBlur = false;
  * @type {boolean}
  * @default true
  */
-export let autoFocus = true;
+export const autoFocus = true;
 
 /**
  * specify a function to execute when the Device is fully loaded and ready
@@ -480,7 +480,7 @@ export function onReady(fn) {
  * @param {boolean} [enable=true] - enable or disable swipe.
  */
 export function enableSwipe(enable) {
-	let moveEvent = pointerEvent
+	const moveEvent = pointerEvent
 		? "pointermove"
 		: touchEvent
 			? "touchmove"
@@ -560,11 +560,11 @@ export function getScreenOrientation() {
 	const PORTRAIT = "portrait";
 	const LANDSCAPE = "landscape";
 
-	let screen = globalThis.screen;
+	const screen = globalThis.screen;
 
 	// first try using "standard" values
 	if (screenOrientation === true) {
-		let orientation = prefixed("orientation", screen);
+		const orientation = prefixed("orientation", screen);
 		if (
 			typeof orientation !== "undefined" &&
 			typeof orientation.type === "string"
@@ -595,9 +595,9 @@ export function getScreenOrientation() {
  * @returns {boolean} true if the orientation was unsuccessfully locked
  */
 export function lockOrientation(orientation) {
-	let screen = globalThis.screen;
+	const screen = globalThis.screen;
 	if (typeof screen !== "undefined") {
-		let _lockOrientation = prefixed("lockOrientation", screen);
+		const _lockOrientation = prefixed("lockOrientation", screen);
 		if (typeof _lockOrientation !== "undefined") {
 			return _lockOrientation(orientation);
 		}
@@ -613,9 +613,9 @@ export function lockOrientation(orientation) {
  * @returns {boolean} true if the orientation was unsuccessfully unlocked
  */
 export function unlockOrientation() {
-	let screen = globalThis.screen;
+	const screen = globalThis.screen;
 	if (typeof screen !== "undefined") {
-		let _unlockOrientation = prefixed("unlockOrientation", screen);
+		const _unlockOrientation = prefixed("unlockOrientation", screen);
 		if (typeof _unlockOrientation !== "undefined") {
 			return _unlockOrientation();
 		}
@@ -748,8 +748,8 @@ export function isWebGLSupported(options) {
 	if (WebGLSupport === -1) {
 		let _supported = false;
 		try {
-			let canvas = globalThis.document.createElement("canvas");
-			let ctxOptions = {
+			const canvas = globalThis.document.createElement("canvas");
+			const ctxOptions = {
 				stencil: true,
 				failIfMajorPerformanceCaveat: options.failIfMajorPerformanceCaveat,
 			};

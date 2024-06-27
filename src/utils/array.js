@@ -21,7 +21,7 @@ import {
  * me.utils.array.remove(arr, "foo");
  */
 export function remove(arr, obj) {
-	let i = Array.prototype.indexOf.call(arr, obj);
+	const i = Array.prototype.indexOf.call(arr, obj);
 	if (i !== -1) {
 		Array.prototype.splice.call(arr, i, 1);
 	}

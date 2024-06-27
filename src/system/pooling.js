@@ -70,11 +70,11 @@ class ObjectPool {
 	 * me.game.world.removeChild(bullet);
 	 */
 	pull(name, ...args) {
-		let className = this.objectClass[name];
+		const className = this.objectClass[name];
 		if (className) {
-			let proto = className["class"],
-				poolArray = className.pool,
-				obj;
+			const proto = className["class"];
+			const poolArray = className.pool;
+			let obj;
 
 			if (poolArray && (obj = poolArray.pop())) {
 				// poolable object must implement a `onResetEvent` method
@@ -98,7 +98,7 @@ class ObjectPool {
 	 * note: this will trigger the garbage collector
 	 */
 	purge() {
-		for (let className in this.objectClass) {
+		for (const className in this.objectClass) {
 			if (this.objectClass[className]) {
 				this.objectClass[className].pool = [];
 			}
@@ -153,7 +153,7 @@ class ObjectPool {
 	 * }
 	 */
 	poolable(obj) {
-		let className = obj.className;
+		const className = obj.className;
 		return (
 			typeof className !== "undefined" &&
 			typeof obj.onResetEvent === "function" &&
@@ -171,7 +171,7 @@ class ObjectPool {
 	}
 }
 
-let pool = new ObjectPool();
+const pool = new ObjectPool();
 
 /**
  * a default global ObjectPool instance
