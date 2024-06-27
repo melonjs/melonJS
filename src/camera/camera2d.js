@@ -20,11 +20,7 @@ import { game } from "../index.js";
  * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
  */
 
-// some ref shortcut
-const MIN = Math.min,
-	MAX = Math.max;
-
-let targetV = new Vector2d();
+const targetV = new Vector2d();
 
 /**
  * a 2D orthographic camera
@@ -193,12 +189,12 @@ export default class Camera2d extends Renderable {
 	_followH(target) {
 		let targetX = this.pos.x;
 		if (target.x - this.pos.x > this.deadzone.right) {
-			targetX = MIN(
+			targetX = Math.min(
 				target.x - this.deadzone.right,
 				this.bounds.width - this.width,
 			);
 		} else if (target.x - this.pos.x < this.deadzone.pos.x) {
-			targetX = MAX(target.x - this.deadzone.pos.x, this.bounds.left);
+			targetX = Math.max(target.x - this.deadzone.pos.x, this.bounds.left);
 		}
 		return targetX;
 	}
@@ -207,12 +203,12 @@ export default class Camera2d extends Renderable {
 	_followV(target) {
 		let targetY = this.pos.y;
 		if (target.y - this.pos.y > this.deadzone.bottom) {
-			targetY = MIN(
+			targetY = Math.min(
 				target.y - this.deadzone.bottom,
 				this.bounds.height - this.height,
 			);
 		} else if (target.y - this.pos.y < this.deadzone.pos.y) {
-			targetY = MAX(target.y - this.deadzone.pos.y, this.bounds.top);
+			targetY = Math.max(target.y - this.deadzone.pos.y, this.bounds.top);
 		}
 		return targetY;
 	}
@@ -400,8 +396,8 @@ export default class Camera2d extends Renderable {
 	 * @param {number} y
 	 */
 	moveTo(x, y) {
-		let _x = this.pos.x;
-		let _y = this.pos.y;
+		const _x = this.pos.x;
+		const _y = this.pos.y;
 
 		this.pos.x = clamp(x, this.bounds.left, this.bounds.width);
 		this.pos.y = clamp(y, this.bounds.top, this.bounds.height);
@@ -575,7 +571,7 @@ export default class Camera2d extends Renderable {
 	 */
 	fadeIn(color, duration = 1000, onComplete) {
 		this._fadeIn.color = pool.pull("Color").copy(color);
-		let _alpha = this._fadeIn.color.alpha;
+		const _alpha = this._fadeIn.color.alpha;
 		this._fadeIn.color.alpha = 0.0;
 		this._fadeIn.tween = pool
 			.pull("Tween", this._fadeIn.color)
@@ -592,7 +588,7 @@ export default class Camera2d extends Renderable {
 	 * @param {Renderable|Entity|Sprite|NineSliceSprite} target - the renderable to focus the camera on
 	 */
 	focusOn(target) {
-		let bounds = target.getBounds();
+		const bounds = target.getBounds();
 		this.moveTo(
 			target.pos.x + bounds.left + bounds.width / 2,
 			target.pos.y + bounds.top + bounds.height / 2,
@@ -700,8 +696,8 @@ export default class Camera2d extends Renderable {
 	 * @ignore
 	 */
 	draw(renderer, container) {
-		let translateX = this.pos.x + this.offset.x;
-		let translateY = this.pos.y + this.offset.y;
+		const translateX = this.pos.x + this.offset.x;
+		const translateY = this.pos.y + this.offset.y;
 
 		// translate the world coordinates by default to screen coordinates
 		container.currentTransform.translate(-translateX, -translateY);

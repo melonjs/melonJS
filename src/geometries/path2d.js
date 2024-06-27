@@ -137,9 +137,9 @@ export default class Path2D {
 	 * If the shape has already been closed or has only one point, this function does nothing.
 	 */
 	closePath() {
-		let points = this.points;
+		const points = this.points;
 		if (points.length > 0) {
-			let firstPoint = points[0];
+			const firstPoint = points[0];
 			if (!firstPoint.equals(points[points.length - 1])) {
 				this.lineTo(firstPoint.x, firstPoint.y);
 			}
@@ -152,12 +152,12 @@ export default class Path2D {
 	 * @returns {Point[]} an array of vertices representing the triangulated path or shape
 	 */
 	triangulatePath() {
-		let vertices = this.vertices;
+		const vertices = this.vertices;
 
 		if (this.isDirty) {
-			let points = this.points;
-			let indices = earcut(points.flatMap((p) => [p.x, p.y]));
-			let indicesLength = indices.length;
+			const points = this.points;
+			const indices = earcut(points.flatMap((p) => [p.x, p.y]));
+			const indicesLength = indices.length;
 
 			// pre-allocate vertices if necessary
 			while (vertices.length < indicesLength) {
@@ -166,7 +166,7 @@ export default class Path2D {
 
 			// calculate all vertices
 			for (let i = 0; i < indicesLength; i++) {
-				let point = points[indices[i]];
+				const point = points[indices[i]];
 				vertices[i].set(point.x, point.y);
 			}
 
@@ -197,9 +197,9 @@ export default class Path2D {
 	 * @param {number} y - the y-axis coordinate of the line's end point.
 	 */
 	lineTo(x, y) {
-		let points = this.points;
-		let startPoint = this.startPoint;
-		let lastPoint =
+		const points = this.points;
+		const startPoint = this.startPoint;
+		const lastPoint =
 			points.length === 0 ? startPoint : points[points.length - 1];
 
 		if (!startPoint.equals(lastPoint)) {
@@ -285,55 +285,55 @@ export default class Path2D {
 	 * @param {number} radius - the arc's radius. Must be positive.
 	 */
 	arcTo(x1, y1, x2, y2, radius) {
-		let points = this.points;
-		let startPoint = this.startPoint;
-		let lastPoint =
+		const points = this.points;
+		const startPoint = this.startPoint;
+		const lastPoint =
 			points.length === 0 ? startPoint : points[points.length - 1];
 
 		// based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
-		let x0 = lastPoint.x,
-			y0 = lastPoint.y;
+		const x0 = lastPoint.x;
+		const y0 = lastPoint.y;
 		//a = -incoming vector, b = outgoing vector to x1, y1
-		let a0 = x0 - x1,
-			a1 = y0 - y1;
-		let b0 = x2 - x1,
-			b1 = y2 - y1;
+		let a0 = x0 - x1;
+		let a1 = y0 - y1;
+		let b0 = x2 - x1;
+		let b1 = y2 - y1;
 
 		//normalize
-		let l_a = Math.sqrt(Math.pow(a0, 2) + Math.pow(a1, 2));
-		let l_b = Math.sqrt(Math.pow(b0, 2) + Math.pow(b1, 2));
+		const l_a = Math.sqrt(Math.pow(a0, 2) + Math.pow(a1, 2));
+		const l_b = Math.sqrt(Math.pow(b0, 2) + Math.pow(b1, 2));
 		a0 /= l_a;
 		a1 /= l_a;
 		b0 /= l_b;
 		b1 /= l_b;
-		let angle = Math.atan2(a1, a0) - Math.atan2(b1, b0);
+		const angle = Math.atan2(a1, a0) - Math.atan2(b1, b0);
 
 		//work out tangent points using tan(θ) = opposite / adjacent; angle/2 because hypotenuse is the bisection of a,b
-		let tan_angle_div2 = Math.tan(angle / 2);
-		let adj_l = radius / tan_angle_div2;
+		const tan_angle_div2 = Math.tan(angle / 2);
+		const adj_l = radius / tan_angle_div2;
 
-		let tangent1_pointx = x1 + a0 * adj_l,
-			tangent1_pointy = y1 + a1 * adj_l;
-		let tangent2_pointx = x1 + b0 * adj_l,
-			tangent2_pointy = y1 + b1 * adj_l;
+		const tangent1_pointx = x1 + a0 * adj_l;
+		const tangent1_pointy = y1 + a1 * adj_l;
+		const tangent2_pointx = x1 + b0 * adj_l;
+		const tangent2_pointy = y1 + b1 * adj_l;
 
 		this.moveTo(tangent1_pointx, tangent1_pointy);
 
-		let bisec0 = (a0 + b0) / 2.0,
-			bisec1 = (a1 + b1) / 2.0;
-		let bisec_l = Math.sqrt(Math.pow(bisec0, 2) + Math.pow(bisec1, 2));
+		let bisec0 = (a0 + b0) / 2.0;
+		let bisec1 = (a1 + b1) / 2.0;
+		const bisec_l = Math.sqrt(Math.pow(bisec0, 2) + Math.pow(bisec1, 2));
 		bisec0 /= bisec_l;
 		bisec1 /= bisec_l;
 
-		let hyp_l = Math.sqrt(Math.pow(radius, 2) + Math.pow(adj_l, 2));
-		let centerx = x1 + hyp_l * bisec0,
-			centery = y1 + hyp_l * bisec1;
+		const hyp_l = Math.sqrt(Math.pow(radius, 2) + Math.pow(adj_l, 2));
+		const centerx = x1 + hyp_l * bisec0;
+		const centery = y1 + hyp_l * bisec1;
 
-		let startAngle = Math.atan2(
+		const startAngle = Math.atan2(
 			tangent1_pointy - centery,
 			tangent1_pointx - centerx,
 		);
-		let endAngle = Math.atan2(
+		const endAngle = Math.atan2(
 			tangent2_pointy - centery,
 			tangent2_pointx - centerx,
 		);
@@ -365,7 +365,7 @@ export default class Path2D {
 	) {
 		// based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
 		if (startAngle === endAngle) return;
-		let fullCircle = anticlockwise
+		const fullCircle = anticlockwise
 			? Math.abs(startAngle - endAngle) >= TAU
 			: Math.abs(endAngle - startAngle) >= TAU;
 

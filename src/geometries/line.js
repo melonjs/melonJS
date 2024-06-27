@@ -29,7 +29,8 @@ export default class Line extends Polygon {
 	 * }
 	 */
 	contains() {
-		let _x, _y;
+		let _x;
+		let _y;
 
 		if (arguments.length === 2) {
 			// x, y
@@ -45,8 +46,8 @@ export default class Line extends Polygon {
 		// rather than creating temp translated vectors
 		_x -= this.pos.x; // Cx
 		_y -= this.pos.y; // Cy
-		let start = this.points[0]; // Ax/Ay
-		let end = this.points[1]; // Bx/By
+		const start = this.points[0]; // Ax/Ay
+		const end = this.points[1]; // Bx/By
 
 		//(Cy - Ay) * (Bx - Ax) = (By - Ay) * (Cx - Ax)
 		return (
@@ -60,12 +61,12 @@ export default class Line extends Polygon {
 	 * @returns {Line} this instance for objecf chaining
 	 */
 	recalc() {
-		let edges = this.edges;
-		let normals = this.normals;
-		let indices = this.indices;
+		const edges = this.edges;
+		const normals = this.normals;
+		const indices = this.indices;
 
 		// Copy the original points array and apply the offset/angle
-		let points = this.points;
+		const points = this.points;
 
 		if (points.length !== 2) {
 			throw new Error("Requires exactly 2 points");
@@ -93,7 +94,7 @@ export default class Line extends Polygon {
 	 * @returns {Line} new Line
 	 */
 	clone() {
-		let copy = [];
+		const copy = [];
 		this.points.forEach((point) => {
 			copy.push(point.clone());
 		});

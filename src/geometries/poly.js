@@ -112,7 +112,7 @@ export default class Polygon {
 			}
 		} else {
 			// it's a flat array of numbers
-			let verticesLength = vertices.length;
+			const verticesLength = vertices.length;
 			this.points.length = 0; // fix potential memory leak
 			for (let p = 0; p < verticesLength; p += 2) {
 				this.points.push(pool.pull("Vector2d", vertices[p], vertices[p + 1]));
@@ -130,8 +130,8 @@ export default class Polygon {
 	 * @returns {Polygon} Reference to this object for method chaining
 	 */
 	transform(m) {
-		let points = this.points;
-		let len = points.length;
+		const points = this.points;
+		const len = points.length;
 		for (let i = 0; i < len; i++) {
 			m.apply(points[i]);
 		}
@@ -164,8 +164,8 @@ export default class Polygon {
 	 */
 	rotate(angle, v) {
 		if (angle !== 0) {
-			let points = this.points;
-			let len = points.length;
+			const points = this.points;
+			const len = points.length;
 			for (let i = 0; i < len; i++) {
 				points[i].rotate(angle, v);
 			}
@@ -182,8 +182,8 @@ export default class Polygon {
 	 * @returns {Polygon} Reference to this object for method chaining
 	 */
 	scale(x, y = x) {
-		let points = this.points;
-		let len = points.length;
+		const points = this.points;
+		const len = points.length;
 		for (let i = 0; i < len; i++) {
 			points[i].scale(x, y);
 		}
@@ -207,13 +207,13 @@ export default class Polygon {
 	 * @returns {Polygon} Reference to this object for method chaining
 	 */
 	recalc() {
-		let edges = this.edges;
-		let normals = this.normals;
-		let indices = this.indices;
+		const edges = this.edges;
+		const normals = this.normals;
+		const indices = this.indices;
 
 		// Copy the original points array and apply the offset/angle
-		let points = this.points;
-		let len = points.length;
+		const points = this.points;
+		const len = points.length;
 
 		if (len < 3) {
 			throw new Error("Requires at least 3 points");
@@ -270,17 +270,17 @@ export default class Polygon {
 		// http://paulbourke.net/geometry/polygonmesh/
 		// Copyright (c) Paul Bourke (use permitted)
 
-		let flag = 0,
-			vertices = this.points,
-			n = vertices.length;
+		let flag = 0;
+		const vertices = this.points;
+		const n = vertices.length;
 
 		if (n < 3) {
 			return null;
 		}
 
 		for (let i = 0; i < n; i++) {
-			let j = (i + 1) % n;
-			let k = (i + 2) % n;
+			const j = (i + 1) % n;
+			const k = (i + 2) % n;
 			let z = (vertices[j].x - vertices[i].x) * (vertices[k].y - vertices[j].y);
 			z -= (vertices[j].y - vertices[i].y) * (vertices[k].x - vertices[j].x);
 
@@ -313,7 +313,8 @@ export default class Polygon {
 	 * polygon.translate(myVector2d);
 	 */
 	translate() {
-		let _x, _y;
+		let _x;
+		let _y;
 
 		if (arguments.length === 2) {
 			// x, y
@@ -342,7 +343,8 @@ export default class Polygon {
 	 * polygon.shift(myVector2d);
 	 */
 	shift() {
-		let _x, _y;
+		let _x;
+		let _y;
 		if (arguments.length === 2) {
 			// x, y
 			_x = arguments[0];
@@ -374,20 +376,20 @@ export default class Polygon {
 	 * }
 	 */
 	contains(...args) {
-		let [_x, _y] = args.length === 2 ? args : [args[0].x, args[0].y];
+		const [_x, _y] = args.length === 2 ? args : [args[0].x, args[0].y];
 
 		let intersects = false;
-		let posx = this.pos.x,
-			posy = this.pos.y;
-		let points = this.points;
-		let len = points.length;
+		const posx = this.pos.x;
+		const posy = this.pos.y;
+		const points = this.points;
+		const len = points.length;
 
 		//http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
 		for (let i = 0, j = len - 1; i < len; j = i++) {
-			const iy = points[i].y + posy,
-				ix = points[i].x + posx,
-				jy = points[j].y + posy,
-				jx = points[j].x + posx;
+			const iy = points[i].y + posy;
+			const ix = points[i].x + posx;
+			const jy = points[j].y + posy;
+			const jx = points[j].x + posx;
 			if (
 				iy > _y !== jy > _y &&
 				_x < ((jx - ix) * (_y - iy)) / (jy - iy) + ix
@@ -414,7 +416,7 @@ export default class Polygon {
 	 * @returns {Bounds} this shape bounding box Rectangle object
 	 */
 	updateBounds() {
-		let bounds = this.getBounds();
+		const bounds = this.getBounds();
 
 		bounds.update(this.points);
 		bounds.translate(this.pos);
@@ -427,7 +429,7 @@ export default class Polygon {
 	 * @returns {Polygon} new Polygon
 	 */
 	clone() {
-		let copy = [];
+		const copy = [];
 		this.points.forEach((point) => {
 			copy.push(point.clone());
 		});

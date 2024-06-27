@@ -54,7 +54,8 @@ export default class Point {
 	 * @returns {boolean}
 	 */
 	equals(...args) {
-		let _x, _y;
+		let _x;
+		let _y;
 		if (args.length === 2) {
 			// x, y
 			[_x, _y] = args;

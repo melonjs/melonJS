@@ -12,7 +12,7 @@ import { isDataUrl } from "./../utils/string.js";
  * audio channel list
  * @ignore
  */
-let audioTracks = {};
+const audioTracks = {};
 
 /**
  * current active track
@@ -36,11 +36,11 @@ let audioExts = [];
  * event listener callback on load error
  * @ignore
  */
-let soundLoadError = function (sound_name, onerror_cb) {
+const soundLoadError = function (sound_name, onerror_cb) {
 	// check the retry counter
 	if (retry_counter++ > 3) {
 		// something went wrong
-		let errmsg = "melonJS: failed loading " + sound_name;
+		const errmsg = "melonJS: failed loading " + sound_name;
 		if (stopOnAudioError === false) {
 			// disable audio
 			disable();
@@ -66,7 +66,7 @@ let soundLoadError = function (sound_name, onerror_cb) {
  * in the console<br>
  * @default true
  */
-export let stopOnAudioError = true;
+export let stopOnAudioError = true; // eslint-disable-line prefer-const
 
 /**
  * Initialize and configure the audio support.<br>
@@ -133,7 +133,7 @@ export function disable() {
  * @returns {number} the amount of asset loaded (always 1 if successfull)
  */
 export function load(sound, onloadcb, onerrorcb, settings = {}) {
-	let urls = [];
+	const urls = [];
 	if (audioExts.length === 0) {
 		throw new Error(
 			"target audio extension(s) should be set through me.audio.init() before calling the preloader.",
@@ -186,9 +186,9 @@ export function load(sound, onloadcb, onerrorcb, settings = {}) {
  * me.audio.play("gameover_sfx", false, null, 0.5);
  */
 export function play(sound_name, loop = false, onend, volume) {
-	let sound = audioTracks[sound_name];
+	const sound = audioTracks[sound_name];
 	if (sound && typeof sound !== "undefined") {
-		let id = sound.play();
+		const id = sound.play();
 		if (typeof loop === "boolean") {
 			// arg[0] can take different types in howler 2.0
 			sound.loop(loop, id);
@@ -219,7 +219,7 @@ export function play(sound_name, loop = false, onend, volume) {
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will fade.
  */
 export function fade(sound_name, from, to, duration, id) {
-	let sound = audioTracks[sound_name];
+	const sound = audioTracks[sound_name];
 	if (sound && typeof sound !== "undefined") {
 		sound.fade(from, to, duration, id);
 	} else {
@@ -240,7 +240,7 @@ export function fade(sound_name, from, to, duration, id) {
  * me.audio.seek("dst-gameforest", 0);
  */
 export function seek(sound_name, ...args) {
-	let sound = audioTracks[sound_name];
+	const sound = audioTracks[sound_name];
 	if (sound && typeof sound !== "undefined") {
 		return sound.seek(...args);
 	} else {
@@ -261,7 +261,7 @@ export function seek(sound_name, ...args) {
  * me.audio.rate("dst-gameforest", 2.0);
  */
 export function rate(sound_name, ...args) {
-	let sound = audioTracks[sound_name];
+	const sound = audioTracks[sound_name];
 	if (sound && typeof sound !== "undefined") {
 		return sound.rate(...args);
 	} else {
@@ -279,7 +279,7 @@ export function rate(sound_name, ...args) {
  * me.audio.stereo("cling", -1);
  */
 export function stereo(sound_name, pan, id) {
-	let sound = audioTracks[sound_name];
+	const sound = audioTracks[sound_name];
 	if (sound && typeof sound !== "undefined") {
 		return sound.stereo(pan, id);
 	} else {
@@ -297,7 +297,7 @@ export function stereo(sound_name, pan, id) {
  * @return {Array} the current 3D spatial position: [x, y, z]
  */
 export function position(sound_name, x, y, z, id) {
-	let sound = audioTracks[sound_name];
+	const sound = audioTracks[sound_name];
 	if (sound && typeof sound !== "undefined") {
 		return sound.pos(x, y, z, id);
 	} else {
@@ -316,7 +316,7 @@ export function position(sound_name, x, y, z, id) {
  * @return {Array} the current 3D spatial orientation: [x, y, z]
  */
 export function orientation(sound_name, x, y, z, id) {
-	let sound = audioTracks[sound_name];
+	const sound = audioTracks[sound_name];
 	if (sound && typeof sound !== "undefined") {
 		return sound.orientation(x, y, z, id);
 	} else {
@@ -348,7 +348,7 @@ export function orientation(sound_name, x, y, z, id) {
  * });
  */
 export function panner(sound_name, attributes, id) {
-	let sound = audioTracks[sound_name];
+	const sound = audioTracks[sound_name];
 	if (sound && typeof sound !== "undefined") {
 		return sound.pannerAttr(attributes, id);
 	} else {
@@ -365,7 +365,7 @@ export function panner(sound_name, attributes, id) {
  */
 export function stop(sound_name, id) {
 	if (typeof sound_name !== "undefined") {
-		let sound = audioTracks[sound_name];
+		const sound = audioTracks[sound_name];
 		if (sound && typeof sound !== "undefined") {
 			sound.stop(id);
 			// remove the defined onend callback (if any defined)
@@ -387,7 +387,7 @@ export function stop(sound_name, id) {
  * me.audio.pause("cling");
  */
 export function pause(sound_name, id) {
-	let sound = audioTracks[sound_name];
+	const sound = audioTracks[sound_name];
 	if (sound && typeof sound !== "undefined") {
 		sound.pause(id);
 	} else {
@@ -410,7 +410,7 @@ export function pause(sound_name, id) {
  * me.audio.resume("myClip", id);
  */
 export function resume(sound_name, id) {
-	let sound = audioTracks[sound_name];
+	const sound = audioTracks[sound_name];
 	if (sound && typeof sound !== "undefined") {
 		sound.play(id);
 	} else {
@@ -510,7 +510,7 @@ export function getVolume() {
  * me.audio.mute("awesome_music");
  */
 export function mute(sound_name, id, mute = true) {
-	let sound = audioTracks[sound_name];
+	const sound = audioTracks[sound_name];
 	if (sound && typeof sound !== "undefined") {
 		sound.mute(mute, id);
 	} else {
@@ -573,7 +573,7 @@ export function unload(sound_name) {
  * me.audio.unloadAll();
  */
 export function unloadAll() {
-	for (let sound_name in audioTracks) {
+	for (const sound_name in audioTracks) {
 		if (audioTracks.hasOwnProperty(sound_name)) {
 			unload(sound_name);
 		}

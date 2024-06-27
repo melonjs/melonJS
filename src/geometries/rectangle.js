@@ -76,7 +76,7 @@ export default class Rect extends Polygon {
 	 * @type {number}
 	 */
 	get right() {
-		let w = this.width;
+		const w = this.width;
 		return this.left + w || w;
 	}
 
@@ -93,7 +93,7 @@ export default class Rect extends Polygon {
 	 * @type {number}
 	 */
 	get bottom() {
-		let h = this.height;
+		const h = this.height;
 		return this.top + h || h;
 	}
 
@@ -216,8 +216,8 @@ export default class Rect extends Polygon {
 	 * @returns {Rect} the union(ed) rectangle
 	 */
 	union(rect) {
-		let x1 = Math.min(this.left, rect.left);
-		let y1 = Math.min(this.top, rect.top);
+		const x1 = Math.min(this.left, rect.left);
+		const y1 = Math.min(this.top, rect.top);
 
 		this.resize(
 			Math.max(this.right, rect.right) - x1,
@@ -261,8 +261,11 @@ export default class Rect extends Polygon {
 	 * }
 	 */
 	contains() {
-		let arg0 = arguments[0];
-		let _x1, _x2, _y1, _y2;
+		const arg0 = arguments[0];
+		let _x1;
+		let _x2;
+		let _y1;
+		let _y2;
 		if (arguments.length === 2) {
 			// x, y
 			_x1 = _x2 = arg0;

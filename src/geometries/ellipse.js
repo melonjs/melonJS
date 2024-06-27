@@ -94,7 +94,7 @@ export default class Ellipse {
 		this.radiusV.set(radius, radius).scaleV(this.ratio);
 		this.radiusSq.set(r, r).scaleV(this.ratio);
 
-		let bounds = this.getBounds();
+		const bounds = this.getBounds();
 		// update the corresponding bounds
 		bounds.setMinMax(x, y, x + w, x + h);
 		// elipse position is the center of the cirble, bounds position are top left
@@ -110,7 +110,7 @@ export default class Ellipse {
 	 * @returns {Ellipse} Reference to this object for method chaining
 	 */
 	rotate(angle, v) {
-		let bounds = this.getBounds();
+		const bounds = this.getBounds();
 		// TODO : only works for circle
 		this.pos.rotate(angle, v);
 		bounds.shift(this.pos);
@@ -163,7 +163,8 @@ export default class Ellipse {
 	 * ellipse.translate(myVector2d);
 	 */
 	translate() {
-		let _x, _y;
+		let _x;
+		let _y;
 
 		if (arguments.length === 2) {
 			// x, y
@@ -197,7 +198,8 @@ export default class Ellipse {
 	 * }
 	 */
 	contains(...args) {
-		let _x, _y;
+		let _x;
+		let _y;
 
 		if (args.length === 2) {
 			// x, y

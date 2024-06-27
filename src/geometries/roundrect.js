@@ -82,8 +82,9 @@ export default class RoundRect extends Rect {
 	 * }
 	 */
 	contains() {
-		let arg0 = arguments[0];
-		let _x, _y;
+		const arg0 = arguments[0];
+		let _x;
+		let _y;
 		if (arguments.length === 2) {
 			// x, y
 			_x = arg0;
@@ -121,7 +122,8 @@ export default class RoundRect extends Rect {
 		}
 
 		// check whether point is in one of the rounded corner areas
-		let tx, ty;
+		let tx;
+		let ty;
 		const radiusX = Math.max(0, Math.min(this.radius, this.width / 2));
 		const radiusY = Math.max(0, Math.min(this.radius, this.height / 2));
 
