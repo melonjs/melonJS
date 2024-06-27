@@ -180,7 +180,7 @@ export default class Container extends Renderable {
 		}
 
 		// delete all children
-		let children = this.getChildren();
+		const children = this.getChildren();
 		for (let i = children.length, child; i >= 0; child = children[--i]) {
 			// don't remove it if a persistent object
 			if (child && child.isPersistent !== true) {
@@ -262,7 +262,7 @@ export default class Container extends Renderable {
 
 		// if a physic body(ies) to the game world
 		if (this.isAttachedToRoot()) {
-			let worldContainer = this.getRootAncestor();
+			const worldContainer = this.getRootAncestor();
 			if (child.body instanceof Body) {
 				worldContainer.addBody(child.body);
 			}
@@ -334,7 +334,7 @@ export default class Container extends Renderable {
 
 			// if a physic body(ies) to the game world
 			if (this.isAttachedToRoot()) {
-				let worldContainer = this.getRootAncestor();
+				const worldContainer = this.getRootAncestor();
 				if (child.body instanceof Body) {
 					worldContainer.addBody(child.body);
 				}
@@ -381,22 +381,17 @@ export default class Container extends Renderable {
 	 * container.forEach((child, index, array) => { ... }, thisArg);
 	 */
 	forEach(callback, thisArg) {
-		let context = this,
-			i = 0;
-		let children = this.getChildren();
+		let i = 0;
+		const children = this.getChildren();
 
-		let len = children.length;
+		const len = children.length;
 
 		if (typeof callback !== "function") {
 			throw new Error(callback + " is not a function");
 		}
 
-		if (arguments.length > 1) {
-			context = thisArg;
-		}
-
 		while (i < len) {
-			callback.call(context, children[i], i, children);
+			callback.call(thisArg ?? this, children[i], i, children);
 			i++;
 		}
 	}
@@ -407,12 +402,12 @@ export default class Container extends Renderable {
 	 * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child2 - Child to be added
 	 */
 	swapChildren(child, child2) {
-		let index = this.getChildIndex(child);
-		let index2 = this.getChildIndex(child2);
+		const index = this.getChildIndex(child);
+		const index2 = this.getChildIndex(child2);
 
 		if (index !== -1 && index2 !== -1) {
 			// swap z index
-			let _z = child.pos.z;
+			const _z = child.pos.z;
 			child.pos.z = child2.pos.z;
 			child2.pos.z = _z;
 			// swap the positions..
@@ -457,7 +452,7 @@ export default class Container extends Renderable {
 	 * @returns {Renderable} child
 	 */
 	getNextChild(child) {
-		let index = this.getChildren().indexOf(child) - 1;
+		const index = this.getChildren().indexOf(child) - 1;
 		if (index >= 0 && index < this.getChildren().length) {
 			return this.getChildAt(index);
 		}
@@ -502,7 +497,7 @@ export default class Container extends Renderable {
 		 * @ignore
 		 */
 		function compare(obj, prop) {
-			let v = obj[prop];
+			const v = obj[prop];
 			if (value instanceof RegExp && typeof v === "string") {
 				if (value.test(v)) {
 					objList.push(obj);
@@ -562,7 +557,7 @@ export default class Container extends Renderable {
 	 * @returns {Renderable} corresponding child or null
 	 */
 	getChildByGUID(guid) {
-		let obj = this.getChildByProp("GUID", guid);
+		const obj = this.getChildByProp("GUID", guid);
 		return obj.length > 0 ? obj[0] : null;
 	}
 
@@ -583,7 +578,7 @@ export default class Container extends Renderable {
 	 * @returns {Bounds} this container bounding box Rectangle object
 	 */
 	updateBounds(absolute = true) {
-		let bounds = this.getBounds();
+		const bounds = this.getBounds();
 
 		// call parent method
 		super.updateBounds(absolute);
@@ -591,7 +586,7 @@ export default class Container extends Renderable {
 		if (this.enableChildBoundsUpdate === true) {
 			this.forEach((child) => {
 				if (child.isRenderable) {
-					let childBounds = child.updateBounds(true);
+					const childBounds = child.updateBounds(true);
 					if (childBounds.isFinite()) {
 						bounds.addBounds(childBounds);
 					}
@@ -715,7 +710,7 @@ export default class Container extends Renderable {
 
 			// Don't cache the child index; another element might have been removed
 			// by the child's `onDeactivateEvent` or `destroy` methods
-			let childIndex = this.getChildIndex(child);
+			const childIndex = this.getChildIndex(child);
 			if (childIndex >= 0) {
 				this.getChildren().splice(childIndex, 1);
 				child.ancestor = undefined;
@@ -754,7 +749,7 @@ export default class Container extends Renderable {
 	 * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child -  Child to be moved
 	 */
 	moveUp(child) {
-		let childIndex = this.getChildIndex(child);
+		const childIndex = this.getChildIndex(child);
 		if (childIndex - 1 >= 0) {
 			// note : we use an inverted loop
 			this.swapChildren(child, this.getChildAt(childIndex - 1));
@@ -768,7 +763,7 @@ export default class Container extends Renderable {
 	 * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be moved
 	 */
 	moveDown(child) {
-		let childIndex = this.getChildIndex(child);
+		const childIndex = this.getChildIndex(child);
 		if (childIndex >= 0 && childIndex + 1 < this.getChildren().length) {
 			// note : we use an inverted loop
 			this.swapChildren(child, this.getChildAt(childIndex + 1));
@@ -782,9 +777,9 @@ export default class Container extends Renderable {
 	 * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be moved
 	 */
 	moveToTop(child) {
-		let childIndex = this.getChildIndex(child);
+		const childIndex = this.getChildIndex(child);
 		if (childIndex > 0) {
-			let children = this.getChildren();
+			const children = this.getChildren();
 			// note : we use an inverted loop
 			children.splice(0, 0, children.splice(childIndex, 1)[0]);
 			// increment our child z value based on the previous child depth
@@ -799,8 +794,8 @@ export default class Container extends Renderable {
 	 * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be moved
 	 */
 	moveToBottom(child) {
-		let childIndex = this.getChildIndex(child);
-		let children = this.getChildren();
+		const childIndex = this.getChildIndex(child);
+		const children = this.getChildren();
 		if (childIndex >= 0 && childIndex < children.length - 1) {
 			// note : we use an inverted loop
 			children.splice(
@@ -878,7 +873,7 @@ export default class Container extends Renderable {
 		if (!b.pos || !a.pos) {
 			return a.pos ? -Infinity : Infinity;
 		}
-		let result = b.pos.z - a.pos.z;
+		const result = b.pos.z - a.pos.z;
 		return result ? result : b.pos.x - a.pos.x;
 	}
 
@@ -890,7 +885,7 @@ export default class Container extends Renderable {
 		if (!b.pos || !a.pos) {
 			return a.pos ? -Infinity : Infinity;
 		}
-		let result = b.pos.z - a.pos.z;
+		const result = b.pos.z - a.pos.z;
 		return result ? result : b.pos.y - a.pos.y;
 	}
 
@@ -914,8 +909,8 @@ export default class Container extends Renderable {
 	 */
 	update(dt) {
 		let isFloating = false;
-		let isPaused = state.isPaused();
-		let children = this.getChildren();
+		const isPaused = state.isPaused();
+		const children = this.getChildren();
 		const childrenLength = children.length;
 
 		for (let i = childrenLength, obj; i--, (obj = children[i]); ) {
@@ -962,7 +957,7 @@ export default class Container extends Renderable {
 	 */
 	draw(renderer, viewport) {
 		let isFloating = false;
-		let bounds = this.getBounds();
+		const bounds = this.getBounds();
 
 		this.drawCount = 0;
 
@@ -983,7 +978,7 @@ export default class Container extends Renderable {
 			renderer.clearColor(this.backgroundColor);
 		}
 
-		let children = this.getChildren();
+		const children = this.getChildren();
 		for (let i = children.length, obj; i--, (obj = children[i]); ) {
 			if (obj.isRenderable) {
 				isFloating = obj.floating === true;

@@ -31,7 +31,7 @@ export default class Glyph {
 	 */
 	getKerning(ch) {
 		if (this.kerning) {
-			let page = this.kerning[ch >>> LOG2_PAGE_SIZE];
+			const page = this.kerning[ch >>> LOG2_PAGE_SIZE];
 			if (page) {
 				return page[ch & (PAGE_SIZE - 1)] || 0;
 			}

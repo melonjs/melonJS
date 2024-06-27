@@ -215,7 +215,7 @@ export default class Text extends Renderable {
 	 */
 	setFont(font, size = 10) {
 		// font name and type
-		let font_names = font.split(",").map((value) => {
+		const font_names = font.split(",").map((value) => {
 			value = value.trim();
 			return !/(^".*"$)|(^'.*'$)/.test(value) ? '"' + value + '"' : value;
 		});
@@ -226,7 +226,7 @@ export default class Text extends Renderable {
 			size += "px";
 		} /* string */ else {
 			// extract the units and convert if necessary
-			let CSSval = size.match(/([-+]?[\d.]*)(.*)/);
+			const CSSval = size.match(/([-+]?[\d.]*)(.*)/);
 			this.fontSize = parseFloat(CSSval[1]);
 			if (CSSval[2]) {
 				this.fontSize *= toPX[runits.indexOf(CSSval[2])];
@@ -249,7 +249,7 @@ export default class Text extends Renderable {
 	 * @returns {Text} this object for chaining
 	 */
 	setText(value = "") {
-		let bounds = this.getBounds();
+		const bounds = this.getBounds();
 
 		// set the next text
 		if (this._text.toString() !== value.toString()) {
@@ -276,8 +276,8 @@ export default class Text extends Renderable {
 		);
 
 		// update the offScreenCanvas texture if required
-		let width = Math.ceil(this.metrics.width),
-			height = Math.ceil(this.metrics.height);
+		let width = Math.ceil(this.metrics.width);
+		let height = Math.ceil(this.metrics.height);
 
 		if (globalRenderer.WebGLVersion === 1) {
 			// round size to next Pow2

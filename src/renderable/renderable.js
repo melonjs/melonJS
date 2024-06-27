@@ -474,11 +474,12 @@ export default class Renderable extends Rect {
 	 * @returns {number} angle in radians
 	 */
 	angleTo(target) {
-		let a = this.getBounds();
-		let ax, ay;
+		const a = this.getBounds();
+		let ax;
+		let ay;
 
 		if (target instanceof Renderable) {
-			let b = target.getBounds();
+			const b = target.getBounds();
 			ax = b.centerX - a.centerX;
 			ay = b.centerY - a.centerY;
 		} else {
@@ -496,11 +497,12 @@ export default class Renderable extends Rect {
 	 * @returns {number} distance
 	 */
 	distanceTo(target) {
-		let a = this.getBounds();
-		let dx, dy;
+		const a = this.getBounds();
+		let dx;
+		let dy;
 
 		if (target instanceof Renderable) {
-			let b = target.getBounds();
+			const b = target.getBounds();
 			dx = a.centerX - b.centerX;
 			dy = a.centerY - b.centerY;
 		} else {
@@ -526,7 +528,7 @@ export default class Renderable extends Rect {
 			position = target;
 		}
 
-		let angle = this.angleTo(position);
+		const angle = this.angleTo(position);
 
 		this.rotate(angle);
 
@@ -591,7 +593,7 @@ export default class Renderable extends Rect {
 	 */
 	updateBounds(absolute = true) {
 		if (this.isRenderable) {
-			let bounds = this.getBounds();
+			const bounds = this.getBounds();
 
 			bounds.clear();
 
@@ -616,7 +618,7 @@ export default class Renderable extends Rect {
 			}
 
 			if (absolute === true) {
-				let absPos = this.getAbsolutePosition();
+				const absPos = this.getAbsolutePosition();
 				bounds.centerOn(
 					absPos.x + bounds.x + bounds.width / 2,
 					absPos.y + bounds.y + bounds.height / 2,
@@ -681,8 +683,8 @@ export default class Renderable extends Rect {
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
 	 */
 	preDraw(renderer) {
-		let ax = this.width * this.anchorPoint.x,
-			ay = this.height * this.anchorPoint.y;
+		const ax = this.width * this.anchorPoint.x;
+		const ay = this.height * this.anchorPoint.y;
 
 		// save renderer context
 		renderer.save();
@@ -692,8 +694,8 @@ export default class Renderable extends Rect {
 
 		// apply flip
 		if (this._flip.x || this._flip.y) {
-			var dx = this._flip.x ? this.centerX - ax : 0,
-				dy = this._flip.y ? this.centerY - ay : 0;
+			const dx = this._flip.x ? this.centerX - ax : 0;
+			const dy = this._flip.y ? this.centerY - ay : 0;
 
 			renderer.translate(dx, dy);
 			renderer.scale(this._flip.x ? -1 : 1, this._flip.y ? -1 : 1);

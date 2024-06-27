@@ -191,12 +191,13 @@ export default class BitmapText extends Renderable {
 	 * @returns {Bounds} this Bitmap Text bounding box Rectangle object
 	 */
 	updateBounds(absolute = true) {
-		let bounds = this.getBounds();
+		const bounds = this.getBounds();
 
 		bounds.clear();
 
 		if (typeof this.metrics !== "undefined") {
-			let ax, ay;
+			let ax;
+			let ay;
 
 			bounds.addBounds(this.metrics.measureText(this._text));
 
@@ -299,7 +300,7 @@ export default class BitmapText extends Renderable {
 	 */
 	draw(renderer, text, x, y) {
 		// save the previous global alpha value
-		let _alpha = renderer.globalAlpha();
+		const _alpha = renderer.globalAlpha();
 
 		// allows to provide backward compatibility when
 		// adding Bitmap Font to an object container
@@ -313,15 +314,15 @@ export default class BitmapText extends Renderable {
 			y = this.pos.y;
 		}
 
-		let lX = x;
-		let stringHeight = this.metrics.lineHeight();
+		const lX = x;
+		const stringHeight = this.metrics.lineHeight();
 		let maxWidth = 0;
 
 		for (let i = 0; i < this._text.length; i++) {
 			x = lX;
 			const string = this._text[i].trimEnd();
 			// adjust x pos based on alignment value
-			let stringWidth = this.metrics.lineWidth(string);
+			const stringWidth = this.metrics.lineWidth(string);
 			switch (this.textAlign) {
 				case "right":
 					x -= stringWidth;
@@ -366,16 +367,16 @@ export default class BitmapText extends Renderable {
 			let lastGlyph = null;
 			for (let c = 0, len = string.length; c < len; c++) {
 				// calculate the char index
-				let ch = string.charCodeAt(c);
-				let glyph = this.fontData.glyphs[ch];
+				const ch = string.charCodeAt(c);
+				const glyph = this.fontData.glyphs[ch];
 
 				if (typeof glyph !== "undefined") {
-					let glyphWidth = glyph.width;
-					let glyphHeight = glyph.height;
-					let kerning =
+					const glyphWidth = glyph.width;
+					const glyphHeight = glyph.height;
+					const kerning =
 						lastGlyph && lastGlyph.kerning ? lastGlyph.getKerning(ch) : 0;
-					let scaleX = this.fontScale.x;
-					let scaleY = this.fontScale.y;
+					const scaleX = this.fontScale.x;
+					const scaleY = this.fontScale.y;
 
 					// draw it
 					if (glyphWidth !== 0 && glyphHeight !== 0) {

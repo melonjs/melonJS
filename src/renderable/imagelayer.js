@@ -157,8 +157,8 @@ export default class ImageLayer extends Sprite {
 	 * @ignore
 	 */
 	updateLayer() {
-		const rx = this.ratio.x,
-			ry = this.ratio.y;
+		const rx = this.ratio.x;
+		const ry = this.ratio.y;
 
 		const viewport = game.viewport;
 
@@ -167,26 +167,26 @@ export default class ImageLayer extends Sprite {
 			return;
 		}
 
-		const width = this.width,
-			height = this.height,
-			bw = viewport.bounds.width,
-			bh = viewport.bounds.height,
-			ax = this.anchorPoint.x,
-			ay = this.anchorPoint.y,
-			/*
-			 * Automatic positioning
-			 *
-			 * See https://github.com/melonjs/melonJS/issues/741#issuecomment-138431532
-			 * for a thorough description of how this works.
-			 */
-			x =
-				ax * (rx - 1) * (bw - viewport.width) +
-				this.offset.x -
-				rx * viewport.pos.x,
-			y =
-				ay * (ry - 1) * (bh - viewport.height) +
-				this.offset.y -
-				ry * viewport.pos.y;
+		const width = this.width;
+		const height = this.height;
+		const bw = viewport.bounds.width;
+		const bh = viewport.bounds.height;
+		const ax = this.anchorPoint.x;
+		const ay = this.anchorPoint.y;
+		/*
+		 * Automatic positioning
+		 *
+		 * See https://github.com/melonjs/melonJS/issues/741#issuecomment-138431532
+		 * for a thorough description of how this works.
+		 */
+		const x =
+			ax * (rx - 1) * (bw - viewport.width) +
+			this.offset.x -
+			rx * viewport.pos.x;
+		const y =
+			ay * (ry - 1) * (bh - viewport.height) +
+			this.offset.y -
+			ry * viewport.pos.y;
 
 		// Repeat horizontally; start drawing from left boundary
 		if (this.repeatX) {
@@ -233,15 +233,15 @@ export default class ImageLayer extends Sprite {
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
 	 */
 	draw(renderer, viewport) {
-		const width = this.width,
-			height = this.height,
-			bw = viewport.bounds.width,
-			bh = viewport.bounds.height,
-			ax = this.anchorPoint.x,
-			ay = this.anchorPoint.y;
+		const width = this.width;
+		const height = this.height;
+		const bw = viewport.bounds.width;
+		const bh = viewport.bounds.height;
+		const ax = this.anchorPoint.x;
+		const ay = this.anchorPoint.y;
 
-		let x = this.pos.x,
-			y = this.pos.y;
+		let x = this.pos.x;
+		let y = this.pos.y;
 
 		if (this.ratio.x === 0 && this.ratio.y === 0) {
 			// static image

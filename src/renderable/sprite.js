@@ -146,7 +146,7 @@ export default class Sprite extends Renderable {
 			// check for defined region
 			if (typeof settings.region !== "undefined") {
 				// use a texture atlas
-				let region = this.source.getRegion(settings.region);
+				const region = this.source.getRegion(settings.region);
 				if (region) {
 					// set the sprite region within the texture
 					this.setRegion(region);
@@ -383,7 +383,7 @@ export default class Sprite extends Renderable {
 
 		// set each frame configuration (offset, size, etc..)
 		for (let i = 0, len = index.length; i < len; i++) {
-			let frame = index[i];
+			const frame = index[i];
 			let frameObject;
 			if (typeof frame === "number" || typeof frame === "string") {
 				frameObject = {
@@ -393,7 +393,7 @@ export default class Sprite extends Renderable {
 			} else {
 				frameObject = frame;
 			}
-			let frameObjectName = frameObject.name;
+			const frameObjectName = frameObject.name;
 			if (typeof frameObjectName === "number") {
 				if (typeof this.textureAtlas[frameObjectName] !== "undefined") {
 					// TODO: adding the cache source coordinates add undefined entries in webGL mode
@@ -616,7 +616,7 @@ export default class Sprite extends Renderable {
 					this.isDirty = true;
 					this.dt -= duration;
 
-					let nextFrame =
+					const nextFrame =
 						this.current.length > 1 ? this.current.idx + 1 : this.current.idx;
 					this.setAnimationFrame(nextFrame);
 
@@ -675,18 +675,18 @@ export default class Sprite extends Renderable {
 		}
 
 		// the frame to draw
-		let frame = this.current;
+		const frame = this.current;
 
 		// cache the current position and size
-		let xpos = this.pos.x,
-			ypos = this.pos.y;
+		let xpos = this.pos.x;
+		const ypos = this.pos.y;
 
-		let w = frame.width,
-			h = frame.height;
+		let w = frame.width;
+		let h = frame.height;
 
 		// frame offset in the texture/atlas
-		let frame_offset = frame.offset;
-		let g_offset = this.offset;
+		const frame_offset = frame.offset;
+		const g_offset = this.offset;
 
 		// remove image's TexturePacker/ShoeBox rotation
 		if (frame.angle !== 0) {

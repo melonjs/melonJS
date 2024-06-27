@@ -145,7 +145,7 @@ export default class Entity extends Renderable {
 	 * @returns {Bounds} this entity bounding box Rectangle object
 	 */
 	updateBounds(absolute = true) {
-		let bounds = this.getBounds();
+		const bounds = this.getBounds();
 
 		bounds.clear();
 		bounds.addFrame(0, 0, this.width, this.height);
@@ -160,7 +160,7 @@ export default class Entity extends Renderable {
 		}
 
 		if (absolute === true) {
-			let absPos = this.getAbsolutePosition();
+			const absPos = this.getAbsolutePosition();
 			bounds.centerOn(
 				absPos.x + bounds.x + bounds.width / 2,
 				absPos.y + bounds.y + bounds.height / 2,
@@ -203,7 +203,7 @@ export default class Entity extends Renderable {
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
 	 */
 	draw(renderer, viewport) {
-		let renderable = this.renderable;
+		const renderable = this.renderable;
 		if (renderable instanceof Renderable) {
 			// predraw (apply transforms)
 			renderable.preDraw(renderer);

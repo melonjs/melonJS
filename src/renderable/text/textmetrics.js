@@ -52,15 +52,15 @@ export default class TextMetrics extends Bounds {
 			return context.measureText(text).width;
 		} else {
 			// it's a BitmapText
-			let characters = text.split("");
+			const characters = text.split("");
 			const charactersLength = characters.length;
 			let width = 0;
 			let lastGlyph = null;
 			for (let i = 0; i < charactersLength; i++) {
-				let ch = characters[i].charCodeAt(0);
-				let glyph = this.ancestor.fontData.glyphs[ch];
+				const ch = characters[i].charCodeAt(0);
+				const glyph = this.ancestor.fontData.glyphs[ch];
 				if (typeof glyph !== "undefined") {
-					let kerning =
+					const kerning =
 						lastGlyph && lastGlyph.kerning ? lastGlyph.getKerning(ch) : 0;
 					width += (glyph.xadvance + kerning) * this.ancestor.fontScale.x;
 					lastGlyph = glyph;
@@ -138,16 +138,15 @@ export default class TextMetrics extends Bounds {
 	 * @returns {string[]} an array of string representing wrapped text
 	 */
 	wordWrap(text, width, context) {
-		let words;
 		let currentLine = "";
-		let output = [];
+		const output = [];
 
 		if (Array.isArray(text)) {
 			// join into a single string
 			text = text.join(" ");
 		}
 		// word splitting to be improved as it replaces \n by space if present
-		words = text.replace(/[\r\n]+/g, " ").split(" ");
+		const words = text.replace(/[\r\n]+/g, " ").split(" ");
 
 		if (typeof context !== "undefined") {
 			// save the previous context
@@ -158,8 +157,8 @@ export default class TextMetrics extends Bounds {
 		}
 
 		for (let i = 0; i < words.length; i++) {
-			let word = words[i];
-			let lineWidth = this.lineWidth(currentLine + word + " ", context);
+			const word = words[i];
+			const lineWidth = this.lineWidth(currentLine + word + " ", context);
 			if (lineWidth < width) {
 				// add the word to the current line
 				currentLine += word + " ";

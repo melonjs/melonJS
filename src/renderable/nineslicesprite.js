@@ -89,18 +89,18 @@ export default class NineSliceSprite extends Sprite {
 	 */
 	draw(renderer) {
 		// the frame to draw
-		let frame = this.current;
+		const frame = this.current;
 
 		// cache the current position and size
-		let dx = this.pos.x,
-			dy = this.pos.y;
+		let dx = this.pos.x;
+		const dy = this.pos.y;
 
-		let w = frame.width,
-			h = frame.height;
+		let w = frame.width;
+		let h = frame.height;
 
 		// frame offset in the texture/atlas
-		let frame_offset = frame.offset;
-		let g_offset = this.offset;
+		const frame_offset = frame.offset;
+		const g_offset = this.offset;
 
 		// remove image's TexturePacker/ShoeBox rotation
 		if (frame.angle !== 0) {
@@ -111,12 +111,12 @@ export default class NineSliceSprite extends Sprite {
 			h = frame.width;
 		}
 
-		let sx = g_offset.x + frame_offset.x,
-			sy = g_offset.y + frame_offset.y;
+		const sx = g_offset.x + frame_offset.x;
+		const sy = g_offset.y + frame_offset.y;
 
 		// should this be configurable ?
-		let corner_width = this.insetx || w / 4,
-			corner_height = this.insety || h / 4;
+		const corner_width = this.insetx || w / 4;
+		const corner_height = this.insety || h / 4;
 
 		// OPTIMIZE ME !
 
@@ -173,11 +173,11 @@ export default class NineSliceSprite extends Sprite {
 		);
 
 		// DRAW SIDES and CENTER
-		let image_center_width = w - (corner_width << 1);
-		let image_center_height = h - (corner_height << 1);
+		const image_center_width = w - (corner_width << 1);
+		const image_center_height = h - (corner_height << 1);
 
-		let target_center_width = this.nss_width - (corner_width << 1);
-		let target_center_height = this.nss_height - (corner_height << 1);
+		const target_center_width = this.nss_width - (corner_width << 1);
+		const target_center_height = this.nss_height - (corner_height << 1);
 
 		//Top center
 		renderer.drawImage(

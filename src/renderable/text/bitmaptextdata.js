@@ -35,7 +35,7 @@ const capChars = [
  * @ignore
  */
 function getValueFromPair(string, pattern) {
-	let value = string.match(pattern);
+	const value = string.match(pattern);
 	if (!value) {
 		throw new Error(
 			"Could not find pattern " + pattern + " in string: " + string,
@@ -54,7 +54,7 @@ function getValueFromPair(string, pattern) {
  * @returns {Glyph}
  */
 function getFirstGlyph(glyphs) {
-	let keys = Object.keys(glyphs);
+	const keys = Object.keys(glyphs);
 	for (let i = 0; i < keys.length; i++) {
 		if (keys[i] > 32) {
 			return glyphs[keys[i]];
@@ -71,7 +71,7 @@ function getFirstGlyph(glyphs) {
  * @param {object} glyphs - the map of glyphs, each key is a char code
  */
 function createSpaceGlyph(glyphs) {
-	let spaceCharCode = " ".charCodeAt(0);
+	const spaceCharCode = " ".charCodeAt(0);
 	let glyph = glyphs[spaceCharCode];
 	if (!glyph) {
 		glyph = new Glyph();
@@ -132,12 +132,12 @@ export default class BitmapTextData {
 				"File containing font data was empty, cannot load the bitmap font.",
 			);
 		}
-		let lines = fontData.split(/\r\n|\n/);
-		let padding = fontData.match(/padding\=\d+,\d+,\d+,\d+/g);
+		const lines = fontData.split(/\r\n|\n/);
+		const padding = fontData.match(/padding\=\d+,\d+,\d+,\d+/g);
 		if (!padding) {
 			throw new Error("Padding not found in first line");
 		}
-		let paddingValues = padding[0].split("=")[1].split(",");
+		const paddingValues = padding[0].split("=")[1].split(",");
 		this.padTop = parseFloat(paddingValues[0]);
 		this.padLeft = parseFloat(paddingValues[1]);
 		this.padBottom = parseFloat(paddingValues[2]);
@@ -147,20 +147,20 @@ export default class BitmapTextData {
 			getValueFromPair(lines[1], /lineHeight\=\d+/g),
 		);
 
-		let baseLine = parseFloat(getValueFromPair(lines[1], /base\=\d+/g));
-		let padY = this.padTop + this.padBottom;
+		const baseLine = parseFloat(getValueFromPair(lines[1], /base\=\d+/g));
+		const padY = this.padTop + this.padBottom;
 		let glyph = null;
 
 		for (let i = 4; i < lines.length; i++) {
-			let line = lines[i];
-			let characterValues = line.split(/=|\s+/);
+			const line = lines[i];
+			const characterValues = line.split(/=|\s+/);
 			if (!line || /^kernings/.test(line)) {
 				continue;
 			}
 			if (/^kerning\s/.test(line)) {
-				let first = parseFloat(characterValues[2]);
-				let second = parseFloat(characterValues[4]);
-				let amount = parseFloat(characterValues[6]);
+				const first = parseFloat(characterValues[2]);
+				const second = parseFloat(characterValues[4]);
+				const amount = parseFloat(characterValues[6]);
 
 				glyph = this.glyphs[first];
 				if (glyph !== null && typeof glyph !== "undefined") {
@@ -169,7 +169,7 @@ export default class BitmapTextData {
 			} else {
 				glyph = new Glyph();
 
-				let ch = parseFloat(characterValues[2]);
+				const ch = parseFloat(characterValues[2]);
 				glyph.id = ch;
 				glyph.x = parseFloat(characterValues[4]);
 				glyph.y = parseFloat(characterValues[6]);
@@ -193,14 +193,14 @@ export default class BitmapTextData {
 
 		let capGlyph = null;
 		for (let i = 0; i < capChars.length; i++) {
-			let capChar = capChars[i];
+			const capChar = capChars[i];
 			capGlyph = this.glyphs[capChar.charCodeAt(0)];
 			if (capGlyph) {
 				break;
 			}
 		}
 		if (!capGlyph) {
-			for (let charCode in this.glyphs) {
+			for (const charCode in this.glyphs) {
 				if (this.glyphs.hasOwnProperty(charCode)) {
 					glyph = this.glyphs[charCode];
 					if (glyph.height === 0 || glyph.width === 0) {

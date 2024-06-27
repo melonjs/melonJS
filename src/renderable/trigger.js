@@ -96,7 +96,7 @@ export default class Trigger extends Renderable {
 	 * @ignore
 	 */
 	getTriggerSettings() {
-		let world = this.ancestor.getRootAncestor();
+		const world = this.ancestor.getRootAncestor();
 		// Lookup for the container instance
 		if (typeof this.triggerSettings.container === "string") {
 			this.triggerSettings.container = world.getChildByName(
@@ -110,7 +110,7 @@ export default class Trigger extends Renderable {
 	 * @ignore
 	 */
 	onFadeComplete() {
-		let world = this.ancestor.getRootAncestor();
+		const world = this.ancestor.getRootAncestor();
 		level.load(this.gotolevel, this.getTriggerSettings());
 		world.app.viewport.fadeOut(this.fade, this.duration);
 	}
@@ -122,8 +122,8 @@ export default class Trigger extends Renderable {
 	 * @protected
 	 */
 	triggerEvent() {
-		let triggerSettings = this.getTriggerSettings();
-		let world = this.ancestor.getRootAncestor();
+		const triggerSettings = this.getTriggerSettings();
+		const world = this.ancestor.getRootAncestor();
 
 		if (triggerSettings.event === "level") {
 			this.gotolevel = triggerSettings.to;
