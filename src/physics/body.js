@@ -252,7 +252,7 @@ export default class Body {
 	 */
 	addShape(shape) {
 		if (shape instanceof Rect || shape instanceof Bounds) {
-			let poly = shape.toPolygon();
+			const poly = shape.toPolygon();
 			this.shapes.push(poly);
 			// update the body bounds
 			this.bounds.add(poly.points);
@@ -300,7 +300,7 @@ export default class Body {
 	 * @param {boolean} [clear=true] - either to reset the body definition before adding the new vertices
 	 */
 	setVertices(vertices, index = 0, clear = true) {
-		let polygon = this.getShape(index);
+		const polygon = this.getShape(index);
 		if (polygon instanceof Polygon) {
 			polygon.setShape(0, 0, vertices);
 		} else {
@@ -453,7 +453,7 @@ export default class Body {
 	 */
 	respondToCollision(response) {
 		// the overlap vector
-		let overlap = response.overlapV;
+		const overlap = response.overlapV;
 
 		// FIXME: Respond proportionally to object mass
 
@@ -475,7 +475,7 @@ export default class Body {
 
 			if (!this.ignoreGravity) {
 				// cancel the falling an jumping flags if necessary
-				let dir = this.falling === true ? 1 : this.jumping === true ? -1 : 0;
+				const dir = this.falling === true ? 1 : this.jumping === true ? -1 : 0;
 				this.falling = overlap.y >= dir;
 				this.jumping = overlap.y <= -dir;
 			}
@@ -500,22 +500,17 @@ export default class Body {
 	 * mySprite.body.forEach((shape, index, array) => { ... }, thisArg);
 	 */
 	forEach(callback, thisArg) {
-		let context = this,
-			i = 0;
-		let shapes = this.shapes;
+		let i = 0;
+		const shapes = this.shapes;
 
-		let len = shapes.length;
+		const len = shapes.length;
 
 		if (typeof callback !== "function") {
 			throw new Error(callback + " is not a function");
 		}
 
-		if (arguments.length > 1) {
-			context = thisArg;
-		}
-
 		while (i < len) {
-			callback.call(context, shapes[i], i, shapes);
+			callback.call(thisArg ?? this, shapes[i], i, shapes);
 			i++;
 		}
 	}
@@ -535,7 +530,8 @@ export default class Body {
 	 * }
 	 */
 	contains(...args) {
-		let _x, _y;
+		let _x;
+		let _y;
 
 		if (args.length === 2) {
 			// x, y
@@ -621,7 +617,7 @@ export default class Body {
 	update() {
 		// apply timer.tick to delta time for linear interpolation (when enabled)
 		// #761 add delta time in body update
-		let deltaTime = /* dt * */ timer.tick;
+		const deltaTime = /* dt * */ timer.tick;
 
 		// apply force if defined
 		if (this.force.x !== 0) {
@@ -633,16 +629,16 @@ export default class Body {
 
 		// apply friction if defined
 		if (this.friction.x > 0) {
-			let fx = this.friction.x * deltaTime,
-				nx = this.vel.x + fx,
-				x = this.vel.x - fx;
+			const fx = this.friction.x * deltaTime;
+			const nx = this.vel.x + fx;
+			const x = this.vel.x - fx;
 
 			this.vel.x = nx < 0 ? nx : x > 0 ? x : 0;
 		}
 		if (this.friction.y > 0) {
-			let fy = this.friction.y * deltaTime,
-				ny = this.vel.y + fy,
-				y = this.vel.y - fy;
+			const fy = this.friction.y * deltaTime;
+			const ny = this.vel.y + fy;
+			const y = this.vel.y - fy;
 
 			this.vel.y = ny < 0 ? ny : y > 0 ? y : 0;
 		}

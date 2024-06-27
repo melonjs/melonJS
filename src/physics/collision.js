@@ -11,7 +11,7 @@ import { game } from "../index.js";
  * @namespace collision
  */
 
-let collision = {
+const collision = {
 	/**
 	 * The maximum number of children that a quadtree node can contain before it is split into sub-nodes.
 	 * @name maxChildren

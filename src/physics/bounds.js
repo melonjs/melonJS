@@ -73,7 +73,7 @@ export default class Bounds {
 	}
 
 	set x(value) {
-		let deltaX = this.max.x - this.min.x;
+		const deltaX = this.max.x - this.min.x;
 		this.min.x = value;
 		this.max.x = value + deltaX;
 	}
@@ -87,7 +87,7 @@ export default class Bounds {
 	}
 
 	set y(value) {
-		let deltaY = this.max.y - this.min.y;
+		const deltaY = this.max.y - this.min.y;
 
 		this.min.y = value;
 		this.max.y = value + deltaY;
@@ -254,7 +254,7 @@ export default class Bounds {
 	 * @param {Matrix2d} [m] - an optional transform to apply to the given frame coordinates
 	 */
 	addFrame(x0, y0, x1, y1, m) {
-		let v = pool.pull("Point");
+		const v = pool.pull("Point");
 
 		this.addPoint(v.set(x0, y0), m);
 		this.addPoint(v.set(x1, y0), m);
@@ -279,8 +279,11 @@ export default class Bounds {
 	 * }
 	 */
 	contains() {
-		let arg0 = arguments[0];
-		let _x1, _x2, _y1, _y2;
+		const arg0 = arguments[0];
+		let _x1;
+		let _x2;
+		let _y1;
+		let _y2;
 		if (arguments.length === 2) {
 			// x, y
 			_x1 = _x2 = arg0;
@@ -344,7 +347,8 @@ export default class Bounds {
 	 * bounds.translate(myVector2d);
 	 */
 	translate() {
-		let _x, _y;
+		let _x;
+		let _y;
 		if (arguments.length === 2) {
 			// x, y
 			_x = arguments[0];
@@ -370,7 +374,8 @@ export default class Bounds {
 	 * bounds.shift(myVector2d);
 	 */
 	shift() {
-		let _x, _y;
+		let _x;
+		let _y;
 
 		if (arguments.length === 2) {
 			// x, y
@@ -382,8 +387,8 @@ export default class Bounds {
 			_y = arguments[0].y;
 		}
 
-		let deltaX = this.max.x - this.min.x,
-			deltaY = this.max.y - this.min.y;
+		const deltaX = this.max.x - this.min.x;
+		const deltaY = this.max.y - this.min.y;
 
 		this.min.x = _x;
 		this.max.x = _x + deltaX;
@@ -396,7 +401,7 @@ export default class Bounds {
 	 * @returns {Bounds}
 	 */
 	clone() {
-		let bounds = new Bounds();
+		const bounds = new Bounds();
 		bounds.addBounds(this);
 		return bounds;
 	}

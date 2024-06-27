@@ -13,7 +13,7 @@ import Bounds from "./bounds.js";
  */
 
 // a dummy object when using Line for raycasting
-let dummyObj = {
+const dummyObj = {
 	pos: new Vector2d(0, 0),
 	ancestor: {
 		_absPos: new Vector2d(0, 0),
@@ -24,8 +24,8 @@ let dummyObj = {
 };
 
 // some cache bounds object used for collision detection
-let boundsA = new Bounds();
-let boundsB = new Bounds();
+const boundsA = new Bounds();
+const boundsB = new Bounds();
 
 /**
  * the Detector class contains methods for detecting collisions between bodies using a broadphase algorithm.
@@ -54,8 +54,8 @@ export default class Detector {
 	 * @returns {boolean} true if they should collide, false otherwise
 	 */
 	shouldCollide(a, b) {
-		let bodyA = a.body,
-			bodyB = b.body;
+		const bodyA = a.body;
+		const bodyB = b.body;
 		return (
 			typeof bodyA === "object" &&
 			typeof bodyB === "object" &&
@@ -119,7 +119,7 @@ export default class Detector {
 	collisions(objA) {
 		let collisionCounter = 0;
 		// retreive a list of potential colliding objects from the game world
-		let candidates = this.world.broadphase.retrieve(objA);
+		const candidates = this.world.broadphase.retrieve(objA);
 
 		boundsA.addBounds(objA.getBounds(), true);
 		boundsA.addBounds(objA.body.getBounds());
@@ -187,7 +187,7 @@ export default class Detector {
 		let collisionCounter = 0;
 
 		// retrieve a list of potential colliding objects from the game world
-		let candidates = this.world.broadphase.retrieve(line);
+		const candidates = this.world.broadphase.retrieve(line);
 
 		for (let i = candidates.length, objB; i--, (objB = candidates[i]); ) {
 			// fast AABB check if both bounding boxes are overlaping
@@ -198,12 +198,12 @@ export default class Detector {
 					continue;
 				}
 
-				let shapeA = line;
+				const shapeA = line;
 
 				// go through all defined shapes in B
 				let indexB = 0;
 				do {
-					let shapeB = objB.body.getShape(indexB);
+					const shapeB = objB.body.getShape(indexB);
 
 					// full SAT collision check
 					if (

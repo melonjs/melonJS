@@ -38,7 +38,7 @@ const RIGHT_VORNOI_REGION = 1;
  * @type {Array.<Vector2d>}
  * @ignore
  */
-let T_VECTORS = [];
+const T_VECTORS = [];
 for (let v = 0; v < 10; v++) {
 	T_VECTORS.push(new Vector2d());
 }
@@ -48,7 +48,7 @@ for (let v = 0; v < 10; v++) {
  * @type {Array.<Array.<number>>}
  * @ignore
  */
-let T_ARRAYS = [];
+const T_ARRAYS = [];
 for (let a = 0; a < 5; a++) {
 	T_ARRAYS.push([]);
 }
@@ -67,7 +67,7 @@ for (let a = 0; a < 5; a++) {
 function flattenPointsOn(points, normal, result) {
 	let min = Number.MAX_VALUE;
 	let max = -Number.MAX_VALUE;
-	let len = points.length;
+	const len = points.length;
 	for (let i = 0; i < len; i++) {
 		// The magnitude of the projection of the point onto the normal
 		const dot = points[i].dot(normal);
@@ -99,11 +99,11 @@ function flattenPointsOn(points, normal, result) {
  *   the direction of the overlap will be populated.
  */
 function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
-	let rangeA = T_ARRAYS.pop();
-	let rangeB = T_ARRAYS.pop();
+	const rangeA = T_ARRAYS.pop();
+	const rangeB = T_ARRAYS.pop();
 	// The magnitude of the offset between the two polygons
-	let offsetV = T_VECTORS.pop().copy(bPos).sub(aPos);
-	let projectedOffset = offsetV.dot(axis);
+	const offsetV = T_VECTORS.pop().copy(bPos).sub(aPos);
+	const projectedOffset = offsetV.dot(axis);
 
 	// Project the polygons onto the axis.
 	flattenPointsOn(aPoints, axis, rangeA);
@@ -131,8 +131,8 @@ function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
 				response.bInA = false;
 				// B is fully inside A.  Pick the shortest way out.
 			} else {
-				let option1 = rangeA[1] - rangeB[0];
-				let option2 = rangeB[1] - rangeA[0];
+				const option1 = rangeA[1] - rangeB[0];
+				const option2 = rangeB[1] - rangeA[0];
 				overlap = option1 < option2 ? option1 : -option2;
 			}
 			// B starts further left than A
@@ -144,14 +144,14 @@ function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
 				response.aInB = false;
 				// A is fully inside B.  Pick the shortest way out.
 			} else {
-				let option11 = rangeA[1] - rangeB[0];
-				let option22 = rangeB[1] - rangeA[0];
+				const option11 = rangeA[1] - rangeB[0];
+				const option22 = rangeB[1] - rangeA[0];
 				overlap = option11 < option22 ? option11 : -option22;
 			}
 		}
 
 		// If this is the smallest amount of overlap we've seen so far, set it as the minimum overlap.
-		let absOverlap = Math.abs(overlap);
+		const absOverlap = Math.abs(overlap);
 		if (absOverlap < response.overlap) {
 			response.overlap = absOverlap;
 			response.overlapN.copy(axis);
@@ -183,8 +183,8 @@ function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
  *          RIGHT_VORNOI_REGION (1) if it is the right region.
  */
 function vornoiRegion(line, point) {
-	let len2 = line.length2();
-	let dp = point.dot(line);
+	const len2 = line.length2();
+	const dp = point.dot(line);
 	if (dp < 0) {
 		// If the point is beyond the start of the line, it is in the
 		// left vornoi region.
@@ -211,18 +211,18 @@ function vornoiRegion(line, point) {
  */
 export function testPolygonPolygon(a, polyA, b, polyB, response) {
 	// specific point for
-	let aPoints = polyA.points;
-	let aNormals = polyA.normals;
-	let aLen = aNormals.length;
-	let bPoints = polyB.points;
-	let bNormals = polyB.normals;
-	let bLen = bNormals.length;
+	const aPoints = polyA.points;
+	const aNormals = polyA.normals;
+	const aLen = aNormals.length;
+	const bPoints = polyB.points;
+	const bNormals = polyB.normals;
+	const bLen = bNormals.length;
 	// aboslute shape position
-	let posA = T_VECTORS.pop()
+	const posA = T_VECTORS.pop()
 		.copy(a.pos)
 		.add(a.ancestor.getAbsolutePosition())
 		.add(polyA.pos);
-	let posB = T_VECTORS.pop()
+	const posB = T_VECTORS.pop()
 		.copy(b.pos)
 		.add(b.ancestor.getAbsolutePosition())
 		.add(polyB.pos);
@@ -272,18 +272,18 @@ export function testPolygonPolygon(a, polyA, b, polyB, response) {
 export function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
 	// Check if the distance between the centers of the two
 	// circles is greater than their combined radius.
-	let differenceV = T_VECTORS.pop()
+	const differenceV = T_VECTORS.pop()
 		.copy(b.pos)
 		.add(b.ancestor.getAbsolutePosition())
 		.add(ellipseB.pos)
 		.sub(a.pos)
 		.add(a.ancestor.getAbsolutePosition())
 		.sub(ellipseA.pos);
-	let radiusA = ellipseA.radius;
-	let radiusB = ellipseB.radius;
-	let totalRadius = radiusA + radiusB;
-	let totalRadiusSq = totalRadius * totalRadius;
-	let distanceSq = differenceV.length2();
+	const radiusA = ellipseA.radius;
+	const radiusB = ellipseB.radius;
+	const totalRadius = radiusA + radiusB;
+	const totalRadiusSq = totalRadius * totalRadius;
+	const distanceSq = differenceV.length2();
 	// If the distance is bigger than the combined radius, they don't intersect.
 	if (distanceSq > totalRadiusSq) {
 		T_VECTORS.push(differenceV);
@@ -291,7 +291,7 @@ export function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
 	}
 	// They intersect.  If we're calculating a response, calculate the overlap.
 	if (response) {
-		let dist = Math.sqrt(distanceSq);
+		const dist = Math.sqrt(distanceSq);
 		response.a = a;
 		response.b = b;
 		response.overlap = totalRadius - dist;
@@ -316,21 +316,21 @@ export function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
  */
 export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
 	// Get the position of the circle relative to the polygon.
-	let circlePos = T_VECTORS.pop()
+	const circlePos = T_VECTORS.pop()
 		.copy(b.pos)
 		.add(b.ancestor.getAbsolutePosition())
 		.add(ellipseB.pos)
 		.sub(a.pos)
 		.add(a.ancestor.getAbsolutePosition())
 		.sub(polyA.pos);
-	let radius = ellipseB.radius;
-	let radius2 = radius * radius;
-	let points = polyA.points;
-	let edges = polyA.edges;
-	let len = edges.length;
-	let edge = T_VECTORS.pop();
-	let normal = T_VECTORS.pop();
-	let point = T_VECTORS.pop();
+	const radius = ellipseB.radius;
+	const radius2 = radius * radius;
+	const points = polyA.points;
+	const edges = polyA.edges;
+	const len = edges.length;
+	const edge = T_VECTORS.pop();
+	const normal = T_VECTORS.pop();
+	const point = T_VECTORS.pop();
 	let dist = 0;
 
 	// For each edge in the polygon:
@@ -431,7 +431,7 @@ export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
 			// Find the perpendicular distance between the center of the
 			// circle and the edge.
 			dist = point.dot(normal);
-			let distAbs = Math.abs(dist);
+			const distAbs = Math.abs(dist);
 			// If the circle is on the outside of the edge, there is no intersection.
 			if ((len === 1 || dist > 0) && distAbs > radius) {
 				// No intersection
@@ -492,11 +492,11 @@ export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
  */
 export function testEllipsePolygon(a, ellipseA, b, polyB, response) {
 	// Test the polygon against the circle.
-	let result = testPolygonEllipse(b, polyB, a, ellipseA, response);
+	const result = testPolygonEllipse(b, polyB, a, ellipseA, response);
 	if (result && response) {
 		// Swap A and B in the response.
-		let resa = response.a;
-		let aInB = response.aInB;
+		const resa = response.a;
+		const aInB = response.aInB;
 		response.overlapN.negateSelf();
 		response.overlapV.negateSelf();
 		response.a = response.b;

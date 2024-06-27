@@ -17,7 +17,7 @@ import * as arrayUtil from "./../utils/array.js";
  * a pool of `QuadTree` objects
  * @ignore
  */
-let QT_ARRAY = [];
+const QT_ARRAY = [];
 
 /**
  * will pop a quadtree object from the array
@@ -32,7 +32,7 @@ function QT_ARRAY_POP(
 	level = 0,
 ) {
 	if (QT_ARRAY.length > 0) {
-		let _qt = QT_ARRAY.pop();
+		const _qt = QT_ARRAY.pop();
 		_qt.world = world;
 		_qt.bounds = bounds;
 		_qt.max_objects = max_objects;
@@ -56,7 +56,7 @@ function QT_ARRAY_PUSH(qt) {
  * a temporary vector object to be reused
  * @ignore
  */
-let QT_VECTOR = new Vector2d();
+const QT_VECTOR = new Vector2d();
 
 /**
  * a QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
@@ -87,11 +87,11 @@ export default class QuadTree {
 	 * Split the node into 4 subnodes
 	 */
 	split() {
-		let nextLevel = this.level + 1,
-			subWidth = this.bounds.width / 2,
-			subHeight = this.bounds.height / 2,
-			left = this.bounds.left,
-			top = this.bounds.top;
+		const nextLevel = this.level + 1;
+		const subWidth = this.bounds.width / 2;
+		const subHeight = this.bounds.height / 2;
+		const left = this.bounds.left;
+		const top = this.bounds.top;
 
 		//top right node
 		this.nodes[0] = QT_ARRAY_POP(
@@ -157,7 +157,7 @@ export default class QuadTree {
 	 */
 	getIndex(item) {
 		let pos;
-		let bounds = item.getBounds();
+		const bounds = item.getBounds();
 
 		// use game world coordinates for floating items
 		if (item.isFloating === true) {
@@ -170,17 +170,17 @@ export default class QuadTree {
 			pos = QT_VECTOR.set(item.left, item.top);
 		}
 
-		let index = -1,
-			rx = pos.x,
-			ry = pos.y,
-			rw = bounds.width,
-			rh = bounds.height,
-			verticalMidpoint = this.bounds.left + this.bounds.width / 2,
-			horizontalMidpoint = this.bounds.top + this.bounds.height / 2,
-			//rect can completely fit within the top quadrants
-			topQuadrant = ry < horizontalMidpoint && ry + rh < horizontalMidpoint,
-			//rect can completely fit within the bottom quadrants
-			bottomQuadrant = ry > horizontalMidpoint;
+		let index = -1;
+		const rx = pos.x;
+		const ry = pos.y;
+		const rw = bounds.width;
+		const rh = bounds.height;
+		const verticalMidpoint = this.bounds.left + this.bounds.width / 2;
+		const horizontalMidpoint = this.bounds.top + this.bounds.height / 2;
+		//rect can completely fit within the top quadrants
+		const topQuadrant = ry < horizontalMidpoint && ry + rh < horizontalMidpoint;
+		//rect can completely fit within the bottom quadrants
+		const bottomQuadrant = ry > horizontalMidpoint;
 
 		//rect can completely fit within the left quadrants
 		if (rx < verticalMidpoint && rx + rw < verticalMidpoint) {
@@ -289,7 +289,7 @@ export default class QuadTree {
 
 		//if we have subnodes ...
 		if (this.nodes.length > 0) {
-			let index = this.getIndex(item);
+			const index = this.getIndex(item);
 
 			//if rect fits into a subnode ..
 			if (index !== -1) {
@@ -328,7 +328,7 @@ export default class QuadTree {
 		//if we have subnodes ...
 		if (this.nodes.length > 0) {
 			// determine to which node the item belongs to
-			let index = this.getIndex(item);
+			const index = this.getIndex(item);
 
 			if (index !== -1) {
 				found = arrayUtil.remove(this.nodes[index], item);
