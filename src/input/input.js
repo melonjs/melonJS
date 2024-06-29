@@ -10,7 +10,7 @@
  * @name preventDefault
  * @memberof input
  */
-export let preventDefault = true; // eslint-disable-line prefer-const
+export let preventDefault = true;
 
 export * from "./pointerevent.js";
 export * from "./keyboard.js";

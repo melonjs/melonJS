@@ -323,22 +323,34 @@ export default class Color {
 
 		switch (i % 6) {
 			case 0:
-				(r = v), (g = t), (b = p);
+				r = v;
+				g = t;
+				b = p;
 				break;
 			case 1:
-				(r = q), (g = v), (b = p);
+				r = q;
+				g = v;
+				b = p;
 				break;
 			case 2:
-				(r = p), (g = v), (b = t);
+				r = p;
+				g = v;
+				b = t;
 				break;
 			case 3:
-				(r = p), (g = q), (b = v);
+				r = p;
+				g = q;
+				b = v;
 				break;
 			case 4:
-				(r = t), (g = p), (b = v);
+				r = t;
+				g = p;
+				b = v;
 				break;
 			case 5:
-				(r = v), (g = p), (b = q);
+				r = v;
+				g = p;
+				b = q;
 				break;
 		}
 		return this.setColor(r * 255, g * 255, b * 255);

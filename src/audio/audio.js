@@ -66,7 +66,7 @@ const soundLoadError = function (sound_name, onerror_cb) {
  * in the console<br>
  * @default true
  */
-export let stopOnAudioError = true; // eslint-disable-line prefer-const
+export let stopOnAudioError = true;
 
 /**
  * Initialize and configure the audio support.<br>

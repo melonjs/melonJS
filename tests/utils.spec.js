@@ -59,13 +59,13 @@ describe("utils", () => {
 		const untrimmed_str = " start and end with white space ";
 
 		it("trim left side", () => {
-			expect(untrimmed_str.trimLeft()).toEqual(
+			expect(untrimmed_str.trimStart()).toEqual(
 				"start and end with white space ",
 			);
 		});
 
 		it("trim right side", () => {
-			expect(untrimmed_str.trimRight()).toEqual(
+			expect(untrimmed_str.trimEnd()).toEqual(
 				" start and end with white space",
 			);
 		});

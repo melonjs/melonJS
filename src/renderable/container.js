@@ -161,10 +161,10 @@ export default class Container extends Renderable {
 			// Workaround for not updating container child-bounds automatically (it's expensive!)
 			event.on(event.CANVAS_ONRESIZE, () => {
 				// temporarly enable the enableChildBoundsUpdate flag
-				this.enableChildBoundsUpdate === true;
+				// this.enableChildBoundsUpdate === true;
 				// update bounds
 				this.updateBounds();
-				this.enableChildBoundsUpdate === false;
+				// this.enableChildBoundsUpdate === false;
 			});
 		}
 	}
