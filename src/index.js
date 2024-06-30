@@ -1,5 +1,5 @@
 // ES5/ES6 polyfills
-import "./polyfill/index.js";
+import "./polyfill/index.ts";
 
 // class definition
 import Color from "./math/color.js";
