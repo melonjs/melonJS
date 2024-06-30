@@ -23,6 +23,7 @@ npm-debug.log
 add-on/
 node_modules/
 build/*
+dist/*
 !.placeholder
 /_SpecRunner.html
 package-lock.json
