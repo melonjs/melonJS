@@ -79,7 +79,7 @@ import * as plugin from "./plugin/plugin.js";
 import { cache as plugins } from "./plugin/plugin.js";
 import * as video from "./video/video.js";
 import save from "./system/save.js";
-import timer from "./system/timer.js";
+import timer from "./system/timer.ts";
 import pool from "./system/pooling.js";
 import state from "./state/state.js";
 import level from "./level/level.js";
@@ -183,7 +183,7 @@ export {
 export * from "./lang/deprecated.js";
 
 // export all public constants
-export * from "./const.js";
+export * from "./const.ts";
 
 /**
  * a flag indicating that melonJS is fully initialized

@@ -3,13 +3,13 @@ import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
 import * as device from "./../system/device.js";
 import * as event from "./../system/event.js";
 import { getUriFragment } from "./../utils/utils.ts";
-import timer from "./../system/timer.js";
+import timer from "./../system/timer.ts";
 import state from "./../state/state.js";
 import World from "./../physics/world.js";
 import { onresize } from "./resize.js";
 import { ApplicationSettings } from "./settings.js";
 import { consoleHeader } from "./header.js";
-import { CANVAS, WEBGL, AUTO } from "../const.js";
+import { CANVAS, WEBGL, AUTO } from "../const.ts";
 
 /**
  * additional import for TypeScript

@@ -4,7 +4,7 @@ import Polygon from "./../geometries/poly.js";
 import Bounds from "./bounds.js";
 import pool from "./../system/pooling.js";
 import collision from "./collision.js";
-import timer from "./../system/timer.js";
+import timer from "./../system/timer.ts";
 import { clamp } from "./../math/math.js";
 import Point from "../geometries/point.js";
 import { remove } from "../utils/array.ts";

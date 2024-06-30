@@ -1,6 +1,6 @@
 import Vector2d from "./../../math/vector2.js";
 import { renderer } from "./../../video/video.js";
-import timer from "./../../system/timer.js";
+import timer from "./../../system/timer.ts";
 import { getTMX, getImage } from "./../../loader/loader.js";
 import { getBasename, getExtension } from "../../utils/file.ts";
 

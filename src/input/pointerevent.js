@@ -4,7 +4,7 @@ import { renderer } from "./../video/video.js";
 import { throttle } from "./../utils/function.ts";
 import { remove } from "./../utils/array.ts";
 import * as event from "./../system/event.js";
-import timer from "./../system/timer.js";
+import timer from "./../system/timer.ts";
 import pool from "./../system/pooling.js";
 import * as device from "./../system/device.js";
 import Pointer from "./pointer.js";
