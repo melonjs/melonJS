@@ -23,14 +23,8 @@ Then build the melonJS source by running:
     $ npm run build
 
 The generated files will be available under the `build` directory :
-- `melonjs.module.js` : plain ES6 module
-- `melonjs.mjs` : a ES6 chunk directory used for tree-shaking
-
-If you need to create the corresponding typing you can use the follwing :
-
-    $ npm run types
-
-This will generate all the `.d.ts` file under the `dist/types` directory.
+- `index.js` : a tree-shakeable ES6 Module Directory
+- `index.d.ts` : typescript declaration files
 
 To run the melonJS test suite simply use the following:
 
@@ -46,10 +40,6 @@ Similarly, you can build your own copy of the docs locally by running :
     $ npm run doc
 
 The documentation will be generated under the `docs` directory, and can be accessed by opening index.html in your web browser.
-
-## WIP Builds
-
-latest WIP builds are available under [`dist`](dist/) in the [master](https://github.com/melonjs/melonJS/tree/master) branch.
 
 ## Questions, need help ?
 

@@ -9,13 +9,7 @@ export default tseslint.config(
 	{
 		name: "eslint/global-ignores",
 		// globally ignore below directories and files
-		ignores: [
-			"dist/**/*",
-			"build",
-			"docs/**/*",
-			"rollup.config.mjs",
-			"scripts/build.js",
-		],
+		ignores: ["build", "docs/**/*", "rollup.config.mjs", "scripts/build.js"],
 	},
 	{
 		name: "eslint/global-rules",
