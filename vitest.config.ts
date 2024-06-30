@@ -19,7 +19,10 @@ export default defineConfig({
 			name: "transform-file",
 			transform(src) {
 				return {
-					code: src.replace(/__VERSION__/g, packageJson.version),
+					code: src.replace(
+						/=\s__VERSION__/g,
+						'= "' + packageJson.version + '"',
+					),
 					map: null,
 				};
 			},

@@ -1,6 +1,7 @@
 import { checkVersion } from "./../utils/utils.js";
-import { game, version } from "./../index.js";
+import { version } from "./../version.ts";
 import { warning } from "../lang/console.js";
+import { game } from "../index.js";
 
 /**
  * @import Application from "./../application/application.js";
@@ -30,10 +31,8 @@ export class BasePlugin {
 		/**
 		 * define the minimum required version of melonJS<br>
 		 * this can be overridden by the plugin
-		 * @type {string}
-		 * @default "__VERSION__"
 		 */
-		this.version = "__VERSION__";
+		this.version = version;
 
 		/**
 		 * a reference to the app/game that registered this plugin

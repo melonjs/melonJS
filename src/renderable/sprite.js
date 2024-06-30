@@ -95,7 +95,7 @@ export default class Sprite extends Renderable {
 		 * @type {Function}
 		 * @default undefined
 		 */
-		this.onended;
+		// this.onended;
 
 		/**
 		 * The source texture object this sprite object is using

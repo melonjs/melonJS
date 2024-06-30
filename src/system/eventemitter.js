@@ -43,9 +43,10 @@ function addListener(emitter, event, fn, context, once) {
 	const listener = new EE(fn, context || emitter, once);
 	const evt = prefix ? prefix + event : event;
 
-	if (!emitter._events[evt])
-		(emitter._events[evt] = listener), emitter._eventsCount++;
-	else if (!emitter._events[evt].fn) emitter._events[evt].push(listener);
+	if (!emitter._events[evt]) {
+		emitter._events[evt] = listener;
+		emitter._eventsCount++;
+	} else if (!emitter._events[evt].fn) emitter._events[evt].push(listener);
 	else emitter._events[evt] = [emitter._events[evt], listener];
 
 	return emitter;

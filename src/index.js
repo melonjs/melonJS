@@ -83,11 +83,7 @@ import timer from "./system/timer.js";
 import pool from "./system/pooling.js";
 import state from "./state/state.js";
 import level from "./level/level.js";
-
-/**
- * current melonJS version
- */
-export const version = "__VERSION__";
+import { version } from "./version.ts";
 
 const math = Math;
 
@@ -113,6 +109,7 @@ export {
 	pool,
 	state,
 	video,
+	version,
 };
 
 // export all class definition
@@ -199,10 +196,9 @@ export let initialized = false;
 /**
  * disable melonJS auto-initialization
  * @type {boolean}
- * @default false
  * @see boot
  */
-export let skipAutoInit = false; // eslint-disable-line prefer-const
+export let skipAutoInit = false;
 
 /**
  * game is a default instance of a melonJS Application and represents your current game,

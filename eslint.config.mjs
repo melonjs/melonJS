@@ -5,10 +5,17 @@ import eslint from "@eslint/js";
 
 export default tseslint.config(
 	eslint.configs.recommended,
+	...tseslint.configs.recommended,
 	{
 		name: "eslint/global-ignores",
 		// globally ignore below directories and files
-		ignores: ["dist/**/*", "build/**/*", "docs/**/*", "rollup.config.mjs"],
+		ignores: [
+			"dist/**/*",
+			"build",
+			"docs/**/*",
+			"rollup.config.mjs",
+			"scripts/build.js",
+		],
 	},
 	{
 		name: "eslint/global-rules",
@@ -19,7 +26,7 @@ export default tseslint.config(
 				...globals.browser,
 			},
 		},
-		files: ["src/**/*.js", "tests/**/*.js"],
+		files: ["src/**/*.js", "src/**/*.ts", "tests/**/*.js"],
 		plugins: {
 			jsdoc,
 		},
@@ -140,6 +147,12 @@ export default tseslint.config(
 			yoda: ["error", "never"],
 			"jsdoc/require-hyphen-before-param-description": "error",
 			"jsdoc/no-undefined-types": "off",
+		},
+	},
+	{
+		files: ["**/*.{ts,tsx,mts,cts}"],
+		rules: {
+			"no-undef": "off",
 		},
 	},
 );

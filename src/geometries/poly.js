@@ -60,7 +60,7 @@ export default class Polygon {
 		this.normals = [];
 
 		// The bounding rectangle for this shape
-		this._bounds;
+		// this._bounds;
 
 		/**
 		 * the shape type (used internally)

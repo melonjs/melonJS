@@ -354,8 +354,7 @@ export default class Renderer {
 	 * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] - the shape defining the mask to be applied
 	 * @param {boolean} [invert=false] - either the given shape should define what is visible (default) or the opposite
 	 */
-	// eslint-disable-next-line no-unused-vars
-	setMask(mask, invert = false) {}
+	setMask() {}
 
 	/**
 	 * disable (remove) the rendering mask set through setMask.
