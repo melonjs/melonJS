@@ -3,18 +3,18 @@
 ## [17.5.0] (melonJS 2) - _2024-06-xx_
 
 ### Added
-- Chore: new GitHub Workflow for running the tests (thanks @hornta)
-- Chore: new GitHub Workflow for doc generation and publishing (thanks @hornta)
+- Chore: new GitHub Workflow for running the tests (@hornta)
+- Chore: new GitHub Workflow for doc generation and publishing (@hornta)
 
 ### Fixed
-- CanvasRenderTarget: fix arguments passed to `convertToBlob()` (thanks @hornta)
-- Chore: fix running test on windows machine (thanks @hornta)
+- CanvasRenderTarget: fix arguments passed to `convertToBlob()` (@hornta)
 - TypeScript: fix missing `OffscreenCanvas` argument type for the TextureAtlas constructor
 - Video: fix implicit global reference to HTMLVideoElement
 
 ### Changed
-- Chore: replaced webdoc with typedoc (thanks @hornta)
-- Chore: replaced mocha and puppeteer with vitest (thanks @hornta)
+- Chore: replaced rollup by esbuild for the build process (@hornta)
+- Chore: replaced webdoc with typedoc (@hornta)
+- Chore: replaced mocha and puppeteer with vitest (@hornta)
 
 
 ## [17.4.0] (melonJS 2) - _2024-06-22_
