@@ -68,8 +68,8 @@
 		"vitest": "^1.6.0"
 	},
 	"scripts": {
-		"build": "node scripts/build.js",
-		"dist": " npm run clean && npm run lint && npx vitest run && npm run build && npm run types && npm run doc",
+		"build": "node scripts/build.js && npm run types",
+		"dist": " npm run clean && npm run lint && npx vitest run && npm run build && npm run doc",
 		"lint": "eslint",
 		"test": "vitest",
 		"doc": "typedoc src/index.js",
