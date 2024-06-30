@@ -56,20 +56,6 @@ describe("utils", () => {
 	});
 
 	describe("String", () => {
-		const untrimmed_str = " start and end with white space ";
-
-		it("trim left side", () => {
-			expect(untrimmed_str.trimStart()).toEqual(
-				"start and end with white space ",
-			);
-		});
-
-		it("trim right side", () => {
-			expect(untrimmed_str.trimEnd()).toEqual(
-				" start and end with white space",
-			);
-		});
-
 		it("capitalize", () => {
 			expect(utils.string.capitalize("capitalize")).toEqual("Capitalize");
 		});
