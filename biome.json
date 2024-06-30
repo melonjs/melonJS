@@ -4,7 +4,7 @@
 		"enabled": false
 	},
 	"files": {
-		"ignore": ["docs/", "build/", "tests/browser/public/lib"]
+		"ignore": ["docs/", "build/"]
 	},
 	"formatter": { "enabled": true },
 	"linter": { "enabled": false }
