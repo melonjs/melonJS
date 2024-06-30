@@ -45,8 +45,7 @@
 	"dependencies": {
 		"@teppeis/multimaps": "^3.0.0",
 		"core-js": "^3.37.1",
-		"howler": "2.2.4",
-		"whatwg-fetch": "^3.6.20"
+		"howler": "2.2.4"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.8.2",
