@@ -1,4 +1,4 @@
-import { resetGUID } from "./../utils/utils.js";
+import { resetGUID } from "./../utils/utils.ts";
 import * as event from "./../system/event.js";
 import state from "./../state/state.js";
 import { getTMX } from "./../loader/loader.js";

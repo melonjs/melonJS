@@ -3,7 +3,7 @@ import * as event from "./../system/event.js";
 import pool from "./../system/pooling.js";
 import { game } from "../index.js";
 import Sprite from "./sprite.js";
-import * as stringUtil from "./../utils/string.js";
+import * as stringUtil from "./../utils/string.ts";
 
 /**
  * additional import for TypeScript

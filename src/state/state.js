@@ -1,9 +1,9 @@
 import { pauseTrack, resumeTrack } from "./../audio/audio.js";
-import * as fctUtil from "./../utils/function.js";
 import * as event from "./../system/event.js";
 import { game } from "../index.js";
 import Stage from "./../state/stage.js";
 import DefaultLoadingScreen from "./../loader/loadingscreen.js";
+import { defer } from "../utils/function.ts";
 
 // current state
 let _state = -1;
@@ -501,7 +501,7 @@ const state = {
 					game.viewport.fadeOut(_fade.color, _fade.duration);
 				};
 				game.viewport.fadeIn(_fade.color, _fade.duration, function () {
-					fctUtil.defer(_switchState, this, state);
+					defer(_switchState, this, state);
 				});
 			}
 			// else just switch without any effects
@@ -511,7 +511,7 @@ const state = {
 				if (forceChange === true) {
 					_switchState(state);
 				} else {
-					fctUtil.defer(_switchState, this, state);
+					defer(_switchState, this, state);
 				}
 			}
 		}

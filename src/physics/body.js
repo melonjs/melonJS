@@ -4,10 +4,10 @@ import Polygon from "./../geometries/poly.js";
 import Bounds from "./bounds.js";
 import pool from "./../system/pooling.js";
 import collision from "./collision.js";
-import * as arrayUtil from "./../utils/array.js";
 import timer from "./../system/timer.js";
 import { clamp } from "./../math/math.js";
 import Point from "../geometries/point.js";
+import { remove } from "../utils/array.ts";
 
 /**
  * @import Entity from "./../renderable/entity/entity.js";
@@ -394,7 +394,7 @@ export default class Body {
 		// clear the current bounds
 		this.bounds.clear();
 		// remove the shape from shape list
-		arrayUtil.remove(this.shapes, shape);
+		remove(this.shapes, shape);
 		// add everything left back
 		for (let s = 0; s < this.shapes.length; s++) {
 			this.addShape(this.shapes[s]);

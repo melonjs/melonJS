@@ -18,12 +18,9 @@ let GUID_index = 0;
 
 /**
  * Compare two version strings
- * @public
- * @memberof utils
- * @name checkVersion
- * @param {string} v1 - First version string to compare
- * @param {string} v2 - second version string to compare
- * @returns {number} Return 0 if v1 == v2, or 1 if v1 is greater, or -1 if v2 is greater
+ * @param v1 - First version string to compare
+ * @param v2 - second version string to compare
+ * @returns Return 0 if v1 == v2, or 1 if v1 is greater, or -1 if v2 is greater
  * @example
  * if (me.utils.checkVersion("7.0.0") > 0) {
  *     console.error(
@@ -31,7 +28,7 @@ let GUID_index = 0;
  *     );
  * }
  */
-export function checkVersion(v1, v2) {
+export function checkVersion(v1: string, v2: string) {
 	// Convert to proper "x.y.z" format if necessary
 	if (/^\d+$/.test(v1)) {
 		v1 += ".0.0";
@@ -48,24 +45,21 @@ export function checkVersion(v1, v2) {
 
 /**
  * parse the fragment (hash) from a URL and returns them into
- * @public
- * @memberof utils
- * @name getUriFragment
- * @param {string} [url=document.location] - an optional params string or URL containing fragment (hash) params to be parsed
- * @returns {object} an object representing the deserialized params string.
- * @property {boolean} [hitbox=false] draw the hitbox in the debug panel (if enabled)
- * @property {boolean} [velocity=false] draw the entities velocity in the debug panel (if enabled)
- * @property {boolean} [quadtree=false] draw the quadtree in the debug panel (if enabled)
- * @property {boolean} [webgl=false] force the renderer to WebGL
- * @property {boolean} [debug=false] display the debug panel (if preloaded)
- * @property {string} [debugToggleKey="s"] show/hide the debug panel (if preloaded)
+ * @param [url] - an optional params string or URL containing fragment (hash) params to be parsed
+ * @returns an object representing the deserialized params string.
+ * [hitbox=false] draw the hitbox in the debug panel (if enabled)
+ * [velocity=false] draw the entities velocity in the debug panel (if enabled)
+ * [quadtree=false] draw the quadtree in the debug panel (if enabled)
+ * [webgl=false] force the renderer to WebGL
+ * [debug=false] display the debug panel (if preloaded)
+ * [debugToggleKey="s"] show/hide the debug panel (if preloaded)
  * @example
  * // http://www.example.com/index.html#debug&hitbox=true&mytag=value
  * let UriFragment = me.utils.getUriFragment();
  * console.log(UriFragment["mytag"]); //> "value"
  */
-export function getUriFragment(url) {
-	const hash = {};
+export function getUriFragment(url: string) {
+	const hash: Record<string, string | boolean> = {};
 
 	if (typeof url === "undefined") {
 		if (typeof globalThis.document !== "undefined") {
@@ -98,7 +92,7 @@ export function getUriFragment(url) {
 		.filter((value) => value !== "")
 		.forEach((value) => {
 			const kv = value.split("=");
-			const k = kv.shift();
+			const k = kv.shift()!;
 			const v = kv.join("=");
 			hash[k] = v || true;
 		});
@@ -112,7 +106,7 @@ export function getUriFragment(url) {
  * per level / object
  * @ignore
  */
-export function resetGUID(base, index = 0) {
+export function resetGUID(base: string, index = 0) {
 	// also ensure it's only 8bit ASCII characters
 	GUID_base = toHex(base.toString().toUpperCase());
 	GUID_index = index;

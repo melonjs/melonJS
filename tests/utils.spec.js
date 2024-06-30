@@ -49,10 +49,6 @@ describe("utils", () => {
 		it("file extension", () => {
 			expect(utils.file.getExtension(filename)).toEqual("baz");
 		});
-
-		it("file path", () => {
-			expect(utils.file.getPath(filename)).toEqual("/src/bar/");
-		});
 	});
 
 	describe("String", () => {

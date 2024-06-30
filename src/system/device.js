@@ -1,7 +1,7 @@
 import { getParent } from "./../video/video.js";
 import save from "./save.js";
 import * as event from "./../system/event.js";
-import { prefixed } from "./../utils/agent.js";
+import { prefixed } from "./../utils/agent.ts";
 import { DOMContentLoaded } from "./dom.js";
 import * as device_platform from "./platform.js"; // export * as name1 from …; // ECMAScript® 2020
 

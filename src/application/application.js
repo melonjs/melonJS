@@ -2,7 +2,7 @@ import { autoDetectRenderer } from "../video/utils/autodetect.js";
 import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
 import * as device from "./../system/device.js";
 import * as event from "./../system/event.js";
-import { getUriFragment } from "./../utils/utils.js";
+import { getUriFragment } from "./../utils/utils.ts";
 import timer from "./../system/timer.js";
 import state from "./../state/state.js";
 import World from "./../physics/world.js";

@@ -1,5 +1,5 @@
 import { createCanvas } from "../video.js";
-import { setPrefixed } from "../../utils/agent.js";
+import { setPrefixed } from "../../utils/agent.ts";
 import { clamp } from "../../math/math.js";
 
 /**

@@ -206,7 +206,7 @@ export default class Container extends Renderable {
 	 * will not be in any container. <br>
 	 * if the given child implements a onActivateEvent method, that method will be called
 	 * once the child is added to this container.
-	 * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be added
+	 * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText|Tween} child - Child to be added
 	 * @param {number} [z] - forces the z index of the child to the specified value
 	 * @returns {Renderable} the added child
 	 */
@@ -683,7 +683,7 @@ export default class Container extends Renderable {
 	 * Removes (and optionally destroys) a child from the container.<br>
 	 * (removal is immediate and unconditional)<br>
 	 * Never use keepalive=true with objects from {@link pool}. Doing so will create a memory leak.
-	 * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be removed
+	 * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText|Tween} child - Child to be removed
 	 * @param {boolean} [keepalive=False] - True to prevent calling child.destroy()
 	 */
 	removeChildNow(child, keepalive) {

@@ -1,4 +1,3 @@
-import * as fileUtil from "./../utils/file.js";
 import * as event from "./../system/event.js";
 import * as audio from "./../audio/audio.js";
 import state from "./../state/state.js";
@@ -18,6 +17,7 @@ import { preloadBinary } from "./parsers/binary.js";
 import { preloadJavascript } from "./parsers/script.js";
 import { preloadVideo } from "./parsers/video.js";
 import { warning } from "../lang/console.js";
+import { getBasename } from "../utils/file.ts";
 
 /**
  * a small class to manage loading of stuff and manage resources
@@ -682,7 +682,7 @@ export function getBinary(elt) {
  */
 export function getImage(image) {
 	// force as string and extract the base name
-	image = fileUtil.getBasename("" + image);
+	image = getBasename("" + image);
 	if (image in imgList) {
 		// return the corresponding Image object
 		return imgList[image];

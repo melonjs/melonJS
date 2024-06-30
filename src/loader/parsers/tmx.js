@@ -1,6 +1,6 @@
-import * as fileUtil from "../../utils/file.js";
 import level from "../../level/level.js";
 import * as TMXUtils from "../../level/tiled/TMXUtils.js";
+import { getExtension } from "../../utils/file.ts";
 import { tmxList } from "../cache.js";
 import { fetchData } from "./fetchdata.js";
 
@@ -50,7 +50,7 @@ export function preloadTMX(tmxData, onload, onerror, settings) {
 
 			let result;
 
-			switch (fileUtil.getExtension(tmxData.src)) {
+			switch (getExtension(tmxData.src)) {
 				case "xml":
 				case "tmx":
 				case "tsx": {
@@ -76,7 +76,7 @@ export function preloadTMX(tmxData, onload, onerror, settings) {
 					break;
 				default:
 					throw new Error(
-						`TMX file format not supported: ${fileUtil.getExtension(tmxData.src)}`,
+						`TMX file format not supported: ${getExtension(tmxData.src)}`,
 					);
 			}
 
