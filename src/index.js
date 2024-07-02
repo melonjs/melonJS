@@ -73,7 +73,7 @@ import * as event from "./system/event.js";
 import * as device from "./system/device.js";
 import * as loader from "./loader/loader.js";
 import * as math from "./math/math.js";
-import * as utils from "./utils/utils.js";
+import * as utils from "./utils/utils.ts";
 import * as input from "./input/input.js";
 import * as plugin from "./plugin/plugin.js";
 import { cache as plugins } from "./plugin/plugin.js";
