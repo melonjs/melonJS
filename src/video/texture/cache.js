@@ -1,8 +1,8 @@
 import { renderer } from "./../video.js";
-import * as fileUtil from "./../../utils/file.js";
 import { TextureAtlas, createAtlas } from "./atlas.js";
 import { isPowerOfTwo } from "./../../math/math.js";
 import { ArrayMultimap } from "@teppeis/multimaps";
+import { getBasename } from "../../utils/file.ts";
 
 /**
  * a basic texture cache object
@@ -133,7 +133,7 @@ class TextureCache {
 				atlas = createAtlas(
 					image.width || image.videoWidth,
 					image.height || image.videoHeight,
-					image.src ? fileUtil.getBasename(image.src) : undefined,
+					image.src ? getBasename(image.src) : undefined,
 				);
 			}
 			entry = new TextureAtlas(atlas, image, false);

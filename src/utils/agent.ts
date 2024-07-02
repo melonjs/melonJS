@@ -1,26 +1,17 @@
 import { capitalize } from "./string.js";
 
 /**
- * a collection of utility functons to ease porting between different user agents.
- * @namespace utils.agent
- */
-
-/**
  * Known agent vendors
- * @ignore
  */
 const vendors = ["ms", "MS", "moz", "webkit", "o"];
 
 /**
  * Get a vendor-prefixed property
- * @public
- * @name prefixed
- * @param {string} name - Property name
- * @param {object} [obj=globalThis] - Object or element reference to access
- * @returns {string} Value of property
- * @memberof utils.agent
+ * @param name - Property name
+ * @param [obj] - Object or element reference to access
+ * @returns Value of property
  */
-export function prefixed(name, obj) {
+export function prefixed(name: string, obj: Record<string, unknown>) {
 	obj = obj || globalThis;
 	if (name in obj) {
 		return obj[name];
@@ -38,15 +29,16 @@ export function prefixed(name, obj) {
 
 /**
  * Set a vendor-prefixed property
- * @public
- * @name setPrefixed
- * @param {string} name - Property name
- * @param {string} value - Property value
- * @param {object} [obj=globalThis] - Object or element reference to access
- * @returns {boolean} true if one of the vendor-prefixed property was found
- * @memberof utils.agent
+ * @param name - Property name
+ * @param value - Property value
+ * @param [obj] - Object or element reference to access
+ * @returns true if one of the vendor-prefixed property was found
  */
-export function setPrefixed(name, value, obj) {
+export function setPrefixed(
+	name: string,
+	value: unknown,
+	obj: Record<string, unknown>,
+) {
 	obj = obj || globalThis;
 	if (name in obj) {
 		obj[name] = value;

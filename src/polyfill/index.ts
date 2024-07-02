@@ -6,5 +6,5 @@ import "core-js/es/string/trim-start";
 import "core-js/es/string/trim-end";
 
 // "built-in" polyfills
-import "./console.js";
+import "./console.ts";
 import "./roundrect.js";

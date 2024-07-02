@@ -47,12 +47,10 @@ describe("pool", () => {
 		});
 
 		it("object is not recycled when pushed and pulled back again", () => {
-			function nonPoolableObject() {
-				pool.push(obj);
-			}
-
 			// pushing it into the object pool should throw an exception
-			expect(nonPoolableObject).toThrow();
+			expect(() => {
+				pool.push(obj);
+			}).toThrow();
 		});
 	});
 });

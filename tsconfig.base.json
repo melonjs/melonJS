@@ -4,9 +4,16 @@
 		"allowJs": true,
 		"checkJs": false,
 		"strict": true,
-		"noImplicitAny": true,
+		"noUnusedLocals": true,
+		"noFallthroughCasesInSwitch": true,
 		"module": "ESNext",
 		"moduleResolution": "Bundler",
-		"resolveJsonModule": true
+		"moduleDetection": "force",
+		"resolveJsonModule": true,
+		"exactOptionalPropertyTypes": true,
+		"allowUnreachableCode": false,
+		"allowSyntheticDefaultImports": false,
+		"isolatedModules": true,
+		"strictPropertyInitialization": false
 	}
 }

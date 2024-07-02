@@ -1,5 +1,5 @@
+import { remove } from "../utils/array.ts";
 import Vector2d from "./../math/vector2.js";
-import * as arrayUtil from "./../utils/array.js";
 
 /**
  * @import World from "./world.js";
@@ -331,7 +331,7 @@ export default class QuadTree {
 			const index = this.getIndex(item);
 
 			if (index !== -1) {
-				found = arrayUtil.remove(this.nodes[index], item);
+				found = remove(this.nodes[index], item);
 				// trim node if empty
 				if (found && this.nodes[index].isPrunable()) {
 					this.nodes.splice(index, 1);
@@ -342,7 +342,7 @@ export default class QuadTree {
 		if (found === false) {
 			// try and remove the item from the list of items in this node
 			if (this.objects.indexOf(item) !== -1) {
-				arrayUtil.remove(this.objects, item);
+				remove(this.objects, item);
 				found = true;
 			}
 		}

@@ -1,28 +1,28 @@
 const MAX_LENGTH = 256;
 
-const numeric = /^[0-9]+$/;
-
-const compareIdentifiers = (a, b) => {
-	const anum = numeric.test(a);
-	const bnum = numeric.test(b);
-
-	if (anum && bnum) {
-		a = +a;
-		b = +b;
+const compareIdentifiers = (a: number, b: number) => {
+	if (a === b) {
+		return 0;
+	} else if (Number(a) < Number(b)) {
+		return -1;
+	} else {
+		return 1;
 	}
-
-	return a === b ? 0 : anum && !bnum ? -1 : bnum && !anum ? 1 : a < b ? -1 : 1;
 };
 
+const SEMVER_REGEX = /(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)/;
+
 class SemVer {
-	constructor(version) {
+	major: number;
+	minor: number;
+	patch: number;
+
+	constructor(version: string) {
 		if (version.length > MAX_LENGTH) {
 			throw new TypeError(`version is longer than ${MAX_LENGTH} characters`);
 		}
 
-		const m = version
-			.trim()
-			.match(/(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)/, "g");
+		const m = version.trim().match(SEMVER_REGEX);
 
 		if (!m) {
 			throw new TypeError(`Invalid Version: ${version}`);
@@ -44,23 +44,21 @@ class SemVer {
 		if (this.patch > Number.MAX_SAFE_INTEGER || this.patch < 0) {
 			throw new TypeError("Invalid patch version");
 		}
-
-		this.format();
 	}
 
-	format() {
-		this.version = `${this.major}.${this.minor}.${this.patch}`;
+	asString() {
+		return `${this.major}.${this.minor}.${this.patch}`;
 	}
 
-	compare(other) {
-		if (other.version === this.version) {
+	compare(other: SemVer) {
+		if (other.asString() === this.asString()) {
 			return 0;
 		}
 
 		return this.compareMain(other);
 	}
 
-	compareMain(other) {
+	compareMain(other: SemVer) {
 		return (
 			compareIdentifiers(this.major, other.major) ||
 			compareIdentifiers(this.minor, other.minor) ||
@@ -69,4 +67,5 @@ class SemVer {
 	}
 }
 
-export const compare = (a, b) => new SemVer(a).compare(new SemVer(b));
+export const compare = (a: string, b: string) =>
+	new SemVer(a).compare(new SemVer(b));

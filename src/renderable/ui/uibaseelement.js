@@ -1,5 +1,5 @@
 import Container from "../container.js";
-import timer from "../../system/timer.js";
+import timer from "../../system/timer.ts";
 import { on, off, POINTERMOVE } from "../../system/event.js";
 import {
 	registerPointerEvent,

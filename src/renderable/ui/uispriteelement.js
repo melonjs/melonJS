@@ -1,4 +1,4 @@
-import timer from "./../../system/timer.js";
+import timer from "./../../system/timer.ts";
 import Sprite from "./../sprite.js";
 import {
 	registerPointerEvent,

@@ -1,4 +1,4 @@
-import { checkVersion } from "./../utils/utils.js";
+import { checkVersion } from "./../utils/utils.ts";
 import { version } from "./../version.ts";
 import { game } from "../index.js";
 

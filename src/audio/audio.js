@@ -1,7 +1,7 @@
 // external import
 import { Howl, Howler } from "howler";
 import { clamp } from "./../math/math.js";
-import { isDataUrl } from "./../utils/string.js";
+import { isDataUrl } from "./../utils/string.ts";
 
 /**
  * additional import for TypeScript

@@ -1,5 +1,5 @@
 import { fontList } from "../cache.js";
-import { isDataUrl } from "../../utils/string.js";
+import { isDataUrl } from "../../utils/string.ts";
 
 /**
  * parse/preload a font face

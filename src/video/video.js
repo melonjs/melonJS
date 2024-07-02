@@ -1,7 +1,7 @@
 import * as event from "./../system/event.js";
 import { initialized, game } from "./../index.js";
 import * as device from "./../system/device.js";
-import { throttle } from "../utils/function.js";
+import { throttle } from "../utils/function.ts";
 import { ApplicationSettings } from "../application/settings.js";
 
 /**

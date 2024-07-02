@@ -1,4 +1,4 @@
-import { isBoolean, isNumeric } from "../../utils/string.js";
+import { isBoolean, isNumeric } from "../../utils/string.ts";
 
 /**
  * the function used to decompress zlib/gzip data

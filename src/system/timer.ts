@@ -1,39 +1,52 @@
 import * as event from "./event.js";
-import state from "./../state/state.js";
-import { clamp } from "./../math/math.js";
+import state from "../state/state.js";
+import { clamp } from "../math/math.js";
 
 /**
  * a Timer class to manage timing related function (FPS, Game Tick, Time...)
  * @see {@link timer} the default global timer instance
  */
 class Timer {
+	tick: number;
+	fps: number;
+	maxfps: number;
+	interpolation: boolean;
+	framecount: number;
+	framedelta: number;
+	last: number;
+	now: number;
+	delta: number;
+	step: number;
+	minstep: number;
+	timers: {
+		fn: (...args: any[]) => any;
+		delay: number;
+		elapsed: number;
+		repeat: boolean;
+		timerId: number;
+		pauseable: boolean;
+		args: any[];
+	}[];
+	timerId: number;
+
 	constructor() {
 		/**
 		 * Last game tick value. <br>
 		 * Use this value to scale velocities during frame drops due to slow hardware or when setting an FPS limit.
 		 * This feature is disabled by default (Enable interpolation to use it).
-		 * @public
 		 * @see interpolation
-		 * @See maxfps
-		 * @type {number}
-		 * @name tick
 		 */
 		this.tick = 1.0;
 
 		/**
 		 * Last measured fps rate.<br>
 		 * This feature is disabled by default, unless the debugPanel is enabled/visible.
-		 * @public
-		 * @type {number}
-		 * @name fps
 		 */
 		this.fps = 0;
 
 		/**
 		 * Set the maximum target display frame per second
-		 * @public
 		 * @see tick
-		 * @type {number}
 		 * @default 60
 		 */
 		this.maxfps = 60;
@@ -41,7 +54,6 @@ class Timer {
 		/**
 		 * Enable/disable frame interpolation
 		 * @see tick
-		 * @type {boolean}
 		 * @default false
 		 */
 		this.interpolation = false;
@@ -68,7 +80,7 @@ class Timer {
 			this.reset();
 			this.now = this.last = 0;
 			// register to the game before update event
-			event.on(event.GAME_BEFORE_UPDATE, (time) => this.update(time));
+			event.on(event.GAME_BEFORE_UPDATE, (time: number) => this.update(time));
 		});
 
 		// reset timer
@@ -101,25 +113,30 @@ class Timer {
 
 	/**
 	 * Calls a function once after a specified delay. See me.timer.setInterval to repeativly call a function.
-	 * @param {Function} fn - the function you want to execute after delay milliseconds.
-	 * @param {number} delay - the number of milliseconds (thousandths of a second) that the function call should be delayed by.
-	 * @param {boolean} [pauseable=true] - respects the pause state of the engine.
-	 * @param {...*} args - optional parameters which are passed through to the function specified by fn once the timer expires.
-	 * @returns {number} a positive integer value which identifies the timer created by the call to setTimeout(), which can be used later with me.timer.clearTimeout().
+	 * @param fn - the function you want to execute after delay milliseconds.
+	 * @param delay - the number of milliseconds (thousandths of a second) that the function call should be delayed by.
+	 * @param [pauseable] - respects the pause state of the engine.
+	 * @param args - optional parameters which are passed through to the function specified by fn once the timer expires.
+	 * @returns a positive integer value which identifies the timer created by the call to setTimeout(), which can be used later with me.timer.clearTimeout().
 	 * @example
 	 * // set a timer to call "myFunction" after 1000ms
 	 * me.timer.setTimeout(myFunction, 1000);
 	 * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
 	 * me.timer.setTimeout(myFunction, 1000, true, param1, param2);
 	 */
-	setTimeout(fn, delay, pauseable, ...args) {
+	setTimeout(
+		fn: (...args: any[]) => any,
+		delay: number,
+		pauseable?: boolean | undefined,
+		...args: any[]
+	) {
 		this.timers.push({
 			fn: fn,
 			delay: delay,
 			elapsed: 0,
 			repeat: false,
 			timerId: ++this.timerId,
-			pauseable: pauseable === true || true,
+			pauseable: pauseable ?? true,
 			args: args,
 		});
 		return this.timerId;
@@ -127,18 +144,23 @@ class Timer {
 
 	/**
 	 * Calls a function continously at the specified interval.  See setTimeout to call function a single time.
-	 * @param {Function} fn - the function to execute
-	 * @param {number} delay - the number of milliseconds (thousandths of a second) on how often to execute the function
-	 * @param {boolean} [pauseable=true] - respects the pause state of the engine.
-	 * @param {...*} args - optional parameters which are passed through to the function specified by fn once the timer expires.
-	 * @returns {number} a numeric, non-zero value which identifies the timer created by the call to setInterval(), which can be used later with me.timer.clearInterval().
+	 * @param fn - the function to execute
+	 * @param delay - the number of milliseconds (thousandths of a second) on how often to execute the function
+	 * @param [pauseable] - respects the pause state of the engine.
+	 * @param args - optional parameters which are passed through to the function specified by fn once the timer expires.
+	 * @returns a numeric, non-zero value which identifies the timer created by the call to setInterval(), which can be used later with me.timer.clearInterval().
 	 * @example
 	 * // set a timer to call "myFunction" every 1000ms
 	 * me.timer.setInterval(myFunction, 1000);
 	 * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
 	 * me.timer.setInterval(myFunction, 1000, true, param1, param2);
 	 */
-	setInterval(fn, delay, pauseable, ...args) {
+	setInterval(
+		fn: (...args: any[]) => any,
+		delay: number,
+		pauseable?: boolean | undefined,
+		...args: any[]
+	) {
 		this.timers.push({
 			fn: fn,
 			delay: delay,
@@ -154,7 +176,7 @@ class Timer {
 	/**
 	 * Return the current timestamp in milliseconds <br>
 	 * since the game has started or since linux epoch (based on browser support for High Resolution Timer)
-	 * @returns {number}
+	 * @returns current time
 	 */
 	getTime() {
 		return this.now;
@@ -162,7 +184,7 @@ class Timer {
 
 	/**
 	 * Return elapsed time in milliseconds since the last update
-	 * @returns {number}
+	 * @returns elapsed time
 	 */
 	getDelta() {
 		return this.delta;
@@ -190,7 +212,7 @@ class Timer {
 	 * update
 	 * @ignore
 	 */
-	update(time) {
+	update(time: number) {
 		this.last = this.now;
 		this.now = time;
 		this.delta = this.now - this.last;
@@ -213,7 +235,7 @@ class Timer {
 	 * clear Timers
 	 * @ignore
 	 */
-	clearTimer(timerId) {
+	clearTimer(timerId: number) {
 		for (let i = 0; i < this.timers.length; i++) {
 			if (this.timers[i].timerId === timerId) {
 				this.timers.splice(i, 1);
@@ -248,7 +270,6 @@ const timer = new Timer();
 
 /**
  * the default global Timer instance
- * @namespace timer
  * @see Timer
  * @example
  * // set a timer to call "myFunction" after 1000ms
