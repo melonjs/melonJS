@@ -1,6 +1,5 @@
 import { checkVersion } from "./../utils/utils.js";
 import { version } from "./../version.ts";
-import { warning } from "../lang/console.js";
 import { game } from "../index.js";
 
 /**
@@ -39,17 +38,6 @@ export class BasePlugin {
 		 * @type {Application}
 		 */
 		this.app = app;
-	}
-}
-
-/**
- * @memberof plugin
- * @deprecated since 15.1.6, see {@link plugin.BasePlugin}
- */
-export class Base extends BasePlugin {
-	constructor() {
-		warning("plugin.Base", "plugin.BasePlugin", "15.1.6");
-		super();
 	}
 }
 

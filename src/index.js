@@ -72,7 +72,7 @@ import collision from "./physics/collision.js";
 import * as event from "./system/event.js";
 import * as device from "./system/device.js";
 import * as loader from "./loader/loader.js";
-import * as Math from "./math/math.js";
+import * as math from "./math/math.js";
 import * as utils from "./utils/utils.js";
 import * as input from "./input/input.js";
 import * as plugin from "./plugin/plugin.js";
@@ -85,8 +85,6 @@ import state from "./state/state.js";
 import level from "./level/level.js";
 import { version } from "./version.ts";
 
-const math = Math;
-
 // export all utility function
 export {
 	audio,
@@ -96,10 +94,6 @@ export {
 	loader,
 	level,
 	input,
-	/**
-	 * @deprecated Use lowercase `math` export instead.
-	 */
-	Math,
 	math,
 	plugin,
 	plugins,

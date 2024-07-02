@@ -367,18 +367,6 @@ export default class Text extends Renderable {
 	}
 
 	/**
-	 * draw a stroke text at the specified coord, as defined by the `lineWidth` and `fillStroke` properties.
-	 * @deprecated since 15.0.0
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - Reference to the destination renderer instance
-	 * @param {string} text
-	 * @param {number} x
-	 * @param {number} y
-	 */
-	drawStroke(renderer, text, x, y) {
-		this.draw(renderer, text, x, y);
-	}
-
-	/**
 	 * @ignore
 	 */
 	_drawFont(context, text, x, y) {

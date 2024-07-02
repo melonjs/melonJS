@@ -1,6 +1,6 @@
 # Changelog
 
-## [17.5.0] (melonJS 2) - _2024-06-xx_
+## [18.0.0] (melonJS 2) - _2024-06-xx_
 
 ### Added
 - Chore: new GitHub Workflow for running the tests (@hornta)
@@ -15,7 +15,8 @@
 - Chore: replaced rollup by esbuild for the build process (@hornta)
 - Chore: replaced webdoc with typedoc (@hornta)
 - Chore: replaced mocha and puppeteer with vitest (@hornta)
-
+- Chore: deprecated classes and methods from version 15 and lower have been removed (see https://github.com/melonjs/melonJS/wiki/Upgrade-Guide)
+- Math: namespace `Math` is now deprecated and renamed to `math` for better consistency with the rest of the API.
 
 ## [17.4.0] (melonJS 2) - _2024-06-22_
 
