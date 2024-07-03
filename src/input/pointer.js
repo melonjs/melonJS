@@ -56,9 +56,9 @@ class Pointer extends Bounds {
 		 * @public
 		 * @type {PointerEvent|TouchEvent|MouseEvent}
 		 * @name event
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent}
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent}
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent}
 		 * @memberof Pointer
 		 */
 		this.event = undefined;
@@ -68,7 +68,7 @@ class Pointer extends Bounds {
 		 * @public
 		 * @type {string}
 		 * @name type
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/Event/type
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Event/type}
 		 * @memberof Pointer
 		 */
 		this.type = undefined;
@@ -78,7 +78,7 @@ class Pointer extends Bounds {
 		 * @public
 		 * @type {number}
 		 * @name button
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button}
 		 * @memberof Pointer
 		 */
 		this.button = 0;
@@ -88,7 +88,7 @@ class Pointer extends Bounds {
 		 * @public
 		 * @type {boolean}
 		 * @name isPrimary
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/isPrimary
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/isPrimary}
 		 * @memberof Pointer
 		 */
 		this.isPrimary = false;
@@ -98,7 +98,7 @@ class Pointer extends Bounds {
 		 * @public
 		 * @type {number}
 		 * @name pageX
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageX
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageX}
 		 * @memberof Pointer
 		 */
 		this.pageX = 0;
@@ -107,7 +107,7 @@ class Pointer extends Bounds {
 		 * the vertical coordinate at which the event occurred, relative to the left edge of the entire document.
 		 * @public
 		 * @type {number}
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageY
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageY}
 		 */
 		this.pageY = 0;
 
@@ -115,7 +115,7 @@ class Pointer extends Bounds {
 		 * the horizontal coordinate within the application's client area at which the event occurred
 		 * @public
 		 * @type {number}
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientX
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientX}
 		 * @memberof Pointer
 		 */
 		this.clientX = 0;
@@ -124,7 +124,7 @@ class Pointer extends Bounds {
 		 * the vertical coordinate within the application's client area at which the event occurred
 		 * @public
 		 * @type {number}
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientY
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientY}
 		 */
 		this.clientY = 0;
 
@@ -132,7 +132,7 @@ class Pointer extends Bounds {
 		 * the difference in the X coordinate of the pointer since the previous move event
 		 * @public
 		 * @type {number}
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/movementX
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/movementX}
 		 */
 		this.movementX = 0;
 
@@ -140,7 +140,7 @@ class Pointer extends Bounds {
 		 * the difference in the Y coordinate of the pointer since the previous move event
 		 * @public
 		 * @type {number}
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/movementY
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/movementY}
 		 */
 		this.movementY = 0;
 
@@ -148,7 +148,7 @@ class Pointer extends Bounds {
 		 * an unsigned long representing the unit of the delta values scroll amount
 		 * @public
 		 * @type {number}
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode}
 		 */
 		this.deltaMode = 0;
 
@@ -156,7 +156,7 @@ class Pointer extends Bounds {
 		 * a double representing the horizontal scroll amount in the Wheel Event deltaMode unit.
 		 * @public
 		 * @type {number}
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaX
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaX}
 		 */
 		this.deltaX = 0;
 
@@ -164,7 +164,7 @@ class Pointer extends Bounds {
 		 * a double representing the vertical scroll amount in the Wheel Event deltaMode unit.
 		 * @public
 		 * @type {number}
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaY
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaY}
 		 */
 		this.deltaY = 0;
 
@@ -172,7 +172,7 @@ class Pointer extends Bounds {
 		 * a double representing the scroll amount in the z-axis, in the Wheel Event deltaMode unit.
 		 * @public
 		 * @type {number}
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaZ
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaZ}
 		 */
 		this.deltaZ = 0;
 
@@ -238,7 +238,7 @@ class Pointer extends Bounds {
 		 * The unique identifier of the contact for a touch, mouse or pen
 		 * @public
 		 * @type {number}
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/pointerId
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/pointerId}
 		 */
 		this.pointerId = undefined;
 

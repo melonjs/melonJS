@@ -816,6 +816,7 @@ export default class Container extends Renderable {
 	 */
 	sort(recursive) {
 		// do nothing if there is already a pending sort
+		/** @ignore */
 		if (!this.pendingSort) {
 			if (recursive === true) {
 				this.forEach((child) => {

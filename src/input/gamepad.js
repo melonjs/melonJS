@@ -307,7 +307,7 @@ export const GAMEPAD = {
 	 *   <li>Right control stick: <code>RX</code> (horizontal), <code>RY</code> (vertical)</li>
 	 *   <li>Extras: <code>EXTRA_1</code>, <code>EXTRA_2</code>, <code>EXTRA_3</code>, <code>EXTRA_4</code></li>
 	 * </ul>
-	 * @see https://w3c.github.io/gamepad/#remapping
+	 * @see {@link https://w3c.github.io/gamepad/#remapping}
 	 */
 	AXES: {
 		LX: 0,
@@ -330,7 +330,7 @@ export const GAMEPAD = {
 	 *   <li>Navigation: <code>SELECT</code> (<code>BACK</code>), <code>START</code> (<code>FORWARD</code>), <code>HOME</code></li>
 	 *   <li>Extras: <code>EXTRA_1</code>, <code>EXTRA_2</code>, <code>EXTRA_3</code>, <code>EXTRA_4</code></li>
 	 * </ul>
-	 * @see https://w3c.github.io/gamepad/#remapping
+	 * @see {@link https://w3c.github.io/gamepad/#remapping}
 	 */
 	BUTTONS: {
 		FACE_1: 0,

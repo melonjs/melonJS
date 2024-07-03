@@ -39,10 +39,10 @@ export const baseURL = {};
  * client-side SSL certificates or HTTP authentication as described in the Terminology section of the CORS specification.<br>
  * @type {string}
  * @name crossOrigin
- * @default undefined
- * @see loader.setOptions
  * @memberof loader
- * @see https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes
+ * @default undefined
+ * @see {@link setOptions}
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes}
  * @example
  *  // allow for cross-origin texture loading
  * me.loader.crossOrigin = "anonymous";
@@ -58,10 +58,10 @@ export let crossOrigin;
  * @public
  * @type {boolean}
  * @name withCredentials
- * @see loader.setOptions
+ * @see {@link setOptions}
  * @default false
  * @memberof loader
- * @see https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials}
  * @example
  *  // enable withCredentials
  * me.loader.withCredentials = true;
@@ -285,8 +285,8 @@ function onLoadingError(res) {
  * @property {boolean} [stream=false] - Set to true to not to wait for large audio or video file to be downloaded before playing.
  * @property {boolean} [autoplay=false] - Set to true to automatically start playing audio or video when loaded or added to a scene (using autoplay might require user iteraction to enable it)
  * @property {boolean} [loop=false] - Set to true to automatically loop the audio or video when playing
- * @see loader.preload
- * @see loader.load
+ * @see {@link preload}
+ * @see {@link load}
  * @example
  *   // PNG tileset
  *   {name: "tileset-platformer", type: "image",  src: "data/map/tileset.png"}
@@ -323,7 +323,7 @@ function onLoadingError(res) {
  * @memberof loader
  * @param {string} type - asset type
  * @param {function} parserFn - parser function
- * @see Asset.type
+ * @see {@link Asset.type}
  * @example
  * // specify a custom function for "abc" format
  * function customAbcParser(data, onload, onerror) {

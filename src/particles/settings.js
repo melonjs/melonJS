@@ -1,6 +1,6 @@
 /**
  * ParticleEmitterSettings contains the default settings for ParticleEmitter
- * @see ParticleEmitter
+ * @see {@link ParticleEmitter}
  * @namespace ParticleEmitterSettings
  */
 const ParticleEmitterSettings = {
@@ -23,7 +23,7 @@ const ParticleEmitterSettings = {
 	 * (by default melonJS will create an white 8x8 texture image)
 	 * @type {HTMLCanvasElement}
 	 * @default undefined
-	 * @see ParticleEmitterSettings.textureSize
+	 * @see {@link textureSize}
 	 */
 	image: undefined,
 
@@ -32,7 +32,7 @@ const ParticleEmitterSettings = {
 	 * (by default melonJS will create an white 8x8 texture image)
 	 * @type {number}
 	 * @default 8
-	 * @see ParticleEmitterSettings.image
+	 * @see {@link image}
 	 */
 	textureSize: 8,
 
@@ -138,7 +138,7 @@ const ParticleEmitterSettings = {
 	 * Vertical force (Gravity) for each particle
 	 * @type {number}
 	 * @default 0
-	 * @see game.world.gravity
+	 * @see {@link World.gravity}
 	 */
 	gravity: 0,
 

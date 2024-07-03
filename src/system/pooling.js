@@ -109,7 +109,7 @@ class ObjectPool {
 	/**
 	 * Push back an object instance into the object pool <br>
 	 * Object pooling for the object class must be enabled,
-	 * and object must have been instantiated using {@link pool#pull},
+	 * and object must have been instantiated using {@link pull},
 	 * otherwise this function won't work
 	 * @throws will throw an error if the object cannot be recycled
 	 * @param {object} obj - instance to be recycled
@@ -171,8 +171,6 @@ class ObjectPool {
 	}
 }
 
-const pool = new ObjectPool();
-
 /**
  * a default global ObjectPool instance
  * @namespace pool
@@ -188,4 +186,6 @@ const pool = new ObjectPool();
  * // function will ensure the object can then be reallocated later
  * game.world.removeChild(bullet);
  */
+const pool = new ObjectPool();
+
 export default pool;

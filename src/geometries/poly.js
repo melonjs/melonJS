@@ -46,7 +46,7 @@ export default class Polygon {
 		this.edges = [];
 
 		/**
-		 * a list of indices for all vertices composing this polygon (@see earcut)
+		 * a list of indices for all vertices composing this polygon
 		 * @ignore
 		 */
 		this.indices = [];
@@ -59,8 +59,11 @@ export default class Polygon {
 		 */
 		this.normals = [];
 
-		// The bounding rectangle for this shape
-		// this._bounds;
+		/**
+		 * The bounding rectangle for this shape
+		 * @ignore
+		 */
+		this._bounds = undefined;
 
 		/**
 		 * the shape type (used internally)

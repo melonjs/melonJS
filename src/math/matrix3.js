@@ -16,6 +16,11 @@ export default class Matrix3d {
 	 * @param {(Matrix3d|...number)} args - An instance of me.Matrix3d to copy from, or individual Matrix components (See {@link Matrix3d.setTransform}). If not arguments are given, the matrix will be set to Identity.
 	 */
 	constructor(...args) {
+		/**
+		 * The matrix values
+		 * @ignore
+		 */
+		this.val = undefined;
 		this.onResetEvent(...args);
 	}
 

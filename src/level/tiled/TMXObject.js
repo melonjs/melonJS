@@ -69,7 +69,7 @@ export default class TMXObject {
 		 * object type
 		 * @type {string}
 		 * @deprecated since Tiled 1.9
-		 * @see https://docs.mapeditor.org/en/stable/reference/tmx-changelog/#tiled-1-9
+		 * @see {@link https://docs.mapeditor.org/en/stable/reference/tmx-changelog/#tiled-1-9}
 		 */
 		this.type = settings.type;
 
@@ -83,7 +83,7 @@ export default class TMXObject {
 		/**
 		 * object text
 		 * @type {object}
-		 * @see http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#text
+		 * @see {@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#text}
 		 */
 		this.text = undefined;
 

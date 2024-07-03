@@ -48,7 +48,7 @@ export default class TMXGroup {
 
 		/**
 		 * group objects list definition
-		 * @see TMXObject
+		 * @see {@link TMXObject}
 		 * @type {object[]}
 		 */
 		this.objects = [];

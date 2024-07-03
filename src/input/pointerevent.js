@@ -567,7 +567,7 @@ export function hasActiveEvents() {
 /**
  * return true if there are register pointer events
  * @memberof input
- * @see registerPointerEvent
+ * @see {@link registerPointerEvent}
  * @returns true if there are pending events
  */
 export function hasRegisteredEvents() {
@@ -607,7 +607,7 @@ export function globalToLocal(x, y, v) {
  * enable/disable all gestures on the given element.<br>
  * by default melonJS will disable browser handling of all panning and zooming gestures.
  * @memberof input
- * @see https://developer.mozilla.org/en-US/docs/Web/CSS/touch-action
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/CSS/touch-action}
  * @param {HTMLCanvasElement} element
  * @param {string} [value="none"]
  */
@@ -662,7 +662,7 @@ export function unbindPointer(button) {
  * allows registration of event listeners on the object target. <br>
  * melonJS will pass a me.Pointer object to the defined callback.
  * @see Pointer
- * @see {@link http://www.w3.org/TR/pointerevents/#list-of-pointer-events|W3C Pointer Event list}
+ * @see {@link http://www.w3.org/TR/pointerevents/#list-of-pointer-events | W3C Pointer Event list}
  * @memberof input
  * @param {string} eventType - The event type for which the object is registering <br>
  * melonJS currently supports: <br>

@@ -17,6 +17,11 @@ export default class Matrix2d {
 	 * @param {(Matrix2d|Matrix3d|...number)} args - an instance of me.Matrix2d or me.Matrix3d to copy from, or individual matrix components (See {@link Matrix2d.setTransform}). If not arguments are given, the matrix will be set to Identity.
 	 */
 	constructor(...args) {
+		/**
+		 * The matrix values
+		 * @ignore
+		 */
+		this.val = undefined;
 		this.onResetEvent(...args);
 	}
 
@@ -52,7 +57,7 @@ export default class Matrix2d {
 	/**
 	 * tx component of the matrix
 	 * @type {number}
-	 * @see Matrix2d.translate
+	 * @see {@link translate}
 	 */
 	get tx() {
 		return this.val[6];
@@ -61,7 +66,7 @@ export default class Matrix2d {
 	/**
 	 * ty component of the matrix
 	 * @type {number}
-	 * @see Matrix2d.translate
+	 * @see {@link translate}
 	 */
 	get ty() {
 		return this.val[7];
