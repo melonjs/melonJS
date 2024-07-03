@@ -15,7 +15,7 @@ export default class Bounds {
 	 * @param {Vector2d[]|Point[]} [vertices] - an array of Vector2d or Point
 	 */
 	constructor(vertices) {
-		// @ignore
+		/** @ignore */
 		this._center = new Vector2d();
 		this.onResetEvent(vertices);
 

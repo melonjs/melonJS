@@ -2,6 +2,7 @@ import Vector2d from "./../math/vector2.js";
 
 /**
  * An object representing the result of an intersection.
+ * @typedef {object} ResponseObject
  * @property {Renderable} a The first object participating in the intersection
  * @property {Renderable} b The second object participating in the intersection
  * @property {number} overlap Magnitude of the overlap on the shortest colliding axis
@@ -11,10 +12,8 @@ import Vector2d from "./../math/vector2.js";
  * @property {boolean} bInA Whether the second object is entirely inside the first
  * @property {number} indexShapeA The index of the colliding shape for the object a body
  * @property {number} indexShapeB The index of the colliding shape for the object b body
- * @name ResponseObject
- * @public
  */
-export default class ResponseObject {
+class ResponseObject {
 	constructor() {
 		this.a = null;
 		this.b = null;
@@ -45,3 +44,5 @@ export default class ResponseObject {
 		return this;
 	}
 }
+
+export default ResponseObject;

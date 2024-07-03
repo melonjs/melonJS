@@ -275,19 +275,37 @@ export default class Renderable extends Rect {
 		 */
 		this.isDirty = true;
 
-		// keep track of when we flip
+		/**
+		 * cache the absolute position of the renderable
+		 * @ignore
+		 */
+		this._absPos = undefined;
+
+		/**
+		 * keep track of when we flip
+		 * @ignore
+		 */
 		this._flip = {
 			x: false,
 			y: false,
 		};
 
-		// viewport flag
+		/**
+		 * viewport flag
+		 * @ignore
+		 */
 		this._inViewport = false;
 
-		// cache value for the parentApp
+		/**
+		 * cache value for the parentApp
+		 * @ignore
+		 */
 		this._parentApp = undefined;
 
-		// renderable cache tint value used by the getter/setter
+		/**
+		 * renderable cache tint value used by the getter/setter
+		 * @ignore
+		 */
 		this._tint = pool.pull("Color", 255, 255, 255, 1.0);
 
 		// ensure it's fully opaque by default

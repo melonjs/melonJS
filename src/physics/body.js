@@ -18,6 +18,7 @@ import { remove } from "../utils/array.ts";
  * @import Line from "./../geometries/line.js";
  * @import Vector2d from "./../math/vector2.js";
  * @import ObservableVector2d from "./../math/observable_vector2.js";
+ * @import ResponseObject from "./response.js";
  **/
 
 /**
@@ -173,7 +174,7 @@ export default class Body {
 		/**
 		 * The degree to which this body is affected by the world gravity
 		 * @public
-		 * @see World.gravity
+		 * @see {@link World.gravity}
 		 * @type {number}
 		 * @default 1.0
 		 */
@@ -182,7 +183,7 @@ export default class Body {
 		/**
 		 * If true this body won't be affected by the world gravity
 		 * @public
-		 * @see World.gravity
+		 * @see {@link World.gravity}
 		 * @type {boolean}
 		 * @default false
 		 */
@@ -449,7 +450,8 @@ export default class Body {
 
 	/**
 	 * the built-in function to solve the collision response
-	 * @param {object} response - the collision response object (see {@link ResponseObject})
+	 * @param {ResponseObject} response - the collision response object
+	 * @see {@link ResponseObject}
 	 */
 	respondToCollision(response) {
 		// the overlap vector

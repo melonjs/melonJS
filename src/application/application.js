@@ -19,7 +19,7 @@ import { CANVAS, WEBGL, AUTO } from "../const.ts";
 
 /**
  * An Application represents a single melonJS game, and is responsible for updating (each frame) all the related object status and draw them.
- * @see game
+ * @see {@link game}
  */
 export default class Application {
 	/**
@@ -324,7 +324,7 @@ export default class Application {
 	 * Specify the property to be used when sorting renderables for this application game world.
 	 * Accepted values : "x", "y", "z", "depth"
 	 * @type {string}
-	 * @see World.sortOn
+	 * @see {@link World.sortOn}
 	 */
 	get sortOn() {
 		return this.world.sortOn;
@@ -344,8 +344,8 @@ export default class Application {
 
 	/**
 	 * Update the renderer framerate using the system config variables.
-	 * @see timer.maxfps
-	 * @see World.fps
+	 * @see {@link timer.maxfps}
+	 * @see {@link World.fps}
 	 */
 	updateFrameRate() {
 		// reset the frame counter

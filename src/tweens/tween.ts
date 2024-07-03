@@ -9,8 +9,11 @@ import { Interpolation, InterpolationFunction } from "./interpolation.js";
  * https://github.com/tweenjs/tween.js
  */
 
+/** @ignore */
 type OnStartCallback<T> = (this: T) => void;
+/** @ignore */
 type OnUpdateCallback<T> = (this: T, value: number) => void;
+/** @ignore */
 type OnCompleteCallback<T> = (this: T) => void;
 
 /**

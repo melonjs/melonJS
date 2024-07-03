@@ -56,9 +56,9 @@ class Pointer extends Bounds {
 		 * @public
 		 * @type {PointerEvent|TouchEvent|MouseEvent}
 		 * @name event
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent}
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent}
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent}
 		 * @memberof Pointer
 		 */
 		this.event = undefined;
@@ -68,7 +68,7 @@ class Pointer extends Bounds {
 		 * @public
 		 * @type {string}
 		 * @name type
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/Event/type
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Event/type}
 		 * @memberof Pointer
 		 */
 		this.type = undefined;
@@ -78,7 +78,7 @@ class Pointer extends Bounds {
 		 * @public
 		 * @type {number}
 		 * @name button
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button}
 		 * @memberof Pointer
 		 */
 		this.button = 0;
@@ -88,7 +88,7 @@ class Pointer extends Bounds {
 		 * @public
 		 * @type {boolean}
 		 * @name isPrimary
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/isPrimary
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/isPrimary}
 		 * @memberof Pointer
 		 */
 		this.isPrimary = false;
@@ -98,7 +98,7 @@ class Pointer extends Bounds {
 		 * @public
 		 * @type {number}
 		 * @name pageX
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageX
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageX}
 		 * @memberof Pointer
 		 */
 		this.pageX = 0;
@@ -107,9 +107,7 @@ class Pointer extends Bounds {
 		 * the vertical coordinate at which the event occurred, relative to the left edge of the entire document.
 		 * @public
 		 * @type {number}
-		 * @name pageY
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageY
-		 * @memberof Pointer
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageY}
 		 */
 		this.pageY = 0;
 
@@ -117,8 +115,7 @@ class Pointer extends Bounds {
 		 * the horizontal coordinate within the application's client area at which the event occurred
 		 * @public
 		 * @type {number}
-		 * @name clientX
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientX
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientX}
 		 * @memberof Pointer
 		 */
 		this.clientX = 0;
@@ -127,9 +124,7 @@ class Pointer extends Bounds {
 		 * the vertical coordinate within the application's client area at which the event occurred
 		 * @public
 		 * @type {number}
-		 * @name clientY
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientY
-		 * @memberof Pointer
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientY}
 		 */
 		this.clientY = 0;
 
@@ -137,9 +132,7 @@ class Pointer extends Bounds {
 		 * the difference in the X coordinate of the pointer since the previous move event
 		 * @public
 		 * @type {number}
-		 * @name movementX
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/movementX
-		 * @memberof Pointer
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/movementX}
 		 */
 		this.movementX = 0;
 
@@ -147,9 +140,7 @@ class Pointer extends Bounds {
 		 * the difference in the Y coordinate of the pointer since the previous move event
 		 * @public
 		 * @type {number}
-		 * @name movementY
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/movementY
-		 * @memberof Pointer
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/movementY}
 		 */
 		this.movementY = 0;
 
@@ -157,9 +148,7 @@ class Pointer extends Bounds {
 		 * an unsigned long representing the unit of the delta values scroll amount
 		 * @public
 		 * @type {number}
-		 * @name deltaMode
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode
-		 * @memberof Pointer
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode}
 		 */
 		this.deltaMode = 0;
 
@@ -167,9 +156,7 @@ class Pointer extends Bounds {
 		 * a double representing the horizontal scroll amount in the Wheel Event deltaMode unit.
 		 * @public
 		 * @type {number}
-		 * @name deltaX
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaX
-		 * @memberof Pointer
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaX}
 		 */
 		this.deltaX = 0;
 
@@ -177,9 +164,7 @@ class Pointer extends Bounds {
 		 * a double representing the vertical scroll amount in the Wheel Event deltaMode unit.
 		 * @public
 		 * @type {number}
-		 * @name deltaY
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaY
-		 * @memberof Pointer
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaY}
 		 */
 		this.deltaY = 0;
 
@@ -187,9 +172,7 @@ class Pointer extends Bounds {
 		 * a double representing the scroll amount in the z-axis, in the Wheel Event deltaMode unit.
 		 * @public
 		 * @type {number}
-		 * @name deltaZ
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaZ
-		 * @memberof Pointer
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaZ}
 		 */
 		this.deltaZ = 0;
 
@@ -198,8 +181,6 @@ class Pointer extends Bounds {
 		 * <img src="images/event_coord.png"/>
 		 * @public
 		 * @type {number}
-		 * @name gameX
-		 * @memberof Pointer
 		 */
 		this.gameX = 0;
 
@@ -208,8 +189,6 @@ class Pointer extends Bounds {
 		 * <img src="images/event_coord.png"/>
 		 * @public
 		 * @type {number}
-		 * @name gameY
-		 * @memberof Pointer
 		 */
 		this.gameY = 0;
 
@@ -217,8 +196,6 @@ class Pointer extends Bounds {
 		 * Event X coordinate relative to the viewport
 		 * @public
 		 * @type {number}
-		 * @name gameScreenX
-		 * @memberof Pointer
 		 */
 		this.gameScreenX = 0;
 
@@ -226,8 +203,6 @@ class Pointer extends Bounds {
 		 * Event Y coordinate relative to the viewport
 		 * @public
 		 * @type {number}
-		 * @name gameScreenY
-		 * @memberof Pointer
 		 */
 		this.gameScreenY = 0;
 
@@ -235,8 +210,6 @@ class Pointer extends Bounds {
 		 * Event X coordinate relative to the map
 		 * @public
 		 * @type {number}
-		 * @name gameWorldX
-		 * @memberof Pointer
 		 */
 		this.gameWorldX = 0;
 
@@ -244,8 +217,6 @@ class Pointer extends Bounds {
 		 * Event Y coordinate relative to the map
 		 * @public
 		 * @type {number}
-		 * @name gameWorldY
-		 * @memberof Pointer
 		 */
 		this.gameWorldY = 0;
 
@@ -253,8 +224,6 @@ class Pointer extends Bounds {
 		 * Event X coordinate relative to the holding container
 		 * @public
 		 * @type {number}
-		 * @name gameLocalX
-		 * @memberof Pointer
 		 */
 		this.gameLocalX = 0;
 
@@ -262,8 +231,6 @@ class Pointer extends Bounds {
 		 * Event Y coordinate relative to the holding container
 		 * @public
 		 * @type {number}
-		 * @name gameLocalY
-		 * @memberof Pointer
 		 */
 		this.gameLocalY = 0;
 
@@ -271,9 +238,7 @@ class Pointer extends Bounds {
 		 * The unique identifier of the contact for a touch, mouse or pen
 		 * @public
 		 * @type {number}
-		 * @name pointerId
-		 * @memberof Pointer
-		 * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/pointerId
+		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/pointerId}
 		 */
 		this.pointerId = undefined;
 
@@ -281,8 +246,6 @@ class Pointer extends Bounds {
 		 * true if not originally a pointer event
 		 * @public
 		 * @type {boolean}
-		 * @name isNormalized
-		 * @memberof Pointer
 		 */
 		this.isNormalized = false;
 
@@ -290,8 +253,6 @@ class Pointer extends Bounds {
 		 * true if the pointer is currently locked
 		 * @public
 		 * @type {boolean}
-		 * @name locked
-		 * @memberof Pointer
 		 */
 		this.locked = false;
 
@@ -301,7 +262,6 @@ class Pointer extends Bounds {
 
 	/**
 	 * initialize the Pointer object using the given Event Object
-	 * @name Pointer#set
 	 * @private
 	 * @param {Event} event - the original Event object
 	 * @param {number} [pageX=0] - the horizontal coordinate at which the event occurred, relative to the left edge of the entire document

@@ -54,7 +54,6 @@ function addListener(emitter, event, fn, context, once) {
 
 /**
  * Clear event by name.
- *
  * @param {EventEmitter} emitter - Reference to the `EventEmitter` instance.
  * @param {(String|Symbol)} evt - The Event name.
  * @private
@@ -64,9 +63,12 @@ function clearEvent(emitter, evt) {
 	else delete emitter._events[evt];
 }
 
+/** @ignore */
 export class EventEmitter {
 	constructor() {
+		/** @ignore */
 		this._events = new Events();
+		/** @ignore */
 		this._eventsCount = 0;
 	}
 

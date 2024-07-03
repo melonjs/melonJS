@@ -190,7 +190,7 @@ export let initialized = false;
 /**
  * disable melonJS auto-initialization
  * @type {boolean}
- * @see boot
+ * @see {@link boot}
  */
 export let skipAutoInit = false;
 
@@ -206,7 +206,7 @@ export const game = new Application(0, 0, { legacy: true });
  * this is automatically called unless me.skipAutoInit is set to true,
  * to allow asynchronous loaders to work.
  * @name boot
- * @see skipAutoInit
+ * @see {@link skipAutoInit}
  * @public
  */
 export function boot() {

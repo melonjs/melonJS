@@ -11,7 +11,7 @@ import { earcut } from "./earcut.js";
 /**
  * a simplified path2d implementation, supporting only one path
  */
-export default class Path2D {
+class Path2D {
 	constructor(svgPath) {
 		/**
 		 * the points defining the current path
@@ -538,3 +538,5 @@ export default class Path2D {
 		this.isDirty = true;
 	}
 }
+
+export default Path2D;

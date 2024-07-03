@@ -5,7 +5,7 @@ import setContextStyle from "./textstyle.js";
 /**
  * a Text Metrics object that contains helper for text manipulation
  */
-export default class TextMetrics extends Bounds {
+class TextMetrics extends Bounds {
 	/**
 	 * @param {Text|BitmapText} ancestor - the parent object that contains this TextMetrics object
 	 */
@@ -15,7 +15,6 @@ export default class TextMetrics extends Bounds {
 
 		/**
 		 * a reference to the parent object that contains this TextMetrics object
-		 * @public
 		 * @type {Renderable}
 		 * @default undefined
 		 */
@@ -178,3 +177,4 @@ export default class TextMetrics extends Bounds {
 		return output;
 	}
 }
+export default TextMetrics;

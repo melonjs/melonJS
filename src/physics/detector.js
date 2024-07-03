@@ -30,7 +30,7 @@ const boundsB = new Bounds();
 /**
  * the Detector class contains methods for detecting collisions between bodies using a broadphase algorithm.
  */
-export default class Detector {
+class Detector {
 	/**
 	 * @param {Container} world - the physic world this detector is bind to
 	 */
@@ -231,3 +231,4 @@ export default class Detector {
 		return result;
 	}
 }
+export default Detector;
