@@ -59,6 +59,7 @@
 		"eslint": "^9.5.0",
 		"eslint-plugin-jsdoc": "^48.2.12",
 		"globals": "^15.6.0",
+		"lefthook": "^1.6.18",
 		"npm-self-link": "^1.1.7",
 		"serve": "^14.2.3",
 		"typedoc": "^0.26.1",
