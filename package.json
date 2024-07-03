@@ -41,13 +41,7 @@
 	"exports": {
 		".": "./build/index.js"
 	},
-	"files": [
-		"build",
-		"package.json",
-		"README.md",
-		"LICENSE",
-		"CHANGELOG"
-	],
+	"files": ["build", "package.json", "README.md", "LICENSE", "CHANGELOG"],
 	"dependencies": {
 		"@teppeis/multimaps": "^3.0.0",
 		"core-js": "^3.37.1",
