@@ -13,6 +13,7 @@ export default class UITextButton extends UIBaseElement {
 	 * slightly shining through.
 	 * @param {number} x - x pos of the button
 	 * @param {number} y - y pos of the button
+	 * @param {Object} settings - settings object
 	 * @param {string} [settings.font] - The name of the BitmapText font to use
 	 * @param {number} [settings.size=1] - The scale factor of the BitmapText
 	 * @param {string} [settings.text] - The text to display

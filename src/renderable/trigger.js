@@ -16,6 +16,7 @@ export default class Trigger extends Renderable {
 	/**
 	 * @param {number} x - the x coordinates of the trigger area
 	 * @param {number} y - the y coordinates of the trigger area
+	 * @param {Object} settings - trigger settings
 	 * @param {number} [settings.width] - width of the trigger area
 	 * @param {number} [settings.height] - height of the trigger area
 	 * @param {Rect[]|Polygon[]|Line[]|Ellipse[]} [settings.shapes] - collision shape(s) that will trigger the event
