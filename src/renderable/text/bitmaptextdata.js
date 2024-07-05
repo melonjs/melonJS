@@ -48,8 +48,6 @@ function getValueFromPair(string, pattern) {
 /**
  * Gets the first glyph in the map that is not a space character
  * @ignore
- * @name _getFirstGlyph
- * @memberof BitmapTextData
  * @param {object} glyphs - the map of glyphs, each key is a char code
  * @returns {Glyph}
  */
@@ -66,8 +64,6 @@ function getFirstGlyph(glyphs) {
 /**
  * Creates a glyph to use for the space character
  * @ignore
- * @name createSpaceGlyph
- * @memberof BitmapTextData
  * @param {object} glyphs - the map of glyphs, each key is a char code
  */
 function createSpaceGlyph(glyphs) {
@@ -110,9 +106,7 @@ export default class BitmapTextData {
 
 		/**
 		 * The map of glyphs, each key is a char code.
-		 * @name glyphs
 		 * @type {object}
-		 * @memberof BitmapTextData
 		 */
 		this.glyphs = {};
 
@@ -122,8 +116,6 @@ export default class BitmapTextData {
 
 	/**
 	 * This parses the font data text and builds a map of glyphs containing the data for each character
-	 * @name parse
-	 * @memberof BitmapTextData
 	 * @param {string} fontData
 	 */
 	parse(fontData) {

@@ -152,8 +152,6 @@ export default class Light2d extends Renderable {
 
 	/**
 	 * returns a geometry representing the visible area of this light
-	 * @name getVisibleArea
-	 * @memberof Light2d
 	 * @returns {Ellipse} the light visible mask
 	 */
 	getVisibleArea() {
@@ -176,8 +174,6 @@ export default class Light2d extends Renderable {
 
 	/**
 	 * draw this Light2d (automatically called by melonJS)
-	 * @name draw
-	 * @memberof Light2d
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
 	 */

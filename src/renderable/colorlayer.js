@@ -24,10 +24,7 @@ export default class ColorLayer extends Renderable {
 
 		/**
 		 * the layer color component
-		 * @public
 		 * @type {Color}
-		 * @name color
-		 * @memberof ColorLayer#
 		 */
 		this.color = pool.pull("Color").parseCSS(color);
 

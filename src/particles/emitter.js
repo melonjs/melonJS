@@ -57,10 +57,7 @@ export default class ParticleEmitter extends Container {
 
 		/**
 		 * the current (active) emitter settings
-		 * @public
 		 * @type {ParticleEmitterSettings}
-		 * @name settings
-		 * @memberof ParticleEmitter
 		 */
 		this.settings = {};
 

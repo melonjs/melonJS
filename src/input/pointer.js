@@ -28,8 +28,6 @@ class Pointer extends Bounds {
 		 * constant for left button
 		 * @public
 		 * @type {number}
-		 * @name LEFT
-		 * @memberof Pointer
 		 */
 		this.LEFT = 0;
 
@@ -37,8 +35,6 @@ class Pointer extends Bounds {
 		 * constant for middle button
 		 * @public
 		 * @type {number}
-		 * @name MIDDLE
-		 * @memberof Pointer
 		 */
 		this.MIDDLE = 1;
 
@@ -46,66 +42,48 @@ class Pointer extends Bounds {
 		 * constant for right button
 		 * @public
 		 * @type {number}
-		 * @name RIGHT
-		 * @memberof Pointer
 		 */
 		this.RIGHT = 2;
 
 		/**
 		 * the originating Event Object
-		 * @public
 		 * @type {PointerEvent|TouchEvent|MouseEvent}
-		 * @name event
 		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent}
 		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent}
 		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent}
-		 * @memberof Pointer
 		 */
 		this.event = undefined;
 
 		/**
 		 * a string containing the event's type.
-		 * @public
 		 * @type {string}
-		 * @name type
 		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Event/type}
-		 * @memberof Pointer
 		 */
 		this.type = undefined;
 
 		/**
 		 * the button property indicates which button was pressed on the mouse to trigger the event.
-		 * @public
 		 * @type {number}
-		 * @name button
 		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button}
-		 * @memberof Pointer
 		 */
 		this.button = 0;
 
 		/**
 		 * indicates whether or not the pointer device that created the event is the primary pointer.
-		 * @public
 		 * @type {boolean}
-		 * @name isPrimary
 		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/isPrimary}
-		 * @memberof Pointer
 		 */
 		this.isPrimary = false;
 
 		/**
 		 * the horizontal coordinate at which the event occurred, relative to the left edge of the entire document.
-		 * @public
 		 * @type {number}
-		 * @name pageX
 		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageX}
-		 * @memberof Pointer
 		 */
 		this.pageX = 0;
 
 		/**
 		 * the vertical coordinate at which the event occurred, relative to the left edge of the entire document.
-		 * @public
 		 * @type {number}
 		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageY}
 		 */
@@ -113,16 +91,13 @@ class Pointer extends Bounds {
 
 		/**
 		 * the horizontal coordinate within the application's client area at which the event occurred
-		 * @public
 		 * @type {number}
 		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientX}
-		 * @memberof Pointer
 		 */
 		this.clientX = 0;
 
 		/**
 		 * the vertical coordinate within the application's client area at which the event occurred
-		 * @public
 		 * @type {number}
 		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientY}
 		 */
@@ -130,7 +105,6 @@ class Pointer extends Bounds {
 
 		/**
 		 * the difference in the X coordinate of the pointer since the previous move event
-		 * @public
 		 * @type {number}
 		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/movementX}
 		 */
@@ -138,7 +112,6 @@ class Pointer extends Bounds {
 
 		/**
 		 * the difference in the Y coordinate of the pointer since the previous move event
-		 * @public
 		 * @type {number}
 		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/movementY}
 		 */
@@ -146,7 +119,6 @@ class Pointer extends Bounds {
 
 		/**
 		 * an unsigned long representing the unit of the delta values scroll amount
-		 * @public
 		 * @type {number}
 		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode}
 		 */
@@ -154,7 +126,6 @@ class Pointer extends Bounds {
 
 		/**
 		 * a double representing the horizontal scroll amount in the Wheel Event deltaMode unit.
-		 * @public
 		 * @type {number}
 		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaX}
 		 */
@@ -162,7 +133,6 @@ class Pointer extends Bounds {
 
 		/**
 		 * a double representing the vertical scroll amount in the Wheel Event deltaMode unit.
-		 * @public
 		 * @type {number}
 		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaY}
 		 */
@@ -170,7 +140,6 @@ class Pointer extends Bounds {
 
 		/**
 		 * a double representing the scroll amount in the z-axis, in the Wheel Event deltaMode unit.
-		 * @public
 		 * @type {number}
 		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaZ}
 		 */
@@ -179,7 +148,6 @@ class Pointer extends Bounds {
 		/**
 		 * Event normalized X coordinate within the game canvas itself<br>
 		 * <img src="images/event_coord.png"/>
-		 * @public
 		 * @type {number}
 		 */
 		this.gameX = 0;
@@ -187,56 +155,48 @@ class Pointer extends Bounds {
 		/**
 		 * Event normalized Y coordinate within the game canvas itself<br>
 		 * <img src="images/event_coord.png"/>
-		 * @public
 		 * @type {number}
 		 */
 		this.gameY = 0;
 
 		/**
 		 * Event X coordinate relative to the viewport
-		 * @public
 		 * @type {number}
 		 */
 		this.gameScreenX = 0;
 
 		/**
 		 * Event Y coordinate relative to the viewport
-		 * @public
 		 * @type {number}
 		 */
 		this.gameScreenY = 0;
 
 		/**
 		 * Event X coordinate relative to the map
-		 * @public
 		 * @type {number}
 		 */
 		this.gameWorldX = 0;
 
 		/**
 		 * Event Y coordinate relative to the map
-		 * @public
 		 * @type {number}
 		 */
 		this.gameWorldY = 0;
 
 		/**
 		 * Event X coordinate relative to the holding container
-		 * @public
 		 * @type {number}
 		 */
 		this.gameLocalX = 0;
 
 		/**
 		 * Event Y coordinate relative to the holding container
-		 * @public
 		 * @type {number}
 		 */
 		this.gameLocalY = 0;
 
 		/**
 		 * The unique identifier of the contact for a touch, mouse or pen
-		 * @public
 		 * @type {number}
 		 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/pointerId}
 		 */
@@ -244,14 +204,12 @@ class Pointer extends Bounds {
 
 		/**
 		 * true if not originally a pointer event
-		 * @public
 		 * @type {boolean}
 		 */
 		this.isNormalized = false;
 
 		/**
 		 * true if the pointer is currently locked
-		 * @public
 		 * @type {boolean}
 		 */
 		this.locked = false;

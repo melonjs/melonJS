@@ -24,32 +24,26 @@ export class DropTarget extends Renderable {
 
 		/**
 		 * constant for the overlaps method
-		 * @public
 		 * @constant
 		 * @type {string}
 		 * @name CHECKMETHOD_OVERLAP
-		 * @memberof DropTarget
 		 */
 		this.CHECKMETHOD_OVERLAP = "overlaps";
 
 		/**
 		 * constant for the contains method
-		 * @public
 		 * @constant
 		 * @type {string}
 		 * @name CHECKMETHOD_CONTAINS
-		 * @memberof DropTarget
 		 */
 		this.CHECKMETHOD_CONTAINS = "contains";
 
 		/**
 		 * the checkmethod we want to use
-		 * @public
 		 * @constant
 		 * @type {string}
 		 * @name checkMethod
-		 * @default "overlaps"
-		 * @memberof DropTarget
+		 * @default "CHECKMETHOD_OVERLAP"
 		 */
 		this.checkMethod = this.CHECKMETHOD_OVERLAP;
 
@@ -58,8 +52,6 @@ export class DropTarget extends Renderable {
 
 	/**
 	 * Sets the collision method which is going to be used to check a valid drop
-	 * @name setCheckMethod
-	 * @memberof DropTarget
 	 * @param {string} checkMethod - the checkmethod (defaults to CHECKMETHOD_OVERLAP)
 	 */
 	setCheckMethod(checkMethod) {
@@ -72,8 +64,6 @@ export class DropTarget extends Renderable {
 
 	/**
 	 * Checks if a dropped entity is dropped on the current entity
-	 * @name checkOnMe
-	 * @memberof DropTarget
 	 * @param {object} e - the triggering event
 	 * @param {Draggable} draggable - the draggable object that is dropped
 	 */
@@ -89,16 +79,12 @@ export class DropTarget extends Renderable {
 
 	/**
 	 * Gets called when a draggable entity is dropped on the current entity
-	 * @name drop
-	 * @memberof DropTarget
 	 * @param {Draggable} draggable - the draggable object that is dropped
 	 */
 	drop() {}
 
 	/**
 	 * Destructor
-	 * @name destroy
-	 * @memberof DropTarget
 	 * @ignore
 	 */
 	destroy() {

@@ -203,8 +203,6 @@ export default class QuadTree {
 
 	/**
 	 * Insert the given object container into the node.
-	 * @name insertContainer
-	 * @memberof QuadTree
 	 * @param {Container} container - group of objects to be added
 	 */
 	insertContainer(container) {
@@ -233,8 +231,6 @@ export default class QuadTree {
 	 * Insert the given object into the node. If the node
 	 * exceeds the capacity, it will split and add all
 	 * objects to their corresponding subnodes.
-	 * @name insert
-	 * @memberof QuadTree
 	 * @param {object} item - object to be added
 	 */
 	insert(item) {
@@ -278,8 +274,6 @@ export default class QuadTree {
 
 	/**
 	 * Return all objects that could collide with the given object
-	 * @name retrieve
-	 * @memberof QuadTree
 	 * @param {object} item - object to be checked against
 	 * @param {object} [fn] - a sorting function for the returned array
 	 * @returns {object[]} array with all detected objects
@@ -312,8 +306,6 @@ export default class QuadTree {
 	/**
 	 * Remove the given item from the quadtree.
 	 * (this function won't recalculate the impacted node)
-	 * @name remove
-	 * @memberof QuadTree
 	 * @param {object} item - object to be removed
 	 * @returns {boolean} true if the item was found and removed.
 	 */
@@ -352,8 +344,6 @@ export default class QuadTree {
 
 	/**
 	 * return true if the node is prunable
-	 * @name isPrunable
-	 * @memberof QuadTree
 	 * @returns {boolean} true if the node is prunable
 	 */
 	isPrunable() {
@@ -362,8 +352,6 @@ export default class QuadTree {
 
 	/**
 	 * return true if the node has any children
-	 * @name hasChildren
-	 * @memberof QuadTree
 	 * @returns {boolean} true if the node has any children
 	 */
 	hasChildren() {
@@ -378,8 +366,6 @@ export default class QuadTree {
 
 	/**
 	 * clear the quadtree
-	 * @name clear
-	 * @memberof QuadTree
 	 * @param {Bounds} [bounds=this.bounds] - the bounds to be cleared
 	 */
 	clear(bounds) {
