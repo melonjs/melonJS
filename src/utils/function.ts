@@ -38,8 +38,12 @@ export const throttle = <R, A extends any[]>(
 
 	return [
 		(...args: A) => {
-			if (cancelled) return undefined;
-			if (wait) return undefined;
+			if (cancelled) {
+				return undefined;
+			}
+			if (wait) {
+				return undefined;
+			}
 
 			const val = fn(...args);
 

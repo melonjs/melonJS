@@ -15,15 +15,16 @@ describe("Shape : Line", () => {
 		});
 
 		it("requires exactly 2 points", () => {
-			expect(() => new Line(0, 0, [{ x: 0, y: 0 }])).toThrow();
-			expect(
-				() =>
-					new Line(0, 0, [
-						{ x: 0, y: 0 },
-						{ x: 0, y: 0 },
-						{ x: 28, y: 60 },
-					]),
-			).toThrow();
+			expect(() => {
+				return new Line(0, 0, [{ x: 0, y: 0 }]);
+			}).toThrow();
+			expect(() => {
+				return new Line(0, 0, [
+					{ x: 0, y: 0 },
+					{ x: 0, y: 0 },
+					{ x: 28, y: 60 },
+				]);
+			}).toThrow();
 		});
 
 		it("contains the point (0, 0)", () => {

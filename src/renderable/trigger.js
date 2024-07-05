@@ -1,7 +1,7 @@
 import Renderable from "./renderable.js";
 import collision from "./../physics/collision.js";
 import Body from "./../physics/body.js";
-import level from "./../level/level.js";
+import { level } from "./../level/level.js";
 import pool from "./../system/pooling.js";
 
 /**
@@ -133,9 +133,9 @@ export default class Trigger extends Renderable {
 			if (this.fade && this.duration) {
 				if (!this.fading) {
 					this.fading = true;
-					world.app.viewport.fadeIn(this.fade, this.duration, () =>
-						this.onFadeComplete(),
-					);
+					world.app.viewport.fadeIn(this.fade, this.duration, () => {
+						return this.onFadeComplete();
+					});
 				}
 			} else {
 				level.load(this.gotolevel, triggerSettings);

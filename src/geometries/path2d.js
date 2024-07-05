@@ -156,7 +156,11 @@ class Path2D {
 
 		if (this.isDirty) {
 			const points = this.points;
-			const indices = earcut(points.flatMap((p) => [p.x, p.y]));
+			const indices = earcut(
+				points.flatMap((p) => {
+					return [p.x, p.y];
+				}),
+			);
 			const indicesLength = indices.length;
 
 			// pre-allocate vertices if necessary
@@ -228,7 +232,9 @@ class Path2D {
 	arc(x, y, radius, startAngle, endAngle, anticlockwise = false) {
 		// based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
 		//bring angles all in [0, 2*PI] range
-		if (startAngle === endAngle) return;
+		if (startAngle === endAngle) {
+			return;
+		}
 		const fullCircle = anticlockwise
 			? Math.abs(startAngle - endAngle) >= TAU
 			: Math.abs(endAngle - startAngle) >= TAU;
@@ -236,8 +242,12 @@ class Path2D {
 		startAngle = startAngle % TAU;
 		endAngle = endAngle % TAU;
 
-		if (startAngle < 0) startAngle += TAU;
-		if (endAngle < 0) endAngle += TAU;
+		if (startAngle < 0) {
+			startAngle += TAU;
+		}
+		if (endAngle < 0) {
+			endAngle += TAU;
+		}
 
 		if (startAngle >= endAngle) {
 			endAngle += TAU;
@@ -250,7 +260,9 @@ class Path2D {
 			diff = TAU - diff;
 		}
 
-		if (fullCircle) diff = TAU;
+		if (fullCircle) {
+			diff = TAU;
+		}
 
 		const length = diff * radius;
 		const nr_of_interpolation_points = length / this.arcResolution;
@@ -364,7 +376,9 @@ class Path2D {
 		anticlockwise = false,
 	) {
 		// based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
-		if (startAngle === endAngle) return;
+		if (startAngle === endAngle) {
+			return;
+		}
 		const fullCircle = anticlockwise
 			? Math.abs(startAngle - endAngle) >= TAU
 			: Math.abs(endAngle - startAngle) >= TAU;
@@ -372,8 +386,12 @@ class Path2D {
 		//bring angles all in [0, 2*PI] range
 		startAngle = startAngle % TAU;
 		endAngle = endAngle % TAU;
-		if (startAngle < 0) startAngle += TAU;
-		if (endAngle < 0) endAngle += TAU;
+		if (startAngle < 0) {
+			startAngle += TAU;
+		}
+		if (endAngle < 0) {
+			endAngle += TAU;
+		}
 
 		if (startAngle >= endAngle) {
 			endAngle += TAU;
@@ -387,7 +405,9 @@ class Path2D {
 			diff = TAU - diff;
 		}
 
-		if (fullCircle) diff = TAU;
+		if (fullCircle) {
+			diff = TAU;
+		}
 
 		const length = (diff * radiusX + diff * radiusY) / 2;
 		const nr_of_interpolation_points = length / this.arcResolution;

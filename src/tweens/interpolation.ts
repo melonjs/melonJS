@@ -3,7 +3,9 @@
  * https://github.com/tweenjs/tween.js
  */
 
-const linear = (p0: number, p1: number, t: number) => (p1 - p0) * t + p0;
+const linear = (p0: number, p1: number, t: number) => {
+	return (p1 - p0) * t + p0;
+};
 
 const factorialCache = [1];
 
@@ -19,8 +21,9 @@ const factorial = (n: number) => {
 	return s;
 };
 
-const bernstein = (n: number, i: number) =>
-	factorial(n) / factorial(i) / factorial(n - i);
+const bernstein = (n: number, i: number) => {
+	return factorial(n) / factorial(i) / factorial(n - i);
+};
 
 const catmullRom = (
 	p0: number,
@@ -49,8 +52,12 @@ export const Interpolation = {
 		const f = m * k;
 		const i = Math.floor(f);
 
-		if (k < 0) return linear(v[0], v[1], f);
-		if (k > 1) return linear(v[m], v[m - 1], m - f);
+		if (k < 0) {
+			return linear(v[0], v[1], f);
+		}
+		if (k > 1) {
+			return linear(v[m], v[m - 1], m - f);
+		}
 
 		return linear(v[i], v[i + 1 > m ? m : i + 1], f - i);
 	},
@@ -70,7 +77,9 @@ export const Interpolation = {
 		let i = Math.floor(f);
 
 		if (v[0] === v[m]) {
-			if (k < 0) i = Math.floor((f = m * (1 + k)));
+			if (k < 0) {
+				i = Math.floor((f = m * (1 + k)));
+			}
 
 			return catmullRom(
 				v[(i - 1 + m) % m],
@@ -80,11 +89,14 @@ export const Interpolation = {
 				f - i,
 			);
 		} else {
-			if (k < 0) return v[0] - (catmullRom(v[0], v[0], v[1], v[1], -f) - v[0]);
-			if (k > 1)
+			if (k < 0) {
+				return v[0] - (catmullRom(v[0], v[0], v[1], v[1], -f) - v[0]);
+			}
+			if (k > 1) {
 				return (
 					v[m] - (catmullRom(v[m], v[m], v[m - 1], v[m - 1], f - m) - v[m])
 				);
+			}
 
 			return catmullRom(
 				v[i ? i - 1 : 0],

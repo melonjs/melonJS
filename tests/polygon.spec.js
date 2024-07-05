@@ -54,13 +54,12 @@ describe("Shape : Polygon", () => {
 		});
 
 		it("requires at least 3 points", () => {
-			expect(
-				() =>
-					new Polygon(0, 0, [
-						{ x: 0, y: 0 },
-						{ x: 28, y: 60 },
-					]),
-			).toThrow();
+			expect(() => {
+				return new Polygon(0, 0, [
+					{ x: 0, y: 0 },
+					{ x: 28, y: 60 },
+				]);
+			}).toThrow();
 		});
 
 		it("contains the point (75, 75)", () => {

@@ -1,17 +1,19 @@
 import Container from "../container.js";
 import timer from "../../system/timer.ts";
-import { on, off, POINTERMOVE } from "../../system/event.js";
 import {
 	registerPointerEvent,
 	releasePointerEvent,
 } from "./../../input/input.js";
 import pool from "../../system/pooling.js";
+import { eventEmitter, POINTERMOVE } from "../../system/event.ts";
 
 /**
  * This is a basic clickable and draggable container which you can use in your game UI.
  * Use this for example if you want to display a panel that contains text, images or other UI elements.
  */
 export default class UIBaseElement extends Container {
+	#boundPointerMoveHandler;
+
 	/**
 	 *
 	 * @param {number} x - The x position of the container
@@ -80,6 +82,8 @@ export default class UIBaseElement extends Container {
 
 		// update container and children bounds automatically
 		this.enableChildBoundsUpdate = true;
+
+		this.#boundPointerMoveHandler = this.pointerMove.bind(this);
 	}
 
 	/**
@@ -94,7 +98,9 @@ export default class UIBaseElement extends Container {
 			if (this.isHoldable) {
 				timer.clearTimer(this.holdTimeout);
 				this.holdTimeout = timer.setTimeout(
-					() => this.hold(),
+					() => {
+						return this.hold();
+					},
 					this.holdThreshold,
 					false,
 				);
@@ -125,7 +131,7 @@ export default class UIBaseElement extends Container {
 		this.hover = true;
 		this.isDirty = true;
 		if (this.isDraggable === true) {
-			on(POINTERMOVE, this.pointerMove, this);
+			eventEmitter.addListener(POINTERMOVE, this.#boundPointerMoveHandler);
 			// to memorize where we grab the object
 			this.grabOffset = pool.pull("Vector2d", 0, 0);
 		}
@@ -172,7 +178,7 @@ export default class UIBaseElement extends Container {
 		this.isDirty = true;
 		if (this.isDraggable === true) {
 			// unregister on the global pointermove event
-			off(POINTERMOVE, this.pointerMove);
+			eventEmitter.removeListener(POINTERMOVE, this.#boundPointerMoveHandler);
 			pool.push(this.grabOffset);
 			this.grabOffset = undefined;
 		}
@@ -235,11 +241,21 @@ export default class UIBaseElement extends Container {
 	 */
 	onActivateEvent() {
 		// register pointer events
-		registerPointerEvent("pointerdown", this, (e) => this.clicked(e));
-		registerPointerEvent("pointerup", this, (e) => this.release(e));
-		registerPointerEvent("pointercancel", this, (e) => this.release(e));
-		registerPointerEvent("pointerenter", this, (e) => this.enter(e));
-		registerPointerEvent("pointerleave", this, (e) => this.leave(e));
+		registerPointerEvent("pointerdown", this, (e) => {
+			return this.clicked(e);
+		});
+		registerPointerEvent("pointerup", this, (e) => {
+			return this.release(e);
+		});
+		registerPointerEvent("pointercancel", this, (e) => {
+			return this.release(e);
+		});
+		registerPointerEvent("pointerenter", this, (e) => {
+			return this.enter(e);
+		});
+		registerPointerEvent("pointerleave", this, (e) => {
+			return this.leave(e);
+		});
 
 		// call the parent function
 		super.onActivateEvent();
@@ -264,7 +280,7 @@ export default class UIBaseElement extends Container {
 		// the object is being remove from his parent
 		// container before the leave function is called
 		if (this.isDraggable === true) {
-			off(POINTERMOVE, this.pointerMove);
+			eventEmitter.removeListener(POINTERMOVE, this.#boundPointerMoveHandler);
 			if (typeof this.grabOffset !== "undefined") {
 				pool.push(this.grabOffset);
 				this.grabOffset = undefined;

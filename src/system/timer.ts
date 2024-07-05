@@ -1,4 +1,11 @@
-import * as event from "./event.js";
+import {
+	BOOT,
+	eventEmitter,
+	GAME_BEFORE_UPDATE,
+	STATE_CHANGE,
+	STATE_RESTART,
+	STATE_RESUME,
+} from "./event.js";
 import state from "../state/state.js";
 import { clamp } from "../math/math.js";
 
@@ -75,22 +82,24 @@ class Timer {
 		this.timerId = 0;
 
 		// Initialize timer on Boot event
-		event.once(event.BOOT, () => {
+		eventEmitter.addListenerOnce(BOOT, () => {
 			// reset variables to initial state
 			this.reset();
 			this.now = this.last = 0;
 			// register to the game before update event
-			event.on(event.GAME_BEFORE_UPDATE, (time: number) => this.update(time));
+			eventEmitter.addListener(GAME_BEFORE_UPDATE, (time) => {
+				this.update(time);
+			});
 		});
 
 		// reset timer
-		event.on(event.STATE_RESUME, () => {
+		eventEmitter.addListener(STATE_RESUME, () => {
 			this.reset();
 		});
-		event.on(event.STATE_RESTART, () => {
+		eventEmitter.addListener(STATE_RESTART, () => {
 			this.reset();
 		});
-		event.on(event.STATE_CHANGE, () => {
+		eventEmitter.addListener(STATE_CHANGE, () => {
 			this.reset();
 		});
 	}

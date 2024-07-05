@@ -51,7 +51,11 @@ export function fetchData(url, responseType, settings = {}) {
 						reject(new Error("Invalid response type"));
 				}
 			})
-			.then((data) => resolve(data))
-			.catch((error) => reject(error));
+			.then((data) => {
+				return resolve(data);
+			})
+			.catch((error) => {
+				return reject(error);
+			});
 	});
 }

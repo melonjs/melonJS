@@ -1,8 +1,8 @@
 import timer from "../system/timer.js";
-import * as event from "../system/event.js";
 import { game } from "../index.js";
 import { Easing, EasingFunction } from "./easing.js";
 import { Interpolation, InterpolationFunction } from "./interpolation.js";
+import { eventEmitter, STATE_RESUME } from "../system/event.js";
 
 /*
  * Tween.js - Licensed under the MIT license
@@ -52,6 +52,8 @@ export default class Tween<T extends Record<string, unknown>> {
 	updateWhenPaused: boolean;
 	isRenderable: boolean;
 
+	#boundResumeCallback: (elapsed: number) => void;
+
 	/**
 	 * @param object - object on which to apply the tween
 	 * @example
@@ -67,6 +69,8 @@ export default class Tween<T extends Record<string, unknown>> {
 	 */
 	constructor(object: T) {
 		this.setProperties(object);
+
+		this.#boundResumeCallback = this._resumeCallback.bind(this);
 	}
 
 	/**
@@ -130,7 +134,7 @@ export default class Tween<T extends Record<string, unknown>> {
 	 * @ignore
 	 */
 	onActivateEvent() {
-		event.on(event.STATE_RESUME, this._resumeCallback, this);
+		eventEmitter.addListener(STATE_RESUME, this.#boundResumeCallback);
 	}
 
 	/**
@@ -138,7 +142,7 @@ export default class Tween<T extends Record<string, unknown>> {
 	 * @ignore
 	 */
 	onDeactivateEvent() {
-		event.off(event.STATE_RESUME, this._resumeCallback);
+		eventEmitter.removeListener(STATE_RESUME, this.#boundResumeCallback);
 	}
 
 	/**

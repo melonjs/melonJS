@@ -6,11 +6,17 @@ import Matrix2d from "./../math/matrix2.js";
 import Matrix3d from "./../math/matrix3.js";
 import Rect from "./../geometries/rectangle.js";
 import { renderer } from "./../video/video.js";
-import * as event from "./../system/event.js";
 import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
 import { clamp, toBeCloseTo } from "./../math/math.js";
 import { game } from "../index.js";
+import {
+	CANVAS_ONRESIZE,
+	eventEmitter,
+	GAME_RESET,
+	VIEWPORT_ONCHANGE,
+	VIEWPORT_ONRESIZE,
+} from "../system/event.ts";
 
 /**
  * @import Bounds from "./../physics/bounds.js";
@@ -156,9 +162,9 @@ export default class Camera2d extends Renderable {
 		this._updateProjectionMatrix();
 
 		// subscribe to the game reset event
-		event.on(event.GAME_RESET, this.reset, this);
+		eventEmitter.addListener(GAME_RESET, this.reset.bind(this));
 		// subscribe to the canvas resize event
-		event.on(event.CANVAS_ONRESIZE, this.resize, this);
+		eventEmitter.addListener(CANVAS_ONRESIZE, this.reset.bind(this));
 	}
 
 	// -- some private function ---
@@ -282,7 +288,7 @@ export default class Camera2d extends Renderable {
 		this._updateProjectionMatrix();
 
 		// publish the viewport resize event
-		event.emit(event.VIEWPORT_ONRESIZE, this.width, this.height, this);
+		eventEmitter.emit(VIEWPORT_ONRESIZE, this.width, this.height);
 
 		return this;
 	}
@@ -464,7 +470,7 @@ export default class Camera2d extends Renderable {
 
 		if (this.isDirty === true) {
 			//publish the corresponding message
-			event.emit(event.VIEWPORT_ONCHANGE, this.pos);
+			eventEmitter.emit(VIEWPORT_ONCHANGE, this.pos);
 		}
 
 		// check for fade/flash effect

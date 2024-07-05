@@ -1,9 +1,9 @@
 import Color from "./../math/color.js";
 import Matrix3d from "./../math/matrix3.js";
-import * as event from "./../system/event.js";
 import Path2D from "./../geometries/path2d.js";
 import Vector2d from "../math/vector2.js";
 import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
+import { CANVAS_ONRESIZE, eventEmitter } from "../system/event.ts";
 
 /**
  * @import Rect from "./../geometries/rectangle.js";
@@ -236,7 +236,7 @@ export default class Renderer {
 			this.currentScissor[2] = width;
 			this.currentScissor[3] = height;
 			// publish the corresponding event
-			event.emit(event.CANVAS_ONRESIZE, width, height);
+			eventEmitter.emit(CANVAS_ONRESIZE, width, height);
 		}
 	}
 

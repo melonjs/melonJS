@@ -1,9 +1,9 @@
 import { resetGUID } from "./../utils/utils.ts";
-import * as event from "./../system/event.js";
 import state from "./../state/state.js";
 import { getTMX } from "./../loader/loader.js";
 import { game } from "../index.js";
 import TMXTileMap from "./tiled/TMXTileMap.js";
+import { eventEmitter, LEVEL_LOADED } from "../system/event.ts";
 
 // our levels
 const levels = {};
@@ -39,7 +39,7 @@ function safeLoadLevel(levelId, options, restart) {
 	);
 
 	// publish the corresponding message
-	event.emit(event.LEVEL_LOADED, levelId);
+	eventEmitter.emit(LEVEL_LOADED, levelId);
 
 	// fire the callback
 	options.onLoaded(levelId);
@@ -80,7 +80,7 @@ function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
  * @namespace level
  */
 
-const level = {
+export const level = {
 	/**
 	 * add a level into the game manager (usually called by the preloader)
 	 * @name add
@@ -285,5 +285,3 @@ const level = {
 		return levelIdx.length;
 	},
 };
-
-export default level;

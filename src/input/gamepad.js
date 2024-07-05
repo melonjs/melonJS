@@ -1,5 +1,11 @@
+import {
+	eventEmitter,
+	GAME_BEFORE_UPDATE,
+	GAMEPAD_CONNECTED,
+	GAMEPAD_DISCONNECTED,
+	GAMEPAD_UPDATE,
+} from "../system/event.ts";
 import { getBindingKey, triggerKeyEvent } from "./keyboard.js";
-import * as event from "./../system/event.js";
 
 // Analog deadzone
 let deadzone = 0.1;
@@ -55,19 +61,23 @@ const leadingZeroRE = /^0+/;
  * @ignore
  */
 function addMapping(id, mapping) {
-	const expanded_id = id.replace(
-		vendorProductRE,
-		(_, a, b) =>
-			"000".slice(a.length - 1) + a + "-" + "000".slice(b.length - 1) + b + "-",
-	);
-	const sparse_id = id.replace(
-		vendorProductRE,
-		(_, a, b) =>
-			a.replace(leadingZeroRE, "") + "-" + b.replace(leadingZeroRE, "") + "-",
-	);
+	const expanded_id = id.replace(vendorProductRE, (_, a, b) => {
+		return (
+			"000".slice(a.length - 1) + a + "-" + "000".slice(b.length - 1) + b + "-"
+		);
+	});
+	const sparse_id = id.replace(vendorProductRE, (_, a, b) => {
+		return (
+			a.replace(leadingZeroRE, "") + "-" + b.replace(leadingZeroRE, "") + "-"
+		);
+	});
 
 	// Normalize optional parameters
-	mapping.analog = mapping.analog || mapping.buttons.map(() => -1);
+	mapping.analog =
+		mapping.analog ||
+		mapping.buttons.map(() => {
+			return -1;
+		});
 	mapping.normalize_fn =
 		mapping.normalize_fn ||
 		function (value) {
@@ -83,8 +93,6 @@ const bindings = {};
 
 // mapping list
 const remap = new Map();
-
-let updateEventHandler;
 
 // Default gamepad mappings
 [
@@ -199,7 +207,7 @@ const updateGamepads = function () {
 				}
 			}
 
-			event.emit(event.GAMEPAD_UPDATE, index, "buttons", +button, current);
+			eventEmitter.emit(GAMEPAD_UPDATE, index, "buttons", +button, current);
 
 			// Edge detection
 			if (!last.pressed && current.pressed) {
@@ -243,7 +251,7 @@ const updateGamepads = function () {
 			const pressed =
 				Math.abs(value) >= deadzone + Math.abs(last[range].threshold);
 
-			event.emit(event.GAMEPAD_UPDATE, index, "axes", +axis, value);
+			eventEmitter.emit(GAMEPAD_UPDATE, index, "axes", +axis, value);
 
 			// Edge detection
 			if (!last[range].pressed && pressed) {
@@ -275,7 +283,7 @@ if (
 	globalThis.addEventListener(
 		"gamepadconnected",
 		(e) => {
-			event.emit(event.GAMEPAD_CONNECTED, e.gamepad);
+			eventEmitter.emit(GAMEPAD_CONNECTED, e.gamepad);
 		},
 		false,
 	);
@@ -286,7 +294,7 @@ if (
 	globalThis.addEventListener(
 		"gamepaddisconnected",
 		(e) => {
-			event.emit(event.GAMEPAD_DISCONNECTED, e.gamepad);
+			eventEmitter.emit(GAMEPAD_DISCONNECTED, e.gamepad);
 		},
 		false,
 	);
@@ -385,10 +393,10 @@ export function bindGamepad(index, button, keyCode) {
 	// register to the the update event if not yet done and supported by the browser
 	// if not supported, the function will fail silently (-> update loop won't be called)
 	if (
-		typeof updateEventHandler === "undefined" &&
+		!eventEmitter.hasListener(GAME_BEFORE_UPDATE, updateGamepads) &&
 		typeof navigator.getGamepads === "function"
 	) {
-		updateEventHandler = event.on(event.GAME_BEFORE_UPDATE, updateGamepads);
+		eventEmitter.addListener(GAME_BEFORE_UPDATE, updateGamepads);
 	}
 
 	// Allocate bindings if not defined

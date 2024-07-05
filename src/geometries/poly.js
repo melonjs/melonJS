@@ -260,7 +260,11 @@ export default class Polygon {
 	 */
 	getIndices() {
 		if (this.indices.length === 0) {
-			this.indices = earcut(this.points.flatMap((p) => [p.x, p.y]));
+			this.indices = earcut(
+				this.points.flatMap((p) => {
+					return [p.x, p.y];
+				}),
+			);
 		}
 		return this.indices;
 	}

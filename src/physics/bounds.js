@@ -203,10 +203,18 @@ export default class Bounds {
 		}
 		for (let i = 0; i < verticeCount; i++) {
 			const vertex = vertices[i];
-			if (vertex.x > this.max.x) this.max.x = vertex.x;
-			if (vertex.x < this.min.x) this.min.x = vertex.x;
-			if (vertex.y > this.max.y) this.max.y = vertex.y;
-			if (vertex.y < this.min.y) this.min.y = vertex.y;
+			if (vertex.x > this.max.x) {
+				this.max.x = vertex.x;
+			}
+			if (vertex.x < this.min.x) {
+				this.min.x = vertex.x;
+			}
+			if (vertex.y > this.max.y) {
+				this.max.y = vertex.y;
+			}
+			if (vertex.y < this.min.y) {
+				this.min.y = vertex.y;
+			}
 		}
 	}
 
@@ -222,10 +230,18 @@ export default class Bounds {
 			this.max.y = bounds.max.y;
 			this.min.y = bounds.min.y;
 		} else {
-			if (bounds.max.x > this.max.x) this.max.x = bounds.max.x;
-			if (bounds.min.x < this.min.x) this.min.x = bounds.min.x;
-			if (bounds.max.y > this.max.y) this.max.y = bounds.max.y;
-			if (bounds.min.y < this.min.y) this.min.y = bounds.min.y;
+			if (bounds.max.x > this.max.x) {
+				this.max.x = bounds.max.x;
+			}
+			if (bounds.min.x < this.min.x) {
+				this.min.x = bounds.min.x;
+			}
+			if (bounds.max.y > this.max.y) {
+				this.max.y = bounds.max.y;
+			}
+			if (bounds.min.y < this.min.y) {
+				this.min.y = bounds.min.y;
+			}
 		}
 	}
 

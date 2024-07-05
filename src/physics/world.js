@@ -1,11 +1,16 @@
 import Vector2d from "./../math/vector2.js";
-import * as event from "./../system/event.js";
 import QuadTree from "./quadtree.js";
 import Container from "../renderable/container.js";
 import collision from "./collision.js";
 import Detector from "./detector.js";
 import state from "./../state/state.js";
 import { hasRegisteredEvents } from "../input/pointerevent.js";
+import {
+	eventEmitter,
+	GAME_RESET,
+	LEVEL_LOADED,
+	WORLD_STEP,
+} from "../system/event.ts";
 
 /**
  * @import Application from "./../application/application.js";
@@ -97,10 +102,10 @@ export default class World extends Container {
 		this.detector = new Detector(this);
 
 		// reset the world container on the game reset signal
-		event.on(event.GAME_RESET, this.reset, this);
+		eventEmitter.addListener(GAME_RESET, this.reset.bind(this));
 
 		// update the broadband world bounds if a new level is loaded
-		event.on(event.LEVEL_LOADED, () => {
+		eventEmitter.addListener(LEVEL_LOADED, () => {
 			// reset the quadtree
 			this.broadphase.clear(this.getBounds());
 		});
@@ -220,6 +225,6 @@ export default class World extends Container {
 				}
 			});
 		}
-		event.emit(event.WORLD_STEP, dt);
+		eventEmitter.emit(WORLD_STEP, dt);
 	}
 }
