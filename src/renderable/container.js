@@ -816,7 +816,6 @@ export default class Container extends Renderable {
 	 */
 	sort(recursive) {
 		// do nothing if there is already a pending sort
-		/** @ignore */
 		if (!this.pendingSort) {
 			if (recursive === true) {
 				this.forEach((child) => {
@@ -827,7 +826,6 @@ export default class Container extends Renderable {
 					}
 				});
 			}
-			/** @ignore */
 			this.pendingSort = defer(function () {
 				// sort everything in this container
 				this.getChildren().sort(this["_sort" + this.sortOn.toUpperCase()]);

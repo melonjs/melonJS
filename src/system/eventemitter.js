@@ -3,8 +3,6 @@ const prefix = "~";
 /**
  * Constructor to create a storage for our `EE` objects.
  * An `Events` instance is a plain object whose properties are event names.
- *
- * @constructor
  * @private
  */
 function Events() {}
@@ -15,7 +13,6 @@ function Events() {}
  * @param {Function} fn - The listener function.
  * @param {*} context - The context to invoke the listener with.
  * @param {Boolean} [once=false] - Specify if the listener is a one-time listener.
- * @constructor
  * @private
  */
 function EE(fn, context, once) {

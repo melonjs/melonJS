@@ -130,7 +130,10 @@ export default class Sprite extends Renderable {
 		// animation frame delta
 		this.dt = 0;
 
-		// flicker settings
+		/**
+		 * flicker settings
+		 * @ignore
+		 */
 		this._flicker = {
 			isFlickering: false,
 			duration: 0,
@@ -189,7 +192,10 @@ export default class Sprite extends Renderable {
 					this.image.pause();
 				}
 
-				// pause the video when losing focus
+				/**
+				 * pause the video when losing focus
+				 * @ignore
+				 */
 				this._onBlurFn = () => {
 					this.image.pause();
 				};
