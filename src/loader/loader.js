@@ -1,4 +1,3 @@
-import * as event from "./../system/event.js";
 import * as audio from "./../audio/audio.js";
 import state from "./../state/state.js";
 import {
@@ -18,6 +17,12 @@ import { preloadJavascript } from "./parsers/script.js";
 import { preloadVideo } from "./parsers/video.js";
 import { warning } from "../lang/console.js";
 import { getBasename } from "../utils/file.ts";
+import {
+	eventEmitter,
+	LOADER_COMPLETE,
+	LOADER_ERROR,
+	LOADER_PROGRESS,
+} from "../system/event.ts";
 
 /**
  * a small class to manage loading of stuff and manage resources
@@ -228,7 +233,7 @@ function checkLoadStatus(onloadcb) {
 			const callback = onloadcb || onload;
 			setTimeout(() => {
 				callback();
-				event.emit(event.LOADER_COMPLETE);
+				eventEmitter.emit(LOADER_COMPLETE);
 			}, 300);
 		} else {
 			throw new Error("no load callback defined");
@@ -257,7 +262,7 @@ function onResourceLoaded(res) {
 		// pass the load progress in percent, as parameter
 		onProgress(progress, res);
 	}
-	event.emit(event.LOADER_PROGRESS, progress, res);
+	eventEmitter.emit(LOADER_PROGRESS, progress, res);
 }
 
 /**
@@ -270,7 +275,7 @@ function onLoadingError(res) {
 	if (this.onError) {
 		this.onError(res);
 	}
-	event.emit(event.LOADER_ERROR, res);
+	eventEmitter.emit(LOADER_ERROR, res);
 	throw new Error("Failed loading resource " + res.src);
 }
 

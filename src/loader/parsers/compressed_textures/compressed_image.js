@@ -3,12 +3,12 @@ import { parseKTX } from "./parseKTX.js";
 import { parseKTX2 } from "./parseKTX2.js";
 import { parsePVR } from "./parsePVR.js";
 import { parsePKM } from "./parsePKM.js";
-import * as event from "../../../system/event.js";
+import { eventEmitter, VIDEO_INIT } from "../../../system/event.ts";
 
 let _renderer;
 
 // gracefully capture a reference to the active renderer without adding more cyclic redundancy
-event.once(event.VIDEO_INIT, (renderer) => {
+eventEmitter.addListenerOnce(VIDEO_INIT, (renderer) => {
 	_renderer = renderer;
 });
 

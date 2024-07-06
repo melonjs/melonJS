@@ -12,7 +12,11 @@ function roundRect(
 	h: number,
 	radii: unknown,
 ) {
-	if (![x, y, w, h].every((input) => Number.isFinite(input))) {
+	if (
+		![x, y, w, h].every((input) => {
+			return Number.isFinite(input);
+		})
+	) {
 		return;
 	}
 
@@ -50,10 +54,16 @@ function roundRect(
 	}
 
 	const corners = [upperLeft, upperRight, lowerRight, lowerLeft];
-	const negativeCorner = corners.find(({ x, y }) => x < 0 || y < 0);
+	const negativeCorner = corners.find(({ x, y }) => {
+		return x < 0 || y < 0;
+	});
 	//const negativeValue = negativeCorner?.x < 0 ? negativeCorner.x : negativeCorner?.y
 
-	if (corners.some(({ x, y }) => !Number.isFinite(x) || !Number.isFinite(y))) {
+	if (
+		corners.some(({ x, y }) => {
+			return !Number.isFinite(x) || !Number.isFinite(y);
+		})
+	) {
 		return;
 	}
 

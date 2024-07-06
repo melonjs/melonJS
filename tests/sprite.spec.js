@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Container, Sprite, boot, video } from "../src/index.js";
 
 describe("Sprite", () => {
@@ -23,6 +23,10 @@ describe("Sprite", () => {
 
 		// add to a parent container
 		container.addChild(sprite);
+	});
+
+	afterAll(() => {
+		container.removeChild(sprite);
 	});
 
 	describe("isAttachedToRoot", () => {

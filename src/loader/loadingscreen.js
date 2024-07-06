@@ -1,14 +1,21 @@
 import { game } from "../index.js";
 import { renderer } from "./../video/video.js";
-import * as event from "./../system/event.js";
 import Sprite from "./../renderable/sprite.js";
 import Renderable from "./../renderable/renderable.js";
 import Stage from "./../state/stage.js";
 import { load, unload } from "./loader.js";
 import logo_url from "./melonjs_logo.png";
+import {
+	eventEmitter,
+	LOADER_PROGRESS,
+	VIEWPORT_ONRESIZE,
+} from "../system/event.ts";
 
 // a basic progress bar object
 class ProgressBar extends Renderable {
+	#boundOnProgressUpdate;
+	#boundResize;
+
 	/**
 	 * @ignore
 	 */
@@ -18,8 +25,11 @@ class ProgressBar extends Renderable {
 		this.barHeight = h;
 		this.anchorPoint.set(0, 0);
 
-		event.on(event.LOADER_PROGRESS, this.onProgressUpdate, this);
-		event.on(event.VIEWPORT_ONRESIZE, this.resize, this);
+		this.#boundOnProgressUpdate = this.onProgressUpdate.bind(this);
+		this.#boundResize = this.resize.bind(this);
+
+		eventEmitter.addListener(LOADER_PROGRESS, this.#boundOnProgressUpdate);
+		eventEmitter.addListener(VIEWPORT_ONRESIZE, this.#boundResize);
 
 		this.anchorPoint.set(0, 0);
 
@@ -64,9 +74,8 @@ class ProgressBar extends Renderable {
 	 * @ignore
 	 */
 	onDestroyEvent() {
-		// cancel the callback
-		event.off(event.LOADER_PROGRESS, this.onProgressUpdate);
-		event.off(event.VIEWPORT_ONRESIZE, this.resize);
+		eventEmitter.removeListener(LOADER_PROGRESS, this.#boundOnProgressUpdate);
+		eventEmitter.removeListener(VIEWPORT_ONRESIZE, this.#boundResize);
 	}
 }
 

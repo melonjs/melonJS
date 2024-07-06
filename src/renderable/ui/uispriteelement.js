@@ -98,7 +98,9 @@ export default class UISpriteElement extends Sprite {
 			if (this.isHoldable) {
 				timer.clearTimer(this.holdTimeout);
 				this.holdTimeout = timer.setTimeout(
-					() => this.hold(),
+					() => {
+						return this.hold();
+					},
 					this.holdThreshold,
 					false,
 				);
@@ -200,11 +202,21 @@ export default class UISpriteElement extends Sprite {
 	 */
 	onActivateEvent() {
 		// register pointer events
-		registerPointerEvent("pointerdown", this, (e) => this.clicked(e));
-		registerPointerEvent("pointerup", this, (e) => this.release(e));
-		registerPointerEvent("pointercancel", this, (e) => this.release(e));
-		registerPointerEvent("pointerenter", this, (e) => this.enter(e));
-		registerPointerEvent("pointerleave", this, (e) => this.leave(e));
+		registerPointerEvent("pointerdown", this, (e) => {
+			return this.clicked(e);
+		});
+		registerPointerEvent("pointerup", this, (e) => {
+			return this.release(e);
+		});
+		registerPointerEvent("pointercancel", this, (e) => {
+			return this.release(e);
+		});
+		registerPointerEvent("pointerenter", this, (e) => {
+			return this.enter(e);
+		});
+		registerPointerEvent("pointerleave", this, (e) => {
+			return this.leave(e);
+		});
 	}
 
 	/**

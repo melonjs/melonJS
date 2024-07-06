@@ -89,7 +89,9 @@ export function getUriFragment(url: string) {
 	url
 		.slice(1)
 		.split("&")
-		.filter((value) => value !== "")
+		.filter((value) => {
+			return value !== "";
+		})
 		.forEach((value) => {
 			const kv = value.split("=");
 			const k = kv.shift()!;

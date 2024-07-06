@@ -30,10 +30,11 @@ export default tseslint.config(
 			// http://eslint.org/docs/rules/
 			"accessor-pairs": "error",
 			"array-callback-return": "error",
-			"arrow-body-style": ["error", "as-needed"],
+			"arrow-body-style": ["error", "always"],
 			"block-scoped-var": "error",
 			camelcase: ["off", { properties: "never" }],
 			"constructor-super": "error",
+			curly: ["error", "all"],
 			eqeqeq: ["error", "allow-null"],
 			"func-call-spacing": ["error", "never"],
 			"for-direction": "error",

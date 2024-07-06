@@ -67,44 +67,31 @@ import Entity from "./renderable/entity/entity.js";
 import Application from "./application/application.js";
 
 // utility classes
-import * as audio from "./audio/audio.js";
-import collision from "./physics/collision.js";
-import * as event from "./system/event.js";
-import * as device from "./system/device.js";
-import * as loader from "./loader/loader.js";
-import * as math from "./math/math.js";
-import * as utils from "./utils/utils.ts";
-import * as input from "./input/input.js";
-import * as plugin from "./plugin/plugin.js";
 import { cache as plugins } from "./plugin/plugin.js";
-import * as video from "./video/video.js";
 import save from "./system/save.js";
 import timer from "./system/timer.ts";
 import pool from "./system/pooling.js";
 import state from "./state/state.js";
-import level from "./level/level.js";
 import { version } from "./version.ts";
+import { BOOT, DOM_READY, eventEmitter } from "./system/event.ts";
+import { setNocache } from "./loader/loader.js";
+import { initKeyboardEvent } from "./input/keyboard.js";
+import { getUriFragment } from "./utils/utils.ts";
+import { onReady } from "./system/device.js";
 
 // export all utility function
-export {
-	audio,
-	collision,
-	device,
-	event,
-	loader,
-	level,
-	input,
-	math,
-	plugin,
-	plugins,
-	utils,
-	save,
-	timer,
-	pool,
-	state,
-	video,
-	version,
-};
+export * as audio from "./audio/audio.js";
+export * as collision from "./physics/collision.js";
+export * as device from "./system/device.js";
+export * as event from "./system/event.ts";
+export * as loader from "./loader/loader.js";
+export * as math from "./math/math.js";
+export * as utils from "./utils/utils.ts";
+export * as input from "./input/input.js";
+export * as plugin from "./plugin/plugin.js";
+export * as level from "./level/level.js";
+export * as video from "./video/video.js";
+export { plugins, save, timer, pool, state, version };
 
 // export all class definition
 export {
@@ -282,25 +269,25 @@ export function boot() {
 	pool.register("CanvasRenderTarget", CanvasRenderTarget, true);
 
 	// publish Boot notification
-	event.emit(event.BOOT);
+	eventEmitter.emit(BOOT);
 
 	// enable/disable the cache
-	loader.setNocache(utils.getUriFragment().nocache || false);
+	setNocache(getUriFragment().nocache || false);
 
 	// automatically enable keyboard events
-	input.initKeyboardEvent();
+	initKeyboardEvent();
 
 	// mark melonJS as initialized
 	initialized = true;
 
 	/// if auto init is disable and this function was called manually
 	if (skipAutoInit === true) {
-		event.emit(event.DOM_READY);
+		eventEmitter.emit(DOM_READY);
 	}
 }
 
 // call the library init function when ready
-device.onReady(() => {
+onReady(() => {
 	if (skipAutoInit === false) {
 		boot();
 	}

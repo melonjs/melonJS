@@ -1,5 +1,4 @@
 import pool from "./../../system/pooling.js";
-import * as event from "./../../system/event.js";
 import { game } from "../../index.js";
 import { checkVersion } from "./../../utils/utils.ts";
 import collision from "./../../physics/collision.js";
@@ -13,6 +12,7 @@ import Container from "../../renderable/container.js";
 import { COLLISION_GROUP } from "./constants.js";
 import { getNewTMXRenderer } from "./renderer/autodetect.js";
 import { warning } from "../../lang/console.js";
+import { eventEmitter, VIEWPORT_ONRESIZE } from "../../system/event.ts";
 
 /**
  * read the layer Data
@@ -384,11 +384,11 @@ export default class TMXTileMap {
 		}
 
 		if (setViewportBounds === true) {
-			event.off(event.VIEWPORT_ONRESIZE, _setBounds);
+			eventEmitter.removeListener(VIEWPORT_ONRESIZE, _setBounds);
 			// force viewport bounds update
 			_setBounds(game.viewport.width, game.viewport.height);
 			// Replace the resize handler
-			event.on(event.VIEWPORT_ONRESIZE, _setBounds, this);
+			eventEmitter.addListener(VIEWPORT_ONRESIZE, _setBounds);
 		}
 
 		//  set back auto-sort and auto-depth

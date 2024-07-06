@@ -1,7 +1,12 @@
 import Vector2d from "./../math/vector2.js";
 import * as input from "./../input/input.js";
-import * as event from "./../system/event.js";
 import Renderable from "./../renderable/renderable.js";
+import {
+	DRAGEND,
+	DRAGSTART,
+	eventEmitter,
+	POINTERMOVE,
+} from "../system/event.ts";
 
 /**
  * A Draggable base object
@@ -34,26 +39,35 @@ export class Draggable extends Renderable {
 	 * @private
 	 */
 	initEvents() {
-		input.registerPointerEvent("pointerdown", this, (e) =>
-			event.emit(event.DRAGSTART, e, this),
-		);
-		input.registerPointerEvent("pointerup", this, (e) =>
-			event.emit(event.DRAGEND, e, this),
-		);
-		input.registerPointerEvent("pointercancel", this, (e) =>
-			event.emit(event.DRAGEND, e, this),
-		);
-		event.on(event.POINTERMOVE, (e) => this.dragMove(e));
-		event.on(event.DRAGSTART, (e, draggable) => {
+		input.registerPointerEvent("pointerdown", this, (e) => {
+			eventEmitter.emit(DRAGSTART, e, this);
+		});
+		input.registerPointerEvent("pointerup", this, (e) => {
+			eventEmitter.emit(DRAGEND, e, this);
+		});
+		input.registerPointerEvent("pointercancel", this, (e) => {
+			eventEmitter.emit(DRAGEND, e, this);
+		});
+
+		this.handlePointerMove = (e) => {
+			this.dragMove(e);
+		};
+
+		this.handleDragStart = (e, draggable) => {
 			if (draggable === this) {
 				this.dragStart(e);
 			}
-		});
-		event.on(event.DRAGEND, (e, draggable) => {
+		};
+
+		this.handleDragEnd = (e, draggable) => {
 			if (draggable === this) {
 				this.dragEnd(e);
 			}
-		});
+		};
+
+		eventEmitter.addListener(POINTERMOVE, this.handlePointerMove);
+		eventEmitter.addListener(DRAGSTART, this.handleDragStart);
+		eventEmitter.addListener(DRAGEND, this.handleDragEnd);
 	}
 
 	/**
@@ -105,9 +119,9 @@ export class Draggable extends Renderable {
 	 * @ignore
 	 */
 	destroy() {
-		event.off(event.POINTERMOVE, this.dragMove);
-		event.off(event.DRAGSTART, this.dragStart);
-		event.off(event.DRAGEND, this.dragEnd);
+		eventEmitter.removeListener(POINTERMOVE, this.handlePointerMove);
+		eventEmitter.removeListener(DRAGSTART, this.handleDragStart);
+		eventEmitter.removeListener(DRAGEND, this.handleDragEnd);
 		input.releasePointerEvent("pointerdown", this);
 		input.releasePointerEvent("pointerup", this);
 		input.releasePointerEvent("pointercancel", this);

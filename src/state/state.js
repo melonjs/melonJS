@@ -1,9 +1,19 @@
 import { pauseTrack, resumeTrack } from "./../audio/audio.js";
-import * as event from "./../system/event.js";
 import { game } from "../index.js";
 import Stage from "./../state/stage.js";
 import DefaultLoadingScreen from "./../loader/loadingscreen.js";
 import { defer } from "../utils/function.ts";
+import {
+	BOOT,
+	eventEmitter,
+	STATE_CHANGE,
+	STATE_PAUSE,
+	STATE_RESTART,
+	STATE_RESUME,
+	STATE_STOP,
+	TICK,
+	VIDEO_INIT,
+} from "../system/event.ts";
 
 // current state
 let _state = -1;
@@ -70,7 +80,7 @@ function _pauseRunLoop() {
  * @ignore
  */
 function _renderFrame(time) {
-	event.emit(event.TICK, time);
+	eventEmitter.emit(TICK, time);
 	// schedule the next frame update
 	if (_animFrameId !== -1) {
 		_animFrameId = globalThis.requestAnimationFrame(_renderFrame);
@@ -113,7 +123,7 @@ function _switchState(state) {
 		_startRunLoop();
 
 		// publish the pause event
-		event.emit(event.STATE_CHANGE);
+		eventEmitter.emit(STATE_CHANGE);
 
 		// execute callback if defined
 		if (_onSwitchComplete) {
@@ -123,13 +133,13 @@ function _switchState(state) {
 }
 
 // initialize me.state on system boot
-event.once(event.BOOT, () => {
+eventEmitter.addListenerOnce(BOOT, () => {
 	// set the built-in loading stage
 	state.set(state.LOADING, new DefaultLoadingScreen());
 	// set and enable the default stage
 	state.set(state.DEFAULT, new Stage());
 	// enable by default as soon as the display is initialized
-	event.once(event.VIDEO_INIT, () => {
+	eventEmitter.addListenerOnce(VIDEO_INIT, () => {
 		state.change(state.DEFAULT, true);
 	});
 });
@@ -255,7 +265,7 @@ const state = {
 			_pauseTime = globalThis.performance.now();
 
 			// publish the stop notification
-			event.emit(event.STATE_STOP);
+			eventEmitter.emit(STATE_STOP);
 		}
 	},
 
@@ -280,7 +290,7 @@ const state = {
 			_pauseTime = globalThis.performance.now();
 
 			// publish the pause event
-			event.emit(event.STATE_PAUSE);
+			eventEmitter.emit(STATE_PAUSE);
 		}
 	},
 
@@ -304,7 +314,7 @@ const state = {
 			_pauseTime = globalThis.performance.now() - _pauseTime;
 
 			// publish the restart notification
-			event.emit(event.STATE_RESTART, _pauseTime);
+			eventEmitter.emit(STATE_RESTART, _pauseTime);
 		}
 	},
 
@@ -328,7 +338,7 @@ const state = {
 			_pauseTime = globalThis.performance.now() - _pauseTime;
 
 			// publish the resume event
-			event.emit(event.STATE_RESUME, _pauseTime);
+			eventEmitter.emit(STATE_RESUME, _pauseTime);
 		}
 	},
 

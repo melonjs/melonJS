@@ -4,7 +4,7 @@ import { getImage } from "./../loader/loader.js";
 import { TextureAtlas } from "./../video/texture/atlas.js";
 import Renderable from "./renderable.js";
 import Color from "../math/color.js";
-import * as event from "../system/event.js";
+import { eventEmitter } from "../system/event.ts";
 
 /**
  * additional import for TypeScript
@@ -196,10 +196,12 @@ export default class Sprite extends Renderable {
 				 * pause the video when losing focus
 				 * @ignore
 				 */
-				this._onBlurFn = () => {
-					this.image.pause();
-				};
-				event.on(event.STATE_PAUSE, this._onBlurFn);
+				this.removeStatePauseListener = eventEmitter.addListener(
+					"statePause",
+					() => {
+						this.image.pause();
+					},
+				);
 
 				// call the onended when the video has ended
 				this.image.onended = () => {
@@ -724,8 +726,7 @@ export default class Sprite extends Renderable {
 		pool.push(this.offset);
 		this.offset = undefined;
 		if (this.isVideo) {
-			event.off(event.STATE_PAUSE, this._onBlurFn);
-			this._onBlurFn = undefined;
+			this.removeStatePauseListener();
 			this.image.onended = undefined;
 			this.image.pause();
 			this.image.currentTime = 0;

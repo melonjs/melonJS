@@ -6,9 +6,15 @@ import Renderer from "./../renderer.js";
 import TextureCache from "./../texture/cache.js";
 import { TextureAtlas, createAtlas } from "./../texture/atlas.js";
 import { renderer } from "./../video.js";
-import * as event from "./../../system/event.js";
 import pool from "./../../system/pooling.js";
 import { isPowerOfTwo } from "./../../math/math.js";
+import {
+	CANVAS_ONRESIZE,
+	eventEmitter,
+	GAME_RESET,
+	ONCONTEXT_LOST,
+	ONCONTEXT_RESTORED,
+} from "../../system/event.ts";
 
 /**
  * additional import for TypeScript
@@ -194,7 +200,7 @@ export default class WebGLRenderer extends Renderer {
 			(e) => {
 				e.preventDefault();
 				this.isContextValid = false;
-				event.emit(event.ONCONTEXT_LOST, this);
+				eventEmitter.emit(ONCONTEXT_LOST, this);
 			},
 			false,
 		);
@@ -204,18 +210,18 @@ export default class WebGLRenderer extends Renderer {
 			() => {
 				this.reset();
 				this.isContextValid = true;
-				event.emit(event.ONCONTEXT_RESTORED, this);
+				eventEmitter.emit(ONCONTEXT_RESTORED, this);
 			},
 			false,
 		);
 
 		// reset the renderer on game reset
-		event.on(event.GAME_RESET, () => {
+		eventEmitter.addListener(GAME_RESET, () => {
 			this.reset();
 		});
 
 		// register to the CANVAS resize channel
-		event.on(event.CANVAS_ONRESIZE, (width, height) => {
+		eventEmitter.addListener(CANVAS_ONRESIZE, (width, height) => {
 			this.flush();
 			this.setViewport(0, 0, width, height);
 		});

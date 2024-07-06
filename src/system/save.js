@@ -1,5 +1,3 @@
-import * as event from "./event.js";
-
 /**
  * allow to access and manage the device localStorage
  * @example
@@ -31,6 +29,8 @@ import * as event from "./event.js";
  * @namespace save
  */
 
+import { BOOT, eventEmitter } from "./event.ts";
+
 // Variable to hold the object data
 const data = {};
 
@@ -55,7 +55,7 @@ function isReserved(key) {
 }
 
 // Initialize me.save on Boot event
-event.once(event.BOOT, () => {
+eventEmitter.addListenerOnce(BOOT, () => {
 	// Load previous data if local Storage is supported
 	if (hasLocalStorage === true) {
 		const me_save_content = globalThis.localStorage.getItem("me.save");

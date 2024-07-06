@@ -1,9 +1,15 @@
 import { renderer } from "./../video/video.js";
-import * as event from "./../system/event.js";
 import pool from "./../system/pooling.js";
 import { game } from "../index.js";
 import Sprite from "./sprite.js";
 import * as stringUtil from "./../utils/string.ts";
+import {
+	eventEmitter,
+	LEVEL_LOADED,
+	ONCONTEXT_RESTORED,
+	VIEWPORT_ONCHANGE,
+	VIEWPORT_ONRESIZE,
+} from "../system/event.ts";
 
 /**
  * additional import for TypeScript
@@ -75,7 +81,8 @@ export default class ImageLayer extends Sprite {
 		this.repeat = settings.repeat || "repeat";
 
 		// on context lost, all previous textures are destroyed
-		event.on(event.ONCONTEXT_RESTORED, this.createPattern, this);
+		this.boundCreatePattern = this.createPattern.bind(this);
+		eventEmitter.addListener(ONCONTEXT_RESTORED, this.boundCreatePattern);
 	}
 
 	/**
@@ -119,11 +126,13 @@ export default class ImageLayer extends Sprite {
 
 	// called when the layer is added to the game world or a container
 	onActivateEvent() {
+		this.boundUpdateLayer = this.updateLayer.bind(this);
+		this.boundResize = this.resize.bind(this);
 		// register to the viewport change notification
-		event.on(event.VIEWPORT_ONCHANGE, this.updateLayer, this);
-		event.on(event.VIEWPORT_ONRESIZE, this.resize, this);
+		eventEmitter.addListener(VIEWPORT_ONCHANGE, this.boundUpdateLayer);
+		eventEmitter.addListener(VIEWPORT_ONRESIZE, this.boundResize);
 		// force a first refresh when the level is loaded
-		event.on(event.LEVEL_LOADED, this.updateLayer, this);
+		eventEmitter.addListener(LEVEL_LOADED, this.boundUpdateLayer);
 		// in case the level is not added to the root container,
 		// the onActivateEvent call happens after the LEVEL_LOADED event
 		// so we need to force a first update
@@ -262,9 +271,9 @@ export default class ImageLayer extends Sprite {
 	// called when the layer is removed from the game world or a container
 	onDeactivateEvent() {
 		// cancel all event subscriptions
-		event.off(event.VIEWPORT_ONCHANGE, this.updateLayer);
-		event.off(event.VIEWPORT_ONRESIZE, this.resize);
-		event.off(event.LEVEL_LOADED, this.updateLayer);
+		eventEmitter.removeListener(VIEWPORT_ONCHANGE, this.boundUpdateLayer);
+		eventEmitter.removeListener(VIEWPORT_ONRESIZE, this.boundResize);
+		eventEmitter.removeListener(LEVEL_LOADED, this.boundUpdateLayer);
 	}
 
 	/**
@@ -274,7 +283,7 @@ export default class ImageLayer extends Sprite {
 	destroy() {
 		pool.push(this.ratio);
 		this.ratio = undefined;
-		event.off(event.ONCONTEXT_RESTORED, this.createPattern);
+		eventEmitter.removeListener(ONCONTEXT_RESTORED, this.boundCreatePattern);
 		super.destroy();
 	}
 }

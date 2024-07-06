@@ -58,7 +58,9 @@ export function parseAseprite(data, textureAtlas) {
 		// aseprite provide a range from [from] to [to], so build the corresponding index array
 		const indexArray = Array.from(
 			{ length: anim.to - anim.from + 1 },
-			(_, i) => anim.from + i,
+			(_, i) => {
+				return anim.from + i;
+			},
 		);
 		anims[name] = {
 			name: anim.name,
