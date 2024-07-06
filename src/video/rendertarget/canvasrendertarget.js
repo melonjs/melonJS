@@ -244,7 +244,9 @@ class CanvasRenderTarget {
 				const image = new Image();
 				image.src = this.canvas.toDataURL(type, quality);
 				image.onload = () => {
-					globalThis.createImageBitmap(image).then((bitmap) => resolve(bitmap));
+					globalThis.createImageBitmap(image).then((bitmap) => {
+						return resolve(bitmap);
+					});
 				};
 			}
 		});

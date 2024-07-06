@@ -67,5 +67,6 @@ class SemVer {
 	}
 }
 
-export const compare = (a: string, b: string) =>
-	new SemVer(a).compare(new SemVer(b));
+export const compare = (a: string, b: string) => {
+	return new SemVer(a).compare(new SemVer(b));
+};

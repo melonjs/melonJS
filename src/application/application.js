@@ -1,7 +1,6 @@
 import { autoDetectRenderer } from "../video/utils/autodetect.js";
 import CanvasRenderer from "../video/canvas/canvas_renderer.js";
 import * as device from "../system/device.js";
-import * as event from "../system/event.js";
 import { getUriFragment } from "../utils/utils.ts";
 import timer from "../system/timer.ts";
 import state from "../state/state.js";
@@ -10,6 +9,25 @@ import { onresize } from "./resize.js";
 import { ApplicationSettings } from "./settings.js";
 import { consoleHeader } from "./header.js";
 import { CANVAS, WEBGL, AUTO } from "../const.ts";
+import {
+	BLUR,
+	eventEmitter,
+	FOCUS,
+	GAME_AFTER_DRAW,
+	GAME_AFTER_UPDATE,
+	GAME_BEFORE_DRAW,
+	GAME_BEFORE_UPDATE,
+	GAME_INIT,
+	GAME_RESET,
+	GAME_UPDATE,
+	STAGE_RESET,
+	STATE_CHANGE,
+	STATE_RESTART,
+	STATE_RESUME,
+	TICK,
+	WINDOW_ONORIENTATION_CHANGE,
+	WINDOW_ONRESIZE,
+} from "../system/event.ts";
 
 /**
  * additional import for TypeScript
@@ -216,8 +234,12 @@ export default class Application {
 		}
 
 		// register to the channel
-		event.on(event.WINDOW_ONRESIZE, () => onresize(this), this);
-		event.on(event.WINDOW_ONORIENTATION_CHANGE, () => onresize(this), this);
+		eventEmitter.addListener(WINDOW_ONRESIZE, () => {
+			return onresize(this);
+		});
+		eventEmitter.addListener(WINDOW_ONORIENTATION_CHANGE, () => {
+			return onresize(this);
+		});
 
 		// add our canvas (default to document.body if settings.parent is undefined)
 		this.parentElement.appendChild(this.renderer.getCanvas());
@@ -234,7 +256,9 @@ export default class Application {
 		// add an observer to detect when the dom tree is modified
 		if ("MutationObserver" in globalThis) {
 			// Create an observer instance linked to the callback function
-			let observer = new MutationObserver(() => onresize(this));
+			let observer = new MutationObserver(() => {
+				return onresize(this);
+			});
 
 			// Start observing the target node for configured mutations
 			observer.observe(this.parentElement, {
@@ -265,24 +289,17 @@ export default class Application {
 
 		this.isInitialized = true;
 
-		event.emit(event.GAME_INIT, this);
-		event.on(event.STATE_CHANGE, this.repaint, this);
-		event.on(event.STATE_RESTART, this.repaint, this);
-		event.on(event.STATE_RESUME, this.repaint, this);
-		event.on(event.STAGE_RESET, this.reset, this);
-		event.on(
-			event.TICK,
-			(time) => {
-				// update all game objects
-				this.update(time);
-				// render all game objects
-				this.draw();
-			},
-			this,
-		);
+		eventEmitter.emit(GAME_INIT);
+		eventEmitter.addListener(STATE_CHANGE, this.reset.bind(this));
+		eventEmitter.addListener(STATE_RESTART, this.reset.bind(this));
+		eventEmitter.addListener(STATE_RESUME, this.reset.bind(this));
+		eventEmitter.addListener(STAGE_RESET, this.reset.bind(this));
+		eventEmitter.addListener(TICK, (time) => {
+			this.update(time);
+			this.draw();
+		});
 
-		// on blur event, pause the current
-		event.on(event.BLUR, () => {
+		eventEmitter.addListener(BLUR, () => {
 			if (this.stopOnBlur === true) {
 				state.stop(true);
 			}
@@ -291,8 +308,7 @@ export default class Application {
 			}
 		});
 
-		// on focus event, restart or resume the current
-		event.on(event.FOCUS, () => {
+		eventEmitter.addListener(FOCUS, () => {
 			if (this.stopOnBlur === true) {
 				state.restart(true);
 			}
@@ -314,7 +330,7 @@ export default class Application {
 		}
 
 		// publish reset notification
-		event.emit(event.GAME_RESET);
+		eventEmitter.emit(GAME_RESET);
 
 		// Refresh internal variables for framerate  limiting
 		this.updateFrameRate();
@@ -388,7 +404,7 @@ export default class Application {
 			this.frameCounter = 0;
 
 			// publish notification
-			event.emit(event.GAME_BEFORE_UPDATE, time);
+			eventEmitter.emit(GAME_BEFORE_UPDATE, time);
 
 			this.accumulator += timer.getDelta();
 			this.accumulator = Math.min(this.accumulator, this.accumulatorMax);
@@ -406,7 +422,7 @@ export default class Application {
 
 				// game update event
 				if (state.isPaused() !== true) {
-					event.emit(event.GAME_UPDATE, time);
+					eventEmitter.emit(GAME_UPDATE, time);
 				}
 
 				// update all objects (and pass the elapsed time since last frame)
@@ -424,7 +440,7 @@ export default class Application {
 			}
 
 			// publish notification
-			event.emit(event.GAME_AFTER_UPDATE, this.lastUpdate);
+			eventEmitter.emit(GAME_AFTER_UPDATE, this.lastUpdate);
 		}
 	}
 
@@ -437,7 +453,7 @@ export default class Application {
 			(this.isDirty || this.isAlwaysDirty)
 		) {
 			// publish notification
-			event.emit(event.GAME_BEFORE_DRAW, globalThis.performance.now());
+			eventEmitter.emit(GAME_BEFORE_DRAW, globalThis.performance.now());
 
 			// prepare renderer to draw a new frame
 			this.renderer.clear();
@@ -452,7 +468,7 @@ export default class Application {
 			this.renderer.flush();
 
 			// publish notification
-			event.emit(event.GAME_AFTER_DRAW, globalThis.performance.now());
+			eventEmitter.emit(GAME_AFTER_DRAW, globalThis.performance.now());
 		}
 	}
 }

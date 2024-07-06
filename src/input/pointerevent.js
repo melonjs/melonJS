@@ -3,13 +3,17 @@ import { getBindingKey, triggerKeyEvent } from "./keyboard.js";
 import { renderer } from "./../video/video.js";
 import { throttle } from "./../utils/function.ts";
 import { remove } from "./../utils/array.ts";
-import * as event from "./../system/event.js";
 import timer from "./../system/timer.ts";
 import pool from "./../system/pooling.js";
 import * as device from "./../system/device.js";
 import Pointer from "./pointer.js";
 import Rect from "./../geometries/rectangle.js";
 import { game } from "../index.js";
+import {
+	eventEmitter,
+	POINTERLOCKCHANGE,
+	POINTERMOVE,
+} from "../system/event.ts";
 
 /**
  * @import Vector2d from "./../math/vector2.js";
@@ -191,13 +195,13 @@ function enablePointerEvent() {
 		// set a on change listener on pointerlock if supported
 		if (device.hasPointerLockSupport) {
 			globalThis.document.addEventListener(
-				"pointerlockchange",
+				POINTERLOCKCHANGE,
 				() => {
 					// change the locked status accordingly
 					locked =
 						globalThis.document.pointerLockElement === game.getParentElement();
 					// emit the corresponding internal event
-					event.emit(event.POINTERLOCKCHANGE, locked);
+					eventEmitter.emit(POINTERLOCKCHANGE, locked);
 				},
 				true,
 			);
@@ -291,7 +295,7 @@ function dispatchEvent(normalizedEvents) {
 		if (POINTER_MOVE.includes(pointer.type)) {
 			pointer.gameX = pointer.gameLocalX = pointer.gameScreenX;
 			pointer.gameY = pointer.gameLocalY = pointer.gameScreenY;
-			event.emit(event.POINTERMOVE, pointer);
+			eventEmitter.emit(POINTERMOVE, pointer);
 		}
 
 		// fetch valid candiates from the game world container

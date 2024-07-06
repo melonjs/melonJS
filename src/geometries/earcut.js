@@ -6,7 +6,9 @@ export function earcut(data, holeIndices, dim) {
 	let outerNode = linkedList(data, 0, outerLen, dim, true);
 	const triangles = [];
 
-	if (!outerNode || outerNode.next === outerNode.prev) return triangles;
+	if (!outerNode || outerNode.next === outerNode.prev) {
+		return triangles;
+	}
 
 	let minX;
 	let minY;
@@ -16,7 +18,9 @@ export function earcut(data, holeIndices, dim) {
 	let y;
 	let invSize;
 
-	if (hasHoles) outerNode = eliminateHoles(data, holeIndices, outerNode, dim);
+	if (hasHoles) {
+		outerNode = eliminateHoles(data, holeIndices, outerNode, dim);
+	}
 
 	// if the shape is not too simple, we'll use z-order curve hash later; calculate polygon bbox
 	if (data.length > 80 * dim) {
@@ -26,10 +30,18 @@ export function earcut(data, holeIndices, dim) {
 		for (let i = dim; i < outerLen; i += dim) {
 			x = data[i];
 			y = data[i + 1];
-			if (x < minX) minX = x;
-			if (y < minY) minY = y;
-			if (x > maxX) maxX = x;
-			if (y > maxY) maxY = y;
+			if (x < minX) {
+				minX = x;
+			}
+			if (y < minY) {
+				minY = y;
+			}
+			if (x > maxX) {
+				maxX = x;
+			}
+			if (y > maxY) {
+				maxY = y;
+			}
 		}
 
 		// minX, minY and invSize are later used to transform coords into integers for z-order calculation
@@ -48,11 +60,13 @@ function linkedList(data, start, end, dim, clockwise) {
 	let last;
 
 	if (clockwise === signedArea(data, start, end, dim) > 0) {
-		for (i = start; i < end; i += dim)
+		for (i = start; i < end; i += dim) {
 			last = insertNode(i, data[i], data[i + 1], last);
+		}
 	} else {
-		for (i = end - dim; i >= start; i -= dim)
+		for (i = end - dim; i >= start; i -= dim) {
 			last = insertNode(i, data[i], data[i + 1], last);
+		}
 	}
 
 	if (last && equals(last, last.next)) {
@@ -65,8 +79,12 @@ function linkedList(data, start, end, dim, clockwise) {
 
 // eliminate colinear or duplicate points
 function filterPoints(start, end) {
-	if (!start) return start;
-	if (!end) end = start;
+	if (!start) {
+		return start;
+	}
+	if (!end) {
+		end = start;
+	}
 
 	let p = start;
 	let again;
@@ -76,7 +94,9 @@ function filterPoints(start, end) {
 		if (!p.steiner && (equals(p, p.next) || area(p.prev, p, p.next) === 0)) {
 			removeNode(p);
 			p = end = p.prev;
-			if (p === p.next) break;
+			if (p === p.next) {
+				break;
+			}
 			again = true;
 		} else {
 			p = p.next;
@@ -88,10 +108,14 @@ function filterPoints(start, end) {
 
 // main ear slicing loop which triangulates a polygon (given as a linked list)
 function earcutLinked(ear, triangles, dim, minX, minY, invSize, pass) {
-	if (!ear) return;
+	if (!ear) {
+		return;
+	}
 
 	// interlink polygon nodes in z-order
-	if (!pass && invSize) indexCurve(ear, minX, minY, invSize);
+	if (!pass && invSize) {
+		indexCurve(ear, minX, minY, invSize);
+	}
 
 	let stop = ear;
 	let prev;
@@ -146,7 +170,9 @@ function isEar(ear) {
 	const b = ear;
 	const c = ear.next;
 
-	if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
+	if (area(a, b, c) >= 0) {
+		return false;
+	} // reflex, can't be an ear
 
 	// now make sure we don't have other points inside the potential ear
 	const ax = a.x;
@@ -171,8 +197,9 @@ function isEar(ear) {
 			p.y <= y1 &&
 			pointInTriangle(ax, ay, bx, by, cx, cy, p.x, p.y) &&
 			area(p.prev, p, p.next) >= 0
-		)
+		) {
 			return false;
+		}
 		p = p.next;
 	}
 
@@ -184,7 +211,9 @@ function isEarHashed(ear, minX, minY, invSize) {
 	const b = ear;
 	const c = ear.next;
 
-	if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
+	if (area(a, b, c) >= 0) {
+		return false;
+	} // reflex, can't be an ear
 
 	const ax = a.x;
 	const bx = b.x;
@@ -217,8 +246,9 @@ function isEarHashed(ear, minX, minY, invSize) {
 			p !== c &&
 			pointInTriangle(ax, ay, bx, by, cx, cy, p.x, p.y) &&
 			area(p.prev, p, p.next) >= 0
-		)
+		) {
 			return false;
+		}
 		p = p.prevZ;
 
 		if (
@@ -230,8 +260,9 @@ function isEarHashed(ear, minX, minY, invSize) {
 			n !== c &&
 			pointInTriangle(ax, ay, bx, by, cx, cy, n.x, n.y) &&
 			area(n.prev, n, n.next) >= 0
-		)
+		) {
 			return false;
+		}
 		n = n.nextZ;
 	}
 
@@ -246,8 +277,9 @@ function isEarHashed(ear, minX, minY, invSize) {
 			p !== c &&
 			pointInTriangle(ax, ay, bx, by, cx, cy, p.x, p.y) &&
 			area(p.prev, p, p.next) >= 0
-		)
+		) {
 			return false;
+		}
 		p = p.prevZ;
 	}
 
@@ -262,8 +294,9 @@ function isEarHashed(ear, minX, minY, invSize) {
 			n !== c &&
 			pointInTriangle(ax, ay, bx, by, cx, cy, n.x, n.y) &&
 			area(n.prev, n, n.next) >= 0
-		)
+		) {
 			return false;
+		}
 		n = n.nextZ;
 	}
 
@@ -338,7 +371,9 @@ function eliminateHoles(data, holeIndices, outerNode, dim) {
 		start = holeIndices[i] * dim;
 		end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
 		list = linkedList(data, start, end, dim, false);
-		if (list === list.next) list.steiner = true;
+		if (list === list.next) {
+			list.steiner = true;
+		}
 		queue.push(getLeftmost(list));
 	}
 
@@ -386,13 +421,17 @@ function findHoleBridge(hole, outerNode) {
 			if (x <= hx && x > qx) {
 				qx = x;
 				m = p.x < p.next.x ? p : p.next;
-				if (x === hx) return m; // hole touches outer segment; pick leftmost endpoint
+				if (x === hx) {
+					return m;
+				} // hole touches outer segment; pick leftmost endpoint
 			}
 		}
 		p = p.next;
 	} while (p !== outerNode);
 
-	if (!m) return null;
+	if (!m) {
+		return null;
+	}
 
 	// look for points inside the triangle of hole point, segment intersection and endpoint;
 	// if there are no points found, we have a valid connection;
@@ -450,7 +489,9 @@ function sectorContainsSector(m, p) {
 function indexCurve(start, minX, minY, invSize) {
 	let p = start;
 	do {
-		if (p.z === 0) p.z = zOrder(p.x, p.y, minX, minY, invSize);
+		if (p.z === 0) {
+			p.z = zOrder(p.x, p.y, minX, minY, invSize);
+		}
 		p.prevZ = p.prev;
 		p.nextZ = p.next;
 		p = p.next;
@@ -488,7 +529,9 @@ function sortLinked(list) {
 			for (i = 0; i < inSize; i++) {
 				pSize++;
 				q = q.nextZ;
-				if (!q) break;
+				if (!q) {
+					break;
+				}
 			}
 			qSize = inSize;
 
@@ -503,8 +546,11 @@ function sortLinked(list) {
 					qSize--;
 				}
 
-				if (tail) tail.nextZ = e;
-				else list = e;
+				if (tail) {
+					tail.nextZ = e;
+				} else {
+					list = e;
+				}
 
 				e.prevZ = tail;
 				tail = e;
@@ -544,8 +590,9 @@ function getLeftmost(start) {
 	let p = start;
 	let leftmost = start;
 	do {
-		if (p.x < leftmost.x || (p.x === leftmost.x && p.y < leftmost.y))
+		if (p.x < leftmost.x || (p.x === leftmost.x && p.y < leftmost.y)) {
 			leftmost = p;
+		}
 		p = p.next;
 	} while (p !== start);
 
@@ -594,12 +641,22 @@ function intersects(p1, q1, p2, q2) {
 	const o3 = sign(area(p2, q2, p1));
 	const o4 = sign(area(p2, q2, q1));
 
-	if (o1 !== o2 && o3 !== o4) return true; // general case
+	if (o1 !== o2 && o3 !== o4) {
+		return true;
+	} // general case
 
-	if (o1 === 0 && onSegment(p1, p2, q1)) return true; // p1, q1 and p2 are collinear and p2 lies on p1q1
-	if (o2 === 0 && onSegment(p1, q2, q1)) return true; // p1, q1 and q2 are collinear and q2 lies on p1q1
-	if (o3 === 0 && onSegment(p2, p1, q2)) return true; // p2, q2 and p1 are collinear and p1 lies on p2q2
-	if (o4 === 0 && onSegment(p2, q1, q2)) return true; // p2, q2 and q1 are collinear and q1 lies on p2q2
+	if (o1 === 0 && onSegment(p1, p2, q1)) {
+		return true;
+	} // p1, q1 and p2 are collinear and p2 lies on p1q1
+	if (o2 === 0 && onSegment(p1, q2, q1)) {
+		return true;
+	} // p1, q1 and q2 are collinear and q2 lies on p1q1
+	if (o3 === 0 && onSegment(p2, p1, q2)) {
+		return true;
+	} // p2, q2 and p1 are collinear and p1 lies on p2q2
+	if (o4 === 0 && onSegment(p2, q1, q2)) {
+		return true;
+	} // p2, q2 and q1 are collinear and q1 lies on p2q2
 
 	return false;
 }
@@ -628,8 +685,9 @@ function intersectsPolygon(a, b) {
 			p.i !== b.i &&
 			p.next.i !== b.i &&
 			intersects(p, p.next, a, b)
-		)
+		) {
 			return true;
+		}
 		p = p.next;
 	} while (p !== a);
 
@@ -654,8 +712,9 @@ function middleInside(a, b) {
 			p.y > py !== p.next.y > py &&
 			p.next.y !== p.y &&
 			px < ((p.next.x - p.x) * (py - p.y)) / (p.next.y - p.y) + p.x
-		)
+		) {
 			inside = !inside;
+		}
 		p = p.next;
 	} while (p !== a);
 
@@ -705,8 +764,12 @@ function removeNode(p) {
 	p.next.prev = p.prev;
 	p.prev.next = p.next;
 
-	if (p.prevZ) p.prevZ.nextZ = p.nextZ;
-	if (p.nextZ) p.nextZ.prevZ = p.prevZ;
+	if (p.prevZ) {
+		p.prevZ.nextZ = p.nextZ;
+	}
+	if (p.nextZ) {
+		p.nextZ.prevZ = p.prevZ;
+	}
 }
 
 function Node(i, x, y) {

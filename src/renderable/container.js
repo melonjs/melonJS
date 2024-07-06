@@ -2,10 +2,10 @@ import Renderable from "./renderable.js";
 import { createGUID } from "../utils/utils";
 import { defer } from "../utils/function";
 import { game } from "../index.js";
-import * as event from "../system/event.js";
 import pool from "../system/pooling.js";
 import state from "../state/state.js";
 import Body from "../physics/body.js";
+import { CANVAS_ONRESIZE, eventEmitter } from "../system/event.ts";
 
 /**
  * Private function to re-use for object removal in a defer
@@ -159,7 +159,7 @@ export default class Container extends Renderable {
 		// subscribe on the canvas resize event
 		if (this.root === true) {
 			// Workaround for not updating container child-bounds automatically (it's expensive!)
-			event.on(event.CANVAS_ONRESIZE, () => {
+			eventEmitter.addListener(CANVAS_ONRESIZE, () => {
 				// temporarly enable the enableChildBoundsUpdate flag
 				// this.enableChildBoundsUpdate === true;
 				// update bounds

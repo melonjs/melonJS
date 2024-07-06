@@ -1,6 +1,6 @@
 import { preventDefault as preventDefaultAction } from "./input.js";
-import * as event from "./../system/event.js";
 import { isMobile } from "./../system/platform.js";
+import { eventEmitter, KEYDOWN, KEYUP } from "../system/event.ts";
 
 // corresponding actions
 const _keyStatus = {};
@@ -28,8 +28,8 @@ const keyDownEvent = function (e, keyCode, mouseButton) {
 	const action = _keyBindings[keyCode];
 
 	// publish a message for keydown event
-	event.emit(
-		event.KEYDOWN,
+	eventEmitter.emit(
+		KEYDOWN,
 		action,
 		keyCode,
 		action ? !_keyLocked[action] : true,
@@ -68,7 +68,7 @@ const keyUpEvent = function (e, keyCode, mouseButton) {
 	const action = _keyBindings[keyCode];
 
 	// publish a message for keydown event
-	event.emit(event.KEYUP, action, keyCode);
+	eventEmitter.emit(KEYUP, action, keyCode);
 
 	if (action) {
 		const trigger = typeof mouseButton !== "undefined" ? mouseButton : keyCode;

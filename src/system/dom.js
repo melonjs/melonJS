@@ -1,4 +1,4 @@
-import * as event from "./event.js";
+import { DOM_READY, eventEmitter } from "./event.ts";
 import { nodeJS } from "./platform.js";
 
 // track if DOMContentLoaded was called already
@@ -37,7 +37,7 @@ function _domReady() {
 		}
 
 		// execute all callbacks
-		event.emit(event.DOM_READY);
+		eventEmitter.emit(DOM_READY);
 
 		// Remember that the DOM is ready
 		isDOMReady = true;
@@ -52,7 +52,7 @@ export function DOMContentLoaded(fn) {
 		fn.call(globalThis, []);
 	} else {
 		// else add the function to the DOM_READY event
-		event.once(event.DOM_READY, fn, globalThis);
+		eventEmitter.addListenerOnce(DOM_READY, fn.bind(globalThis));
 		// bind dom load event if not done yet
 		if (!readyBound) {
 			// directly call domReady if document is already "ready"

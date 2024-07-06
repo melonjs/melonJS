@@ -1,9 +1,9 @@
 import { getParent } from "./../video/video.js";
 import save from "./save.js";
-import * as event from "./../system/event.js";
 import { prefixed } from "./../utils/agent.ts";
 import { DOMContentLoaded } from "./dom.js";
 import * as device_platform from "./platform.js"; // export * as name1 from …; // ECMAScript® 2020
+import { BLUR, eventEmitter, FOCUS } from "./event.ts";
 
 /**
  * device type and capabilities
@@ -402,7 +402,7 @@ export function onReady(fn) {
 		globalThis.addEventListener(
 			"blur",
 			() => {
-				event.emit(event.BLUR);
+				eventEmitter.emit(BLUR);
 			},
 			false,
 		);
@@ -410,7 +410,7 @@ export function onReady(fn) {
 		globalThis.addEventListener(
 			"focus",
 			() => {
-				event.emit(event.FOCUS);
+				eventEmitter.emit(FOCUS);
 				// force focus if autofocus is on
 				if (autoFocus === true) {
 					focus();
@@ -426,13 +426,13 @@ export function onReady(fn) {
 				"visibilitychange",
 				() => {
 					if (globalThis.document.visibilityState === "visible") {
-						event.emit(event.FOCUS);
+						eventEmitter.emit(FOCUS);
 						// force focus if autofocus is on
 						if (autoFocus === true) {
 							focus();
 						}
 					} else {
-						event.emit(event.BLUR);
+						eventEmitter.emit(BLUR);
 					}
 				},
 				false,

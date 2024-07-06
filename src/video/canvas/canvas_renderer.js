@@ -1,7 +1,12 @@
+import {
+	eventEmitter,
+	GAME_RESET,
+	ONCONTEXT_LOST,
+	ONCONTEXT_RESTORED,
+} from "../../system/event.ts";
 import Color from "./../../math/color.js";
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture/cache.js";
-import * as event from "./../../system/event.js";
 
 /**
  * additional import for TypeScript
@@ -46,7 +51,7 @@ export default class CanvasRenderer extends Renderer {
 			(e) => {
 				e.preventDefault();
 				this.isContextValid = false;
-				event.emit(event.ONCONTEXT_LOST, this);
+				eventEmitter.emit(ONCONTEXT_LOST, this);
 			},
 			false,
 		);
@@ -55,13 +60,13 @@ export default class CanvasRenderer extends Renderer {
 			"contextrestored",
 			() => {
 				this.isContextValid = true;
-				event.emit(event.ONCONTEXT_RESTORED, this);
+				eventEmitter.emit(ONCONTEXT_RESTORED, this);
 			},
 			false,
 		);
 
 		// reset the renderer on game reset
-		event.on(event.GAME_RESET, () => {
+		eventEmitter.addListener(GAME_RESET, () => {
 			this.reset();
 		});
 	}

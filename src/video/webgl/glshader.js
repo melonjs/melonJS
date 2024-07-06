@@ -1,9 +1,9 @@
-import * as event from "./../../system/event.js";
 import { extractUniforms } from "./utils/uniforms.js";
 import { extractAttributes } from "./utils/attributes.js";
 import { compileProgram } from "./utils/program.js";
 import { setPrecision, getMaxShaderPrecision } from "./utils/precision.js";
 import { minify } from "./utils/string.js";
+import { eventEmitter, ONCONTEXT_LOST } from "../../system/event.ts";
 
 /**
  * a base GL Shader object
@@ -85,7 +85,7 @@ export default class GLShader {
 		this.uniforms = extractUniforms(this.gl, this);
 
 		// destroy the shader on context lost (will be recreated on context restore)
-		event.on(event.ONCONTEXT_LOST, this.destroy, this);
+		eventEmitter.emit(ONCONTEXT_LOST, this.destroy.bind(this));
 	}
 
 	/**

@@ -1,4 +1,4 @@
-import level from "../../level/level.js";
+import { level } from "../../level/level.js";
 import * as TMXUtils from "../../level/tiled/TMXUtils.js";
 import { getExtension } from "../../utils/file.ts";
 import { tmxList } from "../cache.js";

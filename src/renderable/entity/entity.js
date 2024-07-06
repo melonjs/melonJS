@@ -97,7 +97,9 @@ export default class Entity extends Renderable {
 		 * the entity body object
 		 * @type {Body}
 		 */
-		this.body = new Body(this, settings.shapes, () => this.onBodyUpdate());
+		this.body = new Body(this, settings.shapes, () => {
+			return this.onBodyUpdate();
+		});
 
 		// resize the entity if required
 		if (this.width === 0 && this.height === 0) {
