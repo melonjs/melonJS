@@ -1,7 +1,6 @@
 import { initialized, game } from "./../index.js";
 import * as device from "./../system/device.js";
 import { throttle } from "../utils/function.ts";
-import { ApplicationSettings } from "../application/settings.js";
 import {
 	eventEmitter,
 	VIDEO_INIT,
@@ -9,6 +8,7 @@ import {
 	WINDOW_ONRESIZE,
 	WINDOW_ONSCROLL,
 } from "../system/event.ts";
+import { defaultApplicationSettings } from "../application/defaultApplicationSettings.ts";
 
 /**
  * @namespace video
@@ -60,7 +60,11 @@ export function init(width, height, options) {
 
 	try {
 		// initialize the default game Application with the given options
-		game.init(width, height, Object.assign(ApplicationSettings, options || {}));
+		game.init(
+			width,
+			height,
+			Object.assign(defaultApplicationSettings, options || {}),
+		);
 	} catch (e) {
 		console.log(e.message);
 		// me.video.init() historically returns false if failing at creating/using a HTML5 canvas

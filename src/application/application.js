@@ -6,7 +6,6 @@ import timer from "../system/timer.ts";
 import state from "../state/state.js";
 import World from "../physics/world.js";
 import { onresize } from "./resize.js";
-import { ApplicationSettings } from "./settings.js";
 import { consoleHeader } from "./header.js";
 import { CANVAS, WEBGL, AUTO } from "../const.ts";
 import {
@@ -28,6 +27,8 @@ import {
 	WINDOW_ONORIENTATION_CHANGE,
 	WINDOW_ONRESIZE,
 } from "../system/event.ts";
+import { defaultApplicationSettings } from "./defaultApplicationSettings.ts";
+import { ScaleMethods } from "./scaleMethods.ts";
 
 /**
  * additional import for TypeScript
@@ -162,7 +163,7 @@ export default class Application {
 	 * @param {ApplicationSettings} [options] - The optional parameters for the application and default renderer
 	 */
 	init(width, height, options) {
-		this.settings = Object.assign(ApplicationSettings, options || {});
+		this.settings = Object.assign(defaultApplicationSettings, options || {});
 
 		// sanitize potential given parameters
 		this.settings.width = width;
@@ -183,7 +184,7 @@ export default class Application {
 			this.settings.autoScale = this.settings.scale === "auto" || true;
 		} else {
 			// default scaling method
-			this.settings.scaleMethod = "fit";
+			this.settings.scaleMethod = ScaleMethods.Fit;
 			this.settings.autoScale = this.settings.scale === "auto" || false;
 		}
 
