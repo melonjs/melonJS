@@ -72,12 +72,12 @@ import save from "./system/save.js";
 import timer from "./system/timer.ts";
 import pool from "./system/pooling.js";
 import state from "./state/state.js";
-import { version } from "./version.ts";
 import { BOOT, DOM_READY, eventEmitter } from "./system/event.ts";
 import { setNocache } from "./loader/loader.js";
 import { initKeyboardEvent } from "./input/keyboard.js";
 import { getUriFragment } from "./utils/utils.ts";
 import { onReady } from "./system/device.js";
+import { version } from "./version.ts";
 
 // export all utility function
 export * as audio from "./audio/audio.js";
@@ -91,7 +91,10 @@ export * as input from "./input/input.js";
 export * as plugin from "./plugin/plugin.js";
 export * as level from "./level/level.js";
 export * as video from "./video/video.js";
-export { plugins, save, timer, pool, state, version };
+export * from "./application/scaleMethods.ts";
+export * from "./application/settings.ts";
+export * from "./version.ts";
+export { plugins, save, timer, pool, state };
 
 // export all class definition
 export {
