@@ -8,6 +8,7 @@ import {
 } from "./event.js";
 import state from "../state/state.js";
 import { clamp } from "../math/math.js";
+import { defer } from "./../utils/function.js";
 
 /**
  * a Timer class to manage timing related function (FPS, Game Tick, Time...)
@@ -180,6 +181,30 @@ class Timer {
 			args: args,
 		});
 		return this.timerId;
+	}
+
+	/**
+	 * Cancels a timeout previously established by calling setTimeout().
+	 * @param timeoutID - ID of the timeout to be cancelled
+	 */
+	clearTimeout(timeoutID: number) {
+		if (timeoutID > 0) {
+			defer(() => {
+				this.clearTimer(timeoutID);
+			}, this);
+		}
+	}
+
+	/**
+	 * cancels the timed, repeating action which was previously established by a call to setInterval().
+	 * @param intervalID - ID of the interval to be cleared
+	 */
+	clearInterval(intervalID: number) {
+		if (intervalID > 0) {
+			defer(() => {
+				this.clearTimer(intervalID);
+			}, this);
+		}
 	}
 
 	/**
