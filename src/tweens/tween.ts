@@ -353,7 +353,7 @@ export default class Tween<T extends Record<string, unknown>> {
 			return true;
 		}
 
-		if (this._onStartCallbackFired === false) {
+		if (!this._onStartCallbackFired) {
 			if (this._onStartCallback !== null) {
 				this._onStartCallback.call(this._object);
 			}
@@ -377,12 +377,14 @@ export default class Tween<T extends Record<string, unknown>> {
 				// Parses relative end values with start as base (e.g.: +10, -3)
 				if (typeof end === "string") {
 					// @ts-expect-error todo
+					// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
 					end = start + parseFloat(end);
 				}
 
 				// protect against non numeric properties.
 				if (typeof end === "number") {
 					// @ts-expect-error todo
+					// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
 					this._object[property] = start + (end - start) * value;
 				}
 			}
@@ -403,8 +405,8 @@ export default class Tween<T extends Record<string, unknown>> {
 					if (typeof this._valuesEnd[property] === "string") {
 						this._valuesStartRepeat[property] =
 							// @ts-expect-error todo
+							// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
 							this._valuesStartRepeat[property] +
-							// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 							// @ts-ignore
 							parseFloat(this._valuesEnd[property]);
 					}

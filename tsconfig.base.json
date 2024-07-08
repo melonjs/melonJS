@@ -12,7 +12,7 @@
 		"resolveJsonModule": true,
 		"exactOptionalPropertyTypes": true,
 		"allowUnreachableCode": false,
-		"allowSyntheticDefaultImports": false,
+		"allowSyntheticDefaultImports": true,
 		"isolatedModules": true,
 		"strictPropertyInitialization": false
 	}

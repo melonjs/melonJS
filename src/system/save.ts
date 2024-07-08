@@ -1,3 +1,4 @@
+import { Jsonifiable } from "type-fest";
 /**
  * allow to access and manage the device localStorage
  * @example
@@ -29,10 +30,11 @@
  * @namespace save
  */
 
-import { BOOT, eventEmitter } from "./event.ts";
+import { isStringArray } from "../utils/utils.js";
+import { BOOT, eventEmitter } from "./event.js";
 
 // Variable to hold the object data
-const data = {};
+const data: Record<string, unknown> = {};
 
 let hasLocalStorage = false;
 
@@ -50,102 +52,92 @@ try {
  * a function to check if the given key is a reserved word
  * @ignore
  */
-function isReserved(key) {
+function isReserved(key: string) {
 	return key === "add" || key === "remove";
 }
 
 // Initialize me.save on Boot event
 eventEmitter.addListenerOnce(BOOT, () => {
 	// Load previous data if local Storage is supported
-	if (hasLocalStorage === true) {
-		const me_save_content = globalThis.localStorage.getItem("me.save");
+	if (hasLocalStorage) {
+		const me_save_content = localStorage.getItem("me.save");
 
-		if (typeof me_save_content === "string" && me_save_content.length > 0) {
-			const keys = JSON.parse(me_save_content) || [];
-			keys.forEach((key) => {
-				data[key] = JSON.parse(
-					globalThis.localStorage.getItem("me.save." + key),
-				);
-			});
+		if (me_save_content !== null && me_save_content.length > 0) {
+			try {
+				const stored: unknown = JSON.parse(me_save_content);
+				const keys = isStringArray(stored) ? stored : [];
+				for (const key of keys) {
+					try {
+						const storageKey = `me.save.${key}`;
+						const stored = localStorage.getItem(storageKey);
+						data[key] = stored === null ? null : JSON.parse(stored);
+					} catch {
+						// do nothing is invalid json
+					}
+				}
+			} catch {
+				// do nothing is invalid json
+			}
 		}
 	}
 });
 
-const save = {
+const save: Record<string, unknown> = {
 	/**
 	 * Add new keys to localStorage and set them to the given default values if they do not exist
-	 * @name add
-	 * @memberof save
-	 * @param {object} props - key and corresponding values
+	 * @param props - key and corresponding values
 	 * @example
 	 * // Initialize "score" and "lives" with default values
 	 * me.save.add({ score : 0, lives : 3 });
 	 * // get or set the value through me.save
 	 * me.save.score = 1000;
 	 */
-	add(props) {
+	add(props: Record<string, Jsonifiable>) {
 		const obj = save;
 
-		Object.keys(props).forEach((key) => {
+		for (const key of Object.keys(props)) {
 			if (isReserved(key)) {
-				return;
+				continue;
 			}
 
-			(function (prop) {
-				Object.defineProperty(obj, prop, {
-					configurable: true,
-					enumerable: true,
-					/**
-					 * @ignore
-					 */
-					get() {
-						return data[prop];
-					},
-					/**
-					 * @ignore
-					 */
-					set(value) {
-						data[prop] = value;
-						if (hasLocalStorage === true) {
-							globalThis.localStorage.setItem(
-								"me.save." + prop,
-								JSON.stringify(value),
-							);
-						}
-					},
-				});
-			})(key);
+			Object.defineProperty(obj, key, {
+				configurable: true,
+				enumerable: true,
+				get() {
+					return data[key];
+				},
+				set(value) {
+					data[key] = value;
+					if (hasLocalStorage) {
+						localStorage.setItem(`me.save.${key}`, JSON.stringify(value));
+					}
+				},
+			});
 
-			// Set default value for key
 			if (!(key in data)) {
-				obj[key] = props[key];
+				save[key] = props[key];
 			}
-		});
+		}
 
 		// Save keys
-		if (hasLocalStorage === true) {
-			globalThis.localStorage.setItem(
-				"me.save",
-				JSON.stringify(Object.keys(data)),
-			);
+		if (hasLocalStorage) {
+			localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
 		}
 	},
 
 	/**
 	 * Remove a key from localStorage
-	 * @name remove
-	 * @memberof save
-	 * @param {string} key - key to be removed
+	 * @param key - key to be removed
 	 * @example
 	 * // Remove the "score" key from localStorage
 	 * me.save.remove("score");
 	 */
-	remove(key) {
+	remove(key: string) {
 		if (!isReserved(key)) {
 			if (typeof data[key] !== "undefined") {
 				delete data[key];
-				if (hasLocalStorage === true) {
-					globalThis.localStorage.removeItem("me.save." + key);
+				if (hasLocalStorage) {
+					globalThis.localStorage.removeItem(`me.save.${key}`);
 					globalThis.localStorage.setItem(
 						"me.save",
 						JSON.stringify(Object.keys(data)),

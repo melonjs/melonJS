@@ -7,7 +7,7 @@ const jsDocConfig = jsdoc.configs["flat/recommended-typescript-error"];
 
 export default tseslint.config(
 	eslint.configs.recommended,
-	...tseslint.configs.recommended,
+	...tseslint.configs.strictTypeChecked,
 	{
 		name: "eslint/global-ignores",
 		// globally ignore below directories and files
@@ -141,7 +141,13 @@ export default tseslint.config(
 			yoda: ["error", "never"],
 			"jsdoc/require-hyphen-before-param-description": "error",
 			"jsdoc/no-undefined-types": "off",
+			"@typescript-eslint/no-dynamic-delete": "off",
+			"@typescript-eslint/no-extraneous-class": "off",
 		},
+	},
+	{
+		files: ["**/*.js", "**/*.mjs"],
+		...tseslint.configs.disableTypeChecked,
 	},
 	{
 		...jsDocConfig,
@@ -150,7 +156,22 @@ export default tseslint.config(
 			"no-undef": "off",
 			"no-unused-vars": "off",
 			"@typescript-eslint/no-explicit-any": "off",
+			"@typescript-eslint/ban-ts-comment": "off",
+			"@typescript-eslint/no-dynamic-delete": "off",
+			"@typescript-eslint/no-unsafe-argument": "off",
+			"@typescript-eslint/no-unsafe-assignment": "off",
+			"@typescript-eslint/restrict-template-expressions": [
+				"error",
+				{ allowNumber: true },
+			],
+			"prefer-template": "error",
 			...jsDocConfig.rules,
+		},
+		languageOptions: {
+			parserOptions: {
+				projectService: true,
+				tsconfigRootDir: import.meta.dirname,
+			},
 		},
 	},
 );

@@ -1,6 +1,17 @@
 import { defineConfig } from "vitest/config";
 import glsl from "vite-plugin-glsl";
-import packageJson from "./package.json" with { type: "json" };
+import { PackageJson } from "type-fest";
+
+const packageJson = (
+	await import("./package.json", {
+		with: { type: "json" },
+	})
+).default as PackageJson.PackageJsonStandard;
+
+const version = packageJson.version;
+if (!version) {
+	throw new Error("Version missing from package.json");
+}
 
 export default defineConfig({
 	test: {
@@ -19,10 +30,7 @@ export default defineConfig({
 			name: "transform-file",
 			transform(src) {
 				return {
-					code: src.replace(
-						/=\s__VERSION__/g,
-						'= "' + packageJson.version + '"',
-					),
+					code: src.replace(/=\s__VERSION__/g, `= "${version}"`),
 					map: null,
 				};
 			},

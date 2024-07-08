@@ -11,7 +11,10 @@ const vendors = ["ms", "MS", "moz", "webkit", "o"];
  * @param [obj] - Object or element reference to access
  * @returns Value of property
  */
-export function prefixed(name: string, obj: Record<string, unknown>) {
+export function prefixed(
+	name: string,
+	obj?: Record<string, unknown> | undefined,
+) {
 	obj = obj || globalThis;
 	if (name in obj) {
 		return obj[name];
@@ -37,7 +40,7 @@ export function prefixed(name: string, obj: Record<string, unknown>) {
 export function setPrefixed(
 	name: string,
 	value: unknown,
-	obj: Record<string, unknown>,
+	obj?: Record<string, unknown> | undefined,
 ) {
 	obj = obj || globalThis;
 	if (name in obj) {

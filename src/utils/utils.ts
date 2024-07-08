@@ -65,6 +65,7 @@ export function getUriFragment(url: string) {
 		if (typeof globalThis.document !== "undefined") {
 			const location = globalThis.document.location;
 
+			// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 			if (location && location.hash) {
 				url = location.hash;
 			} else {
@@ -94,6 +95,7 @@ export function getUriFragment(url: string) {
 		})
 		.forEach((value) => {
 			const kv = value.split("=");
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			const k = kv.shift()!;
 			const v = kv.join("=");
 			hash[k] = v || true;
@@ -122,5 +124,14 @@ export function resetGUID(base: string, index = 0) {
 export function createGUID(index = 1) {
 	// to cover the case of undefined id for groups
 	GUID_index += index;
-	return GUID_base + "-" + (index || GUID_index);
+	return `${GUID_base}-${index || GUID_index}`;
 }
+
+export const isStringArray = (value: unknown): value is string[] => {
+	return (
+		Array.isArray(value) &&
+		value.every((element) => {
+			return typeof element === "string";
+		})
+	);
+};

@@ -47,7 +47,7 @@ const catmullRom = (
 export type InterpolationFunction = (v: number[], k: number) => number;
 
 export const Interpolation = {
-	Linear: function (v: number[], k: number) {
+	Linear: (v: number[], k: number) => {
 		const m = v.length - 1;
 		const f = m * k;
 		const i = Math.floor(f);
@@ -61,7 +61,7 @@ export const Interpolation = {
 
 		return linear(v[i], v[i + 1 > m ? m : i + 1], f - i);
 	},
-	Bezier: function (v: number[], k: number) {
+	Bezier: (v: number[], k: number) => {
 		let b = 0;
 		const n = v.length - 1;
 
@@ -71,7 +71,7 @@ export const Interpolation = {
 
 		return b;
 	},
-	CatmullRom: function (v: number[], k: number) {
+	CatmullRom: (v: number[], k: number) => {
 		const m = v.length - 1;
 		let f = m * k;
 		let i = Math.floor(f);

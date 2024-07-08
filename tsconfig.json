@@ -4,5 +4,5 @@
 		"noEmit": true,
 		"allowImportingTsExtensions": true
 	},
-	"include": ["src", "tests"]
+	"include": ["src", "tests", "vitest.config.ts"]
 }

@@ -68,7 +68,7 @@ import Application from "./application/application.js";
 
 // utility classes
 import { cache as plugins } from "./plugin/plugin.js";
-import save from "./system/save.js";
+import save from "./system/save.ts";
 import timer from "./system/timer.ts";
 import pool from "./system/pooling.js";
 import state from "./state/state.js";

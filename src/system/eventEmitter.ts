@@ -16,10 +16,12 @@ export class EventEmitter<Events extends EventsMap = DefaultEvents> {
 	}
 
 	addListener<E extends keyof Events>(event: E, listener: Events[E]) {
-		if (!this.eventListeners[event]) {
-			this.eventListeners[event] = [];
+		let eventListenerList = this.eventListeners[event];
+		if (!eventListenerList) {
+			eventListenerList = [];
+			this.eventListeners[event] = eventListenerList;
 		}
-		this.eventListeners[event]!.push(listener);
+		eventListenerList.push(listener);
 
 		return () => {
 			this.removeListener(event, listener);
@@ -27,10 +29,12 @@ export class EventEmitter<Events extends EventsMap = DefaultEvents> {
 	}
 
 	addListenerOnce<E extends keyof Events>(event: E, listener: Events[E]) {
-		if (!this.eventListenersOnce[event]) {
-			this.eventListenersOnce[event] = [];
+		let eventListenerList = this.eventListenersOnce[event];
+		if (!eventListenerList) {
+			eventListenerList = [];
+			this.eventListenersOnce[event] = eventListenerList;
 		}
-		this.eventListenersOnce[event]!.push(listener);
+		eventListenerList.push(listener);
 	}
 
 	removeAllListeners<E extends keyof Events>(event?: E) {
@@ -57,6 +61,7 @@ export class EventEmitter<Events extends EventsMap = DefaultEvents> {
 		const listeners = this.eventListeners[event];
 		if (listeners) {
 			for (const listener of listeners) {
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 				listener(...args);
 			}
 		}
@@ -64,6 +69,7 @@ export class EventEmitter<Events extends EventsMap = DefaultEvents> {
 		const listenersOnce = this.eventListenersOnce[event];
 		if (listenersOnce) {
 			for (const listener of listenersOnce) {
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 				listener(...args);
 			}
 			this.eventListenersOnce[event] = [];

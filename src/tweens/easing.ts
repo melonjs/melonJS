@@ -44,19 +44,19 @@ export type EasingFunction = (t: number) => number;
 
 export const Easing = {
 	Linear: {
-		None: function (k: number) {
+		None: (k: number) => {
 			return k;
 		},
 	},
 
 	Quadratic: {
-		In: function (k: number) {
+		In: (k: number) => {
 			return k * k;
 		},
-		Out: function (k: number) {
+		Out: (k: number) => {
 			return k * (2 - k);
 		},
-		InOut: function (k: number) {
+		InOut: (k: number) => {
 			if ((k *= 2) < 1) {
 				return 0.5 * k * k;
 			}
@@ -65,13 +65,13 @@ export const Easing = {
 	},
 
 	Cubic: {
-		In: function (k: number) {
+		In: (k: number) => {
 			return k * k * k;
 		},
-		Out: function (k: number) {
+		Out: (k: number) => {
 			return --k * k * k + 1;
 		},
-		InOut: function (k: number) {
+		InOut: (k: number) => {
 			if ((k *= 2) < 1) {
 				return 0.5 * k * k * k;
 			}
@@ -80,16 +80,13 @@ export const Easing = {
 	},
 
 	Quartic: {
-		/** @ignore */
-		In: function (k: number) {
+		In: (k: number) => {
 			return k * k * k * k;
 		},
-		/** @ignore */
-		Out: function (k: number) {
+		Out: (k: number) => {
 			return 1 - --k * k * k * k;
 		},
-		/** @ignore */
-		InOut: function (k: number) {
+		InOut: (k: number) => {
 			if ((k *= 2) < 1) {
 				return 0.5 * k * k * k * k;
 			}
@@ -98,16 +95,13 @@ export const Easing = {
 	},
 
 	Quintic: {
-		/** @ignore */
-		In: function (k: number) {
+		In: (k: number) => {
 			return k * k * k * k * k;
 		},
-		/** @ignore */
-		Out: function (k: number) {
+		Out: (k: number) => {
 			return --k * k * k * k * k + 1;
 		},
-		/** @ignore */
-		InOut: function (k: number) {
+		InOut: (k: number) => {
 			if ((k *= 2) < 1) {
 				return 0.5 * k * k * k * k * k;
 			}
@@ -116,25 +110,25 @@ export const Easing = {
 	},
 
 	Sinusoidal: {
-		In: function (k: number) {
+		In: (k: number) => {
 			return 1 - Math.cos((k * Math.PI) / 2);
 		},
-		Out: function (k: number) {
+		Out: (k: number) => {
 			return Math.sin((k * Math.PI) / 2);
 		},
-		InOut: function (k: number) {
+		InOut: (k: number) => {
 			return 0.5 * (1 - Math.cos(Math.PI * k));
 		},
 	},
 
 	Exponential: {
-		In: function (k: number) {
+		In: (k: number) => {
 			return k === 0 ? 0 : Math.pow(1024, k - 1);
 		},
-		Out: function (k: number) {
+		Out: (k: number) => {
 			return k === 1 ? 1 : 1 - Math.pow(2, -10 * k);
 		},
-		InOut: function (k: number) {
+		InOut: (k: number) => {
 			if (k === 0) {
 				return 0;
 			}
@@ -149,13 +143,13 @@ export const Easing = {
 	},
 
 	Circular: {
-		In: function (k: number) {
+		In: (k: number) => {
 			return 1 - Math.sqrt(1 - k * k);
 		},
-		Out: function (k: number) {
+		Out: (k: number) => {
 			return Math.sqrt(1 - --k * k);
 		},
-		InOut: function (k: number) {
+		InOut: (k: number) => {
 			if ((k *= 2) < 1) {
 				return -0.5 * (Math.sqrt(1 - k * k) - 1);
 			}
@@ -164,7 +158,7 @@ export const Easing = {
 	},
 
 	Elastic: {
-		In: function (k: number) {
+		In: (k: number) => {
 			if (k === 0) {
 				return 0;
 			}
@@ -173,7 +167,7 @@ export const Easing = {
 			}
 			return -Math.pow(2, 10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI);
 		},
-		Out: function (k: number) {
+		Out: (k: number) => {
 			if (k === 0) {
 				return 0;
 			}
@@ -182,7 +176,7 @@ export const Easing = {
 			}
 			return Math.pow(2, -10 * k) * Math.sin((k - 0.1) * 5 * Math.PI) + 1;
 		},
-		InOut: function (k: number) {
+		InOut: (k: number) => {
 			if (k === 0) {
 				return 0;
 			}
@@ -202,15 +196,15 @@ export const Easing = {
 	},
 
 	Back: {
-		In: function (k: number) {
+		In: (k: number) => {
 			const s = 1.70158;
 			return k * k * ((s + 1) * k - s);
 		},
-		Out: function (k: number) {
+		Out: (k: number) => {
 			const s = 1.70158;
 			return --k * k * ((s + 1) * k + s) + 1;
 		},
-		InOut: function (k: number) {
+		InOut: (k: number) => {
 			const s = 1.70158 * 1.525;
 			if ((k *= 2) < 1) {
 				return 0.5 * (k * k * ((s + 1) * k - s));
@@ -220,10 +214,10 @@ export const Easing = {
 	},
 
 	Bounce: {
-		In: function (k: number) {
+		In: (k: number) => {
 			return 1 - Easing.Bounce.Out(1 - k);
 		},
-		Out: function (k: number) {
+		Out: (k: number) => {
 			if (k < 1 / 2.75) {
 				return 7.5625 * k * k;
 			} else if (k < 2 / 2.75) {
@@ -234,7 +228,7 @@ export const Easing = {
 				return 7.5625 * (k -= 2.625 / 2.75) * k + 0.984375;
 			}
 		},
-		InOut: function (k: number) {
+		InOut: (k: number) => {
 			if (k < 0.5) {
 				return Easing.Bounce.In(k * 2) * 0.5;
 			}
