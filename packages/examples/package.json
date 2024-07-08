@@ -1,0 +1,22 @@
+{
+	"name": "examples",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"test:types": "tsc"
+	},
+	"dependencies": {
+		"@types/react": "^18.3.3",
+		"@types/react-dom": "^18.3.0",
+		"@vitejs/plugin-react": "^4.3.1",
+		"melonjs": "workspace:^",
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1",
+		"react-router-dom": "^6.24.1",
+		"tsconfig": "workspace:^",
+		"typescript": "^5.2.2",
+		"vite": "^5.3.1"
+	}
+}

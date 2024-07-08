@@ -6,6 +6,9 @@
 	"[typescript]": {
 		"editor.defaultFormatter": "biomejs.biome"
 	},
+	"[typescriptreact]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
 	"files.eol": "\n",
 	"editor.codeActionsOnSave": {
 		"source.fixAll": "explicit",

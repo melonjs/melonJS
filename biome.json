@@ -4,8 +4,15 @@
 		"enabled": false
 	},
 	"files": {
-		"ignore": ["docs/", "build/"]
+		"ignore": ["docs/", "build/", ".turbo"]
 	},
 	"formatter": { "enabled": true },
-	"linter": { "enabled": false }
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"nursery": { "recommended": true }
+		},
+		"include": ["packages/examples"]
+	}
 }

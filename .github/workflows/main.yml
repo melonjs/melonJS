@@ -1,7 +1,9 @@
 name: Test
 on:
   push:
+    branches: [master]
   pull_request:
+    types: [opened, synchronize]
 jobs:
   test:
     strategy:
@@ -16,7 +18,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-      - run: npm ci
-      - run: npm run lint
-      - run: npx biome check
-      - run: npm run build
+      - uses: pnpm/action-setup@v4
+      - run: pnpm i
+      - run: pnpm lint
+      - run: pnpm biome check
+      - run: pnpm build

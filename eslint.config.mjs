@@ -11,7 +11,7 @@ export default tseslint.config(
 	{
 		name: "eslint/global-ignores",
 		// globally ignore below directories and files
-		ignores: ["build", "docs/**/*", "rollup.config.mjs", "scripts/build.js"],
+		ignores: ["**/build", "**/docs/**/*", "**/node_modules", "**/examples"],
 	},
 	{
 		name: "eslint/global-rules",
@@ -22,7 +22,7 @@ export default tseslint.config(
 				...globals.browser,
 			},
 		},
-		files: ["src/**/*.js", "src/**/*.ts", "tests/**/*.js"],
+		files: ["**/src/**/*.js", "**/tests/**/*.js"],
 		plugins: {
 			jsdoc,
 		},

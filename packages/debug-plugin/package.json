@@ -1,0 +1,58 @@
+{
+	"name": "@melonjs/debug-plugin",
+	"version": "14.8.3",
+	"description": "melonJS debug plugin",
+	"homepage": "https://github.com/melonjs/debug-plugin#readme",
+	"type": "module",
+	"keywords": [
+		"2D",
+		"HTML5",
+		"javascript",
+		"TypeScript",
+		"es6",
+		"Canvas",
+		"WebGL",
+		"WebGL2",
+		"WebAudio",
+		"game",
+		"engine",
+		"tiled",
+		"tileset",
+		"mapeditor",
+		"browser",
+		"electron",
+		"mobile",
+		"cordova"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/melonjs/debug-plugin.git"
+	},
+	"bugs": {
+		"url": "https://github.com/melonjs/debug-plugin/issues"
+	},
+	"license": "MIT",
+	"author": "Olivier Biot (AltByte Pte Ltd)",
+	"funding": "https://github.com/sponsors/melonjs",
+	"engines": {
+		"node": ">= 19"
+	},
+	"main": "dist/@melonjs/debug-plugin.js",
+	"module": "dist/@melonjs/debug-plugin.js",
+	"types": "dist/@melonjs/debug-plugin.d.ts",
+	"sideEffects": false,
+	"files": ["dist/", "src/", "package.json", "README.md", "LICENSE"],
+	"peerDependencies": {
+		"melonjs": ">=15.12.0"
+	},
+	"devDependencies": {
+		"del-cli": "^5.1.0",
+		"typescript": "^5.3.3"
+	},
+	"scripts": {
+		"lint": "eslint src/**.js rollup.config.mjs",
+		"prepublishOnly": "npm run build",
+		"clean": "del-cli --force dist/*",
+		"types": "tsc"
+	}
+}
