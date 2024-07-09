@@ -12,7 +12,8 @@
 		"test": "vitest",
 		"test:types": "turbo test:types",
 		"doc": "pnpm -F melonjs doc",
-		"publish-melonjs": "pnpm lint && pnpm biome check && pnpm publish --filter melonjs"
+		"publish-melonjs": "pnpm lint && pnpm biome check && pnpm publish --filter melonjs",
+		"publish-debug-plugin": "pnpm lint && pnpm biome check && pnpm publish --filter debug-plugin"
 	},
 	"packageManager": "pnpm@9.5.0",
 	"dependencies": {

@@ -1,7 +1,8 @@
 {
 	"$schema": "https://biomejs.dev/schemas/1.8.2/schema.json",
 	"organizeImports": {
-		"enabled": false
+		"enabled": true,
+		"include": ["packages/examples", "packages/debug-plugin"]
 	},
 	"files": {
 		"ignore": ["docs/", "build/", ".turbo"]
@@ -13,6 +14,6 @@
 			"recommended": true,
 			"nursery": { "recommended": true }
 		},
-		"include": ["packages/examples"]
+		"include": ["packages/examples", "packages/debug-plugin"]
 	}
 }

@@ -37,22 +37,30 @@
 	"engines": {
 		"node": ">= 19"
 	},
-	"main": "dist/@melonjs/debug-plugin.js",
-	"module": "dist/@melonjs/debug-plugin.js",
-	"types": "dist/@melonjs/debug-plugin.d.ts",
-	"sideEffects": false,
-	"files": ["dist/", "src/", "package.json", "README.md", "LICENSE"],
+	"types": "./build/index.d.ts",
+	"exports": {
+		".": "./build/index.js"
+	},
+	"files": ["build/", "package.json", "README.md"],
 	"peerDependencies": {
 		"melonjs": ">=15.12.0"
 	},
 	"devDependencies": {
-		"del-cli": "^5.1.0",
-		"typescript": "^5.3.3"
+		"concurrently": "^8.2.2",
+		"esbuild": "^0.23.0",
+		"melonjs": "workspace:*",
+		"tsconfig": "workspace:*",
+		"tsx": "^4.16.2",
+		"typescript": "^5.5.3"
 	},
 	"scripts": {
+		"dev": "concurrently --raw \"pnpm build:watch\" \"pnpm tsc:watch\"",
+		"build": "tsx scripts/build.ts && pnpm types",
+		"build:watch": "tsx scripts/build.ts watch",
 		"lint": "eslint src/**.js rollup.config.mjs",
-		"prepublishOnly": "npm run build",
-		"clean": "del-cli --force dist/*",
-		"types": "tsc"
+		"prepublishOnly": "pnpm clean && pnpm build",
+		"clean": "tsx scripts/clean.ts",
+		"types": "tsc --project tsconfig.build.json",
+		"tsc:watch": "tsc --project tsconfig.build.json --watch --noUnusedParameters false --noUnusedLocals false --preserveWatchOutput"
 	}
 }

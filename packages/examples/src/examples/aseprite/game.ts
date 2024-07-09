@@ -1,8 +1,8 @@
+import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import * as me from "melonjs";
-// import { DebugPanelPlugin } from "debugPlugin";
-import { PlayScreen } from "./screens/play.js";
 import paladinJson from "./assets/paladin.json?url";
 import paladinPng from "./assets/paladin.png";
+import { PlayScreen } from "./screens/play.js";
 
 const resources = [
 	{ name: "paladin", type: "json", src: paladinJson },
@@ -25,7 +25,7 @@ export const game = {
 		}
 
 		// register the debug plugin
-		// me.plugin.register(DebugPanelPlugin,  "debugPanel");
+		me.plugin.register(DebugPanelPlugin, "debugPanel");
 
 		me.loader.setOptions({ withCredentials: true });
 

@@ -17,6 +17,7 @@
 		"react-router-dom": "^6.24.1",
 		"tsconfig": "workspace:^",
 		"typescript": "^5.2.2",
-		"vite": "^5.3.1"
+		"vite": "^5.3.1",
+		"@melonjs/debug-plugin": "workspace:*"
 	}
 }

@@ -11,7 +11,13 @@ export default tseslint.config(
 	{
 		name: "eslint/global-ignores",
 		// globally ignore below directories and files
-		ignores: ["**/build", "**/docs/**/*", "**/node_modules", "**/examples"],
+		ignores: [
+			"**/build",
+			"**/docs/**/*",
+			"**/node_modules",
+			"**/examples",
+			"**/debug-plugin",
+		],
 	},
 	{
 		name: "eslint/global-rules",

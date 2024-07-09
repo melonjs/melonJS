@@ -52,20 +52,31 @@ importers:
         version: 2.0.1(@types/node@20.14.10)(@vitest/browser@2.0.1)
 
   packages/debug-plugin:
-    dependencies:
-      melonjs:
-        specifier: '>=15.12.0'
-        version: 17.4.0
     devDependencies:
-      del-cli:
-        specifier: ^5.1.0
-        version: 5.1.0
+      concurrently:
+        specifier: ^8.2.2
+        version: 8.2.2
+      esbuild:
+        specifier: ^0.23.0
+        version: 0.23.0
+      melonjs:
+        specifier: workspace:*
+        version: link:../melonjs
+      tsconfig:
+        specifier: workspace:*
+        version: link:../tsconfig
+      tsx:
+        specifier: ^4.16.2
+        version: 4.16.2
       typescript:
-        specifier: ^5.3.3
+        specifier: ^5.5.3
         version: 5.5.3
 
   packages/examples:
     dependencies:
+      '@melonjs/debug-plugin':
+        specifier: workspace:*
+        version: link:../debug-plugin
       '@types/react':
         specifier: ^18.3.3
         version: 18.3.3
@@ -1355,9 +1366,6 @@ packages:
   dom-accessibility-api@0.5.16:
     resolution: {integrity: sha512-X7BJ2yElsnOJ30pZF4uIIDfBEVgF4XEBxL9Bxhy6dnrm5hkzqmsWHGTiHqRiITNhMyFLyAiWndIJP7Z1NTteDg==}
 
-  earcut@2.2.4:
-    resolution: {integrity: sha512-/pjZsA1b4RPHbeWZQn66SWS8nZZWLQQ23oE3Eam7aroEFGEvwKAsJfZ9ytiEMycfzXWpca4FA9QIOehf7PocBQ==}
-
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
 
@@ -1454,9 +1462,6 @@ packages:
   esutils@2.0.3:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
     engines: {node: '>=0.10.0'}
-
-  eventemitter3@5.0.1:
-    resolution: {integrity: sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==}
 
   execa@5.1.1:
     resolution: {integrity: sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==}
@@ -1873,10 +1878,6 @@ packages:
 
   mdurl@2.0.0:
     resolution: {integrity: sha512-Lf+9+2r+Tdp5wXDXC4PcIBjTDtq4UKjCPMQhKIuzpJNW0b96kVqSwW0bT7FhRSfmAiFYgP+SCRvdrDozfh0U5w==}
-
-  melonjs@17.4.0:
-    resolution: {integrity: sha512-AktsRa7SbcVExlUBTtu7TJz4gfndZpooJBcfptFjL+t9JIjMxXJGWWajhPbNlSbsBIkmxrDQJDFeKPJlbAZebw==}
-    engines: {node: '>= 20'}
 
   meow@10.1.5:
     resolution: {integrity: sha512-/d+PQ4GKmGvM9Bee/DPa8z3mXs/pkvJE2KEThngVNOqtmljC6K7NMPxtc2JeZYTmpWb9k/TmxjeL18ez3h7vCw==}
@@ -2645,9 +2646,6 @@ packages:
         optional: true
       jsdom:
         optional: true
-
-  whatwg-fetch@3.6.20:
-    resolution: {integrity: sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg==}
 
   which@2.0.2:
     resolution: {integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==}
@@ -3849,8 +3847,6 @@ snapshots:
 
   dom-accessibility-api@0.5.16: {}
 
-  earcut@2.2.4: {}
-
   eastasianwidth@0.2.0: {}
 
   electron-to-chromium@1.4.818: {}
@@ -4015,8 +4011,6 @@ snapshots:
       '@types/estree': 1.0.5
 
   esutils@2.0.3: {}
-
-  eventemitter3@5.0.1: {}
 
   execa@5.1.1:
     dependencies:
@@ -4367,16 +4361,6 @@ snapshots:
       uc.micro: 2.1.0
 
   mdurl@2.0.0: {}
-
-  melonjs@17.4.0:
-    dependencies:
-      '@teppeis/multimaps': 3.0.0
-      core-js: 3.37.1
-      earcut: 2.2.4
-      eventemitter3: 5.0.1
-      howler: 2.2.4
-      semver: 7.6.2
-      whatwg-fetch: 3.6.20
 
   meow@10.1.5:
     dependencies:
@@ -5134,8 +5118,6 @@ snapshots:
       - sugarss
       - supports-color
       - terser
-
-  whatwg-fetch@3.6.20: {}
 
   which@2.0.2:
     dependencies:
