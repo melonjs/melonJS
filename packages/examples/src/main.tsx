@@ -4,6 +4,7 @@ import { Link, RouterProvider, createBrowserRouter } from "react-router-dom";
 import { ExampleAseprite } from "./examples/aseprite/ExampleAseprite";
 import { ExampleCollisionTest } from "./examples/collisionTest/ExampleCollisionTest";
 import "./index.css";
+import { ExampleDeviceTest } from "./examples/deviceTest/ExampleDeviceTest";
 
 const Index = () => {
 	return (
@@ -17,6 +18,11 @@ const Index = () => {
 				<li>
 					<Link to="collision-test" reloadDocument>
 						collision test
+					</Link>
+				</li>
+				<li>
+					<Link to="device-test" reloadDocument>
+						device test
 					</Link>
 				</li>
 			</ul>
@@ -36,6 +42,10 @@ const router = createBrowserRouter([
 	{
 		path: "collision-test",
 		element: <ExampleCollisionTest />,
+	},
+	{
+		path: "device-test",
+		element: <ExampleDeviceTest />,
 	},
 ]);
 

@@ -2,7 +2,7 @@ import { getParent } from "./../video/video.js";
 import save from "./save.ts";
 import { prefixed } from "./../utils/agent.ts";
 import { DOMContentLoaded } from "./dom.js";
-import * as device_platform from "./platform.js"; // export * as name1 from …; // ECMAScript® 2020
+import * as device_platform from "./platform.js";
 import { BLUR, eventEmitter, FOCUS } from "./event.ts";
 
 /**
