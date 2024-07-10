@@ -351,13 +351,11 @@ function roundRect(
 	}
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 if (globalThis.CanvasRenderingContext2D) {
 	if (typeof globalThis.Path2D.prototype.roundRect === "undefined") {
 		globalThis.Path2D.prototype.roundRect = roundRect;
 	}
 }
-// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 if (globalThis.CanvasRenderingContext2D) {
 	if (
 		typeof globalThis.CanvasRenderingContext2D.prototype.roundRect ===
@@ -366,7 +364,6 @@ if (globalThis.CanvasRenderingContext2D) {
 		globalThis.CanvasRenderingContext2D.prototype.roundRect = roundRect;
 	}
 }
-// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 if (globalThis.OffscreenCanvasRenderingContext2D) {
 	if (
 		typeof globalThis.OffscreenCanvasRenderingContext2D.prototype.roundRect ===

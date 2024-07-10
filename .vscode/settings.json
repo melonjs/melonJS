@@ -12,6 +12,7 @@
 	"files.eol": "\n",
 	"editor.codeActionsOnSave": {
 		"source.fixAll": "explicit",
-		"quickfix.biome": "explicit"
+		"quickfix.biome": "explicit",
+		"source.organizeImports.biome": "explicit"
 	}
 }

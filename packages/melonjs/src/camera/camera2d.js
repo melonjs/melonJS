@@ -8,7 +8,7 @@ import Rect from "./../geometries/rectangle.js";
 import { renderer } from "./../video/video.js";
 import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
-import { clamp, toBeCloseTo } from "./../math/math.js";
+import { clamp, toBeCloseTo } from "./../math/math.ts";
 import { game } from "../index.js";
 import {
 	CANVAS_ONRESIZE,
@@ -164,7 +164,7 @@ export default class Camera2d extends Renderable {
 		// subscribe to the game reset event
 		eventEmitter.addListener(GAME_RESET, this.reset.bind(this));
 		// subscribe to the canvas resize event
-		eventEmitter.addListener(CANVAS_ONRESIZE, this.reset.bind(this));
+		eventEmitter.addListener(CANVAS_ONRESIZE, this.resize.bind(this));
 	}
 
 	// -- some private function ---

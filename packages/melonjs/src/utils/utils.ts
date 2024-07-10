@@ -65,7 +65,6 @@ export function getUriFragment(url: string) {
 		if (typeof globalThis.document !== "undefined") {
 			const location = globalThis.document.location;
 
-			// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 			if (location && location.hash) {
 				url = location.hash;
 			} else {

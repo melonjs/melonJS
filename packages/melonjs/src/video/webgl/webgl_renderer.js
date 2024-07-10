@@ -7,7 +7,7 @@ import TextureCache from "./../texture/cache.js";
 import { TextureAtlas, createAtlas } from "./../texture/atlas.js";
 import { renderer } from "./../video.js";
 import pool from "./../../system/pooling.js";
-import { isPowerOfTwo } from "./../../math/math.js";
+import { isPowerOfTwo } from "./../../math/math.ts";
 import {
 	CANVAS_ONRESIZE,
 	eventEmitter,

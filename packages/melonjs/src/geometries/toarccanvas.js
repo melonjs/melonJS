@@ -1,4 +1,4 @@
-import { degToRad, pow } from "./../math/math.js";
+import { degToRad, pow } from "./../math/math.ts";
 
 function correctRadii(signedRx, signedRy, x1p, y1p) {
 	const prx = Math.abs(signedRx);

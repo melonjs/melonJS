@@ -1,4 +1,4 @@
-import { clamp } from "./math.js";
+import { clamp } from "./math.ts";
 import pool from "./../system/pooling.js";
 
 /**

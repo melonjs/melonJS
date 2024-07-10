@@ -1,6 +1,6 @@
 import pool from "./../system/pooling.js";
 import timer from "./../system/timer.ts";
-import { randomFloat, clamp } from "./../math/math.js";
+import { randomFloat, clamp } from "./../math/math.ts";
 import Renderable from "./../renderable/renderable.js";
 
 /**

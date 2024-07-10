@@ -1,5 +1,5 @@
 import Vector2d from "../../../math/vector2.js";
-import { isPowerOfTwo } from "../../../math/math.js";
+import { isPowerOfTwo } from "../../../math/math.ts";
 import quadVertex from "./../shaders/quad.vert";
 import quadFragment from "./../shaders/quad.frag";
 import Compositor from "./compositor.js";

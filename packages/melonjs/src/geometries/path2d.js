@@ -1,5 +1,5 @@
 import pool from "./../system/pooling.js";
-import { TAU } from "./../math/math.js";
+import { TAU } from "./../math/math.ts";
 import { endpointToCenterParameterization } from "./toarccanvas.js";
 import { earcut } from "./earcut.js";
 

@@ -1,7 +1,7 @@
 import pool from "./../../system/pooling.js";
 import { applyTMXProperties } from "./TMXUtils.js";
 import Tile from "./TMXTile.js";
-import { degToRad } from "./../../math/math.js";
+import { degToRad } from "./../../math/math.ts";
 
 /**
  * a TMX Object defintion, as defined in Tiled

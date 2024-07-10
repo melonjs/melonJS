@@ -1,6 +1,6 @@
 import { renderer } from "./../video.js";
 import { TextureAtlas, createAtlas } from "./atlas.js";
-import { isPowerOfTwo } from "./../../math/math.js";
+import { isPowerOfTwo } from "./../../math/math.ts";
 import { ArrayMultimap } from "@teppeis/multimaps";
 import { getBasename } from "../../utils/file.ts";
 

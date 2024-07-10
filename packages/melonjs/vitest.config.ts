@@ -23,7 +23,7 @@ export default defineConfig({
 			headless: true,
 		},
 	},
-	publicDir: "tests/public",
+	publicDir: "./tests/public",
 	plugins: [
 		glsl(),
 		{

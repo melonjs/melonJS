@@ -3,7 +3,7 @@ import ObservableVector3d from "./../math/observable_vector3.js";
 import Rect from "./../geometries/rectangle.js";
 import pool from "./../system/pooling.js";
 import { releaseAllPointerEvents } from "./../input/input.js";
-import { clamp } from "./../math/math.js";
+import { clamp } from "./../math/math.ts";
 import Body from "./../physics/body.js";
 import Bounds from "./../physics/bounds.js";
 import GLShader from "./../video/webgl/glshader.js";

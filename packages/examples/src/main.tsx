@@ -1,8 +1,28 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { Link, RouterProvider, createBrowserRouter } from "react-router-dom";
 import { ExampleAseprite } from "./examples/aseprite/ExampleAseprite";
-import { Index } from "./Index";
+import { ExampleCollisionTest } from "./examples/collisionTest/ExampleCollisionTest";
+import "./index.css";
+
+const Index = () => {
+	return (
+		<>
+			<ul>
+				<li>
+					<Link to="aseprite" reloadDocument>
+						aseprite
+					</Link>
+				</li>
+				<li>
+					<Link to="collision-test" reloadDocument>
+						collision test
+					</Link>
+				</li>
+			</ul>
+		</>
+	);
+};
 
 const router = createBrowserRouter([
 	{
@@ -12,6 +32,10 @@ const router = createBrowserRouter([
 	{
 		path: "aseprite",
 		element: <ExampleAseprite />,
+	},
+	{
+		path: "collision-test",
+		element: <ExampleCollisionTest />,
 	},
 ]);
 

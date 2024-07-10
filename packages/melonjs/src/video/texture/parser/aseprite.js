@@ -1,4 +1,4 @@
-import { ETA } from "../../../math/math.js";
+import { ETA } from "../../../math/math.ts";
 import Vector2d from "../../../math/vector2.js";
 
 /**

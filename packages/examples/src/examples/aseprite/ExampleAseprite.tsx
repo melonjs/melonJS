@@ -1,14 +1,12 @@
-import { useEffect } from "react";
-import { game } from "./game";
 import * as me from "melonjs";
-import { paladin } from "./screens/play";
+import { useEffect } from "react";
+import { createGame } from "./game";
+import { paladin } from "./play";
 
 export const ExampleAseprite = () => {
 	useEffect(() => {
 		if (!me.game.isInitialized) {
-			me.device.onReady(() => {
-				game.onload();
-			});
+			createGame();
 		}
 	}, []);
 

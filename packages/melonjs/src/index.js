@@ -85,7 +85,7 @@ export * as collision from "./physics/collision.js";
 export * as device from "./system/device.js";
 export * as event from "./system/event.ts";
 export * as loader from "./loader/loader.js";
-export * as math from "./math/math.js";
+export * as math from "./math/math.ts";
 export * as utils from "./utils/utils.ts";
 export * as input from "./input/input.js";
 export * as plugin from "./plugin/plugin.js";

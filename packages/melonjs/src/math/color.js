@@ -1,4 +1,4 @@
-import { clamp, random } from "./math.js";
+import { clamp, random } from "./math.ts";
 import pool from "./../system/pooling.js";
 
 // convert a give color component to it hexadecimal value

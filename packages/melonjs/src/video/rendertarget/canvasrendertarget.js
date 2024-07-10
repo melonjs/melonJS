@@ -1,6 +1,6 @@
 import { createCanvas } from "../video.js";
 import { setPrefixed } from "../../utils/agent.ts";
-import { clamp } from "../../math/math.js";
+import { clamp } from "../../math/math.ts";
 
 /**
  * additional import for TypeScript

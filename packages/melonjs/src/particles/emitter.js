@@ -1,6 +1,6 @@
 import pool from "./../system/pooling.js";
 import ParticleEmitterSettings from "./settings.js";
-import { randomFloat } from "./../math/math.js";
+import { randomFloat } from "./../math/math.ts";
 import Container from "./../renderable/container.js";
 
 /**

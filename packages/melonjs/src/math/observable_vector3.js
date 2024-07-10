@@ -1,5 +1,5 @@
 import Vector3d from "./vector3.js";
-import { clamp } from "./math.js";
+import { clamp } from "./math.ts";
 import pool from "./../system/pooling.js";
 
 /**

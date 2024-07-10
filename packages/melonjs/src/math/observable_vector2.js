@@ -1,6 +1,6 @@
 import pool from "./../system/pooling.js";
 import Vector2d from "./vector2.js";
-import { clamp } from "./math.js";
+import { clamp } from "./math.ts";
 
 /**
  * A Vector2d object that provide notification by executing the given callback when the vector is changed.

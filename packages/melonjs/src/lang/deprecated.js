@@ -58,4 +58,4 @@ WebGLRenderer.prototype.setLineWidth = function (width) {
  * @deprecated since 18.0.0
  * Use lowercase `math` export instead.
  */
-export * as Math from "./../math/math.js";
+export * as Math from "./../math/math.ts";

@@ -45,8 +45,7 @@
 	"dependencies": {
 		"@teppeis/multimaps": "^3.0.0",
 		"core-js": "^3.37.1",
-		"howler": "2.2.4",
-		"vitest": "^1.6.0"
+		"howler": "2.2.4"
 	},
 	"devDependencies": {
 		"@types/howler": "^2.2.11",

@@ -1,5 +1,5 @@
 import pool from "./../system/pooling.js";
-import { EPSILON } from "./math.js";
+import { EPSILON } from "./math.ts";
 
 /**
  * additional import for TypeScript

@@ -1,7 +1,7 @@
 import Vector2d from "./../../../math/vector2.js";
 import pool from "./../../../system/pooling.js";
 import TMXHexagonalRenderer from "./TMXHexagonalRenderer.js";
-import { degToRad } from "./../../../math/math.js";
+import { degToRad } from "./../../../math/math.ts";
 
 /**
  * a Staggered Map Renderder

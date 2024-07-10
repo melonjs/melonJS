@@ -2,7 +2,7 @@ import Color from "../../math/color.js";
 import { renderer as globalRenderer } from "../../video/video.js";
 import pool from "../../system/pooling.js";
 import Renderable from "../renderable.js";
-import { nextPowerOfTwo } from "../../math/math.js";
+import { nextPowerOfTwo } from "../../math/math.ts";
 import setContextStyle from "./textstyle.js";
 import TextMetrics from "./textmetrics.js";
 
