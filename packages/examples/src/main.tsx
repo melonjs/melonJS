@@ -5,6 +5,7 @@ import { ExampleAseprite } from "./examples/aseprite/ExampleAseprite";
 import { ExampleCollisionTest } from "./examples/collisionTest/ExampleCollisionTest";
 import "./index.css";
 import { ExampleDeviceTest } from "./examples/deviceTest/ExampleDeviceTest";
+import { ExampleDragAndDrop } from "./examples/dragAndDrop/ExampleDragAndDrop";
 
 const Index = () => {
 	return (
@@ -23,6 +24,11 @@ const Index = () => {
 				<li>
 					<Link to="device-test" reloadDocument>
 						device test
+					</Link>
+				</li>
+				<li>
+					<Link to="drag-and-drop" reloadDocument>
+						drag and drop
 					</Link>
 				</li>
 			</ul>
@@ -46,6 +52,10 @@ const router = createBrowserRouter([
 	{
 		path: "device-test",
 		element: <ExampleDeviceTest />,
+	},
+	{
+		path: "drag-and-drop",
+		element: <ExampleDragAndDrop />,
 	},
 ]);
 
