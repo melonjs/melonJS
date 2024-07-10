@@ -1,5 +1,5 @@
 import { ColorLayer, Draggable, DropTarget, Text, game, video } from "melonjs";
-import { useEffect } from "react";
+import { createExampleComponent } from "../utils";
 
 class Square extends Draggable {
 	constructor(x, y, settings) {
@@ -149,11 +149,4 @@ const createGame = () => {
 	);
 };
 
-export const ExampleDragAndDrop = () => {
-	useEffect(() => {
-		if (!game.isInitialized) {
-			createGame();
-		}
-	}, []);
-	return null;
-};
+export const ExampleDragAndDrop = createExampleComponent(createGame);

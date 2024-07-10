@@ -1,5 +1,5 @@
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
-import * as me from "melonjs";
+import { loader, plugin, state, video } from "melonjs";
 import paladinJson from "./assets/paladin.json?url";
 import paladinPng from "./assets/paladin.png";
 import { PlayScreen } from "./play";
@@ -10,27 +10,18 @@ const resources = [
 ];
 
 export const createGame = () => {
-	if (
-		!me.video.init(640, 480, {
-			parent: "screen",
-			scale: "auto",
-			scaleMethod: "fill",
-		})
-	) {
-		alert("Your browser does not support HTML5 canvas.");
-		return;
-	}
+	video.init(640, 480);
 
 	// register the debug plugin
-	me.plugin.register(DebugPanelPlugin, "debugPanel");
+	plugin.register(DebugPanelPlugin, "debugPanel");
 
-	me.loader.setOptions({ withCredentials: true });
+	loader.setOptions({ withCredentials: true });
 
 	// set all ressources to be loaded
-	me.loader.preload(resources, () => {
-		me.state.set(me.state.PLAY, new PlayScreen());
+	loader.preload(resources, () => {
+		state.set(state.PLAY, new PlayScreen());
 
 		// Start the game.
-		me.state.change(me.state.PLAY);
+		state.change(state.PLAY);
 	});
 };

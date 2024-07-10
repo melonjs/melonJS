@@ -89,7 +89,7 @@ export * as math from "./math/math.ts";
 export * as utils from "./utils/utils.ts";
 export * as input from "./input/input.js";
 export * as plugin from "./plugin/plugin.js";
-export * as level from "./level/level.js";
+export { level } from "./level/level.js";
 export * as video from "./video/video.js";
 export * from "./application/scaleMethods.ts";
 export * from "./application/settings.ts";

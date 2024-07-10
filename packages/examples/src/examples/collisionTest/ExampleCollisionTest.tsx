@@ -14,6 +14,7 @@ import {
 	video,
 } from "melonjs";
 import { useEffect } from "react";
+import { createExampleComponent } from "../utils";
 import monsterPng from "./assets/monster.png";
 
 class Smilie extends Sprite {
@@ -121,11 +122,4 @@ const createGame = () => {
 	});
 };
 
-export const ExampleCollisionTest = () => {
-	useEffect(() => {
-		if (!game.isInitialized) {
-			createGame();
-		}
-	}, []);
-	return null;
-};
+export const ExampleCollisionTest = createExampleComponent(createGame);

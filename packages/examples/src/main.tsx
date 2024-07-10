@@ -1,4 +1,4 @@
-import React from "react";
+import React, { type ReactElement } from "react";
 import ReactDOM from "react-dom/client";
 import { Link, RouterProvider, createBrowserRouter } from "react-router-dom";
 import { ExampleAseprite } from "./examples/aseprite/ExampleAseprite";
@@ -6,31 +6,61 @@ import { ExampleCollisionTest } from "./examples/collisionTest/ExampleCollisionT
 import "./index.css";
 import { ExampleDeviceTest } from "./examples/deviceTest/ExampleDeviceTest";
 import { ExampleDragAndDrop } from "./examples/dragAndDrop/ExampleDragAndDrop";
+import { ExampleGraphics } from "./examples/graphics/ExampleGraphics";
+import { ExampleHelloWorld } from "./examples/helloWorld/ExampleHelloWorld";
+import { ExampleIsometricRPG } from "./examples/isometricRpg/ExampleIsometricRPG";
+
+const examples: { label: string; path: string; component: ReactElement }[] = [
+	{
+		component: <ExampleAseprite />,
+		label: "aseprite",
+		path: "aseprite",
+	},
+	{
+		component: <ExampleCollisionTest />,
+		label: "collision test",
+		path: "collision-test",
+	},
+	{
+		component: <ExampleDeviceTest />,
+		label: "device test",
+		path: "device-test",
+	},
+	{
+		component: <ExampleDragAndDrop />,
+		label: "drag and drop",
+		path: "drag-and-drop",
+	},
+	{
+		component: <ExampleGraphics />,
+		label: "graphics",
+		path: "graphics",
+	},
+	{
+		component: <ExampleHelloWorld />,
+		label: "hello world",
+		path: "hello-world",
+	},
+	{
+		component: <ExampleIsometricRPG />,
+		label: "isometric rpg",
+		path: "isometric-rpg",
+	},
+];
 
 const Index = () => {
 	return (
 		<>
 			<ul>
-				<li>
-					<Link to="aseprite" reloadDocument>
-						aseprite
-					</Link>
-				</li>
-				<li>
-					<Link to="collision-test" reloadDocument>
-						collision test
-					</Link>
-				</li>
-				<li>
-					<Link to="device-test" reloadDocument>
-						device test
-					</Link>
-				</li>
-				<li>
-					<Link to="drag-and-drop" reloadDocument>
-						drag and drop
-					</Link>
-				</li>
+				{examples.map((example) => {
+					return (
+						<li key={example.path}>
+							<Link to={example.path} reloadDocument>
+								{example.label}
+							</Link>
+						</li>
+					);
+				})}
 			</ul>
 		</>
 	);
@@ -41,22 +71,12 @@ const router = createBrowserRouter([
 		path: "/",
 		element: <Index />,
 	},
-	{
-		path: "aseprite",
-		element: <ExampleAseprite />,
-	},
-	{
-		path: "collision-test",
-		element: <ExampleCollisionTest />,
-	},
-	{
-		path: "device-test",
-		element: <ExampleDeviceTest />,
-	},
-	{
-		path: "drag-and-drop",
-		element: <ExampleDragAndDrop />,
-	},
+	...examples.map((example) => {
+		return {
+			path: example.path,
+			element: example.component,
+		};
+	}),
 ]);
 
 const rootEl = document.getElementById("root");

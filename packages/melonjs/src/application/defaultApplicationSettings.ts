@@ -5,7 +5,7 @@ import { ApplicationSettings } from "./settings";
 export const defaultApplicationSettings = {
 	renderer: AUTO,
 	scale: 1.0,
-	scaleMethod: ScaleMethods.Fit,
+	scaleMethod: ScaleMethods.Manual,
 	preferWebGL1: false,
 	depthTest: "sorting",
 	powerPreference: "default",

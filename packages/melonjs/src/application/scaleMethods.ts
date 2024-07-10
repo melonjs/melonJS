@@ -1,5 +1,11 @@
 export const ScaleMethods = {
 	/**
+	 * Manual; no scaling is performed
+	 * <img src="images/scale-fit.png"/>
+	 */
+	Manual: "manual",
+
+	/**
 	 * Letterboxed; content is scaled to design aspect ratio
 	 * <img src="images/scale-fit.png"/>
 	 */

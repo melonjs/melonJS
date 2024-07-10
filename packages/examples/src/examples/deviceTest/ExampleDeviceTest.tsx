@@ -8,7 +8,7 @@ import {
 	math,
 	video,
 } from "melonjs";
-import { useEffect } from "react";
+import { createExampleComponent } from "../utils";
 
 class DeviceInfo extends Renderable {
 	font: Text;
@@ -102,11 +102,4 @@ const createGame = () => {
 	game.world.addChild(new DeviceInfo(), 1);
 };
 
-export const ExampleDeviceTest = () => {
-	useEffect(() => {
-		if (!game.isInitialized) {
-			createGame();
-		}
-	}, []);
-	return null;
-};
+export const ExampleDeviceTest = createExampleComponent(createGame);
