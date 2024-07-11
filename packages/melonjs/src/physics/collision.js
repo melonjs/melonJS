@@ -11,7 +11,7 @@ import { game } from "../index.js";
  * @namespace collision
  */
 
-const collision = {
+export const collision = {
 	/**
 	 * The maximum number of children that a quadtree node can contain before it is split into sub-nodes.
 	 * @name maxChildren
@@ -125,5 +125,3 @@ const collision = {
 		return game.world.detector.rayCast(line, result);
 	},
 };
-
-export default collision;

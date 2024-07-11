@@ -1,7 +1,7 @@
 import pool from "./../../system/pooling.js";
 import { game } from "../../index.js";
 import { checkVersion } from "./../../utils/utils.ts";
-import collision from "./../../physics/collision.js";
+import { collision } from "./../../physics/collision.js";
 import Body from "./../../physics/body.js";
 import TMXTileset from "./TMXTileset.js";
 import TMXTilesetGroup from "./TMXTilesetGroup.js";

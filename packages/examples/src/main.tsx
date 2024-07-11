@@ -10,6 +10,7 @@ import { ExampleGraphics } from "./examples/graphics/ExampleGraphics";
 import { ExampleHelloWorld } from "./examples/helloWorld/ExampleHelloWorld";
 import { ExampleIsometricRPG } from "./examples/isometricRpg/ExampleIsometricRPG";
 import { ExampleLights } from "./examples/lights/ExampleLights";
+import { ExamplePlatformer } from "./examples/platformer/ExamplePlatformer";
 
 const examples: { label: string; path: string; component: ReactElement }[] = [
 	{
@@ -51,6 +52,11 @@ const examples: { label: string; path: string; component: ReactElement }[] = [
 		component: <ExampleLights />,
 		label: "lights",
 		path: "lights",
+	},
+	{
+		component: <ExamplePlatformer />,
+		label: "platformer",
+		path: "platformer",
 	},
 ];
 

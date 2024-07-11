@@ -81,7 +81,7 @@ import { version } from "./version.ts";
 
 // export all utility function
 export * as audio from "./audio/audio.js";
-export * as collision from "./physics/collision.js";
+export { collision } from "./physics/collision.js";
 export * as device from "./system/device.js";
 export * as event from "./system/event.ts";
 export * as loader from "./loader/loader.js";

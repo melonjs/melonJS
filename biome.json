@@ -5,7 +5,7 @@
 		"include": ["packages/examples", "packages/debug-plugin"]
 	},
 	"files": {
-		"ignore": ["docs/", "build/", ".turbo"]
+		"ignore": ["docs/", "build/", ".turbo", "**/examples/**/assets/**/*"]
 	},
 	"formatter": { "enabled": true },
 	"linter": {
