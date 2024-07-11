@@ -9,6 +9,7 @@ import { ExampleDragAndDrop } from "./examples/dragAndDrop/ExampleDragAndDrop";
 import { ExampleGraphics } from "./examples/graphics/ExampleGraphics";
 import { ExampleHelloWorld } from "./examples/helloWorld/ExampleHelloWorld";
 import { ExampleIsometricRPG } from "./examples/isometricRpg/ExampleIsometricRPG";
+import { ExampleLights } from "./examples/lights/ExampleLights";
 
 const examples: { label: string; path: string; component: ReactElement }[] = [
 	{
@@ -45,6 +46,11 @@ const examples: { label: string; path: string; component: ReactElement }[] = [
 		component: <ExampleIsometricRPG />,
 		label: "isometric rpg",
 		path: "isometric-rpg",
+	},
+	{
+		component: <ExampleLights />,
+		label: "lights",
+		path: "lights",
 	},
 ];
 
