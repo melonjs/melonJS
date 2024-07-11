@@ -11,6 +11,7 @@ import { ExampleHelloWorld } from "./examples/helloWorld/ExampleHelloWorld";
 import { ExampleIsometricRPG } from "./examples/isometricRpg/ExampleIsometricRPG";
 import { ExampleLights } from "./examples/lights/ExampleLights";
 import { ExamplePlatformer } from "./examples/platformer/ExamplePlatformer";
+import { ExampleText } from "./examples/text/ExampleText";
 
 const examples: { label: string; path: string; component: ReactElement }[] = [
 	{
@@ -57,6 +58,11 @@ const examples: { label: string; path: string; component: ReactElement }[] = [
 		component: <ExamplePlatformer />,
 		label: "platformer",
 		path: "platformer",
+	},
+	{
+		component: <ExampleText />,
+		label: "text",
+		path: "text",
 	},
 ];
 
