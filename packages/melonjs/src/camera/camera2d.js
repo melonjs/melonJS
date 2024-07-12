@@ -528,7 +528,7 @@ export default class Camera2d extends Renderable {
 		this._fadeOut.color = pool.pull("Color").copy(color);
 		this._fadeOut.tween = pool
 			.pull("Tween", this._fadeOut.color)
-			.to({ alpha: 0.0 }, duration)
+			.to({ alpha: 0.0 }, { duration })
 			.onComplete(onComplete || null);
 		this._fadeOut.tween.isPersistent = true;
 		this._fadeOut.tween.start();
@@ -550,7 +550,7 @@ export default class Camera2d extends Renderable {
 		this._fadeIn.color.alpha = 0.0;
 		this._fadeIn.tween = pool
 			.pull("Tween", this._fadeIn.color)
-			.to({ alpha: _alpha }, duration)
+			.to({ alpha: _alpha }, { duration })
 			.onComplete(onComplete || null);
 		this._fadeIn.tween.isPersistent = true;
 		this._fadeIn.tween.start();

@@ -161,7 +161,6 @@ export default class Tween<T extends Record<string, unknown>> {
 	to(
 		properties: Record<string, unknown>,
 		options?:
-			| number
 			| {
 					duration?: number | undefined;
 					easing?: EasingFunction | undefined;
@@ -175,12 +174,7 @@ export default class Tween<T extends Record<string, unknown>> {
 	) {
 		this._valuesEnd = properties;
 
-		if (typeof options === "number") {
-			this._duration = options;
-			return this;
-		}
-
-		if (options) {
+		if (typeof options !== "undefined") {
 			if (options.duration) {
 				this._duration = options.duration;
 			}
