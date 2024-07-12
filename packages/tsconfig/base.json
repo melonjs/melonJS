@@ -1,0 +1,22 @@
+{
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"compilerOptions": {
+		"target": "es2020",
+		"allowJs": true,
+		"checkJs": false,
+		"strict": true,
+		"noUnusedLocals": true,
+		"noFallthroughCasesInSwitch": true,
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
+		"moduleDetection": "force",
+		"resolveJsonModule": true,
+		"exactOptionalPropertyTypes": true,
+		"allowUnreachableCode": false,
+		"allowSyntheticDefaultImports": true,
+		"isolatedModules": true,
+		"strictPropertyInitialization": false,
+		"allowImportingTsExtensions": true,
+		"noUnusedParameters": true
+	}
+}

@@ -1,11 +1,19 @@
 {
 	"$schema": "https://biomejs.dev/schemas/1.8.2/schema.json",
 	"organizeImports": {
-		"enabled": false
+		"enabled": true,
+		"include": ["packages/examples", "packages/debug-plugin"]
 	},
 	"files": {
-		"ignore": ["docs/", "build/"]
+		"ignore": ["docs/", "build/", ".turbo", "**/examples/**/assets/**/*"]
 	},
 	"formatter": { "enabled": true },
-	"linter": { "enabled": false }
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"nursery": { "recommended": true }
+		},
+		"include": ["packages/examples", "packages/debug-plugin"]
+	}
 }

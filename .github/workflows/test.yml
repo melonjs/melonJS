@@ -1,17 +1,20 @@
 name: Test
 on:
   push:
+    branches: [master]
   pull_request:
+    types: [opened, synchronize]
 jobs:
   test:
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:v1.44.1-jammy
+      image: mcr.microsoft.com/playwright:v1.45.1-jammy
     steps:
       - uses: actions/checkout@v4
       - name: Setup node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm ci
-      - run: npm test
+      - uses: pnpm/action-setup@v4
+      - run: pnpm i
+      - run: pnpm test

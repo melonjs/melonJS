@@ -7,28 +7,25 @@ Please read our [Code of Conduct](./CODE_OF_CONDUCT.md) to keep our community ap
 
 If this is your first time contributing to an open source project on GitHub, please have a look at [this free tutorial](https://egghead.io/courses/how-to-contribute-to-an-open-source-project-on-github).
 
+## Developing melonJS
+The only things you need to start developing melonJS is [Node.js](http://nodejs.org/) and [pnpm](https://pnpm.io/installation). melonJS uses [Corepack](https://nodejs.org/api/corepack.html) to manage the package manager version. Follow the instructions to [install pnpm using Corepack](https://pnpm.io/installation#using-corepack). Run `pnpm install` to install third party dependencies.
+
+You can start development mode by running `pnpm dev` which will build melonJS and the docs on every file change and start a Vite dev server with the examples so you can test out your changes in real time.
+
 ## Building melonJS
+Build the melonJS source by running:
 
-To build your own version of melonJS you will need to install :
+    pnpm build
 
-- The [Node.js](http://nodejs.org/) JavaScript runtime and the [NPM](https://npmjs.org/) package manager
+The generated files will be available under the `build` directory:
+- `index.js`: melonJS ESM bundle
+- `index.js.map`: source map of the bundle
+- `*.d.ts`: TS declaration files
+- `*.d.ts.map`: TS declaration source maps
 
-Once Node.js and NPM have been installed, you need to install build dependencies,
-by executing the following in the folder where you cloned the repository :
+To run the melonJS test suite use the following:
 
-    $ [sudo] npm install
-
-Then build the melonJS source by running:
-
-    $ npm run build
-
-The generated files will be available under the `build` directory :
-- `index.js` : a tree-shakeable ES6 Module Directory
-- `index.d.ts` : typescript declaration files
-
-To run the melonJS test suite simply use the following:
-
-    $ npm run test
+    pnpm test
 
 Last but not least, if you really want to contribute, but not sure how, you can
 always check our [discussions](https://github.com/melonjs/melonJS/discussions/categories/ideas) list to get some idea on where to start.
@@ -37,7 +34,7 @@ always check our [discussions](https://github.com/melonjs/melonJS/discussions/ca
 
 Similarly, you can build your own copy of the docs locally by running :
 
-    $ npm run doc
+    $ pnpm doc
 
 The documentation will be generated under the `docs` directory, and can be accessed by opening index.html in your web browser.
 

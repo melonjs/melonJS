@@ -11,7 +11,13 @@ export default tseslint.config(
 	{
 		name: "eslint/global-ignores",
 		// globally ignore below directories and files
-		ignores: ["build", "docs/**/*", "rollup.config.mjs", "scripts/build.js"],
+		ignores: [
+			"**/build",
+			"**/docs/**/*",
+			"**/node_modules",
+			"**/examples",
+			"**/debug-plugin",
+		],
 	},
 	{
 		name: "eslint/global-rules",
@@ -22,7 +28,7 @@ export default tseslint.config(
 				...globals.browser,
 			},
 		},
-		files: ["src/**/*.js", "src/**/*.ts", "tests/**/*.js"],
+		files: ["**/src/**/*.js", "**/tests/**/*.js"],
 		plugins: {
 			jsdoc,
 		},
@@ -160,6 +166,7 @@ export default tseslint.config(
 			"@typescript-eslint/no-dynamic-delete": "off",
 			"@typescript-eslint/no-unsafe-argument": "off",
 			"@typescript-eslint/no-unsafe-assignment": "off",
+			"@typescript-eslint/no-unnecessary-condition": "off",
 			"@typescript-eslint/restrict-template-expressions": [
 				"error",
 				{ allowNumber: true },

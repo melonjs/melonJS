@@ -1,0 +1,66 @@
+{
+	"name": "@melonjs/debug-plugin",
+	"version": "14.8.3",
+	"description": "melonJS debug plugin",
+	"homepage": "https://github.com/melonjs/debug-plugin#readme",
+	"type": "module",
+	"keywords": [
+		"2D",
+		"HTML5",
+		"javascript",
+		"TypeScript",
+		"es6",
+		"Canvas",
+		"WebGL",
+		"WebGL2",
+		"WebAudio",
+		"game",
+		"engine",
+		"tiled",
+		"tileset",
+		"mapeditor",
+		"browser",
+		"electron",
+		"mobile",
+		"cordova"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/melonjs/debug-plugin.git"
+	},
+	"bugs": {
+		"url": "https://github.com/melonjs/debug-plugin/issues"
+	},
+	"license": "MIT",
+	"author": "Olivier Biot (AltByte Pte Ltd)",
+	"funding": "https://github.com/sponsors/melonjs",
+	"engines": {
+		"node": ">= 19"
+	},
+	"types": "./build/index.d.ts",
+	"exports": {
+		".": "./build/index.js"
+	},
+	"files": ["build/", "package.json", "README.md"],
+	"peerDependencies": {
+		"melonjs": ">=15.12.0"
+	},
+	"devDependencies": {
+		"concurrently": "^8.2.2",
+		"esbuild": "^0.23.0",
+		"melonjs": "workspace:*",
+		"tsconfig": "workspace:*",
+		"tsx": "^4.16.2",
+		"typescript": "^5.5.3"
+	},
+	"scripts": {
+		"dev": "concurrently --raw \"pnpm build:watch\" \"pnpm tsc:watch\"",
+		"build": "tsx scripts/build.ts && pnpm types",
+		"build:watch": "tsx scripts/build.ts watch",
+		"lint": "eslint src/**.js rollup.config.mjs",
+		"prepublishOnly": "pnpm clean && pnpm build",
+		"clean": "tsx scripts/clean.ts",
+		"types": "tsc --project tsconfig.build.json",
+		"tsc:watch": "tsc --project tsconfig.build.json --watch --noUnusedParameters false --noUnusedLocals false --preserveWatchOutput"
+	}
+}
