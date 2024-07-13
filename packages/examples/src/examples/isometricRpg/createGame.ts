@@ -1,4 +1,5 @@
-import { loader, pool, state, video } from "melonjs";
+import { DebugPanelPlugin } from "@melonjs/debug-plugin";
+import { loader, plugin, pool, state, video } from "melonjs";
 import { PlayerEntity } from "./PlayerEntity.js";
 import { PlayScreen } from "./play.js";
 import { resources } from "./resources.js";
@@ -8,6 +9,9 @@ export const createGame = () => {
 		parent: "screen",
 		scale: "auto",
 	});
+
+	// register the debug plugin
+	plugin.register(DebugPanelPlugin, "debugPanel");
 
 	// set all ressources to be loaded
 	loader.preload(resources, () => {
