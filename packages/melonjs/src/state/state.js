@@ -485,14 +485,14 @@ const state = {
 	 * @memberof state
 	 * @public
 	 * @param {number} state - State ID (see constants)
-	 * @param {boolean} forceChange - if true the state will be changed immediately
+	 * @param {boolean} [forceChange=false] - if true the state will be changed immediately (without waiting for the next frame)
 	 * @param {...*} [args] - extra arguments to be passed to the reset functions
 	 * @example
 	 * // The onResetEvent method on the play screen will receive two args:
 	 * // "level_1" and the number 3
 	 * me.state.change(me.state.PLAY, "level_1", 3);
 	 */
-	change(state, forceChange) {
+	change(state, forceChange = false) {
 		// Protect against undefined Stage
 		if (typeof _stages[state] === "undefined") {
 			throw new Error("Undefined Stage for state '" + state + "'");
