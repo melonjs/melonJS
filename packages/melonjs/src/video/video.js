@@ -1,6 +1,5 @@
 import { initialized, game } from "./../index.js";
 import * as device from "./../system/device.js";
-import { throttle } from "../utils/function.ts";
 import {
 	eventEmitter,
 	VIDEO_INIT,
@@ -77,9 +76,9 @@ export function init(width, height, options) {
 	//add a channel for the onresize/onorientationchange event
 	globalThis.addEventListener(
 		"resize",
-		throttle((e) => {
+		(e) => {
 			eventEmitter.emit(WINDOW_ONRESIZE, e);
-		}, 100),
+		},
 		false,
 	);
 
@@ -110,9 +109,9 @@ export function init(width, height, options) {
 	// Automatically update relative canvas position on scroll
 	globalThis.addEventListener(
 		"scroll",
-		throttle((e) => {
+		(e) => {
 			eventEmitter.emit(WINDOW_ONSCROLL, e);
-		}, 100),
+		},
 		false,
 	);
 
