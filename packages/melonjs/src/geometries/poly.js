@@ -3,7 +3,7 @@ import { earcut } from "./earcut.js";
 
 /**
  * additional import for TypeScript
- * @import Vector2d from "./../math/vector2.js";
+ * @import Vector3d from "./../math/vector3.js";
  * @import Matrix2d from "./../math/matrix2.js";
  * @import Bounds from "./../physics/bounds.js";
  */
@@ -25,9 +25,27 @@ export default class Polygon {
 	constructor(x = 0, y = 0, points) {
 		/**
 		 * origin point of the Polygon
-		 * @type {Vector2d}
+		 * @type {Vector3}
 		 */
-		this.pos = pool.pull("Vector2d");
+		this.pos = pool.pull("Vector3d");
+		/**
+		 * Proxy to the pos Vector3d object
+		 * @ignore
+		 */
+		this.posProxy = new Proxy(this.pos, {
+			set: (obj, prop, value) => {
+				// only update bounds if x or y has changed (ignore z)
+				if (prop !== "z") {
+					const newX = prop === "x" ? value : obj.x;
+					const newY = prop === "y" ? value : obj.y;
+					this.getBounds().translate(newX - obj.x, newY - obj.y);
+				}
+
+				obj[prop] = value;
+
+				return true;
+			},
+		});
 
 		/**
 		 * Array of points defining the Polygon <br>
@@ -86,8 +104,8 @@ export default class Polygon {
 	 * @returns {Polygon} this instance for objecf chaining
 	 */
 	setShape(x, y, points) {
-		this.pos.set(x, y);
 		this.setVertices(points);
+		this.pos.set(x, y);
 		return this;
 	}
 
@@ -334,7 +352,6 @@ export default class Polygon {
 
 		this.pos.x += _x;
 		this.pos.y += _y;
-		this.getBounds().translate(_x, _y);
 
 		return this;
 	}
@@ -362,7 +379,6 @@ export default class Polygon {
 		}
 		this.pos.x = _x;
 		this.pos.y = _y;
-		this.updateBounds();
 	}
 
 	/**

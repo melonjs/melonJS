@@ -1,7 +1,5 @@
 import Vector2d from "./../math/vector2.js";
 import Vector3d from "./../math/vector3.js";
-import ObservableVector2d from "./../math/observable_vector2.js";
-import ObservableVector3d from "./../math/observable_vector3.js";
 import Matrix2d from "./../math/matrix2.js";
 import Matrix3d from "./../math/matrix3.js";
 import Rect from "./../geometries/rectangle.js";
@@ -322,12 +320,7 @@ export default class Camera2d extends Renderable {
 	follow(target, axis, damping) {
 		if (target instanceof Renderable) {
 			this.target = target.pos;
-		} else if (
-			target instanceof Vector2d ||
-			target instanceof Vector3d ||
-			target instanceof ObservableVector2d ||
-			target instanceof ObservableVector3d
-		) {
+		} else if (target instanceof Vector2d || target instanceof Vector3d) {
 			this.target = target;
 		} else {
 			throw new Error("invalid target for me.Camera2d.follow");

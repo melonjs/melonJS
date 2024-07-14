@@ -5,8 +5,6 @@ import "./polyfill/index.ts";
 import Color from "./math/color.js";
 import Vector2d from "./math/vector2.js";
 import Vector3d from "./math/vector3.js";
-import ObservableVector2d from "./math/observable_vector2.js";
-import ObservableVector3d from "./math/observable_vector3.js";
 import Matrix2d from "./math/matrix2.js";
 import Matrix3d from "./math/matrix3.js";
 import Polygon from "./geometries/poly.js";
@@ -101,8 +99,6 @@ export {
 	Color,
 	Vector2d,
 	Vector3d,
-	ObservableVector2d,
-	ObservableVector3d,
 	Matrix2d,
 	Matrix3d,
 	Polygon,
@@ -228,8 +224,6 @@ export function boot() {
 	pool.register("me.ColorLayer", ColorLayer, true);
 	pool.register("me.Vector2d", Vector2d, true);
 	pool.register("me.Vector3d", Vector3d, true);
-	pool.register("me.ObservableVector2d", ObservableVector2d, true);
-	pool.register("me.ObservableVector3d", ObservableVector3d, true);
 	pool.register("me.Matrix2d", Matrix2d, true);
 	pool.register("me.Matrix3d", Matrix3d, true);
 	pool.register("me.Rect", Rect, true);
@@ -258,8 +252,6 @@ export function boot() {
 	pool.register("ColorLayer", ColorLayer, true);
 	pool.register("Vector2d", Vector2d, true);
 	pool.register("Vector3d", Vector3d, true);
-	pool.register("ObservableVector2d", ObservableVector2d, true);
-	pool.register("ObservableVector3d", ObservableVector3d, true);
 	pool.register("Matrix2d", Matrix2d, true);
 	pool.register("Matrix3d", Matrix3d, true);
 	pool.register("Rect", Rect, true);

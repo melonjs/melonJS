@@ -2,7 +2,7 @@ import pool from "./../system/pooling.js";
 
 /**
  * additional import for TypeScript
- * @import Vector2d from "./../math/vector2.js";
+ * @import Vector3d from "./../math/vector3.js";
  * @import Matrix2d from "./../math/matrix2.js";
  * @import Bounds from "./../physics/bounds.js";
  */
@@ -21,9 +21,9 @@ export default class Ellipse {
 		/**
 		 * the center coordinates of the ellipse
 		 * @public
-		 * @type {Vector2d}
+		 * @type {Vector3d}
 		 */
-		this.pos = pool.pull("Vector2d");
+		this.pos = pool.pull("Vector3d");
 
 		/**
 		 * The bounding rectangle for this shape

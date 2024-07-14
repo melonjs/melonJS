@@ -493,7 +493,7 @@ export default class TMXTileMap {
 					obj.body = new Body(obj, shape);
 					obj.body.setStatic(true);
 					// set the obj z order
-					obj.pos.setMuted(settings.x, settings.y, settings.z);
+					obj.pos.set(settings.x, settings.y, settings.z);
 				} else {
 					// pull the corresponding object from the object pool
 					if (typeof settings.name !== "undefined" && settings.name !== "") {
