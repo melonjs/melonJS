@@ -17,7 +17,6 @@ import { remove } from "../utils/array.ts";
  * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
  * @import Line from "./../geometries/line.js";
  * @import Vector2d from "./../math/vector2.js";
- * @import ObservableVector2d from "./../math/observable_vector2.js";
  * @import ResponseObject from "./response.js";
  **/
 
@@ -558,7 +557,7 @@ export default class Body {
 	 * Rotate this body (counter-clockwise) by the specified angle (in radians).
 	 * Unless specified the body will be rotated around its center point
 	 * @param {number} angle - The angle to rotate (in radians)
-	 * @param {Vector2d|ObservableVector2d} [v=Body.getBounds().center] - an optional point to rotate around
+	 * @param {Vector2d} [v=Body.getBounds().center] - an optional point to rotate around
 	 * @returns {Body} Reference to this object for method chaining
 	 */
 	rotate(angle, v = this.getBounds().center) {

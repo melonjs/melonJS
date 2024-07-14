@@ -3,7 +3,6 @@ import pool from "./../system/pooling.js";
 /**
  * additional import for TypeScript
  * @import Vector2d from "./../math/vector2.js";
- * @import ObservableVector2d from "./../math/observable_vector2.js";
  * @import Matrix2d from "./../math/matrix2.js";
  * @import Bounds from "./../physics/bounds.js";
  */
@@ -106,7 +105,7 @@ export default class Ellipse {
 	/**
 	 * Rotate this Ellipse (counter-clockwise) by the specified angle (in radians).
 	 * @param {number} angle - The angle to rotate (in radians)
-	 * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
+	 * @param {Vector2d} [v] - an optional point to rotate around
 	 * @returns {Ellipse} Reference to this object for method chaining
 	 */
 	rotate(angle, v) {
