@@ -1,5 +1,3 @@
-import ObservableVector2d from "./../math/observable_vector2.js";
-import ObservableVector3d from "./../math/observable_vector3.js";
 import Rect from "./../geometries/rectangle.js";
 import pool from "./../system/pooling.js";
 import { releaseAllPointerEvents } from "./../input/input.js";
@@ -40,25 +38,7 @@ export default class Renderable extends Rect {
 		// parent constructor
 		super(x, y, width, height);
 
-		if (this.pos instanceof ObservableVector3d) {
-			this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos, this);
-		} else {
-			/**
-			 * Position of the Renderable relative to its parent container
-			 * @public
-			 * @type {ObservableVector3d}
-			 */
-			this.pos = pool.pull("ObservableVector3d", x, y, 0, {
-				onUpdate: this.updateBoundsPos,
-				scope: this,
-			});
-		}
-
-		if (this.anchorPoint instanceof ObservableVector2d) {
-			this.anchorPoint
-				.setMuted(0.5, 0.5)
-				.setCallback(this.onAnchorUpdate, this);
-		} else {
+		if (typeof this.anchorPoint === "undefined") {
 			/**
 			 * The anchor point is used for attachment behavior, and/or when applying transformations.<br>
 			 * The coordinate system places the origin at the top left corner of the frame (0, 0) and (1, 1) means the bottom-right corner<br>
@@ -67,13 +47,25 @@ export default class Renderable extends Rect {
 			 * <br>
 			 * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation.
 			 * To specify a value through Tiled, use a json expression like `json:{"x":0.5,"y":0.5}`. </i>
-			 * @type {ObservableVector2d}
+			 * @type {Vector2d}
 			 * @default <0.5,0.5>
 			 */
-			this.anchorPoint = pool.pull("ObservableVector2d", 0.5, 0.5, {
-				onUpdate: this.onAnchorUpdate,
-				scope: this,
+			this.anchorPoint = pool.pull("Vector2d", 0.5, 0.5);
+			/**
+			 * proxy to the anchorPoint vector
+			 * @ignore
+			 */
+			this.anchorPointProxy = new Proxy(this.anchorPoint, {
+				set: (obj, prop, value) => {
+					// store the new value
+					obj[prop] = value;
+					this.updateBounds();
+					this.isDirty = true;
+					return true;
+				},
 			});
+		} else {
+			this.anchorPoint.set(0.5, 0.5);
 		}
 
 		if (typeof this.currentTransform === "undefined") {
@@ -556,7 +548,7 @@ export default class Renderable extends Rect {
 	/**
 	 * Rotate this renderable by the specified angle (in radians).
 	 * @param {number} angle - The angle to rotate (in radians)
-	 * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
+	 * @param {Vector2d} [v] - an optional point to rotate around
 	 * @returns {Renderable} Reference to this object for method chaining
 	 */
 	rotate(angle, v) {
@@ -651,14 +643,6 @@ export default class Renderable extends Rect {
 	}
 
 	/**
-	 * update the renderable's bounding rect (private)
-	 * @ignore
-	 */
-	updateBoundsPos(newX = this.pos.x, newY = this.pos.y) {
-		this.getBounds().translate(newX - this.pos.x, newY - this.pos.y);
-	}
-
-	/**
 	 * return the renderable absolute position in the game world
 	 * @returns {Vector2d}
 	 */
@@ -676,21 +660,6 @@ export default class Renderable extends Rect {
 			this._absPos.add(this.ancestor.getAbsolutePosition());
 		}
 		return this._absPos;
-	}
-
-	/**
-	 * called when the anchor point value is changed
-	 * @private
-	 * @param {number} x - the new X value to be set for the anchor
-	 * @param {number} y - the new Y value to be set for the anchor
-	 */
-	onAnchorUpdate(x, y) {
-		// since the callback is called before setting the new value
-		// manually update the anchor point (required for updateBoundsPos)
-		this.anchorPoint.setMuted(x, y);
-		// then call updateBounds
-		this.updateBounds();
-		this.isDirty = true;
 	}
 
 	/**

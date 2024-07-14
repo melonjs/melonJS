@@ -53,10 +53,10 @@ export default class Entity extends Renderable {
 
 		// Update anchorPoint
 		if (settings.anchorPoint) {
-			this.anchorPoint.setMuted(settings.anchorPoint.x, settings.anchorPoint.y);
+			this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
 		} else {
 			// for backward compatibility
-			this.anchorPoint.setMuted(0, 0);
+			this.anchorPoint.set(0, 0);
 		}
 
 		// set the sprite name if specified

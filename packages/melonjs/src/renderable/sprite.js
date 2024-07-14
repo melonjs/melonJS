@@ -549,7 +549,7 @@ export default class Sprite extends Renderable {
 		this.height = this.current.height = region.height;
 		// set global anchortPoint if defined
 		if (region.anchorPoint) {
-			this.anchorPoint.setMuted(
+			this.anchorPoint.set(
 				this._flip.x && region.trimmed === true
 					? 1 - region.anchorPoint.x
 					: region.anchorPoint.x,
