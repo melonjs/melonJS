@@ -1,4 +1,4 @@
-import Color from "../../math/color.js";
+import { Color } from "../../math/color.ts";
 import pool from "../../system/pooling.js";
 import { getImage, getBinary } from "../../loader/loader.js";
 import Renderable from "../renderable.js";

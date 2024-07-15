@@ -1,9 +1,10 @@
+import { colorPool } from "./../math/color.ts";
 import pool from "./../system/pooling.js";
 import Renderable from "./renderable.js";
 
 /**
  * additional import for TypeScript
- * @import Color from "./../math/color.js";
+ * @import {Color} from "./../math/color.ts";
  * @import Ellipse from "./../geometries/ellipse.js";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
@@ -101,7 +102,7 @@ export default class Light2d extends Renderable {
 		 * @type {Color}
 		 * @default "#FFF"
 		 */
-		this.color = pool.pull("Color").parseCSS(color);
+		this.color = colorPool.get().parseCSS(color);
 
 		/**
 		 * The horizontal radius of the light
@@ -190,7 +191,7 @@ export default class Light2d extends Renderable {
 	 * @ignore
 	 */
 	destroy() {
-		pool.push(this.color);
+		colorPool.release(this.color);
 		this.color = undefined;
 		pool.push(this.texture);
 		this.texture = undefined;

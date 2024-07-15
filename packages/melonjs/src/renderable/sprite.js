@@ -2,7 +2,7 @@ import { renderer } from "./../video/video.js";
 import { getImage } from "./../loader/loader.js";
 import { TextureAtlas } from "./../video/texture/atlas.js";
 import Renderable from "./renderable.js";
-import Color from "../math/color.js";
+import { Color } from "../math/color.ts";
 import { eventEmitter } from "../system/event.ts";
 import { vector2dPool } from "../math/vector2d.ts";
 

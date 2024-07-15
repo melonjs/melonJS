@@ -16,10 +16,11 @@ import {
 	VIEWPORT_ONRESIZE,
 } from "../system/event.ts";
 import { boundsPool } from "./../physics/bounds.ts";
+import { colorPool } from "../math/color.ts";
 
 /**
  * @import {Bounds} from "./../physics/bounds.ts";
- * @import Color from "./../math/color.js";
+ * @import {Color} from "./../math/color.ts";
  * @import Entity from "./../renderable/entity/entity.js";
  * @import Sprite from "./../renderable/sprite.js";
  * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
@@ -519,7 +520,7 @@ export default class Camera2d extends Renderable {
 	 * });
 	 */
 	fadeOut(color, duration = 1000, onComplete) {
-		this._fadeOut.color = pool.pull("Color").copy(color);
+		this._fadeOut.color = colorPool.get().copy(color);
 		this._fadeOut.tween = pool
 			.pull("Tween", this._fadeOut.color)
 			.to({ alpha: 0.0 }, { duration })
@@ -539,7 +540,7 @@ export default class Camera2d extends Renderable {
 	 * me.game.viewport.fadeIn("#FFFFFF", 75);
 	 */
 	fadeIn(color, duration = 1000, onComplete) {
-		this._fadeIn.color = pool.pull("Color").copy(color);
+		this._fadeIn.color = colorPool.get().copy(color);
 		const _alpha = this._fadeIn.color.alpha;
 		this._fadeIn.color.alpha = 0.0;
 		this._fadeIn.tween = pool
@@ -629,7 +630,7 @@ export default class Camera2d extends Renderable {
 			// remove the tween if over
 			if (this._fadeIn.color.alpha === 1.0) {
 				this._fadeIn.tween = null;
-				pool.push(this._fadeIn.color);
+				colorPool.release(this._fadeIn.color);
 				this._fadeIn.color = null;
 			}
 		}
@@ -646,7 +647,7 @@ export default class Camera2d extends Renderable {
 			// remove the tween if over
 			if (this._fadeOut.color.alpha === 0.0) {
 				this._fadeOut.tween = null;
-				pool.push(this._fadeOut.color);
+				colorPool.release(this._fadeOut.color);
 				this._fadeOut.color = null;
 			}
 		}

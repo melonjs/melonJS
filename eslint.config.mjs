@@ -161,6 +161,7 @@ export default tseslint.config(
 		rules: {
 			"no-undef": "off",
 			"no-unused-vars": "off",
+			"prefer-template": "error",
 			"@typescript-eslint/no-explicit-any": "off",
 			"@typescript-eslint/ban-ts-comment": "off",
 			"@typescript-eslint/no-dynamic-delete": "off",
@@ -174,8 +175,9 @@ export default tseslint.config(
 				"error",
 				{ allowNumber: true },
 			],
-			"prefer-template": "error",
 			...jsDocConfig.rules,
+			"jsdoc/require-jsdoc": "off",
+			"jsdoc/no-defaults": "off",
 		},
 		languageOptions: {
 			parserOptions: {

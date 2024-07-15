@@ -14,6 +14,7 @@ import { getNewTMXRenderer } from "./renderer/autodetect.js";
 import { warning } from "../../lang/console.js";
 import { eventEmitter, VIEWPORT_ONRESIZE } from "../../system/event.ts";
 import { vector2dPool } from "../../math/vector2d.ts";
+import { colorPool } from "../../math/color.ts";
 
 /**
  * read the layer Data
@@ -53,7 +54,7 @@ function readImageLayer(map, data, z) {
 				// convert to melonJS color format (note: this should be done earlier when parsing data)
 				tint:
 					typeof data.tintcolor !== "undefined"
-						? pool.pull("Color").parseHex(data.tintcolor, true)
+						? colorPool.get().parseHex(data.tintcolor, true)
 						: undefined,
 				z: z,
 			},
@@ -446,7 +447,7 @@ export default class TMXTileMap {
 				}
 				// convert to melonJS renderable argument name
 				if (typeof settings.tintcolor !== "undefined") {
-					settings.tint = pool.pull("Color");
+					settings.tint = colorPool.get();
 					settings.tint.parseHex(settings.tintcolor, true);
 				}
 

@@ -1,5 +1,5 @@
 import { clamp, random } from "./math.ts";
-import pool from "./../system/pooling.js";
+import { createPool } from "../system/pool.ts";
 
 // convert a give color component to it hexadecimal value
 const charLookup = [
@@ -21,11 +21,11 @@ const charLookup = [
 	"F",
 ];
 
-function toHex(component) {
+function toHex(component: number) {
 	return charLookup[(component & 0xf0) >> 4] + charLookup[component & 0x0f];
 }
 
-function hue2rgb(p, q, t) {
+function hue2rgb(p: number, q: number, t: number) {
 	if (t < 0) {
 		t += 1;
 	}
@@ -44,16 +44,14 @@ function hue2rgb(p, q, t) {
 	return p;
 }
 
-const rgbaRx = /^rgba?\((\d+), ?(\d+), ?(\d+)(, ?([\d\.]+))?\)$/;
+const rgbaRx = /^rgba?\((\d+), ?(\d+), ?(\d+)(, ?([\d.]+))?\)$/;
 const hex3Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
 const hex4Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
 const hex6Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
 const hex8Rx =
 	/^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
 
-const cssToRGB = new Map();
-
-[
+const CSS_COLORS = [
 	// CSS1
 	["black", [0, 0, 0]],
 	["silver", [192, 192, 129]],
@@ -204,91 +202,106 @@ const cssToRGB = new Map();
 	["wheat", [245, 222, 179]],
 	["whitesmoke", [245, 245, 245]],
 	["yellowgreen", [154, 205, 50]],
-].forEach((value) => {
-	cssToRGB.set(value[0], value[1]);
-});
+] as const;
+
+type ColorName = (typeof CSS_COLORS)[number][0];
+
+const cssToRGB = new Map<ColorName, readonly [number, number, number]>();
+for (const [name, rgb] of CSS_COLORS) {
+	cssToRGB.set(name, rgb);
+}
 
 /**
  * A color manipulation object.
  */
-export default class Color {
-	/**
-	 * @param {number} [r=0] - red component [0 .. 255]
-	 * @param {number} [g=0] - green component [0 .. 255]
-	 * @param {number} [b=0] - blue component [0 .. 255]
-	 * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
-	 */
-	constructor(r = 0, g = 0, b = 0, alpha = 1.0) {
-		this.onResetEvent(r, g, b, alpha);
-	}
+export class Color {
+	private glArray: Float32Array;
 
 	/**
-	 * @ignore
+	 * Creates a new Color instance.
+	 * @param [r] - The red component [0 .. 255]. Defaults to 0.
+	 * @param [g] - The green component [0 .. 255]. Defaults to 0.
+	 * @param [b] - The blue component [0 .. 255]. Defaults to 0.
+	 * @param [alpha] - The alpha value [0.0 .. 1.0]. Defaults to 1.
 	 */
-	onResetEvent(r = 0, g = 0, b = 0, alpha = 1.0) {
-		if (typeof this.glArray === "undefined") {
-			// Color components in a Float32Array suitable for WebGL
-			this.glArray = new Float32Array([0.0, 0.0, 0.0, 1.0]);
-		}
+	constructor(r = 0, g = 0, b = 0, alpha = 1.0) {
+		this.glArray = new Float32Array([0, 0, 0, 1]);
 		this.setColor(r, g, b, alpha);
 	}
 
 	/**
-	 * Color Red Component [0 .. 255]
-	 * @type {number}
+	 * Gets the red component of the color.
+	 * @returns The red component [0 .. 255].
 	 */
 	get r() {
 		return ~~(this.glArray[0] * 255);
 	}
 
+	/**
+	 * Sets the red component of the color.
+	 * @param value - The red component [0 .. 255].
+	 */
 	set r(value) {
 		this.glArray[0] = clamp(~~value || 0, 0, 255) / 255.0;
 	}
 
 	/**
-	 * Color Green Component [0 .. 255]
-	 * @type {number}
+	 * Gets the green component of the color.
+	 * @returns The green component [0 .. 255].
 	 */
 	get g() {
 		return ~~(this.glArray[1] * 255);
 	}
 
+	/**
+	 * Sets the green component of the color.
+	 * @param value - The green component [0 .. 255].
+	 */
 	set g(value) {
 		this.glArray[1] = clamp(~~value || 0, 0, 255) / 255.0;
 	}
 
 	/**
-	 * Color Blue Component [0 .. 255]
-	 * @type {number}
+	 * Gets the blue component of the color.
+	 * @returns The blue component [0 .. 255].
 	 */
 	get b() {
 		return ~~(this.glArray[2] * 255);
 	}
+
+	/**
+	 * Sets the blue component of the color.
+	 * @param value - The blue component [0 .. 255].
+	 */
 	set b(value) {
 		this.glArray[2] = clamp(~~value || 0, 0, 255) / 255.0;
 	}
 
 	/**
-	 * Color Alpha Component [0.0 .. 1.0]
-	 * @type {number}
+	 * Gets the alpha component of the color.
+	 * @returns The alpha component [0.0 .. 1.0].
 	 */
 	get alpha() {
 		return this.glArray[3];
 	}
 
-	set alpha(value = 1.0) {
+	/**
+	 * Sets the alpha component of the color.
+	 * @param value - The alpha component [0.0 .. 1.0].
+	 */
+	set alpha(value) {
 		this.glArray[3] = clamp(+value, 0, 1.0);
 	}
 
 	/**
-	 * Set this color to the specified value.
-	 * @param {number} r - red component [0 .. 255]
-	 * @param {number} g - green component [0 .. 255]
-	 * @param {number} b - blue component [0 .. 255]
-	 * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
-	 * @returns {Color} Reference to this object for method chaining
+	 * Sets the color to the specified values.
+	 * @param r - The red component [0 .. 255].
+	 * @param g - The green component [0 .. 255].
+	 * @param b - The blue component [0 .. 255].
+	 * @param [alpha] - The alpha value [0.0 .. 1.0]. Defaults to 1.
+	 * @returns Reference to this object for method chaining.
 	 */
-	setColor(r, g, b, alpha = 1.0) {
+	setColor(r: number, g: number, b: number, alpha = 1.0) {
 		this.r = r;
 		this.g = g;
 		this.b = b;
@@ -297,14 +310,14 @@ export default class Color {
 	}
 
 	/**
-	 * set this color to the specified normalized float values
-	 * @param {number} r - red component [0.0 .. 1.0]
-	 * @param {number} g - green component [0.0 .. 1.0]
-	 * @param {number} b - blue component [0.0 .. 1.0]
-	 * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
-	 * @returns {Color} Reference to this object for method chaining
+	 * Sets the color to the specified normalized float values.
+	 * @param r - The red component [0.0 .. 1.0].
+	 * @param g - The green component [0.0 .. 1.0].
+	 * @param b - The blue component [0.0 .. 1.0].
+	 * @param [alpha=1.0] - The alpha value [0.0 .. 1.0]. Defaults to 1.
+	 * @returns Reference to this object for method chaining.
 	 */
-	setFloat(r, g, b, alpha = 1.0) {
+	setFloat(r: number, g: number, b: number, alpha = 1.0) {
 		const a = this.glArray;
 		a[0] = clamp(+r, 0, 1.0);
 		a[1] = clamp(+g, 0, 1.0);
@@ -314,16 +327,16 @@ export default class Color {
 	}
 
 	/**
-	 * set this color to the specified HSV value
-	 * @param {number} h - hue (a value from 0 to 1)
-	 * @param {number} s - saturation (a value from 0 to 1)
-	 * @param {number} v - value (a value from 0 to 1)
-	 * @returns {Color} Reference to this object for method chaining
+	 * Sets the color to the specified HSV values.
+	 * @param h - The hue [0 .. 1].
+	 * @param s - The saturation [0 .. 1].
+	 * @param v - The value [0 .. 1].
+	 * @returns Reference to this object for method chaining.
 	 */
-	setHSV(h, s, v) {
-		let r;
-		let g;
-		let b;
+	setHSV(h: number, s: number, v: number) {
+		let r: number;
+		let g: number;
+		let b: number;
 
 		const i = Math.floor(h * 6);
 		const f = h * 6 - i;
@@ -331,7 +344,7 @@ export default class Color {
 		const q = v * (1 - f * s);
 		const t = v * (1 - (1 - f) * s);
 
-		switch (i % 6) {
+		switch ((i % 6) as 0 | 1 | 2 | 3 | 4 | 5) {
 			case 0:
 				r = v;
 				g = t;
@@ -367,13 +380,13 @@ export default class Color {
 	}
 
 	/**
-	 * set this color to the specified HSL value
-	 * @param {number} h - hue (a value from 0 to 1)
-	 * @param {number} s - saturation (a value from 0 to 1)
-	 * @param {number} l - lightness (a value from 0 to 1)
-	 * @returns {Color} Reference to this object for method chaining
+	 * Sets the color to the specified HSL values.
+	 * @param h - The hue [0 .. 1].
+	 * @param s - The saturation [0 .. 1].
+	 * @param l - The lightness [0 .. 1].
+	 * @returns Reference to this object for method chaining.
 	 */
-	setHSL(h, s, l) {
+	setHSL(h: number, s: number, l: number) {
 		let r;
 		let g;
 		let b;
@@ -393,19 +406,19 @@ export default class Color {
 	}
 
 	/**
-	 * Create a new copy of this color object.
-	 * @returns {Color} Reference to the newly cloned object
+	 * Creates a new copy of this color object.
+	 * @returns Reference to the newly cloned object.
 	 */
 	clone() {
-		return pool.pull("Color").copy(this);
+		return colorPool.get().copy(this);
 	}
 
 	/**
-	 * Copy a color object or CSS color into this one.
-	 * @param {Color|string} color
-	 * @returns {Color} Reference to this object for method chaining
+	 * Copies a color object or CSS color into this one.
+	 * @param color - The color to copy.
+	 * @returns Reference to this object for method chaining.
 	 */
-	copy(color) {
+	copy(color: Color) {
 		if (typeof color === "string") {
 			return this.parseCSS(color);
 		} else {
@@ -415,11 +428,11 @@ export default class Color {
 	}
 
 	/**
-	 * Blend this color with the given one using addition.
-	 * @param {Color} color
-	 * @returns {Color} Reference to this object for method chaining
+	 * Blends this color with the given one using addition.
+	 * @param color - The color to blend with.
+	 * @returns Reference to this object for method chaining.
 	 */
-	add(color) {
+	add(color: Color) {
 		this.glArray[0] = clamp(this.glArray[0] + color.glArray[0], 0, 1);
 		this.glArray[1] = clamp(this.glArray[1] + color.glArray[1], 0, 1);
 		this.glArray[2] = clamp(this.glArray[2] + color.glArray[2], 0, 1);
@@ -429,11 +442,11 @@ export default class Color {
 	}
 
 	/**
-	 * Darken this color value by 0..1
-	 * @param {number} scale
-	 * @returns {Color} Reference to this object for method chaining
+	 * Darkens this color value by a given scale.
+	 * @param scale - The scale to darken the color by [0 .. 1].
+	 * @returns Reference to this object for method chaining.
 	 */
-	darken(scale) {
+	darken(scale: number) {
 		scale = clamp(scale, 0, 1);
 		this.glArray[0] *= scale;
 		this.glArray[1] *= scale;
@@ -443,12 +456,12 @@ export default class Color {
 	}
 
 	/**
-	 * Linearly interpolate between this color and the given one.
-	 * @param {Color} color
-	 * @param {number} alpha - with alpha = 0 being this color, and alpha = 1 being the given one.
-	 * @returns {Color} Reference to this object for method chaining
+	 * Linearly interpolates between this color and the given one.
+	 * @param color - The color to interpolate with.
+	 * @param alpha - The interpolation factor, with alpha = 0 being this color, and alpha = 1 being the given one.
+	 * @returns Reference to this object for method chaining.
 	 */
-	lerp(color, alpha) {
+	lerp(color: Color, alpha: number) {
 		alpha = clamp(alpha, 0, 1);
 		this.glArray[0] += (color.glArray[0] - this.glArray[0]) * alpha;
 		this.glArray[1] += (color.glArray[1] - this.glArray[1]) * alpha;
@@ -458,11 +471,11 @@ export default class Color {
 	}
 
 	/**
-	 * Lighten this color value by 0..1
-	 * @param {number} scale
-	 * @returns {Color} Reference to this object for method chaining
+	 * Lightens this color value by a given scale
+	 * @param scale - The scale to lighten the color by [0 .. 1].
+	 * @returns Reference to this object for method chaining.
 	 */
-	lighten(scale) {
+	lighten(scale: number) {
 		scale = clamp(scale, 0, 1);
 		this.glArray[0] = clamp(
 			this.glArray[0] + (1 - this.glArray[0]) * scale,
@@ -485,9 +498,9 @@ export default class Color {
 
 	/**
 	 * Generate random r,g,b values for this color object
-	 * @param {number} [min=0] - minimum value for the random range
-	 * @param {number} [max=255] - maxmium value for the random range
-	 * @returns {Color} Reference to this object for method chaining
+	 * @param [min] - minimum value for the random range
+	 * @param [max] - maxmium value for the random range
+	 * @returns Reference to this object for method chaining
 	 */
 	random(min = 0, max = 255) {
 		if (min < 0) {
@@ -506,12 +519,11 @@ export default class Color {
 	}
 
 	/**
-	 * Return true if the r,g,b,a values of this color are equal with the
-	 * given one.
-	 * @param {Color} color
-	 * @returns {boolean}
+	 * Checks if this color is equal to another.
+	 * @param color - The color to compare with.
+	 * @returns True if the colors are equal, otherwise false.
 	 */
-	equals(color) {
+	equals(color: Color) {
 		return (
 			this.glArray[0] === color.glArray[0] &&
 			this.glArray[1] === color.glArray[1] &&
@@ -521,57 +533,55 @@ export default class Color {
 	}
 
 	/**
-	 * Parse a CSS color string and set this color to the corresponding
-	 * r,g,b values
-	 * @param {string} cssColor
-	 * @returns {Color} Reference to this object for method chaining
+	 * Parse a CSS color name and set this color to the corresponding r,g,b values
+	 * @param cssColor - The CSS color name
+	 * @returns Reference to this object for method chaining
 	 */
-	parseCSS(cssColor) {
-		// TODO : Memoize this function by caching its input
-
-		if (cssToRGB.has(cssColor)) {
-			return this.setColor.apply(this, cssToRGB.get(cssColor));
+	parseCSS(cssColor: ColorName) {
+		const rgb = cssToRGB.get(cssColor);
+		if (!rgb) {
+			return this.parseRGB(cssColor);
 		}
-
-		return this.parseRGB(cssColor);
+		return this.setColor(...rgb);
 	}
 
 	/**
 	 * Parse an RGB or RGBA CSS color string
-	 * @param {string} rgbColor
-	 * @returns {Color} Reference to this object for method chaining
+	 * @param rgbColor - The RGB or RGBA color string to parse
+	 * @returns Reference to this object for method chaining
 	 */
-	parseRGB(rgbColor) {
+	parseRGB(rgbColor: string) {
 		// TODO : Memoize this function by caching its input
 
 		const match = rgbaRx.exec(rgbColor);
-		if (match) {
-			return this.setColor(+match[1], +match[2], +match[3], +match[5]);
+		if (!match) {
+			return this.parseHex(rgbColor as `#${string}`);
 		}
-
-		return this.parseHex(rgbColor);
+		return this.setColor(+match[1], +match[2], +match[3], +match[5]);
 	}
 
 	/**
 	 * Parse a Hex color ("#RGB", "#RGBA" or "#RRGGBB", "#RRGGBBAA" format) and set this color to
 	 * the corresponding r,g,b,a values
-	 * @param {string} hexColor
-	 * @param {boolean} [argb = false] - true if format is #ARGB, or #AARRGGBB (as opposed to #RGBA or #RGGBBAA)
-	 * @returns {Color} Reference to this object for method chaining
+	 * @param hexColor - The Hex color string to parse
+	 * @param [argb] - true if format is #ARGB, or #AARRGGBB (as opposed to #RGBA or #RGGBBAA)
+	 * @returns Reference to this object for method chaining
 	 */
-	parseHex(hexColor, argb = false) {
+	parseHex(hexColor: `#${string}`, argb = false) {
 		// TODO : Memoize this function by caching its input
 
-		let match;
+		let match: RegExpExecArray | null;
 		if ((match = hex8Rx.exec(hexColor))) {
 			// #AARRGGBB or #RRGGBBAA
 			return this.setColor(
-				parseInt(match[argb === false ? 1 : 2], 16), // r
-				parseInt(match[argb === false ? 2 : 3], 16), // g
-				parseInt(match[argb === false ? 3 : 4], 16), // b
-				(
-					clamp(parseInt(match[argb === false ? 4 : 1], 16), 0, 255) / 255.0
-				).toFixed(1), // a
+				parseInt(match[!argb ? 1 : 2], 16), // r
+				parseInt(match[!argb ? 2 : 3], 16), // g
+				parseInt(match[!argb ? 3 : 4], 16), // b
+				Number(
+					(clamp(parseInt(match[!argb ? 4 : 1], 16), 0, 255) / 255.0).toFixed(
+						1,
+					),
+				), // a
 			);
 		}
 
@@ -586,15 +596,15 @@ export default class Color {
 
 		if ((match = hex4Rx.exec(hexColor))) {
 			// #ARGB or #RGBA
-			const r = match[argb === false ? 1 : 2];
-			const g = match[argb === false ? 2 : 3];
-			const b = match[argb === false ? 3 : 4];
-			const a = match[argb === false ? 4 : 1];
+			const r = match[!argb ? 1 : 2];
+			const g = match[!argb ? 2 : 3];
+			const b = match[!argb ? 3 : 4];
+			const a = match[!argb ? 4 : 1];
 			return this.setColor(
 				parseInt(r + r, 16), // r
 				parseInt(g + g, 16), // g
 				parseInt(b + b, 16), // b
-				(clamp(parseInt(a + a, 16), 0, 255) / 255.0).toFixed(1), // a
+				Number((clamp(parseInt(a + a, 16), 0, 255) / 255.0).toFixed(1)), // a
 			);
 		}
 
@@ -607,13 +617,13 @@ export default class Color {
 			);
 		}
 
-		throw new Error("invalid parameter: " + hexColor);
+		throw new Error(`invalid parameter: ${hexColor}`);
 	}
 
 	/**
 	 * Pack this color RGB components into a Uint32 ARGB representation
-	 * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
-	 * @returns {number}
+	 * @param [alpha] - alpha value [0.0 .. 1.0]
+	 * @returns A Uint32 ARGB representation of this color
 	 */
 	toUint32(alpha = 1.0) {
 		const a = this.glArray;
@@ -627,7 +637,7 @@ export default class Color {
 
 	/**
 	 * return an Float Array representation of this object
-	 * @returns {Float32Array}
+	 * @returns A Float Array representation of this color
 	 */
 	toArray() {
 		return this.glArray;
@@ -635,48 +645,65 @@ export default class Color {
 
 	/**
 	 * return the color in "#RRGGBB" format
-	 * @returns {string}
+	 * @returns The color in "#RRGGBB" format
 	 */
 	toHex() {
 		// TODO : Memoize this function by caching its result until any of
 		// the r,g,b,a values are changed
 
-		return "#" + toHex(this.r) + toHex(this.g) + toHex(this.b);
+		return `#${toHex(this.r)}${toHex(this.g)}${toHex(this.b)}`;
 	}
 
 	/**
 	 * Get the color in "#RRGGBBAA" format
-	 * @returns {string}
+	 * @param alpha - The alpha value [0.0 .. 1.0] to use in the output string.
+	 * @returns The color in "#RRGGBBAA" format
 	 */
 	toHex8(alpha = this.alpha) {
 		// TODO : Memoize this function by caching its result until any of
 		// the r,g,b,a values are changed
 
-		return (
-			"#" + toHex(this.r) + toHex(this.g) + toHex(this.b) + toHex(alpha * 255)
-		);
+		return `#${toHex(this.r)}${toHex(this.g)}${toHex(this.b)}${toHex(alpha * 255)}`;
 	}
 
 	/**
 	 * Get the color in "rgb(R,G,B)" format
-	 * @returns {string}
+	 * @returns The color in "rgb(R,G,B)" format
 	 */
 	toRGB() {
 		// TODO : Memoize this function by caching its result until any of
 		// the r,g,b,a values are changed
 
-		return "rgb(" + this.r + "," + this.g + "," + this.b + ")";
+		return `rgb(${this.r},${this.g},${this.b})` as const;
 	}
 
 	/**
 	 * Get the color in "rgba(R,G,B,A)" format
-	 * @param {number} [alpha=1.0] - alpha value [0.0 .. 1.0]
-	 * @returns {string}
+	 * @param [alpha] - alpha value [0.0 .. 1.0]
+	 * @returns The color in "rgba(R,G,B,A)" format
 	 */
 	toRGBA(alpha = this.alpha) {
 		// TODO : Memoize this function by caching its result until any of
 		// the r,g,b,a values are changed
 
-		return "rgba(" + this.r + "," + this.g + "," + this.b + "," + alpha + ")";
+		return `rgba(${this.r},${this.g},${this.b},${alpha})` as const;
 	}
 }
+
+export const colorPool = createPool<
+	Color,
+	[
+		r?: number | undefined,
+		g?: number | undefined,
+		b?: number | undefined,
+		alpha?: number | undefined,
+	]
+>((r, g, b, alpha) => {
+	const color = new Color(r, g, b, alpha);
+	return {
+		instance: color,
+		reset(r = 0, g = 0, b = 0, alpha = 1) {
+			color.setColor(r, g, b, alpha);
+		},
+	};
+});

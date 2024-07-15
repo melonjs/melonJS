@@ -1,13 +1,23 @@
-import { BitmapText, Renderable, Text, Tween, pool, video } from "melonjs";
+import {
+	BitmapText,
+	type Color,
+	Renderable,
+	Text,
+	Tween,
+	getPool,
+	video,
+} from "melonjs";
 
 export class TextTest extends Renderable {
+	color: Color;
+
 	constructor() {
 		super(0, 0, 640, 480);
 
 		this.anchorPoint.set(0, 0);
 
 		// a default white color object
-		this.color = pool.pull("me.Color", 255, 255, 255);
+		this.color = getPool("color").get(255, 255, 255);
 
 		// define a tween to cycle the font color
 		this.tween = new Tween(this.color)
@@ -175,5 +185,9 @@ export class TextTest extends Renderable {
 		this.bFont.textBaseline = "top";
 		this.fancyBFont.textAlign = "left";
 		this.fancyBFont.textBaseline = "top";
+	}
+
+	destroy() {
+		getPool("color").release(this.color);
 	}
 }

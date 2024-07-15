@@ -2,9 +2,10 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { Color } from "../src/index.js";
 
 describe("Color", () => {
-	let red_color;
-	let green_color;
-	let blue_color;
+	let red_color: Color;
+	let green_color: Color;
+	let blue_color: Color;
+
 	//ToDo changing this to 'beforeEach' shows that currently tests leak their state into other tests, which is not good
 	beforeAll(() => {
 		red_color = new Color(255, 0, 0, 0.5);

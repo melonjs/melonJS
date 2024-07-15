@@ -2,7 +2,6 @@
 import "./polyfill/index.ts";
 
 // class definition
-import Color from "./math/color.js";
 import Polygon from "./geometries/poly.js";
 import Line from "./geometries/line.js";
 import Ellipse from "./geometries/ellipse.js";
@@ -91,6 +90,7 @@ export { Vector2d } from "./math/vector2d.ts";
 export { Vector3d } from "./math/vector3d.ts";
 export { Matrix2d } from "./math/matrix2d.ts";
 export { Matrix3d } from "./math/matrix3d.ts";
+export { Color } from "./math/color.ts";
 export { Point } from "./geometries/point.ts";
 export { Bounds } from "./physics/bounds.ts";
 export { createObservableVector2d } from "./math/observableVector2d.ts";
@@ -99,7 +99,6 @@ export { getPool } from "./pool.ts";
 
 // export all class definition
 export {
-	Color,
 	Polygon,
 	Line,
 	Ellipse,
@@ -209,7 +208,6 @@ export function boot() {
 	pool.register("me.Trigger", Trigger);
 	pool.register("me.Light2d", Light2d);
 	pool.register("me.Tween", Tween, true);
-	pool.register("me.Color", Color, true);
 	pool.register("me.Particle", Particle, true);
 	pool.register("me.Sprite", Sprite);
 	pool.register("me.NineSliceSprite", NineSliceSprite);
@@ -231,7 +229,6 @@ export function boot() {
 	pool.register("Trigger", Trigger);
 	pool.register("Light2d", Light2d);
 	pool.register("Tween", Tween, true);
-	pool.register("Color", Color, true);
 	pool.register("Particle", Particle, true);
 	pool.register("Sprite", Sprite);
 	pool.register("NineSliceSprite", NineSliceSprite);

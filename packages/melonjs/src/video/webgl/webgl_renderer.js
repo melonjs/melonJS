@@ -1,4 +1,4 @@
-import Color from "./../../math/color.js";
+import { Color, colorPool } from "./../../math/color.ts";
 import { Matrix2d, matrix2dPool } from "../../math/matrix2d.ts";
 import QuadCompositor from "./compositors/quad_compositor";
 import PrimitiveCompositor from "./compositors/primitive_compositor";
@@ -6,7 +6,6 @@ import Renderer from "./../renderer.js";
 import TextureCache from "./../texture/cache.js";
 import { TextureAtlas, createAtlas } from "./../texture/atlas.js";
 import { renderer } from "./../video.js";
-import pool from "./../../system/pooling.js";
 import { isPowerOfTwo } from "./../../math/math.ts";
 import {
 	CANVAS_ONRESIZE,
@@ -296,7 +295,7 @@ export default class WebGLRenderer extends Renderer {
 
 		// clear all stacks
 		this._colorStack.forEach((color) => {
-			pool.push(color);
+			colorPool.release(color);
 		});
 		this._matrixStack.forEach((matrix) => {
 			matrix2dPool.release(matrix);
@@ -499,10 +498,10 @@ export default class WebGLRenderer extends Renderer {
 		if (color instanceof Color) {
 			glArray = color.toArray();
 		} else {
-			const _color = pool.pull("me.Color");
+			const _color = colorPool.get();
 			// reuse temporary the renderer default color object
 			glArray = _color.parseCSS(color).toArray();
-			pool.push(_color);
+			colorPool.release(_color);
 		}
 
 		// clear gl context with the specified color
@@ -793,7 +792,7 @@ export default class WebGLRenderer extends Renderer {
 			this.setBlendMode(this._blendStack.pop());
 
 			// recycle objects
-			pool.push(color);
+			colorPool.release(color);
 			matrix2dPool.release(matrix);
 		}
 

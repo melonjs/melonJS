@@ -5,7 +5,7 @@ import { clamp } from "./../math/math.ts";
 import Body from "./../physics/body.js";
 import { Bounds, boundsPool } from "./../physics/bounds.ts";
 import GLShader from "./../video/webgl/glshader.js";
-import Color from "./../math/color.js";
+import { Color, colorPool } from "./../math/color.ts";
 import { observableVector3dPool } from "../math/observableVector3d.ts";
 import { observableVector2dPool } from "../math/observableVector2d.ts";
 import { vector2dPool } from "../math/vector2d.ts";
@@ -301,7 +301,7 @@ export default class Renderable extends Rect {
 		 * renderable cache tint value used by the getter/setter
 		 * @ignore
 		 */
-		this._tint = pool.pull("Color", 255, 255, 255, 1.0);
+		this._tint = colorPool.get(255, 255, 255, 1.0);
 
 		// ensure it's fully opaque by default
 		this.setOpacity(1.0);
@@ -847,7 +847,7 @@ export default class Renderable extends Rect {
 		}
 
 		if (this._tint instanceof Color) {
-			pool.push(this._tint);
+			colorPool.release(this._tint);
 			this._tint = undefined;
 		}
 

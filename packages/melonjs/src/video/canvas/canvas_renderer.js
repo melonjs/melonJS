@@ -4,7 +4,7 @@ import {
 	ONCONTEXT_LOST,
 	ONCONTEXT_RESTORED,
 } from "../../system/event.ts";
-import Color from "./../../math/color.js";
+import { Color } from "./../../math/color.ts";
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture/cache.js";
 
