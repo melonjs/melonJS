@@ -1,5 +1,5 @@
 import Color from "./../../math/color.js";
-import Matrix2d from "./../../math/matrix2.js";
+import { Matrix2d, matrix2dPool } from "../../math/matrix2d.ts";
 import QuadCompositor from "./compositors/quad_compositor";
 import PrimitiveCompositor from "./compositors/primitive_compositor";
 import Renderer from "./../renderer.js";
@@ -23,7 +23,7 @@ import {
  * @import Polygon from "./../../geometries/poly.js";
  * @import Line from "./../../geometries/line.js";
  * @import Ellipse from "./../../geometries/ellipse.js";
- * @import Matrix3d from "./../../math/matrix3.js";
+ * @import {Matrix3d} from "../../math/matrix3d.ts";
  * @import Compositor from "./compositors/compositor.js";
  */
 
@@ -299,7 +299,7 @@ export default class WebGLRenderer extends Renderer {
 			pool.push(color);
 		});
 		this._matrixStack.forEach((matrix) => {
-			pool.push(matrix);
+			matrix2dPool.release(matrix);
 		});
 		this._colorStack.length = 0;
 		this._matrixStack.length = 0;
@@ -794,7 +794,7 @@ export default class WebGLRenderer extends Renderer {
 
 			// recycle objects
 			pool.push(color);
-			pool.push(matrix);
+			matrix2dPool.release(matrix);
 		}
 
 		if (this._scissorStack.length !== 0) {

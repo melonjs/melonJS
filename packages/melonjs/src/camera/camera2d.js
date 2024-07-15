@@ -1,9 +1,7 @@
-import Vector2d from "./../math/vector2.js";
-import Vector3d from "./../math/vector3.js";
-import ObservableVector2d from "./../math/observable_vector2.js";
-import ObservableVector3d from "./../math/observable_vector3.js";
-import Matrix2d from "./../math/matrix2.js";
-import Matrix3d from "./../math/matrix3.js";
+import { Vector2d, vector2dPool } from "../math/vector2d.ts";
+import { Vector3d } from "../math/vector3d.ts";
+import { Matrix2d } from "../math/matrix2d.ts";
+import { Matrix3d } from "../math/matrix3d.ts";
 import Rect from "./../geometries/rectangle.js";
 import { renderer } from "./../video/video.js";
 import pool from "./../system/pooling.js";
@@ -17,9 +15,10 @@ import {
 	VIEWPORT_ONCHANGE,
 	VIEWPORT_ONRESIZE,
 } from "../system/event.ts";
+import { boundsPool } from "./../physics/bounds.ts";
 
 /**
- * @import Bounds from "./../physics/bounds.js";
+ * @import {Bounds} from "./../physics/bounds.ts";
  * @import Color from "./../math/color.js";
  * @import Entity from "./../renderable/entity/entity.js";
  * @import Sprite from "./../renderable/sprite.js";
@@ -61,7 +60,7 @@ export default class Camera2d extends Renderable {
 		 * Camera bounds
 		 * @type {Bounds}
 		 */
-		this.bounds = pool.pull("Bounds");
+		this.bounds = boundsPool.get();
 
 		/**
 		 * enable or disable damping
@@ -322,12 +321,7 @@ export default class Camera2d extends Renderable {
 	follow(target, axis, damping) {
 		if (target instanceof Renderable) {
 			this.target = target.pos;
-		} else if (
-			target instanceof Vector2d ||
-			target instanceof Vector3d ||
-			target instanceof ObservableVector2d ||
-			target instanceof ObservableVector3d
-		) {
+		} else if (target instanceof Vector2d || target instanceof Vector3d) {
 			this.target = target;
 		} else {
 			throw new Error("invalid target for me.Camera2d.follow");
@@ -593,7 +587,7 @@ export default class Camera2d extends Renderable {
 	 */
 	localToWorld(x, y, v) {
 		// TODO memoization for one set of coords (multitouch)
-		v = v || pool.pull("Vector2d");
+		v = v || vector2dPool.get();
 		v.set(x, y).add(this.pos).sub(game.world.pos);
 		if (!this.currentTransform.isIdentity()) {
 			this.invCurrentTransform.apply(v);
@@ -610,7 +604,7 @@ export default class Camera2d extends Renderable {
 	 */
 	worldToLocal(x, y, v) {
 		// TODO memoization for one set of coords (multitouch)
-		v = v || pool.pull("Vector2d");
+		v = v || vector2dPool.get();
 		v.set(x, y);
 		if (!this.currentTransform.isIdentity()) {
 			this.currentTransform.apply(v);

@@ -1,4 +1,4 @@
-import Vector2d from "../../../math/vector2.js";
+import { Vector2d } from "../../../math/vector2d.ts";
 import { isPowerOfTwo } from "../../../math/math.ts";
 import quadVertex from "./../shaders/quad.vert";
 import quadFragment from "./../shaders/quad.frag";

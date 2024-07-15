@@ -15,7 +15,7 @@ import TextureCache from "./../texture/cache.js";
  * @import Polygon from "./../../geometries/poly.js";
  * @import Line from "./../../geometries/line.js";
  * @import Ellipse from "./../../geometries/ellipse.js";
- * @import Matrix2d from "./../../math/matrix2.js";
+ * @import {Matrix2d} from "../../math/matrix2d.ts";
  */
 
 /**

@@ -1,4 +1,4 @@
-import Vector2d from "./../math/vector2.js";
+import { Vector2d } from "../math/vector2d.ts";
 
 /**
  * An object representing the result of an intersection.

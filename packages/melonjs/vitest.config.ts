@@ -21,6 +21,7 @@ export default defineConfig({
 			name: "chromium",
 			provider: "playwright",
 			headless: true,
+			screenshotFailures: false,
 		},
 	},
 	publicDir: "./tests/public",

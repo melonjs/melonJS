@@ -1,9 +1,9 @@
 import { createCanvas } from "./../../video/video.js";
-import pool from "./../../system/pooling.js";
 import * as TMXUtils from "./TMXUtils.js";
 import Tile from "./TMXTile.js";
 import Renderable from "./../../renderable/renderable.js";
 import CanvasRenderer from "./../../video/canvas/canvas_renderer";
+import { vector2dPool } from "../../math/vector2d.ts";
 
 /**
  * Create required arrays for the given layer object
@@ -304,10 +304,10 @@ export default class TMXLayer extends Renderable {
 			const coord = this.getRenderer().pixelToTileCoords(
 				x,
 				y,
-				pool.pull("Vector2d"),
+				vector2dPool.get(),
 			);
 			tile = this.cellAt(coord.x, coord.y);
-			pool.push(coord);
+			vector2dPool.release(coord);
 		}
 		return tile;
 	}

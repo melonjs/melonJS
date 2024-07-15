@@ -1,10 +1,11 @@
-import pool from "./../system/pooling.js";
+import { vector2dPool } from "../math/vector2d.ts";
+import { boundsPool } from "./../physics/bounds.ts";
 
 /**
  * additional import for TypeScript
- * @import Vector2d from "./../math/vector2.js";
- * @import Matrix2d from "./../math/matrix2.js";
- * @import Bounds from "./../physics/bounds.js";
+ * @import {Vector2d} from "../math/vector2d.js";
+ * @import {Matrix2d} from "../math/matrix2d.ts";
+ * @import {Bounds} from "./../physics/bounds.ts";
  */
 
 /**
@@ -23,7 +24,7 @@ export default class Ellipse {
 		 * @public
 		 * @type {Vector2d}
 		 */
-		this.pos = pool.pull("Vector2d");
+		this.pos = vector2dPool.get();
 
 		/**
 		 * The bounding rectangle for this shape
@@ -43,21 +44,21 @@ export default class Ellipse {
 		 * @public
 		 * @type {Vector2d}
 		 */
-		this.radiusV = pool.pull("Vector2d");
+		this.radiusV = vector2dPool.get();
 
 		/**
 		 * Radius squared, for pythagorean theorom
 		 * @public
 		 * @type {Vector2d}
 		 */
-		this.radiusSq = pool.pull("Vector2d");
+		this.radiusSq = vector2dPool.get();
 
 		/**
 		 * x/y scaling ratio for ellipse
 		 * @public
 		 * @type {Vector2d}
 		 */
-		this.ratio = pool.pull("Vector2d");
+		this.ratio = vector2dPool.get();
 
 		/**
 		 * the shape type (used internally)
@@ -221,7 +222,7 @@ export default class Ellipse {
 	 */
 	getBounds() {
 		if (typeof this._bounds === "undefined") {
-			this._bounds = pool.pull("Bounds");
+			this._bounds = boundsPool.get();
 		}
 		return this._bounds;
 	}

@@ -1,19 +1,21 @@
-import ObservableVector2d from "./../math/observable_vector2.js";
-import ObservableVector3d from "./../math/observable_vector3.js";
 import Rect from "./../geometries/rectangle.js";
 import pool from "./../system/pooling.js";
 import { releaseAllPointerEvents } from "./../input/input.js";
 import { clamp } from "./../math/math.ts";
 import Body from "./../physics/body.js";
-import Bounds from "./../physics/bounds.js";
+import { Bounds, boundsPool } from "./../physics/bounds.ts";
 import GLShader from "./../video/webgl/glshader.js";
 import Color from "./../math/color.js";
+import { observableVector3dPool } from "../math/observableVector3d.ts";
+import { observableVector2dPool } from "../math/observableVector2d.ts";
+import { vector2dPool } from "../math/vector2d.ts";
+import { matrix2dPool } from "../math/matrix2d.ts";
 
 /**
  * additional import for TypeScript
- * @import Vector2d from "./../math/vector2.js";
- * @import Vector3d from "./../math/vector3.js";
- * @import Matrix2d from "./../math/matrix2.js";
+ * @import {Vector3d} from "../math/vector3d.js";
+ * @import {Vector2d} from "../math/vector2d.js";
+ * @import {Matrix2d} from "../math/matrix2d.ts";
  * @import Entity from "./entity/entity.js";
  * @import Container from "./container.js";
  * @import Line from "./../geometries/line.js";
@@ -40,48 +42,41 @@ export default class Renderable extends Rect {
 		// parent constructor
 		super(x, y, width, height);
 
-		if (this.pos instanceof ObservableVector3d) {
-			this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos, this);
-		} else {
-			/**
-			 * Position of the Renderable relative to its parent container
-			 * @public
-			 * @type {ObservableVector3d}
-			 */
-			this.pos = pool.pull("ObservableVector3d", x, y, 0, {
-				onUpdate: this.updateBoundsPos,
-				scope: this,
-			});
-		}
+		/**
+		 * Position of the Renderable relative to its parent container
+		 * @public
+		 * @type {ObservableVector3d}
+		 */
+		this.pos = observableVector3dPool.get(
+			x,
+			y,
+			0,
+			this.updateBoundsPos.bind(this),
+		);
 
-		if (this.anchorPoint instanceof ObservableVector2d) {
-			this.anchorPoint
-				.setMuted(0.5, 0.5)
-				.setCallback(this.onAnchorUpdate, this);
-		} else {
-			/**
-			 * The anchor point is used for attachment behavior, and/or when applying transformations.<br>
-			 * The coordinate system places the origin at the top left corner of the frame (0, 0) and (1, 1) means the bottom-right corner<br>
-			 * <img src="images/anchor_point.png"/><br>
-			 * a Renderable's anchor point defaults to (0.5,0.5), which corresponds to the center position.<br>
-			 * <br>
-			 * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation.
-			 * To specify a value through Tiled, use a json expression like `json:{"x":0.5,"y":0.5}`. </i>
-			 * @type {ObservableVector2d}
-			 * @default <0.5,0.5>
-			 */
-			this.anchorPoint = pool.pull("ObservableVector2d", 0.5, 0.5, {
-				onUpdate: this.onAnchorUpdate,
-				scope: this,
-			});
-		}
+		/**
+		 * The anchor point is used for attachment behavior, and/or when applying transformations.<br>
+		 * The coordinate system places the origin at the top left corner of the frame (0, 0) and (1, 1) means the bottom-right corner<br>
+		 * <img src="images/anchor_point.png"/><br>
+		 * a Renderable's anchor point defaults to (0.5,0.5), which corresponds to the center position.<br>
+		 * <br>
+		 * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation.
+		 * To specify a value through Tiled, use a json expression like `json:{"x":0.5,"y":0.5}`. </i>
+		 * @type {ObservableVector2d}
+		 * @default <0.5,0.5>
+		 */
+		this.anchorPoint = observableVector2dPool.get(
+			0.5,
+			0.5,
+			this.onAnchorUpdate.bind(this),
+		);
 
 		if (typeof this.currentTransform === "undefined") {
 			/**
 			 * the renderable default transformation matrix
 			 * @type {Matrix2d}
 			 */
-			this.currentTransform = pool.pull("Matrix2d");
+			this.currentTransform = matrix2dPool.get();
 		}
 		this.currentTransform.identity();
 
@@ -614,7 +609,6 @@ export default class Renderable extends Rect {
 			const bounds = this.getBounds();
 
 			bounds.clear();
-
 			if (this.autoTransform === true && !this.currentTransform.isIdentity()) {
 				// temporarly translate the matrix based on the anchor point
 				this.currentTransform.translate(
@@ -654,7 +648,7 @@ export default class Renderable extends Rect {
 	 * update the renderable's bounding rect (private)
 	 * @ignore
 	 */
-	updateBoundsPos(newX = this.pos.x, newY = this.pos.y) {
+	updateBoundsPos({ newX, newY }) {
 		this.getBounds().translate(newX - this.pos.x, newY - this.pos.y);
 	}
 
@@ -664,7 +658,7 @@ export default class Renderable extends Rect {
 	 */
 	getAbsolutePosition() {
 		if (typeof this._absPos === "undefined") {
-			this._absPos = pool.pull("Vector2d");
+			this._absPos = vector2dPool.get();
 		}
 		// XXX Cache me or something
 		this._absPos.set(this.pos.x, this.pos.y);
@@ -684,7 +678,7 @@ export default class Renderable extends Rect {
 	 * @param {number} x - the new X value to be set for the anchor
 	 * @param {number} y - the new Y value to be set for the anchor
 	 */
-	onAnchorUpdate(x, y) {
+	onAnchorUpdate({ newX: x, newY: y }) {
 		// since the callback is called before setting the new value
 		// manually update the anchor point (required for updateBoundsPos)
 		this.anchorPoint.setMuted(x, y);
@@ -826,22 +820,22 @@ export default class Renderable extends Rect {
 	 */
 	destroy() {
 		// allow recycling object properties
-		pool.push(this.currentTransform);
+		matrix2dPool.release(this.currentTransform);
 		this.currentTransform = undefined;
 
-		pool.push(this.anchorPoint);
+		observableVector2dPool.release(this.anchorPoint);
 		this.anchorPoint = undefined;
 
-		pool.push(this.pos);
+		observableVector3dPool.release(this.pos);
 		this.pos = undefined;
 
 		if (typeof this._absPos !== "undefined") {
-			pool.push(this._absPos);
+			vector2dPool.release(this._absPos);
 			this._absPos = undefined;
 		}
 
 		if (this._bounds instanceof Bounds) {
-			pool.push(this._bounds);
+			boundsPool.release(this._bounds);
 			this._bounds = undefined;
 		}
 

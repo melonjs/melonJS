@@ -3,21 +3,13 @@ import "./polyfill/index.ts";
 
 // class definition
 import Color from "./math/color.js";
-import Vector2d from "./math/vector2.js";
-import Vector3d from "./math/vector3.js";
-import ObservableVector2d from "./math/observable_vector2.js";
-import ObservableVector3d from "./math/observable_vector3.js";
-import Matrix2d from "./math/matrix2.js";
-import Matrix3d from "./math/matrix3.js";
 import Polygon from "./geometries/poly.js";
 import Line from "./geometries/line.js";
 import Ellipse from "./geometries/ellipse.js";
-import Point from "./geometries/point.js";
 import Rect from "./geometries/rectangle.js";
 import RoundRect from "./geometries/roundrect.js";
 import QuadTree from "./physics/quadtree.js";
 import Body from "./physics/body.js";
-import Bounds from "./physics/bounds.js";
 import Tween from "./tweens/tween.ts";
 import GLShader from "./video/webgl/glshader.js";
 import Compositor from "./video/webgl/compositors/compositor.js";
@@ -95,20 +87,22 @@ export * from "./application/scaleMethods.ts";
 export * from "./application/settings.ts";
 export * from "./version.ts";
 export { plugins, save, timer, pool, state };
+export { Vector2d } from "./math/vector2d.ts";
+export { Vector3d } from "./math/vector3d.ts";
+export { Matrix2d } from "./math/matrix2d.ts";
+export { Matrix3d } from "./math/matrix3d.ts";
+export { Point } from "./geometries/point.ts";
+export { Bounds } from "./physics/bounds.ts";
+export { createObservableVector2d } from "./math/observableVector2d.ts";
+export { createObservableVector3d } from "./math/observableVector3d.ts";
+export { getPool } from "./pool.ts";
 
 // export all class definition
 export {
 	Color,
-	Vector2d,
-	Vector3d,
-	ObservableVector2d,
-	ObservableVector3d,
-	Matrix2d,
-	Matrix3d,
 	Polygon,
 	Line,
 	Ellipse,
-	Point,
 	Rect,
 	RoundRect,
 	Tween,
@@ -124,7 +118,6 @@ export {
 	TextureAtlas,
 	Renderable,
 	Body,
-	Bounds,
 	Text,
 	BitmapText,
 	BitmapTextData,
@@ -226,19 +219,11 @@ export function boot() {
 	pool.register("me.BitmapTextData", BitmapTextData, true);
 	pool.register("me.ImageLayer", ImageLayer);
 	pool.register("me.ColorLayer", ColorLayer, true);
-	pool.register("me.Vector2d", Vector2d, true);
-	pool.register("me.Vector3d", Vector3d, true);
-	pool.register("me.ObservableVector2d", ObservableVector2d, true);
-	pool.register("me.ObservableVector3d", ObservableVector3d, true);
-	pool.register("me.Matrix2d", Matrix2d, true);
-	pool.register("me.Matrix3d", Matrix3d, true);
 	pool.register("me.Rect", Rect, true);
 	pool.register("me.RoundRect", RoundRect, true);
 	pool.register("me.Polygon", Polygon, true);
 	pool.register("me.Line", Line, true);
-	pool.register("me.Point", Point, true);
 	pool.register("me.Ellipse", Ellipse, true);
-	pool.register("me.Bounds", Bounds, true);
 
 	// duplicate all entries if use with no namespace (e.g. es6)
 	pool.register("Entity", Entity);
@@ -256,19 +241,11 @@ export function boot() {
 	pool.register("BitmapTextData", BitmapTextData, true);
 	pool.register("ImageLayer", ImageLayer);
 	pool.register("ColorLayer", ColorLayer, true);
-	pool.register("Vector2d", Vector2d, true);
-	pool.register("Vector3d", Vector3d, true);
-	pool.register("ObservableVector2d", ObservableVector2d, true);
-	pool.register("ObservableVector3d", ObservableVector3d, true);
-	pool.register("Matrix2d", Matrix2d, true);
-	pool.register("Matrix3d", Matrix3d, true);
 	pool.register("Rect", Rect, true);
 	pool.register("RoundRect", RoundRect, true);
 	pool.register("Polygon", Polygon, true);
 	pool.register("Line", Line, true);
-	pool.register("Point", Point, true);
 	pool.register("Ellipse", Ellipse, true);
-	pool.register("Bounds", Bounds, true);
 	pool.register("CanvasRenderTarget", CanvasRenderTarget, true);
 
 	// publish Boot notification

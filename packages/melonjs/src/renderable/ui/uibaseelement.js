@@ -4,8 +4,8 @@ import {
 	registerPointerEvent,
 	releasePointerEvent,
 } from "./../../input/input.js";
-import pool from "../../system/pooling.js";
 import { eventEmitter, POINTERMOVE } from "../../system/event.ts";
+import { vector2dPool } from "../../math/vector2d.ts";
 
 /**
  * This is a basic clickable and draggable container which you can use in your game UI.
@@ -133,7 +133,7 @@ export default class UIBaseElement extends Container {
 		if (this.isDraggable === true) {
 			eventEmitter.addListener(POINTERMOVE, this.#boundPointerMoveHandler);
 			// to memorize where we grab the object
-			this.grabOffset = pool.pull("Vector2d", 0, 0);
+			this.grabOffset = vector2dPool.get(0, 0);
 		}
 		return this.onOver(event);
 	}
@@ -179,7 +179,7 @@ export default class UIBaseElement extends Container {
 		if (this.isDraggable === true) {
 			// unregister on the global pointermove event
 			eventEmitter.removeListener(POINTERMOVE, this.#boundPointerMoveHandler);
-			pool.push(this.grabOffset);
+			vector2dPool.release(this.grabOffset);
 			this.grabOffset = undefined;
 		}
 		this.release(event);
@@ -282,7 +282,7 @@ export default class UIBaseElement extends Container {
 		if (this.isDraggable === true) {
 			eventEmitter.removeListener(POINTERMOVE, this.#boundPointerMoveHandler);
 			if (typeof this.grabOffset !== "undefined") {
-				pool.push(this.grabOffset);
+				vector2dPool.release(this.grabOffset);
 				this.grabOffset = undefined;
 			}
 		}

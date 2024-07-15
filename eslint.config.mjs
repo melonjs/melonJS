@@ -167,6 +167,9 @@ export default tseslint.config(
 			"@typescript-eslint/no-unsafe-argument": "off",
 			"@typescript-eslint/no-unsafe-assignment": "off",
 			"@typescript-eslint/no-unnecessary-condition": "off",
+			"@typescript-eslint/no-invalid-void-type": "off",
+			"@typescript-eslint/no-unsafe-return": "off",
+			"@typescript-eslint/no-non-null-assertion": "off",
 			"@typescript-eslint/restrict-template-expressions": [
 				"error",
 				{ allowNumber: true },

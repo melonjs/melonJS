@@ -3,6 +3,7 @@ import pool from "../../system/pooling.js";
 import { getImage, getBinary } from "../../loader/loader.js";
 import Renderable from "../renderable.js";
 import TextMetrics from "./textmetrics.js";
+import { vector2dPool } from "../../math/vector2d.ts";
 
 /**
  * a bitmap font object
@@ -87,7 +88,7 @@ export default class BitmapText extends Renderable {
 		 * scaled font size
 		 * @private
 		 */
-		this.fontScale = pool.pull("Vector2d", 1.0, 1.0);
+		this.fontScale = vector2dPool.get(1.0, 1.0);
 
 		/**
 		 * font image
@@ -422,7 +423,7 @@ export default class BitmapText extends Renderable {
 	 * @ignore
 	 */
 	destroy() {
-		pool.push(this.fontScale);
+		vector2dPool.release(this.fontScale);
 		this.fontScale = undefined;
 		pool.push(this.fontData);
 		this.fontData = undefined;

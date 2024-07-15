@@ -1,5 +1,5 @@
 import { ETA } from "./../../../math/math.ts";
-import Vector2d from "./../../../math/vector2.js";
+import { Vector2d } from "../../../math/vector2d.ts";
 
 /**
  * parse the given data and return a corresponding atlas

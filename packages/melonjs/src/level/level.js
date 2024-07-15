@@ -63,7 +63,7 @@ function safeLoadLevel(levelId, options, restart) {
  */
 function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
 	const level = levels[levelId];
-
+	console.log(level);
 	// reset the GUID generator
 	// and pass the level id as parameter
 	resetGUID(levelId, level.nextobjectid);

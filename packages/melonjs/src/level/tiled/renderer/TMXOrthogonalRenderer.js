@@ -1,5 +1,4 @@
-import Vector2d from "./../../../math/vector2.js";
-import pool from "./../../../system/pooling.js";
+import { Vector2d, vector2dPool } from "../../../math/vector2d.ts";
 import TMXRenderer from "./TMXRenderer.js";
 
 /**
@@ -80,13 +79,13 @@ export default class TMXOrthogonalRenderer extends TMXRenderer {
 		const start = this.pixelToTileCoords(
 			Math.max(rect.pos.x - (layer.maxTileSize.width - layer.tilewidth), 0),
 			Math.max(rect.pos.y - (layer.maxTileSize.height - layer.tileheight), 0),
-			pool.pull("Vector2d"),
+			vector2dPool.get(),
 		).floorSelf();
 
 		const end = this.pixelToTileCoords(
 			rect.pos.x + rect.width + this.tilewidth,
 			rect.pos.y + rect.height + this.tileheight,
-			pool.pull("Vector2d"),
+			vector2dPool.get(),
 		).ceilSelf();
 
 		//ensure we are in the valid tile range
@@ -126,7 +125,7 @@ export default class TMXOrthogonalRenderer extends TMXRenderer {
 			}
 		}
 
-		pool.push(start);
-		pool.push(end);
+		vector2dPool.release(start);
+		vector2dPool.release(end);
 	}
 }

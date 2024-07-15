@@ -1,4 +1,4 @@
-import Vector2d from "./../../math/vector2.js";
+import { Vector2d } from "../../math/vector2d.ts";
 import Sprite from "./../../renderable/sprite.js";
 import { renderer } from "./../video.js";
 import pool from "./../../system/pooling.js";

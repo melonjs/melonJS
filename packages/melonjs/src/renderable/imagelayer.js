@@ -1,5 +1,4 @@
 import { renderer } from "./../video/video.js";
-import pool from "./../system/pooling.js";
 import { game } from "../index.js";
 import Sprite from "./sprite.js";
 import * as stringUtil from "./../utils/string.ts";
@@ -10,10 +9,11 @@ import {
 	VIEWPORT_ONCHANGE,
 	VIEWPORT_ONRESIZE,
 } from "../system/event.ts";
+import { vector2dPool } from "../math/vector2d.ts";
 
 /**
  * additional import for TypeScript
- * @import Vector2d from "./../math/vector2.js";
+ * @import {Vector2d} from "../math/vector2d.js";
  */
 
 /**
@@ -57,7 +57,7 @@ export default class ImageLayer extends Sprite {
 		 * @type {Vector2d}
 		 * @default <1.0,1.0>
 		 */
-		this.ratio = pool.pull("Vector2d", 1.0, 1.0);
+		this.ratio = vector2dPool.get(1.0, 1.0);
 
 		if (typeof settings.ratio !== "undefined") {
 			// little hack for backward compatiblity
@@ -281,7 +281,7 @@ export default class ImageLayer extends Sprite {
 	 * @ignore
 	 */
 	destroy() {
-		pool.push(this.ratio);
+		vector2dPool.release(this.ratio);
 		this.ratio = undefined;
 		eventEmitter.removeListener(ONCONTEXT_RESTORED, this.boundCreatePattern);
 		super.destroy();

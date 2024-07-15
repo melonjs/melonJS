@@ -1,4 +1,4 @@
-import Vector2d from "./../../math/vector2.js";
+import { Vector2d } from "../../math/vector2d.ts";
 import { renderer } from "./../../video/video.js";
 import timer from "./../../system/timer.ts";
 import { getTMX, getImage } from "./../../loader/loader.js";

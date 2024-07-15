@@ -1,11 +1,11 @@
-import pool from "./../system/pooling.js";
 import { TAU } from "./../math/math.ts";
-import { endpointToCenterParameterization } from "./toarccanvas.js";
-import { earcut } from "./earcut.js";
+import { endpointToCenterParameterization } from "./toarccanvas.ts";
+import { earcut } from "./earcut.ts";
+import { pointPool } from "./point.ts";
 
 /**
  * additional import for TypeScript
- * @import Point from "./point.js";
+ * @import {Point} from "./point.ts";
  */
 
 /**
@@ -30,7 +30,7 @@ class Path2D {
 		this.vertices = [];
 
 		/* @ignore */
-		this.startPoint = pool.pull("Point");
+		this.startPoint = pointPool.get();
 
 		/* @ignore */
 		this.isDirty = false;
@@ -124,7 +124,7 @@ class Path2D {
 	beginPath() {
 		// empty the cache and recycle all vectors
 		this.points.forEach((point) => {
-			pool.push(point);
+			pointPool.release(point);
 		});
 		this.isDirty = true;
 		this.points.length = 0;
@@ -165,7 +165,7 @@ class Path2D {
 
 			// pre-allocate vertices if necessary
 			while (vertices.length < indicesLength) {
-				vertices.push(pool.pull("Point"));
+				vertices.push(pointPool.get());
 			}
 
 			// calculate all vertices
@@ -176,7 +176,7 @@ class Path2D {
 
 			// recycle overhead from a previous triangulation
 			while (vertices.length > indicesLength) {
-				pool.push(vertices[vertices.length - 1]);
+				pointPool.release(vertices[vertices.length - 1]);
 				vertices.length -= 1;
 			}
 			this.isDirty = false;
@@ -207,11 +207,11 @@ class Path2D {
 			points.length === 0 ? startPoint : points[points.length - 1];
 
 		if (!startPoint.equals(lastPoint)) {
-			points.push(pool.pull("Point", startPoint.x, startPoint.y));
+			points.push(pointPool.get(startPoint.x, startPoint.y));
 		} else {
-			points.push(pool.pull("Point", lastPoint.x, lastPoint.y));
+			points.push(pointPool.get(lastPoint.x, lastPoint.y));
 		}
-		points.push(pool.pull("Point", x, y));
+		points.push(pointPool.get(x, y));
 
 		startPoint.x = x;
 		startPoint.y = y;
@@ -451,8 +451,8 @@ class Path2D {
 		const startPoint = this.startPoint;
 		const lastPoint =
 			points.length === 0 ? startPoint : points[points.length - 1];
-		const endPoint = pool.pull("Point").set(x, y);
-		const controlPoint = pool.pull("Point").set(cpX, cpY);
+		const endPoint = pointPool.get().set(x, y);
+		const controlPoint = pointPool.get().set(cpX, cpY);
 		const resolution = this.arcResolution;
 
 		const t = 1 / resolution;
@@ -466,7 +466,8 @@ class Path2D {
 					endPoint.y * Math.pow(t * i, 2),
 			);
 		}
-		pool.push(endPoint, controlPoint);
+		pointPool.release(endPoint);
+		pointPool.release(controlPoint);
 		this.isDirty = true;
 	}
 
@@ -484,9 +485,9 @@ class Path2D {
 		const startPoint = this.startPoint;
 		const lastPoint =
 			points.length === 0 ? startPoint : points[points.length - 1];
-		const endPoint = pool.pull("Point").set(x, y);
-		const controlPoint1 = pool.pull("Point").set(cp1X, cp1Y);
-		const controlPoint2 = pool.pull("Point").set(cp2X, cp2Y);
+		const endPoint = pointPool.get().set(x, y);
+		const controlPoint1 = pointPool.get().set(cp1X, cp1Y);
+		const controlPoint2 = pointPool.get().set(cp2X, cp2Y);
 		const resolution = this.arcResolution;
 
 		const t = 1 / resolution;
@@ -503,7 +504,9 @@ class Path2D {
 			);
 		}
 
-		pool.push(endPoint, controlPoint1, controlPoint2);
+		pointPool.release(endPoint, controlPoint1, controlPoint2);
+		pointPool.release(controlPoint1);
+		pointPool.release(controlPoint2);
 		this.isDirty = true;
 	}
 

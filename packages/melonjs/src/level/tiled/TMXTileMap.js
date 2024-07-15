@@ -13,6 +13,7 @@ import { COLLISION_GROUP } from "./constants.js";
 import { getNewTMXRenderer } from "./renderer/autodetect.js";
 import { warning } from "../../lang/console.js";
 import { eventEmitter, VIEWPORT_ONRESIZE } from "../../system/event.ts";
+import { vector2dPool } from "../../math/vector2d.ts";
 
 /**
  * read the layer Data
@@ -48,11 +49,7 @@ function readImageLayer(map, data, z) {
 			{
 				name: data.name,
 				image: data.image,
-				ratio: pool.pull(
-					"Vector2d",
-					+data.parallaxx || 1.0,
-					+data.parallaxy || 1.0,
-				),
+				ratio: vector2dPool.get(+data.parallaxx || 1.0, +data.parallaxy || 1.0),
 				// convert to melonJS color format (note: this should be done earlier when parsing data)
 				tint:
 					typeof data.tintcolor !== "undefined"
@@ -483,9 +480,9 @@ export default class TMXTileMap {
 					shape = settings.shapes;
 					if (typeof shape === "undefined") {
 						shape = pool.pull("Polygon", 0, 0, [
-							pool.pull("Vector2d", 0, 0),
-							pool.pull("Vector2d", this.width, 0),
-							pool.pull("Vector2d", this.width, this.height),
+							vector2dPool.get(0, 0),
+							vector2dPool.get(this.width, 0),
+							vector2dPool.get(this.width, this.height),
 						]);
 					}
 					// check if a me.Tile object is embedded
@@ -511,9 +508,9 @@ export default class TMXTileMap {
 						shape = settings.shapes;
 						if (typeof shape === "undefined") {
 							shape = pool.pull("Polygon", 0, 0, [
-								pool.pull("Vector2d", 0, 0),
-								pool.pull("Vector2d", this.width, 0),
-								pool.pull("Vector2d", this.width, this.height),
+								vector2dPool.get(0, 0),
+								vector2dPool.get(this.width, 0),
+								vector2dPool.get(this.width, this.height),
 							]);
 						}
 						obj.anchorPoint.set(0, 0);

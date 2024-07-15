@@ -1,5 +1,4 @@
-import Vector2d from "./../../../math/vector2.js";
-import pool from "./../../../system/pooling.js";
+import { Vector2d, vector2dPool } from "../../../math/vector2d.ts";
 import TMXHexagonalRenderer from "./TMXHexagonalRenderer.js";
 import { degToRad } from "./../../../math/math.ts";
 
@@ -32,8 +31,7 @@ export default class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 		}
 
 		// Start with the coordinates of a grid-aligned tile
-		let referencePoint = pool.pull(
-			"Vector2d",
+		let referencePoint = vector2dPool.get(
 			Math.floor(alignedX / this.tilewidth),
 			Math.floor(alignedY / this.tileheight),
 		);
@@ -52,8 +50,7 @@ export default class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 		}
 
 		// Relative x and y position on the base square of the grid-aligned tile
-		const rel = pool.pull(
-			"Vector2d",
+		const rel = vector2dPool.get(
 			alignedX - referencePoint.x * this.tilewidth,
 			alignedY - referencePoint.y * this.tileheight,
 		);
@@ -105,8 +102,8 @@ export default class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 			.rotate(degToRad(-45))
 			.add(referencePoint);
 
-		pool.push(referencePoint);
-		pool.push(rel);
+		vector2dPool.release(referencePoint);
+		vector2dPool.release(rel);
 
 		return ret;
 	}

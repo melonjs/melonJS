@@ -1,11 +1,12 @@
-import pool from "./../system/pooling.js";
-import { earcut } from "./earcut.js";
+import { vector2dPool } from "../math/vector2d.ts";
+import { boundsPool } from "./../physics/bounds.ts";
+import { earcut } from "./earcut.ts";
 
 /**
  * additional import for TypeScript
- * @import Vector2d from "./../math/vector2.js";
- * @import Matrix2d from "./../math/matrix2.js";
- * @import Bounds from "./../physics/bounds.js";
+ * @import {Vector2d} from "../math/vector2d.js";
+ * @import {Matrix2d} from "../math/matrix2d.ts";
+ * @import {Bounds} from "./../physics/bounds.ts";
  */
 
 /**
@@ -27,7 +28,7 @@ export default class Polygon {
 		 * origin point of the Polygon
 		 * @type {Vector2d}
 		 */
-		this.pos = pool.pull("Vector2d");
+		this.pos = vector2dPool.get();
 
 		/**
 		 * Array of points defining the Polygon <br>
@@ -109,7 +110,7 @@ export default class Polygon {
 				// array of {x,y} objects
 				this.points.length = 0; // fix potential memory leak
 				vertices.forEach((vertice) => {
-					this.points.push(pool.pull("Vector2d", vertice.x, vertice.y));
+					this.points.push(vector2dPool.get(vertice.x, vertice.y));
 				});
 			}
 		} else {
@@ -117,7 +118,7 @@ export default class Polygon {
 			const verticesLength = vertices.length;
 			this.points.length = 0; // fix potential memory leak
 			for (let p = 0; p < verticesLength; p += 2) {
-				this.points.push(pool.pull("Vector2d", vertices[p], vertices[p + 1]));
+				this.points.push(vector2dPool.get(vertices[p], vertices[p + 1]));
 			}
 		}
 
@@ -225,21 +226,21 @@ export default class Polygon {
 		for (let i = 0; i < len; i++) {
 			let edge = edges[i];
 			if (typeof edge === "undefined") {
-				edge = edges[i] = pool.pull("Vector2d");
+				edge = edges[i] = vector2dPool.get();
 			}
 			edge.copy(points[(i + 1) % len]).sub(points[i]);
 
 			let normal = normals[i];
 			if (typeof normal === "undefined") {
-				normal = normals[i] = pool.pull("Vector2d");
+				normal = normals[i] = vector2dPool.get();
 			}
 			normal.copy(edge).perp().normalize();
 		}
 
 		// Release any existing Vector2d objects back to the pool
 		for (let i = len; i < edges.length; i++) {
-			pool.push(edges[i]);
-			pool.push(normals[i]);
+			vector2dPool.release(edges[i]);
+			vector2dPool.release(normals[i]);
 		}
 
 		// trunc array
@@ -412,7 +413,7 @@ export default class Polygon {
 	 */
 	getBounds() {
 		if (typeof this._bounds === "undefined") {
-			this._bounds = pool.pull("Bounds");
+			this._bounds = boundsPool.get();
 		}
 		return this._bounds;
 	}

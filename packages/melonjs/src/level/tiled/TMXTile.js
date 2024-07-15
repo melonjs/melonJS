@@ -1,6 +1,6 @@
-import Matrix2d from "./../../math/matrix2.js";
+import { Matrix2d } from "../../math/matrix2d.ts";
 import Sprite from "./../../renderable/sprite.js";
-import Bounds from "./../../physics/bounds.js";
+import { Bounds } from "./../../physics/bounds.ts";
 import {
 	TMX_FLIP_V,
 	TMX_FLIP_H,
