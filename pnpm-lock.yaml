@@ -22,7 +22,7 @@ importers:
         version: 20.14.10
       '@vitest/browser':
         specifier: ^2.0.2
-        version: 2.0.2(playwright@1.45.1)(typescript@5.5.3)(vitest@2.0.2)
+        version: 2.0.2(playwright@1.45.2)(typescript@5.5.3)(vitest@2.0.2)
       eslint:
         specifier: ^9.6.0
         version: 9.6.0
@@ -50,6 +50,10 @@ importers:
       vitest:
         specifier: ^2.0.2
         version: 2.0.2(@types/node@20.14.10)(@vitest/browser@2.0.2)
+    devDependencies:
+      playwright:
+        specifier: ^1.45.2
+        version: 1.45.2
 
   packages/debug-plugin:
     devDependencies:
@@ -135,9 +139,6 @@ importers:
       esbuild:
         specifier: ^0.23.0
         version: 0.23.0
-      playwright:
-        specifier: ^1.45.1
-        version: 1.45.1
       serve:
         specifier: ^14.2.3
         version: 14.2.3
@@ -2004,13 +2005,13 @@ packages:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
 
-  playwright-core@1.45.1:
-    resolution: {integrity: sha512-LF4CUUtrUu2TCpDw4mcrAIuYrEjVDfT1cHbJMfwnE2+1b8PZcFzPNgvZCvq2JfQ4aTjRCCHw5EJ2tmr2NSzdPg==}
+  playwright-core@1.45.2:
+    resolution: {integrity: sha512-ha175tAWb0dTK0X4orvBIqi3jGEt701SMxMhyujxNrgd8K0Uy5wMSwwcQHtyB4om7INUkfndx02XnQ2p6dvLDw==}
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright@1.45.1:
-    resolution: {integrity: sha512-Hjrgae4kpSQBr98nhCj3IScxVeVUixqj+5oyif8TdIn2opTCPEzqAqNMeK42i3cWDCVu9MI+ZsGWw+gVR4ISBg==}
+  playwright@1.45.2:
+    resolution: {integrity: sha512-ReywF2t/0teRvNBpfIgh5e4wnrI/8Su8ssdo5XsQKpjxJj+jspm00jSoz9BTg91TT0c9HRjXO7LBNVrgYj9X0g==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -3303,7 +3304,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/browser@2.0.2(playwright@1.45.1)(typescript@5.5.3)(vitest@2.0.2)':
+  '@vitest/browser@2.0.2(playwright@1.45.2)(typescript@5.5.3)(vitest@2.0.2)':
     dependencies:
       '@testing-library/dom': 10.3.1
       '@testing-library/user-event': 14.5.2(@testing-library/dom@10.3.1)
@@ -3314,7 +3315,7 @@ snapshots:
       vitest: 2.0.2(@types/node@20.14.10)(@vitest/browser@2.0.2)
       ws: 8.18.0
     optionalDependencies:
-      playwright: 1.45.1
+      playwright: 1.45.2
     transitivePeerDependencies:
       - bufferutil
       - typescript
@@ -4331,11 +4332,11 @@ snapshots:
 
   picomatch@2.3.1: {}
 
-  playwright-core@1.45.1: {}
+  playwright-core@1.45.2: {}
 
-  playwright@1.45.1:
+  playwright@1.45.2:
     dependencies:
-      playwright-core: 1.45.1
+      playwright-core: 1.45.2
     optionalDependencies:
       fsevents: 2.3.2
 
@@ -4803,7 +4804,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 20.14.10
-      '@vitest/browser': 2.0.2(playwright@1.45.1)(typescript@5.5.3)(vitest@2.0.2)
+      '@vitest/browser': 2.0.2(playwright@1.45.2)(typescript@5.5.3)(vitest@2.0.2)
     transitivePeerDependencies:
       - less
       - lightningcss

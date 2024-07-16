@@ -11,7 +11,7 @@ import { Vector2d } from "../math/vector2d.ts";
  * @import Renderable from "./../renderable/renderable.js";
  * @import Sprite from "./../renderable/sprite.js";
  * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
- * @import Polygon from "./../geometries/poly.js";
+ * @import {Polygon} from "../geometries/polygon.ts";
  * @import Ellipse from "./../geometries/ellipse.js";
  */
 

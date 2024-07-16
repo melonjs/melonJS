@@ -9,7 +9,7 @@ import { Bounds } from "./bounds.ts";
  * @import Renderable from "./../renderable/renderable.js";
  * @import Sprite from "./../renderable/sprite.js";
  * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
- * @import Line from "./../geometries/line.js";
+ * @import {Line} from "./../geometries/line.ts";
  */
 
 // a dummy object when using Line for raycasting
@@ -167,13 +167,13 @@ class Detector {
 	 * @returns {Array.<Renderable>} an array of intersecting physic objects
 	 * @example
 	 *    // define a line accross the viewport
-	 *    let ray = new me.Line(
+	 *    let ray = new Line(
 	 *        // absolute position of the line
 	 *        0, 0, [
 	 *        // starting point relative to the initial position
-	 *        new me.Vector2d(0, 0),
+	 *        new Vector2d(0, 0),
 	 *        // ending point
-	 *        new me.Vector2d(me.game.viewport.width, me.game.viewport.height)
+	 *        new Vector2d(me.game.viewport.width, me.game.viewport.height)
 	 *    ]);
 	 *
 	 *    // check for collition

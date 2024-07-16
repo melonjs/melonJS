@@ -12,8 +12,8 @@ import TextureCache from "./../texture/cache.js";
  * additional import for TypeScript
  * @import Rect from "./../../geometries/rectangle.js";
  * @import RoundRect from "./../../geometries/roundrect.js";
- * @import Polygon from "./../../geometries/poly.js";
- * @import Line from "./../../geometries/line.js";
+ * @import {Polygon} from "../../geometries/polygon.ts";
+ * @import {Line} from "./../../geometries/line.ts";
  * @import Ellipse from "./../../geometries/ellipse.js";
  * @import {Matrix2d} from "../../math/matrix2d.ts";
  */

@@ -15,6 +15,7 @@ import { warning } from "../../lang/console.js";
 import { eventEmitter, VIEWPORT_ONRESIZE } from "../../system/event.ts";
 import { vector2dPool } from "../../math/vector2d.ts";
 import { colorPool } from "../../math/color.ts";
+import { polygonPool } from "../../geometries/polygon.ts";
 
 /**
  * read the layer Data
@@ -480,7 +481,7 @@ export default class TMXTileMap {
 					// create a default shape if none is specified
 					shape = settings.shapes;
 					if (typeof shape === "undefined") {
-						shape = pool.pull("Polygon", 0, 0, [
+						shape = polygonPool.get(0, 0, [
 							vector2dPool.get(0, 0),
 							vector2dPool.get(this.width, 0),
 							vector2dPool.get(this.width, this.height),
@@ -508,7 +509,7 @@ export default class TMXTileMap {
 						// create a default shape if none is specified
 						shape = settings.shapes;
 						if (typeof shape === "undefined") {
-							shape = pool.pull("Polygon", 0, 0, [
+							shape = polygonPool.get(0, 0, [
 								vector2dPool.get(0, 0),
 								vector2dPool.get(this.width, 0),
 								vector2dPool.get(this.width, this.height),

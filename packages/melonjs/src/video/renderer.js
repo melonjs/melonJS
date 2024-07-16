@@ -8,8 +8,8 @@ import { CANVAS_ONRESIZE, eventEmitter } from "../system/event.ts";
 /**
  * @import Rect from "./../geometries/rectangle.js";
  * @import RoundRect from "./../geometries/roundrect.js";
- * @import Polygon from "./../geometries/poly.js";
- * @import Line from "./../geometries/line.js";
+ * @import {Polygon} from "../geometries/polygon.ts";
+ * @import {Line} from "./../geometries/line.ts";
  * @import Ellipse from "./../geometries/ellipse.js";
  * @import {Bounds} from "./../physics/bounds.ts";
  */

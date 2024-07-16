@@ -1,5 +1,4 @@
 import { TupleToUnion } from "type-fest";
-import { createPool } from "../system/pool";
 import { clamp } from "./math";
 import { Vector3d, vector3dPool } from "./vector3d";
 
@@ -169,12 +168,10 @@ export const createObservableVector3d = (
 
 			if (prop === "clone") {
 				return () =>
-					observableVector3dPool.get(
-						target.x,
-						target.y,
-						target.z,
-						options.updateFn,
-					);
+					createObservableVector3d({
+						target: new Vector3d(target.x, target.y, target.z),
+						updateFn: options.updateFn,
+					});
 			}
 
 			if (prop === "clamp") {
@@ -200,27 +197,3 @@ export const createObservableVector3d = (
 		},
 	}) as ObservableVector3d;
 };
-
-export const observableVector3dPool = createPool<
-	ObservableVector3d,
-	[number, number, number, ObservableVector3dUpdateFn]
->((x, y, z, updateFn) => {
-	const vector = new Vector3d(x, y, z);
-
-	const options: CreateObservableVector3dOptions = {
-		target: vector,
-		updateFn,
-	};
-
-	const instance = createObservableVector3d(options);
-
-	return {
-		instance: instance,
-		reset(x, y, z, updateFn) {
-			vector.x = x;
-			vector.y = y;
-			vector.z = z;
-			options.updateFn = updateFn;
-		},
-	};
-});

@@ -1,6 +1,7 @@
 import { clamp } from "./math.ts";
 import { createPool } from "../system/pool.ts";
 import { Vector2d } from "./vector2d.ts";
+import { XYPoint } from "../utils/types.ts";
 
 /**
  * a generic 3D Vector Object
@@ -301,7 +302,7 @@ export class Vector3d {
 	 * @param [v] - an optional point to rotate around (on the same z axis)
 	 * @returns Reference to this object for method chaining
 	 */
-	rotate(angle: number, v?: { x: number; y: number } | undefined) {
+	rotate(angle: number, v?: XYPoint | undefined) {
 		let cx = 0;
 		let cy = 0;
 

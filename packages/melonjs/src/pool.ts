@@ -1,4 +1,6 @@
+import { linePool } from "./geometries/line";
 import { pointPool } from "./geometries/point";
+import { polygonPool } from "./geometries/polygon";
 import { colorPool } from "./math/color";
 import { matrix2dPool } from "./math/matrix2d";
 import { matrix3dPool } from "./math/matrix3d";
@@ -14,6 +16,8 @@ const pools = {
 	matrix3d: matrix3dPool,
 	bounds: boundsPool,
 	color: colorPool,
+	polygon: polygonPool,
+	line: linePool,
 } as const;
 
 type PoolKey = keyof typeof pools;

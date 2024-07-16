@@ -1,8 +1,8 @@
 import Sprite from "./sprite.js";
 import Body from "./../physics/body.js";
 import { collision } from "./../physics/collision.js";
-import pool from "./../system/pooling.js";
 import { vector2dPool } from "../math/vector2d.ts";
+import { polygonPool } from "../geometries/polygon.ts";
 
 /**
  * a basic collectable helper class for immovable object (e.g. a coin)
@@ -24,7 +24,7 @@ export default class Collectable extends Sprite {
 		// add and configure the physic body
 		let shape = settings.shapes;
 		if (typeof shape === "undefined") {
-			shape = pool.pull("Polygon", 0, 0, [
+			shape = polygonPool.get(0, 0, [
 				vector2dPool.get(0, 0),
 				vector2dPool.get(this.width, 0),
 				vector2dPool.get(this.width, this.height),

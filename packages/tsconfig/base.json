@@ -17,6 +17,7 @@
 		"isolatedModules": true,
 		"strictPropertyInitialization": false,
 		"allowImportingTsExtensions": true,
-		"noUnusedParameters": true
+		"noUnusedParameters": true,
+		"noImplicitOverride": true
 	}
 }

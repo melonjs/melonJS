@@ -1,6 +1,6 @@
 import Rect from "./../geometries/rectangle.js";
 import Ellipse from "./../geometries/ellipse.js";
-import Polygon from "./../geometries/poly.js";
+import { Polygon, polygonPool } from "../geometries/polygon.ts";
 import { Bounds, boundsPool } from "./bounds.ts";
 import pool from "./../system/pooling.js";
 import { collision } from "./collision.js";
@@ -9,6 +9,7 @@ import { clamp } from "./../math/math.ts";
 import { Point, pointPool } from "../geometries/point.ts";
 import { remove } from "../utils/array.ts";
 import { vector2dPool } from "../math/vector2d.ts";
+import { Line, linePool } from "./../geometries/line.ts";
 
 /**
  * @import Entity from "./../renderable/entity/entity.js";
@@ -16,7 +17,6 @@ import { vector2dPool } from "../math/vector2d.ts";
  * @import Renderable from "./../renderable/renderable.js";
  * @import Sprite from "./../renderable/sprite.js";
  * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
- * @import Line from "./../geometries/line.js";
  * @import {Vector2d} from "../math/vector2d.js";
  * @import ResponseObject from "./response.js";
  **/
@@ -306,7 +306,7 @@ export default class Body {
 			polygon.setShape(0, 0, vertices);
 		} else {
 			// this will replace any other non polygon shape type if defined
-			this.shapes[index] = pool.pull("Polygon", 0, 0, vertices);
+			this.shapes[index] = pointPool.get(0, 0, vertices);
 		}
 
 		// update the body bounds to take in account the new vertices
@@ -678,6 +678,10 @@ export default class Body {
 		this.shapes.forEach((shape) => {
 			if (shape instanceof Point) {
 				pointPool.release(shape);
+			} else if (shape instanceof Line) {
+				linePool.release(shape);
+			} else if (shape instanceof Polygon) {
+				polygonPool.release(shape);
 			} else {
 				pool.push(shape);
 			}

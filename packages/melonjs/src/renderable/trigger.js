@@ -2,8 +2,8 @@ import Renderable from "./renderable.js";
 import { collision } from "./../physics/collision.js";
 import Body from "./../physics/body.js";
 import { level } from "./../level/level.js";
-import pool from "./../system/pooling.js";
 import { vector2dPool } from "../math/vector2d.ts";
+import { polygonPool } from "../geometries/polygon.ts";
 
 /**
  * additional import for TypeScript
@@ -80,7 +80,7 @@ export default class Trigger extends Renderable {
 		// add and configure the physic body
 		let shape = settings.shapes;
 		if (typeof shape === "undefined") {
-			shape = pool.pull("Polygon", 0, 0, [
+			shape = polygonPool.get(0, 0, [
 				vector2dPool.get(0, 0),
 				vector2dPool.get(this.width, 0),
 				vector2dPool.get(this.width, this.height),

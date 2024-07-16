@@ -1,13 +1,19 @@
-import { vector2dPool } from "../math/vector2d.ts";
-import { boundsPool } from "./../physics/bounds.ts";
+import { Matrix2d } from "../math/matrix2d.ts";
+import { Vector2d, vector2dPool } from "../math/vector2d.ts";
+import { Bounds, boundsPool } from "../physics/bounds.ts";
+import { createPool } from "../system/pool.ts";
+import { XYPoint } from "../utils/types.ts";
 import { earcut } from "./earcut.ts";
 
-/**
- * additional import for TypeScript
- * @import {Vector2d} from "../math/vector2d.js";
- * @import {Matrix2d} from "../math/matrix2d.ts";
- * @import {Bounds} from "./../physics/bounds.ts";
- */
+type PolygonVertices =
+	| [XYPoint, XYPoint, XYPoint, ...XYPoint[]]
+	| [Vector2d, Vector2d, Vector2d, ...Vector2d[]]
+	| [number, number, number, number, number, number, ...number[]];
+
+export type LineVertices =
+	| [XYPoint, XYPoint]
+	| [Vector2d, Vector2d]
+	| [number, number, number, number];
 
 /**
  * a polygon Object.<br>
@@ -17,76 +23,72 @@ import { earcut } from "./earcut.ts";
  * <center><img src="images/convex_polygon.png"/></center><br>
  * A polygon's `winding` is clockwise if its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
  */
-export default class Polygon {
+export class Polygon {
 	/**
-	 * @param {number} [x=0] - origin point of the Polygon
-	 * @param {number} [y=0] - origin point of the Polygon
-	 * @param {Vector2d[]} points - array of vector defining the Polygon
+	 * origin point of the Polygon
 	 */
-	constructor(x = 0, y = 0, points) {
-		/**
-		 * origin point of the Polygon
-		 * @type {Vector2d}
-		 */
+	pos: Vector2d;
+
+	/**
+	 * Array of points defining the Polygon <br>
+	 * Note: If you manually change `points`, you **must** call `recalc`afterwards so that the changes get applied correctly.
+	 */
+	points: Vector2d[];
+
+	/**
+	 * The edges here are the direction of the `n`th edge of the polygon, relative to
+	 * the `n`th point. If you want to draw a given edge from the edge value, you must
+	 * first translate to the position of the starting point.
+	 */
+	edges: Vector2d[];
+
+	/**
+	 * a list of indices for all vertices composing this polygon
+	 */
+	indices: number[];
+
+	/**
+	 * The normals here are the direction of the normal for the `n`th edge of the polygon, relative
+	 * to the position of the `n`th point. If you want to draw an edge normal, you must first
+	 * translate to the position of the starting point.
+	 * @ignore
+	 */
+	normals: Vector2d[];
+
+	/**
+	 * The bounding rectangle for this shape
+	 * @ignore
+	 */
+	private _bounds: Bounds;
+
+	/**
+	 * the shape type (used internally)
+	 */
+	type = "Polygon";
+
+	/**
+	 * @param [x=0] - origin point of the Polygon
+	 * @param [y=0] - origin point of the Polygon
+	 * @param points - array of vector defining the Polygon
+	 */
+	constructor(x = 0, y = 0, points: PolygonVertices | LineVertices) {
 		this.pos = vector2dPool.get();
-
-		/**
-		 * Array of points defining the Polygon <br>
-		 * Note: If you manually change `points`, you **must** call `recalc`afterwards so that the changes get applied correctly.
-		 * @type {Vector2d[]}
-		 */
 		this.points = [];
-
-		/**
-		 * The edges here are the direction of the `n`th edge of the polygon, relative to
-		 * the `n`th point. If you want to draw a given edge from the edge value, you must
-		 * first translate to the position of the starting point.
-		 * @ignore
-		 */
 		this.edges = [];
-
-		/**
-		 * a list of indices for all vertices composing this polygon
-		 * @ignore
-		 */
 		this.indices = [];
-
-		/**
-		 * The normals here are the direction of the normal for the `n`th edge of the polygon, relative
-		 * to the position of the `n`th point. If you want to draw an edge normal, you must first
-		 * translate to the position of the starting point.
-		 * @ignore
-		 */
 		this.normals = [];
-
-		/**
-		 * The bounding rectangle for this shape
-		 * @ignore
-		 */
-		this._bounds = undefined;
-
-		/**
-		 * the shape type (used internally)
-		 * @type {string}
-		 * @default "Polygon"
-		 */
-		this.type = "Polygon";
-		this.setShape(x, y, points);
-	}
-
-	/** @ignore */
-	onResetEvent(x, y, points) {
+		this._bounds = boundsPool.get();
 		this.setShape(x, y, points);
 	}
 
 	/**
 	 * set new value to the Polygon
-	 * @param {number} x - position of the Polygon
-	 * @param {number} y - position of the Polygon
-	 * @param {Vector2d[]|number[]} points - array of vector or vertice defining the Polygon
-	 * @returns {Polygon} this instance for objecf chaining
+	 * @param x - position of the Polygon
+	 * @param y - position of the Polygon
+	 * @param points - array of vector or vertice defining the Polygon
+	 * @returns this instance for objecf chaining
 	 */
-	setShape(x, y, points) {
+	setShape(x: number, y: number, points: PolygonVertices | LineVertices) {
 		this.pos.set(x, y);
 		this.setVertices(points);
 		return this;
@@ -94,31 +96,34 @@ export default class Polygon {
 
 	/**
 	 * set the vertices defining this Polygon
-	 * @param {Vector2d[]} vertices - array of vector or vertice defining the Polygon
-	 * @returns {Polygon} this instance for objecf chaining
+	 * @param vertices - array of vector or vertice defining the Polygon
+	 * @returns this instance for objecf chaining
 	 */
-	setVertices(vertices) {
+	setVertices(vertices: PolygonVertices | LineVertices) {
 		if (!Array.isArray(vertices)) {
 			return this;
 		}
 
-		if (typeof vertices[0] === "object") {
-			if (typeof vertices[0].setV === "function") {
-				// array of Vector2d
-				this.points = vertices;
-			} else {
-				// array of {x,y} objects
-				this.points.length = 0; // fix potential memory leak
-				vertices.forEach((vertice) => {
-					this.points.push(vector2dPool.get(vertice.x, vertice.y));
-				});
+		if (vertices.length < 2) {
+			throw new Error("You must provide at least two vertices");
+		}
+
+		if (typeof vertices[0] === "number") {
+			this.points = [];
+			for (let p = 0; p < vertices.length; p += 2) {
+				this.points.push(
+					new Vector2d(
+						(vertices as number[])[p],
+						(vertices as number[])[p + 1],
+					),
+				);
 			}
+		} else if (vertices[0] instanceof Vector2d) {
+			this.points = vertices as Vector2d[];
 		} else {
-			// it's a flat array of numbers
-			const verticesLength = vertices.length;
-			this.points.length = 0; // fix potential memory leak
-			for (let p = 0; p < verticesLength; p += 2) {
-				this.points.push(vector2dPool.get(vertices[p], vertices[p + 1]));
+			this.points = [];
+			for (const vertex of vertices as XYPoint[]) {
+				this.points.push(new Vector2d(vertex.x, vertex.y));
 			}
 		}
 
@@ -129,10 +134,10 @@ export default class Polygon {
 
 	/**
 	 * apply the given transformation matrix to this Polygon
-	 * @param {Matrix2d} m - the transformation matrix
-	 * @returns {Polygon} Reference to this object for method chaining
+	 * @param m - the transformation matrix
+	 * @returns Reference to this object for method chaining
 	 */
-	transform(m) {
+	transform(m: Matrix2d) {
 		const points = this.points;
 		const len = points.length;
 		for (let i = 0; i < len; i++) {
@@ -145,7 +150,7 @@ export default class Polygon {
 
 	/**
 	 * apply an isometric projection to this shape
-	 * @returns {Polygon} Reference to this object for method chaining
+	 * @returns Reference to this object for method chaining
 	 */
 	toIso() {
 		return this.rotate(Math.PI / 4).scale(Math.SQRT2, Math.SQRT1_2);
@@ -153,7 +158,7 @@ export default class Polygon {
 
 	/**
 	 * apply a 2d projection to this shapen
-	 * @returns {Polygon} Reference to this object for method chaining
+	 * @returns Reference to this object for method chaining
 	 */
 	to2d() {
 		return this.scale(Math.SQRT1_2, Math.SQRT2).rotate(-Math.PI / 4);
@@ -161,11 +166,11 @@ export default class Polygon {
 
 	/**
 	 * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
-	 * @param {number} angle - The angle to rotate (in radians)
-	 * @param {Vector2d} [v] - an optional point to rotate around
-	 * @returns {Polygon} Reference to this object for method chaining
+	 * @param angle - The angle to rotate (in radians)
+	 * @param [v] - an optional point to rotate around
+	 * @returns Reference to this object for method chaining
 	 */
-	rotate(angle, v) {
+	rotate(angle: number, v?: Vector2d | undefined) {
 		if (angle !== 0) {
 			const points = this.points;
 			const len = points.length;
@@ -179,12 +184,12 @@ export default class Polygon {
 	}
 
 	/**
-	 * Scale this Polygon by the given scalar.
-	 * @param {number} x
-	 * @param {number} [y=x]
-	 * @returns {Polygon} Reference to this object for method chaining
+	 * Scales the polygon by the given factors along the x and y axes.
+	 * @param x - The factor by which to scale the polygon along the x-axis.
+	 * @param [y=x] - The factor by which to scale the polygon along the y-axis. Defaults to the value of x.
+	 * @returns Reference to this object for method chaining
 	 */
-	scale(x, y = x) {
+	scale(x: number, y = x) {
 		const points = this.points;
 		const len = points.length;
 		for (let i = 0; i < len; i++) {
@@ -196,18 +201,18 @@ export default class Polygon {
 	}
 
 	/**
-	 * Scale this Polygon by the given vector
-	 * @param {Vector2d} v
-	 * @returns {Polygon} Reference to this object for method chaining
+	 * Scales the polygon by the given vector.
+	 * @param v - A vector containing the scaling factors for the x and y axes.
+	 * @returns Reference to this object for method chaining
 	 */
-	scaleV(v) {
+	scaleV(v: Vector2d) {
 		return this.scale(v.x, v.y);
 	}
 
 	/**
 	 * Computes the calculated collision polygon.
 	 * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
-	 * @returns {Polygon} Reference to this object for method chaining
+	 * @returns Reference to this object for method chaining
 	 */
 	recalc() {
 		const edges = this.edges;
@@ -256,7 +261,7 @@ export default class Polygon {
 
 	/**
 	 * returns a list of indices for all triangles defined in this polygon
-	 * @returns {Array.<number>} an array of vertex indices for all triangles forming this polygon.
+	 * @returns an array of vertex indices for all triangles forming this polygon.
 	 */
 	getIndices() {
 		if (this.indices.length === 0) {
@@ -271,7 +276,7 @@ export default class Polygon {
 
 	/**
 	 * Returns true if the vertices composing this polygon form a convex shape (vertices must be in clockwise order).
-	 * @returns {boolean} true if the vertices are convex, false if not, null if not computable
+	 * @returns true if the vertices are convex, false if not, null if not computable
 	 */
 	isConvex() {
 		// http://paulbourke.net/geometry/polygonmesh/
@@ -310,27 +315,27 @@ export default class Polygon {
 	}
 
 	/**
-	 * translate the Polygon by the specified offset
-	 * @param {number|Vector2d} x -  x offset or a vector point to translate by
-	 * @param {number} [y] - y offset
-	 * @returns {Polygon} Reference to this object for method chaining
+	 * Translates the Polygon by the specified offset.
+	 * @param x - The x offset or a vector point to translate by.
+	 * @param [y] - The y offset. This parameter is required if the first parameter is a number.
+	 * @returns Reference to this object for method chaining
 	 * @example
 	 * polygon.translate(10, 10);
 	 * // or
 	 * polygon.translate(myVector2d);
 	 */
-	translate() {
-		let _x;
-		let _y;
+	translate(x: number, y: number): Polygon;
+	translate(vector: Vector2d): Polygon;
+	translate(xOrVector: Vector2d | number, y?: number) {
+		let _x: number;
+		let _y: number;
 
-		if (arguments.length === 2) {
-			// x, y
-			_x = arguments[0];
-			_y = arguments[1];
+		if (xOrVector instanceof Vector2d) {
+			_x = xOrVector.x;
+			_y = xOrVector.y;
 		} else {
-			// vector
-			_x = arguments[0].x;
-			_y = arguments[0].y;
+			_x = xOrVector;
+			_y = y!;
 		}
 
 		this.pos.x += _x;
@@ -342,24 +347,24 @@ export default class Polygon {
 
 	/**
 	 * Shifts the Polygon to the given position vector.
-	 * @param {number|Vector2d} x -  x coordinate or a vector point to shift to
-	 * @param {number} [y]
+	 * @param x - The x coordinate or a vector point to shift to.
+	 * @param [y] - The y coordinate. This parameter is required if the first parameter is a number.
 	 * @example
 	 * polygon.shift(10, 10);
 	 * // or
 	 * polygon.shift(myVector2d);
 	 */
-	shift() {
+	shift(x: number, y: number): void;
+	shift(vector: Vector2d): void;
+	shift(xOrVector: Vector2d | number, y?: number) {
 		let _x;
 		let _y;
-		if (arguments.length === 2) {
-			// x, y
-			_x = arguments[0];
-			_y = arguments[1];
+		if (xOrVector instanceof Vector2d) {
+			_x = xOrVector.x;
+			_y = xOrVector.y;
 		} else {
-			// vector
-			_x = arguments[0].x;
-			_y = arguments[0].y;
+			_x = xOrVector;
+			_y = y!;
 		}
 		this.pos.x = _x;
 		this.pos.y = _y;
@@ -370,9 +375,10 @@ export default class Polygon {
 	 * Returns true if the polygon contains the given point. <br>
 	 * (Note: it is highly recommended to first do a hit test on the corresponding <br>
 	 *  bounding rect, as the function can be highly consuming with complex shapes)
-	 * @param {number|Vector2d} x -  x coordinate or a vector point to check
-	 * @param {number} [y] - y coordinate
-	 * @returns {boolean} True if the polygon contain the point, otherwise false
+	 * @param x -  x coordinate or a vector point to check
+	 * @param [y] - y coordinate
+	 * @param args
+	 * @returns True if the polygon contain the point, otherwise false
 	 * @example
 	 * if (polygon.contains(10, 10)) {
 	 *   // do something
@@ -382,8 +388,13 @@ export default class Polygon {
 	 *   // do something
 	 * }
 	 */
-	contains(...args) {
-		const [_x, _y] = args.length === 2 ? args : [args[0].x, args[0].y];
+	contains(x: number, y: number): boolean;
+	contains(vector: Vector2d): boolean;
+	contains(xOrVector: Vector2d | number, y?: number) {
+		const [_x, _y]: [number, number] =
+			xOrVector instanceof Vector2d
+				? [xOrVector.x, xOrVector.y]
+				: [xOrVector, y!];
 
 		let intersects = false;
 		const posx = this.pos.x;
@@ -409,18 +420,15 @@ export default class Polygon {
 
 	/**
 	 * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
-	 * @returns {Bounds} this shape bounding box Rectangle object
+	 * @returns this shape bounding box Rectangle object
 	 */
 	getBounds() {
-		if (typeof this._bounds === "undefined") {
-			this._bounds = boundsPool.get();
-		}
 		return this._bounds;
 	}
 
 	/**
 	 * update the bounding box for this shape.
-	 * @returns {Bounds} this shape bounding box Rectangle object
+	 * @returns this shape bounding box Rectangle object
 	 */
 	updateBounds() {
 		const bounds = this.getBounds();
@@ -433,13 +441,31 @@ export default class Polygon {
 
 	/**
 	 * clone this Polygon
-	 * @returns {Polygon} new Polygon
+	 * @returns new Polygon
 	 */
 	clone() {
-		const copy = [];
-		this.points.forEach((point) => {
-			copy.push(point.clone());
-		});
-		return new Polygon(this.pos.x, this.pos.y, copy);
+		return polygonPool.get(
+			this.pos.x,
+			this.pos.y,
+			this.points.map((point) => point.clone()) as [
+				Vector2d,
+				Vector2d,
+				Vector2d,
+				...Vector2d[],
+			],
+		);
 	}
 }
+
+export const polygonPool = createPool<
+	Polygon,
+	[x: number, y: number, points: PolygonVertices]
+>((x, y, points) => {
+	const polygon = new Polygon(x, y, points);
+	return {
+		instance: polygon,
+		reset(x, y, points) {
+			polygon.setShape(x, y, points);
+		},
+	};
+});

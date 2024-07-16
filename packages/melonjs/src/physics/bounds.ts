@@ -1,8 +1,9 @@
-import pool from "../system/pooling.js";
-import { Vector2d, vector2dPool } from "../math/vector2d.ts";
+import { Vector2d } from "../math/vector2d.ts";
 import { Point, pointPool } from "../geometries/point.ts";
 import { createPool } from "../system/pool.ts";
 import { Matrix2d } from "../math/matrix2d.ts";
+import { polygonPool } from "../geometries/polygon.ts";
+import { XYPoint } from "../utils/types.ts";
 
 /**
  * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
@@ -10,14 +11,14 @@ import { Matrix2d } from "../math/matrix2d.ts";
 export class Bounds {
 	_center: Vector2d;
 	type: "Bounds";
-	min: { x: number; y: number };
-	max: { x: number; y: number };
+	min: XYPoint;
+	max: XYPoint;
 
 	/**
 	 * Constructs a Bounds object with optional vertices.
 	 * @param [vertices] - An array of Vector2d or Point to initialize the bounds.
 	 */
-	constructor(vertices?: Vector2d[] | Point[] | undefined) {
+	constructor(vertices?: Vector2d[] | Point[] | XYPoint[] | undefined) {
 		this._center = new Vector2d();
 		this.type = "Bounds";
 		this.min = { x: Infinity, y: Infinity };
@@ -189,22 +190,20 @@ export class Bounds {
 	 * Updates the bounds using the given vertices.
 	 * @param vertices - An array of Vector2d or Point to update the bounds.
 	 */
-	update(vertices: Vector2d[] | Point[]) {
+	update(vertices: Vector2d[] | Point[] | XYPoint[]) {
 		this.add(vertices, true);
 	}
 
 	/**
 	 * Adds the given vertices to the bounds definition.
 	 * @param vertices - An array of Vector2d or Point to add to the bounds.
-	 * @param [clear] - Whether to reset the bounds before adding the new vertices.
+	 * @param [clear] - Whether to reset the bounds before adding the new vertices. Defaults to false.
 	 */
-	add(vertices: Vector2d[] | Point[], clear = false) {
-		const verticeCount = vertices.length;
+	add(vertices: Vector2d[] | Point[] | XYPoint[], clear = false) {
 		if (clear) {
 			this.clear();
 		}
-		for (let i = 0; i < verticeCount; i++) {
-			const vertex = vertices[i];
+		for (const vertex of vertices) {
 			if (vertex.x > this.max.x) {
 				this.max.x = vertex.x;
 			}
@@ -268,7 +267,13 @@ export class Bounds {
 	 * @param y1 - The bottom y coordinate of the quad.
 	 * @param [m] - An optional transform to apply to the given coordinates.
 	 */
-	addFrame(x0: number, y0: number, x1: number, y1: number, m: Matrix2d) {
+	addFrame(
+		x0: number,
+		y0: number,
+		x1: number,
+		y1: number,
+		m?: Matrix2d | undefined,
+	) {
 		const v = pointPool.get();
 
 		this.addPoint(v.set(x0, y0), m);
@@ -406,11 +411,11 @@ export class Bounds {
 	 * @returns A new Polygon that represents this bounds.
 	 */
 	toPolygon() {
-		return pool.pull("Polygon", this.x, this.y, [
-			vector2dPool.get(0, 0),
-			vector2dPool.get(this.width, 0),
-			vector2dPool.get(this.width, this.height),
-			vector2dPool.get(0, this.height),
+		return polygonPool.get(this.x, this.y, [
+			new Vector2d(0, 0),
+			new Vector2d(this.width, 0),
+			new Vector2d(this.width, this.height),
+			new Vector2d(0, this.height),
 		]);
 	}
 }

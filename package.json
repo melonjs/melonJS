@@ -8,16 +8,14 @@
 	"scripts": {
 		"build": "turbo build",
 		"dev": "turbo dev",
-		"lint": "eslint && biome check",
+		"lint": "eslint && biome check && turbo test:types",
 		"test": "vitest",
-		"test:types": "turbo test:types",
 		"doc": "pnpm -F melonjs doc",
 		"publish-melonjs": "pnpm lint && pnpm biome check && pnpm publish --filter melonjs",
 		"publish-debug-plugin": "pnpm lint && pnpm biome check && pnpm publish --filter debug-plugin"
 	},
 	"packageManager": "pnpm@9.5.0",
 	"dependencies": {
-		"turbo": "^2.0.6",
 		"@biomejs/biome": "1.8.3",
 		"@eslint/js": "^9.6.0",
 		"@types/eslint__js": "^8.42.3",
@@ -28,8 +26,12 @@
 		"globals": "^15.8.0",
 		"lefthook": "^1.7.1",
 		"tsconfig": "workspace:latest",
+		"turbo": "^2.0.6",
 		"typescript": "^5.5.3",
 		"typescript-eslint": "^8.0.0-alpha.41",
 		"vitest": "^2.0.2"
+	},
+	"devDependencies": {
+		"playwright": "^1.45.2"
 	}
 }

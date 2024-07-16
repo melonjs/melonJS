@@ -1,10 +1,10 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { Line } from "../src/index.js";
+import { Bounds, Line } from "../src/index.js";
 
 describe("Shape : Line", () => {
 	describe("Line", () => {
-		let line;
-		let bounds;
+		let line: Line;
+		let bounds: Bounds;
 
 		beforeAll(() => {
 			line = new Line(0, 0, [
@@ -16,6 +16,7 @@ describe("Shape : Line", () => {
 
 		it("requires exactly 2 points", () => {
 			expect(() => {
+				// @ts-expect-error
 				return new Line(0, 0, [{ x: 0, y: 0 }]);
 			}).toThrow();
 			expect(() => {

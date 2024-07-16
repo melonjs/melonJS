@@ -4,6 +4,8 @@ import Tile from "./TMXTile.js";
 import { degToRad } from "./../../math/math.ts";
 import { vector2dPool } from "../../math/vector2d.ts";
 import { pointPool } from "../../geometries/point.ts";
+import { polygonPool } from "../../geometries/polygon.ts";
+import { linePool } from "../../geometries/line.ts";
 
 /**
  * a TMX Object defintion, as defined in Tiled
@@ -229,7 +231,7 @@ export default class TMXObject {
 		} else {
 			// add a polygon
 			if (this.isPolygon === true) {
-				const _polygon = pool.pull("Polygon", 0, 0, this.points);
+				const _polygon = polygonPool.get(0, 0, this.points);
 				const isConvex = _polygon.isConvex();
 				// make sure it's a convex polygon
 				if (isConvex === false) {
@@ -254,15 +256,15 @@ export default class TMXObject {
 						p1 = p1.rotate(this.rotation);
 						p2 = p2.rotate(this.rotation);
 					}
-					shapes.push(pool.pull("Line", 0, 0, [p1, p2]));
+					shapes.push(linePool.get(0, 0, [p1, p2]));
 				}
 			}
 
 			// it's a rectangle, returns a polygon object anyway
 			else {
 				shapes.push(
-					pool
-						.pull("Polygon", 0, 0, [
+					polygonPool
+						.get(0, 0, [
 							vector2dPool.get(),
 							vector2dPool.get(this.width, 0),
 							vector2dPool.get(this.width, this.height),

@@ -1,6 +1,5 @@
 import { vector2dPool } from "../math/vector2d.ts";
-import pool from "./../system/pooling.js";
-import Polygon from "./poly.js";
+import { Polygon, polygonPool } from "./polygon.ts";
 
 /**
  * additional import for TypeScript
@@ -325,6 +324,6 @@ export default class Rect extends Polygon {
 	 * @returns {Polygon} a new Polygon that represents this rectangle.
 	 */
 	toPolygon() {
-		return pool.pull("Polygon", this.left, this.top, this.points);
+		return polygonPool.get(this.left, this.top, this.points);
 	}
 }

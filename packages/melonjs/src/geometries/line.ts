@@ -1,10 +1,6 @@
-import { vector2dPool } from "../math/vector2d.ts";
-import Polygon from "./poly.js";
-
-/**
- * additional import for TypeScript
- * @import {Vector2d} from "./../math/vector2d.js";
- */
+import { Vector2d, vector2dPool } from "../math/vector2d.ts";
+import { createPool } from "../system/pool.ts";
+import { LineVertices, Polygon } from "./polygon.ts";
 
 /**
  * a line segment Object
@@ -12,13 +8,12 @@ import Polygon from "./poly.js";
  * @param {number} y - origin point of the Line
  * @param {Vector2d[]} points - array of vectors defining the Line
  */
-
-export default class Line extends Polygon {
+export class Line extends Polygon {
 	/**
 	 * Returns true if the Line contains the given point
-	 * @param {number|Vector2d} x -  x coordinate or a vector point to check
-	 * @param {number} [y] -  y coordinate
-	 * @returns {boolean} true if contains
+	 * @param x -  x coordinate or a vector point to check
+	 * @param [y] -  y coordinate
+	 * @returns true if contains
 	 * @example
 	 * if (line.contains(10, 10)) {
 	 *   // do something
@@ -28,26 +23,25 @@ export default class Line extends Polygon {
 	 *   // do something
 	 * }
 	 */
-	contains() {
-		let _x;
-		let _y;
+	override contains(x: number, y: number): boolean;
+	override contains(vector: Vector2d): boolean;
+	override contains(xOrVector: Vector2d | number, y?: number) {
+		let _x: number;
+		let _y: number;
 
-		if (arguments.length === 2) {
-			// x, y
-			_x = arguments[0];
-			_y = arguments[1];
+		if (xOrVector instanceof Vector2d) {
+			_x = xOrVector.x;
+			_y = xOrVector.y;
 		} else {
-			// vector
-			_x = arguments[0].x;
-			_y = arguments[0].y;
+			_x = xOrVector;
+			_y = y!;
 		}
 
 		// translate the given coordinates,
 		// rather than creating temp translated vectors
 		_x -= this.pos.x; // Cx
 		_y -= this.pos.y; // Cy
-		const start = this.points[0]; // Ax/Ay
-		const end = this.points[1]; // Bx/By
+		const [start, end] = this.points;
 
 		//(Cy - Ay) * (Bx - Ax) = (By - Ay) * (Cx - Ax)
 		return (
@@ -58,9 +52,9 @@ export default class Line extends Polygon {
 	/**
 	 * Computes the calculated collision edges and normals.
 	 * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
-	 * @returns {Line} this instance for objecf chaining
+	 * @returns this instance for objecf chaining
 	 */
-	recalc() {
+	override recalc() {
 		const edges = this.edges;
 		const normals = this.normals;
 		const indices = this.indices;
@@ -91,13 +85,26 @@ export default class Line extends Polygon {
 
 	/**
 	 * clone this line segment
-	 * @returns {Line} new Line
+	 * @returns new Line
 	 */
-	clone() {
-		const copy = [];
-		this.points.forEach((point) => {
-			copy.push(point.clone());
-		});
-		return new Line(this.pos.x, this.pos.y, copy);
+	override clone() {
+		return new Line(
+			this.pos.x,
+			this.pos.y,
+			this.points.map((point) => point.clone()) as LineVertices,
+		);
 	}
 }
+
+export const linePool = createPool<
+	Line,
+	[x: number, y: number, points: LineVertices]
+>((x, y, points) => {
+	const line = new Line(x, y, points);
+	return {
+		instance: line,
+		reset(x, y, points) {
+			line.setShape(x, y, points);
+		},
+	};
+});

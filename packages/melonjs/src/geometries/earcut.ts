@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
-/* eslint-disable jsdoc/require-jsdoc */
 export function earcut(
 	data: number[],
 	holeIndices?: number[] | null | undefined,

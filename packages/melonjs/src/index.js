@@ -2,8 +2,6 @@
 import "./polyfill/index.ts";
 
 // class definition
-import Polygon from "./geometries/poly.js";
-import Line from "./geometries/line.js";
 import Ellipse from "./geometries/ellipse.js";
 import Rect from "./geometries/rectangle.js";
 import RoundRect from "./geometries/roundrect.js";
@@ -93,14 +91,14 @@ export { Matrix3d } from "./math/matrix3d.ts";
 export { Color } from "./math/color.ts";
 export { Point } from "./geometries/point.ts";
 export { Bounds } from "./physics/bounds.ts";
+export { Polygon } from "./geometries/polygon.ts";
+export { Line } from "./geometries/line.ts";
 export { createObservableVector2d } from "./math/observableVector2d.ts";
 export { createObservableVector3d } from "./math/observableVector3d.ts";
 export { getPool } from "./pool.ts";
 
 // export all class definition
 export {
-	Polygon,
-	Line,
 	Ellipse,
 	Rect,
 	RoundRect,
@@ -219,8 +217,6 @@ export function boot() {
 	pool.register("me.ColorLayer", ColorLayer, true);
 	pool.register("me.Rect", Rect, true);
 	pool.register("me.RoundRect", RoundRect, true);
-	pool.register("me.Polygon", Polygon, true);
-	pool.register("me.Line", Line, true);
 	pool.register("me.Ellipse", Ellipse, true);
 
 	// duplicate all entries if use with no namespace (e.g. es6)
@@ -240,8 +236,6 @@ export function boot() {
 	pool.register("ColorLayer", ColorLayer, true);
 	pool.register("Rect", Rect, true);
 	pool.register("RoundRect", RoundRect, true);
-	pool.register("Polygon", Polygon, true);
-	pool.register("Line", Line, true);
 	pool.register("Ellipse", Ellipse, true);
 	pool.register("CanvasRenderTarget", CanvasRenderTarget, true);
 

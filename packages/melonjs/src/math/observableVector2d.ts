@@ -1,6 +1,5 @@
 import { TupleToUnion } from "type-fest";
 import { Vector2d, vector2dPool } from "./vector2d";
-import { createPool } from "../system/pool";
 import { clamp } from "./math";
 
 const propertiesToObserve = ["x", "y"] as const;
@@ -153,7 +152,10 @@ export const createObservableVector2d = (
 
 			if (prop === "clone") {
 				return () =>
-					observableVector2dPool.get(target.x, target.y, options.updateFn);
+					createObservableVector2d({
+						target: new Vector2d(target.x, target.y),
+						updateFn: options.updateFn,
+					});
 			}
 
 			if (prop === "clamp") {
@@ -178,23 +180,3 @@ export const createObservableVector2d = (
 		},
 	}) as ObservableVector2d;
 };
-
-export const observableVector2dPool = createPool<
-	ObservableVector2d,
-	[number, number, ObservableVector2dUpdateFn]
->((x, y, updateFn) => {
-	const vector = new Vector2d(x, y);
-
-	const options: CreateObservableVector2dOptions = { target: vector, updateFn };
-
-	const instance = createObservableVector2d(options);
-
-	return {
-		instance,
-		reset(x, y, updateFn) {
-			vector.x = x;
-			vector.y = y;
-			options.updateFn = updateFn;
-		},
-	};
-});

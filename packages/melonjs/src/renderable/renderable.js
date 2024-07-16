@@ -6,21 +6,20 @@ import Body from "./../physics/body.js";
 import { Bounds, boundsPool } from "./../physics/bounds.ts";
 import GLShader from "./../video/webgl/glshader.js";
 import { Color, colorPool } from "./../math/color.ts";
-import { observableVector3dPool } from "../math/observableVector3d.ts";
-import { observableVector2dPool } from "../math/observableVector2d.ts";
-import { vector2dPool } from "../math/vector2d.ts";
+import { createObservableVector3d } from "../math/observableVector3d.ts";
+import { Vector2d, vector2dPool } from "../math/vector2d.ts";
 import { matrix2dPool } from "../math/matrix2d.ts";
+import { Vector3d } from "../math/vector3d.ts";
+import { createObservableVector2d } from "../math/observableVector2d.ts";
 
 /**
  * additional import for TypeScript
- * @import {Vector3d} from "../math/vector3d.js";
- * @import {Vector2d} from "../math/vector2d.js";
  * @import {Matrix2d} from "../math/matrix2d.ts";
  * @import Entity from "./entity/entity.js";
  * @import Container from "./container.js";
- * @import Line from "./../geometries/line.js";
+ * @import {Line} from "./../geometries/line.ts";
  * @import Ellipse from "./../geometries/ellipse.js";
- * @import Polygon from "./../geometries/poly.js";
+ * @import {Polygon} from "../geometries/polygon.ts";
  * @import RoundRect from "./../geometries/roundrect.js";
  * @import Application from "./../application/application.js";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
@@ -47,12 +46,10 @@ export default class Renderable extends Rect {
 		 * @public
 		 * @type {ObservableVector3d}
 		 */
-		this.pos = observableVector3dPool.get(
-			x,
-			y,
-			0,
-			this.updateBoundsPos.bind(this),
-		);
+		this.pos = createObservableVector3d({
+			target: new Vector3d(x, y, 0),
+			updateFn: this.updateBoundsPos.bind(this),
+		});
 
 		/**
 		 * The anchor point is used for attachment behavior, and/or when applying transformations.<br>
@@ -65,11 +62,10 @@ export default class Renderable extends Rect {
 		 * @type {ObservableVector2d}
 		 * @default <0.5,0.5>
 		 */
-		this.anchorPoint = observableVector2dPool.get(
-			0.5,
-			0.5,
-			this.onAnchorUpdate.bind(this),
-		);
+		this.anchorPoint = createObservableVector2d({
+			target: new Vector2d(0.5, 0.5),
+			updateFn: this.onAnchorUpdate.bind(this),
+		});
 
 		if (typeof this.currentTransform === "undefined") {
 			/**
@@ -823,10 +819,7 @@ export default class Renderable extends Rect {
 		matrix2dPool.release(this.currentTransform);
 		this.currentTransform = undefined;
 
-		observableVector2dPool.release(this.anchorPoint);
 		this.anchorPoint = undefined;
-
-		observableVector3dPool.release(this.pos);
 		this.pos = undefined;
 
 		if (typeof this._absPos !== "undefined") {

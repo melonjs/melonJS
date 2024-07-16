@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/require-jsdoc */
 // return a percentage difference between the polygon area and its triangulation area;
 
 import { signedArea } from "../../src/geometries/earcut";

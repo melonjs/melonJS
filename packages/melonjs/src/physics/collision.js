@@ -1,7 +1,7 @@
 import { game } from "../index.js";
 
 /**
- * @import Line from "./../geometries/line.js";
+ * @import {Line} from "./../geometries/line.ts";
  * @import Renderable from "./../renderable/renderable.js";
  **/
 
@@ -105,7 +105,7 @@ export const collision = {
 	 * @returns {Array.<Renderable>} an array of intersecting physic objects
 	 * @example
 	 *    // define a line accross the viewport
-	 *    let ray = new me.Line(
+	 *    let ray = new Line(
 	 *        // absolute position of the line
 	 *        0, 0, [
 	 *        // starting point relative to the initial position
