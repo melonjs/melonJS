@@ -104,7 +104,8 @@ export const linePool = createPool<
 	return {
 		instance: line,
 		reset(x, y, points) {
-			line.setShape(x, y, points);
+			line.pos.set(x, y);
+			line.setVertices(points);
 		},
 	};
 });

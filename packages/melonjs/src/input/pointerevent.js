@@ -6,7 +6,7 @@ import { remove } from "./../utils/array.ts";
 import timer from "./../system/timer.ts";
 import * as device from "./../system/device.js";
 import Pointer from "./pointer.js";
-import Rect from "./../geometries/rectangle.js";
+import { Rect } from "./../geometries/rectangle.ts";
 import { game } from "../index.js";
 import {
 	eventEmitter,
@@ -284,12 +284,8 @@ function dispatchEvent(normalizedEvents) {
 			lastTimeStamp = pointer.event.timeStamp;
 		}
 
-		currentPointer.setShape(
-			pointer.gameWorldX,
-			pointer.gameWorldY,
-			pointer.width,
-			pointer.height,
-		);
+		currentPointer.pos.set(pointer.gameWorldX, pointer.gameWorldY);
+		currentPointer.setSize(pointer.width, pointer.height);
 
 		// trigger a global event for pointer move
 		if (POINTER_MOVE.includes(pointer.type)) {

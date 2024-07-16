@@ -1,42 +1,46 @@
-import Rect from "./rectangle.js";
+import { Vector2d } from "../math/vector2d.ts";
+import { createPool } from "../system/pool.ts";
+import { Rect } from "./rectangle.ts";
 
 // https://developer.chrome.com/blog/canvas2d/#round-rect
+
+const DEFAULT_RADIUS = 20;
 
 /**
  * a rectangle object with rounded corners
  */
-export default class RoundRect extends Rect {
+export class RoundRect extends Rect {
 	/**
-	 * @param {number} x - position of the rounded rectangle
-	 * @param {number} y - position of the rounded rectangle
-	 * @param {number} width - the rectangle width
-	 * @param {number} height - the rectangle height
-	 * @param {number} [radius=20] - the radius of the rounded corner
+	 * Corner radius.
 	 */
-	constructor(x, y, width, height, radius = 20) {
-		// parent constructor
+	_radius: number;
+
+	/**
+	 * the shape type (used internally)
+	 */
+	override type = "RoundRect";
+
+	/**
+	 * @param x - position of the rounded rectangle
+	 * @param y - position of the rounded rectangle
+	 * @param width - the rectangle width
+	 * @param height - the rectangle height
+	 * @param [radius=20] - the radius of the rounded corner
+	 */
+	constructor(
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		radius = DEFAULT_RADIUS,
+	) {
 		super(x, y, width, height);
-
-		/**
-		 * the shape type (used internally)
-		 * @type {string}
-		 * @default "RoundRect"
-		 */
 		this.type = "RoundRect";
-
-		// set the corner radius
-		this.radius = radius;
-	}
-
-	/** @ignore */
-	onResetEvent(x, y, w, h, radius) {
-		super.setShape(x, y, w, h);
 		this.radius = radius;
 	}
 
 	/**
 	 * the radius of the rounded corner
-	 * @type {number}
 	 * @default 20
 	 */
 	get radius() {
@@ -55,20 +59,21 @@ export default class RoundRect extends Rect {
 
 	/**
 	 * copy the position, size and radius of the given rounded rectangle into this one
-	 * @param {RoundRect} rrect - source rounded rectangle
-	 * @returns {RoundRect} new rectangle
+	 * @param rrect - source rounded rectangle
+	 * @returns new rectangle
 	 */
-	copy(rrect) {
-		super.setShape(rrect.pos.x, rrect.pos.y, rrect.width, rrect.height);
+	override copy(rrect: RoundRect) {
+		this.pos.set(rrect.pos.x, rrect.pos.y);
+		this.setSize(rrect.width, rrect.height);
 		this.radius = rrect.radius;
 		return this;
 	}
 
 	/**
 	 * Returns true if the rounded rectangle contains the given point or rectangle
-	 * @param {number|Vector2d|Rect} x -  x coordinate or a vector point, or a Rect to test
-	 * @param {number} [y] - y coordinate
-	 * @returns {boolean} True if the rounded rectangle contain the given point or rectangle, otherwise false
+	 * @param x -  x coordinate or a vector point, or a Rect to test
+	 * @param [y] - y coordinate
+	 * @returns True if the rounded rectangle contain the given point or rectangle, otherwise false
 	 * @example
 	 * if (rect.contains(10, 10)) {
 	 *   // do something
@@ -81,26 +86,18 @@ export default class RoundRect extends Rect {
 	 *   // do something
 	 * }
 	 */
-	contains() {
-		const arg0 = arguments[0];
-		let _x;
-		let _y;
-		if (arguments.length === 2) {
-			// x, y
-			_x = arg0;
-			_y = arguments[1];
+	override contains(x: number, y: number): boolean;
+	override contains(vector: Vector2d): boolean;
+	override contains(xOrVector: Vector2d | number, y?: number) {
+		let _x: number;
+		let _y: number;
+
+		if (xOrVector instanceof Vector2d) {
+			_x = xOrVector.x;
+			_y = xOrVector.y;
 		} else {
-			if (
-				typeof arg0.radius === "undefined" &&
-				typeof arg0.bottom === "number"
-			) {
-				// it's a rect
-				return super.contains(arg0);
-			} else {
-				// else a vector or point
-				_x = arg0.x;
-				_y = arg0.y;
-			}
+			_x = xOrVector;
+			_y = y!;
 		}
 
 		// check whether point is outside the bounding box
@@ -149,18 +146,18 @@ export default class RoundRect extends Rect {
 
 	/**
 	 * check if this RoundRect is identical to the specified one
-	 * @param {RoundRect} rrect
-	 * @returns {boolean} true if equals
+	 * @param rrect - Other rounded rectangle.
+	 * @returns true if equals
 	 */
-	equals(rrect) {
+	override equals(rrect: RoundRect) {
 		return super.equals(rrect) && this.radius === rrect.radius;
 	}
 
 	/**
 	 * clone this RoundRect
-	 * @returns {RoundRect} new RoundRect
+	 * @returns new RoundRect
 	 */
-	clone() {
+	override clone() {
 		return new RoundRect(
 			this.pos.x,
 			this.pos.y,
@@ -170,3 +167,24 @@ export default class RoundRect extends Rect {
 		);
 	}
 }
+
+export const roundedRectanglePool = createPool<
+	RoundRect,
+	[
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		radius?: number | undefined,
+	]
+>((x, y, width, height, radius) => {
+	const roundedRectangle = new RoundRect(x, y, width, height, radius);
+	return {
+		instance: roundedRectangle,
+		reset(x, y, width, height, radius = DEFAULT_RADIUS) {
+			roundedRectangle.pos.set(x, y);
+			roundedRectangle.setSize(width, height);
+			roundedRectangle.radius = radius;
+		},
+	};
+});

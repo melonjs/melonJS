@@ -179,6 +179,7 @@ export default tseslint.config(
 			...jsDocConfig.rules,
 			"jsdoc/require-jsdoc": "off",
 			"jsdoc/no-defaults": "off",
+			"jsdoc/require-returns": "off",
 		},
 		languageOptions: {
 			parserOptions: {

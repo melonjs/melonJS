@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { Rect, RoundRect, Vector2d, pool } from "../src/index.js";
 
 describe("Shape : RoundRect", () => {
-	let rrect;
+	let rrect: RoundRect;
 	beforeEach(() => {
 		pool.register("Vector2d", Vector2d, true);
 		rrect = new RoundRect(50, 50, 100, 100, 40);
@@ -19,7 +19,7 @@ describe("Shape : RoundRect", () => {
 	});
 
 	describe("contains", () => {
-		let rect;
+		let rect: Rect;
 		beforeEach(() => {
 			pool.register("Vector2d", Vector2d, true);
 			rect = new Rect(50, 50, 100, 100);
@@ -52,18 +52,18 @@ describe("Shape : RoundRect", () => {
 		});
 
 		it("should contain another Rect fully within", () => {
-			const innerRRect = new Rect(100, 100, 10, 10, 10);
-			expect(rrect.contains(innerRRect)).toEqual(true);
+			const innerRRect = new RoundRect(100, 100, 10, 10, 10);
+			expect(rrect.containsRectangle(innerRRect)).toEqual(true);
 		});
 
 		it("should not contain another Rect partially outside", () => {
-			const innerRRect = new Rect(75, 75, 175, 25, 10);
-			expect(rrect.contains(innerRRect)).toEqual(false);
+			const innerRRect = new RoundRect(75, 75, 175, 25, 10);
+			expect(rrect.containsRectangle(innerRRect)).toEqual(false);
 		});
 	});
 
 	describe("copy, clone & equality", () => {
-		let _rect;
+		let _rect: RoundRect;
 		beforeEach(() => {
 			pool.register("Vector2d", Vector2d, true);
 			_rect = new RoundRect(1, 1, 1, 1);

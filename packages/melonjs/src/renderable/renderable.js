@@ -1,4 +1,4 @@
-import Rect from "./../geometries/rectangle.js";
+import { Rect } from "./../geometries/rectangle.ts";
 import pool from "./../system/pooling.js";
 import { releaseAllPointerEvents } from "./../input/input.js";
 import { clamp } from "./../math/math.ts";
@@ -20,7 +20,7 @@ import { createObservableVector2d } from "../math/observableVector2d.ts";
  * @import {Line} from "./../geometries/line.ts";
  * @import Ellipse from "./../geometries/ellipse.js";
  * @import {Polygon} from "../geometries/polygon.ts";
- * @import RoundRect from "./../geometries/roundrect.js";
+ * @import {RoundRect} from "./../geometries/roundrect.ts";
  * @import Application from "./../application/application.js";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";

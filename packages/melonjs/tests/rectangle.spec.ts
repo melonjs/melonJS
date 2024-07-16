@@ -1,13 +1,13 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { Bounds, Rect, math, pool } from "../src/index.js";
+import { Bounds, math, pool, Rect } from "../src/index.js";
 
 describe("Shape : Rect", () => {
-	let rect1;
-	let rect2;
-	let rect3;
-	let rect4;
-	let rect5;
-	let rect6;
+	let rect1: Rect;
+	let rect2: Rect;
+	let rect3: Rect;
+	let rect4: Rect;
+	let rect5: Rect;
+	let rect6: Rect;
 
 	beforeAll(() => {
 		// test fail without this
@@ -182,11 +182,11 @@ describe("Shape : Rect", () => {
 
 	describe("rect3", () => {
 		it("rect 3 does no contains rect1", () => {
-			expect(rect3.contains(rect1)).toEqual(false);
+			expect(rect3.containsRectangle(rect1)).toEqual(false);
 		});
 
 		it("rect 3 contains rect2", () => {
-			expect(rect3.contains(rect2)).toEqual(true);
+			expect(rect3.containsRectangle(rect2)).toEqual(true);
 		});
 
 		it("rect 3 contains the point (70, 150)", () => {
@@ -216,7 +216,7 @@ describe("Shape : Rect", () => {
 		});
 
 		it("rect 5 contains rect2", () => {
-			expect(rect5.contains(rect2)).toEqual(true);
+			expect(rect5.containsRectangle(rect2)).toEqual(true);
 		});
 
 		it("rect 5 overlaps rect3", () => {
@@ -224,7 +224,7 @@ describe("Shape : Rect", () => {
 		});
 
 		it("rect 5 contains rect4", () => {
-			expect(rect5.contains(rect4)).toEqual(true);
+			expect(rect5.containsRectangle(rect4)).toEqual(true);
 		});
 
 		it("rect 5 does not equal rect4", () => {

@@ -6,7 +6,7 @@ import { polygonPool } from "../../geometries/polygon.ts";
 
 /**
  * @import {Line} from "./../../geometries/line.ts";
- * @import Rect from "./../../geometries/rectangle.js";
+ * @import {Rect} from "./../../geometries/rectangle.ts";
  * @import Ellipse from "./../../geometries/ellipse.js";
  * @import {Polygon} from "../../geometries/polygon.ts";
  * @import {Bounds} from "./../../physics/bounds.ts";

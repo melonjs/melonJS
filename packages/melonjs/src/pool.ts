@@ -1,6 +1,8 @@
 import { linePool } from "./geometries/line";
 import { pointPool } from "./geometries/point";
 import { polygonPool } from "./geometries/polygon";
+import { rectPool } from "./geometries/rectangle";
+import { roundedRectanglePool } from "./geometries/roundrect";
 import { colorPool } from "./math/color";
 import { matrix2dPool } from "./math/matrix2d";
 import { matrix3dPool } from "./math/matrix3d";
@@ -18,6 +20,8 @@ const pools = {
 	color: colorPool,
 	polygon: polygonPool,
 	line: linePool,
+	rectangle: rectPool,
+	roundedRectangle: roundedRectanglePool,
 } as const;
 
 type PoolKey = keyof typeof pools;

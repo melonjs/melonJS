@@ -17,8 +17,8 @@ import {
 
 /**
  * additional import for TypeScript
- * @import Rect from "./../../geometries/rectangle.js";
- * @import RoundRect from "./../../geometries/roundrect.js";
+ * @import {Rect} from "./../../geometries/rectangle.ts";
+ * @import {RoundRect} from "./../../geometries/roundrect.ts";
  * @import {Polygon} from "../../geometries/polygon.ts";
  * @import {Line} from "./../../geometries/line.ts";
  * @import Ellipse from "./../../geometries/ellipse.js";

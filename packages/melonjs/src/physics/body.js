@@ -1,4 +1,4 @@
-import Rect from "./../geometries/rectangle.js";
+import { Rect } from "./../geometries/rectangle.ts";
 import Ellipse from "./../geometries/ellipse.js";
 import { Polygon, polygonPool } from "../geometries/polygon.ts";
 import { Bounds, boundsPool } from "./bounds.ts";

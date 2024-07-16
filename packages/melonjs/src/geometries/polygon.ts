@@ -5,7 +5,7 @@ import { createPool } from "../system/pool.ts";
 import { XYPoint } from "../utils/types.ts";
 import { earcut } from "./earcut.ts";
 
-type PolygonVertices =
+export type PolygonVertices =
 	| [XYPoint, XYPoint, XYPoint, ...XYPoint[]]
 	| [Vector2d, Vector2d, Vector2d, ...Vector2d[]]
 	| [number, number, number, number, number, number, ...number[]];
@@ -69,16 +69,16 @@ export class Polygon {
 	/**
 	 * @param [x=0] - origin point of the Polygon
 	 * @param [y=0] - origin point of the Polygon
-	 * @param points - array of vector defining the Polygon
+	 * @param vertices - array of vector defining the Polygon
 	 */
-	constructor(x = 0, y = 0, points: PolygonVertices | LineVertices) {
-		this.pos = vector2dPool.get();
+	constructor(x = 0, y = 0, vertices: PolygonVertices | LineVertices) {
+		this.pos = vector2dPool.get(x, y);
 		this.points = [];
 		this.edges = [];
 		this.indices = [];
 		this.normals = [];
 		this._bounds = boundsPool.get();
-		this.setShape(x, y, points);
+		this.setVertices(vertices);
 	}
 
 	/**
@@ -170,7 +170,7 @@ export class Polygon {
 	 * @param [v] - an optional point to rotate around
 	 * @returns Reference to this object for method chaining
 	 */
-	rotate(angle: number, v?: Vector2d | undefined) {
+	rotate(angle: number, v?: Vector2d | XYPoint | undefined) {
 		if (angle !== 0) {
 			const points = this.points;
 			const len = points.length;
@@ -459,13 +459,14 @@ export class Polygon {
 
 export const polygonPool = createPool<
 	Polygon,
-	[x: number, y: number, points: PolygonVertices]
->((x, y, points) => {
-	const polygon = new Polygon(x, y, points);
+	[x: number, y: number, vertices: PolygonVertices]
+>((x, y, vertices) => {
+	const polygon = new Polygon(x, y, vertices);
 	return {
 		instance: polygon,
 		reset(x, y, points) {
-			polygon.setShape(x, y, points);
+			polygon.pos.set(x, y);
+			polygon.setVertices(points);
 		},
 	};
 });

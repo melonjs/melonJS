@@ -2,7 +2,7 @@ import { Vector2d, vector2dPool } from "../math/vector2d.ts";
 import { Vector3d } from "../math/vector3d.ts";
 import { Matrix2d } from "../math/matrix2d.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
-import Rect from "./../geometries/rectangle.js";
+import { Rect } from "./../geometries/rectangle.ts";
 import { renderer } from "./../video/video.js";
 import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";

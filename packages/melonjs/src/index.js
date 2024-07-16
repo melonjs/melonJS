@@ -3,8 +3,6 @@ import "./polyfill/index.ts";
 
 // class definition
 import Ellipse from "./geometries/ellipse.js";
-import Rect from "./geometries/rectangle.js";
-import RoundRect from "./geometries/roundrect.js";
 import QuadTree from "./physics/quadtree.js";
 import Body from "./physics/body.js";
 import Tween from "./tweens/tween.ts";
@@ -93,6 +91,8 @@ export { Point } from "./geometries/point.ts";
 export { Bounds } from "./physics/bounds.ts";
 export { Polygon } from "./geometries/polygon.ts";
 export { Line } from "./geometries/line.ts";
+export { Rect } from "./geometries/rectangle.ts";
+export { RoundRect } from "./geometries/roundrect.ts";
 export { createObservableVector2d } from "./math/observableVector2d.ts";
 export { createObservableVector3d } from "./math/observableVector3d.ts";
 export { getPool } from "./pool.ts";
@@ -100,8 +100,6 @@ export { getPool } from "./pool.ts";
 // export all class definition
 export {
 	Ellipse,
-	Rect,
-	RoundRect,
 	Tween,
 	QuadTree,
 	GLShader,
@@ -215,8 +213,6 @@ export function boot() {
 	pool.register("me.BitmapTextData", BitmapTextData, true);
 	pool.register("me.ImageLayer", ImageLayer);
 	pool.register("me.ColorLayer", ColorLayer, true);
-	pool.register("me.Rect", Rect, true);
-	pool.register("me.RoundRect", RoundRect, true);
 	pool.register("me.Ellipse", Ellipse, true);
 
 	// duplicate all entries if use with no namespace (e.g. es6)
@@ -234,8 +230,6 @@ export function boot() {
 	pool.register("BitmapTextData", BitmapTextData, true);
 	pool.register("ImageLayer", ImageLayer);
 	pool.register("ColorLayer", ColorLayer, true);
-	pool.register("Rect", Rect, true);
-	pool.register("RoundRect", RoundRect, true);
 	pool.register("Ellipse", Ellipse, true);
 	pool.register("CanvasRenderTarget", CanvasRenderTarget, true);
 

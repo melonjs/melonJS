@@ -243,7 +243,7 @@ export class Vector2d {
 	 * let v = new Vector2d(3, 4);
 	 * v.equals(3, 4); // returns true
 	 */
-	equals(...args: [number, number] | [Vector2d]) {
+	equals(...args: [number, number] | [Vector2d | XYPoint]) {
 		if (args.length === 2) {
 			return this.x === args[0] && this.y === args[1];
 		}
