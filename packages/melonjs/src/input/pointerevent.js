@@ -4,7 +4,6 @@ import { renderer } from "./../video/video.js";
 import { throttle } from "./../utils/function.ts";
 import { remove } from "./../utils/array.ts";
 import timer from "./../system/timer.ts";
-import pool from "./../system/pooling.js";
 import * as device from "./../system/device.js";
 import Pointer from "./pointer.js";
 import Rect from "./../geometries/rectangle.js";
@@ -14,9 +13,10 @@ import {
 	POINTERLOCKCHANGE,
 	POINTERMOVE,
 } from "../system/event.ts";
+import { vector2dPool } from "../math/vector2d.ts";
 
 /**
- * @import Vector2d from "./../math/vector2.js";
+ * @import {Vector2d} from "../math/vector2d.js";
  */
 
 /**
@@ -594,7 +594,7 @@ export function hasRegisteredEvents() {
  * };
  */
 export function globalToLocal(x, y, v) {
-	v = v || pool.pull("Vector2d");
+	v = v || vector2dPool.get();
 	const rect = device.getElementBounds(renderer.getCanvas());
 	const pixelRatio = globalThis.devicePixelRatio || 1;
 	x -= rect.left + (globalThis.pageXOffset || 0);

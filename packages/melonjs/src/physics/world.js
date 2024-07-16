@@ -1,4 +1,4 @@
-import Vector2d from "./../math/vector2.js";
+import { Vector2d } from "../math/vector2d.ts";
 import QuadTree from "./quadtree.js";
 import Container from "../renderable/container.js";
 import { collision } from "./collision.js";

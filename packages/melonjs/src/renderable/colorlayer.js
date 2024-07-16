@@ -1,9 +1,9 @@
-import pool from "./../system/pooling.js";
+import { colorPool } from "../math/color.ts";
 import Renderable from "./renderable.js";
 
 /**
  * additional import for TypeScript
- * @import Color from "./../math/color.js";
+ * @import {Color} from "./../math/color.ts";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
  * @import Camera2d from "./../camera/camera2d.js";
@@ -26,7 +26,7 @@ export default class ColorLayer extends Renderable {
 		 * the layer color component
 		 * @type {Color}
 		 */
-		this.color = pool.pull("Color").parseCSS(color);
+		this.color = colorPool.get().parseCSS(color);
 
 		this.onResetEvent(name, color, z);
 	}
@@ -57,7 +57,7 @@ export default class ColorLayer extends Renderable {
 	 * @ignore
 	 */
 	destroy() {
-		pool.push(this.color);
+		colorPool.release(this.color);
 		this.color = undefined;
 		super.destroy();
 	}

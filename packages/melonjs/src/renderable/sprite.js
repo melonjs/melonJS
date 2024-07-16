@@ -1,14 +1,14 @@
 import { renderer } from "./../video/video.js";
-import pool from "./../system/pooling.js";
 import { getImage } from "./../loader/loader.js";
 import { TextureAtlas } from "./../video/texture/atlas.js";
 import Renderable from "./renderable.js";
-import Color from "../math/color.js";
+import { Color } from "../math/color.ts";
 import { eventEmitter } from "../system/event.ts";
+import { vector2dPool } from "../math/vector2d.ts";
 
 /**
  * additional import for TypeScript
- * @import Vector2d from "./../math/vector2.js";
+ * @import {Vector2d} from "../math/vector2d.js";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
  */
@@ -81,7 +81,7 @@ export default class Sprite extends Renderable {
 		 * @type {Vector2d}
 		 * @default <0.0,0.0>
 		 */
-		this.offset = pool.pull("Vector2d", 0, 0);
+		this.offset = vector2dPool.get(0, 0);
 
 		/**
 		 * true if this is a video sprite (e.g. a HTMLVideoElement was passed as as source)
@@ -117,7 +117,7 @@ export default class Sprite extends Renderable {
 			// length of the current animation name
 			length: 0,
 			//current frame texture offset
-			offset: pool.pull("Vector2d", 0, 0),
+			offset: vector2dPool.get(0, 0),
 			// current frame size
 			width: 0,
 			height: 0,
@@ -723,7 +723,7 @@ export default class Sprite extends Renderable {
 	 * @ignore
 	 */
 	destroy() {
-		pool.push(this.offset);
+		vector2dPool.release(this.offset);
 		this.offset = undefined;
 		if (this.isVideo) {
 			this.removeStatePauseListener();

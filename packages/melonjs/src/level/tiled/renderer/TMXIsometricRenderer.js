@@ -1,7 +1,7 @@
-import Vector2d from "./../../../math/vector2.js";
-import pool from "./../../../system/pooling.js";
+import { Vector2d, vector2dPool } from "../../../math/vector2d.ts";
 import TMXRenderer from "./TMXRenderer.js";
 import TMXLayer from "./../TMXLayer.js";
+import { boundsPool } from "../../../physics/bounds.ts";
 
 /**
  * an Isometric Map Renderder
@@ -31,8 +31,7 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	getBounds(layer) {
-		const bounds =
-			layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
+		const bounds = layer instanceof TMXLayer ? boundsPool.get() : this.bounds;
 		bounds.setMinMax(
 			0,
 			0,
@@ -74,14 +73,14 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 	adjustPosition(obj) {
 		const tileX = obj.x / this.hTilewidth;
 		const tileY = obj.y / this.tileheight;
-		const isoPos = pool.pull("Vector2d");
+		const isoPos = vector2dPool.get();
 
 		this.tileToPixelCoords(tileX, tileY, isoPos);
 
 		obj.x = isoPos.x;
 		obj.y = isoPos.y;
 
-		pool.push(isoPos);
+		vector2dPool.release(isoPos);
 	}
 
 	/**
@@ -111,25 +110,25 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 		const rowItr = this.pixelToTileCoords(
 			rect.pos.x - tileset.tilewidth,
 			rect.pos.y - tileset.tileheight,
-			pool.pull("Vector2d"),
+			vector2dPool.get(),
 		).floorSelf();
 		const tileEnd = this.pixelToTileCoords(
 			rect.pos.x + rect.width + tileset.tilewidth,
 			rect.pos.y + rect.height + tileset.tileheight,
-			pool.pull("Vector2d"),
+			vector2dPool.get(),
 		).ceilSelf();
 
 		const rectEnd = this.tileToPixelCoords(
 			tileEnd.x,
 			tileEnd.y,
-			pool.pull("Vector2d"),
+			vector2dPool.get(),
 		);
 
 		// Determine the tile and pixel coordinates to start at
 		const startPos = this.tileToPixelCoords(
 			rowItr.x,
 			rowItr.y,
-			pool.pull("Vector2d"),
+			vector2dPool.get(),
 		);
 		startPos.x -= this.hTilewidth;
 		startPos.y += this.tileheight;
@@ -199,10 +198,10 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 			}
 		}
 
-		pool.push(columnItr);
-		pool.push(rowItr);
-		pool.push(tileEnd);
-		pool.push(rectEnd);
-		pool.push(startPos);
+		vector2dPool.release(columnItr);
+		vector2dPool.release(rowItr);
+		vector2dPool.release(tileEnd);
+		vector2dPool.release(rectEnd);
+		vector2dPool.release(startPos);
 	}
 }

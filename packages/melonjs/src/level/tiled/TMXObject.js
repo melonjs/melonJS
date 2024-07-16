@@ -2,6 +2,8 @@ import pool from "./../../system/pooling.js";
 import { applyTMXProperties } from "./TMXUtils.js";
 import Tile from "./TMXTile.js";
 import { degToRad } from "./../../math/math.ts";
+import { vector2dPool } from "../../math/vector2d.ts";
+import { pointPool } from "../../geometries/point.ts";
 
 /**
  * a TMX Object defintion, as defined in Tiled
@@ -223,7 +225,7 @@ export default class TMXObject {
 					.rotate(this.rotation),
 			);
 		} else if (this.isPoint === true) {
-			shapes.push(pool.pull("Point", this.x, this.y));
+			shapes.push(pointPool.get(this.x, this.y));
 		} else {
 			// add a polygon
 			if (this.isPolygon === true) {
@@ -246,8 +248,8 @@ export default class TMXObject {
 				for (let i = 0; i < segments; i++) {
 					// clone the value before, as [i + 1]
 					// is reused later by the next segment
-					p1 = pool.pull("Vector2d", p[i].x, p[i].y);
-					p2 = pool.pull("Vector2d", p[i + 1].x, p[i + 1].y);
+					p1 = vector2dPool.get(p[i].x, p[i].y);
+					p2 = vector2dPool.get(p[i + 1].x, p[i + 1].y);
 					if (this.rotation !== 0) {
 						p1 = p1.rotate(this.rotation);
 						p2 = p2.rotate(this.rotation);
@@ -261,10 +263,10 @@ export default class TMXObject {
 				shapes.push(
 					pool
 						.pull("Polygon", 0, 0, [
-							pool.pull("Vector2d"),
-							pool.pull("Vector2d", this.width, 0),
-							pool.pull("Vector2d", this.width, this.height),
-							pool.pull("Vector2d", 0, this.height),
+							vector2dPool.get(),
+							vector2dPool.get(this.width, 0),
+							vector2dPool.get(this.width, this.height),
+							vector2dPool.get(0, this.height),
 						])
 						.rotate(this.rotation),
 				);

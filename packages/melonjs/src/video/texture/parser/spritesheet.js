@@ -1,5 +1,4 @@
-import pool from "./../../../system/pooling.js";
-import Vector2d from "./../../../math/vector2.js";
+import { Vector2d, vector2dPool } from "../../../math/vector2d.ts";
 
 /**
  * parse the given data and return a corresponding atlas
@@ -18,8 +17,7 @@ export function parseSpriteSheet(data, textureAtlas) {
 	let height = image.height;
 
 	// calculate the sprite count (line, col)
-	const spritecount = pool.pull(
-		"Vector2d",
+	const spritecount = vector2dPool.get(
 		~~((width - margin + spacing) / (data.framewidth + spacing)),
 		~~((height - margin + spacing) / (data.frameheight + spacing)),
 	);
@@ -78,7 +76,7 @@ export function parseSpriteSheet(data, textureAtlas) {
 		textureAtlas.addUVs(atlas, name, width, height);
 	}
 
-	pool.push(spritecount);
+	vector2dPool.release(spritecount);
 
 	return atlas;
 }

@@ -1,9 +1,10 @@
+import { vector2dPool } from "../math/vector2d.ts";
 import pool from "./../system/pooling.js";
 import Polygon from "./poly.js";
 
 /**
  * additional import for TypeScript
- * @import Vector2d from "./../math/vector2.js";
+ * @import {Vector2d} from "../math/vector2d.js";
  **/
 
 /**
@@ -19,10 +20,10 @@ export default class Rect extends Polygon {
 	constructor(x, y, w, h) {
 		// parent constructor
 		super(x, y, [
-			pool.pull("Vector2d", 0, 0), // 0, 0
-			pool.pull("Vector2d", w, 0), // 1, 0
-			pool.pull("Vector2d", w, h), // 1, 1
-			pool.pull("Vector2d", 0, h), // 0, 1
+			vector2dPool.get(0, 0), // 0, 0
+			vector2dPool.get(w, 0), // 1, 0
+			vector2dPool.get(w, h), // 1, 1
+			vector2dPool.get(0, h), // 0, 1
 		]);
 
 		/**

@@ -1,9 +1,9 @@
-import pool from "./../system/pooling.js";
+import { vector2dPool } from "../math/vector2d.ts";
 import Polygon from "./poly.js";
 
 /**
  * additional import for TypeScript
- * @import Vector2d from "./../math/vector2d.js";
+ * @import {Vector2d} from "./../math/vector2d.js";
  */
 
 /**
@@ -74,11 +74,11 @@ export default class Line extends Polygon {
 
 		// Calculate the edges/normals
 		if (edges[0] === undefined) {
-			edges[0] = pool.pull("Vector2d");
+			edges[0] = vector2dPool.get();
 		}
 		edges[0].copy(points[1]).sub(points[0]);
 		if (normals[0] === undefined) {
-			normals[0] = pool.pull("Vector2d");
+			normals[0] = vector2dPool.get();
 		}
 		normals[0].copy(edges[0]).perp().normalize();
 

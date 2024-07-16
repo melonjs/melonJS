@@ -4,7 +4,7 @@ import Compositor from "./compositor.js";
 
 /**
  * additional import for TypeScript
- * @import Point from "./../../../geometries/point.js";
+ * @import {Point} from "./../../../geometries/point.ts";
  */
 
 /**

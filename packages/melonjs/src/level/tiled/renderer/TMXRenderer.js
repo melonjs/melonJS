@@ -1,6 +1,5 @@
-import pool from "./../../../system/pooling.js";
 import TMXLayer from "./../TMXLayer.js";
-import Bounds from "./../../../physics/bounds.js";
+import { Bounds, boundsPool } from "./../../../physics/bounds.ts";
 
 /**
  * The map renderer base class
@@ -44,8 +43,7 @@ export default class TMXRenderer {
 	 * @returns {Bounds}
 	 */
 	getBounds(layer) {
-		const bounds =
-			layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
+		const bounds = layer instanceof TMXLayer ? boundsPool.get() : this.bounds;
 		bounds.setMinMax(
 			0,
 			0,

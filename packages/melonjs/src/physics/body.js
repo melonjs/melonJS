@@ -1,13 +1,14 @@
 import Rect from "./../geometries/rectangle.js";
 import Ellipse from "./../geometries/ellipse.js";
 import Polygon from "./../geometries/poly.js";
-import Bounds from "./bounds.js";
+import { Bounds, boundsPool } from "./bounds.ts";
 import pool from "./../system/pooling.js";
 import { collision } from "./collision.js";
 import timer from "./../system/timer.ts";
 import { clamp } from "./../math/math.ts";
-import Point from "../geometries/point.js";
+import { Point, pointPool } from "../geometries/point.ts";
 import { remove } from "../utils/array.ts";
+import { vector2dPool } from "../math/vector2d.ts";
 
 /**
  * @import Entity from "./../renderable/entity/entity.js";
@@ -16,7 +17,7 @@ import { remove } from "../utils/array.ts";
  * @import Sprite from "./../renderable/sprite.js";
  * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
  * @import Line from "./../geometries/line.js";
- * @import Vector2d from "./../math/vector2.js";
+ * @import {Vector2d} from "../math/vector2d.js";
  * @import ResponseObject from "./response.js";
  **/
 
@@ -46,7 +47,7 @@ export default class Body {
 			 * @public
 			 * @type {Bounds}
 			 */
-			this.bounds = pool.pull("Bounds");
+			this.bounds = boundsPool.get();
 		}
 
 		if (typeof this.shapes === "undefined") {
@@ -89,7 +90,7 @@ export default class Body {
 			 * @type {Vector2d}
 			 * @default <0,0>
 			 */
-			this.vel = pool.pull("Vector2d");
+			this.vel = vector2dPool.get();
 		}
 		this.vel.set(0, 0);
 
@@ -116,7 +117,7 @@ export default class Body {
 			 *     }
 			 * }
 			 */
-			this.force = pool.pull("Vector2d");
+			this.force = vector2dPool.get();
 		}
 		this.force.set(0, 0);
 
@@ -127,7 +128,7 @@ export default class Body {
 			 * @type {Vector2d}
 			 * @default <0,0>
 			 */
-			this.friction = pool.pull("Vector2d");
+			this.friction = vector2dPool.get();
 		}
 		this.friction.set(0, 0);
 
@@ -155,7 +156,7 @@ export default class Body {
 			 * @type {Vector2d}
 			 * @default <490,490>
 			 */
-			this.maxVel = pool.pull("Vector2d");
+			this.maxVel = vector2dPool.get();
 		}
 		// cap by default to half the default gravity force
 		this.maxVel.set(490, 490);
@@ -669,13 +670,17 @@ export default class Body {
 	 */
 	destroy() {
 		// push back instance into object pool
-		pool.push(this.bounds);
-		pool.push(this.vel);
-		pool.push(this.force);
-		pool.push(this.friction);
-		pool.push(this.maxVel);
+		boundsPool.release(this.bounds);
+		vector2dPool.release(this.vel);
+		vector2dPool.release(this.force);
+		vector2dPool.release(this.friction);
+		vector2dPool.release(this.maxVel);
 		this.shapes.forEach((shape) => {
-			pool.push(shape, false);
+			if (shape instanceof Point) {
+				pointPool.release(shape);
+			} else {
+				pool.push(shape);
+			}
 		});
 
 		// set to undefined

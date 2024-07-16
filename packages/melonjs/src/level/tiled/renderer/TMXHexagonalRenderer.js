@@ -1,7 +1,7 @@
-import Vector2d from "./../../../math/vector2.js";
-import pool from "./../../../system/pooling.js";
+import { Vector2d, vector2dPool } from "../../../math/vector2d.ts";
 import TMXRenderer from "./TMXRenderer.js";
 import TMXLayer from "./../TMXLayer.js";
+import { boundsPool } from "../../../physics/bounds.ts";
 
 // scope global variables & constants
 const offsetsStaggerX = [
@@ -69,8 +69,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	getBounds(layer) {
-		const bounds =
-			layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
+		const bounds = layer instanceof TMXLayer ? boundsPool.get() : this.bounds;
 
 		// The map size is the same regardless of which indexes are shifted.
 		if (this.staggerX) {
@@ -215,15 +214,13 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 		}
 
 		// Start with the coordinates of a grid-aligned tile
-		const referencePoint = pool.pull(
-			"Vector2d",
+		const referencePoint = vector2dPool.get(
 			Math.floor(x / (this.columnwidth * 2)),
 			Math.floor(y / (this.rowheight * 2)),
 		);
 
 		// Relative x and y position on the base square of the grid-aligned tile
-		const rel = pool.pull(
-			"Vector2d",
+		const rel = vector2dPool.get(
 			x - referencePoint.x * (this.columnwidth * 2),
 			y - referencePoint.y * (this.rowheight * 2),
 		);
@@ -283,8 +280,8 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 			referencePoint.y + offsets[nearest].y,
 		);
 
-		pool.push(referencePoint);
-		pool.push(rel);
+		vector2dPool.release(referencePoint);
+		vector2dPool.release(rel);
 
 		return ret;
 	}
@@ -335,7 +332,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	 */
 	drawTile(renderer, x, y, tmxTile) {
 		const tileset = tmxTile.tileset;
-		const point = this.tileToPixelCoords(x, y, pool.pull("Vector2d"));
+		const point = this.tileToPixelCoords(x, y, vector2dPool.get());
 
 		// draw the tile
 		tileset.drawTile(
@@ -345,7 +342,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 			tmxTile,
 		);
 
-		pool.push(point);
+		vector2dPool.release(point);
 	}
 
 	/**
@@ -359,7 +356,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 		const startTile = this.pixelToTileCoords(
 			rect.pos.x,
 			rect.pos.y,
-			pool.pull("Vector2d"),
+			vector2dPool.get(),
 		);
 
 		// Compensate for the layer position
@@ -369,7 +366,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 		let startPos = this.tileToPixelCoords(
 			startTile.x + layer.pos.x,
 			startTile.y + layer.pos.y,
-			pool.pull("Vector2d"),
+			vector2dPool.get(),
 		);
 
 		const rowTile = startTile.clone();
@@ -433,8 +430,8 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 
 				startPos.y += this.rowheight;
 			}
-			pool.push(rowTile);
-			pool.push(rowPos);
+			vector2dPool.release(rowTile);
+			vector2dPool.release(rowPos);
 		} else {
 			//ensure we are in the valid tile range
 			startTile.x = Math.max(0, startTile.x);
@@ -470,11 +467,11 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 				}
 				startPos.y += this.rowheight;
 			}
-			pool.push(rowTile);
-			pool.push(rowPos);
+			vector2dPool.release(rowTile);
+			vector2dPool.release(rowPos);
 		}
 
-		pool.push(startTile);
-		pool.push(startPos);
+		vector2dPool.release(startTile);
+		vector2dPool.release(startPos);
 	}
 }

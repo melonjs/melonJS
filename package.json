@@ -22,7 +22,7 @@
 		"@eslint/js": "^9.6.0",
 		"@types/eslint__js": "^8.42.3",
 		"@types/node": "^20.14.10",
-		"@vitest/browser": "^2.0.1",
+		"@vitest/browser": "^2.0.2",
 		"eslint": "^9.6.0",
 		"eslint-plugin-jsdoc": "^48.5.2",
 		"globals": "^15.8.0",
@@ -30,6 +30,6 @@
 		"tsconfig": "workspace:latest",
 		"typescript": "^5.5.3",
 		"typescript-eslint": "^8.0.0-alpha.41",
-		"vitest": "^2.0.1"
+		"vitest": "^2.0.2"
 	}
 }

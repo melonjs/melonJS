@@ -1,7 +1,7 @@
-import Color from "./../math/color.js";
-import Matrix3d from "./../math/matrix3.js";
+import { Color } from "./../math/color.ts";
+import { Matrix3d } from "../math/matrix3d.ts";
 import Path2D from "./../geometries/path2d.js";
-import Vector2d from "../math/vector2.js";
+import { Vector2d } from "../math/vector2d.ts";
 import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
 import { CANVAS_ONRESIZE, eventEmitter } from "../system/event.ts";
 
@@ -11,7 +11,7 @@ import { CANVAS_ONRESIZE, eventEmitter } from "../system/event.ts";
  * @import Polygon from "./../geometries/poly.js";
  * @import Line from "./../geometries/line.js";
  * @import Ellipse from "./../geometries/ellipse.js";
- * @import Bounds from "./../physics/bounds.js";
+ * @import {Bounds} from "./../physics/bounds.ts";
  */
 
 /**

@@ -1,4 +1,4 @@
-import Vector2d from "./../math/vector2.js";
+import { Vector2d } from "../math/vector2d.ts";
 
 /*
  * Separating Axis Theorem implementation, based on the SAT.js library by Jim Riecken <jimr@jimr.ca>

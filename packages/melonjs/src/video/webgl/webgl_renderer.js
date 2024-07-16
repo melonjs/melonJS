@@ -1,12 +1,11 @@
-import Color from "./../../math/color.js";
-import Matrix2d from "./../../math/matrix2.js";
+import { Color, colorPool } from "./../../math/color.ts";
+import { Matrix2d, matrix2dPool } from "../../math/matrix2d.ts";
 import QuadCompositor from "./compositors/quad_compositor";
 import PrimitiveCompositor from "./compositors/primitive_compositor";
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture/cache.js";
 import { TextureAtlas, createAtlas } from "./../texture/atlas.js";
 import { renderer } from "./../video.js";
-import pool from "./../../system/pooling.js";
 import { isPowerOfTwo } from "./../../math/math.ts";
 import {
 	CANVAS_ONRESIZE,
@@ -23,7 +22,7 @@ import {
  * @import Polygon from "./../../geometries/poly.js";
  * @import Line from "./../../geometries/line.js";
  * @import Ellipse from "./../../geometries/ellipse.js";
- * @import Matrix3d from "./../../math/matrix3.js";
+ * @import {Matrix3d} from "../../math/matrix3d.ts";
  * @import Compositor from "./compositors/compositor.js";
  */
 
@@ -296,10 +295,10 @@ export default class WebGLRenderer extends Renderer {
 
 		// clear all stacks
 		this._colorStack.forEach((color) => {
-			pool.push(color);
+			colorPool.release(color);
 		});
 		this._matrixStack.forEach((matrix) => {
-			pool.push(matrix);
+			matrix2dPool.release(matrix);
 		});
 		this._colorStack.length = 0;
 		this._matrixStack.length = 0;
@@ -499,10 +498,10 @@ export default class WebGLRenderer extends Renderer {
 		if (color instanceof Color) {
 			glArray = color.toArray();
 		} else {
-			const _color = pool.pull("me.Color");
+			const _color = colorPool.get();
 			// reuse temporary the renderer default color object
 			glArray = _color.parseCSS(color).toArray();
-			pool.push(_color);
+			colorPool.release(_color);
 		}
 
 		// clear gl context with the specified color
@@ -793,8 +792,8 @@ export default class WebGLRenderer extends Renderer {
 			this.setBlendMode(this._blendStack.pop());
 
 			// recycle objects
-			pool.push(color);
-			pool.push(matrix);
+			colorPool.release(color);
+			matrix2dPool.release(matrix);
 		}
 
 		if (this._scissorStack.length !== 0) {

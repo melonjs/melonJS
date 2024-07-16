@@ -1,9 +1,7 @@
-import Vector2d from "./../math/vector2.js";
-import Vector3d from "./../math/vector3.js";
-import ObservableVector2d from "./../math/observable_vector2.js";
-import ObservableVector3d from "./../math/observable_vector3.js";
-import Matrix2d from "./../math/matrix2.js";
-import Matrix3d from "./../math/matrix3.js";
+import { Vector2d, vector2dPool } from "../math/vector2d.ts";
+import { Vector3d } from "../math/vector3d.ts";
+import { Matrix2d } from "../math/matrix2d.ts";
+import { Matrix3d } from "../math/matrix3d.ts";
 import Rect from "./../geometries/rectangle.js";
 import { renderer } from "./../video/video.js";
 import pool from "./../system/pooling.js";
@@ -17,10 +15,12 @@ import {
 	VIEWPORT_ONCHANGE,
 	VIEWPORT_ONRESIZE,
 } from "../system/event.ts";
+import { boundsPool } from "./../physics/bounds.ts";
+import { colorPool } from "../math/color.ts";
 
 /**
- * @import Bounds from "./../physics/bounds.js";
- * @import Color from "./../math/color.js";
+ * @import {Bounds} from "./../physics/bounds.ts";
+ * @import {Color} from "./../math/color.ts";
  * @import Entity from "./../renderable/entity/entity.js";
  * @import Sprite from "./../renderable/sprite.js";
  * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
@@ -61,7 +61,7 @@ export default class Camera2d extends Renderable {
 		 * Camera bounds
 		 * @type {Bounds}
 		 */
-		this.bounds = pool.pull("Bounds");
+		this.bounds = boundsPool.get();
 
 		/**
 		 * enable or disable damping
@@ -322,12 +322,7 @@ export default class Camera2d extends Renderable {
 	follow(target, axis, damping) {
 		if (target instanceof Renderable) {
 			this.target = target.pos;
-		} else if (
-			target instanceof Vector2d ||
-			target instanceof Vector3d ||
-			target instanceof ObservableVector2d ||
-			target instanceof ObservableVector3d
-		) {
+		} else if (target instanceof Vector2d || target instanceof Vector3d) {
 			this.target = target;
 		} else {
 			throw new Error("invalid target for me.Camera2d.follow");
@@ -525,7 +520,7 @@ export default class Camera2d extends Renderable {
 	 * });
 	 */
 	fadeOut(color, duration = 1000, onComplete) {
-		this._fadeOut.color = pool.pull("Color").copy(color);
+		this._fadeOut.color = colorPool.get().copy(color);
 		this._fadeOut.tween = pool
 			.pull("Tween", this._fadeOut.color)
 			.to({ alpha: 0.0 }, { duration })
@@ -545,7 +540,7 @@ export default class Camera2d extends Renderable {
 	 * me.game.viewport.fadeIn("#FFFFFF", 75);
 	 */
 	fadeIn(color, duration = 1000, onComplete) {
-		this._fadeIn.color = pool.pull("Color").copy(color);
+		this._fadeIn.color = colorPool.get().copy(color);
 		const _alpha = this._fadeIn.color.alpha;
 		this._fadeIn.color.alpha = 0.0;
 		this._fadeIn.tween = pool
@@ -593,7 +588,7 @@ export default class Camera2d extends Renderable {
 	 */
 	localToWorld(x, y, v) {
 		// TODO memoization for one set of coords (multitouch)
-		v = v || pool.pull("Vector2d");
+		v = v || vector2dPool.get();
 		v.set(x, y).add(this.pos).sub(game.world.pos);
 		if (!this.currentTransform.isIdentity()) {
 			this.invCurrentTransform.apply(v);
@@ -610,7 +605,7 @@ export default class Camera2d extends Renderable {
 	 */
 	worldToLocal(x, y, v) {
 		// TODO memoization for one set of coords (multitouch)
-		v = v || pool.pull("Vector2d");
+		v = v || vector2dPool.get();
 		v.set(x, y);
 		if (!this.currentTransform.isIdentity()) {
 			this.currentTransform.apply(v);
@@ -635,7 +630,7 @@ export default class Camera2d extends Renderable {
 			// remove the tween if over
 			if (this._fadeIn.color.alpha === 1.0) {
 				this._fadeIn.tween = null;
-				pool.push(this._fadeIn.color);
+				colorPool.release(this._fadeIn.color);
 				this._fadeIn.color = null;
 			}
 		}
@@ -652,7 +647,7 @@ export default class Camera2d extends Renderable {
 			// remove the tween if over
 			if (this._fadeOut.color.alpha === 0.0) {
 				this._fadeOut.tween = null;
-				pool.push(this._fadeOut.color);
+				colorPool.release(this._fadeOut.color);
 				this._fadeOut.color = null;
 			}
 		}

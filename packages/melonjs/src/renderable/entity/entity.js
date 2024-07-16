@@ -2,13 +2,14 @@ import pool from "../../system/pooling.js";
 import Renderable from "../renderable.js";
 import Sprite from "../sprite.js";
 import Body from "../../physics/body.js";
+import { vector2dPool } from "../../math/vector2d.ts";
 
 /**
  * @import Line from "./../../geometries/line.js";
  * @import Rect from "./../../geometries/rectangle.js";
  * @import Ellipse from "./../../geometries/ellipse.js";
  * @import Polygon from "./../../geometries/poly.js";
- * @import Bounds from "./../../physics/bounds.js";
+ * @import {Bounds} from "./../../physics/bounds.ts";
  * @import CanvasRenderer from "./../../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../../video/webgl/webgl_renderer.js";
  **/
@@ -86,10 +87,10 @@ export default class Entity extends Renderable {
 		// initialize the default body
 		if (typeof settings.shapes === "undefined") {
 			settings.shapes = pool.pull("Polygon", 0, 0, [
-				pool.pull("Vector2d", 0, 0),
-				pool.pull("Vector2d", this.width, 0),
-				pool.pull("Vector2d", this.width, this.height),
-				pool.pull("Vector2d", 0, this.height),
+				vector2dPool.get(0, 0),
+				vector2dPool.get(this.width, 0),
+				vector2dPool.get(this.width, this.height),
+				vector2dPool.get(0, this.height),
 			]);
 		}
 

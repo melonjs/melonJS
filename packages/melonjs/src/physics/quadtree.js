@@ -1,10 +1,10 @@
 import { remove } from "../utils/array.ts";
-import Vector2d from "./../math/vector2.js";
+import { Vector2d } from "../math/vector2d.ts";
 
 /**
  * @import World from "./world.js";
  * @import Container from "./../renderable/container.js";
- * @import Bounds from "./bounds.js";
+ * @import {Bounds} from "./bounds.ts";
  */
 
 /*

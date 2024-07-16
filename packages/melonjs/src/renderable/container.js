@@ -6,6 +6,7 @@ import pool from "../system/pooling.js";
 import state from "../state/state.js";
 import Body from "../physics/body.js";
 import { CANVAS_ONRESIZE, eventEmitter } from "../system/event.ts";
+import { colorPool } from "../math/color.ts";
 
 /**
  * Private function to re-use for object removal in a defer
@@ -19,7 +20,7 @@ let globalFloatingCounter = 0;
 
 /**
  * additional import for TypeScript
- * @import Color from "./../math/color.js";
+ * @import {Color} from "./../math/color.ts";
  * @import Entity from "./entity/entity.js";
  * @import Sprite from "./sprite.js";
  * @import Collectable from "./collectable.js";
@@ -35,7 +36,7 @@ let globalFloatingCounter = 0;
  * @import UITextButton from "./ui/uitextbutton.js";
  * @import Text from "./text/text.js";
  * @import BitmapText from "./text/bitmaptext.js";
- * @import Bounds from "./../physics/bounds.js";
+ * @import {Bounds} from "./../physics/bounds.ts";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
  */
@@ -140,7 +141,7 @@ export default class Container extends Renderable {
 		 * // add a red background color to this container
 		 * this.backgroundColor.setColor(255, 0, 0);
 		 */
-		this.backgroundColor = pool.pull("Color", 0, 0, 0, 0.0);
+		this.backgroundColor = colorPool.get(0, 0, 0, 0.0);
 
 		/**
 		 * Used by the debug panel plugin
@@ -639,17 +640,17 @@ export default class Container extends Renderable {
 	 * update the cointainer's bounding rect (private)
 	 * @ignore
 	 */
-	updateBoundsPos(newX = this.pos.x, newY = this.pos.y) {
+	updateBoundsPos(options) {
 		// call the parent method
-		super.updateBoundsPos(newX, newY);
+		super.updateBoundsPos(options);
 
 		// Notify children that the parent's position has changed
 		this.forEach((child) => {
 			if (child.isRenderable) {
-				child.updateBoundsPos(
-					child.pos.x + newX - this.pos.x,
-					child.pos.y + newY - this.pos.y,
-				);
+				child.updateBoundsPos({
+					newX: child.pos.x + options.newX - this.pos.x,
+					newY: child.pos.y + options.newY - this.pos.y,
+				});
 			}
 		});
 	}
@@ -897,6 +898,8 @@ export default class Container extends Renderable {
 		this.reset();
 		// call the parent destroy method
 		super.destroy(arguments);
+
+		colorPool.release(this.backgroundColor);
 	}
 
 	/**

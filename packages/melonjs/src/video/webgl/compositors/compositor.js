@@ -4,7 +4,7 @@ import GLShader from "../glshader.js";
 /**
  * additional import for TypeScript
  * @import WebGLRenderer from "./../webgl_renderer.js";
- * @import Matrix3d from "./../../../math/matrix3.js";
+ * @import {Matrix3d} from "../../../math/matrix3d.ts";
  */
 
 /**

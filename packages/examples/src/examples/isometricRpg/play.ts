@@ -108,13 +108,13 @@ export class PlayScreen extends Stage {
 		game.world.addChild(new Selector());
 
 		// register on mouse event
-		input.registerPointerEvent(
-			"pointermove",
-			game.viewport,
-			(event) => {
-				event.emit("pointermove", event);
-			},
-			false,
-		);
+		// input.registerPointerEvent(
+		// 	"pointermove",
+		// 	game.viewport,
+		// 	(ev) => {
+		// 		event.emit(event.POINTERMOVE, ev);
+		// 	},
+		// 	false,
+		// );
 	}
 }

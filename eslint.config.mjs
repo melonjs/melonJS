@@ -161,18 +161,23 @@ export default tseslint.config(
 		rules: {
 			"no-undef": "off",
 			"no-unused-vars": "off",
+			"prefer-template": "error",
 			"@typescript-eslint/no-explicit-any": "off",
 			"@typescript-eslint/ban-ts-comment": "off",
 			"@typescript-eslint/no-dynamic-delete": "off",
 			"@typescript-eslint/no-unsafe-argument": "off",
 			"@typescript-eslint/no-unsafe-assignment": "off",
 			"@typescript-eslint/no-unnecessary-condition": "off",
+			"@typescript-eslint/no-invalid-void-type": "off",
+			"@typescript-eslint/no-unsafe-return": "off",
+			"@typescript-eslint/no-non-null-assertion": "off",
 			"@typescript-eslint/restrict-template-expressions": [
 				"error",
 				{ allowNumber: true },
 			],
-			"prefer-template": "error",
 			...jsDocConfig.rules,
+			"jsdoc/require-jsdoc": "off",
+			"jsdoc/no-defaults": "off",
 		},
 		languageOptions: {
 			parserOptions: {

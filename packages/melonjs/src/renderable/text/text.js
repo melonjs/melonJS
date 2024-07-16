@@ -1,4 +1,4 @@
-import Color from "../../math/color.js";
+import { Color, colorPool } from "../../math/color.ts";
 import { renderer as globalRenderer } from "../../video/video.js";
 import pool from "../../system/pooling.js";
 import Renderable from "../renderable.js";
@@ -48,14 +48,14 @@ export default class Text extends Renderable {
 		 * @type {Color}
 		 * @default black
 		 */
-		this.fillStyle = pool.pull("Color", 0, 0, 0);
+		this.fillStyle = colorPool.get(0, 0, 0);
 
 		/**
 		 * defines the color used to draw the font stroke.<br>
 		 * @type {Color}
 		 * @default black
 		 */
-		this.strokeStyle = pool.pull("Color", 0, 0, 0);
+		this.strokeStyle = colorPool.get(0, 0, 0);
 
 		/**
 		 * sets the current line width, in pixels, when drawing stroke
@@ -116,11 +116,11 @@ export default class Text extends Renderable {
 	/** @ignore */
 	onResetEvent(x, y, settings) {
 		if (typeof this.fillStyle === "undefined") {
-			this.fillStyle = pool.pull("Color", 0, 0, 0);
+			this.fillStyle = colorPool.get(0, 0, 0);
 		}
 
 		if (typeof this.strokeStyle === "undefined") {
-			this.strokeStyle = pool.pull("Color", 0, 0, 0);
+			this.strokeStyle = colorPool.get(0, 0, 0);
 		}
 
 		if (typeof settings.fillStyle !== "undefined") {
@@ -404,8 +404,8 @@ export default class Text extends Renderable {
 		globalRenderer.cache.delete(this.canvasTexture.canvas);
 		pool.push(this.canvasTexture);
 		this.canvasTexture = undefined;
-		pool.push(this.fillStyle);
-		pool.push(this.strokeStyle);
+		colorPool.release(this.fillStyle);
+		colorPool.release(this.strokeStyle);
 		this.fillStyle = this.strokeStyle = undefined;
 		this.metrics = undefined;
 		this._text.length = 0;

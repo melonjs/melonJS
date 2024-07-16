@@ -94,7 +94,6 @@ export function getUriFragment(url: string) {
 		})
 		.forEach((value) => {
 			const kv = value.split("=");
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			const k = kv.shift()!;
 			const v = kv.join("=");
 			hash[k] = v || true;

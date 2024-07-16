@@ -1,7 +1,7 @@
-import pool from "./../system/pooling.js";
 import timer from "./../system/timer.ts";
 import { randomFloat, clamp } from "./../math/math.ts";
 import Renderable from "./../renderable/renderable.js";
+import { vector2dPool } from "../math/vector2d.ts";
 
 /**
  * @import ParticleEmitter from "./emitter.js";
@@ -35,7 +35,7 @@ export default class Particle extends Renderable {
 			this.currentTransform.identity();
 		} else {
 			// particle velocity
-			this.vel = pool.pull("Vector2d");
+			this.vel = vector2dPool.get();
 		}
 
 		this.image = emitter.settings.image;

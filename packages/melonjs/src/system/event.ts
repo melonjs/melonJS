@@ -3,7 +3,7 @@
  */
 
 import Pointer from "../input/pointer.js";
-import Vector2d from "../math/vector2.js";
+import { Vector2d } from "../math/vector2d.ts";
 import { Draggable } from "../renderable/draggable.js";
 import Stage from "../state/stage.js";
 import Renderer from "../video/renderer.js";
