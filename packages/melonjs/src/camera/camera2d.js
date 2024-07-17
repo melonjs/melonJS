@@ -583,7 +583,7 @@ export default class Camera2d extends Renderable {
 	 * convert the given "local" (screen) coordinates into world coordinates
 	 * @param {number} x - the x coordinate of the local point to be converted
 	 * @param {number} y - the y coordinate of the local point to be converted
-	 * @param {number} [v] - an optional vector object where to set the converted value
+	 * @param {Vector2d} [v] - an optional vector object where to set the converted value
 	 * @returns {Vector2d}
 	 */
 	localToWorld(x, y, v) {
