@@ -45,11 +45,11 @@ function _domReady() {
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Window/DOMContentLoaded_event
-export function DOMContentLoaded(fn) {
+export const DOMContentLoaded = (fn: () => void) => {
 	// If the DOM is already ready
 	if (isDOMReady) {
 		// Execute the function immediately
-		fn.call(globalThis, []);
+		fn();
 	} else {
 		// else add the function to the DOM_READY event
 		eventEmitter.addListenerOnce(DOM_READY, fn.bind(globalThis));
@@ -57,7 +57,7 @@ export function DOMContentLoaded(fn) {
 		if (!readyBound) {
 			// directly call domReady if document is already "ready"
 			if (
-				nodeJS === true ||
+				nodeJS ||
 				(typeof globalThis.document !== "undefined" &&
 					globalThis.document.readyState === "complete")
 			) {
@@ -81,4 +81,4 @@ export function DOMContentLoaded(fn) {
 			readyBound = true;
 		}
 	}
-}
+};
