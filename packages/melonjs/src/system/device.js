@@ -189,10 +189,7 @@ export const hasFullscreenSupport =
 	(prefixed("fullscreenEnabled", globalThis.document) ||
 		globalThis.document.mozFullScreenEnabled);
 
-let exitFullScreen = hasFullscreenSupport
-	? prefixed("cancelFullScreen", globalThis.document) ??
-		prefixed("exitFullscreen", globalThis.document)
-	: null;
+let exitFullScreen = hasFullscreenSupport ? document.exitFullscreen() : null;
 
 /**
  * Device WebAudio Support

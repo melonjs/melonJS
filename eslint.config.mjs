@@ -172,6 +172,7 @@ export default tseslint.config(
 			"@typescript-eslint/no-unsafe-return": "off",
 			"@typescript-eslint/no-non-null-assertion": "off",
 			"@typescript-eslint/no-unnecessary-type-assertion": "off",
+			"@typescript-eslint/no-empty-object-type": "off",
 			"@typescript-eslint/restrict-template-expressions": [
 				"error",
 				{ allowNumber: true },

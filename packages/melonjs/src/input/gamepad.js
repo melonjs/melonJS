@@ -5,7 +5,7 @@ import {
 	GAMEPAD_DISCONNECTED,
 	GAMEPAD_UPDATE,
 } from "../system/event.ts";
-import { getBindingKey, triggerKeyEvent } from "./keyboard.js";
+import { getBindingKey, triggerKeyEvent } from "./keyboard.ts";
 
 // Analog deadzone
 let deadzone = 0.1;

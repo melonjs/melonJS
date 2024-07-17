@@ -52,7 +52,7 @@ export const DOMContentLoaded = (fn: () => void) => {
 		fn();
 	} else {
 		// else add the function to the DOM_READY event
-		eventEmitter.addListenerOnce(DOM_READY, fn.bind(globalThis));
+		eventEmitter.addListenerOnce(DOM_READY, fn);
 		// bind dom load event if not done yet
 		if (!readyBound) {
 			// directly call domReady if document is already "ready"

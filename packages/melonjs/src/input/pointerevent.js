@@ -1,5 +1,5 @@
 import { preventDefault } from "./input.js";
-import { getBindingKey, triggerKeyEvent } from "./keyboard.js";
+import { getBindingKey, triggerKeyEvent } from "./keyboard.ts";
 import { renderer } from "./../video/video.js";
 import { throttle } from "./../utils/function.ts";
 import { remove } from "./../utils/array.ts";
