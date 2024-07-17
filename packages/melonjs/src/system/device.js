@@ -2,7 +2,7 @@ import { getParent } from "./../video/video.js";
 import save from "./save.ts";
 import { prefixed } from "./../utils/agent.ts";
 import { DOMContentLoaded } from "./dom.js";
-import * as device_platform from "./platform.js";
+import * as device_platform from "./platform.ts";
 import { BLUR, eventEmitter, FOCUS } from "./event.ts";
 
 /**

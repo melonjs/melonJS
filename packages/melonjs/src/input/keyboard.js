@@ -1,5 +1,5 @@
 import { preventDefault as preventDefaultAction } from "./input.js";
-import { isMobile } from "./../system/platform.js";
+import { isMobile } from "./../system/platform.ts";
 import { eventEmitter, KEYDOWN, KEYUP } from "../system/event.ts";
 
 // corresponding actions

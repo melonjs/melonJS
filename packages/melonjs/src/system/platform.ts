@@ -2,20 +2,20 @@
  * The device platform type
  * @namespace platform
  * @memberof device
- * @property {string} ua the user agent string for the current device
- * @property {boolean} iOS `true` if the device is an iOS platform
- * @property {boolean} android `true` if the device is an Android platform
- * @property {boolean} android2 `true` if the device is an Android 2.x platform
- * @property {boolean} linux `true` if the device is a Linux platform
- * @property {boolean} chromeOS `true` if the device is running on ChromeOS.
- * @property {boolean} wp `true` if the device is a Windows Phone platform
- * @property {boolean} BlackBerry`true` if the device is a BlackBerry platform
- * @property {boolean} Kindle`true` if the device is a Kindle platform
- * @property {boolean} ejecta `true` if running under Ejecta
- * @property {boolean} isWeixin `true` if running under Wechat
- * @property {boolean} nodeJS `true` if running under node.js
- * @property {boolean} isMobile `true` if a mobile device
- * @property {boolean} webApp `true` if running as a standalone web app
+ * ua the user agent string for the current device
+ * iOS `true` if the device is an iOS platform
+ * android `true` if the device is an Android platform
+ * android2 `true` if the device is an Android 2.x platform
+ * linux `true` if the device is a Linux platform
+ * chromeOS `true` if the device is running on ChromeOS.
+ * wp `true` if the device is a Windows Phone platform
+ * BlackBerry`true` if the device is a BlackBerry platform
+ * Kindle`true` if the device is a Kindle platform
+ * ejecta `true` if running under Ejecta
+ * isWeixin `true` if running under Wechat
+ * nodeJS `true` if running under node.js
+ * isMobile `true` if a mobile device
+ * webApp `true` if running as a standalone web app
  */
 
 export const ua =
@@ -30,7 +30,7 @@ export const chromeOS = /CrOS/.test(ua);
 export const wp = /Windows Phone/i.test(ua);
 export const BlackBerry = /BlackBerry/i.test(ua);
 export const Kindle = /Kindle|Silk.*Mobile Safari/i.test(ua);
-export const ejecta = typeof globalThis.ejecta !== "undefined";
+export const ejecta = "ejecta" in globalThis;
 export const isWeixin = /MicroMessenger/i.test(ua);
 export const nodeJS =
 	typeof globalThis.process !== "undefined" &&
@@ -40,6 +40,7 @@ export const isMobile =
 	/Mobi/i.test(ua) || iOS || android || wp || BlackBerry || Kindle || false;
 export const webApp =
 	(typeof globalThis.navigator !== "undefined" &&
+		"standalone" in globalThis.navigator &&
 		globalThis.navigator.standalone === true) ||
 	(typeof globalThis.matchMedia !== "undefined" &&
 		globalThis.matchMedia("(display-mode: standalone)").matches);

@@ -1,5 +1,5 @@
 import { DOM_READY, eventEmitter } from "./event.ts";
-import { nodeJS } from "./platform.js";
+import { nodeJS } from "./platform.ts";
 
 // track if DOMContentLoaded was called already
 let readyBound = false;
