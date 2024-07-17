@@ -14,7 +14,7 @@ import TextureCache from "./../texture/cache.js";
  * @import {RoundRect} from "./../../geometries/roundrect.ts";
  * @import {Polygon} from "../../geometries/polygon.ts";
  * @import {Line} from "./../../geometries/line.ts";
- * @import Ellipse from "./../../geometries/ellipse.js";
+ * @import {Ellipse} from "./../../geometries/ellipse.ts";
  * @import {Matrix2d} from "../../math/matrix2d.ts";
  */
 

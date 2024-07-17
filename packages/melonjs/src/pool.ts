@@ -1,3 +1,4 @@
+import { ellipsePool } from "./geometries/ellipse";
 import { linePool } from "./geometries/line";
 import { pointPool } from "./geometries/point";
 import { polygonPool } from "./geometries/polygon";
@@ -22,6 +23,7 @@ const pools = {
 	line: linePool,
 	rectangle: rectPool,
 	roundedRectangle: roundedRectanglePool,
+	ellipse: ellipsePool,
 } as const;
 
 type PoolKey = keyof typeof pools;

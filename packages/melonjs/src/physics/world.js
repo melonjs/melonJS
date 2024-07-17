@@ -14,6 +14,7 @@ import {
 
 /**
  * @import Application from "./../application/application.js";
+ * @import Body from "./body.js";
  */
 
 /**

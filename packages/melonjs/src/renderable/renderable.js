@@ -18,7 +18,7 @@ import { createObservableVector2d } from "../math/observableVector2d.ts";
  * @import Entity from "./entity/entity.js";
  * @import Container from "./container.js";
  * @import {Line} from "./../geometries/line.ts";
- * @import Ellipse from "./../geometries/ellipse.js";
+ * @import {Ellipse} from "./../geometries/ellipse.ts";
  * @import {Polygon} from "../geometries/polygon.ts";
  * @import {RoundRect} from "./../geometries/roundrect.ts";
  * @import Application from "./../application/application.js";

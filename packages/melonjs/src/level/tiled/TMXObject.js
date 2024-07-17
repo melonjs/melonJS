@@ -1,4 +1,3 @@
-import pool from "./../../system/pooling.js";
 import { applyTMXProperties } from "./TMXUtils.js";
 import Tile from "./TMXTile.js";
 import { degToRad } from "./../../math/math.ts";
@@ -6,6 +5,7 @@ import { vector2dPool } from "../../math/vector2d.ts";
 import { pointPool } from "../../geometries/point.ts";
 import { polygonPool } from "../../geometries/polygon.ts";
 import { linePool } from "../../geometries/line.ts";
+import { ellipsePool } from "../../geometries/ellipse.ts";
 
 /**
  * a TMX Object defintion, as defined in Tiled
@@ -216,14 +216,8 @@ export default class TMXObject {
 		if (this.isEllipse === true) {
 			// ellipse coordinates are the center position, so set default to the corresonding radius
 			shapes.push(
-				pool
-					.pull(
-						"Ellipse",
-						this.width / 2,
-						this.height / 2,
-						this.width,
-						this.height,
-					)
+				ellipsePool
+					.get(this.width / 2, this.height / 2, this.width, this.height)
 					.rotate(this.rotation),
 			);
 		} else if (this.isPoint === true) {

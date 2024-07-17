@@ -1,3 +1,4 @@
+import { ellipsePool } from "./../geometries/ellipse.ts";
 import { colorPool } from "./../math/color.ts";
 import pool from "./../system/pooling.js";
 import Renderable from "./renderable.js";
@@ -5,7 +6,7 @@ import Renderable from "./renderable.js";
 /**
  * additional import for TypeScript
  * @import {Color} from "./../math/color.ts";
- * @import Ellipse from "./../geometries/ellipse.js";
+ * @import {Ellipse} from "./../geometries/ellipse.ts";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
  */
@@ -133,8 +134,7 @@ export default class Light2d extends Renderable {
 		this.blendMode = "lighter";
 
 		/** @ignore */
-		this.visibleArea = pool.pull(
-			"Ellipse",
+		this.visibleArea = ellipsePool.get(
 			this.centerX,
 			this.centerY,
 			this.width,
@@ -195,7 +195,7 @@ export default class Light2d extends Renderable {
 		this.color = undefined;
 		pool.push(this.texture);
 		this.texture = undefined;
-		pool.push(this.visibleArea);
+		ellipsePool.release(this.visibleArea);
 		this.visibleArea = undefined;
 		super.destroy();
 	}
