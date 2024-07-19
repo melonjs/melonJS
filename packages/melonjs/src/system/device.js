@@ -506,15 +506,11 @@ export function requestFullscreen(element) {
  * Exit fullscreen mode. Requires fullscreen support from the browser/device.
  * @memberof device
  */
-export function exitFullscreen() {
+export const exitFullscreen = () => {
 	if (hasFullscreenSupport && isFullscreen()) {
-		globalThis.document.exitFullscreen = prefixed(
-			"exitFullscreen",
-			globalThis.document,
-		);
-		globalThis.document.exitFullscreen();
+		document.exitFullscreen();
 	}
-}
+};
 
 /**
  * Return a string representing the orientation of the device screen.

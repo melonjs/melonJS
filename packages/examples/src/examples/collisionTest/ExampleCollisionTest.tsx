@@ -101,7 +101,7 @@ const createGame = () => {
 		event.on(event.KEYDOWN, (action, keyCode) => {
 			// toggle fullscreen on/off
 			if (keyCode === input.KEY.F) {
-				if (!device.isFullscreen) {
+				if (!device.isFullscreen()) {
 					device.requestFullscreen();
 				} else {
 					device.exitFullscreen();
