@@ -60,7 +60,7 @@ import pool from "./system/pooling.js";
 import state from "./state/state.js";
 import { BOOT, DOM_READY, eventEmitter } from "./system/event.ts";
 import { setNocache } from "./loader/loader.js";
-import { initKeyboardEvent } from "./input/keyboard.js";
+import { initKeyboardEvent } from "./input/keyboard.ts";
 import { getUriFragment } from "./utils/utils.ts";
 import { onReady } from "./system/device.js";
 import { version } from "./version.ts";
