@@ -189,12 +189,6 @@ export const hasFullscreenSupport =
 	(prefixed("fullscreenEnabled", globalThis.document) ||
 		globalThis.document.mozFullScreenEnabled);
 
-if (hasFullscreenSupport === true) {
-	globalThis.document.exitFullscreen =
-		prefixed("cancelFullScreen", globalThis.document) ||
-		prefixed("exitFullscreen", globalThis.document);
-}
-
 /**
  * Device WebAudio Support
  * @memberof device
@@ -514,6 +508,10 @@ export function requestFullscreen(element) {
  */
 export function exitFullscreen() {
 	if (hasFullscreenSupport && isFullscreen()) {
+		globalThis.document.exitFullscreen = prefixed(
+			"exitFullscreen",
+			globalThis.document,
+		);
 		globalThis.document.exitFullscreen();
 	}
 }
