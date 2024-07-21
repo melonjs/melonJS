@@ -87,7 +87,7 @@ export function patch(proto, name, fn) {
  * Register a plugin.
  * @name register
  * @memberof plugin
- * @param {BasePlugin} plugin - Plugin object to instantiate and register
+ * @param {plugin.BasePlugin} plugin - Plugin object to instantiate and register
  * @param {string} [name=plugin.constructor.name] - a unique name for this plugin
  * @param {...*} [args] - all extra parameters will be passed to the plugin constructor
  * @example
@@ -137,7 +137,7 @@ export function register(plugin, name = plugin.toString().match(/ (\w+)/)[1]) {
  * @name get
  * @memberof plugin
  * @param {object|string} classType - the Class Object or registered name of the plugin to retreive
- * @returns {BasePlugin} a plugin instance or undefined
+ * @returns {plugin.BasePlugin} a plugin instance or undefined
  */
 export function get(classType) {
 	for (const name in cache) {
