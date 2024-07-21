@@ -532,6 +532,7 @@
 - Color: added a `setHSL(h, s, l)` and `setHSV(h, s, v)` method to the Color class
 - Tiled: add support for the new `class` property (note: melonJS will still set the deprecated `type` one for backward compatibility)
 - Renderer: Canvas rendering mode can now be forced by adding `[#/&]canvas` to the URL (similarly with WebGL1/2 already)
+- Renderer: new `backgroundColor` property allowing to change the color when clearing the background between frames
 - Vector: new `moveTowards()` method for `[Observable]Vector2d/3d` objects (limited to x and y axis for 3d vectors)
 
 ### Changed

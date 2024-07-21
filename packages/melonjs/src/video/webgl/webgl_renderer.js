@@ -475,7 +475,8 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	clear() {
 		const gl = this.gl;
-		gl.clearColor(0, 0, 0, this.settings.transparent ? 0.0 : 1.0);
+		const clearColor = this.backgroundColor.toArray();
+		gl.clearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
 		this.lineWidth = 1;
 		if (this.depthTest === "z-buffer") {
 			gl.clear(

@@ -129,10 +129,8 @@ export default class CanvasRenderer extends Renderer {
 	 * prepare the framebuffer for drawing a new frame
 	 */
 	clear() {
-		if (this.settings.transparent === false) {
-			const canvas = this.getCanvas();
-			const context = this.getContext();
-			context.clearRect(0, 0, canvas.width, canvas.height);
+		if (this.backgroundColor.alpha > 0) {
+			this.clearColor(this.backgroundColor);
 		}
 	}
 
