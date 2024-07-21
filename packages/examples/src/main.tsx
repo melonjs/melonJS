@@ -1,9 +1,9 @@
 import React, { type ReactElement } from "react";
 import ReactDOM from "react-dom/client";
+import "./index.css";
 import { Link, RouterProvider, createBrowserRouter } from "react-router-dom";
 import { ExampleAseprite } from "./examples/aseprite/ExampleAseprite";
-import { ExampleCollisionTest } from "./examples/collisionTest/ExampleCollisionTest";
-import "./index.css";
+import { ExampleBenchmark } from "./examples/benchmark/ExampleBenchmark";
 import { ExampleDeviceTest } from "./examples/deviceTest/ExampleDeviceTest";
 import { ExampleDragAndDrop } from "./examples/dragAndDrop/ExampleDragAndDrop";
 import { ExampleGraphics } from "./examples/graphics/ExampleGraphics";
@@ -21,9 +21,9 @@ const examples: { label: string; path: string; component: ReactElement }[] = [
 		path: "aseprite",
 	},
 	{
-		component: <ExampleCollisionTest />,
-		label: "collision test",
-		path: "collision-test",
+		component: <ExampleBenchmark />,
+		label: "Sprite benchmark",
+		path: "benchmark",
 	},
 	{
 		component: <ExampleDeviceTest />,
