@@ -18,6 +18,7 @@
 - Chore: replaced mocha and puppeteer with vitest (@hornta)
 - Chore: deprecated classes and methods from version 15 and lower have been removed (see https://github.com/melonjs/melonJS/wiki/Upgrade-Guide)
 - Math: namespace `Math` is now deprecated and renamed to `math` for better consistency with the rest of the API.
+- Renderable: the `anchorPoint` property now used the lighter `ObservablePoint` class instead of `ObservableVector2d`.
 
 ## [17.4.0] (melonJS 2) - _2024-06-22_
 

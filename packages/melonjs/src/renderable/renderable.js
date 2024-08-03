@@ -7,10 +7,10 @@ import { Bounds, boundsPool } from "./../physics/bounds.ts";
 import GLShader from "./../video/webgl/glshader.js";
 import { Color, colorPool } from "./../math/color.ts";
 import { createObservableVector3d } from "../math/observableVector3d.ts";
-import { Vector2d, vector2dPool } from "../math/vector2d.ts";
+import { vector2dPool } from "../math/vector2d.ts";
 import { matrix2dPool } from "../math/matrix2d.ts";
 import { Vector3d } from "../math/vector3d.ts";
-import { createObservableVector2d } from "../math/observableVector2d.ts";
+import { ObservablePoint } from "../geometries/observablePoint.ts";
 
 /**
  * additional import for TypeScript
@@ -59,12 +59,12 @@ export default class Renderable extends Rect {
 		 * <br>
 		 * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation.
 		 * To specify a value through Tiled, use a json expression like `json:{"x":0.5,"y":0.5}`. </i>
-		 * @type {ObservableVector2d}
+		 * @type {ObservablePoint}
 		 * @default <0.5,0.5>
 		 */
-		this.anchorPoint = createObservableVector2d({
-			target: new Vector2d(0.5, 0.5),
-			updateFn: this.onAnchorUpdate.bind(this),
+		this.anchorPoint = new ObservablePoint(0.5, 0.5, () => {
+			this.updateBounds();
+			this.isDirty = true;
 		});
 
 		if (typeof this.currentTransform === "undefined") {
@@ -669,21 +669,6 @@ export default class Renderable extends Rect {
 	}
 
 	/**
-	 * called when the anchor point value is changed
-	 * @private
-	 * @param {number} x - the new X value to be set for the anchor
-	 * @param {number} y - the new Y value to be set for the anchor
-	 */
-	onAnchorUpdate({ newX: x, newY: y }) {
-		// since the callback is called before setting the new value
-		// manually update the anchor point (required for updateBoundsPos)
-		this.anchorPoint.setMuted(x, y);
-		// then call updateBounds
-		this.updateBounds();
-		this.isDirty = true;
-	}
-
-	/**
 	 * Prepare the rendering context before drawing (automatically called by melonJS).
 	 * This will apply any defined transforms, anchor point, tint or blend mode and translate the context accordingly to this renderable position.
 	 * @see Renderable#draw
@@ -819,7 +804,9 @@ export default class Renderable extends Rect {
 		matrix2dPool.release(this.currentTransform);
 		this.currentTransform = undefined;
 
+		this.anchorPoint.revoke();
 		this.anchorPoint = undefined;
+
 		this.pos = undefined;
 
 		if (typeof this._absPos !== "undefined") {

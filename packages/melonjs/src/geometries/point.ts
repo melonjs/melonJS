@@ -50,7 +50,7 @@ export class Point {
 	equals(x: number, y: number): boolean;
 	equals(point: Point): boolean;
 	equals(xOrPoint: number | Point, y?: number | undefined) {
-		if (xOrPoint instanceof Point) {
+		if (typeof xOrPoint === "object") {
 			return this.x === xOrPoint.x && this.y === xOrPoint.y;
 		}
 		return this.x === xOrPoint && this.y === y;

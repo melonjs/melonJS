@@ -87,6 +87,7 @@ export { Matrix2d } from "./math/matrix2d.ts";
 export { Matrix3d } from "./math/matrix3d.ts";
 export { Color } from "./math/color.ts";
 export { Point } from "./geometries/point.ts";
+export { ObservablePoint } from "./geometries/observablePoint.ts";
 export { Bounds } from "./physics/bounds.ts";
 export { Polygon } from "./geometries/polygon.ts";
 export { Line } from "./geometries/line.ts";
