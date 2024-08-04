@@ -299,4 +299,39 @@ describe("Vector3d", () => {
 		b.set(8, 4, 1);
 		expect(math.radToDeg(a.angle(b))).toBeCloseTo(90, -1);
 	});
+
+	describe("equals", () => {
+		it("should return true when comparing with the same vector", () => {
+			const vector = new Vector3d(1, 2, 3);
+			expect(vector.equals(vector)).toEqual(true);
+		});
+
+		it("should return true when comparing with a vector with the same values", () => {
+			const vector1 = new Vector3d(1, 2, 3);
+			const vector2 = new Vector3d(1, 2, 3);
+			expect(vector1.equals(vector2)).toEqual(true);
+		});
+
+		it("should return true when comparing with a 2d vector with the same values for x and y", () => {
+			const vector1 = new Vector3d(1, 2, 3);
+			const vector2 = new Vector2d(1, 2);
+			expect(vector1.equals(vector2)).toEqual(true);
+		});
+
+		it("should return true when comparing with vector components", () => {
+			const vector = new Vector3d(1, 2, 3);
+			expect(vector.equals(1, 2, 3)).toEqual(true);
+		});
+
+		it("should return false when comparing with a vector with different values", () => {
+			const vector1 = new Vector3d(1, 2, 3);
+			const vector2 = new Vector3d(4, 5, 6);
+			expect(vector1.equals(vector2)).toEqual(false);
+		});
+
+		it("should return false when comparing with different vector components", () => {
+			const vector = new Vector3d(1, 2, 3);
+			expect(vector.equals(4, 5, 6)).toEqual(false);
+		});
+	});
 });

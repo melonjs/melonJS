@@ -255,25 +255,34 @@ export class Vector3d {
 
 	/**
 	 * return true if this vector is equal to the given values or vector
-	 * @param vectorOrValues other vector or vector components
-	 * @returns true if both vectros are equals
+	 * @param args other vector or vector components
+	 * @returns true if both vectors are equal
 	 */
-	equals(x: number, y: number, z?: number | undefined): boolean;
-	equals(vector: Vector2d | Vector3d): boolean;
-	equals(xOrVector: number | Vector2d | Vector3d, y?: number, z?: number) {
+	equals(
+		...args:
+			| [number]
+			| [Vector2d]
+			| [Vector3d]
+			| [number, number]
+			| [number, number, number]
+	): boolean {
 		let _x: number;
 		let _y: number;
 		let _z: number;
-		if (xOrVector instanceof Vector2d || xOrVector instanceof Vector3d) {
-			[_x, _y, _z] = [
-				xOrVector.x,
-				xOrVector.y,
-				"z" in xOrVector ? xOrVector.z : this.z,
-			];
+
+		if (args.length === 1) {
+			const arg = args[0];
+			if (arg instanceof Vector2d || arg instanceof Vector3d) {
+				[_x, _y, _z] = [arg.x, arg.y, "z" in arg ? arg.z : this.z];
+			} else {
+				_x = arg;
+				_y = this.y;
+				_z = this.z;
+			}
+		} else if (args.length === 2) {
+			[_x, _y, _z] = [args[0], args[1], this.z];
 		} else {
-			_x = xOrVector;
-			_y = y!;
-			_z = z ?? this.z;
+			[_x, _y, _z] = args;
 		}
 
 		return this.x === _x && this.y === _y && this.z === _z;
