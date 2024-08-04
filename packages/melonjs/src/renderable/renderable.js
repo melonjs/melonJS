@@ -6,10 +6,9 @@ import Body from "./../physics/body.js";
 import { Bounds, boundsPool } from "./../physics/bounds.ts";
 import GLShader from "./../video/webgl/glshader.js";
 import { Color, colorPool } from "./../math/color.ts";
-import { createObservableVector3d } from "../math/observableVector3d.ts";
+import { ObservableVector3d } from "../math/observableVector3d.ts";
 import { vector2dPool } from "../math/vector2d.ts";
 import { matrix2dPool } from "../math/matrix2d.ts";
-import { Vector3d } from "../math/vector3d.ts";
 import { ObservablePoint } from "../geometries/observablePoint.ts";
 
 /**
@@ -46,9 +45,9 @@ export default class Renderable extends Rect {
 		 * @public
 		 * @type {ObservableVector3d}
 		 */
-		this.pos = createObservableVector3d({
-			target: new Vector3d(x, y, 0),
-			updateFn: this.updateBoundsPos.bind(this),
+		this.pos = new ObservableVector3d(x, y, 0, () => {
+			this.updateBounds();
+			this.isDirty = true;
 		});
 
 		/**
@@ -638,14 +637,6 @@ export default class Renderable extends Rect {
 			// before the object being yet properly initialized
 			return super.updateBounds(absolute);
 		}
-	}
-
-	/**
-	 * update the renderable's bounding rect (private)
-	 * @ignore
-	 */
-	updateBoundsPos({ newX, newY }) {
-		this.getBounds().translate(newX - this.pos.x, newY - this.pos.y);
 	}
 
 	/**

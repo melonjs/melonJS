@@ -95,7 +95,7 @@ export { Rect } from "./geometries/rectangle.ts";
 export { RoundRect } from "./geometries/roundrect.ts";
 export { Ellipse } from "./geometries/ellipse.ts";
 export { createObservableVector2d } from "./math/observableVector2d.ts";
-export { createObservableVector3d } from "./math/observableVector3d.ts";
+export { ObservableVector3d } from "./math/observableVector3d.ts";
 export { getPool } from "./pool.ts";
 
 // export all class definition

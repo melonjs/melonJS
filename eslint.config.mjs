@@ -165,6 +165,8 @@ export default tseslint.config(
 			"@typescript-eslint/no-explicit-any": "off",
 			"@typescript-eslint/ban-ts-comment": "off",
 			"@typescript-eslint/no-dynamic-delete": "off",
+			"@typescript-eslint/no-unsafe-call": "off",
+			"@typescript-eslint/no-unsafe-member-access": "off",
 			"@typescript-eslint/no-unsafe-argument": "off",
 			"@typescript-eslint/no-unsafe-assignment": "off",
 			"@typescript-eslint/no-unnecessary-condition": "off",
