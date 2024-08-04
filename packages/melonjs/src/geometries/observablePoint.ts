@@ -35,6 +35,7 @@ export class ObservablePoint {
 			},
 		});
 
+		this.callBackEnabled = true;
 		this._revoke = revoke;
 		this._point = proxy;
 
@@ -50,8 +51,11 @@ export class ObservablePoint {
 	 * @returns Reference to this object for method chaining.
 	 */
 	set(x = 0, y = 0) {
+		this.callBackEnabled = false;
 		this._point.x = x;
 		this._point.y = y;
+		this._callback?.();
+		this.callBackEnabled = true;
 		return this;
 	}
 
