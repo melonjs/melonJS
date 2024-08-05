@@ -1,7 +1,6 @@
 import { TupleToUnion } from "type-fest";
-import { clamp } from "./math";
 import { Vector2d } from "./vector2d";
-import { Vector3d, vector3dPool } from "./vector3d";
+import { Vector3d } from "./vector3d";
 import { createPool } from "../system/pool.ts";
 import { Point } from "../geometries/point.ts";
 
@@ -422,7 +421,7 @@ export class ObservableVector3d {
 	 * @returns The dot product.
 	 */
 	dot(v: Vector2d | Vector3d | ObservableVector3d) {
-		return this.x * v.x + this.y * v.y + this.z * ("z" in v ? v.z : this.z);
+		return this._vector3d.dot(v as Vector3d);
 	}
 
 	/**
@@ -492,9 +491,11 @@ export class ObservableVector3d {
 			return target;
 		}
 
-		this.x += Math.cos(angle) * step;
-		this.y += Math.sin(angle) * step;
-
+		this.set(
+			this.x + Math.cos(angle) * step,
+			this.y + Math.sin(angle) * step,
+			this.z,
+		);
 		return this;
 	}
 
@@ -504,10 +505,7 @@ export class ObservableVector3d {
 	 * @returns distance
 	 */
 	distance(v: Vector2d | Vector3d | ObservableVector3d) {
-		const dx = this.x - v.x;
-		const dy = this.y - v.y;
-		const dz = this.z - ("z" in v ? v.z : 0);
-		return Math.sqrt(dx * dx + dy * dy + dz * dz);
+		return this._vector3d.distance(v as Vector3d);
 	}
 
 	/**
@@ -516,7 +514,7 @@ export class ObservableVector3d {
 	 * @returns angle in radians
 	 */
 	angle(v: Vector2d | Vector3d | ObservableVector3d) {
-		return Math.acos(clamp(this.dot(v) / (this.length() * v.length()), -1, 1));
+		return this._vector3d.angle(v as Vector3d);
 	}
 
 	/**
@@ -542,10 +540,11 @@ export class ObservableVector3d {
 
 	/**
 	 * return a clone copy of this vector
+	 * @param [cb] callback function to override the clone values
 	 * @returns new Vector3d
 	 */
-	clone() {
-		return vector3dPool.get(this.x, this.y, this.z);
+	clone(cb?: () => void) {
+		return observableVector3dPool.get(this.x, this.y, this.z, cb);
 	}
 
 	/**
@@ -553,7 +552,7 @@ export class ObservableVector3d {
 	 * @returns stringified representation
 	 */
 	toString() {
-		return `x:${this.x},y:${this.y},z:${this.z}` as const;
+		return this._vector3d.toString();
 	}
 
 	/**

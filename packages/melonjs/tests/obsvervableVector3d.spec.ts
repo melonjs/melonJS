@@ -22,14 +22,14 @@ describe("ObservableVector3d : constructor", () => {
 		expect(a.toString()).toEqual("x:0,y:0,z:0");
 	});
 
-	it("creates a new ObservablePoint instance with specified values", () => {
+	it("creates a new ObservableVector3d instance with specified values", () => {
 		const observableVector = new ObservableVector3d(10, 20, 3);
 		expect(observableVector.x).toEqual(10);
 		expect(observableVector.y).toEqual(20);
 		expect(observableVector.z).toEqual(3);
 	});
 
-	it("values can be compared with a Point object", () => {
+	it("values can be compared with an other ObservableVector3d object", () => {
 		const observableVector = new ObservableVector3d(10, 20, 3);
 		const vector3 = new Vector3d(10, 20, 3);
 		expect(observableVector.equals(vector3)).toEqual(true);
