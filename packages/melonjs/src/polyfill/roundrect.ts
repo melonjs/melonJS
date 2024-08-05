@@ -271,7 +271,6 @@ function roundRect(
 			return [NaN];
 		}
 		if (type === "object") {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 			if (typeof value[Symbol.iterator] === "function") {
 				return [...value].map((elem) => {
 					// https://webidl.spec.whatwg.org/#es-union
@@ -312,9 +311,7 @@ function roundRect(
 		}
 		if (Object(value) === value) {
 			return {
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 				x: toUnrestrictedNumber(value.x || 0),
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 				y: toUnrestrictedNumber(value.y || 0),
 			};
 		}
@@ -329,22 +326,19 @@ function roundRect(
 	function fixOverlappingCorners(corners: any) {
 		const [upperLeft, upperRight, lowerRight, lowerLeft] = corners;
 		const factors = [
-			// eslint-disable-next-line @typescript-eslint/restrict-plus-operands, @typescript-eslint/no-unsafe-member-access
+			// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
 			Math.abs(w) / (upperLeft.x + upperRight.x),
-			// eslint-disable-next-line @typescript-eslint/restrict-plus-operands, @typescript-eslint/no-unsafe-member-access
+			// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
 			Math.abs(h) / (upperRight.y + lowerRight.y),
-			// eslint-disable-next-line @typescript-eslint/restrict-plus-operands, @typescript-eslint/no-unsafe-member-access
+			// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
 			Math.abs(w) / (lowerRight.x + lowerLeft.x),
-			// eslint-disable-next-line @typescript-eslint/restrict-plus-operands, @typescript-eslint/no-unsafe-member-access
+			// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
 			Math.abs(h) / (upperLeft.y + lowerLeft.y),
 		];
 		const minFactor = Math.min(...factors);
 		if (minFactor <= 1) {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 			corners.forEach((radii: any) => {
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 				radii.x *= minFactor;
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 				radii.y *= minFactor;
 			});
 		}

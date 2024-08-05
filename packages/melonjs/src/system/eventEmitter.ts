@@ -37,7 +37,7 @@ export class EventEmitter<Events extends EventsMap = DefaultEvents> {
 		eventListenerList.push(listener);
 	}
 
-	removeAllListeners<E extends keyof Events>(event?: E) {
+	removeAllListeners(event?: keyof Events) {
 		if (event) {
 			delete this.eventListeners[event];
 		} else {
@@ -61,7 +61,6 @@ export class EventEmitter<Events extends EventsMap = DefaultEvents> {
 		const listeners = this.eventListeners[event];
 		if (listeners) {
 			for (const listener of listeners) {
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 				listener(...args);
 			}
 		}
@@ -69,7 +68,6 @@ export class EventEmitter<Events extends EventsMap = DefaultEvents> {
 		const listenersOnce = this.eventListenersOnce[event];
 		if (listenersOnce) {
 			for (const listener of listenersOnce) {
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 				listener(...args);
 			}
 			this.eventListenersOnce[event] = [];
