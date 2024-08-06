@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { Color } from "../src/index.js";
+import { Color, getPool } from "../src/index.js";
 
 describe("Color", () => {
 	let red_color: Color;
@@ -27,6 +27,24 @@ describe("Color", () => {
 			expect(color.g).toEqual(0);
 			expect(color.b).toEqual(0);
 			expect(color.alpha).toEqual(0.5);
+		});
+	});
+
+	describe("get a Color instance from the pool", () => {
+		const pColor = getPool("color").get(0, 128, 0, 1);
+		it("creates a new Color instance with default values", () => {
+			expect(pColor.r).toEqual(0);
+			expect(pColor.g).toEqual(128);
+			expect(pColor.b).toEqual(0);
+			expect(pColor.alpha).toEqual(1);
+		});
+
+		it("get Color instance from the pool using another Color object as parameter", () => {
+			const pColor2 = getPool("color").get(pColor);
+			expect(pColor2.r).toEqual(0);
+			expect(pColor2.g).toEqual(128);
+			expect(pColor2.b).toEqual(0);
+			expect(pColor2.alpha).toEqual(1);
 		});
 	});
 
