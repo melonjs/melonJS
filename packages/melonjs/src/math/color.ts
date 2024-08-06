@@ -219,14 +219,20 @@ export class Color {
 
 	/**
 	 * Creates a new Color instance.
-	 * @param [r] - The red component [0 .. 255]. Defaults to 0.
-	 * @param [g] - The green component [0 .. 255]. Defaults to 0.
-	 * @param [b] - The blue component [0 .. 255]. Defaults to 0.
-	 * @param [alpha] - The alpha value [0.0 .. 1.0]. Defaults to 1.
+	 * @param r - A Color object or the red component [0 .. 255]. Defaults to 0.
+	 * @param g - The green component [0 .. 255]. Defaults to 0.
+	 * @param b - The blue component [0 .. 255]. Defaults to 0.
+	 * @param alpha - The alpha value [0.0 .. 1.0]. Defaults to 1.
 	 */
-	constructor(r = 0, g = 0, b = 0, alpha = 1.0) {
-		this.glArray = new Float32Array([0, 0, 0, 1]);
-		this.setColor(r, g, b, alpha);
+	constructor(r: Color | number = 0, g = 0, b = 0, alpha = 1.0) {
+		if (typeof r === "number") {
+			this.glArray = new Float32Array([0, 0, 0, 1]);
+			this.setColor(r, g, b, alpha);
+		} else if (typeof r === "object") {
+			this.glArray = r.glArray.slice();
+		} else {
+			throw new Error("Color: invalid parameter");
+		}
 	}
 
 	/**
@@ -242,7 +248,7 @@ export class Color {
 	 * @param value - The red component [0 .. 255].
 	 */
 	set r(value) {
-		this.glArray[0] = clamp(~~value || 0, 0, 255) / 255.0;
+		this.glArray[0] = clamp(value, 0, 255) / 255.0;
 	}
 
 	/**
@@ -258,7 +264,7 @@ export class Color {
 	 * @param value - The green component [0 .. 255].
 	 */
 	set g(value) {
-		this.glArray[1] = clamp(~~value || 0, 0, 255) / 255.0;
+		this.glArray[1] = clamp(value, 0, 255) / 255.0;
 	}
 
 	/**
@@ -274,7 +280,7 @@ export class Color {
 	 * @param value - The blue component [0 .. 255].
 	 */
 	set b(value) {
-		this.glArray[2] = clamp(~~value || 0, 0, 255) / 255.0;
+		this.glArray[2] = clamp(value, 0, 255) / 255.0;
 	}
 
 	/**
@@ -290,7 +296,7 @@ export class Color {
 	 * @param value - The alpha component [0.0 .. 1.0].
 	 */
 	set alpha(value) {
-		this.glArray[3] = clamp(+value, 0, 1.0);
+		this.glArray[3] = clamp(value, 0, 1.0);
 	}
 
 	/**
@@ -410,7 +416,7 @@ export class Color {
 	 * @returns Reference to the newly cloned object.
 	 */
 	clone() {
-		return colorPool.get().copy(this);
+		return colorPool.get(this as Color);
 	}
 
 	/**
@@ -693,7 +699,7 @@ export class Color {
 export const colorPool = createPool<
 	Color,
 	[
-		r?: number | undefined,
+		r?: number | Color | undefined,
 		g?: number | undefined,
 		b?: number | undefined,
 		alpha?: number | undefined,
@@ -703,7 +709,7 @@ export const colorPool = createPool<
 	return {
 		instance: color,
 		reset(r = 0, g = 0, b = 0, alpha = 1) {
-			color.setColor(r, g, b, alpha);
+			color.setColor(r as number, g, b, alpha);
 		},
 	};
 });
