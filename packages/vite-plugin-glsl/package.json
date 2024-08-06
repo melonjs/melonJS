@@ -1,0 +1,23 @@
+{
+	"name": "vite-plugin-glsl",
+	"type": "module",
+	"files": ["build", "package.json"],
+	"types": "./build/main.d.ts",
+	"exports": {
+		".": "./build/main.js"
+	},
+	"scripts": {
+		"build": "esbuild src/main.ts --format=esm --bundle --outdir=build --platform=node --external:vite --external:@rollup/pluginutils && tsc --project tsconfig.build.json"
+	},
+	"devDependencies": {
+		"tsconfig": "workspace:*",
+		"vite": "^5.3.5"
+	},
+	"peerDependencies": {
+		"vite": "^5.3.5"
+	},
+	"dependencies": {
+		"@rollup/pluginutils": "^5.1.0",
+		"esbuild": "^0.23.0"
+	}
+}

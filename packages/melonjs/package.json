@@ -60,7 +60,7 @@
 		"typedoc": "^0.26.3",
 		"typedoc-plugin-missing-exports": "^3.0.0",
 		"typescript": "^5.5.3",
-		"vite-plugin-glsl": "^1.3.0"
+		"vite-plugin-glsl": "workspace:vite-plugin-glsl"
 	},
 	"scripts": {
 		"dev": "concurrently --raw \"pnpm build:watch\" \"pnpm tsc:watch\" \"pnpm doc:watch\"",
