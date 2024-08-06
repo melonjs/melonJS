@@ -13,6 +13,23 @@ describe("Color", () => {
 		blue_color = new Color().parseHex("#0000FF");
 	});
 
+	describe("Color constructor", () => {
+		it("creates a new Color instance with default values", () => {
+			expect(green_color.r).toEqual(0);
+			expect(green_color.g).toEqual(128);
+			expect(green_color.b).toEqual(0);
+			expect(green_color.alpha).toEqual(1);
+		});
+
+		it("creates a new Color instance using another Color object as parameter", () => {
+			const color = new Color(red_color);
+			expect(color.r).toEqual(255);
+			expect(color.g).toEqual(0);
+			expect(color.b).toEqual(0);
+			expect(color.alpha).toEqual(0.5);
+		});
+	});
+
 	describe("parseHex Function", () => {
 		// #RGB
 		it("#00F value is rgb(0, 0, 255)", () => {

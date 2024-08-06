@@ -5,6 +5,7 @@
 ### Added
 - Chore: new GitHub Workflow for running the tests (@hornta)
 - Chore: new GitHub Workflow for doc generation and publishing (@hornta)
+- Color: Color constructor now also accepts another Color object as paramater
 - Renderer: new `backgroundColor` property allowing to change the color when clearing the background between frames
 
 ### Fixed

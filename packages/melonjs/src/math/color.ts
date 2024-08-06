@@ -219,14 +219,20 @@ export class Color {
 
 	/**
 	 * Creates a new Color instance.
-	 * @param [r] - The red component [0 .. 255]. Defaults to 0.
-	 * @param [g] - The green component [0 .. 255]. Defaults to 0.
-	 * @param [b] - The blue component [0 .. 255]. Defaults to 0.
-	 * @param [alpha] - The alpha value [0.0 .. 1.0]. Defaults to 1.
+	 * @param r - A Color object or the red component [0 .. 255]. Defaults to 0.
+	 * @param g - The green component [0 .. 255]. Defaults to 0.
+	 * @param b - The blue component [0 .. 255]. Defaults to 0.
+	 * @param alpha - The alpha value [0.0 .. 1.0]. Defaults to 1.
 	 */
-	constructor(r = 0, g = 0, b = 0, alpha = 1.0) {
-		this.glArray = new Float32Array([0, 0, 0, 1]);
-		this.setColor(r, g, b, alpha);
+	constructor(r: Color | number = 0, g = 0, b = 0, alpha = 1.0) {
+		if (typeof r === "number") {
+			this.glArray = new Float32Array([0, 0, 0, 1]);
+			this.setColor(r, g, b, alpha);
+		} else if (typeof r === "object") {
+			this.glArray = r.glArray.slice();
+		} else {
+			throw new Error("Color: invalid parameter");
+		}
 	}
 
 	/**
