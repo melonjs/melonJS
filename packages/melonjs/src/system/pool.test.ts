@@ -14,7 +14,8 @@ test("can acquire objects from the pool", () => {
 	expect(object1).toBeInstanceOf(GameObject);
 	expect(object2).toBeInstanceOf(GameObject);
 	expect(object1).not.toBe(object2);
-	expect(pool.size()).toBe(2);
+	expect(pool.size()).toBe(0);
+	expect(pool.used()).toBe(2);
 });
 
 test("can release objects from the pool", () => {
@@ -23,8 +24,11 @@ test("can release objects from the pool", () => {
 	});
 	const object1 = pool.get();
 	pool.release(object1);
-	pool.get();
 	expect(pool.size()).toBe(1);
+	expect(pool.used()).toBe(0);
+	pool.get();
+	expect(pool.size()).toBe(0);
+	expect(pool.used()).toBe(1);
 });
 
 test("can manually purge", () => {
@@ -32,18 +36,22 @@ test("can manually purge", () => {
 		return { instance: new GameObject() };
 	});
 	const object1 = pool.get();
+	expect(pool.used()).toBe(1);
 	const object2 = pool.get();
 	const object3 = pool.get();
-	expect(pool.size()).toBe(3);
+	expect(pool.size()).toBe(0);
+	expect(pool.used()).toBe(3);
 	pool.release(object1);
-	pool.purge();
-	expect(pool.size()).toBe(2);
+	expect(pool.size()).toBe(1);
+	expect(pool.used()).toBe(2);
 	pool.release(object2);
 	pool.purge();
-	expect(pool.size()).toBe(1);
-	pool.release(object3);
-	pool.purge();
 	expect(pool.size()).toBe(0);
+	expect(pool.used()).toBe(0);
+	pool.release(object3);
+	expect(pool.size()).toBe(1);
+	expect(pool.size()).toBe(1);
+	pool.purge();
 });
 
 test("can pass arguments", () => {

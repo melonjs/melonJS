@@ -150,7 +150,7 @@ export default class Text extends Renderable {
 
 		// anchor point
 		if (typeof settings.anchorPoint !== "undefined") {
-			this.anchorPoint.setV(settings.anchorPoint);
+			this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
 		} else {
 			this.anchorPoint.set(0, 0);
 		}

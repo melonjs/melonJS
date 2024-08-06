@@ -587,7 +587,7 @@ export default class Container extends Renderable {
 		if (this.enableChildBoundsUpdate === true) {
 			this.forEach((child) => {
 				if (child.isRenderable) {
-					const childBounds = child.updateBounds(true);
+					const childBounds = child.updateBounds(absolute);
 					if (childBounds.isFinite()) {
 						bounds.addBounds(childBounds);
 					}
@@ -634,25 +634,6 @@ export default class Container extends Renderable {
 			}
 			return ancestor;
 		}
-	}
-
-	/**
-	 * update the cointainer's bounding rect (private)
-	 * @ignore
-	 */
-	updateBoundsPos(options) {
-		// call the parent method
-		super.updateBoundsPos(options);
-
-		// Notify children that the parent's position has changed
-		this.forEach((child) => {
-			if (child.isRenderable) {
-				child.updateBoundsPos({
-					newX: child.pos.x + options.newX - this.pos.x,
-					newY: child.pos.y + options.newY - this.pos.y,
-				});
-			}
-		});
 	}
 
 	/**

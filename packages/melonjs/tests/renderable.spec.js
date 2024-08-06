@@ -55,6 +55,7 @@ describe("Renderable", () => {
 			renderable = new Renderable(50, 50, 50, 50);
 			childContainer.anchorPoint.set(0, 0);
 			renderable.anchorPoint.set(0, 0);
+			childContainer.enableChildBoundsUpdate = true;
 		});
 
 		it("create and add a child container to the root container", () => {

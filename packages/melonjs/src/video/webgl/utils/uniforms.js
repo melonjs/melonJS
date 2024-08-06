@@ -54,7 +54,7 @@ export function extractUniforms(gl, shader) {
 				};
 			})(name),
 			set: (function (name, type, fn) {
-				if (type.indexOf("mat") === 0) {
+				if (/^mat/.test(type)) {
 					/*
 					 * A generic setter for uniform matrices
 					 */
@@ -67,7 +67,7 @@ export function extractUniforms(gl, shader) {
 					 */
 					return function (val) {
 						let fnv = fn;
-						if (val.length && fn.slice(-1) !== "v") {
+						if (val.length && /v$/.test(fn)) {
 							fnv += "v";
 						}
 						gl[fnv](locations[name], val);

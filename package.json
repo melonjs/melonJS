@@ -17,21 +17,21 @@
 	"packageManager": "pnpm@9.5.0",
 	"dependencies": {
 		"@biomejs/biome": "1.8.3",
-		"@eslint/js": "^9.6.0",
+		"@eslint/js": "^9.8.0",
 		"@types/eslint__js": "^8.42.3",
-		"@types/node": "^20.14.10",
-		"@vitest/browser": "^2.0.2",
-		"eslint": "^9.6.0",
-		"eslint-plugin-jsdoc": "^48.5.2",
-		"globals": "^15.8.0",
-		"lefthook": "^1.7.1",
+		"@types/node": "^22.1.0",
+		"@vitest/browser": "^2.0.5",
+		"eslint": "^9.8.0",
+		"eslint-plugin-jsdoc": "^48.11.0",
+		"globals": "^15.9.0",
+		"lefthook": "^1.7.11",
 		"tsconfig": "workspace:latest",
-		"turbo": "^2.0.7",
-		"typescript": "^5.5.3",
-		"typescript-eslint": "^8.0.0-alpha.41",
-		"vitest": "^2.0.2"
+		"turbo": "^2.0.11",
+		"typescript": "^5.5.4",
+		"typescript-eslint": "^8.0.0",
+		"vitest": "^2.0.5"
 	},
 	"devDependencies": {
-		"playwright": "^1.45.2"
+		"playwright": "^1.45.3"
 	}
 }

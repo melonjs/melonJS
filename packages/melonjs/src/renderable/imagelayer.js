@@ -74,7 +74,7 @@ export default class ImageLayer extends Sprite {
 			if (typeof settings.anchorPoint === "number") {
 				this.anchorPoint.set(settings.anchorPoint, settings.anchorPoint);
 			} /* vector */ else {
-				this.anchorPoint.setV(settings.anchorPoint);
+				this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
 			}
 		}
 

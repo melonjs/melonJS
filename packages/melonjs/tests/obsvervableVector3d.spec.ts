@@ -1,23 +1,102 @@
 import { describe, expect, it } from "vitest";
-import { Vector2d, Vector3d, math } from "../src/index.js";
+import { ObservableVector3d } from "../src/index.js";
+import { Vector3d, Vector2d } from "../src/index.js";
+import { math } from "../src/index.js";
 
-describe("Vector3d", () => {
+describe("ObservableVector3d : constructor", () => {
 	const x = 1;
 	const y = 2;
 	const z = 3;
 
-	let a: Vector3d;
-	let b: Vector3d;
-	let c: Vector3d;
-	let d: Vector3d;
+	let a: ObservableVector3d;
+	let b: ObservableVector3d;
+	let c: ObservableVector3d;
+	let d: ObservableVector3d;
 
-	it("should be initialized to a (0, 0, 0) 3d vector", () => {
-		a = new Vector3d();
-		b = new Vector3d();
-		c = new Vector3d();
-		d = new Vector3d();
+	it("creates a new ObservableVector3d instance with default values", () => {
+		a = new ObservableVector3d();
+		b = new ObservableVector3d();
+		c = new ObservableVector3d();
+		d = new ObservableVector3d();
 
 		expect(a.toString()).toEqual("x:0,y:0,z:0");
+	});
+
+	it("creates a new ObservableVector3d instance with specified values", () => {
+		const observableVector = new ObservableVector3d(10, 20, 3);
+		expect(observableVector.x).toEqual(10);
+		expect(observableVector.y).toEqual(20);
+		expect(observableVector.z).toEqual(3);
+	});
+
+	it("values can be compared with an other ObservableVector3d object", () => {
+		const observableVector = new ObservableVector3d(10, 20, 3);
+		const vector3 = new Vector3d(10, 20, 3);
+		expect(observableVector.equals(vector3)).toEqual(true);
+	});
+
+	it("triggers the callback function when setting values", () => {
+		let callbackCalled = false;
+		const callback = () => {
+			callbackCalled = true;
+		};
+		const observableVector = new ObservableVector3d(0, 0, 0, callback);
+		expect(observableVector.x).toEqual(0);
+		expect(observableVector.y).toEqual(0);
+		expect(callbackCalled).toEqual(false);
+
+		observableVector.x = 10;
+		expect(observableVector.x).toEqual(10);
+		expect(callbackCalled).toEqual(true);
+	});
+
+	it("triggers the callback function when calling set()", () => {
+		let callbackCalled = false;
+		const callback = () => {
+			callbackCalled = true;
+		};
+		const observableVector = new ObservableVector3d(1, 2, 3, callback);
+		expect(observableVector.x).toEqual(1);
+		expect(observableVector.y).toEqual(2);
+		expect(observableVector.z).toEqual(3);
+		expect(callbackCalled).toEqual(false);
+
+		observableVector.set(10, 20);
+		expect(observableVector.equals(10, 20)).toEqual(true);
+		expect(callbackCalled).toEqual(true);
+	});
+
+	it("does not trigger the callback function when using setMuted", () => {
+		let callbackCalled = false;
+		const callback = () => {
+			callbackCalled = true;
+		};
+		const observableVector = new ObservableVector3d(1, 2, 3, callback);
+		expect(observableVector.x).toEqual(1);
+		expect(observableVector.y).toEqual(2);
+		expect(observableVector.z).toEqual(3);
+		expect(callbackCalled).toEqual(false);
+
+		observableVector.setMuted(10, 20, 0);
+		expect(observableVector.equals(10, 20, 0)).toEqual(true);
+		expect(callbackCalled).toEqual(false);
+	});
+
+	it("does not trigger the callback function when revoked", () => {
+		let callbackCalled = false;
+		const callback = () => {
+			callbackCalled = true;
+		};
+		const observableVector = new ObservableVector3d(1, 2, 3, callback);
+		expect(observableVector.x).toEqual(1);
+		expect(observableVector.y).toEqual(2);
+		expect(observableVector.z).toEqual(3);
+		expect(callbackCalled).toEqual(false);
+
+		observableVector.revoke();
+		expect(() => {
+			observableVector.set(20, 10);
+		}).toThrow();
 	});
 
 	it("a(1, 2, 3) should be copied into b", () => {
@@ -122,19 +201,20 @@ describe("Vector3d", () => {
 	});
 
 	it("lerp functions", () => {
+		const l = new ObservableVector3d();
 		a.set(x, 0, z);
 		b.set(0, -y, 0);
 
-		expect(a.clone().lerp(a, 0).equals(a.lerp(a, 0.5))).toEqual(true);
-		expect(a.clone().lerp(a, 0).equals(a.lerp(a, 1))).toEqual(true);
+		expect(l.copy(a).lerp(a, 0).equals(a.lerp(a, 0.5))).toEqual(true);
+		expect(l.copy(a).lerp(a, 0).equals(a.lerp(a, 1))).toEqual(true);
 
-		expect(a.clone().lerp(b, 0).equals(a)).toEqual(true);
+		expect(l.copy(a).lerp(b, 0).equals(a)).toEqual(true);
 
-		expect(a.clone().lerp(b, 0.5).x).toEqual(x * 0.5);
-		expect(a.clone().lerp(b, 0.5).y).toEqual(-y * 0.5);
-		expect(a.clone().lerp(b, 0.5).z).toEqual(z * 0.5);
+		expect(l.copy(a).lerp(b, 0.5).x).toEqual(x * 0.5);
+		expect(l.copy(a).lerp(b, 0.5).y).toEqual(-y * 0.5);
+		expect(l.copy(a).lerp(b, 0.5).z).toEqual(z * 0.5);
 
-		expect(a.clone().lerp(b, 1).equals(b)).toEqual(true);
+		expect(l.copy(a).lerp(b, 1).equals(b)).toEqual(true);
 	});
 
 	it("normalize function", () => {
@@ -265,7 +345,7 @@ describe("Vector3d", () => {
 	it("rotate around a given 2d point", () => {
 		a.set(1, 0, 1);
 		// rotate the vector by 90 degree clockwise on the z axis
-		a.rotate(Math.PI / 2, { x: 1, y: 1 });
+		a.rotate(Math.PI / 2, new Vector2d(1, 1));
 
 		expect(a.x).toBeCloseTo(2, 5);
 		expect(a.y).toBeCloseTo(1, 5);

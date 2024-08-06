@@ -85,6 +85,19 @@ export default class Renderer {
 		this.type = "Generic";
 
 		/**
+		 * The background color used to clear the main framebuffer.
+		 * Note: alpha value will be set based on the transparent property of the renderer settings.
+		 * @default black
+		 * @type {Color}
+		 */
+		this.backgroundColor = new Color(
+			0,
+			0,
+			0,
+			this.settings.transparent ? 0.0 : 1.0,
+		);
+
+		/**
 		 * @ignore
 		 */
 		this.currentScissor = new Int32Array([
