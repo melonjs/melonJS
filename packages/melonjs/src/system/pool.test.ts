@@ -31,6 +31,17 @@ test("can release objects from the pool", () => {
 	expect(pool.used()).toBe(1);
 });
 
+test("can not release instance that already exist in pool", () => {
+	const pool = createPool(() => {
+		return { instance: new GameObject() };
+	});
+	const object1 = pool.get();
+	pool.release(object1);
+	expect(() => {
+		pool.release(object1);
+	}).toThrow();
+});
+
 test("can manually purge", () => {
 	const pool = createPool(() => {
 		return { instance: new GameObject() };
