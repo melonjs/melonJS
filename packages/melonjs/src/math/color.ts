@@ -248,7 +248,7 @@ export class Color {
 	 * @param value - The red component [0 .. 255].
 	 */
 	set r(value) {
-		this.glArray[0] = clamp(~~value, 0, 255) / 255.0;
+		this.glArray[0] = clamp(value, 0, 255) / 255.0;
 	}
 
 	/**
@@ -264,7 +264,7 @@ export class Color {
 	 * @param value - The green component [0 .. 255].
 	 */
 	set g(value) {
-		this.glArray[1] = clamp(~~value, 0, 255) / 255.0;
+		this.glArray[1] = clamp(value, 0, 255) / 255.0;
 	}
 
 	/**
@@ -280,7 +280,7 @@ export class Color {
 	 * @param value - The blue component [0 .. 255].
 	 */
 	set b(value) {
-		this.glArray[2] = clamp(~~value, 0, 255) / 255.0;
+		this.glArray[2] = clamp(value, 0, 255) / 255.0;
 	}
 
 	/**
@@ -296,7 +296,7 @@ export class Color {
 	 * @param value - The alpha component [0.0 .. 1.0].
 	 */
 	set alpha(value) {
-		this.glArray[3] = clamp(+value, 0, 1.0);
+		this.glArray[3] = clamp(value, 0, 1.0);
 	}
 
 	/**
