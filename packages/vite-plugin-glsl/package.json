@@ -1,5 +1,6 @@
 {
 	"name": "vite-plugin-glsl",
+	"version": "0.0.0",
 	"type": "module",
 	"files": ["build", "package.json"],
 	"types": "./build/main.d.ts",
