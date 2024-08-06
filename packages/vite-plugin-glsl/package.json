@@ -4,6 +4,7 @@
 	"type": "module",
 	"files": ["build", "package.json"],
 	"types": "./build/main.d.ts",
+	"main": "./build/main.js",
 	"exports": {
 		".": "./build/main.js"
 	},
