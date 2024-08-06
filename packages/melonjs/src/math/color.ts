@@ -416,7 +416,7 @@ export class Color {
 	 * @returns Reference to the newly cloned object.
 	 */
 	clone() {
-		return colorPool.get().copy(this);
+		return colorPool.get(this as Color);
 	}
 
 	/**
@@ -699,7 +699,7 @@ export class Color {
 export const colorPool = createPool<
 	Color,
 	[
-		r?: number | undefined,
+		r?: number | Color | undefined,
 		g?: number | undefined,
 		b?: number | undefined,
 		alpha?: number | undefined,
@@ -709,7 +709,7 @@ export const colorPool = createPool<
 	return {
 		instance: color,
 		reset(r = 0, g = 0, b = 0, alpha = 1) {
-			color.setColor(r, g, b, alpha);
+			color.setColor(r as number, g, b, alpha);
 		},
 	};
 });
