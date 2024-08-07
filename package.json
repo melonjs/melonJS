@@ -8,7 +8,7 @@
 	"scripts": {
 		"build": "turbo build",
 		"dev": "turbo dev",
-		"lint": "eslint && biome check && turbo test:types",
+		"lint": "turbo build && eslint && biome check && turbo test:types",
 		"test": "turbo build && vitest",
 		"doc": "pnpm -F melonjs doc",
 		"publish-melonjs": "pnpm lint && pnpm biome check && pnpm publish --filter melonjs",
