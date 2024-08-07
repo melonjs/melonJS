@@ -9,7 +9,7 @@
 		"build": "turbo build",
 		"dev": "turbo dev",
 		"lint": "eslint && biome check && turbo test:types",
-		"test": "vitest",
+		"test": "turbo build && vitest",
 		"doc": "pnpm -F melonjs doc",
 		"publish-melonjs": "pnpm lint && pnpm biome check && pnpm publish --filter melonjs",
 		"publish-debug-plugin": "pnpm lint && pnpm biome check && pnpm publish --filter debug-plugin"
@@ -26,7 +26,7 @@
 		"globals": "^15.9.0",
 		"lefthook": "^1.7.11",
 		"tsconfig": "workspace:latest",
-		"turbo": "^2.0.11",
+		"turbo": "^2.0.12",
 		"typescript": "^5.5.4",
 		"typescript-eslint": "^8.0.0",
 		"vitest": "^2.0.5"

@@ -68,7 +68,7 @@
 		"build:watch": "tsx scripts/build.js watch",
 		"build": "tsx scripts/build.js && pnpm types",
 		"dist": "pnpm clean && pnpm vitest run && pnpm build && pnpm doc",
-		"doc": "typedoc src/index.js --plugin typedoc-plugin-missing-exports",
+		"doc": "typedoc src/index.js --plugin typedoc-plugin-missing-exports --tsconfig tsconfig.build.json",
 		"doc:watch": "typedoc src/index.js --plugin typedoc-plugin-missing-exports --watch --skipErrorChecking --preserveWatchOutput --logLevel Error",
 		"serve": "serve docs",
 		"prepublishOnly": "pnpm dist",
