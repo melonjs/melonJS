@@ -2,7 +2,7 @@ import { Rect } from "./../geometries/rectangle.ts";
 import { Ellipse } from "./../geometries/ellipse.ts";
 import { Polygon, polygonPool } from "../geometries/polygon.ts";
 import { Bounds, boundsPool } from "./bounds.ts";
-import pool from "./../system/pooling.js";
+import pool from "../system/legacy_pool.js";
 import { collision } from "./collision.js";
 import timer from "./../system/timer.ts";
 import { clamp } from "./../math/math.ts";

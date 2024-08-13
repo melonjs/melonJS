@@ -10,6 +10,7 @@ import { matrix3dPool } from "./math/matrix3d";
 import { vector2dPool } from "./math/vector2d";
 import { vector3dPool } from "./math/vector3d";
 import { boundsPool } from "./physics/bounds";
+import { tweenPool } from "./tweens/tween";
 
 const pools = {
 	vector2d: vector2dPool,
@@ -24,6 +25,7 @@ const pools = {
 	rectangle: rectPool,
 	roundedRectangle: roundedRectanglePool,
 	ellipse: ellipsePool,
+	tween: tweenPool,
 } as const;
 
 type PoolKey = keyof typeof pools;
@@ -31,3 +33,5 @@ type PoolKey = keyof typeof pools;
 export const getPool = <K extends PoolKey>(key: K): (typeof pools)[K] => {
 	return pools[key];
 };
+
+export { createPool } from "./system/pool";

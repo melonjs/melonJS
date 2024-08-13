@@ -56,7 +56,7 @@ import Application from "./application/application.js";
 import { cache as plugins } from "./plugin/plugin.js";
 import save from "./system/save.ts";
 import timer from "./system/timer.ts";
-import pool from "./system/pooling.js";
+import pool from "./system/legacy_pool.js";
 import state from "./state/state.js";
 import { BOOT, DOM_READY, eventEmitter } from "./system/event.ts";
 import { setNocache } from "./loader/loader.js";
@@ -203,7 +203,6 @@ export function boot() {
 	pool.register("me.Collectable", Collectable);
 	pool.register("me.Trigger", Trigger);
 	pool.register("me.Light2d", Light2d);
-	pool.register("me.Tween", Tween, true);
 	pool.register("me.Particle", Particle, true);
 	pool.register("me.Sprite", Sprite);
 	pool.register("me.NineSliceSprite", NineSliceSprite);

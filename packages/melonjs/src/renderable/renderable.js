@@ -1,5 +1,5 @@
 import { Rect } from "./../geometries/rectangle.ts";
-import pool from "./../system/pooling.js";
+import pool from "../system/legacy_pool.js";
 import { releaseAllPointerEvents } from "./../input/input.js";
 import { clamp } from "./../math/math.ts";
 import Body from "./../physics/body.js";

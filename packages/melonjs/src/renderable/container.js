@@ -2,7 +2,7 @@ import Renderable from "./renderable.js";
 import { createGUID } from "../utils/utils";
 import { defer } from "../utils/function";
 import { game } from "../index.js";
-import pool from "../system/pooling.js";
+import pool from "../system/legacy_pool.js";
 import state from "../state/state.js";
 import Body from "../physics/body.js";
 import { CANVAS_ONRESIZE, eventEmitter } from "../system/event.ts";

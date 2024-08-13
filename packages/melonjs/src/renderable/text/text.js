@@ -1,6 +1,6 @@
 import { Color, colorPool } from "../../math/color.ts";
 import { renderer as globalRenderer } from "../../video/video.js";
-import pool from "../../system/pooling.js";
+import pool from "../../system/legacy_pool.js";
 import Renderable from "../renderable.js";
 import { nextPowerOfTwo } from "../../math/math.ts";
 import setContextStyle from "./textstyle.js";

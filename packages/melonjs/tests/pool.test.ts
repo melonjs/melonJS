@@ -1,8 +1,16 @@
 import { expect, test, vi } from "vitest";
-import { createPool } from "./pool";
+import { createPool } from "../src/pool";
 
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
-class GameObject {}
+class GameObject {
+	destroyCalled = false;
+	resetCalled = false;
+	reset() {
+		this.resetCalled = true;
+	}
+	destroy() {
+		this.destroyCalled = true;
+	}
+}
 
 test("can acquire objects from the pool", () => {
 	const pool = createPool(() => {
@@ -29,6 +37,32 @@ test("can release objects from the pool", () => {
 	pool.get();
 	expect(pool.size()).toBe(0);
 	expect(pool.used()).toBe(1);
+});
+
+test("object reset and destroy are called when getting & releasing object", () => {
+	const pool = createPool(() => {
+		const gameObject = new GameObject();
+		return {
+			instance: gameObject,
+			reset: () => {
+				gameObject.reset();
+			},
+			destroy: () => {
+				gameObject.destroy();
+			},
+		};
+	});
+	const object1 = pool.get();
+
+	expect(object1).toBeInstanceOf(GameObject);
+	expect(object1.resetCalled).toEqual(false);
+	expect(object1.destroyCalled).toEqual(false);
+	pool.release(object1);
+	expect(object1.destroyCalled).toEqual(true);
+
+	const object2 = pool.get();
+	expect(object2).toBeInstanceOf(GameObject);
+	expect(object2.resetCalled).toEqual(true);
 });
 
 test("can not release instance that already exist in pool", () => {

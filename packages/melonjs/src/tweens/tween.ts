@@ -1,5 +1,6 @@
 import timer from "../system/timer.js";
 import { game } from "../index.js";
+import { createPool } from "../system/pool.ts";
 import { Easing, EasingFunction } from "./easing.js";
 import { Interpolation, InterpolationFunction } from "./interpolation.js";
 import { eventEmitter, STATE_RESUME } from "../system/event.js";
@@ -71,14 +72,6 @@ export default class Tween<T extends Record<string, unknown>> {
 		this.setProperties(object);
 
 		this.#boundResumeCallback = this._resumeCallback.bind(this);
-	}
-
-	/**
-	 * reset the tween object to default value
-	 * @ignore
-	 */
-	onResetEvent(object: T) {
-		this.setProperties(object);
 	}
 
 	/**
@@ -456,3 +449,16 @@ export default class Tween<T extends Record<string, unknown>> {
 		return Interpolation;
 	}
 }
+
+export const tweenPool = createPool(
+	<T extends Record<string, unknown>>(object: T) => {
+		const tween = new Tween(object);
+
+		return {
+			instance: tween,
+			reset(object: T) {
+				tween.setProperties(object);
+			},
+		};
+	},
+);

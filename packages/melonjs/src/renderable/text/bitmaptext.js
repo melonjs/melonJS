@@ -1,5 +1,5 @@
 import { Color } from "../../math/color.ts";
-import pool from "../../system/pooling.js";
+import pool from "../../system/legacy_pool.js";
 import { getImage, getBinary } from "../../loader/loader.js";
 import Renderable from "../renderable.js";
 import TextMetrics from "./textmetrics.js";

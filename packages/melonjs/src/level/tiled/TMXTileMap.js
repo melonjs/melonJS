@@ -1,4 +1,4 @@
-import pool from "./../../system/pooling.js";
+import pool from "../../system/legacy_pool.js";
 import { game } from "../../index.js";
 import { checkVersion } from "./../../utils/utils.ts";
 import { collision } from "./../../physics/collision.js";

@@ -1,7 +1,7 @@
 import { Vector2d } from "../../math/vector2d.ts";
 import Sprite from "./../../renderable/sprite.js";
 import { renderer } from "./../video.js";
-import pool from "./../../system/pooling.js";
+import pool from "../../system/legacy_pool.js";
 import { getImage } from "./../../loader/loader.js";
 import { parseTexturePacker } from "./parser/texturepacker.js";
 import { parseSpriteSheet } from "./parser/spritesheet.js";

@@ -1,6 +1,6 @@
 import { ellipsePool } from "./../geometries/ellipse.ts";
 import { colorPool } from "./../math/color.ts";
-import pool from "./../system/pooling.js";
+import pool from "../system/legacy_pool.js";
 import Renderable from "./renderable.js";
 
 /**

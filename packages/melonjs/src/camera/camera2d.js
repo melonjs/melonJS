@@ -4,7 +4,6 @@ import { Matrix2d } from "../math/matrix2d.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Rect } from "./../geometries/rectangle.ts";
 import { renderer } from "./../video/video.js";
-import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
 import { clamp, toBeCloseTo } from "./../math/math.ts";
 import { game } from "../index.js";
@@ -17,6 +16,7 @@ import {
 } from "../system/event.ts";
 import { boundsPool } from "./../physics/bounds.ts";
 import { colorPool } from "../math/color.ts";
+import { tweenPool } from "../tweens/tween.ts";
 
 /**
  * @import {Bounds} from "./../physics/bounds.ts";
@@ -520,9 +520,9 @@ export default class Camera2d extends Renderable {
 	 * });
 	 */
 	fadeOut(color, duration = 1000, onComplete) {
-		this._fadeOut.color = colorPool.get().copy(color);
-		this._fadeOut.tween = pool
-			.pull("Tween", this._fadeOut.color)
+		this._fadeOut.color = colorPool.get(color);
+		this._fadeOut.tween = tweenPool
+			.get(this._fadeOut.color)
 			.to({ alpha: 0.0 }, { duration })
 			.onComplete(onComplete || null);
 		this._fadeOut.tween.isPersistent = true;
@@ -540,11 +540,11 @@ export default class Camera2d extends Renderable {
 	 * me.game.viewport.fadeIn("#FFFFFF", 75);
 	 */
 	fadeIn(color, duration = 1000, onComplete) {
-		this._fadeIn.color = colorPool.get().copy(color);
+		this._fadeIn.color = colorPool.get(color);
 		const _alpha = this._fadeIn.color.alpha;
 		this._fadeIn.color.alpha = 0.0;
-		this._fadeIn.tween = pool
-			.pull("Tween", this._fadeIn.color)
+		this._fadeIn.tween = tweenPool
+			.get(this._fadeIn.color)
 			.to({ alpha: _alpha }, { duration })
 			.onComplete(onComplete || null);
 		this._fadeIn.tween.isPersistent = true;
