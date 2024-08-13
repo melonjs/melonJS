@@ -123,6 +123,9 @@ importers:
       howler:
         specifier: 2.2.4
         version: 2.2.4
+      vite:
+        specifier: '5.4'
+        version: 5.4.0(@types/node@20.14.10)
     devDependencies:
       '@types/howler':
         specifier: ^2.2.11
@@ -5055,6 +5058,15 @@ snapshots:
       rollup: 4.18.1
     optionalDependencies:
       '@types/node': 22.2.0
+      fsevents: 2.3.3
+
+  vite@5.4.0(@types/node@20.14.10):
+    dependencies:
+      esbuild: 0.21.5
+      postcss: 8.4.41
+      rollup: 4.20.0
+    optionalDependencies:
+      '@types/node': 20.14.10
       fsevents: 2.3.3
 
   vite@5.4.0(@types/node@22.2.0):
