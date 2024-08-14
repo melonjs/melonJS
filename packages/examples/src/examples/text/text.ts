@@ -91,7 +91,7 @@ export class TextTest extends Renderable {
 
 		// Draw the baseline
 		video.renderer.setColor("red");
-		video.renderer.setLineWidth(3);
+		video.renderer.lineWidth = 3;
 		video.renderer.strokeLine(
 			0,
 			baseline + 0.5,
