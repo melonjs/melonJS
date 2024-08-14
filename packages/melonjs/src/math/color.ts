@@ -307,11 +307,12 @@ export class Color {
 	 * @param [alpha] - The alpha value [0.0 .. 1.0]. Defaults to 1.
 	 * @returns Reference to this object for method chaining.
 	 */
-	setColor(r: number, g: number, b: number, alpha = 1.0) {
+	setColor(r: number = 0, g: number = 0, b: number = 0, alpha = 1.0) {
 		this.r = r;
 		this.g = g;
 		this.b = b;
 		this.alpha = alpha;
+
 		return this;
 	}
 
@@ -424,9 +425,9 @@ export class Color {
 	 * @param color - The color to copy.
 	 * @returns Reference to this object for method chaining.
 	 */
-	copy(color: Color) {
+	copy(color: Color | string) {
 		if (typeof color === "string") {
-			return this.parseCSS(color);
+			return this.parseCSS(color as ColorName);
 		} else {
 			this.glArray.set(color.glArray);
 			return this;
@@ -708,8 +709,12 @@ export const colorPool = createPool<
 	const color = new Color(r, g, b, alpha);
 	return {
 		instance: color,
-		reset(r = 0, g = 0, b = 0, alpha = 1) {
-			color.setColor(r as number, g, b, alpha);
+		reset(r, g, b, alpha) {
+			if (typeof r === "number") {
+				color.setColor(r, g, b, alpha);
+			} else {
+				color.copy(r as Color | string);
+			}
 		},
 	};
 });
