@@ -123,9 +123,6 @@ importers:
       howler:
         specifier: 2.2.4
         version: 2.2.4
-      vite:
-        specifier: '5.4'
-        version: 5.4.0(@types/node@20.14.10)
     devDependencies:
       '@types/howler':
         specifier: ^2.2.11
@@ -163,6 +160,9 @@ importers:
       typescript:
         specifier: ^5.5.3
         version: 5.5.3
+      vite:
+        specifier: '5.4'
+        version: 5.4.0(@types/node@20.14.10)
       vite-plugin-glsl:
         specifier: workspace:vite-plugin-glsl
         version: link:../vite-plugin-glsl
