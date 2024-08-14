@@ -32,7 +32,7 @@ describe("Color", () => {
 
 	describe("get a Color instance from the pool", () => {
 		const pColor = getPool("color").get(0, 128, 0, 1);
-		it("creates a new Color instance with default values", () => {
+		it("creates a new Color instance with specific values", () => {
 			expect(pColor.r).toEqual(0);
 			expect(pColor.g).toEqual(128);
 			expect(pColor.b).toEqual(0);
@@ -61,6 +61,14 @@ describe("Color", () => {
 			expect(pColor3.g).toEqual(0);
 			expect(pColor3.b).toEqual(255);
 			expect(pColor3.alpha).toEqual(1);
+		});
+
+		it("get Color instance from the pool usinng default values", () => {
+			const pColor4 = getPool("color").get();
+			expect(pColor4.r).toEqual(0);
+			expect(pColor4.g).toEqual(0);
+			expect(pColor4.b).toEqual(0);
+			expect(pColor4.alpha).toEqual(1);
 		});
 	});
 
