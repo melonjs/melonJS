@@ -5,6 +5,7 @@ import Renderable from "../renderable.js";
 import { nextPowerOfTwo } from "../../math/math.ts";
 import setContextStyle from "./textstyle.js";
 import TextMetrics from "./textmetrics.js";
+import CanvasRenderTarget from "../../video/rendertarget/canvasrendertarget.js";
 
 /*
  * ASCII Table
@@ -173,7 +174,7 @@ export default class Text extends Renderable {
 
 		// the canvas Texture used to render this text
 		// XXX: offscreenCanvas is currently disabled for text rendering due to issue in WebGL mode
-		this.canvasTexture = pool.pull("CanvasRenderTarget", 2, 2, {
+		this.canvasTexture = new CanvasRenderTarget(2, 2, {
 			offscreenCanvas: false,
 		});
 
@@ -403,6 +404,7 @@ export default class Text extends Renderable {
 		}
 		globalRenderer.cache.delete(this.canvasTexture.canvas);
 		pool.push(this.canvasTexture);
+		this.canvasTexture.destroy();
 		this.canvasTexture = undefined;
 		colorPool.release(this.fillStyle);
 		colorPool.release(this.strokeStyle);

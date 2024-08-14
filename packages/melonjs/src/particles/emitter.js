@@ -2,12 +2,13 @@ import pool from "../system/legacy_pool.js";
 import ParticleEmitterSettings from "./settings.js";
 import { randomFloat } from "./../math/math.ts";
 import Container from "./../renderable/container.js";
+import CanvasRenderTarget from "../video/rendertarget/canvasrendertarget.js";
 
 /**
  * @ignore
  */
 function createDefaultParticleTexture(w = 8, h = 8) {
-	const defaultParticleTexture = pool.pull("CanvasRenderTarget", w, h, {
+	const defaultParticleTexture = new CanvasRenderTarget(w, h, {
 		offscreenCanvas: true,
 	});
 

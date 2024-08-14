@@ -2,6 +2,7 @@ import { ellipsePool } from "./../geometries/ellipse.ts";
 import { colorPool } from "./../math/color.ts";
 import pool from "../system/legacy_pool.js";
 import Renderable from "./renderable.js";
+import CanvasRenderTarget from "../video/rendertarget/canvasrendertarget.js";
 
 /**
  * additional import for TypeScript
@@ -142,7 +143,7 @@ export default class Light2d extends Renderable {
 		);
 
 		/** @ignore */
-		this.texture = pool.pull("CanvasRenderTarget", this.width, this.height, {
+		this.texture = new CanvasRenderTarget(this.width, this.height, {
 			offscreenCanvas: false,
 		});
 
@@ -194,6 +195,7 @@ export default class Light2d extends Renderable {
 		colorPool.release(this.color);
 		this.color = undefined;
 		pool.push(this.texture);
+		this.texture.destroy();
 		this.texture = undefined;
 		ellipsePool.release(this.visibleArea);
 		this.visibleArea = undefined;
