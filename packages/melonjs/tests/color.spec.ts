@@ -46,6 +46,22 @@ describe("Color", () => {
 			expect(pColor2.b).toEqual(0);
 			expect(pColor2.alpha).toEqual(1);
 		});
+
+		it("get Color instance from the pool using a CSS String object as parameter", () => {
+			const pColor2 = getPool("color").get("#008000");
+			expect(pColor2.r).toEqual(0);
+			expect(pColor2.g).toEqual(128);
+			expect(pColor2.b).toEqual(0);
+			expect(pColor2.alpha).toEqual(1);
+		});
+
+		it("get Color instance from the pool using a rgb String object as parameter", () => {
+			const pColor3 = getPool("color").get("rgb(0,0,255)");
+			expect(pColor3.r).toEqual(0);
+			expect(pColor3.g).toEqual(0);
+			expect(pColor3.b).toEqual(255);
+			expect(pColor3.alpha).toEqual(1);
+		});
 	});
 
 	describe("parseHex Function", () => {

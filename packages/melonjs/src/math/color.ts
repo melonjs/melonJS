@@ -224,10 +224,13 @@ export class Color {
 	 * @param b - The blue component [0 .. 255]. Defaults to 0.
 	 * @param alpha - The alpha value [0.0 .. 1.0]. Defaults to 1.
 	 */
-	constructor(r: Color | number = 0, g = 0, b = 0, alpha = 1.0) {
+	constructor(r: Color | string | number = 0, g = 0, b = 0, alpha = 1.0) {
 		if (typeof r === "number") {
 			this.glArray = new Float32Array([0, 0, 0, 1]);
 			this.setColor(r, g, b, alpha);
+		} else if (typeof r === "string") {
+			this.glArray = new Float32Array([0, 0, 0, 1]);
+			this.parseCSS(r as ColorName);
 		} else if (typeof r === "object") {
 			this.glArray = r.glArray.slice();
 		} else {
@@ -564,7 +567,12 @@ export class Color {
 		if (!match) {
 			return this.parseHex(rgbColor as `#${string}`);
 		}
-		return this.setColor(+match[1], +match[2], +match[3], +match[5]);
+		return this.setColor(
+			+match[1],
+			+match[2],
+			+match[3],
+			typeof match[5] !== "undefined" ? +match[5] : 1,
+		);
 	}
 
 	/**
@@ -700,7 +708,7 @@ export class Color {
 export const colorPool = createPool<
 	Color,
 	[
-		r?: number | Color | undefined,
+		r?: number | string | Color | undefined,
 		g?: number | undefined,
 		b?: number | undefined,
 		alpha?: number | undefined,
