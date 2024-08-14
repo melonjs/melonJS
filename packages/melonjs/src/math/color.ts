@@ -718,10 +718,14 @@ export const colorPool = createPool<
 	return {
 		instance: color,
 		reset(r, g, b, alpha) {
-			if (typeof r === "number") {
-				color.setColor(r, g, b, alpha);
+			if (arguments.length === 0) {
+				color.setColor();
 			} else {
-				color.copy(r as Color | string);
+				if (typeof r === "number") {
+					color.setColor(r, g, b, alpha);
+				} else {
+					color.copy(r as Color | string);
+				}
 			}
 		},
 	};
