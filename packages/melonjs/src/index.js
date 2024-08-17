@@ -228,7 +228,6 @@ export function boot() {
 	pool.register("BitmapTextData", BitmapTextData, true);
 	pool.register("ImageLayer", ImageLayer);
 	pool.register("ColorLayer", ColorLayer, true);
-	pool.register("CanvasRenderTarget", CanvasRenderTarget, true);
 
 	// publish Boot notification
 	eventEmitter.emit(BOOT);
