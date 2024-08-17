@@ -590,7 +590,8 @@ export default class Renderable extends Rect {
 	 * @param {number} dt - time since the last update in milliseconds.
 	 * @returns {boolean} true if the renderable is dirty
 	 */
-	update() {
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	update(dt) {
 		return this.isDirty;
 	}
 
@@ -730,7 +731,8 @@ export default class Renderable extends Rect {
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
 	 */
-	draw() {
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	draw(renderer, viewport) {
 		// empty one !
 	}
 
