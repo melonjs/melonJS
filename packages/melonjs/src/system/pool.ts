@@ -14,12 +14,12 @@ export interface Pool<T, A extends unknown[]> {
 }
 
 type Reset<A extends unknown[]> = ((...args: A) => void) | undefined;
-type Destroy = (() => void) | undefined;
+type Release = (() => void) | undefined;
 
 export interface CreatePoolOptions<T, A extends unknown[]> {
 	instance: T;
 	reset?: Reset<A>;
-	destroy?: Destroy;
+	release?: Release;
 }
 
 export const createPool = <T, A extends unknown[]>(
@@ -27,7 +27,7 @@ export const createPool = <T, A extends unknown[]>(
 ): Pool<T, A> => {
 	const available = new Set<T>();
 	const instanceResetMethods = new Map<T, Reset<A>>();
-	const instanceDestroyMethods = new Map<T, Destroy>();
+	const instanceReleaseMethods = new Map<T, Release>();
 	let inUse: number = 0;
 
 	return {
@@ -39,8 +39,8 @@ export const createPool = <T, A extends unknown[]>(
 			if (available.has(instance)) {
 				throw new Error("Instance is already in pool.");
 			}
-			const destroy = instanceDestroyMethods.get(instance);
-			destroy?.();
+			const release = instanceReleaseMethods.get(instance);
+			release?.();
 			available.add(instance);
 			inUse--;
 		},
@@ -56,9 +56,9 @@ export const createPool = <T, A extends unknown[]>(
 				inUse++;
 				return object;
 			} else {
-				const { instance, reset, destroy } = options(...args);
+				const { instance, reset, release } = options(...args);
 				instanceResetMethods.set(instance, reset);
-				instanceDestroyMethods.set(instance, destroy);
+				instanceReleaseMethods.set(instance, release);
 				inUse++;
 				return instance;
 			}

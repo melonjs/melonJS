@@ -7,7 +7,7 @@ class GameObject {
 	reset() {
 		this.resetCalled = true;
 	}
-	destroy() {
+	release() {
 		this.destroyCalled = true;
 	}
 }
@@ -47,8 +47,8 @@ test("object reset and destroy are called when getting & releasing object", () =
 			reset: () => {
 				gameObject.reset();
 			},
-			destroy: () => {
-				gameObject.destroy();
+			release: () => {
+				gameObject.release();
 			},
 		};
 	});
