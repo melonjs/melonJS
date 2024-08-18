@@ -9,6 +9,7 @@ import { matrix2dPool } from "./math/matrix2d";
 import { matrix3dPool } from "./math/matrix3d";
 import { vector2dPool } from "./math/vector2d";
 import { vector3dPool } from "./math/vector3d";
+import { particlePool } from "./particles/particle";
 import { boundsPool } from "./physics/bounds";
 import { tweenPool } from "./tweens/tween";
 
@@ -26,12 +27,21 @@ const pools = {
 	roundedRectangle: roundedRectanglePool,
 	ellipse: ellipsePool,
 	tween: tweenPool,
+	particle: particlePool,
 } as const;
 
 type PoolKey = keyof typeof pools;
 
 export const getPool = <K extends PoolKey>(key: K): (typeof pools)[K] => {
 	return pools[key];
+};
+
+export const getTotalPoolSize = (): number => {
+	let totalSize = 0;
+	for (const key in pools) {
+		totalSize += pools[key as PoolKey].size();
+	}
+	return totalSize;
 };
 
 export { createPool } from "./system/pool";

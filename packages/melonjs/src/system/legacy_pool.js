@@ -1,3 +1,5 @@
+import { getTotalPoolSize } from "../pool";
+
 /**
  * Object pooling - a technique that might speed up your game if used properly.<br>
  * If some of your classes will be instantiated and removed a lot at a time, it is a
@@ -167,7 +169,7 @@ class ObjectPool {
 	 * @returns {number} amount of object instance
 	 */
 	getInstanceCount() {
-		return this.instance_counter;
+		return this.instance_counter + getTotalPoolSize();
 	}
 }
 

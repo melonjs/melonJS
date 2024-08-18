@@ -1,4 +1,4 @@
-import pool from "../system/legacy_pool.js";
+import { particlePool } from "./particle.ts";
 import ParticleEmitterSettings from "./settings.js";
 import { randomFloat } from "./../math/math.ts";
 import Container from "./../renderable/container.js";
@@ -142,7 +142,7 @@ export default class ParticleEmitter extends Container {
 	addParticles(count) {
 		for (let i = 0; i < count; i++) {
 			// Add particle to the container
-			this.addChild(pool.pull("Particle", this), this.pos.z);
+			this.addChild(particlePool.get(this), this.pos.z);
 		}
 		this.isDirty = true;
 	}
@@ -252,7 +252,7 @@ export default class ParticleEmitter extends Container {
 		super.destroy(arguments);
 		// clean emitter specific Properties
 		if (typeof this._defaultParticle !== "undefined") {
-			pool.push(this._defaultParticle);
+			this._defaultParticle.destroy();
 			this._defaultParticle = undefined;
 		}
 		this.settings.image = undefined;
