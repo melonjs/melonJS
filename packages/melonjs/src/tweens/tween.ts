@@ -77,6 +77,13 @@ export default class Tween<T extends Record<string, unknown>> {
 	/**
 	 * @ignore
 	 */
+	onResetEvent(object: T) {
+		this.setProperties(object);
+	}
+
+	/**
+	 * @ignore
+	 */
 	setProperties(object: T) {
 		this._object = object;
 		this._valuesStart = {};

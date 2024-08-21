@@ -209,6 +209,8 @@ export function boot() {
 	pool.register("me.Renderable", Renderable);
 	pool.register("me.Text", Text, true);
 	pool.register("me.BitmapText", BitmapText);
+	pool.register("me.ImageLayer", ImageLayer);
+	pool.register("me.Tween", Tween);
 	pool.register("me.ColorLayer", ColorLayer, true);
 	// duplicate all entries if use with no namespace (e.g. es6)
 	pool.register("Entity", Entity);
@@ -223,6 +225,7 @@ export function boot() {
 	pool.register("Text", Text, true);
 	pool.register("BitmapText", BitmapText);
 	pool.register("ImageLayer", ImageLayer);
+	pool.register("Tween", Tween);
 	pool.register("ColorLayer", ColorLayer, true);
 
 	// publish Boot notification
