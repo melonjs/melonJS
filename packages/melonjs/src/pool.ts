@@ -12,6 +12,7 @@ import { vector3dPool } from "./math/vector3d";
 import { particlePool } from "./particles/particle";
 import { boundsPool } from "./physics/bounds";
 import { tweenPool } from "./tweens/tween";
+import { bitmapTextDataPool } from "./renderable/text/bitmaptextdata";
 
 const pools = {
 	vector2d: vector2dPool,
@@ -28,6 +29,7 @@ const pools = {
 	ellipse: ellipsePool,
 	tween: tweenPool,
 	particle: particlePool,
+	bitmapTextData: bitmapTextDataPool,
 } as const;
 
 type PoolKey = keyof typeof pools;

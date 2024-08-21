@@ -1,9 +1,9 @@
 import { Color } from "../../math/color.ts";
-import pool from "../../system/legacy_pool.js";
 import { getImage, getBinary } from "../../loader/loader.js";
 import Renderable from "../renderable.js";
 import TextMetrics from "./textmetrics.js";
 import { vector2dPool } from "../../math/vector2d.ts";
+import { bitmapTextDataPool } from "./bitmaptextdata.ts";
 
 /**
  * a bitmap font object
@@ -105,10 +105,9 @@ export default class BitmapText extends Renderable {
 			 * @private
 			 */
 			// use settings.font to retreive the data from the loader
-			this.fontData = pool.pull("BitmapTextData", getBinary(settings.font));
+			this.fontData = bitmapTextDataPool.get(getBinary(settings.font));
 		} else {
-			this.fontData = pool.pull(
-				"BitmapTextData",
+			this.fontData = bitmapTextDataPool.get(
 				// if starting/includes "info face" the whole data string was passed as parameter
 				settings.fontData.includes("info face")
 					? settings.fontData
@@ -425,7 +424,7 @@ export default class BitmapText extends Renderable {
 	destroy() {
 		vector2dPool.release(this.fontScale);
 		this.fontScale = undefined;
-		pool.push(this.fontData);
+		bitmapTextDataPool.release(this.fontData);
 		this.fontData = undefined;
 		this._text.length = 0;
 		this.metrics = undefined;

@@ -27,7 +27,7 @@ import Trigger from "./renderable/trigger.js";
 import Light2d from "./renderable/light2d.js";
 import Text from "./renderable/text/text.js";
 import BitmapText from "./renderable/text/bitmaptext.js";
-import BitmapTextData from "./renderable/text/bitmaptextdata.js";
+import BitmapTextData from "./renderable/text/bitmaptextdata.ts";
 import { Draggable } from "./renderable/draggable.js";
 import { DropTarget } from "./renderable/dragndrop.js";
 import TMXRenderer from "./level/tiled/renderer/TMXRenderer.js";
@@ -198,7 +198,7 @@ export function boot() {
 		console.log("melonJS 2 (v" + version + ") | http://melonjs.org");
 	}
 
-	// register all built-ins objects into the object pool
+	// register all built-ins objects into the object legacy pool
 	pool.register("me.Entity", Entity);
 	pool.register("me.Collectable", Collectable);
 	pool.register("me.Trigger", Trigger);
@@ -209,10 +209,7 @@ export function boot() {
 	pool.register("me.Renderable", Renderable);
 	pool.register("me.Text", Text, true);
 	pool.register("me.BitmapText", BitmapText);
-	pool.register("me.BitmapTextData", BitmapTextData, true);
-	pool.register("me.ImageLayer", ImageLayer);
 	pool.register("me.ColorLayer", ColorLayer, true);
-
 	// duplicate all entries if use with no namespace (e.g. es6)
 	pool.register("Entity", Entity);
 	pool.register("Collectable", Collectable);
@@ -225,7 +222,6 @@ export function boot() {
 	pool.register("Renderable", Renderable);
 	pool.register("Text", Text, true);
 	pool.register("BitmapText", BitmapText);
-	pool.register("BitmapTextData", BitmapTextData, true);
 	pool.register("ImageLayer", ImageLayer);
 	pool.register("ColorLayer", ColorLayer, true);
 

@@ -1,4 +1,3 @@
-// bitmap constants
 const LOG2_PAGE_SIZE = 9;
 const PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
 
@@ -7,6 +6,24 @@ const PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
  * @ignore
  */
 export default class Glyph {
+	/**
+	 * @ignore
+	 */
+	id: number;
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+	u: number;
+	v: number;
+	u2: number;
+	v2: number;
+	xoffset: number;
+	yoffset: number;
+	xadvance: number;
+	fixedWidth: boolean;
+	kerning: { [key: number]: { [key: number]: number } };
+
 	/**
 	 * @ignore
 	 */
@@ -29,7 +46,7 @@ export default class Glyph {
 	/**
 	 * @ignore
 	 */
-	getKerning(ch) {
+	getKerning(ch: number): number {
 		if (this.kerning) {
 			const page = this.kerning[ch >>> LOG2_PAGE_SIZE];
 			if (page) {
@@ -42,7 +59,7 @@ export default class Glyph {
 	/**
 	 * @ignore
 	 */
-	setKerning(ch, value) {
+	setKerning(ch: number, value: number): void {
 		if (!this.kerning) {
 			this.kerning = {};
 		}

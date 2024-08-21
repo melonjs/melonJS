@@ -1,7 +1,8 @@
-import Glyph from "./glyph.js";
+import Glyph from "./glyph.ts";
+import { createPool } from "../../pool.ts";
 
 // bitmap constants
-const capChars = [
+const capChars: string[] = [
 	"M",
 	"N",
 	"B",
@@ -34,11 +35,11 @@ const capChars = [
  * Gets the value from a string of pairs.
  * @ignore
  */
-function getValueFromPair(string, pattern) {
+function getValueFromPair(string: string, pattern: RegExp): string {
 	const value = string.match(pattern);
 	if (!value) {
 		throw new Error(
-			"Could not find pattern " + pattern + " in string: " + string,
+			`${`Could not find pattern ${pattern}` as string} in string: ${string}`,
 		);
 	}
 
@@ -48,13 +49,13 @@ function getValueFromPair(string, pattern) {
 /**
  * Gets the first glyph in the map that is not a space character
  * @ignore
- * @param {object} glyphs - the map of glyphs, each key is a char code
- * @returns {Glyph}
+ * @param glyphs - the map of glyphs, each key is a char code
+ * @returns the first glyph that is not a space character
  */
-function getFirstGlyph(glyphs) {
+function getFirstGlyph(glyphs: any): Glyph | null {
 	const keys = Object.keys(glyphs);
 	for (let i = 0; i < keys.length; i++) {
-		if (keys[i] > 32) {
+		if (parseInt(keys[i]) > 32) {
 			return glyphs[keys[i]];
 		}
 	}
@@ -64,84 +65,62 @@ function getFirstGlyph(glyphs) {
 /**
  * Creates a glyph to use for the space character
  * @ignore
- * @param {object} glyphs - the map of glyphs, each key is a char code
+ * @param glyphs - the map of glyphs, each key is a char code
  */
-function createSpaceGlyph(glyphs) {
+function createSpaceGlyph(glyphs: any) {
 	const spaceCharCode = " ".charCodeAt(0);
 	let glyph = glyphs[spaceCharCode];
 	if (!glyph) {
 		glyph = new Glyph();
 		glyph.id = spaceCharCode;
-		glyph.xadvance = getFirstGlyph(glyphs).xadvance;
+		const firstGlyph = getFirstGlyph(glyphs);
+		glyph.xadvance = firstGlyph !== null ? firstGlyph.xadvance : 0;
 		glyphs[spaceCharCode] = glyph;
 	}
 }
 
-/**
- * Class for storing relevant data from the font file.
- * @ignore
- */
 export default class BitmapTextData {
-	/**
-	 * @param {string} data - The bitmap font data pulled from the resource loader using me.loader.getBinary()
-	 */
-	constructor(data) {
-		this.onResetEvent(data);
-	}
+	padTop: number = 0;
+	padRight: number = 0;
+	padBottom: number = 0;
+	padLeft: number = 0;
+	lineHeight: number = 0;
+	capHeight: number = 1;
+	descent: number = 0;
+	glyphs: { [key: number]: Glyph } = {};
 
-	/**
-	 * @ignore
-	 */
-	onResetEvent(data) {
-		this.padTop = 0;
-		this.padRight = 0;
-		this.padBottom = 0;
-		this.padLeft = 0;
-		this.lineHeight = 0;
-		// The distance from the top of most uppercase characters to the baseline. Since the drawing position is the cap height of
-		// the first line, the cap height can be used to get the location of the baseline.
-		this.capHeight = 1;
-		// The distance from the bottom of the glyph that extends the lowest to the baseline. This number is negative.
-		this.descent = 0;
-
-		/**
-		 * The map of glyphs, each key is a char code.
-		 * @type {object}
-		 */
-		this.glyphs = {};
-
-		// parse the data
+	constructor(data: string) {
 		this.parse(data);
 	}
 
-	/**
-	 * This parses the font data text and builds a map of glyphs containing the data for each character
-	 * @param {string} fontData
-	 */
-	parse(fontData) {
+	parse(fontData: string) {
 		if (!fontData) {
 			throw new Error(
 				"File containing font data was empty, cannot load the bitmap font.",
 			);
 		}
+
 		const lines = fontData.split(/\r\n|\n/);
-		const padding = fontData.match(/padding\=\d+,\d+,\d+,\d+/g);
+		const padding = fontData.match(/padding=\d+,\d+,\d+,\d+/g);
 		if (!padding) {
 			throw new Error("Padding not found in first line");
 		}
 		const paddingValues = padding[0].split("=")[1].split(",");
+
 		this.padTop = parseFloat(paddingValues[0]);
 		this.padLeft = parseFloat(paddingValues[1]);
 		this.padBottom = parseFloat(paddingValues[2]);
 		this.padRight = parseFloat(paddingValues[3]);
+		this.lineHeight = parseFloat(getValueFromPair(lines[1], /lineHeight=\d+/g));
 
-		this.lineHeight = parseFloat(
-			getValueFromPair(lines[1], /lineHeight\=\d+/g),
-		);
+		this.capHeight = 1;
+		this.descent = 0;
+		this.glyphs = {};
 
-		const baseLine = parseFloat(getValueFromPair(lines[1], /base\=\d+/g));
+		const baseLine = parseFloat(getValueFromPair(lines[1], /base=\d+/g));
 		const padY = this.padTop + this.padBottom;
-		let glyph = null;
+
+		let glyph: Glyph | null = null;
 
 		for (let i = 4; i < lines.length; i++) {
 			const line = lines[i];
@@ -183,7 +162,7 @@ export default class BitmapTextData {
 
 		createSpaceGlyph(this.glyphs);
 
-		let capGlyph = null;
+		let capGlyph: Glyph | null = null;
 		for (let i = 0; i < capChars.length; i++) {
 			const capChar = capChars[i];
 			capGlyph = this.glyphs[capChar.charCodeAt(0)];
@@ -193,7 +172,7 @@ export default class BitmapTextData {
 		}
 		if (!capGlyph) {
 			for (const charCode in this.glyphs) {
-				if (this.glyphs.hasOwnProperty(charCode)) {
+				if (Object.prototype.hasOwnProperty.call(this.glyphs, charCode)) {
 					glyph = this.glyphs[charCode];
 					if (glyph.height === 0 || glyph.width === 0) {
 						continue;
@@ -207,3 +186,17 @@ export default class BitmapTextData {
 		this.capHeight -= padY;
 	}
 }
+
+export const bitmapTextDataPool = createPool<
+	BitmapTextData,
+	[fontData: string]
+>((fontData: string) => {
+	const instance = new BitmapTextData(fontData);
+
+	return {
+		instance,
+		reset(fontData) {
+			instance.parse(fontData);
+		},
+	};
+});
