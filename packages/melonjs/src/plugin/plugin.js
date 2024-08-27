@@ -10,6 +10,7 @@ import { game } from "../index.js";
  * Contains all registered plugins.
  * @name cache
  * @memberof plugin
+ * @type {Object.<plugin.BasePlugin>}
  */
 export const cache = {};
 
