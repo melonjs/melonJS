@@ -1,7 +1,9 @@
 import {
+	type CanvasRenderer,
 	ColorLayer,
 	Renderable,
 	Text,
+	type WebGLRenderer,
 	device,
 	game,
 	input,
@@ -23,11 +25,11 @@ class DeviceInfo extends Renderable {
 		this.anchorPoint.set(0, 0);
 	}
 
-	update() {
+	override update() {
 		return true;
 	}
 
-	draw(renderer) {
+	override draw(renderer: WebGLRenderer | CanvasRenderer) {
 		// current device orientation ("portrait" or "landscape")
 		const orientation = device.getScreenOrientation();
 

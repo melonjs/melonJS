@@ -4,10 +4,13 @@ import { VirtualJoypad } from "./entities/controls";
 import { gameState } from "./gameState";
 
 export class PlayScreen extends Stage {
+	private virtualJoypad?: VirtualJoypad;
+	private HUD?: UIContainer;
+
 	/**
 	 *  action to perform on state change
 	 */
-	onResetEvent() {
+	override onResetEvent() {
 		// load a level
 		level.load("map1");
 
@@ -35,9 +38,11 @@ export class PlayScreen extends Stage {
 	/**
 	 *  action to perform on state change
 	 */
-	onDestroyEvent() {
+	override onDestroyEvent() {
 		// remove the HUD from the game world
-		game.world.removeChild(this.HUD);
+		if (this.HUD) {
+			game.world.removeChild(this.HUD);
+		}
 
 		// remove the joypad if initially added
 		if (this.virtualJoypad && game.world.hasChild(this.virtualJoypad)) {
@@ -45,6 +50,6 @@ export class PlayScreen extends Stage {
 		}
 
 		// stop some music
-		audio.stopTrack("dst-gameforest");
+		audio.stopTrack();
 	}
 }
