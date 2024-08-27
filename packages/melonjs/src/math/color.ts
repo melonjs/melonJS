@@ -547,8 +547,8 @@ export class Color {
 	 * @param cssColor - The CSS color name
 	 * @returns Reference to this object for method chaining
 	 */
-	parseCSS(cssColor: ColorName) {
-		const rgb = cssToRGB.get(cssColor);
+	parseCSS(cssColor: string) {
+		const rgb = cssToRGB.get(cssColor as ColorName);
 		if (!rgb) {
 			return this.parseRGB(cssColor);
 		}
