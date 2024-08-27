@@ -2,6 +2,7 @@ import jsdoc from "eslint-plugin-jsdoc";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 import eslint from "@eslint/js";
+import reactRefresh from "eslint-plugin-react-refresh";
 
 const jsDocConfig = jsdoc.configs["flat/recommended-typescript-error"];
 
@@ -158,6 +159,10 @@ export default tseslint.config(
 	{
 		...jsDocConfig,
 		files: ["**/*.{ts,tsx,mts,cts}"],
+		plugins: {
+			jsdoc,
+			"react-refresh": reactRefresh,
+		},
 		rules: {
 			"no-undef": "off",
 			"no-unused-vars": "off",
@@ -183,6 +188,7 @@ export default tseslint.config(
 			"jsdoc/require-jsdoc": "off",
 			"jsdoc/no-defaults": "off",
 			"jsdoc/require-returns": "off",
+			"react-refresh/only-export-components": "warn",
 		},
 		languageOptions: {
 			parserOptions: {

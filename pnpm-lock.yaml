@@ -51,6 +51,9 @@ importers:
         specifier: ^2.0.5
         version: 2.0.5(@types/node@22.2.0)(@vitest/browser@2.0.5)
     devDependencies:
+      eslint-plugin-react-refresh:
+        specifier: ^0.4.11
+        version: 0.4.11(eslint@9.9.0)
       playwright:
         specifier: ^1.46.0
         version: 1.46.0
@@ -1462,6 +1465,11 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^7.0.0 || ^8.0.0 || ^9.0.0
+
+  eslint-plugin-react-refresh@0.4.11:
+    resolution: {integrity: sha512-wrAKxMbVr8qhXTtIKfXqAn5SAtRZt0aXxe5P23Fh4pUAdC6XEsybGLB8P0PI4j1yYqOgUEUlzKAGDfo7rJOjcw==}
+    peerDependencies:
+      eslint: '>=7'
 
   eslint-scope@8.0.2:
     resolution: {integrity: sha512-6E4xmrTw5wtxnLA5wYL3WDfhZ/1bUBGOXV0zQvVRDOtrR8D0p6W7fs3JweNYhwRYeGvd/1CKX2se0/2s7Q/nJA==}
@@ -3961,6 +3969,10 @@ snapshots:
       synckit: 0.9.1
     transitivePeerDependencies:
       - supports-color
+
+  eslint-plugin-react-refresh@0.4.11(eslint@9.9.0):
+    dependencies:
+      eslint: 9.9.0
 
   eslint-scope@8.0.2:
     dependencies:
