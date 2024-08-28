@@ -10,10 +10,7 @@ export class MoleManager extends Renderable {
 
 	constructor() {
 		// call the super constructor
-		super(0, 0, {
-			width: 10,
-			height: 10,
-		});
+		super(0, 0, 10, 10);
 
 		this.moles = [];
 		this.timer = 0;

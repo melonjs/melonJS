@@ -83,9 +83,8 @@ export class MoleEntity extends Sprite {
 	 */
 	display() {
 		const finalpos = this.initialPos - 140;
-		this.displayTween = pool
-			.pull("me.Tween", this.pos)
-			.to({ y: finalpos }, { duration: 200 });
+		this.displayTween = pool.pull("me.Tween", this.pos) as Tween;
+		this.displayTween.to({ y: finalpos }, { duration: 200 });
 		this.displayTween.easing(Tween.Easing.Quadratic.Out);
 		this.displayTween.onComplete(this.onDisplayed.bind(this));
 		this.displayTween.start();
@@ -107,9 +106,8 @@ export class MoleEntity extends Sprite {
 	 */
 	hide() {
 		const finalpos = this.initialPos;
-		this.displayTween = pool
-			.pull("me.Tween", this.pos)
-			.to({ y: finalpos }, { duration: 200 });
+		this.displayTween = pool.pull("me.Tween", this.pos) as Tween;
+		this.displayTween.to({ y: finalpos }, { duration: 200 });
 		this.displayTween.easing(Tween.Easing.Quadratic.In);
 		this.displayTween.onComplete(this.onHidden.bind(this));
 		this.displayTween.start();
