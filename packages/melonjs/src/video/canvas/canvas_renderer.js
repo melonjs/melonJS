@@ -321,7 +321,7 @@ export default class CanvasRenderer extends Renderer {
 
 	/**
 	 * stroke the given shape or the current defined path
-	 * @param {Rect|RoundRect|Polygon|Line|Ellipse} [shape] - a shape object to stroke
+	 * @param {Rect|RoundRect|Polygon|Line|Ellipse|Bounds} [shape] - a shape object to stroke
 	 * @param {boolean} [fill=false] - fill the shape with the current color if true
 	 */
 	stroke(shape, fill) {
@@ -338,7 +338,7 @@ export default class CanvasRenderer extends Renderer {
 
 	/**
 	 * fill the given shape or the current defined path
-	 * @param {Rect|RoundRect|Polygon|Line|Ellipse} [shape] - a shape object to fill
+	 * @param {Rect|RoundRect|Polygon|Line|Ellipse|Bounds} [shape] - a shape object to fill
 	 */
 	fill(shape) {
 		this.stroke(shape, true);
