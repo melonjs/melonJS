@@ -31,7 +31,7 @@ type OnCompleteCallback<T> = (this: T) => void;
  * author Josh Faul / http://jocafa.com/
  */
 export default class Tween {
-	_object: Object;
+	_object: object;
 	_valuesStart: Record<string, unknown>;
 	_valuesEnd: Record<string, unknown>;
 	_valuesStartRepeat: Record<string, unknown>;
@@ -44,10 +44,10 @@ export default class Tween {
 	_easingFunction: EasingFunction;
 	_interpolationFunction: InterpolationFunction;
 	_chainedTweens: Array<Tween>;
-	_onStartCallback: OnStartCallback<Object> | null;
+	_onStartCallback: OnStartCallback<object> | null;
 	_onStartCallbackFired: boolean;
-	_onUpdateCallback: OnUpdateCallback<Object> | null;
-	_onCompleteCallback: OnCompleteCallback<Object> | null;
+	_onUpdateCallback: OnUpdateCallback<object> | null;
+	_onCompleteCallback: OnCompleteCallback<object> | null;
 	_tweenTimeTracker: number;
 	isPersistent: boolean;
 	updateWhenPaused: boolean;
@@ -68,7 +68,7 @@ export default class Tween {
 	 *       autoStart : true
 	 * }).onComplete(myFunc);
 	 */
-	constructor(object: Object) {
+	constructor(object: object) {
 		this.setProperties(object);
 
 		this.#boundResumeCallback = this._resumeCallback.bind(this);
@@ -77,14 +77,14 @@ export default class Tween {
 	/**
 	 * @ignore
 	 */
-	onResetEvent(object: Object) {
+	onResetEvent(object: object) {
 		this.setProperties(object);
 	}
 
 	/**
 	 * @ignore
 	 */
-	setProperties(object: Object) {
+	setProperties(object: object) {
 		this._object = object;
 		this._valuesStart = {};
 		this._valuesEnd = {};
@@ -317,7 +317,7 @@ export default class Tween {
 	 * @param onStartCallback - callback
 	 * @returns this instance for object chaining
 	 */
-	onStart(onStartCallback: OnStartCallback<Object>) {
+	onStart(onStartCallback: OnStartCallback<object>) {
 		this._onStartCallback = onStartCallback;
 		return this;
 	}
@@ -327,7 +327,7 @@ export default class Tween {
 	 * @param onUpdateCallback - callback
 	 * @returns this instance for object chaining
 	 */
-	onUpdate(onUpdateCallback: OnUpdateCallback<Object>) {
+	onUpdate(onUpdateCallback: OnUpdateCallback<object>) {
 		this._onUpdateCallback = onUpdateCallback;
 		return this;
 	}
@@ -337,7 +337,7 @@ export default class Tween {
 	 * @param onCompleteCallback - callback
 	 * @returns this instance for object chaining
 	 */
-	onComplete(onCompleteCallback: OnCompleteCallback<Object>) {
+	onComplete(onCompleteCallback: OnCompleteCallback<object>) {
 		this._onCompleteCallback = onCompleteCallback;
 		return this;
 	}
@@ -460,13 +460,13 @@ export default class Tween {
 	}
 }
 
-export const tweenPool = createPool((object: globalThis.Object) => {
-	const tween = new Tween(object);
+export const tweenPool = createPool((obj: object) => {
+	const tween = new Tween(obj);
 
 	return {
 		instance: tween,
-		reset(object: globalThis.Object) {
-			tween.setProperties(object);
+		reset(obj: object) {
+			tween.setProperties(obj);
 		},
 	};
 });
