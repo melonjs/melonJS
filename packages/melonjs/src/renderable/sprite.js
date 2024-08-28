@@ -315,7 +315,7 @@ export default class Sprite extends Renderable {
 	/**
 	 * make the object flicker
 	 * @param {number} duration - expressed in milliseconds
-	 * @param {Function} callback - Function to call when flickering ends
+	 * @param {Function} [callback] - Function to call when flickering ends
 	 * @returns {Sprite} Reference to this object for method chaining
 	 * @example
 	 * // make the object flicker for 1 second
@@ -324,11 +324,11 @@ export default class Sprite extends Renderable {
 	 *     world.removeChild(this);
 	 * });
 	 */
-	flicker(duration, callback) {
+	flicker(duration, callback = undefined) {
 		this._flicker.duration = duration;
 		if (this._flicker.duration <= 0) {
 			this._flicker.isFlickering = false;
-			this._flicker.callback = null;
+			this._flicker.callback = undefined;
 		} else if (!this._flicker.isFlickering) {
 			this._flicker.callback = callback;
 			this._flicker.isFlickering = true;
