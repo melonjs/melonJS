@@ -6,7 +6,14 @@ import { data } from "./data";
  * note : we don"t use EntityObject, since we wont" use regular collision, etc..
  */
 export class MoleEntity extends Sprite {
-	constructor(x, y) {
+	isVisible: boolean;
+	isOut: boolean;
+	timer: number;
+	initialPos: number;
+	displayTween: Tween;
+	hideTween: Tween;
+
+	constructor(x: number, y: number) {
 		// call the constructor
 		super(x, y, { image: "mole", framewidth: 178, frameheight: 140 });
 
@@ -29,10 +36,6 @@ export class MoleEntity extends Sprite {
 		this.timer = 0;
 
 		this.initialPos = this.pos.y;
-
-		// tween to display/hide the moles
-		this.displayTween = null;
-		this.hideTween = null;
 
 		this.isKinematic = false;
 
@@ -124,7 +127,7 @@ export class MoleEntity extends Sprite {
 	/**
 	 * update the mole
 	 */
-	update(dt) {
+	override update(dt: number) {
 		if (this.isVisible) {
 			// call the super function to manage animation
 			super.update(dt);

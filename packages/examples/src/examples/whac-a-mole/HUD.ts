@@ -1,14 +1,25 @@
-import { BitmapText, Container, Renderable, video } from "melonjs";
+import {
+	BitmapText,
+	type CanvasRenderer,
+	Container,
+	Renderable,
+	type WebGLRenderer,
+	video,
+} from "melonjs";
+
 import { data } from "./data";
 
 /**
  * a basic HUD item to display score
  */
 class ScoreItem extends Renderable {
+	private scoreRef: string;
+	private font: BitmapText; // Declare the 'font' property
+
 	/**
 	 * constructor
 	 */
-	constructor(score, align, x, y) {
+	constructor(score: string, align: string, x: number, y: number) {
 		// call the super constructor
 		// (size does not matter here)
 		super(x, y, 10, 10);
@@ -31,8 +42,13 @@ class ScoreItem extends Renderable {
 	/**
 	 * draw the score
 	 */
-	draw(context) {
-		this.font.draw(context, data[this.scoreRef], this.pos.x, this.pos.y);
+	override draw(renderer: WebGLRenderer | CanvasRenderer) {
+		this.font.draw(
+			renderer,
+			data[this.scoreRef].toString(),
+			this.pos.x,
+			this.pos.y,
+		);
 	}
 }
 
@@ -48,7 +64,7 @@ export class HUDContainer extends Container {
 		this.isPersistent = true;
 
 		// make sure our object is always draw first
-		this.z = Number.POSITIVE_INFINITY;
+		this.depth = Number.POSITIVE_INFINITY;
 
 		// give a name
 		this.name = "HUD";

@@ -4,7 +4,7 @@ import { Paladin } from "./entities";
 export let paladin: me.Entity;
 
 export class PlayScreen extends me.Stage {
-	onResetEvent() {
+	override onResetEvent() {
 		paladin = new Paladin();
 		me.game.world.addChild(paladin, 2);
 	}

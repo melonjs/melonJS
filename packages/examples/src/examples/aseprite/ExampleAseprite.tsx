@@ -18,7 +18,9 @@ export const ExampleAseprite = () => {
 				id="animation_name"
 				onChange={(event) => {
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-					paladin.renderable.setCurrentAnimation(event.target.value);
+					(paladin.renderable as me.Sprite).setCurrentAnimation(
+						event.target.value,
+					);
 				}}
 			>
 				<option value="step">step</option>

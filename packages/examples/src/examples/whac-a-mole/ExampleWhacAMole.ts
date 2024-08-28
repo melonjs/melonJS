@@ -18,7 +18,7 @@ const createGame = () => {
 	save.add({ hiscore: 0 });
 
 	// set the local hiscore value
-	data.hiscore = save.hiscore;
+	data.hiscore = save.hiscore as number;
 
 	// set all ressources to be loaded
 	loader.preload(resources, () => {

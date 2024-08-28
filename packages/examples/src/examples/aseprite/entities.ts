@@ -16,7 +16,7 @@ export class Paladin extends me.Entity {
 		// create a new sprite with all animations from the paladin atlas
 		this.renderable = textureAtlas.createAnimationFromName();
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-		this.renderable.setCurrentAnimation("run front");
+		(this.renderable as me.Sprite).setCurrentAnimation("run front");
 
 		this.anchorPoint.set(0.5, 0.0);
 		this.renderable.scale(4);

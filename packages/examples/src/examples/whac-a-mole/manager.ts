@@ -5,6 +5,9 @@ import { MoleEntity } from "./mole";
  * a mole manager (to manage movement, etc..)
  */
 export class MoleManager extends Renderable {
+	moles: MoleEntity[]; // declare the 'moles' property
+	timer: number; // declare the 'timer' property
+
 	constructor() {
 		// call the super constructor
 		super(0, 0, {
@@ -39,7 +42,7 @@ export class MoleManager extends Renderable {
 	/*
 	 * update function
 	 */
-	update(dt) {
+	override update(dt: number) {
 		// every 1/2 seconds display moles randomly
 		this.timer += dt;
 		if (this.timer >= 500) {

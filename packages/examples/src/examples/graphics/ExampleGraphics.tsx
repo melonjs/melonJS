@@ -1,10 +1,12 @@
 import {
+	type CanvasRenderer,
 	Color,
 	Ellipse,
 	Polygon,
 	Renderable,
 	RoundRect,
 	Tween,
+	type WebGLRenderer,
 	game,
 	video,
 } from "melonjs";
@@ -25,6 +27,17 @@ const createGame = () => {
 	}
 
 	class Graphics extends Renderable {
+		starMask: Polygon;
+		polymask: Polygon;
+		circleMask: Ellipse;
+		stripe1: Polygon;
+		stripe2: Polygon;
+		stripe3: Polygon;
+		roundRect1: RoundRect;
+		roundRect2: RoundRect;
+		rrect1Tween: Tween;
+		rrect2Tween: Tween;
+		color: Color;
 		// constructor
 		constructor() {
 			super(0, 0, game.viewport.width, game.viewport.height);
@@ -105,12 +118,12 @@ const createGame = () => {
 			this.anchorPoint.set(0, 0);
 		}
 
-		update() {
+		override update() {
 			return true;
 		}
 
 		// draw function
-		draw(renderer) {
+		override draw(renderer: WebGLRenderer | CanvasRenderer) {
 			renderer.clearColor("#FFFFFF");
 
 			renderer.setGlobalAlpha(1.0);
@@ -180,5 +193,4 @@ const createGame = () => {
 
 	game.world.addChild(new Graphics());
 };
-
 export const ExampleGraphics = createExampleComponent(createGame);
