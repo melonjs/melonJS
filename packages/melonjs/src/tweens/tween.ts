@@ -30,8 +30,8 @@ type OnCompleteCallback<T> = (this: T) => void;
  * author lechecacharro<br>
  * author Josh Faul / http://jocafa.com/
  */
-export default class Tween<T extends Record<string, unknown>> {
-	_object: T;
+export default class Tween {
+	_object: Object;
 	_valuesStart: Record<string, unknown>;
 	_valuesEnd: Record<string, unknown>;
 	_valuesStartRepeat: Record<string, unknown>;
@@ -43,11 +43,11 @@ export default class Tween<T extends Record<string, unknown>> {
 	_startTime: number | null;
 	_easingFunction: EasingFunction;
 	_interpolationFunction: InterpolationFunction;
-	_chainedTweens: Tween<Record<string, unknown>>[];
-	_onStartCallback: OnStartCallback<T> | null;
+	_chainedTweens: Array<Tween>;
+	_onStartCallback: OnStartCallback<Object> | null;
 	_onStartCallbackFired: boolean;
-	_onUpdateCallback: OnUpdateCallback<T> | null;
-	_onCompleteCallback: OnCompleteCallback<T> | null;
+	_onUpdateCallback: OnUpdateCallback<Object> | null;
+	_onCompleteCallback: OnCompleteCallback<Object> | null;
 	_tweenTimeTracker: number;
 	isPersistent: boolean;
 	updateWhenPaused: boolean;
@@ -68,7 +68,7 @@ export default class Tween<T extends Record<string, unknown>> {
 	 *       autoStart : true
 	 * }).onComplete(myFunc);
 	 */
-	constructor(object: T) {
+	constructor(object: Object) {
 		this.setProperties(object);
 
 		this.#boundResumeCallback = this._resumeCallback.bind(this);
@@ -77,14 +77,14 @@ export default class Tween<T extends Record<string, unknown>> {
 	/**
 	 * @ignore
 	 */
-	onResetEvent(object: T) {
+	onResetEvent(object: Object) {
 		this.setProperties(object);
 	}
 
 	/**
 	 * @ignore
 	 */
-	setProperties(object: T) {
+	setProperties(object: Object) {
 		this._object = object;
 		this._valuesStart = {};
 		this._valuesEnd = {};
@@ -223,10 +223,14 @@ export default class Tween<T extends Record<string, unknown>> {
 				}
 
 				// create a local copy of the Array with the start value at the front
-				this._valuesEnd[property] = [this._object[property]].concat(endValue);
+				this._valuesEnd[property] = [
+					(this._object as Record<string, unknown>)[property],
+				].concat(endValue);
 			}
 
-			this._valuesStart[property] = this._object[property];
+			this._valuesStart[property] = (this._object as Record<string, unknown>)[
+				property
+			];
 
 			if (!Array.isArray(this._valuesStart[property])) {
 				(this._valuesStart[property] as number) *= 1.0; // Ensures we're using numbers, not strings
@@ -237,7 +241,6 @@ export default class Tween<T extends Record<string, unknown>> {
 
 		return this;
 	}
-
 	/**
 	 * stop the tween
 	 * @returns this instance for object chaining
@@ -304,7 +307,7 @@ export default class Tween<T extends Record<string, unknown>> {
 	 * @param tweens - Tween(s) to be chained
 	 * @returns this instance for object chaining
 	 */
-	chain(...tweens: Tween<any>[]) {
+	chain(...tweens: Tween[]) {
 		this._chainedTweens = tweens;
 		return this;
 	}
@@ -314,7 +317,7 @@ export default class Tween<T extends Record<string, unknown>> {
 	 * @param onStartCallback - callback
 	 * @returns this instance for object chaining
 	 */
-	onStart(onStartCallback: OnStartCallback<T>) {
+	onStart(onStartCallback: OnStartCallback<Object>) {
 		this._onStartCallback = onStartCallback;
 		return this;
 	}
@@ -324,7 +327,7 @@ export default class Tween<T extends Record<string, unknown>> {
 	 * @param onUpdateCallback - callback
 	 * @returns this instance for object chaining
 	 */
-	onUpdate(onUpdateCallback: OnUpdateCallback<T>) {
+	onUpdate(onUpdateCallback: OnUpdateCallback<Object>) {
 		this._onUpdateCallback = onUpdateCallback;
 		return this;
 	}
@@ -334,7 +337,7 @@ export default class Tween<T extends Record<string, unknown>> {
 	 * @param onCompleteCallback - callback
 	 * @returns this instance for object chaining
 	 */
-	onComplete(onCompleteCallback: OnCompleteCallback<T>) {
+	onComplete(onCompleteCallback: OnCompleteCallback<Object>) {
 		this._onCompleteCallback = onCompleteCallback;
 		return this;
 	}
@@ -457,15 +460,13 @@ export default class Tween<T extends Record<string, unknown>> {
 	}
 }
 
-export const tweenPool = createPool(
-	<T extends Record<string, unknown>>(object: T) => {
-		const tween = new Tween(object);
+export const tweenPool = createPool((object: globalThis.Object) => {
+	const tween = new Tween(object);
 
-		return {
-			instance: tween,
-			reset(object: T) {
-				tween.setProperties(object);
-			},
-		};
-	},
-);
+	return {
+		instance: tween,
+		reset(object: globalThis.Object) {
+			tween.setProperties(object);
+		},
+	};
+});
