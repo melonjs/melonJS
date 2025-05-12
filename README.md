@@ -1,7 +1,7 @@
 melonJS 2
 =========
 ![melonJS Logo](https://github.com/melonjs/melonJS/raw/master/media/Banner/Banner%20-%20Billboard%20-%20Original%20Logo%20-%20horizontal.png)
-
+## Welcome!
 [![Build Size](https://badgen.net/bundlephobia/minzip/melonjs)](https://bundlephobia.com/result?p=melonjs)
 [![Tree-shaking](https://badgen.net/bundlephobia/tree-shaking/react-colorful)](https://bundlephobia.com/result?p=melonjs)
 [![NPM Package](https://img.shields.io/npm/v/melonjs)](https://www.npmjs.com/package/melonjs)
