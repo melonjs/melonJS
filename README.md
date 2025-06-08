@@ -42,7 +42,7 @@ Sound
 - Web Audio support with 3D spatial audio or stereo panning based on [Howler](https://howlerjs.com)
 - fallback to Multi-channel HTML5 audio for legacy browsers
 
-Physic
+Physics
 - Polygon (SAT) based collision algorithm for accurate detection and response
 - Fast Broad-phase collision detection using spatial partitioning
 - Collision filtering for optimized automatic collision detection
