@@ -10,6 +10,7 @@ import { ObservableVector3d } from "../math/observableVector3d.ts";
 import { vector2dPool } from "../math/vector2d.ts";
 import { matrix2dPool } from "../math/matrix2d.ts";
 import { ObservablePoint } from "../geometries/observablePoint.ts";
+import Light2d from "./light2d.js";
 
 /**
  * additional import for TypeScript
@@ -713,7 +714,7 @@ export default class Renderable extends Rect {
 		renderer.setTint(this.tint, this.getOpacity());
 
 		// apply blending if different from "normal"
-		if (this.blendMode !== renderer.getBlendMode()) {
+		if (this.blendMode !== renderer.getBlendMode() || this instanceof Light2d) {
 			renderer.setBlendMode(this.blendMode);
 		}
 	}
