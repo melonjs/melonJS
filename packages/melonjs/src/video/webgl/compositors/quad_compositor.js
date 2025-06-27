@@ -116,7 +116,9 @@ export default class QuadCompositor extends Compositor {
 				: gl.CLAMP_TO_EDGE;
 
 		let currentTexture = texture;
-		if (!currentTexture) currentTexture = gl.createTexture();
+		if (!currentTexture) {
+			currentTexture = gl.createTexture();
+		}
 
 		this.bindTexture2D(currentTexture, unit);
 
