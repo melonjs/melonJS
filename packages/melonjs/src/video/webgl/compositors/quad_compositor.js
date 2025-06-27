@@ -100,7 +100,7 @@ export default class QuadCompositor extends Compositor {
 		h = pixels.height,
 		premultipliedAlpha = true,
 		mipmap = true,
-		texture
+		texture,
 	) {
 		const gl = this.gl;
 		const isPOT = isPowerOfTwo(w) && isPowerOfTwo(h);
@@ -115,7 +115,7 @@ export default class QuadCompositor extends Compositor {
 				? gl.REPEAT
 				: gl.CLAMP_TO_EDGE;
 
-		const currentTexture = texture;
+		let currentTexture = texture;
 		if (!currentTexture) currentTexture = gl.createTexture();
 
 		this.bindTexture2D(currentTexture, unit);
@@ -253,7 +253,7 @@ export default class QuadCompositor extends Compositor {
 				h,
 				texture.premultipliedAlpha,
 				undefined,
-				texture2D
+				texture2D,
 			);
 		} else {
 			this.bindTexture2D(texture2D, unit);
