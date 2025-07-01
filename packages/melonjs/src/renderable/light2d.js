@@ -175,6 +175,17 @@ export default class Light2d extends Renderable {
 	}
 
 	/**
+	 * preDraw this Light2d (automatically called by melonJS)
+	 * Note: The renderer should set the blend mode again (after drawing other Light2d objects)
+	 * to ensure colors blend correctly in the CanvasRenderer.
+	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 */
+	preDraw(renderer) {
+		super.preDraw(renderer);
+		renderer.setBlendMode(this.blendMode);
+	}
+
+	/**
 	 * draw this Light2d (automatically called by melonJS)
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw

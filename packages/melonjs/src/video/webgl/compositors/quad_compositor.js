@@ -100,6 +100,7 @@ export default class QuadCompositor extends Compositor {
 		h = pixels.height,
 		premultipliedAlpha = true,
 		mipmap = true,
+		texture,
 	) {
 		const gl = this.gl;
 		const isPOT = isPowerOfTwo(w) && isPowerOfTwo(h);
@@ -114,9 +115,12 @@ export default class QuadCompositor extends Compositor {
 				? gl.REPEAT
 				: gl.CLAMP_TO_EDGE;
 
-		const texture = gl.createTexture();
+		let currentTexture = texture;
+		if (!currentTexture) {
+			currentTexture = gl.createTexture();
+		}
 
-		this.bindTexture2D(texture, unit);
+		this.bindTexture2D(currentTexture, unit);
 
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, rs);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, rt);
@@ -170,7 +174,7 @@ export default class QuadCompositor extends Compositor {
 			gl.generateMipmap(gl.TEXTURE_2D);
 		}
 
-		return texture;
+		return currentTexture;
 	}
 
 	/**
@@ -250,6 +254,8 @@ export default class QuadCompositor extends Compositor {
 				w,
 				h,
 				texture.premultipliedAlpha,
+				undefined,
+				texture2D,
 			);
 		} else {
 			this.bindTexture2D(texture2D, unit);
