@@ -1,11 +1,11 @@
-import { Collectable, Ellipse, audio, collision, game } from "melonjs";
+import { audio, Collectable, collision, Ellipse, game } from "melonjs";
 import { gameState } from "../gameState";
 
 export class CoinEntity extends Collectable {
 	/**
 	 * constructor
 	 */
-	constructor(x, y, settings) {
+	constructor(x, y, _settings) {
 		// call the super constructor
 		super(
 			x,
@@ -19,7 +19,7 @@ export class CoinEntity extends Collectable {
 	}
 
 	// add a onResetEvent to enable object recycling
-	onResetEvent(x, y, settings) {
+	onResetEvent(x, y, _settings) {
 		this.shift(x, y);
 		// only check for collision against player
 		this.body.setCollisionMask(collision.types.PLAYER_OBJECT);

@@ -1,12 +1,12 @@
-import timer from "../system/timer.ts";
-import { randomFloat, clamp } from "../math/math.ts";
-import Renderable from "../renderable/renderable.js";
+import { clamp, randomFloat } from "../math/math.ts";
 import { Vector2d, vector2dPool } from "../math/vector2d.ts";
 import { createPool } from "../pool.ts";
-import ParticleEmitter from "./emitter.js";
+import Container from "../renderable/container.js";
+import Renderable from "../renderable/renderable.js";
+import timer from "../system/timer.ts";
 import CanvasRenderer from "../video/canvas/canvas_renderer.js";
 import WebGLRenderer from "../video/webgl/webgl_renderer.js";
-import Container from "../renderable/container.js";
+import ParticleEmitter from "./emitter.js";
 
 /**
  * @import ParticleEmitter from "./emitter.js";

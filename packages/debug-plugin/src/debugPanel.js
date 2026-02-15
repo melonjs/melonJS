@@ -2,18 +2,18 @@ import {
 	BitmapText,
 	Camera2d,
 	Container,
-	Entity,
-	ImageLayer,
-	Rect,
-	Renderable,
-	Text,
 	collision,
+	Entity,
 	event,
 	game,
+	ImageLayer,
 	input,
 	math,
 	plugin,
 	pool,
+	Rect,
+	Renderable,
+	Text,
 	timer,
 	utils,
 	video,
@@ -161,7 +161,7 @@ export class DebugPanel extends Renderable {
 		// patch renderable.js
 		plugin.patch(Renderable, "postDraw", function (renderer) {
 			// call the original Renderable.postDraw function
-			// biome-ignore lint/style/noArguments: <explanation>
+			// biome-ignore lint/complexity/noArguments: needed to forward all arguments to patched method
 			this._patched.apply(this, arguments);
 
 			// increment the sprites counter
@@ -238,7 +238,7 @@ export class DebugPanel extends Renderable {
 
 		plugin.patch(BitmapText, "draw", function (renderer) {
 			// call the original Sprite.draw function
-			// biome-ignore lint/style/noArguments: <explanation>
+			// biome-ignore lint/complexity/noArguments: needed to forward all arguments to patched method
 			this._patched.apply(this, arguments);
 
 			// draw the font rectangle
@@ -270,7 +270,7 @@ export class DebugPanel extends Renderable {
 		// patch text.js
 		plugin.patch(Text, "draw", function (renderer) {
 			// call the original Text.draw function
-			// biome-ignore lint/style/noArguments: <explanation>
+			// biome-ignore lint/complexity/noArguments: needed to forward all arguments to patched method
 			this._patched.apply(this, arguments);
 
 			if (_this.visible && _this.checkbox.renderHitBox.selected) {
@@ -368,7 +368,7 @@ export class DebugPanel extends Renderable {
 				}
 			}
 			// call the original Entity.postDraw function
-			// biome-ignore lint/style/noArguments: <explanation>
+			// biome-ignore lint/complexity/noArguments: needed to forward all arguments to patched method
 			this._patched.apply(this, arguments);
 		});
 	}

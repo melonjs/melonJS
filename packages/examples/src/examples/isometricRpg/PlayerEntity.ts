@@ -1,4 +1,4 @@
-import { Body, Rect, Sprite, game, input } from "melonjs";
+import { Body, game, input, Rect, Sprite } from "melonjs";
 
 export class PlayerEntity extends Sprite {
 	constructor(x, y, settings) {

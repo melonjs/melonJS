@@ -1,11 +1,11 @@
 import { Color, colorPool } from "../../math/color.ts";
-import { renderer as globalRenderer } from "../../video/video.js";
-import pool from "../../system/legacy_pool.js";
-import Renderable from "../renderable.js";
 import { nextPowerOfTwo } from "../../math/math.ts";
-import setContextStyle from "./textstyle.js";
-import TextMetrics from "./textmetrics.js";
+import pool from "../../system/legacy_pool.js";
 import CanvasRenderTarget from "../../video/rendertarget/canvasrendertarget.js";
+import { renderer as globalRenderer } from "../../video/video.js";
+import Renderable from "../renderable.js";
+import TextMetrics from "./textmetrics.js";
+import setContextStyle from "./textstyle.js";
 
 /*
  * ASCII Table

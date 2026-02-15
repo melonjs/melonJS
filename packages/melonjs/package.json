@@ -41,27 +41,32 @@
 	"exports": {
 		".": "./build/index.js"
 	},
-	"files": ["build", "package.json", "README.md", "CHANGELOG"],
+	"files": [
+		"build",
+		"package.json",
+		"README.md",
+		"CHANGELOG"
+	],
 	"dependencies": {
 		"@teppeis/multimaps": "^3.0.0",
-		"core-js": "^3.37.1",
+		"core-js": "^3.48.0",
 		"howler": "2.2.4"
 	},
 	"devDependencies": {
-		"@types/howler": "^2.2.11",
-		"@types/node": "^20.14.10",
-		"concurrently": "^8.2.2",
-		"del-cli": "^5.1.0",
-		"esbuild": "^0.23.0",
-		"serve": "^14.2.3",
-		"tsconfig": "workspace:tsconfig",
-		"tsx": "^4.16.2",
-		"type-fest": "^4.21.0",
-		"typedoc": "^0.26.3",
-		"typedoc-plugin-missing-exports": "^3.0.0",
-		"typescript": "^5.5.3",
-		"vite": "5.4",
-		"vite-plugin-glsl": "workspace:vite-plugin-glsl"
+		"@types/howler": "^2.2.12",
+		"@types/node": "^25.2.1",
+		"concurrently": "^9.2.1",
+		"del-cli": "^7.0.0",
+		"esbuild": "^0.27.3",
+		"serve": "^14.2.5",
+		"tsconfig": "workspace:^",
+		"tsx": "^4.21.0",
+		"type-fest": "^5.4.3",
+		"typedoc": "^0.28.16",
+		"typedoc-plugin-missing-exports": "^4.1.2",
+		"typescript": "^5.9.3",
+		"vite": "~7.3.1",
+		"vite-plugin-glsl": "workspace:^"
 	},
 	"scripts": {
 		"dev": "concurrently --raw \"pnpm build:watch\" \"pnpm tsc:watch\" \"pnpm doc:watch\"",

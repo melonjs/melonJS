@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CanvasRenderer, boot, game, video } from "../src/index.js";
+import { boot, CanvasRenderer, game, video } from "../src/index.js";
 
 describe("Custom Renderer", async () => {
 	it("should create a custom renderer", async () => {

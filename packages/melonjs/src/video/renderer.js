@@ -1,9 +1,9 @@
+import Path2D from "./../geometries/path2d.js";
 import { Color } from "./../math/color.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
-import Path2D from "./../geometries/path2d.js";
 import { Vector2d } from "../math/vector2d.ts";
-import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
 import { CANVAS_ONRESIZE, eventEmitter } from "../system/event.ts";
+import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
 
 /**
  * @import {Rect} from "./../geometries/rectangle.ts";

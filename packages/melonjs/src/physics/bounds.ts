@@ -1,8 +1,8 @@
-import { Vector2d } from "../math/vector2d.ts";
 import { Point, pointPool } from "../geometries/point.ts";
-import { createPool } from "../system/pool.ts";
-import { Matrix2d } from "../math/matrix2d.ts";
 import { polygonPool } from "../geometries/polygon.ts";
+import { Matrix2d } from "../math/matrix2d.ts";
+import { Vector2d } from "../math/vector2d.ts";
+import { createPool } from "../system/pool.ts";
 import { XYPoint } from "../utils/types.ts";
 
 /**

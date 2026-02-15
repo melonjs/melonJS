@@ -2,13 +2,13 @@ import {
 	type CanvasRenderer,
 	Color,
 	Ellipse,
+	game,
 	Polygon,
 	Renderable,
 	RoundRect,
 	Tween,
-	type WebGLRenderer,
-	game,
 	video,
+	type WebGLRenderer,
 } from "melonjs";
 import { createExampleComponent } from "../utils";
 

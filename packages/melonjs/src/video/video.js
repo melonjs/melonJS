@@ -1,4 +1,5 @@
-import { initialized, game } from "./../index.js";
+import { defaultApplicationSettings } from "../application/defaultApplicationSettings.ts";
+import { game, initialized } from "./../index.js";
 import * as device from "./../system/device.js";
 import {
 	eventEmitter,
@@ -7,7 +8,6 @@ import {
 	WINDOW_ONRESIZE,
 	WINDOW_ONSCROLL,
 } from "../system/event.ts";
-import { defaultApplicationSettings } from "../application/defaultApplicationSettings.ts";
 
 /**
  * @namespace video
@@ -16,17 +16,13 @@ import { defaultApplicationSettings } from "../application/defaultApplicationSet
 /**
  * Select the HTML5 Canvas renderer
  */
-export { CANVAS } from "../const";
-
 /**
  * Select the WebGL renderer
  */
-export { WEBGL } from "../const";
-
 /**
  * Auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
  */
-export { AUTO } from "../const";
+export { AUTO, CANVAS, WEBGL } from "../const";
 
 /**
  * A reference to the active Canvas or WebGL active renderer renderer

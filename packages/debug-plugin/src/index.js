@@ -46,7 +46,7 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 
 		this.panel = new DebugPanel(debugToggle);
 
-		this.keyHandler = event.on(event.KEYDOWN, (action, keyCode) => {
+		this.keyHandler = event.on(event.KEYDOWN, (_action, keyCode) => {
 			if (keyCode === this.debugToggle) {
 				this.toggle();
 			}

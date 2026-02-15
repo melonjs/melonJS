@@ -1,11 +1,11 @@
 import {
 	Container,
-	Sprite,
-	UISpriteElement,
-	Vector2d,
 	event,
 	game,
 	input,
+	Sprite,
+	UISpriteElement,
+	Vector2d,
 } from "melonjs";
 import { gameState } from "../gameState";
 
@@ -28,7 +28,7 @@ class Button extends UISpriteElement {
 	/**
 	 * function called when the object is clicked on
 	 */
-	onClick(event) {
+	onClick(_event) {
 		this.setOpacity(0.5);
 		input.triggerKeyEvent(input.KEY.SPACE, true);
 		return false;
@@ -37,7 +37,7 @@ class Button extends UISpriteElement {
 	/**
 	 * function called when the object is clicked on
 	 */
-	onRelease(event) {
+	onRelease(_event) {
 		this.setOpacity(0.25);
 		input.triggerKeyEvent(input.KEY.SPACE, false);
 		return false;
@@ -121,7 +121,7 @@ class Joypad extends UISpriteElement {
 	}
 
 	// update the cursors value and trigger key event
-	checkDirection(x, y) {
+	checkDirection(x, _y) {
 		if (x - this.pos.x < this.width / 2) {
 			if (this.cursors.left === false) {
 				input.triggerKeyEvent(input.KEY.LEFT, true);
@@ -168,7 +168,7 @@ class Joypad extends UISpriteElement {
 	/**
 	 * function called when the object is release or cancelled
 	 */
-	onRelease(event) {
+	onRelease(_event) {
 		this.setOpacity(0.25);
 		if (this.cursors.left === true) {
 			input.triggerKeyEvent(input.KEY.LEFT, false);

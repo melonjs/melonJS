@@ -1,8 +1,7 @@
 import { pauseTrack, resumeTrack } from "./../audio/audio.js";
 import { game } from "../index.js";
-import Stage from "./../state/stage.js";
 import DefaultLoadingScreen from "./../loader/loadingscreen.js";
-import { defer } from "../utils/function.ts";
+import Stage from "./../state/stage.js";
 import {
 	BOOT,
 	eventEmitter,
@@ -14,6 +13,7 @@ import {
 	TICK,
 	VIDEO_INIT,
 } from "../system/event.ts";
+import { defer } from "../utils/function.ts";
 
 // current state
 let _state = -1;

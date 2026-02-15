@@ -41,17 +41,21 @@
 	"exports": {
 		".": "./build/index.js"
 	},
-	"files": ["build/", "package.json", "README.md"],
+	"files": [
+		"build/",
+		"package.json",
+		"README.md"
+	],
 	"peerDependencies": {
 		"melonjs": ">=15.12.0"
 	},
 	"devDependencies": {
-		"concurrently": "^8.2.2",
-		"esbuild": "^0.23.0",
+		"concurrently": "^9.2.1",
+		"esbuild": "^0.27.3",
 		"melonjs": "workspace:*",
 		"tsconfig": "workspace:*",
-		"tsx": "^4.16.2",
-		"typescript": "^5.5.3"
+		"tsx": "^4.21.0",
+		"typescript": "^5.9.3"
 	},
 	"scripts": {
 		"dev": "concurrently --raw \"pnpm build:watch\" \"pnpm tsc:watch\"",

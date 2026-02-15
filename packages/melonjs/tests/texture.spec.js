@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CanvasTexture, boot, video } from "../src/index.js";
+import { boot, CanvasTexture, video } from "../src/index.js";
 
 describe("Texture", () => {
 	it("convertToBlob() should return a Blob when using a regular canvas", async () => {

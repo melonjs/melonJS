@@ -1,4 +1,4 @@
-import { Renderable, game, math } from "melonjs";
+import { game, math, Renderable } from "melonjs";
 import { MoleEntity } from "./mole";
 
 /**

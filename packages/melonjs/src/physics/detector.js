@@ -1,7 +1,7 @@
-import * as SAT from "./sat.js";
-import ResponseObject from "./response.js";
 import { Vector2d } from "../math/vector2d.ts";
 import { Bounds } from "./bounds.ts";
+import ResponseObject from "./response.js";
+import * as SAT from "./sat.js";
 
 /**
  * @import Entity from "./../renderable/entity/entity.js";

@@ -1,5 +1,5 @@
-import { Vector2d } from "../math/vector2d.ts";
 import * as input from "./../input/input.js";
+import { Vector2d } from "../math/vector2d.ts";
 import Renderable from "./../renderable/renderable.js";
 import {
 	DRAGEND,

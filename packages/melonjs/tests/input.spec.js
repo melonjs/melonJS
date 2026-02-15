@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { Renderable, game, input, video } from "../src/index.js";
+import { game, input, Renderable, video } from "../src/index.js";
 
 describe("input", () => {
 	let renderable;

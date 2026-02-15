@@ -12,7 +12,7 @@
  */
 export let preventDefault = true;
 
-export * from "./pointerevent.js";
-export * from "./keyboard.ts";
 export * from "./gamepad.js";
 export * from "./key.ts";
+export * from "./keyboard.ts";
+export * from "./pointerevent.js";

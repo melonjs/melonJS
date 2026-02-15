@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { Entity, Rect, Sprite, boot, loader, video } from "../src/index.js";
+import { boot, Entity, loader, Rect, Sprite, video } from "../src/index.js";
 
 describe("Entity", () => {
 	let entity;

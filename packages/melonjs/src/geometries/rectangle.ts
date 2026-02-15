@@ -1,6 +1,6 @@
 import { Vector2d, vector2dPool } from "../math/vector2d.ts";
 import { createPool } from "../system/pool.ts";
-import { Polygon, polygonPool, PolygonVertices } from "./polygon.ts";
+import { Polygon, PolygonVertices, polygonPool } from "./polygon.ts";
 
 /**
  * A rectangle object.

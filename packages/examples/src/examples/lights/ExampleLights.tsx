@@ -1,10 +1,10 @@
 import {
-	Light2d,
-	Sprite,
-	Stage,
 	game,
 	input,
+	Light2d,
 	loader,
+	Sprite,
+	Stage,
 	state,
 	video,
 } from "melonjs";

@@ -1,15 +1,15 @@
+import { ObservablePoint } from "../geometries/observablePoint.ts";
 import { Rect } from "./../geometries/rectangle.ts";
-import pool from "../system/legacy_pool.js";
 import { releaseAllPointerEvents } from "./../input/input.js";
-import { clamp } from "./../math/math.ts";
-import Body from "./../physics/body.js";
-import { Bounds, boundsPool } from "./../physics/bounds.ts";
-import GLShader from "./../video/webgl/glshader.js";
 import { Color, colorPool } from "./../math/color.ts";
+import { clamp } from "./../math/math.ts";
+import { matrix2dPool } from "../math/matrix2d.ts";
 import { ObservableVector3d } from "../math/observableVector3d.ts";
 import { vector2dPool } from "../math/vector2d.ts";
-import { matrix2dPool } from "../math/matrix2d.ts";
-import { ObservablePoint } from "../geometries/observablePoint.ts";
+import Body from "./../physics/body.js";
+import { Bounds, boundsPool } from "./../physics/bounds.ts";
+import pool from "../system/legacy_pool.js";
+import GLShader from "./../video/webgl/glshader.js";
 
 /**
  * additional import for TypeScript

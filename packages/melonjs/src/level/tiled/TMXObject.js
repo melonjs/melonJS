@@ -1,11 +1,11 @@
-import { applyTMXProperties } from "./TMXUtils.js";
-import Tile from "./TMXTile.js";
-import { degToRad } from "./../../math/math.ts";
-import { vector2dPool } from "../../math/vector2d.ts";
+import { ellipsePool } from "../../geometries/ellipse.ts";
+import { linePool } from "../../geometries/line.ts";
 import { pointPool } from "../../geometries/point.ts";
 import { polygonPool } from "../../geometries/polygon.ts";
-import { linePool } from "../../geometries/line.ts";
-import { ellipsePool } from "../../geometries/ellipse.ts";
+import { degToRad } from "./../../math/math.ts";
+import { vector2dPool } from "../../math/vector2d.ts";
+import Tile from "./TMXTile.js";
+import { applyTMXProperties } from "./TMXUtils.js";
 
 /**
  * a TMX Object defintion, as defined in Tiled

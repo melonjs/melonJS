@@ -1,4 +1,4 @@
-import { Renderable, Stage, Text, event, game, input, level } from "melonjs";
+import { event, game, level, Renderable, Stage, Text } from "melonjs";
 
 class Selector extends Renderable {
 	constructor() {
@@ -63,13 +63,13 @@ class Selector extends Renderable {
 	}
 
 	/** viewport move event callback */
-	viewportMove(pos) {
+	viewportMove(_pos) {
 		// invalidate the current tile when the viewport is moved
 		this.currentTile = null;
 	}
 
 	/** Update function */
-	update(dt) {
+	update(_dt) {
 		return typeof this.currentTile === "object";
 	}
 

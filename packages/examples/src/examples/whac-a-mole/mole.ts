@@ -1,4 +1,4 @@
-import { Sprite, Tween, audio, input, pool, save } from "melonjs";
+import { audio, input, pool, Sprite, save, Tween } from "melonjs";
 import { data } from "./data";
 
 /**

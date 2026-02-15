@@ -1,19 +1,19 @@
-import { preventDefault } from "./input.js";
-import { getBindingKey, triggerKeyEvent } from "./keyboard.ts";
-import { renderer } from "./../video/video.js";
-import { throttle } from "./../utils/function.ts";
-import { remove } from "./../utils/array.ts";
-import timer from "./../system/timer.ts";
-import * as device from "./../system/device.js";
-import Pointer from "./pointer.js";
 import { Rect } from "./../geometries/rectangle.ts";
 import { game } from "../index.js";
+import { vector2dPool } from "../math/vector2d.ts";
+import * as device from "./../system/device.js";
 import {
 	eventEmitter,
 	POINTERLOCKCHANGE,
 	POINTERMOVE,
 } from "../system/event.ts";
-import { vector2dPool } from "../math/vector2d.ts";
+import timer from "./../system/timer.ts";
+import { remove } from "./../utils/array.ts";
+import { throttle } from "./../utils/function.ts";
+import { renderer } from "./../video/video.js";
+import { preventDefault } from "./input.js";
+import { getBindingKey, triggerKeyEvent } from "./keyboard.ts";
+import Pointer from "./pointer.js";
 
 /**
  * @import {Vector2d} from "../math/vector2d.js";

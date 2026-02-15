@@ -1,6 +1,6 @@
-import TMXOrthogonalRenderer from "./TMXOrthogonalRenderer.js";
-import TMXIsometricRenderer from "./TMXIsometricRenderer.js";
 import TMXHexagonalRenderer from "./TMXHexagonalRenderer.js";
+import TMXIsometricRenderer from "./TMXIsometricRenderer.js";
+import TMXOrthogonalRenderer from "./TMXOrthogonalRenderer.js";
 import TMXStaggeredRenderer from "./TMXStaggeredRenderer.js";
 
 /**

@@ -1,7 +1,5 @@
-import { renderer } from "./../video/video.js";
 import { game } from "../index.js";
-import Sprite from "./sprite.js";
-import * as stringUtil from "./../utils/string.ts";
+import { vector2dPool } from "../math/vector2d.ts";
 import {
 	eventEmitter,
 	LEVEL_LOADED,
@@ -9,7 +7,9 @@ import {
 	VIEWPORT_ONCHANGE,
 	VIEWPORT_ONRESIZE,
 } from "../system/event.ts";
-import { vector2dPool } from "../math/vector2d.ts";
+import * as stringUtil from "./../utils/string.ts";
+import { renderer } from "./../video/video.js";
+import Sprite from "./sprite.js";
 
 /**
  * additional import for TypeScript

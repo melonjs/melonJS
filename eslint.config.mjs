@@ -1,8 +1,8 @@
+import eslint from "@eslint/js";
 import jsdoc from "eslint-plugin-jsdoc";
+import reactRefresh from "eslint-plugin-react-refresh";
 import globals from "globals";
 import tseslint from "typescript-eslint";
-import eslint from "@eslint/js";
-import reactRefresh from "eslint-plugin-react-refresh";
 
 const jsDocConfig = jsdoc.configs["flat/recommended-typescript-error"];
 

@@ -1,9 +1,9 @@
-import { resetGUID } from "./../utils/utils.ts";
-import state from "./../state/state.js";
-import { getTMX } from "./../loader/loader.js";
 import { game } from "../index.js";
-import TMXTileMap from "./tiled/TMXTileMap.js";
+import { getTMX } from "./../loader/loader.js";
+import state from "./../state/state.js";
 import { eventEmitter, LEVEL_LOADED } from "../system/event.ts";
+import { resetGUID } from "./../utils/utils.ts";
+import TMXTileMap from "./tiled/TMXTileMap.js";
 
 // our levels
 const levels = {};

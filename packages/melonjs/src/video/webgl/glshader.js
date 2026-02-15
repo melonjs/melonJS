@@ -1,9 +1,9 @@
-import { extractUniforms } from "./utils/uniforms.js";
-import { extractAttributes } from "./utils/attributes.js";
-import { compileProgram } from "./utils/program.js";
-import { setPrecision, getMaxShaderPrecision } from "./utils/precision.js";
-import { minify } from "./utils/string.js";
 import { eventEmitter, ONCONTEXT_LOST } from "../../system/event.ts";
+import { extractAttributes } from "./utils/attributes.js";
+import { getMaxShaderPrecision, setPrecision } from "./utils/precision.js";
+import { compileProgram } from "./utils/program.js";
+import { minify } from "./utils/string.js";
+import { extractUniforms } from "./utils/uniforms.js";
 
 /**
  * a base GL Shader object

@@ -1,5 +1,5 @@
-import { DRAGEND, eventEmitter } from "../system/event.ts";
 import Renderable from "./../renderable/renderable.js";
+import { DRAGEND, eventEmitter } from "../system/event.ts";
 
 /**
  * additional import for TypeScript

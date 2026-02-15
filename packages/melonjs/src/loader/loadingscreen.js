@@ -1,15 +1,15 @@
 import { game } from "../index.js";
-import { renderer } from "./../video/video.js";
-import Sprite from "./../renderable/sprite.js";
 import Renderable from "./../renderable/renderable.js";
+import Sprite from "./../renderable/sprite.js";
 import Stage from "./../state/stage.js";
-import { load, unload } from "./loader.js";
-import logo_url from "./melonjs_logo.png";
 import {
 	eventEmitter,
 	LOADER_PROGRESS,
 	VIEWPORT_ONRESIZE,
 } from "../system/event.ts";
+import { renderer } from "./../video/video.js";
+import { load, unload } from "./loader.js";
+import logo_url from "./melonjs_logo.png";
 
 // a basic progress bar object
 class ProgressBar extends Renderable {

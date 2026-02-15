@@ -1,5 +1,5 @@
-import { remove } from "../utils/array.ts";
 import { Vector2d } from "../math/vector2d.ts";
+import { remove } from "../utils/array.ts";
 
 /**
  * @import World from "./world.js";

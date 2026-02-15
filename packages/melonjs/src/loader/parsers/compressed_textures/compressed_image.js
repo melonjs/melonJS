@@ -1,9 +1,9 @@
+import { eventEmitter, VIDEO_INIT } from "../../../system/event.ts";
 import { parseDDS } from "./parseDDS.js";
 import { parseKTX } from "./parseKTX.js";
 import { parseKTX2 } from "./parseKTX2.js";
-import { parsePVR } from "./parsePVR.js";
 import { parsePKM } from "./parsePKM.js";
-import { eventEmitter, VIDEO_INIT } from "../../../system/event.ts";
+import { parsePVR } from "./parsePVR.js";
 
 let _renderer;
 

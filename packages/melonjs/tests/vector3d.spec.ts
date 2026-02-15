@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Vector2d, Vector3d, math } from "../src/index.js";
+import { math, Vector2d, Vector3d } from "../src/index.js";
 
 describe("Vector3d", () => {
 	const x = 1;

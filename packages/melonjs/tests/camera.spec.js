@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Camera2d, Renderable, Vector2d, boot, video } from "../src/index.js";
+import { boot, Camera2d, Renderable, Vector2d, video } from "../src/index.js";
 
 const setup = () => {
 	boot();

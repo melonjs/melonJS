@@ -1,8 +1,13 @@
 /// <reference types="vitest" />
 /// <reference types="vite/client" />
-import { defineConfig } from "vitest/config";
-import { default as glsl } from "vite-plugin-glsl";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { playwright } from "@vitest/browser-playwright";
 import { PackageJson } from "type-fest";
+import { default as glsl } from "vite-plugin-glsl";
+import { defineConfig } from "vitest/config";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const packageJson = (
 	await import("../../package.json", {
@@ -21,13 +26,17 @@ export default defineConfig(() =>
 			include: ["**/*.{test,spec}.[jt]s?(x)"],
 			browser: {
 				enabled: true,
-				name: "chromium",
-				provider: "playwright",
-				headless: true,
-				screenshotFailures: false,
+				provider: playwright(),
+				instances: [
+					{
+						browser: "chromium",
+						headless: true,
+						screenshotFailures: false,
+					},
+				],
 			},
 		},
-		publicDir: "./tests/public",
+		publicDir: resolve(__dirname, "tests/public"),
 		plugins: [
 			glsl() as Plugin,
 			{

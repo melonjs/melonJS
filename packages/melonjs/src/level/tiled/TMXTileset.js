@@ -1,8 +1,8 @@
+import { getImage, getTMX } from "./../../loader/loader.js";
 import { Vector2d } from "../../math/vector2d.ts";
-import { renderer } from "./../../video/video.js";
 import timer from "./../../system/timer.ts";
-import { getTMX, getImage } from "./../../loader/loader.js";
 import { getBasename, getExtension } from "../../utils/file.ts";
+import { renderer } from "./../../video/video.js";
 
 /**
  * a TMX Tile Set Object

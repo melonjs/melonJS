@@ -1,3 +1,6 @@
+import { clamp } from "../math/math.js";
+import state from "../state/state.js";
+import { defer } from "./../utils/function.js";
 import {
 	BOOT,
 	eventEmitter,
@@ -6,9 +9,6 @@ import {
 	STATE_RESTART,
 	STATE_RESUME,
 } from "./event.js";
-import state from "../state/state.js";
-import { clamp } from "../math/math.js";
-import { defer } from "./../utils/function.js";
 
 /**
  * a Timer class to manage timing related function (FPS, Game Tick, Time...)

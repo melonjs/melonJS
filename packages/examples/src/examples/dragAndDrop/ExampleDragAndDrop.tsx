@@ -1,4 +1,4 @@
-import { ColorLayer, Draggable, DropTarget, Text, game, video } from "melonjs";
+import { ColorLayer, Draggable, DropTarget, game, Text, video } from "melonjs";
 import { createExampleComponent } from "../utils";
 
 class Square extends Draggable {

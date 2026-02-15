@@ -1,7 +1,7 @@
-import { warning } from "./console.js";
-import CanvasRenderTarget from "../video/rendertarget/canvasrendertarget.js";
 import CanvasRenderer from "../video/canvas/canvas_renderer.js";
+import CanvasRenderTarget from "../video/rendertarget/canvasrendertarget.js";
 import WebGLRenderer from "../video/webgl/webgl_renderer.js";
+import { warning } from "./console.js";
 
 /*
  * placeholder for all deprecated classes and corresponding alias for backward compatibility

@@ -1,10 +1,10 @@
+import { Color } from "./../../math/color.ts";
 import {
 	eventEmitter,
 	GAME_RESET,
 	ONCONTEXT_LOST,
 	ONCONTEXT_RESTORED,
 } from "../../system/event.ts";
-import { Color } from "./../../math/color.ts";
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture/cache.js";
 

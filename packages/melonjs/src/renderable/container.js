@@ -1,12 +1,12 @@
-import Renderable from "./renderable.js";
-import { createGUID } from "../utils/utils";
-import { defer } from "../utils/function";
 import { game } from "../index.js";
-import pool from "../system/legacy_pool.js";
-import state from "../state/state.js";
-import Body from "../physics/body.js";
-import { CANVAS_ONRESIZE, eventEmitter } from "../system/event.ts";
 import { colorPool } from "../math/color.ts";
+import Body from "../physics/body.js";
+import state from "../state/state.js";
+import { CANVAS_ONRESIZE, eventEmitter } from "../system/event.ts";
+import pool from "../system/legacy_pool.js";
+import { defer } from "../utils/function";
+import { createGUID } from "../utils/utils";
+import Renderable from "./renderable.js";
 
 /**
  * Private function to re-use for object removal in a defer

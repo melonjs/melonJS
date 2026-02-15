@@ -1,5 +1,5 @@
-import TMXLayer from "./../TMXLayer.js";
 import { Bounds, boundsPool } from "./../../../physics/bounds.ts";
+import TMXLayer from "./../TMXLayer.js";
 
 /**
  * The map renderer base class

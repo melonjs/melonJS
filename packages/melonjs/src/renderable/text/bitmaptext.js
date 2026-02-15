@@ -1,9 +1,9 @@
+import { getBinary, getImage } from "../../loader/loader.js";
 import { Color } from "../../math/color.ts";
-import { getImage, getBinary } from "../../loader/loader.js";
-import Renderable from "../renderable.js";
-import TextMetrics from "./textmetrics.js";
 import { vector2dPool } from "../../math/vector2d.ts";
+import Renderable from "../renderable.js";
 import { bitmapTextDataPool } from "./bitmaptextdata.ts";
+import TextMetrics from "./textmetrics.js";
 
 /**
  * a bitmap font object

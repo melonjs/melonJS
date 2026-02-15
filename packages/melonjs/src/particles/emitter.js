@@ -1,8 +1,8 @@
-import { particlePool } from "./particle.ts";
-import ParticleEmitterSettings from "./settings.js";
 import { randomFloat } from "./../math/math.ts";
 import Container from "./../renderable/container.js";
 import CanvasRenderTarget from "../video/rendertarget/canvasrendertarget.js";
+import { particlePool } from "./particle.ts";
+import ParticleEmitterSettings from "./settings.js";
 
 /**
  * @ignore

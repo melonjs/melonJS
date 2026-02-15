@@ -1,10 +1,7 @@
 import { expect, test } from "vitest";
-import { deviation, flatten } from "./utils";
-import expected from "./expected.json";
-import { server } from "@vitest/browser/context";
 import { earcut } from "../../src/geometries/earcut";
-
-const { readFile } = server.commands;
+import expected from "./expected.json";
+import { deviation, flatten } from "./utils";
 
 test("indices-2d", () => {
 	const indices = earcut([10, 0, 0, 50, 60, 60, 70, 10]);
@@ -32,8 +29,8 @@ const isExpectedError = (
 
 for (const id of keys) {
 	test(id, async () => {
-		const json = await readFile(`./fixtures/${id}.json`);
-		const data = flatten(JSON.parse(json) as number[][][]),
+		const fixture = await import(`./fixtures/${id}.json`);
+		const data = flatten(fixture.default as number[][][]),
 			indices = earcut(data.vertices, data.holes, data.dimensions),
 			err = deviation(data.vertices, data.holes, data.dimensions, indices),
 			expectedTriangles = expected.triangles[id],

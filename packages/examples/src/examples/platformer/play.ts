@@ -1,6 +1,6 @@
-import { Stage, audio, device, game, level, plugin } from "melonjs";
-import UIContainer from "./entities/HUD";
+import { audio, device, game, level, plugin, Stage } from "melonjs";
 import { VirtualJoypad } from "./entities/controls";
+import UIContainer from "./entities/HUD";
 import { gameState } from "./gameState";
 
 export class PlayScreen extends Stage {

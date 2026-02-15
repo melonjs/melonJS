@@ -1,7 +1,7 @@
 import React, { type ReactElement } from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
-import { Link, RouterProvider, createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Link, RouterProvider } from "react-router-dom";
 import { ExampleAseprite } from "./examples/aseprite/ExampleAseprite";
 import { ExampleBenchmark } from "./examples/benchmark/ExampleBenchmark";
 import { ExampleDeviceTest } from "./examples/deviceTest/ExampleDeviceTest";
@@ -74,19 +74,17 @@ const examples: { label: string; path: string; component: ReactElement }[] = [
 
 const Index = () => {
 	return (
-		<>
-			<ul>
-				{examples.map((example) => {
-					return (
-						<li key={example.path}>
-							<Link to={example.path} reloadDocument>
-								{example.label}
-							</Link>
-						</li>
-					);
-				})}
-			</ul>
-		</>
+		<ul>
+			{examples.map((example) => {
+				return (
+					<li key={example.path}>
+						<Link to={example.path} reloadDocument>
+							{example.label}
+						</Link>
+					</li>
+				);
+			})}
+		</ul>
 	);
 };
 

@@ -1,4 +1,4 @@
-import { Text, game, video } from "melonjs";
+import { game, Text, video } from "melonjs";
 import { createExampleComponent } from "../utils";
 
 export const ExampleHelloWorld = createExampleComponent(() => {

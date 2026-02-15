@@ -1,13 +1,7 @@
-import { autoDetectRenderer } from "../video/utils/autodetect.js";
-import CanvasRenderer from "../video/canvas/canvas_renderer.js";
-import * as device from "../system/device.js";
-import { getUriFragment } from "../utils/utils.ts";
-import timer from "../system/timer.ts";
-import state from "../state/state.js";
+import { AUTO, CANVAS, WEBGL } from "../const.ts";
 import World from "../physics/world.js";
-import { onresize } from "./resize.js";
-import { consoleHeader } from "./header.js";
-import { CANVAS, WEBGL, AUTO } from "../const.ts";
+import state from "../state/state.js";
+import * as device from "../system/device.js";
 import {
 	BLUR,
 	eventEmitter,
@@ -27,7 +21,13 @@ import {
 	WINDOW_ONORIENTATION_CHANGE,
 	WINDOW_ONRESIZE,
 } from "../system/event.ts";
+import timer from "../system/timer.ts";
+import { getUriFragment } from "../utils/utils.ts";
+import CanvasRenderer from "../video/canvas/canvas_renderer.js";
+import { autoDetectRenderer } from "../video/utils/autodetect.js";
 import { defaultApplicationSettings } from "./defaultApplicationSettings.ts";
+import { consoleHeader } from "./header.js";
+import { onresize } from "./resize.js";
 import { ScaleMethods } from "./scaleMethods.ts";
 
 /**

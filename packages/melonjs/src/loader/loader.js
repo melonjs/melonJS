@@ -1,28 +1,28 @@
 import * as audio from "./../audio/audio.js";
-import state from "./../state/state.js";
-import {
-	imgList,
-	tmxList,
-	binList,
-	jsonList,
-	videoList,
-	fontList,
-} from "./cache.js";
-import { preloadImage } from "./parsers/image.js";
-import { preloadFontFace } from "./parsers/fontface.js";
-import { preloadTMX } from "./parsers/tmx.js";
-import { preloadJSON } from "./parsers/json.js";
-import { preloadBinary } from "./parsers/binary.js";
-import { preloadJavascript } from "./parsers/script.js";
-import { preloadVideo } from "./parsers/video.js";
 import { warning } from "../lang/console.js";
-import { getBasename } from "../utils/file.ts";
+import state from "./../state/state.js";
 import {
 	eventEmitter,
 	LOADER_COMPLETE,
 	LOADER_ERROR,
 	LOADER_PROGRESS,
 } from "../system/event.ts";
+import { getBasename } from "../utils/file.ts";
+import {
+	binList,
+	fontList,
+	imgList,
+	jsonList,
+	tmxList,
+	videoList,
+} from "./cache.js";
+import { preloadBinary } from "./parsers/binary.js";
+import { preloadFontFace } from "./parsers/fontface.js";
+import { preloadImage } from "./parsers/image.js";
+import { preloadJSON } from "./parsers/json.js";
+import { preloadJavascript } from "./parsers/script.js";
+import { preloadTMX } from "./parsers/tmx.js";
+import { preloadVideo } from "./parsers/video.js";
 
 /**
  * a small class to manage loading of stuff and manage resources

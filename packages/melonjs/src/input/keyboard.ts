@@ -1,6 +1,6 @@
-import { preventDefault as preventDefaultAction } from "./input.js";
-import { isMobile } from "../system/platform.ts";
 import { eventEmitter, KEYDOWN, KEYUP } from "../system/event.ts";
+import { isMobile } from "../system/platform.ts";
+import { preventDefault as preventDefaultAction } from "./input.js";
 
 // corresponding actions
 const _keyStatus: Record<string, number> = {};

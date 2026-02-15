@@ -1,16 +1,16 @@
-import { Vector2d } from "../math/vector2d.ts";
-import QuadTree from "./quadtree.js";
-import Container from "../renderable/container.js";
-import { collision } from "./collision.js";
-import Detector from "./detector.js";
-import state from "./../state/state.js";
 import { hasRegisteredEvents } from "../input/pointerevent.js";
+import { Vector2d } from "../math/vector2d.ts";
+import Container from "../renderable/container.js";
+import state from "./../state/state.js";
 import {
 	eventEmitter,
 	GAME_RESET,
 	LEVEL_LOADED,
 	WORLD_STEP,
 } from "../system/event.ts";
+import { collision } from "./collision.js";
+import Detector from "./detector.js";
+import QuadTree from "./quadtree.js";
 
 /**
  * @import Application from "./../application/application.js";

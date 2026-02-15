@@ -1,6 +1,6 @@
-import { dirname, resolve, extname, posix, sep } from "node:path";
-import { emitWarning, cwd } from "node:process";
 import { readFileSync } from "node:fs";
+import { dirname, extname, posix, resolve, sep } from "node:path";
+import { cwd, emitWarning } from "node:process";
 import { LoadingOptions } from "./types";
 
 /**

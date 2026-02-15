@@ -1,9 +1,9 @@
-import timer from "../system/timer.js";
 import { game } from "../index.js";
+import { eventEmitter, STATE_RESUME } from "../system/event.js";
 import { createPool } from "../system/pool.ts";
+import timer from "../system/timer.js";
 import { Easing, EasingFunction } from "./easing.js";
 import { Interpolation, InterpolationFunction } from "./interpolation.js";
-import { eventEmitter, STATE_RESUME } from "../system/event.js";
 
 /*
  * Tween.js - Licensed under the MIT license

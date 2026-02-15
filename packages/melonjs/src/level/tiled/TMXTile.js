@@ -1,11 +1,11 @@
 import { Matrix2d } from "../../math/matrix2d.ts";
-import Sprite from "./../../renderable/sprite.js";
 import { Bounds } from "./../../physics/bounds.ts";
+import Sprite from "./../../renderable/sprite.js";
 import {
-	TMX_FLIP_V,
-	TMX_FLIP_H,
-	TMX_FLIP_AD,
 	TMX_CLEAR_BIT_MASK,
+	TMX_FLIP_AD,
+	TMX_FLIP_H,
+	TMX_FLIP_V,
 } from "./constants.js";
 
 /**

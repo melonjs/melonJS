@@ -1,6 +1,6 @@
 import { isWebGLSupported } from "../../system/device";
-import WebGLRenderer from "../webgl/webgl_renderer";
 import CanvasRenderer from "../canvas/canvas_renderer";
+import WebGLRenderer from "../webgl/webgl_renderer";
 
 /**
  * Auto-detect the best renderer to use

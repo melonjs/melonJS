@@ -1,10 +1,10 @@
 import {
 	BitmapText,
 	type Color,
+	getPool,
 	Renderable,
 	Text,
 	Tween,
-	getPool,
 	video,
 } from "melonjs";
 

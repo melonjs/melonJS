@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { Rect, RoundRect, Vector2d, pool } from "../src/index.js";
+import { pool, Rect, RoundRect, Vector2d } from "../src/index.js";
 
 describe("Shape : RoundRect", () => {
 	let rrect: RoundRect;

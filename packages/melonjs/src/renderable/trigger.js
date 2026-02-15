@@ -1,9 +1,9 @@
-import Renderable from "./renderable.js";
-import { collision } from "./../physics/collision.js";
-import Body from "./../physics/body.js";
+import { polygonPool } from "../geometries/polygon.ts";
 import { level } from "./../level/level.js";
 import { vector2dPool } from "../math/vector2d.ts";
-import { polygonPool } from "../geometries/polygon.ts";
+import Body from "./../physics/body.js";
+import { collision } from "./../physics/collision.js";
+import Renderable from "./renderable.js";
 
 /**
  * additional import for TypeScript

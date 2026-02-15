@@ -1,6 +1,6 @@
 import { TupleToUnion } from "type-fest";
-import { Vector2d } from "./vector2d.ts";
 import { createPool } from "../system/pool.ts";
+import { Vector2d } from "./vector2d.ts";
 
 const propertiesToObserve = ["x", "y"] as const;
 type ObservableProperty = keyof Pick<

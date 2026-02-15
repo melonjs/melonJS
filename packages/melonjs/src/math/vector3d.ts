@@ -1,7 +1,7 @@
-import { clamp } from "./math.ts";
 import { createPool } from "../system/pool.ts";
-import { Vector2d } from "./vector2d.ts";
 import { XYPoint } from "../utils/types.ts";
+import { clamp } from "./math.ts";
+import { Vector2d } from "./vector2d.ts";
 
 /**
  * a generic 3D Vector Object

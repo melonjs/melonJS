@@ -3,8 +3,8 @@ import {
 	type CanvasRenderer,
 	Container,
 	Renderable,
-	type WebGLRenderer,
 	video,
+	type WebGLRenderer,
 } from "melonjs";
 
 import { data } from "./data";

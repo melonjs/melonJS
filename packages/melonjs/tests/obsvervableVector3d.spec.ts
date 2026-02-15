@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ObservableVector3d } from "../src/index.js";
-import { Vector3d, Vector2d } from "../src/index.js";
-import { math } from "../src/index.js";
+import { math, ObservableVector3d, Vector2d, Vector3d } from "../src/index.js";
 
 describe("ObservableVector3d : constructor", () => {
 	const x = 1;

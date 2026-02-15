@@ -1,5 +1,5 @@
-import { Polygon, Vector2d } from "../src/index.js";
 import { beforeAll, describe, expect, it } from "vitest";
+import { Polygon, Vector2d } from "../src/index.js";
 
 describe("Shape : Polygon", () => {
 	describe("Polygon", () => {

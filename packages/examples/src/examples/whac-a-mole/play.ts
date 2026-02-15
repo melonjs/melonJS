@@ -1,4 +1,4 @@
-import { Sprite, Stage, audio, game, loader } from "melonjs";
+import { audio, game, loader, Sprite, Stage } from "melonjs";
 import { HUDContainer } from "./HUD";
 import { MoleManager } from "./manager";
 

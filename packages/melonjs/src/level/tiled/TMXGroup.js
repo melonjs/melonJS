@@ -1,7 +1,7 @@
-import { applyTMXProperties } from "./TMXUtils.js";
-import TMXObject from "./TMXObject.js";
-import TMXLayer from "./TMXLayer.js";
 import { clamp } from "./../../math/math.ts";
+import TMXLayer from "./TMXLayer.js";
+import TMXObject from "./TMXObject.js";
+import { applyTMXProperties } from "./TMXUtils.js";
 
 /**
  * object group definition as defined in Tiled.

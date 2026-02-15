@@ -1,14 +1,14 @@
 import {
 	type CanvasRenderer,
 	ColorLayer,
-	Renderable,
-	Text,
-	type WebGLRenderer,
 	device,
 	game,
 	input,
 	math,
+	Renderable,
+	Text,
 	video,
+	type WebGLRenderer,
 } from "melonjs";
 import { createExampleComponent } from "../utils";
 

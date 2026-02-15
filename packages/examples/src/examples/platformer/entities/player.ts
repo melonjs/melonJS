@@ -1,7 +1,7 @@
 import {
-	Entity,
 	audio,
 	collision,
+	Entity,
 	game,
 	input,
 	level,

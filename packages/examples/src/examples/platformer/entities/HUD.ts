@@ -1,12 +1,12 @@
 import {
+	audio,
 	BitmapText,
 	Container,
-	UISpriteElement,
-	Vector2d,
-	audio,
 	device,
 	event,
 	game,
+	UISpriteElement,
+	Vector2d,
 } from "melonjs";
 import { gameState } from "../gameState";
 

@@ -1,12 +1,6 @@
 import { Color, colorPool } from "./../../math/color.ts";
-import { Matrix2d, matrix2dPool } from "../../math/matrix2d.ts";
-import QuadCompositor from "./compositors/quad_compositor";
-import PrimitiveCompositor from "./compositors/primitive_compositor";
-import Renderer from "./../renderer.js";
-import TextureCache from "./../texture/cache.js";
-import { TextureAtlas, createAtlas } from "./../texture/atlas.js";
-import { renderer } from "./../video.js";
 import { isPowerOfTwo } from "./../../math/math.ts";
+import { Matrix2d, matrix2dPool } from "../../math/matrix2d.ts";
 import {
 	CANVAS_ONRESIZE,
 	eventEmitter,
@@ -14,6 +8,12 @@ import {
 	ONCONTEXT_LOST,
 	ONCONTEXT_RESTORED,
 } from "../../system/event.ts";
+import Renderer from "./../renderer.js";
+import { createAtlas, TextureAtlas } from "./../texture/atlas.js";
+import TextureCache from "./../texture/cache.js";
+import { renderer } from "./../video.js";
+import PrimitiveCompositor from "./compositors/primitive_compositor";
+import QuadCompositor from "./compositors/quad_compositor";
 
 /**
  * additional import for TypeScript

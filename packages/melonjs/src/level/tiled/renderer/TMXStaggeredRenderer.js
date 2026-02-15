@@ -1,6 +1,6 @@
+import { degToRad } from "./../../../math/math.ts";
 import { Vector2d, vector2dPool } from "../../../math/vector2d.ts";
 import TMXHexagonalRenderer from "./TMXHexagonalRenderer.js";
-import { degToRad } from "./../../../math/math.ts";
 
 /**
  * a Staggered Map Renderder

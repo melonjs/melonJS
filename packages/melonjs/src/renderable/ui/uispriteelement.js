@@ -1,9 +1,9 @@
-import timer from "./../../system/timer.ts";
-import Sprite from "./../sprite.js";
 import {
 	registerPointerEvent,
 	releasePointerEvent,
 } from "./../../input/input.js";
+import timer from "./../../system/timer.ts";
+import Sprite from "./../sprite.js";
 
 /**
  * This is a basic sprite based button which you can use in your Game UI.

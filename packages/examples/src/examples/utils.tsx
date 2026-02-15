@@ -7,7 +7,7 @@ export const createExampleComponent = (createGameFn: () => void) => {
 			if (!game.isInitialized) {
 				createGameFn();
 			}
-		}, [createGameFn]);
+		}, []);
 		return null;
 	};
 };

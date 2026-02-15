@@ -1,5 +1,5 @@
-import primitiveVertex from "./../shaders/primitive.vert";
 import primitiveFragment from "./../shaders/primitive.frag";
+import primitiveVertex from "./../shaders/primitive.vert";
 import Compositor from "./compositor.js";
 
 /**

@@ -1,15 +1,15 @@
-import { Rect } from "./../geometries/rectangle.ts";
 import { Ellipse } from "./../geometries/ellipse.ts";
-import { Polygon, polygonPool } from "../geometries/polygon.ts";
-import { Bounds, boundsPool } from "./bounds.ts";
-import pool from "../system/legacy_pool.js";
-import { collision } from "./collision.js";
-import timer from "./../system/timer.ts";
-import { clamp } from "./../math/math.ts";
-import { Point, pointPool } from "../geometries/point.ts";
-import { remove } from "../utils/array.ts";
-import { vector2dPool } from "../math/vector2d.ts";
 import { Line, linePool } from "./../geometries/line.ts";
+import { Point, pointPool } from "../geometries/point.ts";
+import { Polygon, polygonPool } from "../geometries/polygon.ts";
+import { Rect } from "./../geometries/rectangle.ts";
+import { clamp } from "./../math/math.ts";
+import { vector2dPool } from "../math/vector2d.ts";
+import pool from "../system/legacy_pool.js";
+import timer from "./../system/timer.ts";
+import { remove } from "../utils/array.ts";
+import { Bounds, boundsPool } from "./bounds.ts";
+import { collision } from "./collision.js";
 
 /**
  * @import Entity from "./../renderable/entity/entity.js";

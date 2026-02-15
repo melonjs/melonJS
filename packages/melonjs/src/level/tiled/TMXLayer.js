@@ -1,9 +1,9 @@
-import { createCanvas } from "./../../video/video.js";
-import * as TMXUtils from "./TMXUtils.js";
-import Tile from "./TMXTile.js";
+import { vector2dPool } from "../../math/vector2d.ts";
 import Renderable from "./../../renderable/renderable.js";
 import CanvasRenderer from "./../../video/canvas/canvas_renderer";
-import { vector2dPool } from "../../math/vector2d.ts";
+import { createCanvas } from "./../../video/video.js";
+import Tile from "./TMXTile.js";
+import * as TMXUtils from "./TMXUtils.js";
 
 /**
  * Create required arrays for the given layer object

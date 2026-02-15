@@ -1,5 +1,5 @@
-import BitmapText from "../text/bitmaptext.js";
 import { RoundRect } from "../../geometries/roundrect.ts";
+import BitmapText from "../text/bitmaptext.js";
 import UIBaseElement from "./uibaseelement.js";
 
 /**

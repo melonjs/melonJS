@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { Container, Sprite, boot, video } from "../src/index.js";
+import { boot, Container, Sprite, video } from "../src/index.js";
 
 describe("Sprite", () => {
 	let container;

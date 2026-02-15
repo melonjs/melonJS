@@ -1,8 +1,8 @@
 import { TupleToUnion } from "type-fest";
+import { Point } from "../geometries/point.ts";
+import { createPool } from "../system/pool.ts";
 import { Vector2d } from "./vector2d";
 import { Vector3d } from "./vector3d";
-import { createPool } from "../system/pool.ts";
-import { Point } from "../geometries/point.ts";
 
 const propertiesToObserve = ["x", "y", "z"] as const;
 type ObservableProperty = keyof Pick<

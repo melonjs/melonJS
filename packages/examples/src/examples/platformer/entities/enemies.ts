@@ -1,4 +1,4 @@
-import { Entity, ParticleEmitter, Rect, audio, collision, game } from "melonjs";
+import { audio, collision, Entity, game, ParticleEmitter, Rect } from "melonjs";
 import { gameState } from "../gameState";
 
 /**

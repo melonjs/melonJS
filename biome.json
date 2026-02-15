@@ -1,11 +1,14 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.8.2/schema.json",
-	"organizeImports": {
-		"enabled": true,
-		"include": ["packages/examples", "packages/debug-plugin"]
-	},
+	"$schema": "https://biomejs.dev/schemas/2.3.14/schema.json",
+	"assist": { "actions": { "source": { "organizeImports": "on" } } },
 	"files": {
-		"ignore": ["docs/", "build/", ".turbo", "**/examples/**/assets/**/*"]
+		"includes": [
+			"**",
+			"!**/docs",
+			"!**/build",
+			"!**/.turbo",
+			"!**/examples/**/assets/**/*"
+		]
 	},
 	"formatter": { "enabled": true },
 	"linter": {
@@ -14,6 +17,6 @@
 			"recommended": true,
 			"nursery": { "recommended": true }
 		},
-		"include": ["packages/examples", "packages/debug-plugin"]
+		"includes": ["**/packages/examples/**", "**/packages/debug-plugin/**"]
 	}
 }

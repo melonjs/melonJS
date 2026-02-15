@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { Text, boot, video } from "../src/index.js";
+import { boot, Text, video } from "../src/index.js";
 
 describe("Font : Text", () => {
 	let font;

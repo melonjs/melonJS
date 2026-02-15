@@ -1,7 +1,7 @@
 import { TAU } from "./../math/math.ts";
-import { endpointToCenterParameterization } from "./toarccanvas.ts";
 import { earcut } from "./earcut.ts";
 import { pointPool } from "./point.ts";
+import { endpointToCenterParameterization } from "./toarccanvas.ts";
 
 /**
  * additional import for TypeScript

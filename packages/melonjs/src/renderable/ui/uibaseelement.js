@@ -1,11 +1,11 @@
-import Container from "../container.js";
-import timer from "../../system/timer.ts";
 import {
 	registerPointerEvent,
 	releasePointerEvent,
 } from "./../../input/input.js";
-import { eventEmitter, POINTERMOVE } from "../../system/event.ts";
 import { vector2dPool } from "../../math/vector2d.ts";
+import { eventEmitter, POINTERMOVE } from "../../system/event.ts";
+import timer from "../../system/timer.ts";
+import Container from "../container.js";
 
 /**
  * This is a basic clickable and draggable container which you can use in your game UI.

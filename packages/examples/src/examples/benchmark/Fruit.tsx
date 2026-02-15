@@ -1,4 +1,4 @@
-import { Sprite, game, math } from "melonjs";
+import { game, math, Sprite } from "melonjs";
 
 export class Fruit extends Sprite {
 	gravity: number;

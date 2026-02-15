@@ -1,7 +1,7 @@
 import { Vector2d, vector2dPool } from "../../../math/vector2d.ts";
-import TMXRenderer from "./TMXRenderer.js";
-import TMXLayer from "./../TMXLayer.js";
 import { boundsPool } from "../../../physics/bounds.ts";
+import TMXLayer from "./../TMXLayer.js";
+import TMXRenderer from "./TMXRenderer.js";
 
 // scope global variables & constants
 const offsetsStaggerX = [

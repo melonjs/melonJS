@@ -1,7 +1,7 @@
-import { renderer } from "./../video/video.js";
 import Camera2d from "./../camera/camera2d.js";
 import { Color } from "./../math/color.ts";
 import { eventEmitter, STAGE_RESET } from "../system/event.ts";
+import { renderer } from "./../video/video.js";
 
 // a default camera instance to use across all stages
 let default_camera;

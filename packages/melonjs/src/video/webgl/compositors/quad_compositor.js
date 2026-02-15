@@ -1,7 +1,7 @@
-import { Vector2d } from "../../../math/vector2d.ts";
 import { isPowerOfTwo } from "../../../math/math.ts";
-import quadVertex from "./../shaders/quad.vert";
+import { Vector2d } from "../../../math/vector2d.ts";
 import quadFragment from "./../shaders/quad.frag";
+import quadVertex from "./../shaders/quad.vert";
 import Compositor from "./compositor.js";
 
 /**

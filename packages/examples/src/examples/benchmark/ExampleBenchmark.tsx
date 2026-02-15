@@ -1,17 +1,17 @@
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import {
-	ScaleMethods,
 	device,
 	event,
 	game,
 	input,
 	loader,
 	plugin,
+	ScaleMethods,
 	video,
 } from "melonjs";
 import { createExampleComponent } from "../utils";
-import { Fruit } from "./Fruit";
 import { assets } from "./assets";
+import { Fruit } from "./Fruit";
 
 const FRUIT_STEP = 50;
 

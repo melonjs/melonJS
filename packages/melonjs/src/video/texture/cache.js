@@ -1,8 +1,8 @@
-import { renderer } from "./../video.js";
-import { TextureAtlas, createAtlas } from "./atlas.js";
-import { isPowerOfTwo } from "./../../math/math.ts";
 import { ArrayMultimap } from "@teppeis/multimaps";
+import { isPowerOfTwo } from "./../../math/math.ts";
 import { getBasename } from "../../utils/file.ts";
+import { renderer } from "./../video.js";
+import { createAtlas, TextureAtlas } from "./atlas.js";
 
 /**
  * a basic texture cache object

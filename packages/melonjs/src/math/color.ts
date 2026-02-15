@@ -1,5 +1,5 @@
-import { clamp, random } from "./math.ts";
 import { createPool } from "../system/pool.ts";
+import { clamp, random } from "./math.ts";
 
 // convert a give color component to it hexadecimal value
 const charLookup = [

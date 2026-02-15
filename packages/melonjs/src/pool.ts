@@ -11,8 +11,8 @@ import { vector2dPool } from "./math/vector2d";
 import { vector3dPool } from "./math/vector3d";
 import { particlePool } from "./particles/particle";
 import { boundsPool } from "./physics/bounds";
-import { tweenPool } from "./tweens/tween";
 import { bitmapTextDataPool } from "./renderable/text/bitmaptextdata";
+import { tweenPool } from "./tweens/tween";
 
 const pools = {
 	vector2d: vector2dPool,

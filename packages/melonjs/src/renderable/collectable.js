@@ -1,8 +1,8 @@
-import Sprite from "./sprite.js";
+import { polygonPool } from "../geometries/polygon.ts";
+import { vector2dPool } from "../math/vector2d.ts";
 import Body from "./../physics/body.js";
 import { collision } from "./../physics/collision.js";
-import { vector2dPool } from "../math/vector2d.ts";
-import { polygonPool } from "../geometries/polygon.ts";
+import Sprite from "./sprite.js";
 
 /**
  * a basic collectable helper class for immovable object (e.g. a coin)

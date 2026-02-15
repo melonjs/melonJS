@@ -1,6 +1,5 @@
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import {
-	TextureAtlas,
 	audio,
 	device,
 	event,
@@ -9,6 +8,7 @@ import {
 	plugin,
 	pool,
 	state,
+	TextureAtlas,
 	video,
 } from "melonjs";
 import { CoinEntity } from "./entities/coin.js";
@@ -65,7 +65,7 @@ export const createGame = () => {
 		);
 
 		// add some keyboard shortcuts
-		event.on(event.KEYDOWN, (action, keyCode /*, edge */) => {
+		event.on(event.KEYDOWN, (_action, keyCode /*, edge */) => {
 			// change global volume setting
 			if (keyCode === input.KEY.PLUS) {
 				// increase volume

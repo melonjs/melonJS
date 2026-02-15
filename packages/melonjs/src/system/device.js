@@ -1,9 +1,9 @@
-import { getParent } from "./../video/video.js";
-import save from "./save.ts";
 import { prefixed } from "./../utils/agent.ts";
+import { getParent } from "./../video/video.js";
 import { DOMContentLoaded } from "./dom.ts";
-import * as device_platform from "./platform.ts";
 import { BLUR, eventEmitter, FOCUS } from "./event.ts";
+import * as device_platform from "./platform.ts";
+import save from "./save.ts";
 
 /**
  * device type and capabilities

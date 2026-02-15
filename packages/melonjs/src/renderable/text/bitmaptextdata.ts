@@ -1,5 +1,5 @@
-import Glyph from "./glyph.ts";
 import { createPool } from "../../pool.ts";
+import Glyph from "./glyph.ts";
 
 // bitmap constants
 const capChars: string[] = [
