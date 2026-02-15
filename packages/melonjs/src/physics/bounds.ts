@@ -18,7 +18,7 @@ export class Bounds {
 	 * Constructs a Bounds object with optional vertices.
 	 * @param [vertices] - An array of Vector2d or Point to initialize the bounds.
 	 */
-	constructor(vertices?: Vector2d[] | Point[] | XYPoint[] | undefined) {
+	constructor(vertices?: Vector2d[] | Point[] | XYPoint[]) {
 		this._center = new Vector2d();
 		this.type = "Bounds";
 		this.min = { x: Infinity, y: Infinity };
@@ -251,7 +251,7 @@ export class Bounds {
 	 * @param point - The point to add to the bounds.
 	 * @param [m] - An optional transform to apply to the given point.
 	 */
-	addPoint(point: Vector2d | Point, m?: Matrix2d | undefined) {
+	addPoint(point: Vector2d | Point, m?: Matrix2d) {
 		const p = m ? m.apply(point) : point;
 		this.min.x = Math.min(this.min.x, p.x);
 		this.max.x = Math.max(this.max.x, p.x);
@@ -267,13 +267,7 @@ export class Bounds {
 	 * @param y1 - The bottom y coordinate of the quad.
 	 * @param [m] - An optional transform to apply to the given coordinates.
 	 */
-	addFrame(
-		x0: number,
-		y0: number,
-		x1: number,
-		y1: number,
-		m?: Matrix2d | undefined,
-	) {
+	addFrame(x0: number, y0: number, x1: number, y1: number, m?: Matrix2d) {
 		const v = pointPool.get();
 
 		this.addPoint(v.set(x0, y0), m);

@@ -311,7 +311,7 @@ export class Vector3d {
 	 * @param [v] - an optional point to rotate around (on the same z axis)
 	 * @returns Reference to this object for method chaining
 	 */
-	rotate(angle: number, v?: XYPoint | undefined) {
+	rotate(angle: number, v?: XYPoint) {
 		let cx = 0;
 		let cy = 0;
 

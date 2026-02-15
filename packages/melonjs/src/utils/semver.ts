@@ -3,7 +3,7 @@ const MAX_LENGTH = 256;
 const compareIdentifiers = (a: number, b: number) => {
 	if (a === b) {
 		return 0;
-	} else if (Number(a) < Number(b)) {
+	} else if (a < b) {
 		return -1;
 	} else {
 		return 1;

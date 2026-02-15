@@ -160,17 +160,15 @@ export default class Tween {
 	 */
 	to(
 		properties: Record<string, unknown>,
-		options?:
-			| {
-					duration?: number | undefined;
-					easing?: EasingFunction | undefined;
-					yoyo?: boolean | undefined;
-					repeat?: number | undefined;
-					delay?: number | undefined;
-					interpolation?: InterpolationFunction | undefined;
-					autoStart?: boolean | undefined;
-			  }
-			| undefined,
+		options?: {
+			duration?: number | undefined;
+			easing?: EasingFunction | undefined;
+			yoyo?: boolean | undefined;
+			repeat?: number | undefined;
+			delay?: number | undefined;
+			interpolation?: InterpolationFunction | undefined;
+			autoStart?: boolean | undefined;
+		},
 	) {
 		this._valuesEnd = properties;
 

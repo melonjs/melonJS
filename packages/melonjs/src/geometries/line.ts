@@ -4,9 +4,9 @@ import { LineVertices, Polygon } from "./polygon.ts";
 
 /**
  * a line segment Object
- * @param {number} x - origin point of the Line
- * @param {number} y - origin point of the Line
- * @param {Vector2d[]} points - array of vectors defining the Line
+ * @param x - origin point of the Line
+ * @param y - origin point of the Line
+ * @param points - array of vectors defining the Line
  */
 export class Line extends Polygon {
 	/**

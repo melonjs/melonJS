@@ -119,7 +119,7 @@ export class ObservablePoint {
 	 */
 	equals(x: number, y: number): boolean;
 	equals(point: ObservablePoint): boolean;
-	equals(xOrPoint: number | ObservablePoint, y?: number | undefined) {
+	equals(xOrPoint: number | ObservablePoint, y?: number) {
 		return this._point.equals(xOrPoint as any, y as any);
 	}
 

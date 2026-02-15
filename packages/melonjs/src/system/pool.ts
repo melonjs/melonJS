@@ -22,6 +22,22 @@ export interface CreatePoolOptions<T, A extends unknown[]> {
 	release?: Release;
 }
 
+// Pool registry for centralized access via getPool/getTotalPoolSize
+const pools: Record<string, Pool<any, any[]>> = {};
+
+/**
+ * Register a pool instance to the pool registry.
+ * @ignore
+ */
+export const registerPool = (key: string, pool: Pool<any, any[]>) => {
+	pools[key] = pool;
+};
+
+/**
+ * @ignore
+ */
+export const getRegisteredPools = () => pools;
+
 export const createPool = <T, A extends unknown[]>(
 	options: (...args: A) => CreatePoolOptions<T, A>,
 ): Pool<T, A> => {

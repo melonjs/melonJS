@@ -273,7 +273,7 @@ export class Vector2d {
 	 * @param [v] - an optional point to rotate around
 	 * @returns Reference to this object for method chaining
 	 */
-	rotate(angle: number, v?: XYPoint | undefined) {
+	rotate(angle: number, v?: XYPoint) {
 		let cx = 0;
 		let cy = 0;
 

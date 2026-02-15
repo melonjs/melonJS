@@ -106,7 +106,7 @@ export function radToDeg(radians: number) {
  * @returns clamped value
  */
 export function clamp(val: number, low: number, high: number) {
-	return val < low ? low : val > high ? high : +val;
+	return val < low ? low : val > high ? high : val;
 }
 
 /**

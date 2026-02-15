@@ -1,7 +1,7 @@
 {
 	"$schema": "https://json.schemastore.org/tsconfig",
 	"compilerOptions": {
-		"target": "es2020",
+		"target": "es2022",
 		"allowJs": true,
 		"checkJs": false,
 		"strict": true,

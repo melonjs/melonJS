@@ -1,6 +1,6 @@
 export function earcut(
 	data: number[],
-	holeIndices?: number[] | null | undefined,
+	holeIndices?: number[] | null,
 	dim: number | undefined = 2,
 ): number[] {
 	const hasHoles = holeIndices && holeIndices.length;

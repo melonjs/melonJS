@@ -21,12 +21,20 @@ const DEFAULT_SHADERS = Object.freeze([
 
 export default function ({
 	include = DEFAULT_SHADERS,
-	exclude = undefined,
+	exclude,
 	warnDuplicatedImports = true,
 	defaultExtension = DEFAULT_EXTENSION,
 	compress = false,
 	watch = true,
 	root = "/",
+}: {
+	include?: readonly string[];
+	exclude?: string | string[];
+	warnDuplicatedImports?: boolean;
+	defaultExtension?: string;
+	compress?: boolean;
+	watch?: boolean;
+	root?: string;
 } = {}): Plugin {
 	let sourcemap: boolean | "inline" | "hidden" = false;
 	const filter = createFilter(include, exclude);

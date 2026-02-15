@@ -533,7 +533,7 @@ export class Matrix3d {
 	 * @param [z] - a number representing the depth of the vector
 	 * @returns Reference to this object for method chaining
 	 */
-	translate(x: number, y: number, z?: number | undefined): Matrix3d;
+	translate(x: number, y: number, z?: number): Matrix3d;
 	translate(vector: Vector3d | Vector2d): Matrix3d;
 	translate(xOrVector: Vector3d | Vector2d | number, y?: number, z?: number) {
 		const a = this.val;

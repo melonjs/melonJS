@@ -170,7 +170,7 @@ export class Polygon {
 	 * @param [v] - an optional point to rotate around
 	 * @returns Reference to this object for method chaining
 	 */
-	rotate(angle: number, v?: Vector2d | XYPoint | undefined) {
+	rotate(angle: number, v?: Vector2d | XYPoint) {
 		if (angle !== 0) {
 			const points = this.points;
 			const len = points.length;

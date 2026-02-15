@@ -110,7 +110,7 @@ export function getUriFragment(url: string) {
  */
 export function resetGUID(base: string, index = 0) {
 	// also ensure it's only 8bit ASCII characters
-	GUID_base = toHex(base.toString().toUpperCase());
+	GUID_base = toHex(base.toUpperCase());
 	GUID_index = index;
 }
 

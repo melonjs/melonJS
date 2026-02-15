@@ -92,7 +92,7 @@ export class Ellipse {
 	 * @param [v] - an optional point to rotate around
 	 * @returns Reference to this object for method chaining
 	 */
-	rotate(angle: number, v?: Vector2d | undefined) {
+	rotate(angle: number, v?: Vector2d) {
 		const bounds = this.getBounds();
 		// TODO : only works for circle
 		this.pos.rotate(angle, v);

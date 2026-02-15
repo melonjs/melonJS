@@ -137,7 +137,7 @@ class Timer {
 	setTimeout(
 		fn: (...args: any[]) => any,
 		delay: number,
-		pauseable?: boolean | undefined,
+		pauseable?: boolean,
 		...args: any[]
 	) {
 		this.timers.push({
@@ -168,7 +168,7 @@ class Timer {
 	setInterval(
 		fn: (...args: any[]) => any,
 		delay: number,
-		pauseable?: boolean | undefined,
+		pauseable?: boolean,
 		...args: any[]
 	) {
 		this.timers.push({

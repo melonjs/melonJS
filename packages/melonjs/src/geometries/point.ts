@@ -22,7 +22,7 @@ export class Point {
 	 */
 	type: "Point";
 
-	constructor(x?: number | undefined, y?: number | undefined) {
+	constructor(x?: number, y?: number) {
 		this.x = x ?? 0;
 		this.y = y ?? 0;
 		this.type = "Point";
@@ -49,7 +49,7 @@ export class Point {
 	 */
 	equals(x: number, y: number): boolean;
 	equals(point: Point): boolean;
-	equals(xOrPoint: number | Point, y?: number | undefined) {
+	equals(xOrPoint: number | Point, y?: number) {
 		if (typeof xOrPoint === "object") {
 			return this.x === xOrPoint.x && this.y === xOrPoint.y;
 		}

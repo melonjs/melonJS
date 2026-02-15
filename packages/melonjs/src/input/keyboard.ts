@@ -27,6 +27,7 @@ type KeyEventHandler = (
 ) => void;
 
 const keyDownEvent: KeyEventHandler = (options) => {
+	// eslint-disable-next-line @typescript-eslint/no-deprecated
 	const { keyCode } = options;
 	const action = _keyBindings[keyCode];
 
@@ -53,6 +54,7 @@ const keyDownEvent: KeyEventHandler = (options) => {
 };
 
 const keyUpEvent: KeyEventHandler = (options) => {
+	// eslint-disable-next-line @typescript-eslint/no-deprecated
 	const { keyCode } = options;
 	const action = _keyBindings[keyCode];
 
@@ -142,7 +144,7 @@ export function keyStatus(action: string) {
 export function triggerKeyEvent(
 	keyCode: number,
 	status: boolean,
-	mouseButton?: number | undefined,
+	mouseButton?: number,
 ) {
 	const handler = status ? keyDownEvent : keyUpEvent;
 	handler({ keyCode, mouseButton });
@@ -164,7 +166,7 @@ export function triggerKeyEvent(
 export const bindKey = (
 	keyCode: number,
 	action: string,
-	lock?: boolean | undefined,
+	lock?: boolean,
 	preventDefault = preventDefaultAction,
 ) => {
 	_keyBindings[keyCode] = action;

@@ -22,6 +22,7 @@ const buildOptions = {
 	format: "esm",
 	outdir: "build",
 	sourcemap: true,
+	target: "es2022",
 	bundle: true,
 	define: { __VERSION__: JSON.stringify(packageJson.version) },
 	banner: {
