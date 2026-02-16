@@ -38,6 +38,9 @@ importers:
       tsconfig:
         specifier: workspace:^
         version: link:packages/tsconfig
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
       turbo:
         specifier: ^2.8.3
         version: 2.8.8

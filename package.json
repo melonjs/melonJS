@@ -11,8 +11,8 @@
 		"lint": "turbo build && eslint && biome check && turbo test:types",
 		"test": "turbo build && vitest --config packages/melonjs/vitest.config.ts",
 		"doc": "pnpm -F melonjs doc",
-		"publish-melonjs": "pnpm lint && pnpm biome check && pnpm publish --filter melonjs",
-		"publish-debug-plugin": "pnpm lint && pnpm biome check && pnpm publish --filter debug-plugin"
+		"publish-melonjs": "pnpm lint && pnpm biome check && pnpm publish --filter melonjs && pnpm tsx scripts/release.ts melonjs",
+		"publish-debug-plugin": "pnpm lint && pnpm biome check && pnpm publish --filter debug-plugin && pnpm tsx scripts/release.ts debug-plugin"
 	},
 	"packageManager": "pnpm@9.5.0",
 	"dependencies": {
@@ -26,6 +26,7 @@
 		"globals": "^17.3.0",
 		"lefthook": "^2.1.0",
 		"tsconfig": "workspace:^",
+		"tsx": "^4.21.0",
 		"turbo": "^2.8.3",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.54.0",
