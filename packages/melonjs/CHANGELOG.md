@@ -1,6 +1,6 @@
 # Changelog
 
-## [18.0.0] (melonJS 2) - _2024-06-xx_
+## [18.0.0] (melonJS 2) - _2026-02-16_
 
 ### Added
 - Chore: new GitHub Workflow for running the tests (@hornta)
@@ -10,6 +10,7 @@
 
 ### Fixed
 - CanvasRenderTarget: fix arguments passed to `convertToBlob()` (@hornta)
+- Renderable: fix Light2D objects color blending when using the Canvas Renderer (@Vareniel)
 - TypeScript: fix missing `OffscreenCanvas` argument type for the TextureAtlas constructor
 - Video: fix implicit global reference to HTMLVideoElement
 
