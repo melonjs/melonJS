@@ -140,7 +140,7 @@ export default class World extends Container {
 		// insert persistent child bodies into the new state
 		if (persistentBodies.length > 0) {
 			persistentBodies.forEach((body) => {
-				return this.bodies.add(body);
+				this.bodies.add(body);
 			});
 		}
 	}
