@@ -125,9 +125,24 @@ export default class World extends Container {
 		// call the parent method
 		super.reset();
 
+		// save persistent child bodies
+		const persistentBodies = [];
+		this.bodies.forEach((value) => {
+			if (value.ancestor && value.ancestor.isPersistent) {
+				persistentBodies.push(value);
+			}
+		});
+
 		// empty the list of active physic bodies
 		// Note: this should be empty already when calling the parent method
 		this.bodies.clear();
+
+		// insert persistent child bodies into the new state
+		if (persistentBodies.length > 0) {
+			persistentBodies.forEach((body) => {
+				return this.bodies.add(body);
+			});
+		}
 	}
 
 	/**
