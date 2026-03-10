@@ -140,6 +140,7 @@ export default class PrimitiveCompositor extends Compositor {
 	 * producing thick lines without manual geometry expansion in the renderer.
 	 * @param {Point[]} verts - line vertices in pairs [from, to, from, to, ...]
 	 * @param {number} vertexCount - number of vertices
+	 * @ignore
 	 */
 	#expandLinesToTriangles(verts, vertexCount) {
 		const viewMatrix = this.viewMatrix;

@@ -92,6 +92,12 @@ export default class WebGLRenderer extends Renderer {
 		this.maxTextures = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
 
 		/**
+		 * reusable scratch array for fillRect (2 triangles = 6 vertices)
+		 * @ignore
+		 */
+		this._rectTriangles = Array.from({ length: 6 }, () => ({ x: 0, y: 0 }));
+
+		/**
 		 * @ignore
 		 */
 		this._colorStack = [];
@@ -681,8 +687,8 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {boolean} [fill=false] - fill the shape with the current color if true
 	 */
 	stroke(shape, fill) {
-		this.setCompositor("primitive");
 		if (typeof shape === "undefined") {
+			this.setCompositor("primitive");
 			if (fill === true) {
 				// draw all triangles
 				this.currentCompositor.drawVertices(
@@ -693,6 +699,7 @@ export default class WebGLRenderer extends Renderer {
 				this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
 			}
 		} else {
+			// dispatches to strokeRect/strokePolygon/etc. which each call setCompositor
 			super.stroke(shape, fill);
 		}
 	}
@@ -1016,14 +1023,16 @@ export default class WebGLRenderer extends Renderer {
 			// add round joins at vertices for thick lines
 			if (this.lineWidth > 1) {
 				const radius = this.lineWidth / 2;
+				const joinPoints = [];
 				for (let i = 1; i < len; i++) {
-					this.fillEllipse(points[i].x, points[i].y, radius, radius);
+					joinPoints.push(points[i]);
 				}
 				const lastPoint = points[len - 1];
 				const firstPoint = points[0];
 				if (!lastPoint.equals(firstPoint)) {
-					this.fillEllipse(firstPoint.x, firstPoint.y, radius, radius);
+					joinPoints.push(firstPoint);
 				}
+				this.#drawJoinCircles(joinPoints, radius);
 			}
 		} else {
 			this.currentCompositor.drawVertices(
@@ -1060,10 +1069,15 @@ export default class WebGLRenderer extends Renderer {
 			// add round joins at corners for thick lines
 			if (this.lineWidth > 1) {
 				const radius = this.lineWidth / 2;
-				this.fillEllipse(x, y, radius, radius);
-				this.fillEllipse(x + width, y, radius, radius);
-				this.fillEllipse(x + width, y + height, radius, radius);
-				this.fillEllipse(x, y + height, radius, radius);
+				this.#drawJoinCircles(
+					[
+						{ x, y },
+						{ x: x + width, y },
+						{ x: x + width, y: y + height },
+						{ x, y: y + height },
+					],
+					radius,
+				);
 			}
 		} else {
 			this.currentCompositor.drawVertices(
@@ -1081,7 +1095,24 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} height - The rectangle's height.
 	 */
 	fillRect(x, y, width, height) {
-		this.strokeRect(x, y, width, height, true);
+		this.setCompositor("primitive");
+		// 2 triangles directly — avoids path2D + earcut overhead
+		const right = x + width;
+		const bottom = y + height;
+		const pts = this._rectTriangles;
+		pts[0].x = x;
+		pts[0].y = y;
+		pts[1].x = right;
+		pts[1].y = y;
+		pts[2].x = x;
+		pts[2].y = bottom;
+		pts[3].x = right;
+		pts[3].y = y;
+		pts[4].x = right;
+		pts[4].y = bottom;
+		pts[5].x = x;
+		pts[5].y = bottom;
+		this.currentCompositor.drawVertices(this.gl.TRIANGLES, pts);
 	}
 
 	/**
@@ -1135,6 +1166,35 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	fillPoint(x, y) {
 		this.strokePoint(x, y);
+	}
+
+	/**
+	 * Generate triangle fan geometry for round joins at the given points
+	 * and draw them in a single drawVertices call.
+	 * @param {Array<{x: number, y: number}>} centers - join center points
+	 * @param {number} radius - join circle radius
+	 * @ignore
+	 */
+	#drawJoinCircles(centers, radius) {
+		const segments = 8;
+		const angleStep = (Math.PI * 2) / segments;
+		const verts = [];
+
+		for (let c = 0; c < centers.length; c++) {
+			const cx = centers[c].x;
+			const cy = centers[c].y;
+			for (let i = 0; i < segments; i++) {
+				const a1 = i * angleStep;
+				const a2 = a1 + angleStep;
+				verts.push(
+					{ x: cx, y: cy },
+					{ x: cx + Math.cos(a1) * radius, y: cy + Math.sin(a1) * radius },
+					{ x: cx + Math.cos(a2) * radius, y: cy + Math.sin(a2) * radius },
+				);
+			}
+		}
+
+		this.currentCompositor.drawVertices(this.gl.TRIANGLES, verts);
 	}
 
 	/**

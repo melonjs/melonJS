@@ -15,6 +15,9 @@
 - QuadTree: replace temporary array allocation with in-place compaction during node splits
 - Renderer: replace `forEach` with `for` loop in `PrimitiveCompositor.drawVertices()`
 - WebGLRenderer: `strokeRect` and `strokePolygon` now use a single `drawVertices` call instead of per-edge `strokeLine` calls for thick lines
+- WebGLRenderer: `fillRect` now pushes 2 triangles directly, bypassing path2D and earcut triangulation
+- WebGLRenderer: round join circles for thick-line corners are now batched into a single `drawVertices` call
+- WebGLRenderer: remove redundant `setCompositor` call in `stroke()` when dispatching to shape-specific methods
 
 ## [18.0.0] (melonJS 2) - _2026-03-10_
 
