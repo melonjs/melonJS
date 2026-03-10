@@ -1,20 +1,23 @@
-<!--
-Thank you for your pull request!
+## Description
 
-Bug fixes and new features should include linting and tests.
+<!-- Briefly describe what this PR does and why -->
 
-Before submitting please read:
+## Type of change
 
-Contributors guide: https://github.com/melonjs/melonJS/blob/master/CONTRIBUTING.md
-Code of Conduct: https://github.com/melonjs/melonJS/blob/master/CODE_OF_CONDUCT.md
--->
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Documentation update
+- [ ] Performance improvement
+- [ ] Refactoring (no functional changes)
 
-##### Description of change
-<!-- Provide a description of the change below this comment. -->
+## Checklist
 
-##### Merge Checklist
-<!-- For completed items, change [ ] to [x]. -->
+- [ ] I have read the [Contributing Guide](../CONTRIBUTING.md)
+- [ ] My code follows the existing code style (`pnpm lint` passes)
+- [ ] I have tested my changes locally (`pnpm test` passes)
+- [ ] I have added tests that cover my changes (if applicable)
+- [ ] The build succeeds (`pnpm build`)
 
-- [ ] Build process passed (`npm run build`)
-- [ ] Lint process passed (`npm run lint`)
-- [ ] Tests passed (`npm run test`)
+## Related issues
+
+<!-- Link any related issues, e.g. "Closes #123" or "Fixes #456" -->
