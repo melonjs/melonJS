@@ -128,6 +128,8 @@ const createGame = () => {
 
 			renderer.setGlobalAlpha(1.0);
 
+			renderer.lineWidth = 3;
+
 			// draw 3 stripes
 			this.color.parseHex("#55aa00");
 			renderer.setColor(this.color);
