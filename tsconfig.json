@@ -4,5 +4,5 @@
 		"noEmit": true,
 		"allowImportingTsExtensions": true
 	},
-	"include": ["vitest.workspace.ts"]
+	"include": ["vitest.workspace.ts", "scripts/release.ts"]
 }
