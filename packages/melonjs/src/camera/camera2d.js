@@ -375,8 +375,8 @@ export default class Camera2d extends Renderable {
 		const _x = this.pos.x;
 		const _y = this.pos.y;
 
-		this.pos.x = clamp(x, this.bounds.left, this.bounds.width);
-		this.pos.y = clamp(y, this.bounds.top, this.bounds.height);
+		this.pos.x = clamp(x, this.bounds.left, this.bounds.width - this.width);
+		this.pos.y = clamp(y, this.bounds.top, this.bounds.height - this.height);
 
 		//publish the VIEWPORT_ONCHANGE event if necessary
 		if (_x !== this.pos.x || _y !== this.pos.y) {
@@ -558,8 +558,8 @@ export default class Camera2d extends Renderable {
 	focusOn(target) {
 		const bounds = target.getBounds();
 		this.moveTo(
-			target.pos.x + bounds.left + bounds.width / 2,
-			target.pos.y + bounds.top + bounds.height / 2,
+			bounds.left + bounds.width / 2 - this.width / 2,
+			bounds.top + bounds.height / 2 - this.height / 2,
 		);
 	}
 

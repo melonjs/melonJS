@@ -257,18 +257,17 @@ export default class QuadTree {
 				this.split();
 			}
 
-			let i = 0;
-
-			//add all objects to there corresponding subnodes
-			while (i < this.objects.length) {
+			//add all objects to their corresponding subnodes
+			const remaining = [];
+			for (let i = 0, len = this.objects.length; i < len; i++) {
 				index = this.getIndex(this.objects[i]);
-
 				if (index !== -1) {
-					this.nodes[index].insert(this.objects.splice(i, 1)[0]);
+					this.nodes[index].insert(this.objects[i]);
 				} else {
-					i = i + 1;
+					remaining.push(this.objects[i]);
 				}
 			}
+			this.objects = remaining;
 		}
 	}
 
@@ -278,8 +277,18 @@ export default class QuadTree {
 	 * @param {object} [fn] - a sorting function for the returned array
 	 * @returns {object[]} array with all detected objects
 	 */
-	retrieve(item, fn) {
-		let returnObjects = this.objects;
+	retrieve(item, fn, result) {
+		// reuse or create a result array to avoid concat allocations
+		const isRoot = typeof result === "undefined";
+		if (isRoot) {
+			result = [];
+		}
+
+		// add objects at this level
+		const objects = this.objects;
+		for (let i = 0, len = objects.length; i < len; i++) {
+			result.push(objects[i]);
+		}
 
 		//if we have subnodes ...
 		if (this.nodes.length > 0) {
@@ -287,20 +296,20 @@ export default class QuadTree {
 
 			//if rect fits into a subnode ..
 			if (index !== -1) {
-				returnObjects = returnObjects.concat(this.nodes[index].retrieve(item));
+				this.nodes[index].retrieve(item, undefined, result);
 			} else {
 				//if rect does not fit into a subnode, check it against all subnodes
-				for (let i = 0; i < this.nodes.length; i = i + 1) {
-					returnObjects = returnObjects.concat(this.nodes[i].retrieve(item));
+				for (let i = 0; i < this.nodes.length; i++) {
+					this.nodes[i].retrieve(item, undefined, result);
 				}
 			}
 		}
 
-		if (typeof fn === "function") {
-			returnObjects.sort(fn);
+		if (isRoot && typeof fn === "function") {
+			result.sort(fn);
 		}
 
-		return returnObjects;
+		return result;
 	}
 
 	/**

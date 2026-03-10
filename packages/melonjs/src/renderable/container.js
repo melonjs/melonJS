@@ -296,7 +296,7 @@ export default class Container extends Renderable {
 	 * @returns {Renderable} the added child
 	 */
 	addChildAt(child, index) {
-		if (index >= 0 && index < this.getChildren().length) {
+		if (index >= 0 && index <= this.getChildren().length) {
 			if (child.ancestor instanceof Container) {
 				child.ancestor.removeChildNow(child);
 			} else {
@@ -453,7 +453,7 @@ export default class Container extends Renderable {
 	 * @returns {Renderable} child
 	 */
 	getNextChild(child) {
-		const index = this.getChildren().indexOf(child) - 1;
+		const index = this.getChildren().indexOf(child) + 1;
 		if (index >= 0 && index < this.getChildren().length) {
 			return this.getChildAt(index);
 		}
@@ -677,7 +677,10 @@ export default class Container extends Renderable {
 			// remove the body first to avoid a condition where a body can be detached
 			// from its parent, before the body is removed from the game world
 			if (child.body instanceof Body) {
-				this.getRootAncestor().removeBody(child.body);
+				const root = this.getRootAncestor();
+				if (root) {
+					root.removeBody(child.body);
+				}
 			}
 
 			if (!keepalive) {
@@ -895,6 +898,7 @@ export default class Container extends Renderable {
 		const isPaused = state.isPaused();
 		const children = this.getChildren();
 		const childrenLength = children.length;
+		const cameras = state.current().cameras;
 
 		for (let i = childrenLength, obj; i--, (obj = children[i]); ) {
 			if (isPaused && !obj.updateWhenPaused) {
@@ -911,7 +915,7 @@ export default class Container extends Renderable {
 				// check if object is in any active cameras
 				obj.inViewport = false;
 				// iterate through all cameras
-				state.current().cameras.forEach((camera) => {
+				cameras.forEach((camera) => {
 					if (camera.isVisible(obj, isFloating)) {
 						obj.inViewport = true;
 					}
