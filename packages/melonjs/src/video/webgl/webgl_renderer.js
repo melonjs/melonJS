@@ -95,7 +95,9 @@ export default class WebGLRenderer extends Renderer {
 		 * reusable scratch array for fillRect (2 triangles = 6 vertices)
 		 * @ignore
 		 */
-		this._rectTriangles = Array.from({ length: 6 }, () => ({ x: 0, y: 0 }));
+		this._rectTriangles = Array.from({ length: 6 }, () => {
+			return { x: 0, y: 0 };
+		});
 
 		/**
 		 * @ignore

@@ -71,7 +71,7 @@
 		"dev": "concurrently --raw \"pnpm build:watch\" \"pnpm tsc:watch\" \"pnpm doc:watch\"",
 		"tsc:watch": "tsc --project tsconfig.build.json --watch --noUnusedParameters false --noUnusedLocals false --preserveWatchOutput",
 		"build:watch": "tsx scripts/build.js watch",
-		"build": "tsx scripts/build.js && pnpm types",
+		"build": "eslint src && tsx scripts/build.js && pnpm types",
 		"dist": "pnpm clean && pnpm vitest run && pnpm build && pnpm doc",
 		"doc": "typedoc src/index.js --plugin typedoc-plugin-missing-exports --tsconfig tsconfig.build.json",
 		"doc:watch": "typedoc src/index.js --plugin typedoc-plugin-missing-exports --watch --skipErrorChecking --preserveWatchOutput --logLevel Error",
