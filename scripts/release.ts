@@ -61,7 +61,7 @@ function main() {
 		console.log("Creating GitHub release...");
 		const notesFlag = previousTag ? `--notes-start-tag "${previousTag}"` : "";
 		const releaseUrl = run(
-			`gh release create "${tag}" --generate-notes ${notesFlag} --title "${name} ${version}"`,
+			`gh release create "${tag}" --generate-notes ${notesFlag} --title "v${version}"`,
 		);
 		console.log(`Release created: ${releaseUrl}`);
 	} catch (e) {
