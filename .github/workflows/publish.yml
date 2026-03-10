@@ -31,7 +31,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           registry-url: "https://registry.npmjs.org"
 
       - uses: pnpm/action-setup@v4
@@ -66,15 +66,11 @@ jobs:
         if: ${{ !inputs.dry-run }}
         working-directory: ${{ steps.pkg.outputs.dir }}
         run: npm publish --access=public --provenance
-        env:
-          NODE_AUTH_TOKEN: ""
 
       - name: Publish (dry run)
         if: ${{ inputs.dry-run }}
         working-directory: ${{ steps.pkg.outputs.dir }}
         run: npm publish --access=public --dry-run
-        env:
-          NODE_AUTH_TOKEN: ""
 
       - name: Create GitHub release
         if: ${{ !inputs.dry-run }}
