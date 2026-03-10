@@ -52,13 +52,15 @@ jobs:
         run: |
           if [ "${{ inputs.package }}" = "melonjs" ]; then
             echo "dir=packages/melonjs" >> "$GITHUB_OUTPUT"
+            echo "build_cmd=pnpm dist" >> "$GITHUB_OUTPUT"
           elif [ "${{ inputs.package }}" = "debug-plugin" ]; then
             echo "dir=packages/debug-plugin" >> "$GITHUB_OUTPUT"
+            echo "build_cmd=pnpm clean && pnpm build" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Build & test
         working-directory: ${{ steps.pkg.outputs.dir }}
-        run: pnpm dist
+        run: ${{ steps.pkg.outputs.build_cmd }}
 
       - name: Publish to npm
         if: ${{ !inputs.dry-run }}
