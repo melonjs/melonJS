@@ -278,36 +278,61 @@ export default class Renderer {
 		switch (shape.type) {
 			// RoundRect
 			case "RoundRect":
-				this.strokeRoundRect(
-					shape.left,
-					shape.top,
-					shape.width,
-					shape.height,
-					shape.radius,
-					fill,
-				);
+				if (fill) {
+					this.fillRoundRect(
+						shape.left,
+						shape.top,
+						shape.width,
+						shape.height,
+						shape.radius,
+					);
+				} else {
+					this.strokeRoundRect(
+						shape.left,
+						shape.top,
+						shape.width,
+						shape.height,
+						shape.radius,
+					);
+				}
 				break;
 
 			// Rect or Bounds
 			case "Rectangle":
 			case "Bounds":
-				this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
+				if (fill) {
+					this.fillRect(shape.left, shape.top, shape.width, shape.height);
+				} else {
+					this.strokeRect(shape.left, shape.top, shape.width, shape.height);
+				}
 				break;
 
 			// Polygon or Line
 			case "Polygon":
 			case "Line":
-				this.strokePolygon(shape, fill);
+				if (fill) {
+					this.fillPolygon(shape);
+				} else {
+					this.strokePolygon(shape);
+				}
 				break;
 
 			case "Ellipse":
-				this.strokeEllipse(
-					shape.pos.x,
-					shape.pos.y,
-					shape.radiusV.x,
-					shape.radiusV.y,
-					fill,
-				);
+				if (fill) {
+					this.fillEllipse(
+						shape.pos.x,
+						shape.pos.y,
+						shape.radiusV.x,
+						shape.radiusV.y,
+					);
+				} else {
+					this.strokeEllipse(
+						shape.pos.x,
+						shape.pos.y,
+						shape.radiusV.x,
+						shape.radiusV.y,
+					);
+				}
 				break;
 
 			// Point

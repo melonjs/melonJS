@@ -915,17 +915,14 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {boolean} [fill=false] - also fill the shape with the current color if true
 	 */
 	strokeArc(x, y, radius, start, end, antiClockwise = false, fill = false) {
+		if (fill === true) {
+			this.fillArc(x, y, radius, start, end, antiClockwise);
+			return;
+		}
 		this.setCompositor("primitive");
 		this.path2D.beginPath();
 		this.path2D.arc(x, y, radius, start, end, antiClockwise);
-		if (fill === false) {
-			this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
-		} else {
-			this.currentCompositor.drawVertices(
-				this.gl.TRIANGLES,
-				this.path2D.triangulatePath(),
-			);
-		}
+		this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
 	}
 
 	/**
@@ -971,17 +968,14 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {boolean} [fill=false] - also fill the shape with the current color if true
 	 */
 	strokeEllipse(x, y, w, h, fill = false) {
+		if (fill === true) {
+			this.fillEllipse(x, y, w, h);
+			return;
+		}
 		this.setCompositor("primitive");
 		this.path2D.beginPath();
 		this.path2D.ellipse(x, y, w, h, 0, 0, 360);
-		if (fill === false) {
-			this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
-		} else {
-			this.currentCompositor.drawVertices(
-				this.gl.TRIANGLES,
-				this.path2D.triangulatePath(),
-			);
-		}
+		this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
 	}
 
 	/**
@@ -1035,6 +1029,10 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {boolean} [fill=false] - also fill the shape with the current color if true
 	 */
 	strokePolygon(poly, fill = false) {
+		if (fill === true) {
+			this.fillPolygon(poly);
+			return;
+		}
 		const points = poly.points;
 		const len = points.length;
 
@@ -1049,27 +1047,20 @@ export default class WebGLRenderer extends Renderer {
 			this.path2D.lineTo(nextPoint.x, nextPoint.y);
 		}
 		this.path2D.closePath();
-		if (fill === false) {
-			this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
-			// add round joins at vertices for thick lines
-			if (this.lineWidth > 1) {
-				const radius = this.lineWidth / 2;
-				const joinPoints = [];
-				for (let i = 1; i < len; i++) {
-					joinPoints.push(points[i]);
-				}
-				const lastPoint = points[len - 1];
-				const firstPoint = points[0];
-				if (!lastPoint.equals(firstPoint)) {
-					joinPoints.push(firstPoint);
-				}
-				this.#drawJoinCircles(joinPoints, radius);
+		this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+		// add round joins at vertices for thick lines
+		if (this.lineWidth > 1) {
+			const radius = this.lineWidth / 2;
+			const joinPoints = [];
+			for (let i = 1; i < len; i++) {
+				joinPoints.push(points[i]);
 			}
-		} else {
-			this.currentCompositor.drawVertices(
-				this.gl.TRIANGLES,
-				this.path2D.triangulatePath(),
-			);
+			const lastPoint = points[len - 1];
+			const firstPoint = points[0];
+			if (!lastPoint.equals(firstPoint)) {
+				joinPoints.push(firstPoint);
+			}
+			this.#drawJoinCircles(joinPoints, radius);
 		}
 
 		this.translate(-poly.pos.x, -poly.pos.y);
@@ -1101,28 +1092,25 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {boolean} [fill=false] - also fill the shape with the current color if true
 	 */
 	strokeRect(x, y, width, height, fill = false) {
+		if (fill === true) {
+			this.fillRect(x, y, width, height);
+			return;
+		}
 		this.setCompositor("primitive");
 		this.path2D.beginPath();
 		this.path2D.rect(x, y, width, height);
-		if (fill === false) {
-			this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
-			// add round joins at corners for thick lines
-			if (this.lineWidth > 1) {
-				const radius = this.lineWidth / 2;
-				this.#drawJoinCircles(
-					[
-						{ x, y },
-						{ x: x + width, y },
-						{ x: x + width, y: y + height },
-						{ x, y: y + height },
-					],
-					radius,
-				);
-			}
-		} else {
-			this.currentCompositor.drawVertices(
-				this.gl.TRIANGLES,
-				this.path2D.triangulatePath(),
+		this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+		// add round joins at corners for thick lines
+		if (this.lineWidth > 1) {
+			const radius = this.lineWidth / 2;
+			this.#drawJoinCircles(
+				[
+					{ x, y },
+					{ x: x + width, y },
+					{ x: x + width, y: y + height },
+					{ x, y: y + height },
+				],
+				radius,
 			);
 		}
 	}
@@ -1165,17 +1153,14 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {boolean} [fill=false] - also fill the shape with the current color if true
 	 */
 	strokeRoundRect(x, y, width, height, radius, fill = false) {
+		if (fill === true) {
+			this.fillRoundRect(x, y, width, height, radius);
+			return;
+		}
 		this.setCompositor("primitive");
 		this.path2D.beginPath();
 		this.path2D.roundRect(x, y, width, height, radius);
-		if (fill === false) {
-			this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
-		} else {
-			this.currentCompositor.drawVertices(
-				this.gl.TRIANGLES,
-				this.path2D.triangulatePath(),
-			);
-		}
+		this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
 	}
 
 	/**
