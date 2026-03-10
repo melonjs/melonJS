@@ -65,14 +65,16 @@ export default class PrimitiveCompositor extends Compositor {
 		}
 
 		if (!viewMatrix.isIdentity()) {
-			verts.forEach((vert) => {
+			for (let i = 0; i < vertexCount; i++) {
+				const vert = verts[i];
 				viewMatrix.apply(vert);
 				vertexData.push(vert.x, vert.y, undefined, undefined, colorUint32);
-			});
+			}
 		} else {
-			verts.forEach((vert) => {
+			for (let i = 0; i < vertexCount; i++) {
+				const vert = verts[i];
 				vertexData.push(vert.x, vert.y, undefined, undefined, colorUint32);
-			});
+			}
 		}
 
 		// force flush for primitive using LINE_STRIP or LINE_LOOP
