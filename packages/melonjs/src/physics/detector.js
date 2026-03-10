@@ -1,7 +1,20 @@
 import { Vector2d } from "../math/vector2d.ts";
 import { Bounds } from "./bounds.ts";
 import ResponseObject from "./response.js";
-import * as SAT from "./sat.js";
+import {
+	testEllipseEllipse,
+	testEllipsePolygon,
+	testPolygonEllipse,
+	testPolygonPolygon,
+} from "./sat.js";
+
+// pre-built lookup table for SAT collision tests to avoid string concatenation
+const SAT_LOOKUP = {
+	PolygonPolygon: testPolygonPolygon,
+	PolygonEllipse: testPolygonEllipse,
+	EllipsePolygon: testEllipsePolygon,
+	EllipseEllipse: testEllipseEllipse,
+};
 
 /**
  * @import Entity from "./../renderable/entity/entity.js";
@@ -89,7 +102,7 @@ class Detector {
 			) {
 				// full SAT collision check
 				if (
-					SAT["test" + shapeA.type + shapeB.type].call(
+					SAT_LOOKUP[shapeA.type + shapeB.type].call(
 						this,
 						bodyA.ancestor, // a reference to the object A
 						shapeA,
@@ -124,7 +137,8 @@ class Detector {
 		boundsA.addBounds(objA.getBounds(), true);
 		boundsA.addBounds(objA.body.getBounds());
 
-		candidates.forEach((objB) => {
+		for (let i = 0, len = candidates.length; i < len; i++) {
+			const objB = candidates[i];
 			// check if both objects "should" collide
 			if (this.shouldCollide(objA, objB)) {
 				boundsB.addBounds(objB.getBounds(), true);
@@ -151,10 +165,44 @@ class Detector {
 						) {
 							objB.body.respondToCollision.call(objB.body, this.response);
 						}
+
+						// for multi-shape bodies (e.g. polylines), resolve remaining
+						// overlaps at segment junctions
+						if (objA.body.shapes.length > 1 || objB.body.shapes.length > 1) {
+							let extraPasses = 3;
+							while (extraPasses-- > 0 && this.collides(objA.body, objB.body)) {
+								const overlap = this.response.overlapV;
+								const overlapN = this.response.overlapN;
+
+								// correct position
+								if (objA.body.isStatic === false) {
+									objA.body.ancestor.pos.sub(overlap);
+									// cancel velocity into this surface (no bounce)
+									const projVel =
+										objA.body.vel.x * overlapN.x + objA.body.vel.y * overlapN.y;
+									if (projVel > 0) {
+										objA.body.vel.x -= projVel * overlapN.x;
+										objA.body.vel.y -= projVel * overlapN.y;
+									}
+								}
+								if (objB.body.isStatic === false) {
+									objB.body.ancestor.pos.add(overlap);
+									const projVel =
+										objB.body.vel.x * overlapN.x + objB.body.vel.y * overlapN.y;
+									if (projVel > 0) {
+										objB.body.vel.x -= projVel * overlapN.x;
+										objB.body.vel.y -= projVel * overlapN.y;
+									}
+								}
+								// update bounds after position changed
+								boundsA.addBounds(objA.getBounds(), true);
+								boundsA.addBounds(objA.body.getBounds());
+							}
+						}
 					}
 				}
 			}
-		});
+		}
 		// we could return the amount of objects we collided with ?
 		return collisionCounter > 0;
 	}
@@ -207,7 +255,7 @@ class Detector {
 
 					// full SAT collision check
 					if (
-						SAT["test" + shapeA.type + shapeB.type].call(
+						SAT_LOOKUP[shapeA.type + shapeB.type].call(
 							this,
 							dummyObj, // a reference to the object A
 							shapeA,

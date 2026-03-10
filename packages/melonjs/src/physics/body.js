@@ -306,7 +306,7 @@ export default class Body {
 			polygon.setShape(0, 0, vertices);
 		} else {
 			// this will replace any other non polygon shape type if defined
-			this.shapes[index] = pointPool.get(0, 0, vertices);
+			this.shapes[index] = polygonPool.get(0, 0, vertices);
 		}
 
 		// update the body bounds to take in account the new vertices
@@ -440,8 +440,14 @@ export default class Body {
 	 */
 	setCollisionType(type) {
 		if (typeof type !== "undefined") {
-			if (typeof collision.types[type] !== "undefined") {
-				this.collisionType = collision.types[type];
+			if (typeof type === "string") {
+				if (typeof collision.types[type] !== "undefined") {
+					this.collisionType = collision.types[type];
+				} else {
+					throw new Error("Invalid value for the collisionType property");
+				}
+			} else if (typeof type === "number") {
+				this.collisionType = type;
 			} else {
 				throw new Error("Invalid value for the collisionType property");
 			}
@@ -456,31 +462,32 @@ export default class Body {
 	respondToCollision(response) {
 		// the overlap vector
 		const overlap = response.overlapV;
+		const overlapN = response.overlapN;
 
 		// FIXME: Respond proportionally to object mass
 
 		// Move out of the other object shape
 		this.ancestor.pos.sub(overlap);
 
-		// adjust velocity
-		if (overlap.x !== 0) {
-			this.vel.x = ~~(0.5 + this.vel.x - overlap.x) || 0;
+		// cancel the velocity component along the collision normal
+		const projVel = this.vel.x * overlapN.x + this.vel.y * overlapN.y;
+		if (projVel > 0) {
 			if (this.bounce > 0) {
-				this.vel.x *= -this.bounce;
+				// reflect velocity along normal with bounce damping
+				this.vel.x -= (1 + this.bounce) * projVel * overlapN.x;
+				this.vel.y -= (1 + this.bounce) * projVel * overlapN.y;
+			} else {
+				// remove the velocity component along the collision normal
+				this.vel.x -= projVel * overlapN.x;
+				this.vel.y -= projVel * overlapN.y;
 			}
 		}
-		if (overlap.y !== 0) {
-			this.vel.y = ~~(0.5 + this.vel.y - overlap.y) || 0;
-			if (this.bounce > 0) {
-				this.vel.y *= -this.bounce;
-			}
 
-			if (!this.ignoreGravity) {
-				// cancel the falling an jumping flags if necessary
-				const dir = this.falling === true ? 1 : this.jumping === true ? -1 : 0;
-				this.falling = overlap.y >= dir;
-				this.jumping = overlap.y <= -dir;
-			}
+		if (overlap.y !== 0 && !this.ignoreGravity) {
+			// cancel the falling an jumping flags if necessary
+			const dir = this.falling === true ? 1 : this.jumping === true ? -1 : 0;
+			this.falling = overlap.y >= dir;
+			this.jumping = overlap.y <= -dir;
 		}
 	}
 

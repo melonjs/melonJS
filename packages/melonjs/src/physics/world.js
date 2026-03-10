@@ -140,7 +140,7 @@ export default class World extends Container {
 		// insert persistent child bodies into the new state
 		if (persistentBodies.length > 0) {
 			persistentBodies.forEach((body) => {
-				this.bodies.add(body);
+				this.addBody(body);
 			});
 		}
 	}
@@ -218,9 +218,12 @@ export default class World extends Container {
 		if (this.physic === "builtin") {
 			const isPaused = state.isPaused();
 			// iterate through all bodies
-			this.bodies.forEach((body) => {
+			for (const body of this.bodies) {
 				if (!body.isStatic) {
 					const ancestor = body.ancestor;
+					if (!ancestor) {
+						continue;
+					}
 					// if the game is not paused, and ancestor can be updated
 					if (
 						!(isPaused && !ancestor.updateWhenPaused) &&
@@ -239,7 +242,7 @@ export default class World extends Container {
 						body.force.set(0, 0);
 					}
 				}
-			});
+			}
 		}
 		eventEmitter.emit(WORLD_STEP, dt);
 	}
