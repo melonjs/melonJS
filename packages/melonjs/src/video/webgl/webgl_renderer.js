@@ -938,7 +938,28 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
 	 */
 	fillArc(x, y, radius, start, end, antiClockwise = false) {
-		this.strokeArc(x, y, radius, start, end, antiClockwise, true);
+		this.setCompositor("primitive");
+		let diff = Math.abs(end - start);
+		if (antiClockwise) {
+			diff = Math.PI * 2 - diff;
+		}
+		const segments = Math.max(
+			4,
+			Math.round((diff * radius) / this.path2D.arcResolution),
+		);
+		const startAngle = antiClockwise ? end : start;
+		this.currentCompositor.drawVertices(
+			this.gl.TRIANGLES,
+			this.#generateTriangleFan(
+				x,
+				y,
+				radius,
+				radius,
+				startAngle,
+				startAngle + diff,
+				segments,
+			),
+		);
 	}
 
 	/**
@@ -971,7 +992,15 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} h - vertical radius of the ellipse
 	 */
 	fillEllipse(x, y, w, h) {
-		this.strokeEllipse(x, y, w, h, true);
+		this.setCompositor("primitive");
+		const segments = Math.max(
+			8,
+			Math.round((Math.PI * (w + h)) / this.path2D.arcResolution),
+		);
+		this.currentCompositor.drawVertices(
+			this.gl.TRIANGLES,
+			this.#generateTriangleFan(x, y, w, h, 0, Math.PI * 2, segments),
+		);
 	}
 
 	/**
@@ -1051,7 +1080,16 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {Polygon} poly - the shape to draw
 	 */
 	fillPolygon(poly) {
-		this.strokePolygon(poly, true);
+		this.setCompositor("primitive");
+		this.translate(poly.pos.x, poly.pos.y);
+		const indices = poly.getIndices();
+		const points = poly.points;
+		const verts = [];
+		for (let i = 0; i < indices.length; i++) {
+			verts.push(points[indices[i]]);
+		}
+		this.currentCompositor.drawVertices(this.gl.TRIANGLES, verts);
+		this.translate(-poly.pos.x, -poly.pos.y);
 	}
 
 	/**
@@ -1149,7 +1187,91 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} radius - The rounded corner's radius.
 	 */
 	fillRoundRect(x, y, width, height, radius) {
-		this.strokeRoundRect(x, y, width, height, radius, true);
+		this.setCompositor("primitive");
+		const r = Math.min(radius, width / 2, height / 2);
+		const verts = [];
+
+		// inner cross: 3 rects (6 triangles = 18 vertices)
+		// horizontal bar (full width, inner height)
+		verts.push(
+			{ x, y: y + r },
+			{ x: x + width, y: y + r },
+			{ x, y: y + height - r },
+			{ x: x + width, y: y + r },
+			{ x: x + width, y: y + height - r },
+			{ x, y: y + height - r },
+		);
+		// top bar (inner width, radius height)
+		verts.push(
+			{ x: x + r, y },
+			{ x: x + width - r, y },
+			{ x: x + r, y: y + r },
+			{ x: x + width - r, y },
+			{ x: x + width - r, y: y + r },
+			{ x: x + r, y: y + r },
+		);
+		// bottom bar (inner width, radius height)
+		verts.push(
+			{ x: x + r, y: y + height - r },
+			{ x: x + width - r, y: y + height - r },
+			{ x: x + r, y: y + height },
+			{ x: x + width - r, y: y + height - r },
+			{ x: x + width - r, y: y + height },
+			{ x: x + r, y: y + height },
+		);
+
+		// 4 corner arcs as triangle fans
+		const cornerSegments = Math.max(
+			4,
+			Math.round((Math.PI * r) / 2 / this.path2D.arcResolution),
+		);
+		const PI = Math.PI;
+		verts.push(
+			...this.#generateTriangleFan(
+				x + r,
+				y + r,
+				r,
+				r,
+				PI,
+				PI * 1.5,
+				cornerSegments,
+			),
+		); // top-left
+		verts.push(
+			...this.#generateTriangleFan(
+				x + width - r,
+				y + r,
+				r,
+				r,
+				PI * 1.5,
+				PI * 2,
+				cornerSegments,
+			),
+		); // top-right
+		verts.push(
+			...this.#generateTriangleFan(
+				x + width - r,
+				y + height - r,
+				r,
+				r,
+				0,
+				PI * 0.5,
+				cornerSegments,
+			),
+		); // bottom-right
+		verts.push(
+			...this.#generateTriangleFan(
+				x + r,
+				y + height - r,
+				r,
+				r,
+				PI * 0.5,
+				PI,
+				cornerSegments,
+			),
+		); // bottom-left
+
+		this.currentCompositor.drawVertices(this.gl.TRIANGLES, verts);
 	}
 
 	/**
@@ -1197,6 +1319,33 @@ export default class WebGLRenderer extends Renderer {
 		}
 
 		this.currentCompositor.drawVertices(this.gl.TRIANGLES, verts);
+	}
+
+	/**
+	 * Generate triangle fan vertices for an elliptical arc.
+	 * @param {number} cx - center x
+	 * @param {number} cy - center y
+	 * @param {number} rx - horizontal radius
+	 * @param {number} ry - vertical radius
+	 * @param {number} startAngle - start angle in radians
+	 * @param {number} endAngle - end angle in radians
+	 * @param {number} segments - number of segments
+	 * @returns {Array<{x: number, y: number}>} triangle vertices
+	 * @ignore
+	 */
+	#generateTriangleFan(cx, cy, rx, ry, startAngle, endAngle, segments) {
+		const angleStep = (endAngle - startAngle) / segments;
+		const verts = [];
+		for (let i = 0; i < segments; i++) {
+			const a1 = startAngle + i * angleStep;
+			const a2 = a1 + angleStep;
+			verts.push(
+				{ x: cx, y: cy },
+				{ x: cx + Math.cos(a1) * rx, y: cy + Math.sin(a1) * ry },
+				{ x: cx + Math.cos(a2) * rx, y: cy + Math.sin(a2) * ry },
+			);
+		}
+		return verts;
 	}
 
 	/**

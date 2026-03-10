@@ -18,6 +18,9 @@
 - WebGLRenderer: `fillRect` now pushes 2 triangles directly, bypassing path2D and earcut triangulation
 - WebGLRenderer: round join circles for thick-line corners are now batched into a single `drawVertices` call
 - WebGLRenderer: remove redundant `setCompositor` call in `stroke()` when dispatching to shape-specific methods
+- WebGLRenderer: `fillEllipse` and `fillArc` now use direct triangle fan geometry, bypassing path2D and earcut
+- WebGLRenderer: `fillRoundRect` now generates composite geometry (3 rects + 4 corner fans) directly, bypassing earcut
+- WebGLRenderer: `fillPolygon` now uses `Polygon.getIndices()` cached earcut results instead of rebuilding the path each frame
 
 ## [18.0.0] (melonJS 2) - _2026-03-10_
 
