@@ -10,6 +10,15 @@ import Sprite from "./../sprite.js";
  */
 export default class UISpriteElement extends Sprite {
 	/**
+	 * if this UISpriteElement should use screen coordinates or local coordinates
+	 * (Note: any UISpriteElement elements added to a floating parent container should have their floating property to false)
+	 * @see Renderable.floating
+	 * @type {boolean}
+	 * @default true
+	 */
+	floating = true;
+
+	/**
 	 * @param {number} x - the x coordinate of the UISpriteElement Object
 	 * @param {number} y - the y coordinate of the UISpriteElement Object
 	 * @param {object} settings - See {@link Sprite}
@@ -72,15 +81,6 @@ export default class UISpriteElement extends Sprite {
 		// object has been updated (clicked,etc..)
 		this.holdTimeout = -1;
 		this.released = true;
-
-		/**
-		 * if this UISpriteElement should use screen coordinates or local coordinates
-		 * (Note: any UISpriteElement elements added to a floating parent container should have their floating property to false)
-		 * @see Renderable.floating
-		 * @type {boolean}
-		 * @default true
-		 */
-		this.floating = true;
 
 		// enable event detection
 		this.isKinematic = false;
