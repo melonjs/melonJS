@@ -56,14 +56,33 @@ function main() {
 		.filter((t) => t && t !== tag);
 	const previousTag = previousTags[0];
 
-	// Create GitHub release with commit history since last release
+	// Build release notes with full commit history
+	let notes = "";
+	if (previousTag) {
+		const commits = run(
+			`git log "${previousTag}..${tag}" --pretty=format:"- %s (%h)" --no-merges`,
+		);
+		if (commits) {
+			notes += "## What's Changed\n\n";
+			notes += commits;
+			notes += `\n\n**Full Changelog**: https://github.com/melonjs/melonJS/compare/${previousTag}...${tag}`;
+		}
+	}
+
+	// Create GitHub release
 	try {
 		console.log("Creating GitHub release...");
-		const notesFlag = previousTag ? `--notes-start-tag "${previousTag}"` : "";
-		const releaseUrl = run(
-			`gh release create "${tag}" --generate-notes ${notesFlag} --title "v${version}"`,
-		);
-		console.log(`Release created: ${releaseUrl}`);
+		if (notes) {
+			const releaseUrl = run(
+				`gh release create "${tag}" --title "v${version}" --notes "${notes.replace(/"/g, '\\"')}"`,
+			);
+			console.log(`Release created: ${releaseUrl}`);
+		} else {
+			const releaseUrl = run(
+				`gh release create "${tag}" --title "v${version}" --generate-notes`,
+			);
+			console.log(`Release created: ${releaseUrl}`);
+		}
 	} catch (e) {
 		const msg = e instanceof Error ? e.message : String(e);
 		if (msg.includes("already exists")) {
