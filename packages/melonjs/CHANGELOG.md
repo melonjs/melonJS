@@ -9,11 +9,28 @@
 - Renderer: new `backgroundColor` property allowing to change the color when clearing the background between frames
 
 ### Fixed
+- Body: fix `setCollisionType()` not accepting numeric collision type values
+- Body: fix `setVertices()` fallback creating a Point instead of a Polygon for non-polygon shapes
+- Camera: fix `moveTo()` upper bound clamping allowing the camera to scroll past the world edge
+- Camera: fix `focusOn()` double-counting target position and not centering the camera viewport
 - CanvasRenderTarget: fix arguments passed to `convertToBlob()` (@hornta)
+- Container: fix `addChildAt()` rejecting valid index equal to children length
+- Container: fix `getNextChild()` returning the previous child instead of the next one
+- Container: fix `removeChildNow()` crash when container is not attached to root
 - Physics: fix persistence for child bodies during world reset (@Vareniel)
+- Physics: fix collision response velocity projection to properly cancel movement into collision surfaces
+- Physics: fix shapes tunneling through polyline segment junctions by resolving all overlapping shapes per body pair (fix sprite going through polyline shapes in the isometric rpg example)
+- Physics: fix `step()` crash when a body's ancestor is undefined
 - Renderable: fix Light2D objects color blending when using the Canvas Renderer (@Vareniel)
 - TypeScript: fix missing `OffscreenCanvas` argument type for the TextureAtlas constructor
 - Video: fix implicit global reference to HTMLVideoElement
+
+### Performance
+- Collision: use a pre-built lookup table for SAT function dispatch
+- Collision: reduce overhead in the collision detection hot path
+- Container: cache camera references outside the per-child update loop
+- Physics: reduce iteration overhead in `world.step()`
+- QuadTree: reduce array allocations in `retrieve()` and `insert()`
 
 ### Changed
 - Chore: replaced rollup by esbuild for the build process (@hornta)
