@@ -1,0 +1,78 @@
+name: Publish to npm
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: "Package to publish"
+        required: true
+        type: choice
+        options:
+          - melonjs
+          - debug-plugin
+      dry-run:
+        description: "Dry run (skip actual publish)"
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    environment: npm
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: "https://registry.npmjs.org"
+
+      - uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Lint & check
+        run: |
+          pnpm lint
+          pnpm biome check
+
+      - name: Set package directory
+        id: pkg
+        run: |
+          if [ "${{ inputs.package }}" = "melonjs" ]; then
+            echo "dir=packages/melonjs" >> "$GITHUB_OUTPUT"
+          elif [ "${{ inputs.package }}" = "debug-plugin" ]; then
+            echo "dir=packages/debug-plugin" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build & test
+        working-directory: ${{ steps.pkg.outputs.dir }}
+        run: pnpm dist
+
+      - name: Publish to npm
+        if: ${{ !inputs.dry-run }}
+        working-directory: ${{ steps.pkg.outputs.dir }}
+        run: npm publish --access=public --provenance
+        env:
+          NODE_AUTH_TOKEN: ""
+
+      - name: Publish (dry run)
+        if: ${{ inputs.dry-run }}
+        working-directory: ${{ steps.pkg.outputs.dir }}
+        run: npm publish --access=public --dry-run
+        env:
+          NODE_AUTH_TOKEN: ""
+
+      - name: Create GitHub release
+        if: ${{ !inputs.dry-run }}
+        run: pnpm tsx scripts/release.ts ${{ inputs.package }}
+        env:
+          GH_TOKEN: ${{ github.token }}

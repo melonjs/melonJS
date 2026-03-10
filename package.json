@@ -11,8 +11,10 @@
 		"lint": "turbo build && eslint && biome check && turbo test:types",
 		"test": "turbo build && vitest --config packages/melonjs/vitest.config.ts",
 		"doc": "pnpm -F melonjs doc",
-		"publish-melonjs": "pnpm lint && pnpm biome check && pnpm publish --filter melonjs && pnpm tsx scripts/release.ts melonjs",
-		"publish-debug-plugin": "pnpm lint && pnpm biome check && pnpm publish --filter debug-plugin && pnpm tsx scripts/release.ts debug-plugin"
+		"publish-melonjs": "gh workflow run publish.yml -f package=melonjs",
+		"publish-melonjs:dry": "gh workflow run publish.yml -f package=melonjs -f dry-run=true",
+		"publish-debug-plugin": "gh workflow run publish.yml -f package=debug-plugin",
+		"publish-debug-plugin:dry": "gh workflow run publish.yml -f package=debug-plugin -f dry-run=true"
 	},
 	"packageManager": "pnpm@9.5.0",
 	"dependencies": {

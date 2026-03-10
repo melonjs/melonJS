@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const PACKAGES: Record<string, { dir: string; tagPrefix: string }> = {
-	melonjs: { dir: "packages/melonjs", tagPrefix: "v" },
+	melonjs: { dir: "packages/melonjs", tagPrefix: "" },
 	"debug-plugin": { dir: "packages/debug-plugin", tagPrefix: "debug-plugin/v" },
 };
 
@@ -47,11 +47,21 @@ function main() {
 		run(`git push origin "refs/tags/${tag}"`);
 	}
 
-	// Create GitHub release with auto-generated notes
+	// Find previous tag for this package to generate notes from
+	const tagPattern = pkg.tagPrefix ? `${pkg.tagPrefix}*` : "[0-9]*";
+	const previousTags = run(
+		`git tag --list "${tagPattern}" --sort=-version:refname`,
+	)
+		.split("\n")
+		.filter((t) => t && t !== tag);
+	const previousTag = previousTags[0];
+
+	// Create GitHub release with commit history since last release
 	try {
 		console.log("Creating GitHub release...");
+		const notesFlag = previousTag ? `--notes-start-tag "${previousTag}"` : "";
 		const releaseUrl = run(
-			`gh release create "${tag}" --generate-notes --title "${tag}"`,
+			`gh release create "${tag}" --generate-notes ${notesFlag} --title "${name} ${version}"`,
 		);
 		console.log(`Release created: ${releaseUrl}`);
 	} catch (e) {
