@@ -1,5 +1,5 @@
-import { ArrayMultimap } from "@teppeis/multimaps";
 import { isPowerOfTwo } from "./../../math/math.ts";
+import { ArrayMultimap } from "../../utils/array-multimap.js";
 import { getBasename } from "../../utils/file.ts";
 import { renderer } from "./../video.js";
 import { createAtlas, TextureAtlas } from "./atlas.js";
@@ -142,15 +142,10 @@ class TextureCache {
 
 		// "activate" the corresponding sources (in case of multi texture atlas)
 		if (typeof entry.sources !== "undefined" && entry.sources.size > 1) {
-			console.log(entry);
 			// manage cases where a specific atlas is specified
 			for (const [key, value] of entry.sources.entries()) {
 				// Check if the imageData matches the provided image
 				if (value === image) {
-					console.log("cache hit");
-					// If a match is found, return the corresponding entry from cache.atlases
-					console.log(key);
-					//return entry.atlases.get(key);
 					entry.activeAtlas = key;
 				}
 			}

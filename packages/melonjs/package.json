@@ -48,17 +48,16 @@
 		"CHANGELOG"
 	],
 	"dependencies": {
-		"@teppeis/multimaps": "^3.0.0",
 		"core-js": "^3.48.0",
 		"howler": "2.2.4"
 	},
 	"devDependencies": {
 		"@types/howler": "^2.2.12",
-		"@types/node": "^25.2.1",
+		"@types/node": "^25.4.0",
 		"concurrently": "^9.2.1",
 		"del-cli": "^7.0.0",
 		"esbuild": "^0.27.3",
-		"serve": "^14.2.5",
+		"serve": "^14.2.6",
 		"tsconfig": "workspace:^",
 		"tsx": "^4.21.0",
 		"type-fest": "^5.4.3",
