@@ -111,4 +111,457 @@ describe("Container", () => {
 			expect(counter).toEqual(3);
 		});
 	});
+
+	describe("addChildAt", () => {
+		it("should add a child at the specified index", () => {
+			const child1 = new Renderable(0, 0, 10, 10);
+			const child2 = new Renderable(10, 10, 10, 10);
+			const child3 = new Renderable(20, 20, 10, 10);
+			container.addChild(child1);
+			container.addChild(child2);
+			container.addChildAt(child3, 1);
+			expect(container.getChildAt(1)).toEqual(child3);
+		});
+
+		it("should trigger onChildChange with the correct index", () => {
+			let receivedIndex = -1;
+			const child1 = new Renderable(0, 0, 10, 10);
+			const child2 = new Renderable(10, 10, 10, 10);
+			container.addChild(child1);
+			container.addChild(child2);
+			container.onChildChange = function (index) {
+				receivedIndex = index;
+			};
+			const child3 = new Renderable(20, 20, 10, 10);
+			container.addChildAt(child3, 0);
+			expect(receivedIndex).toEqual(0);
+		});
+
+		it("should throw an error for out of bounds index", () => {
+			const child1 = new Renderable(0, 0, 10, 10);
+			container.addChild(child1);
+			const child2 = new Renderable(10, 10, 10, 10);
+			expect(() => {
+				container.addChildAt(child2, 99);
+			}).toThrow();
+		});
+
+		it("should set the ancestor on the added child", () => {
+			const child1 = new Renderable(0, 0, 10, 10);
+			container.addChild(child1);
+			const child2 = new Renderable(10, 10, 10, 10);
+			container.addChildAt(child2, 0);
+			expect(child2.ancestor).toEqual(container);
+		});
+	});
+
+	describe("swapChildren", () => {
+		it("should swap the z-index of two children", () => {
+			container.autoSort = false;
+			const child1 = new Renderable(0, 0, 10, 10);
+			const child2 = new Renderable(10, 10, 10, 10);
+			container.addChild(child1);
+			container.addChild(child2);
+			const z1 = child1.pos.z;
+			const z2 = child2.pos.z;
+			container.swapChildren(child1, child2);
+			expect(child1.pos.z).toEqual(z2);
+			expect(child2.pos.z).toEqual(z1);
+		});
+
+		it("should swap the positions in the children array", () => {
+			container.autoSort = false;
+			const child1 = new Renderable(0, 0, 10, 10);
+			const child2 = new Renderable(10, 10, 10, 10);
+			container.addChild(child1);
+			container.addChild(child2);
+			const idx1 = container.getChildIndex(child1);
+			const idx2 = container.getChildIndex(child2);
+			container.swapChildren(child1, child2);
+			expect(container.getChildIndex(child1)).toEqual(idx2);
+			expect(container.getChildIndex(child2)).toEqual(idx1);
+		});
+
+		it("should throw if a child does not belong to the container", () => {
+			const child1 = new Renderable(0, 0, 10, 10);
+			const orphan = new Renderable(10, 10, 10, 10);
+			container.addChild(child1);
+			expect(() => {
+				container.swapChildren(child1, orphan);
+			}).toThrow();
+		});
+	});
+
+	describe("getChildAt", () => {
+		it("should return the child at the given index", () => {
+			const child1 = new Renderable(0, 0, 10, 10);
+			const child2 = new Renderable(10, 10, 10, 10);
+			container.addChild(child1);
+			container.addChild(child2);
+			expect(container.getChildAt(0)).toBeDefined();
+			expect(container.getChildAt(1)).toBeDefined();
+		});
+
+		it("should throw for a negative index", () => {
+			container.addChild(new Renderable(0, 0, 10, 10));
+			expect(() => {
+				container.getChildAt(-1);
+			}).toThrow();
+		});
+
+		it("should throw for an index >= children length", () => {
+			container.addChild(new Renderable(0, 0, 10, 10));
+			expect(() => {
+				container.getChildAt(5);
+			}).toThrow();
+		});
+	});
+
+	describe("getChildIndex", () => {
+		it("should return the index of a child in the container", () => {
+			container.autoSort = false;
+			const child1 = new Renderable(0, 0, 10, 10);
+			const child2 = new Renderable(10, 10, 10, 10);
+			container.addChild(child1);
+			container.addChild(child2);
+			expect(container.getChildIndex(child1)).toEqual(0);
+			expect(container.getChildIndex(child2)).toEqual(1);
+		});
+
+		it("should return -1 for a child not in the container", () => {
+			const orphan = new Renderable(0, 0, 10, 10);
+			expect(container.getChildIndex(orphan)).toEqual(-1);
+		});
+	});
+
+	describe("hasChild", () => {
+		it("should return true if the container has the child", () => {
+			const child = new Renderable(0, 0, 10, 10);
+			container.addChild(child);
+			expect(container.hasChild(child)).toEqual(true);
+		});
+
+		it("should return false if the container does not have the child", () => {
+			const orphan = new Renderable(0, 0, 10, 10);
+			expect(container.hasChild(orphan)).toEqual(false);
+		});
+
+		it("should return false after the child is removed", () => {
+			const child = new Renderable(0, 0, 10, 10);
+			container.addChild(child);
+			container.removeChildNow(child);
+			expect(container.hasChild(child)).toEqual(false);
+		});
+	});
+
+	describe("getChildByProp", () => {
+		it("should find children by a string property", () => {
+			const child1 = new Renderable(0, 0, 10, 10);
+			child1.name = "player";
+			const child2 = new Renderable(10, 10, 10, 10);
+			child2.name = "enemy";
+			container.addChild(child1);
+			container.addChild(child2);
+			const result = container.getChildByProp("name", "player");
+			expect(result.length).toEqual(1);
+			expect(result[0]).toEqual(child1);
+		});
+
+		it("should find children by a RegExp property", () => {
+			const child1 = new Renderable(0, 0, 10, 10);
+			child1.name = "redCoin";
+			const child2 = new Renderable(10, 10, 10, 10);
+			child2.name = "blueCoin";
+			const child3 = new Renderable(20, 20, 10, 10);
+			child3.name = "gem";
+			container.addChild(child1);
+			container.addChild(child2);
+			container.addChild(child3);
+			const result = container.getChildByProp("name", /coin/i);
+			expect(result.length).toEqual(2);
+		});
+
+		it("should return an empty array when no match is found", () => {
+			const child = new Renderable(0, 0, 10, 10);
+			child.name = "something";
+			container.addChild(child);
+			const result = container.getChildByProp("name", "nonexistent");
+			expect(result.length).toEqual(0);
+		});
+
+		it("should search recursively in nested containers", () => {
+			const nested = new Container(0, 0, 50, 50);
+			const child = new Renderable(0, 0, 10, 10);
+			child.name = "deepChild";
+			nested.addChild(child);
+			container.addChild(nested);
+			const result = container.getChildByProp("name", "deepChild");
+			expect(result.length).toEqual(1);
+			expect(result[0]).toEqual(child);
+		});
+	});
+
+	describe("getChildByType", () => {
+		it("should return children matching the given class type", () => {
+			const child = new Renderable(0, 0, 10, 10);
+			const nested = new Container(0, 0, 50, 50);
+			container.addChild(child);
+			container.addChild(nested);
+			const renderables = container.getChildByType(Renderable);
+			// Container extends Renderable, so both match
+			expect(renderables.length).toBeGreaterThanOrEqual(2);
+		});
+
+		it("should return only Container types when filtering by Container", () => {
+			const child = new Renderable(0, 0, 10, 10);
+			const nested = new Container(0, 0, 50, 50);
+			container.addChild(child);
+			container.addChild(nested);
+			const containers = container.getChildByType(Container);
+			expect(containers.length).toEqual(1);
+			expect(containers[0]).toEqual(nested);
+		});
+
+		it("should search recursively in nested containers", () => {
+			const nested = new Container(0, 0, 50, 50);
+			const deepChild = new Renderable(0, 0, 10, 10);
+			nested.addChild(deepChild);
+			container.addChild(nested);
+			const renderables = container.getChildByType(Renderable);
+			// nested (Renderable), deepChild (Renderable) - both are Renderable instances
+			expect(renderables.length).toBeGreaterThanOrEqual(2);
+		});
+	});
+
+	describe("getChildByName", () => {
+		it("should find children by name", () => {
+			const child1 = new Renderable(0, 0, 10, 10);
+			child1.name = "hero";
+			const child2 = new Renderable(10, 10, 10, 10);
+			child2.name = "villain";
+			container.addChild(child1);
+			container.addChild(child2);
+			const result = container.getChildByName("hero");
+			expect(result.length).toEqual(1);
+			expect(result[0]).toEqual(child1);
+		});
+
+		it("should support RegExp matching", () => {
+			const child1 = new Renderable(0, 0, 10, 10);
+			child1.name = "enemy_01";
+			const child2 = new Renderable(10, 10, 10, 10);
+			child2.name = "enemy_02";
+			container.addChild(child1);
+			container.addChild(child2);
+			const result = container.getChildByName(/enemy/);
+			expect(result.length).toEqual(2);
+		});
+	});
+
+	describe("getChildren", () => {
+		it("should return an empty array for a new container", () => {
+			const result = container.getChildren();
+			expect(result).toBeInstanceOf(Array);
+			expect(result.length).toEqual(0);
+		});
+
+		it("should return all children after adding", () => {
+			container.addChild(new Renderable(0, 0, 10, 10));
+			container.addChild(new Renderable(10, 10, 10, 10));
+			container.addChild(new Renderable(20, 20, 10, 10));
+			expect(container.getChildren().length).toEqual(3);
+		});
+	});
+
+	describe("setChildsProperty", () => {
+		it("should set the given property on all children", () => {
+			const child1 = new Renderable(0, 0, 10, 10);
+			const child2 = new Renderable(10, 10, 10, 10);
+			container.addChild(child1);
+			container.addChild(child2);
+			container.setChildsProperty("alpha", 0.5);
+			expect(child1.alpha).toEqual(0.5);
+			expect(child2.alpha).toEqual(0.5);
+		});
+
+		it("should set property recursively when recursive is true", () => {
+			const nested = new Container(0, 0, 50, 50);
+			const deepChild = new Renderable(0, 0, 10, 10);
+			nested.addChild(deepChild);
+			container.addChild(nested);
+			container.setChildsProperty("alpha", 0.25, true);
+			expect(deepChild.alpha).toEqual(0.25);
+			expect(nested.alpha).toEqual(0.25);
+		});
+
+		it("should not set property recursively when recursive is false", () => {
+			const nested = new Container(0, 0, 50, 50);
+			const deepChild = new Renderable(0, 0, 10, 10);
+			deepChild.alpha = 1.0;
+			nested.addChild(deepChild);
+			container.addChild(nested);
+			container.setChildsProperty("alpha", 0.25, false);
+			expect(deepChild.alpha).toEqual(1.0);
+			expect(nested.alpha).toEqual(0.25);
+		});
+	});
+
+	describe("moveUp", () => {
+		it("should move the child one step forward in the children array", () => {
+			container.autoSort = false;
+			const child1 = new Renderable(0, 0, 10, 10);
+			const child2 = new Renderable(10, 10, 10, 10);
+			const child3 = new Renderable(20, 20, 10, 10);
+			container.addChild(child1);
+			container.addChild(child2);
+			container.addChild(child3);
+			const originalIndex = container.getChildIndex(child2);
+			container.moveUp(child2);
+			expect(container.getChildIndex(child2)).toEqual(originalIndex - 1);
+		});
+
+		it("should not move the child if already at the top", () => {
+			container.autoSort = false;
+			const child1 = new Renderable(0, 0, 10, 10);
+			const child2 = new Renderable(10, 10, 10, 10);
+			container.addChild(child1);
+			container.addChild(child2);
+			container.moveUp(child1);
+			expect(container.getChildIndex(child1)).toEqual(0);
+		});
+	});
+
+	describe("moveDown", () => {
+		it("should move the child one step backward in the children array", () => {
+			container.autoSort = false;
+			const child1 = new Renderable(0, 0, 10, 10);
+			const child2 = new Renderable(10, 10, 10, 10);
+			const child3 = new Renderable(20, 20, 10, 10);
+			container.addChild(child1);
+			container.addChild(child2);
+			container.addChild(child3);
+			const originalIndex = container.getChildIndex(child2);
+			container.moveDown(child2);
+			expect(container.getChildIndex(child2)).toEqual(originalIndex + 1);
+		});
+
+		it("should not move the child if already at the bottom", () => {
+			container.autoSort = false;
+			const child1 = new Renderable(0, 0, 10, 10);
+			const child2 = new Renderable(10, 10, 10, 10);
+			container.addChild(child1);
+			container.addChild(child2);
+			container.moveDown(child2);
+			expect(container.getChildIndex(child2)).toEqual(1);
+		});
+	});
+
+	describe("moveToTop", () => {
+		it("should move the child to the top of the children array", () => {
+			container.autoSort = false;
+			const child1 = new Renderable(0, 0, 10, 10);
+			const child2 = new Renderable(10, 10, 10, 10);
+			const child3 = new Renderable(20, 20, 10, 10);
+			container.addChild(child1);
+			container.addChild(child2);
+			container.addChild(child3);
+			container.moveToTop(child3);
+			expect(container.getChildIndex(child3)).toEqual(0);
+		});
+
+		it("should not change position if already at the top", () => {
+			container.autoSort = false;
+			const child1 = new Renderable(0, 0, 10, 10);
+			const child2 = new Renderable(10, 10, 10, 10);
+			container.addChild(child1);
+			container.addChild(child2);
+			container.moveToTop(child1);
+			expect(container.getChildIndex(child1)).toEqual(0);
+		});
+	});
+
+	describe("moveToBottom", () => {
+		it("should move the child to the bottom of the children array", () => {
+			container.autoSort = false;
+			const child1 = new Renderable(0, 0, 10, 10);
+			const child2 = new Renderable(10, 10, 10, 10);
+			const child3 = new Renderable(20, 20, 10, 10);
+			container.addChild(child1);
+			container.addChild(child2);
+			container.addChild(child3);
+			container.moveToBottom(child1);
+			expect(container.getChildIndex(child1)).toEqual(2);
+		});
+
+		it("should not change position if already at the bottom", () => {
+			container.autoSort = false;
+			const child1 = new Renderable(0, 0, 10, 10);
+			const child2 = new Renderable(10, 10, 10, 10);
+			container.addChild(child1);
+			container.addChild(child2);
+			container.moveToBottom(child2);
+			expect(container.getChildIndex(child2)).toEqual(1);
+		});
+	});
+
+	describe("sort", () => {
+		it("should sort children by z index by default", async () => {
+			container.autoSort = false;
+			const child1 = new Renderable(0, 0, 10, 10);
+			child1.pos.z = 3;
+			const child2 = new Renderable(10, 10, 10, 10);
+			child2.pos.z = 1;
+			const child3 = new Renderable(20, 20, 10, 10);
+			child3.pos.z = 2;
+			container.getChildren().push(child1, child2, child3);
+			container.sort();
+			// sort is deferred, wait for it
+			await new Promise((resolve) => setTimeout(resolve, 50));
+			// default sortOn is "z" and _sortZ sorts b.pos.z - a.pos.z (descending)
+			expect(container.getChildAt(0).pos.z).toBeGreaterThanOrEqual(
+				container.getChildAt(1).pos.z,
+			);
+			expect(container.getChildAt(1).pos.z).toBeGreaterThanOrEqual(
+				container.getChildAt(2).pos.z,
+			);
+		});
+	});
+
+	describe("removeChild edge cases", () => {
+		it("should throw when removing a child that does not belong to the container", () => {
+			const orphan = new Renderable(0, 0, 10, 10);
+			expect(() => {
+				container.removeChild(orphan);
+			}).toThrow("Child is not mine.");
+		});
+
+		it("removeChildNow should properly clear the ancestor", () => {
+			const child = new Renderable(0, 0, 10, 10);
+			container.addChild(child);
+			expect(child.ancestor).toEqual(container);
+			container.removeChildNow(child);
+			expect(child.ancestor).toBeUndefined();
+		});
+
+		it("removeChildNow should reduce children count", () => {
+			const child1 = new Renderable(0, 0, 10, 10);
+			const child2 = new Renderable(10, 10, 10, 10);
+			container.addChild(child1);
+			container.addChild(child2);
+			expect(container.getChildren().length).toEqual(2);
+			container.removeChildNow(child1);
+			expect(container.getChildren().length).toEqual(1);
+		});
+
+		it("removeChildNow with keepalive should not destroy the child", () => {
+			const child = new Renderable(0, 0, 10, 10);
+			let destroyed = false;
+			child.destroy = function () {
+				destroyed = true;
+			};
+			container.addChild(child);
+			container.removeChildNow(child, true);
+			expect(destroyed).toEqual(false);
+		});
+	});
 });
