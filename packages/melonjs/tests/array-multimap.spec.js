@@ -79,7 +79,9 @@ describe("ArrayMultimap", () => {
 		});
 
 		it("should not throw when deleting a non-existent key", () => {
-			expect(() => map.delete("missing")).not.toThrow();
+			expect(() => {
+				return map.delete("missing");
+			}).not.toThrow();
 		});
 	});
 

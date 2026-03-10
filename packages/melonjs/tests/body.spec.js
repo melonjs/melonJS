@@ -73,7 +73,8 @@ describe("Physics : Body", () => {
 		it("should set ancestor.isKinematic to false", () => {
 			const parent = new Renderable(0, 0, 32, 64);
 			parent.isKinematic = true;
-			const body = new Body(parent);
+			// eslint-disable-next-line no-new
+			new Body(parent);
 			expect(parent.isKinematic).toEqual(false);
 		});
 
@@ -83,7 +84,8 @@ describe("Physics : Body", () => {
 			const callback = () => {
 				callbackCalled = true;
 			};
-			const body = new Body(parent, new Rect(0, 0, 10, 10), callback);
+			// eslint-disable-next-line no-new
+			new Body(parent, new Rect(0, 0, 10, 10), callback);
 			expect(callbackCalled).toEqual(true);
 		});
 	});
@@ -360,8 +362,12 @@ describe("Physics : Body", () => {
 		it("should throw for an invalid type", () => {
 			const parent = new Renderable(0, 0, 32, 64);
 			const body = new Body(parent);
-			expect(() => body.setCollisionType("INVALID_TYPE")).toThrow();
-			expect(() => body.setCollisionType(true)).toThrow();
+			expect(() => {
+				return body.setCollisionType("INVALID_TYPE");
+			}).toThrow();
+			expect(() => {
+				return body.setCollisionType(true);
+			}).toThrow();
 		});
 	});
 
@@ -437,7 +443,9 @@ describe("Physics : Body", () => {
 		it("should throw if callback is not a function", () => {
 			const parent = new Renderable(0, 0, 32, 32);
 			const body = new Body(parent, new Rect(0, 0, 16, 16));
-			expect(() => body.forEach("not a function")).toThrow();
+			expect(() => {
+				return body.forEach("not a function");
+			}).toThrow();
 		});
 	});
 

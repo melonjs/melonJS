@@ -115,7 +115,9 @@ describe("Texture", () => {
 		it("should not throw when deleting a non-existent key", () => {
 			const canvas = new CanvasTexture(32, 32);
 			// never cached — delete should be a no-op
-			expect(() => cache.delete(canvas.canvas)).not.toThrow();
+			expect(() => {
+				return cache.delete(canvas.canvas);
+			}).not.toThrow();
 		});
 
 		it("should clear all cached textures", () => {
@@ -157,9 +159,9 @@ describe("Texture", () => {
 			cache.allocateTextureUnit();
 			cache.allocateTextureUnit();
 
-			expect(() => cache.allocateTextureUnit()).toThrow(
-				/Texture cache overflow/,
-			);
+			expect(() => {
+				return cache.allocateTextureUnit();
+			}).toThrow(/Texture cache overflow/);
 		});
 
 		it("should handle set() followed by get() returning first entry", () => {

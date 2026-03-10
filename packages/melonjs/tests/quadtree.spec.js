@@ -4,11 +4,9 @@ import {
 	boot,
 	collision,
 	Ellipse,
-	Entity,
 	Line,
 	Rect,
 	Renderable,
-	Sprite,
 	video,
 	World,
 } from "../src/index.js";
@@ -119,10 +117,9 @@ describe("QuadTree & Collision Detection", () => {
 				items.push(r);
 			}
 
-			const results = world.broadphase.retrieve(
-				items[0],
-				(a, b) => a.pos.z - b.pos.z,
-			);
+			const results = world.broadphase.retrieve(items[0], (a, b) => {
+				return a.pos.z - b.pos.z;
+			});
 			// should be sorted by z ascending
 			for (let i = 1; i < results.length; i++) {
 				expect(results[i].pos.z).toBeGreaterThanOrEqual(results[i - 1].pos.z);
@@ -507,7 +504,9 @@ describe("QuadTree & Collision Detection", () => {
 			body.ancestor = undefined;
 
 			// should not crash
-			expect(() => world.step(16)).not.toThrow();
+			expect(() => {
+				return world.step(16);
+			}).not.toThrow();
 		});
 	});
 });

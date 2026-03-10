@@ -516,7 +516,9 @@ describe("Container", () => {
 			container.getChildren().push(child1, child2, child3);
 			container.sort();
 			// sort is deferred, wait for it
-			await new Promise((resolve) => setTimeout(resolve, 50));
+			await new Promise((resolve) => {
+				setTimeout(resolve, 50);
+			});
 			// default sortOn is "z" and _sortZ sorts b.pos.z - a.pos.z (descending)
 			expect(container.getChildAt(0).pos.z).toBeGreaterThanOrEqual(
 				container.getChildAt(1).pos.z,
