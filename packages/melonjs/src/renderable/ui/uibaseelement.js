@@ -15,6 +15,15 @@ export default class UIBaseElement extends Container {
 	#boundPointerMoveHandler;
 
 	/**
+	 * UI base elements use screen coordinates by default
+	 * (Note: any child elements added to a UIBaseElement should have their floating property to false)
+	 * @see Renderable.floating
+	 * @type {boolean}
+	 * @default true
+	 */
+	floating = true;
+
+	/**
 	 *
 	 * @param {number} x - The x position of the container
 	 * @param {number} y - The y position of the container
@@ -64,15 +73,6 @@ export default class UIBaseElement extends Container {
 		 * @default false
 		 */
 		this.released = true;
-
-		/**
-		 * UI base elements use screen coordinates by default
-		 * (Note: any child elements added to a UIBaseElement should have their floating property to false)
-		 * @see Renderable.floating
-		 * @type {boolean}
-		 * @default true
-		 */
-		this.floating = true;
 
 		// object has been updated (clicked,etc..)
 		this.holdTimeout = -1;
