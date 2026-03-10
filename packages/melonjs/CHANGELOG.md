@@ -1,5 +1,17 @@
 # Changelog
 
+## [18.1.0] (melonJS 2)
+
+### Fixed
+- Renderer: fix `PrimitiveCompositor.drawVertices()` ignoring the `vertexCount` parameter
+- Texture: fix tint cache bug where `Map.set()` return value was incorrectly used as the inner cache map, causing duplicate tinted images to be created
+
+### Performance
+- Collision: replace array `push()`/`pop()` with index-based pool access in SAT collision detection
+- Container: replace `concat()` with accumulator pattern in `getChildByProp()` and `getChildByType()` to avoid O(n²) array copying in deep hierarchies
+- QuadTree: replace temporary array allocation with in-place compaction during node splits
+- Renderer: replace `forEach` with `for` loop in `PrimitiveCompositor.drawVertices()`
+
 ## [18.0.0] (melonJS 2) - _2026-03-10_
 
 ### Added
