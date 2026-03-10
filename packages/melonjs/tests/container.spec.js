@@ -333,6 +333,131 @@ describe("Container", () => {
 		});
 	});
 
+	describe("getChildByProp deep nesting", () => {
+		it("should find children across 3 levels of nesting", () => {
+			const level1 = new Container(0, 0, 50, 50);
+			const level2 = new Container(0, 0, 50, 50);
+			const deepChild = new Renderable(0, 0, 10, 10);
+			deepChild.name = "deep";
+			level2.addChild(deepChild);
+			level1.addChild(level2);
+			container.addChild(level1);
+
+			const result = container.getChildByProp("name", "deep");
+			expect(result.length).toEqual(1);
+			expect(result[0]).toEqual(deepChild);
+		});
+
+		it("should collect matches from multiple levels", () => {
+			const child1 = new Renderable(0, 0, 10, 10);
+			child1.name = "coin";
+			container.addChild(child1);
+
+			const nested = new Container(0, 0, 50, 50);
+			const child2 = new Renderable(0, 0, 10, 10);
+			child2.name = "coin";
+			nested.addChild(child2);
+			container.addChild(nested);
+
+			const deepNested = new Container(0, 0, 50, 50);
+			const child3 = new Renderable(0, 0, 10, 10);
+			child3.name = "coin";
+			deepNested.addChild(child3);
+			nested.addChild(deepNested);
+
+			const result = container.getChildByProp("name", "coin");
+			expect(result.length).toEqual(3);
+			expect(result).toContain(child1);
+			expect(result).toContain(child2);
+			expect(result).toContain(child3);
+		});
+
+		it("should return results in depth-first order", () => {
+			const child1 = new Renderable(0, 0, 10, 10);
+			child1.name = "item";
+			container.addChild(child1);
+
+			const nested = new Container(0, 0, 50, 50);
+			const child2 = new Renderable(0, 0, 10, 10);
+			child2.name = "item";
+			nested.addChild(child2);
+			container.addChild(nested);
+
+			const child3 = new Renderable(0, 0, 10, 10);
+			child3.name = "item";
+			container.addChild(child3);
+
+			const result = container.getChildByProp("name", "item");
+			expect(result.length).toEqual(3);
+			// depth-first: child1 (level 0), child2 (nested, level 1), child3 (level 0)
+			expect(result[0]).toEqual(child1);
+			expect(result[1]).toEqual(child2);
+			expect(result[2]).toEqual(child3);
+		});
+
+		it("should return empty array when nothing matches in deep tree", () => {
+			const level1 = new Container(0, 0, 50, 50);
+			const level2 = new Container(0, 0, 50, 50);
+			const child = new Renderable(0, 0, 10, 10);
+			child.name = "exists";
+			level2.addChild(child);
+			level1.addChild(level2);
+			container.addChild(level1);
+
+			const result = container.getChildByProp("name", "nonexistent");
+			expect(result.length).toEqual(0);
+		});
+	});
+
+	describe("getChildByType deep nesting", () => {
+		it("should find all Containers across nested levels", () => {
+			const level1 = new Container(0, 0, 50, 50);
+			const level2 = new Container(0, 0, 50, 50);
+			level1.addChild(level2);
+			container.addChild(level1);
+
+			const result = container.getChildByType(Container);
+			expect(result.length).toEqual(2);
+			expect(result).toContain(level1);
+			expect(result).toContain(level2);
+		});
+
+		it("should collect Renderables from all nesting levels", () => {
+			const r1 = new Renderable(0, 0, 10, 10);
+			container.addChild(r1);
+
+			const nested = new Container(0, 0, 50, 50);
+			const r2 = new Renderable(0, 0, 10, 10);
+			nested.addChild(r2);
+			container.addChild(nested);
+
+			const deepNested = new Container(0, 0, 50, 50);
+			const r3 = new Renderable(0, 0, 10, 10);
+			deepNested.addChild(r3);
+			nested.addChild(deepNested);
+
+			const result = container.getChildByType(Renderable);
+			// r1, nested (is Renderable), r2, deepNested (is Renderable), r3
+			expect(result.length).toEqual(5);
+			expect(result).toContain(r1);
+			expect(result).toContain(r2);
+			expect(result).toContain(r3);
+		});
+
+		it("should return results in depth-first order", () => {
+			const nested = new Container(0, 0, 50, 50);
+			const deepNested = new Container(0, 0, 50, 50);
+			nested.addChild(deepNested);
+			container.addChild(nested);
+
+			const result = container.getChildByType(Container);
+			expect(result.length).toEqual(2);
+			// depth-first: nested first, then deepNested
+			expect(result[0]).toEqual(nested);
+			expect(result[1]).toEqual(deepNested);
+		});
+	});
+
 	describe("getChildByName", () => {
 		it("should find children by name", () => {
 			const child1 = new Renderable(0, 0, 10, 10);

@@ -491,27 +491,18 @@ export default class Container extends Renderable {
 	 * let zIndex10 = container.getChildByProp("z", 10);
 	 * let inViewport = container.getChildByProp("inViewport", true);
 	 */
-	getChildByProp(prop, value) {
-		let objList = [];
-
-		/**
-		 * @ignore
-		 */
-		function compare(obj, prop) {
-			const v = obj[prop];
+	getChildByProp(prop, value, objList = []) {
+		this.forEach((child) => {
+			const v = child[prop];
 			if (value instanceof RegExp && typeof v === "string") {
 				if (value.test(v)) {
-					objList.push(obj);
+					objList.push(child);
 				}
 			} else if (v === value) {
-				objList.push(obj);
+				objList.push(child);
 			}
-		}
-
-		this.forEach((child) => {
-			compare(child, prop);
 			if (child instanceof Container) {
-				objList = objList.concat(child.getChildByProp(prop, value));
+				child.getChildByProp(prop, value, objList);
 			}
 		});
 
@@ -523,15 +514,13 @@ export default class Container extends Renderable {
 	 * @param {object} classType - Class type
 	 * @returns {Renderable[]} Array of children
 	 */
-	getChildByType(classType) {
-		let objList = [];
-
+	getChildByType(classType, objList = []) {
 		this.forEach((child) => {
 			if (child instanceof classType) {
 				objList.push(child);
 			}
 			if (child instanceof Container) {
-				objList = objList.concat(child.getChildByType(classType));
+				child.getChildByType(classType, objList);
 			}
 		});
 
