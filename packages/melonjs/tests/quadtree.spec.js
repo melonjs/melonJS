@@ -195,6 +195,104 @@ describe("QuadTree & Collision Detection", () => {
 		});
 	});
 
+	describe("QuadTree insert redistribution integrity", () => {
+		it("objects array should only contain items that span quadrants after split", () => {
+			world.broadphase.max_objects = 2;
+
+			// items that fit cleanly into separate quadrants
+			const topLeft = new Renderable(10, 10, 15, 15);
+			topLeft.anchorPoint.set(0, 0);
+			topLeft.isKinematic = false;
+			topLeft.name = "topLeft";
+
+			const topRight = new Renderable(500, 10, 15, 15);
+			topRight.anchorPoint.set(0, 0);
+			topRight.isKinematic = false;
+			topRight.name = "topRight";
+
+			const bottomLeft = new Renderable(10, 400, 15, 15);
+			bottomLeft.anchorPoint.set(0, 0);
+			bottomLeft.isKinematic = false;
+			bottomLeft.name = "bottomLeft";
+
+			// item that spans the center (won't fit in any quadrant)
+			const spanning = new Renderable(350, 250, 100, 100);
+			spanning.anchorPoint.set(0, 0);
+			spanning.isKinematic = false;
+			spanning.name = "spanning";
+
+			world.broadphase.insert(topLeft);
+			world.broadphase.insert(topRight);
+			// this triggers split, topLeft and topRight go to subnodes
+			world.broadphase.insert(spanning);
+
+			// spanning should remain in root objects (can't fit in a subnode)
+			expect(world.broadphase.objects).toContain(spanning);
+			// topLeft and topRight should have been redistributed to subnodes
+			expect(world.broadphase.objects).not.toContain(topLeft);
+			expect(world.broadphase.objects).not.toContain(topRight);
+			// root objects should only have the spanning item
+			expect(world.broadphase.objects.length).toEqual(1);
+		});
+
+		it("all items retrievable after multiple splits", () => {
+			world.broadphase.max_objects = 2;
+
+			const items = [];
+			const positions = [
+				[10, 10],
+				[500, 10],
+				[10, 400],
+				[500, 400],
+				[200, 100],
+				[600, 100],
+				[100, 500],
+				[600, 500],
+			];
+
+			for (const [x, y] of positions) {
+				const r = new Renderable(x, y, 15, 15);
+				r.anchorPoint.set(0, 0);
+				r.isKinematic = false;
+				world.broadphase.insert(r);
+				items.push(r);
+			}
+
+			// every item should still be retrievable
+			for (const item of items) {
+				const results = world.broadphase.retrieve(item);
+				expect(results).toContain(item);
+			}
+		});
+
+		it("objects array length should be correct after split with mixed items", () => {
+			world.broadphase.max_objects = 2;
+
+			// two spanning items + one that fits in a quadrant
+			const span1 = new Renderable(350, 250, 100, 100);
+			span1.anchorPoint.set(0, 0);
+			span1.isKinematic = false;
+
+			const span2 = new Renderable(380, 270, 50, 50);
+			span2.anchorPoint.set(0, 0);
+			span2.isKinematic = false;
+
+			const corner = new Renderable(10, 10, 15, 15);
+			corner.anchorPoint.set(0, 0);
+			corner.isKinematic = false;
+
+			world.broadphase.insert(span1);
+			world.broadphase.insert(span2);
+			world.broadphase.insert(corner);
+
+			// corner should be redistributed, both spanning items remain
+			expect(world.broadphase.objects).toContain(span1);
+			expect(world.broadphase.objects).toContain(span2);
+			expect(world.broadphase.objects).not.toContain(corner);
+			expect(world.broadphase.objects.length).toEqual(2);
+		});
+	});
+
 	describe("QuadTree clear and rebuild", () => {
 		it("should clear all objects and subnodes", () => {
 			world.broadphase.max_objects = 2;

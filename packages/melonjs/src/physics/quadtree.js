@@ -258,16 +258,16 @@ export default class QuadTree {
 			}
 
 			//add all objects to their corresponding subnodes
-			const remaining = [];
+			let writeIdx = 0;
 			for (let i = 0, len = this.objects.length; i < len; i++) {
 				index = this.getIndex(this.objects[i]);
 				if (index !== -1) {
 					this.nodes[index].insert(this.objects[i]);
 				} else {
-					remaining.push(this.objects[i]);
+					this.objects[writeIdx++] = this.objects[i];
 				}
 			}
-			this.objects = remaining;
+			this.objects.length = writeIdx;
 		}
 	}
 
