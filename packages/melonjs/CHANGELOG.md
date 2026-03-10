@@ -9,6 +9,7 @@
 - Renderer: new `backgroundColor` property allowing to change the color when clearing the background between frames
 
 ### Fixed
+- Docs: fix `floating` default shown for `UIBaseElement` and `UISpriteElement` (@SergioChan)
 - Body: fix `setCollisionType()` not accepting numeric collision type values
 - Body: fix `setVertices()` fallback creating a Point instead of a Polygon for non-polygon shapes
 - Camera: fix `moveTo()` upper bound clamping allowing the camera to scroll past the world edge
