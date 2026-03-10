@@ -1,12 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import {
-	Container,
-	Ellipse,
-	Polygon,
-	Rect,
-	Renderable,
-	Vector2d,
-} from "../src/index.js";
+import { Ellipse, Polygon, Rect, Renderable, Vector2d } from "../src/index.js";
 import ResponseObject from "../src/physics/response.js";
 import {
 	testEllipseEllipse,
