@@ -42,6 +42,11 @@ const T_VECTORS = [];
 for (let v = 0; v < 10; v++) {
 	T_VECTORS.push(new Vector2d());
 }
+/**
+ * Stack index for the T_VECTORS pool. Points to the next available slot.
+ * @ignore
+ */
+let T_VECTORS_IDX = 10;
 
 /**
  * A pool of arrays of numbers used in calculations to avoid allocating memory.
@@ -52,6 +57,11 @@ const T_ARRAYS = [];
 for (let a = 0; a < 5; a++) {
 	T_ARRAYS.push([]);
 }
+/**
+ * Stack index for the T_ARRAYS pool. Points to the next available slot.
+ * @ignore
+ */
+let T_ARRAYS_IDX = 5;
 
 /**
  * Flattens the specified array of points onto a unit vector axis,
@@ -99,10 +109,10 @@ function flattenPointsOn(points, normal, result) {
  *   the direction of the overlap will be populated.
  */
 function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
-	const rangeA = T_ARRAYS.pop();
-	const rangeB = T_ARRAYS.pop();
+	const rangeA = T_ARRAYS[--T_ARRAYS_IDX];
+	const rangeB = T_ARRAYS[--T_ARRAYS_IDX];
 	// The magnitude of the offset between the two polygons
-	const offsetV = T_VECTORS.pop().copy(bPos).sub(aPos);
+	const offsetV = T_VECTORS[--T_VECTORS_IDX].copy(bPos).sub(aPos);
 	const projectedOffset = offsetV.dot(axis);
 
 	// Project the polygons onto the axis.
@@ -113,9 +123,8 @@ function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
 	rangeB[1] += projectedOffset;
 	// Check if there is a gap. If there is, this is a separating axis and we can stop
 	if (rangeA[0] > rangeB[1] || rangeB[0] > rangeA[1]) {
-		T_VECTORS.push(offsetV);
-		T_ARRAYS.push(rangeA);
-		T_ARRAYS.push(rangeB);
+		T_VECTORS_IDX++;
+		T_ARRAYS_IDX += 2;
 		return true;
 	}
 
@@ -160,9 +169,8 @@ function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
 			}
 		}
 	}
-	T_VECTORS.push(offsetV);
-	T_ARRAYS.push(rangeA);
-	T_ARRAYS.push(rangeB);
+	T_VECTORS_IDX++;
+	T_ARRAYS_IDX += 2;
 	return false;
 }
 
@@ -218,11 +226,11 @@ export function testPolygonPolygon(a, polyA, b, polyB, response) {
 	const bNormals = polyB.normals;
 	const bLen = bNormals.length;
 	// aboslute shape position
-	const posA = T_VECTORS.pop()
+	const posA = T_VECTORS[--T_VECTORS_IDX]
 		.copy(a.pos)
 		.add(a.ancestor.getAbsolutePosition())
 		.add(polyA.pos);
-	const posB = T_VECTORS.pop()
+	const posB = T_VECTORS[--T_VECTORS_IDX]
 		.copy(b.pos)
 		.add(b.ancestor.getAbsolutePosition())
 		.add(polyB.pos);
@@ -230,8 +238,7 @@ export function testPolygonPolygon(a, polyA, b, polyB, response) {
 	// If any of the edge normals of A is a separating axis, no intersection.
 	for (let i = 0; i < aLen; i++) {
 		if (isSeparatingAxis(posA, posB, aPoints, bPoints, aNormals[i], response)) {
-			T_VECTORS.push(posA);
-			T_VECTORS.push(posB);
+			T_VECTORS_IDX += 2;
 			return false;
 		}
 	}
@@ -239,8 +246,7 @@ export function testPolygonPolygon(a, polyA, b, polyB, response) {
 	// If any of the edge normals of B is a separating axis, no intersection.
 	for (let i = 0; i < bLen; i++) {
 		if (isSeparatingAxis(posA, posB, aPoints, bPoints, bNormals[i], response)) {
-			T_VECTORS.push(posA);
-			T_VECTORS.push(posB);
+			T_VECTORS_IDX += 2;
 			return false;
 		}
 	}
@@ -253,8 +259,7 @@ export function testPolygonPolygon(a, polyA, b, polyB, response) {
 		response.b = b;
 		response.overlapV.copy(response.overlapN).scale(response.overlap);
 	}
-	T_VECTORS.push(posA);
-	T_VECTORS.push(posB);
+	T_VECTORS_IDX += 2;
 	return true;
 }
 
@@ -272,7 +277,7 @@ export function testPolygonPolygon(a, polyA, b, polyB, response) {
 export function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
 	// Check if the distance between the centers of the two
 	// circles is greater than their combined radius.
-	const differenceV = T_VECTORS.pop()
+	const differenceV = T_VECTORS[--T_VECTORS_IDX]
 		.copy(b.pos)
 		.add(b.ancestor.getAbsolutePosition())
 		.add(ellipseB.pos)
@@ -286,7 +291,7 @@ export function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
 	const distanceSq = differenceV.length2();
 	// If the distance is bigger than the combined radius, they don't intersect.
 	if (distanceSq > totalRadiusSq) {
-		T_VECTORS.push(differenceV);
+		T_VECTORS_IDX++;
 		return false;
 	}
 	// They intersect.  If we're calculating a response, calculate the overlap.
@@ -300,7 +305,7 @@ export function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
 		response.aInB = radiusA <= radiusB && dist <= radiusB - radiusA;
 		response.bInA = radiusB <= radiusA && dist <= radiusA - radiusB;
 	}
-	T_VECTORS.push(differenceV);
+	T_VECTORS_IDX++;
 	return true;
 }
 
@@ -316,7 +321,7 @@ export function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
  */
 export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
 	// Get the position of the circle relative to the polygon.
-	const circlePos = T_VECTORS.pop()
+	const circlePos = T_VECTORS[--T_VECTORS_IDX]
 		.copy(b.pos)
 		.add(b.ancestor.getAbsolutePosition())
 		.add(ellipseB.pos)
@@ -328,9 +333,9 @@ export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
 	const points = polyA.points;
 	const edges = polyA.edges;
 	const len = edges.length;
-	const edge = T_VECTORS.pop();
-	const normal = T_VECTORS.pop();
-	const point = T_VECTORS.pop();
+	const edge = T_VECTORS[--T_VECTORS_IDX];
+	const normal = T_VECTORS[--T_VECTORS_IDX];
+	const point = T_VECTORS[--T_VECTORS_IDX];
 	let dist = 0;
 
 	// For each edge in the polygon:
@@ -357,13 +362,16 @@ export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
 		let inRegion = true;
 		// If it's the left region:
 		if (region === LEFT_VORNOI_REGION) {
-			let point2 = null;
+			let hasPoint2 = false;
 			if (len > 1) {
 				// We need to make sure we're in the RIGHT_VORNOI_REGION of the previous edge.
 				edge.copy(edges[prev]);
 				// Calculate the center of the circle relative the starting point of the previous edge
-				point2 = T_VECTORS.pop().copy(circlePos).sub(points[prev]);
+				const point2 = T_VECTORS[--T_VECTORS_IDX]
+					.copy(circlePos)
+					.sub(points[prev]);
 				region = vornoiRegion(edge, point2);
+				hasPoint2 = true;
 				if (region !== RIGHT_VORNOI_REGION) {
 					inRegion = false;
 				}
@@ -374,13 +382,10 @@ export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
 				dist = point.length();
 				if (dist > radius) {
 					// No intersection
-					T_VECTORS.push(circlePos);
-					T_VECTORS.push(edge);
-					T_VECTORS.push(normal);
-					T_VECTORS.push(point);
-					if (point2) {
-						T_VECTORS.push(point2);
+					if (hasPoint2) {
+						T_VECTORS_IDX++;
 					}
+					T_VECTORS_IDX += 4;
 					return false;
 				} else if (response) {
 					// It intersects, calculate the overlap.
@@ -390,8 +395,8 @@ export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
 				}
 			}
 
-			if (point2) {
-				T_VECTORS.push(point2);
+			if (hasPoint2) {
+				T_VECTORS_IDX++;
 			}
 			// If it's the right region:
 		} else if (region === RIGHT_VORNOI_REGION) {
@@ -411,10 +416,7 @@ export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
 				dist = point.length();
 				if (dist > radius) {
 					// No intersection
-					T_VECTORS.push(circlePos);
-					T_VECTORS.push(edge);
-					T_VECTORS.push(normal);
-					T_VECTORS.push(point);
+					T_VECTORS_IDX += 4;
 					return false;
 				} else if (response) {
 					// It intersects, calculate the overlap.
@@ -435,10 +437,7 @@ export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
 			// If the circle is on the outside of the edge, there is no intersection.
 			if ((len === 1 || dist > 0) && distAbs > radius) {
 				// No intersection
-				T_VECTORS.push(circlePos);
-				T_VECTORS.push(edge);
-				T_VECTORS.push(normal);
-				T_VECTORS.push(point);
+				T_VECTORS_IDX += 4;
 				return false;
 			} else if (response) {
 				// It intersects, calculate the overlap.
@@ -470,10 +469,7 @@ export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
 		response.b = b;
 		response.overlapV.copy(response.overlapN).scale(response.overlap);
 	}
-	T_VECTORS.push(circlePos);
-	T_VECTORS.push(edge);
-	T_VECTORS.push(normal);
-	T_VECTORS.push(point);
+	T_VECTORS_IDX += 4;
 	return true;
 }
 
