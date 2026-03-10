@@ -26,6 +26,9 @@ interface Commit {
 /**
  * Resolve a git author email to a GitHub login via the commit search API.
  * Falls back to the git author name if the lookup fails.
+ * @param email - the git author email
+ * @param sampleHash - a commit hash from this author to look up
+ * @returns the GitHub login or git author name
  */
 function resolveGitHubLogin(email: string, sampleHash: string): string {
 	try {
