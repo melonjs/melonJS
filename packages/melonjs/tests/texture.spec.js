@@ -164,6 +164,49 @@ describe("Texture", () => {
 			}).toThrow(/Texture cache overflow/);
 		});
 
+		it("tint() should cache and return the same result for identical src+color", () => {
+			// mock a source image and a tint function on the renderer
+			const src = document.createElement("canvas");
+			src.width = 32;
+			src.height = 32;
+			const color = "rgb(255, 0, 0)";
+
+			// call tint twice with the same src and color
+			const result1 = cache.tint(src, color);
+			const result2 = cache.tint(src, color);
+
+			// BUG: if Map.set() return value is used as the inner map,
+			// cache never hits and a new tinted image is created every call
+			expect(result1).toBe(result2);
+		});
+
+		it("tint() should return different results for different colors", () => {
+			const src = document.createElement("canvas");
+			src.width = 32;
+			src.height = 32;
+
+			const red = cache.tint(src, "rgb(255, 0, 0)");
+			const blue = cache.tint(src, "rgb(0, 0, 255)");
+
+			expect(red).not.toBe(blue);
+		});
+
+		it("tint() inner map should grow only for unique colors", () => {
+			const src = document.createElement("canvas");
+			src.width = 32;
+			src.height = 32;
+
+			cache.tint(src, "rgb(255, 0, 0)");
+			cache.tint(src, "rgb(255, 0, 0)"); // duplicate
+			cache.tint(src, "rgb(0, 255, 0)");
+			cache.tint(src, "rgb(0, 255, 0)"); // duplicate
+
+			const innerMap = cache.tinted.get(src);
+			// should have exactly 2 entries, not 4
+			expect(innerMap).toBeInstanceOf(Map);
+			expect(innerMap.size).toEqual(2);
+		});
+
 		it("should handle set() followed by get() returning first entry", () => {
 			const canvas = new CanvasTexture(48, 48);
 

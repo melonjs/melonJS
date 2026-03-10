@@ -175,7 +175,8 @@ class TextureCache {
 		let image_cache = this.tinted.get(src);
 
 		if (image_cache === undefined) {
-			image_cache = this.tinted.set(src, new Map());
+			image_cache = new Map();
+			this.tinted.set(src, image_cache);
 		}
 
 		if (!image_cache.has(color)) {
