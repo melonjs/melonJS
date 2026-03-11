@@ -261,7 +261,7 @@ const createGame = () => {
 			// Pac-Man
 			this.drawSVGShape(
 				renderer,
-				"M 50 25 L 90 50 L 50 75 A 35 35 0 1 1 50 25 Z",
+				"M 50 25 L 85 50 L 50 75 A 35 35 0 1 0 50 25 Z",
 				200,
 				530,
 				"#F57F17",
