@@ -5,7 +5,7 @@
  */
 export function setPrecision(src, precision) {
 	if (src.substring(0, 9) !== "precision") {
-		return "precision " + precision + " float;" + src;
+		return "precision " + precision + " float;\n" + src;
 	}
 	return src;
 }

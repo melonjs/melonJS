@@ -9,8 +9,8 @@ export function minify(src) {
 	src = src.replace(/(\\n\s+)|(\s+\\n)/g, "");
 	// Remove line breaks
 	src = src.replace(/(\\r|\\n)+/g, "");
-	// Remove unnecessary whitespace
-	src = src.replace(/\s*([;,[\](){}\\\/\-+*|^&!=<>?~%])\s*/g, "$1");
+	// Remove unnecessary whitespace (spaces/tabs only, preserving newlines for preprocessor directives)
+	src = src.replace(/[ \t]*([;,[\](){}\\\/\-+*|^&!=<>?~%])[ \t]*/g, "$1");
 
 	return src;
 }
