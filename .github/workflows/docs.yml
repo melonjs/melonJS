@@ -19,6 +19,8 @@ jobs:
           node-version: 22
       - uses: pnpm/action-setup@v4
       - run: pnpm i
+      - name: Build melonjs
+        run: pnpm -F melonjs build
       - name: Build API docs
         run: pnpm doc
       - name: Build examples
