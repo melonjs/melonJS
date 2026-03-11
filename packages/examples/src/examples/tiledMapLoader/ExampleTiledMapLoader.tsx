@@ -12,10 +12,7 @@ import {
 import { useEffect } from "react";
 import { levels, resources } from "./resources";
 
-let currentLevel = "village";
-
 const loadLevel = (name: string) => {
-	currentLevel = name;
 	level.load(name, {
 		container: game.world,
 		onLoaded: () => {

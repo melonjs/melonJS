@@ -79,7 +79,7 @@ class Square extends Renderable {
 		return false;
 	}
 
-	draw(renderer: CanvasRenderingContext2D | any) {
+	draw(renderer: CanvasRenderingContext2D | object) {
 		const lineWidth = 2;
 		if (this.isColliding) {
 			this.color.setColor(255, 0, 0);
@@ -127,7 +127,7 @@ class RotatingLine extends Renderable {
 		return true;
 	}
 
-	draw(renderer: CanvasRenderingContext2D | any) {
+	draw(renderer: CanvasRenderingContext2D | object) {
 		renderer.setColor("red");
 		renderer.stroke(this.line);
 	}
