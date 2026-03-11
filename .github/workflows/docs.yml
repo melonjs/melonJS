@@ -1,4 +1,4 @@
-name: Documentation
+name: Documentation & Examples
 on:
   push:
     branches: [master]
@@ -19,7 +19,16 @@ jobs:
           node-version: 22
       - uses: pnpm/action-setup@v4
       - run: pnpm i
-      - run: pnpm doc
+      - name: Build API docs
+        run: pnpm doc
+      - name: Build examples
+        run: pnpm -F examples build
+        env:
+          VITE_BASE_PATH: /melonJS/examples/
+      - name: Combine docs and examples
+        run: |
+          mkdir -p packages/melonjs/docs/examples
+          cp -r packages/examples/dist/* packages/melonjs/docs/examples/
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -38,4 +47,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-

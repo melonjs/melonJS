@@ -1,0 +1,136 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "lunar1b_tileset_visual.tsx",
+    "automapping.whileDrawing": false,
+    "expandedProjectPaths": [
+    ],
+    "file.lastUsedOpenFilter": "All Files (*)",
+    "fileStates": {
+        "": {
+            "scaleInDock": 1
+        },
+        "/Users/edesantis/Dropbox/Rumblecade/Asset Creation/Tilesets 8 BIT/PLATFORMER ASSETS/TMX TSX/Platformer.tmx": {
+            "scale": 0.5843,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 4377.888071196303,
+                "y": 944.7201779907581
+            }
+        },
+        "/Users/edesantis/Dropbox/Rumblecade/Asset Creation/Tilesets 8 BIT/PLATFORMER ASSETS/TMX TSX/Platformer.tsx": {
+            "scaleInDock": 1.0261,
+            "scaleInEditor": 0.993
+        },
+        "/Users/edesantis/Dropbox/Rumblecade/RC Designs/Space Kitty/Tiled Maps/Spacebase_01.tmx": {
+            "scale": 1.0387,
+            "selectedLayer": 3,
+            "viewCenter": {
+                "x": 714.3544815634929,
+                "y": 794.2620583421585
+            }
+        },
+        "/Users/edesantis/Dropbox/Rumblecade/RC Designs/Space Kitty/Tiled Maps/Spacebase_01.tmx#Spacebase_01": {
+            "scaleInEditor": 2
+        },
+        "/Users/edesantis/Dropbox/Rumblecade/RC Designs/Space Kitty/Tiled Maps/Spacebase_01.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 0.7077,
+            "scaleInEditor": 1.37
+        },
+        "/Users/edesantis/Dropbox/Rumblecade/RC Designs/Space Kitty/Tiled Maps/planet_01.tmx": {
+            "scale": 1,
+            "selectedLayer": 3,
+            "viewCenter": {
+                "x": 4062,
+                "y": 936
+            }
+        },
+        "/Users/edesantis/Dropbox/Rumblecade/RC Designs/Space Kitty/Tiled Maps/planet_01.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1.37
+        },
+        "/Users/edesantis/GIT/2D Gamekit/Assets/2DGamekit/Art/STME Tiled/Spacebase_01.tmx": {
+            "scale": 1.5,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 531.3333333333334,
+                "y": 664
+            }
+        },
+        "/Users/edesantis/GIT/2D Gamekit/Assets/2DGamekit/Art/STME Tiled/Spacebase_01.tmx#Spacebase_01": {
+            "scaleInDock": 1
+        },
+        "/Users/edesantis/GIT/2D Gamekit/Assets/2DGamekit/Art/STME Tiled/Spacebase_01.tsx": {
+            "scaleInDock": 1
+        },
+        "/Users/edesantis/GIT/Hammando/hammando/Assets/Art/Tiles/Basic/beachy.tmx": {
+            "scale": 3,
+            "selectedLayer": 4,
+            "viewCenter": {
+                "x": 8077,
+                "y": 7354.333333333333
+            }
+        },
+        "/Users/edesantis/GIT/Hammando/hammando/Assets/Art/Tiles/Basic/untitled.tmx": {
+            "scale": 1,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 7825,
+                "y": 7993
+            }
+        },
+        "lunar.tmx": {
+            "scale": 0.5154,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 917.733798991075,
+                "y": 87.31082654249144
+            }
+        },
+        "lunar1b_tileset_visual.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 2.3776
+        }
+    },
+    "frame.defaultDuration": 150,
+    "last.imagePath": "/Users/edesantis/Dropbox/Rumblecade/Asset Creation/Tilesets ASTRO/Lunar Surface 1B/LunarSurface1BTileset",
+    "map.fixedSize": true,
+    "map.height": 60,
+    "map.lastUsedExportFilter": "Tiled map files (*.tmx *.xml)",
+    "map.lastUsedFormat": "tmx",
+    "map.orientation": 1,
+    "map.tileHeight": 32,
+    "map.tileWidth": 32,
+    "map.width": 180,
+    "openFiles": [
+        "lunar1b_tileset_visual.tsx",
+        "lunar.tmx"
+    ],
+    "project": "lunar.tiled-project",
+    "recentFiles": [
+        "lunar.tmx",
+        "lunar1b_tileset_visual.tsx",
+        "/Users/edesantis/Dropbox/Rumblecade/Asset Creation/Tilesets 8 BIT/PLATFORMER ASSETS/TMX TSX/Platformer.tsx",
+        "/Users/edesantis/Dropbox/Rumblecade/Asset Creation/Tilesets 8 BIT/PLATFORMER ASSETS/TMX TSX/Platformer.tmx",
+        "/Users/edesantis/Dropbox/Rumblecade/RC Designs/Space Kitty/Tiled Maps/Spacebase_01.tmx",
+        "/Users/edesantis/Dropbox/Rumblecade/RC Designs/Space Kitty/Tiled Maps/Spacebase_01.tsx",
+        "/Users/edesantis/Dropbox/Rumblecade/RC Designs/Space Kitty/Tiled Maps/planet_01.tsx",
+        "/Users/edesantis/Dropbox/Rumblecade/RC Designs/Space Kitty/Tiled Maps/planet_01.tmx",
+        "/Users/edesantis/GIT/2D Gamekit/Assets/2DGamekit/Art/STME Tiled/Spacebase_01.tmx"
+    ],
+    "tileset.embedInMap": false,
+    "tileset.lastUsedExportFilter": "Tiled tileset files (*.tsx *.xml)",
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.margin": 0,
+    "tileset.spacing": 0,
+    "tileset.tileSize": {
+        "height": 32,
+        "width": 32
+    },
+    "tileset.transparentColor": "#ff00ff",
+    "tileset.type": 0,
+    "tileset.useTransparentColor": false
+}

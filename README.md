@@ -125,15 +125,14 @@ For more details, check the wiki [Details & Usage](https://github.com/melonjs/me
 Examples
 -------------------------------------------------------------------------------
 
-* [Platformer](https://melonjs.github.io/examples/platformer/) ([source](https://github.com/melonjs/examples/tree/master/platformer))
-* [Isometric RPG](https://melonjs.github.io/examples/isometric_rpg/) ([source](https://github.com/melonjs/examples/tree/master/isometric_rpg))
-* [Sprite](https://melonjs.github.io/examples/sprite/) ([source](https://github.com/melonjs/examples/tree/master/sprite))
-* [UI](https://melonjs.github.io/examples/UI/) ([source](https://github.com/melonjs/examples/tree/master/UI))
-* [Tiled Map Loader](https://melonjs.github.io/examples/tiled_example_loader/) ([source](https://github.com/melonjs/examples/tree/master/tiled_example_loader))
-* [Video](https://melonjs.github.io/examples/video/) ([source](https://github.com/melonjs/examples/tree/master/video))
-* [SVG Shapes](https://melonjs.github.io/examples/svg-shapes/) ([source](https://github.com/melonjs/examples/tree/master/svg-shapes))
+* [Platformer](https://melonjs.github.io/melonJS/examples/platformer) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/platformer))
+* [Isometric RPG](https://melonjs.github.io/melonJS/examples/isometric-rpg) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/isometricRpg))
+* [SVG Shapes](https://melonjs.github.io/melonJS/examples/svg-shapes) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/svgShapes))
+* [Graphics](https://melonjs.github.io/melonJS/examples/graphics) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/graphics))
+* [Hello World](https://melonjs.github.io/melonJS/examples/hello-world) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/helloWorld))
+* [Whac-A-Mole](https://melonjs.github.io/melonJS/examples/whac-a-mole) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/whac-a-mole))
 
-Browse all examples [here](https://melonjs.github.io/examples/)
+Browse all examples [here](https://melonjs.github.io/melonJS/examples/)
 
 -------------------------------------------------------------------------------
 

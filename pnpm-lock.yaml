@@ -93,6 +93,9 @@ importers:
       '@melonjs/debug-plugin':
         specifier: workspace:*
         version: link:../debug-plugin
+      '@melonjs/tiled-inflate-plugin':
+        specifier: ^1.1.2
+        version: 1.1.2(melonjs@packages+melonjs)
       '@types/react':
         specifier: ^19.2.13
         version: 19.2.14
@@ -568,6 +571,12 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@melonjs/tiled-inflate-plugin@1.1.2':
+    resolution: {integrity: sha512-XuUP/cwF+RWUqZXtGMM/9k5UGFxfOVkEOaWqZGLJ3C7D3l9VKI2auNFzxRIsaTIGQ/2W9iHHyC3twO+QdzG47Q==}
+    engines: {node: '>= 19'}
+    peerDependencies:
+      melonjs: '>=15.2.1'
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -1386,6 +1395,9 @@ packages:
   isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
 
+  js-base64@3.7.8:
+    resolution: {integrity: sha512-hNngCeKxIUQiEUN3GPJOkz4wF/YvdUdbNL9hsBcMQTkKzboD7T/q3OYOuuPZLUE6dBxSGpwhk5mwuDud7JVAow==}
+
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
@@ -1605,6 +1617,9 @@ packages:
   p-map@7.0.4:
     resolution: {integrity: sha512-tkAQEw8ysMzmkhgw8k+1U/iPhWNhykKnSk4Rd5zLoPJCuJaGRPo6YposrZgaxHKzDHdDWWZvE/Sk7hsL2X/CpQ==}
     engines: {node: '>=18'}
+
+  pako@2.1.0:
+    resolution: {integrity: sha512-w+eufiZ1WuJYgPXbV/PO3NCMEc3xqylkKHzp8bxp1uW4qaSNQUkwmLLEc3kKsfz8lpV1F8Ht3U1Cm+9Srog2ug==}
 
   parent-module@1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
@@ -2477,6 +2492,12 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
+  '@melonjs/tiled-inflate-plugin@1.1.2(melonjs@packages+melonjs)':
+    dependencies:
+      js-base64: 3.7.8
+      melonjs: link:packages/melonjs
+      pako: 2.1.0
+
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
       '@nodelib/fs.stat': 2.0.5
@@ -3317,6 +3338,8 @@ snapshots:
 
   isexe@2.0.0: {}
 
+  js-base64@3.7.8: {}
+
   js-tokens@4.0.0: {}
 
   js-yaml@4.1.1:
@@ -3497,6 +3520,8 @@ snapshots:
       p-limit: 3.1.0
 
   p-map@7.0.4: {}
+
+  pako@2.1.0: {}
 
   parent-module@1.0.1:
     dependencies:

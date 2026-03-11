@@ -1,7 +1,149 @@
 body {
 	margin: 0;
+	font-family: "Droid Sans", Tahoma, "Lucida Grande", sans-serif;
+	background-color: #202020;
+	color: #e0e0e0;
+}
+
+body:has(#screen canvas) {
+	overflow: hidden;
 }
 
 #screen canvas {
 	display: block;
+}
+
+/* Example top bar */
+.example-topbar {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 8px 16px;
+	background: #1a1a1a;
+	border-bottom: 1px solid #333;
+	position: relative;
+	z-index: 999;
+}
+
+.example-back {
+	color: #82c743;
+	text-decoration: none;
+	font-size: 14px;
+	padding: 4px 8px;
+	border-radius: 4px;
+	transition: background-color 0.2s;
+}
+
+.example-back:hover {
+	background: #333;
+}
+
+.example-topbar-title {
+	font-size: 14px;
+	color: #aaa;
+}
+
+.example-source {
+	color: #888;
+	text-decoration: none;
+	font-size: 13px;
+	padding: 4px 8px;
+	border-radius: 4px;
+	border: 1px solid #444;
+	margin-left: 4px;
+	transition: border-color 0.2s, color 0.2s;
+}
+
+.example-source:hover {
+	border-color: #82c743;
+	color: #82c743;
+}
+
+/* Index page layout */
+.index-page {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 40px 24px;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+
+.index-header {
+	text-align: center;
+	margin-bottom: 48px;
+}
+
+.index-logo {
+	max-width: 360px;
+	width: 100%;
+	height: auto;
+	margin-bottom: 16px;
+}
+
+.index-subtitle {
+	color: #8de48d;
+	font-size: 16px;
+	margin: 0;
+}
+
+/* Example card grid */
+.index-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 16px;
+	flex: 1;
+}
+
+.example-card {
+	display: block;
+	background: #2a2a2a;
+	border: 1px solid #3a3a3a;
+	border-radius: 8px;
+	padding: 20px;
+	text-decoration: none;
+	color: inherit;
+	transition: border-color 0.2s, background-color 0.2s;
+}
+
+.example-card:hover {
+	border-color: #82c743;
+	background: #333;
+}
+
+.example-card-title {
+	margin: 0 0 8px 0;
+	font-size: 18px;
+	color: #82c743;
+}
+
+.example-card-desc {
+	margin: 0;
+	font-size: 14px;
+	color: #aaa;
+	line-height: 1.5;
+}
+
+/* Footer */
+.index-footer {
+	margin-top: 48px;
+	padding-top: 24px;
+	border-top: 1px solid #3a3a3a;
+	text-align: center;
+	font-size: 14px;
+	color: #888;
+}
+
+.index-footer a {
+	color: #82c743;
+	text-decoration: none;
+}
+
+.index-footer a:hover {
+	text-decoration: underline;
+}
+
+.index-footer .separator {
+	margin: 0 12px;
+	color: #555;
 }

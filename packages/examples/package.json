@@ -5,10 +5,12 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
+		"build": "vite build",
 		"test:types": "tsc"
 	},
 	"dependencies": {
 		"@melonjs/debug-plugin": "workspace:*",
+		"@melonjs/tiled-inflate-plugin": "^1.1.2",
 		"@types/react": "^19.2.13",
 		"@types/react-dom": "^19.2.3",
 		"@vitejs/plugin-react": "^5.1.3",
