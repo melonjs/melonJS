@@ -11,13 +11,8 @@ import {
 	video,
 } from "melonjs";
 import { createExampleComponent } from "../utils";
-import fontWoff2 from "./assets/font/kenvector_future.woff2?url";
-import uiAssets0Json from "./assets/img/UI_Assets-0.json?url";
-import uiAssets0Img from "./assets/img/UI_Assets-0.png";
-import uiAssets1Json from "./assets/img/UI_Assets-1.json?url";
-import uiAssets1Img from "./assets/img/UI_Assets-1.png";
-import uiAssets2Json from "./assets/img/UI_Assets-2.json?url";
-import uiAssets2Img from "./assets/img/UI_Assets-2.png";
+
+const base = `${import.meta.env.BASE_URL}assets/ui/`;
 
 let texture: TextureAtlas;
 
@@ -265,16 +260,16 @@ const createGame = () => {
 	}
 
 	const resources = [
-		{ name: "UI_Assets-0", type: "image", src: uiAssets0Img },
-		{ name: "UI_Assets-1", type: "image", src: uiAssets1Img },
-		{ name: "UI_Assets-2", type: "image", src: uiAssets2Img },
-		{ name: "UI_Assets-0", type: "json", src: uiAssets0Json },
-		{ name: "UI_Assets-1", type: "json", src: uiAssets1Json },
-		{ name: "UI_Assets-2", type: "json", src: uiAssets2Json },
+		{ name: "UI_Assets-0", type: "image", src: `${base}img/UI_Assets-0.png` },
+		{ name: "UI_Assets-1", type: "image", src: `${base}img/UI_Assets-1.png` },
+		{ name: "UI_Assets-2", type: "image", src: `${base}img/UI_Assets-2.png` },
+		{ name: "UI_Assets-0", type: "json", src: `${base}img/UI_Assets-0.json` },
+		{ name: "UI_Assets-1", type: "json", src: `${base}img/UI_Assets-1.json` },
+		{ name: "UI_Assets-2", type: "json", src: `${base}img/UI_Assets-2.json` },
 		{
 			name: "kenpixel",
 			type: "fontface",
-			src: `url(${fontWoff2})`,
+			src: `url(${base}font/kenvector_future.woff2)`,
 		},
 	];
 

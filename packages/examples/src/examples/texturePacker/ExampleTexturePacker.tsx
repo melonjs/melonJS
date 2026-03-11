@@ -9,8 +9,8 @@ import {
 	video,
 } from "melonjs";
 import { createExampleComponent } from "../utils";
-import citysceneJson from "./assets/img/cityscene.json?url";
-import citysceneImg from "./assets/img/cityscene.png";
+
+const base = `${import.meta.env.BASE_URL}assets/texturePacker/img/`;
 
 let texture: TextureAtlas;
 
@@ -64,8 +64,8 @@ const createGame = () => {
 	}
 
 	const resources = [
-		{ name: "cityscene", type: "json", src: citysceneJson },
-		{ name: "cityscene", type: "image", src: citysceneImg },
+		{ name: "cityscene", type: "json", src: `${base}cityscene.json` },
+		{ name: "cityscene", type: "image", src: `${base}cityscene.png` },
 	];
 
 	loader.preload(resources, () => {

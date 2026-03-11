@@ -1,12 +1,11 @@
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import { loader, plugin, state, video } from "melonjs";
-import paladinJson from "./assets/paladin.json?url";
-import paladinPng from "./assets/paladin.png";
 import { PlayScreen } from "./play";
 
+const base = `${import.meta.env.BASE_URL}assets/aseprite/`;
 const resources = [
-	{ name: "paladin", type: "json", src: paladinJson },
-	{ name: "paladin", type: "image", src: paladinPng },
+	{ name: "paladin", type: "json", src: `${base}paladin.json` },
+	{ name: "paladin", type: "image", src: `${base}paladin.png` },
 ];
 
 export const createGame = () => {

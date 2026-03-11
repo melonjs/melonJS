@@ -1,10 +1,3 @@
-import fontFnt from "./assets/fnt/PressStart2P.fnt?url";
-import fontPng from "./assets/fnt/PressStart2P.png";
-import background from "./assets/img/background/bg_dirt128.png";
-import grassLower from "./assets/img/foreground/grass_lower128.png";
-import grassUpper from "./assets/img/foreground/grass_upper128.png";
-import mole from "./assets/img/sprites/mole.png";
-
 /**
  * Whack-A-Mole
  * Freely reused from the Cocos2d Whack-a-mole Tutorial
@@ -15,39 +8,27 @@ import mole from "./assets/img/sprites/mole.png";
  * iPhone game engine Cocos2D.
  **/
 
-const basePath = import.meta.env.BASE_URL;
-const whackBgm = `${basePath}assets/whac-a-mole/bgm/`;
-const owSfx = `${basePath}assets/whac-a-mole/sfx/`;
+const base = `${import.meta.env.BASE_URL}assets/whac-a-mole/`;
 
 export const resources = [
 	{
 		name: "background",
 		type: "image",
-		src: background,
+		src: `${base}img/background/bg_dirt128.png`,
 	},
-	// upper part of foreground
 	{
 		name: "grass_upper",
 		type: "image",
-		src: grassUpper,
+		src: `${base}img/foreground/grass_upper128.png`,
 	},
-	// lower part of foreground
 	{
 		name: "grass_lower",
 		type: "image",
-		src: grassLower,
+		src: `${base}img/foreground/grass_lower128.png`,
 	},
-	// more sprites
-	{ name: "mole", type: "image", src: mole },
-
-	// bitmap font
-	{ name: "PressStart2P", type: "image", src: fontPng },
-	{ name: "PressStart2P", type: "binary", src: fontFnt },
-
-	// main music track
-	{ name: "whack", type: "audio", src: whackBgm },
-	// Laugh audio FX
-	/*{ name: "laugh", type: "audio", src: "data/sfx/" },*/
-	// ow audio FX
-	{ name: "ow", type: "audio", src: owSfx },
+	{ name: "mole", type: "image", src: `${base}img/sprites/mole.png` },
+	{ name: "PressStart2P", type: "image", src: `${base}fnt/PressStart2P.png` },
+	{ name: "PressStart2P", type: "binary", src: `${base}fnt/PressStart2P.fnt` },
+	{ name: "whack", type: "audio", src: `${base}bgm/` },
+	{ name: "ow", type: "audio", src: `${base}sfx/` },
 ];

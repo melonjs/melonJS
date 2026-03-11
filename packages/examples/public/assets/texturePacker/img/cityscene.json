@@ -1,0 +1,93 @@
+{"frames": [
+
+{
+	"filename": "background",
+	"frame": {"x":2,"y":2,"w":800,"h":400},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":800,"h":400},
+	"sourceSize": {"w":800,"h":400},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "capguy/walk/0001",
+	"frame": {"x":2,"y":624,"w":156,"h":314},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":16,"y":4,"w":156,"h":314},
+	"sourceSize": {"w":187,"h":324},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "capguy/walk/0002",
+	"frame": {"x":804,"y":2,"w":166,"h":301},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":1,"y":9,"w":166,"h":301},
+	"sourceSize": {"w":187,"h":324},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "capguy/walk/0003",
+	"frame": {"x":2,"y":404,"w":150,"h":305},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":27,"y":3,"w":150,"h":305},
+	"sourceSize": {"w":187,"h":324},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "capguy/walk/0004",
+	"frame": {"x":445,"y":539,"w":139,"h":304},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":43,"y":2,"w":139,"h":304},
+	"sourceSize": {"w":187,"h":324},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "capguy/walk/0005",
+	"frame": {"x":306,"y":624,"w":137,"h":309},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":34,"y":4,"w":137,"h":309},
+	"sourceSize": {"w":187,"h":324},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "capguy/walk/0006",
+	"frame": {"x":445,"y":404,"w":133,"h":309},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":30,"y":9,"w":133,"h":309},
+	"sourceSize": {"w":187,"h":324},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "capguy/walk/0007",
+	"frame": {"x":160,"y":624,"w":144,"h":312},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":33,"y":3,"w":144,"h":312},
+	"sourceSize": {"w":187,"h":324},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "capguy/walk/0008",
+	"frame": {"x":804,"y":305,"w":159,"h":317},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":23,"y":2,"w":159,"h":317},
+	"sourceSize": {"w":187,"h":324},
+	"pivot": {"x":0.5,"y":0.5}
+}],
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "cityscene.png",
+	"format": "RGBA8888",
+	"size": {"w":1024,"h":1024},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:2b7aef99983276773c15da697edf222e:fed0f696c0a1349f4c5839d5f65ab643:292542e6853f316339413b9243f95b10$"
+}
+}
