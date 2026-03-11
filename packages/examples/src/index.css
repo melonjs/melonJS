@@ -51,7 +51,9 @@ body:has(#screen canvas) {
 	border-radius: 4px;
 	border: 1px solid #444;
 	margin-left: 4px;
-	transition: border-color 0.2s, color 0.2s;
+	transition:
+		border-color 0.2s,
+		color 0.2s;
 }
 
 .example-source:hover {
@@ -103,7 +105,9 @@ body:has(#screen canvas) {
 	padding: 20px;
 	text-decoration: none;
 	color: inherit;
-	transition: border-color 0.2s, background-color 0.2s;
+	transition:
+		border-color 0.2s,
+		background-color 0.2s;
 }
 
 .example-card:hover {
