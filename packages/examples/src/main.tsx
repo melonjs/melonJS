@@ -204,7 +204,7 @@ const ExampleLayout = ({
 	return (
 		<>
 			<div className="example-topbar">
-				<a href={`${import.meta.env.BASE_URL}#/`} className="example-back">
+				<a href={import.meta.env.BASE_URL} className="example-back">
 					&larr; Examples
 				</a>
 				<span className="example-topbar-title">{label}</span>
