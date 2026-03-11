@@ -1,7 +1,7 @@
 import React, { type ReactElement } from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
-import { createBrowserRouter, Link, RouterProvider } from "react-router-dom";
+import { createHashRouter, Link, RouterProvider } from "react-router-dom";
 import { ExampleAseprite } from "./examples/aseprite/ExampleAseprite";
 import { ExampleBenchmark } from "./examples/benchmark/ExampleBenchmark";
 import { ExampleDeviceTest } from "./examples/deviceTest/ExampleDeviceTest";
@@ -192,8 +192,6 @@ const examples: {
 	},
 ];
 
-const basePath = import.meta.env.BASE_URL;
-
 const ExampleLayout = ({
 	label,
 	sourceDir,
@@ -206,7 +204,7 @@ const ExampleLayout = ({
 	return (
 		<>
 			<div className="example-topbar">
-				<Link to={basePath} reloadDocument className="example-back">
+				<Link to="/" className="example-back">
 					&larr; Examples
 				</Link>
 				<span className="example-topbar-title">{label}</span>
@@ -241,8 +239,7 @@ const Index = () => {
 				{examples.map((example) => (
 					<Link
 						key={example.path}
-						to={`${basePath}${example.path}`}
-						reloadDocument
+						to={`/${example.path}`}
 						className="example-card"
 					>
 						<h3 className="example-card-title">{example.label}</h3>
@@ -261,14 +258,14 @@ const Index = () => {
 	);
 };
 
-const router = createBrowserRouter([
+const router = createHashRouter([
 	{
-		path: basePath,
+		path: "/",
 		element: <Index />,
 	},
 	...examples.map((example) => {
 		return {
-			path: `${basePath}${example.path}`,
+			path: `/${example.path}`,
 			element: (
 				<ExampleLayout label={example.label} sourceDir={example.sourceDir}>
 					{example.component}
