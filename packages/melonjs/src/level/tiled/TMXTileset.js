@@ -24,11 +24,11 @@ export default class TMXTileset {
 		if (typeof tileset.source !== "undefined") {
 			const src = tileset.source;
 			const ext = getExtension(src);
-			if (ext === "tsx" || ext === "json") {
-				// load the external tileset (TSX/JSON)
+			if (ext === "tsx" || ext === "xml" || ext === "json" || ext === "tsj") {
+				// load the external tileset (TSX/XML/JSON/TSJ)
 				tileset = getTMX(getBasename(src));
 				if (!tileset) {
-					throw new Error(src + " external TSX/JSON tileset not found");
+					throw new Error(src + " external tileset not found");
 				}
 			}
 		}
