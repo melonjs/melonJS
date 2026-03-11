@@ -21,6 +21,8 @@ jobs:
       - run: pnpm i
       - name: Build melonjs
         run: pnpm -F melonjs build
+      - name: Build debug plugin
+        run: pnpm -F @melonjs/debug-plugin build
       - name: Build API docs
         run: pnpm doc
       - name: Build examples
