@@ -131,6 +131,7 @@ Examples
 * [UI](https://melonjs.github.io/examples/UI/) ([source](https://github.com/melonjs/examples/tree/master/UI))
 * [Tiled Map Loader](https://melonjs.github.io/examples/tiled_example_loader/) ([source](https://github.com/melonjs/examples/tree/master/tiled_example_loader))
 * [Video](https://melonjs.github.io/examples/video/) ([source](https://github.com/melonjs/examples/tree/master/video))
+* [SVG Shapes](https://melonjs.github.io/examples/svg-shapes/) ([source](https://github.com/melonjs/examples/tree/master/svg-shapes))
 
 Browse all examples [here](https://melonjs.github.io/examples/)
 

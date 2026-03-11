@@ -9,7 +9,15 @@ import { endpointToCenterParameterization } from "./toarccanvas.ts";
  */
 
 /**
- * a simplified path2d implementation, supporting only one path
+ * A simplified Path2D implementation, used internally by both the WebGL and Canvas renderers
+ * to build and interpolate 2D paths from SVG commands or direct method calls.
+ *
+ * This implementation supports a single continuous path (sub-path). SVG strings containing
+ * multiple `M` (moveTo) commands will be treated as one continuous path rather than
+ * separate sub-paths, which may produce unexpected fill results for shapes with holes
+ * or disconnected regions. For complex multi-part shapes, draw each sub-path separately.
+ *
+ * Supported SVG commands: M, L, H, V, Q, C, A, Z (uppercase only).
  */
 class Path2D {
 	constructor(svgPath) {
@@ -22,9 +30,9 @@ class Path2D {
 		/**
 		 * space between interpolated points for quadratic and bezier curve approx. in pixels.
 		 * @type {number}
-		 * @default 5
+		 * @default 2
 		 */
-		this.arcResolution = 5;
+		this.arcResolution = 2;
 
 		/* @ignore */
 		this.vertices = [];
@@ -41,8 +49,34 @@ class Path2D {
 	}
 
 	/**
-	 * Parses an SVG path string and adds the points to the current path.
-	 * @param {string} svgPath - The SVG path string to parse.
+	 * Parses an SVG path string and generates interpolated points for rendering.
+	 * Clears any existing path data before parsing (calls {@link beginPath} internally).
+	 *
+	 * Supported commands:
+	 * - **M** x y — move to (sets the starting point)
+	 * - **L** x y — line to
+	 * - **H** dx — horizontal line (relative offset from current x)
+	 * - **V** dy — vertical line (relative offset from current y)
+	 * - **Q** cx cy x y — quadratic Bézier curve
+	 * - **C** cx1 cy1 cx2 cy2 x y — cubic Bézier curve
+	 * - **A** rx ry xRot largeArc sweep x y — elliptical arc
+	 * - **Z** — close path (line back to the starting M point)
+	 *
+	 * After parsing, the generated points are available in {@link points} and can be
+	 * rendered using the renderer's `stroke()` and `fill()` methods.
+	 *
+	 * @example
+	 * // draw a heart shape
+	 * renderer.path2D.parseSVGPath(
+	 *   "M 10 30 A 20 20 0 0 1 50 30 A 20 20 0 0 1 90 30 Q 90 60 50 90 Q 10 60 10 30 Z"
+	 * );
+	 * renderer.setColor("#EF5350");
+	 * renderer.fill();
+	 *
+	 * @param {string} svgPath - An SVG path data string (e.g. "M 0 0 L 100 0 L 50 100 Z").
+	 * Only uppercase (absolute) commands are supported. The path must be a single
+	 * continuous shape — multiple M commands within one string are not treated as
+	 * separate sub-paths and may produce incorrect fill results.
 	 */
 	parseSVGPath(svgPath) {
 		// Split path into commands and coordinates
@@ -66,18 +100,84 @@ class Path2D {
 			switch (command) {
 				case "A":
 					{
-						// A command takes 5 coordinates
-						const p = endpointToCenterParameterization(...coordinates);
-						this.arc(
-							p.x,
-							p.y,
-							p.radiusX,
-							p.radiusY,
-							p.rotation,
-							p.startAngle,
-							p.endAngle,
-							p.applyanticlockwise,
+						// SVG A command: rx ry xAxisRotation largeArcFlag sweepFlag x y
+						lastPoint =
+							points.length === 0 ? startPoint : points[points.length - 1];
+						const [rx, ry, xAxisRotation, largeArcFlag, sweepFlag, x, y] =
+							coordinates;
+						const p = endpointToCenterParameterization(
+							lastPoint.x,
+							lastPoint.y,
+							x,
+							y,
+							largeArcFlag,
+							sweepFlag,
+							rx,
+							ry,
+							xAxisRotation,
 						);
+						// generate arc points inline using lineTo (not ellipse/arc
+						// which call moveTo and break path continuity)
+						{
+							let { startAngle, endAngle } = p;
+							const {
+								cx,
+								cy,
+								rx: arcRx,
+								ry: arcRy,
+								xAxisRotation: rot,
+								anticlockwise,
+							} = p;
+
+							if (startAngle === endAngle) {
+								break;
+							}
+
+							const fullCircle = anticlockwise
+								? Math.abs(startAngle - endAngle) >= TAU
+								: Math.abs(endAngle - startAngle) >= TAU;
+
+							startAngle = startAngle % TAU;
+							endAngle = endAngle % TAU;
+							if (startAngle < 0) {
+								startAngle += TAU;
+							}
+							if (endAngle < 0) {
+								endAngle += TAU;
+							}
+							if (startAngle >= endAngle) {
+								endAngle += TAU;
+							}
+
+							let diff = endAngle - startAngle;
+							let direction = 1;
+							if (anticlockwise) {
+								direction = -1;
+								diff = TAU - diff;
+							}
+							if (fullCircle) {
+								diff = TAU;
+							}
+
+							const length = (diff * arcRx + diff * arcRy) / 2;
+							const nr = length / this.arcResolution;
+							const angleStep = (diff / nr) * direction;
+							const cosRot = Math.cos(rot);
+							const sinRot = Math.sin(rot);
+
+							let angle = startAngle;
+							for (let j = 0; j < nr; j++) {
+								const ex = arcRx * Math.cos(angle);
+								const ey = arcRy * Math.sin(angle);
+								this.lineTo(
+									cx + ex * cosRot - ey * sinRot,
+									cy + ex * sinRot + ey * cosRot,
+								);
+								angle += angleStep;
+							}
+							// end exactly at the SVG endpoint
+							this.lineTo(x, y);
+						}
 					}
 					break;
 				case "H":
@@ -312,8 +412,8 @@ class Path2D {
 		let b1 = y2 - y1;
 
 		//normalize
-		const l_a = Math.sqrt(Math.pow(a0, 2) + Math.pow(a1, 2));
-		const l_b = Math.sqrt(Math.pow(b0, 2) + Math.pow(b1, 2));
+		const l_a = Math.sqrt(a0 * a0 + a1 * a1);
+		const l_b = Math.sqrt(b0 * b0 + b1 * b1);
 		a0 /= l_a;
 		a1 /= l_a;
 		b0 /= l_b;
@@ -333,11 +433,11 @@ class Path2D {
 
 		let bisec0 = (a0 + b0) / 2.0;
 		let bisec1 = (a1 + b1) / 2.0;
-		const bisec_l = Math.sqrt(Math.pow(bisec0, 2) + Math.pow(bisec1, 2));
+		const bisec_l = Math.sqrt(bisec0 * bisec0 + bisec1 * bisec1);
 		bisec0 /= bisec_l;
 		bisec1 /= bisec_l;
 
-		const hyp_l = Math.sqrt(Math.pow(radius, 2) + Math.pow(adj_l, 2));
+		const hyp_l = Math.sqrt(radius * radius + adj_l * adj_l);
 		const centerx = x1 + hyp_l * bisec0;
 		const centery = y1 + hyp_l * bisec1;
 
@@ -418,9 +518,11 @@ class Path2D {
 		const cos_rotation = Math.cos(rotation);
 		const sin_rotation = Math.sin(rotation);
 
+		const sx = radiusX * Math.cos(startAngle);
+		const sy = radiusY * Math.sin(startAngle);
 		this.moveTo(
-			x + radiusX * Math.cos(startAngle),
-			y + radiusY * Math.sin(startAngle),
+			x + sx * cos_rotation - sy * sin_rotation,
+			y + sx * sin_rotation + sy * cos_rotation,
 		);
 
 		for (let j = 0; j < nr_of_interpolation_points; j++) {
@@ -433,8 +535,8 @@ class Path2D {
 		}
 		// close the ellipse
 		this.lineTo(
-			x + radiusX * Math.cos(startAngle),
-			y + radiusY * Math.sin(startAngle),
+			x + sx * cos_rotation - sy * sin_rotation,
+			y + sx * sin_rotation + sy * cos_rotation,
 		);
 		this.isDirty = true;
 	}
@@ -457,13 +559,13 @@ class Path2D {
 
 		const t = 1 / resolution;
 		for (let i = 1; i <= resolution; i++) {
+			const ti = t * i;
+			const omt = 1 - ti;
+			const omt2 = omt * omt;
+			const ti2 = ti * ti;
 			this.lineTo(
-				lastPoint.x * Math.pow(1 - t * i, 2) +
-					controlPoint.x * 2 * (1 - t * i) * t * i +
-					endPoint.x * Math.pow(t * i, 2),
-				lastPoint.y * Math.pow(1 - t * i, 2) +
-					controlPoint.y * 2 * (1 - t * i) * t * i +
-					endPoint.y * Math.pow(t * i, 2),
+				lastPoint.x * omt2 + controlPoint.x * 2 * omt * ti + endPoint.x * ti2,
+				lastPoint.y * omt2 + controlPoint.y * 2 * omt * ti + endPoint.y * ti2,
 			);
 		}
 		pointPool.release(endPoint);
@@ -492,15 +594,21 @@ class Path2D {
 
 		const t = 1 / resolution;
 		for (let i = 1; i <= resolution; i++) {
+			const ti = t * i;
+			const omt = 1 - ti;
+			const omt2 = omt * omt;
+			const omt3 = omt2 * omt;
+			const ti2 = ti * ti;
+			const ti3 = ti2 * ti;
 			this.lineTo(
-				lastPoint.x * Math.pow(1 - t * i, 3) +
-					controlPoint1.x * 3 * Math.pow(1 - t * i, 2) * t * i +
-					controlPoint2.x * 3 * (1 - t * i) * Math.pow(t * i, 2) +
-					endPoint.x * Math.pow(t * i, 3),
-				lastPoint.y * Math.pow(1 - t * i, 3) +
-					controlPoint1.y * 3 * Math.pow(1 - t * i, 2) * t * i +
-					controlPoint2.y * 3 * (1 - t * i) * Math.pow(t * i, 2) +
-					endPoint.y * Math.pow(t * i, 3),
+				lastPoint.x * omt3 +
+					controlPoint1.x * 3 * omt2 * ti +
+					controlPoint2.x * 3 * omt * ti2 +
+					endPoint.x * ti3,
+				lastPoint.y * omt3 +
+					controlPoint1.y * 3 * omt2 * ti +
+					controlPoint2.y * 3 * omt * ti2 +
+					endPoint.y * ti3,
 			);
 		}
 

@@ -11,6 +11,7 @@ import { ExampleHelloWorld } from "./examples/helloWorld/ExampleHelloWorld";
 import { ExampleIsometricRPG } from "./examples/isometricRpg/ExampleIsometricRPG";
 import { ExampleLights } from "./examples/lights/ExampleLights";
 import { ExamplePlatformer } from "./examples/platformer/ExamplePlatformer";
+import { ExampleSVGShapes } from "./examples/svgShapes/ExampleSVGShapes";
 import { ExampleText } from "./examples/text/ExampleText";
 import { ExampleWhacAMole } from "./examples/whac-a-mole/ExampleWhacAMole";
 
@@ -44,6 +45,11 @@ const examples: { label: string; path: string; component: ReactElement }[] = [
 		component: <ExampleHelloWorld />,
 		label: "hello world",
 		path: "hello-world",
+	},
+	{
+		component: <ExampleSVGShapes />,
+		label: "SVG shapes",
+		path: "svg-shapes",
 	},
 	{
 		component: <ExampleIsometricRPG />,

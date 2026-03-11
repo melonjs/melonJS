@@ -326,7 +326,22 @@ export default class CanvasRenderer extends Renderer {
 	 */
 	stroke(shape, fill) {
 		if (typeof shape === "undefined") {
-			if (fill === true) {
+			if (this.path2D.points.length > 0) {
+				// replay path2D interpolated points onto the native context
+				const context = this.getContext();
+				const points = this.path2D.points;
+				context.beginPath();
+				context.moveTo(points[0].x, points[0].y);
+				for (let i = 1; i < points.length; i++) {
+					context.lineTo(points[i].x, points[i].y);
+				}
+				if (fill === true) {
+					context.fill();
+				} else {
+					context.stroke();
+				}
+				this.path2D.beginPath();
+			} else if (fill === true) {
 				this.getContext().fill();
 			} else {
 				this.getContext().stroke();

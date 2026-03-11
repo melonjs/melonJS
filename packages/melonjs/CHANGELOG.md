@@ -3,13 +3,17 @@
 ## [18.1.0] (melonJS 2)
 
 ### Added
-- WebGLRenderer: `lineWidth` now works for all primitive drawing methods (strokeEllipse, strokeArc, strokeRoundRect, beginPath/stroke) via a shader-based implementation
+- WebGLRenderer: `lineWidth` now works for all primitive drawing methods via a proper shader-based implementation (#999)
 
 ### Fixed
+- Path2D: fix SVG arc (`A` command) parsing in `parseSVGPath` — correct endpoint-to-center parameterization and maintain path continuity (#1198)
+- Path2D: fix `ellipse()` rotation bug where the starting point was not transformed by the rotation angle
+- CanvasRenderer: fix `stroke()`/`fill()` not rendering paths built via `path2D.parseSVGPath()`
 - Renderer: fix `PrimitiveCompositor.drawVertices()` ignoring the `vertexCount` parameter
 - Texture: fix tint cache bug where `Map.set()` return value was incorrectly used as the inner cache map, causing duplicate tinted images to be created
 
 ### Performance
+- Path2D: replace `Math.pow()` with inline multiplication in quadratic/cubic Bézier and arc interpolation
 - Collision: replace array `push()`/`pop()` with index-based pool access in SAT collision detection
 - Container: replace `concat()` with accumulator pattern in `getChildByProp()` and `getChildByType()` to avoid O(n²) array copying in deep hierarchies
 - QuadTree: replace temporary array allocation with in-place compaction during node splits
