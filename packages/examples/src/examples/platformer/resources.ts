@@ -1,4 +1,3 @@
-import dstGameForestMp3 from "./assets/bgm/dst-gameforest.mp3";
 import fontFnt from "./assets/fnt/PressStart2P.fnt?url";
 import font from "./assets/fnt/PressStart2P.png";
 import background from "./assets/img/background.png";
@@ -9,20 +8,13 @@ import tileSet from "./assets/img/tileset.png";
 import map1 from "./assets/map/map1.tmx?url";
 import map2 from "./assets/map/map2.json?url";
 import tileSetJson from "./assets/map/tileset.json?url";
-import clingMp3 from "./assets/sfx/cling.mp3";
-import "./assets/sfx/cling.ogg";
-import dieMp3 from "./assets/sfx/die.mp3";
-import "./assets/sfx/die.ogg";
-import enemyKillMp3 from "./assets/sfx/enemykill.mp3";
-import "./assets/sfx/enemykill.ogg";
-import jumpMp3 from "./assets/sfx/jump.mp3";
-import "./assets/sfx/jump.ogg";
 
-const bgm = dstGameForestMp3.slice(0, dstGameForestMp3.lastIndexOf("/") + 1);
-const cling = clingMp3.slice(0, clingMp3.lastIndexOf("/") + 1);
-const die = dieMp3.slice(0, dieMp3.lastIndexOf("/") + 1);
-const enemyKill = enemyKillMp3.slice(0, enemyKillMp3.lastIndexOf("/") + 1);
-const jump = jumpMp3.slice(0, jumpMp3.lastIndexOf("/") + 1);
+const basePath = import.meta.env.BASE_URL;
+const bgm = `${basePath}assets/platformer/bgm/`;
+const cling = `${basePath}assets/platformer/sfx/`;
+const die = `${basePath}assets/platformer/sfx/`;
+const enemyKill = `${basePath}assets/platformer/sfx/`;
+const jump = `${basePath}assets/platformer/sfx/`;
 
 export const resources = [
 	/* Graphics.

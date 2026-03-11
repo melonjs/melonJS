@@ -1,13 +1,9 @@
-import whackMp3 from "./assets/bgm/whack.mp3";
 import fontFnt from "./assets/fnt/PressStart2P.fnt?url";
 import fontPng from "./assets/fnt/PressStart2P.png";
 import background from "./assets/img/background/bg_dirt128.png";
 import grassLower from "./assets/img/foreground/grass_lower128.png";
 import grassUpper from "./assets/img/foreground/grass_upper128.png";
 import mole from "./assets/img/sprites/mole.png";
-import "./assets/bgm/whack.ogg";
-import owMp3 from "./assets/sfx/ow.mp3";
-import "./assets/sfx/ow.ogg";
 
 /**
  * Whack-A-Mole
@@ -19,8 +15,9 @@ import "./assets/sfx/ow.ogg";
  * iPhone game engine Cocos2D.
  **/
 
-const whackBgm = whackMp3.slice(0, whackMp3.lastIndexOf("/") + 1);
-const owSfx = owMp3.slice(0, owMp3.lastIndexOf("/") + 1);
+const basePath = import.meta.env.BASE_URL;
+const whackBgm = `${basePath}assets/whac-a-mole/bgm/`;
+const owSfx = `${basePath}assets/whac-a-mole/sfx/`;
 
 export const resources = [
 	{
