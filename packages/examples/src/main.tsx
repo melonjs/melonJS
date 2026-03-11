@@ -1,7 +1,7 @@
 import React, { type ReactElement } from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
-import { createHashRouter, Link, RouterProvider } from "react-router-dom";
+import { createHashRouter, RouterProvider } from "react-router-dom";
 import { ExampleAseprite } from "./examples/aseprite/ExampleAseprite";
 import { ExampleBenchmark } from "./examples/benchmark/ExampleBenchmark";
 import { ExampleDeviceTest } from "./examples/deviceTest/ExampleDeviceTest";
@@ -204,9 +204,9 @@ const ExampleLayout = ({
 	return (
 		<>
 			<div className="example-topbar">
-				<Link to="/" className="example-back">
+				<a href={`${import.meta.env.BASE_URL}#/`} className="example-back">
 					&larr; Examples
-				</Link>
+				</a>
 				<span className="example-topbar-title">{label}</span>
 				<a
 					href={`https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/${sourceDir}`}
@@ -237,14 +237,14 @@ const Index = () => {
 			</header>
 			<div className="index-grid">
 				{examples.map((example) => (
-					<Link
+					<a
 						key={example.path}
-						to={`/${example.path}`}
+						href={`${import.meta.env.BASE_URL}#/${example.path}`}
 						className="example-card"
 					>
 						<h3 className="example-card-title">{example.label}</h3>
 						<p className="example-card-desc">{example.description}</p>
-					</Link>
+					</a>
 				))}
 			</div>
 			<footer className="index-footer">
