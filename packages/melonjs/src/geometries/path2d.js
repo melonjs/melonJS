@@ -504,7 +504,7 @@ class Path2D {
 			);
 		}
 
-		pointPool.release(endPoint, controlPoint1, controlPoint2);
+		pointPool.release(endPoint);
 		pointPool.release(controlPoint1);
 		pointPool.release(controlPoint2);
 		this.isDirty = true;
