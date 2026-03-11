@@ -60,6 +60,9 @@ export default class QuadCompositor extends Compositor {
 		// list of active texture units
 		this.currentTextureUnit = -1;
 		this.boundTextures = [];
+
+		// track the current sampler unit to avoid redundant gl.uniform1i calls
+		this.currentSamplerUnit = -1;
 	}
 
 	/**
@@ -77,6 +80,7 @@ export default class QuadCompositor extends Compositor {
 			}
 		}
 		this.currentTextureUnit = -1;
+		this.currentSamplerUnit = -1;
 	}
 
 	/**
@@ -289,8 +293,12 @@ export default class QuadCompositor extends Compositor {
 		// upload and activate the texture if necessary
 		const unit = this.uploadTexture(texture, w, h, reupload);
 
-		// set fragment sampler accordingly
-		this.currentShader.setUniform("uSampler", unit);
+		// only update the fragment sampler uniform when the texture unit changes,
+		// avoiding redundant gl.uniform1i calls when consecutive quads share the same texture
+		if (unit !== this.currentSamplerUnit) {
+			this.currentShader.setUniform("uSampler", unit);
+			this.currentSamplerUnit = unit;
+		}
 
 		// Transform vertices
 		const m = this.viewMatrix;
