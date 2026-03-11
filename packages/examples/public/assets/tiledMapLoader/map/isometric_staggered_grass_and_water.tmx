@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.4" tiledversion="1.4.3" orientation="staggered" renderorder="right-down" width="25" height="50" tilewidth="64" tileheight="32" infinite="1" staggeraxis="y" staggerindex="odd" nextlayerid="2" nextobjectid="1">
+ <tileset firstgid="1" name="isometric_grass_and_water" tilewidth="64" tileheight="64" tilecount="24" columns="4">
+  <tileoffset x="0" y="16"/>
+  <grid orientation="isometric" width="64" height="32"/>
+  <image source="isometric_grass_and_water.png" width="256" height="384"/>
+  <wangsets>
+   <wangset name="Terrains" type="corner" tile="15">
+    <wangcolor name="Grass" color="#8ae234" tile="0" probability="1"/>
+    <wangcolor name="Water" color="#729fcf" tile="22" probability="1"/>
+    <wangtile tileid="0" wangid="0,1,0,1,0,1,0,1"/>
+    <wangtile tileid="1" wangid="0,1,0,1,0,1,0,1"/>
+    <wangtile tileid="2" wangid="0,1,0,1,0,1,0,1"/>
+    <wangtile tileid="3" wangid="0,1,0,1,0,1,0,1"/>
+    <wangtile tileid="4" wangid="0,1,0,2,0,1,0,1"/>
+    <wangtile tileid="5" wangid="0,1,0,1,0,2,0,1"/>
+    <wangtile tileid="6" wangid="0,1,0,1,0,1,0,2"/>
+    <wangtile tileid="7" wangid="0,2,0,1,0,1,0,1"/>
+    <wangtile tileid="8" wangid="0,2,0,2,0,2,0,1"/>
+    <wangtile tileid="9" wangid="0,1,0,2,0,2,0,2"/>
+    <wangtile tileid="10" wangid="0,2,0,1,0,2,0,2"/>
+    <wangtile tileid="11" wangid="0,2,0,2,0,1,0,2"/>
+    <wangtile tileid="12" wangid="0,1,0,2,0,2,0,1"/>
+    <wangtile tileid="13" wangid="0,1,0,1,0,2,0,2"/>
+    <wangtile tileid="14" wangid="0,2,0,1,0,1,0,2"/>
+    <wangtile tileid="15" wangid="0,2,0,2,0,1,0,1"/>
+    <wangtile tileid="16" wangid="0,1,0,2,0,2,0,1"/>
+    <wangtile tileid="17" wangid="0,1,0,1,0,2,0,2"/>
+    <wangtile tileid="18" wangid="0,2,0,1,0,1,0,2"/>
+    <wangtile tileid="19" wangid="0,2,0,2,0,1,0,1"/>
+    <wangtile tileid="20" wangid="0,2,0,1,0,2,0,1"/>
+    <wangtile tileid="21" wangid="0,1,0,2,0,1,0,2"/>
+    <wangtile tileid="22" wangid="0,2,0,2,0,2,0,2"/>
+    <wangtile tileid="23" wangid="0,2,0,2,0,2,0,2"/>
+   </wangset>
+  </wangsets>
+ </tileset>
+ <layer id="1" name="Tile Layer 1" width="25" height="50">
+  <data encoding="base64" compression="zlib">
+   <chunk x="0" y="0" width="16" height="16">
+   eJxdk9sSgyAQQ7FSsVovtY76/19amEnGUx4yCrtks1m4QghXxpkxZnyFt/YuxFPGQ2gyImIFc0Yr9OLw+U35jeL+lpqLkMBbYjt0JdTl+Q351ua1NZScJ9CCY676qf971S7fl9CBY9Ca59intSzywfWcb2+aSnsrrZ2+E3qJ4Dan9fqMtR/QPVR5u2ad4If7jVh7jqe4I/ygbvdl/Zzjpfqek/1gr5P4m/Dv0RruOzZVnrr2ihod9ovOMdx3+RPuO7Cg7x055nAPKdzv4VTf1sF7wjfDOVkD31KnfftMDs7UsaRZjYK9pM/m8EzreZS9QzUm9fwDPTIJFw==
+  </chunk>
+   <chunk x="16" y="0" width="16" height="16">
+   eJyVUu0KwjAMvGbVjU3F/XLv/6Q2kNCbShMDBytrch+pAJCGqaEaCp31e1S/+oqd/d+oKt2VDy2S4Od7FWctjqifPbiOrH7mYR2CHP8FPTP2zV5GtVuvzrnie5cS9B82Y2mYSYcj0v8yXt77P/lr/0p3J/OS9a/67+iZPU2P7y/iv5GHYv0r8vtn/ZrhRrP8LUX8B3qGM/oeMvtT/gfOeblvfwujegOrqALV
+  </chunk>
+   <chunk x="0" y="16" width="16" height="16">
+   eJydUtkKwzAMy+FerOtGU0j//0tngwJamga2B5HEtuQrwTkXFF4hgIdtUIy4l/dbsShOnJ44keKe8G+wH8QzZCAQN1JsRtwO/aPiPnAXaHDds+KlSIoJ70y8Hf6Tai4aQjZP+onqmRCzUu0lN/chpJPALfYZb+bxHMV970Mob4mfKEer5kD63GOs4r277rGlx71Guv+DOvcviDcaQ3X2IO5av+3E/q39tbHD452wz3a80F5bPfP8WjNYO/w6Z823+rfODIR8BR8vlwUi
+  </chunk>
+   <chunk x="16" y="16" width="16" height="16">
+   eJydUlsOwzAIg66vPdS11aTl/icdaLbCF8mGZJFIMTaQIiI3w2C4AH4ecfacxd0wgzMZFDwNNbNw7QXvX6jFGiNqZDHj7W7YwInetcHf8HY1nFL7n0IfWSiwBL/exyF989Pgd8DdvRSps8gi7oz5Kd+59viPs6K+58cf+uxlhT5n09In4t579cnjzjzzL/To0zN5R/DPnlr6/H9v8Om9h0995xfUuP7gn/+NXM+n1Lm0+B9/vgOT
+  </chunk>
+   <chunk x="0" y="32" width="16" height="16">
+   eJy9k1EPgjAMhDsVQUFFXLL9/1/qFrt4XFrliYcvwLrj2ksaRCQAvT5j4Ua1Y6ErzIWLEgxqPRWedB5Vk7WeHH3UWqYeZtJmxztD/Uz/bOfZ8R/gXuVKMzGsf4FH0v4Hx9vqvzLBvZbBJOvZPT17Jc3c8vbyf9B9zhyx9C2D0ejlX//YwwJzjw4HR99DFnf9tvD8cZZF36vXST57gDvxS7/FY286+e7xGy8BCeE=
+  </chunk>
+   <chunk x="16" y="32" width="16" height="16">
+   eJydkosKgzAMRaNO3Xzt4UD//0u9xVwMZbTpCgdRcm5CzSwid7CDUZ8DuIFKSZ0ZrGABE9hABxqnv2lGb+YYCv231k/mvS7wd52Z/TkTZ0gdzhvq1iivtH+ofUaZHv9jZqXv7R9qF60L/7zWDH7L+axr5Lrz3rgenx4z7O61Gb+KsO5Xzvsp8S3ch3997mPqtMov/+Xo/5BzV+MMurn+B0mZBM8=
+  </chunk>
+   <chunk x="0" y="48" width="16" height="16">
+   eJxjZGBgYCQRiwAxJxSTqpcDiCWQ8CgYBaNg4AAADXoAkA==
+  </chunk>
+   <chunk x="16" y="48" width="16" height="16">
+   eJwTZ2BgEAdiTiDmBWJGKBYAYgmoHD4AUwPCbFC9HGjio2AUjILBCQBLaAEh
+  </chunk>
+  </data>
+ </layer>
+</map>
