@@ -654,6 +654,254 @@ describe("Container", () => {
 		});
 	});
 
+	describe("enableChildBoundsUpdate", () => {
+		it("child bounds should reflect absolute position after being added", () => {
+			container.enableChildBoundsUpdate = true;
+			const child = new Renderable(50, 50, 20, 20);
+			container.addChild(child);
+
+			const bounds = child.getBounds();
+			// absPos = (50, 50), anchor offset = (-10, -10)
+			// bounds centered at absPos.x + (-10) + 10 = 50, absPos.y + (-10) + 10 = 50
+			expect(bounds.x).toEqual(40);
+			expect(bounds.y).toEqual(40);
+			expect(bounds.width).toEqual(20);
+			expect(bounds.height).toEqual(20);
+		});
+
+		it("child bounds should update when container position changes", () => {
+			container.enableChildBoundsUpdate = true;
+			const child = new Renderable(50, 50, 20, 20);
+			container.addChild(child);
+
+			// Move container
+			container.pos.x = 100;
+			container.pos.y = 100;
+			container.updateBounds();
+
+			const bounds = child.getBounds();
+			// absPos = container(100,100) + child(50,50) = (150, 150)
+			// bounds = (150 - 10, 150 - 10, 20, 20) = (140, 140, 20, 20)
+			expect(bounds.x).toEqual(140);
+			expect(bounds.y).toEqual(140);
+			expect(bounds.width).toEqual(20);
+			expect(bounds.height).toEqual(20);
+		});
+
+		it("container bounds should expand when child moves outward", () => {
+			container.enableChildBoundsUpdate = true;
+			const child = new Renderable(10, 10, 20, 20);
+			container.addChild(child);
+
+			// Move child far out
+			child.pos.x = 200;
+			child.pos.y = 200;
+			container.updateBounds();
+
+			const containerBounds = container.getBounds();
+			const childBounds = child.getBounds();
+
+			// Child absPos = (200, 200), bounds = (190, 190, 20, 20)
+			expect(childBounds.x).toEqual(190);
+			expect(childBounds.y).toEqual(190);
+
+			// Root container frame starts at (0,0,100,100)
+			// Union with child bounds (190, 190, 20, 20) => (0, 0) to (210, 210)
+			expect(containerBounds.x).toEqual(0);
+			expect(containerBounds.y).toEqual(0);
+			expect(containerBounds.width).toEqual(210);
+			expect(containerBounds.height).toEqual(210);
+		});
+
+		it("should update bounds for multiple children at different positions", () => {
+			container.enableChildBoundsUpdate = true;
+			const child1 = new Renderable(10, 10, 20, 20);
+			const child2 = new Renderable(80, 80, 30, 30);
+			container.addChild(child1);
+			container.addChild(child2);
+
+			const containerBounds = container.getBounds();
+
+			// child1 bounds: absPos=(10,10), anchor=(-10,-10) => (0, 0, 20, 20)
+			// child2 bounds: absPos=(80,80), anchor=(-15,-15) => (65, 65, 30, 30)
+			// Root container frame: (0, 0, 100, 100)
+			// Union: min(0,0,65)=0, max(100,20,95)=100 => (0,0) to (100,100)
+			expect(containerBounds.x).toEqual(0);
+			expect(containerBounds.y).toEqual(0);
+			expect(containerBounds.width).toEqual(100);
+			expect(containerBounds.height).toEqual(100);
+		});
+
+		it("nested containers should propagate bounds updates", () => {
+			container.enableChildBoundsUpdate = true;
+			const inner = new Container(30, 30, 50, 50);
+			inner.enableChildBoundsUpdate = true;
+			const child = new Renderable(20, 20, 10, 10);
+
+			container.addChild(inner);
+			inner.addChild(child);
+
+			// child absPos = container(0,0) + inner(30,30) + child(20,20) = (50, 50)
+			const childBounds = child.getBounds();
+			expect(childBounds.x).toEqual(45); // 50 - 5
+			expect(childBounds.y).toEqual(45); // 50 - 5
+			expect(childBounds.width).toEqual(10);
+			expect(childBounds.height).toEqual(10);
+		});
+
+		it("nested container child bounds should update when grandparent moves", () => {
+			container.enableChildBoundsUpdate = true;
+			const inner = new Container(30, 30, 50, 50);
+			inner.enableChildBoundsUpdate = true;
+			const child = new Renderable(20, 20, 10, 10);
+
+			container.addChild(inner);
+			inner.addChild(child);
+
+			// Move root container
+			container.pos.x = 100;
+			container.pos.y = 100;
+			container.updateBounds();
+
+			// child absPos = container(100,100) + inner(30,30) + child(20,20) = (150, 150)
+			const childBounds = child.getBounds();
+			expect(childBounds.x).toEqual(145); // 150 - 5
+			expect(childBounds.y).toEqual(145); // 150 - 5
+		});
+
+		it("nested container child bounds should update when middle container moves", () => {
+			container.enableChildBoundsUpdate = true;
+			const inner = new Container(30, 30, 50, 50);
+			inner.enableChildBoundsUpdate = true;
+			const child = new Renderable(20, 20, 10, 10);
+
+			container.addChild(inner);
+			inner.addChild(child);
+
+			// Move inner container
+			inner.pos.x = 60;
+			inner.pos.y = 60;
+			container.updateBounds();
+
+			// child absPos = container(0,0) + inner(60,60) + child(20,20) = (80, 80)
+			const childBounds = child.getBounds();
+			expect(childBounds.x).toEqual(75); // 80 - 5
+			expect(childBounds.y).toEqual(75); // 80 - 5
+		});
+
+		it("bounds should not include children when enableChildBoundsUpdate is false", () => {
+			container.enableChildBoundsUpdate = false;
+			const child = new Renderable(200, 200, 50, 50);
+			container.addChild(child);
+			container.updateBounds();
+
+			const containerBounds = container.getBounds();
+			// Should only be the container's own bounds, not expanded by child
+			expect(containerBounds.width).toEqual(100);
+			expect(containerBounds.height).toEqual(100);
+		});
+
+		it("three levels of nesting with position changes", () => {
+			container.enableChildBoundsUpdate = true;
+
+			const level1 = new Container(10, 10, 40, 40);
+			level1.enableChildBoundsUpdate = true;
+
+			const level2 = new Container(5, 5, 30, 30);
+			level2.enableChildBoundsUpdate = true;
+
+			const child = new Renderable(10, 10, 10, 10);
+
+			container.addChild(level1);
+			level1.addChild(level2);
+			level2.addChild(child);
+
+			// child absPos = (0+10+5+10) = 25, same for y
+			let childBounds = child.getBounds();
+			expect(childBounds.x).toEqual(20); // 25 - 5
+			expect(childBounds.y).toEqual(20); // 25 - 5
+
+			// Move root container by 50
+			container.pos.x = 50;
+			container.pos.y = 50;
+			container.updateBounds();
+
+			childBounds = child.getBounds();
+			// child absPos = (50+10+5+10) = 75
+			expect(childBounds.x).toEqual(70); // 75 - 5
+			expect(childBounds.y).toEqual(70);
+
+			// Also move level1
+			level1.pos.x = 20;
+			level1.pos.y = 20;
+			container.updateBounds();
+
+			childBounds = child.getBounds();
+			// child absPos = (50+20+5+10) = 85
+			expect(childBounds.x).toEqual(80); // 85 - 5
+			expect(childBounds.y).toEqual(80);
+		});
+
+		it("child absolute position should match bounds center", () => {
+			container.enableChildBoundsUpdate = true;
+			const child = new Renderable(40, 60, 20, 30);
+			container.addChild(child);
+
+			const absPos = child.getAbsolutePosition();
+			const bounds = child.getBounds();
+
+			// absPos = (40, 60)
+			expect(absPos.x).toEqual(40);
+			expect(absPos.y).toEqual(60);
+
+			// bounds should be centered around absPos minus anchor offset
+			// anchor offset = (10, 15), so bounds = (30, 45, 20, 30)
+			expect(bounds.x).toEqual(30);
+			expect(bounds.y).toEqual(45);
+			expect(bounds.x + bounds.width / 2).toEqual(absPos.x);
+			expect(bounds.y + bounds.height / 2).toEqual(absPos.y);
+		});
+
+		it("moving a child should not affect sibling bounds", () => {
+			container.enableChildBoundsUpdate = true;
+			const child1 = new Renderable(10, 10, 20, 20);
+			const child2 = new Renderable(50, 50, 20, 20);
+			container.addChild(child1);
+			container.addChild(child2);
+
+			// Move child1 far away
+			child1.pos.x = 300;
+			container.updateBounds();
+
+			// child2 bounds should remain correct
+			const child2Bounds = child2.getBounds();
+			// child2 absPos = (50, 50), bounds = (40, 40, 20, 20)
+			expect(child2Bounds.x).toEqual(40);
+			expect(child2Bounds.y).toEqual(40);
+			expect(child2Bounds.width).toEqual(20);
+			expect(child2Bounds.height).toEqual(20);
+		});
+
+		it("container bounds should shrink back when child moves closer", () => {
+			container.enableChildBoundsUpdate = true;
+			const child = new Renderable(200, 200, 20, 20);
+			container.addChild(child);
+
+			let containerBounds = container.getBounds();
+			// Container expands to include child at (200,200)
+			const initialWidth = containerBounds.width;
+
+			// Move child back inside container
+			child.pos.x = 10;
+			child.pos.y = 10;
+			container.updateBounds();
+
+			containerBounds = container.getBounds();
+			// Container bounds should be smaller now
+			expect(containerBounds.width).toBeLessThan(initialWidth);
+		});
+	});
+
 	describe("removeChild edge cases", () => {
 		it("should throw when removing a child that does not belong to the container", () => {
 			const orphan = new Renderable(0, 0, 10, 10);
