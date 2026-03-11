@@ -240,6 +240,8 @@ const Index = () => {
 					<a
 						key={example.path}
 						href={`${import.meta.env.BASE_URL}#/${example.path}`}
+						target="_blank"
+						rel="noopener noreferrer"
 						className="example-card"
 					>
 						<h3 className="example-card-title">{example.label}</h3>
