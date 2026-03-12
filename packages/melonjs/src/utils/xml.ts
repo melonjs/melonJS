@@ -22,7 +22,6 @@ export type XMLNormalizer = (
  * - Text nodes are concatenated (trimmed) into a `text` property
  * - Child elements are processed by the optional `normalizer` callback;
  *   without one, each child is recursively converted using its `nodeName` as key
- *
  * @param element - XML element to convert
  * @param normalizer - optional callback to handle child elements
  * @returns plain object representation of the XML element

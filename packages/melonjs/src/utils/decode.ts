@@ -139,6 +139,6 @@ export function decode(
 			throw new Error("XML encoding is deprecated, use base64 instead");
 
 		default:
-			throw new Error("Unknown layer encoding: " + enc);
+			throw new Error(`Unknown layer encoding: ${enc}`);
 	}
 }
