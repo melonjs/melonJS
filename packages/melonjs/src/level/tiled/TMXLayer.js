@@ -10,13 +10,10 @@ import * as TMXUtils from "./TMXUtils.js";
  * @ignore
  */
 function initArray(rows, cols) {
-	// initialize the array
 	const array = new Array(cols);
 	for (let col = 0; col < cols; col++) {
-		array[col] = new Array(rows);
-		for (let row = 0; row < rows; row++) {
-			array[col][row] = null;
-		}
+		// fill with null in one call — avoids per-element loop
+		array[col] = new Array(rows).fill(null);
 	}
 	return array;
 }
@@ -196,14 +193,15 @@ export default class TMXLayer extends Renderable {
 			);
 		} else if (map.infinite === 1) {
 			// infinite map, initialize per chunk
-			data.chunks.forEach((chunk) => {
-				// initialize and set the layer data
+			const chunks = data.chunks;
+			for (let i = 0, len = chunks.length; i < len; i++) {
+				const chunk = chunks[i];
 				setLayerData(
 					this,
 					chunk,
 					TMXUtils.decode(chunk.data, data.encoding, data.compression),
 				);
-			});
+			}
 		}
 	}
 

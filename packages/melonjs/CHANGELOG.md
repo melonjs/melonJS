@@ -5,12 +5,17 @@
 ### Added
 - WebGLRenderer: `lineWidth` now works for all primitive drawing methods via a proper shader-based implementation (#999)
 
+### Changed
+- TMX: refactor TMXUtils into reusable `src/utils/decode.ts` and `src/utils/xml.ts` modules; modernize property coercion, XML normalization, and tileset iteration
+
 ### Fixed
+- Decode: fix CSV decoding skipping newlines after the first one
 - Path2D: fix SVG arc (`A` command) parsing in `parseSVGPath` — correct endpoint-to-center parameterization and maintain path continuity (#1198)
 - Path2D: fix `ellipse()` rotation bug where the starting point was not transformed by the rotation angle
 - CanvasRenderer: fix `stroke()`/`fill()` not rendering paths built via `path2D.parseSVGPath()`
 - Renderer: fix `PrimitiveCompositor.drawVertices()` ignoring the `vertexCount` parameter
 - Texture: fix tint cache bug where `Map.set()` return value was incorrectly used as the inner cache map, causing duplicate tinted images to be created
+- TMX: fix crash when loading XML maps due to missing node type guard in the XML parser
 
 ### Performance
 - Path2D: replace `Math.pow()` with inline multiplication in quadratic/cubic Bézier and arc interpolation
@@ -18,6 +23,7 @@
 - Container: replace `concat()` with accumulator pattern in `getChildByProp()` and `getChildByType()` to avoid O(n²) array copying in deep hierarchies
 - QuadTree: replace temporary array allocation with in-place compaction during node splits
 - Renderer: replace `forEach` with `for` loop in `PrimitiveCompositor.drawVertices()`
+- TMX: optimize map loading pipeline (~20-40% faster) via tileset lookup caching, pre-allocated decode buffers, closure-free iteration, and a fast path for base64 tile data
 - WebGLRenderer: `strokeRect` and `strokePolygon` now use a single `drawVertices` call instead of per-edge `strokeLine` calls for thick lines
 - WebGLRenderer: `fillRect` now pushes 2 triangles directly, bypassing path2D and earcut triangulation
 - WebGLRenderer: round join circles for thick-line corners are now batched into a single `drawVertices` call

@@ -73,44 +73,53 @@ export default class TMXTileset {
 		this._lastUpdate = 0;
 
 		const tiles = tileset.tiles;
-		for (const i in tiles) {
-			if (tiles.hasOwnProperty(i)) {
-				if ("animation" in tiles[i]) {
+		if (tiles) {
+			// tiles can be an array (JSON) or an object keyed by id (XML)
+			const tileEntries = Array.isArray(tiles) ? tiles : Object.values(tiles);
+
+			for (let t = 0, tLen = tileEntries.length; t < tLen; t++) {
+				const tile = tileEntries[t];
+				const tileId = +tile.id;
+
+				if (tile.animation) {
 					this.isAnimated = true;
-					this.animations.set(tiles[+i].animation[0].tileid, {
+					const anim = tile.animation;
+					this.animations.set(anim[0].tileid, {
 						dt: 0,
 						idx: 0,
-						frames: tiles[+i].animation,
-						cur: tiles[+i].animation[0],
+						frames: anim,
+						cur: anim[0],
 					});
 				}
+
 				// set tile properties, if any
-				if ("properties" in tiles[i]) {
-					if (Array.isArray(tiles[i].properties)) {
-						// JSON (new format)
+				if (tile.properties) {
+					if (Array.isArray(tile.properties)) {
+						// JSON (new format) — array of { name, value }
 						const tileProperty = {};
-						for (const j in tiles[i].properties) {
-							tileProperty[tiles[i].properties[j].name] =
-								tiles[i].properties[j].value;
+						const props = tile.properties;
+						for (let j = 0, pLen = props.length; j < pLen; j++) {
+							tileProperty[props[j].name] = props[j].value;
 						}
-						this.setTileProperty(+tiles[i].id + this.firstgid, tileProperty);
+						this.setTileProperty(tileId + this.firstgid, tileProperty);
 					} else {
-						// XML format
-						this.setTileProperty(+i + this.firstgid, tiles[i].properties);
+						// XML format — flat object
+						this.setTileProperty(tileId + this.firstgid, tile.properties);
 					}
 				}
-				if ("image" in tiles[i]) {
-					const image = getImage(tiles[i].image);
+
+				if (tile.image) {
+					const image = getImage(tile.image);
 					if (!image) {
 						throw new Error(
 							"melonJS: '" +
-								tiles[i].image +
+								tile.image +
 								"' file for tile '" +
-								(+i + this.firstgid) +
+								(tileId + this.firstgid) +
 								"' not found!",
 						);
 					}
-					this.imageCollection[+i + this.firstgid] = image;
+					this.imageCollection[tileId + this.firstgid] = image;
 				}
 			}
 		}
@@ -126,10 +135,10 @@ export default class TMXTileset {
 		// set tile properties, if any (JSON old format)
 		const tileInfo = tileset.tileproperties;
 		if (tileInfo) {
-			for (const i in tileInfo) {
-				if (tileInfo.hasOwnProperty(i)) {
-					this.setTileProperty(+i + this.firstgid, tileInfo[i]);
-				}
+			const tileIds = Object.keys(tileInfo);
+			for (let i = 0, len = tileIds.length; i < len; i++) {
+				const id = tileIds[i];
+				this.setTileProperty(+id + this.firstgid, tileInfo[id]);
 			}
 		}
 

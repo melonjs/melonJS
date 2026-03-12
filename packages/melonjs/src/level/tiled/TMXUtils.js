@@ -1,144 +1,163 @@
-import { isBoolean, isNumeric } from "../../utils/string.ts";
+import { decode } from "../../utils/decode.ts";
+import { xmlToObject } from "../../utils/xml.ts";
+
+// pre-compiled regex for #ARGB → #RGBA color conversion
+// matches #ARGB (5 chars) or #AARRGGBB (9 chars)
+const SHORT_ARGB = /^#([\da-fA-F])([\da-fA-F]{3})$/;
+const LONG_ARGB = /^#([\da-fA-F]{2})([\da-fA-F]{6})$/;
 
 /**
- * the function used to decompress zlib/gzip data
+ * Coerce a raw TMX property string into its typed JS value.
+ * Handles int, float, bool, json:, eval:, #ARGB colors,
+ * and auto-detection for untyped properties.
  * @ignore
+ * @param {string} name - property name (used for ratio/anchorPoint normalization)
+ * @param {string} type - declared Tiled type ("int","float","bool","string", etc.)
+ * @param {*} raw - raw value (string from XML, or already-typed from JSON)
+ * @returns {*} coerced value
  */
-let inflateFunction;
-
-/**
- * set and interpret a TMX property value
- * @ignore
- */
-function setTMXValue(name, type, value) {
-	let match;
-
-	if (typeof value !== "string") {
-		// Value is already normalized (e.g. with JSON maps)
-		return value;
+function coerceTMXValue(name, type, raw) {
+	if (typeof raw !== "string") {
+		// already typed (e.g. JSON maps with native bool/number values)
+		return raw;
 	}
 
 	switch (type) {
 		case "int":
 		case "float":
-			value = Number(value);
-			break;
+			return Number(raw);
 
 		case "bool":
-			value = value === "true";
-			break;
+			return raw === "true";
 
 		default:
-			// try to parse it anyway
-			if (!value || isBoolean(value)) {
-				// if value not defined or boolean
-				value = value ? value === "true" : true;
-			} else if (isNumeric(value)) {
-				// check if numeric
-				value = Number(value);
-			} else if (value.search(/^json:/i) === 0) {
-				// try to parse it
-				match = value.split(/^json:/i)[1];
-				try {
-					value = JSON.parse(match);
-				} catch {
-					throw new Error("Unable to parse JSON: " + match);
-				}
-			} else if (value.search(/^eval:/i) === 0) {
-				// try to evaluate it
-				match = value.split(/^eval:/i)[1];
-				try {
-					// eslint-disable-next-line
-					value = Function("'use strict';return (" + match + ")")();
-				} catch {
-					throw new Error("Unable to evaluate: " + match);
-				}
-			} else if (
-				(match = value.match(/^#([\da-fA-F])([\da-fA-F]{3})$/)) ||
-				(match = value.match(/^#([\da-fA-F]{2})([\da-fA-F]{6})$/))
-			) {
-				value = "#" + match[2] + match[1];
-			}
-
-			// normalize values
-			if (name.search(/^(ratio|anchorPoint)$/) === 0) {
-				// convert number to vector
-				if (typeof value === "number") {
-					value = {
-						x: value,
-						y: value,
-					};
-				}
-			}
+			break;
 	}
-	// return the interpreted value
-	return value;
-}
 
-/**
- * @ignore
- */
-function parseAttributes(obj, elt) {
-	// do attributes
-	if (elt.attributes && elt.attributes.length > 0) {
-		for (let j = 0; j < elt.attributes.length; j++) {
-			const attribute = elt.attributes.item(j);
-			if (typeof attribute.name !== "undefined") {
-				// DOM4 (Attr no longer inherit from Node)
-				obj[attribute.name] = attribute.value;
-			} else {
-				// else use the deprecated ones
-				obj[attribute.nodeName] = attribute.nodeValue;
+	// --- untyped / "string" type: auto-detect ---
+
+	// empty string → true (legacy TMX flag behavior)
+	if (raw === "") {
+		return true;
+	}
+
+	// boolean strings
+	if (raw === "true" || raw === "false") {
+		return raw === "true";
+	}
+
+	// numeric strings — inline check avoids function-call overhead
+	// matches: optional sign, digits with optional decimal, or leading decimal
+	if (
+		raw === raw.trim() &&
+		raw !== "" &&
+		!Number.isNaN(+raw) &&
+		/^[+-]?(\d+(\.\d+)?|\.\d+)$/.test(raw)
+	) {
+		const num = Number(raw);
+		// ratio and anchorPoint are expanded to {x, y} vectors
+		if (name === "ratio" || name === "anchorPoint") {
+			return { x: num, y: num };
+		}
+		return num;
+	}
+
+	// json: prefix (case-insensitive)
+	if ((raw.length > 5 && raw[0] === "j") || raw[0] === "J") {
+		const lower = raw.slice(0, 5).toLowerCase();
+		if (lower === "json:") {
+			const body = raw.slice(5);
+			try {
+				return JSON.parse(body);
+			} catch {
+				throw new Error("Unable to parse JSON: " + body);
 			}
 		}
 	}
+
+	// eval: prefix (case-insensitive)
+	if (raw.length > 5 && (raw[0] === "e" || raw[0] === "E")) {
+		const lower = raw.slice(0, 5).toLowerCase();
+		if (lower === "eval:") {
+			const expr = raw.slice(5);
+			try {
+				// eslint-disable-next-line
+				return Function("'use strict';return (" + expr + ")")();
+			} catch {
+				throw new Error("Unable to evaluate: " + expr);
+			}
+		}
+	}
+
+	// #ARGB → #RGBA color conversion (Tiled stores alpha first)
+	let colorMatch;
+	if (
+		raw[0] === "#" &&
+		((colorMatch = SHORT_ARGB.exec(raw)) || (colorMatch = LONG_ARGB.exec(raw)))
+	) {
+		return "#" + colorMatch[2] + colorMatch[1];
+	}
+
+	// plain string — return as-is
+	return raw;
 }
 
 /**
- * Normalize TMX format to Tiled JSON format
+ * Flatten image child object into parent (used by tile and tileset).
+ * Moves source → image, width → imagewidth, height → imageheight.
  * @ignore
  */
-function normalize(obj, item) {
+function flattenImage(obj) {
+	if (obj.image) {
+		obj.imagewidth = obj.image.width;
+		obj.imageheight = obj.image.height;
+		obj.image = obj.image.source;
+	}
+}
+
+/**
+ * Normalizer callback for xmlToObject — converts TMX XML into Tiled JSON format.
+ * @ignore
+ */
+function normalizeTMX(obj, item, parse) {
 	const nodeName = item.nodeName;
 
 	switch (nodeName) {
 		case "data": {
 			const data = parse(item);
+			const encoding = data.encoding || "xml";
+			const compression = data.compression;
 
-			data.encoding = data.encoding || "xml";
-
-			// decode chunks for infinite maps
-			if (typeof data.chunks !== "undefined") {
-				obj.chunks = obj.chunks || [];
-				// infinite maps containing chunk data
-				data.chunks.forEach((chunk) => {
-					obj.chunks.push({
-						x: +chunk.x,
-						y: +chunk.y,
-						// chunk width is in tiles
-						width: +chunk.width,
-						// chunk height is in tiles
-						height: +chunk.height,
-						data: decode(chunk.text, data.encoding, data.compression),
+			// infinite maps: decode each chunk
+			if (data.chunks !== undefined) {
+				const srcChunks = data.chunks;
+				const chunks = obj.chunks || (obj.chunks = []);
+				for (let i = 0, len = srcChunks.length; i < len; i++) {
+					const c = srcChunks[i];
+					chunks.push({
+						x: +c.x,
+						y: +c.y,
+						width: +c.width,
+						height: +c.height,
+						data: decode(c.text, encoding, compression),
 					});
-				});
+				}
 				obj.encoding = "none";
 			}
-			// Bug on if condition: when parsing data, data.text is sometimes defined when chunks are present
-			if (
-				typeof data.text !== "undefined" &&
-				typeof obj.chunks === "undefined"
-			) {
-				// Finite maps
-				obj.data = decode(data.text, data.encoding, data.compression);
+
+			// finite maps (guard: data.text can exist alongside chunks)
+			if (data.text !== undefined && obj.chunks === undefined) {
+				obj.data = decode(data.text, encoding, compression);
 				obj.encoding = "none";
 			}
 			break;
 		}
-		case "chunk":
-			obj.chunks = obj.chunks || [];
-			obj.chunks.push(parse(item));
+
+		case "chunk": {
+			const chunks = obj.chunks || (obj.chunks = []);
+			chunks.push(parse(item));
 			break;
+		}
 
 		case "imagelayer":
 		case "layer":
@@ -149,81 +168,70 @@ function normalize(obj, item) {
 			if (layer.image) {
 				layer.image = layer.image.source;
 			}
-
-			obj.layers = obj.layers || [];
-			obj.layers.push(layer);
+			const layers = obj.layers || (obj.layers = []);
+			layers.push(layer);
 			break;
 		}
+
 		case "animation":
 			obj.animation = parse(item).frames;
 			break;
 
 		case "frame":
 		case "object": {
-			const name = nodeName + "s";
-			obj[name] = obj[name] || [];
-			obj[name].push(parse(item));
+			const key = nodeName + "s";
+			const arr = obj[key] || (obj[key] = []);
+			arr.push(parse(item));
 			break;
 		}
+
 		case "tile": {
 			const tile = parse(item);
-			if (tile.image) {
-				tile.imagewidth = tile.image.width;
-				tile.imageheight = tile.image.height;
-				tile.image = tile.image.source;
-			}
-			obj.tiles = obj.tiles || {};
-			obj.tiles[tile.id] = tile;
+			flattenImage(tile);
+			const tiles = obj.tiles || (obj.tiles = {});
+			tiles[tile.id] = tile;
 			break;
 		}
+
 		case "tileset": {
 			const tileset = parse(item);
-			if (tileset.image) {
-				tileset.imagewidth = tileset.image.width;
-				tileset.imageheight = tileset.image.height;
-				tileset.image = tileset.image.source;
-			}
-
-			obj.tilesets = obj.tilesets || [];
-			obj.tilesets.push(tileset);
+			flattenImage(tileset);
+			const tilesets = obj.tilesets || (obj.tilesets = []);
+			tilesets.push(tileset);
 			break;
 		}
+
 		case "polygon":
 		case "polyline": {
-			obj[nodeName] = [];
-
-			// Get a point array
-			const points = parse(item).points.split(" ");
-
-			// And normalize them into an array of vectors
-			for (let i = 0; i < points.length; i++) {
-				const v = points[i].split(",");
-				obj[nodeName].push({
-					x: +v[0],
-					y: +v[1],
-				});
+			const raw = parse(item).points;
+			const pairs = raw.split(" ");
+			const points = new Array(pairs.length);
+			for (let i = 0, len = pairs.length; i < len; i++) {
+				const sep = pairs[i].indexOf(",");
+				points[i] = {
+					x: +pairs[i].slice(0, sep),
+					y: +pairs[i].slice(sep + 1),
+				};
 			}
-
+			obj[nodeName] = points;
 			break;
 		}
+
 		case "properties":
 			obj.properties = parse(item);
 			break;
 
 		case "property": {
-			const property = parse(item);
-			// for custom properties, text is used
-			const value =
-				typeof property.value !== "undefined" ? property.value : property.text;
-
-			obj[property.name] = setTMXValue(
-				property.name,
-				// in XML type is undefined for "string" values
-				property.type || "string",
-				value,
+			const prop = parse(item);
+			obj[prop.name] = coerceTMXValue(
+				prop.name,
+				// in XML, type is undefined for "string" values
+				prop.type || "string",
+				prop.value !== undefined ? prop.value : prop.text,
 			);
 			break;
 		}
+
 		default:
 			obj[nodeName] = parse(item);
 			break;
@@ -235,99 +243,8 @@ function normalize(obj, item) {
  * @namespace TMXUtils
  */
 
-/**
- * decompress and decode zlib/gzip data
- * @memberof TMXUtils
- * @param {string} input - Base64 encoded and compressed data
- * @param {string} format - compressed data format ("gzip","zlib", "zstd")
- * @returns {Uint32Array} Decoded and decompress data
- */
-function decompress(data, format) {
-	if (typeof inflateFunction === "function") {
-		return inflateFunction(data, format);
-	} else {
-		throw new Error("GZIP/ZLIB compressed TMX Tile Map not supported!");
-	}
-}
-
-/**
- * Decode a CSV encoded array into a binary array
- * @memberof TMXUtils
- * @param  {string} input- -  CSV formatted data (only numbers, everything else will be converted to NaN)
- * @returns {number[]} Decoded data
- */
-function decodeCSV(input) {
-	const entries = input.replace("\n", "").trim().split(",");
-
-	const result = [];
-	for (let i = 0; i < entries.length; i++) {
-		result.push(+entries[i]);
-	}
-	return result;
-}
-
-/**
- * Decode a base64 encoded string into a byte array
- * @memberof TMXUtils
- * @param {string} input - Base64 encoded data
- * @param {number} [bytes] - number of bytes per array entry
- * @returns {Uint32Array} Decoded data
- */
-function decodeBase64AsArray(input, bytes = 1) {
-	const dec = globalThis.atob(input.replace(/[^A-Za-z0-9\+\/\=]/g, ""));
-	const ar = new Uint32Array(dec.length / bytes);
-
-	for (let i = 0, len = dec.length / bytes; i < len; i++) {
-		ar[i] = 0;
-		for (let j = bytes - 1; j >= 0; --j) {
-			ar[i] += dec.charCodeAt(i * bytes + j) << (j << 3);
-		}
-	}
-	return ar;
-}
-
-/**
- * set the function used to inflate gzip/zlib data
- * @memberof TMXUtils
- * @param {Func} fn - inflate function
- */
-export function setInflateFunction(fn) {
-	inflateFunction = fn;
-}
-
-/**
- * Decode a encoded array into a binary array
- * @memberof TMXUtils
- * @param {string} data - data to be decoded
- * @param {string} [encoding="none"] - data encoding ("csv", "base64", "xml")
- * @returns {number[]} Decoded data
- */
-export function decode(data, encoding, compression) {
-	compression = compression || "none";
-	encoding = encoding || "none";
-
-	switch (encoding) {
-		case "csv":
-			return decodeCSV(data);
-
-		case "base64":
-			if (compression !== "none") {
-				data = decompress(data, compression);
-			} else {
-				data = decodeBase64AsArray(data, 4);
-			}
-			return data;
-
-		case "none":
-			return data;
-
-		case "xml":
-			throw new Error("XML encoding is deprecated, use base64 instead");
-
-		default:
-			throw new Error("Unknown layer encoding: " + encoding);
-	}
-}
+// re-export generic decode utilities so existing consumers of TMXUtils can still access them
+export { decode, setInflateFunction } from "../../utils/decode.ts";
 
 /**
  * Parse a XML TMX object and returns the corresponding javascript object
@@ -336,37 +253,7 @@ export function decode(data, encoding, compression) {
  * @returns {object} Javascript object
  */
 export function parse(xml) {
-	// Create the return object
-	const obj = {};
-
-	let text = "";
-
-	if (xml.nodeType === 1) {
-		// do attributes
-		parseAttributes(obj, xml);
-	}
-
-	// do children
-	if (xml.hasChildNodes()) {
-		const children = xml.childNodes;
-		for (const node of children) {
-			switch (node.nodeType) {
-				case 1:
-					normalize(obj, node);
-					break;
-
-				case 3:
-					text += node.nodeValue.trim();
-					break;
-			}
-		}
-	}
-
-	if (text) {
-		obj.text = text;
-	}
-
-	return obj;
+	return xmlToObject(xml, normalizeTMX);
 }
 
 /**
@@ -374,32 +261,44 @@ export function parse(xml) {
  * @memberof TMXUtils
  * @param {object} obj - object to apply the properties to
  * @param {object} data - TMX data object
- * @returns {object} obj
  */
 export function applyTMXProperties(obj, data) {
 	const properties = data.properties;
+	if (properties === undefined) {
+		return;
+	}
+
+	// new Tiled JSON format: array of { name, type, value }
+	if (Array.isArray(properties)) {
+		for (let i = 0, len = properties.length; i < len; i++) {
+			const prop = properties[i];
+			obj[prop.name] = coerceTMXValue(
+				prop.name,
+				prop.type || "string",
+				prop.value,
+			);
+		}
+		return;
+	}
+
+	// old JSON format: flat { key: value } with optional separate propertytypes
 	const types = data.propertytypes;
-	if (typeof properties !== "undefined") {
-		for (const property in properties) {
-			if (properties.hasOwnProperty(property)) {
-				let type = "string";
-				let name = property;
-				let value = properties[property];
-				// proof-check for new and old JSON format
-				if (typeof properties[property].name !== "undefined") {
-					name = properties[property].name;
-				}
-				if (typeof types !== "undefined") {
-					type = types[property];
-				} else if (typeof properties[property].type !== "undefined") {
-					type = properties[property].type;
-				}
-				if (typeof properties[property].value !== "undefined") {
-					value = properties[property].value;
-				}
-				// set the value
-				obj[name] = setTMXValue(name, type, value);
-			}
+	const keys = Object.keys(properties);
+	for (let i = 0, len = keys.length; i < len; i++) {
+		const key = keys[i];
+		const prop = properties[key];
+
+		// old "new" format: { 0: { name, type, value }, 1: ... }
+		if (prop !== null && typeof prop === "object" && prop.name !== undefined) {
+			obj[prop.name] = coerceTMXValue(
+				prop.name,
+				prop.type || "string",
+				prop.value !== undefined ? prop.value : prop,
+			);
+		} else {
+			// flat key-value pair
+			const type = types !== undefined ? types[key] : "string";
+			obj[key] = coerceTMXValue(key, type, prop);
 		}
 	}
 }

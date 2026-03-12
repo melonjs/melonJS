@@ -61,17 +61,19 @@ export default class TMXGroup {
 
 		// parse all child objects/layers
 		if (data.objects) {
-			data.objects.forEach((object) => {
-				object.tintcolor = this.tintcolor;
-				this.objects.push(new TMXObject(map, object, z));
-			});
+			const objects = data.objects;
+			for (let i = 0, len = objects.length; i < len; i++) {
+				objects[i].tintcolor = this.tintcolor;
+				this.objects.push(new TMXObject(map, objects[i], z));
+			}
 		}
 
 		if (data.layers) {
-			data.layers.forEach((data) => {
+			const layers = data.layers;
+			for (let i = 0, len = layers.length; i < len; i++) {
 				const layer = new TMXLayer(
 					map,
-					data,
+					layers[i],
 					map.tilewidth,
 					map.tileheight,
 					map.orientation,
@@ -84,7 +86,7 @@ export default class TMXGroup {
 				this.width = Math.max(this.width, layer.width);
 				this.height = Math.max(this.height, layer.height);
 				this.objects.push(layer);
-			});
+			}
 		}
 	}
 

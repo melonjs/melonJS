@@ -7,6 +7,8 @@ export default class TMXTilesetGroup {
 	constructor() {
 		this.tilesets = [];
 		this.length = 0;
+		// cache last matched tileset — consecutive tiles usually share the same tileset
+		this._lastTileset = null;
 	}
 
 	/**
@@ -34,31 +36,37 @@ export default class TMXTilesetGroup {
 	 * @returns {TMXTileset} corresponding tileset
 	 */
 	getTilesetByGid(gid) {
-		let invalidRange = -1;
-
 		// clear the gid of all flip/rotation flags
 		gid &= TMX_CLEAR_BIT_MASK;
 
+		// fast path: check cached tileset first (high hit rate for sequential tile data)
+		const last = this._lastTileset;
+		if (last !== null && last.contains(gid)) {
+			return last;
+		}
+
+		let invalidRange = -1;
+		const tilesets = this.tilesets;
+
 		// cycle through all tilesets
-		for (let i = 0, len = this.tilesets.length; i < len; i++) {
+		for (let i = 0, len = tilesets.length; i < len; i++) {
+			const ts = tilesets[i];
 			// return the corresponding tileset if matching
-			if (this.tilesets[i].contains(gid)) {
-				return this.tilesets[i];
+			if (ts.contains(gid)) {
+				this._lastTileset = ts;
+				return ts;
 			}
 			// typically indicates a layer with no asset loaded (collision?)
-			if (
-				this.tilesets[i].firstgid === this.tilesets[i].lastgid &&
-				gid >= this.tilesets[i].firstgid
-			) {
-				// store the id if the [firstgid .. lastgid] is invalid
+			if (ts.firstgid === ts.lastgid && gid >= ts.firstgid) {
 				invalidRange = i;
 			}
 		}
 		// return the tileset with the invalid range
 		if (invalidRange !== -1) {
-			return this.tilesets[invalidRange];
-		} else {
-			throw new Error("no matching tileset found for gid " + gid);
+			const fallback = tilesets[invalidRange];
+			this._lastTileset = fallback;
+			return fallback;
 		}
+		throw new Error("no matching tileset found for gid " + gid);
 	}
 }

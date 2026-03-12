@@ -273,10 +273,9 @@ export default class TMXTileMap {
 		// parse all tileset objects
 		if (typeof data.tilesets !== "undefined") {
 			const tilesets = data.tilesets;
-			tilesets.forEach((tileset) => {
-				// add the new tileset
-				this.tilesets.add(readTileset(tileset));
-			});
+			for (let i = 0, len = tilesets.length; i < len; i++) {
+				this.tilesets.add(readTileset(tilesets[i]));
+			}
 		}
 
 		// check if a background image is defined
@@ -291,7 +290,9 @@ export default class TMXTileMap {
 			);
 		}
 
-		data.layers.forEach((layer) => {
+		const layers = data.layers;
+		for (let i = 0, len = layers.length; i < len; i++) {
+			const layer = layers[i];
 			switch (layer.type) {
 				case "imagelayer":
 					this.layers.push(readImageLayer(this, layer, zOrder++));
@@ -301,12 +302,7 @@ export default class TMXTileMap {
 					this.layers.push(readLayer(this, layer, zOrder++));
 					break;
 
-				// get the object groups information
 				case "objectgroup":
-					this.objectGroups.push(readObjectGroup(this, layer, zOrder++));
-					break;
-
-				// get the object groups information
 				case "group":
 					this.objectGroups.push(readObjectGroup(this, layer, zOrder++));
 					break;
@@ -314,7 +310,7 @@ export default class TMXTileMap {
 				default:
 					break;
 			}
-		});
+		}
 
 		this.initialized = true;
 	}
