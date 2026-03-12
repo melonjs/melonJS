@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
 	applyTMXProperties,
 	decode,
@@ -73,11 +73,15 @@ describe("TMXUtils", () => {
 
 		// --- error paths ---
 		it("throws on xml encoding", () => {
-			expect(() => decode("", "xml")).toThrow("XML encoding is deprecated");
+			expect(() => {
+				return decode("", "xml");
+			}).toThrow("XML encoding is deprecated");
 		});
 
 		it("throws on unknown encoding", () => {
-			expect(() => decode("", "bogus")).toThrow("Unknown layer encoding");
+			expect(() => {
+				return decode("", "bogus");
+			}).toThrow("Unknown layer encoding");
 		});
 
 		// --- compressed base64 ---
@@ -95,9 +99,9 @@ describe("TMXUtils", () => {
 
 		it("throws when no inflate function is set for compressed data", () => {
 			setInflateFunction(undefined);
-			expect(() => decode("AAAA", "base64", "zlib")).toThrow(
-				"decompression not supported",
-			);
+			expect(() => {
+				return decode("AAAA", "base64", "zlib");
+			}).toThrow("decompression not supported");
 		});
 	});
 
@@ -508,7 +512,9 @@ describe("TMXUtils", () => {
 	describe("setInflateFunction", () => {
 		it("sets a custom inflate function used by decode", () => {
 			const expected = new Uint32Array([99]);
-			setInflateFunction(() => expected);
+			setInflateFunction(() => {
+				return expected;
+			});
 			const result = decode("AAAA", "base64", "gzip");
 			expect(result).toBe(expected);
 			// cleanup

@@ -129,8 +129,12 @@ describe("xmlToObject", () => {
 			const normalizer = (obj, item, parser) => {
 				const parsed = parser(item);
 				// coerce numeric attributes
-				if (parsed.x) parsed.x = Number(parsed.x);
-				if (parsed.y) parsed.y = Number(parsed.y);
+				if (parsed.x) {
+					parsed.x = Number(parsed.x);
+				}
+				if (parsed.y) {
+					parsed.y = Number(parsed.y);
+				}
 				obj[item.nodeName] = parsed;
 			};
 			const obj = xmlToObject(
