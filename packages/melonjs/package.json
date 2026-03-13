@@ -41,6 +41,7 @@
 		"node": ">= 20"
 	},
 	"types": "./build/index.d.ts",
+	"module": "./build/index.js",
 	"exports": {
 		".": "./build/index.js"
 	},
