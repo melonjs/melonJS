@@ -2,6 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
 	Body,
 	boot,
+	Container,
 	collision,
 	Ellipse,
 	Line,
@@ -293,6 +294,242 @@ describe("QuadTree & Collision Detection", () => {
 		});
 	});
 
+	describe("QuadTree getIndex", () => {
+		it("should return 1 (top-left) for items in the top-left quadrant", () => {
+			// world is 800x600, midpoint is (400, 300)
+			world.broadphase.split();
+			const r = new Renderable(10, 10, 15, 15);
+			r.anchorPoint.set(0, 0);
+			r.isKinematic = false;
+			expect(world.broadphase.getIndex(r)).toEqual(1);
+		});
+
+		it("should return 0 (top-right) for items in the top-right quadrant", () => {
+			world.broadphase.split();
+			const r = new Renderable(500, 10, 15, 15);
+			r.anchorPoint.set(0, 0);
+			r.isKinematic = false;
+			expect(world.broadphase.getIndex(r)).toEqual(0);
+		});
+
+		it("should return 2 (bottom-left) for items in the bottom-left quadrant", () => {
+			world.broadphase.split();
+			const r = new Renderable(10, 400, 15, 15);
+			r.anchorPoint.set(0, 0);
+			r.isKinematic = false;
+			expect(world.broadphase.getIndex(r)).toEqual(2);
+		});
+
+		it("should return 3 (bottom-right) for items in the bottom-right quadrant", () => {
+			world.broadphase.split();
+			const r = new Renderable(500, 400, 15, 15);
+			r.anchorPoint.set(0, 0);
+			r.isKinematic = false;
+			expect(world.broadphase.getIndex(r)).toEqual(3);
+		});
+
+		it("should return -1 for items spanning the vertical midpoint", () => {
+			world.broadphase.split();
+			// item straddles x=400
+			const r = new Renderable(390, 10, 20, 15);
+			r.anchorPoint.set(0, 0);
+			r.isKinematic = false;
+			expect(world.broadphase.getIndex(r)).toEqual(-1);
+		});
+
+		it("should return -1 for items spanning the horizontal midpoint", () => {
+			world.broadphase.split();
+			// item straddles y=300
+			const r = new Renderable(10, 290, 15, 20);
+			r.anchorPoint.set(0, 0);
+			r.isKinematic = false;
+			expect(world.broadphase.getIndex(r)).toEqual(-1);
+		});
+
+		it("should return -1 for items on the exact midpoint", () => {
+			world.broadphase.split();
+			// item sitting exactly at the midpoint boundary
+			const r = new Renderable(400, 300, 15, 15);
+			r.anchorPoint.set(0, 0);
+			r.isKinematic = false;
+			expect(world.broadphase.getIndex(r)).toEqual(-1);
+		});
+
+		it("should use bounds position (not item.left) for quadrant assignment", () => {
+			world.broadphase.split();
+			// place a renderable at pos (500, 10) with default anchor (0.5, 0.5)
+			// and size 100x100. With anchor 0.5:
+			//   bounds.left = 500 - 100*0.5 = 450 (right of midpoint 400)
+			//   bounds.top = 10 - 100*0.5 = -40 (above midpoint 300)
+			// so bounds place it in the top-right quadrant (index 0)
+			const r = new Renderable(500, 10, 100, 100);
+			r.anchorPoint.set(0.5, 0.5);
+			r.isKinematic = false;
+
+			// verify that item.left (pos.x) differs from bounds.left
+			const bounds = r.getBounds();
+			expect(r.left).toEqual(500);
+			expect(bounds.left).toEqual(450);
+
+			expect(world.broadphase.getIndex(r)).toEqual(0);
+		});
+
+		it("should correctly assign quadrant for items with non-zero anchor points", () => {
+			world.broadphase.max_objects = 2;
+
+			// renderable at pos(100, 100), size 50x50, anchor(0.5, 0.5)
+			// bounds.left = 100 - 25 = 75, bounds.top = 100 - 25 = 75
+			// clearly in top-left quadrant (midpoint is 400, 300)
+			const r1 = new Renderable(100, 100, 50, 50);
+			r1.anchorPoint.set(0.5, 0.5);
+			r1.isKinematic = false;
+
+			// renderable at pos(600, 100), size 50x50, anchor(0.5, 0.5)
+			// bounds.left = 600 - 25 = 575, bounds.top = 100 - 25 = 75
+			// clearly in top-right quadrant
+			const r2 = new Renderable(600, 100, 50, 50);
+			r2.anchorPoint.set(0.5, 0.5);
+			r2.isKinematic = false;
+
+			// renderable at pos(100, 500), size 50x50, anchor(0.5, 0.5)
+			// bounds.left = 75, bounds.top = 475
+			// clearly in bottom-left quadrant
+			const r3 = new Renderable(100, 500, 50, 50);
+			r3.anchorPoint.set(0.5, 0.5);
+			r3.isKinematic = false;
+
+			world.broadphase.insert(r1);
+			world.broadphase.insert(r2);
+			world.broadphase.insert(r3);
+
+			// should have split
+			expect(world.broadphase.nodes.length).toEqual(4);
+
+			// all items should be retrievable via their bounds position
+			expect(world.broadphase.retrieve(r1)).toContain(r1);
+			expect(world.broadphase.retrieve(r2)).toContain(r2);
+			expect(world.broadphase.retrieve(r3)).toContain(r3);
+
+			// r1 and r2 should NOT appear together (different quadrants)
+			const r1Results = world.broadphase.retrieve(r1);
+			expect(r1Results).not.toContain(r2);
+		});
+
+		it("should handle anchor point that shifts item across the midpoint", () => {
+			world.broadphase.split();
+			// pos is (410, 10), size 30x30, anchor(0, 0)
+			// bounds.left = 410 (right of midpoint 400) → top-right
+			const r1 = new Renderable(410, 10, 30, 30);
+			r1.anchorPoint.set(0, 0);
+			r1.isKinematic = false;
+			expect(world.broadphase.getIndex(r1)).toEqual(0);
+
+			// same pos (410, 10), size 30x30, but anchor(1, 0)
+			// bounds.left = 410 - 30 = 380 (left of midpoint 400)
+			// bounds.right = 410 (right of midpoint 400) → spans midpoint = -1
+			const r2 = new Renderable(410, 10, 30, 30);
+			r2.anchorPoint.set(1, 0);
+			r2.isKinematic = false;
+			expect(world.broadphase.getIndex(r2)).toEqual(-1);
+		});
+	});
+
+	describe("QuadTree max_levels", () => {
+		it("should not split beyond max_levels", () => {
+			world.broadphase.max_objects = 1;
+			world.broadphase.max_levels = 2;
+
+			// insert many items in the same quadrant to try to force deep splits
+			const items = [];
+			for (let i = 0; i < 10; i++) {
+				const r = new Renderable(10 + i, 10 + i, 5, 5);
+				r.anchorPoint.set(0, 0);
+				r.isKinematic = false;
+				world.broadphase.insert(r);
+				items.push(r);
+			}
+
+			// verify max depth: walk the tree and check no node exceeds level 2
+			const checkMaxLevel = (node, maxLevel) => {
+				expect(node.level).toBeLessThanOrEqual(maxLevel);
+				for (const child of node.nodes) {
+					checkMaxLevel(child, maxLevel);
+				}
+			};
+			checkMaxLevel(world.broadphase, 2);
+
+			// all items should still be retrievable
+			for (const item of items) {
+				expect(world.broadphase.retrieve(item)).toContain(item);
+			}
+		});
+	});
+
+	describe("QuadTree insertContainer", () => {
+		it("should insert non-kinematic children from a container", () => {
+			const container = new Container(0, 0, 800, 600);
+			container.name = "testContainer";
+
+			const r1 = new Renderable(10, 10, 20, 20);
+			r1.anchorPoint.set(0, 0);
+			r1.isKinematic = false;
+
+			const r2 = new Renderable(500, 400, 20, 20);
+			r2.anchorPoint.set(0, 0);
+			r2.isKinematic = false;
+
+			container.addChild(r1);
+			container.addChild(r2);
+
+			world.broadphase.insertContainer(container);
+
+			expect(world.broadphase.retrieve(r1)).toContain(r1);
+			expect(world.broadphase.retrieve(r2)).toContain(r2);
+		});
+
+		it("should skip kinematic children", () => {
+			const container = new Container(0, 0, 800, 600);
+			container.name = "testContainer";
+
+			const r1 = new Renderable(10, 10, 20, 20);
+			r1.anchorPoint.set(0, 0);
+			r1.isKinematic = true;
+
+			const r2 = new Renderable(500, 400, 20, 20);
+			r2.anchorPoint.set(0, 0);
+			r2.isKinematic = false;
+
+			container.addChild(r1);
+			container.addChild(r2);
+
+			world.broadphase.insertContainer(container);
+
+			const results = world.broadphase.retrieve(r2);
+			expect(results).toContain(r2);
+			expect(results).not.toContain(r1);
+		});
+
+		it("should recursively insert nested containers", () => {
+			const outer = new Container(0, 0, 800, 600);
+			outer.name = "outer";
+			const inner = new Container(0, 0, 400, 300);
+			inner.name = "inner";
+
+			const r1 = new Renderable(10, 10, 20, 20);
+			r1.anchorPoint.set(0, 0);
+			r1.isKinematic = false;
+
+			inner.addChild(r1);
+			outer.addChild(inner);
+
+			world.broadphase.insertContainer(outer);
+
+			// both the container and the renderable should be inserted
+			expect(world.broadphase.retrieve(r1)).toContain(r1);
+			expect(world.broadphase.retrieve(inner)).toContain(inner);
+		});
+	});
+
 	describe("QuadTree clear and rebuild", () => {
 		it("should clear all objects and subnodes", () => {
 			world.broadphase.max_objects = 2;
@@ -574,6 +811,211 @@ describe("QuadTree & Collision Detection", () => {
 
 			const hadCollision = world.detector.collisions(obj);
 			expect(hadCollision).toEqual(true);
+		});
+	});
+
+	describe("QuadTree remove", () => {
+		it("should remove an object from root level", () => {
+			const r1 = new Renderable(10, 10, 20, 20);
+			r1.anchorPoint.set(0, 0);
+			r1.isKinematic = false;
+			world.broadphase.insert(r1);
+
+			expect(world.broadphase.objects).toContain(r1);
+			const result = world.broadphase.remove(r1);
+			expect(result).toEqual(true);
+			expect(world.broadphase.objects).not.toContain(r1);
+		});
+
+		it("should return false when removing an object not in the tree", () => {
+			const r1 = new Renderable(10, 10, 20, 20);
+			r1.anchorPoint.set(0, 0);
+			r1.isKinematic = false;
+			// not inserted
+			const result = world.broadphase.remove(r1);
+			expect(result).toEqual(false);
+		});
+
+		it("should return false for objects without getBounds", () => {
+			const result = world.broadphase.remove({ x: 0, y: 0 });
+			expect(result).toEqual(false);
+		});
+
+		it("should remove an object from a subnode after split", () => {
+			world.broadphase.max_objects = 2;
+
+			// items in distinct quadrants to force split
+			const topLeft = new Renderable(10, 10, 15, 15);
+			topLeft.anchorPoint.set(0, 0);
+			topLeft.isKinematic = false;
+			topLeft.name = "topLeft";
+
+			const topRight = new Renderable(500, 10, 15, 15);
+			topRight.anchorPoint.set(0, 0);
+			topRight.isKinematic = false;
+			topRight.name = "topRight";
+
+			const bottomLeft = new Renderable(10, 400, 15, 15);
+			bottomLeft.anchorPoint.set(0, 0);
+			bottomLeft.isKinematic = false;
+			bottomLeft.name = "bottomLeft";
+
+			world.broadphase.insert(topLeft);
+			world.broadphase.insert(topRight);
+			world.broadphase.insert(bottomLeft);
+
+			// should have split
+			expect(world.broadphase.nodes.length).toEqual(4);
+
+			// remove topLeft from its subnode (index 1 = top-left quadrant)
+			const result = world.broadphase.remove(topLeft);
+			expect(result).toEqual(true);
+
+			// topLeft should no longer be retrievable
+			const results = world.broadphase.retrieve(topLeft);
+			expect(results).not.toContain(topLeft);
+
+			// other items should still be retrievable
+			expect(world.broadphase.retrieve(topRight)).toContain(topRight);
+			expect(world.broadphase.retrieve(bottomLeft)).toContain(bottomLeft);
+		});
+
+		it("should not corrupt spatial layout when pruning a subnode", () => {
+			world.broadphase.max_objects = 2;
+
+			const topLeft = new Renderable(10, 10, 15, 15);
+			topLeft.anchorPoint.set(0, 0);
+			topLeft.isKinematic = false;
+
+			const topRight = new Renderable(500, 10, 15, 15);
+			topRight.anchorPoint.set(0, 0);
+			topRight.isKinematic = false;
+
+			const bottomLeft = new Renderable(10, 400, 15, 15);
+			bottomLeft.anchorPoint.set(0, 0);
+			bottomLeft.isKinematic = false;
+
+			const bottomRight = new Renderable(500, 400, 15, 15);
+			bottomRight.anchorPoint.set(0, 0);
+			bottomRight.isKinematic = false;
+
+			world.broadphase.insert(topLeft);
+			world.broadphase.insert(topRight);
+			world.broadphase.insert(bottomLeft);
+			world.broadphase.insert(bottomRight);
+
+			expect(world.broadphase.nodes.length).toEqual(4);
+
+			// subnodes are: 0=TR, 1=TL, 2=BL, 3=BR
+			// removing topLeft should not shift the indices of other subnodes
+			world.broadphase.remove(topLeft);
+
+			// after removal, nodes should still be 4 (indices must remain stable)
+			// or if pruned, the remaining items must still be retrievable in correct quadrants
+			expect(world.broadphase.retrieve(topRight)).toContain(topRight);
+			expect(world.broadphase.retrieve(bottomLeft)).toContain(bottomLeft);
+			expect(world.broadphase.retrieve(bottomRight)).toContain(bottomRight);
+
+			// inserting a new item in the same quadrant should still work
+			const newTopLeft = new Renderable(20, 20, 15, 15);
+			newTopLeft.anchorPoint.set(0, 0);
+			newTopLeft.isKinematic = false;
+			world.broadphase.insert(newTopLeft);
+			expect(world.broadphase.retrieve(newTopLeft)).toContain(newTopLeft);
+		});
+	});
+
+	describe("QuadTree hasChildren and isPrunable", () => {
+		it("isPrunable should return true for empty node", () => {
+			expect(world.broadphase.isPrunable()).toEqual(true);
+		});
+
+		it("isPrunable should return false when node has objects", () => {
+			const r1 = new Renderable(10, 10, 20, 20);
+			r1.anchorPoint.set(0, 0);
+			r1.isKinematic = false;
+			world.broadphase.insert(r1);
+
+			expect(world.broadphase.isPrunable()).toEqual(false);
+		});
+
+		it("hasChildren should return false for node without subnodes", () => {
+			expect(world.broadphase.hasChildren()).toEqual(false);
+		});
+
+		it("hasChildren should return true when subnodes have objects", () => {
+			world.broadphase.max_objects = 2;
+
+			const topLeft = new Renderable(10, 10, 15, 15);
+			topLeft.anchorPoint.set(0, 0);
+			topLeft.isKinematic = false;
+
+			const topRight = new Renderable(500, 10, 15, 15);
+			topRight.anchorPoint.set(0, 0);
+			topRight.isKinematic = false;
+
+			const bottomLeft = new Renderable(10, 400, 15, 15);
+			bottomLeft.anchorPoint.set(0, 0);
+			bottomLeft.isKinematic = false;
+
+			world.broadphase.insert(topLeft);
+			world.broadphase.insert(topRight);
+			world.broadphase.insert(bottomLeft);
+
+			// should have split and subnodes should have objects
+			expect(world.broadphase.nodes.length).toEqual(4);
+			expect(world.broadphase.hasChildren()).toEqual(true);
+		});
+
+		it("hasChildren should detect subnodes that have their own subnodes", () => {
+			world.broadphase.max_objects = 2;
+			world.broadphase.max_levels = 4;
+
+			// force a first-level split
+			const r1 = new Renderable(10, 10, 15, 15);
+			r1.anchorPoint.set(0, 0);
+			r1.isKinematic = false;
+
+			const r2 = new Renderable(100, 10, 15, 15);
+			r2.anchorPoint.set(0, 0);
+			r2.isKinematic = false;
+
+			const r3 = new Renderable(10, 100, 15, 15);
+			r3.anchorPoint.set(0, 0);
+			r3.isKinematic = false;
+
+			world.broadphase.insert(r1);
+			world.broadphase.insert(r2);
+			world.broadphase.insert(r3);
+
+			expect(world.broadphase.nodes.length).toEqual(4);
+
+			// force a second-level split in one of the subnodes (top-left = index 1)
+			const topLeftNode = world.broadphase.nodes[1];
+			// insert more items within the top-left quadrant bounds to trigger nested split
+			const sub1 = new Renderable(10, 10, 5, 5);
+			sub1.anchorPoint.set(0, 0);
+			sub1.isKinematic = false;
+
+			const sub2 = new Renderable(100, 10, 5, 5);
+			sub2.anchorPoint.set(0, 0);
+			sub2.isKinematic = false;
+
+			const sub3 = new Renderable(10, 100, 5, 5);
+			sub3.anchorPoint.set(0, 0);
+			sub3.isKinematic = false;
+
+			topLeftNode.insert(sub1);
+			topLeftNode.insert(sub2);
+			topLeftNode.insert(sub3);
+
+			// the top-left subnode should now have its own subnodes
+			expect(topLeftNode.nodes.length).toEqual(4);
+
+			// even if we clear the direct objects of topLeftNode,
+			// hasChildren should still return true because subnodes have content
+			topLeftNode.objects.length = 0;
+			expect(world.broadphase.hasChildren()).toEqual(true);
 		});
 	});
 

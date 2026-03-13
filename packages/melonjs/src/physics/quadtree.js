@@ -1,5 +1,4 @@
 import { Vector2d } from "../math/vector2d.ts";
-import { remove } from "../utils/array.ts";
 
 /**
  * @import World from "./world.js";
@@ -156,23 +155,26 @@ export default class QuadTree {
 	 * @returns Integer index of the subnode (0-3), or -1 if rect cannot completely fit within a subnode and is part of the parent node
 	 */
 	getIndex(item) {
-		let pos;
 		const bounds = item.getBounds();
+
+		let rx;
+		let ry;
 
 		// use game world coordinates for floating items
 		if (item.isFloating === true) {
-			pos = this.world.app.viewport.localToWorld(
+			const pos = this.world.app.viewport.localToWorld(
 				bounds.left,
 				bounds.top,
 				QT_VECTOR,
 			);
+			rx = pos.x;
+			ry = pos.y;
 		} else {
-			pos = QT_VECTOR.set(item.left, item.top);
+			rx = bounds.left;
+			ry = bounds.top;
 		}
 
 		let index = -1;
-		const rx = pos.x;
-		const ry = pos.y;
 		const rw = bounds.width;
 		const rh = bounds.height;
 		const verticalMidpoint = this.bounds.left + this.bounds.width / 2;
@@ -332,18 +334,19 @@ export default class QuadTree {
 			const index = this.getIndex(item);
 
 			if (index !== -1) {
-				found = remove(this.nodes[index], item);
+				found = this.nodes[index].remove(item);
 				// trim node if empty
 				if (found && this.nodes[index].isPrunable()) {
-					this.nodes.splice(index, 1);
+					this.nodes[index].clear();
 				}
 			}
 		}
 
 		if (found === false) {
 			// try and remove the item from the list of items in this node
-			if (this.objects.indexOf(item) !== -1) {
-				remove(this.objects, item);
+			const idx = this.objects.indexOf(item);
+			if (idx !== -1) {
+				this.objects.splice(idx, 1);
 				found = true;
 			}
 		}
@@ -366,7 +369,7 @@ export default class QuadTree {
 	hasChildren() {
 		for (let i = 0; i < this.nodes.length; i = i + 1) {
 			const subnode = this.nodes[i];
-			if (subnode.length > 0 || subnode.objects.length > 0) {
+			if (subnode.nodes.length > 0 || subnode.objects.length > 0) {
 				return true;
 			}
 		}
