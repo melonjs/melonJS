@@ -21,6 +21,21 @@ A modern & lightweight HTML5 game engine
 
 [melonJS](https://melonjs.org/) is licensed under the [MIT License](LICENSE.md) and actively maintained with the help of a small team of enthusiasts at AltByte in Singapore.
 
+Why melonJS
+-------------------------------------------------------------------------------
+
+melonJS is designed so you can **focus on making games, not on graphics plumbing**.
+
+- **Canvas2D-inspired rendering API** — If you've used the HTML5 Canvas, you already know melonJS. The rendering API (`save`, `restore`, `translate`, `rotate`, `setColor`, `fillRect`, ...) follows the same familiar patterns — no render graphs, no shader pipelines, no instruction sets to learn.
+
+- **True renderer abstraction** — Write your game once, run it on WebGL or Canvas2D with zero code changes. The engine handles all GPU complexity behind a unified API, with automatic fallback when WebGL is not available. Designed to support future backends (WebGPU) without touching game code.
+
+- **Complete engine, minimal footprint** — Physics, tilemaps, audio, input, cameras, tweens, particles, UI — a full 2D game stack in a single tree-shakeable ES module. No dependency sprawl, no library stitching.
+
+- **Tiled as a first-class citizen** — Deep [Tiled](https://www.mapeditor.org) integration built into the core: orthogonal, isometric, hexagonal and staggered maps, animated tilesets, collision shapes, object properties, compressed formats — all parsed and rendered natively.
+
+- **Batteries included, hackable by design** — Get started in minutes with minimal setup. When you need to go deeper: ES6 classes throughout, a plugin system for engine extensions, and a clean architecture that's easy to extend without fighting the framework.
+
 About melonJS
 -------------------------------------------------------------------------------
 
