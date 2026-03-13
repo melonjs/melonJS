@@ -14,8 +14,7 @@ const banner = [
 const buildOptions = {
 	entryPoints: ["src/index.js"],
 	loader: {
-		".png": "dataurl",
-		".fnt": "text",
+		".ttf": "dataurl",
 	},
 	external: ["melonjs"],
 	splitting: true,

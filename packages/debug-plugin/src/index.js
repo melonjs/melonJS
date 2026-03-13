@@ -8,7 +8,7 @@ import { DebugPanel } from "./debugPanel.js";
  * <img src="images/debugPanel.png"/> <br>
  * <b>usage : </b><br>
  * &bull; upon loading the debug panel, it will be automatically registered under me.plugins.debugPanel <br>
- * &bull; you can then press the default "s" key to show or hide the panel, or use me.plugins.debugPanel.show() and me.plugins.debugPanel.show(), or add #debug as a parameter to your URL e.g. http://myURL/index.html#debug <br>
+ * &bull; you can then press the default "s" key to show or hide the panel, or use me.plugins.debugPanel.show() and me.plugins.debugPanel.hide(), or add #debug as a parameter to your URL e.g. http://myURL/index.html#debug <br>
  * &bull; default key can be configured using the following parameters in the url : e.g. http://myURL/index.html#debugToggleKey=d <br>
  * <b>the debug panel provides the following information : </b><br>
  * &bull; amount of total objects currently active in the current stage <br>
@@ -33,29 +33,34 @@ export class DebugPanelPlugin extends plugin.BasePlugin {
 	 * @see input.KEY for default key options
 	 */
 	constructor(debugToggle = input.KEY.S) {
-		// call the super constructor
 		super();
 
-		// minimum melonJS version expected
 		this.version = "15.12.0";
 
-		// hello world
 		console.log(`${name} ${version} | ${homepage}`);
 
 		this.debugToggle = debugToggle;
-
 		this.panel = new DebugPanel(debugToggle);
 
-		this.keyHandler = event.on(event.KEYDOWN, (_action, keyCode) => {
+		this._onKeyDown = (_action, keyCode) => {
 			if (keyCode === this.debugToggle) {
 				this.toggle();
 			}
-		});
+		};
+		event.on(event.KEYDOWN, this._onKeyDown);
 
 		// if "#debug" is present in the URL
 		if (utils.getUriFragment().debug === true) {
 			this.show();
-		} // else keep it hidden
+		}
+	}
+
+	/**
+	 * destroy the debug plugin
+	 */
+	destroy() {
+		this.hide();
+		event.off(event.KEYDOWN, this._onKeyDown);
 	}
 
 	/**

@@ -9,7 +9,7 @@ Installation
 -------------------------------------------------------------------------------
 `$ [sudo] npm install @melonjs/debug-plugin`
 
-Then import and instantiante the debug plugin in your project. For example:
+Then import and instantiate the debug plugin in your project. For example:
 ```JavaScript
 import { utils, plugin } from 'melonjs';
 
@@ -47,6 +47,6 @@ Additionally, using the checkbox in the panel it is also possible to draw :
 Questions, need help ?
 -------------------------------------------------------------------------------
 If you need technical support, you can contact us through the following channels :
-* Forums: with melonJS 2 we moved to a new discourse [forum](https://melonjs.discourse.group), but we can still also find the previous one [here](http://www.html5gamedevs.com/forum/32-melonjs/)
+* Forums: [melonJS discourse forum](https://melonjs.discourse.group)
 * Chat: come and chat with us on [discord](https://discord.gg/aur7JMk)
-* we tried to keep our [wikipage](https://github.com/melonjs/melonJS/wiki) up-to-date with useful links, tutorials, and anything related melonJS.
+* [Wiki](https://github.com/melonjs/melonJS/wiki) with useful links, tutorials, and anything related to melonJS

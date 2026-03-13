@@ -1,8 +1,8 @@
 {
 	"name": "@melonjs/debug-plugin",
-	"version": "14.8.3",
+	"version": "15.0.0",
 	"description": "melonJS debug plugin",
-	"homepage": "https://github.com/melonjs/debug-plugin#readme",
+	"homepage": "https://github.com/melonjs/melonJS/tree/master/packages/debug-plugin#readme",
 	"type": "module",
 	"keywords": [
 		"2D",
@@ -13,23 +13,18 @@
 		"Canvas",
 		"WebGL",
 		"WebGL2",
-		"WebAudio",
 		"game",
 		"engine",
-		"tiled",
-		"tileset",
-		"mapeditor",
-		"browser",
-		"electron",
-		"mobile",
-		"cordova"
+		"debug",
+		"browser"
 	],
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/melonjs/debug-plugin.git"
+		"url": "git+https://github.com/melonjs/melonJS.git",
+		"directory": "packages/debug-plugin"
 	},
 	"bugs": {
-		"url": "https://github.com/melonjs/debug-plugin/issues"
+		"url": "https://github.com/melonjs/melonJS/issues"
 	},
 	"license": "MIT",
 	"author": "Olivier Biot (AltByte Pte Ltd)",
@@ -61,7 +56,7 @@
 		"dev": "concurrently --raw \"pnpm build:watch\" \"pnpm tsc:watch\"",
 		"build": "tsx scripts/build.ts && pnpm types",
 		"build:watch": "tsx scripts/build.ts watch",
-		"lint": "eslint src/**.js rollup.config.mjs",
+		"lint": "eslint src/**.js",
 		"prepublishOnly": "pnpm clean && pnpm build",
 		"clean": "tsx scripts/clean.ts",
 		"types": "tsc --project tsconfig.build.json",
