@@ -73,7 +73,7 @@ jobs:
         run: npm publish --access=public --dry-run
 
       - name: Create GitHub release
-        if: ${{ !inputs.dry-run }}
+        if: ${{ !inputs.dry-run && inputs.package == 'melonjs' }}
         run: pnpm tsx scripts/release.ts ${{ inputs.package }}
         env:
           GH_TOKEN: ${{ github.token }}
