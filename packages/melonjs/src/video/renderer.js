@@ -3,6 +3,7 @@ import { Color } from "./../math/color.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
 import { CANVAS_ONRESIZE, eventEmitter } from "../system/event.ts";
+import RenderState from "./renderstate.js";
 import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
 
 /**
@@ -98,36 +99,38 @@ export default class Renderer {
 		);
 
 		/**
-		 * @ignore
+		 * The renderer state container (color, tint, transform, scissor, blend mode)
+		 * with a zero-allocation save/restore stack.
+		 * @type {RenderState}
 		 */
-		this.currentScissor = new Int32Array([
-			0,
-			0,
-			this.settings.width,
-			this.settings.height,
-		]);
+		this.renderState = new RenderState();
+
+		// expose renderState properties directly (same references)
+		this.currentColor = this.renderState.currentColor;
+		this.currentTint = this.renderState.currentTint;
+		this.currentScissor = this.renderState.currentScissor;
 
 		/**
 		 * @ignore
 		 */
 		this.maskLevel = 0;
 
-		/**
-		 * @ignore
-		 */
-		this.currentBlendMode = "none";
-
-		// global color
-		this.currentColor = new Color(0, 0, 0, 1.0);
-
-		// global tint color
-		this.currentTint = new Color(255, 255, 255, 1.0);
-
 		// the projectionMatrix (set through setProjection)
 		this.projectionMatrix = new Matrix3d();
 
 		// default uvOffset
 		this.uvOffset = 0;
+	}
+
+	/**
+	 * @type {string}
+	 */
+	get currentBlendMode() {
+		return this.renderState.currentBlendMode;
+	}
+
+	set currentBlendMode(value) {
+		this.renderState.currentBlendMode = value;
 	}
 
 	/**
@@ -168,15 +171,12 @@ export default class Renderer {
 	 * Reset context state
 	 */
 	reset() {
+		this.renderState.reset(this.width, this.height);
 		this.resetTransform();
 		this.setBlendMode(this.settings.blendMode);
 		this.setColor("#000000");
 		this.clearTint();
 		this.cache.clear();
-		this.currentScissor[0] = 0;
-		this.currentScissor[1] = 0;
-		this.currentScissor[2] = this.width;
-		this.currentScissor[3] = this.height;
 		this.clearMask();
 	}
 

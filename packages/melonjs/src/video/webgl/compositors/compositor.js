@@ -39,9 +39,6 @@ export default class Compositor {
 		// WebGL context
 		this.gl = renderer.gl;
 
-		// Global fill color
-		this.color = renderer.currentColor;
-
 		// Global transformation matrix
 		this.viewMatrix = renderer.currentTransform;
 
@@ -103,8 +100,8 @@ export default class Compositor {
 					attr.normalized,
 					attr.offset,
 				);
-				this.vertexData = new VertexArrayBuffer(this.vertexSize, 6);
 			});
+			this.vertexData = new VertexArrayBuffer(this.vertexSize, 6);
 		} else {
 			throw new Error("attributes definition missing");
 		}
@@ -171,13 +168,7 @@ export default class Compositor {
 	 * @param {number} offset - offset in bytes of the first component in the vertex attribute array
 	 */
 	addAttribute(name, size, type, normalized, offset) {
-		this.attributes.push({
-			name: name,
-			size: size,
-			type: type,
-			normalized: normalized,
-			offset: offset,
-		});
+		this.attributes.push({ name, size, type, normalized, offset });
 
 		switch (type) {
 			case this.gl.BYTE:

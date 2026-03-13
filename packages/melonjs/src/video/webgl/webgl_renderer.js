@@ -1,6 +1,5 @@
 import { Color, colorPool } from "./../../math/color.ts";
 import { isPowerOfTwo } from "./../../math/math.ts";
-import { Matrix2d, matrix2dPool } from "../../math/matrix2d.ts";
 import {
 	CANVAS_ONRESIZE,
 	eventEmitter,
@@ -22,6 +21,7 @@ import QuadCompositor from "./compositors/quad_compositor";
  * @import {Polygon} from "../../geometries/polygon.ts";
  * @import {Line} from "./../../geometries/line.ts";
  * @import {Ellipse} from "./../../geometries/ellipse.ts";
+ * @import {Matrix2d} from "../../math/matrix2d.ts";
  * @import {Matrix3d} from "../../math/matrix3d.ts";
  * @import Compositor from "./compositors/compositor.js";
  */
@@ -99,31 +99,15 @@ export default class WebGLRenderer extends Renderer {
 			return { x: 0, y: 0 };
 		});
 
-		/**
-		 * @ignore
-		 */
-		this._colorStack = [];
-
-		/**
-		 * @ignore
-		 */
-		this._matrixStack = [];
-
-		/**
-		 * @ignore
-		 */
-		this._scissorStack = [];
-
-		/**
-		 * @ignore
-		 */
-		this._blendStack = [];
+		// scratch array for fillPolygon to avoid mutating polygon points
+		this._polyVerts = [];
 
 		/**
 		 * The current transformation matrix used for transformations on the overall scene
+		 * (alias to renderState.currentTransform for backward compatibility)
 		 * @type {Matrix2d}
 		 */
-		this.currentTransform = new Matrix2d();
+		this.currentTransform = this.renderState.currentTransform;
 
 		/**
 		 * The current compositor used by the renderer
@@ -297,17 +281,6 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	reset() {
 		super.reset();
-
-		// clear all stacks
-		this._colorStack.forEach((color) => {
-			colorPool.release(color);
-		});
-		this._matrixStack.forEach((matrix) => {
-			matrix2dPool.release(matrix);
-		});
-		this._colorStack.length = 0;
-		this._matrixStack.length = 0;
-		this._blendStack.length = 0;
 
 		// clear gl context
 		this.clear();
@@ -787,33 +760,23 @@ export default class WebGLRenderer extends Renderer {
 	 * renderer.restore();
 	 */
 	restore() {
-		// do nothing if there is no saved states
-		if (this._matrixStack.length !== 0) {
-			const color = this._colorStack.pop();
-			const matrix = this._matrixStack.pop();
-
-			// restore the previous context
-			this.currentColor.copy(color);
-			this.currentTransform.copy(matrix);
-
-			this.setBlendMode(this._blendStack.pop());
-
-			// recycle objects
-			colorPool.release(color);
-			matrix2dPool.release(matrix);
-		}
-
-		if (this._scissorStack.length !== 0) {
-			// FIXME : prevent `scissor` object realloc and GC
-			this.currentScissor.set(this._scissorStack.pop());
-		} else {
-			const canvas = this.getCanvas();
-			// turn off scissor test
-			this.gl.disable(this.gl.SCISSOR_TEST);
-			this.currentScissor[0] = 0;
-			this.currentScissor[1] = 0;
-			this.currentScissor[2] = canvas.width;
-			this.currentScissor[3] = canvas.height;
+		const canvas = this.getCanvas();
+		const result = this.renderState.restore(canvas.width, canvas.height);
+		if (result !== null) {
+			this.setBlendMode(result.blendMode);
+			if (result.scissorActive) {
+				const gl = this.gl;
+				const s = this.currentScissor;
+				gl.enable(gl.SCISSOR_TEST);
+				gl.scissor(
+					s[0] + this.currentTransform.tx,
+					canvas.height - s[3] - s[1] - this.currentTransform.ty,
+					s[2],
+					s[3],
+				);
+			} else {
+				this.gl.disable(this.gl.SCISSOR_TEST);
+			}
 		}
 	}
 
@@ -831,15 +794,7 @@ export default class WebGLRenderer extends Renderer {
 	 * renderer.restore();
 	 */
 	save() {
-		this._colorStack.push(this.currentColor.clone());
-		this._matrixStack.push(this.currentTransform.clone());
-
-		if (this.gl.isEnabled(this.gl.SCISSOR_TEST)) {
-			// FIXME avoid slice and object realloc
-			this._scissorStack.push(this.currentScissor.slice());
-		}
-
-		this._blendStack.push(this.getBlendMode());
+		this.renderState.save(this.gl.isEnabled(this.gl.SCISSOR_TEST));
 	}
 
 	/**
@@ -1075,11 +1030,22 @@ export default class WebGLRenderer extends Renderer {
 		this.translate(poly.pos.x, poly.pos.y);
 		const indices = poly.getIndices();
 		const points = poly.points;
-		const verts = [];
-		for (let i = 0; i < indices.length; i++) {
-			verts.push(points[indices[i]]);
+		const verts = this._polyVerts;
+		const len = indices.length;
+
+		// grow the scratch array if needed
+		while (verts.length < len) {
+			verts.push({ x: 0, y: 0 });
 		}
-		this.currentCompositor.drawVertices(this.gl.TRIANGLES, verts);
+
+		// copy point coordinates so drawVertices won't mutate the polygon
+		for (let i = 0; i < len; i++) {
+			const src = points[indices[i]];
+			verts[i].x = src.x;
+			verts[i].y = src.y;
+		}
+
+		this.currentCompositor.drawVertices(this.gl.TRIANGLES, verts, len);
 		this.translate(-poly.pos.x, -poly.pos.y);
 	}
 

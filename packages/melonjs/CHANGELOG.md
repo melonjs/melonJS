@@ -3,12 +3,15 @@
 ## [18.1.0] (melonJS 2)
 
 ### Added
+- Renderer: new `RenderState` class with pre-allocated save/restore stacks for zero-allocation state management
 - WebGLRenderer: `lineWidth` now works for all primitive drawing methods via a proper shader-based implementation (#999)
 
 ### Changed
 - TMX: refactor TMXUtils into reusable `src/utils/decode.ts` and `src/utils/xml.ts` modules; modernize property coercion, XML normalization, and tileset iteration
 
 ### Fixed
+- WebGLRenderer: fix `drawVertices` and `#expandLinesToTriangles` mutating input vertex objects, causing polygon geometry corruption across frames
+- WebGLRenderer: fix `restore()` not re-applying the GL scissor rectangle when restoring a state with active scissor test
 - Decode: fix CSV decoding skipping newlines after the first one
 - Path2D: fix SVG arc (`A` command) parsing in `parseSVGPath` — correct endpoint-to-center parameterization and maintain path continuity (#1198)
 - Path2D: fix `ellipse()` rotation bug where the starting point was not transformed by the rotation angle
@@ -32,6 +35,7 @@
 - WebGLRenderer: `fillRoundRect` now generates composite geometry (3 rects + 4 corner fans) directly, bypassing earcut
 - WebGLRenderer: `fillPolygon` now uses `Polygon.getIndices()` cached earcut results instead of rebuilding the path each frame
 - WebGLRenderer: skip redundant `gl.uniform1i` sampler call in `QuadCompositor.addQuad()` when consecutive quads share the same texture unit
+- WebGLRenderer: replace per-frame `clone()`/`push()`/`pop()` allocations in save/restore with zero-allocation `RenderState` stacks
 
 ## [18.0.0] (melonJS 2) - _2026-03-10_
 

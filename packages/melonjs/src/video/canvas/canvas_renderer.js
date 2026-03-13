@@ -620,8 +620,18 @@ export default class CanvasRenderer extends Renderer {
 	 */
 	restore() {
 		const canvas = this.getCanvas();
-		this.getContext().restore();
-		this.currentColor.glArray[3] = this.getGlobalAlpha();
+		const context = this.getContext();
+		// restore the native context state (transform, globalAlpha, fillStyle, clip, etc.)
+		context.restore();
+		// restore JS-side state that the native context doesn't track (tint, blend mode)
+		const result = this.renderState.restore(canvas.width, canvas.height);
+		if (result !== null) {
+			this.setBlendMode(result.blendMode);
+		}
+		// re-sync from the native context (which is authoritative for Canvas)
+		this.currentColor.copy(context.fillStyle);
+		this.currentColor.glArray[3] = context.globalAlpha;
+		// reset scissor cache so the next clipRect() won't skip
 		this.currentScissor[0] = 0;
 		this.currentScissor[1] = 0;
 		this.currentScissor[2] = canvas.width;
@@ -643,6 +653,7 @@ export default class CanvasRenderer extends Renderer {
 	 */
 	save() {
 		this.getContext().save();
+		this.renderState.save();
 	}
 
 	/**
@@ -690,7 +701,7 @@ export default class CanvasRenderer extends Renderer {
 	 * @param {number} alpha - 0.0 to 1.0 values accepted.
 	 */
 	setGlobalAlpha(alpha) {
-		this.getContext().globalAlpha = alpha;
+		this.getContext().globalAlpha = this.currentColor.glArray[3] = alpha;
 	}
 
 	/**

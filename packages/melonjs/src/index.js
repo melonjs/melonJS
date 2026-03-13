@@ -56,6 +56,7 @@ import { getUriFragment } from "./utils/utils.ts";
 import { version } from "./version.ts";
 import CanvasRenderer from "./video/canvas/canvas_renderer.js";
 import Renderer from "./video/renderer.js";
+import RenderState from "./video/renderstate.js";
 import CanvasRenderTarget from "./video/rendertarget/canvasrendertarget.js";
 import { TextureAtlas } from "./video/texture/atlas.js";
 import Compositor from "./video/webgl/compositors/compositor.js";
@@ -106,6 +107,7 @@ export {
 	PrimitiveCompositor,
 	QuadCompositor,
 	Renderer,
+	RenderState,
 	WebGLRenderer,
 	CanvasRenderer,
 	CanvasRenderTarget,

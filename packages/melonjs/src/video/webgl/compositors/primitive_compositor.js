@@ -116,10 +116,18 @@ export default class PrimitiveCompositor extends Compositor {
 		}
 
 		if (!viewMatrix.isIdentity()) {
+			const m = viewMatrix.val;
 			for (let i = 0; i < vertexCount; i++) {
 				const vert = verts[i];
-				viewMatrix.apply(vert);
-				vertexData.push(vert.x, vert.y, 0, 0, colorUint32);
+				const x = vert.x;
+				const y = vert.y;
+				vertexData.push(
+					x * m[0] + y * m[3] + m[6],
+					x * m[1] + y * m[4] + m[7],
+					0,
+					0,
+					colorUint32,
+				);
 			}
 		} else {
 			for (let i = 0; i < vertexCount; i++) {
@@ -162,19 +170,29 @@ export default class PrimitiveCompositor extends Compositor {
 			this.mode = this.gl.TRIANGLES;
 		}
 
+		const m = hasTransform ? viewMatrix.val : null;
+
 		for (let i = 0; i < vertexCount; i += 2) {
 			const from = verts[i];
 			const to = verts[i + 1];
 
-			// apply view matrix to base positions
+			// apply view matrix to base positions without mutating inputs
+			let fromX, fromY, toX, toY;
 			if (hasTransform) {
-				viewMatrix.apply(from);
-				viewMatrix.apply(to);
+				fromX = from.x * m[0] + from.y * m[3] + m[6];
+				fromY = from.x * m[1] + from.y * m[4] + m[7];
+				toX = to.x * m[0] + to.y * m[3] + m[6];
+				toY = to.x * m[1] + to.y * m[4] + m[7];
+			} else {
+				fromX = from.x;
+				fromY = from.y;
+				toX = to.x;
+				toY = to.y;
 			}
 
 			// compute perpendicular unit normal
-			const dx = to.x - from.x;
-			const dy = to.y - from.y;
+			const dx = toX - fromX;
+			const dy = toY - fromY;
 			const len = Math.sqrt(dx * dx + dy * dy);
 
 			if (len === 0) {
@@ -186,14 +204,14 @@ export default class PrimitiveCompositor extends Compositor {
 
 			// two triangles forming a quad around the line segment
 			// triangle 1: from+n, from-n, to-n
-			vertexData.push(from.x, from.y, nx, ny, colorUint32);
-			vertexData.push(from.x, from.y, -nx, -ny, colorUint32);
-			vertexData.push(to.x, to.y, -nx, -ny, colorUint32);
+			vertexData.push(fromX, fromY, nx, ny, colorUint32);
+			vertexData.push(fromX, fromY, -nx, -ny, colorUint32);
+			vertexData.push(toX, toY, -nx, -ny, colorUint32);
 
 			// triangle 2: from+n, to-n, to+n
-			vertexData.push(from.x, from.y, nx, ny, colorUint32);
-			vertexData.push(to.x, to.y, -nx, -ny, colorUint32);
-			vertexData.push(to.x, to.y, nx, ny, colorUint32);
+			vertexData.push(fromX, fromY, nx, ny, colorUint32);
+			vertexData.push(toX, toY, -nx, -ny, colorUint32);
+			vertexData.push(toX, toY, nx, ny, colorUint32);
 		}
 	}
 }
