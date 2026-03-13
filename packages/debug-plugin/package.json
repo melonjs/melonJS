@@ -38,6 +38,7 @@
 	},
 	"files": [
 		"build/",
+		"debug-panel.png",
 		"package.json",
 		"README.md"
 	],
