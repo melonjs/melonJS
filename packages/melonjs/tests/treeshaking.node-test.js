@@ -4,7 +4,7 @@
  * Simulates what a consumer's bundler does: imports a subset of exports
  * from the built melonJS output and verifies unused code is eliminated.
  *
- * Run with: node --test tests/treeshaking.test.mjs
+ * Run with: node --test tests/treeshaking.node-test.js
  * Requires: pnpm build (or npx turbo run build --filter=melonjs) first
  *
  * @see https://github.com/melonjs/melonJS/issues/1156
