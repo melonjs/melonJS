@@ -197,6 +197,41 @@ export default class Renderer {
 	}
 
 	/**
+	 * return the list of supported compressed texture formats.
+	 * The base implementation returns null for all formats (no GPU compressed texture support).
+	 * The WebGL renderer overrides this with actual extension availability.
+	 * @returns {Object} an object with one key per extension family, each value is the WebGL extension object or null
+	 */
+	getSupportedCompressedTextureFormats() {
+		return {
+			astc: null,
+			bptc: null,
+			s3tc: null,
+			s3tc_srgb: null,
+			pvrtc: null,
+			etc1: null,
+			etc2: null,
+		};
+	}
+
+	/**
+	 * return true if the given compressed texture format is supported
+	 * @param {number} format - a WebGL compressed texture format constant
+	 * @returns {boolean}
+	 */
+	hasSupportedCompressedFormats(format) {
+		const supportedFormats = this.getSupportedCompressedTextureFormats();
+		for (const supportedFormat in supportedFormats) {
+			for (const extension in supportedFormats[supportedFormat]) {
+				if (format === supportedFormats[supportedFormat][extension]) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * returns the current blend mode for this renderer
 	 * @returns {string} blend mode
 	 */

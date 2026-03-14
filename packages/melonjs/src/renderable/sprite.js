@@ -21,7 +21,7 @@ export default class Sprite extends Renderable {
 	 * @param {number} x - the x coordinates of the sprite object
 	 * @param {number} y - the y coordinates of the sprite object
 	 * @param {object} settings - Configuration parameters for the Sprite object
-	 * @param {HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|TextureAtlas|string} settings.image - reference to spritesheet image, a texture atlas, a video element, or to a texture atlas
+	 * @param {HTMLImageElement|HTMLCanvasElement|HTMLVideoElement|TextureAtlas|CompressedImage|string} settings.image - reference to spritesheet image, a texture atlas, a video element, a compressed texture, or to a texture atlas
 	 * @param {string} [settings.name=""] - name of this object
 	 * @param {string} [settings.region] - region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
 	 * @param {number} [settings.framewidth] - Width of a single frame within the spritesheet

@@ -275,7 +275,9 @@ function onLoadingError(res) {
  * @memberof loader
  * @property {string} name - name of the asset
  * @property {string} type  - the type of the asset ("audio"|"binary"|"image"|"json"|"js"|"tmx"|"tmj"|"tsx"|"tsj"|"fontface"|"video")
- * @property {string} [src]  - path and/or file name of the resource (for audio assets only the path is required)
+ * @property {string|string[]} [src]  - path and/or file name of the resource (for audio assets only the path is required).
+ * For image assets, an array of sources can be provided as a fallback chain (e.g. compressed texture formats by priority, with a PNG fallback).
+ * The loader will try each source in order and use the first one that loads successfully.
  * @property {string} [data]  - TMX data if not provided through a src url
  * @property {boolean} [stream=false] - Set to true to not to wait for large audio or video file to be downloaded before playing.
  * @property {boolean} [autoplay=false] - Set to true to automatically start playing audio or video when loaded or added to a scene (using autoplay might require user iteraction to enable it)
@@ -289,6 +291,8 @@ function onLoadingError(res) {
  *   {name: "texture", type:"image", src: "data/gfx/texture.png"}
  *   // PNG base64 encoded image
  *   {name: "texture", type:"image", src: "data:image/png;base64,iVBORw0KAAAQAAAAEACA..."}
+ *   // compressed texture with fallback chain (tries each source in order until one succeeds)
+ *   {name: "terrain", type:"image", src: ["data/gfx/terrain.astc.ktx", "data/gfx/terrain.dds", "data/gfx/terrain.png"]}
  *   // TSX file
  *   {name: "meta_tiles", type: "tsx", src: "data/map/meta_tiles.tsx"}
  *   // TMX level (XML & JSON)
@@ -359,7 +363,9 @@ export function setParser(type, parserFn) {
  *   // PNG packed texture
  *   {name: "texture", type:"image", src: "data/gfx/texture.png"}
  *   // PNG base64 encoded image
- *   {name: "texture", type:"image", src: "data:image/png;base64,iVBORw0KAAAQAAAAEACA..."}
+ *   {name: "texture", type:"image", src: "data:image/png;base64,iVBORw0KAAAQAAAAEACA..."},
+ *   // compressed texture with fallback chain (tries each source in order until one succeeds)
+ *   {name: "terrain", type:"image", src: ["data/gfx/terrain.astc.ktx", "data/gfx/terrain.dds", "data/gfx/terrain.png"]},
  *   // TSX file
  *   {name: "meta_tiles", type: "tsx", src: "data/map/meta_tiles.tsx"},
  *   // TMX level (XML & JSON)
@@ -483,6 +489,8 @@ export function reload(src) {
  * @example
  * // load an image asset
  * me.loader.load({name: "avatar",  type:"image",  src: "data/avatar.png"}, () => this.onload(), () => this.onerror());
+ * // load a compressed texture with fallback chain
+ * me.loader.load({name: "terrain", type:"image", src: ["data/gfx/terrain.astc.ktx", "data/gfx/terrain.dds", "data/gfx/terrain.png"]}, () => this.onload());
  * // load a base64 image asset
  *  me.loader.load({name: "avatar", type:"image", src: "data:image/png;base64,iVBORw0KAAAQAAAAEACA..."};
  *  // load a base64 video asset
@@ -705,7 +713,7 @@ export function getBinary(elt) {
  * return the specified Image Object
  * @memberof loader
  * @param {string} image - name of the Image element ("tileset-platformer");
- * @returns {HTMLImageElement} requested element or null if not found
+ * @returns {HTMLImageElement|CompressedImage|null} requested element or null if not found
  */
 export function getImage(image) {
 	// force as string and extract the base name

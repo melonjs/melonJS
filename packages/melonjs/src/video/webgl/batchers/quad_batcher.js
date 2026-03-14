@@ -190,7 +190,21 @@ export default class QuadBatcher extends Batcher {
 
 		gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultipliedAlpha);
 
-		if (pixels === null || typeof pixels.byteLength !== "undefined") {
+		if (pixels !== null && pixels.compressed === true) {
+			// compressed texture with mipmap levels
+			const mipmaps = pixels.mipmaps;
+			for (let i = 0; i < mipmaps.length; i++) {
+				gl.compressedTexImage2D(
+					gl.TEXTURE_2D,
+					i,
+					pixels.format,
+					mipmaps[i].width,
+					mipmaps[i].height,
+					0,
+					mipmaps[i].data,
+				);
+			}
+		} else if (pixels === null || typeof pixels.byteLength !== "undefined") {
 			// if pixels is undefined, or if it's Uint8Array/Float32Array TypedArray
 			gl.texImage2D(
 				gl.TEXTURE_2D,
@@ -230,8 +244,13 @@ export default class QuadBatcher extends Batcher {
 			);
 		}
 
-		// generate the sprite mimap (used when scaling) if a PowerOfTwo texture
-		if (isPOT && mipmap === true) {
+		// generate the sprite mipmap (used when scaling) if a PowerOfTwo texture
+		// skip for compressed textures as they include their own mip levels
+		if (
+			isPOT &&
+			mipmap === true &&
+			(pixels === null || pixels.compressed !== true)
+		) {
 			gl.generateMipmap(gl.TEXTURE_2D);
 		}
 

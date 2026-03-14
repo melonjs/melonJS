@@ -10,7 +10,17 @@ export default defineConfig({
 		}),
 	],
 	base: process.env.VITE_BASE_PATH || "/",
-	assetsInclude: ["**/*.tmx", "**/*.tmj", "**/*.tsj", "**/*.xml"],
+	assetsInclude: [
+		"**/*.tmx",
+		"**/*.tmj",
+		"**/*.tsj",
+		"**/*.xml",
+		"**/*.dds",
+		"**/*.pvr",
+		"**/*.pkm",
+		"**/*.ktx",
+		"**/*.ktx2",
+	],
 	resolve: {
 		dedupe: ["melonjs"],
 	},

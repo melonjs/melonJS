@@ -4,6 +4,7 @@ import "./index.css";
 import { createHashRouter, RouterProvider } from "react-router-dom";
 import { ExampleAseprite } from "./examples/aseprite/ExampleAseprite";
 import { ExampleBenchmark } from "./examples/benchmark/ExampleBenchmark";
+import { ExampleCompressedTextures } from "./examples/compressedTextures/ExampleCompressedTextures";
 import { ExampleDeviceTest } from "./examples/deviceTest/ExampleDeviceTest";
 import { ExampleDragAndDrop } from "./examples/dragAndDrop/ExampleDragAndDrop";
 import { ExampleGraphics } from "./examples/graphics/ExampleGraphics";
@@ -45,6 +46,14 @@ const examples: {
 		sourceDir: "benchmark",
 		description:
 			"Stress test rendering thousands of animated sprites to measure engine performance.",
+	},
+	{
+		component: <ExampleCompressedTextures />,
+		label: "Compressed Textures",
+		path: "compressed-textures",
+		sourceDir: "compressedTextures",
+		description:
+			"Detect and display GPU-supported compressed texture formats (S3TC, ASTC, ETC2, PVRTC, BPTC).",
 	},
 	{
 		component: <ExampleDeviceTest />,

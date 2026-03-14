@@ -4,6 +4,56 @@ import { parseCompressedImage } from "./compressed_textures/compressed_image.js"
 import { fetchData } from "./fetchdata.js";
 
 /**
+ * try to load a single image source
+ * @param {string} imgPath - the image path
+ * @param {string} imgName - the image name (cache key)
+ * @param {Object} settings - fetch settings
+ * @returns {Promise} resolves on success, rejects on failure (so the next source can be tried)
+ * @ignore
+ */
+function tryLoadSource(imgPath, imgName, settings) {
+	const imgExt = getExtension(imgPath);
+
+	switch (imgExt) {
+		// Compressed textures
+		case "dds":
+		case "pvr":
+		case "pkm":
+		case "ktx":
+		case "ktx2":
+			return fetchData(imgPath, "arrayBuffer", settings).then((arrayBuffer) => {
+				// parseCompressedImage will throw if the format is not supported
+				imgList[imgName] = parseCompressedImage(arrayBuffer, imgExt);
+			});
+
+		// SVG file
+		case "svg":
+			return fetchData(imgPath, "text", settings).then((svgText) => {
+				return new Promise((resolve, reject) => {
+					const svgImage = new Image();
+					svgImage.onload = function () {
+						imgList[imgName] = svgImage;
+						resolve();
+					};
+					svgImage.onerror = function (error) {
+						reject(error);
+					};
+					svgImage.src =
+						"data:image/svg+xml;charset=utf8," + encodeURIComponent(svgText);
+				});
+			});
+
+		// default is regular images (jpg, png and friends)
+		default:
+			return fetchData(imgPath, "blob", settings).then((blob) => {
+				return globalThis.createImageBitmap(blob).then((bitmap) => {
+					imgList[imgName] = bitmap;
+				});
+			});
+	}
+}
+
+/**
  * parse/preload an image
  * @param {loader.Asset} img
  * @param {Function} [onload] - function to be called when the resource is loaded
@@ -16,7 +66,12 @@ import { fetchData } from "./fetchdata.js";
  *     { name : 'image1', src : 'images/image1.png'},
  *     { name : 'image2', src : 'images/image2.png'},
  *     { name : 'image3', src : 'images/image3.png'},
- *     { name : 'image4', src : 'images/image4.png'}
+ *     // compressed texture with fallback chain
+ *     { name : 'image4', src : [
+ *         'images/image4.astc.ktx',  // try ASTC first
+ *         'images/image4.dds',       // then S3TC via DDS
+ *         'images/image4.png'        // fallback to PNG
+ *     ]}
  * ]);
  */
 export function preloadImage(img, onload, onerror, settings) {
@@ -26,94 +81,26 @@ export function preloadImage(img, onload, onerror, settings) {
 	}
 
 	const sources = Array.isArray(img.src) ? img.src : [img.src];
-	let isFormatSupported = false;
 
+	// try each source in order; stop at the first one that succeeds
+	let chain = Promise.reject();
 	for (const imgPath of sources) {
-		const imgExt = getExtension(imgPath);
-		// loop will stop as soon as a first supported format is detected
-		switch (imgExt) {
-			// Compressed texture
-			case "dds":
-			case "pvr":
-			case "pkm":
-			case "ktx":
-			case "ktx2":
-				fetchData(imgPath, "arrayBuffer", settings)
-					.then((arrayBuffer) => {
-						try {
-							imgList[img.name] = parseCompressedImage(arrayBuffer, imgExt);
-							isFormatSupported = true;
-							if (typeof onload === "function") {
-								// callback
-								onload();
-							}
-						} catch {
-							// parseCompressedImage will throw an error if a format is not supported or badly formatted
-						}
-					})
-					.catch((error) => {
-						if (typeof onerror === "function") {
-							// file cannot be loaded
-							onerror(error);
-						}
-					});
-				break;
-
-			// SVG file
-			case "svg":
-				fetchData(imgPath, "text", settings)
-					.then((svgText) => {
-						const svgImage = new Image();
-						svgImage.onload = function () {
-							imgList[img.name] = svgImage;
-							if (typeof onload === "function") {
-								// callback
-								onload();
-							}
-						};
-						svgImage.onerror = function (error) {
-							if (typeof onerror === "function") {
-								onerror(error);
-							}
-						};
-						svgImage.src =
-							"data:image/svg+xml;charset=utf8," + encodeURIComponent(svgText);
-					})
-					.catch((error) => {
-						if (typeof onerror === "function") {
-							onerror(error);
-						}
-					});
-				isFormatSupported = true;
-				break;
-
-			// default is regular images (jpg, png and friends)
-			default:
-				fetchData(imgPath, "blob", settings)
-					.then((blob) => {
-						globalThis.createImageBitmap(blob).then((bitmap) => {
-							imgList[img.name] = bitmap;
-							if (typeof onload === "function") {
-								// callback
-								onload();
-							}
-						});
-					})
-					.catch((error) => {
-						if (typeof onerror === "function") {
-							onerror(error);
-						}
-					});
-				isFormatSupported = true;
-				break;
-		}
-
-		// exit the loop as soon as the first supported format is detected
-		if (isFormatSupported === true) {
-			return 1;
-		}
+		chain = chain.catch(() => {
+			return tryLoadSource(imgPath, img.name, settings);
+		});
 	}
 
-	// no compatible format was found
-	throw new Error("No supported Image file format found for " + img.name);
+	chain
+		.then(() => {
+			if (typeof onload === "function") {
+				onload();
+			}
+		})
+		.catch((error) => {
+			if (typeof onerror === "function") {
+				onerror(error);
+			}
+		});
+
+	return 1;
 }

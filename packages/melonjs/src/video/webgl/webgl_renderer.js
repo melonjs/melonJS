@@ -255,6 +255,16 @@ export default class WebGLRenderer extends Renderer {
 					gl.getExtension("WEBKIT_WEBGL_compressed_texture_etc") ||
 					gl.getExtension("WEBGL_compressed_texture_es3_0"),
 			};
+			// ETC2 is a superset of ETC1 — if we have ETC2 but not ETC1,
+			// synthesize ETC1 support so that PKM/KTX ETC1 textures work
+			if (
+				!supportedCompressedTextureFormats.etc1 &&
+				supportedCompressedTextureFormats.etc2
+			) {
+				supportedCompressedTextureFormats.etc1 = {
+					COMPRESSED_RGB_ETC1_WEBGL: 0x8d64,
+				};
+			}
 		}
 		return supportedCompressedTextureFormats;
 	}
@@ -513,7 +523,7 @@ export default class WebGLRenderer extends Renderer {
 
 	/**
 	 * Draw an image to the gl context
-	 * @param {HTMLImageElement|SVGImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap|OffscreenCanvas|VideoFrame} image - An element to draw into the context.
+	 * @param {HTMLImageElement|SVGImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap|OffscreenCanvas|VideoFrame|CompressedImage} image - An element to draw into the context.
 	 * @param {number} sx - The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
 	 * @param {number} sy - The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
 	 * @param {number} sw - The width of the sub-rectangle of the source image to draw into the destination context. If not specified, the entire rectangle from the coordinates specified by sx and sy to the bottom-right corner of the image is used.

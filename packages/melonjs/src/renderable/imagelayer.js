@@ -24,7 +24,7 @@ export default class ImageLayer extends Sprite {
 	 * @param {number} x - x coordinate
 	 * @param {number} y - y coordinate
 	 * @param {object} settings - ImageLayer properties
-	 * @param {HTMLImageElement|HTMLCanvasElement|string} settings.image - Image reference. See {@link loader.getImage}
+	 * @param {HTMLImageElement|HTMLCanvasElement|CompressedImage|string} settings.image - Image reference. See {@link loader.getImage}
 	 * @param {string} [settings.name="me.ImageLayer"] - layer name
 	 * @param {number} [settings.z=0] - z-index position
 	 * @param {number|Vector2d} [settings.ratio=1.0] - Scrolling ratio to be applied. See {@link ImageLayer#ratio}

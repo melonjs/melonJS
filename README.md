@@ -52,6 +52,7 @@ Graphics
 - Sprite with 9-slice scaling option, and animation management
 - Built-in effects such as tinting, masking and 2D lighting
 - Standard spritesheet, single and multiple Packed Textures support
+- Compressed texture support (DDS, KTX, KTX2, PVR, PKM) with automatic format detection and fallback
 - System & Bitmap Text
 - Video sprite playback
 
@@ -146,6 +147,7 @@ Examples
 * [Graphics](https://melonjs.github.io/melonJS/examples/#/graphics) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/graphics))
 * [Hello World](https://melonjs.github.io/melonJS/examples/#/hello-world) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/helloWorld))
 * [Whac-A-Mole](https://melonjs.github.io/melonJS/examples/#/whac-a-mole) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/whac-a-mole))
+* [Compressed Textures](https://melonjs.github.io/melonJS/examples/#/compressed-textures) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/compressedTextures))
 
 Browse all examples [here](https://melonjs.github.io/melonJS/examples/)
 

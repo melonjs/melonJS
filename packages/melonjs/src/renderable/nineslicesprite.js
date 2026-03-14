@@ -21,7 +21,7 @@ export default class NineSliceSprite extends Sprite {
 	 * @param {number} settings.height - the height of the Renderable over which the sprite needs to be stretched
 	 * @param {number} [settings.insetx] - the width of a corner over which the sprite is unscaled (default is a quarter of the sprite width)
 	 * @param {number} [settings.insety] - the height of a corner over which the sprite is unscaled (default is a quarter of the sprite height)
-	 * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image - reference to spritesheet image, a texture atlas or to a texture atlas
+	 * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|CompressedImage|string} settings.image - reference to spritesheet image, a texture atlas, a compressed texture, or to a texture atlas
 	 * @param {string} [settings.name=""] - name of this object
 	 * @param {string} [settings.region] - region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
 	 * @param {number} [settings.framewidth] - Width of a single frame within the spritesheet
