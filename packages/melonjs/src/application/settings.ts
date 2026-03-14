@@ -5,7 +5,7 @@
 
 import { RendererType } from "../const";
 import Renderer from "../video/renderer";
-import Compositor from "../video/webgl/compositors/compositor";
+import { Batcher } from "../video/webgl/batchers/batcher";
 import { ScaleMethod } from "./scaleMethods";
 
 type BlendMode = "normal" | "multiply" | "lighter" | "additive" | "screen";
@@ -88,9 +88,9 @@ export type ApplicationSettings = {
 	legacy: boolean;
 
 	/**
-	 * a custom compositor class (WebGL only)
+	 * a custom batcher class (WebGL only)
 	 */
-	compositor?: Compositor | undefined;
+	compositor?: Batcher | undefined;
 } & (
 	| {
 			// the DOM parent element to hold the canvas in the HTML file

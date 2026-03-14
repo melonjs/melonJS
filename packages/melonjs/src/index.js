@@ -59,9 +59,9 @@ import Renderer from "./video/renderer.js";
 import RenderState from "./video/renderstate.js";
 import CanvasRenderTarget from "./video/rendertarget/canvasrendertarget.js";
 import { TextureAtlas } from "./video/texture/atlas.js";
-import Compositor from "./video/webgl/compositors/compositor.js";
-import PrimitiveCompositor from "./video/webgl/compositors/primitive_compositor.js";
-import QuadCompositor from "./video/webgl/compositors/quad_compositor.js";
+import { Batcher } from "./video/webgl/batchers/batcher.js";
+import PrimitiveBatcher from "./video/webgl/batchers/primitive_batcher.js";
+import QuadBatcher from "./video/webgl/batchers/quad_batcher.js";
 import GLShader from "./video/webgl/glshader.js";
 import WebGLRenderer from "./video/webgl/webgl_renderer.js";
 
@@ -103,9 +103,9 @@ export {
 	Tween,
 	QuadTree,
 	GLShader,
-	Compositor,
-	PrimitiveCompositor,
-	QuadCompositor,
+	Batcher,
+	PrimitiveBatcher,
+	QuadBatcher,
 	Renderer,
 	RenderState,
 	WebGLRenderer,

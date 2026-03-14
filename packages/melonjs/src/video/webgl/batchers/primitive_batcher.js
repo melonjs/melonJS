@@ -1,6 +1,6 @@
 import primitiveFragment from "./../shaders/primitive.frag";
 import primitiveVertex from "./../shaders/primitive.vert";
-import Compositor from "./compositor.js";
+import { Batcher } from "./batcher.js";
 
 /**
  * additional import for TypeScript
@@ -11,7 +11,7 @@ import Compositor from "./compositor.js";
  * A WebGL Compositor object. This class handles all of the WebGL state<br>
  * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
  */
-export default class PrimitiveCompositor extends Compositor {
+export default class PrimitiveBatcher extends Batcher {
 	/**
 	 * Initialize the compositor
 	 * @ignore

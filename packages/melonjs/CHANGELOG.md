@@ -36,6 +36,11 @@
 - WebGLRenderer: `fillPolygon` now uses `Polygon.getIndices()` cached earcut results instead of rebuilding the path each frame
 - WebGLRenderer: skip redundant `gl.uniform1i` sampler call in `QuadCompositor.addQuad()` when consecutive quads share the same texture unit
 - WebGLRenderer: replace per-frame `clone()`/`push()`/`pop()` allocations in save/restore with zero-allocation `RenderState` stacks
+- WebGLRenderer: switch quad rendering from `gl.drawArrays` (6 vertices per quad) to `gl.drawElements` with a static index buffer (4 vertices + 6 indices per quad), reducing vertex data by 33%
+- WebGLRenderer: increase vertex batch size from 256 (64 quads) to 4096 (1024 quads), reducing draw calls for sprite-heavy and tile-heavy scenes
+
+### Changed
+- WebGLRenderer: `Compositor`, `QuadCompositor`, and `PrimitiveCompositor` are now deprecated in favor of `Batcher`, `QuadBatcher`, and `PrimitiveBatcher`
 
 ## [18.0.0] (melonJS 2) - _2026-03-10_
 

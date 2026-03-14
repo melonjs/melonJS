@@ -1,5 +1,8 @@
 import CanvasRenderer from "../video/canvas/canvas_renderer.js";
 import CanvasRenderTarget from "../video/rendertarget/canvasrendertarget.js";
+import { Batcher } from "../video/webgl/batchers/batcher.js";
+import PrimitiveBatcher from "../video/webgl/batchers/primitive_batcher.js";
+import QuadBatcher from "../video/webgl/batchers/quad_batcher.js";
 import WebGLRenderer from "../video/webgl/webgl_renderer.js";
 import { warning } from "./console.js";
 
@@ -52,6 +55,42 @@ WebGLRenderer.prototype.setLineWidth = function (width) {
 	warning("setLineWidth", "lineWidth", "17.3.0");
 	this.lineWidth = width;
 };
+
+/**
+ * @deprecated since 18.2.0
+ * @see Batcher
+ */
+export class Compositor extends Batcher {
+	/** @param {any[]} args */
+	constructor(...args) {
+		warning("Compositor", "Batcher", "18.2.0");
+		super(...args);
+	}
+}
+
+/**
+ * @deprecated since 18.2.0
+ * @see PrimitiveBatcher
+ */
+export class PrimitiveCompositor extends PrimitiveBatcher {
+	/** @param {any[]} args */
+	constructor(...args) {
+		warning("PrimitiveCompositor", "PrimitiveBatcher", "18.2.0");
+		super(...args);
+	}
+}
+
+/**
+ * @deprecated since 18.2.0
+ * @see QuadBatcher
+ */
+export class QuadCompositor extends QuadBatcher {
+	/** @param {any[]} args */
+	constructor(...args) {
+		warning("QuadCompositor", "QuadBatcher", "18.2.0");
+		super(...args);
+	}
+}
 
 /**
  * @namespace Math

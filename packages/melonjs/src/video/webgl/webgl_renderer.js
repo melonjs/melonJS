@@ -11,8 +11,8 @@ import Renderer from "./../renderer.js";
 import { createAtlas, TextureAtlas } from "./../texture/atlas.js";
 import TextureCache from "./../texture/cache.js";
 import { renderer } from "./../video.js";
-import PrimitiveCompositor from "./compositors/primitive_compositor";
-import QuadCompositor from "./compositors/quad_compositor";
+import PrimitiveBatcher from "./batchers/primitive_batcher";
+import QuadBatcher from "./batchers/quad_batcher";
 
 /**
  * additional import for TypeScript
@@ -23,7 +23,7 @@ import QuadCompositor from "./compositors/quad_compositor";
  * @import {Ellipse} from "./../../geometries/ellipse.ts";
  * @import {Matrix2d} from "../../math/matrix2d.ts";
  * @import {Matrix3d} from "../../math/matrix3d.ts";
- * @import Compositor from "./compositors/compositor.js";
+ * @import {Batcher} from "./batchers/batcher.js";
  */
 
 // list of supported compressed texture formats
@@ -111,7 +111,7 @@ export default class WebGLRenderer extends Renderer {
 
 		/**
 		 * The current compositor used by the renderer
-		 * @type {Compositor}
+		 * @type {Batcher}
 		 */
 		this.currentCompositor = undefined;
 
@@ -132,12 +132,12 @@ export default class WebGLRenderer extends Renderer {
 
 		// Create both quad and primitive compositor
 		this.addCompositor(
-			new (this.settings.compositor || QuadCompositor)(this),
+			new (this.settings.compositor || QuadBatcher)(this),
 			"quad",
 			true,
 		);
 		this.addCompositor(
-			new (this.settings.compositor || PrimitiveCompositor)(this),
+			new (this.settings.compositor || PrimitiveBatcher)(this),
 			"primitive",
 		);
 
@@ -338,13 +338,18 @@ export default class WebGLRenderer extends Renderer {
 	 * set the active compositor for this renderer
 	 * @param {string} name - a compositor name
 	 * @param {GLShader} [shader] - an optional shader program to be used, instead of the default one, when activating the compositor
-	 * @returns {Compositor} an instance to the current active compositor
+	 * @returns {Batcher} an instance to the current active compositor
 	 */
 	setCompositor(name = "default", shader = this.customShader) {
 		const compositor = this.compositors.get(name);
 
 		if (typeof compositor === "undefined") {
 			throw new Error("Invalid Compositor");
+		}
+
+		// fast path: already on the right compositor with no custom shader
+		if (this.currentCompositor === compositor && typeof shader !== "object") {
+			return this.currentCompositor;
 		}
 
 		if (this.currentCompositor !== compositor) {
@@ -354,13 +359,12 @@ export default class WebGLRenderer extends Renderer {
 			}
 			// set as the active one
 			this.currentCompositor = compositor;
+			// bind the compositor with the default shader (program & attributes)
+			this.currentCompositor.bind();
 		}
 
-		if (name === "quad" && typeof shader === "object") {
+		if (typeof shader === "object") {
 			this.currentCompositor.useShader(shader);
-		} else {
-			// (re)bind the compositor with the default shader (program & attributes)
-			this.currentCompositor.bind();
 		}
 
 		return this.currentCompositor;

@@ -133,9 +133,9 @@ export default class GLShader {
 	 * activate the given vertex attribute for this shader
 	 * @param {WebGLRenderingContext} gl - the current WebGL rendering context
 	 * @param {object[]} attributes - an array of vertex attributes
-	 * @param {number} vertexByteSize - the size of a single vertex in bytes
+	 * @param {number} stride - the size of a single vertex in bytes
 	 */
-	setVertexAttributes(gl, attributes, vertexByteSize) {
+	setVertexAttributes(gl, attributes, stride) {
 		// set the vertex attributes
 		for (let index = 0; index < attributes.length; ++index) {
 			const element = attributes[index];
@@ -148,7 +148,7 @@ export default class GLShader {
 					element.size,
 					element.type,
 					element.normalized,
-					vertexByteSize,
+					stride,
 					element.offset,
 				);
 			} else {

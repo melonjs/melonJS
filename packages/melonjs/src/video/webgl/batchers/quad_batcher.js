@@ -1,8 +1,9 @@
 import { isPowerOfTwo } from "../../../math/math.ts";
 import { Vector2d } from "../../../math/vector2d.ts";
+import IndexBuffer from "../buffer/index.js";
 import quadFragment from "./../shaders/quad.frag";
 import quadVertex from "./../shaders/quad.vert";
-import Compositor from "./compositor.js";
+import { Batcher } from "./batcher.js";
 
 /**
  * additional import for TypeScript
@@ -21,7 +22,7 @@ const V_ARRAY = [
  * A WebGL Compositor object. This class handles all of the WebGL state<br>
  * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
  */
-export default class QuadCompositor extends Compositor {
+export default class QuadBatcher extends Batcher {
 	/**
 	 * Initialize the compositor
 	 * @ignore
@@ -63,6 +64,13 @@ export default class QuadCompositor extends Compositor {
 
 		// track the current sampler unit to avoid redundant gl.uniform1i calls
 		this.currentSamplerUnit = -1;
+
+		// create the index buffer for quad batching (4 verts + 6 indices per quad)
+		this.indexBuffer = new IndexBuffer(
+			this.gl,
+			this.vertexData.maxVertex / 4,
+			this.renderer.WebGLVersion > 1,
+		);
 	}
 
 	/**
@@ -81,6 +89,55 @@ export default class QuadCompositor extends Compositor {
 		}
 		this.currentTextureUnit = -1;
 		this.currentSamplerUnit = -1;
+
+		// re-create index buffer after context loss
+		this.indexBuffer = new IndexBuffer(
+			this.gl,
+			this.vertexData.maxVertex / 4,
+			this.renderer.WebGLVersion > 1,
+		);
+	}
+
+	/**
+	 * Flush batched texture data to the GPU using indexed drawing.
+	 * Overrides the base compositor flush to use drawElements with the pre-computed index buffer.
+	 * @param {number} [mode=gl.TRIANGLES] - the GL drawing mode
+	 */
+	flush(mode = this.mode) {
+		const vertex = this.vertexData;
+		const vertexCount = vertex.vertexCount;
+
+		if (vertexCount > 0) {
+			const gl = this.gl;
+			const vertexSize = vertex.vertexSize;
+
+			// ensure the index buffer is bound
+			this.indexBuffer.bind();
+
+			// Copy vertex data into stream buffer
+			if (this.renderer.WebGLVersion > 1) {
+				gl.bufferData(
+					gl.ARRAY_BUFFER,
+					vertex.toFloat32(),
+					gl.STREAM_DRAW,
+					0,
+					vertexCount * vertexSize,
+				);
+			} else {
+				gl.bufferData(
+					gl.ARRAY_BUFFER,
+					vertex.toFloat32(0, vertexCount * vertexSize),
+					gl.STREAM_DRAW,
+				);
+			}
+
+			// 4 vertices per quad -> vertexCount/4 quads -> *6 indices per quad
+			const indexCount = (vertexCount / 4) * 6;
+			gl.drawElements(mode, indexCount, this.indexBuffer.type, 0);
+
+			// clear the vertex buffer
+			vertex.clear();
+		}
 	}
 
 	/**
@@ -285,8 +342,8 @@ export default class QuadCompositor extends Compositor {
 	addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint, reupload = false) {
 		const vertexData = this.vertexData;
 
-		if (vertexData.isFull(6)) {
-			// is the vertex buffer full if we add 6 more vertices
+		if (vertexData.isFull(4)) {
+			// is the vertex buffer full if we add 4 more vertices
 			this.flush();
 		}
 
@@ -314,11 +371,10 @@ export default class QuadCompositor extends Compositor {
 			m.apply(vec3);
 		}
 
+		// 4 vertices per quad; the index buffer provides the 6 indices
 		vertexData.push(vec0.x, vec0.y, u0, v0, tint);
 		vertexData.push(vec1.x, vec1.y, u1, v0, tint);
 		vertexData.push(vec2.x, vec2.y, u0, v1, tint);
-		vertexData.push(vec2.x, vec2.y, u0, v1, tint);
-		vertexData.push(vec1.x, vec1.y, u1, v0, tint);
 		vertexData.push(vec3.x, vec3.y, u1, v1, tint);
 	}
 }

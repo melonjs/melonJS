@@ -8,12 +8,22 @@ import GLShader from "../glshader.js";
  */
 
 /**
- * A base Compositor object.
+ * Maximum number of vertices per batch.
+ * At 4096 vertices (1024 quads), the vertex buffer is ~80 KB (5 floats × 4 bytes × 4096),
+ * which balances draw call reduction with safe buffer upload sizes on mobile tile-based GPUs.
+ * Within the Uint16 index limit (65,535) required for WebGL1 compatibility.
+ * @ignore
  */
-export default class Compositor {
+const MAX_VERTICES = 4096;
+
+/**
+ * A base WebGL Batcher object that manages shader programs, vertex attribute
+ * definitions, and vertex buffer batching for efficient GPU draw calls.
+ */
+export class Batcher {
 	/**
 	 * @param {WebGLRenderer} renderer - the current WebGL renderer session
-	 * @param {object} settings - additional settings to initialize this compositors
+	 * @param {object} settings - additional settings to initialize this batcher
 	 * @param {object[]} settings.attribute - an array of attributes definition
 	 * @param {string} settings.attribute.name - name of the attribute in the vertex shader
 	 * @param {number} settings.attribute.size - number of components per vertex attribute. Must be 1, 2, 3, or 4.
@@ -29,7 +39,7 @@ export default class Compositor {
 	}
 
 	/**
-	 * Initialize the compositor
+	 * Initialize the batcher
 	 * @ignore
 	 */
 	init(renderer, settings) {
@@ -43,13 +53,13 @@ export default class Compositor {
 		this.viewMatrix = renderer.currentTransform;
 
 		/**
-		 * the default shader created by this compositor
+		 * the default shader created by this batcher
 		 * @type {GLShader}
 		 */
 		this.defaultShader = undefined;
 
 		/**
-		 * the shader currently used by this compositor
+		 * the shader currently used by this batcher
 		 * @type {GLShader}
 		 */
 		this.currentShader = undefined;
@@ -63,29 +73,29 @@ export default class Compositor {
 
 		/**
 		 * an array of vertex attribute properties
-		 * @see WebGLCompositor.addAttribute
+		 * @see Batcher.addAttribute
 		 * @type {Array.<Object>}
 		 */
 		this.attributes = [];
 
 		/**
-		 * the size of a single vertex in bytes
+		 * the stride of a single vertex in bytes
 		 * (will automatically be calculated as attributes definitions are added)
-		 * @see WebGLCompositor.addAttribute
+		 * @see Batcher.addAttribute
 		 * @type {number}
 		 */
-		this.vertexByteSize = 0;
+		this.stride = 0;
 
 		/**
 		 * the size of a single vertex in floats
 		 * (will automatically be calculated as attributes definitions are added)
-		 * @see WebGLCompositor.addAttribute
+		 * @see Batcher.addAttribute
 		 * @type {number}
 		 */
 		this.vertexSize = 0;
 
 		/**
-		 * the vertex data buffer used by this compositor
+		 * the vertex data buffer used by this batcher
 		 * @type {VertexArrayBuffer}
 		 */
 		this.vertexData = null;
@@ -101,7 +111,7 @@ export default class Compositor {
 					attr.offset,
 				);
 			});
-			this.vertexData = new VertexArrayBuffer(this.vertexSize, 6);
+			this.vertexData = new VertexArrayBuffer(this.vertexSize, MAX_VERTICES);
 		} else {
 			throw new Error("attributes definition missing");
 		}
@@ -122,7 +132,7 @@ export default class Compositor {
 	}
 
 	/**
-	 * Reset compositor internal state
+	 * Reset batcher internal state
 	 * @ignore
 	 */
 	reset() {
@@ -134,7 +144,7 @@ export default class Compositor {
 	}
 
 	/**
-	 * called by the WebGL renderer when a compositor become the current one
+	 * called by the WebGL renderer when a batcher becomes the current one
 	 */
 	bind() {
 		if (this.renderer.currentProgram !== this.defaultShader.program) {
@@ -152,7 +162,7 @@ export default class Compositor {
 			this.flush();
 			shader.bind();
 			shader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
-			shader.setVertexAttributes(this.gl, this.attributes, this.vertexByteSize);
+			shader.setVertexAttributes(this.gl, this.attributes, this.stride);
 
 			this.currentShader = shader;
 			this.renderer.currentProgram = this.currentShader.program;
@@ -160,7 +170,7 @@ export default class Compositor {
 	}
 
 	/**
-	 * add vertex attribute property definition to the compositor
+	 * add vertex attribute property definition to the batcher
 	 * @param {string} name - name of the attribute in the vertex shader
 	 * @param {number} size - number of components per vertex attribute. Must be 1, 2, 3, or 4.
 	 * @param {GLenum} type - data type of each component in the array
@@ -172,30 +182,30 @@ export default class Compositor {
 
 		switch (type) {
 			case this.gl.BYTE:
-				this.vertexByteSize += size * Int8Array.BYTES_PER_ELEMENT;
+				this.stride += size * Int8Array.BYTES_PER_ELEMENT;
 				break;
 			case this.gl.UNSIGNED_BYTE:
-				this.vertexByteSize += size * Uint8Array.BYTES_PER_ELEMENT;
+				this.stride += size * Uint8Array.BYTES_PER_ELEMENT;
 				break;
 			case this.gl.SHORT:
-				this.vertexByteSize += size * Int16Array.BYTES_PER_ELEMENT;
+				this.stride += size * Int16Array.BYTES_PER_ELEMENT;
 				break;
 			case this.gl.UNSIGNED_SHORT:
-				this.vertexByteSize += size * Uint16Array.BYTES_PER_ELEMENT;
+				this.stride += size * Uint16Array.BYTES_PER_ELEMENT;
 				break;
 			case this.gl.INT:
-				this.vertexByteSize += size * Int32Array.BYTES_PER_ELEMENT;
+				this.stride += size * Int32Array.BYTES_PER_ELEMENT;
 				break;
 			case this.gl.UNSIGNED_INT:
-				this.vertexByteSize += size * Uint32Array.BYTES_PER_ELEMENT;
+				this.stride += size * Uint32Array.BYTES_PER_ELEMENT;
 				break;
 			case this.gl.FLOAT:
-				this.vertexByteSize += size * Float32Array.BYTES_PER_ELEMENT;
+				this.stride += size * Float32Array.BYTES_PER_ELEMENT;
 				break;
 			default:
 				throw new Error("Invalid GL Attribute type");
 		}
-		this.vertexSize = this.vertexByteSize / Float32Array.BYTES_PER_ELEMENT;
+		this.vertexSize = this.stride / Float32Array.BYTES_PER_ELEMENT;
 	}
 
 	/**
@@ -242,3 +252,5 @@ export default class Compositor {
 		}
 	}
 }
+
+export default Batcher;
