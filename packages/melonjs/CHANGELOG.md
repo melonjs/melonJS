@@ -41,6 +41,8 @@
 
 ### Changed
 - WebGLRenderer: `Compositor`, `QuadCompositor`, and `PrimitiveCompositor` are now deprecated in favor of `Batcher`, `QuadBatcher`, and `PrimitiveBatcher`
+- Loader: modernize asset loading with Promise-based completion, improving parallel loading performance
+- Loader: `onload`, `onProgress`, and `onError` properties are now deprecated in favor of `LOADER_COMPLETE`, `LOADER_PROGRESS`, and `LOADER_ERROR` events
 
 ## [18.0.0] (melonJS 2) - _2026-03-10_
 

@@ -150,9 +150,10 @@ export function setBaseURL(type, url = "./") {
  * @default undefined
  * @memberof loader
  * @type {function}
+ * @deprecated since 18.2.0 - Use the {@link event.LOADER_COMPLETE} event or the `onloadcb` parameter of {@link loader.preload} instead.
  * @example
- * // set a callback when everything is loaded
- * me.loader.onload = this.loaded.bind(this);
+ * // use the LOADER_COMPLETE event instead
+ * me.event.on(me.event.LOADER_COMPLETE, this.loaded.bind(this));
  */
 export let onload;
 
@@ -163,9 +164,10 @@ export let onload;
  * @default undefined
  * @memberof loader
  * @type {function}
+ * @deprecated since 18.2.0 - Use the {@link event.LOADER_PROGRESS} event instead.
  * @example
- * // set a callback for progress notification
- * me.loader.onProgress = this.updateProgress.bind(this);
+ * // use the LOADER_PROGRESS event instead
+ * me.event.on(me.event.LOADER_PROGRESS, (progress, resource) => this.updateProgress(progress, resource));
  */
 export let onProgress;
 
@@ -175,9 +177,10 @@ export let onProgress;
  * @default undefined
  * @memberof loader
  * @type {function}
+ * @deprecated since 18.2.0 - Use the {@link event.LOADER_ERROR} event instead.
  * @example
- * // set a callback for error notification
- * me.loader.onError = this.loaderError.bind(this);
+ * // use the LOADER_ERROR event instead
+ * me.event.on(me.event.LOADER_ERROR, (resource) => this.loaderError(resource));
  */
 export let onError;
 
@@ -194,7 +197,6 @@ let parserInitialized = false;
 // flag to check loading status
 let resourceCount = 0;
 let loadCount = 0;
-let timerId = 0;
 
 /**
  * Assets uploaded with an error
@@ -219,29 +221,17 @@ function initParsers() {
 }
 
 /**
- * check the loading status
+ * Complete loading: invoke the callback and emit the LOADER_COMPLETE event.
+ * @param {Function} onloadcb - the completion callback
  * @ignore
  */
-function checkLoadStatus(onloadcb) {
-	if (loadCount === resourceCount) {
-		// wait 1/2s and execute callback (cheap workaround to ensure everything is loaded)
-		if (typeof onloadcb === "function" || onload) {
-			// make sure we clear the timer
-			clearTimeout(timerId);
-			// trigger the onload callback
-			// we call either the supplied callback (which takes precedence) or the global one
-			const callback = onloadcb || onload;
-			setTimeout(() => {
-				callback();
-				eventEmitter.emit(LOADER_COMPLETE);
-			}, 300);
-		} else {
-			throw new Error("no load callback defined");
-		}
+function completeLoading(onloadcb) {
+	const callback = onloadcb || onload;
+	if (typeof callback === "function") {
+		callback();
+		eventEmitter.emit(LOADER_COMPLETE);
 	} else {
-		timerId = setTimeout(() => {
-			checkLoadStatus(onloadcb);
-		}, 100);
+		throw new Error("no load callback defined");
 	}
 }
 
@@ -400,26 +390,45 @@ export function setParser(type, parserFn) {
  * me.loader.preload(game.assets, () => this.loaded());
  */
 export function preload(assets, onloadcb, switchToLoadState = true) {
-	// parse the resources
-	for (let i = 0; i < assets.length; i++) {
-		resourceCount += load(
-			assets[i],
-			onResourceLoaded.bind(this, assets[i]),
-			onLoadingError.bind(this, assets[i]),
-		);
-	}
 	// set the onload callback if defined
 	if (typeof onloadcb !== "undefined") {
 		onload = onloadcb;
 	}
 
+	// parse the resources and collect promises for each asset
+	const promises = [];
+	for (let i = 0; i < assets.length; i++) {
+		const asset = assets[i];
+		const promise = new Promise((resolve, reject) => {
+			const count = load(
+				asset,
+				() => {
+					onResourceLoaded(asset);
+					resolve();
+				},
+				(err) => {
+					onLoadingError.call(this, asset);
+					reject(err);
+				},
+			);
+			resourceCount += count;
+			if (count === 0) {
+				// asset already loaded, resolve immediately
+				resolve();
+			}
+		});
+		promises.push(promise);
+	}
+
 	if (switchToLoadState === true) {
-		// swith to the loading screen
+		// switch to the loading screen
 		state.change(state.LOADING);
 	}
 
-	// check load status
-	checkLoadStatus(onload);
+	// call the completion callback as soon as all assets are loaded
+	Promise.all(promises).then(() => {
+		completeLoading(onload);
+	});
 }
 
 /**
@@ -440,15 +449,28 @@ export function preload(assets, onloadcb, switchToLoadState = true) {
  **/
 export function reload(src) {
 	const assetToReload = failureLoadedAssets[src];
-	this.unload(assetToReload);
+	unload(assetToReload);
 	resourceCount -= 1;
-	resourceCount += this.load(
-		assetToReload,
-		this.onResourceLoaded.bind(this, assetToReload),
-		this.onLoadingError.bind(this, assetToReload),
-	);
-	// check load status
-	checkLoadStatus(this.onload);
+
+	new Promise((resolve, reject) => {
+		const count = load(
+			assetToReload,
+			() => {
+				onResourceLoaded(assetToReload);
+				resolve();
+			},
+			(err) => {
+				onLoadingError.call(this, assetToReload);
+				reject(err);
+			},
+		);
+		resourceCount += count;
+		if (count === 0) {
+			resolve();
+		}
+	}).then(() => {
+		completeLoading(onload);
+	});
 }
 
 /**
