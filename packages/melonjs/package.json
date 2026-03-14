@@ -43,7 +43,10 @@
 	"types": "./build/index.d.ts",
 	"module": "./build/index.js",
 	"exports": {
-		".": "./build/index.js"
+		".": {
+			"types": "./build/index.d.ts",
+			"import": "./build/index.js"
+		}
 	},
 	"files": [
 		"build",
