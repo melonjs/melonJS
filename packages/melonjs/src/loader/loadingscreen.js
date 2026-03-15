@@ -85,6 +85,16 @@ class ProgressBar extends Renderable {
  */
 class DefaultLoadingScreen extends Stage {
 	/**
+	 * @ignore
+	 */
+	progressBar = null;
+
+	/**
+	 * @ignore
+	 */
+	logoSprite = null;
+
+	/**
 	 * call when the loader is resetted
 	 * @ignore
 	 */
@@ -95,22 +105,23 @@ class DefaultLoadingScreen extends Stage {
 		game.world.backgroundColor.parseCSS("#202020");
 
 		// progress bar
-		game.world.addChild(
-			new ProgressBar(0, renderer.height / 2, renderer.width, barHeight),
-			1,
+		this.progressBar = new ProgressBar(
+			0,
+			renderer.height / 2,
+			renderer.width,
+			barHeight,
 		);
+		game.world.addChild(this.progressBar, 1);
 
 		// load the melonJS logo
 		load({ name: "melonjs_logo", type: "image", src: logo_url }, () => {
 			// melonJS logo
-			game.world.addChild(
-				new Sprite(renderer.width / 2, renderer.height / 2, {
-					image: "melonjs_logo",
-					framewidth: 256,
-					frameheight: 256,
-				}),
-				2,
-			);
+			this.logoSprite = new Sprite(renderer.width / 2, renderer.height / 2, {
+				image: "melonjs_logo",
+				framewidth: 256,
+				frameheight: 256,
+			});
+			game.world.addChild(this.logoSprite, 2);
 		});
 	}
 
@@ -119,7 +130,17 @@ class DefaultLoadingScreen extends Stage {
 	 * @ignore
 	 */
 	onDestroyEvent() {
-		// cancel the callback
+		// remove children added during loading
+		if (this.progressBar) {
+			game.world.removeChild(this.progressBar);
+			this.progressBar = null;
+		}
+		if (this.logoSprite) {
+			game.world.removeChild(this.logoSprite);
+			this.logoSprite = null;
+		}
+
+		// unload the logo image
 		unload({ name: "melonjs_logo", type: "image" });
 	}
 }
