@@ -3,6 +3,7 @@ import {
 	Color,
 	Ellipse,
 	game,
+	Matrix2d,
 	Polygon,
 	Renderable,
 	RoundRect,
@@ -38,6 +39,10 @@ const createGame = () => {
 		rrect1Tween: Tween;
 		rrect2Tween: Tween;
 		color: Color;
+		filledEllipse: Ellipse;
+		ellipseTime: number;
+		arcAngle: number;
+		transformMatrix: Matrix2d;
 		// constructor
 		constructor() {
 			super(0, 0, game.viewport.width, game.viewport.height);
@@ -88,8 +93,8 @@ const createGame = () => {
 				{ x: 0, y: 80 },
 			]);
 
-			this.roundRect1 = new RoundRect(100, 500, 400, 220, 4);
-			this.roundRect2 = new RoundRect(105, 505, 390, 210, 4);
+			this.roundRect1 = new RoundRect(100, 470, 400, 180, 4);
+			this.roundRect2 = new RoundRect(105, 475, 390, 170, 4);
 
 			this.rrect1Tween = new Tween(this.roundRect1).to(
 				{ radius: 100 },
@@ -112,13 +117,30 @@ const createGame = () => {
 				},
 			);
 
+			// rotating + transformed ellipse
+			this.filledEllipse = new Ellipse(860, 410, 200, 100);
+			this.transformMatrix = new Matrix2d();
+			this.ellipseTime = 0;
+			this.arcAngle = 0;
+
 			// a temporary color object
 			this.color = new Color();
 
 			this.anchorPoint.set(0, 0);
 		}
 
-		override update() {
+		override update(dt: number) {
+			this.ellipseTime += dt;
+			// reset and apply rotation + oscillating scale transform
+			this.filledEllipse.setShape(860, 410, 200, 100);
+			this.filledEllipse.rotate(this.ellipseTime / 1000);
+			this.transformMatrix.identity();
+			this.transformMatrix.scale(
+				0.7 + 0.3 * Math.sin(this.ellipseTime / 800),
+				0.7 + 0.3 * Math.cos(this.ellipseTime / 600),
+			);
+			this.filledEllipse.transform(this.transformMatrix);
+			this.arcAngle += 0.01;
 			return true;
 		}
 
@@ -159,8 +181,12 @@ const createGame = () => {
 			renderer.setGlobalAlpha(0.5);
 
 			renderer.setColor("#e15d55");
-			renderer.strokeArc(740, 200, 110, Math.PI, 0);
-			renderer.fillArc(740, 200, 110, 0, Math.PI);
+			renderer.save();
+			renderer.translate(740, 200);
+			renderer.rotate(this.arcAngle);
+			renderer.strokeArc(0, 0, 110, Math.PI, 0);
+			renderer.fillArc(0, 0, 110, 0, Math.PI);
+			renderer.restore();
 
 			renderer.setColor("#00aa88");
 			renderer.translate(25, 0);
@@ -173,23 +199,31 @@ const createGame = () => {
 			renderer.beginPath();
 			renderer.setColor("blue");
 
-			renderer.moveTo(865, 200);
-			renderer.lineTo(915, 300);
-			renderer.lineTo(865, 400);
-			renderer.lineTo(915, 500);
-			renderer.lineTo(865, 600);
+			renderer.moveTo(540, 30);
+			renderer.lineTo(640, 55);
+			renderer.lineTo(740, 30);
+			renderer.lineTo(840, 55);
+			renderer.lineTo(940, 30);
 
-			renderer.moveTo(900, 200);
-			renderer.lineTo(950, 300);
-			renderer.lineTo(900, 400);
-			renderer.lineTo(950, 500);
-			renderer.lineTo(900, 600);
+			renderer.moveTo(540, 50);
+			renderer.lineTo(640, 75);
+			renderer.lineTo(740, 50);
+			renderer.lineTo(840, 75);
+			renderer.lineTo(940, 50);
 			renderer.stroke();
 
 			renderer.setColor("#ff69b4");
 			renderer.fill(this.roundRect1);
 			renderer.setColor("#ff1493");
 			renderer.stroke(this.roundRect2);
+
+			// rotating ellipse (filled + stroked border)
+			renderer.setGlobalAlpha(0.6);
+			renderer.setColor("#6366f1");
+			renderer.fill(this.filledEllipse);
+			renderer.setGlobalAlpha(1.0);
+			renderer.setColor("#4f46e5");
+			renderer.stroke(this.filledEllipse);
 		}
 	}
 

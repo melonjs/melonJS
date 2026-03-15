@@ -1,3 +1,4 @@
+import type { Matrix2d } from "../math/matrix2d.ts";
 import { Vector2d, vector2dPool } from "../math/vector2d.ts";
 import { Bounds, boundsPool } from "../physics/bounds.ts";
 import { createPool } from "../system/pool.ts";
@@ -37,6 +38,21 @@ export class Ellipse {
 	ratio: Vector2d;
 
 	/**
+	 * the rotation angle of the ellipse in radians
+	 */
+	angle: number;
+
+	/**
+	 * cached cosine of the current angle
+	 */
+	private _cos: number;
+
+	/**
+	 * cached sine of the current angle
+	 */
+	private _sin: number;
+
+	/**
 	 * the shape type (used internally)
 	 */
 	type = "Ellipse";
@@ -54,6 +70,9 @@ export class Ellipse {
 		this.radiusV = new Vector2d();
 		this.radiusSq = new Vector2d();
 		this.ratio = vector2dPool.get();
+		this.angle = 0;
+		this._cos = 1;
+		this._sin = 0;
 		this.setShape(x, y, w, h);
 	}
 
@@ -69,21 +88,51 @@ export class Ellipse {
 		const hW = w / 2;
 		const hH = h / 2;
 		const radius = Math.max(hW, hH);
-		const r = radius * radius;
 
 		this.pos.set(x, y);
 		this.radius = radius;
 		this.ratio.set(hW / radius, hH / radius);
 		this.radiusV.set(radius, radius).scaleV(this.ratio);
-		this.radiusSq.set(r, r).scaleV(this.ratio);
+		this.radiusSq.set(
+			this.radiusV.x * this.radiusV.x,
+			this.radiusV.y * this.radiusV.y,
+		);
+		this.angle = 0;
+		this._cos = 1;
+		this._sin = 0;
 
-		const bounds = this.getBounds();
-		// update the corresponding bounds
-		bounds.setMinMax(x, y, x + w, x + h);
-		// elipse position is the center of the cirble, bounds position are top left
-		bounds.translate(-this.radiusV.x, -this.radiusV.y);
+		this.updateBounds();
 
 		return this;
+	}
+
+	/**
+	 * update the bounding box for this ellipse, taking rotation into account
+	 */
+	private updateBounds() {
+		const bounds = this.getBounds();
+		const rx = this.radiusV.x;
+		const ry = this.radiusV.y;
+
+		if (this.angle !== 0) {
+			const cos = this._cos;
+			const sin = this._sin;
+			const halfW = Math.sqrt(rx * rx * cos * cos + ry * ry * sin * sin);
+			const halfH = Math.sqrt(rx * rx * sin * sin + ry * ry * cos * cos);
+			bounds.setMinMax(
+				this.pos.x - halfW,
+				this.pos.y - halfH,
+				this.pos.x + halfW,
+				this.pos.y + halfH,
+			);
+		} else {
+			bounds.setMinMax(
+				this.pos.x - rx,
+				this.pos.y - ry,
+				this.pos.x + rx,
+				this.pos.y + ry,
+			);
+		}
 	}
 
 	/**
@@ -93,11 +142,13 @@ export class Ellipse {
 	 * @returns Reference to this object for method chaining
 	 */
 	rotate(angle: number, v?: Vector2d) {
-		const bounds = this.getBounds();
-		// TODO : only works for circle
-		this.pos.rotate(angle, v);
-		bounds.shift(this.pos);
-		bounds.translate(-this.radiusV.x, -this.radiusV.y);
+		if (v) {
+			this.pos.rotate(angle, v);
+		}
+		this.angle += angle;
+		this._cos = Math.cos(this.angle);
+		this._sin = Math.sin(this.angle);
+		this.updateBounds();
 		return this;
 	}
 
@@ -127,10 +178,39 @@ export class Ellipse {
 
 	/**
 	 * apply the given transformation matrix to this ellipse
+	 * @param m - the transformation matrix
 	 * @returns Reference to this object for method chaining
 	 */
-	transform() {
-		// TODO
+	transform(m: Matrix2d) {
+		const a = m.val;
+
+		// extract translation and apply to position
+		this.pos.x += a[6];
+		this.pos.y += a[7];
+
+		// extract scale from the matrix columns
+		const sx = Math.sqrt(a[0] * a[0] + a[1] * a[1]);
+		const sy = Math.sqrt(a[3] * a[3] + a[4] * a[4]);
+
+		// extract rotation from the matrix
+		const rotation = Math.atan2(a[1], a[0]);
+
+		// apply scale to radii
+		this.radiusV.x *= sx;
+		this.radiusV.y *= sy;
+		this.radius = Math.max(this.radiusV.x, this.radiusV.y);
+		this.radiusSq.set(
+			this.radiusV.x * this.radiusV.x,
+			this.radiusV.y * this.radiusV.y,
+		);
+
+		// apply rotation
+		this.angle += rotation;
+		this._cos = Math.cos(this.angle);
+		this._sin = Math.sin(this.angle);
+
+		this.updateBounds();
+
 		return this;
 	}
 
@@ -160,7 +240,7 @@ export class Ellipse {
 
 		this.pos.x += _x;
 		this.pos.y += _y;
-		this.getBounds().translate(_x, _y);
+		this.updateBounds();
 
 		return this;
 	}
@@ -196,6 +276,18 @@ export class Ellipse {
 		// Make position relative to object center point.
 		_x -= this.pos.x;
 		_y -= this.pos.y;
+
+		// Un-rotate the point if the ellipse is rotated
+		// cos(-θ) = cos(θ), sin(-θ) = -sin(θ)
+		if (this.angle !== 0) {
+			const cos = this._cos;
+			const sin = -this._sin;
+			const rx = _x * cos - _y * sin;
+			const ry = _x * sin + _y * cos;
+			_x = rx;
+			_y = ry;
+		}
+
 		// Pythagorean theorem.
 		return (_x * _x) / this.radiusSq.x + (_y * _y) / this.radiusSq.y <= 1.0;
 	}
@@ -216,12 +308,17 @@ export class Ellipse {
 	 * @returns new Ellipse
 	 */
 	clone() {
-		return new Ellipse(
+		const clone = new Ellipse(
 			this.pos.x,
 			this.pos.y,
 			this.radiusV.x * 2,
 			this.radiusV.y * 2,
 		);
+		clone.angle = this.angle;
+		clone._cos = this._cos;
+		clone._sin = this._sin;
+		clone.updateBounds();
+		return clone;
 	}
 }
 

@@ -353,7 +353,17 @@ export default class Renderer {
 				break;
 
 			case "Ellipse":
-				if (fill) {
+				if (shape.angle !== 0) {
+					this.save();
+					this.translate(shape.pos.x, shape.pos.y);
+					this.rotate(shape.angle);
+					if (fill) {
+						this.fillEllipse(0, 0, shape.radiusV.x, shape.radiusV.y);
+					} else {
+						this.strokeEllipse(0, 0, shape.radiusV.x, shape.radiusV.y);
+					}
+					this.restore();
+				} else if (fill) {
 					this.fillEllipse(
 						shape.pos.x,
 						shape.pos.y,
