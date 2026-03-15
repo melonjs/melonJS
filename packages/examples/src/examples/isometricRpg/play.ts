@@ -103,6 +103,8 @@ export class PlayScreen extends Stage {
 		game.world.gravity.set(0, 0);
 		// load a level
 		level.load("isometric");
+		// enable Y-based depth sorting for proper isometric rendering
+		game.world.sortOn = "y";
 
 		// display a basic tile selector
 		game.world.addChild(new Selector());
