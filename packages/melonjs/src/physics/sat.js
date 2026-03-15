@@ -275,6 +275,30 @@ export function testPolygonPolygon(a, polyA, b, polyB, response) {
  * @returns {boolean} true if the circles intersect, false if they don't.
  */
 export function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
+	const isCircleA = ellipseA.radiusV.x === ellipseA.radiusV.y;
+	const isCircleB = ellipseB.radiusV.x === ellipseB.radiusV.y;
+
+	// If either shape is a true ellipse (not a circle), use polygon approximation
+	if (!isCircleA || !isCircleB) {
+		if (!isCircleA && !isCircleB) {
+			// both are ellipses: convert both to polygons
+			return testPolygonPolygon(
+				a,
+				ellipseA.toPolygon(),
+				b,
+				ellipseB.toPolygon(),
+				response,
+			);
+		} else if (!isCircleA) {
+			// A is ellipse, B is circle
+			return testPolygonEllipse(a, ellipseA.toPolygon(), b, ellipseB, response);
+		} else {
+			// A is circle, B is ellipse
+			return testEllipsePolygon(a, ellipseA, b, ellipseB.toPolygon(), response);
+		}
+	}
+
+	// Fast path: both are circles
 	// Check if the distance between the centers of the two
 	// circles is greater than their combined radius.
 	const differenceV = T_VECTORS[--T_VECTORS_IDX]
@@ -320,6 +344,12 @@ export function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
  * @returns {boolean} true if they intersect, false if they don't.
  */
 export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
+	// If the ellipse is not a circle, convert to polygon and use polygon-polygon test
+	if (ellipseB.radiusV.x !== ellipseB.radiusV.y) {
+		return testPolygonPolygon(a, polyA, b, ellipseB.toPolygon(), response);
+	}
+
+	// Fast path: ellipse is a circle
 	// Get the position of the circle relative to the polygon.
 	const circlePos = T_VECTORS[--T_VECTORS_IDX]
 		.copy(b.pos)

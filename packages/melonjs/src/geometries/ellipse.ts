@@ -2,6 +2,7 @@ import type { Matrix2d } from "../math/matrix2d.ts";
 import { Vector2d, vector2dPool } from "../math/vector2d.ts";
 import { Bounds, boundsPool } from "../physics/bounds.ts";
 import { createPool } from "../system/pool.ts";
+import { Polygon } from "./polygon.ts";
 
 /**
  * an ellipse Object
@@ -28,9 +29,9 @@ export class Ellipse {
 	radiusV: Vector2d;
 
 	/**
-	 * Radius squared, for pythagorean theorom
+	 * Radius squared, for pythagorean theorem
 	 */
-	radiusSq: Vector2d;
+	private radiusSq: Vector2d;
 
 	/**
 	 * x/y scaling ratio for ellipse
@@ -38,9 +39,9 @@ export class Ellipse {
 	ratio: Vector2d;
 
 	/**
-	 * the rotation angle of the ellipse in radians
+	 * the internal rotation angle of the ellipse in radians
 	 */
-	angle: number;
+	private _angle: number;
 
 	/**
 	 * cached cosine of the current angle
@@ -51,6 +52,25 @@ export class Ellipse {
 	 * cached sine of the current angle
 	 */
 	private _sin: number;
+
+	/**
+	 * cached polygon approximation, invalidated when shape changes
+	 */
+	private _polygon: Polygon | null = null;
+
+	/**
+	 * the rotation angle of the ellipse in radians
+	 */
+	get angle() {
+		return this._angle;
+	}
+	set angle(value) {
+		this._angle = value;
+		this._cos = Math.cos(value);
+		this._sin = Math.sin(value);
+		this._polygon = null;
+		this.updateBounds();
+	}
 
 	/**
 	 * the shape type (used internally)
@@ -70,7 +90,7 @@ export class Ellipse {
 		this.radiusV = new Vector2d();
 		this.radiusSq = new Vector2d();
 		this.ratio = vector2dPool.get();
-		this.angle = 0;
+		this._angle = 0;
 		this._cos = 1;
 		this._sin = 0;
 		this.setShape(x, y, w, h);
@@ -97,9 +117,10 @@ export class Ellipse {
 			this.radiusV.x * this.radiusV.x,
 			this.radiusV.y * this.radiusV.y,
 		);
-		this.angle = 0;
+		this._angle = 0;
 		this._cos = 1;
 		this._sin = 0;
+		this._polygon = null;
 
 		this.updateBounds();
 
@@ -110,11 +131,14 @@ export class Ellipse {
 	 * update the bounding box for this ellipse, taking rotation into account
 	 */
 	private updateBounds() {
+		// invalidate cached polygon
+		this._polygon = null;
+
 		const bounds = this.getBounds();
 		const rx = this.radiusV.x;
 		const ry = this.radiusV.y;
 
-		if (this.angle !== 0) {
+		if (this._angle !== 0) {
 			const cos = this._cos;
 			const sin = this._sin;
 			const halfW = Math.sqrt(rx * rx * cos * cos + ry * ry * sin * sin);
@@ -146,9 +170,6 @@ export class Ellipse {
 			this.pos.rotate(angle, v);
 		}
 		this.angle += angle;
-		this._cos = Math.cos(this.angle);
-		this._sin = Math.sin(this.angle);
-		this.updateBounds();
 		return this;
 	}
 
@@ -204,12 +225,8 @@ export class Ellipse {
 			this.radiusV.y * this.radiusV.y,
 		);
 
-		// apply rotation
+		// apply rotation (setter updates trig cache, polygon, and bounds)
 		this.angle += rotation;
-		this._cos = Math.cos(this.angle);
-		this._sin = Math.sin(this.angle);
-
-		this.updateBounds();
 
 		return this;
 	}
@@ -279,7 +296,7 @@ export class Ellipse {
 
 		// Un-rotate the point if the ellipse is rotated
 		// cos(-θ) = cos(θ), sin(-θ) = -sin(θ)
-		if (this.angle !== 0) {
+		if (this._angle !== 0) {
 			const cos = this._cos;
 			const sin = -this._sin;
 			const rx = _x * cos - _y * sin;
@@ -304,6 +321,39 @@ export class Ellipse {
 	}
 
 	/**
+	 * Returns a polygon approximation of this ellipse.
+	 * The polygon is cached and only recomputed when the ellipse shape changes.
+	 * @param [segments=16] - the number of segments to use for the approximation
+	 * @returns a Polygon representing this ellipse
+	 */
+	toPolygon(segments = 16) {
+		if (this._polygon !== null) {
+			return this._polygon;
+		}
+
+		const points: Vector2d[] = [];
+		const cos = this._cos;
+		const sin = this._sin;
+		const rx = this.radiusV.x;
+		const ry = this.radiusV.y;
+		const step = (2 * Math.PI) / segments;
+
+		for (let i = 0; i < segments; i++) {
+			const angle = i * step;
+			const px = rx * Math.cos(angle);
+			const py = ry * Math.sin(angle);
+			points.push(new Vector2d(px * cos - py * sin, px * sin + py * cos));
+		}
+
+		this._polygon = new Polygon(
+			this.pos.x,
+			this.pos.y,
+			points as [Vector2d, Vector2d, Vector2d, ...Vector2d[]],
+		);
+		return this._polygon;
+	}
+
+	/**
 	 * clone this Ellipse
 	 * @returns new Ellipse
 	 */
@@ -314,7 +364,7 @@ export class Ellipse {
 			this.radiusV.x * 2,
 			this.radiusV.y * 2,
 		);
-		clone.angle = this.angle;
+		clone._angle = this._angle;
 		clone._cos = this._cos;
 		clone._sin = this._sin;
 		clone.updateBounds();

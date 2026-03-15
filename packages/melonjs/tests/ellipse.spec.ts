@@ -538,6 +538,367 @@ describe("Shape : Ellipse", () => {
 		});
 	});
 
+	describe("toPolygon", () => {
+		it("returns a Polygon with the correct number of vertices", () => {
+			const ellipse = new Ellipse(0, 0, 100, 100);
+			const poly = ellipse.toPolygon();
+			expect(poly.points.length).toEqual(16);
+		});
+
+		it("respects custom segment count", () => {
+			const ellipse = new Ellipse(0, 0, 100, 100);
+			const poly = ellipse.toPolygon(8);
+			expect(poly.points.length).toEqual(8);
+		});
+
+		it("polygon position matches ellipse center", () => {
+			const ellipse = new Ellipse(50, 30, 100, 60);
+			const poly = ellipse.toPolygon();
+			expect(poly.pos.x).toEqual(50);
+			expect(poly.pos.y).toEqual(30);
+		});
+
+		it("vertices lie on the ellipse boundary", () => {
+			const ellipse = new Ellipse(0, 0, 200, 100);
+			const poly = ellipse.toPolygon(32);
+			const rx = 100;
+			const ry = 50;
+			for (const point of poly.points) {
+				const val =
+					(point.x * point.x) / (rx * rx) + (point.y * point.y) / (ry * ry);
+				expect(val).toBeCloseTo(1.0);
+			}
+		});
+
+		it("returns cached polygon on subsequent calls", () => {
+			const ellipse = new Ellipse(0, 0, 200, 100);
+			const poly1 = ellipse.toPolygon();
+			const poly2 = ellipse.toPolygon();
+			expect(poly1).toBe(poly2);
+		});
+
+		it("invalidates cache after rotate", () => {
+			const ellipse = new Ellipse(0, 0, 200, 100);
+			const poly1 = ellipse.toPolygon();
+			ellipse.rotate(Math.PI / 4);
+			const poly2 = ellipse.toPolygon();
+			expect(poly1).not.toBe(poly2);
+		});
+
+		it("invalidates cache after setShape", () => {
+			const ellipse = new Ellipse(0, 0, 200, 100);
+			const poly1 = ellipse.toPolygon();
+			ellipse.setShape(0, 0, 100, 50);
+			const poly2 = ellipse.toPolygon();
+			expect(poly1).not.toBe(poly2);
+		});
+
+		it("invalidates cache after transform", () => {
+			const ellipse = new Ellipse(0, 0, 200, 100);
+			const poly1 = ellipse.toPolygon();
+			const m = new Matrix2d();
+			m.scale(2, 2);
+			ellipse.transform(m);
+			const poly2 = ellipse.toPolygon();
+			expect(poly1).not.toBe(poly2);
+		});
+
+		it("invalidates cache after translate", () => {
+			const ellipse = new Ellipse(0, 0, 200, 100);
+			const poly1 = ellipse.toPolygon();
+			ellipse.translate(10, 10);
+			const poly2 = ellipse.toPolygon();
+			expect(poly1).not.toBe(poly2);
+		});
+
+		it("rotated ellipse produces rotated polygon vertices", () => {
+			const ellipse = new Ellipse(0, 0, 200, 100);
+			ellipse.rotate(Math.PI / 2);
+			const poly = ellipse.toPolygon(4);
+			// at 0°: (rx, 0) rotated 90° → (0, rx)
+			// first vertex should be near (0, 100)
+			expect(poly.points[0].x).toBeCloseTo(0);
+			expect(poly.points[0].y).toBeCloseTo(100);
+		});
+
+		it("polygon vertices match after angle setter", () => {
+			const ellipse = new Ellipse(0, 0, 200, 100);
+			ellipse.angle = Math.PI / 2;
+			const poly = ellipse.toPolygon(32);
+			const rx = ellipse.radiusV.x;
+			const ry = ellipse.radiusV.y;
+			const cos = Math.cos(ellipse.angle);
+			const sin = Math.sin(ellipse.angle);
+			for (const point of poly.points) {
+				// un-rotate point back to axis-aligned frame
+				const ux = point.x * cos + point.y * sin;
+				const uy = -point.x * sin + point.y * cos;
+				const val = (ux * ux) / (rx * rx) + (uy * uy) / (ry * ry);
+				expect(val).toBeCloseTo(1.0);
+			}
+		});
+
+		it("polygon vertices match after rotate()", () => {
+			const ellipse = new Ellipse(0, 0, 200, 100);
+			ellipse.rotate(Math.PI / 3);
+			const poly = ellipse.toPolygon(32);
+			const rx = ellipse.radiusV.x;
+			const ry = ellipse.radiusV.y;
+			const cos = Math.cos(ellipse.angle);
+			const sin = Math.sin(ellipse.angle);
+			for (const point of poly.points) {
+				const ux = point.x * cos + point.y * sin;
+				const uy = -point.x * sin + point.y * cos;
+				const val = (ux * ux) / (rx * rx) + (uy * uy) / (ry * ry);
+				expect(val).toBeCloseTo(1.0);
+			}
+		});
+
+		it("polygon vertices match after scale() non-uniform", () => {
+			const ellipse = new Ellipse(0, 0, 200, 100);
+			ellipse.scale(2, 0.5);
+			const poly = ellipse.toPolygon(32);
+			const rx = ellipse.radiusV.x;
+			const ry = ellipse.radiusV.y;
+			for (const point of poly.points) {
+				const val =
+					(point.x * point.x) / (rx * rx) + (point.y * point.y) / (ry * ry);
+				expect(val).toBeCloseTo(1.0);
+			}
+		});
+
+		it("polygon vertices match after scale() uniform", () => {
+			const ellipse = new Ellipse(0, 0, 200, 100);
+			ellipse.scale(3);
+			const poly = ellipse.toPolygon(32);
+			const rx = ellipse.radiusV.x;
+			const ry = ellipse.radiusV.y;
+			for (const point of poly.points) {
+				const val =
+					(point.x * point.x) / (rx * rx) + (point.y * point.y) / (ry * ry);
+				expect(val).toBeCloseTo(1.0);
+			}
+		});
+
+		it("polygon vertices match after scaleV()", () => {
+			const ellipse = new Ellipse(0, 0, 200, 100);
+			ellipse.scaleV(new Vector2d(2, 3));
+			const poly = ellipse.toPolygon(32);
+			const rx = ellipse.radiusV.x;
+			const ry = ellipse.radiusV.y;
+			for (const point of poly.points) {
+				const val =
+					(point.x * point.x) / (rx * rx) + (point.y * point.y) / (ry * ry);
+				expect(val).toBeCloseTo(1.0);
+			}
+		});
+
+		it("polygon vertices match after rotate() with pivot", () => {
+			const ellipse = new Ellipse(100, 0, 200, 100);
+			ellipse.rotate(Math.PI / 2, new Vector2d(0, 0));
+			const poly = ellipse.toPolygon(32);
+			const rx = ellipse.radiusV.x;
+			const ry = ellipse.radiusV.y;
+			const cos = Math.cos(ellipse.angle);
+			const sin = Math.sin(ellipse.angle);
+			expect(poly.pos.x).toBeCloseTo(0);
+			expect(poly.pos.y).toBeCloseTo(100);
+			for (const point of poly.points) {
+				const ux = point.x * cos + point.y * sin;
+				const uy = -point.x * sin + point.y * cos;
+				const val = (ux * ux) / (rx * rx) + (uy * uy) / (ry * ry);
+				expect(val).toBeCloseTo(1.0);
+			}
+		});
+
+		it("polygon position matches after translate(Vector2d)", () => {
+			const ellipse = new Ellipse(0, 0, 200, 100);
+			ellipse.translate(new Vector2d(50, 30));
+			const poly = ellipse.toPolygon(32);
+			expect(poly.pos.x).toEqual(50);
+			expect(poly.pos.y).toEqual(30);
+			const rx = ellipse.radiusV.x;
+			const ry = ellipse.radiusV.y;
+			for (const point of poly.points) {
+				const val =
+					(point.x * point.x) / (rx * rx) + (point.y * point.y) / (ry * ry);
+				expect(val).toBeCloseTo(1.0);
+			}
+		});
+
+		it("polygon vertices match on cloned rotated ellipse", () => {
+			const ellipse = new Ellipse(0, 0, 200, 100);
+			ellipse.rotate(Math.PI / 3);
+			const cloned = ellipse.clone();
+			const poly = cloned.toPolygon(32);
+			const rx = cloned.radiusV.x;
+			const ry = cloned.radiusV.y;
+			const cos = Math.cos(cloned.angle);
+			const sin = Math.sin(cloned.angle);
+			for (const point of poly.points) {
+				const ux = point.x * cos + point.y * sin;
+				const uy = -point.x * sin + point.y * cos;
+				const val = (ux * ux) / (rx * rx) + (uy * uy) / (ry * ry);
+				expect(val).toBeCloseTo(1.0);
+			}
+		});
+
+		it("polygon position matches after translate()", () => {
+			const ellipse = new Ellipse(0, 0, 200, 100);
+			ellipse.translate(50, 30);
+			const poly = ellipse.toPolygon(32);
+			expect(poly.pos.x).toEqual(50);
+			expect(poly.pos.y).toEqual(30);
+			// vertices are relative to pos, so they should still lie on the boundary
+			const rx = ellipse.radiusV.x;
+			const ry = ellipse.radiusV.y;
+			for (const point of poly.points) {
+				const val =
+					(point.x * point.x) / (rx * rx) + (point.y * point.y) / (ry * ry);
+				expect(val).toBeCloseTo(1.0);
+			}
+		});
+
+		it("polygon vertices match after setShape()", () => {
+			const ellipse = new Ellipse(0, 0, 200, 100);
+			ellipse.setShape(10, 20, 300, 60);
+			const poly = ellipse.toPolygon(32);
+			expect(poly.pos.x).toEqual(10);
+			expect(poly.pos.y).toEqual(20);
+			const rx = ellipse.radiusV.x;
+			const ry = ellipse.radiusV.y;
+			for (const point of poly.points) {
+				const val =
+					(point.x * point.x) / (rx * rx) + (point.y * point.y) / (ry * ry);
+				expect(val).toBeCloseTo(1.0);
+			}
+		});
+
+		it("polygon vertices match after transform()", () => {
+			const ellipse = new Ellipse(0, 0, 100, 100);
+			const m = new Matrix2d();
+			m.scale(2, 3);
+			m.rotate(Math.PI / 6);
+			ellipse.transform(m);
+			const poly = ellipse.toPolygon(32);
+			const rx = ellipse.radiusV.x;
+			const ry = ellipse.radiusV.y;
+			const cos = Math.cos(ellipse.angle);
+			const sin = Math.sin(ellipse.angle);
+			for (const point of poly.points) {
+				const ux = point.x * cos + point.y * sin;
+				const uy = -point.x * sin + point.y * cos;
+				const val = (ux * ux) / (rx * rx) + (uy * uy) / (ry * ry);
+				expect(val).toBeCloseTo(1.0);
+			}
+		});
+	});
+
+	describe("angle setter", () => {
+		it("auto-updates contains without manual recalc", () => {
+			const ellipse = new Ellipse(0, 0, 200, 100);
+			ellipse.angle = Math.PI / 2;
+			expect(ellipse.contains(0, 90)).toEqual(true);
+			expect(ellipse.contains(90, 0)).toEqual(false);
+		});
+
+		it("auto-invalidates polygon cache", () => {
+			const ellipse = new Ellipse(0, 0, 200, 100);
+			const poly1 = ellipse.toPolygon();
+			ellipse.angle = Math.PI / 4;
+			const poly2 = ellipse.toPolygon();
+			expect(poly1).not.toBe(poly2);
+		});
+	});
+
+	describe("bounds after mutations", () => {
+		it("bounds update after angle setter", () => {
+			const ellipse = new Ellipse(0, 0, 200, 100);
+			ellipse.angle = Math.PI / 2;
+			const bounds = ellipse.getBounds();
+			// 90° rotation swaps dimensions
+			expect(bounds.width).toBeCloseTo(100);
+			expect(bounds.height).toBeCloseTo(200);
+		});
+
+		it("bounds update after setShape", () => {
+			const ellipse = new Ellipse(0, 0, 100, 100);
+			ellipse.setShape(50, 50, 300, 60);
+			const bounds = ellipse.getBounds();
+			expect(bounds.x).toBeCloseTo(-100);
+			expect(bounds.y).toBeCloseTo(20);
+			expect(bounds.width).toBeCloseTo(300);
+			expect(bounds.height).toBeCloseTo(60);
+		});
+
+		it("bounds update after rotate with pivot", () => {
+			const ellipse = new Ellipse(100, 0, 60, 40);
+			ellipse.rotate(Math.PI / 2, new Vector2d(0, 0));
+			const bounds = ellipse.getBounds();
+			// center moved to (0, 100), rx=30, ry=20, rotated 90° → bounds width=40, height=60
+			expect(bounds.x).toBeCloseTo(-20);
+			expect(bounds.y).toBeCloseTo(70);
+			expect(bounds.width).toBeCloseTo(40);
+			expect(bounds.height).toBeCloseTo(60);
+		});
+
+		it("bounds update after scale() uniform", () => {
+			const ellipse = new Ellipse(0, 0, 200, 100);
+			ellipse.scale(3);
+			const bounds = ellipse.getBounds();
+			expect(bounds.x).toBeCloseTo(-300);
+			expect(bounds.y).toBeCloseTo(-150);
+			expect(bounds.width).toBeCloseTo(600);
+			expect(bounds.height).toBeCloseTo(300);
+		});
+
+		it("bounds update after scale() non-uniform", () => {
+			const ellipse = new Ellipse(0, 0, 200, 100);
+			ellipse.scale(2, 0.5);
+			const bounds = ellipse.getBounds();
+			expect(bounds.x).toBeCloseTo(-200);
+			expect(bounds.y).toBeCloseTo(-25);
+			expect(bounds.width).toBeCloseTo(400);
+			expect(bounds.height).toBeCloseTo(50);
+		});
+
+		it("bounds update after scaleV()", () => {
+			const ellipse = new Ellipse(0, 0, 200, 100);
+			ellipse.scaleV(new Vector2d(2, 3));
+			const bounds = ellipse.getBounds();
+			expect(bounds.x).toBeCloseTo(-200);
+			expect(bounds.y).toBeCloseTo(-150);
+			expect(bounds.width).toBeCloseTo(400);
+			expect(bounds.height).toBeCloseTo(300);
+		});
+
+		it("bounds update after translate(Vector2d)", () => {
+			const ellipse = new Ellipse(0, 0, 60, 40);
+			ellipse.translate(new Vector2d(100, 200));
+			const bounds = ellipse.getBounds();
+			expect(bounds.x).toBeCloseTo(70);
+			expect(bounds.y).toBeCloseTo(180);
+			expect(bounds.width).toBeCloseTo(60);
+			expect(bounds.height).toBeCloseTo(40);
+		});
+
+		it("bounds update after angle setter on rotated ellipse", () => {
+			const ellipse = new Ellipse(0, 0, 200, 100);
+			ellipse.angle = Math.PI / 4;
+			const bounds = ellipse.getBounds();
+			const rx = 100;
+			const ry = 50;
+			const cos = Math.cos(Math.PI / 4);
+			const sin = Math.sin(Math.PI / 4);
+			const expectedW =
+				2 * Math.sqrt(rx * rx * cos * cos + ry * ry * sin * sin);
+			const expectedH =
+				2 * Math.sqrt(rx * rx * sin * sin + ry * ry * cos * cos);
+			expect(bounds.width).toBeCloseTo(expectedW);
+			expect(bounds.height).toBeCloseTo(expectedH);
+		});
+	});
+
 	describe("type", () => {
 		it("type is 'Ellipse'", () => {
 			const ellipse = new Ellipse(0, 0, 100, 100);

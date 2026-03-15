@@ -3,10 +3,10 @@
 ## [18.1.0] (melonJS 2)
 
 ### Added
-- Ellipse: add rotation and matrix transform support
+- Ellipse: add rotation and matrix transform support (#583, #771)
+- Ellipse: proper SAT collision detection for non-circular ellipses via polygon approximation (#584)
 - WebGLRenderer: compressed texture support — DDS (DXT1/DXT3/DXT5/BC7), KTX v1, KTX2, PVR (PVRTC/S3TC/ETC1), and PKM (ETC1/ETC2) parsers (#1182)
 - Loader: image asset fallback chains — provide an array of sources (e.g. compressed texture formats by priority, with a PNG fallback) and the loader will try each in order until one succeeds
-- WebGLRenderer: synthesize ETC1 support when ETC2 is available (ETC2 is a superset of ETC1)
 - Renderer: new `RenderState` class with pre-allocated save/restore stacks for zero-allocation state management
 - WebGLRenderer: `lineWidth` now works for all primitive drawing methods via a proper shader-based implementation (#999)
 

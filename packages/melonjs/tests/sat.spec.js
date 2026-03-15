@@ -498,6 +498,154 @@ describe("Physics : SAT (Separating Axis Theorem)", () => {
 		});
 	});
 
+	describe("testEllipseEllipse (true ellipses)", () => {
+		let response;
+
+		beforeEach(() => {
+			response = new ResponseObject();
+		});
+
+		it("should detect collision between two overlapping ellipses", () => {
+			const a = createMockRenderable(0, 0);
+			const b = createMockRenderable(60, 0);
+			// wide ellipse: rx=50, ry=20
+			const ellipseA = new Ellipse(0, 0, 100, 40);
+			const ellipseB = new Ellipse(0, 0, 100, 40);
+
+			const result = testEllipseEllipse(a, ellipseA, b, ellipseB, response);
+			expect(result).toBe(true);
+			expect(response.overlap).toBeGreaterThan(0);
+		});
+
+		it("should not detect collision along the minor axis when separated", () => {
+			const a = createMockRenderable(0, 0);
+			const b = createMockRenderable(0, 30);
+			// wide ellipse: rx=50, ry=10
+			const ellipseA = new Ellipse(0, 0, 100, 20);
+			const ellipseB = new Ellipse(0, 0, 100, 20);
+
+			// old circle-based test would say collision (radius=50, distance=30)
+			// but actual ellipse minor axis is only 10, so gap of 10
+			const result = testEllipseEllipse(a, ellipseA, b, ellipseB, response);
+			expect(result).toBe(false);
+		});
+
+		it("should detect collision between rotated ellipses", () => {
+			const a = createMockRenderable(0, 0);
+			const b = createMockRenderable(0, 60);
+			// wide ellipse: rx=50, ry=10
+			const ellipseA = new Ellipse(0, 0, 100, 20);
+			const ellipseB = new Ellipse(0, 0, 100, 20);
+			// rotate A 90° so its major axis is now vertical
+			ellipseA.rotate(Math.PI / 2);
+
+			// A's major axis (50) is now vertical, B is at y=60 with ry=10
+			// should collide: A extends to y=50, B starts at y=50
+			const result = testEllipseEllipse(a, ellipseA, b, ellipseB, response);
+			expect(result).toBe(true);
+		});
+
+		it("should detect collision between ellipse and circle", () => {
+			const a = createMockRenderable(0, 0);
+			const b = createMockRenderable(55, 0);
+			const ellipseA = new Ellipse(0, 0, 100, 40); // rx=50, ry=20
+			const circleB = new Ellipse(0, 0, 20, 20); // radius 10
+
+			const result = testEllipseEllipse(a, ellipseA, b, circleB, response);
+			expect(result).toBe(true);
+			expect(response.overlap).toBeGreaterThan(0);
+		});
+
+		it("should not collide when ellipse minor axis faces the other shape", () => {
+			const a = createMockRenderable(0, 0);
+			const b = createMockRenderable(0, 25);
+			const ellipseA = new Ellipse(0, 0, 100, 20); // rx=50, ry=10
+			const circleB = new Ellipse(0, 0, 20, 20); // radius 10
+
+			// circle at y=25, radius 10 → reaches y=15
+			// ellipse minor axis ry=10 → reaches y=10
+			// gap of 5
+			const result = testEllipseEllipse(a, ellipseA, b, circleB, response);
+			expect(result).toBe(false);
+		});
+	});
+
+	describe("testPolygonEllipse (true ellipses)", () => {
+		let response;
+
+		beforeEach(() => {
+			response = new ResponseObject();
+		});
+
+		it("should detect collision between rectangle and ellipse along major axis", () => {
+			const a = createMockRenderable(0, 0);
+			const b = createMockRenderable(40, 0);
+			const polyA = new Rect(0, 0, 32, 32);
+			const ellipseB = new Ellipse(0, 0, 100, 20); // rx=50, ry=10
+
+			// rect right edge at x=32, ellipse left edge at x=40-50=-10
+			const result = testPolygonEllipse(a, polyA, b, ellipseB, response);
+			expect(result).toBe(true);
+			expect(response.overlap).toBeGreaterThan(0);
+		});
+
+		it("should not detect collision along ellipse minor axis", () => {
+			const a = createMockRenderable(0, 0);
+			const b = createMockRenderable(16, 50);
+			const polyA = new Rect(0, 0, 32, 32);
+			const ellipseB = new Ellipse(0, 0, 100, 20); // rx=50, ry=10
+
+			// rect bottom edge at y=32, ellipse top at y=50-10=40
+			// gap of 8
+			const result = testPolygonEllipse(a, polyA, b, ellipseB, response);
+			expect(result).toBe(false);
+		});
+
+		it("should detect collision with rotated ellipse", () => {
+			const a = createMockRenderable(0, 0);
+			const b = createMockRenderable(16, 50);
+			const polyA = new Rect(0, 0, 32, 32);
+			const ellipseB = new Ellipse(0, 0, 100, 20); // rx=50, ry=10
+			// rotate 90° so major axis is now vertical
+			ellipseB.rotate(Math.PI / 2);
+
+			// now ellipse extends 50 vertically from center at y=50
+			// so it reaches y=0 to y=100, rect is y=0 to y=32
+			const result = testPolygonEllipse(a, polyA, b, ellipseB, response);
+			expect(result).toBe(true);
+		});
+	});
+
+	describe("testEllipsePolygon (true ellipses)", () => {
+		let response;
+
+		beforeEach(() => {
+			response = new ResponseObject();
+		});
+
+		it("should detect collision (reverse of testPolygonEllipse)", () => {
+			const a = createMockRenderable(40, 0);
+			const b = createMockRenderable(0, 0);
+			const ellipseA = new Ellipse(0, 0, 100, 20); // rx=50, ry=10
+			const polyB = new Rect(0, 0, 32, 32);
+
+			const result = testEllipsePolygon(a, ellipseA, b, polyB, response);
+			expect(result).toBe(true);
+			expect(response.a).toBe(a);
+			expect(response.b).toBe(b);
+		});
+
+		it("should not detect collision along minor axis", () => {
+			const a = createMockRenderable(16, 50);
+			const b = createMockRenderable(0, 0);
+			const ellipseA = new Ellipse(0, 0, 100, 20); // rx=50, ry=10
+			const polyB = new Rect(0, 0, 32, 32);
+
+			const result = testEllipsePolygon(a, ellipseA, b, polyB, response);
+			expect(result).toBe(false);
+		});
+	});
+
 	describe("Vector pool integrity", () => {
 		it("should handle rapid alternating collision types without corruption", () => {
 			const response = new ResponseObject();
