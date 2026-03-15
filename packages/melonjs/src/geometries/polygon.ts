@@ -174,9 +174,25 @@ export class Polygon {
 		if (angle !== 0) {
 			const points = this.points;
 			const len = points.length;
-			for (let i = 0; i < len; i++) {
-				points[i].rotate(angle, v);
+			const cos = Math.cos(angle);
+			const sin = Math.sin(angle);
+
+			if (v) {
+				for (let i = 0; i < len; i++) {
+					const x = points[i].x - v.x;
+					const y = points[i].y - v.y;
+					points[i].x = x * cos - y * sin + v.x;
+					points[i].y = x * sin + y * cos + v.y;
+				}
+			} else {
+				for (let i = 0; i < len; i++) {
+					const x = points[i].x;
+					const y = points[i].y;
+					points[i].x = x * cos - y * sin;
+					points[i].y = x * sin + y * cos;
+				}
 			}
+
 			this.recalc();
 			this.updateBounds();
 		}
@@ -230,16 +246,25 @@ export class Polygon {
 		// Calculate the edges/normals
 		for (let i = 0; i < len; i++) {
 			let edge = edges[i];
-			if (typeof edge === "undefined") {
+			if (edge === undefined) {
 				edge = edges[i] = vector2dPool.get();
 			}
-			edge.copy(points[(i + 1) % len]).sub(points[i]);
+
+			const next = i + 1 < len ? i + 1 : 0;
+			const ex = points[next].x - points[i].x;
+			const ey = points[next].y - points[i].y;
+			edge.x = ex;
+			edge.y = ey;
 
 			let normal = normals[i];
-			if (typeof normal === "undefined") {
+			if (normal === undefined) {
 				normal = normals[i] = vector2dPool.get();
 			}
-			normal.copy(edge).perp().normalize();
+
+			// perp of (ex, ey) is (ey, -ex), then normalize
+			const nlen = Math.sqrt(ey * ey + ex * ex);
+			normal.x = ey / nlen;
+			normal.y = -ex / nlen;
 		}
 
 		// Release any existing Vector2d objects back to the pool
@@ -265,11 +290,14 @@ export class Polygon {
 	 */
 	getIndices() {
 		if (this.indices.length === 0) {
-			this.indices = earcut(
-				this.points.flatMap((p) => {
-					return [p.x, p.y];
-				}),
-			);
+			const points = this.points;
+			const len = points.length;
+			const flat = new Array(len * 2);
+			for (let i = 0; i < len; i++) {
+				flat[i * 2] = points[i].x;
+				flat[i * 2 + 1] = points[i].y;
+			}
+			this.indices = earcut(flat);
 		}
 		return this.indices;
 	}
@@ -391,10 +419,16 @@ export class Polygon {
 	contains(x: number, y: number): boolean;
 	contains(vector: Vector2d): boolean;
 	contains(xOrVector: Vector2d | number, y?: number) {
-		const [_x, _y]: [number, number] =
-			xOrVector instanceof Vector2d
-				? [xOrVector.x, xOrVector.y]
-				: [xOrVector, y!];
+		let _x: number;
+		let _y: number;
+
+		if (xOrVector instanceof Vector2d) {
+			_x = xOrVector.x;
+			_y = xOrVector.y;
+		} else {
+			_x = xOrVector;
+			_y = y!;
+		}
 
 		let intersects = false;
 		const posx = this.pos.x;
