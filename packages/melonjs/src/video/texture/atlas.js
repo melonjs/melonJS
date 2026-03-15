@@ -121,6 +121,12 @@ export class TextureAtlas {
 		 */
 		this.activeAtlas = undefined;
 
+		/**
+		 * UV lookup cache to avoid per-frame string allocation in drawImage
+		 * @ignore
+		 */
+		this._uvCache = { sx: -1, sy: -1, sw: -1, sh: -1, uvs: null };
+
 		// parse given atlas(es) paremeters
 		if (typeof atlases !== "undefined") {
 			// normalize to array to keep the following code generic
@@ -324,21 +330,46 @@ export class TextureAtlas {
 
 	/**
 	 * return the uvs mapping for the given region
-	 * @param {object} name - region (or frame) name
+	 * @param {string|number} name - region (or frame) name, or sx when using numeric parameters
+	 * @param {number} [sy] - source y coordinate (when using numeric parameters)
+	 * @param {number} [sw] - source width (when using numeric parameters)
+	 * @param {number} [sh] - source height (when using numeric parameters)
 	 * @returns {Float32Array} region Uvs
 	 */
-	getUVs(name) {
-		// Get the source texture region
+	getUVs(name, sy, sw, sh) {
+		if (typeof name === "number") {
+			const sx = name;
+			const cache = this._uvCache;
+			// fast path: return cached UVs if coordinates match last lookup
+			if (
+				sx === cache.sx &&
+				sy === cache.sy &&
+				sw === cache.sw &&
+				sh === cache.sh
+			) {
+				return cache.uvs;
+			}
+			// cache miss: fall back to string-keyed region lookup
+			const key = sx + "," + sy + "," + sw + "," + sh;
+			let region = this.getRegion(key);
+			if (typeof region === "undefined") {
+				region = this.addRegion(key, sx, sy, sw, sh);
+			}
+			cache.sx = sx;
+			cache.sy = sy;
+			cache.sw = sw;
+			cache.sh = sh;
+			cache.uvs = region.uvs;
+			return region.uvs;
+		}
+
+		// string-based lookup (named regions)
 		let region = this.getRegion(name);
 
 		if (typeof region === "undefined") {
 			// TODO: Require proper atlas regions instead of caching arbitrary region keys
 			const keys = name.split(",");
-			const sx = +keys[0];
-			const sy = +keys[1];
-			const sw = +keys[2];
-			const sh = +keys[3];
-			region = this.addRegion(name, sx, sy, sw, sh);
+			region = this.addRegion(name, +keys[0], +keys[1], +keys[2], +keys[3]);
 		}
 		return region.uvs;
 	}

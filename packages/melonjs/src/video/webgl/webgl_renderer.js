@@ -569,7 +569,7 @@ export default class WebGLRenderer extends Renderer {
 		// force reuploading if the given image is a HTMLVideoElement
 		const reupload = typeof image.videoWidth !== "undefined";
 		const texture = this.cache.get(image);
-		const uvs = texture.getUVs(sx + "," + sy + "," + sw + "," + sh);
+		const uvs = texture.getUVs(sx, sy, sw, sh);
 		this.currentCompositor.addQuad(
 			texture,
 			dx,
