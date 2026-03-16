@@ -9,7 +9,7 @@ import Container from "../../renderable/container.js";
 import { eventEmitter, VIEWPORT_ONRESIZE } from "../../system/event.ts";
 import pool from "../../system/legacy_pool.js";
 import { checkVersion } from "./../../utils/utils.ts";
-import { COLLISION_GROUP } from "./constants.js";
+import { COLLISION_GROUP, TILED_SUPPORTED_VERSION } from "./constants.js";
 import { getNewTMXRenderer } from "./renderer/autodetect.js";
 import TMXGroup from "./TMXGroup.js";
 import TMXLayer from "./TMXLayer.js";
@@ -218,6 +218,18 @@ export default class TMXTileMap {
 					"(" + this.name + ") Tiled Map format version 1.4 and below",
 					"format 1.5 or higher",
 					"10.4.4",
+				);
+			}
+			// warning if map version is newer than what we currently support
+			if (checkVersion(this.version, TILED_SUPPORTED_VERSION) > 0) {
+				console.warn(
+					"(" +
+						this.name +
+						") Tiled Map format version " +
+						this.version +
+						" is newer than the currently supported version " +
+						TILED_SUPPORTED_VERSION +
+						". Some features may not work as expected.",
 				);
 			}
 		}

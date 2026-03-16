@@ -145,31 +145,25 @@ export function applyPatches(panel) {
 		if (panel.visible && panel.options.hitbox) {
 			renderer.save();
 
-			// undo ancestor world transform for non-floating entities
-			if (this.ancestor !== undefined && !this.floating) {
-				const absPos = this.ancestor.getAbsolutePosition();
-				renderer.translate(-absPos.x, -absPos.y);
-			}
-
 			const bodyBounds = this.body.getBounds();
 
-			// entity renderable bounding box (green)
+			// entity renderable bounding box (green) — drawn in entity's
+			// preDraw local space where origin = entity anchor point
 			if (this.renderable instanceof Renderable) {
-				const rbounds = this.renderable.getBounds();
-				renderer.save();
-				renderer.translate(
-					-rbounds.x - this.anchorPoint.x * rbounds.width,
-					-rbounds.y - this.anchorPoint.y * rbounds.height,
-				);
+				const r = this.renderable;
 				renderer.setColor("green");
-				renderer.stroke(rbounds);
-				renderer.restore();
+				renderer.strokeRect(
+					-r.anchorPoint.x * r.width,
+					-r.anchorPoint.y * r.height,
+					r.width,
+					r.height,
+				);
 			}
 
-			// body bounds (orange) and collision shapes (red)
+			// move from anchor point to body origin for body/collision overlays
 			renderer.translate(
-				bodyBounds.x - this.anchorPoint.x * bodyBounds.width,
-				bodyBounds.y - this.anchorPoint.y * bodyBounds.height,
+				-this.anchorPoint.x * bodyBounds.width,
+				-this.anchorPoint.y * bodyBounds.height,
 			);
 
 			renderer.setColor("orange");
