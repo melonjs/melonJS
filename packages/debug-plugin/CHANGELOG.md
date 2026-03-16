@@ -1,5 +1,13 @@
 # Changelog
 
+## 15.0.1
+
+### Bug Fixes
+- Fixed Entity debug overlay drawing in local coordinate space instead of attempting world-coordinate conversion
+  - Green box (renderable bounds) now correctly uses `strokeRect` with the renderable's anchor and dimensions
+  - Orange/red boxes (body bounds and collision shapes) translate from anchor point to body origin before drawing
+  - Fixes overlays being mispositioned for entities with non-zero anchor points or trimmed atlas sprites
+
 ## 15.0.0
 
 ### Breaking Changes
