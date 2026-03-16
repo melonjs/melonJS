@@ -23,6 +23,10 @@
 - Renderer: fix `PrimitiveCompositor.drawVertices()` ignoring the `vertexCount` parameter
 - Texture: fix tint cache bug where `Map.set()` return value was incorrectly used as the inner cache map, causing duplicate tinted images to be created
 - TMX: fix crash when loading XML maps due to missing node type guard in the XML parser
+- Sprite: fix body-renderable misalignment when using `createAnimationFromName()` with trimmed TexturePacker atlas frames (#1201)
+- Sprite: fix visual "vibration" on flip with trimmed atlas frames — stable dimensions and anchor across all frames (#1214)
+- Sprite: fix sprite jumping on rotated atlas frames — trim offset now applied after rotation with correct coordinate transform
+- Entity: auto-inherit renderable's anchorPoint when entity anchor is at default (0,0), aligning body and sprite centers
 
 ### Performance
 - Path2D: replace `Math.pow()` with inline multiplication in quadratic/cubic Bézier and arc interpolation
