@@ -49,6 +49,7 @@ export function parseTexturePacker(data, textureAtlas) {
 				trim: trim,
 				width: s.w,
 				height: s.h,
+				sourceSize: frame.sourceSize || { w: s.w, h: s.h },
 				angle: frame.rotated === true ? -ETA : 0,
 			};
 			textureAtlas.addUVs(

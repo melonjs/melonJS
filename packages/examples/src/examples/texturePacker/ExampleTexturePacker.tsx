@@ -1,7 +1,9 @@
+import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import {
 	Entity,
 	game,
 	loader,
+	plugin,
 	type Sprite,
 	Stage,
 	state,
@@ -16,7 +18,7 @@ let texture: TextureAtlas;
 
 class CapGuyEntity extends Entity {
 	constructor() {
-		super(0, 200, { width: 100, height: 300 });
+		super(0, 50, { width: 100, height: 300 });
 		this.body.setStatic();
 		this.renderable = texture.createAnimationFromName([
 			"capguy/walk/0001",
@@ -62,6 +64,9 @@ const createGame = () => {
 		alert("Your browser does not support HTML5 canvas.");
 		return;
 	}
+
+	// register the debug plugin
+	plugin.register(DebugPanelPlugin, "debugPanel");
 
 	const resources = [
 		{ name: "cityscene", type: "json", src: `${base}cityscene.json` },

@@ -501,9 +501,12 @@ export class TextureAtlas {
 			tpAtlas.push(region);
 			// save the corresponding index
 			indices[name] = tpAtlas.length - 1;
+			// use sourceSize (original untrimmed size) if available for stable bounds
+			const frameW = region.sourceSize ? region.sourceSize.w : region.width;
+			const frameH = region.sourceSize ? region.sourceSize.h : region.height;
 			// calculate the max size of a frame
-			width = Math.max(region.width, width);
-			height = Math.max(region.height, height);
+			width = Math.max(frameW, width);
+			height = Math.max(frameH, height);
 		}
 
 		// instantiate a new animation sheet object

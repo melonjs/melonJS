@@ -125,6 +125,8 @@ export default class Sprite extends Renderable {
 			angle: 0,
 			// current frame index
 			idx: 0,
+			// trim offset for trimmed sprites
+			trim: null,
 		};
 
 		// animation frame delta
@@ -544,20 +546,42 @@ export default class Sprite extends Renderable {
 		this.current.offset.setV(region.offset);
 		// set angle if defined
 		this.current.angle = typeof region.angle === "number" ? region.angle : 0;
-		// update the default "current" size
-		this.width = this.current.width = region.width;
-		this.height = this.current.height = region.height;
-		// set global anchortPoint if defined
-		if (region.anchorPoint) {
-			this.anchorPoint.setMuted(
-				this._flip.x && region.trimmed === true
-					? 1 - region.anchorPoint.x
-					: region.anchorPoint.x,
-				this._flip.y && region.trimmed === true
-					? 1 - region.anchorPoint.y
-					: region.anchorPoint.y,
-			);
+		// update the current frame size (trimmed dimensions, used for drawing)
+		this.current.width = region.width;
+		this.current.height = region.height;
+		// cache trim offset for drawing
+		this.current.trim = region.trim || null;
+
+		if (region.trimmed && region.sourceSize) {
+			// use the original untrimmed size for stable bounds across trimmed frames
+			this.width = region.sourceSize.w;
+			this.height = region.sourceSize.h;
+			// recover the original pivot relative to sourceSize for stable anchor
+			if (region.anchorPoint) {
+				const pivotX =
+					(region.trim.x + region.width * region.anchorPoint.x) / this.width;
+				const pivotY =
+					(region.trim.y + region.height * region.anchorPoint.y) / this.height;
+				this.anchorPoint.setMuted(
+					this._flip.x ? 1 - pivotX : pivotX,
+					this._flip.y ? 1 - pivotY : pivotY,
+				);
+			}
+		} else {
+			this.width = region.width;
+			this.height = region.height;
+			if (region.anchorPoint) {
+				this.anchorPoint.setMuted(
+					this._flip.x && region.trimmed === true
+						? 1 - region.anchorPoint.x
+						: region.anchorPoint.x,
+					this._flip.y && region.trimmed === true
+						? 1 - region.anchorPoint.y
+						: region.anchorPoint.y,
+				);
+			}
 		}
+
 		// update the sprite bounding box
 		this.updateBounds();
 		this.isDirty = true;
@@ -687,7 +711,7 @@ export default class Sprite extends Renderable {
 
 		// cache the current position and size
 		let xpos = this.pos.x;
-		const ypos = this.pos.y;
+		let ypos = this.pos.y;
 
 		let w = frame.width;
 		let h = frame.height;
@@ -703,6 +727,15 @@ export default class Sprite extends Renderable {
 			xpos -= h;
 			w = frame.height;
 			h = frame.width;
+			// apply trim in rotated space: (tx, ty) → (-ty, tx) for -π/2
+			if (frame.trim) {
+				xpos -= frame.trim.y;
+				ypos += frame.trim.x;
+			}
+		} else if (frame.trim) {
+			// apply trim offset for non-rotated trimmed sprites
+			xpos += frame.trim.x;
+			ypos += frame.trim.y;
 		}
 
 		renderer.drawImage(

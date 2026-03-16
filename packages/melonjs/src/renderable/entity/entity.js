@@ -128,6 +128,10 @@ export default class Entity extends Renderable {
 		if (value instanceof Renderable) {
 			this.children[0] = value;
 			this.children[0].ancestor = this;
+			// auto-align: inherit renderable's anchor if entity is still at default
+			if (this.anchorPoint.x === 0 && this.anchorPoint.y === 0) {
+				this.anchorPoint.setMuted(value.anchorPoint.x, value.anchorPoint.y);
+			}
 			this.updateBounds();
 		} else {
 			throw new Error(value + "should extend me.Renderable");
