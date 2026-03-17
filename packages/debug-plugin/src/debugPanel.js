@@ -298,6 +298,9 @@ export class DebugPanel {
 		this._drawQuadTreeNode(renderer, game.world.broadphase);
 		renderer.translate(x, y);
 		renderer.restore();
+		// flush is needed because this runs after GAME_AFTER_DRAW,
+		// which is emitted after the main renderer.flush()
+		renderer.flush();
 	}
 
 	/** @private */

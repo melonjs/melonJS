@@ -1,6 +1,6 @@
 {
 	"name": "@melonjs/debug-plugin",
-	"version": "15.0.1",
+	"version": "15.0.2",
 	"description": "melonJS debug plugin",
 	"homepage": "https://github.com/melonjs/melonJS/tree/master/packages/debug-plugin#readme",
 	"type": "module",

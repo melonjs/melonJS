@@ -1,5 +1,10 @@
 # Changelog
 
+## 15.0.2
+
+### Bug Fixes
+- Fixed quadtree debug visualization not rendering — draw calls were issued after `renderer.flush()`, so the quadtree lines were never submitted to the GPU
+
 ## 15.0.1
 
 ### Bug Fixes
