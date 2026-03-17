@@ -70,7 +70,7 @@ function coerceTMXValue(name, type, raw) {
 			try {
 				return JSON.parse(body);
 			} catch {
-				throw new Error("Unable to parse JSON: " + body);
+				throw new Error(`Unable to parse JSON: ${body}`);
 			}
 		}
 	}
@@ -82,9 +82,9 @@ function coerceTMXValue(name, type, raw) {
 			const expr = raw.slice(5);
 			try {
 				// eslint-disable-next-line
-				return Function("'use strict';return (" + expr + ")")();
+				return Function(`'use strict';return (${expr})`)();
 			} catch {
-				throw new Error("Unable to evaluate: " + expr);
+				throw new Error(`Unable to evaluate: ${expr}`);
 			}
 		}
 	}
@@ -95,7 +95,7 @@ function coerceTMXValue(name, type, raw) {
 		raw[0] === "#" &&
 		((colorMatch = SHORT_ARGB.exec(raw)) || (colorMatch = LONG_ARGB.exec(raw)))
 	) {
-		return "#" + colorMatch[2] + colorMatch[1];
+		return `#${colorMatch[2]}${colorMatch[1]}`;
 	}
 
 	// plain string — return as-is

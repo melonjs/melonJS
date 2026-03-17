@@ -75,8 +75,8 @@ export default class TMXOrthogonalRenderer extends TMXRenderer {
 		).ceilSelf();
 
 		//ensure we are in the valid tile range
-		end.x = end.x > this.cols ? this.cols : end.x;
-		end.y = end.y > this.rows ? this.rows : end.y;
+		end.x = Math.min(end.x, this.cols);
+		end.y = Math.min(end.y, this.rows);
 
 		switch (layer.renderorder) {
 			case "right-up":

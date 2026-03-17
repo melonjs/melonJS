@@ -28,7 +28,7 @@ export default class TMXTileset {
 				// load the external tileset (TSX/XML/JSON/TSJ)
 				tileset = getTMX(getBasename(src));
 				if (!tileset) {
-					throw new Error(src + " external tileset not found");
+					throw new Error(`${src} external tileset not found`);
 				}
 			}
 		}
@@ -112,11 +112,7 @@ export default class TMXTileset {
 					const image = getImage(tile.image);
 					if (!image) {
 						throw new Error(
-							"melonJS: '" +
-								tile.image +
-								"' file for tile '" +
-								(tileId + this.firstgid) +
-								"' not found!",
+							`melonJS: '${tile.image}' file for tile '${tileId + this.firstgid}' not found!`,
 						);
 					}
 					this.imageCollection[tileId + this.firstgid] = image;
@@ -149,11 +145,7 @@ export default class TMXTileset {
 
 			if (!this.image) {
 				throw new Error(
-					"melonJS: '" +
-						tileset.image +
-						"' file for tileset '" +
-						this.name +
-						"' not found!",
+					`melonJS: '${tileset.image}' file for tileset '${this.name}' not found!`,
 				);
 			}
 
@@ -183,11 +175,7 @@ export default class TMXTileset {
 				this.lastgid - this.firstgid + 1 !== +tileset.tilecount
 			) {
 				console.warn(
-					"Computed tilecount (" +
-						(this.lastgid - this.firstgid + 1) +
-						") does not match expected tilecount (" +
-						tileset.tilecount +
-						")",
+					`Computed tilecount (${this.lastgid - this.firstgid + 1}) does not match expected tilecount (${tileset.tilecount})`,
 				);
 			}
 		}

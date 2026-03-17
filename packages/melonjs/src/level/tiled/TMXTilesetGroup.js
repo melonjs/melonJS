@@ -67,6 +67,6 @@ export default class TMXTilesetGroup {
 			this._lastTileset = fallback;
 			return fallback;
 		}
-		throw new Error("no matching tileset found for gid " + gid);
+		throw new Error(`no matching tileset found for gid ${gid}`);
 	}
 }

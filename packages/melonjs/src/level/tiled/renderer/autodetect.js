@@ -24,6 +24,6 @@ export function getNewTMXRenderer(map) {
 
 		// if none found, throw an exception
 		default:
-			throw new Error(map.orientation + " type TMX Tile Map not supported!");
+			throw new Error(`${map.orientation} type TMX Tile Map not supported!`);
 	}
 }
