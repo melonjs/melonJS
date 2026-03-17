@@ -248,9 +248,8 @@ export default class TMXLayer extends Renderable {
 	onDeactivateEvent() {
 		// clear all allocated objects
 		this.animatedTilesets = undefined;
-		if (this.canvasRenderer) {
-			this.canvasRenderer = null;
-		}
+		// keep canvasRenderer for reuse — dropping the reference would leak
+		// event listeners registered by CanvasRenderer's constructor
 	}
 
 	/**

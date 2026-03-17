@@ -123,16 +123,22 @@ describe("TMX Renderers", () => {
 			// This verifies the critical bug fix:
 			// previously this.centers[i].sub(rel) mutated the centers
 
-			// Call pixelToTileCoords multiple times with the same input
-			const result1 = renderer.pixelToTileCoords(50, 50);
-			const result2 = renderer.pixelToTileCoords(50, 50);
-			const result3 = renderer.pixelToTileCoords(50, 50);
+			// Call pixelToTileCoords to trigger center calculations
+			renderer.pixelToTileCoords(50, 50);
 
-			// Results should be identical since centers are not mutated
-			expect(result1.x).toEqual(result2.x);
-			expect(result1.y).toEqual(result2.y);
-			expect(result2.x).toEqual(result3.x);
-			expect(result2.y).toEqual(result3.y);
+			// Save centers values after first call
+			const centersAfterFirst = renderer.centers.map((c) => {
+				return { x: c.x, y: c.y };
+			});
+
+			// Call again — centers should be re-set to the same values
+			renderer.pixelToTileCoords(50, 50);
+
+			// Verify centers were not mutated by the distance calculation
+			for (let i = 0; i < 4; i++) {
+				expect(renderer.centers[i].x).toEqual(centersAfterFirst[i].x);
+				expect(renderer.centers[i].y).toEqual(centersAfterFirst[i].y);
+			}
 		});
 
 		it("pixelToTileCoords should return consistent results (staggerX)", () => {

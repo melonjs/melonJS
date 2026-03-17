@@ -517,8 +517,12 @@ export class TextureAtlas {
 		for (const i in names) {
 			const name = Array.isArray(names) ? names[i] : i;
 			const region = this.getRegion(name);
+			// skip non-region keys (e.g. "anims" added by Aseprite parser)
 			if (region == null) {
-				throw new Error("Texture - region for " + name + " not found");
+				if (Array.isArray(names)) {
+					throw new Error("Texture - region for " + name + " not found");
+				}
+				continue;
 			}
 			regions.push({ name, region });
 			const frameW = region.sourceSize ? region.sourceSize.w : region.width;

@@ -157,6 +157,8 @@ import Sprite from "../sprite.js";
  * @see Body
  */
 export default class Entity extends Renderable {
+	static _deprecationWarned = false;
+
 	/**
 	 * @param {number} x - the x coordinates of the entity object
 	 * @param {number} y - the y coordinates of the entity object
@@ -176,8 +178,11 @@ export default class Entity extends Renderable {
 	 * @deprecated since 18.1.0 — see the class-level documentation for migration examples
 	 */
 	constructor(x, y, settings) {
-		// deprecation warning
-		warning("me.Entity", "me.Sprite combined with me.Body", "18.1.0");
+		// deprecation warning (once per session)
+		if (!Entity._deprecationWarned) {
+			warning("me.Entity", "me.Sprite combined with me.Body", "18.1.0");
+			Entity._deprecationWarned = true;
+		}
 
 		// call the super constructor
 		super(x, y, settings.width, settings.height);
