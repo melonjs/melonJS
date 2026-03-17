@@ -1,4 +1,4 @@
-import { Vector2d, vector2dPool } from "../../../math/vector2d.ts";
+import { vector2dPool } from "../../../math/vector2d.ts";
 import { boundsPool } from "../../../physics/bounds.ts";
 import TMXLayer from "./../TMXLayer.js";
 import TMXRenderer from "./TMXRenderer.js";
@@ -46,7 +46,7 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	pixelToTileCoords(x, y, v) {
-		const ret = v || new Vector2d();
+		const ret = v || vector2dPool.get();
 		return ret.set(
 			y / this.tileheight + (x - this.originX) / this.tilewidth,
 			y / this.tileheight - (x - this.originX) / this.tilewidth,
@@ -58,7 +58,7 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	tileToPixelCoords(x, y, v) {
-		const ret = v || new Vector2d();
+		const ret = v || vector2dPool.get();
 		return ret.set(
 			(x - y) * this.hTilewidth + this.originX,
 			(x + y) * this.hTileheight,
@@ -155,8 +155,8 @@ export default class TMXIsometricRenderer extends TMXRenderer {
 		// Determine whether the current row is shifted half a tile to the right
 		let shifted = inUpperHalf ^ inLeftHalf;
 
-		// initialize the columItr vector
-		const columnItr = rowItr.clone();
+		// initialize the columnItr vector
+		const columnItr = vector2dPool.get().setV(rowItr);
 
 		// main drawing loop
 		for (

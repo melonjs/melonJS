@@ -76,6 +76,20 @@ export default class TMXRenderer {
 	}
 
 	/**
+	 * fix the position of Objects to match
+	 * the way Tiled places them
+	 * @param {object} obj - a TMX Object with gid, x, y, height properties
+	 */
+	adjustPosition(obj) {
+		// only adjust position if obj.gid is defined
+		if (typeof obj.gid === "number") {
+			// Tiled objects origin point is "bottom-left" in Tiled,
+			// "top-left" in melonJS)
+			obj.y -= obj.height;
+		}
+	}
+
+	/**
 	 * draw the given tile at the specified layer
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer object
 	 * @param {number} x - X coordinate where to draw the tile

@@ -1,4 +1,4 @@
-import { Vector2d, vector2dPool } from "../../../math/vector2d.ts";
+import { vector2dPool } from "../../../math/vector2d.ts";
 import TMXRenderer from "./TMXRenderer.js";
 
 /**
@@ -25,7 +25,7 @@ export default class TMXOrthogonalRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	pixelToTileCoords(x, y, v) {
-		const ret = v || new Vector2d();
+		const ret = v || vector2dPool.get();
 		return ret.set(x / this.tilewidth, y / this.tileheight);
 	}
 
@@ -34,22 +34,8 @@ export default class TMXOrthogonalRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	tileToPixelCoords(x, y, v) {
-		const ret = v || new Vector2d();
+		const ret = v || vector2dPool.get();
 		return ret.set(x * this.tilewidth, y * this.tileheight);
-	}
-
-	/**
-	 * fix the position of Objects to match
-	 * the way Tiled places them
-	 * @ignore
-	 */
-	adjustPosition(obj) {
-		// only adjust position if obj.gid is defined
-		if (typeof obj.gid === "number") {
-			// Tiled objects origin point is "bottom-left" in Tiled,
-			// "top-left" in melonJS)
-			obj.y -= obj.height;
-		}
 	}
 
 	/**
