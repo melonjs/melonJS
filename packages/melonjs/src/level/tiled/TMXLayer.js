@@ -247,8 +247,10 @@ export default class TMXLayer extends Renderable {
 	// called when the layer is removed from the game world or a container
 	onDeactivateEvent() {
 		// clear all allocated objects
-		//this.layerData = undefined;
 		this.animatedTilesets = undefined;
+		if (this.canvasRenderer) {
+			this.canvasRenderer = null;
+		}
 	}
 
 	/**

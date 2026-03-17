@@ -78,8 +78,9 @@ export default class TMXGroup {
 					map.tileheight,
 					map.orientation,
 					map.tilesets,
-					z++,
+					z,
 				);
+				z++;
 				// set a renderer
 				layer.setRenderer(map.getRenderer());
 				// resize container accordingly
