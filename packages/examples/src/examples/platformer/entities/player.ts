@@ -1,19 +1,51 @@
 import {
 	audio,
+	Body,
 	collision,
-	Entity,
 	game,
 	input,
 	level,
+	Rect,
+	Sprite,
 	timer,
 	video,
 } from "melonjs";
 import { gameState } from "../gameState";
 
-export class PlayerEntity extends Entity {
+export class PlayerEntity extends Sprite {
+	dying: boolean;
+	multipleJump: number;
+
 	constructor(x, y, settings) {
-		// call the constructor
-		super(x, y, settings);
+		// create the sprite using atlas animation frames
+		super(x, y, {
+			...gameState.texture.getAnimationSettings([
+				"walk0001.png",
+				"walk0002.png",
+				"walk0003.png",
+				"walk0004.png",
+				"walk0005.png",
+				"walk0006.png",
+				"walk0007.png",
+				"walk0008.png",
+				"walk0009.png",
+				"walk0010.png",
+				"walk0011.png",
+			]),
+			anchorPoint: { x: 0, y: 0 },
+		});
+
+		// add a physic body using the Tiled object dimensions,
+		// centered horizontally and bottom-aligned within the sprite frame
+		this.body = new Body(
+			this,
+			new Rect(
+				(this.width - settings.width) / 2,
+				this.height - settings.height,
+				settings.width,
+				settings.height,
+			),
+		);
 
 		// set a "player object" type
 		this.body.collisionType = collision.types.PLAYER_OBJECT;
@@ -44,9 +76,6 @@ export class PlayerEntity extends Entity {
 		input.bindKey(input.KEY.D, "right");
 		input.bindKey(input.KEY.W, "jump", true);
 		input.bindKey(input.KEY.S, "down");
-
-		//me.input.registerPointerEvent("pointerdown", this, this.onCollision.bind(this));
-		//me.input.bindPointer(me.input.pointer.RIGHT, me.input.KEY.LEFT);
 
 		input.bindGamepad(
 			0,
@@ -101,31 +130,14 @@ export class PlayerEntity extends Entity {
 			input.KEY.UP,
 		);
 
-		// set a renderable
-		this.renderable = gameState.texture.createAnimationFromName([
-			"walk0001.png",
-			"walk0002.png",
-			"walk0003.png",
-			"walk0004.png",
-			"walk0005.png",
-			"walk0006.png",
-			"walk0007.png",
-			"walk0008.png",
-			"walk0009.png",
-			"walk0010.png",
-			"walk0011.png",
-		]);
-
-		// define a basic walking animatin
-		this.renderable.addAnimation("stand", [
-			{ name: "walk0001.png", delay: 100 },
-		]);
-		this.renderable.addAnimation("walk", [
+		// define a basic walking animation
+		this.addAnimation("stand", [{ name: "walk0001.png", delay: 100 }]);
+		this.addAnimation("walk", [
 			{ name: "walk0001.png", delay: 100 },
 			{ name: "walk0002.png", delay: 100 },
 			{ name: "walk0003.png", delay: 100 },
 		]);
-		this.renderable.addAnimation("jump", [
+		this.addAnimation("jump", [
 			{ name: "walk0004.png", delay: 150 },
 			{ name: "walk0005.png", delay: 150 },
 			{ name: "walk0006.png", delay: 150 },
@@ -134,10 +146,7 @@ export class PlayerEntity extends Entity {
 		]);
 
 		// set as default
-		this.renderable.setCurrentAnimation("walk");
-
-		// set the renderable position to bottom center
-		this.anchorPoint.set(0.5, 1.0);
+		this.setCurrentAnimation("walk");
 	}
 
 	/**
@@ -146,20 +155,20 @@ export class PlayerEntity extends Entity {
 	update(dt) {
 		if (input.isKeyPressed("left")) {
 			if (this.body.vel.y === 0) {
-				this.renderable.setCurrentAnimation("walk");
+				this.setCurrentAnimation("walk");
 			}
 			this.body.force.x = -this.body.maxVel.x;
-			this.renderable.flipX(true);
+			this.flipX(true);
 		} else if (input.isKeyPressed("right")) {
 			if (this.body.vel.y === 0) {
-				this.renderable.setCurrentAnimation("walk");
+				this.setCurrentAnimation("walk");
 			}
 			this.body.force.x = this.body.maxVel.x;
-			this.renderable.flipX(false);
+			this.flipX(false);
 		}
 
 		if (input.isKeyPressed("jump")) {
-			this.renderable.setCurrentAnimation("jump");
+			this.setCurrentAnimation("jump");
 			this.body.jumping = true;
 			if (this.multipleJump <= 2) {
 				// easy "math" for double jump
@@ -178,7 +187,7 @@ export class PlayerEntity extends Entity {
 		}
 
 		if (this.body.force.x === 0 && this.body.force.y === 0) {
-			this.renderable.setCurrentAnimation("stand");
+			this.setCurrentAnimation("stand");
 		}
 
 		// check if we fell into a hole
@@ -194,11 +203,7 @@ export class PlayerEntity extends Entity {
 		}
 
 		// check if we moved (an "idle" animation would definitely be cleaner)
-		if (
-			this.body.vel.x !== 0 ||
-			this.body.vel.y !== 0 ||
-			this.renderable?.isFlickering()
-		) {
+		if (this.body.vel.x !== 0 || this.body.vel.y !== 0 || this.isFlickering()) {
 			super.update(dt);
 			return true;
 		}
@@ -272,14 +277,12 @@ export class PlayerEntity extends Entity {
 	 * ouch
 	 */
 	hurt() {
-		const sprite = this.renderable;
-
-		if (!sprite.isFlickering()) {
+		if (!this.isFlickering()) {
 			// tint to red and flicker
-			sprite.tint.setColor(255, 192, 192);
-			sprite.flicker(750, () => {
+			this.tint.setColor(255, 192, 192);
+			this.flicker(750, () => {
 				// clear the tint once the flickering effect is over
-				sprite.tint.setColor(255, 255, 255);
+				this.tint.setColor(255, 255, 255);
 			});
 
 			// flash the screen

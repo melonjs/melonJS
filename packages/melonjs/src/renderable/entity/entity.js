@@ -1,4 +1,5 @@
 import { polygonPool } from "../../geometries/polygon.ts";
+import { warning } from "../../lang/console.js";
 import { vector2dPool } from "../../math/vector2d.ts";
 import Body from "../../physics/body.js";
 import Renderable from "../renderable.js";
@@ -16,6 +17,144 @@ import Sprite from "../sprite.js";
 
 /**
  * a Generic Object Entity
+ * @deprecated since 18.1.0 — use {@link Sprite} or {@link Renderable} combined with {@link Body} instead.
+ *
+ * ### Why Entity is deprecated
+ *
+ * `Entity` introduced an unnecessary extra layer: it wrapped a child {@link Renderable} (typically a {@link Sprite})
+ * inside a parent object that also held a {@link Body}. This design led to a number of long-standing issues:
+ *
+ * - **Anchor point confusion** — Entity used its own anchor point to position the child renderable relative to the
+ *   body bounds, which behaved differently from the standard {@link Renderable} anchor point. This caused
+ *   persistent alignment bugs with bounds and rendering (see issues #848, #834, #754, #580, #922).
+ * - **Indirect API** — animations, flipping, tinting, and other visual operations had to go through
+ *   `this.renderable` instead of being called directly, making the API more verbose and error-prone.
+ * - **Custom rendering pipeline** — Entity overrode `preDraw`/`draw` with a custom coordinate system that
+ *   differed from the rest of the engine, making it harder to reason about positioning and transforms.
+ *
+ * ### The Sprite + Body approach
+ *
+ * The recommended replacement is to extend {@link Sprite} (for animated/image-based objects) or
+ * {@link Renderable} (for custom-drawn objects) directly, and attach a {@link Body} in the constructor.
+ * This approach:
+ *
+ * - Uses the **standard rendering pipeline** — no custom `preDraw` or coordinate system surprises.
+ * - Provides a **direct API** — call `this.flipX()`, `this.setCurrentAnimation()`, `this.tint` directly.
+ * - Aligns with **industry conventions** — attaching a physics body to a renderable is the standard pattern
+ *   used by other game engines.
+ * - Gives **full control** over body shape and position within the sprite frame.
+ *
+ * ### Migration Guide
+ *
+ * #### Example 1 — Animated Sprite with physics (using a texture atlas)
+ * ```js
+ * class PlayerSprite extends me.Sprite {
+ *     constructor(x, y, settings) {
+ *         // create the Sprite using atlas animation frames
+ *         super(x, y, {
+ *             ...game.texture.getAnimationSettings([
+ *                 "walk0001.png", "walk0002.png", "walk0003.png"
+ *             ]),
+ *             anchorPoint: { x: 0.5, y: 1.0 }
+ *         });
+ *
+ *         // add a physic body (use Tiled shapes if available, or define your own)
+ *         this.body = new me.Body(this,
+ *             settings.shapes || new me.Rect(0, 0, settings.width, settings.height)
+ *         );
+ *         this.body.collisionType = me.collision.types.PLAYER_OBJECT;
+ *         this.body.setMaxVelocity(3, 15);
+ *         this.body.setFriction(0.4, 0);
+ *
+ *         // define animations (called directly on the sprite, not on this.renderable)
+ *         this.addAnimation("walk", ["walk0001.png", "walk0002.png", "walk0003.png"]);
+ *         this.setCurrentAnimation("walk");
+ *     }
+ *
+ *     update(dt) {
+ *         // input handling, animations, etc. — all directly on `this`
+ *         if (me.input.isKeyPressed("right")) {
+ *             this.body.force.x = this.body.maxVel.x;
+ *             this.flipX(false);
+ *         }
+ *         return super.update(dt);
+ *     }
+ *
+ *     onCollision(response, other) {
+ *         return true; // solid
+ *     }
+ * }
+ * ```
+ *
+ * #### Example 2 — Sprite with physics (using a standalone spritesheet image)
+ * ```js
+ * class EnemySprite extends me.Sprite {
+ *     constructor(x, y, settings) {
+ *         super(x, y, Object.assign({
+ *             image: "enemy_spritesheet",
+ *             framewidth: 32,
+ *             frameheight: 32,
+ *         }, settings));
+ *
+ *         // add a physic body
+ *         this.body = new me.Body(this, new me.Rect(0, 0, this.width, this.height));
+ *         this.body.collisionType = me.collision.types.ENEMY_OBJECT;
+ *         this.body.setMaxVelocity(1, 1);
+ *         this.body.gravityScale = 0;
+ *
+ *         this.addAnimation("walk", [0, 1, 2, 3]);
+ *         this.addAnimation("dead", [4]);
+ *         this.setCurrentAnimation("walk");
+ *     }
+ *
+ *     onCollision(response, other) {
+ *         return false;
+ *     }
+ * }
+ * ```
+ *
+ * #### Example 3 — Custom-drawn Renderable with physics
+ * ```js
+ * class CustomBall extends me.Renderable {
+ *     constructor(x, y, radius) {
+ *         super(x, y, radius * 2, radius * 2);
+ *         this.radius = radius;
+ *
+ *         // add a physic body with a circular shape
+ *         this.body = new me.Body(this, new me.Ellipse(radius, radius, radius * 2, radius * 2));
+ *         this.body.collisionType = me.collision.types.ENEMY_OBJECT;
+ *         this.body.setMaxVelocity(4, 4);
+ *         this.body.gravityScale = 0;
+ *         this.body.force.set(
+ *             me.Math.randomFloat(-4, 4),
+ *             me.Math.randomFloat(-4, 4)
+ *         );
+ *     }
+ *
+ *     update(dt) {
+ *         return super.update(dt);
+ *     }
+ *
+ *     draw(renderer) {
+ *         renderer.setColor("#FF0000");
+ *         renderer.fillEllipse(
+ *             this.width / 2, this.height / 2,
+ *             this.radius, this.radius
+ *         );
+ *     }
+ *
+ *     onCollision(response, other) {
+ *         // bounce off on collision
+ *         this.body.force.x = -this.body.force.x;
+ *         this.body.force.y = -this.body.force.y;
+ *         return false;
+ *     }
+ * }
+ * ```
+ *
+ * @see Sprite
+ * @see Renderable
+ * @see Body
  */
 export default class Entity extends Renderable {
 	/**
@@ -34,8 +173,12 @@ export default class Entity extends Renderable {
 	 * @param {string} [settings.type] - object type
 	 * @param {number} [settings.collisionMask] - Mask collision detection for this object
 	 * @param {Rect[]|Polygon[]|Line[]|Ellipse[]} [settings.shapes] - the initial list of collision shapes (usually populated through Tiled)
+	 * @deprecated since 18.1.0 — see the class-level documentation for migration examples
 	 */
 	constructor(x, y, settings) {
+		// deprecation warning
+		warning("me.Entity", "me.Sprite combined with me.Body", "18.1.0");
+
 		// call the super constructor
 		super(x, y, settings.width, settings.height);
 
