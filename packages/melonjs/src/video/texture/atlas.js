@@ -478,14 +478,90 @@ export class TextureAtlas {
 	 * // set the renderable position to bottom center
 	 * sprite.anchorPoint.set(0.5, 1.0);
 	 */
+	/**
+	 * Return the Sprite settings object (framewidth, frameheight, atlas, atlasIndices, etc.)
+	 * for the given set of atlas frame names. This is useful when extending {@link Sprite}
+	 * and you need to pass atlas animation data to the parent constructor.
+	 * @param {string[]|number[]} [names] - list of names for each sprite
+	 * (when manually creating a Texture out of a spritesheet, only numeric values are authorized).
+	 * If not specified, all defined names/entries in the atlas will be added.
+	 * @returns {object} A settings object suitable for passing to the {@link Sprite} constructor
+	 * @example
+	 * // extend Sprite directly with texture atlas animation frames
+	 * class MyPlayer extends me.Sprite {
+	 *     constructor(x, y, settings) {
+	 *         super(x, y, {
+	 *             ...game.texture.getAnimationSettings([
+	 *                 "walk0001.png", "walk0002.png", "walk0003.png"
+	 *             ]),
+	 *             anchorPoint: { x: 0.5, y: 1.0 }
+	 *         });
+	 *         // add a physic body
+	 *         this.body = new me.Body(this, new me.Rect(0, 0, this.width, this.height));
+	 *     }
+	 * }
+	 */
+	getAnimationSettings(names) {
+		const tpAtlas = [];
+		const indices = {};
+		let width = 0;
+		let height = 0;
+		const textureAtlas = this.getAtlas();
+
+		if (typeof names === "undefined") {
+			names = textureAtlas;
+		}
+
+		// first pass: collect regions and compute max dimensions
+		const regions = [];
+		for (const i in names) {
+			const name = Array.isArray(names) ? names[i] : i;
+			const region = this.getRegion(name);
+			if (region == null) {
+				throw new Error("Texture - region for " + name + " not found");
+			}
+			regions.push({ name, region });
+			const frameW = region.sourceSize ? region.sourceSize.w : region.width;
+			const frameH = region.sourceSize ? region.sourceSize.h : region.height;
+			width = Math.max(frameW, width);
+			height = Math.max(frameH, height);
+		}
+
+		// second pass: clone regions, strip anchorPoint,
+		// and add trim offset to bottom-align smaller frames
+		for (const { name, region } of regions) {
+			const regionCopy = Object.assign({}, region);
+			delete regionCopy.anchorPoint;
+
+			const frameH = region.sourceSize ? region.sourceSize.h : region.height;
+			if (frameH < height) {
+				// bottom-align by offsetting the y draw position
+				regionCopy.trim = Object.assign({}, region.trim || { x: 0, y: 0 });
+				regionCopy.trim.y += height - frameH;
+			}
+
+			tpAtlas.push(regionCopy);
+			indices[name] = tpAtlas.length - 1;
+		}
+
+		return {
+			image: this,
+			framewidth: width,
+			frameheight: height,
+			margin: 0,
+			spacing: 0,
+			atlas: tpAtlas,
+			anims: textureAtlas.anims,
+			atlasIndices: indices,
+		};
+	}
+
 	createAnimationFromName(names, settings) {
 		const tpAtlas = [];
 		const indices = {};
 		let width = 0;
 		let height = 0;
 		const textureAtlas = this.getAtlas();
-		// iterate through the given names
-		// and create a "normalized" atlas
 
 		if (typeof names === "undefined") {
 			names = textureAtlas;
@@ -495,16 +571,12 @@ export class TextureAtlas {
 			const name = Array.isArray(names) ? names[i] : i;
 			const region = this.getRegion(name);
 			if (region == null) {
-				// throw an error
 				throw new Error("Texture - region for " + name + " not found");
 			}
 			tpAtlas.push(region);
-			// save the corresponding index
 			indices[name] = tpAtlas.length - 1;
-			// use sourceSize (original untrimmed size) if available for stable bounds
 			const frameW = region.sourceSize ? region.sourceSize.w : region.width;
 			const frameH = region.sourceSize ? region.sourceSize.h : region.height;
-			// calculate the max size of a frame
 			width = Math.max(frameW, width);
 			height = Math.max(frameH, height);
 		}

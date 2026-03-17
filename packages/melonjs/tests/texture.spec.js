@@ -1,5 +1,11 @@
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { boot, CanvasTexture, video } from "../src/index.js";
+import {
+	boot,
+	CanvasTexture,
+	Sprite,
+	TextureAtlas,
+	video,
+} from "../src/index.js";
 
 describe("Texture", () => {
 	beforeAll(() => {
@@ -222,6 +228,288 @@ describe("Texture", () => {
 			// get should return the first one stored
 			const retrieved = cache.get(canvas.canvas);
 			expect(retrieved).toBe(atlas1);
+		});
+	});
+
+	describe("TextureAtlas.getAnimationSettings", () => {
+		let atlas;
+
+		beforeAll(() => {
+			// create a mock texture atlas using TexturePacker JSON format
+			const mockImage = video.createCanvas(256, 256);
+			const atlasJSON = {
+				meta: {
+					app: "https://www.codeandweb.com/texturepacker",
+					size: { w: 256, h: 256 },
+					image: "default",
+				},
+				frames: [
+					{
+						filename: "walk0001.png",
+						frame: { x: 0, y: 0, w: 32, h: 48 },
+						rotated: false,
+						trimmed: false,
+						spriteSourceSize: { x: 0, y: 0, w: 32, h: 48 },
+						sourceSize: { w: 32, h: 48 },
+					},
+					{
+						filename: "walk0002.png",
+						frame: { x: 32, y: 0, w: 32, h: 48 },
+						rotated: false,
+						trimmed: false,
+						spriteSourceSize: { x: 0, y: 0, w: 32, h: 48 },
+						sourceSize: { w: 32, h: 48 },
+					},
+					{
+						filename: "walk0003.png",
+						frame: { x: 64, y: 0, w: 32, h: 48 },
+						rotated: false,
+						trimmed: false,
+						spriteSourceSize: { x: 0, y: 0, w: 32, h: 48 },
+						sourceSize: { w: 32, h: 48 },
+					},
+					{
+						filename: "idle0001.png",
+						frame: { x: 96, y: 0, w: 40, h: 52 },
+						rotated: false,
+						trimmed: false,
+						spriteSourceSize: { x: 0, y: 0, w: 40, h: 52 },
+						sourceSize: { w: 40, h: 52 },
+					},
+				],
+			};
+			atlas = new TextureAtlas(atlasJSON, mockImage);
+		});
+
+		it("should return a valid settings object with expected properties", () => {
+			const settings = atlas.getAnimationSettings([
+				"walk0001.png",
+				"walk0002.png",
+				"walk0003.png",
+			]);
+
+			expect(settings).toBeDefined();
+			expect(settings.image).toBe(atlas);
+			expect(settings.framewidth).toEqual(32);
+			expect(settings.frameheight).toEqual(48);
+			expect(settings.margin).toEqual(0);
+			expect(settings.spacing).toEqual(0);
+			expect(settings.atlas).toBeInstanceOf(Array);
+			expect(settings.atlas.length).toEqual(3);
+			expect(settings.atlasIndices).toBeDefined();
+			expect(settings.atlasIndices["walk0001.png"]).toEqual(0);
+			expect(settings.atlasIndices["walk0002.png"]).toEqual(1);
+			expect(settings.atlasIndices["walk0003.png"]).toEqual(2);
+		});
+
+		it("should compute framewidth/frameheight as the max across all requested frames", () => {
+			const settings = atlas.getAnimationSettings([
+				"walk0001.png",
+				"idle0001.png",
+			]);
+
+			// walk is 32x48, idle is 40x52 — max should be 40x52
+			expect(settings.framewidth).toEqual(40);
+			expect(settings.frameheight).toEqual(52);
+		});
+
+		it("should use all atlas entries when names is undefined", () => {
+			const settings = atlas.getAnimationSettings();
+
+			expect(settings.atlas.length).toEqual(4);
+			expect(settings.atlasIndices["walk0001.png"]).toBeDefined();
+			expect(settings.atlasIndices["walk0002.png"]).toBeDefined();
+			expect(settings.atlasIndices["walk0003.png"]).toBeDefined();
+			expect(settings.atlasIndices["idle0001.png"]).toBeDefined();
+		});
+
+		it("should throw when a requested frame name does not exist", () => {
+			expect(() => {
+				atlas.getAnimationSettings(["nonexistent.png"]);
+			}).toThrow(/region for nonexistent.png not found/);
+		});
+
+		it("should produce settings compatible with Sprite constructor", () => {
+			const settings = atlas.getAnimationSettings([
+				"walk0001.png",
+				"walk0002.png",
+				"walk0003.png",
+			]);
+
+			const sprite = new Sprite(0, 0, settings);
+			expect(sprite).toBeInstanceOf(Sprite);
+			expect(sprite.width).toEqual(32);
+			expect(sprite.height).toEqual(48);
+		});
+
+		it("should produce settings that enable addAnimation with frame names", () => {
+			const settings = atlas.getAnimationSettings([
+				"walk0001.png",
+				"walk0002.png",
+				"walk0003.png",
+			]);
+
+			const sprite = new Sprite(0, 0, settings);
+			const count = sprite.addAnimation("walk", [
+				"walk0001.png",
+				"walk0002.png",
+			]);
+			expect(count).toEqual(2);
+			sprite.setCurrentAnimation("walk");
+			expect(sprite.isCurrentAnimation("walk")).toEqual(true);
+		});
+
+		it("should produce identical results to createAnimationFromName", () => {
+			const settings = atlas.getAnimationSettings([
+				"walk0001.png",
+				"walk0002.png",
+				"walk0003.png",
+			]);
+			const spriteFromSettings = new Sprite(0, 0, settings);
+
+			const spriteFromFactory = atlas.createAnimationFromName([
+				"walk0001.png",
+				"walk0002.png",
+				"walk0003.png",
+			]);
+
+			// same dimensions
+			expect(spriteFromSettings.width).toEqual(spriteFromFactory.width);
+			expect(spriteFromSettings.height).toEqual(spriteFromFactory.height);
+
+			// same atlas data
+			expect(spriteFromSettings.textureAtlas.length).toEqual(
+				spriteFromFactory.textureAtlas.length,
+			);
+			expect(Object.keys(spriteFromSettings.atlasIndices).length).toEqual(
+				Object.keys(spriteFromFactory.atlasIndices).length,
+			);
+		});
+
+		it("should strip anchorPoint from atlas regions", () => {
+			// create an atlas with pivot/anchorPoint data (as TexturePacker exports)
+			const mockImage = video.createCanvas(256, 256);
+			const atlasWithPivot = new TextureAtlas(
+				{
+					meta: {
+						app: "https://www.codeandweb.com/texturepacker",
+						size: { w: 256, h: 256 },
+						image: "default",
+					},
+					frames: [
+						{
+							filename: "char0001.png",
+							frame: { x: 0, y: 0, w: 32, h: 48 },
+							rotated: false,
+							trimmed: false,
+							spriteSourceSize: { x: 0, y: 0, w: 32, h: 48 },
+							sourceSize: { w: 32, h: 48 },
+							pivot: { x: 0.5, y: 1.0 },
+						},
+						{
+							filename: "char0002.png",
+							frame: { x: 32, y: 0, w: 32, h: 48 },
+							rotated: false,
+							trimmed: false,
+							spriteSourceSize: { x: 0, y: 0, w: 32, h: 48 },
+							sourceSize: { w: 32, h: 48 },
+							pivot: { x: 0.5, y: 1.0 },
+						},
+					],
+				},
+				mockImage,
+			);
+
+			// verify the original regions have anchorPoint
+			const originalRegion = atlasWithPivot.getRegion("char0001.png");
+			expect(originalRegion.anchorPoint).toBeDefined();
+
+			// getAnimationSettings should strip it
+			const settings = atlasWithPivot.getAnimationSettings([
+				"char0001.png",
+				"char0002.png",
+			]);
+			for (const region of settings.atlas) {
+				expect(region.anchorPoint).toBeUndefined();
+			}
+
+			// Sprite created from these settings should keep its own anchor
+			const sprite = new Sprite(10, 20, {
+				...settings,
+				anchorPoint: { x: 0, y: 0 },
+			});
+			sprite.addAnimation("walk", ["char0001.png", "char0002.png"]);
+			sprite.setCurrentAnimation("walk");
+			// anchor should remain (0, 0), not overridden by the region
+			expect(sprite.anchorPoint.x).toEqual(0);
+			expect(sprite.anchorPoint.y).toEqual(0);
+		});
+
+		it("createAnimationFromName should preserve anchorPoint in regions", () => {
+			// create an atlas with pivot data
+			const mockImage = video.createCanvas(256, 256);
+			const atlasWithPivot = new TextureAtlas(
+				{
+					meta: {
+						app: "https://www.codeandweb.com/texturepacker",
+						size: { w: 256, h: 256 },
+						image: "default",
+					},
+					frames: [
+						{
+							filename: "hero0001.png",
+							frame: { x: 0, y: 0, w: 32, h: 48 },
+							rotated: false,
+							trimmed: false,
+							spriteSourceSize: { x: 0, y: 0, w: 32, h: 48 },
+							sourceSize: { w: 32, h: 48 },
+							pivot: { x: 0.5, y: 1.0 },
+						},
+					],
+				},
+				mockImage,
+			);
+
+			// createAnimationFromName should NOT strip anchorPoint (backward compat)
+			const sprite = atlasWithPivot.createAnimationFromName(["hero0001.png"]);
+			// the sprite's anchor should be set from the region's pivot
+			expect(sprite.anchorPoint.x).toEqual(0.5);
+			expect(sprite.anchorPoint.y).toEqual(1.0);
+		});
+
+		it("should bottom-align smaller frames via trim offset", () => {
+			// walk frames are 32x48, idle is 40x52 — max height is 52
+			const settings = atlas.getAnimationSettings([
+				"walk0001.png",
+				"idle0001.png",
+			]);
+
+			// walk frame (height 48) should get a trim.y offset of 52 - 48 = 4
+			const walkRegion = settings.atlas[settings.atlasIndices["walk0001.png"]];
+			expect(walkRegion.trim).toBeDefined();
+			expect(walkRegion.trim.y).toEqual(4);
+
+			// idle frame (height 52 = max) should NOT get a trim offset
+			const idleRegion = settings.atlas[settings.atlasIndices["idle0001.png"]];
+			// trim should be null/undefined or have y=0
+			if (idleRegion.trim) {
+				expect(idleRegion.trim.y).toEqual(0);
+			}
+		});
+
+		it("should not add trim when all frames have the same height", () => {
+			const settings = atlas.getAnimationSettings([
+				"walk0001.png",
+				"walk0002.png",
+				"walk0003.png",
+			]);
+
+			// all walk frames are 32x48 — no trim needed
+			for (const region of settings.atlas) {
+				if (region.trim) {
+					expect(region.trim.y).toEqual(0);
+				}
+			}
 		});
 	});
 });

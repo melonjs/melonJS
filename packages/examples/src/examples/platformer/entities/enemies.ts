@@ -1,45 +1,51 @@
-import { audio, collision, Entity, game, ParticleEmitter, Rect } from "melonjs";
+import {
+	audio,
+	Body,
+	collision,
+	game,
+	ParticleEmitter,
+	Rect,
+	Sprite,
+} from "melonjs";
 import { gameState } from "../gameState";
 
 /**
- * An enemy entity
+ * A base enemy entity using Sprite + Body
  * follow a horizontal path defined by the box size in Tiled
  */
-class PathEnemyEntity extends Entity {
+class PathEnemyEntity extends Sprite {
+	alive: boolean;
+	startX: number;
+	endX: number;
+	walkLeft: boolean;
+	isMovingEnemy: boolean;
+	particleTint: string;
+
 	/**
 	 * constructor
 	 */
-	constructor(x, y, settings) {
+	constructor(x, y, settings, frameNames: string[]) {
 		// save the area size defined in Tiled
 		const width = settings.width || settings.framewidth;
 
-		// adjust the setting size to the sprite one
-		settings.width = settings.framewidth;
-		settings.height = settings.frameheight;
+		// create the sprite from texture atlas animation frames
+		super(x, y, {
+			...gameState.texture.getAnimationSettings(frameNames),
+			anchorPoint: { x: 0, y: 0 },
+		});
 
-		// redefine the default shape (used to define path) with a shape matching the renderable
-		settings.shapes[0] = new Rect(
-			0,
-			0,
-			settings.framewidth,
-			settings.frameheight,
-		);
-
-		// call the super constructor
-		super(x, y, settings);
+		// add a physic body matching the sprite max frame dimensions
+		this.body = new Body(this, new Rect(0, 0, this.width, this.height));
 
 		// set start/end position based on the initial area size
-		this.startX = this.pos.x;
-		this.endX = this.pos.x + width - settings.framewidth;
-		this.pos.x = this.pos.x + width - settings.framewidth;
-
-		// enemies are not impacted by gravity
-		this.body.gravityScale = 0;
+		this.startX = x;
+		this.endX = x + width - settings.framewidth;
+		this.pos.x = x + width - settings.framewidth;
 
 		this.walkLeft = false;
 
 		// body walking & flying speed
-		this.body.setMaxVelocity(settings.velX || 1, settings.velY || 0);
+		this.body.setMaxVelocity(settings.velX || 1, settings.velY || 15);
 
 		// set a "enemyObject" type
 		this.body.collisionType = collision.types.ENEMY_OBJECT;
@@ -55,6 +61,9 @@ class PathEnemyEntity extends Entity {
 		// a specific flag to recognize these enemies
 		this.isMovingEnemy = true;
 
+		// living state
+		this.alive = true;
+
 		// default tint for particles
 		this.particleTint = "#FFF";
 	}
@@ -68,7 +77,7 @@ class PathEnemyEntity extends Entity {
 				if (this.pos.x <= this.startX) {
 					// if reach start position
 					this.walkLeft = false;
-					this.renderable.flipX(true);
+					this.flipX(true);
 				} else {
 					this.body.force.x = -this.body.maxVel.x;
 				}
@@ -78,7 +87,7 @@ class PathEnemyEntity extends Entity {
 			if (this.pos.x >= this.endX) {
 				// if reach the end position
 				this.walkLeft = true;
-				this.renderable.flipX(false);
+				this.flipX(false);
 			} else {
 				this.body.force.x = this.body.maxVel.x;
 			}
@@ -91,7 +100,12 @@ class PathEnemyEntity extends Entity {
 	/**
 	 * collision handle
 	 */
-	onCollision(response) {
+	onCollision(response, other) {
+		if (other.body.collisionType === collision.types.WORLD_SHAPE) {
+			// solid against world shapes (platforms, ground)
+			return true;
+		}
+
 		// res.y >0 means touched by something on the bottom
 		// which mean at top position for this one
 		if (this.alive && response.overlapV.y > 0 && response.a.body.falling) {
@@ -102,7 +116,7 @@ class PathEnemyEntity extends Entity {
 			// make the body static
 			this.body.setStatic(true);
 			// set dead animation
-			this.renderable.setCurrentAnimation("dead");
+			this.setCurrentAnimation("dead");
 
 			const emitter = new ParticleEmitter(this.centerX, this.centerY, {
 				width: this.width / 4,
@@ -129,7 +143,7 @@ class PathEnemyEntity extends Entity {
 }
 
 /**
- * An Slime enemy entity
+ * A Slime enemy entity
  * follow a horizontal path defined by the box size in Tiled
  */
 export class SlimeEnemyEntity extends PathEnemyEntity {
@@ -137,11 +151,8 @@ export class SlimeEnemyEntity extends PathEnemyEntity {
 	 * constructor
 	 */
 	constructor(x, y, settings) {
-		// super constructor
-		super(x, y, settings);
-
-		// set a renderable
-		this.renderable = gameState.texture.createAnimationFromName([
+		// super constructor with slime frame names
+		super(x, y, settings, [
 			"slime_normal.png",
 			"slime_walk.png",
 			"slime_dead.png",
@@ -149,22 +160,16 @@ export class SlimeEnemyEntity extends PathEnemyEntity {
 
 		// custom animation speed ?
 		if (settings.animationspeed) {
-			this.renderable.animationspeed = settings.animationspeed;
+			this.animationspeed = settings.animationspeed;
 		}
 
-		// walking animatin
-		this.renderable.addAnimation("walk", [
-			"slime_normal.png",
-			"slime_walk.png",
-		]);
-		// dead animatin
-		this.renderable.addAnimation("dead", ["slime_dead.png"]);
+		// walking animation
+		this.addAnimation("walk", ["slime_normal.png", "slime_walk.png"]);
+		// dead animation
+		this.addAnimation("dead", ["slime_dead.png"]);
 
 		// set default one
-		this.renderable.setCurrentAnimation("walk");
-
-		// set the renderable position to bottom center
-		this.anchorPoint.set(0.5, 1.0);
+		this.setCurrentAnimation("walk");
 
 		// particle tint matching the sprite color
 		this.particleTint = "#FF35B8";
@@ -172,41 +177,68 @@ export class SlimeEnemyEntity extends PathEnemyEntity {
 }
 
 /**
- * An Fly enemy entity
+ * A Fly enemy entity
  * follow a horizontal path defined by the box size in Tiled
  */
 export class FlyEnemyEntity extends PathEnemyEntity {
+	startY: number;
+	endY: number;
+	flyUp: boolean;
+
 	/**
 	 * constructor
 	 */
 	constructor(x, y, settings) {
-		// super constructor
-		super(x, y, settings);
+		// super constructor with fly frame names
+		super(x, y, settings, ["fly_normal.png", "fly_fly.png", "fly_dead.png"]);
 
-		// set a renderable
-		this.renderable = gameState.texture.createAnimationFromName([
-			"fly_normal.png",
-			"fly_fly.png",
-			"fly_dead.png",
-		]);
+		// set vertical patrol range (bob up and down by half height)
+		const bobRange = settings.height || this.height;
+		this.startY = y;
+		this.endY = y + bobRange;
+		this.flyUp = true;
+
+		// allow vertical movement
+		this.body.setMaxVelocity(settings.velX || 1, settings.velY || 1);
 
 		// custom animation speed ?
 		if (settings.animationspeed) {
-			this.renderable.animationspeed = settings.animationspeed;
+			this.animationspeed = settings.animationspeed;
 		}
 
-		// walking animatin
-		this.renderable.addAnimation("walk", ["fly_normal.png", "fly_fly.png"]);
-		// dead animatin
-		this.renderable.addAnimation("dead", ["fly_dead.png"]);
+		// walking animation
+		this.addAnimation("walk", ["fly_normal.png", "fly_fly.png"]);
+		// dead animation
+		this.addAnimation("dead", ["fly_dead.png"]);
 
 		// set default one
-		this.renderable.setCurrentAnimation("walk");
-
-		// set the renderable position to bottom center
-		this.anchorPoint.set(0.5, 1.0);
+		this.setCurrentAnimation("walk");
 
 		// particle tint matching the sprite color
 		this.particleTint = "#000000";
+	}
+
+	/**
+	 * manage the fly movement (horizontal + vertical bobbing)
+	 */
+	update(dt) {
+		if (this.alive) {
+			// vertical bobbing — apply force against gravity to fly
+			if (this.flyUp) {
+				if (this.pos.y <= this.startY) {
+					this.flyUp = false;
+				} else {
+					this.body.force.y = -this.body.maxVel.y;
+				}
+			} else {
+				if (this.pos.y >= this.endY) {
+					this.flyUp = true;
+				} else {
+					this.body.force.y = this.body.maxVel.y;
+				}
+			}
+		}
+
+		return super.update(dt);
 	}
 }
