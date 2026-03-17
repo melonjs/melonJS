@@ -491,8 +491,8 @@ export default class TMXTileMap {
 					if (typeof shape === "undefined") {
 						shape = polygonPool.get(0, 0, [
 							vector2dPool.get(0, 0),
-							vector2dPool.get(this.width, 0),
-							vector2dPool.get(this.width, this.height),
+							vector2dPool.get(settings.width, 0),
+							vector2dPool.get(settings.width, settings.height),
 						]);
 					}
 					// check if a me.Tile object is embedded
@@ -519,8 +519,8 @@ export default class TMXTileMap {
 						if (typeof shape === "undefined") {
 							shape = polygonPool.get(0, 0, [
 								vector2dPool.get(0, 0),
-								vector2dPool.get(this.width, 0),
-								vector2dPool.get(this.width, this.height),
+								vector2dPool.get(settings.width, 0),
+								vector2dPool.get(settings.width, settings.height),
 							]);
 						}
 						obj.anchorPoint.set(0, 0);

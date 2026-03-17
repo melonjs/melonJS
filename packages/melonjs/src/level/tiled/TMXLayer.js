@@ -98,8 +98,7 @@ export default class TMXLayer extends Renderable {
 		 */
 		this.tilesets = tilesets;
 
-		// the default tileset
-		// XXX: Is this even used?
+		// the default tileset (used as cache in cellAt)
 		this.tileset = this.tilesets ? this.tilesets.getTilesetByIndex(0) : null;
 
 		// Biggest tile size to draw
@@ -235,7 +234,7 @@ export default class TMXLayer extends Renderable {
 			this.canvasRenderer = new CanvasRenderer({
 				canvas: createCanvas(this.width, this.height),
 				width: this.width,
-				heigth: this.height,
+				height: this.height,
 				transparent: true,
 			});
 			// pre render the layer on the canvas
