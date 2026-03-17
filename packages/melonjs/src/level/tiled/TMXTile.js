@@ -1,3 +1,4 @@
+import { degToRad } from "../../math/math.ts";
 import { Matrix2d } from "../../math/matrix2d.ts";
 import { Bounds } from "./../../physics/bounds.ts";
 import Sprite from "./../../renderable/sprite.js";
@@ -102,7 +103,7 @@ export default class Tile extends Bounds {
 	setTileTransform(transform) {
 		transform.translate(this.width / 2, this.height / 2);
 		if (this.flippedAD) {
-			transform.rotate((-90 * Math.PI) / 180);
+			transform.rotate(degToRad(-90));
 			transform.scale(-1, 1);
 		}
 		if (this.flippedX) {

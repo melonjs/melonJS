@@ -81,8 +81,7 @@ export default class TMXObject {
 		 * the object class
 		 * @type {string}
 		 */
-		this.class =
-			typeof settings.class !== "undefined" ? settings.class : settings.type;
+		this.class = settings.class ?? settings.type;
 
 		/**
 		 * object text

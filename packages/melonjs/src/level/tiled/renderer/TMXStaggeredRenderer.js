@@ -1,5 +1,5 @@
 import { degToRad } from "./../../../math/math.ts";
-import { Vector2d, vector2dPool } from "../../../math/vector2d.ts";
+import { vector2dPool } from "../../../math/vector2d.ts";
 import TMXHexagonalRenderer from "./TMXHexagonalRenderer.js";
 
 /**
@@ -19,7 +19,7 @@ export default class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 	 * @ignore
 	 */
 	pixelToTileCoords(x, y, v) {
-		let ret = v || new Vector2d();
+		let ret = v || vector2dPool.get();
 
 		let alignedX = x;
 		let alignedY = y;

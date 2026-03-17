@@ -64,7 +64,7 @@ function readImageLayer(map, data, z) {
 	);
 
 	// set some additional flags
-	const visible = typeof data.visible !== "undefined" ? data.visible : true;
+	const visible = data.visible ?? true;
 	imageLayer.setOpacity(visible ? +data.opacity : 0);
 
 	return imageLayer;
@@ -215,7 +215,7 @@ export default class TMXTileMap {
 			// deprecation warning if map tiled version is older than 1.5
 			if (checkVersion(this.version, "1.5") < 0) {
 				warning(
-					"(" + this.name + ") Tiled Map format version 1.4 and below",
+					`(${this.name}) Tiled Map format version 1.4 and below`,
 					"format 1.5 or higher",
 					"10.4.4",
 				);
@@ -223,13 +223,7 @@ export default class TMXTileMap {
 			// warning if map version is newer than what we currently support
 			if (checkVersion(this.version, TILED_SUPPORTED_VERSION) > 0) {
 				console.warn(
-					"(" +
-						this.name +
-						") Tiled Map format version " +
-						this.version +
-						" is newer than the currently supported version " +
-						TILED_SUPPORTED_VERSION +
-						". Some features may not work as expected.",
+					`(${this.name}) Tiled Map format version ${this.version} is newer than the currently supported version ${TILED_SUPPORTED_VERSION}. Some features may not work as expected.`,
 				);
 			}
 		}
@@ -491,8 +485,8 @@ export default class TMXTileMap {
 					if (typeof shape === "undefined") {
 						shape = polygonPool.get(0, 0, [
 							vector2dPool.get(0, 0),
-							vector2dPool.get(this.width, 0),
-							vector2dPool.get(this.width, this.height),
+							vector2dPool.get(settings.width, 0),
+							vector2dPool.get(settings.width, settings.height),
 						]);
 					}
 					// check if a me.Tile object is embedded
@@ -519,8 +513,8 @@ export default class TMXTileMap {
 						if (typeof shape === "undefined") {
 							shape = polygonPool.get(0, 0, [
 								vector2dPool.get(0, 0),
-								vector2dPool.get(this.width, 0),
-								vector2dPool.get(this.width, this.height),
+								vector2dPool.get(settings.width, 0),
+								vector2dPool.get(settings.width, settings.height),
 							]);
 						}
 						obj.anchorPoint.set(0, 0);

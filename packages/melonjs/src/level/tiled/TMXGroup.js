@@ -53,7 +53,7 @@ export default class TMXGroup {
 		 */
 		this.objects = [];
 
-		const visible = typeof data.visible !== "undefined" ? data.visible : true;
+		const visible = data.visible ?? true;
 		this.opacity = visible === true ? clamp(+data.opacity || 1.0, 0.0, 1.0) : 0;
 
 		// check if we have any user-defined properties
@@ -78,8 +78,9 @@ export default class TMXGroup {
 					map.tileheight,
 					map.orientation,
 					map.tilesets,
-					z++,
+					z,
 				);
+				z++;
 				// set a renderer
 				layer.setRenderer(map.getRenderer());
 				// resize container accordingly

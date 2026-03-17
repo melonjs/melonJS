@@ -114,7 +114,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	topLeft(x, y, v) {
-		const ret = v || new Vector2d();
+		const ret = v || vector2dPool.get();
 
 		if (!this.staggerX) {
 			if ((y & 1) ^ this.staggerEven) {
@@ -136,7 +136,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	topRight(x, y, v) {
-		const ret = v || new Vector2d();
+		const ret = v || vector2dPool.get();
 
 		if (!this.staggerX) {
 			if ((y & 1) ^ this.staggerEven) {
@@ -158,7 +158,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	bottomLeft(x, y, v) {
-		const ret = v || new Vector2d();
+		const ret = v || vector2dPool.get();
 
 		if (!this.staggerX) {
 			if ((y & 1) ^ this.staggerEven) {
@@ -180,7 +180,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	bottomRight(x, y, v) {
-		const ret = v || new Vector2d();
+		const ret = v || vector2dPool.get();
 
 		if (!this.staggerX) {
 			if ((y & 1) ^ this.staggerEven) {
@@ -203,7 +203,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	 * @ignore
 	 */
 	pixelToTileCoords(x, y, v) {
-		const ret = v || new Vector2d();
+		const ret = v || vector2dPool.get();
 
 		if (this.staggerX) {
 			//flat top
@@ -266,7 +266,10 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 		let nearest = 0;
 		let minDist = Number.MAX_VALUE;
 		for (let i = 0; i < 4; ++i) {
-			const dc = this.centers[i].sub(rel).length2();
+			// calculate squared distance without mutating this.centers[i]
+			const dx = this.centers[i].x - rel.x;
+			const dy = this.centers[i].y - rel.y;
+			const dc = dx * dx + dy * dy;
 			if (dc < minDist) {
 				minDist = dc;
 				nearest = i;
@@ -293,7 +296,7 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 	tileToPixelCoords(x, y, v) {
 		const tileX = Math.floor(x);
 		const tileY = Math.floor(y);
-		const ret = v || new Vector2d();
+		const ret = v || vector2dPool.get();
 
 		if (this.staggerX) {
 			ret.y = tileY * (this.tileheight + this.sidelengthy);
@@ -310,20 +313,6 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 		}
 
 		return ret;
-	}
-
-	/**
-	 * fix the position of Objects to match
-	 * the way Tiled places them
-	 * @ignore
-	 */
-	adjustPosition(obj) {
-		// only adjust position if obj.gid is defined
-		if (typeof obj.gid === "number") {
-			// Tiled objects origin point is "bottom-left" in Tiled,
-			// "top-left" in melonJS)
-			obj.y -= obj.height;
-		}
 	}
 
 	/**
@@ -369,8 +358,8 @@ export default class TMXHexagonalRenderer extends TMXRenderer {
 			vector2dPool.get(),
 		);
 
-		const rowTile = startTile.clone();
-		const rowPos = startPos.clone();
+		const rowTile = vector2dPool.get().setV(startTile);
+		const rowPos = vector2dPool.get().setV(startPos);
 
 		/* Determine in which half of the tile the top-left corner of the area we
 		 * need to draw is. If we're in the upper half, we need to start one row
