@@ -226,15 +226,29 @@ export default class TMXObject {
 			if (this.isPolygon === true) {
 				const _polygon = polygonPool.get(0, 0, this.points);
 				const isConvex = _polygon.isConvex();
-				// make sure it's a convex polygon
-				if (isConvex === false) {
-					throw new Error(
-						"collision polygones in Tiled should be defined as Convex",
+
+				if (isConvex === true) {
+					shapes.push(_polygon.rotate(this.rotation));
+				} else if (isConvex === false) {
+					// decompose concave polygon into convex triangles
+					console.warn(
+						"melonJS: concave collision polygon detected, decomposing into convex triangles",
 					);
-				} else if (isConvex === null) {
-					throw new Error("invalid polygone");
+					const indices = _polygon.getIndices();
+					const pts = _polygon.points;
+					for (let t = 0; t < indices.length; t += 3) {
+						const tri = polygonPool.get(0, 0, [
+							vector2dPool.get(pts[indices[t]].x, pts[indices[t]].y),
+							vector2dPool.get(pts[indices[t + 1]].x, pts[indices[t + 1]].y),
+							vector2dPool.get(pts[indices[t + 2]].x, pts[indices[t + 2]].y),
+						]);
+						shapes.push(tri.rotate(this.rotation));
+					}
+					polygonPool.release(_polygon);
+				} else {
+					console.warn("melonJS: invalid polygon definition, skipping");
+					polygonPool.release(_polygon);
 				}
-				shapes.push(_polygon.rotate(this.rotation));
 			} else if (this.isPolyLine === true) {
 				const p = this.points;
 				let p1;

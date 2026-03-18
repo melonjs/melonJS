@@ -227,59 +227,8 @@
   </data>
  </layer>
  <objectgroup id="3" name="Objects">
-  <object id="1" name="maggots" type="Location" x="435" y="74" width="155" height="99">
-   <properties>
-    <property name="spawncount" type="int" value="5"/>
-    <property name="spawntype" value="maggot"/>
-   </properties>
-  </object>
-  <object id="2" name="discover chest" type="Trigger" x="201" y="200" width="127" height="127">
-   <properties>
-    <property name="script" type="file" value="chest-discovered.lua"/>
-   </properties>
-   <ellipse/>
-  </object>
-  <object id="3" name="unreachable" type="Fixture" x="2" y="158">
-   <properties>
-    <property name="static" type="bool" value="true"/>
-   </properties>
+  <object id="3" x="2" y="158">
    <polygon points="0,0 55,-23 96,-117 110,-61 104,-42 119,-33 116,6 104,9 100,36 60,43 53,58 43,58 34,74 21,69 18,90 0,89"/>
-  </object>
-  <object id="5" name="guard" type="NPC" x="22" y="361">
-   <polyline points="-3,120 87,91 154,96 181,16 273,-1"/>
-  </object>
-  <object id="6" name="guard" type="NPC" x="277" y="18">
-   <polyline points="0,0 75,78 133,82 176,179 274,183"/>
-  </object>
-  <object id="10" gid="282" x="413.333" y="225.333" width="16" height="16"/>
-  <object id="11" gid="282" x="421.667" y="218" width="16" height="16"/>
-  <object id="12" gid="2147483930" x="423" y="235.333" width="16" height="16"/>
-  <object id="13" gid="282" x="5" y="70" width="16" height="16"/>
-  <object id="14" gid="282" x="-3.66667" y="80.3333" width="16" height="16"/>
-  <object id="16" gid="283" x="538" y="418.333" width="16" height="16"/>
-  <object id="17" gid="283" x="407.667" y="462" width="16" height="16"/>
-  <object id="18" gid="283" x="417" y="473.667" width="16" height="16"/>
-  <object id="19" gid="283" x="402.667" y="469" width="16" height="16"/>
-  <object id="21" gid="2147483930" x="683.333" y="260.5" width="16" height="16"/>
-  <object id="22" gid="282" x="692.167" y="269.167" width="16" height="16"/>
-  <object id="23" gid="282" x="701.667" y="247.833" width="16" height="16"/>
-  <object id="24" gid="282" x="688.5" y="242" width="16" height="16"/>
-  <object id="25" gid="282" x="670.5" y="263.5" width="16" height="16"/>
-  <object id="26" gid="282" x="680" y="284" width="16" height="16"/>
-  <object id="27" gid="282" x="643.833" y="283.667" width="16" height="16"/>
-  <object id="28" gid="282" x="63.4165" y="386" width="16" height="16"/>
-  <object id="29" gid="282" x="9.0835" y="356.167" width="16" height="16"/>
-  <object id="30" gid="282" x="11.9165" y="385" width="16" height="16"/>
-  <object id="31" gid="282" x="54.2495" y="378.5" width="16" height="16"/>
-  <object id="32" gid="2147483930" x="2.4165" y="364.5" width="16" height="16"/>
-  <object id="33" gid="2147483930" x="41.5835" y="382.833" width="16" height="16"/>
-  <object id="34" type="Sign" gid="257" x="670.667" y="87" width="16" height="16">
-   <properties>
-    <property name="text" value="East West"/>
-   </properties>
-  </object>
-  <object id="37" name="player-start" type="Location" x="192" y="160">
-   <point/>
   </object>
  </objectgroup>
 </map>
