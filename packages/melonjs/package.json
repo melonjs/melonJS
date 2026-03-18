@@ -60,7 +60,7 @@
 	},
 	"devDependencies": {
 		"@types/howler": "^2.2.12",
-		"@types/node": "^25.4.0",
+		"@types/node": "^25.5.0",
 		"concurrently": "^9.2.1",
 		"del-cli": "^7.0.0",
 		"esbuild": "^0.27.3",
@@ -71,7 +71,7 @@
 		"typedoc": "^0.28.16",
 		"typedoc-plugin-missing-exports": "^4.1.2",
 		"typescript": "^5.9.3",
-		"vite": "~7.3.1",
+		"vite": "^8.0.0",
 		"vite-plugin-glsl": "workspace:^"
 	},
 	"scripts": {
