@@ -12,9 +12,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
       - uses: pnpm/action-setup@v4
@@ -36,7 +36,7 @@ jobs:
           mkdir -p packages/melonjs/docs/examples
           cp -r packages/examples/dist/* packages/melonjs/docs/examples/
       - name: Upload GitHub Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: packages/melonjs/docs/
   deploy:
