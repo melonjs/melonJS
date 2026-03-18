@@ -38,7 +38,7 @@
 	"author": "Olivier Biot (AltByte Pte Ltd)",
 	"funding": "https://github.com/sponsors/melonjs",
 	"engines": {
-		"node": ">= 20"
+		"node": "^20.19.0 || >=22.12.0"
 	},
 	"types": "./build/index.d.ts",
 	"module": "./build/index.js",
@@ -88,6 +88,5 @@
 		"clean": "tsx scripts/clean.js",
 		"types": "tsc --project tsconfig.build.json",
 		"test:types": "tsc"
-	},
-	"packageManager": "pnpm@9.5.0"
+	}
 }
