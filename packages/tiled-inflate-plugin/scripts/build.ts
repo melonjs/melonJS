@@ -14,6 +14,7 @@ const banner = [
 const buildOptions = {
 	entryPoints: ["src/index.js"],
 	external: ["melonjs"],
+	target: "es2022",
 	splitting: true,
 	format: "esm",
 	outdir: "build",

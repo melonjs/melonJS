@@ -82,7 +82,7 @@ UI
 
 Level Editor
 - [Tiled](https://www.mapeditor.org) map format version +1.0 built-in support for easy level design
-    - Uncompressed and [compressed](https://github.com/melonjs/tiled-inflate-plugin) Plain, Base64, CSV and JSON encoded XML tilemap loading
+    - Uncompressed and [compressed](https://github.com/melonjs/melonJS/tree/master/packages/tiled-inflate-plugin) Plain, Base64, CSV and JSON encoded XML tilemap loading
     - Orthogonal, Isometric and Hexagonal maps (both normal and staggered)
     - Multiple layers (multiple background/foreground, collision and Image layers)
     - Parallax scrolling via Image layers
@@ -191,8 +191,8 @@ Plugins
 melonJS provides a plugin system allowing to extend the engine capabilities.
 
 Here is the list of official plugins maintained by the melonJS team:
-- [debug-plugin](https://github.com/melonjs/debug-plugin) - a debug panel for inspecting game objects
-- [tiled-inflate-plugin](https://github.com/melonjs/tiled-inflate-plugin) - enable loading and parsing of zlib and gzip compressed [Tiled](https://www.mapeditor.org/) maps
+- [debug-plugin](https://github.com/melonjs/melonJS/tree/master/packages/debug-plugin) - a debug panel for inspecting game objects
+- [tiled-inflate-plugin](https://github.com/melonjs/melonJS/tree/master/packages/tiled-inflate-plugin) - enable loading and parsing of zlib, gzip and zstd compressed [Tiled](https://www.mapeditor.org/) maps
 - [spine-plugin](https://github.com/melonjs/spine-plugin) - [Spine](http://esotericsoftware.com) runtime integration to render Spine skeletal animations
 
 If you wish to develop your own plugin, we also provide a [plugin template](https://github.com/melonjs/plugin-template) to help you get started.
