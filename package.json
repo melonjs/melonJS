@@ -14,7 +14,9 @@
 		"publish-melonjs": "gh workflow run publish.yml -f package=melonjs",
 		"publish-melonjs:dry": "gh workflow run publish.yml -f package=melonjs -f dry-run=true",
 		"publish-debug-plugin": "gh workflow run publish.yml -f package=debug-plugin",
-		"publish-debug-plugin:dry": "gh workflow run publish.yml -f package=debug-plugin -f dry-run=true"
+		"publish-debug-plugin:dry": "gh workflow run publish.yml -f package=debug-plugin -f dry-run=true",
+		"publish-tiled-inflate-plugin": "gh workflow run publish.yml -f package=tiled-inflate-plugin",
+		"publish-tiled-inflate-plugin:dry": "gh workflow run publish.yml -f package=tiled-inflate-plugin -f dry-run=true"
 	},
 	"packageManager": "pnpm@9.5.0",
 	"dependencies": {

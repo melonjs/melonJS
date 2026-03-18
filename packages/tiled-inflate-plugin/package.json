@@ -1,0 +1,64 @@
+{
+	"name": "@melonjs/tiled-inflate-plugin",
+	"version": "1.2.0",
+	"description": "a melonJS plugin to enable loading and parsing of compressed Tiled maps",
+	"homepage": "https://github.com/melonjs/melonJS/tree/master/packages/tiled-inflate-plugin#readme",
+	"type": "module",
+	"keywords": [
+		"2D",
+		"HTML5",
+		"javascript",
+		"TypeScript",
+		"es6",
+		"melonjs",
+		"Tiled",
+		"plugin",
+		"gzip",
+		"zlib"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/melonjs/melonJS.git",
+		"directory": "packages/tiled-inflate-plugin"
+	},
+	"bugs": {
+		"url": "https://github.com/melonjs/melonJS/issues"
+	},
+	"license": "MIT",
+	"author": "Olivier Biot (AltByte Pte Ltd)",
+	"funding": "https://github.com/sponsors/melonjs",
+	"engines": {
+		"node": ">= 19"
+	},
+	"types": "./build/index.d.ts",
+	"exports": {
+		".": "./build/index.js"
+	},
+	"files": [
+		"build/",
+		"package.json",
+		"README.md",
+		"LICENSE"
+	],
+	"peerDependencies": {
+		"melonjs": ">=15.2.1"
+	},
+	"dependencies": {
+		"fzstd": "^0.1.1",
+		"js-base64": "^3.7.7",
+		"pako": "^2.1.0"
+	},
+	"devDependencies": {
+		"esbuild": "^0.27.4",
+		"melonjs": "workspace:*",
+		"tsconfig": "workspace:*",
+		"tsx": "^4.21.0",
+		"typescript": "^5.9.3"
+	},
+	"scripts": {
+		"build": "tsx scripts/build.ts && pnpm types",
+		"prepublishOnly": "pnpm clean && pnpm build",
+		"clean": "tsx scripts/clean.ts",
+		"types": "tsc --project tsconfig.build.json"
+	}
+}
