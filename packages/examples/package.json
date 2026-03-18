@@ -10,7 +10,7 @@
 	},
 	"dependencies": {
 		"@melonjs/debug-plugin": "workspace:*",
-		"@melonjs/tiled-inflate-plugin": "^1.1.2",
+		"@melonjs/tiled-inflate-plugin": "workspace:*",
 		"@types/react": "^19.2.13",
 		"@types/react-dom": "^19.2.3",
 		"@vitejs/plugin-react": "^5.1.3",

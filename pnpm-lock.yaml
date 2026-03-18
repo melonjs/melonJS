@@ -95,8 +95,8 @@ importers:
         specifier: workspace:*
         version: link:../debug-plugin
       '@melonjs/tiled-inflate-plugin':
-        specifier: ^1.1.2
-        version: 1.1.2(melonjs@packages+melonjs)
+        specifier: workspace:*
+        version: link:../tiled-inflate-plugin
       '@types/react':
         specifier: ^19.2.13
         version: 19.2.14
@@ -756,12 +756,6 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
-
-  '@melonjs/tiled-inflate-plugin@1.1.2':
-    resolution: {integrity: sha512-XuUP/cwF+RWUqZXtGMM/9k5UGFxfOVkEOaWqZGLJ3C7D3l9VKI2auNFzxRIsaTIGQ/2W9iHHyC3twO+QdzG47Q==}
-    engines: {node: '>= 19'}
-    peerDependencies:
-      melonjs: '>=15.2.1'
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -2774,12 +2768,6 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
-
-  '@melonjs/tiled-inflate-plugin@1.1.2(melonjs@packages+melonjs)':
-    dependencies:
-      js-base64: 3.7.8
-      melonjs: link:packages/melonjs
-      pako: 2.1.0
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:

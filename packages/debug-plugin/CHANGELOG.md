@@ -1,5 +1,10 @@
 # Changelog
 
+## 15.0.3
+
+### Improvements
+- Console log now links to the npm package page instead of the GitHub readme
+
 ## 15.0.2
 
 ### Bug Fixes
