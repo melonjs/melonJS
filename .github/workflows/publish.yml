@@ -10,6 +10,7 @@ on:
         options:
           - melonjs
           - debug-plugin
+          - tiled-inflate-plugin
       dry-run:
         description: "Dry run (skip actual publish)"
         required: false
@@ -55,6 +56,9 @@ jobs:
             echo "build_cmd=pnpm dist" >> "$GITHUB_OUTPUT"
           elif [ "${{ inputs.package }}" = "debug-plugin" ]; then
             echo "dir=packages/debug-plugin" >> "$GITHUB_OUTPUT"
+            echo "build_cmd=pnpm clean && pnpm build" >> "$GITHUB_OUTPUT"
+          elif [ "${{ inputs.package }}" = "tiled-inflate-plugin" ]; then
+            echo "dir=packages/tiled-inflate-plugin" >> "$GITHUB_OUTPUT"
             echo "build_cmd=pnpm clean && pnpm build" >> "$GITHUB_OUTPUT"
           fi
 
