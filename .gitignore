@@ -1,27 +1,17 @@
-# Eclipse files
-.project
-.settings
+# IDE
 .idea
+*.sw*
 
-# Temp files
+# OS
 .DS_Store
 Thumbs.db
 Desktop.ini
 
-# Vim swap files
-*.sw*
-
-# Sublime project and workspace
-*.sublime-project
-*.sublime-workspace
-
-# Project specific ignore
-add-on/
+# Project
 node_modules/
 **/build/
 dist/*
 !.placeholder
-/_SpecRunner.html
 package-lock.json
 docs/
 .turbo
