@@ -2,7 +2,7 @@
 	"name": "@melonjs/tiled-inflate-plugin",
 	"version": "1.2.0",
 	"description": "a melonJS plugin to enable loading and parsing of compressed Tiled maps",
-	"homepage": "https://github.com/melonjs/melonJS/tree/master/packages/tiled-inflate-plugin#readme",
+	"homepage": "https://www.npmjs.com/package/@melonjs/tiled-inflate-plugin",
 	"type": "module",
 	"keywords": [
 		"2D",

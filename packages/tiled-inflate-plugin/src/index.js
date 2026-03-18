@@ -2,6 +2,7 @@ import { decompress as zstdDecompress } from "fzstd";
 import { Base64 } from "js-base64";
 import { plugin, TMXUtils } from "melonjs";
 import pako from "pako";
+import { homepage, name, version } from "../package.json";
 
 /**
  * @classdesc
@@ -22,6 +23,8 @@ export class TiledInflatePlugin extends plugin.BasePlugin {
 
 		// minimum melonJS version expected to run this plugin
 		this.version = "15.2.1";
+
+		console.log(`${name} ${version} | ${homepage}`);
 
 		/**
 		 * decompress and decode zlib/gzip/zstd data

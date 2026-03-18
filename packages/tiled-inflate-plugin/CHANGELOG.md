@@ -8,6 +8,7 @@
 - Replaced rollup build with esbuild (matching other monorepo packages)
 
 ### Improvements
+- Log plugin name, version and homepage to console on registration
 - Fixed Uint32Array construction to account for byteOffset/byteLength
 - Set esbuild target to es2022
 - Updated Node.js engine requirement to >= 20
