@@ -30,7 +30,7 @@
 	"author": "Olivier Biot (AltByte Pte Ltd)",
 	"funding": "https://github.com/sponsors/melonjs",
 	"engines": {
-		"node": ">= 19"
+		"node": "^20.19.0 || >=22.12.0"
 	},
 	"types": "./build/index.d.ts",
 	"exports": {
