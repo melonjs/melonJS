@@ -11,7 +11,6 @@
 		"moduleResolution": "Bundler",
 		"moduleDetection": "force",
 		"resolveJsonModule": true,
-		"exactOptionalPropertyTypes": true,
 		"allowUnreachableCode": false,
 		"allowSyntheticDefaultImports": true,
 		"isolatedModules": true,
