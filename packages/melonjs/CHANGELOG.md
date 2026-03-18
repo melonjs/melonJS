@@ -3,6 +3,8 @@
 ## [18.1.0] (melonJS 2)
 
 ### Added
+- TextureAtlas: new `getAnimationSettings()` method for extending Sprite with texture atlas animations
+- TMX: automatically decompose concave collision polygons into convex triangles using earcut triangulation, instead of throwing an error
 - Ellipse: add rotation and matrix transform support (#583, #771)
 - Ellipse: proper SAT collision detection for non-circular ellipses via polygon approximation (#584)
 - WebGLRenderer: compressed texture support — DDS (DXT1/DXT3/DXT5/BC7), KTX v1, KTX2, PVR (PVRTC/S3TC/ETC1), and PKM (ETC1/ETC2) parsers (#1182)
@@ -11,9 +13,15 @@
 - WebGLRenderer: `lineWidth` now works for all primitive drawing methods via a proper shader-based implementation (#999)
 
 ### Changed
+- Entity: deprecated in favor of Sprite/Renderable + Body (#1008)
 - TMX: refactor TMXUtils into reusable `src/utils/decode.ts` and `src/utils/xml.ts` modules; modernize property coercion, XML normalization, and tileset iteration
 
 ### Fixed
+- TMX: fix hexagonal renderer `pixelToTileCoords` mutating internal centers array on every call
+- TMX: fix default collision shape using map dimensions instead of object dimensions in `getObjects()`
+- TMX: fix `heigth` typo in TMXLayer canvas renderer options
+- TMX: fix canvas memory leak in TMXLayer — canvasRenderer kept for reuse on deactivation
+- TMX: reduce GC pressure — replace `new Vector2d()` with pool allocations and `clone()` with `vector2dPool.get().setV()` across all TMX renderers
 - WebGLRenderer: fix `drawVertices` and `#expandLinesToTriangles` mutating input vertex objects, causing polygon geometry corruption across frames
 - WebGLRenderer: fix `restore()` not re-applying the GL scissor rectangle when restoring a state with active scissor test
 - Decode: fix CSV decoding skipping newlines after the first one
