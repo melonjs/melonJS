@@ -174,24 +174,40 @@ class Detector {
 								const overlap = this.response.overlapV;
 								const overlapN = this.response.overlapN;
 
+								// mass ratio for proportional response
+								const bothDynamic = !objA.body.isStatic && !objB.body.isStatic;
+								const totalMass = bothDynamic
+									? objA.body.mass + objB.body.mass
+									: 0;
+								const ratioA =
+									bothDynamic && totalMass > 0 ? objB.body.mass / totalMass : 1;
+								const ratioB =
+									bothDynamic && totalMass > 0 ? objA.body.mass / totalMass : 1;
+
 								// correct position
 								if (objA.body.isStatic === false) {
-									objA.body.ancestor.pos.sub(overlap);
+									objA.body.ancestor.pos.set(
+										objA.body.ancestor.pos.x - overlap.x * ratioA,
+										objA.body.ancestor.pos.y - overlap.y * ratioA,
+									);
 									// cancel velocity into this surface (no bounce)
 									const projVel =
 										objA.body.vel.x * overlapN.x + objA.body.vel.y * overlapN.y;
 									if (projVel > 0) {
-										objA.body.vel.x -= projVel * overlapN.x;
-										objA.body.vel.y -= projVel * overlapN.y;
+										objA.body.vel.x -= projVel * ratioA * overlapN.x;
+										objA.body.vel.y -= projVel * ratioA * overlapN.y;
 									}
 								}
 								if (objB.body.isStatic === false) {
-									objB.body.ancestor.pos.add(overlap);
+									objB.body.ancestor.pos.set(
+										objB.body.ancestor.pos.x + overlap.x * ratioB,
+										objB.body.ancestor.pos.y + overlap.y * ratioB,
+									);
 									const projVel =
 										objB.body.vel.x * overlapN.x + objB.body.vel.y * overlapN.y;
 									if (projVel > 0) {
-										objB.body.vel.x -= projVel * overlapN.x;
-										objB.body.vel.y -= projVel * overlapN.y;
+										objB.body.vel.x -= projVel * ratioB * overlapN.x;
+										objB.body.vel.y -= projVel * ratioB * overlapN.y;
 									}
 								}
 								// update bounds after position changed

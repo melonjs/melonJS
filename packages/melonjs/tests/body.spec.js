@@ -548,6 +548,113 @@ describe("Physics : Body", () => {
 			expect(body.vel.x).toBeCloseTo(-5);
 		});
 
+		it("should apply full overlap when other body is static", () => {
+			const parentA = new Renderable(50, 50, 32, 32);
+			parentA.anchorPoint.set(0, 0);
+			const bodyA = new Body(parentA, new Rect(0, 0, 32, 32));
+			parentA.body = bodyA;
+
+			const parentB = new Renderable(40, 50, 32, 32);
+			parentB.anchorPoint.set(0, 0);
+			const bodyB = new Body(parentB, new Rect(0, 0, 32, 32));
+			parentB.body = bodyB;
+			bodyB.setStatic(true);
+
+			const response = {
+				a: parentA,
+				b: parentB,
+				overlapV: { x: 10, y: 0 },
+				overlapN: { x: 1, y: 0 },
+			};
+			bodyA.respondToCollision(response);
+			// static other → full overlap applied (ratio = 1)
+			expect(parentA.pos.x).toBeCloseTo(40);
+		});
+
+		it("should split overlap proportionally when both bodies are dynamic with equal mass", () => {
+			const parentA = new Renderable(50, 50, 32, 32);
+			parentA.anchorPoint.set(0, 0);
+			const bodyA = new Body(parentA, new Rect(0, 0, 32, 32));
+			parentA.body = bodyA;
+			bodyA.mass = 1;
+
+			const parentB = new Renderable(40, 50, 32, 32);
+			parentB.anchorPoint.set(0, 0);
+			const bodyB = new Body(parentB, new Rect(0, 0, 32, 32));
+			parentB.body = bodyB;
+			bodyB.mass = 1;
+
+			const response = {
+				a: parentA,
+				b: parentB,
+				overlapV: { x: 10, y: 0 },
+				overlapN: { x: 1, y: 0 },
+			};
+			bodyA.respondToCollision(response);
+			// equal mass → ratio = 0.5, move half the overlap
+			expect(parentA.pos.x).toBeCloseTo(45);
+		});
+
+		it("should move lighter body more than heavier body", () => {
+			const parentA = new Renderable(50, 50, 32, 32);
+			parentA.anchorPoint.set(0, 0);
+			const bodyA = new Body(parentA, new Rect(0, 0, 32, 32));
+			parentA.body = bodyA;
+			bodyA.mass = 1;
+
+			const parentB = new Renderable(40, 50, 32, 32);
+			parentB.anchorPoint.set(0, 0);
+			const bodyB = new Body(parentB, new Rect(0, 0, 32, 32));
+			parentB.body = bodyB;
+			bodyB.mass = 3;
+
+			const response = {
+				a: parentA,
+				b: parentB,
+				overlapV: { x: 10, y: 0 },
+				overlapN: { x: 1, y: 0 },
+			};
+			// bodyA (mass 1) vs bodyB (mass 3): ratio = 3/(1+3) = 0.75
+			bodyA.respondToCollision(response);
+			expect(parentA.pos.x).toBeCloseTo(42.5);
+
+			// bodyB responds: ratio = 1/(1+3) = 0.25
+			const responseB = {
+				a: parentB,
+				b: parentA,
+				overlapV: { x: -10, y: 0 },
+				overlapN: { x: -1, y: 0 },
+			};
+			bodyB.respondToCollision(responseB);
+			expect(parentB.pos.x).toBeCloseTo(42.5);
+		});
+
+		it("should scale velocity response by mass ratio for dynamic bodies", () => {
+			const parentA = new Renderable(0, 0, 32, 32);
+			parentA.anchorPoint.set(0, 0);
+			const bodyA = new Body(parentA, new Rect(0, 0, 32, 32));
+			parentA.body = bodyA;
+			bodyA.mass = 1;
+
+			const parentB = new Renderable(0, 0, 32, 32);
+			parentB.anchorPoint.set(0, 0);
+			const bodyB = new Body(parentB, new Rect(0, 0, 32, 32));
+			parentB.body = bodyB;
+			bodyB.mass = 3;
+
+			bodyA.vel.set(8, 0);
+			const response = {
+				a: parentA,
+				b: parentB,
+				overlapV: { x: 2, y: 0 },
+				overlapN: { x: 1, y: 0 },
+			};
+			// ratio = 3/4 = 0.75
+			bodyA.respondToCollision(response);
+			// vel.x = 8 - 8 * 0.75 = 2
+			expect(bodyA.vel.x).toBeCloseTo(2);
+		});
+
 		it("should handle diagonal collision normals", () => {
 			const parent = new Renderable(0, 0, 32, 32);
 			parent.anchorPoint.set(0, 0);

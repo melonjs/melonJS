@@ -464,22 +464,32 @@ export default class Body {
 		const overlap = response.overlapV;
 		const overlapN = response.overlapN;
 
-		// FIXME: Respond proportionally to object mass
+		// determine mass ratio: when both bodies are dynamic, split
+		// the response proportionally to mass; otherwise apply full overlap
+		const other = response.a === this.ancestor ? response.b : response.a;
+		let ratio = 1;
+		if (other && other.body && !other.body.isStatic) {
+			const totalMass = this.mass + other.body.mass;
+			ratio = totalMass > 0 ? other.body.mass / totalMass : 0.5;
+		}
 
 		// Move out of the other object shape
-		this.ancestor.pos.sub(overlap);
+		this.ancestor.pos.set(
+			this.ancestor.pos.x - overlap.x * ratio,
+			this.ancestor.pos.y - overlap.y * ratio,
+		);
 
 		// cancel the velocity component along the collision normal
 		const projVel = this.vel.x * overlapN.x + this.vel.y * overlapN.y;
 		if (projVel > 0) {
 			if (this.bounce > 0) {
 				// reflect velocity along normal with bounce damping
-				this.vel.x -= (1 + this.bounce) * projVel * overlapN.x;
-				this.vel.y -= (1 + this.bounce) * projVel * overlapN.y;
+				this.vel.x -= (1 + this.bounce) * projVel * ratio * overlapN.x;
+				this.vel.y -= (1 + this.bounce) * projVel * ratio * overlapN.y;
 			} else {
 				// remove the velocity component along the collision normal
-				this.vel.x -= projVel * overlapN.x;
-				this.vel.y -= projVel * overlapN.y;
+				this.vel.x -= projVel * ratio * overlapN.x;
+				this.vel.y -= projVel * ratio * overlapN.y;
 			}
 		}
 
