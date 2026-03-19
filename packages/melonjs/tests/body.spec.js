@@ -655,6 +655,30 @@ describe("Physics : Body", () => {
 			expect(bodyA.vel.x).toBeCloseTo(2);
 		});
 
+		it("should use 50/50 split when both dynamic bodies have zero mass", () => {
+			const parentA = new Renderable(50, 50, 32, 32);
+			parentA.anchorPoint.set(0, 0);
+			const bodyA = new Body(parentA, new Rect(0, 0, 32, 32));
+			parentA.body = bodyA;
+			bodyA.mass = 0;
+
+			const parentB = new Renderable(40, 50, 32, 32);
+			parentB.anchorPoint.set(0, 0);
+			const bodyB = new Body(parentB, new Rect(0, 0, 32, 32));
+			parentB.body = bodyB;
+			bodyB.mass = 0;
+
+			const response = {
+				a: parentA,
+				b: parentB,
+				overlapV: { x: 10, y: 0 },
+				overlapN: { x: 1, y: 0 },
+			};
+			bodyA.respondToCollision(response);
+			// zero mass fallback → ratio = 0.5, move half the overlap
+			expect(parentA.pos.x).toBeCloseTo(45);
+		});
+
 		it("should handle diagonal collision normals", () => {
 			const parent = new Renderable(0, 0, 32, 32);
 			parent.anchorPoint.set(0, 0);

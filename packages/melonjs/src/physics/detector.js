@@ -179,10 +179,16 @@ class Detector {
 								const totalMass = bothDynamic
 									? objA.body.mass + objB.body.mass
 									: 0;
-								const ratioA =
-									bothDynamic && totalMass > 0 ? objB.body.mass / totalMass : 1;
-								const ratioB =
-									bothDynamic && totalMass > 0 ? objA.body.mass / totalMass : 1;
+								const ratioA = bothDynamic
+									? totalMass > 0
+										? objB.body.mass / totalMass
+										: 0.5
+									: 1;
+								const ratioB = bothDynamic
+									? totalMass > 0
+										? objA.body.mass / totalMass
+										: 0.5
+									: 1;
 
 								// correct position
 								if (objA.body.isStatic === false) {
