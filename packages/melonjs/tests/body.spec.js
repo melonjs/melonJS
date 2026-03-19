@@ -496,6 +496,21 @@ describe("Physics : Body", () => {
 			expect(parent.pos.y).toEqual(50);
 		});
 
+		it("should preserve z position (draw order) after collision", () => {
+			const parent = new Renderable(50, 50, 32, 32);
+			parent.anchorPoint.set(0, 0);
+			parent.pos.z = 5;
+			const body = new Body(parent, new Rect(0, 0, 32, 32));
+			parent.body = body;
+
+			const response = {
+				overlapV: { x: 5, y: 0 },
+				overlapN: { x: 1, y: 0 },
+			};
+			body.respondToCollision(response);
+			expect(parent.pos.z).toEqual(5);
+		});
+
 		it("should cancel velocity component along collision normal", () => {
 			const parent = new Renderable(0, 0, 32, 32);
 			parent.anchorPoint.set(0, 0);
