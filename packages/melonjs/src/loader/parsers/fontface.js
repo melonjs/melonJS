@@ -1,4 +1,3 @@
-import { isDataUrl } from "../../utils/string.ts";
 import { fontList } from "../cache.js";
 
 /**
@@ -10,7 +9,7 @@ import { fontList } from "../cache.js";
  * @ignore
  * @example
  * preloadFontFace(
- *     name: "'kenpixel'", type: "fontface",  src: "url('data/font/kenvector_future.woff2')"
+ *     name: "'kenpixel'", type: "fontface",  src: "data/font/kenvector_future.woff2"
  * ]);
  */
 export function preloadFontFace(data, onload, onerror) {
@@ -19,11 +18,9 @@ export function preloadFontFace(data, onload, onerror) {
 			? globalThis.document.fonts
 			: undefined;
 
-	if (isDataUrl(data.src) === true) {
-		// make sure it in the `url(data:[<mediatype>][;base64],<data>)` format as expected by FontFace
-		if (!data.src.startsWith("url(")) {
-			data.src = "url(" + data.src + ")";
-		}
+	// FontFace constructor expects src in `url(...)` format
+	if (!data.src.startsWith("url(")) {
+		data.src = "url(" + data.src + ")";
 	}
 
 	if (typeof fontFaceSet !== "undefined") {

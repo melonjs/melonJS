@@ -269,7 +269,7 @@ const createGame = () => {
 		{
 			name: "kenpixel",
 			type: "fontface",
-			src: `url(${base}font/kenvector_future.woff2)`,
+			src: `${base}font/kenvector_future.woff2`,
 		},
 	];
 

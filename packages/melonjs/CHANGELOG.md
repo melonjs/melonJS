@@ -3,6 +3,7 @@
 ## [18.1.0] (melonJS 2)
 
 ### Added
+- Loader: fontface assets now support `baseURL` — font paths are resolved consistently with other asset types
 - TextureAtlas: new `getAnimationSettings()` method for extending Sprite with texture atlas animations
 - TMX: automatically decompose concave collision polygons into convex triangles using earcut triangulation, instead of throwing an error
 - Ellipse: add rotation and matrix transform support (#583, #771)

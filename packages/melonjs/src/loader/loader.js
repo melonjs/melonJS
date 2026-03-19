@@ -140,8 +140,7 @@ export function setBaseURL(type, url = "./") {
 		baseURL["js"] = url;
 		baseURL["tmx"] = url;
 		baseURL["tsx"] = url;
-		// XXX ?
-		//baseURL["fontface"] = url;
+		baseURL["fontface"] = url;
 	}
 }
 
@@ -312,7 +311,7 @@ function onLoadingError(res) {
  *   // JavaScript file
  *   {name: "plugin", type: "js", src: "data/js/plugin.js"}
  *   // Font Face
- *   { name: "'kenpixel'", type: "fontface",  src: "url('data/font/kenvector_future.woff2')" }
+ *   { name: "'kenpixel'", type: "fontface",  src: "data/font/kenvector_future.woff2" }
  *   // video resources
  *   {name: "intro", type: "video",  src: "data/video/"}
  */
@@ -385,7 +384,7 @@ export function setParser(type, parserFn) {
  *   // JavaScript file
  *   {name: "plugin", type: "js", src: "data/js/plugin.js"},
  *   // Font Face
- *   {name: "'kenpixel'", type: "fontface",  src: "url('data/font/kenvector_future.woff2')"},
+ *   {name: "'kenpixel'", type: "fontface",  src: "data/font/kenvector_future.woff2"},
  *   // video resources
  *   {name: "intro", type: "video",  src: "data/video/"},
  *   // base64 encoded video asset
@@ -512,6 +511,15 @@ export function load(asset, onload, onerror) {
 	// make sure all parsers have been initialized
 	if (parserInitialized === false) {
 		initParsers();
+	}
+
+	// strip url() wrapper for fontface assets so baseURL can be prepended to the raw path
+	if (
+		asset.type === "fontface" &&
+		typeof asset.src === "string" &&
+		asset.src.startsWith("url(")
+	) {
+		asset.src = asset.src.slice(4, -1);
 	}
 
 	// transform the url if necessary

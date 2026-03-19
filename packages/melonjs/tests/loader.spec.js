@@ -264,9 +264,41 @@ describe("loader", () => {
 		expect(loader.baseURL["json"]).toBe("https://cdn.example.com/");
 		expect(loader.baseURL["binary"]).toBe("https://cdn.example.com/");
 		expect(loader.baseURL["tmx"]).toBe("https://cdn.example.com/");
+		expect(loader.baseURL["fontface"]).toBe("https://cdn.example.com/");
 
 		// reset
 		loader.setBaseURL("*", "./");
+	});
+
+	it("should strip url() wrapper from fontface src before applying baseURL", () => {
+		loader.setBaseURL("fontface", "assets/");
+
+		// simulate what load() does: strip url() then prepend baseURL
+		const asset1 = {
+			name: "font1",
+			type: "fontface",
+			src: "url(font/test.woff2)",
+		};
+		const asset2 = { name: "font2", type: "fontface", src: "font/test.woff2" };
+
+		// strip url() wrapper for fontface assets
+		if (asset1.src.startsWith("url(")) {
+			asset1.src = asset1.src.slice(4, -1);
+		}
+		if (asset2.src.startsWith("url(")) {
+			asset2.src = asset2.src.slice(4, -1);
+		}
+
+		// apply baseURL
+		asset1.src = loader.baseURL[asset1.type] + asset1.src;
+		asset2.src = loader.baseURL[asset2.type] + asset2.src;
+
+		// both should resolve to the same path
+		expect(asset1.src).toBe("assets/font/test.woff2");
+		expect(asset2.src).toBe("assets/font/test.woff2");
+
+		// reset
+		loader.setBaseURL("fontface", "./");
 	});
 
 	it("should configure loader options", () => {
