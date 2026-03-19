@@ -119,7 +119,7 @@ export function setOptions(options) {
  * @name setBaseURL
  * @memberof loader
  * @public
- * @param {string} type  - "*", "audio", "video", "binary", "image", "json", "js", "tmx", "tsx"
+ * @param {string} type  - "*", "audio", "video", "binary", "image", "json", "js", "tmx", "tsx", "fontface"
  * @param {string} [url="./"] - default base URL
  * @example
  * // change the base URL relative address for audio assets
@@ -140,8 +140,7 @@ export function setBaseURL(type, url = "./") {
 		baseURL["js"] = url;
 		baseURL["tmx"] = url;
 		baseURL["tsx"] = url;
-		// XXX ?
-		//baseURL["fontface"] = url;
+		baseURL["fontface"] = url;
 	}
 }
 
@@ -312,7 +311,7 @@ function onLoadingError(res) {
  *   // JavaScript file
  *   {name: "plugin", type: "js", src: "data/js/plugin.js"}
  *   // Font Face
- *   { name: "'kenpixel'", type: "fontface",  src: "url('data/font/kenvector_future.woff2')" }
+ *   { name: "'kenpixel'", type: "fontface",  src: "data/font/kenvector_future.woff2" }
  *   // video resources
  *   {name: "intro", type: "video",  src: "data/video/"}
  */
@@ -385,7 +384,7 @@ export function setParser(type, parserFn) {
  *   // JavaScript file
  *   {name: "plugin", type: "js", src: "data/js/plugin.js"},
  *   // Font Face
- *   {name: "'kenpixel'", type: "fontface",  src: "url('data/font/kenvector_future.woff2')"},
+ *   {name: "'kenpixel'", type: "fontface",  src: "data/font/kenvector_future.woff2"},
  *   // video resources
  *   {name: "intro", type: "video",  src: "data/video/"},
  *   // base64 encoded video asset
@@ -514,8 +513,21 @@ export function load(asset, onload, onerror) {
 		initParsers();
 	}
 
-	// transform the url if necessary
-	if (typeof baseURL[asset.type] !== "undefined") {
+	// strip url() wrapper for fontface assets so baseURL can be prepended to the raw path
+	if (asset.type === "fontface" && typeof asset.src === "string") {
+		const urlMatch = asset.src.match(/^url\(\s*['"]?(.*?)['"]?\s*\)$/);
+		if (urlMatch) {
+			asset.src = urlMatch[1];
+		}
+	}
+
+	// transform the url if necessary (skip for local() font sources and data URIs)
+	if (
+		typeof baseURL[asset.type] !== "undefined" &&
+		typeof asset.src === "string" &&
+		!asset.src.startsWith("local(") &&
+		!asset.src.startsWith("data:")
+	) {
 		asset.src = baseURL[asset.type] + asset.src;
 	}
 
