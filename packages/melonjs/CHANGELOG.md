@@ -14,6 +14,7 @@
 - WebGLRenderer: `lineWidth` now works for all primitive drawing methods via a proper shader-based implementation (#999)
 
 ### Changed
+- Physics: collision response is now mass-proportional — when two dynamic bodies collide, overlap and velocity correction are split based on relative mass
 - Entity: deprecated in favor of Sprite/Renderable + Body (#1008)
 - TMX: refactor TMXUtils into reusable `src/utils/decode.ts` and `src/utils/xml.ts` modules; modernize property coercion, XML normalization, and tileset iteration
 
