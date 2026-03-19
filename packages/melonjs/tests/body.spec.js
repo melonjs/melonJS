@@ -496,6 +496,21 @@ describe("Physics : Body", () => {
 			expect(parent.pos.y).toEqual(50);
 		});
 
+		it("should preserve z position (draw order) after collision", () => {
+			const parent = new Renderable(50, 50, 32, 32);
+			parent.anchorPoint.set(0, 0);
+			parent.pos.z = 5;
+			const body = new Body(parent, new Rect(0, 0, 32, 32));
+			parent.body = body;
+
+			const response = {
+				overlapV: { x: 5, y: 0 },
+				overlapN: { x: 1, y: 0 },
+			};
+			body.respondToCollision(response);
+			expect(parent.pos.z).toEqual(5);
+		});
+
 		it("should cancel velocity component along collision normal", () => {
 			const parent = new Renderable(0, 0, 32, 32);
 			parent.anchorPoint.set(0, 0);
@@ -574,12 +589,14 @@ describe("Physics : Body", () => {
 		it("should split overlap proportionally when both bodies are dynamic with equal mass", () => {
 			const parentA = new Renderable(50, 50, 32, 32);
 			parentA.anchorPoint.set(0, 0);
+			parentA.pos.z = 7;
 			const bodyA = new Body(parentA, new Rect(0, 0, 32, 32));
 			parentA.body = bodyA;
 			bodyA.mass = 1;
 
 			const parentB = new Renderable(40, 50, 32, 32);
 			parentB.anchorPoint.set(0, 0);
+			parentB.pos.z = 3;
 			const bodyB = new Body(parentB, new Rect(0, 0, 32, 32));
 			parentB.body = bodyB;
 			bodyB.mass = 1;
@@ -593,17 +610,21 @@ describe("Physics : Body", () => {
 			bodyA.respondToCollision(response);
 			// equal mass → ratio = 0.5, move half the overlap
 			expect(parentA.pos.x).toBeCloseTo(45);
+			// z must be preserved
+			expect(parentA.pos.z).toEqual(7);
 		});
 
 		it("should move lighter body more than heavier body", () => {
 			const parentA = new Renderable(50, 50, 32, 32);
 			parentA.anchorPoint.set(0, 0);
+			parentA.pos.z = 10;
 			const bodyA = new Body(parentA, new Rect(0, 0, 32, 32));
 			parentA.body = bodyA;
 			bodyA.mass = 1;
 
 			const parentB = new Renderable(40, 50, 32, 32);
 			parentB.anchorPoint.set(0, 0);
+			parentB.pos.z = 2;
 			const bodyB = new Body(parentB, new Rect(0, 0, 32, 32));
 			parentB.body = bodyB;
 			bodyB.mass = 3;
@@ -617,6 +638,7 @@ describe("Physics : Body", () => {
 			// bodyA (mass 1) vs bodyB (mass 3): ratio = 3/(1+3) = 0.75
 			bodyA.respondToCollision(response);
 			expect(parentA.pos.x).toBeCloseTo(42.5);
+			expect(parentA.pos.z).toEqual(10);
 
 			// bodyB responds: ratio = 1/(1+3) = 0.25
 			const responseB = {
@@ -627,6 +649,7 @@ describe("Physics : Body", () => {
 			};
 			bodyB.respondToCollision(responseB);
 			expect(parentB.pos.x).toBeCloseTo(42.5);
+			expect(parentB.pos.z).toEqual(2);
 		});
 
 		it("should scale velocity response by mass ratio for dynamic bodies", () => {
