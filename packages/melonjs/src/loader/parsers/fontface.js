@@ -18,8 +18,9 @@ export function preloadFontFace(data, onload, onerror) {
 			? globalThis.document.fonts
 			: undefined;
 
-	// FontFace constructor expects src in `url(...)` format
-	if (!data.src.startsWith("url(")) {
+	// FontFace constructor expects src in `url(...)` or `local()` format
+	// only wrap plain paths in url(); leave url(), local(), and data URIs as-is
+	if (!data.src.startsWith("url(") && !data.src.startsWith("local(")) {
 		data.src = "url(" + data.src + ")";
 	}
 

@@ -272,33 +272,61 @@ describe("loader", () => {
 
 	it("should strip url() wrapper from fontface src before applying baseURL", () => {
 		loader.setBaseURL("fontface", "assets/");
+		const receivedSrc = [];
 
-		// simulate what load() does: strip url() then prepend baseURL
-		const asset1 = {
-			name: "font1",
-			type: "fontface",
-			src: "url(font/test.woff2)",
-		};
-		const asset2 = { name: "font2", type: "fontface", src: "font/test.woff2" };
+		// stub fontface parser to capture the resolved src
+		loader.setParser("fontface", (data, onload) => {
+			receivedSrc.push(data.src);
+			if (typeof onload === "function") {
+				onload();
+			}
+			return 1;
+		});
 
-		// strip url() wrapper for fontface assets
-		if (asset1.src.startsWith("url(")) {
-			asset1.src = asset1.src.slice(4, -1);
-		}
-		if (asset2.src.startsWith("url(")) {
-			asset2.src = asset2.src.slice(4, -1);
-		}
+		// plain path
+		loader.load(
+			{ name: "font1", type: "fontface", src: "font/test.woff2" },
+			() => {},
+		);
+		// url() wrapped
+		loader.load(
+			{ name: "font2", type: "fontface", src: "url(font/test.woff2)" },
+			() => {},
+		);
+		// url() with quotes
+		loader.load(
+			{ name: "font3", type: "fontface", src: "url('font/test.woff2')" },
+			() => {},
+		);
 
-		// apply baseURL
-		asset1.src = loader.baseURL[asset1.type] + asset1.src;
-		asset2.src = loader.baseURL[asset2.type] + asset2.src;
-
-		// both should resolve to the same path
-		expect(asset1.src).toBe("assets/font/test.woff2");
-		expect(asset2.src).toBe("assets/font/test.woff2");
+		// all should resolve to the same baseURL + path
+		expect(receivedSrc[0]).toBe("assets/font/test.woff2");
+		expect(receivedSrc[1]).toBe("assets/font/test.woff2");
+		expect(receivedSrc[2]).toBe("assets/font/test.woff2");
 
 		// reset
 		loader.setBaseURL("fontface", "./");
+	});
+
+	it("should not strip local() wrapper from fontface src", () => {
+		// reset baseURL so it doesn't interfere
+		loader.setBaseURL("fontface", "./");
+		const receivedSrc = [];
+
+		loader.setParser("fontface", (data, onload) => {
+			receivedSrc.push(data.src);
+			if (typeof onload === "function") {
+				onload();
+			}
+			return 1;
+		});
+
+		loader.load(
+			{ name: "font4", type: "fontface", src: "local('My Font')" },
+			() => {},
+		);
+
+		expect(receivedSrc[0]).toBe("local('My Font')");
 	});
 
 	it("should configure loader options", () => {
