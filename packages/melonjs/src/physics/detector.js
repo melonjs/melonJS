@@ -195,6 +195,7 @@ class Detector {
 									objA.body.ancestor.pos.set(
 										objA.body.ancestor.pos.x - overlap.x * ratioA,
 										objA.body.ancestor.pos.y - overlap.y * ratioA,
+										objA.body.ancestor.pos.z,
 									);
 									// cancel velocity into this surface (no bounce)
 									const projVel =
@@ -208,6 +209,7 @@ class Detector {
 									objB.body.ancestor.pos.set(
 										objB.body.ancestor.pos.x + overlap.x * ratioB,
 										objB.body.ancestor.pos.y + overlap.y * ratioB,
+										objB.body.ancestor.pos.z,
 									);
 									const projVel =
 										objB.body.vel.x * overlapN.x + objB.body.vel.y * overlapN.y;

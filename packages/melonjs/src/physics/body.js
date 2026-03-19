@@ -477,6 +477,7 @@ export default class Body {
 		this.ancestor.pos.set(
 			this.ancestor.pos.x - overlap.x * ratio,
 			this.ancestor.pos.y - overlap.y * ratio,
+			this.ancestor.pos.z,
 		);
 
 		// cancel the velocity component along the collision normal
