@@ -282,7 +282,7 @@ export class TextureAtlas {
 	 * @returns {object} the created region
 	 */
 	addRegion(name, x, y, w, h) {
-		// TODO: Require proper atlas regions instead of caching arbitrary region keys
+		// see https://github.com/melonjs/melonJS/issues/1281
 		if (renderer.settings.verbose === true) {
 			console.warn("Adding texture region", name, "for texture", this);
 		}
@@ -367,7 +367,7 @@ export class TextureAtlas {
 		let region = this.getRegion(name);
 
 		if (typeof region === "undefined") {
-			// TODO: Require proper atlas regions instead of caching arbitrary region keys
+			// see https://github.com/melonjs/melonJS/issues/1281
 			const keys = name.split(",");
 			region = this.addRegion(name, +keys[0], +keys[1], +keys[2], +keys[3]);
 		}
@@ -397,7 +397,7 @@ export class TextureAtlas {
 				(s.y + sh) / h, // v1 (bottom)
 			]);
 			// Cache source coordinates
-			// TODO: Remove this when the Batcher only accepts a region name
+			// see https://github.com/melonjs/melonJS/issues/1281
 			const key = s.x + "," + s.y + "," + w + "," + h;
 			atlas[key] = atlas[name];
 		}

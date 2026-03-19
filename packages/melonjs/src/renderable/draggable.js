@@ -88,7 +88,7 @@ export class Draggable extends Renderable {
 	 */
 	dragMove(e) {
 		if (this.dragging === true) {
-			this.pos.set(e.gameX, e.gameY, this.pos.z); //TODO : z ?
+			this.pos.set(e.gameX, e.gameY, this.pos.z);
 			this.pos.sub(this.grabOffset);
 		}
 	}

@@ -48,7 +48,7 @@ class TextureCache {
 		}
 
 		// No units available
-		// TODO: Merge textures instead of throwing an exception
+		// see https://github.com/melonjs/melonJS/issues/1280
 		throw new Error(
 			"Texture cache overflow: " +
 				this.max_size +

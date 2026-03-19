@@ -587,7 +587,6 @@ export default class Camera2d extends Renderable {
 	 * @returns {Vector2d}
 	 */
 	localToWorld(x, y, v) {
-		// TODO memoization for one set of coords (multitouch)
 		v = v || vector2dPool.get();
 		v.set(x, y).add(this.pos).sub(game.world.pos);
 		if (!this.currentTransform.isIdentity()) {
@@ -604,7 +603,6 @@ export default class Camera2d extends Renderable {
 	 * @returns {Vector2d} a vector with the converted local coordinates
 	 */
 	worldToLocal(x, y, v) {
-		// TODO memoization for one set of coords (multitouch)
 		v = v || vector2dPool.get();
 		v.set(x, y);
 		if (!this.currentTransform.isIdentity()) {

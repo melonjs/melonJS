@@ -270,7 +270,6 @@ export default class Container extends Renderable {
 			// if the child is a container
 			if (child instanceof Container) {
 				// add all container child bodies
-				// TODO: make it recursive ?
 				child.forEach((cchild) => {
 					if (cchild.body instanceof Body) {
 						worldContainer.addBody(cchild.body);
@@ -342,7 +341,6 @@ export default class Container extends Renderable {
 				// if the child is a container
 				if (child instanceof Container) {
 					// add all container child bodies
-					// TODO: make it recursive ?
 					child.forEach((cchild) => {
 						if (cchild.body instanceof Body) {
 							worldContainer.addBody(cchild.body);

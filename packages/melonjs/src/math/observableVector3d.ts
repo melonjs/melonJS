@@ -393,10 +393,10 @@ export class ObservableVector3d {
 	/**
 	 * Rotate this vector (counter-clockwise) by the specified angle (in radians) around the z axis
 	 * @param angle - The angle to rotate (in radians)
-	 * @param [v] - an optional point to rotate around (on the same z axis)
+	 * @param [v] - an optional point to rotate around
 	 * @returns Reference to this object for method chaining
 	 */
-	rotate(angle: number, v?: Vector2d | Point) {
+	rotate(angle: number, v?: Vector2d | Point | Vector3d) {
 		let cx = 0;
 		let cy = 0;
 
@@ -405,7 +405,6 @@ export class ObservableVector3d {
 			cy = v.y;
 		}
 
-		// TODO also rotate on the z axis if the given vector is a 3d one
 		const x = this.x - cx;
 		const y = this.y - cy;
 

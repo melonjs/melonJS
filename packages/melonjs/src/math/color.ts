@@ -561,8 +561,6 @@ export class Color {
 	 * @returns Reference to this object for method chaining
 	 */
 	parseRGB(rgbColor: string) {
-		// TODO : Memoize this function by caching its input
-
 		const match = rgbaRx.exec(rgbColor);
 		if (!match) {
 			return this.parseHex(rgbColor as `#${string}`);
@@ -583,8 +581,6 @@ export class Color {
 	 * @returns Reference to this object for method chaining
 	 */
 	parseHex(hexColor: `#${string}`, argb = false) {
-		// TODO : Memoize this function by caching its input
-
 		let match: RegExpExecArray | null;
 		if ((match = hex8Rx.exec(hexColor))) {
 			// #AARRGGBB or #RRGGBBAA
@@ -663,9 +659,6 @@ export class Color {
 	 * @returns The color in "#RRGGBB" format
 	 */
 	toHex() {
-		// TODO : Memoize this function by caching its result until any of
-		// the r,g,b,a values are changed
-
 		return `#${toHex(this.r)}${toHex(this.g)}${toHex(this.b)}`;
 	}
 
@@ -675,9 +668,6 @@ export class Color {
 	 * @returns The color in "#RRGGBBAA" format
 	 */
 	toHex8(alpha = this.alpha) {
-		// TODO : Memoize this function by caching its result until any of
-		// the r,g,b,a values are changed
-
 		return `#${toHex(this.r)}${toHex(this.g)}${toHex(this.b)}${toHex(alpha * 255)}`;
 	}
 
@@ -686,9 +676,6 @@ export class Color {
 	 * @returns The color in "rgb(R,G,B)" format
 	 */
 	toRGB() {
-		// TODO : Memoize this function by caching its result until any of
-		// the r,g,b,a values are changed
-
 		return `rgb(${this.r},${this.g},${this.b})` as const;
 	}
 
@@ -698,9 +685,6 @@ export class Color {
 	 * @returns The color in "rgba(R,G,B,A)" format
 	 */
 	toRGBA(alpha = this.alpha) {
-		// TODO : Memoize this function by caching its result until any of
-		// the r,g,b,a values are changed
-
 		return `rgba(${this.r},${this.g},${this.b},${alpha})` as const;
 	}
 }
