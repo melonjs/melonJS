@@ -454,8 +454,8 @@ export default class TMXTileMap {
 					settings.tint.parseHex(settings.tintcolor, true);
 				}
 
-				/// XXX Clean/rewrite all this part to remove object
-				/// specific instantiation logic/details from here
+				// TODO: clean/rewrite this part to remove object-specific
+				// instantiation logic from here (see getObjects refactoring plan)
 
 				// groups can contains either text, objects or layers
 				if (settings instanceof TMXLayer) {

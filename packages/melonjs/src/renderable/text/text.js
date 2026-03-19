@@ -173,7 +173,8 @@ export default class Text extends Renderable {
 		}
 
 		// the canvas Texture used to render this text
-		// XXX: offscreenCanvas is currently disabled for text rendering due to issue in WebGL mode
+		// offscreenCanvas is currently disabled for text rendering due to issue in WebGL mode
+		// see https://github.com/melonjs/melonJS/issues/1180
 		this.canvasTexture = new CanvasRenderTarget(2, 2, {
 			offscreenCanvas: false,
 		});

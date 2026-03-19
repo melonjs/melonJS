@@ -406,7 +406,7 @@ export default class Sprite extends Renderable {
 			const frameObjectName = frameObject.name;
 			if (typeof frameObjectName === "number") {
 				if (typeof this.textureAtlas[frameObjectName] !== "undefined") {
-					// TODO: adding the cache source coordinates add undefined entries in webGL mode
+					// see https://github.com/melonjs/melonJS/issues/1281
 					this.anim[name].frames[i] = Object.assign(
 						{},
 						this.textureAtlas[frameObjectName],

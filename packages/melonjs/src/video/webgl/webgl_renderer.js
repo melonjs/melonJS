@@ -424,7 +424,7 @@ export default class WebGLRenderer extends Renderer {
 			image,
 		);
 
-		// FIXME: Remove old cache entry and texture when changing the repeat mode
+		// see https://github.com/melonjs/melonJS/issues/1278
 		this.currentCompositor.uploadTexture(texture);
 
 		return texture;
@@ -843,7 +843,7 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	setAntiAlias(enable = false) {
 		super.setAntiAlias(enable);
-		// TODO: perhaps handle GLNEAREST or other options with texture binding
+		// see https://github.com/melonjs/melonJS/issues/1279
 	}
 
 	/**

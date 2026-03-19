@@ -648,7 +648,7 @@ export default class Renderable extends Rect {
 		if (typeof this._absPos === "undefined") {
 			this._absPos = vector2dPool.get();
 		}
-		// XXX Cache me or something
+		// TODO: cache the absolute position and invalidate when pos or ancestor changes
 		this._absPos.set(this.pos.x, this.pos.y);
 		if (
 			typeof this.ancestor !== "undefined" &&

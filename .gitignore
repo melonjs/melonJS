@@ -1,6 +1,7 @@
 # IDE
 .idea
 *.sw*
+.claude
 
 # OS
 .DS_Store
