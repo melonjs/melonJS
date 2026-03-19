@@ -390,9 +390,18 @@ export let autoFocus = true;
  * });
  */
 export function onReady(fn) {
-	// register on blur/focus and visibility event handlers
+	DOMContentLoaded(fn);
+}
+
+/**
+ * Register blur/focus and visibility change event handlers.
+ * Called once during boot to emit BLUR/FOCUS events when the
+ * window or tab gains/loses focus.
+ * @memberof device
+ * @ignore
+ */
+export function initVisibilityEvents() {
 	if (typeof globalThis.addEventListener === "function") {
-		// set pause/stop action on losing focus
 		globalThis.addEventListener(
 			"blur",
 			() => {
@@ -400,12 +409,10 @@ export function onReady(fn) {
 			},
 			false,
 		);
-		// set restart/resume action on gaining focus
 		globalThis.addEventListener(
 			"focus",
 			() => {
 				eventEmitter.emit(FOCUS);
-				// force focus if autofocus is on
 				if (autoFocus === true) {
 					focus();
 				}
@@ -413,28 +420,22 @@ export function onReady(fn) {
 			false,
 		);
 	}
-	if (typeof globalThis.document !== "undefined") {
-		if (typeof globalThis.document.addEventListener === "function") {
-			// register on the visibilitychange event if supported
-			globalThis.document.addEventListener(
-				"visibilitychange",
-				() => {
-					if (globalThis.document.visibilityState === "visible") {
-						eventEmitter.emit(FOCUS);
-						// force focus if autofocus is on
-						if (autoFocus === true) {
-							focus();
-						}
-					} else {
-						eventEmitter.emit(BLUR);
+	if (globalThis.document?.addEventListener) {
+		globalThis.document.addEventListener(
+			"visibilitychange",
+			() => {
+				if (globalThis.document.visibilityState === "visible") {
+					eventEmitter.emit(FOCUS);
+					if (autoFocus === true) {
+						focus();
 					}
-				},
-				false,
-			);
-		}
+				} else {
+					eventEmitter.emit(BLUR);
+				}
+			},
+			false,
+		);
 	}
-	// call the supplied function
-	DOMContentLoaded(fn);
 }
 
 /**

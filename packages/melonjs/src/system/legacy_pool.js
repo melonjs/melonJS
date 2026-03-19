@@ -39,10 +39,15 @@ class ObjectPool {
 	 */
 	register(className, classObj, recycling = false) {
 		if (typeof classObj !== "undefined") {
-			this.objectClass[className] = {
+			const entry = {
 				class: classObj,
 				pool: recycling ? [] : undefined,
 			};
+			this.objectClass[className] = entry;
+			// also register with "me." prefix for backward compatibility
+			if (!className.startsWith("me.")) {
+				this.objectClass["me." + className] = entry;
+			}
 		} else {
 			throw new Error(
 				"Cannot register object '" + className + "', invalid class",
