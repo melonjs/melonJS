@@ -47,12 +47,11 @@ describe("setAntiAlias", () => {
 		video.renderer.setAntiAlias(false);
 
 		let called = false;
-		const original = video.renderer.renderTarget.setAntiAlias.bind(
-			video.renderer.renderTarget,
-		);
-		video.renderer.renderTarget.setAntiAlias = () => {
+		const renderTarget = video.renderer.renderTarget;
+		const original = renderTarget.setAntiAlias.bind(renderTarget);
+		renderTarget.setAntiAlias = (enable) => {
 			called = true;
-			original();
+			original(enable);
 		};
 
 		// calling with the same value should not trigger renderTarget update
@@ -63,7 +62,8 @@ describe("setAntiAlias", () => {
 		video.renderer.setAntiAlias(true);
 		expect(called).toBe(true);
 
-		// reset
+		// restore original and reset
+		renderTarget.setAntiAlias = original;
 		video.renderer.setAntiAlias(false);
 	});
 });

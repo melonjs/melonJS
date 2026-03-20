@@ -168,8 +168,9 @@ describe("Texture", () => {
 			// stub the compositor to verify flush is called
 			let flushed = false;
 			const compositor = video.renderer.currentCompositor;
+			let originalFlush;
 			if (compositor) {
-				const originalFlush = compositor.flush.bind(compositor);
+				originalFlush = compositor.flush.bind(compositor);
 				compositor.flush = () => {
 					flushed = true;
 					originalFlush();
@@ -186,6 +187,8 @@ describe("Texture", () => {
 				expect(flushed).toBe(true);
 				expect(compositor.boundTextures.length).toEqual(0);
 				expect(compositor.currentTextureUnit).toEqual(-1);
+				// restore original
+				compositor.flush = originalFlush;
 			}
 		});
 

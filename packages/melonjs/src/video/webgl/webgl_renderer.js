@@ -857,6 +857,8 @@ export default class WebGLRenderer extends Renderer {
 							gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
 						}
 					}
+					// reset so next bindTexture2D re-selects the correct unit
+					compositor.currentTextureUnit = -1;
 				}
 			});
 		}
