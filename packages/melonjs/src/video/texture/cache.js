@@ -86,6 +86,15 @@ class TextureCache {
 
 	/**
 	 * @ignore
+	 * return the texture unit for the given texture, or -1 if not allocated
+	 */
+	peekUnit(texture) {
+		const source = texture.sources.get(texture.activeAtlas);
+		return this.units.has(source) ? this.units.get(source) : -1;
+	}
+
+	/**
+	 * @ignore
 	 * cache the textureAltas for the given image
 	 */
 	set(image, textureAtlas) {

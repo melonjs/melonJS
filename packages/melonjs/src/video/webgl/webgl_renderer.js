@@ -300,6 +300,7 @@ export default class WebGLRenderer extends Renderer {
 
 		this.currentBatcher = undefined;
 		this.currentProgram = undefined;
+		this.customShader = undefined;
 
 		this.batchers.forEach((batcher) => {
 			if (this.isContextValid === false) {
@@ -409,7 +410,10 @@ export default class WebGLRenderer extends Renderer {
 		// clean up any previous pattern texture for this image
 		// see https://github.com/melonjs/melonJS/issues/1278
 		if (this.cache.has(image)) {
-			this.currentBatcher.deleteTexture2D(this.cache.get(image));
+			const cached = this.cache.get(image);
+			if (cached.getAtlas().name === "pattern") {
+				this.currentBatcher.deleteTexture2D(cached);
+			}
 		}
 
 		const texture = new TextureAtlas(
