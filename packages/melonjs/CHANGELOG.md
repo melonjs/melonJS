@@ -17,6 +17,9 @@
 - Physics: collision response is now mass-proportional — when two dynamic bodies collide, overlap and velocity correction are split based on relative mass
 - Entity: deprecated in favor of Sprite/Renderable + Body (#1008)
 - TMX: refactor TMXUtils into reusable `src/utils/decode.ts` and `src/utils/xml.ts` modules; modernize property coercion, XML normalization, and tileset iteration
+- WebGLRenderer: `Compositor`, `QuadCompositor`, and `PrimitiveCompositor` are now deprecated in favor of `Batcher`, `QuadBatcher`, and `PrimitiveBatcher`
+- Loader: modernize asset loading with Promise-based completion, improving parallel loading performance
+- Loader: `onload`, `onProgress`, and `onError` properties are now deprecated in favor of `LOADER_COMPLETE`, `LOADER_PROGRESS`, and `LOADER_ERROR` events
 
 ### Fixed
 - TMX: fix hexagonal renderer `pixelToTileCoords` mutating internal centers array on every call
@@ -37,6 +40,7 @@
 - Sprite: fix visual "vibration" on flip with trimmed atlas frames — stable dimensions and anchor across all frames (#1214)
 - Sprite: fix sprite jumping on rotated atlas frames — trim offset now applied after rotation with correct coordinate transform
 - Entity: auto-inherit renderable's anchorPoint when entity anchor is at default (0,0), aligning body and sprite centers
+- WebGL: flush and rebatch when texture units are exhausted instead of throwing (#1280)
 
 ### Performance
 - Path2D: replace `Math.pow()` with inline multiplication in quadratic/cubic Bézier and arc interpolation
@@ -57,10 +61,6 @@
 - WebGLRenderer: switch quad rendering from `gl.drawArrays` (6 vertices per quad) to `gl.drawElements` with a static index buffer (4 vertices + 6 indices per quad), reducing vertex data by 33%
 - WebGLRenderer: increase vertex batch size from 256 (64 quads) to 4096 (1024 quads), reducing draw calls for sprite-heavy and tile-heavy scenes
 
-### Changed
-- WebGLRenderer: `Compositor`, `QuadCompositor`, and `PrimitiveCompositor` are now deprecated in favor of `Batcher`, `QuadBatcher`, and `PrimitiveBatcher`
-- Loader: modernize asset loading with Promise-based completion, improving parallel loading performance
-- Loader: `onload`, `onProgress`, and `onError` properties are now deprecated in favor of `LOADER_COMPLETE`, `LOADER_PROGRESS`, and `LOADER_ERROR` events
 
 ## [18.0.0] (melonJS 2) - _2026-03-10_
 

@@ -160,14 +160,16 @@ describe("Texture", () => {
 			expect(unit1).toEqual(1);
 		});
 
-		it("should throw when texture units are exhausted", () => {
+		it("should flush and reset when texture units are exhausted", () => {
 			cache.max_size = 2;
 			cache.allocateTextureUnit();
 			cache.allocateTextureUnit();
 
-			expect(() => {
-				return cache.allocateTextureUnit();
-			}).toThrow(/Texture cache overflow/);
+			// when all units are exhausted, it should flush, reset, and return unit 0
+			const unit = cache.allocateTextureUnit();
+			expect(unit).toEqual(0);
+			expect(cache.usedUnits.size).toEqual(1);
+			expect(cache.units.size).toEqual(0);
 		});
 
 		it("tint() should cache and return the same result for identical src+color", () => {
