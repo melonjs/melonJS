@@ -31,8 +31,8 @@ function scale(game, x, y) {
 	canvas.style.width = w / pixelRatio + "px";
 	canvas.style.height = h / pixelRatio + "px";
 
-	// if anti-alias and blend mode were resetted (e.g. Canvas mode)
-	renderer.setAntiAlias(context, settings.antiAlias);
+	// if anti-alias and blend mode were reset (e.g. Canvas mode)
+	renderer.setAntiAlias(settings.antiAlias);
 	renderer.setBlendMode(settings.blendMode, context);
 
 	// force repaint

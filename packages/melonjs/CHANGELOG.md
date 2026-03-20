@@ -41,6 +41,8 @@
 - Sprite: fix sprite jumping on rotated atlas frames — trim offset now applied after rotation with correct coordinate transform
 - Entity: auto-inherit renderable's anchorPoint when entity anchor is at default (0,0), aligning body and sprite centers
 - WebGL: flush and rebatch when texture units are exhausted instead of throwing (#1280)
+- WebGLRenderer: `setAntiAlias()` now controls GL texture filtering (`GL_NEAREST` vs `GL_LINEAR`) on all bound textures (#1279)
+- Renderer: fix `setAntiAlias()` in `resize.js` passing the rendering context instead of a boolean, corrupting `settings.antiAlias` on every resize
 
 ### Performance
 - Path2D: replace `Math.pow()` with inline multiplication in quadratic/cubic Bézier and arc interpolation

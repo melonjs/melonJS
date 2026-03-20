@@ -293,7 +293,10 @@ export default class Renderer {
 	 * @param {boolean} [enable=false]
 	 */
 	setAntiAlias(enable = false) {
-		this.renderTarget.setAntiAlias(enable);
+		if (this.settings.antiAlias !== enable) {
+			this.settings.antiAlias = enable;
+			this.renderTarget.setAntiAlias(enable);
+		}
 	}
 
 	/**
