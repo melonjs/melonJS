@@ -2,9 +2,8 @@ import { nodeJS } from "./platform.ts";
 
 /**
  * Execute a callback when the DOM is ready.
- * Emits the DOM_READY event and calls the provided function.
- * In Node.js or when the DOM is already parsed, the callback
- * is deferred to the next microtask.
+ * In Node.js, when there is no DOM, or when the DOM is already parsed,
+ * the callback is deferred to the next microtask.
  * @param fn - callback to execute when the DOM is ready
  * @ignore
  */

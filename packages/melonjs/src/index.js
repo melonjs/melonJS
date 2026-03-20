@@ -54,7 +54,7 @@ import save from "./system/save.ts";
 import timer from "./system/timer.ts";
 import Tween from "./tweens/tween.ts";
 import { getUriFragment } from "./utils/utils.ts";
-import { version } from "./version.ts";
+
 import CanvasRenderer from "./video/canvas/canvas_renderer.js";
 import Renderer from "./video/renderer.js";
 import RenderState from "./video/renderstate.js";
@@ -193,9 +193,6 @@ export function boot() {
 	if (initialized === true) {
 		return;
 	}
-
-	// output melonJS version in the console
-	console.log("melonJS 2 (v" + version + ") | http://melonjs.org");
 
 	// register all built-ins objects into the object legacy pool
 	pool.register("Entity", Entity);
