@@ -46,7 +46,8 @@ import UISpriteElement from "./renderable/ui/uispriteelement.js";
 import UITextButton from "./renderable/ui/uitextbutton.js";
 import Stage from "./state/stage.js";
 import state from "./state/state.js";
-import { onReady } from "./system/device.js";
+import { initVisibilityEvents } from "./system/device.js";
+import { DOMContentLoaded } from "./system/dom.ts";
 import { BOOT, DOM_READY, eventEmitter } from "./system/event.ts";
 import pool from "./system/legacy_pool.js";
 import save from "./system/save.ts";
@@ -194,30 +195,13 @@ export function boot() {
 	}
 
 	// output melonJS version in the console
-	if (!("__vitest_browser__" in window)) {
-		console.log("melonJS 2 (v" + version + ") | http://melonjs.org");
-	}
+	console.log("melonJS 2 (v" + version + ") | http://melonjs.org");
 
 	// register all built-ins objects into the object legacy pool
-	pool.register("me.Entity", Entity);
-	pool.register("me.Collectable", Collectable);
-	pool.register("me.Trigger", Trigger);
-	pool.register("me.Light2d", Light2d);
-	pool.register("me.Particle", Particle, true);
-	pool.register("me.Sprite", Sprite);
-	pool.register("me.NineSliceSprite", NineSliceSprite);
-	pool.register("me.Renderable", Renderable);
-	pool.register("me.Text", Text, true);
-	pool.register("me.BitmapText", BitmapText);
-	pool.register("me.ImageLayer", ImageLayer);
-	pool.register("me.Tween", Tween);
-	pool.register("me.ColorLayer", ColorLayer, true);
-	// duplicate all entries if use with no namespace (e.g. es6)
 	pool.register("Entity", Entity);
 	pool.register("Collectable", Collectable);
 	pool.register("Trigger", Trigger);
 	pool.register("Light2d", Light2d);
-	pool.register("Tween", Tween, true);
 	pool.register("Particle", Particle, true);
 	pool.register("Sprite", Sprite);
 	pool.register("NineSliceSprite", NineSliceSprite);
@@ -225,7 +209,7 @@ export function boot() {
 	pool.register("Text", Text, true);
 	pool.register("BitmapText", BitmapText);
 	pool.register("ImageLayer", ImageLayer);
-	pool.register("Tween", Tween);
+	pool.register("Tween", Tween, true);
 	pool.register("ColorLayer", ColorLayer, true);
 
 	// publish Boot notification
@@ -237,17 +221,18 @@ export function boot() {
 	// automatically enable keyboard events
 	initKeyboardEvent();
 
+	// register blur/focus and visibility change handlers
+	initVisibilityEvents();
+
 	// mark melonJS as initialized
 	initialized = true;
 
-	/// if auto init is disable and this function was called manually
-	if (skipAutoInit === true) {
-		eventEmitter.emit(DOM_READY);
-	}
+	// notify that the engine is ready
+	eventEmitter.emit(DOM_READY);
 }
 
 // call the library init function when ready
-onReady(() => {
+DOMContentLoaded(() => {
 	if (skipAutoInit === false) {
 		boot();
 	}

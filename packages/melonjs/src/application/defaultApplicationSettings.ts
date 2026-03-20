@@ -11,7 +11,7 @@ export const defaultApplicationSettings = {
 	powerPreference: "default",
 	transparent: false,
 	antiAlias: false,
-	consoleHeader: !("__vitest_browser__" in window),
+	consoleHeader: true,
 	blendMode: "normal",
 	physic: "builtin",
 	failIfMajorPerformanceCaveat: true,
