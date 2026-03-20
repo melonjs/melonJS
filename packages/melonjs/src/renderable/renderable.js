@@ -223,9 +223,42 @@ export default class Renderable extends Rect {
 		this.mask = undefined;
 
 		/**
-		 * (Experimental) an optional shader, to be used instead of the default built-in one, when drawing this renderable (WebGL only)
+		 * an optional shader, to be used instead of the default built-in one, when drawing this renderable (WebGL only).
+		 * the custom shader must use the same vertex attribute names as the default quad shader: `aVertex`, `aRegion`, and `aColor`.
 		 * @type {GLShader}
 		 * @default undefined
+		 * @example
+		 * // apply a grayscale fragment shader to a sprite
+		 * mySprite.shader = new me.GLShader(
+		 *     me.video.renderer.gl,
+		 *     // vertex shader — must match default attribute names
+		 *     [
+		 *         "attribute vec2 aVertex;",
+		 *         "attribute vec2 aRegion;",
+		 *         "attribute vec4 aColor;",
+		 *         "uniform mat4 uProjectionMatrix;",
+		 *         "varying vec2 vRegion;",
+		 *         "varying vec4 vColor;",
+		 *         "void main(void) {",
+		 *         "    gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);",
+		 *         "    vColor = vec4(aColor.bgr * aColor.a, aColor.a);",
+		 *         "    vRegion = aRegion;",
+		 *         "}"
+		 *     ].join("\n"),
+		 *     // custom fragment shader
+		 *     [
+		 *         "uniform sampler2D uSampler;",
+		 *         "varying vec4 vColor;",
+		 *         "varying vec2 vRegion;",
+		 *         "void main(void) {",
+		 *         "    vec4 texColor = texture2D(uSampler, vRegion) * vColor;",
+		 *         "    float gray = dot(texColor.rgb, vec3(0.299, 0.587, 0.114));",
+		 *         "    gl_FragColor = vec4(vec3(gray), texColor.a);",
+		 *         "}"
+		 *     ].join("\n")
+		 * );
+		 * // to remove the custom shader
+		 * mySprite.shader = undefined;
 		 */
 		this.shader = undefined;
 
@@ -754,7 +787,6 @@ export default class Renderable extends Rect {
 		// revert to the default shader if defined
 		if (typeof this.shader === "object" && typeof renderer.gl !== "undefined") {
 			renderer.customShader = undefined;
-			//renderer.setCompositor("quad");
 		}
 
 		// restore the context

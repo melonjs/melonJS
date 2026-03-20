@@ -110,10 +110,10 @@ export default class WebGLRenderer extends Renderer {
 		this.currentTransform = this.renderState.currentTransform;
 
 		/**
-		 * The current compositor used by the renderer
+		 * The current batcher used by the renderer
 		 * @type {Batcher}
 		 */
-		this.currentCompositor = undefined;
+		this.currentBatcher = undefined;
 
 		/**
 		 * a reference to the current shader program used by the renderer
@@ -122,24 +122,18 @@ export default class WebGLRenderer extends Renderer {
 		this.currentProgram = undefined;
 
 		/**
-		 * The list of active compositors
-		 * @type {Map<Compositor>}
+		 * The list of active batchers
+		 * @type {Map<Batcher>}
 		 */
-		this.compositors = new Map();
+		this.batchers = new Map();
 
 		// bind the vertex buffer
 		this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
 
-		// Create both quad and primitive compositor
-		this.addCompositor(
-			new (this.settings.compositor || QuadBatcher)(this),
-			"quad",
-			true,
-		);
-		this.addCompositor(
-			new (this.settings.compositor || PrimitiveBatcher)(this),
-			"primitive",
-		);
+		// Create both quad and primitive batchers
+		const CustomBatcher = this.settings.batcher || this.settings.compositor;
+		this.addBatcher(new (CustomBatcher || QuadBatcher)(this), "quad", true);
+		this.addBatcher(new (CustomBatcher || PrimitiveBatcher)(this), "primitive");
 
 		// depth Test settings
 		this.depthTest = options.depthTest;
@@ -170,8 +164,7 @@ export default class WebGLRenderer extends Renderer {
 			);
 		}
 
-		// a private property that when set will make `setCompositor`
-		// to use this specific shader instead of the default one
+		// an optional custom shader set by a renderable's preDraw
 		this.customShader = undefined;
 
 		// Create a texture cache
@@ -305,79 +298,73 @@ export default class WebGLRenderer extends Renderer {
 			this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
 		}
 
-		this.currentCompositor = undefined;
+		this.currentBatcher = undefined;
 		this.currentProgram = undefined;
-		this.customShader = undefined;
 
-		this.compositors.forEach((compositor) => {
+		this.batchers.forEach((batcher) => {
 			if (this.isContextValid === false) {
 				// on context lost/restore
-				compositor.init(this);
+				batcher.init(this);
 			} else {
-				compositor.reset();
+				batcher.reset();
 			}
 		});
 
-		this.setCompositor("quad");
+		this.setBatcher("quad");
 
 		this.gl.disable(this.gl.SCISSOR_TEST);
 	}
 
 	/**
-	 * add a new compositor to this renderer
-	 * @param {Compositor} compositor - a compositor instance
-	 * @param {string} name - a name uniquely identifying this compositor
-	 * @param {boolean} [activate=false] - true if the given compositor should be set as the active one
+	 * add a new batcher to this renderer
+	 * @param {Batcher} batcher - a batcher instance
+	 * @param {string} name - a name uniquely identifying this batcher
+	 * @param {boolean} [activate=false] - true if the given batcher should be set as the active one
 	 */
-	addCompositor(compositor, name = "default", activate = false) {
-		// make sure there is no existing compositor with the same name
-		if (typeof this.compositors.get(name) !== "undefined") {
-			throw new Error("Invalid Compositor name");
+	addBatcher(batcher, name = "default", activate = false) {
+		if (typeof this.batchers.get(name) !== "undefined") {
+			throw new Error("Invalid Batcher name");
 		}
 
-		// add the new compositor
-		this.compositors.set(name, compositor);
+		this.batchers.set(name, batcher);
 
 		if (activate === true) {
-			// set as active one
-			this.setCompositor(name);
+			this.setBatcher(name);
 		}
 	}
 
 	/**
-	 * set the active compositor for this renderer
-	 * @param {string} name - a compositor name
-	 * @param {GLShader} [shader] - an optional shader program to be used, instead of the default one, when activating the compositor
-	 * @returns {Batcher} an instance to the current active compositor
+	 * set the active batcher for this renderer
+	 * @param {string} name - a batcher name
+	 * @param {GLShader} [shader] - an optional shader program to be used, instead of the default one, when activating the batcher
+	 * @returns {Batcher} an instance to the current active batcher
 	 */
-	setCompositor(name = "default", shader = this.customShader) {
-		const compositor = this.compositors.get(name);
+	setBatcher(name = "default", shader) {
+		const batcher = this.batchers.get(name);
 
-		if (typeof compositor === "undefined") {
-			throw new Error("Invalid Compositor");
+		if (typeof batcher === "undefined") {
+			throw new Error("Invalid Batcher");
 		}
 
-		// fast path: already on the right compositor with no custom shader
-		if (this.currentCompositor === compositor && typeof shader !== "object") {
-			return this.currentCompositor;
+		// fast path: already on the right batcher with no custom shader
+		if (this.currentBatcher === batcher && typeof shader !== "object") {
+			return this.currentBatcher;
 		}
 
-		if (this.currentCompositor !== compositor) {
-			if (this.currentCompositor !== undefined) {
-				// flush the current compositor
-				this.currentCompositor.flush();
+		if (this.currentBatcher !== batcher) {
+			if (this.currentBatcher !== undefined) {
+				// flush the current batcher
+				this.currentBatcher.flush();
 			}
-			// set as the active one
-			this.currentCompositor = compositor;
-			// bind the compositor with the default shader (program & attributes)
-			this.currentCompositor.bind();
+			this.currentBatcher = batcher;
+			this.currentBatcher.bind();
 		}
 
 		if (typeof shader === "object") {
-			this.currentCompositor.useShader(shader);
+			this.currentBatcher.useShader(shader);
 		}
 
-		return this.currentCompositor;
+		return this.currentBatcher;
 	}
 
 	/**
@@ -400,7 +387,7 @@ export default class WebGLRenderer extends Renderer {
 	 * let basic      = renderer.createPattern(image, "no-repeat");
 	 */
 	createPattern(image, repeat) {
-		this.setCompositor("quad");
+		this.setBatcher("quad");
 
 		if (
 			renderer.WebGLVersion === 1 &&
@@ -419,22 +406,27 @@ export default class WebGLRenderer extends Renderer {
 			);
 		}
 
+		// clean up any previous pattern texture for this image
+		// see https://github.com/melonjs/melonJS/issues/1278
+		if (this.cache.has(image)) {
+			this.currentBatcher.deleteTexture2D(this.cache.get(image));
+		}
+
 		const texture = new TextureAtlas(
 			createAtlas(image.width, image.height, "pattern", repeat),
 			image,
 		);
 
-		// see https://github.com/melonjs/melonJS/issues/1278
-		this.currentCompositor.uploadTexture(texture);
+		this.currentBatcher.uploadTexture(texture);
 
 		return texture;
 	}
 
 	/**
-	 * Flush the compositor to the frame buffer
+	 * Flush the batcher to the frame buffer
 	 */
 	flush() {
-		this.currentCompositor.flush();
+		this.currentBatcher.flush();
 	}
 
 	/**
@@ -443,7 +435,7 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	setProjection(matrix) {
 		super.setProjection(matrix);
-		this.currentCompositor.setProjection(matrix);
+		this.currentBatcher.setProjection(matrix);
 	}
 
 	/**
@@ -565,12 +557,18 @@ export default class WebGLRenderer extends Renderer {
 			dy |= 0;
 		}
 
-		this.setCompositor("quad");
+		this.setBatcher("quad");
+
+		const shader = this.customShader;
+		if (typeof shader === "object") {
+			this.currentBatcher.useShader(shader);
+		}
+
 		// force reuploading if the given image is a HTMLVideoElement
 		const reupload = typeof image.videoWidth !== "undefined";
 		const texture = this.cache.get(image);
 		const uvs = texture.getUVs(sx, sy, sw, sh);
-		this.currentCompositor.addQuad(
+		this.currentBatcher.addQuad(
 			texture,
 			dx,
 			dy,
@@ -583,6 +581,10 @@ export default class WebGLRenderer extends Renderer {
 			this.currentTint.toUint32(this.getGlobalAlpha()),
 			reupload,
 		);
+
+		if (typeof shader === "object") {
+			this.currentBatcher.useShader(this.currentBatcher.defaultShader);
+		}
 	}
 
 	/**
@@ -596,8 +598,8 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	drawPattern(pattern, x, y, width, height) {
 		const uvs = pattern.getUVs("0,0," + width + "," + height);
-		this.setCompositor("quad");
-		this.currentCompositor.addQuad(
+		this.setBatcher("quad");
+		this.currentBatcher.addQuad(
 			pattern,
 			x,
 			y,
@@ -677,18 +679,18 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	stroke(shape, fill) {
 		if (typeof shape === "undefined") {
-			this.setCompositor("primitive");
+			this.setBatcher("primitive");
 			if (fill === true) {
 				// draw all triangles
-				this.currentCompositor.drawVertices(
+				this.currentBatcher.drawVertices(
 					this.gl.TRIANGLES,
 					this.path2D.triangulatePath(),
 				);
 			} else {
-				this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+				this.currentBatcher.drawVertices(this.gl.LINES, this.path2D.points);
 			}
 		} else {
-			// dispatches to strokeRect/strokePolygon/etc. which each call setCompositor
+			// dispatches to strokeRect/strokePolygon/etc. which each call setBatcher
 			super.stroke(shape, fill);
 		}
 	}
@@ -847,18 +849,18 @@ export default class WebGLRenderer extends Renderer {
 			// see https://github.com/melonjs/melonJS/issues/1279
 			const gl = this.gl;
 			const filter = enable ? gl.LINEAR : gl.NEAREST;
-			this.compositors.forEach((compositor) => {
-				if (compositor.boundTextures) {
-					for (let i = 0; i < compositor.boundTextures.length; i++) {
-						if (typeof compositor.boundTextures[i] !== "undefined") {
+			this.batchers.forEach((batcher) => {
+				if (batcher.boundTextures) {
+					for (let i = 0; i < batcher.boundTextures.length; i++) {
+						if (typeof batcher.boundTextures[i] !== "undefined") {
 							gl.activeTexture(gl.TEXTURE0 + i);
-							gl.bindTexture(gl.TEXTURE_2D, compositor.boundTextures[i]);
+							gl.bindTexture(gl.TEXTURE_2D, batcher.boundTextures[i]);
 							gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
 							gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
 						}
 					}
 					// reset so next bindTexture2D re-selects the correct unit
-					compositor.currentTextureUnit = -1;
+					batcher.currentTextureUnit = -1;
 				}
 			});
 		}
@@ -906,10 +908,10 @@ export default class WebGLRenderer extends Renderer {
 			this.fillArc(x, y, radius, start, end, antiClockwise);
 			return;
 		}
-		this.setCompositor("primitive");
+		this.setBatcher("primitive");
 		this.path2D.beginPath();
 		this.path2D.arc(x, y, radius, start, end, antiClockwise);
-		this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+		this.currentBatcher.drawVertices(this.gl.LINES, this.path2D.points);
 	}
 
 	/**
@@ -922,7 +924,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
 	 */
 	fillArc(x, y, radius, start, end, antiClockwise = false) {
-		this.setCompositor("primitive");
+		this.setBatcher("primitive");
 		let diff = Math.abs(end - start);
 		if (antiClockwise) {
 			diff = Math.PI * 2 - diff;
@@ -932,7 +934,7 @@ export default class WebGLRenderer extends Renderer {
 			Math.round((diff * radius) / this.path2D.arcResolution),
 		);
 		const startAngle = antiClockwise ? end : start;
-		this.currentCompositor.drawVertices(
+		this.currentBatcher.drawVertices(
 			this.gl.TRIANGLES,
 			this.#generateTriangleFan(
 				x,
@@ -959,10 +961,10 @@ export default class WebGLRenderer extends Renderer {
 			this.fillEllipse(x, y, w, h);
 			return;
 		}
-		this.setCompositor("primitive");
+		this.setBatcher("primitive");
 		this.path2D.beginPath();
 		this.path2D.ellipse(x, y, w, h, 0, 0, 360);
-		this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+		this.currentBatcher.drawVertices(this.gl.LINES, this.path2D.points);
 	}
 
 	/**
@@ -973,12 +975,12 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} h - vertical radius of the ellipse
 	 */
 	fillEllipse(x, y, w, h) {
-		this.setCompositor("primitive");
+		this.setBatcher("primitive");
 		const segments = Math.max(
 			8,
 			Math.round((Math.PI * (w + h)) / this.path2D.arcResolution),
 		);
-		this.currentCompositor.drawVertices(
+		this.currentBatcher.drawVertices(
 			this.gl.TRIANGLES,
 			this.#generateTriangleFan(x, y, w, h, 0, Math.PI * 2, segments),
 		);
@@ -992,11 +994,11 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} endY - the end y coordinate
 	 */
 	strokeLine(startX, startY, endX, endY) {
-		this.setCompositor("primitive");
+		this.setBatcher("primitive");
 		this.path2D.beginPath();
 		this.path2D.moveTo(startX, startY);
 		this.path2D.lineTo(endX, endY);
-		this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+		this.currentBatcher.drawVertices(this.gl.LINES, this.path2D.points);
 	}
 
 	/**
@@ -1025,7 +1027,7 @@ export default class WebGLRenderer extends Renderer {
 
 		this.translate(poly.pos.x, poly.pos.y);
 
-		this.setCompositor("primitive");
+		this.setBatcher("primitive");
 		this.path2D.beginPath();
 		for (let i = 0; i < len - 1; i++) {
 			const curPoint = points[i];
@@ -1034,7 +1036,7 @@ export default class WebGLRenderer extends Renderer {
 			this.path2D.lineTo(nextPoint.x, nextPoint.y);
 		}
 		this.path2D.closePath();
-		this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+		this.currentBatcher.drawVertices(this.gl.LINES, this.path2D.points);
 		// add round joins at vertices for thick lines
 		if (this.lineWidth > 1) {
 			const radius = this.lineWidth / 2;
@@ -1058,7 +1060,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {Polygon} poly - the shape to draw
 	 */
 	fillPolygon(poly) {
-		this.setCompositor("primitive");
+		this.setBatcher("primitive");
 		this.translate(poly.pos.x, poly.pos.y);
 		const indices = poly.getIndices();
 		const points = poly.points;
@@ -1077,7 +1079,7 @@ export default class WebGLRenderer extends Renderer {
 			verts[i].y = src.y;
 		}
 
-		this.currentCompositor.drawVertices(this.gl.TRIANGLES, verts, len);
+		this.currentBatcher.drawVertices(this.gl.TRIANGLES, verts, len);
 		this.translate(-poly.pos.x, -poly.pos.y);
 	}
 
@@ -1094,10 +1096,10 @@ export default class WebGLRenderer extends Renderer {
 			this.fillRect(x, y, width, height);
 			return;
 		}
-		this.setCompositor("primitive");
+		this.setBatcher("primitive");
 		this.path2D.beginPath();
 		this.path2D.rect(x, y, width, height);
-		this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+		this.currentBatcher.drawVertices(this.gl.LINES, this.path2D.points);
 		// add round joins at corners for thick lines
 		if (this.lineWidth > 1) {
 			const radius = this.lineWidth / 2;
@@ -1121,7 +1123,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} height - The rectangle's height.
 	 */
 	fillRect(x, y, width, height) {
-		this.setCompositor("primitive");
+		this.setBatcher("primitive");
 		// 2 triangles directly — avoids path2D + earcut overhead
 		const right = x + width;
 		const bottom = y + height;
@@ -1138,7 +1140,7 @@ export default class WebGLRenderer extends Renderer {
 		pts[4].y = bottom;
 		pts[5].x = x;
 		pts[5].y = bottom;
-		this.currentCompositor.drawVertices(this.gl.TRIANGLES, pts);
+		this.currentBatcher.drawVertices(this.gl.TRIANGLES, pts);
 	}
 
 	/**
@@ -1155,10 +1157,10 @@ export default class WebGLRenderer extends Renderer {
 			this.fillRoundRect(x, y, width, height, radius);
 			return;
 		}
-		this.setCompositor("primitive");
+		this.setBatcher("primitive");
 		this.path2D.beginPath();
 		this.path2D.roundRect(x, y, width, height, radius);
-		this.currentCompositor.drawVertices(this.gl.LINES, this.path2D.points);
+		this.currentBatcher.drawVertices(this.gl.LINES, this.path2D.points);
 	}
 
 	/**
@@ -1170,7 +1172,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} radius - The rounded corner's radius.
 	 */
 	fillRoundRect(x, y, width, height, radius) {
-		this.setCompositor("primitive");
+		this.setBatcher("primitive");
 		const r = Math.min(radius, width / 2, height / 2);
 		const verts = [];
 
@@ -1254,7 +1256,7 @@ export default class WebGLRenderer extends Renderer {
 			),
 		); // bottom-left
 
-		this.currentCompositor.drawVertices(this.gl.TRIANGLES, verts);
+		this.currentBatcher.drawVertices(this.gl.TRIANGLES, verts);
 	}
 
 	/**
@@ -1301,7 +1303,7 @@ export default class WebGLRenderer extends Renderer {
 			}
 		}
 
-		this.currentCompositor.drawVertices(this.gl.TRIANGLES, verts);
+		this.currentBatcher.drawVertices(this.gl.TRIANGLES, verts);
 	}
 
 	/**
@@ -1420,7 +1422,7 @@ export default class WebGLRenderer extends Renderer {
 					return;
 				}
 			}
-			// flush the compositor
+			// flush the batcher
 			this.flush();
 			// turn on scissor test
 			gl.enable(this.gl.SCISSOR_TEST);
@@ -1454,7 +1456,7 @@ export default class WebGLRenderer extends Renderer {
 	setMask(mask, invert = false) {
 		const gl = this.gl;
 
-		// flush the compositor
+		// flush the batcher
 		this.flush();
 
 		if (this.maskLevel === 0) {
@@ -1472,7 +1474,7 @@ export default class WebGLRenderer extends Renderer {
 		// fill the given mask shape
 		this.fill(mask);
 
-		// flush the compositor
+		// flush the batcher
 		this.flush();
 
 		gl.colorMask(true, true, true, true);
@@ -1492,7 +1494,7 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	clearMask() {
 		if (this.maskLevel > 0) {
-			// flush the compositor
+			// flush the batcher
 			this.flush();
 			this.maskLevel = 0;
 			this.gl.disable(this.gl.STENCIL_TEST);

@@ -89,8 +89,14 @@ export type ApplicationSettings = {
 
 	/**
 	 * a custom batcher class (WebGL only)
+	 * @deprecated since 18.2.0 — use `batcher` instead
 	 */
 	compositor?: Batcher | undefined;
+
+	/**
+	 * a custom batcher class (WebGL only)
+	 */
+	batcher?: Batcher | undefined;
 } & (
 	| {
 			// the DOM parent element to hold the canvas in the HTML file

@@ -396,10 +396,10 @@ export default class Text extends Renderable {
 	 */
 	destroy() {
 		if (typeof globalRenderer.gl !== "undefined") {
-			// make sure the right compositor is active
-			globalRenderer.setCompositor("quad");
-			globalRenderer.currentCompositor.deleteTexture2D(
-				globalRenderer.currentCompositor.getTexture2D(this.glTextureUnit),
+			// make sure the right batcher is active
+			globalRenderer.setBatcher("quad");
+			globalRenderer.currentBatcher.deleteTexture2D(
+				globalRenderer.currentBatcher.getTexture2D(this.glTextureUnit),
 			);
 			this.glTextureUnit = undefined;
 		}

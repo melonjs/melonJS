@@ -119,6 +119,8 @@ export default class GLShader {
 	setUniform(name, value) {
 		const uniforms = this.uniforms;
 		if (typeof uniforms[name] !== "undefined") {
+			// ensure this shader's program is active before setting uniforms
+			this.bind();
 			if (typeof value === "object" && typeof value.toArray === "function") {
 				uniforms[name] = value.toArray();
 			} else {

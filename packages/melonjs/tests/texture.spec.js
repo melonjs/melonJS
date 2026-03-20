@@ -167,7 +167,7 @@ describe("Texture", () => {
 
 			// stub the compositor to verify flush is called
 			let flushed = false;
-			const compositor = video.renderer.currentCompositor;
+			const compositor = video.renderer.currentBatcher;
 			let originalFlush;
 			if (compositor) {
 				originalFlush = compositor.flush.bind(compositor);

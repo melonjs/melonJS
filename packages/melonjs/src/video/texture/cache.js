@@ -49,10 +49,10 @@ class TextureCache {
 
 		// No units available — flush the current batch and reset assignments
 		// see https://github.com/melonjs/melonJS/issues/1280
-		if (renderer.currentCompositor) {
-			renderer.currentCompositor.flush();
-			renderer.currentCompositor.boundTextures.length = 0;
-			renderer.currentCompositor.currentTextureUnit = -1;
+		if (renderer.currentBatcher) {
+			renderer.currentBatcher.flush();
+			renderer.currentBatcher.boundTextures.length = 0;
+			renderer.currentBatcher.currentTextureUnit = -1;
 		}
 		this.units.clear();
 		this.usedUnits.clear();
@@ -110,6 +110,13 @@ class TextureCache {
 			);
 		}
 		return this.cache.put(image, textureAtlas);
+	}
+
+	/**
+	 * @ignore
+	 */
+	has(image) {
+		return this.cache.has(image);
 	}
 
 	/**

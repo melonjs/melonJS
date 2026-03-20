@@ -274,13 +274,13 @@ class CanvasRenderTarget {
 	 */
 	invalidate(renderer) {
 		if (typeof renderer.gl !== "undefined") {
-			// make sure the right compositor is active
-			renderer.setCompositor("quad");
+			// make sure the right batcher is active
+			renderer.setBatcher("quad");
 			// invalidate the previous corresponding texture so that it can reuploaded once changed
 			this.glTextureUnit = renderer.cache.getUnit(
 				renderer.cache.get(this.canvas),
 			);
-			renderer.currentCompositor.unbindTexture2D(null, this.glTextureUnit);
+			renderer.currentBatcher.unbindTexture2D(null, this.glTextureUnit);
 		}
 	}
 
