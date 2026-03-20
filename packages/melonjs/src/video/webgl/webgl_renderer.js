@@ -837,13 +837,31 @@ export default class WebGLRenderer extends Renderer {
 	}
 
 	/**
-	 * not used by this renderer?
+	 * enable/disable image smoothing (scaling interpolation)
 	 * @param {boolean} [enable=false]
-	 * @ignore
 	 */
 	setAntiAlias(enable = false) {
-		super.setAntiAlias(enable);
-		// see https://github.com/melonjs/melonJS/issues/1279
+		if (this.settings.antiAlias !== enable) {
+			super.setAntiAlias(enable);
+			// update the GL texture filtering on all bound textures
+			// see https://github.com/melonjs/melonJS/issues/1279
+			const gl = this.gl;
+			const filter = enable ? gl.LINEAR : gl.NEAREST;
+			this.compositors.forEach((compositor) => {
+				if (compositor.boundTextures) {
+					for (let i = 0; i < compositor.boundTextures.length; i++) {
+						if (typeof compositor.boundTextures[i] !== "undefined") {
+							gl.activeTexture(gl.TEXTURE0 + i);
+							gl.bindTexture(gl.TEXTURE_2D, compositor.boundTextures[i]);
+							gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+							gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+						}
+					}
+					// reset so next bindTexture2D re-selects the correct unit
+					compositor.currentTextureUnit = -1;
+				}
+			});
+		}
 	}
 
 	/**

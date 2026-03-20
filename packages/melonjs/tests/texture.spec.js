@@ -165,11 +165,31 @@ describe("Texture", () => {
 			cache.allocateTextureUnit();
 			cache.allocateTextureUnit();
 
+			// stub the compositor to verify flush is called
+			let flushed = false;
+			const compositor = video.renderer.currentCompositor;
+			let originalFlush;
+			if (compositor) {
+				originalFlush = compositor.flush.bind(compositor);
+				compositor.flush = () => {
+					flushed = true;
+					originalFlush();
+				};
+			}
+
 			// when all units are exhausted, it should flush, reset, and return unit 0
 			const unit = cache.allocateTextureUnit();
 			expect(unit).toEqual(0);
 			expect(cache.usedUnits.size).toEqual(1);
 			expect(cache.units.size).toEqual(0);
+
+			if (compositor) {
+				expect(flushed).toBe(true);
+				expect(compositor.boundTextures.length).toEqual(0);
+				expect(compositor.currentTextureUnit).toEqual(-1);
+				// restore original
+				compositor.flush = originalFlush;
+			}
 		});
 
 		it("tint() should cache and return the same result for identical src+color", () => {
