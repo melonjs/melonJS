@@ -410,10 +410,7 @@ export default class WebGLRenderer extends Renderer {
 		// clean up any previous pattern texture for this image
 		// see https://github.com/melonjs/melonJS/issues/1278
 		if (this.cache.has(image)) {
-			const cached = this.cache.get(image);
-			if (cached.getAtlas().name === "pattern") {
-				this.currentBatcher.deleteTexture2D(cached);
-			}
+			this.currentBatcher.deleteTexture2D(this.cache.get(image));
 		}
 
 		const texture = new TextureAtlas(

@@ -256,7 +256,11 @@ export default class CanvasRenderer extends Renderer {
 		const context = this.getContext();
 		const fillStyle = context.fillStyle;
 		context.fillStyle = pattern;
-		context.fillRect(x, y, width, height);
+		// translate so the pattern origin aligns with the draw position
+		context.save();
+		context.translate(x, y);
+		context.fillRect(0, 0, width, height);
+		context.restore();
 		context.fillStyle = fillStyle;
 	}
 

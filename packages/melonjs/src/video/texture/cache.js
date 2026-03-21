@@ -68,7 +68,7 @@ class TextureCache {
 		const unit = this.units.get(source);
 		// was a texture unit allocated ?
 		if (typeof unit !== "undefined") {
-			this.usedUnits.delete(source);
+			this.usedUnits.delete(unit);
 			this.units.delete(source);
 		}
 	}
