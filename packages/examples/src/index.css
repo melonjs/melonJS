@@ -13,7 +13,6 @@ body:has(#screen canvas) {
 	display: block;
 }
 
-
 /* Example top bar */
 .example-topbar {
 	display: flex;
@@ -162,7 +161,9 @@ body:has(#screen canvas) {
 	border: 1px solid #444;
 	background: transparent;
 	cursor: pointer;
-	transition: border-color 0.2s, color 0.2s;
+	transition:
+		border-color 0.2s,
+		color 0.2s;
 }
 
 .example-code-toggle:hover {
