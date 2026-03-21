@@ -13,6 +13,7 @@ body:has(#screen canvas) {
 	display: block;
 }
 
+
 /* Example top bar */
 .example-topbar {
 	display: flex;
@@ -150,4 +151,68 @@ body:has(#screen canvas) {
 .index-footer .separator {
 	margin: 0 12px;
 	color: #555;
+}
+
+/* Code toggle button */
+.example-code-toggle {
+	color: #888;
+	font-size: 13px;
+	padding: 4px 8px;
+	border-radius: 4px;
+	border: 1px solid #444;
+	background: transparent;
+	cursor: pointer;
+	transition: border-color 0.2s, color 0.2s;
+}
+
+.example-code-toggle:hover {
+	border-color: #82c743;
+	color: #82c743;
+}
+
+/* Code editor panel — fixed right side overlay */
+.example-editor {
+	position: fixed;
+	top: 41px;
+	right: 0;
+	width: 500px;
+	height: calc(100vh - 41px);
+	display: flex;
+	flex-direction: column;
+	border-left: 1px solid #333;
+	background: #282c34;
+	z-index: 998;
+}
+
+/* Editor file tabs */
+.editor-tabs {
+	display: flex;
+	flex-wrap: wrap;
+	background: #21252b;
+	border-bottom: 1px solid #333;
+}
+
+.editor-tab {
+	padding: 6px 14px;
+	font-size: 12px;
+	color: #888;
+	background: transparent;
+	border: none;
+	border-bottom: 2px solid transparent;
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.editor-tab:hover {
+	color: #ccc;
+}
+
+.editor-tab.active {
+	color: #e0e0e0;
+	border-bottom-color: #82c743;
+}
+
+/* Ace editor fills remaining space */
+.example-editor .ace_editor {
+	flex: 1;
 }
