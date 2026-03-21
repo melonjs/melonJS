@@ -176,7 +176,7 @@ body:has(#screen canvas) {
 	position: fixed;
 	top: 41px;
 	right: 0;
-	width: 500px;
+	width: min(500px, 100vw);
 	height: calc(100vh - 41px);
 	display: flex;
 	flex-direction: column;

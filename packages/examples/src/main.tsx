@@ -271,11 +271,12 @@ const ExampleLayout = ({
 	const files = useMemo(() => {
 		const prefix = `./examples/${sourceDir}/`;
 		return Object.entries(sourceFiles)
-			.filter(([path]) => path.startsWith(prefix))
+			.filter(([path]) => path.startsWith(prefix) && !path.includes("/assets/"))
 			.map(([path, content]) => ({
 				name: path.replace(prefix, ""),
 				content: content as string,
-			}));
+			}))
+			.sort((a, b) => a.name.localeCompare(b.name));
 	}, [sourceDir]);
 
 	const [activeFile, setActiveFile] = useState(0);
@@ -290,7 +291,7 @@ const ExampleLayout = ({
 				<button
 					type="button"
 					className="example-code-toggle"
-					onClick={() => setShowCode(!showCode)}
+					onClick={() => setShowCode((prev) => !prev)}
 				>
 					{showCode ? "Hide Code" : "Show Code"}
 				</button>
