@@ -253,6 +253,41 @@ describe("Texture", () => {
 		});
 	});
 
+	describe("createPattern", () => {
+		it("should create a pattern texture", () => {
+			if (typeof video.renderer.gl === "undefined") {
+				return; // skip in Canvas mode
+			}
+			const canvas = new CanvasTexture(32, 32);
+			const pattern = video.renderer.createPattern(canvas.canvas, "repeat");
+			expect(pattern).toBeDefined();
+			expect(pattern.repeat).toEqual("repeat");
+		});
+
+		it("should clean up previous pattern when repeat mode changes", () => {
+			if (typeof video.renderer.gl === "undefined") {
+				return;
+			}
+			const canvas = new CanvasTexture(32, 32);
+
+			// create initial pattern
+			const pattern1 = video.renderer.createPattern(canvas.canvas, "repeat");
+			expect(pattern1.repeat).toEqual("repeat");
+
+			const usedUnitsBefore = video.renderer.cache.usedUnits.size;
+
+			// create pattern with different repeat — should clean up the previous one
+			const pattern2 = video.renderer.createPattern(canvas.canvas, "repeat-x");
+			expect(pattern2.repeat).toEqual("repeat-x");
+			expect(pattern2).not.toBe(pattern1);
+
+			// texture units should not leak
+			expect(video.renderer.cache.usedUnits.size).toBeLessThanOrEqual(
+				usedUnitsBefore,
+			);
+		});
+	});
+
 	describe("TextureAtlas.getAnimationSettings", () => {
 		let atlas;
 

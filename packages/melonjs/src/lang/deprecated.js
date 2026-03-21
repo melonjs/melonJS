@@ -100,6 +100,10 @@ Object.defineProperty(WebGLRenderer.prototype, "currentCompositor", {
 		warning("currentCompositor", "currentBatcher", "18.1.0");
 		return this.currentBatcher;
 	},
+	set(value) {
+		warning("currentCompositor", "currentBatcher", "18.1.0");
+		this.currentBatcher = value;
+	},
 });
 
 /**
@@ -109,6 +113,10 @@ Object.defineProperty(WebGLRenderer.prototype, "compositors", {
 	get() {
 		warning("compositors", "batchers", "18.1.0");
 		return this.batchers;
+	},
+	set(value) {
+		warning("compositors", "batchers", "18.1.0");
+		this.batchers = value;
 	},
 });
 
