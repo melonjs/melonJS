@@ -1,7 +1,25 @@
-import React, { type ReactElement } from "react";
+import React, {
+	type ReactElement,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
+import ace from "ace-builds";
 import { createHashRouter, RouterProvider } from "react-router-dom";
+import "ace-builds/src-noconflict/mode-javascript";
+import "ace-builds/src-noconflict/mode-typescript";
+import "ace-builds/src-noconflict/theme-one_dark";
+
+// load all example source files as raw strings
+const sourceFiles = import.meta.glob("./examples/**/*.{ts,tsx,js}", {
+	query: "?raw",
+	import: "default",
+	eager: true,
+}) as Record<string, string>;
+
 import { ExampleAseprite } from "./examples/aseprite/ExampleAseprite";
 import { ExampleBenchmark } from "./examples/benchmark/ExampleBenchmark";
 import { ExampleCompressedTextures } from "./examples/compressedTextures/ExampleCompressedTextures";
@@ -201,6 +219,43 @@ const examples: {
 	},
 ];
 
+const AceEditorPane = ({ value, mode }: { value: string; mode: string }) => {
+	const editorRef = useRef<HTMLDivElement>(null);
+	const editorInstance = useRef<ace.Ace.Editor | null>(null);
+
+	useEffect(() => {
+		if (editorRef.current && !editorInstance.current) {
+			const editor = ace.edit(editorRef.current);
+			editor.setTheme("ace/theme/one_dark");
+			editor.setReadOnly(true);
+			editor.setShowPrintMargin(false);
+			editor.setHighlightActiveLine(false);
+			editor.setFontSize(13);
+			editor.setOptions({
+				showLineNumbers: true,
+				tabSize: 2,
+				useWorker: false,
+			});
+			editorInstance.current = editor;
+		}
+		return () => {
+			if (editorInstance.current) {
+				editorInstance.current.destroy();
+				editorInstance.current = null;
+			}
+		};
+	}, []);
+
+	useEffect(() => {
+		if (editorInstance.current) {
+			editorInstance.current.setValue(value, -1);
+			editorInstance.current.session.setMode(`ace/mode/${mode}`);
+		}
+	}, [value, mode]);
+
+	return <div ref={editorRef} style={{ width: "100%", height: "100%" }} />;
+};
+
 const ExampleLayout = ({
 	label,
 	sourceDir,
@@ -210,6 +265,22 @@ const ExampleLayout = ({
 	sourceDir: string;
 	children: ReactElement;
 }) => {
+	const [showCode, setShowCode] = useState(false);
+
+	// collect source files for this example
+	const files = useMemo(() => {
+		const prefix = `./examples/${sourceDir}/`;
+		return Object.entries(sourceFiles)
+			.filter(([path]) => path.startsWith(prefix) && !path.includes("/assets/"))
+			.map(([path, content]) => ({
+				name: path.replace(prefix, ""),
+				content: content as string,
+			}))
+			.sort((a, b) => a.name.localeCompare(b.name));
+	}, [sourceDir]);
+
+	const [activeFile, setActiveFile] = useState(0);
+
 	return (
 		<>
 			<div className="example-topbar">
@@ -217,16 +288,50 @@ const ExampleLayout = ({
 					&larr; Examples
 				</a>
 				<span className="example-topbar-title">{label}</span>
+				<button
+					type="button"
+					className="example-code-toggle"
+					onClick={() => setShowCode((prev) => !prev)}
+				>
+					{showCode ? "Hide Code" : "Show Code"}
+				</button>
 				<a
 					href={`https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/${sourceDir}`}
 					target="_blank"
 					rel="noopener noreferrer"
 					className="example-source"
 				>
-					View Source
+					GitHub
 				</a>
 			</div>
 			{children}
+			{showCode && files.length > 0 && (
+				<div className="example-editor">
+					{files.length > 1 && (
+						<div className="editor-tabs">
+							{files.map((file, i) => (
+								<button
+									type="button"
+									key={file.name}
+									className={`editor-tab ${i === activeFile ? "active" : ""}`}
+									onClick={() => setActiveFile(i)}
+								>
+									{file.name}
+								</button>
+							))}
+						</div>
+					)}
+					<AceEditorPane
+						value={files[activeFile].content}
+						mode={
+							files[activeFile].name.endsWith(".ts") ||
+							files[activeFile].name.endsWith(".tsx")
+								? "typescript"
+								: "javascript"
+						}
+					/>
+				</div>
+			)}
 		</>
 	);
 };

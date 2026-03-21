@@ -14,6 +14,7 @@
 		"@types/react": "^19.2.13",
 		"@types/react-dom": "^19.2.3",
 		"@vitejs/plugin-react": "^6.0.1",
+		"ace-builds": "^1.43.6",
 		"melonjs": "workspace:^",
 		"react": "^19.2.4",
 		"react-dom": "^19.2.4",
