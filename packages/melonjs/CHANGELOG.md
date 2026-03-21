@@ -12,6 +12,7 @@
 - Loader: image asset fallback chains — provide an array of sources (e.g. compressed texture formats by priority, with a PNG fallback) and the loader will try each in order until one succeeds
 - Renderer: new `RenderState` class with pre-allocated save/restore stacks for zero-allocation state management
 - WebGLRenderer: `lineWidth` now works for all primitive drawing methods via a proper shader-based implementation (#999)
+- WebGLRenderer: new `ShaderEffect` class — simplified custom shader API that only requires a fragment `apply(color, uv)` function, with automatic vertex shader and texture sampling boilerplate. Silently disabled in Canvas mode.
 
 ### Changed
 - Physics: collision response is now mass-proportional — when two dynamic bodies collide, overlap and velocity correction are split based on relative mass

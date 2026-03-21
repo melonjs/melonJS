@@ -4,14 +4,14 @@ import {
 	collision,
 	Ellipse,
 	event,
-	GLShader,
 	game,
+	ShaderEffect,
 	timer,
 } from "melonjs";
 import { gameState } from "../gameState";
 
 // shared glow shader for all coins
-let coinShader: GLShader | undefined;
+let coinShader: ShaderEffect | undefined;
 let coinShaderRefCount = 0;
 let coinUpdateHandler: (() => void) | undefined;
 
@@ -31,43 +31,26 @@ export class CoinEntity extends Collectable {
 			}),
 		);
 
-		// apply a pulsing glow shader once added to the world (WebGL only)
+		// apply a pulsing glow shader once added to the world
 		event.once(event.LEVEL_LOADED, () => {
 			const renderer = this.parentApp?.renderer;
-			if (!renderer || typeof renderer.gl === "undefined") {
+			if (!renderer) {
 				return;
 			}
 			if (!coinShader) {
-				coinShader = new GLShader(
-					renderer.gl,
-					[
-						"attribute vec2 aVertex;",
-						"attribute vec2 aRegion;",
-						"attribute vec4 aColor;",
-						"uniform mat4 uProjectionMatrix;",
-						"varying vec2 vRegion;",
-						"varying vec4 vColor;",
-						"void main(void) {",
-						"    gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);",
-						"    vColor = vec4(aColor.bgr * aColor.a, aColor.a);",
-						"    vRegion = aRegion;",
-						"}",
-					].join("\n"),
-					[
-						"uniform sampler2D uSampler;",
-						"uniform float uTime;",
-						"varying vec4 vColor;",
-						"varying vec2 vRegion;",
-						"void main(void) {",
-						"    vec4 texColor = texture2D(uSampler, vRegion) * vColor;",
-						"    float pulse = 0.92 + 0.08 * sin(uTime * 3.0);",
-						"    float sweep = fract(uTime * 0.8);",
-						"    float localX = fract(vRegion.x * 14.5);",
-						"    float glint = smoothstep(0.15, 0.0, abs(localX - sweep)) * 0.4;",
-						"    vec3 glow = texColor.rgb * pulse + vec3(1.0, 0.95, 0.7) * glint;",
-						"    gl_FragColor = vec4(glow * texColor.a, texColor.a);",
-						"}",
-					].join("\n"),
+				coinShader = new ShaderEffect(
+					renderer,
+					`
+					uniform float uTime;
+					vec4 apply(vec4 color, vec2 uv) {
+						float pulse = 0.92 + 0.08 * sin(uTime * 3.0);
+						float sweep = fract(uTime * 0.8);
+						float localX = fract(uv.x * 14.5);
+						float glint = smoothstep(0.15, 0.0, abs(localX - sweep)) * 0.4;
+						vec3 glow = color.rgb * pulse + vec3(1.0, 0.95, 0.7) * glint;
+						return vec4(glow * color.a, color.a);
+					}
+					`,
 				);
 				coinUpdateHandler = () => {
 					if (coinShader) {

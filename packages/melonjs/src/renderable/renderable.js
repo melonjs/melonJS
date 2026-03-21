@@ -9,7 +9,6 @@ import { vector2dPool } from "../math/vector2d.ts";
 import Body from "./../physics/body.js";
 import { Bounds, boundsPool } from "./../physics/bounds.ts";
 import pool from "../system/legacy_pool.js";
-import GLShader from "./../video/webgl/glshader.js";
 
 /**
  * additional import for TypeScript
@@ -224,40 +223,33 @@ export default class Renderable extends Rect {
 
 		/**
 		 * an optional shader, to be used instead of the default built-in one, when drawing this renderable (WebGL only).
-		 * the custom shader must use the same vertex attribute names as the default quad shader: `aVertex`, `aRegion`, and `aColor`.
-		 * @type {GLShader}
+		 * Use {@link ShaderEffect} for a simplified API that only requires a fragment `apply()` function,
+		 * or {@link GLShader} for full control over vertex and fragment shaders.
+		 * In Canvas mode, this property is ignored.
+		 * @type {GLShader|ShaderEffect}
 		 * @default undefined
 		 * @example
-		 * // apply a grayscale fragment shader to a sprite
-		 * mySprite.shader = new me.GLShader(
-		 *     mySprite.parentApp.renderer.gl,
-		 *     // vertex shader — must match default attribute names
-		 *     [
-		 *         "attribute vec2 aVertex;",
-		 *         "attribute vec2 aRegion;",
-		 *         "attribute vec4 aColor;",
-		 *         "uniform mat4 uProjectionMatrix;",
-		 *         "varying vec2 vRegion;",
-		 *         "varying vec4 vColor;",
-		 *         "void main(void) {",
-		 *         "    gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);",
-		 *         "    vColor = vec4(aColor.bgr * aColor.a, aColor.a);",
-		 *         "    vRegion = aRegion;",
-		 *         "}"
-		 *     ].join("\n"),
-		 *     // custom fragment shader
-		 *     [
-		 *         "uniform sampler2D uSampler;",
-		 *         "varying vec4 vColor;",
-		 *         "varying vec2 vRegion;",
-		 *         "void main(void) {",
-		 *         "    vec4 texColor = texture2D(uSampler, vRegion) * vColor;",
-		 *         "    float gray = dot(texColor.rgb, vec3(0.299, 0.587, 0.114));",
-		 *         "    gl_FragColor = vec4(vec3(gray), texColor.a);",
-		 *         "}"
-		 *     ].join("\n")
-		 * );
-		 * // to remove the custom shader
+		 * // grayscale effect — converts the sprite to black and white
+		 * mySprite.shader = new ShaderEffect(renderer, `
+		 *     vec4 apply(vec4 color, vec2 uv) {
+		 *         float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+		 *         return vec4(vec3(gray), color.a);
+		 *     }
+		 * `);
+		 * @example
+		 * // pulsing brightness effect — makes the sprite glow rhythmically
+		 * const effect = new ShaderEffect(renderer, `
+		 *     uniform float uTime;
+		 *     vec4 apply(vec4 color, vec2 uv) {
+		 *         float pulse = 0.8 + 0.2 * sin(uTime * 3.0);
+		 *         return vec4(color.rgb * pulse, color.a);
+		 *     }
+		 * `);
+		 * mySprite.shader = effect;
+		 * // update the uniform each frame
+		 * effect.setUniform("uTime", time);
+		 * @example
+		 * // to remove a custom shader
 		 * mySprite.shader = undefined;
 		 */
 		this.shader = undefined;
@@ -728,7 +720,7 @@ export default class Renderable extends Rect {
 		}
 
 		// use this renderable shader if defined
-		if (typeof this.shader === "object" && typeof renderer.gl !== "undefined") {
+		if (this.shader && typeof renderer.gl !== "undefined") {
 			renderer.customShader = this.shader;
 		}
 
@@ -785,7 +777,7 @@ export default class Renderable extends Rect {
 		}
 
 		// revert to the default shader if defined
-		if (typeof this.shader === "object" && typeof renderer.gl !== "undefined") {
+		if (this.shader && typeof renderer.gl !== "undefined") {
 			renderer.customShader = undefined;
 		}
 
@@ -878,7 +870,7 @@ export default class Renderable extends Rect {
 		this.onDestroyEvent.apply(this, arguments);
 
 		// destroy any shader object if not done by the user through onDestroyEvent()
-		if (this.shader instanceof GLShader) {
+		if (this.shader && typeof this.shader.destroy === "function") {
 			this.shader.destroy();
 			this.shader = undefined;
 		}
