@@ -7,7 +7,6 @@ import {
 	Polygon,
 	Renderable,
 	RoundRect,
-	type TextureAtlas,
 	Tween,
 	video,
 	type WebGLRenderer,
@@ -44,11 +43,6 @@ const createGame = () => {
 		ellipseTime: number;
 		arcAngle: number;
 		transformMatrix: Matrix2d;
-		patternImage: HTMLCanvasElement;
-		patternModes: readonly string[];
-		patternIndex: number;
-		patternTimer: number;
-		pattern: TextureAtlas;
 		// constructor
 		constructor() {
 			super(0, 0, game.viewport.width, game.viewport.height);
@@ -132,46 +126,11 @@ const createGame = () => {
 			// a temporary color object
 			this.color = new Color();
 
-			// createPattern demo — a checkerboard that cycles repeat modes
-			const patternCanvas = document.createElement("canvas");
-			patternCanvas.width = 32;
-			patternCanvas.height = 32;
-			const ctx = patternCanvas.getContext("2d") as CanvasRenderingContext2D;
-			ctx.fillStyle = "#4488cc";
-			ctx.fillRect(0, 0, 16, 16);
-			ctx.fillRect(16, 16, 16, 16);
-			ctx.fillStyle = "#66bbee";
-			ctx.fillRect(16, 0, 16, 16);
-			ctx.fillRect(0, 16, 16, 16);
-			this.patternImage = patternCanvas;
-			this.patternModes = [
-				"repeat",
-				"repeat-x",
-				"repeat-y",
-				"no-repeat",
-			] as const;
-			this.patternIndex = 0;
-			this.patternTimer = 0;
-			this.pattern = video.renderer.createPattern(
-				this.patternImage,
-				this.patternModes[0],
-			) as TextureAtlas;
-
 			this.anchorPoint.set(0, 0);
 		}
 
 		override update(dt: number) {
 			this.ellipseTime += dt;
-			// cycle pattern repeat mode every 2 seconds
-			this.patternTimer += dt;
-			if (this.patternTimer >= 2000) {
-				this.patternTimer = 0;
-				this.patternIndex = (this.patternIndex + 1) % this.patternModes.length;
-				this.pattern = video.renderer.createPattern(
-					this.patternImage,
-					this.patternModes[this.patternIndex],
-				) as TextureAtlas;
-			}
 			// reset and apply rotation + oscillating scale transform
 			this.filledEllipse.setShape(860, 410, 200, 100);
 			this.filledEllipse.rotate(this.ellipseTime / 1000);
@@ -265,16 +224,6 @@ const createGame = () => {
 			renderer.setGlobalAlpha(1.0);
 			renderer.setColor("#4f46e5");
 			renderer.stroke(this.filledEllipse);
-
-			// draw the pattern demo
-			renderer.setGlobalAlpha(1.0);
-			renderer.setColor("#ddeeff");
-			renderer.fillRect(540, 470, 200, 200);
-			renderer.setGlobalAlpha(0.8);
-			renderer.drawPattern(this.pattern, 540, 470, 200, 200);
-			renderer.setGlobalAlpha(1.0);
-			renderer.setColor("#333333");
-			renderer.strokeRect(540, 470, 200, 200);
 		}
 	}
 

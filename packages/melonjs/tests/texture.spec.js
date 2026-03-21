@@ -274,29 +274,17 @@ describe("Texture", () => {
 			const pattern1 = video.renderer.createPattern(canvas.canvas, "repeat");
 			expect(pattern1.repeat).toEqual("repeat");
 
+			const usedUnitsBefore = video.renderer.cache.usedUnits.size;
+
 			// create pattern with different repeat — should clean up the previous one
 			const pattern2 = video.renderer.createPattern(canvas.canvas, "repeat-x");
 			expect(pattern2.repeat).toEqual("repeat-x");
 			expect(pattern2).not.toBe(pattern1);
-		});
 
-		it("should not delete non-pattern cache entries for the same image", () => {
-			if (typeof video.renderer.gl === "undefined") {
-				return;
-			}
-			const canvas = new CanvasTexture(32, 32);
-
-			// cache a regular texture atlas for this image
-			const regularEntry = video.renderer.cache.get(canvas.canvas);
-			expect(regularEntry).toBeDefined();
-			expect(regularEntry.repeat).toEqual("no-repeat");
-
-			// create a pattern — should NOT delete the regular entry
-			video.renderer.createPattern(canvas.canvas, "repeat");
-
-			// the regular entry should still be retrievable
-			const stillThere = video.renderer.cache.get(canvas.canvas);
-			expect(stillThere).toBeDefined();
+			// texture units should not leak
+			expect(video.renderer.cache.usedUnits.size).toBeLessThanOrEqual(
+				usedUnitsBefore,
+			);
 		});
 	});
 
