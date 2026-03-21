@@ -259,11 +259,24 @@ export default class QuadBatcher extends Batcher {
 
 	/**
 	 * delete the given WebGL texture
-	 * @param {WebGLTexture} [texture] - a WebGL texture to delete
+	 * @param {WebGLTexture|TextureAtlas} texture - a WebGL texture or TextureAtlas to delete
 	 */
 	deleteTexture2D(texture) {
-		this.gl.deleteTexture(texture);
-		this.unbindTexture2D(texture);
+		if (typeof texture.getTexture === "function") {
+			// TextureAtlas: resolve to the bound WebGLTexture and clean up the cache
+			const unit = this.renderer.cache.peekUnit(texture);
+			if (unit !== -1) {
+				const texture2D = this.boundTextures[unit];
+				if (typeof texture2D !== "undefined") {
+					this.gl.deleteTexture(texture2D);
+					this.unbindTexture2D(texture2D);
+				}
+			}
+			this.renderer.cache.delete(texture.getTexture());
+		} else {
+			this.gl.deleteTexture(texture);
+			this.unbindTexture2D(texture);
+		}
 	}
 
 	/**

@@ -57,40 +57,80 @@ WebGLRenderer.prototype.setLineWidth = function (width) {
 };
 
 /**
- * @deprecated since 18.2.0
+ * @deprecated since 18.1.0
  * @see Batcher
  */
 export class Compositor extends Batcher {
 	/** @param {any[]} args */
 	constructor(...args) {
-		warning("Compositor", "Batcher", "18.2.0");
+		warning("Compositor", "Batcher", "18.1.0");
 		super(...args);
 	}
 }
 
 /**
- * @deprecated since 18.2.0
+ * @deprecated since 18.1.0
  * @see PrimitiveBatcher
  */
 export class PrimitiveCompositor extends PrimitiveBatcher {
 	/** @param {any[]} args */
 	constructor(...args) {
-		warning("PrimitiveCompositor", "PrimitiveBatcher", "18.2.0");
+		warning("PrimitiveCompositor", "PrimitiveBatcher", "18.1.0");
 		super(...args);
 	}
 }
 
 /**
- * @deprecated since 18.2.0
+ * @deprecated since 18.1.0
  * @see QuadBatcher
  */
 export class QuadCompositor extends QuadBatcher {
 	/** @param {any[]} args */
 	constructor(...args) {
-		warning("QuadCompositor", "QuadBatcher", "18.2.0");
+		warning("QuadCompositor", "QuadBatcher", "18.1.0");
 		super(...args);
 	}
 }
+
+/**
+ * @deprecated since 18.1.0 — use currentBatcher instead
+ */
+Object.defineProperty(WebGLRenderer.prototype, "currentCompositor", {
+	get() {
+		warning("currentCompositor", "currentBatcher", "18.1.0");
+		return this.currentBatcher;
+	},
+});
+
+/**
+ * @deprecated since 18.1.0 — use batchers instead
+ */
+Object.defineProperty(WebGLRenderer.prototype, "compositors", {
+	get() {
+		warning("compositors", "batchers", "18.1.0");
+		return this.batchers;
+	},
+});
+
+/**
+ * @deprecated since 18.1.0 — use addBatcher instead
+ */
+WebGLRenderer.prototype.addCompositor = function (
+	compositor,
+	name = "default",
+	activate = false,
+) {
+	warning("addCompositor", "addBatcher", "18.1.0");
+	return this.addBatcher(compositor, name, activate);
+};
+
+/**
+ * @deprecated since 18.1.0 — use setBatcher instead
+ */
+WebGLRenderer.prototype.setCompositor = function (name = "default", shader) {
+	warning("setCompositor", "setBatcher", "18.1.0");
+	return this.setBatcher(name, shader);
+};
 
 /**
  * @namespace Math

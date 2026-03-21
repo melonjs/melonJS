@@ -64,6 +64,7 @@ import { Batcher } from "./video/webgl/batchers/batcher.js";
 import PrimitiveBatcher from "./video/webgl/batchers/primitive_batcher.js";
 import QuadBatcher from "./video/webgl/batchers/quad_batcher.js";
 import GLShader from "./video/webgl/glshader.js";
+import ShaderEffect from "./video/webgl/shadereffect.js";
 import WebGLRenderer from "./video/webgl/webgl_renderer.js";
 
 export * from "./application/scaleMethods.ts";
@@ -104,6 +105,7 @@ export {
 	Tween,
 	QuadTree,
 	GLShader,
+	ShaderEffect,
 	Batcher,
 	PrimitiveBatcher,
 	QuadBatcher,

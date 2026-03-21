@@ -67,7 +67,7 @@ export function extractUniforms(gl, shader) {
 					 */
 					return function (val) {
 						let fnv = fn;
-						if (val.length && /v$/.test(fn)) {
+						if (val.length && !/v$/.test(fn)) {
 							fnv += "v";
 						}
 						gl[fnv](locations[name], val);

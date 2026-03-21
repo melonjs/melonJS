@@ -9,7 +9,6 @@ import { vector2dPool } from "../math/vector2d.ts";
 import Body from "./../physics/body.js";
 import { Bounds, boundsPool } from "./../physics/bounds.ts";
 import pool from "../system/legacy_pool.js";
-import GLShader from "./../video/webgl/glshader.js";
 
 /**
  * additional import for TypeScript
@@ -223,9 +222,35 @@ export default class Renderable extends Rect {
 		this.mask = undefined;
 
 		/**
-		 * (Experimental) an optional shader, to be used instead of the default built-in one, when drawing this renderable (WebGL only)
-		 * @type {GLShader}
+		 * an optional shader, to be used instead of the default built-in one, when drawing this renderable (WebGL only).
+		 * Use {@link ShaderEffect} for a simplified API that only requires a fragment `apply()` function,
+		 * or {@link GLShader} for full control over vertex and fragment shaders.
+		 * In Canvas mode, this property is ignored.
+		 * @type {GLShader|ShaderEffect}
 		 * @default undefined
+		 * @example
+		 * // grayscale effect — converts the sprite to black and white
+		 * mySprite.shader = new ShaderEffect(renderer, `
+		 *     vec4 apply(vec4 color, vec2 uv) {
+		 *         float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+		 *         return vec4(vec3(gray), color.a);
+		 *     }
+		 * `);
+		 * @example
+		 * // pulsing brightness effect — makes the sprite glow rhythmically
+		 * const effect = new ShaderEffect(renderer, `
+		 *     uniform float uTime;
+		 *     vec4 apply(vec4 color, vec2 uv) {
+		 *         float pulse = 0.8 + 0.2 * sin(uTime * 3.0);
+		 *         return vec4(color.rgb * pulse, color.a);
+		 *     }
+		 * `);
+		 * mySprite.shader = effect;
+		 * // update the uniform each frame
+		 * effect.setUniform("uTime", time);
+		 * @example
+		 * // to remove a custom shader
+		 * mySprite.shader = undefined;
 		 */
 		this.shader = undefined;
 
@@ -695,7 +720,7 @@ export default class Renderable extends Rect {
 		}
 
 		// use this renderable shader if defined
-		if (typeof this.shader === "object" && typeof renderer.gl !== "undefined") {
+		if (this.shader && typeof renderer.gl !== "undefined") {
 			renderer.customShader = this.shader;
 		}
 
@@ -752,9 +777,8 @@ export default class Renderable extends Rect {
 		}
 
 		// revert to the default shader if defined
-		if (typeof this.shader === "object" && typeof renderer.gl !== "undefined") {
+		if (this.shader && typeof renderer.gl !== "undefined") {
 			renderer.customShader = undefined;
-			//renderer.setCompositor("quad");
 		}
 
 		// restore the context
@@ -846,7 +870,7 @@ export default class Renderable extends Rect {
 		this.onDestroyEvent.apply(this, arguments);
 
 		// destroy any shader object if not done by the user through onDestroyEvent()
-		if (this.shader instanceof GLShader) {
+		if (this.shader && typeof this.shader.destroy === "function") {
 			this.shader.destroy();
 			this.shader = undefined;
 		}

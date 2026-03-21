@@ -12,12 +12,15 @@
 - Loader: image asset fallback chains — provide an array of sources (e.g. compressed texture formats by priority, with a PNG fallback) and the loader will try each in order until one succeeds
 - Renderer: new `RenderState` class with pre-allocated save/restore stacks for zero-allocation state management
 - WebGLRenderer: `lineWidth` now works for all primitive drawing methods via a proper shader-based implementation (#999)
+- WebGLRenderer: new `ShaderEffect` class — simplified custom shader API that only requires a fragment `apply(color, uv)` function, with automatic vertex shader and texture sampling boilerplate. Silently disabled in Canvas mode.
 
 ### Changed
 - Physics: collision response is now mass-proportional — when two dynamic bodies collide, overlap and velocity correction are split based on relative mass
 - Entity: deprecated in favor of Sprite/Renderable + Body (#1008)
 - TMX: refactor TMXUtils into reusable `src/utils/decode.ts` and `src/utils/xml.ts` modules; modernize property coercion, XML normalization, and tileset iteration
 - WebGLRenderer: `Compositor`, `QuadCompositor`, and `PrimitiveCompositor` are now deprecated in favor of `Batcher`, `QuadBatcher`, and `PrimitiveBatcher`
+- WebGLRenderer: `currentCompositor`, `compositors`, `addCompositor()`, `setCompositor()` are now deprecated in favor of `currentBatcher`, `batchers`, `addBatcher()`, `setBatcher()`
+- WebGLRenderer: `settings.compositor` is deprecated in favor of `settings.batcher`
 - Loader: modernize asset loading with Promise-based completion, improving parallel loading performance
 - Loader: `onload`, `onProgress`, and `onError` properties are now deprecated in favor of `LOADER_COMPLETE`, `LOADER_PROGRESS`, and `LOADER_ERROR` events
 
@@ -43,6 +46,9 @@
 - WebGL: flush and rebatch when texture units are exhausted instead of throwing (#1280)
 - WebGLRenderer: `setAntiAlias()` now controls GL texture filtering (`GL_NEAREST` vs `GL_LINEAR`) on all bound textures (#1279)
 - Renderer: fix `setAntiAlias()` in `resize.js` passing the rendering context instead of a boolean, corrupting `settings.antiAlias` on every resize
+- WebGLRenderer: `createPattern()` now cleans up previous GPU texture when repeat mode changes (#1278)
+- WebGLRenderer: fix custom shader support — properly flush and restore default shader per draw call, fix `setUniform` using wrong GL program, reset sampler uniform on shader switch
+- WebGLRenderer: fix uniform setter appending extra `v` suffix for vec/mat types
 
 ### Performance
 - Path2D: replace `Math.pow()` with inline multiplication in quadratic/cubic Bézier and arc interpolation

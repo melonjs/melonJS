@@ -158,14 +158,22 @@ export class Batcher {
 	 * @param {GLShader} shader - a reference to a GLShader instance
 	 */
 	useShader(shader) {
-		if (this.renderer.currentProgram !== shader.program) {
+		if (
+			this.currentShader !== shader ||
+			this.renderer.currentProgram !== shader.program
+		) {
 			this.flush();
 			shader.bind();
 			shader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
 			shader.setVertexAttributes(this.gl, this.attributes, this.stride);
 
 			this.currentShader = shader;
-			this.renderer.currentProgram = this.currentShader.program;
+			this.renderer.currentProgram = shader.program;
+
+			// force sampler uniform to be re-set on next addQuad
+			if (typeof this.currentSamplerUnit !== "undefined") {
+				this.currentSamplerUnit = -1;
+			}
 		}
 	}
 
