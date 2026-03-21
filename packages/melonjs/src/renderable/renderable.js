@@ -230,7 +230,7 @@ export default class Renderable extends Rect {
 		 * @example
 		 * // apply a grayscale fragment shader to a sprite
 		 * mySprite.shader = new me.GLShader(
-		 *     me.video.renderer.gl,
+		 *     mySprite.parentApp.renderer.gl,
 		 *     // vertex shader — must match default attribute names
 		 *     [
 		 *         "attribute vec2 aVertex;",
