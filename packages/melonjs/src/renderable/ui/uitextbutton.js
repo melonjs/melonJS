@@ -91,7 +91,7 @@ export default class UITextButton extends UIBaseElement {
 
 		/**
 		 * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
-		 * possible values are "top", "hanging, "middle, "alphabetic, "ideographic, "bottom"<br>
+		 * possible values are "top", "hanging", "middle", "alphabetic", "ideographic", "bottom"<br>
 		 * @public
 		 * @type {string}
 		 * @default "middle"

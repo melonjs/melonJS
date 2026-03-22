@@ -364,10 +364,10 @@ export let autoFocus = true;
  *       // initialize the "audio"
  *       me.audio.init("mp3,ogg");
  *
- *       // set callback for ressources loaded event
+ *       // set callback for resources loaded event
  *       me.loader.onload = this.loaded.bind(this);
  *
- *       // set all ressources to be loaded
+ *       // set all resources to be loaded
  *       me.loader.preload(game.assets);
  *
  *       // load everything & display a loading screen
@@ -807,7 +807,7 @@ export function watchAccelerometer() {
 }
 
 /**
- * unwatch Accelerometor event
+ * unwatch Accelerometer event
  * @memberof device
  * @category Application
  */

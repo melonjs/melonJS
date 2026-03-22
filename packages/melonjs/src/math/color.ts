@@ -648,7 +648,7 @@ export class Color {
 	}
 
 	/**
-	 * return an Float Array representation of this object
+	 * return a Float Array representation of this object
 	 * @returns A Float Array representation of this color
 	 */
 	toArray() {

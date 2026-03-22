@@ -56,7 +56,7 @@ export default class Application {
 		this.parentElement = undefined;
 
 		/**
-		 * a reference to the active Canvas or WebGL active renderer renderer
+		 * a reference to the active Canvas or WebGL renderer
 		 * @type {CanvasRenderer|WebGLRenderer}
 		 */
 		this.renderer = undefined;
@@ -109,7 +109,7 @@ export default class Application {
 		 * @type {boolean}
 		 * @default true
 		 * @example
-		 *  // keep the default game instance running even when loosing focus
+		 *  // keep the default game instance running even when losing focus
 		 *  me.game.pauseOnBlur = false;
 		 */
 		this.pauseOnBlur = true;
@@ -353,7 +353,7 @@ export default class Application {
 
 	/**
 	 * Fired when a level is fully loaded and all renderable instantiated. <br>
-	 * Additionnaly the level id will also be passed to the called function.
+	 * Additionally the level id will also be passed to the called function.
 	 * @example
 	 * // call myFunction () everytime a level is loaded
 	 * me.game.onLevelLoaded = this.myFunction.bind(this);

@@ -44,7 +44,7 @@ export default class Body {
 
 		if (typeof this.bounds === "undefined") {
 			/**
-			 * The AABB bounds box reprensenting this body
+			 * The AABB bounds box representing this body
 			 * @public
 			 * @type {Bounds}
 			 */
@@ -109,7 +109,7 @@ export default class Body {
 			 * this.body.friction.set(0.4, 0);
 			 * this.body.setMaxVelocity(3, 15);
 			 *
-			 * // apply a postive or negative force when pressing left of right key
+			 * // apply a positive or negative force when pressing left of right key
 			 * update(dt) {
 			 *     if (me.input.isKeyPressed("left"))    {
 			 *          this.body.force.x = -this.body.maxVel.x;
@@ -134,7 +134,7 @@ export default class Body {
 		this.friction.set(0, 0);
 
 		/**
-		 * the body bouciness level when colliding with other solid bodies :
+		 * the body bounciness level when colliding with other solid bodies :
 		 * a value of 0 will not bounce, a value of 1 will fully rebound.
 		 * @public
 		 * @type {number}
@@ -234,7 +234,7 @@ export default class Body {
 
 	/**
 	 * set the body as a static body
-	 * static body do not move automatically and do not check againt collision with others
+	 * static body do not move automatically and do not check against collision with others
 	 * @param {boolean} [isStatic=true]
 	 */
 	setStatic(isStatic = true) {
@@ -509,7 +509,7 @@ export default class Body {
 	 *    - The current element being processed in the array <br>
 	 *    - The index of element in the array. <br>
 	 *    - The array forEach() was called upon. <br>
-	 * @param {Function} callback - fnction to execute on each element
+	 * @param {Function} callback - function to execute on each element
 	 * @param {object} [thisArg] - value to use as this(i.e reference Object) when executing callback.
 	 * @example
 	 * // iterate through all shapes of the physic body
@@ -624,10 +624,10 @@ export default class Body {
 
 	/**
 	 * Updates the parent's position as well as computes the new body's velocity based
-	 * on the values of force/friction.  Velocity chages are proportional to the
+	 * on the values of force/friction.  Velocity changes are proportional to the
 	 * me.timer.tick value (which can be used to scale velocities).  The approach to moving the
 	 * parent renderable is to compute new values of the Body.vel property then add them to
-	 * the parent.pos value thus changing the postion the amount of Body.vel each time the
+	 * the parent.pos value thus changing the position by the amount of Body.vel each time the
 	 * update call is made. <br>
 	 * Updates to Body.vel are bounded by maxVel (which defaults to viewport size if not set) <br>
 	 * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the constructor arguments.

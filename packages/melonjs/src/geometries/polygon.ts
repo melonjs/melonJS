@@ -86,8 +86,8 @@ export class Polygon {
 	 * set new value to the Polygon
 	 * @param x - position of the Polygon
 	 * @param y - position of the Polygon
-	 * @param points - array of vector or vertice defining the Polygon
-	 * @returns this instance for objecf chaining
+	 * @param points - array of vector or vertices defining the Polygon
+	 * @returns this instance for object chaining
 	 */
 	setShape(x: number, y: number, points: PolygonVertices | LineVertices) {
 		this.pos.set(x, y);
@@ -97,8 +97,8 @@ export class Polygon {
 
 	/**
 	 * set the vertices defining this Polygon
-	 * @param vertices - array of vector or vertice defining the Polygon
-	 * @returns this instance for objecf chaining
+	 * @param vertices - array of vector or vertices defining the Polygon
+	 * @returns this instance for object chaining
 	 */
 	setVertices(vertices: PolygonVertices | LineVertices) {
 		if (!Array.isArray(vertices)) {
@@ -158,7 +158,7 @@ export class Polygon {
 	}
 
 	/**
-	 * apply a 2d projection to this shapen
+	 * apply a 2d projection to this shape
 	 * @returns Reference to this object for method chaining
 	 */
 	to2d() {

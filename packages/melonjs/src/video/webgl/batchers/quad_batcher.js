@@ -223,7 +223,7 @@ export default class QuadBatcher extends Batcher {
 			typeof globalThis.OffscreenCanvas !== "undefined" &&
 			pixels instanceof globalThis.OffscreenCanvas
 		) {
-			// convert to ImageBitmap first (else Safari 16.4 and higher will throw an TypeError exception)
+			// convert to ImageBitmap first (else Safari 16.4 and higher will throw a TypeError exception)
 			const imageBitmap = pixels.transferToImageBitmap();
 			gl.texImage2D(
 				gl.TEXTURE_2D,

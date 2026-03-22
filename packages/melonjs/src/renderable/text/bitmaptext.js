@@ -36,7 +36,7 @@ export default class BitmapText extends Renderable {
 	 * // two possibilities for using "myFont"
 	 * // either call the draw function from your Renderable draw function
 	 * myFont.draw(renderer, "Hello!", 0, 0);
-	 * // or just add it to the word container
+	 * // or just add it to the world container
 	 * me.game.world.addChild(myFont);
 	 */
 	constructor(x, y, settings) {
@@ -54,7 +54,7 @@ export default class BitmapText extends Renderable {
 
 		/**
 		 * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
-		 * possible values are "top", "hanging, "middle, "alphabetic, "ideographic, "bottom"<br>
+		 * possible values are "top", "hanging", "middle", "alphabetic", "ideographic", "bottom"<br>
 		 * @public
 		 * @type {string}
 		 * @default "top"
@@ -105,7 +105,7 @@ export default class BitmapText extends Renderable {
 			 * font data
 			 * @private
 			 */
-			// use settings.font to retreive the data from the loader
+			// use settings.font to retrieve the data from the loader
 			this.fontData = bitmapTextDataPool.get(getBinary(settings.font));
 		} else {
 			this.fontData = bitmapTextDataPool.get(

@@ -111,7 +111,7 @@ export default class Container extends Renderable {
 		this.autoDepth = true;
 
 		/**
-		 * Specify if the container draw operation should clip his children to its own bounds
+		 * Specify if the container draw operation should clip its children to its own bounds
 		 * @type {boolean}
 		 * @default false
 		 */
@@ -172,7 +172,7 @@ export default class Container extends Renderable {
 	}
 
 	/**
-	 * reset the container, removing all childrens, and reseting transforms.
+	 * reset the container, removing all children, and resetting transforms.
 	 */
 	reset() {
 		// cancel any sort operation
@@ -200,13 +200,13 @@ export default class Container extends Renderable {
 
 	/**
 	 * Add a child to the container <br>
-	 * if auto-sort is disable, the object will be appended at the bottom of the list.
+	 * if auto-sort is disabled, the object will be appended at the bottom of the list.
 	 * Adding a child to the container will automatically remove it from its other container.
 	 * Meaning a child can only have one parent. This is important if you add a renderable
 	 * to a container then add it to the World container it will move it out of the
-	 * orginal container. Then when the World container reset() method is called the renderable
+	 * original container. Then when the World container reset() method is called the renderable
 	 * will not be in any container. <br>
-	 * if the given child implements a onActivateEvent method, that method will be called
+	 * if the given child implements an onActivateEvent method, that method will be called
 	 * once the child is added to this container.
 	 * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText|Tween} child - Child to be added
 	 * @param {number} [z] - forces the z index of the child to the specified value
@@ -262,7 +262,7 @@ export default class Container extends Renderable {
 			this.updateBounds();
 		}
 
-		// if a physic body(ies) to the game world
+		// add a physic body(ies) to the game world
 		if (this.isAttachedToRoot()) {
 			const worldContainer = this.getRootAncestor();
 			if (child.body instanceof Body) {
@@ -333,7 +333,7 @@ export default class Container extends Renderable {
 				this.updateBounds();
 			}
 
-			// if a physic body(ies) to the game world
+			// add a physic body(ies) to the game world
 			if (this.isAttachedToRoot()) {
 				const worldContainer = this.getRootAncestor();
 				if (child.body instanceof Body) {
@@ -368,7 +368,7 @@ export default class Container extends Renderable {
 	 *    - The current element being processed in the array <br>
 	 *    - The index of element in the array. <br>
 	 *    - The array forEach() was called upon. <br>
-	 * @param {Function} callback - fnction to execute on each element
+	 * @param {Function} callback - function to execute on each element
 	 * @param {object} [thisArg] - value to use as this(i.e reference Object) when executing callback.
 	 * @example
 	 * // iterate through all children of this container
@@ -418,7 +418,7 @@ export default class Container extends Renderable {
 		} else {
 			throw new Error(
 				child +
-					" Both the supplied childs must be a child of the caller " +
+					" Both the supplied children must be a child of the caller " +
 					this,
 			);
 		}
@@ -474,7 +474,7 @@ export default class Container extends Renderable {
 	 * it parses the whole object tree each time
 	 * @param {string} prop - Property name
 	 * @param {string|RegExp|number|boolean} value - Value of the property
-	 * @returns {Renderable[]} Array of childs
+	 * @returns {Renderable[]} Array of children
 	 * @example
 	 * // get the first child object called "mainPlayer" in a specific container :
 	 * let ent = myContainer.getChildByProp("name", "mainPlayer");
@@ -509,7 +509,7 @@ export default class Container extends Renderable {
 	}
 
 	/**
-	 * returns the list of childs with the specified class type
+	 * returns the list of children with the specified class type
 	 * @param {object} classType - Class type
 	 * @returns {Renderable[]} Array of children
 	 */
@@ -527,7 +527,7 @@ export default class Container extends Renderable {
 	}
 
 	/**
-	 * returns the list of childs with the specified name<br>
+	 * returns the list of children with the specified name<br>
 	 * as defined in Tiled (Name field of the Object Properties)<br>
 	 * note : avoid calling this function every frame since
 	 * it parses the whole object list each time
@@ -637,7 +637,7 @@ export default class Container extends Renderable {
 
 	/**
 	 * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed. <br>
-	 * if the given child implements a onDeactivateEvent() method, that method will be called once the child is removed from this container.
+	 * if the given child implements an onDeactivateEvent() method, that method will be called once the child is removed from this container.
 	 * @param {Renderable|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be removed
 	 * @param {boolean} [keepalive=false] - true to prevent calling child.destroy()
 	 */
@@ -793,7 +793,7 @@ export default class Container extends Renderable {
 			if (recursive === true) {
 				this.forEach((child) => {
 					if (child instanceof Container) {
-						// note : this will generate one defered sorting function
+						// note : this will generate one deferred sorting function
 						// for each existing containe
 						child.sort(recursive);
 					}
@@ -936,7 +936,7 @@ export default class Container extends Renderable {
 
 		this.drawCount = 0;
 
-		// clip the containter children to the container bounds
+		// clip the container children to the container bounds
 		if (
 			this.root === false &&
 			this.clipping === true &&

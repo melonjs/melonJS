@@ -53,7 +53,7 @@ export class Line extends Polygon {
 	/**
 	 * Computes the calculated collision edges and normals.
 	 * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
-	 * @returns this instance for objecf chaining
+	 * @returns this instance for object chaining
 	 */
 	override recalc() {
 		const edges = this.edges;

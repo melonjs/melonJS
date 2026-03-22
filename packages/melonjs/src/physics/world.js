@@ -18,7 +18,7 @@ import QuadTree from "./quadtree.js";
  */
 
 /**
- * an object representing the physic world, and responsible for managing and updating all childs and physics
+ * an object representing the physic world, and responsible for managing and updating all children and physics
  * @category Container
  */
 export default class World extends Container {

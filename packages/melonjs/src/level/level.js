@@ -75,7 +75,7 @@ function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
 }
 
 /**
- * a level manager. once ressources loaded, the level manager contains all references of defined levels.
+ * a level manager. once resources loaded, the level manager contains all references of defined levels.
  * @namespace level
  */
 

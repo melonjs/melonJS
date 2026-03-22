@@ -76,7 +76,7 @@ export default class Text extends Renderable {
 
 		/**
 		 * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
-		 * possible values are "top", "hanging, "middle, "alphabetic, "ideographic, "bottom"<br>
+		 * possible values are "top", "hanging", "middle", "alphabetic", "ideographic", "bottom"<br>
 		 * @type {string}
 		 * @default "top"
 		 */
@@ -111,7 +111,7 @@ export default class Text extends Renderable {
 		 */
 		this._text = [];
 
-		// initalize the object based on the given settings
+		// initialize the object based on the given settings
 		this.onResetEvent(x, y, settings);
 	}
 

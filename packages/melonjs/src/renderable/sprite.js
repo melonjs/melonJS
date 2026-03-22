@@ -364,7 +364,7 @@ export default class Sprite extends Renderable {
 	 * this.addAnimation("turn", [{ name: 0, delay: 200 }, { name: 1, delay: 100 }])
 	 * // can do this with atlas values as well:
 	 * this.addAnimation("turn", [{ name: "turnone", delay: 200 }, { name: "turntwo", delay: 100 }])
-	 * // define an dying animation that stop on the last frame
+	 * // define a dying animation that stop on the last frame
 	 * this.addAnimation("die", [{ name: 3, delay: 200 }, { name: 4, delay: 100 }, { name: 5, delay: Infinity }])
 	 * // set the standing animation as default
 	 * this.setCurrentAnimation("stand");
@@ -694,7 +694,7 @@ export default class Sprite extends Renderable {
 	}
 
 	/**
-	 * draw this srite (automatically called by melonJS)
+	 * draw this sprite (automatically called by melonJS)
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
 	 */

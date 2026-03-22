@@ -151,7 +151,7 @@ export default class Camera2d extends Renderable {
 		// set a default deadzone
 		this.setDeadzone(this.width / 6, this.height / 6);
 
-		// for backward "compatiblity" (in terms of behavior)
+		// for backward "compatibility" (in terms of behavior)
 		this.anchorPoint.set(0, 0);
 
 		// enable event detection on the camera
@@ -653,7 +653,7 @@ export default class Camera2d extends Renderable {
 	}
 
 	/**
-	 * draw all object visibile in this viewport
+	 * draw all objects visible in this viewport
 	 * @ignore
 	 */
 	draw(renderer, container) {

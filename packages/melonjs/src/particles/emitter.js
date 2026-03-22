@@ -43,7 +43,7 @@ export default class ParticleEmitter extends Container {
 	 * // Add the emitter to the game world
 	 * me.game.world.addChild(emitter);
 	 *
-	 * // Launch all particles one time and stop, like a explosion
+	 * // Launch all particles one time and stop, like an explosion
 	 * emitter.burstParticles();
 	 *
 	 * // Launch constantly the particles, like a fountain
