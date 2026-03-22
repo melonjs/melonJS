@@ -4,7 +4,7 @@ import TMXLayer from "./../TMXLayer.js";
 import TMXRenderer from "./TMXRenderer.js";
 
 /**
- * an Isometric Map Renderder
+ * an Isometric Map Renderer
  * @category Tilemap
  */
 export default class TMXIsometricRenderer extends TMXRenderer {
