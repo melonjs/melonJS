@@ -16,7 +16,7 @@ const isObservableProperty = (
 };
 
 /**
- * Represents a point in a 3D coordinate vector that can be observed for changes.
+ * Represents a point in a 2D coordinate vector that can be observed for changes.
  * @category Math
  */
 export class ObservableVector2d {
@@ -27,7 +27,7 @@ export class ObservableVector2d {
 	private callBackEnabled: boolean = true;
 
 	/**
-	 * Creates a new ObservableVector3d instance.
+	 * Creates a new ObservableVector2d instance.
 	 * @param x - The x-coordinate of the vector. Default is 0.
 	 * @param y - The y-coordinate of the vector. Default is 0.
 	 * @param callback - The callback function to be called when the point changes. Default is undefined.
