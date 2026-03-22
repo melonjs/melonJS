@@ -31,7 +31,7 @@
 		"lefthook": "^2.1.4",
 		"tsconfig": "workspace:^",
 		"tsx": "^4.21.0",
-		"turbo": "^2.8.17",
+		"turbo": "^2.8.20",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.57.1",
 		"vitest": "^4.0.18"
