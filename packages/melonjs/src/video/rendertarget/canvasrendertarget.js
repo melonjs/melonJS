@@ -78,6 +78,7 @@ function createContext(canvas, attributes) {
 
 /**
  * CanvasRenderTarget is 2D render target which exposes a Canvas interface.
+ * @category Rendering
  */
 class CanvasRenderTarget {
 	/**

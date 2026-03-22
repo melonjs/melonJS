@@ -383,6 +383,7 @@ export const GAMEPAD = {
  * me.input.bindGamepad(0, {type:"buttons", code: me.input.GAMEPAD.BUTTONS.FACE_1}, me.input.KEY.X);
  * // map the left axis value on the first gamepad to the LEFT key
  * me.input.bindGamepad(0, {type:"axes", code: me.input.GAMEPAD.AXES.LX, threshold: -0.5}, me.input.KEY.LEFT);
+ * @category Input
  */
 export function bindGamepad(index, button, keyCode) {
 	// Throw an exception if no action is defined for the specified keycode
@@ -447,6 +448,7 @@ export function bindGamepad(index, button, keyCode) {
  * @param {number} button - (See {@link input.GAMEPAD})
  * @example
  * me.input.unbindGamepad(0, me.input.GAMEPAD.BUTTONS.FACE_1);
+ * @category Input
  */
 export function unbindGamepad(index, button) {
 	if (!bindings[index]) {
@@ -459,6 +461,7 @@ export function unbindGamepad(index, button) {
  * Set deadzone for analog gamepad inputs<br>
  * The default deadzone is 0.1 (10%) Analog values less than this will be ignored
  * @param {number} value - Deadzone value
+ * @category Input
  */
 export function setGamepadDeadzone(value) {
 	deadzone = value;

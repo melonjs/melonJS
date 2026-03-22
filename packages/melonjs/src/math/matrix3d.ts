@@ -38,6 +38,7 @@ const reset = (instance: Matrix3d, ...value: ConstructorArg) => {
 
 /**
  * a 4x4 Matrix3d Object
+ * @category Math
  */
 export class Matrix3d {
 	/**

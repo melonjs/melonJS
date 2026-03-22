@@ -11,6 +11,7 @@ import Renderable from "./renderable.js";
 
 /**
  * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
+ * @category Game Objects
  */
 export default class ColorLayer extends Renderable {
 	/**

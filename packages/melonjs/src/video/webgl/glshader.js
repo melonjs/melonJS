@@ -7,6 +7,7 @@ import { extractUniforms } from "./utils/uniforms.js";
 
 /**
  * a base GL Shader object
+ * @category Rendering
  */
 export default class GLShader {
 	/**

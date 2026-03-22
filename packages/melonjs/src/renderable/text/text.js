@@ -20,6 +20,7 @@ const toPX = [12, 24, 0.75, 1];
 
 /**
  * a generic system font object.
+ * @category Text
  */
 export default class Text extends Renderable {
 	/**

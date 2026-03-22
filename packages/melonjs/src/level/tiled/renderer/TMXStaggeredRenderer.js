@@ -3,7 +3,8 @@ import { vector2dPool } from "../../../math/vector2d.ts";
 import TMXHexagonalRenderer from "./TMXHexagonalRenderer.js";
 
 /**
- * a Staggered Map Renderder
+ * a Staggered Map Renderer
+ * @category Tilemap
  */
 export default class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 	/**

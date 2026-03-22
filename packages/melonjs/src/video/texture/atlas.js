@@ -65,6 +65,7 @@ export function identifyFormat(app) {
  * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx} <br>
  * - Standard (fixed cell size) spritesheet : through a {framewidth:xx, frameheight:xx, anchorPoint:me.Vector2d} object
  * );
+ * @category Game Objects
  */
 export class TextureAtlas {
 	/**

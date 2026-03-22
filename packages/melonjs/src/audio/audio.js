@@ -83,6 +83,7 @@ export let stopOnAudioError = true;
  *     alert("Sorry but your browser does not support html 5 audio !");
  *     return;
  * }
+ * @category Audio
  */
 export function init(format = "mp3") {
 	// convert it into an array
@@ -95,6 +96,7 @@ export function init(format = "mp3") {
  * check if the given audio format is supported
  * @param {"mp3"|"mpeg"|"opus"|"ogg"|"oga"|"wav"|"aac"|"caf"|"m4a"|"m4b"|"mp4"|"weba"|"webm"|"dolby"|"flac"} codec - the audio format to check for support
  * @returns {boolean} return true if the given audio format is supported
+ * @category Audio
  */
 export function hasFormat(codec) {
 	return hasAudio() && Howler.codecs(codec);
@@ -103,6 +105,7 @@ export function hasFormat(codec) {
 /**
  * check if audio (HTML5 or WebAudio) is supported
  * @returns {boolean} return true if audio (HTML5 or WebAudio) is supported
+ * @category Audio
  */
 export function hasAudio() {
 	return !Howler.noAudio;
@@ -112,6 +115,7 @@ export function hasAudio() {
  * enable audio output <br>
  * only useful if audio supported and previously disabled through
  * @see {@link disable}
+ * @category Audio
  */
 export function enable() {
 	unmuteAll();
@@ -119,6 +123,7 @@ export function enable() {
 
 /**
  * disable audio output
+ * @category Audio
  */
 export function disable() {
 	muteAll();
@@ -131,6 +136,7 @@ export function disable() {
  * @param {Function} [onerrorcb] - function to be called in case of error
  * @param {Object} [settings] - custom settings to apply to the request (@link https://developer.mozilla.org/en-US/docs/Web/API/fetch#options)
  * @returns {number} the amount of asset loaded (always 1 if successfull)
+ * @category Audio
  */
 export function load(sound, onloadcb, onerrorcb, settings = {}) {
 	const urls = [];
@@ -184,6 +190,7 @@ export function load(sound, onloadcb, onerrorcb, settings = {}) {
  * me.audio.play("gameover_sfx", false, myFunc);
  * // play the "gameover_sfx" audio clip with a lower volume level
  * me.audio.play("gameover_sfx", false, null, 0.5);
+ * @category Audio
  */
 export function play(sound_name, loop = false, onend, volume) {
 	const sound = audioTracks[sound_name];
@@ -217,6 +224,7 @@ export function play(sound_name, loop = false, onend, volume) {
  * @param {number} to - Volume to fade to (0.0 to 1.0).
  * @param {number} duration - Time in milliseconds to fade.
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will fade.
+ * @category Audio
  */
 export function fade(sound_name, from, to, duration, id) {
 	const sound = audioTracks[sound_name];
@@ -238,6 +246,7 @@ export function fade(sound_name, from, to, duration, id) {
  * let current_pos = me.audio.seek("dst-gameforest");
  * // set back the position of the background music to the beginning
  * me.audio.seek("dst-gameforest", 0);
+ * @category Audio
  */
 export function seek(sound_name, ...args) {
 	const sound = audioTracks[sound_name];
@@ -259,6 +268,7 @@ export function seek(sound_name, ...args) {
  * let rate = me.audio.rate("dst-gameforest");
  * // speed up the playback of the background music
  * me.audio.rate("dst-gameforest", 2.0);
+ * @category Audio
  */
 export function rate(sound_name, ...args) {
 	const sound = audioTracks[sound_name];
@@ -277,6 +287,7 @@ export function rate(sound_name, ...args) {
  * @return {number} the current panning value
  * @example
  * me.audio.stereo("cling", -1);
+ * @category Audio
  */
 export function stereo(sound_name, pan, id) {
 	const sound = audioTracks[sound_name];
@@ -295,6 +306,7 @@ export function stereo(sound_name, pan, id) {
  * @param  {Number} z - the z-position of the audio source.
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will be changed.
  * @return {Array} the current 3D spatial position: [x, y, z]
+ * @category Audio
  */
 export function position(sound_name, x, y, z, id) {
 	const sound = audioTracks[sound_name];
@@ -314,6 +326,7 @@ export function position(sound_name, x, y, z, id) {
  * @param  {Number} z - the z-orientation of the audio source.
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will be changed.
  * @return {Array} the current 3D spatial orientation: [x, y, z]
+ * @category Audio
  */
 export function orientation(sound_name, x, y, z, id) {
 	const sound = audioTracks[sound_name];
@@ -346,6 +359,7 @@ export function orientation(sound_name, x, y, z, id) {
  *    rolloffFactor: 2.5,
  *    distanceModel: 'exponential'
  * });
+ * @category Audio
  */
 export function panner(sound_name, attributes, id) {
 	const sound = audioTracks[sound_name];
@@ -362,6 +376,7 @@ export function panner(sound_name, attributes, id) {
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will stop.
  * @example
  * me.audio.stop("cling");
+ * @category Audio
  */
 export function stop(sound_name, id) {
 	if (typeof sound_name !== "undefined") {
@@ -385,6 +400,7 @@ export function stop(sound_name, id) {
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will pause.
  * @example
  * me.audio.pause("cling");
+ * @category Audio
  */
 export function pause(sound_name, id) {
 	const sound = audioTracks[sound_name];
@@ -408,6 +424,7 @@ export function pause(sound_name, id) {
  * ...
  * // resume
  * me.audio.resume("myClip", id);
+ * @category Audio
  */
 export function resume(sound_name, id) {
 	const sound = audioTracks[sound_name];
@@ -427,6 +444,7 @@ export function resume(sound_name, id) {
  * @returns {number} the sound instance ID.
  * @example
  * me.audio.playTrack("awesome_music");
+ * @category Audio
  */
 export function playTrack(sound_name, volume) {
 	current_track_id = sound_name;
@@ -441,6 +459,7 @@ export function playTrack(sound_name, volume) {
  * me.audio.playTrack("awesome_music");
  * // stop the current music
  * me.audio.stopTrack();
+ * @category Audio
  */
 export function stopTrack() {
 	if (current_track_id !== null) {
@@ -453,6 +472,7 @@ export function stopTrack() {
  * pause the current audio track
  * @example
  * me.audio.pauseTrack();
+ * @category Audio
  */
 export function pauseTrack() {
 	if (current_track_id !== null) {
@@ -469,6 +489,7 @@ export function pauseTrack() {
  * me.audio.pauseTrack();
  * // resume the music
  * me.audio.resumeTrack();
+ * @category Audio
  */
 export function resumeTrack() {
 	if (current_track_id !== null) {
@@ -479,6 +500,7 @@ export function resumeTrack() {
 /**
  * returns the current track Id
  * @returns {string} audio track name
+ * @category Audio
  */
 export function getCurrentTrack() {
 	return current_track_id;
@@ -487,6 +509,7 @@ export function getCurrentTrack() {
 /**
  * set the default global volume
  * @param {number} volume - Float specifying volume (0.0 - 1.0 values accepted).
+ * @category Audio
  */
 export function setVolume(volume) {
 	Howler.volume(volume);
@@ -495,6 +518,7 @@ export function setVolume(volume) {
 /**
  * get the default global volume
  * @returns {number} current volume value in Float [0.0 - 1.0] .
+ * @category Audio
  */
 export function getVolume() {
 	return Howler.volume();
@@ -508,6 +532,7 @@ export function getVolume() {
  * @example
  * // mute the background music
  * me.audio.mute("awesome_music");
+ * @category Audio
  */
 export function mute(sound_name, id, mute = true) {
 	const sound = audioTracks[sound_name];
@@ -522,6 +547,7 @@ export function mute(sound_name, id, mute = true) {
  * unmute the specified sound
  * @param {string} sound_name - audio clip name
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will unmute.
+ * @category Audio
  */
 export function unmute(sound_name, id) {
 	mute(sound_name, id, false);
@@ -529,6 +555,7 @@ export function unmute(sound_name, id) {
 
 /**
  * mute all audio
+ * @category Audio
  */
 export function muteAll() {
 	Howler.mute(true);
@@ -536,6 +563,7 @@ export function muteAll() {
 
 /**
  * unmute all audio
+ * @category Audio
  */
 export function unmuteAll() {
 	Howler.mute(false);
@@ -544,6 +572,7 @@ export function unmuteAll() {
 /**
  * Returns true if audio is muted globally.
  * @returns {boolean} true if audio is muted globally
+ * @category Audio
  */
 export function muted() {
 	return Howler._muted;
@@ -555,6 +584,7 @@ export function muted() {
  * @returns {boolean} true if unloaded
  * @example
  * me.audio.unload("awesome_music");
+ * @category Audio
  */
 export function unload(sound_name) {
 	if (!(sound_name in audioTracks)) {
@@ -571,6 +601,7 @@ export function unload(sound_name) {
  * unload all audio to free memory
  * @example
  * me.audio.unloadAll();
+ * @category Audio
  */
 export function unloadAll() {
 	for (const sound_name in audioTracks) {

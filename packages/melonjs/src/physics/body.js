@@ -23,6 +23,7 @@ import { collision } from "./collision.js";
 
 /**
  * a Generic Physic Body Object with some physic properties and behavior functionality, to add as a member of a Renderable.
+ * @category Physics
  * @see Renderable.body
  */
 export default class Body {

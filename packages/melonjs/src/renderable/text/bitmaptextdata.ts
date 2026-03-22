@@ -79,6 +79,10 @@ function createSpaceGlyph(glyphs: any) {
 	}
 }
 
+/**
+ * a bitmap font data object
+ * @category Text
+ */
 export default class BitmapTextData {
 	padTop: number = 0;
 	padRight: number = 0;

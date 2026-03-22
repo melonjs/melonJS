@@ -2,7 +2,8 @@ import { vector2dPool } from "../../../math/vector2d.ts";
 import TMXRenderer from "./TMXRenderer.js";
 
 /**
- * an Orthogonal Map Renderder
+ * an Orthogonal Map Renderer
+ * @category Tilemap
  */
 export default class TMXOrthogonalRenderer extends TMXRenderer {
 	/**

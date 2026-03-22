@@ -10,6 +10,7 @@ import Container from "../container.js";
 /**
  * This is a basic clickable and draggable container which you can use in your game UI.
  * Use this for example if you want to display a panel that contains text, images or other UI elements.
+ * @category UI
  */
 export default class UIBaseElement extends Container {
 	#boundPointerMoveHandler;

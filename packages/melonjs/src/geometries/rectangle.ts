@@ -4,6 +4,7 @@ import { Polygon, PolygonVertices, polygonPool } from "./polygon.ts";
 
 /**
  * A rectangle object.
+ * @category Geometry
  */
 export class Rect extends Polygon {
 	/**

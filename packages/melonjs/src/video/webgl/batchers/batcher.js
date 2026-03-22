@@ -19,6 +19,7 @@ const MAX_VERTICES = 4096;
 /**
  * A base WebGL Batcher object that manages shader programs, vertex attribute
  * definitions, and vertex buffer batching for efficient GPU draw calls.
+ * @category Rendering
  */
 export class Batcher {
 	/**

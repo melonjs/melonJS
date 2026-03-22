@@ -30,6 +30,7 @@ const targetV = new Vector2d();
 
 /**
  * a 2D orthographic camera
+ * @category Camera
  */
 export default class Camera2d extends Renderable {
 	/**

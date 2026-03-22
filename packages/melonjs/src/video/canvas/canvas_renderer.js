@@ -20,6 +20,7 @@ import TextureCache from "./../texture/cache.js";
 
 /**
  * a canvas renderer object
+ * @category Rendering
  */
 export default class CanvasRenderer extends Renderer {
 	/**

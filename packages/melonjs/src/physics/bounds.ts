@@ -7,6 +7,7 @@ import { XYPoint } from "../utils/types.ts";
 
 /**
  * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
+ * @category Geometry
  */
 export class Bounds {
 	_center: Vector2d;

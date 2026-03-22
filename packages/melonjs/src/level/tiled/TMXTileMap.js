@@ -89,6 +89,7 @@ function readObjectGroup(map, data, z) {
 /**
  * a TMX Tile Map Object
  * Tiled QT +0.7.x format
+ * @category Tilemap
  */
 export default class TMXTileMap {
 	/**

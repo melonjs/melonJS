@@ -100,6 +100,7 @@ export function setNocache(enable = false) {
  *
  * // Enable withCredentials
  * me.loader.setOptions({ withCredentials: true });
+ * @category Assets
  */
 export function setOptions(options) {
 	if (options.crossOrigin !== undefined) {
@@ -126,6 +127,7 @@ export function setOptions(options) {
  * me.loader.setBaseURL("audio", "data/audio/");
  * // change the base URL absolute address for all object types
  * me.loader.setBaseURL("*", "http://myurl.com/")
+ * @category Assets
  */
 export function setBaseURL(type, url = "./") {
 	if (type !== "*") {
@@ -336,6 +338,7 @@ function onLoadingError(res) {
  * }
  * // set the parser for the custom format
  * loader.setParser("abc", customAbcParser);
+ * @category Assets
  */
 export function setParser(type, parserFn) {
 	if (typeof parserFn !== "function") {
@@ -393,6 +396,7 @@ export function setParser(type, parserFn) {
  * ...
  * // set all resources to be loaded
  * me.loader.preload(game.assets, () => this.loaded());
+ * @category Assets
  */
 export function preload(assets, onloadcb, switchToLoadState = true) {
 	// set the onload callback if defined
@@ -506,6 +510,7 @@ export function reload(src) {
  * }, function () {
  *     me.audio.play("bgmusic");
  * });
+ * @category Assets
  */
 export function load(asset, onload, onerror) {
 	// make sure all parsers have been initialized
@@ -551,6 +556,7 @@ export function load(asset, onload, onerror) {
  * @param {Asset} asset
  * @returns {boolean} true if unloaded
  * @example me.loader.unload({name: "avatar",  type:"image"});
+ * @category Assets
  */
 export function unload(asset) {
 	switch (asset.type) {
@@ -623,6 +629,7 @@ export function unload(asset) {
  * unload all resources to free memory
  * @memberof loader
  * @example me.loader.unloadAll();
+ * @category Assets
  */
 export function unloadAll() {
 	let name;
@@ -696,6 +703,7 @@ export function unloadAll() {
  * @memberof loader
  * @param {string} elt - name of the tmx/tsx element ("map1");
  * @returns {object} requested element or null if not found
+ * @category Assets
  */
 export function getTMX(elt) {
 	// force as string
@@ -711,6 +719,7 @@ export function getTMX(elt) {
  * @memberof loader
  * @param {string} elt - name of the binary object ("ymTrack");
  * @returns {object} requested element or null if not found
+ * @category Assets
  */
 export function getBinary(elt) {
 	// force as string
@@ -726,6 +735,7 @@ export function getBinary(elt) {
  * @memberof loader
  * @param {string} image - name of the Image element ("tileset-platformer");
  * @returns {HTMLImageElement|CompressedImage|null} requested element or null if not found
+ * @category Assets
  */
 export function getImage(image) {
 	// force as string and extract the base name
@@ -742,6 +752,7 @@ export function getImage(image) {
  * @memberof loader
  * @param {string} elt - name of the json file
  * @returns {JSON}
+ * @category Assets
  */
 export function getJSON(elt) {
 	// force as string
@@ -757,6 +768,7 @@ export function getJSON(elt) {
  * @memberof loader
  * @param {string} elt - name of the video file
  * @returns {HTMLVideoElement}
+ * @category Assets
  */
 export function getVideo(elt) {
 	// force as string
@@ -772,6 +784,7 @@ export function getVideo(elt) {
  * @memberof loader
  * @param {string} elt - name of the font file
  * @returns {FontFace}
+ * @category Assets
  */
 export function getFont(elt) {
 	// force as string

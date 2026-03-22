@@ -6,6 +6,7 @@ import Sprite from "./sprite.js";
 
 /**
  * a basic collectable helper class for immovable object (e.g. a coin)
+ * @category Game Objects
  */
 export default class Collectable extends Sprite {
 	/**

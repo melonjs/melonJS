@@ -18,6 +18,7 @@ import Sprite from "./sprite.js";
 
 /**
  * a generic Image Layer Object
+ * @category Game Objects
  */
 export default class ImageLayer extends Sprite {
 	/**

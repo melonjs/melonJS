@@ -17,6 +17,7 @@ import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
 
 /**
  * a base renderer object
+ * @category Rendering
  */
 export default class Renderer {
 	/**

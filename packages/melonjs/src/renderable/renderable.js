@@ -27,6 +27,7 @@ import pool from "../system/legacy_pool.js";
 
 /**
  * A base class for renderable objects.
+ * @category Game Objects
  */
 export default class Renderable extends Rect {
 	/**

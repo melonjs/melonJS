@@ -14,6 +14,7 @@ import ParticleEmitter from "./emitter.js";
 
 /**
  * Single Particle Object.
+ * @category Particles
  */
 export default class Particle extends Renderable {
 	vel: Vector2d;

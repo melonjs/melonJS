@@ -31,6 +31,7 @@ let supportedCompressedTextureFormats;
 
 /**
  * a WebGL renderer object
+ * @category Rendering
  */
 export default class WebGLRenderer extends Renderer {
 	/**

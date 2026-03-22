@@ -38,6 +38,7 @@ import { ScaleMethods } from "./scaleMethods.ts";
 
 /**
  * An Application represents a single melonJS game, and is responsible for updating (each frame) all the related object status and draw them.
+ * @category Application
  * @see {@link game}
  */
 export default class Application {

@@ -18,7 +18,8 @@ const offsetsStaggerY = [
 ];
 
 /**
- * an Hexagonal Map Renderder
+ * an Hexagonal Map Renderer
+ * @category Tilemap
  */
 export default class TMXHexagonalRenderer extends TMXRenderer {
 	/**

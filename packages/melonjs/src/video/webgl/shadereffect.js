@@ -6,6 +6,7 @@ import quadVertex from "./shaders/quad.vert";
  * Only requires a fragment `apply()` function — the vertex shader, uniforms, and
  * texture sampling boilerplate are handled automatically.
  * In Canvas mode, the shader is silently disabled (all methods become no-ops).
+ * @category Rendering
  * @example
  * // create a grayscale effect
  * mySprite.shader = new ShaderEffect(renderer, `
