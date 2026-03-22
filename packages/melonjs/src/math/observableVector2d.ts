@@ -16,7 +16,7 @@ const isObservableProperty = (
 };
 
 /**
- * Represents a point in a 2D coordinate vector that can be observed for changes.
+ * Represents an observable 2D vector that can be observed for changes.
  * @category Math
  */
 export class ObservableVector2d {

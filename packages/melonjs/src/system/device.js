@@ -807,7 +807,7 @@ export function watchAccelerometer() {
 }
 
 /**
- * Unwatch device accelerometer event
+ * Unwatch device Accelerometer event
  * @memberof device
  * @category Application
  */
