@@ -135,7 +135,7 @@ export function disable() {
  * @param {Function} [onloadcb] - function to be called when the resource is loaded
  * @param {Function} [onerrorcb] - function to be called in case of error
  * @param {Object} [settings] - custom settings to apply to the request (@link https://developer.mozilla.org/en-US/docs/Web/API/fetch#options)
- * @returns {number} the amount of asset loaded (always 1 if successfull)
+ * @returns {number} the amount of asset loaded (always 1 if successful)
  * @category Audio
  */
 export function load(sound, onloadcb, onerrorcb, settings = {}) {
@@ -218,7 +218,7 @@ export function play(sound_name, loop = false, onend, volume) {
 }
 
 /**
- * Fade a currently playing sound between two volumee.
+ * Fade a currently playing sound between two volumes.
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} from - Volume to fade from (0.0 to 1.0).
  * @param {number} to - Volume to fade to (0.0 to 1.0).
@@ -416,7 +416,7 @@ export function pause(sound_name, id) {
  * @param {string} sound_name - audio clip name - case sensitive
  * @param {number} [id] - the sound instance ID. If none is passed, all sounds in group will resume.
  * @example
- * // play a audio clip
+ * // play an audio clip
  * let id = me.audio.play("myClip");
  * ...
  * // pause it
@@ -455,7 +455,7 @@ export function playTrack(sound_name, volume) {
  * stop the current audio track
  * @see {@link playTrack}
  * @example
- * // play a awesome music
+ * // play an awesome music
  * me.audio.playTrack("awesome_music");
  * // stop the current music
  * me.audio.stopTrack();

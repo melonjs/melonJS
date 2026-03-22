@@ -137,7 +137,7 @@ export function register(plugin, name = plugin.toString().match(/ (\w+)/)[1]) {
  * returns the the plugin instance with the specified class type or registered name
  * @name get
  * @memberof plugin
- * @param {object|string} classType - the Class Object or registered name of the plugin to retreive
+ * @param {object|string} classType - the Class Object or registered name of the plugin to retrieve
  * @returns {plugin.BasePlugin} a plugin instance or undefined
  */
 export function get(classType) {

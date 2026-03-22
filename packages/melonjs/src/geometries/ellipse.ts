@@ -103,7 +103,7 @@ export class Ellipse {
 	 * @param y - the center y coordinate of the ellipse
 	 * @param w - width (diameter) of the ellipse
 	 * @param h - height (diameter) of the ellipse
-	 * @returns this instance for objecf chaining
+	 * @returns this instance for object chaining
 	 */
 	setShape(x: number, y: number, w: number, h: number) {
 		const hW = w / 2;

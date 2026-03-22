@@ -217,7 +217,7 @@ export default class QuadTree {
 					if (child.name !== "rootContainer") {
 						this.insert(child);
 					}
-					// recursivly insert all childs
+					// recursively insert all children
 					this.insertContainer(child);
 				} else {
 					// only insert object with a bounding box

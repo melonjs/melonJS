@@ -68,7 +68,7 @@ export class Vector3d {
 	}
 
 	/**
-	 * Substract the passed vector to this vector
+	 * Subtract the passed vector from this vector
 	 * @param v other vector
 	 * @returns Reference to this object for method chaining
 	 */

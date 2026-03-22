@@ -52,7 +52,7 @@ export const baseURL = {};
  *  // allow for cross-origin texture loading
  * me.loader.crossOrigin = "anonymous";
  *
- * // set all ressources to be loaded
+ * // set all resources to be loaded
  * me.loader.preload(game.resources, () => this.loaded());
  */
 export let crossOrigin;
@@ -71,7 +71,7 @@ export let crossOrigin;
  *  // enable withCredentials
  * me.loader.withCredentials = true;
  *
- * // set all ressources to be loaded
+ * // set all resources to be loaded
  * me.loader.preload(game.resources, () => this.loaded());
  */
 export let withCredentials = false;

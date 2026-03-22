@@ -632,7 +632,7 @@ export default class Renderable extends Rect {
 
 			bounds.clear();
 			if (this.autoTransform === true && !this.currentTransform.isIdentity()) {
-				// temporarly translate the matrix based on the anchor point
+				// temporarily translate the matrix based on the anchor point
 				this.currentTransform.translate(
 					-this.width * this.anchorPoint.x,
 					-this.height * this.anchorPoint.y,
@@ -796,7 +796,7 @@ export default class Renderable extends Rect {
 	 * @param {Renderable} other - the other renderable touching this one (a reference to response.a or response.b)
 	 * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
 	 * @example
-	 * // colision handler
+	 * // collision handler
 	 * onCollision(response) {
 	 *     if (response.b.body.collisionType === me.collision.types.ENEMY_OBJECT) {
 	 *         // makes the other object solid, by substracting the overlap vector to the current position

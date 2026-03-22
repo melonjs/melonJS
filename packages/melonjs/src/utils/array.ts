@@ -26,7 +26,7 @@ export function remove<T>(arr: T[], obj: T): T[] {
 
 /**
  * return a random array element
- * @param arr - array to pick a element
+ * @param arr - array to pick an element
  * @returns random member of array
  * @example
  * // Select a random array element
@@ -39,7 +39,7 @@ export function random<T>(arr: T[]) {
 
 /**
  * return a weighted random array element, favoring the earlier entries
- * @param arr - array to pick a element
+ * @param arr - array to pick an element
  * @returns random member of array
  */
 export function weightedRandom<T>(arr: T[]) {

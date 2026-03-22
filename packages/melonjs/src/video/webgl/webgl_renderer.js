@@ -723,7 +723,7 @@ export default class WebGLRenderer extends Renderer {
 
 	/**
 	 * set a blend mode for the given context. <br>
-	 * Supported blend mode between Canvas and WebGL remderer : <br>
+	 * Supported blend mode between Canvas and WebGL renderer : <br>
 	 * - "normal" : this is the default mode and draws new content on top of the existing content <br>
 	 * <img src="../images/normal-blendmode.png" width="510"/> <br>
 	 * - "multiply" : the pixels of the top layer are multiplied with the corresponding pixel of the bottom layer. A darker picture is the result. <br>
@@ -1271,7 +1271,7 @@ export default class WebGLRenderer extends Renderer {
 	}
 
 	/**
-	 * Draw a a point at the specified coordinates
+	 * Draw a point at the specified coordinates
 	 * @param {number} x - x axis of the coordinate for the point.
 	 * @param {number} y - y axis of the coordinate for the point.
 	 */

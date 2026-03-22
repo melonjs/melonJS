@@ -61,7 +61,7 @@ export default class ImageLayer extends Sprite {
 		this.ratio = vector2dPool.get(1.0, 1.0);
 
 		if (typeof settings.ratio !== "undefined") {
-			// little hack for backward compatiblity
+			// little hack for backward compatibility
 			if (stringUtil.isNumeric(settings.ratio)) {
 				this.ratio.set(settings.ratio, +settings.ratio);
 			} /* vector */ else {
