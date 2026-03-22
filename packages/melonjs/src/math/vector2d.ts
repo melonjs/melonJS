@@ -4,6 +4,7 @@ import { clamp } from "./math.ts";
 
 /**
  * a generic 2D Vector Object
+ * @category Math
  */
 export class Vector2d {
 	x: number;

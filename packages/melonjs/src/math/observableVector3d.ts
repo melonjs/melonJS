@@ -19,6 +19,7 @@ const isObservableProperty = (
 
 /**
  * Represents a point in a 3D coordinate vector that can be observed for changes.
+ * @category Math
  */
 export class ObservableVector3d {
 	private _callback: () => void;

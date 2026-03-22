@@ -155,6 +155,7 @@ import Sprite from "../sprite.js";
  * @see Sprite
  * @see Renderable
  * @see Body
+ * @category Game Objects
  */
 export default class Entity extends Renderable {
 	static _deprecationWarned = false;

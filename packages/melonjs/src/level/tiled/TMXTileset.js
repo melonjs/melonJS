@@ -6,6 +6,7 @@ import { renderer } from "./../../video/video.js";
 
 /**
  * a TMX Tile Set Object
+ * @category Tilemap
  */
 export default class TMXTileset {
 	/**

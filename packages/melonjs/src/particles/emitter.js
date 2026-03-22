@@ -20,6 +20,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
 
 /**
  * Particle Emitter Object.
+ * @category Particles
  */
 export default class ParticleEmitter extends Container {
 	/**

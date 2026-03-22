@@ -5,6 +5,7 @@ import TMXRenderer from "./TMXRenderer.js";
 
 /**
  * an Isometric Map Renderder
+ * @category Tilemap
  */
 export default class TMXIsometricRenderer extends TMXRenderer {
 	/**

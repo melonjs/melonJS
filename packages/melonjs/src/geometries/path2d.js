@@ -18,6 +18,7 @@ import { endpointToCenterParameterization } from "./toarccanvas.ts";
  * or disconnected regions. For complex multi-part shapes, draw each sub-path separately.
  *
  * Supported SVG commands: M, L, H, V, Q, C, A, Z (uppercase only).
+ * @category Geometry
  */
 class Path2D {
 	constructor(svgPath) {

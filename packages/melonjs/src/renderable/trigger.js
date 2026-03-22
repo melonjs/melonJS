@@ -12,6 +12,7 @@ import Renderable from "./renderable.js";
 
 /**
  * trigger an event when colliding with another object
+ * @category Game Objects
  */
 export default class Trigger extends Renderable {
 	/**

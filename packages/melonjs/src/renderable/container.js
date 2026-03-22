@@ -43,6 +43,7 @@ let globalFloatingCounter = 0;
 
 /**
  * Container represents a collection of child objects
+ * @category Container
  */
 export default class Container extends Renderable {
 	/**

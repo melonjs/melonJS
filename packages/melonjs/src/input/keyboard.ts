@@ -112,6 +112,7 @@ export function initKeyboardEvent() {
  * else if (me.input.isKeyPressed('right')) {
  *    //do something else...
  * }
+ * @category Input
  */
 export function isKeyPressed(action: string) {
 	if (_keyStatus[action] && !_keyLocked[action]) {
@@ -127,6 +128,7 @@ export function isKeyPressed(action: string) {
  * return the key status of the specified action
  * @param action - user defined corresponding action
  * @returns down (true) or up(false)
+ * @category Input
  */
 export function keyStatus(action: string) {
 	return _keyStatus[action] > 0;
@@ -140,6 +142,7 @@ export function keyStatus(action: string) {
  * @example
  * // trigger a key press
  * me.input.triggerKeyEvent(me.input.KEY.LEFT, true);
+ * @category Input
  */
 export function triggerKeyEvent(
 	keyCode: number,
@@ -182,6 +185,7 @@ export const bindKey = (
  * return the action associated with the given keycode
  * @param keyCode - (See {@link input.KEY})
  * @returns user defined associated action
+ * @category Input
  */
 export function getBindingKey(keyCode: number) {
 	return _keyBindings[keyCode];
@@ -195,6 +199,7 @@ export function getBindingKey(keyCode: number) {
  * if (!this.falling && !this.jumping) {
  *     me.input.unlockKey("jump");
  * }
+ * @category Input
  */
 export function unlockKey(action: string) {
 	_keyLocked[action] = false;
@@ -205,6 +210,7 @@ export function unlockKey(action: string) {
  * @param keyCode - (See {@link input.KEY})
  * @example
  * me.input.unbindKey(me.input.KEY.LEFT);
+ * @category Input
  */
 export function unbindKey(keyCode: number) {
 	// clear the event status

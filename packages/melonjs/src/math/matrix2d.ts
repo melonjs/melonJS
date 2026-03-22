@@ -28,6 +28,7 @@ const reset = (instance: Matrix2d, ...value: ConstructorArg) => {
  * a Matrix2d Object.<br>
  * the identity matrix and parameters position : <br>
  * <img src="images/identity-matrix_2x.png"/>
+ * @category Math
  */
 export class Matrix2d {
 	/**

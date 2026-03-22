@@ -11,6 +11,7 @@ import {
 /**
  * A Draggable base object
  * @see DropTarget
+ * @category Game Objects
  */
 export class Draggable extends Renderable {
 	/**

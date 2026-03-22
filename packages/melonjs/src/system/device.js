@@ -388,6 +388,7 @@ export let autoFocus = true;
  * me.device.onReady(function () {
  *    game.onload();
  * });
+ * @category Application
  */
 export function onReady(fn) {
 	DOMContentLoaded(fn);
@@ -442,6 +443,7 @@ export function initVisibilityEvents() {
  * enable/disable swipe on WebView.
  * @memberof device
  * @param {boolean} [enable=true] - enable or disable swipe.
+ * @category Application
  */
 export function enableSwipe(enable) {
 	const moveEvent = pointerEvent
@@ -466,6 +468,7 @@ export function enableSwipe(enable) {
  * Returns true if the browser/device is in full screen mode.
  * @memberof device
  * @returns {boolean}
+ * @category Application
  */
 export function isFullscreen() {
 	if (hasFullscreenSupport) {
@@ -493,6 +496,7 @@ export function isFullscreen() {
  *       me.device.exitFullscreen();
  *    }
  * });
+ * @category Application
  */
 export function requestFullscreen(element) {
 	if (hasFullscreenSupport && !isFullscreen()) {
@@ -519,6 +523,7 @@ export const exitFullscreen = () => {
  * @memberof device
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/orientation
  * @returns {string} the screen orientation
+ * @category Application
  */
 export function getScreenOrientation() {
 	const PORTRAIT = "portrait";
@@ -557,6 +562,7 @@ export function getScreenOrientation() {
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
  * @param {string|string[]} orientation - The orientation into which to lock the screen.
  * @returns {boolean} true if the orientation was unsuccessfully locked
+ * @category Application
  */
 export function lockOrientation(orientation) {
 	const screen = globalThis.screen;
@@ -575,6 +581,7 @@ export function lockOrientation(orientation) {
  * @memberof device
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
  * @returns {boolean} true if the orientation was unsuccessfully unlocked
+ * @category Application
  */
 export function unlockOrientation() {
 	const screen = globalThis.screen;
@@ -591,6 +598,7 @@ export function unlockOrientation() {
  * return true if the device screen orientation is in Portrait mode
  * @memberof device
  * @returns {boolean}
+ * @category Application
  */
 export function isPortrait() {
 	return getScreenOrientation().includes("portrait");
@@ -600,6 +608,7 @@ export function isPortrait() {
  * return true if the device screen orientation is in Portrait mode
  * @memberof device
  * @returns {boolean}
+ * @category Application
  */
 export function isLandscape() {
 	return getScreenOrientation().includes("landscape");
@@ -611,6 +620,7 @@ export function isLandscape() {
  * @see save
  * @param {string} [type="local"]
  * @returns {object} a reference to the device storage
+ * @category Application
  */
 export function getStorage(type = "local") {
 	switch (type) {
@@ -627,6 +637,7 @@ export function getStorage(type = "local") {
  * @memberof device
  * @param {string|HTMLElement} element - the parent element name or a HTMLElement object
  * @returns {HTMLElement} the parent Element
+ * @category Application
  */
 export function getParentElement(element) {
 	let target = getElement(element);
@@ -643,6 +654,7 @@ export function getParentElement(element) {
  * @memberof device
  * @param {string|HTMLElement} element - the parent element name or a HTMLElement object
  * @returns {HTMLElement} the corresponding DOM Element or null if not existing
+ * @category Application
  */
 export function getElement(element) {
 	let target = null;
@@ -674,6 +686,7 @@ export function getElement(element) {
  * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
  * @param {string|HTMLElement} element - an HTMLElement object
  * @returns {DOMRect} the size and position of the element relatively to the viewport
+ * @category Application
  */
 export function getElementBounds(element) {
 	if (
@@ -696,6 +709,7 @@ export function getElementBounds(element) {
  * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
  * @param {string|HTMLElement} element - an HTMLElement object
  * @returns {DOMRect} the size and position of the given element parent relative to the viewport
+ * @category Application
  */
 export function getParentBounds(element) {
 	return getElementBounds(getParentElement(element));
@@ -707,6 +721,7 @@ export function getParentBounds(element) {
  * @param {object} [options] - context creation options
  * @param {boolean} [options.failIfMajorPerformanceCaveat=true] - If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
  * @returns {boolean} true if WebGL is supported
+ * @category Application
  */
 export function isWebGLSupported(options) {
 	if (WebGLSupport === -1) {
@@ -737,6 +752,7 @@ export function isWebGLSupported(options) {
  *  if (clicked) {
  *    me.device.focus();
  *  }
+ * @category Application
  */
 export function focus() {
 	if (typeof globalThis.focus === "function") {
@@ -764,6 +780,7 @@ export function focus() {
  *         // ... fail at enabling the device accelerometer event
  *     }
  * });
+ * @category Application
  */
 export function watchAccelerometer() {
 	if (hasAccelerometer && !accelInitialized) {
@@ -792,6 +809,7 @@ export function watchAccelerometer() {
 /**
  * unwatch Accelerometor event
  * @memberof device
+ * @category Application
  */
 export function unwatchAccelerometer() {
 	if (accelInitialized) {
@@ -819,6 +837,7 @@ export function unwatchAccelerometer() {
  *         // ... fail at enabling the device orientation event
  *     }
  * });
+ * @category Application
  */
 export function watchDeviceOrientation() {
 	if (hasDeviceOrientation && !deviceOrientationInitialized) {
@@ -846,6 +865,7 @@ export function watchDeviceOrientation() {
 /**
  * unwatch Device orientation event
  * @memberof device
+ * @category Application
  */
 export function unwatchDeviceOrientation() {
 	if (deviceOrientationInitialized) {
@@ -870,6 +890,7 @@ export function unwatchDeviceOrientation() {
  * me.device.vibrate([50, 100, 150]);
  * // cancel any existing vibrations
  * me.device.vibrate(0);
+ * @category Application
  */
 export function vibrate(pattern) {
 	if (
@@ -885,6 +906,7 @@ export function vibrate(pattern) {
  * @memberof device
  * @param {"h264"|"h265"|"ogg"|"mp4"|"m4v"|"webm"|"vp9"|"hls"} codec - the video format to check for support
  * @returns {boolean} return true if the given video format is supported
+ * @category Application
  */
 export function hasVideoFormat(codec) {
 	let result = false;

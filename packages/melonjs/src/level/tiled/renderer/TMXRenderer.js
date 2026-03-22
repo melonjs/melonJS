@@ -3,6 +3,7 @@ import TMXLayer from "./../TMXLayer.js";
 
 /**
  * The map renderer base class
+ * @category Tilemap
  */
 export default class TMXRenderer {
 	/**

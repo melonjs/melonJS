@@ -29,6 +29,7 @@ type OnCompleteCallback<T> = (this: T) => void;
  * author Paul Lewis / http://www.aerotwist.com/<br>
  * author lechecacharro<br>
  * author Josh Faul / http://jocafa.com/
+ * @category Tweens
  */
 export default class Tween {
 	_object: object;

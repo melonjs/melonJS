@@ -4,6 +4,7 @@ import TMXHexagonalRenderer from "./TMXHexagonalRenderer.js";
 
 /**
  * a Staggered Map Renderder
+ * @category Tilemap
  */
 export default class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 	/**

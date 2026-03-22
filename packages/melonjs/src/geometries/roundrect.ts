@@ -8,6 +8,7 @@ const DEFAULT_RADIUS = 20;
 
 /**
  * a rectangle object with rounded corners
+ * @category Geometry
  */
 export class RoundRect extends Rect {
 	/**

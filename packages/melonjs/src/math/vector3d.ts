@@ -5,6 +5,7 @@ import { Vector2d } from "./vector2d.ts";
 
 /**
  * a generic 3D Vector Object
+ * @category Math
  */
 export class Vector3d {
 	x: number;

@@ -3,6 +3,7 @@ import TMXRenderer from "./TMXRenderer.js";
 
 /**
  * an Orthogonal Map Renderder
+ * @category Tilemap
  */
 export default class TMXOrthogonalRenderer extends TMXRenderer {
 	/**

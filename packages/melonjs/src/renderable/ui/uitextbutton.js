@@ -4,6 +4,7 @@ import UIBaseElement from "./uibaseelement.js";
 
 /**
  * This is a basic base text button which you can use in your Game UI.
+ * @category UI
  */
 export default class UITextButton extends UIBaseElement {
 	/**

@@ -7,6 +7,7 @@ import TextMetrics from "./textmetrics.js";
 
 /**
  * a bitmap font object
+ * @category Text
  */
 export default class BitmapText extends Renderable {
 	/**

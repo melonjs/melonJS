@@ -7,6 +7,7 @@ import Sprite from "./../sprite.js";
 
 /**
  * This is a basic sprite based button which you can use in your Game UI.
+ * @category UI
  */
 export default class UISpriteElement extends Sprite {
 	/**

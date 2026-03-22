@@ -213,6 +213,7 @@ for (const [name, rgb] of CSS_COLORS) {
 
 /**
  * A color manipulation object.
+ * @category Math
  */
 export class Color {
 	private glArray: Float32Array;

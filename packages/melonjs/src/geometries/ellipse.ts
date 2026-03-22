@@ -6,6 +6,7 @@ import { Polygon } from "./polygon.ts";
 
 /**
  * an ellipse Object
+ * @category Geometry
  */
 export class Ellipse {
 	/**

@@ -15,6 +15,7 @@ import Renderable from "./renderable.js";
 
 /**
  * An object to display a fixed or animated sprite on screen.
+ * @category Game Objects
  */
 export default class Sprite extends Renderable {
 	/**

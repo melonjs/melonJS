@@ -21,6 +21,7 @@ const V_ARRAY = [
 /**
  * A WebGL Compositor object. This class handles all of the WebGL state<br>
  * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
+ * @category Rendering
  */
 export default class QuadBatcher extends Batcher {
 	/**
