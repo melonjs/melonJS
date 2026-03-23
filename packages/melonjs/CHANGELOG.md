@@ -1,6 +1,6 @@
 # Changelog
 
-## [18.2.0] (melonJS 2)
+## [18.2.0] (melonJS 2) - _Unreleased_
 
 ### Added
 
