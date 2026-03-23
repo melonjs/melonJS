@@ -1,0 +1,28 @@
+{
+	"name": "create-melonjs",
+	"version": "1.0.0",
+	"description": "Create a new melonJS game project",
+	"type": "module",
+	"license": "MIT",
+	"author": "Olivier Biot (AltByte Pte Ltd)",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/melonjs/melonJS.git",
+		"directory": "packages/create-melonjs"
+	},
+	"bin": {
+		"create-melonjs": "bin/create-melonjs.js"
+	},
+	"files": [
+		"bin/"
+	],
+	"keywords": [
+		"melonjs",
+		"game",
+		"create",
+		"scaffold",
+		"boilerplate",
+		"html5",
+		"game-engine"
+	]
+}
