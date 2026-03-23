@@ -129,12 +129,16 @@ Tools integration and usage with melonJS is documented in our [Wiki](https://git
 Getting Started
 -------------------------------------------------------------------------------
 
-Start a new project using one of our boilerplate templates :
+The fastest way to create a new game:
 
-- [ES6 x Vite boilerplate](https://github.com/melonjs/es6-boilerplate)
-- [TypeScript x Vite boilerplate](https://github.com/melonjs/typescript-boilerplate)
+    npm create melonjs my-game
+    cd my-game
+    npm install
+    npm run dev
 
-Or follow the step-by-step [Platformer Tutorial](https://melonjs.org/tutorial/).
+This scaffolds a ready-to-run project with TypeScript, Vite, and the debug plugin. It also works with plain JavaScript — just rename `.ts` files to `.js`.
+
+You can also start from the [boilerplate](https://github.com/melonjs/typescript-boilerplate) directly, or follow the step-by-step [Platformer Tutorial](https://melonjs.org/tutorial/).
 
 For more details, check the wiki [Details & Usage](https://github.com/melonjs/melonJS/wiki#details--usage) guide.
 
