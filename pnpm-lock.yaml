@@ -68,6 +68,8 @@ importers:
         specifier: ^1.58.2
         version: 1.58.2
 
+  packages/create-melonjs: {}
+
   packages/debug-plugin:
     devDependencies:
       concurrently:
@@ -170,9 +172,6 @@ importers:
       typedoc:
         specifier: ^0.28.16
         version: 0.28.17(typescript@5.9.3)
-      typedoc-plugin-missing-exports:
-        specifier: ^4.1.2
-        version: 4.1.2(typedoc@0.28.17(typescript@5.9.3))
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -1922,11 +1921,6 @@ packages:
     resolution: {integrity: sha512-JnTrzGu+zPV3aXIUhnyWJj4z/wigMsdYajGLIYakqyOW1nPllzXEJee0QQbHj+CTIQtXGlAjuK0UY+2xTyjVAw==}
     engines: {node: '>=20'}
 
-  typedoc-plugin-missing-exports@4.1.2:
-    resolution: {integrity: sha512-WNoeWX9+8X3E3riuYPduilUTFefl1K+Z+5bmYqNeH5qcWjtnTRMbRzGdEQ4XXn1WEO4WCIlU0vf46Ca2y/mspg==}
-    peerDependencies:
-      typedoc: ^0.28.1
-
   typedoc@0.28.17:
     resolution: {integrity: sha512-ZkJ2G7mZrbxrKxinTQMjFqsCoYY6a5Luwv2GKbTnBCEgV2ihYm5CflA9JnJAwH0pZWavqfYxmDkFHPt4yx2oDQ==}
     engines: {node: '>= 18', pnpm: '>= 10'}
@@ -3648,10 +3642,6 @@ snapshots:
   type-fest@5.4.4:
     dependencies:
       tagged-tag: 1.0.0
-
-  typedoc-plugin-missing-exports@4.1.2(typedoc@0.28.17(typescript@5.9.3)):
-    dependencies:
-      typedoc: 0.28.17(typescript@5.9.3)
 
   typedoc@0.28.17(typescript@5.9.3):
     dependencies:
