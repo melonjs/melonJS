@@ -1,5 +1,15 @@
 # Changelog
 
+## [18.2.0] (melonJS 2)
+
+### Added
+
+### Changed
+
+### Fixed
+
+### Performance
+
 ## [18.1.0] (melonJS 2) - _2026-03-23_
 
 ### Added
