@@ -1,7 +1,8 @@
 #!/usr/bin/env node
+/* eslint-env node */
 
 import { execSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 const REPO = "melonjs/typescript-boilerplate";
