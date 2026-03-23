@@ -217,8 +217,7 @@ const examples: {
 
 const AceEditorPane = ({ value, mode }: { value: string; mode: string }) => {
 	const editorRef = useRef<HTMLDivElement>(null);
-	// biome-ignore lint/suspicious/noExplicitAny: ace editor type
-	const editorInstance = useRef<any>(null);
+	const editorInstance = useRef<import("ace-builds").Ace.Editor | null>(null);
 
 	useEffect(() => {
 		if (!editorRef.current || editorInstance.current) return;
@@ -227,22 +226,26 @@ const AceEditorPane = ({ value, mode }: { value: string; mode: string }) => {
 			import("ace-builds/src-noconflict/mode-javascript"),
 			import("ace-builds/src-noconflict/mode-typescript"),
 			import("ace-builds/src-noconflict/theme-one_dark"),
-		]).then(([aceModule]) => {
-			const aceLib = aceModule.default || aceModule;
-			if (!editorRef.current) return;
-			const editor = aceLib.edit(editorRef.current);
-			editor.setTheme("ace/theme/one_dark");
-			editor.setReadOnly(true);
-			editor.setShowPrintMargin(false);
-			editor.setHighlightActiveLine(false);
-			editor.setFontSize(13);
-			editor.setOptions({
-				showLineNumbers: true,
-				tabSize: 2,
-				useWorker: false,
+		])
+			.then(([aceModule]) => {
+				const aceLib = aceModule.default || aceModule;
+				if (!editorRef.current) return;
+				const editor = aceLib.edit(editorRef.current);
+				editor.setTheme("ace/theme/one_dark");
+				editor.setReadOnly(true);
+				editor.setShowPrintMargin(false);
+				editor.setHighlightActiveLine(false);
+				editor.setFontSize(13);
+				editor.setOptions({
+					showLineNumbers: true,
+					tabSize: 2,
+					useWorker: false,
+				});
+				editorInstance.current = editor;
+			})
+			.catch((err) => {
+				console.warn("Failed to load code editor:", err);
 			});
-			editorInstance.current = editor;
-		});
 		return () => {
 			if (editorInstance.current) {
 				editorInstance.current.destroy();
