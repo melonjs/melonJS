@@ -1,6 +1,6 @@
 # Changelog
 
-## [18.1.0] (melonJS 2)
+## [18.1.0] (melonJS 2) - _2026-03-23_
 
 ### Added
 - Loader: fontface assets now support `baseURL` — font paths are resolved consistently with other asset types
