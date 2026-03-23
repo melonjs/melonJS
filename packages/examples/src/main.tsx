@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
-import ace from "ace-builds";
+import * as ace from "ace-builds/src-noconflict/ace";
 import { createHashRouter, RouterProvider } from "react-router-dom";
 import "ace-builds/src-noconflict/mode-javascript";
 import "ace-builds/src-noconflict/mode-typescript";
