@@ -1,6 +1,6 @@
 import { game } from "../index.js";
 import { getTMX } from "./../loader/loader.js";
-import state from "./../state/state.js";
+import state from "./../state/state.ts";
 import { eventEmitter, LEVEL_LOADED } from "../system/event.ts";
 import { resetGUID } from "./../utils/utils.ts";
 import TMXTileMap from "./tiled/TMXTileMap.js";

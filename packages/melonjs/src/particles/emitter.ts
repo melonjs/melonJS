@@ -7,7 +7,10 @@ import ParticleEmitterSettings from "./settings.js";
 /**
  * @ignore
  */
-function createDefaultParticleTexture(w = 8, h = 8) {
+function createDefaultParticleTexture(
+	w: number = 8,
+	h: number = 8,
+): CanvasRenderTarget {
 	const defaultParticleTexture = new CanvasRenderTarget(w, h, {
 		offscreenCanvas: true,
 	});
@@ -24,9 +27,35 @@ function createDefaultParticleTexture(w = 8, h = 8) {
  */
 export default class ParticleEmitter extends Container {
 	/**
-	 * @param {number} x - x position of the particle emitter
-	 * @param {number} y - y position of the particle emitter
-	 * @param {ParticleEmitterSettings} [settings=ParticleEmitterSettings] - the settings for the particle emitter.
+	 * the current (active) emitter settings
+	 */
+	settings: Record<string, any>;
+
+	/** @ignore */
+	_stream: boolean;
+
+	/** @ignore */
+	_frequencyTimer: number;
+
+	/** @ignore */
+	_durationTimer: number;
+
+	/** @ignore */
+	_enabled: boolean;
+
+	/** @ignore */
+	_updateCount: number;
+
+	/** @ignore */
+	_dt: number;
+
+	/** @ignore */
+	_defaultParticle: CanvasRenderTarget | undefined;
+
+	/**
+	 * @param x - x position of the particle emitter
+	 * @param y - y position of the particle emitter
+	 * @param [settings=ParticleEmitterSettings] - the settings for the particle emitter.
 	 * @example
 	 * // Create a particle emitter at position 100, 100
 	 * let emitter = new ParticleEmitter(100, 100, {
@@ -53,14 +82,10 @@ export default class ParticleEmitter extends Container {
 	 * // call this in onDestroyEvent function
 	 * me.game.world.removeChild(emitter);
 	 */
-	constructor(x, y, settings = {}) {
+	constructor(x: number, y: number, settings: Record<string, any> = {}) {
 		// call the super constructor
 		super(x, y, settings.width | 1, settings.height | 1);
 
-		/**
-		 * the current (active) emitter settings
-		 * @type {ParticleEmitterSettings}
-		 */
 		this.settings = {};
 
 		// center the emitter around the given coordinates
@@ -104,9 +129,9 @@ export default class ParticleEmitter extends Container {
 
 	/**
 	 * Reset the emitter with particle emitter settings.
-	 * @param {ParticleEmitterSettings} settings - [optional] object with emitter settings. See {@link ParticleEmitterSettings}
+	 * @param settings - [optional] object with emitter settings. See {@link ParticleEmitterSettings}
 	 */
-	reset(settings = {}) {
+	override reset(settings: Record<string, any> = {}): void {
 		Object.assign(this.settings, ParticleEmitterSettings, settings);
 
 		if (typeof this.settings.image === "undefined") {
@@ -124,43 +149,43 @@ export default class ParticleEmitter extends Container {
 
 	/**
 	 * returns a random point on the x axis within the bounds of this emitter
-	 * @returns {number}
+	 * @returns a random x position within the emitter bounds
 	 */
-	getRandomPointX() {
+	getRandomPointX(): number {
 		return randomFloat(0, this.getBounds().width);
 	}
 
 	/**
 	 * returns a random point on the y axis within the bounds this emitter
-	 * @returns {number}
+	 * @returns a random y position within the emitter bounds
 	 */
-	getRandomPointY() {
+	getRandomPointY(): number {
 		return randomFloat(0, this.getBounds().height);
 	}
 
 	// Add count particles in the game world
 	/** @ignore */
-	addParticles(count) {
+	addParticles(count: number): void {
 		for (let i = 0; i < count; i++) {
 			// Add particle to the container
-			this.addChild(particlePool.get(this), this.pos.z);
+			this.addChild(particlePool.get(this), (this.pos as any).z);
 		}
 		this.isDirty = true;
 	}
 
 	/**
 	 * Emitter is of type stream and is launching particles
-	 * @returns {boolean} Emitter is Stream and is launching particles
+	 * @returns Emitter is Stream and is launching particles
 	 */
-	isRunning() {
+	isRunning(): boolean {
 		return this._enabled && this._stream;
 	}
 
 	/**
 	 * Launch particles from emitter constantly (e.g. for stream)
-	 * @param {number} [duration] - time that the emitter releases particles in ms
+	 * @param [duration] - time that the emitter releases particles in ms
 	 */
-	streamParticles(duration) {
+	streamParticles(duration?: number): void {
 		this._enabled = true;
 		this._stream = true;
 		this.settings.frequency = Math.max(1, this.settings.frequency);
@@ -171,15 +196,15 @@ export default class ParticleEmitter extends Container {
 	/**
 	 * Stop the emitter from generating new particles (used only if emitter is Stream)
 	 */
-	stopStream() {
+	stopStream(): void {
 		this._enabled = false;
 	}
 
 	/**
 	 * Launch all particles from emitter and stop (e.g. for explosion)
-	 * @param {number} [total] - number of particles to launch
+	 * @param [total] - number of particles to launch
 	 */
-	burstParticles(total) {
+	burstParticles(total?: number): void {
 		this._enabled = true;
 		this._stream = false;
 		this.addParticles(
@@ -191,7 +216,7 @@ export default class ParticleEmitter extends Container {
 	/**
 	 * @ignore
 	 */
-	update(dt) {
+	override update(dt: number): boolean {
 		// skip frames if necessary
 		if (++this._updateCount > this.settings.framesToSkip) {
 			this._updateCount = 0;
@@ -206,7 +231,7 @@ export default class ParticleEmitter extends Container {
 		this._dt = 0;
 
 		// Update particles
-		this.isDirty |= super.update(dt);
+		this.isDirty = this.isDirty || super.update(dt);
 
 		// Launch new particles, if emitter is Stream
 		if (this._enabled && this._stream) {
@@ -224,13 +249,13 @@ export default class ParticleEmitter extends Container {
 			this._frequencyTimer += dt;
 
 			// Check for new particles launch
-			const particlesCount = this.children.length;
+			const particlesCount = this.children?.length ?? 0;
 			if (
 				particlesCount < this.settings.totalParticles &&
 				this._frequencyTimer >= this.settings.frequency
 			) {
 				if (
-					particlesCount + this.settings.maxParticles <=
+					particlesCount + (this.settings.maxParticles as number) <=
 					this.settings.totalParticles
 				) {
 					this.addParticles(this.settings.maxParticles);
@@ -248,15 +273,15 @@ export default class ParticleEmitter extends Container {
 	 * Destroy function
 	 * @ignore
 	 */
-	destroy() {
+	override destroy(): void {
 		// call the parent destroy method
-		super.destroy(arguments);
+		super.destroy();
 		// clean emitter specific Properties
 		if (typeof this._defaultParticle !== "undefined") {
 			this._defaultParticle.destroy();
 			this._defaultParticle = undefined;
 		}
 		this.settings.image = undefined;
-		this.settings = undefined;
+		this.settings = undefined as unknown as Record<string, any>;
 	}
 }

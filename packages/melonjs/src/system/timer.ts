@@ -1,5 +1,5 @@
 import { clamp } from "../math/math.js";
-import state from "../state/state.js";
+import state from "../state/state.ts";
 import { defer } from "./../utils/function.js";
 import {
 	BOOT,

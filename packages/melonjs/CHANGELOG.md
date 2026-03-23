@@ -1,12 +1,14 @@
 # Changelog
 
-## [18.2.0] (melonJS 2) - _Unreleased_
+## [18.2.0] (melonJS 2)
 
 ### Added
 
 ### Changed
+- TypeScript: convert leaf modules to TypeScript — plugin, camera, particles emitter, state, audio
 
 ### Fixed
+- Plugin: fix `plugin.get()` throwing `TypeError` when searching by name with no match (instanceof on string)
 
 ### Performance
 

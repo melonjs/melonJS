@@ -1,7 +1,7 @@
 import { hasRegisteredEvents } from "../input/pointerevent.js";
 import { Vector2d } from "../math/vector2d.ts";
 import Container from "../renderable/container.js";
-import state from "./../state/state.js";
+import state from "./../state/state.ts";
 import {
 	eventEmitter,
 	GAME_RESET,
