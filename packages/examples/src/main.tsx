@@ -7,11 +7,7 @@ import React, {
 } from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
-import * as ace from "ace-builds/src-noconflict/ace";
 import { createHashRouter, RouterProvider } from "react-router-dom";
-import "ace-builds/src-noconflict/mode-javascript";
-import "ace-builds/src-noconflict/mode-typescript";
-import "ace-builds/src-noconflict/theme-one_dark";
 
 // load all example source files as raw strings
 const sourceFiles = import.meta.glob("./examples/**/*.{ts,tsx,js}", {
@@ -221,11 +217,20 @@ const examples: {
 
 const AceEditorPane = ({ value, mode }: { value: string; mode: string }) => {
 	const editorRef = useRef<HTMLDivElement>(null);
-	const editorInstance = useRef<ace.Ace.Editor | null>(null);
+	// biome-ignore lint/suspicious/noExplicitAny: ace editor type
+	const editorInstance = useRef<any>(null);
 
 	useEffect(() => {
-		if (editorRef.current && !editorInstance.current) {
-			const editor = ace.edit(editorRef.current);
+		if (!editorRef.current || editorInstance.current) return;
+		Promise.all([
+			import("ace-builds/src-noconflict/ace"),
+			import("ace-builds/src-noconflict/mode-javascript"),
+			import("ace-builds/src-noconflict/mode-typescript"),
+			import("ace-builds/src-noconflict/theme-one_dark"),
+		]).then(([aceModule]) => {
+			const aceLib = aceModule.default || aceModule;
+			if (!editorRef.current) return;
+			const editor = aceLib.edit(editorRef.current);
 			editor.setTheme("ace/theme/one_dark");
 			editor.setReadOnly(true);
 			editor.setShowPrintMargin(false);
@@ -237,7 +242,7 @@ const AceEditorPane = ({ value, mode }: { value: string; mode: string }) => {
 				useWorker: false,
 			});
 			editorInstance.current = editor;
-		}
+		});
 		return () => {
 			if (editorInstance.current) {
 				editorInstance.current.destroy();
