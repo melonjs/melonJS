@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* eslint-env node */
+/* global process, console */
 
 import { execSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
