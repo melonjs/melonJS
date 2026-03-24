@@ -1,7 +1,9 @@
 import {
 	registerPointerEvent,
 	releasePointerEvent,
-} from "./../../input/input.js";
+} from "./../../input/input.ts";
+import type Pointer from "./../../input/pointer.ts";
+import type { Vector2d } from "../../math/vector2d.ts";
 import { vector2dPool } from "../../math/vector2d.ts";
 import { eventEmitter, POINTERMOVE } from "../../system/event.ts";
 import timer from "../../system/timer.ts";
@@ -13,69 +15,73 @@ import Container from "../container.js";
  * @category UI
  */
 export default class UIBaseElement extends Container {
-	#boundPointerMoveHandler;
+	#boundPointerMoveHandler: (event: Pointer) => void;
 
 	/**
 	 * UI base elements use screen coordinates by default
 	 * (Note: any child elements added to a UIBaseElement should have their floating property to false)
 	 * @see Renderable.floating
-	 * @type {boolean}
 	 * @default true
 	 */
-	floating = true;
+	override floating = true;
 
 	/**
-	 *
-	 * @param {number} x - The x position of the container
-	 * @param {number} y - The y position of the container
-	 * @param {number} w - width of the container
-	 * @param {number} h - height of the container
+	 * object can be clicked or not
+	 * @default true
 	 */
-	constructor(x, y, w, h) {
+	isClickable: boolean;
+
+	/**
+	 * object can be clicked or not
+	 * @default false
+	 */
+	isDraggable: boolean;
+
+	/**
+	 * Tap and hold threshold timeout in ms
+	 * @default 250
+	 */
+	holdThreshold: number;
+
+	/**
+	 * object can be tap and hold
+	 * @default false
+	 */
+	isHoldable: boolean;
+
+	/**
+	 * true if the pointer is over the object
+	 * @default false
+	 */
+	hover: boolean;
+
+	/**
+	 * false if the pointer is down, or true when the pointer status is up
+	 * @default false
+	 */
+	released: boolean;
+
+	// object has been updated (clicked,etc..)
+	holdTimeout: number;
+
+	// grab offset for dragging
+	grabOffset: Vector2d | undefined;
+
+	/**
+	 * @param x - The x position of the container
+	 * @param y - The y position of the container
+	 * @param w - width of the container
+	 * @param h - height of the container
+	 */
+	constructor(x: number, y: number, w?: number, h?: number) {
 		super(x, y, w, h);
-		/**
-		 * object can be clicked or not
-		 * @type {boolean}
-		 * @default true
-		 */
+
 		this.isClickable = true;
-
-		/**
-		 * object can be clicked or not
-		 * @type {boolean}
-		 * @default false
-		 */
 		this.isDraggable = false;
-
-		/**
-		 * Tap and hold threshold timeout in ms
-		 * @type {number}
-		 * @default 250
-		 */
 		this.holdThreshold = 250;
-
-		/**
-		 * object can be tap and hold
-		 * @type {boolean}
-		 * @default false
-		 */
 		this.isHoldable = false;
-
-		/**
-		 * true if the pointer is over the object
-		 * @type {boolean}
-		 * @default false
-		 */
 		this.hover = false;
-
-		/**
-		 * false if the pointer is down, or true when the pointer status is up
-		 * @type {boolean}
-		 * @default false
-		 */
 		this.released = true;
-
-		// object has been updated (clicked,etc..)
 		this.holdTimeout = -1;
 
 		// enable event detection
@@ -91,7 +97,7 @@ export default class UIBaseElement extends Container {
 	 * function callback for the pointerdown event
 	 * @ignore
 	 */
-	clicked(event) {
+	clicked(event: Pointer): boolean | void {
 		// Check if left mouse button is pressed
 		if (event.button === 0 && this.isClickable) {
 			this.isDirty = true;
@@ -100,7 +106,7 @@ export default class UIBaseElement extends Container {
 				timer.clearTimer(this.holdTimeout);
 				this.holdTimeout = timer.setTimeout(
 					() => {
-						return this.hold();
+						this.hold();
 					},
 					this.holdThreshold,
 					false,
@@ -108,8 +114,8 @@ export default class UIBaseElement extends Container {
 				this.released = false;
 			}
 			if (this.isDraggable) {
-				this.grabOffset.set(event.gameX, event.gameY);
-				this.grabOffset.sub(this.pos);
+				this.grabOffset!.set(event.gameX, event.gameY);
+				this.grabOffset!.sub(this.pos);
 			}
 			return this.onClick(event);
 		}
@@ -117,10 +123,11 @@ export default class UIBaseElement extends Container {
 
 	/**
 	 * function called when the object is pressed (to be extended)
-	 * @param {Pointer} event - the event object
-	 * @returns {boolean} return false if we need to stop propagating the event
+	 * @param _event - the event object
+	 * @returns return false if we need to stop propagating the event
 	 */
-	onClick() {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	onClick(_event?: Pointer): boolean {
 		return true;
 	}
 
@@ -128,45 +135,49 @@ export default class UIBaseElement extends Container {
 	 * function callback for the pointerEnter event
 	 * @ignore
 	 */
-	enter(event) {
+	enter(event: Pointer): void {
 		this.hover = true;
 		this.isDirty = true;
-		if (this.isDraggable === true) {
+		if (this.isDraggable) {
 			eventEmitter.addListener(POINTERMOVE, this.#boundPointerMoveHandler);
 			// to memorize where we grab the object
 			this.grabOffset = vector2dPool.get(0, 0);
 		}
-		return this.onOver(event);
+		this.onOver(event);
 	}
 
 	/**
 	 * pointermove function
 	 * @ignore
 	 */
-	pointerMove(event) {
-		if (this.hover === true && this.released === false) {
+	pointerMove(event: Pointer): void {
+		if (this.hover && !this.released) {
 			// follow the pointer
-			this.pos.set(event.gameX, event.gameY, this.pos.z);
-			this.pos.sub(this.grabOffset);
+			// pos is ObservableVector3d at runtime but typed as Vector2d in Renderable
+			(this.pos as any).set(event.gameX, event.gameY, (this.pos as any).z);
+			(this.pos as any).sub(this.grabOffset!);
 			// mark the container for redraw
 			this.isDirty = true;
-			return this.onMove(event);
+			this.onMove(event);
+			return;
 		}
 	}
 
 	/**
 	 * function called when the pointer is moved over the object
-	 * @param {Pointer} event - the event object
+	 * @param _event - the event object
 	 */
-	onMove() {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	onMove(_event?: Pointer): void {
 		// to be extended
 	}
 
 	/**
 	 * function called when the pointer is over the object
-	 * @param {Pointer} event - the event object
+	 * @param _event - the event object
 	 */
-	onOver() {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	onOver(_event?: Pointer): void {
 		// to be extended
 	}
 
@@ -174,24 +185,25 @@ export default class UIBaseElement extends Container {
 	 * function callback for the pointerLeave event
 	 * @ignore
 	 */
-	leave(event) {
+	leave(event: Pointer): void {
 		this.hover = false;
 		this.isDirty = true;
-		if (this.isDraggable === true) {
+		if (this.isDraggable) {
 			// unregister on the global pointermove event
 			eventEmitter.removeListener(POINTERMOVE, this.#boundPointerMoveHandler);
-			vector2dPool.release(this.grabOffset);
+			vector2dPool.release(this.grabOffset!);
 			this.grabOffset = undefined;
 		}
 		this.release(event);
-		return this.onOut(event);
+		this.onOut(event);
 	}
 
 	/**
 	 * function called when the pointer is leaving the object area
-	 * @param {Pointer} event - the event object
+	 * @param _event - the event object
 	 */
-	onOut() {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	onOut(_event?: Pointer): void {
 		// to be extended
 	}
 
@@ -199,8 +211,8 @@ export default class UIBaseElement extends Container {
 	 * function callback for the pointerup event
 	 * @ignore
 	 */
-	release(event) {
-		if (this.released === false) {
+	release(event: Pointer): boolean | void {
+		if (!this.released) {
 			this.released = true;
 			this.isDirty = true;
 			timer.clearTimer(this.holdTimeout);
@@ -211,9 +223,11 @@ export default class UIBaseElement extends Container {
 
 	/**
 	 * function called when the object is pressed and released (to be extended)
-	 * @returns {boolean} return false if we need to stop propagating the event
+	 * @param _event - the event object
+	 * @returns return false if we need to stop propagating the event
 	 */
-	onRelease() {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	onRelease(_event?: Pointer): boolean {
 		return true;
 	}
 
@@ -221,7 +235,7 @@ export default class UIBaseElement extends Container {
 	 * function callback for the tap and hold timer event
 	 * @ignore
 	 */
-	hold() {
+	hold(): void {
 		timer.clearTimer(this.holdTimeout);
 		this.holdTimeout = -1;
 		this.isDirty = true;
@@ -234,13 +248,13 @@ export default class UIBaseElement extends Container {
 	 * function called when the object is pressed and held<br>
 	 * to be extended <br>
 	 */
-	onHold() {}
+	onHold(): void {}
 
 	/**
 	 * function called when added to the game world or a container
 	 * @ignore
 	 */
-	onActivateEvent() {
+	override onActivateEvent(): void {
 		// register pointer events
 		registerPointerEvent("pointerdown", this, (e) => {
 			return this.clicked(e);
@@ -252,10 +266,10 @@ export default class UIBaseElement extends Container {
 			return this.release(e);
 		});
 		registerPointerEvent("pointerenter", this, (e) => {
-			return this.enter(e);
+			this.enter(e);
 		});
 		registerPointerEvent("pointerleave", this, (e) => {
-			return this.leave(e);
+			this.leave(e);
 		});
 
 		// call the parent function
@@ -266,7 +280,7 @@ export default class UIBaseElement extends Container {
 	 * function called when removed from the game world or a container
 	 * @ignore
 	 */
-	onDeactivateEvent() {
+	override onDeactivateEvent(): void {
 		// release pointer events
 		releasePointerEvent("pointerdown", this);
 		releasePointerEvent("pointerup", this);
@@ -280,7 +294,7 @@ export default class UIBaseElement extends Container {
 		// note: this is just a precaution, in case
 		// the object is being remove from his parent
 		// container before the leave function is called
-		if (this.isDraggable === true) {
+		if (this.isDraggable) {
 			eventEmitter.removeListener(POINTERMOVE, this.#boundPointerMoveHandler);
 			if (typeof this.grabOffset !== "undefined") {
 				vector2dPool.release(this.grabOffset);

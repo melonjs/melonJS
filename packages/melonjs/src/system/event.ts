@@ -2,7 +2,7 @@
  * an event system based on nodeJS EventEmitter interface
  */
 
-import Pointer from "../input/pointer.js";
+import Pointer from "../input/pointer.ts";
 import { Vector2d } from "../math/vector2d.ts";
 import { Draggable } from "../renderable/draggable.js";
 import Stage from "../state/stage.js";
@@ -339,7 +339,7 @@ interface Events {
 	[BOOT]: () => void;
 	[TICK]: (time: number) => void;
 	[BLUR]: () => void;
-	[BLUR]: () => void;
+	[FOCUS]: () => void;
 	[STATE_PAUSE]: () => void;
 	[STATE_RESUME]: (time: number) => void;
 	[STATE_STOP]: () => void;

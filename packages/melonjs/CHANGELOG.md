@@ -6,6 +6,7 @@
 
 ### Changed
 - TypeScript: convert leaf modules to TypeScript — plugin, camera, particles emitter, state, audio
+- TypeScript: convert application, input, and UI modules to TypeScript — application, header, resize, input, pointer, pointerevent, gamepad, uibaseelement, uispriteelement, uitextbutton
 
 ### Fixed
 - Plugin: fix `plugin.get()` throwing `TypeError` when searching by name with no match (instanceof on string)

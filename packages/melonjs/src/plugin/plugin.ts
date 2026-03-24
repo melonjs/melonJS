@@ -1,4 +1,4 @@
-import type Application from "./../application/application.js";
+import type Application from "./../application/application.ts";
 import { game } from "../index.js";
 import { checkVersion } from "./../utils/utils.ts";
 import { version } from "./../version.ts";

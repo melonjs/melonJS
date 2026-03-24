@@ -1,10 +1,10 @@
 // ES5/ES6 polyfills
 import "./polyfill/index.ts";
 
-import Application from "./application/application.js";
+import Application from "./application/application.ts";
 import Camera2d from "./camera/camera2d.ts";
 import { initKeyboardEvent } from "./input/keyboard.ts";
-import Pointer from "./input/pointer.js";
+import Pointer from "./input/pointer.ts";
 import TMXHexagonalRenderer from "./level/tiled/renderer/TMXHexagonalRenderer.js";
 import TMXIsometricRenderer from "./level/tiled/renderer/TMXIsometricRenderer.js";
 import TMXOrthogonalRenderer from "./level/tiled/renderer/TMXOrthogonalRenderer.js";
@@ -41,9 +41,9 @@ import BitmapText from "./renderable/text/bitmaptext.js";
 import BitmapTextData from "./renderable/text/bitmaptextdata.ts";
 import Text from "./renderable/text/text.js";
 import Trigger from "./renderable/trigger.js";
-import UIBaseElement from "./renderable/ui/uibaseelement.js";
-import UISpriteElement from "./renderable/ui/uispriteelement.js";
-import UITextButton from "./renderable/ui/uitextbutton.js";
+import UIBaseElement from "./renderable/ui/uibaseelement.ts";
+import UISpriteElement from "./renderable/ui/uispriteelement.ts";
+import UITextButton from "./renderable/ui/uitextbutton.ts";
 import Stage from "./state/stage.js";
 import state from "./state/state.ts";
 import { initVisibilityEvents } from "./system/device.js";
@@ -71,7 +71,7 @@ export * from "./application/scaleMethods.ts";
 export * from "./application/settings.ts";
 // export all utility function
 export * as audio from "./audio/audio.ts";
-export * as input from "./input/input.js";
+export * as input from "./input/input.ts";
 export { level } from "./level/level.js";
 export * as loader from "./loader/loader.js";
 export * as math from "./math/math.ts";

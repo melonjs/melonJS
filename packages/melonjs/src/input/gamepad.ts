@@ -7,6 +7,25 @@ import {
 } from "../system/event.ts";
 import { getBindingKey, triggerKeyEvent } from "./keyboard.ts";
 
+interface GamepadMapping {
+	axes: number[];
+	buttons: number[];
+	analog: number[];
+	normalize_fn: (value: number, axis: number, button: number) => number;
+}
+
+interface ButtonBinding {
+	keyCode: number;
+	value: number;
+	pressed: boolean;
+	threshold?: number;
+}
+
+interface GamepadBindings {
+	axes: Record<string, Record<number, ButtonBinding>>;
+	buttons: Record<string, ButtonBinding>;
+}
+
 // Analog deadzone
 let deadzone = 0.1;
 
@@ -14,7 +33,12 @@ let deadzone = 0.1;
  * Normalize axis values for wired Xbox 360
  * @ignore
  */
-function wiredXbox360NormalizeFn(value, axis, button) {
+function wiredXbox360NormalizeFn(
+	this: any,
+	value: number,
+	_axis: number,
+	button: number,
+): number {
 	if (
 		button === this.GAMEPAD.BUTTONS.L2 ||
 		button === this.GAMEPAD.BUTTONS.R2
@@ -28,7 +52,12 @@ function wiredXbox360NormalizeFn(value, axis, button) {
  * Normalize axis values for OUYA
  * @ignore
  */
-function ouyaNormalizeFn(value, axis, button) {
+function ouyaNormalizeFn(
+	this: any,
+	value: number,
+	_axis: number,
+	button: number,
+): number {
 	if (value > 0) {
 		if (button === this.GAMEPAD.BUTTONS.L2) {
 			// L2 is wonky; seems like the deadzone is around 20000
@@ -60,93 +89,97 @@ const leadingZeroRE = /^0+/;
  * This function normalizes the id to support both formats
  * @ignore
  */
-function addMapping(id, mapping) {
-	const expanded_id = id.replace(vendorProductRE, (_, a, b) => {
-		return (
-			"000".slice(a.length - 1) + a + "-" + "000".slice(b.length - 1) + b + "-"
-		);
-	});
-	const sparse_id = id.replace(vendorProductRE, (_, a, b) => {
-		return (
-			a.replace(leadingZeroRE, "") + "-" + b.replace(leadingZeroRE, "") + "-"
-		);
-	});
+function addMapping(id: string, mapping: Partial<GamepadMapping>): void {
+	const expanded_id = id.replace(
+		vendorProductRE,
+		(_: string, a: string, b: string) => {
+			return `${"000".slice(a.length - 1) + a}-${"000".slice(b.length - 1)}${b}-`;
+		},
+	);
+	const sparse_id = id.replace(
+		vendorProductRE,
+		(_: string, a: string, b: string) => {
+			return `${a.replace(leadingZeroRE, "")}-${b.replace(leadingZeroRE, "")}-`;
+		},
+	);
 
 	// Normalize optional parameters
 	mapping.analog =
 		mapping.analog ||
-		mapping.buttons.map(() => {
+		mapping.buttons!.map(() => {
 			return -1;
 		});
 	mapping.normalize_fn =
 		mapping.normalize_fn ||
-		function (value) {
+		function (value: number) {
 			return value;
 		};
 
-	remap.set(expanded_id, mapping);
-	remap.set(sparse_id, mapping);
+	remap.set(expanded_id, mapping as GamepadMapping);
+	remap.set(sparse_id, mapping as GamepadMapping);
 }
 
 // binding list
-const bindings = {};
+const bindings: Record<string, GamepadBindings> = {};
 
 // mapping list
-const remap = new Map();
+const remap: Map<string, GamepadMapping> = new Map();
 
 // Default gamepad mappings
-[
-	// Firefox mappings
+(
 	[
-		"45e-28e-Xbox 360 Wired Controller",
-		{
-			axes: [0, 1, 3, 4],
-			buttons: [11, 12, 13, 14, 8, 9, -1, -1, 5, 4, 6, 7, 0, 1, 2, 3, 10],
-			analog: [
-				-1, -1, -1, -1, -1, -1, 2, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-			],
-			normalize_fn: wiredXbox360NormalizeFn,
-		},
-	],
-	[
-		"54c-268-PLAYSTATION(R)3 Controller",
-		{
-			axes: [0, 1, 2, 3],
-			buttons: [14, 13, 15, 12, 10, 11, 8, 9, 0, 3, 1, 2, 4, 6, 7, 5, 16],
-		},
-	],
-	[
-		"54c-5c4-Wireless Controller", // PS4 Controller
-		{
-			axes: [0, 1, 2, 3],
-			buttons: [1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 16, 17, 12, 13],
-		},
-	],
-	[
-		"2836-1-OUYA Game Controller",
-		{
-			axes: [0, 3, 7, 9],
-			buttons: [3, 6, 4, 5, 7, 8, 15, 16, -1, -1, 9, 10, 11, 12, 13, 14, -1],
-			analog: [
-				-1, -1, -1, -1, -1, -1, 5, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-			],
-			normalize_fn: ouyaNormalizeFn,
-		},
-	],
+		// Firefox mappings
+		[
+			"45e-28e-Xbox 360 Wired Controller",
+			{
+				axes: [0, 1, 3, 4],
+				buttons: [11, 12, 13, 14, 8, 9, -1, -1, 5, 4, 6, 7, 0, 1, 2, 3, 10],
+				analog: [
+					-1, -1, -1, -1, -1, -1, 2, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+				],
+				normalize_fn: wiredXbox360NormalizeFn,
+			},
+		],
+		[
+			"54c-268-PLAYSTATION(R)3 Controller",
+			{
+				axes: [0, 1, 2, 3],
+				buttons: [14, 13, 15, 12, 10, 11, 8, 9, 0, 3, 1, 2, 4, 6, 7, 5, 16],
+			},
+		],
+		[
+			"54c-5c4-Wireless Controller", // PS4 Controller
+			{
+				axes: [0, 1, 2, 3],
+				buttons: [1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 16, 17, 12, 13],
+			},
+		],
+		[
+			"2836-1-OUYA Game Controller",
+			{
+				axes: [0, 3, 7, 9],
+				buttons: [3, 6, 4, 5, 7, 8, 15, 16, -1, -1, 9, 10, 11, 12, 13, 14, -1],
+				analog: [
+					-1, -1, -1, -1, -1, -1, 5, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+				],
+				normalize_fn: ouyaNormalizeFn,
+			},
+		],
 
-	// Chrome mappings
-	[
-		"OUYA Game Controller (Vendor: 2836 Product: 0001)",
-		{
-			axes: [0, 1, 3, 4],
-			buttons: [0, 3, 1, 2, 4, 5, 12, 13, -1, -1, 6, 7, 8, 9, 10, 11, -1],
-			analog: [
-				-1, -1, -1, -1, -1, -1, 2, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-			],
-			normalize_fn: ouyaNormalizeFn,
-		},
-	],
-].forEach((value) => {
+		// Chrome mappings
+		[
+			"OUYA Game Controller (Vendor: 2836 Product: 0001)",
+			{
+				axes: [0, 1, 3, 4],
+				buttons: [0, 3, 1, 2, 4, 5, 12, 13, -1, -1, 6, 7, 8, 9, 10, 11, -1],
+				analog: [
+					-1, -1, -1, -1, -1, -1, 2, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+				],
+				normalize_fn: ouyaNormalizeFn,
+			},
+		],
+	] as [string, Partial<GamepadMapping>][]
+).forEach((value) => {
 	addMapping(value[0], value[1]);
 });
 
@@ -154,19 +187,19 @@ const remap = new Map();
  * Update gamepad status
  * @ignore
  */
-const updateGamepads = function () {
+const updateGamepads = function (): void {
 	const gamepads = navigator.getGamepads();
 
 	// Trigger button bindings
 	Object.keys(bindings).forEach((index) => {
-		const gamepad = gamepads[index];
+		const gamepad = gamepads[index as any];
 		if (!gamepad) {
 			return;
 		}
 
-		let mapping = null;
+		let mapping: GamepadMapping | null = null;
 		if (gamepad.mapping !== "standard") {
-			mapping = remap.get(gamepad.id);
+			mapping = remap.get(gamepad.id) || null;
 		}
 
 		const binding = bindings[index];
@@ -174,13 +207,13 @@ const updateGamepads = function () {
 		// Iterate all buttons that have active bindings
 		Object.keys(binding.buttons).forEach((button) => {
 			const last = binding.buttons[button];
-			let mapped_button = button;
+			let mapped_button: any = button;
 			let mapped_axis = -1;
 
 			// Remap buttons if necessary
 			if (mapping) {
-				mapped_button = mapping.buttons[button];
-				mapped_axis = mapping.analog[button];
+				mapped_button = mapping.buttons[button as any];
+				mapped_axis = mapping.analog[button as any];
 				if (mapped_button < 0 && mapped_axis < 0) {
 					// Button is not mapped
 					return;
@@ -188,7 +221,9 @@ const updateGamepads = function () {
 			}
 
 			// Get mapped button
-			let current = gamepad.buttons[mapped_button] || {};
+			let current: { value: number; pressed: boolean } = gamepad.buttons[
+				mapped_button
+			] || { value: 0, pressed: false };
 
 			// Remap an axis to an analog button
 			if (mapping) {
@@ -211,9 +246,9 @@ const updateGamepads = function () {
 
 			// Edge detection
 			if (!last.pressed && current.pressed) {
-				triggerKeyEvent(last.keyCode, true, mapped_button + 256);
+				triggerKeyEvent(last.keyCode, true, Number(mapped_button) + 256);
 			} else if (last.pressed && !current.pressed) {
-				triggerKeyEvent(last.keyCode, false, mapped_button + 256);
+				triggerKeyEvent(last.keyCode, false, Number(mapped_button) + 256);
 			}
 
 			// Update last button state
@@ -224,11 +259,11 @@ const updateGamepads = function () {
 		// Iterate all axes that have active bindings
 		Object.keys(binding.axes).forEach((axis) => {
 			const last = binding.axes[axis];
-			let mapped_axis = axis;
+			let mapped_axis: any = axis;
 
 			// Remap buttons if necessary
 			if (mapping) {
-				mapped_axis = mapping.axes[axis];
+				mapped_axis = mapping.axes[axis as any];
 				if (mapped_axis < 0) {
 					// axe is not mapped
 					return;
@@ -244,28 +279,32 @@ const updateGamepads = function () {
 				value = mapping.normalize_fn(value, +axis, -1);
 			}
 			// normalize value into a [-1, 1] range value (treat 0 as positive)
-			let range = Math.sign(value) || 1;
+			let range: number = Math.sign(value) || 1;
 			if (last[range].keyCode === 0) {
 				return;
 			}
 			const pressed =
-				Math.abs(value) >= deadzone + Math.abs(last[range].threshold);
+				Math.abs(value) >= deadzone + Math.abs(last[range].threshold || 0);
 
-			eventEmitter.emit(GAMEPAD_UPDATE, index, "axes", +axis, value);
+			eventEmitter.emit(GAMEPAD_UPDATE, index, "axes", +axis, value as any);
 
 			// Edge detection
 			if (!last[range].pressed && pressed) {
 				// Release the opposite direction, if necessary
 				if (last[-range].pressed) {
-					triggerKeyEvent(last[-range].keyCode, false, mapped_axis + 256);
+					triggerKeyEvent(
+						last[-range].keyCode,
+						false,
+						Number(mapped_axis) + 256,
+					);
 					last[-range].value = 0;
 					last[-range].pressed = false;
 				}
 
-				triggerKeyEvent(last[range].keyCode, true, mapped_axis + 256);
+				triggerKeyEvent(last[range].keyCode, true, Number(mapped_axis) + 256);
 			} else if ((last[range].pressed || last[-range].pressed) && !pressed) {
 				range = last[range].pressed ? range : -range;
-				triggerKeyEvent(last[range].keyCode, false, mapped_axis + 256);
+				triggerKeyEvent(last[range].keyCode, false, Number(mapped_axis) + 256);
 			}
 
 			// Update last axis state
@@ -282,7 +321,7 @@ if (
 ) {
 	globalThis.addEventListener(
 		"gamepadconnected",
-		(e) => {
+		(e: GamepadEvent) => {
 			eventEmitter.emit(GAMEPAD_CONNECTED, e.gamepad);
 		},
 		false,
@@ -293,7 +332,7 @@ if (
 	 */
 	globalThis.addEventListener(
 		"gamepaddisconnected",
-		(e) => {
+		(e: GamepadEvent) => {
 			eventEmitter.emit(GAMEPAD_DISCONNECTED, e.gamepad);
 		},
 		false,
@@ -365,16 +404,16 @@ export const GAMEPAD = {
 		EXTRA_3: 19,
 		EXTRA_4: 20,
 	},
-};
+} as const;
 
 /**
  * Associate a gamepad event to a keycode
- * @param {number} index - Gamepad index
- * @param {object} button - Button/Axis definition
- * @param {string} button.type - "buttons" or "axes"
- * @param {number} button.code - button or axis code id (See {@link input.GAMEPAD})
- * @param {number} [button.threshold=1] - value indicating when the axis should trigger the keycode (e.g. -0.5 or 0.5)
- * @param {number} keyCode - (See {@link input.KEY})
+ * @param index - Gamepad index
+ * @param button - Button/Axis definition
+ * @param button.type - "buttons" or "axes"
+ * @param button.code - button or axis code id
+ * @param button.threshold - value indicating when the axis should trigger the keycode
+ * @param keyCode - (See {@link input.KEY})
  * @example
  * // enable the keyboard
  * me.input.bindKey(me.input.KEY.X, "shoot");
@@ -385,10 +424,14 @@ export const GAMEPAD = {
  * me.input.bindGamepad(0, {type:"axes", code: me.input.GAMEPAD.AXES.LX, threshold: -0.5}, me.input.KEY.LEFT);
  * @category Input
  */
-export function bindGamepad(index, button, keyCode) {
+export function bindGamepad(
+	index: number,
+	button: { type: "buttons" | "axes"; code: number; threshold?: number },
+	keyCode: number,
+): void {
 	// Throw an exception if no action is defined for the specified keycode
 	if (!getBindingKey(keyCode)) {
-		throw new Error("no action defined for keycode " + keyCode);
+		throw new Error(`no action defined for keycode ${keyCode}`);
 	}
 
 	// register to the the update event if not yet done and supported by the browser
@@ -408,13 +451,13 @@ export function bindGamepad(index, button, keyCode) {
 		};
 	}
 
-	const mapping = {
+	const mapping: ButtonBinding = {
 		keyCode: keyCode,
 		value: 0,
 		pressed: false,
 		threshold: button.threshold, // can be undefined
 	};
-	const binding = bindings[index][button.type];
+	const binding = bindings[index][button.type] as any;
 
 	// Map the gamepad button or axis to the keycode
 	if (button.type === "buttons") {
@@ -422,7 +465,7 @@ export function bindGamepad(index, button, keyCode) {
 		binding[button.code] = mapping;
 	} else if (button.type === "axes") {
 		// normalize threshold into a value that can represent both side of the axis
-		const range = Math.sign(button.threshold) || 1;
+		const range = Math.sign(button.threshold!) || 1;
 		// axes are defined using two objects; one for negative and one for positive
 		if (!binding[button.code]) {
 			binding[button.code] = {};
@@ -444,26 +487,26 @@ export function bindGamepad(index, button, keyCode) {
 
 /**
  * unbind the defined keycode
- * @param {number} index - Gamepad index
- * @param {number} button - (See {@link input.GAMEPAD})
+ * @param index - Gamepad index
+ * @param button - (See {@link input.GAMEPAD})
  * @example
  * me.input.unbindGamepad(0, me.input.GAMEPAD.BUTTONS.FACE_1);
  * @category Input
  */
-export function unbindGamepad(index, button) {
+export function unbindGamepad(index: number, button: number): void {
 	if (!bindings[index]) {
-		throw new Error("no bindings for gamepad " + index);
+		throw new Error(`no bindings for gamepad ${index}`);
 	}
-	bindings[index].buttons[button] = {};
+	bindings[index].buttons[button] = {} as ButtonBinding;
 }
 
 /**
  * Set deadzone for analog gamepad inputs<br>
  * The default deadzone is 0.1 (10%) Analog values less than this will be ignored
- * @param {number} value - Deadzone value
+ * @param value - Deadzone value
  * @category Input
  */
-export function setGamepadDeadzone(value) {
+export function setGamepadDeadzone(value: number): void {
 	deadzone = value;
 }
 
@@ -471,12 +514,8 @@ export function setGamepadDeadzone(value) {
  * specify a custom mapping for a specific gamepad id<br>
  * see below for the default mapping : <br>
  * <center><img src="images/gamepad_diagram.png"/></center><br>
- * @param {string} id - Gamepad id string
- * @param {object} mapping - A hash table
- * @param {number[]} mapping.axes - Standard analog control stick axis locations
- * @param {number[]} mapping.buttons - Standard digital button locations
- * @param {number[]} [mapping.analog] - Analog axis locations for buttons
- * @param {Function} [mapping.normalize_fn] - a function that returns a normalized value in range [-1.0..1.0] for the given value, axis and button
+ * @param id - Gamepad id string
+ * @param mapping - A hash table
  * @example
  * // A weird controller that has its axis mappings reversed
  * me.input.setGamepadMapping("Generic USB Controller", {
@@ -501,4 +540,7 @@ export function setGamepadDeadzone(value) {
  *   }
  * });
  */
-export const setGamepadMapping = addMapping;
+export const setGamepadMapping: (
+	id: string,
+	mapping: Partial<GamepadMapping>,
+) => void = addMapping;
