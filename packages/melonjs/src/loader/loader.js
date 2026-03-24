@@ -1,6 +1,6 @@
-import * as audio from "./../audio/audio.js";
+import * as audio from "./../audio/audio.ts";
 import { warning } from "../lang/console.js";
-import state from "./../state/state.js";
+import state from "./../state/state.ts";
 import {
 	eventEmitter,
 	LOADER_COMPLETE,

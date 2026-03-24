@@ -1,7 +1,7 @@
 import { game } from "../index.js";
 import { colorPool } from "../math/color.ts";
 import Body from "../physics/body.js";
-import state from "../state/state.js";
+import state from "../state/state.ts";
 import { CANVAS_ONRESIZE, eventEmitter } from "../system/event.ts";
 import pool from "../system/legacy_pool.js";
 import { defer } from "../utils/function";

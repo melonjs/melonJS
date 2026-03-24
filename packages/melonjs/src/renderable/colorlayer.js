@@ -6,7 +6,7 @@ import Renderable from "./renderable.js";
  * @import {Color} from "./../math/color.ts";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
- * @import Camera2d from "./../camera/camera2d.js";
+ * @import Camera2d from "./../camera/camera2d.ts";
  */
 
 /**

@@ -15,7 +15,7 @@
  * me.utils.function.defer(myFunc, this, 1, 2, 3);
  */
 export function defer(
-	func: () => unknown,
+	func: (...args: unknown[]) => unknown,
 	thisArg: unknown,
 	...args: unknown[]
 ) {

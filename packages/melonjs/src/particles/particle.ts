@@ -6,11 +6,7 @@ import { createPool, registerPool } from "../system/pool.ts";
 import timer from "../system/timer.ts";
 import CanvasRenderer from "../video/canvas/canvas_renderer.js";
 import WebGLRenderer from "../video/webgl/webgl_renderer.js";
-import ParticleEmitter from "./emitter.js";
-
-/**
- * @import ParticleEmitter from "./emitter.js";
- */
+import ParticleEmitter from "./emitter.ts";
 
 /**
  * Single Particle Object.
@@ -74,12 +70,12 @@ export default class Particle extends Renderable {
 
 		// Set the start particle Angle and Speed as defined in emitter
 		const angle =
-			emitter.settings.angle +
+			(emitter.settings.angle as number) +
 			(emitter.settings.angleVariation > 0
 				? (randomFloat(0, 2) - 1) * emitter.settings.angleVariation
 				: 0);
 		const speed =
-			emitter.settings.speed +
+			(emitter.settings.speed as number) +
 			(emitter.settings.speedVariation > 0
 				? (randomFloat(0, 2) - 1) * emitter.settings.speedVariation
 				: 0);

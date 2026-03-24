@@ -1,25 +1,79 @@
-name: Test
+name: Build & Test
 on:
   push:
     branches: [master]
+    paths-ignore:
+      - '*.md'
+      - 'media/**'
+      - 'packages/melonjs/DOC_README.md'
   pull_request:
     types: [opened, synchronize]
+    paths-ignore:
+      - '*.md'
+      - 'media/**'
+      - 'packages/melonjs/DOC_README.md'
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
+
 jobs:
-  test:
-    strategy:
-      matrix:
-        node: [22]
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
-    name: Node ${{ matrix.node }} on ${{ matrix.os }}
+  lint:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - name: Setup node
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 22
+      - uses: pnpm/action-setup@v4
+      - name: Get pnpm store directory
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+      - uses: actions/cache@v5
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
+      - run: pnpm i
+      - run: pnpm lint
+      - run: pnpm biome check
+      - run: pnpm build
+
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.2-noble
+    steps:
+      - uses: actions/checkout@v5
+      - name: Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - uses: pnpm/action-setup@v4
+      - name: Get pnpm store directory
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+      - uses: actions/cache@v5
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
+      - run: pnpm i
+      - run: pnpm test
+
+  # Windows build — only on master push, not on PRs
+  windows:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
       - uses: pnpm/action-setup@v4
       - name: Get pnpm store directory
         shell: bash
@@ -31,5 +85,4 @@ jobs:
           restore-keys: ${{ runner.os }}-pnpm-store-
       - run: pnpm i
       - run: pnpm lint
-      - run: pnpm biome check
       - run: pnpm build

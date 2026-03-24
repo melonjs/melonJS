@@ -1,6 +1,6 @@
 import { AUTO, CANVAS, WEBGL } from "../const.ts";
 import World from "../physics/world.js";
-import state from "../state/state.js";
+import state from "../state/state.ts";
 import * as device from "../system/device.js";
 import {
 	BLUR,
@@ -33,7 +33,7 @@ import { ScaleMethods } from "./scaleMethods.ts";
 /**
  * additional import for TypeScript
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
- * @import Camera2d from "./../camera/camera2d.js";
+ * @import Camera2d from "./../camera/camera2d.ts";
  */
 
 /**

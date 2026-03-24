@@ -1,4 +1,4 @@
-import { pauseTrack, resumeTrack } from "./../audio/audio.js";
+import { pauseTrack, resumeTrack } from "./../audio/audio.ts";
 import { game } from "../index.js";
 import DefaultLoadingScreen from "./../loader/loadingscreen.js";
 import Stage from "./../state/stage.js";
@@ -15,38 +15,47 @@ import {
 } from "../system/event.ts";
 import { defer } from "../utils/function.ts";
 
+/**
+ * @import {Color} from "./../math/color.ts";
+ */
+
+interface StageEntry {
+	stage: Stage;
+	transition: boolean;
+}
+
 // current state
-let _state = -1;
+let _state: number = -1;
 
 // requestAnimeFrame Id
-let _animFrameId = -1;
+let _animFrameId: number = -1;
 
 // whether the game state is "paused"
-let _isPaused = false;
+let _isPaused: boolean = false;
 
 // list of stages
-const _stages = {};
+const _stages: Record<number, StageEntry> = {};
 
 // fading transition parameters between screen
-const _fade = {
+const _fade: { color: string; duration: number } = {
 	color: "",
 	duration: 0,
 };
 
 // callback when state switch is done
 /** @ignore */
-let _onSwitchComplete = null;
+let _onSwitchComplete: (() => void) | null = null;
 
 // just to keep track of possible extra arguments
-let _extraArgs = null;
+let _extraArgs: unknown[] | null = null;
 
 // store the elapsed time during pause/stop period
-let _pauseTime = 0;
+let _pauseTime: number = 0;
 
 /**
  * @ignore
  */
-function _startRunLoop() {
+function _startRunLoop(): void {
 	// ensure nothing is running first and in valid state
 	if (_animFrameId === -1 && _state !== -1) {
 		// start the main loop
@@ -58,7 +67,7 @@ function _startRunLoop() {
  * Resume the game loop after a pause.
  * @ignore
  */
-function _resumeRunLoop() {
+function _resumeRunLoop(): void {
 	// ensure game is actually paused and in valid state
 	if (_isPaused && _state !== -1) {
 		_isPaused = false;
@@ -69,17 +78,17 @@ function _resumeRunLoop() {
  * Pause the loop for most stage objects.
  * @ignore
  */
-function _pauseRunLoop() {
+function _pauseRunLoop(): void {
 	// Set the paused boolean to stop updates on (most) entities
 	_isPaused = true;
 }
 
 /**
  * this is only called when using requestAnimFrame stuff
- * @param {number} time - current timestamp in milliseconds
+ * @param time - current timestamp in milliseconds
  * @ignore
  */
-function _renderFrame(time) {
+function _renderFrame(time: number): void {
 	eventEmitter.emit(TICK, time);
 	// schedule the next frame update
 	if (_animFrameId !== -1) {
@@ -91,7 +100,7 @@ function _renderFrame(time) {
  * stop the SO main loop
  * @ignore
  */
-function _stopRunLoop() {
+function _stopRunLoop(): void {
 	// cancel any previous animationRequestFrame
 	globalThis.cancelAnimationFrame(_animFrameId);
 	_animFrameId = -1;
@@ -101,7 +110,7 @@ function _stopRunLoop() {
  * start the SO main loop
  * @ignore
  */
-function _switchState(state) {
+function _switchState(stateId: number): void {
 	// clear previous interval if any
 	_stopRunLoop();
 
@@ -111,12 +120,16 @@ function _switchState(state) {
 		_stages[_state].stage.destroy();
 	}
 
-	if (_stages[state]) {
+	if (_stages[stateId]) {
 		// set the global variable
-		_state = state;
+		_state = stateId;
 
 		// call the reset function with _extraArgs as arguments
-		_stages[_state].stage.reset.apply(_stages[_state].stage, _extraArgs);
+		if (_extraArgs) {
+			_stages[_state].stage.reset(..._extraArgs);
+		} else {
+			_stages[_state].stage.reset();
+		}
 
 		// and start the main loop of the
 		// new requested state
@@ -146,118 +159,81 @@ eventEmitter.addListenerOnce(BOOT, () => {
 
 /**
  * a State Manager (state machine)
- * @namespace state
  */
 const state = {
 	/**
 	 * default state ID for Loading Stage
-	 * @constant
-	 * @name LOADING
-	 * @memberof state
 	 */
-	LOADING: 0,
+	LOADING: 0 as const,
 
 	/**
 	 * default state ID for Menu Stage
-	 * @constant
-	 * @name MENU
-	 * @memberof state
 	 */
-	MENU: 1,
+	MENU: 1 as const,
 
 	/**
 	 * default state ID for "Ready" Stage
-	 * @constant
-	 * @name READY
-	 * @memberof state
 	 */
-	READY: 2,
+	READY: 2 as const,
 
 	/**
 	 * default state ID for Play Stage
-	 * @constant
-	 * @name PLAY
-	 * @memberof state
 	 */
-	PLAY: 3,
+	PLAY: 3 as const,
 
 	/**
 	 * default state ID for Game Over Stage
-	 * @constant
-	 * @name GAMEOVER
-	 * @memberof state
 	 */
-	GAMEOVER: 4,
+	GAMEOVER: 4 as const,
 
 	/**
 	 * default state ID for Game End Stage
-	 * @constant
-	 * @name GAME_END
-	 * @memberof state
 	 */
-	GAME_END: 5,
+	GAME_END: 5 as const,
 
 	/**
 	 * default state ID for High Score Stage
-	 * @constant
-	 * @name SCORE
-	 * @memberof state
 	 */
-	SCORE: 6,
+	SCORE: 6 as const,
 
 	/**
 	 * default state ID for Credits Stage
-	 * @constant
-	 * @name CREDITS
-	 * @memberof state
 	 */
-	CREDITS: 7,
+	CREDITS: 7 as const,
 
 	/**
 	 * default state ID for Settings Stage
-	 * @constant
-	 * @name SETTINGS
-	 * @memberof state
 	 */
-	SETTINGS: 8,
+	SETTINGS: 8 as const,
 
 	/**
 	 * default state ID for the default Stage
 	 * (the default stage is the one running as soon as melonJS is started)
-	 * @constant
-	 * @name DEFAULT
-	 * @memberof state
 	 */
-	DEFAULT: 9,
+	DEFAULT: 9 as const,
 
 	/**
 	 * default state ID for user defined constants<br>
-	 * @constant
-	 * @name USER
-	 * @memberof state
 	 * @example
 	 * let STATE_INFO = me.state.USER + 0;
 	 * let STATE_WARN = me.state.USER + 1;
 	 * let STATE_ERROR = me.state.USER + 2;
 	 * let STATE_CUTSCENE = me.state.USER + 3;
 	 */
-	USER: 100,
+	USER: 100 as const,
 
 	/**
 	 * Stop the current stage.
-	 * @name stop
-	 * @memberof state
-	 * @public
-	 * @param {boolean} [pauseTrack=false] - pause current track on screen stop.
+	 * @param [shouldPauseTrack=false] - pause current track on screen stop.
 	 */
-	stop(pauseTrack = false) {
+	stop(shouldPauseTrack: boolean = false): void {
 		// only stop when we are not loading stuff
 		if (_state !== this.LOADING && this.isRunning()) {
 			// stop the main loop
 			_stopRunLoop();
 
 			// current music stop
-			if (pauseTrack === true) {
+			if (shouldPauseTrack) {
 				pauseTrack();
 			}
 
@@ -271,18 +247,15 @@ const state = {
 
 	/**
 	 * pause the current stage
-	 * @name pause
-	 * @memberof state
-	 * @public
-	 * @param {boolean} [music=false] - pause current music track on screen pause
+	 * @param [music=false] - pause current music track on screen pause
 	 */
-	pause(music = false) {
+	pause(music: boolean = false): void {
 		// only pause when we are not loading stuff
 		if (_state !== this.LOADING && !this.isPaused()) {
 			// stop the main loop
 			_pauseRunLoop();
 			// current music stop
-			if (music === true) {
+			if (music) {
 				pauseTrack();
 			}
 
@@ -296,17 +269,14 @@ const state = {
 
 	/**
 	 * Restart the current stage from a full stop.
-	 * @name restart
-	 * @memberof state
-	 * @public
-	 * @param {boolean} [music=false] - resume current music track on screen resume
+	 * @param [music=false] - resume current music track on screen resume
 	 */
-	restart(music = false) {
+	restart(music: boolean = false): void {
 		if (!this.isRunning()) {
 			// restart the main loop
 			_startRunLoop();
 			// current music stop
-			if (music === true) {
+			if (music) {
 				resumeTrack();
 			}
 
@@ -320,17 +290,14 @@ const state = {
 
 	/**
 	 * resume the current stage
-	 * @name resume
-	 * @memberof state
-	 * @public
-	 * @param {boolean} [music=false] - resume current music track on screen resume
+	 * @param [music=false] - resume current music track on screen resume
 	 */
-	resume(music = false) {
+	resume(music: boolean = false): void {
 		if (this.isPaused()) {
 			// resume the main loop
 			_resumeRunLoop();
 			// current music stop
-			if (music === true) {
+			if (music) {
 				resumeTrack();
 			}
 
@@ -344,34 +311,25 @@ const state = {
 
 	/**
 	 * return the running state of the state manager
-	 * @name isRunning
-	 * @memberof state
-	 * @public
-	 * @returns {boolean} true if a "process is running"
+	 * @returns true if a "process is running"
 	 */
-	isRunning() {
+	isRunning(): boolean {
 		return _animFrameId !== -1;
 	},
 
 	/**
 	 * Return the pause state of the state manager
-	 * @name isPaused
-	 * @memberof state
-	 * @public
-	 * @returns {boolean} true if the game is paused
+	 * @returns true if the game is paused
 	 */
-	isPaused() {
+	isPaused(): boolean {
 		return _isPaused;
 	},
 
 	/**
 	 * associate the specified state with a Stage
-	 * @name set
-	 * @memberof state
-	 * @public
-	 * @param {number} state - State ID (see constants)
-	 * @param {Stage} stage - Instantiated Stage to associate with state ID
-	 * @param {boolean} [start = false] - if true the state will be changed immediately after adding it.
+	 * @param stateId - State ID (see constants)
+	 * @param stage - Instantiated Stage to associate with state ID
+	 * @param [start = false] - if true the state will be changed immediately after adding it.
 	 * @example
 	 * class MenuButton extends me.GUI_Object {
 	 *     onClick() {
@@ -409,31 +367,29 @@ const state = {
 	 *
 	 * me.state.set(me.state.MENU, new MenuScreen());
 	 */
-	set(state, stage, start = false) {
+	set(stateId: number, stage: Stage, start: boolean = false): void {
 		if (!(stage instanceof Stage)) {
-			throw new Error(stage + " is not an instance of me.Stage");
+			throw new Error(`${String(stage)} is not an instance of me.Stage`);
 		}
-		_stages[state] = {};
-		_stages[state].stage = stage;
-		_stages[state].transition = true;
+		_stages[stateId] = {
+			stage,
+			transition: true,
+		};
 
-		if (start === true) {
-			this.change(state);
+		if (start) {
+			this.change(stateId);
 		}
 	},
 
 	/**
 	 * returns the stage associated with the specified state
 	 * (or the current one if none is specified)
-	 * @name set
-	 * @memberof state
-	 * @public
-	 * @param {number} [state] - State ID (see constants)
-	 * @returns {Stage}
+	 * @param [stateId] - State ID (see constants)
+	 * @returns the Stage instance associated with the given state ID, or undefined
 	 */
-	get(state = _state) {
-		if (typeof _stages[state] !== "undefined") {
-			return _stages[state].stage;
+	get(stateId: number = _state): Stage | undefined {
+		if (typeof _stages[stateId] !== "undefined") {
+			return _stages[stateId].stage;
 		} else {
 			return undefined;
 		}
@@ -442,25 +398,19 @@ const state = {
 	/**
 	 * return a reference to the current stage<br>
 	 * useful to call a object specific method
-	 * @name current
-	 * @memberof state
-	 * @public
-	 * @returns {Stage}
+	 * @returns the current Stage instance, or undefined if no stage is active
 	 */
-	current() {
+	current(): Stage | undefined {
 		return this.get();
 	},
 
 	/**
 	 * specify a global transition effect
-	 * @name transition
-	 * @memberof state
-	 * @public
-	 * @param {string} effect - (only "fade" is supported for now)
-	 * @param {Color|string} color - a CSS color value
-	 * @param {number} [duration=1000] - expressed in milliseconds
+	 * @param effect - (only "fade" is supported for now)
+	 * @param color - a CSS color value
+	 * @param [duration=1000] - expressed in milliseconds
 	 */
-	transition(effect, color, duration) {
+	transition(effect: string, color: string, duration: number): void {
 		if (effect === "fade") {
 			_fade.color = color;
 			_fade.duration = duration;
@@ -469,59 +419,66 @@ const state = {
 
 	/**
 	 * enable/disable the transition to a particular state (by default enabled for all)
-	 * @name setTransition
-	 * @memberof state
-	 * @public
-	 * @param {number} state - State ID (see constants)
-	 * @param {boolean} enable
+	 * @param stateId - State ID (see constants)
+	 * @param enable - true to enable transition, false to disable
 	 */
-	setTransition(state, enable) {
-		_stages[state].transition = enable;
+	setTransition(stateId: number, enable: boolean): void {
+		_stages[stateId].transition = enable;
 	},
 
 	/**
 	 * change the game/app state
-	 * @name change
-	 * @memberof state
-	 * @public
-	 * @param {number} state - State ID (see constants)
-	 * @param {boolean} [forceChange=false] - if true the state will be changed immediately (without waiting for the next frame)
-	 * @param {...*} [args] - extra arguments to be passed to the reset functions
+	 * @param stateId - State ID (see constants)
+	 * @param [forceChange=false] - if true the state will be changed immediately (without waiting for the next frame)
+	 * @param extraArgs - extra arguments to be passed to the reset functions
 	 * @example
 	 * // The onResetEvent method on the play screen will receive two args:
 	 * // "level_1" and the number 3
 	 * me.state.change(me.state.PLAY, "level_1", 3);
 	 */
-	change(state, forceChange = false) {
+	change(
+		stateId: number,
+		forceChange: boolean = false,
+		...extraArgs: unknown[]
+	): void {
 		// Protect against undefined Stage
-		if (typeof _stages[state] === "undefined") {
-			throw new Error("Undefined Stage for state '" + state + "'");
+		if (typeof _stages[stateId] === "undefined") {
+			throw new Error(`Undefined Stage for state '${stateId}'`);
 		}
 
 		// do nothing if already the current state
-		if (!this.isCurrent(state)) {
-			_extraArgs = null;
-			if (arguments.length > 1) {
-				// store extra arguments if any
-				_extraArgs = Array.prototype.slice.call(arguments, 1);
-			}
+		if (!this.isCurrent(stateId)) {
+			// store extra arguments if any
+			_extraArgs = extraArgs.length > 0 ? extraArgs : null;
 			// if fading effect
-			if (_fade.duration && _stages[state].transition) {
+			if (_fade.duration && _stages[stateId].transition) {
 				_onSwitchComplete = () => {
 					game.viewport.fadeOut(_fade.color, _fade.duration);
 				};
-				game.viewport.fadeIn(_fade.color, _fade.duration, function () {
-					defer(_switchState, this, state);
-				});
+				game.viewport.fadeIn(
+					_fade.color,
+					_fade.duration,
+					function (this: typeof state) {
+						defer(
+							_switchState as unknown as (...args: unknown[]) => unknown,
+							this,
+							stateId,
+						);
+					},
+				);
 			}
 			// else just switch without any effects
 			else {
 				// wait for the last frame to be
 				// "finished" before switching
-				if (forceChange === true) {
-					_switchState(state);
+				if (forceChange) {
+					_switchState(stateId);
 				} else {
-					defer(_switchState, this, state);
+					defer(
+						_switchState as unknown as (...args: unknown[]) => unknown,
+						this,
+						stateId,
+					);
 				}
 			}
 		}
@@ -529,14 +486,11 @@ const state = {
 
 	/**
 	 * return true if the specified state is the current one
-	 * @name isCurrent
-	 * @memberof state
-	 * @public
-	 * @param {number} state - State ID (see constants)
-	 * @returns {boolean} true if the specified state is the current one
+	 * @param stateId - State ID (see constants)
+	 * @returns true if the specified state is the current one
 	 */
-	isCurrent(state) {
-		return _state === state;
+	isCurrent(stateId: number): boolean {
+		return _state === stateId;
 	},
 };
 export default state;

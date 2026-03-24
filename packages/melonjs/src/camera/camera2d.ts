@@ -1,12 +1,15 @@
 import { Rect } from "./../geometries/rectangle.ts";
 import { game } from "../index.js";
+import type { Color } from "../math/color.ts";
 import { colorPool } from "../math/color.ts";
 import { clamp, toBeCloseTo } from "./../math/math.ts";
 import { Matrix2d } from "../math/matrix2d.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d, vector2dPool } from "../math/vector2d.ts";
 import { Vector3d } from "../math/vector3d.ts";
+import type { Bounds } from "./../physics/bounds.ts";
 import { boundsPool } from "./../physics/bounds.ts";
+import type Container from "./../renderable/container.js";
 import Renderable from "./../renderable/renderable.js";
 import {
 	CANVAS_ONRESIZE,
@@ -15,16 +18,35 @@ import {
 	VIEWPORT_ONCHANGE,
 	VIEWPORT_ONRESIZE,
 } from "../system/event.ts";
+import type Tween from "../tweens/tween.ts";
 import { tweenPool } from "../tweens/tween.ts";
+import type Renderer from "./../video/renderer.js";
 import { renderer } from "./../video/video.js";
 
 /**
- * @import {Bounds} from "./../physics/bounds.ts";
- * @import {Color} from "./../math/color.ts";
  * @import Entity from "./../renderable/entity/entity.js";
  * @import Sprite from "./../renderable/sprite.js";
  * @import NineSliceSprite from "./../renderable/nineslicesprite.js";
  */
+
+interface AxisEnum {
+	readonly NONE: 0;
+	readonly HORIZONTAL: 1;
+	readonly VERTICAL: 2;
+	readonly BOTH: 3;
+}
+
+interface ShakeState {
+	intensity: number;
+	duration: number;
+	axis: number;
+	onComplete: (() => void) | null | undefined;
+}
+
+interface FadeState {
+	color: Color | null;
+	tween: Tween | null;
+}
 
 const targetV = new Vector2d();
 
@@ -34,23 +56,95 @@ const targetV = new Vector2d();
  */
 export default class Camera2d extends Renderable {
 	/**
-	 * @param {number} minX - start x offset
-	 * @param {number} minY - start y offset
-	 * @param {number} maxX - end x offset
-	 * @param {number} maxY - end y offset
+	 * Axis definition
+	 * NONE no axis
+	 * HORIZONTAL horizontal axis only
+	 * VERTICAL vertical axis only
+	 * BOTH both axis
 	 */
-	constructor(minX, minY, maxX, maxY) {
+	AXIS: AxisEnum;
+
+	/**
+	 * Camera bounds
+	 */
+	bounds: Bounds;
+
+	/**
+	 * enable or disable damping
+	 * @default true
+	 */
+	smoothFollow: boolean;
+
+	/**
+	 * Camera damping for smooth transition [0 .. 1].
+	 * 1 being the maximum value and will snap the camera to the target position
+	 * @default 1.0
+	 */
+	damping: number;
+
+	/**
+	 * the closest point relative to the camera
+	 * @default -1000
+	 */
+	near: number;
+
+	/**
+	 * the furthest point relative to the camera.
+	 * @default 1000
+	 */
+	far: number;
+
+	/**
+	 * the default camera projection matrix
+	 * (2d cameras use an orthographic projection by default).
+	 */
+	projectionMatrix: Matrix3d;
+
+	/**
+	 * the invert camera transform used to unproject points
+	 * @ignore
+	 */
+	invCurrentTransform: Matrix2d;
+
+	/** offset for shake effect */
+	offset: Vector2d;
+
+	/** target to follow */
+	target: Vector2d | Vector3d | null;
+
+	/** default value follow */
+	follow_axis: number;
+
+	/**
+	 * shake variables
+	 * @ignore
+	 */
+	_shake: ShakeState;
+
+	/**
+	 * flash variables
+	 * @ignore
+	 */
+	_fadeOut: FadeState;
+
+	/**
+	 * fade variables
+	 * @ignore
+	 */
+	_fadeIn: FadeState;
+
+	/** the camera deadzone */
+	deadzone: Rect;
+
+	/**
+	 * @param minX - start x offset
+	 * @param minY - start y offset
+	 * @param maxX - end x offset
+	 * @param maxY - end y offset
+	 */
+	constructor(minX: number, minY: number, maxX: number, maxY: number) {
 		super(minX, minY, maxX - minX, maxY - minY);
 
-		/**
-		 * Axis definition
-		 * @enum {number}
-		 * @property {number} NONE no axis
-		 * @property {number} HORIZONTAL horizontal axis only
-		 * @property {number} VERTICAL vertical axis only
-		 * @property {number} BOTH both axis
-		 * @readonly
-		 */
 		this.AXIS = {
 			NONE: 0,
 			HORIZONTAL: 1,
@@ -58,53 +152,18 @@ export default class Camera2d extends Renderable {
 			BOTH: 3,
 		};
 
-		/**
-		 * Camera bounds
-		 * @type {Bounds}
-		 */
 		this.bounds = boundsPool.get();
 
-		/**
-		 * enable or disable damping
-		 * @private
-		 * @default true
-		 */
 		this.smoothFollow = true;
 
-		/**
-		 * Camera damping for smooth transition [0 .. 1].
-		 * 1 being the maximum value and will snap the camera to the target position
-		 * @type {number}
-		 * @default 1.0
-		 */
 		this.damping = 1.0;
 
-		/**
-		 * the closest point relative to the camera
-		 * @type {number}
-		 * @default -1000
-		 */
 		this.near = -1000;
 
-		/**
-		 * the furthest point relative to the camera.
-		 * @type {number}
-		 * @default 1000
-		 */
 		this.far = 1000;
 
-		/**
-		 * the default camera projection matrix
-		 * (2d cameras use an orthographic projection by default).
-		 * @type {Matrix3d}
-		 */
 		this.projectionMatrix = new Matrix3d();
 
-		/**
-		 * the invert camera transform used to unproject points
-		 * @ignore
-		 * @type {Matrix2d}
-		 */
 		this.invCurrentTransform = new Matrix2d();
 
 		// offset for shake effect
@@ -116,10 +175,6 @@ export default class Camera2d extends Renderable {
 		// default value follow
 		this.follow_axis = this.AXIS.NONE;
 
-		/**
-		 * shake variables
-		 * @ignore
-		 */
 		this._shake = {
 			intensity: 0,
 			duration: 0,
@@ -127,19 +182,11 @@ export default class Camera2d extends Renderable {
 			onComplete: null,
 		};
 
-		/**
-		 * flash variables
-		 * @ignore
-		 */
 		this._fadeOut = {
 			color: null,
 			tween: null,
 		};
 
-		/**
-		 * fade variables
-		 * @ignore
-		 */
 		this._fadeIn = {
 			color: null,
 			tween: null,
@@ -172,7 +219,7 @@ export default class Camera2d extends Renderable {
 
 	/** @ignore */
 	// update the projection matrix based on the projection frame (a rectangle)
-	_updateProjectionMatrix() {
+	_updateProjectionMatrix(): void {
 		this.projectionMatrix.ortho(
 			0,
 			this.width,
@@ -184,7 +231,7 @@ export default class Camera2d extends Renderable {
 	}
 
 	/** @ignore */
-	_followH(target) {
+	_followH(target: Vector2d | Vector3d): number {
 		let targetX = this.pos.x;
 		if (target.x - this.pos.x > this.deadzone.right) {
 			targetX = Math.min(
@@ -198,7 +245,7 @@ export default class Camera2d extends Renderable {
 	}
 
 	/** @ignore */
-	_followV(target) {
+	_followV(target: Vector2d | Vector3d): number {
 		let targetY = this.pos.y;
 		if (target.y - this.pos.y > this.deadzone.bottom) {
 			targetY = Math.min(
@@ -215,10 +262,10 @@ export default class Camera2d extends Renderable {
 
 	/**
 	 * reset the camera position to specified coordinates
-	 * @param {number} [x=0] - initial position of the camera on the x axis
-	 * @param {number} [y=0] - initial position of the camera on the y axis
+	 * @param [x=0] - initial position of the camera on the x axis
+	 * @param [y=0] - initial position of the camera on the y axis
 	 */
-	reset(x = 0, y = 0) {
+	reset(x: number = 0, y: number = 0): void {
 		// reset the initial camera position to 0,0
 		this.pos.x = x;
 		this.pos.y = y;
@@ -243,10 +290,10 @@ export default class Camera2d extends Renderable {
 	 * the "deadzone" defines an area within the current camera in which
 	 * the followed renderable can move without scrolling the camera.
 	 * @see {@link follow}
-	 * @param {number} w - deadzone width
-	 * @param {number} h - deadzone height
+	 * @param w - deadzone width
+	 * @param h - deadzone height
 	 */
-	setDeadzone(w, h) {
+	setDeadzone(w: number, h: number): void {
 		if (typeof this.deadzone === "undefined") {
 			this.deadzone = new Rect(0, 0, 0, 0);
 		}
@@ -268,11 +315,11 @@ export default class Camera2d extends Renderable {
 
 	/**
 	 * resize the camera
-	 * @param {number} w - new width of the camera
-	 * @param {number} h - new height of the camera
-	 * @returns {Camera2d} this camera
+	 * @param w - new width of the camera
+	 * @param h - new height of the camera
+	 * @returns this camera
 	 */
-	resize(w, h) {
+	override resize(w: number, h: number): this {
 		// parent consctructor, resize camera rect
 		super.resize(w, h);
 
@@ -297,12 +344,12 @@ export default class Camera2d extends Renderable {
 	/**
 	 * set the camera boundaries (set to the world limit by default).
 	 * the camera is bound to the given coordinates and cannot move/be scrolled outside of it.
-	 * @param {number} x - world left limit
-	 * @param {number} y - world top limit
-	 * @param {number} w - world width limit
-	 * @param {number} h - world height limit
+	 * @param x - world left limit
+	 * @param y - world top limit
+	 * @param w - world width limit
+	 * @param h - world height limit
 	 */
-	setBounds(x, y, w, h) {
+	setBounds(x: number, y: number, w: number, h: number): void {
 		this.smoothFollow = false;
 		this.bounds.setMinMax(x, y, w + x, h + y);
 		this.moveTo(this.pos.x, this.pos.y);
@@ -313,14 +360,18 @@ export default class Camera2d extends Renderable {
 	/**
 	 * set the camera to follow the specified renderable. <br>
 	 * (this will put the camera center around the given target)
-	 * @param {Renderable|Vector2d} target - renderable or position vector to follow
-	 * @param {number} [axis=me.game.viewport.AXIS.BOTH] - Which axis to follow (see {@link Camera2d.AXIS})
-	 * @param {number} [damping=1] - default damping value
+	 * @param target - renderable or position vector to follow
+	 * @param [axis=me.game.viewport.AXIS.BOTH] - Which axis to follow (see {@link Camera2d.AXIS})
+	 * @param [damping=1] - default damping value
 	 * @example
 	 * // set the camera to follow this renderable on both axis, and enable damping
 	 * me.game.viewport.follow(this, me.game.viewport.AXIS.BOTH, 0.1);
 	 */
-	follow(target, axis, damping) {
+	follow(
+		target: Renderable | Vector2d | Vector3d,
+		axis?: number,
+		damping?: number,
+	): void {
 		if (target instanceof Renderable) {
 			this.target = target.pos;
 		} else if (target instanceof Vector2d || target instanceof Vector3d) {
@@ -348,7 +399,7 @@ export default class Camera2d extends Renderable {
 	/**
 	 * unfollow the current target
 	 */
-	unfollow() {
+	unfollow(): void {
 		this.target = null;
 		this.follow_axis = this.AXIS.NONE;
 	}
@@ -356,23 +407,23 @@ export default class Camera2d extends Renderable {
 	/**
 	 * move the camera upper-left position by the specified offset.
 	 * @see {@link focusOn}
-	 * @param {number} x - horizontal offset
-	 * @param {number} y - vertical offset
+	 * @param x - horizontal offset
+	 * @param y - vertical offset
 	 * @example
 	 * // Move the camera up by four pixels
 	 * me.game.viewport.move(0, -4);
 	 */
-	move(x, y) {
+	move(x: number, y: number): void {
 		this.moveTo(this.pos.x + x, this.pos.y + y);
 	}
 
 	/**
 	 * move the camera upper-left position to the specified coordinates
 	 * @see {@link focusOn}
-	 * @param {number} x
-	 * @param {number} y
+	 * @param x - horizontal position
+	 * @param y - vertical position
 	 */
-	moveTo(x, y) {
+	moveTo(x: number, y: number): void {
 		const _x = this.pos.x;
 		const _y = this.pos.y;
 
@@ -386,7 +437,8 @@ export default class Camera2d extends Renderable {
 	}
 
 	/** @ignore */
-	updateTarget() {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	updateTarget(_dt?: number): void {
 		if (this.target) {
 			targetV.setV(this.pos);
 
@@ -414,7 +466,7 @@ export default class Camera2d extends Renderable {
 
 			if (!this.pos.equals(targetV)) {
 				// update the camera position
-				if (this.smoothFollow === true && this.damping < 1.0) {
+				if (this.smoothFollow && this.damping < 1.0) {
 					// account for floating precision and check if we are close "enough"
 					if (
 						toBeCloseTo(targetV.x, this.pos.x, 2) &&
@@ -434,12 +486,12 @@ export default class Camera2d extends Renderable {
 	}
 
 	/** @ignore */
-	update(dt) {
+	override update(dt?: number): boolean {
 		// update the camera position
 		this.updateTarget(dt);
 
 		if (this._shake.duration > 0) {
-			this._shake.duration -= dt;
+			this._shake.duration -= dt ?? 0;
 			if (this._shake.duration <= 0) {
 				this._shake.duration = 0;
 				this.offset.setZero();
@@ -464,7 +516,7 @@ export default class Camera2d extends Renderable {
 			this.isDirty = true;
 		}
 
-		if (this.isDirty === true) {
+		if (this.isDirty) {
 			//publish the corresponding message
 			eventEmitter.emit(VIEWPORT_ONCHANGE, this.pos);
 		}
@@ -481,22 +533,28 @@ export default class Camera2d extends Renderable {
 			this.invCurrentTransform.identity();
 		}
 
-		return super.update(dt);
+		return super.update(dt ?? 0);
 	}
 
 	/**
 	 * shake the camera
-	 * @param {number} intensity - maximum offset that the screen can be moved
+	 * @param intensity - maximum offset that the screen can be moved
 	 * while shaking
-	 * @param {number} duration - expressed in milliseconds
-	 * @param {number} [axis=me.game.viewport.AXIS.BOTH] - specify on which axis to apply the shake effect (see {@link Camera2d.AXIS})
-	 * @param {Function} [onComplete] - callback once shaking effect is over
-	 * @param {boolean} [force] - if true this will override the current effect
+	 * @param duration - expressed in milliseconds
+	 * @param [axis=me.game.viewport.AXIS.BOTH] - specify on which axis to apply the shake effect (see {@link Camera2d.AXIS})
+	 * @param [onComplete] - callback once shaking effect is over
+	 * @param [force] - if true this will override the current effect
 	 * @example
 	 * // shake it baby !
 	 * me.game.viewport.shake(10, 500, me.game.viewport.AXIS.BOTH);
 	 */
-	shake(intensity, duration, axis, onComplete, force) {
+	shake(
+		intensity: number,
+		duration: number,
+		axis?: number,
+		onComplete?: () => void,
+		force?: boolean,
+	): void {
 		if (this._shake.duration === 0 || force === true) {
 			this._shake.intensity = intensity;
 			this._shake.duration = duration;
@@ -509,9 +567,9 @@ export default class Camera2d extends Renderable {
 	/**
 	 * fadeOut(flash) effect<p>
 	 * screen is filled with the specified color and slowly goes back to normal
-	 * @param {Color|string} color - a CSS color value
-	 * @param {number} [duration=1000] - expressed in milliseconds
-	 * @param {Function} [onComplete] - callback once effect is over
+	 * @param color - a CSS color value
+	 * @param [duration=1000] - expressed in milliseconds
+	 * @param [onComplete] - callback once effect is over
 	 * @example
 	 * // fade the camera to white upon dying, reload the level, and then fade out back
 	 * me.game.viewport.fadeIn("#fff", 150, function() {
@@ -520,12 +578,18 @@ export default class Camera2d extends Renderable {
 	 *     me.game.viewport.fadeOut("#fff", 150);
 	 * });
 	 */
-	fadeOut(color, duration = 1000, onComplete) {
+	fadeOut(
+		color: Color | string,
+		duration: number = 1000,
+		onComplete?: () => void,
+	): void {
 		this._fadeOut.color = colorPool.get(color);
 		this._fadeOut.tween = tweenPool
 			.get(this._fadeOut.color)
-			.to({ alpha: 0.0 }, { duration })
-			.onComplete(onComplete || null);
+			.to({ alpha: 0.0 }, { duration });
+		if (onComplete) {
+			this._fadeOut.tween.onComplete(onComplete);
+		}
 		this._fadeOut.tween.isPersistent = true;
 		this._fadeOut.tween.start();
 	}
@@ -533,30 +597,36 @@ export default class Camera2d extends Renderable {
 	/**
 	 * fadeIn effect <p>
 	 * fade to the specified color
-	 * @param {Color|string} color - a CSS color value
-	 * @param {number} [duration=1000] - expressed in milliseconds
-	 * @param {Function} [onComplete] - callback once effect is over
+	 * @param color - a CSS color value
+	 * @param [duration=1000] - expressed in milliseconds
+	 * @param [onComplete] - callback once effect is over
 	 * @example
 	 * // flash the camera to white for 75ms
 	 * me.game.viewport.fadeIn("#FFFFFF", 75);
 	 */
-	fadeIn(color, duration = 1000, onComplete) {
+	fadeIn(
+		color: Color | string,
+		duration: number = 1000,
+		onComplete?: () => void,
+	): void {
 		this._fadeIn.color = colorPool.get(color);
 		const _alpha = this._fadeIn.color.alpha;
 		this._fadeIn.color.alpha = 0.0;
 		this._fadeIn.tween = tweenPool
 			.get(this._fadeIn.color)
-			.to({ alpha: _alpha }, { duration })
-			.onComplete(onComplete || null);
+			.to({ alpha: _alpha }, { duration });
+		if (onComplete) {
+			this._fadeIn.tween.onComplete(onComplete);
+		}
 		this._fadeIn.tween.isPersistent = true;
 		this._fadeIn.tween.start();
 	}
 
 	/**
 	 * set the camera position around the specified object
-	 * @param {Renderable|Entity|Sprite|NineSliceSprite} target - the renderable to focus the camera on
+	 * @param target - the renderable to focus the camera on
 	 */
-	focusOn(target) {
+	focusOn(target: Renderable): void {
 		const bounds = target.getBounds();
 		this.moveTo(
 			bounds.left + bounds.width / 2 - this.width / 2,
@@ -566,28 +636,28 @@ export default class Camera2d extends Renderable {
 
 	/**
 	 * check if the specified renderable is in the camera
-	 * @param {Renderable|Entity|Sprite|NineSliceSprite} obj - to be checked against
-	 * @param {boolean} [floating = obj.floating] - if visibility check should be done against screen coordinates
-	 * @returns {boolean} true if within the viewport
+	 * @param obj - to be checked against
+	 * @param [floating = obj.floating] - if visibility check should be done against screen coordinates
+	 * @returns true if within the viewport
 	 */
-	isVisible(obj, floating = obj.floating) {
-		if (floating === true || obj.floating === true) {
+	isVisible(obj: Renderable, floating: boolean = obj.floating): boolean {
+		if (floating || obj.floating) {
 			// check against screen coordinates
 			return renderer.overlaps(obj.getBounds());
 		} else {
 			// check if within the current camera
-			return obj.getBounds().overlaps(this);
+			return obj.getBounds().overlaps(this.getBounds());
 		}
 	}
 
 	/**
 	 * convert the given "local" (screen) coordinates into world coordinates
-	 * @param {number} x - the x coordinate of the local point to be converted
-	 * @param {number} y - the y coordinate of the local point to be converted
-	 * @param {Vector2d} [v] - an optional vector object where to set the converted value
-	 * @returns {Vector2d}
+	 * @param x - the x coordinate of the local point to be converted
+	 * @param y - the y coordinate of the local point to be converted
+	 * @param [v] - an optional vector object where to set the converted value
+	 * @returns the converted world coordinates as a Vector2d
 	 */
-	localToWorld(x, y, v) {
+	localToWorld(x: number, y: number, v?: Vector2d): Vector2d {
 		v = v || vector2dPool.get();
 		v.set(x, y).add(this.pos).sub(game.world.pos);
 		if (!this.currentTransform.isIdentity()) {
@@ -598,12 +668,12 @@ export default class Camera2d extends Renderable {
 
 	/**
 	 * convert the given world coordinates into "local" (screen) coordinates
-	 * @param {number} x
-	 * @param {number} y
-	 * @param {number} [v] - an optional vector object where to set the converted value
-	 * @returns {Vector2d} a vector with the converted local coordinates
+	 * @param x - the x world coordinate to be converted
+	 * @param y - the y world coordinate to be converted
+	 * @param [v] - an optional vector object where to set the converted value
+	 * @returns a vector with the converted local coordinates
 	 */
-	worldToLocal(x, y, v) {
+	worldToLocal(x: number, y: number, v?: Vector2d): Vector2d {
 		v = v || vector2dPool.get();
 		v.set(x, y);
 		if (!this.currentTransform.isIdentity()) {
@@ -616,20 +686,22 @@ export default class Camera2d extends Renderable {
 	 * render the camera effects
 	 * @ignore
 	 */
-	drawFX(renderer) {
+	drawFX(renderer: Renderer): void {
+		// cast to any to access canvas/webgl renderer-specific methods
+		const r = renderer as any;
 		// fading effect
 		if (this._fadeIn.tween) {
 			// add an overlay
-			renderer.save();
+			r.save();
 			// reset all transform so that the overaly cover the whole camera area
-			renderer.resetTransform();
-			renderer.setColor(this._fadeIn.color);
-			renderer.fillRect(0, 0, this.width, this.height);
-			renderer.restore();
+			r.resetTransform();
+			r.setColor(this._fadeIn.color!);
+			r.fillRect(0, 0, this.width, this.height);
+			r.restore();
 			// remove the tween if over
-			if (this._fadeIn.color.alpha === 1.0) {
+			if (this._fadeIn.color!.alpha === 1.0) {
 				this._fadeIn.tween = null;
-				colorPool.release(this._fadeIn.color);
+				colorPool.release(this._fadeIn.color!);
 				this._fadeIn.color = null;
 			}
 		}
@@ -637,16 +709,16 @@ export default class Camera2d extends Renderable {
 		// flashing effect
 		if (this._fadeOut.tween) {
 			// add an overlay
-			renderer.save();
+			r.save();
 			// reset all transform so that the overaly cover the whole camera area
-			renderer.resetTransform();
-			renderer.setColor(this._fadeOut.color);
-			renderer.fillRect(0, 0, this.width, this.height);
-			renderer.restore();
+			r.resetTransform();
+			r.setColor(this._fadeOut.color!);
+			r.fillRect(0, 0, this.width, this.height);
+			r.restore();
 			// remove the tween if over
-			if (this._fadeOut.color.alpha === 0.0) {
+			if (this._fadeOut.color!.alpha === 0.0) {
 				this._fadeOut.tween = null;
-				colorPool.release(this._fadeOut.color);
+				colorPool.release(this._fadeOut.color!);
 				this._fadeOut.color = null;
 			}
 		}
@@ -656,7 +728,9 @@ export default class Camera2d extends Renderable {
 	 * draw all objects visible in this viewport
 	 * @ignore
 	 */
-	draw(renderer, container) {
+	override draw(renderer: Renderer, container: Container): void {
+		// cast to any to access canvas/webgl renderer-specific methods not on base Renderer
+		const r = renderer as any;
 		const translateX = this.pos.x + this.offset.x;
 		const translateY = this.pos.y + this.offset.y;
 
@@ -667,22 +741,22 @@ export default class Camera2d extends Renderable {
 		renderer.setProjection(this.projectionMatrix);
 
 		// clip to camera bounds
-		renderer.clipRect(0, 0, this.width, this.height);
+		r.clipRect(0, 0, this.width, this.height);
 
-		this.preDraw(renderer);
+		this.preDraw(r);
 
-		container.preDraw(renderer, this);
+		container.preDraw(r);
 
 		// draw all objects,
 		// specifying the viewport as the rectangle area to redraw
-		container.draw(renderer, this);
+		container.draw(r, this);
 
 		// draw the viewport/camera effects
 		this.drawFX(renderer);
 
-		container.postDraw(renderer, this);
+		container.postDraw(r);
 
-		this.postDraw(renderer);
+		this.postDraw(r);
 
 		// translate the world coordinates by default to screen coordinates
 		container.currentTransform.translate(translateX, translateY);
