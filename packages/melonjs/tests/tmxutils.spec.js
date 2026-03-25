@@ -694,6 +694,60 @@ describe("TMXUtils", () => {
 			}
 		});
 
+		it("baked offset matches on Y-axis (ax=0, ratio=0.5)", () => {
+			const layerOffset = 80;
+			const ratio = 0.5;
+			const parallaxOrigin = 300;
+			const bakedOffset = layerOffset + parallaxOrigin * ratio;
+
+			for (const camY of [0, 150, 300, 600]) {
+				const explicit = computeParallaxPos(
+					layerOffset,
+					ratio,
+					camY - parallaxOrigin,
+					0,
+					1500,
+					600,
+				);
+				const baked = computeParallaxPos(
+					bakedOffset,
+					ratio,
+					camY,
+					0,
+					1500,
+					600,
+				);
+				expect(baked).toBeCloseTo(explicit);
+			}
+		});
+
+		it("baked offset matches on Y-axis with anchorPoint=1", () => {
+			const layerOffset = 200;
+			const ratio = 0.75;
+			const parallaxOrigin = 400;
+			const bakedOffset = layerOffset + parallaxOrigin * ratio;
+
+			for (const camY of [0, 200, 400, 800]) {
+				const explicit = computeParallaxPos(
+					layerOffset,
+					ratio,
+					camY - parallaxOrigin,
+					1,
+					1500,
+					600,
+				);
+				const baked = computeParallaxPos(
+					bakedOffset,
+					ratio,
+					camY,
+					1,
+					1500,
+					600,
+				);
+				expect(baked).toBeCloseTo(explicit);
+			}
+		});
+
 		it("zero parallax origin produces unchanged offset", () => {
 			const layerOffset = 100;
 			const ratio = 0.5;
