@@ -41,8 +41,8 @@ function readImageLayer(map, data, z) {
 	// Normalize properties
 	applyTMXProperties(data.properties, data);
 
-	// derive repeat mode from Tiled 1.8+ native repeatx/repeaty attributes,
-	// falling back to the legacy custom "repeat" string property
+	// derive repeat mode: legacy custom "repeat" property takes precedence
+	// (for backward compatibility), then Tiled 1.8+ native repeatx/repeaty
 	const rx = data.repeatx === true || data.repeatx === "1";
 	const ry = data.repeaty === true || data.repeaty === "1";
 	let repeat = data.properties?.repeat;

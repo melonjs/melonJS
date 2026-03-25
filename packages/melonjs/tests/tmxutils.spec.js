@@ -521,4 +521,76 @@ describe("TMXUtils", () => {
 			setInflateFunction(undefined);
 		});
 	});
+
+	// ---------------------------------------------------------------
+	// repeatx/repeaty → repeat string mapping
+	// ---------------------------------------------------------------
+	describe("repeatx/repeaty to repeat string mapping", () => {
+		// Helper: mirrors the logic in readImageLayer
+		function deriveRepeat(data) {
+			const rx = data.repeatx === true || data.repeatx === "1";
+			const ry = data.repeaty === true || data.repeaty === "1";
+			let repeat = data.properties?.repeat;
+			if (typeof repeat === "undefined" && (rx || ry)) {
+				if (rx && ry) {
+					repeat = "repeat";
+				} else if (rx) {
+					repeat = "repeat-x";
+				} else {
+					repeat = "repeat-y";
+				}
+			}
+			return repeat;
+		}
+
+		it("should derive repeat-x from JSON boolean repeatx=true", () => {
+			expect(deriveRepeat({ repeatx: true })).toEqual("repeat-x");
+		});
+
+		it("should derive repeat-y from JSON boolean repeaty=true", () => {
+			expect(deriveRepeat({ repeaty: true })).toEqual("repeat-y");
+		});
+
+		it("should derive repeat from both JSON booleans", () => {
+			expect(deriveRepeat({ repeatx: true, repeaty: true })).toEqual("repeat");
+		});
+
+		it('should derive repeat-x from TMX string repeatx="1"', () => {
+			expect(deriveRepeat({ repeatx: "1" })).toEqual("repeat-x");
+		});
+
+		it('should derive repeat-y from TMX string repeaty="1"', () => {
+			expect(deriveRepeat({ repeaty: "1" })).toEqual("repeat-y");
+		});
+
+		it('should derive repeat from both TMX strings "1"', () => {
+			expect(deriveRepeat({ repeatx: "1", repeaty: "1" })).toEqual("repeat");
+		});
+
+		it("should not derive repeat from false/0 values", () => {
+			expect(deriveRepeat({ repeatx: false })).toBeUndefined();
+			expect(deriveRepeat({ repeatx: "0" })).toBeUndefined();
+			expect(deriveRepeat({})).toBeUndefined();
+		});
+
+		it("should prefer legacy repeat property over native attributes", () => {
+			expect(
+				deriveRepeat({
+					repeatx: true,
+					repeaty: true,
+					properties: { repeat: "repeat-x" },
+				}),
+			).toEqual("repeat-x");
+		});
+
+		it("should use native attributes when legacy property is absent", () => {
+			expect(
+				deriveRepeat({
+					repeatx: true,
+					repeaty: true,
+					properties: {},
+				}),
+			).toEqual("repeat");
+		});
+	});
 });
