@@ -88,6 +88,26 @@ export default class CanvasRenderer extends Renderer {
 	}
 
 	/**
+	 * set/change the current projection matrix.
+	 * In Canvas mode, this applies the ortho projection as a canvas 2D transform
+	 * (translate + scale) to map world coordinates to screen coordinates.
+	 * @param {Matrix3d} matrix - the new projection matrix
+	 */
+	setProjection(matrix) {
+		super.setProjection(matrix);
+		// convert the ortho projection matrix to a canvas 2D transform
+		// ortho uses OpenGL convention (Y-up), canvas is Y-down, so negate Y scale
+		const val = matrix.val;
+		const w = this.getCanvas().width;
+		const h = this.getCanvas().height;
+		const sx = val[0] * w * 0.5;
+		const sy = -val[5] * h * 0.5;
+		const tx = (val[12] + 1) * w * 0.5;
+		const ty = (1 - val[13]) * h * 0.5;
+		this.getContext().setTransform(sx, 0, 0, sy, tx, ty);
+	}
+
+	/**
 	 * set a blend mode for the given context. <br>
 	 * Supported blend mode between Canvas and WebGL renderer : <br>
 	 * - "normal" : this is the default mode and draws new content on top of the existing content <br>

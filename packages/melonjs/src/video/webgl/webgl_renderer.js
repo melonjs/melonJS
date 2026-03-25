@@ -436,6 +436,8 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {Matrix3d} matrix - the new projection matrix
 	 */
 	setProjection(matrix) {
+		// flush pending draws before switching projection
+		this.flush();
 		super.setProjection(matrix);
 		this.currentBatcher.setProjection(matrix);
 	}

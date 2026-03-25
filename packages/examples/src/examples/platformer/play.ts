@@ -1,6 +1,7 @@
 import { audio, device, game, level, plugin, Stage } from "melonjs";
 import { VirtualJoypad } from "./entities/controls";
 import UIContainer from "./entities/HUD";
+import { MinimapCamera } from "./entities/minimap";
 import { gameState } from "./gameState";
 
 export class PlayScreen extends Stage {
@@ -13,6 +14,11 @@ export class PlayScreen extends Stage {
 	override onResetEvent() {
 		// load a level
 		level.load("map1");
+
+		// add a minimap camera (reuse if already present)
+		if (!this.cameras.has("minimap")) {
+			this.cameras.set("minimap", new MinimapCamera());
+		}
 
 		// reset the score
 		gameState.data.score = 0;

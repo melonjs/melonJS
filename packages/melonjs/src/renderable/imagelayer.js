@@ -45,6 +45,9 @@ export default class ImageLayer extends Sprite {
 		// render in screen coordinates
 		this.floating = true;
 
+		// background layers should render in all cameras (e.g. minimap, split-screen)
+		this.visibleInAllCameras = true;
+
 		// image drawing offset
 		this.offset.set(x, y);
 
@@ -249,17 +252,39 @@ export default class ImageLayer extends Sprite {
 		const bh = viewport.bounds.height;
 		const ax = this.anchorPoint.x;
 		const ay = this.anchorPoint.y;
+		const rx = this.ratio.x;
+		const ry = this.ratio.y;
+		const vZoom = viewport.zoom;
 
-		let x = this.pos.x;
-		let y = this.pos.y;
+		let x, y;
 
-		if (this.ratio.x === 0 && this.ratio.y === 0) {
+		if (rx === 0 && ry === 0) {
 			// static image
-			x = x + ax * (bw - width);
-			y = y + ay * (bh - height);
+			x = this.pos.x + ax * (bw - width);
+			y = this.pos.y + ay * (bh - height);
+		} else {
+			// parallax — compute position from the current viewport, not game.viewport
+			x =
+				ax * (rx - 1) * (bw - viewport.width) +
+				this.offset.x -
+				rx * viewport.pos.x;
+			y =
+				ay * (ry - 1) * (bh - viewport.height) +
+				this.offset.y -
+				ry * viewport.pos.y;
+
+			if (this.repeatX) {
+				x = x % width;
+			}
+			if (this.repeatY) {
+				y = y % height;
+			}
 		}
 
-		renderer.translate(x, y);
+		// for zoomed cameras, scale positions and pattern to match the world view
+		renderer.translate(x * vZoom, y * vZoom);
+		renderer.scale(vZoom, vZoom);
+
 		renderer.drawPattern(
 			this._pattern,
 			0,

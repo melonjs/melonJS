@@ -939,4 +939,35 @@ describe("Container", () => {
 			expect(destroyed).toEqual(false);
 		});
 	});
+
+	describe("floating elements and multi-camera visibility", () => {
+		it("floating children should be included in draw loop", () => {
+			const floatingChild = new Renderable(0, 0, 10, 10);
+			floatingChild.floating = true;
+			container.addChild(floatingChild);
+
+			// floating children are always included (inViewport || isFloating)
+			const children = container.getChildren();
+			const floating = children.filter((c) => {
+				return c.floating === true;
+			});
+			expect(floating.length).toEqual(1);
+			expect(floating[0]).toBe(floatingChild);
+		});
+
+		it("visibleInAllCameras defaults to false for floating children", () => {
+			const floatingChild = new Renderable(0, 0, 10, 10);
+			floatingChild.floating = true;
+			container.addChild(floatingChild);
+			expect(floatingChild.visibleInAllCameras).toEqual(false);
+		});
+
+		it("visibleInAllCameras can be set to true", () => {
+			const child = new Renderable(0, 0, 10, 10);
+			child.floating = true;
+			child.visibleInAllCameras = true;
+			container.addChild(child);
+			expect(child.visibleInAllCameras).toEqual(true);
+		});
+	});
 });

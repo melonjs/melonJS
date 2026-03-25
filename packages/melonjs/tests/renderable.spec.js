@@ -45,6 +45,28 @@ describe("Renderable", () => {
 		});
 	});
 
+	describe("visibleInAllCameras", () => {
+		it("should default to false", () => {
+			const renderable = new Renderable(0, 0, 50, 50);
+			expect(renderable.visibleInAllCameras).toEqual(false);
+		});
+
+		it("should be settable to true", () => {
+			const renderable = new Renderable(0, 0, 50, 50);
+			renderable.visibleInAllCameras = true;
+			expect(renderable.visibleInAllCameras).toEqual(true);
+		});
+
+		it("should be independent from floating", () => {
+			const renderable = new Renderable(0, 0, 50, 50);
+			renderable.floating = true;
+			expect(renderable.visibleInAllCameras).toEqual(false);
+			renderable.visibleInAllCameras = true;
+			expect(renderable.floating).toEqual(true);
+			expect(renderable.visibleInAllCameras).toEqual(true);
+		});
+	});
+
 	describe("getAbsoluteBounds returns the correct value", () => {
 		let rootContainer;
 		let childContainer;
