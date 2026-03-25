@@ -32,7 +32,7 @@ export default class UIBaseElement extends Container {
 	isClickable: boolean;
 
 	/**
-	 * object can be clicked or not
+	 * object can be dragged or not
 	 * @default false
 	 */
 	isDraggable: boolean;
@@ -57,7 +57,7 @@ export default class UIBaseElement extends Container {
 
 	/**
 	 * false if the pointer is down, or true when the pointer status is up
-	 * @default false
+	 * @default true
 	 */
 	released: boolean;
 

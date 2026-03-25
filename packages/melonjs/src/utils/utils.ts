@@ -58,7 +58,7 @@ export function checkVersion(v1: string, v2: string) {
  * let UriFragment = me.utils.getUriFragment();
  * console.log(UriFragment["mytag"]); //> "value"
  */
-export function getUriFragment(url: string) {
+export function getUriFragment(url?: string) {
 	const hash: Record<string, string | boolean> = {};
 
 	if (typeof url === "undefined") {

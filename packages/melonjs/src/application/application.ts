@@ -144,7 +144,7 @@ export default class Application {
 	constructor(
 		width: number,
 		height: number,
-		options: Partial<ApplicationSettings> & { legacy?: boolean },
+		options: Partial<ApplicationSettings> & { legacy?: boolean } = {},
 	) {
 		this.mergeGroup = true;
 		this.lastUpdate = 0;
@@ -207,7 +207,7 @@ export default class Application {
 		}
 
 		// override renderer settings if &webgl or &canvas is defined in the URL
-		const uriFragment = getUriFragment(undefined as unknown as string);
+		const uriFragment = getUriFragment();
 		if (
 			uriFragment.webgl === true ||
 			uriFragment.webgl1 === true ||

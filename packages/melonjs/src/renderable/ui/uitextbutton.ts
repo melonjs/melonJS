@@ -8,7 +8,7 @@ interface UITextButtonSettings {
 	font?: string;
 	size?: number;
 	text?: string;
-	bindKey?: string;
+	bindKey?: string | number;
 	hoverOffColor?: string;
 	hoverOnColor?: string;
 	borderStrokeColor?: string;
