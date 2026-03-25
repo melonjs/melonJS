@@ -164,6 +164,16 @@ export default class Renderable extends Rect {
 		this.floating = false;
 
 		/**
+		 * If true, this floating renderable will be rendered by all cameras
+		 * (e.g. background image layers). If false (default), floating elements
+		 * are only rendered by the default camera (e.g. UI/HUD elements).
+		 * Only applies to floating renderables in multi-camera setups.
+		 * @type {boolean}
+		 * @default false
+		 */
+		this.visibleInAllCameras = false;
+
+		/**
 		 * When enabled, an object container will automatically apply
 		 * any defined transformation before calling the child draw method.
 		 * @type {boolean}

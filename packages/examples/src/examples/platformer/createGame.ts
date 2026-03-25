@@ -24,7 +24,7 @@ export const createGame = () => {
 		!video.init(800, 600, {
 			parent: "screen",
 			scaleMethod: "flex-width",
-			renderer: video.WEBGL,
+			renderer: video.AUTO,
 			preferWebGL1: false,
 			depthTest: "z-buffer",
 			subPixel: false,

@@ -3,6 +3,8 @@
 ## [18.2.0] (melonJS 2)
 
 ### Added
+- Camera2d: added proper multi-camera support
+- Platformer example: minimap camera showing a zoomed-out view of the full level with viewport highlight and player marker
 
 ### Changed
 - TypeScript: convert leaf modules to TypeScript — plugin, camera, particles emitter, state, audio
@@ -15,6 +17,7 @@
 - UITextButton: fix `bindKey` settings type from `string` to `string | number`
 - Application: fix constructor `options` parameter not being optional
 - Application: fix `getUriFragment()` unsafe cast by making `url` parameter optional
+- CanvasRenderer: `setProjection()` now properly applies the projection matrix as a canvas 2D transform
 
 ### Performance
 

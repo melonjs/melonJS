@@ -136,6 +136,47 @@ describe("Physics : Bounds", () => {
 			expect(bound2.height).toBeCloseTo(100, 5);
 		});
 	});
+	describe("setMinMax", () => {
+		it("should set bounds from explicit min/max values", () => {
+			const b = new Bounds();
+			b.setMinMax(10, 20, 110, 220);
+			expect(b.left).toEqual(10);
+			expect(b.top).toEqual(20);
+			expect(b.right).toEqual(110);
+			expect(b.bottom).toEqual(220);
+			expect(b.width).toEqual(100);
+			expect(b.height).toEqual(200);
+		});
+
+		it("should update an existing bounds", () => {
+			const b = new Bounds();
+			b.setMinMax(0, 0, 50, 50);
+			expect(b.width).toEqual(50);
+			b.setMinMax(100, 200, 400, 600);
+			expect(b.left).toEqual(100);
+			expect(b.top).toEqual(200);
+			expect(b.width).toEqual(300);
+			expect(b.height).toEqual(400);
+		});
+
+		it("should report as finite", () => {
+			const b = new Bounds();
+			expect(b.isFinite()).toEqual(false);
+			b.setMinMax(0, 0, 100, 100);
+			expect(b.isFinite()).toEqual(true);
+		});
+
+		it("should support overlaps check after setMinMax", () => {
+			const a = new Bounds();
+			const b = new Bounds();
+			a.setMinMax(0, 0, 100, 100);
+			b.setMinMax(50, 50, 150, 150);
+			expect(a.overlaps(b)).toEqual(true);
+			b.setMinMax(200, 200, 300, 300);
+			expect(a.overlaps(b)).toEqual(false);
+		});
+	});
+
 	describe("bound with complex vertices", () => {
 		// define a polygon object (star from the the shape example)
 		const star = [

@@ -953,29 +953,35 @@ export default class Container extends Renderable {
 			renderer.clearColor(this.backgroundColor);
 		}
 
+		const isNonDefaultCamera = !viewport.isDefault;
+
 		const children = this.getChildren();
 		for (let i = children.length, obj; i--, (obj = children[i]); ) {
 			if (obj.isRenderable) {
 				isFloating = obj.floating === true;
 
 				if (obj.inViewport || isFloating) {
-					if (isFloating) {
-						// translate to screen coordinates
-						renderer.save();
-						renderer.resetTransform();
+					// skip UI-only floating elements on non-default cameras
+					if (isFloating && isNonDefaultCamera && !obj.visibleInAllCameras) {
+						continue;
 					}
 
-					// predraw (apply transforms)
+					if (isFloating) {
+						renderer.save();
+						renderer.resetTransform();
+						if (isNonDefaultCamera) {
+							renderer.setProjection(viewport.screenProjection);
+						}
+					}
+
 					obj.preDraw(renderer);
-
-					// draw the object
 					obj.draw(renderer, viewport);
-
-					// postdraw (clean-up);
 					obj.postDraw(renderer);
 
-					// restore the previous "state"
 					if (isFloating) {
+						if (isNonDefaultCamera) {
+							renderer.setProjection(viewport.worldProjection);
+						}
 						renderer.restore();
 					}
 
