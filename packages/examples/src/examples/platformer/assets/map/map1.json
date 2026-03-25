@@ -11,6 +11,7 @@
 			"offsetx": 0,
 			"offsety": 538,
 			"opacity": 1,
+			"repeatx": true,
 			"properties": [
 				{
 					"name": "anchorPoint",
@@ -21,11 +22,6 @@
 					"name": "ratio",
 					"type": "string",
 					"value": "0.25"
-				},
-				{
-					"name": "repeat",
-					"type": "string",
-					"value": "repeat-x"
 				}
 			],
 			"type": "imagelayer",
@@ -40,16 +36,12 @@
 			"offsetx": 140,
 			"offsety": 128,
 			"opacity": 1,
+			"repeatx": true,
 			"properties": [
 				{
 					"name": "ratio",
 					"type": "string",
 					"value": "0.5"
-				},
-				{
-					"name": "repeat",
-					"type": "string",
-					"value": "repeat-x"
 				}
 			],
 			"type": "imagelayer",

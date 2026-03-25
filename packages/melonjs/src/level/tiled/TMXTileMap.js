@@ -41,6 +41,21 @@ function readImageLayer(map, data, z) {
 	// Normalize properties
 	applyTMXProperties(data.properties, data);
 
+	// derive repeat mode: legacy custom "repeat" property takes precedence
+	// (for backward compatibility), then Tiled 1.8+ native repeatx/repeaty
+	const rx = data.repeatx === true || data.repeatx === "1";
+	const ry = data.repeaty === true || data.repeaty === "1";
+	let repeat = data.properties?.repeat;
+	if (typeof repeat === "undefined" && (rx || ry)) {
+		if (rx && ry) {
+			repeat = "repeat";
+		} else if (rx) {
+			repeat = "repeat-x";
+		} else {
+			repeat = "repeat-y";
+		}
+	}
+
 	// create the layer
 	const imageLayer = pool.pull(
 		"ImageLayer",
@@ -58,6 +73,7 @@ function readImageLayer(map, data, z) {
 						? colorPool.get().parseHex(data.tintcolor, true)
 						: undefined,
 				z: z,
+				repeat: repeat,
 			},
 			data.properties,
 		),
