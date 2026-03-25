@@ -10,6 +10,11 @@
 
 ### Fixed
 - Plugin: fix `plugin.get()` throwing `TypeError` when searching by name with no match (instanceof on string)
+- Events: fix duplicate `BLUR` entry in Events interface (was missing `FOCUS`)
+- UIBaseElement: fix `isDraggable` JSDoc (was incorrectly saying "clicked"), fix `released` default (was `false`, should be `true`)
+- UITextButton: fix `bindKey` settings type from `string` to `string | number`
+- Application: fix constructor `options` parameter not being optional
+- Application: fix `getUriFragment()` unsafe cast by making `url` parameter optional
 
 ### Performance
 
