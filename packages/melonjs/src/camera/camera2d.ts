@@ -95,6 +95,18 @@ export default class Camera2d extends Renderable {
 	far: number;
 
 	/**
+	 * the x position on the screen where this camera viewport is rendered.
+	 * @default 0
+	 */
+	screenX: number;
+
+	/**
+	 * the y position on the screen where this camera viewport is rendered.
+	 * @default 0
+	 */
+	screenY: number;
+
+	/**
 	 * the default camera projection matrix
 	 * (2d cameras use an orthographic projection by default).
 	 */
@@ -191,6 +203,10 @@ export default class Camera2d extends Renderable {
 			color: null,
 			tween: null,
 		};
+
+		// default screen position (top-left of canvas)
+		this.screenX = 0;
+		this.screenY = 0;
 
 		// default camera name
 		this.name = "default";
@@ -731,6 +747,7 @@ export default class Camera2d extends Renderable {
 	override draw(renderer: Renderer, container: Container): void {
 		// cast to any to access canvas/webgl renderer-specific methods not on base Renderer
 		const r = renderer as any;
+		const hasViewportOffset = this.screenX !== 0 || this.screenY !== 0;
 		const translateX = this.pos.x + this.offset.x;
 		const translateY = this.pos.y + this.offset.y;
 
@@ -740,10 +757,15 @@ export default class Camera2d extends Renderable {
 		// set the camera projection
 		renderer.setProjection(this.projectionMatrix);
 
-		// clip to camera bounds
-		r.clipRect(0, 0, this.width, this.height);
-
 		this.preDraw(r);
+
+		// clip to camera viewport on screen (after preDraw's save)
+		r.clipRect(this.screenX, this.screenY, this.width, this.height);
+
+		// apply viewport offset for non-default cameras
+		if (hasViewportOffset) {
+			r.translate(this.screenX, this.screenY);
+		}
 
 		container.preDraw(r);
 

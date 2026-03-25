@@ -385,7 +385,10 @@ describe("UI", () => {
 		describe("construction without font data throws", () => {
 			it("should throw when no font binary is loaded", () => {
 				expect(() => {
-					new UITextButton(0, 0, { font: "nonexistent-font", text: "Test" });
+					return new UITextButton(0, 0, {
+						font: "nonexistent-font",
+						text: "Test",
+					});
 				}).toThrow();
 			});
 		});
