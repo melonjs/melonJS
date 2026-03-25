@@ -1,19 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.8" tiledversion="1.8.5" orientation="orthogonal" renderorder="right-down" width="54" height="30" tilewidth="35" tileheight="35" infinite="0" backgroundcolor="#d0f4f7" nextlayerid="12" nextobjectid="36">
  <tileset firstgid="1" source="tileset.tsx"/>
- <imagelayer id="1" name="Background" y="538" offsetx="0" offsety="538">
+ <imagelayer id="1" name="Background" y="538" offsetx="0" offsety="538" repeatx="1">
   <image source="../img/background.png" width="1024" height="512"/>
   <properties>
    <property name="anchorPoint" value="json:{&quot;x&quot;:0,&quot;y&quot;:1}"/>
    <property name="ratio" value="0.25"/>
-   <property name="repeat" value="repeat-x"/>
   </properties>
  </imagelayer>
- <imagelayer id="2" name="Clouds" y="128" offsetx="140" offsety="128">
+ <imagelayer id="2" name="Clouds" y="128" offsetx="140" offsety="128" repeatx="1">
   <image source="../img/clouds.png" width="512" height="512"/>
   <properties>
    <property name="ratio" value="0.5"/>
-   <property name="repeat" value="repeat-x"/>
   </properties>
  </imagelayer>
  <layer id="3" name="Back Layer 2" width="54" height="30">

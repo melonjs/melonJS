@@ -5,6 +5,7 @@
 ### Added
 - Camera2d: added proper multi-camera support
 - Platformer example: minimap camera showing a zoomed-out view of the full level with viewport highlight and player marker
+- TMX: support Tiled 1.8+ native `repeatx`/`repeaty` attributes on image layers (with fallback to legacy custom `repeat` property)
 
 ### Changed
 - TypeScript: convert leaf modules to TypeScript — plugin, camera, particles emitter, state, audio
