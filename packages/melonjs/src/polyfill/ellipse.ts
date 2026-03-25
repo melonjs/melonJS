@@ -19,6 +19,21 @@ function ellipse(
 		throw new RangeError("Radius values must be non-negative.");
 	}
 
+	// bail out on non-finite inputs to avoid infinite loops
+	if (
+		!Number.isFinite(x) ||
+		!Number.isFinite(y) ||
+		!Number.isFinite(radiusX) ||
+		!Number.isFinite(radiusY) ||
+		!Number.isFinite(rotation) ||
+		!Number.isFinite(startAngle) ||
+		!Number.isFinite(endAngle)
+	) {
+		return;
+	}
+
+	const ctx = this as CanvasRenderingContext2D;
+
 	// for a full, unrotated ellipse use the fast bezier path
 	const isFullEllipse =
 		rotation === 0 &&
@@ -32,43 +47,16 @@ function ellipse(
 		const kx = radiusX * kappa;
 		const ky = radiusY * kappa;
 
-		(this as CanvasRenderingContext2D).moveTo(x + radiusX, y);
-		(this as CanvasRenderingContext2D).bezierCurveTo(
-			x + radiusX,
-			y + ky,
-			x + kx,
-			y + radiusY,
-			x,
-			y + radiusY,
-		);
-		(this as CanvasRenderingContext2D).bezierCurveTo(
-			x - kx,
-			y + radiusY,
-			x - radiusX,
-			y + ky,
-			x - radiusX,
-			y,
-		);
-		(this as CanvasRenderingContext2D).bezierCurveTo(
-			x - radiusX,
-			y - ky,
-			x - kx,
-			y - radiusY,
-			x,
-			y - radiusY,
-		);
-		(this as CanvasRenderingContext2D).bezierCurveTo(
-			x + kx,
-			y - radiusY,
-			x + radiusX,
-			y - ky,
-			x + radiusX,
-			y,
-		);
+		// use lineTo for the first point to continue existing subpaths
+		// (matches native ellipse/arc behavior)
+		ctx.lineTo(x + radiusX, y);
+		ctx.bezierCurveTo(x + radiusX, y + ky, x + kx, y + radiusY, x, y + radiusY);
+		ctx.bezierCurveTo(x - kx, y + radiusY, x - radiusX, y + ky, x - radiusX, y);
+		ctx.bezierCurveTo(x - radiusX, y - ky, x - kx, y - radiusY, x, y - radiusY);
+		ctx.bezierCurveTo(x + kx, y - radiusY, x + radiusX, y - ky, x + radiusX, y);
 	} else {
 		// general case: approximate with line segments
 		const step = Math.PI / 36; // 5-degree increments
-		let angle = startAngle;
 		const dir = counterclockwise ? -1 : 1;
 		let end = endAngle;
 
@@ -78,22 +66,24 @@ function ellipse(
 			end += Math.PI * 2;
 		}
 
+		// cap iterations to prevent runaway loops
+		const maxSegments = Math.ceil(Math.abs(end - startAngle) / step) + 1;
+
 		const cos = Math.cos(rotation);
 		const sin = Math.sin(rotation);
-		let first = true;
 
-		while ((dir > 0 && angle <= end) || (dir < 0 && angle >= end)) {
+		for (let i = 0; i <= maxSegments; i++) {
+			const angle = i === maxSegments ? end : startAngle + i * step * dir;
+			// stop if we've passed the end angle
+			if ((dir > 0 && angle > end) || (dir < 0 && angle < end)) {
+				break;
+			}
 			const px =
 				x + radiusX * Math.cos(angle) * cos - radiusY * Math.sin(angle) * sin;
 			const py =
 				y + radiusX * Math.cos(angle) * sin + radiusY * Math.sin(angle) * cos;
-			if (first) {
-				(this as CanvasRenderingContext2D).moveTo(px, py);
-				first = false;
-			} else {
-				(this as CanvasRenderingContext2D).lineTo(px, py);
-			}
-			angle += step * dir;
+			// lineTo continues existing subpaths (matches native behavior)
+			ctx.lineTo(px, py);
 		}
 
 		// ensure we hit the exact end angle
@@ -105,7 +95,7 @@ function ellipse(
 			y +
 			radiusX * Math.cos(endAngle) * sin +
 			radiusY * Math.sin(endAngle) * cos;
-		(this as CanvasRenderingContext2D).lineTo(px, py);
+		ctx.lineTo(px, py);
 	}
 }
 
