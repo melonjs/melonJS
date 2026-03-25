@@ -530,6 +530,16 @@ describe("Camera2d", () => {
 			expect(camera.height).toEqual(1000);
 		});
 
+		it("should clamp invalid values to 1", () => {
+			const { camera } = setup();
+			camera.zoom = 0;
+			expect(camera.zoom).toEqual(1);
+			camera.zoom = -2;
+			expect(camera.zoom).toEqual(1);
+			camera.zoom = 0.001;
+			expect(camera.zoom).toEqual(0.001);
+		});
+
 		it("should affect isVisible with zoomed-out world area", () => {
 			setup();
 			const cam = new Camera2d(0, 0, 100, 100);

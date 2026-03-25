@@ -118,16 +118,9 @@ export default class Camera2d extends Renderable {
 	screenY: number;
 
 	/**
-	 * the zoom level of this camera.
-	 * Values less than 1 zoom out (show more of the world),
-	 * values greater than 1 zoom in (show less of the world).
-	 * Applied as a scale transform during rendering — does not modify currentTransform.
-	 * @default 1
-	 * @example
-	 * // zoom out to show the full level in a 180x100 minimap
-	 * camera.zoom = Math.min(180 / levelWidth, 100 / levelHeight);
+	 * @ignore
 	 */
-	zoom: number;
+	_zoom: number;
 
 	/**
 	 * the world-space projection matrix for non-default cameras (offset/zoomed).
@@ -330,6 +323,23 @@ export default class Camera2d extends Renderable {
 	}
 
 	// -- public function ---
+
+	/**
+	 * the zoom level of this camera.
+	 * Values less than 1 zoom out (show more of the world),
+	 * values greater than 1 zoom in (show less of the world).
+	 * @default 1
+	 * @example
+	 * // zoom out to show the full level in a 180x100 minimap
+	 * camera.zoom = Math.min(180 / levelWidth, 100 / levelHeight);
+	 */
+	get zoom(): number {
+		return this._zoom;
+	}
+
+	set zoom(value: number) {
+		this._zoom = value > 0 ? value : 1;
+	}
 
 	/**
 	 * Whether this camera is using default settings (no screen offset, no zoom).

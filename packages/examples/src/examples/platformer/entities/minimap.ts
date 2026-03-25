@@ -8,6 +8,8 @@ const MINIMAP_HEIGHT = 100;
  * in the top-right corner of the screen.
  */
 export class MinimapCamera extends Camera2d {
+	private boundOnResize: (w: number) => void;
+
 	constructor() {
 		super(0, 0, MINIMAP_WIDTH, MINIMAP_HEIGHT);
 		this.name = "minimap";
@@ -18,9 +20,10 @@ export class MinimapCamera extends Camera2d {
 		this.autoResize = false;
 
 		// reposition on canvas resize (keep anchored to top-right)
-		event.on(event.CANVAS_ONRESIZE, (w: number) => {
+		this.boundOnResize = (w: number) => {
 			this.screenX = w - MINIMAP_WIDTH - 10;
-		});
+		};
+		event.on(event.CANVAS_ONRESIZE, this.boundOnResize);
 
 		const currentLevel = level.getCurrentLevel();
 		if (currentLevel) {
@@ -37,6 +40,7 @@ export class MinimapCamera extends Camera2d {
 	override postDraw(renderer: any): void {
 		const viewport = game.viewport;
 		const screenPx = 1 / this.zoom; // 1 screen pixel in world units
+		const savedLineWidth = renderer.lineWidth;
 
 		// main camera's visible area in world space
 		const view = viewport.worldView;
@@ -71,7 +75,18 @@ export class MinimapCamera extends Camera2d {
 			MINIMAP_HEIGHT / this.zoom,
 		);
 
+		// restore lineWidth
+		renderer.lineWidth = savedLineWidth;
+
 		// restore the camera context
 		super.postDraw(renderer);
+	}
+
+	/**
+	 * Cleanup event listeners.
+	 */
+	override destroy(): void {
+		event.off(event.CANVAS_ONRESIZE, this.boundOnResize);
+		super.destroy();
 	}
 }

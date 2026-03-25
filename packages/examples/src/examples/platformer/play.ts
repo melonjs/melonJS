@@ -15,8 +15,10 @@ export class PlayScreen extends Stage {
 		// load a level
 		level.load("map1");
 
-		// add a second camera
-		this.cameras.set("minimap", new MinimapCamera());
+		// add a minimap camera (reuse if already present)
+		if (!this.cameras.has("minimap")) {
+			this.cameras.set("minimap", new MinimapCamera());
+		}
 
 		// reset the score
 		gameState.data.score = 0;
