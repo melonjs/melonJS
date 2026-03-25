@@ -764,4 +764,61 @@ describe("TMXUtils", () => {
 			expect(bakedOffset).toEqual(250);
 		});
 	});
+
+	// ---------------------------------------------------------------
+	// class-type custom properties
+	// ---------------------------------------------------------------
+	describe("class-type custom properties", () => {
+		it("JSON: class property value is preserved as nested object", () => {
+			const obj = {};
+			const data = {
+				properties: [
+					{
+						name: "config",
+						type: "class",
+						propertytype: "EnemyConfig",
+						value: { health: 100, speed: 2.5, active: true },
+					},
+				],
+			};
+			applyTMXProperties(obj, data);
+			expect(obj.config).toEqual({ health: 100, speed: 2.5, active: true });
+		});
+
+		it("JSON: class property with empty value", () => {
+			const obj = {};
+			const data = {
+				properties: [
+					{
+						name: "empty",
+						type: "class",
+						propertytype: "EmptyType",
+						value: {},
+					},
+				],
+			};
+			applyTMXProperties(obj, data);
+			expect(obj.empty).toEqual({});
+		});
+
+		it("JSON: class property alongside scalar properties", () => {
+			const obj = {};
+			const data = {
+				properties: [
+					{ name: "name", type: "string", value: "goblin" },
+					{
+						name: "stats",
+						type: "class",
+						propertytype: "Stats",
+						value: { hp: 50, atk: 10 },
+					},
+					{ name: "level", type: "int", value: 3 },
+				],
+			};
+			applyTMXProperties(obj, data);
+			expect(obj.name).toEqual("goblin");
+			expect(obj.stats).toEqual({ hp: 50, atk: 10 });
+			expect(obj.level).toEqual(3);
+		});
+	});
 });

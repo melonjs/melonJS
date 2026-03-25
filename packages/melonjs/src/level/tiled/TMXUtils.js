@@ -223,12 +223,17 @@ function normalizeTMX(obj, item, parse) {
 
 		case "property": {
 			const prop = parse(item);
-			obj[prop.name] = coerceTMXValue(
-				prop.name,
-				// in XML, type is undefined for "string" values
-				prop.type || "string",
-				prop.value !== undefined ? prop.value : prop.text,
-			);
+			if (prop.type === "class") {
+				// class properties have nested <properties> with member values
+				obj[prop.name] = prop.properties || {};
+			} else {
+				obj[prop.name] = coerceTMXValue(
+					prop.name,
+					// in XML, type is undefined for "string" values
+					prop.type || "string",
+					prop.value !== undefined ? prop.value : prop.text,
+				);
+			}
 			break;
 		}
 
