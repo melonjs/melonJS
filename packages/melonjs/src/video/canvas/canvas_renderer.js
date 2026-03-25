@@ -442,27 +442,8 @@ export default class CanvasRenderer extends Renderer {
 			return;
 		}
 		const context = this.getContext();
-
-		const hw = w;
-		const hh = h;
-		const lx = x - hw;
-		const rx = x + hw;
-		const ty = y - hh;
-		const by = y + hh;
-
-		const xmagic = hw * 0.551784;
-		const ymagic = hh * 0.551784;
-		const xmin = x - xmagic;
-		const xmax = x + xmagic;
-		const ymin = y - ymagic;
-		const ymax = y + ymagic;
-
 		context.beginPath();
-		context.moveTo(x, ty);
-		context.bezierCurveTo(xmax, ty, rx, ymin, rx, y);
-		context.bezierCurveTo(rx, ymax, xmax, by, x, by);
-		context.bezierCurveTo(xmin, by, lx, ymax, lx, y);
-		context.bezierCurveTo(lx, ymin, xmin, ty, x, ty);
+		context.ellipse(x, y, w, h, 0, 0, Math.PI * 2);
 		context[fill === true ? "fill" : "stroke"]();
 		context.closePath();
 	}
