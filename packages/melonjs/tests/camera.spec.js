@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { boot, Camera2d, Renderable, Vector2d, video } from "../src/index.js";
+import {
+	boot,
+	Camera2d,
+	game,
+	Renderable,
+	Vector2d,
+	video,
+} from "../src/index.js";
 
 const setup = () => {
 	boot();
@@ -296,6 +303,141 @@ describe("Camera2d", () => {
 			const expectedY = bounds.top + bounds.height / 2 - 600 / 2;
 			expect(camera.pos.x).toBeCloseTo(expectedX);
 			expect(camera.pos.y).toBeCloseTo(expectedY);
+		});
+	});
+
+	describe("screenX / screenY (viewport offset)", () => {
+		it("should default to 0, 0", () => {
+			const { camera } = setup();
+			expect(camera.screenX).toEqual(0);
+			expect(camera.screenY).toEqual(0);
+		});
+
+		it("should be settable", () => {
+			const { camera } = setup();
+			camera.screenX = 620;
+			camera.screenY = 10;
+			expect(camera.screenX).toEqual(620);
+			expect(camera.screenY).toEqual(10);
+		});
+
+		it("should not affect pos (world position)", () => {
+			const { camera } = setup();
+			camera.setBounds(0, 0, 2000, 2000);
+			camera.screenX = 500;
+			camera.screenY = 100;
+			camera.moveTo(200, 200);
+			expect(camera.pos.x).toEqual(200);
+			expect(camera.pos.y).toEqual(200);
+			expect(camera.screenX).toEqual(500);
+			expect(camera.screenY).toEqual(100);
+		});
+
+		it("should allow creating a minimap-style camera", () => {
+			setup();
+			const minimap = new Camera2d(0, 0, 180, 100);
+			minimap.screenX = 620;
+			minimap.screenY = 10;
+			minimap.name = "minimap";
+			expect(minimap.width).toEqual(180);
+			expect(minimap.height).toEqual(100);
+			expect(minimap.screenX).toEqual(620);
+			expect(minimap.screenY).toEqual(10);
+			expect(minimap.name).toEqual("minimap");
+		});
+
+		it("should support zoom via currentTransform.scale", () => {
+			setup();
+			const cam = new Camera2d(0, 0, 180, 100);
+			cam.screenX = 620;
+			cam.screenY = 10;
+			// simulate zoom out
+			cam.currentTransform.scale(0.1, 0.1);
+			expect(cam.currentTransform.isIdentity()).toBe(false);
+			expect(cam.screenX).toEqual(620);
+		});
+
+		it("should keep screenX/screenY independent from resize", () => {
+			setup();
+			const cam = new Camera2d(0, 0, 180, 100);
+			cam.screenX = 620;
+			cam.screenY = 10;
+			cam.resize(1890, 1050);
+			expect(cam.width).toEqual(1890);
+			expect(cam.height).toEqual(1050);
+			expect(cam.screenX).toEqual(620);
+			expect(cam.screenY).toEqual(10);
+		});
+
+		it("should preserve screenX/screenY after reset", () => {
+			setup();
+			const cam = new Camera2d(0, 0, 180, 100);
+			cam.screenX = 620;
+			cam.screenY = 10;
+			cam.reset(0, 0);
+			expect(cam.screenX).toEqual(620);
+			expect(cam.screenY).toEqual(10);
+		});
+	});
+
+	describe("draw() state management", () => {
+		it("should restore renderer save/restore stack depth after draw", () => {
+			setup();
+			const renderer = video.renderer;
+			const cam = new Camera2d(0, 0, 800, 600);
+			cam.reset(0, 0);
+
+			const depthBefore = renderer.renderState._stackDepth;
+			cam.draw(renderer, game.world);
+			const depthAfter = renderer.renderState._stackDepth;
+
+			expect(depthAfter).toEqual(depthBefore);
+		});
+
+		it("should restore renderer stack depth for offset cameras", () => {
+			setup();
+			const renderer = video.renderer;
+			const cam = new Camera2d(0, 0, 180, 100);
+			cam.screenX = 620;
+			cam.screenY = 10;
+			cam.reset(0, 0);
+
+			const depthBefore = renderer.renderState._stackDepth;
+			cam.draw(renderer, game.world);
+			const depthAfter = renderer.renderState._stackDepth;
+
+			expect(depthAfter).toEqual(depthBefore);
+		});
+
+		it("should restore container transform after draw", () => {
+			setup();
+			const renderer = video.renderer;
+			const cam = new Camera2d(0, 0, 800, 600);
+			cam.reset(0, 0);
+			cam.moveTo(100, 50);
+
+			const txBefore = game.world.currentTransform.tx;
+			const tyBefore = game.world.currentTransform.ty;
+			cam.draw(renderer, game.world);
+
+			expect(game.world.currentTransform.tx).toBeCloseTo(txBefore);
+			expect(game.world.currentTransform.ty).toBeCloseTo(tyBefore);
+		});
+
+		it("should restore container transform for offset cameras", () => {
+			setup();
+			const renderer = video.renderer;
+			const cam = new Camera2d(0, 0, 180, 100);
+			cam.screenX = 620;
+			cam.screenY = 10;
+			cam.reset(0, 0);
+
+			const txBefore = game.world.currentTransform.tx;
+			const tyBefore = game.world.currentTransform.ty;
+			cam.draw(renderer, game.world);
+
+			expect(game.world.currentTransform.tx).toBeCloseTo(txBefore);
+			expect(game.world.currentTransform.ty).toBeCloseTo(tyBefore);
 		});
 	});
 });

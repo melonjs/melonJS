@@ -1,4 +1,4 @@
-import * as input from "./../input/input.js";
+import * as input from "./../input/input.ts";
 import { Vector2d } from "../math/vector2d.ts";
 import Renderable from "./../renderable/renderable.js";
 import {

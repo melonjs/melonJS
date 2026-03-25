@@ -1,4 +1,4 @@
-import { hasRegisteredEvents } from "../input/pointerevent.js";
+import { hasRegisteredEvents } from "../input/pointerevent.ts";
 import { Vector2d } from "../math/vector2d.ts";
 import Container from "../renderable/container.js";
 import state from "./../state/state.ts";
@@ -13,7 +13,7 @@ import Detector from "./detector.js";
 import QuadTree from "./quadtree.js";
 
 /**
- * @import Application from "./../application/application.js";
+ * @import Application from "./../application/application.ts";
  * @import Body from "./body.js";
  */
 

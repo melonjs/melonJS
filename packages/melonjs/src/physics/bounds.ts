@@ -11,7 +11,7 @@ import { XYPoint } from "../utils/types.ts";
  */
 export class Bounds {
 	_center: Vector2d;
-	type: "Bounds";
+	type: string;
 	min: XYPoint;
 	max: XYPoint;
 

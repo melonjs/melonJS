@@ -1,7 +1,8 @@
 import {
 	registerPointerEvent,
 	releasePointerEvent,
-} from "./../../input/input.js";
+} from "./../../input/input.ts";
+import type Pointer from "./../../input/pointer.ts";
 import timer from "./../../system/timer.ts";
 import Sprite from "./../sprite.js";
 
@@ -14,15 +15,43 @@ export default class UISpriteElement extends Sprite {
 	 * if this UISpriteElement should use screen coordinates or local coordinates
 	 * (Note: any UISpriteElement elements added to a floating parent container should have their floating property to false)
 	 * @see Renderable.floating
-	 * @type {boolean}
 	 * @default true
 	 */
-	floating = true;
+	override floating = true;
 
 	/**
-	 * @param {number} x - the x coordinate of the UISpriteElement Object
-	 * @param {number} y - the y coordinate of the UISpriteElement Object
-	 * @param {object} settings - See {@link Sprite}
+	 * object can be clicked or not
+	 * @default true
+	 */
+	isClickable: boolean;
+
+	/**
+	 * Tap and hold threshold timeout in ms
+	 * @default 250
+	 */
+	holdThreshold: number;
+
+	/**
+	 * object can be tap and hold
+	 * @default false
+	 */
+	isHoldable: boolean;
+
+	/**
+	 * true if the pointer is over the object
+	 * @default false
+	 */
+	hover: boolean;
+
+	// object has been updated (clicked,etc..)
+	holdTimeout: number;
+	released: boolean;
+
+	/**
+	 * @param x - the x coordinate of the UISpriteElement Object
+	 * @param y - the y coordinate of the UISpriteElement Object
+	 * @param settings - See {@link Sprite}
+	 * @param settings.image - the image to use for the sprite
 	 * @example
 	 * // create a basic GUI Object
 	 * class myButton extends UISpriteElement {
@@ -47,39 +76,18 @@ export default class UISpriteElement extends Sprite {
 	 * // add the object at pos (10,10)
 	 * world.addChild(new myButton(10,10));
 	 */
-	constructor(x, y, settings) {
+	constructor(
+		x: number,
+		y: number,
+		settings: { image: any; [key: string]: any },
+	) {
 		// call the parent constructor
 		super(x, y, settings);
 
-		/**
-		 * object can be clicked or not
-		 * @type {boolean}
-		 * @default true
-		 */
 		this.isClickable = true;
-
-		/**
-		 * Tap and hold threshold timeout in ms
-		 * @type {number}
-		 * @default 250
-		 */
 		this.holdThreshold = 250;
-
-		/**
-		 * object can be tap and hold
-		 * @type {boolean}
-		 * @default false
-		 */
 		this.isHoldable = false;
-
-		/**
-		 * true if the pointer is over the object
-		 * @type {boolean}
-		 * @default false
-		 */
 		this.hover = false;
-
-		// object has been updated (clicked,etc..)
 		this.holdTimeout = -1;
 		this.released = true;
 
@@ -91,7 +99,7 @@ export default class UISpriteElement extends Sprite {
 	 * function callback for the pointerdown event
 	 * @ignore
 	 */
-	clicked(event) {
+	clicked(event: Pointer): boolean | void {
 		// Check if left mouse button is pressed
 		if (event.button === 0 && this.isClickable) {
 			this.isDirty = true;
@@ -100,7 +108,7 @@ export default class UISpriteElement extends Sprite {
 				timer.clearTimer(this.holdTimeout);
 				this.holdTimeout = timer.setTimeout(
 					() => {
-						return this.hold();
+						this.hold();
 					},
 					this.holdThreshold,
 					false,
@@ -113,9 +121,11 @@ export default class UISpriteElement extends Sprite {
 
 	/**
 	 * function called when the object is pressed (to be extended)
-	 * @returns {boolean} return false if we need to stop propagating the event
+	 * @param _event - the event object
+	 * @returns return false if we need to stop propagating the event
 	 */
-	onClick() {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	onClick(_event?: Pointer): boolean {
 		return false;
 	}
 
@@ -123,17 +133,18 @@ export default class UISpriteElement extends Sprite {
 	 * function callback for the pointerEnter event
 	 * @ignore
 	 */
-	enter(event) {
+	enter(event: Pointer): void {
 		this.hover = true;
 		this.isDirty = true;
-		return this.onOver(event);
+		this.onOver(event);
 	}
 
 	/**
 	 * function called when the pointer is over the object
-	 * @param {Pointer} event - the event object
+	 * @param _event - the event object
 	 */
-	onOver() {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	onOver(_event?: Pointer): void {
 		// to be extended
 	}
 
@@ -141,18 +152,19 @@ export default class UISpriteElement extends Sprite {
 	 * function callback for the pointerLeave event
 	 * @ignore
 	 */
-	leave(event) {
+	leave(event: Pointer): void {
 		this.hover = false;
 		this.isDirty = true;
 		this.release(event);
-		return this.onOut(event);
+		this.onOut(event);
 	}
 
 	/**
 	 * function called when the pointer is leaving the object area
-	 * @param {Pointer} event - the event object
+	 * @param _event - the event object
 	 */
-	onOut() {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	onOut(_event?: Pointer): void {
 		// to be extended
 	}
 
@@ -160,8 +172,8 @@ export default class UISpriteElement extends Sprite {
 	 * function callback for the pointerup event
 	 * @ignore
 	 */
-	release(event) {
-		if (this.released === false) {
+	release(event: Pointer): boolean | void {
+		if (!this.released) {
 			this.released = true;
 			this.isDirty = true;
 			timer.clearTimer(this.holdTimeout);
@@ -172,9 +184,11 @@ export default class UISpriteElement extends Sprite {
 
 	/**
 	 * function called when the object is pressed and released (to be extended)
-	 * @returns {boolean} return false if we need to stop propagating the event
+	 * @param _event - the event object
+	 * @returns return false if we need to stop propagating the event
 	 */
-	onRelease() {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	onRelease(_event?: Pointer): boolean {
 		return false;
 	}
 
@@ -182,7 +196,7 @@ export default class UISpriteElement extends Sprite {
 	 * function callback for the tap and hold timer event
 	 * @ignore
 	 */
-	hold() {
+	hold(): void {
 		timer.clearTimer(this.holdTimeout);
 		this.holdTimeout = -1;
 		this.isDirty = true;
@@ -195,13 +209,13 @@ export default class UISpriteElement extends Sprite {
 	 * function called when the object is pressed and held<br>
 	 * to be extended <br>
 	 */
-	onHold() {}
+	onHold(): void {}
 
 	/**
 	 * function called when added to the game world or a container
 	 * @ignore
 	 */
-	onActivateEvent() {
+	onActivateEvent(): void {
 		// register pointer events
 		registerPointerEvent("pointerdown", this, (e) => {
 			return this.clicked(e);
@@ -213,10 +227,10 @@ export default class UISpriteElement extends Sprite {
 			return this.release(e);
 		});
 		registerPointerEvent("pointerenter", this, (e) => {
-			return this.enter(e);
+			this.enter(e);
 		});
 		registerPointerEvent("pointerleave", this, (e) => {
-			return this.leave(e);
+			this.leave(e);
 		});
 	}
 
@@ -224,7 +238,7 @@ export default class UISpriteElement extends Sprite {
 	 * function called when removed from the game world or a container
 	 * @ignore
 	 */
-	onDeactivateEvent() {
+	onDeactivateEvent(): void {
 		// release pointer events
 		releasePointerEvent("pointerdown", this);
 		releasePointerEvent("pointerup", this);

@@ -1,3 +1,4 @@
+import type Camera2d from "./../camera/camera2d.ts";
 import { AUTO, CANVAS, WEBGL } from "../const.ts";
 import World from "../physics/world.js";
 import state from "../state/state.ts";
@@ -24,17 +25,13 @@ import {
 import timer from "../system/timer.ts";
 import { getUriFragment } from "../utils/utils.ts";
 import CanvasRenderer from "../video/canvas/canvas_renderer.js";
+import type Renderer from "./../video/renderer.js";
 import { autoDetectRenderer } from "../video/utils/autodetect.js";
 import { defaultApplicationSettings } from "./defaultApplicationSettings.ts";
-import { consoleHeader } from "./header.js";
-import { onresize } from "./resize.js";
+import { consoleHeader } from "./header.ts";
+import { onresize } from "./resize.ts";
 import { ScaleMethods } from "./scaleMethods.ts";
-
-/**
- * additional import for TypeScript
- * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
- * @import Camera2d from "./../camera/camera2d.ts";
- */
+import type { ApplicationSettings } from "./settings.ts";
 
 /**
  * An Application represents a single melonJS game, and is responsible for updating (each frame) all the related object status and draw them.
@@ -43,108 +40,125 @@ import { ScaleMethods } from "./scaleMethods.ts";
  */
 export default class Application {
 	/**
-	 * @param {number} width - The width of the canvas viewport
-	 * @param {number} height - The height of the canvas viewport
-	 * @param {ApplicationSettings} [options] - The optional parameters for the application and default renderer
-	 * @throws Will throw an exception if it fails to instantiate a renderer
+	 * the parent HTML element holding the main canvas of this application
 	 */
-	constructor(width, height, options) {
-		/**
-		 * the parent HTML element holding the main canvas of this application
-		 * @type {HTMLElement}
-		 */
-		this.parentElement = undefined;
+	parentElement!: HTMLElement;
 
-		/**
-		 * a reference to the active Canvas or WebGL renderer
-		 * @type {CanvasRenderer|WebGLRenderer}
-		 */
-		this.renderer = undefined;
+	/**
+	 * a reference to the active Canvas or WebGL renderer
+	 */
+	renderer!: Renderer;
 
-		/**
-		 * the active stage "default" camera
-		 * @type {Camera2d}
-		 */
-		this.viewport = undefined;
+	/**
+	 * the active stage "default" camera
+	 */
+	viewport!: Camera2d;
 
-		/**
-		 * a reference to the game world, <br>
-		 * a world is a virtual environment containing all the game objects
-		 * @type {World}
-		 */
-		this.world = undefined;
+	/**
+	 * a reference to the game world, <br>
+	 * a world is a virtual environment containing all the game objects
+	 */
+	world!: World;
 
-		/**
-		 * when true, all objects will be added under the root world container.<br>
-		 * When false, a `me.Container` object will be created for each corresponding groups
-		 * @type {boolean}
-		 * @default true
-		 */
+	/**
+	 * when true, all objects will be added under the root world container.<br>
+	 * When false, a `me.Container` object will be created for each corresponding groups
+	 * @default true
+	 */
+	mergeGroup: boolean;
+
+	/**
+	 * Last time the game update loop was executed. <br>
+	 * Use this value to implement frame prediction in drawing events,
+	 * for creating smooth motion while running game update logic at
+	 * a lower fps.
+	 */
+	lastUpdate: DOMHighResTimeStamp;
+
+	/**
+	 * true when this app instance has been initialized
+	 * @default false
+	 */
+	isInitialized: boolean;
+
+	/**
+	 * the given settings used when creating this application
+	 */
+	settings!: ApplicationSettings & {
+		width: number;
+		height: number;
+		autoScale: boolean;
+		zoomX: number;
+		zoomY: number;
+		scale: number | "auto";
+	};
+
+	/**
+	 * Specify whether to pause this app when losing focus
+	 * @default true
+	 * @example
+	 *  // keep the default game instance running even when losing focus
+	 *  me.game.pauseOnBlur = false;
+	 */
+	pauseOnBlur: boolean;
+
+	/**
+	 * Specify whether to unpause this app when gaining back focus
+	 * @default true
+	 */
+	resumeOnFocus: boolean;
+
+	/**
+	 * Specify whether to stop this app when losing focus
+	 * @default false
+	 */
+	stopOnBlur: boolean;
+
+	// to know when we have to refresh the display
+	isDirty: boolean;
+
+	// always refresh the display when updatesPerSecond are lower than fps
+	isAlwaysDirty: boolean;
+
+	// frame counter for frameSkipping
+	frameCounter: number;
+	frameRate: number;
+
+	// time accumulation for multiple update calls
+	accumulator: number;
+	accumulatorMax: number;
+	accumulatorUpdateDelta: number;
+
+	// min update step size
+	stepSize: number;
+	updateDelta: number;
+	lastUpdateStart: number | null;
+	updateAverageDelta: number;
+
+	/**
+	 * @param width - The width of the canvas viewport
+	 * @param height - The height of the canvas viewport
+	 * @param options - The optional parameters for the application and default renderer
+	 * @throws {Error} Will throw an exception if it fails to instantiate a renderer
+	 */
+	constructor(
+		width: number,
+		height: number,
+		options: Partial<ApplicationSettings> & { legacy?: boolean } = {},
+	) {
 		this.mergeGroup = true;
-
-		/**
-		 * Last time the game update loop was executed. <br>
-		 * Use this value to implement frame prediction in drawing events,
-		 * for creating smooth motion while running game update logic at
-		 * a lower fps.
-		 * @type {DOMHighResTimeStamp}
-		 */
 		this.lastUpdate = 0;
-
-		/**
-		 * true when this app instance has been initialized
-		 * @type {boolean}
-		 * @default false
-		 */
 		this.isInitialized = false;
-
-		/**
-		 * the given settings used when creating this application
-		 * @type {ApplicationSettings}
-		 */
-		this.settings = undefined;
-
-		/**
-		 * Specify whether to pause this app when losing focus
-		 * @type {boolean}
-		 * @default true
-		 * @example
-		 *  // keep the default game instance running even when losing focus
-		 *  me.game.pauseOnBlur = false;
-		 */
 		this.pauseOnBlur = true;
-
-		/**
-		 * Specify whether to unpause this app when gaining back focus
-		 * @type {boolean}
-		 * @default true
-		 */
 		this.resumeOnFocus = true;
-
-		/**
-		 * Specify whether to stop this app when losing focus
-		 * @type {boolean}
-		 * @default false
-		 */
 		this.stopOnBlur = false;
-
-		// to know when we have to refresh the display
 		this.isDirty = true;
-
-		// always refresh the display when updatesPerSecond are lower than fps
 		this.isAlwaysDirty = false;
-
-		// frame counter for frameSkipping
-		// reset the frame counter
 		this.frameCounter = 0;
 		this.frameRate = 1;
-
-		// time accumulation for multiple update calls
 		this.accumulator = 0.0;
 		this.accumulatorMax = 0.0;
 		this.accumulatorUpdateDelta = 0;
-
-		// min update step size
 		this.stepSize = 1000 / 60;
 		this.updateDelta = 0;
 		this.lastUpdateStart = null;
@@ -159,38 +173,41 @@ export default class Application {
 
 	/**
 	 * init the game instance (create a physic world, update starting time, etc..)
-	 * @param {number} width - The width of the canvas viewport
-	 * @param {number} height - The height of the canvas viewport
-	 * @param {ApplicationSettings} [options] - The optional parameters for the application and default renderer
+	 * @param width - The width of the canvas viewport
+	 * @param height - The height of the canvas viewport
+	 * @param options - The optional parameters for the application and default renderer
 	 */
-	init(width, height, options) {
-		this.settings = Object.assign(defaultApplicationSettings, options || {});
+	init(
+		width: number,
+		height: number,
+		options?: Partial<ApplicationSettings>,
+	): void {
+		this.settings = Object.assign(
+			defaultApplicationSettings,
+			options || {},
+		) as any;
 
 		// sanitize potential given parameters
-		this.settings.width = width;
-		this.settings.height = height;
-		this.settings.transparent = !!this.settings.transparent;
-		this.settings.antiAlias = !!this.settings.antiAlias;
-		this.settings.failIfMajorPerformanceCaveat =
-			!!this.settings.failIfMajorPerformanceCaveat;
+		(this.settings as any).width = width;
+		(this.settings as any).height = height;
+		// These are already booleans from the settings type, so no conversion needed
 		this.settings.depthTest =
 			this.settings.depthTest === "z-buffer" ? "z-buffer" : "sorting";
-		this.settings.subPixel = !!this.settings.subPixel;
-		this.settings.verbose = !!this.settings.verbose;
 		if (
 			this.settings.scaleMethod.search(
 				/^(fill-(min|max)|fit|flex(-(width|height))?|stretch)$/,
 			) !== -1
 		) {
-			this.settings.autoScale = this.settings.scale === "auto" || true;
+			(this.settings as any).autoScale = this.settings.scale === "auto" || true;
 		} else {
 			// default scaling method
 			this.settings.scaleMethod = ScaleMethods.Fit;
-			this.settings.autoScale = this.settings.scale === "auto" || false;
+			(this.settings as any).autoScale =
+				this.settings.scale === "auto" || false;
 		}
 
 		// override renderer settings if &webgl or &canvas is defined in the URL
-		let uriFragment = getUriFragment();
+		const uriFragment = getUriFragment();
 		if (
 			uriFragment.webgl === true ||
 			uriFragment.webgl1 === true ||
@@ -205,16 +222,16 @@ export default class Application {
 		}
 
 		// normalize scale
-		this.settings.scale = this.settings.autoScale
+		(this.settings as any).scale = (this.settings as any).autoScale
 			? 1.0
 			: +this.settings.scale || 1.0;
 
 		// default scaled size value
-		this.settings.zoomX = width * this.settings.scale;
-		this.settings.zoomY = height * this.settings.scale;
+		(this.settings as any).zoomX = width * (this.settings.scale as number);
+		(this.settings as any).zoomY = height * (this.settings.scale as number);
 
 		// identify parent element and/or the html target for resizing
-		this.parentElement = device.getElement(this.settings.parent);
+		this.parentElement = device.getElement((this.settings as any).parent);
 		if (typeof this.settings.scaleTarget !== "undefined") {
 			this.settings.scaleTarget = device.getElement(this.settings.scaleTarget);
 		}
@@ -223,24 +240,24 @@ export default class Application {
 			switch (this.settings.renderer) {
 				case AUTO:
 				case WEBGL:
-					this.renderer = autoDetectRenderer(this.settings);
+					this.renderer = autoDetectRenderer(this.settings as any);
 					break;
 				default:
-					this.renderer = new CanvasRenderer(this.settings);
+					this.renderer = new CanvasRenderer(this.settings as any);
 					break;
 			}
 		} else {
-			let CustomRenderer = this.settings.renderer;
+			const CustomRenderer = this.settings.renderer as any;
 			// a renderer class
 			this.renderer = new CustomRenderer(this.settings);
 		}
 
 		// register to the channel
 		eventEmitter.addListener(WINDOW_ONRESIZE, () => {
-			return onresize(this);
+			onresize(this);
 		});
 		eventEmitter.addListener(WINDOW_ONORIENTATION_CHANGE, () => {
-			return onresize(this);
+			onresize(this);
 		});
 
 		// add our canvas (default to document.body if settings.parent is undefined)
@@ -258,8 +275,8 @@ export default class Application {
 		// add an observer to detect when the dom tree is modified
 		if ("MutationObserver" in globalThis) {
 			// Create an observer instance linked to the callback function
-			let observer = new MutationObserver(() => {
-				return onresize(this);
+			const observer = new MutationObserver(() => {
+				onresize(this);
 			});
 
 			// Start observing the target node for configured mutations
@@ -270,7 +287,7 @@ export default class Application {
 			});
 		}
 
-		if (this.settings.consoleHeader !== false) {
+		if (this.settings.consoleHeader) {
 			consoleHeader(this);
 		}
 
@@ -296,25 +313,25 @@ export default class Application {
 		eventEmitter.addListener(STATE_RESTART, this.repaint.bind(this));
 		eventEmitter.addListener(STATE_RESUME, this.repaint.bind(this));
 		eventEmitter.addListener(STAGE_RESET, this.reset.bind(this));
-		eventEmitter.addListener(TICK, (time) => {
+		eventEmitter.addListener(TICK, (time: number) => {
 			this.update(time);
 			this.draw();
 		});
 
 		eventEmitter.addListener(BLUR, () => {
-			if (this.stopOnBlur === true) {
+			if (this.stopOnBlur) {
 				state.stop(true);
 			}
-			if (this.pauseOnBlur === true) {
+			if (this.pauseOnBlur) {
 				state.pause(true);
 			}
 		});
 
 		eventEmitter.addListener(FOCUS, () => {
-			if (this.stopOnBlur === true) {
+			if (this.stopOnBlur) {
 				state.restart(true);
 			}
-			if (this.resumeOnFocus === true) {
+			if (this.resumeOnFocus) {
 				state.resume(true);
 			}
 		});
@@ -324,11 +341,13 @@ export default class Application {
 	 * reset the game Object manager
 	 * destroy all current objects
 	 */
-	reset() {
+	reset(): void {
 		// point to the current active stage "default" camera
-		let current = state.get();
+		const current = state.get();
 		if (typeof current !== "undefined") {
-			this.viewport = current.cameras.get("default");
+			this.viewport = (current.cameras as unknown as Map<string, Camera2d>).get(
+				"default",
+			)!;
 		}
 
 		// publish reset notification
@@ -341,13 +360,12 @@ export default class Application {
 	/**
 	 * Specify the property to be used when sorting renderables for this application game world.
 	 * Accepted values : "x", "y", "z", "depth"
-	 * @type {string}
 	 * @see {@link World.sortOn}
 	 */
-	get sortOn() {
+	get sortOn(): string {
 		return this.world.sortOn;
 	}
-	set sortOn(value) {
+	set sortOn(value: string) {
 		this.world.sortOn = value;
 	}
 
@@ -358,14 +376,14 @@ export default class Application {
 	 * // call myFunction () everytime a level is loaded
 	 * me.game.onLevelLoaded = this.myFunction.bind(this);
 	 */
-	onLevelLoaded() {}
+	onLevelLoaded(): void {}
 
 	/**
 	 * Update the renderer framerate using the system config variables.
 	 * @see {@link timer.maxfps}
 	 * @see {@link World.fps}
 	 */
-	updateFrameRate() {
+	updateFrameRate(): void {
 		// reset the frame counter
 		this.frameCounter = 0;
 		this.frameRate = ~~(0.5 + 60 / timer.maxfps);
@@ -382,24 +400,24 @@ export default class Application {
 
 	/**
 	 * Returns the parent HTML Element holding the main canvas of this application
-	 * @returns {HTMLElement} the parent HTML element
+	 * @returns the parent HTML element
 	 */
-	getParentElement() {
+	getParentElement(): HTMLElement {
 		return this.parentElement;
 	}
 
 	/**
 	 * force the redraw (not update) of all objects
 	 */
-	repaint() {
+	repaint(): void {
 		this.isDirty = true;
 	}
 
 	/**
 	 * update all objects related to this game active scene/stage
-	 * @param {number} time - current timestamp as provided by the RAF callback
+	 * @param time - current timestamp as provided by the RAF callback
 	 */
-	update(time) {
+	update(time: number): void {
 		// handle frame skipping if required
 		if (++this.frameCounter % this.frameRate === 0) {
 			// reset the frame counter
@@ -422,13 +440,14 @@ export default class Application {
 				this.lastUpdateStart = globalThis.performance.now();
 
 				// game update event
-				if (state.isPaused() !== true) {
+				if (!state.isPaused()) {
 					eventEmitter.emit(GAME_UPDATE, time);
 				}
 
 				// update all objects (and pass the elapsed time since last frame)
 				this.isDirty = this.world.update(this.updateDelta);
-				this.isDirty = state.current().update(this.updateDelta) || this.isDirty;
+				this.isDirty =
+					state.current()!.update(this.updateDelta) || this.isDirty;
 
 				this.lastUpdate = globalThis.performance.now();
 				this.updateAverageDelta = this.lastUpdate - this.lastUpdateStart;
@@ -448,11 +467,8 @@ export default class Application {
 	/**
 	 * draw the active scene/stage associated to this game
 	 */
-	draw() {
-		if (
-			this.renderer.isContextValid === true &&
-			(this.isDirty || this.isAlwaysDirty)
-		) {
+	draw(): void {
+		if (this.renderer.isContextValid && (this.isDirty || this.isAlwaysDirty)) {
 			// publish notification
 			eventEmitter.emit(GAME_BEFORE_DRAW, globalThis.performance.now());
 
@@ -460,7 +476,7 @@ export default class Application {
 			this.renderer.clear();
 
 			// render the stage
-			state.current().draw(this.renderer, this.world);
+			state.current()!.draw(this.renderer, this.world);
 
 			// set back to flag
 			this.isDirty = false;

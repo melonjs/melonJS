@@ -1,6 +1,6 @@
 import { ObservablePoint } from "../geometries/observablePoint.ts";
 import { Rect } from "./../geometries/rectangle.ts";
-import { releaseAllPointerEvents } from "./../input/input.js";
+import { releaseAllPointerEvents } from "./../input/input.ts";
 import { Color, colorPool } from "./../math/color.ts";
 import { clamp } from "./../math/math.ts";
 import { matrix2dPool } from "../math/matrix2d.ts";
@@ -19,7 +19,7 @@ import pool from "../system/legacy_pool.js";
  * @import {Ellipse} from "./../geometries/ellipse.ts";
  * @import {Polygon} from "../geometries/polygon.ts";
  * @import {RoundRect} from "./../geometries/roundrect.ts";
- * @import Application from "./../application/application.js";
+ * @import Application from "./../application/application.ts";
  * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
  * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
  * @import ResponseObject from "./../physics/response.js";
