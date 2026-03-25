@@ -7,4 +7,5 @@ import "core-js/es/string/trim-end";
 
 // "built-in" polyfills
 import "./console.ts";
+import "./ellipse.ts";
 import "./roundrect.js";
