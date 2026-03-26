@@ -8,6 +8,7 @@
 - TMX: support Tiled 1.8+ native `repeatx`/`repeaty` attributes on image layers (with fallback to legacy custom `repeat` property)
 - TMX: support Tiled 1.8+ `parallaxoriginx`/`parallaxoriginy` map attributes
 - TMX: support Tiled 1.8+ class-type custom properties (`type="class"` with nested properties)
+- TMX: use Tiled 1.10+ `isCollection` tileset flag when available (fallback to image detection for older maps)
 
 ### Changed
 - TypeScript: convert leaf modules to TypeScript — plugin, camera, particles emitter, state, audio

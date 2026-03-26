@@ -121,7 +121,8 @@ export default class TMXTileset {
 			}
 		}
 
-		this.isCollection = this.imageCollection.length > 0;
+		// Tiled 1.10+ provides an explicit flag; fall back to detection for older maps
+		this.isCollection = tileset.isCollection ?? this.imageCollection.length > 0;
 
 		const offset = tileset.tileoffset;
 		if (offset) {
