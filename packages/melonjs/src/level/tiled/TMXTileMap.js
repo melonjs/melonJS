@@ -562,6 +562,15 @@ export default class TMXTileMap {
 					obj.body.isStatic = true;
 				}
 
+				// apply per-object opacity (Tiled 1.12+) and visibility
+				if (obj.isRenderable === true) {
+					if (!settings.visible) {
+						obj.setOpacity(0);
+					} else if (settings.opacity < 1) {
+						obj.setOpacity(obj.getOpacity() * settings.opacity);
+					}
+				}
+
 				//apply group opacity value to the child objects if group are merged
 				if (flatten !== false) {
 					if (obj.isRenderable === true) {

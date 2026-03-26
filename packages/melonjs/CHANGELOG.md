@@ -9,6 +9,7 @@
 - TMX: support Tiled 1.8+ `parallaxoriginx`/`parallaxoriginy` map attributes
 - TMX: support Tiled 1.8+ class-type custom properties (`type="class"` with nested properties)
 - TMX: use Tiled 1.10+ `isCollection` tileset flag when available (fallback to image detection for older maps)
+- TMX: support Tiled 1.12+ per-object opacity and visibility
 
 ### Changed
 - TypeScript: convert leaf modules to TypeScript — plugin, camera, particles emitter, state, audio

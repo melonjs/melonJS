@@ -97,6 +97,18 @@ export default class TMXObject {
 		this.rotation = degToRad(+settings.rotation || 0);
 
 		/**
+		 * the object opacity (0-1), defaults to 1 (since Tiled 1.12)
+		 * @type {number}
+		 */
+		this.opacity = +(settings.opacity ?? 1);
+
+		/**
+		 * whether the object is visible, defaults to true
+		 * @type {boolean}
+		 */
+		this.visible = settings.visible !== false && (settings.visible ?? 1) !== 0;
+
+		/**
 		 * object unique identifier per level (Tiled 0.11.x+)
 		 * @type {number}
 		 */
