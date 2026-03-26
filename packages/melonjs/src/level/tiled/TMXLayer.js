@@ -160,6 +160,9 @@ export default class TMXLayer extends Renderable {
 		const visible = typeof data.visible !== "undefined" ? +data.visible : 1;
 		this.setOpacity(visible ? +data.opacity : 0);
 
+		// layer blend mode (Tiled 1.12+)
+		this.blendMode = TMXUtils.tiledBlendMode(data.mode);
+
 		// layer tint
 		if (typeof data.tintcolor === "string") {
 			// Tiled provides #RRGGBB or #AARRGGBB

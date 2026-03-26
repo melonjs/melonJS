@@ -37,6 +37,7 @@
 			"offsety": 128,
 			"opacity": 1,
 			"repeatx": true,
+			"mode": "screen",
 			"properties": [
 				{
 					"name": "ratio",

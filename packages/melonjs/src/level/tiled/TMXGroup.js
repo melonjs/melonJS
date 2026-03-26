@@ -1,7 +1,7 @@
 import { clamp } from "./../../math/math.ts";
 import TMXLayer from "./TMXLayer.js";
 import TMXObject from "./TMXObject.js";
-import { applyTMXProperties } from "./TMXUtils.js";
+import { applyTMXProperties, tiledBlendMode } from "./TMXUtils.js";
 
 /**
  * object group definition as defined in Tiled.
@@ -55,6 +55,12 @@ export default class TMXGroup {
 
 		const visible = data.visible ?? true;
 		this.opacity = visible === true ? clamp(+data.opacity || 1.0, 0.0, 1.0) : 0;
+
+		/**
+		 * group blend mode (Tiled 1.12+)
+		 * @type {string}
+		 */
+		this.blendMode = tiledBlendMode(data.mode);
 
 		// check if we have any user-defined properties
 		applyTMXProperties(this, data);
