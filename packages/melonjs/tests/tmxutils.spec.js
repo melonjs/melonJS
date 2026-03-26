@@ -870,4 +870,67 @@ describe("TMXUtils", () => {
 			expect(resolveIsCollection(null, 0)).toEqual(false);
 		});
 	});
+
+	// ---------------------------------------------------------------
+	// per-object opacity and visibility (Tiled 1.12+)
+	// ---------------------------------------------------------------
+	describe("per-object opacity and visibility", () => {
+		// mirrors the parsing logic in TMXObject constructor
+		function parseObjectOpacity(settings) {
+			return {
+				opacity: +(settings.opacity ?? 1),
+				visible: +(settings.visible ?? 1) !== 0,
+			};
+		}
+
+		it("should default opacity to 1 when not specified", () => {
+			expect(parseObjectOpacity({}).opacity).toEqual(1);
+		});
+
+		it("should read explicit opacity value", () => {
+			expect(parseObjectOpacity({ opacity: 0.5 }).opacity).toEqual(0.5);
+		});
+
+		it("should read opacity of 0", () => {
+			expect(parseObjectOpacity({ opacity: 0 }).opacity).toEqual(0);
+		});
+
+		it("should read string opacity from XML", () => {
+			expect(parseObjectOpacity({ opacity: "0.75" }).opacity).toEqual(0.75);
+		});
+
+		it("should default visible to true when not specified", () => {
+			expect(parseObjectOpacity({}).visible).toEqual(true);
+		});
+
+		it("should read visible=1 as true", () => {
+			expect(parseObjectOpacity({ visible: 1 }).visible).toEqual(true);
+		});
+
+		it("should read visible=0 as false", () => {
+			expect(parseObjectOpacity({ visible: 0 }).visible).toEqual(false);
+		});
+
+		it("should read visible=true as true (JSON)", () => {
+			expect(parseObjectOpacity({ visible: true }).visible).toEqual(true);
+		});
+
+		it("should read visible=false as false (JSON)", () => {
+			expect(parseObjectOpacity({ visible: false }).visible).toEqual(false);
+		});
+
+		it("should read visible='1' as true (XML string)", () => {
+			expect(parseObjectOpacity({ visible: "1" }).visible).toEqual(true);
+		});
+
+		it("should read visible='0' as false (XML string)", () => {
+			expect(parseObjectOpacity({ visible: "0" }).visible).toEqual(false);
+		});
+
+		it("should handle opacity and visibility together", () => {
+			const result = parseObjectOpacity({ opacity: 0.3, visible: 0 });
+			expect(result.opacity).toEqual(0.3);
+			expect(result.visible).toEqual(false);
+		});
+	});
 });
