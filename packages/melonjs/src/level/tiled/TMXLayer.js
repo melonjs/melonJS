@@ -4,6 +4,7 @@ import CanvasRenderer from "./../../video/canvas/canvas_renderer";
 import { createCanvas } from "./../../video/video.js";
 import Tile from "./TMXTile.js";
 import * as TMXUtils from "./TMXUtils.js";
+import { tiledBlendMode } from "./TMXUtils.js";
 
 /**
  * Create required arrays for the given layer object
