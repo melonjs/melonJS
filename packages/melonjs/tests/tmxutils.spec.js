@@ -979,5 +979,9 @@ describe("TMXUtils", () => {
 			expect(tiledBlendMode("difference")).toEqual("difference");
 			expect(tiledBlendMode("exclusion")).toEqual("exclusion");
 		});
+
+		it("should pass through unknown modes to the renderer", () => {
+			expect(tiledBlendMode("some-future-mode")).toEqual("some-future-mode");
+		});
 	});
 });
