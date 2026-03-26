@@ -15,7 +15,7 @@ import TMXGroup from "./TMXGroup.js";
 import TMXLayer from "./TMXLayer.js";
 import TMXTileset from "./TMXTileset.js";
 import TMXTilesetGroup from "./TMXTilesetGroup.js";
-import { applyTMXProperties } from "./TMXUtils.js";
+import { applyTMXProperties, tiledBlendMode } from "./TMXUtils.js";
 
 /**
  * read the layer Data
@@ -89,6 +89,9 @@ function readImageLayer(map, data, z) {
 	// set some additional flags
 	const visible = data.visible ?? true;
 	imageLayer.setOpacity(visible ? +data.opacity : 0);
+
+	// layer blend mode (Tiled 1.12+)
+	imageLayer.blendMode = tiledBlendMode(data.mode);
 
 	return imageLayer;
 }
@@ -452,6 +455,7 @@ export default class TMXTileMap {
 				targetContainer.name = group.name;
 				targetContainer.pos.z = group.z;
 				targetContainer.setOpacity(group.opacity);
+				targetContainer.blendMode = group.blendMode;
 
 				// disable auto-sort and auto-depth
 				targetContainer.autoSort = false;

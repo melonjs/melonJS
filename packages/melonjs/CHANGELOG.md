@@ -10,6 +10,7 @@
 - TMX: support Tiled 1.8+ class-type custom properties (`type="class"` with nested properties)
 - TMX: use Tiled 1.10+ `isCollection` tileset flag when available (fallback to image detection for older maps)
 - TMX: support Tiled 1.12+ per-object opacity and visibility
+- TMX: support Tiled 1.12+ layer blend modes (`mode` attribute on tile layers, image layers, and object groups)
 - CanvasRenderer: add support for additional CSS blend modes (`overlay`, `darken`, `lighten`, `color-dodge`, `color-burn`, `hard-light`, `soft-light`, `difference`, `exclusion`) when supported by the browser
 - WebGLRenderer: add `darken` and `lighten` blend modes via `gl.MIN`/`gl.MAX` (WebGL2 only)
 

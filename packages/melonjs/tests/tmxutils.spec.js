@@ -4,6 +4,7 @@ import {
 	decode,
 	parse,
 	setInflateFunction,
+	tiledBlendMode,
 } from "../src/level/tiled/TMXUtils.js";
 
 describe("TMXUtils", () => {
@@ -931,6 +932,52 @@ describe("TMXUtils", () => {
 			const result = parseObjectOpacity({ opacity: 0.3, visible: 0 });
 			expect(result.opacity).toEqual(0.3);
 			expect(result.visible).toEqual(false);
+		});
+	});
+
+	// ---------------------------------------------------------------
+	// tiledBlendMode mapping
+	// ---------------------------------------------------------------
+	describe("tiledBlendMode", () => {
+		it("should return 'normal' for undefined", () => {
+			expect(tiledBlendMode(undefined)).toEqual("normal");
+		});
+
+		it("should return 'normal' for 'normal'", () => {
+			expect(tiledBlendMode("normal")).toEqual("normal");
+		});
+
+		it("should map 'add' to 'lighter'", () => {
+			expect(tiledBlendMode("add")).toEqual("lighter");
+		});
+
+		it("should pass through 'multiply'", () => {
+			expect(tiledBlendMode("multiply")).toEqual("multiply");
+		});
+
+		it("should pass through 'screen'", () => {
+			expect(tiledBlendMode("screen")).toEqual("screen");
+		});
+
+		it("should pass through 'overlay'", () => {
+			expect(tiledBlendMode("overlay")).toEqual("overlay");
+		});
+
+		it("should pass through 'darken'", () => {
+			expect(tiledBlendMode("darken")).toEqual("darken");
+		});
+
+		it("should pass through 'lighten'", () => {
+			expect(tiledBlendMode("lighten")).toEqual("lighten");
+		});
+
+		it("should pass through advanced modes", () => {
+			expect(tiledBlendMode("color-dodge")).toEqual("color-dodge");
+			expect(tiledBlendMode("color-burn")).toEqual("color-burn");
+			expect(tiledBlendMode("hard-light")).toEqual("hard-light");
+			expect(tiledBlendMode("soft-light")).toEqual("soft-light");
+			expect(tiledBlendMode("difference")).toEqual("difference");
+			expect(tiledBlendMode("exclusion")).toEqual("exclusion");
 		});
 	});
 });

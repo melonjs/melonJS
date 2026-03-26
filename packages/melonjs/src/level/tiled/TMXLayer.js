@@ -4,6 +4,7 @@ import CanvasRenderer from "./../../video/canvas/canvas_renderer";
 import { createCanvas } from "./../../video/video.js";
 import Tile from "./TMXTile.js";
 import * as TMXUtils from "./TMXUtils.js";
+import { tiledBlendMode } from "./TMXUtils.js";
 
 /**
  * Create required arrays for the given layer object
@@ -159,6 +160,9 @@ export default class TMXLayer extends Renderable {
 		// layer opacity
 		const visible = typeof data.visible !== "undefined" ? +data.visible : 1;
 		this.setOpacity(visible ? +data.opacity : 0);
+
+		// layer blend mode (Tiled 1.12+)
+		this.blendMode = tiledBlendMode(data.mode);
 
 		// layer tint
 		if (typeof data.tintcolor === "string") {

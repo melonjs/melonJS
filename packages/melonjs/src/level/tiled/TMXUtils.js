@@ -1,6 +1,20 @@
 import { decode } from "../../utils/decode.ts";
 import { xmlToObject } from "../../utils/xml.ts";
 
+/**
+ * Convert a Tiled blend mode name to the melonJS equivalent.
+ * Tiled uses "add" while melonJS/Canvas uses "lighter".
+ * Returns "normal" for undefined/unsupported values.
+ * @param {string} [mode] - the Tiled blend mode
+ * @returns {string} the melonJS blend mode name
+ */
+export function tiledBlendMode(mode) {
+	if (typeof mode === "undefined" || mode === "normal") {
+		return "normal";
+	}
+	return mode === "add" ? "lighter" : mode;
+}
+
 // pre-compiled regex for #ARGB → #RGBA color conversion
 // matches #ARGB (5 chars) or #AARRGGBB (9 chars)
 const SHORT_ARGB = /^#([\da-fA-F])([\da-fA-F]{3})$/;
