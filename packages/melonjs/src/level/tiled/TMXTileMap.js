@@ -43,30 +43,37 @@ function readImageLayer(map, data, z) {
 
 	// derive repeat mode: legacy custom "repeat" property takes precedence
 	// (for backward compatibility), then Tiled 1.8+ native repeatx/repeaty
-	const rx = data.repeatx === true || data.repeatx === "1";
-	const ry = data.repeaty === true || data.repeaty === "1";
+	const repX = data.repeatx === true || data.repeatx === "1";
+	const repY = data.repeaty === true || data.repeaty === "1";
 	let repeat = data.properties?.repeat;
-	if (typeof repeat === "undefined" && (rx || ry)) {
-		if (rx && ry) {
+	if (typeof repeat === "undefined" && (repX || repY)) {
+		if (repX && repY) {
 			repeat = "repeat";
-		} else if (rx) {
+		} else if (repX) {
 			repeat = "repeat-x";
 		} else {
 			repeat = "repeat-y";
 		}
 	}
 
+	// Tiled 1.8+ parallax origin (map-level, baked into layer offset)
+	const pox = +(map.data.parallaxoriginx ?? 0);
+	const poy = +(map.data.parallaxoriginy ?? 0);
+	const ratioX = +(data.parallaxx ?? 1.0);
+	const ratioY = +(data.parallaxy ?? 1.0);
+	const ox = +(data.offsetx ?? data.x ?? 0) + pox * ratioX;
+	const oy = +(data.offsety ?? data.y ?? 0) + poy * ratioY;
+
 	// create the layer
 	const imageLayer = pool.pull(
 		"ImageLayer",
-		// x/y is deprecated since 0.15 and replace by offsetx/y
-		+data.offsetx || +data.x || 0,
-		+data.offsety || +data.y || 0,
+		ox,
+		oy,
 		Object.assign(
 			{
 				name: data.name,
 				image: data.image,
-				ratio: vector2dPool.get(+data.parallaxx || 1.0, +data.parallaxy || 1.0),
+				ratio: vector2dPool.get(ratioX, ratioY),
 				// convert to melonJS color format (note: this should be done earlier when parsing data)
 				tint:
 					typeof data.tintcolor !== "undefined"

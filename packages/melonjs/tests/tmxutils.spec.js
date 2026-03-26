@@ -593,4 +593,175 @@ describe("TMXUtils", () => {
 			).toEqual("repeat");
 		});
 	});
+
+	// ---------------------------------------------------------------
+	// parallax origin offset baking
+	// ---------------------------------------------------------------
+	describe("parallax origin offset baking", () => {
+		// Helper: compute parallax position the way ImageLayer.draw does
+		function computeParallaxPos(
+			offset,
+			ratio,
+			camPos,
+			anchorPoint,
+			boundsW,
+			viewportW,
+		) {
+			const ax = anchorPoint;
+			const rx = ratio;
+			return ax * (rx - 1) * (boundsW - viewportW) + offset - rx * camPos;
+		}
+
+		it("baked offset matches explicit parallax origin (ax=0, ratio=0.5)", () => {
+			const layerOffset = 100;
+			const ratio = 0.5;
+			const parallaxOrigin = 400;
+			const bakedOffset = layerOffset + parallaxOrigin * ratio;
+
+			// test at various camera positions
+			for (const camX of [0, 200, 400, 800]) {
+				const explicit = computeParallaxPos(
+					layerOffset,
+					ratio,
+					camX - parallaxOrigin,
+					0,
+					2000,
+					800,
+				);
+				const baked = computeParallaxPos(
+					bakedOffset,
+					ratio,
+					camX,
+					0,
+					2000,
+					800,
+				);
+				expect(baked).toBeCloseTo(explicit);
+			}
+		});
+
+		it("baked offset matches with anchorPoint=1", () => {
+			const layerOffset = 50;
+			const ratio = 0.25;
+			const parallaxOrigin = 300;
+			const bakedOffset = layerOffset + parallaxOrigin * ratio;
+
+			for (const camX of [0, 150, 300, 600]) {
+				const explicit = computeParallaxPos(
+					layerOffset,
+					ratio,
+					camX - parallaxOrigin,
+					1,
+					2000,
+					800,
+				);
+				const baked = computeParallaxPos(
+					bakedOffset,
+					ratio,
+					camX,
+					1,
+					2000,
+					800,
+				);
+				expect(baked).toBeCloseTo(explicit);
+			}
+		});
+
+		it("baked offset matches with anchorPoint=0.5", () => {
+			const layerOffset = 0;
+			const ratio = 0.75;
+			const parallaxOrigin = 500;
+			const bakedOffset = layerOffset + parallaxOrigin * ratio;
+
+			for (const camX of [0, 250, 500, 1000]) {
+				const explicit = computeParallaxPos(
+					layerOffset,
+					ratio,
+					camX - parallaxOrigin,
+					0.5,
+					1500,
+					600,
+				);
+				const baked = computeParallaxPos(
+					bakedOffset,
+					ratio,
+					camX,
+					0.5,
+					1500,
+					600,
+				);
+				expect(baked).toBeCloseTo(explicit);
+			}
+		});
+
+		it("baked offset matches on Y-axis (ax=0, ratio=0.5)", () => {
+			const layerOffset = 80;
+			const ratio = 0.5;
+			const parallaxOrigin = 300;
+			const bakedOffset = layerOffset + parallaxOrigin * ratio;
+
+			for (const camY of [0, 150, 300, 600]) {
+				const explicit = computeParallaxPos(
+					layerOffset,
+					ratio,
+					camY - parallaxOrigin,
+					0,
+					1500,
+					600,
+				);
+				const baked = computeParallaxPos(
+					bakedOffset,
+					ratio,
+					camY,
+					0,
+					1500,
+					600,
+				);
+				expect(baked).toBeCloseTo(explicit);
+			}
+		});
+
+		it("baked offset matches on Y-axis with anchorPoint=1", () => {
+			const layerOffset = 200;
+			const ratio = 0.75;
+			const parallaxOrigin = 400;
+			const bakedOffset = layerOffset + parallaxOrigin * ratio;
+
+			for (const camY of [0, 200, 400, 800]) {
+				const explicit = computeParallaxPos(
+					layerOffset,
+					ratio,
+					camY - parallaxOrigin,
+					1,
+					1500,
+					600,
+				);
+				const baked = computeParallaxPos(
+					bakedOffset,
+					ratio,
+					camY,
+					1,
+					1500,
+					600,
+				);
+				expect(baked).toBeCloseTo(explicit);
+			}
+		});
+
+		it("zero parallax origin produces unchanged offset", () => {
+			const layerOffset = 100;
+			const ratio = 0.5;
+			const parallaxOrigin = 0;
+			const bakedOffset = layerOffset + parallaxOrigin * ratio;
+			expect(bakedOffset).toEqual(layerOffset);
+		});
+
+		it("parallax origin with ratio=1 adds full origin value", () => {
+			const layerOffset = 50;
+			const ratio = 1.0;
+			const parallaxOrigin = 200;
+			const bakedOffset = layerOffset + parallaxOrigin * ratio;
+			expect(bakedOffset).toEqual(250);
+		});
+	});
 });
