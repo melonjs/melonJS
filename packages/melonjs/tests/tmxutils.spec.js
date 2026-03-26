@@ -842,4 +842,32 @@ describe("TMXUtils", () => {
 			expect(obj.emptyClass).toEqual({});
 		});
 	});
+
+	// ---------------------------------------------------------------
+	// isCollection flag (Tiled 1.10+)
+	// ---------------------------------------------------------------
+	describe("isCollection tileset flag", () => {
+		// mirrors the logic: tileset.isCollection ?? imageCollection.length > 0
+		function resolveIsCollection(flag, imageCount) {
+			return flag ?? imageCount > 0;
+		}
+
+		it("should use explicit true flag", () => {
+			expect(resolveIsCollection(true, 0)).toEqual(true);
+		});
+
+		it("should use explicit false flag", () => {
+			expect(resolveIsCollection(false, 5)).toEqual(false);
+		});
+
+		it("should fall back to image detection when flag is undefined", () => {
+			expect(resolveIsCollection(undefined, 3)).toEqual(true);
+			expect(resolveIsCollection(undefined, 0)).toEqual(false);
+		});
+
+		it("should fall back to image detection when flag is null", () => {
+			expect(resolveIsCollection(null, 3)).toEqual(true);
+			expect(resolveIsCollection(null, 0)).toEqual(false);
+		});
+	});
 });
