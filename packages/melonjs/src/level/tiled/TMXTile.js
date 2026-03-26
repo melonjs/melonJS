@@ -1,7 +1,7 @@
 import { degToRad } from "../../math/math.ts";
 import { Matrix2d } from "../../math/matrix2d.ts";
-import { Bounds } from "./../../physics/bounds.ts";
-import Sprite from "./../../renderable/sprite.js";
+import { Bounds } from "../../physics/bounds.ts";
+import Sprite from "../../renderable/sprite.js";
 import {
 	TMX_CLEAR_BIT_MASK,
 	TMX_FLIP_AD,
@@ -11,6 +11,7 @@ import {
 
 /**
  * a basic tile object
+ * @category Tilemap
  */
 export default class Tile extends Bounds {
 	/**
@@ -20,42 +21,45 @@ export default class Tile extends Bounds {
 	 * @param {TMXTileset} tileset - the corresponding tileset object
 	 */
 	constructor(x, y, gid, tileset) {
-		let width;
-		let height;
-
-		// call the parent constructor
 		super();
 
-		// determine the tile size
-		if (tileset.isCollection) {
-			const image = tileset.getTileImage(gid & TMX_CLEAR_BIT_MASK);
-			width = image.width;
-			height = image.height;
-		} else {
-			width = tileset.tilewidth;
-			height = tileset.tileheight;
-		}
+		// determine the tile size from tileset or image
+		const width = tileset.isCollection
+			? tileset.getTileImage(gid & TMX_CLEAR_BIT_MASK).width
+			: tileset.tilewidth;
+		const height = tileset.isCollection
+			? tileset.getTileImage(gid & TMX_CLEAR_BIT_MASK).height
+			: tileset.tileheight;
 
 		this.setMinMax(0, 0, width, height);
 
 		/**
-		 * tileset
+		 * the corresponding tileset
 		 * @type {TMXTileset}
 		 */
 		this.tileset = tileset;
 
 		/**
-		 * the tile transformation matrix (if defined)
+		 * the tile transformation matrix (if flipped)
+		 * @type {Matrix2d|null}
 		 * @ignore
 		 */
 		this.currentTransform = null;
 
-		// Tile col / row pos
+		/**
+		 * tile column position in the map
+		 * @type {number}
+		 */
 		this.col = x;
+
+		/**
+		 * tile row position in the map
+		 * @type {number}
+		 */
 		this.row = y;
 
 		/**
-		 * tileId
+		 * the global tile ID (with flip bits cleared)
 		 * @type {number}
 		 */
 		this.tileId = gid;
@@ -85,23 +89,25 @@ export default class Tile extends Bounds {
 		this.flipped = this.flippedX || this.flippedY || this.flippedAD;
 
 		// create and apply transformation matrix if required
-		if (this.flipped === true) {
-			if (this.currentTransform === null) {
-				this.currentTransform = new Matrix2d();
-			}
+		if (this.flipped) {
+			this.currentTransform = new Matrix2d();
 			this.setTileTransform(this.currentTransform.identity());
 		}
 
-		// clear out the flags and set the tileId
+		// clear out the flip flags and keep the actual tileId
 		this.tileId &= TMX_CLEAR_BIT_MASK;
 	}
 
 	/**
 	 * set the transformation matrix for this tile
+	 * @param {Matrix2d} transform - the transformation matrix to apply
 	 * @ignore
 	 */
 	setTileTransform(transform) {
-		transform.translate(this.width / 2, this.height / 2);
+		const halfW = this.width / 2;
+		const halfH = this.height / 2;
+
+		transform.translate(halfW, halfH);
 		if (this.flippedAD) {
 			transform.rotate(degToRad(-90));
 			transform.scale(-1, 1);
@@ -112,7 +118,7 @@ export default class Tile extends Bounds {
 		if (this.flippedY) {
 			transform.scale(this.flippedAD ? -1 : 1, this.flippedAD ? 1 : -1);
 		}
-		transform.translate(-this.width / 2, -this.height / 2);
+		transform.translate(-halfW, -halfH);
 	}
 
 	/**
@@ -125,53 +131,48 @@ export default class Tile extends Bounds {
 		const tileset = this.tileset;
 
 		if (tileset.animations.has(this.tileId)) {
+			// animated tile — create an animated sprite
 			const frames = [];
 			const frameId = [];
-			tileset.animations.get(this.tileId).frames.forEach((frame) => {
+			for (const frame of tileset.animations.get(this.tileId).frames) {
 				frameId.push(frame.tileid);
 				frames.push({
 					name: "" + frame.tileid,
 					delay: frame.duration,
 				});
-			});
+			}
 			renderable = tileset.texture.createAnimationFromName(frameId, settings);
 			renderable.addAnimation(this.tileId - tileset.firstgid, frames);
 			renderable.setCurrentAnimation(this.tileId - tileset.firstgid);
-		} else {
-			if (tileset.isCollection === true) {
-				const image = tileset.getTileImage(this.tileId);
-				renderable = new Sprite(
-					0,
-					0,
-					Object.assign({
-						image: image,
-					}), //, settings)
+		} else if (tileset.isCollection) {
+			// collection tile — create a sprite from the tile image
+			const image = tileset.getTileImage(this.tileId);
+			renderable = new Sprite(0, 0, { image });
+			renderable.anchorPoint.set(0, 0);
+			renderable.scale(
+				settings.width / this.width,
+				settings.height / this.height,
+			);
+			if (settings.rotation !== undefined) {
+				renderable.anchorPoint.set(0.5, 0.5);
+				renderable.currentTransform.rotate(settings.rotation);
+				renderable.currentTransform.translate(
+					settings.width / 2,
+					settings.height / 2,
 				);
-				renderable.anchorPoint.set(0, 0);
-				renderable.scale(
-					settings.width / this.width,
-					settings.height / this.height,
-				);
-				if (typeof settings.rotation !== "undefined") {
-					renderable.anchorPoint.set(0.5, 0.5);
-					renderable.currentTransform.rotate(settings.rotation);
-					renderable.currentTransform.translate(
-						settings.width / 2,
-						settings.height / 2,
-					);
-					// TODO : move the rotation related code from TMXTiledMap to here (under)
-					settings.rotation = undefined;
-				}
-			} else {
-				renderable = tileset.texture.createSpriteFromName(
-					this.tileId - tileset.firstgid,
-					settings,
-				);
-				renderable.anchorPoint.set(0, 0);
+				// clear rotation to prevent double-application by the caller
+				settings.rotation = undefined;
 			}
+		} else {
+			// regular tile — create a sprite from the tileset atlas
+			renderable = tileset.texture.createSpriteFromName(
+				this.tileId - tileset.firstgid,
+				settings,
+			);
+			renderable.anchorPoint.set(0, 0);
 		}
 
-		// any H/V flipping to apply?
+		// apply any H/V/AD flip transforms
 		this.setTileTransform(renderable.currentTransform);
 
 		return renderable;
