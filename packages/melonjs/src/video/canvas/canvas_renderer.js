@@ -109,34 +109,67 @@ export default class CanvasRenderer extends Renderer {
 
 	/**
 	 * set a blend mode for the given context. <br>
-	 * Supported blend mode between Canvas and WebGL renderer : <br>
-	 * - "normal" : this is the default mode and draws new content on top of the existing content <br>
-	 * <img src="../images/normal-blendmode.png" width="510"/> <br>
-	 * - "multiply" : the pixels of the top layer are multiplied with the corresponding pixel of the bottom layer. A darker picture is the result. <br>
-	 * <img src="../images/multiply-blendmode.png" width="510"/> <br>
-	 * - "additive or lighter" : where both content overlap the color is determined by adding color values. <br>
-	 * <img src="../images/lighter-blendmode.png" width="510"/> <br>
-	 * - "screen" : The pixels are inverted, multiplied, and inverted again. A lighter picture is the result (opposite of multiply) <br>
-	 * <img src="../images/screen-blendmode.png" width="510"/> <br>
+	 * All renderers support: <br>
+	 * - "normal" : draws new content on top of the existing content <br>
+	 * <img src="../images/normal-blendmode.png" width="180"/> <br>
+	 * - "add", "additive", or "lighter" : color values are added together <br>
+	 * <img src="../images/add-blendmode.png" width="180"/> <br>
+	 * - "multiply" : pixels are multiplied, resulting in a darker picture <br>
+	 * <img src="../images/multiply-blendmode.png" width="180"/> <br>
+	 * - "screen" : pixels are inverted, multiplied, and inverted again (opposite of multiply) <br>
+	 * <img src="../images/screen-blendmode.png" width="180"/> <br>
+	 * Canvas (browser-dependent) and WebGL2: <br>
+	 * - "darken" : retains the darkest pixels of both layers <br>
+	 * <img src="../images/darken-blendmode.png" width="180"/> <br>
+	 * - "lighten" : retains the lightest pixels of both layers <br>
+	 * <img src="../images/lighten-blendmode.png" width="180"/> <br>
+	 * Canvas only, browser-dependent (falls back to "normal" if unsupported or in WebGL): <br>
+	 * - "overlay" <br>
+	 * <img src="../images/overlay-blendmode.png" width="180"/> <br>
+	 * - "color-dodge" <br>
+	 * <img src="../images/color-dodge-blendmode.png" width="180"/> <br>
+	 * - "color-burn" <br>
+	 * <img src="../images/color-burn-blendmode.png" width="180"/> <br>
+	 * - "hard-light" <br>
+	 * <img src="../images/hard-light-blendmode.png" width="180"/> <br>
+	 * - "soft-light" <br>
+	 * <img src="../images/soft-light-blendmode.png" width="180"/> <br>
+	 * - "difference" <br>
+	 * <img src="../images/difference-blendmode.png" width="180"/> <br>
+	 * - "exclusion" <br>
+	 * <img src="../images/exclusion-blendmode.png" width="180"/> <br>
 	 * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
-	 * @param {string} [mode="normal"] - blend mode : "normal", "multiply", "lighter, "additive", "screen"
+	 * @param {string} [mode="normal"] - blend mode
 	 * @param {CanvasRenderingContext2D} [context]
+	 * @returns {string} the blend mode actually applied (may differ if the requested mode is unsupported)
 	 */
 	setBlendMode(mode = "normal", context) {
 		context = context || this.getContext();
 		this.currentBlendMode = mode;
 		switch (mode) {
-			case "screen":
-				context.globalCompositeOperation = "screen";
-				break;
-
 			case "lighter":
 			case "additive":
+			case "add":
 				context.globalCompositeOperation = "lighter";
 				break;
 
 			case "multiply":
-				context.globalCompositeOperation = "multiply";
+			case "screen":
+			case "overlay":
+			case "darken":
+			case "lighten":
+			case "color-dodge":
+			case "color-burn":
+			case "hard-light":
+			case "soft-light":
+			case "difference":
+			case "exclusion":
+				context.globalCompositeOperation = mode;
+				// verify the browser accepted the mode
+				if (context.globalCompositeOperation !== mode) {
+					context.globalCompositeOperation = "source-over";
+					this.currentBlendMode = "normal";
+				}
 				break;
 
 			default: // normal
@@ -144,6 +177,7 @@ export default class CanvasRenderer extends Renderer {
 				this.currentBlendMode = "normal";
 				break;
 		}
+		return this.currentBlendMode;
 	}
 
 	/**

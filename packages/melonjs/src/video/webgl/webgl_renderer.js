@@ -725,18 +725,27 @@ export default class WebGLRenderer extends Renderer {
 
 	/**
 	 * set a blend mode for the given context. <br>
-	 * Supported blend mode between Canvas and WebGL renderer : <br>
-	 * - "normal" : this is the default mode and draws new content on top of the existing content <br>
-	 * <img src="../images/normal-blendmode.png" width="510"/> <br>
-	 * - "multiply" : the pixels of the top layer are multiplied with the corresponding pixel of the bottom layer. A darker picture is the result. <br>
-	 * <img src="../images/multiply-blendmode.png" width="510"/> <br>
-	 * - "additive or lighter" : where both content overlap the color is determined by adding color values. <br>
-	 * <img src="../images/lighter-blendmode.png" width="510"/> <br>
-	 * - "screen" : The pixels are inverted, multiplied, and inverted again. A lighter picture is the result (opposite of multiply) <br>
-	 * <img src="../images/screen-blendmode.png" width="510"/> <br>
+	 * All renderers support: <br>
+	 * - "normal" : draws new content on top of the existing content <br>
+	 * <img src="../images/normal-blendmode.png" width="180"/> <br>
+	 * - "add", "additive", or "lighter" : color values are added together <br>
+	 * <img src="../images/add-blendmode.png" width="180"/> <br>
+	 * - "multiply" : pixels are multiplied, resulting in a darker picture <br>
+	 * <img src="../images/multiply-blendmode.png" width="180"/> <br>
+	 * - "screen" : pixels are inverted, multiplied, and inverted again (opposite of multiply) <br>
+	 * <img src="../images/screen-blendmode.png" width="180"/> <br>
+	 * WebGL2 additionally supports: <br>
+	 * - "darken" : retains the darkest pixels of both layers <br>
+	 * <img src="../images/darken-blendmode.png" width="180"/> <br>
+	 * - "lighten" : retains the lightest pixels of both layers <br>
+	 * <img src="../images/lighten-blendmode.png" width="180"/> <br>
+	 * Other CSS blend modes ("overlay", "color-dodge", "color-burn", "hard-light", "soft-light",
+	 * "difference", "exclusion") may be supported by the Canvas renderer (browser-dependent)
+	 * and will always fall back to "normal" in WebGL. <br>
 	 * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
-	 * @param {string} [mode="normal"] - blend mode : "normal", "multiply", "lighter", "additive", "screen"
+	 * @param {string} [mode="normal"] - blend mode
 	 * @param {WebGLRenderingContext} [gl] - a WebGL context
+	 * @returns {string} the blend mode actually applied (may differ if the requested mode is unsupported)
 	 */
 	setBlendMode(mode = "normal", gl = this.gl) {
 		if (this.currentBlendMode !== mode) {
@@ -746,24 +755,52 @@ export default class WebGLRenderer extends Renderer {
 
 			switch (mode) {
 				case "screen":
+					gl.blendEquation(gl.FUNC_ADD);
 					gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
 					break;
 
 				case "lighter":
 				case "additive":
+				case "add":
+					gl.blendEquation(gl.FUNC_ADD);
 					gl.blendFunc(gl.ONE, gl.ONE);
 					break;
 
 				case "multiply":
+					gl.blendEquation(gl.FUNC_ADD);
 					gl.blendFunc(gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA);
 					break;
 
+				case "darken":
+					if (this.WebGLVersion > 1) {
+						gl.blendEquation(gl.MIN);
+						gl.blendFunc(gl.ONE, gl.ONE);
+					} else {
+						gl.blendEquation(gl.FUNC_ADD);
+						gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+						this.currentBlendMode = "normal";
+					}
+					break;
+
+				case "lighten":
+					if (this.WebGLVersion > 1) {
+						gl.blendEquation(gl.MAX);
+						gl.blendFunc(gl.ONE, gl.ONE);
+					} else {
+						gl.blendEquation(gl.FUNC_ADD);
+						gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+						this.currentBlendMode = "normal";
+					}
+					break;
+
 				default:
+					gl.blendEquation(gl.FUNC_ADD);
 					gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 					this.currentBlendMode = "normal";
 					break;
 			}
 		}
+		return this.currentBlendMode;
 	}
 
 	/**
