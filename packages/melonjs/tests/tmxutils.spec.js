@@ -879,7 +879,7 @@ describe("TMXUtils", () => {
 		function parseObjectOpacity(settings) {
 			return {
 				opacity: +(settings.opacity ?? 1),
-				visible: settings.visible !== false && (settings.visible ?? 1) !== 0,
+				visible: +(settings.visible ?? 1) !== 0,
 			};
 		}
 
@@ -917,6 +917,14 @@ describe("TMXUtils", () => {
 
 		it("should read visible=false as false (JSON)", () => {
 			expect(parseObjectOpacity({ visible: false }).visible).toEqual(false);
+		});
+
+		it("should read visible='1' as true (XML string)", () => {
+			expect(parseObjectOpacity({ visible: "1" }).visible).toEqual(true);
+		});
+
+		it("should read visible='0' as false (XML string)", () => {
+			expect(parseObjectOpacity({ visible: "0" }).visible).toEqual(false);
 		});
 
 		it("should handle opacity and visibility together", () => {

@@ -106,7 +106,7 @@ export default class TMXObject {
 		 * whether the object is visible, defaults to true
 		 * @type {boolean}
 		 */
-		this.visible = settings.visible !== false && (settings.visible ?? 1) !== 0;
+		this.visible = +(settings.visible ?? 1) !== 0;
 
 		/**
 		 * object unique identifier per level (Tiled 0.11.x+)
