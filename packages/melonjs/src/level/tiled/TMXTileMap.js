@@ -590,9 +590,13 @@ export default class TMXTileMap {
 					}
 				}
 
-				//apply group opacity value to the child objects if group are merged
+				//apply group opacity and blend mode to child objects if group are merged
 				if (flatten !== false) {
 					if (obj.isRenderable === true) {
+						// propagate group blend mode to children (if not default)
+						if (group.blendMode !== "normal" && obj.blendMode === "normal") {
+							obj.blendMode = group.blendMode;
+						}
 						obj.setOpacity(obj.getOpacity() * group.opacity);
 						// and to child renderables if any
 						if (
