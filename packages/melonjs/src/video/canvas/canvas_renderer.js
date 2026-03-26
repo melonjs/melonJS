@@ -118,12 +118,12 @@ export default class CanvasRenderer extends Renderer {
 	 * <img src="../images/multiply-blendmode.png" width="180"/> <br>
 	 * - "screen" : pixels are inverted, multiplied, and inverted again (opposite of multiply) <br>
 	 * <img src="../images/screen-blendmode.png" width="180"/> <br>
-	 * Canvas and WebGL2: <br>
+	 * Canvas (browser-dependent) and WebGL2: <br>
 	 * - "darken" : retains the darkest pixels of both layers <br>
 	 * <img src="../images/darken-blendmode.png" width="180"/> <br>
 	 * - "lighten" : retains the lightest pixels of both layers <br>
 	 * <img src="../images/lighten-blendmode.png" width="180"/> <br>
-	 * Canvas only (falls back to "normal" in WebGL): <br>
+	 * Canvas only, browser-dependent (falls back to "normal" if unsupported or in WebGL): <br>
 	 * - "overlay" <br>
 	 * <img src="../images/overlay-blendmode.png" width="180"/> <br>
 	 * - "color-dodge" <br>

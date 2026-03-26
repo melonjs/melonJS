@@ -740,8 +740,8 @@ export default class WebGLRenderer extends Renderer {
 	 * - "lighten" : retains the lightest pixels of both layers <br>
 	 * <img src="../images/lighten-blendmode.png" width="180"/> <br>
 	 * Other CSS blend modes ("overlay", "color-dodge", "color-burn", "hard-light", "soft-light",
-	 * "difference", "exclusion") are only supported by the Canvas renderer
-	 * and will fall back to "normal" in WebGL. <br>
+	 * "difference", "exclusion") may be supported by the Canvas renderer (browser-dependent)
+	 * and will always fall back to "normal" in WebGL. <br>
 	 * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
 	 * @param {string} [mode="normal"] - blend mode
 	 * @param {WebGLRenderingContext} [gl] - a WebGL context
