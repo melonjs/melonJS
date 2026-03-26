@@ -23,13 +23,17 @@ export default class Tile extends Bounds {
 	constructor(x, y, gid, tileset) {
 		super();
 
-		// determine the tile size from tileset or image
-		const width = tileset.isCollection
-			? tileset.getTileImage(gid & TMX_CLEAR_BIT_MASK).width
-			: tileset.tilewidth;
-		const height = tileset.isCollection
-			? tileset.getTileImage(gid & TMX_CLEAR_BIT_MASK).height
-			: tileset.tileheight;
+		// determine the tile size from tileset or per-tile image
+		let width;
+		let height;
+		if (tileset.isCollection) {
+			const tileImage = tileset.getTileImage(gid & TMX_CLEAR_BIT_MASK);
+			width = tileImage.width;
+			height = tileImage.height;
+		} else {
+			width = tileset.tilewidth;
+			height = tileset.tileheight;
+		}
 
 		this.setMinMax(0, 0, width, height);
 
