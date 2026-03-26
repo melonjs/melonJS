@@ -27,8 +27,9 @@
         {
          "image":"..\/img\/clouds.png",
          "name":"clouds",
+         "mode":"screen",
          "offsetx":71,
-         "offsety":0,
+         "offsety":128,
          "opacity":1,
          "properties":
             {

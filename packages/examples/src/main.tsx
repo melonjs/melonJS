@@ -148,7 +148,7 @@ const examples: {
 		path: "platformer",
 		sourceDir: "platformer",
 		description:
-			"Side-scrolling platformer with physics, tile collisions, enemies, and collectibles.",
+			"Side-scrolling platformer with physics, tile collisions, enemies, collectibles, custom shaders, blend modes, particles, and multi-camera minimap.",
 	},
 	{
 		component: <ExampleSpaceInvaders />,
