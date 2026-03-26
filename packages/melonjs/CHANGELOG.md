@@ -7,6 +7,7 @@
 - Platformer example: minimap camera showing a zoomed-out view of the full level with viewport highlight and player marker
 - TMX: support Tiled 1.8+ native `repeatx`/`repeaty` attributes on image layers (with fallback to legacy custom `repeat` property)
 - TMX: support Tiled 1.8+ `parallaxoriginx`/`parallaxoriginy` map attributes
+- TMX: support Tiled 1.8+ class-type custom properties (`type="class"` with nested properties)
 
 ### Changed
 - TypeScript: convert leaf modules to TypeScript — plugin, camera, particles emitter, state, audio
