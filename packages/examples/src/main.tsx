@@ -18,6 +18,7 @@ const sourceFiles = import.meta.glob("./examples/**/*.{ts,tsx,js}", {
 
 import { ExampleAseprite } from "./examples/aseprite/ExampleAseprite";
 import { ExampleBenchmark } from "./examples/benchmark/ExampleBenchmark";
+import { ExampleBlendModes } from "./examples/blendModes/ExampleBlendModes";
 import { ExampleCompressedTextures } from "./examples/compressedTextures/ExampleCompressedTextures";
 import { ExampleDeviceTest } from "./examples/deviceTest/ExampleDeviceTest";
 import { ExampleDragAndDrop } from "./examples/dragAndDrop/ExampleDragAndDrop";
@@ -60,6 +61,14 @@ const examples: {
 		sourceDir: "benchmark",
 		description:
 			"Stress test rendering thousands of animated sprites to measure engine performance.",
+	},
+	{
+		component: <ExampleBlendModes />,
+		label: "Blend Modes",
+		path: "blend-modes",
+		sourceDir: "blendModes",
+		description:
+			"Visual comparison of all supported blend modes (normal, multiply, screen, overlay, darken, lighten, etc.).",
 	},
 	{
 		component: <ExampleCompressedTextures />,

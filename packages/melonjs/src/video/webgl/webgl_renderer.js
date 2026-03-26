@@ -727,16 +727,25 @@ export default class WebGLRenderer extends Renderer {
 	 * set a blend mode for the given context. <br>
 	 * All renderers support: <br>
 	 * - "normal" : draws new content on top of the existing content <br>
-	 * - "multiply" : the pixels are multiplied, resulting in a darker picture <br>
+	 * <img src="../images/normal-blendmode.png" width="180"/> <br>
 	 * - "add", "additive", or "lighter" : color values are added together <br>
-	 * - "screen" : pixels are inverted, multiplied, and inverted again <br>
+	 * <img src="../images/add-blendmode.png" width="180"/> <br>
+	 * - "multiply" : pixels are multiplied, resulting in a darker picture <br>
+	 * <img src="../images/multiply-blendmode.png" width="180"/> <br>
+	 * - "screen" : pixels are inverted, multiplied, and inverted again (opposite of multiply) <br>
+	 * <img src="../images/screen-blendmode.png" width="180"/> <br>
 	 * WebGL2 additionally supports: <br>
 	 * - "darken" : retains the darkest pixels of both layers <br>
+	 * <img src="../images/darken-blendmode.png" width="180"/> <br>
 	 * - "lighten" : retains the lightest pixels of both layers <br>
-	 * Other CSS blend modes (overlay, color-dodge, etc.) are only supported by the Canvas renderer
+	 * <img src="../images/lighten-blendmode.png" width="180"/> <br>
+	 * Other CSS blend modes ("overlay", "color-dodge", "color-burn", "hard-light", "soft-light",
+	 * "difference", "exclusion") are only supported by the Canvas renderer
 	 * and will fall back to "normal" in WebGL. <br>
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
 	 * @param {string} [mode="normal"] - blend mode
 	 * @param {WebGLRenderingContext} [gl] - a WebGL context
+	 * @returns {string} the blend mode actually applied (may differ if the requested mode is unsupported)
 	 */
 	setBlendMode(mode = "normal", gl = this.gl) {
 		if (this.currentBlendMode !== mode) {
@@ -791,6 +800,7 @@ export default class WebGLRenderer extends Renderer {
 					break;
 			}
 		}
+		return this.currentBlendMode;
 	}
 
 	/**
