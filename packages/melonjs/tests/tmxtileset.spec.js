@@ -514,6 +514,60 @@ describe("TMXTileset", () => {
 			const changed = ts.update(1);
 			expect(changed).toEqual(false);
 		});
+
+		it("should handle old JSON format (object-keyed tiles without id)", () => {
+			const ts = new TMXTileset({
+				firstgid: 1,
+				name: "oldfmt",
+				tilewidth: 32,
+				tileheight: 32,
+				spacing: 0,
+				margin: 0,
+				tilecount: 8,
+				columns: 4,
+				image: "animated.png",
+				tiles: {
+					0: {
+						animation: [
+							{ tileid: 0, duration: 100 },
+							{ tileid: 1, duration: 100 },
+						],
+					},
+				},
+			});
+			expect(ts.isAnimated).toEqual(true);
+			expect(ts.animations.has(0)).toEqual(true);
+			expect(ts.getViewTileId(1)).toEqual(0);
+		});
+
+		it("should key animations by tile.id, not first frame tileid", () => {
+			// tile id=3 has animation starting with frame tileid=0
+			const ts = new TMXTileset({
+				firstgid: 1,
+				name: "anim",
+				tilewidth: 32,
+				tileheight: 32,
+				spacing: 0,
+				margin: 0,
+				tilecount: 8,
+				columns: 4,
+				image: "animated.png",
+				tiles: [
+					{
+						id: 3,
+						animation: [
+							{ tileid: 0, duration: 100 },
+							{ tileid: 1, duration: 100 },
+						],
+					},
+				],
+			});
+			// animation should be keyed by tile.id (3), not anim[0].tileid (0)
+			expect(ts.animations.has(3)).toEqual(true);
+			expect(ts.animations.has(0)).toEqual(false);
+			// getViewTileId for gid 4 (firstgid 1 + local 3) should return animated frame
+			expect(ts.getViewTileId(4)).toEqual(0);
+		});
 	});
 
 	// ==============================================================

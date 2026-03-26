@@ -158,8 +158,16 @@ export default class TMXTileset {
 			return;
 		}
 
-		// tiles can be an array (JSON) or an object keyed by id (XML)
-		const tileEntries = Array.isArray(tiles) ? tiles : Object.values(tiles);
+		// normalize: tiles can be an array (JSON new) or an object keyed by id (XML / JSON old)
+		let tileEntries;
+		if (Array.isArray(tiles)) {
+			tileEntries = tiles;
+		} else {
+			// convert object-keyed format to array, injecting the key as id
+			tileEntries = Object.entries(tiles).map(([key, value]) => {
+				return { id: key, ...value };
+			});
+		}
 
 		for (const tile of tileEntries) {
 			const tileId = +tile.id;
@@ -168,7 +176,8 @@ export default class TMXTileset {
 			if (tile.animation) {
 				this.isAnimated = true;
 				const anim = tile.animation;
-				this.animations.set(anim[0].tileid, {
+				// key by the tile's own local id, not the first frame's tileid
+				this.animations.set(tileId, {
 					dt: 0,
 					idx: 0,
 					frames: anim,

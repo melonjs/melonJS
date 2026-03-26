@@ -134,11 +134,13 @@ export default class Tile extends Bounds {
 		let renderable;
 		const tileset = this.tileset;
 
-		if (tileset.animations.has(this.tileId)) {
+		const localId = this.tileId - tileset.firstgid;
+
+		if (tileset.animations.has(localId)) {
 			// animated tile — create an animated sprite
 			const frames = [];
 			const frameId = [];
-			for (const frame of tileset.animations.get(this.tileId).frames) {
+			for (const frame of tileset.animations.get(localId).frames) {
 				frameId.push(frame.tileid);
 				frames.push({
 					name: "" + frame.tileid,
@@ -146,8 +148,8 @@ export default class Tile extends Bounds {
 				});
 			}
 			renderable = tileset.texture.createAnimationFromName(frameId, settings);
-			renderable.addAnimation(this.tileId - tileset.firstgid, frames);
-			renderable.setCurrentAnimation(this.tileId - tileset.firstgid);
+			renderable.addAnimation(localId, frames);
+			renderable.setCurrentAnimation(localId);
 		} else if (tileset.isCollection) {
 			// collection tile — create a sprite from the tile image
 			const image = tileset.getTileImage(this.tileId);

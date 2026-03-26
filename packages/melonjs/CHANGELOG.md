@@ -18,6 +18,7 @@
 - TypeScript: convert application, input, and UI modules to TypeScript — application, header, resize, input, pointer, pointerevent, gamepad, uibaseelement, uispriteelement, uitextbutton
 
 ### Fixed
+- TMXTileset: fix animation key using first frame tileid instead of the tile's own id
 - CanvasRenderer: replace bezier ellipse approximation with native `context.ellipse()` (with polyfill for older browsers)
 - Plugin: fix `plugin.get()` throwing `TypeError` when searching by name with no match (instanceof on string)
 - Events: fix duplicate `BLUR` entry in Events interface (was missing `FOCUS`)
