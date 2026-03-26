@@ -820,5 +820,26 @@ describe("TMXUtils", () => {
 			expect(obj.stats).toEqual({ hp: 50, atk: 10 });
 			expect(obj.level).toEqual(3);
 		});
+
+		it("XML: parses class properties with nested <properties>", () => {
+			function parseXML(str) {
+				return new DOMParser().parseFromString(str, "text/xml").documentElement;
+			}
+
+			const xml = parseXML(`
+				<properties>
+					<property name="config" type="class" propertytype="EnemyConfig">
+						<properties>
+							<property name="health" type="int" value="100"/>
+							<property name="speed" type="float" value="2.5"/>
+						</properties>
+					</property>
+					<property name="emptyClass" type="class" propertytype="EmptyType"/>
+				</properties>
+			`);
+			const obj = parse(xml);
+			expect(obj.config).toEqual({ health: 100, speed: 2.5 });
+			expect(obj.emptyClass).toEqual({});
+		});
 	});
 });

@@ -294,7 +294,14 @@ export function applyTMXProperties(obj, data) {
 		const prop = properties[key];
 
 		// old "new" format: { 0: { name, type, value }, 1: ... }
-		if (prop !== null && typeof prop === "object" && prop.name !== undefined) {
+		// require numeric key + name + type to avoid matching class property values
+		if (
+			prop !== null &&
+			typeof prop === "object" &&
+			!isNaN(key) &&
+			prop.name !== undefined &&
+			prop.type !== undefined
+		) {
 			obj[prop.name] = coerceTMXValue(
 				prop.name,
 				prop.type || "string",
