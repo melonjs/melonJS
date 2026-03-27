@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
 	applyTMXProperties,
+	cacheEmbeddedImage,
 	decode,
 	parse,
+	resolveEmbeddedImage,
 	setInflateFunction,
 	tiledBlendMode,
 } from "../src/level/tiled/TMXUtils.js";
+import { imgList } from "../src/loader/cache.js";
+import { decodeBase64Image } from "../src/utils/decode.ts";
 
 describe("TMXUtils", () => {
 	// ---------------------------------------------------------------
@@ -982,6 +986,252 @@ describe("TMXUtils", () => {
 
 		it("should pass through unknown modes to the renderer", () => {
 			expect(tiledBlendMode("some-future-mode")).toEqual("some-future-mode");
+		});
+	});
+
+	// ---------------------------------------------------------------
+	// Embedded images (Tiled 1.11+)
+	// ---------------------------------------------------------------
+	describe("embedded images", () => {
+		// minimal 1x1 red PNG as base64
+		const RED_1x1_PNG =
+			"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg==";
+
+		function makeXml(xmlString) {
+			return new DOMParser().parseFromString(xmlString, "text/xml")
+				.documentElement;
+		}
+
+		it("should decode embedded tileset image and cache it in imgList", () => {
+			const xml = makeXml(`
+				<map>
+					<tileset firstgid="1" name="embedded" tilewidth="32" tileheight="32" tilecount="1" columns="1">
+						<image format="png" width="1" height="1">
+							<data encoding="base64">${RED_1x1_PNG}</data>
+						</image>
+					</tileset>
+				</map>
+			`);
+			const result = parse(xml);
+			const ts = result.tilesets[0];
+
+			// image should be a generated cache key with extension
+			expect(ts.image).toMatch(/^__embedded_\d+\.png$/);
+			expect(ts.imagewidth).toEqual("1");
+			expect(ts.imageheight).toEqual("1");
+
+			// should be cached in imgList
+			const basename = ts.image.replace(".png", "");
+			expect(imgList[basename]).toBeDefined();
+			expect(imgList[basename].src).toContain("data:image/png;base64,");
+		});
+
+		it("should decode embedded per-tile image in collection tileset", () => {
+			const xml = makeXml(`
+				<map>
+					<tileset firstgid="1" name="collection" tilewidth="32" tileheight="32" tilecount="1" columns="0">
+						<tile id="0">
+							<image format="png" width="1" height="1">
+								<data encoding="base64">${RED_1x1_PNG}</data>
+							</image>
+						</tile>
+					</tileset>
+				</map>
+			`);
+			const result = parse(xml);
+			const ts = result.tilesets[0];
+
+			const tile = ts.tiles["0"];
+			expect(tile.image).toMatch(/^__embedded_\d+\.png$/);
+
+			const basename = tile.image.replace(".png", "");
+			expect(imgList[basename]).toBeDefined();
+		});
+
+		it("should decode embedded image on image layer", () => {
+			const xml = makeXml(`
+				<map>
+					<imagelayer name="bg" offsetx="0" offsety="0">
+						<image format="png" width="1" height="1">
+							<data encoding="base64">${RED_1x1_PNG}</data>
+						</image>
+					</imagelayer>
+				</map>
+			`);
+			const result = parse(xml);
+			const layer = result.layers[0];
+
+			expect(layer.image).toMatch(/^__embedded_\d+\.png$/);
+			expect(layer.type).toEqual("imagelayer");
+
+			const basename = layer.image.replace(".png", "");
+			expect(imgList[basename]).toBeDefined();
+		});
+
+		it("should still handle external image source normally", () => {
+			const xml = makeXml(`
+				<map>
+					<tileset firstgid="1" name="external" tilewidth="32" tileheight="32">
+						<image source="terrain.png" width="128" height="128"/>
+					</tileset>
+				</map>
+			`);
+			const result = parse(xml);
+			const ts = result.tilesets[0];
+
+			expect(ts.image).toEqual("terrain.png");
+			expect(ts.imagewidth).toEqual("128");
+			expect(ts.imageheight).toEqual("128");
+		});
+
+		it("should generate unique cache keys for multiple embedded images", () => {
+			const xml = makeXml(`
+				<map>
+					<tileset firstgid="1" name="a" tilewidth="32" tileheight="32" tilecount="1" columns="1">
+						<image format="png" width="1" height="1">
+							<data encoding="base64">${RED_1x1_PNG}</data>
+						</image>
+					</tileset>
+					<tileset firstgid="2" name="b" tilewidth="32" tileheight="32" tilecount="1" columns="1">
+						<image format="png" width="1" height="1">
+							<data encoding="base64">${RED_1x1_PNG}</data>
+						</image>
+					</tileset>
+				</map>
+			`);
+			const result = parse(xml);
+
+			expect(result.tilesets[0].image).not.toEqual(result.tilesets[1].image);
+		});
+
+		it("should handle non-PNG format (e.g. jpg)", () => {
+			const xml = makeXml(`
+				<map>
+					<tileset firstgid="1" name="jpgtileset" tilewidth="32" tileheight="32" tilecount="1" columns="1">
+						<image format="jpg" width="1" height="1">
+							<data encoding="base64">${RED_1x1_PNG}</data>
+						</image>
+					</tileset>
+				</map>
+			`);
+			const result = parse(xml);
+			const ts = result.tilesets[0];
+
+			expect(ts.image).toMatch(/^__embedded_\d+\.jpg$/);
+			const basename = ts.image.replace(".jpg", "");
+			expect(imgList[basename]).toBeDefined();
+			expect(imgList[basename].src).toContain("data:image/jpg;base64,");
+		});
+
+		it("should handle image layer with external source", () => {
+			const xml = makeXml(`
+				<map>
+					<imagelayer name="bg">
+						<image source="background.png" width="640" height="480"/>
+					</imagelayer>
+				</map>
+			`);
+			const result = parse(xml);
+			const layer = result.layers[0];
+
+			expect(layer.image).toEqual("background.png");
+		});
+	});
+
+	// ---------------------------------------------------------------
+	// decodeBase64Image utility
+	// ---------------------------------------------------------------
+	describe("decodeBase64Image", () => {
+		const RED_1x1_PNG =
+			"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg==";
+
+		it("should return an HTMLImageElement with data URI src", () => {
+			const img = decodeBase64Image(RED_1x1_PNG, "png");
+			expect(img).toBeInstanceOf(HTMLImageElement);
+			expect(img.src).toContain("data:image/png;base64,");
+		});
+
+		it("should set width and height when provided", () => {
+			const img = decodeBase64Image(RED_1x1_PNG, "png", 32, 64);
+			expect(img.width).toEqual(32);
+			expect(img.height).toEqual(64);
+		});
+
+		it("should handle different formats", () => {
+			const img = decodeBase64Image(RED_1x1_PNG, "webp");
+			expect(img.src).toContain("data:image/webp;base64,");
+		});
+
+		it("should default format to png", () => {
+			const img = decodeBase64Image(RED_1x1_PNG);
+			expect(img.src).toContain("data:image/png;base64,");
+		});
+	});
+
+	// ---------------------------------------------------------------
+	// cacheEmbeddedImage / resolveEmbeddedImage helpers
+	// ---------------------------------------------------------------
+	describe("cacheEmbeddedImage", () => {
+		const RED_1x1_PNG =
+			"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg==";
+
+		it("should return a filename with extension", () => {
+			const name = cacheEmbeddedImage(RED_1x1_PNG, "png");
+			expect(name).toMatch(/^__embedded_\d+\.png$/);
+		});
+
+		it("should cache the image in imgList", () => {
+			const name = cacheEmbeddedImage(RED_1x1_PNG, "jpg");
+			const basename = name.replace(".jpg", "");
+			expect(imgList[basename]).toBeDefined();
+			expect(imgList[basename]).toBeInstanceOf(HTMLImageElement);
+		});
+	});
+
+	describe("resolveEmbeddedImage", () => {
+		const RED_1x1_PNG =
+			"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg==";
+
+		it("should resolve imagedata into image filename", () => {
+			const data = {
+				imagedata: RED_1x1_PNG,
+				imageformat: "png",
+				imagewidth: 1,
+				imageheight: 1,
+			};
+			resolveEmbeddedImage(data);
+
+			expect(data.image).toMatch(/^__embedded_\d+\.png$/);
+			expect(data.imagedata).toBeUndefined();
+			expect(data.imageformat).toBeUndefined();
+		});
+
+		it("should do nothing when no imagedata present", () => {
+			const data = { image: "tileset.png", imagewidth: 64 };
+			resolveEmbeddedImage(data);
+
+			expect(data.image).toEqual("tileset.png");
+		});
+
+		it("should default format to png", () => {
+			const data = { imagedata: RED_1x1_PNG, imagewidth: 1, imageheight: 1 };
+			resolveEmbeddedImage(data);
+
+			expect(data.image).toMatch(/\.png$/);
+		});
+
+		it("should use specified format", () => {
+			const data = {
+				imagedata: RED_1x1_PNG,
+				imageformat: "webp",
+				imagewidth: 1,
+				imageheight: 1,
+			};
+			resolveEmbeddedImage(data);
+
+			expect(data.image).toMatch(/\.webp$/);
+			const basename = data.image.replace(".webp", "");
+			expect(imgList[basename].src).toContain("data:image/webp;base64,");
 		});
 	});
 });

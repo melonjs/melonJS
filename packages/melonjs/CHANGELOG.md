@@ -13,6 +13,7 @@
 - TMX: support Tiled 1.12+ layer blend modes (`mode` attribute on tile layers, image layers, and object groups)
 - TMX: support Tiled 1.9+ tile sub-rectangles (`x`, `y`, `width`, `height` on `<tile>` elements for defining sub-regions within a tileset image)
 - TMX: support Tiled 1.9+ `tilerendersize` and `fillmode` tileset attributes for controlling how oversize tiles render relative to the map grid
+- TMX: support embedded base64 images on tilesets and image layers (Tiled 1.11+, TMX/XML format only)
 - CanvasRenderer: add support for additional CSS blend modes (`overlay`, `darken`, `lighten`, `color-dodge`, `color-burn`, `hard-light`, `soft-light`, `difference`, `exclusion`) when supported by the browser
 - WebGLRenderer: add `darken` and `lighten` blend modes via `gl.MIN`/`gl.MAX` (WebGL2 only)
 

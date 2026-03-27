@@ -107,6 +107,31 @@ export function decodeBase64AsArray(
 }
 
 /**
+ * Decode a base64 encoded image string into an HTMLImageElement
+ * @param base64 - Base64 encoded image data (raw, without data URI prefix)
+ * @param format - image format (e.g. "png", "jpg")
+ * @param width - optional image width hint
+ * @param height - optional image height hint
+ * @returns an HTMLImageElement with the decoded image
+ */
+export function decodeBase64Image(
+	base64: string,
+	format: string = "png",
+	width?: number,
+	height?: number,
+): HTMLImageElement {
+	const img = new Image();
+	if (width) {
+		img.width = width;
+	}
+	if (height) {
+		img.height = height;
+	}
+	img.src = `data:image/${format};base64,${base64}`;
+	return img;
+}
+
+/**
  * Decode an encoded array into a binary array
  * @param data - data to be decoded
  * @param encoding - data encoding ("csv", "base64", "none")

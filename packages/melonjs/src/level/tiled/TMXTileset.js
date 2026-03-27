@@ -3,6 +3,7 @@ import { Vector2d } from "../../math/vector2d.ts";
 import timer from "../../system/timer.ts";
 import { getBasename, getExtension } from "../../utils/file.ts";
 import { renderer } from "../../video/video.js";
+import { resolveEmbeddedImage } from "./TMXUtils.js";
 
 /**
  * a TMX Tile Set Object
@@ -190,6 +191,9 @@ export default class TMXTileset {
 		 */
 		this._lastUpdate = 0;
 
+		// resolve embedded JSON image data on the tileset itself
+		resolveEmbeddedImage(tileset);
+
 		// parse individual tile entries (animations, properties, images)
 		this._parseTiles(tileset.tiles);
 
@@ -268,6 +272,9 @@ export default class TMXTileset {
 					this.setTileProperty(tileId + this.firstgid, tile.properties);
 				}
 			}
+
+			// resolve embedded JSON image data on individual tiles
+			resolveEmbeddedImage(tile);
 
 			// store per-tile image (collection of images tileset)
 			if (tile.image) {
