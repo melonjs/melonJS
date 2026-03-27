@@ -1281,4 +1281,72 @@ describe("TMXTileset", () => {
 			});
 		});
 	});
+
+	// ==============================================================
+	// Embedded JSON images (forward-looking for Tiled JSON support)
+	// ==============================================================
+	describe("embedded JSON images", () => {
+		// minimal 1x1 red PNG as base64
+		const RED_1x1_PNG =
+			"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg==";
+
+		it("should decode embedded JSON tileset image from imagedata", () => {
+			const ts = new TMXTileset({
+				firstgid: 1,
+				name: "json_embedded",
+				tilewidth: 1,
+				tileheight: 1,
+				tilecount: 1,
+				columns: 1,
+				imagedata: RED_1x1_PNG,
+				imageformat: "png",
+				imagewidth: 1,
+				imageheight: 1,
+			});
+			// should have resolved the image
+			expect(ts.image).toBeDefined();
+			expect(ts.image.src).toContain("data:image/png;base64,");
+		});
+
+		it("should decode embedded JSON per-tile image from imagedata", () => {
+			const ts = new TMXTileset({
+				firstgid: 1,
+				name: "json_collection",
+				tilewidth: 1,
+				tileheight: 1,
+				tilecount: 1,
+				columns: 0,
+				tiles: [
+					{
+						id: 0,
+						imagedata: RED_1x1_PNG,
+						imageformat: "png",
+						imagewidth: 1,
+						imageheight: 1,
+					},
+				],
+			});
+			expect(ts.isCollection).toEqual(true);
+			expect(ts.imageCollection.size).toEqual(1);
+			const img = ts.getTileImage(1);
+			expect(img).toBeDefined();
+			expect(img.src).toContain("data:image/png;base64,");
+		});
+
+		it("should default imageformat to png when not specified", () => {
+			const ts = new TMXTileset({
+				firstgid: 1,
+				name: "json_noformat",
+				tilewidth: 1,
+				tileheight: 1,
+				tilecount: 1,
+				columns: 1,
+				imagedata: RED_1x1_PNG,
+				imagewidth: 1,
+				imageheight: 1,
+			});
+			expect(ts.image).toBeDefined();
+			expect(ts.image.src).toContain("data:image/png;base64,");
+		});
+	});
 });

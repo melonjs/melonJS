@@ -15,7 +15,11 @@ import TMXGroup from "./TMXGroup.js";
 import TMXLayer from "./TMXLayer.js";
 import TMXTileset from "./TMXTileset.js";
 import TMXTilesetGroup from "./TMXTilesetGroup.js";
-import { applyTMXProperties, tiledBlendMode } from "./TMXUtils.js";
+import {
+	applyTMXProperties,
+	resolveEmbeddedImage,
+	tiledBlendMode,
+} from "./TMXUtils.js";
 
 /**
  * read the layer Data
@@ -38,6 +42,9 @@ function readLayer(map, data, z) {
  * @ignore
  */
 function readImageLayer(map, data, z) {
+	// resolve embedded JSON image data if present
+	resolveEmbeddedImage(data);
+
 	// Normalize properties
 	applyTMXProperties(data.properties, data);
 

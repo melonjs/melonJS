@@ -1,5 +1,46 @@
-import { decode } from "../../utils/decode.ts";
+import { imgList } from "../../loader/cache.js";
+import { decode, decodeBase64Image } from "../../utils/decode.ts";
 import { xmlToObject } from "../../utils/xml.ts";
+
+// counter for generating unique cache keys for embedded images
+let embeddedImageId = 0;
+
+/**
+ * Decode an embedded base64 image, cache it in imgList, and return
+ * a generated filename (with extension) suitable for getImage().
+ * Works for both XML-parsed data (base64 string) and JSON data.
+ * @ignore
+ * @param {string} base64 - raw base64-encoded image data
+ * @param {string} [format="png"] - image format
+ * @param {number} [width] - image width hint
+ * @param {number} [height] - image height hint
+ * @returns {string} generated filename (e.g. "__embedded_0.png")
+ */
+export function cacheEmbeddedImage(base64, format = "png", width, height) {
+	const name = `__embedded_${embeddedImageId++}`;
+	imgList[name] = decodeBase64Image(base64, format, width, height);
+	return `${name}.${format}`;
+}
+
+/**
+ * If the given data object has an embedded base64 image (JSON `imagedata`
+ * property), decode it, cache it, and replace with a generated filename.
+ * @ignore
+ * @param {object} data - tileset, tile, or layer data
+ */
+export function resolveEmbeddedImage(data) {
+	if (data.imagedata) {
+		const format = data.imageformat || "png";
+		data.image = cacheEmbeddedImage(
+			data.imagedata,
+			format,
+			data.imagewidth ? +data.imagewidth : undefined,
+			data.imageheight ? +data.imageheight : undefined,
+		);
+		delete data.imagedata;
+		delete data.imageformat;
+	}
+}
 
 /**
  * Convert a Tiled blend mode name to a canonical melonJS blend mode.
@@ -123,13 +164,28 @@ function coerceTMXValue(name, type, raw) {
 /**
  * Flatten image child object into parent (used by tile and tileset).
  * Moves source → image, width → imagewidth, height → imageheight.
+ * For embedded images (no source, has data), decodes and caches the image.
  * @ignore
  */
 function flattenImage(obj) {
 	if (obj.image) {
 		obj.imagewidth = obj.image.width;
 		obj.imageheight = obj.image.height;
-		obj.image = obj.image.source;
+		if (obj.image.source) {
+			obj.image = obj.image.source;
+		} else if (obj.image.data) {
+			// embedded XML image: <data encoding="base64">...</data>
+			const format = obj.image.format || "png";
+			const base64 = obj.image.data.text || obj.image.data;
+			obj.image = cacheEmbeddedImage(
+				base64,
+				format,
+				obj.image.width ? +obj.image.width : undefined,
+				obj.image.height ? +obj.image.height : undefined,
+			);
+		} else {
+			obj.image = obj.image.source;
+		}
 	}
 }
 
@@ -184,7 +240,19 @@ function normalizeTMX(obj, item, parse) {
 			const layer = parse(item);
 			layer.type = nodeName === "layer" ? "tilelayer" : nodeName;
 			if (layer.image) {
-				layer.image = layer.image.source;
+				// flattenImage equivalent for image layers
+				if (layer.image.source) {
+					layer.image = layer.image.source;
+				} else if (layer.image.data) {
+					const format = layer.image.format || "png";
+					const base64 = layer.image.data.text || layer.image.data;
+					layer.image = cacheEmbeddedImage(
+						base64,
+						format,
+						layer.image.width ? +layer.image.width : undefined,
+						layer.image.height ? +layer.image.height : undefined,
+					);
+				}
 			}
 			const layers = obj.layers || (obj.layers = []);
 			layers.push(layer);
@@ -254,6 +322,12 @@ function normalizeTMX(obj, item, parse) {
 			}
 			break;
 		}
+
+		case "image":
+			// parse <image> without the TMX normalizer so that a <data> child
+			// (embedded base64 image) is not mistakenly decoded as tile layer data
+			obj.image = xmlToObject(item);
+			break;
 
 		default:
 			obj[nodeName] = parse(item);
