@@ -129,5 +129,23 @@ describe("TMXTileMap", () => {
 			});
 			expect(container.getOpacity()).toBeCloseTo(0.8);
 		});
+
+		it("should propagate blend mode to children in non-flattened mode", () => {
+			const map = new TMXTileMap("test", minimalMap);
+			const objects = map.getObjects(false);
+
+			const container = objects.find((obj) => {
+				return obj.name === "TestGroup";
+			});
+			expect(container).toBeDefined();
+			expect(container.children.length).toBeGreaterThan(0);
+
+			// children should inherit the group blend mode
+			for (const child of container.children) {
+				if (child.isRenderable === true) {
+					expect(child.blendMode).toEqual("multiply");
+				}
+			}
+		});
 	});
 });
