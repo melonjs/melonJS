@@ -93,7 +93,8 @@ function coerceTMXValue(name, type, raw) {
 			// JSON list property: value is an array of { type, value } objects
 			if (Array.isArray(raw)) {
 				return raw.map((item) => {
-					return coerceTMXValue(name, item.type || "string", item.value);
+					// use "" as name to avoid name-dependent coercions (e.g. ratio/anchorPoint)
+					return coerceTMXValue("", item.type || "string", item.value);
 				});
 			}
 			// XML list: items already collected as array by normalizeTMX
