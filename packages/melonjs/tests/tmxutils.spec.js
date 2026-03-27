@@ -1104,7 +1104,7 @@ describe("TMXUtils", () => {
 			expect(result.tilesets[0].image).not.toEqual(result.tilesets[1].image);
 		});
 
-		it("should handle non-PNG format (e.g. jpg)", () => {
+		it("should use format attribute for the data URI and cache key extension", () => {
 			const xml = makeXml(`
 				<map>
 					<tileset firstgid="1" name="jpgtileset" tilewidth="32" tileheight="32" tilecount="1" columns="1">
@@ -1117,9 +1117,11 @@ describe("TMXUtils", () => {
 			const result = parse(xml);
 			const ts = result.tilesets[0];
 
+			// cache key should use the specified format extension
 			expect(ts.image).toMatch(/^__embedded_\d+\.jpg$/);
 			const basename = ts.image.replace(".jpg", "");
 			expect(imgList[basename]).toBeDefined();
+			// "jpg" should be normalized to "image/jpeg" MIME type
 			expect(imgList[basename].src).toContain("data:image/jpeg;base64,");
 		});
 
@@ -1157,9 +1159,15 @@ describe("TMXUtils", () => {
 			expect(img.height).toEqual(64);
 		});
 
-		it("should handle different formats", () => {
-			const img = decodeBase64Image(RED_1x1_PNG, "webp");
-			expect(img.src).toContain("data:image/webp;base64,");
+		it("should build correct data URI for different format strings", () => {
+			const jpg = decodeBase64Image(RED_1x1_PNG, "jpg");
+			expect(jpg.src).toContain("data:image/jpeg;base64,");
+
+			const webp = decodeBase64Image(RED_1x1_PNG, "webp");
+			expect(webp.src).toContain("data:image/webp;base64,");
+
+			const bmp = decodeBase64Image(RED_1x1_PNG, "bmp");
+			expect(bmp.src).toContain("data:image/bmp;base64,");
 		});
 
 		it("should default format to png", () => {
