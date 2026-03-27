@@ -100,8 +100,8 @@ function readImageLayer(map, data, z) {
  * read the tileset Data
  * @ignore
  */
-function readTileset(data) {
-	return new TMXTileset(data);
+function readTileset(data, mapTilewidth, mapTileheight) {
+	return new TMXTileset(data, mapTilewidth, mapTileheight);
 }
 
 /**
@@ -307,7 +307,9 @@ export default class TMXTileMap {
 		if (typeof data.tilesets !== "undefined") {
 			const tilesets = data.tilesets;
 			for (let i = 0, len = tilesets.length; i < len; i++) {
-				this.tilesets.add(readTileset(tilesets[i]));
+				this.tilesets.add(
+					readTileset(tilesets[i], this.tilewidth, this.tileheight),
+				);
 			}
 		}
 

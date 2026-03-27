@@ -81,7 +81,7 @@ UI
 - Text buttons with built-in styling
 
 Level Editor
-- [Tiled](https://www.mapeditor.org) map format version +1.0 built-in support for easy level design
+- [Tiled](https://www.mapeditor.org) map format [up to 1.10+](https://doc.mapeditor.org/en/stable/reference/tmx-changelog/) built-in support for easy level design
     - Uncompressed and [compressed](https://github.com/melonjs/melonJS/tree/master/packages/tiled-inflate-plugin) Plain, Base64, CSV and JSON encoded XML tilemap loading
     - Orthogonal, Isometric and Hexagonal maps (both normal and staggered)
     - Multiple layers (multiple background/foreground, collision and Image layers)

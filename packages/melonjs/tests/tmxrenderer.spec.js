@@ -1,13 +1,31 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { boot } from "../src/index.js";
+import { boot, video } from "../src/index.js";
 import TMXHexagonalRenderer from "../src/level/tiled/renderer/TMXHexagonalRenderer.js";
 import TMXIsometricRenderer from "../src/level/tiled/renderer/TMXIsometricRenderer.js";
 import TMXOrthogonalRenderer from "../src/level/tiled/renderer/TMXOrthogonalRenderer.js";
 import TMXStaggeredRenderer from "../src/level/tiled/renderer/TMXStaggeredRenderer.js";
+import Tile from "../src/level/tiled/TMXTile.js";
+import TMXTileset from "../src/level/tiled/TMXTileset.js";
+import { imgList } from "../src/loader/cache.js";
+
+// helper to create a fake image in the loader cache
+function fakeImage(name, w = 64, h = 64) {
+	const canvas = document.createElement("canvas");
+	canvas.width = w;
+	canvas.height = h;
+	imgList[name] = canvas;
+	return canvas;
+}
 
 describe("TMX Renderers", () => {
 	beforeAll(() => {
 		boot();
+		video.init(128, 128, {
+			parent: "screen",
+			scale: "auto",
+			renderer: video.AUTO,
+		});
+		fakeImage("drawtest", 256, 256);
 	});
 
 	// mock map object for constructors
@@ -201,6 +219,156 @@ describe("TMX Renderers", () => {
 
 			expect(result1.x).toEqual(result2.x);
 			expect(result1.y).toEqual(result2.y);
+		});
+	});
+
+	// ==============================================================
+	// drawTile with tilerendersize/fillmode across renderers
+	// ==============================================================
+	describe("drawTile with tilerendersize/fillmode", () => {
+		// spy renderer that captures drawImage calls
+		function spyRenderer() {
+			const calls = [];
+			return {
+				calls,
+				drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh) {
+					calls.push({ sx, sy, sw, sh, dx, dy, dw, dh });
+				},
+				save() {},
+				restore() {},
+				translate() {},
+				transform() {},
+				uvOffset: 0,
+			};
+		}
+
+		// create a tileset with given overrides and map grid size
+		function makeTileset(overrides, mapTw, mapTh) {
+			return new TMXTileset(
+				{
+					firstgid: 1,
+					name: "drawtest",
+					tilewidth: 48,
+					tileheight: 48,
+					spacing: 0,
+					margin: 0,
+					tilecount: 16,
+					columns: 4,
+					image: "drawtest.png",
+					...overrides,
+				},
+				mapTw,
+				mapTh,
+			);
+		}
+
+		describe("TMXOrthogonalRenderer.drawTile", () => {
+			it("should draw oversize tile at native size with tilerendersize='tile'", () => {
+				const ts = makeTileset({}, 32, 32);
+				const tile = new Tile(0, 0, 1, ts);
+				const spy = spyRenderer();
+				const ortho = new TMXOrthogonalRenderer(mockMap());
+				ortho.drawTile(spy, 0, 0, tile);
+				expect(spy.calls.length).toEqual(1);
+				// native tile size: 48x48
+				expect(spy.calls[0].dw).toEqual(48);
+				expect(spy.calls[0].dh).toEqual(48);
+			});
+
+			it("should scale tile to grid size with tilerendersize='grid' stretch", () => {
+				const ts = makeTileset({ tilerendersize: "grid" }, 32, 32);
+				const tile = new Tile(0, 0, 1, ts);
+				const spy = spyRenderer();
+				const ortho = new TMXOrthogonalRenderer(mockMap());
+				ortho.drawTile(spy, 0, 0, tile);
+				expect(spy.calls.length).toEqual(1);
+				expect(spy.calls[0].dw).toBeCloseTo(32);
+				expect(spy.calls[0].dh).toBeCloseTo(32);
+			});
+
+			it("should use uniform scale with preserve-aspect-fit", () => {
+				// 48x48 tile on 32x16 grid → min(32/48, 16/48) = 1/3
+				const ts = makeTileset(
+					{ tilerendersize: "grid", fillmode: "preserve-aspect-fit" },
+					32,
+					16,
+				);
+				const tile = new Tile(0, 0, 1, ts);
+				const spy = spyRenderer();
+				const ortho = new TMXOrthogonalRenderer(
+					mockMap({ tilewidth: 32, tileheight: 16 }),
+				);
+				ortho.drawTile(spy, 0, 0, tile);
+				expect(spy.calls.length).toEqual(1);
+				expect(spy.calls[0].dw).toBeCloseTo(16);
+				expect(spy.calls[0].dh).toBeCloseTo(16);
+			});
+		});
+
+		describe("TMXIsometricRenderer.drawTile", () => {
+			it("should draw at native size with tilerendersize='tile'", () => {
+				const ts = makeTileset({}, 32, 32);
+				const tile = new Tile(0, 0, 1, ts);
+				const spy = spyRenderer();
+				const iso = new TMXIsometricRenderer(
+					mockMap({ orientation: "isometric" }),
+				);
+				iso.drawTile(spy, 0, 0, tile);
+				expect(spy.calls.length).toEqual(1);
+				expect(spy.calls[0].dw).toEqual(48);
+				expect(spy.calls[0].dh).toEqual(48);
+			});
+
+			it("should scale tile to grid size with tilerendersize='grid'", () => {
+				const ts = makeTileset({ tilerendersize: "grid" }, 32, 32);
+				const tile = new Tile(0, 0, 1, ts);
+				const spy = spyRenderer();
+				const iso = new TMXIsometricRenderer(
+					mockMap({ orientation: "isometric" }),
+				);
+				iso.drawTile(spy, 0, 0, tile);
+				expect(spy.calls.length).toEqual(1);
+				expect(spy.calls[0].dw).toBeCloseTo(32);
+				expect(spy.calls[0].dh).toBeCloseTo(32);
+			});
+		});
+
+		describe("TMXHexagonalRenderer.drawTile", () => {
+			it("should draw at native size with tilerendersize='tile'", () => {
+				const ts = makeTileset({}, 32, 32);
+				const tile = new Tile(0, 0, 1, ts);
+				const spy = spyRenderer();
+				const hex = new TMXHexagonalRenderer(
+					mockMap({
+						orientation: "hexagonal",
+						hexsidelength: 16,
+						staggeraxis: "y",
+						staggerindex: "odd",
+					}),
+				);
+				hex.drawTile(spy, 0, 0, tile);
+				expect(spy.calls.length).toEqual(1);
+				expect(spy.calls[0].dw).toEqual(48);
+				expect(spy.calls[0].dh).toEqual(48);
+			});
+
+			it("should scale tile to grid size with tilerendersize='grid'", () => {
+				const ts = makeTileset({ tilerendersize: "grid" }, 32, 32);
+				const tile = new Tile(0, 0, 1, ts);
+				const spy = spyRenderer();
+				const hex = new TMXHexagonalRenderer(
+					mockMap({
+						orientation: "hexagonal",
+						hexsidelength: 16,
+						staggeraxis: "y",
+						staggerindex: "odd",
+					}),
+				);
+				hex.drawTile(spy, 0, 0, tile);
+				expect(spy.calls.length).toEqual(1);
+				expect(spy.calls[0].dw).toBeCloseTo(32);
+				expect(spy.calls[0].dh).toBeCloseTo(32);
+			});
 		});
 	});
 });
