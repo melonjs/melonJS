@@ -628,7 +628,40 @@ describe("TMXTileset", () => {
 			expect(ts.class).toEqual("terrain");
 		});
 
-		it("should be undefined when not set", () => {
+		it("should fall back to type when class is not set (Tiled 1.10+)", () => {
+			const ts = new TMXTileset({
+				firstgid: 1,
+				name: "typed",
+				type: "terrain",
+				tilewidth: 32,
+				tileheight: 32,
+				spacing: 0,
+				margin: 0,
+				tilecount: 4,
+				columns: 2,
+				image: "ground.png",
+			});
+			expect(ts.class).toEqual("terrain");
+		});
+
+		it("should prefer class over type when both are set", () => {
+			const ts = new TMXTileset({
+				firstgid: 1,
+				name: "both",
+				class: "from-class",
+				type: "from-type",
+				tilewidth: 32,
+				tileheight: 32,
+				spacing: 0,
+				margin: 0,
+				tilecount: 4,
+				columns: 2,
+				image: "ground.png",
+			});
+			expect(ts.class).toEqual("from-class");
+		});
+
+		it("should be undefined when neither class nor type is set", () => {
 			const ts = new TMXTileset({
 				firstgid: 1,
 				name: "noclassed",
