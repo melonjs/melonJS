@@ -839,4 +839,176 @@ describe("TMXTileset", () => {
 			});
 		});
 	});
+
+	// ==============================================================
+	// Tile sub-rectangles (Tiled 1.9+, collection tilesets only)
+	// ==============================================================
+	describe("tile sub-rectangles (Tiled 1.9+)", () => {
+		function makeCollectionWithSubRect(tileData) {
+			fakeImage("subrect", 64, 64);
+			return new TMXTileset({
+				firstgid: 1,
+				name: "subcollection",
+				tilewidth: 32,
+				tileheight: 32,
+				tilecount: 1,
+				columns: 0,
+				tiles: [
+					{
+						id: 0,
+						image: "subrect.png",
+						imagewidth: 64,
+						imageheight: 64,
+						...tileData,
+					},
+				],
+			});
+		}
+
+		it("should store sub-rectangle from tile entry", () => {
+			const ts = makeCollectionWithSubRect({
+				x: 10,
+				y: 5,
+				width: 40,
+				height: 30,
+			});
+			expect(ts.tileSubRects.size).toEqual(1);
+			const rect = ts.tileSubRects.get(0);
+			expect(rect.x).toEqual(10);
+			expect(rect.y).toEqual(5);
+			expect(rect.width).toEqual(40);
+			expect(rect.height).toEqual(30);
+		});
+
+		it("should default width/height to image dimensions when not specified", () => {
+			const ts = makeCollectionWithSubRect({ x: 10, y: 5 });
+			const rect = ts.tileSubRects.get(0);
+			expect(rect.x).toEqual(10);
+			expect(rect.y).toEqual(5);
+			// defaults to the full image dimensions (64x64)
+			expect(rect.width).toEqual(64);
+			expect(rect.height).toEqual(64);
+		});
+
+		it("should return a cropped image from getTileImage", () => {
+			const ts = makeCollectionWithSubRect({
+				x: 10,
+				y: 10,
+				width: 40,
+				height: 30,
+			});
+			const image = ts.getTileImage(1); // gid = firstgid + 0
+			expect(image.width).toEqual(40);
+			expect(image.height).toEqual(30);
+			// should be a canvas (cropped), not the original image
+			expect(image.tagName).toEqual("CANVAS");
+		});
+
+		it("should return the original image when sub-rect matches full image", () => {
+			const ts = makeCollectionWithSubRect({
+				x: 0,
+				y: 0,
+				width: 64,
+				height: 64,
+			});
+			const image = ts.getTileImage(1);
+			// no cropping needed, should be the original canvas (not a new one)
+			expect(image.width).toEqual(64);
+			expect(image.height).toEqual(64);
+		});
+
+		it("should use sub-rectangle dimensions for Tile bounds", () => {
+			const ts = makeCollectionWithSubRect({
+				x: 10,
+				y: 10,
+				width: 40,
+				height: 30,
+			});
+			const tile = new Tile(0, 0, 1, ts);
+			expect(tile.width).toEqual(40);
+			expect(tile.height).toEqual(30);
+		});
+
+		it("should fall back to image dimensions when sub-rect has no width/height", () => {
+			const ts = makeCollectionWithSubRect({ x: 5, y: 5 });
+			const tile = new Tile(0, 0, 1, ts);
+			// defaults to full image dimensions (64x64)
+			expect(tile.width).toEqual(64);
+			expect(tile.height).toEqual(64);
+		});
+
+		it("should fall back to image dimensions when no sub-rectangle", () => {
+			const ts = new TMXTileset({
+				firstgid: 1,
+				name: "nocollection",
+				tilewidth: 32,
+				tileheight: 32,
+				tilecount: 1,
+				columns: 0,
+				tiles: [
+					{
+						id: 0,
+						image: "house.png",
+						imagewidth: 64,
+						imageheight: 80,
+					},
+				],
+			});
+			const tile = new Tile(0, 0, 1, ts);
+			expect(tile.width).toEqual(64);
+			expect(tile.height).toEqual(80);
+		});
+
+		it("should parse sub-rectangles from XML object-keyed format", () => {
+			fakeImage("xmlsub", 64, 64);
+			const ts = new TMXTileset({
+				firstgid: 1,
+				name: "xmlcollection",
+				tilewidth: 32,
+				tileheight: 32,
+				tilecount: 1,
+				columns: 0,
+				tiles: {
+					0: {
+						image: "xmlsub.png",
+						imagewidth: 64,
+						imageheight: 64,
+						x: 5,
+						y: 10,
+						width: 28,
+						height: 30,
+					},
+				},
+			});
+			expect(ts.tileSubRects.size).toEqual(1);
+			const rect = ts.tileSubRects.get(0);
+			expect(rect.x).toEqual(5);
+			expect(rect.y).toEqual(10);
+			expect(rect.width).toEqual(28);
+			expect(rect.height).toEqual(30);
+		});
+
+		it("should ignore sub-rectangle attributes on spritesheet tiles", () => {
+			// Tiled never generates sub-rects for spritesheet tilesets;
+			// sub-rects are only parsed for tiles with a per-tile image
+			const ts = new TMXTileset({
+				firstgid: 1,
+				name: "ground",
+				tilewidth: 32,
+				tileheight: 32,
+				tilecount: 16,
+				columns: 4,
+				image: "ground.png",
+				tiles: [{ id: 0, x: 10, y: 5, width: 20, height: 24 }],
+			});
+			// no sub-rects stored (no per-tile image)
+			expect(ts.tileSubRects.size).toEqual(0);
+			const entry = ts.atlas["0"];
+			// atlas entry uses grid-based offset
+			expect(entry.offset.x).toEqual(0);
+			expect(entry.offset.y).toEqual(0);
+			expect(entry.width).toEqual(32);
+			expect(entry.height).toEqual(32);
+		});
+	});
 });

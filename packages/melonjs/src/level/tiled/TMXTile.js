@@ -23,7 +23,7 @@ export default class Tile extends Bounds {
 	constructor(x, y, gid, tileset) {
 		super();
 
-		// determine the tile size from tileset or per-tile image
+		// determine the tile size from per-tile image or tileset grid
 		let width;
 		let height;
 		if (tileset.isCollection) {
