@@ -1,8 +1,8 @@
-import { getImage, getTMX } from "./../../loader/loader.js";
+import { getImage, getTMX } from "../../loader/loader.js";
 import { Vector2d } from "../../math/vector2d.ts";
-import timer from "./../../system/timer.ts";
+import timer from "../../system/timer.ts";
 import { getBasename, getExtension } from "../../utils/file.ts";
-import { renderer } from "./../../video/video.js";
+import { renderer } from "../../video/video.js";
 
 /**
  * a TMX Tile Set Object
@@ -13,16 +13,34 @@ export default class TMXTileset {
 	 *  @param {object} tileset - tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
 	 */
 	constructor(tileset) {
-		// tile properties (collidable, etc..)
-		this.TileProperties = [];
+		/**
+		 * per-tile properties indexed by gid
+		 * @type {Map<number, object>}
+		 * @ignore
+		 */
+		this.tileProperties = new Map();
 
-		// hold reference to each tile image
-		this.imageCollection = [];
+		/**
+		 * per-tile images for "Collection of Image" tilesets, indexed by gid
+		 * @type {Map<number, HTMLImageElement|HTMLCanvasElement>}
+		 * @ignore
+		 */
+		this.imageCollection = new Map();
 
-		this.firstgid = this.lastgid = +tileset.firstgid;
+		/**
+		 * the first global tile ID of this tileset
+		 * @type {number}
+		 */
+		this.firstgid = +tileset.firstgid;
+
+		/**
+		 * the last global tile ID of this tileset
+		 * @type {number}
+		 */
+		this.lastgid = this.firstgid;
 
 		// check if an external tileset is defined
-		if (typeof tileset.source !== "undefined") {
+		if (tileset.source !== undefined) {
 			const src = tileset.source;
 			const ext = getExtension(src);
 			if (ext === "tsx" || ext === "xml" || ext === "json" || ext === "tsj") {
@@ -34,13 +52,42 @@ export default class TMXTileset {
 			}
 		}
 
+		/**
+		 * the tileset name
+		 * @type {string}
+		 */
 		this.name = tileset.name;
-		this.tilewidth = +tileset.tilewidth;
-		this.tileheight = +tileset.tileheight;
-		this.spacing = +tileset.spacing || 0;
-		this.margin = +tileset.margin || 0;
 
-		// set tile offset properties (if any)
+		/**
+		 * the width of each tile in pixels
+		 * @type {number}
+		 */
+		this.tilewidth = +tileset.tilewidth;
+
+		/**
+		 * the height of each tile in pixels
+		 * @type {number}
+		 */
+		this.tileheight = +tileset.tileheight;
+
+		/**
+		 * the spacing between tiles in pixels
+		 * @type {number}
+		 * @default 0
+		 */
+		this.spacing = +(tileset.spacing ?? 0);
+
+		/**
+		 * the margin around tiles in pixels
+		 * @type {number}
+		 * @default 0
+		 */
+		this.margin = +(tileset.margin ?? 0);
+
+		/**
+		 * tile drawing offset
+		 * @type {Vector2d}
+		 */
 		this.tileoffset = new Vector2d();
 
 		/**
@@ -56,14 +103,15 @@ export default class TMXTileset {
 		this.isCollection = false;
 
 		/**
-		 * the tileset class
-		 * @type {boolean}
+		 * the tileset class (since Tiled 1.9)
+		 * @type {string}
 		 */
 		this.class = tileset.class;
 
 		/**
 		 * Tileset animations
 		 * @private
+		 * @type {Map}
 		 */
 		this.animations = new Map();
 
@@ -73,132 +121,161 @@ export default class TMXTileset {
 		 */
 		this._lastUpdate = 0;
 
-		const tiles = tileset.tiles;
-		if (tiles) {
-			// tiles can be an array (JSON) or an object keyed by id (XML)
-			const tileEntries = Array.isArray(tiles) ? tiles : Object.values(tiles);
-
-			for (let t = 0, tLen = tileEntries.length; t < tLen; t++) {
-				const tile = tileEntries[t];
-				const tileId = +tile.id;
-
-				if (tile.animation) {
-					this.isAnimated = true;
-					const anim = tile.animation;
-					this.animations.set(anim[0].tileid, {
-						dt: 0,
-						idx: 0,
-						frames: anim,
-						cur: anim[0],
-					});
-				}
-
-				// set tile properties, if any
-				if (tile.properties) {
-					if (Array.isArray(tile.properties)) {
-						// JSON (new format) — array of { name, value }
-						const tileProperty = {};
-						const props = tile.properties;
-						for (let j = 0, pLen = props.length; j < pLen; j++) {
-							tileProperty[props[j].name] = props[j].value;
-						}
-						this.setTileProperty(tileId + this.firstgid, tileProperty);
-					} else {
-						// XML format — flat object
-						this.setTileProperty(tileId + this.firstgid, tile.properties);
-					}
-				}
-
-				if (tile.image) {
-					const image = getImage(tile.image);
-					if (!image) {
-						throw new Error(
-							`melonJS: '${tile.image}' file for tile '${tileId + this.firstgid}' not found!`,
-						);
-					}
-					this.imageCollection[tileId + this.firstgid] = image;
-				}
-			}
-		}
+		// parse individual tile entries (animations, properties, images)
+		this._parseTiles(tileset.tiles);
 
 		// Tiled 1.10+ provides an explicit flag; fall back to detection for older maps
-		this.isCollection = tileset.isCollection ?? this.imageCollection.length > 0;
+		this.isCollection = tileset.isCollection ?? this.imageCollection.size > 0;
 
+		// set tile offset
 		const offset = tileset.tileoffset;
 		if (offset) {
 			this.tileoffset.x = +offset.x;
 			this.tileoffset.y = +offset.y;
 		}
 
-		// set tile properties, if any (JSON old format)
+		// set tile properties from old JSON format (tileproperties)
 		const tileInfo = tileset.tileproperties;
 		if (tileInfo) {
-			const tileIds = Object.keys(tileInfo);
-			for (let i = 0, len = tileIds.length; i < len; i++) {
-				const id = tileIds[i];
-				this.setTileProperty(+id + this.firstgid, tileInfo[id]);
+			for (const [id, props] of Object.entries(tileInfo)) {
+				this.setTileProperty(+id + this.firstgid, props);
 			}
 		}
 
-		// if not a tile image collection
-		if (this.isCollection === false) {
-			// get the global tileset texture
-			this.image = getImage(tileset.image);
+		// initialize atlas for spritesheet tilesets
+		if (!this.isCollection) {
+			this._initAtlas(tileset);
+		}
+	}
 
-			if (!this.image) {
-				throw new Error(
-					`melonJS: '${tileset.image}' file for tileset '${this.name}' not found!`,
-				);
-			}
+	/**
+	 * Parse individual tile entries for animations, properties, and images.
+	 * @param {object[]|object} [tiles] - tile entries (array in JSON, object in XML)
+	 * @ignore
+	 */
+	_parseTiles(tiles) {
+		if (!tiles) {
+			return;
+		}
 
-			// create a texture atlas for the given tileset
-			this.texture = renderer.cache.get(this.image, {
-				framewidth: this.tilewidth,
-				frameheight: this.tileheight,
-				margin: this.margin,
-				spacing: this.spacing,
+		// normalize: tiles can be an array (JSON new) or an object keyed by id (XML / JSON old)
+		let tileEntries;
+		if (Array.isArray(tiles)) {
+			tileEntries = tiles;
+		} else {
+			// convert object-keyed format to array, injecting the key as id
+			tileEntries = Object.entries(tiles).map(([key, value]) => {
+				return { id: key, ...value };
 			});
-			this.atlas = this.texture.getAtlas();
+		}
 
-			// calculate the number of tiles per horizontal line
-			const hTileCount =
-				+tileset.columns ||
-				Math.round(this.image.width / (this.tilewidth + this.spacing));
-			let vTileCount = Math.round(
-				this.image.height / (this.tileheight + this.spacing),
+		for (const tile of tileEntries) {
+			const tileId = +tile.id;
+
+			// parse animation frames
+			if (tile.animation) {
+				this.isAnimated = true;
+				const anim = tile.animation;
+				// key by the tile's own local id, not the first frame's tileid
+				this.animations.set(tileId, {
+					dt: 0,
+					idx: 0,
+					frames: anim,
+					cur: anim[0],
+				});
+			}
+
+			// set tile properties, if any
+			if (tile.properties) {
+				if (Array.isArray(tile.properties)) {
+					// JSON (new format) — array of { name, value }
+					const tileProperty = {};
+					for (const prop of tile.properties) {
+						tileProperty[prop.name] = prop.value;
+					}
+					this.setTileProperty(tileId + this.firstgid, tileProperty);
+				} else {
+					// XML format — flat object
+					this.setTileProperty(tileId + this.firstgid, tile.properties);
+				}
+			}
+
+			// store per-tile image (collection of images tileset)
+			if (tile.image) {
+				const image = getImage(tile.image);
+				if (!image) {
+					throw new Error(
+						`melonJS: '${tile.image}' file for tile '${tileId + this.firstgid}' not found!`,
+					);
+				}
+				this.imageCollection.set(tileId + this.firstgid, image);
+			}
+		}
+	}
+
+	/**
+	 * Initialize the texture atlas for a spritesheet tileset.
+	 * @param {object} tileset - tileset data
+	 * @ignore
+	 */
+	_initAtlas(tileset) {
+		// get the global tileset texture
+		this.image = getImage(tileset.image);
+
+		if (!this.image) {
+			throw new Error(
+				`melonJS: '${tileset.image}' file for tileset '${this.name}' not found!`,
 			);
-			if (tileset.tilecount % hTileCount > 0) {
-				++vTileCount;
-			}
-			// compute the last gid value in the tileset
-			this.lastgid = this.firstgid + (hTileCount * vTileCount - 1 || 0);
-			if (
-				tileset.tilecount &&
-				this.lastgid - this.firstgid + 1 !== +tileset.tilecount
-			) {
-				console.warn(
-					`Computed tilecount (${this.lastgid - this.firstgid + 1}) does not match expected tilecount (${tileset.tilecount})`,
-				);
-			}
+		}
+
+		// create a texture atlas for the given tileset
+		this.texture = renderer.cache.get(this.image, {
+			framewidth: this.tilewidth,
+			frameheight: this.tileheight,
+			margin: this.margin,
+			spacing: this.spacing,
+		});
+		this.atlas = this.texture.getAtlas();
+
+		// calculate the number of tiles per horizontal line
+		const hTileCount =
+			+tileset.columns ||
+			Math.round(this.image.width / (this.tilewidth + this.spacing));
+		let vTileCount = Math.round(
+			this.image.height / (this.tileheight + this.spacing),
+		);
+		if (tileset.tilecount % hTileCount > 0) {
+			++vTileCount;
+		}
+		// compute the last gid value in the tileset
+		this.lastgid = this.firstgid + (hTileCount * vTileCount - 1 || 0);
+		if (
+			tileset.tilecount &&
+			this.lastgid - this.firstgid + 1 !== +tileset.tilecount
+		) {
+			console.warn(
+				`Computed tilecount (${this.lastgid - this.firstgid + 1}) does not match expected tilecount (${tileset.tilecount})`,
+			);
 		}
 	}
 
 	/**
 	 * return the tile image from a "Collection of Image" tileset
 	 * @param {number} gid
-	 * @returns {Image} corresponding image or undefined
+	 * @returns {HTMLImageElement|HTMLCanvasElement|undefined} corresponding image or undefined
 	 */
 	getTileImage(gid) {
-		return this.imageCollection[gid];
+		return this.imageCollection.get(gid);
 	}
 
 	/**
 	 * set the tile properties
+	 * @param {number} gid - global tile ID
+	 * @param {object} prop - property object
 	 * @ignore
 	 */
 	setTileProperty(gid, prop) {
-		// set the given tile id
-		this.TileProperties[gid] = prop;
+		this.tileProperties.set(gid, prop);
 	}
 
 	/**
@@ -218,9 +295,10 @@ export default class TMXTileset {
 	getViewTileId(gid) {
 		const localId = gid - this.firstgid;
 
-		if (this.animations.has(localId)) {
-			// return the current corresponding tile id if animated
-			return this.animations.get(localId).cur.tileid;
+		// return the current corresponding tile id if animated
+		const anim = this.animations.get(localId);
+		if (anim !== undefined) {
+			return anim.cur.tileid;
 		}
 
 		return localId;
@@ -228,25 +306,29 @@ export default class TMXTileset {
 
 	/**
 	 * return the properties of the specified tile
-	 * @param {number} tileId
-	 * @returns {object}
+	 * @param {number} tileId - global tile ID
+	 * @returns {object|undefined} tile properties or undefined
 	 */
 	getTileProperties(tileId) {
-		return this.TileProperties[tileId];
+		return this.tileProperties.get(tileId);
 	}
 
-	// update tile animations
+	/**
+	 * update tile animations
+	 * @param {number} dt - time delta in milliseconds
+	 * @returns {boolean} true if any animation frame changed
+	 * @ignore
+	 */
 	update(dt) {
-		let duration = 0;
 		const now = timer.getTime();
 		let result = false;
 
 		if (this._lastUpdate !== now) {
 			this._lastUpdate = now;
 
-			this.animations.forEach((anim) => {
+			for (const anim of this.animations.values()) {
 				anim.dt += dt;
-				duration = anim.cur.duration;
+				let duration = anim.cur.duration;
 				while (anim.dt >= duration) {
 					anim.dt -= duration;
 					anim.idx = (anim.idx + 1) % anim.frames.length;
@@ -254,13 +336,20 @@ export default class TMXTileset {
 					duration = anim.cur.duration;
 					result = true;
 				}
-			});
+			}
 		}
 
 		return result;
 	}
 
-	// draw the x,y tile
+	/**
+	 * draw a tile at the specified position
+	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 * @param {number} dx - destination x position
+	 * @param {number} dy - destination y position
+	 * @param {Tile} tmxTile - the tile object to draw
+	 * @ignore
+	 */
 	drawTile(renderer, dx, dy, tmxTile) {
 		// check if any transformation is required
 		if (tmxTile.flipped) {
@@ -268,15 +357,15 @@ export default class TMXTileset {
 			// apply the tile current transform
 			renderer.translate(dx, dy);
 			renderer.transform(tmxTile.currentTransform);
-			// reset both values as managed through transform();
+			// reset both values as managed through transform()
 			dx = dy = 0;
 		}
 
 		// check if the tile has an associated image
-		if (this.isCollection === true) {
-			// draw the tile
+		if (this.isCollection) {
+			// draw the tile from the image collection
 			renderer.drawImage(
-				this.imageCollection[tmxTile.tileId],
+				this.imageCollection.get(tmxTile.tileId),
 				0,
 				0,
 				tmxTile.width,
@@ -287,9 +376,8 @@ export default class TMXTileset {
 				tmxTile.height,
 			);
 		} else {
-			// use the tileset texture
+			// use the tileset texture atlas
 			const offset = this.atlas[this.getViewTileId(tmxTile.tileId)].offset;
-			// draw the tile
 			renderer.drawImage(
 				this.image,
 				offset.x,
