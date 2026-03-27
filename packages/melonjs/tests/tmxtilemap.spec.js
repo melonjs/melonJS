@@ -137,6 +137,7 @@ describe("TMXTileMap", () => {
 			const container = objects.find((obj) => {
 				return obj.name === "TestGroup";
 			});
+			expect(container).toBeDefined();
 			expect(container.children.length).toBeGreaterThan(0);
 
 			// children should inherit the group blend mode
