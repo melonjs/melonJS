@@ -596,6 +596,14 @@ export default class TMXTileMap {
 						// propagate group blend mode to children (if not default)
 						if (group.blendMode !== "normal" && obj.blendMode === "normal") {
 							obj.blendMode = group.blendMode;
+							// also propagate to child renderables (e.g. Entity wrappers)
+							if (
+								typeof obj.renderable !== "undefined" &&
+								obj.renderable.isRenderable === true &&
+								obj.renderable.blendMode === "normal"
+							) {
+								obj.renderable.blendMode = group.blendMode;
+							}
 						}
 						obj.setOpacity(obj.getOpacity() * group.opacity);
 						// and to child renderables if any
@@ -611,6 +619,22 @@ export default class TMXTileMap {
 					// directly add the obj into the objects array
 					objects.push(obj);
 				} /* false*/ else {
+					// propagate group blend mode to children in non-flattened mode,
+					// since container blendMode is overridden by each child's preDraw()
+					if (
+						group.blendMode !== "normal" &&
+						obj.isRenderable === true &&
+						obj.blendMode === "normal"
+					) {
+						obj.blendMode = group.blendMode;
+						if (
+							typeof obj.renderable !== "undefined" &&
+							obj.renderable.isRenderable === true &&
+							obj.renderable.blendMode === "normal"
+						) {
+							obj.renderable.blendMode = group.blendMode;
+						}
+					}
 					// add it to the new container
 					targetContainer.addChild(obj);
 				}
