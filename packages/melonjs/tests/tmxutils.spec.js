@@ -1120,7 +1120,7 @@ describe("TMXUtils", () => {
 			expect(ts.image).toMatch(/^__embedded_\d+\.jpg$/);
 			const basename = ts.image.replace(".jpg", "");
 			expect(imgList[basename]).toBeDefined();
-			expect(imgList[basename].src).toContain("data:image/jpg;base64,");
+			expect(imgList[basename].src).toContain("data:image/jpeg;base64,");
 		});
 
 		it("should handle image layer with external source", () => {

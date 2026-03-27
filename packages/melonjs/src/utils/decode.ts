@@ -114,6 +114,12 @@ export function decodeBase64AsArray(
  * @param height - optional image height hint
  * @returns an HTMLImageElement with the decoded image
  */
+// map common file extensions to MIME types where they differ
+const mimeTypes: Record<string, string> = {
+	jpg: "image/jpeg",
+	svg: "image/svg+xml",
+};
+
 export function decodeBase64Image(
 	base64: string,
 	format: string = "png",
@@ -121,13 +127,14 @@ export function decodeBase64Image(
 	height?: number,
 ): HTMLImageElement {
 	const img = new Image();
-	if (width) {
+	if (width != null) {
 		img.width = width;
 	}
-	if (height) {
+	if (height != null) {
 		img.height = height;
 	}
-	img.src = `data:image/${format};base64,${base64}`;
+	const mime = mimeTypes[format] || `image/${format}`;
+	img.src = `data:${mime};base64,${base64}`;
 	return img;
 }
 
