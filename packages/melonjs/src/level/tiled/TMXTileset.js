@@ -11,8 +11,10 @@ import { renderer } from "../../video/video.js";
 export default class TMXTileset {
 	/**
 	 *  @param {object} tileset - tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
+	 *  @param {number} [mapTilewidth] - the map's tile grid width in pixels
+	 *  @param {number} [mapTileheight] - the map's tile grid height in pixels
 	 */
-	constructor(tileset) {
+	constructor(tileset, mapTilewidth, mapTileheight) {
 		/**
 		 * per-tile properties indexed by gid
 		 * @type {Map<number, object>}
@@ -103,10 +105,70 @@ export default class TMXTileset {
 		this.isCollection = false;
 
 		/**
-		 * the tileset class (since Tiled 1.9)
+		 * the tileset class (since Tiled 1.9, renamed back to type on tile/object in 1.10)
 		 * @type {string}
 		 */
-		this.class = tileset.class;
+		this.class = tileset.class ?? tileset.type;
+
+		/**
+		 * how tiles render relative to the grid (since Tiled 1.9)
+		 * @type {string}
+		 * @default "tile"
+		 */
+		this.tilerendersize = tileset.tilerendersize ?? "tile";
+
+		/**
+		 * fill mode when tiles are not rendered at native size (since Tiled 1.9)
+		 * @type {string}
+		 * @default "stretch"
+		 */
+		this.fillmode = tileset.fillmode ?? "stretch";
+
+		/**
+		 * the map's tile grid width (used for tilerendersize="grid")
+		 * @type {number}
+		 * @ignore
+		 */
+		this.mapTilewidth = mapTilewidth ?? this.tilewidth;
+
+		/**
+		 * the map's tile grid height (used for tilerendersize="grid")
+		 * @type {number}
+		 * @ignore
+		 */
+		this.mapTileheight = mapTileheight ?? this.tileheight;
+
+		/**
+		 * precomputed render scale for tilerendersize="grid" (spritesheet only)
+		 * @private
+		 */
+		this._renderScaleX = 1;
+		this._renderScaleY = 1;
+		this._renderDw = this.tilewidth;
+		this._renderDh = this.tileheight;
+		this._renderDyOffset = 0;
+		this._renderDxCenter = 0;
+		this._renderDyCenter = 0;
+
+		if (this.tilerendersize === "grid") {
+			this._renderScaleX = this.mapTilewidth / this.tilewidth;
+			this._renderScaleY = this.mapTileheight / this.tileheight;
+
+			if (this.fillmode === "preserve-aspect-fit") {
+				const minScale = Math.min(this._renderScaleX, this._renderScaleY);
+				this._renderScaleX = minScale;
+				this._renderScaleY = minScale;
+			}
+
+			this._renderDw = this.tilewidth * this._renderScaleX;
+			this._renderDh = this.tileheight * this._renderScaleY;
+			this._renderDyOffset = this.tileheight - this._renderDh;
+
+			if (this.fillmode === "preserve-aspect-fit") {
+				this._renderDxCenter = (this.mapTilewidth - this._renderDw) / 2;
+				this._renderDyCenter = -(this.mapTileheight - this._renderDh) / 2;
+			}
+		}
 
 		/**
 		 * per-tile sub-rectangles (Tiled 1.9+), indexed by local tile id
@@ -401,6 +463,43 @@ export default class TMXTileset {
 	 * @ignore
 	 */
 	drawTile(renderer, dx, dy, tmxTile) {
+		let dw, dh;
+
+		if (this.isCollection) {
+			// collection tiles can have varying sizes; compute scale per-tile
+			if (this.tilerendersize === "grid") {
+				let scaleX = this.mapTilewidth / tmxTile.width;
+				let scaleY = this.mapTileheight / tmxTile.height;
+
+				if (this.fillmode === "preserve-aspect-fit") {
+					const scale = Math.min(scaleX, scaleY);
+					scaleX = scale;
+					scaleY = scale;
+				}
+
+				dw = tmxTile.width * scaleX;
+				dh = tmxTile.height * scaleY;
+
+				// bottom-align against tileset baseline (renderer uses tileset.tileheight)
+				dy += this.tileheight - dh;
+
+				if (this.fillmode === "preserve-aspect-fit") {
+					dx += (this.mapTilewidth - dw) / 2;
+					dy -= (this.mapTileheight - dh) / 2;
+				}
+			} else {
+				dw = tmxTile.width;
+				dh = tmxTile.height;
+			}
+		} else {
+			// spritesheet: use precomputed values
+			dw = this._renderDw;
+			dh = this._renderDh;
+			dy += this._renderDyOffset;
+			dx += this._renderDxCenter;
+			dy += this._renderDyCenter;
+		}
+
 		// check if any transformation is required
 		if (tmxTile.flipped) {
 			renderer.save();
@@ -422,8 +521,8 @@ export default class TMXTileset {
 				tmxTile.height,
 				dx,
 				dy,
-				tmxTile.width,
-				tmxTile.height,
+				dw,
+				dh,
 			);
 		} else {
 			// use the tileset texture atlas
@@ -436,8 +535,8 @@ export default class TMXTileset {
 				this.tileheight,
 				dx,
 				dy,
-				this.tilewidth + renderer.uvOffset,
-				this.tileheight + renderer.uvOffset,
+				dw + renderer.uvOffset,
+				dh + renderer.uvOffset,
 			);
 		}
 

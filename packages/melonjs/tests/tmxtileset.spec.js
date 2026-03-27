@@ -628,7 +628,40 @@ describe("TMXTileset", () => {
 			expect(ts.class).toEqual("terrain");
 		});
 
-		it("should be undefined when not set", () => {
+		it("should fall back to type when class is not set (Tiled 1.10+)", () => {
+			const ts = new TMXTileset({
+				firstgid: 1,
+				name: "typed",
+				type: "terrain",
+				tilewidth: 32,
+				tileheight: 32,
+				spacing: 0,
+				margin: 0,
+				tilecount: 4,
+				columns: 2,
+				image: "ground.png",
+			});
+			expect(ts.class).toEqual("terrain");
+		});
+
+		it("should prefer class over type when both are set", () => {
+			const ts = new TMXTileset({
+				firstgid: 1,
+				name: "both",
+				class: "from-class",
+				type: "from-type",
+				tilewidth: 32,
+				tileheight: 32,
+				spacing: 0,
+				margin: 0,
+				tilecount: 4,
+				columns: 2,
+				image: "ground.png",
+			});
+			expect(ts.class).toEqual("from-class");
+		});
+
+		it("should be undefined when neither class nor type is set", () => {
 			const ts = new TMXTileset({
 				firstgid: 1,
 				name: "noclassed",
@@ -1009,6 +1042,243 @@ describe("TMXTileset", () => {
 			expect(entry.offset.y).toEqual(0);
 			expect(entry.width).toEqual(32);
 			expect(entry.height).toEqual(32);
+		});
+	});
+
+	// ==============================================================
+	// tilerendersize and fillmode (Tiled 1.9+)
+	// ==============================================================
+	describe("tilerendersize and fillmode (Tiled 1.9+)", () => {
+		function makeTileset(overrides, mapTilewidth, mapTileheight) {
+			return new TMXTileset(
+				{
+					firstgid: 1,
+					name: "ground",
+					tilewidth: 48,
+					tileheight: 48,
+					spacing: 0,
+					margin: 0,
+					tilecount: 4,
+					columns: 2,
+					image: "large.png",
+					...overrides,
+				},
+				mapTilewidth,
+				mapTileheight,
+			);
+		}
+
+		it("should default tilerendersize to 'tile'", () => {
+			const ts = makeTileset({}, 16, 16);
+			expect(ts.tilerendersize).toEqual("tile");
+		});
+
+		it("should default fillmode to 'stretch'", () => {
+			const ts = makeTileset({}, 16, 16);
+			expect(ts.fillmode).toEqual("stretch");
+		});
+
+		it("should store tilerendersize from tileset data", () => {
+			const ts = makeTileset({ tilerendersize: "grid" }, 16, 16);
+			expect(ts.tilerendersize).toEqual("grid");
+		});
+
+		it("should store fillmode from tileset data", () => {
+			const ts = makeTileset({ fillmode: "preserve-aspect-fit" }, 16, 16);
+			expect(ts.fillmode).toEqual("preserve-aspect-fit");
+		});
+
+		it("should store map grid dimensions", () => {
+			const ts = makeTileset({}, 16, 16);
+			expect(ts.mapTilewidth).toEqual(16);
+			expect(ts.mapTileheight).toEqual(16);
+		});
+
+		it("should default map grid to tileset size when not provided", () => {
+			const ts = makeTileset({});
+			expect(ts.mapTilewidth).toEqual(48);
+			expect(ts.mapTileheight).toEqual(48);
+		});
+
+		describe("spritesheet with tilerendersize='tile' (default)", () => {
+			it("should not scale tiles (scale = 1)", () => {
+				const ts = makeTileset({}, 16, 16);
+				expect(ts._renderScaleX).toEqual(1);
+				expect(ts._renderScaleY).toEqual(1);
+				expect(ts._renderDw).toEqual(48);
+				expect(ts._renderDh).toEqual(48);
+				expect(ts._renderDyOffset).toEqual(0);
+			});
+		});
+
+		describe("spritesheet with tilerendersize='grid', fillmode='stretch'", () => {
+			it("should precompute stretch scale to map grid size", () => {
+				const ts = makeTileset({ tilerendersize: "grid" }, 16, 16);
+				expect(ts._renderScaleX).toBeCloseTo(16 / 48);
+				expect(ts._renderScaleY).toBeCloseTo(16 / 48);
+				expect(ts._renderDw).toBeCloseTo(16);
+				expect(ts._renderDh).toBeCloseTo(16);
+			});
+
+			it("should precompute dy offset for bottom-alignment correction", () => {
+				const ts = makeTileset({ tilerendersize: "grid" }, 16, 16);
+				// tileheight(48) - renderDh(16) = 32
+				expect(ts._renderDyOffset).toBeCloseTo(32);
+			});
+
+			it("should not apply centering offsets", () => {
+				const ts = makeTileset({ tilerendersize: "grid" }, 16, 16);
+				expect(ts._renderDxCenter).toEqual(0);
+				expect(ts._renderDyCenter).toEqual(0);
+			});
+
+			it("should handle non-square scaling", () => {
+				// 48x48 tiles on 32x16 grid
+				const ts = makeTileset({ tilerendersize: "grid" }, 32, 16);
+				expect(ts._renderScaleX).toBeCloseTo(32 / 48);
+				expect(ts._renderScaleY).toBeCloseTo(16 / 48);
+				expect(ts._renderDw).toBeCloseTo(32);
+				expect(ts._renderDh).toBeCloseTo(16);
+			});
+		});
+
+		describe("spritesheet with tilerendersize='grid', fillmode='preserve-aspect-fit'", () => {
+			it("should use uniform scale (min of x/y)", () => {
+				// 48x48 tiles on 32x16 grid → min(32/48, 16/48) = 16/48
+				const ts = makeTileset(
+					{ tilerendersize: "grid", fillmode: "preserve-aspect-fit" },
+					32,
+					16,
+				);
+				const expectedScale = 16 / 48;
+				expect(ts._renderScaleX).toBeCloseTo(expectedScale);
+				expect(ts._renderScaleY).toBeCloseTo(expectedScale);
+				expect(ts._renderDw).toBeCloseTo(16);
+				expect(ts._renderDh).toBeCloseTo(16);
+			});
+
+			it("should precompute centering offsets", () => {
+				// 48x48 tiles on 32x16 grid, uniform scale = 16/48
+				// renderDw = 16, renderDh = 16
+				// dxCenter = (32 - 16) / 2 = 8
+				// dyCenter = -(16 - 16) / 2 = 0
+				const ts = makeTileset(
+					{ tilerendersize: "grid", fillmode: "preserve-aspect-fit" },
+					32,
+					16,
+				);
+				expect(ts._renderDxCenter).toBeCloseTo(8);
+				expect(ts._renderDyCenter).toBeCloseTo(0);
+			});
+
+			it("should compute centering when tile is smaller than grid on one axis", () => {
+				// 48x48 tiles on 16x32 grid, uniform scale = 16/48
+				// renderDw = 16, renderDh = 16
+				// dxCenter = (16 - 16) / 2 = 0
+				// dyCenter = -(32 - 16) / 2 = -8
+				const ts = makeTileset(
+					{ tilerendersize: "grid", fillmode: "preserve-aspect-fit" },
+					16,
+					32,
+				);
+				expect(ts._renderDxCenter).toBeCloseTo(0);
+				expect(ts._renderDyCenter).toBeCloseTo(-8);
+			});
+
+			it("should use square scale for square grid", () => {
+				// 48x48 tiles on 24x24 grid → scale = 0.5
+				const ts = makeTileset(
+					{ tilerendersize: "grid", fillmode: "preserve-aspect-fit" },
+					24,
+					24,
+				);
+				expect(ts._renderScaleX).toBeCloseTo(0.5);
+				expect(ts._renderScaleY).toBeCloseTo(0.5);
+				expect(ts._renderDw).toBeCloseTo(24);
+				expect(ts._renderDh).toBeCloseTo(24);
+				expect(ts._renderDxCenter).toBeCloseTo(0);
+				expect(ts._renderDyCenter).toBeCloseTo(0);
+			});
+		});
+
+		describe("collection tileset with tilerendersize", () => {
+			function makeCollectionTileset(overrides, mapTw, mapTh) {
+				fakeImage("render_tile", 48, 48);
+				return new TMXTileset(
+					{
+						firstgid: 1,
+						name: "render_collection",
+						tilewidth: 48,
+						tileheight: 48,
+						tilecount: 1,
+						columns: 0,
+						tiles: [
+							{
+								id: 0,
+								image: "render_tile.png",
+								imagewidth: 48,
+								imageheight: 48,
+							},
+						],
+						...overrides,
+					},
+					mapTw,
+					mapTh,
+				);
+			}
+
+			it("should store tilerendersize and fillmode", () => {
+				const ts = makeCollectionTileset(
+					{ tilerendersize: "grid", fillmode: "preserve-aspect-fit" },
+					16,
+					16,
+				);
+				expect(ts.tilerendersize).toEqual("grid");
+				expect(ts.fillmode).toEqual("preserve-aspect-fit");
+				expect(ts.isCollection).toEqual(true);
+			});
+
+			it("should precompute scale factors for collection tiles", () => {
+				const ts = makeCollectionTileset({ tilerendersize: "grid" }, 16, 16);
+				expect(ts._renderScaleX).toBeCloseTo(16 / 48);
+				expect(ts._renderScaleY).toBeCloseTo(16 / 48);
+			});
+
+			it("should use uniform scale with preserve-aspect-fit", () => {
+				const ts = makeCollectionTileset(
+					{ tilerendersize: "grid", fillmode: "preserve-aspect-fit" },
+					32,
+					16,
+				);
+				const expectedScale = 16 / 48;
+				expect(ts._renderScaleX).toBeCloseTo(expectedScale);
+				expect(ts._renderScaleY).toBeCloseTo(expectedScale);
+			});
+
+			it("should default to scale 1 with tilerendersize='tile'", () => {
+				const ts = makeCollectionTileset({}, 16, 16);
+				expect(ts._renderScaleX).toEqual(1);
+				expect(ts._renderScaleY).toEqual(1);
+			});
+
+			it("should use tile image dimensions for Tile bounds (not scaled)", () => {
+				const ts = makeCollectionTileset({ tilerendersize: "grid" }, 16, 16);
+				// Tile bounds should reflect the source image size
+				const tile = new Tile(0, 0, 1, ts);
+				expect(tile.width).toEqual(48);
+				expect(tile.height).toEqual(48);
+			});
+		});
+
+		describe("no scaling when tile size matches grid size", () => {
+			it("should have identity scale for spritesheet", () => {
+				const ts = makeTileset({ tilerendersize: "grid" }, 48, 48);
+				expect(ts._renderScaleX).toEqual(1);
+				expect(ts._renderScaleY).toEqual(1);
+				expect(ts._renderDw).toEqual(48);
+				expect(ts._renderDh).toEqual(48);
+				expect(ts._renderDyOffset).toEqual(0);
+			});
 		});
 	});
 });

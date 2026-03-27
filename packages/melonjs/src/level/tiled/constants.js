@@ -1,5 +1,5 @@
 // latest supported Tiled map format version
-export const TILED_SUPPORTED_VERSION = "1.9";
+export const TILED_SUPPORTED_VERSION = "1.10";
 
 // bitmask constants to check for flipped & rotated tiles
 export const TMX_FLIP_H = 0x80000000;
