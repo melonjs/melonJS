@@ -109,6 +109,13 @@ export default class TMXTileset {
 		this.class = tileset.class;
 
 		/**
+		 * per-tile sub-rectangles (Tiled 1.9+), indexed by local tile id
+		 * @type {Map<number, {x: number, y: number, width: number, height: number}>}
+		 * @ignore
+		 */
+		this.tileSubRects = new Map();
+
+		/**
 		 * Tileset animations
 		 * @private
 		 * @type {Map}
@@ -208,7 +215,50 @@ export default class TMXTileset {
 						`melonJS: '${tile.image}' file for tile '${tileId + this.firstgid}' not found!`,
 					);
 				}
-				this.imageCollection.set(tileId + this.firstgid, image);
+
+				// check for sub-rectangle (Tiled 1.9+)
+				const hasSubRect =
+					typeof tile.x !== "undefined" ||
+					typeof tile.y !== "undefined" ||
+					typeof tile.width !== "undefined" ||
+					typeof tile.height !== "undefined";
+
+				if (hasSubRect) {
+					const sx = +(tile.x ?? 0);
+					const sy = +(tile.y ?? 0);
+					const sw =
+						typeof tile.width !== "undefined" ? +tile.width : image.width;
+					const sh =
+						typeof tile.height !== "undefined" ? +tile.height : image.height;
+
+					// store the sub-rect metadata
+					this.tileSubRects.set(tileId, {
+						x: sx,
+						y: sy,
+						width: sw,
+						height: sh,
+					});
+
+					// crop and cache a sub-image if the rect differs from the full image
+					if (
+						sx !== 0 ||
+						sy !== 0 ||
+						sw !== image.width ||
+						sh !== image.height
+					) {
+						const canvas = document.createElement("canvas");
+						canvas.width = sw;
+						canvas.height = sh;
+						canvas
+							.getContext("2d")
+							.drawImage(image, sx, sy, sw, sh, 0, 0, sw, sh);
+						this.imageCollection.set(tileId + this.firstgid, canvas);
+					} else {
+						this.imageCollection.set(tileId + this.firstgid, image);
+					}
+				} else {
+					this.imageCollection.set(tileId + this.firstgid, image);
+				}
 			}
 		}
 	}
