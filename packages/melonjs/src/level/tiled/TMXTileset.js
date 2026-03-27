@@ -466,15 +466,30 @@ export default class TMXTileset {
 		let dw, dh;
 
 		if (this.isCollection) {
-			// collection tiles can have varying sizes; compute per-tile
-			dw = tmxTile.width * this._renderScaleX;
-			dh = tmxTile.height * this._renderScaleY;
+			// collection tiles can have varying sizes; compute scale per-tile
 			if (this.tilerendersize === "grid") {
-				dy += tmxTile.height - dh;
+				let scaleX = this.mapTilewidth / tmxTile.width;
+				let scaleY = this.mapTileheight / tmxTile.height;
+
+				if (this.fillmode === "preserve-aspect-fit") {
+					const scale = Math.min(scaleX, scaleY);
+					scaleX = scale;
+					scaleY = scale;
+				}
+
+				dw = tmxTile.width * scaleX;
+				dh = tmxTile.height * scaleY;
+
+				// bottom-align against tileset baseline (renderer uses tileset.tileheight)
+				dy += this.tileheight - dh;
+
 				if (this.fillmode === "preserve-aspect-fit") {
 					dx += (this.mapTilewidth - dw) / 2;
 					dy -= (this.mapTileheight - dh) / 2;
 				}
+			} else {
+				dw = tmxTile.width;
+				dh = tmxTile.height;
 			}
 		} else {
 			// spritesheet: use precomputed values
