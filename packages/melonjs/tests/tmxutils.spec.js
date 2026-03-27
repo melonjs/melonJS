@@ -1242,4 +1242,699 @@ describe("TMXUtils", () => {
 			expect(imgList[basename].src).toContain("data:image/webp;base64,");
 		});
 	});
+
+	// ---------------------------------------------------------------
+	// List/array custom properties (Tiled 1.12+)
+	// ---------------------------------------------------------------
+	describe("list properties", () => {
+		function makeXml(xmlString) {
+			return new DOMParser().parseFromString(xmlString, "text/xml")
+				.documentElement;
+		}
+
+		describe("XML format (via parse)", () => {
+			it("should parse a list of strings", () => {
+				const xml = makeXml(`
+					<map>
+						<properties>
+							<property name="tags" type="list">
+								<item type="string" value="enemy"/>
+								<item type="string" value="flying"/>
+								<item type="string" value="boss"/>
+							</property>
+						</properties>
+					</map>
+				`);
+				const result = parse(xml);
+				expect(result.properties.tags).toEqual(["enemy", "flying", "boss"]);
+			});
+
+			it("should parse a list of ints", () => {
+				const xml = makeXml(`
+					<map>
+						<properties>
+							<property name="scores" type="list">
+								<item type="int" value="100"/>
+								<item type="int" value="200"/>
+								<item type="int" value="300"/>
+							</property>
+						</properties>
+					</map>
+				`);
+				const result = parse(xml);
+				expect(result.properties.scores).toEqual([100, 200, 300]);
+			});
+
+			it("should parse a list of floats", () => {
+				const xml = makeXml(`
+					<map>
+						<properties>
+							<property name="multipliers" type="list">
+								<item type="float" value="1.5"/>
+								<item type="float" value="2.0"/>
+							</property>
+						</properties>
+					</map>
+				`);
+				const result = parse(xml);
+				expect(result.properties.multipliers).toEqual([1.5, 2.0]);
+			});
+
+			it("should parse a list of booleans", () => {
+				const xml = makeXml(`
+					<map>
+						<properties>
+							<property name="flags" type="list">
+								<item type="bool" value="true"/>
+								<item type="bool" value="false"/>
+								<item type="bool" value="true"/>
+							</property>
+						</properties>
+					</map>
+				`);
+				const result = parse(xml);
+				expect(result.properties.flags).toEqual([true, false, true]);
+			});
+
+			it("should parse an empty list", () => {
+				const xml = makeXml(`
+					<map>
+						<properties>
+							<property name="empty" type="list"/>
+						</properties>
+					</map>
+				`);
+				const result = parse(xml);
+				expect(result.properties.empty).toEqual([]);
+			});
+
+			it("should default item type to string when omitted", () => {
+				const xml = makeXml(`
+					<map>
+						<properties>
+							<property name="names" type="list">
+								<item value="alice"/>
+								<item value="bob"/>
+							</property>
+						</properties>
+					</map>
+				`);
+				const result = parse(xml);
+				expect(result.properties.names).toEqual(["alice", "bob"]);
+			});
+
+			it("should coexist with scalar properties", () => {
+				const xml = makeXml(`
+					<map>
+						<properties>
+							<property name="name" value="level1"/>
+							<property name="tags" type="list">
+								<item type="string" value="outdoor"/>
+							</property>
+							<property name="difficulty" type="int" value="3"/>
+						</properties>
+					</map>
+				`);
+				const result = parse(xml);
+				expect(result.properties.name).toEqual("level1");
+				expect(result.properties.tags).toEqual(["outdoor"]);
+				expect(result.properties.difficulty).toEqual(3);
+			});
+
+			it("should parse list of colors with ARGB→RGBA conversion", () => {
+				const xml = makeXml(`
+					<map>
+						<properties>
+							<property name="palette" type="list">
+								<item type="color" value="#FF112233"/>
+								<item type="color" value="#AABBCCDD"/>
+							</property>
+						</properties>
+					</map>
+				`);
+				const result = parse(xml);
+				expect(result.properties.palette).toEqual(["#112233FF", "#BBCCDDAA"]);
+			});
+		});
+
+		describe("JSON format (via applyTMXProperties)", () => {
+			it("should parse a list of strings", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [
+						{
+							name: "tags",
+							type: "list",
+							value: [
+								{ type: "string", value: "enemy" },
+								{ type: "string", value: "flying" },
+							],
+						},
+					],
+				});
+				expect(obj.tags).toEqual(["enemy", "flying"]);
+			});
+
+			it("should parse a list of ints", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [
+						{
+							name: "scores",
+							type: "list",
+							value: [
+								{ type: "int", value: 100 },
+								{ type: "int", value: 200 },
+							],
+						},
+					],
+				});
+				expect(obj.scores).toEqual([100, 200]);
+			});
+
+			it("should parse a list of floats", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [
+						{
+							name: "rates",
+							type: "list",
+							value: [
+								{ type: "float", value: 1.5 },
+								{ type: "float", value: 2.5 },
+							],
+						},
+					],
+				});
+				expect(obj.rates).toEqual([1.5, 2.5]);
+			});
+
+			it("should parse a list of booleans", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [
+						{
+							name: "flags",
+							type: "list",
+							value: [
+								{ type: "bool", value: true },
+								{ type: "bool", value: false },
+							],
+						},
+					],
+				});
+				expect(obj.flags).toEqual([true, false]);
+			});
+
+			it("should parse an empty list", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [{ name: "empty", type: "list", value: [] }],
+				});
+				expect(obj.empty).toEqual([]);
+			});
+
+			it("should default item type to string", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [
+						{
+							name: "names",
+							type: "list",
+							value: [{ value: "alice" }, { value: "bob" }],
+						},
+					],
+				});
+				expect(obj.names).toEqual(["alice", "bob"]);
+			});
+
+			it("should coexist with scalar properties", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [
+						{ name: "name", type: "string", value: "level1" },
+						{
+							name: "tags",
+							type: "list",
+							value: [{ type: "string", value: "outdoor" }],
+						},
+						{ name: "difficulty", type: "int", value: 3 },
+					],
+				});
+				expect(obj.name).toEqual("level1");
+				expect(obj.tags).toEqual(["outdoor"]);
+				expect(obj.difficulty).toEqual(3);
+			});
+
+			it("should handle list with string int values (XML-style)", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [
+						{
+							name: "ids",
+							type: "list",
+							value: [
+								{ type: "int", value: "10" },
+								{ type: "int", value: "20" },
+							],
+						},
+					],
+				});
+				expect(obj.ids).toEqual([10, 20]);
+			});
+
+			it("should parse a single-item list", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [
+						{
+							name: "solo",
+							type: "list",
+							value: [{ type: "string", value: "only" }],
+						},
+					],
+				});
+				expect(obj.solo).toEqual(["only"]);
+			});
+
+			it("should handle multiple list properties on the same element", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [
+						{
+							name: "names",
+							type: "list",
+							value: [
+								{ type: "string", value: "alice" },
+								{ type: "string", value: "bob" },
+							],
+						},
+						{
+							name: "scores",
+							type: "list",
+							value: [
+								{ type: "int", value: 10 },
+								{ type: "int", value: 20 },
+							],
+						},
+					],
+				});
+				expect(obj.names).toEqual(["alice", "bob"]);
+				expect(obj.scores).toEqual([10, 20]);
+			});
+
+			it("should parse list with color items (ARGB→RGBA)", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [
+						{
+							name: "colors",
+							type: "list",
+							value: [
+								{ type: "color", value: "#FF112233" },
+								{ type: "color", value: "#AABBCCDD" },
+							],
+						},
+					],
+				});
+				expect(obj.colors).toEqual(["#112233FF", "#BBCCDDAA"]);
+			});
+
+			it("should parse list with object reference ids", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [
+						{
+							name: "targets",
+							type: "list",
+							value: [
+								{ type: "object", value: 42 },
+								{ type: "object", value: 99 },
+							],
+						},
+					],
+				});
+				expect(obj.targets).toEqual([42, 99]);
+			});
+
+			it("should parse list with file paths", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [
+						{
+							name: "sounds",
+							type: "list",
+							value: [
+								{ type: "file", value: "sfx/hit.ogg" },
+								{ type: "file", value: "sfx/miss.ogg" },
+							],
+						},
+					],
+				});
+				expect(obj.sounds).toEqual(["sfx/hit.ogg", "sfx/miss.ogg"]);
+			});
+
+			it("should handle list alongside class property", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [
+						{
+							name: "config",
+							type: "class",
+							value: { speed: 5 },
+						},
+						{
+							name: "tags",
+							type: "list",
+							value: [{ type: "string", value: "npc" }],
+						},
+					],
+				});
+				expect(obj.config).toEqual({ speed: 5 });
+				expect(obj.tags).toEqual(["npc"]);
+			});
+		});
+
+		describe("XML format — additional cases", () => {
+			it("should parse a single-item list", () => {
+				const xml = makeXml(`
+					<map>
+						<properties>
+							<property name="solo" type="list">
+								<item type="int" value="42"/>
+							</property>
+						</properties>
+					</map>
+				`);
+				const result = parse(xml);
+				expect(result.properties.solo).toEqual([42]);
+			});
+
+			it("should parse multiple list properties", () => {
+				const xml = makeXml(`
+					<map>
+						<properties>
+							<property name="names" type="list">
+								<item value="alice"/>
+								<item value="bob"/>
+							</property>
+							<property name="ids" type="list">
+								<item type="int" value="1"/>
+								<item type="int" value="2"/>
+							</property>
+						</properties>
+					</map>
+				`);
+				const result = parse(xml);
+				expect(result.properties.names).toEqual(["alice", "bob"]);
+				expect(result.properties.ids).toEqual([1, 2]);
+			});
+
+			it("should parse list alongside class property in XML", () => {
+				const xml = makeXml(`
+					<map>
+						<properties>
+							<property name="config" type="class" propertytype="Settings">
+								<properties>
+									<property name="speed" type="int" value="5"/>
+								</properties>
+							</property>
+							<property name="tags" type="list">
+								<item value="outdoor"/>
+								<item value="forest"/>
+							</property>
+						</properties>
+					</map>
+				`);
+				const result = parse(xml);
+				expect(result.properties.config).toEqual({ speed: 5 });
+				expect(result.properties.tags).toEqual(["outdoor", "forest"]);
+			});
+
+			it("should parse list on an object element", () => {
+				const xml = makeXml(`
+					<map>
+						<objectgroup name="objects">
+							<object id="1" x="0" y="0" width="32" height="32">
+								<properties>
+									<property name="waypoints" type="list">
+										<item type="int" value="10"/>
+										<item type="int" value="20"/>
+										<item type="int" value="30"/>
+									</property>
+								</properties>
+							</object>
+						</objectgroup>
+					</map>
+				`);
+				const result = parse(xml);
+				const obj = result.layers[0].objects[0];
+				expect(obj.properties.waypoints).toEqual([10, 20, 30]);
+			});
+
+			it("should parse list on a tileset tile", () => {
+				const xml = makeXml(`
+					<tileset firstgid="1" name="test" tilewidth="32" tileheight="32">
+						<tile id="0">
+							<properties>
+								<property name="frames" type="list">
+									<item type="int" value="0"/>
+									<item type="int" value="1"/>
+									<item type="int" value="2"/>
+								</property>
+							</properties>
+						</tile>
+					</tileset>
+				`);
+				const result = parse(xml);
+				expect(result.tiles["0"].properties.frames).toEqual([0, 1, 2]);
+			});
+
+			it("should parse list with string bool values", () => {
+				const xml = makeXml(`
+					<map>
+						<properties>
+							<property name="switches" type="list">
+								<item type="bool" value="true"/>
+								<item type="bool" value="false"/>
+								<item type="bool" value="true"/>
+							</property>
+						</properties>
+					</map>
+				`);
+				const result = parse(xml);
+				expect(result.properties.switches).toEqual([true, false, true]);
+			});
+		});
+
+		describe("backward compatibility", () => {
+			it("should not affect existing json: prefix arrays", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [
+						{
+							name: "legacy",
+							type: "string",
+							value: "json:[1,2,3]",
+						},
+					],
+				});
+				expect(obj.legacy).toEqual([1, 2, 3]);
+			});
+
+			it("should not affect existing class properties", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [
+						{
+							name: "config",
+							type: "class",
+							value: { health: 100, speed: 2.5 },
+						},
+					],
+				});
+				expect(obj.config).toEqual({ health: 100, speed: 2.5 });
+			});
+
+			it("should not affect existing scalar properties", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [
+						{ name: "count", type: "int", value: 42 },
+						{ name: "label", type: "string", value: "hello" },
+						{ name: "active", type: "bool", value: true },
+					],
+				});
+				expect(obj.count).toEqual(42);
+				expect(obj.label).toEqual("hello");
+				expect(obj.active).toEqual(true);
+			});
+
+			it("should not affect old JSON format flat properties", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: { speed: 10, name: "goblin" },
+					propertytypes: { speed: "int", name: "string" },
+				});
+				expect(obj.speed).toEqual(10);
+				expect(obj.name).toEqual("goblin");
+			});
+
+			it("should not affect XML properties without list type", () => {
+				const xml = makeXml(`
+					<map>
+						<properties>
+							<property name="greeting" value="hello"/>
+							<property name="count" type="int" value="5"/>
+							<property name="flag" type="bool" value="true"/>
+						</properties>
+					</map>
+				`);
+				const result = parse(xml);
+				expect(result.properties.greeting).toEqual("hello");
+				expect(result.properties.count).toEqual(5);
+				expect(result.properties.flag).toEqual(true);
+			});
+
+			it("should still pass through native JSON booleans (non-string)", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [
+						{ name: "active", type: "bool", value: true },
+						{ name: "visible", type: "bool", value: false },
+					],
+				});
+				expect(obj.active).toEqual(true);
+				expect(obj.visible).toEqual(false);
+			});
+
+			it("should still pass through native JSON numbers (non-string)", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [
+						{ name: "speed", type: "int", value: 42 },
+						{ name: "rate", type: "float", value: 3.14 },
+						{ name: "zero", type: "int", value: 0 },
+						{ name: "negative", type: "float", value: -1.5 },
+					],
+				});
+				expect(obj.speed).toEqual(42);
+				expect(obj.rate).toEqual(3.14);
+				expect(obj.zero).toEqual(0);
+				expect(obj.negative).toEqual(-1.5);
+			});
+
+			it("should still pass through native JSON null/undefined values", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [{ name: "nothing", type: "string", value: null }],
+				});
+				expect(obj.nothing).toEqual(null);
+			});
+
+			it("should still handle eval: prefix strings", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [{ name: "calc", type: "string", value: "eval:2+3" }],
+				});
+				expect(obj.calc).toEqual(5);
+			});
+
+			it("should still handle color ARGB conversion", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [{ name: "tint", type: "color", value: "#FF00FF00" }],
+				});
+				expect(obj.tint).toEqual("#00FF00FF");
+			});
+
+			it("should still handle ratio property expansion", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [{ name: "ratio", type: "string", value: "0.5" }],
+				});
+				expect(obj.ratio).toEqual({ x: 0.5, y: 0.5 });
+			});
+
+			it("should still handle anchorPoint property expansion", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [{ name: "anchorPoint", type: "string", value: "0.5" }],
+				});
+				expect(obj.anchorPoint).toEqual({ x: 0.5, y: 0.5 });
+			});
+
+			it("should still handle old intermediate JSON format (numeric keys)", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: {
+						0: { name: "health", type: "int", value: 100 },
+						1: { name: "label", type: "string", value: "goblin" },
+					},
+				});
+				expect(obj.health).toEqual(100);
+				expect(obj.label).toEqual("goblin");
+			});
+
+			it("should still handle XML class properties with nested members", () => {
+				const xml = makeXml(`
+					<map>
+						<properties>
+							<property name="config" type="class" propertytype="Settings">
+								<properties>
+									<property name="health" type="int" value="100"/>
+									<property name="name" value="hero"/>
+								</properties>
+							</property>
+						</properties>
+					</map>
+				`);
+				const result = parse(xml);
+				expect(result.properties.config).toEqual({
+					health: 100,
+					name: "hero",
+				});
+			});
+
+			it("should still handle empty class property in XML", () => {
+				const xml = makeXml(`
+					<map>
+						<properties>
+							<property name="empty" type="class" propertytype="Empty"/>
+						</properties>
+					</map>
+				`);
+				const result = parse(xml);
+				expect(result.properties.empty).toEqual({});
+			});
+
+			it("should still auto-detect numeric strings as numbers", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [{ name: "val", type: "string", value: "42" }],
+				});
+				expect(obj.val).toEqual(42);
+			});
+
+			it("should still auto-detect boolean strings", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [
+						{ name: "on", type: "string", value: "true" },
+						{ name: "off", type: "string", value: "false" },
+					],
+				});
+				expect(obj.on).toEqual(true);
+				expect(obj.off).toEqual(false);
+			});
+
+			it("should still handle empty string as true (legacy flag)", () => {
+				const obj = {};
+				applyTMXProperties(obj, {
+					properties: [{ name: "flag", type: "string", value: "" }],
+				});
+				expect(obj.flag).toEqual(true);
+			});
+		});
+	});
 });

@@ -76,7 +76,7 @@ const LONG_ARGB = /^#([\da-fA-F]{2})([\da-fA-F]{6})$/;
  * @returns {*} coerced value
  */
 function coerceTMXValue(name, type, raw) {
-	if (typeof raw !== "string") {
+	if (typeof raw !== "string" && type !== "list") {
 		// already typed (e.g. JSON maps with native bool/number values)
 		return raw;
 	}
@@ -88,6 +88,16 @@ function coerceTMXValue(name, type, raw) {
 
 		case "bool":
 			return raw === "true";
+
+		case "list":
+			// JSON list property: value is an array of { type, value } objects
+			if (Array.isArray(raw)) {
+				return raw.map((item) => {
+					return coerceTMXValue(name, item.type || "string", item.value);
+				});
+			}
+			// XML list: items already collected as array by normalizeTMX
+			return raw;
 
 		default:
 			break;
@@ -307,11 +317,28 @@ function normalizeTMX(obj, item, parse) {
 			obj.properties = parse(item);
 			break;
 
+		case "item": {
+			// list item: coerce and append to the parent's items array
+			const itemData = parse(item);
+			const items = obj.items || (obj.items = []);
+			items.push(
+				coerceTMXValue(
+					"",
+					itemData.type || "string",
+					itemData.value !== undefined ? itemData.value : itemData.text,
+				),
+			);
+			break;
+		}
+
 		case "property": {
 			const prop = parse(item);
 			if (prop.type === "class") {
 				// class properties have nested <properties> with member values
 				obj[prop.name] = prop.properties || {};
+			} else if (prop.type === "list") {
+				// list properties: items collected via "item" case above
+				obj[prop.name] = prop.items || [];
 			} else {
 				obj[prop.name] = coerceTMXValue(
 					prop.name,
