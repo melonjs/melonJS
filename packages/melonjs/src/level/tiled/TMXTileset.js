@@ -105,10 +105,10 @@ export default class TMXTileset {
 		this.isCollection = false;
 
 		/**
-		 * the tileset class (since Tiled 1.9)
+		 * the tileset class (since Tiled 1.9, renamed back to type on tile/object in 1.10)
 		 * @type {string}
 		 */
-		this.class = tileset.class;
+		this.class = tileset.class ?? tileset.type;
 
 		/**
 		 * how tiles render relative to the grid (since Tiled 1.9)
