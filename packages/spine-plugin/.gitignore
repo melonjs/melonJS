@@ -7,3 +7,4 @@ npm-debug.log
 # Project specific ignore
 node_modules/
 package-lock.json
+build/
