@@ -158,7 +158,8 @@ export class RoundRect extends Polygon {
 	}
 	set width(value) {
 		this._width = value;
-		this._updateVertices();
+		// re-clamp radius and rebuild vertices
+		this.radius = this._radius;
 	}
 
 	/**
@@ -169,7 +170,8 @@ export class RoundRect extends Polygon {
 	}
 	set height(value) {
 		this._height = value;
-		this._updateVertices();
+		// re-clamp radius and rebuild vertices
+		this.radius = this._radius;
 	}
 
 	/**
@@ -222,7 +224,8 @@ export class RoundRect extends Polygon {
 		return this._radius;
 	}
 	set radius(value) {
-		// clamp radius to half the shorter side
+		// clamp to non-negative and to half the shorter side
+		value = Math.max(0, value);
 		if (this._width < 2 * value) {
 			value = this._width / 2;
 		}
@@ -359,9 +362,18 @@ export class RoundRect extends Polygon {
 	/**
 	 * Returns true if the rounded rectangle contains the given rectangle
 	 * @param rectangle - rectangle to test
+	 * @param rectangle.left - left coordinate
+	 * @param rectangle.right - right coordinate
+	 * @param rectangle.top - top coordinate
+	 * @param rectangle.bottom - bottom coordinate
 	 * @returns true if contained
 	 */
-	containsRectangle(rectangle: RoundRect) {
+	containsRectangle(rectangle: {
+		left: number;
+		right: number;
+		top: number;
+		bottom: number;
+	}) {
 		return (
 			rectangle.left >= this.left &&
 			rectangle.right <= this.right &&
