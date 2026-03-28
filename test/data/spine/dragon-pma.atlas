@@ -1,0 +1,129 @@
+dragon-pma.png
+	size: 1024, 1024
+	filter: Linear, Linear
+	pma: true
+back
+	bounds: 564, 534, 190, 185
+chest
+	bounds: 2, 645, 136, 122
+chin
+	bounds: 140, 619, 214, 146
+front-toe-a
+	bounds: 2, 862, 29, 50
+	rotate: 90
+front-toe-b
+	bounds: 467, 835, 56, 57
+	rotate: 90
+head
+	bounds: 756, 398, 296, 260
+	rotate: 90
+left-front-leg
+	bounds: 599, 834, 84, 57
+left-front-thigh
+	bounds: 782, 819, 84, 72
+left-rear-leg
+	bounds: 356, 558, 206, 177
+left-rear-thigh
+	bounds: 216, 767, 91, 149
+	rotate: 90
+left-wing01
+	bounds: 2, 268, 264, 589
+	rotate: 90
+left-wing02
+	bounds: 2, 2, 264, 589
+	rotate: 90
+right-front-leg
+	bounds: 113, 769, 101, 89
+right-front-thigh
+	bounds: 758, 709, 108, 108
+right-rear-leg
+	bounds: 640, 721, 116, 100
+right-rear-thigh
+	bounds: 367, 742, 91, 149
+	rotate: 90
+right-rear-toe
+	bounds: 2, 781, 109, 77
+tail01
+	bounds: 868, 696, 120, 153
+	rotate: 90
+tail02
+	bounds: 518, 737, 95, 120
+	rotate: 90
+tail03
+	bounds: 868, 818, 73, 92
+	rotate: 90
+tail04
+	bounds: 526, 835, 56, 71
+	rotate: 90
+tail05
+	bounds: 406, 839, 52, 59
+	rotate: 90
+tail06
+	bounds: 685, 823, 95, 68
+thiagobrayner
+	bounds: 54, 860, 350, 31
+
+dragon-pma_2.png
+	size: 1024, 1024
+	filter: Linear, Linear
+	pma: true
+left-wing03
+	bounds: 2, 534, 264, 589
+	rotate: 90
+left-wing04
+	bounds: 2, 268, 264, 589
+	rotate: 90
+left-wing05
+	bounds: 593, 209, 264, 589
+left-wing06
+	bounds: 2, 2, 264, 589
+	rotate: 90
+
+dragon-pma_3.png
+	size: 1024, 1024
+	filter: Linear, Linear
+	pma: true
+left-wing07
+	bounds: 2, 694, 264, 589
+	rotate: 90
+left-wing08
+	bounds: 2, 428, 264, 589
+	rotate: 90
+left-wing09
+	bounds: 593, 369, 264, 589
+right-wing01
+	bounds: 2, 2, 365, 643
+	rotate: 90
+
+dragon-pma_4.png
+	size: 1024, 1024
+	filter: Linear, Linear
+	pma: true
+right-wing02
+	bounds: 2, 369, 365, 643
+right-wing03
+	bounds: 369, 369, 365, 643
+right-wing04
+	bounds: 2, 2, 365, 643
+	rotate: 90
+
+dragon-pma_5.png
+	size: 1024, 1024
+	filter: Linear, Linear
+	pma: true
+right-wing05
+	bounds: 2, 369, 365, 643
+right-wing06
+	bounds: 369, 369, 365, 643
+right-wing07
+	bounds: 2, 2, 365, 643
+	rotate: 90
+
+dragon-pma_6.png
+	size: 1024, 1024
+	filter: Linear, Linear
+	pma: true
+right-wing08
+	bounds: 2, 2, 365, 643
+right-wing09
+	bounds: 369, 2, 365, 643
