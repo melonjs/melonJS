@@ -179,11 +179,25 @@ export default class TMXTileMap {
 		this.infinite = +data.infinite || 0;
 
 		/**
-		 * the map orientation type. melonJS supports “orthogonal”, “isometric”, “staggered” and “hexagonal”.
+		 * the map orientation type. melonJS supports “orthogonal”, “isometric”, “staggered”, “hexagonal” and “oblique”.
 		 * @type {string}
-		 * @default "orthogonal"
+		 * @default “orthogonal”
 		 */
 		this.orientation = data.orientation;
+
+		/**
+		 * horizontal skew in pixels per tile row (oblique maps, since Tiled 1.12)
+		 * @type {number}
+		 * @default 0
+		 */
+		this.skewx = +(data.skewx ?? 0);
+
+		/**
+		 * vertical skew in pixels per tile column (oblique maps, since Tiled 1.12)
+		 * @type {number}
+		 * @default 0
+		 */
+		this.skewy = +(data.skewy ?? 0);
 
 		/**
 		 * the order in which tiles on orthogonal tile layers are rendered.
