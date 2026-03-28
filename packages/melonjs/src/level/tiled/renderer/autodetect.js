@@ -1,5 +1,6 @@
 import TMXHexagonalRenderer from "./TMXHexagonalRenderer.js";
 import TMXIsometricRenderer from "./TMXIsometricRenderer.js";
+import TMXObliqueRenderer from "./TMXObliqueRenderer.js";
 import TMXOrthogonalRenderer from "./TMXOrthogonalRenderer.js";
 import TMXStaggeredRenderer from "./TMXStaggeredRenderer.js";
 
@@ -21,6 +22,9 @@ export function getNewTMXRenderer(map) {
 
 		case "staggered":
 			return new TMXStaggeredRenderer(map);
+
+		case "oblique":
+			return new TMXObliqueRenderer(map);
 
 		// if none found, throw an exception
 		default:

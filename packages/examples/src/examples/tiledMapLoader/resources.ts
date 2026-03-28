@@ -53,6 +53,10 @@ export const resources = [
 	{ name: "rpg", type: "tmx", src: `${base}rpg/island.tmx` },
 	{ name: "beach_tileset", type: "tsx", src: `${base}rpg/beach_tileset.xml` },
 	{ name: "beach_tileset", type: "image", src: `${base}rpg/beach_tileset.png` },
+	// oblique
+	{ name: "oblique", type: "tmx", src: `${base}oblique.tmx` },
+	{ name: "gravel", type: "image", src: `${base}oblique/gravel.png` },
+	{ name: "hole", type: "image", src: `${base}oblique/hole.png` },
 	// island rotated tiles
 	{ name: "island-rotated-tiles", type: "tmx", src: `${base}island-1.json` },
 	{ name: "sprites", type: "tsx", src: `${base}sprites.json` },
@@ -74,4 +78,5 @@ export const levels = [
 	{ name: "rpg", label: "RPG Island" },
 	{ name: "island-rotated-tiles", label: "Rotated Tiles" },
 	{ name: "desert-infinite", label: "Infinite Desert" },
+	{ name: "oblique", label: "Oblique" },
 ];

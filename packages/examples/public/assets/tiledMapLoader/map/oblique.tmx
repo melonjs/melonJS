@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.12.1" orientation="oblique" renderorder="right-down" width="10" height="10" tilewidth="40" tileheight="14" infinite="0" skewx="12" nextlayerid="3" nextobjectid="1">
+ <tileset firstgid="1" name="oblique_tiles" tilewidth="51" tileheight="26" tilecount="2" columns="0">
+  <tile id="0">
+   <image source="oblique/gravel.png" width="51" height="26"/>
+  </tile>
+  <tile id="1">
+   <image source="oblique/hole.png" width="51" height="26"/>
+  </tile>
+ </tileset>
+ <layer id="1" name="Ground" width="10" height="10">
+  <data encoding="csv">
+1,1,1,1,1,1,1,1,1,1,
+1,1,2,1,1,1,1,1,1,1,
+1,1,1,1,1,2,1,1,1,1,
+1,2,1,1,1,1,1,1,2,1,
+1,1,1,1,1,1,1,1,1,1,
+1,1,1,2,1,1,2,1,1,1,
+1,1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,1,1,1,
+1,2,1,1,1,1,1,2,1,1,
+1,1,1,1,1,1,1,1,1,1
+</data>
+ </layer>
+</map>
