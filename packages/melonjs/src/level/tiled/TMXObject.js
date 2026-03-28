@@ -2,10 +2,37 @@ import { ellipsePool } from "../../geometries/ellipse.ts";
 import { linePool } from "../../geometries/line.ts";
 import { pointPool } from "../../geometries/point.ts";
 import { polygonPool } from "../../geometries/polygon.ts";
+import { roundedRectanglePool } from "../../geometries/roundrect.ts";
 import { degToRad } from "./../../math/math.ts";
 import { vector2dPool } from "../../math/vector2d.ts";
 import Tile from "./TMXTile.js";
 import { applyTMXProperties } from "./TMXUtils.js";
+
+/**
+ * Detect the shape type from the TMX object settings.
+ * Shape markers are mutually exclusive; the first match wins.
+ * @param {object} settings - TMX object settings
+ * @returns {string} one of "ellipse", "capsule", "point", "polygon", "polyline", "rectangle"
+ * @ignore
+ */
+function detectShape(settings) {
+	if (typeof settings.ellipse !== "undefined") {
+		return "ellipse";
+	}
+	if (typeof settings.capsule !== "undefined") {
+		return "capsule";
+	}
+	if (typeof settings.point !== "undefined") {
+		return "point";
+	}
+	if (typeof settings.polygon !== "undefined") {
+		return "polygon";
+	}
+	if (typeof settings.polyline !== "undefined") {
+		return "polyline";
+	}
+	return "rectangle";
+}
 
 /**
  * a TMX Object defintion, as defined in Tiled
@@ -127,51 +154,36 @@ export default class TMXObject {
 		this.shapes = undefined;
 
 		/**
-		 * if true, the object is an Ellipse
-		 * @type {boolean}
+		 * the detected shape type
+		 * @type {string}
 		 */
-		this.isEllipse = false;
+		this.shapeType = "rectangle";
 
-		/**
-		 * if true, the object is a Point
-		 * @type {boolean}
-		 */
-		this.isPoint = false;
-
-		/**
-		 * if true, the object is a Polygon
-		 * @type {boolean}
-		 */
-		this.isPolygon = false;
-
-		/**
-		 * if true, the object is a PolyLine
-		 * @type {boolean}
-		 */
-		this.isPolyLine = false;
-
-		// check if the object has an associated gid
+		// detect shape type and store points for polygon/polyline
 		if (typeof this.gid === "number") {
 			this.setTile(map.tilesets);
 		} else {
-			if (typeof settings.ellipse !== "undefined") {
-				this.isEllipse = true;
-			} else if (typeof settings.point !== "undefined") {
-				this.isPoint = true;
-			} else if (typeof settings.polygon !== "undefined") {
-				this.points = settings.polygon;
-				this.isPolygon = true;
-			} else if (typeof settings.polyline !== "undefined") {
-				this.points = settings.polyline;
-				this.isPolyLine = true;
+			this.shapeType = detectShape(settings);
+			if (this.shapeType === "polygon" || this.shapeType === "polyline") {
+				this.points = settings[this.shapeType];
 			}
 		}
 
+		// backward-compatible boolean flags
+		/** @type {boolean} */
+		this.isEllipse = this.shapeType === "ellipse";
+		/** @type {boolean} */
+		this.isCapsule = this.shapeType === "capsule";
+		/** @type {boolean} */
+		this.isPoint = this.shapeType === "point";
+		/** @type {boolean} */
+		this.isPolygon = this.shapeType === "polygon";
+		/** @type {boolean} */
+		this.isPolyLine = this.shapeType === "polyline";
+
 		// check for text information
 		if (typeof settings.text !== "undefined") {
-			// a text object
 			this.text = settings.text;
-			// normalize field name and default value the melonjs way
 			this.text.font = settings.text.fontfamily || "sans-serif";
 			this.text.size = settings.text.pixelsize || 16;
 			this.text.fillStyle = settings.text.color || "#000000";
@@ -179,14 +191,10 @@ export default class TMXObject {
 			this.text.textBaseline = settings.text.valign || "top";
 			this.text.width = this.width;
 			this.text.height = this.height;
-			// set the object properties
 			applyTMXProperties(this.text, settings);
 		} else {
-			// set the object properties
 			applyTMXProperties(this, settings);
-			// a standard object
 			if (!this.shapes) {
-				// else define the object shapes if required
 				this.shapes = this.parseTMXShapes();
 			}
 		}
@@ -202,85 +210,101 @@ export default class TMXObject {
 	 * @ignore
 	 */
 	setTile(tilesets) {
-		// get the corresponding tileset
 		const tileset = tilesets.getTilesetByGid(this.gid);
 
 		if (tileset.isCollection === false) {
-			// set width and height equal to tile size
 			this.width = this.framewidth = tileset.tilewidth;
 			this.height = this.frameheight = tileset.tileheight;
 		}
 
-		// the object corresponding tile object
 		this.tile = new Tile(this.x, this.y, this.gid, tileset);
 	}
 
 	/**
-	 * parses the TMX shape definition and returns a corresponding array of me.Shape object
+	 * parses the TMX shape definition and returns a corresponding array of shape objects
 	 * @private
-	 * @returns {Polygon[]|Line[]|Ellipse[]} an array of shape objects
+	 * @returns {Polygon[]|Line[]|Ellipse[]|RoundRect[]} an array of shape objects
 	 */
 	parseTMXShapes() {
 		const shapes = [];
 
-		// add an ellipse shape
-		if (this.isEllipse === true) {
-			// ellipse coordinates are the center position, so set default to the corresonding radius
-			shapes.push(
-				ellipsePool
-					.get(this.width / 2, this.height / 2, this.width, this.height)
-					.rotate(this.rotation),
-			);
-		} else if (this.isPoint === true) {
-			shapes.push(pointPool.get(this.x, this.y));
-		} else {
-			// add a polygon
-			if (this.isPolygon === true) {
-				const _polygon = polygonPool.get(0, 0, this.points);
-				const isConvex = _polygon.isConvex();
+		switch (this.shapeType) {
+			case "ellipse":
+				shapes.push(
+					ellipsePool
+						.get(this.width / 2, this.height / 2, this.width, this.height)
+						.rotate(this.rotation),
+				);
+				break;
+
+			case "capsule": {
+				const radius = Math.min(this.width, this.height) / 2;
+				shapes.push(
+					roundedRectanglePool
+						.get(0, 0, this.width, this.height, radius)
+						.rotate(this.rotation),
+				);
+				break;
+			}
+
+			case "point":
+				shapes.push(pointPool.get(this.x, this.y));
+				break;
+
+			case "polygon": {
+				const polygon = polygonPool.get(0, 0, this.points);
+				const isConvex = polygon.isConvex();
 
 				if (isConvex === true) {
-					shapes.push(_polygon.rotate(this.rotation));
+					shapes.push(polygon.rotate(this.rotation));
 				} else if (isConvex === false) {
 					// decompose concave polygon into convex triangles
 					console.warn(
 						"melonJS: concave collision polygon detected, decomposing into convex triangles",
 					);
-					const indices = _polygon.getIndices();
-					const pts = _polygon.points;
+					const indices = polygon.getIndices();
+					const pts = polygon.points;
 					for (let t = 0; t < indices.length; t += 3) {
-						const tri = polygonPool.get(0, 0, [
-							vector2dPool.get(pts[indices[t]].x, pts[indices[t]].y),
-							vector2dPool.get(pts[indices[t + 1]].x, pts[indices[t + 1]].y),
-							vector2dPool.get(pts[indices[t + 2]].x, pts[indices[t + 2]].y),
-						]);
-						shapes.push(tri.rotate(this.rotation));
+						shapes.push(
+							polygonPool
+								.get(0, 0, [
+									vector2dPool.get(pts[indices[t]].x, pts[indices[t]].y),
+									vector2dPool.get(
+										pts[indices[t + 1]].x,
+										pts[indices[t + 1]].y,
+									),
+									vector2dPool.get(
+										pts[indices[t + 2]].x,
+										pts[indices[t + 2]].y,
+									),
+								])
+								.rotate(this.rotation),
+						);
 					}
-					polygonPool.release(_polygon);
+					polygonPool.release(polygon);
 				} else {
 					console.warn("melonJS: invalid polygon definition, skipping");
-					polygonPool.release(_polygon);
+					polygonPool.release(polygon);
 				}
-			} else if (this.isPolyLine === true) {
+				break;
+			}
+
+			case "polyline": {
 				const p = this.points;
-				let p1;
-				let p2;
-				const segments = p.length - 1;
-				for (let i = 0; i < segments; i++) {
-					// clone the value before, as [i + 1]
-					// is reused later by the next segment
-					p1 = vector2dPool.get(p[i].x, p[i].y);
-					p2 = vector2dPool.get(p[i + 1].x, p[i + 1].y);
+				for (let i = 0, len = p.length - 1; i < len; i++) {
+					let p1 = vector2dPool.get(p[i].x, p[i].y);
+					let p2 = vector2dPool.get(p[i + 1].x, p[i + 1].y);
 					if (this.rotation !== 0) {
 						p1 = p1.rotate(this.rotation);
 						p2 = p2.rotate(this.rotation);
 					}
 					shapes.push(linePool.get(0, 0, [p1, p2]));
 				}
+				break;
 			}
 
-			// it's a rectangle, returns a polygon object anyway
-			else {
+			default:
+				// rectangle — returns a polygon
 				shapes.push(
 					polygonPool
 						.get(0, 0, [
@@ -291,7 +315,7 @@ export default class TMXObject {
 						])
 						.rotate(this.rotation),
 				);
-			}
+				break;
 		}
 
 		// Apply isometric projection

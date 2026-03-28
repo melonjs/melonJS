@@ -9,11 +9,24 @@ import {
 } from "./sat.js";
 
 // pre-built lookup table for SAT collision tests to avoid string concatenation
+// Rect and RoundRect extend Polygon, so they reuse the Polygon SAT tests
 const SAT_LOOKUP = {
 	PolygonPolygon: testPolygonPolygon,
 	PolygonEllipse: testPolygonEllipse,
 	EllipsePolygon: testEllipsePolygon,
 	EllipseEllipse: testEllipseEllipse,
+	RoundRectRoundRect: testPolygonPolygon,
+	RoundRectPolygon: testPolygonPolygon,
+	PolygonRoundRect: testPolygonPolygon,
+	RoundRectEllipse: testPolygonEllipse,
+	EllipseRoundRect: testEllipsePolygon,
+	RectangleRectangle: testPolygonPolygon,
+	RectanglePolygon: testPolygonPolygon,
+	PolygonRectangle: testPolygonPolygon,
+	RectangleEllipse: testPolygonEllipse,
+	EllipseRectangle: testEllipsePolygon,
+	RectangleRoundRect: testPolygonPolygon,
+	RoundRectRectangle: testPolygonPolygon,
 };
 
 /**

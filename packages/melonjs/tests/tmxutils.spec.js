@@ -1937,4 +1937,78 @@ describe("TMXUtils", () => {
 			});
 		});
 	});
+
+	// ---------------------------------------------------------------
+	// Capsule object shape parsing (Tiled 1.12+)
+	// ---------------------------------------------------------------
+	describe("capsule object parsing", () => {
+		function makeXml(xmlString) {
+			return new DOMParser().parseFromString(xmlString, "text/xml")
+				.documentElement;
+		}
+
+		it("should parse capsule marker in XML object", () => {
+			const xml = makeXml(`
+				<map>
+					<objectgroup name="shapes">
+						<object id="1" x="10" y="20" width="64" height="32">
+							<capsule/>
+						</object>
+					</objectgroup>
+				</map>
+			`);
+			const result = parse(xml);
+			const obj = result.layers[0].objects[0];
+			expect(obj.capsule).toBeDefined();
+			expect(obj.x).toEqual("10");
+			expect(obj.y).toEqual("20");
+			expect(obj.width).toEqual("64");
+			expect(obj.height).toEqual("32");
+		});
+
+		it("should parse capsule with rotation in XML", () => {
+			const xml = makeXml(`
+				<map>
+					<objectgroup name="shapes">
+						<object id="1" x="0" y="0" width="100" height="40" rotation="45">
+							<capsule/>
+						</object>
+					</objectgroup>
+				</map>
+			`);
+			const result = parse(xml);
+			const obj = result.layers[0].objects[0];
+			expect(obj.capsule).toBeDefined();
+			expect(obj.rotation).toEqual("45");
+		});
+
+		it("should not set capsule flag on regular rectangle object", () => {
+			const xml = makeXml(`
+				<map>
+					<objectgroup name="shapes">
+						<object id="1" x="0" y="0" width="64" height="32"/>
+					</objectgroup>
+				</map>
+			`);
+			const result = parse(xml);
+			const obj = result.layers[0].objects[0];
+			expect(obj.capsule).toBeUndefined();
+		});
+
+		it("should not set capsule flag on ellipse object", () => {
+			const xml = makeXml(`
+				<map>
+					<objectgroup name="shapes">
+						<object id="1" x="0" y="0" width="64" height="32">
+							<ellipse/>
+						</object>
+					</objectgroup>
+				</map>
+			`);
+			const result = parse(xml);
+			const obj = result.layers[0].objects[0];
+			expect(obj.capsule).toBeUndefined();
+			expect(obj.ellipse).toBeDefined();
+		});
+	});
 });
