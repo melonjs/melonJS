@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+      "target": "es2020",
+      "allowJs": true,
+      "checkJs": false,
+      "skipLibCheck": true,
+      "emitDeclarationOnly": true,
+      "declaration": true,
+      "declarationDir": "dist/@melonjs",
+      "removeComments": false,
+      "strict": true,
+      "noImplicitAny": true,
+      "moduleResolution": "node",
+      "resolveJsonModule": true
+  },
+  "include": ["dist/@melonjs/**.js"],
+  "exclude": ["node_modules"]
+}

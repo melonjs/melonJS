@@ -1,0 +1,9 @@
+# Temp files
+.DS_Store
+Thumbs.db
+Desktop.ini
+npm-debug.log
+
+# Project specific ignore
+node_modules/
+package-lock.json
