@@ -129,6 +129,30 @@ describe("Shape : RoundRect", () => {
 			const rr = new RoundRect(0, 0, 30, 50, 100);
 			expect(rr.radius).toEqual(15); // 30/2
 		});
+
+		it("should clamp radius when width shrinks via setter", () => {
+			const rr = new RoundRect(0, 0, 100, 100, 40);
+			rr.width = 20;
+			expect(rr.radius).toEqual(10); // clamped to 20/2
+		});
+
+		it("should clamp radius when height shrinks via setter", () => {
+			const rr = new RoundRect(0, 0, 100, 100, 40);
+			rr.height = 30;
+			expect(rr.radius).toEqual(15); // clamped to 30/2
+		});
+
+		it("should clamp negative radius to 0", () => {
+			const rr = new RoundRect(0, 0, 100, 100, -10);
+			expect(rr.radius).toEqual(0);
+		});
+
+		it("should clamp negative radius to 0 via setter", () => {
+			const rr = new RoundRect(0, 0, 100, 100, 20);
+			rr.radius = -5;
+			expect(rr.radius).toEqual(0);
+			expect(rr.points.length).toEqual(4); // plain rectangle
+		});
 	});
 
 	describe("contains — corner edge cases", () => {
@@ -225,6 +249,17 @@ describe("Shape : RoundRect", () => {
 
 		it("should contain itself", () => {
 			expect(rrect.containsRectangle(rrect)).toEqual(true);
+		});
+
+		it("should accept a Rect (not just RoundRect)", () => {
+			const inner = new Rect(90, 90, 20, 20);
+			expect(rrect.containsRectangle(inner)).toEqual(true);
+		});
+
+		it("should accept any object with left/right/top/bottom", () => {
+			expect(
+				rrect.containsRectangle({ left: 90, right: 110, top: 90, bottom: 110 }),
+			).toEqual(true);
 		});
 	});
 
