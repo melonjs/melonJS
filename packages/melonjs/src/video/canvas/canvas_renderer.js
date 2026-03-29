@@ -140,11 +140,10 @@ export default class CanvasRenderer extends Renderer {
 	 * <img src="../images/exclusion-blendmode.png" width="180"/> <br>
 	 * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
 	 * @param {string} [mode="normal"] - blend mode
-	 * @param {CanvasRenderingContext2D} [context]
 	 * @returns {string} the blend mode actually applied (may differ if the requested mode is unsupported)
 	 */
-	setBlendMode(mode = "normal", context) {
-		context = context || this.getContext();
+	setBlendMode(mode = "normal") {
+		const context = this.getContext();
 		this.currentBlendMode = mode;
 		switch (mode) {
 			case "lighter":
