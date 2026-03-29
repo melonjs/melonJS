@@ -16,7 +16,9 @@
 		"publish-debug-plugin": "gh workflow run publish.yml -f package=debug-plugin",
 		"publish-debug-plugin:dry": "gh workflow run publish.yml -f package=debug-plugin -f dry-run=true",
 		"publish-tiled-inflate-plugin": "gh workflow run publish.yml -f package=tiled-inflate-plugin",
-		"publish-tiled-inflate-plugin:dry": "gh workflow run publish.yml -f package=tiled-inflate-plugin -f dry-run=true"
+		"publish-tiled-inflate-plugin:dry": "gh workflow run publish.yml -f package=tiled-inflate-plugin -f dry-run=true",
+		"publish-spine-plugin": "gh workflow run publish.yml -f package=spine-plugin",
+		"publish-spine-plugin:dry": "gh workflow run publish.yml -f package=spine-plugin -f dry-run=true"
 	},
 	"packageManager": "pnpm@10.32.1",
 	"dependencies": {
