@@ -163,7 +163,7 @@ Browse all examples [here](https://melonjs.github.io/melonJS/examples/)
 ### Basic Hello World Example
 
 ```JavaScript
-import * as me from "https://esm.run/melonjs";
+import * as me from "https://cdn.jsdelivr.net/npm/melonjs/+esm";
 
 me.device.onReady(function () {
     // initialize the display canvas once the device/browser is ready
@@ -223,10 +223,10 @@ Or use it directly via [jsDelivr](https://www.jsdelivr.com/package/npm/melonjs) 
 
 ```html
 <!-- load the ES6 module bundle of melonJS v18.x -->
-<script type="module" src="https://esm.run/melonjs@18"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/melonjs@18/+esm"></script>
 <!-- omit the version completely to get the latest one -->
 <!-- you should NOT use this in production -->
-<script type="module" src="https://esm.run/melonjs"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/melonjs/+esm"></script>
 ```
 > Note: the debug plugin is available separately as [`@melonjs/debug-plugin`](https://www.npmjs.com/package/@melonjs/debug-plugin)
 
