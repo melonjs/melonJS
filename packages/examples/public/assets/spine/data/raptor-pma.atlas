@@ -1,0 +1,94 @@
+raptor-pma.png
+	size: 1024, 512
+	filter: Linear, Linear
+	pma: true
+	scale: 0.5
+back-arm
+	bounds: 895, 295, 46, 25
+back-bracer
+	bounds: 992, 216, 39, 28
+	rotate: 90
+back-hand
+	bounds: 594, 58, 36, 34
+back-knee
+	bounds: 729, 86, 49, 67
+	rotate: 90
+back-thigh
+	bounds: 379, 2, 39, 24
+eyes-open
+	bounds: 902, 194, 47, 45
+	rotate: 90
+front-arm
+	bounds: 945, 306, 48, 26
+front-bracer
+	bounds: 949, 197, 41, 29
+front-hand
+	bounds: 949, 266, 41, 38
+front-open-hand
+	bounds: 875, 148, 43, 44
+front-thigh
+	bounds: 793, 171, 57, 29
+	rotate: 90
+gun
+	bounds: 379, 28, 107, 103
+	rotate: 90
+gun-nohand
+	bounds: 487, 87, 105, 102
+head
+	bounds: 807, 361, 136, 149
+lower-leg
+	bounds: 827, 195, 73, 98
+mouth-grind
+	bounds: 920, 145, 47, 30
+	rotate: 90
+mouth-smile
+	bounds: 992, 257, 47, 30
+	rotate: 90
+neck
+	bounds: 359, 114, 18, 21
+raptor-back-arm
+	bounds: 653, 142, 82, 86
+raptor-body
+	bounds: 2, 277, 632, 233
+raptor-front-arm
+	bounds: 484, 4, 81, 102
+	rotate: 90
+raptor-front-leg
+	bounds: 2, 18, 191, 257
+raptor-hindleg-back
+	bounds: 636, 295, 169, 215
+raptor-horn
+	bounds: 195, 22, 182, 80
+raptor-horn-back
+	bounds: 945, 334, 176, 77
+	rotate: 90
+raptor-jaw
+	bounds: 359, 137, 126, 138
+raptor-jaw-tooth
+	bounds: 895, 322, 37, 48
+	rotate: 90
+raptor-mouth-inside
+	bounds: 949, 228, 36, 41
+	rotate: 90
+raptor-saddle-strap-back
+	bounds: 653, 86, 54, 74
+	rotate: 90
+raptor-saddle-strap-front
+	bounds: 594, 94, 57, 95
+raptor-saddle-w-shadow
+	bounds: 195, 104, 162, 171
+raptor-tail-shadow
+	bounds: 636, 230, 189, 63
+raptor-tongue
+	bounds: 807, 295, 86, 64
+stirrup-back
+	bounds: 952, 151, 44, 35
+	rotate: 90
+stirrup-front
+	bounds: 902, 243, 45, 50
+stirrup-strap
+	bounds: 824, 147, 49, 46
+torso
+	bounds: 737, 137, 54, 91
+visor
+	bounds: 487, 191, 131, 84

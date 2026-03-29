@@ -1,0 +1,72 @@
+speedy-pma.png
+	size: 1024, 128
+	filter: Linear, Linear
+	pma: true
+belt-ends
+	bounds: 965, 81, 45, 56
+	rotate: 90
+hair-1
+	bounds: 635, 87, 82, 39
+hair-2
+	bounds: 719, 83, 74, 43
+head
+	bounds: 2, 2, 116, 124
+hood-end1a
+	bounds: 879, 103, 23, 84
+	rotate: 90
+hood-end1b
+	bounds: 795, 67, 28, 79
+	rotate: 90
+hood-end1c
+	bounds: 636, 24, 31, 70
+	rotate: 90
+hood-end1d
+	bounds: 795, 97, 29, 82
+	rotate: 90
+hood-end1e
+	bounds: 248, 2, 35, 78
+	rotate: 90
+hood-end1f
+	bounds: 509, 42, 39, 71
+	rotate: 90
+hood-end2a
+	bounds: 120, 9, 30, 76
+	rotate: 90
+hood-end2b
+	bounds: 509, 2, 38, 71
+	rotate: 90
+hood-end2c
+	bounds: 337, 18, 42, 64
+hood-end2d
+	bounds: 712, 58, 23, 76
+	rotate: 90
+hood-end2e
+	bounds: 636, 57, 28, 74
+	rotate: 90
+hood-end2f
+	bounds: 879, 70, 31, 70
+	rotate: 90
+left-foot
+	bounds: 199, 2, 80, 47
+	rotate: 90
+left-foot-bent01
+	bounds: 248, 39, 87, 43
+left-foot-bent02
+	bounds: 470, 83, 82, 43
+left-foot-side
+	bounds: 199, 84, 90, 42
+left-hand
+	bounds: 582, 28, 52, 53
+right-foot
+	bounds: 381, 25, 66, 56
+right-foot-bent01
+	bounds: 383, 83, 85, 43
+right-foot-bent02
+	bounds: 554, 83, 79, 43
+right-foot-side
+	bounds: 291, 84, 90, 42
+right-hand
+	bounds: 449, 25, 56, 58
+	rotate: 90
+torso
+	bounds: 120, 41, 77, 85

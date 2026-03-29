@@ -1,0 +1,67 @@
+alien.png
+	size: 1024, 1024
+	filter: Linear, Linear
+	scale: 0.5
+back-foot
+	bounds: 1013, 577, 8, 6
+back-shin
+	bounds: 712, 387, 21, 24
+back-thigh
+	bounds: 971, 135, 24, 24
+backarmor
+	bounds: 159, 61, 81, 91
+	rotate: 90
+blown-up-neck
+	bounds: 252, 90, 77, 52
+body
+	bounds: 516, 2, 98, 118
+	rotate: 90
+burst01
+	bounds: 2, 48, 143, 155
+	rotate: 90
+burst02
+	bounds: 207, 144, 156, 181
+burst03-bg
+	bounds: 735, 356, 276, 227
+burst03-fg
+	bounds: 371, 190, 339, 221
+eye
+	bounds: 252, 13, 75, 75
+eye-highlight
+	bounds: 1000, 166, 22, 22
+eye-pupil
+	bounds: 712, 367, 18, 18
+eye-stalk
+	bounds: 640, 114, 74, 66
+	rotate: 90
+front-foot
+	bounds: 1013, 565, 10, 6
+	rotate: 90
+front-lower-arm
+	bounds: 640, 57, 55, 63
+	rotate: 90
+front-shin
+	bounds: 971, 190, 25, 28
+	rotate: 90
+front-thigh
+	bounds: 971, 161, 27, 27
+front-upper-arm
+	bounds: 971, 217, 57, 28
+	rotate: 90
+head
+	bounds: 365, 52, 149, 136
+lower-back-arm
+	bounds: 971, 308, 51, 46
+metaljaw
+	bounds: 516, 102, 122, 86
+splat01
+	bounds: 712, 102, 257, 252
+splat01-fg
+	bounds: 2, 193, 203, 132
+splat02
+	bounds: 2, 327, 367, 256
+splat03
+	bounds: 371, 413, 362, 170
+upper-back-arm
+	bounds: 971, 276, 30, 43
+	rotate: 90

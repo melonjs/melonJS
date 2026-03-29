@@ -1,0 +1,10 @@
+powerup-pma.png
+	size: 512, 256
+	filter: Linear, Linear
+	pma: true
+star
+	bounds: 2, 2, 76, 72
+token
+	bounds: 141, 104, 123, 122
+wing
+	bounds: 2, 76, 137, 150

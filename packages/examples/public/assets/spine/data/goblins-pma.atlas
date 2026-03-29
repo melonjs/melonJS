@@ -1,0 +1,102 @@
+goblins-pma.png
+	size: 1024, 128
+	filter: Linear, Linear
+	pma: true
+dagger
+	bounds: 372, 100, 26, 108
+	rotate: 90
+goblin/eyes-closed
+	bounds: 2, 7, 34, 12
+goblin/head
+	bounds: 107, 36, 103, 66
+goblin/left-arm
+	bounds: 901, 56, 37, 35
+goblin/left-foot
+	bounds: 929, 95, 65, 31
+goblin/left-hand
+	bounds: 452, 2, 36, 41
+goblin/left-lower-leg
+	bounds: 713, 93, 33, 70
+	rotate: 90
+goblin/left-shoulder
+	bounds: 610, 44, 29, 44
+goblin/left-upper-leg
+	bounds: 638, 93, 33, 73
+	rotate: 90
+goblin/neck
+	bounds: 490, 2, 36, 41
+goblin/pelvis
+	bounds: 482, 45, 62, 43
+goblin/right-arm
+	bounds: 690, 2, 23, 50
+	rotate: 90
+goblin/right-foot
+	bounds: 771, 58, 63, 33
+goblin/right-hand
+	bounds: 940, 56, 36, 37
+goblin/right-lower-leg
+	bounds: 482, 90, 36, 76
+	rotate: 90
+goblin/right-shoulder
+	bounds: 602, 3, 39, 45
+	rotate: 90
+goblin/right-upper-leg
+	bounds: 641, 57, 34, 63
+	rotate: 90
+goblin/torso
+	bounds: 212, 34, 68, 96
+	rotate: 90
+goblin/undie-straps
+	bounds: 380, 5, 55, 19
+goblin/undies
+	bounds: 174, 5, 36, 29
+goblingirl/eyes-closed
+	bounds: 269, 11, 37, 21
+goblingirl/head
+	bounds: 2, 21, 103, 81
+goblingirl/left-arm
+	bounds: 978, 56, 37, 35
+	rotate: 90
+goblingirl/left-foot
+	bounds: 107, 3, 65, 31
+goblingirl/left-hand
+	bounds: 565, 2, 35, 40
+goblingirl/left-lower-leg
+	bounds: 785, 93, 33, 70
+	rotate: 90
+goblingirl/left-shoulder
+	bounds: 690, 27, 28, 46
+	rotate: 90
+goblingirl/left-upper-leg
+	bounds: 857, 93, 33, 70
+	rotate: 90
+goblingirl/neck
+	bounds: 528, 2, 35, 41
+goblingirl/pelvis
+	bounds: 546, 45, 62, 43
+goblingirl/right-arm
+	bounds: 452, 48, 28, 50
+goblingirl/right-foot
+	bounds: 836, 58, 63, 33
+goblingirl/right-hand
+	bounds: 771, 20, 36, 37
+	rotate: 90
+goblingirl/right-lower-leg
+	bounds: 560, 90, 36, 76
+	rotate: 90
+goblingirl/right-shoulder
+	bounds: 649, 10, 39, 45
+goblingirl/right-upper-leg
+	bounds: 706, 57, 34, 63
+	rotate: 90
+goblingirl/torso
+	bounds: 310, 2, 68, 96
+goblingirl/undie-straps
+	bounds: 212, 13, 55, 19
+goblingirl/undies
+	bounds: 810, 27, 36, 29
+shield
+	bounds: 380, 26, 70, 72
+spear
+	bounds: 2, 104, 22, 368
+	rotate: 90

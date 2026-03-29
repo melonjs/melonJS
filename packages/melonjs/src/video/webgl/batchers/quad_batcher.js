@@ -67,11 +67,13 @@ export default class QuadBatcher extends Batcher {
 		this.currentSamplerUnit = -1;
 
 		// create the index buffer for quad batching (4 verts + 6 indices per quad)
+		const maxQuads = this.vertexData.maxVertex / 4;
 		this.indexBuffer = new IndexBuffer(
 			this.gl,
-			this.vertexData.maxVertex / 4,
+			maxQuads * 6,
 			this.renderer.WebGLVersion > 1,
 		);
+		this.indexBuffer.fillQuadPattern(maxQuads);
 	}
 
 	/**
@@ -92,11 +94,13 @@ export default class QuadBatcher extends Batcher {
 		this.currentSamplerUnit = -1;
 
 		// re-create index buffer after context loss
+		const maxQuads = this.vertexData.maxVertex / 4;
 		this.indexBuffer = new IndexBuffer(
 			this.gl,
-			this.vertexData.maxVertex / 4,
+			maxQuads * 6,
 			this.renderer.WebGLVersion > 1,
 		);
+		this.indexBuffer.fillQuadPattern(maxQuads);
 	}
 
 	/**

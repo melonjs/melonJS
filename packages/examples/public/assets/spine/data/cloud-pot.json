@@ -1,0 +1,842 @@
+{
+"skeleton": {
+	"hash": "CKnF82un6n8",
+	"spine": "4.2.22",
+	"x": -345,
+	"y": -272846.84,
+	"width": 756,
+	"height": 273927.84,
+	"images": "./images/",
+	"audio": ""
+},
+"bones": [
+	{ "name": "root" },
+	{ "name": "pot-control", "parent": "root", "x": 5, "y": 42, "color": "8828ffff", "icon": "arrowsB" },
+	{ "name": "cloud", "parent": "pot-control", "x": 26.5, "y": 772, "color": "1ee8c0ff", "icon": "circle" },
+	{ "name": "cloud-base-1", "parent": "cloud", "x": -4, "y": 57, "color": "b0d5eaff" },
+	{ "name": "cloud-base-2", "parent": "cloud-base-1", "x": 148.5, "y": -18.5, "color": "b0d5eaff" },
+	{ "name": "cloud-base-3", "parent": "cloud-base-1", "x": -182, "y": -87.5, "color": "b0d5eaff" },
+	{ "name": "cloud-base-4", "parent": "cloud", "x": -31.5, "y": -77, "color": "b0d5eaff" },
+	{ "name": "cloud-base-5", "parent": "cloud-base-4", "x": 177.5, "y": 8, "color": "b0d5eaff" },
+	{ "name": "cloud-base-6", "parent": "cloud-base-1", "x": -150.5, "y": 40, "color": "b0d5eaff" },
+	{ "name": "cloud-base-7", "parent": "cloud-base-1", "x": 8.5, "y": 36.5, "color": "b0d5eaff" },
+	{ "name": "cloud-base-8", "parent": "cloud-base-2", "x": 3.5, "y": 68.5, "color": "b0d5eaff" },
+	{ "name": "cloud-base-9", "parent": "cloud-base-3", "x": -83.5, "y": 30.5, "color": "b0d5eaff" },
+	{ "name": "cloud-base-10", "parent": "cloud-base-5", "x": 137, "y": 54.5, "color": "b0d5eaff" },
+	{ "name": "rain-blue", "parent": "cloud", "x": 102.49, "y": -26, "color": "2360e3ff", "icon": "diamond" },
+	{ "name": "rain-color", "parent": "cloud", "x": -39.42, "y": -26, "color": "2360e3ff", "icon": "diamond" },
+	{ "name": "rain-green", "parent": "cloud", "x": 35.08, "y": -26, "color": "2360e3ff", "icon": "diamond" },
+	{ "name": "rain-white", "parent": "cloud", "x": -103.92, "y": -26, "color": "2360e3ff", "icon": "diamond" },
+	{ "name": "pot", "parent": "pot-control", "x": -5, "y": -42, "color": "8828ffff" },
+	{ "name": "pot-face", "parent": "pot", "x": -1.06, "y": 28.16, "color": "f38383ff", "icon": "gear" },
+	{
+		"name": "leaf-big",
+		"parent": "pot",
+		"length": 46.73,
+		"rotation": 119.24,
+		"x": 4.04,
+		"y": 95.05,
+		"color": "abe323ff"
+	},
+	{ "name": "leaf-big-tip", "parent": "leaf-big", "length": 46.73, "x": 46.73, "color": "abe323ff" },
+	{
+		"name": "leaf-small",
+		"parent": "pot",
+		"length": 51.32,
+		"rotation": 50.93,
+		"x": 10.16,
+		"y": 96.81,
+		"color": "abe323ff"
+	},
+	{
+		"name": "stem",
+		"parent": "pot",
+		"length": 104.76,
+		"rotation": 90,
+		"x": 7.24,
+		"y": 92.61,
+		"color": "abe323ff"
+	},
+	{ "name": "stem2", "parent": "stem", "length": 69.84, "x": 104.76, "color": "abe323ff" },
+	{ "name": "stem3", "parent": "stem2", "length": 34.92, "x": 69.84, "color": "abe323ff" },
+	{
+		"name": "petal-3",
+		"parent": "stem3",
+		"length": 37.74,
+		"rotation": 1.03,
+		"x": 30.73,
+		"y": 0.64,
+		"color": "2381e3ff"
+	},
+	{
+		"name": "petal-1",
+		"parent": "stem3",
+		"length": 40.11,
+		"rotation": 70.18,
+		"x": 34.13,
+		"y": 3.02,
+		"color": "2381e3ff"
+	},
+	{
+		"name": "petal-2",
+		"parent": "stem3",
+		"length": 48.62,
+		"rotation": -80.34,
+		"x": 32.09,
+		"y": -4.46,
+		"color": "2381e3ff"
+	},
+	{ "name": "cloud-face", "parent": "cloud", "y": 14.93, "color": "9e82ffff", "icon": "arrowsB" }
+],
+"slots": [
+	{ "name": "rain/rain-green", "bone": "rain-green", "attachment": "rain-green" },
+	{ "name": "rain/rain-blue", "bone": "rain-blue", "attachment": "rain-blue" },
+	{ "name": "rain/rain-color", "bone": "rain-color", "attachment": "rain-color" },
+	{ "name": "rain/rain-white", "bone": "rain-white", "attachment": "rain-white" },
+	{ "name": "rain/rain-white-reflex", "bone": "rain-white", "attachment": "rain-white-reflex" },
+	{ "name": "flower/petal-1", "bone": "petal-1", "attachment": "petal-1" },
+	{ "name": "flower/petal-2", "bone": "petal-2", "attachment": "petal-2" },
+	{ "name": "flower/petal-3", "bone": "petal-3", "attachment": "petal-3" },
+	{ "name": "flower/stem", "bone": "stem", "attachment": "stem" },
+	{ "name": "flower/leaf-big", "bone": "leaf-big", "attachment": "leaf-big" },
+	{ "name": "flower/leaf-small", "bone": "leaf-small", "attachment": "leaf-small" },
+	{ "name": "flower/stem-end", "bone": "stem3", "attachment": "stem-end" },
+	{ "name": "pot/pot-base", "bone": "pot", "attachment": "pot-base" },
+	{ "name": "pot/pot-mouth", "bone": "pot-face", "attachment": "pot-mouth-smile-big" },
+	{ "name": "pot/pot-eyes", "bone": "pot-face", "attachment": "pot-eyes-open" },
+	{ "name": "cloud/cloud-base/cloud-base-1", "bone": "cloud-base-1", "attachment": "cloud-base-1" },
+	{ "name": "cloud/cloud-base/cloud-base-2", "bone": "cloud-base-2", "attachment": "cloud-base-2" },
+	{ "name": "cloud/cloud-base/cloud-base-3", "bone": "cloud-base-3", "attachment": "cloud-base-3" },
+	{ "name": "cloud/cloud-base/cloud-base-4", "bone": "cloud-base-4", "attachment": "cloud-base-4" },
+	{ "name": "cloud/cloud-base/cloud-base-5", "bone": "cloud-base-5", "attachment": "cloud-base-5" },
+	{ "name": "cloud/cloud-base/cloud-base-6", "bone": "cloud-base-6", "attachment": "cloud-base-6" },
+	{ "name": "cloud/cloud-base/cloud-base-7", "bone": "cloud-base-7", "attachment": "cloud-base-7" },
+	{ "name": "cloud/cloud-base/cloud-base-8", "bone": "cloud-base-8", "attachment": "cloud-base-8" },
+	{ "name": "cloud/cloud-base/cloud-base-9", "bone": "cloud-base-9", "attachment": "cloud-base-9" },
+	{ "name": "cloud/cloud-base/cloud-base-10", "bone": "cloud-base-10", "attachment": "cloud-base-10" },
+	{ "name": "cloud/cloud-cheeks", "bone": "cloud-face", "attachment": "cloud-cheeks" },
+	{ "name": "cloud/cloud-eyes", "bone": "cloud-face", "attachment": "cloud-eyes-open" },
+	{ "name": "cloud/cloud-eyes-reflex", "bone": "cloud-face", "attachment": "cloud-eyes-reflex" },
+	{ "name": "cloud/cloud-mouth", "bone": "cloud-face", "attachment": "cloud-mouth-closed" }
+],
+"physics": [
+	{
+		"name": "cloud",
+		"order": 25,
+		"bone": "cloud",
+		"x": 1,
+		"y": 1,
+		"inertia": 0.5,
+		"strength": 172.8,
+		"damping": 0.8571,
+		"mass": 3
+	},
+	{
+		"name": "cloud-face",
+		"order": 24,
+		"bone": "cloud-face",
+		"x": 0.1923,
+		"y": 0.141,
+		"limit": 500,
+		"inertia": 0.5,
+		"damping": 0.15
+	},
+	{
+		"name": "pot-face",
+		"order": 23,
+		"bone": "pot-face",
+		"x": 0.1667,
+		"y": 0.1026,
+		"limit": 500,
+		"inertia": 0.5,
+		"strength": 137.3,
+		"damping": 0.6078
+	},
+	{
+		"name": "cloud-base/cloud-base-1",
+		"order": 4,
+		"bone": "cloud-base-1",
+		"x": 1,
+		"y": 1,
+		"limit": 500,
+		"inertia": 0.3741,
+		"strength": 134.7,
+		"damping": 0.8163,
+		"mass": 2.8
+	},
+	{
+		"name": "cloud-base/cloud-base-2",
+		"order": 5,
+		"bone": "cloud-base-2",
+		"x": 1,
+		"y": 1,
+		"limit": 300,
+		"inertia": 0.3741,
+		"strength": 134.7,
+		"damping": 0.8163,
+		"mass": 2.8
+	},
+	{
+		"name": "cloud-base/cloud-base-3",
+		"order": 6,
+		"bone": "cloud-base-3",
+		"x": 1,
+		"y": 1,
+		"limit": 300,
+		"inertia": 0.3741,
+		"strength": 134.7,
+		"damping": 0.8163,
+		"mass": 2.8
+	},
+	{
+		"name": "cloud-base/cloud-base-4",
+		"order": 7,
+		"bone": "cloud-base-4",
+		"x": 1,
+		"y": 1,
+		"limit": 500,
+		"inertia": 0.3741,
+		"strength": 134.7,
+		"damping": 0.8163,
+		"mass": 2.8
+	},
+	{
+		"name": "cloud-base/cloud-base-5",
+		"order": 8,
+		"bone": "cloud-base-5",
+		"x": 1,
+		"y": 1,
+		"limit": 300,
+		"inertia": 0.3741,
+		"strength": 134.7,
+		"damping": 0.8163,
+		"mass": 2.8
+	},
+	{
+		"name": "cloud-base/cloud-base-6",
+		"order": 9,
+		"bone": "cloud-base-6",
+		"x": 1,
+		"y": 1,
+		"limit": 300,
+		"inertia": 0.3741,
+		"strength": 134.7,
+		"damping": 0.8163,
+		"mass": 2.8
+	},
+	{
+		"name": "cloud-base/cloud-base-7",
+		"order": 10,
+		"bone": "cloud-base-7",
+		"x": 1,
+		"y": 1,
+		"limit": 300,
+		"inertia": 0.3741,
+		"strength": 134.7,
+		"damping": 0.8163,
+		"mass": 2.8
+	},
+	{
+		"name": "cloud-base/cloud-base-8",
+		"order": 11,
+		"bone": "cloud-base-8",
+		"x": 1,
+		"y": 1,
+		"limit": 300,
+		"inertia": 0.3741,
+		"strength": 134.7,
+		"damping": 0.8163,
+		"mass": 2.8
+	},
+	{
+		"name": "cloud-base/cloud-base-9",
+		"order": 12,
+		"bone": "cloud-base-9",
+		"x": 1,
+		"y": 1,
+		"limit": 300,
+		"inertia": 0.3741,
+		"strength": 134.7,
+		"damping": 0.8163,
+		"mass": 2.8
+	},
+	{
+		"name": "cloud-base/cloud-base-10",
+		"order": 13,
+		"bone": "cloud-base-10",
+		"x": 1,
+		"y": 1,
+		"limit": 300,
+		"inertia": 0.3741,
+		"strength": 134.7,
+		"damping": 0.8163,
+		"mass": 2.8
+	},
+	{
+		"name": "plant/leaf-big",
+		"order": 14,
+		"bone": "leaf-big",
+		"rotate": 0.7532,
+		"shearX": 0.2468,
+		"limit": 500,
+		"inertia": 0.5,
+		"strength": 160.5,
+		"damping": 0.8367,
+		"mass": 4
+	},
+	{
+		"name": "plant/leaf-big-tip",
+		"order": 22,
+		"bone": "leaf-big-tip",
+		"rotate": 1,
+		"limit": 500,
+		"inertia": 0.5,
+		"strength": 160.5,
+		"damping": 0.8367,
+		"mass": 4
+	},
+	{
+		"name": "plant/leaf-small",
+		"order": 15,
+		"bone": "leaf-small",
+		"rotate": 0.6026,
+		"limit": 500,
+		"inertia": 0.5,
+		"strength": 160.5,
+		"damping": 0.8367,
+		"mass": 4
+	},
+	{
+		"name": "plant/petal-1",
+		"order": 19,
+		"bone": "petal-1",
+		"rotate": 1,
+		"limit": 500,
+		"inertia": 0.5,
+		"strength": 164.6,
+		"damping": 0.6531,
+		"mass": 2.6
+	},
+	{
+		"name": "plant/petal-2",
+		"order": 21,
+		"bone": "petal-2",
+		"rotate": 1,
+		"limit": 500,
+		"inertia": 0.5,
+		"strength": 164.6,
+		"damping": 0.6531,
+		"mass": 2.6
+	},
+	{
+		"name": "plant/petal-3",
+		"order": 20,
+		"bone": "petal-3",
+		"rotate": 1,
+		"limit": 500,
+		"inertia": 0.5,
+		"strength": 164.6,
+		"damping": 0.7823,
+		"mass": 3.83
+	},
+	{
+		"name": "plant/stem",
+		"order": 16,
+		"bone": "stem",
+		"rotate": 0.8205,
+		"limit": 700,
+		"inertia": 0.5,
+		"strength": 152.4,
+		"damping": 0.9388,
+		"mass": 2.6
+	},
+	{
+		"name": "plant/stem2",
+		"order": 17,
+		"bone": "stem2",
+		"rotate": 0.8205,
+		"limit": 700,
+		"inertia": 0.5,
+		"strength": 152.4,
+		"damping": 0.9388,
+		"mass": 2.6
+	},
+	{
+		"name": "plant/stem3",
+		"order": 18,
+		"bone": "stem3",
+		"rotate": 0.8205,
+		"limit": 700,
+		"inertia": 0.5,
+		"strength": 152.4,
+		"damping": 0.9388,
+		"mass": 2.6
+	},
+	{
+		"name": "rain/rain-blue",
+		"order": 3,
+		"bone": "rain-blue",
+		"x": 1,
+		"y": 1,
+		"strength": 0,
+		"gravity": 70
+	},
+	{
+		"name": "rain/rain-color",
+		"order": 2,
+		"bone": "rain-color",
+		"x": 1,
+		"y": 1,
+		"strength": 0,
+		"gravity": 70
+	},
+	{
+		"name": "rain/rain-green",
+		"order": 1,
+		"bone": "rain-green",
+		"x": 1,
+		"y": 1,
+		"strength": 0,
+		"gravity": 70
+	},
+	{ "name": "rain/rain-white", "bone": "rain-white", "x": 1, "y": 1, "strength": 0, "gravity": 70 }
+],
+"skins": [
+	{
+		"name": "default",
+		"attachments": {
+			"cloud/cloud-base/cloud-base-1": {
+				"cloud-base-1": { "width": 465, "height": 420 }
+			},
+			"cloud/cloud-base/cloud-base-2": {
+				"cloud-base-2": { "width": 420, "height": 415 }
+			},
+			"cloud/cloud-base/cloud-base-3": {
+				"cloud-base-3": { "width": 349, "height": 327 }
+			},
+			"cloud/cloud-base/cloud-base-4": {
+				"cloud-base-4": { "width": 352, "height": 326 }
+			},
+			"cloud/cloud-base/cloud-base-5": {
+				"cloud-base-5": { "width": 289, "height": 250 }
+			},
+			"cloud/cloud-base/cloud-base-6": {
+				"cloud-base-6": { "width": 322, "height": 272 }
+			},
+			"cloud/cloud-base/cloud-base-7": {
+				"cloud-base-7": { "width": 300, "height": 297 }
+			},
+			"cloud/cloud-base/cloud-base-8": {
+				"cloud-base-8": { "width": 307, "height": 256 }
+			},
+			"cloud/cloud-base/cloud-base-9": {
+				"cloud-base-9": { "width": 214, "height": 216 }
+			},
+			"cloud/cloud-base/cloud-base-10": {
+				"cloud-base-10": { "width": 193, "height": 201 }
+			},
+			"cloud/cloud-cheeks": {
+				"cloud-cheeks": { "x": -19, "y": -53.93, "width": 435, "height": 158 }
+			},
+			"cloud/cloud-eyes": {
+				"cloud-eyes-closed": { "x": -10, "y": -5.43, "width": 263, "height": 43 },
+				"cloud-eyes-open": { "x": -8, "y": -4.43, "width": 265, "height": 51 }
+			},
+			"cloud/cloud-eyes-reflex": {
+				"cloud-eyes-reflex": { "x": -10, "y": 2.07, "width": 239, "height": 34 }
+			},
+			"cloud/cloud-mouth": {
+				"cloud-mouth-closed": { "y": -14.93, "width": 97, "height": 32 },
+				"cloud-mouth-open": { "x": -0.5, "y": -27.93, "width": 118, "height": 70 }
+			},
+			"flower/leaf-big": {
+				"leaf-big": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0.75, 0, 0.5, 0, 0.25, 0, 0, 1, 0, 1, 0.25, 1, 0.5, 1, 0.75 ],
+					"triangles": [ 8, 3, 7, 3, 4, 7, 7, 4, 6, 4, 5, 6, 0, 1, 9, 1, 2, 9, 9, 2, 8, 2, 3, 8 ],
+					"vertices": [ 1, 19, -5.05, -21.72, 1, 1, 19, -5.05, 18.28, 1, 2, 19, 19.45, 18.28, 0.75483, 20, -27.28, 18.28, 0.24517, 2, 19, 43.95, 18.28, 0.50538, 20, -2.78, 18.28, 0.49462, 2, 19, 68.45, 18.28, 0.25278, 20, 21.72, 18.28, 0.74722, 1, 20, 46.22, 18.28, 1, 1, 20, 46.22, -21.72, 1, 2, 19, 68.45, -21.72, 0.24458, 20, 21.72, -21.72, 0.75542, 2, 19, 43.95, -21.72, 0.4937, 20, -2.78, -21.72, 0.5063, 2, 19, 19.45, -21.72, 0.74651, 20, -27.28, -21.72, 0.25349 ],
+					"hull": 10,
+					"edges": [ 0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 12, 12, 14, 14, 16, 16, 18, 18, 0 ],
+					"width": 40,
+					"height": 98
+				}
+			},
+			"flower/leaf-small": {
+				"leaf-small": { "x": 25.02, "y": 0.4, "rotation": -91.36, "width": 34, "height": 59 }
+			},
+			"flower/petal-1": {
+				"petal-1": { "x": 18.88, "y": -4.54, "rotation": -160.18, "width": 52, "height": 36 }
+			},
+			"flower/petal-2": {
+				"petal-2": { "x": 21.96, "y": 2.06, "rotation": -9.66, "width": 56, "height": 34 }
+			},
+			"flower/petal-3": {
+				"petal-3": { "x": 16.97, "y": -5.71, "rotation": -91.03, "width": 58, "height": 42 }
+			},
+			"flower/stem": {
+				"stem": {
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0.90909, 0, 0.81818, 0, 0.72727, 0, 0.63636, 0, 0.54545, 0, 0.45455, 0, 0.36364, 0, 0.27273, 0, 0.18182, 0, 0.09091, 0, 0, 1, 0, 1, 0.09091, 1, 0.18182, 1, 0.27273, 1, 0.36364, 1, 0.45455, 1, 0.54545, 1, 0.63636, 1, 0.72727, 1, 0.81818, 1, 0.90909 ],
+					"triangles": [ 15, 10, 14, 10, 11, 14, 14, 11, 13, 11, 12, 13, 18, 7, 17, 7, 8, 17, 17, 8, 16, 8, 9, 16, 16, 9, 15, 9, 10, 15, 0, 1, 23, 1, 2, 23, 23, 2, 22, 2, 3, 22, 22, 3, 21, 3, 4, 21, 21, 4, 20, 4, 5, 20, 20, 5, 19, 5, 6, 19, 19, 6, 18, 6, 7, 18 ],
+					"vertices": [ 1, 22, -3.61, -6.76, 1, 1, 22, -3.61, 9.24, 1, 3, 22, 15.49, 9.24, 0.97258, 23, -89.27, 9.24, 0.02734, 24, -159.11, 9.24, 8.0E-5, 3, 22, 34.58, 9.24, 0.92758, 23, -70.18, 9.24, 0.07175, 24, -140.02, 9.24, 6.7E-4, 3, 22, 53.67, 9.24, 0.851, 23, -51.09, 9.24, 0.14565, 24, -120.93, 9.24, 0.00335, 3, 22, 72.76, 9.24, 0.73702, 23, -32, 9.24, 0.25075, 24, -101.84, 9.24, 0.01223, 3, 22, 91.85, 9.24, 0.59184, 23, -12.91, 9.24, 0.37282, 24, -82.74, 9.24, 0.03534, 3, 22, 110.94, 9.24, 0.43333, 23, 6.18, 9.24, 0.482, 24, -63.65, 9.24, 0.08467, 3, 22, 130.03, 9.24, 0.28467, 23, 25.27, 9.24, 0.54153, 24, -44.56, 9.24, 0.1738, 3, 22, 149.12, 9.24, 0.16502, 23, 44.37, 9.24, 0.52188, 24, -25.47, 9.24, 0.3131, 3, 22, 168.21, 9.24, 0.08234, 23, 63.46, 9.24, 0.4129, 24, -6.38, 9.24, 0.50477, 3, 22, 187.3, 9.24, 0.03198, 23, 82.55, 9.24, 0.228, 24, 12.71, 9.24, 0.74001, 1, 24, 31.8, 9.24, 1, 1, 24, 31.8, -6.76, 1, 3, 22, 187.3, -6.76, 0.02989, 23, 82.55, -6.76, 0.23389, 24, 12.71, -6.76, 0.73622, 3, 22, 168.21, -6.76, 0.07799, 23, 63.46, -6.76, 0.42357, 24, -6.38, -6.76, 0.49844, 3, 22, 149.12, -6.76, 0.1584, 23, 44.37, -6.76, 0.53549, 24, -25.47, -6.76, 0.30611, 3, 22, 130.03, -6.76, 0.27629, 23, 25.27, -6.76, 0.55594, 24, -44.56, -6.76, 0.16777, 3, 22, 110.94, -6.76, 0.42428, 23, 6.18, -6.76, 0.49529, 24, -63.65, -6.76, 0.08044, 3, 22, 91.85, -6.76, 0.58346, 23, -12.91, -6.76, 0.38366, 24, -82.74, -6.76, 0.03289, 3, 22, 72.76, -6.76, 0.73038, 23, -32, -6.76, 0.25856, 24, -101.84, -6.76, 0.01107, 3, 22, 53.67, -6.76, 0.84652, 23, -51.09, -6.76, 0.15057, 24, -120.93, -6.76, 0.00291, 3, 22, 34.58, -6.76, 0.92506, 23, -70.18, -6.76, 0.0744, 24, -140.02, -6.76, 5.4E-4, 3, 22, 15.49, -6.76, 0.97151, 23, -89.27, -6.76, 0.02843, 24, -159.11, -6.76, 6.0E-5 ],
+					"hull": 24,
+					"edges": [ 0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 12, 12, 14, 14, 16, 16, 18, 18, 20, 20, 22, 22, 24, 24, 26, 26, 28, 28, 30, 30, 32, 32, 34, 34, 36, 36, 38, 38, 40, 40, 42, 42, 44, 44, 46, 46, 0 ],
+					"width": 16,
+					"height": 210
+				}
+			},
+			"flower/stem-end": {
+				"stem-end": { "x": 25.8, "y": -0.26, "rotation": -90, "width": 25, "height": 26 }
+			},
+			"pot/pot-base": {
+				"pot-base": { "x": 5, "y": 42, "width": 152, "height": 118 }
+			},
+			"pot/pot-eyes": {
+				"pot-eyes-closed": { "x": -0.94, "y": 2.34, "width": 92, "height": 17 },
+				"pot-eyes-open": { "x": 0.06, "y": 3.84, "width": 80, "height": 22 }
+			},
+			"pot/pot-mouth": {
+				"pot-mouth-open": { "x": -1.44, "y": -13.66, "width": 27, "height": 31 },
+				"pot-mouth-pouty": { "x": 0.56, "y": -12.66, "width": 35, "height": 19 },
+				"pot-mouth-smile": { "x": 0.56, "y": -12.16, "width": 27, "height": 20 },
+				"pot-mouth-smile-big": { "x": 1.56, "y": -9.16, "width": 39, "height": 18 }
+			},
+			"rain/rain-blue": {
+				"rain-blue": { "width": 23, "height": 36 }
+			},
+			"rain/rain-color": {
+				"rain-color": { "width": 18, "height": 34 }
+			},
+			"rain/rain-green": {
+				"rain-green": { "width": 23, "height": 36 }
+			},
+			"rain/rain-white": {
+				"rain-white": { "width": 23, "height": 44 }
+			},
+			"rain/rain-white-reflex": {
+				"rain-white-reflex": { "x": -0.5, "y": 3.5, "width": 10, "height": 19 }
+			}
+		}
+	}
+],
+"animations": {
+	"playing-in-the-rain": {
+		"slots": {
+			"cloud/cloud-eyes": {
+				"attachment": [
+					{ "time": 0.2, "name": "cloud-eyes-closed" },
+					{ "time": 0.9, "name": "cloud-eyes-open" },
+					{ "time": 1.7667, "name": "cloud-eyes-closed" },
+					{ "time": 1.9333, "name": "cloud-eyes-open" },
+					{ "time": 2.4333, "name": "cloud-eyes-closed" },
+					{ "time": 2.6, "name": "cloud-eyes-open" },
+					{ "time": 3.9333, "name": "cloud-eyes-closed" },
+					{ "time": 4.1, "name": "cloud-eyes-open" }
+				]
+			},
+			"cloud/cloud-mouth": {
+				"attachment": [
+					{ "time": 0.2, "name": "cloud-mouth-open" },
+					{ "time": 0.9, "name": "cloud-mouth-closed" }
+				]
+			},
+			"pot/pot-eyes": {
+				"attachment": [
+					{ "time": 0.1333, "name": "pot-eyes-closed" },
+					{ "time": 0.3, "name": "pot-eyes-open" },
+					{ "time": 1.0667, "name": "pot-eyes-closed" },
+					{ "time": 1.5, "name": "pot-eyes-open" },
+					{ "time": 3.0333, "name": "pot-eyes-closed" },
+					{ "time": 3.2333, "name": "pot-eyes-open" },
+					{ "time": 3.4667, "name": "pot-eyes-closed" },
+					{ "time": 3.6667, "name": "pot-eyes-open" }
+				]
+			},
+			"pot/pot-mouth": {
+				"attachment": [
+					{ "time": 0.1333, "name": "pot-mouth-open" },
+					{ "time": 0.3, "name": "pot-mouth-smile-big" },
+					{ "time": 1.0667, "name": "pot-mouth-pouty" },
+					{ "time": 2.4, "name": "pot-mouth-smile" },
+					{ "time": 3.0333, "name": "pot-mouth-smile-big" }
+				]
+			}
+		},
+		"bones": {
+			"pot": {
+				"rotate": [
+					{ "time": 1.1 },
+					{ "time": 1.2, "value": -12.76 },
+					{ "time": 1.5333, "curve": "stepped" },
+					{ "time": 3.7667 },
+					{ "time": 3.9, "value": 8.28 },
+					{ "time": 4.2333, "value": -4.34 },
+					{ "time": 4.4333 }
+				],
+				"scale": [
+					{},
+					{ "time": 0.2, "y": 0.752 },
+					{ "time": 0.4, "x": 0.845, "y": 1.068 },
+					{ "time": 0.6333 }
+				]
+			},
+			"pot-control": {
+				"translatex": [
+					{
+						"time": 1.0667,
+						"curve": [ 1.222, -203.48, 1.378, -610.44 ]
+					},
+					{ "time": 1.5333, "value": -610.44, "curve": "stepped" },
+					{
+						"time": 2.2333,
+						"value": -610.44,
+						"curve": [ 2.389, -610.44, 2.544, -478.45 ]
+					},
+					{ "time": 2.7, "value": -478.45, "curve": "stepped" },
+					{
+						"time": 3.8333,
+						"value": -478.45,
+						"curve": [ 3.971, -478.45, 4.095, -135.56 ]
+					},
+					{ "time": 4.2333 }
+				],
+				"translatey": [
+					{
+						"time": 1.0333,
+						"curve": [ 1.089, 10.56, 1.144, 44.34 ]
+					},
+					{
+						"time": 1.2,
+						"value": 44.34,
+						"curve": [ 1.256, 44.34, 1.311, 0 ]
+					},
+					{ "time": 1.3667, "curve": "stepped" },
+					{
+						"time": 2.2333,
+						"curve": [ 2.408, 0, 2.392, 44.34 ]
+					},
+					{
+						"time": 2.4333,
+						"value": 44.34,
+						"curve": [ 2.455, 44.34, 2.51, 0 ]
+					},
+					{ "time": 2.6, "curve": "stepped" },
+					{
+						"time": 3.8,
+						"curve": [ 3.841, 14.78, 3.893, 44.34 ]
+					},
+					{
+						"time": 3.9333,
+						"value": 44.34,
+						"curve": [ 4.023, 44.34, 4.111, 14.78 ]
+					},
+					{ "time": 4.2 }
+				]
+			},
+			"cloud-base-1": {
+				"rotate": [
+					{
+						"curve": [ 0.144, -9.36, 0.289, -17.29 ]
+					},
+					{
+						"time": 0.4333,
+						"value": -17.29,
+						"curve": [ 0.5, -17.29, 0.567, -4.32 ]
+					},
+					{ "time": 0.6333 }
+				],
+				"scale": [
+					{
+						"curve": [ 0.089, 1, 0.178, 1.064, 0.089, 1, 0.178, 1.064 ]
+					},
+					{
+						"time": 0.2667,
+						"x": 1.064,
+						"y": 1.064,
+						"curve": [ 0.411, 1.064, 0.556, 1.021, 0.411, 1.064, 0.556, 1.021 ]
+					},
+					{ "time": 0.7 }
+				]
+			},
+			"cloud-base-4": {
+				"rotate": [
+					{
+						"curve": [ 0.1, 5.55, 0.2, 14.81 ]
+					},
+					{
+						"time": 0.3,
+						"value": 14.81,
+						"curve": [ 0.467, 14.81, 0.633, 9.25 ]
+					},
+					{ "time": 0.8 }
+				],
+				"scale": [
+					{
+						"curve": [ 0.089, 1, 0.178, 1.064, 0.089, 1, 0.178, 1.064 ]
+					},
+					{
+						"time": 0.2667,
+						"x": 1.064,
+						"y": 1.064,
+						"curve": [ 0.411, 1.064, 0.556, 1.021, 0.411, 1.064, 0.556, 1.021 ]
+					},
+					{ "time": 0.7 }
+				]
+			},
+			"cloud": {
+				"translate": [
+					{ "time": 0.2333 },
+					{ "time": 0.3333, "y": 30.43 },
+					{ "time": 0.4667 },
+					{ "time": 0.5667, "y": 30.43 },
+					{ "time": 0.6667 },
+					{ "time": 0.7667, "y": 30.43 },
+					{ "time": 0.9333 }
+				]
+			}
+		},
+		"physics": {
+			"rain/rain-blue": {
+				"reset": [
+					{ "time": 0.4667 },
+					{ "time": 0.9333 },
+					{ "time": 1.4 },
+					{ "time": 1.8667 },
+					{ "time": 2.3333 },
+					{ "time": 2.8 },
+					{ "time": 3.2667 },
+					{ "time": 3.7333 },
+					{ "time": 4.2 },
+					{ "time": 4.6667 }
+				]
+			},
+			"rain/rain-color": {
+				"reset": [
+					{ "time": 0.3 },
+					{ "time": 0.7667 },
+					{ "time": 1.2333 },
+					{ "time": 1.7 },
+					{ "time": 2.1667 },
+					{ "time": 2.6333 },
+					{ "time": 3.1 },
+					{ "time": 3.5667 },
+					{ "time": 4.0333 },
+					{ "time": 4.5 }
+				]
+			},
+			"rain/rain-green": {
+				"reset": [
+					{ "time": 0.1333 },
+					{ "time": 0.6 },
+					{ "time": 1.0667 },
+					{ "time": 1.5333 },
+					{ "time": 2 },
+					{ "time": 2.4667 },
+					{ "time": 2.9333 },
+					{ "time": 3.4 },
+					{ "time": 3.8667 },
+					{ "time": 4.3333 }
+				]
+			},
+			"rain/rain-white": {
+				"reset": [
+					{},
+					{ "time": 0.4667 },
+					{ "time": 0.9333 },
+					{ "time": 1.4 },
+					{ "time": 1.8667 },
+					{ "time": 2.3333 },
+					{ "time": 2.8 },
+					{ "time": 3.2667 },
+					{ "time": 3.7333 },
+					{ "time": 4.2 }
+				]
+			}
+		}
+	},
+	"pot-moving-followed-by-rain": {
+		"bones": {
+			"pot-control": {
+				"translate": [
+					{},
+					{ "time": 0.5667, "x": -389.34, "curve": "stepped" },
+					{ "time": 1.1667, "x": -389.34 },
+					{ "time": 2.2, "x": 463.88, "curve": "stepped" },
+					{ "time": 2.4667, "x": 463.88 },
+					{ "time": 3 }
+				]
+			}
+		},
+		"physics": {
+			"rain/rain-blue": {
+				"reset": [
+					{ "time": 0.4667 },
+					{ "time": 0.9333 },
+					{ "time": 1.4 },
+					{ "time": 1.8667 },
+					{ "time": 2.3333 },
+					{ "time": 2.8 },
+					{ "time": 3.2667 }
+				]
+			},
+			"rain/rain-color": {
+				"reset": [
+					{ "time": 0.3 },
+					{ "time": 0.7667 },
+					{ "time": 1.2333 },
+					{ "time": 1.7 },
+					{ "time": 2.1667 },
+					{ "time": 2.6333 },
+					{ "time": 3.1 }
+				]
+			},
+			"rain/rain-green": {
+				"reset": [
+					{ "time": 0.1333 },
+					{ "time": 0.6 },
+					{ "time": 1.0667 },
+					{ "time": 1.5333 },
+					{ "time": 2 },
+					{ "time": 2.4667 },
+					{ "time": 2.9333 }
+				]
+			},
+			"rain/rain-white": {
+				"reset": [
+					{},
+					{ "time": 0.4667 },
+					{ "time": 0.9333 },
+					{ "time": 1.4 },
+					{ "time": 1.8667 },
+					{ "time": 2.3333 },
+					{ "time": 2.8 }
+				]
+			}
+		}
+	},
+	"rain": {
+		"physics": {
+			"rain/rain-blue": {
+				"reset": [
+					{ "time": 0.4667 }
+				]
+			},
+			"rain/rain-color": {
+				"reset": [
+					{ "time": 0.3 }
+				]
+			},
+			"rain/rain-green": {
+				"reset": [
+					{ "time": 0.1333 }
+				]
+			},
+			"rain/rain-white": {
+				"reset": [
+					{}
+				]
+			}
+		}
+	}
+}
+}
