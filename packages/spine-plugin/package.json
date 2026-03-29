@@ -47,7 +47,7 @@
 		"CHANGELOG.md"
 	],
 	"peerDependencies": {
-		"melonjs": ">=18.2.0"
+		"melonjs": ">=18.2.1"
 	},
 	"dependencies": {
 		"@esotericsoftware/spine-canvas": "^4.2.108",

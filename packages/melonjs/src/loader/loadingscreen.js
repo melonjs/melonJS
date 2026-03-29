@@ -4,6 +4,7 @@ import Sprite from "./../renderable/sprite.js";
 import Stage from "./../state/stage.js";
 import {
 	eventEmitter,
+	LOADER_COMPLETE,
 	LOADER_PROGRESS,
 	VIEWPORT_ONRESIZE,
 } from "../system/event.ts";
@@ -95,6 +96,11 @@ class DefaultLoadingScreen extends Stage {
 	logoSprite = null;
 
 	/**
+	 * @ignore
+	 */
+	#boundCleanup = null;
+
+	/**
 	 * call when the loader is resetted
 	 * @ignore
 	 */
@@ -113,8 +119,17 @@ class DefaultLoadingScreen extends Stage {
 		);
 		game.world.addChild(this.progressBar, 1);
 
+		// clean up loading screen children when the preloader completes,
+		// whether or not a state.change() follows
+		this.#boundCleanup = this.#cleanup.bind(this);
+		eventEmitter.addListenerOnce(LOADER_COMPLETE, this.#boundCleanup);
+
 		// load the melonJS logo
 		load({ name: "melonjs_logo", type: "image", src: logo_url }, () => {
+			// guard against the logo loading after preload completed
+			if (this.#boundCleanup === null) {
+				return;
+			}
 			// melonJS logo
 			this.logoSprite = new Sprite(renderer.width / 2, renderer.height / 2, {
 				image: "melonjs_logo",
@@ -126,11 +141,12 @@ class DefaultLoadingScreen extends Stage {
 	}
 
 	/**
-	 * Called by engine before deleting the object
+	 * Remove loading screen children and unload the logo
 	 * @ignore
 	 */
-	onDestroyEvent() {
-		// remove children added during loading
+	#cleanup() {
+		this.#boundCleanup = null;
+
 		if (this.progressBar) {
 			game.world.removeChild(this.progressBar);
 			this.progressBar = null;
@@ -142,6 +158,19 @@ class DefaultLoadingScreen extends Stage {
 
 		// unload the logo image
 		unload({ name: "melonjs_logo", type: "image" });
+	}
+
+	/**
+	 * Called by engine before deleting the object
+	 * @ignore
+	 */
+	onDestroyEvent() {
+		// remove the listener in case state.change() is called
+		// before the preloader fires LOADER_COMPLETE
+		if (this.#boundCleanup) {
+			eventEmitter.removeListener(LOADER_COMPLETE, this.#boundCleanup);
+		}
+		this.#cleanup();
 	}
 }
 
