@@ -108,7 +108,7 @@ export default class CanvasRenderer extends Renderer {
 	}
 
 	/**
-	 * set a blend mode for the given context. <br>
+	 * set the current blend mode for this renderer. <br>
 	 * All renderers support: <br>
 	 * - "normal" : draws new content on top of the existing content <br>
 	 * <img src="../images/normal-blendmode.png" width="180"/> <br>
