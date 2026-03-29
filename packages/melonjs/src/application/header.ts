@@ -8,12 +8,11 @@ import type Application from "./application.ts";
 export function consoleHeader(app: Application): void {
 	const renderType = app.renderer.type;
 	const gpu_renderer =
-		typeof (app.renderer as any).GPURenderer === "string"
-			? ` (${(app.renderer as any).GPURenderer})`
+		typeof app.renderer.GPURenderer === "string"
+			? ` (${app.renderer.GPURenderer})`
 			: "";
 	const depthTesting =
-		renderType.includes("WebGL") &&
-		(app.renderer as any).depthTest === "z-buffer"
+		renderType.includes("WebGL") && app.renderer.depthTest === "z-buffer"
 			? "Depth Test | "
 			: "";
 	const audioType = device.hasWebAudio ? "Web Audio" : "HTML5 Audio";

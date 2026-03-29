@@ -358,6 +358,8 @@ export default class WebGLRenderer extends Renderer {
 				// flush the current batcher
 				this.currentBatcher.flush();
 			}
+			// rebind the renderer's shared vertex buffer (custom batchers may have bound their own)
+			this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
 			this.currentBatcher = batcher;
 			this.currentBatcher.bind();
 		}
@@ -724,7 +726,7 @@ export default class WebGLRenderer extends Renderer {
 	}
 
 	/**
-	 * set a blend mode for the given context. <br>
+	 * set the current blend mode for this renderer. <br>
 	 * All renderers support: <br>
 	 * - "normal" : draws new content on top of the existing content <br>
 	 * <img src="../images/normal-blendmode.png" width="180"/> <br>
@@ -744,14 +746,18 @@ export default class WebGLRenderer extends Renderer {
 	 * and will always fall back to "normal" in WebGL. <br>
 	 * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
 	 * @param {string} [mode="normal"] - blend mode
-	 * @param {WebGLRenderingContext} [gl] - a WebGL context
+	 * @param {boolean} [premultipliedAlpha=true] - whether textures use premultiplied alpha (affects source blend factor)
 	 * @returns {string} the blend mode actually applied (may differ if the requested mode is unsupported)
 	 */
-	setBlendMode(mode = "normal", gl = this.gl) {
+	setBlendMode(mode = "normal", premultipliedAlpha = true) {
 		if (this.currentBlendMode !== mode) {
+			const gl = this.gl;
 			this.flush();
 			gl.enable(gl.BLEND);
 			this.currentBlendMode = mode;
+
+			// source factor depends on whether textures use premultiplied alpha
+			const srcAlpha = premultipliedAlpha ? gl.ONE : gl.SRC_ALPHA;
 
 			switch (mode) {
 				case "screen":
@@ -763,7 +769,7 @@ export default class WebGLRenderer extends Renderer {
 				case "additive":
 				case "add":
 					gl.blendEquation(gl.FUNC_ADD);
-					gl.blendFunc(gl.ONE, gl.ONE);
+					gl.blendFunc(srcAlpha, gl.ONE);
 					break;
 
 				case "multiply":
@@ -777,7 +783,7 @@ export default class WebGLRenderer extends Renderer {
 						gl.blendFunc(gl.ONE, gl.ONE);
 					} else {
 						gl.blendEquation(gl.FUNC_ADD);
-						gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+						gl.blendFunc(srcAlpha, gl.ONE_MINUS_SRC_ALPHA);
 						this.currentBlendMode = "normal";
 					}
 					break;
@@ -788,14 +794,14 @@ export default class WebGLRenderer extends Renderer {
 						gl.blendFunc(gl.ONE, gl.ONE);
 					} else {
 						gl.blendEquation(gl.FUNC_ADD);
-						gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+						gl.blendFunc(srcAlpha, gl.ONE_MINUS_SRC_ALPHA);
 						this.currentBlendMode = "normal";
 					}
 					break;
 
 				default:
 					gl.blendEquation(gl.FUNC_ADD);
-					gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+					gl.blendFunc(srcAlpha, gl.ONE_MINUS_SRC_ALPHA);
 					this.currentBlendMode = "normal";
 					break;
 			}

@@ -95,7 +95,8 @@ export function register(
 	...args: any[]
 ): void {
 	// derive name from class if not provided
-	const pluginName = name || pluginClass.toString().match(/ (\w+)/)![1];
+	const pluginName =
+		name || pluginClass.name || pluginClass.toString().match(/ (\w+)/)![1];
 
 	// ensure me.plugins[name] is not already "used"
 	if (cache[pluginName]) {

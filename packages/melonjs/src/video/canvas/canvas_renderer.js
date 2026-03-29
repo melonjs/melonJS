@@ -108,7 +108,7 @@ export default class CanvasRenderer extends Renderer {
 	}
 
 	/**
-	 * set a blend mode for the given context. <br>
+	 * set the current blend mode for this renderer. <br>
 	 * All renderers support: <br>
 	 * - "normal" : draws new content on top of the existing content <br>
 	 * <img src="../images/normal-blendmode.png" width="180"/> <br>
@@ -140,11 +140,10 @@ export default class CanvasRenderer extends Renderer {
 	 * <img src="../images/exclusion-blendmode.png" width="180"/> <br>
 	 * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
 	 * @param {string} [mode="normal"] - blend mode
-	 * @param {CanvasRenderingContext2D} [context]
 	 * @returns {string} the blend mode actually applied (may differ if the requested mode is unsupported)
 	 */
-	setBlendMode(mode = "normal", context) {
-		context = context || this.getContext();
+	setBlendMode(mode = "normal") {
+		const context = this.getContext();
 		this.currentBlendMode = mode;
 		switch (mode) {
 			case "lighter":
