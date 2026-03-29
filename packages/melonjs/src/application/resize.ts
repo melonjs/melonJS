@@ -12,7 +12,6 @@ import type Application from "./application.ts";
 function scale(game: Application, x: number, y: number): void {
 	const renderer = game.renderer;
 	const canvas = renderer.getCanvas();
-	const context = renderer.getContext();
 	const settings = renderer.settings as any;
 	const pixelRatio = device.devicePixelRatio;
 
@@ -28,7 +27,7 @@ function scale(game: Application, x: number, y: number): void {
 
 	// if anti-alias and blend mode were reset (e.g. Canvas mode)
 	renderer.setAntiAlias(settings.antiAlias);
-	(renderer as any).setBlendMode(settings.blendMode, context);
+	renderer.setBlendMode(settings.blendMode);
 
 	// force repaint
 	game.repaint();

@@ -74,6 +74,12 @@ export default class Renderer {
 		this.depthTest = "sorting";
 
 		/**
+		 * The GPU renderer string (WebGL only, undefined for Canvas)
+		 * @type {string|undefined}
+		 */
+		this.GPURenderer = undefined;
+
+		/**
 		 * The Path2D instance used by the renderer to draw primitives
 		 * @type {Path2D}
 		 */
@@ -238,6 +244,16 @@ export default class Renderer {
 	 */
 	getBlendMode() {
 		return this.currentBlendMode;
+	}
+
+	/**
+	 * set the current blend mode.
+	 * Subclasses (CanvasRenderer, WebGLRenderer) implement the actual GL/Canvas logic.
+	 * @param {string} [mode="normal"] - blend mode
+	 * @param {boolean} [premultipliedAlpha=true] - whether textures use premultiplied alpha (WebGL only)
+	 */
+	setBlendMode(mode = "normal") {
+		this.currentBlendMode = mode;
 	}
 
 	/**
