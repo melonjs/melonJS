@@ -1,5 +1,10 @@
 # Changelog
 
+## [18.2.2] (melonJS 2)
+
+### Fixed
+- Chore: fix missing README on the npm release
+
 ## [18.2.1] (melonJS 2)
 
 ### Fixed
