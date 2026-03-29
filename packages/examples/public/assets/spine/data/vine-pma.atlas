@@ -1,0 +1,6 @@
+vine-pma.png
+	size: 128, 1024
+	filter: Linear, Linear
+	pma: true
+vine
+	bounds: 2, 2, 68, 962

@@ -35,9 +35,9 @@
 		"node": "^20.19.0 || >=22.12.0"
 	},
 	"exports": {
-		".": "./build/Spine.js"
+		".": "./build/index.js"
 	},
-	"types": "./build/Spine.d.ts",
+	"types": "./build/index.d.ts",
 	"sideEffects": false,
 	"files": [
 		"build/",

@@ -1,0 +1,86 @@
+cloud-pot-pma.png
+	size: 1024, 512
+	filter: Linear, Linear
+	pma: true
+	scale: 0.5
+cloud-base-1
+	bounds: 2, 300, 233, 210
+cloud-base-10
+	bounds: 214, 113, 97, 101
+cloud-base-2
+	bounds: 2, 90, 210, 208
+cloud-base-3
+	bounds: 237, 346, 175, 164
+cloud-base-4
+	bounds: 414, 347, 176, 163
+cloud-base-5
+	bounds: 313, 89, 145, 125
+cloud-base-6
+	bounds: 744, 374, 161, 136
+cloud-base-7
+	bounds: 592, 361, 150, 149
+cloud-base-8
+	bounds: 237, 216, 154, 128
+cloud-base-9
+	bounds: 907, 402, 107, 108
+cloud-cheeks
+	bounds: 2, 9, 218, 79
+cloud-eyes-closed
+	bounds: 744, 350, 132, 22
+cloud-eyes-open
+	bounds: 592, 333, 133, 26
+cloud-eyes-reflex
+	bounds: 393, 224, 120, 17
+	rotate: 90
+cloud-mouth-closed
+	bounds: 907, 374, 49, 16
+cloud-mouth-open
+	bounds: 222, 15, 59, 35
+leaf-big
+	bounds: 214, 218, 20, 49
+leaf-small
+	bounds: 958, 373, 17, 30
+	rotate: 90
+petal-1
+	bounds: 283, 2, 26, 18
+petal-2
+	bounds: 283, 22, 28, 17
+	rotate: 90
+petal-3
+	bounds: 214, 269, 29, 21
+	rotate: 90
+pot-base
+	bounds: 222, 52, 76, 59
+pot-eyes-closed
+	bounds: 878, 363, 46, 9
+pot-eyes-open
+	bounds: 222, 2, 40, 11
+pot-mouth-open
+	bounds: 990, 374, 14, 16
+pot-mouth-pouty
+	bounds: 300, 93, 18, 10
+	rotate: 90
+pot-mouth-smile
+	bounds: 300, 77, 14, 10
+	rotate: 90
+pot-mouth-smile-big
+	bounds: 878, 352, 20, 9
+rain-blue
+	bounds: 926, 360, 12, 18
+	rotate: 90
+rain-color
+	bounds: 264, 4, 9, 17
+	rotate: 90
+rain-green
+	bounds: 900, 349, 12, 18
+	rotate: 90
+rain-white
+	bounds: 727, 337, 12, 22
+rain-white-reflex
+	bounds: 2, 2, 5, 10
+	rotate: 90
+stem
+	bounds: 907, 392, 8, 105
+	rotate: 90
+stem-end
+	bounds: 300, 62, 13, 13

@@ -1,0 +1,64 @@
+tank-pma.png
+	size: 1024, 1024
+	filter: Linear, Linear
+	pma: true
+	scale: 0.5
+antenna
+	bounds: 650, 857, 11, 152
+	rotate: 90
+cannon
+	bounds: 434, 376, 466, 29
+	rotate: 90
+cannon-connector
+	bounds: 349, 241, 56, 68
+	rotate: 90
+ground
+	bounds: 255, 330, 512, 177
+	rotate: 90
+guntower
+	bounds: 650, 870, 365, 145
+machinegun
+	bounds: 255, 299, 166, 29
+machinegun-mount
+	bounds: 2, 2, 36, 48
+	rotate: 90
+rock
+	bounds: 465, 552, 290, 64
+	rotate: 90
+smoke-glow
+	bounds: 531, 563, 50, 50
+smoke-puff01-bg
+	bounds: 465, 458, 92, 62
+	rotate: 90
+smoke-puff01-fg
+	bounds: 115, 138, 88, 59
+smoke-puff02-fg
+	bounds: 255, 235, 92, 62
+smoke-puff03-fg
+	bounds: 531, 685, 92, 62
+smoke-puff04-fg
+	bounds: 465, 378, 78, 48
+	rotate: 90
+tank-bottom
+	bounds: 115, 199, 643, 138
+	rotate: 90
+tank-bottom-shadow
+	bounds: 2, 844, 646, 171
+tank-top
+	bounds: 2, 138, 704, 111
+	rotate: 90
+tread
+	bounds: 626, 794, 48, 15
+	rotate: 90
+tread-inside
+	bounds: 434, 360, 13, 14
+wheel-big
+	bounds: 2, 40, 96, 96
+wheel-big-overlay
+	bounds: 531, 749, 93, 93
+wheel-mid
+	bounds: 531, 615, 68, 68
+wheel-mid-overlay
+	bounds: 100, 68, 68, 68
+wheel-small
+	bounds: 205, 161, 36, 36

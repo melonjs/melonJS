@@ -1,0 +1,60 @@
+hero-pma.png
+	size: 1024, 256
+	filter: Linear, Linear
+	pma: true
+body
+	bounds: 324, 88, 97, 95
+cape
+	bounds: 176, 95, 146, 159
+chain-ball
+	bounds: 423, 115, 64, 68
+chain-flat
+	bounds: 2, 2, 16, 5
+chain-round
+	bounds: 423, 99, 17, 14
+eyes
+	bounds: 678, 223, 82, 31
+fingers
+	bounds: 948, 221, 31, 33
+foot1
+	bounds: 762, 212, 50, 42
+foot2
+	bounds: 140, 26, 53, 38
+	rotate: 90
+forearm1
+	bounds: 814, 213, 41, 49
+	rotate: 90
+forearm2
+	bounds: 981, 222, 31, 32
+hand1
+	bounds: 865, 217, 37, 48
+	rotate: 90
+hand2
+	bounds: 915, 217, 31, 37
+handle
+	bounds: 542, 240, 134, 14
+head
+	bounds: 2, 81, 172, 173
+mantles
+	bounds: 2, 24, 136, 55
+mouth
+	bounds: 2, 9, 61, 13
+shin1
+	bounds: 542, 126, 53, 57
+	rotate: 90
+shin2
+	bounds: 489, 129, 51, 54
+sword
+	bounds: 324, 185, 216, 69
+thigh1
+	bounds: 608, 178, 60, 63
+	rotate: 90
+thigh2
+	bounds: 542, 181, 57, 64
+	rotate: 90
+upper-arm1
+	bounds: 601, 126, 50, 56
+	rotate: 90
+upper-arm2
+	bounds: 673, 182, 39, 59
+	rotate: 90

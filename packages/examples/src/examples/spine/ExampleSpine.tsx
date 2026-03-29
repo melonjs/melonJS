@@ -24,6 +24,11 @@ const loadCharacter = (char: (typeof characters)[number]) => {
 		spineObj.setSkinByName(char.skin);
 	}
 
+	// apply scale if specified
+	if ("scale" in char && char.scale) {
+		spineObj.scale(char.scale);
+	}
+
 	// set default animation
 	spineObj.setAnimation(0, char.animation, true);
 
@@ -55,6 +60,7 @@ const createGame = () => {
 
 	// register plugins
 	plugin.register(DebugPanelPlugin);
+	plugin.get(DebugPanelPlugin)?.show();
 	plugin.register(SpinePlugin);
 
 	// set cross-origin
@@ -86,7 +92,7 @@ const CharacterSelector = () => {
 		<div
 			style={{
 				position: "absolute",
-				top: 44,
+				top: 150,
 				left: 16,
 				zIndex: 1000,
 			}}

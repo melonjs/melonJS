@@ -173,7 +173,7 @@ const examples: {
 		path: "spine",
 		sourceDir: "spine",
 		description:
-			"Loading and playing Spine skeletal animations with the @melonjs/spine-plugin (WebGL and Canvas).",
+			"Loading and playing Spine skeletal animations with the @melonjs/spine-plugin through custom WebGL Batcher integration.",
 	},
 	{
 		component: <ExampleSVGShapes />,

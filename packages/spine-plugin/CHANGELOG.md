@@ -6,7 +6,14 @@
 - migrated into the melonJS monorepo
 - replaced rollup build with esbuild (aligned with debug-plugin)
 - bumped Spine runtime dependencies to ^4.2.108
-- minimum melonJS version is now 18.1.0
+- minimum melonJS version is now 18.2.0
+- WebGL rendering now uses a custom `SpineBatcher` extending melonJS `Batcher` with indexed drawing, instead of Spine's own `PolygonBatcher` — integrates through melonJS's batcher system (`setBatcher("spine")`)
+- SpineBatcher uses Spine's official two-color tinting shader (`Shader.newTwoColoredTextured`) and attribute names
+- blend modes now delegate to melonJS `renderer.setBlendMode()` with premultiplied alpha support
+- canvas `SkeletonRenderer` refactored: extracted `drawRegion()`, `drawMesh()`, `drawTriangle()` methods from monolithic `draw()`
+- `AssetManager` cleaned up: renamed `asset_manager` to `spineAssetManager`, added `dispose()`, fixed JSDoc
+- source reorganized: `index.js` is the proper entry point, `Spine.js` is the renderable, `SpinePlugin.js` is the plugin registration
+- `SpinePlugin.js` renamed from `index.js` for clarity
 
 ### Fixed
 - use `setBatcher`/`currentBatcher` instead of deprecated `setCompositor`/`currentCompositor`
@@ -16,17 +23,28 @@
 - `dispose()` now guards against calling WebGL-only methods on canvas renderer
 - `throw "string"` replaced with `throw new Error()` for proper stack traces
 - `setAnimationByIndex`/`addAnimationByIndex` now use `console.warn` instead of `console.log` for errors
+- canvas `drawTriangle()` now guards against degenerate triangles (zero-area UV)
+- canvas mesh drawing now subtracts 1 pixel from UV dimensions to prevent edge bleeding (matches official spine-canvas)
 
 ### Added
+- `SpineBatcher`: custom melonJS `Batcher` for two-color tinted Spine rendering via indexed `drawElements`
 - `addAnimation(trackIndex, name, loop, delay)` method for adding queued animations by name
+- `setCombinedSkin(combinedName, ...skinNames)` for mix-and-match skin combining
+- `setEmptyAnimation(trackIndex, mixDuration)` for clearing animation tracks
+- `findBone(boneName)` and `findSlot(slotName)` for direct skeleton access
+- `addAnimationListener(listener)` and `removeAnimationListener(listener)` for animation state events (start, end, complete, event, etc.)
+- `getAnimationNames()` and `getSkinNames()` for skeleton introspection
 - `skeleton.update(delta)` call before `updateWorldTransform()` as required by Spine 4.2+
-- spine example added to the monorepo examples app with character selector dropdown
+- canvas `SkeletonRenderer` auto-detects mesh attachments and enables `triangleRendering` only when needed
+- spine example added to the monorepo examples app with character selector dropdown and debug plugin
 
 ### Removed
 - redundant `getSpinePosition()`, `setSpineSize()`, `getSpineSize()` methods (use inherited `pos`, `width`, `height`)
 - redundant `addAnimationByName()` (replaced by `addAnimation()`)
-- old melonJS version check hack in constructor (no longer needed with >=18.1.0)
+- old melonJS version check hack in constructor (no longer needed with >=18.2.0)
 - old test/examples folder (replaced by monorepo examples)
+- custom GLSL shaders (now uses Spine's official `Shader.newTwoColoredTextured`)
+- manual GL state management in `resetRenderer()`/`enableRenderer()`/`end()` (replaced by melonJS batcher system)
 
 ## 1.5.0 - 2023-09-23
 

@@ -1,12 +1,10 @@
 import * as spineCanvas from "@esotericsoftware/spine-canvas";
-import { Physics, Vector2 } from "@esotericsoftware/spine-core";
+import { MeshAttachment, Physics, Vector2 } from "@esotericsoftware/spine-core";
 import * as spineWebGL from "@esotericsoftware/spine-webgl";
-import { Math, plugin, Renderable, Vector2d } from "melonjs";
-import { SpinePlugin } from "./index.js";
+import { Math, plugin, Renderable } from "melonjs";
 import SkeletonRenderer from "./SkeletonRenderer.js";
 import SpineBatcher from "./SpineBatcher.js";
-
-export { SpinePlugin } from "./index.js";
+import { SpinePlugin } from "./SpinePlugin.js";
 
 // a temporary array used for skeleton.getBounds();
 const tempArray = [];
@@ -109,7 +107,10 @@ export default class Spine extends Renderable {
 
 			// register the Spine batcher with the melonJS renderer (once)
 			if (!this.renderer.batchers.has("spine")) {
-				this.renderer.addBatcher(new SpineBatcher(this.renderer), "spine");
+				this.renderer.addBatcher(
+					new SpineBatcher(this.renderer, this.canvas),
+					"spine",
+				);
 			}
 			this.spineBatcher = this.renderer.batchers.get("spine");
 
@@ -195,6 +196,22 @@ export default class Spine extends Renderable {
 		// Instantiate a new skeleton based on the atlas and skeleton data.
 		this.skeleton = new this.runtime.Skeleton(skeletonData);
 
+		// auto-detect if the skeleton uses mesh attachments for canvas renderer
+		if (this.skeletonRenderer instanceof SkeletonRenderer) {
+			this.skeletonRenderer.triangleRendering = skeletonData.skins.some(
+				(skin) => {
+					for (const [, attachments] of skin.attachments.entries()) {
+						for (const [, attachment] of attachments.entries()) {
+							if (attachment instanceof MeshAttachment) {
+								return true;
+							}
+						}
+					}
+					return false;
+				},
+			);
+		}
+
 		this.setToSetupPose();
 
 		// Setup an animation state with a default mix of 0.2 seconds.
@@ -206,6 +223,12 @@ export default class Spine extends Renderable {
 
 		// get a reference to the root bone
 		this.root = this.skeleton.getRootBone();
+
+		// invert physics gravity to match Y-down coordinate system
+		for (const constraint of this.skeleton.physicsConstraints) {
+			constraint.data.gravity = -constraint.data.gravity;
+			constraint.gravity = -constraint.gravity;
+		}
 	}
 
 	/**
@@ -323,7 +346,6 @@ export default class Spine extends Renderable {
 	 */
 	update(dt) {
 		if (typeof this.skeleton !== "undefined") {
-			const rootBone = this.skeleton.getRootBone();
 			const deltaSeconds = dt / 1000;
 
 			// update skeleton time for physics simulation (Spine 4.2+)
@@ -334,6 +356,7 @@ export default class Spine extends Renderable {
 			this.animationState.apply(this.skeleton);
 
 			// update the root bone position
+			const rootBone = this.skeleton.getRootBone();
 			rootBone.x = this.pos.x;
 			rootBone.y = this.pos.y;
 
@@ -524,6 +547,104 @@ export default class Spine extends Renderable {
 	 */
 	setSkinByName(skinName) {
 		this.skeleton.setSkinByName(skinName);
+	}
+
+	/**
+	 * Create a combined skin from multiple skin names (mix-and-match).
+	 * @param {string} combinedName - name for the new combined skin
+	 * @param {...string} skinNames - names of skins to combine
+	 * @example
+	 * // combine multiple skins for mix-and-match
+	 * spineChar.setCombinedSkin("custom", "skin-base", "nose/short", "eyelids/girly");
+	 */
+	setCombinedSkin(combinedName, ...skinNames) {
+		const Skin = this.runtime.Skin;
+		const combined = new Skin(combinedName);
+		for (const name of skinNames) {
+			const skin = this.skeleton.data.findSkin(name);
+			if (skin) {
+				combined.addSkin(skin);
+			} else {
+				console.warn(`Spine plugin: skin "${name}" not found`);
+			}
+		}
+		this.skeleton.setSkin(combined);
+		this.skeleton.setToSetupPose();
+	}
+
+	/**
+	 * Sets an empty animation for a track, allowing the track entry to be mixed from.
+	 * @param {number} trackIndex - the track index
+	 * @param {number} [mixDuration=0] - mix duration in seconds
+	 * @returns {TrackEntry} A track entry to allow further customization.
+	 */
+	setEmptyAnimation(trackIndex, mixDuration = 0) {
+		return this.animationState.setEmptyAnimation(trackIndex, mixDuration);
+	}
+
+	/**
+	 * Find a bone by name.
+	 * @param {string} boneName - the bone name
+	 * @returns {Bone|null} the bone, or null if not found
+	 */
+	findBone(boneName) {
+		return this.skeleton.findBone(boneName);
+	}
+
+	/**
+	 * Find a slot by name.
+	 * @param {string} slotName - the slot name
+	 * @returns {Slot|null} the slot, or null if not found
+	 */
+	findSlot(slotName) {
+		return this.skeleton.findSlot(slotName);
+	}
+
+	/**
+	 * Register a listener for animation state events.
+	 * @param {object} listener - an object with event handler methods
+	 * @param {Function} [listener.start] - called when an animation starts
+	 * @param {Function} [listener.interrupt] - called when an animation is interrupted
+	 * @param {Function} [listener.end] - called when an animation ends
+	 * @param {Function} [listener.dispose] - called when a track entry is disposed
+	 * @param {Function} [listener.complete] - called when an animation completes a loop
+	 * @param {Function} [listener.event] - called when a user-defined event fires
+	 * @example
+	 * spineObj.addAnimationListener({
+	 *     complete: (entry) => {
+	 *         console.log("Animation complete:", entry.animation.name);
+	 *     },
+	 *     event: (entry, event) => {
+	 *         console.log("Event:", event.data.name);
+	 *     }
+	 * });
+	 */
+	addAnimationListener(listener) {
+		this.animationState.addListener(listener);
+	}
+
+	/**
+	 * Remove a previously registered animation state listener.
+	 * @param {object} listener - the listener to remove
+	 */
+	removeAnimationListener(listener) {
+		this.animationState.removeListener(listener);
+	}
+
+	/**
+	 * Get the list of animation names available in this skeleton.
+	 * @returns {string[]} array of animation names
+	 */
+	getAnimationNames() {
+		return this.skeleton.data.animations.map((a) => a.name);
+	}
+
+	/**
+	 * Get the list of skin names available in this skeleton.
+	 * @returns {string[]} array of skin names
+	 */
+	getSkinNames() {
+		return this.skeleton.data.skins.map((s) => s.name);
 	}
 
 	/**

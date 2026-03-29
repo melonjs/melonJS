@@ -1,0 +1,11 @@
+sack-pma.png
+	size: 512, 512
+	filter: Linear, Linear
+	pma: true
+	scale: 0.5
+cape-back
+	bounds: 237, 149, 260, 260
+cape-front
+	bounds: 237, 43, 200, 104
+sack
+	bounds: 2, 2, 233, 407
