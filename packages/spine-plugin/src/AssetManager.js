@@ -43,9 +43,12 @@ export default class AssetManager {
 					this.loadBinary(filename, onload, onerror);
 					break;
 				default:
-					throw new Error(
-						`Spine plugin: unknown extension "${ext}" when preloading spine assets`,
-					);
+					if (onerror) {
+						onerror(
+							`Spine plugin: unknown extension "${ext}" when preloading spine assets`,
+						);
+					}
+					return 0;
 			}
 
 			return 1;

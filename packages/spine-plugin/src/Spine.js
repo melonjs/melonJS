@@ -414,7 +414,7 @@ export default class Spine extends Renderable {
 
 	/**
 	 * Disposes of all rendering-related resources to free GPU memory.
-	 * Should be called when this Spine object is no longer needed.
+	 * Called automatically when the renderable is removed from the world.
 	 */
 	dispose() {
 		if (this.renderer.WebGLVersion >= 1) {
@@ -422,6 +422,15 @@ export default class Spine extends Renderable {
 			this.shapesShader.dispose();
 			this.skeletonDebugRenderer.dispose();
 		}
+	}
+
+	/**
+	 * Called when the renderable is destroyed (removed from the world).
+	 * Cleans up GPU resources automatically.
+	 * @ignore
+	 */
+	onDestroyEvent() {
+		this.dispose();
 	}
 
 	/**

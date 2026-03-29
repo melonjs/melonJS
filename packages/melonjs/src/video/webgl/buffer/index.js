@@ -6,7 +6,7 @@
 
 export default class IndexBuffer {
 	/**
-	 * @param {WebGL2RenderingContext} gl - the WebGL context
+	 * @param {WebGLRenderingContext|WebGL2RenderingContext} gl - the WebGL context
 	 * @param {number} maxIndices - maximum number of indices this buffer can hold
 	 * @param {boolean} [useUint32=false] - use Uint32 indices (WebGL2) instead of Uint16 (WebGL1)
 	 * @param {boolean} [dynamic=false] - if true, use STREAM_DRAW for frequent updates; if false, use STATIC_DRAW
