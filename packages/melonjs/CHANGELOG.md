@@ -26,6 +26,10 @@
 - TypeScript: convert application, input, and UI modules to TypeScript — application, header, resize, input, pointer, pointerevent, gamepad, uibaseelement, uispriteelement, uitextbutton
 
 ### Fixed
+- WebGLRenderer: `setBatcher()` now rebinds the shared vertex buffer when switching batchers, allowing custom batchers with their own GL buffers to integrate without manual cleanup
+- WebGLRenderer: `setBlendMode()` now accepts a `premultipliedAlpha` parameter (default `true`) for correct blending with non-premultiplied textures; removed internal `gl`/`context` parameter from both WebGL and Canvas renderers
+- Renderer: add base `setBlendMode()` and `GPURenderer` property to fix TypeScript `as any` casts in `header.ts` and `resize.ts`
+- Plugin: `plugin.register()` now uses `pluginClass.name` for name derivation, fixing class name extraction when bundlers strip class names
 - TMXTileset: fix animation key using first frame tileid instead of the tile's own id
 - CanvasRenderer: replace bezier ellipse approximation with native `context.ellipse()` (with polyfill for older browsers)
 - Plugin: fix `plugin.get()` throwing `TypeError` when searching by name with no match (instanceof on string)
