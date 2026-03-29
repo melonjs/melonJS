@@ -1,0 +1,14 @@
+{
+	"extends": "tsconfig/base.json",
+	"compilerOptions": {
+		"declarationDir": "build",
+		"removeComments": false,
+		"declarationMap": true,
+		"declaration": true,
+		"emitDeclarationOnly": true,
+		"skipLibCheck": true,
+		"allowJs": true,
+		"checkJs": false
+	},
+	"include": ["src"]
+}

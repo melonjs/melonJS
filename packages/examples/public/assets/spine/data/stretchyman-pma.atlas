@@ -1,0 +1,16 @@
+stretchyman-pma.png
+	size: 1024, 256
+	filter: Linear, Linear
+	pma: true
+back-arm
+	bounds: 149, 45, 72, 202
+back-leg
+	bounds: 312, 4, 100, 318
+	rotate: 90
+body
+	bounds: 223, 106, 141, 452
+	rotate: 90
+front-arm
+	bounds: 2, 26, 145, 221
+head
+	bounds: 223, 2, 87, 102

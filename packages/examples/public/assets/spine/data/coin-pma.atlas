@@ -1,0 +1,19 @@
+coin-pma.png
+	size: 1024, 1024
+	filter: Linear, Linear
+	pma: true
+coin-front-logo
+	bounds: 2, 570, 305, 302
+coin-front-shine-logo
+	bounds: 2, 286, 282, 282
+coin-front-shine-spineboy
+	bounds: 305, 283, 282, 282
+coin-front-spineboy
+	bounds: 309, 567, 305, 302
+	rotate: 90
+coin-side-round
+	bounds: 2, 2, 144, 282
+coin-side-straight
+	bounds: 286, 286, 17, 282
+shine
+	bounds: 148, 39, 72, 245
