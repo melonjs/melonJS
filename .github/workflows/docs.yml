@@ -36,6 +36,8 @@ jobs:
         run: pnpm -F @melonjs/debug-plugin build
       - name: Build tiled-inflate-plugin
         run: pnpm -F @melonjs/tiled-inflate-plugin build
+      - name: Build spine-plugin
+        run: pnpm -F @melonjs/spine-plugin build
       - name: Build API docs
         run: pnpm doc
       - name: Build examples

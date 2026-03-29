@@ -48,6 +48,7 @@ Compatibility
 Graphics
 - 2D sprite-based graphic engine
 - Fast WebGL renderer for desktop and mobile devices with fallback to Canvas rendering
+- Extensible batcher system for custom rendering pipelines
 - High DPI resolution & Canvas advanced auto scaling
 - Sprite with 9-slice scaling option, and animation management
 - Built-in effects such as tinting, masking and 2D lighting
@@ -72,6 +73,7 @@ Input
 - Device motion & accelerometer support
 
 Camera
+- Multi-camera support (split-screen, minimaps, multiple viewports)
 - Camera follow with configurable deadzone and damping
 - Built-in shake, fade and flash effects
 
@@ -152,6 +154,7 @@ Examples
 * [Hello World](https://melonjs.github.io/melonJS/examples/#/hello-world) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/helloWorld))
 * [Whac-A-Mole](https://melonjs.github.io/melonJS/examples/#/whac-a-mole) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/whac-a-mole))
 * [Compressed Textures](https://melonjs.github.io/melonJS/examples/#/compressed-textures) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/compressedTextures))
+* [Spine](https://melonjs.github.io/melonJS/examples/#/spine) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/spine))
 
 Browse all examples [here](https://melonjs.github.io/melonJS/examples/)
 
@@ -160,7 +163,7 @@ Browse all examples [here](https://melonjs.github.io/melonJS/examples/)
 ### Basic Hello World Example
 
 ```JavaScript
-import * as me from "https://esm.run/melonjs";
+import * as me from "https://cdn.jsdelivr.net/npm/melonjs/+esm";
 
 me.device.onReady(function () {
     // initialize the display canvas once the device/browser is ready
@@ -197,7 +200,7 @@ melonJS provides a plugin system allowing to extend the engine capabilities.
 Here is the list of official plugins maintained by the melonJS team:
 - [debug-plugin](https://github.com/melonjs/melonJS/tree/master/packages/debug-plugin) - a debug panel for inspecting game objects
 - [tiled-inflate-plugin](https://github.com/melonjs/melonJS/tree/master/packages/tiled-inflate-plugin) - enable loading and parsing of zlib, gzip and zstd compressed [Tiled](https://www.mapeditor.org/) maps
-- [spine-plugin](https://github.com/melonjs/spine-plugin) - [Spine](http://esotericsoftware.com) runtime integration to render Spine skeletal animations
+- [spine-plugin](https://github.com/melonjs/melonJS/tree/master/packages/spine-plugin) - [Spine](http://esotericsoftware.com) runtime integration to render Spine skeletal animations
 
 If you wish to develop your own plugin, we also provide a [plugin template](https://github.com/melonjs/plugin-template) to help you get started.
 
@@ -219,11 +222,11 @@ import * as me from 'melonjs';
 Or use it directly via [jsDelivr](https://www.jsdelivr.com/package/npm/melonjs) CDN :
 
 ```html
-<!-- load the ES6 module bundle of melonJS v18.0 -->
-<script type="module" src="https://esm.run/melonjs@18.0"></script>
+<!-- load the ES6 module bundle of melonJS v18.x -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/melonjs@18/+esm"></script>
 <!-- omit the version completely to get the latest one -->
 <!-- you should NOT use this in production -->
-<script type="module" src="https://esm.run/melonjs"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/melonjs/+esm"></script>
 ```
 > Note: the debug plugin is available separately as [`@melonjs/debug-plugin`](https://www.npmjs.com/package/@melonjs/debug-plugin)
 

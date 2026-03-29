@@ -45,8 +45,6 @@
 - Application: fix `getUriFragment()` unsafe cast by making `url` parameter optional
 - CanvasRenderer: `setProjection()` now properly applies the projection matrix as a canvas 2D transform
 
-### Performance
-
 ## [18.1.0] (melonJS 2) - _2026-03-23_
 
 ### Added
