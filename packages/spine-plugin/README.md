@@ -6,23 +6,23 @@ a [Spine](http://en.esotericsoftware.com/spine-in-depth) 4.x plugin implementati
 
 >Note: although functional, this plugin is still a work in progress. Feedback and especially contributions are welcome!
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/melonjs/es6-boilerplate/blob/master/LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/melonjs/melonJS/blob/master/packages/spine-plugin/LICENSE)
 [![NPM Package](https://img.shields.io/npm/v/@melonjs/spine-plugin)](https://www.npmjs.com/package/@melonjs/spine-plugin)
-[![jsDeliver](https://data.jsdelivr.com/v1/package/npm/@melonjs/spine-plugin/badge?style=rounded)](https://www.jsdelivr.com/package/npm/@melonjs/spine-plugin)
 
 
 ## Installation
 -------------------------------------------------------------------------------
 this plugin is already bundled with the required Spine [4.x runtime](package.json#dependencies), so there is no need to install it separately.
->Note: this plugin requires melonJS version 15.12 or higher.
+>Note: this plugin requires melonJS version 18.1.0 or higher.
 
 To install the plugin using npm :
 
-`$ [sudo] npm install @melonjs/spine-plugin`
+`$ npm install @melonjs/spine-plugin`
 
 Then import and use the plugin in your project. For example:
 ```JavaScript
 import { SpinePlugin } from '@melonjs/spine-plugin';
+import Spine from '@melonjs/spine-plugin';
 import * as me from 'melonjs';
 
 // register the plugin
@@ -42,9 +42,6 @@ const DataManifest = [
     },
 ];
 
-// import default Spine class
-import Spine from '@melonjs/spine-plugin';
-
 // preload assets
 me.loader.preload(DataManifest, async function() {
 
@@ -59,24 +56,18 @@ me.loader.preload(DataManifest, async function() {
 
 }
 ```
->Note: use "spine" as a value for the `type` property to indicate which assets and are actual Spine assets and to be loaded using the plugin (requires version 1.4.0 or higher of the Spine plugin)
-
-for more details, see a complete usage example in the [test](test) folder
+>Note: use "spine" as a value for the `type` property to indicate which assets are actual Spine assets and to be loaded using the plugin (requires version 1.4.0 or higher of the Spine plugin)
 
 ## Compatibility
 -------------------------------------------------------------------------------
 
-below is the compatibility version matrix :
-
-| melonJS | @melonjs/spine-plugin | spine-runtime |
+| @melonjs/spine-plugin | melonJS | spine-runtime |
 |---|---|---|
-| v15.12.x (or higher) | v1.x | v4.1, v4.2-beta |
-
->Note: the current version of the spine-plugin is bundled with the 4.2.x beta version of the Spine runtime, which is for now backward compatible with the Spine 4.1 runtime (from a player/rendering point of view). 
+| v1.6.x | v18.2.x (or higher) | v4.2.x |
+| v1.5.x | v15.12.x — v18.0.x | v4.1, v4.2-beta |
 
 ## Questions, need help ?
 -------------------------------------------------------------------------------
 If you need technical support, you can contact us through the following channels :
-* Forums: with melonJS 2 we moved to a new discourse [forum](https://melonjs.discourse.group), but we can still also find the previous one [here](http://www.html5gamedevs.com/forum/32-melonjs/)
-* Chat: come and chat with us on [discord](https://discord.gg/aur7JMk), or [gitter](https://gitter.im/melonjs/public)
+* Chat: come and chat with us on [discord](https://discord.gg/aur7JMk)
 * we tried to keep our [wikipage](https://github.com/melonjs/melonJS/wiki) up-to-date with useful links, tutorials, and anything related melonJS.

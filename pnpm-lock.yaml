@@ -96,6 +96,9 @@ importers:
       '@melonjs/debug-plugin':
         specifier: workspace:*
         version: link:../debug-plugin
+      '@melonjs/spine-plugin':
+        specifier: workspace:*
+        version: link:../spine-plugin
       '@melonjs/tiled-inflate-plugin':
         specifier: workspace:*
         version: link:../tiled-inflate-plugin
@@ -185,15 +188,18 @@ importers:
   packages/spine-plugin:
     dependencies:
       '@esotericsoftware/spine-canvas':
-        specifier: ^4.2.23
+        specifier: ^4.2.108
         version: 4.2.108
       '@esotericsoftware/spine-core':
-        specifier: ^4.2.23
+        specifier: ^4.2.108
         version: 4.2.108
       '@esotericsoftware/spine-webgl':
-        specifier: ^4.2.23
+        specifier: ^4.2.108
         version: 4.2.108
     devDependencies:
+      concurrently:
+        specifier: ^9.2.1
+        version: 9.2.1
       esbuild:
         specifier: 0.27.4
         version: 0.27.4

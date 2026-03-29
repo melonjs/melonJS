@@ -35,9 +35,9 @@
 		"node": "^20.19.0 || >=22.12.0"
 	},
 	"exports": {
-		".": "./build/index.js"
+		".": "./build/Spine.js"
 	},
-	"types": "./build/index.d.ts",
+	"types": "./build/Spine.d.ts",
 	"sideEffects": false,
 	"files": [
 		"build/",
@@ -47,14 +47,15 @@
 		"CHANGELOG.md"
 	],
 	"peerDependencies": {
-		"melonjs": ">=15.12.0"
+		"melonjs": ">=18.1.0"
 	},
 	"dependencies": {
-		"@esotericsoftware/spine-canvas": "^4.2.23",
-		"@esotericsoftware/spine-core": "^4.2.23",
-		"@esotericsoftware/spine-webgl": "^4.2.23"
+		"@esotericsoftware/spine-canvas": "^4.2.108",
+		"@esotericsoftware/spine-core": "^4.2.108",
+		"@esotericsoftware/spine-webgl": "^4.2.108"
 	},
 	"devDependencies": {
+		"concurrently": "^9.2.1",
 		"esbuild": "^0.27.3",
 		"melonjs": "workspace:*",
 		"tsconfig": "workspace:*",
@@ -62,9 +63,12 @@
 		"typescript": "^5.9.3"
 	},
 	"scripts": {
+		"dev": "concurrently --raw \"pnpm build:watch\" \"pnpm tsc:watch\"",
 		"build": "tsx scripts/build.ts && pnpm types",
+		"build:watch": "tsx scripts/build.ts watch",
 		"prepublishOnly": "pnpm clean && pnpm build",
 		"clean": "tsx scripts/clean.ts",
-		"types": "tsc --project tsconfig.build.json"
+		"types": "tsc --project tsconfig.build.json",
+		"tsc:watch": "tsc --project tsconfig.build.json --watch --noUnusedParameters false --noUnusedLocals false --preserveWatchOutput"
 	}
 }

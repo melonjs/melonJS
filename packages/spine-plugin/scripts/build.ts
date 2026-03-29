@@ -12,7 +12,7 @@ const banner = [
 ].join("\n");
 
 const buildOptions = {
-	entryPoints: ["src/index.js"],
+	entryPoints: ["src/Spine.js"],
 	external: ["melonjs"],
 	splitting: true,
 	format: "esm",

@@ -30,6 +30,7 @@ import { ExampleLineOfSight } from "./examples/lineOfSight/ExampleLineOfSight";
 import { ExampleMasking } from "./examples/masking/ExampleMasking";
 import { ExamplePlatformer } from "./examples/platformer/ExamplePlatformer";
 import { ExampleSpaceInvaders } from "./examples/spaceInvaders/ExampleSpaceInvaders";
+import { ExampleSpine } from "./examples/spine/ExampleSpine";
 import { ExampleSprite } from "./examples/sprite/ExampleSprite";
 import { ExampleSVGShapes } from "./examples/svgShapes/ExampleSVGShapes";
 import { ExampleText } from "./examples/text/ExampleText";
@@ -165,6 +166,14 @@ const examples: {
 		sourceDir: "sprite",
 		description:
 			"Displaying and transforming sprites with scaling, rotation, and alpha blending.",
+	},
+	{
+		component: <ExampleSpine />,
+		label: "Spine Animation",
+		path: "spine",
+		sourceDir: "spine",
+		description:
+			"Loading and playing Spine skeletal animations with the @melonjs/spine-plugin (WebGL and Canvas).",
 	},
 	{
 		component: <ExampleSVGShapes />,
