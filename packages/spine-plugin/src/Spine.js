@@ -636,7 +636,9 @@ export default class Spine extends Renderable {
 	 * @returns {string[]} array of animation names
 	 */
 	getAnimationNames() {
-		return this.skeleton.data.animations.map((a) => a.name);
+		return this.skeleton.data.animations.map((a) => {
+			return a.name;
+		});
 	}
 
 	/**
@@ -644,7 +646,9 @@ export default class Spine extends Renderable {
 	 * @returns {string[]} array of skin names
 	 */
 	getSkinNames() {
-		return this.skeleton.data.skins.map((s) => s.name);
+		return this.skeleton.data.skins.map((s) => {
+			return s.name;
+		});
 	}
 
 	/**
