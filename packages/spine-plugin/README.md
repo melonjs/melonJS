@@ -119,7 +119,8 @@ me.loader.preload(DataManifest, async function() {
 
 | @melonjs/spine-plugin | melonJS | spine-runtime |
 |---|---|---|
-| v2.0.x | v18.2.1 (or higher) | v4.2.x |
+| v2.0.1+ | v18.2.1 (or higher) | v4.2.x |
+| v2.0.0 | v18.2.0 | v4.2.x |
 | v1.5.x | v15.12.x — v18.0.x | v4.1, v4.2-beta |
 
 ## Questions, need help ?

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.1
+
+### Changed
+- minimum melonJS version is now 18.2.1 (loading screen race condition fix)
+
 ## 2.0.0
 
 ### Changed

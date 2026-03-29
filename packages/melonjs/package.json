@@ -79,12 +79,12 @@
 		"build:watch": "tsx scripts/build.js watch",
 		"lint": "eslint src tests",
 		"build": "pnpm lint && tsx scripts/build.js && pnpm types",
-		"dist": "pnpm clean && pnpm lint && pnpm vitest run && pnpm build && pnpm doc",
+		"dist": "pnpm clean && pnpm lint && pnpm vitest run && pnpm build && pnpm doc && cp ../../README.md .",
 		"doc": "typedoc src/index.js --tsconfig tsconfig.build.json --readme DOC_README.md --hideGenerator --name 'melonJS' --navigation.includeCategories true --categorizeByGroup false",
 		"doc:watch": "typedoc src/index.js --tsconfig tsconfig.build.json --readme DOC_README.md --hideGenerator --name 'melonJS' --navigation.includeCategories true --categorizeByGroup false --watch --skipErrorChecking --preserveWatchOutput --logLevel Error",
 		"serve": "serve docs",
 		"prepublishOnly": "pnpm dist",
-		"clean": "tsx scripts/clean.js",
+		"clean": "tsx scripts/clean.ts",
 		"types": "tsc --project tsconfig.build.json",
 		"test:types": "tsc"
 	}
