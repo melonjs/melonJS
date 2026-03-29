@@ -1,3 +1,4 @@
+import IndexBuffer from "../buffer/index.js";
 import VertexArrayBuffer from "../buffer/vertex.js";
 import GLShader from "../glshader.js";
 
@@ -8,13 +9,13 @@ import GLShader from "../glshader.js";
  */
 
 /**
- * Maximum number of vertices per batch.
+ * Default maximum number of vertices per batch.
  * At 4096 vertices (1024 quads), the vertex buffer is ~80 KB (5 floats × 4 bytes × 4096),
  * which balances draw call reduction with safe buffer upload sizes on mobile tile-based GPUs.
  * Within the Uint16 index limit (65,535) required for WebGL1 compatibility.
  * @ignore
  */
-const MAX_VERTICES = 4096;
+const DEFAULT_MAX_VERTICES = 4096;
 
 /**
  * A base WebGL Batcher object that manages shader programs, vertex attribute
@@ -25,15 +26,18 @@ export class Batcher {
 	/**
 	 * @param {WebGLRenderer} renderer - the current WebGL renderer session
 	 * @param {object} settings - additional settings to initialize this batcher
-	 * @param {object[]} settings.attribute - an array of attributes definition
-	 * @param {string} settings.attribute.name - name of the attribute in the vertex shader
-	 * @param {number} settings.attribute.size - number of components per vertex attribute. Must be 1, 2, 3, or 4.
-	 * @param {GLenum} settings.attribute.type - data type of each component in the array
-	 * @param {boolean} settings.attribute.normalized - whether integer data values should be normalized into a certain range when being cast to a float
-	 * @param {number} settings.attribute.offset - offset in bytes of the first component in the vertex attribute array
-	 * @param {object} settings.shader - an array of attributes definition
+	 * @param {object[]} settings.attributes - an array of attributes definition
+	 * @param {string} settings.attributes.name - name of the attribute in the vertex shader
+	 * @param {number} settings.attributes.size - number of components per vertex attribute. Must be 1, 2, 3, or 4.
+	 * @param {GLenum} settings.attributes.type - data type of each component in the array
+	 * @param {boolean} settings.attributes.normalized - whether integer data values should be normalized into a certain range when being cast to a float
+	 * @param {number} settings.attributes.offset - offset in bytes of the first component in the vertex attribute array
+	 * @param {object} settings.shader - shader definition
 	 * @param {string} settings.shader.vertex - a string containing the GLSL source code to set
 	 * @param {string} settings.shader.fragment - a string containing the GLSL source code to set
+	 * @param {number} [settings.maxVertices=4096] - the maximum number of vertices this batcher can hold
+	 * @param {boolean} [settings.indexed=false] - whether this batcher uses an index buffer for indexed drawing (drawElements)
+	 * @param {string} [settings.projectionUniform="uProjectionMatrix"] - the name of the projection matrix uniform in the shader
 	 */
 	constructor(renderer, settings) {
 		this.init(renderer, settings);
@@ -101,7 +105,11 @@ export class Batcher {
 		 */
 		this.vertexData = null;
 
-		// parse given attibrutes
+		// maximum number of vertices
+		const maxVertices =
+			(settings && settings.maxVertices) || DEFAULT_MAX_VERTICES;
+
+		// parse given attributes
 		if (typeof settings !== "undefined" && Array.isArray(settings.attributes)) {
 			settings.attributes.forEach((attr) => {
 				this.addAttribute(
@@ -112,7 +120,7 @@ export class Batcher {
 					attr.offset,
 				);
 			});
-			this.vertexData = new VertexArrayBuffer(this.vertexSize, MAX_VERTICES);
+			this.vertexData = new VertexArrayBuffer(this.vertexSize, maxVertices);
 		} else {
 			throw new Error("attributes definition missing");
 		}
@@ -130,6 +138,39 @@ export class Batcher {
 		} else {
 			throw new Error("shader definition missing");
 		}
+
+		/**
+		 * the name of the projection matrix uniform in the shader
+		 * @type {string}
+		 */
+		this.projectionUniform = settings.projectionUniform || "uProjectionMatrix";
+
+		/**
+		 * whether this batcher uses indexed drawing
+		 * @type {boolean}
+		 */
+		this.useIndexBuffer = settings.indexed === true;
+
+		/**
+		 * the GL vertex buffer object (own buffer for indexed batchers, null for shared)
+		 * @type {WebGLBuffer|null}
+		 * @ignore
+		 */
+		this.glVertexBuffer = null;
+
+		/**
+		 * the dynamic index buffer (only for indexed batchers)
+		 * @type {IndexBuffer|null}
+		 * @ignore
+		 */
+		this.indexBuffer = null;
+
+		if (this.useIndexBuffer) {
+			const gl = this.gl;
+			this.glVertexBuffer = gl.createBuffer();
+			// max indices: worst case is 3 indices per vertex (all triangles, no sharing)
+			this.indexBuffer = new IndexBuffer(gl, maxVertices * 3, false, true);
+		}
 	}
 
 	/**
@@ -142,12 +183,24 @@ export class Batcher {
 
 		// clear the vertex data buffer
 		this.vertexData.clear();
+
+		if (this.useIndexBuffer) {
+			this.indexBuffer.clear();
+		}
 	}
 
 	/**
 	 * called by the WebGL renderer when a batcher becomes the current one
 	 */
 	bind() {
+		if (this.useIndexBuffer) {
+			const gl = this.gl;
+			gl.bindBuffer(gl.ARRAY_BUFFER, this.glVertexBuffer);
+			if (this.indexBuffer) {
+				this.indexBuffer.bind();
+			}
+		}
+
 		if (this.renderer.currentProgram !== this.defaultShader.program) {
 			this.useShader(this.defaultShader);
 		}
@@ -165,7 +218,8 @@ export class Batcher {
 		) {
 			this.flush();
 			shader.bind();
-			shader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
+			shader.setUniform(this.projectionUniform, this.renderer.projectionMatrix);
+
 			shader.setVertexAttributes(this.gl, this.attributes, this.stride);
 
 			this.currentShader = shader;
@@ -222,7 +276,19 @@ export class Batcher {
 	 * @param {Matrix3d} matrix - the new projection matrix
 	 */
 	setProjection(matrix) {
-		this.currentShader.setUniform("uProjectionMatrix", matrix);
+		this.currentShader.setUniform(this.projectionUniform, matrix);
+	}
+
+	/**
+	 * Add index values to the index buffer (only for indexed batchers).
+	 * Indices are rebased relative to the current vertex count.
+	 * @param {number[]} indices - array of index values to add
+	 */
+	addIndices(indices) {
+		if (!this.useIndexBuffer) {
+			return;
+		}
+		this.indexBuffer.add(indices, this.vertexData.vertexCount);
 	}
 
 	/**
@@ -237,24 +303,65 @@ export class Batcher {
 			const gl = this.gl;
 			const vertexSize = vertex.vertexSize;
 
-			// Copy data into stream buffer
-			if (this.renderer.WebGLVersion > 1) {
-				gl.bufferData(
-					gl.ARRAY_BUFFER,
-					vertex.toFloat32(),
-					gl.STREAM_DRAW,
-					0,
-					vertexCount * vertexSize,
-				);
-			} else {
-				gl.bufferData(
-					gl.ARRAY_BUFFER,
-					vertex.toFloat32(0, vertexCount * vertexSize),
-					gl.STREAM_DRAW,
-				);
-			}
+			if (this.useIndexBuffer && this.indexBuffer.length > 0) {
+				// indexed drawing path — bind own buffers
+				gl.bindBuffer(gl.ARRAY_BUFFER, this.glVertexBuffer);
 
-			gl.drawArrays(mode, 0, vertexCount);
+				// re-apply vertex attributes
+				this.currentShader.setVertexAttributes(
+					gl,
+					this.attributes,
+					this.stride,
+				);
+
+				// upload vertex data
+				if (this.renderer.WebGLVersion > 1) {
+					gl.bufferData(
+						gl.ARRAY_BUFFER,
+						vertex.toFloat32(),
+						gl.STREAM_DRAW,
+						0,
+						vertexCount * vertexSize,
+					);
+				} else {
+					gl.bufferData(
+						gl.ARRAY_BUFFER,
+						vertex.toFloat32(0, vertexCount * vertexSize),
+						gl.STREAM_DRAW,
+					);
+				}
+
+				// upload and draw with index buffer
+				this.indexBuffer.upload();
+				gl.drawElements(
+					mode,
+					this.indexBuffer.length,
+					this.indexBuffer.type,
+					0,
+				);
+
+				// clear index buffer
+				this.indexBuffer.clear();
+			} else {
+				// non-indexed drawing path (original behavior)
+				if (this.renderer.WebGLVersion > 1) {
+					gl.bufferData(
+						gl.ARRAY_BUFFER,
+						vertex.toFloat32(),
+						gl.STREAM_DRAW,
+						0,
+						vertexCount * vertexSize,
+					);
+				} else {
+					gl.bufferData(
+						gl.ARRAY_BUFFER,
+						vertex.toFloat32(0, vertexCount * vertexSize),
+						gl.STREAM_DRAW,
+					);
+				}
+
+				gl.drawArrays(mode, 0, vertexCount);
+			}
 
 			// clear the vertex buffer
 			vertex.clear();

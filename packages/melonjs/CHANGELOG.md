@@ -18,6 +18,11 @@
 - TMX: support Tiled 1.12 per-object opacity and visibility
 - TMX: support Tiled 1.12 layer blend modes (`mode` attribute on tile layers, image layers, and object groups)
 - RoundRect: can now be used as a collision shape — extends Polygon directly with polygon-approximated rounded corners for accurate SAT collision (previously treated as a plain rectangle)
+- Batcher: support configurable `maxVertices` via `settings.maxVertices` (default 4096)
+- Batcher: support optional indexed drawing via `settings.indexed` — creates own VBO and dynamic `IndexBuffer` with `addIndices()` method
+- Batcher: support configurable projection matrix uniform name via `settings.projectionUniform` (default `"uProjectionMatrix"`) — enables use of third-party shaders (e.g. Spine's `u_projTrans`)
+- IndexBuffer: refactored to support both static quad patterns (`fillQuadPattern`) and dynamic stream drawing (`add`/`upload`/`clear`)
+- VertexArrayBuffer: new `pushFloats()` method for variable-length all-float vertex data (used by custom batchers with non-standard vertex formats)
 - CanvasRenderer: add support for additional CSS blend modes (`overlay`, `darken`, `lighten`, `color-dodge`, `color-burn`, `hard-light`, `soft-light`, `difference`, `exclusion`) when supported by the browser
 - WebGLRenderer: add `darken` and `lighten` blend modes via `gl.MIN`/`gl.MAX` (WebGL2 only)
 

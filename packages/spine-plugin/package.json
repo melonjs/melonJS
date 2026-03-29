@@ -1,0 +1,74 @@
+{
+	"name": "@melonjs/spine-plugin",
+	"version": "1.6.0",
+	"description": "melonJS Spine plugin",
+	"homepage": "https://www.npmjs.com/package/@melonjs/spine-plugin",
+	"type": "module",
+	"keywords": [
+		"2D",
+		"HTML5",
+		"javascript",
+		"TypeScript",
+		"ES6",
+		"Canvas",
+		"WebGL",
+		"WebGL2",
+		"melonjs",
+		"plugin",
+		"spine",
+		"spine-runtimes",
+		"spine-animation",
+		"esotericsoftware"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/melonjs/melonJS.git",
+		"directory": "packages/spine-plugin"
+	},
+	"bugs": {
+		"url": "https://github.com/melonjs/melonJS/issues"
+	},
+	"license": "MIT",
+	"author": "AltByte Pte Ltd",
+	"funding": "https://github.com/sponsors/melonjs",
+	"engines": {
+		"node": "^20.19.0 || >=22.12.0"
+	},
+	"exports": {
+		".": "./build/Spine.js"
+	},
+	"types": "./build/Spine.d.ts",
+	"sideEffects": false,
+	"files": [
+		"build/",
+		"package.json",
+		"README.md",
+		"LICENSE",
+		"CHANGELOG.md"
+	],
+	"peerDependencies": {
+		"melonjs": ">=18.1.0"
+	},
+	"dependencies": {
+		"@esotericsoftware/spine-canvas": "^4.2.108",
+		"@esotericsoftware/spine-core": "^4.2.108",
+		"@esotericsoftware/spine-webgl": "^4.2.108"
+	},
+	"devDependencies": {
+		"concurrently": "^9.2.1",
+		"esbuild": "^0.27.3",
+		"melonjs": "workspace:*",
+		"tsconfig": "workspace:*",
+		"tsx": "^4.21.0",
+		"typescript": "^5.9.3"
+	},
+	"scripts": {
+		"dev": "concurrently --raw \"pnpm build:watch\" \"pnpm tsc:watch\"",
+		"build": "tsx scripts/build.ts && pnpm types",
+		"build:watch": "tsx scripts/build.ts watch",
+		"prepublishOnly": "pnpm clean && pnpm build",
+		"clean": "tsx scripts/clean.ts",
+		"types": "tsc --project tsconfig.build.json",
+		"tsc:watch": "tsc --project tsconfig.build.json --watch --noUnusedParameters false --noUnusedLocals false --preserveWatchOutput"
+	}
+}

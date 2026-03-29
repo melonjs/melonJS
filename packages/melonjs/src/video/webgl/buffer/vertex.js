@@ -39,7 +39,7 @@ export default class VertexArrayBuffer {
 	}
 
 	/**
-	 * push a new vertex to the buffer
+	 * push a new vertex to the buffer (quad format: x, y, u, v, tint)
 	 * @ignore
 	 */
 	push(x, y, u, v, tint) {
@@ -50,6 +50,25 @@ export default class VertexArrayBuffer {
 		this.bufferF32[++offset] = u;
 		this.bufferF32[++offset] = v;
 		this.bufferU32[++offset] = tint;
+
+		this.vertexCount++;
+
+		return this;
+	}
+
+	/**
+	 * push a new vertex with all-float data to the buffer
+	 * @param {ArrayLike<number>} data - float values for one vertex
+	 * @param {number} srcOffset - start index in the source data
+	 * @param {number} count - number of floats to copy (should equal vertexSize)
+	 * @ignore
+	 */
+	pushFloats(data, srcOffset, count) {
+		const offset = this.vertexCount * this.vertexSize;
+
+		for (let i = 0; i < count; i++) {
+			this.bufferF32[offset + i] = data[srcOffset + i];
+		}
 
 		this.vertexCount++;
 
