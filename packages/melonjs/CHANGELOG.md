@@ -1,5 +1,10 @@
 # Changelog
 
+## [18.2.1] (melonJS 2)
+
+### Fixed
+- Loader: fix race condition where the default loading screen logo sprite could persist after preloading completes, caused by the async logo image loading finishing after the state transition or `game.world.reset()`
+
 ## [18.2.0] (melonJS 2)
 
 ### Added

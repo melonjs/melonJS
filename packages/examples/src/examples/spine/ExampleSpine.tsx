@@ -92,7 +92,7 @@ const CharacterSelector = () => {
 		<div
 			style={{
 				position: "absolute",
-				top: 150,
+				top: 200,
 				left: 16,
 				zIndex: 1000,
 			}}

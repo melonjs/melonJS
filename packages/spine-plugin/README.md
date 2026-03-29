@@ -30,7 +30,7 @@ A [Spine](http://en.esotericsoftware.com/spine-in-depth) 4.2 runtime integration
 ## Installation
 -------------------------------------------------------------------------------
 This plugin is already bundled with the required Spine [4.x runtime](package.json#dependencies), so there is no need to install it separately.
->Note: this plugin requires melonJS version 18.2.0 or higher.
+>Note: this plugin requires melonJS version 18.2.1 or higher.
 
 To install the plugin using npm:
 
@@ -119,7 +119,7 @@ me.loader.preload(DataManifest, async function() {
 
 | @melonjs/spine-plugin | melonJS | spine-runtime |
 |---|---|---|
-| v2.0.x | v18.2.x (or higher) | v4.2.x |
+| v2.0.x | v18.2.1 (or higher) | v4.2.x |
 | v1.5.x | v15.12.x — v18.0.x | v4.1, v4.2-beta |
 
 ## Questions, need help ?
