@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.2
+
+### Fixed
+- Auto-detect `premultipliedAlpha` from atlas pages and set it on the SkeletonRenderer, fixing incorrect blending for PMA textures (e.g. Cloud Pot)
+
 ## 2.0.1
 
 ### Changed
