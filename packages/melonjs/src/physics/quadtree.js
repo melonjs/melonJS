@@ -237,11 +237,9 @@ export default class QuadTree {
 	 * @param {object} item - object to be added
 	 */
 	insert(item) {
-		let index = -1;
-
 		//if we have subnodes ...
 		if (this.nodes.length > 0) {
-			index = this.getIndex(item);
+			const index = this.getIndex(item);
 
 			if (index !== -1) {
 				this.nodes[index].insert(item);
@@ -263,9 +261,9 @@ export default class QuadTree {
 			//add all objects to their corresponding subnodes
 			let writeIdx = 0;
 			for (let i = 0, len = this.objects.length; i < len; i++) {
-				index = this.getIndex(this.objects[i]);
-				if (index !== -1) {
-					this.nodes[index].insert(this.objects[i]);
+				const subIndex = this.getIndex(this.objects[i]);
+				if (subIndex !== -1) {
+					this.nodes[subIndex].insert(this.objects[i]);
 				} else {
 					this.objects[writeIdx++] = this.objects[i];
 				}

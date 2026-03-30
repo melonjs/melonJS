@@ -170,7 +170,7 @@ export let onload;
  * // use the LOADER_PROGRESS event instead
  * me.event.on(me.event.LOADER_PROGRESS, (progress, resource) => this.updateProgress(progress, resource));
  */
-export let onProgress;
+export let onProgress; // eslint-disable-line no-unassigned-vars
 
 /**
  * onError callback<br>

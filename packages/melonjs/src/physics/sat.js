@@ -130,7 +130,7 @@ function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
 
 	// This is not a separating axis. If we're calculating a response, calculate the overlap.
 	if (response) {
-		let overlap = 0;
+		let overlap;
 		// A starts further left than B
 		if (rangeA[0] < rangeB[0]) {
 			response.aInB = false;
@@ -366,7 +366,7 @@ export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
 	const edge = T_VECTORS[--T_VECTORS_IDX];
 	const normal = T_VECTORS[--T_VECTORS_IDX];
 	const point = T_VECTORS[--T_VECTORS_IDX];
-	let dist = 0;
+	let dist;
 
 	// For each edge in the polygon:
 	for (let i = 0; i < len; i++) {

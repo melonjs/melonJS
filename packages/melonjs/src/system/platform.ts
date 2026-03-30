@@ -33,9 +33,12 @@ export const Kindle = /Kindle|Silk.*Mobile Safari/i.test(ua);
 export const ejecta = "ejecta" in globalThis;
 export const isWeixin = /MicroMessenger/i.test(ua);
 export const nodeJS =
-	typeof globalThis.process !== "undefined" &&
-	typeof globalThis.process.release !== "undefined" &&
-	globalThis.process.release.name === "node";
+	typeof (globalThis as unknown as { process?: { release?: { name: string } } })
+		.process !== "undefined" &&
+	typeof (globalThis as unknown as { process?: { release?: { name: string } } })
+		.process?.release !== "undefined" &&
+	(globalThis as unknown as { process?: { release?: { name: string } } })
+		.process?.release?.name === "node";
 export const isMobile =
 	/Mobi/i.test(ua) || iOS || android || wp || BlackBerry || Kindle || false;
 export const webApp =

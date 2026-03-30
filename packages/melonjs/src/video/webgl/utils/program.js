@@ -21,7 +21,7 @@ export function compileProgram(gl, vertex, fragment, attributes) {
 	const vertShader = compileShader(gl, gl.VERTEX_SHADER, vertex);
 	const fragShader = compileShader(gl, gl.FRAGMENT_SHADER, fragment);
 
-	let program = gl.createProgram();
+	const program = gl.createProgram();
 
 	gl.attachShader(program, vertShader);
 	gl.attachShader(program, fragShader);
@@ -49,7 +49,6 @@ export function compileProgram(gl, vertex, fragment, attributes) {
 			gl.getProgramInfoLog(program);
 		// house cleaning
 		gl.deleteProgram(program);
-		program = null;
 		// throw the exception
 		throw new Error(error_msg);
 	}

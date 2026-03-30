@@ -1,6 +1,7 @@
 {
 	"extends": "tsconfig/base.json",
 	"compilerOptions": {
+		"rootDir": "src",
 		"declarationDir": "build",
 		"removeComments": false,
 		"declarationMap": true,
