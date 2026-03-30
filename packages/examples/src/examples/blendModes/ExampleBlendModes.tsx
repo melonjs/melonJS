@@ -40,6 +40,7 @@ const createGame = () => {
 	}
 
 	// detect which modes are actually supported by probing setBlendMode
+	// biome-ignore lint/suspicious/noExplicitAny: renderer type varies between WebGL/Canvas
 	const renderer = video.renderer as any;
 	const supported: Record<string, boolean> = {};
 	for (const mode of BLEND_MODES) {
@@ -55,6 +56,7 @@ const createGame = () => {
 			this.anchorPoint.set(0, 0);
 		}
 
+		// biome-ignore lint/suspicious/noExplicitAny: renderer type varies between WebGL/Canvas
 		override draw(renderer: any) {
 			// dark background
 			renderer.setBlendMode("normal");
@@ -105,7 +107,7 @@ const createGame = () => {
 		size: 16,
 		fillStyle: "#aaaaaa",
 		textAlign: "center",
-		text: renderer.type + " Supported Blend Modes",
+		text: `${renderer.type} Supported Blend Modes`,
 	});
 	header.anchorPoint.set(0, 0);
 	header.floating = true;

@@ -37,6 +37,7 @@ export class MinimapCamera extends Camera2d {
 	/**
 	 * Draw minimap overlays: viewport highlight, player marker, and border.
 	 */
+	// biome-ignore lint/suspicious/noExplicitAny: renderer type varies between WebGL/Canvas
 	override postDraw(renderer: any): void {
 		const viewport = game.viewport;
 		const screenPx = 1 / this.zoom; // 1 screen pixel in world units
