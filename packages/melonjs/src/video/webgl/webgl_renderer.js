@@ -750,11 +750,15 @@ export default class WebGLRenderer extends Renderer {
 	 * @returns {string} the blend mode actually applied (may differ if the requested mode is unsupported)
 	 */
 	setBlendMode(mode = "normal", premultipliedAlpha = true) {
-		if (this.currentBlendMode !== mode) {
+		if (
+			this.currentBlendMode !== mode ||
+			this.currentPremultipliedAlpha !== premultipliedAlpha
+		) {
 			const gl = this.gl;
 			this.flush();
 			gl.enable(gl.BLEND);
 			this.currentBlendMode = mode;
+			this.currentPremultipliedAlpha = premultipliedAlpha;
 
 			// source factor depends on whether textures use premultiplied alpha
 			const srcAlpha = premultipliedAlpha ? gl.ONE : gl.SRC_ALPHA;

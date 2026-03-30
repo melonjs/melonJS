@@ -2,6 +2,9 @@
 
 ## [18.3.0] (melonJS 2)
 
+### Fixed
+- WebGLRenderer: `setBlendMode()` now tracks the `premultipliedAlpha` flag — previously only the mode name was checked, causing incorrect GL blend function when mixing PMA and non-PMA textures with the same blend mode
+
 ### Chore
 - Minimum Node.js version is now 24.0.0 (Node 18/20 EOL, Node 22 in maintenance)
 - CI: upgrade to Node.js 24 and pnpm/action-setup v5

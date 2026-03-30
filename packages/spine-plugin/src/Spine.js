@@ -193,6 +193,14 @@ export default class Spine extends Renderable {
 			this.plugin.assetManager.require(jsonFile),
 		);
 
+		// detect premultiplied alpha from atlas pages
+		this.premultipliedAlpha = atlas.pages.some((page) => {
+			return page.pma;
+		});
+		if (this.renderer.WebGLVersion >= 1) {
+			this.skeletonRenderer.premultipliedAlpha = this.premultipliedAlpha;
+		}
+
 		// Instantiate a new skeleton based on the atlas and skeleton data.
 		this.skeleton = new this.runtime.Skeleton(skeletonData);
 
