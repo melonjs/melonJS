@@ -124,7 +124,7 @@ export default class BitmapTextData {
 		const baseLine = parseFloat(getValueFromPair(lines[1], /base=\d+/g));
 		const padY = this.padTop + this.padBottom;
 
-		let glyph: Glyph | null = null;
+		let glyph: Glyph | null | undefined;
 
 		for (let i = 4; i < lines.length; i++) {
 			const line = lines[i];

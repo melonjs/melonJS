@@ -32,7 +32,7 @@
 	"author": "AltByte Pte Ltd",
 	"funding": "https://github.com/sponsors/melonjs",
 	"engines": {
-		"node": "^20.19.0 || >=22.12.0"
+		"node": ">=24.0.0"
 	},
 	"exports": {
 		".": "./build/index.js"
@@ -60,7 +60,7 @@
 		"melonjs": "workspace:*",
 		"tsconfig": "workspace:*",
 		"tsx": "^4.21.0",
-		"typescript": "^5.9.3"
+		"typescript": "^6.0.2"
 	},
 	"scripts": {
 		"dev": "concurrently --raw \"pnpm build:watch\" \"pnpm tsc:watch\"",

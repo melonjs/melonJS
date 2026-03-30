@@ -28,8 +28,8 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v6
         with:
-          node-version: 22
-      - uses: pnpm/action-setup@v4
+          node-version: 24
+      - uses: pnpm/action-setup@v5
       - name: Get pnpm store directory
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
       - uses: actions/cache@v5
@@ -52,8 +52,8 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v6
         with:
-          node-version: 22
-      - uses: pnpm/action-setup@v4
+          node-version: 24
+      - uses: pnpm/action-setup@v5
       - name: Get pnpm store directory
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
       - uses: actions/cache@v5
@@ -73,8 +73,8 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v6
         with:
-          node-version: 22
-      - uses: pnpm/action-setup@v4
+          node-version: 24
+      - uses: pnpm/action-setup@v5
       - name: Get pnpm store directory
         shell: bash
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV

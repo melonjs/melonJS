@@ -335,7 +335,6 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 				const region = handlers.region;
 				const ancestor = region.ancestor;
 				const bounds = region.getBounds();
-				let eventInBounds = false;
 
 				if (region.isFloating === true) {
 					pointer.gameX = pointer.gameLocalX = pointer.gameScreenX;
@@ -353,7 +352,7 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 					pointer.gameLocalY = pointer.gameY - parentBounds.y;
 				}
 
-				eventInBounds = bounds.contains(pointer.gameX, pointer.gameY);
+				const eventInBounds = bounds.contains(pointer.gameX, pointer.gameY);
 
 				switch (pointer.type) {
 					case POINTER_MOVE[0]:

@@ -71,18 +71,8 @@ export * from "./application/scaleMethods.ts";
 export * from "./application/settings.ts";
 // export all utility function
 export * as audio from "./audio/audio.ts";
-export * as input from "./input/input.ts";
-export { level } from "./level/level.js";
-export * as loader from "./loader/loader.js";
-export * as math from "./math/math.ts";
-export { collision } from "./physics/collision.js";
-export * as plugin from "./plugin/plugin.ts";
-export * as device from "./system/device.js";
-export * as event from "./system/event.ts";
-export * as utils from "./utils/utils.ts";
-export * from "./version.ts";
-export * as video from "./video/video.js";
-export { plugins, save, timer, pool, state };
+// export all public constants
+export * from "./const.ts";
 export { Ellipse } from "./geometries/ellipse.ts";
 export { Line } from "./geometries/line.ts";
 export { ObservablePoint } from "./geometries/observablePoint.ts";
@@ -90,7 +80,13 @@ export { Point } from "./geometries/point.ts";
 export { Polygon } from "./geometries/polygon.ts";
 export { Rect } from "./geometries/rectangle.ts";
 export { RoundRect } from "./geometries/roundrect.ts";
+export * as input from "./input/input.ts";
+// Backward compatibility for deprecated method or properties
+export * from "./lang/deprecated.js";
+export { level } from "./level/level.js";
+export * as loader from "./loader/loader.js";
 export { Color } from "./math/color.ts";
+export * as math from "./math/math.ts";
 export { Matrix2d } from "./math/matrix2d.ts";
 export { Matrix3d } from "./math/matrix3d.ts";
 export { ObservableVector2d } from "./math/observableVector2d.ts";
@@ -98,67 +94,73 @@ export { ObservableVector3d } from "./math/observableVector3d.ts";
 export { Vector2d } from "./math/vector2d.ts";
 export { Vector3d } from "./math/vector3d.ts";
 export { Bounds } from "./physics/bounds.ts";
+export { collision } from "./physics/collision.js";
+export * as plugin from "./plugin/plugin.ts";
 export { getPool } from "./pool.ts";
-
+export * as device from "./system/device.js";
+export * as event from "./system/event.ts";
+export * as utils from "./utils/utils.ts";
+export * from "./version.ts";
+export * as video from "./video/video.js";
 // export all class definition
 export {
-	Tween,
-	QuadTree,
-	GLShader,
-	ShaderEffect,
+	Application,
 	Batcher,
-	PrimitiveBatcher,
-	QuadBatcher,
-	Renderer,
-	RenderState,
-	WebGLRenderer,
-	CanvasRenderer,
-	CanvasRenderTarget,
-	TextureAtlas,
-	Renderable,
-	Body,
-	Text,
 	BitmapText,
 	BitmapTextData,
-	ColorLayer,
-	ImageLayer,
-	Sprite,
-	NineSliceSprite,
-	UIBaseElement,
-	UITextButton,
-	UISpriteElement,
+	Body,
+	Camera2d,
+	CanvasRenderer,
+	CanvasRenderTarget,
 	Collectable,
-	Trigger,
-	Light2d,
+	ColorLayer,
+	Container,
 	Draggable,
 	DropTarget,
-	TMXRenderer,
-	TMXOrthogonalRenderer,
-	TMXIsometricRenderer,
-	TMXHexagonalRenderer,
-	TMXStaggeredRenderer,
-	Tile,
-	TMXTileset,
-	TMXTilesetGroup,
-	TMXTileMap,
-	TMXLayer,
-	TMXUtils,
-	Pointer,
-	Stage,
-	Camera2d,
-	Container,
-	World,
+	Entity,
+	GLShader,
+	ImageLayer,
+	Light2d,
+	NineSliceSprite,
+	Particle,
 	ParticleEmitter,
 	ParticleEmitterSettings,
-	Particle,
-	Entity,
-	Application,
+	Pointer,
+	PrimitiveBatcher,
+	plugins,
+	pool,
+	QuadBatcher,
+	QuadTree,
+	Renderable,
+	Renderer,
+	RenderState,
+	ShaderEffect,
+	Sprite,
+	Stage,
+	save,
+	state,
+	Text,
+	TextureAtlas,
+	Tile,
+	TMXHexagonalRenderer,
+	TMXIsometricRenderer,
+	TMXLayer,
+	TMXOrthogonalRenderer,
+	TMXRenderer,
+	TMXStaggeredRenderer,
+	TMXTileMap,
+	TMXTileset,
+	TMXTilesetGroup,
+	TMXUtils,
+	Trigger,
+	Tween,
+	timer,
+	UIBaseElement,
+	UISpriteElement,
+	UITextButton,
+	WebGLRenderer,
+	World,
 };
-
-// export all public constants
-export * from "./const.ts";
-// Backward compatibility for deprecated method or properties
-export * from "./lang/deprecated.js";
 
 /**
  * a flag indicating that melonJS is fully initialized

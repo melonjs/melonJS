@@ -3,7 +3,7 @@
 	"version": "0.0.0",
 	"type": "module",
 	"engines": {
-		"node": "^20.19.0 || >=22.12.0"
+		"node": ">=24.0.0"
 	},
 	"scripts": {
 		"build": "turbo build",
@@ -22,21 +22,21 @@
 	},
 	"packageManager": "pnpm@10.32.1",
 	"dependencies": {
-		"@biomejs/biome": "2.3.14",
-		"@eslint/js": "^9.39.4",
+		"@biomejs/biome": "2.4.9",
+		"@eslint/js": "^10.0.1",
 		"@types/node": "^25.5.0",
-		"@vitest/browser": "^4.0.18",
-		"@vitest/browser-playwright": "^4.0.18",
-		"eslint": "^9.39.4",
-		"eslint-plugin-jsdoc": "^62.8.0",
+		"@vitest/browser": "^4.1.2",
+		"@vitest/browser-playwright": "^4.1.2",
+		"eslint": "^10.1.0",
+		"eslint-plugin-jsdoc": "^62.8.1",
 		"globals": "^17.4.0",
 		"lefthook": "^2.1.4",
 		"tsconfig": "workspace:^",
 		"tsx": "^4.21.0",
-		"turbo": "^2.8.20",
-		"typescript": "^5.9.3",
-		"typescript-eslint": "^8.57.1",
-		"vitest": "^4.0.18"
+		"turbo": "^2.8.21",
+		"typescript": "^6.0.2",
+		"typescript-eslint": "^8.57.2",
+		"vitest": "^4.1.2"
 	},
 	"devDependencies": {
 		"eslint-plugin-react-refresh": "^0.5.2",
@@ -53,7 +53,7 @@
 			"minimatch@<4.0.0": "3.1.4",
 			"minimatch@>=9.0.0 <9.0.7": "9.0.7",
 			"ajv@<6.14.0": "6.14.0",
-			"vite": "8.0.0",
+			"vite": "8.0.3",
 			"esbuild": "0.27.4"
 		}
 	}

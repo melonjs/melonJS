@@ -19,9 +19,9 @@
 		"melonjs": "workspace:^",
 		"react": "^19.2.4",
 		"react-dom": "^19.2.4",
-		"react-router-dom": "^7.13.0",
+		"react-router-dom": "^7.13.2",
 		"tsconfig": "workspace:^",
-		"typescript": "^5.9.3",
-		"vite": "^8.0.0"
+		"typescript": "^6.0.2",
+		"vite": "8.0.0"
 	}
 }

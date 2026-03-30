@@ -455,7 +455,6 @@ export default class TMXTileMap {
 	 */
 	getObjects(flatten) {
 		const objects = [];
-		let isCollisionGroup = false;
 		let targetContainer;
 
 		// parse the map for objects
@@ -465,7 +464,9 @@ export default class TMXTileMap {
 			const group = this.objectGroups[g];
 
 			// check if this is the collision shape group
-			isCollisionGroup = group.name.toLowerCase().includes(COLLISION_GROUP);
+			const isCollisionGroup = group.name
+				.toLowerCase()
+				.includes(COLLISION_GROUP);
 
 			if (flatten === false) {
 				// create a new container

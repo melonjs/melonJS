@@ -84,7 +84,7 @@ class Path2D {
 		const pathCommands = svgPath.match(/([a-df-z])[^a-df-z]*/gi);
 		const points = this.points;
 		const startPoint = this.startPoint;
-		let lastPoint = startPoint;
+		let lastPoint;
 
 		this.beginPath();
 

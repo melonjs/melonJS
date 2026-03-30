@@ -931,7 +931,6 @@ export default class Container extends Renderable {
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
 	 */
 	draw(renderer, viewport) {
-		let isFloating = false;
 		const bounds = this.getBounds();
 
 		this.drawCount = 0;
@@ -958,7 +957,7 @@ export default class Container extends Renderable {
 		const children = this.getChildren();
 		for (let i = children.length, obj; i--, (obj = children[i]); ) {
 			if (obj.isRenderable) {
-				isFloating = obj.floating === true;
+				const isFloating = obj.floating === true;
 
 				if (obj.inViewport || isFloating) {
 					// skip UI-only floating elements on non-default cameras

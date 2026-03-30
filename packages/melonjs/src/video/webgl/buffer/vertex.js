@@ -43,13 +43,13 @@ export default class VertexArrayBuffer {
 	 * @ignore
 	 */
 	push(x, y, u, v, tint) {
-		let offset = this.vertexCount * this.vertexSize;
+		const offset = this.vertexCount * this.vertexSize;
 
 		this.bufferF32[offset] = x;
-		this.bufferF32[++offset] = y;
-		this.bufferF32[++offset] = u;
-		this.bufferF32[++offset] = v;
-		this.bufferU32[++offset] = tint;
+		this.bufferF32[offset + 1] = y;
+		this.bufferF32[offset + 2] = u;
+		this.bufferF32[offset + 3] = v;
+		this.bufferU32[offset + 4] = tint;
 
 		this.vertexCount++;
 

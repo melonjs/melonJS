@@ -725,14 +725,13 @@ export function getParentBounds(element) {
  */
 export function isWebGLSupported(options) {
 	if (WebGLSupport === -1) {
-		let _supported = false;
 		try {
 			const canvas = globalThis.document.createElement("canvas");
 			const ctxOptions = {
 				stencil: true,
 				failIfMajorPerformanceCaveat: options.failIfMajorPerformanceCaveat,
 			};
-			_supported = !!(
+			const _supported = !!(
 				globalThis.WebGLRenderingContext &&
 				(canvas.getContext("webgl", ctxOptions) ||
 					canvas.getContext("experimental-webgl", ctxOptions))

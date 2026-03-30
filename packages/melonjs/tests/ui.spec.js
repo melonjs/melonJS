@@ -274,12 +274,10 @@ describe("UI", () => {
 					// stopping just before `new BitmapText(...)`.
 					this.bindKey = settings.bindKey || -1;
 
-					/* eslint-disable no-prototype-builtins */
 					this.hoverOffColor =
 						settings.hoverOffColor || settings.backgroundColor || "#00aa0080";
 					this.hoverOnColor =
 						settings.hoverOnColor || settings.hoverColor || "#00ff00ff";
-					/* eslint-enable no-prototype-builtins */
 
 					this.borderStrokeColor = settings.borderStrokeColor || "#000000";
 					this.textAlign = settings.textAlign || "center";
