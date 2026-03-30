@@ -4,10 +4,15 @@
 
 ### Chore
 - Minimum Node.js version is now 24.0.0 (Node 18/20 EOL, Node 22 in maintenance)
-- CI: upgrade to pnpm/action-setup v5 (Node.js 24 runtime)
-
-### Fixed
-- Chore: fix missing README on the npm release
+- CI: upgrade to Node.js 24 and pnpm/action-setup v5
+- TypeScript: 5.9 → 6.0 (added explicit `rootDir` to all tsconfig.build.json)
+- ESLint: 9.x → 10.x (fixed all `no-useless-assignment` errors across the codebase)
+- Biome: 2.3 → 2.4
+- Updated vitest, turbo, eslint-plugin-jsdoc, typescript-eslint, typedoc, type-fest, vite, react-router-dom to latest versions
+- Examples: lazy-load all example components via React.lazy() for code splitting (main bundle 1286 KB → 427 KB)
+- Examples: fix ace editor loading order and initial content display in "Show Code" panel
+- Fix missing README on the npm release (copy root README during `pnpm dist`)
+- Add VertexArrayBuffer unit tests for `push()` and `pushFloats()`
 
 ## [18.2.1] (melonJS 2)
 
