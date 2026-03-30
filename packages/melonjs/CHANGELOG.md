@@ -1,6 +1,10 @@
 # Changelog
 
-## [18.2.2] (melonJS 2)
+## [18.3.0] (melonJS 2)
+
+### Chore
+- Minimum Node.js version is now 24.0.0 (Node 18/20 EOL, Node 22 in maintenance)
+- CI: upgrade to pnpm/action-setup v5 (Node.js 24 runtime)
 
 ### Fixed
 - Chore: fix missing README on the npm release

@@ -1,5 +1,6 @@
 import React, {
-	type ReactElement,
+	lazy,
+	Suspense,
 	useEffect,
 	useMemo,
 	useRef,
@@ -16,36 +17,127 @@ const sourceFiles = import.meta.glob("./examples/**/*.{ts,tsx,js}", {
 	eager: true,
 }) as Record<string, string>;
 
-import { ExampleAseprite } from "./examples/aseprite/ExampleAseprite";
-import { ExampleBenchmark } from "./examples/benchmark/ExampleBenchmark";
-import { ExampleBlendModes } from "./examples/blendModes/ExampleBlendModes";
-import { ExampleCompressedTextures } from "./examples/compressedTextures/ExampleCompressedTextures";
-import { ExampleDeviceTest } from "./examples/deviceTest/ExampleDeviceTest";
-import { ExampleDragAndDrop } from "./examples/dragAndDrop/ExampleDragAndDrop";
-import { ExampleGraphics } from "./examples/graphics/ExampleGraphics";
-import { ExampleHelloWorld } from "./examples/helloWorld/ExampleHelloWorld";
-import { ExampleIsometricRPG } from "./examples/isometricRpg/ExampleIsometricRPG";
-import { ExampleLights } from "./examples/lights/ExampleLights";
-import { ExampleLineOfSight } from "./examples/lineOfSight/ExampleLineOfSight";
-import { ExampleMasking } from "./examples/masking/ExampleMasking";
-import { ExamplePlatformer } from "./examples/platformer/ExamplePlatformer";
-import { ExampleSpaceInvaders } from "./examples/spaceInvaders/ExampleSpaceInvaders";
-import { ExampleSpine } from "./examples/spine/ExampleSpine";
-import { ExampleSprite } from "./examples/sprite/ExampleSprite";
-import { ExampleSVGShapes } from "./examples/svgShapes/ExampleSVGShapes";
-import { ExampleText } from "./examples/text/ExampleText";
-import { ExampleTexturePacker } from "./examples/texturePacker/ExampleTexturePacker";
-import { ExampleTiledMapLoader } from "./examples/tiledMapLoader/ExampleTiledMapLoader";
-import { ExampleUI } from "./examples/ui/ExampleUI";
-import { ExampleVideo } from "./examples/video/ExampleVideo";
-import { ExampleWhacAMole } from "./examples/whac-a-mole/ExampleWhacAMole";
+// lazy-load each example so they are code-split into separate chunks
+const ExampleAseprite = lazy(() =>
+	import("./examples/aseprite/ExampleAseprite").then((m) => ({
+		default: m.ExampleAseprite,
+	})),
+);
+const ExampleBenchmark = lazy(() =>
+	import("./examples/benchmark/ExampleBenchmark").then((m) => ({
+		default: m.ExampleBenchmark,
+	})),
+);
+const ExampleBlendModes = lazy(() =>
+	import("./examples/blendModes/ExampleBlendModes").then((m) => ({
+		default: m.ExampleBlendModes,
+	})),
+);
+const ExampleCompressedTextures = lazy(() =>
+	import("./examples/compressedTextures/ExampleCompressedTextures").then(
+		(m) => ({ default: m.ExampleCompressedTextures }),
+	),
+);
+const ExampleDeviceTest = lazy(() =>
+	import("./examples/deviceTest/ExampleDeviceTest").then((m) => ({
+		default: m.ExampleDeviceTest,
+	})),
+);
+const ExampleDragAndDrop = lazy(() =>
+	import("./examples/dragAndDrop/ExampleDragAndDrop").then((m) => ({
+		default: m.ExampleDragAndDrop,
+	})),
+);
+const ExampleGraphics = lazy(() =>
+	import("./examples/graphics/ExampleGraphics").then((m) => ({
+		default: m.ExampleGraphics,
+	})),
+);
+const ExampleHelloWorld = lazy(() =>
+	import("./examples/helloWorld/ExampleHelloWorld").then((m) => ({
+		default: m.ExampleHelloWorld,
+	})),
+);
+const ExampleIsometricRPG = lazy(() =>
+	import("./examples/isometricRpg/ExampleIsometricRPG").then((m) => ({
+		default: m.ExampleIsometricRPG,
+	})),
+);
+const ExampleLights = lazy(() =>
+	import("./examples/lights/ExampleLights").then((m) => ({
+		default: m.ExampleLights,
+	})),
+);
+const ExampleLineOfSight = lazy(() =>
+	import("./examples/lineOfSight/ExampleLineOfSight").then((m) => ({
+		default: m.ExampleLineOfSight,
+	})),
+);
+const ExampleMasking = lazy(() =>
+	import("./examples/masking/ExampleMasking").then((m) => ({
+		default: m.ExampleMasking,
+	})),
+);
+const ExamplePlatformer = lazy(() =>
+	import("./examples/platformer/ExamplePlatformer").then((m) => ({
+		default: m.ExamplePlatformer,
+	})),
+);
+const ExampleSpaceInvaders = lazy(() =>
+	import("./examples/spaceInvaders/ExampleSpaceInvaders").then((m) => ({
+		default: m.ExampleSpaceInvaders,
+	})),
+);
+const ExampleSpine = lazy(() =>
+	import("./examples/spine/ExampleSpine").then((m) => ({
+		default: m.ExampleSpine,
+	})),
+);
+const ExampleSprite = lazy(() =>
+	import("./examples/sprite/ExampleSprite").then((m) => ({
+		default: m.ExampleSprite,
+	})),
+);
+const ExampleSVGShapes = lazy(() =>
+	import("./examples/svgShapes/ExampleSVGShapes").then((m) => ({
+		default: m.ExampleSVGShapes,
+	})),
+);
+const ExampleText = lazy(() =>
+	import("./examples/text/ExampleText").then((m) => ({
+		default: m.ExampleText,
+	})),
+);
+const ExampleTexturePacker = lazy(() =>
+	import("./examples/texturePacker/ExampleTexturePacker").then((m) => ({
+		default: m.ExampleTexturePacker,
+	})),
+);
+const ExampleTiledMapLoader = lazy(() =>
+	import("./examples/tiledMapLoader/ExampleTiledMapLoader").then((m) => ({
+		default: m.ExampleTiledMapLoader,
+	})),
+);
+const ExampleUI = lazy(() =>
+	import("./examples/ui/ExampleUI").then((m) => ({ default: m.ExampleUI })),
+);
+const ExampleVideo = lazy(() =>
+	import("./examples/video/ExampleVideo").then((m) => ({
+		default: m.ExampleVideo,
+	})),
+);
+const ExampleWhacAMole = lazy(() =>
+	import("./examples/whac-a-mole/ExampleWhacAMole").then((m) => ({
+		default: m.ExampleWhacAMole,
+	})),
+);
 
 const examples: {
 	label: string;
 	path: string;
 	sourceDir: string;
 	description: string;
-	component: ReactElement;
+	component: React.ReactElement;
 }[] = [
 	{
 		component: <ExampleAseprite />,
@@ -237,15 +329,17 @@ const AceEditorPane = ({ value, mode }: { value: string; mode: string }) => {
 	const editorRef = useRef<HTMLDivElement>(null);
 	const editorInstance = useRef<import("ace-builds").Ace.Editor | null>(null);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: intentionally run once on mount; value/mode are read for initial content only
 	useEffect(() => {
 		if (!editorRef.current || editorInstance.current) return;
-		Promise.all([
-			import("ace-builds/src-noconflict/ace"),
-			import("ace-builds/src-noconflict/mode-javascript"),
-			import("ace-builds/src-noconflict/mode-typescript"),
-			import("ace-builds/src-noconflict/theme-one_dark"),
-		])
-			.then(([aceModule]) => {
+		// ace must load first — modes and themes depend on the global `ace` variable
+		import("ace-builds/src-noconflict/ace")
+			.then(async (aceModule) => {
+				await Promise.all([
+					import("ace-builds/src-noconflict/mode-javascript"),
+					import("ace-builds/src-noconflict/mode-typescript"),
+					import("ace-builds/src-noconflict/theme-one_dark"),
+				]);
 				const aceLib = aceModule.default || aceModule;
 				if (!editorRef.current) return;
 				const editor = aceLib.edit(editorRef.current);
@@ -259,6 +353,9 @@ const AceEditorPane = ({ value, mode }: { value: string; mode: string }) => {
 					tabSize: 2,
 					useWorker: false,
 				});
+				// set the initial content
+				editor.setValue(value, -1);
+				editor.session.setMode(`ace/mode/${mode}`);
 				editorInstance.current = editor;
 			})
 			.catch((err) => {
@@ -410,7 +507,7 @@ const router = createHashRouter([
 			path: `/${example.path}`,
 			element: (
 				<ExampleLayout label={example.label} sourceDir={example.sourceDir}>
-					{example.component}
+					<Suspense>{example.component}</Suspense>
 				</ExampleLayout>
 			),
 		};

@@ -37,7 +37,7 @@ jobs:
           node-version: 24
           registry-url: "https://registry.npmjs.org"
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
 
       - name: Install dependencies
         run: pnpm install
