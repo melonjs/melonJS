@@ -280,6 +280,9 @@ export default class Application {
 		// set the global renderer reference for renderables that depend on it
 		setRenderer(this.renderer);
 
+		// make this the active game instance for modules that reference the global
+		setDefaultGame(this);
+
 		// register to the channel
 		on(WINDOW_ONRESIZE, () => {
 			onresize(this);
