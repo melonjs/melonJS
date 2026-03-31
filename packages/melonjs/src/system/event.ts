@@ -402,7 +402,7 @@ export function on<E extends keyof Events>(
 	listener: Events[E],
 	context?: any,
 ) {
-	eventEmitter.addListener(eventName, listener, context);
+	return eventEmitter.addListener(eventName, listener, context);
 }
 
 /**
@@ -435,4 +435,18 @@ export function off<E extends keyof Events>(
 	context?: any,
 ) {
 	eventEmitter.removeListener(eventName, listener, context);
+}
+
+/**
+ * emit (trigger) the specified event.
+ * @param eventName - The event name.
+ * @param args - arguments to be passed to the listener functions.
+ * @example
+ * me.event.emit("event-name", arg1, arg2);
+ */
+export function emit<E extends keyof Events>(
+	eventName: E,
+	...args: Parameters<Events[E]>
+) {
+	eventEmitter.emit(eventName, ...args);
 }

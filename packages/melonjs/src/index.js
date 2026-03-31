@@ -48,7 +48,7 @@ import Stage from "./state/stage.js";
 import state from "./state/state.ts";
 import { initVisibilityEvents } from "./system/device.js";
 import { DOMContentLoaded } from "./system/dom.ts";
-import { BOOT, DOM_READY, eventEmitter } from "./system/event.ts";
+import { BOOT, DOM_READY, emit } from "./system/event.ts";
 import pool from "./system/legacy_pool.js";
 import save from "./system/save.ts";
 import timer from "./system/timer.ts";
@@ -239,7 +239,7 @@ export function boot() {
 	registerBuiltinTiledClass("ColorLayer", ColorLayer);
 
 	// publish Boot notification
-	eventEmitter.emit(BOOT);
+	emit(BOOT);
 
 	// enable/disable the cache
 	setNocache(getUriFragment().nocache || false);
@@ -254,7 +254,7 @@ export function boot() {
 	initialized = true;
 
 	// notify that the engine is ready
-	eventEmitter.emit(DOM_READY);
+	emit(DOM_READY);
 }
 
 // call the library init function when ready

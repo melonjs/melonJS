@@ -5,7 +5,7 @@ import {
 import type Pointer from "./../../input/pointer.ts";
 import type { Vector2d } from "../../math/vector2d.ts";
 import { vector2dPool } from "../../math/vector2d.ts";
-import { eventEmitter, POINTERMOVE } from "../../system/event.ts";
+import { off, on, POINTERMOVE } from "../../system/event.ts";
 import timer from "../../system/timer.ts";
 import Container from "../container.js";
 
@@ -139,7 +139,7 @@ export default class UIBaseElement extends Container {
 		this.hover = true;
 		this.isDirty = true;
 		if (this.isDraggable) {
-			eventEmitter.addListener(POINTERMOVE, this.#boundPointerMoveHandler);
+			on(POINTERMOVE, this.#boundPointerMoveHandler);
 			// to memorize where we grab the object
 			this.grabOffset = vector2dPool.get(0, 0);
 		}
@@ -190,7 +190,7 @@ export default class UIBaseElement extends Container {
 		this.isDirty = true;
 		if (this.isDraggable) {
 			// unregister on the global pointermove event
-			eventEmitter.removeListener(POINTERMOVE, this.#boundPointerMoveHandler);
+			off(POINTERMOVE, this.#boundPointerMoveHandler);
 			vector2dPool.release(this.grabOffset!);
 			this.grabOffset = undefined;
 		}
@@ -295,7 +295,7 @@ export default class UIBaseElement extends Container {
 		// the object is being remove from his parent
 		// container before the leave function is called
 		if (this.isDraggable) {
-			eventEmitter.removeListener(POINTERMOVE, this.#boundPointerMoveHandler);
+			off(POINTERMOVE, this.#boundPointerMoveHandler);
 			if (typeof this.grabOffset !== "undefined") {
 				vector2dPool.release(this.grabOffset);
 				this.grabOffset = undefined;

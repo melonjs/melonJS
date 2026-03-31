@@ -5,7 +5,7 @@ import state from "../state/state.ts";
 import * as device from "../system/device.js";
 import {
 	BLUR,
-	eventEmitter,
+	emit,
 	FOCUS,
 	GAME_AFTER_DRAW,
 	GAME_AFTER_UPDATE,
@@ -14,6 +14,7 @@ import {
 	GAME_INIT,
 	GAME_RESET,
 	GAME_UPDATE,
+	on,
 	STAGE_RESET,
 	STATE_CHANGE,
 	STATE_RESTART,
@@ -253,10 +254,10 @@ export default class Application {
 		}
 
 		// register to the channel
-		eventEmitter.addListener(WINDOW_ONRESIZE, () => {
+		on(WINDOW_ONRESIZE, () => {
 			onresize(this);
 		});
-		eventEmitter.addListener(WINDOW_ONORIENTATION_CHANGE, () => {
+		on(WINDOW_ONORIENTATION_CHANGE, () => {
 			onresize(this);
 		});
 
@@ -308,17 +309,17 @@ export default class Application {
 
 		this.isInitialized = true;
 
-		eventEmitter.emit(GAME_INIT);
-		eventEmitter.addListener(STATE_CHANGE, this.repaint.bind(this));
-		eventEmitter.addListener(STATE_RESTART, this.repaint.bind(this));
-		eventEmitter.addListener(STATE_RESUME, this.repaint.bind(this));
-		eventEmitter.addListener(STAGE_RESET, this.reset.bind(this));
-		eventEmitter.addListener(TICK, (time: number) => {
+		emit(GAME_INIT);
+		on(STATE_CHANGE, this.repaint.bind(this));
+		on(STATE_RESTART, this.repaint.bind(this));
+		on(STATE_RESUME, this.repaint.bind(this));
+		on(STAGE_RESET, this.reset.bind(this));
+		on(TICK, (time: number) => {
 			this.update(time);
 			this.draw();
 		});
 
-		eventEmitter.addListener(BLUR, () => {
+		on(BLUR, () => {
 			if (this.stopOnBlur) {
 				state.stop(true);
 			}
@@ -327,7 +328,7 @@ export default class Application {
 			}
 		});
 
-		eventEmitter.addListener(FOCUS, () => {
+		on(FOCUS, () => {
 			if (this.stopOnBlur) {
 				state.restart(true);
 			}
@@ -351,7 +352,7 @@ export default class Application {
 		}
 
 		// publish reset notification
-		eventEmitter.emit(GAME_RESET);
+		emit(GAME_RESET);
 
 		// Refresh internal variables for framerate  limiting
 		this.updateFrameRate();
@@ -424,7 +425,7 @@ export default class Application {
 			this.frameCounter = 0;
 
 			// publish notification
-			eventEmitter.emit(GAME_BEFORE_UPDATE, time);
+			emit(GAME_BEFORE_UPDATE, time);
 			this.accumulator += timer.getDelta();
 			this.accumulator = Math.min(this.accumulator, this.accumulatorMax);
 
@@ -441,7 +442,7 @@ export default class Application {
 
 				// game update event
 				if (!state.isPaused()) {
-					eventEmitter.emit(GAME_UPDATE, time);
+					emit(GAME_UPDATE, time);
 				}
 
 				// update all objects (and pass the elapsed time since last frame)
@@ -460,7 +461,7 @@ export default class Application {
 			}
 
 			// publish notification
-			eventEmitter.emit(GAME_AFTER_UPDATE, this.lastUpdate);
+			emit(GAME_AFTER_UPDATE, this.lastUpdate);
 		}
 	}
 
@@ -470,7 +471,7 @@ export default class Application {
 	draw(): void {
 		if (this.renderer.isContextValid && (this.isDirty || this.isAlwaysDirty)) {
 			// publish notification
-			eventEmitter.emit(GAME_BEFORE_DRAW, globalThis.performance.now());
+			emit(GAME_BEFORE_DRAW, globalThis.performance.now());
 
 			// prepare renderer to draw a new frame
 			this.renderer.clear();
@@ -485,7 +486,7 @@ export default class Application {
 			this.renderer.flush();
 
 			// publish notification
-			eventEmitter.emit(GAME_AFTER_DRAW, globalThis.performance.now());
+			emit(GAME_AFTER_DRAW, globalThis.performance.now());
 		}
 	}
 }

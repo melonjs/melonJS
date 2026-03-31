@@ -1,5 +1,5 @@
 import { game } from "../index.js";
-import { eventEmitter, STATE_RESUME } from "../system/event.js";
+import { off, on, STATE_RESUME } from "../system/event.js";
 import { createPool } from "../system/pool.ts";
 import timer from "../system/timer.js";
 import { Easing, EasingFunction } from "./easing.js";
@@ -135,7 +135,7 @@ export default class Tween {
 	 * @ignore
 	 */
 	onActivateEvent() {
-		eventEmitter.addListener(STATE_RESUME, this.#boundResumeCallback);
+		on(STATE_RESUME, this.#boundResumeCallback);
 	}
 
 	/**
@@ -143,7 +143,7 @@ export default class Tween {
 	 * @ignore
 	 */
 	onDeactivateEvent() {
-		eventEmitter.removeListener(STATE_RESUME, this.#boundResumeCallback);
+		off(STATE_RESUME, this.#boundResumeCallback);
 	}
 
 	/**

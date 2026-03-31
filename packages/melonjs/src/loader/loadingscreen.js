@@ -3,9 +3,11 @@ import Renderable from "./../renderable/renderable.js";
 import Sprite from "./../renderable/sprite.js";
 import Stage from "./../state/stage.js";
 import {
-	eventEmitter,
 	LOADER_COMPLETE,
 	LOADER_PROGRESS,
+	off,
+	on,
+	once,
 	VIEWPORT_ONRESIZE,
 } from "../system/event.ts";
 import { renderer } from "./../video/video.js";
@@ -23,8 +25,8 @@ class ProgressBar extends Renderable {
 		this.barHeight = h;
 		this.anchorPoint.set(0, 0);
 
-		eventEmitter.addListener(LOADER_PROGRESS, this.onProgressUpdate, this);
-		eventEmitter.addListener(VIEWPORT_ONRESIZE, this.resize, this);
+		on(LOADER_PROGRESS, this.onProgressUpdate, this);
+		on(VIEWPORT_ONRESIZE, this.resize, this);
 
 		this.anchorPoint.set(0, 0);
 
@@ -69,8 +71,8 @@ class ProgressBar extends Renderable {
 	 * @ignore
 	 */
 	onDestroyEvent() {
-		eventEmitter.removeListener(LOADER_PROGRESS, this.onProgressUpdate, this);
-		eventEmitter.removeListener(VIEWPORT_ONRESIZE, this.resize, this);
+		off(LOADER_PROGRESS, this.onProgressUpdate, this);
+		off(VIEWPORT_ONRESIZE, this.resize, this);
 	}
 }
 
@@ -118,7 +120,7 @@ class DefaultLoadingScreen extends Stage {
 
 		// clean up loading screen children when the preloader completes,
 		// whether or not a state.change() follows
-		eventEmitter.addListenerOnce(LOADER_COMPLETE, this.#cleanup, this);
+		once(LOADER_COMPLETE, this.#cleanup, this);
 
 		// load the melonJS logo
 		load({ name: "melonjs_logo", type: "image", src: logo_url }, () => {
@@ -164,7 +166,7 @@ class DefaultLoadingScreen extends Stage {
 		// remove the listener in case state.change() is called
 		// before the preloader fires LOADER_COMPLETE
 		if (!this.#cleanedUp) {
-			eventEmitter.removeListener(LOADER_COMPLETE, this.#cleanup, this);
+			off(LOADER_COMPLETE, this.#cleanup, this);
 		}
 		this.#cleanup();
 	}

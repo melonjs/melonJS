@@ -2,10 +2,11 @@ import { Color, colorPool } from "./../../math/color.ts";
 import { isPowerOfTwo } from "./../../math/math.ts";
 import {
 	CANVAS_ONRESIZE,
-	eventEmitter,
+	emit,
 	GAME_RESET,
 	ONCONTEXT_LOST,
 	ONCONTEXT_RESTORED,
+	on,
 } from "../../system/event.ts";
 import Renderer from "./../renderer.js";
 import { createAtlas, TextureAtlas } from "./../texture/atlas.js";
@@ -182,7 +183,7 @@ export default class WebGLRenderer extends Renderer {
 			(e) => {
 				e.preventDefault();
 				this.isContextValid = false;
-				eventEmitter.emit(ONCONTEXT_LOST, this);
+				emit(ONCONTEXT_LOST, this);
 			},
 			false,
 		);
@@ -192,18 +193,18 @@ export default class WebGLRenderer extends Renderer {
 			() => {
 				this.reset();
 				this.isContextValid = true;
-				eventEmitter.emit(ONCONTEXT_RESTORED, this);
+				emit(ONCONTEXT_RESTORED, this);
 			},
 			false,
 		);
 
 		// reset the renderer on game reset
-		eventEmitter.addListener(GAME_RESET, () => {
+		on(GAME_RESET, () => {
 			this.reset();
 		});
 
 		// register to the CANVAS resize channel
-		eventEmitter.addListener(CANVAS_ONRESIZE, (width, height) => {
+		on(CANVAS_ONRESIZE, (width, height) => {
 			this.flush();
 			this.setViewport(0, 0, width, height);
 		});

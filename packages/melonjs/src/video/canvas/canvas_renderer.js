@@ -1,9 +1,10 @@
 import { Color } from "./../../math/color.ts";
 import {
-	eventEmitter,
+	emit,
 	GAME_RESET,
 	ONCONTEXT_LOST,
 	ONCONTEXT_RESTORED,
+	on,
 } from "../../system/event.ts";
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture/cache.js";
@@ -52,7 +53,7 @@ export default class CanvasRenderer extends Renderer {
 			(e) => {
 				e.preventDefault();
 				this.isContextValid = false;
-				eventEmitter.emit(ONCONTEXT_LOST, this);
+				emit(ONCONTEXT_LOST, this);
 			},
 			false,
 		);
@@ -61,13 +62,13 @@ export default class CanvasRenderer extends Renderer {
 			"contextrestored",
 			() => {
 				this.isContextValid = true;
-				eventEmitter.emit(ONCONTEXT_RESTORED, this);
+				emit(ONCONTEXT_RESTORED, this);
 			},
 			false,
 		);
 
 		// reset the renderer on game reset
-		eventEmitter.addListener(GAME_RESET, () => {
+		on(GAME_RESET, () => {
 			this.reset();
 		});
 	}

@@ -2,7 +2,7 @@ import * as audio from "./../audio/audio.ts";
 import { warning } from "../lang/console.js";
 import state from "./../state/state.ts";
 import {
-	eventEmitter,
+	emit,
 	LOADER_COMPLETE,
 	LOADER_ERROR,
 	LOADER_PROGRESS,
@@ -230,7 +230,7 @@ function completeLoading(onloadcb) {
 	const callback = onloadcb || onload;
 	if (typeof callback === "function") {
 		callback();
-		eventEmitter.emit(LOADER_COMPLETE);
+		emit(LOADER_COMPLETE);
 	} else {
 		throw new Error("no load callback defined");
 	}
@@ -253,7 +253,7 @@ function onResourceLoaded(res) {
 		// pass the load progress in percent, as parameter
 		onProgress(progress, res);
 	}
-	eventEmitter.emit(LOADER_PROGRESS, progress, res);
+	emit(LOADER_PROGRESS, progress, res);
 }
 
 /**
@@ -266,7 +266,7 @@ function onLoadingError(res) {
 	if (this.onError) {
 		this.onError(res);
 	}
-	eventEmitter.emit(LOADER_ERROR, res);
+	emit(LOADER_ERROR, res);
 	throw new Error("Failed loading resource " + res.src);
 }
 

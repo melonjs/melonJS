@@ -1,4 +1,4 @@
-import { eventEmitter, VIDEO_INIT } from "../../../system/event.ts";
+import { once, VIDEO_INIT } from "../../../system/event.ts";
 import { parseDDS } from "./parseDDS.js";
 import { parseKTX } from "./parseKTX.js";
 import { parseKTX2 } from "./parseKTX2.js";
@@ -26,7 +26,7 @@ import { parsePVR } from "./parsePVR.js";
 let _renderer;
 
 // gracefully capture a reference to the active renderer without adding more cyclic redundancy
-eventEmitter.addListenerOnce(VIDEO_INIT, (renderer) => {
+once(VIDEO_INIT, (renderer) => {
 	_renderer = renderer;
 });
 

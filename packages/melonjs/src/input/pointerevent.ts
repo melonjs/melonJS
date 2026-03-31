@@ -3,11 +3,7 @@ import { game } from "../index.js";
 import type { Vector2d } from "../math/vector2d.ts";
 import { vector2dPool } from "../math/vector2d.ts";
 import * as device from "./../system/device.js";
-import {
-	eventEmitter,
-	POINTERLOCKCHANGE,
-	POINTERMOVE,
-} from "../system/event.ts";
+import { emit, POINTERLOCKCHANGE, POINTERMOVE } from "../system/event.ts";
 import timer from "./../system/timer.ts";
 import { remove } from "./../utils/array.ts";
 import { throttle } from "./../utils/function.ts";
@@ -209,7 +205,7 @@ function enablePointerEvent(): void {
 					locked =
 						globalThis.document.pointerLockElement === game.getParentElement();
 					// emit the corresponding internal event
-					eventEmitter.emit(POINTERLOCKCHANGE, locked);
+					emit(POINTERLOCKCHANGE, locked);
 				},
 				true,
 			);
@@ -310,7 +306,7 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 		if (POINTER_MOVE.includes(pointer.type!)) {
 			pointer.gameX = pointer.gameLocalX = pointer.gameScreenX;
 			pointer.gameY = pointer.gameLocalY = pointer.gameScreenY;
-			eventEmitter.emit(POINTERMOVE, pointer);
+			emit(POINTERMOVE, pointer);
 		}
 
 		// fetch valid candiates from the game world container

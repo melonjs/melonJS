@@ -3,9 +3,10 @@ import { Vector2d } from "../math/vector2d.ts";
 import Container from "../renderable/container.js";
 import state from "./../state/state.ts";
 import {
-	eventEmitter,
+	emit,
 	GAME_RESET,
 	LEVEL_LOADED,
+	on,
 	WORLD_STEP,
 } from "../system/event.ts";
 import { collision } from "./collision.js";
@@ -104,10 +105,10 @@ export default class World extends Container {
 		this.detector = new Detector(this);
 
 		// reset the world container on the game reset signal
-		eventEmitter.addListener(GAME_RESET, this.reset, this);
+		on(GAME_RESET, this.reset, this);
 
 		// update the broadband world bounds if a new level is loaded
-		eventEmitter.addListener(LEVEL_LOADED, () => {
+		on(LEVEL_LOADED, () => {
 			// reset the quadtree
 			this.broadphase.clear(this.getBounds());
 		});
@@ -245,6 +246,6 @@ export default class World extends Container {
 				}
 			}
 		}
-		eventEmitter.emit(WORLD_STEP, dt);
+		emit(WORLD_STEP, dt);
 	}
 }

@@ -2,7 +2,7 @@ import Path2D from "./../geometries/path2d.js";
 import { Color } from "./../math/color.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
-import { CANVAS_ONRESIZE, eventEmitter } from "../system/event.ts";
+import { CANVAS_ONRESIZE, emit } from "../system/event.ts";
 import RenderState from "./renderstate.js";
 import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
 
@@ -301,7 +301,7 @@ export default class Renderer {
 			this.currentScissor[2] = width;
 			this.currentScissor[3] = height;
 			// publish the corresponding event
-			eventEmitter.emit(CANVAS_ONRESIZE, width, height);
+			emit(CANVAS_ONRESIZE, width, height);
 		}
 	}
 
