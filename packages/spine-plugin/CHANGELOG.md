@@ -5,8 +5,6 @@
 ### Added
 - Tiled integration: Spine objects can now be placed directly in Tiled maps — set the object class to "Spine" and add `atlasFile`/`jsonFile` custom properties. The plugin registers a Tiled object class on initialization via `registerTiledObjectClass("Spine", Spine)`
 
-## 2.0.2
-
 ### Fixed
 - Auto-detect `premultipliedAlpha` from atlas pages and set it on the SkeletonRenderer, fixing incorrect blending for PMA textures (e.g. Cloud Pot)
 
