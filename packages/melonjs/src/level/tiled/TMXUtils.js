@@ -1,4 +1,5 @@
 import { imgList } from "../../loader/cache.js";
+import { colorPool } from "../../math/color.ts";
 import { decode, decodeBase64Image } from "../../utils/decode.ts";
 import { xmlToObject } from "../../utils/xml.ts";
 
@@ -58,6 +59,59 @@ export function tiledBlendMode(mode) {
 		return "normal";
 	}
 	return mode === "add" ? "lighter" : mode;
+}
+
+/**
+ * Apply an opacity multiplier to a renderable and its child renderable (if any).
+ * @ignore
+ * @param {Renderable} obj - the renderable to apply to
+ * @param {number} opacity - the opacity multiplier
+ */
+export function applyObjectOpacity(obj, opacity) {
+	obj.setOpacity(obj.getOpacity() * opacity);
+	if (
+		typeof obj.renderable !== "undefined" &&
+		obj.renderable.isRenderable === true
+	) {
+		obj.renderable.setOpacity(obj.renderable.getOpacity() * opacity);
+	}
+}
+
+/**
+ * Propagate a blend mode to a renderable and its child renderable (if any).
+ * Only applies when the object still has the default "normal" blend mode.
+ * @ignore
+ * @param {Renderable} obj - the renderable to apply to
+ * @param {string} blendMode - the blend mode to propagate
+ */
+export function propagateBlendMode(obj, blendMode) {
+	if (
+		blendMode !== "normal" &&
+		obj.isRenderable === true &&
+		obj.blendMode === "normal"
+	) {
+		obj.blendMode = blendMode;
+		if (
+			typeof obj.renderable !== "undefined" &&
+			obj.renderable.isRenderable === true &&
+			obj.renderable.blendMode === "normal"
+		) {
+			obj.renderable.blendMode = blendMode;
+		}
+	}
+}
+
+/**
+ * Parse a Tiled tint color hex string into a melonJS Color object.
+ * @ignore
+ * @param {string} tintcolor - hex color string from Tiled (e.g. "#ff0000")
+ * @returns {Color|undefined} parsed Color, or undefined if no tint
+ */
+export function parseTintColor(tintcolor) {
+	if (typeof tintcolor !== "undefined") {
+		return colorPool.get().parseHex(tintcolor, true);
+	}
+	return undefined;
 }
 
 // pre-compiled regex for #ARGB → #RGBA color conversion

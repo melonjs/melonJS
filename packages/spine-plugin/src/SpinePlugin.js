@@ -1,4 +1,4 @@
-import { plugin } from "melonjs";
+import { plugin, registerTiledObjectClass } from "melonjs";
 import {
 	dependencies,
 	homepage,
@@ -7,6 +7,7 @@ import {
 	version,
 } from "../package.json";
 import AssetManager from "./AssetManager";
+import Spine from "./Spine.js";
 
 /**
  * @classdesc
@@ -28,5 +29,9 @@ export class SpinePlugin extends plugin.BasePlugin {
 
 		// instantiate the asset manager
 		this.assetManager = new AssetManager(this.app.renderer);
+
+		// register Spine as a Tiled object class
+		// (set the object class to "Spine" in Tiled)
+		registerTiledObjectClass("Spine", Spine);
 	}
 }

@@ -8,7 +8,6 @@ import { fetchData } from "./fetchdata.js";
  * parse/preload a TMX file
  * @param {loader.Asset} data - asset data
  * @param {Function} [onload] - function to be called when the asset is loaded
- * @param {Function} [onload] - function to be called when the resource is loaded
  * @param {Function} [onerror] - function to be called in case of error
  * @param {Object} [settings] - Additional settings to be passed when loading the asset
  * @returns {number} the amount of corresponding resource parsed/preloaded
@@ -39,7 +38,7 @@ export function preloadTMX(tmxData, onload, onerror, settings) {
 		if (typeof onload === "function") {
 			onload();
 		}
-		return;
+		return 1;
 	}
 
 	fetchData(tmxData.src, "text", settings)

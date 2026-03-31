@@ -3,7 +3,7 @@ import { linePool } from "../../geometries/line.ts";
 import { pointPool } from "../../geometries/point.ts";
 import { polygonPool } from "../../geometries/polygon.ts";
 import { roundedRectanglePool } from "../../geometries/roundrect.ts";
-import { degToRad } from "./../../math/math.ts";
+import { degToRad } from "../../math/math.ts";
 import { vector2dPool } from "../../math/vector2d.ts";
 import Tile from "./TMXTile.js";
 import { applyTMXProperties } from "./TMXUtils.js";

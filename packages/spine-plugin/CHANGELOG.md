@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.0
+
+### Added
+- Tiled integration: Spine objects can now be placed directly in Tiled maps — set the object class to "Spine" and add `atlasFile`/`jsonFile` custom properties. The plugin registers a Tiled object class on initialization via `registerTiledObjectClass("Spine", Spine)`
+
 ## 2.0.2
 
 ### Fixed

@@ -1,22 +1,23 @@
-import { polygonPool } from "../../geometries/polygon.ts";
 import { game } from "../../index.js";
 import { warning } from "../../lang/console.js";
-import { colorPool } from "../../math/color.ts";
 import { vector2dPool } from "../../math/vector2d.ts";
-import Body from "./../../physics/body.js";
-import { collision } from "./../../physics/collision.js";
+import { collision } from "../../physics/collision.js";
 import Container from "../../renderable/container.js";
 import { eventEmitter, VIEWPORT_ONRESIZE } from "../../system/event.ts";
 import pool from "../../system/legacy_pool.js";
-import { checkVersion } from "./../../utils/utils.ts";
+import { checkVersion } from "../../utils/utils.ts";
 import { COLLISION_GROUP, TILED_SUPPORTED_VERSION } from "./constants.js";
 import { getNewTMXRenderer } from "./renderer/autodetect.js";
 import TMXGroup from "./TMXGroup.js";
 import TMXLayer from "./TMXLayer.js";
+import { createTMXObject } from "./TMXObjectFactory.js";
 import TMXTileset from "./TMXTileset.js";
 import TMXTilesetGroup from "./TMXTilesetGroup.js";
 import {
+	applyObjectOpacity,
 	applyTMXProperties,
+	parseTintColor,
+	propagateBlendMode,
 	resolveEmbeddedImage,
 	tiledBlendMode,
 } from "./TMXUtils.js";
@@ -81,11 +82,7 @@ function readImageLayer(map, data, z) {
 				name: data.name,
 				image: data.image,
 				ratio: vector2dPool.get(ratioX, ratioY),
-				// convert to melonJS color format (note: this should be done earlier when parsing data)
-				tint:
-					typeof data.tintcolor !== "undefined"
-						? colorPool.get().parseHex(data.tintcolor, true)
-						: undefined,
+				tint: parseTintColor(data.tintcolor),
 				z: z,
 				repeat: repeat,
 			},
@@ -448,7 +445,11 @@ export default class TMXTileMap {
 	}
 
 	/**
-	 * return an Array of instantiated objects, based on the map object definition
+	 * Return an Array of instantiated objects, based on the map object definition.
+	 * Objects are created using the Tiled object factory registry, which dispatches
+	 * to the appropriate factory based on the object's class, name, or structure.
+	 * Custom factories can be registered via {@link registerTiledObjectFactory} or
+	 * {@link registerTiledObjectClass}.
 	 * @param {boolean} [flatten=true] - if true, flatten all objects into the returned array.
 	 * when false, a `me.Container` object will be created for each corresponding groups
 	 * @returns {Renderable[]} Array of Objects
@@ -486,15 +487,10 @@ export default class TMXTileMap {
 				targetContainer.autoDepth = false;
 			}
 
-			// iterate through the group and add all object into their
+			// iterate through the group and add all objects into their
 			// corresponding target Container
 			for (let o = 0; o < group.objects.length; o++) {
-				// TMX object settings
 				const settings = group.objects[o];
-				// reference to the instantiated object
-				let obj;
-				// a reference to the default shape
-				let shape;
 
 				// Tiled uses 0,0 by default
 				if (typeof settings.anchorPoint === "undefined") {
@@ -502,96 +498,19 @@ export default class TMXTileMap {
 				}
 				// convert to melonJS renderable argument name
 				if (typeof settings.tintcolor !== "undefined") {
-					settings.tint = colorPool.get();
-					settings.tint.parseHex(settings.tintcolor, true);
+					settings.tint = parseTintColor(settings.tintcolor);
 				}
 
-				// TODO: clean/rewrite this part to remove object-specific
-				// instantiation logic from here (see getObjects refactoring plan)
+				// instantiate the object based on its type
+				const obj = createTMXObject(settings, this);
 
-				// groups can contains either text, objects or layers
-				if (settings instanceof TMXLayer) {
-					// layers are already instantiated & initialized
-					obj = settings;
-					// z value set already
-				} else if (typeof settings.text === "object") {
-					// Tiled uses 0,0 by default
-					if (typeof settings.text.anchorPoint === "undefined") {
-						settings.text.anchorPoint = settings.anchorPoint;
-					}
-					if (settings.text.bitmap === true) {
-						obj = pool.pull(
-							"BitmapText",
-							settings.x,
-							settings.y,
-							settings.text,
-						);
-					} else {
-						obj = pool.pull("Text", settings.x, settings.y, settings.text);
-					}
-					// set the obj z order
-					obj.pos.z = settings.z;
-				} else if (typeof settings.tile === "object") {
-					// create a default shape if none is specified
-					shape = settings.shapes;
-					if (typeof shape === "undefined") {
-						shape = polygonPool.get(0, 0, [
-							vector2dPool.get(0, 0),
-							vector2dPool.get(settings.width, 0),
-							vector2dPool.get(settings.width, settings.height),
-						]);
-					}
-					// check if a me.Tile object is embedded
-					obj = settings.tile.getRenderable(settings);
-					obj.body = new Body(obj, shape);
-					obj.body.setStatic(true);
-					// set the obj z order
-					obj.pos.setMuted(settings.x, settings.y, settings.z);
-				} else {
-					// pull the corresponding object from the object pool
-					if (typeof settings.name !== "undefined" && settings.name !== "") {
-						obj = pool.pull(settings.name, settings.x, settings.y, settings);
-					} else {
-						// unnamed shape object
-						obj = pool.pull(
-							"Renderable",
-							settings.x,
-							settings.y,
-							settings.width,
-							settings.height,
-						);
-						// create a default shape if none is specified
-						shape = settings.shapes;
-						if (typeof shape === "undefined") {
-							shape = polygonPool.get(0, 0, [
-								vector2dPool.get(0, 0),
-								vector2dPool.get(settings.width, 0),
-								vector2dPool.get(settings.width, settings.height),
-							]);
-						}
-						obj.anchorPoint.set(0, 0);
-						obj.name = settings.name;
-						obj.type = settings.type;
-						// for backward compatibility
-						obj.class = settings.class || settings.type;
-						obj.id = settings.id;
-						obj.body = new Body(obj, shape);
-						obj.body.setStatic(true);
-						obj.resize(obj.body.getBounds().width, obj.body.getBounds().height);
-					}
-					// set the obj z order
-					obj.pos.z = settings.z;
-				}
-
+				// configure collision on unnamed objects in collision groups
 				if (isCollisionGroup && !settings.name && obj.body) {
-					// configure the body accordingly
 					obj.body.collisionType = collision.types.WORLD_SHAPE;
-					// mark collision shapes as static
 					obj.body.isStatic = true;
 				}
 
-				// apply per-object opacity (Tiled 1.12+) and visibility
-				// (skip TMXLayer instances which handle their own opacity)
+				// apply per-object opacity and visibility (skip TMXLayer)
 				if (obj.isRenderable === true && !(settings instanceof TMXLayer)) {
 					if (!settings.visible) {
 						obj.setOpacity(0);
@@ -602,70 +521,26 @@ export default class TMXTileMap {
 							obj.renderable.setOpacity(0);
 						}
 					} else if (settings.opacity < 1) {
-						obj.setOpacity(obj.getOpacity() * settings.opacity);
-						if (
-							typeof obj.renderable !== "undefined" &&
-							obj.renderable.isRenderable === true
-						) {
-							obj.renderable.setOpacity(
-								obj.renderable.getOpacity() * settings.opacity,
-							);
-						}
+						applyObjectOpacity(obj, settings.opacity);
 					}
 				}
 
-				//apply group opacity and blend mode to child objects if group are merged
+				// propagate group blend mode to child objects
+				propagateBlendMode(obj, group.blendMode);
+
 				if (flatten !== false) {
+					// apply group opacity when flattened
 					if (obj.isRenderable === true) {
-						// propagate group blend mode to children (if not default)
-						if (group.blendMode !== "normal" && obj.blendMode === "normal") {
-							obj.blendMode = group.blendMode;
-							// also propagate to child renderables (e.g. Entity wrappers)
-							if (
-								typeof obj.renderable !== "undefined" &&
-								obj.renderable.isRenderable === true &&
-								obj.renderable.blendMode === "normal"
-							) {
-								obj.renderable.blendMode = group.blendMode;
-							}
-						}
-						obj.setOpacity(obj.getOpacity() * group.opacity);
-						// and to child renderables if any
-						if (
-							typeof obj.renderable !== "undefined" &&
-							obj.renderable.isRenderable === true
-						) {
-							obj.renderable.setOpacity(
-								obj.renderable.getOpacity() * group.opacity,
-							);
-						}
+						applyObjectOpacity(obj, group.opacity);
 					}
-					// directly add the obj into the objects array
 					objects.push(obj);
-				} /* false*/ else {
-					// propagate group blend mode to children in non-flattened mode,
-					// since container blendMode is overridden by each child's preDraw()
-					if (
-						group.blendMode !== "normal" &&
-						obj.isRenderable === true &&
-						obj.blendMode === "normal"
-					) {
-						obj.blendMode = group.blendMode;
-						if (
-							typeof obj.renderable !== "undefined" &&
-							obj.renderable.isRenderable === true &&
-							obj.renderable.blendMode === "normal"
-						) {
-							obj.renderable.blendMode = group.blendMode;
-						}
-					}
-					// add it to the new container
+				} else {
 					targetContainer.addChild(obj);
 				}
 			}
 
-			// if we created a new container
-			if (flatten === false && targetContainer.children.length > 0) {
+			// if we created a new container with children
+			if (flatten === false && targetContainer.getChildren().length > 0) {
 				// re-enable auto-sort and auto-depth
 				targetContainer.autoSort = true;
 				targetContainer.autoDepth = true;

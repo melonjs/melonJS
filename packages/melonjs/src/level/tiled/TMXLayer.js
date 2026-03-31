@@ -1,7 +1,7 @@
 import { vector2dPool } from "../../math/vector2d.ts";
-import Renderable from "./../../renderable/renderable.js";
-import CanvasRenderer from "./../../video/canvas/canvas_renderer";
-import { createCanvas } from "./../../video/video.js";
+import Renderable from "../../renderable/renderable.js";
+import CanvasRenderer from "../../video/canvas/canvas_renderer";
+import { createCanvas } from "../../video/video.js";
 import Tile from "./TMXTile.js";
 import * as TMXUtils from "./TMXUtils.js";
 
@@ -210,10 +210,6 @@ export default class TMXLayer extends Renderable {
 
 	// called when the layer is added to the game world or a container
 	onActivateEvent() {
-		if (this.animatedTilesets === undefined) {
-			this.animatedTilesets = [];
-		}
-
 		if (this.tilesets) {
 			const tileset = this.tilesets.tilesets;
 			for (let i = 0; i < tileset.length; i++) {

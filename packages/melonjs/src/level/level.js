@@ -95,12 +95,9 @@ export const level = {
 			case "tmx":
 				// just load the level with the XML stuff
 				if (levels[levelId] == null) {
-					//console.log("loading "+ levelId);
 					levels[levelId] = new TMXTileMap(levelId, getTMX(levelId));
-					// level index
 					levelIdx.push(levelId);
 				} else {
-					//console.log("level %s already loaded", levelId);
 					return false;
 				}
 
