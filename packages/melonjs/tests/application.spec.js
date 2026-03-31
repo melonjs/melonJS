@@ -168,4 +168,67 @@ describe("Application", () => {
 			expect(app1.renderer).not.toBe(app2.renderer);
 		});
 	});
+
+	describe("canvas getter", () => {
+		it("should return the renderer canvas element", () => {
+			expect(game.canvas).toBeDefined();
+			expect(game.canvas).toBeInstanceOf(globalThis.HTMLCanvasElement);
+			expect(game.canvas).toBe(game.renderer.getCanvas());
+		});
+	});
+
+	describe("resize()", () => {
+		it("should not throw when called", () => {
+			expect(() => {
+				game.resize();
+			}).not.toThrow();
+		});
+	});
+
+	describe("destroy()", () => {
+		it("should destroy a standalone Application instance", () => {
+			const app = new Application(320, 240, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				consoleHeader: false,
+			});
+
+			expect(app.isInitialized).toBe(true);
+			expect(app.canvas).toBeDefined();
+
+			app.destroy();
+
+			expect(app.isInitialized).toBe(false);
+		});
+
+		it("should remove the canvas from the DOM when removeCanvas is true", () => {
+			const app = new Application(320, 240, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				consoleHeader: false,
+			});
+
+			const canvas = app.canvas;
+			expect(canvas.parentElement).toBeDefined();
+
+			app.destroy(true);
+
+			expect(canvas.parentElement).toBeNull();
+		});
+
+		it("should keep the canvas in the DOM when removeCanvas is false", () => {
+			const app = new Application(320, 240, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				consoleHeader: false,
+			});
+
+			const canvas = app.canvas;
+			app.destroy(false);
+
+			expect(canvas.parentElement).not.toBeNull();
+			// clean up manually
+			canvas.parentElement.removeChild(canvas);
+		});
+	});
 });

@@ -15,6 +15,7 @@ import {
 	GAME_INIT,
 	GAME_RESET,
 	GAME_UPDATE,
+	off,
 	on,
 	STAGE_RESET,
 	STATE_CHANGE,
@@ -432,6 +433,62 @@ export default class Application {
 	 */
 	getParentElement(): HTMLElement {
 		return this.parentElement;
+	}
+
+	/**
+	 * The HTML canvas element associated with this application's renderer.
+	 * @example
+	 * // access the canvas DOM element
+	 * const canvas = app.canvas;
+	 */
+	get canvas(): HTMLCanvasElement {
+		return this.renderer.getCanvas();
+	}
+
+	/**
+	 * Trigger a manual resize of the application canvas to fit the parent element.
+	 * This is automatically called on window resize/orientation change, but can
+	 * be called manually if the parent element size changes programmatically.
+	 * @example
+	 * // force a resize after changing the parent element dimensions
+	 * app.resize();
+	 */
+	resize(): void {
+		onresize(this);
+	}
+
+	/**
+	 * Destroy this application instance and release all associated resources.
+	 * Removes the canvas from the DOM, destroys the world, and unregisters
+	 * all event listeners.
+	 * @param removeCanvas - if true, the canvas element is removed from the DOM (default: true)
+	 * @example
+	 * // clean up when done
+	 * app.destroy();
+	 */
+	destroy(removeCanvas: boolean = true): void {
+		// remove event listeners
+		/* eslint-disable @typescript-eslint/unbound-method */
+		off(STATE_CHANGE, this.repaint, this);
+		off(STATE_RESTART, this.repaint, this);
+		off(STATE_RESUME, this.repaint, this);
+		off(STAGE_RESET, this.reset, this);
+		/* eslint-enable @typescript-eslint/unbound-method */
+
+		// destroy the world and all its children
+		if (this.world) {
+			this.world.destroy();
+		}
+
+		// remove the canvas from the DOM
+		if (removeCanvas && this.renderer) {
+			const canvas = this.renderer.getCanvas();
+			if (canvas.parentElement) {
+				canvas.parentElement.removeChild(canvas);
+			}
+		}
+
+		this.isInitialized = false;
 	}
 
 	/**

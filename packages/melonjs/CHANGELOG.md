@@ -8,7 +8,6 @@
 - Tiled: `detectObjectType()` now checks `settings.class` and `settings.name` against the factory registry before falling through to structural detection, enabling class-based dispatch for custom types
 
 ### Changed
-- Application: `new Application(width, height, options)` now auto-calls `boot()` if the engine hasn't been initialized, making it a valid standalone entry point
 - Application: `boot()` moved to `system/bootstrap.ts` — decoupled from `index.js`
 - Application: `game` singleton decoupled from barrel `index.js` — internal modules no longer import from the barrel
 - EventEmitter: native context parameter support — `addListener(event, fn, context)` and `addListenerOnce(event, fn, context)` now accept an optional context, eliminating `.bind()` closure overhead and enabling proper `removeListener()` by original function reference
