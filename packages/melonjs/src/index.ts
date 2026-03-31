@@ -169,6 +169,8 @@ export {
 // eslint-disable-next-line prefer-const
 export let skipAutoInit = false;
 
+export { initialized } from "./system/bootstrap.ts";
+
 // create and register the default game application instance
 setDefaultGame(new Application(0, 0, { legacy: true }));
 

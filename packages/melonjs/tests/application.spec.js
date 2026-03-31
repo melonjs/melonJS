@@ -106,11 +106,11 @@ describe("Application", () => {
 	});
 
 	describe("auto-bootstrap", () => {
-		it("Application.init() should call boot() automatically if not initialized", () => {
+		it("initialized flag should be true after boot()", () => {
 			expect(initialized).toBe(true);
 		});
 
-		it("new Application() should work as a standalone entry point", () => {
+		it("new Application() should initialize when boot() already called", () => {
 			const app = new Application(160, 120, {
 				parent: "screen",
 				renderer: video.CANVAS,
@@ -133,7 +133,7 @@ describe("Application", () => {
 			expect(game).toBeInstanceOf(Application);
 		});
 
-		it("game should not be initialized until boot + video.init", () => {
+		it("game should be initialized after boot + video.init", () => {
 			// game was created with { legacy: true }, so init is deferred
 			// after boot() + video.init(), it should be initialized
 			expect(game.isInitialized).toBe(true);
