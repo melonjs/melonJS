@@ -33,6 +33,15 @@ export { AUTO, CANVAS, WEBGL } from "../const";
 export let renderer = null;
 
 /**
+ * Set the global renderer reference.
+ * Called by Application.init() to ensure renderables can access the renderer.
+ * @ignore
+ */
+export function setRenderer(r) {
+	renderer = r;
+}
+
+/**
  * Initialize the "video" system (create a canvas based on the given arguments, and the related renderer). <br>
  * @memberof video
  * @param {number} width - The width of the canvas viewport

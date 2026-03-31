@@ -22,6 +22,7 @@ import {
 	STATE_RESTART,
 	STATE_RESUME,
 	TICK,
+	VIDEO_INIT,
 	WINDOW_ONORIENTATION_CHANGE,
 	WINDOW_ONRESIZE,
 } from "../system/event.ts";
@@ -30,6 +31,7 @@ import { getUriFragment } from "../utils/utils.ts";
 import CanvasRenderer from "../video/canvas/canvas_renderer.js";
 import type Renderer from "./../video/renderer.js";
 import { autoDetectRenderer } from "../video/utils/autodetect.js";
+import { setRenderer } from "../video/video.js";
 import { defaultApplicationSettings } from "./defaultApplicationSettings.ts";
 import { consoleHeader } from "./header.ts";
 import { onresize } from "./resize.ts";
@@ -275,6 +277,9 @@ export default class Application {
 			this.renderer = new CustomRenderer(this.settings);
 		}
 
+		// set the global renderer reference for renderables that depend on it
+		setRenderer(this.renderer);
+
 		// register to the channel
 		on(WINDOW_ONRESIZE, () => {
 			onresize(this);
@@ -364,6 +369,7 @@ export default class Application {
 		this.isInitialized = true;
 
 		emit(GAME_INIT);
+		emit(VIDEO_INIT, this.renderer);
 	}
 
 	/**
