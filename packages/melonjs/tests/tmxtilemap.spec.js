@@ -12,6 +12,12 @@ import {
 	TMXTileMap,
 	video,
 } from "../src/index.js";
+import {
+	applyObjectOpacity,
+	parseTintColor,
+	propagateBlendMode,
+	tiledBlendMode,
+} from "../src/level/tiled/TMXUtils.js";
 import { imgList } from "../src/loader/cache.js";
 
 // create a small canvas to use as a fake tile image
@@ -1544,6 +1550,175 @@ describe("TMXTileMap", () => {
 			}).toThrow(
 				"a different class is already registered for Tiled type: TestEntity",
 			);
+		});
+	});
+
+	// ---------------------------------------------------------------
+	// pool.autoRegisterTiled flag
+	// ---------------------------------------------------------------
+	describe("pool.autoRegisterTiled", () => {
+		it("should not register Tiled factory when autoRegisterTiled is false", () => {
+			class NonTiledClass extends Renderable {
+				constructor(x, y, settings) {
+					super(x, y, settings.width, settings.height);
+				}
+			}
+
+			pool.autoRegisterTiled = false;
+			pool.register("NonTiledClass", NonTiledClass);
+			pool.autoRegisterTiled = true;
+
+			const map = new TMXTileMap("test", {
+				width: 2,
+				height: 2,
+				tilewidth: 32,
+				tileheight: 32,
+				orientation: "orthogonal",
+				renderorder: "right-down",
+				infinite: false,
+				version: "1.10",
+				tiledversion: "1.12.0",
+				tilesets: [],
+				layers: [
+					{
+						type: "objectgroup",
+						name: "Objects",
+						opacity: 1,
+						visible: true,
+						objects: [
+							{
+								id: 400,
+								name: "NonTiledClass",
+								type: "",
+								x: 0,
+								y: 0,
+								width: 32,
+								height: 32,
+							},
+						],
+					},
+				],
+			});
+			const objects = map.getObjects(true);
+
+			expect(objects[0]).not.toBeInstanceOf(NonTiledClass);
+		});
+	});
+
+	// ---------------------------------------------------------------
+	// TMXUtils: tiledBlendMode
+	// ---------------------------------------------------------------
+	describe("tiledBlendMode", () => {
+		it("should return 'normal' for undefined", () => {
+			expect(tiledBlendMode(undefined)).toEqual("normal");
+		});
+
+		it("should return 'normal' for 'normal'", () => {
+			expect(tiledBlendMode("normal")).toEqual("normal");
+		});
+
+		it("should convert 'add' to 'lighter'", () => {
+			expect(tiledBlendMode("add")).toEqual("lighter");
+		});
+
+		it("should pass through other blend modes", () => {
+			expect(tiledBlendMode("multiply")).toEqual("multiply");
+			expect(tiledBlendMode("screen")).toEqual("screen");
+		});
+	});
+
+	// ---------------------------------------------------------------
+	// TMXUtils: parseTintColor
+	// ---------------------------------------------------------------
+	describe("parseTintColor", () => {
+		it("should return a Color object for valid hex", () => {
+			const color = parseTintColor("#ff0000");
+			expect(color).toBeDefined();
+			expect(color.r).toEqual(255);
+			expect(color.g).toEqual(0);
+			expect(color.b).toEqual(0);
+		});
+
+		it("should return undefined when tintcolor is undefined", () => {
+			expect(parseTintColor(undefined)).toBeUndefined();
+		});
+	});
+
+	// ---------------------------------------------------------------
+	// TMXUtils: applyObjectOpacity
+	// ---------------------------------------------------------------
+	describe("applyObjectOpacity", () => {
+		it("should multiply opacity on object", () => {
+			const obj = new Renderable(0, 0, 32, 32);
+			obj.setOpacity(1);
+			applyObjectOpacity(obj, 0.5);
+			expect(obj.getOpacity()).toBeCloseTo(0.5);
+		});
+
+		it("should multiply opacity on child renderable", () => {
+			const obj = new Renderable(0, 0, 32, 32);
+			obj.renderable = new Renderable(0, 0, 32, 32);
+			obj.renderable.isRenderable = true;
+			applyObjectOpacity(obj, 0.4);
+			expect(obj.getOpacity()).toBeCloseTo(0.4);
+			expect(obj.renderable.getOpacity()).toBeCloseTo(0.4);
+		});
+
+		it("should skip child renderable when isRenderable is false", () => {
+			const obj = new Renderable(0, 0, 32, 32);
+			obj.renderable = {
+				isRenderable: false,
+				getOpacity: () => {
+					return 1;
+				},
+			};
+			applyObjectOpacity(obj, 0.5);
+			expect(obj.getOpacity()).toBeCloseTo(0.5);
+		});
+	});
+
+	// ---------------------------------------------------------------
+	// TMXUtils: propagateBlendMode
+	// ---------------------------------------------------------------
+	describe("propagateBlendMode", () => {
+		it("should set blend mode on object with 'normal' default", () => {
+			const obj = new Renderable(0, 0, 32, 32);
+			propagateBlendMode(obj, "multiply");
+			expect(obj.blendMode).toEqual("multiply");
+		});
+
+		it("should not override existing non-normal blend mode", () => {
+			const obj = new Renderable(0, 0, 32, 32);
+			obj.blendMode = "screen";
+			propagateBlendMode(obj, "multiply");
+			expect(obj.blendMode).toEqual("screen");
+		});
+
+		it("should not propagate 'normal' blend mode", () => {
+			const obj = new Renderable(0, 0, 32, 32);
+			propagateBlendMode(obj, "normal");
+			expect(obj.blendMode).toEqual("normal");
+		});
+
+		it("should not override child renderable with non-normal blend mode", () => {
+			const obj = new Renderable(0, 0, 32, 32);
+			obj.renderable = new Renderable(0, 0, 32, 32);
+			obj.renderable.isRenderable = true;
+			obj.renderable.blendMode = "screen";
+			propagateBlendMode(obj, "multiply");
+			expect(obj.blendMode).toEqual("multiply");
+			expect(obj.renderable.blendMode).toEqual("screen");
+		});
+	});
+
+	// ---------------------------------------------------------------
+	// registerTiledObjectFactory validation
+	// ---------------------------------------------------------------
+	describe("registerTiledObjectFactory validation", () => {
+		it("should throw when registering a non-function", () => {
+			expect(() => {
+				registerTiledObjectFactory("invalid", "not a function");
+			}).toThrow("invalid factory function for invalid");
 		});
 	});
 });
