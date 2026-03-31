@@ -387,7 +387,7 @@ interface Events {
 	[ONCONTEXT_RESTORED]: (renderer: Renderer) => void;
 }
 
-export const eventEmitter = new EventEmitter<Events>();
+const eventEmitter = new EventEmitter<Events>();
 
 /**
  * Add a listener for a given event.
