@@ -8,7 +8,7 @@ let onRegisterCallback = null;
 
 /**
  * Set a callback to be invoked whenever pool.register() is called.
- * @param {Function} callback - function(className, classObj) called on each registration
+ * @param {Function} callback - function(className, classObj, poolInstance) called on each registration
  * @ignore
  */
 export function setPoolRegisterCallback(callback) {
@@ -54,7 +54,7 @@ class ObjectPool {
 	/**
 	 * Register an object to the pool. <br>
 	 * Pooling must be set to true if more than one such objects will be created. <br>
-	 * (Note: for an object to be poolable, it must implements a `onResetEvent` method) <br><br>
+	 * (Note: for an object to be poolable, it must implement an `onResetEvent` method) <br><br>
 	 * Registered classes are also automatically available as Tiled object factories,
 	 * meaning objects placed in a Tiled map with a matching class or name will be
 	 * instantiated using the registered constructor. For more control, use

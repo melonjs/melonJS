@@ -193,10 +193,16 @@ export function registerBuiltinTiledClass(name, Constructor) {
  * @ignore
  */
 function initFactories() {
-	// structural factories (detected by object properties)
-	registerTiledObjectFactory("text", createTextObject);
-	registerTiledObjectFactory("tile", createTileObject);
-	registerTiledObjectFactory("shape", createShapeObject);
+	// only register built-in structural factories if not already overridden
+	if (!factories.has("text")) {
+		registerTiledObjectFactory("text", createTextObject);
+	}
+	if (!factories.has("tile")) {
+		registerTiledObjectFactory("tile", createTileObject);
+	}
+	if (!factories.has("shape")) {
+		registerTiledObjectFactory("shape", createShapeObject);
+	}
 
 	// apply pending class-based factories
 	for (const entry of pendingClasses) {
