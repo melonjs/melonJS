@@ -2,7 +2,7 @@ import { game } from "../index.js";
 import { colorPool } from "../math/color.ts";
 import Body from "../physics/body.js";
 import state from "../state/state.ts";
-import { CANVAS_ONRESIZE, eventEmitter } from "../system/event.ts";
+import { CANVAS_ONRESIZE, on } from "../system/event.ts";
 import pool from "../system/legacy_pool.js";
 import { defer } from "../utils/function";
 import { createGUID } from "../utils/utils";
@@ -161,7 +161,7 @@ export default class Container extends Renderable {
 		// subscribe on the canvas resize event
 		if (this.root === true) {
 			// Workaround for not updating container child-bounds automatically (it's expensive!)
-			eventEmitter.addListener(CANVAS_ONRESIZE, () => {
+			on(CANVAS_ONRESIZE, () => {
 				// temporarly enable the enableChildBoundsUpdate flag
 				// this.enableChildBoundsUpdate === true;
 				// update bounds

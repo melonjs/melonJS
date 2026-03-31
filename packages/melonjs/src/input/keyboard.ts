@@ -1,4 +1,4 @@
-import { eventEmitter, KEYDOWN, KEYUP } from "../system/event.ts";
+import { emit, KEYDOWN, KEYUP } from "../system/event.ts";
 import { isMobile } from "../system/platform.ts";
 import { preventDefault as preventDefaultAction } from "./input.ts";
 
@@ -31,12 +31,7 @@ const keyDownEvent: KeyEventHandler = (options) => {
 	const { keyCode } = options;
 	const action = _keyBindings[keyCode];
 
-	eventEmitter.emit(
-		KEYDOWN,
-		action,
-		keyCode,
-		action ? !_keyLocked[action] : true,
-	);
+	emit(KEYDOWN, action, keyCode, action ? !_keyLocked[action] : true);
 
 	if (action) {
 		if (!_keyLocked[action]) {
@@ -58,7 +53,7 @@ const keyUpEvent: KeyEventHandler = (options) => {
 	const { keyCode } = options;
 	const action = _keyBindings[keyCode];
 
-	eventEmitter.emit(KEYUP, action, keyCode);
+	emit(KEYUP, action, keyCode);
 
 	if (action) {
 		const trigger =

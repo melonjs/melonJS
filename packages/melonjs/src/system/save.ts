@@ -31,7 +31,7 @@ import { Jsonifiable } from "type-fest";
  */
 
 import { isStringArray } from "../utils/utils.js";
-import { BOOT, eventEmitter } from "./event.js";
+import { BOOT, once } from "./event.js";
 
 // Variable to hold the object data
 const data: Record<string, unknown> = {};
@@ -57,7 +57,7 @@ function isReserved(key: string) {
 }
 
 // Initialize me.save on Boot event
-eventEmitter.addListenerOnce(BOOT, () => {
+once(BOOT, () => {
 	// Load previous data if local Storage is supported
 	if (hasLocalStorage) {
 		const me_save_content = localStorage.getItem("me.save");

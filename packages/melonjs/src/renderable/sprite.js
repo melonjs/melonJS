@@ -1,7 +1,7 @@
 import { getImage } from "./../loader/loader.js";
 import { Color } from "../math/color.ts";
 import { vector2dPool } from "../math/vector2d.ts";
-import { eventEmitter } from "../system/event.ts";
+import { on } from "../system/event.ts";
 import { TextureAtlas } from "./../video/texture/atlas.js";
 import { renderer } from "./../video/video.js";
 import Renderable from "./renderable.js";
@@ -199,12 +199,9 @@ export default class Sprite extends Renderable {
 				 * pause the video when losing focus
 				 * @ignore
 				 */
-				this.removeStatePauseListener = eventEmitter.addListener(
-					"statePause",
-					() => {
-						this.image.pause();
-					},
-				);
+				this.removeStatePauseListener = on("statePause", () => {
+					this.image.pause();
+				});
 
 				// call the onended when the video has ended
 				this.image.onended = () => {

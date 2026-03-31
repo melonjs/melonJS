@@ -7,9 +7,15 @@
 - Tiled: new public `registerTiledObjectFactory(type, factory)` and `registerTiledObjectClass(name, Constructor)` APIs allowing plugins to register custom Tiled object handlers by class name without modifying engine code
 - Tiled: `detectObjectType()` now checks `settings.class` and `settings.name` against the factory registry before falling through to structural detection, enabling class-based dispatch for custom types
 
+### Changed
+- EventEmitter: native context parameter support — `addListener(event, fn, context)` and `addListenerOnce(event, fn, context)` now accept an optional context, eliminating `.bind()` closure overhead and enabling proper `removeListener()` by original function reference
+- EventEmitter: `event.on()` and `event.once()` no longer create `.bind()` closures when a context is provided
+
 ### Fixed
 - WebGLRenderer: `setBlendMode()` now tracks the `premultipliedAlpha` flag — previously only the mode name was checked, causing incorrect GL blend function when mixing PMA and non-PMA textures with the same blend mode
 - TMX: fix crash in `getObjects(false)` when a map contains an empty object group (Container.children lazily initialized)
+- EventEmitter: `removeAllListeners()` now correctly clears once-listeners (previously only cleared regular listeners)
+- Loader: fix undefined `crossOrigin` variable in script parser, unsafe regex match in video parser, missing error parameter in video/fontface error callbacks, `fetchData` Promise constructor antipattern and silent error swallowing
 
 ### Chore
 - Minimum Node.js version is now 24.0.0 (Node 18/20 EOL, Node 22 in maintenance)

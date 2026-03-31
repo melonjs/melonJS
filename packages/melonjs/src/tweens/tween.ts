@@ -1,5 +1,5 @@
 import { game } from "../index.js";
-import { eventEmitter, STATE_RESUME } from "../system/event.js";
+import { off, on, STATE_RESUME } from "../system/event.js";
 import { createPool } from "../system/pool.ts";
 import timer from "../system/timer.js";
 import { Easing, EasingFunction } from "./easing.js";
@@ -54,8 +54,6 @@ export default class Tween {
 	updateWhenPaused: boolean;
 	isRenderable: boolean;
 
-	#boundResumeCallback: (elapsed: number) => void;
-
 	/**
 	 * @param object - object on which to apply the tween
 	 * @example
@@ -71,8 +69,6 @@ export default class Tween {
 	 */
 	constructor(object: object) {
 		this.setProperties(object);
-
-		this.#boundResumeCallback = this._resumeCallback.bind(this);
 	}
 
 	/**
@@ -135,7 +131,8 @@ export default class Tween {
 	 * @ignore
 	 */
 	onActivateEvent() {
-		eventEmitter.addListener(STATE_RESUME, this.#boundResumeCallback);
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		on(STATE_RESUME, this._resumeCallback, this);
 	}
 
 	/**
@@ -143,7 +140,8 @@ export default class Tween {
 	 * @ignore
 	 */
 	onDeactivateEvent() {
-		eventEmitter.removeListener(STATE_RESUME, this.#boundResumeCallback);
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		off(STATE_RESUME, this._resumeCallback, this);
 	}
 
 	/**

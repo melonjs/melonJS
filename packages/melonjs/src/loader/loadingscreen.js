@@ -3,9 +3,11 @@ import Renderable from "./../renderable/renderable.js";
 import Sprite from "./../renderable/sprite.js";
 import Stage from "./../state/stage.js";
 import {
-	eventEmitter,
 	LOADER_COMPLETE,
 	LOADER_PROGRESS,
+	off,
+	on,
+	once,
 	VIEWPORT_ONRESIZE,
 } from "../system/event.ts";
 import { renderer } from "./../video/video.js";
@@ -14,9 +16,6 @@ import logo_url from "./melonjs_logo.png";
 
 // a basic progress bar object
 class ProgressBar extends Renderable {
-	#boundOnProgressUpdate;
-	#boundResize;
-
 	/**
 	 * @ignore
 	 */
@@ -26,11 +25,8 @@ class ProgressBar extends Renderable {
 		this.barHeight = h;
 		this.anchorPoint.set(0, 0);
 
-		this.#boundOnProgressUpdate = this.onProgressUpdate.bind(this);
-		this.#boundResize = this.resize.bind(this);
-
-		eventEmitter.addListener(LOADER_PROGRESS, this.#boundOnProgressUpdate);
-		eventEmitter.addListener(VIEWPORT_ONRESIZE, this.#boundResize);
+		on(LOADER_PROGRESS, this.onProgressUpdate, this);
+		on(VIEWPORT_ONRESIZE, this.resize, this);
 
 		this.anchorPoint.set(0, 0);
 
@@ -75,8 +71,8 @@ class ProgressBar extends Renderable {
 	 * @ignore
 	 */
 	onDestroyEvent() {
-		eventEmitter.removeListener(LOADER_PROGRESS, this.#boundOnProgressUpdate);
-		eventEmitter.removeListener(VIEWPORT_ONRESIZE, this.#boundResize);
+		off(LOADER_PROGRESS, this.onProgressUpdate, this);
+		off(VIEWPORT_ONRESIZE, this.resize, this);
 	}
 }
 
@@ -96,9 +92,10 @@ class DefaultLoadingScreen extends Stage {
 	logoSprite = null;
 
 	/**
+	 * whether the cleanup has already run
 	 * @ignore
 	 */
-	#boundCleanup = null;
+	#cleanedUp = false;
 
 	/**
 	 * call when the loader is resetted
@@ -106,6 +103,8 @@ class DefaultLoadingScreen extends Stage {
 	 */
 	onResetEvent() {
 		const barHeight = 8;
+
+		this.#cleanedUp = false;
 
 		// set a background color
 		game.world.backgroundColor.parseCSS("#202020");
@@ -121,13 +120,12 @@ class DefaultLoadingScreen extends Stage {
 
 		// clean up loading screen children when the preloader completes,
 		// whether or not a state.change() follows
-		this.#boundCleanup = this.#cleanup.bind(this);
-		eventEmitter.addListenerOnce(LOADER_COMPLETE, this.#boundCleanup);
+		once(LOADER_COMPLETE, this.#cleanup, this);
 
 		// load the melonJS logo
 		load({ name: "melonjs_logo", type: "image", src: logo_url }, () => {
 			// guard against the logo loading after preload completed
-			if (this.#boundCleanup === null) {
+			if (this.#cleanedUp) {
 				return;
 			}
 			// melonJS logo
@@ -145,7 +143,7 @@ class DefaultLoadingScreen extends Stage {
 	 * @ignore
 	 */
 	#cleanup() {
-		this.#boundCleanup = null;
+		this.#cleanedUp = true;
 
 		if (this.progressBar) {
 			game.world.removeChild(this.progressBar);
@@ -167,8 +165,8 @@ class DefaultLoadingScreen extends Stage {
 	onDestroyEvent() {
 		// remove the listener in case state.change() is called
 		// before the preloader fires LOADER_COMPLETE
-		if (this.#boundCleanup) {
-			eventEmitter.removeListener(LOADER_COMPLETE, this.#boundCleanup);
+		if (!this.#cleanedUp) {
+			off(LOADER_COMPLETE, this.#cleanup, this);
 		}
 		this.#cleanup();
 	}

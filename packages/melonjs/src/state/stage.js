@@ -1,6 +1,6 @@
 import Camera2d from "./../camera/camera2d.ts";
 import { Color } from "./../math/color.ts";
-import { eventEmitter, STAGE_RESET } from "../system/event.ts";
+import { emit, STAGE_RESET } from "../system/event.ts";
 import { renderer } from "./../video/video.js";
 
 // a default camera instance to use across all stages
@@ -103,7 +103,7 @@ export default class Stage {
 		}
 
 		// reset the game
-		eventEmitter.emit(STAGE_RESET, this);
+		emit(STAGE_RESET, this);
 
 		// call the onReset Function
 		this.onResetEvent.apply(this, arguments);

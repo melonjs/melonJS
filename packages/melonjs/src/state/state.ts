@@ -4,7 +4,8 @@ import DefaultLoadingScreen from "./../loader/loadingscreen.js";
 import Stage from "./../state/stage.js";
 import {
 	BOOT,
-	eventEmitter,
+	emit,
+	once,
 	STATE_CHANGE,
 	STATE_PAUSE,
 	STATE_RESTART,
@@ -89,7 +90,7 @@ function _pauseRunLoop(): void {
  * @ignore
  */
 function _renderFrame(time: number): void {
-	eventEmitter.emit(TICK, time);
+	emit(TICK, time);
 	// schedule the next frame update
 	if (_animFrameId !== -1) {
 		_animFrameId = globalThis.requestAnimationFrame(_renderFrame);
@@ -136,7 +137,7 @@ function _switchState(stateId: number): void {
 		_startRunLoop();
 
 		// publish the pause event
-		eventEmitter.emit(STATE_CHANGE);
+		emit(STATE_CHANGE);
 
 		// execute callback if defined
 		if (_onSwitchComplete) {
@@ -146,13 +147,13 @@ function _switchState(stateId: number): void {
 }
 
 // initialize me.state on system boot
-eventEmitter.addListenerOnce(BOOT, () => {
+once(BOOT, () => {
 	// set the built-in loading stage
 	state.set(state.LOADING, new DefaultLoadingScreen());
 	// set and enable the default stage
 	state.set(state.DEFAULT, new Stage());
 	// enable by default as soon as the display is initialized
-	eventEmitter.addListenerOnce(VIDEO_INIT, () => {
+	once(VIDEO_INIT, () => {
 		state.change(state.DEFAULT, true);
 	});
 });
@@ -241,7 +242,7 @@ const state = {
 			_pauseTime = globalThis.performance.now();
 
 			// publish the stop notification
-			eventEmitter.emit(STATE_STOP);
+			emit(STATE_STOP);
 		}
 	},
 
@@ -263,7 +264,7 @@ const state = {
 			_pauseTime = globalThis.performance.now();
 
 			// publish the pause event
-			eventEmitter.emit(STATE_PAUSE);
+			emit(STATE_PAUSE);
 		}
 	},
 
@@ -284,7 +285,7 @@ const state = {
 			_pauseTime = globalThis.performance.now() - _pauseTime;
 
 			// publish the restart notification
-			eventEmitter.emit(STATE_RESTART, _pauseTime);
+			emit(STATE_RESTART, _pauseTime);
 		}
 	},
 
@@ -305,7 +306,7 @@ const state = {
 			_pauseTime = globalThis.performance.now() - _pauseTime;
 
 			// publish the resume event
-			eventEmitter.emit(STATE_RESUME, _pauseTime);
+			emit(STATE_RESUME, _pauseTime);
 		}
 	},
 

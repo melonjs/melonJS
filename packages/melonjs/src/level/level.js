@@ -1,7 +1,7 @@
 import { game } from "../index.js";
 import { getTMX } from "./../loader/loader.js";
 import state from "./../state/state.ts";
-import { eventEmitter, LEVEL_LOADED } from "../system/event.ts";
+import { emit, LEVEL_LOADED } from "../system/event.ts";
 import { resetGUID } from "./../utils/utils.ts";
 import TMXTileMap from "./tiled/TMXTileMap.js";
 
@@ -39,7 +39,7 @@ function safeLoadLevel(levelId, options, restart) {
 	);
 
 	// publish the corresponding message
-	eventEmitter.emit(LEVEL_LOADED, levelId);
+	emit(LEVEL_LOADED, levelId);
 
 	// fire the callback
 	options.onLoaded(levelId);

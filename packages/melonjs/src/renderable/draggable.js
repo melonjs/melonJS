@@ -4,7 +4,9 @@ import Renderable from "./../renderable/renderable.js";
 import {
 	DRAGEND,
 	DRAGSTART,
-	eventEmitter,
+	emit,
+	off,
+	on,
 	POINTERMOVE,
 } from "../system/event.ts";
 
@@ -39,13 +41,13 @@ export class Draggable extends Renderable {
 	 */
 	initEvents() {
 		input.registerPointerEvent("pointerdown", this, (e) => {
-			eventEmitter.emit(DRAGSTART, e, this);
+			emit(DRAGSTART, e, this);
 		});
 		input.registerPointerEvent("pointerup", this, (e) => {
-			eventEmitter.emit(DRAGEND, e, this);
+			emit(DRAGEND, e, this);
 		});
 		input.registerPointerEvent("pointercancel", this, (e) => {
-			eventEmitter.emit(DRAGEND, e, this);
+			emit(DRAGEND, e, this);
 		});
 
 		this.handlePointerMove = (e) => {
@@ -64,9 +66,9 @@ export class Draggable extends Renderable {
 			}
 		};
 
-		eventEmitter.addListener(POINTERMOVE, this.handlePointerMove);
-		eventEmitter.addListener(DRAGSTART, this.handleDragStart);
-		eventEmitter.addListener(DRAGEND, this.handleDragEnd);
+		on(POINTERMOVE, this.handlePointerMove);
+		on(DRAGSTART, this.handleDragStart);
+		on(DRAGEND, this.handleDragEnd);
 	}
 
 	/**
@@ -110,9 +112,9 @@ export class Draggable extends Renderable {
 	 * @ignore
 	 */
 	destroy() {
-		eventEmitter.removeListener(POINTERMOVE, this.handlePointerMove);
-		eventEmitter.removeListener(DRAGSTART, this.handleDragStart);
-		eventEmitter.removeListener(DRAGEND, this.handleDragEnd);
+		off(POINTERMOVE, this.handlePointerMove);
+		off(DRAGSTART, this.handleDragStart);
+		off(DRAGEND, this.handleDragEnd);
 		input.releasePointerEvent("pointerdown", this);
 		input.releasePointerEvent("pointerup", this);
 		input.releasePointerEvent("pointercancel", this);

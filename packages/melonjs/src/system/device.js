@@ -1,7 +1,7 @@
 import { prefixed } from "./../utils/agent.ts";
 import { getParent } from "./../video/video.js";
 import { DOMContentLoaded } from "./dom.ts";
-import { BLUR, eventEmitter, FOCUS } from "./event.ts";
+import { BLUR, emit, FOCUS } from "./event.ts";
 import * as device_platform from "./platform.ts";
 import save from "./save.ts";
 
@@ -406,14 +406,14 @@ export function initVisibilityEvents() {
 		globalThis.addEventListener(
 			"blur",
 			() => {
-				eventEmitter.emit(BLUR);
+				emit(BLUR);
 			},
 			false,
 		);
 		globalThis.addEventListener(
 			"focus",
 			() => {
-				eventEmitter.emit(FOCUS);
+				emit(FOCUS);
 				if (autoFocus === true) {
 					focus();
 				}
@@ -426,12 +426,12 @@ export function initVisibilityEvents() {
 			"visibilitychange",
 			() => {
 				if (globalThis.document.visibilityState === "visible") {
-					eventEmitter.emit(FOCUS);
+					emit(FOCUS);
 					if (autoFocus === true) {
 						focus();
 					}
 				} else {
-					eventEmitter.emit(BLUR);
+					emit(BLUR);
 				}
 			},
 			false,

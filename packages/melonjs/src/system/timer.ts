@@ -3,8 +3,9 @@ import state from "../state/state.ts";
 import { defer } from "./../utils/function.js";
 import {
 	BOOT,
-	eventEmitter,
 	GAME_BEFORE_UPDATE,
+	on,
+	once,
 	STATE_CHANGE,
 	STATE_RESTART,
 	STATE_RESUME,
@@ -83,24 +84,24 @@ class Timer {
 		this.timerId = 0;
 
 		// Initialize timer on Boot event
-		eventEmitter.addListenerOnce(BOOT, () => {
+		once(BOOT, () => {
 			// reset variables to initial state
 			this.reset();
 			this.now = this.last = 0;
 			// register to the game before update event
-			eventEmitter.addListener(GAME_BEFORE_UPDATE, (time) => {
+			on(GAME_BEFORE_UPDATE, (time) => {
 				this.update(time);
 			});
 		});
 
 		// reset timer
-		eventEmitter.addListener(STATE_RESUME, () => {
+		on(STATE_RESUME, () => {
 			this.reset();
 		});
-		eventEmitter.addListener(STATE_RESTART, () => {
+		on(STATE_RESTART, () => {
 			this.reset();
 		});
-		eventEmitter.addListener(STATE_CHANGE, () => {
+		on(STATE_CHANGE, () => {
 			this.reset();
 		});
 	}

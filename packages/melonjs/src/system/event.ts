@@ -387,7 +387,7 @@ interface Events {
 	[ONCONTEXT_RESTORED]: (renderer: Renderer) => void;
 }
 
-export const eventEmitter = new EventEmitter<Events>();
+const eventEmitter = new EventEmitter<Events>();
 
 /**
  * Add a listener for a given event.
@@ -402,10 +402,7 @@ export function on<E extends keyof Events>(
 	listener: Events[E],
 	context?: any,
 ) {
-	eventEmitter.addListener(
-		eventName,
-		context ? (listener.bind(context) as Events[E]) : listener,
-	);
+	return eventEmitter.addListener(eventName, listener, context);
 }
 
 /**
@@ -421,19 +418,54 @@ export function once<E extends keyof Events>(
 	listener: Events[E],
 	context?: any,
 ) {
-	eventEmitter.addListenerOnce(
-		eventName,
-		context ? (listener.bind(context) as Events[E]) : listener,
-	);
+	eventEmitter.addListenerOnce(eventName, listener, context);
 }
 
 /**
  * remove the given listener for a given event.
  * @param eventName - The event name.
  * @param listener - The listener function.
+ * @param [context] - The context that was used when registering the listener.
  * @example
  * me.event.off("event-name", myFunction);
  */
-export function off<E extends keyof Events>(eventName: E, listener: Events[E]) {
-	eventEmitter.removeListener(eventName, listener);
+export function off<E extends keyof Events>(
+	eventName: E,
+	listener: Events[E],
+	context?: any,
+) {
+	eventEmitter.removeListener(eventName, listener, context);
+}
+
+/**
+ * emit (trigger) the specified event.
+ * @param eventName - The event name.
+ * @param args - arguments to be passed to the listener functions.
+ * @example
+ * me.event.emit("event-name", arg1, arg2);
+ */
+export function emit<E extends keyof Events>(
+	eventName: E,
+	...args: Parameters<Events[E]>
+) {
+	eventEmitter.emit(eventName, ...args);
+}
+
+/**
+ * Check if a listener is registered for a given event.
+ * @param eventName - The event name.
+ * @param listener - The listener function.
+ * @param [context] - The context that was used when registering the listener.
+ * @returns true if the listener is registered.
+ * @example
+ * if (me.event.has("event-name", myFunction)) {
+ *     // listener is registered
+ * }
+ */
+export function has<E extends keyof Events>(
+	eventName: E,
+	listener: Events[E],
+	context?: any,
+) {
+	return eventEmitter.hasListener(eventName, listener, context);
 }

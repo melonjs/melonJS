@@ -1,9 +1,11 @@
 import {
-	eventEmitter,
+	emit,
 	GAME_BEFORE_UPDATE,
 	GAMEPAD_CONNECTED,
 	GAMEPAD_DISCONNECTED,
 	GAMEPAD_UPDATE,
+	has,
+	on,
 } from "../system/event.ts";
 import { getBindingKey, triggerKeyEvent } from "./keyboard.ts";
 
@@ -242,7 +244,7 @@ const updateGamepads = function (): void {
 				}
 			}
 
-			eventEmitter.emit(GAMEPAD_UPDATE, index, "buttons", +button, current);
+			emit(GAMEPAD_UPDATE, index, "buttons", +button, current);
 
 			// Edge detection
 			if (!last.pressed && current.pressed) {
@@ -286,7 +288,7 @@ const updateGamepads = function (): void {
 			const pressed =
 				Math.abs(value) >= deadzone + Math.abs(last[range].threshold || 0);
 
-			eventEmitter.emit(GAMEPAD_UPDATE, index, "axes", +axis, value as any);
+			emit(GAMEPAD_UPDATE, index, "axes", +axis, value as any);
 
 			// Edge detection
 			if (!last[range].pressed && pressed) {
@@ -322,7 +324,7 @@ if (
 	globalThis.addEventListener(
 		"gamepadconnected",
 		(e: GamepadEvent) => {
-			eventEmitter.emit(GAMEPAD_CONNECTED, e.gamepad);
+			emit(GAMEPAD_CONNECTED, e.gamepad);
 		},
 		false,
 	);
@@ -333,7 +335,7 @@ if (
 	globalThis.addEventListener(
 		"gamepaddisconnected",
 		(e: GamepadEvent) => {
-			eventEmitter.emit(GAMEPAD_DISCONNECTED, e.gamepad);
+			emit(GAMEPAD_DISCONNECTED, e.gamepad);
 		},
 		false,
 	);
@@ -437,10 +439,10 @@ export function bindGamepad(
 	// register to the the update event if not yet done and supported by the browser
 	// if not supported, the function will fail silently (-> update loop won't be called)
 	if (
-		!eventEmitter.hasListener(GAME_BEFORE_UPDATE, updateGamepads) &&
+		!has(GAME_BEFORE_UPDATE, updateGamepads) &&
 		typeof navigator.getGamepads === "function"
 	) {
-		eventEmitter.addListener(GAME_BEFORE_UPDATE, updateGamepads);
+		on(GAME_BEFORE_UPDATE, updateGamepads);
 	}
 
 	// Allocate bindings if not defined

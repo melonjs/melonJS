@@ -1,9 +1,10 @@
 import { game } from "../index.js";
 import { vector2dPool } from "../math/vector2d.ts";
 import {
-	eventEmitter,
 	LEVEL_LOADED,
 	ONCONTEXT_RESTORED,
+	off,
+	on,
 	VIEWPORT_ONCHANGE,
 	VIEWPORT_ONRESIZE,
 } from "../system/event.ts";
@@ -85,8 +86,7 @@ export default class ImageLayer extends Sprite {
 		this.repeat = settings.repeat || "repeat";
 
 		// on context lost, all previous textures are destroyed
-		this.boundCreatePattern = this.createPattern.bind(this);
-		eventEmitter.addListener(ONCONTEXT_RESTORED, this.boundCreatePattern);
+		on(ONCONTEXT_RESTORED, this.createPattern, this);
 	}
 
 	/**
@@ -130,13 +130,11 @@ export default class ImageLayer extends Sprite {
 
 	// called when the layer is added to the game world or a container
 	onActivateEvent() {
-		this.boundUpdateLayer = this.updateLayer.bind(this);
-		this.boundResize = this.resize.bind(this);
 		// register to the viewport change notification
-		eventEmitter.addListener(VIEWPORT_ONCHANGE, this.boundUpdateLayer);
-		eventEmitter.addListener(VIEWPORT_ONRESIZE, this.boundResize);
+		on(VIEWPORT_ONCHANGE, this.updateLayer, this);
+		on(VIEWPORT_ONRESIZE, this.resize, this);
 		// force a first refresh when the level is loaded
-		eventEmitter.addListener(LEVEL_LOADED, this.boundUpdateLayer);
+		on(LEVEL_LOADED, this.updateLayer, this);
 		// in case the level is not added to the root container,
 		// the onActivateEvent call happens after the LEVEL_LOADED event
 		// so we need to force a first update
@@ -297,9 +295,9 @@ export default class ImageLayer extends Sprite {
 	// called when the layer is removed from the game world or a container
 	onDeactivateEvent() {
 		// cancel all event subscriptions
-		eventEmitter.removeListener(VIEWPORT_ONCHANGE, this.boundUpdateLayer);
-		eventEmitter.removeListener(VIEWPORT_ONRESIZE, this.boundResize);
-		eventEmitter.removeListener(LEVEL_LOADED, this.boundUpdateLayer);
+		off(VIEWPORT_ONCHANGE, this.updateLayer, this);
+		off(VIEWPORT_ONRESIZE, this.resize, this);
+		off(LEVEL_LOADED, this.updateLayer, this);
 	}
 
 	/**
@@ -309,7 +307,7 @@ export default class ImageLayer extends Sprite {
 	destroy() {
 		vector2dPool.release(this.ratio);
 		this.ratio = undefined;
-		eventEmitter.removeListener(ONCONTEXT_RESTORED, this.boundCreatePattern);
+		off(ONCONTEXT_RESTORED, this.createPattern, this);
 		super.destroy();
 	}
 }

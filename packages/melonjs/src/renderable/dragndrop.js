@@ -1,5 +1,5 @@
 import Renderable from "./../renderable/renderable.js";
-import { DRAGEND, eventEmitter } from "../system/event.ts";
+import { DRAGEND, on } from "../system/event.ts";
 
 /**
  * additional import for TypeScript
@@ -47,10 +47,7 @@ export class DropTarget extends Renderable {
 		 */
 		this.checkMethod = this.CHECKMETHOD_OVERLAP;
 
-		this.removeDragEndListener = eventEmitter.addListener(
-			DRAGEND,
-			this.checkOnMe.bind(this),
-		);
+		this.removeDragEndListener = on(DRAGEND, this.checkOnMe, this);
 	}
 
 	/**

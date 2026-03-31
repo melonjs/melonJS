@@ -2,7 +2,7 @@ import { defaultApplicationSettings } from "../application/defaultApplicationSet
 import { game, initialized } from "./../index.js";
 import * as device from "./../system/device.js";
 import {
-	eventEmitter,
+	emit,
 	VIDEO_INIT,
 	WINDOW_ONORIENTATION_CHANGE,
 	WINDOW_ONRESIZE,
@@ -73,7 +73,7 @@ export function init(width, height, options) {
 	globalThis.addEventListener(
 		"resize",
 		(e) => {
-			eventEmitter.emit(WINDOW_ONRESIZE, e);
+			emit(WINDOW_ONRESIZE, e);
 		},
 		false,
 	);
@@ -82,7 +82,7 @@ export function init(width, height, options) {
 	globalThis.addEventListener(
 		"orientationchange",
 		(e) => {
-			eventEmitter.emit(WINDOW_ONORIENTATION_CHANGE, e);
+			emit(WINDOW_ONORIENTATION_CHANGE, e);
 		},
 		false,
 	);
@@ -91,14 +91,14 @@ export function init(width, height, options) {
 	globalThis.addEventListener(
 		"onmozorientationchange",
 		(e) => {
-			eventEmitter.emit(WINDOW_ONORIENTATION_CHANGE, e);
+			emit(WINDOW_ONORIENTATION_CHANGE, e);
 		},
 		false,
 	);
 
 	if (device.screenOrientation === true) {
 		globalThis.screen.orientation.onchange = (e) => {
-			eventEmitter.emit(WINDOW_ONORIENTATION_CHANGE, e);
+			emit(WINDOW_ONORIENTATION_CHANGE, e);
 		};
 	}
 
@@ -106,13 +106,13 @@ export function init(width, height, options) {
 	globalThis.addEventListener(
 		"scroll",
 		(e) => {
-			eventEmitter.emit(WINDOW_ONSCROLL, e);
+			emit(WINDOW_ONSCROLL, e);
 		},
 		false,
 	);
 
 	// notify the video has been initialized
-	eventEmitter.emit(VIDEO_INIT, game.renderer);
+	emit(VIDEO_INIT, game.renderer);
 
 	return true;
 }

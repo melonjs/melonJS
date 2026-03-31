@@ -3,7 +3,7 @@ import { warning } from "../../lang/console.js";
 import { vector2dPool } from "../../math/vector2d.ts";
 import { collision } from "../../physics/collision.js";
 import Container from "../../renderable/container.js";
-import { eventEmitter, VIEWPORT_ONRESIZE } from "../../system/event.ts";
+import { off, on, VIEWPORT_ONRESIZE } from "../../system/event.ts";
 import pool from "../../system/legacy_pool.js";
 import { checkVersion } from "../../utils/utils.ts";
 import { COLLISION_GROUP, TILED_SUPPORTED_VERSION } from "./constants.js";
@@ -432,11 +432,11 @@ export default class TMXTileMap {
 		}
 
 		if (setViewportBounds === true) {
-			eventEmitter.removeListener(VIEWPORT_ONRESIZE, _setBounds);
+			off(VIEWPORT_ONRESIZE, _setBounds);
 			// force viewport bounds update
 			_setBounds(game.viewport.width, game.viewport.height);
 			// Replace the resize handler
-			eventEmitter.addListener(VIEWPORT_ONRESIZE, _setBounds);
+			on(VIEWPORT_ONRESIZE, _setBounds);
 		}
 
 		//  set back auto-sort and auto-depth

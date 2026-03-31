@@ -12,8 +12,9 @@ import type Container from "./../renderable/container.js";
 import Renderable from "./../renderable/renderable.js";
 import {
 	CANVAS_ONRESIZE,
-	eventEmitter,
+	emit,
 	GAME_RESET,
+	on,
 	VIEWPORT_ONCHANGE,
 	VIEWPORT_ONRESIZE,
 } from "../system/event.ts";
@@ -274,9 +275,11 @@ export default class Camera2d extends Renderable {
 		this._updateProjectionMatrix();
 
 		// subscribe to the game reset event
-		eventEmitter.addListener(GAME_RESET, this.reset.bind(this));
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		on(GAME_RESET, this.reset, this);
 		// subscribe to the canvas resize event
-		eventEmitter.addListener(CANVAS_ONRESIZE, this.resize.bind(this));
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		on(CANVAS_ONRESIZE, this.resize, this);
 	}
 
 	// -- some private function ---
@@ -468,7 +471,7 @@ export default class Camera2d extends Renderable {
 		this._updateProjectionMatrix();
 
 		// publish the viewport resize event
-		eventEmitter.emit(VIEWPORT_ONRESIZE, this.width, this.height);
+		emit(VIEWPORT_ONRESIZE, this.width, this.height);
 
 		return this;
 	}
@@ -650,7 +653,7 @@ export default class Camera2d extends Renderable {
 
 		if (this.isDirty) {
 			//publish the corresponding message
-			eventEmitter.emit(VIEWPORT_ONCHANGE, this.pos);
+			emit(VIEWPORT_ONCHANGE, this.pos);
 		}
 
 		// check for fade/flash effect
