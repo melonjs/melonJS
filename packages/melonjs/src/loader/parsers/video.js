@@ -1,6 +1,6 @@
 import { hasVideoFormat } from "../../system/device.js";
 import * as fileUtil from "../../utils/file.ts";
-import { isDataUrl } from "./../../utils/string.ts";
+import { isDataUrl } from "../../utils/string.ts";
 import { videoList } from "../cache.js";
 import { fetchData } from "./fetchdata.js";
 
@@ -23,7 +23,8 @@ export function preloadVideo(data, onload, onerror, settings) {
 		globalThis.document.createElement("video"));
 
 	if (isDataUrl(data.src)) {
-		const mimeType = data.src.match(/[^:]\w+\/[\w-+\d.]+(?=;|,)/)[0];
+		const mimeMatch = data.src.match(/[^:]\w+\/[\w-+\d.]+(?=;|,)/);
+		const mimeType = mimeMatch ? mimeMatch[0] : null;
 		if (!mimeType || videoElement.canPlayType(mimeType) === "") {
 			throw new Error(
 				`Invalid dataURL or Video file format not supported: ${mimeType}`,
@@ -86,8 +87,8 @@ export function preloadVideo(data, onload, onerror, settings) {
 	}
 
 	if (typeof onerror === "function") {
-		videoElement.onerror = () => {
-			onerror();
+		videoElement.onerror = (error) => {
+			onerror(error);
 		};
 	}
 
