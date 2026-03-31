@@ -402,10 +402,7 @@ export function on<E extends keyof Events>(
 	listener: Events[E],
 	context?: any,
 ) {
-	eventEmitter.addListener(
-		eventName,
-		context ? (listener.bind(context) as Events[E]) : listener,
-	);
+	eventEmitter.addListener(eventName, listener, context);
 }
 
 /**
@@ -421,10 +418,7 @@ export function once<E extends keyof Events>(
 	listener: Events[E],
 	context?: any,
 ) {
-	eventEmitter.addListenerOnce(
-		eventName,
-		context ? (listener.bind(context) as Events[E]) : listener,
-	);
+	eventEmitter.addListenerOnce(eventName, listener, context);
 }
 
 /**

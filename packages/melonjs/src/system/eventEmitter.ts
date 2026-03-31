@@ -6,35 +6,49 @@ interface DefaultEvents extends EventsMap {
 	[event: string]: (...args: any) => void;
 }
 
+type ListenerEntry<F> = { fn: F; ctx: any };
+
 export class EventEmitter<Events extends EventsMap = DefaultEvents> {
-	private eventListeners: Partial<{ [E in keyof Events]: Events[E][] }>;
-	private eventListenersOnce: Partial<{ [E in keyof Events]: Events[E][] }>;
+	private eventListeners: Partial<{
+		[E in keyof Events]: ListenerEntry<Events[E]>[];
+	}>;
+	private eventListenersOnce: Partial<{
+		[E in keyof Events]: ListenerEntry<Events[E]>[];
+	}>;
 
 	constructor() {
 		this.eventListeners = {};
 		this.eventListenersOnce = {};
 	}
 
-	addListener<E extends keyof Events>(event: E, listener: Events[E]) {
+	addListener<E extends keyof Events>(
+		event: E,
+		listener: Events[E],
+		context?: any,
+	) {
 		let eventListenerList = this.eventListeners[event];
 		if (!eventListenerList) {
 			eventListenerList = [];
 			this.eventListeners[event] = eventListenerList;
 		}
-		eventListenerList.push(listener);
+		eventListenerList.push({ fn: listener, ctx: context });
 
 		return () => {
 			this.removeListener(event, listener);
 		};
 	}
 
-	addListenerOnce<E extends keyof Events>(event: E, listener: Events[E]) {
+	addListenerOnce<E extends keyof Events>(
+		event: E,
+		listener: Events[E],
+		context?: any,
+	) {
 		let eventListenerList = this.eventListenersOnce[event];
 		if (!eventListenerList) {
 			eventListenerList = [];
 			this.eventListenersOnce[event] = eventListenerList;
 		}
-		eventListenerList.push(listener);
+		eventListenerList.push({ fn: listener, ctx: context });
 	}
 
 	removeAllListeners(event?: keyof Events) {
@@ -49,28 +63,34 @@ export class EventEmitter<Events extends EventsMap = DefaultEvents> {
 
 	removeListener<E extends keyof Events>(event: E, listener: Events[E]) {
 		const listeners = this.eventListeners[event];
-		if (listeners?.includes(listener)) {
-			listeners.splice(listeners.indexOf(listener), 1);
+		if (listeners) {
+			const idx = listeners.findIndex((entry) => entry.fn === listener);
+			if (idx !== -1) {
+				listeners.splice(idx, 1);
+			}
 		}
 
 		const listenersOnce = this.eventListenersOnce[event];
-		if (listenersOnce?.includes(listener)) {
-			listenersOnce.splice(listenersOnce.indexOf(listener), 1);
+		if (listenersOnce) {
+			const idx = listenersOnce.findIndex((entry) => entry.fn === listener);
+			if (idx !== -1) {
+				listenersOnce.splice(idx, 1);
+			}
 		}
 	}
 
 	emit<E extends keyof Events>(event: E, ...args: Parameters<Events[E]>) {
 		const listeners = this.eventListeners[event];
 		if (listeners) {
-			for (const listener of listeners) {
-				listener(...args);
+			for (const entry of listeners) {
+				entry.fn.apply(entry.ctx, args);
 			}
 		}
 
 		const listenersOnce = this.eventListenersOnce[event];
 		if (listenersOnce) {
-			for (const listener of listenersOnce) {
-				listener(...args);
+			for (const entry of listenersOnce) {
+				entry.fn.apply(entry.ctx, args);
 			}
 			this.eventListenersOnce[event] = [];
 		}
@@ -78,12 +98,8 @@ export class EventEmitter<Events extends EventsMap = DefaultEvents> {
 
 	hasListener<E extends keyof Events>(event: E, listener: Events[E]) {
 		return (
-			Array.from(this.eventListeners[event]?.values() ?? []).includes(
-				listener,
-			) ||
-			Array.from(this.eventListenersOnce[event]?.values() ?? []).includes(
-				listener,
-			)
+			!!this.eventListeners[event]?.some((entry) => entry.fn === listener) ||
+			!!this.eventListenersOnce[event]?.some((entry) => entry.fn === listener)
 		);
 	}
 }
