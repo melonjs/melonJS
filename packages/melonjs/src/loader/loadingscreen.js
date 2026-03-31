@@ -1,4 +1,4 @@
-import { game } from "../index.js";
+import { game } from "../application/application.ts";
 import Renderable from "./../renderable/renderable.js";
 import Sprite from "./../renderable/sprite.js";
 import Stage from "./../state/stage.js";

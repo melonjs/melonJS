@@ -1,4 +1,4 @@
-import { game } from "../index.js";
+import { game } from "../application/application.ts";
 import { vector2dPool } from "../math/vector2d.ts";
 import {
 	LEVEL_LOADED,

@@ -1,5 +1,5 @@
+import { game } from "../application/application.ts";
 import { Rect } from "./../geometries/rectangle.ts";
-import { game } from "../index.js";
 import type { Color } from "../math/color.ts";
 import { colorPool } from "../math/color.ts";
 import { clamp, toBeCloseTo } from "./../math/math.ts";

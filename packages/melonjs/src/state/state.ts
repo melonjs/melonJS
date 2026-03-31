@@ -1,5 +1,5 @@
+import { game } from "../application/application.ts";
 import { pauseTrack, resumeTrack } from "./../audio/audio.ts";
-import { game } from "../index.js";
 import DefaultLoadingScreen from "./../loader/loadingscreen.js";
 import Stage from "./../state/stage.js";
 import {

@@ -2,6 +2,7 @@ import type Camera2d from "./../camera/camera2d.ts";
 import { AUTO, CANVAS, WEBGL } from "../const.ts";
 import World from "../physics/world.js";
 import state from "../state/state.ts";
+import { boot, initialized } from "../system/bootstrap.ts";
 import * as device from "../system/device.js";
 import {
 	BLUR,
@@ -183,6 +184,11 @@ export default class Application {
 		height: number,
 		options?: Partial<ApplicationSettings>,
 	): void {
+		// ensure the engine is bootstrapped
+		if (!initialized) {
+			boot();
+		}
+
 		this.settings = Object.assign(
 			defaultApplicationSettings,
 			options || {},
@@ -491,4 +497,18 @@ export default class Application {
 			emit(GAME_AFTER_DRAW, globalThis.performance.now());
 		}
 	}
+}
+
+/**
+ * The default game application instance.
+ * Set via {@link setDefaultGame} during engine initialization.
+ */
+export let game: Application;
+
+/**
+ * Set the default game application instance.
+ * @ignore
+ */
+export function setDefaultGame(app: Application) {
+	game = app;
 }

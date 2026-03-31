@@ -1,5 +1,5 @@
 import type Application from "./../application/application.ts";
-import { game } from "../index.js";
+import { game } from "../application/application.ts";
 import { checkVersion } from "./../utils/utils.ts";
 import { version } from "./../version.ts";
 

@@ -1,5 +1,6 @@
+import { game } from "../application/application.ts";
 import { defaultApplicationSettings } from "../application/defaultApplicationSettings.ts";
-import { game, initialized } from "./../index.js";
+import { initialized } from "../system/bootstrap.ts";
 import * as device from "./../system/device.js";
 import {
 	emit,

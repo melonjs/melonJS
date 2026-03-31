@@ -1,5 +1,5 @@
+import { game } from "../application/application.ts";
 import { Rect } from "./../geometries/rectangle.ts";
-import { game } from "../index.js";
 import type { Vector2d } from "../math/vector2d.ts";
 import { vector2dPool } from "../math/vector2d.ts";
 import * as device from "./../system/device.js";

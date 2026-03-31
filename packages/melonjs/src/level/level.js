@@ -1,4 +1,4 @@
-import { game } from "../index.js";
+import { game } from "../application/application.ts";
 import { getTMX } from "./../loader/loader.js";
 import state from "./../state/state.ts";
 import { emit, LEVEL_LOADED } from "../system/event.ts";

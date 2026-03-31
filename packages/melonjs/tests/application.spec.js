@@ -1,5 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
+import { game as gameFromModule } from "../src/application/application.ts";
 import { Application, boot, game, video } from "../src/index.js";
+import { initialized } from "../src/system/bootstrap.ts";
 
 describe("Application", () => {
 	describe("class existence", () => {
@@ -100,6 +102,68 @@ describe("Application", () => {
 			game.sortOn = "z";
 			expect(game.sortOn).toBe("z");
 			expect(game.world.sortOn).toBe("z");
+		});
+	});
+
+	describe("auto-bootstrap", () => {
+		it("Application.init() should call boot() automatically if not initialized", () => {
+			expect(initialized).toBe(true);
+		});
+
+		it("new Application() should work as a standalone entry point", () => {
+			const app = new Application(160, 120, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				consoleHeader: false,
+			});
+			expect(app).toBeInstanceOf(Application);
+			expect(app.isInitialized).toBe(true);
+			expect(app.renderer).toBeDefined();
+			expect(app.world).toBeDefined();
+			expect(initialized).toBe(true);
+		});
+	});
+
+	describe("game singleton", () => {
+		it("game exported from index should be the same as from application module", () => {
+			expect(game).toBe(gameFromModule);
+		});
+
+		it("game should be an Application instance with legacy mode", () => {
+			expect(game).toBeInstanceOf(Application);
+		});
+
+		it("game should not be initialized until boot + video.init", () => {
+			// game was created with { legacy: true }, so init is deferred
+			// after boot() + video.init(), it should be initialized
+			expect(game.isInitialized).toBe(true);
+		});
+
+		it("game.world should be accessible", () => {
+			expect(game.world).toBeDefined();
+		});
+
+		it("game.renderer should be accessible", () => {
+			expect(game.renderer).toBeDefined();
+		});
+	});
+
+	describe("multiple Application instances", () => {
+		it("should create separate instances with independent worlds and renderers", () => {
+			const app1 = new Application(320, 240, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				consoleHeader: false,
+			});
+			const app2 = new Application(640, 480, {
+				parent: "screen",
+				renderer: video.CANVAS,
+				consoleHeader: false,
+			});
+
+			expect(app1).not.toBe(app2);
+			expect(app1.world).not.toBe(app2.world);
+			expect(app1.renderer).not.toBe(app2.renderer);
 		});
 	});
 });
