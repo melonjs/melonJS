@@ -220,36 +220,36 @@ test("removeAllListeners(event) clears once-listeners for that event", () => {
 
 test("addListener() with context applies correct this", () => {
 	const emitter = new EventEmitter();
-	const context = { name: "test-context" };
-	let receivedThis: any;
+	const context = { name: "test-context", value: 0 };
 
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	emitter.addListener(
 		"message",
 		function (this: any) {
-			receivedThis = this;
+			context.value = this === context ? 1 : 0;
 		},
 		context,
 	);
 
 	emitter.emit("message");
-	expect(receivedThis).toBe(context);
+	expect(context.value).toBe(1);
 });
 
 test("addListenerOnce() with context applies correct this", () => {
 	const emitter = new EventEmitter();
-	const context = { name: "once-context" };
-	let receivedThis: any;
+	const context = { name: "once-context", value: 0 };
 
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	emitter.addListenerOnce(
 		"message",
 		function (this: any) {
-			receivedThis = this;
+			context.value = this === context ? 1 : 0;
 		},
 		context,
 	);
 
 	emitter.emit("message");
-	expect(receivedThis).toBe(context);
+	expect(context.value).toBe(1);
 });
 
 test("removeListener() works with original reference when context was used", () => {
@@ -270,12 +270,13 @@ test("removeListener() works with original reference when context was used", () 
 
 test("listener without context has undefined this", () => {
 	const emitter = new EventEmitter();
-	let receivedThis: any = "not-set";
+	const result = { value: "not-set" };
 
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	emitter.addListener("message", function (this: any) {
-		receivedThis = this;
+		result.value = typeof this === "undefined" ? "undefined" : "defined";
 	});
 
 	emitter.emit("message");
-	expect(receivedThis).toBeUndefined();
+	expect(result.value).toBe("undefined");
 });

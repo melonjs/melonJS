@@ -274,9 +274,9 @@ export default class Camera2d extends Renderable {
 		this._updateProjectionMatrix();
 
 		// subscribe to the game reset event
-		eventEmitter.addListener(GAME_RESET, this.reset, this);
+		eventEmitter.addListener(GAME_RESET, this.reset.bind(this));
 		// subscribe to the canvas resize event
-		eventEmitter.addListener(CANVAS_ONRESIZE, this.resize, this);
+		eventEmitter.addListener(CANVAS_ONRESIZE, this.resize.bind(this));
 	}
 
 	// -- some private function ---
