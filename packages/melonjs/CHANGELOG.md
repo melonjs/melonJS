@@ -8,10 +8,14 @@
 - Tiled: `detectObjectType()` now checks `settings.class` and `settings.name` against the factory registry before falling through to structural detection, enabling class-based dispatch for custom types
 
 ### Changed
+- Application: `new Application(width, height, options)` now auto-calls `boot()` if the engine hasn't been initialized, making it a valid standalone entry point
+- Application: `boot()` moved to `system/bootstrap.ts` — decoupled from `index.js`
+- Application: `game` singleton decoupled from barrel `index.js` — internal modules no longer import from the barrel
 - EventEmitter: native context parameter support — `addListener(event, fn, context)` and `addListenerOnce(event, fn, context)` now accept an optional context, eliminating `.bind()` closure overhead and enabling proper `removeListener()` by original function reference
 - EventEmitter: `event.on()` and `event.once()` no longer create `.bind()` closures when a context is provided
 
 ### Fixed
+- Application: `Object.assign(defaultApplicationSettings, options)` mutated the shared defaults object — creating multiple Application instances would corrupt settings. Fixed with object spread.
 - WebGLRenderer: `setBlendMode()` now tracks the `premultipliedAlpha` flag — previously only the mode name was checked, causing incorrect GL blend function when mixing PMA and non-PMA textures with the same blend mode
 - TMX: fix crash in `getObjects(false)` when a map contains an empty object group (Container.children lazily initialized)
 - EventEmitter: `removeAllListeners()` now correctly clears once-listeners (previously only cleared regular listeners)
