@@ -84,6 +84,13 @@ export * as input from "./input/input.ts";
 // Backward compatibility for deprecated method or properties
 export * from "./lang/deprecated.js";
 export { level } from "./level/level.js";
+export {
+	registerTiledObjectClass,
+	registerTiledObjectFactory,
+} from "./level/tiled/TMXObjectFactory.js";
+
+import { registerBuiltinTiledClass } from "./level/tiled/TMXObjectFactory.js";
+
 export * as loader from "./loader/loader.js";
 export { Color } from "./math/color.ts";
 export * as math from "./math/math.ts";
@@ -215,6 +222,21 @@ export function boot() {
 	pool.register("ImageLayer", ImageLayer);
 	pool.register("Tween", Tween, true);
 	pool.register("ColorLayer", ColorLayer, true);
+
+	// ensure built-in classes are registered as Tiled object factories
+	// (redundant with pool.register auto-registration, but ensures
+	// built-ins remain available if pool behavior changes in the future)
+	registerBuiltinTiledClass("Renderable", Renderable);
+	registerBuiltinTiledClass("Text", Text);
+	registerBuiltinTiledClass("BitmapText", BitmapText);
+	registerBuiltinTiledClass("Entity", Entity);
+	registerBuiltinTiledClass("Collectable", Collectable);
+	registerBuiltinTiledClass("Trigger", Trigger);
+	registerBuiltinTiledClass("Light2d", Light2d);
+	registerBuiltinTiledClass("Sprite", Sprite);
+	registerBuiltinTiledClass("NineSliceSprite", NineSliceSprite);
+	registerBuiltinTiledClass("ImageLayer", ImageLayer);
+	registerBuiltinTiledClass("ColorLayer", ColorLayer);
 
 	// publish Boot notification
 	eventEmitter.emit(BOOT);

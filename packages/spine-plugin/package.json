@@ -1,6 +1,6 @@
 {
 	"name": "@melonjs/spine-plugin",
-	"version": "2.0.2",
+	"version": "2.1.0",
 	"description": "melonJS Spine plugin",
 	"homepage": "https://www.npmjs.com/package/@melonjs/spine-plugin",
 	"type": "module",
@@ -47,7 +47,7 @@
 		"CHANGELOG.md"
 	],
 	"peerDependencies": {
-		"melonjs": ">=18.2.1"
+		"melonjs": ">=18.3.0"
 	},
 	"dependencies": {
 		"@esotericsoftware/spine-canvas": "^4.2.108",

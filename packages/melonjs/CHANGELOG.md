@@ -2,8 +2,14 @@
 
 ## [18.3.0] (melonJS 2)
 
+### Added
+- Tiled: extensible object factory registry for `TMXTileMap.getObjects()` — object creation is now dispatched through a `Map`-based registry (like `loader.setParser`), with built-in factories for text, tile, and shape objects, plus class-based factories for Entity, Collectable, Trigger, Light2d, Sprite, NineSliceSprite, ImageLayer, and ColorLayer
+- Tiled: new public `registerTiledObjectFactory(type, factory)` and `registerTiledObjectClass(name, Constructor)` APIs allowing plugins to register custom Tiled object handlers by class name without modifying engine code
+- Tiled: `detectObjectType()` now checks `settings.class` and `settings.name` against the factory registry before falling through to structural detection, enabling class-based dispatch for custom types
+
 ### Fixed
 - WebGLRenderer: `setBlendMode()` now tracks the `premultipliedAlpha` flag — previously only the mode name was checked, causing incorrect GL blend function when mixing PMA and non-PMA textures with the same blend mode
+- TMX: fix crash in `getObjects(false)` when a map contains an empty object group (Container.children lazily initialized)
 
 ### Chore
 - Minimum Node.js version is now 24.0.0 (Node 18/20 EOL, Node 22 in maintenance)

@@ -1,6 +1,21 @@
 import { getTotalPoolSize } from "../pool";
 
 /**
+ * callback invoked when a class is registered, used by the Tiled object factory
+ * @ignore
+ */
+let onRegisterCallback = null;
+
+/**
+ * Set a callback to be invoked whenever pool.register() is called.
+ * @param {Function} callback - function(className, classObj, poolInstance) called on each registration
+ * @ignore
+ */
+export function setPoolRegisterCallback(callback) {
+	onRegisterCallback = callback;
+}
+
+/**
  * Object pooling - a technique that might speed up your game if used properly.<br>
  * If some of your classes will be instantiated and removed a lot at a time, it is a
  * good idea to add the class to this object pool. A separate pool for that class
@@ -17,12 +32,33 @@ class ObjectPool {
 	constructor() {
 		this.objectClass = {};
 		this.instance_counter = 0;
+
+		/**
+		 * When enabled, classes registered via {@link pool.register} are also
+		 * automatically registered as Tiled object factories, so that objects
+		 * placed in a Tiled map with a matching class or name will be
+		 * instantiated using the registered constructor.
+		 * Set to `false` to disable this behavior (e.g. for classes that should
+		 * only be used programmatically and not from Tiled maps).
+		 * @type {boolean}
+		 * @default true
+		 * @example
+		 * // disable auto-registration for a specific class
+		 * pool.autoRegisterTiled = false;
+		 * pool.register("InternalHelper", HelperClass);
+		 * pool.autoRegisterTiled = true; // re-enable for subsequent registrations
+		 */
+		this.autoRegisterTiled = true;
 	}
 
 	/**
-	 * register an object to the pool. <br>
+	 * Register an object to the pool. <br>
 	 * Pooling must be set to true if more than one such objects will be created. <br>
-	 * (Note: for an object to be poolable, it must implements a `onResetEvent` method)
+	 * (Note: for an object to be poolable, it must implement an `onResetEvent` method) <br><br>
+	 * Registered classes are also automatically available as Tiled object factories,
+	 * meaning objects placed in a Tiled map with a matching class or name will be
+	 * instantiated using the registered constructor. For more control, use
+	 * {@link registerTiledObjectClass} or {@link registerTiledObjectFactory} instead.
 	 * @param {string} className - as defined in the Name field of the Object Properties (in Tiled)
 	 * @param {object} classObj - corresponding Class to be instantiated
 	 * @param {boolean} [recycling=false] - enables object recycling for the specified class
@@ -35,6 +71,8 @@ class ObjectPool {
 	 *    }
 	 * };
 	 * // add our users defined entities in the object pool and enable object recycling
+	 * // this also registers "cherrysprite" as a Tiled object factory, so any object
+	 * // with class or name "cherrysprite" in a Tiled map will create a Cherry instance
 	 * me.pool.register("cherrysprite", Cherry, true);
 	 */
 	register(className, classObj, recycling = false) {
@@ -47,6 +85,14 @@ class ObjectPool {
 			// also register with "me." prefix for backward compatibility
 			if (!className.startsWith("me.")) {
 				this.objectClass["me." + className] = entry;
+			}
+			// also register as a Tiled object factory
+			if (this.autoRegisterTiled && typeof onRegisterCallback === "function") {
+				onRegisterCallback(className, classObj, this);
+				// also register with "me." prefix for backward compatibility
+				if (!className.startsWith("me.")) {
+					onRegisterCallback("me." + className, classObj, this);
+				}
 			}
 		} else {
 			throw new Error(

@@ -1,4 +1,4 @@
-import { clamp } from "./../../math/math.ts";
+import { clamp } from "../../math/math.ts";
 import TMXLayer from "./TMXLayer.js";
 import TMXObject from "./TMXObject.js";
 import { applyTMXProperties, tiledBlendMode } from "./TMXUtils.js";
