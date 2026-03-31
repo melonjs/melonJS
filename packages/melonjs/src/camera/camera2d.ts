@@ -275,9 +275,11 @@ export default class Camera2d extends Renderable {
 		this._updateProjectionMatrix();
 
 		// subscribe to the game reset event
-		on(GAME_RESET, this.reset.bind(this));
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		on(GAME_RESET, this.reset, this);
 		// subscribe to the canvas resize event
-		on(CANVAS_ONRESIZE, this.resize.bind(this));
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		on(CANVAS_ONRESIZE, this.resize, this);
 	}
 
 	// -- some private function ---

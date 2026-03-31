@@ -15,8 +15,6 @@ import Container from "../container.js";
  * @category UI
  */
 export default class UIBaseElement extends Container {
-	#boundPointerMoveHandler: (event: Pointer) => void;
-
 	/**
 	 * UI base elements use screen coordinates by default
 	 * (Note: any child elements added to a UIBaseElement should have their floating property to false)
@@ -89,8 +87,6 @@ export default class UIBaseElement extends Container {
 
 		// update container and children bounds automatically
 		this.enableChildBoundsUpdate = true;
-
-		this.#boundPointerMoveHandler = this.pointerMove.bind(this);
 	}
 
 	/**
@@ -139,7 +135,8 @@ export default class UIBaseElement extends Container {
 		this.hover = true;
 		this.isDirty = true;
 		if (this.isDraggable) {
-			on(POINTERMOVE, this.#boundPointerMoveHandler);
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			on(POINTERMOVE, this.pointerMove, this);
 			// to memorize where we grab the object
 			this.grabOffset = vector2dPool.get(0, 0);
 		}
@@ -190,7 +187,8 @@ export default class UIBaseElement extends Container {
 		this.isDirty = true;
 		if (this.isDraggable) {
 			// unregister on the global pointermove event
-			off(POINTERMOVE, this.#boundPointerMoveHandler);
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			off(POINTERMOVE, this.pointerMove, this);
 			vector2dPool.release(this.grabOffset!);
 			this.grabOffset = undefined;
 		}
@@ -295,7 +293,8 @@ export default class UIBaseElement extends Container {
 		// the object is being remove from his parent
 		// container before the leave function is called
 		if (this.isDraggable) {
-			off(POINTERMOVE, this.#boundPointerMoveHandler);
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			off(POINTERMOVE, this.pointerMove, this);
 			if (typeof this.grabOffset !== "undefined") {
 				vector2dPool.release(this.grabOffset);
 				this.grabOffset = undefined;

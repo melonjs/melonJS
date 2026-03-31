@@ -223,7 +223,6 @@ test("addListener() with context applies correct this", () => {
 	const emitter = new EventEmitter();
 	const context = { name: "test-context", value: 0 };
 
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	emitter.addListener(
 		"message",
 		function (this: any) {
@@ -240,7 +239,6 @@ test("addListenerOnce() with context applies correct this", () => {
 	const emitter = new EventEmitter();
 	const context = { name: "once-context", value: 0 };
 
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	emitter.addListenerOnce(
 		"message",
 		function (this: any) {
@@ -291,7 +289,6 @@ test("listener without context has undefined this", () => {
 	const emitter = new EventEmitter();
 	const result = { value: "not-set" };
 
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	emitter.addListener("message", function (this: any) {
 		result.value = typeof this === "undefined" ? "undefined" : "defined";
 	});
@@ -371,7 +368,6 @@ describe("event.ts public API", () => {
 	it("on() with context should pass correct this to listener", () => {
 		const context = { value: 0 };
 
-		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		event.on(
 			"testCtx",
 			function (this: any) {

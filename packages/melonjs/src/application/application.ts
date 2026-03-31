@@ -310,10 +310,12 @@ export default class Application {
 		this.isInitialized = true;
 
 		emit(GAME_INIT);
-		on(STATE_CHANGE, this.repaint.bind(this));
-		on(STATE_RESTART, this.repaint.bind(this));
-		on(STATE_RESUME, this.repaint.bind(this));
-		on(STAGE_RESET, this.reset.bind(this));
+		/* eslint-disable @typescript-eslint/unbound-method */
+		on(STATE_CHANGE, this.repaint, this);
+		on(STATE_RESTART, this.repaint, this);
+		on(STATE_RESUME, this.repaint, this);
+		on(STAGE_RESET, this.reset, this);
+		/* eslint-enable @typescript-eslint/unbound-method */
 		on(TICK, (time: number) => {
 			this.update(time);
 			this.draw();

@@ -54,8 +54,6 @@ export default class Tween {
 	updateWhenPaused: boolean;
 	isRenderable: boolean;
 
-	#boundResumeCallback: (elapsed: number) => void;
-
 	/**
 	 * @param object - object on which to apply the tween
 	 * @example
@@ -71,8 +69,6 @@ export default class Tween {
 	 */
 	constructor(object: object) {
 		this.setProperties(object);
-
-		this.#boundResumeCallback = this._resumeCallback.bind(this);
 	}
 
 	/**
@@ -135,7 +131,8 @@ export default class Tween {
 	 * @ignore
 	 */
 	onActivateEvent() {
-		on(STATE_RESUME, this.#boundResumeCallback);
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		on(STATE_RESUME, this._resumeCallback, this);
 	}
 
 	/**
@@ -143,7 +140,8 @@ export default class Tween {
 	 * @ignore
 	 */
 	onDeactivateEvent() {
-		off(STATE_RESUME, this.#boundResumeCallback);
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		off(STATE_RESUME, this._resumeCallback, this);
 	}
 
 	/**
