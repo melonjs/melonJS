@@ -169,7 +169,7 @@ export default class WebGLRenderer extends Renderer {
 		this.customShader = undefined;
 
 		// Create a texture cache
-		this.cache = new TextureCache(this.maxTextures);
+		this.cache = new TextureCache(this, this.maxTextures);
 
 		// set the renderer type
 		this.type = "WebGL" + this.WebGLVersion;

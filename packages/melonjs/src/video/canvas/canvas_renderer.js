@@ -37,7 +37,7 @@ export default class CanvasRenderer extends Renderer {
 		this.setColor(this.currentColor);
 
 		// create a texture cache
-		this.cache = new TextureCache();
+		this.cache = new TextureCache(this);
 
 		if (this.settings.textureSeamFix !== false && !this.settings.antiAlias) {
 			// enable the tile texture seam fix with the canvas renderer

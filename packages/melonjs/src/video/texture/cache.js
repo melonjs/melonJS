@@ -1,7 +1,6 @@
 import { isPowerOfTwo } from "./../../math/math.ts";
 import { ArrayMultimap } from "../../utils/array-multimap.js";
 import { getBasename } from "../../utils/file.ts";
-import { renderer } from "./../video.js";
 import { createAtlas, TextureAtlas } from "./atlas.js";
 
 /**
@@ -12,7 +11,9 @@ class TextureCache {
 	/**
 	 * @ignore
 	 */
-	constructor(max_size = Infinity) {
+	constructor(renderer, max_size = Infinity) {
+		// reference to the renderer that owns this cache
+		this.renderer = renderer;
 		// cache uses an array to allow for duplicated key
 		this.cache = new ArrayMultimap();
 		this.tinted = new Map();
@@ -49,10 +50,10 @@ class TextureCache {
 
 		// No units available — flush the current batch and reset assignments
 		// see https://github.com/melonjs/melonJS/issues/1280
-		if (renderer.currentBatcher) {
-			renderer.currentBatcher.flush();
-			renderer.currentBatcher.boundTextures.length = 0;
-			renderer.currentBatcher.currentTextureUnit = -1;
+		if (this.renderer.currentBatcher) {
+			this.renderer.currentBatcher.flush();
+			this.renderer.currentBatcher.boundTextures.length = 0;
+			this.renderer.currentBatcher.currentTextureUnit = -1;
 		}
 		this.units.clear();
 		this.usedUnits.clear();
@@ -103,7 +104,7 @@ class TextureCache {
 
 		// warn if a non POT texture is added to the cache when using WebGL1
 		if (
-			renderer.WebGLVersion === 1 &&
+			this.renderer.WebGLVersion === 1 &&
 			(!isPowerOfTwo(width) || !isPowerOfTwo(height))
 		) {
 			const src = typeof image.src !== "undefined" ? image.src : image;
@@ -200,7 +201,7 @@ class TextureCache {
 		}
 
 		if (!image_cache.has(color)) {
-			image_cache.set(color, renderer.tint(src, color, "multiply"));
+			image_cache.set(color, this.renderer.tint(src, color, "multiply"));
 		}
 
 		return image_cache.get(color);
