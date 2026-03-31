@@ -328,37 +328,41 @@ export default class Application {
 			this.renderer.type === "WEBGL" && this.settings.depthTest === "z-buffer"
 		);
 
+		// only register event listeners once per instance
+		if (!this.isInitialized) {
+			/* eslint-disable @typescript-eslint/unbound-method */
+			on(STATE_CHANGE, this.repaint, this);
+			on(STATE_RESTART, this.repaint, this);
+			on(STATE_RESUME, this.repaint, this);
+			on(STAGE_RESET, this.reset, this);
+			/* eslint-enable @typescript-eslint/unbound-method */
+			on(TICK, (time: number) => {
+				this.update(time);
+				this.draw();
+			});
+
+			on(BLUR, () => {
+				if (this.stopOnBlur) {
+					state.stop(true);
+				}
+				if (this.pauseOnBlur) {
+					state.pause(true);
+				}
+			});
+
+			on(FOCUS, () => {
+				if (this.stopOnBlur) {
+					state.restart(true);
+				}
+				if (this.resumeOnFocus) {
+					state.resume(true);
+				}
+			});
+		}
+
 		this.isInitialized = true;
 
 		emit(GAME_INIT);
-		/* eslint-disable @typescript-eslint/unbound-method */
-		on(STATE_CHANGE, this.repaint, this);
-		on(STATE_RESTART, this.repaint, this);
-		on(STATE_RESUME, this.repaint, this);
-		on(STAGE_RESET, this.reset, this);
-		/* eslint-enable @typescript-eslint/unbound-method */
-		on(TICK, (time: number) => {
-			this.update(time);
-			this.draw();
-		});
-
-		on(BLUR, () => {
-			if (this.stopOnBlur) {
-				state.stop(true);
-			}
-			if (this.pauseOnBlur) {
-				state.pause(true);
-			}
-		});
-
-		on(FOCUS, () => {
-			if (this.stopOnBlur) {
-				state.restart(true);
-			}
-			if (this.resumeOnFocus) {
-				state.resume(true);
-			}
-		});
 	}
 
 	/**
