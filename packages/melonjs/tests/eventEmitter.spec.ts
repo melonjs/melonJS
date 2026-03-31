@@ -326,22 +326,22 @@ describe("event.ts public API", () => {
 
 	it("once() should fire listener only once", () => {
 		const listener = vi.fn();
-		event.once(event.STAGE_RESET, listener);
+		event.once(event.STATE_PAUSE, listener);
 
-		event.emit(event.STAGE_RESET);
-		event.emit(event.STAGE_RESET);
+		event.emit(event.STATE_PAUSE);
+		event.emit(event.STATE_PAUSE);
 		expect(listener).toHaveBeenCalledTimes(1);
 	});
 
 	it("off() should remove a listener", () => {
 		const listener = vi.fn();
-		event.on(event.STATE_CHANGE, listener);
+		event.on(event.STATE_STOP, listener);
 
-		event.emit(event.STATE_CHANGE);
+		event.emit(event.STATE_STOP);
 		expect(listener).toHaveBeenCalledTimes(1);
 
-		event.off(event.STATE_CHANGE, listener);
-		event.emit(event.STATE_CHANGE);
+		event.off(event.STATE_STOP, listener);
+		event.emit(event.STATE_STOP);
 		expect(listener).toHaveBeenCalledTimes(1);
 	});
 
