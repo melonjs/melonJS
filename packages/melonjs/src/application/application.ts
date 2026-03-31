@@ -241,15 +241,17 @@ export default class Application {
 
 		// prevent white flash before first render by matching the renderer default
 		// only set if no background is defined (neither inline nor via CSS)
-		const computedBg = globalThis.getComputedStyle(
-			this.parentElement,
-		).backgroundColor;
-		if (
-			!computedBg ||
-			computedBg === "rgba(0, 0, 0, 0)" ||
-			computedBg === "transparent"
-		) {
-			this.parentElement.style.backgroundColor = "#000000";
+		if (typeof globalThis.getComputedStyle === "function") {
+			const computedBg = globalThis.getComputedStyle(
+				this.parentElement,
+			).backgroundColor;
+			if (
+				!computedBg ||
+				computedBg === "rgba(0, 0, 0, 0)" ||
+				computedBg === "transparent"
+			) {
+				this.parentElement.style.backgroundColor = "#000000";
+			}
 		}
 
 		if (typeof this.settings.renderer === "number") {
