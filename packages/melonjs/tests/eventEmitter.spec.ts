@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { EventEmitter } from "./eventEmitter";
+import { EventEmitter } from "../src/system/eventEmitter";
 
 test("addListener()", () => {
 	const emitter = new EventEmitter();
