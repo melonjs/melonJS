@@ -49,7 +49,8 @@ export class DropTarget extends Renderable {
 
 		this.removeDragEndListener = eventEmitter.addListener(
 			DRAGEND,
-			this.checkOnMe.bind(this),
+			this.checkOnMe,
+			this,
 		);
 	}
 

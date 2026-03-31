@@ -54,8 +54,6 @@ export default class Tween {
 	updateWhenPaused: boolean;
 	isRenderable: boolean;
 
-	#boundResumeCallback: (elapsed: number) => void;
-
 	/**
 	 * @param object - object on which to apply the tween
 	 * @example
@@ -71,8 +69,6 @@ export default class Tween {
 	 */
 	constructor(object: object) {
 		this.setProperties(object);
-
-		this.#boundResumeCallback = this._resumeCallback.bind(this);
 	}
 
 	/**
@@ -135,7 +131,7 @@ export default class Tween {
 	 * @ignore
 	 */
 	onActivateEvent() {
-		eventEmitter.addListener(STATE_RESUME, this.#boundResumeCallback);
+		eventEmitter.addListener(STATE_RESUME, this._resumeCallback, this);
 	}
 
 	/**
@@ -143,7 +139,7 @@ export default class Tween {
 	 * @ignore
 	 */
 	onDeactivateEvent() {
-		eventEmitter.removeListener(STATE_RESUME, this.#boundResumeCallback);
+		eventEmitter.removeListener(STATE_RESUME, this._resumeCallback);
 	}
 
 	/**

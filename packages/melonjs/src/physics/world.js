@@ -104,7 +104,7 @@ export default class World extends Container {
 		this.detector = new Detector(this);
 
 		// reset the world container on the game reset signal
-		eventEmitter.addListener(GAME_RESET, this.reset.bind(this));
+		eventEmitter.addListener(GAME_RESET, this.reset, this);
 
 		// update the broadband world bounds if a new level is loaded
 		eventEmitter.addListener(LEVEL_LOADED, () => {

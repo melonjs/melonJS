@@ -309,10 +309,10 @@ export default class Application {
 		this.isInitialized = true;
 
 		eventEmitter.emit(GAME_INIT);
-		eventEmitter.addListener(STATE_CHANGE, this.repaint.bind(this));
-		eventEmitter.addListener(STATE_RESTART, this.repaint.bind(this));
-		eventEmitter.addListener(STATE_RESUME, this.repaint.bind(this));
-		eventEmitter.addListener(STAGE_RESET, this.reset.bind(this));
+		eventEmitter.addListener(STATE_CHANGE, this.repaint, this);
+		eventEmitter.addListener(STATE_RESTART, this.repaint, this);
+		eventEmitter.addListener(STATE_RESUME, this.repaint, this);
+		eventEmitter.addListener(STAGE_RESET, this.reset, this);
 		eventEmitter.addListener(TICK, (time: number) => {
 			this.update(time);
 			this.draw();

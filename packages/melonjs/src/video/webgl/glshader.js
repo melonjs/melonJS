@@ -86,7 +86,7 @@ export default class GLShader {
 		this.uniforms = extractUniforms(this.gl, this);
 
 		// destroy the shader on context lost (will be recreated on context restore)
-		eventEmitter.addListener(ONCONTEXT_LOST, this.destroy.bind(this));
+		eventEmitter.addListener(ONCONTEXT_LOST, this.destroy, this);
 	}
 
 	/**
