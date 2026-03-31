@@ -21,7 +21,6 @@ import {
 import type Tween from "../tweens/tween.ts";
 import { tweenPool } from "../tweens/tween.ts";
 import type Renderer from "./../video/renderer.js";
-import { renderer } from "./../video/video.js";
 
 /**
  * @import Entity from "./../renderable/entity/entity.js";
@@ -777,10 +776,18 @@ export default class Camera2d extends Renderable {
 	 */
 	isVisible(obj: Renderable, floating: boolean = obj.floating): boolean {
 		if (floating || obj.floating) {
-			// floating objects are checked against screen coordinates
-			return renderer.overlaps(obj.getBounds());
+			// floating objects use screen coordinates, check against the
+			// camera viewport area (0, 0, camera.width, camera.height)
+			const objBounds = obj.getBounds();
+			return (
+				objBounds.left <= this.width &&
+				objBounds.right >= 0 &&
+				objBounds.top <= this.height &&
+				objBounds.bottom >= 0
+			);
 		}
-		// check against the visible world area (accounts for zoom)
+		// non-floating objects use world coordinates, check against
+		// the camera's visible world area (accounts for position and zoom)
 		return obj.getBounds().overlaps(this.worldView);
 	}
 
