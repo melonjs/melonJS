@@ -1,7 +1,7 @@
+import { game } from "../application/application.ts";
 import Camera2d from "./../camera/camera2d.ts";
 import { Color } from "./../math/color.ts";
 import { emit, STAGE_RESET } from "../system/event.ts";
-import { renderer } from "./../video/video.js";
 
 // a default camera instance to use across all stages
 let default_camera;
@@ -94,8 +94,8 @@ export default class Stage {
 		// empty or no default camera
 		if (this.cameras.has("default") === false) {
 			if (typeof default_camera === "undefined") {
-				const width = renderer.width;
-				const height = renderer.height;
+				const width = game.renderer.width;
+				const height = game.renderer.height;
 				// new default camera instance
 				default_camera = new Camera2d(0, 0, width, height);
 			}
