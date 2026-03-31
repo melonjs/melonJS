@@ -450,3 +450,22 @@ export function emit<E extends keyof Events>(
 ) {
 	eventEmitter.emit(eventName, ...args);
 }
+
+/**
+ * Check if a listener is registered for a given event.
+ * @param eventName - The event name.
+ * @param listener - The listener function.
+ * @param [context] - The context that was used when registering the listener.
+ * @returns true if the listener is registered.
+ * @example
+ * if (me.event.has("event-name", myFunction)) {
+ *     // listener is registered
+ * }
+ */
+export function has<E extends keyof Events>(
+	eventName: E,
+	listener: Events[E],
+	context?: any,
+) {
+	return eventEmitter.hasListener(eventName, listener, context);
+}

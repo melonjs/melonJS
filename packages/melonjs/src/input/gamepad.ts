@@ -1,10 +1,10 @@
 import {
 	emit,
-	eventEmitter,
 	GAME_BEFORE_UPDATE,
 	GAMEPAD_CONNECTED,
 	GAMEPAD_DISCONNECTED,
 	GAMEPAD_UPDATE,
+	has,
 	on,
 } from "../system/event.ts";
 import { getBindingKey, triggerKeyEvent } from "./keyboard.ts";
@@ -439,7 +439,7 @@ export function bindGamepad(
 	// register to the the update event if not yet done and supported by the browser
 	// if not supported, the function will fail silently (-> update loop won't be called)
 	if (
-		!eventEmitter.hasListener(GAME_BEFORE_UPDATE, updateGamepads) &&
+		!has(GAME_BEFORE_UPDATE, updateGamepads) &&
 		typeof navigator.getGamepads === "function"
 	) {
 		on(GAME_BEFORE_UPDATE, updateGamepads);

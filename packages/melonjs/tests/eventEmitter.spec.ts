@@ -1,4 +1,5 @@
-import { expect, test, vi } from "vitest";
+import { beforeAll, describe, expect, it, test, vi } from "vitest";
+import { boot, event, video } from "../src/index.js";
 import { EventEmitter } from "../src/system/eventEmitter";
 
 test("addListener()", () => {
@@ -297,4 +298,91 @@ test("listener without context has undefined this", () => {
 
 	emitter.emit("message");
 	expect(result.value).toBe("undefined");
+});
+
+// ---------------------------------------------------------------
+// event.ts public API (on/off/once/emit/has)
+// ---------------------------------------------------------------
+describe("event.ts public API", () => {
+	beforeAll(() => {
+		boot();
+		video.init(64, 64, {
+			parent: "screen",
+			scale: "auto",
+			renderer: video.AUTO,
+		});
+	});
+
+	it("on() should register a listener and return unsubscribe function", () => {
+		const listener = vi.fn();
+		const unsub = event.on("testEvent", listener);
+
+		event.emit("testEvent");
+		expect(listener).toHaveBeenCalledTimes(1);
+
+		unsub();
+		event.emit("testEvent");
+		expect(listener).toHaveBeenCalledTimes(1);
+	});
+
+	it("once() should fire listener only once", () => {
+		const listener = vi.fn();
+		event.once("testOnce", listener);
+
+		event.emit("testOnce");
+		event.emit("testOnce");
+		expect(listener).toHaveBeenCalledTimes(1);
+	});
+
+	it("off() should remove a listener", () => {
+		const listener = vi.fn();
+		event.on("testOff", listener);
+
+		event.emit("testOff");
+		expect(listener).toHaveBeenCalledTimes(1);
+
+		event.off("testOff", listener);
+		event.emit("testOff");
+		expect(listener).toHaveBeenCalledTimes(1);
+	});
+
+	it("emit() should pass arguments to listeners", () => {
+		const listener = vi.fn();
+		event.on("testArgs", listener);
+
+		event.emit("testArgs", "hello", 42);
+		expect(listener).toHaveBeenCalledWith("hello", 42);
+
+		event.off("testArgs", listener);
+	});
+
+	it("has() should check listener registration", () => {
+		const listener = vi.fn();
+
+		expect(event.has("testHas", listener)).toBe(false);
+
+		event.on("testHas", listener);
+		expect(event.has("testHas", listener)).toBe(true);
+
+		event.off("testHas", listener);
+		expect(event.has("testHas", listener)).toBe(false);
+	});
+
+	it("on() with context should pass correct this to listener", () => {
+		const context = { value: 0 };
+
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
+		event.on(
+			"testCtx",
+			function (this: any) {
+				context.value = this === context ? 1 : 0;
+			},
+			context,
+		);
+
+		event.emit("testCtx");
+		expect(context.value).toBe(1);
+
+		event.off("testCtx", function () {}, context);
+	});
 });
