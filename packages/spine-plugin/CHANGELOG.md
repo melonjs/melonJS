@@ -5,6 +5,9 @@
 ### Added
 - Tiled integration: Spine objects can now be placed directly in Tiled maps — set the object class to "Spine" and add `atlasFile`/`jsonFile` custom properties. The plugin registers a Tiled object class on initialization via `registerTiledObjectClass("Spine", Spine)`
 
+### Changed
+- minimum melonJS version is now 18.4.0 (Tiled object factory registry)
+
 ### Fixed
 - Auto-detect `premultipliedAlpha` from atlas pages and set it on the SkeletonRenderer, fixing incorrect blending for PMA textures (e.g. Cloud Pot)
 
