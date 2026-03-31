@@ -40,8 +40,10 @@ export class EventEmitter<Events extends EventsMap = DefaultEvents> {
 	removeAllListeners(event?: keyof Events) {
 		if (event) {
 			delete this.eventListeners[event];
+			delete this.eventListenersOnce[event];
 		} else {
 			this.eventListeners = {};
+			this.eventListenersOnce = {};
 		}
 	}
 

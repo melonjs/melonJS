@@ -141,3 +141,79 @@ test("hasListener()", () => {
 	expect(emitter.hasListener("message2", listener2)).toBe(false);
 	expect(emitter.hasListener("message2", listener3)).toBe(false);
 });
+
+test("emit() with multiple arguments", () => {
+	const emitter = new EventEmitter();
+	const listener = vi.fn();
+	emitter.addListener("data", listener);
+
+	emitter.emit("data", "arg1", 42, true);
+	expect(listener).toHaveBeenCalledWith("arg1", 42, true);
+});
+
+test("emit() on non-existing event does not throw", () => {
+	const emitter = new EventEmitter();
+	expect(() => {
+		emitter.emit("nonexistent");
+	}).not.toThrow();
+});
+
+test("multiple listeners fire in registration order", () => {
+	const emitter = new EventEmitter();
+	const order: number[] = [];
+
+	emitter.addListener("message", () => {
+		order.push(1);
+	});
+	emitter.addListener("message", () => {
+		order.push(2);
+	});
+	emitter.addListener("message", () => {
+		order.push(3);
+	});
+
+	emitter.emit("message");
+	expect(order).toEqual([1, 2, 3]);
+});
+
+test("removeListener() removes a once-listener before it fires", () => {
+	const emitter = new EventEmitter();
+	const listener = vi.fn();
+	emitter.addListenerOnce("message", listener);
+
+	emitter.removeListener("message", listener);
+	emitter.emit("message");
+	expect(listener).not.toHaveBeenCalled();
+});
+
+test("removeAllListeners() clears once-listeners too", () => {
+	const emitter = new EventEmitter();
+	const listener = vi.fn();
+	const onceListener = vi.fn();
+
+	emitter.addListener("message", listener);
+	emitter.addListenerOnce("message", onceListener);
+
+	emitter.removeAllListeners();
+
+	emitter.emit("message");
+	expect(listener).not.toHaveBeenCalled();
+	expect(onceListener).not.toHaveBeenCalled();
+});
+
+test("removeAllListeners(event) clears once-listeners for that event", () => {
+	const emitter = new EventEmitter();
+	const onceListener = vi.fn();
+	const otherListener = vi.fn();
+
+	emitter.addListenerOnce("message", onceListener);
+	emitter.addListenerOnce("other", otherListener);
+
+	emitter.removeAllListeners("message");
+
+	emitter.emit("message");
+	emitter.emit("other");
+
+	expect(onceListener).not.toHaveBeenCalled();
+	expect(otherListener).toHaveBeenCalledTimes(1);
+});
