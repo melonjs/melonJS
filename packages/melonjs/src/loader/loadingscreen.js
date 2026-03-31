@@ -69,8 +69,8 @@ class ProgressBar extends Renderable {
 	 * @ignore
 	 */
 	onDestroyEvent() {
-		eventEmitter.removeListener(LOADER_PROGRESS, this.onProgressUpdate);
-		eventEmitter.removeListener(VIEWPORT_ONRESIZE, this.resize);
+		eventEmitter.removeListener(LOADER_PROGRESS, this.onProgressUpdate, this);
+		eventEmitter.removeListener(VIEWPORT_ONRESIZE, this.resize, this);
 	}
 }
 
@@ -164,7 +164,7 @@ class DefaultLoadingScreen extends Stage {
 		// remove the listener in case state.change() is called
 		// before the preloader fires LOADER_COMPLETE
 		if (!this.#cleanedUp) {
-			eventEmitter.removeListener(LOADER_COMPLETE, this.#cleanup);
+			eventEmitter.removeListener(LOADER_COMPLETE, this.#cleanup, this);
 		}
 		this.#cleanup();
 	}

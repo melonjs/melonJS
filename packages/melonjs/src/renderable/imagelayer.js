@@ -294,9 +294,9 @@ export default class ImageLayer extends Sprite {
 	// called when the layer is removed from the game world or a container
 	onDeactivateEvent() {
 		// cancel all event subscriptions
-		eventEmitter.removeListener(VIEWPORT_ONCHANGE, this.updateLayer);
-		eventEmitter.removeListener(VIEWPORT_ONRESIZE, this.resize);
-		eventEmitter.removeListener(LEVEL_LOADED, this.updateLayer);
+		eventEmitter.removeListener(VIEWPORT_ONCHANGE, this.updateLayer, this);
+		eventEmitter.removeListener(VIEWPORT_ONRESIZE, this.resize, this);
+		eventEmitter.removeListener(LEVEL_LOADED, this.updateLayer, this);
 	}
 
 	/**
@@ -306,7 +306,7 @@ export default class ImageLayer extends Sprite {
 	destroy() {
 		vector2dPool.release(this.ratio);
 		this.ratio = undefined;
-		eventEmitter.removeListener(ONCONTEXT_RESTORED, this.createPattern);
+		eventEmitter.removeListener(ONCONTEXT_RESTORED, this.createPattern, this);
 		super.destroy();
 	}
 }
