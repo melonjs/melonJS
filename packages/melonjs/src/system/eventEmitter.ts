@@ -34,7 +34,7 @@ export class EventEmitter<Events extends EventsMap = DefaultEvents> {
 		eventListenerList.push({ fn: listener, ctx: context });
 
 		return () => {
-			this.removeListener(event, listener);
+			this.removeListener(event, listener, context);
 		};
 	}
 
@@ -61,10 +61,16 @@ export class EventEmitter<Events extends EventsMap = DefaultEvents> {
 		}
 	}
 
-	removeListener<E extends keyof Events>(event: E, listener: Events[E]) {
+	removeListener<E extends keyof Events>(
+		event: E,
+		listener: Events[E],
+		context?: any,
+	) {
 		const listeners = this.eventListeners[event];
 		if (listeners) {
-			const idx = listeners.findIndex((entry) => entry.fn === listener);
+			const idx = listeners.findIndex(
+				(entry) => entry.fn === listener && entry.ctx === context,
+			);
 			if (idx !== -1) {
 				listeners.splice(idx, 1);
 			}
@@ -72,7 +78,9 @@ export class EventEmitter<Events extends EventsMap = DefaultEvents> {
 
 		const listenersOnce = this.eventListenersOnce[event];
 		if (listenersOnce) {
-			const idx = listenersOnce.findIndex((entry) => entry.fn === listener);
+			const idx = listenersOnce.findIndex(
+				(entry) => entry.fn === listener && entry.ctx === context,
+			);
 			if (idx !== -1) {
 				listenersOnce.splice(idx, 1);
 			}
@@ -96,10 +104,18 @@ export class EventEmitter<Events extends EventsMap = DefaultEvents> {
 		}
 	}
 
-	hasListener<E extends keyof Events>(event: E, listener: Events[E]) {
+	hasListener<E extends keyof Events>(
+		event: E,
+		listener: Events[E],
+		context?: any,
+	) {
 		return (
-			!!this.eventListeners[event]?.some((entry) => entry.fn === listener) ||
-			!!this.eventListenersOnce[event]?.some((entry) => entry.fn === listener)
+			!!this.eventListeners[event]?.some(
+				(entry) => entry.fn === listener && entry.ctx === context,
+			) ||
+			!!this.eventListenersOnce[event]?.some(
+				(entry) => entry.fn === listener && entry.ctx === context,
+			)
 		);
 	}
 }

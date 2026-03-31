@@ -425,9 +425,14 @@ export function once<E extends keyof Events>(
  * remove the given listener for a given event.
  * @param eventName - The event name.
  * @param listener - The listener function.
+ * @param [context] - The context that was used when registering the listener.
  * @example
  * me.event.off("event-name", myFunction);
  */
-export function off<E extends keyof Events>(eventName: E, listener: Events[E]) {
-	eventEmitter.removeListener(eventName, listener);
+export function off<E extends keyof Events>(
+	eventName: E,
+	listener: Events[E],
+	context?: any,
+) {
+	eventEmitter.removeListener(eventName, listener, context);
 }

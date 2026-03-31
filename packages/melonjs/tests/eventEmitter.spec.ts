@@ -252,20 +252,38 @@ test("addListenerOnce() with context applies correct this", () => {
 	expect(context.value).toBe(1);
 });
 
-test("removeListener() works with original reference when context was used", () => {
+test("removeListener() works with original reference and context", () => {
 	const emitter = new EventEmitter();
 	const context = { name: "ctx" };
 	const listener = vi.fn();
 
 	emitter.addListener("message", listener, context);
-	expect(emitter.hasListener("message", listener)).toBe(true);
+	expect(emitter.hasListener("message", listener, context)).toBe(true);
 
-	// can remove by original function reference (not a bound copy)
-	emitter.removeListener("message", listener);
-	expect(emitter.hasListener("message", listener)).toBe(false);
+	// remove by original function reference + context
+	emitter.removeListener("message", listener, context);
+	expect(emitter.hasListener("message", listener, context)).toBe(false);
 
 	emitter.emit("message");
 	expect(listener).not.toHaveBeenCalled();
+});
+
+test("same listener with different contexts are independent", () => {
+	const emitter = new EventEmitter();
+	const ctxA = { name: "A" };
+	const ctxB = { name: "B" };
+	const listener = vi.fn();
+
+	emitter.addListener("message", listener, ctxA);
+	emitter.addListener("message", listener, ctxB);
+
+	// removing one context doesn't affect the other
+	emitter.removeListener("message", listener, ctxA);
+	expect(emitter.hasListener("message", listener, ctxA)).toBe(false);
+	expect(emitter.hasListener("message", listener, ctxB)).toBe(true);
+
+	emitter.emit("message");
+	expect(listener).toHaveBeenCalledTimes(1);
 });
 
 test("listener without context has undefined this", () => {
