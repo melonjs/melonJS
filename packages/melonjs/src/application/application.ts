@@ -240,7 +240,15 @@ export default class Application {
 		}
 
 		// prevent white flash before first render by matching the renderer default
-		if (!this.parentElement.style.backgroundColor) {
+		// only set if no background is defined (neither inline nor via CSS)
+		const computedBg = globalThis.getComputedStyle(
+			this.parentElement,
+		).backgroundColor;
+		if (
+			!computedBg ||
+			computedBg === "rgba(0, 0, 0, 0)" ||
+			computedBg === "transparent"
+		) {
 			this.parentElement.style.backgroundColor = "#000000";
 		}
 
