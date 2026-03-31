@@ -243,6 +243,11 @@ export default class Application {
 			this.settings.scaleTarget = device.getElement(this.settings.scaleTarget);
 		}
 
+		// prevent white flash before first render by matching the renderer default
+		if (!this.parentElement.style.backgroundColor) {
+			this.parentElement.style.backgroundColor = "#000000";
+		}
+
 		if (typeof this.settings.renderer === "number") {
 			switch (this.settings.renderer) {
 				case AUTO:
