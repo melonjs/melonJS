@@ -117,7 +117,7 @@ export {
 	Container,
 	Draggable,
 	DropTarget,
-	Entity,
+	Entity, // eslint-disable-line @typescript-eslint/no-deprecated
 	GLShader,
 	ImageLayer,
 	Light2d,
@@ -164,9 +164,9 @@ export {
 
 /**
  * disable melonJS auto-initialization
- * @type {boolean}
  * @see {@link boot}
  */
+// eslint-disable-next-line prefer-const
 export let skipAutoInit = false;
 
 // create and register the default game application instance
@@ -176,17 +176,15 @@ export { game } from "./application/application.ts";
 
 /**
  * initialize the melonJS library.
- * this is automatically called unless me.skipAutoInit is set to true,
+ * this is automatically called unless skipAutoInit is set to true,
  * to allow asynchronous loaders to work.
- * @name boot
  * @see {@link skipAutoInit}
- * @public
  */
 export { boot } from "./system/bootstrap.ts";
 
 // call the library init function when ready
 DOMContentLoaded(() => {
-	if (skipAutoInit === false) {
+	if (!skipAutoInit) {
 		boot();
 	}
 });
