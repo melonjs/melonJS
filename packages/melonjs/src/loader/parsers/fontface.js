@@ -8,8 +8,8 @@ import { fontList } from "../cache.js";
  * @returns {number} the amount of corresponding resource parsed/preloaded
  * @ignore
  * @example
- * preloadFontFace(
- *     name: "'kenpixel'", type: "fontface",  src: "data/font/kenvector_future.woff2"
+ * preloadFontFace([
+ *     { name: "'kenpixel'", type: "fontface", src: "data/font/kenvector_future.woff2" }
  * ]);
  */
 export function preloadFontFace(data, onload, onerror) {
@@ -39,10 +39,10 @@ export function preloadFontFace(data, onload, onerror) {
 					onload();
 				}
 			},
-			() => {
+			(error) => {
 				// rejected
 				if (typeof onerror === "function") {
-					onerror(data.name);
+					onerror(error);
 				}
 			},
 		);

@@ -393,4 +393,86 @@ describe("loader", () => {
 		expect(loader.unload({ name: "nope", type: "tmx" })).toBe(false);
 		expect(loader.unload({ name: "nope", type: "video" })).toBe(false);
 	});
+
+	it("should call onerror for invalid image sources", async () => {
+		await expect(
+			new Promise((resolve, reject) => {
+				loader.load(
+					{
+						name: "bad_image",
+						type: "image",
+						src: "nonexistent/path/image.png",
+					},
+					() => {
+						reject(new Error("should not succeed"));
+					},
+					() => {
+						resolve(true);
+					},
+				);
+			}),
+		).resolves.toBe(true);
+	});
+
+	it("should call onerror for invalid JSON sources", async () => {
+		await expect(
+			new Promise((resolve, reject) => {
+				loader.load(
+					{
+						name: "bad_json",
+						type: "json",
+						src: "nonexistent/path/data.json",
+					},
+					() => {
+						reject(new Error("should not succeed"));
+					},
+					() => {
+						resolve(true);
+					},
+				);
+			}),
+		).resolves.toBe(true);
+	});
+
+	it("should call onerror for invalid binary sources", async () => {
+		await expect(
+			new Promise((resolve, reject) => {
+				loader.load(
+					{
+						name: "bad_binary",
+						type: "binary",
+						src: "nonexistent/path/data.bin",
+					},
+					() => {
+						reject(new Error("should not succeed"));
+					},
+					() => {
+						resolve(true);
+					},
+				);
+			}),
+		).resolves.toBe(true);
+	});
+
+	it("should handle inline TMX data and return 1", () => {
+		const result = loader.load(
+			{
+				name: "inline_tmx",
+				type: "tmx",
+				data: {
+					width: 1,
+					height: 1,
+					tilewidth: 32,
+					tileheight: 32,
+					orientation: "orthogonal",
+					renderorder: "right-down",
+					version: "1.10",
+					layers: [],
+					tilesets: [],
+				},
+			},
+			() => {},
+		);
+		expect(result).toBe(1);
+	});
 });

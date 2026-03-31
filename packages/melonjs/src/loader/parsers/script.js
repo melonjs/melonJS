@@ -12,7 +12,7 @@ export function preloadJavascript(data, onload, onerror, settings) {
 
 	script.src = data.src;
 	script.type = "text/javascript";
-	if (typeof crossOrigin === "string") {
+	if (typeof settings.crossOrigin === "string") {
 		script.crossOrigin = settings.crossOrigin;
 	}
 	script.defer = true;
