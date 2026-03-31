@@ -201,7 +201,7 @@ export default class Application {
 			width,
 			height,
 			autoScale,
-			scale: autoScale ? 1.0 : (merged.scale as number) || 1.0,
+			scale: autoScale ? 1.0 : +merged.scale || 1.0,
 			zoomX: 0,
 			zoomY: 0,
 			depthTest: merged.depthTest === "z-buffer" ? "z-buffer" : "sorting",
