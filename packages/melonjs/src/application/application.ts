@@ -239,9 +239,12 @@ export default class Application {
 			this.settings.scaleTarget = device.getElement(this.settings.scaleTarget);
 		}
 
-		// prevent white flash before first render by matching the renderer default
-		// only set if no background is defined (neither inline nor via CSS)
-		if (typeof globalThis.getComputedStyle === "function") {
+		// set the CSS background color on the parent element to prevent
+		// a white flash before the first render frame
+		if (
+			this.settings.backgroundColor !== "transparent" &&
+			typeof globalThis.getComputedStyle === "function"
+		) {
 			const computedBg = globalThis.getComputedStyle(
 				this.parentElement,
 			).backgroundColor;
@@ -250,7 +253,8 @@ export default class Application {
 				computedBg === "rgba(0, 0, 0, 0)" ||
 				computedBg === "transparent"
 			) {
-				this.parentElement.style.backgroundColor = "#000000";
+				this.parentElement.style.backgroundColor =
+					this.settings.backgroundColor;
 			}
 		}
 

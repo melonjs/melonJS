@@ -88,6 +88,14 @@ export type ApplicationSettings = {
 	legacy: boolean;
 
 	/**
+	 * the CSS background color of the parent element that holds the canvas.
+	 * Applied during initialization to prevent a white flash before the first render.
+	 * Set to `"transparent"` to disable, or any valid CSS color value.
+	 * @default "#000000"
+	 */
+	backgroundColor: string;
+
+	/**
 	 * a custom batcher class (WebGL only)
 	 * @deprecated since 18.1.0 — use `batcher` instead
 	 */
