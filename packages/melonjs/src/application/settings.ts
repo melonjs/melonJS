@@ -109,3 +109,16 @@ export type ApplicationSettings = {
 			canvas: HTMLCanvasElement;
 	  }
 );
+
+/**
+ * Resolved application settings after init() has processed the input.
+ * Includes computed properties not present in the user-facing settings.
+ */
+export type ResolvedApplicationSettings = ApplicationSettings & {
+	width: number;
+	height: number;
+	autoScale: boolean;
+	zoomX: number;
+	zoomY: number;
+	scale: number;
+};

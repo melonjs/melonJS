@@ -33,7 +33,10 @@ import { defaultApplicationSettings } from "./defaultApplicationSettings.ts";
 import { consoleHeader } from "./header.ts";
 import { onresize } from "./resize.ts";
 import { ScaleMethods } from "./scaleMethods.ts";
-import type { ApplicationSettings } from "./settings.ts";
+import type {
+	ApplicationSettings,
+	ResolvedApplicationSettings,
+} from "./settings.ts";
 
 /**
  * An Application represents a single melonJS game, and is responsible for updating (each frame) all the related object status and draw them.
@@ -86,14 +89,7 @@ export default class Application {
 	/**
 	 * the given settings used when creating this application
 	 */
-	settings!: ApplicationSettings & {
-		width: number;
-		height: number;
-		autoScale: boolean;
-		zoomX: number;
-		zoomY: number;
-		scale: number | "auto";
-	};
+	settings!: ResolvedApplicationSettings;
 
 	/**
 	 * Specify whether to pause this app when losing focus
@@ -189,29 +185,32 @@ export default class Application {
 			boot();
 		}
 
-		this.settings = {
+		const merged = {
 			...defaultApplicationSettings,
 			...(options || {}),
-		} as any;
+		};
 
-		// sanitize potential given parameters
-		(this.settings as any).width = width;
-		(this.settings as any).height = height;
-		// These are already booleans from the settings type, so no conversion needed
-		this.settings.depthTest =
-			this.settings.depthTest === "z-buffer" ? "z-buffer" : "sorting";
-		if (
-			this.settings.scaleMethod.search(
-				/^(fill-(min|max)|fit|flex(-(width|height))?|stretch)$/,
-			) !== -1
-		) {
-			(this.settings as any).autoScale = this.settings.scale === "auto" || true;
-		} else {
-			// default scaling method
-			this.settings.scaleMethod = ScaleMethods.Fit;
-			(this.settings as any).autoScale =
-				this.settings.scale === "auto" || false;
-		}
+		const autoScale =
+			merged.scale === "auto" ||
+			/^(fill-(min|max)|fit|flex(-(width|height))?|stretch)$/.test(
+				merged.scaleMethod,
+			);
+
+		const settings = {
+			...merged,
+			width,
+			height,
+			autoScale,
+			scale: autoScale ? 1.0 : (merged.scale as number) || 1.0,
+			zoomX: 0,
+			zoomY: 0,
+			depthTest: merged.depthTest === "z-buffer" ? "z-buffer" : "sorting",
+			scaleMethod: /^(fill-(min|max)|fit|flex(-(width|height))?|stretch)$/.test(
+				merged.scaleMethod,
+			)
+				? merged.scaleMethod
+				: ScaleMethods.Fit,
+		} as ResolvedApplicationSettings;
 
 		// override renderer settings if &webgl or &canvas is defined in the URL
 		const uriFragment = getUriFragment();
@@ -220,25 +219,22 @@ export default class Application {
 			uriFragment.webgl1 === true ||
 			uriFragment.webgl2 === true
 		) {
-			this.settings.renderer = WEBGL;
+			settings.renderer = WEBGL;
 			if (uriFragment.webgl1 === true) {
-				this.settings.preferWebGL1 = true;
+				settings.preferWebGL1 = true;
 			}
 		} else if (uriFragment.canvas === true) {
-			this.settings.renderer = CANVAS;
+			settings.renderer = CANVAS;
 		}
 
-		// normalize scale
-		(this.settings as any).scale = (this.settings as any).autoScale
-			? 1.0
-			: +this.settings.scale || 1.0;
+		// computed scaled size
+		settings.zoomX = width * settings.scale;
+		settings.zoomY = height * settings.scale;
 
-		// default scaled size value
-		(this.settings as any).zoomX = width * (this.settings.scale as number);
-		(this.settings as any).zoomY = height * (this.settings.scale as number);
+		this.settings = settings;
 
 		// identify parent element and/or the html target for resizing
-		this.parentElement = device.getElement((this.settings as any).parent);
+		this.parentElement = device.getElement(this.settings.parent!);
 		if (typeof this.settings.scaleTarget !== "undefined") {
 			this.settings.scaleTarget = device.getElement(this.settings.scaleTarget);
 		}
