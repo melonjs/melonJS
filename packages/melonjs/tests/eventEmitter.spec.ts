@@ -312,73 +312,73 @@ describe("event.ts public API", () => {
 
 	it("on() should register a listener and return unsubscribe function", () => {
 		const listener = vi.fn();
-		const unsub = event.on("testEvent", listener);
+		const unsub = event.on(event.GAME_RESET, listener);
 
-		event.emit("testEvent");
+		event.emit(event.GAME_RESET);
 		expect(listener).toHaveBeenCalledTimes(1);
 
 		unsub();
-		event.emit("testEvent");
+		event.emit(event.GAME_RESET);
 		expect(listener).toHaveBeenCalledTimes(1);
+
+		// clean up any side effects from GAME_RESET
 	});
 
 	it("once() should fire listener only once", () => {
 		const listener = vi.fn();
-		event.once("testOnce", listener);
+		event.once(event.STAGE_RESET, listener);
 
-		event.emit("testOnce");
-		event.emit("testOnce");
+		event.emit(event.STAGE_RESET);
+		event.emit(event.STAGE_RESET);
 		expect(listener).toHaveBeenCalledTimes(1);
 	});
 
 	it("off() should remove a listener", () => {
 		const listener = vi.fn();
-		event.on("testOff", listener);
+		event.on(event.STATE_CHANGE, listener);
 
-		event.emit("testOff");
+		event.emit(event.STATE_CHANGE);
 		expect(listener).toHaveBeenCalledTimes(1);
 
-		event.off("testOff", listener);
-		event.emit("testOff");
+		event.off(event.STATE_CHANGE, listener);
+		event.emit(event.STATE_CHANGE);
 		expect(listener).toHaveBeenCalledTimes(1);
 	});
 
 	it("emit() should pass arguments to listeners", () => {
 		const listener = vi.fn();
-		event.on("testArgs", listener);
+		event.on(event.GAME_UPDATE, listener);
 
-		event.emit("testArgs", "hello", 42);
-		expect(listener).toHaveBeenCalledWith("hello", 42);
+		event.emit(event.GAME_UPDATE, 16);
+		expect(listener).toHaveBeenCalledWith(16);
 
-		event.off("testArgs", listener);
+		event.off(event.GAME_UPDATE, listener);
 	});
 
 	it("has() should check listener registration", () => {
 		const listener = vi.fn();
 
-		expect(event.has("testHas", listener)).toBe(false);
+		expect(event.has(event.STATE_PAUSE, listener)).toBe(false);
 
-		event.on("testHas", listener);
-		expect(event.has("testHas", listener)).toBe(true);
+		event.on(event.STATE_PAUSE, listener);
+		expect(event.has(event.STATE_PAUSE, listener)).toBe(true);
 
-		event.off("testHas", listener);
-		expect(event.has("testHas", listener)).toBe(false);
+		event.off(event.STATE_PAUSE, listener);
+		expect(event.has(event.STATE_PAUSE, listener)).toBe(false);
 	});
 
 	it("on() with context should pass correct this to listener", () => {
 		const context = { value: 0 };
 
 		event.on(
-			"testCtx",
+			event.STATE_STOP,
 			function (this: any) {
 				context.value = this === context ? 1 : 0;
 			},
 			context,
 		);
 
-		event.emit("testCtx");
+		event.emit(event.STATE_STOP);
 		expect(context.value).toBe(1);
-
-		event.off("testCtx", function () {}, context);
 	});
 });
