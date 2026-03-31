@@ -189,10 +189,10 @@ export default class Application {
 			boot();
 		}
 
-		this.settings = Object.assign(
-			defaultApplicationSettings,
-			options || {},
-		) as any;
+		this.settings = {
+			...defaultApplicationSettings,
+			...(options || {}),
+		} as any;
 
 		// sanitize potential given parameters
 		(this.settings as any).width = width;

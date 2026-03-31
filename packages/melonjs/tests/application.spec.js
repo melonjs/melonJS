@@ -149,7 +149,7 @@ describe("Application", () => {
 	});
 
 	describe("multiple Application instances", () => {
-		it("should create separate instances with independent worlds and renderers", () => {
+		it("should have independent settings, worlds, and renderers", () => {
 			const app1 = new Application(320, 240, {
 				parent: "screen",
 				renderer: video.CANVAS,
@@ -162,6 +162,8 @@ describe("Application", () => {
 			});
 
 			expect(app1).not.toBe(app2);
+			expect(app1.settings.width).toBe(320);
+			expect(app2.settings.width).toBe(640);
 			expect(app1.world).not.toBe(app2.world);
 			expect(app1.renderer).not.toBe(app2.renderer);
 		});
