@@ -326,7 +326,8 @@ export default class Text extends Renderable {
 	 * @param {number} [y]
 	 */
 	draw(renderer, text, x = this.pos.x, y = this.pos.y) {
-		// "hacky patch" for backward compatibilty
+		// @deprecated since 10.6.0 — standalone draw without a parent container
+		// TODO: remove in 19.0.0
 		if (typeof this.ancestor === "undefined") {
 			// update position if changed
 			if (this.pos.x !== x || this.pos.y !== y) {
@@ -358,7 +359,7 @@ export default class Text extends Renderable {
 		// draw the text
 		renderer.drawImage(this.canvasTexture.canvas, x, y);
 
-		// for backward compatibilty
+		// @deprecated since 10.6.0 — TODO: remove in 19.0.0
 		if (typeof this.ancestor === "undefined") {
 			// restore previous context
 			renderer.restore();
