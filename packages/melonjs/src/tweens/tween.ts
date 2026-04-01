@@ -1,5 +1,5 @@
 import { game } from "../application/application.ts";
-import { off, on, STATE_RESUME } from "../system/event.js";
+import { GAME_AFTER_UPDATE, off, on, STATE_RESUME } from "../system/event.js";
 import { createPool } from "../system/pool.ts";
 import timer from "../system/timer.js";
 import { Easing, EasingFunction } from "./easing.js";
@@ -50,6 +50,7 @@ export default class Tween {
 	_onUpdateCallback: OnUpdateCallback<object> | null;
 	_onCompleteCallback: OnCompleteCallback<object> | null;
 	_tweenTimeTracker: number;
+	_lastUpdate: number;
 	isPersistent: boolean;
 	updateWhenPaused: boolean;
 	isRenderable: boolean;
@@ -99,8 +100,9 @@ export default class Tween {
 		this._onStartCallbackFired = false;
 		this._onUpdateCallback = null;
 		this._onCompleteCallback = null;
-		// tweens are synchronized with the game update loop
-		this._tweenTimeTracker = game.lastUpdate;
+		// track the last update timestamp from the game loop
+		this._lastUpdate = globalThis.performance.now();
+		this._tweenTimeTracker = this._lastUpdate;
 
 		// reset flags to default value
 		this.isPersistent = false;
@@ -126,13 +128,20 @@ export default class Tween {
 		}
 	}
 
+	/** @ignore */
+	_onAfterUpdate(lastUpdate: number) {
+		this._lastUpdate = lastUpdate;
+	}
+
 	/**
-	 * subscribe to the resume event when added
+	 * subscribe to events when added
 	 * @ignore
 	 */
 	onActivateEvent() {
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		on(STATE_RESUME, this._resumeCallback, this);
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		on(GAME_AFTER_UPDATE, this._onAfterUpdate, this);
 	}
 
 	/**
@@ -142,6 +151,8 @@ export default class Tween {
 	onDeactivateEvent() {
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		off(STATE_RESUME, this._resumeCallback, this);
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		off(GAME_AFTER_UPDATE, this._onAfterUpdate, this);
 	}
 
 	/**
@@ -344,8 +355,8 @@ export default class Tween {
 		// the original Tween implementation expect
 		// a timestamp and not a time delta
 		this._tweenTimeTracker =
-			game.lastUpdate > this._tweenTimeTracker
-				? game.lastUpdate
+			this._lastUpdate > this._tweenTimeTracker
+				? this._lastUpdate
 				: this._tweenTimeTracker + dt;
 		const time = this._tweenTimeTracker;
 
