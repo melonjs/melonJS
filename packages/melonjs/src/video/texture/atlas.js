@@ -283,11 +283,6 @@ export class TextureAtlas {
 	 * @returns {object} the created region
 	 */
 	addRegion(name, x, y, w, h) {
-		// see https://github.com/melonjs/melonJS/issues/1281
-		if (game.renderer.settings.verbose === true) {
-			console.warn("Adding texture region", name, "for texture", this);
-		}
-
 		const source = this.getTexture();
 		const atlas = this.getAtlas();
 		const dw = source.width;
