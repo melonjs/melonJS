@@ -1,6 +1,15 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { game as gameFromModule } from "../src/application/application.ts";
-import { Application, boot, game, video } from "../src/index.js";
+import {
+	Application,
+	boot,
+	Container,
+	game,
+	Renderable,
+	Sprite,
+	Text,
+	video,
+} from "../src/index.js";
 import { initialized } from "../src/system/bootstrap.ts";
 
 describe("Application", () => {
@@ -229,6 +238,68 @@ describe("Application", () => {
 			expect(canvas.parentElement).not.toBeNull();
 			// clean up manually
 			canvas.parentElement.removeChild(canvas);
+		});
+	});
+
+	describe("parentApp", () => {
+		beforeAll(() => {
+			boot();
+			video.init(800, 600, {
+				parent: "screen",
+				scale: "auto",
+				renderer: video.AUTO,
+			});
+		});
+
+		it("should return the Application for renderables added to world", () => {
+			const obj = new Renderable(0, 0, 32, 32);
+			game.world.addChild(obj);
+
+			expect(obj.parentApp).toBeDefined();
+			expect(obj.parentApp).toBeInstanceOf(Application);
+			expect(obj.parentApp.renderer).toBe(game.renderer);
+
+			game.world.removeChild(obj);
+		});
+
+		it("should return the Application for nested renderables", () => {
+			const container = new Container(0, 0, 100, 100);
+			const child = new Renderable(0, 0, 16, 16);
+			container.addChild(child);
+			game.world.addChild(container);
+
+			expect(child.parentApp).toBeDefined();
+			expect(child.parentApp).toBeInstanceOf(Application);
+			expect(child.parentApp.renderer).toBe(game.renderer);
+
+			game.world.removeChild(container);
+		});
+
+		it("should give access to the renderer via parentApp", () => {
+			const obj = new Renderable(0, 0, 32, 32);
+			game.world.addChild(obj);
+
+			// parentApp.renderer should be the same as game.renderer
+			expect(obj.parentApp.renderer).toBe(game.renderer);
+			expect(obj.parentApp.renderer.getCanvas()).toBeInstanceOf(
+				globalThis.HTMLCanvasElement,
+			);
+
+			game.world.removeChild(obj);
+		});
+
+		it("should be undefined before being added to a container", () => {
+			const obj = new Renderable(0, 0, 32, 32);
+			expect(obj.parentApp).toBeUndefined();
+		});
+
+		it("should give access to the texture cache via parentApp", () => {
+			const obj = new Renderable(0, 0, 32, 32);
+			game.world.addChild(obj);
+
+			expect(obj.parentApp.renderer.cache).toBeDefined();
+
+			game.world.removeChild(obj);
 		});
 	});
 });
