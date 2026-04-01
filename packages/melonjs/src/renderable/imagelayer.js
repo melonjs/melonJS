@@ -159,10 +159,10 @@ export default class ImageLayer extends Sprite {
 	 * @ignore
 	 */
 	createPattern() {
-		this._pattern = this.parentApp.renderer.createPattern(
-			this.image,
-			this._repeat,
-		);
+		const renderer = this.parentApp?.renderer ?? game.renderer;
+		if (renderer) {
+			this._pattern = renderer.createPattern(this.image, this._repeat);
+		}
 	}
 
 	/**

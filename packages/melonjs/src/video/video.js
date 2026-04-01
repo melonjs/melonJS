@@ -26,7 +26,9 @@ import {
 export { AUTO, CANVAS, WEBGL } from "../const";
 
 /**
- * A reference to the active Canvas or WebGL active renderer renderer
+ * A reference to the active Canvas or WebGL renderer.
+ * Only available after calling {@link video.init}.
+ * When using {@link Application} directly, use `app.renderer` instead.
  * @memberof video
  * @type {CanvasRenderer|WebGLRenderer}
  */
