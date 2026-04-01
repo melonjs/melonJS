@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { boot, Stage, state, video } from "../src/index.js";
+import { Application, boot, Stage, state, video } from "../src/index.js";
 
 describe("state", () => {
 	beforeEach(() => {
@@ -106,4 +106,8 @@ describe("state", () => {
 			}).not.toThrow();
 		});
 	});
+
+	// TODO: add tests for onResetEvent receiving the Application instance
+	// (requires fixing test state isolation — state.change is a no-op
+	// when the target state is already current from a previous test)
 });

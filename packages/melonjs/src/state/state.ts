@@ -6,6 +6,7 @@ import {
 	BOOT,
 	emit,
 	GAME_INIT,
+	on,
 	once,
 	STATE_CHANGE,
 	STATE_PAUSE,
@@ -157,7 +158,7 @@ once(BOOT, () => {
 	// set and enable the default stage
 	state.set(state.DEFAULT, new Stage());
 	// store the application reference when initialized
-	once(GAME_INIT, (app: Application) => {
+	on(GAME_INIT, (app: Application) => {
 		_app = app;
 	});
 	// enable by default as soon as the display is initialized

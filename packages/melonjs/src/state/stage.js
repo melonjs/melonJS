@@ -105,8 +105,8 @@ export default class Stage {
 		// reset the game
 		emit(STAGE_RESET, this);
 
-		// call the onReset Function
-		this.onResetEvent.apply(this, extraArgs);
+		// call the onReset Function with the app reference and any extra args
+		this.onResetEvent.call(this, app, ...extraArgs);
 	}
 
 	/**
@@ -199,10 +199,11 @@ export default class Stage {
 	 * this is typically where you will load a level, add renderables, etc...
 	 * @name onResetEvent
 	 * @memberof Stage
+	 * @param {Application} app - the current application instance
 	 * @param {...*} [args] - optional arguments passed when switching state
 	 * @see state#change
 	 */
-	onResetEvent() {
+	onResetEvent(/* app, ...args */) {
 		// execute onResetEvent function if given through the constructor
 		if (typeof this.settings.onResetEvent === "function") {
 			this.settings.onResetEvent.apply(this, arguments);
