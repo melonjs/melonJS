@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { Application, boot, Stage, state, video } from "../src/index.js";
+import { boot, Stage, state, video } from "../src/index.js";
 
 describe("state", () => {
 	beforeEach(() => {
