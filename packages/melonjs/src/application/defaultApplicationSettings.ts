@@ -18,4 +18,5 @@ export const defaultApplicationSettings = {
 	subPixel: false,
 	verbose: false,
 	legacy: false,
+	backgroundColor: "#000000",
 } satisfies Partial<ApplicationSettings>;

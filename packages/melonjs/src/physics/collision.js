@@ -1,4 +1,4 @@
-import { game } from "../index.js";
+import { game } from "../application/application.ts";
 
 /**
  * @import {Line} from "./../geometries/line.ts";

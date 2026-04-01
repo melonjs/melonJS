@@ -1,5 +1,6 @@
+import { game } from "../application/application.ts";
 import { defaultApplicationSettings } from "../application/defaultApplicationSettings.ts";
-import { game, initialized } from "./../index.js";
+import { initialized } from "../system/bootstrap.ts";
 import * as device from "./../system/device.js";
 import {
 	emit,
@@ -32,6 +33,15 @@ export { AUTO, CANVAS, WEBGL } from "../const";
 export let renderer = null;
 
 /**
+ * Set the global renderer reference.
+ * Called by Application.init() to ensure renderables can access the renderer.
+ * @ignore
+ */
+export function setRenderer(r) {
+	renderer = r;
+}
+
+/**
  * Initialize the "video" system (create a canvas based on the given arguments, and the related renderer). <br>
  * @memberof video
  * @param {number} width - The width of the canvas viewport
@@ -55,11 +65,10 @@ export function init(width, height, options) {
 
 	try {
 		// initialize the default game Application with the given options
-		game.init(
-			width,
-			height,
-			Object.assign(defaultApplicationSettings, options || {}),
-		);
+		game.init(width, height, {
+			...defaultApplicationSettings,
+			...(options || {}),
+		});
 	} catch (e) {
 		console.log(e.message);
 		// me.video.init() historically returns false if failing at creating/using a HTML5 canvas

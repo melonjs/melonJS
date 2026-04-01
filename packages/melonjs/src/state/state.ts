@@ -1,10 +1,12 @@
+import type Application from "../application/application.ts";
 import { pauseTrack, resumeTrack } from "./../audio/audio.ts";
-import { game } from "../index.js";
 import DefaultLoadingScreen from "./../loader/loadingscreen.js";
 import Stage from "./../state/stage.js";
 import {
 	BOOT,
 	emit,
+	GAME_INIT,
+	on,
 	once,
 	STATE_CHANGE,
 	STATE_PAUSE,
@@ -125,11 +127,11 @@ function _switchState(stateId: number): void {
 		// set the global variable
 		_state = stateId;
 
-		// call the reset function with _extraArgs as arguments
+		// call the reset function with the app reference and any extra args
 		if (_extraArgs) {
-			_stages[_state].stage.reset(..._extraArgs);
+			_stages[_state].stage.reset(_app, ..._extraArgs);
 		} else {
-			_stages[_state].stage.reset();
+			_stages[_state].stage.reset(_app);
 		}
 
 		// and start the main loop of the
@@ -146,12 +148,19 @@ function _switchState(stateId: number): void {
 	}
 }
 
+// the active application instance
+let _app: Application;
+
 // initialize me.state on system boot
 once(BOOT, () => {
 	// set the built-in loading stage
 	state.set(state.LOADING, new DefaultLoadingScreen());
 	// set and enable the default stage
 	state.set(state.DEFAULT, new Stage());
+	// store the application reference when initialized
+	on(GAME_INIT, (app: Application) => {
+		_app = app;
+	});
 	// enable by default as soon as the display is initialized
 	once(VIDEO_INIT, () => {
 		state.change(state.DEFAULT, true);
@@ -454,9 +463,9 @@ const state = {
 			// if fading effect
 			if (_fade.duration && _stages[stateId].transition) {
 				_onSwitchComplete = () => {
-					game.viewport.fadeOut(_fade.color, _fade.duration);
+					_app.viewport.fadeOut(_fade.color, _fade.duration);
 				};
-				game.viewport.fadeIn(
+				_app.viewport.fadeIn(
 					_fade.color,
 					_fade.duration,
 					function (this: typeof state) {

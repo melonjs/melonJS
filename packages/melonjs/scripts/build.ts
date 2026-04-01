@@ -12,7 +12,7 @@ const banner = [
 ].join("\n");
 
 const buildOptions = {
-	entryPoints: ["src/index.js"],
+	entryPoints: ["src/index.ts"],
 	loader: {
 		".png": "dataurl",
 		".vert": "text",

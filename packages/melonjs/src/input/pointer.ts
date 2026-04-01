@@ -1,4 +1,4 @@
-import { game } from "../index.js";
+import { game } from "../application/application.ts";
 import { Vector2d } from "../math/vector2d.ts";
 import { Bounds } from "./../physics/bounds.ts";
 import { globalToLocal } from "./input.ts";

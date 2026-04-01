@@ -1,15 +1,19 @@
-import { game, Text, video } from "melonjs";
+import { Application, Text } from "melonjs";
 import { createExampleComponent } from "../utils";
 
 export const ExampleHelloWorld = createExampleComponent(() => {
-	// Initialize the video.
-	video.init(1218, 562, { parent: "screen", scale: "auto" });
+	// create a new Application instance
+	const app = new Application(1218, 562, {
+		parent: "screen",
+		scale: "auto",
+		backgroundColor: "#202020",
+	});
 
 	// set a gray background color
-	game.world.backgroundColor.parseCSS("#202020");
+	app.world.backgroundColor.parseCSS("#202020");
 
 	// add a text object in the center of the display
-	game.world.addChild(
+	app.world.addChild(
 		new Text(609, 281, {
 			font: "Arial",
 			size: 160,

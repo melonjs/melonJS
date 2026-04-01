@@ -1,4 +1,4 @@
-import { game } from "../index.js";
+import { game } from "../application/application.ts";
 import { colorPool } from "../math/color.ts";
 import Body from "../physics/body.js";
 import state from "../state/state.ts";

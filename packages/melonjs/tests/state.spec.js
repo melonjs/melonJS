@@ -106,4 +106,8 @@ describe("state", () => {
 			}).not.toThrow();
 		});
 	});
+
+	// TODO: add tests for onResetEvent receiving the Application instance
+	// (requires fixing test state isolation — state.change is a no-op
+	// when the target state is already current from a previous test)
 });

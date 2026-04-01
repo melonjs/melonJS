@@ -1,9 +1,8 @@
 // ES5/ES6 polyfills
 import "./polyfill/index.ts";
 
-import Application from "./application/application.ts";
+import Application, { setDefaultGame } from "./application/application.ts";
 import Camera2d from "./camera/camera2d.ts";
-import { initKeyboardEvent } from "./input/keyboard.ts";
 import Pointer from "./input/pointer.ts";
 import TMXHexagonalRenderer from "./level/tiled/renderer/TMXHexagonalRenderer.js";
 import TMXIsometricRenderer from "./level/tiled/renderer/TMXIsometricRenderer.js";
@@ -16,7 +15,6 @@ import TMXTileMap from "./level/tiled/TMXTileMap.js";
 import TMXTileset from "./level/tiled/TMXTileset.js";
 import TMXTilesetGroup from "./level/tiled/TMXTilesetGroup.js";
 import * as TMXUtils from "./level/tiled/TMXUtils.js";
-import { setNocache } from "./loader/loader.js";
 import ParticleEmitter from "./particles/emitter.ts";
 import Particle from "./particles/particle.ts";
 import ParticleEmitterSettings from "./particles/settings.js";
@@ -46,15 +44,12 @@ import UISpriteElement from "./renderable/ui/uispriteelement.ts";
 import UITextButton from "./renderable/ui/uitextbutton.ts";
 import Stage from "./state/stage.js";
 import state from "./state/state.ts";
-import { initVisibilityEvents } from "./system/device.js";
+import { boot } from "./system/bootstrap.ts";
 import { DOMContentLoaded } from "./system/dom.ts";
-import { BOOT, DOM_READY, emit } from "./system/event.ts";
 import pool from "./system/legacy_pool.js";
 import save from "./system/save.ts";
 import timer from "./system/timer.ts";
 import Tween from "./tweens/tween.ts";
-import { getUriFragment } from "./utils/utils.ts";
-import { version } from "./version.ts";
 import CanvasRenderer from "./video/canvas/canvas_renderer.js";
 import Renderer from "./video/renderer.js";
 import RenderState from "./video/renderstate.js";
@@ -89,8 +84,6 @@ export {
 	registerTiledObjectFactory,
 } from "./level/tiled/TMXObjectFactory.js";
 
-import { registerBuiltinTiledClass } from "./level/tiled/TMXObjectFactory.js";
-
 export * as loader from "./loader/loader.js";
 export { Color } from "./math/color.ts";
 export * as math from "./math/math.ts";
@@ -124,7 +117,7 @@ export {
 	Container,
 	Draggable,
 	DropTarget,
-	Entity,
+	Entity, // eslint-disable-line @typescript-eslint/no-deprecated
 	GLShader,
 	ImageLayer,
 	Light2d,
@@ -170,96 +163,30 @@ export {
 };
 
 /**
- * a flag indicating that melonJS is fully initialized
- * @type {boolean}
- * @default false
- * @readonly
- */
-export let initialized = false;
-
-/**
  * disable melonJS auto-initialization
- * @type {boolean}
  * @see {@link boot}
  */
+// eslint-disable-next-line prefer-const
 export let skipAutoInit = false;
 
-/**
- * game is a default instance of a melonJS Application and represents your current game,
- * it contains all the objects, tilemap layers, current viewport, collision map, etc...<br>
- * @namespace game
- */
-export const game = new Application(0, 0, { legacy: true });
+export { initialized } from "./system/bootstrap.ts";
+
+// create and register the default game application instance
+setDefaultGame(new Application(0, 0, { legacy: true }));
+
+export { game } from "./application/application.ts";
 
 /**
  * initialize the melonJS library.
- * this is automatically called unless me.skipAutoInit is set to true,
+ * this is automatically called unless skipAutoInit is set to true,
  * to allow asynchronous loaders to work.
- * @name boot
  * @see {@link skipAutoInit}
- * @public
  */
-export function boot() {
-	// don't do anything if already initialized (should not happen anyway)
-	if (initialized === true) {
-		return;
-	}
-
-	// output melonJS version in the console
-	console.log("melonJS 2 (v" + version + ") | http://melonjs.org");
-
-	// register all built-ins objects into the object legacy pool
-	pool.register("Entity", Entity);
-	pool.register("Collectable", Collectable);
-	pool.register("Trigger", Trigger);
-	pool.register("Light2d", Light2d);
-	pool.register("Particle", Particle, true);
-	pool.register("Sprite", Sprite);
-	pool.register("NineSliceSprite", NineSliceSprite);
-	pool.register("Renderable", Renderable);
-	pool.register("Text", Text, true);
-	pool.register("BitmapText", BitmapText);
-	pool.register("ImageLayer", ImageLayer);
-	pool.register("Tween", Tween, true);
-	pool.register("ColorLayer", ColorLayer, true);
-
-	// ensure built-in classes are registered as Tiled object factories
-	// (redundant with pool.register auto-registration, but ensures
-	// built-ins remain available if pool behavior changes in the future)
-	registerBuiltinTiledClass("Renderable", Renderable);
-	registerBuiltinTiledClass("Text", Text);
-	registerBuiltinTiledClass("BitmapText", BitmapText);
-	registerBuiltinTiledClass("Entity", Entity);
-	registerBuiltinTiledClass("Collectable", Collectable);
-	registerBuiltinTiledClass("Trigger", Trigger);
-	registerBuiltinTiledClass("Light2d", Light2d);
-	registerBuiltinTiledClass("Sprite", Sprite);
-	registerBuiltinTiledClass("NineSliceSprite", NineSliceSprite);
-	registerBuiltinTiledClass("ImageLayer", ImageLayer);
-	registerBuiltinTiledClass("ColorLayer", ColorLayer);
-
-	// publish Boot notification
-	emit(BOOT);
-
-	// enable/disable the cache
-	setNocache(getUriFragment().nocache || false);
-
-	// automatically enable keyboard events
-	initKeyboardEvent();
-
-	// register blur/focus and visibility change handlers
-	initVisibilityEvents();
-
-	// mark melonJS as initialized
-	initialized = true;
-
-	// notify that the engine is ready
-	emit(DOM_READY);
-}
+export { boot } from "./system/bootstrap.ts";
 
 // call the library init function when ready
 DOMContentLoaded(() => {
-	if (skipAutoInit === false) {
+	if (!skipAutoInit) {
 		boot();
 	}
 });

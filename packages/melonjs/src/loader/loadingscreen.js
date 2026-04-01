@@ -1,4 +1,3 @@
-import { game } from "../index.js";
 import Renderable from "./../renderable/renderable.js";
 import Sprite from "./../renderable/sprite.js";
 import Stage from "./../state/stage.js";
@@ -10,7 +9,6 @@ import {
 	once,
 	VIEWPORT_ONRESIZE,
 } from "../system/event.ts";
-import { renderer } from "./../video/video.js";
 import { load, unload } from "./loader.js";
 import logo_url from "./melonjs_logo.png";
 
@@ -92,6 +90,12 @@ class DefaultLoadingScreen extends Stage {
 	logoSprite = null;
 
 	/**
+	 * reference to the application instance
+	 * @ignore
+	 */
+	#app = null;
+
+	/**
 	 * whether the cleanup has already run
 	 * @ignore
 	 */
@@ -101,22 +105,20 @@ class DefaultLoadingScreen extends Stage {
 	 * call when the loader is resetted
 	 * @ignore
 	 */
-	onResetEvent() {
+	onResetEvent(app) {
 		const barHeight = 8;
 
+		this.#app = app;
 		this.#cleanedUp = false;
 
 		// set a background color
-		game.world.backgroundColor.parseCSS("#202020");
+		app.world.backgroundColor.parseCSS("#202020");
+
+		const { width, height } = app.renderer;
 
 		// progress bar
-		this.progressBar = new ProgressBar(
-			0,
-			renderer.height / 2,
-			renderer.width,
-			barHeight,
-		);
-		game.world.addChild(this.progressBar, 1);
+		this.progressBar = new ProgressBar(0, height / 2, width, barHeight);
+		app.world.addChild(this.progressBar, 1);
 
 		// clean up loading screen children when the preloader completes,
 		// whether or not a state.change() follows
@@ -129,12 +131,12 @@ class DefaultLoadingScreen extends Stage {
 				return;
 			}
 			// melonJS logo
-			this.logoSprite = new Sprite(renderer.width / 2, renderer.height / 2, {
+			this.logoSprite = new Sprite(width / 2, height / 2, {
 				image: "melonjs_logo",
 				framewidth: 256,
 				frameheight: 256,
 			});
-			game.world.addChild(this.logoSprite, 2);
+			app.world.addChild(this.logoSprite, 2);
 		});
 	}
 
@@ -146,11 +148,11 @@ class DefaultLoadingScreen extends Stage {
 		this.#cleanedUp = true;
 
 		if (this.progressBar) {
-			game.world.removeChild(this.progressBar);
+			this.#app.world.removeChild(this.progressBar);
 			this.progressBar = null;
 		}
 		if (this.logoSprite) {
-			game.world.removeChild(this.logoSprite);
+			this.#app.world.removeChild(this.logoSprite);
 			this.logoSprite = null;
 		}
 

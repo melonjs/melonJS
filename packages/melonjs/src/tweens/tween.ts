@@ -1,4 +1,4 @@
-import { game } from "../index.js";
+import { game } from "../application/application.ts";
 import { off, on, STATE_RESUME } from "../system/event.js";
 import { createPool } from "../system/pool.ts";
 import timer from "../system/timer.js";

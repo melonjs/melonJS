@@ -11,7 +11,6 @@ import {
 import Renderer from "./../renderer.js";
 import { createAtlas, TextureAtlas } from "./../texture/atlas.js";
 import TextureCache from "./../texture/cache.js";
-import { renderer } from "./../video.js";
 import PrimitiveBatcher from "./batchers/primitive_batcher";
 import QuadBatcher from "./batchers/quad_batcher";
 
@@ -170,7 +169,7 @@ export default class WebGLRenderer extends Renderer {
 		this.customShader = undefined;
 
 		// Create a texture cache
-		this.cache = new TextureCache(this.maxTextures);
+		this.cache = new TextureCache(this, this.maxTextures);
 
 		// set the renderer type
 		this.type = "WebGL" + this.WebGLVersion;
@@ -395,7 +394,7 @@ export default class WebGLRenderer extends Renderer {
 		this.setBatcher("quad");
 
 		if (
-			renderer.WebGLVersion === 1 &&
+			this.WebGLVersion === 1 &&
 			(!isPowerOfTwo(image.width) || !isPowerOfTwo(image.height))
 		) {
 			const src = typeof image.src !== "undefined" ? image.src : image;

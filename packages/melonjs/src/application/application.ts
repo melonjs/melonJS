@@ -2,6 +2,7 @@ import type Camera2d from "./../camera/camera2d.ts";
 import { AUTO, CANVAS, WEBGL } from "../const.ts";
 import World from "../physics/world.js";
 import state from "../state/state.ts";
+import { boot, initialized } from "../system/bootstrap.ts";
 import * as device from "../system/device.js";
 import {
 	BLUR,
@@ -14,12 +15,14 @@ import {
 	GAME_INIT,
 	GAME_RESET,
 	GAME_UPDATE,
+	off,
 	on,
 	STAGE_RESET,
 	STATE_CHANGE,
 	STATE_RESTART,
 	STATE_RESUME,
 	TICK,
+	VIDEO_INIT,
 	WINDOW_ONORIENTATION_CHANGE,
 	WINDOW_ONRESIZE,
 } from "../system/event.ts";
@@ -28,11 +31,15 @@ import { getUriFragment } from "../utils/utils.ts";
 import CanvasRenderer from "../video/canvas/canvas_renderer.js";
 import type Renderer from "./../video/renderer.js";
 import { autoDetectRenderer } from "../video/utils/autodetect.js";
+import { setRenderer } from "../video/video.js";
 import { defaultApplicationSettings } from "./defaultApplicationSettings.ts";
 import { consoleHeader } from "./header.ts";
 import { onresize } from "./resize.ts";
 import { ScaleMethods } from "./scaleMethods.ts";
-import type { ApplicationSettings } from "./settings.ts";
+import type {
+	ApplicationSettings,
+	ResolvedApplicationSettings,
+} from "./settings.ts";
 
 /**
  * An Application represents a single melonJS game, and is responsible for updating (each frame) all the related object status and draw them.
@@ -85,14 +92,7 @@ export default class Application {
 	/**
 	 * the given settings used when creating this application
 	 */
-	settings!: ApplicationSettings & {
-		width: number;
-		height: number;
-		autoScale: boolean;
-		zoomX: number;
-		zoomY: number;
-		scale: number | "auto";
-	};
+	settings!: ResolvedApplicationSettings;
 
 	/**
 	 * Specify whether to pause this app when losing focus
@@ -183,29 +183,37 @@ export default class Application {
 		height: number,
 		options?: Partial<ApplicationSettings>,
 	): void {
-		this.settings = Object.assign(
-			defaultApplicationSettings,
-			options || {},
-		) as any;
-
-		// sanitize potential given parameters
-		(this.settings as any).width = width;
-		(this.settings as any).height = height;
-		// These are already booleans from the settings type, so no conversion needed
-		this.settings.depthTest =
-			this.settings.depthTest === "z-buffer" ? "z-buffer" : "sorting";
-		if (
-			this.settings.scaleMethod.search(
-				/^(fill-(min|max)|fit|flex(-(width|height))?|stretch)$/,
-			) !== -1
-		) {
-			(this.settings as any).autoScale = this.settings.scale === "auto" || true;
-		} else {
-			// default scaling method
-			this.settings.scaleMethod = ScaleMethods.Fit;
-			(this.settings as any).autoScale =
-				this.settings.scale === "auto" || false;
+		// ensure the engine is bootstrapped
+		if (!initialized) {
+			boot();
 		}
+
+		const merged = {
+			...defaultApplicationSettings,
+			...(options || {}),
+		};
+
+		const autoScale =
+			merged.scale === "auto" ||
+			/^(fill-(min|max)|fit|flex(-(width|height))?|stretch)$/.test(
+				merged.scaleMethod,
+			);
+
+		const settings = {
+			...merged,
+			width,
+			height,
+			autoScale,
+			scale: autoScale ? 1.0 : +merged.scale || 1.0,
+			zoomX: 0,
+			zoomY: 0,
+			depthTest: merged.depthTest === "z-buffer" ? "z-buffer" : "sorting",
+			scaleMethod: /^(fill-(min|max)|fit|flex(-(width|height))?|stretch)$/.test(
+				merged.scaleMethod,
+			)
+				? merged.scaleMethod
+				: ScaleMethods.Fit,
+		} as ResolvedApplicationSettings;
 
 		// override renderer settings if &webgl or &canvas is defined in the URL
 		const uriFragment = getUriFragment();
@@ -214,27 +222,43 @@ export default class Application {
 			uriFragment.webgl1 === true ||
 			uriFragment.webgl2 === true
 		) {
-			this.settings.renderer = WEBGL;
+			settings.renderer = WEBGL;
 			if (uriFragment.webgl1 === true) {
-				this.settings.preferWebGL1 = true;
+				settings.preferWebGL1 = true;
 			}
 		} else if (uriFragment.canvas === true) {
-			this.settings.renderer = CANVAS;
+			settings.renderer = CANVAS;
 		}
 
-		// normalize scale
-		(this.settings as any).scale = (this.settings as any).autoScale
-			? 1.0
-			: +this.settings.scale || 1.0;
+		// computed scaled size
+		settings.zoomX = width * settings.scale;
+		settings.zoomY = height * settings.scale;
 
-		// default scaled size value
-		(this.settings as any).zoomX = width * (this.settings.scale as number);
-		(this.settings as any).zoomY = height * (this.settings.scale as number);
+		this.settings = settings;
 
 		// identify parent element and/or the html target for resizing
-		this.parentElement = device.getElement((this.settings as any).parent);
+		this.parentElement = device.getElement(this.settings.parent!);
 		if (typeof this.settings.scaleTarget !== "undefined") {
 			this.settings.scaleTarget = device.getElement(this.settings.scaleTarget);
+		}
+
+		// set the CSS background color on the parent element to prevent
+		// a white flash before the first render frame
+		if (
+			this.settings.backgroundColor !== "transparent" &&
+			typeof globalThis.getComputedStyle === "function"
+		) {
+			const computedBg = globalThis.getComputedStyle(
+				this.parentElement,
+			).backgroundColor;
+			if (
+				!computedBg ||
+				computedBg === "rgba(0, 0, 0, 0)" ||
+				computedBg === "transparent"
+			) {
+				this.parentElement.style.backgroundColor =
+					this.settings.backgroundColor;
+			}
 		}
 
 		if (typeof this.settings.renderer === "number") {
@@ -252,6 +276,12 @@ export default class Application {
 			// a renderer class
 			this.renderer = new CustomRenderer(this.settings);
 		}
+
+		// set the global renderer reference for renderables that depend on it
+		setRenderer(this.renderer);
+
+		// make this the active game instance for modules that reference the global
+		setDefaultGame(this);
 
 		// register to the channel
 		on(WINDOW_ONRESIZE, () => {
@@ -307,37 +337,26 @@ export default class Application {
 			this.renderer.type === "WEBGL" && this.settings.depthTest === "z-buffer"
 		);
 
+		// only register event listeners once per instance
+		if (!this.isInitialized) {
+			/* eslint-disable @typescript-eslint/unbound-method */
+			on(STATE_CHANGE, this.repaint, this);
+			on(STATE_RESTART, this.repaint, this);
+			on(STATE_RESUME, this.repaint, this);
+			on(STAGE_RESET, this.reset, this);
+			/* eslint-enable @typescript-eslint/unbound-method */
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			on(TICK, this._tick, this);
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			on(BLUR, this._onBlur, this);
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			on(FOCUS, this._onFocus, this);
+		}
+
 		this.isInitialized = true;
 
-		emit(GAME_INIT);
-		/* eslint-disable @typescript-eslint/unbound-method */
-		on(STATE_CHANGE, this.repaint, this);
-		on(STATE_RESTART, this.repaint, this);
-		on(STATE_RESUME, this.repaint, this);
-		on(STAGE_RESET, this.reset, this);
-		/* eslint-enable @typescript-eslint/unbound-method */
-		on(TICK, (time: number) => {
-			this.update(time);
-			this.draw();
-		});
-
-		on(BLUR, () => {
-			if (this.stopOnBlur) {
-				state.stop(true);
-			}
-			if (this.pauseOnBlur) {
-				state.pause(true);
-			}
-		});
-
-		on(FOCUS, () => {
-			if (this.stopOnBlur) {
-				state.restart(true);
-			}
-			if (this.resumeOnFocus) {
-				state.resume(true);
-			}
-		});
+		emit(GAME_INIT, this);
+		emit(VIDEO_INIT, this.renderer);
 	}
 
 	/**
@@ -410,10 +429,95 @@ export default class Application {
 	}
 
 	/**
+	 * The HTML canvas element associated with this application's renderer.
+	 * @example
+	 * // access the canvas DOM element
+	 * const canvas = app.canvas;
+	 */
+	get canvas(): HTMLCanvasElement {
+		return this.renderer.getCanvas();
+	}
+
+	/**
+	 * Trigger a manual resize of the application canvas to fit the parent element.
+	 * This is automatically called on window resize/orientation change, but can
+	 * be called manually if the parent element size changes programmatically.
+	 * @example
+	 * // force a resize after changing the parent element dimensions
+	 * app.resize();
+	 */
+	resize(): void {
+		onresize(this);
+	}
+
+	/**
+	 * Destroy this application instance and release all associated resources.
+	 * Removes the canvas from the DOM, destroys the world, and unregisters
+	 * all event listeners.
+	 * @param removeCanvas - if true, the canvas element is removed from the DOM (default: true)
+	 * @example
+	 * // clean up when done
+	 * app.destroy();
+	 */
+	destroy(removeCanvas: boolean = true): void {
+		// stop the render loop and remove all event listeners
+		/* eslint-disable @typescript-eslint/unbound-method */
+		off(TICK, this._tick, this);
+		off(BLUR, this._onBlur, this);
+		off(FOCUS, this._onFocus, this);
+		off(STATE_CHANGE, this.repaint, this);
+		off(STATE_RESTART, this.repaint, this);
+		off(STATE_RESUME, this.repaint, this);
+		off(STAGE_RESET, this.reset, this);
+		/* eslint-enable @typescript-eslint/unbound-method */
+
+		// destroy the world and all its children
+		if (this.world) {
+			this.world.destroy();
+		}
+
+		// remove the canvas from the DOM
+		if (removeCanvas && this.renderer) {
+			const canvas = this.renderer.getCanvas();
+			if (canvas.parentElement) {
+				canvas.parentElement.removeChild(canvas);
+			}
+		}
+
+		this.isInitialized = false;
+	}
+
+	/**
 	 * force the redraw (not update) of all objects
 	 */
 	repaint(): void {
 		this.isDirty = true;
+	}
+
+	/** @ignore */
+	_tick(time: number): void {
+		this.update(time);
+		this.draw();
+	}
+
+	/** @ignore */
+	_onBlur(): void {
+		if (this.stopOnBlur) {
+			state.stop(true);
+		}
+		if (this.pauseOnBlur) {
+			state.pause(true);
+		}
+	}
+
+	/** @ignore */
+	_onFocus(): void {
+		if (this.stopOnBlur) {
+			state.restart(true);
+		}
+		if (this.resumeOnFocus) {
+			state.resume(true);
+		}
 	}
 
 	/**
@@ -491,4 +595,18 @@ export default class Application {
 			emit(GAME_AFTER_DRAW, globalThis.performance.now());
 		}
 	}
+}
+
+/**
+ * The default game application instance.
+ * Set via {@link setDefaultGame} during engine initialization.
+ */
+export let game: Application;
+
+/**
+ * Set the default game application instance.
+ * @ignore
+ */
+export function setDefaultGame(app: Application) {
+	game = app;
 }

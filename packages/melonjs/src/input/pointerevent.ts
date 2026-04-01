@@ -1,5 +1,5 @@
+import { game } from "../application/application.ts";
 import { Rect } from "./../geometries/rectangle.ts";
-import { game } from "../index.js";
 import type { Vector2d } from "../math/vector2d.ts";
 import { vector2dPool } from "../math/vector2d.ts";
 import * as device from "./../system/device.js";
@@ -7,7 +7,6 @@ import { emit, POINTERLOCKCHANGE, POINTERMOVE } from "../system/event.ts";
 import timer from "./../system/timer.ts";
 import { remove } from "./../utils/array.ts";
 import { throttle } from "./../utils/function.ts";
-import { renderer } from "./../video/video.js";
 import { preventDefault } from "./input.ts";
 import { getBindingKey, triggerKeyEvent } from "./keyboard.ts";
 import Pointer from "./pointer.ts";
@@ -134,7 +133,7 @@ function enablePointerEvent(): void {
 
 		if (pointerEventTarget === null || pointerEventTarget === undefined) {
 			// default pointer event target
-			pointerEventTarget = renderer.getCanvas();
+			pointerEventTarget = game.renderer.getCanvas();
 		}
 
 		if (device.pointerEvent) {
@@ -595,11 +594,11 @@ export function hasRegisteredEvents(): boolean {
  */
 export function globalToLocal(x: number, y: number, v?: Vector2d): Vector2d {
 	v = v || vector2dPool.get();
-	const rect = device.getElementBounds(renderer.getCanvas());
+	const rect = device.getElementBounds(game.renderer.getCanvas());
 	const pixelRatio = globalThis.devicePixelRatio || 1;
 	x -= rect.left + (globalThis.pageXOffset || 0);
 	y -= rect.top + (globalThis.pageYOffset || 0);
-	const scale = renderer.scaleRatio;
+	const scale = game.renderer.scaleRatio;
 	if (scale.x !== 1.0 || scale.y !== 1.0) {
 		x /= scale.x;
 		y /= scale.y;

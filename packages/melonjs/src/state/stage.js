@@ -1,7 +1,6 @@
 import Camera2d from "./../camera/camera2d.ts";
 import { Color } from "./../math/color.ts";
 import { emit, STAGE_RESET } from "../system/event.ts";
-import { renderer } from "./../video/video.js";
 
 // a default camera instance to use across all stages
 let default_camera;
@@ -85,28 +84,29 @@ export default class Stage {
 	 * Object reset function
 	 * @ignore
 	 */
-	reset() {
+	reset(app, ...extraArgs) {
 		// add all defined cameras
 		this.settings.cameras.forEach((camera) => {
 			this.cameras.set(camera.name, camera);
 		});
 
-		// empty or no default camera
+		// use the application's default camera if no "default" camera is defined
 		if (this.cameras.has("default") === false) {
-			if (typeof default_camera === "undefined") {
-				const width = renderer.width;
-				const height = renderer.height;
-				// new default camera instance
+			if (typeof default_camera === "undefined" && app) {
+				const width = app.renderer.width;
+				const height = app.renderer.height;
 				default_camera = new Camera2d(0, 0, width, height);
 			}
-			this.cameras.set("default", default_camera);
+			if (typeof default_camera !== "undefined") {
+				this.cameras.set("default", default_camera);
+			}
 		}
 
 		// reset the game
 		emit(STAGE_RESET, this);
 
-		// call the onReset Function
-		this.onResetEvent.apply(this, arguments);
+		// call the onReset Function with the app reference and any extra args
+		this.onResetEvent.call(this, app, ...extraArgs);
 	}
 
 	/**
@@ -199,10 +199,11 @@ export default class Stage {
 	 * this is typically where you will load a level, add renderables, etc...
 	 * @name onResetEvent
 	 * @memberof Stage
+	 * @param {Application} app - the current application instance
 	 * @param {...*} [args] - optional arguments passed when switching state
 	 * @see state#change
 	 */
-	onResetEvent() {
+	onResetEvent(/* app, ...args */) {
 		// execute onResetEvent function if given through the constructor
 		if (typeof this.settings.onResetEvent === "function") {
 			this.settings.onResetEvent.apply(this, arguments);
