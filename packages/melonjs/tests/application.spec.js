@@ -6,8 +6,6 @@ import {
 	Container,
 	game,
 	Renderable,
-	Sprite,
-	Text,
 	video,
 } from "../src/index.js";
 import { initialized } from "../src/system/bootstrap.ts";
