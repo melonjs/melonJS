@@ -52,6 +52,80 @@ describe("Font : Text", () => {
 		});
 	});
 
+	describe("bold and italic", () => {
+		it("bold() should add bold to the font", () => {
+			const text = new Text(0, 0, {
+				font: "Arial",
+				size: 12,
+				text: "test",
+			});
+			text.bold();
+			expect(text.font).toContain("bold");
+		});
+
+		it("bold() should not duplicate when called twice", () => {
+			const text = new Text(0, 0, {
+				font: "Arial",
+				size: 12,
+				text: "test",
+			});
+			text.bold();
+			text.bold();
+			const matches = text.font.match(/bold/g);
+			expect(matches.length).toEqual(1);
+		});
+
+		it("italic() should add italic to the font", () => {
+			const text = new Text(0, 0, {
+				font: "Arial",
+				size: 12,
+				text: "test",
+			});
+			text.italic();
+			expect(text.font).toContain("italic");
+		});
+
+		it("italic() should not duplicate when called twice", () => {
+			const text = new Text(0, 0, {
+				font: "Arial",
+				size: 12,
+				text: "test",
+			});
+			text.italic();
+			text.italic();
+			const matches = text.font.match(/italic/g);
+			expect(matches.length).toEqual(1);
+		});
+
+		it("should support both bold and italic together", () => {
+			const text = new Text(0, 0, {
+				font: "Arial",
+				size: 12,
+				text: "test",
+			});
+			text.bold();
+			text.italic();
+			expect(text.font).toContain("bold");
+			expect(text.font).toContain("italic");
+		});
+
+		it("bold and italic via settings should not duplicate", () => {
+			const text = new Text(0, 0, {
+				font: "Arial",
+				size: 12,
+				text: "test",
+				bold: true,
+				italic: true,
+			});
+			text.bold();
+			text.italic();
+			const boldMatches = text.font.match(/bold/g);
+			const italicMatches = text.font.match(/italic/g);
+			expect(boldMatches.length).toEqual(1);
+			expect(italicMatches.length).toEqual(1);
+		});
+	});
+
 	describe("word wrapping", () => {
 		it("word wrap a single string", async () => {
 			font.wordWrapWidth = 150;

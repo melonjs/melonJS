@@ -164,7 +164,7 @@ export default class Text extends Renderable {
 		// font name and type
 		this.setFont(settings.font, settings.size);
 
-		// aditional
+		// additional font styles
 		if (settings.bold === true) {
 			this.bold();
 		}
@@ -191,8 +191,10 @@ export default class Text extends Renderable {
 	 * @returns {Text} this object for chaining
 	 */
 	bold() {
-		this.font = "bold " + this.font;
-		this.isDirty = true;
+		if (!this.font.includes("bold")) {
+			this.font = "bold " + this.font;
+			this.isDirty = true;
+		}
 		return this;
 	}
 
@@ -201,8 +203,10 @@ export default class Text extends Renderable {
 	 * @returns {Text} this object for chaining
 	 */
 	italic() {
-		this.font = "italic " + this.font;
-		this.isDirty = true;
+		if (!this.font.includes("italic")) {
+			this.font = "italic " + this.font;
+			this.isDirty = true;
+		}
 		return this;
 	}
 
