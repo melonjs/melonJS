@@ -393,17 +393,8 @@ export default class Text extends Renderable {
 	 */
 	destroy() {
 		const renderer = this.parentApp?.renderer ?? game.renderer;
-		if (typeof renderer.gl !== "undefined") {
-			// make sure the right batcher is active
-			renderer.setBatcher("quad");
-			renderer.currentBatcher.deleteTexture2D(
-				renderer.currentBatcher.getTexture2D(this.glTextureUnit),
-			);
-			this.glTextureUnit = undefined;
-		}
-		renderer.cache.delete(this.canvasTexture.canvas);
 		pool.push(this.canvasTexture);
-		this.canvasTexture.destroy();
+		this.canvasTexture.destroy(renderer);
 		this.canvasTexture = undefined;
 		colorPool.release(this.fillStyle);
 		colorPool.release(this.strokeStyle);

@@ -205,8 +205,9 @@ export default class Light2d extends Renderable {
 	destroy() {
 		colorPool.release(this.color);
 		this.color = undefined;
+		const renderer = this.parentApp?.renderer;
 		pool.push(this.texture);
-		this.texture.destroy();
+		this.texture.destroy(renderer);
 		this.texture = undefined;
 		ellipsePool.release(this.visibleArea);
 		this.visibleArea = undefined;
