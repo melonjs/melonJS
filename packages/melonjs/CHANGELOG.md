@@ -19,6 +19,9 @@
 
 ### Fixed
 - Application: `Object.assign(defaultApplicationSettings, options)` mutated the shared defaults object in both `Application.init()` and `video.init()` — creating multiple Application instances would corrupt settings. Fixed with object spread.
+- Text/Light2d: fix invalid `pool.push` on CanvasRenderTarget instances that were never pool-registered (would throw on destroy)
+- CanvasRenderTarget: `destroy(renderer)` now properly cleans up WebGL GPU textures and cache entries (previously leaked in Light2d)
+- Text: always use power-of-two texture sizes for offscreen canvas (removes WebGL version check dependency)
 - Application: prevent white flash on load by setting a black background on the parent element when no background is defined
 - WebGLRenderer: `setBlendMode()` now tracks the `premultipliedAlpha` flag — previously only the mode name was checked, causing incorrect GL blend function when mixing PMA and non-PMA textures with the same blend mode
 - TMX: fix crash in `getObjects(false)` when a map contains an empty object group (Container.children lazily initialized)
