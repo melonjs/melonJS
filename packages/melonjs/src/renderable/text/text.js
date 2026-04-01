@@ -393,7 +393,6 @@ export default class Text extends Renderable {
 	 */
 	destroy() {
 		const renderer = this.parentApp?.renderer ?? game.renderer;
-		pool.push(this.canvasTexture);
 		this.canvasTexture.destroy(renderer);
 		this.canvasTexture = undefined;
 		colorPool.release(this.fillStyle);

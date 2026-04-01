@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { boot, Text, video } from "../src/index.js";
+import { Application, boot, game, Text, video } from "../src/index.js";
 
 describe("Font : Text", () => {
 	let font;
@@ -59,6 +59,56 @@ describe("Font : Text", () => {
 				"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
 			);
 			expect(font.measureText().width).toBeLessThanOrEqual(font.wordWrapWidth);
+		});
+	});
+
+	describe("setText", () => {
+		it("should update text content", () => {
+			font.setText("hello");
+			expect(font.measureText()).toBeDefined();
+		});
+
+		it("should have a canvas texture after setText", () => {
+			font.setText("test");
+			expect(font.canvasTexture).toBeDefined();
+			expect(font.canvasTexture.canvas).toBeInstanceOf(
+				globalThis.HTMLCanvasElement,
+			);
+		});
+	});
+
+	describe("parentApp and renderer access", () => {
+		it("should access renderer via parentApp when in container tree", () => {
+			const text = new Text(0, 0, {
+				font: "Arial",
+				size: 16,
+				text: "hello",
+			});
+			game.world.addChild(text);
+
+			expect(text.parentApp).toBeDefined();
+			expect(text.parentApp).toBeInstanceOf(Application);
+			expect(text.parentApp.renderer).toBe(game.renderer);
+
+			game.world.removeChild(text);
+		});
+	});
+
+	describe("destroy", () => {
+		it("should clean up resources when removed from world", () => {
+			const text = new Text(0, 0, {
+				font: "Arial",
+				size: 16,
+				text: "destroy test",
+			});
+			game.world.addChild(text);
+
+			// removeChildNow triggers destroy synchronously
+			game.world.removeChildNow(text);
+
+			expect(text.canvasTexture).toBeUndefined();
+			expect(text.fillStyle).toBeUndefined();
+			expect(text.strokeStyle).toBeUndefined();
 		});
 	});
 });
