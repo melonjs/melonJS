@@ -278,18 +278,14 @@ export default class Text extends Renderable {
 			true,
 		);
 
-		// update the offScreenCanvas texture if required
-		let width = Math.ceil(this.metrics.width);
-		let height = Math.ceil(this.metrics.height);
-
-		if (game.renderer.WebGLVersion === 1) {
-			// round size to next Pow2
-			width = nextPowerOfTwo(this.metrics.width);
-			height = nextPowerOfTwo(this.metrics.height);
-		}
+		// round the offscreen canvas size to the next power of two
+		// (required for WebGL1, harmless for WebGL2/Canvas)
+		const width = nextPowerOfTwo(this.metrics.width);
+		const height = nextPowerOfTwo(this.metrics.height);
 
 		// invalidate the texture
-		this.canvasTexture.invalidate(game.renderer);
+		const renderer = this.parentApp?.renderer ?? game.renderer;
+		this.canvasTexture.invalidate(renderer);
 
 		// resize the cache canvas if necessary
 		if (
@@ -396,15 +392,16 @@ export default class Text extends Renderable {
 	 * @ignore
 	 */
 	destroy() {
-		if (typeof game.renderer.gl !== "undefined") {
+		const renderer = this.parentApp?.renderer ?? game.renderer;
+		if (typeof renderer.gl !== "undefined") {
 			// make sure the right batcher is active
-			game.renderer.setBatcher("quad");
-			game.renderer.currentBatcher.deleteTexture2D(
-				game.renderer.currentBatcher.getTexture2D(this.glTextureUnit),
+			renderer.setBatcher("quad");
+			renderer.currentBatcher.deleteTexture2D(
+				renderer.currentBatcher.getTexture2D(this.glTextureUnit),
 			);
 			this.glTextureUnit = undefined;
 		}
-		game.renderer.cache.delete(this.canvasTexture.canvas);
+		renderer.cache.delete(this.canvasTexture.canvas);
 		pool.push(this.canvasTexture);
 		this.canvasTexture.destroy();
 		this.canvasTexture = undefined;
