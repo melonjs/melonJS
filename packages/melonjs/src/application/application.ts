@@ -31,7 +31,6 @@ import { getUriFragment } from "../utils/utils.ts";
 import CanvasRenderer from "../video/canvas/canvas_renderer.js";
 import type Renderer from "./../video/renderer.js";
 import { autoDetectRenderer } from "../video/utils/autodetect.js";
-import { setRenderer } from "../video/video.js";
 import { defaultApplicationSettings } from "./defaultApplicationSettings.ts";
 import { consoleHeader } from "./header.ts";
 import { onresize } from "./resize.ts";
@@ -276,9 +275,6 @@ export default class Application {
 			// a renderer class
 			this.renderer = new CustomRenderer(this.settings);
 		}
-
-		// set the global renderer reference for renderables that depend on it
-		setRenderer(this.renderer);
 
 		// make this the active game instance for modules that reference the global
 		setDefaultGame(this);

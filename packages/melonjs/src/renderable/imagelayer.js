@@ -9,7 +9,6 @@ import {
 	VIEWPORT_ONRESIZE,
 } from "../system/event.ts";
 import * as stringUtil from "./../utils/string.ts";
-import { renderer } from "./../video/video.js";
 import Sprite from "./sprite.js";
 
 /**
@@ -160,7 +159,10 @@ export default class ImageLayer extends Sprite {
 	 * @ignore
 	 */
 	createPattern() {
-		this._pattern = renderer.createPattern(this.image, this._repeat);
+		this._pattern = this.parentApp.renderer.createPattern(
+			this.image,
+			this._repeat,
+		);
 	}
 
 	/**

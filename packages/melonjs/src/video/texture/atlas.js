@@ -1,8 +1,8 @@
+import { game } from "../../application/application.ts";
 import { getImage } from "./../../loader/loader.js";
 import { Vector2d } from "../../math/vector2d.ts";
 import Sprite from "./../../renderable/sprite.js";
 import pool from "../../system/legacy_pool.js";
-import { renderer } from "./../video.js";
 import { parseAseprite } from "./parser/aseprite.js";
 import { parseSpriteSheet } from "./parser/spritesheet.js";
 import { parseTexturePacker } from "./parser/texturepacker.js";
@@ -234,7 +234,7 @@ export class TextureAtlas {
 		// Add self to TextureCache if cache !== false
 		if (cache !== false) {
 			this.sources.forEach((source) => {
-				renderer.cache.set(source, this);
+				game.renderer.cache.set(source, this);
 			});
 		}
 	}
@@ -284,7 +284,7 @@ export class TextureAtlas {
 	 */
 	addRegion(name, x, y, w, h) {
 		// see https://github.com/melonjs/melonJS/issues/1281
-		if (renderer.settings.verbose === true) {
+		if (game.renderer.settings.verbose === true) {
 			console.warn("Adding texture region", name, "for texture", this);
 		}
 
@@ -385,7 +385,7 @@ export class TextureAtlas {
 	 */
 	addUVs(atlas, name, w, h) {
 		// ignore if using the Canvas Renderer
-		if (typeof renderer.gl !== "undefined") {
+		if (typeof game.renderer.gl !== "undefined") {
 			// Source coordinates
 			const s = atlas[name].offset;
 			const sw = atlas[name].width;

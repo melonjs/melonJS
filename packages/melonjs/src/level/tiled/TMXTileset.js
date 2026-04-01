@@ -1,8 +1,8 @@
+import { game } from "../../application/application.ts";
 import { getImage, getTMX } from "../../loader/loader.js";
 import { Vector2d } from "../../math/vector2d.ts";
 import timer from "../../system/timer.ts";
 import { getBasename, getExtension } from "../../utils/file.ts";
-import { renderer } from "../../video/video.js";
 import { resolveEmbeddedImage } from "./TMXUtils.js";
 
 /**
@@ -348,7 +348,7 @@ export default class TMXTileset {
 		}
 
 		// create a texture atlas for the given tileset
-		this.texture = renderer.cache.get(this.image, {
+		this.texture = game.renderer.cache.get(this.image, {
 			framewidth: this.tilewidth,
 			frameheight: this.tileheight,
 			margin: this.margin,

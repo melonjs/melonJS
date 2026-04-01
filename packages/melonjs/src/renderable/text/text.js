@@ -1,8 +1,8 @@
+import { game } from "../../application/application.ts";
 import { Color, colorPool } from "../../math/color.ts";
 import { nextPowerOfTwo } from "../../math/math.ts";
 import pool from "../../system/legacy_pool.js";
 import CanvasRenderTarget from "../../video/rendertarget/canvasrendertarget.js";
-import { renderer as globalRenderer } from "../../video/video.js";
 import Renderable from "../renderable.js";
 import TextMetrics from "./textmetrics.js";
 import setContextStyle from "./textstyle.js";
@@ -282,14 +282,14 @@ export default class Text extends Renderable {
 		let width = Math.ceil(this.metrics.width);
 		let height = Math.ceil(this.metrics.height);
 
-		if (globalRenderer.WebGLVersion === 1) {
+		if (game.renderer.WebGLVersion === 1) {
 			// round size to next Pow2
 			width = nextPowerOfTwo(this.metrics.width);
 			height = nextPowerOfTwo(this.metrics.height);
 		}
 
 		// invalidate the texture
-		this.canvasTexture.invalidate(globalRenderer);
+		this.canvasTexture.invalidate(game.renderer);
 
 		// resize the cache canvas if necessary
 		if (
@@ -396,15 +396,15 @@ export default class Text extends Renderable {
 	 * @ignore
 	 */
 	destroy() {
-		if (typeof globalRenderer.gl !== "undefined") {
+		if (typeof game.renderer.gl !== "undefined") {
 			// make sure the right batcher is active
-			globalRenderer.setBatcher("quad");
-			globalRenderer.currentBatcher.deleteTexture2D(
-				globalRenderer.currentBatcher.getTexture2D(this.glTextureUnit),
+			game.renderer.setBatcher("quad");
+			game.renderer.currentBatcher.deleteTexture2D(
+				game.renderer.currentBatcher.getTexture2D(this.glTextureUnit),
 			);
 			this.glTextureUnit = undefined;
 		}
-		globalRenderer.cache.delete(this.canvasTexture.canvas);
+		game.renderer.cache.delete(this.canvasTexture.canvas);
 		pool.push(this.canvasTexture);
 		this.canvasTexture.destroy();
 		this.canvasTexture = undefined;
