@@ -345,28 +345,12 @@ export default class Application {
 			on(STATE_RESUME, this.repaint, this);
 			on(STAGE_RESET, this.reset, this);
 			/* eslint-enable @typescript-eslint/unbound-method */
-			on(TICK, (time: number) => {
-				this.update(time);
-				this.draw();
-			});
-
-			on(BLUR, () => {
-				if (this.stopOnBlur) {
-					state.stop(true);
-				}
-				if (this.pauseOnBlur) {
-					state.pause(true);
-				}
-			});
-
-			on(FOCUS, () => {
-				if (this.stopOnBlur) {
-					state.restart(true);
-				}
-				if (this.resumeOnFocus) {
-					state.resume(true);
-				}
-			});
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			on(TICK, this._tick, this);
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			on(BLUR, this._onBlur, this);
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			on(FOCUS, this._onFocus, this);
 		}
 
 		this.isInitialized = true;
@@ -476,8 +460,11 @@ export default class Application {
 	 * app.destroy();
 	 */
 	destroy(removeCanvas: boolean = true): void {
-		// remove event listeners
+		// stop the render loop and remove all event listeners
 		/* eslint-disable @typescript-eslint/unbound-method */
+		off(TICK, this._tick, this);
+		off(BLUR, this._onBlur, this);
+		off(FOCUS, this._onFocus, this);
 		off(STATE_CHANGE, this.repaint, this);
 		off(STATE_RESTART, this.repaint, this);
 		off(STATE_RESUME, this.repaint, this);
@@ -505,6 +492,32 @@ export default class Application {
 	 */
 	repaint(): void {
 		this.isDirty = true;
+	}
+
+	/** @ignore */
+	_tick(time: number): void {
+		this.update(time);
+		this.draw();
+	}
+
+	/** @ignore */
+	_onBlur(): void {
+		if (this.stopOnBlur) {
+			state.stop(true);
+		}
+		if (this.pauseOnBlur) {
+			state.pause(true);
+		}
+	}
+
+	/** @ignore */
+	_onFocus(): void {
+		if (this.stopOnBlur) {
+			state.restart(true);
+		}
+		if (this.resumeOnFocus) {
+			state.resume(true);
+		}
 	}
 
 	/**
