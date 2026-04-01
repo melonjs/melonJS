@@ -1,7 +1,6 @@
 import { game } from "../../application/application.ts";
 import { Color, colorPool } from "../../math/color.ts";
 import { nextPowerOfTwo } from "../../math/math.ts";
-import pool from "../../system/legacy_pool.js";
 import CanvasRenderTarget from "../../video/rendertarget/canvasrendertarget.js";
 import Renderable from "../renderable.js";
 import TextMetrics from "./textmetrics.js";
