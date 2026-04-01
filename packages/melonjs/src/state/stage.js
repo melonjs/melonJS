@@ -1,4 +1,3 @@
-import { game } from "../application/application.ts";
 import Camera2d from "./../camera/camera2d.ts";
 import { Color } from "./../math/color.ts";
 import { emit, STAGE_RESET } from "../system/event.ts";
@@ -85,28 +84,29 @@ export default class Stage {
 	 * Object reset function
 	 * @ignore
 	 */
-	reset() {
+	reset(app, ...extraArgs) {
 		// add all defined cameras
 		this.settings.cameras.forEach((camera) => {
 			this.cameras.set(camera.name, camera);
 		});
 
-		// empty or no default camera
+		// use the application's default camera if no "default" camera is defined
 		if (this.cameras.has("default") === false) {
-			if (typeof default_camera === "undefined") {
-				const width = game.renderer.width;
-				const height = game.renderer.height;
-				// new default camera instance
+			if (typeof default_camera === "undefined" && app) {
+				const width = app.renderer.width;
+				const height = app.renderer.height;
 				default_camera = new Camera2d(0, 0, width, height);
 			}
-			this.cameras.set("default", default_camera);
+			if (typeof default_camera !== "undefined") {
+				this.cameras.set("default", default_camera);
+			}
 		}
 
 		// reset the game
 		emit(STAGE_RESET, this);
 
 		// call the onReset Function
-		this.onResetEvent.apply(this, arguments);
+		this.onResetEvent.apply(this, extraArgs);
 	}
 
 	/**

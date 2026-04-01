@@ -371,7 +371,7 @@ export default class Application {
 
 		this.isInitialized = true;
 
-		emit(GAME_INIT);
+		emit(GAME_INIT, this);
 		emit(VIDEO_INIT, this.renderer);
 	}
 

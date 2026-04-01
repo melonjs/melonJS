@@ -2,6 +2,7 @@
  * an event system based on nodeJS EventEmitter interface
  */
 
+import type Application from "../application/application.ts";
 import Pointer from "../input/pointer.ts";
 import { Vector2d } from "../math/vector2d.ts";
 import { Draggable } from "../renderable/draggable.js";
@@ -347,7 +348,7 @@ interface Events {
 	[STATE_CHANGE]: () => void;
 	[STAGE_RESET]: (stage: Stage) => void;
 	[VIDEO_INIT]: (renderer: Renderer) => void;
-	[GAME_INIT]: () => void;
+	[GAME_INIT]: (app: Application) => void;
 	[GAME_RESET]: () => void;
 	[GAME_BEFORE_UPDATE]: (time: number) => void;
 	[GAME_AFTER_UPDATE]: (time: number) => void;
