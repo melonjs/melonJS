@@ -291,7 +291,11 @@ class CanvasRenderTarget {
 	 * @ignore
 	 */
 	destroy(renderer) {
-		if (renderer && typeof renderer.gl !== "undefined") {
+		if (
+			renderer &&
+			typeof renderer.gl !== "undefined" &&
+			typeof this.glTextureUnit !== "undefined"
+		) {
 			renderer.setBatcher("quad");
 			renderer.currentBatcher.deleteTexture2D(
 				renderer.currentBatcher.getTexture2D(this.glTextureUnit),
