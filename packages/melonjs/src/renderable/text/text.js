@@ -191,7 +191,10 @@ export default class Text extends Renderable {
 	 * @returns {Text} this object for chaining
 	 */
 	bold() {
-		if (!this.font.includes("bold")) {
+		if (
+			!this.font.startsWith("bold ") &&
+			!this.font.startsWith("italic bold ")
+		) {
 			this.font = "bold " + this.font;
 			this.isDirty = true;
 		}
@@ -203,7 +206,10 @@ export default class Text extends Renderable {
 	 * @returns {Text} this object for chaining
 	 */
 	italic() {
-		if (!this.font.includes("italic")) {
+		if (
+			!this.font.startsWith("italic ") &&
+			!this.font.startsWith("bold italic ")
+		) {
 			this.font = "italic " + this.font;
 			this.isDirty = true;
 		}
