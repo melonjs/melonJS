@@ -970,4 +970,42 @@ describe("Container", () => {
 			expect(child.visibleInAllCameras).toEqual(true);
 		});
 	});
+
+	describe("default dimensions", () => {
+		it("should default to Infinity when no dimensions are provided", () => {
+			const c = new Container();
+			expect(c.width).toEqual(Infinity);
+			expect(c.height).toEqual(Infinity);
+		});
+
+		it("should default to (0, 0) position when no position is provided", () => {
+			const c = new Container();
+			expect(c.pos.x).toEqual(0);
+			expect(c.pos.y).toEqual(0);
+		});
+
+		it("should use explicit dimensions when provided", () => {
+			const c = new Container(10, 20, 200, 150);
+			expect(c.pos.x).toEqual(10);
+			expect(c.pos.y).toEqual(20);
+			expect(c.width).toEqual(200);
+			expect(c.height).toEqual(150);
+		});
+
+		it("should accept children when dimensions are Infinity", () => {
+			const c = new Container();
+			const child = new Renderable(50, 50, 32, 32);
+			c.addChild(child);
+			expect(c.getChildren().length).toEqual(1);
+		});
+
+		it("should not clip children when dimensions are Infinity", () => {
+			const c = new Container();
+			const farChild = new Renderable(99999, 99999, 10, 10);
+			c.addChild(farChild);
+			// child bounds should extend beyond any finite container
+			const bounds = farChild.getBounds();
+			expect(bounds.left).toBeGreaterThan(0);
+		});
+	});
 });
