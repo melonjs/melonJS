@@ -1,6 +1,6 @@
+import { game } from "../application/application.ts";
 import { ellipsePool } from "./../geometries/ellipse.ts";
 import { colorPool } from "./../math/color.ts";
-import pool from "../system/legacy_pool.js";
 import CanvasRenderTarget from "../video/rendertarget/canvasrendertarget.js";
 import Renderable from "./renderable.js";
 
@@ -205,8 +205,8 @@ export default class Light2d extends Renderable {
 	destroy() {
 		colorPool.release(this.color);
 		this.color = undefined;
-		pool.push(this.texture);
-		this.texture.destroy();
+		const renderer = this.parentApp?.renderer ?? game.renderer;
+		this.texture.destroy(renderer);
 		this.texture = undefined;
 		ellipsePool.release(this.visibleArea);
 		this.visibleArea = undefined;

@@ -286,9 +286,25 @@ class CanvasRenderTarget {
 	}
 
 	/**
+	 * Destroy this canvas render target and release associated GPU resources.
+	 * @param {CanvasRenderer|WebGLRenderer} [renderer] - the renderer to clean up WebGL resources from
 	 * @ignore
 	 */
-	destroy() {
+	destroy(renderer) {
+		if (
+			renderer &&
+			typeof renderer.gl !== "undefined" &&
+			typeof this.glTextureUnit !== "undefined"
+		) {
+			renderer.setBatcher("quad");
+			renderer.currentBatcher.deleteTexture2D(
+				renderer.currentBatcher.getTexture2D(this.glTextureUnit),
+			);
+			this.glTextureUnit = undefined;
+		}
+		if (renderer) {
+			renderer.cache.delete(this.canvas);
+		}
 		this.context = undefined;
 		this.canvas = undefined;
 	}

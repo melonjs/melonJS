@@ -1,9 +1,9 @@
+import { game } from "../application/application.ts";
 import { getImage } from "./../loader/loader.js";
 import { Color } from "../math/color.ts";
 import { vector2dPool } from "../math/vector2d.ts";
 import { on } from "../system/event.ts";
 import { TextureAtlas } from "./../video/texture/atlas.js";
-import { renderer } from "./../video/video.js";
 import Renderable from "./renderable.js";
 
 /**
@@ -223,7 +223,7 @@ export default class Sprite extends Renderable {
 					this.current.height =
 					settings.frameheight =
 						settings.frameheight || this.image.height;
-				this.source = renderer.cache.get(this.image, settings);
+				this.source = game.renderer.cache.get(this.image, settings);
 				this.textureAtlas = this.source.getAtlas();
 			}
 		}

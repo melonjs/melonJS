@@ -26,20 +26,13 @@ import {
 export { AUTO, CANVAS, WEBGL } from "../const";
 
 /**
- * A reference to the active Canvas or WebGL active renderer renderer
+ * A reference to the active Canvas or WebGL renderer.
+ * Only available after calling {@link video.init}.
+ * When using {@link Application} directly, use `app.renderer` instead.
  * @memberof video
  * @type {CanvasRenderer|WebGLRenderer}
  */
 export let renderer = null;
-
-/**
- * Set the global renderer reference.
- * Called by Application.init() to ensure renderables can access the renderer.
- * @ignore
- */
-export function setRenderer(r) {
-	renderer = r;
-}
 
 /**
  * Initialize the "video" system (create a canvas based on the given arguments, and the related renderer). <br>
@@ -75,7 +68,7 @@ export function init(width, height, options) {
 		return false;
 	}
 
-	// assign the default renderer
+	// set the public renderer reference
 	renderer = game.renderer;
 
 	//add a channel for the onresize/onorientationchange event

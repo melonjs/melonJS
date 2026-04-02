@@ -1,8 +1,7 @@
+import { game } from "../../application/application.ts";
 import { Color, colorPool } from "../../math/color.ts";
 import { nextPowerOfTwo } from "../../math/math.ts";
-import pool from "../../system/legacy_pool.js";
 import CanvasRenderTarget from "../../video/rendertarget/canvasrendertarget.js";
-import { renderer as globalRenderer } from "../../video/video.js";
 import Renderable from "../renderable.js";
 import TextMetrics from "./textmetrics.js";
 import setContextStyle from "./textstyle.js";
@@ -165,7 +164,7 @@ export default class Text extends Renderable {
 		// font name and type
 		this.setFont(settings.font, settings.size);
 
-		// aditional
+		// additional font styles
 		if (settings.bold === true) {
 			this.bold();
 		}
@@ -192,8 +191,13 @@ export default class Text extends Renderable {
 	 * @returns {Text} this object for chaining
 	 */
 	bold() {
-		this.font = "bold " + this.font;
-		this.isDirty = true;
+		if (
+			!this.font.startsWith("bold ") &&
+			!this.font.startsWith("italic bold ")
+		) {
+			this.font = "bold " + this.font;
+			this.isDirty = true;
+		}
 		return this;
 	}
 
@@ -202,8 +206,13 @@ export default class Text extends Renderable {
 	 * @returns {Text} this object for chaining
 	 */
 	italic() {
-		this.font = "italic " + this.font;
-		this.isDirty = true;
+		if (
+			!this.font.startsWith("italic ") &&
+			!this.font.startsWith("bold italic ")
+		) {
+			this.font = "italic " + this.font;
+			this.isDirty = true;
+		}
 		return this;
 	}
 
@@ -278,18 +287,14 @@ export default class Text extends Renderable {
 			true,
 		);
 
-		// update the offScreenCanvas texture if required
-		let width = Math.ceil(this.metrics.width);
-		let height = Math.ceil(this.metrics.height);
-
-		if (globalRenderer.WebGLVersion === 1) {
-			// round size to next Pow2
-			width = nextPowerOfTwo(this.metrics.width);
-			height = nextPowerOfTwo(this.metrics.height);
-		}
+		// round the offscreen canvas size to the next power of two
+		// (required for WebGL1, harmless for WebGL2/Canvas)
+		const width = nextPowerOfTwo(this.metrics.width);
+		const height = nextPowerOfTwo(this.metrics.height);
 
 		// invalidate the texture
-		this.canvasTexture.invalidate(globalRenderer);
+		const renderer = this.parentApp?.renderer ?? game.renderer;
+		this.canvasTexture.invalidate(renderer);
 
 		// resize the cache canvas if necessary
 		if (
@@ -330,7 +335,8 @@ export default class Text extends Renderable {
 	 * @param {number} [y]
 	 */
 	draw(renderer, text, x = this.pos.x, y = this.pos.y) {
-		// "hacky patch" for backward compatibilty
+		// @deprecated since 10.6.0 — standalone draw without a parent container
+		// TODO: remove in 19.0.0
 		if (typeof this.ancestor === "undefined") {
 			// update position if changed
 			if (this.pos.x !== x || this.pos.y !== y) {
@@ -362,7 +368,7 @@ export default class Text extends Renderable {
 		// draw the text
 		renderer.drawImage(this.canvasTexture.canvas, x, y);
 
-		// for backward compatibilty
+		// @deprecated since 10.6.0 — TODO: remove in 19.0.0
 		if (typeof this.ancestor === "undefined") {
 			// restore previous context
 			renderer.restore();
@@ -396,17 +402,8 @@ export default class Text extends Renderable {
 	 * @ignore
 	 */
 	destroy() {
-		if (typeof globalRenderer.gl !== "undefined") {
-			// make sure the right batcher is active
-			globalRenderer.setBatcher("quad");
-			globalRenderer.currentBatcher.deleteTexture2D(
-				globalRenderer.currentBatcher.getTexture2D(this.glTextureUnit),
-			);
-			this.glTextureUnit = undefined;
-		}
-		globalRenderer.cache.delete(this.canvasTexture.canvas);
-		pool.push(this.canvasTexture);
-		this.canvasTexture.destroy();
+		const renderer = this.parentApp?.renderer ?? game.renderer;
+		this.canvasTexture.destroy(renderer);
 		this.canvasTexture = undefined;
 		colorPool.release(this.fillStyle);
 		colorPool.release(this.strokeStyle);

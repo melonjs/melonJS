@@ -1,8 +1,8 @@
+import { game } from "../../application/application.ts";
 import { getImage } from "./../../loader/loader.js";
 import { Vector2d } from "../../math/vector2d.ts";
 import Sprite from "./../../renderable/sprite.js";
 import pool from "../../system/legacy_pool.js";
-import { renderer } from "./../video.js";
 import { parseAseprite } from "./parser/aseprite.js";
 import { parseSpriteSheet } from "./parser/spritesheet.js";
 import { parseTexturePacker } from "./parser/texturepacker.js";
@@ -234,7 +234,7 @@ export class TextureAtlas {
 		// Add self to TextureCache if cache !== false
 		if (cache !== false) {
 			this.sources.forEach((source) => {
-				renderer.cache.set(source, this);
+				game.renderer.cache.set(source, this);
 			});
 		}
 	}
@@ -283,11 +283,6 @@ export class TextureAtlas {
 	 * @returns {object} the created region
 	 */
 	addRegion(name, x, y, w, h) {
-		// see https://github.com/melonjs/melonJS/issues/1281
-		if (renderer.settings.verbose === true) {
-			console.warn("Adding texture region", name, "for texture", this);
-		}
-
 		const source = this.getTexture();
 		const atlas = this.getAtlas();
 		const dw = source.width;
@@ -384,24 +379,22 @@ export class TextureAtlas {
 	 * @returns {Float32Array} the created region UVs
 	 */
 	addUVs(atlas, name, w, h) {
-		// ignore if using the Canvas Renderer
-		if (typeof renderer.gl !== "undefined") {
-			// Source coordinates
-			const s = atlas[name].offset;
-			const sw = atlas[name].width;
-			const sh = atlas[name].height;
+		// Source coordinates
+		const s = atlas[name].offset;
+		const sw = atlas[name].width;
+		const sh = atlas[name].height;
 
-			atlas[name].uvs = new Float32Array([
-				s.x / w, // u0 (left)
-				s.y / h, // v0 (top)
-				(s.x + sw) / w, // u1 (right)
-				(s.y + sh) / h, // v1 (bottom)
-			]);
-			// Cache source coordinates
-			// see https://github.com/melonjs/melonJS/issues/1281
-			const key = s.x + "," + s.y + "," + w + "," + h;
-			atlas[key] = atlas[name];
-		}
+		atlas[name].uvs = new Float32Array([
+			s.x / w, // u0 (left)
+			s.y / h, // v0 (top)
+			(s.x + sw) / w, // u1 (right)
+			(s.y + sh) / h, // v1 (bottom)
+		]);
+		// Cache source coordinates
+		// see https://github.com/melonjs/melonJS/issues/1281
+		const key = `${s.x},${s.y},${w},${h}`;
+		atlas[key] = atlas[name];
+
 		return atlas[name].uvs;
 	}
 
