@@ -155,6 +155,11 @@ export default class Application {
 
 	// min update step size
 	stepSize: number;
+
+	// DOM event handlers (stored for cleanup in destroy)
+	private _onResize?: (e: Event) => void;
+	private _onOrientationChange?: (e: Event) => void;
+	private _onScroll?: (e: Event) => void;
 	updateDelta: number;
 	lastUpdateStart: number | null;
 	updateAverageDelta: number;
@@ -313,20 +318,16 @@ export default class Application {
 		setDefaultGame(this);
 
 		// bridge DOM events to the melonJS event system
-		globalThis.addEventListener("resize", (e) => {
-			emit(WINDOW_ONRESIZE, e);
-		});
-		globalThis.addEventListener("orientationchange", (e) => {
+		this._onResize = (e: Event) => emit(WINDOW_ONRESIZE, e);
+		this._onOrientationChange = (e: Event) =>
 			emit(WINDOW_ONORIENTATION_CHANGE, e);
-		});
+		this._onScroll = (e: Event) => emit(WINDOW_ONSCROLL, e);
+		globalThis.addEventListener("resize", this._onResize);
+		globalThis.addEventListener("orientationchange", this._onOrientationChange);
 		if (device.screenOrientation) {
-			globalThis.screen.orientation.onchange = (e) => {
-				emit(WINDOW_ONORIENTATION_CHANGE, e);
-			};
+			globalThis.screen.orientation.onchange = this._onOrientationChange;
 		}
-		globalThis.addEventListener("scroll", (e) => {
-			emit(WINDOW_ONSCROLL, e);
-		});
+		globalThis.addEventListener("scroll", this._onScroll);
 
 		// react to resize/orientation changes
 		on(WINDOW_ONRESIZE, () => {
@@ -515,6 +516,19 @@ export default class Application {
 		off(STATE_RESUME, this.repaint, this);
 		off(STAGE_RESET, this.reset, this);
 		/* eslint-enable @typescript-eslint/unbound-method */
+
+		// remove DOM event listeners
+		if (this._onResize) {
+			globalThis.removeEventListener("resize", this._onResize);
+			globalThis.removeEventListener(
+				"orientationchange",
+				this._onOrientationChange!,
+			);
+			globalThis.removeEventListener("scroll", this._onScroll!);
+			if (device.screenOrientation) {
+				globalThis.screen.orientation.onchange = null;
+			}
+		}
 
 		// destroy the world and all its children
 		if (this.world) {

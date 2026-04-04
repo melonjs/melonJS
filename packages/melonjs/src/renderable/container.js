@@ -570,6 +570,9 @@ export default class Container extends Renderable {
 		if (this.isFinite()) {
 			// call parent method only when container has finite dimensions
 			super.updateBounds(absolute);
+		} else if (this.enableChildBoundsUpdate === true) {
+			// clear bounds so child aggregation starts fresh
+			bounds.clear();
 		}
 
 		if (this.enableChildBoundsUpdate === true) {

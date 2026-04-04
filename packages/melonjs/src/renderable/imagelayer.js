@@ -123,6 +123,11 @@ export default class ImageLayer extends Sprite {
 
 	// called when the layer is added to the game world or a container
 	onActivateEvent() {
+		if (!this.parentApp) {
+			throw new Error(
+				"ImageLayer requires a parent Application (must be added to an app's world container)",
+			);
+		}
 		const viewport = this.parentApp.viewport;
 		// set the initial size to match the viewport
 		this.resize(viewport.width, viewport.height);

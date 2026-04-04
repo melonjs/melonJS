@@ -413,26 +413,26 @@ export default class TMXTileMap {
 		 * callback funtion for the viewport resize event
 		 * @ignore
 		 */
-		const app = container.getRootAncestor().app;
-
-		function _setBounds(width, height) {
-			// adjust the viewport bounds if level is smaller
-			app.viewport.setBounds(
-				0,
-				0,
-				Math.max(levelBounds.width, width),
-				Math.max(levelBounds.height, height),
-			);
-			// center the map if smaller than the current viewport
-			container.pos.set(
-				Math.max(0, ~~((width - levelBounds.width) / 2)),
-				Math.max(0, ~~((height - levelBounds.height) / 2)),
-				// don't change the container z position if defined
-				container.pos.z,
-			);
-		}
-
 		if (setViewportBounds === true) {
+			const app = container.getRootAncestor().app;
+
+			function _setBounds(width, height) {
+				// adjust the viewport bounds if level is smaller
+				app.viewport.setBounds(
+					0,
+					0,
+					Math.max(levelBounds.width, width),
+					Math.max(levelBounds.height, height),
+				);
+				// center the map if smaller than the current viewport
+				container.pos.set(
+					Math.max(0, ~~((width - levelBounds.width) / 2)),
+					Math.max(0, ~~((height - levelBounds.height) / 2)),
+					// don't change the container z position if defined
+					container.pos.z,
+				);
+			}
+
 			off(VIEWPORT_ONRESIZE, _setBounds);
 			// force viewport bounds update
 			_setBounds(app.viewport.width, app.viewport.height);

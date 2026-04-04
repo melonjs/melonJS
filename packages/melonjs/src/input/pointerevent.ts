@@ -138,6 +138,9 @@ function registerEventListener(
  */
 function enablePointerEvent(): void {
 	if (!pointerInitialized) {
+		if (!_app) {
+			throw new Error("Pointer events require an initialized Application");
+		}
 		// the current pointer area
 		currentPointer = new Rect(0, 0, 1, 1);
 
