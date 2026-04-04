@@ -32,7 +32,7 @@ describe("Gradient", () => {
 			expect(gradient.colorStops.length).toEqual(2);
 		});
 
-		it("should accept Color objects in addColorStop", () => {
+		it("should store color stop as string", () => {
 			const gradient = app.renderer.createLinearGradient(0, 0, 100, 0);
 			gradient.addColorStop(0, "#FF0000");
 			expect(gradient.colorStops[0].color).toEqual("#FF0000");

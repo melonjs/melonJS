@@ -1443,18 +1443,6 @@ export default class WebGLRenderer extends Renderer {
 	}
 
 	/**
-	 * Generate triangle fan vertices for an elliptical arc.
-	 * @param {number} cx - center x
-	 * @param {number} cy - center y
-	 * @param {number} rx - horizontal radius
-	 * @param {number} ry - vertical radius
-	 * @param {number} startAngle - start angle in radians
-	 * @param {number} endAngle - end angle in radians
-	 * @param {number} segments - number of segments
-	 * @returns {Array<{x: number, y: number}>} triangle vertices
-	 * @ignore
-	 */
-	/**
 	 * Draw a gradient-filled shape by masking with the shape and filling the bounding rect.
 	 * Temporarily disables the gradient to prevent recursion in the fill methods.
 	 * @param {Function} drawShape - draws the shape into the stencil buffer
@@ -1516,6 +1504,18 @@ export default class WebGLRenderer extends Renderer {
 		}
 	}
 
+	/**
+	 * Generate triangle fan vertices for an elliptical arc.
+	 * @param {number} cx - center x
+	 * @param {number} cy - center y
+	 * @param {number} rx - horizontal radius
+	 * @param {number} ry - vertical radius
+	 * @param {number} startAngle - start angle in radians
+	 * @param {number} endAngle - end angle in radians
+	 * @param {number} segments - number of segments
+	 * @returns {Array<{x: number, y: number}>} triangle vertices
+	 * @ignore
+	 */
 	#generateTriangleFan(cx, cy, rx, ry, startAngle, endAngle, segments) {
 		const angleStep = (endAngle - startAngle) / segments;
 		const verts = [];

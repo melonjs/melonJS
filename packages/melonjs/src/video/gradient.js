@@ -70,6 +70,9 @@ export class Gradient {
 	 * gradient.addColorStop(1, "blue");
 	 */
 	addColorStop(offset, color) {
+		if (offset < 0.0 || offset > 1.0) {
+			throw new Error("offset must be between 0.0 and 1.0");
+		}
 		this.colorStops.push({
 			offset,
 			color: typeof color === "string" ? color : color.toRGBA(),

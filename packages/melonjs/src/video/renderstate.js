@@ -2,6 +2,10 @@ import { Color } from "./../math/color.ts";
 import { Matrix2d } from "../math/matrix2d.ts";
 
 /**
+ * @import {Gradient} from "./gradient.js";
+ */
+
+/**
  * Renderer-agnostic state container with a pre-allocated save/restore stack.
  *
  * Owns the mutable rendering state (color, tint, transform, scissor, blend mode)
