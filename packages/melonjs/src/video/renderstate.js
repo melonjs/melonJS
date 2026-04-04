@@ -52,12 +52,6 @@ export default class RenderState {
 		this.lineDash = [];
 
 		/**
-		 * current line dash offset
-		 * @type {number}
-		 */
-		this.lineDashOffset = 0;
-
-		/**
 		 * current blend mode
 		 * @type {string}
 		 */
@@ -100,9 +94,6 @@ export default class RenderState {
 		this._lineDashStack = new Array(this._stackCapacity);
 
 		/** @ignore */
-		this._lineDashOffsetStack = new Float64Array(this._stackCapacity);
-
-		/** @ignore */
 		this._scissorActive = new Uint8Array(this._stackCapacity);
 
 		/** @ignore */
@@ -128,7 +119,6 @@ export default class RenderState {
 		this._matrixStack[depth].copy(this.currentTransform);
 		this._gradientStack[depth] = this.currentGradient;
 		this._lineDashStack[depth] = this.lineDash;
-		this._lineDashOffsetStack[depth] = this.lineDashOffset;
 		this._blendStack[depth] = this.currentBlendMode;
 
 		if (scissorTestActive) {
@@ -159,8 +149,6 @@ export default class RenderState {
 			this.currentTransform.copy(this._matrixStack[depth]);
 			this.currentGradient = this._gradientStack[depth];
 			this.lineDash = this._lineDashStack[depth];
-			this.lineDashOffset = this._lineDashOffsetStack[depth];
-
 			const scissorActive = !!this._scissorActive[depth];
 			if (scissorActive) {
 				this.currentScissor.set(this._scissorStack[depth]);
@@ -206,9 +194,6 @@ export default class RenderState {
 		const newScissorActive = new Uint8Array(newCap);
 		newScissorActive.set(this._scissorActive);
 		this._scissorActive = newScissorActive;
-		const newLineDashOffset = new Float64Array(newCap);
-		newLineDashOffset.set(this._lineDashOffsetStack);
-		this._lineDashOffsetStack = newLineDashOffset;
 		this._stackCapacity = newCap;
 	}
 }

@@ -196,6 +196,71 @@ describe("LineDash", () => {
 			expect(app.renderer.getLineDash()).toEqual([]);
 		});
 
+		it("should draw solid line after restoring from dashed state", () => {
+			app.renderer.save();
+			app.renderer.setLineDash([10, 5]);
+			app.renderer.strokeLine(0, 0, 64, 0);
+			app.renderer.restore();
+			// after restore, dash is cleared — this should draw solid
+			expect(app.renderer.getLineDash()).toEqual([]);
+			expect(() => {
+				app.renderer.strokeLine(0, 32, 64, 32);
+			}).not.toThrow();
+		});
+
+		it("should draw dashed line after restoring to dashed state", () => {
+			app.renderer.setLineDash([10, 5]);
+			app.renderer.save();
+			app.renderer.setLineDash([]);
+			// draw solid
+			app.renderer.strokeLine(0, 0, 64, 0);
+			app.renderer.restore();
+			// after restore, dash is back
+			expect(app.renderer.getLineDash()).toEqual([10, 5]);
+			expect(() => {
+				app.renderer.strokeLine(0, 32, 64, 32);
+			}).not.toThrow();
+			app.renderer.setLineDash([]);
+		});
+
+		it("should alternate solid and dashed lines with save/restore", () => {
+			expect(() => {
+				// solid
+				app.renderer.strokeLine(0, 0, 64, 0);
+
+				app.renderer.save();
+				app.renderer.setLineDash([8, 4]);
+				// dashed
+				app.renderer.strokeLine(0, 10, 64, 10);
+
+				app.renderer.save();
+				app.renderer.setLineDash([]);
+				// solid again
+				app.renderer.strokeLine(0, 20, 64, 20);
+				app.renderer.restore();
+
+				// back to dashed [8, 4]
+				app.renderer.strokeLine(0, 30, 64, 30);
+				app.renderer.restore();
+
+				// back to solid
+				app.renderer.strokeLine(0, 40, 64, 40);
+			}).not.toThrow();
+			expect(app.renderer.getLineDash()).toEqual([]);
+		});
+
+		it("should mix dashed strokeLine with solid path stroke", () => {
+			app.renderer.setLineDash([10, 5]);
+			app.renderer.strokeLine(0, 0, 64, 0);
+			app.renderer.setLineDash([]);
+			app.renderer.beginPath();
+			app.renderer.moveTo(0, 16);
+			app.renderer.lineTo(64, 16);
+			expect(() => {
+				app.renderer.stroke();
+			}).not.toThrow();
+		});
+
 		it("save should not be affected by subsequent setLineDash calls", () => {
 			app.renderer.setLineDash([10, 5]);
 			app.renderer.save();
