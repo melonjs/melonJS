@@ -26,7 +26,7 @@ Why melonJS
 
 melonJS is designed so you can **focus on making games, not on graphics plumbing**.
 
-- **Canvas2D-inspired rendering API** — If you've used the HTML5 Canvas, you already know melonJS. The rendering API (`save`, `restore`, `translate`, `rotate`, `setColor`, `fillRect`, ...) follows the same familiar patterns — no render graphs, no shader pipelines, no instruction sets to learn.
+- **[Canvas2D-inspired rendering API](https://github.com/melonjs/melonJS/wiki/Rendering-API)** — If you've used the HTML5 Canvas, you already know melonJS. The rendering API (`save`, `restore`, `translate`, `rotate`, `setColor`, `fillRect`, ...) follows the same familiar patterns — no render graphs, no shader pipelines, no instruction sets to learn.
 
 - **True renderer abstraction** — Write your game once, run it on WebGL or Canvas2D with zero code changes. The engine handles all GPU complexity behind a unified API, with automatic fallback when WebGL is not available. Designed to support future backends (WebGPU) without touching game code.
 

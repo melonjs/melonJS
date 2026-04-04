@@ -8,6 +8,7 @@ import {
 	ONCONTEXT_RESTORED,
 	on,
 } from "../../system/event.ts";
+import { Gradient } from "../gradient.js";
 import Renderer from "./../renderer.js";
 import { createAtlas, TextureAtlas } from "./../texture/atlas.js";
 import TextureCache from "./../texture/cache.js";
@@ -102,6 +103,9 @@ export default class WebGLRenderer extends Renderer {
 
 		// scratch array for fillPolygon to avoid mutating polygon points
 		this._polyVerts = [];
+
+		// current gradient state (null when using solid color)
+		this._currentGradient = null;
 
 		/**
 		 * The current transformation matrix used for transformations on the overall scene
@@ -936,12 +940,21 @@ export default class WebGLRenderer extends Renderer {
 	/**
 	 * Set the current fill & stroke style color.
 	 * By default, or upon reset, the value is set to #000000.
-	 * @param {Color|string} color - css color string.
+	 * @param {Color|string|Gradient} color - css color string or a Gradient object.
 	 */
 	setColor(color) {
-		const alpha = this.currentColor.alpha;
-		this.currentColor.copy(color);
-		this.currentColor.alpha *= alpha;
+		if (color instanceof Gradient) {
+			this.renderState.currentGradient = color;
+			this._currentGradient = color;
+			// ensure full opacity for gradient texture rendering
+			this.currentColor.alpha = 1.0;
+		} else {
+			this.renderState.currentGradient = null;
+			this._currentGradient = null;
+			const alpha = this.currentColor.alpha;
+			this.currentColor.copy(color);
+			this.currentColor.alpha *= alpha;
+		}
 	}
 
 	/**
@@ -975,6 +988,18 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
 	 */
 	fillArc(x, y, radius, start, end, antiClockwise = false) {
+		if (this._currentGradient) {
+			this.#gradientMask(
+				() => {
+					this.fillArc(x, y, radius, start, end, antiClockwise);
+				},
+				x - radius,
+				y - radius,
+				radius * 2,
+				radius * 2,
+			);
+			return;
+		}
 		this.setBatcher("primitive");
 		let diff = Math.abs(end - start);
 		if (antiClockwise) {
@@ -1026,6 +1051,18 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} h - vertical radius of the ellipse
 	 */
 	fillEllipse(x, y, w, h) {
+		if (this._currentGradient) {
+			this.#gradientMask(
+				() => {
+					this.fillEllipse(x, y, w, h);
+				},
+				x - w,
+				y - h,
+				w * 2,
+				h * 2,
+			);
+			return;
+		}
 		this.setBatcher("primitive");
 		const segments = Math.max(
 			8,
@@ -1111,6 +1148,37 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {Polygon} poly - the shape to draw
 	 */
 	fillPolygon(poly) {
+		if (this._currentGradient) {
+			const bounds = poly.getBounds();
+			// translate to polygon's local space so gradient coords match
+			this.translate(poly.pos.x, poly.pos.y);
+			this.#gradientMask(
+				() => {
+					// draw polygon vertices directly (already translated)
+					this.setBatcher("primitive");
+					const indices = poly.getIndices();
+					const points = poly.points;
+					const verts = this._polyVerts;
+					const len = indices.length;
+					while (verts.length < len) {
+						verts.push({ x: 0, y: 0 });
+					}
+					for (let i = 0; i < len; i++) {
+						const src = points[indices[i]];
+						verts[i].x = src.x;
+						verts[i].y = src.y;
+					}
+					this.currentBatcher.drawVertices(this.gl.TRIANGLES, verts, len);
+				},
+				// use local bounds (subtract pos since getBounds includes it)
+				bounds.x - poly.pos.x,
+				bounds.y - poly.pos.y,
+				bounds.width,
+				bounds.height,
+			);
+			this.translate(-poly.pos.x, -poly.pos.y);
+			return;
+		}
 		this.setBatcher("primitive");
 		this.translate(poly.pos.x, poly.pos.y);
 		const indices = poly.getIndices();
@@ -1174,6 +1242,11 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} height - The rectangle's height.
 	 */
 	fillRect(x, y, width, height) {
+		if (this._currentGradient) {
+			const canvas = this._currentGradient.toCanvas(x, y, width, height);
+			this.drawImage(canvas, 0, 0, width, height, x, y, width, height);
+			return;
+		}
 		this.setBatcher("primitive");
 		// 2 triangles directly — avoids path2D + earcut overhead
 		const right = x + width;
@@ -1223,6 +1296,18 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} radius - The rounded corner's radius.
 	 */
 	fillRoundRect(x, y, width, height, radius) {
+		if (this._currentGradient) {
+			this.#gradientMask(
+				() => {
+					this.fillRoundRect(x, y, width, height, radius);
+				},
+				x,
+				y,
+				width,
+				height,
+			);
+			return;
+		}
 		this.setBatcher("primitive");
 		const r = Math.min(radius, width / 2, height / 2);
 		const verts = [];
@@ -1369,6 +1454,45 @@ export default class WebGLRenderer extends Renderer {
 	 * @returns {Array<{x: number, y: number}>} triangle vertices
 	 * @ignore
 	 */
+	/**
+	 * Draw a gradient-filled shape by masking with the shape and filling the bounding rect.
+	 * Temporarily disables the gradient to prevent recursion in the fill methods.
+	 * @param {Function} drawShape - draws the shape into the stencil buffer
+	 * @param {number} x - bounding rect x
+	 * @param {number} y - bounding rect y
+	 * @param {number} w - bounding rect width
+	 * @param {number} h - bounding rect height
+	 * @ignore
+	 */
+	#gradientMask(drawShape, x, y, w, h) {
+		const gl = this.gl;
+		const grad = this._currentGradient;
+		this._currentGradient = null;
+
+		this.flush();
+
+		// setup stencil — write shape
+		gl.enable(gl.STENCIL_TEST);
+		gl.clear(gl.STENCIL_BUFFER_BIT);
+		gl.colorMask(false, false, false, false);
+		gl.stencilFunc(gl.ALWAYS, 1, 0xff);
+		gl.stencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE);
+
+		drawShape();
+		this.flush();
+
+		// use stencil to clip gradient
+		gl.colorMask(true, true, true, true);
+		gl.stencilFunc(gl.EQUAL, 1, 0xff);
+		gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+
+		this._currentGradient = grad;
+		this.fillRect(x, y, w, h);
+		this.flush();
+
+		gl.disable(gl.STENCIL_TEST);
+	}
+
 	#generateTriangleFan(cx, cy, rx, ry, startAngle, endAngle, segments) {
 		const angleStep = (endAngle - startAngle) / segments;
 		const verts = [];

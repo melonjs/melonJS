@@ -36,6 +36,12 @@ export default class RenderState {
 		this.currentScissor = new Int32Array(4);
 
 		/**
+		 * current gradient fill (null when using solid color)
+		 * @type {Gradient|null}
+		 */
+		this.currentGradient = null;
+
+		/**
 		 * current blend mode
 		 * @type {string}
 		 */
@@ -78,6 +84,9 @@ export default class RenderState {
 		this._scissorActive = new Uint8Array(this._stackCapacity);
 
 		/** @ignore */
+		this._gradientStack = new Array(this._stackCapacity);
+
+		/** @ignore */
 		this._blendStack = new Array(this._stackCapacity);
 	}
 
@@ -95,6 +104,7 @@ export default class RenderState {
 		this._colorStack[depth].copy(this.currentColor);
 		this._tintStack[depth].copy(this.currentTint);
 		this._matrixStack[depth].copy(this.currentTransform);
+		this._gradientStack[depth] = this.currentGradient;
 		this._blendStack[depth] = this.currentBlendMode;
 
 		if (scissorTestActive) {
@@ -123,6 +133,7 @@ export default class RenderState {
 			this.currentColor.copy(this._colorStack[depth]);
 			this.currentTint.copy(this._tintStack[depth]);
 			this.currentTransform.copy(this._matrixStack[depth]);
+			this.currentGradient = this._gradientStack[depth];
 
 			const scissorActive = !!this._scissorActive[depth];
 			if (scissorActive) {
@@ -162,6 +173,7 @@ export default class RenderState {
 			this._tintStack.push(new Color());
 			this._matrixStack.push(new Matrix2d());
 			this._scissorStack.push(new Int32Array(4));
+			this._gradientStack.push(null);
 			this._blendStack.push(undefined);
 		}
 		const newScissorActive = new Uint8Array(newCap);

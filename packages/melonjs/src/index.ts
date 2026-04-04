@@ -51,6 +51,7 @@ import save from "./system/save.ts";
 import timer from "./system/timer.ts";
 import Tween from "./tweens/tween.ts";
 import CanvasRenderer from "./video/canvas/canvas_renderer.js";
+import { Gradient } from "./video/gradient.js";
 import Renderer from "./video/renderer.js";
 import RenderState from "./video/renderstate.js";
 import CanvasRenderTarget from "./video/rendertarget/canvasrendertarget.js";
@@ -119,6 +120,7 @@ export {
 	DropTarget,
 	Entity, // eslint-disable-line @typescript-eslint/no-deprecated
 	GLShader,
+	Gradient,
 	ImageLayer,
 	Light2d,
 	NineSliceSprite,

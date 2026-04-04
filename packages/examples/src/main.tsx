@@ -48,6 +48,11 @@ const ExampleDragAndDrop = lazy(() =>
 		default: m.ExampleDragAndDrop,
 	})),
 );
+const ExampleGradients = lazy(() =>
+	import("./examples/gradients/ExampleGradients").then((m) => ({
+		default: m.ExampleGradients,
+	})),
+);
 const ExampleGraphics = lazy(() =>
 	import("./examples/graphics/ExampleGraphics").then((m) => ({
 		default: m.ExampleGraphics,
@@ -186,6 +191,14 @@ const examples: {
 		sourceDir: "dragAndDrop",
 		description:
 			"Interactive drag-and-drop with pointer events, collision detection, and drop zones.",
+	},
+	{
+		component: <ExampleGradients />,
+		label: "Gradients",
+		path: "gradients",
+		sourceDir: "gradients",
+		description:
+			"Linear and radial gradients for sky backgrounds, health bars, UI buttons, and lighting effects.",
 	},
 	{
 		component: <ExampleGraphics />,
