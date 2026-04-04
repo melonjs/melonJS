@@ -124,6 +124,7 @@ export class Gradient {
 	/**
 	 * Render the gradient onto a canvas matching the given draw rect.
 	 * Uses the original gradient coordinates so the result matches Canvas 2D behavior.
+	 * @param {CanvasRenderer|WebGLRenderer} renderer - the active renderer (used to invalidate GPU texture)
 	 * @param {number} x - draw rect x
 	 * @param {number} y - draw rect y
 	 * @param {number} width - draw rect width
@@ -131,7 +132,7 @@ export class Gradient {
 	 * @returns {HTMLCanvasElement|OffscreenCanvas} the rendered gradient canvas
 	 * @ignore
 	 */
-	toCanvas(x, y, width, height) {
+	toCanvas(renderer, x, y, width, height) {
 		// use power-of-two dimensions for WebGL texture compatibility
 		const tw = nextPowerOfTwo(Math.max(1, Math.ceil(width)));
 		const th = nextPowerOfTwo(Math.max(1, Math.ceil(height)));
@@ -198,6 +199,7 @@ export class Gradient {
 		this._dirty = false;
 		this._lastX = x;
 		this._lastY = y;
+		this._renderTarget.invalidate(renderer);
 		return this._renderTarget.canvas;
 	}
 }

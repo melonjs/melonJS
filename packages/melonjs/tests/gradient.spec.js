@@ -281,7 +281,7 @@ describe("Gradient", () => {
 			const gradient = new Gradient("linear", [0, 0, 100, 0]);
 			gradient.addColorStop(0, "red");
 			gradient.addColorStop(1, "blue");
-			const canvas = gradient.toCanvas(0, 0, 100, 50);
+			const canvas = gradient.toCanvas(app.renderer, 0, 0, 100, 50);
 			expect(canvas).toBeDefined();
 			// dimensions are next power of two
 			expect(canvas.width).toEqual(128);
@@ -292,8 +292,8 @@ describe("Gradient", () => {
 			const gradient = new Gradient("linear", [0, 0, 100, 0]);
 			gradient.addColorStop(0, "red");
 			gradient.addColorStop(1, "blue");
-			const first = gradient.toCanvas(0, 0, 100, 50);
-			const second = gradient.toCanvas(0, 0, 100, 50);
+			const first = gradient.toCanvas(app.renderer, 0, 0, 100, 50);
+			const second = gradient.toCanvas(app.renderer, 0, 0, 100, 50);
 			expect(first).toBe(second);
 		});
 
@@ -301,8 +301,8 @@ describe("Gradient", () => {
 			const gradient = new Gradient("linear", [0, 0, 100, 0]);
 			gradient.addColorStop(0, "red");
 			gradient.addColorStop(1, "blue");
-			const first = gradient.toCanvas(0, 0, 100, 50);
-			const second = gradient.toCanvas(10, 10, 100, 50);
+			const first = gradient.toCanvas(app.renderer, 0, 0, 100, 50);
+			const second = gradient.toCanvas(app.renderer, 10, 10, 100, 50);
 			// same canvas object reused, but re-rendered
 			expect(first).toBe(second);
 		});

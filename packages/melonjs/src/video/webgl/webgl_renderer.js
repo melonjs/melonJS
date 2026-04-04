@@ -575,13 +575,8 @@ export default class WebGLRenderer extends Renderer {
 		}
 
 		// force reuploading if the given image is a HTMLVideoElement or a
-		// gradient canvas whose content may have been re-rendered
-		const reupload =
-			typeof image.videoWidth !== "undefined" ||
-			(this._currentGradient &&
-				this._currentGradient._dirty &&
-				this._currentGradient._renderTarget &&
-				this._currentGradient._renderTarget.canvas === image);
+		// force re-upload for video elements
+		const reupload = typeof image.videoWidth !== "undefined";
 		const texture = this.cache.get(image);
 		const uvs = texture.getUVs(sx, sy, sw, sh);
 		this.currentBatcher.addQuad(
@@ -1297,7 +1292,7 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	fillRect(x, y, width, height) {
 		if (this._currentGradient) {
-			const canvas = this._currentGradient.toCanvas(x, y, width, height);
+			const canvas = this._currentGradient.toCanvas(this, x, y, width, height);
 			this.drawImage(canvas, 0, 0, width, height, x, y, width, height);
 			return;
 		}
@@ -1519,6 +1514,18 @@ export default class WebGLRenderer extends Renderer {
 
 		const nx = dx / lineLen;
 		const ny = dy / lineLen;
+		// bail out if pattern has no positive values (would loop forever)
+		if (
+			!pattern.some((v) => {
+				return v > 0;
+			})
+		) {
+			return [
+				{ x: x0, y: y0 },
+				{ x: x1, y: y1 },
+			];
+		}
+
 		const segments = [];
 		let dist = 0;
 		let patIdx = 0;
@@ -1528,6 +1535,7 @@ export default class WebGLRenderer extends Renderer {
 			const dashLen = pattern[patIdx % pattern.length];
 			if (dashLen <= 0) {
 				patIdx++;
+				drawing = !drawing;
 				continue;
 			}
 			const segEnd = Math.min(dist + dashLen, lineLen);

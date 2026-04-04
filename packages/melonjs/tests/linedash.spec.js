@@ -109,6 +109,25 @@ describe("LineDash", () => {
 			}).not.toThrow();
 			app.renderer.setLineDash([]);
 		});
+
+		it("should not infinite loop with all-zero dash pattern", () => {
+			app.renderer.setLineDash([0, 0]);
+			expect(() => {
+				app.renderer.strokeLine(0, 0, 64, 0);
+			}).not.toThrow();
+			app.renderer.setLineDash([]);
+		});
+
+		it("should not infinite loop with all-zero pattern on path stroke", () => {
+			app.renderer.setLineDash([0, 0, 0]);
+			app.renderer.beginPath();
+			app.renderer.moveTo(0, 0);
+			app.renderer.lineTo(64, 64);
+			expect(() => {
+				app.renderer.stroke();
+			}).not.toThrow();
+			app.renderer.setLineDash([]);
+		});
 	});
 
 	describe("setLineDash edge cases", () => {
