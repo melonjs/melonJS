@@ -195,5 +195,21 @@ describe("LineDash", () => {
 			app.renderer.restore();
 			expect(app.renderer.getLineDash()).toEqual([]);
 		});
+
+		it("save should not be affected by subsequent setLineDash calls", () => {
+			app.renderer.setLineDash([10, 5]);
+			app.renderer.save();
+			// setLineDash creates a new array, so saved reference stays intact
+			app.renderer.setLineDash([20, 10]);
+			app.renderer.save();
+			app.renderer.setLineDash([1, 1]);
+			// restore to [20, 10]
+			app.renderer.restore();
+			expect(app.renderer.getLineDash()).toEqual([20, 10]);
+			// restore to [10, 5]
+			app.renderer.restore();
+			expect(app.renderer.getLineDash()).toEqual([10, 5]);
+			app.renderer.setLineDash([]);
+		});
 	});
 });

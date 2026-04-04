@@ -127,7 +127,7 @@ export default class RenderState {
 		this._tintStack[depth].copy(this.currentTint);
 		this._matrixStack[depth].copy(this.currentTransform);
 		this._gradientStack[depth] = this.currentGradient;
-		this._lineDashStack[depth] = this.lineDash.slice();
+		this._lineDashStack[depth] = this.lineDash;
 		this._lineDashOffsetStack[depth] = this.lineDashOffset;
 		this._blendStack[depth] = this.currentBlendMode;
 
