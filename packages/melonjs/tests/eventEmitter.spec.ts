@@ -303,7 +303,7 @@ test("listener without context has undefined this", () => {
 describe("event.ts public API", () => {
 	beforeAll(() => {
 		new Application(64, 64, {
-			parent: document.getElementById("screen") || document.body,
+			parent: "screen",
 			scale: "auto",
 		});
 	});
