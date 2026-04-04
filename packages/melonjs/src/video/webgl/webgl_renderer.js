@@ -574,8 +574,13 @@ export default class WebGLRenderer extends Renderer {
 			this.currentBatcher.useShader(shader);
 		}
 
-		// force reuploading if the given image is a HTMLVideoElement
-		const reupload = typeof image.videoWidth !== "undefined";
+		// force reuploading if the given image is a HTMLVideoElement or a
+		// gradient canvas whose content may have been re-rendered
+		const reupload =
+			typeof image.videoWidth !== "undefined" ||
+			(this._currentGradient &&
+				this._currentGradient._renderTarget &&
+				this._currentGradient._renderTarget.canvas === image);
 		const texture = this.cache.get(image);
 		const uvs = texture.getUVs(sx, sy, sw, sh);
 		this.currentBatcher.addQuad(

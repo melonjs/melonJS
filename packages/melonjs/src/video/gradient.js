@@ -7,9 +7,8 @@ import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
 
 /**
  * A Gradient object representing a linear or radial gradient fill.
- * Created via {@link CanvasRenderer#createLinearGradient}, {@link CanvasRenderer#createRadialGradient},
- * {@link WebGLRenderer#createLinearGradient}, or {@link WebGLRenderer#createRadialGradient}.
- * Can be passed to {@link CanvasRenderer#setColor} or {@link WebGLRenderer#setColor} as a fill style.
+ * Created via {@link Renderer#createLinearGradient} or {@link Renderer#createRadialGradient}.
+ * Can be passed to {@link Renderer#setColor} as a fill style.
  */
 export class Gradient {
 	/**
@@ -79,7 +78,8 @@ export class Gradient {
 		});
 		this._dirty = true;
 		this._canvasGradient = undefined;
-		this._renderTarget = undefined;
+		// keep _renderTarget alive — the _dirty flag will trigger re-rendering
+		// in toCanvasGradient() / toCanvas(), avoiding a GL texture leak
 		return this;
 	}
 
@@ -155,6 +155,10 @@ export class Gradient {
 			this._renderTarget.width !== tw ||
 			this._renderTarget.height !== th
 		) {
+			// NOTE: resizing the canvas invalidates its GPU texture in the
+			// TextureCache, but the cache key (the canvas element itself)
+			// remains the same. The drawImage path must force a re-upload
+			// so the GPU texture matches the new content.
 			this._renderTarget.canvas.width = tw;
 			this._renderTarget.canvas.height = th;
 		}
