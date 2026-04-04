@@ -14,6 +14,12 @@
 - Application: new `canvas` getter, `resize()`, and `destroy()` convenience methods
 - Application: `GAME_INIT` event now passes the Application instance as parameter
 - Stage: `onResetEvent(app, ...args)` now receives the Application instance as first parameter, followed by any extra arguments from `state.change()`
+- Stage: `onDestroyEvent(app)` now receives the Application instance as parameter
+- Container: default dimensions are now `Infinity` (no intrinsic size, no clipping) — removes dependency on `game.viewport`. `anchorPoint` is always `(0, 0)` as containers act as grouping/transform nodes
+- ImageLayer: decoupled from `game` singleton — uses `parentApp` for viewport and renderer access; `resize`, `createPattern` and event listeners deferred to `onActivateEvent`
+- TMXTileMap: `addTo()` resolves viewport from the container tree via `getRootAncestor().app` instead of `game.viewport`
+- Input: pointer and pointerevent modules now receive the Application instance via `GAME_INIT` event instead of importing the `game` singleton
+- video: `video.renderer` and `video.init()` are now deprecated — use `new Application(width, height, options)` and `app.renderer` instead. `video.renderer` is kept in sync via `VIDEO_INIT` for backward compatibility
 - EventEmitter: native context parameter support — `addListener(event, fn, context)` and `addListenerOnce(event, fn, context)` now accept an optional context, eliminating `.bind()` closure overhead and enabling proper `removeListener()` by original function reference
 - EventEmitter: `event.on()` and `event.once()` no longer create `.bind()` closures when a context is provided
 
@@ -25,6 +31,8 @@
 - Application: prevent white flash on load by setting a black background on the parent element when no background is defined
 - WebGLRenderer: `setBlendMode()` now tracks the `premultipliedAlpha` flag — previously only the mode name was checked, causing incorrect GL blend function when mixing PMA and non-PMA textures with the same blend mode
 - TMX: fix crash in `getObjects(false)` when a map contains an empty object group (Container.children lazily initialized)
+- Container: fix `updateBounds()` producing NaN when container has Infinity dimensions (skip parent bounds computation for non-finite containers, derive bounds from children only)
+- Container: fix circular import in `BitmapTextData` pool registration (`pool.ts` ↔ `bitmaptextdata.ts`)
 - EventEmitter: `removeAllListeners()` now correctly clears once-listeners (previously only cleared regular listeners)
 - Loader: fix undefined `crossOrigin` variable in script parser, unsafe regex match in video parser, missing error parameter in video/fontface error callbacks, `fetchData` Promise constructor antipattern and silent error swallowing
 

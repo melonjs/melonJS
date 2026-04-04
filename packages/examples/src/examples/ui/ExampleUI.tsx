@@ -1,6 +1,7 @@
 import {
+	Application as App,
+	type Application,
 	ColorLayer,
-	game,
 	loader,
 	Stage,
 	state,
@@ -41,7 +42,6 @@ class ButtonUI extends UISpriteElement {
 			fillStyle: "black",
 			textAlign: "center",
 			textBaseline: "middle",
-			offScreenCanvas: video.renderer.WebGLVersion >= 1,
 		});
 	}
 
@@ -123,7 +123,6 @@ class CheckBoxUI extends UISpriteElement {
 			textAlign: "left",
 			textBaseline: "middle",
 			text: offLabel,
-			offScreenCanvas: true,
 		});
 
 		this.getBounds().width += this.font.measureText().width;
@@ -204,8 +203,8 @@ class UIContainer extends UIBaseElement {
 }
 
 class PlayScreen extends Stage {
-	override onResetEvent() {
-		game.world.addChild(
+	override onResetEvent(app: Application) {
+		app.world.addChild(
 			new ColorLayer("background", "rgba(248, 194, 40, 1.0)"),
 			0,
 		);
@@ -243,21 +242,16 @@ class PlayScreen extends Stage {
 		panel.addChild(new ButtonUI(30, 250, "green", "Accept"));
 		panel.addChild(new ButtonUI(230, 250, "yellow", "Cancel"));
 
-		game.world.addChild(panel, 1);
+		app.world.addChild(panel, 1);
 	}
 }
 
 const createGame = () => {
-	if (
-		!video.init(800, 600, {
-			parent: "screen",
-			scale: "auto",
-			scaleMethod: "flex-width",
-		})
-	) {
-		alert("Your browser does not support HTML5 canvas.");
-		return;
-	}
+	const app = new App(800, 600, {
+		parent: "screen",
+		scale: "auto",
+		scaleMethod: "flex-width",
+	});
 
 	const resources = [
 		{ name: "UI_Assets-0", type: "image", src: `${base}img/UI_Assets-0.png` },

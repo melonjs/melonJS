@@ -163,30 +163,29 @@ Browse all examples [here](https://melonjs.github.io/melonJS/examples/)
 ### Basic Hello World Example
 
 ```JavaScript
-import * as me from "https://cdn.jsdelivr.net/npm/melonjs/+esm";
+import { Application, Text } from "https://cdn.jsdelivr.net/npm/melonjs/+esm";
 
-me.device.onReady(function () {
-    // initialize the display canvas once the device/browser is ready
-    if (!me.video.init(1218, 562, {parent : "screen", scale : "auto"})) {
-        alert("Your browser does not support HTML5 canvas.");
-        return;
-    }
-
-    // set a gray background color
-    me.game.world.backgroundColor.parseCSS("#202020");
-
-    // add a font text display object
-    me.game.world.addChild(new me.Text(609, 281, {
-        font: "Arial",
-        size: 160,
-        fillStyle: "#FFFFFF",
-        textBaseline : "middle",
-        textAlign : "center",
-        text : "Hello World !"
-    }));
+// create a new melonJS application
+const app = new Application(1218, 562, {
+    parent: "screen",
+    scale: "auto",
+    backgroundColor: "#202020",
 });
+
+// set a gray background color
+app.world.backgroundColor.parseCSS("#202020");
+
+// add a font text display object
+app.world.addChild(new Text(609, 281, {
+    font: "Arial",
+    size: 160,
+    fillStyle: "#FFFFFF",
+    textBaseline: "middle",
+    textAlign: "center",
+    text: "Hello World !",
+}));
 ```
-> Simple hello world using melonJS 2
+> Simple hello world using melonJS
 
 Documentation
 -------------------------------------------------------------------------------

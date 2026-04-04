@@ -111,7 +111,7 @@ export const collision = {
 	 *        // starting point relative to the initial position
 	 *        new me.Vector2d(0, 0),
 	 *        // ending point
-	 *        new me.Vector2d(me.game.viewport.width, me.game.viewport.height)
+	 *        new me.Vector2d(app.viewport.width, app.viewport.height)
 	 *    ]);
 	 *
 	 *    // check for collition

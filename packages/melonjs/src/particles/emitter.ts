@@ -70,7 +70,7 @@ export default class ParticleEmitter extends Container {
 	 * });
 	 *
 	 * // Add the emitter to the game world
-	 * me.game.world.addChild(emitter);
+	 * app.world.addChild(emitter);
 	 *
 	 * // Launch all particles one time and stop, like an explosion
 	 * emitter.burstParticles();
@@ -80,7 +80,7 @@ export default class ParticleEmitter extends Container {
 	 *
 	 * // At the end, remove emitter from the game world
 	 * // call this in onDestroyEvent function
-	 * me.game.world.removeChild(emitter);
+	 * app.world.removeChild(emitter);
 	 */
 	constructor(x: number, y: number, settings: Record<string, any> = {}) {
 		// call the super constructor

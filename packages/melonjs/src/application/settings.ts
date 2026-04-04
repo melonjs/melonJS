@@ -107,8 +107,8 @@ export type ApplicationSettings = {
 	batcher?: (new (renderer: any) => Batcher) | undefined;
 } & (
 	| {
-			// the DOM parent element to hold the canvas in the HTML file
-			parent: HTMLElement;
+			// the DOM parent element (or its string ID) to hold the canvas in the HTML file
+			parent: string | HTMLElement;
 			canvas?: never;
 	  }
 	| {

@@ -970,4 +970,183 @@ describe("Container", () => {
 			expect(child.visibleInAllCameras).toEqual(true);
 		});
 	});
+
+	describe("default dimensions", () => {
+		it("should default to Infinity when no dimensions are provided", () => {
+			const c = new Container();
+			expect(c.width).toEqual(Infinity);
+			expect(c.height).toEqual(Infinity);
+		});
+
+		it("should default to (0, 0) position when no position is provided", () => {
+			const c = new Container();
+			expect(c.pos.x).toEqual(0);
+			expect(c.pos.y).toEqual(0);
+		});
+
+		it("should use explicit dimensions when provided", () => {
+			const c = new Container(10, 20, 200, 150);
+			expect(c.pos.x).toEqual(10);
+			expect(c.pos.y).toEqual(20);
+			expect(c.width).toEqual(200);
+			expect(c.height).toEqual(150);
+		});
+
+		it("should accept children when dimensions are Infinity", () => {
+			const c = new Container();
+			const child = new Renderable(50, 50, 32, 32);
+			c.addChild(child);
+			expect(c.getChildren().length).toEqual(1);
+		});
+
+		it("should not clip children when dimensions are Infinity", () => {
+			const c = new Container();
+			c.clipping = true;
+			const farChild = new Renderable(99999, 99999, 10, 10);
+			c.addChild(farChild);
+			// draw() guards clipRect with bounds.isFinite(), so even with
+			// clipping enabled, Infinity bounds prevent actual clipping
+			const bounds = c.getBounds();
+			expect(bounds.isFinite()).toEqual(false);
+			// child bounds should still be valid and reachable
+			const childBounds = farChild.getBounds();
+			expect(childBounds.isFinite()).toEqual(true);
+			expect(childBounds.left).toBeGreaterThan(0);
+		});
+
+		it("getBounds() should return valid bounds with Infinity dimensions", () => {
+			const c = new Container();
+			const bounds = c.getBounds();
+			expect(bounds).toBeDefined();
+			expect(typeof bounds.width).toEqual("number");
+			expect(typeof bounds.height).toEqual("number");
+		});
+
+		it("getBounds() should grow to fit children with explicit dimensions", () => {
+			const c = new Container(0, 0, 100, 100);
+			c.enableChildBoundsUpdate = true;
+			const child = new Renderable(10, 20, 50, 60);
+			c.addChild(child);
+			c.updateBounds();
+			const bounds = c.getBounds();
+			expect(bounds.width).toBeGreaterThanOrEqual(50);
+			expect(bounds.height).toBeGreaterThanOrEqual(60);
+		});
+
+		it("getChildByName should work with Infinity-sized container", () => {
+			const c = new Container();
+			const child = new Renderable(0, 0, 32, 32);
+			child.name = "testChild";
+			c.addChild(child);
+			const found = c.getChildByName("testChild");
+			expect(found.length).toEqual(1);
+			expect(found[0]).toBe(child);
+		});
+
+		it("sort should work with Infinity-sized container", () => {
+			const c = new Container();
+			c.autoSort = true;
+			const child1 = new Renderable(0, 0, 10, 10);
+			child1.pos.z = 5;
+			const child2 = new Renderable(0, 0, 10, 10);
+			child2.pos.z = 1;
+			c.addChild(child1);
+			c.addChild(child2);
+			c.sort();
+			expect(c.getChildAt(0).pos.z).toBeLessThanOrEqual(c.getChildAt(1).pos.z);
+		});
+
+		it("isFinite() should return false for Infinity-sized container", () => {
+			const c = new Container();
+			expect(c.isFinite()).toEqual(false);
+		});
+
+		it("isFinite() should return true for explicitly-sized container", () => {
+			const c = new Container(0, 0, 100, 100);
+			expect(c.isFinite()).toEqual(true);
+		});
+
+		it("getBounds().isFinite() should return false for Infinity-sized container", () => {
+			const c = new Container();
+			const bounds = c.getBounds();
+			expect(bounds.isFinite()).toEqual(false);
+		});
+
+		it("getBounds().isFinite() should return true for explicitly-sized container", () => {
+			const c = new Container(0, 0, 200, 150);
+			const bounds = c.getBounds();
+			expect(bounds.isFinite()).toEqual(true);
+		});
+
+		it("updateBounds should not produce NaN for Infinity-sized container", () => {
+			const c = new Container();
+			c.enableChildBoundsUpdate = true;
+			const child = new Renderable(10, 10, 50, 50);
+			c.addChild(child);
+			const bounds = c.updateBounds();
+			expect(Number.isNaN(bounds.width)).toEqual(false);
+			expect(Number.isNaN(bounds.height)).toEqual(false);
+		});
+
+		it("updateBounds should return finite child bounds for Infinity container", () => {
+			const c = new Container();
+			c.enableChildBoundsUpdate = true;
+			const child = new Renderable(10, 10, 50, 50);
+			c.addChild(child);
+			const bounds = c.updateBounds();
+			expect(bounds.isFinite()).toEqual(true);
+			expect(bounds.width).toBeGreaterThanOrEqual(50);
+			expect(bounds.height).toBeGreaterThanOrEqual(50);
+		});
+
+		it("clipping should be skipped for Infinity-sized container", () => {
+			const c = new Container();
+			// clipping requires finite bounds — verify the guard condition
+			expect(c.clipping).toEqual(false);
+			c.clipping = true;
+			const bounds = c.getBounds();
+			// draw() checks bounds.isFinite() before clipping
+			expect(bounds.isFinite()).toEqual(false);
+		});
+
+		it("clipping preconditions should be met for finite container", () => {
+			const c = new Container(0, 0, 200, 150);
+			c.clipping = true;
+			const bounds = c.getBounds();
+			// all three guard conditions in draw() should pass
+			expect(c.root).toEqual(false);
+			expect(c.clipping).toEqual(true);
+			expect(bounds.isFinite()).toEqual(true);
+			expect(bounds.width).toEqual(200);
+			expect(bounds.height).toEqual(150);
+		});
+
+		it("clipping defaults to false", () => {
+			expect(new Container().clipping).toEqual(false);
+			expect(new Container(0, 0, 100, 100).clipping).toEqual(false);
+		});
+
+		it("nested Infinity containers should not produce NaN bounds", () => {
+			const parent = new Container();
+			const child = new Container();
+			child.enableChildBoundsUpdate = true;
+			const renderable = new Renderable(5, 5, 20, 20);
+			child.addChild(renderable);
+			parent.addChild(child);
+			parent.enableChildBoundsUpdate = true;
+			const bounds = parent.updateBounds();
+			expect(Number.isNaN(bounds.width)).toEqual(false);
+			expect(Number.isNaN(bounds.height)).toEqual(false);
+		});
+
+		it("anchorPoint should always be (0,0) for containers", () => {
+			const infinite = new Container();
+			expect(infinite.anchorPoint.x).toEqual(0);
+			expect(infinite.anchorPoint.y).toEqual(0);
+
+			const finite = new Container(0, 0, 200, 100);
+			expect(finite.anchorPoint.x).toEqual(0);
+			expect(finite.anchorPoint.y).toEqual(0);
+		});
+	});
 });

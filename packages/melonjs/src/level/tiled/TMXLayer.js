@@ -291,7 +291,7 @@ export default class TMXLayer extends Renderable {
 	 * @returns {Tile} corresponding tile or null if there is no defined tile at the coordinate or if outside of the layer bounds
 	 * @example
 	 * // get the TMX Map Layer called "Front layer"
-	 * let layer = me.game.world.getChildByName("Front Layer")[0];
+	 * let layer = app.world.getChildByName("Front Layer")[0];
 	 * // get the tile object corresponding to the latest pointer position
 	 * let tile = layer.getTile(me.input.pointer.x, me.input.pointer.y);
 	 */
@@ -369,7 +369,7 @@ export default class TMXLayer extends Renderable {
 	 * @param {number} x - X coordinate (in map coordinates: row/column)
 	 * @param {number} y - Y coordinate (in map coordinates: row/column)
 	 * @example
-	 * me.game.world.getChildByType(me.TMXLayer).forEach(function(layer) {
+	 * app.world.getChildByType(me.TMXLayer).forEach(function(layer) {
 	 *     // clear all tiles at the given x,y coordinates
 	 *     layer.clearTile(x, y);
 	 * });

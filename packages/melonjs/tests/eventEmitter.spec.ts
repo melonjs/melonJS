@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it, test, vi } from "vitest";
-import { boot, event, video } from "../src/index.js";
+import { Application, event } from "../src/index.js";
 import { EventEmitter } from "../src/system/eventEmitter";
 
 test("addListener()", () => {
@@ -302,11 +302,9 @@ test("listener without context has undefined this", () => {
 // ---------------------------------------------------------------
 describe("event.ts public API", () => {
 	beforeAll(() => {
-		boot();
-		video.init(64, 64, {
+		new Application(64, 64, {
 			parent: "screen",
 			scale: "auto",
-			renderer: video.AUTO,
 		});
 	});
 

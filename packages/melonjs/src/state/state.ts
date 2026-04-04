@@ -120,7 +120,7 @@ function _switchState(stateId: number): void {
 	// call the stage destroy method
 	if (_stages[_state]) {
 		// just notify the object
-		_stages[_state].stage.destroy();
+		_stages[_state].stage.destroy(_app);
 	}
 
 	if (_stages[stateId]) {
@@ -352,7 +352,7 @@ const state = {
 	 * class MenuScreen extends me.Stage {
 	 *     onResetEvent() {
 	 *         // Load background image
-	 *         me.game.world.addChild(
+	 *         app.world.addChild(
 	 *             new me.ImageLayer(0, 0, {
 	 *                 image : "bg",
 	 *                 z: 0 // z-index
@@ -360,7 +360,7 @@ const state = {
 	 *         );
 	 *
 	 *         // Add a button
-	 *         me.game.world.addChild(
+	 *         app.world.addChild(
 	 *             new MenuButton(350, 200, { "image" : "start" }),
 	 *             1 // z-index
 	 *         );

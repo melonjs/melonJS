@@ -26,8 +26,8 @@ export default class World extends Container {
 	/**
 	 * @param {number} [x=0] - position of the container (accessible via the inherited pos.x property)
 	 * @param {number} [y=0] - position of the container (accessible via the inherited pos.y property)
-	 * @param {number} [width=game.viewport.width] - width of the container
-	 * @param {number} [height=game.viewport.height] - height of the container
+	 * @param {number} [width=Infinity] - width of the world container
+	 * @param {number} [height=Infinity] - height of the world container
 	 */
 	constructor(x = 0, y = 0, width = Infinity, height = Infinity) {
 		// call the super constructor
@@ -52,7 +52,7 @@ export default class World extends Container {
 		 * @default "builtin"
 		 * @example
 		 * // disable builtin physic
-		 * me.game.world.physic = "none";
+		 * app.world.physic = "none";
 		 */
 		this.physic = "builtin";
 

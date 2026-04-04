@@ -1,4 +1,4 @@
-import { audio, device, game, level, plugin, Stage } from "melonjs";
+import { type Application, audio, device, level, plugin, Stage } from "melonjs";
 import { VirtualJoypad } from "./entities/controls";
 import UIContainer from "./entities/HUD";
 import { MinimapCamera } from "./entities/minimap";
@@ -11,7 +11,7 @@ export class PlayScreen extends Stage {
 	/**
 	 *  action to perform on state change
 	 */
-	override onResetEvent() {
+	override onResetEvent(app: Application) {
 		// load a level
 		level.load("map1");
 
@@ -27,14 +27,14 @@ export class PlayScreen extends Stage {
 		if (typeof this.HUD === "undefined") {
 			this.HUD = new UIContainer();
 		}
-		game.world.addChild(this.HUD);
+		app.world.addChild(this.HUD);
 
 		// display if debugPanel is enabled or on mobile
 		if (plugin.cache.debugPanel?.panel.visible || device.touch) {
 			if (typeof this.virtualJoypad === "undefined") {
 				this.virtualJoypad = new VirtualJoypad();
 			}
-			game.world.addChild(this.virtualJoypad);
+			app.world.addChild(this.virtualJoypad);
 		}
 
 		// play some music
@@ -44,15 +44,15 @@ export class PlayScreen extends Stage {
 	/**
 	 *  action to perform on state change
 	 */
-	override onDestroyEvent() {
+	override onDestroyEvent(app: Application) {
 		// remove the HUD from the game world
 		if (this.HUD) {
-			game.world.removeChild(this.HUD);
+			app.world.removeChild(this.HUD);
 		}
 
 		// remove the joypad if initially added
-		if (this.virtualJoypad && game.world.hasChild(this.virtualJoypad)) {
-			game.world.removeChild(this.virtualJoypad);
+		if (this.virtualJoypad && app.world.hasChild(this.virtualJoypad)) {
+			app.world.removeChild(this.virtualJoypad);
 		}
 
 		// stop some music

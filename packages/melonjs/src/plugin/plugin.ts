@@ -40,11 +40,11 @@ export class BasePlugin {
  * @param name - target function
  * @param fn - replacement function
  * @example
- * // redefine the me.game.update function with a new one
- * me.plugin.patch(me.game, "update", function () {
+ * // redefine the app.update function with a new one
+ * me.plugin.patch(app, "update", function () {
  *   // display something in the console
  *   console.log("duh");
- *   // call the original me.game.update function
+ *   // call the original app.update function
  *   this._patched();
  * });
  */

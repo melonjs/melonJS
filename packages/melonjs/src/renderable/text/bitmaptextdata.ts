@@ -1,4 +1,4 @@
-import { createPool } from "../../pool.ts";
+import { createPool } from "../../system/pool.ts";
 import Glyph from "./glyph.ts";
 
 // bitmap constants

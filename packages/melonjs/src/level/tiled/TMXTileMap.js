@@ -1,4 +1,3 @@
-import { game } from "../../application/application.ts";
 import { warning } from "../../lang/console.js";
 import { vector2dPool } from "../../math/vector2d.ts";
 import { collision } from "../../physics/collision.js";
@@ -129,7 +128,7 @@ export default class TMXTileMap {
 	 * // create a new level object based on the TMX JSON object
 	 * let level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
 	 * // add the level to the game world container
-	 * level.addTo(me.game.world, true);
+	 * level.addTo(app.world, true);
 	 */
 	constructor(levelId, data) {
 		/**
@@ -378,7 +377,7 @@ export default class TMXTileMap {
 	 * // create a new level object based on the TMX JSON object
 	 * let level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
 	 * // add the level to the game world container
-	 * level.addTo(me.game.world, true, true);
+	 * level.addTo(app.world, true, true);
 	 */
 	addTo(container, flatten, setViewportBounds) {
 		const _sort = container.autoSort;
@@ -414,27 +413,29 @@ export default class TMXTileMap {
 		 * callback funtion for the viewport resize event
 		 * @ignore
 		 */
-		function _setBounds(width, height) {
-			// adjust the viewport bounds if level is smaller
-			game.viewport.setBounds(
-				0,
-				0,
-				Math.max(levelBounds.width, width),
-				Math.max(levelBounds.height, height),
-			);
-			// center the map if smaller than the current viewport
-			container.pos.set(
-				Math.max(0, ~~((width - levelBounds.width) / 2)),
-				Math.max(0, ~~((height - levelBounds.height) / 2)),
-				// don't change the container z position if defined
-				container.pos.z,
-			);
-		}
-
 		if (setViewportBounds === true) {
+			const app = container.getRootAncestor().app;
+
+			function _setBounds(width, height) {
+				// adjust the viewport bounds if level is smaller
+				app.viewport.setBounds(
+					0,
+					0,
+					Math.max(levelBounds.width, width),
+					Math.max(levelBounds.height, height),
+				);
+				// center the map if smaller than the current viewport
+				container.pos.set(
+					Math.max(0, ~~((width - levelBounds.width) / 2)),
+					Math.max(0, ~~((height - levelBounds.height) / 2)),
+					// don't change the container z position if defined
+					container.pos.z,
+				);
+			}
+
 			off(VIEWPORT_ONRESIZE, _setBounds);
 			// force viewport bounds update
-			_setBounds(game.viewport.width, game.viewport.height);
+			_setBounds(app.viewport.width, app.viewport.height);
 			// Replace the resize handler
 			on(VIEWPORT_ONRESIZE, _setBounds);
 		}

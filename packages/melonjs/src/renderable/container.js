@@ -1,4 +1,3 @@
-import { game } from "../application/application.ts";
 import { colorPool } from "../math/color.ts";
 import Body from "../physics/body.js";
 import state from "../state/state.ts";
@@ -42,32 +41,27 @@ let globalFloatingCounter = 0;
  */
 
 /**
- * Container represents a collection of child objects
+ * Container represents a collection of child objects.
+ * When no explicit dimensions are given, width and height default to Infinity,
+ * meaning the container has no intrinsic size, no clipping, and acts as a pure
+ * grouping/transform node (similar to PixiJS or Phaser containers).
+ * In this case, anchorPoint is treated as (0, 0) since there is no meaningful
+ * center for an infinite area. Bounds are then derived entirely from children
+ * when {@link Container#enableChildBoundsUpdate} is enabled.
  * @category Container
  */
 export default class Container extends Renderable {
 	/**
 	 * @param {number} [x=0] - position of the container (accessible via the inherited pos.x property)
 	 * @param {number} [y=0] - position of the container (accessible via the inherited pos.y property)
-	 * @param {number} [width=game.viewport.width] - width of the container
-	 * @param {number} [height=game.viewport.height] - height of the container
+	 * @param {number} [width=Infinity] - width of the container. Defaults to Infinity (no intrinsic size, no clipping).
+	 * @param {number} [height=Infinity] - height of the container. Defaults to Infinity (no intrinsic size, no clipping).
+	 * @param {boolean} [root=false] - internal flag, true for the world root container
+	 * @ignore root
 	 */
-	constructor(x = 0, y = 0, width, height, root = false) {
+	constructor(x = 0, y = 0, width = Infinity, height = Infinity, root = false) {
 		// call the super constructor
-		super(
-			x,
-			y,
-			typeof width === "undefined"
-				? typeof game.viewport !== "undefined"
-					? game.viewport.width
-					: Infinity
-				: width,
-			typeof height === "undefined"
-				? typeof game.viewport !== "undefined"
-					? game.viewport.height
-					: Infinity
-				: height,
-		);
+		super(x, y, width, height);
 
 		/**
 		 * keep track of pending sort
@@ -156,6 +150,10 @@ export default class Container extends Renderable {
 		// enable collision and event detection
 		this.isKinematic = false;
 
+		// container anchorPoint is always (0, 0) — children position from the
+		// container's origin (top-left), matching the convention used by other engines
+		// (PixiJS, Phaser). This also avoids Infinity * 0.5 = Infinity issues
+		// when the container has no explicit size.
 		this.anchorPoint.set(0, 0);
 
 		// subscribe on the canvas resize event
@@ -569,8 +567,13 @@ export default class Container extends Renderable {
 	updateBounds(absolute = true) {
 		const bounds = this.getBounds();
 
-		// call parent method
-		super.updateBounds(absolute);
+		if (this.isFinite()) {
+			// call parent method only when container has finite dimensions
+			super.updateBounds(absolute);
+		} else if (this.enableChildBoundsUpdate === true) {
+			// clear bounds so child aggregation starts fresh
+			bounds.clear();
+		}
 
 		if (this.enableChildBoundsUpdate === true) {
 			this.forEach((child) => {

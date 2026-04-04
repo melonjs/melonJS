@@ -119,8 +119,8 @@ class ObjectPool {
 	 * // ...
 	 * // when we want to destroy existing object, the remove
 	 * // function will ensure the object can then be reallocated later
-	 * me.game.world.removeChild(enemy);
-	 * me.game.world.removeChild(bullet);
+	 * app.world.removeChild(enemy);
+	 * app.world.removeChild(bullet);
 	 */
 	pull(name, ...args) {
 		const className = this.objectClass[name];

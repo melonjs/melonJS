@@ -150,7 +150,7 @@ export const level = {
 	 * levelContainer.currentTransform.rotate(0.05);
 	 * levelContainer.currentTransform.translate(-levelContainer.width / 2, -levelContainer.height / 2 );
 	 * // add it to the game world
-	 * me.game.world.addChild(levelContainer);
+	 * app.world.addChild(levelContainer);
 	 */
 	load(levelId, options) {
 		options = Object.assign(
@@ -203,7 +203,7 @@ export const level = {
 	/**
 	 * return the current level definition.
 	 * for a reference to the live instantiated level,
-	 * rather use the container in which it was loaded (e.g. me.game.world)
+	 * rather use the container in which it was loaded (e.g. app.world)
 	 * @name getCurrentLevel
 	 * @memberof level
 	 * @public
