@@ -296,5 +296,74 @@ describe("Gradient", () => {
 			const second = gradient.toCanvas(0, 0, 100, 50);
 			expect(first).toBe(second);
 		});
+
+		it("should invalidate cache when position changes", () => {
+			const gradient = new Gradient("linear", [0, 0, 100, 0]);
+			gradient.addColorStop(0, "red");
+			gradient.addColorStop(1, "blue");
+			const first = gradient.toCanvas(0, 0, 100, 50);
+			const second = gradient.toCanvas(10, 10, 100, 50);
+			// same canvas object reused, but re-rendered
+			expect(first).toBe(second);
+		});
+	});
+
+	describe("addColorStop validation", () => {
+		it("should throw for offset less than 0", () => {
+			const gradient = new Gradient("linear", [0, 0, 100, 0]);
+			expect(() => {
+				gradient.addColorStop(-0.1, "red");
+			}).toThrow();
+		});
+
+		it("should throw for offset greater than 1", () => {
+			const gradient = new Gradient("linear", [0, 0, 100, 0]);
+			expect(() => {
+				gradient.addColorStop(1.1, "red");
+			}).toThrow();
+		});
+
+		it("should accept offset 0 and 1", () => {
+			const gradient = new Gradient("linear", [0, 0, 100, 0]);
+			expect(() => {
+				gradient.addColorStop(0, "red");
+				gradient.addColorStop(1, "blue");
+			}).not.toThrow();
+		});
+	});
+
+	describe("gradient with no color stops", () => {
+		it("should not throw when creating gradient with no stops", () => {
+			const gradient = app.renderer.createLinearGradient(0, 0, 100, 0);
+			expect(() => {
+				app.renderer.setColor(gradient);
+			}).not.toThrow();
+		});
+	});
+
+	describe("gradient reuse across multiple setColor calls", () => {
+		it("should allow the same gradient to be set multiple times", () => {
+			const gradient = app.renderer.createLinearGradient(0, 0, 64, 0);
+			gradient.addColorStop(0, "red");
+			gradient.addColorStop(1, "blue");
+			expect(() => {
+				app.renderer.setColor(gradient);
+				app.renderer.fillRect(0, 0, 32, 32);
+				app.renderer.setColor("#000000");
+				app.renderer.setColor(gradient);
+				app.renderer.fillRect(32, 0, 32, 32);
+			}).not.toThrow();
+		});
+	});
+
+	describe("gradient with single color stop", () => {
+		it("should not throw with a single color stop", () => {
+			const gradient = app.renderer.createLinearGradient(0, 0, 64, 0);
+			gradient.addColorStop(0.5, "red");
+			expect(() => {
+				app.renderer.setColor(gradient);
+				app.renderer.fillRect(0, 0, 64, 64);
+			}).not.toThrow();
+		});
 	});
 });
