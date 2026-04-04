@@ -6,6 +6,7 @@ import {
 	ONCONTEXT_RESTORED,
 	on,
 } from "../../system/event.ts";
+import { Gradient } from "./../gradient.js";
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture/cache.js";
 
@@ -526,6 +527,23 @@ export default class CanvasRenderer extends Renderer {
 	}
 
 	/**
+	 * Set the line dash pattern.
+	 * @param {number[]} segments - dash pattern
+	 */
+	setLineDash(segments) {
+		super.setLineDash(segments);
+		this.getContext().setLineDash(this.renderState.lineDash);
+	}
+
+	/**
+	 * Get the current line dash pattern.
+	 * @returns {number[]} dash pattern
+	 */
+	getLineDash() {
+		return this.getContext().getLineDash();
+	}
+
+	/**
 	 * Stroke the given me.Polygon on the screen
 	 * @param {Polygon} poly - the shape to draw
 	 * @param {boolean} [fill=false] - also fill the shape with the current color if true
@@ -669,7 +687,10 @@ export default class CanvasRenderer extends Renderer {
 			this.setBlendMode(result.blendMode);
 		}
 		// re-sync from the native context (which is authoritative for Canvas)
-		this.currentColor.copy(context.fillStyle);
+		// fillStyle may be a CanvasGradient/CanvasPattern — only sync if it's a color string
+		if (typeof context.fillStyle === "string") {
+			this.currentColor.copy(context.fillStyle);
+		}
 		this.currentColor.glArray[3] = context.globalAlpha;
 		// reset scissor cache so the next clipRect() won't skip
 		this.currentScissor[0] = 0;
@@ -724,16 +745,19 @@ export default class CanvasRenderer extends Renderer {
 	/**
 	 * Set the current fill & stroke style color.
 	 * By default, or upon reset, the value is set to #000000.
-	 * @param {Color|string} color - css color value
+	 * @param {Color|string|Gradient} color - css color value or a Gradient object
 	 */
 	setColor(color) {
-		const currentColor = this.currentColor;
 		const context = this.getContext();
 
-		currentColor.copy(color);
-		// globalAlpha is applied at rendering time by the canvas
-
-		context.strokeStyle = context.fillStyle = currentColor.toRGBA();
+		if (color instanceof Gradient) {
+			this.renderState.currentGradient = color;
+			context.strokeStyle = context.fillStyle = color.toCanvasGradient(context);
+		} else {
+			this.renderState.currentGradient = null;
+			this.currentColor.copy(color);
+			context.strokeStyle = context.fillStyle = this.currentColor.toRGBA();
+		}
 	}
 
 	/**

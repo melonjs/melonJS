@@ -3,6 +3,7 @@ import { Color } from "./../math/color.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
 import { CANVAS_ONRESIZE, emit } from "../system/event.ts";
+import { Gradient } from "./gradient.js";
 import RenderState from "./renderstate.js";
 import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
 
@@ -257,11 +258,71 @@ export default class Renderer {
 	}
 
 	/**
+	 * Set the current fill & stroke style color.
+	 * By default, or upon reset, the value is set to #000000.
+	 * @param {Color|string|Gradient} color - css color value or a Gradient object
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	setColor(color) {
+		// implemented by subclasses
+	}
+
+	/**
 	 * get the current fill & stroke style color.
 	 * @returns {Color} current global color
 	 */
 	getColor() {
 		return this.currentColor;
+	}
+
+	/**
+	 * Create a linear gradient that can be used with {@link Renderer#setColor}.
+	 * @param {number} x0 - x-axis coordinate of the start point
+	 * @param {number} y0 - y-axis coordinate of the start point
+	 * @param {number} x1 - x-axis coordinate of the end point
+	 * @param {number} y1 - y-axis coordinate of the end point
+	 * @returns {Gradient} a Gradient object
+	 */
+	createLinearGradient(x0, y0, x1, y1) {
+		return new Gradient("linear", [x0, y0, x1, y1]);
+	}
+
+	/**
+	 * Create a radial gradient that can be used with {@link Renderer#setColor}.
+	 * @param {number} x0 - x-axis coordinate of the start circle
+	 * @param {number} y0 - y-axis coordinate of the start circle
+	 * @param {number} r0 - radius of the start circle
+	 * @param {number} x1 - x-axis coordinate of the end circle
+	 * @param {number} y1 - y-axis coordinate of the end circle
+	 * @param {number} r1 - radius of the end circle
+	 * @returns {Gradient} a Gradient object
+	 */
+	createRadialGradient(x0, y0, r0, x1, y1, r1) {
+		return new Gradient("radial", [x0, y0, r0, x1, y1, r1]);
+	}
+
+	/**
+	 * Set the line dash pattern for stroke operations.
+	 * @param {number[]} segments - an array of numbers specifying distances to alternately draw a line and a gap. An empty array clears the dash pattern (solid lines).
+	 * @example
+	 * // draw a dashed line
+	 * renderer.setLineDash([10, 5]);
+	 * renderer.strokeLine(0, 0, 100, 0);
+	 * // clear the dash pattern
+	 * renderer.setLineDash([]);
+	 */
+	setLineDash(segments) {
+		this.renderState.lineDash = segments.filter((v) => {
+			return Number.isFinite(v) && v >= 0;
+		});
+	}
+
+	/**
+	 * Get the current line dash pattern.
+	 * @returns {number[]} the current dash pattern
+	 */
+	getLineDash() {
+		return this.renderState.lineDash;
 	}
 
 	/**

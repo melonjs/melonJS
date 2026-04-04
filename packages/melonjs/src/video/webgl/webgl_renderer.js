@@ -8,6 +8,7 @@ import {
 	ONCONTEXT_RESTORED,
 	on,
 } from "../../system/event.ts";
+import { Gradient } from "../gradient.js";
 import Renderer from "./../renderer.js";
 import { createAtlas, TextureAtlas } from "./../texture/atlas.js";
 import TextureCache from "./../texture/cache.js";
@@ -102,6 +103,9 @@ export default class WebGLRenderer extends Renderer {
 
 		// scratch array for fillPolygon to avoid mutating polygon points
 		this._polyVerts = [];
+
+		// current gradient state (null when using solid color)
+		this._currentGradient = null;
 
 		/**
 		 * The current transformation matrix used for transformations on the overall scene
@@ -570,7 +574,8 @@ export default class WebGLRenderer extends Renderer {
 			this.currentBatcher.useShader(shader);
 		}
 
-		// force reuploading if the given image is a HTMLVideoElement
+		// force reuploading if the given image is a HTMLVideoElement or a
+		// force re-upload for video elements
 		const reupload = typeof image.videoWidth !== "undefined";
 		const texture = this.cache.get(image);
 		const uvs = texture.getUVs(sx, sy, sw, sh);
@@ -693,7 +698,27 @@ export default class WebGLRenderer extends Renderer {
 					this.path2D.triangulatePath(),
 				);
 			} else {
-				this.currentBatcher.drawVertices(this.gl.LINES, this.path2D.points);
+				const dash = this.renderState.lineDash;
+				if (dash.length > 0) {
+					const pts = this.path2D.points;
+					const dashed = [];
+					for (let i = 0; i < pts.length - 1; i += 2) {
+						dashed.push(
+							...this.#dashSegments(
+								pts[i].x,
+								pts[i].y,
+								pts[i + 1].x,
+								pts[i + 1].y,
+								dash,
+							),
+						);
+					}
+					if (dashed.length > 0) {
+						this.currentBatcher.drawVertices(this.gl.LINES, dashed);
+					}
+				} else {
+					this.currentBatcher.drawVertices(this.gl.LINES, this.path2D.points);
+				}
 			}
 		} else {
 			// dispatches to strokeRect/strokePolygon/etc. which each call setBatcher
@@ -845,6 +870,8 @@ export default class WebGLRenderer extends Renderer {
 				this.gl.disable(this.gl.SCISSOR_TEST);
 			}
 		}
+		// sync gradient from renderState
+		this._currentGradient = this.renderState.currentGradient;
 	}
 
 	/**
@@ -936,12 +963,19 @@ export default class WebGLRenderer extends Renderer {
 	/**
 	 * Set the current fill & stroke style color.
 	 * By default, or upon reset, the value is set to #000000.
-	 * @param {Color|string} color - css color string.
+	 * @param {Color|string|Gradient} color - css color string or a Gradient object.
 	 */
 	setColor(color) {
-		const alpha = this.currentColor.alpha;
-		this.currentColor.copy(color);
-		this.currentColor.alpha *= alpha;
+		if (color instanceof Gradient) {
+			this.renderState.currentGradient = color;
+			this._currentGradient = color;
+		} else {
+			this.renderState.currentGradient = null;
+			this._currentGradient = null;
+			const alpha = this.currentColor.alpha;
+			this.currentColor.copy(color);
+			this.currentColor.alpha *= alpha;
+		}
 	}
 
 	/**
@@ -975,6 +1009,18 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {boolean} [antiClockwise=false] - draw arc anti-clockwise
 	 */
 	fillArc(x, y, radius, start, end, antiClockwise = false) {
+		if (this._currentGradient) {
+			this.#gradientMask(
+				() => {
+					this.fillArc(x, y, radius, start, end, antiClockwise);
+				},
+				x - radius,
+				y - radius,
+				radius * 2,
+				radius * 2,
+			);
+			return;
+		}
 		this.setBatcher("primitive");
 		let diff = Math.abs(end - start);
 		if (antiClockwise) {
@@ -1026,6 +1072,18 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} h - vertical radius of the ellipse
 	 */
 	fillEllipse(x, y, w, h) {
+		if (this._currentGradient) {
+			this.#gradientMask(
+				() => {
+					this.fillEllipse(x, y, w, h);
+				},
+				x - w,
+				y - h,
+				w * 2,
+				h * 2,
+			);
+			return;
+		}
 		this.setBatcher("primitive");
 		const segments = Math.max(
 			8,
@@ -1046,10 +1104,18 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	strokeLine(startX, startY, endX, endY) {
 		this.setBatcher("primitive");
-		this.path2D.beginPath();
-		this.path2D.moveTo(startX, startY);
-		this.path2D.lineTo(endX, endY);
-		this.currentBatcher.drawVertices(this.gl.LINES, this.path2D.points);
+		const dash = this.renderState.lineDash;
+		if (dash.length > 0) {
+			const segments = this.#dashSegments(startX, startY, endX, endY, dash);
+			if (segments.length > 0) {
+				this.currentBatcher.drawVertices(this.gl.LINES, segments);
+			}
+		} else {
+			this.path2D.beginPath();
+			this.path2D.moveTo(startX, startY);
+			this.path2D.lineTo(endX, endY);
+			this.currentBatcher.drawVertices(this.gl.LINES, this.path2D.points);
+		}
 	}
 
 	/**
@@ -1087,7 +1153,27 @@ export default class WebGLRenderer extends Renderer {
 			this.path2D.lineTo(nextPoint.x, nextPoint.y);
 		}
 		this.path2D.closePath();
-		this.currentBatcher.drawVertices(this.gl.LINES, this.path2D.points);
+		const dash = this.renderState.lineDash;
+		if (dash.length > 0) {
+			const pts = this.path2D.points;
+			const dashed = [];
+			for (let i = 0; i < pts.length - 1; i += 2) {
+				dashed.push(
+					...this.#dashSegments(
+						pts[i].x,
+						pts[i].y,
+						pts[i + 1].x,
+						pts[i + 1].y,
+						dash,
+					),
+				);
+			}
+			if (dashed.length > 0) {
+				this.currentBatcher.drawVertices(this.gl.LINES, dashed);
+			}
+		} else {
+			this.currentBatcher.drawVertices(this.gl.LINES, this.path2D.points);
+		}
 		// add round joins at vertices for thick lines
 		if (this.lineWidth > 1) {
 			const radius = this.lineWidth / 2;
@@ -1111,6 +1197,37 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {Polygon} poly - the shape to draw
 	 */
 	fillPolygon(poly) {
+		if (this._currentGradient) {
+			const bounds = poly.getBounds();
+			// translate to polygon's local space so gradient coords match
+			this.translate(poly.pos.x, poly.pos.y);
+			this.#gradientMask(
+				() => {
+					// draw polygon vertices directly (already translated)
+					this.setBatcher("primitive");
+					const indices = poly.getIndices();
+					const points = poly.points;
+					const verts = this._polyVerts;
+					const len = indices.length;
+					while (verts.length < len) {
+						verts.push({ x: 0, y: 0 });
+					}
+					for (let i = 0; i < len; i++) {
+						const src = points[indices[i]];
+						verts[i].x = src.x;
+						verts[i].y = src.y;
+					}
+					this.currentBatcher.drawVertices(this.gl.TRIANGLES, verts, len);
+				},
+				// use local bounds (subtract pos since getBounds includes it)
+				bounds.x - poly.pos.x,
+				bounds.y - poly.pos.y,
+				bounds.width,
+				bounds.height,
+			);
+			this.translate(-poly.pos.x, -poly.pos.y);
+			return;
+		}
 		this.setBatcher("primitive");
 		this.translate(poly.pos.x, poly.pos.y);
 		const indices = poly.getIndices();
@@ -1174,6 +1291,11 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} height - The rectangle's height.
 	 */
 	fillRect(x, y, width, height) {
+		if (this._currentGradient) {
+			const canvas = this._currentGradient.toCanvas(this, x, y, width, height);
+			this.drawImage(canvas, 0, 0, width, height, x, y, width, height);
+			return;
+		}
 		this.setBatcher("primitive");
 		// 2 triangles directly — avoids path2D + earcut overhead
 		const right = x + width;
@@ -1223,6 +1345,18 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} radius - The rounded corner's radius.
 	 */
 	fillRoundRect(x, y, width, height, radius) {
+		if (this._currentGradient) {
+			this.#gradientMask(
+				() => {
+					this.fillRoundRect(x, y, width, height, radius);
+				},
+				x,
+				y,
+				width,
+				height,
+			);
+			return;
+		}
 		this.setBatcher("primitive");
 		const r = Math.min(radius, width / 2, height / 2);
 		const verts = [];
@@ -1355,6 +1489,132 @@ export default class WebGLRenderer extends Renderer {
 		}
 
 		this.currentBatcher.drawVertices(this.gl.TRIANGLES, verts);
+	}
+
+	/**
+	 * Split a line segment into dashed sub-segments.
+	 * @param {number} x0 - start x
+	 * @param {number} y0 - start y
+	 * @param {number} x1 - end x
+	 * @param {number} y1 - end y
+	 * @param {number[]} pattern - dash pattern [on, off, on, off, ...]
+	 * @returns {Array<{x: number, y: number}>} pairs of start/end points for visible segments
+	 * @ignore
+	 */
+	#dashSegments(x0, y0, x1, y1, pattern) {
+		const dx = x1 - x0;
+		const dy = y1 - y0;
+		const lineLen = Math.sqrt(dx * dx + dy * dy);
+		if (lineLen === 0 || pattern.length === 0) {
+			return [
+				{ x: x0, y: y0 },
+				{ x: x1, y: y1 },
+			];
+		}
+
+		const nx = dx / lineLen;
+		const ny = dy / lineLen;
+		// bail out if pattern has no positive values (would loop forever)
+		if (
+			!pattern.some((v) => {
+				return v > 0;
+			})
+		) {
+			return [
+				{ x: x0, y: y0 },
+				{ x: x1, y: y1 },
+			];
+		}
+
+		const segments = [];
+		let dist = 0;
+		let patIdx = 0;
+		let drawing = true; // start with "on"
+
+		while (dist < lineLen) {
+			const dashLen = pattern[patIdx % pattern.length];
+			if (dashLen <= 0) {
+				patIdx++;
+				drawing = !drawing;
+				continue;
+			}
+			const segEnd = Math.min(dist + dashLen, lineLen);
+
+			if (drawing) {
+				segments.push(
+					{ x: x0 + nx * dist, y: y0 + ny * dist },
+					{ x: x0 + nx * segEnd, y: y0 + ny * segEnd },
+				);
+			}
+
+			dist = segEnd;
+			drawing = !drawing;
+			patIdx++;
+		}
+
+		return segments;
+	}
+
+	/**
+	 * Draw a gradient-filled shape by masking with the shape and filling the bounding rect.
+	 * Temporarily disables the gradient to prevent recursion in the fill methods.
+	 * @param {Function} drawShape - draws the shape into the stencil buffer
+	 * @param {number} x - bounding rect x
+	 * @param {number} y - bounding rect y
+	 * @param {number} w - bounding rect width
+	 * @param {number} h - bounding rect height
+	 * @ignore
+	 */
+	#gradientMask(drawShape, x, y, w, h) {
+		const gl = this.gl;
+		const grad = this._currentGradient;
+		const hasMask = this.maskLevel > 0;
+		const stencilRef = hasMask ? this.maskLevel + 1 : 1;
+		this._currentGradient = null;
+
+		this.flush();
+
+		gl.enable(gl.STENCIL_TEST);
+		gl.colorMask(false, false, false, false);
+
+		if (hasMask) {
+			// nest within existing mask level
+			gl.stencilFunc(gl.EQUAL, this.maskLevel, 0xff);
+			gl.stencilOp(gl.KEEP, gl.KEEP, gl.INCR);
+		} else {
+			gl.clear(gl.STENCIL_BUFFER_BIT);
+			gl.stencilFunc(gl.ALWAYS, 1, 0xff);
+			gl.stencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE);
+		}
+
+		drawShape();
+		this.flush();
+
+		// use stencil to clip gradient
+		gl.colorMask(true, true, true, true);
+		gl.stencilFunc(gl.EQUAL, stencilRef, 0xff);
+		gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+
+		this._currentGradient = grad;
+		this.fillRect(x, y, w, h);
+		this.flush();
+
+		if (hasMask) {
+			// restore the parent mask level by decrementing stencil
+			this._currentGradient = null;
+			gl.colorMask(false, false, false, false);
+			gl.stencilFunc(gl.EQUAL, stencilRef, 0xff);
+			gl.stencilOp(gl.KEEP, gl.KEEP, gl.DECR);
+			drawShape();
+			this.flush();
+			gl.colorMask(true, true, true, true);
+			// restore parent mask stencil test
+			gl.stencilFunc(gl.NOTEQUAL, this.maskLevel + 1, 1);
+			gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+			this._currentGradient = grad;
+		} else {
+			gl.disable(gl.STENCIL_TEST);
+		}
 	}
 
 	/**
