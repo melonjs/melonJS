@@ -318,10 +318,15 @@ export default class Application {
 		setDefaultGame(this);
 
 		// bridge DOM events to the melonJS event system
-		this._onResize = (e: Event) => emit(WINDOW_ONRESIZE, e);
-		this._onOrientationChange = (e: Event) =>
+		this._onResize = (e: Event) => {
+			emit(WINDOW_ONRESIZE, e);
+		};
+		this._onOrientationChange = (e: Event) => {
 			emit(WINDOW_ONORIENTATION_CHANGE, e);
-		this._onScroll = (e: Event) => emit(WINDOW_ONSCROLL, e);
+		};
+		this._onScroll = (e: Event) => {
+			emit(WINDOW_ONSCROLL, e);
+		};
 		globalThis.addEventListener("resize", this._onResize);
 		globalThis.addEventListener("orientationchange", this._onOrientationChange);
 		if (device.screenOrientation) {
