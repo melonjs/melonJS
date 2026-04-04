@@ -501,6 +501,23 @@ export default class CanvasRenderer extends Renderer {
 	 * @param {number} endX - the end x coordinate
 	 * @param {number} endY - the end y coordinate
 	 */
+	/**
+	 * Set the line dash pattern.
+	 * @param {number[]} segments - dash pattern
+	 */
+	setLineDash(segments) {
+		super.setLineDash(segments);
+		this.getContext().setLineDash(segments);
+	}
+
+	/**
+	 * Get the current line dash pattern.
+	 * @returns {number[]} dash pattern
+	 */
+	getLineDash() {
+		return this.getContext().getLineDash();
+	}
+
 	strokeLine(startX, startY, endX, endY) {
 		if (this.getGlobalAlpha() < 1 / 255) {
 			// Fast path: don't draw fully transparent

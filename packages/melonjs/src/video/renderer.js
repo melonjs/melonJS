@@ -302,6 +302,29 @@ export default class Renderer {
 	}
 
 	/**
+	 * Set the line dash pattern for stroke operations.
+	 * @param {number[]} segments - an array of numbers specifying distances to alternately draw a line and a gap. An empty array clears the dash pattern (solid lines).
+	 * @example
+	 * // draw a dashed line
+	 * renderer.setLineDash([10, 5]);
+	 * renderer.strokeLine(0, 0, 100, 0);
+	 * // clear the dash pattern
+	 * renderer.setLineDash([]);
+	 */
+	setLineDash(segments) {
+		this.renderState.lineDash = segments;
+		this.renderState.lineDashOffset = 0;
+	}
+
+	/**
+	 * Get the current line dash pattern.
+	 * @returns {number[]} the current dash pattern
+	 */
+	getLineDash() {
+		return this.renderState.lineDash;
+	}
+
+	/**
 	 * return the current global alpha
 	 * @returns {number}
 	 */

@@ -697,7 +697,27 @@ export default class WebGLRenderer extends Renderer {
 					this.path2D.triangulatePath(),
 				);
 			} else {
-				this.currentBatcher.drawVertices(this.gl.LINES, this.path2D.points);
+				const dash = this.renderState.lineDash;
+				if (dash.length > 0) {
+					const pts = this.path2D.points;
+					const dashed = [];
+					for (let i = 0; i < pts.length - 1; i += 2) {
+						dashed.push(
+							...this.#dashSegments(
+								pts[i].x,
+								pts[i].y,
+								pts[i + 1].x,
+								pts[i + 1].y,
+								dash,
+							),
+						);
+					}
+					if (dashed.length > 0) {
+						this.currentBatcher.drawVertices(this.gl.LINES, dashed);
+					}
+				} else {
+					this.currentBatcher.drawVertices(this.gl.LINES, this.path2D.points);
+				}
 			}
 		} else {
 			// dispatches to strokeRect/strokePolygon/etc. which each call setBatcher
@@ -1083,10 +1103,18 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	strokeLine(startX, startY, endX, endY) {
 		this.setBatcher("primitive");
-		this.path2D.beginPath();
-		this.path2D.moveTo(startX, startY);
-		this.path2D.lineTo(endX, endY);
-		this.currentBatcher.drawVertices(this.gl.LINES, this.path2D.points);
+		const dash = this.renderState.lineDash;
+		if (dash.length > 0) {
+			const segments = this.#dashSegments(startX, startY, endX, endY, dash);
+			if (segments.length > 0) {
+				this.currentBatcher.drawVertices(this.gl.LINES, segments);
+			}
+		} else {
+			this.path2D.beginPath();
+			this.path2D.moveTo(startX, startY);
+			this.path2D.lineTo(endX, endY);
+			this.currentBatcher.drawVertices(this.gl.LINES, this.path2D.points);
+		}
 	}
 
 	/**
@@ -1124,7 +1152,27 @@ export default class WebGLRenderer extends Renderer {
 			this.path2D.lineTo(nextPoint.x, nextPoint.y);
 		}
 		this.path2D.closePath();
-		this.currentBatcher.drawVertices(this.gl.LINES, this.path2D.points);
+		const dash = this.renderState.lineDash;
+		if (dash.length > 0) {
+			const pts = this.path2D.points;
+			const dashed = [];
+			for (let i = 0; i < pts.length - 1; i += 2) {
+				dashed.push(
+					...this.#dashSegments(
+						pts[i].x,
+						pts[i].y,
+						pts[i + 1].x,
+						pts[i + 1].y,
+						dash,
+					),
+				);
+			}
+			if (dashed.length > 0) {
+				this.currentBatcher.drawVertices(this.gl.LINES, dashed);
+			}
+		} else {
+			this.currentBatcher.drawVertices(this.gl.LINES, this.path2D.points);
+		}
 		// add round joins at vertices for thick lines
 		if (this.lineWidth > 1) {
 			const radius = this.lineWidth / 2;
@@ -1452,6 +1500,53 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} h - bounding rect height
 	 * @ignore
 	 */
+	/**
+	 * Split a line segment into dashed sub-segments.
+	 * @param {number} x0 - start x
+	 * @param {number} y0 - start y
+	 * @param {number} x1 - end x
+	 * @param {number} y1 - end y
+	 * @param {number[]} pattern - dash pattern [on, off, on, off, ...]
+	 * @returns {Array<{x: number, y: number}>} pairs of start/end points for visible segments
+	 * @ignore
+	 */
+	#dashSegments(x0, y0, x1, y1, pattern) {
+		const dx = x1 - x0;
+		const dy = y1 - y0;
+		const lineLen = Math.sqrt(dx * dx + dy * dy);
+		if (lineLen === 0 || pattern.length === 0) {
+			return [
+				{ x: x0, y: y0 },
+				{ x: x1, y: y1 },
+			];
+		}
+
+		const nx = dx / lineLen;
+		const ny = dy / lineLen;
+		const segments = [];
+		let dist = 0;
+		let patIdx = 0;
+		let drawing = true; // start with "on"
+
+		while (dist < lineLen) {
+			const dashLen = pattern[patIdx % pattern.length];
+			const segEnd = Math.min(dist + dashLen, lineLen);
+
+			if (drawing) {
+				segments.push(
+					{ x: x0 + nx * dist, y: y0 + ny * dist },
+					{ x: x0 + nx * segEnd, y: y0 + ny * segEnd },
+				);
+			}
+
+			dist = segEnd;
+			drawing = !drawing;
+			patIdx++;
+		}
+
+		return segments;
+	}
+
 	#gradientMask(drawShape, x, y, w, h) {
 		const gl = this.gl;
 		const grad = this._currentGradient;

@@ -205,12 +205,18 @@ const createGame = () => {
 			renderer.lineTo(840, 55);
 			renderer.lineTo(940, 30);
 
+			renderer.stroke();
+
+			// dashed zigzag line
+			renderer.setLineDash([10, 6]);
+			renderer.beginPath();
 			renderer.moveTo(540, 50);
 			renderer.lineTo(640, 75);
 			renderer.lineTo(740, 50);
 			renderer.lineTo(840, 75);
 			renderer.lineTo(940, 50);
 			renderer.stroke();
+			renderer.setLineDash([]);
 
 			renderer.setColor("#ff69b4");
 			renderer.fill(this.roundRect1);

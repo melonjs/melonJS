@@ -46,6 +46,18 @@ export default class RenderState {
 		this.currentGradient = null;
 
 		/**
+		 * current line dash pattern (empty array = solid line)
+		 * @type {number[]}
+		 */
+		this.lineDash = [];
+
+		/**
+		 * current line dash offset
+		 * @type {number}
+		 */
+		this.lineDashOffset = 0;
+
+		/**
 		 * current blend mode
 		 * @type {string}
 		 */
@@ -85,6 +97,12 @@ export default class RenderState {
 		});
 
 		/** @ignore */
+		this._lineDashStack = new Array(this._stackCapacity);
+
+		/** @ignore */
+		this._lineDashOffsetStack = new Float64Array(this._stackCapacity);
+
+		/** @ignore */
 		this._scissorActive = new Uint8Array(this._stackCapacity);
 
 		/** @ignore */
@@ -109,6 +127,8 @@ export default class RenderState {
 		this._tintStack[depth].copy(this.currentTint);
 		this._matrixStack[depth].copy(this.currentTransform);
 		this._gradientStack[depth] = this.currentGradient;
+		this._lineDashStack[depth] = this.lineDash.slice();
+		this._lineDashOffsetStack[depth] = this.lineDashOffset;
 		this._blendStack[depth] = this.currentBlendMode;
 
 		if (scissorTestActive) {
@@ -138,6 +158,8 @@ export default class RenderState {
 			this.currentTint.copy(this._tintStack[depth]);
 			this.currentTransform.copy(this._matrixStack[depth]);
 			this.currentGradient = this._gradientStack[depth];
+			this.lineDash = this._lineDashStack[depth];
+			this.lineDashOffset = this._lineDashOffsetStack[depth];
 
 			const scissorActive = !!this._scissorActive[depth];
 			if (scissorActive) {
@@ -178,11 +200,15 @@ export default class RenderState {
 			this._matrixStack.push(new Matrix2d());
 			this._scissorStack.push(new Int32Array(4));
 			this._gradientStack.push(null);
+			this._lineDashStack.push([]);
 			this._blendStack.push(undefined);
 		}
 		const newScissorActive = new Uint8Array(newCap);
 		newScissorActive.set(this._scissorActive);
 		this._scissorActive = newScissorActive;
+		const newLineDashOffset = new Float64Array(newCap);
+		newLineDashOffset.set(this._lineDashOffsetStack);
+		this._lineDashOffsetStack = newLineDashOffset;
 		this._stackCapacity = newCap;
 	}
 }
