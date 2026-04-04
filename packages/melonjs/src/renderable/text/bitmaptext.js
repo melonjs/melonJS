@@ -37,7 +37,7 @@ export default class BitmapText extends Renderable {
 	 * // either call the draw function from your Renderable draw function
 	 * myFont.draw(renderer, "Hello!", 0, 0);
 	 * // or just add it to the world container
-	 * me.game.world.addChild(myFont);
+	 * app.world.addChild(myFont);
 	 */
 	constructor(x, y, settings) {
 		// call the parent constructor

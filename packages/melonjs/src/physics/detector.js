@@ -258,7 +258,7 @@ class Detector {
 	 *        // starting point relative to the initial position
 	 *        new Vector2d(0, 0),
 	 *        // ending point
-	 *        new Vector2d(me.game.viewport.width, me.game.viewport.height)
+	 *        new Vector2d(app.viewport.width, app.viewport.height)
 	 *    ]);
 	 *
 	 *    // check for collition

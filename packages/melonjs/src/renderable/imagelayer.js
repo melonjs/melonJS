@@ -1,4 +1,3 @@
-import { game } from "../application/application.ts";
 import { vector2dPool } from "../math/vector2d.ts";
 import {
 	LEVEL_LOADED,
@@ -33,7 +32,7 @@ export default class ImageLayer extends Sprite {
 	 * @param {number|Vector2d} [settings.anchorPoint=<0.0,0.0>] - Define how the image is anchored to the viewport bound. By default, its upper-left corner is anchored to the viewport bounds upper left corner.
 	 * @example
 	 * // create a repetitive background pattern on the X axis using the citycloud image asset
-	 * me.game.world.addChild(new me.ImageLayer(0, 0, {
+	 * app.world.addChild(new me.ImageLayer(0, 0, {
 	 *     image:"citycloud",
 	 *     repeat :"repeat-x"
 	 * }), 1);
@@ -83,9 +82,6 @@ export default class ImageLayer extends Sprite {
 		}
 
 		this.repeat = settings.repeat || "repeat";
-
-		// on context lost, all previous textures are destroyed
-		on(ONCONTEXT_RESTORED, this.createPattern, this);
 	}
 
 	/**
@@ -123,15 +119,18 @@ export default class ImageLayer extends Sprite {
 				this.repeatY = true;
 				break;
 		}
-		this.resize(game.viewport.width, game.viewport.height);
-		this.createPattern();
 	}
 
 	// called when the layer is added to the game world or a container
 	onActivateEvent() {
-		// register to the viewport change notification
+		const viewport = this.parentApp.viewport;
+		// set the initial size to match the viewport
+		this.resize(viewport.width, viewport.height);
+		this.createPattern();
+		// register to the viewport change notification and context restore
 		on(VIEWPORT_ONCHANGE, this.updateLayer, this);
 		on(VIEWPORT_ONRESIZE, this.resize, this);
+		on(ONCONTEXT_RESTORED, this.createPattern, this);
 		// force a first refresh when the level is loaded
 		on(LEVEL_LOADED, this.updateLayer, this);
 		// in case the level is not added to the root container,
@@ -159,10 +158,10 @@ export default class ImageLayer extends Sprite {
 	 * @ignore
 	 */
 	createPattern() {
-		const renderer = this.parentApp?.renderer ?? game.renderer;
-		if (renderer) {
-			this._pattern = renderer.createPattern(this.image, this._repeat);
-		}
+		this._pattern = this.parentApp.renderer.createPattern(
+			this.image,
+			this._repeat,
+		);
 	}
 
 	/**
@@ -173,7 +172,7 @@ export default class ImageLayer extends Sprite {
 		const rx = this.ratio.x;
 		const ry = this.ratio.y;
 
-		const viewport = game.viewport;
+		const viewport = this.parentApp.viewport;
 
 		if (rx === 0 && ry === 0) {
 			// static image
@@ -263,7 +262,7 @@ export default class ImageLayer extends Sprite {
 			x = this.pos.x + ax * (bw - width);
 			y = this.pos.y + ay * (bh - height);
 		} else {
-			// parallax — compute position from the current viewport, not game.viewport
+			// parallax — compute position from the current viewport passed to draw()
 			x =
 				ax * (rx - 1) * (bw - viewport.width) +
 				this.offset.x -
@@ -300,6 +299,7 @@ export default class ImageLayer extends Sprite {
 		off(VIEWPORT_ONCHANGE, this.updateLayer, this);
 		off(VIEWPORT_ONRESIZE, this.resize, this);
 		off(LEVEL_LOADED, this.updateLayer, this);
+		off(ONCONTEXT_RESTORED, this.createPattern, this);
 	}
 
 	/**
@@ -309,7 +309,6 @@ export default class ImageLayer extends Sprite {
 	destroy() {
 		vector2dPool.release(this.ratio);
 		this.ratio = undefined;
-		off(ONCONTEXT_RESTORED, this.createPattern, this);
 		super.destroy();
 	}
 }

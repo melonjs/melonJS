@@ -53,7 +53,7 @@ export default class Stage {
 		 * // set a dark ambient light
 		 * this.ambientLight.parseCSS("#1117");
 		 * // make the light follow the mouse
-		 * me.input.registerPointerEvent("pointermove", me.game.viewport, (event) => {
+		 * me.input.registerPointerEvent("pointermove", app.viewport, (event) => {
 		 *    whiteLight.centerOn(event.gameX, event.gameY);
 		 * });
 		 */
@@ -181,7 +181,7 @@ export default class Stage {
 	 * destroy function
 	 * @ignore
 	 */
-	destroy() {
+	destroy(app) {
 		// clear all cameras
 		this.cameras.clear();
 		// clear all lights
@@ -190,7 +190,7 @@ export default class Stage {
 		});
 		this.lights.clear();
 		// notify the object
-		this.onDestroyEvent.apply(this, arguments);
+		this.onDestroyEvent(app);
 	}
 
 	/**
@@ -215,11 +215,12 @@ export default class Stage {
 	 * called by the state manager before switching to another state
 	 * @name onDestroyEvent
 	 * @memberof Stage
+	 * @param {Application} [app] - the current application instance
 	 */
-	onDestroyEvent() {
+	onDestroyEvent(app) {
 		// execute onDestroyEvent function if given through the constructor
 		if (typeof this.settings.onDestroyEvent === "function") {
-			this.settings.onDestroyEvent.apply(this, arguments);
+			this.settings.onDestroyEvent.call(this, app);
 		}
 	}
 }

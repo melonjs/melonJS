@@ -56,7 +56,7 @@ const targetV = new Vector2d();
  * // create a minimap camera in the top-right corner showing the full level
  * const minimap = new Camera2d(0, 0, 180, 100);
  * minimap.name = "minimap";
- * minimap.screenX = game.viewport.width - 190;
+ * minimap.screenX = app.viewport.width - 190;
  * minimap.screenY = 10;
  * minimap.autoResize = false;
  * minimap.setBounds(0, 0, levelWidth, levelHeight);
@@ -495,11 +495,11 @@ export default class Camera2d extends Renderable {
 	 * set the camera to follow the specified renderable. <br>
 	 * (this will put the camera center around the given target)
 	 * @param target - renderable or position vector to follow
-	 * @param [axis=me.game.viewport.AXIS.BOTH] - Which axis to follow (see {@link Camera2d.AXIS})
+	 * @param [axis=app.viewport.AXIS.BOTH] - Which axis to follow (see {@link Camera2d.AXIS})
 	 * @param [damping=1] - default damping value
 	 * @example
 	 * // set the camera to follow this renderable on both axis, and enable damping
-	 * me.game.viewport.follow(this, me.game.viewport.AXIS.BOTH, 0.1);
+	 * app.viewport.follow(this, app.viewport.AXIS.BOTH, 0.1);
 	 */
 	follow(
 		target: Renderable | Vector2d | Vector3d,
@@ -545,7 +545,7 @@ export default class Camera2d extends Renderable {
 	 * @param y - vertical offset
 	 * @example
 	 * // Move the camera up by four pixels
-	 * me.game.viewport.move(0, -4);
+	 * app.viewport.move(0, -4);
 	 */
 	move(x: number, y: number): void {
 		this.moveTo(this.pos.x + x, this.pos.y + y);
@@ -675,12 +675,12 @@ export default class Camera2d extends Renderable {
 	 * @param intensity - maximum offset that the screen can be moved
 	 * while shaking
 	 * @param duration - expressed in milliseconds
-	 * @param [axis=me.game.viewport.AXIS.BOTH] - specify on which axis to apply the shake effect (see {@link Camera2d.AXIS})
+	 * @param [axis=app.viewport.AXIS.BOTH] - specify on which axis to apply the shake effect (see {@link Camera2d.AXIS})
 	 * @param [onComplete] - callback once shaking effect is over
 	 * @param [force] - if true this will override the current effect
 	 * @example
 	 * // shake it baby !
-	 * me.game.viewport.shake(10, 500, me.game.viewport.AXIS.BOTH);
+	 * app.viewport.shake(10, 500, app.viewport.AXIS.BOTH);
 	 */
 	shake(
 		intensity: number,
@@ -706,10 +706,10 @@ export default class Camera2d extends Renderable {
 	 * @param [onComplete] - callback once effect is over
 	 * @example
 	 * // fade the camera to white upon dying, reload the level, and then fade out back
-	 * me.game.viewport.fadeIn("#fff", 150, function() {
+	 * app.viewport.fadeIn("#fff", 150, function() {
 	 *     me.audio.play("die", false);
 	 *     me.level.reload();
-	 *     me.game.viewport.fadeOut("#fff", 150);
+	 *     app.viewport.fadeOut("#fff", 150);
 	 * });
 	 */
 	fadeOut(
@@ -736,7 +736,7 @@ export default class Camera2d extends Renderable {
 	 * @param [onComplete] - callback once effect is over
 	 * @example
 	 * // flash the camera to white for 75ms
-	 * me.game.viewport.fadeIn("#FFFFFF", 75);
+	 * app.viewport.fadeIn("#FFFFFF", 75);
 	 */
 	fadeIn(
 		color: Color | string,

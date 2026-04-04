@@ -41,15 +41,23 @@ let globalFloatingCounter = 0;
  */
 
 /**
- * Container represents a collection of child objects
+ * Container represents a collection of child objects.
+ * When no explicit dimensions are given, width and height default to Infinity,
+ * meaning the container has no intrinsic size, no clipping, and acts as a pure
+ * grouping/transform node (similar to PixiJS or Phaser containers).
+ * In this case, anchorPoint is treated as (0, 0) since there is no meaningful
+ * center for an infinite area. Bounds are then derived entirely from children
+ * when {@link Container#enableChildBoundsUpdate} is enabled.
  * @category Container
  */
 export default class Container extends Renderable {
 	/**
 	 * @param {number} [x=0] - position of the container (accessible via the inherited pos.x property)
 	 * @param {number} [y=0] - position of the container (accessible via the inherited pos.y property)
-	 * @param {number} [width=Infinity] - width of the container (Infinity means no clipping)
-	 * @param {number} [height=Infinity] - height of the container (Infinity means no clipping)
+	 * @param {number} [width=Infinity] - width of the container. Defaults to Infinity (no intrinsic size, no clipping).
+	 * @param {number} [height=Infinity] - height of the container. Defaults to Infinity (no intrinsic size, no clipping).
+	 * @param {boolean} [root=false] - internal flag, true for the world root container
+	 * @ignore root
 	 */
 	constructor(x = 0, y = 0, width = Infinity, height = Infinity, root = false) {
 		// call the super constructor
@@ -142,6 +150,10 @@ export default class Container extends Renderable {
 		// enable collision and event detection
 		this.isKinematic = false;
 
+		// container anchorPoint is always (0, 0) — children position from the
+		// container's origin (top-left), matching the convention used by other engines
+		// (PixiJS, Phaser). This also avoids Infinity * 0.5 = Infinity issues
+		// when the container has no explicit size.
 		this.anchorPoint.set(0, 0);
 
 		// subscribe on the canvas resize event
@@ -555,8 +567,10 @@ export default class Container extends Renderable {
 	updateBounds(absolute = true) {
 		const bounds = this.getBounds();
 
-		// call parent method
-		super.updateBounds(absolute);
+		if (this.isFinite()) {
+			// call parent method only when container has finite dimensions
+			super.updateBounds(absolute);
+		}
 
 		if (this.enableChildBoundsUpdate === true) {
 			this.forEach((child) => {

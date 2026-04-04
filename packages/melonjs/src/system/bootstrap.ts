@@ -27,12 +27,10 @@ export let initialized = false;
 
 /**
  * Initialize the melonJS library.
- * This is called automatically in two cases:
- * - On DOMContentLoaded, unless {@link skipAutoInit} is set to true
- * - By {@link Application.init} when creating a new game instance
- *
+ * This is called automatically by the {@link Application} constructor.
  * Multiple calls are safe — boot() is idempotent.
- * @see {@link skipAutoInit}
+ * When using {@link Application} directly, calling boot() manually is not needed.
+ * @see {@link Application}
  */
 export function boot() {
 	// don't do anything if already initialized (should not happen anyway)

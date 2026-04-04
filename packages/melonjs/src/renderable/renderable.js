@@ -104,7 +104,7 @@ export default class Renderable extends Rect {
 		 *          this.isKinematic = false;
 		 *
 		 *          // set the display to follow our position on both axis
-		 *          me.game.viewport.follow(this.pos, me.game.viewport.AXIS.BOTH);
+		 *          app.viewport.follow(this.pos, app.viewport.AXIS.BOTH);
 		 *      }
 		 *
 		 *      ...
@@ -116,7 +116,7 @@ export default class Renderable extends Rect {
 		/**
 		 * (G)ame (U)nique (Id)entifier" <br>
 		 * a GUID will be allocated for any renderable object added <br>
-		 * to an object container (including the `me.game.world` container)
+		 * to an object container (including the `app.world` container)
 		 * @type {string}
 		 */
 		this.GUID = undefined;

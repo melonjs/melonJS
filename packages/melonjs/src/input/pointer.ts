@@ -1,8 +1,7 @@
-import { game } from "../application/application.ts";
 import { Vector2d } from "../math/vector2d.ts";
 import { Bounds } from "./../physics/bounds.ts";
 import { globalToLocal } from "./input.ts";
-import { locked } from "./pointerevent.ts";
+import { _app, locked } from "./pointerevent.ts";
 
 /**
  * a temporary vector object
@@ -284,8 +283,8 @@ class Pointer extends Bounds {
 		this.type = event.type;
 
 		// get the current screen to game world offset
-		if (typeof game.viewport !== "undefined") {
-			game.viewport.localToWorld(this.gameScreenX, this.gameScreenY, tmpVec);
+		if (typeof _app?.viewport !== "undefined") {
+			_app.viewport.localToWorld(this.gameScreenX, this.gameScreenY, tmpVec);
 		}
 
 		/* Initialize the two coordinate space properties. */

@@ -17,7 +17,6 @@ describe("Font : Text", () => {
 			size: 8,
 			fillStyle: "white",
 			text: "test",
-			offScreenCanvas: false,
 		});
 	});
 

@@ -388,6 +388,7 @@ export let autoFocus = true;
  * me.device.onReady(function () {
  *    game.onload();
  * });
+ * @deprecated since 18.3.0 — no longer needed when using {@link Application} as entry point.
  * @category Application
  */
 export function onReady(fn) {
@@ -771,10 +772,10 @@ export function focus() {
  * @returns {boolean} false if not supported or permission not granted by the user
  * @example
  * // try to enable device accelerometer event on user gesture
- * me.input.registerPointerEvent("pointerleave", me.game.viewport, function() {
+ * me.input.registerPointerEvent("pointerleave", app.viewport, function() {
  *     if (me.device.watchAccelerometer() === true) {
  *         // Success
- *         me.input.releasePointerEvent("pointerleave", me.game.viewport);
+ *         me.input.releasePointerEvent("pointerleave", app.viewport);
  *     } else {
  *         // ... fail at enabling the device accelerometer event
  *     }
@@ -828,10 +829,10 @@ export function unwatchAccelerometer() {
  * @returns {boolean} false if not supported or permission not granted by the user
  * @example
  * // try to enable device orientation event on user gesture
- * me.input.registerPointerEvent("pointerleave", me.game.viewport, function() {
+ * me.input.registerPointerEvent("pointerleave", app.viewport, function() {
  *     if (me.device.watchDeviceOrientation() === true) {
  *         // Success
- *         me.input.releasePointerEvent("pointerleave", me.game.viewport);
+ *         me.input.releasePointerEvent("pointerleave", app.viewport);
  *     } else {
  *         // ... fail at enabling the device orientation event
  *     }

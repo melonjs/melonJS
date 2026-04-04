@@ -36,7 +36,7 @@ function detectShape(settings) {
 
 /**
  * a TMX Object defintion, as defined in Tiled
- * (Object definition is translated into the virtual `me.game.world` using `me.Renderable`)
+ * (Object definition is translated into the virtual `app.world` using `me.Renderable`)
  * @ignore
  */
 export default class TMXObject {

@@ -1,9 +1,15 @@
-import { game } from "../application/application.ts";
+import type Application from "../application/application.ts";
 import { Rect } from "./../geometries/rectangle.ts";
 import type { Vector2d } from "../math/vector2d.ts";
 import { vector2dPool } from "../math/vector2d.ts";
 import * as device from "./../system/device.js";
-import { emit, POINTERLOCKCHANGE, POINTERMOVE } from "../system/event.ts";
+import {
+	emit,
+	GAME_INIT,
+	on,
+	POINTERLOCKCHANGE,
+	POINTERMOVE,
+} from "../system/event.ts";
 import timer from "./../system/timer.ts";
 import { remove } from "./../utils/array.ts";
 import { throttle } from "./../utils/function.ts";
@@ -28,6 +34,15 @@ const eventHandlers: Map<any, PointerHandler> = new Map();
 
 // a cache rect represeting the current pointer area
 let currentPointer: Rect;
+
+/**
+ * reference to the active application instance
+ * @ignore
+ */
+export let _app: Application;
+on(GAME_INIT, (app: Application) => {
+	_app = app;
+});
 
 // some useful flags
 let pointerInitialized = false;
@@ -133,7 +148,7 @@ function enablePointerEvent(): void {
 
 		if (pointerEventTarget === null || pointerEventTarget === undefined) {
 			// default pointer event target
-			pointerEventTarget = game.renderer.getCanvas();
+			pointerEventTarget = _app.renderer.getCanvas();
 		}
 
 		if (device.pointerEvent) {
@@ -202,7 +217,7 @@ function enablePointerEvent(): void {
 				() => {
 					// change the locked status accordingly
 					locked =
-						globalThis.document.pointerLockElement === game.getParentElement();
+						globalThis.document.pointerLockElement === _app.getParentElement();
 					// emit the corresponding internal event
 					emit(POINTERLOCKCHANGE, locked);
 				},
@@ -309,14 +324,14 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 		}
 
 		// fetch valid candiates from the game world container
-		let candidates = game.world.broadphase.retrieve(
+		let candidates = _app.world.broadphase.retrieve(
 			currentPointer,
-			(a: any, b: any) => game.world._sortReverseZ(a, b),
+			(a: any, b: any) => _app.world._sortReverseZ(a, b),
 			undefined,
 		);
 
 		// add the main game viewport to the list of candidates
-		candidates = candidates.concat([game.viewport]);
+		candidates = candidates.concat([_app.viewport]);
 
 		for (
 			let c = candidates.length, candidate;
@@ -594,11 +609,11 @@ export function hasRegisteredEvents(): boolean {
  */
 export function globalToLocal(x: number, y: number, v?: Vector2d): Vector2d {
 	v = v || vector2dPool.get();
-	const rect = device.getElementBounds(game.renderer.getCanvas());
+	const rect = device.getElementBounds(_app.renderer.getCanvas());
 	const pixelRatio = globalThis.devicePixelRatio || 1;
 	x -= rect.left + (globalThis.pageXOffset || 0);
 	y -= rect.top + (globalThis.pageYOffset || 0);
-	const scale = game.renderer.scaleRatio;
+	const scale = _app.renderer.scaleRatio;
 	if (scale.x !== 1.0 || scale.y !== 1.0) {
 		x /= scale.x;
 		y /= scale.y;
@@ -817,7 +832,7 @@ export function releaseAllPointerEvents(region: any): void {
  */
 export function requestPointerLock(): boolean {
 	if (device.hasPointerLockSupport) {
-		const element = game.getParentElement();
+		const element = _app.getParentElement();
 		void element.requestPointerLock();
 		return true;
 	}

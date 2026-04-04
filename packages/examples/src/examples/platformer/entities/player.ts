@@ -2,7 +2,6 @@ import {
 	audio,
 	Body,
 	collision,
-	game,
 	input,
 	level,
 	Rect,
@@ -60,9 +59,6 @@ export class PlayerEntity extends Sprite {
 		this.dying = false;
 
 		this.multipleJump = 1;
-
-		// set the viewport to follow this renderable on both axis, and enable damping
-		game.viewport.follow(this, game.viewport.AXIS.BOTH, 0.1);
 
 		// enable keyboard
 		input.bindKey(input.KEY.LEFT, "left");
@@ -150,7 +146,16 @@ export class PlayerEntity extends Sprite {
 	}
 
 	/**
-	 ** update the force applied
+	 * called when added to the game world
+	 */
+	onActivateEvent() {
+		const app = this.parentApp;
+		// set the viewport to follow this renderable on both axis, and enable damping
+		app.viewport.follow(this, app.viewport.AXIS.BOTH, 0.1);
+	}
+
+	/**
+	 * update the force applied
 	 */
 	update(dt) {
 		if (input.isKeyPressed("left")) {
@@ -192,12 +197,13 @@ export class PlayerEntity extends Sprite {
 
 		// check if we fell into a hole
 		if (!this.inViewport && this.getBounds().top > video.renderer.height) {
+			const app = this.parentApp;
 			// if yes reset the game
-			game.world.removeChild(this);
-			game.viewport.fadeIn("#fff", 150, () => {
+			app.world.removeChild(this);
+			app.viewport.fadeIn("#fff", 150, () => {
 				audio.play("die", false);
 				level.reload();
-				game.viewport.fadeOut("#fff", 150);
+				app.viewport.fadeOut("#fff", 150);
 			});
 			return true;
 		}
@@ -211,7 +217,7 @@ export class PlayerEntity extends Sprite {
 	}
 
 	/**
-	 * colision handler
+	 * collision handler
 	 */
 	onCollision(response, other) {
 		switch (other.body.collisionType) {
@@ -228,7 +234,7 @@ export class PlayerEntity extends Sprite {
 					) {
 						// Disable collision on the x axis
 						response.overlapV.x = 0;
-						// Repond to the platform (it is solid)
+						// Respond to the platform (it is solid)
 						return true;
 					}
 					// Do not respond to the platform (pass through)
@@ -286,7 +292,7 @@ export class PlayerEntity extends Sprite {
 			});
 
 			// flash the screen
-			game.viewport.fadeIn("#FFFFFF", 75);
+			this.parentApp.viewport.fadeIn("#FFFFFF", 75);
 			audio.play("die", false);
 		}
 	}

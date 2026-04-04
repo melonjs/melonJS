@@ -25,6 +25,7 @@ import {
 	VIDEO_INIT,
 	WINDOW_ONORIENTATION_CHANGE,
 	WINDOW_ONRESIZE,
+	WINDOW_ONSCROLL,
 } from "../system/event.ts";
 import timer from "../system/timer.ts";
 import { getUriFragment } from "../utils/utils.ts";
@@ -41,9 +42,32 @@ import type {
 } from "./settings.ts";
 
 /**
- * An Application represents a single melonJS game, and is responsible for updating (each frame) all the related object status and draw them.
+ * The Application class is the main entry point for creating a melonJS game.
+ * It initializes the renderer, creates the game world and viewport, registers DOM event
+ * listeners (resize, orientation, scroll), and starts the game loop.
+ *
+ * The Application instance provides access to the core game systems:
+ * - {@link Application#renderer renderer} — the active Canvas or WebGL renderer
+ * - {@link Application#world world} — the root container for all game objects
+ * - {@link Application#viewport viewport} — the default camera / viewport
+ *
+ * The app instance is automatically passed to {@link Stage#onResetEvent} and
+ * {@link Stage#onDestroyEvent}, and is accessible from any renderable via
+ * {@link Renderable#parentApp parentApp}.
  * @category Application
- * @see {@link game}
+ * @example
+ * // create a new melonJS Application
+ * const app = new Application(800, 600, {
+ *     parent: "screen",
+ *     scaleMethod: "flex-width",
+ *     renderer: 2, // AUTO
+ * });
+ *
+ * // add objects to the world
+ * app.world.addChild(new Sprite(0, 0, { image: "player" }));
+ *
+ * // access the viewport
+ * app.viewport.follow(player, app.viewport.AXIS.BOTH);
  */
 export default class Application {
 	/**
@@ -98,7 +122,7 @@ export default class Application {
 	 * @default true
 	 * @example
 	 *  // keep the default game instance running even when losing focus
-	 *  me.game.pauseOnBlur = false;
+	 *  app.pauseOnBlur = false;
 	 */
 	pauseOnBlur: boolean;
 
@@ -136,10 +160,19 @@ export default class Application {
 	updateAverageDelta: number;
 
 	/**
+	 * Create and initialize a new melonJS Application.
+	 * This is the recommended way to start a melonJS game.
 	 * @param width - The width of the canvas viewport
 	 * @param height - The height of the canvas viewport
 	 * @param options - The optional parameters for the application and default renderer
 	 * @throws {Error} Will throw an exception if it fails to instantiate a renderer
+	 * @example
+	 * const app = new Application(1024, 768, {
+	 *     parent: "game-container",
+	 *     scale: "auto",
+	 *     scaleMethod: "fit",
+	 *     renderer: 2, // AUTO
+	 * });
 	 */
 	constructor(
 		width: number,
@@ -279,7 +312,23 @@ export default class Application {
 		// make this the active game instance for modules that reference the global
 		setDefaultGame(this);
 
-		// register to the channel
+		// bridge DOM events to the melonJS event system
+		globalThis.addEventListener("resize", (e) => {
+			emit(WINDOW_ONRESIZE, e);
+		});
+		globalThis.addEventListener("orientationchange", (e) => {
+			emit(WINDOW_ONORIENTATION_CHANGE, e);
+		});
+		if (device.screenOrientation) {
+			globalThis.screen.orientation.onchange = (e) => {
+				emit(WINDOW_ONORIENTATION_CHANGE, e);
+			};
+		}
+		globalThis.addEventListener("scroll", (e) => {
+			emit(WINDOW_ONSCROLL, e);
+		});
+
+		// react to resize/orientation changes
 		on(WINDOW_ONRESIZE, () => {
 			onresize(this);
 		});
@@ -392,7 +441,7 @@ export default class Application {
 	 * Additionally the level id will also be passed to the called function.
 	 * @example
 	 * // call myFunction () everytime a level is loaded
-	 * me.game.onLevelLoaded = this.myFunction.bind(this);
+	 * app.onLevelLoaded = this.myFunction.bind(this);
 	 */
 	onLevelLoaded(): void {}
 
@@ -596,6 +645,8 @@ export default class Application {
 /**
  * The default game application instance.
  * Set via {@link setDefaultGame} during engine initialization.
+ * When using {@link Application} directly, prefer using the app instance
+ * (e.g. from {@link Stage#onResetEvent} or {@link Renderable#parentApp}).
  */
 export let game: Application;
 
