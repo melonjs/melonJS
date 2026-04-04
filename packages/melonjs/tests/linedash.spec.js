@@ -67,6 +67,116 @@ describe("LineDash", () => {
 		});
 	});
 
+	describe("setLineDash input validation", () => {
+		it("should clone the array (not store by reference)", () => {
+			const pattern = [10, 5];
+			app.renderer.setLineDash(pattern);
+			pattern[0] = 999;
+			expect(app.renderer.getLineDash()[0]).toEqual(10);
+			app.renderer.setLineDash([]);
+		});
+
+		it("should filter out negative values", () => {
+			app.renderer.setLineDash([10, -5, 8, -3]);
+			expect(app.renderer.getLineDash()).toEqual([10, 8]);
+			app.renderer.setLineDash([]);
+		});
+
+		it("should keep zero values", () => {
+			app.renderer.setLineDash([10, 0, 5, 0]);
+			expect(app.renderer.getLineDash()).toEqual([10, 0, 5, 0]);
+			app.renderer.setLineDash([]);
+		});
+
+		it("should handle all-negative values (becomes empty = solid)", () => {
+			app.renderer.setLineDash([-1, -2, -3]);
+			expect(app.renderer.getLineDash()).toEqual([]);
+			app.renderer.setLineDash([]);
+		});
+
+		it("should not throw with zero-length dash pattern on strokeLine", () => {
+			app.renderer.setLineDash([0, 0]);
+			expect(() => {
+				app.renderer.strokeLine(0, 0, 64, 64);
+			}).not.toThrow();
+			app.renderer.setLineDash([]);
+		});
+
+		it("should not infinite loop with zero dash values on strokeLine", () => {
+			app.renderer.setLineDash([0, 5, 0, 10]);
+			expect(() => {
+				app.renderer.strokeLine(0, 0, 64, 0);
+			}).not.toThrow();
+			app.renderer.setLineDash([]);
+		});
+	});
+
+	describe("setLineDash edge cases", () => {
+		it("should filter NaN values", () => {
+			app.renderer.setLineDash([10, NaN, 5]);
+			const dash = app.renderer.getLineDash();
+			expect(dash).not.toContain(NaN);
+			app.renderer.setLineDash([]);
+		});
+
+		it("should filter Infinity values", () => {
+			app.renderer.setLineDash([10, Infinity, 5]);
+			const dash = app.renderer.getLineDash();
+			expect(dash).not.toContain(Infinity);
+			app.renderer.setLineDash([]);
+		});
+
+		it("should handle a single-element pattern", () => {
+			app.renderer.setLineDash([10]);
+			expect(() => {
+				app.renderer.strokeLine(0, 0, 64, 0);
+			}).not.toThrow();
+			app.renderer.setLineDash([]);
+		});
+
+		it("should handle fractional values", () => {
+			app.renderer.setLineDash([0.5, 0.1]);
+			expect(() => {
+				app.renderer.strokeLine(0, 0, 64, 0);
+			}).not.toThrow();
+			app.renderer.setLineDash([]);
+		});
+	});
+
+	describe("dash on different stroke methods", () => {
+		it("should not throw with strokeRect", () => {
+			app.renderer.setLineDash([8, 4]);
+			expect(() => {
+				app.renderer.strokeRect(0, 0, 32, 32);
+			}).not.toThrow();
+			app.renderer.setLineDash([]);
+		});
+
+		it("should not throw with strokeEllipse", () => {
+			app.renderer.setLineDash([8, 4]);
+			expect(() => {
+				app.renderer.strokeEllipse(32, 32, 16, 16);
+			}).not.toThrow();
+			app.renderer.setLineDash([]);
+		});
+
+		it("should not throw with strokeArc", () => {
+			app.renderer.setLineDash([6, 3]);
+			expect(() => {
+				app.renderer.strokeArc(32, 32, 16, 0, Math.PI * 2);
+			}).not.toThrow();
+			app.renderer.setLineDash([]);
+		});
+
+		it("should not throw on zero-length line", () => {
+			app.renderer.setLineDash([10, 5]);
+			expect(() => {
+				app.renderer.strokeLine(32, 32, 32, 32);
+			}).not.toThrow();
+			app.renderer.setLineDash([]);
+		});
+	});
+
 	describe("save/restore with dash", () => {
 		it("should restore dash pattern after save/restore", () => {
 			app.renderer.setLineDash([10, 5]);

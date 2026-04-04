@@ -579,6 +579,7 @@ export default class WebGLRenderer extends Renderer {
 		const reupload =
 			typeof image.videoWidth !== "undefined" ||
 			(this._currentGradient &&
+				this._currentGradient._dirty &&
 				this._currentGradient._renderTarget &&
 				this._currentGradient._renderTarget.canvas === image);
 		const texture = this.cache.get(image);
@@ -1496,16 +1497,6 @@ export default class WebGLRenderer extends Renderer {
 	}
 
 	/**
-	 * Draw a gradient-filled shape by masking with the shape and filling the bounding rect.
-	 * Temporarily disables the gradient to prevent recursion in the fill methods.
-	 * @param {Function} drawShape - draws the shape into the stencil buffer
-	 * @param {number} x - bounding rect x
-	 * @param {number} y - bounding rect y
-	 * @param {number} w - bounding rect width
-	 * @param {number} h - bounding rect height
-	 * @ignore
-	 */
-	/**
 	 * Split a line segment into dashed sub-segments.
 	 * @param {number} x0 - start x
 	 * @param {number} y0 - start y
@@ -1535,6 +1526,10 @@ export default class WebGLRenderer extends Renderer {
 
 		while (dist < lineLen) {
 			const dashLen = pattern[patIdx % pattern.length];
+			if (dashLen <= 0) {
+				patIdx++;
+				continue;
+			}
 			const segEnd = Math.min(dist + dashLen, lineLen);
 
 			if (drawing) {
@@ -1552,6 +1547,16 @@ export default class WebGLRenderer extends Renderer {
 		return segments;
 	}
 
+	/**
+	 * Draw a gradient-filled shape by masking with the shape and filling the bounding rect.
+	 * Temporarily disables the gradient to prevent recursion in the fill methods.
+	 * @param {Function} drawShape - draws the shape into the stencil buffer
+	 * @param {number} x - bounding rect x
+	 * @param {number} y - bounding rect y
+	 * @param {number} w - bounding rect width
+	 * @param {number} h - bounding rect height
+	 * @ignore
+	 */
 	#gradientMask(drawShape, x, y, w, h) {
 		const gl = this.gl;
 		const grad = this._currentGradient;

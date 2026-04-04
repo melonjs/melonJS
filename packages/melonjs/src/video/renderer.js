@@ -312,7 +312,9 @@ export default class Renderer {
 	 * renderer.setLineDash([]);
 	 */
 	setLineDash(segments) {
-		this.renderState.lineDash = segments;
+		this.renderState.lineDash = segments.filter((v) => {
+			return Number.isFinite(v) && v >= 0;
+		});
 		this.renderState.lineDashOffset = 0;
 	}
 
