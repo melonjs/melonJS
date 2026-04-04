@@ -849,6 +849,8 @@ export default class WebGLRenderer extends Renderer {
 				this.gl.disable(this.gl.SCISSOR_TEST);
 			}
 		}
+		// sync gradient from renderState
+		this._currentGradient = this.renderState.currentGradient;
 	}
 
 	/**
@@ -946,8 +948,6 @@ export default class WebGLRenderer extends Renderer {
 		if (color instanceof Gradient) {
 			this.renderState.currentGradient = color;
 			this._currentGradient = color;
-			// ensure full opacity for gradient texture rendering
-			this.currentColor.alpha = 1.0;
 		} else {
 			this.renderState.currentGradient = null;
 			this._currentGradient = null;
@@ -1467,30 +1467,53 @@ export default class WebGLRenderer extends Renderer {
 	#gradientMask(drawShape, x, y, w, h) {
 		const gl = this.gl;
 		const grad = this._currentGradient;
+		const hasMask = this.maskLevel > 0;
+		const stencilRef = hasMask ? this.maskLevel + 1 : 1;
 		this._currentGradient = null;
 
 		this.flush();
 
-		// setup stencil — write shape
 		gl.enable(gl.STENCIL_TEST);
-		gl.clear(gl.STENCIL_BUFFER_BIT);
 		gl.colorMask(false, false, false, false);
-		gl.stencilFunc(gl.ALWAYS, 1, 0xff);
-		gl.stencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE);
+
+		if (hasMask) {
+			// nest within existing mask level
+			gl.stencilFunc(gl.EQUAL, this.maskLevel, 0xff);
+			gl.stencilOp(gl.KEEP, gl.KEEP, gl.INCR);
+		} else {
+			gl.clear(gl.STENCIL_BUFFER_BIT);
+			gl.stencilFunc(gl.ALWAYS, 1, 0xff);
+			gl.stencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE);
+		}
 
 		drawShape();
 		this.flush();
 
 		// use stencil to clip gradient
 		gl.colorMask(true, true, true, true);
-		gl.stencilFunc(gl.EQUAL, 1, 0xff);
+		gl.stencilFunc(gl.EQUAL, stencilRef, 0xff);
 		gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
 
 		this._currentGradient = grad;
 		this.fillRect(x, y, w, h);
 		this.flush();
 
-		gl.disable(gl.STENCIL_TEST);
+		if (hasMask) {
+			// restore the parent mask level by decrementing stencil
+			this._currentGradient = null;
+			gl.colorMask(false, false, false, false);
+			gl.stencilFunc(gl.EQUAL, stencilRef, 0xff);
+			gl.stencilOp(gl.KEEP, gl.KEEP, gl.DECR);
+			drawShape();
+			this.flush();
+			gl.colorMask(true, true, true, true);
+			// restore parent mask stencil test
+			gl.stencilFunc(gl.NOTEQUAL, this.maskLevel + 1, 1);
+			gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+			this._currentGradient = grad;
+		} else {
+			gl.disable(gl.STENCIL_TEST);
+		}
 	}
 
 	#generateTriangleFan(cx, cy, rx, ry, startAngle, endAngle, segments) {
