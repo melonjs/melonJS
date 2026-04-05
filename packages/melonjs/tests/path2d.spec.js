@@ -296,8 +296,8 @@ describe("Path2D", () => {
 
 		it("rect with zero dimensions should still create path", () => {
 			path.rect(10, 20, 0, 0);
-			// degenerate rect still creates line segments
-			expect(path.points.length).toBeGreaterThanOrEqual(0);
+			// degenerate rect still creates 4 line segments (4 lineTo * 2 points each = 8)
+			expect(path.points.length).toEqual(8);
 		});
 
 		it("bezierCurveTo without moveTo should start from (0, 0)", () => {

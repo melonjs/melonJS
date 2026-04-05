@@ -11,7 +11,7 @@ export function dashPath(pts, pattern) {
 			return v > 0;
 		})
 	) {
-		return pts.slice();
+		return pts;
 	}
 
 	const result = [];

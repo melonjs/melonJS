@@ -18,6 +18,9 @@ export function generateTriangleFan(
 	endAngle,
 	segments,
 ) {
+	if (segments <= 0) {
+		return [];
+	}
 	const angleStep = (endAngle - startAngle) / segments;
 	const verts = [];
 	for (let i = 0; i < segments; i++) {
