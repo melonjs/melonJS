@@ -155,6 +155,29 @@ describe("Bezier Curves", () => {
 		});
 	});
 
+	describe("arcTo", () => {
+		it("should not throw when drawing an arcTo path", () => {
+			expect(() => {
+				app.renderer.beginPath();
+				app.renderer.moveTo(20, 20);
+				app.renderer.arcTo(100, 20, 100, 100, 30);
+				app.renderer.stroke();
+			}).not.toThrow();
+		});
+
+		it("should work with lineTo and closePath", () => {
+			expect(() => {
+				app.renderer.beginPath();
+				app.renderer.moveTo(20, 20);
+				app.renderer.lineTo(80, 20);
+				app.renderer.arcTo(120, 20, 120, 60, 20);
+				app.renderer.lineTo(120, 100);
+				app.renderer.closePath();
+				app.renderer.stroke();
+			}).not.toThrow();
+		});
+	});
+
 	describe("Path2D tessellation correctness", () => {
 		it("quadraticCurveTo should start from moveTo point", () => {
 			const path = new Path2D();

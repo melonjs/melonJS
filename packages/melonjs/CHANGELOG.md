@@ -3,7 +3,7 @@
 ## [18.3.0] (melonJS 2)
 
 ### Added
-- Renderer: `bezierCurveTo()` and `quadraticCurveTo()` path methods — draw cubic and quadratic Bezier curves, matching the Canvas 2D API. Canvas renderer uses native context methods, WebGL renderer tessellates via Path2D.
+- Renderer: `bezierCurveTo()`, `quadraticCurveTo()`, and `arcTo()` path methods — draw cubic and quadratic Bezier curves, matching the Canvas 2D API. Canvas renderer uses native context methods, WebGL renderer tessellates via Path2D.
 - Renderer: `setLineDash()` and `getLineDash()` methods — set dash patterns for stroke operations, matching the Canvas 2D API. Works on both Canvas and WebGL renderers. Dash state is saved/restored with `save()`/`restore()`.
 - Renderer: `createLinearGradient()` and `createRadialGradient()` methods — create gradient fills that can be passed to `setColor()`, matching the Canvas 2D API. Works on both Canvas and WebGL renderers with all fill methods (`fillRect`, `fillEllipse`, `fillArc`, `fillPolygon`, `fillRoundRect`). Gradient state is saved/restored with `save()`/`restore()`.
 - Tiled: extensible object factory registry for `TMXTileMap.getObjects()` — object creation is now dispatched through a `Map`-based registry (like `loader.setParser`), with built-in factories for text, tile, and shape objects, plus class-based factories for Entity, Collectable, Trigger, Light2d, Sprite, NineSliceSprite, ImageLayer, and ColorLayer
