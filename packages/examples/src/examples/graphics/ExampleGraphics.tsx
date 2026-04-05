@@ -8,6 +8,7 @@ import {
 	Renderable,
 	RoundRect,
 	Tween,
+	video,
 	type WebGLRenderer,
 } from "melonjs";
 import { createExampleComponent } from "../utils";
@@ -15,6 +16,7 @@ import { createExampleComponent } from "../utils";
 const createGame = () => {
 	const _app = new Application(1024, 768, {
 		parent: "screen",
+		renderer: video.AUTO,
 	});
 
 	class Graphics extends Renderable {
