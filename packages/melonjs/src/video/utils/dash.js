@@ -48,11 +48,13 @@ export function dashPath(pts, pattern) {
 				drawing = !drawing;
 				patIdx = (patIdx + 1) % pattern.length;
 				remaining = pattern[patIdx];
-				// skip zero-length entries
-				while (remaining <= 0 && patIdx < pattern.length * 2) {
+				// skip zero-length entries (bounded to avoid infinite loop)
+				let skipped = 0;
+				while (remaining <= 0 && skipped < pattern.length) {
 					drawing = !drawing;
 					patIdx = (patIdx + 1) % pattern.length;
 					remaining = pattern[patIdx];
+					skipped++;
 				}
 			}
 		}

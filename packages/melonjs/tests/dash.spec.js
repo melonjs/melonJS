@@ -109,5 +109,18 @@ describe("dash utilities", () => {
 				expect(len).toBeGreaterThan(0);
 			}
 		});
+		it("should not infinite loop when skipping consecutive zero entries", () => {
+			const pts = [
+				{ x: 0, y: 0 },
+				{ x: 100, y: 0 },
+			];
+			// pattern with multiple consecutive zeros followed by a visible dash
+			expect(() => {
+				dashPath(pts, [10, 0, 0, 5]);
+			}).not.toThrow();
+			const result = dashPath(pts, [10, 0, 0, 5]);
+			// should produce segments without hanging
+			expect(result.length).toBeGreaterThan(0);
+		});
 	});
 });
