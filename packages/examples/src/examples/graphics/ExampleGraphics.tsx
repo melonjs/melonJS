@@ -18,7 +18,7 @@ const createGame = () => {
 	if (
 		!video.init(1024, 768, {
 			parent: "screen",
-			renderer: video.AUTO,
+			renderer: video.WEBGL,
 			preferWebGL1: false,
 			blendMode: "normal",
 		})
@@ -215,6 +215,22 @@ const createGame = () => {
 			renderer.lineTo(740, 50);
 			renderer.lineTo(840, 75);
 			renderer.lineTo(940, 50);
+			renderer.stroke();
+			renderer.setLineDash([]);
+
+			// cubic bezier curve
+			renderer.beginPath();
+			renderer.setColor("#10b981");
+			renderer.moveTo(540, 100);
+			renderer.bezierCurveTo(640, 30, 840, 170, 940, 100);
+			renderer.stroke();
+
+			// dashed quadratic bezier curve
+			renderer.setLineDash([8, 4]);
+			renderer.beginPath();
+			renderer.setColor("#f59e0b");
+			renderer.moveTo(540, 100);
+			renderer.quadraticCurveTo(740, 160, 940, 100);
 			renderer.stroke();
 			renderer.setLineDash([]);
 

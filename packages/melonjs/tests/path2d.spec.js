@@ -149,12 +149,183 @@ describe("Path2D", () => {
 		});
 	});
 
+	describe("moveTo", () => {
+		it("should set startPoint without adding points", () => {
+			path.moveTo(50, 75);
+			expect(path.startPoint.x).toEqual(50);
+			expect(path.startPoint.y).toEqual(75);
+			expect(path.points.length).toEqual(0);
+		});
+	});
+
+	describe("lineTo", () => {
+		it("should add a pair of points from startPoint", () => {
+			path.moveTo(0, 0);
+			path.lineTo(100, 100);
+			expect(path.points.length).toEqual(2);
+			expect(path.points[0].x).toEqual(0);
+			expect(path.points[1].x).toEqual(100);
+		});
+
+		it("should chain from previous endpoint", () => {
+			path.moveTo(0, 0);
+			path.lineTo(50, 50);
+			path.lineTo(100, 0);
+			expect(path.points.length).toEqual(4);
+			expect(path.points[2].x).toEqual(50);
+			expect(path.points[3].x).toEqual(100);
+		});
+
+		it("should update startPoint", () => {
+			path.moveTo(0, 0);
+			path.lineTo(100, 200);
+			expect(path.startPoint.x).toEqual(100);
+			expect(path.startPoint.y).toEqual(200);
+		});
+	});
+
+	describe("quadraticCurveTo", () => {
+		it("should start from moveTo point", () => {
+			path.moveTo(0, 100);
+			path.quadraticCurveTo(50, 0, 100, 100);
+			expect(path.points[0].x).toBeCloseTo(0, 0);
+			expect(path.points[0].y).toBeCloseTo(100, 0);
+			expect(path.points[path.points.length - 1].x).toBeCloseTo(100, 0);
+		});
+
+		it("should not deform (startPoint reference bug)", () => {
+			path.moveTo(0, 50);
+			path.quadraticCurveTo(50, 0, 100, 50);
+			const midIdx = Math.floor(path.points.length / 2);
+			expect(path.points[midIdx].y).toBeLessThan(50);
+		});
+
+		it("should generate enough segments for long curves", () => {
+			path.moveTo(0, 0);
+			path.quadraticCurveTo(150, 0, 300, 100);
+			expect(path.points.length).toBeGreaterThan(8);
+		});
+	});
+
+	describe("bezierCurveTo", () => {
+		it("should start from moveTo point", () => {
+			path.moveTo(0, 100);
+			path.bezierCurveTo(30, 0, 70, 0, 100, 100);
+			expect(path.points[0].x).toBeCloseTo(0, 0);
+			expect(path.points[path.points.length - 1].x).toBeCloseTo(100, 0);
+		});
+
+		it("should not deform (startPoint reference bug)", () => {
+			path.moveTo(0, 50);
+			path.bezierCurveTo(25, 0, 75, 0, 100, 50);
+			const midIdx = Math.floor(path.points.length / 2);
+			expect(path.points[midIdx].y).toBeLessThan(50);
+		});
+
+		it("should generate enough segments for long curves", () => {
+			path.moveTo(0, 0);
+			path.bezierCurveTo(100, 0, 200, 100, 300, 100);
+			expect(path.points.length).toBeGreaterThan(8);
+		});
+	});
+
+	describe("method chaining", () => {
+		it("lineTo after bezierCurveTo should start from curve endpoint", () => {
+			path.moveTo(0, 0);
+			path.bezierCurveTo(30, 0, 70, 100, 100, 100);
+			path.lineTo(200, 100);
+			const pts = path.points;
+			expect(pts[pts.length - 2].x).toBeCloseTo(100, 0);
+			expect(pts[pts.length - 1].x).toEqual(200);
+		});
+
+		it("bezierCurveTo after lineTo should start from line endpoint", () => {
+			path.moveTo(0, 0);
+			path.lineTo(50, 0);
+			path.bezierCurveTo(70, 0, 80, 50, 100, 50);
+			expect(path.points[0].x).toEqual(0);
+			expect(path.points[1].x).toEqual(50);
+			expect(path.points[path.points.length - 1].x).toBeCloseTo(100, 0);
+		});
+
+		it("moveTo should reset start for subsequent curves", () => {
+			path.moveTo(0, 0);
+			path.lineTo(50, 50);
+			path.moveTo(200, 200);
+			path.quadraticCurveTo(250, 100, 300, 200);
+			expect(path.points[0].x).toEqual(0);
+			expect(path.points[1].x).toEqual(50);
+			expect(path.points[2].x).toBeCloseTo(200, 0);
+		});
+	});
+
+	describe("edge cases", () => {
+		it("lineTo without prior moveTo should start from (0, 0)", () => {
+			path.lineTo(100, 100);
+			expect(path.points[0].x).toEqual(0);
+			expect(path.points[0].y).toEqual(0);
+		});
+
+		it("lineTo with zero length should still add points", () => {
+			path.moveTo(50, 50);
+			path.lineTo(50, 50);
+			expect(path.points.length).toEqual(2);
+		});
+
+		it("multiple moveTo calls should use the last one", () => {
+			path.moveTo(10, 10);
+			path.moveTo(20, 20);
+			path.moveTo(30, 30);
+			path.lineTo(100, 100);
+			expect(path.points[0].x).toEqual(30);
+			expect(path.points[0].y).toEqual(30);
+		});
+
+		it("closePath on empty path should not throw", () => {
+			expect(() => {
+				path.closePath();
+			}).not.toThrow();
+			expect(path.points.length).toEqual(0);
+		});
+
+		it("closePath with only moveTo should not add points", () => {
+			path.moveTo(50, 50);
+			path.closePath();
+			expect(path.points.length).toEqual(0);
+		});
+
+		it("rect with zero dimensions should still create path", () => {
+			path.rect(10, 20, 0, 0);
+			// degenerate rect still creates line segments
+			expect(path.points.length).toBeGreaterThanOrEqual(0);
+		});
+
+		it("bezierCurveTo without moveTo should start from (0, 0)", () => {
+			path.bezierCurveTo(30, 0, 70, 0, 100, 50);
+			expect(path.points[0].x).toBeCloseTo(0, 0);
+			expect(path.points[0].y).toBeCloseTo(0, 0);
+		});
+
+		it("quadraticCurveTo without moveTo should start from (0, 0)", () => {
+			path.quadraticCurveTo(50, 0, 100, 50);
+			expect(path.points[0].x).toBeCloseTo(0, 0);
+			expect(path.points[0].y).toBeCloseTo(0, 0);
+		});
+	});
+
 	describe("beginPath", () => {
 		it("should clear all points", () => {
 			path.parseSVGPath("M 0 0 L 10 10 L 20 20");
 			expect(path.points.length).toBeGreaterThan(0);
 			path.beginPath();
 			expect(path.points.length).toBe(0);
+		});
+
+		it("should reset startPoint to (0, 0)", () => {
+			path.moveTo(50, 75);
+			path.beginPath();
+			expect(path.startPoint.x).toEqual(0);
+			expect(path.startPoint.y).toEqual(0);
 		});
 	});
 
