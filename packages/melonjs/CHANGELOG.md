@@ -3,6 +3,7 @@
 ## [18.3.0] (melonJS 2)
 
 ### Added
+- Renderer: `bezierCurveTo()`, `quadraticCurveTo()`, and `arcTo()` path methods — draw cubic and quadratic Bezier curves, matching the Canvas 2D API. Canvas renderer uses native context methods, WebGL renderer tessellates via Path2D.
 - Renderer: `setLineDash()` and `getLineDash()` methods — set dash patterns for stroke operations, matching the Canvas 2D API. Works on both Canvas and WebGL renderers. Dash state is saved/restored with `save()`/`restore()`.
 - Renderer: `createLinearGradient()` and `createRadialGradient()` methods — create gradient fills that can be passed to `setColor()`, matching the Canvas 2D API. Works on both Canvas and WebGL renderers with all fill methods (`fillRect`, `fillEllipse`, `fillArc`, `fillPolygon`, `fillRoundRect`). Gradient state is saved/restored with `save()`/`restore()`.
 - Tiled: extensible object factory registry for `TMXTileMap.getObjects()` — object creation is now dispatched through a `Map`-based registry (like `loader.setParser`), with built-in factories for text, tile, and shape objects, plus class-based factories for Entity, Collectable, Trigger, Light2d, Sprite, NineSliceSprite, ImageLayer, and ColorLayer
@@ -26,6 +27,8 @@
 - EventEmitter: `event.on()` and `event.once()` no longer create `.bind()` closures when a context is provided
 
 ### Fixed
+- Path2D: fix `quadraticCurveTo()` and `bezierCurveTo()` using a reference to `startPoint` instead of capturing coordinates — `lineTo()` mutates `startPoint` on each call, causing the curve to deform as it was tessellated. Captured `lx`/`ly` values instead.
+- Path2D: fix `quadraticCurveTo()` and `bezierCurveTo()` segment count — was using `arcResolution` directly (2 segments), now computes adaptive segment count based on control polygon length for smooth curves.
 - Application: `Object.assign(defaultApplicationSettings, options)` mutated the shared defaults object in both `Application.init()` and `video.init()` — creating multiple Application instances would corrupt settings. Fixed with object spread.
 - Text/Light2d: fix invalid `pool.push` on CanvasRenderTarget instances that were never pool-registered (would throw on destroy)
 - CanvasRenderTarget: `destroy(renderer)` now properly cleans up WebGL GPU textures and cache entries (previously leaked in Light2d)

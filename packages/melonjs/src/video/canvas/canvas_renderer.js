@@ -357,6 +357,42 @@ export default class CanvasRenderer extends Renderer {
 	}
 
 	/**
+	 * Adds a quadratic Bezier curve to the current sub-path.
+	 * @param {number} cpx - The x-axis coordinate of the control point.
+	 * @param {number} cpy - The y-axis coordinate of the control point.
+	 * @param {number} x - The x-axis coordinate of the end point.
+	 * @param {number} y - The y-axis coordinate of the end point.
+	 */
+	quadraticCurveTo(cpx, cpy, x, y) {
+		this.getContext().quadraticCurveTo(cpx, cpy, x, y);
+	}
+
+	/**
+	 * Adds a cubic Bezier curve to the current sub-path.
+	 * @param {number} cp1x - The x-axis coordinate of the first control point.
+	 * @param {number} cp1y - The y-axis coordinate of the first control point.
+	 * @param {number} cp2x - The x-axis coordinate of the second control point.
+	 * @param {number} cp2y - The y-axis coordinate of the second control point.
+	 * @param {number} x - The x-axis coordinate of the end point.
+	 * @param {number} y - The y-axis coordinate of the end point.
+	 */
+	bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y) {
+		this.getContext().bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
+	}
+
+	/**
+	 * Adds a circular arc to the current sub-path, using the given control points and radius.
+	 * @param {number} x1 - The x-axis coordinate of the first control point.
+	 * @param {number} y1 - The y-axis coordinate of the first control point.
+	 * @param {number} x2 - The x-axis coordinate of the second control point.
+	 * @param {number} y2 - The y-axis coordinate of the second control point.
+	 * @param {number} radius - The arc's radius. Must be non-negative.
+	 */
+	arcTo(x1, y1, x2, y2, radius) {
+		this.getContext().arcTo(x1, y1, x2, y2, radius);
+	}
+
+	/**
 	 * creates a rectangular path whose starting point is at (x, y) and whose size is specified by width and height.
 	 * @param {number} x - The x axis of the coordinate for the rectangle starting point.
 	 * @param {number} y - The y axis of the coordinate for the rectangle starting point.

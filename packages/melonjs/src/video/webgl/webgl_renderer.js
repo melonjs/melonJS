@@ -12,6 +12,11 @@ import { Gradient } from "../gradient.js";
 import Renderer from "./../renderer.js";
 import { createAtlas, TextureAtlas } from "./../texture/atlas.js";
 import TextureCache from "./../texture/cache.js";
+import { dashPath, dashSegments } from "../utils/dash.js";
+import {
+	generateJoinCircles,
+	generateTriangleFan,
+} from "../utils/tessellation.js";
 import PrimitiveBatcher from "./batchers/primitive_batcher";
 import QuadBatcher from "./batchers/quad_batcher";
 
@@ -661,6 +666,45 @@ export default class WebGLRenderer extends Renderer {
 	}
 
 	/**
+	 * Adds a quadratic Bezier curve to the current sub-path.
+	 * The curve is tessellated into line segments for WebGL rendering.
+	 * @param {number} cpx - The x-axis coordinate of the control point.
+	 * @param {number} cpy - The y-axis coordinate of the control point.
+	 * @param {number} x - The x-axis coordinate of the end point.
+	 * @param {number} y - The y-axis coordinate of the end point.
+	 */
+	quadraticCurveTo(cpx, cpy, x, y) {
+		this.path2D.quadraticCurveTo(cpx, cpy, x, y);
+	}
+
+	/**
+	 * Adds a cubic Bezier curve to the current sub-path.
+	 * The curve is tessellated into line segments for WebGL rendering.
+	 * @param {number} cp1x - The x-axis coordinate of the first control point.
+	 * @param {number} cp1y - The y-axis coordinate of the first control point.
+	 * @param {number} cp2x - The x-axis coordinate of the second control point.
+	 * @param {number} cp2y - The y-axis coordinate of the second control point.
+	 * @param {number} x - The x-axis coordinate of the end point.
+	 * @param {number} y - The y-axis coordinate of the end point.
+	 */
+	bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y) {
+		this.path2D.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
+	}
+
+	/**
+	 * Adds a circular arc to the current sub-path, using the given control points and radius.
+	 * The arc is tessellated into line segments for WebGL rendering.
+	 * @param {number} x1 - The x-axis coordinate of the first control point.
+	 * @param {number} y1 - The y-axis coordinate of the first control point.
+	 * @param {number} x2 - The x-axis coordinate of the second control point.
+	 * @param {number} y2 - The y-axis coordinate of the second control point.
+	 * @param {number} radius - The arc's radius. Must be non-negative.
+	 */
+	arcTo(x1, y1, x2, y2, radius) {
+		this.path2D.arcTo(x1, y1, x2, y2, radius);
+	}
+
+	/**
 	 * creates a rectangular path whose starting point is at (x, y) and whose size is specified by width and height.
 	 * @param {number} x - The x axis of the coordinate for the rectangle starting point.
 	 * @param {number} y - The y axis of the coordinate for the rectangle starting point.
@@ -701,18 +745,7 @@ export default class WebGLRenderer extends Renderer {
 				const dash = this.renderState.lineDash;
 				if (dash.length > 0) {
 					const pts = this.path2D.points;
-					const dashed = [];
-					for (let i = 0; i < pts.length - 1; i += 2) {
-						dashed.push(
-							...this.#dashSegments(
-								pts[i].x,
-								pts[i].y,
-								pts[i + 1].x,
-								pts[i + 1].y,
-								dash,
-							),
-						);
-					}
+					const dashed = dashPath(pts, dash);
 					if (dashed.length > 0) {
 						this.currentBatcher.drawVertices(this.gl.LINES, dashed);
 					}
@@ -1033,7 +1066,7 @@ export default class WebGLRenderer extends Renderer {
 		const startAngle = antiClockwise ? end : start;
 		this.currentBatcher.drawVertices(
 			this.gl.TRIANGLES,
-			this.#generateTriangleFan(
+			generateTriangleFan(
 				x,
 				y,
 				radius,
@@ -1091,7 +1124,7 @@ export default class WebGLRenderer extends Renderer {
 		);
 		this.currentBatcher.drawVertices(
 			this.gl.TRIANGLES,
-			this.#generateTriangleFan(x, y, w, h, 0, Math.PI * 2, segments),
+			generateTriangleFan(x, y, w, h, 0, Math.PI * 2, segments),
 		);
 	}
 
@@ -1106,7 +1139,7 @@ export default class WebGLRenderer extends Renderer {
 		this.setBatcher("primitive");
 		const dash = this.renderState.lineDash;
 		if (dash.length > 0) {
-			const segments = this.#dashSegments(startX, startY, endX, endY, dash);
+			const segments = dashSegments(startX, startY, endX, endY, dash);
 			if (segments.length > 0) {
 				this.currentBatcher.drawVertices(this.gl.LINES, segments);
 			}
@@ -1156,18 +1189,7 @@ export default class WebGLRenderer extends Renderer {
 		const dash = this.renderState.lineDash;
 		if (dash.length > 0) {
 			const pts = this.path2D.points;
-			const dashed = [];
-			for (let i = 0; i < pts.length - 1; i += 2) {
-				dashed.push(
-					...this.#dashSegments(
-						pts[i].x,
-						pts[i].y,
-						pts[i + 1].x,
-						pts[i + 1].y,
-						dash,
-					),
-				);
-			}
+			const dashed = dashPath(pts, dash);
 			if (dashed.length > 0) {
 				this.currentBatcher.drawVertices(this.gl.LINES, dashed);
 			}
@@ -1186,7 +1208,10 @@ export default class WebGLRenderer extends Renderer {
 			if (!lastPoint.equals(firstPoint)) {
 				joinPoints.push(firstPoint);
 			}
-			this.#drawJoinCircles(joinPoints, radius);
+			this.currentBatcher.drawVertices(
+				this.gl.TRIANGLES,
+				generateJoinCircles(joinPoints, radius),
+			);
 		}
 
 		this.translate(-poly.pos.x, -poly.pos.y);
@@ -1271,14 +1296,17 @@ export default class WebGLRenderer extends Renderer {
 		// add round joins at corners for thick lines
 		if (this.lineWidth > 1) {
 			const radius = this.lineWidth / 2;
-			this.#drawJoinCircles(
-				[
-					{ x, y },
-					{ x: x + width, y },
-					{ x: x + width, y: y + height },
-					{ x, y: y + height },
-				],
-				radius,
+			this.currentBatcher.drawVertices(
+				this.gl.TRIANGLES,
+				generateJoinCircles(
+					[
+						{ x, y },
+						{ x: x + width, y },
+						{ x: x + width, y: y + height },
+						{ x, y: y + height },
+					],
+					radius,
+				),
 			);
 		}
 	}
@@ -1397,18 +1425,10 @@ export default class WebGLRenderer extends Renderer {
 		);
 		const PI = Math.PI;
 		verts.push(
-			...this.#generateTriangleFan(
-				x + r,
-				y + r,
-				r,
-				r,
-				PI,
-				PI * 1.5,
-				cornerSegments,
-			),
+			...generateTriangleFan(x + r, y + r, r, r, PI, PI * 1.5, cornerSegments),
 		); // top-left
 		verts.push(
-			...this.#generateTriangleFan(
+			...generateTriangleFan(
 				x + width - r,
 				y + r,
 				r,
@@ -1419,7 +1439,7 @@ export default class WebGLRenderer extends Renderer {
 			),
 		); // top-right
 		verts.push(
-			...this.#generateTriangleFan(
+			...generateTriangleFan(
 				x + width - r,
 				y + height - r,
 				r,
@@ -1430,7 +1450,7 @@ export default class WebGLRenderer extends Renderer {
 			),
 		); // bottom-right
 		verts.push(
-			...this.#generateTriangleFan(
+			...generateTriangleFan(
 				x + r,
 				y + height - r,
 				r,
@@ -1460,99 +1480,6 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	fillPoint(x, y) {
 		this.strokePoint(x, y);
-	}
-
-	/**
-	 * Generate triangle fan geometry for round joins at the given points
-	 * and draw them in a single drawVertices call.
-	 * @param {Array<{x: number, y: number}>} centers - join center points
-	 * @param {number} radius - join circle radius
-	 * @ignore
-	 */
-	#drawJoinCircles(centers, radius) {
-		const segments = 8;
-		const angleStep = (Math.PI * 2) / segments;
-		const verts = [];
-
-		for (let c = 0; c < centers.length; c++) {
-			const cx = centers[c].x;
-			const cy = centers[c].y;
-			for (let i = 0; i < segments; i++) {
-				const a1 = i * angleStep;
-				const a2 = a1 + angleStep;
-				verts.push(
-					{ x: cx, y: cy },
-					{ x: cx + Math.cos(a1) * radius, y: cy + Math.sin(a1) * radius },
-					{ x: cx + Math.cos(a2) * radius, y: cy + Math.sin(a2) * radius },
-				);
-			}
-		}
-
-		this.currentBatcher.drawVertices(this.gl.TRIANGLES, verts);
-	}
-
-	/**
-	 * Split a line segment into dashed sub-segments.
-	 * @param {number} x0 - start x
-	 * @param {number} y0 - start y
-	 * @param {number} x1 - end x
-	 * @param {number} y1 - end y
-	 * @param {number[]} pattern - dash pattern [on, off, on, off, ...]
-	 * @returns {Array<{x: number, y: number}>} pairs of start/end points for visible segments
-	 * @ignore
-	 */
-	#dashSegments(x0, y0, x1, y1, pattern) {
-		const dx = x1 - x0;
-		const dy = y1 - y0;
-		const lineLen = Math.sqrt(dx * dx + dy * dy);
-		if (lineLen === 0 || pattern.length === 0) {
-			return [
-				{ x: x0, y: y0 },
-				{ x: x1, y: y1 },
-			];
-		}
-
-		const nx = dx / lineLen;
-		const ny = dy / lineLen;
-		// bail out if pattern has no positive values (would loop forever)
-		if (
-			!pattern.some((v) => {
-				return v > 0;
-			})
-		) {
-			return [
-				{ x: x0, y: y0 },
-				{ x: x1, y: y1 },
-			];
-		}
-
-		const segments = [];
-		let dist = 0;
-		let patIdx = 0;
-		let drawing = true; // start with "on"
-
-		while (dist < lineLen) {
-			const dashLen = pattern[patIdx % pattern.length];
-			if (dashLen <= 0) {
-				patIdx++;
-				drawing = !drawing;
-				continue;
-			}
-			const segEnd = Math.min(dist + dashLen, lineLen);
-
-			if (drawing) {
-				segments.push(
-					{ x: x0 + nx * dist, y: y0 + ny * dist },
-					{ x: x0 + nx * segEnd, y: y0 + ny * segEnd },
-				);
-			}
-
-			dist = segEnd;
-			drawing = !drawing;
-			patIdx++;
-		}
-
-		return segments;
 	}
 
 	/**
@@ -1615,33 +1542,6 @@ export default class WebGLRenderer extends Renderer {
 		} else {
 			gl.disable(gl.STENCIL_TEST);
 		}
-	}
-
-	/**
-	 * Generate triangle fan vertices for an elliptical arc.
-	 * @param {number} cx - center x
-	 * @param {number} cy - center y
-	 * @param {number} rx - horizontal radius
-	 * @param {number} ry - vertical radius
-	 * @param {number} startAngle - start angle in radians
-	 * @param {number} endAngle - end angle in radians
-	 * @param {number} segments - number of segments
-	 * @returns {Array<{x: number, y: number}>} triangle vertices
-	 * @ignore
-	 */
-	#generateTriangleFan(cx, cy, rx, ry, startAngle, endAngle, segments) {
-		const angleStep = (endAngle - startAngle) / segments;
-		const verts = [];
-		for (let i = 0; i < segments; i++) {
-			const a1 = startAngle + i * angleStep;
-			const a2 = a1 + angleStep;
-			verts.push(
-				{ x: cx, y: cy },
-				{ x: cx + Math.cos(a1) * rx, y: cy + Math.sin(a1) * ry },
-				{ x: cx + Math.cos(a2) * rx, y: cy + Math.sin(a2) * ry },
-			);
-		}
-		return verts;
 	}
 
 	/**

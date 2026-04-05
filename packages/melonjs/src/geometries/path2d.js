@@ -552,11 +552,16 @@ class Path2D {
 	quadraticCurveTo(cpX, cpY, x, y) {
 		const points = this.points;
 		const startPoint = this.startPoint;
-		const lastPoint =
-			points.length === 0 ? startPoint : points[points.length - 1];
+		// capture coordinates (not reference) since lineTo mutates startPoint
+		const lx = points.length === 0 ? startPoint.x : points[points.length - 1].x;
+		const ly = points.length === 0 ? startPoint.y : points[points.length - 1].y;
 		const endPoint = pointPool.get().set(x, y);
 		const controlPoint = pointPool.get().set(cpX, cpY);
-		const resolution = this.arcResolution;
+		// estimate curve length via control polygon
+		const polyLen =
+			Math.sqrt((cpX - lx) ** 2 + (cpY - ly) ** 2) +
+			Math.sqrt((x - cpX) ** 2 + (y - cpY) ** 2);
+		const resolution = Math.max(4, Math.ceil(polyLen / this.arcResolution));
 
 		const t = 1 / resolution;
 		for (let i = 1; i <= resolution; i++) {
@@ -565,8 +570,8 @@ class Path2D {
 			const omt2 = omt * omt;
 			const ti2 = ti * ti;
 			this.lineTo(
-				lastPoint.x * omt2 + controlPoint.x * 2 * omt * ti + endPoint.x * ti2,
-				lastPoint.y * omt2 + controlPoint.y * 2 * omt * ti + endPoint.y * ti2,
+				lx * omt2 + controlPoint.x * 2 * omt * ti + endPoint.x * ti2,
+				ly * omt2 + controlPoint.y * 2 * omt * ti + endPoint.y * ti2,
 			);
 		}
 		pointPool.release(endPoint);
@@ -586,12 +591,18 @@ class Path2D {
 	bezierCurveTo(cp1X, cp1Y, cp2X, cp2Y, x, y) {
 		const points = this.points;
 		const startPoint = this.startPoint;
-		const lastPoint =
-			points.length === 0 ? startPoint : points[points.length - 1];
+		// capture coordinates (not reference) since lineTo mutates startPoint
+		const lx = points.length === 0 ? startPoint.x : points[points.length - 1].x;
+		const ly = points.length === 0 ? startPoint.y : points[points.length - 1].y;
 		const endPoint = pointPool.get().set(x, y);
 		const controlPoint1 = pointPool.get().set(cp1X, cp1Y);
 		const controlPoint2 = pointPool.get().set(cp2X, cp2Y);
-		const resolution = this.arcResolution;
+		// estimate curve length via control polygon
+		const polyLen =
+			Math.sqrt((cp1X - lx) ** 2 + (cp1Y - ly) ** 2) +
+			Math.sqrt((cp2X - cp1X) ** 2 + (cp2Y - cp1Y) ** 2) +
+			Math.sqrt((x - cp2X) ** 2 + (y - cp2Y) ** 2);
+		const resolution = Math.max(4, Math.ceil(polyLen / this.arcResolution));
 
 		const t = 1 / resolution;
 		for (let i = 1; i <= resolution; i++) {
@@ -602,11 +613,11 @@ class Path2D {
 			const ti2 = ti * ti;
 			const ti3 = ti2 * ti;
 			this.lineTo(
-				lastPoint.x * omt3 +
+				lx * omt3 +
 					controlPoint1.x * 3 * omt2 * ti +
 					controlPoint2.x * 3 * omt * ti2 +
 					endPoint.x * ti3,
-				lastPoint.y * omt3 +
+				ly * omt3 +
 					controlPoint1.y * 3 * omt2 * ti +
 					controlPoint2.y * 3 * omt * ti2 +
 					endPoint.y * ti3,

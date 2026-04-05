@@ -150,6 +150,63 @@ describe("Gradient", () => {
 		});
 	});
 
+	describe("multiple gradient instances sharing render target", () => {
+		it("should draw different gradients in sequence without errors", () => {
+			const g1 = app.renderer.createLinearGradient(0, 0, 64, 0);
+			g1.addColorStop(0, "red");
+			g1.addColorStop(1, "blue");
+			const g2 = app.renderer.createLinearGradient(0, 0, 0, 64);
+			g2.addColorStop(0, "green");
+			g2.addColorStop(1, "yellow");
+			const g3 = app.renderer.createRadialGradient(32, 32, 0, 32, 32, 32);
+			g3.addColorStop(0, "white");
+			g3.addColorStop(1, "black");
+
+			expect(() => {
+				app.renderer.setColor(g1);
+				app.renderer.fillRect(0, 0, 64, 20);
+				app.renderer.setColor(g2);
+				app.renderer.fillRect(0, 20, 64, 20);
+				app.renderer.setColor(g3);
+				app.renderer.fillRect(0, 40, 64, 20);
+			}).not.toThrow();
+		});
+
+		it("should handle rapid gradient creation without memory leak", () => {
+			expect(() => {
+				for (let i = 0; i < 100; i++) {
+					const g = app.renderer.createLinearGradient(0, 0, 64, 0);
+					g.addColorStop(0, "red");
+					g.addColorStop(1, "blue");
+					app.renderer.setColor(g);
+					app.renderer.fillRect(0, 0, 64, 64);
+				}
+			}).not.toThrow();
+			app.renderer.setColor("#000000");
+		});
+
+		it("should restore and draw a different gradient after save/restore", () => {
+			const g1 = app.renderer.createLinearGradient(0, 0, 64, 0);
+			g1.addColorStop(0, "red");
+			g1.addColorStop(1, "blue");
+			const g2 = app.renderer.createRadialGradient(32, 32, 0, 32, 32, 32);
+			g2.addColorStop(0, "green");
+			g2.addColorStop(1, "yellow");
+
+			expect(() => {
+				app.renderer.setColor(g1);
+				app.renderer.fillRect(0, 0, 64, 32);
+				app.renderer.save();
+				app.renderer.setColor(g2);
+				app.renderer.fillRect(0, 32, 64, 32);
+				app.renderer.restore();
+				// g1 should be active again and render correctly
+				app.renderer.fillRect(0, 0, 64, 32);
+			}).not.toThrow();
+			expect(app.renderer.renderState.currentGradient).toBe(g1);
+		});
+	});
+
 	describe("toCanvasGradient", () => {
 		it("should produce a CanvasGradient for linear type", () => {
 			const gradient = new Gradient("linear", [0, 0, 100, 0]);

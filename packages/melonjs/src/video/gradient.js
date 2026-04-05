@@ -6,6 +6,17 @@ import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
  */
 
 /**
+ * Shared render target for WebGL gradient textures.
+ * Reused across all Gradient instances to avoid GPU memory leaks.
+ * @ignore
+ */
+let sharedRenderTarget = null;
+let sharedLastId = -1;
+let sharedLastX = NaN;
+let sharedLastY = NaN;
+let nextGradientId = 0;
+
+/**
  * A Gradient object representing a linear or radial gradient fill.
  * Created via {@link Renderer#createLinearGradient} or {@link Renderer#createRadialGradient}.
  * Can be passed to {@link Renderer#setColor} as a fill style.
@@ -20,6 +31,9 @@ export class Gradient {
 		 * gradient type
 		 * @type {"linear"|"radial"}
 		 */
+		/** @ignore */
+		this._id = nextGradientId++;
+
 		this.type = type;
 
 		/**
@@ -137,32 +151,31 @@ export class Gradient {
 		const tw = nextPowerOfTwo(Math.max(1, Math.ceil(width)));
 		const th = nextPowerOfTwo(Math.max(1, Math.ceil(height)));
 
-		// return cached texture if nothing changed
+		// skip if this gradient already rendered to the shared target at these coords
 		if (
-			this._renderTarget &&
+			sharedRenderTarget &&
+			sharedLastId === this._id &&
 			!this._dirty &&
-			this._lastX === x &&
-			this._lastY === y &&
-			this._renderTarget.width === tw &&
-			this._renderTarget.height === th
+			sharedLastX === x &&
+			sharedLastY === y &&
+			sharedRenderTarget.width === tw &&
+			sharedRenderTarget.height === th
 		) {
+			this._renderTarget = sharedRenderTarget;
 			return this._renderTarget.canvas;
 		}
 
-		// reuse or create the render target
-		if (!this._renderTarget) {
-			this._renderTarget = new CanvasRenderTarget(tw, th);
+		// reuse the shared render target to avoid GPU memory leaks
+		if (!sharedRenderTarget) {
+			sharedRenderTarget = new CanvasRenderTarget(tw, th);
 		} else if (
-			this._renderTarget.width !== tw ||
-			this._renderTarget.height !== th
+			sharedRenderTarget.width !== tw ||
+			sharedRenderTarget.height !== th
 		) {
-			// NOTE: resizing the canvas invalidates its GPU texture in the
-			// TextureCache, but the cache key (the canvas element itself)
-			// remains the same. The drawImage path must force a re-upload
-			// so the GPU texture matches the new content.
-			this._renderTarget.canvas.width = tw;
-			this._renderTarget.canvas.height = th;
+			sharedRenderTarget.canvas.width = tw;
+			sharedRenderTarget.canvas.height = th;
 		}
+		this._renderTarget = sharedRenderTarget;
 
 		const ctx = this._renderTarget.context;
 		ctx.clearRect(0, 0, tw, th);
@@ -197,8 +210,9 @@ export class Gradient {
 		ctx.fillRect(0, 0, tw, th);
 
 		this._dirty = false;
-		this._lastX = x;
-		this._lastY = y;
+		sharedLastId = this._id;
+		sharedLastX = x;
+		sharedLastY = y;
 		this._renderTarget.invalidate(renderer);
 		return this._renderTarget.canvas;
 	}
