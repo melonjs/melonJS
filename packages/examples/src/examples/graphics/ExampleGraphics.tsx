@@ -18,7 +18,7 @@ const createGame = () => {
 	if (
 		!video.init(1024, 768, {
 			parent: "screen",
-			renderer: video.WEBGL,
+			renderer: video.CANVAS,
 			preferWebGL1: false,
 			blendMode: "normal",
 		})
@@ -42,6 +42,7 @@ const createGame = () => {
 		filledEllipse: Ellipse;
 		ellipseTime: number;
 		arcAngle: number;
+		starAngle: number;
 		transformMatrix: Matrix2d;
 		// constructor
 		constructor() {
@@ -122,6 +123,7 @@ const createGame = () => {
 			this.transformMatrix = new Matrix2d();
 			this.ellipseTime = 0;
 			this.arcAngle = 0;
+			this.starAngle = 0;
 
 			// a temporary color object
 			this.color = new Color();
@@ -141,6 +143,7 @@ const createGame = () => {
 			);
 			this.filledEllipse.transform(this.transformMatrix);
 			this.arcAngle += 0.01;
+			this.starAngle += dt / 1000;
 			return true;
 		}
 
@@ -170,13 +173,36 @@ const createGame = () => {
 			renderer.fill(this.polymask.getBounds());
 			renderer.clearMask();
 
+			// star bounding box with solid color
 			renderer.setColor("#55aa00");
-			renderer.fill(this.starMask);
 			renderer.setGlobalAlpha(0.5);
-			renderer.stroke(this.starMask);
 			renderer.fill(this.starMask.getBounds());
 			renderer.setGlobalAlpha(1.0);
 			renderer.stroke(this.starMask.getBounds());
+
+			// animated star with rotating gradient
+			const starBounds = this.starMask.getBounds();
+			// gradient coords are relative to polygon pos (fill translates by pos)
+			const scx = starBounds.x - this.starMask.pos.x + starBounds.width / 2;
+			const scy = starBounds.y - this.starMask.pos.y + starBounds.height / 2;
+			const sr = Math.max(starBounds.width, starBounds.height) / 2;
+			const cos = Math.cos(this.starAngle);
+			const sin = Math.sin(this.starAngle);
+			const starGrad = renderer.createLinearGradient(
+				scx + cos * sr,
+				scy + sin * sr,
+				scx - cos * sr,
+				scy - sin * sr,
+			);
+			starGrad.addColorStop(0, "#55aa00");
+			starGrad.addColorStop(0.5, "#88cc33");
+			starGrad.addColorStop(1, "#337700");
+			renderer.setColor(starGrad);
+			renderer.fill(this.starMask);
+			renderer.setGlobalAlpha(0.5);
+			renderer.setColor("#336600");
+			renderer.stroke(this.starMask);
+			renderer.setGlobalAlpha(1.0);
 
 			renderer.setGlobalAlpha(0.5);
 
