@@ -36,7 +36,7 @@ export function dashPath(pts, pattern) {
 
 		while (dist < segLen) {
 			const step = Math.min(remaining, segLen - dist);
-			if (drawing) {
+			if (drawing && step > 0) {
 				result.push(
 					{ x: x0 + nx * dist, y: y0 + ny * dist },
 					{ x: x0 + nx * (dist + step), y: y0 + ny * (dist + step) },

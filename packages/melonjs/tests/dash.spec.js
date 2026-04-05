@@ -94,5 +94,20 @@ describe("dash utilities", () => {
 			const result = dashPath([], [10, 5]);
 			expect(result.length).toEqual(0);
 		});
+
+		it("should not emit zero-length segments with zero dash values", () => {
+			const pts = [
+				{ x: 0, y: 0 },
+				{ x: 100, y: 0 },
+			];
+			const result = dashPath(pts, [0, 10, 5, 10]);
+			// verify no zero-length segments (start === end)
+			for (let i = 0; i < result.length - 1; i += 2) {
+				const dx = result[i + 1].x - result[i].x;
+				const dy = result[i + 1].y - result[i].y;
+				const len = Math.sqrt(dx * dx + dy * dy);
+				expect(len).toBeGreaterThan(0);
+			}
+		});
 	});
 });
