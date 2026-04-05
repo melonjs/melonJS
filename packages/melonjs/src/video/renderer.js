@@ -312,6 +312,16 @@ export default class Renderer {
 	 * renderer.setLineDash([]);
 	 */
 	setLineDash(segments) {
+		// skip allocation if the pattern hasn't changed
+		const current = this.renderState.lineDash;
+		if (
+			segments.length === current.length &&
+			segments.every((v, i) => {
+				return v === current[i];
+			})
+		) {
+			return;
+		}
 		this.renderState.lineDash = segments.filter((v) => {
 			return Number.isFinite(v) && v >= 0;
 		});

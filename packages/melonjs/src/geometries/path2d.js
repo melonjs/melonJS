@@ -561,7 +561,7 @@ class Path2D {
 		const polyLen =
 			Math.sqrt((cpX - lx) ** 2 + (cpY - ly) ** 2) +
 			Math.sqrt((x - cpX) ** 2 + (y - cpY) ** 2);
-		const resolution = Math.max(4, Math.round(polyLen / this.arcResolution));
+		const resolution = Math.max(4, Math.ceil(polyLen / this.arcResolution));
 
 		const t = 1 / resolution;
 		for (let i = 1; i <= resolution; i++) {
@@ -602,7 +602,7 @@ class Path2D {
 			Math.sqrt((cp1X - lx) ** 2 + (cp1Y - ly) ** 2) +
 			Math.sqrt((cp2X - cp1X) ** 2 + (cp2Y - cp1Y) ** 2) +
 			Math.sqrt((x - cp2X) ** 2 + (y - cp2Y) ** 2);
-		const resolution = Math.max(4, Math.round(polyLen / this.arcResolution));
+		const resolution = Math.max(4, Math.ceil(polyLen / this.arcResolution));
 
 		const t = 1 / resolution;
 		for (let i = 1; i <= resolution; i++) {

@@ -109,6 +109,22 @@ describe("dash utilities", () => {
 				expect(len).toBeGreaterThan(0);
 			}
 		});
+		it("should handle negative values in pattern defensively", () => {
+			const pts = [
+				{ x: 0, y: 0 },
+				{ x: 100, y: 0 },
+			];
+			// negative values should not cause backward movement
+			const result = dashPath(pts, [-5, 10, 5, 10]);
+			for (let i = 0; i < result.length - 1; i += 2) {
+				// all x coordinates should be within [0, 100]
+				expect(result[i].x).toBeGreaterThanOrEqual(0);
+				expect(result[i + 1].x).toBeLessThanOrEqual(100);
+				// end should be >= start (no backward segments)
+				expect(result[i + 1].x).toBeGreaterThanOrEqual(result[i].x);
+			}
+		});
+
 		it("should not infinite loop when skipping consecutive zero entries", () => {
 			const pts = [
 				{ x: 0, y: 0 },

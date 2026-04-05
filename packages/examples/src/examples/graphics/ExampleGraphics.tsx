@@ -36,7 +36,6 @@ const createGame = () => {
 		filledEllipse: Ellipse;
 		ellipseTime: number;
 		arcAngle: number;
-		starAngle: number;
 		transformMatrix: Matrix2d;
 		// constructor
 		constructor() {
@@ -131,10 +130,14 @@ const createGame = () => {
 			this.transformMatrix = new Matrix2d();
 			this.ellipseTime = 0;
 			this.arcAngle = 0;
-			this.starAngle = 0;
 
 			// a temporary color object
 			this.color = new Color();
+
+			// pre-allocate dash patterns to avoid per-frame array creation
+			this.dashZigzag = [10, 6];
+			this.dashCurve = [8, 4];
+			this.noDash = [] as number[];
 
 			this.anchorPoint.set(0, 0);
 		}
@@ -151,7 +154,6 @@ const createGame = () => {
 			);
 			this.filledEllipse.transform(this.transformMatrix);
 			this.arcAngle += 0.01;
-			this.starAngle += dt / 1000;
 			return true;
 		}
 
@@ -189,29 +191,16 @@ const createGame = () => {
 			renderer.setGlobalAlpha(1.0);
 			renderer.stroke(this.starMask.getBounds());
 
-			// animated star with rotating gradient
-			const starBounds = this.starMask.getBounds();
-			// gradient coords are relative to polygon pos (fill translates by pos)
-			const scx = starBounds.x - this.starMask.pos.x + starBounds.width / 2;
-			const scy = starBounds.y - this.starMask.pos.y + starBounds.height / 2;
-			const sr = Math.max(starBounds.width, starBounds.height) / 2;
-			const cos = Math.cos(this.starAngle);
-			const sin = Math.sin(this.starAngle);
-			const starGrad = renderer.createLinearGradient(
-				scx + cos * sr,
-				scy + sin * sr,
-				scx - cos * sr,
-				scy - sin * sr,
-			);
-			starGrad.addColorStop(0, "#55aa00");
-			starGrad.addColorStop(0.5, "#88cc33");
-			starGrad.addColorStop(1, "#337700");
-			renderer.setColor(starGrad);
-			renderer.fill(this.starMask);
+			renderer.setColor("#88cc44");
 			renderer.setGlobalAlpha(0.5);
-			renderer.setColor("#336600");
-			renderer.stroke(this.starMask);
+			renderer.fill(this.starMask.getBounds());
 			renderer.setGlobalAlpha(1.0);
+			renderer.stroke(this.starMask.getBounds());
+
+			renderer.setColor("#88cc44");
+			renderer.fill(this.starMask);
+			renderer.setColor("#55aa00");
+			renderer.stroke(this.starMask);
 
 			renderer.setGlobalAlpha(0.5);
 
@@ -243,7 +232,7 @@ const createGame = () => {
 			renderer.stroke();
 
 			// dashed zigzag line
-			renderer.setLineDash([10, 6]);
+			renderer.setLineDash(this.dashZigzag);
 			renderer.beginPath();
 			renderer.moveTo(540, 50);
 			renderer.lineTo(640, 75);
@@ -251,7 +240,7 @@ const createGame = () => {
 			renderer.lineTo(840, 75);
 			renderer.lineTo(940, 50);
 			renderer.stroke();
-			renderer.setLineDash([]);
+			renderer.setLineDash(this.noDash);
 
 			// animated cubic bezier curve
 			const wave = Math.sin(this.ellipseTime / 500) * 50;
@@ -262,13 +251,13 @@ const createGame = () => {
 			renderer.stroke();
 
 			// animated dashed quadratic bezier curve (inverted)
-			renderer.setLineDash([8, 4]);
+			renderer.setLineDash(this.dashCurve);
 			renderer.beginPath();
 			renderer.setColor("#f59e0b");
 			renderer.moveTo(540, 100);
 			renderer.quadraticCurveTo(740, 130 - wave, 940, 100);
 			renderer.stroke();
-			renderer.setLineDash([]);
+			renderer.setLineDash(this.noDash);
 
 			renderer.setColor("#ff69b4");
 			renderer.fill(this.roundRect1);

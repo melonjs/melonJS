@@ -5,6 +5,9 @@
  * @param {number[]} pattern - dash pattern [on, off, on, off, ...]
  * @returns {Array<{x: number, y: number}>} dashed segment pairs
  */
+// pre-allocated scratch array to avoid per-frame allocations
+const _dashPathResult = [];
+
 export function dashPath(pts, pattern) {
 	if (
 		!pattern.some((v) => {
@@ -14,10 +17,11 @@ export function dashPath(pts, pattern) {
 		return pts;
 	}
 
-	const result = [];
+	const result = _dashPathResult;
+	let resultLen = 0;
 	let patIdx = 0;
 	let drawing = true;
-	let remaining = pattern[0];
+	let remaining = Math.max(0, pattern[0]);
 
 	for (let i = 0; i < pts.length - 1; i += 2) {
 		const x0 = pts[i].x;
@@ -37,28 +41,34 @@ export function dashPath(pts, pattern) {
 		while (dist < segLen) {
 			const step = Math.min(remaining, segLen - dist);
 			if (drawing && step > 0) {
-				result.push(
-					{ x: x0 + nx * dist, y: y0 + ny * dist },
-					{ x: x0 + nx * (dist + step), y: y0 + ny * (dist + step) },
-				);
+				// grow array if needed, reuse existing objects
+				while (result.length <= resultLen + 1) {
+					result.push({ x: 0, y: 0 });
+				}
+				result[resultLen].x = x0 + nx * dist;
+				result[resultLen].y = y0 + ny * dist;
+				result[resultLen + 1].x = x0 + nx * (dist + step);
+				result[resultLen + 1].y = y0 + ny * (dist + step);
+				resultLen += 2;
 			}
 			dist += step;
 			remaining -= step;
 			if (remaining <= 0) {
 				drawing = !drawing;
 				patIdx = (patIdx + 1) % pattern.length;
-				remaining = pattern[patIdx];
+				remaining = Math.max(0, pattern[patIdx]);
 				// skip zero-length entries (bounded to avoid infinite loop)
 				let skipped = 0;
 				while (remaining <= 0 && skipped < pattern.length) {
 					drawing = !drawing;
 					patIdx = (patIdx + 1) % pattern.length;
-					remaining = pattern[patIdx];
+					remaining = Math.max(0, pattern[patIdx]);
 					skipped++;
 				}
 			}
 		}
 	}
+	result.length = resultLen;
 	return result;
 }
 
