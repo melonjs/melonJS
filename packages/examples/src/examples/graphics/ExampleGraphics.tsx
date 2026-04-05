@@ -1,31 +1,21 @@
 import {
+	Application,
 	type CanvasRenderer,
 	Color,
 	Ellipse,
-	game,
 	Matrix2d,
 	Polygon,
 	Renderable,
 	RoundRect,
 	Tween,
-	video,
 	type WebGLRenderer,
 } from "melonjs";
 import { createExampleComponent } from "../utils";
 
 const createGame = () => {
-	// Initialize the video.
-	if (
-		!video.init(1024, 768, {
-			parent: "screen",
-			renderer: video.CANVAS,
-			preferWebGL1: false,
-			blendMode: "normal",
-		})
-	) {
-		alert("Your browser does not support HTML5 canvas.");
-		return;
-	}
+	const _app = new Application(1024, 768, {
+		parent: "screen",
+	});
 
 	class Graphics extends Renderable {
 		starMask: Polygon;
@@ -34,6 +24,8 @@ const createGame = () => {
 		stripe1: Polygon;
 		stripe2: Polygon;
 		stripe3: Polygon;
+		stripe4: Polygon;
+		stripe5: Polygon;
 		roundRect1: RoundRect;
 		roundRect2: RoundRect;
 		rrect1Tween: Tween;
@@ -46,7 +38,7 @@ const createGame = () => {
 		transformMatrix: Matrix2d;
 		// constructor
 		constructor() {
-			super(0, 0, game.viewport.width, game.viewport.height);
+			super(0, 0, 1024, 768);
 
 			this.starMask = new Polygon(300, 70, [
 				// draw a star
@@ -76,22 +68,36 @@ const createGame = () => {
 
 			this.circleMask = new Ellipse(630 + 50, 560 + 50, 200, 200);
 
+			// Commodore rainbow stripes
+			const bw = 20;
 			this.stripe1 = new Polygon(0, 0, [
-				{ x: 0, y: 40 },
+				{ x: 0, y: bw },
 				{ x: 0, y: 0 },
-				{ x: 40, y: 0 },
+				{ x: bw, y: 0 },
 			]);
 			this.stripe2 = new Polygon(0, 0, [
-				{ x: 0, y: 40 },
-				{ x: 40, y: 0 },
-				{ x: 60, y: 0 },
-				{ x: 0, y: 60 },
+				{ x: 0, y: bw },
+				{ x: bw, y: 0 },
+				{ x: bw * 2, y: 0 },
+				{ x: 0, y: bw * 2 },
 			]);
 			this.stripe3 = new Polygon(0, 0, [
-				{ x: 0, y: 60 },
-				{ x: 60, y: 0 },
-				{ x: 80, y: 0 },
-				{ x: 0, y: 80 },
+				{ x: 0, y: bw * 2 },
+				{ x: bw * 2, y: 0 },
+				{ x: bw * 3, y: 0 },
+				{ x: 0, y: bw * 3 },
+			]);
+			this.stripe4 = new Polygon(0, 0, [
+				{ x: 0, y: bw * 3 },
+				{ x: bw * 3, y: 0 },
+				{ x: bw * 4, y: 0 },
+				{ x: 0, y: bw * 4 },
+			]);
+			this.stripe5 = new Polygon(0, 0, [
+				{ x: 0, y: bw * 4 },
+				{ x: bw * 4, y: 0 },
+				{ x: bw * 5, y: 0 },
+				{ x: 0, y: bw * 5 },
 			]);
 
 			this.roundRect1 = new RoundRect(100, 530, 400, 180, 4);
@@ -155,16 +161,17 @@ const createGame = () => {
 
 			renderer.lineWidth = 3;
 
-			// draw 3 stripes
-			this.color.parseHex("#55aa00");
-			renderer.setColor(this.color);
+			// draw Commodore rainbow stripes (red, orange, yellow, green, blue)
+			renderer.setColor("#e02020");
 			renderer.fill(this.stripe1);
-			renderer.setColor("#ffcc00");
-			// lerp from the the starting color and the current renderer one
-			renderer.setColor(this.color.lerp(renderer.getColor(), 0.5));
+			renderer.setColor("#e07020");
 			renderer.fill(this.stripe2);
-			renderer.setColor("#ffcc00");
+			renderer.setColor("#e0c020");
 			renderer.fill(this.stripe3);
+			renderer.setColor("#40a040");
+			renderer.fill(this.stripe4);
+			renderer.setColor("#40a0e0");
+			renderer.fill(this.stripe5);
 
 			renderer.setColor("#ffcc00");
 			renderer.setGlobalAlpha(0.375);
@@ -244,19 +251,20 @@ const createGame = () => {
 			renderer.stroke();
 			renderer.setLineDash([]);
 
-			// cubic bezier curve
+			// animated cubic bezier curve
+			const wave = Math.sin(this.ellipseTime / 500) * 50;
 			renderer.beginPath();
 			renderer.setColor("#10b981");
 			renderer.moveTo(540, 100);
-			renderer.bezierCurveTo(640, 30, 840, 170, 940, 100);
+			renderer.bezierCurveTo(640, 30 - wave, 840, 170 + wave, 940, 100);
 			renderer.stroke();
 
-			// dashed quadratic bezier curve
+			// animated dashed quadratic bezier curve (inverted)
 			renderer.setLineDash([8, 4]);
 			renderer.beginPath();
 			renderer.setColor("#f59e0b");
 			renderer.moveTo(540, 100);
-			renderer.quadraticCurveTo(740, 160, 940, 100);
+			renderer.quadraticCurveTo(740, 130 - wave, 940, 100);
 			renderer.stroke();
 			renderer.setLineDash([]);
 
@@ -275,6 +283,6 @@ const createGame = () => {
 		}
 	}
 
-	game.world.addChild(new Graphics());
+	_app.world.addChild(new Graphics());
 };
 export const ExampleGraphics = createExampleComponent(createGame);
