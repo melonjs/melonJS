@@ -81,7 +81,7 @@ describe("dash utilities", () => {
 			expect(multiSeg.length).toEqual(singleSeg.length);
 		});
 
-		it("should return copy for all-zero pattern", () => {
+		it("should return original points for all-zero pattern", () => {
 			const pts = [
 				{ x: 0, y: 0 },
 				{ x: 100, y: 0 },

@@ -3,7 +3,7 @@
  * Carries the dash state across segment boundaries for continuous dashing.
  * @param {Array<{x: number, y: number}>} pts - pairs of start/end points
  * @param {number[]} pattern - dash pattern [on, off, on, off, ...]
- * @returns {Array<{x: number, y: number}>} dashed segment pairs
+ * @returns {Array<{x: number, y: number}>} dashed segment pairs (internal scratch array — consume immediately, do not store)
  */
 // pre-allocated scratch array to avoid per-frame allocations
 const _dashPathResult = [];
