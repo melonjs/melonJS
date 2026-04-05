@@ -11,9 +11,10 @@ import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
  * @ignore
  */
 let sharedRenderTarget = null;
-let sharedLastGradient = null;
+let sharedLastId = -1;
 let sharedLastX = NaN;
 let sharedLastY = NaN;
+let nextGradientId = 0;
 
 /**
  * A Gradient object representing a linear or radial gradient fill.
@@ -30,6 +31,9 @@ export class Gradient {
 		 * gradient type
 		 * @type {"linear"|"radial"}
 		 */
+		/** @ignore */
+		this._id = nextGradientId++;
+
 		this.type = type;
 
 		/**
@@ -150,7 +154,7 @@ export class Gradient {
 		// skip if this gradient already rendered to the shared target at these coords
 		if (
 			sharedRenderTarget &&
-			sharedLastGradient === this &&
+			sharedLastId === this._id &&
 			!this._dirty &&
 			sharedLastX === x &&
 			sharedLastY === y &&
@@ -206,7 +210,7 @@ export class Gradient {
 		ctx.fillRect(0, 0, tw, th);
 
 		this._dirty = false;
-		sharedLastGradient = this;
+		sharedLastId = this._id;
 		sharedLastX = x;
 		sharedLastY = y;
 		this._renderTarget.invalidate(renderer);
