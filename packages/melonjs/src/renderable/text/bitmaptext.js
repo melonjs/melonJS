@@ -213,18 +213,17 @@ export default class BitmapText extends Renderable {
 					break;
 			}
 
-			// baseline shift uses actual glyph extents (matching draw code)
+			// baseline shift based on total text height (matching draw code)
 			const gy = this.metrics.glyphYOffset || 0;
-			const gmb = this.metrics.glyphMaxBottom || this.metrics.lineHeight();
 			let ay = 0;
 			switch (this.textBaseline) {
 				case "middle":
-					ay = (gy + gmb) * 0.5;
+					ay = gy + h * 0.5;
 					break;
 				case "ideographic":
 				case "alphabetic":
 				case "bottom":
-					ay = gmb;
+					ay = gy + h;
 					break;
 			}
 
@@ -311,7 +310,25 @@ export default class BitmapText extends Renderable {
 
 		const lX = x;
 		const stringHeight = this.metrics.lineHeight();
+		const gy = this.metrics.glyphYOffset || 0;
+		const h = this.metrics.height;
 		let maxWidth = 0;
+
+		// apply baseline shift once for the entire text block
+		switch (this.textBaseline) {
+			case "middle":
+				y -= gy + h * 0.5;
+				break;
+
+			case "ideographic":
+			case "alphabetic":
+			case "bottom":
+				y -= gy + h;
+				break;
+
+			default:
+				break;
+		}
 
 		for (let i = 0; i < this._text.length; i++) {
 			x = lX;
@@ -325,24 +342,6 @@ export default class BitmapText extends Renderable {
 
 				case "center":
 					x -= stringWidth * 0.5;
-					break;
-
-				default:
-					break;
-			}
-
-			// adjust y pos based on baseline using actual glyph extents
-			const gy = this.metrics.glyphYOffset || 0;
-			const gmb = this.metrics.glyphMaxBottom || stringHeight;
-			switch (this.textBaseline) {
-				case "middle":
-					y -= (gy + gmb) * 0.5;
-					break;
-
-				case "ideographic":
-				case "alphabetic":
-				case "bottom":
-					y -= gmb;
 					break;
 
 				default:

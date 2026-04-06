@@ -740,6 +740,50 @@ describe("Font : BitmapText bounds", () => {
 		});
 	});
 
+	describe("BitmapText multiline baseline bounds", () => {
+		it("bottom baseline multiline should end at pos.y", () => {
+			const b = new BitmapText(100, 200, {
+				font: "xolo12",
+				textBaseline: "bottom",
+				text: "LINE1\nLINE2\nLINE3",
+			});
+			game.world.addChild(b);
+			const bounds = b.getBounds();
+			expect(bounds.bottom).toBeCloseTo(200, 0);
+			game.world.removeChildNow(b);
+		});
+
+		it("middle baseline multiline should center on pos.y", () => {
+			const b = new BitmapText(100, 200, {
+				font: "xolo12",
+				textBaseline: "middle",
+				text: "LINE1\nLINE2\nLINE3",
+			});
+			game.world.addChild(b);
+			const bounds = b.getBounds();
+			const cy = bounds.top + bounds.height / 2;
+			expect(cy).toBeCloseTo(200, 0);
+			game.world.removeChildNow(b);
+		});
+
+		it("top baseline multiline height should grow with lines", () => {
+			const b1 = new BitmapText(0, 0, {
+				font: "xolo12",
+				text: "A",
+			});
+			const b3 = new BitmapText(0, 0, {
+				font: "xolo12",
+				text: "A\nB\nC",
+			});
+			game.world.addChild(b1);
+			game.world.addChild(b3);
+			// 3 lines should be roughly 3x the height of 1 line
+			expect(b3.getBounds().height).toBeGreaterThan(b1.getBounds().height * 2);
+			game.world.removeChildNow(b1);
+			game.world.removeChildNow(b3);
+		});
+	});
+
 	describe("BitmapText bounds with scale", () => {
 		it("scaled bitmap text bounds should reflect scaled size", () => {
 			const b1 = new BitmapText(0, 0, {
