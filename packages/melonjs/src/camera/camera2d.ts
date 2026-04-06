@@ -779,8 +779,13 @@ export default class Camera2d extends Renderable {
 			// floating objects use screen coordinates, check against the
 			// camera viewport area (0, 0, camera.width, camera.height)
 			const objBounds = obj.getBounds();
-			if (!objBounds.isFinite()) {
-				// containers with no explicit size (Infinity bounds) are always visible
+			if (
+				objBounds.left === Infinity &&
+				objBounds.top === Infinity &&
+				objBounds.right === -Infinity &&
+				objBounds.bottom === -Infinity
+			) {
+				// containers with no explicit size (cleared Infinity bounds) are always visible
 				return true;
 			}
 			return (
