@@ -167,7 +167,7 @@ class UIContainer extends Container {
 		this.name = "HUD";
 
 		// add our child score object at position
-		this.addChild(new ScoreItem(-10, -10));
+		this.addChild(new ScoreItem(-10, -30));
 
 		// add our audio control object
 		this.addChild(new AudioControl(36, 56));

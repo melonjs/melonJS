@@ -229,6 +229,29 @@ describe("Camera2d", () => {
 		});
 	});
 
+	describe("isVisible() with cleared/infinite bounds", () => {
+		it("should treat floating object with cleared bounds as visible", () => {
+			const { camera } = setup();
+			camera.reset(0, 0);
+			// simulate a floating container with Infinity dimensions (cleared bounds)
+			const container = new Renderable(0, 0, Infinity, Infinity);
+			container.floating = true;
+			// clear bounds to the sentinel state (min=Infinity, max=-Infinity)
+			container.getBounds().clear();
+			expect(camera.isVisible(container)).toEqual(true);
+		});
+
+		it("should treat non-floating object with cleared bounds as not visible", () => {
+			const { camera } = setup();
+			camera.reset(0, 0);
+			camera.setBounds(0, 0, 2000, 2000);
+			const obj = new Renderable(0, 0, 10, 10);
+			obj.floating = false;
+			obj.getBounds().clear();
+			expect(camera.isVisible(obj)).toEqual(false);
+		});
+	});
+
 	describe("reset()", () => {
 		it("should reset the camera position to 0,0 by default", () => {
 			const { camera } = setup();
