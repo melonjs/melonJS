@@ -31,6 +31,13 @@
 - Path2D: fix `quadraticCurveTo()` and `bezierCurveTo()` segment count — was using `arcResolution` directly (2 segments), now computes adaptive segment count based on control polygon length for smooth curves.
 - Text: fix textBaseline y offset for multiline text — "bottom"/"middle" used single line height instead of total text height, causing misaligned bounding boxes
 - BitmapText: fix bounds offset direction for textAlign/textBaseline — bounds were shifted in the wrong direction for "right"/"center"/"bottom"/"middle"
+- BitmapText: fix bounding box width — last glyph now uses `max(xadvance, xoffset + width)` to capture full visual extent
+- BitmapText: fix bounding box height — uses actual glyph extents (`maxBottom - minTop`) instead of `capHeight` which was too short for glyphs with descenders
+- BitmapText: fix baseline positioning — "middle"/"bottom"/"alphabetic"/"ideographic" shifts now use real glyph metrics and total text height, correctly centering and aligning text on baseline reference points
+- BitmapText: fix bounding box y offset — box starts at first visible glyph pixel (`glyphMinTop * scale`) instead of draw origin
+- BitmapText: optimize bounds calculation — precompute `glyphMinTop`/`glyphMaxBottom` once in font parsing; cache `measureText` results in `setText`/`resize` instead of recomputing on every `updateBounds`
+- Camera2d: fix floating containers with Infinity bounds not rendering — containers with default `Infinity` dimensions had cleared bounds, causing `isVisible()` to return false and preventing update/draw of children (e.g., HUD elements)
+- Sprite: fix `flicker()` not working with multi-camera setups — visibility was toggled per draw call (once per camera), so with 2 cameras the toggle canceled out. Now uses time-based flickering (~15 flashes/sec) that is frame-rate independent and multi-camera safe
 - Application: `Object.assign(defaultApplicationSettings, options)` mutated the shared defaults object in both `Application.init()` and `video.init()` — creating multiple Application instances would corrupt settings. Fixed with object spread.
 - Text/Light2d: fix invalid `pool.push` on CanvasRenderTarget instances that were never pool-registered (would throw on destroy)
 - CanvasRenderTarget: `destroy(renderer)` now properly cleans up WebGL GPU textures and cache entries (previously leaked in Light2d)

@@ -141,7 +141,7 @@ export default class Sprite extends Renderable {
 			isFlickering: false,
 			duration: 0,
 			callback: null,
-			state: false,
+			elapsed: 0,
 		};
 
 		// set the proper image/texture to use
@@ -329,8 +329,10 @@ export default class Sprite extends Renderable {
 		if (this._flicker.duration <= 0) {
 			this._flicker.isFlickering = false;
 			this._flicker.callback = undefined;
+			this._flicker.elapsed = 0;
 		} else if (!this._flicker.isFlickering) {
 			this._flicker.callback = callback;
+			this._flicker.elapsed = 0;
 			this._flicker.isFlickering = true;
 		}
 		return this;
@@ -677,8 +679,8 @@ export default class Sprite extends Renderable {
 
 		//update the "flickering" state if necessary
 		if (this._flicker.isFlickering) {
-			this._flicker.duration -= dt;
-			if (this._flicker.duration < 0) {
+			this._flicker.elapsed += dt;
+			if (this._flicker.elapsed >= this._flicker.duration) {
 				if (typeof this._flicker.callback === "function") {
 					this._flicker.callback();
 				}
@@ -696,12 +698,12 @@ export default class Sprite extends Renderable {
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
 	 */
 	draw(renderer) {
-		// do nothing if we are flickering
-		if (this._flicker.isFlickering) {
-			this._flicker.state = !this._flicker.state;
-			if (!this._flicker.state) {
-				return;
-			}
+		// do nothing if we are flickering (time-based, ~15 flashes/sec)
+		if (
+			this._flicker.isFlickering &&
+			Math.floor(this._flicker.elapsed / 33) % 2 === 0
+		) {
+			return;
 		}
 
 		// the frame to draw
