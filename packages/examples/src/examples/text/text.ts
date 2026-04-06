@@ -38,7 +38,7 @@ export class TextScreen extends Stage {
 		const w = app.viewport.width;
 
 		app.world.addChild(new ColorLayer("background", "#202020"), 0);
-		app.world.addChild(new BaselineOverlay(w, app.viewport.height), 10);
+		app.world.addChild(new BaselineOverlay(w, app.viewport.height), 2);
 
 		// ---- Font size test (left side) ----
 		let yPos = 0;
@@ -113,7 +113,7 @@ export class TextScreen extends Stage {
 		app.world.addChild(
 			new Text(90, 210, {
 				font: "Arial",
-				size: 8,
+				size: 14,
 				fillStyle: "white",
 				textAlign: "center",
 				textBaseline: "top",
@@ -125,9 +125,9 @@ export class TextScreen extends Stage {
 
 		// ---- Multiline text (right aligned) ----
 		app.world.addChild(
-			new Text(200, 300, {
+			new Text(165, 290, {
 				font: "Arial",
-				size: 8,
+				size: 14,
 				fillStyle: "white",
 				textAlign: "right",
 				textBaseline: "top",

@@ -181,6 +181,8 @@ export default class BitmapText extends Renderable {
 			this._text = this.metrics.wordWrap(this._text, this.wordWrapWidth);
 		}
 
+		// measure text dimensions (cached for updateBounds)
+		this.metrics.measureText(this._text);
 		this.updateBounds();
 
 		return this;
@@ -197,54 +199,44 @@ export default class BitmapText extends Renderable {
 		bounds.clear();
 
 		if (typeof this.metrics !== "undefined") {
-			let ax;
-			let ay;
+			const w = this.metrics.width;
+			const h = this.metrics.height;
 
-			bounds.addBounds(this.metrics.measureText(this._text));
-
+			// compute x offset based on textAlign
+			let ax = 0;
 			switch (this.textAlign) {
 				case "right":
-					ax = this.metrics.width * 1.0;
+					ax = w;
 					break;
-
 				case "center":
-					ax = this.metrics.width * 0.5;
-					break;
-
-				default:
-					ax = 0; //this.metrics.width * 0.0;
+					ax = w / 2;
 					break;
 			}
 
-			// adjust y pos based on alignment value
+			// baseline shift uses actual glyph extents (matching draw code)
+			const gy = this.metrics.glyphYOffset || 0;
+			const gmb = this.metrics.glyphMaxBottom || this.metrics.lineHeight();
+			let ay = 0;
 			switch (this.textBaseline) {
 				case "middle":
-					ay = this.metrics.height * 0.5;
+					ay = (gy + gmb) * 0.5;
 					break;
-
 				case "ideographic":
 				case "alphabetic":
 				case "bottom":
-					ay = this.metrics.height * 1.0;
-					break;
-
-				default:
-					ay = 0; //this.metrics.height * 0.0;
+					ay = gmb;
 					break;
 			}
 
-			// translate the bounds accordingly
-			bounds.translate(ax, ay);
+			bounds.addFrame(-ax, -ay + gy, w - ax, -ay + gy + h);
 		}
 
 		if (absolute === true) {
-			if (
-				typeof this.ancestor !== "undefined" &&
-				typeof this.ancestor.getAbsolutePosition === "function" &&
-				this.floating !== true
-			) {
-				bounds.translate(this.ancestor.getAbsolutePosition());
-			}
+			const absPos = this.getAbsolutePosition();
+			bounds.centerOn(
+				absPos.x + bounds.x + bounds.width / 2,
+				absPos.y + bounds.y + bounds.height / 2,
+			);
 		}
 
 		return bounds;
@@ -276,6 +268,8 @@ export default class BitmapText extends Renderable {
 	resize(scale) {
 		this.fontScale.set(scale, scale);
 
+		// remeasure with new scale (cached for updateBounds)
+		this.metrics.measureText(this._text);
 		this.updateBounds();
 
 		this.isDirty = true;
@@ -337,16 +331,18 @@ export default class BitmapText extends Renderable {
 					break;
 			}
 
-			// adjust y pos based on alignment value
+			// adjust y pos based on baseline using actual glyph extents
+			const gy = this.metrics.glyphYOffset || 0;
+			const gmb = this.metrics.glyphMaxBottom || stringHeight;
 			switch (this.textBaseline) {
 				case "middle":
-					y -= stringHeight * 0.5;
+					y -= (gy + gmb) * 0.5;
 					break;
 
 				case "ideographic":
 				case "alphabetic":
 				case "bottom":
-					y -= stringHeight;
+					y -= gmb;
 					break;
 
 				default:

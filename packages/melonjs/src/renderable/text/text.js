@@ -318,6 +318,57 @@ export default class Text extends Renderable {
 	}
 
 	/**
+	 * update the bounding box for this Text, accounting for textAlign and textBaseline.
+	 * @param {boolean} [absolute=true] - update in absolute coordinates
+	 * @returns {Bounds} this renderable's bounding box
+	 */
+	updateBounds(absolute = true) {
+		if (typeof this.metrics !== "undefined" && this._text.length > 0) {
+			const bounds = this.getBounds();
+			bounds.clear();
+
+			const w = this.metrics.width;
+			const h = this.metrics.height;
+
+			// compute x offset based on textAlign
+			let ax = 0;
+			switch (this.textAlign) {
+				case "right":
+					ax = w;
+					break;
+				case "center":
+					ax = w / 2;
+					break;
+			}
+
+			// compute y offset based on textBaseline
+			let ay = 0;
+			switch (this.textBaseline) {
+				case "middle":
+					ay = h / 2;
+					break;
+				case "ideographic":
+				case "alphabetic":
+				case "bottom":
+					ay = h;
+					break;
+			}
+
+			bounds.addFrame(-ax, -ay, w - ax, h - ay);
+
+			if (absolute === true) {
+				const absPos = this.getAbsolutePosition();
+				bounds.centerOn(
+					absPos.x + bounds.x + bounds.width / 2,
+					absPos.y + bounds.y + bounds.height / 2,
+				);
+			}
+			return bounds;
+		}
+		return super.updateBounds(absolute);
+	}
+
+	/**
 	 * measure the given text size in pixels
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - reference to the active renderer
 	 * @param {string} [text] - the text to be measured

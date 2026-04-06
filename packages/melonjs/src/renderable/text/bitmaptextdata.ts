@@ -91,6 +91,8 @@ export default class BitmapTextData {
 	lineHeight: number = 0;
 	capHeight: number = 1;
 	descent: number = 0;
+	glyphMinTop: number = 0;
+	glyphMaxBottom: number = 0;
 	glyphs: { [key: number]: Glyph } = {};
 
 	constructor(data: string) {
@@ -119,6 +121,8 @@ export default class BitmapTextData {
 
 		this.capHeight = 1;
 		this.descent = 0;
+		this.glyphMinTop = Infinity;
+		this.glyphMaxBottom = 0;
 		this.glyphs = {};
 
 		const baseLine = parseFloat(getValueFromPair(lines[1], /base=\d+/g));
@@ -156,10 +160,19 @@ export default class BitmapTextData {
 
 				if (glyph.width > 0 && glyph.height > 0) {
 					this.descent = Math.min(baseLine + glyph.yoffset, this.descent);
+					this.glyphMinTop = Math.min(this.glyphMinTop, glyph.yoffset);
+					this.glyphMaxBottom = Math.max(
+						this.glyphMaxBottom,
+						glyph.yoffset + glyph.height,
+					);
 				}
 
 				this.glyphs[ch] = glyph;
 			}
+		}
+
+		if (this.glyphMinTop === Infinity) {
+			this.glyphMinTop = 0;
 		}
 
 		this.descent += this.padBottom;
