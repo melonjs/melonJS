@@ -181,6 +181,8 @@ export default class BitmapText extends Renderable {
 			this._text = this.metrics.wordWrap(this._text, this.wordWrapWidth);
 		}
 
+		// measure text dimensions (cached for updateBounds)
+		this.metrics.measureText(this._text);
 		this.updateBounds();
 
 		return this;
@@ -197,54 +199,43 @@ export default class BitmapText extends Renderable {
 		bounds.clear();
 
 		if (typeof this.metrics !== "undefined") {
-			let ax;
-			let ay;
+			const w = this.metrics.width;
+			const h = this.metrics.height;
 
-			bounds.addBounds(this.metrics.measureText(this._text));
-
+			// compute x offset based on textAlign
+			let ax = 0;
 			switch (this.textAlign) {
 				case "right":
-					ax = this.metrics.width * 1.0;
+					ax = w;
 					break;
-
 				case "center":
-					ax = this.metrics.width * 0.5;
-					break;
-
-				default:
-					ax = 0; //this.metrics.width * 0.0;
+					ax = w / 2;
 					break;
 			}
 
-			// adjust y pos based on alignment value
+			// baseline shift based on total text height (matching draw code)
+			const gy = this.metrics.glyphYOffset || 0;
+			let ay = 0;
 			switch (this.textBaseline) {
 				case "middle":
-					ay = this.metrics.height * 0.5;
+					ay = gy + h * 0.5;
 					break;
-
 				case "ideographic":
 				case "alphabetic":
 				case "bottom":
-					ay = this.metrics.height * 1.0;
-					break;
-
-				default:
-					ay = 0; //this.metrics.height * 0.0;
+					ay = gy + h;
 					break;
 			}
 
-			// translate the bounds accordingly
-			bounds.translate(ax, ay);
+			bounds.addFrame(-ax, -ay + gy, w - ax, -ay + gy + h);
 		}
 
 		if (absolute === true) {
-			if (
-				typeof this.ancestor !== "undefined" &&
-				typeof this.ancestor.getAbsolutePosition === "function" &&
-				this.floating !== true
-			) {
-				bounds.translate(this.ancestor.getAbsolutePosition());
-			}
+			const absPos = this.getAbsolutePosition();
+			bounds.centerOn(
+				absPos.x + bounds.x + bounds.width / 2,
+				absPos.y + bounds.y + bounds.height / 2,
+			);
 		}
 
 		return bounds;
@@ -276,6 +267,8 @@ export default class BitmapText extends Renderable {
 	resize(scale) {
 		this.fontScale.set(scale, scale);
 
+		// remeasure with new scale (cached for updateBounds)
+		this.metrics.measureText(this._text);
 		this.updateBounds();
 
 		this.isDirty = true;
@@ -317,7 +310,25 @@ export default class BitmapText extends Renderable {
 
 		const lX = x;
 		const stringHeight = this.metrics.lineHeight();
+		const gy = this.metrics.glyphYOffset || 0;
+		const h = this.metrics.height;
 		let maxWidth = 0;
+
+		// apply baseline shift once for the entire text block
+		switch (this.textBaseline) {
+			case "middle":
+				y -= gy + h * 0.5;
+				break;
+
+			case "ideographic":
+			case "alphabetic":
+			case "bottom":
+				y -= gy + h;
+				break;
+
+			default:
+				break;
+		}
 
 		for (let i = 0; i < this._text.length; i++) {
 			x = lX;
@@ -331,22 +342,6 @@ export default class BitmapText extends Renderable {
 
 				case "center":
 					x -= stringWidth * 0.5;
-					break;
-
-				default:
-					break;
-			}
-
-			// adjust y pos based on alignment value
-			switch (this.textBaseline) {
-				case "middle":
-					y -= stringHeight * 0.5;
-					break;
-
-				case "ideographic":
-				case "alphabetic":
-				case "bottom":
-					y -= stringHeight;
 					break;
 
 				default:

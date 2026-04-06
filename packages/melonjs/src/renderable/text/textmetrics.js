@@ -61,7 +61,12 @@ class TextMetrics extends Bounds {
 				if (typeof glyph !== "undefined") {
 					const kerning =
 						lastGlyph && lastGlyph.kerning ? lastGlyph.getKerning(ch) : 0;
-					width += (glyph.xadvance + kerning) * this.ancestor.fontScale.x;
+					// for the last glyph, use the visual extent if it exceeds xadvance
+					const advance =
+						i < charactersLength - 1
+							? glyph.xadvance
+							: Math.max(glyph.xadvance, glyph.xoffset + glyph.width);
+					width += (advance + kerning) * this.ancestor.fontScale.x;
 					lastGlyph = glyph;
 				}
 			}
@@ -95,6 +100,8 @@ class TextMetrics extends Bounds {
 		// compute the bounding box size
 		this.width = this.height = 0;
 
+		const isBitmapText = !(this.ancestor instanceof Text);
+
 		for (let i = 0; i < strings.length; i++) {
 			this.width = Math.max(
 				this.lineWidth(strings[i].trimEnd(), context),
@@ -102,6 +109,23 @@ class TextMetrics extends Bounds {
 			);
 			this.height += this.lineHeight();
 		}
+
+		// glyph vertical extents (BitmapText only) — use font-wide
+		// precomputed values from BitmapTextData instead of per-line iteration
+		this.glyphYOffset = 0;
+		this.glyphMaxBottom = 0;
+
+		if (isBitmapText && strings.length > 0) {
+			const fontData = this.ancestor.fontData;
+			const scaleY = this.ancestor.fontScale.y;
+			const visualLineH =
+				(fontData.glyphMaxBottom - fontData.glyphMinTop) * scaleY;
+			// replace the last capHeight-based line with the actual visual height
+			this.height += visualLineH - this.lineHeight();
+			this.glyphYOffset = fontData.glyphMinTop * scaleY;
+			this.glyphMaxBottom = fontData.glyphMaxBottom * scaleY;
+		}
+
 		this.width = Math.ceil(this.width);
 		this.height = Math.ceil(this.height);
 

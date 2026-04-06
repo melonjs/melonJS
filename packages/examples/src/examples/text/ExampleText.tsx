@@ -1,22 +1,21 @@
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
-import { game, loader, plugin, video } from "melonjs";
+import { Application, loader, plugin, state, video } from "melonjs";
 import { createExampleComponent } from "../utils.tsx";
-import { TextTest } from "./text.ts";
+import { TextScreen } from "./text.ts";
 
 const base = `${import.meta.env.BASE_URL}assets/text/`;
 
 const createGame = () => {
-	video.init(640, 480, {
+	const _app = new Application(640, 480, {
 		parent: "screen",
 		scale: "auto",
 		renderer: video.AUTO,
-		preferWebGL1: false,
 	});
 
 	// register the debug plugin
 	plugin.register(DebugPanelPlugin, "debugPanel");
 
-	// set all ressources to be loaded
+	// set all resources to be loaded
 	loader.preload(
 		[
 			{ name: "xolo12", type: "image", src: `${base}xolo12.png` },
@@ -25,8 +24,8 @@ const createGame = () => {
 			{ name: "arialfancy", type: "binary", src: `${base}arialfancy.fnt` },
 		],
 		() => {
-			game.world.reset();
-			game.world.addChild(new TextTest(), 1);
+			state.set(state.PLAY, new TextScreen());
+			state.change(state.PLAY);
 		},
 	);
 };
