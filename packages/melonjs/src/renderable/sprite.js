@@ -6,6 +6,9 @@ import { on } from "../system/event.ts";
 import { TextureAtlas } from "./../video/texture/atlas.js";
 import Renderable from "./renderable.js";
 
+// flicker interval in ms (~15 flashes per second)
+const FLICKER_INTERVAL_MS = 33;
+
 /**
  * additional import for TypeScript
  * @import {Vector2d} from "../math/vector2d.js";
@@ -330,7 +333,7 @@ export default class Sprite extends Renderable {
 			this._flicker.isFlickering = false;
 			this._flicker.callback = undefined;
 			this._flicker.elapsed = 0;
-		} else if (!this._flicker.isFlickering) {
+		} else {
 			this._flicker.callback = callback;
 			this._flicker.elapsed = 0;
 			this._flicker.isFlickering = true;
@@ -698,10 +701,10 @@ export default class Sprite extends Renderable {
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
 	 */
 	draw(renderer) {
-		// do nothing if we are flickering (time-based, ~15 flashes/sec)
+		// do nothing if we are flickering (time-based, frame-rate independent)
 		if (
 			this._flicker.isFlickering &&
-			Math.floor(this._flicker.elapsed / 33) % 2 === 0
+			Math.floor(this._flicker.elapsed / FLICKER_INTERVAL_MS) % 2 !== 0
 		) {
 			return;
 		}
