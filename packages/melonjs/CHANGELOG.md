@@ -1,6 +1,6 @@
 # Changelog
 
-## [18.3.0] (melonJS 2)
+## [18.3.0] (melonJS 2) - _2026-04-07_
 
 ### Added
 - Renderer: `bezierCurveTo()`, `quadraticCurveTo()`, and `arcTo()` path methods — draw cubic and quadratic Bezier curves, matching the Canvas 2D API. Canvas renderer uses native context methods, WebGL renderer tessellates via Path2D.
@@ -63,12 +63,12 @@
 - Fix missing README on the npm release (copy root README during `pnpm dist`)
 - Add VertexArrayBuffer unit tests for `push()` and `pushFloats()`
 
-## [18.2.1] (melonJS 2)
+## [18.2.1] (melonJS 2) - _2026-03-29_
 
 ### Fixed
 - Loader: fix race condition where the default loading screen logo sprite could persist after preloading completes, caused by the async logo image loading finishing after the state transition or `game.world.reset()`
 
-## [18.2.0] (melonJS 2)
+## [18.2.0] (melonJS 2) - _2026-03-29_
 
 ### Added
 - Camera2d: added proper multi-camera support
