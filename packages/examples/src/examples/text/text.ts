@@ -1,104 +1,82 @@
 import {
+	type Application,
 	BitmapText,
-	type Color,
-	getPool,
+	ColorLayer,
 	Renderable,
+	Stage,
 	Text,
-	Tween,
-	video,
 } from "melonjs";
 
-export class TextTest extends Renderable {
-	color: Color;
-
-	constructor() {
-		super(0, 0, 640, 480);
-
+/**
+ * Overlay that draws the two red baseline reference lines.
+ */
+class BaselineOverlay extends Renderable {
+	constructor(w: number, h: number) {
+		super(0, 0, w, h);
 		this.anchorPoint.set(0, 0);
-
-		// a default white color object
-		this.color = getPool("color").get(255, 255, 255);
-
-		// define a tween to cycle the font color
-		this.tween = new Tween(this.color)
-			.to(
-				{
-					g: 0,
-					b: 0,
-				},
-				2000,
-			)
-			.repeat(Number.POSITIVE_INFINITY)
-			.yoyo(true)
-			.start();
-
-		// text font
-		this.font = new Text(0, 0, {
-			font: "Arial",
-			size: 8,
-			fillStyle: "white",
-		});
-
-		// bitmap font
-		this.bFont = new BitmapText(0, 0, { font: "xolo12", size: 4.0 });
-		this.fancyBFont = new BitmapText(0, 0, { font: "arialfancy" });
+		this.alwaysUpdate = true;
 	}
 
-	// draw function
-	draw(renderer) {
-		let text = "";
-		let xPos = 0;
+	override update() {
+		return true;
+	}
+
+	override draw(renderer) {
+		renderer.setColor("red");
+		renderer.lineWidth = 3;
+		renderer.strokeLine(0, 200.5, this.width, 200.5);
+		renderer.strokeLine(0, 375.5, this.width, 375.5);
+		renderer.lineWidth = 1;
+	}
+}
+
+/**
+ * Text example Stage.
+ */
+export class TextScreen extends Stage {
+	onResetEvent(app: Application) {
+		const w = app.viewport.width;
+
+		app.world.addChild(new ColorLayer("background", "#202020"), 0);
+		app.world.addChild(new BaselineOverlay(w, app.viewport.height), 10);
+
+		// ---- Font size test (left side) ----
 		let yPos = 0;
-
-		// black background
-		renderer.clearColor("#202020");
-
-		// font size test
-		this.font.textAlign = "left";
-		this.font.strokeStyle.parseCSS("red");
-		this.font.lineWidth = 1;
-		this.font.setOpacity(0.5);
 		for (let i = 8; i < 56; i += 8) {
-			this.font.setFont("Arial", i);
-			renderer.setTint(this.color);
-			this.font.draw(renderer, `Arial Text ${i}px !`, 5, yPos);
-			yPos += this.font.getBounds().height;
+			const t = new Text(5, yPos, {
+				font: "Arial",
+				size: i,
+				fillStyle: "white",
+				strokeStyle: "red",
+				lineWidth: 1,
+				textBaseline: "top",
+				textAlign: "left",
+				text: `Arial Text ${i}px !`,
+			});
+			t.setOpacity(0.5);
+			app.world.addChild(t, 1);
+			yPos += t.getBounds().height;
 		}
-		this.font.lineWidth = 0;
 
-		// bFont size test
+		// ---- BitmapText size test (right side) ----
 		yPos = 0;
-		this.bFont.textAlign = "right";
-		this.bFont.fillStyle.parseCSS("indigo");
 		for (let i = 1; i < 5; i++) {
-			//this.bFont.setOpacity (0.1 * i);
-			this.bFont.resize(i * 0.75);
-			this.bFont.fillStyle.lighten(0.25);
-			// call preDraw and postDraw for the tint to work
-			// as the font is not added to the game world
-			this.bFont.preDraw(renderer);
-			this.bFont.draw(renderer, "BITMAP TEST", video.renderer.width, yPos);
-			this.bFont.postDraw(renderer);
-			yPos += this.bFont.getBounds().height * 1.5;
+			const b = new BitmapText(w, yPos, {
+				font: "xolo12",
+				size: i * 0.75,
+				textAlign: "right",
+				textBaseline: "top",
+				text: "BITMAP TEST",
+			});
+			b.fillStyle.parseCSS("indigo");
+			for (let j = 0; j < i; j++) {
+				b.fillStyle.lighten(0.25);
+			}
+			app.world.addChild(b, 1);
+			yPos += b.getBounds().height * 1.5;
 		}
 
-		this.font.setOpacity(1);
-		this.bFont.setOpacity(1);
-
-		// font baseline test
-		this.font.setFont("Arial", 16);
-		let baseline = 200;
-
-		// Draw the baseline
-		video.renderer.setColor("red");
-		video.renderer.lineWidth = 3;
-		video.renderer.strokeLine(
-			0,
-			baseline + 0.5,
-			video.renderer.width,
-			baseline + 0.5,
-		);
-
+		// ---- Font baseline test (y=200) ----
 		const baselines = [
 			"bottom",
 			"ideographic",
@@ -107,87 +85,97 @@ export class TextTest extends Renderable {
 			"hanging",
 			"top",
 		];
+		let xPos = 0;
 
-		// font baseline test
-		video.renderer.setColor("white");
-		for (let i = 0; i < baselines.length; i++) {
-			text = baselines[i];
-			this.font.textBaseline = baselines[i];
-			this.font.lineWidth = 0;
-			this.font.draw(renderer, text, xPos, baseline);
-			xPos += this.font.measureText(renderer, `${text}@@@`).width;
+		// we need a temp Text to measure widths for spacing
+		const tmpFont = new Text(0, 0, {
+			font: "Arial",
+			size: 16,
+			fillStyle: "white",
+		});
+		for (const bl of baselines) {
+			const t = new Text(xPos, 200, {
+				font: "Arial",
+				size: 16,
+				fillStyle: "white",
+				textBaseline: bl,
+				textAlign: "left",
+				text: bl,
+			});
+			app.world.addChild(t, 3);
+			// measure with extra chars for spacing (matching original)
+			tmpFont.textBaseline = bl;
+			tmpFont.setText(`${bl}@@@`);
+			xPos += tmpFont.measureText().width;
 		}
 
-		// restore default baseline
-		this.font.textBaseline = "top";
-
-		// ---- multiline testing -----
-
-		// font text
-		text =
-			"this is a multiline font\n test with melonjs and it\nworks even with a\n specific lineHeight value!";
-		this.font.textAlign = "center";
-		this.font.lineHeight = 1.1;
-		this.font.lineWidth = 0;
-		this.font.draw(renderer, text, 90, 210);
-
-		text =
-			"this is another web font \nwith right alignment\nand it still works!";
-		this.font.textAlign = "right";
-		this.font.lineHeight = 1.1;
-		this.font.draw(renderer, text, 200, 300);
-
-		// bitmapfonts
-		// bFont  test
-		this.fancyBFont.textAlign = "right";
-		this.fancyBFont.wordWrapWidth = 430;
-		text =
-			"ANOTHER FANCY MULTILINE BITMAP TEXT USING WORD WRAP AND IT STILL WORKS";
-		this.fancyBFont.lineHeight = 1.2;
-		this.fancyBFont.resize(1.5);
-		this.fancyBFont.draw(renderer, text, 620, 230);
-		this.fancyBFont.lineHeight = 1.0;
-		this.fancyBFont.wordWrapWidth = -1;
-
-		this.bFont.textAlign = "center";
-		text = "THIS IS A MULTILINE\n BITMAP TEXT WITH MELONJS\nAND IT WORKS";
-		this.bFont.resize(2.5);
-		this.bFont.draw(renderer, text, video.renderer.width / 2, 400);
-
-		// baseline test with bitmap font
-		xPos = 0;
-		this.fancyBFont.textAlign = "left";
-		baseline = 375;
-
-		// Draw the baseline
-		video.renderer.setColor("red");
-		video.renderer.strokeLine(
-			0,
-			baseline + 0.5,
-			video.renderer.width,
-			baseline + 0.5,
+		// ---- Multiline text (center aligned) ----
+		app.world.addChild(
+			new Text(90, 210, {
+				font: "Arial",
+				size: 8,
+				fillStyle: "white",
+				textAlign: "center",
+				textBaseline: "top",
+				lineHeight: 1.1,
+				text: "this is a multiline font\n test with melonjs and it\nworks even with a\n specific lineHeight value!",
+			}),
+			1,
 		);
 
-		// font baseline test
-		video.renderer.setColor("white");
-		this.fancyBFont.resize(1.275);
-		for (let i = 0; i < baselines.length; i++) {
-			text = baselines[i];
-			this.fancyBFont.textBaseline = baselines[i];
-			this.fancyBFont.draw(renderer, text, xPos, baseline);
-			xPos += this.fancyBFont.measureText(`${text}@`).width;
+		// ---- Multiline text (right aligned) ----
+		app.world.addChild(
+			new Text(200, 300, {
+				font: "Arial",
+				size: 8,
+				fillStyle: "white",
+				textAlign: "right",
+				textBaseline: "top",
+				lineHeight: 1.1,
+				text: "this is another web font \nwith right alignment\nand it still works!",
+			}),
+			1,
+		);
+
+		// ---- Fancy BitmapText multiline with word wrap ----
+		const fancy = new BitmapText(620, 230, {
+			font: "arialfancy",
+			textAlign: "right",
+			textBaseline: "top",
+			size: 1.5,
+		});
+		fancy.lineHeight = 1.2;
+		fancy.wordWrapWidth = 430;
+		fancy.setText(
+			"ANOTHER FANCY MULTILINE BITMAP TEXT USING WORD WRAP AND IT STILL WORKS",
+		);
+		app.world.addChild(fancy, 1);
+
+		// ---- BitmapText multiline centered ----
+		const bMulti = new BitmapText(w / 2, 400, {
+			font: "xolo12",
+			size: 2.5,
+			textAlign: "center",
+			textBaseline: "top",
+			text: "THIS IS A MULTILINE\n BITMAP TEXT WITH MELONJS\nAND IT WORKS",
+		});
+		app.world.addChild(bMulti, 1);
+
+		// ---- BitmapText baseline test (y=375) ----
+		xPos = 0;
+		const tmpBFont = new BitmapText(0, 0, { font: "arialfancy", size: 1.275 });
+		for (const bl of baselines) {
+			const b = new BitmapText(xPos, 375, {
+				font: "arialfancy",
+				size: 1.275,
+				textBaseline: bl,
+				textAlign: "left",
+				text: bl,
+			});
+			app.world.addChild(b, 3);
+			tmpBFont.textBaseline = bl;
+			tmpBFont.setText(`${bl}@`);
+			xPos += tmpBFont.measureText().width;
 		}
-
-		// restore default alignement/baseline
-		this.font.textAlign = "left";
-		this.font.textBaseline = "top";
-		this.bFont.textAlign = "left";
-		this.bFont.textBaseline = "top";
-		this.fancyBFont.textAlign = "left";
-		this.fancyBFont.textBaseline = "top";
-	}
-
-	destroy() {
-		getPool("color").release(this.color);
 	}
 }

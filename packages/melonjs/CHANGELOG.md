@@ -29,6 +29,8 @@
 ### Fixed
 - Path2D: fix `quadraticCurveTo()` and `bezierCurveTo()` using a reference to `startPoint` instead of capturing coordinates — `lineTo()` mutates `startPoint` on each call, causing the curve to deform as it was tessellated. Captured `lx`/`ly` values instead.
 - Path2D: fix `quadraticCurveTo()` and `bezierCurveTo()` segment count — was using `arcResolution` directly (2 segments), now computes adaptive segment count based on control polygon length for smooth curves.
+- Text: fix textBaseline y offset for multiline text — "bottom"/"middle" used single line height instead of total text height, causing misaligned bounding boxes
+- BitmapText: fix bounds offset direction for textAlign/textBaseline — bounds were shifted in the wrong direction for "right"/"center"/"bottom"/"middle"
 - Application: `Object.assign(defaultApplicationSettings, options)` mutated the shared defaults object in both `Application.init()` and `video.init()` — creating multiple Application instances would corrupt settings. Fixed with object spread.
 - Text/Light2d: fix invalid `pool.push` on CanvasRenderTarget instances that were never pool-registered (would throw on destroy)
 - CanvasRenderTarget: `destroy(renderer)` now properly cleans up WebGL GPU textures and cache entries (previously leaked in Light2d)

@@ -261,6 +261,11 @@ describe("Font : Text", () => {
 		});
 	});
 
+	// TODO: multiline textBaseline bounds tests deferred to #1345
+	// TextMetrics.measureText uses lineHeight() for baseline offset
+	// which is incorrect for multiline — should use total height.
+	// Fix requires separating bounds computation from draw position.
+
 	describe("wordWrap", () => {
 		it("should wrap long text within the given width", () => {
 			font.wordWrapWidth = 100;
