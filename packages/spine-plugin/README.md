@@ -30,7 +30,7 @@ A [Spine](http://en.esotericsoftware.com/spine-in-depth) 4.2 runtime integration
 ## Installation
 -------------------------------------------------------------------------------
 This plugin is already bundled with the required Spine [4.x runtime](package.json#dependencies), so there is no need to install it separately.
->Note: this plugin requires melonJS version 18.2.1 or higher.
+>Note: this plugin requires melonJS version 18.3.0 or higher.
 
 To install the plugin using npm:
 
@@ -58,8 +58,14 @@ const DataManifest = [
     },
 ];
 
+// create a new Application
+const app = new me.Application(800, 600, {
+    parent: "screen",
+    renderer: me.video.AUTO,
+});
+
 // preload assets
-me.loader.preload(DataManifest, async function() {
+me.loader.preload(DataManifest, function() {
 
     // create a new Spine Renderable
     let spineAlien = new Spine(100, 100, {atlasFile: "alien.atlas", jsonFile: "alien-ess.json"});
@@ -68,9 +74,9 @@ me.loader.preload(DataManifest, async function() {
     spineAlien.setAnimation(0, "death", true);
 
     // add it to the game world
-    me.game.world.addChild(spineAlien);
+    app.world.addChild(spineAlien);
 
-}
+});
 ```
 >Note: use "spine" as a value for the `type` property to indicate which assets are actual Spine assets and to be loaded using the plugin
 
@@ -119,7 +125,8 @@ me.loader.preload(DataManifest, async function() {
 
 | @melonjs/spine-plugin | melonJS | spine-runtime |
 |---|---|---|
-| v2.0.1+ | v18.2.1 (or higher) | v4.2.x |
+| v2.1.0 | v18.3.0 (or higher) | v4.2.x |
+| v2.0.1 | v18.2.1 (or higher) | v4.2.x |
 | v2.0.0 | v18.2.0 | v4.2.x |
 | v1.5.x | v15.12.x — v18.0.x | v4.1, v4.2-beta |
 
