@@ -146,9 +146,9 @@ export const level = {
 	 * let levelContainer = new me.Container();
 	 * me.level.load("a4_level2", {container:levelContainer});
 	 * // add a simple transformation
-	 * levelContainer.currentTransform.translate(levelContainer.width / 2, levelContainer.height / 2 );
-	 * levelContainer.currentTransform.rotate(0.05);
-	 * levelContainer.currentTransform.translate(-levelContainer.width / 2, -levelContainer.height / 2 );
+	 * levelContainer.translate(levelContainer.width / 2, levelContainer.height / 2 );
+	 * levelContainer.rotate(0.05);
+	 * levelContainer.translate(-levelContainer.width / 2, -levelContainer.height / 2 );
 	 * // add it to the game world
 	 * app.world.addChild(levelContainer);
 	 */

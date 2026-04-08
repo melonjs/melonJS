@@ -19,3 +19,9 @@ export const videoList = {};
 
 // contains all the font files
 export const fontList = {};
+
+// contains all the OBJ model files
+export const objList = {};
+
+// contains all the MTL material files
+export const mtlList = {};

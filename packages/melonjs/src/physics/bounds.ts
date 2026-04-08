@@ -1,6 +1,7 @@
 import { Point, pointPool } from "../geometries/point.ts";
 import { polygonPool } from "../geometries/polygon.ts";
 import { Matrix2d } from "../math/matrix2d.ts";
+import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
 import { createPool } from "../system/pool.ts";
 import { XYPoint } from "../utils/types.ts";
@@ -252,7 +253,7 @@ export class Bounds {
 	 * @param point - The point to add to the bounds.
 	 * @param [m] - An optional transform to apply to the given point.
 	 */
-	addPoint(point: Vector2d | Point, m?: Matrix2d) {
+	addPoint(point: Vector2d | Point, m?: Matrix2d | Matrix3d) {
 		const p = m ? m.apply(point) : point;
 		this.min.x = Math.min(this.min.x, p.x);
 		this.max.x = Math.max(this.max.x, p.x);
@@ -268,7 +269,13 @@ export class Bounds {
 	 * @param y1 - The bottom y coordinate of the quad.
 	 * @param [m] - An optional transform to apply to the given coordinates.
 	 */
-	addFrame(x0: number, y0: number, x1: number, y1: number, m?: Matrix2d) {
+	addFrame(
+		x0: number,
+		y0: number,
+		x1: number,
+		y1: number,
+		m?: Matrix2d | Matrix3d,
+	) {
 		const v = pointPool.get();
 
 		this.addPoint(v.set(x0, y0), m);

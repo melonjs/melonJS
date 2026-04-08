@@ -34,7 +34,7 @@ describe("Matrix2d", () => {
 			15,
 			16,
 		);
-		const result = "Matrix2d(1, 2, 3, 5, 6, 7, 9, 10, 11)";
+		const result = "Matrix2d(1, 2, 0, 5, 6, 0, 13, 14, 1)";
 
 		matA.fromMat3d(matB);
 

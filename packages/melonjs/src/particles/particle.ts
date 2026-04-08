@@ -1,5 +1,6 @@
 import { clamp, randomFloat } from "../math/math.ts";
 import { Vector2d, vector2dPool } from "../math/vector2d.ts";
+
 import type Container from "../renderable/container.js";
 import Renderable from "../renderable/renderable.js";
 import { createPool, registerPool } from "../system/pool.ts";
@@ -180,7 +181,24 @@ export default class Particle extends Renderable {
 
 		// Update particle transform
 		this.currentTransform
-			.setTransform(scale, 0, 0, 0, scale, 0, this.pos.x, this.pos.y, 1)
+			.setTransform(
+				scale,
+				0,
+				0,
+				0,
+				0,
+				scale,
+				0,
+				0,
+				0,
+				0,
+				1,
+				0,
+				this.pos.x,
+				this.pos.y,
+				0,
+				1,
+			)
 			.rotate(angle);
 
 		// mark as dirty if the particle is not dead yet

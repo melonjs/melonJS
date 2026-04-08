@@ -3,7 +3,7 @@ import { Rect } from "./../geometries/rectangle.ts";
 import { releaseAllPointerEvents } from "./../input/input.ts";
 import { Color, colorPool } from "./../math/color.ts";
 import { clamp } from "./../math/math.ts";
-import { matrix2dPool } from "../math/matrix2d.ts";
+import { Matrix3d } from "../math/matrix3d.ts";
 import { ObservableVector3d } from "../math/observableVector3d.ts";
 import { vector2dPool } from "../math/vector2d.ts";
 import Body from "./../physics/body.js";
@@ -12,7 +12,7 @@ import pool from "../system/legacy_pool.js";
 
 /**
  * additional import for TypeScript
- * @import {Matrix2d} from "../math/matrix2d.ts";
+ * @import {Matrix3d} from "../math/matrix3d.ts";
  * @import Entity from "./entity/entity.js";
  * @import Container from "./container.js";
  * @import {Line} from "./../geometries/line.ts";
@@ -68,10 +68,14 @@ export default class Renderable extends Rect {
 
 		if (typeof this.currentTransform === "undefined") {
 			/**
-			 * the renderable default transformation matrix
-			 * @type {Matrix2d}
+			 * the renderable transformation matrix (4x4).
+			 * For standard 2D use, only the 2D components are used (rotate around Z, scale X/Y, translate X/Y).
+			 * For 3D use (e.g. Mesh), the full 4x4 matrix supports rotation around any axis,
+			 * 3D translation, and perspective projection.
+			 * Use the `rotate()`, `scale()`, and `translate()` methods rather than modifying this directly.
+			 * @type {Matrix3d}
 			 */
-			this.currentTransform = matrix2dPool.get();
+			this.currentTransform = new Matrix3d();
 		}
 		this.currentTransform.identity();
 
@@ -477,7 +481,7 @@ export default class Renderable extends Rect {
 
 	/**
 	 * flip the renderable on the horizontal axis (around the center of the renderable)
-	 * @see Matrix2d#scaleX
+	 * @see Matrix3d#scaleX
 	 * @param {boolean} [flip=true] - `true` to flip this renderable.
 	 * @returns {Renderable} Reference to this object for method chaining
 	 */
@@ -489,7 +493,7 @@ export default class Renderable extends Rect {
 
 	/**
 	 * flip the renderable on the vertical axis (around the center of the renderable)
-	 * @see Matrix2d#scaleY
+	 * @see Matrix3d#scaleY
 	 * @param {boolean} [flip=true] - `true` to flip this renderable.
 	 * @returns {Renderable} Reference to this object for method chaining
 	 */
@@ -502,7 +506,7 @@ export default class Renderable extends Rect {
 	/**
 	 * multiply the renderable currentTransform with the given matrix
 	 * @see Renderable#currentTransform
-	 * @param {Matrix2d} m - the transformation matrix
+	 * @param {Matrix2d|Matrix3d} m - the transformation matrix
 	 * @returns {Renderable} Reference to this object for method chaining
 	 */
 	transform(m) {
@@ -581,8 +585,10 @@ export default class Renderable extends Rect {
 
 	/**
 	 * Rotate this renderable by the specified angle (in radians).
+	 * When called with just an angle, rotates around the Z axis (2D rotation).
+	 * When called with an angle and a Vector3d axis, rotates around that axis in 3D.
 	 * @param {number} angle - The angle to rotate (in radians)
-	 * @param {Vector2d|ObservableVector2d} [v] - an optional point to rotate around
+	 * @param {Vector3d} [v] - the axis to rotate around (defaults to Z axis for 2D)
 	 * @returns {Renderable} Reference to this object for method chaining
 	 */
 	rotate(angle, v) {
@@ -602,10 +608,11 @@ export default class Renderable extends Rect {
 	 * member will be changed.
 	 * @param {number} x - a number representing the abscissa of the scaling vector.
 	 * @param {number} [y=x] - a number representing the ordinate of the scaling vector.
+	 * @param {number} [z=1] - a number representing the depth of the scaling vector.
 	 * @returns {Renderable} Reference to this object for method chaining
 	 */
-	scale(x, y = x) {
-		this.currentTransform.scale(x, y);
+	scale(x, y = x, z = 1) {
+		this.currentTransform.scale(x, y, z);
 		this.updateBounds();
 		this.isDirty = true;
 		return this;
@@ -618,6 +625,20 @@ export default class Renderable extends Rect {
 	 */
 	scaleV(v) {
 		this.scale(v.x, v.y);
+		return this;
+	}
+
+	/**
+	 * Translate the renderable by the specified offset.
+	 * @param {number} x - x offset
+	 * @param {number} [y=0] - y offset
+	 * @param {number} [z=0] - z offset
+	 * @returns {Renderable} Reference to this object for method chaining
+	 */
+	translate(x, y = 0, z = 0) {
+		this.currentTransform.translate(x, y, z);
+		this.updateBounds();
+		this.isDirty = true;
 		return this;
 	}
 
@@ -829,7 +850,6 @@ export default class Renderable extends Rect {
 	 */
 	destroy() {
 		// allow recycling object properties
-		matrix2dPool.release(this.currentTransform);
 		this.currentTransform = undefined;
 
 		this.anchorPoint.revoke();

@@ -161,11 +161,8 @@ export default class Tile extends Bounds {
 			);
 			if (settings.rotation !== undefined) {
 				renderable.anchorPoint.set(0.5, 0.5);
-				renderable.currentTransform.rotate(settings.rotation);
-				renderable.currentTransform.translate(
-					settings.width / 2,
-					settings.height / 2,
-				);
+				renderable.rotate(settings.rotation);
+				renderable.translate(settings.width / 2, settings.height / 2);
 				// clear rotation to prevent double-application by the caller
 				settings.rotation = undefined;
 			}

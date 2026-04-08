@@ -75,6 +75,17 @@ export default class IndexBuffer {
 	}
 
 	/**
+	 * Add pre-computed absolute indices to the buffer (no rebasing)
+	 * @param {number[]} indices - absolute index values to add
+	 */
+	addRaw(indices) {
+		for (let i = 0; i < indices.length; i++) {
+			this.data[this.length + i] = indices[i];
+		}
+		this.length += indices.length;
+	}
+
+	/**
 	 * Upload the current index data to the GPU (for dynamic buffers)
 	 */
 	upload() {

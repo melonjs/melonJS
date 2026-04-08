@@ -123,8 +123,8 @@ export default class PrimitiveBatcher extends Batcher {
 				const x = vert.x;
 				const y = vert.y;
 				vertexData.push(
-					x * m[0] + y * m[3] + m[6],
-					x * m[1] + y * m[4] + m[7],
+					x * m[0] + y * m[4] + m[12],
+					x * m[1] + y * m[5] + m[13],
 					0,
 					0,
 					colorUint32,
@@ -180,10 +180,10 @@ export default class PrimitiveBatcher extends Batcher {
 			// apply view matrix to base positions without mutating inputs
 			let fromX, fromY, toX, toY;
 			if (hasTransform) {
-				fromX = from.x * m[0] + from.y * m[3] + m[6];
-				fromY = from.x * m[1] + from.y * m[4] + m[7];
-				toX = to.x * m[0] + to.y * m[3] + m[6];
-				toY = to.x * m[1] + to.y * m[4] + m[7];
+				fromX = from.x * m[0] + from.y * m[4] + m[12];
+				fromY = from.x * m[1] + from.y * m[5] + m[13];
+				toX = to.x * m[0] + to.y * m[4] + m[12];
+				toY = to.x * m[1] + to.y * m[5] + m[13];
 			} else {
 				fromX = from.x;
 				fromY = from.y;

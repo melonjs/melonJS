@@ -20,10 +20,10 @@ import { resources } from "./resources.js";
 
 export const createGame = () => {
 	// create a new melonJS Application
-	const app = new Application(800, 600, {
+	const _app = new Application(800, 600, {
 		parent: "screen",
 		scaleMethod: "flex-width",
-		renderer: 2, // AUTO
+		renderer: 0, // AUTO
 		preferWebGL1: false,
 		depthTest: "z-buffer",
 		subPixel: false,

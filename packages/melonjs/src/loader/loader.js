@@ -13,6 +13,8 @@ import {
 	fontList,
 	imgList,
 	jsonList,
+	mtlList,
+	objList,
 	tmxList,
 	videoList,
 } from "./cache.js";
@@ -20,6 +22,8 @@ import { preloadBinary } from "./parsers/binary.js";
 import { preloadFontFace } from "./parsers/fontface.js";
 import { preloadImage } from "./parsers/image.js";
 import { preloadJSON } from "./parsers/json.js";
+import { preloadMTL } from "./parsers/mtl.js";
+import { preloadOBJ } from "./parsers/obj.js";
 import { preloadJavascript } from "./parsers/script.js";
 import { preloadTMX } from "./parsers/tmx.js";
 import { preloadVideo } from "./parsers/video.js";
@@ -218,6 +222,8 @@ function initParsers() {
 	setParser("audio", audio.load);
 	setParser("fontface", preloadFontFace);
 	setParser("video", preloadVideo);
+	setParser("obj", preloadOBJ);
+	setParser("mtl", preloadMTL);
 	parserInitialized = true;
 }
 
@@ -618,6 +624,22 @@ export function unload(asset) {
 			delete videoList[asset.name];
 			return true;
 
+		case "obj":
+			if (!(asset.name in objList)) {
+				return false;
+			}
+
+			delete objList[asset.name];
+			return true;
+
+		case "mtl":
+			if (!(asset.name in mtlList)) {
+				return false;
+			}
+
+			delete mtlList[asset.name];
+			return true;
+
 		default:
 			throw new Error(
 				"unload : unknown or invalid resource type : " + asset.type,
@@ -759,6 +781,81 @@ export function getJSON(elt) {
 	elt = "" + elt;
 	if (elt in jsonList) {
 		return jsonList[elt];
+	}
+	return null;
+}
+
+/**
+ * return the specified OBJ model data
+ * @memberof loader
+ * @param {string} elt - name of the OBJ file (as specified in the preload list)
+ * @returns {object} parsed OBJ data with `vertices` (Float32Array), `uvs` (Float32Array), `indices` (Uint16Array), and `vertexCount` (number), or null if not found
+ * @category Assets
+ * @example
+ * // 1. preload the OBJ model and its texture
+ * me.loader.preload([
+ *     { name: "cube", type: "obj", src: "models/cube.obj" },
+ *     { name: "cube", type: "image", src: "models/cube_texture.png" },
+ * ], () => {
+ *     // 2. create a Mesh using the preloaded model name
+ *     const mesh = new me.Mesh(400, 300, {
+ *         model: "cube",        // references the preloaded OBJ
+ *         texture: "cube",      // references the preloaded image
+ *         width: 200,
+ *         height: 200,
+ *     });
+ *     me.game.world.addChild(mesh);
+ *
+ *     // 3. or access the raw parsed data directly
+ *     const data = me.loader.getOBJ("cube");
+ *     // data.vertices — Float32Array of x,y,z positions
+ *     // data.uvs — Float32Array of u,v texture coordinates
+ *     // data.indices — Uint16Array of triangle vertex indices
+ *     // data.vertexCount — number of unique vertices
+ * });
+ */
+export function getOBJ(elt) {
+	// force as string
+	elt = "" + elt;
+	if (elt in objList) {
+		return objList[elt];
+	}
+	return null;
+}
+
+/**
+ * return the specified MTL material data
+ * @memberof loader
+ * @param {string} elt - name of the MTL file (as specified in the preload list)
+ * @returns {object} map of material names to properties (`Kd`, `d`, `map_Kd`), or null if not found
+ * @category Assets
+ * @example
+ * // 1. preload OBJ + MTL + texture
+ * me.loader.preload([
+ *     { name: "fox", type: "obj", src: "models/fox.obj" },
+ *     { name: "fox", type: "mtl", src: "models/fox.mtl" },
+ *     { name: "colormap", type: "image", src: "models/colormap.png" },
+ * ], () => {
+ *     // 2. create a Mesh with material — texture, tint, opacity auto-applied
+ *     const mesh = new me.Mesh(400, 300, {
+ *         model: "fox",
+ *         material: "fox",
+ *         texture: "colormap",
+ *         width: 200,
+ *         height: 200,
+ *     });
+ *
+ *     // 3. or access the raw material data directly
+ *     const materials = me.loader.getMTL("fox");
+ *     // materials["colormap"].Kd — [r, g, b] diffuse color (0-1 range)
+ *     // materials["colormap"].d — opacity (0-1)
+ *     // materials["colormap"].map_Kd — resolved texture URL
+ * });
+ */
+export function getMTL(elt) {
+	elt = "" + elt;
+	if (elt in mtlList) {
+		return mtlList[elt];
 	}
 	return null;
 }

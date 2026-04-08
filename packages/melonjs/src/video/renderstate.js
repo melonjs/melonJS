@@ -1,5 +1,5 @@
 import { Color } from "./../math/color.ts";
-import { Matrix2d } from "../math/matrix2d.ts";
+import { Matrix3d } from "../math/matrix3d.ts";
 
 /**
  * @import {Gradient} from "./gradient.js";
@@ -29,9 +29,9 @@ export default class RenderState {
 
 		/**
 		 * current transformation matrix
-		 * @type {Matrix2d}
+		 * @type {Matrix3d}
 		 */
-		this.currentTransform = new Matrix2d();
+		this.currentTransform = new Matrix3d();
 
 		/**
 		 * current scissor/clipping rectangle [x, y, width, height]
@@ -82,7 +82,7 @@ export default class RenderState {
 
 		/** @ignore */
 		this._matrixStack = Array.from({ length: this._stackCapacity }, () => {
-			return new Matrix2d();
+			return new Matrix3d();
 		});
 
 		/** @ignore */
@@ -185,7 +185,7 @@ export default class RenderState {
 		for (let i = oldCap; i < newCap; i++) {
 			this._colorStack.push(new Color());
 			this._tintStack.push(new Color());
-			this._matrixStack.push(new Matrix2d());
+			this._matrixStack.push(new Matrix3d());
 			this._scissorStack.push(new Int32Array(4));
 			this._gradientStack.push(null);
 			this._lineDashStack.push([]);
