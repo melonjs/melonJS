@@ -370,45 +370,21 @@ export default class Text extends Renderable {
 
 	/**
 	 * measure the given text size in pixels
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - reference to the active renderer
 	 * @param {string} [text] - the text to be measured
 	 * @returns {TextMetrics} a TextMetrics object defining the dimensions of the given piece of text
 	 */
-	measureText(renderer, text = this._text) {
+	measureText(text = this._text) {
 		return this.metrics.measureText(text, this.canvasTexture.context);
 	}
 
 	/**
 	 * draw a text at the specified coord
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - Reference to the destination renderer instance
-	 * @param {string} [text]
-	 * @param {number} [x]
-	 * @param {number} [y]
 	 */
-	draw(renderer, text, x = this.pos.x, y = this.pos.y) {
-		// @deprecated since 10.6.0 — standalone draw without a parent container
-		// TODO: remove in 19.0.0
-		if (typeof this.ancestor === "undefined") {
-			// update position if changed
-			if (this.pos.x !== x || this.pos.y !== y) {
-				this.pos.x = x;
-				this.pos.y = y;
-				this.isDirty = true;
-			}
-
-			// update text cache
-			this.setText(text);
-
-			// save the previous context
-			renderer.save();
-
-			// apply the defined alpha value
-			renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
-		}
-
+	draw(renderer) {
 		// adjust x,y position based on the bounding box
-		x = this.metrics.x;
-		y = this.metrics.y;
+		let x = this.metrics.x;
+		let y = this.metrics.y;
 
 		// clamp to pixel grid if required
 		if (renderer.settings.subPixel === false) {
@@ -418,12 +394,6 @@ export default class Text extends Renderable {
 
 		// draw the text
 		renderer.drawImage(this.canvasTexture.canvas, x, y);
-
-		// @deprecated since 10.6.0 — TODO: remove in 19.0.0
-		if (typeof this.ancestor === "undefined") {
-			// restore previous context
-			renderer.restore();
-		}
 	}
 
 	/**

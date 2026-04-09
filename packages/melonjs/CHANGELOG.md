@@ -33,6 +33,9 @@
 - WebGL context always created with `depth: true` for hardware depth buffer support
 - WebGL `clear()` now always clears depth + color + stencil buffers
 - WebGL renderer `setBatcher()` now syncs the projection matrix to the new batcher
+- **BREAKING**: `Text.draw()` and `BitmapText.draw()` no longer accept `text`, `x`, `y` parameters — standalone draw without a parent container is removed (deprecated since 10.6.0)
+- **BREAKING**: `Text.measureText()` no longer takes a `renderer` parameter (was unused)
+- **BREAKING**: `UITextButton` settings `backgroundColor` and `hoverColor` removed — use `hoverOffColor` and `hoverOnColor` instead
 
 ### Fixed
 - WebGL: depth buffer now correctly used for 3D mesh rendering with `gl.LESS` depth function
