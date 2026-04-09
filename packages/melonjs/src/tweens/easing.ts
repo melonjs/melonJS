@@ -4,40 +4,29 @@
  */
 
 /**
- * Easing Function :<br>
- * <p>
- * Easing.Linear.None<br>
- * Easing.Quadratic.In<br>
- * Easing.Quadratic.Out<br>
- * Easing.Quadratic.InOut<br>
- * Easing.Cubic.In<br>
- * Easing.Cubic.Out<br>
- * Easing.Cubic.InOut<br>
- * Easing.Quartic.In<br>
- * Easing.Quartic.Out<br>
- * Easing.Quartic.InOut<br>
- * Easing.Quintic.In<br>
- * Easing.Quintic.Out<br>
- * Easing.Quintic.InOut<br>
- * Easing.Sinusoidal.In<br>
- * Easing.Sinusoidal.Out<br>
- * Easing.Sinusoidal.InOut<br>
- * Easing.Exponential.In<br>
- * Easing.Exponential.Out<br>
- * Easing.Exponential.InOut<br>
- * Easing.Circular.In<br>
- * Easing.Circular.Out<br>
- * Easing.Circular.InOut<br>
- * Easing.Elastic.In<br>
- * Easing.Elastic.Out<br>
- * Easing.Elastic.InOut<br>
- * Easing.Back.In<br>
- * Easing.Back.Out<br>
- * Easing.Back.InOut<br>
- * Easing.Bounce.In<br>
- * Easing.Bounce.Out<br>
- * Easing.Bounce.InOut
- * </p>
+ * Easing functions for use with {@link Tween}.
+ * Each family provides `In` (accelerate), `Out` (decelerate), and `InOut` (both) variants.
+ *
+ * Available families:
+ * - `Linear.None` — constant speed
+ * - `Quadratic` — power of 2
+ * - `Cubic` — power of 3
+ * - `Quartic` — power of 4
+ * - `Quintic` — power of 5
+ * - `Sinusoidal` — sine wave
+ * - `Exponential` — base-2 exponential
+ * - `Circular` — circular arc
+ * - `Elastic` — spring overshoot
+ * - `Back` — slight overshoot before settling
+ * - `Bounce` — bouncing ball effect
+ * @example
+ * // use with Tween
+ * new me.Tween(obj).to({ x: 100 }, {
+ *     duration: 1000,
+ *     easing: me.Tween.Easing.Bounce.Out,
+ * }).start();
+ * @see https://easings.net/ for visual reference
+ * @category Tweens
  */
 
 export type EasingFunction = (t: number) => number;

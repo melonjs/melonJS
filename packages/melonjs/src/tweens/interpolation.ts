@@ -46,7 +46,29 @@ const catmullRom = (
 
 export type InterpolationFunction = (v: number[], k: number) => number;
 
+/**
+ * Interpolation functions for tweening through arrays of values.
+ * Used when a tween target property is an array (e.g. a path of waypoints).
+ *
+ * Available functions:
+ * - `Linear` — straight-line interpolation between consecutive values
+ * - `Bezier` — smooth Bezier curve through all values
+ * - `CatmullRom` — smooth Catmull-Rom spline through all values (best for paths)
+ * @example
+ * // tween through waypoints using CatmullRom spline
+ * new me.Tween(obj).to({ x: [100, 200, 300, 400] }, {
+ *     duration: 2000,
+ *     interpolation: me.Tween.Interpolation.CatmullRom,
+ * }).start();
+ * @see {@link Tween}
+ * @category Tweens
+ */
 export const Interpolation = {
+	/**
+	 * Piecewise linear interpolation between consecutive array values.
+	 * @param v - array of values
+	 * @param k - interpolation factor (0 to 1)
+	 */
 	Linear: (v: number[], k: number) => {
 		const m = v.length - 1;
 		const f = m * k;
@@ -61,6 +83,11 @@ export const Interpolation = {
 
 		return linear(v[i], v[i + 1 > m ? m : i + 1], f - i);
 	},
+	/**
+	 * Smooth Bezier curve interpolation through all array values.
+	 * @param v - array of values
+	 * @param k - interpolation factor (0 to 1)
+	 */
 	Bezier: (v: number[], k: number) => {
 		let b = 0;
 		const n = v.length - 1;
@@ -71,6 +98,11 @@ export const Interpolation = {
 
 		return b;
 	},
+	/**
+	 * Smooth Catmull-Rom spline interpolation — best for path-following tweens.
+	 * @param v - array of values
+	 * @param k - interpolation factor (0 to 1)
+	 */
 	CatmullRom: (v: number[], k: number) => {
 		const m = v.length - 1;
 		let f = m * k;

@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { createPool } from "../src/pool";
+import { createPool } from "../src/system/pool";
 
 class GameObject {
 	destroyCalled = false;
