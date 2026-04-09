@@ -1,5 +1,12 @@
-import { game } from "../application/application.ts";
-import { GAME_AFTER_UPDATE, off, on, STATE_RESUME } from "../system/event.js";
+import {
+	GAME_AFTER_UPDATE,
+	GAME_RESET,
+	off,
+	on,
+	STATE_PAUSE,
+	STATE_RESUME,
+	TICK,
+} from "../system/event.js";
 import { createPool } from "../system/pool.ts";
 import timer from "../system/timer.js";
 import { Easing, EasingFunction } from "./easing.js";
@@ -18,17 +25,30 @@ type OnUpdateCallback<T> = (this: T, value: number) => void;
 type OnCompleteCallback<T> = (this: T) => void;
 
 /**
- * Javascript Tweening Engine<p>
- * Super simple, fast and easy to use tweening engine which incorporates optimised Robert Penner's equation<p>
- * <a href="https://github.com/sole/Tween.js">https://github.com/sole/Tween.js</a><p>
- * author sole / http://soledadpenades.com<br>
- * author mr.doob / http://mrdoob.com<br>
- * author Robert Eisele / http://www.xarg.org<br>
- * author Philippe / http://philippe.elsass.me<br>
- * author Robert Penner / http://www.robertpenner.com/easing_terms_of_use.html<br>
- * author Paul Lewis / http://www.aerotwist.com/<br>
- * author lechecacharro<br>
- * author Josh Faul / http://jocafa.com/
+ * A tweening engine for smoothly interpolating object properties over time.
+ * Based on <a href="https://github.com/sole/Tween.js">tween.js</a> with
+ * optimised Robert Penner's equations.
+ *
+ * Tweens use an event-based lifecycle — on `start()` the tween subscribes to
+ * the game loop events (`TICK`, `GAME_AFTER_UPDATE`, `STATE_PAUSE`,
+ * `STATE_RESUME`, `GAME_RESET`)
+ * and automatically unsubscribes on completion or `stop()`.
+ * They do not need to be added to a container.
+ * @example
+ * // basic usage
+ * new me.Tween(myObject.pos)
+ *     .to({ x: 200, y: 200 }, { duration: 3000, easing: me.Tween.Easing.Bounce.Out })
+ *     .onComplete(() => console.log("done!"))
+ *     .start();
+ * @example
+ * // auto-start with options
+ * new me.Tween(myObject.pos).to({ x: 200 }, {
+ *     duration: 1000,
+ *     easing: me.Tween.Easing.Quadratic.InOut,
+ *     yoyo: true,
+ *     repeat: Infinity,
+ *     autoStart: true,
+ * });
  * @category Tweens
  */
 export default class Tween {
@@ -51,22 +71,24 @@ export default class Tween {
 	_onCompleteCallback: OnCompleteCallback<object> | null;
 	_tweenTimeTracker: number;
 	_lastUpdate: number;
-	isPersistent: boolean;
-	updateWhenPaused: boolean;
-	isRenderable: boolean;
+	_isRunning: boolean;
+	_isPaused: boolean;
+	_lastTick: number;
 
 	/**
-	 * @param object - object on which to apply the tween
-	 * @example
-	 * // add a tween to change the object pos.x and pos.y variable to 200 in 3 seconds
-	 * tween = new me.Tween(myObject.pos).to({
-	 *       x: 200,
-	 *       y: 200,
-	 *    }, {
-	 *       duration: 3000,
-	 *       easing: me.Tween.Easing.Bounce.Out,
-	 *       autoStart : true
-	 * }).onComplete(myFunc);
+	 * whether the tween should persist across state changes (not auto-stopped on game reset)
+	 * @default false
+	 */
+	isPersistent: boolean;
+
+	/**
+	 * whether the tween should keep running when the game is paused
+	 * @default false
+	 */
+	updateWhenPaused: boolean;
+
+	/**
+	 * @param object - the object whose properties will be tweened
 	 */
 	constructor(object: object) {
 		this.setProperties(object);
@@ -83,6 +105,9 @@ export default class Tween {
 	 * @ignore
 	 */
 	setProperties(object: object) {
+		// ensure any running tween is stopped before resetting (e.g., pool reuse)
+		this._unsubscribe();
+
 		this._object = object;
 		this._valuesStart = {};
 		this._valuesEnd = {};
@@ -103,27 +128,19 @@ export default class Tween {
 		// track the last update timestamp from the game loop
 		this._lastUpdate = globalThis.performance.now();
 		this._tweenTimeTracker = this._lastUpdate;
-
-		// reset flags to default value
+		this._isRunning = false;
+		this._isPaused = false;
+		this._lastTick = globalThis.performance.now();
 		this.isPersistent = false;
-		// this is not really supported
 		this.updateWhenPaused = false;
-		// comply with the container contract
-		this.isRenderable = false;
-
-		// Set all starting values present on the target object
-		for (const field in object) {
-			if (typeof object !== "object") {
-				this._valuesStart[field] = parseFloat(object[field]);
-			}
-		}
 	}
 
 	/**
 	 * @ignore
 	 */
 	_resumeCallback(elapsed: number) {
-		if (this._startTime) {
+		this._isPaused = false;
+		if (this._startTime !== null && !this.updateWhenPaused) {
 			this._startTime += elapsed;
 		}
 	}
@@ -133,39 +150,82 @@ export default class Tween {
 		this._lastUpdate = lastUpdate;
 	}
 
-	/**
-	 * subscribe to events when added
-	 * @ignore
-	 */
-	onActivateEvent() {
-		// eslint-disable-next-line @typescript-eslint/unbound-method
-		on(STATE_RESUME, this._resumeCallback, this);
-		// eslint-disable-next-line @typescript-eslint/unbound-method
-		on(GAME_AFTER_UPDATE, this._onAfterUpdate, this);
+	/** @ignore */
+	_onTick(timestamp: number) {
+		if (!this._isPaused || this.updateWhenPaused) {
+			// compute delta from the raw RAF timestamp
+			const dt = timestamp - this._lastTick;
+			this._lastTick = timestamp;
+			if (dt > 0 && dt < 1000) {
+				this.update(dt);
+			}
+		}
+	}
+
+	/** @ignore */
+	_onPause() {
+		this._isPaused = true;
+	}
+
+	/** @ignore */
+	_onReset() {
+		if (!this.isPersistent) {
+			this.stop();
+		}
 	}
 
 	/**
-	 * Unsubscribe when tween is removed
+	 * Subscribe to the game loop events
 	 * @ignore
 	 */
-	onDeactivateEvent() {
-		// eslint-disable-next-line @typescript-eslint/unbound-method
-		off(STATE_RESUME, this._resumeCallback, this);
-		// eslint-disable-next-line @typescript-eslint/unbound-method
-		off(GAME_AFTER_UPDATE, this._onAfterUpdate, this);
+	_subscribe() {
+		if (!this._isRunning) {
+			this._isRunning = true;
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			on(TICK, this._onTick, this);
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			on(STATE_PAUSE, this._onPause, this);
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			on(STATE_RESUME, this._resumeCallback, this);
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			on(GAME_AFTER_UPDATE, this._onAfterUpdate, this);
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			on(GAME_RESET, this._onReset, this);
+		}
 	}
 
 	/**
-	 * object properties to be updated and duration
-	 * @param properties - hash of properties
-	 * @param [options] - object of tween properties, or a duration if a numeric value is passed
-	 * @param [options.duration] - tween duration
-	 * @param [options.easing] - easing function
-	 * @param [options.delay] - delay amount expressed in milliseconds
-	 * @param [options.yoyo] - allows the tween to bounce back to their original value when finished. To be used together with repeat to create endless loops.
-	 * @param [options.repeat] - amount of times the tween should be repeated
-	 * @param [options.interpolation] - interpolation function
-	 * @param [options.autoStart] - allow this tween to start automatically. Otherwise call me.Tween.start().
+	 * Unsubscribe from the game loop events
+	 * @ignore
+	 */
+	_unsubscribe() {
+		if (this._isRunning) {
+			this._isRunning = false;
+			this._isPaused = false;
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			off(TICK, this._onTick, this);
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			off(STATE_PAUSE, this._onPause, this);
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			off(STATE_RESUME, this._resumeCallback, this);
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			off(GAME_AFTER_UPDATE, this._onAfterUpdate, this);
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			off(GAME_RESET, this._onReset, this);
+		}
+	}
+
+	/**
+	 * Define the target property values and tween options.
+	 * @param properties - target property values to tween to (e.g. `{ x: 200, y: 100 }`)
+	 * @param [options] - tween configuration
+	 * @param [options.duration] - tween duration in milliseconds
+	 * @param [options.easing] - easing function (e.g. `Tween.Easing.Quadratic.InOut`)
+	 * @param [options.delay] - delay before starting, in milliseconds
+	 * @param [options.yoyo] - bounce back to original values when finished (use with `repeat`)
+	 * @param [options.repeat] - number of times to repeat (use `Infinity` for endless loops)
+	 * @param [options.interpolation] - interpolation function for array values
+	 * @param [options.autoStart] - start the tween immediately without calling `start()`
 	 * @returns this instance for object chaining
 	 */
 	to(
@@ -183,25 +243,25 @@ export default class Tween {
 		this._valuesEnd = properties;
 
 		if (typeof options !== "undefined") {
-			if (options.duration) {
+			if (options.duration !== undefined) {
 				this._duration = options.duration;
 			}
-			if (options.yoyo) {
+			if (options.yoyo !== undefined) {
 				this.yoyo(options.yoyo);
 			}
-			if (options.easing) {
+			if (options.easing !== undefined) {
 				this.easing(options.easing);
 			}
-			if (options.repeat) {
+			if (options.repeat !== undefined) {
 				this.repeat(options.repeat);
 			}
-			if (options.delay) {
+			if (options.delay !== undefined) {
 				this.delay(options.delay);
 			}
-			if (options.interpolation) {
+			if (options.interpolation !== undefined) {
 				this.interpolation(options.interpolation);
 			}
-			if (options.autoStart) {
+			if (options.autoStart === true) {
 				this.start();
 			}
 		}
@@ -210,15 +270,24 @@ export default class Tween {
 	}
 
 	/**
-	 * start the tween
-	 * @param [time] - the current time when the tween was started
+	 * Start the tween. Subscribes to game loop events and begins interpolation.
+	 * @param [time] - the start time (defaults to current game time)
 	 * @returns this instance for object chaining
 	 */
 	start(time = timer.getTime()) {
+		// stop any running tween before restarting (prevents listener leaks
+		// and array value corruption from repeated start() calls)
+		this._unsubscribe();
+
 		this._onStartCallbackFired = false;
 
-		// add the tween to the object pool on start
-		game.world.addChild(this);
+		// sync internal time tracker to the provided start time
+		this._tweenTimeTracker = time;
+		this._lastUpdate = time;
+
+		// subscribe to game loop events
+		this._lastTick = globalThis.performance.now();
+		this._subscribe();
 
 		this._startTime = time + this._delayTime;
 
@@ -250,12 +319,11 @@ export default class Tween {
 		return this;
 	}
 	/**
-	 * stop the tween
+	 * Stop the tween. Unsubscribes from all game loop events.
 	 * @returns this instance for object chaining
 	 */
 	stop() {
-		// remove the tween from the world container
-		game.world.removeChildNow(this);
+		this._unsubscribe();
 		return this;
 	}
 
@@ -372,7 +440,8 @@ export default class Tween {
 			this._onStartCallbackFired = true;
 		}
 
-		let elapsed = (time - this._startTime) / this._duration;
+		let elapsed =
+			this._duration > 0 ? (time - this._startTime) / this._duration : 1;
 		elapsed = elapsed > 1 ? 1 : elapsed;
 
 		const value = this._easingFunction(elapsed);
@@ -387,9 +456,13 @@ export default class Tween {
 			} else {
 				// Parses relative end values with start as base (e.g.: +10, -3)
 				if (typeof end === "string") {
+					const parsed = parseFloat(end);
+					if (isNaN(parsed)) {
+						continue; // skip non-numeric string properties
+					}
 					// @ts-expect-error todo
 					// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-					end = start + parseFloat(end);
+					end = start + parsed;
 				}
 
 				// protect against non numeric properties.
@@ -438,8 +511,8 @@ export default class Tween {
 
 				return true;
 			} else {
-				// remove the tween from the world container
-				game.world.removeChildNow(this);
+				// unsubscribe from events on completion
+				this._unsubscribe();
 
 				if (this._onCompleteCallback !== null) {
 					this._onCompleteCallback.call(this._object);
@@ -459,10 +532,27 @@ export default class Tween {
 		return true;
 	}
 
-	// export easing function as static class property
+	/**
+	 * Available easing functions, accessed via `Tween.Easing`.
+	 * Each family provides `In`, `Out`, and `InOut` variants.
+	 * @see {@link Easing} for the full list
+	 * @example
+	 * me.Tween.Easing.Quadratic.InOut
+	 * me.Tween.Easing.Bounce.Out
+	 * me.Tween.Easing.Elastic.In
+	 */
 	static get Easing() {
 		return Easing;
 	}
+
+	/**
+	 * Available interpolation functions for tweening array values.
+	 * @see {@link Interpolation}
+	 * @example
+	 * me.Tween.Interpolation.Linear
+	 * me.Tween.Interpolation.Bezier
+	 * me.Tween.Interpolation.CatmullRom
+	 */
 	static get Interpolation() {
 		return Interpolation;
 	}

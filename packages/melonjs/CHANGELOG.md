@@ -36,6 +36,7 @@
 - **BREAKING**: `Text.draw()` and `BitmapText.draw()` no longer accept `text`, `x`, `y` parameters — standalone draw without a parent container is removed (deprecated since 10.6.0)
 - **BREAKING**: `Text.measureText()` no longer takes a `renderer` parameter (was unused)
 - **BREAKING**: `UITextButton` settings `backgroundColor` and `hoverColor` removed — use `hoverOffColor` and `hoverOnColor` instead
+- **BREAKING**: `Tween` no longer adds itself to `game.world` — uses event-based lifecycle (`TICK`, `GAME_AFTER_UPDATE`, `STATE_PAUSE`, `STATE_RESUME`, `GAME_RESET`) instead. Public API unchanged. `isPersistent` and `updateWhenPaused` properties still supported.
 
 ### Fixed
 - WebGL: depth buffer now correctly used for 3D mesh rendering with `gl.LESS` depth function

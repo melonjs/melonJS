@@ -90,17 +90,20 @@ export class EventEmitter<Events extends EventsMap = DefaultEvents> {
 	emit<E extends keyof Events>(event: E, ...args: Parameters<Events[E]>) {
 		const listeners = this.eventListeners[event];
 		if (listeners) {
-			for (const entry of listeners) {
+			// iterate over a copy so that removeListener during emit is safe
+			const snapshot = listeners.slice();
+			for (const entry of snapshot) {
 				entry.fn.apply(entry.ctx, args);
 			}
 		}
 
 		const listenersOnce = this.eventListenersOnce[event];
 		if (listenersOnce) {
+			// clear before invoking so re-entrant addListenerOnce is safe
+			this.eventListenersOnce[event] = [];
 			for (const entry of listenersOnce) {
 				entry.fn.apply(entry.ctx, args);
 			}
-			this.eventListenersOnce[event] = [];
 		}
 	}
 
