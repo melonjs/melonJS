@@ -431,7 +431,8 @@ export default class Tween {
 			this._onStartCallbackFired = true;
 		}
 
-		let elapsed = (time - this._startTime) / this._duration;
+		let elapsed =
+			this._duration > 0 ? (time - this._startTime) / this._duration : 1;
 		elapsed = elapsed > 1 ? 1 : elapsed;
 
 		const value = this._easingFunction(elapsed);
@@ -446,9 +447,13 @@ export default class Tween {
 			} else {
 				// Parses relative end values with start as base (e.g.: +10, -3)
 				if (typeof end === "string") {
+					const parsed = parseFloat(end);
+					if (isNaN(parsed)) {
+						continue; // skip non-numeric string properties
+					}
 					// @ts-expect-error todo
 					// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-					end = start + parseFloat(end);
+					end = start + parsed;
 				}
 
 				// protect against non numeric properties.

@@ -463,4 +463,182 @@ describe("Tween", () => {
 			expect(obj.x).toBeCloseTo(150, 0);
 		});
 	});
+
+	// --- edge cases ---
+
+	describe("edge cases", () => {
+		it("restart after completion works", () => {
+			tween.to({ x: 100 }, { duration: 100 });
+			tween.start(0);
+			tween.update(100);
+			expect(tween._isRunning).toBe(false);
+			expect(obj.x).toBeCloseTo(100, 0);
+
+			// reset object and restart
+			obj.x = 0;
+			tween.to({ x: 200 }, { duration: 100 });
+			tween.start(0);
+			expect(tween._isRunning).toBe(true);
+
+			tween.update(100);
+			expect(obj.x).toBeCloseTo(200, 0);
+		});
+
+		it("duration of 0 does not divide by zero", () => {
+			// duration 0 should not cause Infinity/NaN in elapsed calculation
+			tween.to({ x: 100 }, { duration: 0 });
+			tween.start(0);
+
+			// should not throw or produce NaN
+			expect(() => {
+				tween.update(16);
+			}).not.toThrow();
+			expect(isNaN(obj.x)).toBe(false);
+		});
+
+		it("empty properties to({}) completes after duration", () => {
+			let completed = false;
+			tween.to({}, { duration: 100 }).onComplete(() => {
+				completed = true;
+			});
+			tween.start(0);
+
+			tween.update(100);
+			expect(completed).toBe(true);
+			// object unchanged
+			expect(obj.x).toEqual(0);
+			expect(obj.y).toEqual(0);
+		});
+
+		it("infinite repeat never completes", () => {
+			let completeCount = 0;
+			tween
+				.to({ x: 100 }, { duration: 100, repeat: Infinity })
+				.onComplete(() => {
+					completeCount++;
+				});
+			tween.start(0);
+
+			// run many cycles
+			for (let i = 0; i < 100; i++) {
+				tween.update(100);
+			}
+			expect(completeCount).toEqual(0);
+			expect(tween._isRunning).toBe(true);
+		});
+
+		it("onComplete callback can start a new tween", () => {
+			const obj2 = { x: 0 };
+			let secondStarted = false;
+
+			tween.to({ x: 100 }, { duration: 100 }).onComplete(() => {
+				const t2 = new Tween(obj2).to({ x: 50 }, { duration: 100 });
+				t2.start(0);
+				secondStarted = t2._isRunning;
+			});
+			tween.start(0);
+
+			tween.update(100);
+			expect(secondStarted).toBe(true);
+		});
+
+		it("multiple tweens on same object both run", () => {
+			const tweenX = new Tween(obj).to({ x: 100 }, { duration: 100 });
+			const tweenY = new Tween(obj).to({ y: 200 }, { duration: 100 });
+
+			tweenX.start(0);
+			tweenY.start(0);
+
+			tweenX.update(100);
+			tweenY.update(100);
+
+			expect(obj.x).toBeCloseTo(100, 0);
+			expect(obj.y).toBeCloseTo(200, 0);
+		});
+
+		it("stop during onUpdate callback is safe", () => {
+			let updateCount = 0;
+			tween.to({ x: 100 }, { duration: 1000 }).onUpdate(() => {
+				updateCount++;
+				if (updateCount >= 2) {
+					tween.stop();
+				}
+			});
+			tween.start(0);
+
+			tween.update(100);
+			tween.update(100);
+			expect(tween._isRunning).toBe(false);
+		});
+
+		it("start with negative delay is treated as no delay", () => {
+			tween.to({ x: 100 }, { duration: 100 });
+			tween.delay(-500);
+			tween.start(0);
+
+			tween.update(100);
+			// should have completed (negative delay doesn't block)
+			expect(obj.x).toBeGreaterThan(0);
+		});
+
+		it("tweening a non-numeric property is ignored", () => {
+			const strObj = { name: "hello", x: 0 } as Record<string, unknown>;
+			const t = new Tween(strObj).to(
+				{ name: "world", x: 100 },
+				{ duration: 100 },
+			);
+			t.start(0);
+
+			expect(() => {
+				t.update(100);
+			}).not.toThrow();
+			// numeric property should be tweened
+			expect(strObj.x).toBeCloseTo(100, 0);
+			// string property should be unchanged (not corrupted to NaN)
+			expect(strObj.name).toEqual("hello");
+		});
+
+		it("very large dt does not break the tween", () => {
+			tween.to({ x: 100 }, { duration: 1000 });
+			tween.start(0);
+
+			// simulate a huge frame skip
+			tween.update(999999);
+			expect(obj.x).toBeCloseTo(100, 0);
+			expect(tween._isRunning).toBe(false);
+		});
+
+		it("update with dt=0 does not crash", () => {
+			tween.to({ x: 100 }, { duration: 1000 });
+			tween.start(0);
+
+			expect(() => {
+				tween.update(0);
+				tween.update(0);
+				tween.update(0);
+			}).not.toThrow();
+		});
+
+		it("yoyo without repeat behaves like no yoyo", () => {
+			tween.to({ x: 100 }, { duration: 100, yoyo: true });
+			tween.start(0);
+
+			tween.update(100);
+			// completes normally (yoyo only matters with repeat)
+			expect(obj.x).toBeCloseTo(100, 0);
+			expect(tween._isRunning).toBe(false);
+		});
+
+		it("chained tween on a stopped parent never starts", () => {
+			const obj2 = { x: 0 };
+			const chained = new Tween(obj2).to({ x: 100 }, { duration: 100 });
+
+			tween.to({ x: 100 }, { duration: 1000 }).chain(chained);
+			tween.start(0);
+			tween.stop();
+
+			// parent was stopped, chained should not have started
+			expect(chained._isRunning).toBe(false);
+		});
+	});
 });
