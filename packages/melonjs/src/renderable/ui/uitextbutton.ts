@@ -17,10 +17,6 @@ interface UITextButtonSettings {
 	textBaseline?: string;
 	borderWidth?: number;
 	borderHeight?: number;
-	/** @deprecated use hoverOffColor */
-	backgroundColor?: string;
-	/** @deprecated use hoverOnColor */
-	hoverColor?: string;
 	[key: string]: any;
 }
 
@@ -96,8 +92,8 @@ export default class UITextButton extends UIBaseElement {
 	 *              // if you omit the next two, size is calculated by the size of the text
 	 *              borderWidth: 200,
 	 *              borderHeight: 20,
-	 *              backgroundColor: '#00aa0080',
-	 *              hoverColor: '#00ff00ff'
+	 *              hoverOffColor: '#00aa0080',
+	 *              hoverOnColor: '#00ff00ff'
 	 *          });
 	 *      }
 	 *
@@ -113,15 +109,8 @@ export default class UITextButton extends UIBaseElement {
 
 		this.bindKey = settings.bindKey || -1;
 
-		/* eslint-disable @typescript-eslint/no-deprecated */
-		// keep settings.backgroundColor for backward compatibility
-		this.hoverOffColor =
-			settings.hoverOffColor || settings.backgroundColor || "#00aa0080";
-
-		// keep settings.hoverColor for backward compatibility
-		this.hoverOnColor =
-			settings.hoverOnColor || settings.hoverColor || "#00ff00ff";
-		/* eslint-enable @typescript-eslint/no-deprecated */
+		this.hoverOffColor = settings.hoverOffColor || "#00aa0080";
+		this.hoverOnColor = settings.hoverOnColor || "#00ff00ff";
 
 		this.borderStrokeColor = settings.borderStrokeColor || "#000000";
 

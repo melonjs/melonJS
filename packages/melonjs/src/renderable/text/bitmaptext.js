@@ -288,31 +288,15 @@ export default class BitmapText extends Renderable {
 	/**
 	 * draw the bitmap font
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - Reference to the destination renderer instance
-	 * @param {string} [text]
-	 * @param {number} [x]
-	 * @param {number} [y]
 	 */
-	draw(renderer, text, x, y) {
-		// save the previous global alpha value
-		const _alpha = renderer.globalAlpha();
-
-		// allows to provide backward compatibility when
-		// adding Bitmap Font to an object container
-		if (typeof this.ancestor === "undefined") {
-			// update cache
-			this.setText(text);
-			renderer.setGlobalAlpha(_alpha * this.getOpacity());
-		} else {
-			// added directly to an object container
-			x = this.pos.x;
-			y = this.pos.y;
-		}
+	draw(renderer) {
+		let x = this.pos.x;
+		let y = this.pos.y;
 
 		const lX = x;
 		const stringHeight = this.metrics.lineHeight();
 		const gy = this.metrics.glyphYOffset || 0;
 		const h = this.metrics.height;
-		let maxWidth = 0;
 
 		// apply baseline shift once for the entire text block
 		switch (this.textBaseline) {
@@ -346,17 +330,6 @@ export default class BitmapText extends Renderable {
 
 				default:
 					break;
-			}
-
-			// update initial position if required
-			if (this.isDirty === true && typeof this.ancestor === "undefined") {
-				if (i === 0) {
-					this.pos.y = y;
-				}
-				if (maxWidth < stringWidth) {
-					maxWidth = stringWidth;
-					this.pos.x = x;
-				}
 			}
 
 			// draw the string
@@ -402,15 +375,6 @@ export default class BitmapText extends Renderable {
 			// increment line
 			y += stringHeight;
 		}
-
-		if (typeof this.ancestor === "undefined") {
-			// restore the previous global alpha value
-			renderer.setGlobalAlpha(_alpha);
-		}
-
-		// clear the dirty flag here for
-		// backward compatibility
-		this.isDirty = false;
 	}
 
 	/**
