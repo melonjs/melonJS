@@ -308,6 +308,9 @@ describe("Tween", () => {
 			// Quadratic.In should be behind Linear at the midpoint
 			expect(quadObj.x).toBeLessThan(linearObj.x);
 			expect(quadObj.x).toBeGreaterThan(0);
+
+			linearTween.stop();
+			quadTween.stop();
 		});
 
 		it("returns this for chaining", () => {
@@ -328,6 +331,7 @@ describe("Tween", () => {
 			tween.update(100);
 			// chained tween should have started
 			expect(chained._isRunning).toBe(true);
+			chained.stop();
 		});
 
 		it("returns this for chaining", () => {
@@ -535,9 +539,10 @@ describe("Tween", () => {
 		it("onComplete callback can start a new tween", () => {
 			const obj2 = { x: 0 };
 			let secondStarted = false;
+			let t2: InstanceType<typeof Tween> | null = null;
 
 			tween.to({ x: 100 }, { duration: 100 }).onComplete(() => {
-				const t2 = new Tween(obj2).to({ x: 50 }, { duration: 100 });
+				t2 = new Tween(obj2).to({ x: 50 }, { duration: 100 });
 				t2.start(0);
 				secondStarted = t2._isRunning;
 			});
@@ -545,6 +550,7 @@ describe("Tween", () => {
 
 			tween.update(100);
 			expect(secondStarted).toBe(true);
+			t2?.stop();
 		});
 
 		it("multiple tweens on same object both run", () => {

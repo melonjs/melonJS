@@ -243,25 +243,25 @@ export default class Tween {
 		this._valuesEnd = properties;
 
 		if (typeof options !== "undefined") {
-			if (options.duration) {
+			if (options.duration !== undefined) {
 				this._duration = options.duration;
 			}
-			if (options.yoyo) {
+			if (options.yoyo !== undefined) {
 				this.yoyo(options.yoyo);
 			}
-			if (options.easing) {
+			if (options.easing !== undefined) {
 				this.easing(options.easing);
 			}
-			if (options.repeat) {
+			if (options.repeat !== undefined) {
 				this.repeat(options.repeat);
 			}
-			if (options.delay) {
+			if (options.delay !== undefined) {
 				this.delay(options.delay);
 			}
-			if (options.interpolation) {
+			if (options.interpolation !== undefined) {
 				this.interpolation(options.interpolation);
 			}
-			if (options.autoStart) {
+			if (options.autoStart === true) {
 				this.start();
 			}
 		}
@@ -280,6 +280,10 @@ export default class Tween {
 		this._unsubscribe();
 
 		this._onStartCallbackFired = false;
+
+		// sync internal time tracker to the provided start time
+		this._tweenTimeTracker = time;
+		this._lastUpdate = time;
 
 		// subscribe to game loop events
 		this._lastTick = globalThis.performance.now();
