@@ -1,5 +1,6 @@
 import { Color, colorPool } from "./../../math/color.ts";
 import { isPowerOfTwo } from "./../../math/math.ts";
+import { Matrix3d } from "../../math/matrix3d.ts";
 import {
 	CANVAS_ONRESIZE,
 	emit,
@@ -17,6 +18,7 @@ import {
 	generateJoinCircles,
 	generateTriangleFan,
 } from "../utils/tessellation.js";
+import MeshBatcher from "./batchers/mesh_batcher";
 import PrimitiveBatcher from "./batchers/primitive_batcher";
 import QuadBatcher from "./batchers/quad_batcher";
 
@@ -31,6 +33,9 @@ import QuadBatcher from "./batchers/quad_batcher";
  * @import {Matrix3d} from "../../math/matrix3d.ts";
  * @import {Batcher} from "./batchers/batcher.js";
  */
+
+// reusable constants for 2D→3D matrix operations
+const _tempMatrix = new Matrix3d();
 
 // list of supported compressed texture formats
 let supportedCompressedTextureFormats;
@@ -115,7 +120,7 @@ export default class WebGLRenderer extends Renderer {
 		/**
 		 * The current transformation matrix used for transformations on the overall scene
 		 * (alias to renderState.currentTransform for backward compatibility)
-		 * @type {Matrix2d}
+		 * @type {Matrix3d}
 		 */
 		this.currentTransform = this.renderState.currentTransform;
 
@@ -144,6 +149,7 @@ export default class WebGLRenderer extends Renderer {
 		const CustomBatcher = this.settings.batcher || this.settings.compositor;
 		this.addBatcher(new (CustomBatcher || QuadBatcher)(this), "quad", true);
 		this.addBatcher(new (CustomBatcher || PrimitiveBatcher)(this), "primitive");
+		this.addBatcher(new MeshBatcher(this), "mesh");
 
 		// depth Test settings
 		this.depthTest = options.depthTest;
@@ -371,6 +377,8 @@ export default class WebGLRenderer extends Renderer {
 			this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
 			this.currentBatcher = batcher;
 			this.currentBatcher.bind();
+			// sync the projection matrix to the new batcher
+			this.currentBatcher.setProjection(this.projectionMatrix);
 		}
 
 		if (typeof shader === "object") {
@@ -477,13 +485,8 @@ export default class WebGLRenderer extends Renderer {
 		const clearColor = this.backgroundColor.toArray();
 		gl.clearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
 		this.lineWidth = 1;
-		if (this.depthTest === "z-buffer") {
-			gl.clear(
-				gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT,
-			);
-		} else {
-			gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
-		}
+		// always clear depth + color + stencil (depth buffer is always available)
+		gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 	}
 
 	/**
@@ -627,6 +630,68 @@ export default class WebGLRenderer extends Renderer {
 			uvs[3],
 			this.currentTint.toUint32(this.getGlobalAlpha()),
 		);
+	}
+
+	/**
+	 * Draw a textured triangle mesh.
+	 * Enables hardware depth testing and backface culling for the duration of the draw,
+	 * then restores the previous GL state. Large meshes are automatically chunked
+	 * across multiple draw calls to fit the vertex/index buffer limits.
+	 * @param {Mesh} mesh - a Mesh renderable or compatible object
+	 */
+	drawMesh(mesh) {
+		const gl = this.gl;
+
+		this.setBatcher("mesh");
+
+		// apply custom shader if set on the renderable (via preDraw)
+		if (typeof this.customShader === "object") {
+			this.currentBatcher.useShader(this.customShader);
+		}
+
+		// save current depth state and force depth testing for 3D mesh
+		const depthWasEnabled = this.depthTest === "z-buffer";
+
+		gl.enable(gl.DEPTH_TEST);
+		gl.depthFunc(gl.LESS);
+		gl.depthMask(true);
+		gl.clearDepth(1.0);
+		gl.clear(gl.DEPTH_BUFFER_BIT);
+
+		// disable blending during opaque mesh rendering to avoid depth/blend conflicts
+		gl.disable(gl.BLEND);
+
+		// toggle backface culling based on mesh property
+		if (mesh.cullBackFaces) {
+			gl.enable(gl.CULL_FACE);
+			gl.cullFace(gl.BACK);
+			gl.frontFace(gl.CCW);
+		}
+
+		this.currentBatcher.addMesh(
+			mesh,
+			this.currentTint.toUint32(this.getGlobalAlpha()),
+		);
+
+		// flush and restore GL state
+		this.flush();
+
+		if (mesh.cullBackFaces) {
+			gl.disable(gl.CULL_FACE);
+		}
+
+		// restore blending and depth state
+		gl.enable(gl.BLEND);
+
+		if (!depthWasEnabled) {
+			gl.disable(gl.DEPTH_TEST);
+			gl.depthMask(false);
+		}
+
+		// revert to default shader if custom was applied
+		if (typeof this.customShader === "object") {
+			this.currentBatcher.useShader(this.currentBatcher.defaultShader);
+		}
 	}
 
 	/**
@@ -946,7 +1011,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} y - Scaling factor in the vertical direction. A negative value flips pixels across the horizontal axis. A value of 1 results in no vertical scaling
 	 */
 	scale(x, y) {
-		this.currentTransform.scale(x, y);
+		this.currentTransform.scale(x, y, 1);
 	}
 
 	/**
@@ -1547,7 +1612,7 @@ export default class WebGLRenderer extends Renderer {
 	/**
 	 * Reset (overrides) the renderer transformation matrix to the
 	 * identity one, and then apply the given transformation matrix.
-	 * @param {Matrix2d|number} a - a matrix2d to transform by, or a the a component to multiply the current matrix by
+	 * @param {Matrix2d|Matrix3d|number} a - a matrix to transform by, or the a component to multiply the current matrix by
 	 * @param {number} b - the b component to multiply the current matrix by
 	 * @param {number} c - the c component to multiply the current matrix by
 	 * @param {number} d - the d component to multiply the current matrix by
@@ -1562,7 +1627,7 @@ export default class WebGLRenderer extends Renderer {
 	/**
 	 * Multiply given matrix into the renderer tranformation matrix
 	 * @see {@link WebGLRenderer.setTransform} which will reset the current transform matrix prior to performing the new transformation
-	 * @param {Matrix2d|number} a - a matrix2d to transform by, or a the a component to multiply the current matrix by
+	 * @param {Matrix2d|Matrix3d|number} a - a matrix to transform by, or the a component to multiply the current matrix by
 	 * @param {number} b - the b component to multiply the current matrix by
 	 * @param {number} c - the c component to multiply the current matrix by
 	 * @param {number} d - the d component to multiply the current matrix by
@@ -1571,16 +1636,36 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	transform(a, b, c, d, e, f) {
 		if (typeof a === "object") {
+			// accepts both Matrix2d and Matrix3d (no temporary copy needed)
 			this.currentTransform.multiply(a);
 		} else {
-			// indivudual component
-			this.currentTransform.transform(a, b, c, d, e, f);
+			// individual 2D affine components
+			this.currentTransform.multiply(
+				_tempMatrix.setTransform(
+					a,
+					b,
+					0,
+					0,
+					c,
+					d,
+					0,
+					0,
+					0,
+					0,
+					1,
+					0,
+					e,
+					f,
+					0,
+					1,
+				),
+			);
 		}
 		if (this.settings.subPixel === false) {
 			// snap position values to pixel grid
-			const a = this.currentTransform.toArray();
-			a[6] |= 0;
-			a[7] |= 0;
+			const a = this.currentTransform.val;
+			a[12] |= 0;
+			a[13] |= 0;
 		}
 	}
 
@@ -1590,13 +1675,12 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} y - Distance to move in the vertical direction. Positive values are down, and negative are up.
 	 */
 	translate(x, y) {
-		const currentTransform = this.currentTransform;
-		currentTransform.translate(x, y);
+		this.currentTransform.translate(x, y);
 		if (this.settings.subPixel === false) {
 			// snap position values to pixel grid
-			const a = currentTransform.toArray();
-			a[6] |= 0;
-			a[7] |= 0;
+			const a = this.currentTransform.val;
+			a[12] |= 0;
+			a[13] |= 0;
 		}
 	}
 

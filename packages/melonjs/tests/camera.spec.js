@@ -51,7 +51,7 @@ describe("Camera2d", () => {
 		// update position so that it's not just 0
 		camera.move(100, 100);
 		// rotate the viewport
-		camera.currentTransform.rotate(0.5);
+		camera.rotate(0.5);
 		// make sure the camera go through one round of update
 		camera.update(0.16);
 		// convert to word coordinates
@@ -506,7 +506,7 @@ describe("Camera2d", () => {
 			cam.screenX = 620;
 			cam.screenY = 10;
 			// simulate zoom out
-			cam.currentTransform.scale(0.1, 0.1);
+			cam.scale(0.1, 0.1);
 			expect(cam.currentTransform.isIdentity()).toBe(false);
 			expect(cam.screenX).toEqual(620);
 		});
@@ -742,7 +742,7 @@ describe("Camera2d", () => {
 	describe("rotation", () => {
 		it("should not affect camera dimensions", () => {
 			const { camera } = setup();
-			camera.currentTransform.rotate(Math.PI / 4);
+			camera.rotate(Math.PI / 4);
 			expect(camera.width).toEqual(1000);
 			expect(camera.height).toEqual(1000);
 		});
@@ -752,7 +752,7 @@ describe("Camera2d", () => {
 			const r = video.renderer;
 			const cam = new Camera2d(0, 0, 800, 600);
 			cam.reset(0, 0);
-			cam.currentTransform.rotate(0.5);
+			cam.rotate(0.5);
 
 			const angleBefore = Math.atan2(
 				cam.currentTransform.val[1],
@@ -771,7 +771,7 @@ describe("Camera2d", () => {
 			const r = video.renderer;
 			const cam = new Camera2d(0, 0, 800, 600);
 			cam.reset(0, 0);
-			cam.currentTransform.rotate(0.5);
+			cam.rotate(0.5);
 
 			const depthBefore = r.renderState._stackDepth;
 			cam.draw(r, game.world);
@@ -787,7 +787,7 @@ describe("Camera2d", () => {
 			cam.zoom = 0.5;
 			cam.reset(0, 0);
 			cam.setBounds(0, 0, 2000, 2000);
-			cam.currentTransform.rotate(0.3);
+			cam.rotate(0.3);
 
 			const depthBefore = r.renderState._stackDepth;
 			cam.draw(r, game.world);
@@ -801,7 +801,7 @@ describe("Camera2d", () => {
 			const cam = new Camera2d(0, 0, 100, 100);
 			cam.reset(0, 0);
 			cam.setBounds(0, 0, 2000, 2000);
-			cam.currentTransform.rotate(0.5);
+			cam.rotate(0.5);
 
 			// worldView is axis-aligned and based on pos/zoom, not rotation
 			const view = cam.worldView;
@@ -816,7 +816,7 @@ describe("Camera2d", () => {
 			const cam = new Camera2d(0, 0, 100, 100);
 			cam.reset(0, 0);
 			cam.setBounds(0, 0, 2000, 2000);
-			cam.currentTransform.rotate(0.5);
+			cam.rotate(0.5);
 			cam.zoom = 0.5;
 
 			const view = cam.worldView;

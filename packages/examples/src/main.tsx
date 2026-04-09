@@ -83,6 +83,16 @@ const ExampleMasking = lazy(() =>
 		default: m.ExampleMasking,
 	})),
 );
+const ExampleMesh3d = lazy(() =>
+	import("./examples/mesh3d/ExampleMesh3d").then((m) => ({
+		default: m.ExampleMesh3d,
+	})),
+);
+const ExampleMesh3dMaterial = lazy(() =>
+	import("./examples/mesh3dMaterial/ExampleMesh3dMaterial").then((m) => ({
+		default: m.ExampleMesh3dMaterial,
+	})),
+);
 const ExamplePlatformer = lazy(() =>
 	import("./examples/platformer/ExamplePlatformer").then((m) => ({
 		default: m.ExamplePlatformer,
@@ -247,6 +257,22 @@ const examples: {
 		sourceDir: "masking",
 		description:
 			"Sprite masking with different shapes (rounded rectangle, ellipse, star polygon) and blend modes.",
+	},
+	{
+		component: <ExampleMesh3d />,
+		label: "3D Mesh",
+		path: "mesh-3d",
+		sourceDir: "mesh3d",
+		description:
+			"Rotating textured 3D objects (cube, sphere, teapot) loaded from OBJ files with checkerboard texture and perspective projection.",
+	},
+	{
+		component: <ExampleMesh3dMaterial />,
+		label: "3D Material",
+		path: "mesh-3d-material",
+		sourceDir: "mesh3dMaterial",
+		description:
+			"3D cube pet models from Kenney with MTL material support — texture and colors auto-resolved from .mtl files.",
 	},
 	{
 		component: <ExamplePlatformer />,

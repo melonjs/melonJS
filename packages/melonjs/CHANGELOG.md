@@ -1,12 +1,44 @@
 # Changelog
 
-## [18.4.0] (melonJS 2) - _unreleased_
+## [19.0.0] (melonJS 2) - _unreleased_
 
 ### Added
+- Renderer: `drawMesh(mesh)` method on both WebGL and Canvas renderers for textured triangle mesh rendering with backface culling and depth testing
+- Renderable: `Mesh` class for displaying textured 3D triangle meshes, with OBJ model loading or raw geometry data, built-in perspective projection, and standard transform API (`rotate`, `scale`, `translate`)
+- Renderable: `Mesh.toCanvas()` and `Mesh.toImageBitmap()` — render the mesh at its current state to an offscreen canvas or ImageBitmap for use as a Sprite image or with `drawImage()`
+- Renderable: `Mesh.toPolygon()` — compute a 2D convex hull polygon from the current projected vertices for collision shapes
+- Renderable: `translate(x, y, z)` method added to Renderable for transform-based translation
+- Loader: Wavefront OBJ format parser — `loader.preload({ type: "obj" })` and `loader.getOBJ(name)` for loading 3D model geometry (vertices, UVs, faces, quad triangulation, winding auto-correction)
+- Loader: Wavefront MTL material parser — `loader.preload({ type: "mtl" })` and `loader.getMTL(name)` for loading material properties (diffuse texture, diffuse color, opacity)
+- Math: `Matrix3d.perspective(fov, aspect, near, far)` — generate a perspective projection matrix
+- Math: `Matrix3d.toMatrix2d(out?)` — extract the 2D affine components from a 4x4 matrix
+- Math: vertex utilities in `src/math/vertex.js` — `normalizeVertices()`, `projectVertices()`, `convexHull()`
+- WebGL: `MaterialBatcher` base class for textured batchers, shared by `QuadBatcher` and `MeshBatcher` (texture create/bind/upload/delete)
+- WebGL: `MeshBatcher` for indexed triangle mesh rendering with chunked buffer management for large models
+- WebGL: `IndexBuffer.addRaw(indices)` for adding pre-computed absolute indices without rebasing
+- Canvas: degenerate UV triangle support — solid color fill sampled from texture for color-palette models (e.g. Kenney)
 
 ### Changed
+- **BREAKING**: `Renderable.currentTransform` is now a `Matrix3d` (was `Matrix2d`) — enables 3D transforms on any renderable. Code that accesses `currentTransform.val` indices directly must update: translation is at `[12],[13]` (was `[6],[7]`)
+- **BREAKING**: `Matrix3d.scale(x, y, z)` default `z` changed from `0` to `1` — prevents accidental Z-axis flattening
+- **BREAKING**: `Matrix3d.rotate(angle, v)` axis parameter is now optional, defaults to Z axis — 2D rotation works without specifying an axis
+- **BREAKING**: `Matrix2d.fromMat3d()` now extracts translation from indices `[12],[13]` (was `[8],[9]`) — correctly converts 4x4 translation to 2D affine
+- **BREAKING**: `Matrix3d.multiply()` now accepts both `Matrix3d` and `Matrix2d` — Matrix2d is promoted to 4x4 inline, no temporary copy needed
+- **BREAKING**: `Matrix3d.rotate()` returns `this` instead of `null` on zero-length axis vector — safe for method chaining
+- `RenderState` save/restore stack uses `Matrix3d` (was `Matrix2d`)
+- `Camera2d.invCurrentTransform` is now `Matrix3d` (was `Matrix2d`)
+- `Renderable.rotate(angle, v)` defaults to Z axis when no axis given (same 2D behavior)
+- `Renderable.scale(x, y, z)` defaults z to 1 (preserves Z dimension)
+- `QuadBatcher` and `MeshBatcher` now extend `MaterialBatcher` (was `Batcher`) — eliminates ~180 lines of duplicated texture management code
+- WebGL context always created with `depth: true` for hardware depth buffer support
+- WebGL `clear()` now always clears depth + color + stencil buffers
+- WebGL renderer `setBatcher()` now syncs the projection matrix to the new batcher
 
 ### Fixed
+- WebGL: depth buffer now correctly used for 3D mesh rendering with `gl.LESS` depth function
+- Canvas: backface culling corrected for Y-flipped screen space (was culling front faces instead of back)
+- Canvas: triangle seam expansion (0.5px) to cover anti-aliasing gaps between adjacent triangles
+- Canvas: painter's algorithm depth sorting for back-to-front triangle rendering
 
 ## [18.3.0] (melonJS 2) - _2026-04-07_
 

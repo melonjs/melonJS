@@ -32,6 +32,7 @@ import { DropTarget } from "./renderable/dragndrop.js";
 import Entity from "./renderable/entity/entity.js";
 import ImageLayer from "./renderable/imagelayer.js";
 import Light2d from "./renderable/light2d.js";
+import Mesh from "./renderable/mesh.js";
 import NineSliceSprite from "./renderable/nineslicesprite.js";
 import Renderable from "./renderable/renderable.js";
 import Sprite from "./renderable/sprite.js";
@@ -123,6 +124,7 @@ export {
 	Gradient,
 	ImageLayer,
 	Light2d,
+	Mesh,
 	NineSliceSprite,
 	Particle,
 	ParticleEmitter,

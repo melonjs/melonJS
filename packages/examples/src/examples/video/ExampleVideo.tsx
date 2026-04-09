@@ -46,7 +46,7 @@ const createGame = () => {
 					anchorPoint: new Vector2d(0.5, 0.5),
 				},
 			);
-			videoSprite.currentTransform.scale(2);
+			videoSprite.scale(2);
 			videoSprite.onended = () => {
 				console.log("video ended !");
 			};

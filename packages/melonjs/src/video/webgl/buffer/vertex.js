@@ -76,6 +76,25 @@ export default class VertexArrayBuffer {
 	}
 
 	/**
+	 * push a new vertex to the buffer (mesh format: x, y, z, u, v, tint)
+	 * @ignore
+	 */
+	pushMesh(x, y, z, u, v, tint) {
+		const offset = this.vertexCount * this.vertexSize;
+
+		this.bufferF32[offset] = x;
+		this.bufferF32[offset + 1] = y;
+		this.bufferF32[offset + 2] = z;
+		this.bufferF32[offset + 3] = u;
+		this.bufferF32[offset + 4] = v;
+		this.bufferU32[offset + 5] = tint;
+
+		this.vertexCount++;
+
+		return this;
+	}
+
+	/**
 	 * return a reference to the data in Float32 format
 	 * @ignore
 	 */

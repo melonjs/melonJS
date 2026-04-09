@@ -3,7 +3,6 @@ import { Rect } from "./../geometries/rectangle.ts";
 import type { Color } from "../math/color.ts";
 import { colorPool } from "../math/color.ts";
 import { clamp, toBeCloseTo } from "./../math/math.ts";
-import { Matrix2d } from "../math/matrix2d.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d, vector2dPool } from "../math/vector2d.ts";
 import { Vector3d } from "../math/vector3d.ts";
@@ -159,7 +158,7 @@ export default class Camera2d extends Renderable {
 	 * the invert camera transform used to unproject points
 	 * @ignore
 	 */
-	invCurrentTransform: Matrix2d;
+	invCurrentTransform: Matrix3d;
 
 	/** offset for shake effect */
 	offset: Vector2d;
@@ -219,7 +218,7 @@ export default class Camera2d extends Renderable {
 
 		this.projectionMatrix = new Matrix3d();
 
-		this.invCurrentTransform = new Matrix2d();
+		this.invCurrentTransform = new Matrix3d();
 
 		// offset for shake effect
 		this.offset = new Vector2d();
@@ -890,7 +889,7 @@ export default class Camera2d extends Renderable {
 		const translateY = this.pos.y + this.offset.y + containerOffsetY;
 
 		// translate the world coordinates by default to screen coordinates
-		container.currentTransform.translate(-translateX, -translateY);
+		container.translate(-translateX, -translateY);
 
 		this.preDraw(r);
 
@@ -954,6 +953,6 @@ export default class Camera2d extends Renderable {
 		this.postDraw(r);
 
 		// translate the world coordinates by default to screen coordinates
-		container.currentTransform.translate(translateX, translateY);
+		container.translate(translateX, translateY);
 	}
 }

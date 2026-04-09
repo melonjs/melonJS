@@ -321,6 +321,177 @@ export default class CanvasRenderer extends Renderer {
 	}
 
 	/**
+	 * Draw a textured triangle mesh.
+	 * Uses per-triangle affine texture mapping with back-to-front depth sorting
+	 * (painter's algorithm) and optional backface culling.
+	 * Note: the painter's algorithm works well for convex shapes but may produce
+	 * visual artifacts with concave or self-overlapping geometry (e.g. a torus),
+	 * as Canvas 2D has no hardware depth buffer. Use the WebGL renderer for
+	 * correct depth ordering on complex meshes.
+	 * @param {Mesh} mesh - a Mesh renderable or compatible object
+	 */
+	drawMesh(mesh) {
+		if (this.getGlobalAlpha() < 1 / 255) {
+			return;
+		}
+
+		const vertices = mesh.vertices;
+		const uvs = mesh.uvs;
+		const indices = mesh.indices;
+
+		// apply tint if set
+		let image = mesh.texture.getTexture();
+		const tint = this.currentTint.toArray();
+		if (tint[0] !== 1.0 || tint[1] !== 1.0 || tint[2] !== 1.0) {
+			image = this.cache.tint(image, this.currentTint.toRGB());
+		}
+		const imgW = image.width;
+		const imgH = image.height;
+		const cullBack = mesh.cullBackFaces === true;
+		const triCount = indices.length / 3;
+
+		// pre-allocate flat sort array (reuse across frames via closure)
+		// each entry stores: [sortKey, originalIndex]
+		if (!this._meshSortBuf || this._meshSortBuf.length < triCount * 2) {
+			this._meshSortBuf = new Float64Array(triCount * 2);
+		}
+		const sortBuf = this._meshSortBuf;
+		let visCount = 0;
+
+		// build sort keys for visible triangles (no object allocation)
+		for (let j = 0; j < indices.length; j += 3) {
+			const i0 = indices[j];
+			const i1 = indices[j + 1];
+			const i2 = indices[j + 2];
+
+			// backface culling
+			if (cullBack) {
+				const x0 = vertices[i0 * 3];
+				const y0 = vertices[i0 * 3 + 1];
+				const cross =
+					(vertices[i1 * 3] - x0) * (vertices[i2 * 3 + 1] - y0) -
+					(vertices[i2 * 3] - x0) * (vertices[i1 * 3 + 1] - y0);
+				if (cross > 0) {
+					continue;
+				}
+			}
+
+			// store maxZ as sort key and triangle start index
+			const z0 = vertices[i0 * 3 + 2];
+			const z1 = vertices[i1 * 3 + 2];
+			const z2 = vertices[i2 * 3 + 2];
+			const idx = visCount * 2;
+			sortBuf[idx] = z0 > z1 ? (z0 > z2 ? z0 : z2) : z1 > z2 ? z1 : z2;
+			sortBuf[idx + 1] = j; // original index into indices array
+			visCount++;
+		}
+
+		// sort back-to-front (largest Z = farthest = drawn first)
+		for (let i = 1; i < visCount; i++) {
+			const keyZ = sortBuf[i * 2];
+			const keyJ = sortBuf[i * 2 + 1];
+			let k = i - 1;
+			while (k >= 0 && sortBuf[k * 2] < keyZ) {
+				sortBuf[(k + 1) * 2] = sortBuf[k * 2];
+				sortBuf[(k + 1) * 2 + 1] = sortBuf[k * 2 + 1];
+				k--;
+			}
+			sortBuf[(k + 1) * 2] = keyZ;
+			sortBuf[(k + 1) * 2 + 1] = keyJ;
+		}
+
+		// draw sorted triangles using raw context
+		const context = this.getContext();
+
+		for (let t = 0; t < visCount; t++) {
+			const j = sortBuf[t * 2 + 1];
+			const i0 = indices[j];
+			const i1 = indices[j + 1];
+			const i2 = indices[j + 2];
+
+			const x0 = vertices[i0 * 3];
+			const y0 = vertices[i0 * 3 + 1];
+			const x1 = vertices[i1 * 3];
+			const y1 = vertices[i1 * 3 + 1];
+			const x2 = vertices[i2 * 3];
+			const y2 = vertices[i2 * 3 + 1];
+
+			// UV coordinates scaled to pixel space
+			const u0 = uvs[i0 * 2] * imgW;
+			const v0 = uvs[i0 * 2 + 1] * imgH;
+			const u1 = uvs[i1 * 2] * imgW;
+			const v1 = uvs[i1 * 2 + 1] * imgH;
+			const u2 = uvs[i2 * 2] * imgW;
+			const v2 = uvs[i2 * 2 + 1] * imgH;
+
+			const du1 = u1 - u0;
+			const dv1 = v1 - v0;
+			const du2 = u2 - u0;
+			const dv2 = v2 - v0;
+			const rawDet = du1 * dv2 - du2 * dv1;
+
+			// expand triangle by 0.5px to cover seams
+			const cx = (x0 + x1 + x2) * 0.333333;
+			const cy = (y0 + y1 + y2) * 0.333333;
+
+			context.save();
+			context.beginPath();
+			context.moveTo(
+				x0 + (x0 > cx ? 0.5 : x0 < cx ? -0.5 : 0),
+				y0 + (y0 > cy ? 0.5 : y0 < cy ? -0.5 : 0),
+			);
+			context.lineTo(
+				x1 + (x1 > cx ? 0.5 : x1 < cx ? -0.5 : 0),
+				y1 + (y1 > cy ? 0.5 : y1 < cy ? -0.5 : 0),
+			);
+			context.lineTo(
+				x2 + (x2 > cx ? 0.5 : x2 < cx ? -0.5 : 0),
+				y2 + (y2 > cy ? 0.5 : y2 < cy ? -0.5 : 0),
+			);
+
+			if (rawDet === 0) {
+				// degenerate UV triangle — sample a solid color from the texture
+				// (common with color-palette models where all 3 UVs map to the same point)
+				context.closePath();
+				if (!this._meshColorCanvas) {
+					this._meshColorCanvas = document.createElement("canvas");
+					this._meshColorCanvas.width = 1;
+					this._meshColorCanvas.height = 1;
+					this._meshColorCtx = this._meshColorCanvas.getContext("2d");
+				}
+				const sx = Math.min(Math.max(Math.round(u0), 0), imgW - 1);
+				const sy = Math.min(Math.max(Math.round(v0), 0), imgH - 1);
+				this._meshColorCtx.drawImage(image, sx, sy, 1, 1, 0, 0, 1, 1);
+				const pixel = this._meshColorCtx.getImageData(0, 0, 1, 1).data;
+				context.fillStyle = `rgb(${pixel[0]},${pixel[1]},${pixel[2]})`;
+				context.fill();
+			} else {
+				const dx1 = x1 - x0;
+				const dy1 = y1 - y0;
+				const dx2 = x2 - x0;
+				const dy2 = y2 - y0;
+				const det = 1 / rawDet;
+				const a = (dv2 * dx1 - dv1 * dx2) * det;
+				const b = (dv2 * dy1 - dv1 * dy2) * det;
+				const c = (du1 * dx2 - du2 * dx1) * det;
+				const d = (du1 * dy2 - du2 * dy1) * det;
+
+				context.clip();
+				context.transform(
+					a,
+					b,
+					c,
+					d,
+					x0 - a * u0 - c * v0,
+					y0 - b * u0 - d * v0,
+				);
+				context.drawImage(image, 0, 0);
+			}
+			context.restore();
+		}
+	}
+
+	/**
 	 * starts a new path by emptying the list of sub-paths. Call this method when you want to create a new path
 	 * @example
 	 * // First path
@@ -849,7 +1020,7 @@ export default class CanvasRenderer extends Renderer {
 	/**
 	 * Reset (overrides) the renderer transformation matrix to the
 	 * identity one, and then apply the given transformation matrix.
-	 * @param {Matrix2d|number} a - a matrix2d to transform by, or a the a component to multiply the current matrix by
+	 * @param {Matrix2d|Matrix3d|number} a - a matrix to transform by, or the a component to multiply the current matrix by
 	 * @param {number} b - the b component to multiply the current matrix by
 	 * @param {number} c - the c component to multiply the current matrix by
 	 * @param {number} d - the d component to multiply the current matrix by
@@ -864,7 +1035,7 @@ export default class CanvasRenderer extends Renderer {
 	/**
 	 * Multiply given matrix into the renderer tranformation matrix
 	 * @see {@link CanvasRenderer.setTransform} which will reset the current transform matrix prior to performing the new transformation
-	 * @param {Matrix2d|number} a - a matrix2d to transform by, or a the a component to multiply the current matrix by
+	 * @param {Matrix2d|Matrix3d|number} a - a matrix to transform by, or the a component to multiply the current matrix by
 	 * @param {number} b - the b component to multiply the current matrix by
 	 * @param {number} c - the c component to multiply the current matrix by
 	 * @param {number} d - the d component to multiply the current matrix by
@@ -873,13 +1044,24 @@ export default class CanvasRenderer extends Renderer {
 	 */
 	transform(a, b, c, d, e, f) {
 		if (typeof a === "object") {
-			const m = a.toArray();
-			a = m[0];
-			b = m[1];
-			c = m[3];
-			d = m[4];
-			e = m[6];
-			f = m[7];
+			const m = a.val;
+			if (m.length === 16) {
+				// Matrix3d (column-major 4x4)
+				b = m[1];
+				c = m[4];
+				d = m[5];
+				e = m[12];
+				f = m[13];
+				a = m[0];
+			} else {
+				// Matrix2d (3x3)
+				b = m[1];
+				c = m[3];
+				d = m[4];
+				e = m[6];
+				f = m[7];
+				a = m[0];
+			}
 		}
 		// else individual components
 

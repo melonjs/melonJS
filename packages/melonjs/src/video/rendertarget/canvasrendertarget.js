@@ -39,7 +39,7 @@ function createContext(canvas, attributes) {
 		const attr = {
 			alpha: attributes.transparent,
 			antialias: attributes.antiAlias,
-			depth: attributes.depth,
+			depth: true,
 			stencil: true,
 			preserveDrawingBuffer: false,
 			premultipliedAlpha: attributes.transparent

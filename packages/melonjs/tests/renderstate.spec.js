@@ -72,10 +72,10 @@ describe("RenderState", () => {
 		const val = state.currentTransform.val;
 		expect(val[0]).toBeCloseTo(1, 5);
 		expect(val[1]).toBeCloseTo(0, 5);
-		expect(val[3]).toBeCloseTo(0, 5);
-		expect(val[4]).toBeCloseTo(1, 5);
-		expect(val[6]).toBeCloseTo(0, 5);
-		expect(val[7]).toBeCloseTo(0, 5);
+		expect(val[4]).toBeCloseTo(0, 5);
+		expect(val[5]).toBeCloseTo(1, 5);
+		expect(val[12]).toBeCloseTo(0, 5);
+		expect(val[13]).toBeCloseTo(0, 5);
 	});
 
 	it("should preserve translation across save/restore", () => {
@@ -194,9 +194,9 @@ describe("RenderState", () => {
 		// transform should be identity again
 		const val = state.currentTransform.val;
 		expect(val[0]).toBeCloseTo(1, 5);
-		expect(val[4]).toBeCloseTo(1, 5);
-		expect(val[6]).toBeCloseTo(0, 5);
-		expect(val[7]).toBeCloseTo(0, 5);
+		expect(val[5]).toBeCloseTo(1, 5);
+		expect(val[12]).toBeCloseTo(0, 5);
+		expect(val[13]).toBeCloseTo(0, 5);
 	});
 
 	// ---- Deep nesting ----
@@ -222,9 +222,9 @@ describe("RenderState", () => {
 
 		const val = state.currentTransform.val;
 		expect(val[0]).toBeCloseTo(1, 5);
-		expect(val[4]).toBeCloseTo(1, 5);
-		expect(val[6]).toBeCloseTo(0, 5);
-		expect(val[7]).toBeCloseTo(0, 5);
+		expect(val[5]).toBeCloseTo(1, 5);
+		expect(val[12]).toBeCloseTo(0, 5);
+		expect(val[13]).toBeCloseTo(0, 5);
 	});
 
 	// ---- Stack growth ----
@@ -246,9 +246,9 @@ describe("RenderState", () => {
 		// should be back to identity
 		const val = state.currentTransform.val;
 		expect(val[0]).toBeCloseTo(1, 5);
-		expect(val[4]).toBeCloseTo(1, 5);
-		expect(val[6]).toBeCloseTo(0, 5);
-		expect(val[7]).toBeCloseTo(0, 5);
+		expect(val[5]).toBeCloseTo(1, 5);
+		expect(val[12]).toBeCloseTo(0, 5);
+		expect(val[13]).toBeCloseTo(0, 5);
 		expect(state.currentColor.r).toBe(255);
 	});
 
@@ -303,7 +303,7 @@ describe("RenderState", () => {
 		expect(state.currentColor.r).toBe(255);
 		expect(state.currentColor.g).toBe(0);
 		expect(state.currentColor.b).toBe(0);
-		expect(state.currentTransform.val[6]).toBeCloseTo(0, 5);
+		expect(state.currentTransform.val[12]).toBeCloseTo(0, 5);
 	});
 
 	// ---- Reset ----

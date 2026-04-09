@@ -151,20 +151,21 @@ export class Matrix2d {
 	}
 
 	/**
-	 * Copies over the upper-left 3x3 values from the given Matrix3d
-	 * @param m - the matrix object to copy from
+	 * Extract the 2D affine components from the given Matrix3d
+	 * @param m - the 4x4 matrix to extract from
 	 * @returns Reference to this object for method chaining
 	 */
 	fromMat3d(m: Matrix3d) {
-		this.val[0] = m.val[0];
-		this.val[1] = m.val[1];
-		this.val[2] = m.val[2];
-		this.val[3] = m.val[4];
-		this.val[4] = m.val[5];
-		this.val[5] = m.val[6];
-		this.val[6] = m.val[8];
-		this.val[7] = m.val[9];
-		this.val[8] = m.val[10];
+		const v = m.val;
+		this.val[0] = v[0]; // a (scaleX / cos)
+		this.val[1] = v[1]; // b (sin)
+		this.val[2] = 0;
+		this.val[3] = v[4]; // c (-sin / skewX)
+		this.val[4] = v[5]; // d (scaleY / cos)
+		this.val[5] = 0;
+		this.val[6] = v[12]; // tx (translation X)
+		this.val[7] = v[13]; // ty (translation Y)
+		this.val[8] = 1;
 
 		return this;
 	}

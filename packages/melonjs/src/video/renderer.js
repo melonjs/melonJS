@@ -176,6 +176,18 @@ export default class Renderer {
 	flush() {}
 
 	/**
+	 * Draw a textured triangle mesh.
+	 * The mesh object must provide: `vertices` (Float32Array, x/y/z triplets),
+	 * `uvs` (Float32Array, u/v pairs), `indices` (Uint16Array, triangle indices),
+	 * `texture` (TextureAtlas), `vertexCount` (number), and optionally
+	 * `cullBackFaces` (boolean, default true).
+	 * WebGL uses hardware depth testing; Canvas uses painter's algorithm (back-to-front sort).
+	 * @param {Mesh} mesh - a Mesh renderable or compatible object
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	drawMesh(mesh) {}
+
+	/**
 	 * Reset context state
 	 */
 	reset() {
