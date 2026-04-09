@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { Tween } from "../src/index.js";
 import { Easing } from "../src/tweens/easing.js";
 import { Interpolation } from "../src/tweens/interpolation.js";
@@ -10,6 +10,11 @@ describe("Tween", () => {
 	beforeEach(() => {
 		obj = { x: 0, y: 0 };
 		tween = new Tween(obj);
+	});
+
+	afterEach(() => {
+		// ensure event listeners are cleaned up between tests
+		tween.stop();
 	});
 
 	// --- construction ---

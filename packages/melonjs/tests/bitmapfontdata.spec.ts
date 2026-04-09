@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { bitmapTextDataPool } from "../src/renderable/text/bitmaptextdata.ts";
 
 const bitmapTextDataFixture =
@@ -146,6 +146,12 @@ describe("BitmapTextData", () => {
 		let bitmapTextData: any = null;
 		beforeEach(() => {
 			bitmapTextData = bitmapTextDataPool.get(bitmapTextDataFixture);
+		});
+		afterEach(() => {
+			if (bitmapTextData) {
+				bitmapTextDataPool.release(bitmapTextData);
+				bitmapTextData = null;
+			}
 		});
 
 		it("should have 95 glyphs", () => {

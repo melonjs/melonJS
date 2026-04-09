@@ -30,7 +30,8 @@ type OnCompleteCallback<T> = (this: T) => void;
  * optimised Robert Penner's equations.
  *
  * Tweens use an event-based lifecycle — on `start()` the tween subscribes to
- * the game loop events (`TICK`, `GAME_AFTER_UPDATE`, `STATE_PAUSE`, `STATE_RESUME`, `GAME_RESET`)
+ * the game loop events (`TICK`, `GAME_AFTER_UPDATE`, `STATE_PAUSE`,
+ * `STATE_RESUME`, `GAME_RESET`)
  * and automatically unsubscribes on completion or `stop()`.
  * They do not need to be added to a container.
  * @example
@@ -274,6 +275,10 @@ export default class Tween {
 	 * @returns this instance for object chaining
 	 */
 	start(time = timer.getTime()) {
+		// stop any running tween before restarting (prevents listener leaks
+		// and array value corruption from repeated start() calls)
+		this._unsubscribe();
+
 		this._onStartCallbackFired = false;
 
 		// subscribe to game loop events
