@@ -188,7 +188,7 @@ describe("projectVertices()", () => {
 		expect(dst[1]).toBeCloseTo(50, 5);
 	});
 
-	it("identity matrix maps (0.5, 0.5, 0) to bottom-right corner", () => {
+	it("identity matrix maps (0.5, -0.5, 0) to bottom-right corner", () => {
 		const src = new Float32Array([0.5, -0.5, 0]);
 		const dst = new Float32Array(3);
 		projectVertices(src, dst, 1, new Matrix3d().val, 200, 100);
@@ -196,7 +196,7 @@ describe("projectVertices()", () => {
 		expect(dst[1]).toBeCloseTo(100, 5); // halfH + 0.5 * height (Y flipped)
 	});
 
-	it("identity matrix maps (-0.5, -0.5, 0) to top-left corner area", () => {
+	it("identity matrix maps (-0.5, 0.5, 0) to top-left corner area", () => {
 		const src = new Float32Array([-0.5, 0.5, 0]);
 		const dst = new Float32Array(3);
 		projectVertices(src, dst, 1, new Matrix3d().val, 200, 100);

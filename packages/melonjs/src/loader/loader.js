@@ -716,6 +716,26 @@ export function unloadAll() {
 		}
 	}
 
+	// unload all OBJ resources
+	for (name in objList) {
+		if (objList.hasOwnProperty(name)) {
+			unload({
+				name: name,
+				type: "obj",
+			});
+		}
+	}
+
+	// unload all MTL resources
+	for (name in mtlList) {
+		if (mtlList.hasOwnProperty(name)) {
+			unload({
+				name: name,
+				type: "mtl",
+			});
+		}
+	}
+
 	// unload all audio resources
 	audio.unloadAll();
 }

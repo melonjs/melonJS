@@ -119,18 +119,32 @@ export class MaterialBatcher extends Batcher {
 				);
 			}
 		} else if (pixels === null || typeof pixels.byteLength !== "undefined") {
-			gl.texImage2D(
-				gl.TEXTURE_2D,
-				0,
-				gl.RGBA,
-				w,
-				h,
-				0,
-				gl.RGBA,
-				gl.UNSIGNED_BYTE,
-				pixels,
-				0,
-			);
+			if (this.renderer.WebGLVersion > 1) {
+				gl.texImage2D(
+					gl.TEXTURE_2D,
+					0,
+					gl.RGBA,
+					w,
+					h,
+					0,
+					gl.RGBA,
+					gl.UNSIGNED_BYTE,
+					pixels,
+					0,
+				);
+			} else {
+				gl.texImage2D(
+					gl.TEXTURE_2D,
+					0,
+					gl.RGBA,
+					w,
+					h,
+					0,
+					gl.RGBA,
+					gl.UNSIGNED_BYTE,
+					pixels,
+				);
+			}
 		} else if (
 			typeof globalThis.OffscreenCanvas !== "undefined" &&
 			pixels instanceof globalThis.OffscreenCanvas
@@ -223,7 +237,7 @@ export class MaterialBatcher extends Batcher {
 	/**
 	 * unbind the given WebGL texture, forcing it to be reuploaded
 	 * @param {WebGLTexture} [texture] - a WebGL texture
-	 * @param {number} [unit] - a WebGL texture
+	 * @param {number} [unit] - Texture unit to unbind from
 	 * @returns {number} unit the unit number that was associated with the given texture
 	 */
 	unbindTexture2D(texture, unit) {

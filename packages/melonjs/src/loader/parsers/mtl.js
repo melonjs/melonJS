@@ -84,6 +84,10 @@ function parseMTL(text, basePath) {
 						"MTL: multiple materials detected — only the first material's texture will be used per mesh",
 					);
 				}
+				if (!parts[1]) {
+					warning("MTL: newmtl missing material name, skipping");
+					break;
+				}
 				current = {
 					name: parts[1],
 					Kd: [1, 1, 1],
