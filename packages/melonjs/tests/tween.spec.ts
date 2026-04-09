@@ -539,18 +539,21 @@ describe("Tween", () => {
 		it("onComplete callback can start a new tween", () => {
 			const obj2 = { x: 0 };
 			let secondStarted = false;
-			let t2: InstanceType<typeof Tween> | null = null;
+			const tweensToCleanup: Tween[] = [];
 
 			tween.to({ x: 100 }, { duration: 100 }).onComplete(() => {
-				t2 = new Tween(obj2).to({ x: 50 }, { duration: 100 });
+				const t2 = new Tween(obj2).to({ x: 50 }, { duration: 100 });
 				t2.start(0);
 				secondStarted = t2._isRunning;
+				tweensToCleanup.push(t2);
 			});
 			tween.start(0);
 
 			tween.update(100);
 			expect(secondStarted).toBe(true);
-			t2?.stop();
+			tweensToCleanup.forEach((t) => {
+				t.stop();
+			});
 		});
 
 		it("multiple tweens on same object both run", () => {
