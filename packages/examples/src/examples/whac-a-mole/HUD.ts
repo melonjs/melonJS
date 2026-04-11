@@ -1,63 +1,15 @@
-import {
-	BitmapText,
-	type CanvasRenderer,
-	Container,
-	Renderable,
-	video,
-	type WebGLRenderer,
-} from "melonjs";
+import { BitmapText, Container, video } from "melonjs";
 
 import { data } from "./data";
 
 /**
- * a basic HUD item to display score
- */
-class ScoreItem extends Renderable {
-	private scoreRef: string;
-	private font: BitmapText; // Declare the 'font' property
-
-	/**
-	 * constructor
-	 */
-	constructor(score: string, align: string, x: number, y: number) {
-		// call the super constructor
-		// (size does not matter here)
-		super(x, y, 10, 10);
-
-		// create a font
-		this.font = new BitmapText(0, 0, {
-			font: "PressStart2P",
-			size: 1.5,
-			textAlign: align,
-			textBaseline: "top",
-		});
-
-		// ref to the score variable
-		this.scoreRef = score;
-
-		// make sure we use screen coordinates
-		this.floating = true;
-	}
-
-	/**
-	 * draw the score
-	 */
-	override draw(renderer: WebGLRenderer | CanvasRenderer) {
-		this.font.draw(
-			renderer,
-			data[this.scoreRef].toString(),
-			this.pos.x,
-			this.pos.y,
-		);
-	}
-}
-
-/**
- * a HUD container a
+ * a HUD container
  */
 export class HUDContainer extends Container {
+	score: BitmapText;
+	hiscore: BitmapText;
+
 	constructor() {
-		// call the constructor
 		super();
 
 		// persistent across level change
@@ -66,13 +18,36 @@ export class HUDContainer extends Container {
 		// make sure our object is always draw first
 		this.depth = Number.POSITIVE_INFINITY;
 
+		// make sure we use screen coordinates
+		this.floating = true;
+
 		// give a name
 		this.name = "HUD";
 
-		// add our child score object at position
-		this.addChild(new ScoreItem("score", "left", 10, 10));
+		// score display
+		this.score = new BitmapText(10, 10, {
+			font: "PressStart2P",
+			size: 1.5,
+			textAlign: "left",
+			textBaseline: "top",
+			text: "0",
+		});
+		this.addChild(this.score);
 
-		// add our child score object at position
-		this.addChild(new ScoreItem("hiscore", "right", video.renderer.width, 10));
+		// hiscore display
+		this.hiscore = new BitmapText(video.renderer.width, 10, {
+			font: "PressStart2P",
+			size: 1.5,
+			textAlign: "right",
+			textBaseline: "top",
+			text: data.hiscore.toString(),
+		});
+		this.addChild(this.hiscore);
+	}
+
+	override update(dt: number) {
+		this.score.setText(data.score.toString());
+		this.hiscore.setText(data.hiscore.toString());
+		return super.update(dt);
 	}
 }
