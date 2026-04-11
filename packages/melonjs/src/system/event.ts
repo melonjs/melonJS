@@ -6,7 +6,7 @@ import type Application from "../application/application.ts";
 import Pointer from "../input/pointer.ts";
 import { Vector2d } from "../math/vector2d.ts";
 import { Draggable } from "../renderable/draggable.js";
-import Stage from "../state/stage.ts";
+import type Stage from "../state/stage.ts";
 import Renderer from "../video/renderer.js";
 import { EventEmitter } from "./eventEmitter.js";
 

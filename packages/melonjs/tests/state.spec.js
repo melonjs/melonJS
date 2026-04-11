@@ -160,8 +160,12 @@ describe("state", () => {
 
 		it("should not throw when onResetEvent/onDestroyEvent have no callbacks", () => {
 			const myStage = new Stage();
-			expect(() => myStage.onResetEvent()).not.toThrow();
-			expect(() => myStage.onDestroyEvent()).not.toThrow();
+			expect(() => {
+				myStage.onResetEvent();
+			}).not.toThrow();
+			expect(() => {
+				myStage.onDestroyEvent();
+			}).not.toThrow();
 		});
 
 		it("should return false from update when no cameras or lights", () => {

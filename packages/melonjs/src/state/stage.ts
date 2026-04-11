@@ -6,14 +6,10 @@ import type Light2d from "./../renderable/light2d.js";
 import { emit, STAGE_RESET } from "../system/event.ts";
 import type Renderer from "./../video/renderer.js";
 
-/**
- * @import Container from "./../renderable/container.js";
- */
-
 interface StageSettings {
 	cameras: Camera2d[];
-	onResetEvent?: (...args: unknown[]) => void;
-	onDestroyEvent?: (app?: Application) => void;
+	onResetEvent?: (app: Application, ...args: unknown[]) => void;
+	onDestroyEvent?: (app: Application) => void;
 }
 
 // a default camera instance to use across all stages
@@ -34,25 +30,25 @@ const default_settings: StageSettings = {
 export default class Stage {
 	/**
 	 * The list of active cameras in this stage.
-	 * Cameras will be renderered based on this order defined in this list.
+	 * Cameras will be rendered based on this order defined in this list.
 	 * Only the "default" camera will be resized when the window or canvas is resized.
 	 */
 	cameras: Map<string, Camera2d>;
 
 	/**
 	 * The list of active lights in this stage.
-	 * (Note: Canvas Renderering mode will only properly support one light per stage)
+	 * (Note: Canvas Rendering mode will only properly support one light per stage)
 	 * @see Light2d
 	 * @see Stage.ambientLight
 	 * @example
 	 * // create a white spot light
-	 * let whiteLight = new me.Light2d(0, 0, 140, "#fff", 0.7);
+	 * const whiteLight = new Light2d(0, 0, 140, "#fff", 0.7);
 	 * // and add the light to this current stage
 	 * this.lights.set("whiteLight", whiteLight);
 	 * // set a dark ambient light
 	 * this.ambientLight.parseCSS("#1117");
 	 * // make the light follow the mouse
-	 * me.input.registerPointerEvent("pointermove", app.viewport, (event) => {
+	 * input.registerPointerEvent("pointermove", app.viewport, (event) => {
 	 *    whiteLight.centerOn(event.gameX, event.gameY);
 	 * });
 	 */
@@ -94,7 +90,7 @@ export default class Stage {
 		});
 
 		// use the application's default camera if no "default" camera is defined
-		if (this.cameras.has("default") === false) {
+		if (!this.cameras.has("default")) {
 			if (typeof default_camera === "undefined" && app) {
 				const width = app.renderer.width;
 				const height = app.renderer.height;
@@ -124,14 +120,14 @@ export default class Stage {
 		// update the camera/viewport
 		// iterate through all cameras
 		this.cameras.forEach((camera) => {
-			if (camera.update(dt) === true) {
+			if (camera.update(dt)) {
 				isDirty = true;
 			}
 		});
 
 		// update all lights
 		this.lights.forEach((light) => {
-			if (light.update() === true) {
+			if (light.update()) {
 				isDirty = true;
 			}
 		});
@@ -197,13 +193,13 @@ export default class Stage {
 
 	/**
 	 * onResetEvent function<br>
-	 * called by the state manager when reseting the object
+	 * called by the state manager when resetting the object
 	 * this is typically where you will load a level, add renderables, etc...
 	 * @param app - the current application instance
 	 * @param args - optional arguments passed when switching state
 	 * @see state#change
 	 */
-	onResetEvent(app?: Application, ...args: unknown[]): void {
+	onResetEvent(app: Application, ...args: unknown[]): void {
 		// execute onResetEvent function if given through the constructor
 		if (typeof this.settings.onResetEvent === "function") {
 			this.settings.onResetEvent(app, ...args);
@@ -215,7 +211,7 @@ export default class Stage {
 	 * called by the state manager before switching to another state
 	 * @param app - the current application instance
 	 */
-	onDestroyEvent(app?: Application): void {
+	onDestroyEvent(app: Application): void {
 		// execute onDestroyEvent function if given through the constructor
 		if (typeof this.settings.onDestroyEvent === "function") {
 			this.settings.onDestroyEvent(app);
