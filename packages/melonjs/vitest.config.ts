@@ -4,7 +4,6 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { playwright } from "@vitest/browser-playwright";
 import { PackageJson } from "type-fest";
-import type { Plugin as VitePlugin } from "vite";
 import { default as glsl } from "vite-plugin-glsl";
 import { defineConfig } from "vitest/config";
 
@@ -39,7 +38,7 @@ export default defineConfig(() =>
 		},
 		publicDir: resolve(__dirname, "tests/public"),
 		plugins: [
-			glsl() as VitePlugin,
+			glsl(),
 			{
 				name: "transform-file",
 				transform(src) {
