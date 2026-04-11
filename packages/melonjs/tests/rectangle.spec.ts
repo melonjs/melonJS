@@ -271,6 +271,14 @@ describe("Shape : Rect", () => {
 			expect(bounds.width).toEqual(20);
 			expect(bounds.height).toEqual(15);
 		});
+
+		it("should recalculate edges and normals after setSize", () => {
+			const rect = new Rect(0, 0, 10, 10);
+			rect.setSize(50, 30);
+			// edges should reflect the new dimensions
+			expect(rect.edges[0].x).toEqual(50); // top edge
+			expect(rect.edges[1].y).toEqual(30); // right edge
+		});
 	});
 
 	describe("copy", () => {
