@@ -38,9 +38,7 @@ const capChars: string[] = [
 function getValueFromPair(string: string, pattern: RegExp): string {
 	const value = string.match(pattern);
 	if (!value) {
-		throw new Error(
-			`${`Could not find pattern ${pattern}` as string} in string: ${string}`,
-		);
+		throw new Error(`Could not find pattern ${pattern} in string: ${string}`);
 	}
 
 	return value[0].split("=")[1];

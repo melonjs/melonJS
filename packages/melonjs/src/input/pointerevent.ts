@@ -175,7 +175,7 @@ function enablePointerEvent(): void {
 
 		if (device.autoFocus) {
 			device.focus();
-			pointerEventTarget!.addEventListener(
+			pointerEventTarget.addEventListener(
 				activeEventList[2], // MOUSE/POINTER DOWN
 				() => {
 					device.focus();
@@ -189,7 +189,7 @@ function enablePointerEvent(): void {
 		if (throttlingInterval < 17) {
 			for (let i = 0; i < events.length; i++) {
 				if (activeEventList.indexOf(events[i]) !== -1) {
-					pointerEventTarget!.addEventListener(
+					pointerEventTarget.addEventListener(
 						events[i],
 						onMoveEvent as EventListener,
 						{ passive: true }, // do not preventDefault on Move events
@@ -199,7 +199,7 @@ function enablePointerEvent(): void {
 		} else {
 			for (let i = 0; i < events.length; i++) {
 				if (activeEventList.indexOf(events[i]) !== -1) {
-					pointerEventTarget!.addEventListener(
+					pointerEventTarget.addEventListener(
 						events[i],
 						throttle(
 							onMoveEvent as unknown as () => void,
@@ -320,7 +320,7 @@ function dispatchEvent(normalizedEvents: Pointer[]): boolean {
 		currentPointer.setSize(pointer.width, pointer.height);
 
 		// trigger a global event for pointer move
-		if (POINTER_MOVE.includes(pointer.type!)) {
+		if (POINTER_MOVE.includes(pointer.type)) {
 			pointer.gameX = pointer.gameLocalX = pointer.gameScreenX;
 			pointer.gameY = pointer.gameLocalY = pointer.gameScreenY;
 			emit(POINTERMOVE, pointer);

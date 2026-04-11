@@ -526,7 +526,7 @@ function sortLinked(head: Node) {
 			p = q;
 		}
 
-		tail!.nextZ = null;
+		tail.nextZ = null;
 		inSize *= 2;
 	} while (numMerges > 1);
 
