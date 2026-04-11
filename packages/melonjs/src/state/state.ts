@@ -18,10 +18,6 @@ import {
 } from "../system/event.ts";
 import { defer } from "../utils/function.ts";
 
-/**
- * @import {Color} from "./../math/color.ts";
- */
-
 interface StageEntry {
 	stage: Stage;
 	transition: boolean;
@@ -225,10 +221,10 @@ const state = {
 	/**
 	 * default state ID for user defined constants<br>
 	 * @example
-	 * let STATE_INFO = me.state.USER + 0;
-	 * let STATE_WARN = me.state.USER + 1;
-	 * let STATE_ERROR = me.state.USER + 2;
-	 * let STATE_CUTSCENE = me.state.USER + 3;
+	 * const STATE_INFO = state.USER + 0;
+	 * const STATE_WARN = state.USER + 1;
+	 * const STATE_ERROR = state.USER + 2;
+	 * const STATE_CUTSCENE = state.USER + 3;
 	 */
 	USER: 100 as const,
 
@@ -341,41 +337,27 @@ const state = {
 	 * @param stage - Instantiated Stage to associate with state ID
 	 * @param [start = false] - if true the state will be changed immediately after adding it.
 	 * @example
-	 * class MenuButton extends me.GUI_Object {
-	 *     onClick() {
-	 *         // Change to the PLAY state when the button is clicked
-	 *         me.state.change(me.state.PLAY);
-	 *         return true;
-	 *     }
-	 * };
-	 *
-	 * class MenuScreen extends me.Stage {
-	 *     onResetEvent() {
+	 * class MenuScreen extends Stage {
+	 *     onResetEvent(app) {
 	 *         // Load background image
 	 *         app.world.addChild(
-	 *             new me.ImageLayer(0, 0, {
+	 *             new ImageLayer(0, 0, {
 	 *                 image : "bg",
 	 *                 z: 0 // z-index
-	 *             }
-	 *         );
-	 *
-	 *         // Add a button
-	 *         app.world.addChild(
-	 *             new MenuButton(350, 200, { "image" : "start" }),
-	 *             1 // z-index
+	 *             })
 	 *         );
 	 *
 	 *         // Play music
-	 *         me.audio.playTrack("menu");
+	 *         audio.playTrack("menu");
 	 *     }
 	 *
 	 *     onDestroyEvent() {
 	 *         // Stop music
-	 *         me.audio.stopTrack();
+	 *         audio.stopTrack();
 	 *     }
-	 * };
+	 * }
 	 *
-	 * me.state.set(me.state.MENU, new MenuScreen());
+	 * state.set(state.MENU, new MenuScreen());
 	 */
 	set(stateId: number, stage: Stage, start: boolean = false): void {
 		if (!(stage instanceof Stage)) {
@@ -444,7 +426,7 @@ const state = {
 	 * @example
 	 * // The onResetEvent method on the play screen will receive two args:
 	 * // "level_1" and the number 3
-	 * me.state.change(me.state.PLAY, "level_1", 3);
+	 * state.change(state.PLAY, false, "level_1", 3);
 	 */
 	change(
 		stateId: number,
