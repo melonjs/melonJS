@@ -173,5 +173,23 @@ describe("BitmapTextData", () => {
 			const glyph = bitmapTextData.glyphs[70];
 			expect(glyph.getKerning(44)).toEqual(-1);
 		});
+
+		it("glyph without kerning should return 0", () => {
+			const glyph = bitmapTextData.glyphs[33];
+			expect(glyph.getKerning(65)).toEqual(0);
+		});
+
+		it("glyph kerning should be undefined before setKerning is called", () => {
+			const glyph = bitmapTextData.glyphs[33];
+			// kerning is lazily initialized — undefined until setKerning is called
+			expect(glyph.kerning).toBeUndefined();
+		});
+
+		it("setKerning should initialize kerning and store the value", () => {
+			const glyph = bitmapTextData.glyphs[33];
+			glyph.setKerning(65, -2);
+			expect(glyph.kerning).toBeDefined();
+			expect(glyph.getKerning(65)).toEqual(-2);
+		});
 	});
 });
