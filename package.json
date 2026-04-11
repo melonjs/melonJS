@@ -22,21 +22,21 @@
 	},
 	"packageManager": "pnpm@10.32.1",
 	"dependencies": {
-		"@biomejs/biome": "2.4.9",
+		"@biomejs/biome": "2.4.11",
 		"@eslint/js": "^10.0.1",
-		"@types/node": "^25.5.2",
-		"@vitest/browser": "^4.1.2",
-		"@vitest/browser-playwright": "^4.1.2",
+		"@types/node": "^25.6.0",
+		"@vitest/browser": "^4.1.4",
+		"@vitest/browser-playwright": "^4.1.4",
 		"eslint": "^10.2.0",
 		"eslint-plugin-jsdoc": "^62.9.0",
 		"globals": "^17.4.0",
 		"lefthook": "^2.1.5",
 		"tsconfig": "workspace:^",
 		"tsx": "^4.21.0",
-		"turbo": "^2.9.5",
+		"turbo": "^2.9.6",
 		"typescript": "^6.0.2",
-		"typescript-eslint": "^8.58.0",
-		"vitest": "^4.1.2"
+		"typescript-eslint": "^8.58.1",
+		"vitest": "^4.1.4"
 	},
 	"devDependencies": {
 		"eslint-plugin-react-refresh": "^0.5.2",
