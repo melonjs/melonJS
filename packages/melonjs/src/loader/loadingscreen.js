@@ -1,6 +1,6 @@
 import Renderable from "./../renderable/renderable.js";
 import Sprite from "./../renderable/sprite.js";
-import Stage from "./../state/stage.js";
+import Stage from "./../state/stage.ts";
 import {
 	LOADER_COMPLETE,
 	LOADER_PROGRESS,

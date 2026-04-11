@@ -43,7 +43,7 @@ import Trigger from "./renderable/trigger.js";
 import UIBaseElement from "./renderable/ui/uibaseelement.ts";
 import UISpriteElement from "./renderable/ui/uispriteelement.ts";
 import UITextButton from "./renderable/ui/uitextbutton.ts";
-import Stage from "./state/stage.js";
+import Stage from "./state/stage.ts";
 import state from "./state/state.ts";
 import { boot } from "./system/bootstrap.ts";
 import { DOMContentLoaded } from "./system/dom.ts";

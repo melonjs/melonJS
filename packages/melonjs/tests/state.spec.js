@@ -107,7 +107,70 @@ describe("state", () => {
 		});
 	});
 
-	// TODO: add tests for onResetEvent receiving the Application instance
-	// (requires fixing test state isolation — state.change is a no-op
-	// when the target state is already current from a previous test)
+	describe("Stage", () => {
+		it("should initialize with empty cameras and lights maps", () => {
+			const myStage = new Stage();
+			expect(myStage.cameras).toBeInstanceOf(Map);
+			expect(myStage.lights).toBeInstanceOf(Map);
+			expect(myStage.cameras.size).toEqual(0);
+			expect(myStage.lights.size).toEqual(0);
+		});
+
+		it("should have a default ambient light with zero alpha", () => {
+			const myStage = new Stage();
+			expect(myStage.ambientLight.alpha).toEqual(0);
+		});
+
+		it("should accept settings via constructor", () => {
+			const onReset = () => {};
+			const onDestroy = () => {};
+			const myStage = new Stage({
+				onResetEvent: onReset,
+				onDestroyEvent: onDestroy,
+			});
+			expect(myStage.settings.onResetEvent).toBe(onReset);
+			expect(myStage.settings.onDestroyEvent).toBe(onDestroy);
+		});
+
+		it("should call settings.onResetEvent from onResetEvent", () => {
+			let called = false;
+			let receivedApp = null;
+			const myStage = new Stage({
+				onResetEvent: (app) => {
+					called = true;
+					receivedApp = app;
+				},
+			});
+			const fakeApp = { renderer: { width: 800, height: 600 } };
+			myStage.onResetEvent(fakeApp);
+			expect(called).toEqual(true);
+			expect(receivedApp).toBe(fakeApp);
+		});
+
+		it("should call settings.onDestroyEvent from onDestroyEvent", () => {
+			let called = false;
+			const myStage = new Stage({
+				onDestroyEvent: () => {
+					called = true;
+				},
+			});
+			myStage.onDestroyEvent();
+			expect(called).toEqual(true);
+		});
+
+		it("should not throw when onResetEvent/onDestroyEvent have no callbacks", () => {
+			const myStage = new Stage();
+			expect(() => {
+				myStage.onResetEvent();
+			}).not.toThrow();
+			expect(() => {
+				myStage.onDestroyEvent();
+			}).not.toThrow();
+		});
+
+		it("should return false from update when no cameras or lights", () => {
+			const myStage = new Stage();
+			expect(myStage.update(16)).toEqual(false);
+		});
+	});
 });
