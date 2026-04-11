@@ -1,7 +1,7 @@
 import type Application from "../application/application.ts";
 import { pauseTrack, resumeTrack } from "./../audio/audio.ts";
 import DefaultLoadingScreen from "./../loader/loadingscreen.js";
-import Stage from "./../state/stage.js";
+import Stage from "./../state/stage.ts";
 import {
 	BOOT,
 	emit,
