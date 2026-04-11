@@ -39,7 +39,7 @@ let currentPointer: Rect;
  * reference to the active application instance
  * @ignore
  */
-export let _app: Application | undefined;
+export let _app: Application;
 on(GAME_INIT, (app: Application) => {
 	_app = app;
 });

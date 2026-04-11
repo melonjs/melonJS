@@ -528,7 +528,7 @@ function sortLinked(head: Node) {
 			p = q;
 		}
 
-		tail.nextZ = null;
+		tail!.nextZ = null; // eslint-disable-line @typescript-eslint/no-unnecessary-type-assertion, @typescript-eslint/no-non-null-assertion
 		inSize *= 2;
 	} while (numMerges > 1);
 
