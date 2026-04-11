@@ -8,6 +8,8 @@ import { data } from "./data";
 export class HUDContainer extends Container {
 	score: BitmapText;
 	hiscore: BitmapText;
+	private lastScore = -1;
+	private lastHiscore = -1;
 
 	constructor() {
 		super();
@@ -15,7 +17,7 @@ export class HUDContainer extends Container {
 		// persistent across level change
 		this.isPersistent = true;
 
-		// make sure our object is always draw first
+		// make sure our object is always drawn last (on top)
 		this.depth = Number.POSITIVE_INFINITY;
 
 		// make sure we use screen coordinates
@@ -46,8 +48,14 @@ export class HUDContainer extends Container {
 	}
 
 	override update(dt: number) {
-		this.score.setText(data.score.toString());
-		this.hiscore.setText(data.hiscore.toString());
+		if (data.score !== this.lastScore) {
+			this.lastScore = data.score;
+			this.score.setText(data.score.toString());
+		}
+		if (data.hiscore !== this.lastHiscore) {
+			this.lastHiscore = data.hiscore;
+			this.hiscore.setText(data.hiscore.toString());
+		}
 		return super.update(dt);
 	}
 }

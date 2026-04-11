@@ -1,4 +1,4 @@
-import { audio, loader, Sprite, Stage } from "melonjs";
+import { type Application, audio, loader, Sprite, Stage } from "melonjs";
 import { HUDContainer } from "./HUD";
 import { MoleManager } from "./manager";
 
@@ -6,10 +6,12 @@ import { MoleManager } from "./manager";
 const y_pos = [0, 127, 255, 383, 511, 639];
 
 export class PlayScreen extends Stage {
+	HUD?: HUDContainer;
+
 	/**
 	 * action to perform on state change
 	 */
-	override onResetEvent(app) {
+	override onResetEvent(app: Application) {
 		app.reset();
 
 		// add the background & foreground sprite elements
@@ -31,7 +33,7 @@ export class PlayScreen extends Stage {
 		});
 
 		// instantiate the mole Manager
-		const moleManager = new MoleManager(0, 0);
+		const moleManager = new MoleManager();
 		app.world.addChild(moleManager, 0);
 
 		// add our HUD (scores/hiscore)
@@ -45,9 +47,11 @@ export class PlayScreen extends Stage {
 	/**
 	 * action to perform when leaving this screen (state change)
 	 */
-	override onDestroyEvent(app) {
+	override onDestroyEvent(app: Application) {
 		// remove the HUD from the game world
-		app.world.removeChild(this.HUD);
+		if (this.HUD) {
+			app.world.removeChild(this.HUD);
+		}
 
 		// stop some music
 		audio.stopTrack();
