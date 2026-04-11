@@ -241,4 +241,48 @@ describe("Shape : Rect", () => {
 			expect(rect6.isFinite()).toEqual(false);
 		});
 	});
+
+	describe("setSize", () => {
+		it("should update bounds when setSize is called", () => {
+			const rect = new Rect(0, 0, 10, 10);
+			rect.setSize(50, 30);
+			const bounds = rect.getBounds();
+			expect(bounds.width).toEqual(50);
+			expect(bounds.height).toEqual(30);
+		});
+
+		it("should reflect position in bounds after pos.set + setSize", () => {
+			const rect = new Rect(0, 0, 1, 1);
+			rect.pos.set(100, 200);
+			rect.setSize(50, 30);
+			const bounds = rect.getBounds();
+			expect(bounds.x).toEqual(100);
+			expect(bounds.y).toEqual(200);
+			expect(bounds.width).toEqual(50);
+			expect(bounds.height).toEqual(30);
+		});
+
+		it("should update bounds when only setSize is called after construction", () => {
+			const rect = new Rect(500, 300, 1, 1);
+			rect.setSize(20, 15);
+			const bounds = rect.getBounds();
+			expect(bounds.x).toEqual(500);
+			expect(bounds.y).toEqual(300);
+			expect(bounds.width).toEqual(20);
+			expect(bounds.height).toEqual(15);
+		});
+	});
+
+	describe("copy", () => {
+		it("should update bounds after copy", () => {
+			const src = new Rect(100, 200, 50, 30);
+			const dst = new Rect(0, 0, 1, 1);
+			dst.copy(src);
+			const bounds = dst.getBounds();
+			expect(bounds.x).toEqual(100);
+			expect(bounds.y).toEqual(200);
+			expect(bounds.width).toEqual(50);
+			expect(bounds.height).toEqual(30);
+		});
+	});
 });

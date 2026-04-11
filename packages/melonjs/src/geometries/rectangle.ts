@@ -38,6 +38,7 @@ export class Rect extends Polygon {
 		this.points[1].set(width, 0); // 1, 0
 		this.points[2].set(width, height); // 1, 1
 		this.points[3].set(0, height); // 0, 1
+		this.updateBounds();
 		return this;
 	}
 
