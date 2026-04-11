@@ -367,6 +367,40 @@ describe("Shape : RoundRect", () => {
 		});
 	});
 
+	describe("bounds updates", () => {
+		it("should update bounds after setSize", () => {
+			const rr = new RoundRect(100, 200, 50, 30, 10);
+			rr.setSize(80, 60);
+			const bounds = rr.getBounds();
+			expect(bounds.x).toEqual(100);
+			expect(bounds.y).toEqual(200);
+			expect(bounds.width).toEqual(80);
+			expect(bounds.height).toEqual(60);
+		});
+
+		it("should update bounds after pos.set + setSize", () => {
+			const rr = new RoundRect(0, 0, 1, 1, 0);
+			rr.pos.set(300, 400);
+			rr.setSize(50, 30);
+			const bounds = rr.getBounds();
+			expect(bounds.x).toEqual(300);
+			expect(bounds.y).toEqual(400);
+			expect(bounds.width).toEqual(50);
+			expect(bounds.height).toEqual(30);
+		});
+
+		it("should update bounds after copy", () => {
+			const src = new RoundRect(100, 200, 80, 60, 15);
+			const dst = new RoundRect(0, 0, 1, 1, 0);
+			dst.copy(src);
+			const bounds = dst.getBounds();
+			expect(bounds.x).toEqual(100);
+			expect(bounds.y).toEqual(200);
+			expect(bounds.width).toEqual(80);
+			expect(bounds.height).toEqual(60);
+		});
+	});
+
 	describe("vertex reuse optimization", () => {
 		it("should reuse vertex objects when radius stays > 0 and size changes", () => {
 			const rr = new RoundRect(0, 0, 100, 100, 20);

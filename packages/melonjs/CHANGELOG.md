@@ -39,6 +39,7 @@
 - **BREAKING**: `Tween` no longer adds itself to `game.world` — uses event-based lifecycle (`TICK`, `GAME_AFTER_UPDATE`, `STATE_PAUSE`, `STATE_RESUME`, `GAME_RESET`) instead. Public API unchanged. `isPersistent` and `updateWhenPaused` properties still supported.
 
 ### Fixed
+- Geometry: `Rect.setSize()` now calls `updateBounds()` — fixes a regression from July 2024 (`4d185c902`) where replacing `Rect.setShape()` with `pos.set()` + `setSize()` during the TypeScript conversion left bounds stale, causing pointer event broadphase lookups to use `(0,0)` instead of the actual pointer position (see #817)
 - WebGL: depth buffer now correctly used for 3D mesh rendering with `gl.LESS` depth function
 - Canvas: backface culling corrected for Y-flipped screen space (was culling front faces instead of back)
 - Canvas: triangle seam expansion (0.5px) to cover anti-aliasing gaps between adjacent triangles
