@@ -1,6 +1,7 @@
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import {
 	Application,
+	AUTO,
 	audio,
 	device,
 	event,
@@ -23,7 +24,7 @@ export const createGame = () => {
 	const _app = new Application(800, 600, {
 		parent: "screen",
 		scaleMethod: "flex-width",
-		renderer: 0, // AUTO
+		renderer: AUTO,
 		preferWebGL1: false,
 		depthTest: "z-buffer",
 		subPixel: false,
