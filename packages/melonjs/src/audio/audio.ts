@@ -302,7 +302,7 @@ export function fade(
 export function seek(sound_name: string, ...args: number[]): number {
 	const sound = audioTracks[sound_name];
 	if (sound && typeof sound !== "undefined") {
-		return sound.seek(...args) as number;
+		return sound.seek(...args);
 	} else {
 		throw new Error(`audio clip ${sound_name} does not exist`);
 	}
@@ -323,7 +323,7 @@ export function seek(sound_name: string, ...args: number[]): number {
 export function rate(sound_name: string, ...args: number[]): number {
 	const sound = audioTracks[sound_name];
 	if (sound && typeof sound !== "undefined") {
-		return sound.rate(...args) as number;
+		return sound.rate(...args);
 	} else {
 		throw new Error(`audio clip ${sound_name} does not exist`);
 	}

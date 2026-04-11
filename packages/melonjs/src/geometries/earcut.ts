@@ -8,6 +8,7 @@ export function earcut(
 	let outerNode = linkedList(data, 0, outerLen, dim, true);
 	const triangles: number[] = [];
 
+	// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive guard from earcut algorithm
 	if (!outerNode || outerNode.next === outerNode.prev) return triangles;
 
 	let minX, minY, invSize;
@@ -103,8 +104,6 @@ function earcutLinked(
 	invSize: number | undefined,
 	pass: number,
 ) {
-	if (!ear) return;
-
 	// interlink polygon nodes in z-order
 	if (!pass && invSize) indexCurve(ear, minX!, minY!, invSize);
 
@@ -526,7 +525,7 @@ function sortLinked(head: Node) {
 			p = q;
 		}
 
-		tail!.nextZ = null;
+		tail!.nextZ = null; // eslint-disable-line @typescript-eslint/no-unnecessary-type-assertion, @typescript-eslint/no-non-null-assertion
 		inSize *= 2;
 	} while (numMerges > 1);
 

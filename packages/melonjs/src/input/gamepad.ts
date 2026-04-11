@@ -122,7 +122,7 @@ function addMapping(id: string, mapping: Partial<GamepadMapping>): void {
 }
 
 // binding list
-const bindings: Record<string, GamepadBindings> = {};
+const bindings: Record<string, GamepadBindings | undefined> = {};
 
 // mapping list
 const remap: Map<string, GamepadMapping> = new Map();
@@ -205,6 +205,9 @@ const updateGamepads = function (): void {
 		}
 
 		const binding = bindings[index];
+		if (!binding) {
+			return;
+		}
 
 		// Iterate all buttons that have active bindings
 		Object.keys(binding.buttons).forEach((button) => {

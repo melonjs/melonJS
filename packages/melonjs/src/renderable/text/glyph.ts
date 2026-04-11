@@ -22,7 +22,7 @@ export default class Glyph {
 	yoffset: number;
 	xadvance: number;
 	fixedWidth: boolean;
-	kerning: { [key: number]: { [key: number]: number } };
+	kerning?: { [key: number]: { [key: number]: number } };
 
 	/**
 	 * @ignore
