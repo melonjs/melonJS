@@ -231,15 +231,15 @@ export default class Container extends Renderable {
 	 * @returns {Renderable} the added child
 	 */
 	addChild(child, z) {
+		if (!(child instanceof Renderable)) {
+			throw new Error(`${String(child)} is not an instance of Renderable`);
+		}
 		if (child.ancestor instanceof Container) {
 			child.ancestor.removeChildNow(child);
 		} else {
 			// only allocate a GUID if the object has no previous ancestor
 			// (e.g. move one child from one container to another)
-			if (child.isRenderable) {
-				// allocated a GUID value (use child.id as based index if defined)
-				child.GUID = createGUID(child.id);
-			}
+			child.GUID = createGUID(child.id);
 		}
 
 		// add the new child
@@ -314,16 +314,16 @@ export default class Container extends Renderable {
 	 * @returns {Renderable} the added child
 	 */
 	addChildAt(child, index) {
+		if (!(child instanceof Renderable)) {
+			throw new Error(`${String(child)} is not an instance of Renderable`);
+		}
 		if (index >= 0 && index <= this.getChildren().length) {
 			if (child.ancestor instanceof Container) {
 				child.ancestor.removeChildNow(child);
 			} else {
 				// only allocate a GUID if the object has no previous ancestor
 				// (e.g. move one child from one container to another)
-				if (child.isRenderable) {
-					// allocated a GUID value
-					child.GUID = createGUID();
-				}
+				child.GUID = createGUID();
 			}
 
 			// add the new child
@@ -597,11 +597,9 @@ export default class Container extends Renderable {
 
 		if (this.enableChildBoundsUpdate === true) {
 			this.forEach((child) => {
-				if (child.isRenderable) {
-					const childBounds = child.updateBounds(absolute);
-					if (childBounds.isFinite()) {
-						bounds.addBounds(childBounds);
-					}
+				const childBounds = child.updateBounds(absolute);
+				if (childBounds.isFinite()) {
+					bounds.addBounds(childBounds);
 				}
 			});
 		}
@@ -909,30 +907,25 @@ export default class Container extends Renderable {
 				continue;
 			}
 
-			if (obj.isRenderable) {
-				isFloating = globalFloatingCounter > 0 || obj.floating;
-				if (isFloating) {
-					globalFloatingCounter++;
+			isFloating = globalFloatingCounter > 0 || obj.floating;
+			if (isFloating) {
+				globalFloatingCounter++;
+			}
+
+			// check if object is in any active cameras
+			obj.inViewport = false;
+			// iterate through all cameras
+			cameras.forEach((camera) => {
+				if (camera.isVisible(obj, isFloating)) {
+					obj.inViewport = true;
 				}
+			});
 
-				// check if object is in any active cameras
-				obj.inViewport = false;
-				// iterate through all cameras
-				cameras.forEach((camera) => {
-					if (camera.isVisible(obj, isFloating)) {
-						obj.inViewport = true;
-					}
-				});
+			// update our object
+			this.isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update(dt);
 
-				// update our object
-				this.isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update(dt);
-
-				if (globalFloatingCounter > 0) {
-					globalFloatingCounter--;
-				}
-			} else {
-				// just directly call update() for non renderable object
-				this.isDirty |= obj.update(dt);
+			if (globalFloatingCounter > 0) {
+				globalFloatingCounter--;
 			}
 		}
 
@@ -971,36 +964,34 @@ export default class Container extends Renderable {
 
 		const children = this.getChildren();
 		for (let i = children.length, obj; i--, (obj = children[i]); ) {
-			if (obj.isRenderable) {
-				const isFloating = obj.floating === true;
+			const isFloating = obj.floating === true;
 
-				if (obj.inViewport || isFloating) {
-					// skip UI-only floating elements on non-default cameras
-					if (isFloating && isNonDefaultCamera && !obj.visibleInAllCameras) {
-						continue;
-					}
-
-					if (isFloating) {
-						renderer.save();
-						renderer.resetTransform();
-						if (isNonDefaultCamera) {
-							renderer.setProjection(viewport.screenProjection);
-						}
-					}
-
-					obj.preDraw(renderer);
-					obj.draw(renderer, viewport);
-					obj.postDraw(renderer);
-
-					if (isFloating) {
-						if (isNonDefaultCamera) {
-							renderer.setProjection(viewport.worldProjection);
-						}
-						renderer.restore();
-					}
-
-					this.drawCount++;
+			if (obj.inViewport || isFloating) {
+				// skip UI-only floating elements on non-default cameras
+				if (isFloating && isNonDefaultCamera && !obj.visibleInAllCameras) {
+					continue;
 				}
+
+				if (isFloating) {
+					renderer.save();
+					renderer.resetTransform();
+					if (isNonDefaultCamera) {
+						renderer.setProjection(viewport.screenProjection);
+					}
+				}
+
+				obj.preDraw(renderer);
+				obj.draw(renderer, viewport);
+				obj.postDraw(renderer);
+
+				if (isFloating) {
+					if (isNonDefaultCamera) {
+						renderer.setProjection(viewport.worldProjection);
+					}
+					renderer.restore();
+				}
+
+				this.drawCount++;
 			}
 		}
 	}
