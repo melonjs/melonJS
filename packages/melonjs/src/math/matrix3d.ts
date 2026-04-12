@@ -633,23 +633,24 @@ export class Matrix3d {
 	isIdentity() {
 		const a = this.val;
 
+		// check translation first (most commonly non-zero), then diagonal, then rest
 		return (
+			a[12] === 0 &&
+			a[13] === 0 &&
 			a[0] === 1 &&
+			a[5] === 1 &&
+			a[10] === 1 &&
+			a[15] === 1 &&
 			a[1] === 0 &&
 			a[2] === 0 &&
 			a[3] === 0 &&
 			a[4] === 0 &&
-			a[5] === 1 &&
 			a[6] === 0 &&
 			a[7] === 0 &&
 			a[8] === 0 &&
 			a[9] === 0 &&
-			a[10] === 1 &&
 			a[11] === 0 &&
-			a[12] === 0 &&
-			a[13] === 0 &&
-			a[14] === 0 &&
-			a[15] === 1
+			a[14] === 0
 		);
 	}
 

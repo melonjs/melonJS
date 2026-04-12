@@ -209,10 +209,7 @@ export default class Container extends Renderable {
 			}
 		}
 
-		if (typeof this.currentTransform !== "undefined") {
-			// just reset some variables
-			this.currentTransform.identity();
-		}
+		this.currentTransform.identity();
 
 		this.backgroundColor.setColor(0, 0, 0, 0.0);
 	}
@@ -248,21 +245,17 @@ export default class Container extends Renderable {
 		this.getChildren().push(child);
 
 		// update child bounds to reflect the new ancestor
-		if (typeof child.updateBounds === "function") {
-			if (this.isFloating === true) {
-				// only parent container can be floating
-				child.floating = false;
-			}
-			child.updateBounds();
+		if (this.isFloating === true) {
+			// only parent container can be floating
+			child.floating = false;
 		}
+		child.updateBounds();
 
 		// set the child z value if required
-		if (typeof child.pos !== "undefined") {
-			if (typeof z === "number") {
-				child.pos.z = z;
-			} else if (this.autoDepth === true) {
-				child.pos.z = this.getChildren().length;
-			}
+		if (typeof z === "number") {
+			child.pos.z = z;
+		} else if (this.autoDepth === true) {
+			child.pos.z = this.getChildren().length;
 		}
 
 		if (this.autoSort === true) {
@@ -332,13 +325,11 @@ export default class Container extends Renderable {
 			this.getChildren().splice(index, 0, child);
 
 			// update child bounds to reflect the new ancestor
-			if (typeof child.updateBounds === "function") {
-				if (this.isFloating === true) {
-					// only parent container can be floating
-					child.floating = false;
-				}
-				child.updateBounds();
+			if (this.isFloating === true) {
+				// only parent container can be floating
+				child.floating = false;
 			}
+			child.updateBounds();
 
 			if (
 				typeof child.onActivateEvent === "function" &&

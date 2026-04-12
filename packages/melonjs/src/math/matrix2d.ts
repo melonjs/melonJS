@@ -403,16 +403,19 @@ export class Matrix2d {
 	 * @returns true if the matrix is an identity matrix
 	 */
 	isIdentity() {
+		const a = this.val;
+
+		// check translation first (most commonly non-zero), then diagonal, then rest
 		return (
-			this.val[0] === 1 &&
-			this.val[1] === 0 &&
-			this.val[2] === 0 &&
-			this.val[3] === 0 &&
-			this.val[4] === 1 &&
-			this.val[5] === 0 &&
-			this.val[6] === 0 &&
-			this.val[7] === 0 &&
-			this.val[8] === 1
+			a[6] === 0 &&
+			a[7] === 0 &&
+			a[0] === 1 &&
+			a[4] === 1 &&
+			a[8] === 1 &&
+			a[1] === 0 &&
+			a[2] === 0 &&
+			a[3] === 0 &&
+			a[5] === 0
 		);
 	}
 
