@@ -180,6 +180,11 @@ export default class Container extends Renderable {
 		return this._sortOn;
 	}
 	set sortOn(value) {
+		if (value !== "x" && value !== "y" && value !== "z") {
+			throw new Error(
+				`Invalid sortOn value: "${value}" (expected "x", "y", or "z")`,
+			);
+		}
 		this._sortOn = value;
 		this._comparator = this["_sort" + value.toUpperCase()];
 	}
