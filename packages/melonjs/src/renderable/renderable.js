@@ -238,31 +238,35 @@ export default class Renderable extends Rect {
 
 		/**
 		 * an optional shader, to be used instead of the default built-in one, when drawing this renderable (WebGL only).
-		 * Use {@link ShaderEffect} for a simplified API that only requires a fragment `apply()` function,
-		 * or {@link GLShader} for full control over vertex and fragment shaders.
+		 * Use {@link ShaderEffect} for a custom fragment `apply()` function,
+		 * or one of the built-in effect presets:
+		 * - {@link FlashEffect} — flash the sprite with a solid color (hit feedback)
+		 * - {@link OutlineEffect} — colored outline around the sprite (selection, hover)
+		 * - {@link GlowEffect} — soft colored glow around the sprite (power-ups, magic)
+		 * - {@link DesaturateEffect} — partial or full grayscale (disabled, death)
+		 * - {@link PixelateEffect} — progressive pixelation (teleport, retro)
+		 * - {@link BlurEffect} — box blur (defocus, backdrop)
+		 * - {@link ChromaticAberrationEffect} — RGB channel offset (impact, glitch)
+		 * - {@link DissolveEffect} — noise-based dissolve (death, spawn)
+		 * - {@link DropShadowEffect} — offset shadow beneath the sprite
+		 * - {@link ScanlineEffect} — horizontal scanlines overlay (retro CRT)
+		 * - {@link TintPulseEffect} — pulsing color overlay (poison, freeze, fire)
+		 *
+		 * Use {@link GLShader} for full control over vertex and fragment shaders.
 		 * In Canvas mode, this property is ignored.
 		 * @type {GLShader|ShaderEffect}
 		 * @default undefined
 		 * @example
-		 * // grayscale effect — converts the sprite to black and white
+		 * // apply a built-in effect
+		 * mySprite.shader = new FlashEffect(renderer, { intensity: 1.0 });
+		 * @example
+		 * // custom shader effect
 		 * mySprite.shader = new ShaderEffect(renderer, `
 		 *     vec4 apply(vec4 color, vec2 uv) {
 		 *         float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));
 		 *         return vec4(vec3(gray), color.a);
 		 *     }
 		 * `);
-		 * @example
-		 * // pulsing brightness effect — makes the sprite glow rhythmically
-		 * const effect = new ShaderEffect(renderer, `
-		 *     uniform float uTime;
-		 *     vec4 apply(vec4 color, vec2 uv) {
-		 *         float pulse = 0.8 + 0.2 * sin(uTime * 3.0);
-		 *         return vec4(color.rgb * pulse, color.a);
-		 *     }
-		 * `);
-		 * mySprite.shader = effect;
-		 * // update the uniform each frame
-		 * effect.setUniform("uTime", time);
 		 * @example
 		 * // to remove a custom shader
 		 * mySprite.shader = undefined;

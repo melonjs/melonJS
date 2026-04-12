@@ -108,6 +108,11 @@ const ExampleSpine = lazy(() =>
 		default: m.ExampleSpine,
 	})),
 );
+const ExampleShaderEffects = lazy(() =>
+	import("./examples/shaderEffects/ExampleShaderEffects").then((m) => ({
+		default: m.ExampleShaderEffects,
+	})),
+);
 const ExampleSprite = lazy(() =>
 	import("./examples/sprite/ExampleSprite").then((m) => ({
 		default: m.ExampleSprite,
@@ -289,6 +294,14 @@ const examples: {
 		sourceDir: "spaceInvaders",
 		description:
 			"Classic space invaders game with player movement, shooting mechanics, and enemy wave patterns.",
+	},
+	{
+		component: <ExampleShaderEffects />,
+		label: "Shader Effects",
+		path: "shader-effects",
+		sourceDir: "shaderEffects",
+		description:
+			"Showcase of all built-in ShaderEffect presets: flash, outline, glow, desaturate, pixelate, blur, chromatic aberration, dissolve, drop shadow, scanlines, and tint pulse.",
 	},
 	{
 		component: <ExampleSprite />,

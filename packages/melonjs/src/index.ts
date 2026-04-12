@@ -60,6 +60,17 @@ import { TextureAtlas } from "./video/texture/atlas.js";
 import { Batcher } from "./video/webgl/batchers/batcher.js";
 import PrimitiveBatcher from "./video/webgl/batchers/primitive_batcher.js";
 import QuadBatcher from "./video/webgl/batchers/quad_batcher.js";
+import BlurEffect from "./video/webgl/effects/blur.js";
+import ChromaticAberrationEffect from "./video/webgl/effects/chromaticAberration.js";
+import DesaturateEffect from "./video/webgl/effects/desaturate.js";
+import DissolveEffect from "./video/webgl/effects/dissolve.js";
+import DropShadowEffect from "./video/webgl/effects/dropShadow.js";
+import FlashEffect from "./video/webgl/effects/flash.js";
+import GlowEffect from "./video/webgl/effects/glow.js";
+import OutlineEffect from "./video/webgl/effects/outline.js";
+import PixelateEffect from "./video/webgl/effects/pixelate.js";
+import ScanlineEffect from "./video/webgl/effects/scanline.js";
+import TintPulseEffect from "./video/webgl/effects/tintPulse.js";
 import GLShader from "./video/webgl/glshader.js";
 import ShaderEffect from "./video/webgl/shadereffect.js";
 import WebGLRenderer from "./video/webgl/webgl_renderer.js";
@@ -110,25 +121,34 @@ export {
 	Batcher,
 	BitmapText,
 	BitmapTextData,
+	BlurEffect,
 	Body,
 	Camera2d,
 	CanvasRenderer,
 	CanvasRenderTarget,
+	ChromaticAberrationEffect,
 	Collectable,
 	ColorLayer,
 	Container,
+	DesaturateEffect,
+	DissolveEffect,
 	Draggable,
+	DropShadowEffect,
 	DropTarget,
 	Entity, // eslint-disable-line @typescript-eslint/no-deprecated
+	FlashEffect,
 	GLShader,
+	GlowEffect,
 	Gradient,
 	ImageLayer,
 	Light2d,
 	Mesh,
 	NineSliceSprite,
+	OutlineEffect,
 	Particle,
 	ParticleEmitter,
 	ParticleEmitterSettings,
+	PixelateEffect,
 	Pointer,
 	PrimitiveBatcher,
 	plugins,
@@ -138,6 +158,7 @@ export {
 	Renderable,
 	Renderer,
 	RenderState,
+	ScanlineEffect,
 	ShaderEffect,
 	Sprite,
 	Stage,
@@ -146,6 +167,7 @@ export {
 	Text,
 	TextureAtlas,
 	Tile,
+	TintPulseEffect,
 	TMXHexagonalRenderer,
 	TMXIsometricRenderer,
 	TMXLayer,
