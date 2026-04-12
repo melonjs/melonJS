@@ -7,7 +7,6 @@ export const defaultApplicationSettings = {
 	scale: 1.0,
 	scaleMethod: ScaleMethods.Manual,
 	preferWebGL1: false,
-	depthTest: "sorting",
 	powerPreference: "default",
 	transparent: false,
 	antiAlias: false,

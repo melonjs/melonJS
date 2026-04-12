@@ -14,8 +14,6 @@ type PhysicsType = "builtin" | "none";
 
 type PowerPreference = "default" | "low-power";
 
-type DepthTest = "sorting" | "z-buffer";
-
 export type ApplicationSettings = {
 	/**
 	 * renderer to use (CANVAS, WEBGL, AUTO), or a custom renderer class
@@ -45,12 +43,6 @@ export type ApplicationSettings = {
 	 * @default false
 	 */
 	preferWebGL1: boolean;
-
-	/**
-	 * ~Experimental~ the default method to sort object on the z axis in WebGL
-	 * @default sorting
-	 */
-	depthTest: DepthTest;
 
 	/**
 	 * a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context. To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.

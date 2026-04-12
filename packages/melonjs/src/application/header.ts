@@ -11,15 +11,11 @@ export function consoleHeader(app: Application): void {
 		typeof app.renderer.GPURenderer === "string"
 			? ` (${app.renderer.GPURenderer})`
 			: "";
-	const depthTesting =
-		renderType.includes("WebGL") && app.renderer.depthTest === "z-buffer"
-			? "Depth Test | "
-			: "";
 	const audioType = device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
 
 	// output video information in the console
 	console.log(
-		`${renderType} renderer${gpu_renderer} | ${depthTesting}${audioType} | ` +
+		`${renderType} renderer${gpu_renderer} | ${audioType} | ` +
 			`pixel ratio ${device.devicePixelRatio} | ${
 				device.platform.nodeJS
 					? "node.js"

@@ -88,7 +88,8 @@ export default class Container extends Renderable {
 		 * @type {string}
 		 * @default "z"
 		 */
-		this.sortOn = "z";
+		this._sortOn = "z";
+		this._comparator = this._sortZ;
 
 		/**
 		 * Specify if the children list should be automatically sorted when adding a new child
@@ -167,6 +168,20 @@ export default class Container extends Renderable {
 				// this.enableChildBoundsUpdate === false;
 			});
 		}
+	}
+
+	/**
+	 * The property of the child object that should be used to sort on this container.
+	 * Accepted values: "x", "y", "z"
+	 * @type {string}
+	 * @default "z"
+	 */
+	get sortOn() {
+		return this._sortOn;
+	}
+	set sortOn(value) {
+		this._sortOn = value;
+		this._comparator = this["_sort" + value.toUpperCase()];
 	}
 
 	/**
@@ -804,7 +819,7 @@ export default class Container extends Renderable {
 			}
 			this.pendingSort = defer(function () {
 				// sort everything in this container
-				this.getChildren().sort(this["_sort" + this.sortOn.toUpperCase()]);
+				this.getChildren().sort(this._comparator);
 				// clear the defer id
 				this.pendingSort = null;
 				// make sure we redraw everything
@@ -829,7 +844,7 @@ export default class Container extends Renderable {
 	 * @ignore
 	 */
 	_sortZ(a, b) {
-		return b.pos && a.pos ? b.pos.z - a.pos.z : a.pos ? -Infinity : Infinity;
+		return b.pos.z - a.pos.z;
 	}
 
 	/**
@@ -837,7 +852,7 @@ export default class Container extends Renderable {
 	 * @ignore
 	 */
 	_sortReverseZ(a, b) {
-		return a.pos && b.pos ? a.pos.z - b.pos.z : a.pos ? Infinity : -Infinity;
+		return a.pos.z - b.pos.z;
 	}
 
 	/**
@@ -845,11 +860,7 @@ export default class Container extends Renderable {
 	 * @ignore
 	 */
 	_sortX(a, b) {
-		if (!b.pos || !a.pos) {
-			return a.pos ? -Infinity : Infinity;
-		}
-		const result = b.pos.z - a.pos.z;
-		return result ? result : b.pos.x - a.pos.x;
+		return b.pos.z - a.pos.z || b.pos.x - a.pos.x;
 	}
 
 	/**
@@ -857,11 +868,7 @@ export default class Container extends Renderable {
 	 * @ignore
 	 */
 	_sortY(a, b) {
-		if (!b.pos || !a.pos) {
-			return a.pos ? -Infinity : Infinity;
-		}
-		const result = b.pos.z - a.pos.z;
-		return result ? result : b.pos.y - a.pos.y;
+		return b.pos.z - a.pos.z || b.pos.y - a.pos.y;
 	}
 
 	/**

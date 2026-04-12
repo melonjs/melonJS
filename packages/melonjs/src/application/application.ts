@@ -244,7 +244,6 @@ export default class Application {
 			scale: autoScale ? 1.0 : +merged.scale || 1.0,
 			zoomX: 0,
 			zoomY: 0,
-			depthTest: merged.depthTest === "z-buffer" ? "z-buffer" : "sorting",
 			scaleMethod: /^(fill-(min|max)|fit|flex(-(width|height))?|stretch)$/.test(
 				merged.scaleMethod,
 			)
@@ -383,11 +382,6 @@ export default class Application {
 
 		// app starting time
 		this.lastUpdate = globalThis.performance.now();
-		// manually sort child if depthTest setting is "sorting"
-		this.world.autoSort = !(
-			this.renderer.type === "WEBGL" && this.settings.depthTest === "z-buffer"
-		);
-
 		// only register event listeners once per instance
 		if (!this.isInitialized) {
 			/* eslint-disable @typescript-eslint/unbound-method */

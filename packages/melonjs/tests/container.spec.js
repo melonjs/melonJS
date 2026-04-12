@@ -654,6 +654,67 @@ describe("Container", () => {
 		});
 	});
 
+	describe("sort comparators", () => {
+		it("_sortZ should sort descending by z", () => {
+			const a = new Renderable(0, 0, 1, 1);
+			const b = new Renderable(0, 0, 1, 1);
+			a.pos.z = 5;
+			b.pos.z = 10;
+			expect(container._sortZ(a, b)).toBeGreaterThan(0); // b first
+			expect(container._sortZ(b, a)).toBeLessThan(0); // b still first
+		});
+
+		it("_sortZ should return 0 for equal z", () => {
+			const a = new Renderable(0, 0, 1, 1);
+			const b = new Renderable(0, 0, 1, 1);
+			a.pos.z = 5;
+			b.pos.z = 5;
+			expect(container._sortZ(a, b)).toBe(0);
+		});
+
+		it("_sortReverseZ should sort ascending by z", () => {
+			const a = new Renderable(0, 0, 1, 1);
+			const b = new Renderable(0, 0, 1, 1);
+			a.pos.z = 5;
+			b.pos.z = 10;
+			expect(container._sortReverseZ(a, b)).toBeLessThan(0); // a first
+			expect(container._sortReverseZ(b, a)).toBeGreaterThan(0); // a still first
+		});
+
+		it("_sortX should sort by z first, then by x", () => {
+			const a = new Renderable(100, 0, 1, 1);
+			const b = new Renderable(200, 0, 1, 1);
+			a.pos.z = 5;
+			b.pos.z = 5;
+			// same z, should sort by x
+			expect(container._sortX(a, b)).toBeGreaterThan(0); // b.x > a.x
+			// different z, x ignored
+			b.pos.z = 10;
+			expect(container._sortX(a, b)).toBeGreaterThan(0); // b.z > a.z
+		});
+
+		it("_sortY should sort by z first, then by y", () => {
+			const a = new Renderable(0, 100, 1, 1);
+			const b = new Renderable(0, 200, 1, 1);
+			a.pos.z = 5;
+			b.pos.z = 5;
+			// same z, should sort by y
+			expect(container._sortY(a, b)).toBeGreaterThan(0); // b.y > a.y
+			// different z, y ignored
+			b.pos.z = 10;
+			expect(container._sortY(a, b)).toBeGreaterThan(0); // b.z > a.z
+		});
+
+		it("sortOn setter should update the cached comparator", () => {
+			container.sortOn = "y";
+			expect(container._comparator).toBe(container._sortY);
+			container.sortOn = "x";
+			expect(container._comparator).toBe(container._sortX);
+			container.sortOn = "z";
+			expect(container._comparator).toBe(container._sortZ);
+		});
+	});
+
 	describe("enableChildBoundsUpdate", () => {
 		it("child bounds should reflect absolute position after being added", () => {
 			container.enableChildBoundsUpdate = true;

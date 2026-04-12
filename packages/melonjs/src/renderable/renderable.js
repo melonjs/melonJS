@@ -752,7 +752,7 @@ export default class Renderable extends Rect {
 		}
 
 		// use this renderable shader if defined
-		if (this.shader && typeof renderer.gl !== "undefined") {
+		if (this.shader) {
 			renderer.customShader = this.shader;
 		}
 
@@ -809,7 +809,7 @@ export default class Renderable extends Rect {
 		}
 
 		// revert to the default shader if defined
-		if (this.shader && typeof renderer.gl !== "undefined") {
+		if (this.shader) {
 			renderer.customShader = undefined;
 		}
 
