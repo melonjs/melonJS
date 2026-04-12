@@ -21,22 +21,18 @@ npm install melonjs
 ```
 
 ```javascript
-import { device, video, game, Sprite, loader } from "melonjs";
+import { Application, Sprite, loader } from "melonjs";
 
-device.onReady(function () {
-    // initialize the display canvas once the device/browser is ready
-    if (!video.init(1218, 562, {parent : "screen", scale : "auto"})) {
-        alert("Your browser does not support HTML5 canvas.");
-        return;
-    }
+// create a new melonJS application
+const app = new Application(1218, 562, {
+    parent: "screen",
+    scale: "auto",
+    backgroundColor: "#202020",
+});
 
-    // set a background color
-    game.world.backgroundColor.parseCSS("#202020");
-
-    // load and add a sprite
-    loader.preload([{ name: "player", type: "image", src: "player.png" }], () => {
-        game.world.addChild(new Sprite(609, 281, { image: "player" }));
-    });
+// load and add a sprite
+loader.preload([{ name: "player", type: "image", src: "player.png" }], () => {
+    app.world.addChild(new Sprite(609, 281, { image: "player" }));
 });
 ```
 
@@ -44,7 +40,7 @@ device.onReady(function () {
 
 | Feature | Description |
 |---------|-------------|
-| **Rendering** | WebGL & Canvas 2D with automatic fallback |
+| **Rendering** | WebGL & Canvas 2D with automatic fallback, 3D mesh rendering with OBJ/MTL support |
 | **Tiled Maps** | First-class [Tiled](https://www.mapeditor.org/) map editor support (TMX/JSON) |
 | **Sprites** | Texture atlas, animation, TexturePacker & Aseprite support |
 | **Physics** | Built-in collision detection (SAT), gravity, friction |

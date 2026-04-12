@@ -54,6 +54,8 @@ Graphics
 - Built-in effects such as tinting, masking and 2D lighting
 - Standard spritesheet, single and multiple Packed Textures support
 - Compressed texture support (DDS, KTX, KTX2, PVR, PKM) with automatic format detection and fallback
+- 3D mesh rendering with OBJ/MTL model loading, perspective projection and hardware depth testing
+- Custom shader support via `ShaderEffect` for per-sprite fragment effects (WebGL)
 - System & Bitmap Text
 - Video sprite playback
 
@@ -154,6 +156,8 @@ Examples
 * [Hello World](https://melonjs.github.io/melonJS/examples/#/hello-world) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/helloWorld))
 * [Whac-A-Mole](https://melonjs.github.io/melonJS/examples/#/whac-a-mole) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/whac-a-mole))
 * [Compressed Textures](https://melonjs.github.io/melonJS/examples/#/compressed-textures) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/compressedTextures))
+* [3D Mesh](https://melonjs.github.io/melonJS/examples/#/mesh-3d) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/mesh3d))
+* [3D Mesh Material](https://melonjs.github.io/melonJS/examples/#/mesh-3d-material) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/mesh3dMaterial))
 * [Spine](https://melonjs.github.io/melonJS/examples/#/spine) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/spine))
 
 Browse all examples [here](https://melonjs.github.io/melonJS/examples/)
@@ -212,17 +216,17 @@ Install via [npm](https://www.npmjs.com/package/melonjs) :
 
     npm install melonjs
 
-Then import it in your project :
+Then import what you need in your project :
 
 ```JavaScript
-import * as me from 'melonjs';
+import { Application, Sprite, loader } from 'melonjs';
 ```
 
 Or use it directly via [jsDelivr](https://www.jsdelivr.com/package/npm/melonjs) CDN :
 
 ```html
-<!-- load the ES6 module bundle of melonJS v18.x -->
-<script type="module" src="https://cdn.jsdelivr.net/npm/melonjs@18/+esm"></script>
+<!-- load the ES6 module bundle of melonJS v19.x -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/melonjs@19/+esm"></script>
 <!-- omit the version completely to get the latest one -->
 <!-- you should NOT use this in production -->
 <script type="module" src="https://cdn.jsdelivr.net/npm/melonjs/+esm"></script>
