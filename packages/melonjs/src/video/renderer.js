@@ -68,17 +68,18 @@ export default class Renderer {
 		this.isContextValid = true;
 
 		/**
-		 * the default method to sort object ("sorting", "z-buffer")
-		 * @type {string}
-		 * @default "sorting"
-		 */
-		this.depthTest = "sorting";
-
-		/**
 		 * The GPU renderer string (WebGL only, undefined for Canvas)
 		 * @type {string|undefined}
 		 */
 		this.GPURenderer = undefined;
+
+		/**
+		 * an optional custom shader to use instead of the default one.
+		 * Set by a renderable's preDraw when a shader is assigned.
+		 * (WebGL only, ignored by Canvas renderer)
+		 * @type {GLShader|ShaderEffect|undefined}
+		 */
+		this.customShader = undefined;
 
 		/**
 		 * The Path2D instance used by the renderer to draw primitives

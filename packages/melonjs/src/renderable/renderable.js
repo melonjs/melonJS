@@ -1,13 +1,13 @@
 import { ObservablePoint } from "../geometries/observablePoint.ts";
 import { Rect } from "./../geometries/rectangle.ts";
 import { releaseAllPointerEvents } from "./../input/input.ts";
-import { Color, colorPool } from "./../math/color.ts";
+import { colorPool } from "./../math/color.ts";
 import { clamp } from "./../math/math.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { ObservableVector3d } from "../math/observableVector3d.ts";
 import { vector2dPool } from "../math/vector2d.ts";
 import Body from "./../physics/body.js";
-import { Bounds, boundsPool } from "./../physics/bounds.ts";
+import { boundsPool } from "./../physics/bounds.ts";
 import pool from "../system/legacy_pool.js";
 
 /**
@@ -347,14 +347,9 @@ export default class Renderable extends Rect {
 	 * @return {Application} the parent application or undefined if not attached to any container/app
 	 */
 	get parentApp() {
-		if (typeof this._parentApp === "undefined") {
-			if (
-				typeof this.ancestor !== "undefined" &&
-				typeof this.ancestor.getRootAncestor === "function"
-			) {
-				// the `app` property is only defined in the world "root" container
-				this._parentApp = this.ancestor.getRootAncestor().app;
-			}
+		if (!this._parentApp && this.ancestor) {
+			// the `app` property is only defined in the world "root" container
+			this._parentApp = this.ancestor.getRootAncestor().app;
 		}
 		return this._parentApp;
 	}
@@ -367,8 +362,7 @@ export default class Renderable extends Rect {
 	get isFloating() {
 		return (
 			this.floating === true ||
-			(typeof this.ancestor !== "undefined" &&
-				this.ancestor.isFloating === true)
+			(this.ancestor && this.ancestor.isFloating === true)
 		);
 	}
 
@@ -707,11 +701,7 @@ export default class Renderable extends Rect {
 		}
 		// TODO: cache the absolute position and invalidate when pos or ancestor changes
 		this._absPos.set(this.pos.x, this.pos.y);
-		if (
-			typeof this.ancestor !== "undefined" &&
-			typeof this.ancestor.getAbsolutePosition === "function" &&
-			this.floating !== true
-		) {
+		if (this.ancestor && this.floating !== true) {
 			this._absPos.add(this.ancestor.getAbsolutePosition());
 		}
 		return this._absPos;
@@ -745,14 +735,14 @@ export default class Renderable extends Rect {
 		}
 
 		// apply stencil mask if defined
-		if (typeof this.mask !== "undefined") {
+		if (this.mask) {
 			renderer.translate(this.pos.x, this.pos.y);
 			renderer.setMask(this.mask);
 			renderer.translate(-this.pos.x, -this.pos.y);
 		}
 
 		// use this renderable shader if defined
-		if (this.shader && typeof renderer.gl !== "undefined") {
+		if (this.shader) {
 			renderer.customShader = this.shader;
 		}
 
@@ -804,12 +794,12 @@ export default class Renderable extends Rect {
 		renderer.clearTint();
 
 		// clear the mask if set
-		if (typeof this.mask !== "undefined") {
+		if (this.mask) {
 			renderer.clearMask();
 		}
 
 		// revert to the default shader if defined
-		if (this.shader && typeof renderer.gl !== "undefined") {
+		if (this.shader) {
 			renderer.customShader = undefined;
 		}
 
@@ -857,24 +847,24 @@ export default class Renderable extends Rect {
 
 		this.pos = undefined;
 
-		if (typeof this._absPos !== "undefined") {
+		if (this._absPos) {
 			vector2dPool.release(this._absPos);
 			this._absPos = undefined;
 		}
 
-		if (this._bounds instanceof Bounds) {
+		if (this._bounds) {
 			boundsPool.release(this._bounds);
 			this._bounds = undefined;
 		}
 
 		this.onVisibilityChange = undefined;
 
-		if (typeof this.mask !== "undefined") {
+		if (this.mask) {
 			pool.push(this.mask);
 			this.mask = undefined;
 		}
 
-		if (this._tint instanceof Color) {
+		if (this._tint) {
 			colorPool.release(this._tint);
 			this._tint = undefined;
 		}

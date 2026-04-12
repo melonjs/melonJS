@@ -760,7 +760,7 @@ export default class Camera2d extends Renderable {
 	 * @param target - the renderable to focus the camera on
 	 */
 	focusOn(target: Renderable): void {
-		const bounds = target.getBounds();
+		const bounds = target.getBounds() as Bounds;
 		this.moveTo(
 			bounds.left + bounds.width / 2 - this.width / 2,
 			bounds.top + bounds.height / 2 - this.height / 2,

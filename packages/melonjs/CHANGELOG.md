@@ -30,13 +30,17 @@
 - `Renderable.rotate(angle, v)` defaults to Z axis when no axis given (same 2D behavior)
 - `Renderable.scale(x, y, z)` defaults z to 1 (preserves Z dimension)
 - `QuadBatcher` and `MeshBatcher` now extend `MaterialBatcher` (was `Batcher`) — eliminates ~180 lines of duplicated texture management code
-- WebGL context always created with `depth: true` for hardware depth buffer support
-- WebGL `clear()` now always clears depth + color + stencil buffers
+- WebGL context always created with `depth: true` for hardware depth buffer support (used by 3D mesh rendering)
 - WebGL renderer `setBatcher()` now syncs the projection matrix to the new batcher
 - **BREAKING**: `Text.draw()` and `BitmapText.draw()` no longer accept `text`, `x`, `y` parameters — standalone draw without a parent container is removed (deprecated since 10.6.0)
 - **BREAKING**: `Text.measureText()` no longer takes a `renderer` parameter (was unused)
 - **BREAKING**: `UITextButton` settings `backgroundColor` and `hoverColor` removed — use `hoverOffColor` and `hoverOnColor` instead
 - **BREAKING**: `Tween` no longer adds itself to `game.world` — uses event-based lifecycle (`TICK`, `GAME_AFTER_UPDATE`, `STATE_PAUSE`, `STATE_RESUME`, `GAME_RESET`) instead. Public API unchanged. `isPersistent` and `updateWhenPaused` properties still supported.
+- **BREAKING**: removed `depthTest` application setting and `DepthTest` type — GPU depth sorting is incompatible with 2D alpha blending and the painter's algorithm. The `"z-buffer"` option never worked correctly for 2D sprites. Depth testing remains available internally for 3D mesh rendering only (`drawMesh`).
+- Container: `sortOn` is now a getter/setter that caches the comparator function — avoids string lookup on each sort call
+- Container: sort comparators simplified — removed legacy null guards (children always have `pos`)
+- Renderer: `customShader` property moved to base `Renderer` class — `Renderable.preDraw`/`postDraw` no longer check renderer type via `renderer.gl`
+- WebGL: `clear()` no longer clears the depth buffer (only used by `drawMesh` which clears it locally)
 
 ### Fixed
 - Geometry: `Rect.setSize()` now calls `updateBounds()` — fixes a regression from July 2024 (`4d185c902`) where replacing `Rect.setShape()` with `pos.set()` + `setSize()` during the TypeScript conversion left bounds stale, causing pointer event broadphase lookups to use `(0,0)` instead of the actual pointer position (see #817)

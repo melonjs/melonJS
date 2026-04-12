@@ -26,7 +26,6 @@ export const createGame = () => {
 		scaleMethod: "flex-width",
 		renderer: AUTO,
 		preferWebGL1: false,
-		depthTest: "z-buffer",
 		subPixel: false,
 	});
 

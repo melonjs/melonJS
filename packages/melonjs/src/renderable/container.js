@@ -88,7 +88,8 @@ export default class Container extends Renderable {
 		 * @type {string}
 		 * @default "z"
 		 */
-		this.sortOn = "z";
+		this._sortOn = "z";
+		this._comparator = this._sortZ;
 
 		/**
 		 * Specify if the children list should be automatically sorted when adding a new child
@@ -170,6 +171,26 @@ export default class Container extends Renderable {
 	}
 
 	/**
+	 * The property of the child object that should be used to sort on this container.
+	 * Accepted values: "x", "y", "z"
+	 * @type {string}
+	 * @default "z"
+	 */
+	get sortOn() {
+		return this._sortOn;
+	}
+	set sortOn(value) {
+		const v = value.toLowerCase();
+		if (v !== "x" && v !== "y" && v !== "z") {
+			throw new Error(
+				`Invalid sortOn value: "${value}" (expected "x", "y", or "z")`,
+			);
+		}
+		this._sortOn = v;
+		this._comparator = this["_sort" + v.toUpperCase()];
+	}
+
+	/**
 	 * reset the container, removing all children, and resetting transforms.
 	 */
 	reset() {
@@ -188,10 +209,7 @@ export default class Container extends Renderable {
 			}
 		}
 
-		if (typeof this.currentTransform !== "undefined") {
-			// just reset some variables
-			this.currentTransform.identity();
-		}
+		this.currentTransform.identity();
 
 		this.backgroundColor.setColor(0, 0, 0, 0.0);
 	}
@@ -206,20 +224,20 @@ export default class Container extends Renderable {
 	 * will not be in any container. <br>
 	 * if the given child implements an onActivateEvent method, that method will be called
 	 * once the child is added to this container.
-	 * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText|Tween} child - Child to be added
+	 * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be added
 	 * @param {number} [z] - forces the z index of the child to the specified value
 	 * @returns {Renderable} the added child
 	 */
 	addChild(child, z) {
+		if (!(child instanceof Renderable)) {
+			throw new Error(`${String(child)} is not an instance of Renderable`);
+		}
 		if (child.ancestor instanceof Container) {
 			child.ancestor.removeChildNow(child);
 		} else {
 			// only allocate a GUID if the object has no previous ancestor
 			// (e.g. move one child from one container to another)
-			if (child.isRenderable) {
-				// allocated a GUID value (use child.id as based index if defined)
-				child.GUID = createGUID(child.id);
-			}
+			child.GUID = createGUID(child.id);
 		}
 
 		// add the new child
@@ -227,21 +245,17 @@ export default class Container extends Renderable {
 		this.getChildren().push(child);
 
 		// update child bounds to reflect the new ancestor
-		if (typeof child.updateBounds === "function") {
-			if (this.isFloating === true) {
-				// only parent container can be floating
-				child.floating = false;
-			}
-			child.updateBounds();
+		if (this.isFloating === true) {
+			// only parent container can be floating
+			child.floating = false;
 		}
+		child.updateBounds();
 
 		// set the child z value if required
-		if (typeof child.pos !== "undefined") {
-			if (typeof z === "number") {
-				child.pos.z = z;
-			} else if (this.autoDepth === true) {
-				child.pos.z = this.getChildren().length;
-			}
+		if (typeof z === "number") {
+			child.pos.z = z;
+		} else if (this.autoDepth === true) {
+			child.pos.z = this.getChildren().length;
 		}
 
 		if (this.autoSort === true) {
@@ -294,16 +308,16 @@ export default class Container extends Renderable {
 	 * @returns {Renderable} the added child
 	 */
 	addChildAt(child, index) {
+		if (!(child instanceof Renderable)) {
+			throw new Error(`${String(child)} is not an instance of Renderable`);
+		}
 		if (index >= 0 && index <= this.getChildren().length) {
 			if (child.ancestor instanceof Container) {
 				child.ancestor.removeChildNow(child);
 			} else {
 				// only allocate a GUID if the object has no previous ancestor
 				// (e.g. move one child from one container to another)
-				if (child.isRenderable) {
-					// allocated a GUID value
-					child.GUID = createGUID();
-				}
+				child.GUID = createGUID();
 			}
 
 			// add the new child
@@ -311,13 +325,11 @@ export default class Container extends Renderable {
 			this.getChildren().splice(index, 0, child);
 
 			// update child bounds to reflect the new ancestor
-			if (typeof child.updateBounds === "function") {
-				if (this.isFloating === true) {
-					// only parent container can be floating
-					child.floating = false;
-				}
-				child.updateBounds();
+			if (this.isFloating === true) {
+				// only parent container can be floating
+				child.floating = false;
 			}
+			child.updateBounds();
 
 			if (
 				typeof child.onActivateEvent === "function" &&
@@ -577,11 +589,9 @@ export default class Container extends Renderable {
 
 		if (this.enableChildBoundsUpdate === true) {
 			this.forEach((child) => {
-				if (child.isRenderable) {
-					const childBounds = child.updateBounds(absolute);
-					if (childBounds.isFinite()) {
-						bounds.addBounds(childBounds);
-					}
+				const childBounds = child.updateBounds(absolute);
+				if (childBounds.isFinite()) {
+					bounds.addBounds(childBounds);
 				}
 			});
 		}
@@ -656,7 +666,7 @@ export default class Container extends Renderable {
 	 * Removes (and optionally destroys) a child from the container.<br>
 	 * (removal is immediate and unconditional)<br>
 	 * Never use keepalive=true with objects from {@link pool}. Doing so will create a memory leak.
-	 * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText|Tween} child - Child to be removed
+	 * @param {Renderable|Entity|Sprite|Collectable|Trigger|Draggable|DropTarget|NineSliceSprite|ImageLayer|ColorLayer|Light2d|UIBaseElement|UISpriteElement|UITextButton|Text|BitmapText} child - Child to be removed
 	 * @param {boolean} [keepalive=False] - True to prevent calling child.destroy()
 	 */
 	removeChildNow(child, keepalive) {
@@ -804,7 +814,7 @@ export default class Container extends Renderable {
 			}
 			this.pendingSort = defer(function () {
 				// sort everything in this container
-				this.getChildren().sort(this["_sort" + this.sortOn.toUpperCase()]);
+				this.getChildren().sort(this._comparator);
 				// clear the defer id
 				this.pendingSort = null;
 				// make sure we redraw everything
@@ -829,7 +839,7 @@ export default class Container extends Renderable {
 	 * @ignore
 	 */
 	_sortZ(a, b) {
-		return b.pos && a.pos ? b.pos.z - a.pos.z : a.pos ? -Infinity : Infinity;
+		return b.pos.z - a.pos.z;
 	}
 
 	/**
@@ -837,7 +847,7 @@ export default class Container extends Renderable {
 	 * @ignore
 	 */
 	_sortReverseZ(a, b) {
-		return a.pos && b.pos ? a.pos.z - b.pos.z : a.pos ? Infinity : -Infinity;
+		return a.pos.z - b.pos.z;
 	}
 
 	/**
@@ -845,11 +855,7 @@ export default class Container extends Renderable {
 	 * @ignore
 	 */
 	_sortX(a, b) {
-		if (!b.pos || !a.pos) {
-			return a.pos ? -Infinity : Infinity;
-		}
-		const result = b.pos.z - a.pos.z;
-		return result ? result : b.pos.x - a.pos.x;
+		return b.pos.z - a.pos.z || b.pos.x - a.pos.x;
 	}
 
 	/**
@@ -857,11 +863,7 @@ export default class Container extends Renderable {
 	 * @ignore
 	 */
 	_sortY(a, b) {
-		if (!b.pos || !a.pos) {
-			return a.pos ? -Infinity : Infinity;
-		}
-		const result = b.pos.z - a.pos.z;
-		return result ? result : b.pos.y - a.pos.y;
+		return b.pos.z - a.pos.z || b.pos.y - a.pos.y;
 	}
 
 	/**
@@ -897,30 +899,25 @@ export default class Container extends Renderable {
 				continue;
 			}
 
-			if (obj.isRenderable) {
-				isFloating = globalFloatingCounter > 0 || obj.floating;
-				if (isFloating) {
-					globalFloatingCounter++;
+			isFloating = globalFloatingCounter > 0 || obj.floating;
+			if (isFloating) {
+				globalFloatingCounter++;
+			}
+
+			// check if object is in any active cameras
+			obj.inViewport = false;
+			// iterate through all cameras
+			cameras.forEach((camera) => {
+				if (camera.isVisible(obj, isFloating)) {
+					obj.inViewport = true;
 				}
+			});
 
-				// check if object is in any active cameras
-				obj.inViewport = false;
-				// iterate through all cameras
-				cameras.forEach((camera) => {
-					if (camera.isVisible(obj, isFloating)) {
-						obj.inViewport = true;
-					}
-				});
+			// update our object
+			this.isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update(dt);
 
-				// update our object
-				this.isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update(dt);
-
-				if (globalFloatingCounter > 0) {
-					globalFloatingCounter--;
-				}
-			} else {
-				// just directly call update() for non renderable object
-				this.isDirty |= obj.update(dt);
+			if (globalFloatingCounter > 0) {
+				globalFloatingCounter--;
 			}
 		}
 
@@ -959,36 +956,34 @@ export default class Container extends Renderable {
 
 		const children = this.getChildren();
 		for (let i = children.length, obj; i--, (obj = children[i]); ) {
-			if (obj.isRenderable) {
-				const isFloating = obj.floating === true;
+			const isFloating = obj.floating === true;
 
-				if (obj.inViewport || isFloating) {
-					// skip UI-only floating elements on non-default cameras
-					if (isFloating && isNonDefaultCamera && !obj.visibleInAllCameras) {
-						continue;
-					}
-
-					if (isFloating) {
-						renderer.save();
-						renderer.resetTransform();
-						if (isNonDefaultCamera) {
-							renderer.setProjection(viewport.screenProjection);
-						}
-					}
-
-					obj.preDraw(renderer);
-					obj.draw(renderer, viewport);
-					obj.postDraw(renderer);
-
-					if (isFloating) {
-						if (isNonDefaultCamera) {
-							renderer.setProjection(viewport.worldProjection);
-						}
-						renderer.restore();
-					}
-
-					this.drawCount++;
+			if (obj.inViewport || isFloating) {
+				// skip UI-only floating elements on non-default cameras
+				if (isFloating && isNonDefaultCamera && !obj.visibleInAllCameras) {
+					continue;
 				}
+
+				if (isFloating) {
+					renderer.save();
+					renderer.resetTransform();
+					if (isNonDefaultCamera) {
+						renderer.setProjection(viewport.screenProjection);
+					}
+				}
+
+				obj.preDraw(renderer);
+				obj.draw(renderer, viewport);
+				obj.postDraw(renderer);
+
+				if (isFloating) {
+					if (isNonDefaultCamera) {
+						renderer.setProjection(viewport.worldProjection);
+					}
+					renderer.restore();
+				}
+
+				this.drawCount++;
 			}
 		}
 	}

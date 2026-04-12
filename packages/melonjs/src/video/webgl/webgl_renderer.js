@@ -151,19 +151,11 @@ export default class WebGLRenderer extends Renderer {
 		this.addBatcher(new (CustomBatcher || PrimitiveBatcher)(this), "primitive");
 		this.addBatcher(new MeshBatcher(this), "mesh");
 
-		// depth Test settings
-		this.depthTest = options.depthTest;
-
 		// default WebGL state(s)
-		if (this.depthTest === "z-buffer") {
-			this.gl.enable(this.gl.DEPTH_TEST);
-			// https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/depthFunc
-			this.gl.depthFunc(this.gl.LEQUAL);
-			this.gl.depthMask(true);
-		} else {
-			this.gl.disable(this.gl.DEPTH_TEST);
-			this.gl.depthMask(false);
-		}
+		// depth testing disabled for 2D (painter's algorithm handles z-ordering).
+		// drawMesh() enables it temporarily for 3D mesh rendering.
+		this.gl.disable(this.gl.DEPTH_TEST);
+		this.gl.depthMask(false);
 
 		this.gl.disable(this.gl.SCISSOR_TEST);
 		this.gl.enable(this.gl.BLEND);
@@ -180,8 +172,7 @@ export default class WebGLRenderer extends Renderer {
 			);
 		}
 
-		// an optional custom shader set by a renderable's preDraw
-		this.customShader = undefined;
+		// customShader is declared on the base Renderer class
 
 		// Create a texture cache
 		this.cache = new TextureCache(this, this.maxTextures);
@@ -485,8 +476,8 @@ export default class WebGLRenderer extends Renderer {
 		const clearColor = this.backgroundColor.toArray();
 		gl.clearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
 		this.lineWidth = 1;
-		// always clear depth + color + stencil (depth buffer is always available)
-		gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+		// clear color + stencil (depth buffer is only used by drawMesh, which clears it locally)
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 	}
 
 	/**
@@ -649,9 +640,7 @@ export default class WebGLRenderer extends Renderer {
 			this.currentBatcher.useShader(this.customShader);
 		}
 
-		// save current depth state and force depth testing for 3D mesh
-		const depthWasEnabled = this.depthTest === "z-buffer";
-
+		// enable depth testing for 3D mesh rendering
 		gl.enable(gl.DEPTH_TEST);
 		gl.depthFunc(gl.LESS);
 		gl.depthMask(true);
@@ -682,11 +671,8 @@ export default class WebGLRenderer extends Renderer {
 
 		// restore blending and depth state
 		gl.enable(gl.BLEND);
-
-		if (!depthWasEnabled) {
-			gl.disable(gl.DEPTH_TEST);
-			gl.depthMask(false);
-		}
+		gl.disable(gl.DEPTH_TEST);
+		gl.depthMask(false);
 
 		// revert to default shader if custom was applied
 		if (typeof this.customShader === "object") {
