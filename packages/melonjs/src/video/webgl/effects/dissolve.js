@@ -21,7 +21,7 @@ export default class DissolveEffect extends ShaderEffect {
 	 * @param {object} [options] - effect options
 	 * @param {number} [options.progress=0.0] - dissolve progress (0.0 = visible, 1.0 = dissolved)
 	 * @param {number[]} [options.edgeColor=[1.0, 0.5, 0.0]] - color of the dissolve edge
-	 * @param {number} [options.edgeWidth=0.05] - width of the colored edge (0.0–1.0)
+	 * @param {number} [options.edgeWidth=0.1] - width of the colored edge (0.0–1.0)
 	 */
 	constructor(renderer, options = {}) {
 		super(

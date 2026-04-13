@@ -23,6 +23,7 @@ export default class OutlineEffect extends ShaderEffect {
 	 * @param {object} [options] - effect options
 	 * @param {number[]} [options.color=[1.0, 1.0, 1.0]] - outline color as [r, g, b] (0.0–1.0)
 	 * @param {number} [options.width=1.0] - outline width in pixels
+	 * @param {number[]} [options.textureSize] - texture dimensions [width, height] (defaults to renderer size)
 	 */
 	constructor(renderer, options = {}) {
 		super(
@@ -80,7 +81,7 @@ export default class OutlineEffect extends ShaderEffect {
 	}
 
 	/**
-	 * set the texture size (called automatically when the sprite texture is known)
+	 * set the texture size for accurate outline width calculation
 	 * @param {number} width - texture width in pixels
 	 * @param {number} height - texture height in pixels
 	 */
