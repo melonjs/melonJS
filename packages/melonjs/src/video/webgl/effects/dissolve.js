@@ -29,21 +29,43 @@ export default class DissolveEffect extends ShaderEffect {
 			uniform float uDissolveProgress;
 			uniform vec3 uEdgeColor;
 			uniform float uEdgeWidth;
-			// simple pseudo-random hash
+			// pseudo-random hash
 			float hash(vec2 p) {
 				return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+			}
+			// smooth value noise
+			float vnoise(vec2 p) {
+				vec2 i = floor(p);
+				vec2 f = fract(p);
+				f = f * f * (3.0 - 2.0 * f);
+				return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
+				           mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+			}
+			// fractal brownian motion for organic shapes
+			float fbm(vec2 p) {
+				float v = 0.0, a = 0.5;
+				for (int i = 0; i < 4; i++) { v += a * vnoise(p); p *= 2.0; a *= 0.5; }
+				return v;
 			}
 			vec4 apply(vec4 color, vec2 uv) {
 				if (uDissolveProgress <= 0.0) {
 					return color;
 				}
-				float noise = hash(uv * 100.0);
-				if (noise < uDissolveProgress) {
+				float n = fbm(uv * 8.0);
+				if (n < uDissolveProgress) {
 					discard;
 				}
-				// draw edge color near the dissolve threshold
-				if (noise < uDissolveProgress + uEdgeWidth) {
-					return vec4(uEdgeColor * color.a, color.a);
+				// glowing burn edge
+				float dist = (n - uDissolveProgress) / uEdgeWidth;
+				if (dist < 1.0) {
+					float t = 1.0 - dist;
+					// 3-stop gradient: red edge -> orange -> bright white core
+					vec3 red = vec3(0.8, 0.1, 0.0);
+					vec3 glow = (t < 0.5)
+						? mix(red, uEdgeColor, t * 2.0)
+						: mix(uEdgeColor, vec3(1.0, 0.95, 0.8), (t - 0.5) * 2.0);
+					glow *= 1.0 + t * t;
+					return vec4(mix(color.rgb, glow, t) * color.a, color.a);
 				}
 				return color;
 			}
@@ -56,7 +78,7 @@ export default class DissolveEffect extends ShaderEffect {
 			"uEdgeColor",
 			new Float32Array(options.edgeColor || [1.0, 0.5, 0.0]),
 		);
-		this.setUniform("uEdgeWidth", options.edgeWidth || 0.05);
+		this.setUniform("uEdgeWidth", options.edgeWidth || 0.1);
 	}
 
 	/**
