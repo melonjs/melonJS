@@ -67,10 +67,14 @@ import DissolveEffect from "./video/webgl/effects/dissolve.js";
 import DropShadowEffect from "./video/webgl/effects/dropShadow.js";
 import FlashEffect from "./video/webgl/effects/flash.js";
 import GlowEffect from "./video/webgl/effects/glow.js";
+import HologramEffect from "./video/webgl/effects/hologram.js";
+import InvertEffect from "./video/webgl/effects/invert.js";
 import OutlineEffect from "./video/webgl/effects/outline.js";
 import PixelateEffect from "./video/webgl/effects/pixelate.js";
 import ScanlineEffect from "./video/webgl/effects/scanline.js";
+import SepiaEffect from "./video/webgl/effects/sepia.js";
 import TintPulseEffect from "./video/webgl/effects/tintPulse.js";
+import WaveEffect from "./video/webgl/effects/wave.js";
 import GLShader from "./video/webgl/glshader.js";
 import ShaderEffect from "./video/webgl/shadereffect.js";
 import WebGLRenderer from "./video/webgl/webgl_renderer.js";
@@ -140,7 +144,9 @@ export {
 	GLShader,
 	GlowEffect,
 	Gradient,
+	HologramEffect,
 	ImageLayer,
+	InvertEffect,
 	Light2d,
 	Mesh,
 	NineSliceSprite,
@@ -159,6 +165,7 @@ export {
 	Renderer,
 	RenderState,
 	ScanlineEffect,
+	SepiaEffect,
 	ShaderEffect,
 	Sprite,
 	Stage,
@@ -184,6 +191,7 @@ export {
 	UIBaseElement,
 	UISpriteElement,
 	UITextButton,
+	WaveEffect,
 	WebGLRenderer,
 	World,
 };

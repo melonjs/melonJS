@@ -34,6 +34,9 @@ export default class DissolveEffect extends ShaderEffect {
 				return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
 			}
 			vec4 apply(vec4 color, vec2 uv) {
+				if (uDissolveProgress <= 0.0) {
+					return color;
+				}
 				float noise = hash(uv * 100.0);
 				if (noise < uDissolveProgress) {
 					discard;

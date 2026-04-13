@@ -249,8 +249,12 @@ export default class Renderable extends Rect {
 		 * - {@link ChromaticAberrationEffect} — RGB channel offset (impact, glitch)
 		 * - {@link DissolveEffect} — noise-based dissolve (death, spawn)
 		 * - {@link DropShadowEffect} — offset shadow beneath the sprite
-		 * - {@link ScanlineEffect} — horizontal scanlines overlay (retro CRT)
+		 * - {@link ScanlineEffect} — horizontal scanlines with optional CRT curvature and vignette
 		 * - {@link TintPulseEffect} — pulsing color overlay (poison, freeze, fire)
+		 * - {@link WaveEffect} — sine wave distortion (underwater, heat haze)
+		 * - {@link InvertEffect} — color inversion (negative image, X-ray)
+		 * - {@link SepiaEffect} — warm vintage photo tone
+		 * - {@link HologramEffect} — flickering holographic projection (sci-fi)
 		 *
 		 * Use {@link GLShader} for full control over vertex and fragment shaders.
 		 * In Canvas mode, this property is ignored.
