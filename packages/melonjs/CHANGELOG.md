@@ -17,7 +17,7 @@
 - WebGL: `MeshBatcher` for indexed triangle mesh rendering with chunked buffer management for large models
 - WebGL: `IndexBuffer.addRaw(indices)` for adding pre-computed absolute indices without rebasing
 - Canvas: degenerate UV triangle support — solid color fill sampled from texture for color-palette models (e.g. Kenney)
-- WebGL: 16 built-in `ShaderEffect` presets for per-sprite visual effects — `FlashEffect`, `OutlineEffect`, `GlowEffect`, `DesaturateEffect`, `PixelateEffect`, `BlurEffect`, `ChromaticAberrationEffect`, `DissolveEffect`, `DropShadowEffect`, `ScanlineEffect` (with optional CRT curvature/vignette), `TintPulseEffect`, `WaveEffect`, `InvertEffect`, `SepiaEffect`, `HologramEffect`. All extend `ShaderEffect` and are silently disabled on Canvas.
+- WebGL: 15 built-in `ShaderEffect` presets for per-sprite visual effects — `FlashEffect`, `OutlineEffect`, `GlowEffect`, `DesaturateEffect`, `PixelateEffect`, `BlurEffect`, `ChromaticAberrationEffect`, `DissolveEffect`, `DropShadowEffect`, `ScanlineEffect` (with optional CRT curvature/vignette), `TintPulseEffect`, `WaveEffect`, `InvertEffect`, `SepiaEffect`, `HologramEffect`. All extend `ShaderEffect` and are disabled in Canvas mode.
 
 ### Changed
 - **BREAKING**: `Renderable.currentTransform` is now a `Matrix3d` (was `Matrix2d`) — enables 3D transforms on any renderable. Code that accesses `currentTransform.val` indices directly must update: translation is at `[12],[13]` (was `[6],[7]`)
