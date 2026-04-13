@@ -4,6 +4,7 @@ import ShaderEffect from "../shadereffect.js";
  * A shader effect that pixelates the sprite by snapping UV coordinates
  * to a grid. Commonly used for teleport effects, transitions, or retro styling.
  * @category Effects
+ * @see {@link Renderable.shader} for usage
  * @example
  * // moderate pixelation
  * mySprite.shader = new PixelateEffect(renderer, { size: 8.0 });
@@ -32,8 +33,8 @@ export default class PixelateEffect extends ShaderEffect {
 			`,
 		);
 
-		this.size = options.size || 4.0;
-		const texSize = options.textureSize || [256, 256];
+		this.size = options.size ?? 4.0;
+		const texSize = options.textureSize ?? [256, 256];
 
 		this.setUniform("uPixelSize", this.size);
 		this.setUniform("uTextureSize", new Float32Array(texSize));

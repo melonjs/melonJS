@@ -6,6 +6,7 @@ import ShaderEffect from "../shadereffect.js";
  * current pixel is transparent, it draws the outline color.
  * Commonly used for selection highlights, hover states, or collectible glow.
  * @category Effects
+ * @see {@link Renderable.shader} for usage
  * @example
  * // yellow outline for selection
  * mySprite.shader = new OutlineEffect(renderer, {
@@ -53,16 +54,13 @@ export default class OutlineEffect extends ShaderEffect {
 			`,
 		);
 
-		const color = options.color || [1.0, 1.0, 1.0];
-		const width = options.width || 1.0;
+		const color = options.color ?? [1.0, 1.0, 1.0];
+		const width = options.width ?? 1.0;
+		const texSize = options.textureSize ?? [renderer.width, renderer.height];
 
 		this.setUniform("uOutlineColor", new Float32Array(color));
 		this.setUniform("uOutlineWidth", width);
-		// texture size will be set when the sprite renders
-		this.setUniform(
-			"uTextureSize",
-			new Float32Array([renderer.width, renderer.height]),
-		);
+		this.setUniform("uTextureSize", new Float32Array(texSize));
 	}
 
 	/**

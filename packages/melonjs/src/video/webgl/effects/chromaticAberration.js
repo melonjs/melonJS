@@ -5,6 +5,7 @@ import ShaderEffect from "../shadereffect.js";
  * chromatic aberration (color fringe) effect. Commonly used for
  * impact feedback, glitch effects, or damage indicators.
  * @category Effects
+ * @see {@link Renderable.shader} for usage
  * @example
  * // subtle chromatic aberration
  * mySprite.shader = new ChromaticAberrationEffect(renderer, { offset: 2.0 });
@@ -28,15 +29,16 @@ export default class ChromaticAberrationEffect extends ShaderEffect {
 			vec4 apply(vec4 color, vec2 uv) {
 				vec2 texel = uOffset / uTextureSize;
 				float r = texture2D(uSampler, uv + vec2(texel.x, 0.0)).r;
-				float g = color.g;
+				float g = texture2D(uSampler, uv).g;
 				float b = texture2D(uSampler, uv - vec2(texel.x, 0.0)).b;
-				return vec4(r, g, b, color.a) * vColor;
+				float a = texture2D(uSampler, uv).a;
+				return vec4(r, g, b, a) * vColor;
 			}
 			`,
 		);
 
-		this.offset = options.offset || 3.0;
-		const texSize = options.textureSize || [256, 256];
+		this.offset = options.offset ?? 3.0;
+		const texSize = options.textureSize ?? [256, 256];
 
 		this.setUniform("uOffset", this.offset);
 		this.setUniform("uTextureSize", new Float32Array(texSize));

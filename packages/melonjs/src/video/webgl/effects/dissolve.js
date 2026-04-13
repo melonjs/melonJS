@@ -6,6 +6,7 @@ import ShaderEffect from "../shadereffect.js";
  * `progress` value increases from 0 to 1.
  * Commonly used for death, spawn, or teleport effects.
  * @category Effects
+ * @see {@link Renderable.shader} for usage
  * @example
  * // create a dissolve effect
  * const dissolve = new DissolveEffect(renderer);
@@ -72,13 +73,13 @@ export default class DissolveEffect extends ShaderEffect {
 			`,
 		);
 
-		this.progress = options.progress || 0.0;
+		this.progress = options.progress ?? 0.0;
 		this.setUniform("uDissolveProgress", this.progress);
 		this.setUniform(
 			"uEdgeColor",
-			new Float32Array(options.edgeColor || [1.0, 0.5, 0.0]),
+			new Float32Array(options.edgeColor ?? [1.0, 0.5, 0.0]),
 		);
-		this.setUniform("uEdgeWidth", options.edgeWidth || 0.1);
+		this.setUniform("uEdgeWidth", options.edgeWidth ?? 0.1);
 	}
 
 	/**

@@ -6,6 +6,7 @@ import ShaderEffect from "../shadereffect.js";
  * (0.0 = full color, 1.0 = fully grayscale).
  * Commonly used for disabled states, death effects, or petrification.
  * @category Effects
+ * @see {@link Renderable.shader} for usage
  * @example
  * // full grayscale
  * mySprite.shader = new DesaturateEffect(renderer);

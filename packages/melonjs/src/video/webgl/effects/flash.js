@@ -6,6 +6,7 @@ import ShaderEffect from "../shadereffect.js";
  * The `intensity` uniform controls how much of the flash color is mixed in
  * (0.0 = original sprite, 1.0 = fully colored).
  * @category Effects
+ * @see {@link Renderable.shader} for usage
  * @example
  * // create a white flash effect
  * const flash = new FlashEffect(renderer);
@@ -39,8 +40,8 @@ export default class FlashEffect extends ShaderEffect {
 			`,
 		);
 
-		const color = options.color || [1.0, 1.0, 1.0];
-		this.intensity = options.intensity || 0.0;
+		const color = options.color ?? [1.0, 1.0, 1.0];
+		this.intensity = options.intensity ?? 0.0;
 
 		this.setUniform("uFlashColor", new Float32Array(color));
 		this.setUniform("uFlashIntensity", this.intensity);

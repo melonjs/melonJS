@@ -4,6 +4,7 @@ import ShaderEffect from "../shadereffect.js";
  * A shader effect that overlays horizontal scanlines on the sprite.
  * Can optionally add barrel distortion and vignette for a full CRT monitor look.
  * @category Effects
+ * @see {@link Renderable.shader} for usage
  * @example
  * // simple scanlines
  * mySprite.shader = new ScanlineEffect(renderer, { opacity: 0.3 });
@@ -60,9 +61,9 @@ export default class ScanlineEffect extends ShaderEffect {
 			`,
 		);
 
-		this.setUniform("uScanlineOpacity", options.opacity || 0.25);
-		this.setUniform("uCurvature", options.curvature || 0.0);
-		this.setUniform("uVignetteStrength", options.vignetteStrength || 0.0);
+		this.setUniform("uScanlineOpacity", options.opacity ?? 0.25);
+		this.setUniform("uCurvature", options.curvature ?? 0.0);
+		this.setUniform("uVignetteStrength", options.vignetteStrength ?? 0.0);
 	}
 
 	/**

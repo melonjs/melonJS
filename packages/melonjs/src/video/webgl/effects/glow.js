@@ -5,6 +5,7 @@ import ShaderEffect from "../shadereffect.js";
  * Similar to OutlineEffect but with a soft, blurred edge instead of a hard line.
  * Commonly used for power-ups, magic items, or selection highlights.
  * @category Effects
+ * @see {@link Renderable.shader} for usage
  * @example
  * // blue glow for a magic item
  * mySprite.shader = new GlowEffect(renderer, {
@@ -49,10 +50,10 @@ export default class GlowEffect extends ShaderEffect {
 			`,
 		);
 
-		const color = options.color || [1.0, 1.0, 1.0];
-		const width = options.width || 3.0;
-		const texSize = options.textureSize || [256, 256];
-		this.intensity = options.intensity || 1.0;
+		const color = options.color ?? [1.0, 1.0, 1.0];
+		const width = options.width ?? 3.0;
+		const texSize = options.textureSize ?? [256, 256];
+		this.intensity = options.intensity ?? 1.0;
 
 		this.setUniform("uGlowColor", new Float32Array(color));
 		this.setUniform("uGlowWidth", width);

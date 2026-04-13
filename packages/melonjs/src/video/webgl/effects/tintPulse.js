@@ -5,6 +5,7 @@ import ShaderEffect from "../shadereffect.js";
  * Commonly used for status effects — poison green, freeze blue, fire red.
  * The `time` uniform should be updated each frame for the pulse animation.
  * @category Effects
+ * @see {@link Renderable.shader} for usage
  * @example
  * // poison pulse
  * const poison = new TintPulseEffect(renderer, {
@@ -39,10 +40,10 @@ export default class TintPulseEffect extends ShaderEffect {
 			`,
 		);
 
-		const color = options.color || [1.0, 0.0, 0.0];
+		const color = options.color ?? [1.0, 0.0, 0.0];
 		this.setUniform("uPulseColor", new Float32Array(color));
-		this.setUniform("uPulseSpeed", options.speed || 2.0);
-		this.setUniform("uPulseIntensity", options.intensity || 0.3);
+		this.setUniform("uPulseSpeed", options.speed ?? 2.0);
+		this.setUniform("uPulseIntensity", options.intensity ?? 0.3);
 		this.setUniform("uTime", 0.0);
 	}
 

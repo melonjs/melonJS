@@ -6,6 +6,7 @@ import ShaderEffect from "../shadereffect.js";
  * Commonly used for sci-fi UI, ghost/spirit characters, or tech displays.
  * The `time` uniform should be updated each frame for animation.
  * @category Effects
+ * @see {@link Renderable.shader} for usage
  * @example
  * const holo = new HologramEffect(renderer);
  * mySprite.shader = holo;
@@ -39,9 +40,9 @@ export default class HologramEffect extends ShaderEffect {
 			`,
 		);
 
-		const color = options.color || [0.1, 0.7, 1.0];
+		const color = options.color ?? [0.1, 0.7, 1.0];
 		this.setUniform("uHoloColor", new Float32Array(color));
-		this.setUniform("uHoloIntensity", options.intensity || 0.5);
+		this.setUniform("uHoloIntensity", options.intensity ?? 0.5);
 		this.setUniform("uTime", 0.0);
 	}
 

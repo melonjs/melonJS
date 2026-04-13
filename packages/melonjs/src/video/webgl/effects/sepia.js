@@ -3,6 +3,7 @@ import ShaderEffect from "../shadereffect.js";
 /**
  * A shader effect that applies a warm sepia (vintage photo) tone to the sprite.
  * @category Effects
+ * @see {@link Renderable.shader} for usage
  * @example
  * mySprite.shader = new SepiaEffect(renderer);
  * @example

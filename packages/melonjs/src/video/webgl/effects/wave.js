@@ -5,6 +5,7 @@ import ShaderEffect from "../shadereffect.js";
  * Commonly used for underwater, heat haze, or dream sequence effects.
  * The `time` uniform should be updated each frame for animation.
  * @category Effects
+ * @see {@link Renderable.shader} for usage
  * @example
  * const wave = new WaveEffect(renderer, { amplitude: 0.01, frequency: 10.0 });
  * mySprite.shader = wave;
@@ -35,9 +36,9 @@ export default class WaveEffect extends ShaderEffect {
 			`,
 		);
 
-		this.setUniform("uAmplitude", options.amplitude || 0.01);
-		this.setUniform("uFrequency", options.frequency || 10.0);
-		this.setUniform("uSpeed", options.speed || 2.0);
+		this.setUniform("uAmplitude", options.amplitude ?? 0.01);
+		this.setUniform("uFrequency", options.frequency ?? 10.0);
+		this.setUniform("uSpeed", options.speed ?? 2.0);
 		this.setUniform("uTime", 0.0);
 	}
 

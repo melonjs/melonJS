@@ -4,6 +4,7 @@ import ShaderEffect from "../shadereffect.js";
  * A shader effect that inverts the colors of the sprite.
  * Commonly used for damage feedback, negative image, or X-ray effects.
  * @category Effects
+ * @see {@link Renderable.shader} for usage
  * @example
  * mySprite.shader = new InvertEffect(renderer);
  * @example

@@ -5,6 +5,7 @@ import ShaderEffect from "../shadereffect.js";
  * Commonly used for background defocus, depth-of-field simulation,
  * or UI backdrop blur.
  * @category Effects
+ * @see {@link Renderable.shader} for usage
  * @example
  * // moderate blur
  * mySprite.shader = new BlurEffect(renderer, { strength: 2.0 });
@@ -40,8 +41,8 @@ export default class BlurEffect extends ShaderEffect {
 			`,
 		);
 
-		this.strength = options.strength || 1.0;
-		const texSize = options.textureSize || [256, 256];
+		this.strength = options.strength ?? 1.0;
+		const texSize = options.textureSize ?? [256, 256];
 
 		this.setUniform("uBlurStrength", this.strength);
 		this.setUniform("uTextureSize", new Float32Array(texSize));

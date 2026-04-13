@@ -301,7 +301,7 @@ const examples: {
 		path: "shader-effects",
 		sourceDir: "shaderEffects",
 		description:
-			"Showcase of all built-in ShaderEffect presets: flash, outline, glow, desaturate, pixelate, blur, chromatic aberration, dissolve, drop shadow, scanlines, and tint pulse.",
+			"Showcase of all 16 built-in ShaderEffect presets for per-sprite visual effects (WebGL).",
 	},
 	{
 		component: <ExampleSprite />,

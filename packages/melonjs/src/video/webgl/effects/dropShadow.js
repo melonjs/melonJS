@@ -5,6 +5,7 @@ import ShaderEffect from "../shadereffect.js";
  * Works by sampling the texture at an offset — if the offset position
  * has an opaque pixel but the current position doesn't, the shadow is drawn.
  * @category Effects
+ * @see {@link Renderable.shader} for usage
  * @example
  * // dark shadow offset to the bottom-right
  * mySprite.shader = new DropShadowEffect(renderer, {
@@ -47,16 +48,16 @@ export default class DropShadowEffect extends ShaderEffect {
 			`,
 		);
 
-		const texSize = options.textureSize || [256, 256];
+		const texSize = options.textureSize ?? [256, 256];
 		this.setUniform(
 			"uShadowOffset",
-			new Float32Array([options.offsetX || 2.0, options.offsetY || 2.0]),
+			new Float32Array([options.offsetX ?? 2.0, options.offsetY ?? 2.0]),
 		);
 		this.setUniform(
 			"uShadowColor",
-			new Float32Array(options.color || [0.0, 0.0, 0.0]),
+			new Float32Array(options.color ?? [0.0, 0.0, 0.0]),
 		);
-		this.setUniform("uShadowOpacity", options.opacity || 0.5);
+		this.setUniform("uShadowOpacity", options.opacity ?? 0.5);
 		this.setUniform("uTextureSize", new Float32Array(texSize));
 	}
 
