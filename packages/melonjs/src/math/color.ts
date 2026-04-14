@@ -1,28 +1,17 @@
 import { createPool } from "../system/pool.ts";
 import { clamp, random } from "./math.ts";
 
-// convert a give color component to it hexadecimal value
-const charLookup = [
-	"0",
-	"1",
-	"2",
-	"3",
-	"4",
-	"5",
-	"6",
-	"7",
-	"8",
-	"9",
-	"A",
-	"B",
-	"C",
-	"D",
-	"E",
-	"F",
-];
+// pre-computed lookup table for byte-to-hex conversion (0–255 → "00"–"FF")
+const hexLookup: string[] = new Array(256);
+{
+	const chars = "0123456789ABCDEF";
+	for (let i = 0; i < 256; i++) {
+		hexLookup[i] = chars[(i & 0xf0) >> 4] + chars[i & 0x0f];
+	}
+}
 
 function toHex(component: number) {
-	return charLookup[(component & 0xf0) >> 4] + charLookup[component & 0x0f];
+	return hexLookup[component];
 }
 
 function hue2rgb(p: number, q: number, t: number) {
@@ -660,7 +649,8 @@ export class Color {
 	 * @returns The color in "#RRGGBB" format
 	 */
 	toHex() {
-		return `#${toHex(this.r)}${toHex(this.g)}${toHex(this.b)}`;
+		const a = this.glArray;
+		return `#${toHex((a[0] * 255) >> 0)}${toHex((a[1] * 255) >> 0)}${toHex((a[2] * 255) >> 0)}`;
 	}
 
 	/**
@@ -668,8 +658,9 @@ export class Color {
 	 * @param alpha - The alpha value [0.0 .. 1.0] to use in the output string.
 	 * @returns The color in "#RRGGBBAA" format
 	 */
-	toHex8(alpha = this.alpha) {
-		return `#${toHex(this.r)}${toHex(this.g)}${toHex(this.b)}${toHex(alpha * 255)}`;
+	toHex8(alpha = this.glArray[3]) {
+		const a = this.glArray;
+		return `#${toHex((a[0] * 255) >> 0)}${toHex((a[1] * 255) >> 0)}${toHex((a[2] * 255) >> 0)}${toHex((alpha * 255) >> 0)}`;
 	}
 
 	/**

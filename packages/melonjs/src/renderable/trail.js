@@ -220,13 +220,12 @@ export default class Trail extends Renderable {
 				}
 			}
 		} else if (options.color) {
-			const c =
-				typeof options.color === "string"
-					? options.color
-					: options.color.toRGBA();
-			const base = c.length >= 9 ? c.slice(0, 7) : c;
-			gradient.addColorStop(0, `${base}ff`);
-			gradient.addColorStop(1, `${base}00`);
+			// parse into a Color to handle CSS names, rgba(), hex, or Color objects
+			const parsed = colorPool.get(options.color);
+			const hex = parsed.toHex();
+			colorPool.release(parsed);
+			gradient.addColorStop(0, `${hex}ff`);
+			gradient.addColorStop(1, `${hex}00`);
 		} else {
 			gradient.addColorStop(0, "#ffffffff");
 			gradient.addColorStop(1, "#ffffff00");

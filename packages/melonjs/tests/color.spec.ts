@@ -223,6 +223,194 @@ describe("Color", () => {
 		});
 	});
 
+	describe("toHex", () => {
+		it("converts black to #000000", () => {
+			expect(new Color(0, 0, 0).toHex()).toEqual("#000000");
+		});
+
+		it("converts white to #FFFFFF", () => {
+			expect(new Color(255, 255, 255).toHex()).toEqual("#FFFFFF");
+		});
+
+		it("converts primary red", () => {
+			expect(new Color(255, 0, 0).toHex()).toEqual("#FF0000");
+		});
+
+		it("converts primary green", () => {
+			expect(new Color(0, 255, 0).toHex()).toEqual("#00FF00");
+		});
+
+		it("converts primary blue", () => {
+			expect(new Color(0, 0, 255).toHex()).toEqual("#0000FF");
+		});
+
+		it("converts low nibble values (1-9)", () => {
+			expect(new Color(1, 2, 3).toHex()).toEqual("#010203");
+			expect(new Color(9, 9, 9).toHex()).toEqual("#090909");
+		});
+
+		it("converts high nibble boundary (16 = 0x10)", () => {
+			expect(new Color(16, 32, 48).toHex()).toEqual("#102030");
+		});
+
+		it("converts nibble boundary (15 = 0x0F)", () => {
+			expect(new Color(15, 15, 15).toHex()).toEqual("#0F0F0F");
+		});
+
+		it("converts value 128 (0x80) correctly", () => {
+			expect(new Color(128, 128, 128).toHex()).toEqual("#808080");
+		});
+
+		it("converts value 170 (0xAA) correctly", () => {
+			expect(new Color(170, 170, 170).toHex()).toEqual("#AAAAAA");
+		});
+
+		it("converts mixed low/high values", () => {
+			expect(new Color(1, 255, 0).toHex()).toEqual("#01FF00");
+			expect(new Color(254, 1, 127).toHex()).toEqual("#FE017F");
+		});
+
+		it("ignores alpha component", () => {
+			expect(new Color(255, 0, 0, 0.5).toHex()).toEqual("#FF0000");
+			expect(new Color(255, 0, 0, 0).toHex()).toEqual("#FF0000");
+			expect(new Color(255, 0, 0, 1).toHex()).toEqual("#FF0000");
+		});
+
+		it("is consistent with parseHex round-trip", () => {
+			const c = new Color().parseHex("#3A7BCD");
+			expect(c.toHex()).toEqual("#3A7BCD");
+		});
+
+		it("handles color created via setColor", () => {
+			const c = new Color();
+			c.setColor(64, 128, 192);
+			expect(c.toHex()).toEqual("#4080C0");
+		});
+
+		it("handles color created via setFloat", () => {
+			const c = new Color();
+			c.setFloat(1.0, 0.0, 0.5);
+			expect(c.toHex()).toEqual("#FF007F");
+		});
+	});
+
+	describe("toHex8", () => {
+		it("converts full alpha", () => {
+			expect(new Color(255, 0, 0, 1).toHex8()).toEqual("#FF0000FF");
+		});
+
+		it("converts zero alpha", () => {
+			expect(new Color(255, 0, 0, 0).toHex8()).toEqual("#FF000000");
+		});
+
+		it("converts half alpha", () => {
+			expect(new Color(0, 255, 0, 0.5).toHex8()).toEqual("#00FF007F");
+		});
+
+		it("converts quarter alpha", () => {
+			expect(new Color(0, 0, 255, 0.25).toHex8()).toEqual("#0000FF3F");
+		});
+
+		it("converts black with full alpha", () => {
+			expect(new Color(0, 0, 0, 1).toHex8()).toEqual("#000000FF");
+		});
+
+		it("converts white with zero alpha", () => {
+			expect(new Color(255, 255, 255, 0).toHex8()).toEqual("#FFFFFF00");
+		});
+
+		it("accepts alpha override parameter", () => {
+			expect(new Color(0, 0, 255, 1).toHex8(0)).toEqual("#0000FF00");
+			expect(new Color(0, 0, 255, 0).toHex8(1)).toEqual("#0000FFFF");
+			expect(new Color(0, 0, 255, 0).toHex8(0.5)).toEqual("#0000FF7F");
+		});
+
+		it("is consistent with parseHex round-trip for 8-digit hex", () => {
+			// alpha 0xFF round-trips cleanly (1.0 float)
+			const c = new Color().parseHex("#3A7BCDFF");
+			expect(c.toHex8()).toEqual("#3A7BCDFF");
+			// alpha 0x00 round-trips cleanly (0.0 float)
+			const c2 = new Color().parseHex("#3A7BCD00");
+			expect(c2.toHex8()).toEqual("#3A7BCD00");
+		});
+
+		it("alpha override does not modify instance alpha", () => {
+			const c = new Color(255, 0, 0, 1);
+			c.toHex8(0);
+			expect(c.alpha).toEqual(1);
+		});
+	});
+
+	describe("toRGB", () => {
+		it("formats black correctly", () => {
+			expect(new Color(0, 0, 0).toRGB()).toEqual("rgb(0,0,0)");
+		});
+
+		it("formats white correctly", () => {
+			expect(new Color(255, 255, 255).toRGB()).toEqual("rgb(255,255,255)");
+		});
+
+		it("formats primary colors", () => {
+			expect(new Color(255, 0, 0).toRGB()).toEqual("rgb(255,0,0)");
+			expect(new Color(0, 255, 0).toRGB()).toEqual("rgb(0,255,0)");
+			expect(new Color(0, 0, 255).toRGB()).toEqual("rgb(0,0,255)");
+		});
+
+		it("formats mid-range values", () => {
+			expect(new Color(128, 64, 32).toRGB()).toEqual("rgb(128,64,32)");
+		});
+
+		it("ignores alpha", () => {
+			expect(new Color(100, 200, 50, 0.3).toRGB()).toEqual("rgb(100,200,50)");
+			expect(new Color(100, 200, 50, 0).toRGB()).toEqual("rgb(100,200,50)");
+			expect(new Color(100, 200, 50, 1).toRGB()).toEqual("rgb(100,200,50)");
+		});
+	});
+
+	describe("toRGBA", () => {
+		it("includes alpha", () => {
+			expect(new Color(255, 128, 0, 0.75).toRGBA()).toEqual(
+				"rgba(255,128,0,0.75)",
+			);
+		});
+
+		it("defaults to instance alpha", () => {
+			expect(new Color(0, 0, 0, 0.25).toRGBA()).toEqual("rgba(0,0,0,0.25)");
+		});
+
+		it("formats full alpha", () => {
+			expect(new Color(255, 255, 255, 1).toRGBA()).toEqual(
+				"rgba(255,255,255,1)",
+			);
+		});
+
+		it("formats zero alpha", () => {
+			expect(new Color(128, 64, 32, 0).toRGBA()).toEqual("rgba(128,64,32,0)");
+		});
+
+		it("accepts alpha override parameter", () => {
+			expect(new Color(0, 0, 0, 0.25).toRGBA(1)).toEqual("rgba(0,0,0,1)");
+			expect(new Color(255, 255, 255, 1).toRGBA(0)).toEqual(
+				"rgba(255,255,255,0)",
+			);
+			expect(new Color(128, 64, 32, 0).toRGBA(0.5)).toEqual(
+				"rgba(128,64,32,0.5)",
+			);
+		});
+
+		it("alpha override does not modify instance alpha", () => {
+			const c = new Color(255, 0, 0, 1);
+			c.toRGBA(0);
+			expect(c.alpha).toEqual(1);
+		});
+
+		it("formats black with various alphas", () => {
+			expect(new Color(0, 0, 0, 0).toRGBA()).toEqual("rgba(0,0,0,0)");
+			expect(new Color(0, 0, 0, 0.5).toRGBA()).toEqual("rgba(0,0,0,0.5)");
+			expect(new Color(0, 0, 0, 1).toRGBA()).toEqual("rgba(0,0,0,1)");
+		});
+	});
+
 	describe("color lerp function", () => {
 		it("Linearly interpolates between colors", () => {
 			const _colorA = new Color(0, 0, 0);

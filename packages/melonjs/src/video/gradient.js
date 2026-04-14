@@ -100,6 +100,13 @@ export class Gradient {
 		});
 		this._dirty = true;
 		this._canvasGradient = undefined;
+		// invalidate parsed Color cache so getColorAt() rebuilds on next call
+		if (this._parsedStops) {
+			for (const stop of this._parsedStops) {
+				colorPool.release(stop.color);
+			}
+			this._parsedStops = null;
+		}
 		// keep _renderTarget alive — the _dirty flag will trigger re-rendering
 		// in toCanvasGradient() / toCanvas(), avoiding a GL texture leak
 		return this;
@@ -238,7 +245,7 @@ export class Gradient {
 	 * gradient.getColorAt(0.5, myColor); // myColor is now purple
 	 */
 	getColorAt(position, out) {
-		if (!this._parsedStops || this._dirty) {
+		if (!this._parsedStops) {
 			this._buildParsedStops();
 		}
 
@@ -279,13 +286,6 @@ export class Gradient {
 	 * @ignore
 	 */
 	_buildParsedStops() {
-		// release previous cached colors
-		if (this._parsedStops) {
-			for (const stop of this._parsedStops) {
-				colorPool.release(stop.color);
-			}
-		}
-
 		this._parsedStops = this.colorStops.map((stop) => {
 			return {
 				offset: stop.offset,
