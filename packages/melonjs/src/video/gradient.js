@@ -252,6 +252,11 @@ export class Gradient {
 		const stops = this._parsedStops;
 		const len = stops.length;
 
+		// no stops defined
+		if (len === 0) {
+			return out;
+		}
+
 		// single stop or before first
 		if (len === 1 || position <= stops[0].offset) {
 			return out.copy(stops[0].color);
@@ -286,12 +291,16 @@ export class Gradient {
 	 * @ignore
 	 */
 	_buildParsedStops() {
-		this._parsedStops = this.colorStops.map((stop) => {
-			return {
-				offset: stop.offset,
-				color: colorPool.get(stop.color),
-			};
-		});
+		this._parsedStops = this.colorStops
+			.map((stop) => {
+				return {
+					offset: stop.offset,
+					color: colorPool.get(stop.color),
+				};
+			})
+			.sort((a, b) => {
+				return a.offset - b.offset;
+			});
 	}
 
 	/**

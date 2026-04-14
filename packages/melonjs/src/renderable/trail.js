@@ -71,7 +71,10 @@ export default class Trail extends Renderable {
 		/** @type {number} */
 		this.width = options.width ?? 10;
 		/** @type {number[]} */
-		this.widthCurve = options.widthCurve ?? [1, 0];
+		this.widthCurve =
+			Array.isArray(options.widthCurve) && options.widthCurve.length > 0
+				? options.widthCurve
+				: [1, 0];
 
 		/** @ignore */
 		this._gradient = this._buildGradient(options);
