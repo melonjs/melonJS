@@ -1,7 +1,6 @@
 import {
 	Application,
 	ColorLayer,
-	event,
 	loader,
 	Sprite,
 	Trail,
@@ -10,6 +9,32 @@ import {
 } from "melonjs";
 import { createExampleComponent } from "../utils";
 import monsterImg from "./assets/monster.png";
+
+class Monster extends Sprite {
+	elapsed: number;
+	lastX: number;
+
+	constructor(x: number, y: number) {
+		super(x, y, {
+			image: "monster",
+			anchorPoint: new Vector2d(0.5, 0.5),
+		});
+		this.scale(0.25);
+		this.alwaysUpdate = true;
+		this.elapsed = 0;
+		this.lastX = x;
+	}
+
+	override update(dt: number): boolean {
+		this.elapsed += dt;
+		const t = this.elapsed / 2000;
+		this.pos.x = 609 + Math.sin(t) * 350;
+		this.pos.y = 281 + Math.sin(t * 2) * 150;
+		this.flipX(this.pos.x > this.lastX);
+		this.lastX = this.pos.x;
+		return super.update(dt);
+	}
+}
 
 const createGame = () => {
 	const app = new Application(1218, 562, {
@@ -22,15 +47,8 @@ const createGame = () => {
 	loader.preload([{ name: "monster", type: "image", src: monsterImg }], () => {
 		app.world.addChild(new ColorLayer("bg", "#101020"), 0);
 
-		// create the monster sprite
-		const monster = new Sprite(609, 281, {
-			image: "monster",
-			anchorPoint: new Vector2d(0.5, 0.5),
-		});
-		monster.scale(0.25);
+		const monster = new Monster(609, 281);
 
-		// create a green trail following the monster
-		// rainbow trail with width curve and gradient
 		const trail = new Trail({
 			target: monster,
 			length: 60,
@@ -53,18 +71,6 @@ const createGame = () => {
 
 		app.world.addChild(trail, 1);
 		app.world.addChild(monster, 2);
-
-		// move the monster in a figure-eight pattern
-		const startTime = globalThis.performance.now();
-		let lastX = monster.pos.x;
-		event.on(event.GAME_UPDATE, () => {
-			const t = (globalThis.performance.now() - startTime) / 2000;
-			monster.pos.x = 609 + Math.sin(t) * 350;
-			monster.pos.y = 281 + Math.sin(t * 2) * 150;
-			// flip sprite based on horizontal direction
-			monster.flipX(monster.pos.x > lastX);
-			lastX = monster.pos.x;
-		});
 	});
 };
 
