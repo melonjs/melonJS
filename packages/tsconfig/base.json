@@ -17,6 +17,7 @@
 		"strictPropertyInitialization": false,
 		"allowImportingTsExtensions": true,
 		"noUnusedParameters": true,
-		"noImplicitOverride": true
+		"noImplicitOverride": true,
+		"exactOptionalPropertyTypes": true
 	}
 }
