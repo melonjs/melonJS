@@ -20,7 +20,7 @@ interface ButtonBinding {
 	keyCode: number;
 	value: number;
 	pressed: boolean;
-	threshold?: number;
+	threshold?: number | undefined;
 }
 
 interface GamepadBindings {
