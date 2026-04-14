@@ -50,9 +50,9 @@
 		"melonjs": ">=18.3.0"
 	},
 	"dependencies": {
-		"@esotericsoftware/spine-canvas": "^4.2.108",
-		"@esotericsoftware/spine-core": "^4.2.108",
-		"@esotericsoftware/spine-webgl": "^4.2.108"
+		"@esotericsoftware/spine-canvas": "^4.2.109",
+		"@esotericsoftware/spine-core": "^4.2.109",
+		"@esotericsoftware/spine-webgl": "^4.2.109"
 	},
 	"devDependencies": {
 		"concurrently": "^9.2.1",

@@ -6,7 +6,7 @@ import {
 	Vector2d,
 	Vector3d,
 } from "../src/index.js";
-import { normalizeVertices, projectVertices } from "../src/math/vertex.js";
+import { normalizeVertices, projectVertices } from "../src/math/vertex.ts";
 
 // ── Vertex Utilities ────────────────────────────────────────────────────────
 

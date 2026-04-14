@@ -7,7 +7,7 @@ import {
 	convexHull,
 	normalizeVertices,
 	projectVertices,
-} from "../math/vertex.js";
+} from "../math/vertex.ts";
 import { TextureAtlas } from "./../video/texture/atlas.js";
 import Renderable from "./renderable.js";
 
