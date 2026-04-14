@@ -1,6 +1,6 @@
 # Changelog
 
-## [19.0.0] (melonJS 2) - _unreleased_
+## [19.0.0] (melonJS 2) - _2026-04-14_
 
 ### Added
 - Renderer: `drawMesh(mesh)` method on both WebGL and Canvas renderers for textured triangle mesh rendering with backface culling and depth testing
