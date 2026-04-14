@@ -192,7 +192,7 @@ export function pow(n: number) {
  * Linearly interpolate a value from an array at the given position.
  * The array is treated as evenly spaced samples along the 0–1 range.
  * @param values - array of values to interpolate between
- * @param position - position along the array (0.0–1.0)
+ * @param position - position along the array (0.0–1.0). Values above 1.0 clamp to the last element. Values below 0.0 extrapolate before the first element.
  * @returns interpolated value
  * @example
  * // interpolate halfway through a curve
