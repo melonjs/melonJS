@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { Matrix3d, Vector2d } from "../src/index.js";
 import {
+	computeVertexNormal,
 	convexHull,
 	normalizeVertices,
 	projectVertices,
-} from "../src/math/vertex.js";
+} from "../src/math/vertex.ts";
 
 // ── normalizeVertices ───────────────────────────────────────────────────────
 
@@ -383,6 +384,206 @@ describe("projectVertices()", () => {
 		projectVertices(src, dst, 1, new Matrix3d().val, 200, 200);
 		// positive model Y → negative screen Y offset → closer to top
 		expect(dst[1]).toBeLessThan(100); // above center
+	});
+});
+
+// ── computeVertexNormal ─────────────────────────────────────────────────────
+
+describe("computeVertexNormal()", () => {
+	it("returns perpendicular normal for a horizontal line", () => {
+		const points = [
+			{ x: 0, y: 0 },
+			{ x: 10, y: 0 },
+		];
+		const n0 = computeVertexNormal(points, 0);
+		expect(n0.x).toBeCloseTo(0, 5);
+		expect(n0.y).toBeCloseTo(1, 5);
+
+		const n1 = computeVertexNormal(points, 1);
+		expect(n1.x).toBeCloseTo(0, 5);
+		expect(n1.y).toBeCloseTo(1, 5);
+	});
+
+	it("returns perpendicular normal for a vertical line", () => {
+		const points = [
+			{ x: 0, y: 0 },
+			{ x: 0, y: 10 },
+		];
+		const n = computeVertexNormal(points, 0);
+		expect(n.x).toBeCloseTo(-1, 5);
+		expect(n.y).toBeCloseTo(0, 5);
+	});
+
+	it("produces a unit-length normal", () => {
+		const points = [
+			{ x: 0, y: 0 },
+			{ x: 3, y: 4 },
+			{ x: 10, y: 7 },
+		];
+		const n = computeVertexNormal(points, 1);
+		const len = Math.sqrt(n.x * n.x + n.y * n.y);
+		expect(len).toBeCloseTo(1, 5);
+	});
+
+	it("averages normals at a middle vertex of a polyline", () => {
+		const points = [
+			{ x: 0, y: 0 },
+			{ x: 10, y: 0 },
+			{ x: 10, y: 10 },
+		];
+		const n = computeVertexNormal(points, 1);
+		const len = Math.sqrt(n.x * n.x + n.y * n.y);
+		expect(len).toBeCloseTo(1, 5);
+		// 90-degree turn: averaged normal should point diagonally
+		expect(n.x).toBeCloseTo(-Math.SQRT1_2, 5);
+		expect(n.y).toBeCloseTo(Math.SQRT1_2, 5);
+	});
+
+	it("falls back to (0, 1) for a single point", () => {
+		const points = [{ x: 5, y: 5 }];
+		const n = computeVertexNormal(points, 0);
+		expect(n.x).toBe(0);
+		expect(n.y).toBe(1);
+	});
+
+	it("handles a diagonal line", () => {
+		const points = [
+			{ x: 0, y: 0 },
+			{ x: 10, y: 10 },
+		];
+		const n = computeVertexNormal(points, 0);
+		const len = Math.sqrt(n.x * n.x + n.y * n.y);
+		expect(len).toBeCloseTo(1, 5);
+		// perpendicular to (1,1) is (-1,1) normalized
+		expect(n.x).toBeCloseTo(-Math.SQRT1_2, 5);
+		expect(n.y).toBeCloseTo(Math.SQRT1_2, 5);
+	});
+
+	it("handles coincident points gracefully", () => {
+		const points = [
+			{ x: 5, y: 5 },
+			{ x: 5, y: 5 },
+			{ x: 5, y: 5 },
+		];
+		const n = computeVertexNormal(points, 1);
+		// zero-length edges → fallback
+		expect(n.x).toBe(0);
+		expect(n.y).toBe(1);
+	});
+
+	it("normals are consistent along a straight line", () => {
+		const points = [
+			{ x: 0, y: 0 },
+			{ x: 5, y: 0 },
+			{ x: 10, y: 0 },
+			{ x: 15, y: 0 },
+		];
+		for (let i = 0; i < points.length; i++) {
+			const n = computeVertexNormal(points, i);
+			expect(n.x).toBeCloseTo(0, 5);
+			expect(n.y).toBeCloseTo(1, 5);
+		}
+	});
+
+	// --- edge cases ---
+
+	it("handles first vertex of a long polyline", () => {
+		const points = [
+			{ x: 0, y: 0 },
+			{ x: 10, y: 5 },
+			{ x: 20, y: 0 },
+			{ x: 30, y: 5 },
+		];
+		const n = computeVertexNormal(points, 0);
+		const len = Math.sqrt(n.x * n.x + n.y * n.y);
+		expect(len).toBeCloseTo(1, 5);
+	});
+
+	it("handles last vertex of a long polyline", () => {
+		const points = [
+			{ x: 0, y: 0 },
+			{ x: 10, y: 5 },
+			{ x: 20, y: 0 },
+			{ x: 30, y: 5 },
+		];
+		const n = computeVertexNormal(points, 3);
+		const len = Math.sqrt(n.x * n.x + n.y * n.y);
+		expect(len).toBeCloseTo(1, 5);
+	});
+
+	it("handles 180-degree reversal (hairpin turn)", () => {
+		const points = [
+			{ x: 0, y: 0 },
+			{ x: 10, y: 0 },
+			{ x: 0, y: 0 },
+		];
+		const n = computeVertexNormal(points, 1);
+		// both edges point in opposite directions along X
+		// normals cancel on X, add on Y → pure Y
+		expect(n.x).toBeCloseTo(0, 5);
+		expect(n.y).toBeCloseTo(1, 5);
+	});
+
+	it("handles very short edges", () => {
+		const points = [
+			{ x: 0, y: 0 },
+			{ x: 0.001, y: 0 },
+			{ x: 0.002, y: 0 },
+		];
+		const n = computeVertexNormal(points, 1);
+		expect(n.x).toBeCloseTo(0, 5);
+		expect(n.y).toBeCloseTo(1, 5);
+	});
+
+	it("handles very long edges", () => {
+		const points = [
+			{ x: 0, y: 0 },
+			{ x: 1e6, y: 0 },
+		];
+		const n = computeVertexNormal(points, 0);
+		expect(n.x).toBeCloseTo(0, 5);
+		expect(n.y).toBeCloseTo(1, 5);
+	});
+
+	it("handles negative coordinates", () => {
+		const points = [
+			{ x: -10, y: -10 },
+			{ x: -5, y: -10 },
+			{ x: 0, y: -10 },
+		];
+		const n = computeVertexNormal(points, 1);
+		expect(n.x).toBeCloseTo(0, 5);
+		expect(n.y).toBeCloseTo(1, 5);
+	});
+
+	it("handles two-point polyline at both indices", () => {
+		const points = [
+			{ x: 3, y: 7 },
+			{ x: 13, y: 7 },
+		];
+		const n0 = computeVertexNormal(points, 0);
+		const n1 = computeVertexNormal(points, 1);
+		// both should be identical for a straight segment
+		expect(n0.x).toBeCloseTo(n1.x, 5);
+		expect(n0.y).toBeCloseTo(n1.y, 5);
+	});
+
+	it("produces opposite normals for reversed polyline", () => {
+		const forward = [
+			{ x: 0, y: 0 },
+			{ x: 10, y: 0 },
+		];
+		const reversed = [
+			{ x: 10, y: 0 },
+			{ x: 0, y: 0 },
+		];
+		const outA = { x: 0, y: 0 };
+		const outB = { x: 0, y: 0 };
+		computeVertexNormal(forward, 0, outA);
+		computeVertexNormal(reversed, 0, outB);
+		// reversing the direction flips the normal
+		expect(outA.x).toBeCloseTo(-outB.x, 5);
+		expect(outA.y).toBeCloseTo(-outB.y, 5);
 	});
 });
 

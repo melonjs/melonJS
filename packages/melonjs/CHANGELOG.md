@@ -18,6 +18,11 @@
 - WebGL: `IndexBuffer.addRaw(indices)` for adding pre-computed absolute indices without rebasing
 - Canvas: degenerate UV triangle support — solid color fill sampled from texture for color-palette models (e.g. Kenney)
 - WebGL: 15 built-in `ShaderEffect` presets for per-sprite visual effects — `FlashEffect`, `OutlineEffect`, `GlowEffect`, `DesaturateEffect`, `PixelateEffect`, `BlurEffect`, `ChromaticAberrationEffect`, `DissolveEffect`, `DropShadowEffect`, `ScanlineEffect` (with optional CRT curvature/vignette), `TintPulseEffect`, `WaveEffect`, `InvertEffect`, `SepiaEffect`, `HologramEffect`. All extend `ShaderEffect` and are disabled in Canvas mode.
+- Renderable: `Trail` class for drawing fading, tapering ribbons behind moving objects — auto-follow or manual point mode, configurable width/gradient/lifetime, works on both WebGL and Canvas
+- Gradient: `getColorAt(position, out)` — interpolate a color at any position along a gradient, useful for procedural effects
+- Gradient: `destroy()` — release pooled resources held by a gradient instance
+- Math: `lerpArray(values, position)` — linearly interpolate a value from an evenly spaced array at a given 0–1 position
+- Math: `computeVertexNormal(points, index, out)` — compute the averaged perpendicular normal at a vertex in a 2D polyline
 
 ### Changed
 - **BREAKING**: `Renderable.currentTransform` is now a `Matrix3d` (was `Matrix2d`) — enables 3D transforms on any renderable. Code that accesses `currentTransform.val` indices directly must update: translation is at `[12],[13]` (was `[6],[7]`)

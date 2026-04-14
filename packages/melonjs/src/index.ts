@@ -39,6 +39,7 @@ import Sprite from "./renderable/sprite.js";
 import BitmapText from "./renderable/text/bitmaptext.js";
 import BitmapTextData from "./renderable/text/bitmaptextdata.ts";
 import Text from "./renderable/text/text.js";
+import Trail from "./renderable/trail.js";
 import Trigger from "./renderable/trigger.js";
 import UIBaseElement from "./renderable/ui/uibaseelement.ts";
 import UISpriteElement from "./renderable/ui/uispriteelement.ts";
@@ -185,6 +186,7 @@ export {
 	TMXTileset,
 	TMXTilesetGroup,
 	TMXUtils,
+	Trail,
 	Trigger,
 	Tween,
 	timer,

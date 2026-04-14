@@ -60,7 +60,7 @@
 	},
 	"devDependencies": {
 		"@types/howler": "^2.2.12",
-		"@types/node": "^25.5.2",
+		"@types/node": "^25.6.0",
 		"concurrently": "^9.2.1",
 		"del-cli": "^7.0.0",
 		"esbuild": "^0.27.3",
@@ -68,10 +68,10 @@
 		"tsconfig": "workspace:^",
 		"tsx": "^4.21.0",
 		"type-fest": "^5.5.0",
-		"typedoc": "^0.28.18",
+		"typedoc": "^0.28.19",
 		"typescript": "^6.0.2",
-		"vite": "8.0.3",
-		"vite-plugin-glsl": "^1.5.6"
+		"vite": "8.0.8",
+		"vite-plugin-glsl": "^1.6.0"
 	},
 	"scripts": {
 		"dev": "concurrently --raw \"pnpm build:watch\" \"pnpm tsc:watch\" \"pnpm doc:watch\"",

@@ -56,6 +56,7 @@ Graphics
 - Compressed texture support (DDS, KTX, KTX2, PVR, PKM) with automatic format detection and fallback
 - 3D mesh rendering with OBJ/MTL model loading, perspective projection and hardware depth testing
 - Built-in shader effects (Flash, Outline, Glow, Dissolve, CRT, Hologram, etc.) and custom shader support via `ShaderEffect` for per-sprite fragment effects (WebGL)
+- Trail renderable for fading, tapering ribbons behind moving objects (speed lines, sword slashes, magic trails)
 - System & Bitmap Text
 - Video sprite playback
 
@@ -158,6 +159,7 @@ Examples
 * [Compressed Textures](https://melonjs.github.io/melonJS/examples/#/compressed-textures) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/compressedTextures))
 * [3D Mesh](https://melonjs.github.io/melonJS/examples/#/mesh-3d) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/mesh3d))
 * [3D Mesh Material](https://melonjs.github.io/melonJS/examples/#/mesh-3d-material) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/mesh3dMaterial))
+* [Trail](https://melonjs.github.io/melonJS/examples/#/trail) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/trail))
 * [Shader Effects](https://melonjs.github.io/melonJS/examples/#/shader-effects) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/shaderEffects))
 * [Spine](https://melonjs.github.io/melonJS/examples/#/spine) ([source](https://github.com/melonjs/melonJS/tree/master/packages/examples/src/examples/spine))
 

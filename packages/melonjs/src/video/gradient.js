@@ -1,9 +1,10 @@
-import { nextPowerOfTwo } from "../math/math.ts";
-import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
+import { colorPool } from "../math/color.ts";
 
 /**
  * @import {Color} from "../math/color.ts";
  */
+import { nextPowerOfTwo } from "../math/math.ts";
+import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
 
 /**
  * Shared render target for WebGL gradient textures.
@@ -70,6 +71,13 @@ export class Gradient {
 		 * @ignore
 		 */
 		this._dirty = true;
+
+		/**
+		 * cached parsed Color objects for sampling (lazily built)
+		 * @type {{offset: number, color: Color}[]|null}
+		 * @ignore
+		 */
+		this._parsedStops = null;
 	}
 
 	/**
@@ -215,5 +223,86 @@ export class Gradient {
 		sharedLastY = y;
 		this._renderTarget.invalidate(renderer);
 		return this._renderTarget.canvas;
+	}
+
+	/**
+	 * Get the interpolated color at a given position along the gradient.
+	 * Useful for procedural effects like trails that need per-segment colors.
+	 * @param {number} position - position along the gradient (0.0–1.0)
+	 * @param {Color} out - output Color object to write into
+	 * @returns {Color} the output Color object
+	 * @example
+	 * const gradient = new Gradient("linear", [0, 0, 1, 0]);
+	 * gradient.addColorStop(0, "#ff0000");
+	 * gradient.addColorStop(1, "#0000ff");
+	 * gradient.getColorAt(0.5, myColor); // myColor is now purple
+	 */
+	getColorAt(position, out) {
+		if (!this._parsedStops || this._dirty) {
+			this._buildParsedStops();
+		}
+
+		const stops = this._parsedStops;
+		const len = stops.length;
+
+		// single stop or before first
+		if (len === 1 || position <= stops[0].offset) {
+			return out.copy(stops[0].color);
+		}
+
+		// at or past last stop
+		if (position >= stops[len - 1].offset) {
+			return out.copy(stops[len - 1].color);
+		}
+
+		// find surrounding stops and interpolate in float space
+		for (let i = 0; i < len - 1; i++) {
+			if (position >= stops[i].offset && position <= stops[i + 1].offset) {
+				const range = stops[i + 1].offset - stops[i].offset;
+				const frac = range > 0 ? (position - stops[i].offset) / range : 0;
+				const a = stops[i].color.toArray();
+				const b = stops[i + 1].color.toArray();
+				return out.setFloat(
+					a[0] + (b[0] - a[0]) * frac,
+					a[1] + (b[1] - a[1]) * frac,
+					a[2] + (b[2] - a[2]) * frac,
+					a[3] + (b[3] - a[3]) * frac,
+				);
+			}
+		}
+
+		return out;
+	}
+
+	/**
+	 * Build the parsed Color cache from colorStops strings.
+	 * @ignore
+	 */
+	_buildParsedStops() {
+		// release previous cached colors
+		if (this._parsedStops) {
+			for (const stop of this._parsedStops) {
+				colorPool.release(stop.color);
+			}
+		}
+
+		this._parsedStops = this.colorStops.map((stop) => {
+			return {
+				offset: stop.offset,
+				color: colorPool.get(stop.color),
+			};
+		});
+	}
+
+	/**
+	 * Release pooled resources held by this gradient.
+	 */
+	destroy() {
+		if (this._parsedStops) {
+			for (const stop of this._parsedStops) {
+				colorPool.release(stop.color);
+			}
+			this._parsedStops = null;
+		}
 	}
 }

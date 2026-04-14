@@ -187,3 +187,25 @@ export function toBeCloseTo(expected: number, actual: number, precision = 2) {
 export function pow(n: number) {
 	return Math.pow(n, 2);
 }
+
+/**
+ * Linearly interpolate a value from an array at the given position.
+ * The array is treated as evenly spaced samples along the 0–1 range.
+ * @param values - array of values to interpolate between
+ * @param position - position along the array (0.0–1.0)
+ * @returns interpolated value
+ * @example
+ * // interpolate halfway through a curve
+ * math.lerpArray([0, 10, 20], 0.5); // returns 10
+ * math.lerpArray([1, 0], 0.75);     // returns 0.25
+ */
+export function lerpArray(values: number[], position: number) {
+	const last = values.length - 1;
+	if (last <= 0) return values[0];
+	const pos = position * last;
+	const idx = ~~pos;
+	// clamp index to valid segment range without Math.min
+	if (idx >= last) return values[last];
+	const frac = pos - idx;
+	return values[idx] + (values[idx + 1] - values[idx]) * frac;
+}

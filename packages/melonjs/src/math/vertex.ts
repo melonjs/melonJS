@@ -1,16 +1,13 @@
-/**
- * Utility functions for 3D vertex operations.
- * @namespace vertexUtils
- */
+import type { XYPoint } from "../utils/types.ts";
+import type { Vector2d } from "./vector2d.ts";
 
 /**
  * Normalize a vertex array to fit within a unit cube centered at the origin.
  * Vertices are scaled uniformly so that the largest axis spans [-0.5, 0.5].
  * Modifies the array in place.
- * @param {Float32Array} vertices - vertex positions as x,y,z triplets
- * @memberof vertexUtils
+ * @param vertices - vertex positions as x,y,z triplets
  */
-export function normalizeVertices(vertices) {
+export function normalizeVertices(vertices: Float32Array) {
 	const len = vertices.length;
 	let minX = Infinity;
 	let minY = Infinity;
@@ -61,24 +58,23 @@ export function normalizeVertices(vertices) {
 /**
  * Project 3D vertices through a 4x4 matrix with perspective divide,
  * mapping the result to a 2D display area.
- * @param {Float32Array} src - source vertex positions (x,y,z triplets)
- * @param {Float32Array} dst - destination array (x,y,z triplets, written in place)
- * @param {number} count - number of vertices to project
- * @param {Float32Array} matrix - 4x4 matrix values (column-major, 16 elements)
- * @param {number} width - display width to map projected x to
- * @param {number} height - display height to map projected y to
- * @param {number} [offsetX=0] - x offset added to each projected vertex
- * @param {number} [offsetY=0] - y offset added to each projected vertex
- * @param {number} [zScale=0] - scale factor for Z output (0 = don't compute Z)
- * @memberof vertexUtils
+ * @param src - source vertex positions (x,y,z triplets)
+ * @param dst - destination array (x,y,z triplets, written in place)
+ * @param count - number of vertices to project
+ * @param matrix - 4x4 matrix values (column-major, 16 elements)
+ * @param width - display width to map projected x to
+ * @param height - display height to map projected y to
+ * @param offsetX - x offset added to each projected vertex
+ * @param offsetY - y offset added to each projected vertex
+ * @param zScale - scale factor for Z output (0 = don't compute Z)
  */
 export function projectVertices(
-	src,
-	dst,
-	count,
-	matrix,
-	width,
-	height,
+	src: Float32Array,
+	dst: Float32Array,
+	count: number,
+	matrix: Float32Array,
+	width: number,
+	height: number,
 	offsetX = 0,
 	offsetY = 0,
 	zScale = 0,
@@ -141,27 +137,77 @@ export function projectVertices(
 	}
 }
 
+const _defaultNormal: XYPoint = { x: 0, y: 0 };
+
+/**
+ * Compute the averaged perpendicular normal at a vertex in a 2D polyline.
+ * At interior vertices, normals from both adjacent edges are averaged
+ * to produce a smooth miter direction.
+ * @param points - the polyline vertices
+ * @param index - the vertex index
+ * @param out - output object to write into (avoids allocation)
+ * @returns unit normal
+ */
+export function computeVertexNormal(
+	points: XYPoint[],
+	index: number,
+	out: XYPoint = _defaultNormal,
+): XYPoint {
+	let nx = 0;
+	let ny = 0;
+	const last = points.length - 1;
+	const p = points[index];
+
+	if (index < last) {
+		const dx = points[index + 1].x - p.x;
+		const dy = points[index + 1].y - p.y;
+		const len = Math.sqrt(dx * dx + dy * dy);
+		if (len > 0) {
+			const invLen = 1 / len;
+			nx -= dy * invLen;
+			ny += dx * invLen;
+		}
+	}
+	if (index > 0) {
+		const dx = p.x - points[index - 1].x;
+		const dy = p.y - points[index - 1].y;
+		const len = Math.sqrt(dx * dx + dy * dy);
+		if (len > 0) {
+			const invLen = 1 / len;
+			nx -= dy * invLen;
+			ny += dx * invLen;
+		}
+	}
+
+	const nlen = Math.sqrt(nx * nx + ny * ny);
+	if (nlen > 0) {
+		const invNlen = 1 / nlen;
+		nx *= invNlen;
+		ny *= invNlen;
+	} else {
+		nx = 0;
+		ny = 1;
+	}
+
+	out.x = nx;
+	out.y = ny;
+	return out;
+}
+
 /**
  * 2D cross product of vectors (p1-p0) and (p2-p0).
  * Positive = CCW, negative = CW, zero = collinear.
- * @param {Vector2d} p0
- * @param {Vector2d} p1
- * @param {Vector2d} p2
- * @returns {number}
  * @ignore
  */
-function cross2d(p0, p1, p2) {
+function cross2d(p0: XYPoint, p1: XYPoint, p2: XYPoint): number {
 	return (p1.x - p0.x) * (p2.y - p0.y) - (p1.y - p0.y) * (p2.x - p0.x);
 }
 
 /**
  * Squared distance between two 2D points.
- * @param {Vector2d} a
- * @param {Vector2d} b
- * @returns {number}
  * @ignore
  */
-function dist2(a, b) {
+function dist2(a: XYPoint, b: XYPoint): number {
 	const dx = a.x - b.x;
 	const dy = a.y - b.y;
 	return dx * dx + dy * dy;
@@ -171,11 +217,10 @@ function dist2(a, b) {
  * Compute the convex hull of a set of 2D points using the Graham scan algorithm.
  * The input array is sorted in place. Returns a subset of the input points
  * forming the convex hull in counter-clockwise order.
- * @param {Vector2d[]} points - array of 2D points (modified in place by sorting)
- * @returns {Vector2d[]} convex hull vertices in CCW order
- * @memberof vertexUtils
+ * @param points - array of 2D points (modified in place by sorting)
+ * @returns convex hull vertices in CCW order
  */
-export function convexHull(points) {
+export function convexHull(points: Vector2d[]): Vector2d[] {
 	const len = points.length;
 	if (len <= 3) {
 		return points;
@@ -213,7 +258,7 @@ export function convexHull(points) {
 	});
 
 	// build hull using a stack
-	const hull = [points[0], points[1]];
+	const hull: Vector2d[] = [points[0], points[1]];
 	for (let i = 2; i < len; i++) {
 		const pt = points[i];
 		while (

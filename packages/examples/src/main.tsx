@@ -118,6 +118,11 @@ const ExampleSprite = lazy(() =>
 		default: m.ExampleSprite,
 	})),
 );
+const ExampleTrail = lazy(() =>
+	import("./examples/trail/ExampleTrail").then((m) => ({
+		default: m.ExampleTrail,
+	})),
+);
 const ExampleSVGShapes = lazy(() =>
 	import("./examples/svgShapes/ExampleSVGShapes").then((m) => ({
 		default: m.ExampleSVGShapes,
@@ -310,6 +315,14 @@ const examples: {
 		sourceDir: "sprite",
 		description:
 			"Displaying and transforming sprites with scaling, rotation, and alpha blending.",
+	},
+	{
+		component: <ExampleTrail />,
+		label: "Trail",
+		path: "trail",
+		sourceDir: "trail",
+		description:
+			"Trail renderable that draws a fading, tapering ribbon behind a moving sprite.",
 	},
 	{
 		component: <ExampleSpine />,

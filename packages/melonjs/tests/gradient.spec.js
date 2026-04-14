@@ -1,5 +1,5 @@
-import { beforeAll, describe, expect, it } from "vitest";
-import { Application, Gradient } from "../src/index.js";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { Application, Color, Gradient } from "../src/index.js";
 
 describe("Gradient", () => {
 	let app;
@@ -421,6 +421,113 @@ describe("Gradient", () => {
 				app.renderer.setColor(gradient);
 				app.renderer.fillRect(0, 0, 64, 64);
 			}).not.toThrow();
+		});
+	});
+
+	describe("getColorAt", () => {
+		let out;
+
+		beforeEach(() => {
+			out = new Color(0, 0, 0, 1);
+		});
+
+		it("should clamp to the first stop when position <= first offset", () => {
+			const g = new Gradient("linear", [0, 0, 1, 0]);
+			g.addColorStop(0.2, "#ff0000");
+			g.addColorStop(0.8, "#0000ff");
+			g.getColorAt(0, out);
+			expect(out.r).toBe(255);
+			expect(out.g).toBe(0);
+			expect(out.b).toBe(0);
+			expect(out.alpha).toBe(1);
+			g.destroy();
+		});
+
+		it("should clamp to the last stop when position >= last offset", () => {
+			const g = new Gradient("linear", [0, 0, 1, 0]);
+			g.addColorStop(0.2, "#ff0000");
+			g.addColorStop(0.8, "#0000ff");
+			g.getColorAt(1, out);
+			expect(out.r).toBe(0);
+			expect(out.g).toBe(0);
+			expect(out.b).toBe(255);
+			expect(out.alpha).toBe(1);
+			g.destroy();
+		});
+
+		it("should interpolate between two stops at midpoint", () => {
+			const g = new Gradient("linear", [0, 0, 1, 0]);
+			g.addColorStop(0, "rgba(0,0,0,1)");
+			g.addColorStop(1, "rgba(200,100,50,0)");
+			g.getColorAt(0.5, out);
+			expect(out.r).toBe(100);
+			expect(out.g).toBe(50);
+			expect(out.b).toBe(25);
+			expect(out.alpha).toBeCloseTo(0.5, 5);
+			g.destroy();
+		});
+
+		it("should interpolate across multiple stops", () => {
+			const g = new Gradient("linear", [0, 0, 1, 0]);
+			g.addColorStop(0, "#ff0000");
+			g.addColorStop(0.5, "#00ff00");
+			g.addColorStop(1, "#0000ff");
+			g.getColorAt(0.25, out);
+			expect(out.r).toBeGreaterThanOrEqual(127);
+			expect(out.r).toBeLessThanOrEqual(128);
+			expect(out.g).toBeGreaterThanOrEqual(127);
+			expect(out.g).toBeLessThanOrEqual(128);
+			expect(out.b).toBe(0);
+			g.destroy();
+		});
+
+		it("should return exact color at a stop position", () => {
+			const g = new Gradient("linear", [0, 0, 1, 0]);
+			g.addColorStop(0, "#ff0000");
+			g.addColorStop(0.5, "#00ff00");
+			g.addColorStop(1, "#0000ff");
+			g.getColorAt(0.5, out);
+			expect(out.r).toBe(0);
+			expect(out.g).toBe(255);
+			expect(out.b).toBe(0);
+			g.destroy();
+		});
+
+		it("should handle a single stop", () => {
+			const g = new Gradient("linear", [0, 0, 1, 0]);
+			g.addColorStop(0.5, "#ff0000");
+			g.getColorAt(0, out);
+			expect(out.r).toBe(255);
+			g.getColorAt(1, out);
+			expect(out.r).toBe(255);
+			g.destroy();
+		});
+
+		it("should rebuild cache after addColorStop", () => {
+			const g = new Gradient("linear", [0, 0, 1, 0]);
+			g.addColorStop(0, "#ff0000");
+			g.addColorStop(1, "#ff0000");
+			g.getColorAt(0.5, out);
+			expect(out.r).toBe(255);
+			expect(out.b).toBe(0);
+
+			g.addColorStop(0.5, "#0000ff");
+			g.getColorAt(0.5, out);
+			expect(out.r).toBe(0);
+			expect(out.b).toBe(255);
+			g.destroy();
+		});
+	});
+
+	describe("destroy", () => {
+		it("should release parsed stops and allow re-creation", () => {
+			const g = new Gradient("linear", [0, 0, 1, 0]);
+			g.addColorStop(0, "#ff0000");
+			g.addColorStop(1, "#0000ff");
+			const out = new Color();
+			g.getColorAt(0.5, out); // triggers cache build
+			g.destroy();
+			expect(g._parsedStops).toBeNull();
 		});
 	});
 });
