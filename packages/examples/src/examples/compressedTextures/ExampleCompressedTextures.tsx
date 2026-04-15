@@ -149,8 +149,8 @@ class CompressedTextureDisplay extends Renderable {
 		x: number,
 		y: number,
 	) {
-		font.setText(text);
 		font.pos.set(x, y);
+		font.setText(text);
 		font.preDraw(renderer);
 		font.draw(renderer);
 		font.postDraw(renderer);
