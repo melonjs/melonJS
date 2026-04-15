@@ -158,6 +158,7 @@ export default class WebGLRenderer extends Renderer {
 		this.gl.depthMask(false);
 
 		this.gl.disable(this.gl.SCISSOR_TEST);
+		this._scissorActive = false;
 		this.gl.enable(this.gl.BLEND);
 
 		// set default mode
@@ -325,6 +326,7 @@ export default class WebGLRenderer extends Renderer {
 		this.setBatcher("quad");
 
 		this.gl.disable(this.gl.SCISSOR_TEST);
+		this._scissorActive = false;
 	}
 
 	/**
@@ -948,6 +950,7 @@ export default class WebGLRenderer extends Renderer {
 				const gl = this.gl;
 				const s = this.currentScissor;
 				gl.enable(gl.SCISSOR_TEST);
+				this._scissorActive = true;
 				gl.scissor(
 					s[0] + this.currentTransform.tx,
 					canvas.height - s[3] - s[1] - this.currentTransform.ty,
@@ -956,6 +959,7 @@ export default class WebGLRenderer extends Renderer {
 				);
 			} else {
 				this.gl.disable(this.gl.SCISSOR_TEST);
+				this._scissorActive = false;
 			}
 		}
 		// sync gradient from renderState
@@ -976,7 +980,7 @@ export default class WebGLRenderer extends Renderer {
 	 * renderer.restore();
 	 */
 	save() {
-		this.renderState.save(this.gl.isEnabled(this.gl.SCISSOR_TEST));
+		this.renderState.save(this._scissorActive === true);
 	}
 
 	/**
@@ -1711,6 +1715,7 @@ export default class WebGLRenderer extends Renderer {
 			this.flush();
 			// turn on scissor test
 			gl.enable(this.gl.SCISSOR_TEST);
+			this._scissorActive = true;
 			// set the scissor rectangle (note : coordinates are left/bottom)
 			gl.scissor(
 				// scissor does not account for currentTransform, so manually adjust
@@ -1727,6 +1732,7 @@ export default class WebGLRenderer extends Renderer {
 		} else {
 			// turn off scissor test
 			gl.disable(gl.SCISSOR_TEST);
+			this._scissorActive = false;
 		}
 	}
 

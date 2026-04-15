@@ -7,6 +7,7 @@ import {
 	loader,
 	plugin,
 	ScaleMethods,
+	Text,
 	video,
 } from "melonjs";
 import { createExampleComponent } from "../utils";
@@ -64,6 +65,18 @@ const createGame = () => {
 
 		// reset/empty the game world
 		game.world.reset();
+
+		// add hint text
+		const hint = new Text(game.viewport.width / 2, 20, {
+			font: "Arial",
+			size: "16px",
+			fillStyle: "#ffffff",
+			textAlign: "center",
+			text: "Tap or Click to spawn more sprites",
+		});
+		hint.floating = true;
+		hint.setOpacity(0.6);
+		game.world.addChild(hint, Infinity);
 
 		addFruits(FRUIT_STEP, "watermelon");
 	});

@@ -216,11 +216,13 @@ export class MaterialBatcher extends Batcher {
 	 * @param {WebGLTexture} texture - a WebGL texture
 	 * @param {number} unit - Texture unit to which the given texture is bound
 	 */
-	bindTexture2D(texture, unit) {
+	bindTexture2D(texture, unit, flush = true) {
 		const gl = this.gl;
 
 		if (texture !== this.boundTextures[unit]) {
-			this.flush();
+			if (flush) {
+				this.flush();
+			}
 			if (this.currentTextureUnit !== unit) {
 				this.currentTextureUnit = unit;
 				gl.activeTexture(gl.TEXTURE0 + unit);
@@ -228,7 +230,9 @@ export class MaterialBatcher extends Batcher {
 			gl.bindTexture(gl.TEXTURE_2D, texture);
 			this.boundTextures[unit] = texture;
 		} else if (this.currentTextureUnit !== unit) {
-			this.flush();
+			if (flush) {
+				this.flush();
+			}
 			this.currentTextureUnit = unit;
 			gl.activeTexture(gl.TEXTURE0 + unit);
 		}
@@ -256,7 +260,7 @@ export class MaterialBatcher extends Batcher {
 	/**
 	 * @ignore
 	 */
-	uploadTexture(texture, w, h, force = false) {
+	uploadTexture(texture, w, h, force = false, flush = true) {
 		const unit = this.renderer.cache.getUnit(texture);
 		const texture2D = this.boundTextures[unit];
 
@@ -273,9 +277,9 @@ export class MaterialBatcher extends Batcher {
 				texture2D,
 			);
 		} else {
-			this.bindTexture2D(texture2D, unit);
+			this.bindTexture2D(texture2D, unit, flush);
 		}
 
-		return this.currentTextureUnit;
+		return flush ? this.currentTextureUnit : unit;
 	}
 }
