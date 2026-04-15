@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.2.0 - 2026-04-15
+
+### Added
+- `setTint()` now applies to `skeleton.color` — RGB tinting works on WebGL, Canvas is limited to alpha only
+- Canvas `SkeletonRenderer` now passes `premultipliedAlpha` to `setBlendMode()` for correct blending with PMA textures
+
+### Fixed
+- fix `scale()` double-applying on Canvas — was scaling through both root bone and canvas context
+- fix `skin.attachments.entries()` crash in mesh detection — inner attachments are plain objects, not Maps
+- fix potential crash when `draw()` is called before `setSkeleton` completes
+
 ## 2.1.0
 
 ### Added

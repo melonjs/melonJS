@@ -18,7 +18,6 @@ export default class Spine extends Renderable {
 	runtime;
 	skeleton;
 	plugin;
-	renderer;
 	animationState;
 	skeletonRenderer;
 	root;
@@ -96,23 +95,19 @@ export default class Spine extends Renderable {
 				"Spine plugin: plugin needs to be registered first using plugin.register",
 			);
 		}
-		this.renderer = this.plugin.app.renderer;
+		const renderer = this.plugin.app.renderer;
 
-		if (this.renderer.WebGLVersion >= 1) {
+		/** @ignore */
+		this.isWebGL = renderer.WebGLVersion >= 1;
+
+		if (this.isWebGL) {
 			this.runtime = spineWebGL;
-			this.gl = this.renderer.gl;
-			this.canvas = this.renderer.renderTarget.canvas;
-			this.context = this.renderer;
-			this.twoColorTint = true;
-
+			this.canvas = renderer.renderTarget.canvas;
 			// register the Spine batcher with the melonJS renderer (once)
-			if (!this.renderer.batchers.has("spine")) {
-				this.renderer.addBatcher(
-					new SpineBatcher(this.renderer, this.canvas),
-					"spine",
-				);
+			if (!renderer.batchers.has("spine")) {
+				renderer.addBatcher(new SpineBatcher(renderer, this.canvas), "spine");
 			}
-			this.spineBatcher = this.renderer.batchers.get("spine");
+			this.spineBatcher = renderer.batchers.get("spine");
 
 			// spine skeleton renderer
 			this.skeletonRenderer = new this.runtime.SkeletonRenderer(
@@ -197,21 +192,21 @@ export default class Spine extends Renderable {
 		this.premultipliedAlpha = atlas.pages.some((page) => {
 			return page.pma;
 		});
-		if (this.renderer.WebGLVersion >= 1) {
-			this.skeletonRenderer.premultipliedAlpha = this.premultipliedAlpha;
-		}
+		this.skeletonRenderer.premultipliedAlpha = this.premultipliedAlpha;
 
 		// Instantiate a new skeleton based on the atlas and skeleton data.
 		this.skeleton = new this.runtime.Skeleton(skeletonData);
 
 		// auto-detect if the skeleton uses mesh attachments for canvas renderer
-		if (this.skeletonRenderer instanceof SkeletonRenderer) {
+		if (!this.isWebGL) {
 			this.skeletonRenderer.triangleRendering = skeletonData.skins.some(
 				(skin) => {
-					for (const [, attachments] of skin.attachments.entries()) {
-						for (const [, attachment] of attachments.entries()) {
-							if (attachment instanceof MeshAttachment) {
-								return true;
+					for (const attachments of skin.attachments) {
+						if (attachments) {
+							for (const attachment of Object.values(attachments)) {
+								if (attachment instanceof MeshAttachment) {
+									return true;
+								}
 							}
 						}
 					}
@@ -274,7 +269,7 @@ export default class Spine extends Renderable {
 	 * @returns {Spine} Reference to this object for method chaining
 	 */
 	rotate(angle, v) {
-		if (this.renderer.WebGLVersion >= 1) {
+		if (this.isWebGL) {
 			this.skeleton.getRootBone().rotation -= Math.radToDeg(angle);
 		} else {
 			// rotation for rootBone is in degrees (anti-clockwise)
@@ -291,8 +286,13 @@ export default class Spine extends Renderable {
 	 * @returns {Spine} Reference to this object for method chaining
 	 */
 	scale(x, y = x) {
-		this.root.scaleX *= x;
-		this.root.scaleY *= y;
+		if (this.isWebGL) {
+			// WebGL: SpineBatcher ignores currentTransform, scale through root bone
+			this.root.scaleX *= x;
+			this.root.scaleY *= y;
+		}
+		// Canvas: scale through currentTransform only (applied by preDraw),
+		// which scales both region bone transforms and mesh world vertices uniformly
 		return super.scale(x, y);
 	}
 
@@ -385,9 +385,17 @@ export default class Spine extends Renderable {
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - A renderer instance.
 	 */
 	draw(renderer) {
-		if (this.renderer.WebGLVersion >= 1) {
+		if (typeof this.skeleton === "undefined") {
+			return;
+		}
+
+		// apply melonJS tint to Spine skeleton color
+		const t = this.tint.toArray();
+		this.skeleton.color.set(t[0], t[1], t[2], this.skeleton.color.a);
+
+		if (this.isWebGL) {
 			// switch to the Spine batcher via melonJS batcher system
-			this.renderer.setBatcher("spine");
+			renderer.setBatcher("spine");
 
 			// draw the skeleton — SkeletonRenderer calls spineBatcher.draw()
 			this.skeletonRenderer.draw(
@@ -406,7 +414,7 @@ export default class Spine extends Renderable {
 				this.shapesShader.bind();
 				this.shapesShader.setUniform4x4f(
 					this.runtime.Shader.MVP_MATRIX,
-					this.context.projectionMatrix.val,
+					renderer.projectionMatrix.toArray(),
 				);
 				this.shapes.begin(this.shapesShader);
 				this.skeletonDebugRenderer.draw(this.shapes, this.skeleton);
@@ -425,7 +433,7 @@ export default class Spine extends Renderable {
 	 * Called automatically when the renderable is removed from the world.
 	 */
 	dispose() {
-		if (this.renderer.WebGLVersion >= 1) {
+		if (this.isWebGL) {
 			this.shapes.dispose();
 			this.shapesShader.dispose();
 			this.skeletonDebugRenderer.dispose();
