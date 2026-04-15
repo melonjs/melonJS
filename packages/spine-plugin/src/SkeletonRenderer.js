@@ -49,6 +49,13 @@ export default class SkeletonRenderer {
 	 */
 	debugRendering = false;
 
+	/**
+	 * Whether textures use premultiplied alpha
+	 * @type {boolean}
+	 * @default false
+	 */
+	premultipliedAlpha = false;
+
 	// reusable color instances to avoid allocations
 	tintColor = new MColor();
 	tempColor = new MColor();
@@ -140,7 +147,10 @@ export default class SkeletonRenderer {
 
 				renderer.setGlobalAlpha(color.a);
 				renderer.setTint(color);
-				renderer.setBlendMode(BLEND_MODES[slot.data.blendMode]);
+				renderer.setBlendMode(
+					BLEND_MODES[slot.data.blendMode],
+					this.premultipliedAlpha,
+				);
 
 				if (triangles) {
 					this.drawMesh(renderer, image, worldVertices, triangles);

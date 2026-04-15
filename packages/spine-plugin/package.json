@@ -1,6 +1,6 @@
 {
 	"name": "@melonjs/spine-plugin",
-	"version": "2.1.0",
+	"version": "2.2.0",
 	"description": "melonJS Spine plugin",
 	"homepage": "https://www.npmjs.com/package/@melonjs/spine-plugin",
 	"type": "module",
@@ -56,7 +56,7 @@
 	},
 	"devDependencies": {
 		"concurrently": "^9.2.1",
-		"esbuild": "^0.27.3",
+		"esbuild": "^0.28.0",
 		"melonjs": "workspace:*",
 		"tsconfig": "workspace:*",
 		"tsx": "^4.21.0",

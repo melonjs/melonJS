@@ -60,7 +60,7 @@ const createGame = () => {
 
 	// register plugins
 	plugin.register(DebugPanelPlugin);
-	plugin.get(DebugPanelPlugin)?.show();
+	(plugin.get(DebugPanelPlugin) as DebugPanelPlugin)?.show();
 	plugin.register(SpinePlugin);
 
 	// set cross-origin
