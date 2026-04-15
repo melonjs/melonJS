@@ -1,5 +1,14 @@
 # Changelog
 
+## [19.1.0] (melonJS 2) - _2026-04-15_
+
+### Changed
+- WebGL: `failIfMajorPerformanceCaveat` default changed from `true` to `false` — allows WebGL context creation on machines with blocklisted GPU drivers or software renderers, matching PixiJS and Phaser behavior
+
+### Fixed
+- WebGL: `getSupportedCompressedTextureFormats()` no longer crashes when the GL context is unavailable — falls back to the base renderer's empty format list
+- Examples: compressed textures example updated to use `setText()`/`preDraw()`/`draw()`/`postDraw()` pattern — fixes text not rendering after `Text.draw()` standalone removal in 19.0
+
 ## [19.0.0] (melonJS 2) - _2026-04-14_
 
 ### Added

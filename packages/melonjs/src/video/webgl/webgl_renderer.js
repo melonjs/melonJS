@@ -231,6 +231,10 @@ export default class WebGLRenderer extends Renderer {
 	getSupportedCompressedTextureFormats() {
 		if (typeof supportedCompressedTextureFormats === "undefined") {
 			const gl = this.gl;
+			if (typeof gl === "undefined" || gl === null) {
+				// WebGL context not available
+				return super.getSupportedCompressedTextureFormats();
+			}
 			supportedCompressedTextureFormats = {
 				astc:
 					gl.getExtension("WEBGL_compressed_texture_astc") ||
