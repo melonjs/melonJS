@@ -3,7 +3,7 @@
 ## [19.1.0] (melonJS 2) - _2026-04-15_
 
 ### Changed
-- WebGL: `failIfMajorPerformanceCaveat` default changed from `true` to `false` — allows WebGL context creation on machines with blocklisted GPU drivers or software renderers, matching PixiJS and Phaser behavior
+- WebGL: `CanvasRenderTarget` internal default for `failIfMajorPerformanceCaveat` changed from `true` to `false` — allows WebGL context creation on machines with blocklisted GPU drivers when creating render targets directly. Application default remains `true`; set `failIfMajorPerformanceCaveat: false` in Application options to opt in.
 
 ### Fixed
 - WebGL: `getSupportedCompressedTextureFormats()` no longer crashes when the GL context is unavailable — falls back to the base renderer's empty format list
