@@ -20,6 +20,7 @@ describe("WebGL Renderer save/restore", () => {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.AUTO,
+			failIfMajorPerformanceCaveat: true,
 		});
 		renderer = video.renderer;
 		isWebGL = renderer instanceof WebGLRenderer;
@@ -30,6 +31,7 @@ describe("WebGL Renderer save/restore", () => {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.AUTO,
+			failIfMajorPerformanceCaveat: true,
 		});
 	});
 

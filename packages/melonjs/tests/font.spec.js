@@ -19,6 +19,7 @@ describe("Font : Text", () => {
 			parent: "screen",
 			scale: "auto",
 			renderer: video.AUTO,
+			failIfMajorPerformanceCaveat: true,
 		});
 
 		font = new Text(0, 0, {
