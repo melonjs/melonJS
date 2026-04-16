@@ -1,11 +1,9 @@
 import {
-	type CanvasRenderer,
+	Application,
 	ColorLayer,
-	game,
 	loader,
 	Renderable,
 	Sprite,
-	state,
 	Text,
 	video,
 	type WebGLRenderer,
@@ -40,10 +38,16 @@ const textureAssets = [
 		src: "assets/compressedTextures/format_bc7_unorm.ktx",
 	},
 	{
-		name: "ktx-astc",
-		label: "KTX (ASTC)",
-		ext: "astc",
-		src: "assets/compressedTextures/format_astc_4x4_srgb.ktx",
+		name: "pvr-pvrtc4",
+		label: "PVR (PVRTC 4bpp)",
+		ext: "pvrtc",
+		src: "assets/compressedTextures/shannon-pvrtc-4bpp-rgba.pvr",
+	},
+	{
+		name: "ktx-pvrtc",
+		label: "KTX (PVRTC)",
+		ext: "pvrtc",
+		src: "assets/compressedTextures/format_pvrtc1_4bpp_unorm.ktx",
 	},
 	{
 		name: "ktx-etc2",
@@ -52,10 +56,10 @@ const textureAssets = [
 		src: "assets/compressedTextures/format_etc2_r8g8b8_srgb.ktx",
 	},
 	{
-		name: "ktx2-bc1",
-		label: "KTX2 (BC1)",
-		ext: "s3tc",
-		src: "assets/compressedTextures/synthetic_bc1.ktx2",
+		name: "ktx-astc4",
+		label: "KTX (ASTC 4x4)",
+		ext: "astc",
+		src: "assets/compressedTextures/format_astc_4x4_srgb.ktx",
 	},
 	{
 		name: "pkm-etc1",
@@ -70,33 +74,38 @@ const textureAssets = [
 		src: "assets/compressedTextures/synthetic_etc2.pkm",
 	},
 	{
-		name: "pvr-4bpp",
-		label: "PVR (PVRTC)",
-		ext: "pvrtc",
-		src: "assets/compressedTextures/shannon-pvrtc-4bpp-rgba.pvr",
+		name: "ktx2-bc1",
+		label: "KTX2 (BC1)",
+		ext: "s3tc",
+		src: "assets/compressedTextures/synthetic_bc1.ktx2",
 	},
 ];
 
+/**
+ * A display renderable that shows compressed texture support info and loaded textures.
+ */
 class CompressedTextureDisplay extends Renderable {
+	formats: ReturnType<WebGLRenderer["getSupportedCompressedTextureFormats"]>;
+	sprites: { sprite: Sprite; label: string; x: number; y: number }[] = [];
 	titleFont: Text;
 	font: Text;
 	smallFont: Text;
-	formats: Record<string, unknown>;
-	loadedAssets: typeof textureAssets;
-	sprites: { sprite: Sprite; label: string; x: number; y: number }[] = [];
 
 	constructor(
-		formats: Record<string, unknown>,
-		loadedAssets: typeof textureAssets,
+		app: Application,
+		formats: ReturnType<WebGLRenderer["getSupportedCompressedTextureFormats"]>,
+		loadedAssets: (typeof textureAssets)[number][],
 	) {
-		super(0, 0, game.viewport.width, game.viewport.height);
+		super(0, 0, app.viewport.width, app.viewport.height);
+
 		this.formats = formats;
-		this.loadedAssets = loadedAssets;
 		this.anchorPoint.set(0, 0);
+		this.floating = true;
+		this.isPersistent = true;
 
 		this.titleFont = new Text(0, 0, {
 			font: "Arial",
-			size: "20px",
+			size: "24px",
 			fillStyle: "#FFFFFF",
 		});
 		this.font = new Text(0, 0, {
@@ -114,7 +123,7 @@ class CompressedTextureDisplay extends Renderable {
 		// create sprites for each loaded compressed texture
 		const cols = Math.min(Math.max(loadedAssets.length, 1), 4);
 		const spacing = 160;
-		const startX = game.viewport.width / 2 - ((cols - 1) * spacing) / 2;
+		const startX = app.viewport.width / 2 - ((cols - 1) * spacing) / 2;
 		const startY = 200;
 
 		for (let i = 0; i < loadedAssets.length; i++) {
@@ -143,7 +152,7 @@ class CompressedTextureDisplay extends Renderable {
 
 	/** @ignore */
 	drawText(
-		renderer: WebGLRenderer | CanvasRenderer,
+		renderer: WebGLRenderer,
 		font: Text,
 		text: string,
 		x: number,
@@ -156,7 +165,7 @@ class CompressedTextureDisplay extends Renderable {
 		font.postDraw(renderer);
 	}
 
-	override draw(renderer: WebGLRenderer | CanvasRenderer) {
+	override draw(renderer: WebGLRenderer) {
 		let y = 10;
 		const x = 10;
 
@@ -182,7 +191,8 @@ class CompressedTextureDisplay extends Renderable {
 
 		for (const [key, label] of extensions) {
 			const supported =
-				this.formats[key] !== null && this.formats[key] !== undefined;
+				(this.formats as Record<string, unknown>)[key] !== null &&
+				(this.formats as Record<string, unknown>)[key] !== undefined;
 			this.font.fillStyle.parseCSS(supported ? "#4ade80" : "#f87171");
 			this.drawText(
 				renderer,
@@ -211,7 +221,7 @@ class CompressedTextureDisplay extends Renderable {
 		}
 
 		// Footer info
-		const footerY = game.viewport.height - 40;
+		const footerY = this.height - 40;
 		this.font.fillStyle.parseCSS("#64748b");
 		this.drawText(
 			renderer,
@@ -224,18 +234,13 @@ class CompressedTextureDisplay extends Renderable {
 }
 
 const createGame = () => {
-	if (
-		!video.init(800, 600, {
-			parent: "screen",
-			scaleMethod: "flex",
-			renderer: video.WEBGL,
-		})
-	) {
-		alert("Your browser does not support WebGL.");
-		return;
-	}
+	const app = new Application(800, 600, {
+		parent: "screen",
+		scaleMethod: "flex",
+		renderer: video.WEBGL,
+	});
 
-	const renderer = video.renderer as WebGLRenderer;
+	const renderer = app.renderer as WebGLRenderer;
 	const formats = renderer.getSupportedCompressedTextureFormats();
 
 	// Filter texture assets to only those whose extension is supported
@@ -252,11 +257,9 @@ const createGame = () => {
 	}));
 
 	const showScene = () => {
-		state.change(state.DEFAULT, true);
-		game.world.reset();
-		game.world.addChild(new ColorLayer("background", "#0f172a"), 0);
-		game.world.addChild(
-			new CompressedTextureDisplay(formats, supportedAssets),
+		app.world.addChild(new ColorLayer("background", "#0f172a"), 0);
+		app.world.addChild(
+			new CompressedTextureDisplay(app, formats, supportedAssets),
 			1,
 		);
 	};
