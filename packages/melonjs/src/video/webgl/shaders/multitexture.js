@@ -7,10 +7,11 @@
  * @ignore
  */
 export function buildMultiTextureFragment(maxTextures) {
+	const count = Math.max(maxTextures, 1);
 	const lines = [];
 
 	// declare sampler uniforms
-	for (let i = 0; i < maxTextures; i++) {
+	for (let i = 0; i < count; i++) {
 		lines.push("uniform sampler2D uSampler" + i + ";");
 	}
 
@@ -22,7 +23,7 @@ export function buildMultiTextureFragment(maxTextures) {
 	lines.push("    vec4 color;");
 
 	// generate if/else chain using < N.5 thresholds
-	for (let i = 0; i < maxTextures; i++) {
+	for (let i = 0; i < count; i++) {
 		if (i === 0) {
 			lines.push("    if (vTextureId < 0.5) {");
 		} else {
