@@ -275,6 +275,9 @@ class CanvasRenderTarget {
 	 */
 	invalidate(renderer) {
 		if (typeof renderer.gl !== "undefined") {
+			// flush pending draws that reference the current texture data
+			// before invalidating (required for multi-texture batching)
+			renderer.flush();
 			// make sure the right batcher is active
 			renderer.setBatcher("quad");
 			// invalidate the previous corresponding texture so that it can reuploaded once changed
