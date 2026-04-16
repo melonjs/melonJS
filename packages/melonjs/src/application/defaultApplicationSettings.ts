@@ -13,7 +13,7 @@ export const defaultApplicationSettings = {
 	consoleHeader: true,
 	blendMode: "normal",
 	physic: "builtin",
-	failIfMajorPerformanceCaveat: false,
+	failIfMajorPerformanceCaveat: true,
 	subPixel: false,
 	verbose: false,
 	legacy: false,

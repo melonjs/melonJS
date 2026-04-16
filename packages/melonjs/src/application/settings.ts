@@ -83,7 +83,7 @@ export type ApplicationSettings = {
 	 * if true, the renderer will fail if the browser reports a major performance caveat
 	 * (e.g. software WebGL). Set to false to allow WebGL on machines with
 	 * blocklisted GPU drivers or software renderers.
-	 * @default false
+	 * @default true
 	 */
 	failIfMajorPerformanceCaveat: boolean;
 

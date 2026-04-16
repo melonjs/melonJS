@@ -18,7 +18,7 @@ const defaultAttributes = {
 	premultipliedAlpha: true,
 	stencil: true,
 	blendMode: "normal",
-	failIfMajorPerformanceCaveat: false,
+	failIfMajorPerformanceCaveat: true,
 	preferWebGL1: false,
 	powerPreference: "default",
 };

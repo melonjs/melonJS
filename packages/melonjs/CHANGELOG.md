@@ -5,9 +5,6 @@
 ### Added
 - WebGL: multi-texture batching — up to 16 textures (based on device capabilities) drawn in a single batch/draw call, eliminating GPU flushes on texture changes. Automatically falls back to single-texture mode when a custom `ShaderEffect` is active. ~80% fewer draw calls on the platformer example (14 vs ~70 flushes/frame), with an estimated 30-50% FPS improvement on low-end mobile devices.
 
-### Changed
-- WebGL: `failIfMajorPerformanceCaveat` default changed from `true` to `false` — allows WebGL context creation on machines with blocklisted GPU drivers or software renderers. Set to `true` in Application options to restore the previous stricter behavior.
-
 ### Fixed
 - WebGL: `getSupportedCompressedTextureFormats()` no longer crashes when the GL context is unavailable — falls back to the base renderer's empty format list
 - Examples: compressed textures example updated to use `setText()`/`preDraw()`/`draw()`/`postDraw()` pattern — fixes text not rendering after `Text.draw()` standalone removal in 19.0
