@@ -4,6 +4,7 @@
 
 ### Added
 - WebGL: multi-texture batching — up to 16 textures (based on device capabilities) drawn in a single batch/draw call, eliminating GPU flushes on texture changes. Automatically falls back to single-texture mode when a custom `ShaderEffect` is active. ~80% fewer draw calls on the platformer example (14 vs ~70 flushes/frame), with an estimated 30-50% FPS improvement on low-end mobile devices.
+- WebGL: `highPrecisionShader` application setting — when `false`, caps shader precision at `mediump` for better performance on mobile GPUs that support `highp` but run faster at `mediump`. Default `true` (auto-detect highest precision).
 
 ### Fixed
 - WebGL: `getSupportedCompressedTextureFormats()` no longer crashes when the GL context is unavailable — falls back to the base renderer's empty format list

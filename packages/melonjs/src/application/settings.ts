@@ -88,6 +88,23 @@ export type ApplicationSettings = {
 	failIfMajorPerformanceCaveat: boolean;
 
 	/**
+	 * enable high precision shaders (WebGL only).
+	 * When false, shaders prefer "mediump" precision for better performance on
+	 * some mobile GPUs, falling back to "lowp" if "mediump" is not supported.
+	 * When true (default), the highest precision supported by the device is used.
+	 * This setting is ignored by the Canvas renderer.
+	 * @default true
+	 * @example
+	 * import { Application, device } from "melonjs";
+	 * const app = new Application(800, 600, {
+	 *     parent: "screen",
+	 *     // prefer lower shader precision on mobile for better performance
+	 *     highPrecisionShader: !device.isMobile,
+	 * });
+	 */
+	highPrecisionShader: boolean;
+
+	/**
 	 * whether to enable sub-pixel rendering (avoid sprite flickering when using transforms)
 	 * @default false
 	 */

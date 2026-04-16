@@ -71,7 +71,12 @@ export default class ShaderEffect {
 		].join("\n");
 
 		/** @ignore */
-		this._shader = new GLShader(renderer.gl, quadVertex, fragment, precision);
+		this._shader = new GLShader(
+			renderer.gl,
+			quadVertex,
+			fragment,
+			precision || renderer.shaderPrecision,
+		);
 		this.enabled = true;
 	}
 
