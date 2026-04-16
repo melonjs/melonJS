@@ -1380,7 +1380,11 @@ export default class WebGLRenderer extends Renderer {
 	fillRect(x, y, width, height) {
 		if (this._currentGradient) {
 			const canvas = this._currentGradient.toCanvas(this, x, y, width, height);
+			// flush before drawing — the gradient uses a shared canvas that gets
+			// overwritten by the next gradient, so the texture must be uploaded immediately
+			this.flush();
 			this.drawImage(canvas, 0, 0, width, height, x, y, width, height);
+			this.flush();
 			return;
 		}
 		this.setBatcher("primitive");
