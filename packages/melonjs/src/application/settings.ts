@@ -161,6 +161,7 @@ export type ApplicationSettings = {
 /**
  * Resolved application settings after init() has processed the input.
  * Includes computed properties not present in the user-facing settings.
+ * @ignore
  */
 export type ResolvedApplicationSettings = ApplicationSettings & {
 	width: number;
