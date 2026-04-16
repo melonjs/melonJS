@@ -26,7 +26,7 @@ describe("Drawing methods should not mutate input shapes", () => {
 		video.init(800, 600, {
 			parent: "screen",
 			scale: "auto",
-			renderer: video.AUTO,
+			renderer: video.CANVAS,
 		});
 		renderer = video.renderer;
 	});
@@ -35,7 +35,7 @@ describe("Drawing methods should not mutate input shapes", () => {
 		video.init(800, 600, {
 			parent: "screen",
 			scale: "auto",
-			renderer: video.AUTO,
+			renderer: video.CANVAS,
 		});
 	});
 

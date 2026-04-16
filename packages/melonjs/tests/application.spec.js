@@ -24,7 +24,7 @@ describe("Application", () => {
 			video.init(800, 600, {
 				parent: "screen",
 				scale: "auto",
-				renderer: video.AUTO,
+				renderer: video.CANVAS,
 			});
 		});
 
@@ -245,7 +245,7 @@ describe("Application", () => {
 			video.init(800, 600, {
 				parent: "screen",
 				scale: "auto",
-				renderer: video.AUTO,
+				renderer: video.CANVAS,
 			});
 		});
 

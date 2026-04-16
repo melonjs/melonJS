@@ -24,7 +24,7 @@ describe("TMX Renderers", () => {
 		video.init(128, 128, {
 			parent: "screen",
 			scale: "auto",
-			renderer: video.AUTO,
+			renderer: video.CANVAS,
 		});
 		fakeImage("drawtest", 256, 256);
 	});

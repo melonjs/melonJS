@@ -9,7 +9,7 @@ describe("ParticleEmitter", () => {
 		video.init(800, 600, {
 			parent: "screen",
 			scale: "auto",
-			renderer: video.AUTO,
+			renderer: video.CANVAS,
 		});
 		emitter = new ParticleEmitter(100, 100, {
 			width: 16,

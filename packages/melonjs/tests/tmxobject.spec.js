@@ -21,7 +21,7 @@ describe("TMXObject", () => {
 		video.init(128, 128, {
 			parent: "screen",
 			scale: "auto",
-			renderer: video.AUTO,
+			renderer: video.CANVAS,
 		});
 	});
 
