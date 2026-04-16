@@ -77,6 +77,7 @@ export class MaterialBatcher extends Batcher {
 		premultipliedAlpha = true,
 		mipmap = true,
 		texture,
+		flush = true,
 	) {
 		const gl = this.gl;
 		const isPOT = isPowerOfTwo(w) && isPowerOfTwo(h);
@@ -96,7 +97,7 @@ export class MaterialBatcher extends Batcher {
 			currentTexture = gl.createTexture();
 		}
 
-		this.bindTexture2D(currentTexture, unit);
+		this.bindTexture2D(currentTexture, unit, flush);
 
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, rs);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, rt);
@@ -275,6 +276,7 @@ export class MaterialBatcher extends Batcher {
 				texture.premultipliedAlpha,
 				undefined,
 				texture2D,
+				flush,
 			);
 		} else {
 			this.bindTexture2D(texture2D, unit, flush);
