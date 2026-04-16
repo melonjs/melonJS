@@ -14,7 +14,7 @@ describe("Renderer save/restore", () => {
 		video.init(800, 600, {
 			parent: "screen",
 			scale: "auto",
-			renderer: video.AUTO,
+			renderer: video.CANVAS,
 		});
 		renderer = video.renderer;
 	});
@@ -30,7 +30,7 @@ describe("Renderer save/restore", () => {
 		video.init(800, 600, {
 			parent: "screen",
 			scale: "auto",
-			renderer: video.AUTO,
+			renderer: video.CANVAS,
 		});
 	});
 

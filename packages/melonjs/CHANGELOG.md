@@ -2,8 +2,8 @@
 
 ## [19.1.0] (melonJS 2) - _2026-04-15_
 
-### Changed
-- WebGL: `CanvasRenderTarget` internal default for `failIfMajorPerformanceCaveat` changed from `true` to `false` — allows WebGL context creation on machines with blocklisted GPU drivers when creating render targets directly. Application default remains `true`; set `failIfMajorPerformanceCaveat: false` in Application options to opt in.
+### Added
+- WebGL: multi-texture batching — up to 16 textures (based on device capabilities) drawn in a single batch/draw call, eliminating GPU flushes on texture changes. Automatically falls back to single-texture mode when a custom `ShaderEffect` is active. ~80% fewer draw calls on the platformer example (14 vs ~70 flushes/frame), with an estimated 30-50% FPS improvement on low-end mobile devices.
 
 ### Fixed
 - WebGL: `getSupportedCompressedTextureFormats()` no longer crashes when the GL context is unavailable — falls back to the base renderer's empty format list

@@ -18,7 +18,7 @@ const defaultAttributes = {
 	premultipliedAlpha: true,
 	stencil: true,
 	blendMode: "normal",
-	failIfMajorPerformanceCaveat: false,
+	failIfMajorPerformanceCaveat: true,
 	preferWebGL1: false,
 	powerPreference: "default",
 };
@@ -275,7 +275,8 @@ class CanvasRenderTarget {
 	 */
 	invalidate(renderer) {
 		if (typeof renderer.gl !== "undefined") {
-			// make sure the right batcher is active
+			// flush pending draws referencing the current texture data
+			renderer.flush();
 			renderer.setBatcher("quad");
 			// invalidate the previous corresponding texture so that it can reuploaded once changed
 			this.glTextureUnit = renderer.cache.getUnit(

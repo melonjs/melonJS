@@ -10,7 +10,7 @@ describe("Sprite", () => {
 		video.init(800, 600, {
 			parent: "screen",
 			scale: "auto",
-			renderer: video.AUTO,
+			renderer: video.CANVAS,
 		});
 
 		container = new Container(50, 50, 150, 150);

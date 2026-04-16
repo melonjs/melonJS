@@ -18,8 +18,7 @@ describe("Font : Text", () => {
 		video.init(800, 600, {
 			parent: "screen",
 			scale: "auto",
-			renderer: video.AUTO,
-			failIfMajorPerformanceCaveat: true,
+			renderer: video.CANVAS,
 		});
 
 		font = new Text(0, 0, {

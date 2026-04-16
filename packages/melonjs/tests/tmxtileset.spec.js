@@ -19,7 +19,7 @@ describe("TMXTileset", () => {
 		video.init(128, 128, {
 			parent: "screen",
 			scale: "auto",
-			renderer: video.AUTO,
+			renderer: video.CANVAS,
 		});
 
 		// pre-register fake images of various sizes

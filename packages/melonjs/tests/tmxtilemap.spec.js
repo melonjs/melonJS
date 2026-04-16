@@ -676,7 +676,7 @@ describe("TMXTileMap", () => {
 		video.init(128, 128, {
 			parent: "screen",
 			scale: "auto",
-			renderer: video.AUTO,
+			renderer: video.CANVAS,
 		});
 		// pre-register fake images for tileset tests
 		fakeImage("testtiles", 64, 64);

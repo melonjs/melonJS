@@ -62,6 +62,20 @@ class TextureCache {
 	}
 
 	/**
+	 * Reset all texture unit assignments without clearing the texture cache.
+	 * Used by multi-texture batching when the shader's sampler range is exceeded.
+	 * @ignore
+	 */
+	resetUnitAssignments() {
+		if (this.renderer.currentBatcher) {
+			this.renderer.currentBatcher.boundTextures.length = 0;
+			this.renderer.currentBatcher.currentTextureUnit = -1;
+		}
+		this.units.clear();
+		this.usedUnits.clear();
+	}
+
+	/**
 	 * @ignore
 	 */
 	freeTextureUnit(texture) {

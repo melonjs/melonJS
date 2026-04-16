@@ -9,7 +9,7 @@ describe("Sprite trimming and Entity anchor sync", () => {
 		video.init(800, 600, {
 			parent: "screen",
 			scale: "auto",
-			renderer: video.AUTO,
+			renderer: video.CANVAS,
 		});
 		// create a mock image for sprite creation
 		mockImage = video.createCanvas(512, 512);

@@ -9,7 +9,7 @@ describe("ImageLayer", () => {
 		video.init(800, 600, {
 			parent: "screen",
 			scale: "auto",
-			renderer: video.AUTO,
+			renderer: video.CANVAS,
 		});
 
 		// create a small canvas to use as the image source

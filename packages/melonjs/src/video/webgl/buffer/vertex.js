@@ -39,10 +39,16 @@ export default class VertexArrayBuffer {
 	}
 
 	/**
-	 * push a new vertex to the buffer (quad format: x, y, u, v, tint)
+	 * push a new vertex to the buffer
+	 * @param {number} x - x position
+	 * @param {number} y - y position
+	 * @param {number} u - texture U coordinate
+	 * @param {number} v - texture V coordinate
+	 * @param {number} tint - tint color in UINT32 (argb) format
+	 * @param {number} [textureId] - texture unit index for multi-texture batching
 	 * @ignore
 	 */
-	push(x, y, u, v, tint) {
+	push(x, y, u, v, tint, textureId) {
 		const offset = this.vertexCount * this.vertexSize;
 
 		this.bufferF32[offset] = x;
@@ -50,6 +56,9 @@ export default class VertexArrayBuffer {
 		this.bufferF32[offset + 2] = u;
 		this.bufferF32[offset + 3] = v;
 		this.bufferU32[offset + 4] = tint;
+		if (this.vertexSize > 5) {
+			this.bufferF32[offset + 5] = textureId || 0;
+		}
 
 		this.vertexCount++;
 

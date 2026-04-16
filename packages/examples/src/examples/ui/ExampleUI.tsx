@@ -9,7 +9,6 @@ import {
 	TextureAtlas,
 	UIBaseElement,
 	UISpriteElement,
-	video,
 } from "melonjs";
 import { createExampleComponent } from "../utils";
 
@@ -20,10 +19,9 @@ let texture: TextureAtlas;
 class ButtonUI extends UISpriteElement {
 	private unclicked_region: object;
 	private clicked_region: object;
-	private font: Text;
-	private label: string;
+	label: Text;
 
-	constructor(x: number, y: number, color: string, label: string) {
+	constructor(x: number, y: number, color: string, labelText: string) {
 		super(x, y, {
 			image: texture,
 			region: `${color}_button04`,
@@ -33,15 +31,16 @@ class ButtonUI extends UISpriteElement {
 		this.clicked_region = texture.getRegion(`${color}_button05`);
 		this.anchorPoint.set(0, 0);
 		this.setOpacity(0.5);
-		this.label = label;
 		this.floating = false;
 
-		this.font = new Text(0, 0, {
+		// create label as a sibling — added to the parent by the caller
+		this.label = new Text(x + this.width / 2, y + this.height / 2, {
 			font: "kenpixel",
 			size: 12,
 			fillStyle: "black",
 			textAlign: "center",
 			textBaseline: "middle",
+			text: labelText,
 		});
 	}
 
@@ -70,29 +69,15 @@ class ButtonUI extends UISpriteElement {
 		);
 		return false;
 	}
-
-	override draw(renderer: Parameters<UISpriteElement["draw"]>[0]) {
-		super.draw(renderer);
-		this.font.draw(
-			renderer,
-			this.label,
-			this.pos.x + this.width / 2,
-			this.pos.y + this.height / 2,
-		);
-	}
-
-	override onDestroyEvent() {
-		this.font.destroy();
-	}
 }
 
 class CheckBoxUI extends UISpriteElement {
 	private on_icon_region: object;
 	private off_icon_region: object;
-	private font: Text;
 	private isSelected: boolean;
 	private label_on: string;
 	private label_off: string;
+	label: Text;
 
 	constructor(
 		x: number,
@@ -116,16 +101,15 @@ class CheckBoxUI extends UISpriteElement {
 		this.label_off = offLabel;
 		this.floating = false;
 
-		this.font = new Text(0, 0, {
+		// create label as a sibling — added to the parent by the caller
+		this.label = new Text(x + this.width, y + this.height / 2, {
 			font: "kenpixel",
 			size: 12,
 			fillStyle: "black",
 			textAlign: "left",
 			textBaseline: "middle",
-			text: offLabel,
+			text: onLabel,
 		});
-
-		this.getBounds().width += this.font.measureText().width;
 	}
 
 	override onOver() {
@@ -140,25 +124,17 @@ class CheckBoxUI extends UISpriteElement {
 		if (selected) {
 			this.setRegion(this.on_icon_region);
 			this.isSelected = true;
+			this.label.setText(this.label_on);
 		} else {
 			this.setRegion(this.off_icon_region);
 			this.isSelected = false;
+			this.label.setText(this.label_off);
 		}
 	}
 
 	override onClick() {
 		this.setSelected(!this.isSelected);
 		return false;
-	}
-
-	override draw(renderer: Parameters<UISpriteElement["draw"]>[0]) {
-		super.draw(renderer);
-		this.font.draw(
-			renderer,
-			` ${this.isSelected ? this.label_on : this.label_off}`,
-			this.pos.x + this.width,
-			this.pos.y + this.height / 2,
-		);
 	}
 }
 
@@ -192,7 +168,6 @@ class UIContainer extends UIBaseElement {
 				fillStyle: "black",
 				textAlign: "center",
 				textBaseline: "top",
-				bold: true,
 				text: label,
 			}),
 		);
@@ -213,41 +188,50 @@ class PlayScreen extends Stage {
 
 		const cbPanel = new UIBaseElement(125, 75, 100, 100);
 
-		cbPanel.addChild(
-			new CheckBoxUI(
-				0,
-				0,
-				texture,
-				"green_boxCheckmark",
-				"grey_boxCheckmark",
-				"Music ON",
-				"Music OFF",
-			),
+		const cb1 = new CheckBoxUI(
+			0,
+			0,
+			texture,
+			"green_boxCheckmark",
+			"grey_boxCheckmark",
+			"Music ON",
+			"Music OFF",
 		);
-		cbPanel.addChild(
-			new CheckBoxUI(
-				0,
-				50,
-				texture,
-				"green_boxCheckmark",
-				"grey_boxCheckmark",
-				"Sound FX ON",
-				"Sound FX OFF",
-			),
+		cbPanel.addChild(cb1);
+		cbPanel.addChild(cb1.label);
+
+		const cb2 = new CheckBoxUI(
+			0,
+			50,
+			texture,
+			"green_boxCheckmark",
+			"grey_boxCheckmark",
+			"Sound FX ON",
+			"Sound FX OFF",
 		);
+		cbPanel.addChild(cb2);
+		cbPanel.addChild(cb2.label);
 
 		panel.addChild(cbPanel);
 
-		panel.addChild(new ButtonUI(125, 175, "blue", "Video Options"));
-		panel.addChild(new ButtonUI(30, 250, "green", "Accept"));
-		panel.addChild(new ButtonUI(230, 250, "yellow", "Cancel"));
+		const btn1 = new ButtonUI(125, 175, "blue", "Video Options");
+		panel.addChild(btn1);
+		panel.addChild(btn1.label);
+
+		const btn2 = new ButtonUI(30, 250, "green", "Accept");
+		panel.addChild(btn2);
+		panel.addChild(btn2.label);
+
+		const btn3 = new ButtonUI(230, 250, "yellow", "Cancel");
+		panel.addChild(btn3);
+		panel.addChild(btn3.label);
 
 		app.world.addChild(panel, 1);
 	}
 }
 
 const createGame = () => {
-	const app = new App(800, 600, {
+	new App(800, 600, {
 		parent: "screen",
 		scale: "auto",
 		scaleMethod: "flex-width",

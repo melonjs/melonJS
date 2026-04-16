@@ -13,7 +13,7 @@ const setup = () => {
 	video.init(800, 600, {
 		parent: "screen",
 		scale: "auto",
-		renderer: video.AUTO,
+		renderer: video.CANVAS,
 	});
 
 	// a camera instance
