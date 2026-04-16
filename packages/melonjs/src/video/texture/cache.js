@@ -67,6 +67,10 @@ class TextureCache {
 	 * @ignore
 	 */
 	resetUnitAssignments() {
+		if (this.renderer.currentBatcher) {
+			this.renderer.currentBatcher.boundTextures.length = 0;
+			this.renderer.currentBatcher.currentTextureUnit = -1;
+		}
 		this.units.clear();
 		this.usedUnits.clear();
 	}
