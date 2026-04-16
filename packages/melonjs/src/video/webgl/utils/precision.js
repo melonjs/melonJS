@@ -11,13 +11,15 @@ export function setPrecision(src, precision) {
 }
 
 /**
- * return the highest precision format supported by this device for GL Shaders
+ * return the best shader precision for this device, up to the requested cap.
  * @ignore
  * @param {WebGLRenderingContext} gl - the current WebGL context
- * @returns {boolean} "lowp", "mediump", or "highp"
+ * @param {boolean} [highPrecision=true] - if false, cap at "mediump" even when "highp" is available
+ * @returns {string} "lowp", "mediump", or "highp"
  */
-export function getMaxShaderPrecision(gl) {
+export function getMaxShaderPrecision(gl, highPrecision = true) {
 	if (
+		highPrecision &&
 		gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT).precision >
 			0 &&
 		gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT).precision > 0

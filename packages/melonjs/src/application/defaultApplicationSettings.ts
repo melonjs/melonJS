@@ -14,6 +14,7 @@ export const defaultApplicationSettings = {
 	blendMode: "normal",
 	physic: "builtin",
 	failIfMajorPerformanceCaveat: true,
+	highPrecisionShader: true,
 	subPixel: false,
 	verbose: false,
 	legacy: false,

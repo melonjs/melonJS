@@ -134,6 +134,7 @@ export class Batcher {
 				this.gl,
 				settings.shader.vertex,
 				settings.shader.fragment,
+				this.renderer.shaderPrecision,
 			);
 		} else {
 			throw new Error("shader definition missing");

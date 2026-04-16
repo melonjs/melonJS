@@ -21,6 +21,7 @@ import {
 import MeshBatcher from "./batchers/mesh_batcher";
 import PrimitiveBatcher from "./batchers/primitive_batcher";
 import QuadBatcher from "./batchers/quad_batcher";
+import { getMaxShaderPrecision } from "./utils/precision.js";
 
 /**
  * additional import for TypeScript
@@ -102,6 +103,16 @@ export default class WebGLRenderer extends Renderer {
 		 * @readonly
 		 */
 		this.maxTextures = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
+
+		/**
+		 * the default shader precision based on application settings
+		 * @type {string}
+		 * @ignore
+		 */
+		this.shaderPrecision = getMaxShaderPrecision(
+			this.gl,
+			this.settings.highPrecisionShader !== false,
+		);
 
 		/**
 		 * reusable scratch array for fillRect (2 triangles = 6 vertices)
