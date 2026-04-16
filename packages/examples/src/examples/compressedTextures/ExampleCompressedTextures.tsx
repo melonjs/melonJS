@@ -141,12 +141,33 @@ class CompressedTextureDisplay extends Renderable {
 		return true;
 	}
 
+	/** @ignore */
+	drawText(
+		renderer: WebGLRenderer | CanvasRenderer,
+		font: Text,
+		text: string,
+		x: number,
+		y: number,
+	) {
+		font.pos.set(x, y);
+		font.setText(text);
+		font.preDraw(renderer);
+		font.draw(renderer);
+		font.postDraw(renderer);
+	}
+
 	override draw(renderer: WebGLRenderer | CanvasRenderer) {
 		let y = 10;
 		const x = 10;
 
 		// Title
-		this.titleFont.draw(renderer, "Compressed Texture Format Support", x, y);
+		this.drawText(
+			renderer,
+			this.titleFont,
+			"Compressed Texture Format Support",
+			x,
+			y,
+		);
 		y += 32;
 
 		// Format support table
@@ -163,8 +184,9 @@ class CompressedTextureDisplay extends Renderable {
 			const supported =
 				this.formats[key] !== null && this.formats[key] !== undefined;
 			this.font.fillStyle.parseCSS(supported ? "#4ade80" : "#f87171");
-			this.font.draw(
+			this.drawText(
 				renderer,
+				this.font,
 				`${label}: ${supported ? "supported" : "not available"}`,
 				x,
 				y,
@@ -179,14 +201,21 @@ class CompressedTextureDisplay extends Renderable {
 			entry.sprite.postDraw(renderer);
 
 			this.smallFont.fillStyle.parseCSS("#94a3b8");
-			this.smallFont.draw(renderer, entry.label, entry.x, entry.y + 60);
+			this.drawText(
+				renderer,
+				this.smallFont,
+				entry.label,
+				entry.x,
+				entry.y + 60,
+			);
 		}
 
 		// Footer info
 		const footerY = game.viewport.height - 40;
 		this.font.fillStyle.parseCSS("#64748b");
-		this.font.draw(
+		this.drawText(
 			renderer,
+			this.font,
 			`${this.sprites.length} compressed texture(s) loaded. Assets: sevmeyer/ktxtest (CC0).`,
 			x,
 			footerY,
