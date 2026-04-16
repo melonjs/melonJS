@@ -196,6 +196,14 @@ export default class QuadBatcher extends MaterialBatcher {
 			// multi-texture path: embed the texture unit in the vertex data
 			// and avoid flushing on texture changes
 			unit = this.uploadTexture(texture, w, h, reupload, false);
+			// shader only supports maxBatchTextures samplers — flush and
+			// reset if the cache assigned a unit beyond the shader's range
+			if (unit >= this.maxBatchTextures) {
+				this.flush();
+				this.renderer.cache.units.clear();
+				this.renderer.cache.usedUnits.clear();
+				unit = this.uploadTexture(texture, w, h, reupload, false);
+			}
 		} else {
 			// single-texture fallback (custom ShaderEffect active):
 			// use regular upload which flushes on texture change, and set uSampler

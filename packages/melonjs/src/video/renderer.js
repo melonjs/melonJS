@@ -243,8 +243,12 @@ export default class Renderer {
 	hasSupportedCompressedFormats(format) {
 		const supportedFormats = this.getSupportedCompressedTextureFormats();
 		for (const supportedFormat in supportedFormats) {
-			for (const extension in supportedFormats[supportedFormat]) {
-				if (format === supportedFormats[supportedFormat][extension]) {
+			const entry = supportedFormats[supportedFormat];
+			if (entry === null || typeof entry === "undefined") {
+				continue;
+			}
+			for (const extension in entry) {
+				if (format === entry[extension]) {
 					return true;
 				}
 			}
