@@ -1,6 +1,6 @@
 # Changelog
 
-## [19.1.0] (melonJS 2) - _2026-04-15_
+## [19.1.0] (melonJS 2) - _2026-04-16_
 
 ### Added
 - WebGL: multi-texture batching — up to 16 textures (based on device capabilities) drawn in a single batch/draw call, eliminating GPU flushes on texture changes. Automatically falls back to single-texture mode when a custom `ShaderEffect` is active. ~80% fewer draw calls on the platformer example (14 vs ~70 flushes/frame), with an estimated 30-50% FPS improvement on low-end mobile devices.
