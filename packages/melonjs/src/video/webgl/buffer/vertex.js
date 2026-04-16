@@ -56,8 +56,8 @@ export default class VertexArrayBuffer {
 		this.bufferF32[offset + 2] = u;
 		this.bufferF32[offset + 3] = v;
 		this.bufferU32[offset + 4] = tint;
-		if (arguments.length > 5) {
-			this.bufferF32[offset + 5] = textureId;
+		if (this.vertexSize > 5) {
+			this.bufferF32[offset + 5] = textureId || 0;
 		}
 
 		this.vertexCount++;

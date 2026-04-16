@@ -200,8 +200,7 @@ export default class QuadBatcher extends MaterialBatcher {
 			// reset if the cache assigned a unit beyond the shader's range
 			if (unit >= this.maxBatchTextures) {
 				this.flush();
-				this.renderer.cache.units.clear();
-				this.renderer.cache.usedUnits.clear();
+				this.renderer.cache.resetUnitAssignments();
 				unit = this.uploadTexture(texture, w, h, reupload, false);
 			}
 		} else {

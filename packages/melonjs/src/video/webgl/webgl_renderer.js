@@ -1701,7 +1701,7 @@ export default class WebGLRenderer extends Renderer {
 			height !== canvas.height
 		) {
 			const currentScissor = this.currentScissor;
-			if (gl.isEnabled(gl.SCISSOR_TEST)) {
+			if (this._scissorActive) {
 				// if same as the current scissor box do nothing
 				if (
 					currentScissor[0] === x &&

@@ -33,13 +33,24 @@ describe("VertexArrayBuffer", () => {
 			expect(buf.bufferF32[5]).toBe(3); // textureId
 		});
 
-		it("should not write textureId when not provided", () => {
+		it("should write default textureId 0 when not provided (vertexSize 6)", () => {
 			const buf = new VertexArrayBuffer(6, 4);
 
 			buf.push(10, 20, 0.0, 1.0, 0xffffffff);
 
 			expect(buf.vertexCount).toBe(1);
-			expect(buf.bufferF32[5]).toBe(0); // untouched (default zero)
+			expect(buf.bufferF32[5]).toBe(0); // default 0
+		});
+
+		it("should not write textureId when vertexSize is 5", () => {
+			const buf = new VertexArrayBuffer(5, 4);
+
+			// write a sentinel at offset 5
+			buf.bufferF32[5] = 99;
+			buf.push(10, 20, 0.0, 1.0, 0xffffffff);
+
+			expect(buf.vertexCount).toBe(1);
+			expect(buf.bufferF32[5]).toBe(99); // untouched
 		});
 
 		it("should write multiple vertices sequentially", () => {

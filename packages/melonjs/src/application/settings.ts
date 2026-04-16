@@ -29,7 +29,7 @@ export type ApplicationSettings = {
 
 	/**
 	 * screen scaling modes
-	 * @default fit
+	 * @default "manual"
 	 */
 	scaleMethod: ScaleMethod;
 
@@ -67,6 +67,11 @@ export type ApplicationSettings = {
 	 * @default true
 	 */
 	consoleHeader: boolean;
+
+	/**
+	 * the default blend mode to use ("normal", "multiply", "lighter", "additive", "screen")
+	 * @default "normal"
+	 */
 	blendMode: BlendMode;
 
 	/**
@@ -74,9 +79,30 @@ export type ApplicationSettings = {
 	 * @default "builtin"
 	 */
 	physic: PhysicsType;
+	/**
+	 * if true, the renderer will fail if the browser reports a major performance caveat
+	 * (e.g. software WebGL). Set to false to allow WebGL on machines with
+	 * blocklisted GPU drivers or software renderers.
+	 * @default false
+	 */
 	failIfMajorPerformanceCaveat: boolean;
+
+	/**
+	 * whether to enable sub-pixel rendering (avoid sprite flickering when using transforms)
+	 * @default false
+	 */
 	subPixel: boolean;
+
+	/**
+	 * whether to enable verbose mode (additional console output for debugging)
+	 * @default false
+	 */
 	verbose: boolean;
+
+	/**
+	 * whether to enable legacy mode (enables deprecated `video.init()` entry point)
+	 * @default false
+	 */
 	legacy: boolean;
 
 	/**
@@ -99,13 +125,18 @@ export type ApplicationSettings = {
 	batcher?: (new (renderer: any) => Batcher) | undefined;
 } & (
 	| {
-			// the DOM parent element (or its string ID) to hold the canvas in the HTML file
+			/**
+			 * the DOM parent element (or its string ID) to hold the canvas in the HTML file
+			 */
 			parent: string | HTMLElement;
 			canvas?: never;
 	  }
 	| {
 			parent?: never;
-			// an existing canvas element to use as the renderer target (by default melonJS will create its own canvas based on given parameters)
+			/**
+			 * an existing canvas element to use as the renderer target
+			 * (by default melonJS will create its own canvas based on given parameters)
+			 */
 			canvas: HTMLCanvasElement;
 	  }
 );
