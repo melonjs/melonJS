@@ -20,7 +20,7 @@ export default class VignetteEffect extends ShaderEffect {
 	/**
 	 * @param {import("../webgl_renderer.js").default} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
-	 * @param {number} [options.strength=0.15] - edge darkening power (higher = more subtle, 0.1 = strong, 0.3 = very soft)
+	 * @param {number} [options.strength=0.15] - edge darkening power (lower = stronger darkening, higher = softer falloff)
 	 * @param {number} [options.size=25.0] - vignette spread multiplier (higher = smaller dark area)
 	 */
 	constructor(renderer, options = {}) {
@@ -46,7 +46,7 @@ export default class VignetteEffect extends ShaderEffect {
 
 	/**
 	 * set the vignette strength
-	 * @param {number} strength - edge darkening power (higher = more subtle)
+	 * @param {number} strength - edge darkening power (lower = stronger, higher = softer)
 	 */
 	setStrength(strength) {
 		this.strength = Math.max(0, strength);

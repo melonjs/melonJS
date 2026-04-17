@@ -40,7 +40,24 @@ export default class WebGLRenderTarget {
 		// create depth+stencil renderbuffer (needed for masks)
 		this.depthStencilBuffer = gl.createRenderbuffer();
 		gl.bindRenderbuffer(gl.RENDERBUFFER, this.depthStencilBuffer);
-		gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, width, height);
+
+		// WebGL2 natively supports DEPTH_STENCIL; WebGL1 needs the extension
+		const usePackedDepthStencil =
+			(typeof WebGL2RenderingContext !== "undefined" &&
+				gl instanceof WebGL2RenderingContext) ||
+			gl.getExtension("WEBGL_depth_stencil") !== null;
+
+		if (usePackedDepthStencil) {
+			gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, width, height);
+		} else {
+			gl.renderbufferStorage(
+				gl.RENDERBUFFER,
+				gl.DEPTH_COMPONENT16,
+				width,
+				height,
+			);
+		}
+		this._usePackedDepthStencil = usePackedDepthStencil;
 
 		// attach to framebuffer
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
@@ -51,12 +68,21 @@ export default class WebGLRenderTarget {
 			this.texture,
 			0,
 		);
-		gl.framebufferRenderbuffer(
-			gl.FRAMEBUFFER,
-			gl.DEPTH_STENCIL_ATTACHMENT,
-			gl.RENDERBUFFER,
-			this.depthStencilBuffer,
-		);
+		if (usePackedDepthStencil) {
+			gl.framebufferRenderbuffer(
+				gl.FRAMEBUFFER,
+				gl.DEPTH_STENCIL_ATTACHMENT,
+				gl.RENDERBUFFER,
+				this.depthStencilBuffer,
+			);
+		} else {
+			gl.framebufferRenderbuffer(
+				gl.FRAMEBUFFER,
+				gl.DEPTH_ATTACHMENT,
+				gl.RENDERBUFFER,
+				this.depthStencilBuffer,
+			);
+		}
 
 		// unbind
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -109,7 +135,12 @@ export default class WebGLRenderTarget {
 
 		// resize depth+stencil renderbuffer
 		gl.bindRenderbuffer(gl.RENDERBUFFER, this.depthStencilBuffer);
-		gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, width, height);
+		gl.renderbufferStorage(
+			gl.RENDERBUFFER,
+			this._usePackedDepthStencil ? gl.DEPTH_STENCIL : gl.DEPTH_COMPONENT16,
+			width,
+			height,
+		);
 
 		gl.bindTexture(gl.TEXTURE_2D, null);
 		gl.bindRenderbuffer(gl.RENDERBUFFER, null);
@@ -117,7 +148,6 @@ export default class WebGLRenderTarget {
 
 	/**
 	 * Returns an ImageData object representing the pixel contents of this render target.
-	 * The FBO must be bound before calling this method.
 	 * @param {number} [x=0] - x coordinate of the top-left corner
 	 * @param {number} [y=0] - y coordinate of the top-left corner
 	 * @param {number} [width=this.width] - width of the area to read
@@ -126,6 +156,11 @@ export default class WebGLRenderTarget {
 	 */
 	getImageData(x = 0, y = 0, width = this.width, height = this.height) {
 		const gl = this.gl;
+		// clamp to render target bounds
+		x = Math.max(0, Math.min(Math.floor(x), this.width - 1));
+		y = Math.max(0, Math.min(Math.floor(y), this.height - 1));
+		width = Math.max(1, Math.min(width, this.width - x));
+		height = Math.max(1, Math.min(height, this.height - y));
 		const pixels = new Uint8ClampedArray(width * height * 4);
 		this.bind();
 		gl.readPixels(x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
@@ -151,10 +186,27 @@ export default class WebGLRenderTarget {
 	 */
 	toBlob(type = "image/png", quality) {
 		const imageData = this.getImageData();
-		const canvas = new OffscreenCanvas(this.width, this.height);
+		if (typeof OffscreenCanvas !== "undefined") {
+			const canvas = new OffscreenCanvas(this.width, this.height);
+			const ctx = canvas.getContext("2d");
+			ctx.putImageData(imageData, 0, 0);
+			return canvas.convertToBlob({ type, quality });
+		}
+		// fallback for environments without OffscreenCanvas
+		const canvas = document.createElement("canvas");
+		canvas.width = this.width;
+		canvas.height = this.height;
 		const ctx = canvas.getContext("2d");
 		ctx.putImageData(imageData, 0, 0);
-		return canvas.convertToBlob({ type, quality });
+		return new Promise((resolve) => {
+			canvas.toBlob(
+				(blob) => {
+					resolve(blob);
+				},
+				type,
+				quality,
+			);
+		});
 	}
 
 	/**
