@@ -749,10 +749,8 @@ export default class Renderable extends Rect {
 			renderer.translate(-this.pos.x, -this.pos.y);
 		}
 
-		// use this renderable shader if defined
-		if (this.shader) {
-			renderer.customShader = this.shader;
-		}
+		// set the custom shader for this renderable (undefined clears it)
+		renderer.customShader = this.shader;
 
 		if (this.autoTransform === true && !this.currentTransform.isIdentity()) {
 			// apply the renderable transformation matrix
@@ -806,12 +804,7 @@ export default class Renderable extends Rect {
 			renderer.clearMask();
 		}
 
-		// revert to the default shader if defined
-		if (this.shader) {
-			renderer.customShader = undefined;
-		}
-
-		// restore the context
+		// restore the context (also restores customShader)
 		renderer.restore();
 
 		// reset the dirty flag

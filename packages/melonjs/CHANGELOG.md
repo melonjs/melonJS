@@ -1,5 +1,18 @@
 # Changelog
 
+## [19.2.0] (melonJS 2) - _unreleased_
+
+### Added
+- Camera: FBO-based post-processing pipeline — assign a `ShaderEffect` to any camera's `shader` property to apply full-screen post-effects (vignette, scanlines, desaturation, etc.). Works with multiple cameras independently (e.g. main camera + minimap with different effects). Renderer manages FBO lifecycle via `beginPostEffect()`/`endPostEffect()`/`blitEffect()` methods.
+- WebGL: `VignetteEffect` built-in shader effect — darkens screen edges to draw focus to the center, with configurable `strength` and `size` parameters
+- WebGL: `WebGLRenderTarget` class — reusable FBO wrapper (framebuffer + color texture + depth/stencil renderbuffer) with bind/unbind/resize/destroy lifecycle
+- Renderer: `beginPostEffect(camera)`, `endPostEffect(camera)`, and `blitEffect(source, x, y, w, h, shader)` methods on the base Renderer (no-op for Canvas) and WebGLRenderer
+- RenderState: `currentShader` is now part of the save/restore stack — custom shaders are properly scoped per-renderable without leaking to siblings or parent cameras
+
+### Changed
+- Renderable: `preDraw()` now always sets `renderer.customShader = this.shader` unconditionally (was guarded by `if (this.shader)`), relying on save/restore to scope the shader correctly
+- Renderable: `postDraw()` no longer manually clears `renderer.customShader` — save/restore handles it
+
 ## [19.1.0] (melonJS 2) - _2026-04-16_
 
 ### Added

@@ -257,6 +257,44 @@ export default class Renderer {
 	}
 
 	/**
+	 * Begin capturing rendering to an offscreen buffer for post-effect processing.
+	 * Call endPostEffect() after rendering to blit the result to the screen.
+	 * No-op on Canvas renderer.
+	 * @param {Camera2d} camera - the camera requesting post-effect processing
+	 * @returns {boolean} false (Canvas renderer does not support post-effect processing)
+	 * @ignore
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	beginPostEffect(camera) {
+		return false;
+	}
+
+	/**
+	 * End post-effect capture and blit the offscreen buffer to the screen
+	 * through the camera's shader effect.
+	 * No-op on Canvas renderer.
+	 * @param {Camera2d} camera - the camera with shader, screen position, and dimensions
+	 * @ignore
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	endPostEffect(camera) {}
+
+	/**
+	 * Blit a texture to the screen through a shader effect.
+	 * Draws a screen-aligned quad using the given texture as source
+	 * and the given shader for post-processing (e.g. scanlines, desaturation).
+	 * No-op on Canvas renderer.
+	 * @param {WebGLTexture} source - the source texture to blit
+	 * @param {number} x - destination x position
+	 * @param {number} y - destination y position
+	 * @param {number} width - destination width
+	 * @param {number} height - destination height
+	 * @param {ShaderEffect} shader - the shader effect to apply
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	blitEffect(source, x, y, width, height, shader) {}
+
+	/**
 	 * returns the current blend mode for this renderer
 	 * @returns {string} blend mode
 	 */

@@ -1,4 +1,12 @@
-import { type Application, audio, device, level, plugin, Stage } from "melonjs";
+import {
+	type Application,
+	audio,
+	device,
+	level,
+	plugin,
+	Stage,
+	VignetteEffect,
+} from "melonjs";
 import { VirtualJoypad } from "./entities/controls";
 import UIContainer from "./entities/HUD";
 import { MinimapCamera } from "./entities/minimap";
@@ -36,6 +44,9 @@ export class PlayScreen extends Stage {
 			}
 			app.world.addChild(this.virtualJoypad);
 		}
+
+		// apply subtle vignette post-process effect on the camera
+		app.viewport.shader = new VignetteEffect(app.renderer as any);
 
 		// play some music
 		audio.playTrack("dst-gameforest");
