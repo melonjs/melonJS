@@ -1,4 +1,4 @@
-import { Camera2d, event, game, level } from "melonjs";
+import { Camera2d, event, game, level, VignetteEffect } from "melonjs";
 
 const MINIMAP_WIDTH = 180;
 const MINIMAP_HEIGHT = 100;
@@ -24,6 +24,9 @@ export class MinimapCamera extends Camera2d {
 			this.screenX = w - MINIMAP_WIDTH - 10;
 		};
 		event.on(event.CANVAS_ONRESIZE, this.boundOnResize);
+
+		// apply subtle vignette post-process effect on the minimap
+		this.shader = new VignetteEffect(game.renderer);
 
 		const currentLevel = level.getCurrentLevel();
 		if (currentLevel) {

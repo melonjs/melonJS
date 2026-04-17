@@ -119,6 +119,73 @@ describe("RenderState", () => {
 		expect(result.blendMode).toBe("additive");
 	});
 
+	// ---- Custom shader ----
+
+	it("should preserve currentShader across save/restore", () => {
+		const fakeShader = { name: "scanline" };
+		state.currentShader = fakeShader;
+
+		state.save();
+		state.currentShader = { name: "desaturate" };
+		state.restore(800, 600);
+
+		expect(state.currentShader).toBe(fakeShader);
+	});
+
+	it("should restore currentShader to undefined when it was unset", () => {
+		expect(state.currentShader).toBeUndefined();
+
+		state.save();
+		state.currentShader = { name: "scanline" };
+		state.restore(800, 600);
+
+		expect(state.currentShader).toBeUndefined();
+	});
+
+	it("should scope currentShader through nested save/restore", () => {
+		const shaderA = { name: "A" };
+		const shaderB = { name: "B" };
+
+		state.currentShader = shaderA;
+		state.save();
+
+		state.currentShader = shaderB;
+		state.save();
+
+		state.currentShader = undefined;
+
+		// restore depth 2 — should get shaderB back
+		state.restore(800, 600);
+		expect(state.currentShader).toBe(shaderB);
+
+		// restore depth 1 — should get shaderA back
+		state.restore(800, 600);
+		expect(state.currentShader).toBe(shaderA);
+	});
+
+	it("should not leak currentShader when child has no shader", () => {
+		const cameraShader = { name: "camera-effect" };
+
+		// simulate camera preDraw: save + set shader
+		state.save();
+		state.currentShader = cameraShader;
+
+		// simulate child preDraw: save + set undefined (no shader)
+		state.save();
+		state.currentShader = undefined;
+
+		// child rendering should see no custom shader
+		expect(state.currentShader).toBeUndefined();
+
+		// simulate child postDraw: restore
+		state.restore(800, 600);
+		expect(state.currentShader).toBe(cameraShader);
+
+		// simulate camera postDraw: restore
+		state.restore(800, 600);
+		expect(state.currentShader).toBeUndefined();
+	});
+
 	// ---- Scissor ----
 
 	it("should preserve scissor when active", () => {
@@ -331,6 +398,8 @@ describe("RenderState", () => {
 		state.currentColor.parseCSS("rgba(10, 20, 30, 0.5)");
 		state.currentTint.parseCSS("rgb(128, 64, 32)");
 		state.currentBlendMode = "additive";
+		const shaderBefore = { name: "test-shader" };
+		state.currentShader = shaderBefore;
 
 		const colorBefore = state.currentColor.toArray().slice();
 		const tintBefore = state.currentTint.toArray().slice();
@@ -345,11 +414,13 @@ describe("RenderState", () => {
 		state.currentColor.parseCSS("rgba(200, 100, 50, 1.0)");
 		state.currentTint.parseCSS("white");
 		state.currentBlendMode = "multiply";
+		state.currentShader = { name: "different-shader" };
 
 		const result = state.restore(800, 600);
 
 		// verify ALL properties restored
 		expect(result.blendMode).toBe("additive");
+		expect(state.currentShader).toBe(shaderBefore);
 
 		const colorAfter = state.currentColor.toArray();
 		for (let i = 0; i < 4; i++) {

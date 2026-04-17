@@ -75,6 +75,7 @@ import PixelateEffect from "./video/webgl/effects/pixelate.js";
 import ScanlineEffect from "./video/webgl/effects/scanline.js";
 import SepiaEffect from "./video/webgl/effects/sepia.js";
 import TintPulseEffect from "./video/webgl/effects/tintPulse.js";
+import VignetteEffect from "./video/webgl/effects/vignette.js";
 import WaveEffect from "./video/webgl/effects/wave.js";
 import GLShader from "./video/webgl/glshader.js";
 import ShaderEffect from "./video/webgl/shadereffect.js";
@@ -193,6 +194,7 @@ export {
 	UIBaseElement,
 	UISpriteElement,
 	UITextButton,
+	VignetteEffect,
 	WaveEffect,
 	WebGLRenderer,
 	World,

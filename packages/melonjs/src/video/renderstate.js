@@ -57,6 +57,12 @@ export default class RenderState {
 		 */
 		this.currentBlendMode = "none";
 
+		/**
+		 * current custom shader effect (undefined when using default shader)
+		 * @type {ShaderEffect|undefined}
+		 */
+		this.currentShader = undefined;
+
 		// ---- pre-allocated save/restore stack ----
 
 		/**
@@ -101,6 +107,9 @@ export default class RenderState {
 
 		/** @ignore */
 		this._blendStack = new Array(this._stackCapacity);
+
+		/** @ignore */
+		this._shaderStack = new Array(this._stackCapacity);
 	}
 
 	/**
@@ -120,6 +129,7 @@ export default class RenderState {
 		this._gradientStack[depth] = this.currentGradient;
 		this._lineDashStack[depth] = this.lineDash;
 		this._blendStack[depth] = this.currentBlendMode;
+		this._shaderStack[depth] = this.currentShader;
 
 		if (scissorTestActive) {
 			this._scissorStack[depth].set(this.currentScissor);
@@ -149,6 +159,7 @@ export default class RenderState {
 			this.currentTransform.copy(this._matrixStack[depth]);
 			this.currentGradient = this._gradientStack[depth];
 			this.lineDash = this._lineDashStack[depth];
+			this.currentShader = this._shaderStack[depth];
 			const scissorActive = !!this._scissorActive[depth];
 			if (scissorActive) {
 				this.currentScissor.set(this._scissorStack[depth]);
@@ -176,6 +187,7 @@ export default class RenderState {
 		this.currentScissor[1] = 0;
 		this.currentScissor[2] = width;
 		this.currentScissor[3] = height;
+		this.currentShader = undefined;
 	}
 
 	/** @private — doubles stack capacity when exceeded */
@@ -190,6 +202,7 @@ export default class RenderState {
 			this._gradientStack.push(null);
 			this._lineDashStack.push([]);
 			this._blendStack.push(undefined);
+			this._shaderStack.push(undefined);
 		}
 		const newScissorActive = new Uint8Array(newCap);
 		newScissorActive.set(this._scissorActive);

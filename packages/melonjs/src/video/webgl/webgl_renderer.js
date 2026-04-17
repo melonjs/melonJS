@@ -11,6 +11,7 @@ import {
 } from "../../system/event.ts";
 import { Gradient } from "../gradient.js";
 import Renderer from "./../renderer.js";
+import WebGLRenderTarget from "./../rendertarget/webglrendertarget.js";
 import { createAtlas, TextureAtlas } from "./../texture/atlas.js";
 import TextureCache from "./../texture/cache.js";
 import { dashPath, dashSegments } from "../utils/dash.js";
@@ -37,6 +38,10 @@ import { getMaxShaderPrecision } from "./utils/precision.js";
 
 // reusable constants for 2D→3D matrix operations
 const _tempMatrix = new Matrix3d();
+
+// pre-allocated matrices for blitEffect (avoids per-frame allocation)
+const _savedTransform = new Matrix3d();
+const _savedProjection = new Matrix3d();
 
 // list of supported compressed texture formats
 let supportedCompressedTextureFormats;
@@ -75,6 +80,13 @@ export default class WebGLRenderer extends Renderer {
 		 * @type {WebGLRenderingContext}
 		 */
 		this.gl = this.renderTarget.context;
+
+		/**
+		 * cached FBO for post-effect processing (lazily created on first use)
+		 * @type {WebGLRenderTarget|null}
+		 * @ignore
+		 */
+		this.currentEffectFBO = null;
 
 		/**
 		 * sets or returns the thickness of lines for shape drawing
@@ -338,6 +350,12 @@ export default class WebGLRenderer extends Renderer {
 
 		this.gl.disable(this.gl.SCISSOR_TEST);
 		this._scissorActive = false;
+
+		// release post-process FBO (will be recreated on demand)
+		if (this.currentEffectFBO) {
+			this.currentEffectFBO.destroy();
+			this.currentEffectFBO = null;
+		}
 	}
 
 	/**
@@ -456,6 +474,109 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	flush() {
 		this.currentBatcher.flush();
+	}
+
+	/**
+	 * Begin capturing rendering to an offscreen FBO for post-effect processing.
+	 * Returns true if post-effect processing is active (camera has a valid shader).
+	 * @param {Camera2d} camera - the camera requesting post-effect processing
+	 * @returns {boolean} true if FBO capture started, false if skipped
+	 * @ignore
+	 */
+	beginPostEffect(camera) {
+		if (!camera.shader || camera.shader.enabled === false) {
+			return false;
+		}
+		const canvas = this.getCanvas();
+		if (!this.currentEffectFBO) {
+			this.currentEffectFBO = new WebGLRenderTarget(
+				this.gl,
+				canvas.width,
+				canvas.height,
+			);
+		} else {
+			this.currentEffectFBO.resize(canvas.width, canvas.height);
+		}
+		this.flush();
+		// save renderer state before modifying it for FBO rendering
+		this.save();
+		this.currentEffectFBO.bind();
+		this.gl.disable(this.gl.SCISSOR_TEST);
+		this._scissorActive = false;
+		this.setGlobalAlpha(1.0);
+		this.setBlendMode("normal");
+		this.clear();
+		return true;
+	}
+
+	/** @ignore */
+	endPostEffect(camera) {
+		if (!camera.shader || camera.shader.enabled === false) {
+			return;
+		}
+		this.flush();
+		this.currentEffectFBO.unbind();
+		if (!camera.isDefault) {
+			this.clipRect(
+				camera.screenX,
+				camera.screenY,
+				camera.width,
+				camera.height,
+			);
+		}
+		this.blitEffect(
+			this.currentEffectFBO.texture,
+			0,
+			0,
+			this.width,
+			this.height,
+			camera.shader,
+		);
+		if (!camera.isDefault) {
+			this.gl.disable(this.gl.SCISSOR_TEST);
+			this._scissorActive = false;
+		}
+		// restore renderer state saved in beginPostEffect
+		this.restore();
+	}
+
+	/**
+	 * Blit a texture to the screen through a shader effect.
+	 * Draws a screen-aligned quad using the given texture as source
+	 * and the given shader for post-processing (e.g. scanlines, desaturation).
+	 * @param {WebGLTexture} source - the source texture to blit
+	 * @param {number} x - destination x position
+	 * @param {number} y - destination y position
+	 * @param {number} width - destination width
+	 * @param {number} height - destination height
+	 * @param {ShaderEffect} shader - the shader effect to apply
+	 */
+	blitEffect(source, x, y, width, height, shader) {
+		const gl = this.gl;
+
+		// flush any pending draws
+		this.flush();
+
+		const batcher = this.setBatcher("quad");
+
+		// set up a screen-space ortho projection for the blit quad
+		// (not the camera's world projection which includes scrolling)
+		_savedTransform.copy(this.currentTransform);
+		_savedProjection.copy(this.projectionMatrix);
+		this.currentTransform.identity();
+		this.projectionMatrix.ortho(0, width, height, 0, -1, 1);
+		batcher.setProjection(this.projectionMatrix);
+
+		// blit the FBO without alpha blending — the FBO already contains
+		// the fully composited scene (particles, additive blend, etc.)
+		gl.disable(gl.BLEND);
+		batcher.blitTexture(source, x, y, width, height, shader);
+		gl.enable(gl.BLEND);
+
+		// restore state
+		this.currentTransform.copy(_savedTransform);
+		this.projectionMatrix.copy(_savedProjection);
+		batcher.setProjection(this.projectionMatrix);
 	}
 
 	/**
@@ -973,8 +1094,9 @@ export default class WebGLRenderer extends Renderer {
 				this._scissorActive = false;
 			}
 		}
-		// sync gradient from renderState
+		// sync gradient and shader from renderState
 		this._currentGradient = this.renderState.currentGradient;
+		this.customShader = this.renderState.currentShader;
 	}
 
 	/**
@@ -991,6 +1113,7 @@ export default class WebGLRenderer extends Renderer {
 	 * renderer.restore();
 	 */
 	save() {
+		this.renderState.currentShader = this.customShader;
 		this.renderState.save(this._scissorActive === true);
 	}
 

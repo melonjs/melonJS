@@ -100,7 +100,8 @@ export default class QuadBatcher extends MaterialBatcher {
 	 * Multi-texture batching is automatically enabled when the default
 	 * shader is active, and disabled for custom ShaderEffect shaders.
 	 * @see GLShader
-	 * @param {GLShader} shader - a reference to a GLShader instance
+	 * @see ShaderEffect
+	 * @param {GLShader|ShaderEffect} shader - a reference to a GLShader or ShaderEffect instance
 	 */
 	useShader(shader) {
 		super.useShader(shader);
@@ -167,6 +168,45 @@ export default class QuadBatcher extends MaterialBatcher {
 
 			vertex.clear();
 		}
+	}
+
+	/**
+	 * Draw a screen-aligned quad with the given raw WebGL texture through the given shader.
+	 * Binds the texture to unit 0, pushes 4 vertices (Y-flipped UVs), flushes,
+	 * then unbinds the texture.
+	 * @param {WebGLTexture} source - the raw GL texture to blit
+	 * @param {number} x - destination x
+	 * @param {number} y - destination y
+	 * @param {number} width - destination width
+	 * @param {number} height - destination height
+	 * @param {GLShader|ShaderEffect} shader - the shader effect to apply
+	 */
+	blitTexture(source, x, y, width, height, shader) {
+		const gl = this.gl;
+
+		this.useShader(shader);
+
+		// bind the source texture to unit 0
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, source);
+		shader.setUniform("uSampler", 0);
+
+		// push a screen-aligned quad with Y-flipped UVs
+		const tint = 0xffffffff;
+		this.vertexData.push(x, y, 0, 1, tint, 0);
+		this.vertexData.push(x + width, y, 1, 1, tint, 0);
+		this.vertexData.push(x, y + height, 0, 0, tint, 0);
+		this.vertexData.push(x + width, y + height, 1, 0, tint, 0);
+
+		this.flush();
+
+		// unbind the texture to prevent feedback loop on next frame
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, null);
+		delete this.boundTextures[0];
+
+		// restore the default shader (also re-enables multi-texture batching)
+		this.useShader(this.defaultShader);
 	}
 
 	/**

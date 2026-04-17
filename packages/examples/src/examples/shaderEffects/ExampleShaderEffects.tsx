@@ -18,7 +18,9 @@ import {
 	Sprite,
 	Text,
 	TintPulseEffect,
+	VignetteEffect,
 	WaveEffect,
+	type WebGLRenderer,
 } from "melonjs";
 import { createExampleComponent } from "../utils";
 import monsterImg from "./assets/monster.png";
@@ -29,6 +31,9 @@ const createGame = () => {
 		scale: "auto",
 		backgroundColor: "#202020",
 	});
+
+	// apply subtle vignette post-process effect on the camera
+	app.viewport.shader = new VignetteEffect(app.renderer as WebGLRenderer);
 
 	loader.preload([{ name: "monster", type: "image", src: monsterImg }], () => {
 		const r = app.renderer;

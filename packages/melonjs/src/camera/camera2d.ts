@@ -840,34 +840,36 @@ export default class Camera2d extends Renderable {
 		const r = renderer as any;
 		// fading effect
 		if (this._fadeIn.tween) {
+			const color = this._fadeIn.color;
 			// add an overlay
 			r.save();
-			// reset all transform so that the overaly cover the whole camera area
+			// reset all transform so that the overlay covers the whole camera area
 			r.resetTransform();
-			r.setColor(this._fadeIn.color!);
+			r.setColor(color);
 			r.fillRect(0, 0, this.width, this.height);
 			r.restore();
 			// remove the tween if over
-			if (this._fadeIn.color!.alpha === 1.0) {
+			if (color && color.alpha === 1.0) {
 				this._fadeIn.tween = null;
-				colorPool.release(this._fadeIn.color!);
+				colorPool.release(color);
 				this._fadeIn.color = null;
 			}
 		}
 
 		// flashing effect
 		if (this._fadeOut.tween) {
+			const color = this._fadeOut.color;
 			// add an overlay
 			r.save();
-			// reset all transform so that the overaly cover the whole camera area
+			// reset all transform so that the overlay covers the whole camera area
 			r.resetTransform();
-			r.setColor(this._fadeOut.color!);
+			r.setColor(color);
 			r.fillRect(0, 0, this.width, this.height);
 			r.restore();
 			// remove the tween if over
-			if (this._fadeOut.color!.alpha === 0.0) {
+			if (color && color.alpha === 0.0) {
 				this._fadeOut.tween = null;
-				colorPool.release(this._fadeOut.color!);
+				colorPool.release(color);
 				this._fadeOut.color = null;
 			}
 		}
@@ -888,13 +890,19 @@ export default class Camera2d extends Renderable {
 		const translateX = this.pos.x + this.offset.x + containerOffsetX;
 		const translateY = this.pos.y + this.offset.y + containerOffsetY;
 
+		// post-effect: bind FBO if a shader effect is set (WebGL only)
+		const usePostEffect = r.beginPostEffect(this);
+
 		// translate the world coordinates by default to screen coordinates
 		container.translate(-translateX, -translateY);
 
 		this.preDraw(r);
 
-		// clip to camera viewport on screen (after preDraw's save)
-		r.clipRect(this.screenX, this.screenY, this.width, this.height);
+		// clip to camera viewport on screen (skip when rendering to FBO —
+		// the FBO itself defines the render area)
+		if (!usePostEffect) {
+			r.clipRect(this.screenX, this.screenY, this.width, this.height);
+		}
 
 		// set camera projection for non-default cameras
 		if (isNonDefault) {
@@ -951,6 +959,9 @@ export default class Camera2d extends Renderable {
 		container.postDraw(r);
 
 		this.postDraw(r);
+
+		// post-effect: unbind FBO and blit to screen through shader effect
+		r.endPostEffect(this);
 
 		// translate the world coordinates by default to screen coordinates
 		container.translate(translateX, translateY);
