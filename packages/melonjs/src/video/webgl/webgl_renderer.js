@@ -484,7 +484,7 @@ export default class WebGLRenderer extends Renderer {
 	 * @ignore
 	 */
 	beginPostEffect(camera) {
-		if (!camera.shader || !camera.shader.enabled) {
+		if (!camera.shader || camera.shader.enabled === false) {
 			return false;
 		}
 		const canvas = this.getCanvas();
@@ -511,7 +511,7 @@ export default class WebGLRenderer extends Renderer {
 
 	/** @ignore */
 	endPostEffect(camera) {
-		if (!camera.shader || !camera.shader.enabled) {
+		if (!camera.shader || camera.shader.enabled === false) {
 			return;
 		}
 		this.flush();

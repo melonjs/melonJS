@@ -187,6 +187,7 @@ export default class RenderState {
 		this.currentScissor[1] = 0;
 		this.currentScissor[2] = width;
 		this.currentScissor[3] = height;
+		this.currentShader = undefined;
 	}
 
 	/** @private — doubles stack capacity when exceeded */
