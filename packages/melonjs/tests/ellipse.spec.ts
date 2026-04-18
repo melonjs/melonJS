@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Ellipse, Matrix2d, Vector2d } from "../src";
+import { ellipsePool } from "../src/geometries/ellipse.ts";
 
 describe("Shape : Ellipse", () => {
 	describe("Circle (equal radii)", () => {
@@ -535,6 +536,18 @@ describe("Shape : Ellipse", () => {
 			const bounds = cloned.getBounds();
 			expect(bounds.width).toBeCloseTo(100);
 			expect(bounds.height).toBeCloseTo(200);
+		});
+
+		it("clone uses the ellipse pool", () => {
+			const sizeBefore = ellipsePool.size();
+			const ellipse = new Ellipse(10, 20, 60, 40);
+			const cloned = ellipse.clone();
+			// cloned instance should be valid
+			expect(cloned.pos.x).toEqual(10);
+			expect(cloned.radiusV.x).toEqual(30);
+			// releasing should increase pool size
+			ellipsePool.release(cloned);
+			expect(ellipsePool.size()).toBeGreaterThan(sizeBefore);
 		});
 	});
 

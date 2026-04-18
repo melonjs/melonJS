@@ -1,5 +1,7 @@
 import type Application from "../application/application.ts";
 import { pauseTrack, resumeTrack } from "./../audio/audio.ts";
+import FadeEffect from "../camera/effects/fade_effect.ts";
+import MaskEffect from "../camera/effects/mask_effect.ts";
 import DefaultLoadingScreen from "./../loader/loadingscreen.js";
 import Stage from "./../state/stage.ts";
 import {
@@ -35,8 +37,17 @@ let _isPaused: boolean = false;
 // list of stages
 const _stages: Record<number, StageEntry> = {};
 
-// fading transition parameters between screen
-const _fade: { color: string; duration: number } = {
+// transition type and parameters
+let _transitionType: "fade" | "mask" = "fade";
+
+const _transitionConfig: {
+	color: string;
+	duration: number;
+	shape?:
+		| import("../geometries/ellipse.ts").Ellipse
+		| import("../geometries/polygon.ts").Polygon
+		| undefined;
+} = {
 	color: "",
 	duration: 0,
 };
@@ -115,11 +126,12 @@ function _switchState(stateId: number): void {
 
 	// call the stage destroy method
 	if (_stages[_state]) {
-		// just notify the object
+		// eslint-disable-line @typescript-eslint/no-unnecessary-condition
 		_stages[_state].stage.destroy(_app);
 	}
 
 	if (_stages[stateId]) {
+		// eslint-disable-line @typescript-eslint/no-unnecessary-condition
 		// set the global variable
 		_state = stateId;
 
@@ -140,6 +152,7 @@ function _switchState(stateId: number): void {
 		// execute callback if defined
 		if (_onSwitchComplete) {
 			_onSwitchComplete();
+			_onSwitchComplete = null;
 		}
 	}
 }
@@ -398,15 +411,35 @@ const state = {
 
 	/**
 	 * specify a global transition effect
-	 * @param effect - (only "fade" is supported for now)
+	 * @param effect - "fade" for a color fade, "mask" for a shape-based mask transition
 	 * @param color - a CSS color value
 	 * @param [duration=1000] - expressed in milliseconds
+	 * @param [shape] - an Ellipse or Polygon defining the mask shape (required when effect is "mask")
+	 * @example
+	 * // classic fade to black
+	 * state.transition("fade", "#000", 500);
+	 * @example
+	 * // iris (circle) mask transition
+	 * state.transition("mask", "#000", 500, new Ellipse(0, 0, 1, 1));
+	 * @example
+	 * // diamond mask transition
+	 * state.transition("mask", "#000", 400, new Polygon(0, 0, [
+	 *     { x: 0, y: -1 }, { x: 1, y: 0 },
+	 *     { x: 0, y: 1 }, { x: -1, y: 0 },
+	 * ]));
 	 */
-	transition(effect: string, color: string, duration: number): void {
-		if (effect === "fade") {
-			_fade.color = color;
-			_fade.duration = duration;
-		}
+	transition(
+		effect: "fade" | "mask",
+		color: string,
+		duration: number = 1000,
+		shape?:
+			| import("../geometries/ellipse.ts").Ellipse
+			| import("../geometries/polygon.ts").Polygon,
+	): void {
+		_transitionType = effect;
+		_transitionConfig.color = color;
+		_transitionConfig.duration = duration;
+		_transitionConfig.shape = shape;
 	},
 
 	/**
@@ -442,24 +475,80 @@ const state = {
 		if (!this.isCurrent(stateId)) {
 			// store extra arguments if any
 			_extraArgs = extraArgs.length > 0 ? extraArgs : null;
-			// if fading effect
-			if (_fade.duration && _stages[stateId].transition) {
-				_onSwitchComplete = () => {
-					_app.viewport.fadeOut(_fade.color, _fade.duration);
+			// apply transition effect if configured
+			if (_transitionConfig.duration && _stages[stateId].transition) {
+				const onComplete = () => {
+					defer(
+						_switchState as unknown as (...args: unknown[]) => unknown,
+						state,
+						stateId,
+					);
 				};
-				_app.viewport.fadeIn(
-					_fade.color,
-					_fade.duration,
-					function (this: typeof state) {
-						defer(
-							_switchState as unknown as (...args: unknown[]) => unknown,
-							this,
-							stateId,
+
+				switch (_transitionType) {
+					case "fade": {
+						const color = _transitionConfig.color;
+						const duration = _transitionConfig.duration;
+						// pre-create the reveal effect so it's ready immediately
+						const revealFade = new FadeEffect(_app.viewport, {
+							color,
+							duration,
+							direction: "out",
+						});
+						revealFade.isPersistent = true;
+						_onSwitchComplete = () => {
+							_app.viewport.addCameraEffect(revealFade);
+						};
+						const fadeEffect = new FadeEffect(_app.viewport, {
+							color,
+							duration,
+							direction: "in",
+							onComplete,
+						});
+						fadeEffect.isPersistent = true;
+						_app.viewport.addCameraEffect(fadeEffect);
+						break;
+					}
+					case "mask": {
+						if (!_transitionConfig.shape) {
+							console.warn(
+								"melonJS: mask transition requires a shape, falling back to direct switch",
+							);
+							onComplete();
+							break;
+						}
+						const shape = _transitionConfig.shape;
+						const color = _transitionConfig.color;
+						const duration = _transitionConfig.duration;
+						// pre-create the reveal effect so it's ready immediately
+						const revealMask = new MaskEffect(_app.viewport, {
+							shape,
+							color,
+							duration,
+							direction: "reveal",
+						});
+						revealMask.isPersistent = true;
+						_onSwitchComplete = () => {
+							_app.viewport.addCameraEffect(revealMask);
+						};
+						const maskEffect = new MaskEffect(_app.viewport, {
+							shape,
+							color,
+							duration,
+							direction: "hide",
+							onComplete,
+						});
+						maskEffect.isPersistent = true;
+						_app.viewport.addCameraEffect(maskEffect);
+						break;
+					}
+					default:
+						throw new Error(
+							`Invalid transition type: ${_transitionType as string}`,
 						);
-					},
-				);
+				}
 			}
-			// else just switch without any effects
+			// no transition — switch directly
 			else {
 				// wait for the last frame to be
 				// "finished" before switching

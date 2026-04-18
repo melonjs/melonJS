@@ -8,10 +8,22 @@
 - WebGL: `WebGLRenderTarget` class — reusable FBO wrapper (framebuffer + color texture + depth/stencil renderbuffer) with bind/unbind/resize/destroy lifecycle
 - Renderer: `beginPostEffect(camera)`, `endPostEffect(camera)`, and `blitEffect(source, x, y, w, h, shader)` methods on the base Renderer (no-op for Canvas) and WebGLRenderer
 - RenderState: `currentShader` is now part of the save/restore stack — custom shaders are properly scoped per-renderable without leaking to siblings or parent cameras
+- Camera: extensible camera effect system — `CameraEffect` base class with `update(dt)`, `draw(renderer, w, h)`, `destroy()` lifecycle. Add/get/remove effects via `addCameraEffect()`, `getCameraEffect(EffectClass)`, `removeCameraEffect(effect)` on any Camera2d.
+- Camera: `ShakeEffect` — extracted shake logic into a standalone camera effect class with `intensity`, `duration`, `axis`, and `onComplete` support. Multiple shakes can coexist.
+- Camera: `FadeEffect` — unified fade-in/fade-out into a single effect class with `direction: "in" | "out"`. Replaces the hardcoded `_fadeIn`/`_fadeOut` state objects.
+- Camera: `MaskEffect` — shape-based mask transition effect using Ellipse or Polygon. Supports `direction: "hide"` (shape shrinks) and `direction: "reveal"` (shape expands) with configurable color and duration. Uses inverted clip masking on both Canvas (evenodd) and WebGL (stencil).
+- Trigger: `transition` setting — accepts `"fade"` (default, backward compatible) or `"mask"` for shape-based level transitions. When `"mask"` is used, a `shape` setting (Ellipse or Polygon) defines the mask geometry.
+- Trigger: `color` setting replaces legacy `fade` property (backward compatible — `fade` still works as fallback)
 
 ### Changed
-- Renderable: `preDraw()` now always sets `renderer.customShader = this.shader` unconditionally (was guarded by `if (this.shader)`), relying on save/restore to scope the shader correctly
-- Renderable: `postDraw()` no longer manually clears `renderer.customShader` — save/restore handles it
+- Camera: `shake()`, `fadeIn()`, `fadeOut()` are now convenience wrappers that create `ShakeEffect`/`FadeEffect` instances — same signatures, fully backward compatible
+- Trigger: internally uses `FadeEffect`/`MaskEffect` instead of `viewport.fadeIn()`/`viewport.fadeOut()`, with both hide and reveal effects
+
+### Fixed
+- Canvas: `setMask(shape, true)` now uses `evenodd` clipping for proper inverted mask support (was using `destination-atop` composite which didn't clip subsequent draws)
+- Ellipse: `clone()` now uses the ellipse pool instead of `new Ellipse()` — consistent with `Polygon.clone()` which already uses its pool
+- TMXObjectFactory: override warning now uses `console.warn()` instead of the deprecation `warning()` function (was showing "deprecated since version undefined")
+
 
 ## [19.1.0] (melonJS 2) - _2026-04-16_
 

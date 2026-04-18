@@ -3,6 +3,10 @@ import "./polyfill/index.ts";
 
 import Application, { setDefaultGame } from "./application/application.ts";
 import Camera2d from "./camera/camera2d.ts";
+import CameraEffect from "./camera/effects/camera_effect.ts";
+import FadeEffect from "./camera/effects/fade_effect.ts";
+import MaskEffect from "./camera/effects/mask_effect.ts";
+import ShakeEffect from "./camera/effects/shake_effect.ts";
 import Pointer from "./input/pointer.ts";
 import TMXHexagonalRenderer from "./level/tiled/renderer/TMXHexagonalRenderer.js";
 import TMXIsometricRenderer from "./level/tiled/renderer/TMXIsometricRenderer.js";
@@ -130,6 +134,7 @@ export {
 	BlurEffect,
 	Body,
 	Camera2d,
+	CameraEffect,
 	CanvasRenderer,
 	CanvasRenderTarget,
 	ChromaticAberrationEffect,
@@ -142,6 +147,7 @@ export {
 	DropShadowEffect,
 	DropTarget,
 	Entity, // eslint-disable-line @typescript-eslint/no-deprecated
+	FadeEffect,
 	FlashEffect,
 	GLShader,
 	GlowEffect,
@@ -150,6 +156,7 @@ export {
 	ImageLayer,
 	InvertEffect,
 	Light2d,
+	MaskEffect,
 	Mesh,
 	NineSliceSprite,
 	OutlineEffect,
@@ -169,6 +176,7 @@ export {
 	ScanlineEffect,
 	SepiaEffect,
 	ShaderEffect,
+	ShakeEffect,
 	Sprite,
 	Stage,
 	save,

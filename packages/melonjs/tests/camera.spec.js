@@ -2,11 +2,25 @@ import { describe, expect, it } from "vitest";
 import {
 	boot,
 	Camera2d,
+	CameraEffect,
+	Ellipse,
+	FadeEffect,
 	game,
+	MaskEffect,
+	Polygon,
 	Renderable,
+	ShakeEffect,
 	Vector2d,
 	video,
 } from "../src/index.js";
+
+// advance a tween by simulating elapsed time
+const advanceTween = (tween, totalMs, steps = 20) => {
+	const dt = totalMs / steps;
+	for (let i = 0; i < steps; i++) {
+		tween.update(dt);
+	}
+};
 
 const setup = () => {
 	boot();
@@ -909,6 +923,379 @@ describe("Camera2d", () => {
 			cam.reset(0, 0);
 			expect(cam.worldProjection.isIdentity()).toEqual(true);
 			expect(cam.screenProjection.isIdentity()).toEqual(true);
+		});
+	});
+
+	describe("camera effects", () => {
+		it("should start with an empty effects list", () => {
+			const { camera } = setup();
+			expect(camera.cameraEffects).toEqual([]);
+		});
+
+		it("addCameraEffect should add and return the effect", () => {
+			const { camera } = setup();
+			const effect = new ShakeEffect(camera, {
+				intensity: 10,
+				duration: 500,
+			});
+			const result = camera.addCameraEffect(effect);
+			expect(result).toBe(effect);
+			expect(camera.cameraEffects).toHaveLength(1);
+			expect(camera.cameraEffects[0]).toBe(effect);
+		});
+
+		it("getCameraEffect should find by class", () => {
+			const { camera } = setup();
+			const shake = new ShakeEffect(camera, {
+				intensity: 10,
+				duration: 500,
+			});
+			camera.addCameraEffect(shake);
+			expect(camera.getCameraEffect(ShakeEffect)).toBe(shake);
+			expect(camera.getCameraEffect(FadeEffect)).toBeUndefined();
+		});
+
+		it("removeCameraEffect should remove and destroy the effect", () => {
+			const { camera } = setup();
+			const shake = new ShakeEffect(camera, {
+				intensity: 10,
+				duration: 500,
+			});
+			camera.addCameraEffect(shake);
+			camera.removeCameraEffect(shake);
+			expect(camera.cameraEffects).toHaveLength(0);
+			// offset should be zeroed by destroy
+			expect(camera.offset.x).toEqual(0);
+			expect(camera.offset.y).toEqual(0);
+		});
+
+		it("removeCameraEffect should be a no-op for unknown effects", () => {
+			const { camera } = setup();
+			const shake = new ShakeEffect(camera, {
+				intensity: 10,
+				duration: 500,
+			});
+			// not added — should not throw
+			camera.removeCameraEffect(shake);
+			expect(camera.cameraEffects).toHaveLength(0);
+		});
+
+		it("multiple effects should coexist", () => {
+			const { camera } = setup();
+			camera.addCameraEffect(
+				new ShakeEffect(camera, { intensity: 5, duration: 200 }),
+			);
+			camera.addCameraEffect(
+				new FadeEffect(camera, { color: "#000", duration: 300 }),
+			);
+			expect(camera.cameraEffects).toHaveLength(2);
+			expect(camera.getCameraEffect(ShakeEffect)).toBeDefined();
+			expect(camera.getCameraEffect(FadeEffect)).toBeDefined();
+		});
+
+		it("reset should clear all effects", () => {
+			const { camera } = setup();
+			camera.addCameraEffect(
+				new ShakeEffect(camera, { intensity: 5, duration: 200 }),
+			);
+			camera.addCameraEffect(
+				new FadeEffect(camera, { color: "#000", duration: 300 }),
+			);
+			camera.reset();
+			expect(camera.cameraEffects).toHaveLength(0);
+		});
+
+		it("completed effects should be auto-removed on update", () => {
+			const { camera } = setup();
+			camera.addCameraEffect(
+				new ShakeEffect(camera, { intensity: 5, duration: 100 }),
+			);
+			expect(camera.cameraEffects).toHaveLength(1);
+			// update with enough time to complete
+			camera.update(200);
+			expect(camera.cameraEffects).toHaveLength(0);
+		});
+
+		it("shake() convenience method should add a ShakeEffect", () => {
+			const { camera } = setup();
+			camera.shake(10, 500, camera.AXIS.BOTH);
+			expect(camera.getCameraEffect(ShakeEffect)).toBeDefined();
+			expect(camera.cameraEffects).toHaveLength(1);
+		});
+
+		it("shake() should not replace existing shake without force", () => {
+			const { camera } = setup();
+			camera.shake(10, 500);
+			const first = camera.getCameraEffect(ShakeEffect);
+			camera.shake(20, 300);
+			// should still be the first one
+			expect(camera.getCameraEffect(ShakeEffect)).toBe(first);
+		});
+
+		it("shake() with force should replace existing shake", () => {
+			const { camera } = setup();
+			camera.shake(10, 500);
+			const first = camera.getCameraEffect(ShakeEffect);
+			camera.shake(20, 300, undefined, undefined, true);
+			const second = camera.getCameraEffect(ShakeEffect);
+			expect(second).not.toBe(first);
+			expect(camera.cameraEffects).toHaveLength(1);
+		});
+
+		it("ShakeEffect should modify camera offset during update", () => {
+			const { camera } = setup();
+			camera.shake(10, 500, camera.AXIS.BOTH);
+			camera.update(16);
+			// offset should be non-zero (random, but within [-5, 5])
+			const hasOffset = camera.offset.x !== 0 || camera.offset.y !== 0;
+			expect(hasOffset).toEqual(true);
+		});
+
+		it("ShakeEffect should reset offset when complete", () => {
+			const { camera } = setup();
+			camera.shake(10, 100);
+			camera.update(200);
+			expect(camera.offset.x).toEqual(0);
+			expect(camera.offset.y).toEqual(0);
+		});
+
+		it("ShakeEffect should call onComplete callback", () => {
+			const { camera } = setup();
+			let called = false;
+			camera.shake(10, 100, camera.AXIS.BOTH, () => {
+				called = true;
+			});
+			camera.update(200);
+			expect(called).toEqual(true);
+		});
+
+		it("fadeIn() convenience method should add a FadeEffect", () => {
+			const { camera } = setup();
+			camera.fadeIn("#000", 500);
+			expect(camera.getCameraEffect(FadeEffect)).toBeDefined();
+		});
+
+		it("fadeOut() convenience method should add a FadeEffect", () => {
+			const { camera } = setup();
+			camera.fadeOut("#fff", 500);
+			expect(camera.getCameraEffect(FadeEffect)).toBeDefined();
+		});
+
+		it("custom CameraEffect subclass should work", () => {
+			const { camera } = setup();
+			let updated = false;
+
+			class CustomEffect extends CameraEffect {
+				update() {
+					updated = true;
+					this.isComplete = true;
+				}
+			}
+
+			camera.addCameraEffect(new CustomEffect(camera));
+			camera.update(16);
+			expect(updated).toEqual(true);
+			// should be auto-removed after completing
+			expect(camera.cameraEffects).toHaveLength(0);
+		});
+	});
+
+	describe("FadeEffect", () => {
+		it("should start with alpha 0 for direction 'in'", () => {
+			const { camera } = setup();
+			const effect = new FadeEffect(camera, {
+				color: "#000",
+				duration: 500,
+				direction: "in",
+			});
+			expect(effect.color.alpha).toEqual(0);
+			expect(effect.direction).toEqual("in");
+			expect(effect.isComplete).toEqual(false);
+			effect.destroy();
+		});
+
+		it("should start with full alpha for direction 'out'", () => {
+			const { camera } = setup();
+			const effect = new FadeEffect(camera, {
+				color: "#000",
+				duration: 500,
+				direction: "out",
+			});
+			expect(effect.color.alpha).toEqual(1);
+			expect(effect.direction).toEqual("out");
+			effect.destroy();
+		});
+
+		it("should complete for non-opaque target alpha", () => {
+			const { camera } = setup();
+			const effect = new FadeEffect(camera, {
+				color: "rgba(0,0,0,0.5)",
+				duration: 10,
+				direction: "in",
+			});
+			// advance the tween then call effect.update() directly
+			advanceTween(effect.tween, 500);
+			effect.update();
+			expect(effect.isComplete).toEqual(true);
+		});
+
+		it("should call onComplete when finished", () => {
+			const { camera } = setup();
+			let called = false;
+			const effect = new FadeEffect(camera, {
+				color: "#000",
+				duration: 10,
+				direction: "in",
+				onComplete: () => {
+					called = true;
+				},
+			});
+			advanceTween(effect.tween, 500);
+			effect.update();
+			expect(called).toEqual(true);
+		});
+
+		it("should default direction to 'in'", () => {
+			const { camera } = setup();
+			const effect = new FadeEffect(camera, {
+				color: "#000",
+				duration: 500,
+			});
+			expect(effect.direction).toEqual("in");
+			effect.destroy();
+		});
+
+		it("should release pooled resources on destroy", () => {
+			const { camera } = setup();
+			const effect = new FadeEffect(camera, {
+				color: "#000",
+				duration: 500,
+			});
+			// should not throw
+			effect.destroy();
+		});
+	});
+
+	describe("MaskEffect", () => {
+		it("should initialize with correct direction and progress", () => {
+			const { camera } = setup();
+			const effect = new MaskEffect(camera, {
+				shape: new Ellipse(0, 0, 1, 1),
+				color: "#000",
+				duration: 500,
+				direction: "hide",
+			});
+			expect(effect.direction).toEqual("hide");
+			expect(effect.progress.value).toEqual(1.0);
+			expect(effect.isComplete).toEqual(false);
+			effect.destroy();
+		});
+
+		it("should start reveal from progress 0", () => {
+			const { camera } = setup();
+			const effect = new MaskEffect(camera, {
+				shape: new Ellipse(0, 0, 1, 1),
+				color: "#000",
+				duration: 500,
+				direction: "reveal",
+			});
+			expect(effect.progress.value).toEqual(0.0);
+			effect.destroy();
+		});
+
+		it("should complete hide when progress reaches 0", () => {
+			const { camera } = setup();
+			const effect = new MaskEffect(camera, {
+				shape: new Ellipse(0, 0, 1, 1),
+				color: "#000",
+				duration: 10,
+				direction: "hide",
+			});
+			advanceTween(effect.tween, 500);
+			effect.update();
+			expect(effect.isComplete).toEqual(true);
+			expect(effect.progress.value).toEqual(0.0);
+		});
+
+		it("should complete reveal when progress reaches 1", () => {
+			const { camera } = setup();
+			const effect = new MaskEffect(camera, {
+				shape: new Ellipse(0, 0, 1, 1),
+				color: "#000",
+				duration: 10,
+				direction: "reveal",
+			});
+			advanceTween(effect.tween, 500);
+			effect.update();
+			expect(effect.isComplete).toEqual(true);
+			expect(effect.progress.value).toEqual(1.0);
+		});
+
+		it("should call onComplete callback", () => {
+			const { camera } = setup();
+			let called = false;
+			const effect = new MaskEffect(camera, {
+				shape: new Ellipse(0, 0, 1, 1),
+				color: "#000",
+				duration: 10,
+				direction: "hide",
+				onComplete: () => {
+					called = true;
+				},
+			});
+			advanceTween(effect.tween, 500);
+			effect.update();
+			expect(called).toEqual(true);
+		});
+
+		it("should work with Polygon shape", () => {
+			const { camera } = setup();
+			const diamond = new Polygon(0, 0, [
+				{ x: 0, y: -1 },
+				{ x: 1, y: 0 },
+				{ x: 0, y: 1 },
+				{ x: -1, y: 0 },
+			]);
+			const effect = new MaskEffect(camera, {
+				shape: diamond,
+				color: "#000",
+				duration: 10,
+				direction: "hide",
+			});
+			advanceTween(effect.tween, 500);
+			effect.update();
+			expect(effect.isComplete).toEqual(true);
+		});
+
+		it("should default direction to 'hide'", () => {
+			const { camera } = setup();
+			const effect = new MaskEffect(camera, {
+				shape: new Ellipse(0, 0, 1, 1),
+				color: "#000",
+			});
+			expect(effect.direction).toEqual("hide");
+			effect.destroy();
+		});
+
+		it("should release pooled resources on destroy", () => {
+			const { camera } = setup();
+			const effect = new MaskEffect(camera, {
+				shape: new Ellipse(0, 0, 1, 1),
+				color: "#000",
+				duration: 500,
+			});
+			// should not throw
+			effect.destroy();
+		});
+
+		it("isPersistent should default to false", () => {
+			const { camera } = setup();
+			const effect = new MaskEffect(camera, {
+				shape: new Ellipse(0, 0, 1, 1),
+				color: "#000",
+			});
+			expect(effect.isPersistent).toEqual(false);
+			effect.destroy();
 		});
 	});
 

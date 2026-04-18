@@ -1214,9 +1214,10 @@ export default class CanvasRenderer extends Renderer {
 		this.maskLevel++;
 
 		if (invert === true) {
-			context.closePath();
-			context.globalCompositeOperation = "destination-atop";
-			context.fill();
+			// draw a full-canvas rect as the outer path, then close the
+			// inner shape — clipping with "evenodd" makes the shape a hole
+			context.rect(0, 0, this.getCanvas().width, this.getCanvas().height);
+			context.clip("evenodd");
 		} else {
 			context.clip();
 		}

@@ -1,3 +1,5 @@
+import FadeEffect from "../camera/effects/fade_effect.ts";
+import MaskEffect from "../camera/effects/mask_effect.ts";
 import { polygonPool } from "../geometries/polygon.ts";
 import { level } from "./../level/level.js";
 import { vector2dPool } from "../math/vector2d.ts";
@@ -11,7 +13,8 @@ import Renderable from "./renderable.js";
  */
 
 /**
- * trigger an event when colliding with another object
+ * Trigger an event when colliding with another object.
+ * Supports both fade and mask-based transitions when loading a new level.
  * @category Game Objects
  */
 export default class Trigger extends Renderable {
@@ -22,8 +25,10 @@ export default class Trigger extends Renderable {
 	 * @param {number} [settings.width] - width of the trigger area
 	 * @param {number} [settings.height] - height of the trigger area
 	 * @param {Rect[]|Polygon[]|Line[]|Ellipse[]} [settings.shapes] - collision shape(s) that will trigger the event
-	 * @param {string} [settings.duration] - Fade duration (in ms)
-	 * @param {string|Color} [settings.color] - Fade color
+	 * @param {number} [settings.duration] - Transition duration (in ms)
+	 * @param {string|Color} [settings.color] - Transition color (also accepts legacy `fade` property)
+	 * @param {string} [settings.transition="fade"] - Transition type: "fade" for a color fade, "mask" for a shape-based mask transition
+	 * @param {Ellipse|Polygon} [settings.shape] - Mask shape for "mask" transition type (e.g. an Ellipse for iris, a Polygon for diamond/star)
 	 * @param {string} [settings.event="level"] - the type of event to trigger (only "level" supported for now)
 	 * @param {string} [settings.to] - level to load if level trigger
 	 * @param {string|Container} [settings.container] - Target container. See {@link level.load}
@@ -31,52 +36,71 @@ export default class Trigger extends Renderable {
 	 * @param {boolean} [settings.flatten] - Flatten all objects into the target container. See {@link level.load}
 	 * @param {boolean} [settings.setViewportBounds] - Resize the viewport to match the level. See {@link level.load}
 	 * @example
-	 * world.addChild(new me.Trigger(
-	 *     x, y, {
-	 *         shapes: [new me.Rect(0, 0, 100, 100)],
-	 *         "duration" : 250,
-	 *         "color" : "#000",
-	 *         "to" : "mymap2"
-	 *     }
-	 * ));
+	 * // fade transition (default)
+	 * world.addChild(new Trigger(x, y, {
+	 *     shapes: [new Rect(0, 0, 100, 100)],
+	 *     color: "#000",
+	 *     duration: 250,
+	 *     to: "mymap2",
+	 * }));
+	 * @example
+	 * // mask transition with iris (ellipse) shape
+	 * world.addChild(new Trigger(x, y, {
+	 *     shapes: [new Rect(0, 0, 100, 100)],
+	 *     transition: "mask",
+	 *     shape: new Ellipse(0, 0, 1, 1),
+	 *     color: "#000",
+	 *     duration: 500,
+	 *     to: "mymap2",
+	 * }));
+	 * @example
+	 * // mask transition with diamond polygon
+	 * world.addChild(new Trigger(x, y, {
+	 *     shapes: [new Rect(0, 0, 100, 100)],
+	 *     transition: "mask",
+	 *     shape: new Polygon(0, 0, [
+	 *         { x: 0, y: -1 }, { x: 1, y: 0 },
+	 *         { x: 0, y: 1 }, { x: -1, y: 0 },
+	 *     ]),
+	 *     color: "#000",
+	 *     duration: 400,
+	 *     to: "mymap2",
+	 * }));
 	 */
 	constructor(x, y, settings) {
-		// call the parent constructor
 		super(x, y, settings.width || 0, settings.height || 0);
 
-		// for backward compatibility
 		this.anchorPoint.set(0, 0);
 
-		this.fade = settings.fade;
+		this.color = settings.color || settings.fade;
 		this.duration = settings.duration;
+		this.transition = settings.transition || "fade";
+		this.transitionShape = settings.shape;
 		this.fading = false;
 
-		// Tiled Settings
+		// Tiled settings
 		this.name = "Trigger";
 		this.type = settings.type;
 		this.id = settings.id;
-
-		// a temp variable
 		this.gotolevel = settings.to;
 
-		// Collect the defined trigger settings
+		// collect the defined trigger settings
 		this.triggerSettings = {
-			// the default (and only for now) action
 			event: "level",
 		};
 
-		[
+		for (const property of [
 			"type",
 			"container",
 			"onLoaded",
 			"flatten",
 			"setViewportBounds",
 			"to",
-		].forEach((property) => {
+		]) {
 			if (typeof settings[property] !== "undefined") {
 				this.triggerSettings[property] = settings[property];
 			}
-		});
+		}
 
 		// add and configure the physic body
 		let shape = settings.shapes;
@@ -89,7 +113,6 @@ export default class Trigger extends Renderable {
 		}
 		this.body = new Body(this, shape);
 		this.body.collisionType = collision.types.ACTION_OBJECT;
-		// by default only collides with PLAYER_OBJECT
 		this.body.setCollisionMask(collision.types.PLAYER_OBJECT);
 		this.body.setStatic(true);
 		this.resize(this.body.getBounds().width, this.body.getBounds().height);
@@ -100,7 +123,6 @@ export default class Trigger extends Renderable {
 	 */
 	getTriggerSettings() {
 		const world = this.ancestor.getRootAncestor();
-		// Lookup for the container instance
 		if (typeof this.triggerSettings.container === "string") {
 			this.triggerSettings.container = world.getChildByName(
 				this.triggerSettings.container,
@@ -110,32 +132,81 @@ export default class Trigger extends Renderable {
 	}
 
 	/**
-	 * @ignore
-	 */
-	onFadeComplete() {
-		const world = this.ancestor.getRootAncestor();
-		level.load(this.gotolevel, this.getTriggerSettings());
-		world.app.viewport.fadeOut(this.fade, this.duration);
-	}
-
-	/**
-	 * trigger this event
+	 * Trigger this event. Override in subclasses to customize behavior.
 	 * @protected
 	 */
 	triggerEvent() {
 		const triggerSettings = this.getTriggerSettings();
 		const world = this.ancestor.getRootAncestor();
+		const app = world.app;
+		const viewport = app.viewport;
 
 		if (triggerSettings.event === "level") {
 			this.gotolevel = triggerSettings.to;
-			// load a level
-			//console.log("going to : ", to);
-			if (this.fade && this.duration) {
+			if (this.color && this.duration) {
 				if (!this.fading) {
 					this.fading = true;
-					world.app.viewport.fadeIn(this.fade, this.duration, () => {
-						return this.onFadeComplete();
-					});
+					const gotolevel = this.gotolevel;
+					const settings = this.getTriggerSettings();
+					const color = this.color;
+					const duration = this.duration;
+					const useMask = this.transition === "mask" && this.transitionShape;
+					const shape = this.transitionShape;
+
+					// wrap the user's onLoaded to add the reveal effect
+					const userOnLoaded = settings.onLoaded;
+					settings.onLoaded = () => {
+						// re-read viewport after game.reset reassigns it
+						const vp = app.viewport;
+						// reveal effect (same type as hide)
+						if (useMask) {
+							vp.addCameraEffect(
+								new MaskEffect(vp, {
+									shape,
+									color,
+									duration,
+									direction: "reveal",
+								}),
+							);
+						} else {
+							vp.addCameraEffect(
+								new FadeEffect(vp, {
+									color,
+									duration,
+									direction: "out",
+								}),
+							);
+						}
+						// call the user's onLoaded if any
+						if (typeof userOnLoaded === "function") {
+							userOnLoaded();
+						}
+					};
+					const onComplete = () => {
+						level.load(gotolevel, settings);
+					};
+
+					// hide effect, then load level + reveal
+					if (useMask) {
+						viewport.addCameraEffect(
+							new MaskEffect(viewport, {
+								shape,
+								color,
+								duration,
+								direction: "hide",
+								onComplete,
+							}),
+						);
+					} else {
+						viewport.addCameraEffect(
+							new FadeEffect(viewport, {
+								color,
+								duration,
+								direction: "in",
+								onComplete,
+							}),
+						);
+					}
 				}
 			} else {
 				level.load(this.gotolevel, triggerSettings);
@@ -153,7 +224,7 @@ export default class Trigger extends Renderable {
 	 */
 	onCollision() {
 		if (this.name === "Trigger") {
-			this.triggerEvent.apply(this);
+			this.triggerEvent();
 		}
 		return false;
 	}

@@ -26,6 +26,13 @@
  </layer>
  <objectgroup color="#00ff00" id="5" name="Player">
   <object id="16" name="mainPlayer" x="251" y="893" width="35" height="88"/>
+  <object id="99" name="me.Trigger" x="350" y="810" width="50" height="100">
+   <properties>
+    <property name="duration" value="150"/>
+    <property name="fade" value="#fff"/>
+    <property name="to" value="map2"/>
+   </properties>
+  </object>
   <object id="17" name="me.Trigger" x="1830" y="810" width="50" height="100">
    <properties>
     <property name="duration" value="150"/>

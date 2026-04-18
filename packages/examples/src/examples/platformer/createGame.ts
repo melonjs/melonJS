@@ -1,7 +1,6 @@
 import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import {
 	Application,
-	AUTO,
 	audio,
 	device,
 	event,
@@ -11,9 +10,11 @@ import {
 	pool,
 	state,
 	TextureAtlas,
+	video,
 } from "melonjs";
 import { CoinEntity } from "./entities/coin.js";
 import { FlyEnemyEntity, SlimeEnemyEntity } from "./entities/enemies.js";
+import { LevelTrigger } from "./entities/leveltrigger.js";
 import { PlayerEntity } from "./entities/player.js";
 import { gameState } from "./gameState.js";
 import { PlayScreen } from "./play.js";
@@ -24,7 +25,7 @@ export const createGame = () => {
 	const _app = new Application(800, 600, {
 		parent: "screen",
 		scaleMethod: "flex-width",
-		renderer: AUTO,
+		renderer: video.AUTO,
 		preferWebGL1: false,
 		subPixel: false,
 		highPrecisionShader: !device.isMobile,
@@ -52,6 +53,8 @@ export const createGame = () => {
 		pool.register("SlimeEntity", SlimeEnemyEntity);
 		pool.register("FlyEntity", FlyEnemyEntity);
 		pool.register("CoinEntity", CoinEntity, true);
+		// override the built-in trigger with star mask transition
+		pool.register("me.Trigger", LevelTrigger, true);
 
 		// load the texture atlas
 		gameState.texture = new TextureAtlas(

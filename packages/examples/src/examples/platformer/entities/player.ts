@@ -291,8 +291,9 @@ export class PlayerEntity extends Sprite {
 				this.tint.setColor(255, 255, 255);
 			});
 
-			// flash the screen
+			// flash the screen and shake the camera
 			this.parentApp.viewport.fadeIn("#FFFFFF", 75);
+			this.parentApp.viewport.shake(4, 200);
 			audio.play("die", false);
 		}
 	}
