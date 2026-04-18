@@ -155,7 +155,7 @@ export default class Trigger extends Renderable {
 
 					// wrap the user's onLoaded to add the reveal effect
 					const userOnLoaded = settings.onLoaded;
-					settings.onLoaded = () => {
+					settings.onLoaded = function (levelId) {
 						// re-read viewport after game.reset reassigns it
 						const vp = app.viewport;
 						// reveal effect (same type as hide)
@@ -179,7 +179,7 @@ export default class Trigger extends Renderable {
 						}
 						// call the user's onLoaded if any
 						if (typeof userOnLoaded === "function") {
-							userOnLoaded();
+							userOnLoaded.call(this, levelId);
 						}
 					};
 					const onComplete = () => {

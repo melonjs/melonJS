@@ -993,7 +993,7 @@ describe("Camera2d", () => {
 			expect(camera.getCameraEffect(FadeEffect)).toBeDefined();
 		});
 
-		it("reset should clear all effects", () => {
+		it("reset should clear non-persistent effects", () => {
 			const { camera } = setup();
 			camera.addCameraEffect(
 				new ShakeEffect(camera, { intensity: 5, duration: 200 }),
@@ -1003,6 +1003,22 @@ describe("Camera2d", () => {
 			);
 			camera.reset();
 			expect(camera.cameraEffects).toHaveLength(0);
+		});
+
+		it("reset should preserve persistent effects", () => {
+			const { camera } = setup();
+			const fade = new FadeEffect(camera, {
+				color: "#000",
+				duration: 300,
+			});
+			fade.isPersistent = true;
+			camera.addCameraEffect(fade);
+			camera.addCameraEffect(
+				new ShakeEffect(camera, { intensity: 5, duration: 200 }),
+			);
+			camera.reset();
+			expect(camera.cameraEffects).toHaveLength(1);
+			expect(camera.getCameraEffect(FadeEffect)).toBe(fade);
 		});
 
 		it("completed effects should be auto-removed on update", () => {
@@ -1049,12 +1065,15 @@ describe("Camera2d", () => {
 			Math.random = () => {
 				return 0.8;
 			};
-			camera.shake(10, 500, camera.AXIS.BOTH);
-			camera.update(16);
-			// offset should be (0.8 - 0.5) * 10 = 3
-			expect(camera.offset.x).toBeCloseTo(3);
-			expect(camera.offset.y).toBeCloseTo(3);
-			Math.random = originalRandom;
+			try {
+				camera.shake(10, 500, camera.AXIS.BOTH);
+				camera.update(16);
+				// offset should be (0.8 - 0.5) * 10 = 3
+				expect(camera.offset.x).toBeCloseTo(3);
+				expect(camera.offset.y).toBeCloseTo(3);
+			} finally {
+				Math.random = originalRandom;
+			}
 		});
 
 		it("ShakeEffect should reset offset when complete", () => {
