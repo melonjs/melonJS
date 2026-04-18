@@ -1044,11 +1044,15 @@ describe("Camera2d", () => {
 
 		it("ShakeEffect should modify camera offset during update", () => {
 			const { camera } = setup();
+			// use a deterministic random to avoid flaky results
+			const originalRandom = Math.random;
+			Math.random = () => 0.8;
 			camera.shake(10, 500, camera.AXIS.BOTH);
 			camera.update(16);
-			// offset should be non-zero (random, but within [-5, 5])
-			const hasOffset = camera.offset.x !== 0 || camera.offset.y !== 0;
-			expect(hasOffset).toEqual(true);
+			// offset should be (0.8 - 0.5) * 10 = 3
+			expect(camera.offset.x).toBeCloseTo(3);
+			expect(camera.offset.y).toBeCloseTo(3);
+			Math.random = originalRandom;
 		});
 
 		it("ShakeEffect should reset offset when complete", () => {

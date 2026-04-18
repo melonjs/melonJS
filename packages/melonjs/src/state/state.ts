@@ -125,13 +125,13 @@ function _switchState(stateId: number): void {
 	_stopRunLoop();
 
 	// call the stage destroy method
+	// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 	if (_stages[_state]) {
-		// eslint-disable-line @typescript-eslint/no-unnecessary-condition
 		_stages[_state].stage.destroy(_app);
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 	if (_stages[stateId]) {
-		// eslint-disable-line @typescript-eslint/no-unnecessary-condition
 		// set the global variable
 		_state = stateId;
 
@@ -489,15 +489,15 @@ const state = {
 					case "fade": {
 						const color = _transitionConfig.color;
 						const duration = _transitionConfig.duration;
-						// pre-create the reveal effect so it's ready immediately
-						const revealFade = new FadeEffect(_app.viewport, {
-							color,
-							duration,
-							direction: "out",
-						});
-						revealFade.isPersistent = true;
 						_onSwitchComplete = () => {
-							_app.viewport.addCameraEffect(revealFade);
+							// create reveal with the post-switch viewport
+							_app.viewport.addCameraEffect(
+								new FadeEffect(_app.viewport, {
+									color,
+									duration,
+									direction: "out",
+								}),
+							);
 						};
 						const fadeEffect = new FadeEffect(_app.viewport, {
 							color,
@@ -520,16 +520,16 @@ const state = {
 						const shape = _transitionConfig.shape;
 						const color = _transitionConfig.color;
 						const duration = _transitionConfig.duration;
-						// pre-create the reveal effect so it's ready immediately
-						const revealMask = new MaskEffect(_app.viewport, {
-							shape,
-							color,
-							duration,
-							direction: "reveal",
-						});
-						revealMask.isPersistent = true;
 						_onSwitchComplete = () => {
-							_app.viewport.addCameraEffect(revealMask);
+							// create reveal with the post-switch viewport
+							_app.viewport.addCameraEffect(
+								new MaskEffect(_app.viewport, {
+									shape,
+									color,
+									duration,
+									direction: "reveal",
+								}),
+							);
 						};
 						const maskEffect = new MaskEffect(_app.viewport, {
 							shape,

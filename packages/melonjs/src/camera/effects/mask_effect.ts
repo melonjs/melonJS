@@ -157,7 +157,7 @@ export default class MaskEffect extends CameraEffect {
 	}
 
 	override draw(renderer: Renderer, width: number, height: number): void {
-		if (this.isComplete) {
+		if (this.isComplete && this.direction === "reveal") {
 			return;
 		}
 
