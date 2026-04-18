@@ -1046,7 +1046,9 @@ describe("Camera2d", () => {
 			const { camera } = setup();
 			// use a deterministic random to avoid flaky results
 			const originalRandom = Math.random;
-			Math.random = () => 0.8;
+			Math.random = () => {
+				return 0.8;
+			};
 			camera.shake(10, 500, camera.AXIS.BOTH);
 			camera.update(16);
 			// offset should be (0.8 - 0.5) * 10 = 3
