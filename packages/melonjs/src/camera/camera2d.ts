@@ -1,7 +1,6 @@
 import { game } from "../application/application.ts";
 import { Rect } from "./../geometries/rectangle.ts";
 import type { Color } from "../math/color.ts";
-import { colorPool } from "../math/color.ts";
 import { clamp, toBeCloseTo } from "./../math/math.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d, vector2dPool } from "../math/vector2d.ts";
@@ -17,9 +16,10 @@ import {
 	VIEWPORT_ONCHANGE,
 	VIEWPORT_ONRESIZE,
 } from "../system/event.ts";
-import type Tween from "../tweens/tween.ts";
-import { tweenPool } from "../tweens/tween.ts";
 import type Renderer from "./../video/renderer.js";
+import type CameraEffect from "./effects/camera_effect.ts";
+import FadeEffect from "./effects/fade_effect.ts";
+import ShakeEffect from "./effects/shake_effect.ts";
 
 /**
  * @import Entity from "./../renderable/entity/entity.js";
@@ -32,18 +32,6 @@ interface AxisEnum {
 	readonly HORIZONTAL: 1;
 	readonly VERTICAL: 2;
 	readonly BOTH: 3;
-}
-
-interface ShakeState {
-	intensity: number;
-	duration: number;
-	axis: number;
-	onComplete: (() => void) | null | undefined;
-}
-
-interface FadeState {
-	color: Color | null;
-	tween: Tween | null;
 }
 
 const targetV = new Vector2d();
@@ -170,22 +158,9 @@ export default class Camera2d extends Renderable {
 	follow_axis: number;
 
 	/**
-	 * shake variables
-	 * @ignore
+	 * active camera effects (shake, fade, etc.)
 	 */
-	_shake: ShakeState;
-
-	/**
-	 * flash variables
-	 * @ignore
-	 */
-	_fadeOut: FadeState;
-
-	/**
-	 * fade variables
-	 * @ignore
-	 */
-	_fadeIn: FadeState;
+	cameraEffects: CameraEffect[];
 
 	/** the camera deadzone */
 	deadzone: Rect;
@@ -229,22 +204,8 @@ export default class Camera2d extends Renderable {
 		// default value follow
 		this.follow_axis = this.AXIS.NONE;
 
-		this._shake = {
-			intensity: 0,
-			duration: 0,
-			axis: this.AXIS.BOTH,
-			onComplete: null,
-		};
-
-		this._fadeOut = {
-			color: null,
-			tween: null,
-		};
-
-		this._fadeIn = {
-			color: null,
-			tween: null,
-		};
+		// active camera effects
+		this.cameraEffects = [];
 
 		// default screen position (top-left of canvas)
 		this.screenX = 0;
@@ -411,6 +372,14 @@ export default class Camera2d extends Renderable {
 
 		// update the projection matrix
 		this._updateProjectionMatrix();
+
+		// remove non-persistent camera effects (persistent ones survive state changes)
+		for (let i = this.cameraEffects.length - 1; i >= 0; i--) {
+			if (!this.cameraEffects[i].isPersistent) {
+				this.cameraEffects[i].destroy();
+				this.cameraEffects.splice(i, 1);
+			}
+		}
 	}
 
 	/**
@@ -623,40 +592,24 @@ export default class Camera2d extends Renderable {
 		// update the camera position
 		this.updateTarget(dt);
 
-		if (this._shake.duration > 0) {
-			this._shake.duration -= dt ?? 0;
-			if (this._shake.duration <= 0) {
-				this._shake.duration = 0;
-				this.offset.setZero();
-				if (typeof this._shake.onComplete === "function") {
-					this._shake.onComplete();
-				}
-			} else {
-				if (
-					this._shake.axis === this.AXIS.BOTH ||
-					this._shake.axis === this.AXIS.HORIZONTAL
-				) {
-					this.offset.x = (Math.random() - 0.5) * this._shake.intensity;
-				}
-				if (
-					this._shake.axis === this.AXIS.BOTH ||
-					this._shake.axis === this.AXIS.VERTICAL
-				) {
-					this.offset.y = (Math.random() - 0.5) * this._shake.intensity;
+		// update all active camera effects
+		if (this.cameraEffects.length > 0) {
+			for (const fx of this.cameraEffects) {
+				fx.update(dt ?? 0);
+			}
+			// remove completed effects
+			for (let i = this.cameraEffects.length - 1; i >= 0; i--) {
+				if (this.cameraEffects[i].isComplete) {
+					this.cameraEffects[i].destroy();
+					this.cameraEffects.splice(i, 1);
 				}
 			}
-			// updated!
 			this.isDirty = true;
 		}
 
 		if (this.isDirty) {
 			//publish the corresponding message
 			emit(VIEWPORT_ONCHANGE, this.pos);
-		}
-
-		// check for fade/flash effect
-		if (this._fadeIn.tween != null || this._fadeOut.tween != null) {
-			this.isDirty = true;
 		}
 
 		if (!this.currentTransform.isIdentity()) {
@@ -688,13 +641,22 @@ export default class Camera2d extends Renderable {
 		onComplete?: () => void,
 		force?: boolean,
 	): void {
-		if (this._shake.duration === 0 || force === true) {
-			this._shake.intensity = intensity;
-			this._shake.duration = duration;
-			this._shake.axis = axis || this.AXIS.BOTH;
-			this._shake.onComplete =
-				typeof onComplete === "function" ? onComplete : undefined;
+		// check if a shake is already running
+		const existing = this.getCameraEffect(ShakeEffect);
+		if (existing && force !== true) {
+			return;
 		}
+		if (existing) {
+			this.removeCameraEffect(existing);
+		}
+		this.addCameraEffect(
+			new ShakeEffect(this, {
+				intensity,
+				duration,
+				axis: axis || this.AXIS.BOTH,
+				onComplete,
+			}),
+		);
 	}
 
 	/**
@@ -716,15 +678,14 @@ export default class Camera2d extends Renderable {
 		duration: number = 1000,
 		onComplete?: () => void,
 	): void {
-		this._fadeOut.color = colorPool.get(color);
-		this._fadeOut.tween = tweenPool
-			.get(this._fadeOut.color)
-			.to({ alpha: 0.0 }, { duration });
-		if (onComplete) {
-			this._fadeOut.tween.onComplete(onComplete);
-		}
-		this._fadeOut.tween.isPersistent = true;
-		this._fadeOut.tween.start();
+		this.addCameraEffect(
+			new FadeEffect(this, {
+				color,
+				duration,
+				direction: "out",
+				onComplete,
+			}),
+		);
 	}
 
 	/**
@@ -742,17 +703,56 @@ export default class Camera2d extends Renderable {
 		duration: number = 1000,
 		onComplete?: () => void,
 	): void {
-		this._fadeIn.color = colorPool.get(color);
-		const _alpha = this._fadeIn.color.alpha;
-		this._fadeIn.color.alpha = 0.0;
-		this._fadeIn.tween = tweenPool
-			.get(this._fadeIn.color)
-			.to({ alpha: _alpha }, { duration });
-		if (onComplete) {
-			this._fadeIn.tween.onComplete(onComplete);
+		this.addCameraEffect(
+			new FadeEffect(this, {
+				color,
+				duration,
+				direction: "in",
+				onComplete,
+			}),
+		);
+	}
+
+	/**
+	 * Add a camera effect to this camera.
+	 * @param effect - the camera effect to add
+	 * @returns the added effect
+	 * @example
+	 * camera.addCameraEffect(new ShakeEffect(camera, { intensity: 10, duration: 500 }));
+	 */
+	addCameraEffect<T extends CameraEffect>(effect: T): T {
+		this.cameraEffects.push(effect);
+		return effect;
+	}
+
+	/**
+	 * Get the first camera effect matching the given class.
+	 * @param effectClass - the effect class to search for
+	 * @returns the first matching effect, or undefined
+	 * @example
+	 * const shake = camera.getCameraEffect(ShakeEffect);
+	 */
+	getCameraEffect<T extends CameraEffect>(
+		effectClass: new (...args: any[]) => T,
+	): T | undefined {
+		return this.cameraEffects.find((fx) => fx instanceof effectClass) as
+			| T
+			| undefined;
+	}
+
+	/**
+	 * Remove a specific camera effect instance.
+	 * @param effect - the effect to remove
+	 * @example
+	 * const fade = camera.getCameraEffect(FadeEffect);
+	 * if (fade) camera.removeCameraEffect(fade);
+	 */
+	removeCameraEffect(effect: CameraEffect): void {
+		const idx = this.cameraEffects.indexOf(effect);
+		if (idx !== -1) {
+			effect.destroy();
+			this.cameraEffects.splice(idx, 1);
 		}
-		this._fadeIn.tween.isPersistent = true;
-		this._fadeIn.tween.start();
 	}
 
 	/**
@@ -836,42 +836,8 @@ export default class Camera2d extends Renderable {
 	 * @ignore
 	 */
 	drawFX(renderer: Renderer): void {
-		// cast to any to access canvas/webgl renderer-specific methods
-		const r = renderer as any;
-		// fading effect
-		if (this._fadeIn.tween) {
-			const color = this._fadeIn.color;
-			// add an overlay
-			r.save();
-			// reset all transform so that the overlay covers the whole camera area
-			r.resetTransform();
-			r.setColor(color);
-			r.fillRect(0, 0, this.width, this.height);
-			r.restore();
-			// remove the tween if over
-			if (color && color.alpha === 1.0) {
-				this._fadeIn.tween = null;
-				colorPool.release(color);
-				this._fadeIn.color = null;
-			}
-		}
-
-		// flashing effect
-		if (this._fadeOut.tween) {
-			const color = this._fadeOut.color;
-			// add an overlay
-			r.save();
-			// reset all transform so that the overlay covers the whole camera area
-			r.resetTransform();
-			r.setColor(color);
-			r.fillRect(0, 0, this.width, this.height);
-			r.restore();
-			// remove the tween if over
-			if (color && color.alpha === 0.0) {
-				this._fadeOut.tween = null;
-				colorPool.release(color);
-				this._fadeOut.color = null;
-			}
+		for (const fx of this.cameraEffects) {
+			fx.draw(renderer, this.width, this.height);
 		}
 	}
 

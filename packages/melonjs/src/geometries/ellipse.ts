@@ -359,7 +359,7 @@ export class Ellipse {
 	 * @returns new Ellipse
 	 */
 	clone() {
-		const clone = new Ellipse(
+		const clone = ellipsePool.get(
 			this.pos.x,
 			this.pos.y,
 			this.radiusV.x * 2,

@@ -1,5 +1,4 @@
 import { polygonPool } from "../../geometries/polygon.ts";
-import { warning } from "../../lang/console.js";
 import { vector2dPool } from "../../math/vector2d.ts";
 import { setPoolRegisterCallback } from "../../system/legacy_pool.js";
 import { createShapeObject } from "./factories/shape.js";
@@ -115,7 +114,9 @@ export function registerTiledObjectFactory(type, factory) {
 	}
 
 	if (typeof factories.get(type) !== "undefined") {
-		warning("overriding Tiled object factory for " + type + " type");
+		console.warn(
+			"melonJS: overriding Tiled object factory for " + type + " type",
+		);
 	}
 
 	factories.set(type, factory);
