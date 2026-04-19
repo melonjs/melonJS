@@ -19,6 +19,7 @@ import TMXTileMap from "./level/tiled/TMXTileMap.js";
 import TMXTileset from "./level/tiled/TMXTileset.js";
 import TMXTilesetGroup from "./level/tiled/TMXTilesetGroup.js";
 import * as TMXUtils from "./level/tiled/TMXUtils.js";
+import { ColorMatrix } from "./math/color_matrix.ts";
 import ParticleEmitter from "./particles/emitter.ts";
 import Particle from "./particles/particle.ts";
 import ParticleEmitterSettings from "./particles/settings.js";
@@ -67,6 +68,7 @@ import PrimitiveBatcher from "./video/webgl/batchers/primitive_batcher.js";
 import QuadBatcher from "./video/webgl/batchers/quad_batcher.js";
 import BlurEffect from "./video/webgl/effects/blur.js";
 import ChromaticAberrationEffect from "./video/webgl/effects/chromaticAberration.js";
+import ColorMatrixEffect from "./video/webgl/effects/colorMatrix.js";
 import DesaturateEffect from "./video/webgl/effects/desaturate.js";
 import DissolveEffect from "./video/webgl/effects/dissolve.js";
 import DropShadowEffect from "./video/webgl/effects/dropShadow.js";
@@ -140,6 +142,8 @@ export {
 	ChromaticAberrationEffect,
 	Collectable,
 	ColorLayer,
+	ColorMatrix,
+	ColorMatrixEffect,
 	Container,
 	DesaturateEffect,
 	DissolveEffect,

@@ -252,6 +252,151 @@ export class Matrix3d {
 	}
 
 	/**
+	 * Multiplies the current transformation with a 2D affine matrix (a, b, c, d, e, f).
+	 * The 2D matrix is promoted to 4x4 internally.
+	 * @param a - a component (scale x / cos)
+	 * @param b - b component (skew y / sin)
+	 * @param c - c component (skew x / -sin)
+	 * @param d - d component (scale y / cos)
+	 * @param e - e component (translate x)
+	 * @param f - f component (translate y)
+	 * @returns Reference to this object for method chaining
+	 */
+	transform(
+		a: number,
+		b: number,
+		c: number,
+		d: number,
+		e: number,
+		f: number,
+	): this;
+	/**
+	 * Multiplies the current transformation with a full 4x4 matrix specified as 16 individual values (column-major).
+	 * @returns Reference to this object for method chaining
+	 */
+	transform(
+		b00: number,
+		b01: number,
+		b02: number,
+		b03: number,
+		b10: number,
+		b11: number,
+		b12: number,
+		b13: number,
+		b20: number,
+		b21: number,
+		b22: number,
+		b23: number,
+		b30: number,
+		b31: number,
+		b32: number,
+		b33: number,
+	): this;
+	transform(
+		b00: number,
+		b01: number,
+		b02: number,
+		b03: number,
+		b10: number,
+		b11: number,
+		b12?: number,
+		b13?: number,
+		b20?: number,
+		b21?: number,
+		b22?: number,
+		b23?: number,
+		b30?: number,
+		b31?: number,
+		b32?: number,
+		b33?: number,
+	) {
+		// resolve all 16 components (promote 2D affine if only 6 args)
+		const argc = arguments.length;
+		if (argc !== 6 && argc !== 16) {
+			throw new Error(`transform() requires 6 or 16 arguments, got ${argc}`);
+		}
+		let c0: number, c1: number, c2: number, c3: number;
+		let c4: number, c5: number, c6: number, c7: number;
+		let c8: number, c9: number, c10: number, c11: number;
+		let c12: number, c13: number, c14: number, c15: number;
+		if (argc === 6) {
+			// 2D affine (a, b, c, d, tx, ty) → 4x4
+			c0 = b00;
+			c1 = b01;
+			c2 = 0;
+			c3 = 0;
+			c4 = b02;
+			c5 = b03;
+			c6 = 0;
+			c7 = 0;
+			c8 = 0;
+			c9 = 0;
+			c10 = 1;
+			c11 = 0;
+			c12 = b10;
+			c13 = b11;
+			c14 = 0;
+			c15 = 1;
+		} else {
+			c0 = b00;
+			c1 = b01;
+			c2 = b02;
+			c3 = b03;
+			c4 = b10;
+			c5 = b11;
+			c6 = b12!;
+			c7 = b13!;
+			c8 = b20!;
+			c9 = b21!;
+			c10 = b22!;
+			c11 = b23!;
+			c12 = b30!;
+			c13 = b31!;
+			c14 = b32!;
+			c15 = b33!;
+		}
+		const a = this.val;
+		const a00 = a[0],
+			a01 = a[1],
+			a02 = a[2],
+			a03 = a[3];
+		const a10 = a[4],
+			a11 = a[5],
+			a12 = a[6],
+			a13 = a[7];
+		const a20 = a[8],
+			a21 = a[9],
+			a22 = a[10],
+			a23 = a[11];
+		const a30 = a[12],
+			a31 = a[13],
+			a32 = a[14],
+			a33 = a[15];
+
+		a[0] = c0 * a00 + c1 * a10 + c2 * a20 + c3 * a30;
+		a[1] = c0 * a01 + c1 * a11 + c2 * a21 + c3 * a31;
+		a[2] = c0 * a02 + c1 * a12 + c2 * a22 + c3 * a32;
+		a[3] = c0 * a03 + c1 * a13 + c2 * a23 + c3 * a33;
+
+		a[4] = c4 * a00 + c5 * a10 + c6 * a20 + c7 * a30;
+		a[5] = c4 * a01 + c5 * a11 + c6 * a21 + c7 * a31;
+		a[6] = c4 * a02 + c5 * a12 + c6 * a22 + c7 * a32;
+		a[7] = c4 * a03 + c5 * a13 + c6 * a23 + c7 * a33;
+
+		a[8] = c8 * a00 + c9 * a10 + c10 * a20 + c11 * a30;
+		a[9] = c8 * a01 + c9 * a11 + c10 * a21 + c11 * a31;
+		a[10] = c8 * a02 + c9 * a12 + c10 * a22 + c11 * a32;
+		a[11] = c8 * a03 + c9 * a13 + c10 * a23 + c11 * a33;
+
+		a[12] = c12 * a00 + c13 * a10 + c14 * a20 + c15 * a30;
+		a[13] = c12 * a01 + c13 * a11 + c14 * a21 + c15 * a31;
+		a[14] = c12 * a02 + c13 * a12 + c14 * a22 + c15 * a32;
+		a[15] = c12 * a03 + c13 * a13 + c14 * a23 + c15 * a33;
+
+		return this;
+	}
+
+	/**
 	 * Transpose the value of this matrix.
 	 * @returns Reference to this object for method chaining
 	 */

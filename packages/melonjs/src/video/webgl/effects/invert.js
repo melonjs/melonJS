@@ -1,4 +1,4 @@
-import ShaderEffect from "../shadereffect.js";
+import ColorMatrixEffect from "./colorMatrix.js";
 
 /**
  * A shader effect that inverts the colors of the sprite.
@@ -11,27 +11,17 @@ import ShaderEffect from "../shadereffect.js";
  * // partial inversion
  * mySprite.shader = new InvertEffect(renderer, { intensity: 0.5 });
  */
-export default class InvertEffect extends ShaderEffect {
+export default class InvertEffect extends ColorMatrixEffect {
 	/**
 	 * @param {import("../webgl_renderer.js").default} renderer - the current renderer instance
 	 * @param {object} [options] - effect options
 	 * @param {number} [options.intensity=1.0] - inversion intensity (0.0 = original, 1.0 = fully inverted)
 	 */
 	constructor(renderer, options = {}) {
-		super(
-			renderer,
-			`
-			uniform float uInvertIntensity;
-			vec4 apply(vec4 color, vec2 uv) {
-				vec3 inverted = vec3(color.a) - color.rgb;
-				return vec4(mix(color.rgb, inverted, uInvertIntensity), color.a);
-			}
-			`,
-		);
-
+		super(renderer);
 		this.intensity =
 			typeof options.intensity === "number" ? options.intensity : 1.0;
-		this.setUniform("uInvertIntensity", this.intensity);
+		this.invertColors(this.intensity);
 	}
 
 	/**
@@ -40,6 +30,6 @@ export default class InvertEffect extends ShaderEffect {
 	 */
 	setIntensity(value) {
 		this.intensity = Math.max(0, Math.min(1, value));
-		this.setUniform("uInvertIntensity", this.intensity);
+		this.reset().invertColors(this.intensity);
 	}
 }
