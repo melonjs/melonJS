@@ -109,12 +109,12 @@ export class Matrix2d {
 
 	/**
 	 * Multiplies the current transformation with the matrix described by the arguments of this method.
-	 * @param a a component
-	 * @param b b component
-	 * @param c c component
-	 * @param d d component
-	 * @param e e component
-	 * @param f f component
+	 * @param a - a component (scale x / cos)
+	 * @param b - b component (skew y / sin)
+	 * @param c - c component (skew x / -sin)
+	 * @param d - d component (scale y / cos)
+	 * @param e - e component (translate x)
+	 * @param f - f component (translate y)
 	 * @returns Reference to this object for method chaining
 	 */
 	transform(a: number, b: number, c: number, d: number, e: number, f: number) {

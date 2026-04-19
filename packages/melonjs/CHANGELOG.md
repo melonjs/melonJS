@@ -14,10 +14,14 @@
 - Camera: `MaskEffect` — shape-based mask transition effect using Ellipse or Polygon. Supports `direction: "hide"` (shape shrinks) and `direction: "reveal"` (shape expands) with configurable color and duration. Uses inverted clip masking on both Canvas (evenodd) and WebGL (stencil).
 - Trigger: `transition` setting — accepts `"fade"` (default, backward compatible) or `"mask"` for shape-based level transitions. When `"mask"` is used, a `shape` setting (Ellipse or Polygon) defines the mask geometry.
 - Trigger: `color` setting replaces legacy `fade` property (backward compatible — `fade` still works as fallback)
+- Math: `ColorMatrix` class extending `Matrix3d` — chainable color adjustment methods (`brightness`, `contrast`, `saturate`, `hueRotate`, `sepia`, `invertColors`) using zero-allocation `transform()` on the parent matrix
+- Math: `Matrix3d.transform()` — accepts either 16 values (full 4x4) or 6 values (2D affine, promoted to 4x4). Mirrors the `Matrix2d.transform()` API.
+- WebGL: `ColorMatrixEffect` shader effect — applies a `ColorMatrix` to any renderable or camera. Exposes chainable color methods (`brightness`, `contrast`, `saturate`, `hueRotate`, `sepia`, `invertColors`, `reset`) that auto-push the GPU uniform.
 
 ### Changed
 - Camera: `shake()`, `fadeIn()`, `fadeOut()` are now convenience wrappers that create `ShakeEffect`/`FadeEffect` instances — same signatures, fully backward compatible
 - Trigger: internally uses `FadeEffect`/`MaskEffect` instead of `viewport.fadeIn()`/`viewport.fadeOut()`, with both hide and reveal effects
+- WebGL: `SepiaEffect`, `InvertEffect`, `DesaturateEffect` now extend `ColorMatrixEffect` — share a single color matrix shader instead of individual GLSL shaders
 
 ### Fixed
 - Canvas: `setMask(shape, true)` now uses `evenodd` clipping for proper inverted mask support (was using `destination-atop` composite which didn't clip subsequent draws)
