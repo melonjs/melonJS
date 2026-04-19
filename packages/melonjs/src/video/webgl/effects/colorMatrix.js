@@ -138,22 +138,8 @@ export default class ColorMatrixEffect extends ShaderEffect {
 
 	/**
 	 * Multiplies the current matrix with a transform described by individual values.
-	 * @param {number} a - value
-	 * @param {number} b - value
-	 * @param {number} c - value
-	 * @param {number} d - value
-	 * @param {number} e - value
-	 * @param {number} f - value
-	 * @param {number} [g] - value
-	 * @param {number} [h] - value
-	 * @param {number} [i] - value
-	 * @param {number} [j] - value
-	 * @param {number} [k] - value
-	 * @param {number} [l] - value
-	 * @param {number} [m] - value
-	 * @param {number} [n] - value
-	 * @param {number} [o] - value
-	 * @param {number} [p] - value
+	 * Accepts either 6 values (2D affine: a, b, c, d, e, f) or 16 values (full 4x4 column-major).
+	 * @param {...number} args - 6 or 16 numeric values
 	 * @returns {this} this instance for chaining
 	 */
 	transform(...args) {

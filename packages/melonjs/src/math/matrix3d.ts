@@ -252,12 +252,7 @@ export class Matrix3d {
 	}
 
 	/**
-	 * Multiplies the current transformation with the matrix described by the arguments of this method.
-	 * Accepts either 16 values (full 4x4) or 6 values (2D affine: a, b, c, d, tx, ty — promoted to 4x4).
-	 * @returns Reference to this object for method chaining
-	 */
-	/**
-	 * Multiplies the current transformation with a 2D affine matrix.
+	 * Multiplies the current transformation with a 2D affine matrix (a, b, c, d, e, f).
 	 * The 2D matrix is promoted to 4x4 internally.
 	 * @param a - a component (scale x / cos)
 	 * @param b - b component (skew y / sin)
@@ -316,11 +311,15 @@ export class Matrix3d {
 		b33?: number,
 	) {
 		// resolve all 16 components (promote 2D affine if only 6 args)
+		const argc = arguments.length;
+		if (argc !== 6 && argc !== 16) {
+			throw new Error(`transform() requires 6 or 16 arguments, got ${argc}`);
+		}
 		let c0: number, c1: number, c2: number, c3: number;
 		let c4: number, c5: number, c6: number, c7: number;
 		let c8: number, c9: number, c10: number, c11: number;
 		let c12: number, c13: number, c14: number, c15: number;
-		if (arguments.length === 6) {
+		if (argc === 6) {
 			// 2D affine (a, b, c, d, tx, ty) → 4x4
 			c0 = b00;
 			c1 = b01;
