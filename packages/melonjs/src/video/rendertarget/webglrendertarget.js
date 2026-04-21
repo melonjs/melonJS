@@ -23,7 +23,9 @@ export default class WebGLRenderTarget extends RenderTarget {
 		this.framebuffer = gl.createFramebuffer();
 
 		// create color texture — use TEXTURE0 explicitly to avoid corrupting
-		// other texture units that the multi-texture batcher may have active
+		// other texture units that the multi-texture batcher may have active.
+		// Save/restore the active unit so the batcher's cache stays in sync.
+		const prevUnit = gl.getParameter(gl.ACTIVE_TEXTURE);
 		this.texture = gl.createTexture();
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
@@ -90,10 +92,11 @@ export default class WebGLRenderTarget extends RenderTarget {
 			);
 		}
 
-		// unbind
+		// unbind and restore the previously active texture unit
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 		gl.bindTexture(gl.TEXTURE_2D, null);
+		gl.activeTexture(prevUnit);
 	}
 
 	/**
@@ -126,7 +129,9 @@ export default class WebGLRenderTarget extends RenderTarget {
 		this.height = height;
 
 		// resize color texture — use TEXTURE0 explicitly to avoid corrupting
-		// other texture units that the multi-texture batcher may have active
+		// other texture units that the multi-texture batcher may have active.
+		// Save/restore the active unit so the batcher's cache stays in sync.
+		const prevUnit = gl.getParameter(gl.ACTIVE_TEXTURE);
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
 		gl.texImage2D(
@@ -152,6 +157,7 @@ export default class WebGLRenderTarget extends RenderTarget {
 
 		gl.bindTexture(gl.TEXTURE_2D, null);
 		gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+		gl.activeTexture(prevUnit);
 	}
 
 	/**
