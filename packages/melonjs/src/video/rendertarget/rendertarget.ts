@@ -90,10 +90,14 @@ export default abstract class RenderTarget {
 		canvas.height = this.height;
 		const ctx = canvas.getContext("2d")!;
 		ctx.putImageData(imageData, 0, 0);
-		return new Promise((resolve) => {
+		return new Promise((resolve, reject) => {
 			canvas.toBlob(
 				(blob) => {
-					resolve(blob!);
+					if (blob) {
+						resolve(blob);
+					} else {
+						reject(new Error(`toBlob failed for type "${type}"`));
+					}
 				},
 				type,
 				quality,

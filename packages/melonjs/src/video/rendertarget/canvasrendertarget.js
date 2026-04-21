@@ -226,15 +226,27 @@ class CanvasRenderTarget extends RenderTarget {
 			return this.canvas.convertToBlob({ type, quality });
 		}
 		// HTMLCanvasElement path
-		return new Promise((resolve) => {
+		return new Promise((resolve, reject) => {
 			this.canvas.toBlob(
 				(blob) => {
-					resolve(blob);
+					if (blob) {
+						resolve(blob);
+					} else {
+						reject(new Error(`toBlob failed for type "${type}"`));
+					}
 				},
 				type,
 				quality,
 			);
 		});
+	}
+
+	/**
+	 * Creates an ImageBitmap directly from the canvas (avoids the getImageData round-trip).
+	 * @returns {Promise<ImageBitmap>} A Promise resolving to an ImageBitmap
+	 */
+	toImageBitmap() {
+		return globalThis.createImageBitmap(this.canvas);
 	}
 
 	/**

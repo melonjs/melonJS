@@ -53,8 +53,13 @@ export default class RenderTargetPool {
 	 * @returns {RenderTarget} the capture target (ready to bind)
 	 */
 	begin(isCamera, effectCount, width, height) {
+		const newBase = isCamera ? 0 : 2;
+		// guard against nested sprite post-effect passes (not yet supported)
+		if (!isCamera && this._activeBase === newBase) {
+			return this.get(this._activeBase, width, height);
+		}
 		this._previousBase = this._activeBase;
-		this._activeBase = isCamera ? 0 : 2;
+		this._activeBase = newBase;
 		const rt = this.get(this._activeBase, width, height);
 		if (effectCount > 1) {
 			this.get(this._activeBase + 1, width, height);
@@ -121,5 +126,7 @@ export default class RenderTargetPool {
 			}
 		}
 		this._pool.length = 0;
+		this._activeBase = -1;
+		this._previousBase = -1;
 	}
 }

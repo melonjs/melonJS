@@ -284,6 +284,8 @@ export default class Renderer {
 		});
 		if (effects.length === 1) {
 			this.customShader = effects[0];
+		} else {
+			this.customShader = undefined;
 		}
 		return false;
 	}

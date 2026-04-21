@@ -497,6 +497,7 @@ export default class WebGLRenderer extends Renderer {
 			return fx.enabled !== false;
 		});
 		if (effects.length === 0) {
+			this.customShader = undefined;
 			return false;
 		}
 		// single effect on non-managed renderable: fast path via customShader (no FBO)
@@ -504,6 +505,9 @@ export default class WebGLRenderer extends Renderer {
 			this.customShader = effects[0];
 			return false;
 		}
+
+		// multi-pass FBO path: clear customShader so children render with default shader
+		this.customShader = undefined;
 
 		const isCamera = renderable._postEffectManaged;
 		const canvas = this.getCanvas();
