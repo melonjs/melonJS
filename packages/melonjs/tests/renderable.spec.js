@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { Container, Renderable } from "../src/index.js";
+import { boot, Container, Renderable, video } from "../src/index.js";
 
 describe("Renderable", () => {
 	describe("bounds updates", () => {
@@ -113,6 +113,285 @@ describe("Renderable", () => {
 			childContainer.floating = false;
 			renderable.floating = true;
 			expect(renderable.isFloating).toEqual(true);
+		});
+	});
+
+	describe("postEffects", () => {
+		let renderable;
+		beforeEach(() => {
+			renderable = new Renderable(0, 0, 100, 100);
+		});
+
+		it("should start with an empty postEffects array", () => {
+			expect(renderable.postEffects).toEqual([]);
+		});
+
+		it("addPostEffect should add and return the effect", () => {
+			const effect = { enabled: true };
+			const result = renderable.addPostEffect(effect);
+			expect(result).toBe(effect);
+			expect(renderable.postEffects).toHaveLength(1);
+			expect(renderable.postEffects[0]).toBe(effect);
+		});
+
+		it("addPostEffect should support multiple effects", () => {
+			const a = { enabled: true };
+			const b = { enabled: true };
+			renderable.addPostEffect(a);
+			renderable.addPostEffect(b);
+			expect(renderable.postEffects).toHaveLength(2);
+			expect(renderable.postEffects[0]).toBe(a);
+			expect(renderable.postEffects[1]).toBe(b);
+		});
+
+		it("getPostEffect with class should find by instanceof", () => {
+			class EffectA {
+				constructor() {
+					this.enabled = true;
+				}
+			}
+			class EffectB {
+				constructor() {
+					this.enabled = true;
+				}
+			}
+			const a = new EffectA();
+			const b = new EffectB();
+			renderable.addPostEffect(a);
+			renderable.addPostEffect(b);
+			expect(renderable.getPostEffect(EffectA)).toBe(a);
+			expect(renderable.getPostEffect(EffectB)).toBe(b);
+		});
+
+		it("getPostEffect with class should return undefined if not found", () => {
+			class EffectA {
+				constructor() {
+					this.enabled = true;
+				}
+			}
+			expect(renderable.getPostEffect(EffectA)).toBeUndefined();
+		});
+
+		it("getPostEffect without args should return the full array", () => {
+			const a = { enabled: true };
+			renderable.addPostEffect(a);
+			const result = renderable.getPostEffect();
+			expect(result).toBe(renderable.postEffects);
+			expect(result).toHaveLength(1);
+		});
+
+		it("removePostEffect should remove the effect", () => {
+			const a = { enabled: true };
+			const b = { enabled: true };
+			renderable.addPostEffect(a);
+			renderable.addPostEffect(b);
+			renderable.removePostEffect(a);
+			expect(renderable.postEffects).toHaveLength(1);
+			expect(renderable.postEffects[0]).toBe(b);
+		});
+
+		it("removePostEffect should call destroy if available", () => {
+			let destroyed = false;
+			const effect = {
+				enabled: true,
+				destroy() {
+					destroyed = true;
+				},
+			};
+			renderable.addPostEffect(effect);
+			renderable.removePostEffect(effect);
+			expect(destroyed).toEqual(true);
+		});
+
+		it("removePostEffect should be a no-op for unknown effects", () => {
+			const a = { enabled: true };
+			const b = { enabled: true };
+			renderable.addPostEffect(a);
+			renderable.removePostEffect(b);
+			expect(renderable.postEffects).toHaveLength(1);
+		});
+
+		it("direct array assignment should work", () => {
+			const a = { enabled: true };
+			const b = { enabled: true };
+			renderable.postEffects = [a, b];
+			expect(renderable.postEffects).toHaveLength(2);
+			expect(renderable.postEffects[0]).toBe(a);
+		});
+	});
+
+	describe("shader (deprecated getter/setter)", () => {
+		let renderable;
+		beforeEach(() => {
+			renderable = new Renderable(0, 0, 100, 100);
+		});
+
+		it("shader getter should return postEffects[0]", () => {
+			const effect = { enabled: true };
+			renderable.postEffects = [effect];
+			expect(renderable.shader).toBe(effect);
+		});
+
+		it("shader getter should return undefined when no effects", () => {
+			expect(renderable.shader).toBeUndefined();
+		});
+
+		it("shader setter should set postEffects to [value]", () => {
+			const effect = { enabled: true };
+			renderable.shader = effect;
+			expect(renderable.postEffects).toHaveLength(1);
+			expect(renderable.postEffects[0]).toBe(effect);
+		});
+
+		it("shader setter with undefined should clear postEffects", () => {
+			renderable.addPostEffect({ enabled: true });
+			renderable.addPostEffect({ enabled: true });
+			renderable.shader = undefined;
+			expect(renderable.postEffects).toHaveLength(0);
+		});
+
+		it("shader setter should replace all existing effects", () => {
+			renderable.addPostEffect({ enabled: true, id: 1 });
+			renderable.addPostEffect({ enabled: true, id: 2 });
+			const newEffect = { enabled: true, id: 3 };
+			renderable.shader = newEffect;
+			expect(renderable.postEffects).toHaveLength(1);
+			expect(renderable.postEffects[0]).toBe(newEffect);
+		});
+	});
+
+	describe("destroy cleans up postEffects", () => {
+		it("should destroy all effects on renderable destroy", () => {
+			const renderable = new Renderable(0, 0, 100, 100);
+			let destroyCount = 0;
+			renderable.addPostEffect({
+				enabled: true,
+				destroy() {
+					destroyCount++;
+				},
+			});
+			renderable.addPostEffect({
+				enabled: true,
+				destroy() {
+					destroyCount++;
+				},
+			});
+			renderable.destroy();
+			expect(destroyCount).toEqual(2);
+			expect(renderable.postEffects).toHaveLength(0);
+		});
+	});
+
+	describe("postEffect pipeline integration", () => {
+		const setup = () => {
+			boot();
+			video.init(800, 600, {
+				parent: "screen",
+				scale: "auto",
+				renderer: video.CANVAS,
+			});
+		};
+
+		it("preDraw with single effect should set customShader", () => {
+			setup();
+			const renderer = video.renderer;
+			const renderable = new Renderable(0, 0, 100, 100);
+			const effect = { enabled: true };
+			renderable.addPostEffect(effect);
+
+			renderable.preDraw(renderer);
+			expect(renderer.customShader).toBe(effect);
+			renderable.postDraw(renderer);
+		});
+
+		it("preDraw with no effects should not set customShader", () => {
+			setup();
+			const renderer = video.renderer;
+			const renderable = new Renderable(0, 0, 100, 100);
+
+			renderable.preDraw(renderer);
+			expect(renderer.customShader).toBeUndefined();
+			renderable.postDraw(renderer);
+		});
+
+		it("preDraw/postDraw should not leak customShader state", () => {
+			setup();
+			const renderer = video.renderer;
+			const renderable = new Renderable(0, 0, 100, 100);
+			const effect = { enabled: true };
+			renderable.addPostEffect(effect);
+
+			renderable.preDraw(renderer);
+			// during draw, customShader should be set (single-effect fast path)
+			expect(renderer.customShader).toBe(effect);
+			renderable.postDraw(renderer);
+			// after postDraw's restore(), customShader should be cleared
+			expect(renderer.customShader).toBeUndefined();
+		});
+
+		it("disabled single effect should not be set as customShader", () => {
+			setup();
+			const renderer = video.renderer;
+			const renderable = new Renderable(0, 0, 100, 100);
+			renderable.addPostEffect({ enabled: false });
+
+			renderable.preDraw(renderer);
+			// disabled effect should not set customShader
+			expect(renderer.customShader).toBeUndefined();
+			renderable.postDraw(renderer);
+			expect(renderer.customShader).toBeUndefined();
+		});
+
+		it("_postEffectManaged flag should prevent preDraw from calling beginPostEffect", () => {
+			setup();
+			const renderer = video.renderer;
+			const renderable = new Renderable(0, 0, 100, 100);
+			renderable.addPostEffect({ enabled: true });
+			renderable.addPostEffect({ enabled: true });
+
+			// simulate camera-managed mode
+			renderable._postEffectManaged = true;
+			renderable.preDraw(renderer);
+			// managed mode: beginPostEffect is NOT called from preDraw,
+			// so customShader should not be set
+			expect(renderer.customShader).toBeUndefined();
+			renderable.postDraw(renderer);
+			expect(renderer.customShader).toBeUndefined();
+			renderable._postEffectManaged = false;
+		});
+
+		it("multiple effects on renderable should trigger beginPostEffect", () => {
+			setup();
+			const renderer = video.renderer;
+			const renderable = new Renderable(0, 0, 100, 100);
+			renderable.addPostEffect({ enabled: true });
+			renderable.addPostEffect({ enabled: true });
+
+			// on Canvas renderer, beginPostEffect returns false (no-op)
+			// but the code path should be exercised without error
+			renderable.preDraw(renderer);
+			renderable.postDraw(renderer);
+		});
+
+		it("clearPostEffects should remove all and destroy", () => {
+			setup();
+			const renderable = new Renderable(0, 0, 100, 100);
+			let count = 0;
+			renderable.addPostEffect({
+				enabled: true,
+				destroy() {
+					count++;
+				},
+			});
+			renderable.addPostEffect({
+				enabled: true,
+				destroy() {
+					count++;
+				},
+			});
+			renderable.clearPostEffects();
+			expect(renderable.postEffects).toHaveLength(0);
+			expect(count).toEqual(2);
 		});
 	});
 });

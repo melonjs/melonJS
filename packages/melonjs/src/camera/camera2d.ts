@@ -228,6 +228,9 @@ export default class Camera2d extends Renderable {
 		// enable event detection on the camera
 		this.isKinematic = false;
 
+		// camera manages its own FBO lifecycle in draw()
+		this._postEffectManaged = true;
+
 		this.bounds.setMinMax(minX, minY, maxX, maxY);
 
 		// update the projection matrix
@@ -856,7 +859,7 @@ export default class Camera2d extends Renderable {
 		const translateX = this.pos.x + this.offset.x + containerOffsetX;
 		const translateY = this.pos.y + this.offset.y + containerOffsetY;
 
-		// post-effect: bind FBO if a shader effect is set (WebGL only)
+		// post-effect: bind FBO if shader effects are set (WebGL only)
 		const usePostEffect = r.beginPostEffect(this);
 
 		// translate the world coordinates by default to screen coordinates

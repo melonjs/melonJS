@@ -4,9 +4,13 @@
 
 ### Added
 - Camera: FBO-based post-processing pipeline — assign a `ShaderEffect` to any camera's `shader` property to apply full-screen post-effects (vignette, scanlines, desaturation, etc.). Works with multiple cameras independently (e.g. main camera + minimap with different effects). Renderer manages FBO lifecycle via `beginPostEffect()`/`endPostEffect()`/`blitEffect()` methods.
+- Renderable: multi-pass post-effect chaining — `postEffects` array replaces single `shader` property. Multiple effects are applied in sequence via FBO ping-pong (e.g. `sprite.addPostEffect(new DesaturateEffect(r)); sprite.addPostEffect(new InvertEffect(r));`). Single-effect renderables use a zero-overhead `customShader` fast path (no FBO). Camera manages its own FBO lifecycle; per-sprite effects use a separate FBO pair.
+- Renderable: `addPostEffect(effect)`, `getPostEffect(EffectClass?)`, `removePostEffect(effect)`, `clearPostEffects()` — manage post-processing shader effects on any renderable
+- Renderable: `shader` getter/setter — backward-compatible access to `postEffects[0]` (deprecated)
+- Rendering: `RenderTarget` abstract base class — renderer-agnostic interface for offscreen render targets (`bind`, `unbind`, `resize`, `clear`, `destroy`, `getImageData`, `toBlob`, `toImageBitmap`, `toDataURL`). Concrete implementations: `WebGLRenderTarget` (FBO) and `CanvasRenderTarget` (canvas surface). Designed for future WebGPU support.
+- Rendering: `RenderTargetPool` — renderer-agnostic pool for post-effect ping-pong render targets. Uses a factory function provided by the renderer, no GL dependency. Camera effects use pool indices 0+1, sprite effects use indices 2+3.
+- Renderer: `setViewport()`, `clearRenderTarget()`, `enableScissor()`, `disableScissor()`, `setBlendEnabled()` — renderer-agnostic state methods on the base Renderer (no-ops for Canvas), implemented on WebGLRenderer. Eliminates direct GL calls from the post-effect pipeline.
 - WebGL: `VignetteEffect` built-in shader effect — darkens screen edges to draw focus to the center, with configurable `strength` and `size` parameters
-- WebGL: `WebGLRenderTarget` class — reusable FBO wrapper (framebuffer + color texture + depth/stencil renderbuffer) with bind/unbind/resize/destroy lifecycle
-- Renderer: `beginPostEffect(camera)`, `endPostEffect(camera)`, and `blitEffect(source, x, y, w, h, shader)` methods on the base Renderer (no-op for Canvas) and WebGLRenderer
 - RenderState: `currentShader` is now part of the save/restore stack — custom shaders are properly scoped per-renderable without leaking to siblings or parent cameras
 - Camera: extensible camera effect system — `CameraEffect` base class with `update(dt)`, `draw(renderer, w, h)`, `destroy()` lifecycle. Add/get/remove effects via `addCameraEffect()`, `getCameraEffect(EffectClass)`, `removeCameraEffect(effect)` on any Camera2d.
 - Camera: `ShakeEffect` — extracted shake logic into a standalone camera effect class with `intensity`, `duration`, `axis`, and `onComplete` support. Multiple shakes can coexist.
@@ -22,11 +26,16 @@
 - Camera: `shake()`, `fadeIn()`, `fadeOut()` are now convenience wrappers that create `ShakeEffect`/`FadeEffect` instances — same signatures, fully backward compatible
 - Trigger: internally uses `FadeEffect`/`MaskEffect` instead of `viewport.fadeIn()`/`viewport.fadeOut()`, with both hide and reveal effects
 - WebGL: `SepiaEffect`, `InvertEffect`, `DesaturateEffect` now extend `ColorMatrixEffect` — share a single color matrix shader instead of individual GLSL shaders
+- Rendering: `WebGLRenderTarget` and `CanvasRenderTarget` now extend the abstract `RenderTarget` base class
+- Rendering: FBO pool refactored from WebGL-specific `FBOPool` to renderer-agnostic `RenderTargetPool` with factory pattern
+- Canvas: `CanvasRenderTarget` save/restore now properly syncs `customShader` with the render state stack (mirrors WebGLRenderer behavior)
 
 ### Fixed
 - Canvas: `setMask(shape, true)` now uses `evenodd` clipping for proper inverted mask support (was using `destination-atop` composite which didn't clip subsequent draws)
 - Ellipse: `clone()` now uses the ellipse pool instead of `new Ellipse()` — consistent with `Polygon.clone()` which already uses its pool
 - TMXObjectFactory: override warning now uses `console.warn()` instead of the deprecation `warning()` function (was showing "deprecated since version undefined")
+- WebGL: `WebGLRenderTarget` constructor and `resize()` now explicitly use `TEXTURE0` to avoid corrupting the multi-texture batcher's texture unit bindings
+- WebGL: post-effect pipeline now explicitly sets viewport on every FBO bind and saves/restores the projection matrix, fixing rendering issues after canvas resize
 
 
 ## [19.1.0] (melonJS 2) - _2026-04-16_

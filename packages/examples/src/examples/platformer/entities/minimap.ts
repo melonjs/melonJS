@@ -26,7 +26,7 @@ export class MinimapCamera extends Camera2d {
 		event.on(event.CANVAS_ONRESIZE, this.boundOnResize);
 
 		// apply subtle vignette post-process effect on the minimap
-		this.shader = new VignetteEffect(game.renderer);
+		this.addPostEffect(new VignetteEffect(game.renderer));
 
 		const currentLevel = level.getCurrentLevel();
 		if (currentLevel) {
