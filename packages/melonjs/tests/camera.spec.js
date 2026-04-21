@@ -3,6 +3,7 @@ import {
 	boot,
 	Camera2d,
 	CameraEffect,
+	ColorMatrix,
 	Ellipse,
 	FadeEffect,
 	game,
@@ -1475,6 +1476,78 @@ describe("Camera2d", () => {
 
 			// restore world pos
 			game.world.pos.set(0, 0, 0);
+		});
+	});
+
+	describe("colorMatrix", () => {
+		it("should default to identity", () => {
+			setup();
+			const cam = new Camera2d(0, 0, 800, 600);
+			expect(cam.colorMatrix).toBeInstanceOf(ColorMatrix);
+			expect(cam.colorMatrix.isIdentity()).toBe(true);
+		});
+
+		it("should not add effect to postEffects when identity", () => {
+			setup();
+			const cam = new Camera2d(0, 0, 800, 600);
+			cam.draw(video.renderer, game.world);
+			expect(cam.postEffects).toHaveLength(0);
+		});
+
+		it("non-identity should lazily create the internal effect", () => {
+			setup();
+			const cam = new Camera2d(0, 0, 800, 600);
+			expect(cam._colorMatrixEffect).toBeNull();
+			cam.colorMatrix.contrast(1.2);
+			cam.draw(video.renderer, game.world);
+			// effect created but removed from postEffects after draw (transient)
+			expect(cam._colorMatrixEffect).not.toBeNull();
+		});
+
+		it("colorMatrix effect should not persist in postEffects after draw", () => {
+			setup();
+			const cam = new Camera2d(0, 0, 800, 600);
+			cam.colorMatrix.saturate(1.5);
+			cam.draw(video.renderer, game.world);
+			// transient — removed after endPostEffect
+			expect(cam.postEffects.indexOf(cam._colorMatrixEffect)).toBe(-1);
+		});
+
+		it("user effects should not be affected by colorMatrix lifecycle", () => {
+			setup();
+			const cam = new Camera2d(0, 0, 800, 600);
+			cam.colorMatrix.saturate(1.5);
+			const other = { enabled: true };
+			cam.addPostEffect(other);
+			cam.draw(video.renderer, game.world);
+			// user effect persists, colorMatrix effect is transient
+			expect(cam.postEffects.indexOf(other)).not.toBe(-1);
+			expect(cam.postEffects.indexOf(cam._colorMatrixEffect)).toBe(-1);
+		});
+
+		it("reset to identity should not create or add effect", () => {
+			setup();
+			const cam = new Camera2d(0, 0, 800, 600);
+			cam.colorMatrix.contrast(1.2);
+			cam.draw(video.renderer, game.world);
+			// reset to identity
+			cam.colorMatrix.identity();
+			cam.draw(video.renderer, game.world);
+			// no colorMatrix effect in postEffects
+			expect(cam.postEffects.indexOf(cam._colorMatrixEffect)).toBe(-1);
+		});
+
+		it("clearPostEffects should not prevent colorMatrix from working", () => {
+			setup();
+			const cam = new Camera2d(0, 0, 800, 600);
+			cam.colorMatrix.brightness(1.3);
+			cam.draw(video.renderer, game.world);
+			// internal effect was created
+			expect(cam._colorMatrixEffect).not.toBeNull();
+			cam.clearPostEffects();
+			// draw again — colorMatrix still works (effect recreated/re-added transiently)
+			cam.draw(video.renderer, game.world);
+			expect(cam._colorMatrixEffect).not.toBeNull();
 		});
 	});
 });

@@ -123,9 +123,12 @@ export default abstract class RenderTarget {
 	toDataURL(type = "image/png", quality?: number): Promise<string> {
 		return this.toBlob(type, quality).then((blob) => {
 			const reader = new FileReader();
-			return new Promise<string>((resolve) => {
+			return new Promise<string>((resolve, reject) => {
 				reader.onloadend = () => {
 					resolve(reader.result as string);
+				};
+				reader.onerror = () => {
+					reject(new Error(reader.error?.message ?? "FileReader failed"));
 				};
 				reader.readAsDataURL(blob);
 			});

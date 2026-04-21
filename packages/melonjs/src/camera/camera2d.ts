@@ -1,6 +1,7 @@
 import { game } from "../application/application.ts";
 import { Rect } from "./../geometries/rectangle.ts";
 import type { Color } from "../math/color.ts";
+import { ColorMatrix } from "../math/color_matrix.ts";
 import { clamp, toBeCloseTo } from "./../math/math.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d, vector2dPool } from "../math/vector2d.ts";
@@ -17,6 +18,7 @@ import {
 	VIEWPORT_ONRESIZE,
 } from "../system/event.ts";
 import type Renderer from "./../video/renderer.js";
+import ColorMatrixEffect from "./../video/webgl/effects/colorMatrix.js";
 import type CameraEffect from "./effects/camera_effect.ts";
 import FadeEffect from "./effects/fade_effect.ts";
 import ShakeEffect from "./effects/shake_effect.ts";
@@ -162,6 +164,22 @@ export default class Camera2d extends Renderable {
 	 */
 	cameraEffects: CameraEffect[];
 
+	/**
+	 * A built-in color transformation matrix applied as the final post-processing pass.
+	 * Provides convenient color grading (brightness, contrast, saturation, etc.)
+	 * that is always applied after any effects added via {@link addPostEffect}.
+	 * When set to identity (default), no effect is applied and there is zero overhead.
+	 * @example
+	 * // warm HDR-like color grading
+	 * camera.colorMatrix.contrast(1.2).saturate(1.1);
+	 * // reset to no color grading
+	 * camera.colorMatrix.identity();
+	 */
+	colorMatrix: ColorMatrix;
+
+	/** @ignore */
+	_colorMatrixEffect: ColorMatrixEffect | null;
+
 	/** the camera deadzone */
 	deadzone: Rect;
 
@@ -230,6 +248,9 @@ export default class Camera2d extends Renderable {
 
 		// camera manages its own FBO lifecycle in draw()
 		this._postEffectManaged = true;
+
+		this.colorMatrix = new ColorMatrix();
+		this._colorMatrixEffect = null;
 
 		this.bounds.setMinMax(minX, minY, maxX, maxY);
 
@@ -859,6 +880,15 @@ export default class Camera2d extends Renderable {
 		const translateX = this.pos.x + this.offset.x + containerOffsetX;
 		const translateY = this.pos.y + this.offset.y + containerOffsetY;
 
+		// sync the built-in colorMatrix: append as final pass if non-identity
+		if (!this.colorMatrix.isIdentity()) {
+			if (!this._colorMatrixEffect) {
+				this._colorMatrixEffect = new ColorMatrixEffect(renderer as any);
+			}
+			this._colorMatrixEffect.reset().multiply(this.colorMatrix);
+			this.postEffects.push(this._colorMatrixEffect);
+		}
+
 		// post-effect: bind FBO if shader effects are set (WebGL only)
 		const usePostEffect = r.beginPostEffect(this);
 
@@ -932,7 +962,29 @@ export default class Camera2d extends Renderable {
 		// post-effect: unbind FBO and blit to screen through shader effect
 		r.endPostEffect(this);
 
+		// remove the transient colorMatrix effect so it doesn't persist between frames
+		if (this._colorMatrixEffect) {
+			const idx = this.postEffects.indexOf(this._colorMatrixEffect);
+			if (idx !== -1) {
+				this.postEffects.splice(idx, 1);
+			}
+		}
+
 		// translate the world coordinates by default to screen coordinates
 		container.translate(translateX, translateY);
+	}
+
+	/**
+	 * @ignore
+	 */
+	override destroy(): void {
+		// clean up the internal colorMatrix effect (may not be in postEffects if identity)
+		if (this._colorMatrixEffect) {
+			if (typeof this._colorMatrixEffect.destroy === "function") {
+				this._colorMatrixEffect.destroy();
+			}
+			this._colorMatrixEffect = null;
+		}
+		super.destroy();
 	}
 }
