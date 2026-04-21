@@ -60,7 +60,7 @@ export class CoinEntity extends Collectable {
 				event.on(event.GAME_UPDATE, coinUpdateHandler);
 			}
 			coinShaderRefCount++;
-			this.shader = coinShader;
+			this.addPostEffect(coinShader);
 		});
 	}
 

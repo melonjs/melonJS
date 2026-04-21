@@ -237,45 +237,27 @@ export default class Renderable extends Rect {
 		this.mask = undefined;
 
 		/**
-		 * an optional shader, to be used instead of the default built-in one, when drawing this renderable (WebGL only).
-		 * Use {@link ShaderEffect} for a custom fragment `apply()` function,
-		 * or one of the built-in effect presets:
-		 * - {@link FlashEffect} — flash the sprite with a solid color (hit feedback)
-		 * - {@link OutlineEffect} — colored outline around the sprite (selection, hover)
-		 * - {@link GlowEffect} — soft colored glow around the sprite (power-ups, magic)
-		 * - {@link DesaturateEffect} — partial or full grayscale (disabled, death)
-		 * - {@link PixelateEffect} — progressive pixelation (teleport, retro)
-		 * - {@link BlurEffect} — box blur (defocus, backdrop)
-		 * - {@link ChromaticAberrationEffect} — RGB channel offset (impact, glitch)
-		 * - {@link DissolveEffect} — noise-based dissolve (death, spawn)
-		 * - {@link DropShadowEffect} — offset shadow beneath the sprite
-		 * - {@link ScanlineEffect} — horizontal scanlines with optional CRT curvature and vignette
-		 * - {@link TintPulseEffect} — pulsing color overlay (poison, freeze, fire)
-		 * - {@link WaveEffect} — sine wave distortion (underwater, heat haze)
-		 * - {@link InvertEffect} — color inversion (negative image, X-ray)
-		 * - {@link SepiaEffect} — warm vintage photo tone
-		 * - {@link HologramEffect} — flickering holographic projection (sci-fi)
-		 *
-		 * Use {@link GLShader} for full control over vertex and fragment shaders.
+		 * the list of post-processing shader effects applied to this renderable (WebGL only).
+		 * Effects are applied in order. Use {@link addPostEffect}, {@link getPostEffect},
+		 * and {@link removePostEffect} to manage effects, or assign directly.
 		 * In Canvas mode, this property is ignored.
-		 * @type {GLShader|ShaderEffect}
-		 * @default undefined
+		 * @type {Array<GLShader|ShaderEffect>}
+		 * @default []
 		 * @example
-		 * // apply a built-in effect
-		 * mySprite.shader = new FlashEffect(renderer, { intensity: 1.0 });
+		 * // add effects via helper methods
+		 * mySprite.addPostEffect(new DesaturateEffect(renderer));
+		 * mySprite.addPostEffect(new VignetteEffect(renderer));
 		 * @example
-		 * // custom shader effect
-		 * mySprite.shader = new ShaderEffect(renderer, `
-		 *     vec4 apply(vec4 color, vec2 uv) {
-		 *         float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));
-		 *         return vec4(vec3(gray), color.a);
-		 *     }
-		 * `);
-		 * @example
-		 * // to remove a custom shader
-		 * mySprite.shader = undefined;
+		 * // assign directly
+		 * mySprite.postEffects = [new SepiaEffect(renderer), new VignetteEffect(renderer)];
 		 */
-		this.shader = undefined;
+		this.postEffects = [];
+
+		/**
+		 * whether this renderable manages its own FBO lifecycle (e.g. Camera2d)
+		 * @ignore
+		 */
+		this._postEffectManaged = false;
 
 		/**
 		 * the blend mode to be applied to this renderable (see renderer setBlendMode for available blend mode)
@@ -417,6 +399,89 @@ export default class Renderable extends Rect {
 			this._inViewport = value;
 			if (typeof this.onVisibilityChange === "function") {
 				this.onVisibilityChange.call(this, value);
+			}
+		}
+	}
+
+	/**
+	 * @deprecated since 19.2.0 — use {@link addPostEffect} / {@link getPostEffect} / {@link removePostEffect} instead
+	 * @type {GLShader|ShaderEffect|undefined}
+	 */
+	get shader() {
+		return this.postEffects[0];
+	}
+
+	set shader(value) {
+		// destroy existing effects before replacing
+		for (const effect of this.postEffects) {
+			if (typeof effect.destroy === "function") {
+				effect.destroy();
+			}
+		}
+		if (typeof value === "undefined") {
+			this.postEffects.length = 0;
+		} else {
+			this.postEffects = [value];
+		}
+	}
+
+	/**
+	 * Add a post-processing shader effect to this renderable.
+	 * @param {GLShader|ShaderEffect} effect - the effect to add
+	 * @returns {GLShader|ShaderEffect} the added effect
+	 * @example
+	 * mySprite.addPostEffect(new DesaturateEffect(renderer));
+	 */
+	addPostEffect(effect) {
+		this.postEffects.push(effect);
+		return effect;
+	}
+
+	/**
+	 * Get post-processing shader effects.
+	 * When called with a class, returns the first effect matching the given class.
+	 * When called without arguments, returns the full effects array.
+	 * @param {Function} [effectClass] - the effect class to search for
+	 * @returns {GLShader|ShaderEffect|Array|undefined} the matching effect, the effects array, or undefined
+	 * @example
+	 * const desat = sprite.getPostEffect(DesaturateEffect);
+	 * const allEffects = sprite.getPostEffect();
+	 */
+	getPostEffect(effectClass) {
+		if (typeof effectClass === "undefined") {
+			return this.postEffects;
+		}
+		return this.postEffects.find((fx) => {
+			return fx instanceof effectClass;
+		});
+	}
+
+	/**
+	 * Remove all post-processing shader effects.
+	 * @example
+	 * sprite.clearPostEffects();
+	 */
+	clearPostEffects() {
+		for (const effect of this.postEffects) {
+			if (typeof effect.destroy === "function") {
+				effect.destroy();
+			}
+		}
+		this.postEffects.length = 0;
+	}
+
+	/**
+	 * Remove a specific post-processing shader effect.
+	 * @param {GLShader|ShaderEffect} effect - the effect to remove
+	 * @example
+	 * sprite.removePostEffect(effect);
+	 */
+	removePostEffect(effect) {
+		const idx = this.postEffects.indexOf(effect);
+		if (idx !== -1) {
+			this.postEffects.splice(idx, 1);
+			if (typeof effect.destroy === "function") {
+				effect.destroy();
 			}
 		}
 	}
@@ -749,8 +814,11 @@ export default class Renderable extends Rect {
 			renderer.translate(-this.pos.x, -this.pos.y);
 		}
 
-		// set the custom shader for this renderable (undefined clears it)
-		renderer.customShader = this.shader;
+		// delegate post-effect setup to the renderer.
+		// Camera manages its own FBO lifecycle in draw().
+		if (!this._postEffectManaged) {
+			renderer.beginPostEffect(this);
+		}
 
 		if (this.autoTransform === true && !this.currentTransform.isIdentity()) {
 			// apply the renderable transformation matrix
@@ -802,6 +870,11 @@ export default class Renderable extends Rect {
 		// clear the mask if set
 		if (this.mask) {
 			renderer.clearMask();
+		}
+
+		// finalize post-effects (renderer decides what to do)
+		if (!this._postEffectManaged) {
+			renderer.endPostEffect(this);
 		}
 
 		// restore the context (also restores customShader)
@@ -891,11 +964,13 @@ export default class Renderable extends Rect {
 		// call the user defined destroy method
 		this.onDestroyEvent.apply(this, arguments);
 
-		// destroy any shader object if not done by the user through onDestroyEvent()
-		if (this.shader && typeof this.shader.destroy === "function") {
-			this.shader.destroy();
-			this.shader = undefined;
+		// destroy any shader effects if not done by the user through onDestroyEvent()
+		for (const effect of this.postEffects) {
+			if (typeof effect.destroy === "function") {
+				effect.destroy();
+			}
 		}
+		this.postEffects.length = 0;
 	}
 
 	/**

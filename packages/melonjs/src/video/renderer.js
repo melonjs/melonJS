@@ -8,6 +8,10 @@ import RenderState from "./renderstate.js";
 import CanvasRenderTarget from "./rendertarget/canvasrendertarget.js";
 
 /**
+ * @import RenderTargetPool from "./rendertarget/render_target_pool.js";
+ */
+
+/**
  * @import {Rect} from "./../geometries/rectangle.ts";
  * @import {RoundRect} from "./../geometries/roundrect.ts";
  * @import {Polygon} from "../geometries/polygon.ts";
@@ -78,8 +82,17 @@ export default class Renderer {
 		 * Set by a renderable's preDraw when a shader is assigned.
 		 * (WebGL only, ignored by Canvas renderer)
 		 * @type {GLShader|ShaderEffect|undefined}
+		 * @ignore
 		 */
 		this.customShader = undefined;
+
+		/**
+		 * The render target pool for post-effect processing (ping-pong FBOs).
+		 * Initialized by GPU renderers (WebGL, WebGPU). Null on Canvas renderer.
+		 * @type {RenderTargetPool|null}
+		 * @ignore
+		 */
+		this._renderTargetPool = null;
 
 		/**
 		 * The Path2D instance used by the renderer to draw primitives
@@ -260,24 +273,30 @@ export default class Renderer {
 	 * Begin capturing rendering to an offscreen buffer for post-effect processing.
 	 * Call endPostEffect() after rendering to blit the result to the screen.
 	 * No-op on Canvas renderer.
-	 * @param {Camera2d} camera - the camera requesting post-effect processing
+	 * @param {Renderable} renderable - the renderable with postEffects to apply
 	 * @returns {boolean} false (Canvas renderer does not support post-effect processing)
 	 * @ignore
 	 */
-	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-	beginPostEffect(camera) {
+	beginPostEffect(renderable) {
+		// on Canvas, only set customShader for single-effect fast path
+		const effects = renderable.postEffects.filter((fx) => {
+			return fx.enabled !== false;
+		});
+		if (effects.length === 1) {
+			this.customShader = effects[0];
+		}
 		return false;
 	}
 
 	/**
 	 * End post-effect capture and blit the offscreen buffer to the screen
-	 * through the camera's shader effect.
+	 * through the renderable's post-effects.
 	 * No-op on Canvas renderer.
-	 * @param {Camera2d} camera - the camera with shader, screen position, and dimensions
+	 * @param {Renderable} renderable - the renderable with postEffects to apply
 	 * @ignore
 	 */
 	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-	endPostEffect(camera) {}
+	endPostEffect(renderable) {}
 
 	/**
 	 * Blit a texture to the screen through a shader effect.
@@ -290,9 +309,54 @@ export default class Renderer {
 	 * @param {number} width - destination width
 	 * @param {number} height - destination height
 	 * @param {ShaderEffect} shader - the shader effect to apply
+	 * @param {boolean} [keepBlend=false] - if true, keep current blend mode (for sprite compositing)
 	 */
 	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-	blitEffect(source, x, y, width, height, shader) {}
+	blitEffect(source, x, y, width, height, shader, keepBlend) {}
+
+	/**
+	 * Sets the viewport for the renderer.
+	 * Defines the affine transformation from normalized device coordinates to window coordinates.
+	 * No-op on Canvas renderer.
+	 * @param {number} [x=0] - x coordinate of the viewport origin
+	 * @param {number} [y=0] - y coordinate of the viewport origin
+	 * @param {number} [w] - width of the viewport (defaults to canvas width)
+	 * @param {number} [h] - height of the viewport (defaults to canvas height)
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	setViewport(x = 0, y = 0, w, h) {}
+
+	/**
+	 * Clear the current render target to transparent black (color + stencil).
+	 * Used to prepare FBOs for post-effect capture.
+	 * No-op on Canvas renderer.
+	 */
+	clearRenderTarget() {}
+
+	/**
+	 * Enable the scissor test with the given rectangle.
+	 * No-op on Canvas renderer.
+	 * @param {number} x - x coordinate of the scissor rectangle
+	 * @param {number} y - y coordinate of the scissor rectangle
+	 * @param {number} width - width of the scissor rectangle
+	 * @param {number} height - height of the scissor rectangle
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	enableScissor(x, y, width, height) {}
+
+	/**
+	 * Disable the scissor test, allowing rendering to the full viewport.
+	 * No-op on Canvas renderer.
+	 */
+	disableScissor() {}
+
+	/**
+	 * Enable or disable alpha blending.
+	 * No-op on Canvas renderer (Canvas always blends).
+	 * @param {boolean} enable - true to enable blending, false to disable
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	setBlendEnabled(enable) {}
 
 	/**
 	 * returns the current blend mode for this renderer

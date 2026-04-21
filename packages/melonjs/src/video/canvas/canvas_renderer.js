@@ -893,6 +893,8 @@ export default class CanvasRenderer extends Renderer {
 		if (result !== null) {
 			this.setBlendMode(result.blendMode);
 		}
+		// sync customShader from renderState (mirrors WebGLRenderer.restore)
+		this.customShader = this.renderState.currentShader;
 		// re-sync from the native context (which is authoritative for Canvas)
 		// fillStyle may be a CanvasGradient/CanvasPattern — only sync if it's a color string
 		if (typeof context.fillStyle === "string") {
@@ -921,6 +923,7 @@ export default class CanvasRenderer extends Renderer {
 	 */
 	save() {
 		this.getContext().save();
+		this.renderState.currentShader = this.customShader;
 		this.renderState.save();
 	}
 

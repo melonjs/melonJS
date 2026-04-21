@@ -62,6 +62,7 @@ import { Gradient } from "./video/gradient.js";
 import Renderer from "./video/renderer.js";
 import RenderState from "./video/renderstate.js";
 import CanvasRenderTarget from "./video/rendertarget/canvasrendertarget.js";
+import RenderTarget from "./video/rendertarget/rendertarget.ts";
 import { TextureAtlas } from "./video/texture/atlas.js";
 import { Batcher } from "./video/webgl/batchers/batcher.js";
 import PrimitiveBatcher from "./video/webgl/batchers/primitive_batcher.js";
@@ -177,6 +178,7 @@ export {
 	Renderable,
 	Renderer,
 	RenderState,
+	RenderTarget,
 	ScanlineEffect,
 	SepiaEffect,
 	ShaderEffect,

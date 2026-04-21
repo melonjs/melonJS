@@ -11,7 +11,8 @@ import {
 } from "../../system/event.ts";
 import { Gradient } from "../gradient.js";
 import Renderer from "./../renderer.js";
-import WebGLRenderTarget from "./../rendertarget/webglrendertarget.js";
+import RenderTargetPool from "../rendertarget/render_target_pool.js";
+import WebGLRenderTarget from "../rendertarget/webglrendertarget.js";
 import { createAtlas, TextureAtlas } from "./../texture/atlas.js";
 import TextureCache from "./../texture/cache.js";
 import { dashPath, dashSegments } from "../utils/dash.js";
@@ -86,7 +87,17 @@ export default class WebGLRenderer extends Renderer {
 		 * @type {WebGLRenderTarget|null}
 		 * @ignore
 		 */
-		this.currentEffectFBO = null;
+		// initialize the render target pool with a WebGL factory
+		this._renderTargetPool = new RenderTargetPool((w, h) => {
+			return new WebGLRenderTarget(this.gl, w, h);
+		});
+
+		/**
+		 * Saved projection matrix for begin/endPostEffect.
+		 * @type {Matrix3d}
+		 * @ignore
+		 */
+		this._savedEffectProjection = new Matrix3d();
 
 		/**
 		 * sets or returns the thickness of lines for shape drawing
@@ -236,6 +247,7 @@ export default class WebGLRenderer extends Renderer {
 		on(CANVAS_ONRESIZE, (width, height) => {
 			this.flush();
 			this.setViewport(0, 0, width, height);
+			// FBOs are lazily resized in beginPostEffect via get() → resize()
 		});
 	}
 
@@ -351,11 +363,8 @@ export default class WebGLRenderer extends Renderer {
 		this.gl.disable(this.gl.SCISSOR_TEST);
 		this._scissorActive = false;
 
-		// release post-process FBO (will be recreated on demand)
-		if (this.currentEffectFBO) {
-			this.currentEffectFBO.destroy();
-			this.currentEffectFBO = null;
-		}
+		// release post-process FBOs (will be recreated on demand)
+		this._renderTargetPool.destroy();
 	}
 
 	/**
@@ -478,66 +487,142 @@ export default class WebGLRenderer extends Renderer {
 
 	/**
 	 * Begin capturing rendering to an offscreen FBO for post-effect processing.
-	 * Returns true if post-effect processing is active (camera has a valid shader).
-	 * @param {Camera2d} camera - the camera requesting post-effect processing
+	 * @param {Renderable} renderable - the renderable requesting post-effect processing
 	 * @returns {boolean} true if FBO capture started, false if skipped
 	 * @ignore
 	 */
-	beginPostEffect(camera) {
-		if (!camera.shader || camera.shader.enabled === false) {
+	beginPostEffect(renderable) {
+		// filter to only enabled effects
+		const effects = renderable.postEffects.filter((fx) => {
+			return fx.enabled !== false;
+		});
+		if (effects.length === 0) {
 			return false;
 		}
-		const canvas = this.getCanvas();
-		if (!this.currentEffectFBO) {
-			this.currentEffectFBO = new WebGLRenderTarget(
-				this.gl,
-				canvas.width,
-				canvas.height,
-			);
-		} else {
-			this.currentEffectFBO.resize(canvas.width, canvas.height);
+		// single effect on non-managed renderable: fast path via customShader (no FBO)
+		if (effects.length === 1 && !renderable._postEffectManaged) {
+			this.customShader = effects[0];
+			return false;
 		}
+
+		const isCamera = renderable._postEffectManaged;
+		const canvas = this.getCanvas();
+		const w = canvas.width;
+		const h = canvas.height;
+
+		// flush pending draws BEFORE creating/resizing FBOs,
+		// since FBO construction temporarily changes GL framebuffer bindings
 		this.flush();
-		// save renderer state before modifying it for FBO rendering
 		this.save();
-		this.currentEffectFBO.bind();
-		this.gl.disable(this.gl.SCISSOR_TEST);
-		this._scissorActive = false;
+		// save the current projection (not part of the render state stack)
+		this._savedEffectProjection.copy(this.projectionMatrix);
+
+		const rt = this._renderTargetPool.begin(isCamera, effects.length, w, h);
+		// FBO creation/resize uses TEXTURE0 — invalidate the batcher's cache for that unit
+		if (this.currentBatcher && this.currentBatcher.boundTextures) {
+			delete this.currentBatcher.boundTextures[0];
+		}
+		rt.bind();
+		this.setViewport(0, 0, w, h);
+		this.disableScissor();
 		this.setGlobalAlpha(1.0);
 		this.setBlendMode("normal");
-		this.clear();
+
+		if (isCamera) {
+			this.clear();
+		} else {
+			this.clearRenderTarget();
+		}
 		return true;
 	}
 
 	/** @ignore */
-	endPostEffect(camera) {
-		if (!camera.shader || camera.shader.enabled === false) {
+	endPostEffect(renderable) {
+		// filter to only enabled effects
+		const effects = renderable.postEffects.filter((fx) => {
+			return fx.enabled !== false;
+		});
+		if (effects.length === 0) {
 			return;
 		}
+		// single effect on non-managed renderable used customShader — no FBO to unbind
+		if (effects.length === 1 && !renderable._postEffectManaged) {
+			return;
+		}
+
+		const isCamera = renderable._postEffectManaged;
+		const rt1 = this._renderTargetPool.getCaptureTarget();
+		const rt2 = this._renderTargetPool.getPingPongTarget();
+		const keepBlend = !isCamera;
+		const canvas = this.getCanvas();
+		const w = canvas.width;
+		const h = canvas.height;
+
 		this.flush();
-		this.currentEffectFBO.unbind();
-		if (!camera.isDefault) {
+		rt1.unbind();
+
+		// get parent render target for rebinding after blits
+		const parentRT = this._renderTargetPool.end();
+
+		// clip to camera viewport for non-default cameras
+		if (isCamera && renderable.isDefault === false) {
 			this.clipRect(
-				camera.screenX,
-				camera.screenY,
-				camera.width,
-				camera.height,
+				renderable.screenX,
+				renderable.screenY,
+				renderable.width,
+				renderable.height,
 			);
 		}
-		this.blitEffect(
-			this.currentEffectFBO.texture,
-			0,
-			0,
-			this.width,
-			this.height,
-			camera.shader,
-		);
-		if (!camera.isDefault) {
-			this.gl.disable(this.gl.SCISSOR_TEST);
-			this._scissorActive = false;
+
+		// rebind parent render target (or screen) and restore viewport
+		if (parentRT) {
+			parentRT.bind();
 		}
-		// restore renderer state saved in beginPostEffect
+		this.setViewport(0, 0, w, h);
+
+		if (effects.length === 1) {
+			this.blitEffect(rt1.texture, 0, 0, w, h, effects[0], keepBlend);
+		} else {
+			// multi-pass: ping-pong between two render targets
+			let src = rt1;
+			let dst = rt2;
+
+			for (let i = 0; i < effects.length - 1; i++) {
+				dst.bind();
+				this.setViewport(0, 0, w, h);
+				this.clearRenderTarget();
+				this.blitEffect(src.texture, 0, 0, w, h, effects[i]);
+				dst.unbind();
+				const tmp = src;
+				src = dst;
+				dst = tmp;
+			}
+
+			// rebind parent for final blit
+			if (parentRT) {
+				parentRT.bind();
+			}
+			this.setViewport(0, 0, w, h);
+
+			this.blitEffect(
+				src.texture,
+				0,
+				0,
+				w,
+				h,
+				effects[effects.length - 1],
+				keepBlend,
+			);
+		}
+
+		if (isCamera && renderable.isDefault === false) {
+			this.disableScissor();
+		}
+
+		// restore renderer state and projection saved in beginPostEffect
 		this.restore();
+		this.projectionMatrix.copy(this._savedEffectProjection);
+		this.currentBatcher.setProjection(this.projectionMatrix);
 	}
 
 	/**
@@ -550,10 +635,9 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number} width - destination width
 	 * @param {number} height - destination height
 	 * @param {ShaderEffect} shader - the shader effect to apply
+	 * @param {boolean} [keepBlend=false] - if true, keep current blend mode (for sprite compositing)
 	 */
-	blitEffect(source, x, y, width, height, shader) {
-		const gl = this.gl;
-
+	blitEffect(source, x, y, width, height, shader, keepBlend = false) {
 		// flush any pending draws
 		this.flush();
 
@@ -567,11 +651,15 @@ export default class WebGLRenderer extends Renderer {
 		this.projectionMatrix.ortho(0, width, height, 0, -1, 1);
 		batcher.setProjection(this.projectionMatrix);
 
-		// blit the FBO without alpha blending — the FBO already contains
-		// the fully composited scene (particles, additive blend, etc.)
-		gl.disable(gl.BLEND);
+		// disable blending for camera blits (render target is fully composited).
+		// keep blending for per-sprite blits (transparent areas must not overwrite scene).
+		if (!keepBlend) {
+			this.setBlendEnabled(false);
+		}
 		batcher.blitTexture(source, x, y, width, height, shader);
-		gl.enable(gl.BLEND);
+		if (!keepBlend) {
+			this.setBlendEnabled(true);
+		}
 
 		// restore state
 		this.currentTransform.copy(_savedTransform);
@@ -604,6 +692,59 @@ export default class WebGLRenderer extends Renderer {
 		h = this.getCanvas().height,
 	) {
 		this.gl.viewport(x, y, w, h);
+	}
+
+	/**
+	 * Clear the current render target to transparent black (color + stencil).
+	 */
+	clearRenderTarget() {
+		const gl = this.gl;
+		gl.clearColor(0, 0, 0, 0);
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+	}
+
+	/**
+	 * Enable the scissor test with the given rectangle.
+	 * @param {number} x - x coordinate of the scissor rectangle
+	 * @param {number} y - y coordinate of the scissor rectangle
+	 * @param {number} width - width of the scissor rectangle
+	 * @param {number} height - height of the scissor rectangle
+	 */
+	enableScissor(x, y, width, height) {
+		const gl = this.gl;
+		this.flush();
+		gl.enable(gl.SCISSOR_TEST);
+		this._scissorActive = true;
+		gl.scissor(
+			x + this.currentTransform.tx,
+			this.getCanvas().height - height - y - this.currentTransform.ty,
+			width,
+			height,
+		);
+		this.currentScissor[0] = x;
+		this.currentScissor[1] = y;
+		this.currentScissor[2] = width;
+		this.currentScissor[3] = height;
+	}
+
+	/**
+	 * Disable the scissor test, allowing rendering to the full viewport.
+	 */
+	disableScissor() {
+		this.gl.disable(this.gl.SCISSOR_TEST);
+		this._scissorActive = false;
+	}
+
+	/**
+	 * Enable or disable alpha blending.
+	 * @param {boolean} enable - true to enable blending, false to disable
+	 */
+	setBlendEnabled(enable) {
+		if (enable) {
+			this.gl.enable(this.gl.BLEND);
+		} else {
+			this.gl.disable(this.gl.BLEND);
+		}
 	}
 
 	/**

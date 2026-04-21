@@ -1,6 +1,7 @@
 import { clamp } from "../../math/math.ts";
 import { setPrefixed } from "../../utils/agent.ts";
 import { createCanvas } from "../video.js";
+import RenderTarget from "./rendertarget.ts";
 
 /**
  * additional import for TypeScript
@@ -77,10 +78,13 @@ function createContext(canvas, attributes) {
 }
 
 /**
- * CanvasRenderTarget is 2D render target which exposes a Canvas interface.
+ * A 2D canvas render target for offscreen texture generation.
+ * Used by Text, Gradient, Light2d and Particle systems to render into
+ * a canvas that is then uploaded as a WebGL texture.
+ * @augments RenderTarget
  * @category Rendering
  */
-class CanvasRenderTarget {
+class CanvasRenderTarget extends RenderTarget {
 	/**
 	 * @param {number} width - the desired width of the canvas
 	 * @param {number} height - the desired height of the canvas
@@ -93,17 +97,7 @@ class CanvasRenderTarget {
 	 * @param {boolean} [attributes.antiAlias=false] - Whether to enable anti-aliasing, use false (default) for a pixelated effect.
 	 */
 	constructor(width, height, attributes = defaultAttributes) {
-		/**
-		 * the canvas created for this CanvasRenderTarget
-		 * @type {HTMLCanvasElement|OffscreenCanvas}
-		 */
-		// this.canvas;
-
-		/**
-		 * the rendering context of this CanvasRenderTarget
-		 * @type {CanvasRenderingContext2D|WebGLRenderingContext}
-		 */
-		// this.context;
+		super();
 		// clean up the given attributes
 		this.attributes = Object.assign({}, defaultAttributes, attributes);
 
@@ -206,65 +200,40 @@ class CanvasRenderTarget {
 	}
 
 	/**
-	 * creates a Blob object representing the image contained in this canvas texture
+	 * Returns a data URL directly from the canvas (avoids the getImageData/Blob round-trip).
+	 * Note: not supported by OffscreenCanvas — falls back to the base implementation.
 	 * @param {string} [type="image/png"] - A string indicating the image format
-	 * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
-	 * @returns {Promise} A Promise returning a Blob object representing the image contained in this canvas texture
-	 * @example
-	 * renderTarget.convertToBlob().then((blob) => console.log(blob));
+	 * @param {number} [quality] - A number between 0 and 1 for lossy formats (image/jpeg, image/webp)
+	 * @returns {Promise<string>} A Promise resolving to a data URL string
+	 */
+	toDataURL(type = "image/png", quality) {
+		if (typeof this.canvas.toDataURL === "function") {
+			return Promise.resolve(this.canvas.toDataURL(type, quality));
+		}
+		// OffscreenCanvas doesn't have toDataURL — use base implementation
+		return super.toDataURL(type, quality);
+	}
+
+	/**
+	 * Creates a Blob directly from the canvas (avoids the getImageData round-trip).
+	 * @param {string} [type="image/png"] - A string indicating the image format
+	 * @param {number} [quality] - A number between 0 and 1 for lossy formats (image/jpeg, image/webp)
+	 * @returns {Promise<Blob>} A Promise resolving to a Blob
 	 */
 	toBlob(type = "image/png", quality) {
 		if (typeof this.canvas.convertToBlob === "function") {
+			// OffscreenCanvas path
 			return this.canvas.convertToBlob({ type, quality });
-		} else {
-			return new Promise((resolve) => {
-				this.canvas.toBlob(
-					(blob) => {
-						resolve(blob);
-					},
-					type,
-					quality,
-				);
-			});
 		}
-	}
-
-	/**
-	 * creates an ImageBitmap object from the most recently rendered image of this canvas texture
-	 * @param {string} [type="image/png"] - A string indicating the image format
-	 * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
-	 * @returns {Promise} A Promise returning an ImageBitmap.
-	 * @example
-	 * renderTarget.transferToImageBitmap().then((bitmap) => console.log(bitmap));
-	 */
-	toImageBitmap(type = "image/png", quality) {
+		// HTMLCanvasElement path
 		return new Promise((resolve) => {
-			if (typeof this.canvas.transferToImageBitmap === "function") {
-				resolve(this.canvas.transferToImageBitmap());
-			} else {
-				const image = new Image();
-				image.src = this.canvas.toDataURL(type, quality);
-				image.onload = () => {
-					globalThis.createImageBitmap(image).then((bitmap) => {
-						return resolve(bitmap);
-					});
-				};
-			}
-		});
-	}
-
-	/**
-	 * returns a data URL containing a representation of the most recently rendered image of this canvas texture
-	 * (not supported by OffscreenCanvas)
-	 * @param {string} [type="image/png"] - A string indicating the image format
-	 * @param {number} [quality] - A Number between 0 and 1 indicating the image quality to be used when creating images using file formats that support lossy compression (such as image/jpeg or image/webp). A user agent will use its default quality value if this option is not specified, or if the number is outside the allowed range.
-	 * @returns {Promise} A Promise returning a string containing the requested data URL.
-	 * @example
-	 * renderer.toDataURL().then((dataURL) => console.log(dataURL));
-	 */
-	toDataURL(type = "image/png", quality) {
-		return new Promise((resolve) => {
-			resolve(this.canvas.toDataURL(type, quality));
+			this.canvas.toBlob(
+				(blob) => {
+					resolve(blob);
+				},
+				type,
+				quality,
+			);
 		});
 	}
 

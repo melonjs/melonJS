@@ -1,16 +1,20 @@
+import RenderTarget from "./rendertarget.ts";
+
 /**
  * A WebGL Framebuffer Object (FBO) render target for offscreen rendering.
  * Used by the post-processing pipeline to render a camera's output to a texture,
  * which can then be drawn to the screen through a post-process shader.
+ * @augments RenderTarget
  * @ignore
  */
-export default class WebGLRenderTarget {
+export default class WebGLRenderTarget extends RenderTarget {
 	/**
 	 * @param {WebGLRenderingContext|WebGL2RenderingContext} gl - the WebGL context
 	 * @param {number} width - initial width in pixels
 	 * @param {number} height - initial height in pixels
 	 */
 	constructor(gl, width, height) {
+		super();
 		this.gl = gl;
 		this.width = width;
 		this.height = height;
@@ -18,8 +22,10 @@ export default class WebGLRenderTarget {
 		// create framebuffer
 		this.framebuffer = gl.createFramebuffer();
 
-		// create color texture
+		// create color texture — use TEXTURE0 explicitly to avoid corrupting
+		// other texture units that the multi-texture batcher may have active
 		this.texture = gl.createTexture();
+		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
 		gl.texImage2D(
 			gl.TEXTURE_2D,
@@ -119,7 +125,9 @@ export default class WebGLRenderTarget {
 		this.width = width;
 		this.height = height;
 
-		// resize color texture
+		// resize color texture — use TEXTURE0 explicitly to avoid corrupting
+		// other texture units that the multi-texture batcher may have active
+		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
 		gl.texImage2D(
 			gl.TEXTURE_2D,
@@ -144,6 +152,17 @@ export default class WebGLRenderTarget {
 
 		gl.bindTexture(gl.TEXTURE_2D, null);
 		gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+	}
+
+	/**
+	 * Clear the FBO contents to transparent black.
+	 */
+	clear() {
+		const gl = this.gl;
+		this.bind();
+		gl.clearColor(0, 0, 0, 0);
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+		this.unbind();
 	}
 
 	/**
@@ -176,75 +195,6 @@ export default class WebGLRenderTarget {
 			pixels.set(temp, bottomOffset);
 		}
 		return new ImageData(pixels, width, height);
-	}
-
-	/**
-	 * Creates a Blob object representing the image contained in this render target.
-	 * @param {string} [type="image/png"] - A string indicating the image format
-	 * @param {number} [quality] - A number between 0 and 1 for lossy formats (image/jpeg, image/webp)
-	 * @returns {Promise<Blob>} A Promise resolving to a Blob
-	 */
-	toBlob(type = "image/png", quality) {
-		const imageData = this.getImageData();
-		if (typeof OffscreenCanvas !== "undefined") {
-			const canvas = new OffscreenCanvas(this.width, this.height);
-			const ctx = canvas.getContext("2d");
-			ctx.putImageData(imageData, 0, 0);
-			return canvas.convertToBlob({ type, quality });
-		}
-		// fallback for environments without OffscreenCanvas
-		const canvas = document.createElement("canvas");
-		canvas.width = this.width;
-		canvas.height = this.height;
-		const ctx = canvas.getContext("2d");
-		ctx.putImageData(imageData, 0, 0);
-		return new Promise((resolve) => {
-			canvas.toBlob(
-				(blob) => {
-					resolve(blob);
-				},
-				type,
-				quality,
-			);
-		});
-	}
-
-	/**
-	 * Creates an ImageBitmap object from the current contents of this render target.
-	 * @returns {Promise<ImageBitmap>} A Promise resolving to an ImageBitmap
-	 */
-	toImageBitmap() {
-		const imageData = this.getImageData();
-		return globalThis.createImageBitmap(imageData);
-	}
-
-	/**
-	 * Returns a data URL containing a representation of the current contents of this render target.
-	 * @param {string} [type="image/png"] - A string indicating the image format
-	 * @param {number} [quality] - A number between 0 and 1 for lossy formats (image/jpeg, image/webp)
-	 * @returns {Promise<string>} A Promise resolving to a data URL string
-	 */
-	toDataURL(type = "image/png", quality) {
-		return this.toBlob(type, quality).then((blob) => {
-			const reader = new FileReader();
-			return new Promise((resolve) => {
-				reader.onloadend = () => {
-					resolve(reader.result);
-				};
-				reader.readAsDataURL(blob);
-			});
-		});
-	}
-
-	/**
-	 * Clear the FBO contents to transparent black.
-	 */
-	clear() {
-		const gl = this.gl;
-		this.bind();
-		gl.clearColor(0, 0, 0, 0);
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
-		this.unbind();
 	}
 
 	/**

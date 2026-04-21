@@ -1,6 +1,7 @@
 import {
 	type Application,
 	audio,
+	ColorMatrixEffect,
 	device,
 	level,
 	plugin,
@@ -45,8 +46,11 @@ export class PlayScreen extends Stage {
 			app.world.addChild(this.virtualJoypad);
 		}
 
-		// apply subtle vignette post-process effect on the camera
-		app.viewport.shader = new VignetteEffect(app.renderer as any);
+		// multi-pass post-effects: vignette + HDR-like color grading
+		app.viewport.addPostEffect(new VignetteEffect(app.renderer as any));
+		app.viewport.addPostEffect(
+			new ColorMatrixEffect(app.renderer as any).contrast(1.1).saturate(1.1),
+		);
 
 		// play some music
 		audio.playTrack("dst-gameforest");
