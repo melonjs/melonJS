@@ -10,12 +10,10 @@ export default class WebGLIndexBuffer extends IndexBuffer {
 	 * @param {WebGLRenderingContext|WebGL2RenderingContext} gl - the WebGL context
 	 * @param {number} maxIndices - maximum number of indices this buffer can hold
 	 * @param {boolean} [useUint32=false] - use Uint32 indices (WebGL2) instead of Uint16 (WebGL1)
-	 * @param {boolean} [dynamic=false] - if true, use STREAM_DRAW for frequent updates; if false, use STATIC_DRAW
 	 */
-	constructor(gl, maxIndices, useUint32 = false, dynamic = false) {
+	constructor(gl, maxIndices, useUint32 = false) {
 		super(maxIndices, useUint32);
 		this.gl = gl;
-		this.dynamic = dynamic;
 		this.type = useUint32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT;
 		this.buffer = gl.createBuffer();
 	}

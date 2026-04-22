@@ -170,7 +170,7 @@ export class Batcher {
 			const gl = this.gl;
 			this.glVertexBuffer = gl.createBuffer();
 			// max indices: worst case is 3 indices per vertex (all triangles, no sharing)
-			this.indexBuffer = new WebGLIndexBuffer(gl, maxVertices * 3, false, true);
+			this.indexBuffer = new WebGLIndexBuffer(gl, maxVertices * 3, false);
 		}
 	}
 
