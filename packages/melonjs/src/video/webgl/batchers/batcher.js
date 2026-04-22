@@ -1,5 +1,5 @@
-import IndexBuffer from "../buffer/index.js";
-import VertexArrayBuffer from "../buffer/vertex.js";
+import VertexArrayBuffer from "../../buffer/vertex.js";
+import WebGLIndexBuffer from "../buffer/index.js";
 import GLShader from "../glshader.js";
 
 /**
@@ -161,7 +161,7 @@ export class Batcher {
 
 		/**
 		 * the dynamic index buffer (only for indexed batchers)
-		 * @type {IndexBuffer|null}
+		 * @type {WebGLIndexBuffer|null}
 		 * @ignore
 		 */
 		this.indexBuffer = null;
@@ -170,7 +170,7 @@ export class Batcher {
 			const gl = this.gl;
 			this.glVertexBuffer = gl.createBuffer();
 			// max indices: worst case is 3 indices per vertex (all triangles, no sharing)
-			this.indexBuffer = new IndexBuffer(gl, maxVertices * 3, false, true);
+			this.indexBuffer = new WebGLIndexBuffer(gl, maxVertices * 3, false, true);
 		}
 	}
 

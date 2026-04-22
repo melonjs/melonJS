@@ -30,6 +30,8 @@
 - Rendering: `WebGLRenderTarget` and `CanvasRenderTarget` now extend the abstract `RenderTarget` base class
 - Rendering: FBO pool refactored from WebGL-specific `FBOPool` to renderer-agnostic `RenderTargetPool` with factory pattern
 - Canvas: `CanvasRenderTarget` save/restore now properly syncs `customShader` with the render state stack (mirrors WebGLRenderer behavior)
+- Rendering: `VertexArrayBuffer` moved from `video/webgl/buffer/` to `video/buffer/` (renderer-agnostic, zero GL dependency)
+- Rendering: `IndexBuffer` split into renderer-agnostic `IndexBuffer` base (data accumulation) and `WebGLIndexBuffer` (GL buffer bind/upload)
 
 ### Fixed
 - Canvas: `setMask(shape, true)` now uses `evenodd` clipping for proper inverted mask support (was using `destination-atop` composite which didn't clip subsequent draws)
