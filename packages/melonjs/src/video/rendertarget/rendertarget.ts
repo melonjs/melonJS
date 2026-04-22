@@ -130,11 +130,14 @@ export default abstract class RenderTarget {
 		return this.toBlob(type, quality).then((blob) => {
 			const reader = new FileReader();
 			return new Promise<string>((resolve, reject) => {
-				reader.onloadend = () => {
+				reader.onload = () => {
 					resolve(reader.result as string);
 				};
 				reader.onerror = () => {
 					reject(new Error(reader.error?.message ?? "FileReader failed"));
+				};
+				reader.onabort = () => {
+					reject(new Error("FileReader aborted"));
 				};
 				reader.readAsDataURL(blob);
 			});
