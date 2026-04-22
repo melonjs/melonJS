@@ -77,7 +77,10 @@ export default abstract class RenderTarget {
 		const imageData = this.getImageData();
 		if (typeof OffscreenCanvas !== "undefined") {
 			const canvas = new OffscreenCanvas(this.width, this.height);
-			const ctx = canvas.getContext("2d")!;
+			const ctx = canvas.getContext("2d");
+			if (!ctx) {
+				return Promise.reject(new Error("Failed to get 2d context"));
+			}
 			ctx.putImageData(imageData, 0, 0);
 			const options: { type: string; quality?: number } = { type };
 			if (typeof quality !== "undefined") {
@@ -88,7 +91,10 @@ export default abstract class RenderTarget {
 		const canvas = document.createElement("canvas");
 		canvas.width = this.width;
 		canvas.height = this.height;
-		const ctx = canvas.getContext("2d")!;
+		const ctx = canvas.getContext("2d");
+		if (!ctx) {
+			return Promise.reject(new Error("Failed to get 2d context"));
+		}
 		ctx.putImageData(imageData, 0, 0);
 		return new Promise((resolve, reject) => {
 			canvas.toBlob(
@@ -123,9 +129,15 @@ export default abstract class RenderTarget {
 	toDataURL(type = "image/png", quality?: number): Promise<string> {
 		return this.toBlob(type, quality).then((blob) => {
 			const reader = new FileReader();
-			return new Promise<string>((resolve) => {
-				reader.onloadend = () => {
+			return new Promise<string>((resolve, reject) => {
+				reader.onload = () => {
 					resolve(reader.result as string);
+				};
+				reader.onerror = () => {
+					reject(new Error(reader.error?.message ?? "FileReader failed"));
+				};
+				reader.onabort = () => {
+					reject(new Error("FileReader aborted"));
 				};
 				reader.readAsDataURL(blob);
 			});
