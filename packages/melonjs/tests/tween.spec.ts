@@ -258,6 +258,58 @@ describe("Tween", () => {
 		});
 	});
 
+	// --- repeatDelay ---
+
+	describe("repeatDelay()", () => {
+		it("delays before each repeat cycle", () => {
+			let completeCount = 0;
+			tween
+				.to({ x: 100 }, { duration: 100, repeat: 1, repeatDelay: 50 })
+				.onComplete(() => {
+					completeCount++;
+				});
+			tween.start(0);
+
+			// first pass completes at t=100
+			tween.update(100);
+			expect(obj.x).toBeCloseTo(100, 0);
+			expect(completeCount).toEqual(0);
+
+			// during repeat delay, not yet complete
+			tween.update(25);
+			expect(completeCount).toEqual(0);
+
+			// after delay (50ms) + second pass (100ms) = 150ms more
+			tween.update(125);
+			expect(obj.x).toBeCloseTo(100, 0);
+			expect(completeCount).toEqual(1);
+		});
+
+		it("repeatDelay: 0 should not use delay value", () => {
+			tween.to(
+				{ x: 100 },
+				{ duration: 100, repeat: 1, delay: 50, repeatDelay: 0 },
+			);
+			tween.start(0);
+
+			// initial delay of 50ms
+			tween.update(50);
+			expect(obj.x).toBeCloseTo(0, 0);
+
+			// first pass
+			tween.update(100);
+			expect(obj.x).toBeCloseTo(100, 0);
+
+			// repeat should start immediately (repeatDelay: 0, not delay: 50)
+			tween.update(100);
+			expect(obj.x).toBeCloseTo(100, 0);
+		});
+
+		it("returns this for chaining", () => {
+			expect(tween.repeatDelay(100)).toBe(tween);
+		});
+	});
+
 	// --- yoyo ---
 
 	describe("yoyo()", () => {
