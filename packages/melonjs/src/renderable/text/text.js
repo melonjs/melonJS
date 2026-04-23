@@ -38,7 +38,7 @@ export default class Text extends Renderable {
 	 * @param {number} [settings.wordWrapWidth] - the maximum length in CSS pixel for a single segment of text
 	 * @param {(string|string[])} [settings.text=""] - a string, or an array of strings
 	 * @example
-	 * let font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
+	 * let font = new Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
 	 */
 	constructor(x, y, settings) {
 		// call the parent constructor
@@ -179,6 +179,11 @@ export default class Text extends Renderable {
 			offscreenCanvas: false,
 		});
 
+		/**
+		 * @ignore
+		 */
+		this._visibleCharacters = -1;
+
 		// instance to text metrics functions
 		this.metrics = new TextMetrics(this);
 
@@ -318,6 +323,57 @@ export default class Text extends Renderable {
 	}
 
 	/**
+	 * the number of characters to display (use -1 to show all).
+	 * Useful for typewriter effects combined with Tween.
+	 * @public
+	 * @type {number}
+	 * @default -1
+	 * @see Text#visibleRatio
+	 * @example
+	 * // typewriter effect
+	 * text.visibleCharacters = 0;
+	 * new Tween(text).to({ visibleRatio: 1.0 }, { duration: 2000 }).start();
+	 */
+	get visibleCharacters() {
+		return this._visibleCharacters;
+	}
+
+	set visibleCharacters(value) {
+		if (this._visibleCharacters !== value) {
+			this._visibleCharacters = value;
+			this.isDirty = true;
+		}
+	}
+
+	/**
+	 * the ratio of visible characters (0.0 to 1.0).
+	 * Setting this automatically updates {@link visibleCharacters}.
+	 * @public
+	 * @type {number}
+	 */
+	get visibleRatio() {
+		if (this._visibleCharacters === -1) {
+			return 1.0;
+		}
+		const total = this._text.reduce((sum, line) => {
+			return sum + line.length;
+		}, 0);
+		return total > 0 ? this._visibleCharacters / total : 1.0;
+	}
+
+	set visibleRatio(value) {
+		const clamped = Math.max(0, Math.min(1, isFinite(value) ? value : 1));
+		if (clamped >= 1.0) {
+			this.visibleCharacters = -1;
+		} else {
+			const total = this._text.reduce((sum, line) => {
+				return sum + line.length;
+			}, 0);
+			this.visibleCharacters = Math.floor(clamped * total);
+		}
+	}
+
+	/**
 	 * update the bounding box for this Text, accounting for textAlign and textBaseline.
 	 * @param {boolean} [absolute=true] - update in absolute coordinates
 	 * @returns {Bounds} this renderable's bounding box
@@ -382,6 +438,18 @@ export default class Text extends Renderable {
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - Reference to the destination renderer instance
 	 */
 	draw(renderer) {
+		// re-render the canvas texture when dirty (e.g. visibleCharacters changed)
+		if (this.isDirty) {
+			this.canvasTexture.invalidate(renderer);
+			this.canvasTexture.clear();
+			this._drawFont(
+				this.canvasTexture.context,
+				this._text,
+				this.pos.x - this.metrics.x,
+				this.pos.y - this.metrics.y,
+			);
+		}
+
 		// adjust x,y position based on the bounding box
 		let x = this.metrics.x;
 		let y = this.metrics.y;
@@ -402,8 +470,20 @@ export default class Text extends Renderable {
 	_drawFont(context, text, x, y) {
 		setContextStyle(context, this);
 
+		let remaining = this.visibleCharacters;
+
 		for (let i = 0; i < text.length; i++) {
-			const string = text[i].trimEnd();
+			let string = text[i].trimEnd();
+
+			// limit visible characters if needed
+			if (remaining !== -1) {
+				if (remaining <= 0) {
+					break;
+				}
+				string = string.substring(0, remaining);
+				remaining -= string.length;
+			}
+
 			// draw the string
 			if (this.fillStyle.alpha > 0) {
 				context.fillText(string, x, y);

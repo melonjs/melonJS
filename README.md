@@ -57,7 +57,7 @@ Graphics
 - 3D mesh rendering with OBJ/MTL model loading, perspective projection and hardware depth testing
 - Built-in shader effects (Flash, Outline, Glow, Dissolve, CRT, Hologram, etc.) and custom shader support via `ShaderEffect` for per-sprite fragment effects (WebGL)
 - Trail renderable for fading, tapering ribbons behind moving objects (speed lines, sword slashes, magic trails)
-- System & Bitmap Text
+- System & Bitmap Text with built-in typewriter effect
 - Video sprite playback
 
 Sound
