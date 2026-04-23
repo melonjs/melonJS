@@ -61,7 +61,7 @@ export default class Tween {
 	_yoyo: boolean;
 	_reversed: boolean;
 	_delayTime: number;
-	_repeatDelayTime: number;
+	_repeatDelayTime: number | undefined;
 	_startTime: number | null;
 	_easingFunction: EasingFunction;
 	_interpolationFunction: InterpolationFunction;
@@ -118,7 +118,7 @@ export default class Tween {
 		this._yoyo = false;
 		this._reversed = false;
 		this._delayTime = 0;
-		this._repeatDelayTime = 0;
+		this._repeatDelayTime = undefined;
 		this._startTime = null;
 		this._easingFunction = Easing.Linear.None;
 		this._interpolationFunction = Interpolation.Linear;
@@ -524,7 +524,7 @@ export default class Tween {
 					this._reversed = !this._reversed;
 				}
 
-				this._startTime = time + (this._repeatDelayTime || this._delayTime);
+				this._startTime = time + (this._repeatDelayTime ?? this._delayTime);
 
 				return true;
 			} else {

@@ -134,20 +134,9 @@ export default class BitmapText extends Renderable {
 		}
 
 		/**
-		 * the number of characters to display (use -1 to show all).
-		 * Useful for typewriter effects combined with Tween.
-		 * @public
-		 * @type {number}
-		 * @default -1
-		 * @see BitmapText#visibleRatio
-		 * @example
-		 * // show only the first 5 characters
-		 * bitmapText.visibleCharacters = 5;
-		 * // typewriter effect
-		 * bitmapText.visibleCharacters = 0;
-		 * new Tween(bitmapText).to({ visibleRatio: 1.0 }, { duration: 2000 }).start();
+		 * @ignore
 		 */
-		this.visibleCharacters = -1;
+		this._visibleCharacters = -1;
 
 		// instance to text metrics functions
 		this.metrics = new TextMetrics(this);
@@ -205,29 +194,55 @@ export default class BitmapText extends Renderable {
 	}
 
 	/**
+	 * the number of characters to display (use -1 to show all).
+	 * Useful for typewriter effects combined with Tween.
+	 * @public
+	 * @type {number}
+	 * @default -1
+	 * @see BitmapText#visibleRatio
+	 * @example
+	 * // show only the first 5 characters
+	 * bitmapText.visibleCharacters = 5;
+	 * // typewriter effect
+	 * bitmapText.visibleCharacters = 0;
+	 * new Tween(bitmapText).to({ visibleRatio: 1.0 }, { duration: 2000 }).start();
+	 */
+	get visibleCharacters() {
+		return this._visibleCharacters;
+	}
+
+	set visibleCharacters(value) {
+		if (this._visibleCharacters !== value) {
+			this._visibleCharacters = value;
+			this.isDirty = true;
+		}
+	}
+
+	/**
 	 * the ratio of visible characters (0.0 to 1.0).
 	 * Setting this automatically updates {@link visibleCharacters}.
 	 * @public
 	 * @type {number}
 	 */
 	get visibleRatio() {
-		if (this.visibleCharacters === -1) {
+		if (this._visibleCharacters === -1) {
 			return 1.0;
 		}
 		const total = this._text.reduce((sum, line) => {
 			return sum + line.length;
 		}, 0);
-		return total > 0 ? this.visibleCharacters / total : 1.0;
+		return total > 0 ? this._visibleCharacters / total : 1.0;
 	}
 
 	set visibleRatio(value) {
-		if (value >= 1.0) {
+		const clamped = Math.max(0, Math.min(1, isFinite(value) ? value : 1));
+		if (clamped >= 1.0) {
 			this.visibleCharacters = -1;
 		} else {
 			const total = this._text.reduce((sum, line) => {
 				return sum + line.length;
 			}, 0);
-			this.visibleCharacters = Math.floor(value * total);
+			this.visibleCharacters = Math.floor(clamped * total);
 		}
 	}
 
