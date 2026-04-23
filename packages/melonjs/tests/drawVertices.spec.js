@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import VertexArrayBuffer from "../src/video/webgl/buffer/vertex.js";
+import VertexArrayBuffer from "../src/video/buffer/vertex.js";
 
 describe("VertexArrayBuffer", () => {
 	const VERTEX_SIZE = 5; // x, y, u/nx, v/ny, tint

@@ -1,6 +1,7 @@
 /**
- * a fixed-size Vertex Buffer object.
- * Compositors must check isFull() and flush before the buffer overflows.
+ * A fixed-size vertex array buffer for batching vertex data.
+ * Renderer-agnostic — stores vertex data in typed arrays (Float32/Uint32).
+ * Batchers must check isFull() and flush before the buffer overflows.
  * @ignore
  */
 
