@@ -61,6 +61,7 @@ export default class Tween {
 	_yoyo: boolean;
 	_reversed: boolean;
 	_delayTime: number;
+	_repeatDelayTime: number;
 	_startTime: number | null;
 	_easingFunction: EasingFunction;
 	_interpolationFunction: InterpolationFunction;
@@ -117,6 +118,7 @@ export default class Tween {
 		this._yoyo = false;
 		this._reversed = false;
 		this._delayTime = 0;
+		this._repeatDelayTime = 0;
 		this._startTime = null;
 		this._easingFunction = Easing.Linear.None;
 		this._interpolationFunction = Interpolation.Linear;
@@ -224,6 +226,7 @@ export default class Tween {
 	 * @param [options.delay] - delay before starting, in milliseconds
 	 * @param [options.yoyo] - bounce back to original values when finished (use with `repeat`)
 	 * @param [options.repeat] - number of times to repeat (use `Infinity` for endless loops)
+	 * @param [options.repeatDelay] - delay in milliseconds before each repeat cycle
 	 * @param [options.interpolation] - interpolation function for array values
 	 * @param [options.autoStart] - start the tween immediately without calling `start()`
 	 * @returns this instance for object chaining
@@ -236,6 +239,7 @@ export default class Tween {
 			yoyo?: boolean | undefined;
 			repeat?: number | undefined;
 			delay?: number | undefined;
+			repeatDelay?: number | undefined;
 			interpolation?: InterpolationFunction | undefined;
 			autoStart?: boolean | undefined;
 		},
@@ -257,6 +261,9 @@ export default class Tween {
 			}
 			if (options.delay !== undefined) {
 				this.delay(options.delay);
+			}
+			if (options.repeatDelay !== undefined) {
+				this.repeatDelay(options.repeatDelay);
 			}
 			if (options.interpolation !== undefined) {
 				this.interpolation(options.interpolation);
@@ -344,6 +351,16 @@ export default class Tween {
 	 */
 	repeat(times: number) {
 		this._repeat = times;
+		return this;
+	}
+
+	/**
+	 * Set a delay before each repeat.
+	 * @param amount - delay in milliseconds before each repeat cycle
+	 * @returns this instance for object chaining
+	 */
+	repeatDelay(amount: number) {
+		this._repeatDelayTime = amount;
 		return this;
 	}
 
@@ -507,7 +524,7 @@ export default class Tween {
 					this._reversed = !this._reversed;
 				}
 
-				this._startTime = time + this._delayTime;
+				this._startTime = time + (this._repeatDelayTime || this._delayTime);
 
 				return true;
 			} else {

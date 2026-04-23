@@ -3,6 +3,8 @@
 ## [19.2.0] (melonJS 2) - _unreleased_
 
 ### Added
+- Text: `visibleCharacters` and `visibleRatio` properties on Text and BitmapText for progressive text reveal and typewriter effects. Animate `visibleRatio` with Tween for character-by-character text display.
+- Tween: `repeatDelay(ms)` method and `repeatDelay` option in `to()` — adds a delay before each repeat cycle.
 - Camera: FBO-based post-processing pipeline — assign a `ShaderEffect` to any camera's `shader` property to apply full-screen post-effects (vignette, scanlines, desaturation, etc.). Works with multiple cameras independently (e.g. main camera + minimap with different effects). Renderer manages FBO lifecycle via `beginPostEffect()`/`endPostEffect()`/`blitEffect()` methods.
 - Renderable: multi-pass post-effect chaining — `postEffects` array replaces single `shader` property. Multiple effects are applied in sequence via FBO ping-pong (e.g. `sprite.addPostEffect(new DesaturateEffect(r)); sprite.addPostEffect(new InvertEffect(r));`). Single-effect renderables use a zero-overhead `customShader` fast path (no FBO). Camera manages its own FBO lifecycle; per-sprite effects use a separate FBO pair.
 - Renderable: `addPostEffect(effect)`, `getPostEffect(EffectClass?)`, `removePostEffect(effect)`, `clearPostEffects()` — manage post-processing shader effects on any renderable

@@ -5,6 +5,7 @@ import {
 	Renderable,
 	Stage,
 	Text,
+	Tween,
 } from "melonjs";
 
 /**
@@ -123,19 +124,29 @@ export class TextScreen extends Stage {
 			1,
 		);
 
-		// ---- Multiline text (right aligned) ----
-		app.world.addChild(
-			new Text(165, 290, {
-				font: "Arial",
-				size: 14,
-				fillStyle: "white",
-				textAlign: "right",
-				textBaseline: "top",
-				lineHeight: 1.1,
-				text: "this is another web font \nwith right alignment\nand it still works!",
-			}),
-			1,
-		);
+		// ---- Multiline text (right aligned) with typewriter ----
+		const rightText = new Text(165, 290, {
+			font: "Arial",
+			size: 14,
+			fillStyle: "white",
+			textAlign: "right",
+			textBaseline: "top",
+			lineHeight: 1.1,
+			text: "this is another web font \nwith right alignment\nusing typewriter effect!",
+		});
+		rightText.visibleCharacters = 0;
+		app.world.addChild(rightText, 1);
+
+		new Tween(rightText)
+			.to(
+				{ visibleRatio: 1.0 },
+				{
+					duration: 5000,
+					repeat: Infinity,
+					repeatDelay: 1500,
+				},
+			)
+			.start();
 
 		// ---- Fancy BitmapText multiline with word wrap ----
 		const fancy = new BitmapText(620, 230, {
@@ -151,15 +162,27 @@ export class TextScreen extends Stage {
 		);
 		app.world.addChild(fancy, 1);
 
-		// ---- BitmapText multiline centered ----
+		// ---- BitmapText multiline centered with typewriter effect ----
 		const bMulti = new BitmapText(w / 2, 400, {
 			font: "xolo12",
-			size: 2.5,
+			size: 1.5,
 			textAlign: "center",
 			textBaseline: "top",
-			text: "THIS IS A MULTILINE\n BITMAP TEXT WITH MELONJS\nAND IT WORKS",
+			text: "THIS IS A MULTILINE BITMAP TEXT\n USING TYPEWRITER EFFECT",
 		});
+		bMulti.visibleCharacters = 0;
 		app.world.addChild(bMulti, 1);
+
+		new Tween(bMulti)
+			.to(
+				{ visibleRatio: 1.0 },
+				{
+					duration: 5000,
+					repeat: Infinity,
+					repeatDelay: 1500,
+				},
+			)
+			.start();
 
 		// ---- BitmapText baseline test (y=375) ----
 		xPos = 0;

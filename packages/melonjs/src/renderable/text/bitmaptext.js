@@ -26,13 +26,13 @@ export default class BitmapText extends Renderable {
 	 * @param {number} [settings.wordWrapWidth] - the maximum length in CSS pixel for a single segment of text
 	 * @param {(string|string[])} [settings.text] - a string, or an array of strings
 	 * @example
-	 * // Use me.loader.preload or me.loader.load to load assets
-	 * me.loader.preload([
-	 *     { name: "arial", type: "binary" src: "data/font/arial.fnt" },
-	 *     { name: "arial", type: "image" src: "data/font/arial.png" },
+	 * // Use loader.preload or loader.load to load assets
+	 * loader.preload([
+	 *     { name: "arial", type: "binary", src: "data/font/arial.fnt" },
+	 *     { name: "arial", type: "image", src: "data/font/arial.png" },
 	 * ])
 	 * // Then create an instance of your bitmap font:
-	 * let myFont = new me.BitmapText(x, y, {font:"arial", text:"Hello"});
+	 * let myFont = new BitmapText(x, y, {font:"arial", text:"Hello"});
 	 * // two possibilities for using "myFont"
 	 * // either call the draw function from your Renderable draw function
 	 * myFont.draw(renderer, "Hello!", 0, 0);
@@ -133,6 +133,22 @@ export default class BitmapText extends Renderable {
 			this.anchorPoint.set(0, 0);
 		}
 
+		/**
+		 * the number of characters to display (use -1 to show all).
+		 * Useful for typewriter effects combined with Tween.
+		 * @public
+		 * @type {number}
+		 * @default -1
+		 * @see BitmapText#visibleRatio
+		 * @example
+		 * // show only the first 5 characters
+		 * bitmapText.visibleCharacters = 5;
+		 * // typewriter effect
+		 * bitmapText.visibleCharacters = 0;
+		 * new Tween(bitmapText).to({ visibleRatio: 1.0 }, { duration: 2000 }).start();
+		 */
+		this.visibleCharacters = -1;
+
 		// instance to text metrics functions
 		this.metrics = new TextMetrics(this);
 
@@ -186,6 +202,33 @@ export default class BitmapText extends Renderable {
 		this.updateBounds();
 
 		return this;
+	}
+
+	/**
+	 * the ratio of visible characters (0.0 to 1.0).
+	 * Setting this automatically updates {@link visibleCharacters}.
+	 * @public
+	 * @type {number}
+	 */
+	get visibleRatio() {
+		if (this.visibleCharacters === -1) {
+			return 1.0;
+		}
+		const total = this._text.reduce((sum, line) => {
+			return sum + line.length;
+		}, 0);
+		return total > 0 ? this.visibleCharacters / total : 1.0;
+	}
+
+	set visibleRatio(value) {
+		if (value >= 1.0) {
+			this.visibleCharacters = -1;
+		} else {
+			const total = this._text.reduce((sum, line) => {
+				return sum + line.length;
+			}, 0);
+			this.visibleCharacters = Math.floor(value * total);
+		}
 	}
 
 	/**
@@ -314,6 +357,10 @@ export default class BitmapText extends Renderable {
 				break;
 		}
 
+		// running character counter for visibleCharacters
+		let charCount = 0;
+		const maxChars = this.visibleCharacters;
+
 		for (let i = 0; i < this._text.length; i++) {
 			x = lX;
 			const string = this._text[i].trimEnd();
@@ -335,6 +382,11 @@ export default class BitmapText extends Renderable {
 			// draw the string
 			let lastGlyph = null;
 			for (let c = 0, len = string.length; c < len; c++) {
+				// stop drawing when visibleCharacters limit is reached
+				if (maxChars !== -1 && charCount >= maxChars) {
+					return;
+				}
+
 				// calculate the char index
 				const ch = string.charCodeAt(c);
 				const glyph = this.fontData.glyphs[ch];
@@ -371,6 +423,8 @@ export default class BitmapText extends Renderable {
 						"BitmapText: no defined Glyph in for " + String.fromCharCode(ch),
 					);
 				}
+
+				charCount++;
 			}
 			// increment line
 			y += stringHeight;
