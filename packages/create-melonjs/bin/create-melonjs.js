@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /* global process, console */
 
-import { execSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 const REPO = "melonjs/typescript-boilerplate";
@@ -38,24 +38,40 @@ ${bold("Example:")}
 	console.log(`\nCreating a new melonJS game in ${green(targetDir)}...\n`);
 
 	// download the boilerplate
-	try {
-		// try degit first (fast, no git history)
-		execSync(`npx --yes degit ${REPO}#${BRANCH} "${targetDir}"`, {
+	// try degit first (fast, no git history)
+	const degitResult = spawnSync(
+		"npx",
+		["--yes", "degit", `${REPO}#${BRANCH}`, targetDir],
+		{
 			stdio: "inherit",
-		});
-	} catch {
+			shell: process.platform === "win32",
+		},
+	);
+
+	if (degitResult.status !== 0) {
 		// fallback to git clone
 		console.log("Falling back to git clone...");
-		execSync(
-			`git clone --depth 1 -b ${BRANCH} https://github.com/${REPO}.git "${targetDir}"`,
+		const cloneResult = spawnSync(
+			"git",
+			[
+				"clone",
+				"--depth",
+				"1",
+				"-b",
+				BRANCH,
+				`https://github.com/${REPO}.git`,
+				targetDir,
+			],
 			{ stdio: "inherit" },
 		);
+
+		if (cloneResult.status !== 0) {
+			console.error("\nError: failed to download the boilerplate.\n");
+			process.exit(1);
+		}
+
 		// remove .git directory
-		execSync(
-			process.platform === "win32"
-				? `rmdir /s /q "${join(targetDir, ".git")}"`
-				: `rm -rf "${join(targetDir, ".git")}"`,
-		);
+		rmSync(join(targetDir, ".git"), { recursive: true, force: true });
 	}
 
 	// update package.json with the project name
