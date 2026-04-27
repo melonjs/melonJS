@@ -2,7 +2,7 @@
 /* global process, console */
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 const REPO = "melonjs/typescript-boilerplate";
@@ -39,32 +39,42 @@ ${bold("Example:")}
 
 	// download the boilerplate
 	// try degit first (fast, no git history)
-	const degitResult = spawnSync("npx", ["--yes", "degit", `${REPO}#${BRANCH}`, targetDir], {
-		stdio: "inherit",
-		shell: process.platform === "win32"
-	});
+	const degitResult = spawnSync(
+		"npx",
+		["--yes", "degit", `${REPO}#${BRANCH}`, targetDir],
+		{
+			stdio: "inherit",
+			shell: process.platform === "win32",
+		},
+	);
 
 	if (degitResult.status !== 0) {
 		// fallback to git clone
 		console.log("Falling back to git clone...");
-		const cloneResult = spawnSync("git", ["clone", "--depth", "1", "-b", BRANCH, `https://github.com/${REPO}.git`, targetDir], {
-			stdio: "inherit",
-			shell: process.platform === "win32"
-		});
+		const cloneResult = spawnSync(
+			"git",
+			[
+				"clone",
+				"--depth",
+				"1",
+				"-b",
+				BRANCH,
+				`https://github.com/${REPO}.git`,
+				targetDir,
+			],
+			{ stdio: "inherit" },
+		);
 
-		if (cloneResult.status === 0) {
-			// remove .git directory
-			const gitDir = join(targetDir, ".git");
-			if (process.platform === "win32") {
-				spawnSync("cmd", ["/c", "rmdir", "/s", "/q", gitDir], { stdio: "inherit" });
-			} else {
-				spawnSync("rm", ["-rf", gitDir], { stdio: "inherit" });
-			}
+		if (cloneResult.status !== 0) {
+			console.error("\nError: failed to download the boilerplate.\n");
+			process.exit(1);
 		}
+
+		// remove .git directory
+		rmSync(join(targetDir, ".git"), { recursive: true, force: true });
 	}
 
 	// update package.json with the project name
-
 	const pkgPath = join(targetDir, "package.json");
 	if (existsSync(pkgPath)) {
 		const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
