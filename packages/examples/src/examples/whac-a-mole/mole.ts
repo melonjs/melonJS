@@ -26,7 +26,7 @@ export class MoleEntity extends Sprite {
 	initialPos: number;
 	displayTween: Tween;
 	hideTween: Tween;
-	chromaticEffect: ChromaticAberrationEffect | null;
+	chromaticEffect: ChromaticAberrationEffect;
 
 	constructor(x: number, y: number) {
 		// call the constructor
