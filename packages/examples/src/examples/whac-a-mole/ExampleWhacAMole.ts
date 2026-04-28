@@ -1,6 +1,7 @@
 import { Application, audio, loader, save, state } from "melonjs";
 import { createExampleComponent } from "../utils";
 import { data } from "./data";
+import { setupViewportEffects } from "./effects";
 import { PlayScreen } from "./play";
 import { resources } from "./resources";
 
@@ -10,6 +11,9 @@ const createGame = () => {
 		parent: "screen",
 		scale: "auto",
 	});
+
+	// vignette (always on) + dormant chromatic aberration (burst on hit)
+	setupViewportEffects(_app.viewport, _app.renderer);
 
 	// initialize the "sound engine"
 	audio.init("mp3,ogg");

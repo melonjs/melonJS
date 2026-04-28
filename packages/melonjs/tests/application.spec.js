@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { game as gameFromModule } from "../src/application/application.ts";
 import {
 	Application,
@@ -6,6 +6,7 @@ import {
 	Container,
 	game,
 	Renderable,
+	state,
 	video,
 } from "../src/index.js";
 import { initialized } from "../src/system/bootstrap.ts";
@@ -236,6 +237,108 @@ describe("Application", () => {
 			expect(canvas.parentElement).not.toBeNull();
 			// clean up manually
 			canvas.parentElement.removeChild(canvas);
+		});
+	});
+
+	describe("pause / resume / freeze", () => {
+		beforeAll(() => {
+			boot();
+			video.init(800, 600, {
+				parent: "screen",
+				scale: "auto",
+				renderer: video.CANVAS,
+			});
+		});
+
+		afterEach(() => {
+			// always end with the game running for subsequent tests
+			if (state.isPaused()) {
+				state.resume();
+			}
+			vi.useRealTimers();
+		});
+
+		it("pause() should pause the underlying state", () => {
+			expect(state.isPaused()).toBe(false);
+			game.pause();
+			expect(state.isPaused()).toBe(true);
+			game.resume();
+			expect(state.isPaused()).toBe(false);
+		});
+
+		it("freeze() should pause immediately and resume after the duration", async () => {
+			vi.useFakeTimers();
+			expect(state.isPaused()).toBe(false);
+
+			const done = game.freeze(100);
+			expect(state.isPaused()).toBe(true);
+
+			await vi.advanceTimersByTimeAsync(100);
+			await done;
+
+			expect(state.isPaused()).toBe(false);
+		});
+
+		it("freeze() should return a Promise that resolves on unfreeze", async () => {
+			vi.useFakeTimers();
+			let resolved = false;
+			const done = game.freeze(50).then(() => {
+				resolved = true;
+			});
+
+			expect(resolved).toBe(false);
+			await vi.advanceTimersByTimeAsync(50);
+			await done;
+			expect(resolved).toBe(true);
+		});
+
+		it("freeze() should extend (not stack) when called again with a later end-time", async () => {
+			vi.useFakeTimers();
+			const first = game.freeze(100);
+
+			// at t=50, request another 100ms freeze (ends at t=150, later than t=100)
+			await vi.advanceTimersByTimeAsync(50);
+			const second = game.freeze(100);
+
+			// at t=120, the first freeze would have ended — but we extended, so still paused
+			await vi.advanceTimersByTimeAsync(70);
+			expect(state.isPaused()).toBe(true);
+
+			// at t=150, the extended freeze should end
+			await vi.advanceTimersByTimeAsync(30);
+			await Promise.all([first, second]);
+			expect(state.isPaused()).toBe(false);
+		});
+
+		it("freeze() should silently no-op for invalid durations (NaN/Infinity/negative)", async () => {
+			expect(state.isPaused()).toBe(false);
+
+			await game.freeze(Number.NaN);
+			expect(state.isPaused()).toBe(false);
+
+			await game.freeze(Number.POSITIVE_INFINITY);
+			expect(state.isPaused()).toBe(false);
+
+			await game.freeze(-100);
+			expect(state.isPaused()).toBe(false);
+		});
+
+		it("freeze() should NOT shorten when called with an earlier end-time", async () => {
+			vi.useFakeTimers();
+			const long = game.freeze(200);
+
+			// at t=10, request a shorter freeze — should be ignored
+			await vi.advanceTimersByTimeAsync(10);
+			const short = game.freeze(50);
+
+			// at t=80, short would have ended but long is still active
+			await vi.advanceTimersByTimeAsync(70);
+			expect(state.isPaused()).toBe(true);
+
+			// at t=200, long ends — both promises should resolve
+			await vi.advanceTimersByTimeAsync(120);
+			await Promise.all([long, short]);
+			expect(state.isPaused()).toBe(false);
 		});
 	});
 

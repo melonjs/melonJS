@@ -3,6 +3,8 @@
 ## [19.2.0] (melonJS 2) - _unreleased_
 
 ### Added
+- State: `state.freeze(duration, music?)` — freeze the current stage for a fixed duration in milliseconds, then automatically resume. Returns a `Promise<void>` that resolves on unfreeze. Reentrant calls extend the freeze to whichever end-time is later (they do not stack). Useful for hit-stop / hit-pause effects on impact.
+- Application: `app.pause(music?)`, `app.resume(music?)`, `app.freeze(duration, music?)` — convenience proxy methods on the Application instance for the corresponding `state.*` methods.
 - Text: `visibleCharacters` and `visibleRatio` properties on Text and BitmapText for progressive text reveal and typewriter effects. Animate `visibleRatio` with Tween for character-by-character text display.
 - Tween: `repeatDelay(ms)` method and `repeatDelay` option in `to()` — adds a delay before each repeat cycle.
 - Camera: FBO-based post-processing pipeline — assign a `ShaderEffect` to any camera's `shader` property to apply full-screen post-effects (vignette, scanlines, desaturation, etc.). Works with multiple cameras independently (e.g. main camera + minimap with different effects). Renderer manages FBO lifecycle via `beginPostEffect()`/`endPostEffect()`/`blitEffect()` methods.

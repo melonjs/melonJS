@@ -1,5 +1,19 @@
-import { audio, input, pool, Sprite, save, Tween } from "melonjs";
+import {
+	audio,
+	type ChromaticAberrationEffect,
+	game,
+	input,
+	pool,
+	Sprite,
+	save,
+	Tween,
+} from "melonjs";
 import { data } from "./data";
+import {
+	attachChromaticAberration,
+	attachDropShadow,
+	triggerChromaticBurst,
+} from "./effects";
 
 /**
  * a mole entity
@@ -12,10 +26,18 @@ export class MoleEntity extends Sprite {
 	initialPos: number;
 	displayTween: Tween;
 	hideTween: Tween;
+	chromaticEffect: ChromaticAberrationEffect | null;
 
 	constructor(x: number, y: number) {
 		// call the constructor
 		super(x, y, { image: "mole", framewidth: 178, frameheight: 140 });
+
+		// per-mole shader effects:
+		// - drop shadow gives the mole weight against the hole
+		// - chromatic aberration bursts on hit
+		// shadow is added first so chromatic aberration applies on top
+		attachDropShadow(this, game.renderer);
+		this.chromaticEffect = attachChromaticAberration(this, game.renderer);
 
 		// idle animation
 		this.addAnimation("idle", [0]);
@@ -59,6 +81,13 @@ export class MoleEntity extends Sprite {
 			this.flicker(750);
 			// play ow FX
 			audio.play("ow");
+
+			// juice trifecta: shake + per-mole chromatic burst + hit-stop
+			// (start motion/burst first, then freeze — the chromatic decays in
+			// real-time *during* the freeze, making the impact feel punchy)
+			game.viewport.shake(8, 400);
+			triggerChromaticBurst(this.chromaticEffect, 8, 250);
+			game.freeze(150);
 
 			// add some points
 			data.score += 100;
