@@ -1,8 +1,11 @@
 import { randomFloat } from "./../math/math.ts";
 import Container from "./../renderable/container.js";
+import timer from "../system/timer.ts";
 import CanvasRenderTarget from "../video/rendertarget/canvasrendertarget.js";
 import { particlePool } from "./particle.ts";
-import ParticleEmitterSettings from "./settings.js";
+import defaultEmitterSettings, {
+	type ParticleEmitterSettings,
+} from "./settings.ts";
 
 /**
  * @ignore
@@ -22,14 +25,30 @@ function createDefaultParticleTexture(
 }
 
 /**
+ * If `settings[minKey] > settings[maxKey]`, lower `min` to `max`.
+ * Guards against the partial-override footgun where a user sets only the
+ * `max` half of a range-style setting and the default of `min` ends up larger.
+ * @ignore
+ */
+function clampMinToMax<K extends keyof ParticleEmitterSettings>(
+	settings: ParticleEmitterSettings,
+	minKey: K,
+	maxKey: K,
+): void {
+	if ((settings[minKey] as number) > (settings[maxKey] as number)) {
+		(settings as Record<K, number>)[minKey] = settings[maxKey] as number;
+	}
+}
+
+/**
  * Particle Emitter Object.
  * @category Particles
  */
 export default class ParticleEmitter extends Container {
 	/**
-	 * the current (active) emitter settings
+	 * the current (active) emitter settings (with defaults merged in)
 	 */
-	settings: Record<string, any>;
+	settings: ParticleEmitterSettings;
 
 	/** @ignore */
 	_stream: boolean;
@@ -51,6 +70,21 @@ export default class ParticleEmitter extends Container {
 
 	/** @ignore */
 	_defaultParticle: CanvasRenderTarget | undefined;
+
+	/**
+	 * whether at least one particle has been spawned by this emitter — used as
+	 * the precondition for completion detection (a brand-new emitter with zero
+	 * children must not count as "complete")
+	 * @ignore
+	 */
+	_hasSpawned: boolean;
+
+	/**
+	 * cached `timer.maxfps / 1000` — particles read this directly instead of
+	 * recomputing it on every spawn.
+	 * @ignore
+	 */
+	_deltaInv: number;
 
 	/**
 	 * @param x - x position of the particle emitter
@@ -82,62 +116,68 @@ export default class ParticleEmitter extends Container {
 	 * // call this in onDestroyEvent function
 	 * app.world.removeChild(emitter);
 	 */
-	constructor(x: number, y: number, settings: Record<string, any> = {}) {
+	constructor(
+		x: number,
+		y: number,
+		settings: Partial<ParticleEmitterSettings> = {},
+	) {
 		// call the super constructor
-		super(x, y, settings.width | 1, settings.height | 1);
+		super(x, y, settings.width || 1, settings.height || 1);
 
-		this.settings = {};
+		// settings will be fully populated by reset() below; start with defaults
+		this.settings = { ...defaultEmitterSettings };
 
 		// center the emitter around the given coordinates
 		this.centerOn(x, y);
 
-		// Emitter is Stream, launch particles constantly
-		/** @ignore */
+		// stream mode flag
 		this._stream = false;
-
-		// Frequency timer (in ms) for emitter launch new particles
-		// used only in stream emitter
-		/** @ignore */
+		// frequency timer (ms) — stream mode only
 		this._frequencyTimer = 0;
-
-		// Time of live (in ms) for emitter launch new particles
-		// used only in stream emitter
-		/** @ignore */
+		// duration timer (ms) — stream mode only
 		this._durationTimer = 0;
-
-		// Emitter is emitting particles
-		/** @ignore */
+		// whether the emitter is currently emitting
 		this._enabled = false;
-
-		// Emitter will always update
+		// emitter ticks regardless of viewport
 		this.alwaysUpdate = true;
-
-		// don't sort the particles by z-index
+		// preserve insertion order — particle z-sort would be wasted work
 		this.autoSort = false;
-
-		// count the updates
+		// frame-skip bookkeeping
 		this._updateCount = 0;
-
-		// internally store how much time was skipped when frames are skipped
 		this._dt = 0;
+		// completion tracking
+		this._hasSpawned = false;
+		// per-spawn delta inverse — populated by reset()
+		this._deltaInv = timer.maxfps / 1000;
 
-		//this.anchorPoint.set(0, 0);
-
-		// Reset the emitter to defaults
+		// Apply user overrides + clamp range pairs
 		this.reset(settings);
 	}
 
 	/**
 	 * Reset the emitter with particle emitter settings.
-	 * @param settings - [optional] object with emitter settings. See {@link ParticleEmitterSettings}
+	 * @param settings - object with emitter settings. See {@link ParticleEmitterSettings}
 	 */
-	override reset(settings: Record<string, any> = {}): void {
-		Object.assign(this.settings, ParticleEmitterSettings, settings);
+	override reset(settings: Partial<ParticleEmitterSettings> = {}): void {
+		Object.assign(this.settings, defaultEmitterSettings, settings);
+
+		// Clamp range-style settings: if `min > max`, lower `min` to `max`.
+		// Catches the common footgun where a user overrides only one half of
+		// a min/max pair (e.g. `maxLife: 5` while `minLife` keeps its 1000 ms
+		// default), which would otherwise produce a wide unintended range.
+		clampMinToMax(this.settings, "minLife", "maxLife");
+		clampMinToMax(this.settings, "minStartScale", "maxStartScale");
+		clampMinToMax(this.settings, "minEndScale", "maxEndScale");
+		clampMinToMax(this.settings, "minRotation", "maxRotation");
+
+		// refresh the cached delta inverse — `timer.maxfps` is constant after
+		// boot but reset() runs after VIDEO_INIT, so this is the safest place.
+		this._deltaInv = timer.maxfps / 1000;
 
 		if (typeof this.settings.image === "undefined") {
 			this._defaultParticle = createDefaultParticleTexture(
-				settings.textureSize,
-				settings.textureSize,
+				this.settings.textureSize,
+				this.settings.textureSize,
 			);
 			this.settings.image = this._defaultParticle.canvas;
 		}
@@ -166,9 +206,15 @@ export default class ParticleEmitter extends Container {
 	// Add count particles in the game world
 	/** @ignore */
 	addParticles(count: number): void {
+		// pos is an ObservableVector3d at runtime; the renderable typedef exposes
+		// it as Vector2d, so we read .z through an unknown cast.
+		const z = (this.pos as unknown as { z: number }).z;
 		for (let i = 0; i < count; i++) {
 			// Add particle to the container
-			this.addChild(particlePool.get(this), (this.pos as any).z);
+			this.addChild(particlePool.get(this), z);
+		}
+		if (count > 0) {
+			this._hasSpawned = true;
 		}
 		this.isDirty = true;
 	}
@@ -217,18 +263,19 @@ export default class ParticleEmitter extends Container {
 	 * @ignore
 	 */
 	override update(dt: number): boolean {
-		// skip frames if necessary
-		if (++this._updateCount > this.settings.framesToSkip) {
-			this._updateCount = 0;
+		// frame-skip: only do the bookkeeping when actually configured.
+		// Defaults to 0 (every frame), and that path is the hot one.
+		if (this.settings.framesToSkip > 0) {
+			if (++this._updateCount > this.settings.framesToSkip) {
+				this._updateCount = 0;
+			}
+			if (this._updateCount > 0) {
+				this._dt += dt;
+				return this.isDirty;
+			}
+			dt += this._dt;
+			this._dt = 0;
 		}
-		if (this._updateCount > 0) {
-			this._dt += dt;
-			return this.isDirty;
-		}
-
-		// apply skipped delta time
-		dt += this._dt;
-		this._dt = 0;
 
 		// Update particles
 		this.isDirty = this.isDirty || super.update(dt);
@@ -249,23 +296,37 @@ export default class ParticleEmitter extends Container {
 			this._frequencyTimer += dt;
 
 			// Check for new particles launch
-			const particlesCount = this.children?.length ?? 0;
+			const particlesCount = this.getChildren().length;
 			if (
 				particlesCount < this.settings.totalParticles &&
 				this._frequencyTimer >= this.settings.frequency
 			) {
-				if (
-					particlesCount + (this.settings.maxParticles as number) <=
-					this.settings.totalParticles
-				) {
-					this.addParticles(this.settings.maxParticles);
-				} else {
-					this.addParticles(this.settings.totalParticles - particlesCount);
-				}
+				this.addParticles(
+					Math.min(
+						this.settings.maxParticles,
+						this.settings.totalParticles - particlesCount,
+					),
+				);
 				this._frequencyTimer = 0;
 				this.isDirty = true;
 			}
 		}
+
+		// completion detection — fires once after at least one particle has
+		// been spawned, the emitter is no longer producing new ones, and all
+		// children have died. Covers both burst (instant _enabled = false) and
+		// stream (duration elapsed → stopStream()).
+		if (this._hasSpawned && !this._enabled && this.getChildren().length === 0) {
+			// guard against re-entry: clear the flag so we only fire once
+			this._hasSpawned = false;
+			if (typeof this.settings.onComplete === "function") {
+				this.settings.onComplete.call(this);
+			}
+			if (this.settings.autoDestroyOnComplete && this.ancestor) {
+				(this.ancestor as Container).removeChild(this);
+			}
+		}
+
 		return this.isDirty;
 	}
 
@@ -274,14 +335,12 @@ export default class ParticleEmitter extends Container {
 	 * @ignore
 	 */
 	override destroy(): void {
-		// call the parent destroy method
 		super.destroy();
-		// clean emitter specific Properties
 		if (typeof this._defaultParticle !== "undefined") {
 			this._defaultParticle.destroy();
 			this._defaultParticle = undefined;
 		}
 		this.settings.image = undefined;
-		this.settings = undefined as unknown as Record<string, any>;
+		this.settings = undefined as unknown as ParticleEmitterSettings;
 	}
 }

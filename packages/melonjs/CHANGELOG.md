@@ -3,6 +3,9 @@
 ## [19.2.0] (melonJS 2) - _unreleased_
 
 ### Added
+- ParticleEmitter: `autoDestroyOnComplete` setting (default `false`) — when enabled, the emitter automatically removes itself from its parent container once all particles have died. Solves the leak in fire-and-forget `burstParticles()` use cases (explosions, pickups, impact effects) where there is no natural cleanup hook. Also adds an `onComplete` callback that fires when the emitter completes, regardless of `autoDestroyOnComplete`.
+- ParticleEmitter: `accurateBounds` setting (default `false`) — when enabled, each particle refreshes its bounding box every frame so the hitbox tracks the visual exactly (useful for debug visualization or collision queries). Default `false` matches the previous behavior (bounds reflect the previous frame's transform — sufficient for viewport culling and significantly cheaper at high particle counts).
+- ParticleEmitter: `ParticleEmitterSettings` is now an exported TypeScript interface — replaces the legacy untyped JS object. Constructor and `reset()` accept `Partial<ParticleEmitterSettings>` for compile-time validation.
 - State: `state.freeze(duration, music?)` — freeze the current stage for a fixed duration in milliseconds, then automatically resume. Returns a `Promise<void>` that resolves on unfreeze. Reentrant calls extend the freeze to whichever end-time is later (they do not stack). Useful for hit-stop / hit-pause effects on impact.
 - Application: `app.pause(music?)`, `app.resume(music?)`, `app.freeze(duration, music?)` — convenience proxy methods on the Application instance for the corresponding `state.*` methods.
 - Text: `visibleCharacters` and `visibleRatio` properties on Text and BitmapText for progressive text reveal and typewriter effects. Animate `visibleRatio` with Tween for character-by-character text display.
@@ -28,6 +31,10 @@
 - WebGL: `ColorMatrixEffect` shader effect — applies a `ColorMatrix` to any renderable or camera. Exposes chainable color methods (`brightness`, `contrast`, `saturate`, `hueRotate`, `sepia`, `invertColors`, `reset`) that auto-push the GPU uniform.
 
 ### Changed
+- ParticleEmitter: `reset()` now clamps reversed range pairs (`minLife > maxLife`, `minStartScale > maxStartScale`, `minEndScale > maxEndScale`, `minRotation > maxRotation`) by lowering the `min` to the `max`. Catches the common footgun where a user overrides only one half of a range (e.g. `maxLife: 5` while `minLife` keeps its 1000ms default).
+- ParticleEmitter / Particle: hot-path performance — particle transform construction folded into a single `setTransform()` call (saves 3 matrix multiplies per particle per frame), `_halfW`/`_halfH` cached in `onResetEvent`, `_deltaInv` cached on the emitter and shared with particles, frame-skip bookkeeping gated behind `framesToSkip > 0`. For 1000 particles at 60fps this saves roughly 240k matrix ops/sec.
+- Particle: hitbox now tracks the visual — anchor + transform + bounds are kept consistent (rotation pivots on the visual center, bounds match the visual extent). Previously the hitbox was offset by `(w/2, h/2)` and lagged one frame behind the visual.
+- Particle: removed dead-code clamps around `randomFloat(min, max)` calls (the result is already in range) and the unused `> 0` variation guards.
 - Camera: `shake()`, `fadeIn()`, `fadeOut()` are now convenience wrappers that create `ShakeEffect`/`FadeEffect` instances — same signatures, fully backward compatible
 - Trigger: internally uses `FadeEffect`/`MaskEffect` instead of `viewport.fadeIn()`/`viewport.fadeOut()`, with both hide and reveal effects
 - WebGL: `SepiaEffect`, `InvertEffect`, `DesaturateEffect` now extend `ColorMatrixEffect` — share a single color matrix shader instead of individual GLSL shaders
@@ -38,6 +45,7 @@
 - Rendering: `IndexBuffer` split into renderer-agnostic `IndexBuffer` base (data accumulation) and `WebGLIndexBuffer` (GL buffer bind/upload)
 
 ### Fixed
+- ParticleEmitter: constructor was using bitwise `|` instead of logical `||` for the `width`/`height` fallback, which silently rounded any provided value to the next odd number (e.g. `width: 16 → 17`, `width: 32 → 33`).
 - Canvas: `setMask(shape, true)` now uses `evenodd` clipping for proper inverted mask support (was using `destination-atop` composite which didn't clip subsequent draws)
 - Ellipse: `clone()` now uses the ellipse pool instead of `new Ellipse()` — consistent with `Polygon.clone()` which already uses its pool
 - TMXObjectFactory: override warning now uses `console.warn()` instead of the deprecation `warning()` function (was showing "deprecated since version undefined")
