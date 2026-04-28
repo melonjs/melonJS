@@ -62,6 +62,12 @@ let _extraArgs: unknown[] | null = null;
 // store the elapsed time during pause/stop period
 let _pauseTime: number = 0;
 
+// freeze() bookkeeping
+let _freezeTimer: ReturnType<typeof setTimeout> | null = null;
+let _freezeEndsAt: number = 0;
+let _freezeMusic: boolean = false;
+let _freezeResolvers: Array<() => void> = [];
+
 /**
  * @ignore
  */
@@ -91,6 +97,21 @@ function _resumeRunLoop(): void {
 function _pauseRunLoop(): void {
 	// Set the paused boolean to stop updates on (most) entities
 	_isPaused = true;
+}
+
+/**
+ * End an active freeze: resume the run loop and resolve waiters.
+ * @ignore
+ */
+function _endFreeze(): void {
+	_freezeTimer = null;
+	_freezeEndsAt = 0;
+	state.resume(_freezeMusic);
+	const resolvers = _freezeResolvers;
+	_freezeResolvers = [];
+	for (const resolve of resolvers) {
+		resolve();
+	}
 }
 
 /**
@@ -326,6 +347,53 @@ const state = {
 			// publish the resume event
 			emit(STATE_RESUME, _pauseTime);
 		}
+	},
+
+	/**
+	 * Freeze the current stage for a fixed duration, then automatically resume.
+	 * Useful for hit-stop / hit-pause effects on impact.
+	 *
+	 * If `freeze()` is called again while a freeze is already active, the freeze
+	 * is *extended* to whichever end-time is later (calls do not stack). The
+	 * `music` flag from the initial call is preserved for the eventual resume.
+	 * @param duration - duration of the freeze in milliseconds
+	 * @param [music=false] - also pause the current music track during the freeze
+	 * @returns a Promise that resolves once the freeze ends
+	 * @example
+	 * // simple hit-stop on impact
+	 * state.freeze(80);
+	 *
+	 * // chain VFX after the freeze
+	 * await state.freeze(120);
+	 * spawnImpactParticles();
+	 */
+	freeze(duration: number, music: boolean = false): Promise<void> {
+		// guard against NaN, Infinity, and negative durations — silently no-op
+		// (mirrors how state.pause/resume quietly ignore invalid states)
+		if (!Number.isFinite(duration) || duration < 0) {
+			return Promise.resolve();
+		}
+		const now = globalThis.performance.now();
+		const newEndsAt = now + duration;
+
+		if (_freezeTimer !== null) {
+			// already frozen: only extend if the new end-time is later
+			if (newEndsAt > _freezeEndsAt) {
+				clearTimeout(_freezeTimer);
+				_freezeEndsAt = newEndsAt;
+				_freezeTimer = setTimeout(_endFreeze, newEndsAt - now);
+			}
+		} else {
+			// start a new freeze
+			_freezeMusic = music;
+			_freezeEndsAt = newEndsAt;
+			this.pause(music);
+			_freezeTimer = setTimeout(_endFreeze, duration);
+		}
+
+		return new Promise<void>((resolve) => {
+			_freezeResolvers.push(resolve);
+		});
 	},
 
 	/**

@@ -552,6 +552,45 @@ export default class Application {
 		this.isDirty = true;
 	}
 
+	/**
+	 * Pause the current stage. Convenience proxy for {@link state.pause}.
+	 * @param [music=false] - also pause the current music track
+	 * @example
+	 * app.pause();        // pause game updates, keep music playing
+	 * app.pause(true);    // pause game updates and music
+	 */
+	pause(music: boolean = false): void {
+		state.pause(music);
+	}
+
+	/**
+	 * Resume the current stage. Convenience proxy for {@link state.resume}.
+	 * @param [music=false] - also resume the current music track
+	 */
+	resume(music: boolean = false): void {
+		state.resume(music);
+	}
+
+	/**
+	 * Freeze the current stage for a fixed duration, then automatically resume.
+	 * Useful for hit-stop / hit-pause effects on impact. Reentrant calls extend
+	 * the freeze to whichever end-time is later (they do not stack).
+	 * Convenience proxy for {@link state.freeze}.
+	 * @param duration - duration of the freeze in milliseconds
+	 * @param [music=false] - also pause the current music track during the freeze
+	 * @returns a Promise that resolves once the freeze ends
+	 * @example
+	 * // simple hit-stop on impact
+	 * app.freeze(80);
+	 *
+	 * // chain VFX after the freeze
+	 * await app.freeze(120);
+	 * spawnImpactParticles();
+	 */
+	freeze(duration: number, music: boolean = false): Promise<void> {
+		return state.freeze(duration, music);
+	}
+
 	/** @ignore */
 	_tick(time: number): void {
 		this.update(time);
