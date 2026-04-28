@@ -207,13 +207,21 @@ describe("ParticleEmitter", () => {
 			const em = new ParticleEmitter(100, 100, {
 				...baseSettings,
 				autoDestroyOnComplete: true,
+				// frequency 1ms + maxParticles 4 means streamParticles spawns at
+				// least one particle on the first update tick — exercises the
+				// public _hasSpawned tracking path without poking internals.
+				frequency: 1,
+				maxParticles: 4,
 			});
 			parent.addChild(em);
-			em.streamParticles(0); // tiny duration so stopStream fires next tick
-			em._hasSpawned = true; // simulate particles having been spawned
-			em.update(20); // duration elapsed → stopStream() → _enabled = false
+			em.streamParticles(20);
+			// first tick: duration not elapsed yet, frequency satisfied → spawn
+			em.update(5);
+			expect(em._hasSpawned).toBe(true);
+			// second tick: duration elapses → stopStream() → _enabled = false
+			em.update(20);
 			drainParticles(em);
-			em.update(0); // completion check fires
+			em.update(0); // completion check fires → autoDestroy schedules removal
 			await flushDefer();
 
 			expect(parent.children).not.toContain(em);

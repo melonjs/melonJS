@@ -1,3 +1,5 @@
+import type ParticleEmitter from "./emitter.ts";
+
 /**
  * Configuration shape for {@link ParticleEmitter}.
  * Every field has a sensible default; users typically pass a `Partial<ParticleEmitterSettings>`
@@ -217,10 +219,11 @@ export interface ParticleEmitterSettings {
 	 * Optional callback fired when the emitter completes (all particles dead
 	 * after at least one particle has been spawned, and — for stream mode —
 	 * the duration has elapsed). Fires regardless of `autoDestroyOnComplete`,
-	 * and runs *before* the emitter is removed from its parent.
+	 * and runs *before* the emitter is removed from its parent. The callback
+	 * is invoked with the emitter as its `this` context.
 	 * @default undefined
 	 */
-	onComplete: (() => void) | undefined;
+	onComplete: ((this: ParticleEmitter) => void) | undefined;
 }
 
 /**

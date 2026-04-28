@@ -121,8 +121,9 @@ export default class ParticleEmitter extends Container {
 		y: number,
 		settings: Partial<ParticleEmitterSettings> = {},
 	) {
-		// call the super constructor
-		super(x, y, settings.width || 1, settings.height || 1);
+		// call the super constructor — `??` (not `||`) so a deliberate width/height
+		// of 0 (point emitter) survives, only `undefined` falls back to 1.
+		super(x, y, settings.width ?? 1, settings.height ?? 1);
 
 		// settings will be fully populated by reset() below; start with defaults
 		this.settings = { ...defaultEmitterSettings };
@@ -174,6 +175,14 @@ export default class ParticleEmitter extends Container {
 		// boot but reset() runs after VIDEO_INIT, so this is the safest place.
 		this._deltaInv = timer.maxfps / 1000;
 
+		// dispose any previously-created fallback texture. Switching to a
+		// user-provided image *or* re-creating the default fallback both make
+		// the old CanvasRenderTarget unreachable, so destroy it eagerly to
+		// avoid a leak across repeated reset() calls.
+		if (typeof this._defaultParticle !== "undefined") {
+			this._defaultParticle.destroy();
+			this._defaultParticle = undefined;
+		}
 		if (typeof this.settings.image === "undefined") {
 			this._defaultParticle = createDefaultParticleTexture(
 				this.settings.textureSize,
