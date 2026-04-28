@@ -45,6 +45,7 @@
 - Rendering: `IndexBuffer` split into renderer-agnostic `IndexBuffer` base (data accumulation) and `WebGLIndexBuffer` (GL buffer bind/upload)
 
 ### Fixed
+- State: `state.freeze()` no longer leaves the game in inconsistent states when interacting with manual pause/resume or window blur. Specifically: (a) the freeze timer's auto-resume now respects whether the game was already paused when freeze started — won't unpause a manually-paused game on expiry; (b) calling `state.resume()` or `state.stop()` mid-freeze cancels the timer and resolves the freeze promise immediately; (c) window `BLUR` cancels the freeze (the visual "moment" is over by the time the user returns; regular `pauseOnBlur` keeps the game paused while away).
 - ParticleEmitter: constructor was using bitwise `|` instead of logical `||` for the `width`/`height` fallback, which silently rounded any provided value to the next odd number (e.g. `width: 16 → 17`, `width: 32 → 33`).
 - Canvas: `setMask(shape, true)` now uses `evenodd` clipping for proper inverted mask support (was using `destination-atop` composite which didn't clip subsequent draws)
 - Ellipse: `clone()` now uses the ellipse pool instead of `new Ellipse()` — consistent with `Polygon.clone()` which already uses its pool
