@@ -5,6 +5,7 @@ import MaskEffect from "../camera/effects/mask_effect.ts";
 import DefaultLoadingScreen from "./../loader/loadingscreen.js";
 import Stage from "./../state/stage.ts";
 import {
+	BLUR,
 	BOOT,
 	emit,
 	GAME_INIT,
@@ -66,6 +67,8 @@ let _pauseTime: number = 0;
 let _freezeTimer: ReturnType<typeof setTimeout> | null = null;
 let _freezeEndsAt: number = 0;
 let _freezeMusic: boolean = false;
+// whether freeze() itself performed the pause (vs. the game was already paused)
+let _freezeStartedPause: boolean = false;
 let _freezeResolvers: Array<() => void> = [];
 
 /**
@@ -100,17 +103,45 @@ function _pauseRunLoop(): void {
 }
 
 /**
- * End an active freeze: resume the run loop and resolve waiters.
+ * Drain and resolve any pending freeze() promises.
+ * @ignore
+ */
+function _resolveFreezeWaiters(): void {
+	const resolvers = _freezeResolvers;
+	_freezeResolvers = [];
+	for (const resolve of resolvers) {
+		resolve();
+	}
+}
+
+/**
+ * End an active freeze on timer expiry: optionally resume the run loop
+ * (only if freeze itself performed the pause), then resolve waiters.
  * @ignore
  */
 function _endFreeze(): void {
 	_freezeTimer = null;
 	_freezeEndsAt = 0;
-	state.resume(_freezeMusic);
-	const resolvers = _freezeResolvers;
-	_freezeResolvers = [];
-	for (const resolve of resolvers) {
-		resolve();
+	const wasOwnedPause = _freezeStartedPause;
+	_freezeStartedPause = false;
+	if (wasOwnedPause) {
+		state.resume(_freezeMusic);
+	}
+	_resolveFreezeWaiters();
+}
+
+/**
+ * Cancel any active freeze without auto-resuming (the caller is taking over
+ * pause/resume control). Clears the timer and resolves pending waiters.
+ * @ignore
+ */
+function _cancelFreeze(): void {
+	if (_freezeTimer !== null) {
+		clearTimeout(_freezeTimer);
+		_freezeTimer = null;
+		_freezeEndsAt = 0;
+		_freezeStartedPause = false;
+		_resolveFreezeWaiters();
 	}
 }
 
@@ -195,6 +226,13 @@ once(BOOT, () => {
 	once(VIDEO_INIT, () => {
 		state.change(state.DEFAULT, true);
 	});
+	// cancel any in-flight freeze when the window loses focus — the visual
+	// hit-stop is short enough that by the time the user comes back the
+	// "moment" is over. Application._onBlur still pauses the state via the
+	// regular pauseOnBlur path, so the game stays paused while away.
+	on(BLUR, () => {
+		_cancelFreeze();
+	});
 });
 
 /**
@@ -269,6 +307,8 @@ const state = {
 	stop(shouldPauseTrack: boolean = false): void {
 		// only stop when we are not loading stuff
 		if (_state !== this.LOADING && this.isRunning()) {
+			// caller is taking over — drop any in-flight freeze
+			_cancelFreeze();
 			// stop the main loop
 			_stopRunLoop();
 
@@ -334,6 +374,8 @@ const state = {
 	 */
 	resume(music: boolean = false): void {
 		if (this.isPaused()) {
+			// caller is taking over — drop any in-flight freeze
+			_cancelFreeze();
 			// resume the main loop
 			_resumeRunLoop();
 			// current music stop
@@ -353,12 +395,22 @@ const state = {
 	 * Freeze the current stage for a fixed duration, then automatically resume.
 	 * Useful for hit-stop / hit-pause effects on impact.
 	 *
-	 * If `freeze()` is called again while a freeze is already active, the freeze
-	 * is *extended* to whichever end-time is later (calls do not stack). The
-	 * `music` flag from the initial call is preserved for the eventual resume.
+	 * Behaviour notes:
+	 * - If `freeze()` is called again while a freeze is already active, the
+	 *   freeze is *extended* to whichever end-time is later (calls do not
+	 *   stack). The `music` flag from the initial call is preserved.
+	 * - If the game was already paused when `freeze()` was called, the freeze
+	 *   timer will *not* unpause it on expiry — the game stays paused.
+	 * - Calling `state.resume()` or `state.stop()` while a freeze is active
+	 *   cancels the timer and resolves the returned promise immediately.
+	 * - The freeze is also cancelled when the window loses focus (BLUR) since
+	 *   the hit-stop's "moment" is short enough that the user has missed it
+	 *   by the time they return. The regular `pauseOnBlur` behaviour still
+	 *   keeps the game paused while away.
+	 * - Negative, `NaN`, and `Infinity` durations silently no-op.
 	 * @param duration - duration of the freeze in milliseconds
 	 * @param [music=false] - also pause the current music track during the freeze
-	 * @returns a Promise that resolves once the freeze ends
+	 * @returns a Promise that resolves once the freeze ends (or is cancelled)
 	 * @example
 	 * // simple hit-stop on impact
 	 * state.freeze(80);
@@ -387,7 +439,12 @@ const state = {
 			// start a new freeze
 			_freezeMusic = music;
 			_freezeEndsAt = newEndsAt;
-			this.pause(music);
+			// only own the pause if the game wasn't already paused — that way
+			// _endFreeze() won't unpause a manually-paused game on timer expiry
+			_freezeStartedPause = !this.isPaused();
+			if (_freezeStartedPause) {
+				this.pause(music);
+			}
 			_freezeTimer = setTimeout(_endFreeze, duration);
 		}
 

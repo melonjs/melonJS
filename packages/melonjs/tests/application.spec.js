@@ -340,6 +340,91 @@ describe("Application", () => {
 			await Promise.all([long, short]);
 			expect(state.isPaused()).toBe(false);
 		});
+
+		it("freeze() should leave game paused on timeout if it was already paused", async () => {
+			vi.useFakeTimers();
+			state.pause();
+			expect(state.isPaused()).toBe(true);
+
+			const done = game.freeze(100);
+			expect(state.isPaused()).toBe(true);
+
+			await vi.advanceTimersByTimeAsync(100);
+			await done;
+
+			// freeze didn't own the pause — game must remain paused
+			expect(state.isPaused()).toBe(true);
+		});
+
+		it("manual state.resume() during freeze should cancel timer and resolve waiters", async () => {
+			vi.useFakeTimers();
+			let resolved = false;
+			const done = game.freeze(500).then(() => {
+				resolved = true;
+			});
+			expect(state.isPaused()).toBe(true);
+
+			// user resumes manually before the freeze timer fires
+			state.resume();
+			expect(state.isPaused()).toBe(false);
+
+			// freeze promise should resolve immediately (cancelled)
+			await done;
+			expect(resolved).toBe(true);
+
+			// no zombie timer — advancing time should not affect anything
+			await vi.advanceTimersByTimeAsync(1000);
+			expect(state.isPaused()).toBe(false);
+		});
+
+		it("freeze() called after a manual resume should re-pause properly", async () => {
+			vi.useFakeTimers();
+			game.freeze(500);
+			expect(state.isPaused()).toBe(true);
+
+			state.resume();
+			expect(state.isPaused()).toBe(false);
+
+			// a new freeze must actually re-pause the game (not hit the
+			// "already frozen" extend branch because of a stale timer)
+			const done = game.freeze(100);
+			expect(state.isPaused()).toBe(true);
+
+			await vi.advanceTimersByTimeAsync(100);
+			await done;
+			expect(state.isPaused()).toBe(false);
+		});
+
+		it("window blur should cancel an in-flight freeze and resolve waiters", async () => {
+			vi.useFakeTimers();
+			let resolved = false;
+			const done = game.freeze(500).then(() => {
+				resolved = true;
+			});
+			expect(state.isPaused()).toBe(true);
+
+			// emit BLUR the same way device.js does on visibility loss —
+			// state.ts's listener cancels the freeze + resolves the promise
+			const { emit, BLUR } = await import("../src/system/event.ts");
+			emit(BLUR);
+
+			// freeze promise resolves immediately — no waiting for the 500ms
+			await done;
+			expect(resolved).toBe(true);
+
+			// state stays paused (Application._onBlur's regular pauseOnBlur path
+			// keeps it that way until focus returns) — but the freeze timer is
+			// gone, so a manual resume unpauses normally with no zombie timer.
+			state.resume();
+			expect(state.isPaused()).toBe(false);
+
+			// and a fresh freeze still works
+			const next = game.freeze(50);
+			expect(state.isPaused()).toBe(true);
+			await vi.advanceTimersByTimeAsync(50);
+			await next;
+			expect(state.isPaused()).toBe(false);
+		});
 	});
 
 	describe("parentApp", () => {
