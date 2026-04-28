@@ -125,8 +125,10 @@ class PathEnemyEntity extends Sprite {
 				totalParticles: 32,
 				angle: 0,
 				angleVariation: 6.283185307179586,
-				maxLife: 5,
+				minLife: 400,
+				maxLife: 800,
 				speed: 3,
+				autoDestroyOnComplete: true,
 			});
 
 			game.world.addChild(emitter, this.pos.z);

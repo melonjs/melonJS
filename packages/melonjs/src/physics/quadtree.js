@@ -209,7 +209,10 @@ export default class QuadTree {
 	 * @param {Container} container - group of objects to be added
 	 */
 	insertContainer(container) {
-		const children = container.children;
+		// use getChildren() to lazily initialise an empty array — Container
+		// stores `children` as `undefined` until first access, which would
+		// otherwise crash here for a freshly-constructed world.
+		const children = container.getChildren();
 		const childrenLength = children.length;
 		for (let i = childrenLength, child; i--, (child = children[i]); ) {
 			if (child.isKinematic !== true) {
