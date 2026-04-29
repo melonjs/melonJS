@@ -223,8 +223,19 @@ export default class ImageLayer extends Sprite {
 	}
 
 	/**
-	 * override the default predraw function
-	 * as repeat and anchor are managed directly in the draw method
+	 * Override the default preDraw to skip the base class's anchor offset
+	 * translation and `autoTransform` application — `ImageLayer.draw()`
+	 * computes its own world-space position from the viewport, the parallax
+	 * `ratio`, anchor, and zoom, so applying anchor/transform here would
+	 * double-translate the layer.
+	 *
+	 * Coordinate-sensitive setup (flip, stencil mask) is intentionally
+	 * deferred to `draw()` where it runs *after* the per-camera zoom
+	 * translate/scale — that way it stays correctly aligned at any
+	 * `viewport.zoom` and across multiple cameras. Coordinate-independent
+	 * setup (alpha, post-effects, tint, blend) stays here. The inherited
+	 * `Renderable.postDraw` cleans up symmetrically (`clearTint` /
+	 * `clearMask` / `endPostEffect` / `restore`).
 	 * @ignore
 	 */
 	preDraw(renderer) {
@@ -234,7 +245,12 @@ export default class ImageLayer extends Sprite {
 		// apply the defined alpha value
 		renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
-		// apply the defined tint, if any
+		// delegate post-effect setup to the renderer (custom shader / postEffects)
+		if (!this._postEffectManaged) {
+			renderer.beginPostEffect(this);
+		}
+
+		// apply the defined tint
 		renderer.setTint(this.tint);
 
 		// apply blending if different from "normal"
@@ -288,6 +304,25 @@ export default class ImageLayer extends Sprite {
 		// for zoomed cameras, scale positions and pattern to match the world view
 		renderer.translate(x * vZoom, y * vZoom);
 		renderer.scale(vZoom, vZoom);
+
+		// apply flip — pivot at the centre of the drawn pattern in the
+		// post-zoom local frame, so the mirror lands in the visible viewport
+		// regardless of `viewport.zoom`. Done here (not in preDraw) because
+		// preDraw runs before this translate/scale and would misalign.
+		if (this._flip.x || this._flip.y) {
+			const px = viewport.width;
+			const py = viewport.height;
+			renderer.translate(px, py);
+			renderer.scale(this._flip.x ? -1 : 1, this._flip.y ? -1 : 1);
+			renderer.translate(-px, -py);
+		}
+
+		// stencil mask — also applied in the post-zoom local frame so the
+		// mask shape's coordinates are interpreted relative to the layer's
+		// drawn area, matching `drawPattern` below.
+		if (this.mask) {
+			renderer.setMask(this.mask);
+		}
 
 		renderer.drawPattern(
 			this._pattern,
