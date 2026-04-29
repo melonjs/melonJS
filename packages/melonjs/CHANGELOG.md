@@ -1,5 +1,7 @@
 # Changelog
 
+## [19.3.0] (melonJS 2) - _unreleased_
+
 ## [19.2.0] (melonJS 2) - _2026-04-29_
 
 ### Added
