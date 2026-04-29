@@ -1,6 +1,6 @@
 # Changelog
 
-## [19.2.0] (melonJS 2) - _unreleased_
+## [19.2.0] (melonJS 2) - _2026-04-29_
 
 ### Added
 - ParticleEmitter: `autoDestroyOnComplete` setting (default `false`) — when enabled, the emitter automatically removes itself from its parent container once all particles have died. Solves the leak in fire-and-forget `burstParticles()` use cases (explosions, pickups, impact effects) where there is no natural cleanup hook. Also adds an `onComplete` callback that fires when the emitter completes, regardless of `autoDestroyOnComplete`.
