@@ -573,12 +573,15 @@ export default class Application {
 
 	/**
 	 * Freeze the current stage for a fixed duration, then automatically resume.
-	 * Useful for hit-stop / hit-pause effects on impact. Reentrant calls extend
-	 * the freeze to whichever end-time is later (they do not stack).
-	 * Convenience proxy for {@link state.freeze}.
+	 * Useful for hit-stop / hit-pause effects on impact.
+	 *
+	 * Convenience proxy for {@link state.freeze}; see that method's
+	 * documentation for the full behaviour matrix (extend-not-stack semantics,
+	 * interaction with manual `state.pause()` / `state.resume()`, automatic
+	 * cancellation on window blur, etc.).
 	 * @param duration - duration of the freeze in milliseconds
 	 * @param [music=false] - also pause the current music track during the freeze
-	 * @returns a Promise that resolves once the freeze ends
+	 * @returns a Promise that resolves once the freeze ends (or is cancelled)
 	 * @example
 	 * // simple hit-stop on impact
 	 * app.freeze(80);
