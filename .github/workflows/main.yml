@@ -1,4 +1,9 @@
 name: Build & Test
+# Note: docs-only PRs (markdown / media changes) skip these jobs via
+# `paths-ignore`. If branch-protection rules require `lint`/`test` as
+# checks, those PRs may end up BLOCKED with no checks ever running. The
+# workaround is admin-merge (or a status-check shim emitting matching
+# job names with `success` for the same paths).
 on:
   push:
     branches: [master]
