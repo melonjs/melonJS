@@ -223,8 +223,16 @@ export default class ImageLayer extends Sprite {
 	}
 
 	/**
-	 * override the default predraw function
-	 * as repeat and anchor are managed directly in the draw method
+	 * Override the default preDraw to skip the base class's anchor offset
+	 * translation and `autoTransform` application — `ImageLayer.draw()`
+	 * computes its own world-space position from the viewport, the parallax
+	 * `ratio`, anchor, and zoom, so applying anchor/transform here would
+	 * double-translate the layer.
+	 *
+	 * Everything else from `Renderable.preDraw` is preserved (alpha, flip,
+	 * mask, post-effects, tint, blend mode) so those features still work on
+	 * an `ImageLayer` instance. The inherited `Renderable.postDraw` cleans
+	 * up symmetrically (clearTint / clearMask / endPostEffect / restore).
 	 * @ignore
 	 */
 	preDraw(renderer) {
@@ -234,7 +242,31 @@ export default class ImageLayer extends Sprite {
 		// apply the defined alpha value
 		renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
-		// apply the defined tint, if any
+		// apply flip — pivots around the layer center
+		if (this._flip.x || this._flip.y) {
+			const ax = this.width * this.anchorPoint.x;
+			const ay = this.height * this.anchorPoint.y;
+			const dx = this._flip.x ? this.centerX - ax : 0;
+			const dy = this._flip.y ? this.centerY - ay : 0;
+
+			renderer.translate(dx, dy);
+			renderer.scale(this._flip.x ? -1 : 1, this._flip.y ? -1 : 1);
+			renderer.translate(-dx, -dy);
+		}
+
+		// apply stencil mask if defined — anchored at the layer position
+		if (this.mask) {
+			renderer.translate(this.pos.x, this.pos.y);
+			renderer.setMask(this.mask);
+			renderer.translate(-this.pos.x, -this.pos.y);
+		}
+
+		// delegate post-effect setup to the renderer (custom shader / postEffects)
+		if (!this._postEffectManaged) {
+			renderer.beginPostEffect(this);
+		}
+
+		// apply the defined tint
 		renderer.setTint(this.tint);
 
 		// apply blending if different from "normal"

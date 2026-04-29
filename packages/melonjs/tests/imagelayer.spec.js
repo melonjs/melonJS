@@ -1,5 +1,5 @@
-import { beforeAll, describe, expect, it } from "vitest";
-import { boot, game, ImageLayer, video } from "../src/index.js";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+import { boot, game, ImageLayer, Rect, video } from "../src/index.js";
 
 describe("ImageLayer", () => {
 	let testImage;
@@ -78,6 +78,94 @@ describe("ImageLayer", () => {
 			expect(layer.width).toEqual(game.viewport.width);
 			expect(layer.height).toEqual(Infinity);
 			game.world.removeChildNow(layer);
+		});
+	});
+
+	describe("preDraw delegates flip / mask / post-effects", () => {
+		// Build a tiny renderer stub that captures the high-level calls we want
+		// to assert on. Anything not listed here is a no-op spy.
+		function makeRendererStub() {
+			return {
+				save: vi.fn(),
+				translate: vi.fn(),
+				scale: vi.fn(),
+				setMask: vi.fn(),
+				beginPostEffect: vi.fn(),
+				setTint: vi.fn(),
+				setBlendMode: vi.fn(),
+				setGlobalAlpha: vi.fn(),
+				globalAlpha: vi.fn(() => {
+					return 1;
+				}),
+				getBlendMode: vi.fn(() => {
+					return "normal";
+				}),
+			};
+		}
+
+		function makeLayer() {
+			const layer = new ImageLayer(0, 0, {
+				image: testImage,
+				name: "test",
+				repeat: "no-repeat",
+			});
+			// avoid any hidden GPU side-effects from world activation
+			layer.width = 64;
+			layer.height = 64;
+			return layer;
+		}
+
+		it("calls renderer.setMask when this.mask is set", () => {
+			const layer = makeLayer();
+			layer.mask = new Rect(0, 0, 32, 32);
+			const r = makeRendererStub();
+			layer.preDraw(r);
+			expect(r.setMask).toHaveBeenCalledWith(layer.mask);
+		});
+
+		it("does not call setMask when this.mask is undefined", () => {
+			const layer = makeLayer();
+			const r = makeRendererStub();
+			layer.preDraw(r);
+			expect(r.setMask).not.toHaveBeenCalled();
+		});
+
+		it("calls renderer.beginPostEffect (post-effects path)", () => {
+			const layer = makeLayer();
+			const r = makeRendererStub();
+			layer.preDraw(r);
+			expect(r.beginPostEffect).toHaveBeenCalledWith(layer);
+		});
+
+		it("skips beginPostEffect when _postEffectManaged is true", () => {
+			const layer = makeLayer();
+			layer._postEffectManaged = true;
+			const r = makeRendererStub();
+			layer.preDraw(r);
+			expect(r.beginPostEffect).not.toHaveBeenCalled();
+		});
+
+		it("applies horizontal flip via renderer.scale(-1, 1)", () => {
+			const layer = makeLayer();
+			layer.flipX(true);
+			const r = makeRendererStub();
+			layer.preDraw(r);
+			// expect a scale call with x = -1
+			const flipCall = r.scale.mock.calls.find((args) => {
+				return args[0] === -1 && args[1] === 1;
+			});
+			expect(flipCall).toBeDefined();
+		});
+
+		it("applies vertical flip via renderer.scale(1, -1)", () => {
+			const layer = makeLayer();
+			layer.flipY(true);
+			const r = makeRendererStub();
+			layer.preDraw(r);
+			const flipCall = r.scale.mock.calls.find((args) => {
+				return args[0] === 1 && args[1] === -1;
+			});
+			expect(flipCall).toBeDefined();
 		});
 	});
 });
