@@ -17,9 +17,9 @@ A modern & lightweight HTML5 game engine
 -------------------------------------------------------------------------------
 ![melonJS](https://melonjs.org/img/alex4-github.png)
 
-[melonJS](https://melonjs.org/) is an open-source HTML5 game engine that empowers developers to create 2D games using modern JavaScript and TypeScript. Built with ES6 classes and bundled using [esbuild](https://esbuild.github.io), it provides tree-shaking support for optimal bundle sizes.
+[melonJS](https://melonjs.org/) is an open-source 2D game engine designed for indie developers — post-processing effects, custom shaders, 3D mesh support, polygon-accurate physics, modern Tiled workflows, and high performance, all packed into just over 100 KB of vanilla JS/TS with no toolchain lock-in. Built with ES6 classes and bundled with [esbuild](https://esbuild.github.io).
 
-[melonJS](https://melonjs.org/) is licensed under the [MIT License](LICENSE.md) and actively maintained with the help of a small team of enthusiasts at AltByte in Singapore.
+[melonJS](https://melonjs.org/) is licensed under the [MIT License](LICENSE.md) and actively maintained at AltByte in Singapore.
 
 Why melonJS
 -------------------------------------------------------------------------------
@@ -55,7 +55,7 @@ Graphics
 - Standard spritesheet, single and multiple Packed Textures support
 - Compressed texture support (DDS, KTX, KTX2, PVR, PKM) with automatic format detection and fallback
 - 3D mesh rendering with OBJ/MTL model loading, perspective projection and hardware depth testing
-- Built-in shader effects (Flash, Outline, Glow, Dissolve, CRT, Hologram, etc.) and custom shader support via `ShaderEffect` for per-sprite fragment effects (WebGL)
+- Built-in shader effects (Flash, Outline, Glow, Dissolve, CRT, Hologram, etc.) with multi-pass chaining via `postEffects`, plus custom shader support via `ShaderEffect` for per-sprite fragment effects (WebGL)
 - Trail renderable for fading, tapering ribbons behind moving objects (speed lines, sword slashes, magic trails)
 - System & Bitmap Text with built-in typewriter effect
 - Video sprite playback
@@ -78,7 +78,8 @@ Input
 Camera
 - Multi-camera support (split-screen, minimaps, multiple viewports)
 - Camera follow with configurable deadzone and damping
-- Built-in shake, fade and flash effects
+- Built-in shake, fade, flash, and mask-based transition effects
+- Per-camera post-processing pipeline with stackable shader effects and color grading (ColorMatrix)
 
 UI
 - Clickable, hoverable and draggable UI elements
@@ -107,6 +108,7 @@ Assets
 - Support for images, JSON, TMX/TSX, audio, video, binary and fonts
 
 Core
+- `Application` class as the modern entry point with built-in pause, resume, and `freeze()` (hit-stop) primitives
 - A state manager (to easily manage loading, menu, options, in-game state)
 - Tween effects with multiple easing functions (Quadratic, Cubic, Elastic, Bounce, etc.) and Bezier/Catmull-Rom interpolation
 - Transition effects
