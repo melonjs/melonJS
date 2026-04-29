@@ -8,6 +8,8 @@ const FRAMEBUFFER_COMPLETE = 0x8cd5;
 const FRAMEBUFFER_UNSUPPORTED = 0x8cdd;
 const DEPTH_STENCIL = 0x84f9;
 const DEPTH_STENCIL_ATTACHMENT = 0x821a;
+const DEPTH_ATTACHMENT = 0x8d00;
+const DEPTH_COMPONENT16 = 0x81a5;
 const COLOR_ATTACHMENT0 = 0x8ce0;
 const TEXTURE_2D = 0x0de1;
 const RGBA = 0x1908;
@@ -34,6 +36,8 @@ function makeMockGL(extras = {}) {
 		RENDERBUFFER,
 		FRAMEBUFFER,
 		FRAMEBUFFER_COMPLETE,
+		DEPTH_ATTACHMENT,
+		DEPTH_COMPONENT16,
 		COLOR_ATTACHMENT0,
 		TEXTURE_2D,
 		RGBA,
@@ -151,7 +155,48 @@ describe("WebGLRenderTarget", () => {
 			expect(target._hasStencil).toBe(true);
 		});
 
-		it("sets _hasStencil=false and warns on incomplete framebuffer (no throw)", () => {
+		it("falls back to depth-only when packed depth+stencil is incomplete", () => {
+			const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {
+				/* swallow */
+			});
+			// First check (after depth+stencil attach) fails; second (after
+			// depth-only fallback) succeeds.
+			let callCount = 0;
+			const gl = makeMockGL({
+				checkFramebufferStatus: vi.fn(() => {
+					callCount++;
+					return callCount === 1
+						? FRAMEBUFFER_UNSUPPORTED
+						: FRAMEBUFFER_COMPLETE;
+				}),
+			});
+
+			let target;
+			expect(() => {
+				target = new WebGLRenderTarget(gl, 64, 64);
+			}).not.toThrow();
+
+			expect(target._hasStencil).toBe(false);
+			// fallback path called framebufferRenderbuffer with DEPTH_ATTACHMENT
+			const depthOnlyAttach = gl.__calls.framebufferRenderbuffer.find(
+				(call) => {
+					return call[1] === DEPTH_ATTACHMENT;
+				},
+			);
+			expect(depthOnlyAttach).toBeDefined();
+			// fallback called renderbufferStorage with DEPTH_COMPONENT16
+			const depthOnlyStorage = gl.__calls.renderbufferStorage.find((call) => {
+				return call[1] === DEPTH_COMPONENT16;
+			});
+			expect(depthOnlyStorage).toBeDefined();
+			// warned about depth-only fallback (not "incomplete after fallback")
+			expect(warnSpy).toHaveBeenCalledOnce();
+			expect(warnSpy.mock.calls[0][0]).toMatch(/depth-only/i);
+
+			warnSpy.mockRestore();
+		});
+
+		it("warns and continues when even depth-only is incomplete", () => {
 			const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {
 				/* swallow */
 			});
@@ -161,7 +206,6 @@ describe("WebGLRenderTarget", () => {
 				}),
 			});
 
-			// must not throw even when attachment fails
 			let target;
 			expect(() => {
 				target = new WebGLRenderTarget(gl, 64, 64);
@@ -169,7 +213,37 @@ describe("WebGLRenderTarget", () => {
 
 			expect(target._hasStencil).toBe(false);
 			expect(warnSpy).toHaveBeenCalledOnce();
-			expect(warnSpy.mock.calls[0][0]).toMatch(/incomplete/i);
+			expect(warnSpy.mock.calls[0][0]).toMatch(
+				/incomplete after depth-only fallback/i,
+			);
+
+			warnSpy.mockRestore();
+		});
+
+		it("resize() re-validates completeness and updates _hasStencil", () => {
+			const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {
+				/* swallow */
+			});
+			// Construction succeeds. Resize then fails depth+stencil but succeeds
+			// depth-only — _hasStencil should flip from true → false.
+			let callCount = 0;
+			const gl = makeMockGL({
+				checkFramebufferStatus: vi.fn(() => {
+					callCount++;
+					// 1st: ctor depth+stencil → COMPLETE
+					// 2nd: resize depth+stencil → UNSUPPORTED
+					// 3rd: resize depth-only → COMPLETE
+					if (callCount === 2) {
+						return FRAMEBUFFER_UNSUPPORTED;
+					}
+					return FRAMEBUFFER_COMPLETE;
+				}),
+			});
+			const target = new WebGLRenderTarget(gl, 64, 64);
+			expect(target._hasStencil).toBe(true);
+
+			target.resize(128, 64);
+			expect(target._hasStencil).toBe(false);
 
 			warnSpy.mockRestore();
 		});

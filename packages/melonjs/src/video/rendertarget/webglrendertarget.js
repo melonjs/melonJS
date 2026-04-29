@@ -11,6 +11,56 @@ const DEPTH_STENCIL = 0x84f9;
 const DEPTH_STENCIL_ATTACHMENT = 0x821a;
 
 /**
+ * Try to attach a depth+stencil (preferred) or depth-only renderbuffer to
+ * the currently-bound framebuffer, validating completeness at each step.
+ *
+ * Returns `{ hasStencil, isComplete }`:
+ * - `hasStencil = true` only if packed depth+stencil attachment succeeded
+ * - `isComplete = false` means even depth-only failed → callers should not
+ *   render into the FBO (post-effects, blits, etc. will fail)
+ * @ignore
+ */
+function attachDepthStencil(gl, framebuffer, renderbuffer, width, height) {
+	const depthStencil = gl.DEPTH_STENCIL ?? DEPTH_STENCIL;
+	const depthStencilAttachment =
+		gl.DEPTH_STENCIL_ATTACHMENT ?? DEPTH_STENCIL_ATTACHMENT;
+
+	// preferred path: packed depth + stencil so masking works
+	gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
+	gl.renderbufferStorage(gl.RENDERBUFFER, depthStencil, width, height);
+	gl.framebufferRenderbuffer(
+		gl.FRAMEBUFFER,
+		depthStencilAttachment,
+		gl.RENDERBUFFER,
+		renderbuffer,
+	);
+	if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE) {
+		return { hasStencil: true, isComplete: true };
+	}
+
+	// fallback: depth-only — masking unavailable, but the FBO is still usable
+	// for plain post-effect / blit pipelines
+	gl.framebufferRenderbuffer(
+		gl.FRAMEBUFFER,
+		depthStencilAttachment,
+		gl.RENDERBUFFER,
+		null,
+	);
+	gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, width, height);
+	gl.framebufferRenderbuffer(
+		gl.FRAMEBUFFER,
+		gl.DEPTH_ATTACHMENT,
+		gl.RENDERBUFFER,
+		renderbuffer,
+	);
+	const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+	return {
+		hasStencil: false,
+		isComplete: status === gl.FRAMEBUFFER_COMPLETE,
+	};
+}
+
+/**
  * A WebGL Framebuffer Object (FBO) render target for offscreen rendering.
  * Used by the post-processing pipeline to render a camera's output to a texture,
  * which can then be drawn to the screen through a post-process shader.
@@ -57,15 +107,8 @@ export default class WebGLRenderTarget extends RenderTarget {
 
 		// create depth+stencil renderbuffer (needed for masks)
 		this.depthStencilBuffer = gl.createRenderbuffer();
-		gl.bindRenderbuffer(gl.RENDERBUFFER, this.depthStencilBuffer);
-		gl.renderbufferStorage(
-			gl.RENDERBUFFER,
-			gl.DEPTH_STENCIL ?? DEPTH_STENCIL,
-			width,
-			height,
-		);
 
-		// attach to framebuffer
+		// bind FBO + attach color, then try depth+stencil with depth-only fallback
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
 		gl.framebufferTexture2D(
 			gl.FRAMEBUFFER,
@@ -74,29 +117,40 @@ export default class WebGLRenderTarget extends RenderTarget {
 			this.texture,
 			0,
 		);
-		gl.framebufferRenderbuffer(
-			gl.FRAMEBUFFER,
-			gl.DEPTH_STENCIL_ATTACHMENT ?? DEPTH_STENCIL_ATTACHMENT,
-			gl.RENDERBUFFER,
-			this.depthStencilBuffer,
-		);
-
-		// validate completeness — if the depth+stencil attachment failed for
-		// any reason (driver bug, unsupported format), `_hasStencil` is false
-		// and downstream stencil-dependent paths can short-circuit.
-		const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-		this._hasStencil = status === gl.FRAMEBUFFER_COMPLETE;
-		if (!this._hasStencil) {
-			console.warn(
-				`WebGLRenderTarget: framebuffer incomplete (status 0x${status.toString(16)}) — stencil masking disabled for this target`,
-			);
-		}
+		this._applyDepthStencil(width, height);
 
 		// unbind and restore the previously active texture unit
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 		gl.bindTexture(gl.TEXTURE_2D, null);
 		gl.activeTexture(prevUnit);
+	}
+
+	/**
+	 * (Re)attach the depth/stencil renderbuffer at the given size and
+	 * update `_hasStencil` based on the resulting framebuffer status.
+	 * Falls back to depth-only when packed depth+stencil fails; warns
+	 * once if even depth-only is incomplete.
+	 * @ignore
+	 */
+	_applyDepthStencil(width, height) {
+		const result = attachDepthStencil(
+			this.gl,
+			this.framebuffer,
+			this.depthStencilBuffer,
+			width,
+			height,
+		);
+		this._hasStencil = result.hasStencil;
+		if (!result.isComplete) {
+			console.warn(
+				"WebGLRenderTarget: framebuffer incomplete after depth-only fallback — rendering into this target may fail",
+			);
+		} else if (!result.hasStencil) {
+			console.warn(
+				"WebGLRenderTarget: depth+stencil attachment failed; using depth-only — stencil masking disabled for this target",
+			);
+		}
 	}
 
 	/**
@@ -146,14 +200,11 @@ export default class WebGLRenderTarget extends RenderTarget {
 			null,
 		);
 
-		// resize depth+stencil renderbuffer
-		gl.bindRenderbuffer(gl.RENDERBUFFER, this.depthStencilBuffer);
-		gl.renderbufferStorage(
-			gl.RENDERBUFFER,
-			gl.DEPTH_STENCIL ?? DEPTH_STENCIL,
-			width,
-			height,
-		);
+		// reattach depth/stencil at the new size (and re-validate completeness
+		// so `_hasStencil` reflects the post-resize attachment status)
+		gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+		this._applyDepthStencil(width, height);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
 		gl.bindTexture(gl.TEXTURE_2D, null);
 		gl.bindRenderbuffer(gl.RENDERBUFFER, null);
