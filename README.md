@@ -17,7 +17,7 @@ A modern & lightweight HTML5 game engine
 -------------------------------------------------------------------------------
 ![melonJS](https://melonjs.org/img/alex4-github.png)
 
-[melonJS](https://melonjs.org/) is an open-source 2D game engine designed for indie developers — post-processing effects, custom shaders, 3D mesh support, polygon-accurate physics, modern Tiled workflows, and high performance, all packed into just over 100 KB of vanilla JS/TS with no toolchain lock-in. Built with ES6 classes and bundled with [esbuild](https://esbuild.github.io).
+[melonJS](https://melonjs.org/) is an open-source 2D game engine designed for indie developers — post-processing effects, custom shaders, 3D mesh support, polygon-accurate physics, modern Tiled workflows, and high performance, all packed into just over 100 KB minzipped of vanilla JS/TS with no toolchain lock-in. Built with ES6 classes and bundled with [esbuild](https://esbuild.github.io).
 
 [melonJS](https://melonjs.org/) is licensed under the [MIT License](LICENSE.md) and actively maintained by the team at AltByte in Singapore.
 
