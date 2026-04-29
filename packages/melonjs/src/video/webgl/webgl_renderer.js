@@ -699,12 +699,18 @@ export default class WebGLRenderer extends Renderer {
 	}
 
 	/**
-	 * Clear the current render target to transparent black (color + stencil).
+	 * Clear the current render target to transparent black.
+	 *
+	 * Only clears the color buffer — `setMask()` clears `STENCIL_BUFFER_BIT`
+	 * itself when starting a mask, and including it here would emit a WebGL
+	 * `Clear called for non-existing buffers` warning when the active FBO
+	 * has no stencil attachment (rare, but happens on drivers that fail
+	 * the depth+stencil renderbuffer attachment for the FBO).
 	 */
 	clearRenderTarget() {
 		const gl = this.gl;
 		gl.clearColor(0, 0, 0, 0);
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+		gl.clear(gl.COLOR_BUFFER_BIT);
 	}
 
 	/**

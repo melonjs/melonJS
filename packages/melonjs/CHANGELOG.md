@@ -45,6 +45,7 @@
 - Rendering: `IndexBuffer` split into renderer-agnostic `IndexBuffer` base (data accumulation) and `WebGLIndexBuffer` (GL buffer bind/upload)
 
 ### Fixed
+- WebGL: stencil masking (`setMask` / `MaskEffect`) now works correctly in WebGL1 mode (`preferWebGL1: true`). `WebGLRenderTarget` was relying on `gl.DEPTH_STENCIL` / `gl.DEPTH_STENCIL_ATTACHMENT` being exposed on the WebGL1 context, which some browser/driver combinations leave `undefined`, silently producing FBOs with no stencil attachment. The setup now uses spec-defined numeric fallbacks (0x84F9 / 0x821A) and validates completeness via `gl.checkFramebufferStatus()`. Also dropped the dead `WEBGL_depth_stencil` extension gate (those constants are core WebGL 1.0, no extension required) and removed the redundant `STENCIL_BUFFER_BIT` from `clearRenderTarget()` (which produced spurious `Clear called for non-existing buffers` warnings).
 - ParticleEmitter: constructor was using bitwise `|` instead of logical `||` for the `width`/`height` fallback, which silently rounded any provided value to the next odd number (e.g. `width: 16 → 17`, `width: 32 → 33`).
 - Canvas: `setMask(shape, true)` now uses `evenodd` clipping for proper inverted mask support (was using `destination-atop` composite which didn't clip subsequent draws)
 - Ellipse: `clone()` now uses the ellipse pool instead of `new Ellipse()` — consistent with `Polygon.clone()` which already uses its pool
