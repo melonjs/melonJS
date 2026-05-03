@@ -90,16 +90,17 @@ Level Editor
 - [Tiled](https://www.mapeditor.org) map format [up to 1.12](https://doc.mapeditor.org/en/stable/reference/tmx-changelog/) built-in support for easy level design
     - Uncompressed and [compressed](https://github.com/melonjs/melonJS/tree/master/packages/tiled-inflate-plugin) Plain, Base64, CSV and JSON encoded XML tilemap loading
     - Orthogonal, Isometric, Hexagonal (both normal and staggered) and Oblique maps
-    - Multiple layers (multiple background/foreground, collision and Image layers)
-    - Parallax scrolling via Image layers
-    - Animated and multiple Tileset support
+    - Multiple layers with per-layer alpha, tinting and blend modes (multiple background/foreground, collision and Image layers)
+    - Parallax scrolling via Image layers, with parallax origin support
+    - Animated and multiple Tileset support, tile sub-rectangles, embedded base64 images
     - Tileset transparency settings
-    - Layers alpha and tinting settings
-    - Rectangle, Ellipse, Polygon and Polyline objects support
-    - Tiled Objects with custom properties
+    - Rectangle, Ellipse, Polygon, Polyline and Capsule (round-rect) object shapes
+    - Tiled Objects with custom properties (string, number, boolean, color, file, object, list/array and class-typed)
+    - Per-object opacity and visibility
+    - Concave collision polygons auto-decomposed via earcut triangulation
     - Flipped & rotated Tiles
     - Dynamic Layer and Object/Group ordering
-    - Dynamic Entity loading
+    - Dynamic Entity loading via an extensible object factory registry — register custom handlers for any Tiled class name without modifying engine code
     - Shape based Tile collision support
 
 Assets
