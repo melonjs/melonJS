@@ -9,7 +9,7 @@ import { Vector3d } from "../math/vector3d.ts";
 import { Bounds, boundsPool } from "./../physics/bounds.ts";
 import type Container from "./../renderable/container.js";
 import Renderable from "./../renderable/renderable.js";
-import Stage from "../state/stage.ts";
+import type Stage from "../state/stage.ts";
 import state from "../state/state.ts";
 import {
 	CANVAS_ONRESIZE,
@@ -965,8 +965,12 @@ export default class Camera2d extends Renderable {
 		// world tree as Renderables; the Stage paints the ambient fill with
 		// per-light cutouts here. Done inside the FBO bracket so any post-
 		// effect on this camera (vignette, ColorMatrix, …) wraps the lighting.
-		const stage = state.current();
-		if (stage instanceof Stage) {
+		// duck-type rather than `instanceof Stage` to avoid a circular runtime
+		// import between camera2d.ts and stage.ts
+		const stage = state.current() as {
+			drawLighting?: typeof Stage.prototype.drawLighting;
+		} | null;
+		if (stage && typeof stage.drawLighting === "function") {
 			stage.drawLighting(renderer, this);
 		}
 

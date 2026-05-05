@@ -205,16 +205,30 @@ export default class Stage {
 		if (this.ambientLight.alpha === 0) {
 			return;
 		}
-		// cast for renderer-specific methods (setMask, setColor, fillRect)
+		// cast for renderer-specific methods (setMask, setColor, fillRect, translate)
 		const r = renderer as any;
 		r.save();
+		// `light.getVisibleArea()` returns world-space coords (via
+		// `getBounds()` → `getAbsolutePosition()` walking ancestors), but by
+		// the time `drawLighting` runs the world container's
+		// `translate(-cameraPos)` has already been popped — the renderer is
+		// back in camera-local/FBO space. Re-apply the camera's
+		// world-to-screen translate here so the cutouts align with the
+		// gradient regardless of camera scroll or container parenting.
+		const tx = camera.pos.x + camera.offset.x;
+		const ty = camera.pos.y + camera.offset.y;
+		if (tx !== 0 || ty !== 0) {
+			r.translate(-tx, -ty);
+		}
 		// punch out each active light's visible area so the ambient fill
 		// doesn't darken what the light is illuminating
 		this._activeLights.forEach((light) => {
 			r.setMask(light.getVisibleArea(), true);
 		});
 		r.setColor(this.ambientLight);
-		r.fillRect(0, 0, camera.width, camera.height);
+		// fillRect must cover the camera's view in the (now world-space)
+		// renderer — offset by the camera origin so it matches the viewport.
+		r.fillRect(tx, ty, camera.width, camera.height);
 		r.clearMask();
 		r.restore();
 	}
