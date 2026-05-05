@@ -849,6 +849,10 @@ export default class Sprite extends Renderable {
 			this.image.currentTime = 0;
 		}
 		this.image = undefined;
+		// drop the normal-map reference too — same precedent as `image`,
+		// avoids holding a (possibly large) paired image alive after the
+		// sprite is gone
+		this._normalMap = null;
 		super.destroy();
 	}
 }

@@ -401,5 +401,18 @@ describe("Sprite", () => {
 			unlit.draw(stub);
 			expect(calls.normalMapAtDrawImage).toEqual([normal, null]);
 		});
+
+		it("destroy() drops the normal-map reference (mirrors how `image` is cleared)", () => {
+			const normal = video.createCanvas(16, 16);
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+				normalMap: normal,
+			});
+			expect(s.normalMap).toBe(normal);
+			s.destroy();
+			expect(s.normalMap).toBeNull();
+		});
 	});
 });
