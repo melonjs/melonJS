@@ -247,9 +247,12 @@ describe("Light2d + Stage lighting", () => {
 			const translateCalls = [];
 			const stub = {
 				save: () => {},
-				translate: (x, y) => translateCalls.push([x, y]),
-				setMask: (shape) =>
-					setMaskShapes.push({ cx: shape.pos.x, cy: shape.pos.y }),
+				translate: (x, y) => {
+					translateCalls.push([x, y]);
+				},
+				setMask: (shape) => {
+					setMaskShapes.push({ cx: shape.pos.x, cy: shape.pos.y });
+				},
 				setColor: () => {},
 				fillRect: () => {},
 				clearMask: () => {},
@@ -259,7 +262,9 @@ describe("Light2d + Stage lighting", () => {
 				stub,
 				effective: (i) => {
 					const acc = translateCalls.reduce(
-						(a, [x, y]) => ({ x: a.x + x, y: a.y + y }),
+						(a, [x, y]) => {
+							return { x: a.x + x, y: a.y + y };
+						},
 						{ x: 0, y: 0 },
 					);
 					return {
