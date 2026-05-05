@@ -1,4 +1,5 @@
 import {
+	event,
 	game,
 	input,
 	Light2d,
@@ -88,7 +89,12 @@ class PlayScreen extends Stage {
 		// pre-populated with `atlas` + `atlasIndices` + framewidth/height —
 		// it's what `addAnimation(name, [string])` needs to look up frames
 		// by their atlas filename.
-		const character = new Sprite(vw / 2, vh * 0.65, {
+		// start the character offscreen-left, walk-cycle to the right,
+		// loop back when fully past the right edge
+		const charY = vh * 0.65;
+		const startX = -200 * scale;
+		const endX = vw + 200 * scale;
+		const character = new Sprite(startX, charY, {
 			...atlas.getAnimationSettings(animFrames),
 			anchorPoint: new Vector2d(0.5, 0.5),
 		});
@@ -96,6 +102,21 @@ class PlayScreen extends Stage {
 		character.setCurrentAnimation("walk");
 		character.scale(scale * 0.7);
 		game.world.addChild(character, 2);
+
+		// horizontal movement: ~220 px/sec at the asset's native scale,
+		// so `220 * scale` px/sec at the rendered scale. `dt` from
+		// GAME_UPDATE is the elapsed real-frame time; convert to seconds
+		// via the previous time-stamp.
+		const speedPxPerSec = 220 * scale;
+		let lastTime = 0;
+		event.on(event.GAME_UPDATE, (time: number) => {
+			const dt = lastTime === 0 ? 0 : (time - lastTime) / 1000;
+			lastTime = time;
+			character.pos.x += speedPxPerSec * dt;
+			if (character.pos.x > endX) {
+				character.pos.x = startX;
+			}
+		});
 
 		// 4. Lightbulb sprite — the visible cue for the cursor's position.
 		// The actual light source is the `Light2d` below; the bulb is just
