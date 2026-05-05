@@ -4,11 +4,17 @@ import { createExampleComponent } from "../utils";
 /**
  * Procedurally generate a sphere "orb" sprite paired with a normal map.
  * The color image is a soft radial gradient; the normal map encodes the
- * sphere's surface normals as RGB (the standard SpriteIlluminator
- * convention: R = X, G = Y (up), B = Z (out of screen), each shifted
- * from `[-1, 1]` into `[0, 255]`).
+ * sphere's surface normals as RGB (R = X, G = Y up, B = Z out of screen),
+ * each component shifted from `[-1, 1]` into `[0, 255]`.
  */
-function generateOrb(size: number) {
+function generateOrb(
+	size: number,
+	tint: { inner: string; mid: string; edge: string } = {
+		inner: "#dddddd",
+		mid: "#888888",
+		edge: "rgba(40, 40, 40, 0)",
+	},
+) {
 	const colorCanvas = document.createElement("canvas");
 	colorCanvas.width = size;
 	colorCanvas.height = size;
@@ -21,9 +27,9 @@ function generateOrb(size: number) {
 		size / 2,
 		size / 2,
 	);
-	radial.addColorStop(0, "#dddddd");
-	radial.addColorStop(0.85, "#888888");
-	radial.addColorStop(1, "rgba(40, 40, 40, 0)");
+	radial.addColorStop(0, tint.inner);
+	radial.addColorStop(0.85, tint.mid);
+	radial.addColorStop(1, tint.edge);
 	cctx.fillStyle = radial;
 	cctx.fillRect(0, 0, size, size);
 
@@ -71,20 +77,39 @@ function generateOrb(size: number) {
 class PlayScreen extends Stage {
 	onResetEvent() {
 		const orbSize = 192;
-		const { colorCanvas, normalCanvas } = generateOrb(orbSize);
 
-		// place three orbs side by side. Each one carries the same
-		// normal-map — they'll all react to the same Light2d but at their
-		// own positions, demonstrating that lit sprites batch together
-		// through the augmented quad batcher.
+		// Three orbs with different base colors. Each generation creates
+		// its own color canvas (per-orb tint) but they all share the same
+		// normal map (per-orb shape encoding) — demonstrating that the
+		// normal-map controls *shape* / *shading direction*, while the
+		// color texture controls the orb's base hue. The lit shader
+		// multiplies them together: `baseColor * (ambient + light × NdotL)`.
+		const palette = [
+			{
+				inner: "#ff7070",
+				mid: "#aa3030",
+				edge: "rgba(60, 0, 0, 0)",
+			},
+			{
+				inner: "#70ff70",
+				mid: "#30aa30",
+				edge: "rgba(0, 60, 0, 0)",
+			},
+			{
+				inner: "#7090ff",
+				mid: "#3050aa",
+				edge: "rgba(0, 10, 60, 0)",
+			},
+		];
 		const yMid = game.viewport.height / 2;
-		const positions = [
+		const xs = [
 			game.viewport.width * 0.25,
 			game.viewport.width * 0.5,
 			game.viewport.width * 0.75,
 		];
-		for (const x of positions) {
-			const orb = new Sprite(x, yMid, {
+		for (let i = 0; i < xs.length; i++) {
+			const { colorCanvas, normalCanvas } = generateOrb(orbSize, palette[i]);
+			const orb = new Sprite(xs[i], yMid, {
 				image: colorCanvas,
 				framewidth: orbSize,
 				frameheight: orbSize,
@@ -100,16 +125,17 @@ class PlayScreen extends Stage {
 
 		// single moving light. Same `Light2d` API as the Lights example —
 		// the lit sprite pipeline samples its position/color/intensity
-		// from `Stage._activeLights`. We set `illuminationOnly = true`
-		// so the light's own gradient texture isn't drawn — only its
-		// effect on the normal-mapped orbs is visible (this is the
-		// SpriteIlluminator workflow: a logical light source, not a
-		// glowing spot).
+		// from `Stage._activeLights`. `illuminationOnly = true` skips the
+		// light's own gradient texture so only its effect on the
+		// normal-mapped orbs is visible — a logical light source, not a
+		// glowing spot.
+		// Radius generous enough to reach all three orbs from any cursor
+		// position in the 728×410 viewport (worst case ~ √(width² + height²)).
 		const cursor = new Light2d(
 			game.viewport.width / 2,
 			game.viewport.height / 2,
-			260,
-			260,
+			900,
+			900,
 			"#ffffff",
 			1.5,
 		);
