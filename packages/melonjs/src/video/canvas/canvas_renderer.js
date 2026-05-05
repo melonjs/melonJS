@@ -1148,6 +1148,7 @@ export default class CanvasRenderer extends Renderer {
 				context.beginPath();
 			}
 			// else use the current path
+			this._maskInvertOuterAdded = false;
 		}
 
 		if (typeof mask !== "undefined") {
@@ -1155,8 +1156,8 @@ export default class CanvasRenderer extends Renderer {
 				// RoundRect
 				case "RoundRect":
 					context.roundRect(
-						mask.top,
 						mask.left,
+						mask.top,
 						mask.width,
 						mask.height,
 						mask.radius,
@@ -1166,7 +1167,7 @@ export default class CanvasRenderer extends Renderer {
 				// Rect or Bounds
 				case "Rectangle":
 				case "Bounds":
-					context.rect(mask.top, mask.left, mask.width, mask.height);
+					context.rect(mask.left, mask.top, mask.width, mask.height);
 					break;
 
 				// Polygon or Line
@@ -1218,8 +1219,15 @@ export default class CanvasRenderer extends Renderer {
 
 		if (invert === true) {
 			// draw a full-canvas rect as the outer path, then close the
-			// inner shape — clipping with "evenodd" makes the shape a hole
-			context.rect(0, 0, this.getCanvas().width, this.getCanvas().height);
+			// inner shape(s) — clipping with "evenodd" makes the shape a hole.
+			// The outer rect is added only once per mask sequence so chained
+			// invert masks accumulate their cutouts correctly (each new
+			// shape adds another hole to the same evenodd path) instead of
+			// duplicate full-canvas rects cancelling under evenodd parity.
+			if (this._maskInvertOuterAdded !== true) {
+				context.rect(0, 0, this.getCanvas().width, this.getCanvas().height);
+				this._maskInvertOuterAdded = true;
+			}
 			context.clip("evenodd");
 		} else {
 			context.clip();

@@ -1,6 +1,7 @@
 import { game } from "../application/application.ts";
 import { ellipsePool } from "./../geometries/ellipse.ts";
 import { colorPool } from "./../math/color.ts";
+import state from "../state/state.ts";
 import CanvasRenderTarget from "../video/rendertarget/canvasrendertarget.js";
 import Renderable from "./renderable.js";
 
@@ -74,19 +75,35 @@ function createGradient(light) {
 
 /**
  * A 2D point light.
- * Note: this is a very experimental and work in progress feature, that provides a simple spot light effect.
- * The light effect is best rendered in WebGL, as they are few limitations when using the Canvas Renderer
- * (multiple lights are not supported, alpha component of the ambient light is ignored)
  * @see stage.lights
  */
 export default class Light2d extends Renderable {
 	/**
-	 * @param {number} x - The horizontal position of the light.
-	 * @param {number} y - The vertical position of the light.
+	 * Create a 2D point light.
+	 *
+	 * A `Light2d` is a first-class world Renderable: add it to a container
+	 * with `app.world.addChild(light)` (or any sub-container, including a
+	 * `Sprite`, so the light follows the parent via its transform). On
+	 * activation, the light auto-registers with the active `Stage`'s
+	 * lighting set so the ambient overlay (`Stage.ambientLight`) cuts a
+	 * hole at the light's visible area, and a radial gradient from the
+	 * given `color` (full intensity at center → fully transparent at the
+	 * radius) is composited additively on top — producing a soft spot
+	 * light. Rendering happens inside each `Camera2d`'s post-effect FBO
+	 * bracket so any camera shader (vignette, color-matrix, scanlines,
+	 * etc.) wraps the lighting output.
+	 *
+	 * Set `radiusY` to a different value than `radiusX` for a stretched
+	 * (elliptical) light. The `intensity` parameter scales the gradient's
+	 * inner alpha; the `Stage.ambientLight` color and alpha control how
+	 * dark the unlit areas are. Use `light.blendMode` to override the
+	 * default additive blend if needed.
+	 * @param {number} x - The horizontal position of the light's center.
+	 * @param {number} y - The vertical position of the light's center.
 	 * @param {number} radiusX - The horizontal radius of the light.
 	 * @param {number} [radiusY=radiusX] - The vertical radius of the light.
-	 * @param {Color|string} [color="#FFF"] - the color of the light
-	 * @param {number} [intensity=0.7] - The intensity of the light.
+	 * @param {Color|string} [color="#FFF"] - The color of the light at full intensity.
+	 * @param {number} [intensity=0.7] - The peak alpha of the radial gradient at the light's center (0–1).
 	 */
 	constructor(
 		x,
@@ -196,6 +213,32 @@ export default class Light2d extends Renderable {
 			this.getBounds().x,
 			this.getBounds().y,
 		);
+	}
+
+	/**
+	 * Auto-register this light with the active Stage's lighting set when
+	 * added to a container. The Stage uses that set to build the ambient
+	 * overlay cutouts; rendering the light itself is handled normally as
+	 * part of the world tree walk.
+	 * @ignore
+	 */
+	onActivateEvent() {
+		const stage = state.current();
+		if (stage && typeof stage._registerLight === "function") {
+			stage._registerLight(this);
+		}
+	}
+
+	/**
+	 * Auto-deregister this light from the active Stage's lighting set when
+	 * removed from a container.
+	 * @ignore
+	 */
+	onDeactivateEvent() {
+		const stage = state.current();
+		if (stage && typeof stage._unregisterLight === "function") {
+			stage._unregisterLight(this);
+		}
 	}
 
 	/**

@@ -9,6 +9,8 @@ import { Vector3d } from "../math/vector3d.ts";
 import { Bounds, boundsPool } from "./../physics/bounds.ts";
 import type Container from "./../renderable/container.js";
 import Renderable from "./../renderable/renderable.js";
+import Stage from "../state/stage.ts";
+import state from "../state/state.ts";
 import {
 	CANVAS_ONRESIZE,
 	emit,
@@ -958,6 +960,15 @@ export default class Camera2d extends Renderable {
 		container.postDraw(r);
 
 		this.postDraw(r);
+
+		// stage-level lighting overlay — lights themselves render through the
+		// world tree as Renderables; the Stage paints the ambient fill with
+		// per-light cutouts here. Done inside the FBO bracket so any post-
+		// effect on this camera (vignette, ColorMatrix, …) wraps the lighting.
+		const stage = state.current();
+		if (stage instanceof Stage) {
+			stage.drawLighting(renderer, this);
+		}
 
 		// post-effect: unbind FBO and blit to screen through shader effect
 		r.endPostEffect(this);
