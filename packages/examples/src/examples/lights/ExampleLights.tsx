@@ -49,7 +49,7 @@ class PlayScreen extends Stage {
 		// ambient fill simultaneously.
 		const orangeLight = new Light2d(
 			game.viewport.width * 0.18,
-			game.viewport.height * 0.65,
+			game.viewport.height * 0.725,
 			140,
 			100,
 			"#ff8a3c",

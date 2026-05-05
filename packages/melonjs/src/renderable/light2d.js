@@ -244,11 +244,13 @@ export default class Light2d extends Renderable {
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
 	 */
 	draw(renderer) {
-		renderer.drawImage(
-			this.texture.canvas,
-			this.getBounds().x,
-			this.getBounds().y,
-		);
+		// Draw at `pos` (Sprite-style): Renderable.preDraw has already
+		// applied the anchor offset (`translate(-w/2, -h/2)` for
+		// anchorPoint=(0.5, 0.5)), so the texture top-left lands at
+		// `(pos.x − r, pos.y − r)` and its gradient center at `(pos.x, pos.y)`.
+		// Using `getBounds().x/y` (which is `pos − r`) here would double-count
+		// the anchor offset and shift the bright spot by `(−r, −r)`.
+		renderer.drawImage(this.texture.canvas, this.pos.x, this.pos.y);
 	}
 
 	/**
