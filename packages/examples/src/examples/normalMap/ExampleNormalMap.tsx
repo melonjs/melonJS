@@ -89,8 +89,8 @@ class PlayScreen extends Stage {
 			game.world.addChild(orb);
 		}
 
-		// Phaser-style ambient floor — without it the unlit hemispheres
-		// of each orb would be pure black.
+		// ambient floor — without it the unlit hemispheres of each orb
+		// would be pure black.
 		this.ambientLightingColor.setColor(60, 60, 70);
 
 		// single moving light. Same `Light2d` API as the Lights example —

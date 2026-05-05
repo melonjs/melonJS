@@ -51,11 +51,11 @@ function buildSamplerSelect(varName, samplerPrefix, count, target) {
  *    renderer/Stage. Result is the color texture multiplied by
  *    `ambient + Σ light_i`.
  *
- * The light's "height above the sprite plane" is encoded as a
- * fraction of the light's radius (a Phaser-compatible default of
- * 0.075 per Phaser's `Light2D` pipeline) so that lights at the
- * sprite's center don't produce a degenerate flat shading; the value
- * trades off realism for stability with hand-painted normal maps.
+ * The light's "height above the sprite plane" is encoded as a small
+ * fraction of the light's radius (default `0.075`) so that lights
+ * exactly at a fragment's screen position don't produce degenerate
+ * flat shading; the value trades off realism for stability with
+ * hand-painted normal maps.
  * @param {number} maxTextures - the number of color/normal texture units to support
  * @returns {string} GLSL fragment shader source
  * @ignore
