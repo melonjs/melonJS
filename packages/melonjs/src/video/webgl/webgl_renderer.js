@@ -2044,9 +2044,15 @@ export default class WebGLRenderer extends Renderer {
 
 		this.maskLevel++;
 
+		// Write phase: increment stencil for the drawn shape's pixels so each
+		// setMask call adds +1 to stencil inside the shape. This lets chained
+		// inverted masks (e.g. multi-light cutouts) accumulate correctly:
+		// stencil > 0 means "covered by some mask shape"; stencil == 0 means
+		// "outside every mask shape".
 		gl.colorMask(false, false, false, false);
-		gl.stencilFunc(gl.EQUAL, this.maskLevel, 1);
-		gl.stencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE);
+		gl.stencilMask(0xff);
+		gl.stencilFunc(gl.ALWAYS, 0, 0xff);
+		gl.stencilOp(gl.KEEP, gl.KEEP, gl.INCR);
 
 		// fill the given mask shape
 		this.fill(mask);
@@ -2056,11 +2062,15 @@ export default class WebGLRenderer extends Renderer {
 
 		gl.colorMask(true, true, true, true);
 
-		// Use stencil buffer to affect next rendering object
+		// Render phase:
+		// - invert=true: render where no mask shape covers (stencil == 0).
+		//   With chained invert calls this naturally produces canvas \ ⋃ shapes.
+		// - invert=false: render where the just-added mask covers
+		//   (stencil == maskLevel, i.e. the intersection of all masks so far).
 		if (invert === true) {
-			gl.stencilFunc(gl.EQUAL, this.maskLevel + 1, 1);
+			gl.stencilFunc(gl.EQUAL, 0, 0xff);
 		} else {
-			gl.stencilFunc(gl.NOTEQUAL, this.maskLevel + 1, 1);
+			gl.stencilFunc(gl.EQUAL, this.maskLevel, 0xff);
 		}
 		gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
 	}

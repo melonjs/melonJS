@@ -37,22 +37,35 @@ export default class Stage {
 
 	/**
 	 * The list of active lights in this stage.
-	 * (Note: Canvas Rendering mode will only properly support one light per stage)
+	 *
+	 * Since 19.3.0, `Light2d` is a first-class world Renderable — the
+	 * recommended pattern is to add lights directly to `app.world` (or any
+	 * container, including a sprite, so the light follows it via parent
+	 * transforms). The `lights` Map remains for backward compatibility:
+	 * any entry added via `this.lights.set(name, light)` in
+	 * `onResetEvent()` is automatically adopted into the world tree at
+	 * stage reset time so it renders normally.
 	 * @see Light2d
 	 * @see Stage.ambientLight
 	 * @example
-	 * // create a white spot light
-	 * const whiteLight = new Light2d(0, 0, 140, "#fff", 0.7);
-	 * // and add the light to this current stage
+	 * // recommended:
+	 * const whiteLight = new Light2d(100, 100, 140, 140, "#fff", 0.7);
+	 * app.world.addChild(whiteLight);
+	 *
+	 * // legacy (still works, auto-adopted into world):
 	 * this.lights.set("whiteLight", whiteLight);
-	 * // set a dark ambient light
+	 *
 	 * this.ambientLight.parseCSS("#1117");
-	 * // make the light follow the mouse
-	 * input.registerPointerEvent("pointermove", app.viewport, (event) => {
-	 *    whiteLight.centerOn(event.gameX, event.gameY);
-	 * });
 	 */
 	lights: Map<string, Light2d>;
+
+	/**
+	 * Internal set of active lights, auto-populated by `Light2d`'s
+	 * `onActivateEvent` / `onDeactivateEvent` hooks. Used by Camera2d's
+	 * ambient-overlay pass to compute the cutouts.
+	 * @ignore
+	 */
+	_activeLights: Set<Light2d>;
 
 	/**
 	 * an ambient light that will be added to the stage rendering
@@ -75,8 +88,26 @@ export default class Stage {
 	constructor(settings?: Partial<StageSettings>) {
 		this.cameras = new Map();
 		this.lights = new Map();
+		this._activeLights = new Set();
 		this.ambientLight = new Color(0, 0, 0, 0);
 		this.settings = Object.assign({}, default_settings, settings || {});
+	}
+
+	/**
+	 * Called by `Light2d.onActivateEvent` to register the light with the
+	 * stage's ambient-overlay cutout list. Users normally don't call this.
+	 * @ignore
+	 */
+	_registerLight(light: Light2d): void {
+		this._activeLights.add(light);
+	}
+
+	/**
+	 * Called by `Light2d.onDeactivateEvent` to deregister the light.
+	 * @ignore
+	 */
+	_unregisterLight(light: Light2d): void {
+		this._activeLights.delete(light);
 	}
 
 	/**
@@ -106,6 +137,17 @@ export default class Stage {
 
 		// call the onReset Function with the app reference and any extra args
 		this.onResetEvent(app, ...extraArgs);
+
+		// adopt any lights registered via the legacy `this.lights.set(...)` API
+		// into the world tree so they render as standard Renderables. Their
+		// onActivateEvent hook then auto-registers them with `_activeLights`.
+		if (app && app.world) {
+			this.lights.forEach((light) => {
+				if (!light.ancestor) {
+					app.world.addChild(light);
+				}
+			});
+		}
 	}
 
 	/**
@@ -118,61 +160,88 @@ export default class Stage {
 		let isDirty = false;
 
 		// update the camera/viewport
-		// iterate through all cameras
 		this.cameras.forEach((camera) => {
 			if (camera.update(dt)) {
 				isDirty = true;
 			}
 		});
 
-		// update all lights
-		this.lights.forEach((light) => {
-			if (light.update()) {
-				isDirty = true;
-			}
-		});
+		// lights are part of the world tree now and updated by Container.update;
+		// no separate per-light update loop is needed here.
 
 		return isDirty;
 	}
 
 	/**
 	 * draw the current stage
+	 *
+	 * Lights are rendered as part of the world tree (they're now first-class
+	 * Renderables) and the ambient overlay pass runs inside each Camera's
+	 * post-effect FBO bracket via {@link Stage#drawLighting}.
 	 * @ignore
 	 * @param renderer - the renderer object to draw with
 	 * @param world - the world object to draw
 	 */
 	draw(renderer: Renderer, world: World): void {
-		// cast to any to access canvas/webgl renderer-specific methods
-		const r = renderer as any;
-
-		// iterate through all cameras
 		this.cameras.forEach((camera) => {
-			// render the root container
 			camera.draw(renderer, world);
-
-			// render the ambient light
-			if (this.ambientLight.alpha !== 0) {
-				r.save();
-				// iterate through all lights
-				this.lights.forEach((light) => {
-					// cut out all lights visible areas
-					r.setMask(light.getVisibleArea(), true);
-				});
-				// fill the screen with the ambient color
-				r.setColor(this.ambientLight);
-				r.fillRect(0, 0, camera.width, camera.height);
-				// clear all masks
-				r.clearMask();
-				r.restore();
-			}
-
-			// render all lights
-			this.lights.forEach((light) => {
-				light.preDraw(r);
-				light.draw(r);
-				light.postDraw(r);
-			});
 		});
+	}
+
+	/**
+	 * Draw the stage's ambient-light overlay with cutouts for each active
+	 * light. Called from each `Camera2d` inside its post-effect FBO bracket —
+	 * lights themselves render via the world tree (they're standard
+	 * Renderables); this pass only paints the dark fill that the lights cut
+	 * holes through.
+	 *
+	 * Subclasses can override this method to implement custom lighting (e.g.
+	 * per-pixel normal-mapped lighting via a custom shader). Called once per
+	 * camera per frame.
+	 * @param renderer - the active renderer
+	 * @param camera - the camera currently rendering this stage
+	 * @param translateX - the same world-to-screen X translate that
+	 *   `Camera2d.draw()` applies to the world container (i.e.
+	 *   `camera.pos.x + camera.offset.x` for the default camera, plus
+	 *   the container's own offset for non-default cameras)
+	 * @param translateY - the world-to-screen Y translate (see `translateX`)
+	 */
+	drawLighting(
+		renderer: Renderer,
+		camera: Camera2d,
+		translateX: number = camera.pos.x + camera.offset.x,
+		translateY: number = camera.pos.y + camera.offset.y,
+	): void {
+		if (this.ambientLight.alpha === 0) {
+			return;
+		}
+		// cast for renderer-specific methods (setMask, setColor, fillRect, translate)
+		const r = renderer as any;
+		r.save();
+		// `light.getVisibleArea()` returns world-space coords (via
+		// `getBounds()` → `getAbsolutePosition()` walking ancestors), but by
+		// the time `drawLighting` runs the world container's
+		// `translate(-translateX, -translateY)` has already been popped —
+		// the renderer is back in camera-local/FBO space. Re-apply the
+		// same world-to-screen translate here so the cutouts align with
+		// the gradient regardless of camera scroll, container parenting,
+		// or non-default cameras (minimap / splitscreen).
+		const tx = translateX;
+		const ty = translateY;
+		if (tx !== 0 || ty !== 0) {
+			r.translate(-tx, -ty);
+		}
+		// punch out each active light's visible area so the ambient fill
+		// doesn't darken what the light is illuminating
+		this._activeLights.forEach((light) => {
+			r.setMask(light.getVisibleArea(), true);
+		});
+		r.setColor(this.ambientLight);
+		// fillRect must cover the camera's view in the (now world-space)
+		// renderer — offset by the camera origin so it matches the viewport.
+		r.fillRect(tx, ty, camera.width, camera.height);
+		r.clearMask();
+		r.restore();
 	}
 
 	/**
@@ -182,11 +251,17 @@ export default class Stage {
 	destroy(app: Application): void {
 		// clear all cameras
 		this.cameras.clear();
-		// clear all lights
+		// clear all lights — Light2d.onDeactivateEvent will deregister each
+		// from `_activeLights` as the world container removes them. Lights
+		// only stored in the legacy `lights` map (never adopted into the
+		// world) get destroyed directly.
 		this.lights.forEach((light) => {
-			light.destroy();
+			if (!light.ancestor) {
+				light.destroy();
+			}
 		});
 		this.lights.clear();
+		this._activeLights.clear();
 		// notify the object
 		this.onDestroyEvent(app);
 	}

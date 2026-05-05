@@ -2,6 +2,19 @@
 
 ## [19.3.0] (melonJS 2) - _unreleased_
 
+### Added
+- Light2d: now a first-class world Renderable — add lights with `app.world.addChild(light)` (or any container, including a sprite, so the light follows it via parent transforms). Auto-registers with the active Stage's lighting set via `onActivateEvent` / `onDeactivateEvent` — no manual bookkeeping.
+
+### Changed
+- Lights are now rendered inside the camera's post-effect FBO bracket — vignette, scanlines, ColorMatrix and any other camera shader effect now wrap the lighting output (closes #1398). The `Stage.draw()` lighting block has been removed; rendering happens via the world tree walk and a public `Stage.drawLighting(renderer, camera)` pass invoked by each camera (subclassable for custom lighting).
+- `Stage.lights.set(name, light)` (the legacy registration API) still works — entries are auto-adopted into the world tree on stage reset so they render normally and benefit from the FBO capture. New code should use `app.world.addChild(light)` directly.
+- **Breaking:** `Light2d` is now centered on its `pos` (`anchorPoint = (0.5, 0.5)`), matching `Sprite` and `Ellipse(x, y, w, h)` conventions. Constructor `x`/`y` and `light.pos.x`/`y` denote the light's **center**, not the bounding-box top-left. Transforms applied via `light.scale(...)` or `light.rotate(...)` now pivot around the visual center (so a "pulse" or "flicker" effect doesn't drift the bright spot down-right). Existing call sites that passed top-left coordinates need to add `radiusX` / `radiusY`: `new Light2d(x, y, r)` → `new Light2d(x + r, y + r, r)`. Code using `light.centerOn(x, y)` is unaffected.
+
+### Fixed
+- Lifted the historical "Canvas mode only supports one light per stage" limitation — multiple `Light2d` instances now render correctly under both Canvas and WebGL. Follow-up to #1369 (which introduced evenodd-based inverted masking for camera mask transitions): root cause was in the underlying `setMask(shape, true)` implementation on both renderers, where chained calls did not accumulate cutouts. Canvas re-added the full-canvas outer rect on every call, which cancelled out under evenodd parity; WebGL used a 1-bit `REPLACE` stencil protocol where each new mask overwrote the previous. Canvas now adds the outer rect once per mask sequence (made tractable by the evenodd groundwork from #1369), and WebGL switched to an `INCR`-based stencil protocol so each shape adds independently.
+- CanvasRenderer: `setMask(shape)` with a `Rect`, `Bounds`, or `RoundRect` mask was passing arguments in the wrong order to `context.rect` / `context.roundRect` (X and Y swapped via `mask.top` / `mask.left`). Masks at off-diagonal positions (`pos.x !== pos.y`) were clipped at the wrong location. Latent because nothing in core or examples used those shape types as a mask — `Light2d`, `MaskEffect`, and other internal masks all use `Ellipse` or `Polygon`.
+- `Stage.drawLighting`: ambient-overlay cutouts now align with each light's rendered gradient when the camera is scrolled or the light is parented to a translated container. `light.getVisibleArea()` returns world-space coordinates (via `getBounds()` → `getAbsolutePosition()`), but `drawLighting` runs after the world container's `translate(-cameraPos)` has been popped from the renderer — so cutouts were landing at world coords inside a camera-local FBO. The fix re-applies the camera's world-to-screen translate inside `drawLighting`. Visible only when `ambientLight` is set with a scrolling camera (e.g. a torch on the player in a dark side-scrolling level): pre-fix, the bright gradient followed the player but the dark fill stopped cutting around it, leaving a phantom hole at a fixed world position.
+
 ## [19.2.0] (melonJS 2) - _2026-04-29_
 
 ### Added
