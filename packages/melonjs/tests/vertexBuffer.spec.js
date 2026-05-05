@@ -78,6 +78,59 @@ describe("VertexArrayBuffer", () => {
 			expect(buf.bufferF32[5]).toBe(0); // textureId vertex 0
 			expect(buf.bufferF32[11]).toBe(5); // textureId vertex 1
 		});
+
+		it("should write vertex data with textureId + normalTextureId (7 floats)", () => {
+			// vertexSize=7 matches the lit-pipeline quad format:
+			// x, y, u, v, tint, textureId, normalTextureId
+			const buf = new VertexArrayBuffer(7, 4);
+
+			buf.push(10, 20, 0.0, 1.0, 0xffffffff, 3, 2);
+
+			expect(buf.vertexCount).toBe(1);
+			expect(buf.bufferF32[0]).toBe(10);
+			expect(buf.bufferF32[1]).toBe(20);
+			expect(buf.bufferF32[2]).toBe(0.0);
+			expect(buf.bufferF32[3]).toBe(1.0);
+			expect(buf.bufferU32[4]).toBe(0xffffffff);
+			expect(buf.bufferF32[5]).toBe(3); // textureId
+			expect(buf.bufferF32[6]).toBe(2); // normalTextureId
+		});
+
+		it("should default normalTextureId to -1 when not provided (vertexSize 7)", () => {
+			// Regression test: with vertexSize=7, omitting `normalTextureId`
+			// must NOT leave stale data at offset 6. The shader's lit path
+			// activates on `vNormalTextureId >= 0`; reading garbage there
+			// causes unlit sprites to render through the lit path with
+			// random normal-map / light state — visible as broken
+			// hemispheric shading on every WebGL example after the
+			// normal-map vertex format was introduced.
+			const buf = new VertexArrayBuffer(7, 4);
+			// poison the slot to prove push() actively writes -1
+			buf.bufferF32[6] = 99;
+
+			buf.push(10, 20, 0.0, 1.0, 0xffffffff, 3);
+
+			expect(buf.bufferF32[6]).toBe(-1);
+		});
+
+		it("should accept negative normalTextureId (sentinel for unlit)", () => {
+			const buf = new VertexArrayBuffer(7, 4);
+			buf.push(0, 0, 0, 0, 0, 0, -1);
+			expect(buf.bufferF32[6]).toBe(-1);
+		});
+
+		it("should not touch offset 6 when vertexSize is 6 (backward compat)", () => {
+			// older quad batchers using vertexSize=6 mustn't get any
+			// writes past offset 5
+			const buf = new VertexArrayBuffer(6, 4);
+			// poison the slot beyond the buffer's reach
+			buf.bufferF32[6] = 77;
+
+			// pass a normalTextureId — should be silently dropped
+			buf.push(10, 20, 0, 0, 0xff, 1, 9);
+			// (offset 6 is in the next vertex's slot — verify it's untouched)
+			expect(buf.bufferF32[6]).toBe(77);
+		});
 	});
 
 	describe("buildMultiTextureFragment()", () => {
