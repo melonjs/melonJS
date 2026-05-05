@@ -52,9 +52,14 @@ function generateOrb(size: number) {
 				continue;
 			}
 			const nz = Math.sqrt(Math.max(0, 1 - dx * dx - dy * dy));
+			// Encode each component as `(c + 1) / 2` so the shader's
+			// `rgb * 2 - 1` decode round-trips correctly. (Encoding Z
+			// as raw `nz * 255` would make the shader read 2*nz - 1,
+			// pulling the edges' Z all the way to -1 and turning them
+			// into "back-facing" surfaces.)
 			imgData.data[i + 0] = Math.round((dx * 0.5 + 0.5) * 255);
 			imgData.data[i + 1] = Math.round((dy * 0.5 + 0.5) * 255);
-			imgData.data[i + 2] = Math.round(nz * 255);
+			imgData.data[i + 2] = Math.round((nz * 0.5 + 0.5) * 255);
 			imgData.data[i + 3] = 255;
 		}
 	}

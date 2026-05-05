@@ -111,10 +111,14 @@ export function buildMultiTextureFragment(maxTextures) {
 			"normalSample",
 		),
 	);
-	// decode 0..1 → -1..1 and ensure unit length
+	// Decode 0..1 → -1..1. Normal maps emitted by SpriteIlluminator (and
+	// most 3D authoring tools) use Y-up convention, but screen-space
+	// here is Y-down — flip the Y component so `dot(normal, lightDir)`
+	// is computed in a single coherent coord system.
 	lines.push(
 		"    vec3 normal = normalize(normalSample.rgb * 2.0 - vec3(1.0));",
 	);
+	lines.push("    normal.y = -normal.y;");
 
 	// Lambertian accumulation. `lighting` starts at the ambient floor.
 	lines.push("    vec3 lighting = uAmbient;");
