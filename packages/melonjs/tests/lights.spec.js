@@ -500,6 +500,40 @@ describe("Light2d + Stage lighting", () => {
 			stage.ambientLight.setColor(0, 0, 0, 0);
 		});
 
+		it("non-default camera (minimap / splitscreen): containerOffset is honored in the cutout translate", () => {
+			// `Camera2d.draw()` computes
+			//   translateX = camera.pos.x + camera.offset.x + containerOffsetX
+			// where `containerOffsetX = container.pos.x` for non-default
+			// cameras (i.e. cameras rendering a container other than
+			// game.world). `Stage.drawLighting` must honor that same value
+			// or the cutout drifts when a minimap/splitscreen camera is
+			// in use. This test exercises the public API by passing the
+			// `translateX/translateY` parameters explicitly (same as
+			// Camera2d.draw does).
+			const stage = freshAlignmentState();
+			const light = lightAtWorld(100, 100);
+			game.world.addChild(light);
+
+			const camera = game.viewport;
+			const orig = { x: camera.pos.x, y: camera.pos.y };
+			camera.pos.x = 20;
+			camera.pos.y = 0;
+
+			const cap = makeAlignmentStub();
+			// simulate non-default camera: container offset adds 30, 0 on
+			// top of camera.pos. Total world-to-screen translate is 50, 0.
+			stage.drawLighting(cap.stub, camera, 50, 0);
+
+			const eff = cap.effective(0);
+			expect(eff.x).toBe(50); // 100 − 50
+			expect(eff.y).toBe(100);
+
+			camera.pos.x = orig.x;
+			camera.pos.y = orig.y;
+			game.world.removeChildNow(light, true);
+			stage.ambientLight.setColor(0, 0, 0, 0);
+		});
+
 		it("baseline: default camera at origin still aligns (regression guard)", () => {
 			// Sanity check that the no-scroll case remains correct after the
 			// fix lands — we don't want to over-correct and break the

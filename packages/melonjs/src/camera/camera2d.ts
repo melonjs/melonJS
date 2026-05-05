@@ -966,12 +966,15 @@ export default class Camera2d extends Renderable {
 		// per-light cutouts here. Done inside the FBO bracket so any post-
 		// effect on this camera (vignette, ColorMatrix, …) wraps the lighting.
 		// duck-type rather than `instanceof Stage` to avoid a circular runtime
-		// import between camera2d.ts and stage.ts
+		// import between camera2d.ts and stage.ts. Pass the same
+		// translateX/translateY the world container was rendered with so
+		// non-default cameras (minimap/splitscreen) line up correctly —
+		// `camera.pos + camera.offset` alone misses `containerOffsetX/Y`.
 		const stage = state.current() as {
 			drawLighting?: typeof Stage.prototype.drawLighting;
 		} | null;
 		if (stage && typeof stage.drawLighting === "function") {
-			stage.drawLighting(renderer, this);
+			stage.drawLighting(renderer, this, translateX, translateY);
 		}
 
 		// post-effect: unbind FBO and blit to screen through shader effect

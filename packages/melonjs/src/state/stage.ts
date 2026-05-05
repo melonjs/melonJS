@@ -49,7 +49,7 @@ export default class Stage {
 	 * @see Stage.ambientLight
 	 * @example
 	 * // recommended:
-	 * const whiteLight = new Light2d(0, 0, 140, "#fff", 0.7);
+	 * const whiteLight = new Light2d(100, 100, 140, 140, "#fff", 0.7);
 	 * app.world.addChild(whiteLight);
 	 *
 	 * // legacy (still works, auto-adopted into world):
@@ -200,8 +200,18 @@ export default class Stage {
 	 * camera per frame.
 	 * @param renderer - the active renderer
 	 * @param camera - the camera currently rendering this stage
+	 * @param translateX - the same world-to-screen X translate that
+	 *   `Camera2d.draw()` applies to the world container (i.e.
+	 *   `camera.pos.x + camera.offset.x` for the default camera, plus
+	 *   the container's own offset for non-default cameras)
+	 * @param translateY - the world-to-screen Y translate (see `translateX`)
 	 */
-	drawLighting(renderer: Renderer, camera: Camera2d): void {
+	drawLighting(
+		renderer: Renderer,
+		camera: Camera2d,
+		translateX: number = camera.pos.x + camera.offset.x,
+		translateY: number = camera.pos.y + camera.offset.y,
+	): void {
 		if (this.ambientLight.alpha === 0) {
 			return;
 		}
@@ -211,12 +221,13 @@ export default class Stage {
 		// `light.getVisibleArea()` returns world-space coords (via
 		// `getBounds()` → `getAbsolutePosition()` walking ancestors), but by
 		// the time `drawLighting` runs the world container's
-		// `translate(-cameraPos)` has already been popped — the renderer is
-		// back in camera-local/FBO space. Re-apply the camera's
-		// world-to-screen translate here so the cutouts align with the
-		// gradient regardless of camera scroll or container parenting.
-		const tx = camera.pos.x + camera.offset.x;
-		const ty = camera.pos.y + camera.offset.y;
+		// `translate(-translateX, -translateY)` has already been popped —
+		// the renderer is back in camera-local/FBO space. Re-apply the
+		// same world-to-screen translate here so the cutouts align with
+		// the gradient regardless of camera scroll, container parenting,
+		// or non-default cameras (minimap / splitscreen).
+		const tx = translateX;
+		const ty = translateY;
 		if (tx !== 0 || ty !== 0) {
 			r.translate(-tx, -ty);
 		}
