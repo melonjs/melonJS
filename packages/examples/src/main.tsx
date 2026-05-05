@@ -276,7 +276,7 @@ const examples: {
 		path: "sprite-illuminator",
 		sourceDir: "spriteIlluminator",
 		description:
-			"Per-pixel sprite lighting from normal maps via the SpriteIlluminator + TexturePacker workflow. Animated character + foreground prop tile lit by a moving cursor light, faithfully ported from CodeAndWeb's cocos2d-x demo.",
+			"Per-pixel sprite lighting from normal maps. Animated character + foreground prop tile lit by a moving cursor light, faithfully ported from CodeAndWeb's cocos2d-x demo.",
 	},
 	{
 		component: <ExampleLineOfSight />,
