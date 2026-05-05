@@ -1,6 +1,7 @@
 {
-	"frames": {
-		"character/01.png": {
+	"frames": [
+		{
+			"filename": "character/01.png",
 			"frame": {
 				"x": 2,
 				"y": 518,
@@ -28,7 +29,8 @@
 				"y": -15
 			}
 		},
-		"character/02.png": {
+		{
+			"filename": "character/02.png",
 			"frame": {
 				"x": 180,
 				"y": 2,
@@ -56,7 +58,8 @@
 				"y": -12
 			}
 		},
-		"character/03.png": {
+		{
+			"filename": "character/03.png",
 			"frame": {
 				"x": 252,
 				"y": 500,
@@ -84,7 +87,8 @@
 				"y": -13
 			}
 		},
-		"character/04.png": {
+		{
+			"filename": "character/04.png",
 			"frame": {
 				"x": 182,
 				"y": 1032,
@@ -112,7 +116,8 @@
 				"y": -9
 			}
 		},
-		"character/05.png": {
+		{
+			"filename": "character/05.png",
 			"frame": {
 				"x": 2,
 				"y": 1544,
@@ -140,7 +145,8 @@
 				"y": -14
 			}
 		},
-		"character/06.png": {
+		{
+			"filename": "character/06.png",
 			"frame": {
 				"x": 182,
 				"y": 1542,
@@ -168,7 +174,8 @@
 				"y": -17
 			}
 		},
-		"character/07.png": {
+		{
+			"filename": "character/07.png",
 			"frame": {
 				"x": 2,
 				"y": 1032,
@@ -196,7 +203,8 @@
 				"y": -13
 			}
 		},
-		"character/08.png": {
+		{
+			"filename": "character/08.png",
 			"frame": {
 				"x": 2,
 				"y": 2,
@@ -224,7 +232,7 @@
 				"y": -15
 			}
 		}
-	},
+	],
 	"meta": {
 		"app": "https://www.codeandweb.com/texturepacker",
 		"version": "1.0",
