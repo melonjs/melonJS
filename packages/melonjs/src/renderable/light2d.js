@@ -172,6 +172,22 @@ export default class Light2d extends Renderable {
 		// rotate) pivot around it.
 		this.anchorPoint.set(0.5, 0.5);
 
+		/**
+		 * When `true`, this light acts as a pure illumination source —
+		 * the gradient texture isn't drawn. The light still feeds the
+		 * `Stage` ambient-cutout pass and the WebGL lit-sprite
+		 * pipeline's per-frame uniforms, so normal-mapped sprites still
+		 * get shaded by it. Use this for SpriteIlluminator-style demos
+		 * where the light should be invisible (only its effect on
+		 * normal-mapped surfaces is what you want to see).
+		 *
+		 * Default `false`, preserving the legacy "soft glowing spot"
+		 * behavior.
+		 * @type {boolean}
+		 * @default false
+		 */
+		this.illuminationOnly = false;
+
 		createGradient(this);
 	}
 
@@ -244,6 +260,9 @@ export default class Light2d extends Renderable {
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
 	 */
 	draw(renderer) {
+		if (this.illuminationOnly) {
+			return;
+		}
 		renderer.drawImage(this.texture.canvas, this.pos.x, this.pos.y);
 	}
 

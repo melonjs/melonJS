@@ -95,7 +95,11 @@ class PlayScreen extends Stage {
 
 		// single moving light. Same `Light2d` API as the Lights example —
 		// the lit sprite pipeline samples its position/color/intensity
-		// from `Stage._activeLights`.
+		// from `Stage._activeLights`. We set `illuminationOnly = true`
+		// so the light's own gradient texture isn't drawn — only its
+		// effect on the normal-mapped orbs is visible (this is the
+		// SpriteIlluminator workflow: a logical light source, not a
+		// glowing spot).
 		const cursor = new Light2d(
 			game.viewport.width / 2,
 			game.viewport.height / 2,
@@ -104,6 +108,7 @@ class PlayScreen extends Stage {
 			"#ffffff",
 			1.5,
 		);
+		cursor.illuminationOnly = true;
 		game.world.addChild(cursor);
 
 		input.registerPointerEvent("pointermove", game.viewport, (event) => {

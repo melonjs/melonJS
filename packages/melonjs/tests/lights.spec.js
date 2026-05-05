@@ -834,6 +834,97 @@ describe("Light2d + Stage lighting", () => {
 			game.world.removeChildNow(light, true);
 		});
 
+		it("illuminationOnly=true skips drawing the gradient texture", () => {
+			// SpriteIlluminator workflow: a logical light source whose own
+			// gradient isn't visible — only its effect on normal-mapped
+			// sprites is. The light still feeds the cutout pass and the
+			// lit-pipeline uniforms; only the per-frame self-draw is
+			// suppressed.
+			const light = spawn(150, 100, 30);
+			light.illuminationOnly = true;
+
+			const drawImageCalls = [];
+			const stub = {
+				drawImage: (img, x, y) => {
+					drawImageCalls.push({ x, y });
+				},
+			};
+			light.draw(stub);
+			expect(drawImageCalls).toHaveLength(0);
+
+			game.world.removeChildNow(light, true);
+		});
+
+		it("illuminationOnly=true light still appears in _activeLights and lit uniforms", () => {
+			// Regression guard: `illuminationOnly` must NOT short-circuit
+			// the lifecycle hooks that register the light with the stage.
+			// A light that's "invisible" must still illuminate.
+			const stage = state.current();
+			while (stage._activeLights.size > 0) {
+				const l = [...stage._activeLights][0];
+				if (l.ancestor) {
+					l.ancestor.removeChildNow(l, true);
+				} else {
+					stage._activeLights.delete(l);
+				}
+			}
+
+			const light = new Light2d(120, 80, 30, 30, "#ff8000", 0.7);
+			light.illuminationOnly = true;
+			game.world.addChild(light);
+
+			expect(stage._activeLights.has(light)).toBe(true);
+
+			const u = stage.collectLightingUniforms(0, 0);
+			expect(u.count).toBe(1);
+			expect(u.positions[0]).toBe(120);
+			expect(u.positions[1]).toBe(80);
+
+			game.world.removeChildNow(light, true);
+		});
+
+		it("illuminationOnly=true is also honored by the cutout pass (Stage.drawLighting)", () => {
+			// The cutout pass iterates `_activeLights` and emits one
+			// setMask per light — illuminationOnly lights MUST still cut
+			// holes through the ambient overlay. This test re-uses the
+			// stub patterns from the cutout describe block.
+			const stage = state.current();
+			while (stage._activeLights.size > 0) {
+				const l = [...stage._activeLights][0];
+				if (l.ancestor) {
+					l.ancestor.removeChildNow(l, true);
+				} else {
+					stage._activeLights.delete(l);
+				}
+			}
+			stage.ambientLight.setColor(0, 0, 0, 0.5);
+
+			const a = new Light2d(40, 40, 20);
+			a.illuminationOnly = true;
+			const b = new Light2d(80, 80, 20);
+			game.world.addChild(a);
+			game.world.addChild(b);
+
+			let setMaskCount = 0;
+			const stub = {
+				save: () => {},
+				translate: () => {},
+				setMask: () => {
+					setMaskCount++;
+				},
+				setColor: () => {},
+				fillRect: () => {},
+				clearMask: () => {},
+				restore: () => {},
+			};
+			stage.drawLighting(stub, game.viewport);
+			expect(setMaskCount).toBe(2); // both lights cut, regardless of illuminationOnly
+
+			game.world.removeChildNow(a, true);
+			game.world.removeChildNow(b, true);
+			stage.ambientLight.setColor(0, 0, 0, 0);
+		});
+
 		it("transform around `pos` (regression guard): scale does NOT shift the visible center by half-the-bbox", () => {
 			// Concrete regression: with anchorPoint=(0,0) (or a forgotten
 			// anchor reset), a 2× scale would shift the center by
