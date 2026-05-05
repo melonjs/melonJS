@@ -122,9 +122,10 @@ class PlayScreen extends Stage {
 		light.illuminationOnly = true;
 		game.world.addChild(light);
 
-		// dim ambient floor so the unlit areas of normal-mapped sprites
-		// aren't pitch black (cocos2d demo does the same via `u_ambientColor`)
-		this.ambientLightingColor.setColor(40, 40, 50);
+		// neutral-gray ambient floor so the unlit areas of normal-mapped
+		// sprites aren't pitch black. Matches the original cocos2d demo's
+		// `setAmbientLightColor(127, 127, 127)`.
+		this.ambientLightingColor.setColor(127, 127, 127);
 
 		// cursor → light position
 		input.registerPointerEvent("pointermove", game.viewport, (event) => {
