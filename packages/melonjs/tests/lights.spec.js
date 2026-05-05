@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	boot,
 	Container,
+	Ellipse,
 	game,
 	Light2d,
 	Stage,
@@ -271,12 +272,11 @@ describe("Light2d + Stage lighting", () => {
 			};
 		}
 
-		// helper: spawn a Light2d whose bounding-box center sits at world (cx, cy).
-		// Light2d's anchorPoint is (0,0) so the constructor's x/y is the
-		// TOP-LEFT of the bounding box (NOT the center) — see the constructor
-		// docstring caveat. We compute the top-left from the desired center.
+		// helper: spawn a Light2d whose center sits at world (cx, cy).
+		// Light2d's anchorPoint is (0.5, 0.5), so the constructor's x/y is
+		// already the center — same convention as Ellipse(x, y, w, h).
 		function lightAtWorld(cx, cy, radius = 30) {
-			return new Light2d(cx - radius, cy - radius, radius, radius);
+			return new Light2d(cx, cy, radius, radius);
 		}
 
 		it("scrolled camera (X axis): cutout follows the gradient", () => {
@@ -362,18 +362,17 @@ describe("Light2d + Stage lighting", () => {
 		});
 
 		it("light parented to a translated container: cutout uses world coords", () => {
-			// Torch attached to a player Sprite at world (200, 150); the
-			// torch itself is positioned (10, 0) relative to the player.
+			// Torch attached to a player Container at world (200, 150); the
+			// torch itself is positioned at (40, 30) relative to the player
+			// (its center) → world center (240, 180).
 			// `getAbsolutePosition` walks ancestors so getBounds returns
 			// world-space — the cutout (no scrolled camera) should sit at
-			// (210, 180) in world coords ≡ screen coords here.
+			// (240, 180) in world coords ≡ screen coords here.
 			const stage = freshAlignmentState();
 			const player = new Container(200, 150, 32, 32);
 			game.world.addChild(player);
-			// torch local pos (10, 0) → world (210, 150); center of light at
-			// (210 + 30, 150 + 30) = (240, 180)
 			const torchRadius = 30;
-			const torch = new Light2d(10, 0, torchRadius, torchRadius);
+			const torch = new Light2d(40, 30, torchRadius, torchRadius);
 			player.addChild(torch);
 
 			const camera = game.viewport;
@@ -402,7 +401,8 @@ describe("Light2d + Stage lighting", () => {
 			const player = new Container(200, 150, 32, 32);
 			game.world.addChild(player);
 			const torchRadius = 30;
-			const torch = new Light2d(10, 0, torchRadius, torchRadius);
+			// torch local center (40, 30) → world center (240, 180)
+			const torch = new Light2d(40, 30, torchRadius, torchRadius);
 			player.addChild(torch);
 
 			const camera = game.viewport;
@@ -436,8 +436,8 @@ describe("Light2d + Stage lighting", () => {
 			const player = new Container(250, 150, 32, 32);
 			game.world.addChild(player);
 			const radB = 30;
-			// world center = player.pos + lightB.pos + radB = (250, 150) + (20, 20) + (30, 30) = (300, 200)
-			const lightB = new Light2d(20, 20, radB, radB);
+			// world center = player.pos + lightB.pos = (250, 150) + (50, 50) = (300, 200)
+			const lightB = new Light2d(50, 50, radB, radB);
 			player.addChild(lightB);
 
 			const camera = game.viewport;
@@ -523,46 +523,45 @@ describe("Light2d + Stage lighting", () => {
 	});
 
 	describe("Light2d coordinate semantics", () => {
-		it("constructor x/y is the TOP-LEFT of the bounding box (anchorPoint = 0,0)", () => {
-			// Document the actual semantic. A light created at (100, 100)
-			// with radius 30 has bounds.x = 100 (top-left), and its visible
-			// gradient center sits at (130, 130).
+		it("constructor x/y is the CENTER of the light (anchorPoint = 0.5, 0.5)", () => {
+			// Light2d uses a centered anchor so the constructor's x/y means
+			// the light's center — same convention as Ellipse(x, y, w, h).
+			// A light created at (100, 100) with radius 30 has its visible
+			// gradient center at (100, 100); bounds extend (70, 70)–(130, 130).
 			const light = new Light2d(100, 100, 30, 30);
 			game.world.addChild(light);
 			const b = light.getBounds();
-			expect(b.x).toBe(100);
-			expect(b.y).toBe(100);
+			expect(b.centerX).toBe(100);
+			expect(b.centerY).toBe(100);
 			expect(b.width).toBe(60); // 2 * radius
 			expect(b.height).toBe(60);
-			expect(b.centerX).toBe(130);
-			expect(b.centerY).toBe(130);
+			expect(b.x).toBe(70); // center − radius
+			expect(b.y).toBe(70);
 			game.world.removeChildNow(light, true);
 		});
 
-		it("centerOn(x, y) places the light's CENTER at (x, y)", () => {
+		it("centerOn(x, y) repositions the light's center", () => {
 			const light = new Light2d(0, 0, 30, 30);
 			game.world.addChild(light);
 			light.centerOn(200, 150);
 			const b = light.getBounds();
 			expect(b.centerX).toBe(200);
 			expect(b.centerY).toBe(150);
-			expect(b.x).toBe(170); // 200 − radius
-			expect(b.y).toBe(120);
 			game.world.removeChildNow(light, true);
 		});
 
 		it("getVisibleArea() reflects the bounding-box center in world coords", () => {
 			// The cutout shape used by Stage.drawLighting comes from
 			// getVisibleArea — its center must match getBounds().centerX/Y
-			// (i.e. world-space) so that the alignment fix in drawLighting
-			// can rely on a single coord space.
-			const light = new Light2d(50, 80, 25, 25);
+			// (i.e. world-space) so the alignment fix in drawLighting can
+			// rely on a single coord space.
+			const light = new Light2d(75, 105, 25, 25);
 			game.world.addChild(light);
 			const va = light.getVisibleArea();
 			expect(va.pos.x).toBe(light.getBounds().centerX);
 			expect(va.pos.y).toBe(light.getBounds().centerY);
-			expect(va.pos.x).toBe(75); // 50 + 25
-			expect(va.pos.y).toBe(105); // 80 + 25
+			expect(va.pos.x).toBe(75);
+			expect(va.pos.y).toBe(105);
 			game.world.removeChildNow(light, true);
 		});
 
@@ -571,12 +570,92 @@ describe("Light2d + Stage lighting", () => {
 			// visible area's center must be in world space, not parent-local.
 			const player = new Container(200, 150, 32, 32);
 			game.world.addChild(player);
-			const torch = new Light2d(10, 0, 30, 30); // local center (40, 30)
+			// torch local center (40, 30) → world center (240, 180)
+			const torch = new Light2d(40, 30, 30, 30);
 			player.addChild(torch);
 			const va = torch.getVisibleArea();
-			expect(va.pos.x).toBe(240); // 200 + 10 + 30
-			expect(va.pos.y).toBe(180); // 150 + 0 + 30
+			expect(va.pos.x).toBe(240);
+			expect(va.pos.y).toBe(180);
 			game.world.removeChildNow(player, true);
+		});
+
+		it("constructor: pos is offset by (-radiusX, -radiusY) from the requested center", () => {
+			// Implementation detail of how the center semantic is achieved:
+			// Renderable's underlying Rect uses top-left positioning, so the
+			// constructor translates the requested center by -radius to set
+			// `pos`. This test pins that contract so any future refactor
+			// (e.g. switching to anchorPoint=(0.5,0.5)) still has to keep the
+			// constructor x/y == center.
+			const light = new Light2d(100, 100, 30, 25);
+			expect(light.pos.x).toBe(70); // center 100 − radiusX 30
+			expect(light.pos.y).toBe(75); // center 100 − radiusY 25
+			// the visible center, not the pos, is what users care about
+			const b = light.getBounds();
+			expect(b.centerX).toBe(100);
+			expect(b.centerY).toBe(100);
+			light.destroy();
+		});
+
+		it("constructor: asymmetric radii (radiusX !== radiusY) center correctly on both axes", () => {
+			// Adversarial: catch a regression where a fix accidentally uses
+			// radiusX for both axes (or width/2 only for X).
+			const light = new Light2d(50, 50, 40, 10);
+			game.world.addChild(light);
+			const b = light.getBounds();
+			expect(b.centerX).toBe(50);
+			expect(b.centerY).toBe(50);
+			expect(b.width).toBe(80); // 2 * radiusX
+			expect(b.height).toBe(20); // 2 * radiusY
+			expect(b.x).toBe(10); // 50 − 40
+			expect(b.y).toBe(40); // 50 − 10
+			game.world.removeChildNow(light, true);
+		});
+
+		it("constructor at origin (0, 0): bounds extend symmetrically into negative coords", () => {
+			// Catches off-by-one fixes that hardcode positive offsets.
+			const light = new Light2d(0, 0, 25, 25);
+			game.world.addChild(light);
+			const b = light.getBounds();
+			expect(b.centerX).toBe(0);
+			expect(b.centerY).toBe(0);
+			expect(b.x).toBe(-25);
+			expect(b.y).toBe(-25);
+			game.world.removeChildNow(light, true);
+		});
+
+		it("constructor: matches Ellipse(x, y, w, h) center semantics", () => {
+			// The whole point of choosing the center semantic — verify it
+			// actually matches what users would write for an Ellipse, so
+			// `Light2d(x, y, r, r)` and `new Ellipse(x, y, 2r, 2r)` describe
+			// the same region.
+			const x = 120;
+			const y = 90;
+			const r = 35;
+			const light = new Light2d(x, y, r, r);
+			game.world.addChild(light);
+			const lightArea = light.getVisibleArea();
+			// `Ellipse(x, y, w, h)` uses x/y as center (per its setShape docstring),
+			// w/h as full diameters — same as `Light2d` after this PR.
+			const ref = new Ellipse(x, y, 2 * r, 2 * r);
+			expect(lightArea.pos.x).toBe(ref.pos.x);
+			expect(lightArea.pos.y).toBe(ref.pos.y);
+			expect(lightArea.radiusV.x).toBe(ref.radiusV.x);
+			expect(lightArea.radiusV.y).toBe(ref.radiusV.y);
+			game.world.removeChildNow(light, true);
+		});
+
+		it("constructor + centerOn(): centerOn moves the visible center, not the constructor's local pos", () => {
+			// Document the interplay: after `new Light2d(x, y, …)`, calling
+			// `centerOn(nx, ny)` should make the light's gradient center
+			// land at (nx, ny) — the constructor's (x, y) is just the
+			// initial center, replaceable later via centerOn.
+			const light = new Light2d(50, 50, 30, 30);
+			game.world.addChild(light);
+			expect(light.getBounds().centerX).toBe(50);
+			light.centerOn(200, 175);
+			expect(light.getBounds().centerX).toBe(200);
+			expect(light.getBounds().centerY).toBe(175);
+			game.world.removeChildNow(light, true);
 		});
 	});
 

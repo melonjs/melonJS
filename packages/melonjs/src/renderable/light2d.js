@@ -98,7 +98,7 @@ export default class Light2d extends Renderable {
 	 * inner alpha; the `Stage.ambientLight` color and alpha control how
 	 * dark the unlit areas are. Use `light.blendMode` to override the
 	 * default additive blend if needed.
-	 * @param {number} x - The horizontal position of the light's center.
+	 * @param {number} x - The horizontal position of the light's center (matches `Ellipse(x, y, w, h)` conventions).
 	 * @param {number} y - The vertical position of the light's center.
 	 * @param {number} radiusX - The horizontal radius of the light.
 	 * @param {number} [radiusY=radiusX] - The vertical radius of the light.
@@ -113,8 +113,11 @@ export default class Light2d extends Renderable {
 		color = "#FFF",
 		intensity = 0.7,
 	) {
-		// call the parent constructor
-		super(x, y, radiusX * 2, radiusY * 2);
+		// Constructor x/y is the light's CENTER (matching Ellipse(x, y, w, h)
+		// conventions), but Renderable's underlying Rect uses top-left
+		// positioning. Translate so `pos` is the bbox top-left while the
+		// bounds' center lines up with the requested (x, y).
+		super(x - radiusX, y - radiusY, radiusX * 2, radiusY * 2);
 
 		/**
 		 * the color of the light
