@@ -88,7 +88,7 @@ class PlayScreen extends Stage {
 		// pre-populated with `atlas` + `atlasIndices` + framewidth/height —
 		// it's what `addAnimation(name, [string])` needs to look up frames
 		// by their atlas filename.
-		const character = new Sprite(vw / 2, vh * 0.8, {
+		const character = new Sprite(vw / 2, vh * 0.65, {
 			...atlas.getAnimationSettings(animFrames),
 			anchorPoint: new Vector2d(0.5, 0.5),
 		});
