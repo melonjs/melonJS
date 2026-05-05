@@ -81,6 +81,9 @@ export function buildMultiTextureFragment(maxTextures) {
 	// pos = (x, y, radius, intensity) packed into a vec4 for fewer uniforms
 	lines.push("uniform vec4 uLightPos[" + MAX_LIGHTS + "];");
 	lines.push("uniform vec3 uLightColor[" + MAX_LIGHTS + "];");
+	// per-light "height above the sprite plane" — controls how
+	// directional vs flat the lighting reads
+	lines.push("uniform float uLightHeight[" + MAX_LIGHTS + "];");
 	lines.push("uniform vec3 uAmbient;");
 
 	lines.push("varying vec4 vColor;");
@@ -127,11 +130,16 @@ export function buildMultiTextureFragment(maxTextures) {
 	lines.push("        vec4 lp = uLightPos[i];");
 	lines.push("        vec2 toLight = lp.xy - vWorldPos;");
 	lines.push("        float dist = length(toLight);");
-	// linear attenuation over [0, radius]; clamp to non-negative
-	lines.push("        float att = max(0.0, 1.0 - dist / max(lp.z, 1.0));");
-	// height z-component keeps near-center pixels from going dark
-	lines.push("        float height = lp.z * 0.075;");
-	lines.push("        vec3 lightDir = normalize(vec3(toLight, height));");
+	// quadratic attenuation over [0, radius]: gives a wider plateau near
+	// the cursor and a softer feathered edge than the linear formula
+	lines.push("        float linear = max(0.0, 1.0 - dist / max(lp.z, 1.0));");
+	lines.push("        float att = linear * linear;");
+	// per-light height controls how flat (low) vs head-on (high) the
+	// lighting reads. Set via `light.height` (defaults to ~0.075 *
+	// max-radius for a balanced look at the rendered scale).
+	lines.push(
+		"        vec3 lightDir = normalize(vec3(toLight, uLightHeight[i]));",
+	);
 	lines.push("        float NdotL = max(0.0, dot(normal, lightDir));");
 	lines.push("        lighting += uLightColor[i] * (lp.w * att * NdotL);");
 	lines.push("    }");

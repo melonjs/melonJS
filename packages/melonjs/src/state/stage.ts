@@ -93,6 +93,7 @@ export default class Stage {
 	_lightUniformsScratch: {
 		positions: Float32Array;
 		colors: Float32Array;
+		heights: Float32Array;
 		ambient: number[];
 	} | null;
 
@@ -300,6 +301,7 @@ export default class Stage {
 	): {
 		positions: Float32Array;
 		colors: Float32Array;
+		heights: Float32Array;
 		count: number;
 		ambient: number[];
 	} {
@@ -309,14 +311,16 @@ export default class Stage {
 			this._lightUniformsScratch = {
 				positions: new Float32Array(MAX_LIGHTS * 4),
 				colors: new Float32Array(MAX_LIGHTS * 3),
+				heights: new Float32Array(MAX_LIGHTS),
 				ambient: [0, 0, 0],
 			};
 		}
 		const scratch = this._lightUniformsScratch;
-		// reset positions to zero for any unused slots so stale data from
-		// the previous frame doesn't leak into the shader
+		// reset to zero for any unused slots so stale data from the
+		// previous frame doesn't leak into the shader
 		scratch.positions.fill(0);
 		scratch.colors.fill(0);
+		scratch.heights.fill(0);
 
 		let i = 0;
 		this._activeLights.forEach((light) => {
@@ -332,6 +336,7 @@ export default class Stage {
 			scratch.colors[i * 3 + 0] = light.color.r / 255;
 			scratch.colors[i * 3 + 1] = light.color.g / 255;
 			scratch.colors[i * 3 + 2] = light.color.b / 255;
+			scratch.heights[i] = light.lightHeight;
 			i++;
 		});
 
@@ -342,6 +347,7 @@ export default class Stage {
 		return {
 			positions: scratch.positions,
 			colors: scratch.colors,
+			heights: scratch.heights,
 			count: i,
 			ambient: scratch.ambient,
 		};

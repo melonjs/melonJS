@@ -1085,6 +1085,33 @@ describe("Light2d + Stage lighting", () => {
 			}
 		});
 
+		it("packs per-light height into a parallel `heights` Float32Array", () => {
+			// `Light2d.height` controls the Z component of `lightDir` in
+			// the lit shader. Default is `max(radiusX, radiusY) * 0.075`;
+			// users can override per-light for stylized "low and grazing"
+			// vs "head-on" lighting.
+			const stage = freshLitState();
+			const a = new Light2d(0, 0, 100, 50, "#fff", 1);
+			const b = new Light2d(50, 50, 80, 80, "#fff", 1);
+			b.lightHeight = 200;
+			game.world.addChild(a);
+			game.world.addChild(b);
+
+			const u = stage.collectLightingUniforms(0, 0);
+			expect(u.heights).toBeInstanceOf(Float32Array);
+			expect(u.heights.length).toBe(8); // MAX_LIGHTS
+			// default for `a`: max(100, 50) * 0.075 = 7.5
+			expect(u.heights[0]).toBeCloseTo(7.5, 4);
+			// custom override for `b`
+			expect(u.heights[1]).toBe(200);
+			// stale slots zeroed
+			expect(u.heights[2]).toBe(0);
+			expect(u.heights[7]).toBe(0);
+
+			game.world.removeChildNow(a, true);
+			game.world.removeChildNow(b, true);
+		});
+
 		it("packs ambientLightingColor (RGB / 255) into the ambient slot", () => {
 			const stage = freshLitState();
 			stage.ambientLightingColor.setColor(85, 85, 85);

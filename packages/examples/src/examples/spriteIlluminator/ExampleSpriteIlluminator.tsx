@@ -1,9 +1,11 @@
+import { DebugPanelPlugin } from "@melonjs/debug-plugin";
 import {
 	event,
 	game,
 	input,
 	Light2d,
 	loader,
+	plugin,
 	Sprite,
 	Stage,
 	state,
@@ -164,6 +166,9 @@ const createGame = () => {
 		// per-pixel normal-map lighting needs the WebGL renderer
 		renderer: video.WEBGL,
 	});
+
+	// register the debug panel — toggled with the `s` key by default
+	plugin.register(DebugPanelPlugin, "debugPanel");
 
 	state.set(state.PLAY, new PlayScreen());
 

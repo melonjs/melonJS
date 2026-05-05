@@ -216,12 +216,16 @@ export default class QuadBatcher extends MaterialBatcher {
 		this._lightCount = count;
 		shader.setUniform("uLightCount", count);
 		if (count > 0) {
-			// `uLightPos` and `uLightColor` are GLSL arrays; the renderer's
-			// uniform parser stores them under the unbracketed name. Passing
-			// the full Float32Array uploads all `count` elements starting
-			// at index 0 via `gl.uniform4fv` / `gl.uniform3fv`.
+			// `uLightPos`, `uLightColor`, `uLightHeight` are GLSL arrays;
+			// the renderer's uniform parser stores them under the
+			// unbracketed name. Passing the full Float32Array uploads all
+			// `count` elements starting at index 0 via the appropriate
+			// `gl.uniform*v` call.
 			shader.setUniform("uLightPos", uniforms.positions);
 			shader.setUniform("uLightColor", uniforms.colors);
+			if (uniforms.heights) {
+				shader.setUniform("uLightHeight", uniforms.heights);
+			}
 		}
 		if (uniforms.ambient) {
 			shader.setUniform("uAmbient", uniforms.ambient);

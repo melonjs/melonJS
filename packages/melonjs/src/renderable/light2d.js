@@ -188,6 +188,25 @@ export default class Light2d extends Renderable {
 		 */
 		this.illuminationOnly = false;
 
+		/**
+		 * Light height above the sprite plane (Z axis), in the same
+		 * units as `radiusX`/`radiusY`. Used by the WebGL lit-sprite
+		 * pipeline as the Z component of the light direction in the
+		 * `dot(normal, lightDir)` calculation: a low height makes the
+		 * lighting graze across the surface (long visible shadows on
+		 * normal-map detail), a high height makes it head-on (more
+		 * uniform brightness on the lit hemisphere).
+		 *
+		 * Default is `max(radiusX, radiusY) * 0.075` — a balanced look
+		 * at the asset's native scale that prevents lights at the
+		 * sprite's center from producing degenerate flat shading.
+		 *
+		 * Named `lightHeight` (not just `height`) to avoid colliding
+		 * with the bbox-height getter Light2d inherits from `Rect`.
+		 * @type {number}
+		 */
+		this.lightHeight = Math.max(radiusX, radiusY) * 0.075;
+
 		createGradient(this);
 	}
 
