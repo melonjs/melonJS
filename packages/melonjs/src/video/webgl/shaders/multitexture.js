@@ -64,7 +64,10 @@ export function buildMultiTextureFragment(maxTextures) {
 	const count = Math.max(maxTextures, 1);
 	const lines = [];
 
-	lines.push("precision highp float;");
+	// no explicit `precision` — `GLShader.setPrecision()` auto-injects
+	// the highest float precision the device's fragment stage supports
+	// via `getMaxShaderPrecision()`. Hardcoding `highp` would refuse to
+	// compile on older mobile GPUs that only support `mediump`.
 
 	// color samplers (one per texture unit)
 	for (let i = 0; i < count; i++) {

@@ -34,7 +34,7 @@ export default class Sprite extends Renderable {
 	 * @param {number} [settings.flipX] - flip the sprite on the horizontal axis
 	 * @param {number} [settings.flipY] - flip the sprite on the vertical axis
 	 * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] - Anchor point to draw the frame at (defaults to the center of the frame).
-	 * @param {HTMLImageElement|HTMLCanvasElement|string} [settings.normalMap] - optional normal-map texture used for per-pixel lighting (SpriteIlluminator-style). Same layout/UVs as `settings.image`. When omitted (default), the sprite renders unlit and pays no extra cost. Ignored by the Canvas renderer.
+	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|HTMLVideoElement|string} [settings.normalMap] - optional normal-map texture used for per-pixel lighting (SpriteIlluminator-style). Same layout/UVs as `settings.image`. When omitted (default), the sprite renders unlit and pays no extra cost. Ignored by the Canvas renderer.
 	 * @example
 	 * // create a single sprite from a standalone image, with anchor in the center
 	 * let sprite = new me.Sprite(0, 0, {
@@ -340,7 +340,7 @@ export default class Sprite extends Renderable {
 	 * `width`/`height`) throws — assign `null` to clear.
 	 *
 	 * Silently ignored by the Canvas renderer.
-	 * @type {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|null}
+	 * @type {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|HTMLVideoElement|null}
 	 */
 	get normalMap() {
 		return this._normalMap;

@@ -1085,6 +1085,29 @@ describe("Light2d + Stage lighting", () => {
 			}
 		});
 
+		it("light radius reflects transform-applied bounds (scaled lights have larger reach)", () => {
+			// `Stage.collectLightingUniforms` should derive the shader
+			// `radius` uniform from the transform-aware bbox so a scaled
+			// light's brightness range tracks its visible range. Using the
+			// raw `light.radiusX/Y` would leave the lighting math at the
+			// pre-scale radius even though the cutout pass (via
+			// `getVisibleArea()`) already reflects the scale.
+			const stage = freshLitState();
+			const light = new Light2d(40, 40, 30, 30);
+			game.world.addChild(light);
+
+			let u = stage.collectLightingUniforms(0, 0);
+			const beforeR = u.positions[2];
+			expect(beforeR).toBeCloseTo(30); // half of bounds.width (60) at scale 1
+
+			light.scale(2);
+			u = stage.collectLightingUniforms(0, 0);
+			const afterR = u.positions[2];
+			expect(afterR).toBeCloseTo(60); // bounds.width doubled
+
+			game.world.removeChildNow(light, true);
+		});
+
 		it("packs per-light height into a parallel `heights` Float32Array", () => {
 			// `Light2d.height` controls the Z component of `lightDir` in
 			// the lit shader. Default is `max(radiusX, radiusY) * 0.075`;

@@ -894,22 +894,6 @@ export default class Camera2d extends Renderable {
 		// post-effect: bind FBO if shader effects are set (WebGL only)
 		const usePostEffect = r.beginPostEffect(this);
 
-		// upload Light2d uniforms for the lit sprite pipeline. Computed
-		// from the active stage (if any) and translated into the same
-		// camera-local space the world container will render into. The
-		// renderer no-ops when in Canvas mode.
-		const litStage = state.current() as {
-			collectLightingUniforms?: (
-				translateX: number,
-				translateY: number,
-			) => Parameters<Renderer["setLightUniforms"]>[0];
-		} | null;
-		if (litStage && typeof litStage.collectLightingUniforms === "function") {
-			renderer.setLightUniforms(
-				litStage.collectLightingUniforms(translateX, translateY),
-			);
-		}
-
 		// translate the world coordinates by default to screen coordinates
 		container.translate(-translateX, -translateY);
 
@@ -950,6 +934,25 @@ export default class Camera2d extends Renderable {
 			);
 		} else {
 			renderer.setProjection(this.projectionMatrix);
+		}
+
+		// Upload Light2d uniforms for the lit sprite pipeline. Done here
+		// — after `setProjection()` (which can flush the current batch)
+		// and before `container.draw()` walks the world tree — so the
+		// uniforms are guaranteed to apply to every lit quad pushed by
+		// the upcoming draw walk. Computed from the active stage and
+		// translated into the same camera-local space the world container
+		// renders into. The renderer no-ops in Canvas mode.
+		const litStage = state.current() as {
+			collectLightingUniforms?: (
+				translateX: number,
+				translateY: number,
+			) => Parameters<Renderer["setLightUniforms"]>[0];
+		} | null;
+		if (litStage && typeof litStage.collectLightingUniforms === "function") {
+			renderer.setLightUniforms(
+				litStage.collectLightingUniforms(translateX, translateY),
+			);
 		}
 
 		container.preDraw(r);

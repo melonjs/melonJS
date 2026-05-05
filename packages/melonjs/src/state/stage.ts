@@ -5,6 +5,7 @@ import type World from "./../physics/world.js";
 import type Light2d from "./../renderable/light2d.js";
 import { emit, STAGE_RESET } from "../system/event.ts";
 import type Renderer from "./../video/renderer.js";
+import { MAX_LIGHTS } from "./../video/webgl/shaders/multitexture.js";
 
 interface StageSettings {
 	cameras: Camera2d[];
@@ -305,8 +306,9 @@ export default class Stage {
 		count: number;
 		ambient: number[];
 	} {
-		// keep the shader's MAX_LIGHTS in sync with this constant
-		const MAX_LIGHTS = 8;
+		// `MAX_LIGHTS` is imported from `multitexture.js` — single source
+		// of truth shared with the lit fragment shader and the
+		// `QuadBatcher.setLightUniforms` clamp.
 		if (this._lightUniformsScratch === null) {
 			this._lightUniformsScratch = {
 				positions: new Float32Array(MAX_LIGHTS * 4),
@@ -328,7 +330,10 @@ export default class Stage {
 				return;
 			}
 			const b = light.getBounds();
-			const radius = Math.max(light.radiusX, light.radiusY);
+			// derive the radius from the transform-aware bbox (so a
+			// scaled light's brightness range tracks its visible range —
+			// matches the cutout pass's `getVisibleArea()` sizing)
+			const radius = Math.max(b.width, b.height) / 2;
 			scratch.positions[i * 4 + 0] = b.centerX - translateX;
 			scratch.positions[i * 4 + 1] = b.centerY - translateY;
 			scratch.positions[i * 4 + 2] = radius;

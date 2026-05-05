@@ -36,8 +36,18 @@ export default class QuadBatcher extends MaterialBatcher {
 		 * batching. Paired with an equally-sized pool of normal-map sampler
 		 * slots starting at unit `maxBatchTextures` (so a sprite's color
 		 * goes to unit `n` and its `normalMap` to unit `maxBatchTextures + n`).
-		 * Halved relative to the renderer's hard limit so that even on
-		 * WebGL1's 8-unit minimum spec the paired layout still fits.
+		 *
+		 * Halved relative to the renderer's hard limit so the paired
+		 * layout fits WebGL1's 8-unit minimum spec. This shrinks the
+		 * batch capacity for **unlit-only scenes** too — a real but bounded
+		 * trade-off: the engine still batches up to 16 distinct color
+		 * textures per draw call on hardware that exposes ≥ 32 units, and
+		 * a typical 2D scene hits its draw-call limit on **batch fill**
+		 * (4 verts × 16 KB) long before it saturates 8 distinct textures.
+		 * Conditionally splitting per-mode would require runtime
+		 * introspection of "does any sprite ever have a normalMap" — out
+		 * of scope; this comment documents the trade-off so future
+		 * tuners know what's at play.
 		 * @type {number}
 		 * @ignore
 		 */
@@ -109,7 +119,7 @@ export default class QuadBatcher extends MaterialBatcher {
 		 * normal-map texture per color slot — keyed by the same unit index as
 		 * `boundTextures`. Used by `addQuad` to detect when a normal-map slot
 		 * needs (re-)uploading, mirroring the color-texture cache.
-		 * @type {Array<HTMLImageElement|HTMLCanvasElement|null>}
+		 * @type {Array<HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|HTMLVideoElement|null>}
 		 * @ignore
 		 */
 		this.boundNormalMaps = new Array(this.maxBatchTextures).fill(null);
@@ -119,7 +129,7 @@ export default class QuadBatcher extends MaterialBatcher {
 		 * Lazily populated on first use; the GL texture is created once
 		 * and re-bound on subsequent quads that reference the same
 		 * `normalMap`. Cleared on context loss / batcher reset.
-		 * @type {Map<HTMLImageElement|HTMLCanvasElement, WebGLTexture>}
+		 * @type {Map<HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|HTMLVideoElement, WebGLTexture>}
 		 * @ignore
 		 */
 		this.normalMapTextures = new Map();
@@ -187,6 +197,13 @@ export default class QuadBatcher extends MaterialBatcher {
 			);
 		}
 		this.boundNormalMaps.fill(null);
+		// release the GL textures we created in `_uploadOrBindNormalMap`
+		// before dropping our JS references — `gl.createTexture()` objects
+		// don't get GC'd until explicitly deleted (or the context is lost).
+		const gl = this.gl;
+		this.normalMapTextures.forEach((tex) => {
+			gl.deleteTexture(tex);
+		});
 		this.normalMapTextures.clear();
 		this._lightCount = 0;
 		this.defaultShader.setUniform("uLightCount", 0);
@@ -322,7 +339,7 @@ export default class QuadBatcher extends MaterialBatcher {
 	 * `2.0 * rgb - 1.0` in the shader), so premultiplied alpha is
 	 * disabled here — multiplying through alpha would corrupt the
 	 * encoding for any non-opaque texel.
-	 * @param {HTMLImageElement|HTMLCanvasElement} image - normal-map source
+	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|HTMLVideoElement} image - normal-map source
 	 * @param {number} unit - GL texture unit (already offset by `maxBatchTextures`)
 	 * @ignore
 	 */
@@ -344,7 +361,35 @@ export default class QuadBatcher extends MaterialBatcher {
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
 		gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+		// Mirror MaterialBatcher.createTexture2D's OffscreenCanvas branch:
+		// transfer to ImageBitmap first since OffscreenCanvas isn't a
+		// TexImageSource directly on every browser. Other accepted types
+		// (HTMLImageElement, HTMLCanvasElement, ImageBitmap, HTMLVideoElement)
+		// flow through `texImage2D` as-is.
+		if (
+			typeof globalThis.OffscreenCanvas !== "undefined" &&
+			image instanceof globalThis.OffscreenCanvas
+		) {
+			const bitmap = image.transferToImageBitmap();
+			gl.texImage2D(
+				gl.TEXTURE_2D,
+				0,
+				gl.RGBA,
+				gl.RGBA,
+				gl.UNSIGNED_BYTE,
+				bitmap,
+			);
+			bitmap.close();
+		} else {
+			gl.texImage2D(
+				gl.TEXTURE_2D,
+				0,
+				gl.RGBA,
+				gl.RGBA,
+				gl.UNSIGNED_BYTE,
+				image,
+			);
+		}
 		this.normalMapTextures.set(image, glTex);
 	}
 
@@ -394,6 +439,11 @@ export default class QuadBatcher extends MaterialBatcher {
 			if (unit >= this.maxBatchTextures) {
 				this.flush();
 				this.renderer.cache.resetUnitAssignments();
+				// the color-texture cache no longer remembers which slot is
+				// bound to what — drop our paired-normal-map cache too so
+				// the next normal-mapped quad re-uploads cleanly instead of
+				// trusting a stale `boundNormalMaps[unit]` entry.
+				this.boundNormalMaps.fill(null);
 				unit = this.uploadTexture(texture, w, h, reupload, false);
 			}
 		} else {
