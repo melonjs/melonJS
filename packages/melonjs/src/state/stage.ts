@@ -78,7 +78,7 @@ export default class Stage {
 	 * Base light level applied to every normal-mapped sprite in the
 	 * lit rendering path. Unlike {@link Stage#ambientLight} (which is
 	 * the dark overlay punched by each light's cutout), this color is
-	 * *added* to every lit pixel so unlit areas don't render pure
+	 * added to every lit pixel so unlit areas don't render pure
 	 * black. Defaults to black (0, 0, 0) — sprites without a
 	 * `normalMap` ignore it entirely.
 	 * @default "#000000"

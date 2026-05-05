@@ -43,7 +43,7 @@ const resources = [
 	{ name: "si_sheet", type: "image", src: spritesheetImg },
 	{ name: "si_sheet_n", type: "image", src: spritesheetN },
 	{ name: "si_lightbulb", type: "image", src: lightbulbImg },
-	{ name: "si_atlas", type: "json", data: spritesheetJSON },
+	{ name: "si_atlas", type: "json", src: spritesheetJsonUrl },
 ];
 
 class PlayScreen extends Stage {
