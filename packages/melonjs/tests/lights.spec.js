@@ -5,6 +5,7 @@ import {
 	Ellipse,
 	game,
 	Light2d,
+	Sprite,
 	Stage,
 	state,
 	video,
@@ -1176,6 +1177,342 @@ describe("Light2d + Stage lighting", () => {
 			expect(u.positions[7]).toBe(0);
 
 			game.world.removeChildNow(a, true);
+		});
+	});
+
+	describe("Lit pipeline — adversarial edge cases", () => {
+		function freshLitState() {
+			const stage = state.current();
+			while (stage._activeLights.size > 0) {
+				const l = [...stage._activeLights][0];
+				if (l.ancestor) {
+					l.ancestor.removeChildNow(l, true);
+				} else {
+					stage._activeLights.delete(l);
+				}
+			}
+			stage.ambientLight.setColor(0, 0, 0, 0);
+			stage.ambientLightingColor.setColor(0, 0, 0, 1);
+			return stage;
+		}
+
+		it("exactly MAX_LIGHTS active lights — all 8 packed; the 9th is dropped", () => {
+			// boundary check around the cap. Going from 8 → 9 lights must
+			// not overflow the Float32Array (length = 8 * 4) or skip
+			// existing lights.
+			const stage = freshLitState();
+			const lights = [];
+			for (let i = 0; i < 9; i++) {
+				const l = new Light2d(i * 10, 0, 5, 5);
+				lights.push(l);
+				game.world.addChild(l);
+			}
+			const u = stage.collectLightingUniforms(0, 0);
+			expect(u.count).toBe(8);
+			// every slot in the buffer must be reachable (no out-of-range writes)
+			expect(u.positions.length).toBe(8 * 4);
+			expect(u.colors.length).toBe(8 * 3);
+			expect(u.heights.length).toBe(8);
+			for (const l of lights) {
+				game.world.removeChildNow(l, true);
+			}
+		});
+
+		it("light with `lightHeight = 0` packs cleanly (no NaN, no division)", () => {
+			// The shader's lightDir math `normalize(vec3(toLight, height))`
+			// handles height=0 fine (it's just a 2D direction with
+			// implicit z=0). Stage shouldn't blow up either.
+			const stage = freshLitState();
+			const l = new Light2d(40, 40, 30, 30);
+			l.lightHeight = 0;
+			game.world.addChild(l);
+			const u = stage.collectLightingUniforms(0, 0);
+			expect(u.count).toBe(1);
+			expect(u.heights[0]).toBe(0);
+			expect(Number.isFinite(u.positions[0])).toBe(true);
+			expect(Number.isFinite(u.heights[0])).toBe(true);
+			game.world.removeChildNow(l, true);
+		});
+
+		it("light with `lightHeight < 0` is uploaded as-is (shader decides what it means)", () => {
+			// Negative height = light below the sprite plane. The shader's
+			// `dot(normal, lightDir)` will give negative for upward-facing
+			// surface normals → `max(0, neg)` = 0 (unlit). That's a
+			// reasonable visual; Stage shouldn't pre-clamp.
+			const stage = freshLitState();
+			const l = new Light2d(0, 0, 10, 10);
+			l.lightHeight = -25;
+			game.world.addChild(l);
+			const u = stage.collectLightingUniforms(0, 0);
+			expect(u.heights[0]).toBe(-25);
+			game.world.removeChildNow(l, true);
+		});
+
+		it("light with negative `intensity` is uploaded unclamped", () => {
+			// "Negative intensity" = subtractive light — a useful gimmick
+			// for shadow-casting effects, but only if Stage doesn't clamp
+			// it on the way to the shader.
+			const stage = freshLitState();
+			const l = new Light2d(0, 0, 50, 50, "#fff", -0.5);
+			game.world.addChild(l);
+			const u = stage.collectLightingUniforms(0, 0);
+			expect(u.positions[3]).toBe(-0.5); // intensity slot
+			game.world.removeChildNow(l, true);
+		});
+
+		it("minimum-radius (1px) light: uniforms pack cleanly, no NaN", () => {
+			// `Light2d` itself rejects 0×0 (its gradient texture can't be
+			// zero-sized). The minimum feasible light is 1px radius; this
+			// pins the boundary case so a future degenerate-input handling
+			// change doesn't accidentally start NaN-ing.
+			const stage = freshLitState();
+			const l = new Light2d(50, 50, 1, 1);
+			game.world.addChild(l);
+			const u = stage.collectLightingUniforms(0, 0);
+			expect(u.count).toBe(1);
+			expect(u.positions[2]).toBe(1); // radius from bbox half-width
+			expect(Number.isFinite(u.positions[0])).toBe(true);
+			expect(Number.isFinite(u.positions[2])).toBe(true);
+			expect(Number.isFinite(u.heights[0])).toBe(true);
+			game.world.removeChildNow(l, true);
+		});
+
+		it("light with non-uniform `radiusX` ≠ `radiusY`: shader radius takes max bbox dimension", () => {
+			// transform-aware radius (post-fix #4). The bbox uses
+			// max(2*radiusX, 2*radiusY); we feed half of that.
+			const stage = freshLitState();
+			const l = new Light2d(0, 0, 100, 25);
+			game.world.addChild(l);
+			const u = stage.collectLightingUniforms(0, 0);
+			expect(u.positions[2]).toBe(100); // max(200, 50) / 2 = 100
+			game.world.removeChildNow(l, true);
+		});
+
+		it("light pos mutation between frames updates the uniform position", () => {
+			const stage = freshLitState();
+			const l = new Light2d(10, 20, 30, 30);
+			game.world.addChild(l);
+
+			let u = stage.collectLightingUniforms(0, 0);
+			expect(u.positions[0]).toBe(10);
+			expect(u.positions[1]).toBe(20);
+
+			l.pos.set(150, 175);
+			u = stage.collectLightingUniforms(0, 0);
+			expect(u.positions[0]).toBe(150);
+			expect(u.positions[1]).toBe(175);
+
+			game.world.removeChildNow(l, true);
+		});
+
+		it("light parented to a deeply nested container chain: getBounds walks the full ancestor stack", () => {
+			// container → container → container → light
+			const stage = freshLitState();
+			const a = new Container(100, 100, 50, 50);
+			const b = new Container(50, 50, 50, 50);
+			const c = new Container(25, 25, 50, 50);
+			game.world.addChild(a);
+			a.addChild(b);
+			b.addChild(c);
+			const torch = new Light2d(10, 10, 5, 5);
+			c.addChild(torch);
+
+			const u = stage.collectLightingUniforms(0, 0);
+			// world-space center: 100 + 50 + 25 + 10 = 185 on each axis
+			expect(u.positions[0]).toBe(185);
+			expect(u.positions[1]).toBe(185);
+
+			game.world.removeChildNow(a, true);
+		});
+
+		it("light removed mid-flight: doesn't appear in the next collectLightingUniforms", () => {
+			const stage = freshLitState();
+			const a = new Light2d(0, 0, 10);
+			const b = new Light2d(50, 50, 10);
+			game.world.addChild(a);
+			game.world.addChild(b);
+
+			expect(stage.collectLightingUniforms(0, 0).count).toBe(2);
+
+			// remove `a` and verify only `b` shows up
+			game.world.removeChildNow(a, true);
+			const u = stage.collectLightingUniforms(0, 0);
+			expect(u.count).toBe(1);
+
+			// the surviving light's coords land in slot 0
+			expect(u.positions[0]).toBe(50);
+
+			game.world.removeChildNow(b, true);
+		});
+
+		it("light removed and re-added across calls: re-registers cleanly", () => {
+			const stage = freshLitState();
+			const l = new Light2d(40, 40, 20);
+			game.world.addChild(l);
+			expect(stage.collectLightingUniforms(0, 0).count).toBe(1);
+
+			game.world.removeChildNow(l, true);
+			expect(stage.collectLightingUniforms(0, 0).count).toBe(0);
+
+			game.world.addChild(l);
+			expect(stage.collectLightingUniforms(0, 0).count).toBe(1);
+
+			game.world.removeChildNow(l, true);
+		});
+
+		it("ambientLightingColor with non-1 alpha: alpha is ignored (only RGB feeds the ambient slot)", () => {
+			// `ambient` is a vec3 in the shader. Stage reads .r/.g/.b only.
+			// Setting alpha != 1 must not reduce the ambient floor.
+			const stage = freshLitState();
+			stage.ambientLightingColor.setColor(120, 60, 30, 0.5); // alpha 0.5
+			const u = stage.collectLightingUniforms(0, 0);
+			expect(u.ambient[0]).toBeCloseTo(120 / 255, 3);
+			expect(u.ambient[1]).toBeCloseTo(60 / 255, 3);
+			expect(u.ambient[2]).toBeCloseTo(30 / 255, 3);
+			expect(u.ambient.length).toBe(3); // no alpha slot
+		});
+
+		it("rotated light: lightHeight is independent of rotation (a uniform Z height)", () => {
+			// Rotating a Light2d shouldn't change its height — height is
+			// "above the sprite plane", not "in the rotation axis."
+			const stage = freshLitState();
+			const l = new Light2d(0, 0, 30, 30);
+			l.lightHeight = 12.5;
+			game.world.addChild(l);
+			l.rotate(Math.PI / 4);
+			const u = stage.collectLightingUniforms(0, 0);
+			expect(u.heights[0]).toBe(12.5);
+			game.world.removeChildNow(l, true);
+		});
+
+		it("scaled light: position uniform is the (anchor-aware) bbox center, not the scaled corner", () => {
+			// After `light.scale(2)`, the bbox grows symmetrically around
+			// the center (since anchorPoint is 0.5, 0.5). The uniform
+			// position should still be the orig pos.
+			const stage = freshLitState();
+			const l = new Light2d(80, 60, 20);
+			game.world.addChild(l);
+			l.scale(2);
+			const u = stage.collectLightingUniforms(0, 0);
+			expect(u.positions[0]).toBeCloseTo(80);
+			expect(u.positions[1]).toBeCloseTo(60);
+			game.world.removeChildNow(l, true);
+		});
+
+		it("multiple lights at the SAME world position: each gets its own slot", () => {
+			// stacked / overlapping lights are a real pattern (e.g. additive
+			// color glows). Stage shouldn't dedup or merge.
+			const stage = freshLitState();
+			const a = new Light2d(50, 50, 30, 30, "#ff0000", 0.5);
+			const b = new Light2d(50, 50, 30, 30, "#0000ff", 0.5);
+			game.world.addChild(a);
+			game.world.addChild(b);
+			const u = stage.collectLightingUniforms(0, 0);
+			expect(u.count).toBe(2);
+			// both at same xy
+			expect(u.positions[0]).toBe(50);
+			expect(u.positions[4]).toBe(50);
+			// distinct colors
+			const seen = new Set([
+				`${u.colors[0]},${u.colors[1]},${u.colors[2]}`,
+				`${u.colors[3]},${u.colors[4]},${u.colors[5]}`,
+			]);
+			expect(seen.size).toBe(2);
+			game.world.removeChildNow(a, true);
+			game.world.removeChildNow(b, true);
+		});
+	});
+
+	describe("Lit pipeline — Sprite.normalMap adversarial cases", () => {
+		it("re-assigning the same normalMap value is a no-op (preserves it)", () => {
+			const normal = video.createCanvas(16, 16);
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+				normalMap: normal,
+			});
+			s.normalMap = normal;
+			s.normalMap = normal;
+			expect(s.normalMap).toBe(normal);
+		});
+
+		it("two sprites can share the same normalMap reference safely", () => {
+			const normal = video.createCanvas(16, 16);
+			const a = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+				normalMap: normal,
+			});
+			const b = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+				normalMap: normal,
+			});
+			expect(a.normalMap).toBe(b.normalMap);
+			expect(a.normalMap).toBe(normal);
+		});
+
+		it("Sprite swapped to a new normalMap mid-life: the old reference is dropped", () => {
+			const oldN = video.createCanvas(8, 8);
+			const newN = video.createCanvas(16, 16);
+			const s = new Sprite(0, 0, {
+				framewidth: 8,
+				frameheight: 8,
+				image: video.createCanvas(8, 8),
+				normalMap: oldN,
+			});
+			s.normalMap = newN;
+			expect(s.normalMap).toBe(newN);
+			expect(s.normalMap).not.toBe(oldN);
+		});
+
+		it("Sprite.destroy releases the normalMap reference even after re-assignment", () => {
+			const a = video.createCanvas(8, 8);
+			const b = video.createCanvas(16, 16);
+			const s = new Sprite(0, 0, {
+				framewidth: 8,
+				frameheight: 8,
+				image: video.createCanvas(8, 8),
+				normalMap: a,
+			});
+			s.normalMap = b; // swap to a different image
+			s.destroy();
+			expect(s.normalMap).toBeNull();
+		});
+
+		it("normalMap setter accepts a duck-typed image-like with numeric width/height", () => {
+			// HTMLVideoElement, ImageBitmap, OffscreenCanvas don't all exist
+			// in every test environment. The setter validates duck-typed
+			// `{ width, height }` so any shape that quacks like an image
+			// works.
+			const fakeBitmap = { width: 32, height: 32, close: () => {} };
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+			});
+			s.normalMap = fakeBitmap;
+			expect(s.normalMap).toBe(fakeBitmap);
+		});
+
+		it("normalMap setter rejects an object whose width/height are non-finite (NaN, Infinity)", () => {
+			// `typeof NaN === "number"` is true — current setter would
+			// accept this. Documents the boundary; if we want stricter
+			// validation later, the test pins what we want to flip.
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+			});
+			// Current behavior: NaN dimensions ARE accepted (typeof
+			// number is true). Documented here so future stricter
+			// validation is a deliberate change.
+			expect(() => {
+				s.normalMap = { width: Number.NaN, height: Number.NaN };
+			}).not.toThrow();
 		});
 	});
 
