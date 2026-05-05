@@ -818,12 +818,7 @@ describe("Light2d + Stage lighting", () => {
 			game.world.removeChildNow(light, true);
 		});
 
-		it("draw() places the gradient center at pos.x/pos.y (anchor-aware regression guard)", () => {
-			// The bug this catches: with anchorPoint=(0.5, 0.5),
-			// Renderable.preDraw already calls translate(-w/2, -h/2), so
-			// Light2d.draw must use LOCAL pos coords — using getBounds().x/y
-			// (which is pos − r post-anchor) would double-apply the offset
-			// and shift the bright spot by (−r, −r) on screen.
+		it("draw() passes pos.x/pos.y to drawImage (anchor-aware regression guard)", () => {
 			const light = spawn(150, 100, 30);
 			const drawImageCalls = [];
 			const stub = {
@@ -833,8 +828,6 @@ describe("Light2d + Stage lighting", () => {
 			};
 			light.draw(stub);
 			expect(drawImageCalls).toHaveLength(1);
-			// Texture top-left passed as drawImage args must equal pos
-			// (NOT pos − r, which would be getBounds().x/y).
 			expect(drawImageCalls[0].x).toBe(150);
 			expect(drawImageCalls[0].y).toBe(100);
 
