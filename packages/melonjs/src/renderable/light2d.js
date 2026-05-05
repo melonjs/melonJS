@@ -113,11 +113,10 @@ export default class Light2d extends Renderable {
 		color = "#FFF",
 		intensity = 0.7,
 	) {
-		// Constructor x/y is the light's CENTER (matching Ellipse(x, y, w, h)
-		// conventions), but Renderable's underlying Rect uses top-left
-		// positioning. Translate so `pos` is the bbox top-left while the
-		// bounds' center lines up with the requested (x, y).
-		super(x - radiusX, y - radiusY, radiusX * 2, radiusY * 2);
+		// pos is the light's CENTER (matches `Ellipse(x, y, w, h)` and
+		// `Sprite` conventions); the centered anchor below makes Renderable's
+		// transform stack scale/rotate around that center too.
+		super(x, y, radiusX * 2, radiusY * 2);
 
 		/**
 		 * the color of the light
@@ -154,10 +153,12 @@ export default class Light2d extends Renderable {
 		 */
 		this.blendMode = "lighter";
 
+		// initial shape — getVisibleArea() updates this each frame from
+		// world-space bounds. `pos` is the center (anchorPoint set below).
 		/** @ignore */
 		this.visibleArea = ellipsePool.get(
-			this.centerX,
-			this.centerY,
+			this.pos.x,
+			this.pos.y,
 			this.width,
 			this.height,
 		);
@@ -167,22 +168,54 @@ export default class Light2d extends Renderable {
 			offscreenCanvas: false,
 		});
 
-		this.anchorPoint.set(0, 0);
+		// centered anchor — `pos` is the visual center, transforms (scale,
+		// rotate) pivot around it.
+		this.anchorPoint.set(0.5, 0.5);
 
 		createGradient(this);
 	}
 
 	/**
-	 * returns a geometry representing the visible area of this light
+	 * the horizontal coordinate of this light's center.
+	 * Overrides Rect's getter, which assumes `pos` is the bbox top-left and
+	 * returns `pos.x + width/2`. Light2d uses `anchorPoint = (0.5, 0.5)`, so
+	 * `pos` already IS the center.
+	 * @type {number}
+	 */
+	get centerX() {
+		return this.pos.x;
+	}
+	set centerX(value) {
+		this.pos.x = value;
+		this.recalc();
+		this.updateBounds();
+	}
+
+	/**
+	 * the vertical coordinate of this light's center.
+	 * @see Light2d#centerX
+	 * @type {number}
+	 */
+	get centerY() {
+		return this.pos.y;
+	}
+	set centerY(value) {
+		this.pos.y = value;
+		this.recalc();
+		this.updateBounds();
+	}
+
+	/**
+	 * returns a geometry representing the visible area of this light, in
+	 * world-space coordinates (so it aligns with the rendered gradient
+	 * regardless of camera scroll or container parenting).
 	 * @returns {Ellipse} the light visible mask
 	 */
 	getVisibleArea() {
-		return this.visibleArea.setShape(
-			this.getBounds().centerX,
-			this.getBounds().centerY,
-			this.width,
-			this.height,
-		);
+		const b = this.getBounds();
+		// `b.width/b.height` are the transform-aware (and anchor-aware) bbox
+		// dimensions, so the cutout tracks scale changes.
+		return this.visibleArea.setShape(b.centerX, b.centerY, b.width, b.height);
 	}
 
 	/**

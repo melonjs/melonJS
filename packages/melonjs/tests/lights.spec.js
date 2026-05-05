@@ -579,20 +579,20 @@ describe("Light2d + Stage lighting", () => {
 			game.world.removeChildNow(player, true);
 		});
 
-		it("constructor: pos is offset by (-radiusX, -radiusY) from the requested center", () => {
-			// Implementation detail of how the center semantic is achieved:
-			// Renderable's underlying Rect uses top-left positioning, so the
-			// constructor translates the requested center by -radius to set
-			// `pos`. This test pins that contract so any future refactor
-			// (e.g. switching to anchorPoint=(0.5,0.5)) still has to keep the
-			// constructor x/y == center.
+		it("constructor: pos directly equals the requested center (anchorPoint = 0.5)", () => {
+			// Light2d uses a centered anchor — `pos` IS the visual center,
+			// matching `Sprite` and `Ellipse` conventions. No offset, no
+			// surprise: setting `light.pos.x = X` later moves the visible
+			// center to X, transforms (scale, rotate) pivot around `pos`.
 			const light = new Light2d(100, 100, 30, 25);
-			expect(light.pos.x).toBe(70); // center 100 − radiusX 30
-			expect(light.pos.y).toBe(75); // center 100 − radiusY 25
-			// the visible center, not the pos, is what users care about
+			expect(light.pos.x).toBe(100);
+			expect(light.pos.y).toBe(100);
+			// bounds are anchor-aware so they still surface the real bbox
 			const b = light.getBounds();
 			expect(b.centerX).toBe(100);
 			expect(b.centerY).toBe(100);
+			expect(b.x).toBe(70); // center − radiusX
+			expect(b.y).toBe(75); // center − radiusY
 			light.destroy();
 		});
 
@@ -655,6 +655,140 @@ describe("Light2d + Stage lighting", () => {
 			light.centerOn(200, 175);
 			expect(light.getBounds().centerX).toBe(200);
 			expect(light.getBounds().centerY).toBe(175);
+			game.world.removeChildNow(light, true);
+		});
+	});
+
+	describe("Light2d transforms (scale, rotate, pos mutation)", () => {
+		// helper: read the bounds + visible-area center for a light freshly
+		// added to the world (so `getAbsolutePosition` is wired up).
+		function spawn(x, y, rx, ry = rx) {
+			const light = new Light2d(x, y, rx, ry);
+			game.world.addChild(light);
+			return light;
+		}
+
+		it("uniform scale enlarges bounds around the visible center, not the corner", () => {
+			// Why this matters: an anchorPoint=(0,0) implementation would
+			// scale from the bbox top-left, drifting the visible center.
+			// With anchorPoint=(0.5, 0.5), scale is anchor-aware so the
+			// center stays put — what users expect for a light that "pulses".
+			const light = spawn(100, 100, 30);
+			const beforeCenter = {
+				x: light.getBounds().centerX,
+				y: light.getBounds().centerY,
+			};
+
+			light.scale(2);
+
+			const after = light.getBounds();
+			expect(after.centerX).toBeCloseTo(beforeCenter.x);
+			expect(after.centerY).toBeCloseTo(beforeCenter.y);
+			expect(after.width).toBeCloseTo(120); // 2 × (2 × radius)
+			expect(after.height).toBeCloseTo(120);
+
+			game.world.removeChildNow(light, true);
+		});
+
+		it("non-uniform scale (sx ≠ sy) preserves the center", () => {
+			const light = spawn(80, 60, 25);
+			const before = {
+				x: light.getBounds().centerX,
+				y: light.getBounds().centerY,
+			};
+
+			light.scale(1.5, 0.5);
+
+			const after = light.getBounds();
+			expect(after.centerX).toBeCloseTo(before.x);
+			expect(after.centerY).toBeCloseTo(before.y);
+			// width 50 × 1.5 = 75; height 50 × 0.5 = 25
+			expect(after.width).toBeCloseTo(75);
+			expect(after.height).toBeCloseTo(25);
+
+			game.world.removeChildNow(light, true);
+		});
+
+		it("scaling down (< 1) keeps the center stable", () => {
+			const light = spawn(50, 50, 40);
+			const before = {
+				x: light.getBounds().centerX,
+				y: light.getBounds().centerY,
+			};
+
+			light.scale(0.5);
+
+			const after = light.getBounds();
+			expect(after.centerX).toBeCloseTo(before.x);
+			expect(after.centerY).toBeCloseTo(before.y);
+			expect(after.width).toBeCloseTo(40); // 2 × radius × 0.5
+			expect(after.height).toBeCloseTo(40);
+
+			game.world.removeChildNow(light, true);
+		});
+
+		it("rotating an elliptical light keeps the center stable", () => {
+			// Rotation by 90° on a non-circular light: the bbox dimensions
+			// swap (since the rotated ellipse fits a different AABB), but
+			// the visual center must not drift. This catches a regression
+			// where rotation pivots from a non-center point.
+			const light = spawn(120, 80, 40, 20); // wider than tall
+			const before = {
+				x: light.getBounds().centerX,
+				y: light.getBounds().centerY,
+			};
+
+			light.rotate(Math.PI / 2);
+
+			const after = light.getBounds();
+			expect(after.centerX).toBeCloseTo(before.x);
+			expect(after.centerY).toBeCloseTo(before.y);
+
+			game.world.removeChildNow(light, true);
+		});
+
+		it("setting pos directly moves the visible center to the new pos", () => {
+			// With anchorPoint=(0.5, 0.5), `light.pos.x = X` directly sets
+			// the visual center (matching Sprite). Catches a regression
+			// where `pos` reverts to top-left semantics.
+			const light = spawn(0, 0, 30);
+			light.pos.set(150, 200);
+			// bounds rebuild on next access
+			const b = light.getBounds();
+			expect(b.centerX).toBe(150);
+			expect(b.centerY).toBe(200);
+
+			game.world.removeChildNow(light, true);
+		});
+
+		it("getVisibleArea() reflects post-scale dimensions (cutout matches gradient size)", () => {
+			// The cutout shape must keep up with the rendered light size.
+			// Otherwise: scale-up a torch and the dark fill keeps cutting
+			// the original-radius hole — leaving a dark ring around the
+			// brightened center.
+			const light = spawn(100, 100, 25);
+			light.scale(2);
+			const va = light.getVisibleArea();
+			// width tracks transform-applied bounds (anchor-aware), so the
+			// cutout ellipse should now have radius 25 → 50.
+			expect(va.radiusV.x).toBeCloseTo(50);
+			expect(va.radiusV.y).toBeCloseTo(50);
+			expect(va.pos.x).toBeCloseTo(100);
+			expect(va.pos.y).toBeCloseTo(100);
+
+			game.world.removeChildNow(light, true);
+		});
+
+		it("transform around `pos` (regression guard): scale does NOT shift the visible center by half-the-bbox", () => {
+			// Concrete regression: with anchorPoint=(0,0) (or a forgotten
+			// anchor reset), a 2× scale would shift the center by
+			// `(width/2, height/2)`. Pin that this does NOT happen.
+			const light = spawn(64, 64, 20);
+			light.scale(2);
+			const b = light.getBounds();
+			expect(b.centerX).not.toBeCloseTo(64 + 20); // would be the wrong value
+			expect(b.centerX).toBeCloseTo(64);
+
 			game.world.removeChildNow(light, true);
 		});
 	});
