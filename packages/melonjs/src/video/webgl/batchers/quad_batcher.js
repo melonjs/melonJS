@@ -408,8 +408,18 @@ export default class QuadBatcher extends MaterialBatcher {
 		let normalTextureId = -1;
 		if (normalMap !== null && this.useMultiTexture) {
 			const normalUnit = this.maxBatchTextures + unit;
-			// only re-bind when the slot's normal-map source changes
-			if (this.boundNormalMaps[unit] !== normalMap) {
+			const prev = this.boundNormalMaps[unit];
+			if (prev !== normalMap) {
+				// If this slot already had a different normal-map bound, the
+				// vertices already in the batch are sampling that one — flush
+				// before rebinding so they draw with their original normal.
+				// (Only happens when two lit sprites in the same batch share
+				// a color texture but have different normal maps; rare with
+				// the canonical SpriteIlluminator workflow but worth getting
+				// right.)
+				if (prev !== null) {
+					this.flush();
+				}
 				this._uploadOrBindNormalMap(normalMap, normalUnit);
 				this.boundNormalMaps[unit] = normalMap;
 			}
