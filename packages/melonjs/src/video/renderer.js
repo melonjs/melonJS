@@ -142,6 +142,17 @@ export default class Renderer {
 
 		// default uvOffset
 		this.uvOffset = 0;
+
+		/**
+		 * The normal-map texture associated with the next `drawImage` call,
+		 * if any. Set by `Sprite.draw` (and any other normal-map-aware
+		 * renderable) just before calling `drawImage`, then cleared back
+		 * to `null` after. The WebGL renderer reads this state and routes
+		 * lit quads through the shader's lighting path; the Canvas
+		 * renderer ignores it entirely.
+		 * @type {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|null}
+		 */
+		this.currentNormalMap = null;
 	}
 
 	/**
@@ -376,6 +387,34 @@ export default class Renderer {
 	 */
 	setBlendMode(mode = "normal") {
 		this.currentBlendMode = mode;
+	}
+
+	/**
+	 * Upload per-frame Light2d uniforms used by the WebGL renderer's lit
+	 * sprite pipeline (normal-map shading). Called once per camera per
+	 * frame by `Camera2d.draw()` after the FBO is bound and before the
+	 * world tree walk fires `Sprite.draw` for any normal-mapped sprite.
+	 *
+	 * The Canvas renderer (this base implementation) cannot do per-pixel
+	 * normal-map lighting and silently ignores the call. The first time
+	 * a non-empty light list is passed in Canvas mode, a one-shot
+	 * console warning is emitted so the user knows the normal-map
+	 * pipeline isn't running.
+	 *
+	 * The WebGL renderer overrides this method and forwards to its quad
+	 * batcher.
+	 * @param {object} uniforms - lighting uniforms (positions, colors, count, ambient)
+	 * @see Stage#collectLightingUniforms
+	 */
+	setLightUniforms(uniforms) {
+		if (!this._litPipelineWarned && uniforms && uniforms.count > 0) {
+			this._litPipelineWarned = true;
+			console.warn(
+				"melonJS: Light2d normal-map lighting requires the WebGL renderer; " +
+					"the Canvas fallback renders sprites without per-pixel lighting. " +
+					"Switch to `video.WEBGL` or `video.AUTO` to enable the lit pipeline.",
+			);
+		}
 	}
 
 	/**

@@ -894,6 +894,22 @@ export default class Camera2d extends Renderable {
 		// post-effect: bind FBO if shader effects are set (WebGL only)
 		const usePostEffect = r.beginPostEffect(this);
 
+		// upload Light2d uniforms for the lit sprite pipeline. Computed
+		// from the active stage (if any) and translated into the same
+		// camera-local space the world container will render into. The
+		// renderer no-ops when in Canvas mode.
+		const litStage = state.current() as {
+			collectLightingUniforms?: (
+				translateX: number,
+				translateY: number,
+			) => Parameters<Renderer["setLightUniforms"]>[0];
+		} | null;
+		if (litStage && typeof litStage.collectLightingUniforms === "function") {
+			renderer.setLightUniforms(
+				litStage.collectLightingUniforms(translateX, translateY),
+			);
+		}
+
 		// translate the world coordinates by default to screen coordinates
 		container.translate(-translateX, -translateY);
 

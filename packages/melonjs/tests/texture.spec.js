@@ -571,4 +571,180 @@ describe("Texture", () => {
 			}
 		});
 	});
+
+	describe("TextureAtlas normalMap (SpriteIlluminator workflow)", () => {
+		// Minimal TexturePacker-format atlas used to drive these tests.
+		function makeAtlasJSON() {
+			return {
+				meta: {
+					app: "https://www.codeandweb.com/texturepacker",
+					size: { w: 64, h: 64 },
+					image: "default",
+				},
+				frames: [
+					{
+						filename: "tile.png",
+						frame: { x: 0, y: 0, w: 32, h: 32 },
+						rotated: false,
+						trimmed: false,
+						spriteSourceSize: { x: 0, y: 0, w: 32, h: 32 },
+						sourceSize: { w: 32, h: 32 },
+					},
+				],
+			};
+		}
+
+		it("getNormalTexture() returns null when no normalMap is provided", () => {
+			const atlas = new TextureAtlas(
+				makeAtlasJSON(),
+				video.createCanvas(64, 64),
+			);
+			expect(atlas.getNormalTexture()).toBeNull();
+		});
+
+		it("stores a paired normal-map image when passed via options", () => {
+			const color = video.createCanvas(64, 64);
+			const normal = video.createCanvas(64, 64);
+			const atlas = new TextureAtlas(makeAtlasJSON(), color, {
+				normalMap: normal,
+			});
+			expect(atlas.getNormalTexture()).toBe(normal);
+		});
+
+		it("preserves backward-compat with the legacy boolean `cache` 3rd arg", () => {
+			// Passing `false` should still work as the legacy cache flag.
+			const atlas = new TextureAtlas(
+				makeAtlasJSON(),
+				video.createCanvas(64, 64),
+				false,
+			);
+			expect(atlas.getNormalTexture()).toBeNull();
+			expect(atlas.getTexture()).toBeDefined();
+		});
+
+		it("a Sprite built from the atlas inherits the paired normal map", () => {
+			const color = video.createCanvas(64, 64);
+			const normal = video.createCanvas(64, 64);
+			const atlas = new TextureAtlas(makeAtlasJSON(), color, {
+				normalMap: normal,
+			});
+			const sprite = new Sprite(0, 0, {
+				image: atlas,
+				region: "tile.png",
+			});
+			expect(sprite.normalMap).toBe(normal);
+		});
+
+		it("an explicit settings.normalMap is overridden by the atlas-paired one", () => {
+			// Atlas-paired normal map wins because the atlas drove the layout.
+			const color = video.createCanvas(64, 64);
+			const atlasNormal = video.createCanvas(64, 64);
+			const sidecarNormal = video.createCanvas(64, 64);
+			const atlas = new TextureAtlas(makeAtlasJSON(), color, {
+				normalMap: atlasNormal,
+			});
+			const sprite = new Sprite(0, 0, {
+				image: atlas,
+				region: "tile.png",
+				normalMap: sidecarNormal,
+			});
+			expect(sprite.normalMap).toBe(atlasNormal);
+		});
+
+		it("atlas without normal + sidecar settings.normalMap → uses sidecar", () => {
+			// When the atlas has NO paired normal, an explicit
+			// settings.normalMap on the Sprite is the source of truth.
+			const color = video.createCanvas(64, 64);
+			const sidecarNormal = video.createCanvas(64, 64);
+			const atlas = new TextureAtlas(makeAtlasJSON(), color);
+			const sprite = new Sprite(0, 0, {
+				image: atlas,
+				region: "tile.png",
+				normalMap: sidecarNormal,
+			});
+			expect(sprite.normalMap).toBe(sidecarNormal);
+		});
+
+		it("atlas without normal + no sidecar → sprite.normalMap is null", () => {
+			const atlas = new TextureAtlas(
+				makeAtlasJSON(),
+				video.createCanvas(64, 64),
+			);
+			const sprite = new Sprite(0, 0, {
+				image: atlas,
+				region: "tile.png",
+			});
+			expect(sprite.normalMap).toBeNull();
+		});
+
+		it("raw image (not atlas) + sidecar normalMap → uses sidecar", () => {
+			const sidecarNormal = video.createCanvas(64, 64);
+			const sprite = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(64, 64),
+				normalMap: sidecarNormal,
+			});
+			expect(sprite.normalMap).toBe(sidecarNormal);
+		});
+
+		it("options.normalMap = null is a no-op (no normal map stored)", () => {
+			const atlas = new TextureAtlas(
+				makeAtlasJSON(),
+				video.createCanvas(64, 64),
+				{ normalMap: null },
+			);
+			expect(atlas.getNormalTexture()).toBeNull();
+			expect(atlas.normalSources.size).toBe(0);
+		});
+
+		it("options.normalMap = undefined is a no-op", () => {
+			const atlas = new TextureAtlas(
+				makeAtlasJSON(),
+				video.createCanvas(64, 64),
+				{ normalMap: undefined },
+			);
+			expect(atlas.getNormalTexture()).toBeNull();
+		});
+
+		it("options form with both cache and normalMap honors both", () => {
+			// cache: false skips the TextureCache; normalMap is still wired up.
+			const color = video.createCanvas(64, 64);
+			const normal = video.createCanvas(64, 64);
+			const atlas = new TextureAtlas(makeAtlasJSON(), color, {
+				cache: false,
+				normalMap: normal,
+			});
+			expect(atlas.getNormalTexture()).toBe(normal);
+		});
+
+		it("options.normalMap as an unknown loader-key string throws", () => {
+			expect(() => {
+				return new TextureAtlas(makeAtlasJSON(), video.createCanvas(64, 64), {
+					normalMap: "definitely-not-loaded",
+				});
+			}).toThrow(/normal map image .* not found/);
+		});
+
+		it("getNormalTexture(region) honors the region.texture key", () => {
+			// Region keys map to the same names used in `sources` (atlas.meta.image),
+			// so the parallel `normalSources` is keyed identically.
+			const color = video.createCanvas(64, 64);
+			const normal = video.createCanvas(64, 64);
+			const atlas = new TextureAtlas(makeAtlasJSON(), color, {
+				normalMap: normal,
+			});
+			// 'default' is the key used when atlas.meta.image is "default"
+			expect(atlas.getNormalTexture({ texture: "default" })).toBe(normal);
+		});
+
+		it("getNormalTexture(region) for an unknown region returns null", () => {
+			const color = video.createCanvas(64, 64);
+			const normal = video.createCanvas(64, 64);
+			const atlas = new TextureAtlas(makeAtlasJSON(), color, {
+				normalMap: normal,
+			});
+			expect(atlas.getNormalTexture({ texture: "no-such-key" })).toBeNull();
+		});
+	});
 });

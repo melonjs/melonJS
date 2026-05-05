@@ -486,6 +486,24 @@ export default class WebGLRenderer extends Renderer {
 	}
 
 	/**
+	 * Upload per-frame Light2d uniforms used by the lit sprite pipeline.
+	 * Forwards to the quad batcher's `setLightUniforms`. Lights past
+	 * `MAX_LIGHTS` (8) are silently dropped.
+	 * @param {object} uniforms - returned by `Stage#collectLightingUniforms`
+	 * @param {Float32Array} uniforms.positions - flat `[x, y, radius, intensity]` per light
+	 * @param {Float32Array} uniforms.colors - flat `[r, g, b]` per light (0..1)
+	 * @param {number} uniforms.count - number of valid lights
+	 * @param {number[]} uniforms.ambient - `[r, g, b]` ambient floor (0..1 each)
+	 */
+	setLightUniforms(uniforms) {
+		// the quad batcher owns the lit shader uniforms
+		const quad = this.batchers.get("quad");
+		if (quad && typeof quad.setLightUniforms === "function") {
+			quad.setLightUniforms(uniforms);
+		}
+	}
+
+	/**
 	 * Begin capturing rendering to an offscreen FBO for post-effect processing.
 	 * @param {Renderable} renderable - the renderable requesting post-effect processing
 	 * @returns {boolean} true if FBO capture started, false if skipped
@@ -879,6 +897,7 @@ export default class WebGLRenderer extends Renderer {
 			uvs[3],
 			this.currentTint.toUint32(this.getGlobalAlpha()),
 			reupload,
+			this.currentNormalMap,
 		);
 
 		if (typeof shader === "object") {

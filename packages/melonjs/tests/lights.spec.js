@@ -873,4 +873,218 @@ describe("Light2d + Stage lighting", () => {
 			stage.lights.clear();
 		});
 	});
+
+	describe("Stage.collectLightingUniforms (lit pipeline)", () => {
+		function freshLitState() {
+			const stage = state.current();
+			while (stage._activeLights.size > 0) {
+				const l = [...stage._activeLights][0];
+				if (l.ancestor) {
+					l.ancestor.removeChildNow(l, true);
+				} else {
+					stage._activeLights.delete(l);
+				}
+			}
+			stage.ambientLight.setColor(0, 0, 0, 0);
+			stage.ambientLightingColor.setColor(0, 0, 0, 1);
+			return stage;
+		}
+
+		it("returns count = 0 and zero-padded buffers when no lights are active", () => {
+			const stage = freshLitState();
+			const u = stage.collectLightingUniforms(0, 0);
+			expect(u.count).toBe(0);
+			expect(u.positions).toBeInstanceOf(Float32Array);
+			expect(u.colors).toBeInstanceOf(Float32Array);
+			expect(u.positions.length).toBe(8 * 4); // MAX_LIGHTS * 4
+			expect(u.colors.length).toBe(8 * 3);
+			// padded to zeros so stale data can't leak across frames
+			for (let i = 0; i < u.positions.length; i++) {
+				expect(u.positions[i]).toBe(0);
+			}
+			for (let i = 0; i < u.colors.length; i++) {
+				expect(u.colors[i]).toBe(0);
+			}
+		});
+
+		it("packs a single light's position, radius, intensity, color", () => {
+			const stage = freshLitState();
+			const light = new Light2d(120, 80, 30, 30, "#ff0000", 0.6);
+			game.world.addChild(light);
+
+			const u = stage.collectLightingUniforms(0, 0);
+			expect(u.count).toBe(1);
+			expect(u.positions[0]).toBe(120); // worldX
+			expect(u.positions[1]).toBe(80); // worldY
+			expect(u.positions[2]).toBe(30); // radius (max of radiusX, radiusY)
+			expect(u.positions[3]).toBeCloseTo(0.6); // intensity
+			expect(u.colors[0]).toBeCloseTo(1.0, 2); // r
+			expect(u.colors[1]).toBeCloseTo(0.0, 2); // g
+			expect(u.colors[2]).toBeCloseTo(0.0, 2); // b
+
+			game.world.removeChildNow(light, true);
+		});
+
+		it("translates light positions by (translateX, translateY) so they land in camera-local space", () => {
+			// Same convention as Stage.drawLighting: subtract camera offset
+			// so the lit fragment shader's `lightPos - vWorldPos` matches
+			// the renderer's pre-projection coords.
+			const stage = freshLitState();
+			const light = new Light2d(200, 150, 40, 40);
+			game.world.addChild(light);
+
+			const u = stage.collectLightingUniforms(50, 30);
+			expect(u.positions[0]).toBe(150); // 200 − 50
+			expect(u.positions[1]).toBe(120); // 150 − 30
+
+			game.world.removeChildNow(light, true);
+		});
+
+		it("uses asymmetric radii's MAX value as the light radius", () => {
+			const stage = freshLitState();
+			const light = new Light2d(0, 0, 80, 25, "#fff", 1);
+			game.world.addChild(light);
+
+			const u = stage.collectLightingUniforms(0, 0);
+			expect(u.positions[2]).toBe(80); // max of radiusX/radiusY
+
+			game.world.removeChildNow(light, true);
+		});
+
+		it("packs multiple lights independently and reports the count", () => {
+			const stage = freshLitState();
+			const a = new Light2d(10, 10, 20, 20, "#fff", 1);
+			const b = new Light2d(50, 60, 30, 30, "#0f0", 0.5);
+			const c = new Light2d(100, 100, 40, 40, "#00f", 0.25);
+			game.world.addChild(a);
+			game.world.addChild(b);
+			game.world.addChild(c);
+
+			const u = stage.collectLightingUniforms(0, 0);
+			expect(u.count).toBe(3);
+			// the iteration order isn't guaranteed but each entry must
+			// match one of the lights — assert by collecting positions
+			const seen = new Set();
+			for (let i = 0; i < u.count; i++) {
+				seen.add(`${u.positions[i * 4]},${u.positions[i * 4 + 1]}`);
+			}
+			expect(seen.has("10,10")).toBe(true);
+			expect(seen.has("50,60")).toBe(true);
+			expect(seen.has("100,100")).toBe(true);
+
+			game.world.removeChildNow(a, true);
+			game.world.removeChildNow(b, true);
+			game.world.removeChildNow(c, true);
+		});
+
+		it("silently drops lights past MAX_LIGHTS (8)", () => {
+			const stage = freshLitState();
+			const lights = [];
+			for (let i = 0; i < 12; i++) {
+				const l = new Light2d(i * 10, 0, 5, 5);
+				lights.push(l);
+				game.world.addChild(l);
+			}
+
+			const u = stage.collectLightingUniforms(0, 0);
+			expect(u.count).toBe(8);
+
+			for (const l of lights) {
+				game.world.removeChildNow(l, true);
+			}
+		});
+
+		it("packs ambientLightingColor (RGB / 255) into the ambient slot", () => {
+			const stage = freshLitState();
+			stage.ambientLightingColor.setColor(85, 85, 85);
+			const u = stage.collectLightingUniforms(0, 0);
+			expect(u.ambient[0]).toBeCloseTo(85 / 255, 3);
+			expect(u.ambient[1]).toBeCloseTo(85 / 255, 3);
+			expect(u.ambient[2]).toBeCloseTo(85 / 255, 3);
+		});
+
+		it("re-uses the same scratch buffers across calls (no per-frame allocation)", () => {
+			const stage = freshLitState();
+			const light = new Light2d(0, 0, 10);
+			game.world.addChild(light);
+			const u1 = stage.collectLightingUniforms(0, 0);
+			const u2 = stage.collectLightingUniforms(0, 0);
+			expect(u1.positions).toBe(u2.positions);
+			expect(u1.colors).toBe(u2.colors);
+			game.world.removeChildNow(light, true);
+		});
+
+		it("zero-pads stale slots when a light is removed between frames", () => {
+			// Frame 1: 2 lights → slots 0, 1 populated, slots 2..7 zero.
+			// Frame 2: only 1 light → slot 0 populated; slot 1 must be zeroed
+			// out so the shader doesn't see leftover positions.
+			const stage = freshLitState();
+			const a = new Light2d(10, 10, 5, 5);
+			const b = new Light2d(80, 80, 5, 5);
+			game.world.addChild(a);
+			game.world.addChild(b);
+			stage.collectLightingUniforms(0, 0); // frame 1
+			game.world.removeChildNow(b, true);
+
+			const u = stage.collectLightingUniforms(0, 0); // frame 2
+			expect(u.count).toBe(1);
+			// the active light landed in slot 0; verify slot 1 is zeroed
+			expect(u.positions[4]).toBe(0);
+			expect(u.positions[5]).toBe(0);
+			expect(u.positions[6]).toBe(0);
+			expect(u.positions[7]).toBe(0);
+
+			game.world.removeChildNow(a, true);
+		});
+	});
+
+	describe("Renderer.setLightUniforms (Canvas fallback warning)", () => {
+		it("emits a one-shot console warning when called with count > 0 in Canvas mode", () => {
+			const renderer = video.renderer;
+			// Reset the once-flag on the live renderer so we can re-trigger.
+			renderer._litPipelineWarned = false;
+
+			const orig = console.warn;
+			const warnings = [];
+			console.warn = (...args) => {
+				return warnings.push(args.join(" "));
+			};
+
+			try {
+				renderer.setLightUniforms({ count: 0 });
+				renderer.setLightUniforms({ count: 1 });
+				renderer.setLightUniforms({ count: 5 });
+				renderer.setLightUniforms({ count: 1 });
+			} finally {
+				console.warn = orig;
+			}
+
+			// only the first count > 0 call warns
+			expect(warnings.length).toBe(1);
+			expect(warnings[0]).toMatch(
+				/normal-map lighting requires the WebGL renderer/,
+			);
+		});
+
+		it("does NOT warn when count is 0 (every-frame default with no active lights)", () => {
+			const renderer = video.renderer;
+			renderer._litPipelineWarned = false;
+
+			const orig = console.warn;
+			const warnings = [];
+			console.warn = (...args) => {
+				return warnings.push(args.join(" "));
+			};
+
+			try {
+				for (let i = 0; i < 10; i++) {
+					renderer.setLightUniforms({ count: 0 });
+				}
+			} finally {
+				console.warn = orig;
+			}
+
+			expect(warnings.length).toBe(0);
+		});
+	});
 });

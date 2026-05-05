@@ -34,6 +34,7 @@ export default class Sprite extends Renderable {
 	 * @param {number} [settings.flipX] - flip the sprite on the horizontal axis
 	 * @param {number} [settings.flipY] - flip the sprite on the vertical axis
 	 * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] - Anchor point to draw the frame at (defaults to the center of the frame).
+	 * @param {HTMLImageElement|HTMLCanvasElement|string} [settings.normalMap] - optional normal-map texture used for per-pixel lighting (SpriteIlluminator-style). Same layout/UVs as `settings.image`. When omitted (default), the sprite renders unlit and pays no extra cost. Ignored by the Canvas renderer.
 	 * @example
 	 * // create a single sprite from a standalone image, with anchor in the center
 	 * let sprite = new me.Sprite(0, 0, {
@@ -106,6 +107,13 @@ export default class Sprite extends Renderable {
 		 * @type {TextureAtlas}
 		 */
 		this.source = null;
+
+		/**
+		 * backing field for the `normalMap` accessor — see the getter/setter
+		 * defined on the class for the public API and validation rules.
+		 * @ignore
+		 */
+		this._normalMap = null;
 
 		// hold all defined animation
 		this.anim = {};
@@ -231,6 +239,36 @@ export default class Sprite extends Renderable {
 			}
 		}
 
+		// resolve the optional normal-map paired with this sprite (used by
+		// the WebGL renderer's lit pipeline; silently ignored by Canvas).
+		// When the source is a TextureAtlas, prefer its paired normal-map
+		// over an explicit `settings.normalMap` (the atlas drove the layout).
+		if (
+			settings.image instanceof TextureAtlas &&
+			typeof settings.image.getNormalTexture === "function"
+		) {
+			const fromAtlas = settings.image.getNormalTexture();
+			if (fromAtlas) {
+				this.normalMap = fromAtlas;
+			}
+		}
+		if (
+			this.normalMap === null &&
+			typeof settings.normalMap !== "undefined" &&
+			settings.normalMap !== null
+		) {
+			const resolved =
+				typeof settings.normalMap === "object"
+					? settings.normalMap
+					: getImage(settings.normalMap);
+			if (!resolved) {
+				throw new Error(
+					"me.Sprite: '" + settings.normalMap + "' normal map image not found!",
+				);
+			}
+			this.normalMap = resolved;
+		}
+
 		// store/reset the current atlas information if specified
 		if (typeof settings.atlas !== "undefined") {
 			this.textureAtlas = settings.atlas;
@@ -291,6 +329,37 @@ export default class Sprite extends Renderable {
 			// set as default
 			this.setCurrentAnimation("default");
 		}
+	}
+
+	/**
+	 * The optional normal-map image paired with this sprite's color
+	 * texture (SpriteIlluminator workflow). When set, the WebGL
+	 * renderer's lit pipeline samples this texture for per-pixel
+	 * lighting using `Stage._activeLights`. `null` when unlit.
+	 * Setting any non-image value (or anything without numeric
+	 * `width`/`height`) throws — assign `null` to clear.
+	 *
+	 * Silently ignored by the Canvas renderer.
+	 * @type {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|null}
+	 */
+	get normalMap() {
+		return this._normalMap;
+	}
+	set normalMap(value) {
+		if (value === null || value === undefined) {
+			this._normalMap = null;
+			return;
+		}
+		if (
+			typeof value !== "object" ||
+			typeof value.width !== "number" ||
+			typeof value.height !== "number"
+		) {
+			throw new TypeError(
+				"Sprite.normalMap must be an image-like (HTMLImageElement, HTMLCanvasElement, OffscreenCanvas, ImageBitmap) or null",
+			);
+		}
+		this._normalMap = value;
 	}
 
 	/**
@@ -741,6 +810,15 @@ export default class Sprite extends Renderable {
 			ypos += frame.trim.y;
 		}
 
+		// Route through the renderer's normal-map state slot — kept off
+		// the public `drawImage` signature so material features can be
+		// added without disturbing the API. The WebGL batcher reads
+		// `currentNormalMap` from the renderer; Canvas ignores it.
+		// Clearing back to null after the call keeps the slot scoped to
+		// this draw, so a subsequent un-lit sprite isn't accidentally lit.
+		if (this._normalMap !== null) {
+			renderer.currentNormalMap = this._normalMap;
+		}
 		renderer.drawImage(
 			this.image,
 			g_offset.x + frame_offset.x, // sx
@@ -752,6 +830,9 @@ export default class Sprite extends Renderable {
 			w,
 			h, // dw,dh
 		);
+		if (this._normalMap !== null) {
+			renderer.currentNormalMap = null;
+		}
 	}
 
 	/**

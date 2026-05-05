@@ -73,6 +73,11 @@ const ExampleLights = lazy(() =>
 		default: m.ExampleLights,
 	})),
 );
+const ExampleNormalMap = lazy(() =>
+	import("./examples/normalMap/ExampleNormalMap").then((m) => ({
+		default: m.ExampleNormalMap,
+	})),
+);
 const ExampleLineOfSight = lazy(() =>
 	import("./examples/lineOfSight/ExampleLineOfSight").then((m) => ({
 		default: m.ExampleLineOfSight,
@@ -251,6 +256,14 @@ const examples: {
 		sourceDir: "lights",
 		description:
 			"2D lighting system with dynamic light sources, shadows, and blend mode effects.",
+	},
+	{
+		component: <ExampleNormalMap />,
+		label: "Normal Map",
+		path: "normal-map",
+		sourceDir: "normalMap",
+		description:
+			"Per-pixel sprite lighting from normal maps (SpriteIlluminator workflow). Procedurally-generated orbs react to a moving Light2d via the WebGL renderer's lit pipeline.",
 	},
 	{
 		component: <ExampleLineOfSight />,
