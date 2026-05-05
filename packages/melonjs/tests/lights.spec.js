@@ -818,6 +818,22 @@ describe("Light2d + Stage lighting", () => {
 			game.world.removeChildNow(light, true);
 		});
 
+		it("draw() passes pos.x/pos.y to drawImage (anchor-aware regression guard)", () => {
+			const light = spawn(150, 100, 30);
+			const drawImageCalls = [];
+			const stub = {
+				drawImage: (img, x, y) => {
+					drawImageCalls.push({ x, y });
+				},
+			};
+			light.draw(stub);
+			expect(drawImageCalls).toHaveLength(1);
+			expect(drawImageCalls[0].x).toBe(150);
+			expect(drawImageCalls[0].y).toBe(100);
+
+			game.world.removeChildNow(light, true);
+		});
+
 		it("transform around `pos` (regression guard): scale does NOT shift the visible center by half-the-bbox", () => {
 			// Concrete regression: with anchorPoint=(0,0) (or a forgotten
 			// anchor reset), a 2× scale would shift the center by

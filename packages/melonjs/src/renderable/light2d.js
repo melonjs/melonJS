@@ -244,11 +244,7 @@ export default class Light2d extends Renderable {
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
 	 */
 	draw(renderer) {
-		renderer.drawImage(
-			this.texture.canvas,
-			this.getBounds().x,
-			this.getBounds().y,
-		);
+		renderer.drawImage(this.texture.canvas, this.pos.x, this.pos.y);
 	}
 
 	/**
