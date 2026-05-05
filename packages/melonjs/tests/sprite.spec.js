@@ -326,6 +326,31 @@ describe("Sprite", () => {
 			}).toThrow(/normal map image not found/);
 		});
 
+		it("constructor: settings.normalMap = boolean rejected with TypeError (no coercion)", () => {
+			// Pre-fix, booleans/numbers fell through to `getImage(value)`
+			// which coerces to a string and throws "image not found" — a
+			// confusing error. Now rejected loudly with a TypeError.
+			expect(() => {
+				return new Sprite(0, 0, {
+					framewidth: 16,
+					frameheight: 16,
+					image: video.createCanvas(16, 16),
+					normalMap: true,
+				});
+			}).toThrow(TypeError);
+		});
+
+		it("constructor: settings.normalMap = number rejected with TypeError", () => {
+			expect(() => {
+				return new Sprite(0, 0, {
+					framewidth: 16,
+					frameheight: 16,
+					image: video.createCanvas(16, 16),
+					normalMap: 42,
+				});
+			}).toThrow(TypeError);
+		});
+
 		it("constructor: settings.normalMap = bad object propagates the setter TypeError", () => {
 			expect(() => {
 				return new Sprite(0, 0, {

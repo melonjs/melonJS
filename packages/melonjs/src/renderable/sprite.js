@@ -257,13 +257,26 @@ export default class Sprite extends Renderable {
 			typeof settings.normalMap !== "undefined" &&
 			settings.normalMap !== null
 		) {
-			const resolved =
-				typeof settings.normalMap === "object"
-					? settings.normalMap
-					: getImage(settings.normalMap);
-			if (!resolved) {
-				throw new Error(
-					"me.Sprite: '" + settings.normalMap + "' normal map image not found!",
+			let resolved;
+			if (typeof settings.normalMap === "object") {
+				// already an image-like — let the setter validate it
+				resolved = settings.normalMap;
+			} else if (typeof settings.normalMap === "string") {
+				// loader-key string
+				resolved = getImage(settings.normalMap);
+				if (!resolved) {
+					throw new Error(
+						"me.Sprite: '" +
+							settings.normalMap +
+							"' normal map image not found!",
+					);
+				}
+			} else {
+				// reject non-string non-object inputs (boolean, number, etc.)
+				// loudly rather than coercing them through `getImage`
+				throw new TypeError(
+					"me.Sprite: settings.normalMap must be an image-like, a loader key string, or null/undefined; got " +
+						typeof settings.normalMap,
 				);
 			}
 			this.normalMap = resolved;

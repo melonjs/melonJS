@@ -266,11 +266,26 @@ export class TextureAtlas {
 		// Multipack atlases with per-source normal maps can be handled later
 		// by accepting an array/Map matching `sources`.
 		if (typeof normalMap !== "undefined" && normalMap !== null) {
-			const resolved =
-				typeof normalMap === "string" ? getImage(normalMap) : normalMap;
-			if (!resolved) {
-				throw new Error(
-					"TextureAtlas: normal map image '" + normalMap + "' not found",
+			let resolved;
+			if (typeof normalMap === "string") {
+				resolved = getImage(normalMap);
+				if (!resolved) {
+					throw new Error(
+						"TextureAtlas: normal map image '" + normalMap + "' not found",
+					);
+				}
+			} else if (
+				typeof normalMap === "object" &&
+				typeof normalMap.width === "number" &&
+				typeof normalMap.height === "number"
+			) {
+				// image-like (HTMLImageElement, HTMLCanvasElement,
+				// OffscreenCanvas, ImageBitmap, HTMLVideoElement, etc.)
+				resolved = normalMap;
+			} else {
+				throw new TypeError(
+					"TextureAtlas: options.normalMap must be an image-like, a loader key string, or null/undefined; got " +
+						typeof normalMap,
 				);
 			}
 			this.sources.forEach((_source, key) => {

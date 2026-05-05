@@ -718,6 +718,25 @@ describe("Texture", () => {
 			expect(atlas.getNormalTexture()).toBe(normal);
 		});
 
+		it("options.normalMap = boolean rejected with TypeError (no silent storage)", () => {
+			// Pre-fix, any non-string non-null value passed the truthy
+			// check and got stored — a sprite later constructed from the
+			// atlas would try to use the value as an image. Reject loudly.
+			expect(() => {
+				return new TextureAtlas(makeAtlasJSON(), video.createCanvas(64, 64), {
+					normalMap: true,
+				});
+			}).toThrow(TypeError);
+		});
+
+		it("options.normalMap = number rejected with TypeError", () => {
+			expect(() => {
+				return new TextureAtlas(makeAtlasJSON(), video.createCanvas(64, 64), {
+					normalMap: 42,
+				});
+			}).toThrow(TypeError);
+		});
+
 		it("options.normalMap as an unknown loader-key string throws", () => {
 			expect(() => {
 				return new TextureAtlas(makeAtlasJSON(), video.createCanvas(64, 64), {

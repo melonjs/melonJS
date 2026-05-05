@@ -345,52 +345,40 @@ export default class QuadBatcher extends MaterialBatcher {
 	 */
 	_uploadOrBindNormalMap(image, unit) {
 		const gl = this.gl;
-		let glTex = this.normalMapTextures.get(image);
-		if (typeof glTex !== "undefined") {
+		const cached = this.normalMapTextures.get(image);
+		if (typeof cached !== "undefined") {
+			// already uploaded — just rebind to the requested unit
 			gl.activeTexture(gl.TEXTURE0 + unit);
-			gl.bindTexture(gl.TEXTURE_2D, glTex);
+			gl.bindTexture(gl.TEXTURE_2D, cached);
 			return;
 		}
-		// first-time upload
-		glTex = gl.createTexture();
-		gl.activeTexture(gl.TEXTURE0 + unit);
-		gl.bindTexture(gl.TEXTURE_2D, glTex);
-		const filter = this.renderer.settings.antiAlias ? gl.LINEAR : gl.NEAREST;
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
-		gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-		// Mirror MaterialBatcher.createTexture2D's OffscreenCanvas branch:
-		// transfer to ImageBitmap first since OffscreenCanvas isn't a
-		// TexImageSource directly on every browser. Other accepted types
-		// (HTMLImageElement, HTMLCanvasElement, ImageBitmap, HTMLVideoElement)
-		// flow through `texImage2D` as-is.
-		if (
-			typeof globalThis.OffscreenCanvas !== "undefined" &&
-			image instanceof globalThis.OffscreenCanvas
-		) {
-			const bitmap = image.transferToImageBitmap();
-			gl.texImage2D(
-				gl.TEXTURE_2D,
-				0,
-				gl.RGBA,
-				gl.RGBA,
-				gl.UNSIGNED_BYTE,
-				bitmap,
-			);
-			bitmap.close();
-		} else {
-			gl.texImage2D(
-				gl.TEXTURE_2D,
-				0,
-				gl.RGBA,
-				gl.RGBA,
-				gl.UNSIGNED_BYTE,
-				image,
-			);
-		}
-		this.normalMapTextures.set(image, glTex);
+		// First-time upload via the shared MaterialBatcher path so we
+		// inherit its OffscreenCanvas/ImageBitmap branch, compressed-
+		// texture handling, and POT-aware repeat modes. The unit lives
+		// outside the color-cache range (`maxBatchTextures + n`), so
+		// the boundTextures slot we mutate here doesn't conflict with
+		// the color-batching cache.
+		//
+		// `premultipliedAlpha = false` — normal maps store linear-
+		// encoded surface normals; multiplying through alpha would
+		// corrupt the encoding.
+		this.createTexture2D(
+			unit,
+			image,
+			this.renderer.settings.antiAlias ? gl.LINEAR : gl.NEAREST,
+			"no-repeat",
+			image.width,
+			image.height,
+			false,
+			undefined,
+			undefined,
+			false,
+		);
+		// `createTexture2D` doesn't return the GL texture, but it
+		// stashes it in `boundTextures[unit]` via `bindTexture2D`.
+		// Capture it so we can rebind on subsequent quads without
+		// re-uploading.
+		this.normalMapTextures.set(image, this.boundTextures[unit]);
 	}
 
 	/**
