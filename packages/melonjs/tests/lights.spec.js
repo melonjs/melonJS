@@ -1641,7 +1641,7 @@ describe("Light2d + Stage lighting", () => {
 			light.destroy();
 		});
 
-		it("Canvas drawLight bakes once and caches; same light reuses the canvas", () => {
+		it("Canvas drawLight caches the Gradient; same light reuses the same instance", () => {
 			const renderer = video.renderer;
 			// reset the cache to start clean
 			renderer._lightCache = undefined;
@@ -1651,17 +1651,17 @@ describe("Light2d + Stage lighting", () => {
 			expect(renderer._lightCache).toBeInstanceOf(WeakMap);
 			const firstEntry = renderer._lightCache.get(light);
 			expect(firstEntry).toBeDefined();
-			expect(firstEntry.target).toBeDefined();
-			const firstTarget = firstEntry.target;
+			expect(firstEntry.gradient).toBeDefined();
+			const firstGradient = firstEntry.gradient;
 
 			renderer.drawLight(light);
-			// no property changed → same target reused (no re-bake)
-			expect(renderer._lightCache.get(light).target).toBe(firstTarget);
+			// no property changed → same Gradient instance reused
+			expect(renderer._lightCache.get(light).gradient).toBe(firstGradient);
 
 			light.destroy();
 		});
 
-		it("Canvas drawLight re-bakes when radius changes", () => {
+		it("Canvas drawLight rebuilds the Gradient when radius changes", () => {
 			// fixes the original stale-texture bug: mutating radii after
 			// construction must invalidate the cached gradient on next draw.
 			const renderer = video.renderer;
@@ -1676,13 +1676,13 @@ describe("Light2d + Stage lighting", () => {
 			const newEntry = renderer._lightCache.get(light);
 			expect(newEntry.radiusX).toBe(60);
 			expect(newEntry.radiusY).toBe(60);
-			// dimensions changed → underlying CanvasRenderTarget was re-allocated
-			expect(newEntry.target).not.toBe(oldEntry.target);
+			// dimensions changed → new Gradient instance built
+			expect(newEntry.gradient).not.toBe(oldEntry.gradient);
 
 			light.destroy();
 		});
 
-		it("Canvas drawLight re-bakes when color or intensity changes", () => {
+		it("Canvas drawLight rebuilds the Gradient when color or intensity changes", () => {
 			const renderer = video.renderer;
 			renderer._lightCache = undefined;
 
@@ -1695,32 +1695,13 @@ describe("Light2d + Stage lighting", () => {
 			light.color.parseCSS("#00ff00");
 			renderer.drawLight(light);
 			expect(renderer._lightCache.get(light).g).toBe(255);
+			expect(renderer._lightCache.get(light).gradient).not.toBe(
+				baseline.gradient,
+			);
 
 			light.intensity = 0.9;
 			renderer.drawLight(light);
 			expect(renderer._lightCache.get(light).intensity).toBe(0.9);
-
-			light.destroy();
-		});
-
-		it("Canvas drawLight reuses the same CanvasRenderTarget when only color/intensity change (no realloc)", () => {
-			// Optimization: the gradient is repainted into the existing
-			// offscreen canvas; we only allocate a new render target when
-			// the radii actually change.
-			const renderer = video.renderer;
-			renderer._lightCache = undefined;
-
-			const light = new Light2d(0, 0, 25, 25, "#ff0000", 0.5);
-			renderer.drawLight(light);
-			const t1 = renderer._lightCache.get(light).target;
-
-			light.intensity = 0.9;
-			renderer.drawLight(light);
-			expect(renderer._lightCache.get(light).target).toBe(t1);
-
-			light.color.parseCSS("#0000ff");
-			renderer.drawLight(light);
-			expect(renderer._lightCache.get(light).target).toBe(t1);
 
 			light.destroy();
 		});
