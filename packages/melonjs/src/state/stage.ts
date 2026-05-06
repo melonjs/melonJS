@@ -308,7 +308,7 @@ export default class Stage {
 	} {
 		// `MAX_LIGHTS` is imported from `multitexture-lit.js` — single source
 		// of truth shared with the lit fragment shader and the
-		// `QuadBatcher.setLightUniforms` clamp.
+		// `LitQuadBatcher.setLightUniforms` clamp.
 		if (this._lightUniformsScratch === null) {
 			this._lightUniformsScratch = {
 				positions: new Float32Array(MAX_LIGHTS * 4),
