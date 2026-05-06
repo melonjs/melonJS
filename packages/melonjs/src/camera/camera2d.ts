@@ -9,7 +9,6 @@ import { Vector3d } from "../math/vector3d.ts";
 import { Bounds, boundsPool } from "./../physics/bounds.ts";
 import type Container from "./../renderable/container.js";
 import Renderable from "./../renderable/renderable.js";
-import type Stage from "../state/stage.ts";
 import state from "../state/state.ts";
 import {
 	CANVAS_ONRESIZE,
@@ -936,6 +935,22 @@ export default class Camera2d extends Renderable {
 			renderer.setProjection(this.projectionMatrix);
 		}
 
+		// Upload active Light2d instances for the lit sprite pipeline.
+		// Done here — after `setProjection()` (which can flush the
+		// current batch) and before `container.draw()` walks the world
+		// tree — so the lights are guaranteed to apply to every lit quad
+		// pushed by the upcoming draw walk. Stage stays renderer-agnostic
+		// (just exposes the raw lights set + ambient color); the renderer
+		// decides how to encode them. Canvas's `setLightUniforms` is a
+		// no-op.
+		const stage = state.current();
+		renderer.setLightUniforms(
+			stage?._activeLights,
+			stage?.ambientLightingColor,
+			translateX,
+			translateY,
+		);
+
 		container.preDraw(r);
 
 		// for non-default cameras, temporarily expand the camera rect to the
@@ -970,10 +985,7 @@ export default class Camera2d extends Renderable {
 		// translateX/translateY the world container was rendered with so
 		// non-default cameras (minimap/splitscreen) line up correctly —
 		// `camera.pos + camera.offset` alone misses `containerOffsetX/Y`.
-		const stage = state.current() as {
-			drawLighting?: typeof Stage.prototype.drawLighting;
-		} | null;
-		if (stage && typeof stage.drawLighting === "function") {
+		if (stage) {
 			stage.drawLighting(renderer, this, translateX, translateY);
 		}
 

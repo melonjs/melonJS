@@ -73,6 +73,16 @@ const ExampleLights = lazy(() =>
 		default: m.ExampleLights,
 	})),
 );
+const ExampleNormalMap = lazy(() =>
+	import("./examples/normalMap/ExampleNormalMap").then((m) => ({
+		default: m.ExampleNormalMap,
+	})),
+);
+const ExampleSpriteIlluminator = lazy(() =>
+	import("./examples/spriteIlluminator/ExampleSpriteIlluminator").then((m) => ({
+		default: m.ExampleSpriteIlluminator,
+	})),
+);
 const ExampleLineOfSight = lazy(() =>
 	import("./examples/lineOfSight/ExampleLineOfSight").then((m) => ({
 		default: m.ExampleLineOfSight,
@@ -251,6 +261,22 @@ const examples: {
 		sourceDir: "lights",
 		description:
 			"2D lighting system with dynamic light sources, shadows, and blend mode effects.",
+	},
+	{
+		component: <ExampleNormalMap />,
+		label: "Normal Map",
+		path: "normal-map",
+		sourceDir: "normalMap",
+		description:
+			"Per-pixel sprite lighting from normal maps. Three procedurally-generated orbs (red, green, blue base colors paired with a sphere normal map) react to a moving Light2d.",
+	},
+	{
+		component: <ExampleSpriteIlluminator />,
+		label: "SpriteIlluminator",
+		path: "sprite-illuminator",
+		sourceDir: "spriteIlluminator",
+		description:
+			"Per-pixel sprite lighting from normal maps. Animated character + foreground prop tile lit by a moving cursor light, faithfully ported from CodeAndWeb's cocos2d-x demo.",
 	},
 	{
 		component: <ExampleLineOfSight />,

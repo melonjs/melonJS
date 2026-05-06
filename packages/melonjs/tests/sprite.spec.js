@@ -150,4 +150,323 @@ describe("Sprite", () => {
 			).toEqual(true);
 		});
 	});
+
+	describe("normalMap", () => {
+		it("defaults to null when no normalMap is provided", () => {
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+			});
+			expect(s.normalMap).toBeNull();
+		});
+
+		it("accepts an image-like value passed via settings", () => {
+			const normal = video.createCanvas(16, 16);
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+				normalMap: normal,
+			});
+			expect(s.normalMap).toBe(normal);
+		});
+
+		it("accepts an image-like value assigned after construction", () => {
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+			});
+			const normal = video.createCanvas(32, 32);
+			s.normalMap = normal;
+			expect(s.normalMap).toBe(normal);
+		});
+
+		it("accepts null to clear an existing normal map", () => {
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+				normalMap: video.createCanvas(16, 16),
+			});
+			expect(s.normalMap).not.toBeNull();
+			s.normalMap = null;
+			expect(s.normalMap).toBeNull();
+		});
+
+		it("rejects non-image values with TypeError", () => {
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+			});
+			expect(() => {
+				s.normalMap = 42;
+			}).toThrow(TypeError);
+			expect(() => {
+				s.normalMap = "not-an-image";
+			}).toThrow(TypeError);
+			expect(() => {
+				s.normalMap = { foo: "bar" };
+			}).toThrow(TypeError);
+			// the failed assignments must not have mutated state
+			expect(s.normalMap).toBeNull();
+		});
+
+		it("rejects an object with non-numeric width/height", () => {
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+			});
+			expect(() => {
+				s.normalMap = { width: "32", height: "32" };
+			}).toThrow(TypeError);
+		});
+
+		it("accepts undefined to clear (same as null)", () => {
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+				normalMap: video.createCanvas(16, 16),
+			});
+			expect(s.normalMap).not.toBeNull();
+			s.normalMap = undefined;
+			expect(s.normalMap).toBeNull();
+		});
+
+		it("re-assignment replaces the previous value", () => {
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+			});
+			const a = video.createCanvas(8, 8);
+			const b = video.createCanvas(16, 16);
+			s.normalMap = a;
+			expect(s.normalMap).toBe(a);
+			s.normalMap = b;
+			expect(s.normalMap).toBe(b);
+		});
+
+		it("a failed setter assignment must not mutate the previous value", () => {
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+			});
+			const valid = video.createCanvas(8, 8);
+			s.normalMap = valid;
+			expect(() => {
+				s.normalMap = "broken";
+			}).toThrow(TypeError);
+			// previous value preserved
+			expect(s.normalMap).toBe(valid);
+		});
+
+		it("rejects boolean, array, and function", () => {
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+			});
+			expect(() => {
+				s.normalMap = true;
+			}).toThrow(TypeError);
+			expect(() => {
+				s.normalMap = false;
+			}).toThrow(TypeError);
+			expect(() => {
+				s.normalMap = [1, 2, 3];
+			}).toThrow(TypeError);
+			expect(() => {
+				s.normalMap = () => {};
+			}).toThrow(TypeError);
+		});
+
+		it("constructor: settings.normalMap = null is a no-op (not a throw)", () => {
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+				normalMap: null,
+			});
+			expect(s.normalMap).toBeNull();
+		});
+
+		it("constructor: settings.normalMap = undefined is a no-op", () => {
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+				normalMap: undefined,
+			});
+			expect(s.normalMap).toBeNull();
+		});
+
+		it("constructor: missing settings.normalMap key defaults to null", () => {
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+			});
+			expect(s.normalMap).toBeNull();
+		});
+
+		it("constructor: unknown loader key throws a descriptive error", () => {
+			expect(() => {
+				return new Sprite(0, 0, {
+					framewidth: 16,
+					frameheight: 16,
+					image: video.createCanvas(16, 16),
+					normalMap: "definitely-not-loaded-anywhere",
+				});
+			}).toThrow(/normal map image not found/);
+		});
+
+		it("constructor: settings.normalMap = boolean rejected with TypeError (no coercion)", () => {
+			// Pre-fix, booleans/numbers fell through to `getImage(value)`
+			// which coerces to a string and throws "image not found" — a
+			// confusing error. Now rejected loudly with a TypeError.
+			expect(() => {
+				return new Sprite(0, 0, {
+					framewidth: 16,
+					frameheight: 16,
+					image: video.createCanvas(16, 16),
+					normalMap: true,
+				});
+			}).toThrow(TypeError);
+		});
+
+		it("constructor: settings.normalMap = number rejected with TypeError", () => {
+			expect(() => {
+				return new Sprite(0, 0, {
+					framewidth: 16,
+					frameheight: 16,
+					image: video.createCanvas(16, 16),
+					normalMap: 42,
+				});
+			}).toThrow(TypeError);
+		});
+
+		it("constructor: settings.normalMap = bad object propagates the setter TypeError", () => {
+			expect(() => {
+				return new Sprite(0, 0, {
+					framewidth: 16,
+					frameheight: 16,
+					image: video.createCanvas(16, 16),
+					normalMap: { foo: 1 },
+				});
+			}).toThrow(TypeError);
+		});
+	});
+
+	describe("Sprite.preDraw/draw/postDraw + renderer.currentNormalMap state", () => {
+		// Stub renderer that captures `currentNormalMap` at the moment
+		// `drawImage` is called. Verifies Sprite routes the normal-map
+		// through renderer state via the `preDraw` → `draw` → `postDraw`
+		// lifecycle (the same convention `setTint` / `clearTint` follow).
+		// `drawImage` itself stays signature-stable.
+		function makeStub() {
+			const calls = { normalMapAtDrawImage: [], finalState: null };
+			const noop = () => {};
+			const stub = {
+				currentNormalMap: null,
+				drawImage: function () {
+					calls.normalMapAtDrawImage.push(this.currentNormalMap);
+				},
+				// the rest is what `Renderable.preDraw`/`postDraw` touches —
+				// no-op stubs are enough to let the lifecycle run end-to-end
+				save: noop,
+				restore: noop,
+				translate: noop,
+				scale: noop,
+				transform: noop,
+				setGlobalAlpha: noop,
+				globalAlpha: () => {
+					return 1;
+				},
+				setTint: noop,
+				clearTint: noop,
+				setMask: noop,
+				clearMask: noop,
+				setBlendMode: noop,
+				getBlendMode: () => {
+					return "normal";
+				},
+				beginPostEffect: noop,
+				endPostEffect: noop,
+			};
+			return { stub, calls };
+		}
+
+		// run the full draw lifecycle the way the engine does
+		function fullDraw(sprite, stub) {
+			sprite.preDraw(stub);
+			sprite.draw(stub);
+			sprite.postDraw(stub);
+		}
+
+		it("Sprite without normalMap leaves currentNormalMap unchanged", () => {
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+			});
+			const { stub, calls } = makeStub();
+			fullDraw(s, stub);
+			expect(calls.normalMapAtDrawImage).toEqual([null]);
+			expect(stub.currentNormalMap).toBeNull();
+		});
+
+		it("Sprite with normalMap sets currentNormalMap during drawImage and clears after postDraw", () => {
+			const normal = video.createCanvas(16, 16);
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+				normalMap: normal,
+			});
+			const { stub, calls } = makeStub();
+			fullDraw(s, stub);
+			expect(calls.normalMapAtDrawImage).toEqual([normal]);
+			// cleared by postDraw so the next un-lit sprite isn't
+			// accidentally lit
+			expect(stub.currentNormalMap).toBeNull();
+		});
+
+		it("two Sprites in sequence — first lit, second unlit — state isolated", () => {
+			const normal = video.createCanvas(16, 16);
+			const lit = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+				normalMap: normal,
+			});
+			const unlit = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+			});
+			const { stub, calls } = makeStub();
+			fullDraw(lit, stub);
+			fullDraw(unlit, stub);
+			expect(calls.normalMapAtDrawImage).toEqual([normal, null]);
+		});
+
+		it("destroy() drops the normal-map reference (mirrors how `image` is cleared)", () => {
+			const normal = video.createCanvas(16, 16);
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+				normalMap: normal,
+			});
+			expect(s.normalMap).toBe(normal);
+			s.destroy();
+			expect(s.normalMap).toBeNull();
+		});
+	});
 });

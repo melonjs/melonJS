@@ -51,7 +51,7 @@ Graphics
 - Extensible batcher system for custom rendering pipelines
 - High DPI resolution & Canvas advanced auto scaling
 - Sprite with 9-slice scaling option, and animation management
-- Built-in effects such as tinting, masking and 2D lighting
+- Built-in effects such as tinting, masking and 2D lighting (with optional per-pixel normal-map shading on sprites for 3D-looking dynamic lights)
 - Standard spritesheet, single and multiple Packed Textures support
 - Compressed texture support (DDS, KTX, KTX2, PVR, PKM) with automatic format detection and fallback
 - 3D mesh rendering with OBJ/MTL model loading, perspective projection and hardware depth testing
@@ -124,8 +124,9 @@ Tools integration
 melonJS is supporting the below tools and frameworks natively or through our official plugin(s) :
 
  [![Free Texture Packer](https://user-images.githubusercontent.com/4033090/136762061-1d3a0dfe-dbe0-4d3d-808d-47a49ecf5309.png "Free Texture Packer")](http://free-tex-packer.com)
- [![TexturePacker](https://user-images.githubusercontent.com/4033090/136762472-bc55a638-c69b-4ff5-9d03-c684c8bea0ea.png "TexturePacker")](https://www.codeandweb.com/texturepacker)
- [![PhysicsEditor](https://user-images.githubusercontent.com/4033090/136762890-b1010c7f-cb19-4d35-a3f1-f5048db07835.png "PhysicsEditor")](https://www.codeandweb.com/physicseditor)
+ [![TexturePacker](media/icons/texturepacker.png "TexturePacker")](https://www.codeandweb.com/texturepacker)
+ [![SpriteIlluminator](media/icons/spriteilluminator.png "SpriteIlluminator")](https://www.codeandweb.com/spriteilluminator)
+ [![PhysicsEditor](media/icons/physicseditor.png "PhysicsEditor")](https://www.codeandweb.com/physicseditor)
  [![ShoeBox](https://user-images.githubusercontent.com/4033090/136762705-92027d94-d87c-4a95-b051-26647410248d.png "ShoeBox")](https://renderhjs.net/shoebox/)
  [![Tiled](https://user-images.githubusercontent.com/4033090/136762999-5a7f377b-4136-4205-9fe0-83728c90cb9b.png "Tiled")](https://www.mapeditor.org)
  [![Cordova](https://user-images.githubusercontent.com/4033090/136763147-6d157ce6-6921-437e-bb8f-0287b86109da.png "Cordova")](https://cordova.apache.org)

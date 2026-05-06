@@ -208,6 +208,26 @@ export class Batcher {
 	}
 
 	/**
+	 * called by the WebGL renderer when this batcher is being replaced by another.
+	 * Disables this batcher's vertex attribute locations so they don't leak across
+	 * (otherwise stale stride/offset state can cause INVALID_OPERATION on the next draw).
+	 */
+	unbind() {
+		if (this.currentShader === undefined) {
+			return;
+		}
+		const gl = this.gl;
+		for (let i = 0; i < this.attributes.length; ++i) {
+			const location = this.currentShader.getAttribLocation(
+				this.attributes[i].name,
+			);
+			if (location !== -1) {
+				gl.disableVertexAttribArray(location);
+			}
+		}
+	}
+
+	/**
 	 * Select the shader to use for compositing
 	 * @see GLShader
 	 * @param {GLShader} shader - a reference to a GLShader instance
@@ -218,6 +238,15 @@ export class Batcher {
 			this.renderer.currentProgram !== shader.program
 		) {
 			this.flush();
+			// Disable the previous shader's enabled attribute locations
+			// before binding the new one. The two shaders may have linked
+			// the same attribute name to different locations, so the new
+			// shader's `setVertexAttributes` won't necessarily re-point
+			// every old location — leaving stale stride/offset state that
+			// can trigger `INVALID_OPERATION` on the next draw call.
+			if (this.currentShader && this.currentShader !== shader) {
+				this.unbind();
+			}
 			shader.bind();
 			shader.setUniform(this.projectionUniform, this.renderer.projectionMatrix);
 

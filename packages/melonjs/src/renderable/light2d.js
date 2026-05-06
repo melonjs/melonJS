@@ -9,8 +9,7 @@ import Renderable from "./renderable.js";
  * additional import for TypeScript
  * @import {Color} from "./../math/color.ts";
  * @import {Ellipse} from "./../geometries/ellipse.ts";
- * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
- * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
+ * @import Renderer from "./../video/renderer.js";
  */
 
 /** @ignore */
@@ -172,6 +171,41 @@ export default class Light2d extends Renderable {
 		// rotate) pivot around it.
 		this.anchorPoint.set(0.5, 0.5);
 
+		/**
+		 * When `true`, this light acts as a pure illumination source —
+		 * the gradient texture isn't drawn. The light still feeds the
+		 * `Stage` ambient-cutout pass and the WebGL lit-sprite
+		 * pipeline's per-frame uniforms, so normal-mapped sprites still
+		 * get shaded by it. Use this for SpriteIlluminator-style demos
+		 * where the light should be invisible (only its effect on
+		 * normal-mapped surfaces is what you want to see).
+		 *
+		 * Default `false`, preserving the legacy "soft glowing spot"
+		 * behavior.
+		 * @type {boolean}
+		 * @default false
+		 */
+		this.illuminationOnly = false;
+
+		/**
+		 * Light height above the sprite plane (Z axis), in the same
+		 * units as `radiusX`/`radiusY`. Used by the WebGL lit-sprite
+		 * pipeline as the Z component of the light direction in the
+		 * `dot(normal, lightDir)` calculation: a low height makes the
+		 * lighting graze across the surface (long visible shadows on
+		 * normal-map detail), a high height makes it head-on (more
+		 * uniform brightness on the lit hemisphere).
+		 *
+		 * Default is `max(radiusX, radiusY) * 0.075` — a balanced look
+		 * at the asset's native scale that prevents lights at the
+		 * sprite's center from producing degenerate flat shading.
+		 *
+		 * Named `lightHeight` (not just `height`) to avoid colliding
+		 * with the bbox-height getter Light2d inherits from `Rect`.
+		 * @type {number}
+		 */
+		this.lightHeight = Math.max(radiusX, radiusY) * 0.075;
+
 		createGradient(this);
 	}
 
@@ -231,7 +265,7 @@ export default class Light2d extends Renderable {
 	 * preDraw this Light2d (automatically called by melonJS)
 	 * Note: The renderer should set the blend mode again (after drawing other Light2d objects)
 	 * to ensure colors blend correctly in the CanvasRenderer.
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 * @param {Renderer} renderer - a renderer instance
 	 */
 	preDraw(renderer) {
 		super.preDraw(renderer);
@@ -240,10 +274,13 @@ export default class Light2d extends Renderable {
 
 	/**
 	 * draw this Light2d (automatically called by melonJS)
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 * @param {Renderer} renderer - a renderer instance
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
 	 */
 	draw(renderer) {
+		if (this.illuminationOnly) {
+			return;
+		}
 		renderer.drawImage(this.texture.canvas, this.pos.x, this.pos.y);
 	}
 

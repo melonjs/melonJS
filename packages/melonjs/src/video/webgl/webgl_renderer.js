@@ -20,9 +20,11 @@ import {
 	generateJoinCircles,
 	generateTriangleFan,
 } from "../utils/tessellation.js";
+import LitQuadBatcher from "./batchers/lit_quad_batcher";
 import MeshBatcher from "./batchers/mesh_batcher";
 import PrimitiveBatcher from "./batchers/primitive_batcher";
 import QuadBatcher from "./batchers/quad_batcher";
+import { createLightUniformScratch, packLights } from "./lighting/pack.ts";
 import { getMaxShaderPrecision } from "./utils/precision.js";
 
 /**
@@ -179,9 +181,14 @@ export default class WebGLRenderer extends Renderer {
 		// bind the vertex buffer
 		this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
 
-		// Create both quad and primitive batchers
+		// Create the default batchers. The lit-aware quad batcher is only
+		// created when no custom batcher override is supplied — its lit
+		// fragment path needs the paired (color, normal) sampler layout.
 		const CustomBatcher = this.settings.batcher || this.settings.compositor;
 		this.addBatcher(new (CustomBatcher || QuadBatcher)(this), "quad", true);
+		if (!CustomBatcher) {
+			this.addBatcher(new LitQuadBatcher(this), "litQuad");
+		}
 		this.addBatcher(new (CustomBatcher || PrimitiveBatcher)(this), "primitive");
 		this.addBatcher(new MeshBatcher(this), "mesh");
 
@@ -405,8 +412,9 @@ export default class WebGLRenderer extends Renderer {
 
 		if (this.currentBatcher !== batcher) {
 			if (this.currentBatcher !== undefined) {
-				// flush the current batcher
+				// flush the current batcher and release its vertex attribute locations
 				this.currentBatcher.flush();
+				this.currentBatcher.unbind();
 			}
 			// rebind the renderer's shared vertex buffer (custom batchers may have bound their own)
 			this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
@@ -483,6 +491,63 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	flush() {
 		this.currentBatcher.flush();
+	}
+
+	/**
+	 * Upload per-frame Light2d uniforms used by the lit sprite pipeline.
+	 *
+	 * Packs the active lights into pre-allocated scratch buffers, then
+	 * forwards to `LitQuadBatcher`. Light positions are translated from
+	 * world-space (where `light.getBounds().centerX/Y` lives) into the
+	 * renderer's pre-projection coords by subtracting `(translateX, translateY)`,
+	 * matching what `Stage.drawLighting` does for the cutout pass — so
+	 * the lit fragment's `lightPos - vWorldPos` math lines up with the
+	 * camera's view.
+	 *
+	 * Lights past `MAX_LIGHTS` (8) are silently dropped. Also caches the
+	 * active light count on the renderer so `drawImage` can dispatch
+	 * normal-mapped sprites to the lit batcher only when there's
+	 * something to light them with.
+	 * @param {Iterable<object>} [lights] - active `Light2d` instances; falsy/empty no-ops the lit pipeline
+	 * @param {object} [ambient] - ambient lighting color (0..255 RGB); defaults to black
+	 * @param {number} [translateX=0] - world-to-screen X translate (matches `Camera2d.draw()`)
+	 * @param {number} [translateY=0] - world-to-screen Y translate
+	 */
+	setLightUniforms(lights, ambient, translateX = 0, translateY = 0) {
+		// scratch is allocated lazily on first call so non-lit scenes
+		// don't pay for it
+		if (this._lightUniformsScratch === undefined) {
+			this._lightUniformsScratch = createLightUniformScratch();
+		}
+		const u = packLights(
+			lights,
+			ambient,
+			translateX,
+			translateY,
+			this._lightUniformsScratch,
+		);
+
+		this.activeLightCount = u.count;
+		const lit = this.batchers.get("litQuad");
+		if (lit && typeof lit.setLightUniforms === "function") {
+			lit.setLightUniforms(u);
+			// `GLShader.setUniform` calls `gl.useProgram` internally to
+			// guarantee the right program is active for the upload. Since
+			// litQuad is rarely the *active* batcher (most frames have no
+			// lights and route through the unlit `quad`), restore the
+			// active batcher's program so the next draw doesn't render
+			// through litQuad's shader by accident — which feeds 4-attribute
+			// vertex data to a 5-attribute shader and produces visible garbage.
+			if (this.currentBatcher && this.currentBatcher !== lit) {
+				const shader =
+					this.currentBatcher.currentShader ||
+					this.currentBatcher.defaultShader;
+				if (shader) {
+					this.gl.useProgram(shader.program);
+					this.currentProgram = shader.program;
+				}
+			}
+		}
 	}
 
 	/**
@@ -855,7 +920,15 @@ export default class WebGLRenderer extends Renderer {
 			dy |= 0;
 		}
 
-		this.setBatcher("quad");
+		// dispatch to the lit batcher only when the scene actually has
+		// active lights AND this sprite has a normal map. Otherwise the
+		// unlit `quad` batcher is faster (full texture-unit capacity, no
+		// paired normal upload, no per-fragment lighting math).
+		const useLit =
+			this.batchers.has("litQuad") &&
+			this.activeLightCount > 0 &&
+			this.currentNormalMap !== null;
+		this.setBatcher(useLit ? "litQuad" : "quad");
 
 		const shader = this.customShader;
 		if (typeof shader === "object") {
@@ -867,19 +940,36 @@ export default class WebGLRenderer extends Renderer {
 		const reupload = typeof image.videoWidth !== "undefined";
 		const texture = this.cache.get(image);
 		const uvs = texture.getUVs(sx, sy, sw, sh);
-		this.currentBatcher.addQuad(
-			texture,
-			dx,
-			dy,
-			dw,
-			dh,
-			uvs[0],
-			uvs[1],
-			uvs[2],
-			uvs[3],
-			this.currentTint.toUint32(this.getGlobalAlpha()),
-			reupload,
-		);
+		if (useLit) {
+			this.currentBatcher.addQuad(
+				texture,
+				dx,
+				dy,
+				dw,
+				dh,
+				uvs[0],
+				uvs[1],
+				uvs[2],
+				uvs[3],
+				this.currentTint.toUint32(this.getGlobalAlpha()),
+				reupload,
+				this.currentNormalMap,
+			);
+		} else {
+			this.currentBatcher.addQuad(
+				texture,
+				dx,
+				dy,
+				dw,
+				dh,
+				uvs[0],
+				uvs[1],
+				uvs[2],
+				uvs[3],
+				this.currentTint.toUint32(this.getGlobalAlpha()),
+				reupload,
+			);
+		}
 
 		if (typeof shader === "object") {
 			this.currentBatcher.useShader(this.currentBatcher.defaultShader);

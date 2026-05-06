@@ -12,8 +12,7 @@ const FLICKER_INTERVAL_MS = 33;
 /**
  * additional import for TypeScript
  * @import {Vector2d} from "../math/vector2d.js";
- * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
- * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
+ * @import Renderer from "./../video/renderer.js";
  */
 
 /**
@@ -34,6 +33,7 @@ export default class Sprite extends Renderable {
 	 * @param {number} [settings.flipX] - flip the sprite on the horizontal axis
 	 * @param {number} [settings.flipY] - flip the sprite on the vertical axis
 	 * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] - Anchor point to draw the frame at (defaults to the center of the frame).
+	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|string} [settings.normalMap] - optional normal-map texture used for per-pixel lighting (SpriteIlluminator-style). Same layout/UVs as `settings.image`. When omitted (default), the sprite renders unlit and pays no extra cost. Ignored by the Canvas renderer. Note: `HTMLVideoElement` is intentionally not supported — normal maps encode static surface directions in RGB, and the engine caches the GL texture per image reference (a video would freeze on frame 0).
 	 * @example
 	 * // create a single sprite from a standalone image, with anchor in the center
 	 * let sprite = new me.Sprite(0, 0, {
@@ -106,6 +106,13 @@ export default class Sprite extends Renderable {
 		 * @type {TextureAtlas}
 		 */
 		this.source = null;
+
+		/**
+		 * backing field for the `normalMap` accessor — see the getter/setter
+		 * defined on the class for the public API and validation rules.
+		 * @ignore
+		 */
+		this._normalMap = null;
 
 		// hold all defined animation
 		this.anim = {};
@@ -231,6 +238,43 @@ export default class Sprite extends Renderable {
 			}
 		}
 
+		// resolve the optional normal-map paired with this sprite (used by
+		// the WebGL renderer's lit pipeline; silently ignored by Canvas).
+		// When the source is a TextureAtlas, prefer its paired normal-map
+		// over an explicit `settings.normalMap` (the atlas drove the layout).
+		if (
+			settings.image instanceof TextureAtlas &&
+			typeof settings.image.getNormalTexture === "function"
+		) {
+			const fromAtlas = settings.image.getNormalTexture();
+			if (fromAtlas) {
+				this.normalMap = fromAtlas;
+			}
+		}
+		if (
+			this.normalMap === null &&
+			typeof settings.normalMap !== "undefined" &&
+			settings.normalMap !== null
+		) {
+			// strings are loader keys — resolve through getImage first.
+			// Anything else flows straight to the setter, which validates
+			// image-like shape and throws TypeError for invalid types
+			// (boolean, number, function, etc.).
+			if (typeof settings.normalMap === "string") {
+				const resolved = getImage(settings.normalMap);
+				if (!resolved) {
+					throw new Error(
+						"me.Sprite: '" +
+							settings.normalMap +
+							"' normal map image not found!",
+					);
+				}
+				this.normalMap = resolved;
+			} else {
+				this.normalMap = settings.normalMap;
+			}
+		}
+
 		// store/reset the current atlas information if specified
 		if (typeof settings.atlas !== "undefined") {
 			this.textureAtlas = settings.atlas;
@@ -291,6 +335,48 @@ export default class Sprite extends Renderable {
 			// set as default
 			this.setCurrentAnimation("default");
 		}
+	}
+
+	/**
+	 * The optional normal-map image paired with this sprite's color
+	 * texture (SpriteIlluminator workflow). When set, the WebGL
+	 * renderer's lit pipeline samples this texture for per-pixel
+	 * lighting using `Stage._activeLights`. `null` when unlit.
+	 * Setting any non-image value (or anything without numeric
+	 * `width`/`height`) throws — assign `null` to clear.
+	 *
+	 * Silently ignored by the Canvas renderer.
+	 * @type {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|null}
+	 */
+	get normalMap() {
+		return this._normalMap;
+	}
+	set normalMap(value) {
+		if (value === null || value === undefined) {
+			this._normalMap = null;
+			return;
+		}
+		if (
+			typeof value !== "object" ||
+			typeof value.width !== "number" ||
+			typeof value.height !== "number"
+		) {
+			throw new TypeError(
+				"Sprite.normalMap must be null or an image-like object with numeric width/height " +
+					"(HTMLImageElement, HTMLCanvasElement, OffscreenCanvas, ImageBitmap)",
+			);
+		}
+		// Explicitly reject HTMLVideoElement — it duck-types past the
+		// width/height check, but the lit pipeline caches the GL texture
+		// per image reference and never re-uploads. A video as a normal
+		// map would silently freeze on frame 0; better a loud TypeError
+		// at assignment time than a confusing visual bug at runtime.
+		if (typeof value.videoWidth === "number") {
+			throw new TypeError(
+				"Sprite.normalMap does not support HTMLVideoElement (the lit pipeline caches the texture per image reference and would freeze on frame 0)",
+			);
+		}
+		this._normalMap = value;
 	}
 
 	/**
@@ -696,8 +782,38 @@ export default class Sprite extends Renderable {
 	}
 
 	/**
+	 * Prepare the rendering context before drawing this sprite (automatically called by melonJS).
+	 * Extends `Renderable.preDraw` to publish this sprite's `normalMap` (if any)
+	 * on the renderer so the WebGL lit pipeline can pair it with the next
+	 * `drawImage` call. Cleared back in `postDraw`.
+	 * @param {Renderer} renderer - a renderer instance
+	 */
+	preDraw(renderer) {
+		super.preDraw(renderer);
+		// Route through the renderer's normal-map state slot — kept off
+		// the public `drawImage` signature so material features can be
+		// added without disturbing the API. The WebGL batcher reads
+		// `currentNormalMap` from the renderer; Canvas ignores it.
+		if (this._normalMap !== null) {
+			renderer.currentNormalMap = this._normalMap;
+		}
+	}
+
+	/**
+	 * restore the rendering context after drawing this sprite (automatically called by melonJS).
+	 * @param {Renderer} renderer - a renderer instance
+	 */
+	postDraw(renderer) {
+		// Clear the slot so a subsequent un-lit sprite isn't accidentally lit.
+		if (this._normalMap !== null) {
+			renderer.currentNormalMap = null;
+		}
+		super.postDraw(renderer);
+	}
+
+	/**
 	 * draw this sprite (automatically called by melonJS)
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 * @param {Renderer} renderer - a renderer instance
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
 	 */
 	draw(renderer) {
@@ -768,6 +884,10 @@ export default class Sprite extends Renderable {
 			this.image.currentTime = 0;
 		}
 		this.image = undefined;
+		// drop the normal-map reference too — same precedent as `image`,
+		// avoids holding a (possibly large) paired image alive after the
+		// sprite is gone
+		this._normalMap = null;
 		super.destroy();
 	}
 }

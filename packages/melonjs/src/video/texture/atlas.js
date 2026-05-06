@@ -71,7 +71,7 @@ export class TextureAtlas {
 	/**
 	 * @param {object|object[]} atlases - atlas information. See {@link loader.getJSON}
 	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|CompressedImage|string|OffscreenCanvas[]|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] - Image source
-	 * @param {boolean} [cache=false] - Use true to skip caching this Texture
+	 * @param {boolean|object} [options] - either a boolean (legacy `cache` flag — `false` disables `TextureCache` registration; default behavior is to cache) or an options object `{ cache?: boolean, normalMap?: HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|string }`. When `normalMap` is provided, the atlas exposes a paired normal-map texture sharing the same UVs as the color texture (used by the WebGL renderer's lit pipeline). `HTMLVideoElement` is intentionally not supported as a normal map (would freeze on frame 0 due to per-image GL texture caching).
 	 * @example
 	 * // create a texture atlas from a JSON Object
 	 * game.texture = new me.TextureAtlas(
@@ -93,8 +93,21 @@ export class TextureAtlas {
 	 *         anchorPoint : new me.Vector2d(0.5, 0.5)
 	 *     },
 	 *     me.loader.getImage("spritesheet")
+	 * );
+	 *
+	 * // SpriteIlluminator workflow: pair the color atlas with its normal map
+	 * game.texture = new me.TextureAtlas(
+	 *     me.loader.getJSON("scene"),
+	 *     me.loader.getImage("scene"),
+	 *     { normalMap: me.loader.getImage("scene_n") }
+	 * );
 	 */
-	constructor(atlases, src, cache) {
+	constructor(atlases, src, options) {
+		// backward compat: 3rd arg used to be a `cache` boolean.
+		const opts =
+			typeof options === "boolean" ? { cache: options } : options || {};
+		const cache = opts.cache;
+		const normalMap = opts.normalMap;
 		/**
 		 * to identify the atlas format (e.g. texture packer)
 		 * @ignore
@@ -107,6 +120,15 @@ export class TextureAtlas {
 		 * @ignore
 		 */
 		this.sources = new Map();
+
+		/**
+		 * paired normal-map source(s), keyed identically to `sources`.
+		 * Populated from the constructor's `options.normalMap`. Used by
+		 * the WebGL renderer's lit pipeline for per-pixel lighting.
+		 * @type {Map}
+		 * @ignore
+		 */
+		this.normalSources = new Map();
 
 		/**
 		 * the atlas dictionnaries
@@ -237,6 +259,48 @@ export class TextureAtlas {
 				game.renderer.cache.set(source, this);
 			});
 		}
+
+		// Populate the parallel normal-map sources map. For Phase 1 we
+		// support a single paired normal-map (the typical SpriteIlluminator
+		// workflow); each color source gets the same normal-map image.
+		// Multipack atlases with per-source normal maps can be handled later
+		// by accepting an array/Map matching `sources`.
+		if (typeof normalMap !== "undefined" && normalMap !== null) {
+			let resolved;
+			if (typeof normalMap === "string") {
+				resolved = getImage(normalMap);
+				if (!resolved) {
+					throw new Error(
+						"TextureAtlas: normal map image '" + normalMap + "' not found",
+					);
+				}
+			} else if (
+				typeof normalMap === "object" &&
+				typeof normalMap.width === "number" &&
+				typeof normalMap.height === "number"
+			) {
+				// image-like (HTMLImageElement, HTMLCanvasElement,
+				// OffscreenCanvas, ImageBitmap). Explicitly reject
+				// HTMLVideoElement — it duck-types past the size check
+				// but the lit pipeline caches the GL texture per image
+				// reference and never re-uploads, so a video would freeze
+				// on frame 0 (see `Sprite.normalMap`).
+				if (typeof normalMap.videoWidth === "number") {
+					throw new TypeError(
+						"TextureAtlas: options.normalMap does not support HTMLVideoElement (the lit pipeline caches the texture per image reference and would freeze on frame 0)",
+					);
+				}
+				resolved = normalMap;
+			} else {
+				throw new TypeError(
+					"TextureAtlas: options.normalMap must be an image-like, a loader key string, or null/undefined; got " +
+						typeof normalMap,
+				);
+			}
+			this.sources.forEach((_source, key) => {
+				this.normalSources.set(key, resolved);
+			});
+		}
 	}
 
 	/**
@@ -271,6 +335,23 @@ export class TextureAtlas {
 		} else {
 			return this.sources.get(this.activeAtlas);
 		}
+	}
+
+	/**
+	 * Return the paired normal-map texture for the given region, or `null`
+	 * if no normal map was provided to this atlas. The normal map shares
+	 * the same UV layout as the color texture returned by {@link TextureAtlas#getTexture}.
+	 * @param {object} [region] - region name in case of multipack textures
+	 * @returns {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|null}
+	 */
+	getNormalTexture(region) {
+		if (this.normalSources.size === 0) {
+			return null;
+		}
+		if (typeof region === "object" && typeof region.texture === "string") {
+			return this.normalSources.get(region.texture) ?? null;
+		}
+		return this.normalSources.get(this.activeAtlas) ?? null;
 	}
 
 	/**

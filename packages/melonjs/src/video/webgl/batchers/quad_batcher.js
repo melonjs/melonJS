@@ -9,8 +9,11 @@ import { MaterialBatcher } from "./material_batcher.js";
  * @import {TextureAtlas} from "./../../texture/atlas.js";
  */
 
-// a pool of reusable vectors
-const V_ARRAY = [
+// a pool of reusable vectors used by `addQuad` to transform the four
+// quad corners. Exported so `LitQuadBatcher` reuses the same pool —
+// JS is single-threaded and `addQuad` is synchronous, so concurrent
+// access can't happen and a single shared pool is safe.
+export const V_ARRAY = [
 	new Vector2d(),
 	new Vector2d(),
 	new Vector2d(),
@@ -72,10 +75,7 @@ export default class QuadBatcher extends MaterialBatcher {
 			},
 		});
 
-		// bind all sampler uniforms to their respective texture units
-		for (let i = 0; i < this.maxBatchTextures; i++) {
-			this.defaultShader.setUniform("uSampler" + i, i);
-		}
+		this.bindColorSamplers();
 
 		/**
 		 * whether multi-texture batching is currently active
@@ -85,7 +85,15 @@ export default class QuadBatcher extends MaterialBatcher {
 		 */
 		this.useMultiTexture = true;
 
-		// create the index buffer for quad batching (4 verts + 6 indices per quad)
+		this.createIndexBuffer();
+	}
+
+	/**
+	 * (Re-)create the index buffer for quad batching (4 verts + 6 indices per quad).
+	 * Called from `init` and `reset` (after context loss).
+	 * @ignore
+	 */
+	createIndexBuffer() {
 		const maxQuads = this.vertexData.maxVertex / 4;
 		this.indexBuffer = new IndexBuffer(
 			this.gl,
@@ -93,6 +101,17 @@ export default class QuadBatcher extends MaterialBatcher {
 			this.renderer.WebGLVersion > 1,
 		);
 		this.indexBuffer.fillQuadPattern(maxQuads);
+	}
+
+	/**
+	 * Bind the color sampler uniforms (`uSampler0..uSamplerN-1`) to their
+	 * respective texture units. Called from `init` and `reset`.
+	 * @ignore
+	 */
+	bindColorSamplers() {
+		for (let i = 0; i < this.maxBatchTextures; i++) {
+			this.defaultShader.setUniform("uSampler" + i, i);
+		}
 	}
 
 	/**
@@ -114,20 +133,8 @@ export default class QuadBatcher extends MaterialBatcher {
 	 */
 	reset() {
 		super.reset();
-
-		// re-create index buffer after context loss
-		const maxQuads = this.vertexData.maxVertex / 4;
-		this.indexBuffer = new IndexBuffer(
-			this.gl,
-			maxQuads * 6,
-			this.renderer.WebGLVersion > 1,
-		);
-		this.indexBuffer.fillQuadPattern(maxQuads);
-
-		// re-bind sampler uniforms after context restore
-		for (let i = 0; i < this.maxBatchTextures; i++) {
-			this.defaultShader.setUniform("uSampler" + i, i);
-		}
+		this.createIndexBuffer();
+		this.bindColorSamplers();
 		this.useMultiTexture = true;
 	}
 
@@ -221,7 +228,7 @@ export default class QuadBatcher extends MaterialBatcher {
 	 * @param {number} u1 - Texture UV (u1) value.
 	 * @param {number} v1 - Texture UV (v1) value.
 	 * @param {number} tint - tint color to be applied to the texture in UINT32 (argb) format
-	 * @param {boolean} reupload - Force the texture to be reuploaded even if already bound
+	 * @param {boolean} [reupload=false] - Force the texture to be reuploaded even if already bound
 	 */
 	addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint, reupload = false) {
 		const vertexData = this.vertexData;

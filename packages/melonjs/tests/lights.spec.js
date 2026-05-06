@@ -5,10 +5,29 @@ import {
 	Ellipse,
 	game,
 	Light2d,
+	Sprite,
 	Stage,
 	state,
 	video,
 } from "../src/index.js";
+import {
+	createLightUniformScratch,
+	packLights,
+} from "../src/video/webgl/lighting/pack.ts";
+
+// Replaces the old `Stage.collectLightingUniforms` method (removed
+// because it gave Stage a renderer-specific shape; lights/ambient
+// stay on Stage, the GPU-shape packing lives in `video/webgl/lighting`).
+const _packScratch = createLightUniformScratch();
+function packStage(stage, translateX = 0, translateY = 0) {
+	return packLights(
+		stage._activeLights,
+		stage.ambientLightingColor,
+		translateX,
+		translateY,
+		_packScratch,
+	);
+}
 
 describe("Light2d + Stage lighting", () => {
 	beforeAll(() => {
@@ -834,6 +853,97 @@ describe("Light2d + Stage lighting", () => {
 			game.world.removeChildNow(light, true);
 		});
 
+		it("illuminationOnly=true skips drawing the gradient texture", () => {
+			// SpriteIlluminator workflow: a logical light source whose own
+			// gradient isn't visible — only its effect on normal-mapped
+			// sprites is. The light still feeds the cutout pass and the
+			// lit-pipeline uniforms; only the per-frame self-draw is
+			// suppressed.
+			const light = spawn(150, 100, 30);
+			light.illuminationOnly = true;
+
+			const drawImageCalls = [];
+			const stub = {
+				drawImage: (img, x, y) => {
+					drawImageCalls.push({ x, y });
+				},
+			};
+			light.draw(stub);
+			expect(drawImageCalls).toHaveLength(0);
+
+			game.world.removeChildNow(light, true);
+		});
+
+		it("illuminationOnly=true light still appears in _activeLights and lit uniforms", () => {
+			// Regression guard: `illuminationOnly` must NOT short-circuit
+			// the lifecycle hooks that register the light with the stage.
+			// A light that's "invisible" must still illuminate.
+			const stage = state.current();
+			while (stage._activeLights.size > 0) {
+				const l = [...stage._activeLights][0];
+				if (l.ancestor) {
+					l.ancestor.removeChildNow(l, true);
+				} else {
+					stage._activeLights.delete(l);
+				}
+			}
+
+			const light = new Light2d(120, 80, 30, 30, "#ff8000", 0.7);
+			light.illuminationOnly = true;
+			game.world.addChild(light);
+
+			expect(stage._activeLights.has(light)).toBe(true);
+
+			const u = packStage(stage, 0, 0);
+			expect(u.count).toBe(1);
+			expect(u.positions[0]).toBe(120);
+			expect(u.positions[1]).toBe(80);
+
+			game.world.removeChildNow(light, true);
+		});
+
+		it("illuminationOnly=true is also honored by the cutout pass (Stage.drawLighting)", () => {
+			// The cutout pass iterates `_activeLights` and emits one
+			// setMask per light — illuminationOnly lights MUST still cut
+			// holes through the ambient overlay. This test re-uses the
+			// stub patterns from the cutout describe block.
+			const stage = state.current();
+			while (stage._activeLights.size > 0) {
+				const l = [...stage._activeLights][0];
+				if (l.ancestor) {
+					l.ancestor.removeChildNow(l, true);
+				} else {
+					stage._activeLights.delete(l);
+				}
+			}
+			stage.ambientLight.setColor(0, 0, 0, 0.5);
+
+			const a = new Light2d(40, 40, 20);
+			a.illuminationOnly = true;
+			const b = new Light2d(80, 80, 20);
+			game.world.addChild(a);
+			game.world.addChild(b);
+
+			let setMaskCount = 0;
+			const stub = {
+				save: () => {},
+				translate: () => {},
+				setMask: () => {
+					setMaskCount++;
+				},
+				setColor: () => {},
+				fillRect: () => {},
+				clearMask: () => {},
+				restore: () => {},
+			};
+			stage.drawLighting(stub, game.viewport);
+			expect(setMaskCount).toBe(2); // both lights cut, regardless of illuminationOnly
+
+			game.world.removeChildNow(a, true);
+			game.world.removeChildNow(b, true);
+			stage.ambientLight.setColor(0, 0, 0, 0);
+		});
+
 		it("transform around `pos` (regression guard): scale does NOT shift the visible center by half-the-bbox", () => {
 			// Concrete regression: with anchorPoint=(0,0) (or a forgotten
 			// anchor reset), a 2× scale would shift the center by
@@ -871,6 +981,649 @@ describe("Light2d + Stage lighting", () => {
 				light.ancestor.removeChildNow(light);
 			}
 			stage.lights.clear();
+		});
+	});
+
+	describe("Stage.collectLightingUniforms (lit pipeline)", () => {
+		function freshLitState() {
+			const stage = state.current();
+			while (stage._activeLights.size > 0) {
+				const l = [...stage._activeLights][0];
+				if (l.ancestor) {
+					l.ancestor.removeChildNow(l, true);
+				} else {
+					stage._activeLights.delete(l);
+				}
+			}
+			stage.ambientLight.setColor(0, 0, 0, 0);
+			stage.ambientLightingColor.setColor(0, 0, 0, 1);
+			return stage;
+		}
+
+		it("returns count = 0 and zero-padded buffers when no lights are active", () => {
+			const stage = freshLitState();
+			const u = packStage(stage, 0, 0);
+			expect(u.count).toBe(0);
+			expect(u.positions).toBeInstanceOf(Float32Array);
+			expect(u.colors).toBeInstanceOf(Float32Array);
+			expect(u.positions.length).toBe(8 * 4); // MAX_LIGHTS * 4
+			expect(u.colors.length).toBe(8 * 3);
+			// padded to zeros so stale data can't leak across frames
+			for (let i = 0; i < u.positions.length; i++) {
+				expect(u.positions[i]).toBe(0);
+			}
+			for (let i = 0; i < u.colors.length; i++) {
+				expect(u.colors[i]).toBe(0);
+			}
+		});
+
+		it("packs a single light's position, radius, intensity, color", () => {
+			const stage = freshLitState();
+			const light = new Light2d(120, 80, 30, 30, "#ff0000", 0.6);
+			game.world.addChild(light);
+
+			const u = packStage(stage, 0, 0);
+			expect(u.count).toBe(1);
+			expect(u.positions[0]).toBe(120); // worldX
+			expect(u.positions[1]).toBe(80); // worldY
+			expect(u.positions[2]).toBe(30); // radius (max of radiusX, radiusY)
+			expect(u.positions[3]).toBeCloseTo(0.6); // intensity
+			expect(u.colors[0]).toBeCloseTo(1.0, 2); // r
+			expect(u.colors[1]).toBeCloseTo(0.0, 2); // g
+			expect(u.colors[2]).toBeCloseTo(0.0, 2); // b
+
+			game.world.removeChildNow(light, true);
+		});
+
+		it("translates light positions by (translateX, translateY) so they land in camera-local space", () => {
+			// Same convention as Stage.drawLighting: subtract camera offset
+			// so the lit fragment shader's `lightPos - vWorldPos` matches
+			// the renderer's pre-projection coords.
+			const stage = freshLitState();
+			const light = new Light2d(200, 150, 40, 40);
+			game.world.addChild(light);
+
+			const u = packStage(stage, 50, 30);
+			expect(u.positions[0]).toBe(150); // 200 − 50
+			expect(u.positions[1]).toBe(120); // 150 − 30
+
+			game.world.removeChildNow(light, true);
+		});
+
+		it("uses asymmetric radii's MAX value as the light radius", () => {
+			const stage = freshLitState();
+			const light = new Light2d(0, 0, 80, 25, "#fff", 1);
+			game.world.addChild(light);
+
+			const u = packStage(stage, 0, 0);
+			expect(u.positions[2]).toBe(80); // max of radiusX/radiusY
+
+			game.world.removeChildNow(light, true);
+		});
+
+		it("packs multiple lights independently and reports the count", () => {
+			const stage = freshLitState();
+			const a = new Light2d(10, 10, 20, 20, "#fff", 1);
+			const b = new Light2d(50, 60, 30, 30, "#0f0", 0.5);
+			const c = new Light2d(100, 100, 40, 40, "#00f", 0.25);
+			game.world.addChild(a);
+			game.world.addChild(b);
+			game.world.addChild(c);
+
+			const u = packStage(stage, 0, 0);
+			expect(u.count).toBe(3);
+			// the iteration order isn't guaranteed but each entry must
+			// match one of the lights — assert by collecting positions
+			const seen = new Set();
+			for (let i = 0; i < u.count; i++) {
+				seen.add(`${u.positions[i * 4]},${u.positions[i * 4 + 1]}`);
+			}
+			expect(seen.has("10,10")).toBe(true);
+			expect(seen.has("50,60")).toBe(true);
+			expect(seen.has("100,100")).toBe(true);
+
+			game.world.removeChildNow(a, true);
+			game.world.removeChildNow(b, true);
+			game.world.removeChildNow(c, true);
+		});
+
+		it("silently drops lights past MAX_LIGHTS (8)", () => {
+			const stage = freshLitState();
+			const lights = [];
+			for (let i = 0; i < 12; i++) {
+				const l = new Light2d(i * 10, 0, 5, 5);
+				lights.push(l);
+				game.world.addChild(l);
+			}
+
+			const u = packStage(stage, 0, 0);
+			expect(u.count).toBe(8);
+
+			for (const l of lights) {
+				game.world.removeChildNow(l, true);
+			}
+		});
+
+		it("light radius reflects transform-applied bounds (scaled lights have larger reach)", () => {
+			// `Stage.collectLightingUniforms` should derive the shader
+			// `radius` uniform from the transform-aware bbox so a scaled
+			// light's brightness range tracks its visible range. Using the
+			// raw `light.radiusX/Y` would leave the lighting math at the
+			// pre-scale radius even though the cutout pass (via
+			// `getVisibleArea()`) already reflects the scale.
+			const stage = freshLitState();
+			const light = new Light2d(40, 40, 30, 30);
+			game.world.addChild(light);
+
+			let u = packStage(stage, 0, 0);
+			const beforeR = u.positions[2];
+			expect(beforeR).toBeCloseTo(30); // half of bounds.width (60) at scale 1
+
+			light.scale(2);
+			u = packStage(stage, 0, 0);
+			const afterR = u.positions[2];
+			expect(afterR).toBeCloseTo(60); // bounds.width doubled
+
+			game.world.removeChildNow(light, true);
+		});
+
+		it("packs per-light height into a parallel `heights` Float32Array", () => {
+			// `Light2d.height` controls the Z component of `lightDir` in
+			// the lit shader. Default is `max(radiusX, radiusY) * 0.075`;
+			// users can override per-light for stylized "low and grazing"
+			// vs "head-on" lighting.
+			const stage = freshLitState();
+			const a = new Light2d(0, 0, 100, 50, "#fff", 1);
+			const b = new Light2d(50, 50, 80, 80, "#fff", 1);
+			b.lightHeight = 200;
+			game.world.addChild(a);
+			game.world.addChild(b);
+
+			const u = packStage(stage, 0, 0);
+			expect(u.heights).toBeInstanceOf(Float32Array);
+			expect(u.heights.length).toBe(8); // MAX_LIGHTS
+			// default for `a`: max(100, 50) * 0.075 = 7.5
+			expect(u.heights[0]).toBeCloseTo(7.5, 4);
+			// custom override for `b`
+			expect(u.heights[1]).toBe(200);
+			// stale slots zeroed
+			expect(u.heights[2]).toBe(0);
+			expect(u.heights[7]).toBe(0);
+
+			game.world.removeChildNow(a, true);
+			game.world.removeChildNow(b, true);
+		});
+
+		it("packs ambientLightingColor (RGB / 255) into the ambient slot", () => {
+			const stage = freshLitState();
+			stage.ambientLightingColor.setColor(85, 85, 85);
+			const u = packStage(stage, 0, 0);
+			expect(u.ambient[0]).toBeCloseTo(85 / 255, 3);
+			expect(u.ambient[1]).toBeCloseTo(85 / 255, 3);
+			expect(u.ambient[2]).toBeCloseTo(85 / 255, 3);
+		});
+
+		it("re-uses the same scratch buffers across calls (no per-frame allocation)", () => {
+			const stage = freshLitState();
+			const light = new Light2d(0, 0, 10);
+			game.world.addChild(light);
+			const u1 = packStage(stage, 0, 0);
+			const u2 = packStage(stage, 0, 0);
+			expect(u1.positions).toBe(u2.positions);
+			expect(u1.colors).toBe(u2.colors);
+			game.world.removeChildNow(light, true);
+		});
+
+		it("zero-pads stale slots when a light is removed between frames", () => {
+			// Frame 1: 2 lights → slots 0, 1 populated, slots 2..7 zero.
+			// Frame 2: only 1 light → slot 0 populated; slot 1 must be zeroed
+			// out so the shader doesn't see leftover positions.
+			const stage = freshLitState();
+			const a = new Light2d(10, 10, 5, 5);
+			const b = new Light2d(80, 80, 5, 5);
+			game.world.addChild(a);
+			game.world.addChild(b);
+			packStage(stage, 0, 0); // frame 1
+			game.world.removeChildNow(b, true);
+
+			const u = packStage(stage, 0, 0); // frame 2
+			expect(u.count).toBe(1);
+			// the active light landed in slot 0; verify slot 1 is zeroed
+			expect(u.positions[4]).toBe(0);
+			expect(u.positions[5]).toBe(0);
+			expect(u.positions[6]).toBe(0);
+			expect(u.positions[7]).toBe(0);
+
+			game.world.removeChildNow(a, true);
+		});
+	});
+
+	describe("Lit pipeline — adversarial edge cases", () => {
+		function freshLitState() {
+			const stage = state.current();
+			while (stage._activeLights.size > 0) {
+				const l = [...stage._activeLights][0];
+				if (l.ancestor) {
+					l.ancestor.removeChildNow(l, true);
+				} else {
+					stage._activeLights.delete(l);
+				}
+			}
+			stage.ambientLight.setColor(0, 0, 0, 0);
+			stage.ambientLightingColor.setColor(0, 0, 0, 1);
+			return stage;
+		}
+
+		it("exactly MAX_LIGHTS active lights — all 8 packed; the 9th is dropped", () => {
+			// boundary check around the cap. Going from 8 → 9 lights must
+			// not overflow the Float32Array (length = 8 * 4) or skip
+			// existing lights.
+			const stage = freshLitState();
+			const lights = [];
+			for (let i = 0; i < 9; i++) {
+				const l = new Light2d(i * 10, 0, 5, 5);
+				lights.push(l);
+				game.world.addChild(l);
+			}
+			const u = packStage(stage, 0, 0);
+			expect(u.count).toBe(8);
+			// every slot in the buffer must be reachable (no out-of-range writes)
+			expect(u.positions.length).toBe(8 * 4);
+			expect(u.colors.length).toBe(8 * 3);
+			expect(u.heights.length).toBe(8);
+			for (const l of lights) {
+				game.world.removeChildNow(l, true);
+			}
+		});
+
+		it("light with `lightHeight = 0` packs cleanly (no NaN, no division)", () => {
+			// The shader's lightDir math `normalize(vec3(toLight, height))`
+			// handles height=0 fine (it's just a 2D direction with
+			// implicit z=0). Stage shouldn't blow up either.
+			const stage = freshLitState();
+			const l = new Light2d(40, 40, 30, 30);
+			l.lightHeight = 0;
+			game.world.addChild(l);
+			const u = packStage(stage, 0, 0);
+			expect(u.count).toBe(1);
+			expect(u.heights[0]).toBe(0);
+			expect(Number.isFinite(u.positions[0])).toBe(true);
+			expect(Number.isFinite(u.heights[0])).toBe(true);
+			game.world.removeChildNow(l, true);
+		});
+
+		it("light with `lightHeight < 0` is uploaded as-is (shader decides what it means)", () => {
+			// Negative height = light below the sprite plane. The shader's
+			// `dot(normal, lightDir)` will give negative for upward-facing
+			// surface normals → `max(0, neg)` = 0 (unlit). That's a
+			// reasonable visual; Stage shouldn't pre-clamp.
+			const stage = freshLitState();
+			const l = new Light2d(0, 0, 10, 10);
+			l.lightHeight = -25;
+			game.world.addChild(l);
+			const u = packStage(stage, 0, 0);
+			expect(u.heights[0]).toBe(-25);
+			game.world.removeChildNow(l, true);
+		});
+
+		it("light with negative `intensity` is uploaded unclamped", () => {
+			// "Negative intensity" = subtractive light — a useful gimmick
+			// for shadow-casting effects, but only if Stage doesn't clamp
+			// it on the way to the shader.
+			const stage = freshLitState();
+			const l = new Light2d(0, 0, 50, 50, "#fff", -0.5);
+			game.world.addChild(l);
+			const u = packStage(stage, 0, 0);
+			expect(u.positions[3]).toBe(-0.5); // intensity slot
+			game.world.removeChildNow(l, true);
+		});
+
+		it("minimum-radius (1px) light: uniforms pack cleanly, no NaN", () => {
+			// `Light2d` itself rejects 0×0 (its gradient texture can't be
+			// zero-sized). The minimum feasible light is 1px radius; this
+			// pins the boundary case so a future degenerate-input handling
+			// change doesn't accidentally start NaN-ing.
+			const stage = freshLitState();
+			const l = new Light2d(50, 50, 1, 1);
+			game.world.addChild(l);
+			const u = packStage(stage, 0, 0);
+			expect(u.count).toBe(1);
+			expect(u.positions[2]).toBe(1); // radius from bbox half-width
+			expect(Number.isFinite(u.positions[0])).toBe(true);
+			expect(Number.isFinite(u.positions[2])).toBe(true);
+			expect(Number.isFinite(u.heights[0])).toBe(true);
+			game.world.removeChildNow(l, true);
+		});
+
+		it("light with non-uniform `radiusX` ≠ `radiusY`: shader radius takes max bbox dimension", () => {
+			// transform-aware radius (post-fix #4). The bbox uses
+			// max(2*radiusX, 2*radiusY); we feed half of that.
+			const stage = freshLitState();
+			const l = new Light2d(0, 0, 100, 25);
+			game.world.addChild(l);
+			const u = packStage(stage, 0, 0);
+			expect(u.positions[2]).toBe(100); // max(200, 50) / 2 = 100
+			game.world.removeChildNow(l, true);
+		});
+
+		it("light pos mutation between frames updates the uniform position", () => {
+			const stage = freshLitState();
+			const l = new Light2d(10, 20, 30, 30);
+			game.world.addChild(l);
+
+			let u = packStage(stage, 0, 0);
+			expect(u.positions[0]).toBe(10);
+			expect(u.positions[1]).toBe(20);
+
+			l.pos.set(150, 175);
+			u = packStage(stage, 0, 0);
+			expect(u.positions[0]).toBe(150);
+			expect(u.positions[1]).toBe(175);
+
+			game.world.removeChildNow(l, true);
+		});
+
+		it("light parented to a deeply nested container chain: getBounds walks the full ancestor stack", () => {
+			// container → container → container → light
+			const stage = freshLitState();
+			const a = new Container(100, 100, 50, 50);
+			const b = new Container(50, 50, 50, 50);
+			const c = new Container(25, 25, 50, 50);
+			game.world.addChild(a);
+			a.addChild(b);
+			b.addChild(c);
+			const torch = new Light2d(10, 10, 5, 5);
+			c.addChild(torch);
+
+			const u = packStage(stage, 0, 0);
+			// world-space center: 100 + 50 + 25 + 10 = 185 on each axis
+			expect(u.positions[0]).toBe(185);
+			expect(u.positions[1]).toBe(185);
+
+			game.world.removeChildNow(a, true);
+		});
+
+		it("light removed mid-flight: doesn't appear in the next collectLightingUniforms", () => {
+			const stage = freshLitState();
+			const a = new Light2d(0, 0, 10);
+			const b = new Light2d(50, 50, 10);
+			game.world.addChild(a);
+			game.world.addChild(b);
+
+			expect(packStage(stage, 0, 0).count).toBe(2);
+
+			// remove `a` and verify only `b` shows up
+			game.world.removeChildNow(a, true);
+			const u = packStage(stage, 0, 0);
+			expect(u.count).toBe(1);
+
+			// the surviving light's coords land in slot 0
+			expect(u.positions[0]).toBe(50);
+
+			game.world.removeChildNow(b, true);
+		});
+
+		it("light removed and re-added across calls: re-registers cleanly", () => {
+			const stage = freshLitState();
+			const l = new Light2d(40, 40, 20);
+			game.world.addChild(l);
+			expect(packStage(stage, 0, 0).count).toBe(1);
+
+			game.world.removeChildNow(l, true);
+			expect(packStage(stage, 0, 0).count).toBe(0);
+
+			game.world.addChild(l);
+			expect(packStage(stage, 0, 0).count).toBe(1);
+
+			game.world.removeChildNow(l, true);
+		});
+
+		it("ambientLightingColor with non-1 alpha: alpha is ignored (only RGB feeds the ambient slot)", () => {
+			// `ambient` is a vec3 in the shader. Stage reads .r/.g/.b only.
+			// Setting alpha != 1 must not reduce the ambient floor.
+			const stage = freshLitState();
+			stage.ambientLightingColor.setColor(120, 60, 30, 0.5); // alpha 0.5
+			const u = packStage(stage, 0, 0);
+			expect(u.ambient[0]).toBeCloseTo(120 / 255, 3);
+			expect(u.ambient[1]).toBeCloseTo(60 / 255, 3);
+			expect(u.ambient[2]).toBeCloseTo(30 / 255, 3);
+			expect(u.ambient.length).toBe(3); // no alpha slot
+		});
+
+		it("rotated light: lightHeight is independent of rotation (a uniform Z height)", () => {
+			// Rotating a Light2d shouldn't change its height — height is
+			// "above the sprite plane", not "in the rotation axis."
+			const stage = freshLitState();
+			const l = new Light2d(0, 0, 30, 30);
+			l.lightHeight = 12.5;
+			game.world.addChild(l);
+			l.rotate(Math.PI / 4);
+			const u = packStage(stage, 0, 0);
+			expect(u.heights[0]).toBe(12.5);
+			game.world.removeChildNow(l, true);
+		});
+
+		it("scaled light: position uniform is the (anchor-aware) bbox center, not the scaled corner", () => {
+			// After `light.scale(2)`, the bbox grows symmetrically around
+			// the center (since anchorPoint is 0.5, 0.5). The uniform
+			// position should still be the orig pos.
+			const stage = freshLitState();
+			const l = new Light2d(80, 60, 20);
+			game.world.addChild(l);
+			l.scale(2);
+			const u = packStage(stage, 0, 0);
+			expect(u.positions[0]).toBeCloseTo(80);
+			expect(u.positions[1]).toBeCloseTo(60);
+			game.world.removeChildNow(l, true);
+		});
+
+		it("multiple lights at the SAME world position: each gets its own slot", () => {
+			// stacked / overlapping lights are a real pattern (e.g. additive
+			// color glows). Stage shouldn't dedup or merge.
+			const stage = freshLitState();
+			const a = new Light2d(50, 50, 30, 30, "#ff0000", 0.5);
+			const b = new Light2d(50, 50, 30, 30, "#0000ff", 0.5);
+			game.world.addChild(a);
+			game.world.addChild(b);
+			const u = packStage(stage, 0, 0);
+			expect(u.count).toBe(2);
+			// both at same xy
+			expect(u.positions[0]).toBe(50);
+			expect(u.positions[4]).toBe(50);
+			// distinct colors
+			const seen = new Set([
+				`${u.colors[0]},${u.colors[1]},${u.colors[2]}`,
+				`${u.colors[3]},${u.colors[4]},${u.colors[5]}`,
+			]);
+			expect(seen.size).toBe(2);
+			game.world.removeChildNow(a, true);
+			game.world.removeChildNow(b, true);
+		});
+	});
+
+	describe("Lit pipeline — Sprite.normalMap adversarial cases", () => {
+		it("re-assigning the same normalMap value is a no-op (preserves it)", () => {
+			const normal = video.createCanvas(16, 16);
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+				normalMap: normal,
+			});
+			s.normalMap = normal;
+			s.normalMap = normal;
+			expect(s.normalMap).toBe(normal);
+		});
+
+		it("two sprites can share the same normalMap reference safely", () => {
+			const normal = video.createCanvas(16, 16);
+			const a = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+				normalMap: normal,
+			});
+			const b = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+				normalMap: normal,
+			});
+			expect(a.normalMap).toBe(b.normalMap);
+			expect(a.normalMap).toBe(normal);
+		});
+
+		it("Sprite swapped to a new normalMap mid-life: the old reference is dropped", () => {
+			const oldN = video.createCanvas(8, 8);
+			const newN = video.createCanvas(16, 16);
+			const s = new Sprite(0, 0, {
+				framewidth: 8,
+				frameheight: 8,
+				image: video.createCanvas(8, 8),
+				normalMap: oldN,
+			});
+			s.normalMap = newN;
+			expect(s.normalMap).toBe(newN);
+			expect(s.normalMap).not.toBe(oldN);
+		});
+
+		it("Sprite.destroy releases the normalMap reference even after re-assignment", () => {
+			const a = video.createCanvas(8, 8);
+			const b = video.createCanvas(16, 16);
+			const s = new Sprite(0, 0, {
+				framewidth: 8,
+				frameheight: 8,
+				image: video.createCanvas(8, 8),
+				normalMap: a,
+			});
+			s.normalMap = b; // swap to a different image
+			s.destroy();
+			expect(s.normalMap).toBeNull();
+		});
+
+		it("normalMap setter accepts a duck-typed image-like with numeric width/height", () => {
+			// HTMLVideoElement, ImageBitmap, OffscreenCanvas don't all exist
+			// in every test environment. The setter validates duck-typed
+			// `{ width, height }` so any shape that quacks like an image
+			// works.
+			const fakeBitmap = { width: 32, height: 32, close: () => {} };
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+			});
+			s.normalMap = fakeBitmap;
+			expect(s.normalMap).toBe(fakeBitmap);
+		});
+
+		it("normalMap setter accepts (does not reject) non-finite width/height — boundary doc", () => {
+			// `typeof NaN === "number"` is true, so the setter's
+			// `typeof value.width === "number"` check passes for NaN /
+			// Infinity. Test pins the current acceptance behavior so a
+			// future stricter validator (e.g. `Number.isFinite`) is a
+			// deliberate, test-failing change rather than a silent shift.
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+			});
+			expect(() => {
+				s.normalMap = { width: Number.NaN, height: Number.NaN };
+			}).not.toThrow();
+		});
+
+		it("normalMap setter rejects HTMLVideoElement-like sources (videoWidth present)", () => {
+			// Copilot regression: a `HTMLVideoElement` duck-types past the
+			// width/height check, but the lit pipeline caches the GL
+			// texture per image reference and would silently freeze on
+			// frame 0. Setter throws TypeError to make this obvious at
+			// assignment time instead of producing a confusing visual bug.
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+			});
+			const fakeVideo = {
+				width: 64,
+				height: 64,
+				videoWidth: 64,
+				videoHeight: 64,
+			};
+			expect(() => {
+				s.normalMap = fakeVideo;
+			}).toThrow(TypeError);
+			// constructor settings.normalMap goes through the setter too
+			expect(() => {
+				return new Sprite(0, 0, {
+					framewidth: 16,
+					frameheight: 16,
+					image: video.createCanvas(16, 16),
+					normalMap: fakeVideo,
+				});
+			}).toThrow(TypeError);
+		});
+	});
+
+	describe("Renderer.setLightUniforms (Canvas fallback warning)", () => {
+		it("emits a one-shot console warning when called with count > 0 in Canvas mode", () => {
+			const renderer = video.renderer;
+			// Reset the once-flag on the live renderer so we can re-trigger.
+			renderer._litPipelineWarned = false;
+
+			const orig = console.warn;
+			const warnings = [];
+			console.warn = (...args) => {
+				return warnings.push(args.join(" "));
+			};
+
+			const fakeLight = {
+				getBounds: () => {
+					return { centerX: 0, centerY: 0, width: 30, height: 30 };
+				},
+				intensity: 1,
+				color: { r: 255, g: 255, b: 255 },
+				lightHeight: 1,
+			};
+			try {
+				renderer.setLightUniforms([], null, 0, 0); // empty — no warn
+				renderer.setLightUniforms([fakeLight], null, 0, 0); // first warn
+				renderer.setLightUniforms(
+					[fakeLight, fakeLight, fakeLight, fakeLight, fakeLight],
+					null,
+					0,
+					0,
+				);
+				renderer.setLightUniforms([fakeLight], null, 0, 0);
+			} finally {
+				console.warn = orig;
+			}
+
+			// only the first non-empty call warns
+			expect(warnings.length).toBe(1);
+			expect(warnings[0]).toMatch(
+				/normal-map lighting requires the WebGL renderer/,
+			);
+		});
+
+		it("does NOT warn when count is 0 (every-frame default with no active lights)", () => {
+			const renderer = video.renderer;
+			renderer._litPipelineWarned = false;
+
+			const orig = console.warn;
+			const warnings = [];
+			console.warn = (...args) => {
+				return warnings.push(args.join(" "));
+			};
+
+			try {
+				for (let i = 0; i < 10; i++) {
+					renderer.setLightUniforms([], null, 0, 0);
+				}
+			} finally {
+				console.warn = orig;
+			}
+
+			expect(warnings.length).toBe(0);
 		});
 	});
 });

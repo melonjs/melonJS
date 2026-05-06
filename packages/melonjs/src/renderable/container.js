@@ -44,7 +44,7 @@ let globalFloatingCounter = 0;
  * Container represents a collection of child objects.
  * When no explicit dimensions are given, width and height default to Infinity,
  * meaning the container has no intrinsic size, no clipping, and acts as a pure
- * grouping/transform node (similar to PixiJS or Phaser containers).
+ * grouping/transform node.
  * In this case, anchorPoint is treated as (0, 0) since there is no meaningful
  * center for an infinite area. Bounds are then derived entirely from children
  * when {@link Container#enableChildBoundsUpdate} is enabled.
@@ -151,10 +151,10 @@ export default class Container extends Renderable {
 		// enable collision and event detection
 		this.isKinematic = false;
 
-		// container anchorPoint is always (0, 0) — children position from the
-		// container's origin (top-left), matching the convention used by other engines
-		// (PixiJS, Phaser). This also avoids Infinity * 0.5 = Infinity issues
-		// when the container has no explicit size.
+		// container anchorPoint is always (0, 0) — children position from
+		// the container's origin (top-left). This also avoids
+		// Infinity * 0.5 = Infinity issues when the container has no
+		// explicit size.
 		this.anchorPoint.set(0, 0);
 
 		// subscribe on the canvas resize event

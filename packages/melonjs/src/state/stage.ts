@@ -75,6 +75,17 @@ export default class Stage {
 	ambientLight: Color;
 
 	/**
+	 * Base light level applied to every normal-mapped sprite in the
+	 * lit rendering path. Unlike {@link Stage#ambientLight} (which is
+	 * the dark overlay punched by each light's cutout), this color is
+	 * added to every lit pixel so unlit areas don't render pure
+	 * black. Defaults to black (0, 0, 0) — sprites without a
+	 * `normalMap` ignore it entirely.
+	 * @default "#000000"
+	 */
+	ambientLightingColor: Color;
+
+	/**
 	 * The given constructor options
 	 */
 	settings: StageSettings;
@@ -90,6 +101,7 @@ export default class Stage {
 		this.lights = new Map();
 		this._activeLights = new Set();
 		this.ambientLight = new Color(0, 0, 0, 0);
+		this.ambientLightingColor = new Color(0, 0, 0, 1);
 		this.settings = Object.assign({}, default_settings, settings || {});
 	}
 

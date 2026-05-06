@@ -142,6 +142,27 @@ export default class Renderer {
 
 		// default uvOffset
 		this.uvOffset = 0;
+
+		/**
+		 * The normal-map texture associated with the next `drawImage` call,
+		 * if any. Set by `Sprite.draw` (and any other normal-map-aware
+		 * renderable) just before calling `drawImage`, then cleared back
+		 * to `null` after. The WebGL renderer reads this state and routes
+		 * lit quads through the shader's lighting path; the Canvas
+		 * renderer ignores it entirely.
+		 * @type {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|null}
+		 */
+		this.currentNormalMap = null;
+
+		/**
+		 * Number of active `Light2d` instances uploaded to the lit batcher
+		 * for the current frame. Set by `setLightUniforms`. The WebGL
+		 * renderer's `drawImage` reads this to decide between the unlit
+		 * fast-path batcher (default) and the lit batcher (only when
+		 * lights AND a normal map are both in play).
+		 * @type {number}
+		 */
+		this.activeLightCount = 0;
 	}
 
 	/**
@@ -376,6 +397,46 @@ export default class Renderer {
 	 */
 	setBlendMode(mode = "normal") {
 		this.currentBlendMode = mode;
+	}
+
+	/**
+	 * Upload the active scene lights to the lit sprite pipeline.
+	 *
+	 * Called once per camera per frame by `Camera2d.draw()` (after the
+	 * FBO is bound, before the world tree walk fires `Sprite.draw` for
+	 * any normal-mapped sprite). The WebGL renderer overrides this to
+	 * pack the lights into the lit shader's uniform buffers; the Canvas
+	 * renderer cannot do per-pixel normal-map lighting and silently
+	 * ignores the call. The first time a non-empty light list is passed
+	 * in Canvas mode, a one-shot console warning is emitted.
+	 *
+	 * Stage stays renderer-agnostic by passing the raw scene data —
+	 * lights iterable and ambient color — and letting the renderer
+	 * decide how to encode them.
+	 * @param {Iterable<object>} [lights] - active `Light2d` instances; falsy/empty no-ops
+	 * @param {object} [ambient] - ambient lighting color (0..255 RGB)
+	 * @param {number} [translateX=0] - world-to-screen X translate (matches `Camera2d.draw()`)
+	 * @param {number} [translateY=0] - world-to-screen Y translate
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	setLightUniforms(lights, ambient, translateX, translateY) {
+		if (this._litPipelineWarned || !lights) {
+			return;
+		}
+		// detect "non-empty" via `Set.size`, array length, or by iterating
+		const hasAny =
+			(typeof lights.size === "number" && lights.size > 0) ||
+			(typeof lights.length === "number" && lights.length > 0) ||
+			(typeof lights[Symbol.iterator] === "function" &&
+				!lights[Symbol.iterator]().next().done);
+		if (hasAny) {
+			this._litPipelineWarned = true;
+			console.warn(
+				"melonJS: Light2d normal-map lighting requires the WebGL renderer; " +
+					"the Canvas fallback renders sprites without per-pixel lighting. " +
+					"Switch to `video.WEBGL` or `video.AUTO` to enable the lit pipeline.",
+			);
+		}
 	}
 
 	/**

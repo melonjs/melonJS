@@ -51,8 +51,13 @@ describe("Timer", () => {
 
 			expect(fn).not.toHaveBeenCalled();
 
+			// Assert "fires repeatedly" (the setInterval contract) instead of
+			// an exact call count — under CI load, `vi.waitFor`'s first poll
+			// can land past the target N, and the equality condition never
+			// becomes true again. Two calls is enough to prove it's an
+			// interval and not a one-shot.
 			await vi.waitFor(() => {
-				expect(fn).toHaveBeenCalledTimes(5);
+				expect(fn.mock.calls.length).toBeGreaterThanOrEqual(2);
 			});
 		});
 
