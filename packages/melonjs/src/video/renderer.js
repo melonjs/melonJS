@@ -413,7 +413,7 @@ export default class Renderer {
 	 *
 	 * The WebGL renderer overrides this method and forwards to its quad
 	 * batcher.
-	 * @param {object} uniforms - lighting uniforms (positions, colors, count, ambient)
+	 * @param {object} [uniforms] - lighting uniforms (positions, colors, count, ambient); falsy values no-op
 	 * @see Stage#collectLightingUniforms
 	 */
 	setLightUniforms(uniforms) {

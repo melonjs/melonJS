@@ -940,35 +940,10 @@ export default class Camera2d extends Renderable {
 		// — after `setProjection()` (which can flush the current batch)
 		// and before `container.draw()` walks the world tree — so the
 		// uniforms are guaranteed to apply to every lit quad pushed by
-		// the upcoming draw walk. Computed from the active stage and
-		// translated into the same camera-local space the world container
-		// renders into.
-		//
-		// Gated on `renderer.batchers` (a WebGL-only field): Canvas has no
-		// lit pipeline, and `collectLightingUniforms` allocates / iterates
-		// every active light per camera per frame — pure waste in Canvas
-		// mode. The WebGL renderer's `setLightUniforms` is also a no-op
-		// when no `litQuad` batcher is registered, so this gate just
-		// avoids the upstream work.
-		const rendererWithBatchers = renderer as Renderer & {
-			batchers?: Map<string, unknown>;
-		};
-		const hasLitPipeline =
-			rendererWithBatchers.batchers !== undefined &&
-			rendererWithBatchers.batchers.has("litQuad");
-		if (hasLitPipeline) {
-			const litStage = state.current() as {
-				collectLightingUniforms?: (
-					translateX: number,
-					translateY: number,
-				) => Parameters<Renderer["setLightUniforms"]>[0];
-			} | null;
-			if (litStage && typeof litStage.collectLightingUniforms === "function") {
-				renderer.setLightUniforms(
-					litStage.collectLightingUniforms(translateX, translateY),
-				);
-			}
-		}
+		// the upcoming draw walk. Canvas's `setLightUniforms` is a no-op.
+		renderer.setLightUniforms(
+			state.current()?.collectLightingUniforms(translateX, translateY),
+		);
 
 		container.preDraw(r);
 

@@ -498,7 +498,7 @@ export default class WebGLRenderer extends Renderer {
 	 * silently dropped. Also caches the active light count on the
 	 * renderer so `drawImage` can dispatch normal-mapped sprites to the
 	 * lit batcher only when there's something to light them with.
-	 * @param {object} uniforms - returned by `Stage#collectLightingUniforms`
+	 * @param {object} [uniforms] - returned by `Stage#collectLightingUniforms`; falsy values no-op
 	 * @param {Float32Array} uniforms.positions - flat `[x, y, radius, intensity]` per light
 	 * @param {Float32Array} uniforms.colors - flat `[r, g, b]` per light (0..1)
 	 * @param {number} uniforms.count - number of valid lights
