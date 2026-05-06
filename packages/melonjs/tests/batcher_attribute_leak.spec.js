@@ -337,3 +337,91 @@ describe("WebGLRenderer.drawImage lit/unlit dispatch", () => {
 		expect(gl.getParameter(gl.CURRENT_PROGRAM)).toBe(expectedProgram);
 	});
 });
+
+describe("LitQuadBatcher internal bookkeeping invariants", () => {
+	// These tests probe internal state that GL doesn't expose (and that
+	// observable invariants like `gl.getError()` won't surface). They guard
+	// against silent desync between MaterialBatcher's per-unit bookkeeping
+	// (`boundTextures`, `currentTextureUnit`) and the actual GL bind state.
+	// A desync doesn't break rendering today (color/normal slot ranges don't
+	// overlap) but would silently corrupt any future feature that reads the
+	// bookkeeping — e.g. an LRU evict, a debug overlay, or unit re-purposing.
+	let renderer;
+	let isWebGL;
+
+	beforeAll(() => {
+		boot();
+		video.init(800, 600, {
+			parent: "screen",
+			scale: "auto",
+			renderer: video.WEBGL,
+			failIfMajorPerformanceCaveat: false,
+		});
+		renderer = video.renderer;
+		isWebGL = renderer instanceof WebGLRenderer;
+	});
+
+	afterAll(() => {
+		video.init(800, 600, {
+			parent: "screen",
+			scale: "auto",
+			renderer: video.AUTO,
+		});
+	});
+
+	it("cached normal-map rebind updates boundTextures and currentTextureUnit", () => {
+		// Original Copilot-reported bug: the cached branch in
+		// `_uploadOrBindNormalMap` was using raw `gl.activeTexture` +
+		// `gl.bindTexture`, which set GL state correctly but didn't update
+		// MaterialBatcher's `boundTextures[unit]` / `currentTextureUnit`.
+		// Switched to `bindTexture2D(cached, unit, false)` so a subsequent
+		// color-texture upload at the same unit can correctly skip the
+		// rebind (or, conversely, knows the slot is already taken).
+		if (!isWebGL) {
+			return;
+		}
+		const lit = renderer.batchers.get("litQuad");
+		const normal = video.createCanvas(8, 8);
+		const unit = lit.maxBatchTextures; // first paired-normal slot
+
+		// first call: createTexture2D path. Populates boundTextures[unit].
+		lit._uploadOrBindNormalMap(normal, unit);
+		const tex = lit.boundTextures[unit];
+		expect(tex).toBeDefined();
+		expect(lit.normalMapTextures.get(normal)).toBe(tex);
+
+		// simulate the bookkeeping going stale (e.g. another unit took over,
+		// the slot was reset, etc.). The cached rebind must restore it.
+		lit.boundTextures[unit] = undefined;
+		lit.currentTextureUnit = -1;
+
+		// second call: cached path. Must restore boundTextures[unit] and
+		// currentTextureUnit, not just GL state.
+		lit._uploadOrBindNormalMap(normal, unit);
+		expect(lit.boundTextures[unit]).toBe(tex);
+		expect(lit.currentTextureUnit).toBe(unit);
+	});
+
+	it("cached rebind to the SAME unit doesn't trigger redundant work", () => {
+		// Sanity check: if the bookkeeping already says this unit holds the
+		// texture, the cached path should be a true no-op (no flush, no
+		// activeTexture, no bindTexture). `bindTexture2D` skips the work
+		// when `texture === boundTextures[unit] && unit === currentTextureUnit`.
+		if (!isWebGL) {
+			return;
+		}
+		const lit = renderer.batchers.get("litQuad");
+		const normal = video.createCanvas(8, 8);
+		const unit = lit.maxBatchTextures;
+
+		lit._uploadOrBindNormalMap(normal, unit);
+		const before = {
+			tex: lit.boundTextures[unit],
+			currentUnit: lit.currentTextureUnit,
+		};
+		// rebind without disturbing state: no observable change
+		lit._uploadOrBindNormalMap(normal, unit);
+		expect(lit.boundTextures[unit]).toBe(before.tex);
+		expect(lit.currentTextureUnit).toBe(before.currentUnit);
+	});
+});
