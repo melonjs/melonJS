@@ -12,8 +12,7 @@ const FLICKER_INTERVAL_MS = 33;
 /**
  * additional import for TypeScript
  * @import {Vector2d} from "../math/vector2d.js";
- * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
- * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
+ * @import Renderer from "./../video/renderer.js";
  */
 
 /**
@@ -787,7 +786,7 @@ export default class Sprite extends Renderable {
 	 * Extends `Renderable.preDraw` to publish this sprite's `normalMap` (if any)
 	 * on the renderer so the WebGL lit pipeline can pair it with the next
 	 * `drawImage` call. Cleared back in `postDraw`.
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 * @param {Renderer} renderer - a renderer instance
 	 */
 	preDraw(renderer) {
 		super.preDraw(renderer);
@@ -802,7 +801,7 @@ export default class Sprite extends Renderable {
 
 	/**
 	 * restore the rendering context after drawing this sprite (automatically called by melonJS).
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 * @param {Renderer} renderer - a renderer instance
 	 */
 	postDraw(renderer) {
 		// Clear the slot so a subsequent un-lit sprite isn't accidentally lit.
@@ -814,7 +813,7 @@ export default class Sprite extends Renderable {
 
 	/**
 	 * draw this sprite (automatically called by melonJS)
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 * @param {Renderer} renderer - a renderer instance
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
 	 */
 	draw(renderer) {

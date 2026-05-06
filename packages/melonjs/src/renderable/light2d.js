@@ -9,8 +9,7 @@ import Renderable from "./renderable.js";
  * additional import for TypeScript
  * @import {Color} from "./../math/color.ts";
  * @import {Ellipse} from "./../geometries/ellipse.ts";
- * @import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
- * @import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
+ * @import Renderer from "./../video/renderer.js";
  */
 
 /** @ignore */
@@ -266,7 +265,7 @@ export default class Light2d extends Renderable {
 	 * preDraw this Light2d (automatically called by melonJS)
 	 * Note: The renderer should set the blend mode again (after drawing other Light2d objects)
 	 * to ensure colors blend correctly in the CanvasRenderer.
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 * @param {Renderer} renderer - a renderer instance
 	 */
 	preDraw(renderer) {
 		super.preDraw(renderer);
@@ -275,7 +274,7 @@ export default class Light2d extends Renderable {
 
 	/**
 	 * draw this Light2d (automatically called by melonJS)
-	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 * @param {Renderer} renderer - a renderer instance
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
 	 */
 	draw(renderer) {
