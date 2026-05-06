@@ -400,24 +400,36 @@ export default class Renderer {
 	}
 
 	/**
-	 * Upload per-frame Light2d uniforms used by the WebGL renderer's lit
-	 * sprite pipeline (normal-map shading). Called once per camera per
-	 * frame by `Camera2d.draw()` after the FBO is bound and before the
-	 * world tree walk fires `Sprite.draw` for any normal-mapped sprite.
+	 * Upload the active scene lights to the lit sprite pipeline.
 	 *
-	 * The Canvas renderer (this base implementation) cannot do per-pixel
-	 * normal-map lighting and silently ignores the call. The first time
-	 * a non-empty light list is passed in Canvas mode, a one-shot
-	 * console warning is emitted so the user knows the normal-map
-	 * pipeline isn't running.
+	 * Called once per camera per frame by `Camera2d.draw()` (after the
+	 * FBO is bound, before the world tree walk fires `Sprite.draw` for
+	 * any normal-mapped sprite). The WebGL renderer overrides this to
+	 * pack the lights into the lit shader's uniform buffers; the Canvas
+	 * renderer cannot do per-pixel normal-map lighting and silently
+	 * ignores the call. The first time a non-empty light list is passed
+	 * in Canvas mode, a one-shot console warning is emitted.
 	 *
-	 * The WebGL renderer overrides this method and forwards to its quad
-	 * batcher.
-	 * @param {object} [uniforms] - lighting uniforms (positions, colors, count, ambient); falsy values no-op
-	 * @see Stage#collectLightingUniforms
+	 * Stage stays renderer-agnostic by passing the raw scene data —
+	 * lights iterable and ambient color — and letting the renderer
+	 * decide how to encode them.
+	 * @param {Iterable<object>} [lights] - active `Light2d` instances; falsy/empty no-ops
+	 * @param {object} [ambient] - ambient lighting color (0..255 RGB)
+	 * @param {number} [translateX=0] - world-to-screen X translate (matches `Camera2d.draw()`)
+	 * @param {number} [translateY=0] - world-to-screen Y translate
 	 */
-	setLightUniforms(uniforms) {
-		if (!this._litPipelineWarned && uniforms && uniforms.count > 0) {
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	setLightUniforms(lights, ambient, translateX, translateY) {
+		if (this._litPipelineWarned || !lights) {
+			return;
+		}
+		// detect "non-empty" via `Set.size`, array length, or by iterating
+		const hasAny =
+			(typeof lights.size === "number" && lights.size > 0) ||
+			(typeof lights.length === "number" && lights.length > 0) ||
+			(typeof lights[Symbol.iterator] === "function" &&
+				!lights[Symbol.iterator]().next().done);
+		if (hasAny) {
 			this._litPipelineWarned = true;
 			console.warn(
 				"melonJS: Light2d normal-map lighting requires the WebGL renderer; " +

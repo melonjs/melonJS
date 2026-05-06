@@ -24,6 +24,7 @@ import LitQuadBatcher from "./batchers/lit_quad_batcher";
 import MeshBatcher from "./batchers/mesh_batcher";
 import PrimitiveBatcher from "./batchers/primitive_batcher";
 import QuadBatcher from "./batchers/quad_batcher";
+import { createLightUniformScratch, packLights } from "./lighting/pack.ts";
 import { getMaxShaderPrecision } from "./utils/precision.js";
 
 /**
@@ -494,29 +495,42 @@ export default class WebGLRenderer extends Renderer {
 
 	/**
 	 * Upload per-frame Light2d uniforms used by the lit sprite pipeline.
-	 * Forwards to `LitQuadBatcher`. Lights past `MAX_LIGHTS` (8) are
-	 * silently dropped. Also caches the active light count on the
-	 * renderer so `drawImage` can dispatch normal-mapped sprites to the
-	 * lit batcher only when there's something to light them with.
-	 * @param {object} [uniforms] - returned by `Stage#collectLightingUniforms`; falsy values no-op
-	 * @param {Float32Array} uniforms.positions - flat `[x, y, radius, intensity]` per light
-	 * @param {Float32Array} uniforms.colors - flat `[r, g, b]` per light (0..1)
-	 * @param {number} uniforms.count - number of valid lights
-	 * @param {number[]} uniforms.ambient - `[r, g, b]` ambient floor (0..1 each)
+	 *
+	 * Packs the active lights into pre-allocated scratch buffers, then
+	 * forwards to `LitQuadBatcher`. Light positions are translated from
+	 * world-space (where `light.getBounds().centerX/Y` lives) into the
+	 * renderer's pre-projection coords by subtracting `(translateX, translateY)`,
+	 * matching what `Stage.drawLighting` does for the cutout pass — so
+	 * the lit fragment's `lightPos - vWorldPos` math lines up with the
+	 * camera's view.
+	 *
+	 * Lights past `MAX_LIGHTS` (8) are silently dropped. Also caches the
+	 * active light count on the renderer so `drawImage` can dispatch
+	 * normal-mapped sprites to the lit batcher only when there's
+	 * something to light them with.
+	 * @param {Iterable<object>} [lights] - active `Light2d` instances; falsy/empty no-ops the lit pipeline
+	 * @param {object} [ambient] - ambient lighting color (0..255 RGB); defaults to black
+	 * @param {number} [translateX=0] - world-to-screen X translate (matches `Camera2d.draw()`)
+	 * @param {number} [translateY=0] - world-to-screen Y translate
 	 */
-	setLightUniforms(uniforms) {
-		// guard against undefined / null: callers (Camera2d.draw) may forward
-		// the result of `Stage.collectLightingUniforms` directly, and a
-		// future Stage subclass that doesn't implement that method would
-		// otherwise crash here on `uniforms.count`.
-		if (!uniforms) {
-			this.activeLightCount = 0;
-			return;
+	setLightUniforms(lights, ambient, translateX = 0, translateY = 0) {
+		// scratch is allocated lazily on first call so non-lit scenes
+		// don't pay for it
+		if (this._lightUniformsScratch === undefined) {
+			this._lightUniformsScratch = createLightUniformScratch();
 		}
-		this.activeLightCount = uniforms.count | 0;
+		const u = packLights(
+			lights,
+			ambient,
+			translateX,
+			translateY,
+			this._lightUniformsScratch,
+		);
+
+		this.activeLightCount = u.count;
 		const lit = this.batchers.get("litQuad");
 		if (lit && typeof lit.setLightUniforms === "function") {
-			lit.setLightUniforms(uniforms);
+			lit.setLightUniforms(u);
 			// `GLShader.setUniform` calls `gl.useProgram` internally to
 			// guarantee the right program is active for the upload. Since
 			// litQuad is rarely the *active* batcher (most frames have no

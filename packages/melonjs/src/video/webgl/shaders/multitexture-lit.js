@@ -1,4 +1,4 @@
-import { MAX_LIGHTS } from "../../../lighting/constants.ts";
+import { MAX_LIGHTS } from "../lighting/constants.ts";
 
 // re-export so existing batcher imports keep working
 export { MAX_LIGHTS };

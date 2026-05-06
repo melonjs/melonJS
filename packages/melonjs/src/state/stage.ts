@@ -1,6 +1,5 @@
 import type Application from "./../application/application.ts";
 import Camera2d from "./../camera/camera2d.ts";
-import { MAX_LIGHTS } from "./../lighting/constants.ts";
 import { Color } from "./../math/color.ts";
 import type World from "./../physics/world.js";
 import type Light2d from "./../renderable/light2d.js";
@@ -87,18 +86,6 @@ export default class Stage {
 	ambientLightingColor: Color;
 
 	/**
-	 * scratch buffers for `collectLightingUniforms()` so the per-frame
-	 * uniform upload doesn't allocate.
-	 * @ignore
-	 */
-	_lightUniformsScratch: {
-		positions: Float32Array;
-		colors: Float32Array;
-		heights: Float32Array;
-		ambient: number[];
-	} | null;
-
-	/**
 	 * The given constructor options
 	 */
 	settings: StageSettings;
@@ -115,7 +102,6 @@ export default class Stage {
 		this._activeLights = new Set();
 		this.ambientLight = new Color(0, 0, 0, 0);
 		this.ambientLightingColor = new Color(0, 0, 0, 1);
-		this._lightUniformsScratch = null;
 		this.settings = Object.assign({}, default_settings, settings || {});
 	}
 
@@ -268,94 +254,6 @@ export default class Stage {
 		r.fillRect(tx, ty, camera.width, camera.height);
 		r.clearMask();
 		r.restore();
-	}
-
-	/**
-	 * Collect the per-frame lighting uniforms used by the WebGL renderer's
-	 * lit pipeline (sprite normal-map shading). Returns an object with
-	 * flat `Float32Array`s suitable for direct upload via
-	 * `WebGLRenderer.setLightUniforms`.
-	 *
-	 * Light positions are translated from world-space (where
-	 * `light.getBounds().centerX/Y` lives) into the renderer's
-	 * pre-projection coords by subtracting `(translateX, translateY)` —
-	 * the same translate `Camera2d.draw()` applies to the world
-	 * container. This matches what `Stage.drawLighting` does for the
-	 * cutout pass, so the lit fragment's `lightPos - vWorldPos` math
-	 * lines up with the camera's view.
-	 *
-	 * The returned `positions` packs `[x, y, radius, intensity]` per
-	 * light; `colors` packs `[r, g, b]`. Lights past `MAX_LIGHTS` (8)
-	 * are silently dropped — no animation system has more than that
-	 * for a single visible scene in practice, and the cap keeps the
-	 * shader compatible with WebGL1's uniform-array size limits.
-	 *
-	 * Both buffers are reused across frames; callers must not retain
-	 * references between frames.
-	 * @param translateX - world-to-screen X translate (matches `Camera2d.draw()`)
-	 * @param translateY - world-to-screen Y translate
-	 * @returns lighting uniforms ready for the renderer
-	 */
-	collectLightingUniforms(
-		translateX: number,
-		translateY: number,
-	): {
-		positions: Float32Array;
-		colors: Float32Array;
-		heights: Float32Array;
-		count: number;
-		ambient: number[];
-	} {
-		// `MAX_LIGHTS` is imported from `lighting/constants.ts` — single
-		// source of truth shared with the lit fragment shader and the
-		// `LitQuadBatcher.setLightUniforms` clamp.
-		if (this._lightUniformsScratch === null) {
-			this._lightUniformsScratch = {
-				positions: new Float32Array(MAX_LIGHTS * 4),
-				colors: new Float32Array(MAX_LIGHTS * 3),
-				heights: new Float32Array(MAX_LIGHTS),
-				ambient: [0, 0, 0],
-			};
-		}
-		const scratch = this._lightUniformsScratch;
-		// reset to zero for any unused slots so stale data from the
-		// previous frame doesn't leak into the shader
-		scratch.positions.fill(0);
-		scratch.colors.fill(0);
-		scratch.heights.fill(0);
-
-		let i = 0;
-		this._activeLights.forEach((light) => {
-			if (i >= MAX_LIGHTS) {
-				return;
-			}
-			const b = light.getBounds();
-			// derive the radius from the transform-aware bbox (so a
-			// scaled light's brightness range tracks its visible range —
-			// matches the cutout pass's `getVisibleArea()` sizing)
-			const radius = Math.max(b.width, b.height) / 2;
-			scratch.positions[i * 4 + 0] = b.centerX - translateX;
-			scratch.positions[i * 4 + 1] = b.centerY - translateY;
-			scratch.positions[i * 4 + 2] = radius;
-			scratch.positions[i * 4 + 3] = light.intensity;
-			scratch.colors[i * 3 + 0] = light.color.r / 255;
-			scratch.colors[i * 3 + 1] = light.color.g / 255;
-			scratch.colors[i * 3 + 2] = light.color.b / 255;
-			scratch.heights[i] = light.lightHeight;
-			i++;
-		});
-
-		scratch.ambient[0] = this.ambientLightingColor.r / 255;
-		scratch.ambient[1] = this.ambientLightingColor.g / 255;
-		scratch.ambient[2] = this.ambientLightingColor.b / 255;
-
-		return {
-			positions: scratch.positions,
-			colors: scratch.colors,
-			heights: scratch.heights,
-			count: i,
-			ambient: scratch.ambient,
-		};
 	}
 
 	/**

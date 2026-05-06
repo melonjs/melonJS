@@ -286,41 +286,53 @@ describe("WebGLRenderer.drawImage lit/unlit dispatch", () => {
 			return;
 		}
 		const lit = renderer.batchers.get("litQuad");
-		renderer.setLightUniforms({
-			count: 2,
-			positions: new Float32Array(8 * 4),
-			colors: new Float32Array(8 * 3),
-			heights: new Float32Array(8),
-			ambient: [0.2, 0.2, 0.2],
-		});
+		// fake two lights with the duck-typed shape `packLights` reads
+		const fakeLight = (cx, cy) => {
+			return {
+				getBounds: () => {
+					return { centerX: cx, centerY: cy, width: 30, height: 30 };
+				},
+				intensity: 1,
+				color: { r: 255, g: 255, b: 255 },
+				lightHeight: 1.5,
+			};
+		};
+		renderer.setLightUniforms(
+			[fakeLight(10, 20), fakeLight(50, 60)],
+			{ r: 50, g: 50, b: 50 },
+			0,
+			0,
+		);
 		expect(renderer.activeLightCount).toBe(2);
 		expect(lit._lightCount).toBe(2);
 	});
 
-	it("setLightUniforms tolerates undefined uniforms (no throw, count = 0)", () => {
-		// Copilot regression: WebGLRenderer.setLightUniforms used to read
-		// `uniforms.count` directly, throwing TypeError when called with
-		// undefined/null. Camera2d.draw forwards the result of
-		// Stage.collectLightingUniforms — a future Stage subclass that
-		// doesn't implement that method would crash here.
+	it("setLightUniforms tolerates undefined / empty inputs (no throw, count = 0)", () => {
+		// Camera2d.draw forwards `stage?._activeLights` — when there's no
+		// active stage, both lights and ambient are undefined.
 		if (!isWebGL) {
 			return;
 		}
 		expect(() => {
-			renderer.setLightUniforms(undefined);
+			renderer.setLightUniforms(undefined, undefined, 0, 0);
 		}).not.toThrow();
 		expect(renderer.activeLightCount).toBe(0);
 
 		expect(() => {
-			renderer.setLightUniforms(null);
+			renderer.setLightUniforms(null, null, 0, 0);
+		}).not.toThrow();
+		expect(renderer.activeLightCount).toBe(0);
+
+		expect(() => {
+			renderer.setLightUniforms([], { r: 0, g: 0, b: 0 }, 0, 0);
 		}).not.toThrow();
 		expect(renderer.activeLightCount).toBe(0);
 	});
 
 	it("setLightUniforms must not leak gl.useProgram out of the active batcher", () => {
 		// Real-world reproducer for the bug that broke the platformer:
-		// every camera draw calls `renderer.setLightUniforms({count: 0, ...})`
-		// even when the scene has no lights. That call writes to litQuad's
+		// every camera draw calls `renderer.setLightUniforms(...)` even
+		// when the scene has no lights. That call writes to litQuad's
 		// shader, and `GLShader.setUniform` flips `gl.useProgram` to litQuad's
 		// program. If the renderer doesn't restore the active batcher's
 		// program before the next draw, quad's 4-attribute vertex data gets
@@ -336,15 +348,9 @@ describe("WebGLRenderer.drawImage lit/unlit dispatch", () => {
 		const expectedProgram = quad.defaultShader.program;
 		expect(gl.getParameter(gl.CURRENT_PROGRAM)).toBe(expectedProgram);
 
-		// simulate Camera2d.draw uploading per-frame light uniforms (count 0
-		// is the platformer case — no lights but the call still fires)
-		renderer.setLightUniforms({
-			count: 0,
-			positions: new Float32Array(8 * 4),
-			colors: new Float32Array(8 * 3),
-			heights: new Float32Array(8),
-			ambient: [0, 0, 0],
-		});
+		// simulate Camera2d.draw uploading per-frame light state (no
+		// lights — the platformer case)
+		renderer.setLightUniforms([], { r: 0, g: 0, b: 0 }, 0, 0);
 
 		// gl.useProgram must still point to quad's program — otherwise the
 		// next drawImage will render quad data through litQuad's shader

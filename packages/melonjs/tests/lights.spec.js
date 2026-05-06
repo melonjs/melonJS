@@ -10,6 +10,24 @@ import {
 	state,
 	video,
 } from "../src/index.js";
+import {
+	createLightUniformScratch,
+	packLights,
+} from "../src/video/webgl/lighting/pack.ts";
+
+// Replaces the old `Stage.collectLightingUniforms` method (removed
+// because it gave Stage a renderer-specific shape; lights/ambient
+// stay on Stage, the GPU-shape packing lives in `video/webgl/lighting`).
+const _packScratch = createLightUniformScratch();
+function packStage(stage, translateX = 0, translateY = 0) {
+	return packLights(
+		stage._activeLights,
+		stage.ambientLightingColor,
+		translateX,
+		translateY,
+		_packScratch,
+	);
+}
 
 describe("Light2d + Stage lighting", () => {
 	beforeAll(() => {
@@ -876,7 +894,7 @@ describe("Light2d + Stage lighting", () => {
 
 			expect(stage._activeLights.has(light)).toBe(true);
 
-			const u = stage.collectLightingUniforms(0, 0);
+			const u = packStage(stage, 0, 0);
 			expect(u.count).toBe(1);
 			expect(u.positions[0]).toBe(120);
 			expect(u.positions[1]).toBe(80);
@@ -984,7 +1002,7 @@ describe("Light2d + Stage lighting", () => {
 
 		it("returns count = 0 and zero-padded buffers when no lights are active", () => {
 			const stage = freshLitState();
-			const u = stage.collectLightingUniforms(0, 0);
+			const u = packStage(stage, 0, 0);
 			expect(u.count).toBe(0);
 			expect(u.positions).toBeInstanceOf(Float32Array);
 			expect(u.colors).toBeInstanceOf(Float32Array);
@@ -1004,7 +1022,7 @@ describe("Light2d + Stage lighting", () => {
 			const light = new Light2d(120, 80, 30, 30, "#ff0000", 0.6);
 			game.world.addChild(light);
 
-			const u = stage.collectLightingUniforms(0, 0);
+			const u = packStage(stage, 0, 0);
 			expect(u.count).toBe(1);
 			expect(u.positions[0]).toBe(120); // worldX
 			expect(u.positions[1]).toBe(80); // worldY
@@ -1025,7 +1043,7 @@ describe("Light2d + Stage lighting", () => {
 			const light = new Light2d(200, 150, 40, 40);
 			game.world.addChild(light);
 
-			const u = stage.collectLightingUniforms(50, 30);
+			const u = packStage(stage, 50, 30);
 			expect(u.positions[0]).toBe(150); // 200 − 50
 			expect(u.positions[1]).toBe(120); // 150 − 30
 
@@ -1037,7 +1055,7 @@ describe("Light2d + Stage lighting", () => {
 			const light = new Light2d(0, 0, 80, 25, "#fff", 1);
 			game.world.addChild(light);
 
-			const u = stage.collectLightingUniforms(0, 0);
+			const u = packStage(stage, 0, 0);
 			expect(u.positions[2]).toBe(80); // max of radiusX/radiusY
 
 			game.world.removeChildNow(light, true);
@@ -1052,7 +1070,7 @@ describe("Light2d + Stage lighting", () => {
 			game.world.addChild(b);
 			game.world.addChild(c);
 
-			const u = stage.collectLightingUniforms(0, 0);
+			const u = packStage(stage, 0, 0);
 			expect(u.count).toBe(3);
 			// the iteration order isn't guaranteed but each entry must
 			// match one of the lights — assert by collecting positions
@@ -1078,7 +1096,7 @@ describe("Light2d + Stage lighting", () => {
 				game.world.addChild(l);
 			}
 
-			const u = stage.collectLightingUniforms(0, 0);
+			const u = packStage(stage, 0, 0);
 			expect(u.count).toBe(8);
 
 			for (const l of lights) {
@@ -1097,12 +1115,12 @@ describe("Light2d + Stage lighting", () => {
 			const light = new Light2d(40, 40, 30, 30);
 			game.world.addChild(light);
 
-			let u = stage.collectLightingUniforms(0, 0);
+			let u = packStage(stage, 0, 0);
 			const beforeR = u.positions[2];
 			expect(beforeR).toBeCloseTo(30); // half of bounds.width (60) at scale 1
 
 			light.scale(2);
-			u = stage.collectLightingUniforms(0, 0);
+			u = packStage(stage, 0, 0);
 			const afterR = u.positions[2];
 			expect(afterR).toBeCloseTo(60); // bounds.width doubled
 
@@ -1121,7 +1139,7 @@ describe("Light2d + Stage lighting", () => {
 			game.world.addChild(a);
 			game.world.addChild(b);
 
-			const u = stage.collectLightingUniforms(0, 0);
+			const u = packStage(stage, 0, 0);
 			expect(u.heights).toBeInstanceOf(Float32Array);
 			expect(u.heights.length).toBe(8); // MAX_LIGHTS
 			// default for `a`: max(100, 50) * 0.075 = 7.5
@@ -1139,7 +1157,7 @@ describe("Light2d + Stage lighting", () => {
 		it("packs ambientLightingColor (RGB / 255) into the ambient slot", () => {
 			const stage = freshLitState();
 			stage.ambientLightingColor.setColor(85, 85, 85);
-			const u = stage.collectLightingUniforms(0, 0);
+			const u = packStage(stage, 0, 0);
 			expect(u.ambient[0]).toBeCloseTo(85 / 255, 3);
 			expect(u.ambient[1]).toBeCloseTo(85 / 255, 3);
 			expect(u.ambient[2]).toBeCloseTo(85 / 255, 3);
@@ -1149,8 +1167,8 @@ describe("Light2d + Stage lighting", () => {
 			const stage = freshLitState();
 			const light = new Light2d(0, 0, 10);
 			game.world.addChild(light);
-			const u1 = stage.collectLightingUniforms(0, 0);
-			const u2 = stage.collectLightingUniforms(0, 0);
+			const u1 = packStage(stage, 0, 0);
+			const u2 = packStage(stage, 0, 0);
 			expect(u1.positions).toBe(u2.positions);
 			expect(u1.colors).toBe(u2.colors);
 			game.world.removeChildNow(light, true);
@@ -1165,10 +1183,10 @@ describe("Light2d + Stage lighting", () => {
 			const b = new Light2d(80, 80, 5, 5);
 			game.world.addChild(a);
 			game.world.addChild(b);
-			stage.collectLightingUniforms(0, 0); // frame 1
+			packStage(stage, 0, 0); // frame 1
 			game.world.removeChildNow(b, true);
 
-			const u = stage.collectLightingUniforms(0, 0); // frame 2
+			const u = packStage(stage, 0, 0); // frame 2
 			expect(u.count).toBe(1);
 			// the active light landed in slot 0; verify slot 1 is zeroed
 			expect(u.positions[4]).toBe(0);
@@ -1207,7 +1225,7 @@ describe("Light2d + Stage lighting", () => {
 				lights.push(l);
 				game.world.addChild(l);
 			}
-			const u = stage.collectLightingUniforms(0, 0);
+			const u = packStage(stage, 0, 0);
 			expect(u.count).toBe(8);
 			// every slot in the buffer must be reachable (no out-of-range writes)
 			expect(u.positions.length).toBe(8 * 4);
@@ -1226,7 +1244,7 @@ describe("Light2d + Stage lighting", () => {
 			const l = new Light2d(40, 40, 30, 30);
 			l.lightHeight = 0;
 			game.world.addChild(l);
-			const u = stage.collectLightingUniforms(0, 0);
+			const u = packStage(stage, 0, 0);
 			expect(u.count).toBe(1);
 			expect(u.heights[0]).toBe(0);
 			expect(Number.isFinite(u.positions[0])).toBe(true);
@@ -1243,7 +1261,7 @@ describe("Light2d + Stage lighting", () => {
 			const l = new Light2d(0, 0, 10, 10);
 			l.lightHeight = -25;
 			game.world.addChild(l);
-			const u = stage.collectLightingUniforms(0, 0);
+			const u = packStage(stage, 0, 0);
 			expect(u.heights[0]).toBe(-25);
 			game.world.removeChildNow(l, true);
 		});
@@ -1255,7 +1273,7 @@ describe("Light2d + Stage lighting", () => {
 			const stage = freshLitState();
 			const l = new Light2d(0, 0, 50, 50, "#fff", -0.5);
 			game.world.addChild(l);
-			const u = stage.collectLightingUniforms(0, 0);
+			const u = packStage(stage, 0, 0);
 			expect(u.positions[3]).toBe(-0.5); // intensity slot
 			game.world.removeChildNow(l, true);
 		});
@@ -1268,7 +1286,7 @@ describe("Light2d + Stage lighting", () => {
 			const stage = freshLitState();
 			const l = new Light2d(50, 50, 1, 1);
 			game.world.addChild(l);
-			const u = stage.collectLightingUniforms(0, 0);
+			const u = packStage(stage, 0, 0);
 			expect(u.count).toBe(1);
 			expect(u.positions[2]).toBe(1); // radius from bbox half-width
 			expect(Number.isFinite(u.positions[0])).toBe(true);
@@ -1283,7 +1301,7 @@ describe("Light2d + Stage lighting", () => {
 			const stage = freshLitState();
 			const l = new Light2d(0, 0, 100, 25);
 			game.world.addChild(l);
-			const u = stage.collectLightingUniforms(0, 0);
+			const u = packStage(stage, 0, 0);
 			expect(u.positions[2]).toBe(100); // max(200, 50) / 2 = 100
 			game.world.removeChildNow(l, true);
 		});
@@ -1293,12 +1311,12 @@ describe("Light2d + Stage lighting", () => {
 			const l = new Light2d(10, 20, 30, 30);
 			game.world.addChild(l);
 
-			let u = stage.collectLightingUniforms(0, 0);
+			let u = packStage(stage, 0, 0);
 			expect(u.positions[0]).toBe(10);
 			expect(u.positions[1]).toBe(20);
 
 			l.pos.set(150, 175);
-			u = stage.collectLightingUniforms(0, 0);
+			u = packStage(stage, 0, 0);
 			expect(u.positions[0]).toBe(150);
 			expect(u.positions[1]).toBe(175);
 
@@ -1317,7 +1335,7 @@ describe("Light2d + Stage lighting", () => {
 			const torch = new Light2d(10, 10, 5, 5);
 			c.addChild(torch);
 
-			const u = stage.collectLightingUniforms(0, 0);
+			const u = packStage(stage, 0, 0);
 			// world-space center: 100 + 50 + 25 + 10 = 185 on each axis
 			expect(u.positions[0]).toBe(185);
 			expect(u.positions[1]).toBe(185);
@@ -1332,11 +1350,11 @@ describe("Light2d + Stage lighting", () => {
 			game.world.addChild(a);
 			game.world.addChild(b);
 
-			expect(stage.collectLightingUniforms(0, 0).count).toBe(2);
+			expect(packStage(stage, 0, 0).count).toBe(2);
 
 			// remove `a` and verify only `b` shows up
 			game.world.removeChildNow(a, true);
-			const u = stage.collectLightingUniforms(0, 0);
+			const u = packStage(stage, 0, 0);
 			expect(u.count).toBe(1);
 
 			// the surviving light's coords land in slot 0
@@ -1349,13 +1367,13 @@ describe("Light2d + Stage lighting", () => {
 			const stage = freshLitState();
 			const l = new Light2d(40, 40, 20);
 			game.world.addChild(l);
-			expect(stage.collectLightingUniforms(0, 0).count).toBe(1);
+			expect(packStage(stage, 0, 0).count).toBe(1);
 
 			game.world.removeChildNow(l, true);
-			expect(stage.collectLightingUniforms(0, 0).count).toBe(0);
+			expect(packStage(stage, 0, 0).count).toBe(0);
 
 			game.world.addChild(l);
-			expect(stage.collectLightingUniforms(0, 0).count).toBe(1);
+			expect(packStage(stage, 0, 0).count).toBe(1);
 
 			game.world.removeChildNow(l, true);
 		});
@@ -1365,7 +1383,7 @@ describe("Light2d + Stage lighting", () => {
 			// Setting alpha != 1 must not reduce the ambient floor.
 			const stage = freshLitState();
 			stage.ambientLightingColor.setColor(120, 60, 30, 0.5); // alpha 0.5
-			const u = stage.collectLightingUniforms(0, 0);
+			const u = packStage(stage, 0, 0);
 			expect(u.ambient[0]).toBeCloseTo(120 / 255, 3);
 			expect(u.ambient[1]).toBeCloseTo(60 / 255, 3);
 			expect(u.ambient[2]).toBeCloseTo(30 / 255, 3);
@@ -1380,7 +1398,7 @@ describe("Light2d + Stage lighting", () => {
 			l.lightHeight = 12.5;
 			game.world.addChild(l);
 			l.rotate(Math.PI / 4);
-			const u = stage.collectLightingUniforms(0, 0);
+			const u = packStage(stage, 0, 0);
 			expect(u.heights[0]).toBe(12.5);
 			game.world.removeChildNow(l, true);
 		});
@@ -1393,7 +1411,7 @@ describe("Light2d + Stage lighting", () => {
 			const l = new Light2d(80, 60, 20);
 			game.world.addChild(l);
 			l.scale(2);
-			const u = stage.collectLightingUniforms(0, 0);
+			const u = packStage(stage, 0, 0);
 			expect(u.positions[0]).toBeCloseTo(80);
 			expect(u.positions[1]).toBeCloseTo(60);
 			game.world.removeChildNow(l, true);
@@ -1407,7 +1425,7 @@ describe("Light2d + Stage lighting", () => {
 			const b = new Light2d(50, 50, 30, 30, "#0000ff", 0.5);
 			game.world.addChild(a);
 			game.world.addChild(b);
-			const u = stage.collectLightingUniforms(0, 0);
+			const u = packStage(stage, 0, 0);
 			expect(u.count).toBe(2);
 			// both at same xy
 			expect(u.positions[0]).toBe(50);
@@ -1559,16 +1577,29 @@ describe("Light2d + Stage lighting", () => {
 				return warnings.push(args.join(" "));
 			};
 
+			const fakeLight = {
+				getBounds: () => {
+					return { centerX: 0, centerY: 0, width: 30, height: 30 };
+				},
+				intensity: 1,
+				color: { r: 255, g: 255, b: 255 },
+				lightHeight: 1,
+			};
 			try {
-				renderer.setLightUniforms({ count: 0 });
-				renderer.setLightUniforms({ count: 1 });
-				renderer.setLightUniforms({ count: 5 });
-				renderer.setLightUniforms({ count: 1 });
+				renderer.setLightUniforms([], null, 0, 0); // empty — no warn
+				renderer.setLightUniforms([fakeLight], null, 0, 0); // first warn
+				renderer.setLightUniforms(
+					[fakeLight, fakeLight, fakeLight, fakeLight, fakeLight],
+					null,
+					0,
+					0,
+				);
+				renderer.setLightUniforms([fakeLight], null, 0, 0);
 			} finally {
 				console.warn = orig;
 			}
 
-			// only the first count > 0 call warns
+			// only the first non-empty call warns
 			expect(warnings.length).toBe(1);
 			expect(warnings[0]).toMatch(
 				/normal-map lighting requires the WebGL renderer/,
@@ -1587,7 +1618,7 @@ describe("Light2d + Stage lighting", () => {
 
 			try {
 				for (let i = 0; i < 10; i++) {
-					renderer.setLightUniforms({ count: 0 });
+					renderer.setLightUniforms([], null, 0, 0);
 				}
 			} finally {
 				console.warn = orig;

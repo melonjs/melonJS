@@ -92,13 +92,15 @@ describe("WebGL pipeline adversarial integration", () => {
 
 		// pretend a Light2d is active so the dispatch sends normal-mapped
 		// sprites through litQuad
-		renderer.setLightUniforms({
-			count: 1,
-			positions: new Float32Array(8 * 4),
-			colors: new Float32Array(8 * 3),
-			heights: new Float32Array(8),
-			ambient: [0.3, 0.3, 0.3],
-		});
+		const fakeLight = {
+			getBounds: () => {
+				return { centerX: 0, centerY: 0, width: 30, height: 30 };
+			},
+			intensity: 1,
+			color: { r: 255, g: 255, b: 255 },
+			lightHeight: 1,
+		};
+		renderer.setLightUniforms([fakeLight], { r: 80, g: 80, b: 80 }, 0, 0);
 
 		// lit (has normalMap)
 		renderer.currentNormalMap = normal;
@@ -117,24 +119,18 @@ describe("WebGL pipeline adversarial integration", () => {
 		expectNoGLErrors();
 	});
 
-	it("frame: setLightUniforms({count: 0}) followed by sprite draw uses quad's program", () => {
+	it("frame: setLightUniforms with no lights followed by sprite draw uses quad's program", () => {
 		// The exact platformer reproducer: every camera frame calls
-		// setLightUniforms even when count=0; that call writes to litQuad's
-		// shader and would leave gl.useProgram pointing at it. The next
-		// drawImage must NOT render quad data through litQuad's shader.
+		// setLightUniforms even when there are no lights; that call writes
+		// to litQuad's shader and would leave gl.useProgram pointing at it.
+		// The next drawImage must NOT render quad data through litQuad's shader.
 		if (!isWebGL) {
 			return;
 		}
 		renderer.setBatcher("quad");
 		const quad = renderer.batchers.get("quad");
 
-		renderer.setLightUniforms({
-			count: 0,
-			positions: new Float32Array(8 * 4),
-			colors: new Float32Array(8 * 3),
-			heights: new Float32Array(8),
-			ambient: [0, 0, 0],
-		});
+		renderer.setLightUniforms([], { r: 0, g: 0, b: 0 }, 0, 0);
 
 		const tex = video.createCanvas(8, 8);
 		renderer.drawImage(tex, 0, 0, 8, 8, 0, 0, 8, 8);
@@ -198,13 +194,17 @@ describe("WebGL pipeline adversarial integration", () => {
 		const tex = video.createCanvas(16, 16);
 		const normal = video.createCanvas(16, 16);
 
-		renderer.setLightUniforms({
-			count: 1,
-			positions: new Float32Array(8 * 4),
-			colors: new Float32Array(8 * 3),
-			heights: new Float32Array(8),
-			ambient: [0.5, 0.5, 0.5],
-		});
+		const oneLight = [
+			{
+				getBounds: () => {
+					return { centerX: 0, centerY: 0, width: 30, height: 30 };
+				},
+				intensity: 1,
+				color: { r: 255, g: 255, b: 255 },
+				lightHeight: 1,
+			},
+		];
+		renderer.setLightUniforms(oneLight, { r: 128, g: 128, b: 128 }, 0, 0);
 
 		renderer.drawImage(tex, 0, 0, 16, 16, 0, 0, 16, 16); // unlit → quad
 		renderer.currentNormalMap = normal;
@@ -246,6 +246,17 @@ describe("WebGL pipeline adversarial integration", () => {
 
 	// ---- Light uniform staleness across "scenes" ----
 
+	function fakeLight() {
+		return {
+			getBounds: () => {
+				return { centerX: 0, centerY: 0, width: 30, height: 30 };
+			},
+			intensity: 1,
+			color: { r: 255, g: 255, b: 255 },
+			lightHeight: 1,
+		};
+	}
+
 	it("light count: 3 → 0 zeroes the lit batcher's uLightCount on next call", () => {
 		// Stage transitions can drop active-light count to 0. The lit
 		// batcher must update — leftover non-zero count would make a
@@ -255,22 +266,15 @@ describe("WebGL pipeline adversarial integration", () => {
 		}
 		const lit = renderer.batchers.get("litQuad");
 
-		renderer.setLightUniforms({
-			count: 3,
-			positions: new Float32Array(8 * 4),
-			colors: new Float32Array(8 * 3),
-			heights: new Float32Array(8),
-			ambient: [0.5, 0.5, 0.5],
-		});
+		renderer.setLightUniforms(
+			[fakeLight(), fakeLight(), fakeLight()],
+			{ r: 128, g: 128, b: 128 },
+			0,
+			0,
+		);
 		expect(lit._lightCount).toBe(3);
 
-		renderer.setLightUniforms({
-			count: 0,
-			positions: new Float32Array(8 * 4),
-			colors: new Float32Array(8 * 3),
-			heights: new Float32Array(8),
-			ambient: [0, 0, 0],
-		});
+		renderer.setLightUniforms([], { r: 0, g: 0, b: 0 }, 0, 0);
 		expect(lit._lightCount).toBe(0);
 	});
 
@@ -282,13 +286,11 @@ describe("WebGL pipeline adversarial integration", () => {
 		}
 		const lit = renderer.batchers.get("litQuad");
 		const MAX = lit._maxLights;
-		renderer.setLightUniforms({
-			count: MAX + 1,
-			positions: new Float32Array(8 * 4),
-			colors: new Float32Array(8 * 3),
-			heights: new Float32Array(8),
-			ambient: [0, 0, 0],
-		});
+		const lights = [];
+		for (let i = 0; i < MAX + 1; i++) {
+			lights.push(fakeLight());
+		}
+		renderer.setLightUniforms(lights, { r: 0, g: 0, b: 0 }, 0, 0);
 		expect(lit._lightCount).toBe(MAX);
 		expectNoGLErrors();
 	});
@@ -451,17 +453,26 @@ describe("WebGL pipeline adversarial integration", () => {
 			const normal = video.createCanvas(8, 8);
 			const blendModes = ["normal", "multiply", "additive", "screen"];
 
-			// pre-built light uniform payloads (different counts) — one
-			// allocation per shape so we don't churn GC inside the loop
-			const lightUniforms = [0, 1, 3, 8, 9].map((count) => {
+			// pre-built light arrays (different counts) — one allocation per
+			// shape so we don't churn GC inside the loop
+			const fakeLightFactory = () => {
 				return {
-					count,
-					positions: new Float32Array(8 * 4),
-					colors: new Float32Array(8 * 3),
-					heights: new Float32Array(8),
-					ambient: [0.2, 0.2, 0.2],
+					getBounds: () => {
+						return { centerX: 0, centerY: 0, width: 30, height: 30 };
+					},
+					intensity: 1,
+					color: { r: 255, g: 255, b: 255 },
+					lightHeight: 1,
 				};
+			};
+			const lightSets = [0, 1, 3, 8, 9].map((count) => {
+				const arr = [];
+				for (let i = 0; i < count; i++) {
+					arr.push(fakeLightFactory());
+				}
+				return arr;
 			});
+			const ambientColor = { r: 50, g: 50, b: 50 };
 
 			const opLog = [];
 			const logOp = (s) => {
@@ -546,9 +557,9 @@ describe("WebGL pipeline adversarial integration", () => {
 						break;
 					}
 					case "setLightUniforms": {
-						const u = pick(lightUniforms);
-						renderer.setLightUniforms(u);
-						logOp(`setLightUniforms(count=${u.count})`);
+						const lights = pick(lightSets);
+						renderer.setLightUniforms(lights, ambientColor, 0, 0);
+						logOp(`setLightUniforms(count=${lights.length})`);
 						break;
 					}
 					case "setColor": {
