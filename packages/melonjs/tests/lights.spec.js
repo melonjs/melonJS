@@ -1775,10 +1775,11 @@ describe("Light2d + Stage lighting", () => {
 
 	describe("Light2dEffect (standalone API)", () => {
 		// Light2dEffect is the WebGL-side procedural shader. It's exposed
-		// via the constructor + setColor/setIntensity/setRadii so tests
-		// (and any future custom path) can use it standalone, not just via
-		// `WebGLRenderer.drawLight`.
-		it("constructor accepts color/intensity/radii options without throwing", async () => {
+		// via the constructor + setColor/setIntensity so tests (and any
+		// future custom path) can use it standalone, not just via
+		// `WebGLRenderer.drawLight`. Elliptical falloff is handled by the
+		// quad's natural UV aspect — no per-shader setRadii needed.
+		it("constructor accepts color/intensity options without throwing", async () => {
 			// Skipped on Canvas (the shader requires a GL context).
 			if (!video.renderer.WebGLVersion) {
 				return;
@@ -1791,16 +1792,13 @@ describe("Light2d + Stage lighting", () => {
 				const eff = new Light2dEffect(video.renderer, {
 					color: new Color(255, 128, 64),
 					intensity: 0.8,
-					radiusX: 40,
-					radiusY: 20,
 				});
 				eff.setColor(new Color(0, 255, 0));
 				eff.setIntensity(1.5);
-				eff.setRadii(60, 60);
 			}).not.toThrow();
 		});
 
-		it("constructor with no options uses sensible defaults (white, 1.0, 1×1)", async () => {
+		it("constructor with no options uses sensible defaults (white, 1.0)", async () => {
 			if (!video.renderer.WebGLVersion) {
 				return;
 			}

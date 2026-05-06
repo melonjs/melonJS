@@ -570,7 +570,6 @@ export default class WebGLRenderer extends Renderer {
 		}
 		this._lightShader.setColor(light.color);
 		this._lightShader.setIntensity(light.intensity);
-		this._lightShader.setRadii(light.radiusX, light.radiusY);
 
 		this.setBatcher("quad");
 		const batcher = this.currentBatcher;
