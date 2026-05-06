@@ -9,8 +9,11 @@ import { MaterialBatcher } from "./material_batcher.js";
  * @import {TextureAtlas} from "./../../texture/atlas.js";
  */
 
-// a pool of reusable vectors
-const V_ARRAY = [
+// a pool of reusable vectors used by `addQuad` to transform the four
+// quad corners. Exported so `LitQuadBatcher` reuses the same pool —
+// JS is single-threaded and `addQuad` is synchronous, so concurrent
+// access can't happen and a single shared pool is safe.
+export const V_ARRAY = [
 	new Vector2d(),
 	new Vector2d(),
 	new Vector2d(),

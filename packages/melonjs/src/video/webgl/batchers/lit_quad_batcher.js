@@ -1,24 +1,15 @@
-import { Vector2d } from "../../../math/vector2d.ts";
 import IndexBuffer from "../buffer/index.js";
 import {
 	buildLitMultiTextureFragment,
 	MAX_LIGHTS,
 } from "./../shaders/multitexture-lit.js";
 import quadMultiLitVertex from "./../shaders/quad-multi-lit.vert";
-import QuadBatcher from "./quad_batcher.js";
+import QuadBatcher, { V_ARRAY } from "./quad_batcher.js";
 
 /**
  * additional import for TypeScript
  * @import {TextureAtlas} from "./../../texture/atlas.js";
  */
-
-// a pool of reusable vectors
-const V_ARRAY = [
-	new Vector2d(),
-	new Vector2d(),
-	new Vector2d(),
-	new Vector2d(),
-];
 
 /**
  * Lit-aware variant of `QuadBatcher` for the SpriteIlluminator workflow.
