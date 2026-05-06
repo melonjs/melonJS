@@ -1773,23 +1773,23 @@ describe("Light2d + Stage lighting", () => {
 		});
 	});
 
-	describe("Light2dEffect (standalone API)", () => {
-		// Light2dEffect is the WebGL-side procedural shader. It's exposed
-		// via the constructor + setColor/setIntensity so tests (and any
-		// future custom path) can use it standalone, not just via
-		// `WebGLRenderer.drawLight`. Elliptical falloff is handled by the
-		// quad's natural UV aspect — no per-shader setRadii needed.
+	describe("RadialGradientEffect (standalone API)", () => {
+		// `RadialGradientEffect` is the generic procedural radial-gradient
+		// shader that `WebGLRenderer.drawLight` happens to use for Light2d.
+		// Exposed standalone via constructor + setColor/setIntensity so
+		// tests (and any future caller — debug overlays, hotspots, etc.)
+		// can use it without going through Light2d.
 		it("constructor accepts color/intensity options without throwing", async () => {
 			// Skipped on Canvas (the shader requires a GL context).
 			if (!video.renderer.WebGLVersion) {
 				return;
 			}
-			const { default: Light2dEffect } = await import(
-				"../src/video/webgl/effects/light2d.js"
+			const { default: RadialGradientEffect } = await import(
+				"../src/video/webgl/effects/radialGradient.js"
 			);
 			const { Color } = await import("../src/math/color.ts");
 			expect(() => {
-				const eff = new Light2dEffect(video.renderer, {
+				const eff = new RadialGradientEffect(video.renderer, {
 					color: new Color(255, 128, 64),
 					intensity: 0.8,
 				});
@@ -1802,11 +1802,11 @@ describe("Light2d + Stage lighting", () => {
 			if (!video.renderer.WebGLVersion) {
 				return;
 			}
-			const { default: Light2dEffect } = await import(
-				"../src/video/webgl/effects/light2d.js"
+			const { default: RadialGradientEffect } = await import(
+				"../src/video/webgl/effects/radialGradient.js"
 			);
 			expect(() => {
-				return new Light2dEffect(video.renderer);
+				return new RadialGradientEffect(video.renderer);
 			}).not.toThrow();
 		});
 	});

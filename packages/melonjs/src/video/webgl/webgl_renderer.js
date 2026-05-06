@@ -24,7 +24,7 @@ import LitQuadBatcher from "./batchers/lit_quad_batcher";
 import MeshBatcher from "./batchers/mesh_batcher";
 import PrimitiveBatcher from "./batchers/primitive_batcher";
 import QuadBatcher from "./batchers/quad_batcher";
-import Light2dEffect from "./effects/light2d.js";
+import RadialGradientEffect from "./effects/radialGradient.js";
 import { createLightUniformScratch, packLights } from "./lighting/pack.ts";
 import { getMaxShaderPrecision } from "./utils/precision.js";
 
@@ -555,14 +555,14 @@ export default class WebGLRenderer extends Renderer {
 	 * @inheritdoc
 	 *
 	 * Renders the light as a single quad through a shared
-	 * {@link Light2dEffect} fragment shader (procedural radial falloff —
-	 * no per-light texture). The shader is lazy-allocated on first call
+	 * {@link RadialGradientEffect} fragment shader (procedural — no
+	 * per-light texture). The shader is lazy-allocated on first call
 	 * and reused for every Light2d on this renderer.
 	 * @param {object} light - the Light2d instance to render
 	 */
 	drawLight(light) {
 		if (this._lightShader === undefined) {
-			this._lightShader = new Light2dEffect(this);
+			this._lightShader = new RadialGradientEffect(this);
 		}
 		this._lightShader.setColor(light.color);
 		this._lightShader.setIntensity(light.intensity);

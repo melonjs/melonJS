@@ -1,0 +1,112 @@
+import ShaderEffect from "../shadereffect.js";
+
+/**
+ * additional import for TypeScript
+ * @import { Color } from "../../../math/color.ts";
+ * @import { default as WebGLRenderer } from "../webgl_renderer.js";
+ */
+
+/**
+ * A procedural radial-gradient shader effect: solid color at the center
+ * fading linearly to fully transparent at the edge of the quad. The
+ * falloff is naturally elliptical for non-square quads — the quad's UV
+ * space is normalized to `[0, 1]` regardless of dimensions, so
+ * `length(uv * 2 - 1) == 1` lies exactly on the inscribed ellipse.
+ *
+ * The falloff curve is **linear** (`f = clamp(1 - d, 0, 1)`) to match
+ * the Canvas 2D `createRadialGradient` two-stop output exactly. Output
+ * is premultiplied so the result composes correctly under additive
+ * (`"lighter"`) blending across overlapping quads.
+ * @category Effects
+ * @example
+ * // Soft white spot, 50% peak alpha at center
+ * const spot = new RadialGradientEffect(renderer, { intensity: 0.5 });
+ * @example
+ * // Tinted hotspot — orange center, full brightness, sized via the
+ * // host quad's bounds
+ * const hot = new RadialGradientEffect(renderer, {
+ *     color: new Color(255, 128, 64),
+ *     intensity: 1.0,
+ * });
+ * hot.setIntensity(2.0); // pulse brighter at runtime
+ * @example
+ * // Pickup highlight — attach to any Renderable so it renders inside
+ * // the renderable's bounding rect (anchorPoint applies). Combine with
+ * // `blendMode = "lighter"` for the additive glow look.
+ * pickup.shader = new RadialGradientEffect(renderer, {
+ *     color: new Color(120, 255, 200), // mint green
+ *     intensity: 0.8,
+ * });
+ * pickup.blendMode = "lighter";
+ * @example
+ * // Damage / impact indicator — short-lived elliptical flash on hit.
+ * // The quad's width/height drive the falloff aspect for free.
+ * const flash = new RadialGradientEffect(renderer, {
+ *     color: new Color(255, 32, 32),
+ *     intensity: 1.5,
+ * });
+ * // animate intensity to fade out
+ * tween.to({ intensity: 0 }, 200).onUpdate((s) => flash.setIntensity(s.intensity));
+ * @example
+ * // Debug overlay — draw a soft circle wherever the player is to mark
+ * // a trigger zone, without baking a texture per zone.
+ * const zoneMarker = new RadialGradientEffect(renderer, {
+ *     color: new Color(80, 160, 255),
+ *     intensity: 0.4,
+ * });
+ */
+export default class RadialGradientEffect extends ShaderEffect {
+	/**
+	 * @param {WebGLRenderer} renderer - the current renderer instance
+	 * @param {object} [options] - initial uniform values
+	 * @param {Color} [options.color] - center color (0..255 RGB); defaults to white
+	 * @param {number} [options.intensity=1] - peak alpha at the center (0..1+)
+	 */
+	constructor(renderer, options = {}) {
+		super(
+			renderer,
+			`
+			uniform vec3 uColor;
+			uniform float uIntensity;
+			vec4 apply(vec4 color, vec2 uv) {
+				// recenter to [-1, 1] across the quad. The quad's own aspect
+				// ratio handles elliptical falloffs naturally — length(c) == 1
+				// lies on the inscribed ellipse in world space.
+				vec2 c = uv * 2.0 - 1.0;
+				float d = length(c);
+				// linear ramp matches Canvas createRadialGradient's two-stop output
+				float f = clamp(1.0 - d, 0.0, 1.0);
+				float a = f * uIntensity;
+				// premultiplied: composes correctly under additive ("lighter") blending
+				return vec4(uColor * a, a);
+			}
+			`,
+		);
+
+		const color = options.color;
+		if (color) {
+			this.setColor(color);
+		} else {
+			this.setUniform("uColor", [1, 1, 1]);
+		}
+		this.setIntensity(options.intensity ?? 1);
+	}
+
+	/**
+	 * Set the center color. RGB only — alpha is ignored (the radial
+	 * falloff supplies the per-pixel alpha).
+	 * @param {Color} color - 0..255 RGB color
+	 */
+	setColor(color) {
+		this.setUniform("uColor", [color.r / 255, color.g / 255, color.b / 255]);
+	}
+
+	/**
+	 * Set the peak intensity. Acts as a brightness multiplier on the
+	 * falloff curve; values above 1 over-saturate the center of the gradient.
+	 * @param {number} intensity - 0..1+ multiplier
+	 */
+	setIntensity(intensity) {
+		this.setUniform("uIntensity", intensity);
+	}
+}
