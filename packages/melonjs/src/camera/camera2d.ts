@@ -942,17 +942,32 @@ export default class Camera2d extends Renderable {
 		// uniforms are guaranteed to apply to every lit quad pushed by
 		// the upcoming draw walk. Computed from the active stage and
 		// translated into the same camera-local space the world container
-		// renders into. The renderer no-ops in Canvas mode.
-		const litStage = state.current() as {
-			collectLightingUniforms?: (
-				translateX: number,
-				translateY: number,
-			) => Parameters<Renderer["setLightUniforms"]>[0];
-		} | null;
-		if (litStage && typeof litStage.collectLightingUniforms === "function") {
-			renderer.setLightUniforms(
-				litStage.collectLightingUniforms(translateX, translateY),
-			);
+		// renders into.
+		//
+		// Gated on `renderer.batchers` (a WebGL-only field): Canvas has no
+		// lit pipeline, and `collectLightingUniforms` allocates / iterates
+		// every active light per camera per frame — pure waste in Canvas
+		// mode. The WebGL renderer's `setLightUniforms` is also a no-op
+		// when no `litQuad` batcher is registered, so this gate just
+		// avoids the upstream work.
+		const rendererWithBatchers = renderer as Renderer & {
+			batchers?: Map<string, unknown>;
+		};
+		const hasLitPipeline =
+			rendererWithBatchers.batchers !== undefined &&
+			rendererWithBatchers.batchers.has("litQuad");
+		if (hasLitPipeline) {
+			const litStage = state.current() as {
+				collectLightingUniforms?: (
+					translateX: number,
+					translateY: number,
+				) => Parameters<Renderer["setLightUniforms"]>[0];
+			} | null;
+			if (litStage && typeof litStage.collectLightingUniforms === "function") {
+				renderer.setLightUniforms(
+					litStage.collectLightingUniforms(translateX, translateY),
+				);
+			}
 		}
 
 		container.preDraw(r);

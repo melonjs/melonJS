@@ -134,15 +134,15 @@ export default class LitQuadBatcher extends QuadBatcher {
 	 */
 	reset() {
 		// QuadBatcher.reset rebuilds the index buffer, rebinds color
-		// samplers, and resets `useMultiTexture`. We just add the
-		// lit-specific state on top.
+		// samplers, and resets `useMultiTexture`. MaterialBatcher.reset
+		// (called transitively) iterates `this.renderer.maxTextures` —
+		// covering both color and paired-normal slots — and deletes
+		// every bound GL texture, so our normal-map textures are
+		// already disposed by the time we get here. We just need to
+		// drop the JS references and re-bind the per-frame uniforms.
 		super.reset();
 		this.bindNormalSamplers();
 		this.boundNormalMaps.fill(null);
-		const gl = this.gl;
-		this.normalMapTextures.forEach((tex) => {
-			gl.deleteTexture(tex);
-		});
 		this.normalMapTextures.clear();
 		this._lightCount = 0;
 		this.defaultShader.setUniform("uLightCount", 0);

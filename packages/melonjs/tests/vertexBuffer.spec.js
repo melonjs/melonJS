@@ -123,12 +123,14 @@ describe("VertexArrayBuffer", () => {
 			// older quad batchers using vertexSize=6 mustn't get any
 			// writes past offset 5
 			const buf = new VertexArrayBuffer(6, 4);
-			// poison the slot beyond the buffer's reach
+			// pre-fill the next vertex's first slot with a sentinel
 			buf.bufferF32[6] = 77;
 
-			// pass a normalTextureId — should be silently dropped
+			// pass a normalTextureId — should be silently dropped because
+			// vertexSize is 6 (the unlit layout has no `aNormalTextureId`)
 			buf.push(10, 20, 0, 0, 0xff, 1, 9);
-			// (offset 6 is in the next vertex's slot — verify it's untouched)
+			// offset 6 is the next vertex's first float — verify push()
+			// didn't bleed into it
 			expect(buf.bufferF32[6]).toBe(77);
 		});
 	});

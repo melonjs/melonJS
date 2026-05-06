@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { boot, video, WebGLRenderer } from "../src/index.js";
+import { boot, GLShader, video, WebGLRenderer } from "../src/index.js";
 
 /**
  * Adversarial integration tests for the WebGL pipeline.
@@ -346,18 +346,43 @@ describe("WebGL pipeline adversarial integration", () => {
 
 	// ---- ShaderEffect / custom shader interactions ----
 
-	it("custom shader on quad → revert: useMultiTexture re-enables", () => {
-		// QuadBatcher.useShader(custom) sets useMultiTexture=false (single-
-		// texture fallback path). useShader(default) must restore it.
+	it("custom shader on quad → revert: useMultiTexture flips off and back on", () => {
+		// QuadBatcher.useShader(non-default) sets useMultiTexture=false
+		// (single-texture fallback path). useShader(default) must
+		// restore it. Use a real custom shader so the test actually
+		// exercises both transitions.
 		if (!isWebGL) {
 			return;
 		}
 		const quad = renderer.setBatcher("quad");
 		expect(quad.useMultiTexture).toBe(true);
 
-		// pretend a non-default shader was applied
-		quad.useShader(quad.defaultShader); // explicit re-set is a no-op
+		const customVertex = [
+			"attribute vec2 aVertex;",
+			"attribute vec2 aRegion;",
+			"attribute vec4 aColor;",
+			"uniform mat4 uProjectionMatrix;",
+			"varying vec2 vRegion;",
+			"varying vec4 vColor;",
+			"void main(void) {",
+			"  gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);",
+			"  vColor = aColor;",
+			"  vRegion = aRegion;",
+			"}",
+		].join("\n");
+		const customFragment = [
+			"varying vec4 vColor;",
+			"void main(void) { gl_FragColor = vColor; }",
+		].join("\n");
+		const custom = new GLShader(renderer.gl, customVertex, customFragment);
+
+		quad.useShader(custom);
+		expect(quad.useMultiTexture).toBe(false);
+
+		quad.useShader(quad.defaultShader);
 		expect(quad.useMultiTexture).toBe(true);
+
+		custom.destroy();
 	});
 
 	// ---- Mode flag interactions (blend, scissor) ----
