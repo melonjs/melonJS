@@ -1516,18 +1516,17 @@ describe("Light2d + Stage lighting", () => {
 			expect(s.normalMap).toBe(fakeBitmap);
 		});
 
-		it("normalMap setter rejects an object whose width/height are non-finite (NaN, Infinity)", () => {
-			// `typeof NaN === "number"` is true — current setter would
-			// accept this. Documents the boundary; if we want stricter
-			// validation later, the test pins what we want to flip.
+		it("normalMap setter accepts (does not reject) non-finite width/height — boundary doc", () => {
+			// `typeof NaN === "number"` is true, so the setter's
+			// `typeof value.width === "number"` check passes for NaN /
+			// Infinity. Test pins the current acceptance behavior so a
+			// future stricter validator (e.g. `Number.isFinite`) is a
+			// deliberate, test-failing change rather than a silent shift.
 			const s = new Sprite(0, 0, {
 				framewidth: 16,
 				frameheight: 16,
 				image: video.createCanvas(16, 16),
 			});
-			// Current behavior: NaN dimensions ARE accepted (typeof
-			// number is true). Documented here so future stricter
-			// validation is a deliberate change.
 			expect(() => {
 				s.normalMap = { width: Number.NaN, height: Number.NaN };
 			}).not.toThrow();
