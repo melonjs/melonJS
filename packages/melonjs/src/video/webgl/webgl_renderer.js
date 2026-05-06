@@ -1,6 +1,7 @@
 import { Color, colorPool } from "./../../math/color.ts";
 import { isPowerOfTwo } from "./../../math/math.ts";
 import { Matrix3d } from "../../math/matrix3d.ts";
+import { Vector2d } from "../../math/vector2d.ts";
 import {
 	CANVAS_ONRESIZE,
 	emit,
@@ -46,6 +47,9 @@ const _tempMatrix = new Matrix3d();
 // pre-allocated matrices for blitEffect (avoids per-frame allocation)
 const _savedTransform = new Matrix3d();
 const _savedProjection = new Matrix3d();
+
+// pre-allocated scratch vector for `drawLight` corner transforms
+const _lightTmpVec = new Vector2d();
 
 // list of supported compressed texture formats
 let supportedCompressedTextureFormats;
@@ -569,15 +573,64 @@ export default class WebGLRenderer extends Renderer {
 		this._lightShader.setRadii(light.radiusX, light.radiusY);
 
 		this.setBatcher("quad");
-		this.flush();
-		this.currentBatcher.blitTexture(
-			this._getWhitePixel(),
-			light.pos.x,
-			light.pos.y,
-			light.width,
-			light.height,
-			this._lightShader,
-		);
+		const batcher = this.currentBatcher;
+		batcher.flush();
+
+		// Inline quad emit (instead of `blitTexture`) so the renderer's
+		// `currentTransform` is applied to the four corners. Light2d's
+		// `preDraw` translates `-ax, -ay` (anchor adjustment) into the
+		// view matrix; `blitTexture` is designed for FBO blits and skips
+		// that step, leaving the procedural quad offset from the cutout.
+		batcher.useShader(this._lightShader);
+		const gl = this.gl;
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, this._getWhitePixel());
+		this._lightShader.setUniform("uSampler", 0);
+
+		const m = batcher.viewMatrix;
+		const x = light.pos.x;
+		const y = light.pos.y;
+		const w = light.width;
+		const h = light.height;
+		let x0 = x;
+		let y0 = y;
+		let x1 = x + w;
+		let y1 = y;
+		let x2 = x;
+		let y2 = y + h;
+		let x3 = x + w;
+		let y3 = y + h;
+		if (m && !m.isIdentity()) {
+			const v = _lightTmpVec;
+			v.set(x0, y0);
+			m.apply(v);
+			x0 = v.x;
+			y0 = v.y;
+			v.set(x1, y1);
+			m.apply(v);
+			x1 = v.x;
+			y1 = v.y;
+			v.set(x2, y2);
+			m.apply(v);
+			x2 = v.x;
+			y2 = v.y;
+			v.set(x3, y3);
+			m.apply(v);
+			x3 = v.x;
+			y3 = v.y;
+		}
+
+		const tint = 0xffffffff;
+		batcher.vertexData.push(x0, y0, 0, 1, tint, 0);
+		batcher.vertexData.push(x1, y1, 1, 1, tint, 0);
+		batcher.vertexData.push(x2, y2, 0, 0, tint, 0);
+		batcher.vertexData.push(x3, y3, 1, 0, tint, 0);
+		batcher.flush();
+
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, null);
+		delete batcher.boundTextures[0];
+		batcher.useShader(batcher.defaultShader);
 	}
 
 	/**
