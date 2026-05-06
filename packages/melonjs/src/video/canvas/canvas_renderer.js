@@ -301,17 +301,17 @@ export default class CanvasRenderer extends Renderer {
 	/**
 	 * @inheritdoc
 	 *
-	 * Renders the light by setting a cached radial `Gradient` as the
-	 * fill style and filling the light's bounding box on the main 2D
-	 * context — no offscreen canvas, no `drawImage` round-trip. The
-	 * Gradient is cached per-Light2d in a `WeakMap` and rebuilt only
-	 * when the light's radii / color / intensity change.
+	 * Renders the light by drawing a cached radial `Gradient` via
+	 * `Gradient.toCanvas()`. The Gradient instance is cached per-Light2d
+	 * in a `WeakMap` and rebuilt only when the light's radii / color /
+	 * intensity change. `toCanvas` itself shares a single
+	 * `CanvasRenderTarget` across all gradients in the engine, so memory
+	 * stays at O(1) regardless of how many lights are active.
 	 *
-	 * Elliptical lights (`radiusX !== radiusY`) work via a non-uniform
-	 * `ctx.scale()` around the light's center: the cached Gradient is
-	 * always circular (outer radius = `max(radiusX, radiusY)`), the
-	 * scale stretches it into the elliptical contour. Same trick the
-	 * WebGL shader uses (the quad's natural UV aspect handles ellipses).
+	 * The cached Gradient is always circular (outer radius =
+	 * `max(radiusX, radiusY)`) — `drawImage`'s non-uniform stretch
+	 * produces the elliptical falloff for non-square lights, matching
+	 * the procedural shader's behavior on WebGL.
 	 * @param {object} light - the Light2d instance to render
 	 */
 	drawLight(light) {
@@ -345,23 +345,24 @@ export default class CanvasRenderer extends Renderer {
 			};
 			this._lightCache.set(light, entry);
 		}
-
-		const ctx = this.getContext();
-		const r = entry.radius;
-		// Light2d.preDraw has already translated the context by
-		// `(-radiusX, -radiusY)` (the anchor offset), so the light's
-		// world center maps to `(light.pos.x + radiusX, light.pos.y + radiusY)`
-		// in the current coordinate frame. Translate to that point,
-		// scale non-uniformly to stretch the circular gradient into the
-		// elliptical contour, then translate to put the gradient's
-		// center coord (r, r) at the new origin.
-		ctx.save();
-		ctx.translate(light.pos.x + light.radiusX, light.pos.y + light.radiusY);
-		ctx.scale(light.radiusX / r, light.radiusY / r);
-		ctx.translate(-r, -r);
-		ctx.fillStyle = entry.gradient.toCanvasGradient(ctx);
-		ctx.fillRect(0, 0, r * 2, r * 2);
-		ctx.restore();
+		const r2 = entry.radius * 2;
+		// `Gradient.toCanvas` renders into a shared `CanvasRenderTarget`
+		// (one per engine, reused across all gradients) and returns its
+		// canvas. `drawImage` with explicit src/dst rects crops the POT
+		// padding and stretches the circular gradient into the
+		// elliptical bounding box `(light.width × light.height)`.
+		const canvas = entry.gradient.toCanvas(this, 0, 0, r2, r2);
+		this.drawImage(
+			canvas,
+			0,
+			0,
+			r2,
+			r2,
+			light.pos.x,
+			light.pos.y,
+			light.width,
+			light.height,
+		);
 	}
 
 	/**
