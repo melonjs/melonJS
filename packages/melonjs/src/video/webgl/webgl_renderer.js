@@ -375,19 +375,19 @@ export default class WebGLRenderer extends Renderer {
 		this._renderTargetPool.destroy();
 
 		// drop the lazily-cached drawLight resources — after a context
-		// loss/restore the cached shader program and white-pixel texture
+		// loss/restore the cached shader program and white-pixel atlas
 		// reference the OLD GL context and would error if reused.
 		// Lazy re-init happens on the next drawLight call.
 		if (this._lightShader !== undefined) {
 			this._lightShader.destroy?.();
 			this._lightShader = undefined;
 		}
-		if (this._whitePixel !== undefined) {
-			// only delete if the underlying GL texture is still valid
-			// (post-context-loss it isn't, but deleteTexture is harmless
-			// either way)
-			this.gl.deleteTexture(this._whitePixel);
-			this._whitePixel = undefined;
+		if (this._lightAtlas !== undefined) {
+			// drop the cache mapping (the underlying GL texture is gone
+			// with the lost context anyway); the atlas object itself
+			// holds only the source canvas, no GL handles to release.
+			this.cache.delete?.(this._lightAtlas);
+			this._lightAtlas = undefined;
 		}
 	}
 
@@ -422,8 +422,19 @@ export default class WebGLRenderer extends Renderer {
 			throw new Error("Invalid Batcher");
 		}
 
-		// fast path: already on the right batcher with no custom shader
-		if (this.currentBatcher === batcher && typeof shader !== "object") {
+		// resolve the target shader — the explicitly-passed one if any,
+		// otherwise the batcher's default. We always reconcile the
+		// currentShader to this target so a custom shader left bound by a
+		// prior call (e.g. `drawLight` parking the radial-gradient
+		// program) gets evicted before the next sprite batch flushes.
+		const targetShader =
+			typeof shader === "object" ? shader : batcher.defaultShader;
+
+		if (
+			this.currentBatcher === batcher &&
+			batcher.currentShader === targetShader
+		) {
+			// fast path: same batcher, same shader — nothing to do.
 			return this.currentBatcher;
 		}
 
@@ -441,9 +452,11 @@ export default class WebGLRenderer extends Renderer {
 			this.currentBatcher.setProjection(this.projectionMatrix);
 		}
 
-		if (typeof shader === "object") {
-			this.currentBatcher.useShader(shader);
-		}
+		// useShader() is internally a no-op when the shader is already
+		// bound; it flushes and rebinds otherwise. Pending vertices that
+		// were queued under the prior shader get drained against that
+		// shader before the switch, which is exactly what we want.
+		this.currentBatcher.useShader(targetShader);
 
 		return this.currentBatcher;
 	}
@@ -570,81 +583,75 @@ export default class WebGLRenderer extends Renderer {
 	/**
 	 * @inheritdoc
 	 *
-	 * Renders the light as a single quad through a shared
+	 * Renders the light as a quad through a shared
 	 * {@link RadialGradientEffect} fragment shader (procedural — no
-	 * per-light texture). The shader is lazy-allocated on first call
-	 * and reused for every Light2d on this renderer.
+	 * per-light texture). The shader and a shared 1×1 white-pixel atlas
+	 * are lazy-allocated on first call and reused for every Light2d on
+	 * this renderer. Each light's color and intensity are encoded into
+	 * the per-vertex tint so consecutive `drawLight` calls accumulate
+	 * into the quad batcher's buffer and flush together — N lights
+	 * become 1 program switch + 1 flush instead of 2N + N.
 	 * @param {object} light - the Light2d instance to render
 	 */
 	drawLight(light) {
 		if (this._lightShader === undefined) {
 			this._lightShader = new RadialGradientEffect(this);
 		}
-		const batcher = this.setBatcher("quad");
-		// Flush BEFORE mutating shader uniforms or binding textures.
-		// `setBatcher("quad")` only flushes when *switching* batchers — if
-		// the active batcher is already "quad" (e.g. a sprite was just
-		// queued), pending vertices stay in the buffer. The setColor /
-		// setIntensity calls below trigger `gl.useProgram(_lightShader)`
-		// internally (via `setUniform`), and `_getWhitePixel`'s lazy init
-		// rebinds TEXTURE0 — both would corrupt those pending vertices on
-		// the next flush. Flushing here drains them with the correct
-		// program / texture state still active.
-		batcher.flush();
-		this._lightShader.setColor(light.color);
-		this._lightShader.setIntensity(light.intensity);
-		batcher.blitTexture(
-			this._getWhitePixel(),
+		// `setBatcher("quad", _lightShader)` switches the quad batcher's
+		// shader to the radial gradient if it isn't already bound (and
+		// flushes any sprite vertices queued under the previous shader).
+		// On subsequent back-to-back `drawLight` calls this is a no-op,
+		// so the lights pile into the same vertex buffer.
+		const batcher = this.setBatcher("quad", this._lightShader);
+		batcher.addQuad(
+			this._getLightAtlas(),
 			light.pos.x,
 			light.pos.y,
 			light.width,
 			light.height,
-			this._lightShader,
+			0,
+			0,
+			1,
+			1,
+			// pack the light's color (RGB) and intensity (A) into the
+			// vertex tint — the shader's `apply()` reads `color.rgb` and
+			// `color.a` as the per-light values.
+			light.color.toUint32(light.intensity),
 		);
+		// Note: we deliberately do NOT switch back to the default shader
+		// here. The next `setBatcher` call (sprites, primitives, etc.)
+		// will reconcile to the right shader on its own (see
+		// `setBatcher`), and that's what unlocks the cross-light batch.
 	}
 
 	/**
-	 * Lazy-init a shared 1×1 white `WebGLTexture` used as the no-op
-	 * source for `drawLight`'s procedural shader. The shader's `apply`
-	 * ignores the sampled color, but `ShaderEffect`'s auto-injected
-	 * wrapper still issues a `texture2D(uSampler, vRegion)` read — the
-	 * white pixel makes that read trivially cheap.
-	 * @returns {WebGLTexture}
+	 * Lazy-init a shared 1×1 white `TextureAtlas` used as the source
+	 * texture for `drawLight`'s procedural shader. The shader ignores
+	 * the sampled color, but `addQuad`'s vertex format includes a
+	 * texture-unit attribute so we still need a real texture; sharing
+	 * one across every light keeps them on the same multi-texture slot
+	 * (no flush on light switch).
+	 * @returns {TextureAtlas}
 	 * @ignore
 	 */
-	_getWhitePixel() {
-		if (this._whitePixel === undefined) {
-			const gl = this.gl;
-			this._whitePixel = gl.createTexture();
-			// `texImage2D` / `texParameteri` operate on the currently bound
-			// texture, so we have to bind first. That mutates GL state the
-			// active batcher caches in `boundTextures[0]` — sync that cache
-			// to the new binding so the batcher's view stays consistent
-			// with actual GL state until the immediately-following
-			// `blitTexture` call rebinds and clears it.
-			gl.activeTexture(gl.TEXTURE0);
-			gl.bindTexture(gl.TEXTURE_2D, this._whitePixel);
-			if (this.currentBatcher && this.currentBatcher.boundTextures) {
-				this.currentBatcher.boundTextures[0] = this._whitePixel;
-				this.currentBatcher.currentTextureUnit = 0;
-			}
-			gl.texImage2D(
-				gl.TEXTURE_2D,
-				0,
-				gl.RGBA,
-				1,
-				1,
-				0,
-				gl.RGBA,
-				gl.UNSIGNED_BYTE,
-				new Uint8Array([255, 255, 255, 255]),
+	_getLightAtlas() {
+		if (this._lightAtlas === undefined) {
+			// build a 1×1 white canvas — TextureAtlas wants an image-like
+			// source that can feed `gl.texImage2D` directly.
+			const canvas = globalThis.document
+				? globalThis.document.createElement("canvas")
+				: new OffscreenCanvas(1, 1);
+			canvas.width = 1;
+			canvas.height = 1;
+			const ctx = canvas.getContext("2d");
+			ctx.fillStyle = "#fff";
+			ctx.fillRect(0, 0, 1, 1);
+			this._lightAtlas = new TextureAtlas(
+				createAtlas(1, 1, "lightWhite", "no-repeat"),
+				canvas,
 			);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 		}
-		return this._whitePixel;
+		return this._lightAtlas;
 	}
 
 	/**

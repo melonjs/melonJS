@@ -1706,6 +1706,58 @@ describe("Light2d + Stage lighting", () => {
 			light.destroy();
 		});
 
+		it("Canvas drawLight uses Gradient.toCanvas (not toCanvasGradient) so the cached gradient stays correct as the light moves", () => {
+			// `Gradient.toCanvasGradient(ctx)` caches the underlying native
+			// `CanvasGradient` against the calling context's *current*
+			// transform — using it inside `drawLight` would anchor the
+			// cached gradient to the light's first-drawn position, and
+			// every subsequent draw would render at the wrong offset.
+			//
+			// We use `Gradient.toCanvas`, which renders into a *separate*
+			// shared offscreen `CanvasRenderTarget` whose context has no
+			// inherited transform. Each call creates a fresh native
+			// `CanvasGradient` inside that isolated context — no anchoring.
+			//
+			// This regression test guarantees the implementation keeps
+			// using the transform-isolated path.
+			const renderer = video.renderer;
+			renderer._lightCache = undefined;
+
+			const light = new Light2d(50, 50, 30);
+			renderer.drawLight(light);
+			const entry = renderer._lightCache.get(light);
+			expect(entry).toBeDefined();
+
+			let toCanvasCalls = 0;
+			let toCanvasGradientCalls = 0;
+			const origToCanvas = entry.gradient.toCanvas.bind(entry.gradient);
+			entry.gradient.toCanvas = (...args) => {
+				toCanvasCalls++;
+				return origToCanvas(...args);
+			};
+			if (typeof entry.gradient.toCanvasGradient === "function") {
+				const origTCG = entry.gradient.toCanvasGradient.bind(entry.gradient);
+				entry.gradient.toCanvasGradient = (...args) => {
+					toCanvasGradientCalls++;
+					return origTCG(...args);
+				};
+			}
+
+			// move the light and redraw a couple of times — each draw must
+			// go through `toCanvas`, never `toCanvasGradient`.
+			light.pos.x = 100;
+			light.pos.y = 100;
+			renderer.drawLight(light);
+			light.pos.x = 200;
+			light.pos.y = 250;
+			renderer.drawLight(light);
+
+			expect(toCanvasCalls).toBeGreaterThanOrEqual(2);
+			expect(toCanvasGradientCalls).toBe(0);
+
+			light.destroy();
+		});
+
 		it("Canvas reset() clears the light cache", () => {
 			const renderer = video.renderer;
 			renderer._lightCache = undefined;
@@ -1809,5 +1861,172 @@ describe("RadialGradientEffect (standalone API, WebGL)", () => {
 		expect(() => {
 			return new RadialGradientEffect(video.renderer);
 		}).not.toThrow();
+	});
+
+	it("drawLight drains pending sprite vertices BEFORE binding the light shader", () => {
+		// Regression guard for the mid-batch corruption class:
+		//
+		// If `drawLight` flipped the active program (or rebound a texture
+		// unit) while the quad batcher still held sprite vertices queued
+		// under the default shader, those queued vertices would later
+		// flush against the wrong program / wrong texture binding and
+		// render garbage.
+		//
+		// The current implementation routes through
+		// `setBatcher("quad", _lightShader)` → `useShader(_lightShader)`,
+		// and `useShader` is documented to flush *first*, then bind the
+		// new program. So the queued sprite vertices are drained against
+		// `defaultShader` before the light shader takes over. This test
+		// enforces that ordering by spying on `flush` and capturing the
+		// active shader at flush time.
+		const renderer = video.renderer;
+		expect(renderer.WebGLVersion).toBeGreaterThan(0);
+
+		// warm up the lazy resources so the test only measures the
+		// steady-state path.
+		const warmup = new Light2d(0, 0, 8);
+		renderer.drawLight(warmup);
+		warmup.destroy();
+
+		const batcher = renderer.batchers.get("quad");
+		// reset the batcher to the default shader (the state a normal
+		// sprite draw would leave it in) and queue one quad's worth of
+		// vertices manually.
+		renderer.setBatcher("quad");
+		expect(batcher.currentShader).toBe(batcher.defaultShader);
+		const baselineCount = batcher.vertexData.vertexCount;
+		batcher.vertexData.push(0, 0, 0, 0, 0xffffffff, 0);
+		batcher.vertexData.push(1, 0, 1, 0, 0xffffffff, 0);
+		batcher.vertexData.push(0, 1, 0, 1, 0xffffffff, 0);
+		batcher.vertexData.push(1, 1, 1, 1, 0xffffffff, 0);
+		expect(batcher.vertexData.vertexCount).toBe(baselineCount + 4);
+
+		const events = [];
+		const origFlush = batcher.flush.bind(batcher);
+		batcher.flush = (...a) => {
+			// snapshot which shader the flush is targeting BEFORE
+			// useShader swaps it.
+			events.push(batcher.currentShader);
+			return origFlush(...a);
+		};
+
+		try {
+			const light = new Light2d(50, 50, 30);
+			renderer.drawLight(light);
+			light.destroy();
+		} finally {
+			batcher.flush = origFlush;
+		}
+
+		// First flush recorded must have happened while the default
+		// shader was still bound — that's the proof that the queued
+		// sprite vertices were drained before the light shader took
+		// over.
+		expect(events.length).toBeGreaterThanOrEqual(1);
+		expect(events[0]).toBe(batcher.defaultShader);
+	});
+
+	it("drawLight batches consecutive lights into a single flush + program switch", () => {
+		// The whole point of routing `drawLight` through `addQuad` (with
+		// per-vertex tint encoding color + intensity) is that N back-to-
+		// back lights pile into one shared vertex buffer instead of each
+		// taking its own draw call. This test enforces that contract.
+		const renderer = video.renderer;
+		expect(renderer.WebGLVersion).toBeGreaterThan(0);
+
+		// warm up
+		const warmup = new Light2d(0, 0, 8);
+		renderer.drawLight(warmup);
+		warmup.destroy();
+
+		const batcher = renderer.batchers.get("quad");
+		// reset to a clean baseline: default shader, empty vertex buffer.
+		renderer.setBatcher("quad");
+		batcher.flush();
+		expect(batcher.currentShader).toBe(batcher.defaultShader);
+		expect(batcher.vertexData.vertexCount).toBe(0);
+
+		let flushCount = 0;
+		const origFlush = batcher.flush.bind(batcher);
+		batcher.flush = (...a) => {
+			flushCount++;
+			return origFlush(...a);
+		};
+
+		const lights = [
+			new Light2d(50, 50, 30, 30, "#ff0000", 0.7),
+			new Light2d(150, 50, 30, 30, "#00ff00", 0.7),
+			new Light2d(250, 50, 30, 30, "#0000ff", 0.7),
+			new Light2d(50, 150, 30, 30, "#ffffff", 0.5),
+		];
+
+		try {
+			for (const l of lights) {
+				renderer.drawLight(l);
+			}
+		} finally {
+			batcher.flush = origFlush;
+			for (const l of lights) {
+				l.destroy();
+			}
+		}
+
+		// At most one flush — the implicit one inside `useShader` when
+		// the radial-gradient shader is bound for the first light.
+		// Lights 2-N hit the same shader and accumulate without
+		// flushing.
+		expect(flushCount).toBeLessThanOrEqual(1);
+		// All four lights' vertices should still be queued (4 vertices
+		// per quad × 4 lights = 16).
+		expect(batcher.vertexData.vertexCount).toBe(16);
+		// And the radial-gradient shader is still bound — the next
+		// non-light draw will reconcile via setBatcher's targetShader
+		// logic.
+		expect(batcher.currentShader).toBe(renderer._lightShader);
+	});
+
+	it("drawLight uses a per-vertex tint to carry per-light color + intensity", () => {
+		// Architectural guarantee: the per-light color/intensity must
+		// flow through the vertex tint (so lights batch), NOT through
+		// `setColor` / `setIntensity` calls on the shared shader (which
+		// would be uniforms — unique per-program-state, killing batching).
+		const renderer = video.renderer;
+		expect(renderer.WebGLVersion).toBeGreaterThan(0);
+
+		const warmup = new Light2d(0, 0, 8);
+		renderer.drawLight(warmup);
+		warmup.destroy();
+
+		let setColorCalls = 0;
+		let setIntensityCalls = 0;
+		const origSetColor = renderer._lightShader.setColor.bind(
+			renderer._lightShader,
+		);
+		const origSetIntensity = renderer._lightShader.setIntensity.bind(
+			renderer._lightShader,
+		);
+		renderer._lightShader.setColor = (...a) => {
+			setColorCalls++;
+			return origSetColor(...a);
+		};
+		renderer._lightShader.setIntensity = (...a) => {
+			setIntensityCalls++;
+			return origSetIntensity(...a);
+		};
+
+		try {
+			const a = new Light2d(50, 50, 30, 30, "#ff0000", 0.5);
+			const b = new Light2d(100, 100, 30, 30, "#00ff00", 0.9);
+			renderer.drawLight(a);
+			renderer.drawLight(b);
+			a.destroy();
+			b.destroy();
+		} finally {
+			renderer._lightShader.setColor = origSetColor;
+			renderer._lightShader.setIntensity = origSetIntensity;
+		}
+
+		expect(setColorCalls).toBe(0);
+		expect(setIntensityCalls).toBe(0);
 	});
 });

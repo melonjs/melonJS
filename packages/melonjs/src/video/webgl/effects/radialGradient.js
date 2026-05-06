@@ -17,6 +17,17 @@ import ShaderEffect from "../shadereffect.js";
  * the Canvas 2D `createRadialGradient` two-stop output exactly. Output
  * is premultiplied so the result composes correctly under additive
  * (`"lighter"`) blending across overlapping quads.
+ *
+ * Color & intensity come from **two stacked sources**, multiplied
+ * together: the `uColor`/`uIntensity` uniforms (set per-effect via
+ * `setColor` / `setIntensity` — the natural API for a single-instance
+ * shader attached to a renderable) AND the per-vertex tint coming
+ * through `aColor` (used by `WebGLRenderer.drawLight` to encode each
+ * light's color + intensity in the vertex stream so multiple lights
+ * sharing this shader can batch into a single draw call). For typical
+ * standalone usage the per-vertex tint is `(1,1,1,1)` and the uniforms
+ * drive the look; for the Light2d batching path the uniforms stay at
+ * defaults and the tint carries everything.
  * @category Effects
  * @example
  * // Soft white spot, 50% peak alpha at center
@@ -76,9 +87,15 @@ export default class RadialGradientEffect extends ShaderEffect {
 				float d = length(c);
 				// linear ramp matches Canvas createRadialGradient's two-stop output
 				float f = clamp(1.0 - d, 0.0, 1.0);
-				float a = f * uIntensity;
-				// premultiplied: composes correctly under additive ("lighter") blending
-				return vec4(uColor * a, a);
+				// 'color' is the per-vertex tint, already premultiplied by
+				// alpha in the vertex shader (vColor = vec4(aColor.bgr *
+				// aColor.a, aColor.a)). For standalone use the tint is
+				// (1,1,1,1) and the uniforms drive the look; for the Light2d
+				// batching path the uniforms stay at default and the tint
+				// carries the per-light color + intensity.
+				vec3 rgb = color.rgb * uColor * uIntensity * f;
+				float a = color.a * uIntensity * f;
+				return vec4(rgb, a);
 			}
 			`,
 		);
