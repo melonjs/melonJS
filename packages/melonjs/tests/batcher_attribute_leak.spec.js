@@ -297,6 +297,26 @@ describe("WebGLRenderer.drawImage lit/unlit dispatch", () => {
 		expect(lit._lightCount).toBe(2);
 	});
 
+	it("setLightUniforms tolerates undefined uniforms (no throw, count = 0)", () => {
+		// Copilot regression: WebGLRenderer.setLightUniforms used to read
+		// `uniforms.count` directly, throwing TypeError when called with
+		// undefined/null. Camera2d.draw forwards the result of
+		// Stage.collectLightingUniforms — a future Stage subclass that
+		// doesn't implement that method would crash here.
+		if (!isWebGL) {
+			return;
+		}
+		expect(() => {
+			renderer.setLightUniforms(undefined);
+		}).not.toThrow();
+		expect(renderer.activeLightCount).toBe(0);
+
+		expect(() => {
+			renderer.setLightUniforms(null);
+		}).not.toThrow();
+		expect(renderer.activeLightCount).toBe(0);
+	});
+
 	it("setLightUniforms must not leak gl.useProgram out of the active batcher", () => {
 		// Real-world reproducer for the bug that broke the platformer:
 		// every camera draw calls `renderer.setLightUniforms({count: 0, ...})`

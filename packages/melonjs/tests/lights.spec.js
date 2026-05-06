@@ -1514,6 +1514,37 @@ describe("Light2d + Stage lighting", () => {
 				s.normalMap = { width: Number.NaN, height: Number.NaN };
 			}).not.toThrow();
 		});
+
+		it("normalMap setter rejects HTMLVideoElement-like sources (videoWidth present)", () => {
+			// Copilot regression: a `HTMLVideoElement` duck-types past the
+			// width/height check, but the lit pipeline caches the GL
+			// texture per image reference and would silently freeze on
+			// frame 0. Setter throws TypeError to make this obvious at
+			// assignment time instead of producing a confusing visual bug.
+			const s = new Sprite(0, 0, {
+				framewidth: 16,
+				frameheight: 16,
+				image: video.createCanvas(16, 16),
+			});
+			const fakeVideo = {
+				width: 64,
+				height: 64,
+				videoWidth: 64,
+				videoHeight: 64,
+			};
+			expect(() => {
+				s.normalMap = fakeVideo;
+			}).toThrow(TypeError);
+			// constructor settings.normalMap goes through the setter too
+			expect(() => {
+				return new Sprite(0, 0, {
+					framewidth: 16,
+					frameheight: 16,
+					image: video.createCanvas(16, 16),
+					normalMap: fakeVideo,
+				});
+			}).toThrow(TypeError);
+		});
 	});
 
 	describe("Renderer.setLightUniforms (Canvas fallback warning)", () => {
