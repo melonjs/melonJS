@@ -336,8 +336,12 @@ export default class LitQuadBatcher extends QuadBatcher {
 
 		this.useShader(shader);
 
+		// keep the batcher's texture-unit bookkeeping aligned with the GL
+		// state we just mutated — see `QuadBatcher.blitTexture`.
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, source);
+		this.currentTextureUnit = 0;
+		this.boundTextures[0] = source;
 		shader.setUniform("uSampler", 0);
 
 		// transform corners through the renderer transform — see
@@ -366,6 +370,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, null);
+		this.currentTextureUnit = -1;
 		delete this.boundTextures[0];
 
 		this.useShader(this.defaultShader);

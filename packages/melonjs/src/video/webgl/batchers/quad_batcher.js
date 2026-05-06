@@ -193,9 +193,14 @@ export default class QuadBatcher extends MaterialBatcher {
 
 		this.useShader(shader);
 
-		// bind the source texture to unit 0
+		// bind the source texture to unit 0 — keep the batcher's internal
+		// texture-unit bookkeeping in sync with the actual GL state, or
+		// later `bindTexture2D` calls may early-out on a stale
+		// `currentTextureUnit` and bind to the wrong unit.
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, source);
+		this.currentTextureUnit = 0;
+		this.boundTextures[0] = source;
 		shader.setUniform("uSampler", 0);
 
 		// push a screen-aligned quad with Y-flipped UVs, transformed by
@@ -223,9 +228,11 @@ export default class QuadBatcher extends MaterialBatcher {
 
 		this.flush();
 
-		// unbind the texture to prevent feedback loop on next frame
+		// unbind the texture to prevent feedback loop on next frame, and
+		// drop the unit-0 cache slot so the next bind re-issues activeTexture.
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, null);
+		this.currentTextureUnit = -1;
 		delete this.boundTextures[0];
 
 		// restore the default shader (also re-enables multi-texture batching)
