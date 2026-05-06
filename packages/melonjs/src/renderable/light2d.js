@@ -1,8 +1,6 @@
-import { game } from "../application/application.ts";
 import { ellipsePool } from "./../geometries/ellipse.ts";
 import { colorPool } from "./../math/color.ts";
 import state from "../state/state.ts";
-import CanvasRenderTarget from "../video/rendertarget/canvasrendertarget.js";
 import Renderable from "./renderable.js";
 
 /**
@@ -12,68 +10,22 @@ import Renderable from "./renderable.js";
  * @import Renderer from "./../video/renderer.js";
  */
 
-/** @ignore */
-function createGradient(light) {
-	const context = light.texture.context;
-
-	const x1 = light.texture.width / 2;
-	const y1 = light.texture.height / 2;
-
-	const radiusX = light.radiusX;
-	const radiusY = light.radiusY;
-
-	let scaleX;
-	let scaleY;
-	let invScaleX;
-	let invScaleY;
-	let gradient;
-
-	light.texture.clear();
-
-	if (radiusX >= radiusY) {
-		scaleX = 1;
-		invScaleX = 1;
-		scaleY = radiusY / radiusX;
-		invScaleY = radiusX / radiusY;
-		gradient = context.createRadialGradient(
-			x1,
-			y1 * invScaleY,
-			0,
-			x1,
-			radiusY * invScaleY,
-			radiusX,
-		);
-	} else {
-		scaleY = 1;
-		invScaleY = 1;
-		scaleX = radiusX / radiusY;
-		invScaleX = radiusY / radiusX;
-		gradient = context.createRadialGradient(
-			x1 * invScaleX,
-			y1,
-			0,
-			x1 * invScaleX,
-			y1,
-			radiusY,
-		);
-	}
-
-	gradient.addColorStop(0, light.color.toRGBA(light.intensity));
-	gradient.addColorStop(1, light.color.toRGBA(0.0));
-
-	context.fillStyle = gradient;
-
-	context.setTransform(scaleX, 0, 0, scaleY, 0, 0);
-	context.fillRect(
-		0,
-		0,
-		light.texture.width * invScaleX,
-		light.texture.height * invScaleY,
-	);
-}
-
 /**
  * A 2D point light.
+ *
+ * Light2d carries the *properties* of a light (color, radii, intensity,
+ * height, flags, position) and asks the active renderer to render it
+ * via `renderer.drawLight(this)`. The renderer picks the right machinery:
+ *
+ * - **WebGL**: a single quad through a procedural radial-falloff fragment
+ *   shader (`Light2dEffect`). One shader is shared across every Light2d
+ *   on the renderer; no per-light texture is allocated.
+ * - **Canvas**: an offscreen `CanvasRenderTarget` baked with a
+ *   `createRadialGradient`, cached per-light inside the renderer and
+ *   re-baked on property change.
+ *
+ * Light2d itself is renderer-agnostic — no shader knowledge, no canvas
+ * allocation, no renderer reference held.
  * @see stage.lights
  */
 export default class Light2d extends Renderable {
@@ -162,11 +114,6 @@ export default class Light2d extends Renderable {
 			this.height,
 		);
 
-		/** @ignore */
-		this.texture = new CanvasRenderTarget(this.width, this.height, {
-			offscreenCanvas: false,
-		});
-
 		// centered anchor — `pos` is the visual center, transforms (scale,
 		// rotate) pivot around it.
 		this.anchorPoint.set(0.5, 0.5);
@@ -205,8 +152,6 @@ export default class Light2d extends Renderable {
 		 * @type {number}
 		 */
 		this.lightHeight = Math.max(radiusX, radiusY) * 0.075;
-
-		createGradient(this);
 	}
 
 	/**
@@ -240,6 +185,23 @@ export default class Light2d extends Renderable {
 	}
 
 	/**
+	 * Resize the light to a new pair of radii.
+	 *
+	 * Updates `radiusX`/`radiusY` and the underlying bbox so
+	 * `getBounds()` and `getVisibleArea()` (which feed the cutout pass)
+	 * track the new size. The renderer's gradient cache (Canvas) auto-
+	 * invalidates on next draw via the property comparison; the WebGL
+	 * procedural shader adapts to the new dimensions automatically.
+	 * @param {number} radiusX - new horizontal radius
+	 * @param {number} [radiusY=radiusX] - new vertical radius
+	 */
+	resize(radiusX, radiusY = radiusX) {
+		this.radiusX = radiusX;
+		this.radiusY = radiusY;
+		super.resize(radiusX * 2, radiusY * 2);
+	}
+
+	/**
 	 * returns a geometry representing the visible area of this light, in
 	 * world-space coordinates (so it aligns with the rendered gradient
 	 * regardless of camera scroll or container parenting).
@@ -254,7 +216,6 @@ export default class Light2d extends Renderable {
 
 	/**
 	 * update function
-	 * @param {number} dt - time since the last update in milliseconds.
 	 * @returns {boolean} true if dirty
 	 */
 	update() {
@@ -263,8 +224,6 @@ export default class Light2d extends Renderable {
 
 	/**
 	 * preDraw this Light2d (automatically called by melonJS)
-	 * Note: The renderer should set the blend mode again (after drawing other Light2d objects)
-	 * to ensure colors blend correctly in the CanvasRenderer.
 	 * @param {Renderer} renderer - a renderer instance
 	 */
 	preDraw(renderer) {
@@ -273,15 +232,18 @@ export default class Light2d extends Renderable {
 	}
 
 	/**
-	 * draw this Light2d (automatically called by melonJS)
+	 * draw this Light2d (automatically called by melonJS).
+	 *
+	 * Delegates to `renderer.drawLight(this)` — each renderer picks its
+	 * own implementation (procedural shader on WebGL, offscreen-canvas
+	 * bake on Canvas). Light2d itself doesn't know which path is used.
 	 * @param {Renderer} renderer - a renderer instance
-	 * @param {Camera2d} [viewport] - the viewport to (re)draw
 	 */
 	draw(renderer) {
 		if (this.illuminationOnly) {
 			return;
 		}
-		renderer.drawImage(this.texture.canvas, this.pos.x, this.pos.y);
+		renderer.drawLight(this);
 	}
 
 	/**
@@ -317,11 +279,10 @@ export default class Light2d extends Renderable {
 	destroy() {
 		colorPool.release(this.color);
 		this.color = undefined;
-		const renderer = this.parentApp?.renderer ?? game.renderer;
-		this.texture.destroy(renderer);
-		this.texture = undefined;
 		ellipsePool.release(this.visibleArea);
 		this.visibleArea = undefined;
+		// Cache entry in the Canvas renderer (if any) becomes GC-eligible
+		// via its WeakMap when this Light2d is no longer referenced.
 		super.destroy();
 	}
 }

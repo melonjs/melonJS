@@ -8,6 +8,7 @@ import {
 } from "../../system/event.ts";
 import { Gradient } from "./../gradient.js";
 import Renderer from "./../renderer.js";
+import CanvasRenderTarget from "./../rendertarget/canvasrendertarget.js";
 import TextureCache from "./../texture/cache.js";
 
 /**
@@ -80,6 +81,9 @@ export default class CanvasRenderer extends Renderer {
 	reset() {
 		super.reset();
 		this.clearColor(this.currentColor, this.settings.transparent !== true);
+		// drop the per-light gradient cache; entries will lazily re-bake on
+		// the next `drawLight()` call.
+		this._lightCache = undefined;
 	}
 
 	/**
@@ -293,6 +297,121 @@ export default class CanvasRenderer extends Renderer {
 			source = this.cache.tint(image, this.currentTint.toRGB());
 		}
 		context.drawImage(source, sx, sy, sw, sh, dx, dy, dw, dh);
+	}
+
+	/**
+	 * @inheritdoc
+	 *
+	 * Renders the light by baking its radial gradient onto an offscreen
+	 * `CanvasRenderTarget` and compositing it via `drawImage`. The bake
+	 * is cached per-Light2d in a `WeakMap` and re-fired whenever the
+	 * light's radii / color / intensity change. Cache entries are
+	 * reclaimed automatically by GC when the Light2d itself is no
+	 * longer referenced.
+	 * @param {object} light - the Light2d instance to render
+	 */
+	drawLight(light) {
+		if (this._lightCache === undefined) {
+			this._lightCache = new WeakMap();
+		}
+		let entry = this._lightCache.get(light);
+		const c = light.color;
+		if (
+			entry === undefined ||
+			entry.radiusX !== light.radiusX ||
+			entry.radiusY !== light.radiusY ||
+			entry.r !== c.r ||
+			entry.g !== c.g ||
+			entry.b !== c.b ||
+			entry.intensity !== light.intensity
+		) {
+			entry = this._bakeLight(light, entry);
+			this._lightCache.set(light, entry);
+		}
+		this.drawImage(entry.target.canvas, light.pos.x, light.pos.y);
+	}
+
+	/**
+	 * Bake (or re-bake) a `Light2d`'s radial gradient into an offscreen
+	 * canvas. Reuses `prev.target` when dimensions match (just re-fills
+	 * the gradient); allocates a new `CanvasRenderTarget` only when the
+	 * radii change.
+	 * @param {object} light - the Light2d instance
+	 * @param {object} [prev] - the previous cache entry, if any
+	 * @returns {object} the new cache entry `{ target, radiusX, radiusY, r, g, b, intensity }`
+	 * @ignore
+	 */
+	_bakeLight(light, prev) {
+		const w = light.radiusX * 2;
+		const h = light.radiusY * 2;
+		let target = prev?.target;
+		if (target && (target.width !== w || target.height !== h)) {
+			target.destroy(this);
+			target = undefined;
+		}
+		if (target === undefined) {
+			target = new CanvasRenderTarget(w, h, { offscreenCanvas: false });
+		}
+
+		const context = target.context;
+		const x1 = w / 2;
+		const y1 = h / 2;
+		const radiusX = light.radiusX;
+		const radiusY = light.radiusY;
+
+		let scaleX;
+		let scaleY;
+		let invScaleX;
+		let invScaleY;
+		let gradient;
+
+		target.clear();
+
+		if (radiusX >= radiusY) {
+			scaleX = 1;
+			invScaleX = 1;
+			scaleY = radiusY / radiusX;
+			invScaleY = radiusX / radiusY;
+			gradient = context.createRadialGradient(
+				x1,
+				y1 * invScaleY,
+				0,
+				x1,
+				radiusY * invScaleY,
+				radiusX,
+			);
+		} else {
+			scaleY = 1;
+			invScaleY = 1;
+			scaleX = radiusX / radiusY;
+			invScaleX = radiusY / radiusX;
+			gradient = context.createRadialGradient(
+				x1 * invScaleX,
+				y1,
+				0,
+				x1 * invScaleX,
+				y1,
+				radiusY,
+			);
+		}
+
+		gradient.addColorStop(0, light.color.toRGBA(light.intensity));
+		gradient.addColorStop(1, light.color.toRGBA(0.0));
+
+		context.fillStyle = gradient;
+		context.setTransform(scaleX, 0, 0, scaleY, 0, 0);
+		context.fillRect(0, 0, w * invScaleX, h * invScaleY);
+
+		const color = light.color;
+		return {
+			target,
+			radiusX,
+			radiusY,
+			r: color.r,
+			g: color.g,
+			b: color.b,
+			intensity: light.intensity,
+		};
 	}
 
 	/**

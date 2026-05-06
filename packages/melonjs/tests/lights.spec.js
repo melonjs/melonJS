@@ -837,23 +837,26 @@ describe("Light2d + Stage lighting", () => {
 			game.world.removeChildNow(light, true);
 		});
 
-		it("draw() passes pos.x/pos.y to drawImage (anchor-aware regression guard)", () => {
+		it("draw() delegates to renderer.drawLight with the light instance", () => {
+			// Light2d is renderer-agnostic — `draw` just calls
+			// `renderer.drawLight(this)` and lets the renderer pick the
+			// implementation (procedural shader on WebGL, offscreen-canvas
+			// bake on Canvas).
 			const light = spawn(150, 100, 30);
-			const drawImageCalls = [];
+			const drawLightCalls = [];
 			const stub = {
-				drawImage: (img, x, y) => {
-					drawImageCalls.push({ x, y });
+				drawLight: (l) => {
+					drawLightCalls.push(l);
 				},
 			};
 			light.draw(stub);
-			expect(drawImageCalls).toHaveLength(1);
-			expect(drawImageCalls[0].x).toBe(150);
-			expect(drawImageCalls[0].y).toBe(100);
+			expect(drawLightCalls).toHaveLength(1);
+			expect(drawLightCalls[0]).toBe(light);
 
 			game.world.removeChildNow(light, true);
 		});
 
-		it("illuminationOnly=true skips drawing the gradient texture", () => {
+		it("illuminationOnly=true skips renderer.drawLight", () => {
 			// SpriteIlluminator workflow: a logical light source whose own
 			// gradient isn't visible — only its effect on normal-mapped
 			// sprites is. The light still feeds the cutout pass and the
@@ -862,14 +865,14 @@ describe("Light2d + Stage lighting", () => {
 			const light = spawn(150, 100, 30);
 			light.illuminationOnly = true;
 
-			const drawImageCalls = [];
+			const drawLightCalls = [];
 			const stub = {
-				drawImage: (img, x, y) => {
-					drawImageCalls.push({ x, y });
+				drawLight: (l) => {
+					drawLightCalls.push(l);
 				},
 			};
 			light.draw(stub);
-			expect(drawImageCalls).toHaveLength(0);
+			expect(drawLightCalls).toHaveLength(0);
 
 			game.world.removeChildNow(light, true);
 		});
@@ -1624,6 +1627,189 @@ describe("Light2d + Stage lighting", () => {
 			}
 
 			expect(warnings.length).toBe(0);
+		});
+	});
+
+	describe("renderer.drawLight (procedural / cached paths)", () => {
+		it("Light2d does not allocate any per-light texture in its constructor", () => {
+			// The pre-#1430 implementation built a `CanvasRenderTarget` in
+			// the constructor (per-light memory cost, irrespective of
+			// renderer). Both renderers now defer rendering machinery to
+			// `drawLight()`, so Light2d itself owns no canvas/texture.
+			const light = new Light2d(0, 0, 30);
+			expect(light.texture).toBeUndefined();
+			light.destroy();
+		});
+
+		it("Canvas drawLight bakes once and caches; same light reuses the canvas", () => {
+			const renderer = video.renderer;
+			// reset the cache to start clean
+			renderer._lightCache = undefined;
+
+			const light = new Light2d(50, 50, 30);
+			renderer.drawLight(light);
+			expect(renderer._lightCache).toBeInstanceOf(WeakMap);
+			const firstEntry = renderer._lightCache.get(light);
+			expect(firstEntry).toBeDefined();
+			expect(firstEntry.target).toBeDefined();
+			const firstTarget = firstEntry.target;
+
+			renderer.drawLight(light);
+			// no property changed → same target reused (no re-bake)
+			expect(renderer._lightCache.get(light).target).toBe(firstTarget);
+
+			light.destroy();
+		});
+
+		it("Canvas drawLight re-bakes when radius changes", () => {
+			// fixes the original stale-texture bug: mutating radii after
+			// construction must invalidate the cached gradient on next draw.
+			const renderer = video.renderer;
+			renderer._lightCache = undefined;
+
+			const light = new Light2d(50, 50, 30);
+			renderer.drawLight(light);
+			const oldEntry = renderer._lightCache.get(light);
+
+			light.resize(60, 60);
+			renderer.drawLight(light);
+			const newEntry = renderer._lightCache.get(light);
+			expect(newEntry.radiusX).toBe(60);
+			expect(newEntry.radiusY).toBe(60);
+			// dimensions changed → underlying CanvasRenderTarget was re-allocated
+			expect(newEntry.target).not.toBe(oldEntry.target);
+
+			light.destroy();
+		});
+
+		it("Canvas drawLight re-bakes when color or intensity changes", () => {
+			const renderer = video.renderer;
+			renderer._lightCache = undefined;
+
+			const light = new Light2d(0, 0, 25, 25, "#ff0000", 0.5);
+			renderer.drawLight(light);
+			const baseline = renderer._lightCache.get(light);
+			expect(baseline.r).toBe(255);
+			expect(baseline.intensity).toBe(0.5);
+
+			light.color.parseCSS("#00ff00");
+			renderer.drawLight(light);
+			expect(renderer._lightCache.get(light).g).toBe(255);
+
+			light.intensity = 0.9;
+			renderer.drawLight(light);
+			expect(renderer._lightCache.get(light).intensity).toBe(0.9);
+
+			light.destroy();
+		});
+
+		it("Canvas drawLight reuses the same CanvasRenderTarget when only color/intensity change (no realloc)", () => {
+			// Optimization: the gradient is repainted into the existing
+			// offscreen canvas; we only allocate a new render target when
+			// the radii actually change.
+			const renderer = video.renderer;
+			renderer._lightCache = undefined;
+
+			const light = new Light2d(0, 0, 25, 25, "#ff0000", 0.5);
+			renderer.drawLight(light);
+			const t1 = renderer._lightCache.get(light).target;
+
+			light.intensity = 0.9;
+			renderer.drawLight(light);
+			expect(renderer._lightCache.get(light).target).toBe(t1);
+
+			light.color.parseCSS("#0000ff");
+			renderer.drawLight(light);
+			expect(renderer._lightCache.get(light).target).toBe(t1);
+
+			light.destroy();
+		});
+
+		it("Canvas reset() clears the light cache", () => {
+			const renderer = video.renderer;
+			renderer._lightCache = undefined;
+
+			const light = new Light2d(0, 0, 25);
+			renderer.drawLight(light);
+			expect(renderer._lightCache).toBeInstanceOf(WeakMap);
+
+			renderer.reset();
+			expect(renderer._lightCache).toBeUndefined();
+
+			light.destroy();
+		});
+
+		it("base Renderer.drawLight is a no-op (does not throw, returns undefined)", () => {
+			// Polymorphism guard: any renderer subclass without a custom
+			// drawLight should be safely substitutable in Light2d.draw.
+			const stubRenderer = Object.create(null);
+			Object.assign(stubRenderer, {
+				drawLight: video.renderer.constructor.prototype.drawLight
+					? video.renderer.constructor.prototype.drawLight
+					: undefined,
+			});
+			// reach the actual base class
+			let proto = video.renderer;
+			while (proto && Object.getPrototypeOf(proto)) {
+				proto = Object.getPrototypeOf(proto);
+				if (proto.constructor.name === "Renderer") {
+					break;
+				}
+			}
+			const baseDrawLight = proto.drawLight;
+			expect(typeof baseDrawLight).toBe("function");
+			const fakeLight = {
+				color: { r: 0, g: 0, b: 0 },
+				radiusX: 1,
+				radiusY: 1,
+				intensity: 1,
+				pos: { x: 0, y: 0 },
+				width: 2,
+				height: 2,
+			};
+			expect(() => {
+				baseDrawLight.call({}, fakeLight);
+			}).not.toThrow();
+		});
+	});
+
+	describe("Light2dEffect (standalone API)", () => {
+		// Light2dEffect is the WebGL-side procedural shader. It's exposed
+		// via the constructor + setColor/setIntensity/setRadii so tests
+		// (and any future custom path) can use it standalone, not just via
+		// `WebGLRenderer.drawLight`.
+		it("constructor accepts color/intensity/radii options without throwing", async () => {
+			// Skipped on Canvas (the shader requires a GL context).
+			if (!video.renderer.WebGLVersion) {
+				return;
+			}
+			const { default: Light2dEffect } = await import(
+				"../src/video/webgl/effects/light2d.js"
+			);
+			const { Color } = await import("../src/math/color.ts");
+			expect(() => {
+				const eff = new Light2dEffect(video.renderer, {
+					color: new Color(255, 128, 64),
+					intensity: 0.8,
+					radiusX: 40,
+					radiusY: 20,
+				});
+				eff.setColor(new Color(0, 255, 0));
+				eff.setIntensity(1.5);
+				eff.setRadii(60, 60);
+			}).not.toThrow();
+		});
+
+		it("constructor with no options uses sensible defaults (white, 1.0, 1×1)", async () => {
+			if (!video.renderer.WebGLVersion) {
+				return;
+			}
+			const { default: Light2dEffect } = await import(
+				"../src/video/webgl/effects/light2d.js"
+			);
+			expect(() => {
+				return new Light2dEffect(video.renderer);
+			}).not.toThrow();
 		});
 	});
 });

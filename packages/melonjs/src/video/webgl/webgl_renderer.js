@@ -24,6 +24,7 @@ import LitQuadBatcher from "./batchers/lit_quad_batcher";
 import MeshBatcher from "./batchers/mesh_batcher";
 import PrimitiveBatcher from "./batchers/primitive_batcher";
 import QuadBatcher from "./batchers/quad_batcher";
+import Light2dEffect from "./effects/light2d.js";
 import { createLightUniformScratch, packLights } from "./lighting/pack.ts";
 import { getMaxShaderPrecision } from "./utils/precision.js";
 
@@ -548,6 +549,69 @@ export default class WebGLRenderer extends Renderer {
 				}
 			}
 		}
+	}
+
+	/**
+	 * @inheritdoc
+	 *
+	 * Renders the light as a single quad through a shared
+	 * {@link Light2dEffect} fragment shader (procedural radial falloff —
+	 * no per-light texture). The shader is lazy-allocated on first call
+	 * and reused for every Light2d on this renderer.
+	 * @param {object} light - the Light2d instance to render
+	 */
+	drawLight(light) {
+		if (this._lightShader === undefined) {
+			this._lightShader = new Light2dEffect(this);
+		}
+		this._lightShader.setColor(light.color);
+		this._lightShader.setIntensity(light.intensity);
+		this._lightShader.setRadii(light.radiusX, light.radiusY);
+
+		this.setBatcher("quad");
+		this.flush();
+		this.currentBatcher.blitTexture(
+			this._getWhitePixel(),
+			light.pos.x,
+			light.pos.y,
+			light.width,
+			light.height,
+			this._lightShader,
+		);
+	}
+
+	/**
+	 * Lazy-init a shared 1×1 white `WebGLTexture` used as the no-op
+	 * source for `drawLight`'s procedural shader. The shader's `apply`
+	 * ignores the sampled color, but `ShaderEffect`'s auto-injected
+	 * wrapper still issues a `texture2D(uSampler, vRegion)` read — the
+	 * white pixel makes that read trivially cheap.
+	 * @returns {WebGLTexture}
+	 * @ignore
+	 */
+	_getWhitePixel() {
+		if (this._whitePixel === undefined) {
+			const gl = this.gl;
+			this._whitePixel = gl.createTexture();
+			gl.activeTexture(gl.TEXTURE0);
+			gl.bindTexture(gl.TEXTURE_2D, this._whitePixel);
+			gl.texImage2D(
+				gl.TEXTURE_2D,
+				0,
+				gl.RGBA,
+				1,
+				1,
+				0,
+				gl.RGBA,
+				gl.UNSIGNED_BYTE,
+				new Uint8Array([255, 255, 255, 255]),
+			);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		}
+		return this._whitePixel;
 	}
 
 	/**
