@@ -105,8 +105,8 @@ export default class Light2d extends Renderable {
 		 */
 		this.blendMode = "lighter";
 
-		// initial shape — getVisibleArea() updates this each frame from
-		// world-space bounds. `pos` is the center (anchorPoint set below).
+		// initial shape — `getVisibleArea()` rewrites this each frame from
+		// transform-aware bounds.
 		/** @ignore */
 		this.visibleArea = ellipsePool.get(
 			this.pos.x,
@@ -115,8 +115,7 @@ export default class Light2d extends Renderable {
 			this.height,
 		);
 
-		// centered anchor — `pos` is the visual center, transforms (scale,
-		// rotate) pivot around it.
+		// centered anchor — transforms (scale, rotate) pivot around `pos`.
 		this.anchorPoint.set(0.5, 0.5);
 
 		/**

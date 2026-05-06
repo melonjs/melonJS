@@ -607,11 +607,12 @@ export default class WebGLRenderer extends Renderer {
 		if (this._whitePixel === undefined) {
 			const gl = this.gl;
 			this._whitePixel = gl.createTexture();
-			// Activating + binding TEXTURE0 here mutates GL state that
-			// the active batcher tracks via `boundTextures[0]`. Drop
-			// that cache slot so the next color upload re-binds cleanly,
-			// otherwise the batcher could think unit 0 still holds
-			// whatever was there before this call.
+			// `texImage2D` / `texParameteri` operate on the currently bound
+			// texture, so we have to bind first. That mutates GL state the
+			// active batcher caches in `boundTextures[0]` — sync that cache
+			// to the new binding so the batcher's view stays consistent
+			// with actual GL state until the immediately-following
+			// `blitTexture` call rebinds and clears it.
 			gl.activeTexture(gl.TEXTURE0);
 			gl.bindTexture(gl.TEXTURE_2D, this._whitePixel);
 			if (this.currentBatcher && this.currentBatcher.boundTextures) {
