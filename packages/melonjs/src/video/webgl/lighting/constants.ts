@@ -1,9 +1,8 @@
 /**
- * Renderer-agnostic constants shared by the lighting subsystem.
- *
- * Lives outside `video/webgl/` so `Stage` (used by both Canvas and WebGL)
- * can import it without dragging WebGL-specific shader code into Canvas
- * builds.
+ * Constants shared between the lit fragment shader (`multitexture-lit.js`),
+ * the lit batcher (`LitQuadBatcher`), and the uniform packer (`pack.ts`).
+ * Kept in a tiny standalone module so the three consumers don't depend on
+ * each other transitively for a single integer.
  */
 
 /**
