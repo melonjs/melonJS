@@ -1,4 +1,3 @@
-import IndexBuffer from "../buffer/index.js";
 import {
 	buildLitMultiTextureFragment,
 	MAX_LIGHTS,
@@ -39,12 +38,10 @@ export default class LitQuadBatcher extends QuadBatcher {
 			Math.max(1, Math.floor(renderer.maxTextures / 2)),
 			16,
 		);
-
-		// We can't call super.init because QuadBatcher's vertex shader and
-		// attribute layout differ. Reach past it to MaterialBatcher.init
-		// directly — same pattern QuadBatcher itself uses.
 		this.maxBatchTextures = halved;
 
+		// Skip QuadBatcher.init (its attribute layout / shader differ) and
+		// invoke MaterialBatcher.init directly with the lit configuration.
 		Object.getPrototypeOf(QuadBatcher.prototype).init.call(this, renderer, {
 			attributes: [
 				{
@@ -89,11 +86,13 @@ export default class LitQuadBatcher extends QuadBatcher {
 			},
 		});
 
-		// bind color samplers to units 0..N-1, paired normals to N..2N-1
-		for (let i = 0; i < halved; i++) {
-			this.defaultShader.setUniform("uSampler" + i, i);
-			this.defaultShader.setUniform("uNormalSampler" + i, halved + i);
-		}
+		// Reuse the parent's setup helpers — they're agnostic to the
+		// shader/attribute layout, just iterate `this.maxBatchTextures`.
+		this._bindColorSamplers();
+		this._bindNormalSamplers();
+		this._createIndexBuffer();
+
+		this.useMultiTexture = true;
 
 		/**
 		 * normal-map texture per color slot — keyed by the same unit index as
@@ -115,41 +114,32 @@ export default class LitQuadBatcher extends QuadBatcher {
 		this._maxLights = MAX_LIGHTS;
 		this.defaultShader.setUniform("uLightCount", 0);
 		this.defaultShader.setUniform("uAmbient", [0, 0, 0]);
+	}
 
-		this.useMultiTexture = true;
-
-		const maxQuads = this.vertexData.maxVertex / 4;
-		this.indexBuffer = new IndexBuffer(
-			this.gl,
-			maxQuads * 6,
-			this.renderer.WebGLVersion > 1,
-		);
-		this.indexBuffer.fillQuadPattern(maxQuads);
+	/**
+	 * Bind the paired normal sampler uniforms (`uNormalSampler0..N-1`)
+	 * to texture units `maxBatchTextures..2*maxBatchTextures-1`. Called
+	 * from `init` and `reset`.
+	 * @ignore
+	 */
+	_bindNormalSamplers() {
+		for (let i = 0; i < this.maxBatchTextures; i++) {
+			this.defaultShader.setUniform(
+				"uNormalSampler" + i,
+				this.maxBatchTextures + i,
+			);
+		}
 	}
 
 	/**
 	 * @ignore
 	 */
 	reset() {
-		// MaterialBatcher.reset (skip QuadBatcher to avoid its index-buffer
-		// rebuild that uses stale maxBatchTextures math)
-		Object.getPrototypeOf(QuadBatcher.prototype).reset.call(this);
-
-		const maxQuads = this.vertexData.maxVertex / 4;
-		this.indexBuffer = new IndexBuffer(
-			this.gl,
-			maxQuads * 6,
-			this.renderer.WebGLVersion > 1,
-		);
-		this.indexBuffer.fillQuadPattern(maxQuads);
-
-		for (let i = 0; i < this.maxBatchTextures; i++) {
-			this.defaultShader.setUniform("uSampler" + i, i);
-			this.defaultShader.setUniform(
-				"uNormalSampler" + i,
-				this.maxBatchTextures + i,
-			);
-		}
+		// QuadBatcher.reset rebuilds the index buffer, rebinds color
+		// samplers, and resets `useMultiTexture`. We just add the
+		// lit-specific state on top.
+		super.reset();
+		this._bindNormalSamplers();
 		this.boundNormalMaps.fill(null);
 		const gl = this.gl;
 		this.normalMapTextures.forEach((tex) => {
@@ -159,7 +149,6 @@ export default class LitQuadBatcher extends QuadBatcher {
 		this._lightCount = 0;
 		this.defaultShader.setUniform("uLightCount", 0);
 		this.defaultShader.setUniform("uAmbient", [0, 0, 0]);
-		this.useMultiTexture = true;
 	}
 
 	/**
@@ -335,8 +324,8 @@ export default class LitQuadBatcher extends QuadBatcher {
 	}
 
 	/**
-	 * Override blitTexture so the FBO blit pushes -1 as the unlit
-	 * sentinel (the vertex layout includes aNormalTextureId).
+	 * Override `blitTexture` so the FBO blit pushes `-1` as the unlit
+	 * sentinel (this batcher's vertex layout includes `aNormalTextureId`).
 	 * @param {WebGLTexture} source - the raw GL texture to blit
 	 * @param {number} x - destination x
 	 * @param {number} y - destination y
