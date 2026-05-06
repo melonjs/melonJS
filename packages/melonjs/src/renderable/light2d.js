@@ -20,10 +20,12 @@ import Renderable from "./renderable.js";
  * - **WebGL**: a single quad through a shared procedural radial-falloff
  *   fragment shader (`RadialGradientEffect`). One shader is reused across
  *   every Light2d on the renderer; no per-light texture is allocated.
- * - **Canvas**: a `Gradient` (cached per-light in a `WeakMap` and rebuilt
- *   only when radii / color / intensity change) rasterized via
- *   `Gradient.toCanvas()` into a single shared `CanvasRenderTarget`, then
- *   composited with `drawImage`.
+ * - **Canvas**: a small `Gradient` config object (cached per-light in a
+ *   `WeakMap` and rebuilt only when radii / color / intensity change),
+ *   rasterized via `Gradient.toCanvas()` on every draw into a single
+ *   shared `CanvasRenderTarget`, then composited with `drawImage`. The
+ *   per-light cache holds only the gradient stops, not the bitmap — the
+ *   render target is one-per-engine.
  *
  * Light2d itself is renderer-agnostic — no shader knowledge, no canvas
  * allocation, no renderer reference held.
@@ -241,8 +243,9 @@ export default class Light2d extends Renderable {
 	 * draw this Light2d (automatically called by melonJS).
 	 *
 	 * Delegates to `renderer.drawLight(this)` — each renderer picks its
-	 * own implementation (procedural shader on WebGL, offscreen-canvas
-	 * bake on Canvas). Light2d itself doesn't know which path is used.
+	 * own implementation (procedural shader on WebGL; cached `Gradient`
+	 * rasterized into a shared `CanvasRenderTarget` on Canvas). Light2d
+	 * itself doesn't know which path is used.
 	 * @param {Renderer} renderer - a renderer instance
 	 */
 	draw(renderer) {

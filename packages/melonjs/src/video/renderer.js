@@ -443,14 +443,16 @@ export default class Renderer {
 	 * Render a `Light2d` instance.
 	 *
 	 * Each renderer implements its own strategy: the WebGL renderer
-	 * draws a single quad through a shared procedural radial-falloff
-	 * fragment shader (no per-light texture); the Canvas renderer
-	 * caches a `Gradient` per light in a `WeakMap` (rebuilt only when
-	 * the light's radii / color / intensity change), rasterizes it with
-	 * `Gradient.toCanvas()` into a single shared `CanvasRenderTarget`,
-	 * and composites the result via `drawImage`. The base implementation
-	 * is a no-op so renderers without a lighting path can be
-	 * polymorphically substituted.
+	 * draws lights as quads through a shared procedural radial-falloff
+	 * fragment shader (no per-light texture, color and intensity
+	 * encoded in the per-vertex tint so consecutive draws batch); the
+	 * Canvas renderer caches a small `Gradient` config object per
+	 * light in a `WeakMap` (rebuilt only when the light's radii /
+	 * color / intensity change), rasterizes it with `Gradient.toCanvas()`
+	 * into a single shared `CanvasRenderTarget`, and composites the
+	 * result via `drawImage`. The base implementation is a no-op so
+	 * renderers without a lighting path can be polymorphically
+	 * substituted.
 	 *
 	 * Light2d itself is renderer-agnostic — it just calls
 	 * `renderer.drawLight(this)` and relies on the renderer to pick

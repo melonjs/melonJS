@@ -383,10 +383,15 @@ export default class WebGLRenderer extends Renderer {
 			this._lightShader = undefined;
 		}
 		if (this._lightAtlas !== undefined) {
-			// drop the cache mapping (the underlying GL texture is gone
-			// with the lost context anyway); the atlas object itself
-			// holds only the source canvas, no GL handles to release.
-			this.cache.delete?.(this._lightAtlas);
+			// `TextureCache` is keyed by the source image, not by the
+			// `TextureAtlas` instance. Dropping the wrong key would leak
+			// the entry (so a context lost / restore would later resolve
+			// the canvas to a `TextureAtlas` whose internal GL texture
+			// reference is invalid). Iterate the atlas's sources to drop
+			// every cached entry it registered in `cache.set(source, this)`.
+			this._lightAtlas.sources.forEach((source) => {
+				this.cache.delete?.(source);
+			});
 			this._lightAtlas = undefined;
 		}
 	}
@@ -427,8 +432,9 @@ export default class WebGLRenderer extends Renderer {
 		// currentShader to this target so a custom shader left bound by a
 		// prior call (e.g. `drawLight` parking the radial-gradient
 		// program) gets evicted before the next sprite batch flushes.
-		const targetShader =
-			typeof shader === "object" ? shader : batcher.defaultShader;
+		// `shader != null` excludes both `null` and `undefined`
+		// (`typeof null === "object"` would otherwise let null through).
+		const targetShader = shader != null ? shader : batcher.defaultShader;
 
 		if (
 			this.currentBatcher === batcher &&
@@ -1035,7 +1041,7 @@ export default class WebGLRenderer extends Renderer {
 		this.setBatcher(useLit ? "litQuad" : "quad");
 
 		const shader = this.customShader;
-		if (typeof shader === "object") {
+		if (shader != null) {
 			this.currentBatcher.useShader(shader);
 		}
 
@@ -1119,7 +1125,7 @@ export default class WebGLRenderer extends Renderer {
 		this.setBatcher("mesh");
 
 		// apply custom shader if set on the renderable (via preDraw)
-		if (typeof this.customShader === "object") {
+		if (this.customShader != null) {
 			this.currentBatcher.useShader(this.customShader);
 		}
 
@@ -1158,7 +1164,7 @@ export default class WebGLRenderer extends Renderer {
 		gl.depthMask(false);
 
 		// revert to default shader if custom was applied
-		if (typeof this.customShader === "object") {
+		if (this.customShader != null) {
 			this.currentBatcher.useShader(this.currentBatcher.defaultShader);
 		}
 	}

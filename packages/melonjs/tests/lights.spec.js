@@ -10,6 +10,7 @@ import {
 	state,
 	video,
 } from "../src/index.js";
+import Renderer from "../src/video/renderer.js";
 import {
 	createLightUniformScratch,
 	packLights,
@@ -1775,21 +1776,7 @@ describe("Light2d + Stage lighting", () => {
 		it("base Renderer.drawLight is a no-op (does not throw, returns undefined)", () => {
 			// Polymorphism guard: any renderer subclass without a custom
 			// drawLight should be safely substitutable in Light2d.draw.
-			const stubRenderer = Object.create(null);
-			Object.assign(stubRenderer, {
-				drawLight: video.renderer.constructor.prototype.drawLight
-					? video.renderer.constructor.prototype.drawLight
-					: undefined,
-			});
-			// reach the actual base class
-			let proto = video.renderer;
-			while (proto && Object.getPrototypeOf(proto)) {
-				proto = Object.getPrototypeOf(proto);
-				if (proto.constructor.name === "Renderer") {
-					break;
-				}
-			}
-			const baseDrawLight = proto.drawLight;
+			const baseDrawLight = Renderer.prototype.drawLight;
 			expect(typeof baseDrawLight).toBe("function");
 			const fakeLight = {
 				color: { r: 0, g: 0, b: 0 },
@@ -1828,11 +1815,13 @@ describe("RadialGradientEffect (standalone API, WebGL)", () => {
 	});
 
 	afterAll(() => {
-		// hand the world back to the default renderer for any later test files
+		// restore the file-level CANVAS init the parent describe started
+		// with — keeps the renderer choice deterministic for any sibling
+		// describe that might run after this one in the same file.
 		video.init(800, 600, {
 			parent: "screen",
 			scale: "auto",
-			renderer: video.AUTO,
+			renderer: video.CANVAS,
 		});
 	});
 
