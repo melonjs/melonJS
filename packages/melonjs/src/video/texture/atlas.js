@@ -71,7 +71,7 @@ export class TextureAtlas {
 	/**
 	 * @param {object|object[]} atlases - atlas information. See {@link loader.getJSON}
 	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|CompressedImage|string|OffscreenCanvas[]|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] - Image source
-	 * @param {boolean|object} [options=false] - either a boolean (legacy `cache` flag) or an options object `{ cache?: boolean, normalMap?: HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|HTMLVideoElement|string }`. When `normalMap` is provided, the atlas exposes a paired normal-map texture sharing the same UVs as the color texture (used by the WebGL renderer's lit pipeline).
+	 * @param {boolean|object} [options=false] - either a boolean (legacy `cache` flag) or an options object `{ cache?: boolean, normalMap?: HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|string }`. When `normalMap` is provided, the atlas exposes a paired normal-map texture sharing the same UVs as the color texture (used by the WebGL renderer's lit pipeline). `HTMLVideoElement` is intentionally not supported as a normal map (would freeze on frame 0 due to per-image GL texture caching).
 	 * @example
 	 * // create a texture atlas from a JSON Object
 	 * game.texture = new me.TextureAtlas(
@@ -280,7 +280,7 @@ export class TextureAtlas {
 				typeof normalMap.height === "number"
 			) {
 				// image-like (HTMLImageElement, HTMLCanvasElement,
-				// OffscreenCanvas, ImageBitmap, HTMLVideoElement, etc.)
+				// OffscreenCanvas, ImageBitmap)
 				resolved = normalMap;
 			} else {
 				throw new TypeError(

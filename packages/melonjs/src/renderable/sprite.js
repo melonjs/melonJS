@@ -34,7 +34,7 @@ export default class Sprite extends Renderable {
 	 * @param {number} [settings.flipX] - flip the sprite on the horizontal axis
 	 * @param {number} [settings.flipY] - flip the sprite on the vertical axis
 	 * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] - Anchor point to draw the frame at (defaults to the center of the frame).
-	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|HTMLVideoElement|string} [settings.normalMap] - optional normal-map texture used for per-pixel lighting (SpriteIlluminator-style). Same layout/UVs as `settings.image`. When omitted (default), the sprite renders unlit and pays no extra cost. Ignored by the Canvas renderer.
+	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|string} [settings.normalMap] - optional normal-map texture used for per-pixel lighting (SpriteIlluminator-style). Same layout/UVs as `settings.image`. When omitted (default), the sprite renders unlit and pays no extra cost. Ignored by the Canvas renderer. Note: `HTMLVideoElement` is intentionally not supported — normal maps encode static surface directions in RGB, and the engine caches the GL texture per image reference (a video would freeze on frame 0).
 	 * @example
 	 * // create a single sprite from a standalone image, with anchor in the center
 	 * let sprite = new me.Sprite(0, 0, {
@@ -347,7 +347,7 @@ export default class Sprite extends Renderable {
 	 * `width`/`height`) throws — assign `null` to clear.
 	 *
 	 * Silently ignored by the Canvas renderer.
-	 * @type {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|HTMLVideoElement|null}
+	 * @type {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|null}
 	 */
 	get normalMap() {
 		return this._normalMap;
@@ -364,7 +364,7 @@ export default class Sprite extends Renderable {
 		) {
 			throw new TypeError(
 				"Sprite.normalMap must be null or an image-like object with numeric width/height " +
-					"(HTMLImageElement, HTMLCanvasElement, OffscreenCanvas, ImageBitmap, HTMLVideoElement)",
+					"(HTMLImageElement, HTMLCanvasElement, OffscreenCanvas, ImageBitmap)",
 			);
 		}
 		this._normalMap = value;

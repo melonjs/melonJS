@@ -108,14 +108,14 @@ export default class LitQuadBatcher extends QuadBatcher {
 		 * normal-map texture per color slot — keyed by the same unit index as
 		 * `boundTextures`. Used by `addQuad` to detect when a normal-map slot
 		 * needs (re-)uploading, mirroring the color-texture cache.
-		 * @type {Array<HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|HTMLVideoElement|null>}
+		 * @type {Array<HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|null>}
 		 * @ignore
 		 */
 		this.boundNormalMaps = new Array(halved).fill(null);
 
 		/**
 		 * Map from a normal-map source image to its GL texture object.
-		 * @type {Map<HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|HTMLVideoElement, WebGLTexture>}
+		 * @type {Map<HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap, WebGLTexture>}
 		 * @ignore
 		 */
 		this.normalMapTextures = new Map();
@@ -211,7 +211,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 	 * `premultipliedAlpha = false` — normal maps store linear-encoded
 	 * surface normals; multiplying through alpha would corrupt the
 	 * encoding for any non-opaque texel.
-	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|HTMLVideoElement} image - normal-map source
+	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap} image - normal-map source
 	 * @param {number} unit - GL texture unit (already offset by `maxBatchTextures`)
 	 * @ignore
 	 */
