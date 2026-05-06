@@ -567,8 +567,8 @@ export default class WebGLRenderer extends Renderer {
 		this._lightShader.setColor(light.color);
 		this._lightShader.setIntensity(light.intensity);
 
-		this.setBatcher("quad");
-		this.currentBatcher.blitTexture(
+		const batcher = this.setBatcher("quad");
+		batcher.blitTexture(
 			this._getWhitePixel(),
 			light.pos.x,
 			light.pos.y,
