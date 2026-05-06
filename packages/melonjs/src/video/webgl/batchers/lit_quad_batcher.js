@@ -345,9 +345,9 @@ export default class LitQuadBatcher extends QuadBatcher {
 		shader.setUniform("uSampler", 0);
 
 		// transform corners through the renderer transform — see
-		// `QuadBatcher.blitTexture` for the rationale (FBO callers reset
-		// `currentTransform` to identity, world-space callers get the
-		// translate/scale applied).
+		// `QuadBatcher.blitTexture` for the rationale. Only caller today
+		// is `WebGLRenderer.blitEffect`, which resets `currentTransform`
+		// to identity, so the matrix branch is dormant in practice.
 		const m = this.viewMatrix;
 		const vec0 = V_ARRAY[0].set(x, y);
 		const vec1 = V_ARRAY[1].set(x + width, y);

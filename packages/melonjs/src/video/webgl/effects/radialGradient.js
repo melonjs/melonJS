@@ -8,10 +8,21 @@ import ShaderEffect from "../shadereffect.js";
 
 /**
  * A procedural radial-gradient shader effect: solid color at the center
- * fading linearly to fully transparent at the edge of the quad. The
- * falloff is naturally elliptical for non-square quads — the quad's UV
- * space is normalized to `[0, 1]` regardless of dimensions, so
- * `length(uv * 2 - 1) == 1` lies exactly on the inscribed ellipse.
+ * fading linearly to fully transparent at the edge of the host quad.
+ * The falloff is naturally elliptical for non-square quads.
+ *
+ * **UV-space caveat.** The `apply(color, uv)` function receives
+ * `vRegion` — the atlas UVs of the host quad. The falloff math
+ * (`length(uv * 2 - 1)`) assumes those UVs span `[0, 1] × [0, 1]`,
+ * which is true when the quad samples a full-rect texture (a
+ * dedicated 1×1 white pixel, a non-atlased Sprite, an FBO blit, or
+ * the engine-provided light atlas used by `WebGLRenderer.drawLight`).
+ * If you attach this effect to a Sprite that uses a *sub-region* of a
+ * larger atlas, `uv` will be in `[u0..u1] × [v0..v1]` and the radial
+ * center will be misplaced. For atlas-based renderables, set the
+ * effect's `uColor`/`uIntensity` and pair it with a Sprite whose
+ * texture covers a full atlas, or use a Sprite created from a
+ * standalone image.
  *
  * The falloff curve is **linear** (`f = clamp(1 - d, 0, 1)`) to match
  * the Canvas 2D `createRadialGradient` two-stop output exactly. Output

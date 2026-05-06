@@ -204,10 +204,11 @@ export default class QuadBatcher extends MaterialBatcher {
 		shader.setUniform("uSampler", 0);
 
 		// push a screen-aligned quad with Y-flipped UVs, transformed by
-		// the current renderer transform. `WebGLRenderer.blitEffect` resets
-		// `currentTransform` to identity before calling so FBO blits are
-		// unaffected; world-space callers (e.g. `drawLight`) get the
-		// `preDraw` translate / scale applied automatically.
+		// the current renderer transform. `WebGLRenderer.blitEffect` (the
+		// only caller today) resets `currentTransform` to identity before
+		// calling so FBO blits land in screen space; the matrix path is
+		// kept for any future world-space caller that wants its preDraw
+		// translate/scale honored.
 		const m = this.viewMatrix;
 		const vec0 = V_ARRAY[0].set(x, y);
 		const vec1 = V_ARRAY[1].set(x + width, y);
