@@ -580,10 +580,19 @@ export default class WebGLRenderer extends Renderer {
 		if (this._lightShader === undefined) {
 			this._lightShader = new RadialGradientEffect(this);
 		}
+		const batcher = this.setBatcher("quad");
+		// Flush BEFORE mutating shader uniforms or binding textures.
+		// `setBatcher("quad")` only flushes when *switching* batchers — if
+		// the active batcher is already "quad" (e.g. a sprite was just
+		// queued), pending vertices stay in the buffer. The setColor /
+		// setIntensity calls below trigger `gl.useProgram(_lightShader)`
+		// internally (via `setUniform`), and `_getWhitePixel`'s lazy init
+		// rebinds TEXTURE0 — both would corrupt those pending vertices on
+		// the next flush. Flushing here drains them with the correct
+		// program / texture state still active.
+		batcher.flush();
 		this._lightShader.setColor(light.color);
 		this._lightShader.setIntensity(light.intensity);
-
-		const batcher = this.setBatcher("quad");
 		batcher.blitTexture(
 			this._getWhitePixel(),
 			light.pos.x,
