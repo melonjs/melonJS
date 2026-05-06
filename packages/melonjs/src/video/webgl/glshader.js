@@ -139,7 +139,6 @@ export default class GLShader {
 	 * @param {number} stride - the size of a single vertex in bytes
 	 */
 	setVertexAttributes(gl, attributes, stride) {
-		// set the vertex attributes
 		for (let index = 0; index < attributes.length; ++index) {
 			const element = attributes[index];
 			const location = this.getAttribLocation(element.name);
@@ -154,8 +153,6 @@ export default class GLShader {
 					stride,
 					element.offset,
 				);
-			} else {
-				gl.disableVertexAttribArray(index);
 			}
 		}
 	}

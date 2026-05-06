@@ -208,6 +208,26 @@ export class Batcher {
 	}
 
 	/**
+	 * called by the WebGL renderer when this batcher is being replaced by another.
+	 * Disables this batcher's vertex attribute locations so they don't leak across
+	 * (otherwise stale stride/offset state can cause INVALID_OPERATION on the next draw).
+	 */
+	unbind() {
+		if (this.currentShader === undefined) {
+			return;
+		}
+		const gl = this.gl;
+		for (let i = 0; i < this.attributes.length; ++i) {
+			const location = this.currentShader.getAttribLocation(
+				this.attributes[i].name,
+			);
+			if (location !== -1) {
+				gl.disableVertexAttribArray(location);
+			}
+		}
+	}
+
+	/**
 	 * Select the shader to use for compositing
 	 * @see GLShader
 	 * @param {GLShader} shader - a reference to a GLShader instance

@@ -363,21 +363,50 @@ describe("Sprite", () => {
 		});
 	});
 
-	describe("Sprite.draw + renderer.currentNormalMap state", () => {
+	describe("Sprite.preDraw/draw/postDraw + renderer.currentNormalMap state", () => {
 		// Stub renderer that captures `currentNormalMap` at the moment
-		// `drawImage` is called. Verifies Sprite.draw routes the
-		// normal-map through renderer state (not through drawImage args
-		// — the drawImage signature must stay stable).
+		// `drawImage` is called. Verifies Sprite routes the normal-map
+		// through renderer state via the `preDraw` → `draw` → `postDraw`
+		// lifecycle (the same convention `setTint` / `clearTint` follow).
+		// `drawImage` itself stays signature-stable.
 		function makeStub() {
 			const calls = { normalMapAtDrawImage: [], finalState: null };
+			const noop = () => {};
 			const stub = {
 				currentNormalMap: null,
 				drawImage: function () {
-					// snapshot the renderer state at the moment drawImage runs
 					calls.normalMapAtDrawImage.push(this.currentNormalMap);
 				},
+				// the rest is what `Renderable.preDraw`/`postDraw` touches —
+				// no-op stubs are enough to let the lifecycle run end-to-end
+				save: noop,
+				restore: noop,
+				translate: noop,
+				scale: noop,
+				transform: noop,
+				setGlobalAlpha: noop,
+				globalAlpha: () => {
+					return 1;
+				},
+				setTint: noop,
+				clearTint: noop,
+				setMask: noop,
+				clearMask: noop,
+				setBlendMode: noop,
+				getBlendMode: () => {
+					return "normal";
+				},
+				beginPostEffect: noop,
+				endPostEffect: noop,
 			};
 			return { stub, calls };
+		}
+
+		// run the full draw lifecycle the way the engine does
+		function fullDraw(sprite, stub) {
+			sprite.preDraw(stub);
+			sprite.draw(stub);
+			sprite.postDraw(stub);
 		}
 
 		it("Sprite without normalMap leaves currentNormalMap unchanged", () => {
@@ -387,12 +416,12 @@ describe("Sprite", () => {
 				image: video.createCanvas(16, 16),
 			});
 			const { stub, calls } = makeStub();
-			s.draw(stub);
+			fullDraw(s, stub);
 			expect(calls.normalMapAtDrawImage).toEqual([null]);
 			expect(stub.currentNormalMap).toBeNull();
 		});
 
-		it("Sprite with normalMap sets currentNormalMap during drawImage and clears after", () => {
+		it("Sprite with normalMap sets currentNormalMap during drawImage and clears after postDraw", () => {
 			const normal = video.createCanvas(16, 16);
 			const s = new Sprite(0, 0, {
 				framewidth: 16,
@@ -401,9 +430,9 @@ describe("Sprite", () => {
 				normalMap: normal,
 			});
 			const { stub, calls } = makeStub();
-			s.draw(stub);
+			fullDraw(s, stub);
 			expect(calls.normalMapAtDrawImage).toEqual([normal]);
-			// cleared after drawImage so the next un-lit sprite isn't
+			// cleared by postDraw so the next un-lit sprite isn't
 			// accidentally lit
 			expect(stub.currentNormalMap).toBeNull();
 		});
@@ -422,8 +451,8 @@ describe("Sprite", () => {
 				image: video.createCanvas(16, 16),
 			});
 			const { stub, calls } = makeStub();
-			lit.draw(stub);
-			unlit.draw(stub);
+			fullDraw(lit, stub);
+			fullDraw(unlit, stub);
 			expect(calls.normalMapAtDrawImage).toEqual([normal, null]);
 		});
 

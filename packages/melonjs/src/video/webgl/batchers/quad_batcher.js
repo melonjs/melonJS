@@ -1,9 +1,6 @@
 import { Vector2d } from "../../../math/vector2d.ts";
 import IndexBuffer from "../buffer/index.js";
-import {
-	buildMultiTextureFragment,
-	MAX_LIGHTS,
-} from "./../shaders/multitexture.js";
+import { buildMultiTextureFragment } from "./../shaders/multitexture.js";
 import quadMultiVertex from "./../shaders/quad-multi.vert";
 import { MaterialBatcher } from "./material_batcher.js";
 
@@ -32,29 +29,11 @@ export default class QuadBatcher extends MaterialBatcher {
 	 */
 	init(renderer) {
 		/**
-		 * The maximum number of color sampler slots used for multi-texture
-		 * batching. Paired with an equally-sized pool of normal-map sampler
-		 * slots starting at unit `maxBatchTextures` (so a sprite's color
-		 * goes to unit `n` and its `normalMap` to unit `maxBatchTextures + n`).
-		 *
-		 * Halved relative to the renderer's hard limit so the paired
-		 * layout fits WebGL1's 8-unit minimum spec. This shrinks the
-		 * batch capacity for **unlit-only scenes** too — a real but bounded
-		 * trade-off: the engine still batches up to 16 distinct color
-		 * textures per draw call on hardware that exposes ≥ 32 units, and
-		 * a typical 2D scene hits its draw-call limit on **batch fill**
-		 * (4 verts × 16 KB) long before it saturates 8 distinct textures.
-		 * Conditionally splitting per-mode would require runtime
-		 * introspection of "does any sprite ever have a normalMap" — out
-		 * of scope; this comment documents the trade-off so future
-		 * tuners know what's at play.
+		 * the maximum number of texture units used for multi-texture batching
 		 * @type {number}
 		 * @ignore
 		 */
-		this.maxBatchTextures = Math.min(
-			Math.max(1, Math.floor(renderer.maxTextures / 2)),
-			16,
-		);
+		this.maxBatchTextures = Math.min(renderer.maxTextures, 16);
 
 		super.init(renderer, {
 			attributes: [
@@ -86,13 +65,6 @@ export default class QuadBatcher extends MaterialBatcher {
 					normalized: false,
 					offset: 5 * Float32Array.BYTES_PER_ELEMENT,
 				},
-				{
-					name: "aNormalTextureId",
-					size: 1,
-					type: renderer.gl.FLOAT,
-					normalized: false,
-					offset: 6 * Float32Array.BYTES_PER_ELEMENT,
-				},
 			],
 			shader: {
 				vertex: quadMultiVertex,
@@ -100,46 +72,10 @@ export default class QuadBatcher extends MaterialBatcher {
 			},
 		});
 
-		// bind all color sampler uniforms to their respective texture units
+		// bind all sampler uniforms to their respective texture units
 		for (let i = 0; i < this.maxBatchTextures; i++) {
 			this.defaultShader.setUniform("uSampler" + i, i);
 		}
-		// bind paired normal-map sampler uniforms to a parallel set of
-		// units (offset by `maxBatchTextures`). When a sprite has
-		// `normalMap` set, its color goes to unit `n` and its normal goes
-		// to unit `maxBatchTextures + n`.
-		for (let i = 0; i < this.maxBatchTextures; i++) {
-			this.defaultShader.setUniform(
-				"uNormalSampler" + i,
-				this.maxBatchTextures + i,
-			);
-		}
-
-		/**
-		 * normal-map texture per color slot — keyed by the same unit index as
-		 * `boundTextures`. Used by `addQuad` to detect when a normal-map slot
-		 * needs (re-)uploading, mirroring the color-texture cache.
-		 * @type {Array<HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|HTMLVideoElement|null>}
-		 * @ignore
-		 */
-		this.boundNormalMaps = new Array(this.maxBatchTextures).fill(null);
-
-		/**
-		 * Map from a normal-map source image to its GL texture object.
-		 * Lazily populated on first use; the GL texture is created once
-		 * and re-bound on subsequent quads that reference the same
-		 * `normalMap`. Cleared on context loss / batcher reset.
-		 * @type {Map<HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|HTMLVideoElement, WebGLTexture>}
-		 * @ignore
-		 */
-		this.normalMapTextures = new Map();
-
-		// initialize empty light state — Stage / Camera2d sets these via
-		// `setLightUniforms` before each frame's draw.
-		this._lightCount = 0;
-		this._maxLights = MAX_LIGHTS;
-		this.defaultShader.setUniform("uLightCount", 0);
-		this.defaultShader.setUniform("uAmbient", [0, 0, 0]);
 
 		/**
 		 * whether multi-texture batching is currently active
@@ -191,62 +127,8 @@ export default class QuadBatcher extends MaterialBatcher {
 		// re-bind sampler uniforms after context restore
 		for (let i = 0; i < this.maxBatchTextures; i++) {
 			this.defaultShader.setUniform("uSampler" + i, i);
-			this.defaultShader.setUniform(
-				"uNormalSampler" + i,
-				this.maxBatchTextures + i,
-			);
 		}
-		this.boundNormalMaps.fill(null);
-		// release the GL textures we created in `_uploadOrBindNormalMap`
-		// before dropping our JS references — `gl.createTexture()` objects
-		// don't get GC'd until explicitly deleted (or the context is lost).
-		const gl = this.gl;
-		this.normalMapTextures.forEach((tex) => {
-			gl.deleteTexture(tex);
-		});
-		this.normalMapTextures.clear();
-		this._lightCount = 0;
-		this.defaultShader.setUniform("uLightCount", 0);
-		this.defaultShader.setUniform("uAmbient", [0, 0, 0]);
 		this.useMultiTexture = true;
-	}
-
-	/**
-	 * Upload per-frame Light2d uniforms used by the lit fragment path of
-	 * the batcher's shader. Called once per camera per frame (before the
-	 * world tree walk). Lights past `MAX_LIGHTS` are silently ignored.
-	 *
-	 * Coordinates must be supplied in the same space as the renderer's
-	 * pre-projection vertex coords (i.e. camera-local / FBO-local),
-	 * matching `Stage.drawLighting`'s convention. The caller is
-	 * responsible for translating world-space `Light2d.pos` by
-	 * `(-translateX, -translateY)`.
-	 * @param {object} uniforms
-	 * @param {Float32Array} uniforms.positions - flat array of `[x, y, radius, intensity]` per light, length = 4 * count
-	 * @param {Float32Array} uniforms.colors - flat array of `[r, g, b]` per light, length = 3 * count
-	 * @param {number} uniforms.count - number of lights to render (clamped to MAX_LIGHTS)
-	 * @param {number[]} uniforms.ambient - `[r, g, b]` ambient floor (0..1 each)
-	 */
-	setLightUniforms(uniforms) {
-		const shader = this.defaultShader;
-		const count = Math.min(uniforms.count | 0, this._maxLights);
-		this._lightCount = count;
-		shader.setUniform("uLightCount", count);
-		if (count > 0) {
-			// `uLightPos`, `uLightColor`, `uLightHeight` are GLSL arrays;
-			// the renderer's uniform parser stores them under the
-			// unbracketed name. Passing the full Float32Array uploads all
-			// `count` elements starting at index 0 via the appropriate
-			// `gl.uniform*v` call.
-			shader.setUniform("uLightPos", uniforms.positions);
-			shader.setUniform("uLightColor", uniforms.colors);
-			if (uniforms.heights) {
-				shader.setUniform("uLightHeight", uniforms.heights);
-			}
-		}
-		if (uniforms.ambient) {
-			shader.setUniform("uAmbient", uniforms.ambient);
-		}
 	}
 
 	/**
@@ -309,14 +191,12 @@ export default class QuadBatcher extends MaterialBatcher {
 		gl.bindTexture(gl.TEXTURE_2D, source);
 		shader.setUniform("uSampler", 0);
 
-		// push a screen-aligned quad with Y-flipped UVs.
-		// `aNormalTextureId = -1` flags the unlit path (the FBO blit
-		// shouldn't run lighting math even if the renderer has lights set).
+		// push a screen-aligned quad with Y-flipped UVs
 		const tint = 0xffffffff;
-		this.vertexData.push(x, y, 0, 1, tint, 0, -1);
-		this.vertexData.push(x + width, y, 1, 1, tint, 0, -1);
-		this.vertexData.push(x, y + height, 0, 0, tint, 0, -1);
-		this.vertexData.push(x + width, y + height, 1, 0, tint, 0, -1);
+		this.vertexData.push(x, y, 0, 1, tint, 0);
+		this.vertexData.push(x + width, y, 1, 1, tint, 0);
+		this.vertexData.push(x, y + height, 0, 0, tint, 0);
+		this.vertexData.push(x + width, y + height, 1, 0, tint, 0);
 
 		this.flush();
 
@@ -327,58 +207,6 @@ export default class QuadBatcher extends MaterialBatcher {
 
 		// restore the default shader (also re-enables multi-texture batching)
 		this.useShader(this.defaultShader);
-	}
-
-	/**
-	 * Upload (first time) or rebind (subsequent times) a normal-map image
-	 * to the given texture unit. Normal-map textures don't go through the
-	 * `TextureCache` (they don't share atlas semantics with color
-	 * textures); they're cached per-image in `normalMapTextures`.
-	 *
-	 * Normal maps store linear-encoded surface normals (RGB → XYZ via
-	 * `2.0 * rgb - 1.0` in the shader), so premultiplied alpha is
-	 * disabled here — multiplying through alpha would corrupt the
-	 * encoding for any non-opaque texel.
-	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|HTMLVideoElement} image - normal-map source
-	 * @param {number} unit - GL texture unit (already offset by `maxBatchTextures`)
-	 * @ignore
-	 */
-	_uploadOrBindNormalMap(image, unit) {
-		const gl = this.gl;
-		const cached = this.normalMapTextures.get(image);
-		if (typeof cached !== "undefined") {
-			// already uploaded — just rebind to the requested unit
-			gl.activeTexture(gl.TEXTURE0 + unit);
-			gl.bindTexture(gl.TEXTURE_2D, cached);
-			return;
-		}
-		// First-time upload via the shared MaterialBatcher path so we
-		// inherit its OffscreenCanvas/ImageBitmap branch, compressed-
-		// texture handling, and POT-aware repeat modes. The unit lives
-		// outside the color-cache range (`maxBatchTextures + n`), so
-		// the boundTextures slot we mutate here doesn't conflict with
-		// the color-batching cache.
-		//
-		// `premultipliedAlpha = false` — normal maps store linear-
-		// encoded surface normals; multiplying through alpha would
-		// corrupt the encoding.
-		this.createTexture2D(
-			unit,
-			image,
-			this.renderer.settings.antiAlias ? gl.LINEAR : gl.NEAREST,
-			"no-repeat",
-			image.width,
-			image.height,
-			false,
-			undefined,
-			undefined,
-			false,
-		);
-		// `createTexture2D` doesn't return the GL texture, but it
-		// stashes it in `boundTextures[unit]` via `bindTexture2D`.
-		// Capture it so we can rebind on subsequent quads without
-		// re-uploading.
-		this.normalMapTextures.set(image, this.boundTextures[unit]);
 	}
 
 	/**
@@ -394,22 +222,8 @@ export default class QuadBatcher extends MaterialBatcher {
 	 * @param {number} v1 - Texture UV (v1) value.
 	 * @param {number} tint - tint color to be applied to the texture in UINT32 (argb) format
 	 * @param {boolean} [reupload=false] - Force the texture to be reuploaded even if already bound
-	 * @param {HTMLImageElement|HTMLCanvasElement|null} [normalMap=null] - optional paired normal-map image (SpriteIlluminator workflow). When present, the quad goes through the shader's lit path with `Stage._activeLights` applied per pixel.
 	 */
-	addQuad(
-		texture,
-		x,
-		y,
-		w,
-		h,
-		u0,
-		v0,
-		u1,
-		v1,
-		tint,
-		reupload = false,
-		normalMap = null,
-	) {
+	addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint, reupload = false) {
 		const vertexData = this.vertexData;
 
 		if (vertexData.isFull(4)) {
@@ -427,11 +241,6 @@ export default class QuadBatcher extends MaterialBatcher {
 			if (unit >= this.maxBatchTextures) {
 				this.flush();
 				this.renderer.cache.resetUnitAssignments();
-				// the color-texture cache no longer remembers which slot is
-				// bound to what — drop our paired-normal-map cache too so
-				// the next normal-mapped quad re-uploads cleanly instead of
-				// trusting a stale `boundNormalMaps[unit]` entry.
-				this.boundNormalMaps.fill(null);
 				unit = this.uploadTexture(texture, w, h, reupload, false);
 			}
 		} else {
@@ -442,30 +251,6 @@ export default class QuadBatcher extends MaterialBatcher {
 				this.currentShader.setUniform("uSampler", unit);
 				this.currentSamplerUnit = unit;
 			}
-		}
-
-		// Bind the paired normal map (when present) to the parallel
-		// sampler unit. The shader's lit path reads from `uNormalSampler<n>`
-		// where n = aNormalTextureId.
-		let normalTextureId = -1;
-		if (normalMap !== null && this.useMultiTexture) {
-			const normalUnit = this.maxBatchTextures + unit;
-			const prev = this.boundNormalMaps[unit];
-			if (prev !== normalMap) {
-				// If this slot already had a different normal-map bound, the
-				// vertices already in the batch are sampling that one — flush
-				// before rebinding so they draw with their original normal.
-				// (Only happens when two lit sprites in the same batch share
-				// a color texture but have different normal maps; rare with
-				// the canonical SpriteIlluminator workflow but worth getting
-				// right.)
-				if (prev !== null) {
-					this.flush();
-				}
-				this._uploadOrBindNormalMap(normalMap, normalUnit);
-				this.boundNormalMaps[unit] = normalMap;
-			}
-			normalTextureId = unit;
 		}
 
 		// Transform vertices
@@ -485,9 +270,9 @@ export default class QuadBatcher extends MaterialBatcher {
 		// 4 vertices per quad; the index buffer provides the 6 indices
 		// textureId is the unit index for multi-texture, or 0 for single-texture fallback
 		const textureId = this.useMultiTexture ? unit : 0;
-		vertexData.push(vec0.x, vec0.y, u0, v0, tint, textureId, normalTextureId);
-		vertexData.push(vec1.x, vec1.y, u1, v0, tint, textureId, normalTextureId);
-		vertexData.push(vec2.x, vec2.y, u0, v1, tint, textureId, normalTextureId);
-		vertexData.push(vec3.x, vec3.y, u1, v1, tint, textureId, normalTextureId);
+		vertexData.push(vec0.x, vec0.y, u0, v0, tint, textureId);
+		vertexData.push(vec1.x, vec1.y, u1, v0, tint, textureId);
+		vertexData.push(vec2.x, vec2.y, u0, v1, tint, textureId);
+		vertexData.push(vec3.x, vec3.y, u1, v1, tint, textureId);
 	}
 }

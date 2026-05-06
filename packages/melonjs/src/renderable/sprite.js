@@ -257,13 +257,12 @@ export default class Sprite extends Renderable {
 			typeof settings.normalMap !== "undefined" &&
 			settings.normalMap !== null
 		) {
-			let resolved;
-			if (typeof settings.normalMap === "object") {
-				// already an image-like — let the setter validate it
-				resolved = settings.normalMap;
-			} else if (typeof settings.normalMap === "string") {
-				// loader-key string
-				resolved = getImage(settings.normalMap);
+			// strings are loader keys — resolve through getImage first.
+			// Anything else flows straight to the setter, which validates
+			// image-like shape and throws TypeError for invalid types
+			// (boolean, number, function, etc.).
+			if (typeof settings.normalMap === "string") {
+				const resolved = getImage(settings.normalMap);
 				if (!resolved) {
 					throw new Error(
 						"me.Sprite: '" +
@@ -271,15 +270,10 @@ export default class Sprite extends Renderable {
 							"' normal map image not found!",
 					);
 				}
+				this.normalMap = resolved;
 			} else {
-				// reject non-string non-object inputs (boolean, number, etc.)
-				// loudly rather than coercing them through `getImage`
-				throw new TypeError(
-					"me.Sprite: settings.normalMap must be an image-like, a loader key string, or null/undefined; got " +
-						typeof settings.normalMap,
-				);
+				this.normalMap = settings.normalMap;
 			}
-			this.normalMap = resolved;
 		}
 
 		// store/reset the current atlas information if specified
@@ -778,6 +772,36 @@ export default class Sprite extends Renderable {
 	}
 
 	/**
+	 * Prepare the rendering context before drawing this sprite (automatically called by melonJS).
+	 * Extends `Renderable.preDraw` to publish this sprite's `normalMap` (if any)
+	 * on the renderer so the WebGL lit pipeline can pair it with the next
+	 * `drawImage` call. Cleared back in `postDraw`.
+	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 */
+	preDraw(renderer) {
+		super.preDraw(renderer);
+		// Route through the renderer's normal-map state slot — kept off
+		// the public `drawImage` signature so material features can be
+		// added without disturbing the API. The WebGL batcher reads
+		// `currentNormalMap` from the renderer; Canvas ignores it.
+		if (this._normalMap !== null) {
+			renderer.currentNormalMap = this._normalMap;
+		}
+	}
+
+	/**
+	 * restore the rendering context after drawing this sprite (automatically called by melonJS).
+	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
+	 */
+	postDraw(renderer) {
+		// Clear the slot so a subsequent un-lit sprite isn't accidentally lit.
+		if (this._normalMap !== null) {
+			renderer.currentNormalMap = null;
+		}
+		super.postDraw(renderer);
+	}
+
+	/**
 	 * draw this sprite (automatically called by melonJS)
 	 * @param {CanvasRenderer|WebGLRenderer} renderer - a renderer instance
 	 * @param {Camera2d} [viewport] - the viewport to (re)draw
@@ -823,15 +847,6 @@ export default class Sprite extends Renderable {
 			ypos += frame.trim.y;
 		}
 
-		// Route through the renderer's normal-map state slot — kept off
-		// the public `drawImage` signature so material features can be
-		// added without disturbing the API. The WebGL batcher reads
-		// `currentNormalMap` from the renderer; Canvas ignores it.
-		// Clearing back to null after the call keeps the slot scoped to
-		// this draw, so a subsequent un-lit sprite isn't accidentally lit.
-		if (this._normalMap !== null) {
-			renderer.currentNormalMap = this._normalMap;
-		}
 		renderer.drawImage(
 			this.image,
 			g_offset.x + frame_offset.x, // sx
@@ -843,9 +858,6 @@ export default class Sprite extends Renderable {
 			w,
 			h, // dw,dh
 		);
-		if (this._normalMap !== null) {
-			renderer.currentNormalMap = null;
-		}
 	}
 
 	/**

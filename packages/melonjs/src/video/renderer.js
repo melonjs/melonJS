@@ -153,6 +153,16 @@ export default class Renderer {
 		 * @type {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|null}
 		 */
 		this.currentNormalMap = null;
+
+		/**
+		 * Number of active `Light2d` instances uploaded to the lit batcher
+		 * for the current frame. Set by `setLightUniforms`. The WebGL
+		 * renderer's `drawImage` reads this to decide between the unlit
+		 * fast-path batcher (default) and the lit batcher (only when
+		 * lights AND a normal map are both in play).
+		 * @type {number}
+		 */
+		this.activeLightCount = 0;
 	}
 
 	/**
