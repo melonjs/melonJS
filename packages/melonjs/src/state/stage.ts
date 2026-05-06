@@ -1,11 +1,11 @@
 import type Application from "./../application/application.ts";
 import Camera2d from "./../camera/camera2d.ts";
+import { MAX_LIGHTS } from "./../lighting/constants.ts";
 import { Color } from "./../math/color.ts";
 import type World from "./../physics/world.js";
 import type Light2d from "./../renderable/light2d.js";
 import { emit, STAGE_RESET } from "../system/event.ts";
 import type Renderer from "./../video/renderer.js";
-import { MAX_LIGHTS } from "./../video/webgl/shaders/multitexture-lit.js";
 
 interface StageSettings {
 	cameras: Camera2d[];
@@ -306,8 +306,8 @@ export default class Stage {
 		count: number;
 		ambient: number[];
 	} {
-		// `MAX_LIGHTS` is imported from `multitexture-lit.js` — single source
-		// of truth shared with the lit fragment shader and the
+		// `MAX_LIGHTS` is imported from `lighting/constants.ts` — single
+		// source of truth shared with the lit fragment shader and the
 		// `LitQuadBatcher.setLightUniforms` clamp.
 		if (this._lightUniformsScratch === null) {
 			this._lightUniformsScratch = {

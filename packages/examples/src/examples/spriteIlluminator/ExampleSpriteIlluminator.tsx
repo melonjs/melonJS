@@ -50,6 +50,8 @@ const resources = [
 ];
 
 class PlayScreen extends Stage {
+	private _updateHandler: ((time: number) => void) | null = null;
+
 	onResetEvent() {
 		const vw = game.viewport.width;
 		const vh = game.viewport.height;
@@ -111,14 +113,15 @@ class PlayScreen extends Stage {
 		// via the previous time-stamp.
 		const speedPxPerSec = 220 * scale;
 		let lastTime = 0;
-		event.on(event.GAME_UPDATE, (time: number) => {
+		this._updateHandler = (time: number) => {
 			const dt = lastTime === 0 ? 0 : (time - lastTime) / 1000;
 			lastTime = time;
 			character.pos.x += speedPxPerSec * dt;
 			if (character.pos.x > endX) {
 				character.pos.x = startX;
 			}
-		});
+		};
+		event.on(event.GAME_UPDATE, this._updateHandler);
 
 		// 4. Lightbulb sprite — the visible cue for the cursor's position.
 		// The actual light source is the `Light2d` below; the bulb is just
@@ -156,6 +159,16 @@ class PlayScreen extends Stage {
 			bulb.pos.y = event.gameY;
 			light.centerOn(event.gameX, event.gameY);
 		});
+	}
+
+	onDestroyEvent() {
+		// release the per-stage event handlers so re-entering doesn't
+		// stack duplicate listeners
+		input.releasePointerEvent("pointermove", game.viewport);
+		if (this._updateHandler) {
+			event.off(event.GAME_UPDATE, this._updateHandler);
+			this._updateHandler = null;
+		}
 	}
 }
 

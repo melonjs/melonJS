@@ -1,9 +1,7 @@
-/**
- * Maximum number of `Light2d` instances the lit fragment shader supports
- * concurrently per draw call. Lights past this index are ignored.
- * @ignore
- */
-export const MAX_LIGHTS = 8;
+import { MAX_LIGHTS } from "../../../lighting/constants.ts";
+
+// re-export so existing batcher imports keep working
+export { MAX_LIGHTS };
 
 /**
  * Build the GLSL `if/else` chain that picks among N samplers based on

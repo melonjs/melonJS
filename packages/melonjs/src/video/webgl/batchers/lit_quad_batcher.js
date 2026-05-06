@@ -1,7 +1,5 @@
-import {
-	buildLitMultiTextureFragment,
-	MAX_LIGHTS,
-} from "./../shaders/multitexture-lit.js";
+import { MAX_LIGHTS } from "../../../lighting/constants.ts";
+import { buildLitMultiTextureFragment } from "./../shaders/multitexture-lit.js";
 import quadMultiLitVertex from "./../shaders/quad-multi-lit.vert";
 import QuadBatcher, { V_ARRAY } from "./quad_batcher.js";
 

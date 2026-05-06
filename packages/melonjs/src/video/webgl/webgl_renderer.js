@@ -505,7 +505,15 @@ export default class WebGLRenderer extends Renderer {
 	 * @param {number[]} uniforms.ambient - `[r, g, b]` ambient floor (0..1 each)
 	 */
 	setLightUniforms(uniforms) {
-		this.activeLightCount = (uniforms && uniforms.count) | 0;
+		// guard against undefined / null: callers (Camera2d.draw) may forward
+		// the result of `Stage.collectLightingUniforms` directly, and a
+		// future Stage subclass that doesn't implement that method would
+		// otherwise crash here on `uniforms.count`.
+		if (!uniforms) {
+			this.activeLightCount = 0;
+			return;
+		}
+		this.activeLightCount = uniforms.count | 0;
 		const lit = this.batchers.get("litQuad");
 		if (lit && typeof lit.setLightUniforms === "function") {
 			lit.setLightUniforms(uniforms);
@@ -516,13 +524,14 @@ export default class WebGLRenderer extends Renderer {
 			// active batcher's program so the next draw doesn't render
 			// through litQuad's shader by accident — which feeds 4-attribute
 			// vertex data to a 5-attribute shader and produces visible garbage.
-			if (
-				this.currentBatcher &&
-				this.currentBatcher !== lit &&
-				this.currentBatcher.currentShader
-			) {
-				this.gl.useProgram(this.currentBatcher.currentShader.program);
-				this.currentProgram = this.currentBatcher.currentShader.program;
+			if (this.currentBatcher && this.currentBatcher !== lit) {
+				const shader =
+					this.currentBatcher.currentShader ||
+					this.currentBatcher.defaultShader;
+				if (shader) {
+					this.gl.useProgram(shader.program);
+					this.currentProgram = shader.program;
+				}
 			}
 		}
 	}

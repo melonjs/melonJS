@@ -367,6 +367,16 @@ export default class Sprite extends Renderable {
 					"(HTMLImageElement, HTMLCanvasElement, OffscreenCanvas, ImageBitmap)",
 			);
 		}
+		// Explicitly reject HTMLVideoElement — it duck-types past the
+		// width/height check, but the lit pipeline caches the GL texture
+		// per image reference and never re-uploads. A video as a normal
+		// map would silently freeze on frame 0; better a loud TypeError
+		// at assignment time than a confusing visual bug at runtime.
+		if (typeof value.videoWidth === "number") {
+			throw new TypeError(
+				"Sprite.normalMap does not support HTMLVideoElement (the lit pipeline caches the texture per image reference and would freeze on frame 0)",
+			);
+		}
 		this._normalMap = value;
 	}
 

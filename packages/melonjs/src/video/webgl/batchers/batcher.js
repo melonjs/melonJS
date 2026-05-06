@@ -238,6 +238,15 @@ export class Batcher {
 			this.renderer.currentProgram !== shader.program
 		) {
 			this.flush();
+			// Disable the previous shader's enabled attribute locations
+			// before binding the new one. The two shaders may have linked
+			// the same attribute name to different locations, so the new
+			// shader's `setVertexAttributes` won't necessarily re-point
+			// every old location — leaving stale stride/offset state that
+			// can trigger `INVALID_OPERATION` on the next draw call.
+			if (this.currentShader && this.currentShader !== shader) {
+				this.unbind();
+			}
 			shader.bind();
 			shader.setUniform(this.projectionUniform, this.renderer.projectionMatrix);
 

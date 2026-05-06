@@ -146,6 +146,12 @@ class PlayScreen extends Stage {
 			cursor.centerOn(event.gameX, event.gameY);
 		});
 	}
+
+	onDestroyEvent() {
+		// release the pointer handler so re-entering the stage doesn't
+		// accumulate listeners
+		input.releasePointerEvent("pointermove", game.viewport);
+	}
 }
 
 const createGame = () => {

@@ -280,7 +280,16 @@ export class TextureAtlas {
 				typeof normalMap.height === "number"
 			) {
 				// image-like (HTMLImageElement, HTMLCanvasElement,
-				// OffscreenCanvas, ImageBitmap)
+				// OffscreenCanvas, ImageBitmap). Explicitly reject
+				// HTMLVideoElement — it duck-types past the size check
+				// but the lit pipeline caches the GL texture per image
+				// reference and never re-uploads, so a video would freeze
+				// on frame 0 (see `Sprite.normalMap`).
+				if (typeof normalMap.videoWidth === "number") {
+					throw new TypeError(
+						"TextureAtlas: options.normalMap does not support HTMLVideoElement (the lit pipeline caches the texture per image reference and would freeze on frame 0)",
+					);
+				}
 				resolved = normalMap;
 			} else {
 				throw new TypeError(
@@ -333,7 +342,7 @@ export class TextureAtlas {
 	 * if no normal map was provided to this atlas. The normal map shares
 	 * the same UV layout as the color texture returned by {@link TextureAtlas#getTexture}.
 	 * @param {object} [region] - region name in case of multipack textures
-	 * @returns {HTMLImageElement|HTMLCanvasElement|null}
+	 * @returns {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap|null}
 	 */
 	getNormalTexture(region) {
 		if (this.normalSources.size === 0) {
