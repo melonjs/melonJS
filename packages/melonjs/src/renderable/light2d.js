@@ -17,12 +17,13 @@ import Renderable from "./renderable.js";
  * height, flags, position) and asks the active renderer to render it
  * via `renderer.drawLight(this)`. The renderer picks the right machinery:
  *
- * - **WebGL**: a single quad through a procedural radial-falloff fragment
- *   shader (`Light2dEffect`). One shader is shared across every Light2d
- *   on the renderer; no per-light texture is allocated.
- * - **Canvas**: an offscreen `CanvasRenderTarget` baked with a
- *   `createRadialGradient`, cached per-light inside the renderer and
- *   re-baked on property change.
+ * - **WebGL**: a single quad through a shared procedural radial-falloff
+ *   fragment shader (`RadialGradientEffect`). One shader is reused across
+ *   every Light2d on the renderer; no per-light texture is allocated.
+ * - **Canvas**: a `Gradient` (cached per-light in a `WeakMap` and rebuilt
+ *   only when radii / color / intensity change) rasterized via
+ *   `Gradient.toCanvas()` into a single shared `CanvasRenderTarget`, then
+ *   composited with `drawImage`.
  *
  * Light2d itself is renderer-agnostic — no shader knowledge, no canvas
  * allocation, no renderer reference held.
@@ -185,20 +186,26 @@ export default class Light2d extends Renderable {
 	}
 
 	/**
-	 * Resize the light to a new pair of radii.
+	 * Set new radii for this light.
 	 *
-	 * Updates `radiusX`/`radiusY` and the underlying bbox so
-	 * `getBounds()` and `getVisibleArea()` (which feed the cutout pass)
-	 * track the new size. The renderer's gradient cache (Canvas) auto-
-	 * invalidates on next draw via the property comparison; the WebGL
-	 * procedural shader adapts to the new dimensions automatically.
+	 * Updates `radiusX`/`radiusY` and the underlying bbox (via
+	 * `Renderable.resize(width, height)`) so `getBounds()` and
+	 * `getVisibleArea()` — which feed the ambient-cutout pass — track the
+	 * new size. The Canvas renderer's gradient cache auto-invalidates on
+	 * next draw via its property comparison; the WebGL procedural shader
+	 * adapts to the new dimensions automatically.
+	 *
+	 * Named `setRadii` (not `resize`) so it does not shadow
+	 * `Renderable.resize(width, height)` — code that operates on a
+	 * generic `Renderable` and calls `.resize(w, h)` keeps working when
+	 * the instance happens to be a `Light2d`.
 	 * @param {number} radiusX - new horizontal radius
 	 * @param {number} [radiusY=radiusX] - new vertical radius
 	 */
-	resize(radiusX, radiusY = radiusX) {
+	setRadii(radiusX, radiusY = radiusX) {
 		this.radiusX = radiusX;
 		this.radiusY = radiusY;
-		super.resize(radiusX * 2, radiusY * 2);
+		this.resize(radiusX * 2, radiusY * 2);
 	}
 
 	/**

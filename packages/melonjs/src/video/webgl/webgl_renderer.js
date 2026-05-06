@@ -373,6 +373,22 @@ export default class WebGLRenderer extends Renderer {
 
 		// release post-process FBOs (will be recreated on demand)
 		this._renderTargetPool.destroy();
+
+		// drop the lazily-cached drawLight resources — after a context
+		// loss/restore the cached shader program and white-pixel texture
+		// reference the OLD GL context and would error if reused.
+		// Lazy re-init happens on the next drawLight call.
+		if (this._lightShader !== undefined) {
+			this._lightShader.destroy?.();
+			this._lightShader = undefined;
+		}
+		if (this._whitePixel !== undefined) {
+			// only delete if the underlying GL texture is still valid
+			// (post-context-loss it isn't, but deleteTexture is harmless
+			// either way)
+			this.gl.deleteTexture(this._whitePixel);
+			this._whitePixel = undefined;
+		}
 	}
 
 	/**
@@ -591,8 +607,17 @@ export default class WebGLRenderer extends Renderer {
 		if (this._whitePixel === undefined) {
 			const gl = this.gl;
 			this._whitePixel = gl.createTexture();
+			// Activating + binding TEXTURE0 here mutates GL state that
+			// the active batcher tracks via `boundTextures[0]`. Drop
+			// that cache slot so the next color upload re-binds cleanly,
+			// otherwise the batcher could think unit 0 still holds
+			// whatever was there before this call.
 			gl.activeTexture(gl.TEXTURE0);
 			gl.bindTexture(gl.TEXTURE_2D, this._whitePixel);
+			if (this.currentBatcher && this.currentBatcher.boundTextures) {
+				this.currentBatcher.boundTextures[0] = this._whitePixel;
+				this.currentBatcher.currentTextureUnit = 0;
+			}
 			gl.texImage2D(
 				gl.TEXTURE_2D,
 				0,

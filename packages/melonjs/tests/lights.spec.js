@@ -1671,7 +1671,7 @@ describe("Light2d + Stage lighting", () => {
 			renderer.drawLight(light);
 			const oldEntry = renderer._lightCache.get(light);
 
-			light.resize(60, 60);
+			light.setRadii(60, 60);
 			renderer.drawLight(light);
 			const newEntry = renderer._lightCache.get(light);
 			expect(newEntry.radiusX).toBe(60);
@@ -1753,42 +1753,61 @@ describe("Light2d + Stage lighting", () => {
 			}).not.toThrow();
 		});
 	});
+});
 
-	describe("RadialGradientEffect (standalone API)", () => {
-		// `RadialGradientEffect` is the generic procedural radial-gradient
-		// shader that `WebGLRenderer.drawLight` happens to use for Light2d.
-		// Exposed standalone via constructor + setColor/setIntensity so
-		// tests (and any future caller — debug overlays, hotspots, etc.)
-		// can use it without going through Light2d.
-		it("constructor accepts color/intensity options without throwing", async () => {
-			// Skipped on Canvas (the shader requires a GL context).
-			if (!video.renderer.WebGLVersion) {
-				return;
-			}
-			const { default: RadialGradientEffect } = await import(
-				"../src/video/webgl/effects/radialGradient.js"
-			);
-			const { Color } = await import("../src/math/color.ts");
-			expect(() => {
-				const eff = new RadialGradientEffect(video.renderer, {
-					color: new Color(255, 128, 64),
-					intensity: 0.8,
-				});
-				eff.setColor(new Color(0, 255, 0));
-				eff.setIntensity(1.5);
-			}).not.toThrow();
+describe("RadialGradientEffect (standalone API, WebGL)", () => {
+	// `RadialGradientEffect` is the generic procedural radial-gradient
+	// shader that `WebGLRenderer.drawLight` happens to use for Light2d.
+	// Exposed standalone via constructor + setColor/setIntensity so
+	// tests (and any future caller — debug overlays, hotspots, etc.)
+	// can use it without going through Light2d.
+	//
+	// This block runs in its own WebGL-initialized describe so the tests
+	// actually exercise the shader rather than silently no-op'ing on
+	// Canvas. The parent describe uses `video.CANVAS`.
+	beforeAll(() => {
+		boot();
+		video.init(800, 600, {
+			parent: "screen",
+			scale: "auto",
+			renderer: video.WEBGL,
+			failIfMajorPerformanceCaveat: false,
 		});
+	});
 
-		it("constructor with no options uses sensible defaults (white, 1.0)", async () => {
-			if (!video.renderer.WebGLVersion) {
-				return;
-			}
-			const { default: RadialGradientEffect } = await import(
-				"../src/video/webgl/effects/radialGradient.js"
-			);
-			expect(() => {
-				return new RadialGradientEffect(video.renderer);
-			}).not.toThrow();
+	afterAll(() => {
+		// hand the world back to the default renderer for any later test files
+		video.init(800, 600, {
+			parent: "screen",
+			scale: "auto",
+			renderer: video.AUTO,
 		});
+	});
+
+	it("constructor accepts color/intensity options without throwing", async () => {
+		// Sanity: the test only makes sense if WebGL actually came up.
+		expect(video.renderer.WebGLVersion).toBeGreaterThan(0);
+		const { default: RadialGradientEffect } = await import(
+			"../src/video/webgl/effects/radialGradient.js"
+		);
+		const { Color } = await import("../src/math/color.ts");
+		expect(() => {
+			const eff = new RadialGradientEffect(video.renderer, {
+				color: new Color(255, 128, 64),
+				intensity: 0.8,
+			});
+			eff.setColor(new Color(0, 255, 0));
+			eff.setIntensity(1.5);
+		}).not.toThrow();
+	});
+
+	it("constructor with no options uses sensible defaults (white, 1.0)", async () => {
+		expect(video.renderer.WebGLVersion).toBeGreaterThan(0);
+		const { default: RadialGradientEffect } = await import(
+			"../src/video/webgl/effects/radialGradient.js"
+		);
+		expect(() => {
+			return new RadialGradientEffect(video.renderer);
+		}).not.toThrow();
 	});
 });

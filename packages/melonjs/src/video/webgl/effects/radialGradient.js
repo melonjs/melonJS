@@ -83,11 +83,18 @@ export default class RadialGradientEffect extends ShaderEffect {
 			`,
 		);
 
+		// reused across `setColor` calls so we don't allocate a fresh
+		// 3-element array every frame on every light.
+		this._colorBuf = new Float32Array(3);
+
 		const color = options.color;
 		if (color) {
 			this.setColor(color);
 		} else {
-			this.setUniform("uColor", [1, 1, 1]);
+			this._colorBuf[0] = 1;
+			this._colorBuf[1] = 1;
+			this._colorBuf[2] = 1;
+			this.setUniform("uColor", this._colorBuf);
 		}
 		this.setIntensity(options.intensity ?? 1);
 	}
@@ -98,7 +105,10 @@ export default class RadialGradientEffect extends ShaderEffect {
 	 * @param {Color} color - 0..255 RGB color
 	 */
 	setColor(color) {
-		this.setUniform("uColor", [color.r / 255, color.g / 255, color.b / 255]);
+		this._colorBuf[0] = color.r / 255;
+		this._colorBuf[1] = color.g / 255;
+		this._colorBuf[2] = color.b / 255;
+		this.setUniform("uColor", this._colorBuf);
 	}
 
 	/**
