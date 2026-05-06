@@ -88,9 +88,9 @@ export default class LitQuadBatcher extends QuadBatcher {
 
 		// Reuse the parent's setup helpers — they're agnostic to the
 		// shader/attribute layout, just iterate `this.maxBatchTextures`.
-		this._bindColorSamplers();
-		this._bindNormalSamplers();
-		this._createIndexBuffer();
+		this.bindColorSamplers();
+		this.bindNormalSamplers();
+		this.createIndexBuffer();
 
 		this.useMultiTexture = true;
 
@@ -122,7 +122,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 	 * from `init` and `reset`.
 	 * @ignore
 	 */
-	_bindNormalSamplers() {
+	bindNormalSamplers() {
 		for (let i = 0; i < this.maxBatchTextures; i++) {
 			this.defaultShader.setUniform(
 				"uNormalSampler" + i,
@@ -139,7 +139,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 		// samplers, and resets `useMultiTexture`. We just add the
 		// lit-specific state on top.
 		super.reset();
-		this._bindNormalSamplers();
+		this.bindNormalSamplers();
 		this.boundNormalMaps.fill(null);
 		const gl = this.gl;
 		this.normalMapTextures.forEach((tex) => {

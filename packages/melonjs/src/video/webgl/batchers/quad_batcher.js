@@ -75,7 +75,7 @@ export default class QuadBatcher extends MaterialBatcher {
 			},
 		});
 
-		this._bindColorSamplers();
+		this.bindColorSamplers();
 
 		/**
 		 * whether multi-texture batching is currently active
@@ -85,7 +85,7 @@ export default class QuadBatcher extends MaterialBatcher {
 		 */
 		this.useMultiTexture = true;
 
-		this._createIndexBuffer();
+		this.createIndexBuffer();
 	}
 
 	/**
@@ -93,7 +93,7 @@ export default class QuadBatcher extends MaterialBatcher {
 	 * Called from `init` and `reset` (after context loss).
 	 * @ignore
 	 */
-	_createIndexBuffer() {
+	createIndexBuffer() {
 		const maxQuads = this.vertexData.maxVertex / 4;
 		this.indexBuffer = new IndexBuffer(
 			this.gl,
@@ -108,7 +108,7 @@ export default class QuadBatcher extends MaterialBatcher {
 	 * respective texture units. Called from `init` and `reset`.
 	 * @ignore
 	 */
-	_bindColorSamplers() {
+	bindColorSamplers() {
 		for (let i = 0; i < this.maxBatchTextures; i++) {
 			this.defaultShader.setUniform("uSampler" + i, i);
 		}
@@ -133,8 +133,8 @@ export default class QuadBatcher extends MaterialBatcher {
 	 */
 	reset() {
 		super.reset();
-		this._createIndexBuffer();
-		this._bindColorSamplers();
+		this.createIndexBuffer();
+		this.bindColorSamplers();
 		this.useMultiTexture = true;
 	}
 
