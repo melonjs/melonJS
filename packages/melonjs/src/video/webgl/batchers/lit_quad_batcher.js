@@ -340,11 +340,27 @@ export default class LitQuadBatcher extends QuadBatcher {
 		gl.bindTexture(gl.TEXTURE_2D, source);
 		shader.setUniform("uSampler", 0);
 
+		// transform corners through the renderer transform — see
+		// `QuadBatcher.blitTexture` for the rationale (FBO callers reset
+		// `currentTransform` to identity, world-space callers get the
+		// translate/scale applied).
+		const m = this.viewMatrix;
+		const vec0 = V_ARRAY[0].set(x, y);
+		const vec1 = V_ARRAY[1].set(x + width, y);
+		const vec2 = V_ARRAY[2].set(x, y + height);
+		const vec3 = V_ARRAY[3].set(x + width, y + height);
+		if (m && !m.isIdentity()) {
+			m.apply(vec0);
+			m.apply(vec1);
+			m.apply(vec2);
+			m.apply(vec3);
+		}
+
 		const tint = 0xffffffff;
-		this.vertexData.push(x, y, 0, 1, tint, 0, -1);
-		this.vertexData.push(x + width, y, 1, 1, tint, 0, -1);
-		this.vertexData.push(x, y + height, 0, 0, tint, 0, -1);
-		this.vertexData.push(x + width, y + height, 1, 0, tint, 0, -1);
+		this.vertexData.push(vec0.x, vec0.y, 0, 1, tint, 0, -1);
+		this.vertexData.push(vec1.x, vec1.y, 1, 1, tint, 0, -1);
+		this.vertexData.push(vec2.x, vec2.y, 0, 0, tint, 0, -1);
+		this.vertexData.push(vec3.x, vec3.y, 1, 0, tint, 0, -1);
 
 		this.flush();
 

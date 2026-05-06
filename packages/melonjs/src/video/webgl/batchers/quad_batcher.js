@@ -198,12 +198,28 @@ export default class QuadBatcher extends MaterialBatcher {
 		gl.bindTexture(gl.TEXTURE_2D, source);
 		shader.setUniform("uSampler", 0);
 
-		// push a screen-aligned quad with Y-flipped UVs
+		// push a screen-aligned quad with Y-flipped UVs, transformed by
+		// the current renderer transform. `WebGLRenderer.blitEffect` resets
+		// `currentTransform` to identity before calling so FBO blits are
+		// unaffected; world-space callers (e.g. `drawLight`) get the
+		// `preDraw` translate / scale applied automatically.
+		const m = this.viewMatrix;
+		const vec0 = V_ARRAY[0].set(x, y);
+		const vec1 = V_ARRAY[1].set(x + width, y);
+		const vec2 = V_ARRAY[2].set(x, y + height);
+		const vec3 = V_ARRAY[3].set(x + width, y + height);
+		if (m && !m.isIdentity()) {
+			m.apply(vec0);
+			m.apply(vec1);
+			m.apply(vec2);
+			m.apply(vec3);
+		}
+
 		const tint = 0xffffffff;
-		this.vertexData.push(x, y, 0, 1, tint, 0);
-		this.vertexData.push(x + width, y, 1, 1, tint, 0);
-		this.vertexData.push(x, y + height, 0, 0, tint, 0);
-		this.vertexData.push(x + width, y + height, 1, 0, tint, 0);
+		this.vertexData.push(vec0.x, vec0.y, 0, 1, tint, 0);
+		this.vertexData.push(vec1.x, vec1.y, 1, 1, tint, 0);
+		this.vertexData.push(vec2.x, vec2.y, 0, 0, tint, 0);
+		this.vertexData.push(vec3.x, vec3.y, 1, 0, tint, 0);
 
 		this.flush();
 
