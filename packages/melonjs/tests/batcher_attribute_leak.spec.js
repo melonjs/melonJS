@@ -370,13 +370,13 @@ describe("LitQuadBatcher internal bookkeeping invariants", () => {
 	});
 
 	it("cached normal-map rebind updates boundTextures and currentTextureUnit", () => {
-		// Original Copilot-reported bug: the cached branch in
-		// `_uploadOrBindNormalMap` was using raw `gl.activeTexture` +
-		// `gl.bindTexture`, which set GL state correctly but didn't update
-		// MaterialBatcher's `boundTextures[unit]` / `currentTextureUnit`.
-		// Switched to `bindTexture2D(cached, unit, false)` so a subsequent
-		// color-texture upload at the same unit can correctly skip the
-		// rebind (or, conversely, knows the slot is already taken).
+		// Original Copilot-reported footgun: the cached branch in
+		// `bindNormalMap` was using raw `gl.activeTexture` + `gl.bindTexture`,
+		// which set GL state correctly but didn't update MaterialBatcher's
+		// `boundTextures[unit]` / `currentTextureUnit`. Switched to
+		// `bindTexture2D(cached, unit, false)` so a subsequent color-texture
+		// upload at the same unit can correctly skip the rebind (or,
+		// conversely, knows the slot is already taken).
 		if (!isWebGL) {
 			return;
 		}
@@ -385,7 +385,7 @@ describe("LitQuadBatcher internal bookkeeping invariants", () => {
 		const unit = lit.maxBatchTextures; // first paired-normal slot
 
 		// first call: createTexture2D path. Populates boundTextures[unit].
-		lit._uploadOrBindNormalMap(normal, unit);
+		lit.bindNormalMap(normal, unit);
 		const tex = lit.boundTextures[unit];
 		expect(tex).toBeDefined();
 		expect(lit.normalMapTextures.get(normal)).toBe(tex);
@@ -397,7 +397,7 @@ describe("LitQuadBatcher internal bookkeeping invariants", () => {
 
 		// second call: cached path. Must restore boundTextures[unit] and
 		// currentTextureUnit, not just GL state.
-		lit._uploadOrBindNormalMap(normal, unit);
+		lit.bindNormalMap(normal, unit);
 		expect(lit.boundTextures[unit]).toBe(tex);
 		expect(lit.currentTextureUnit).toBe(unit);
 	});
@@ -414,13 +414,13 @@ describe("LitQuadBatcher internal bookkeeping invariants", () => {
 		const normal = video.createCanvas(8, 8);
 		const unit = lit.maxBatchTextures;
 
-		lit._uploadOrBindNormalMap(normal, unit);
+		lit.bindNormalMap(normal, unit);
 		const before = {
 			tex: lit.boundTextures[unit],
 			currentUnit: lit.currentTextureUnit,
 		};
 		// rebind without disturbing state: no observable change
-		lit._uploadOrBindNormalMap(normal, unit);
+		lit.bindNormalMap(normal, unit);
 		expect(lit.boundTextures[unit]).toBe(before.tex);
 		expect(lit.currentTextureUnit).toBe(before.currentUnit);
 	});

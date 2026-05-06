@@ -204,19 +204,16 @@ export default class LitQuadBatcher extends QuadBatcher {
 	}
 
 	/**
-	 * Upload (first time) or rebind (subsequent times) a normal-map image
-	 * to the given texture unit. Normal-map textures don't go through the
-	 * `TextureCache`; they're cached per-image in `normalMapTextures`.
-	 *
-	 * `premultipliedAlpha = false` — normal maps store linear-encoded
-	 * surface normals; multiplying through alpha would corrupt the
-	 * encoding for any non-opaque texel.
+	 * Bind a normal-map image to the given GL texture unit. Uploads on
+	 * first use (via `uploadNormalMap`) and rebinds the cached
+	 * `WebGLTexture` on subsequent calls. Mirrors the
+	 * `bindTexture2D` / `createTexture2D` split used by `MaterialBatcher`,
+	 * but for normal-map textures which live outside the color
+	 * `TextureCache` (cached per-image in `normalMapTextures`).
 	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap} image - normal-map source
 	 * @param {number} unit - GL texture unit (already offset by `maxBatchTextures`)
-	 * @ignore
 	 */
-	_uploadOrBindNormalMap(image, unit) {
-		const gl = this.gl;
+	bindNormalMap(image, unit) {
 		const cached = this.normalMapTextures.get(image);
 		if (typeof cached !== "undefined") {
 			// `bindTexture2D` updates `boundTextures[unit]` and
@@ -226,6 +223,22 @@ export default class LitQuadBatcher extends QuadBatcher {
 			this.bindTexture2D(cached, unit, false);
 			return;
 		}
+		this.uploadNormalMap(image, unit);
+	}
+
+	/**
+	 * Upload a normal-map image to GL and cache the resulting `WebGLTexture`
+	 * for future `bindNormalMap` calls. Not meant to be called directly —
+	 * `bindNormalMap` invokes this on the first use of a given image.
+	 *
+	 * `premultipliedAlpha = false` — normal maps store linear-encoded
+	 * surface normals; multiplying through alpha would corrupt the
+	 * encoding for any non-opaque texel.
+	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas|ImageBitmap} image - normal-map source
+	 * @param {number} unit - GL texture unit (already offset by `maxBatchTextures`)
+	 */
+	uploadNormalMap(image, unit) {
+		const gl = this.gl;
 		this.createTexture2D(
 			unit,
 			image,
@@ -304,7 +317,7 @@ export default class LitQuadBatcher extends QuadBatcher {
 				if (prev !== null) {
 					this.flush();
 				}
-				this._uploadOrBindNormalMap(normalMap, normalUnit);
+				this.bindNormalMap(normalMap, normalUnit);
 				this.boundNormalMaps[unit] = normalMap;
 			}
 			normalTextureId = unit;
