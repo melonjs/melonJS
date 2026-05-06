@@ -363,7 +363,8 @@ export default class Sprite extends Renderable {
 			typeof value.height !== "number"
 		) {
 			throw new TypeError(
-				"Sprite.normalMap must be an image-like (HTMLImageElement, HTMLCanvasElement, OffscreenCanvas, ImageBitmap) or null",
+				"Sprite.normalMap must be null or an image-like object with numeric width/height " +
+					"(HTMLImageElement, HTMLCanvasElement, OffscreenCanvas, ImageBitmap, HTMLVideoElement)",
 			);
 		}
 		this._normalMap = value;

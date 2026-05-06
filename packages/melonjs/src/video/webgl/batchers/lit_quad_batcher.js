@@ -219,8 +219,11 @@ export default class LitQuadBatcher extends QuadBatcher {
 		const gl = this.gl;
 		const cached = this.normalMapTextures.get(image);
 		if (typeof cached !== "undefined") {
-			gl.activeTexture(gl.TEXTURE0 + unit);
-			gl.bindTexture(gl.TEXTURE_2D, cached);
+			// `bindTexture2D` updates `boundTextures[unit]` and
+			// `currentTextureUnit` so subsequent color-texture binds don't
+			// land on the wrong unit thinking it's still free. `flush=false`
+			// so we don't disturb the in-progress lit batch.
+			this.bindTexture2D(cached, unit, false);
 			return;
 		}
 		this.createTexture2D(
