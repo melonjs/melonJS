@@ -935,17 +935,26 @@ export default class Container extends Renderable {
 
 		this.drawCount = 0;
 
-		// clip the container children to the container bounds
+		// adjust position before clipping so the renderer's currentTransform
+		// sits at this container's local origin. `clipRect` then operates
+		// in container-local coords and any scale/rotation accumulated in
+		// the matrix is honored when the renderer converts to screen space.
+		// (Issue #1349 — passing world-space `bounds.left/top` to the
+		// previous local-space-expecting `clipRect` double-counted the
+		// translation when the container was nested inside a translated
+		// parent.)
+		renderer.translate(this.pos.x, this.pos.y);
+
+		// clip the container children to the container bounds.
+		// Container's anchorPoint is forced to (0, 0), so the local rect
+		// is (0, 0, width, height).
 		if (
 			this.root === false &&
 			this.clipping === true &&
 			bounds.isFinite() === true
 		) {
-			renderer.clipRect(bounds.left, bounds.top, bounds.width, bounds.height);
+			renderer.clipRect(0, 0, this.width, this.height);
 		}
-
-		// adjust position if required (e.g. canvas/window centering)
-		renderer.translate(this.pos.x, this.pos.y);
 
 		// color background if defined
 		if (this.backgroundColor.alpha > 1 / 255) {

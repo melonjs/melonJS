@@ -1434,12 +1434,10 @@ export default class WebGLRenderer extends Renderer {
 				const s = this.currentScissor;
 				gl.enable(gl.SCISSOR_TEST);
 				this._scissorActive = true;
-				gl.scissor(
-					s[0] + this.currentTransform.tx,
-					canvas.height - s[3] - s[1] - this.currentTransform.ty,
-					s[2],
-					s[3],
-				);
+				// `currentScissor` now stores screen-space coords directly
+				// (see `clipRect`); apply with the GL bottom-left y-flip and
+				// no further transform math.
+				gl.scissor(s[0], canvas.height - s[3] - s[1], s[2], s[3]);
 			} else {
 				this.gl.disable(this.gl.SCISSOR_TEST);
 				this._scissorActive = false;
@@ -2178,48 +2176,72 @@ export default class WebGLRenderer extends Renderer {
 	clipRect(x, y, width, height) {
 		const canvas = this.getCanvas();
 		const gl = this.gl;
-		// if requested box is different from the current canvas size
+
+		// Fast path: input rect matches the full canvas — treat as an
+		// explicit "no clip" signal and disable the scissor without
+		// running any transform math. This is the contract callers like
+		// `ColorLayer.draw` rely on (where the host renderable has
+		// `Infinity` dimensions + a 0.5-anchor, leaving
+		// `currentTransform.tx/ty = -Infinity`; running the transform
+		// math on those coords would produce NaN/Infinity corners and a
+		// broken `gl.scissor` call).
 		if (
-			x !== 0 ||
-			y !== 0 ||
-			width !== canvas.width ||
-			height !== canvas.height
+			x === 0 &&
+			y === 0 &&
+			width === canvas.width &&
+			height === canvas.height
 		) {
-			const currentScissor = this.currentScissor;
-			if (this._scissorActive) {
-				// if same as the current scissor box do nothing
-				if (
-					currentScissor[0] === x &&
-					currentScissor[1] === y &&
-					currentScissor[2] === width &&
-					currentScissor[3] === height
-				) {
-					return;
-				}
-			}
-			// flush the batcher
-			this.flush();
-			// turn on scissor test
-			gl.enable(this.gl.SCISSOR_TEST);
-			this._scissorActive = true;
-			// set the scissor rectangle (note : coordinates are left/bottom)
-			gl.scissor(
-				// scissor does not account for currentTransform, so manually adjust
-				x + this.currentTransform.tx,
-				canvas.height - height - y - this.currentTransform.ty,
-				width,
-				height,
-			);
-			// save the new currentScissor box
-			currentScissor[0] = x;
-			currentScissor[1] = y;
-			currentScissor[2] = width;
-			currentScissor[3] = height;
-		} else {
-			// turn off scissor test
 			gl.disable(gl.SCISSOR_TEST);
 			this._scissorActive = false;
+			return;
 		}
+
+		// transform the 4 input corners through the current transform to
+		// derive the screen-space scissor rect. `gl.scissor` takes an
+		// axis-aligned screen-space box and is not transform-aware, so
+		// any rotation in the matrix becomes an AABB on screen — matching
+		// what the Canvas renderer does in practice (its `context.clip()`
+		// produces a polygonal clip, but for downstream rendering only the
+		// AABB matters when the user wants a "rect that follows my
+		// transform" behavior). Issue #1349.
+		const m = this.currentTransform;
+		const p0 = { x: x, y: y };
+		const p1 = { x: x + width, y: y };
+		const p2 = { x: x, y: y + height };
+		const p3 = { x: x + width, y: y + height };
+		m.apply(p0);
+		m.apply(p1);
+		m.apply(p2);
+		m.apply(p3);
+		const sx = Math.floor(Math.min(p0.x, p1.x, p2.x, p3.x));
+		const sy = Math.floor(Math.min(p0.y, p1.y, p2.y, p3.y));
+		const sw = Math.ceil(Math.max(p0.x, p1.x, p2.x, p3.x) - sx);
+		const sh = Math.ceil(Math.max(p0.y, p1.y, p2.y, p3.y) - sy);
+
+		// `currentScissor` now stores screen-space coords directly so
+		// `restore()` can re-apply without re-running the transform math.
+		const cs = this.currentScissor;
+		if (
+			this._scissorActive &&
+			cs[0] === sx &&
+			cs[1] === sy &&
+			cs[2] === sw &&
+			cs[3] === sh
+		) {
+			return; // already at the right scissor
+		}
+		// flush the batcher BEFORE enabling/changing scissor — pending
+		// vertices were queued under the previous clip state and need to
+		// drain there.
+		this.flush();
+		gl.enable(gl.SCISSOR_TEST);
+		this._scissorActive = true;
+		// GL scissor uses bottom-left origin
+		gl.scissor(sx, canvas.height - sh - sy, sw, sh);
+		cs[0] = sx;
+		cs[1] = sy;
+		cs[2] = sw;
+		cs[3] = sh;
 	}
 
 	/**

@@ -33,6 +33,11 @@ const ExampleBlendModes = lazy(() =>
 		default: m.ExampleBlendModes,
 	})),
 );
+const ExampleClipping = lazy(() =>
+	import("./examples/clipping/ExampleClipping").then((m) => ({
+		default: m.ExampleClipping,
+	})),
+);
 const ExampleCompressedTextures = lazy(() =>
 	import("./examples/compressedTextures/ExampleCompressedTextures").then(
 		(m) => ({ default: m.ExampleCompressedTextures }),
@@ -197,6 +202,14 @@ const examples: {
 		sourceDir: "blendModes",
 		description:
 			"Visual comparison of all supported blend modes (normal, multiply, screen, overlay, darken, lighten, etc.).",
+	},
+	{
+		component: <ExampleClipping />,
+		label: "Clipping (#1349)",
+		path: "clipping",
+		sourceDir: "clipping",
+		description:
+			"Visual reproducer for #1349: Container clipping is offset when nested inside a translated parent. Compares a working scene (clipping container directly under the world) with a broken scene (clipping container nested inside a translated wrapper). Green outlines mark the expected clip rectangle.",
 	},
 	{
 		component: <ExampleCompressedTextures />,
