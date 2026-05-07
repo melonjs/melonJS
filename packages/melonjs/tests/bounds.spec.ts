@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Bounds, Matrix2d, math } from "../src/index.js";
+import { Bounds, Matrix2d, Matrix3d, math } from "../src/index.js";
 
 describe("Physics : Bounds", () => {
 	it("works", () => {});
@@ -134,6 +134,83 @@ describe("Physics : Bounds", () => {
 			expect(bound2.y).toBeCloseTo(10, 5);
 			expect(bound2.width).toBeCloseTo(200, 5);
 			expect(bound2.height).toBeCloseTo(100, 5);
+		});
+		it("addFrame with Matrix3d identity equals untransformed addFrame", () => {
+			const b = new Bounds();
+			b.addFrame(10, 50, 110, 250, new Matrix3d());
+			expect(b.x).toBeCloseTo(10, 5);
+			expect(b.y).toBeCloseTo(50, 5);
+			expect(b.width).toBeCloseTo(100, 5);
+			expect(b.height).toBeCloseTo(200, 5);
+		});
+		it("addFrame with Matrix3d translation shifts the AABB", () => {
+			const m = new Matrix3d();
+			m.translate(40, 30);
+			const b = new Bounds();
+			b.addFrame(10, 50, 110, 250, m);
+			expect(b.x).toBeCloseTo(50, 5);
+			expect(b.y).toBeCloseTo(80, 5);
+			expect(b.width).toBeCloseTo(100, 5);
+			expect(b.height).toBeCloseTo(200, 5);
+		});
+		it("addFrame with Matrix3d non-uniform scale stretches the AABB", () => {
+			const m = new Matrix3d();
+			m.scale(2, 3);
+			const b = new Bounds();
+			b.addFrame(10, 50, 110, 250, m);
+			expect(b.x).toBeCloseTo(20, 5);
+			expect(b.y).toBeCloseTo(150, 5);
+			expect(b.width).toBeCloseTo(200, 5);
+			expect(b.height).toBeCloseTo(600, 5);
+		});
+		it("addFrame with Matrix3d 45° rotation produces the rotated-rect AABB", () => {
+			const m = new Matrix3d();
+			m.rotate(math.degToRad(45));
+			const b = new Bounds();
+			// 100×100 rect at origin, rotated 45° → AABB side ≈ 100·√2.
+			b.addFrame(0, 0, 100, 100, m);
+			expect(b.width).toBeCloseTo(Math.SQRT2 * 100, 5);
+			expect(b.height).toBeCloseTo(Math.SQRT2 * 100, 5);
+		});
+		it("addFrame with Matrix3d composed translate + scale + rotate matches manual application", () => {
+			const m = new Matrix3d();
+			m.translate(50, 30);
+			m.rotate(math.degToRad(45));
+			m.scale(2, 1);
+			const b = new Bounds();
+			b.addFrame(0, 0, 100, 100, m);
+			// Reproduce the expected AABB by manually applying the same
+			// matrix to the four corners and taking min/max — this is the
+			// exact same path `WebGLRenderer.clipRect` walks.
+			const corners = [
+				{ x: 0, y: 0 },
+				{ x: 100, y: 0 },
+				{ x: 0, y: 100 },
+				{ x: 100, y: 100 },
+			];
+			let minX = Infinity;
+			let minY = Infinity;
+			let maxX = -Infinity;
+			let maxY = -Infinity;
+			for (const c of corners) {
+				m.apply(c);
+				if (c.x < minX) {
+					minX = c.x;
+				}
+				if (c.x > maxX) {
+					maxX = c.x;
+				}
+				if (c.y < minY) {
+					minY = c.y;
+				}
+				if (c.y > maxY) {
+					maxY = c.y;
+				}
+			}
+			expect(b.x).toBeCloseTo(minX, 5);
+			expect(b.y).toBeCloseTo(minY, 5);
+			expect(b.width).toBeCloseTo(maxX - minX, 5);
+			expect(b.height).toBeCloseTo(maxY - minY, 5);
 		});
 	});
 	describe("setMinMax", () => {
