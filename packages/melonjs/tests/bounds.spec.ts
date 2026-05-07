@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { Bounds, Matrix2d, Matrix3d, math } from "../src/index.js";
 
 describe("Physics : Bounds", () => {
-	it("works", () => {});
 	const bound1 = new Bounds([
 		{ x: 0, y: 0 },
 		{ x: 50, y: 0 },

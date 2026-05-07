@@ -262,12 +262,15 @@ export class Bounds {
 	}
 
 	/**
-	 * Adds the given quad coordinates to this bounds definition, multiplied by the given matrix.
+	 * Expands this bounds to include the axis-aligned bounding box of
+	 * the given rect's four corners, optionally transformed through `m`
+	 * first. With a non-identity `m` (rotation, scale, etc.) the result
+	 * is the AABB of the transformed quad, not a transformed AABB.
 	 * @param x0 - The left x coordinate of the quad.
 	 * @param y0 - The top y coordinate of the quad.
 	 * @param x1 - The right x coordinate of the quad.
 	 * @param y1 - The bottom y coordinate of the quad.
-	 * @param [m] - An optional transform to apply to the given coordinates.
+	 * @param [m] - An optional transform applied to each corner before inclusion.
 	 */
 	addFrame(
 		x0: number,
