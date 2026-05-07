@@ -205,11 +205,10 @@ const examples: {
 	},
 	{
 		component: <ExampleClipping />,
-		label: "Clipping (#1349)",
+		label: "Clipping",
 		path: "clipping",
 		sourceDir: "clipping",
-		description:
-			"Visual reproducer for #1349: Container clipping is offset when nested inside a translated parent. Compares a working scene (clipping container directly under the world) with a broken scene (clipping container nested inside a translated wrapper). Green outlines mark the expected clip rectangle.",
+		description: "Nested and animated `Container` clipping.",
 	},
 	{
 		component: <ExampleCompressedTextures />,

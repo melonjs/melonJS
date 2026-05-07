@@ -142,6 +142,23 @@ export default class RenderState {
 	}
 
 	/**
+	 * Inspect the scissor that the next `restore()` would install,
+	 * without mutating state. Returns the saved scissor box as a live
+	 * reference into the internal stack when scissor was active at
+	 * `save()` time, or `null` when the saved state had scissor
+	 * disabled (or the stack is empty). Caller treats `null` as
+	 * "next scissor will be inactive".
+	 * @returns {Int32Array | null}
+	 */
+	peekScissor() {
+		const depth = this._stackDepth - 1;
+		if (depth < 0 || !this._scissorActive[depth]) {
+			return null;
+		}
+		return this._scissorStack[depth];
+	}
+
+	/**
 	 * Restore state from the stack.
 	 * Color, tint, transform, and scissor are restored in place.
 	 * Blend mode is NOT applied to `currentBlendMode` — it is returned so the

@@ -1,39 +1,26 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { boot, Container, video } from "../src/index.js";
 import CanvasRenderer from "../src/video/canvas/canvas_renderer.js";
+import RenderState from "../src/video/renderstate.js";
 import WebGLRenderer from "../src/video/webgl/webgl_renderer.js";
 
 /**
- * `clipRect` correctness tests for issue #1349.
+ * `clipRect` regression guards for issue #1349. Three classes of bug
+ * are covered, all now fixed:
  *
- * Two related bug families are documented:
- *
- *   **Bug #1 — coordinate-space mismatch (call site).**
- *   `Container.draw` passes its `getBounds()` rect — *world*-space —
- *   to `renderer.clipRect`, which expects coordinates *local to the
- *   current transform*. When the container is nested inside a
- *   translated parent, the parent's translate is already baked into
- *   `currentTransform` by the time `clipRect` runs, so the world-space
- *   input gets double-counted. Reproducible on **both** Canvas and
- *   WebGL — they end up with the clip rect at the same wrong screen
- *   position via different mechanisms.
- *
- *   **Bug #2 / #3 — WebGL `clipRect` ignores scale and rotation.**
- *   The WebGL impl converts input to GL's bottom-left scissor space by
- *   only adding `currentTransform.tx/ty`:
- *
- *       gl.scissor(
- *           x + currentTransform.tx,
- *           canvasH - h - y - currentTransform.ty,
- *           w,
- *           h,
- *       )
- *
- *   Canvas doesn't have these — `context.rect` is fully matrix-aware.
- *
- * The tests below mark the buggy cases with `it.fails` so they pass
- * *because* they fail today; once #1349 is fixed they should be
- * flipped to plain `it()` (or assertions inverted).
+ * 1. Coordinate-space mismatch at the call site — `Container.draw`
+ *    used to pass `getBounds()` (world space) to a `clipRect` API
+ *    interpreted as local to the current transform, so a translated
+ *    parent double-counted its own translate. Affected both Canvas
+ *    and WebGL.
+ * 2. WebGL `clipRect` honored only translation (`currentTransform.tx/ty`),
+ *    ignoring scale and rotation, so a scaled parent produced a
+ *    wrong-sized scissor box. Canvas's `context.rect` was already
+ *    matrix-aware.
+ * 3. WebGL `restore()` reverted the scissor without flushing pending
+ *    PrimitiveBatcher vertices, so vertices queued inside a deeper
+ *    clipping container could leak out and flush later under a more
+ *    permissive scissor.
  */
 
 // ---------------- WebGLRenderer ----------------
@@ -260,6 +247,99 @@ describe("WebGLRenderer.clipRect (#1349)", () => {
 		expect(renderer._scissorActive).toBe(false);
 	});
 
+	// ---- Regression guard: vertices queued under a tighter clip
+	// flush *under that clip's scissor*, not under whatever scissor is
+	// active at end-of-frame. The pre-fix `restore()` reverted the GL
+	// scissor box without draining the batcher, so vertices queued
+	// inside a deeply nested clipping container would survive past
+	// `restore()` and flush later under a more permissive scissor.
+
+	/**
+	 * Spy on `gl.drawArrays` / `gl.drawElements` and capture the
+	 * renderer's tracked scissor state at the moment each draw is
+	 * issued. Internal `_scissorActive` / `currentScissor` mirror the
+	 * GL state we set, so reading them is equivalent to and cheaper
+	 * than calling `gl.getParameter(gl.SCISSOR_BOX)`.
+	 */
+	function captureDrawScissors(fn) {
+		const drawArrays = gl.drawArrays.bind(gl);
+		const drawElements = gl.drawElements.bind(gl);
+		const calls = [];
+		const snapshot = () => {
+			const s = renderer.currentScissor;
+			calls.push({
+				active: renderer._scissorActive === true,
+				x: s[0],
+				y: s[1],
+				w: s[2],
+				h: s[3],
+			});
+		};
+		gl.drawArrays = function (...args) {
+			snapshot();
+			return drawArrays(...args);
+		};
+		gl.drawElements = function (...args) {
+			snapshot();
+			return drawElements(...args);
+		};
+		try {
+			fn();
+		} finally {
+			gl.drawArrays = drawArrays;
+			gl.drawElements = drawElements;
+		}
+		return calls;
+	}
+
+	it("vertices queued inside a nested clip flush under that clip's scissor", () => {
+		if (!isWebGL) {
+			return;
+		}
+		renderer.save();
+		renderer.resetTransform();
+		// reset cache so each clipRect call below actually issues a
+		// fresh `gl.scissor`.
+		renderer.currentScissor[0] = -1;
+
+		const calls = captureDrawScissors(() => {
+			// outer clip: (10, 10, 100, 100) — vertices issued here
+			// must end up under this scissor.
+			renderer.clipRect(10, 10, 100, 100);
+			renderer.fillRect(10, 10, 100, 100);
+
+			renderer.save();
+			// inner clip — narrower box. fillRect underneath must end
+			// up under THIS scissor, not the outer one or no scissor.
+			renderer.clipRect(20, 20, 50, 50);
+			renderer.fillRect(20, 20, 50, 50);
+			// pre-fix: this `restore()` reverts the scissor without
+			// flushing, leaving inner vertices in the batcher.
+			renderer.restore();
+
+			renderer.restore();
+			// any pending vertices are now flushed at end-of-frame.
+			renderer.flush();
+		});
+
+		// each fillRect produces at least one draw call (PrimitiveBatcher
+		// flushes on scissor change in clipRect / restore). Find the
+		// call whose scissor box matches the inner clip.
+		const innerDraw = calls.find((c) => {
+			return c.active && c.x === 20 && c.w === 50;
+		});
+		expect(innerDraw).toBeDefined();
+		expect(innerDraw.y).toBe(20);
+		expect(innerDraw.h).toBe(50);
+
+		// outer clip's vertices must also have flushed under the outer
+		// scissor (they were drained by the inner clipRect's flush).
+		const outerDraw = calls.find((c) => {
+			return c.active && c.x === 10 && c.w === 100;
+		});
+		expect(outerDraw).toBeDefined();
+	});
+
 	// ---- Regression guard: nested save/restore correctly snapshots the scissor box ----
 
 	it("nested save/restore restores the outer scissor box after an inner clipRect", () => {
@@ -287,6 +367,199 @@ describe("WebGLRenderer.clipRect (#1349)", () => {
 		expect(renderer.currentScissor[3]).toBe(outer[3]);
 
 		renderer.restore();
+	});
+
+	// ---- Regression guard: AABB ≥ canvas under a non-identity transform
+	// disables the scissor (transform-aware fast path).
+
+	it("clipRect whose screen-space AABB covers the canvas disables the scissor", () => {
+		if (!isWebGL) {
+			return;
+		}
+		renderer.save();
+		renderer.resetTransform();
+		// huge scale → the (0..50, 0..50) input rect maps to a screen
+		// AABB of (0..1000, 0..1000), well past the 800×600 canvas.
+		// The fast path should disable the scissor outright.
+		renderer.scale(20, 20);
+		renderer.currentScissor[0] = -1; // bust cache so the call is observable
+
+		const calls = captureScissor(() => {
+			renderer.clipRect(0, 0, 50, 50);
+		});
+		renderer.restore();
+
+		// no `gl.scissor` call should have been issued; the scissor
+		// state should be off.
+		expect(calls.length).toBe(0);
+		expect(renderer._scissorActive).toBe(false);
+	});
+
+	// ---- Regression guard: primitive draw-mode change inside a clip
+	// (TRIANGLES → LINES) forces a `PrimitiveBatcher` flush; that flush
+	// must happen under the active scissor.
+
+	it("primitive mode switch (fillRect → strokeLine) inside a clip stays clipped", () => {
+		if (!isWebGL) {
+			return;
+		}
+		renderer.save();
+		renderer.resetTransform();
+		renderer.currentScissor[0] = -1;
+
+		const calls = captureDrawScissors(() => {
+			renderer.clipRect(40, 40, 80, 80);
+			// fillRect uses TRIANGLES via PrimitiveBatcher.
+			renderer.fillRect(40, 40, 80, 80);
+			// strokeLine uses LINES via the same batcher — the mode
+			// change forces an internal flush. That flush must occur
+			// while the (40, 40, 80, 80) scissor is still active.
+			renderer.strokeLine(50, 50, 100, 100);
+			renderer.flush();
+		});
+		renderer.restore();
+
+		// At least two draw calls (one TRIANGLES, one LINES). Both must
+		// have happened under the (40, 40, 80, 80) scissor.
+		const underClip = calls.filter((c) => {
+			return c.active && c.x === 40 && c.y === 40 && c.w === 80 && c.h === 80;
+		});
+		expect(underClip.length).toBeGreaterThanOrEqual(2);
+	});
+
+	// ---- Regression guard: batcher swap inside a clip flushes the
+	// outgoing batcher under the active scissor (primitive ↔ quad).
+
+	it("alternating fillRect ↔ drawImage inside a clip stays clipped across batcher swaps", () => {
+		if (!isWebGL) {
+			return;
+		}
+		// build a 4×4 image source (HTMLCanvasElement) for drawImage.
+		const src = document.createElement("canvas");
+		src.width = 4;
+		src.height = 4;
+		const ctx = src.getContext("2d");
+		ctx.fillStyle = "#ffffff";
+		ctx.fillRect(0, 0, 4, 4);
+
+		renderer.save();
+		renderer.resetTransform();
+		renderer.currentScissor[0] = -1;
+
+		const calls = captureDrawScissors(() => {
+			renderer.clipRect(60, 60, 120, 120);
+			// PrimitiveBatcher
+			renderer.fillRect(60, 60, 40, 40);
+			// QuadBatcher — swap forces flush of PrimitiveBatcher.
+			renderer.drawImage(src, 80, 80);
+			// back to PrimitiveBatcher — swap forces flush of QuadBatcher.
+			renderer.fillRect(100, 100, 40, 40);
+			renderer.flush();
+		});
+		renderer.restore();
+
+		// every captured draw must have happened under the active clip.
+		expect(calls.length).toBeGreaterThanOrEqual(2);
+		for (const c of calls) {
+			expect(c.active).toBe(true);
+			expect(c.x).toBe(60);
+			expect(c.y).toBe(60);
+			expect(c.w).toBe(120);
+			expect(c.h).toBe(120);
+		}
+	});
+
+	// ---- Regression guard: pending vertices queued *outside* any clip
+	// must drain BEFORE a subsequent `clipRect` activates a new scissor
+	// — symmetric to the `restore()` flush-ordering fix.
+
+	it("pre-clip vertices flush under no scissor, post-clip vertices flush under the new scissor", () => {
+		if (!isWebGL) {
+			return;
+		}
+		renderer.save();
+		renderer.resetTransform();
+		// ensure scissor is disabled at start.
+		if (renderer._scissorActive) {
+			renderer.gl.disable(renderer.gl.SCISSOR_TEST);
+			renderer._scissorActive = false;
+		}
+		renderer.currentScissor[0] = -1;
+
+		const calls = captureDrawScissors(() => {
+			// 1. fillRect outside any clip — must drain under "no scissor".
+			renderer.fillRect(10, 10, 20, 20);
+			// 2. clipRect activates a new scissor — pre-clip vertices
+			//    must have flushed BEFORE the new gl.scissor() call.
+			renderer.clipRect(200, 200, 100, 100);
+			// 3. fillRect inside the clip — must flush under (200, 200, 100, 100).
+			renderer.fillRect(200, 200, 100, 100);
+			renderer.flush();
+		});
+		renderer.restore();
+
+		// Find the "no-clip" draw (active=false) — this is the pre-clip
+		// fillRect, drained by the clipRect's flush.
+		const preClip = calls.find((c) => {
+			return !c.active;
+		});
+		expect(preClip).toBeDefined();
+
+		// Find the post-clip draw under the (200, 200, 100, 100) scissor.
+		const postClip = calls.find((c) => {
+			return (
+				c.active && c.x === 200 && c.y === 200 && c.w === 100 && c.h === 100
+			);
+		});
+		expect(postClip).toBeDefined();
+	});
+});
+
+// ---------------- RenderState.peekScissor (unit) ----------------
+
+describe("RenderState.peekScissor", () => {
+	it("returns null on empty stack", () => {
+		const rs = new RenderState();
+		expect(rs.peekScissor()).toBe(null);
+	});
+
+	it("returns null when the saved state had scissor disabled", () => {
+		const rs = new RenderState();
+		rs.save(false);
+		expect(rs.peekScissor()).toBe(null);
+	});
+
+	it("returns the saved scissor box (live ref) when scissor was active at save time", () => {
+		const rs = new RenderState();
+		rs.currentScissor[0] = 11;
+		rs.currentScissor[1] = 22;
+		rs.currentScissor[2] = 33;
+		rs.currentScissor[3] = 44;
+		rs.save(true);
+
+		// mutate currentScissor after save — peek must still return
+		// the snapshot from the time of `save`.
+		rs.currentScissor[0] = 999;
+
+		const peek = rs.peekScissor();
+		expect(peek).not.toBe(null);
+		expect(peek[0]).toBe(11);
+		expect(peek[1]).toBe(22);
+		expect(peek[2]).toBe(33);
+		expect(peek[3]).toBe(44);
+	});
+
+	it("does not mutate the stack (idempotent)", () => {
+		const rs = new RenderState();
+		rs.currentScissor[0] = 1;
+		rs.currentScissor[1] = 2;
+		rs.currentScissor[2] = 3;
+		rs.currentScissor[3] = 4;
+		rs.save(true);
+		const depthBefore = rs._stackDepth;
+		rs.peekScissor();
+		rs.peekScissor();
+		expect(rs._stackDepth).toBe(depthBefore);
 	});
 });
 

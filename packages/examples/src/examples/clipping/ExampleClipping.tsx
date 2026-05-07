@@ -12,45 +12,25 @@ import {
 import { createExampleComponent } from "../utils";
 
 /**
- * `Container` clipping demo / regression guard for #1349.
+ * `Container` clipping demo over a `ColorLayer` backdrop.
  *
- * Both scenes clip an overflowing rectangle to a 180×160 region marked
- * by a green outline. The two scenes set up the *same* clip in two
- * different ways:
- *
- * - **Left:** clipping `Container` added directly to the world. Parent
- *   transform at `clipRect` time is identity.
- * - **Right:** clipping `Container` nested inside a non-clipping wrapper
- *   with `pos = (280, 80)`. Parent transform at `clipRect` time has
- *   the wrapper's translate baked in.
- *
- * Both should clip identically. Pre-#1349, the right scene was offset
- * by exactly `(280, 80)` because `Container.draw` was passing
- * world-space `bounds.left/top` to a `clipRect` API that expected
- * coordinates *local to the current transform*, double-counting the
- * wrapper's translate. The fix moves `Container.draw`'s `translate`
- * before `clipRect` and passes local-frame `(0, 0, width, height)`,
- * letting the renderer's own transform stack handle all the math.
+ * Left: three nested clipping containers form concentric color rings.
+ * Right: a wrapper with a sinusoidal scale animates a clipping
+ * container; the overflowing fill stays cropped to the scaled bounds.
  */
 
 class OverflowingRect extends Renderable {
 	private color = new Color();
 
 	constructor(colorHex: string) {
-		// the renderable's own bounds are intentionally larger than its
-		// host clipping container so the rect bleeds out on every side.
-		// Drawn at LOCAL (0, 0) inside its parent — Container.draw
-		// translates by the parent's pos before iterating children.
+		// bounds are intentionally larger than the host clipping
+		// container so the rect bleeds out on every side.
 		super(0, 0, 500, 280);
 		this.anchorPoint.set(0, 0);
 		this.color.parseCSS(colorHex);
 	}
 
 	draw(renderer: Parameters<Renderable["draw"]>[0]) {
-		// fill + a 3px white stroke on the renderable's *own* edge so the
-		// natural rect boundary is visible. Anything outside the host
-		// clipping container's bounds should be cropped — that's the
-		// signal whether clipping is active.
 		renderer.setColor(this.color);
 		renderer.fillRect(0, 0, this.width, this.height);
 		renderer.setColor("#ffffff");
@@ -59,13 +39,7 @@ class OverflowingRect extends Renderable {
 	}
 }
 
-/**
- * A `ColorLayer` that fills only a sub-region of the canvas instead of
- * the whole viewport. Reuses `ColorLayer`'s `clipRect` + `clearColor`
- * approach but with a custom rect, so the example exercises both
- * "full canvas" (built-in `ColorLayer`) and "partial rect" forms of
- * the clip-and-clear pattern.
- */
+/** A `ColorLayer` that fills only a sub-region of the canvas. */
 class PartialColorLayer extends ColorLayer {
 	private rectX: number;
 	private rectY: number;
@@ -109,9 +83,6 @@ class ClipOutline extends Renderable {
 	}
 
 	draw(renderer: Parameters<Renderable["draw"]>[0]) {
-		// Renderable doesn't auto-translate by its own pos (that happens
-		// only inside autoTransform when a non-identity matrix is set),
-		// so anchor the stroke at this.pos.x/y explicitly.
 		renderer.setColor(this.color);
 		renderer.setLineWidth(3);
 		renderer.strokeRect(this.pos.x, this.pos.y, this.width, this.height);
@@ -120,64 +91,93 @@ class ClipOutline extends Renderable {
 
 class PlayScreen extends Stage {
 	onResetEvent() {
-		// Layer 1 (z=0): full-canvas dark backdrop via the engine's
-		// built-in `ColorLayer`. Internally calls
-		// `clipRect(0, 0, viewport.w, viewport.h) + clearColor(...)` —
-		// the canvas-sized clipRect input hits the renderer's
-		// "full-canvas = no clip" fast path, so the entire framebuffer
-		// gets cleared to this color regardless of any prior scissor
-		// state.
+		// full-canvas backdrop + a partial colored band
 		game.world.addChild(new ColorLayer("bg", "#0e1116"), 0);
-
-		// Layer 2 (z=1): a partial colored band rendered via the same
-		// `clipRect + clearColor` mechanism, but with a sub-rect input.
-		// Anything previously drawn inside the band is replaced; the
-		// dark backdrop outside the band stays untouched. This proves
-		// `clearColor` honors the active scissor and that the partial-
-		// rect path produces the right screen region.
 		game.world.addChild(
 			new PartialColorLayer("band", "#1f2a3a", 0, 100, 760, 140),
 			1,
 		);
 
-		// LEFT scene — clipping container directly under the world.
-		// Position chosen so it doesn't overlap the right scene's expected
-		// or buggy region.
-		const leftClip = new Container(40, 80, 180, 160);
-		leftClip.clipping = true;
-		leftClip.addChild(new OverflowingRect("#3498db"));
-		game.world.addChild(leftClip, 2);
+		// LEFT — three concentric clipping containers, each with its
+		// own overflowing fill. Each color is only visible in the ring
+		// between its own clip and the next inner one.
+		const A = new Container(40, 80, 180, 160);
+		A.clipping = true;
+		A.addChild(new OverflowingRect("#3498db")); // outer ring: blue
+
+		const B = new Container(15, 15, 150, 130);
+		B.clipping = true;
+		B.addChild(new OverflowingRect("#2ecc71")); // middle ring: green
+
+		const C = new Container(15, 15, 120, 100);
+		C.clipping = true;
+		C.addChild(new OverflowingRect("#f39c12")); // inner: orange
+
+		B.addChild(C);
+		A.addChild(B);
+		game.world.addChild(A, 2);
+
+		// outlines mark each clip level
 		game.world.addChild(new ClipOutline(40, 80, 180, 160), 3);
+		game.world.addChild(new ClipOutline(40 + 15, 80 + 15, 150, 130), 3);
+		game.world.addChild(
+			new ClipOutline(40 + 15 + 15, 80 + 15 + 15, 120, 100),
+			3,
+		);
 		game.world.addChild(
 			new Text(40, 60, {
 				font: "monospace",
 				size: 12,
 				fillStyle: "#00ff88",
-				text: "Direct child of world",
+				text: "Triple-nested clipping",
 			}),
 			4,
 		);
 
-		// RIGHT scene — clipping container nested inside a translated
-		// wrapper (the regression-prone path for #1349). Should clip
-		// identically to the LEFT scene; pre-fix it was offset by
-		// `wrapper.pos`.
-		const wrapper = new Container(280, 80, 180, 160);
+		// RIGHT — wrapper centered on its pos, with a clipping
+		// container offset back to the top-left. The wrapper's
+		// `currentTransform` gets a sinusoidal scale each frame, so
+		// the inner clip pulses around the wrapper's center.
+		const RIGHT_CENTER_X = 370;
+		const RIGHT_CENTER_Y = 160;
+		const RIGHT_W = 180;
+		const RIGHT_H = 160;
+		const wrapper = new Container(
+			RIGHT_CENTER_X,
+			RIGHT_CENTER_Y,
+			RIGHT_W,
+			RIGHT_H,
+		);
 		wrapper.clipping = false;
-		const innerClip = new Container(0, 0, 180, 160);
+		const innerClip = new Container(
+			-RIGHT_W / 2,
+			-RIGHT_H / 2,
+			RIGHT_W,
+			RIGHT_H,
+		);
 		innerClip.clipping = true;
 		innerClip.addChild(new OverflowingRect("#e74c3c"));
 		wrapper.addChild(innerClip);
+
+		// keep `update` ticking even when the scaled wrapper bounds
+		// momentarily fall off-viewport.
+		wrapper.alwaysUpdate = true;
+		let t = 0;
+		const baseUpdate = wrapper.update.bind(wrapper);
+		wrapper.update = function (dt: number) {
+			t += dt;
+			this.currentTransform.identity();
+			const s = 1 + 0.25 * Math.sin(t * 0.0025);
+			this.currentTransform.scale(s, s);
+			return baseUpdate(dt) || true;
+		};
 		game.world.addChild(wrapper, 2);
-		// expected clip outline (green) — at the inner clip's world rect:
-		// wrapper.pos + innerClip.pos = (280, 80) + (0, 0) = (280, 80).
-		game.world.addChild(new ClipOutline(280, 80, 180, 160), 3);
 		game.world.addChild(
 			new Text(280, 60, {
 				font: "monospace",
 				size: 12,
 				fillStyle: "#00ff88",
-				text: "Inside translated wrapper (#1349 regression)",
+				text: "Pulsing wrapper",
 			}),
 			4,
 		);
@@ -188,7 +188,7 @@ class PlayScreen extends Stage {
 				size: 11,
 				fillStyle: "#cccccc",
 				textAlign: "center",
-				text: "Green outline = expected clip rect. Lighter band = partial ColorLayer.",
+				text: "Green outlines = static clip bounds. Lighter band = partial ColorLayer.",
 			}),
 			4,
 		);
