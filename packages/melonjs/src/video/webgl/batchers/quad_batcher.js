@@ -193,23 +193,47 @@ export default class QuadBatcher extends MaterialBatcher {
 
 		this.useShader(shader);
 
-		// bind the source texture to unit 0
+		// bind the source texture to unit 0 — keep the batcher's internal
+		// texture-unit bookkeeping in sync with the actual GL state, or
+		// later `bindTexture2D` calls may early-out on a stale
+		// `currentTextureUnit` and bind to the wrong unit.
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, source);
+		this.currentTextureUnit = 0;
+		this.boundTextures[0] = source;
 		shader.setUniform("uSampler", 0);
 
-		// push a screen-aligned quad with Y-flipped UVs
+		// push a screen-aligned quad with Y-flipped UVs, transformed by
+		// the current renderer transform. `WebGLRenderer.blitEffect` (the
+		// only caller today) resets `currentTransform` to identity before
+		// calling so FBO blits land in screen space; the matrix path is
+		// kept for any future world-space caller that wants its preDraw
+		// translate/scale honored.
+		const m = this.viewMatrix;
+		const vec0 = V_ARRAY[0].set(x, y);
+		const vec1 = V_ARRAY[1].set(x + width, y);
+		const vec2 = V_ARRAY[2].set(x, y + height);
+		const vec3 = V_ARRAY[3].set(x + width, y + height);
+		if (m && !m.isIdentity()) {
+			m.apply(vec0);
+			m.apply(vec1);
+			m.apply(vec2);
+			m.apply(vec3);
+		}
+
 		const tint = 0xffffffff;
-		this.vertexData.push(x, y, 0, 1, tint, 0);
-		this.vertexData.push(x + width, y, 1, 1, tint, 0);
-		this.vertexData.push(x, y + height, 0, 0, tint, 0);
-		this.vertexData.push(x + width, y + height, 1, 0, tint, 0);
+		this.vertexData.push(vec0.x, vec0.y, 0, 1, tint, 0);
+		this.vertexData.push(vec1.x, vec1.y, 1, 1, tint, 0);
+		this.vertexData.push(vec2.x, vec2.y, 0, 0, tint, 0);
+		this.vertexData.push(vec3.x, vec3.y, 1, 0, tint, 0);
 
 		this.flush();
 
-		// unbind the texture to prevent feedback loop on next frame
+		// unbind the texture to prevent feedback loop on next frame, and
+		// drop the unit-0 cache slot so the next bind re-issues activeTexture.
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, null);
+		this.currentTextureUnit = -1;
 		delete this.boundTextures[0];
 
 		// restore the default shader (also re-enables multi-texture batching)

@@ -80,6 +80,9 @@ export default class CanvasRenderer extends Renderer {
 	reset() {
 		super.reset();
 		this.clearColor(this.currentColor, this.settings.transparent !== true);
+		// drop the per-light gradient cache; entries will lazily re-bake on
+		// the next `drawLight()` call.
+		this._lightCache = undefined;
 	}
 
 	/**
@@ -293,6 +296,73 @@ export default class CanvasRenderer extends Renderer {
 			source = this.cache.tint(image, this.currentTint.toRGB());
 		}
 		context.drawImage(source, sx, sy, sw, sh, dx, dy, dw, dh);
+	}
+
+	/**
+	 * @inheritdoc
+	 *
+	 * Renders the light by drawing a cached radial `Gradient` via
+	 * `Gradient.toCanvas()`. The Gradient instance is cached per-Light2d
+	 * in a `WeakMap` and rebuilt only when the light's radii / color /
+	 * intensity change. `toCanvas` itself shares a single
+	 * `CanvasRenderTarget` across all gradients in the engine, so memory
+	 * stays at O(1) regardless of how many lights are active.
+	 *
+	 * The cached Gradient is always circular (outer radius =
+	 * `max(radiusX, radiusY)`) — `drawImage`'s non-uniform stretch
+	 * produces the elliptical falloff for non-square lights, matching
+	 * the procedural shader's behavior on WebGL.
+	 * @param {object} light - the Light2d instance to render
+	 */
+	drawLight(light) {
+		if (this._lightCache === undefined) {
+			this._lightCache = new WeakMap();
+		}
+		let entry = this._lightCache.get(light);
+		const c = light.color;
+		if (
+			entry === undefined ||
+			entry.radiusX !== light.radiusX ||
+			entry.radiusY !== light.radiusY ||
+			entry.r !== c.r ||
+			entry.g !== c.g ||
+			entry.b !== c.b ||
+			entry.intensity !== light.intensity
+		) {
+			const r = Math.max(light.radiusX, light.radiusY);
+			const gradient = this.createRadialGradient(r, r, 0, r, r, r);
+			gradient.addColorStop(0, c.toRGBA(light.intensity));
+			gradient.addColorStop(1, c.toRGBA(0.0));
+			entry = {
+				gradient,
+				radius: r,
+				radiusX: light.radiusX,
+				radiusY: light.radiusY,
+				r: c.r,
+				g: c.g,
+				b: c.b,
+				intensity: light.intensity,
+			};
+			this._lightCache.set(light, entry);
+		}
+		const r2 = entry.radius * 2;
+		// `Gradient.toCanvas` renders into a shared `CanvasRenderTarget`
+		// (one per engine, reused across all gradients) and returns its
+		// canvas. `drawImage` with explicit src/dst rects crops the POT
+		// padding and stretches the circular gradient into the
+		// elliptical bounding box `(light.width × light.height)`.
+		const canvas = entry.gradient.toCanvas(this, 0, 0, r2, r2);
+		this.drawImage(
+			canvas,
+			0,
+			0,
+			r2,
+			r2,
+			light.pos.x,
+			light.pos.y,
+			light.width,
+			light.height,
+		);
 	}
 
 	/**

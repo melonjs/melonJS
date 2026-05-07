@@ -440,6 +440,32 @@ export default class Renderer {
 	}
 
 	/**
+	 * Render a `Light2d` instance.
+	 *
+	 * Each renderer implements its own strategy: the WebGL renderer
+	 * draws lights as quads through a shared procedural radial-falloff
+	 * fragment shader (no per-light texture, color and intensity
+	 * encoded in the per-vertex tint so consecutive draws batch); the
+	 * Canvas renderer caches a small `Gradient` config object per
+	 * light in a `WeakMap` (rebuilt only when the light's radii /
+	 * color / intensity change), rasterizes it with `Gradient.toCanvas()`
+	 * into a single shared `CanvasRenderTarget`, and composites the
+	 * result via `drawImage`. The base implementation is a no-op so
+	 * renderers without a lighting path can be polymorphically
+	 * substituted.
+	 *
+	 * Light2d itself is renderer-agnostic — it just calls
+	 * `renderer.drawLight(this)` and relies on the renderer to pick
+	 * the right machinery.
+	 * @param {object} light - the Light2d instance to render
+	 * @see Light2d
+	 */
+	// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+	drawLight(light) {
+		// base no-op; concrete renderers override
+	}
+
+	/**
 	 * Set the current fill & stroke style color.
 	 * By default, or upon reset, the value is set to #000000.
 	 * @param {Color|string|Gradient} color - css color value or a Gradient object

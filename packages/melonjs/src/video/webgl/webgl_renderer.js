@@ -24,6 +24,7 @@ import LitQuadBatcher from "./batchers/lit_quad_batcher";
 import MeshBatcher from "./batchers/mesh_batcher";
 import PrimitiveBatcher from "./batchers/primitive_batcher";
 import QuadBatcher from "./batchers/quad_batcher";
+import RadialGradientEffect from "./effects/radialGradient.js";
 import { createLightUniformScratch, packLights } from "./lighting/pack.ts";
 import { getMaxShaderPrecision } from "./utils/precision.js";
 
@@ -372,6 +373,27 @@ export default class WebGLRenderer extends Renderer {
 
 		// release post-process FBOs (will be recreated on demand)
 		this._renderTargetPool.destroy();
+
+		// drop the lazily-cached drawLight resources — after a context
+		// loss/restore the cached shader program and white-pixel atlas
+		// reference the OLD GL context and would error if reused.
+		// Lazy re-init happens on the next drawLight call.
+		if (this._lightShader !== undefined) {
+			this._lightShader.destroy?.();
+			this._lightShader = undefined;
+		}
+		if (this._lightAtlas !== undefined) {
+			// `TextureCache` is keyed by the source image, not by the
+			// `TextureAtlas` instance. Dropping the wrong key would leak
+			// the entry (so a context lost / restore would later resolve
+			// the canvas to a `TextureAtlas` whose internal GL texture
+			// reference is invalid). Iterate the atlas's sources to drop
+			// every cached entry it registered in `cache.set(source, this)`.
+			this._lightAtlas.sources.forEach((source) => {
+				this.cache.delete?.(source);
+			});
+			this._lightAtlas = undefined;
+		}
 	}
 
 	/**
@@ -405,8 +427,20 @@ export default class WebGLRenderer extends Renderer {
 			throw new Error("Invalid Batcher");
 		}
 
-		// fast path: already on the right batcher with no custom shader
-		if (this.currentBatcher === batcher && typeof shader !== "object") {
+		// resolve the target shader — the explicitly-passed one if any,
+		// otherwise the batcher's default. We always reconcile the
+		// currentShader to this target so a custom shader left bound by a
+		// prior call (e.g. `drawLight` parking the radial-gradient
+		// program) gets evicted before the next sprite batch flushes.
+		// `shader != null` excludes both `null` and `undefined`
+		// (`typeof null === "object"` would otherwise let null through).
+		const targetShader = shader != null ? shader : batcher.defaultShader;
+
+		if (
+			this.currentBatcher === batcher &&
+			batcher.currentShader === targetShader
+		) {
+			// fast path: same batcher, same shader — nothing to do.
 			return this.currentBatcher;
 		}
 
@@ -424,9 +458,11 @@ export default class WebGLRenderer extends Renderer {
 			this.currentBatcher.setProjection(this.projectionMatrix);
 		}
 
-		if (typeof shader === "object") {
-			this.currentBatcher.useShader(shader);
-		}
+		// useShader() is internally a no-op when the shader is already
+		// bound; it flushes and rebinds otherwise. Pending vertices that
+		// were queued under the prior shader get drained against that
+		// shader before the switch, which is exactly what we want.
+		this.currentBatcher.useShader(targetShader);
 
 		return this.currentBatcher;
 	}
@@ -548,6 +584,80 @@ export default class WebGLRenderer extends Renderer {
 				}
 			}
 		}
+	}
+
+	/**
+	 * @inheritdoc
+	 *
+	 * Renders the light as a quad through a shared
+	 * {@link RadialGradientEffect} fragment shader (procedural — no
+	 * per-light texture). The shader and a shared 1×1 white-pixel atlas
+	 * are lazy-allocated on first call and reused for every Light2d on
+	 * this renderer. Each light's color and intensity are encoded into
+	 * the per-vertex tint so consecutive `drawLight` calls accumulate
+	 * into the quad batcher's buffer and flush together — N lights
+	 * become 1 program switch + 1 flush instead of 2N + N.
+	 * @param {object} light - the Light2d instance to render
+	 */
+	drawLight(light) {
+		if (this._lightShader === undefined) {
+			this._lightShader = new RadialGradientEffect(this);
+		}
+		// `setBatcher("quad", _lightShader)` switches the quad batcher's
+		// shader to the radial gradient if it isn't already bound (and
+		// flushes any sprite vertices queued under the previous shader).
+		// On subsequent back-to-back `drawLight` calls this is a no-op,
+		// so the lights pile into the same vertex buffer.
+		const batcher = this.setBatcher("quad", this._lightShader);
+		batcher.addQuad(
+			this._getLightAtlas(),
+			light.pos.x,
+			light.pos.y,
+			light.width,
+			light.height,
+			0,
+			0,
+			1,
+			1,
+			// pack the light's color (RGB) and intensity (A) into the
+			// vertex tint — the shader's `apply()` reads `color.rgb` and
+			// `color.a` as the per-light values.
+			light.color.toUint32(light.intensity),
+		);
+		// Note: we deliberately do NOT switch back to the default shader
+		// here. The next `setBatcher` call (sprites, primitives, etc.)
+		// will reconcile to the right shader on its own (see
+		// `setBatcher`), and that's what unlocks the cross-light batch.
+	}
+
+	/**
+	 * Lazy-init a shared 1×1 white `TextureAtlas` used as the source
+	 * texture for `drawLight`'s procedural shader. The shader ignores
+	 * the sampled color, but `addQuad`'s vertex format includes a
+	 * texture-unit attribute so we still need a real texture; sharing
+	 * one across every light keeps them on the same multi-texture slot
+	 * (no flush on light switch).
+	 * @returns {TextureAtlas}
+	 * @ignore
+	 */
+	_getLightAtlas() {
+		if (this._lightAtlas === undefined) {
+			// build a 1×1 white canvas — TextureAtlas wants an image-like
+			// source that can feed `gl.texImage2D` directly.
+			const canvas = globalThis.document
+				? globalThis.document.createElement("canvas")
+				: new OffscreenCanvas(1, 1);
+			canvas.width = 1;
+			canvas.height = 1;
+			const ctx = canvas.getContext("2d");
+			ctx.fillStyle = "#fff";
+			ctx.fillRect(0, 0, 1, 1);
+			this._lightAtlas = new TextureAtlas(
+				createAtlas(1, 1, "lightWhite", "no-repeat"),
+				canvas,
+			);
+		}
+		return this._lightAtlas;
 	}
 
 	/**
@@ -931,7 +1041,7 @@ export default class WebGLRenderer extends Renderer {
 		this.setBatcher(useLit ? "litQuad" : "quad");
 
 		const shader = this.customShader;
-		if (typeof shader === "object") {
+		if (shader != null) {
 			this.currentBatcher.useShader(shader);
 		}
 
@@ -1015,7 +1125,7 @@ export default class WebGLRenderer extends Renderer {
 		this.setBatcher("mesh");
 
 		// apply custom shader if set on the renderable (via preDraw)
-		if (typeof this.customShader === "object") {
+		if (this.customShader != null) {
 			this.currentBatcher.useShader(this.customShader);
 		}
 
@@ -1054,7 +1164,7 @@ export default class WebGLRenderer extends Renderer {
 		gl.depthMask(false);
 
 		// revert to default shader if custom was applied
-		if (typeof this.customShader === "object") {
+		if (this.customShader != null) {
 			this.currentBatcher.useShader(this.currentBatcher.defaultShader);
 		}
 	}

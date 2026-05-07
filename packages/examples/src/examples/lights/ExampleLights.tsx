@@ -3,6 +3,7 @@ import {
 	input,
 	Light2d,
 	loader,
+	ScanlineEffect,
 	Sprite,
 	Stage,
 	state,
@@ -62,11 +63,20 @@ class PlayScreen extends Stage {
 		// post-effect FBO so the vignette below applies to the lighting too.
 		this.ambientLight.parseCSS("#1117");
 
-		// vignette demonstrates that lights are now captured by post-effects
-		// (the ambient fill darkens at the screen edges as the vignette adds
-		// its own darkening on top).
-		game.viewport.shader = new VignetteEffect(
-			video.renderer as Parameters<typeof VignetteEffect>[0],
+		// chain TWO post-effects on the viewport to exercise the multi-pass
+		// FBO ping-pong (Renderable.postEffects), not the single-shader fast
+		// path. Lights MUST render inside that FBO bracket — if they escape
+		// it, you'll see the gradients sit on top of the scanlines / past
+		// the vignette instead of being darkened with everything else.
+		// This is the visual contract `Stage.drawLighting` + the procedural
+		// drawLight pipeline have to honor on both Canvas and WebGL.
+		const renderer = video.renderer as Parameters<typeof VignetteEffect>[0];
+		game.viewport.addPostEffect(new VignetteEffect(renderer));
+		game.viewport.addPostEffect(
+			new ScanlineEffect(renderer, {
+				opacity: 0.18,
+				curvature: 0.015,
+			}),
 		);
 
 		// white light follows the mouse; orange light stays put

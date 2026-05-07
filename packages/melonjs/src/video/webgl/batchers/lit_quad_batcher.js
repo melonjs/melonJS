@@ -336,20 +336,41 @@ export default class LitQuadBatcher extends QuadBatcher {
 
 		this.useShader(shader);
 
+		// keep the batcher's texture-unit bookkeeping aligned with the GL
+		// state we just mutated — see `QuadBatcher.blitTexture`.
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, source);
+		this.currentTextureUnit = 0;
+		this.boundTextures[0] = source;
 		shader.setUniform("uSampler", 0);
 
+		// transform corners through the renderer transform — see
+		// `QuadBatcher.blitTexture` for the rationale. Only caller today
+		// is `WebGLRenderer.blitEffect`, which resets `currentTransform`
+		// to identity, so the matrix branch is dormant in practice.
+		const m = this.viewMatrix;
+		const vec0 = V_ARRAY[0].set(x, y);
+		const vec1 = V_ARRAY[1].set(x + width, y);
+		const vec2 = V_ARRAY[2].set(x, y + height);
+		const vec3 = V_ARRAY[3].set(x + width, y + height);
+		if (m && !m.isIdentity()) {
+			m.apply(vec0);
+			m.apply(vec1);
+			m.apply(vec2);
+			m.apply(vec3);
+		}
+
 		const tint = 0xffffffff;
-		this.vertexData.push(x, y, 0, 1, tint, 0, -1);
-		this.vertexData.push(x + width, y, 1, 1, tint, 0, -1);
-		this.vertexData.push(x, y + height, 0, 0, tint, 0, -1);
-		this.vertexData.push(x + width, y + height, 1, 0, tint, 0, -1);
+		this.vertexData.push(vec0.x, vec0.y, 0, 1, tint, 0, -1);
+		this.vertexData.push(vec1.x, vec1.y, 1, 1, tint, 0, -1);
+		this.vertexData.push(vec2.x, vec2.y, 0, 0, tint, 0, -1);
+		this.vertexData.push(vec3.x, vec3.y, 1, 0, tint, 0, -1);
 
 		this.flush();
 
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, null);
+		this.currentTextureUnit = -1;
 		delete this.boundTextures[0];
 
 		this.useShader(this.defaultShader);
