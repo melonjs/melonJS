@@ -902,19 +902,28 @@ export default class WebGLRenderer extends Renderer {
 	 */
 	enableScissor(x, y, width, height) {
 		const gl = this.gl;
+		const canvas = this.getCanvas();
+		// Walk the 4 corners through `currentTransform` to derive the
+		// screen-space AABB, matching the convention `clipRect` and
+		// `restore` use. `currentScissor` stores screen-space coords
+		// directly so save/restore can re-apply without re-running
+		// transform math (and so a scaled/rotated parent transform is
+		// honored, not just translation). Issue #1349.
+		const aabb = this._clipAABB;
+		aabb.clear();
+		aabb.addFrame(x, y, x + width, y + height, this.currentTransform);
+		const sx = Math.floor(aabb.min.x);
+		const sy = Math.floor(aabb.min.y);
+		const sw = Math.ceil(aabb.max.x - sx);
+		const sh = Math.ceil(aabb.max.y - sy);
 		this.flush();
 		gl.enable(gl.SCISSOR_TEST);
 		this._scissorActive = true;
-		gl.scissor(
-			x + this.currentTransform.tx,
-			this.getCanvas().height - height - y - this.currentTransform.ty,
-			width,
-			height,
-		);
-		this.currentScissor[0] = x;
-		this.currentScissor[1] = y;
-		this.currentScissor[2] = width;
-		this.currentScissor[3] = height;
+		gl.scissor(sx, canvas.height - sh - sy, sw, sh);
+		this.currentScissor[0] = sx;
+		this.currentScissor[1] = sy;
+		this.currentScissor[2] = sw;
+		this.currentScissor[3] = sh;
 	}
 
 	/**

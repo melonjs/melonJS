@@ -67,6 +67,12 @@ class PartialColorLayer extends ColorLayer {
 		_viewport: Parameters<ColorLayer["draw"]>[1],
 	) {
 		renderer.save();
+		// `ColorLayer` inherits `Renderable(0, 0, Infinity, Infinity)`
+		// with the default 0.5 anchor, so `Renderable.preDraw` has
+		// translated by (-Infinity, -Infinity) by the time we get here.
+		// Reset to identity so `clipRect` runs under a finite
+		// transform on both Canvas and WebGL.
+		renderer.resetTransform();
 		renderer.clipRect(this.rectX, this.rectY, this.rectW, this.rectH);
 		renderer.clearColor(this.color);
 		renderer.restore();

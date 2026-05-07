@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Bounds, Matrix2d, Matrix3d, math } from "../src/index.js";
+import { Bounds, Matrix2d, Matrix3d, math, Vector2d } from "../src/index.js";
 
 describe("Physics : Bounds", () => {
 	const bound1 = new Bounds([
@@ -182,10 +182,10 @@ describe("Physics : Bounds", () => {
 			// matrix to the four corners and taking min/max — this is the
 			// exact same path `WebGLRenderer.clipRect` walks.
 			const corners = [
-				{ x: 0, y: 0 },
-				{ x: 100, y: 0 },
-				{ x: 0, y: 100 },
-				{ x: 100, y: 100 },
+				new Vector2d(0, 0),
+				new Vector2d(100, 0),
+				new Vector2d(0, 100),
+				new Vector2d(100, 100),
 			];
 			let minX = Infinity;
 			let minY = Infinity;
