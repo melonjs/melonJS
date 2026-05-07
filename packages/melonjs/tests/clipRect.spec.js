@@ -515,18 +515,18 @@ describe("WebGLRenderer.clipRect (#1349)", () => {
 	});
 });
 
-// ---------------- RenderState.peekScissor (unit) ----------------
+// ---------------- RenderState._peekScissor (unit) ----------------
 
-describe("RenderState.peekScissor", () => {
+describe("RenderState._peekScissor", () => {
 	it("returns null on empty stack", () => {
 		const rs = new RenderState();
-		expect(rs.peekScissor()).toBe(null);
+		expect(rs._peekScissor()).toBe(null);
 	});
 
 	it("returns null when the saved state had scissor disabled", () => {
 		const rs = new RenderState();
 		rs.save(false);
-		expect(rs.peekScissor()).toBe(null);
+		expect(rs._peekScissor()).toBe(null);
 	});
 
 	it("returns the saved scissor box (live ref) when scissor was active at save time", () => {
@@ -541,7 +541,7 @@ describe("RenderState.peekScissor", () => {
 		// the snapshot from the time of `save`.
 		rs.currentScissor[0] = 999;
 
-		const peek = rs.peekScissor();
+		const peek = rs._peekScissor();
 		expect(peek).not.toBe(null);
 		expect(peek[0]).toBe(11);
 		expect(peek[1]).toBe(22);
@@ -557,8 +557,8 @@ describe("RenderState.peekScissor", () => {
 		rs.currentScissor[3] = 4;
 		rs.save(true);
 		const depthBefore = rs._stackDepth;
-		rs.peekScissor();
-		rs.peekScissor();
+		rs._peekScissor();
+		rs._peekScissor();
 		expect(rs._stackDepth).toBe(depthBefore);
 	});
 });

@@ -1446,9 +1446,10 @@ export default class WebGLRenderer extends Renderer {
 		// the *current* GL scissor — otherwise vertices queued inside
 		// a tighter clip would flush later under a more permissive
 		// scissor and visually escape their clip.
-		// `peekScissor` returns the saved box directly (live ref) or
-		// null when scissor will be inactive after the restore.
-		const peek = this.renderState.peekScissor();
+		// `_peekScissor` returns the saved box directly (live ref) or
+		// null when scissor will be inactive after the restore. Treat
+		// the returned array as read-only — it points into the stack.
+		const peek = this.renderState._peekScissor();
 		const cur = this.currentScissor;
 		const curActive = this._scissorActive === true;
 		const willBeActive = peek !== null;

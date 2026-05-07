@@ -148,9 +148,15 @@ export default class RenderState {
 	 * `save()` time, or `null` when the saved state had scissor
 	 * disabled (or the stack is empty). Caller treats `null` as
 	 * "next scissor will be inactive".
+	 *
+	 * Internal helper for `WebGLRenderer.restore()` — the live-ref
+	 * return is deliberate (zero allocations on a hot path). Callers
+	 * MUST treat the returned array as read-only; mutating it would
+	 * corrupt the save/restore stack.
+	 * @ignore
 	 * @returns {Int32Array | null}
 	 */
-	peekScissor() {
+	_peekScissor() {
 		const depth = this._stackDepth - 1;
 		if (depth < 0 || !this._scissorActive[depth]) {
 			return null;
