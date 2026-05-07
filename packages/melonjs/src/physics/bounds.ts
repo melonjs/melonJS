@@ -1,10 +1,17 @@
-import { Point, pointPool } from "../geometries/point.ts";
+import { Point } from "../geometries/point.ts";
 import { polygonPool } from "../geometries/polygon.ts";
 import { Matrix2d } from "../math/matrix2d.ts";
 import { Matrix3d } from "../math/matrix3d.ts";
 import { Vector2d } from "../math/vector2d.ts";
 import { createPool } from "../system/pool.ts";
 import { XYPoint } from "../utils/types.ts";
+
+// Module-level scratch reused by `Bounds.addFrame` for the matrix
+// path. Avoids a `pointPool.get`/`release` round-trip on every call —
+// `addFrame` is hit once per renderable per frame, so the round-trip
+// adds up. Safe to share across instances: JS is single-threaded and
+// `addPoint` cannot reenter `addFrame`.
+const _addFrameScratch = new Point();
 
 /**
  * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
@@ -279,14 +286,38 @@ export class Bounds {
 		y1: number,
 		m?: Matrix2d | Matrix3d,
 	) {
-		const v = pointPool.get();
-
+		if (m === undefined) {
+			// no transform: fold the 4 corners' min/max directly into
+			// the AABB without any Point allocation. Mirrors `addPoint`
+			// for each corner — using Math.min/max so the caller may
+			// pass swapped corners (x1 < x0 etc.) without breaking.
+			const minX = Math.min(x0, x1);
+			const maxX = Math.max(x0, x1);
+			const minY = Math.min(y0, y1);
+			const maxY = Math.max(y0, y1);
+			if (minX < this.min.x) {
+				this.min.x = minX;
+			}
+			if (maxX > this.max.x) {
+				this.max.x = maxX;
+			}
+			if (minY < this.min.y) {
+				this.min.y = minY;
+			}
+			if (maxY > this.max.y) {
+				this.max.y = maxY;
+			}
+			return;
+		}
+		// transformed: walk the 4 corners through `m` via `addPoint`.
+		// Reuse the module-level scratch — `m.apply` mutates in place
+		// and `addPoint` reads x/y immediately after, so the same Point
+		// can shuttle through all four corners.
+		const v = _addFrameScratch;
 		this.addPoint(v.set(x0, y0), m);
 		this.addPoint(v.set(x1, y0), m);
 		this.addPoint(v.set(x0, y1), m);
 		this.addPoint(v.set(x1, y1), m);
-
-		pointPool.release(v);
 	}
 
 	/**
