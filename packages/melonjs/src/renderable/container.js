@@ -947,11 +947,19 @@ export default class Container extends Renderable {
 
 		// clip the container children to the container bounds.
 		// Container's anchorPoint is forced to (0, 0), so the local rect
-		// is (0, 0, width, height).
+		// is (0, 0, width, height). `bounds.isFinite()` covers the
+		// aggregate (self + children) — a container may have a finite
+		// child bounds while its own `width/height` are `Infinity`
+		// (e.g., the world container or any `enableChildBoundsUpdate`
+		// container with a finite child but no intrinsic size). Passing
+		// `Infinity` to `clipRect` would NaN-poison the WebGL scissor
+		// math, so guard on the size we actually pass too.
 		if (
 			this.root === false &&
 			this.clipping === true &&
-			bounds.isFinite() === true
+			bounds.isFinite() === true &&
+			Number.isFinite(this.width) === true &&
+			Number.isFinite(this.height) === true
 		) {
 			renderer.clipRect(0, 0, this.width, this.height);
 		}

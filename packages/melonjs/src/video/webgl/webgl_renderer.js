@@ -148,6 +148,10 @@ export default class WebGLRenderer extends Renderer {
 			return { x: 0, y: 0 };
 		});
 
+		// scratch point reused across the four corner transforms in
+		// `clipRect`, kept on the instance so the call doesn't allocate.
+		this._clipPoint = { x: 0, y: 0 };
+
 		// scratch array for fillPolygon to avoid mutating polygon points
 		this._polyVerts = [];
 
@@ -2211,8 +2215,13 @@ export default class WebGLRenderer extends Renderer {
 		// `gl.scissor`. Treat a non-finite transform as "no clip".
 		const m = this.currentTransform;
 		if (!Number.isFinite(m.tx) || !Number.isFinite(m.ty)) {
-			gl.disable(gl.SCISSOR_TEST);
-			this._scissorActive = false;
+			if (this._scissorActive) {
+				// drain pending vertices under the active scissor first;
+				// otherwise they would flush later under no scissor.
+				this.flush();
+				gl.disable(gl.SCISSOR_TEST);
+				this._scissorActive = false;
+			}
 			return;
 		}
 
@@ -2224,18 +2233,35 @@ export default class WebGLRenderer extends Renderer {
 		// produces a polygonal clip, but for downstream rendering only the
 		// AABB matters when the user wants a "rect that follows my
 		// transform" behavior). Issue #1349.
-		const p0 = { x: x, y: y };
-		const p1 = { x: x + width, y: y };
-		const p2 = { x: x, y: y + height };
-		const p3 = { x: x + width, y: y + height };
-		m.apply(p0);
-		m.apply(p1);
-		m.apply(p2);
-		m.apply(p3);
-		const sx = Math.floor(Math.min(p0.x, p1.x, p2.x, p3.x));
-		const sy = Math.floor(Math.min(p0.y, p1.y, p2.y, p3.y));
-		const sw = Math.ceil(Math.max(p0.x, p1.x, p2.x, p3.x) - sx);
-		const sh = Math.ceil(Math.max(p0.y, p1.y, p2.y, p3.y) - sy);
+		// Reuse a single scratch point rather than allocating four
+		// fresh literals per call (this can run per-renderable per-frame).
+		const pt = this._clipPoint;
+		const right = x + width;
+		const bottom = y + height;
+		pt.x = x;
+		pt.y = y;
+		m.apply(pt);
+		const x0 = pt.x;
+		const y0 = pt.y;
+		pt.x = right;
+		pt.y = y;
+		m.apply(pt);
+		const x1 = pt.x;
+		const y1 = pt.y;
+		pt.x = x;
+		pt.y = bottom;
+		m.apply(pt);
+		const x2 = pt.x;
+		const y2 = pt.y;
+		pt.x = right;
+		pt.y = bottom;
+		m.apply(pt);
+		const x3 = pt.x;
+		const y3 = pt.y;
+		const sx = Math.floor(Math.min(x0, x1, x2, x3));
+		const sy = Math.floor(Math.min(y0, y1, y2, y3));
+		const sw = Math.ceil(Math.max(x0, x1, x2, x3) - sx);
+		const sh = Math.ceil(Math.max(y0, y1, y2, y3) - sy);
 
 		// If the resulting screen AABB covers the whole canvas, treat as
 		// no-clip and disable the scissor. Caller intent: "clip to the
