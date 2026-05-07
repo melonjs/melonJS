@@ -1,6 +1,7 @@
 import { Color, colorPool } from "./../../math/color.ts";
 import { isPowerOfTwo } from "./../../math/math.ts";
 import { Matrix3d } from "../../math/matrix3d.ts";
+import { Bounds } from "../../physics/bounds.ts";
 import {
 	CANVAS_ONRESIZE,
 	emit,
@@ -148,9 +149,9 @@ export default class WebGLRenderer extends Renderer {
 			return { x: 0, y: 0 };
 		});
 
-		// scratch point reused across the four corner transforms in
-		// `clipRect`, kept on the instance so the call doesn't allocate.
-		this._clipPoint = { x: 0, y: 0 };
+		// scratch AABB reused by `clipRect` for screen-space corner
+		// transforms, kept on the instance so the call doesn't allocate.
+		this._clipAABB = new Bounds();
 
 		// scratch array for fillPolygon to avoid mutating polygon points
 		this._polyVerts = [];
@@ -2225,43 +2226,19 @@ export default class WebGLRenderer extends Renderer {
 			return;
 		}
 
-		// transform the 4 input corners through the current transform to
-		// derive the screen-space scissor rect. `gl.scissor` takes an
-		// axis-aligned screen-space box and is not transform-aware, so
-		// any rotation in the matrix becomes an AABB on screen — matching
-		// what the Canvas renderer does in practice (its `context.clip()`
-		// produces a polygonal clip, but for downstream rendering only the
-		// AABB matters when the user wants a "rect that follows my
-		// transform" behavior). Issue #1349.
-		// Reuse a single scratch point rather than allocating four
-		// fresh literals per call (this can run per-renderable per-frame).
-		const pt = this._clipPoint;
-		const right = x + width;
-		const bottom = y + height;
-		pt.x = x;
-		pt.y = y;
-		m.apply(pt);
-		const x0 = pt.x;
-		const y0 = pt.y;
-		pt.x = right;
-		pt.y = y;
-		m.apply(pt);
-		const x1 = pt.x;
-		const y1 = pt.y;
-		pt.x = x;
-		pt.y = bottom;
-		m.apply(pt);
-		const x2 = pt.x;
-		const y2 = pt.y;
-		pt.x = right;
-		pt.y = bottom;
-		m.apply(pt);
-		const x3 = pt.x;
-		const y3 = pt.y;
-		const sx = Math.floor(Math.min(x0, x1, x2, x3));
-		const sy = Math.floor(Math.min(y0, y1, y2, y3));
-		const sw = Math.ceil(Math.max(x0, x1, x2, x3) - sx);
-		const sh = Math.ceil(Math.max(y0, y1, y2, y3) - sy);
+		// derive the screen-space AABB by feeding the rect's 4 corners
+		// through `currentTransform` via `Bounds.addFrame`. `gl.scissor`
+		// is not transform-aware, so any rotation collapses to the
+		// rotated-rect AABB on screen — Canvas's `context.clip()` would
+		// produce a true polygonal clip, but downstream rendering only
+		// observes the AABB anyway. Issue #1349.
+		const aabb = this._clipAABB;
+		aabb.clear();
+		aabb.addFrame(x, y, x + width, y + height, m);
+		const sx = Math.floor(aabb.min.x);
+		const sy = Math.floor(aabb.min.y);
+		const sw = Math.ceil(aabb.max.x - sx);
+		const sh = Math.ceil(aabb.max.y - sy);
 
 		// If the resulting screen AABB covers the whole canvas, treat as
 		// no-clip and disable the scissor. Caller intent: "clip to the
