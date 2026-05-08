@@ -142,6 +142,33 @@ export default class RenderState {
 	}
 
 	/**
+	 * Inspect the scissor box that the next `restore()` would install,
+	 * without mutating any state. Lets renderers detect whether a
+	 * pending `restore()` will actually change the scissor (and
+	 * decide, e.g., whether to flush GPU work first).
+	 *
+	 * Returns:
+	 * - `Int32Array` (length 4) — `[x, y, width, height]` of the
+	 *   saved scissor when scissor was active at the matching `save()`
+	 *   call.
+	 * - `null` — when the saved state had scissor disabled, or the
+	 *   stack is empty. Treat this as "next scissor will be inactive".
+	 *
+	 * The returned array is a **live reference into the internal
+	 * stack** — zero allocation on a hot path. Callers MUST treat it
+	 * as read-only; mutating it corrupts subsequent `restore()` calls.
+	 * @ignore
+	 * @returns {Int32Array | null}
+	 */
+	peekScissor() {
+		const depth = this._stackDepth - 1;
+		if (depth < 0 || !this._scissorActive[depth]) {
+			return null;
+		}
+		return this._scissorStack[depth];
+	}
+
+	/**
 	 * Restore state from the stack.
 	 * Color, tint, transform, and scissor are restored in place.
 	 * Blend mode is NOT applied to `currentBlendMode` — it is returned so the

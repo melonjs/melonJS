@@ -33,6 +33,11 @@ const ExampleBlendModes = lazy(() =>
 		default: m.ExampleBlendModes,
 	})),
 );
+const ExampleClipping = lazy(() =>
+	import("./examples/clipping/ExampleClipping").then((m) => ({
+		default: m.ExampleClipping,
+	})),
+);
 const ExampleCompressedTextures = lazy(() =>
 	import("./examples/compressedTextures/ExampleCompressedTextures").then(
 		(m) => ({ default: m.ExampleCompressedTextures }),
@@ -197,6 +202,13 @@ const examples: {
 		sourceDir: "blendModes",
 		description:
 			"Visual comparison of all supported blend modes (normal, multiply, screen, overlay, darken, lighten, etc.).",
+	},
+	{
+		component: <ExampleClipping />,
+		label: "Clipping",
+		path: "clipping",
+		sourceDir: "clipping",
+		description: "Nested and animated `Container` clipping.",
 	},
 	{
 		component: <ExampleCompressedTextures />,
