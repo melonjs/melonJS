@@ -157,6 +157,7 @@ export default class RenderState {
 	 * The returned array is a **live reference into the internal
 	 * stack** — zero allocation on a hot path. Callers MUST treat it
 	 * as read-only; mutating it corrupts subsequent `restore()` calls.
+	 * @ignore
 	 * @returns {Int32Array | null}
 	 */
 	peekScissor() {
