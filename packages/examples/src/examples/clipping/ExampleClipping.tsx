@@ -140,27 +140,19 @@ class PlayScreen extends Stage {
 			4,
 		);
 
-		// RIGHT — wrapper centered on its pos, with a clipping
-		// container offset back to the top-left. The wrapper's
-		// `currentTransform` gets a sinusoidal scale each frame, so
-		// the inner clip pulses around the wrapper's center.
-		const RIGHT_CENTER_X = 370;
-		const RIGHT_CENTER_Y = 160;
+		// RIGHT — wrapper at top-left with a clipping container as a
+		// direct child (no negative offset). The wrapper's
+		// `currentTransform` gets a sinusoidal scale each frame,
+		// composed as translate→scale→translate-back so the pulse
+		// breathes around the wrapper's visual center while keeping
+		// `pos` and bounds aligned with what's actually drawn.
+		const RIGHT_X = 280;
+		const RIGHT_Y = 80;
 		const RIGHT_W = 180;
 		const RIGHT_H = 160;
-		const wrapper = new Container(
-			RIGHT_CENTER_X,
-			RIGHT_CENTER_Y,
-			RIGHT_W,
-			RIGHT_H,
-		);
+		const wrapper = new Container(RIGHT_X, RIGHT_Y, RIGHT_W, RIGHT_H);
 		wrapper.clipping = false;
-		const innerClip = new Container(
-			-RIGHT_W / 2,
-			-RIGHT_H / 2,
-			RIGHT_W,
-			RIGHT_H,
-		);
+		const innerClip = new Container(0, 0, RIGHT_W, RIGHT_H);
 		innerClip.clipping = true;
 		innerClip.addChild(new OverflowingRect("#e74c3c"));
 		wrapper.addChild(innerClip);
@@ -170,11 +162,17 @@ class PlayScreen extends Stage {
 		wrapper.alwaysUpdate = true;
 		let t = 0;
 		const baseUpdate = wrapper.update.bind(wrapper);
+		const cx = RIGHT_W / 2;
+		const cy = RIGHT_H / 2;
 		wrapper.update = function (dt: number) {
 			t += dt;
-			this.currentTransform.identity();
 			const s = 1 + 0.25 * Math.sin(t * 0.0025);
+			// scale around (cx, cy) without moving the wrapper's pos:
+			// translate to center → scale → translate back.
+			this.currentTransform.identity();
+			this.currentTransform.translate(cx, cy);
 			this.currentTransform.scale(s, s);
+			this.currentTransform.translate(-cx, -cy);
 			return baseUpdate(dt) || true;
 		};
 		game.world.addChild(wrapper, 2);

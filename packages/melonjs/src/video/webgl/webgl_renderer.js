@@ -903,12 +903,12 @@ export default class WebGLRenderer extends Renderer {
 	enableScissor(x, y, width, height) {
 		const gl = this.gl;
 		const canvas = this.getCanvas();
-		// Walk the 4 corners through `currentTransform` to derive the
-		// screen-space AABB, matching the convention `clipRect` and
-		// `restore` use. `currentScissor` stores screen-space coords
-		// directly so save/restore can re-apply without re-running
-		// transform math (and so a scaled/rotated parent transform is
-		// honored, not just translation). Issue #1349.
+		// Derive the screen-space AABB via `Bounds.addFrame`, which
+		// short-circuits the 4-corner walk when `currentTransform` is
+		// identity. `currentScissor` stores screen-space coords directly
+		// so save/restore can re-apply without re-running transform math
+		// and so a scaled or rotated parent transform is honored — not
+		// just translation. Issue #1349.
 		const aabb = this._clipAABB;
 		aabb.clear();
 		aabb.addFrame(x, y, x + width, y + height, this.currentTransform);
@@ -2237,11 +2237,12 @@ export default class WebGLRenderer extends Renderer {
 		}
 
 		// derive the screen-space AABB by feeding the rect's 4 corners
-		// through `currentTransform` via `Bounds.addFrame`. `gl.scissor`
-		// is not transform-aware, so any rotation collapses to the
-		// rotated-rect AABB on screen — Canvas's `context.clip()` would
-		// produce a true polygonal clip, but downstream rendering only
-		// observes the AABB anyway. Issue #1349.
+		// through `currentTransform` via `Bounds.addFrame` (which short-
+		// circuits the corner walk when the transform is identity).
+		// `gl.scissor` is not transform-aware, so any rotation collapses
+		// to the rotated-rect AABB on screen — Canvas's `context.clip()`
+		// would produce a true polygonal clip, but downstream rendering
+		// only observes the AABB anyway. Issue #1349.
 		const aabb = this._clipAABB;
 		aabb.clear();
 		aabb.addFrame(x, y, x + width, y + height, m);
