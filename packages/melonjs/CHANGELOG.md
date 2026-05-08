@@ -1,6 +1,6 @@
 # Changelog
 
-## [19.3.0] (melonJS 2) - _unreleased_
+## [19.3.0] (melonJS 2) - _2026-05-08_
 
 ### Added
 - Light2d: now a first-class world Renderable — add lights with `app.world.addChild(light)` (or any container, including a sprite, so the light follows it via parent transforms). Auto-registers with the active Stage's lighting set via `onActivateEvent` / `onDeactivateEvent` — no manual bookkeeping.

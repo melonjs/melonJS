@@ -124,9 +124,9 @@ Tools integration
 melonJS is supporting the below tools and frameworks natively or through our official plugin(s) :
 
  [![Free Texture Packer](https://user-images.githubusercontent.com/4033090/136762061-1d3a0dfe-dbe0-4d3d-808d-47a49ecf5309.png "Free Texture Packer")](http://free-tex-packer.com)
- [![TexturePacker](media/icons/texturepacker.png "TexturePacker")](https://www.codeandweb.com/texturepacker)
- [![SpriteIlluminator](media/icons/spriteilluminator.png "SpriteIlluminator")](https://www.codeandweb.com/spriteilluminator)
- [![PhysicsEditor](media/icons/physicseditor.png "PhysicsEditor")](https://www.codeandweb.com/physicseditor)
+ [![TexturePacker](https://github.com/melonjs/melonJS/raw/master/media/icons/texturepacker.svg "TexturePacker")](https://www.codeandweb.com/texturepacker)
+ [![SpriteIlluminator](https://github.com/melonjs/melonJS/raw/master/media/icons/spriteilluminator.svg "SpriteIlluminator")](https://www.codeandweb.com/spriteilluminator)
+ [![PhysicsEditor](https://github.com/melonjs/melonJS/raw/master/media/icons/physicseditor.svg "PhysicsEditor")](https://www.codeandweb.com/physicseditor)
  [![ShoeBox](https://user-images.githubusercontent.com/4033090/136762705-92027d94-d87c-4a95-b051-26647410248d.png "ShoeBox")](https://renderhjs.net/shoebox/)
  [![Tiled](https://user-images.githubusercontent.com/4033090/136762999-5a7f377b-4136-4205-9fe0-83728c90cb9b.png "Tiled")](https://www.mapeditor.org)
  [![Cordova](https://user-images.githubusercontent.com/4033090/136763147-6d157ce6-6921-437e-bb8f-0287b86109da.png "Cordova")](https://cordova.apache.org)
